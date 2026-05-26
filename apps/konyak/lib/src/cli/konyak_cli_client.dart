@@ -501,6 +501,54 @@ final class KonyakCliClient {
     };
   }
 
+  Future<BottleArchiveExportLoadResult> exportBottleArchive({
+    required String bottleId,
+    required String archivePath,
+  }) async {
+    final result = await _run([
+      'export-bottle-archive',
+      bottleId,
+      '--archive',
+      archivePath,
+      '--json',
+    ]);
+
+    final parsed = _parseBottleArchiveExportPayload(result.stdout);
+    return switch (parsed) {
+      ExportedBottleArchive() when result.exitCode == 0 => parsed,
+      ExportedBottleArchive() ||
+      BottleArchiveExportLoadFailure() => BottleArchiveExportLoadFailure(
+        exitCode: result.exitCode,
+        message: _operationFailureMessage(result, 'export-bottle-archive'),
+        diagnostic: result.stderr,
+      ),
+    };
+  }
+
+  Future<BottleArchiveImportLoadResult> importBottleArchive({
+    required String archivePath,
+  }) async {
+    final result = await _run([
+      'import-bottle-archive',
+      '--archive',
+      archivePath,
+      '--json',
+    ]);
+
+    final parsed = parseBottleDetailPayload(result.stdout);
+    return switch (parsed) {
+      ParsedBottleDetail(:final bottle) when result.exitCode == 0 =>
+        ImportedBottleArchive(bottle),
+      ParsedBottleDetail() ||
+      BottleDetailNotFound() ||
+      BottleDetailParseFailure() => BottleArchiveImportLoadFailure(
+        exitCode: result.exitCode,
+        message: _operationFailureMessage(result, 'import-bottle-archive'),
+        diagnostic: result.stderr,
+      ),
+    };
+  }
+
   Future<BottleUpdateLoadResult> setWindowsVersion({
     required String bottleId,
     required String windowsVersion,
@@ -940,6 +988,48 @@ final class KonyakCliClient {
 
 sealed class _BottleDeleteParseResult {
   const _BottleDeleteParseResult();
+}
+
+BottleArchiveExportLoadResult _parseBottleArchiveExportPayload(String payload) {
+  final Object? decoded;
+  try {
+    decoded = jsonDecode(payload);
+  } on FormatException catch (error) {
+    return BottleArchiveExportLoadFailure(
+      exitCode: 0,
+      message: error.message,
+      diagnostic: '',
+    );
+  }
+
+  if (decoded is! Map<String, Object?> || decoded['schemaVersion'] != 1) {
+    return const BottleArchiveExportLoadFailure(
+      exitCode: 0,
+      message: 'Unsupported bottle archive export payload.',
+      diagnostic: '',
+    );
+  }
+
+  final archive = decoded['bottleArchive'];
+  if (archive is! Map<String, Object?>) {
+    return const BottleArchiveExportLoadFailure(
+      exitCode: 0,
+      message: 'Missing bottleArchive payload.',
+      diagnostic: '',
+    );
+  }
+
+  final bottleId = archive['bottleId'];
+  final archivePath = archive['archivePath'];
+  if (bottleId is! String || archivePath is! String) {
+    return const BottleArchiveExportLoadFailure(
+      exitCode: 0,
+      message: 'Invalid bottleArchive payload.',
+      diagnostic: '',
+    );
+  }
+
+  return ExportedBottleArchive(bottleId: bottleId, archivePath: archivePath);
 }
 
 final class _ParsedBottleDelete extends _BottleDeleteParseResult {
@@ -2036,6 +2126,56 @@ final class ExistingBottle extends BottleCreateLoadResult {
 
 final class BottleCreateLoadFailure extends BottleCreateLoadResult {
   const BottleCreateLoadFailure({
+    required this.exitCode,
+    required this.message,
+    required this.diagnostic,
+  });
+
+  final int exitCode;
+  final String message;
+  final String diagnostic;
+}
+
+sealed class BottleArchiveExportLoadResult {
+  const BottleArchiveExportLoadResult();
+}
+
+final class ExportedBottleArchive extends BottleArchiveExportLoadResult {
+  const ExportedBottleArchive({
+    required this.bottleId,
+    required this.archivePath,
+  });
+
+  final String bottleId;
+  final String archivePath;
+}
+
+final class BottleArchiveExportLoadFailure
+    extends BottleArchiveExportLoadResult {
+  const BottleArchiveExportLoadFailure({
+    required this.exitCode,
+    required this.message,
+    required this.diagnostic,
+  });
+
+  final int exitCode;
+  final String message;
+  final String diagnostic;
+}
+
+sealed class BottleArchiveImportLoadResult {
+  const BottleArchiveImportLoadResult();
+}
+
+final class ImportedBottleArchive extends BottleArchiveImportLoadResult {
+  const ImportedBottleArchive(this.bottle);
+
+  final BottleSummary bottle;
+}
+
+final class BottleArchiveImportLoadFailure
+    extends BottleArchiveImportLoadResult {
+  const BottleArchiveImportLoadFailure({
     required this.exitCode,
     required this.message,
     required this.diagnostic,

@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 
 import '../bottles/bottle_summary.dart';
 import '../cli/konyak_cli_client.dart';
+import '../files/bottle_archive_picker.dart';
 import '../files/directory_picker.dart';
 import '../files/program_file_picker.dart';
 import '../logs/log_reader.dart';
@@ -37,6 +38,7 @@ class KonyakHomeLoader extends StatefulWidget {
     required this.logReader,
     required this.programFilePicker,
     required this.directoryPicker,
+    required this.bottleArchivePicker,
     required this.enableBackgroundServices,
     required this.onAppSettingsLoaded,
     required this.onAppearanceModeChanged,
@@ -47,6 +49,7 @@ class KonyakHomeLoader extends StatefulWidget {
   final LogReader logReader;
   final ProgramFilePicker programFilePicker;
   final DirectoryPicker directoryPicker;
+  final BottleArchivePicker bottleArchivePicker;
   final bool enableBackgroundServices;
   final ValueChanged<AppSettingsSummary> onAppSettingsLoaded;
   final ValueChanged<AppAppearanceMode> onAppearanceModeChanged;
@@ -62,6 +65,7 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
   bool _isCreatingBottle = false;
   bool _isLoadingWinetricks = false;
   bool _isInstallingMacosWine = false;
+  String? _archiveProgressMessage;
   String? _runtimeInstallProgressMessage;
   bool _isShowingSettings = false;
   bool _hasTerminatedWineProcesses = false;
@@ -106,6 +110,9 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
     switch (call.method) {
       case 'openSettings':
         unawaited(_showSettings());
+        return;
+      case 'importBottleArchive':
+        unawaited(_importBottleArchive());
         return;
       default:
         throw MissingPluginException(
@@ -580,6 +587,91 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
         ).showSnackBar(SnackBar(content: Text('Moved ${bottle.name}')));
       case MissingBottleUpdate(:final message) ||
           BottleUpdateLoadFailure(:final message):
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(message)));
+    }
+  }
+
+  Future<void> _exportBottleArchive(BottleSummary bottle) async {
+    final archivePath = await widget.bottleArchivePicker.pickArchiveExportPath(
+      suggestedName: '${bottle.id}.konyak-bottle.tar',
+    );
+    if (archivePath == null) {
+      return;
+    }
+
+    setState(() {
+      _archiveProgressMessage = 'Exporting bottle archive...';
+    });
+
+    late final BottleArchiveExportLoadResult result;
+    try {
+      result = await widget.cliClient.exportBottleArchive(
+        bottleId: bottle.id,
+        archivePath: archivePath,
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _archiveProgressMessage = null;
+        });
+      }
+    }
+
+    if (!mounted) {
+      return;
+    }
+
+    switch (result) {
+      case ExportedBottleArchive():
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Exported ${bottle.name}')));
+      case BottleArchiveExportLoadFailure(:final message):
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(message)));
+    }
+  }
+
+  Future<void> _importBottleArchive() async {
+    final archivePath = await widget.bottleArchivePicker.pickArchiveToImport();
+    if (archivePath == null) {
+      return;
+    }
+
+    setState(() {
+      _archiveProgressMessage = 'Importing bottle archive...';
+    });
+
+    late final BottleArchiveImportLoadResult result;
+    try {
+      result = await widget.cliClient.importBottleArchive(
+        archivePath: archivePath,
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _archiveProgressMessage = null;
+        });
+      }
+    }
+
+    if (!mounted) {
+      return;
+    }
+
+    switch (result) {
+      case ImportedBottleArchive(:final bottle):
+        setState(() {
+          _bottles = upsertBottle(_bottles, bottle);
+          _errorMessage = null;
+        });
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Imported ${bottle.name}')));
+      case BottleArchiveImportLoadFailure(:final message):
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(message)));
@@ -1277,6 +1369,8 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
           onShowSettings: _showSettings,
           onShowAbout: _showAbout,
           onCreateBottle: _createBottle,
+          onImportBottleArchive: _importBottleArchive,
+          onExportBottleArchive: _exportBottleArchive,
           onInstallMacosWine: widget.platform.isMacOS && !_isInstallingMacosWine
               ? _installMacosWine
               : null,
@@ -1336,6 +1430,11 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
           const BlockingProgressOverlay(
             key: ValueKey('winetricks-progress'),
             message: 'Loading winetricks packages...',
+          ),
+        if (_archiveProgressMessage case final message?)
+          BlockingProgressOverlay(
+            key: const ValueKey('bottle-archive-progress'),
+            message: message,
           ),
         if (_runtimeInstallProgressMessage case final message?)
           BlockingProgressOverlay(

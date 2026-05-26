@@ -16,6 +16,10 @@ class AppDelegate: FlutterAppDelegate {
     menuChannel?.invokeMethod("openSettings", arguments: nil)
   }
 
+  @IBAction func importBottleArchive(_ _: Any?) {
+    menuChannel?.invokeMethod("importBottleArchive", arguments: nil)
+  }
+
   override func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
     return true
   }

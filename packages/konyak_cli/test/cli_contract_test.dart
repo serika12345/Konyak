@@ -221,6 +221,120 @@ void main() {
     ]);
   });
 
+  test('export-bottle-archive --json writes a tar archive for a bottle', () {
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-bottle-export-test-',
+    );
+    addTearDown(() {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    });
+    final repository = FileBottleRepository(
+      dataHome: _joinTestPath(tempDirectory.path, const ['data']),
+    );
+    final createResult = repository.createBottle(
+      const BottleCreateRequest(name: 'Steam', windowsVersion: 'win10'),
+    );
+    final bottle = (createResult as BottleCreated).bottle;
+    File(_joinTestPath(bottle.path, const ['drive_c', 'steam.txt']))
+      ..createSync(recursive: true)
+      ..writeAsStringSync('installed');
+    final archivePath = _joinTestPath(tempDirectory.path, const [
+      'steam.konyak-bottle.tar',
+    ]);
+
+    final result = runCli([
+      'export-bottle-archive',
+      'steam',
+      '--archive',
+      archivePath,
+      '--json',
+    ], bottleRepository: repository);
+
+    expect(result.exitCode, 0);
+    expect(result.stderr, isEmpty);
+    final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+    expect(payload, {
+      'schemaVersion': 1,
+      'bottleArchive': {'bottleId': 'steam', 'archivePath': archivePath},
+    });
+    expect(File(archivePath).existsSync(), isTrue);
+    final listing = Process.runSync('tar', ['-tf', archivePath]);
+    expect(listing.exitCode, 0);
+    expect(listing.stdout.toString(), contains('steam/metadata.json'));
+    expect(listing.stdout.toString(), contains('steam/drive_c/steam.txt'));
+  });
+
+  test('import-bottle-archive --json imports a bottle into the repository', () {
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-bottle-import-test-',
+    );
+    addTearDown(() {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    });
+    final sourceBottlePath = _joinTestPath(tempDirectory.path, const [
+      'archive-source',
+      'steam',
+    ]);
+    final sourceBottle = BottleRecord(
+      id: 'steam',
+      name: 'Steam',
+      path: sourceBottlePath,
+      windowsVersion: 'win10',
+    );
+    Directory(
+      _joinTestPath(sourceBottlePath, const ['drive_c']),
+    ).createSync(recursive: true);
+    File(
+      _joinTestPath(sourceBottlePath, const ['drive_c', 'steam.txt']),
+    ).writeAsStringSync('installed');
+    _writeTestBottleMetadata(sourceBottle);
+    final archivePath = _joinTestPath(tempDirectory.path, const [
+      'steam.konyak-bottle.tar',
+    ]);
+    final archiveResult = Process.runSync('tar', [
+      '-cf',
+      archivePath,
+      '-C',
+      _joinTestPath(tempDirectory.path, const ['archive-source']),
+      'steam',
+    ]);
+    expect(archiveResult.exitCode, 0);
+    final repository = FileBottleRepository(
+      dataHome: _joinTestPath(tempDirectory.path, const ['data']),
+    );
+
+    final result = runCli([
+      'import-bottle-archive',
+      '--archive',
+      archivePath,
+      '--json',
+    ], bottleRepository: repository);
+
+    expect(result.exitCode, 0);
+    expect(result.stderr, isEmpty);
+    final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+    final imported = payload['bottle'] as Map<String, Object?>;
+    final importedPath = _joinTestPath(tempDirectory.path, const [
+      'data',
+      'bottles',
+      'steam',
+    ]);
+    expect(imported['id'], 'steam');
+    expect(imported['name'], 'Steam');
+    expect(imported['path'], importedPath);
+    expect(
+      File(
+        _joinTestPath(importedPath, const ['drive_c', 'steam.txt']),
+      ).readAsStringSync(),
+      'installed',
+    );
+    expect(repository.findBottle('steam')?.path, importedPath);
+  });
+
   test('inspect-bottle --json returns a versioned bottle detail contract', () {
     final result = runCli(
       const ['inspect-bottle', 'steam', '--json'],

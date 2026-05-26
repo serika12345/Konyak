@@ -58,6 +58,22 @@ void main() {
     expect(window, contains('configureMenuChannel'));
   });
 
+  test('macOS File menu exposes the archive import command', () {
+    final xib = File('macos/Runner/Base.lproj/MainMenu.xib').readAsStringSync();
+    final appDelegate = File(
+      'macos/Runner/AppDelegate.swift',
+    ).readAsStringSync();
+
+    expect(xib, contains('<menu key="submenu" title="File"'));
+    expect(xib, contains('<menuItem title="Import Bottle"'));
+    expect(
+      xib,
+      contains('selector="importBottleArchive:" target="Voe-Tx-rLC"'),
+    );
+    expect(appDelegate, contains('@IBAction func importBottleArchive'));
+    expect(appDelegate, contains('invokeMethod("importBottleArchive"'));
+  });
+
   test('macOS app menu omits unused default items', () {
     final xib = File('macos/Runner/Base.lproj/MainMenu.xib').readAsStringSync();
 
@@ -87,6 +103,8 @@ void main() {
 
     for (final retainedTitle in [
       'About APP_NAME',
+      'File',
+      'Import Bottle',
       'Settings…',
       'Hide APP_NAME',
       'Hide Others',

@@ -117,6 +117,77 @@ void main() {
     },
   );
 
+  test('exports a bottle archive through the JSON CLI contract', () async {
+    final runner = _FakeProcessRunner(
+      result: const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottleArchive": {
+              "bottleId": "steam",
+              "archivePath": "/exports/steam.konyak-bottle.tar"
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+    );
+    final client = KonyakCliClient(executable: 'konyak', processRunner: runner);
+
+    final result = await client.exportBottleArchive(
+      bottleId: 'steam',
+      archivePath: '/exports/steam.konyak-bottle.tar',
+    );
+
+    expect(runner.arguments, const [
+      'export-bottle-archive',
+      'steam',
+      '--archive',
+      '/exports/steam.konyak-bottle.tar',
+      '--json',
+    ]);
+    expect(result, isA<ExportedBottleArchive>());
+    final exported = result as ExportedBottleArchive;
+    expect(exported.bottleId, 'steam');
+    expect(exported.archivePath, '/exports/steam.konyak-bottle.tar');
+  });
+
+  test('imports a bottle archive through the JSON CLI contract', () async {
+    final runner = _FakeProcessRunner(
+      result: const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottle": {
+              "id": "steam",
+              "name": "Steam",
+              "path": "/home/user/.local/share/konyak/bottles/steam",
+              "windowsVersion": "win10"
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+    );
+    final client = KonyakCliClient(executable: 'konyak', processRunner: runner);
+
+    final result = await client.importBottleArchive(
+      archivePath: '/imports/steam.konyak-bottle.tar',
+    );
+
+    expect(runner.arguments, const [
+      'import-bottle-archive',
+      '--archive',
+      '/imports/steam.konyak-bottle.tar',
+      '--json',
+    ]);
+    expect(result, isA<ImportedBottleArchive>());
+    final imported = result as ImportedBottleArchive;
+    expect(imported.bottle.id, 'steam');
+  });
+
   test('builds default CLI client from Flutter dev environment paths', () {
     final runner = _FakeProcessRunner(
       result: const ProcessRunResult(

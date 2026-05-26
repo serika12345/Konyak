@@ -12,6 +12,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:konyak/main.dart';
 import 'package:konyak/src/app/app_constants.dart';
 import 'package:konyak/src/cli/konyak_cli_client.dart';
+import 'package:konyak/src/files/bottle_archive_picker.dart';
 import 'package:konyak/src/files/directory_picker.dart';
 import 'package:konyak/src/files/program_file_picker.dart';
 import 'package:konyak/src/logs/log_reader.dart';
@@ -465,6 +466,73 @@ void main() {
       ['open-bottle-location', 'steam', '--location', 'root', '--json'],
     ]);
     expect(find.text('Opened bottle folder'), findsOneWidget);
+  });
+
+  testWidgets('bottle context menu exports a bottle archive', (
+    WidgetTester tester,
+  ) async {
+    final runner = _QueuedProcessRunner([
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottles": [
+              {
+                "id": "steam",
+                "name": "Steam",
+                "path": "/home/user/.local/share/konyak/bottles/steam",
+                "windowsVersion": "win10"
+              }
+            ]
+          }
+        ''',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottleArchive": {
+              "bottleId": "steam",
+              "archivePath": "/exports/steam.konyak-bottle.tar"
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+    ]);
+
+    await tester.pumpWidget(
+      _testKonyakApp(
+        cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
+        bottleArchivePicker: const _FakeBottleArchivePicker(
+          exportPath: '/exports/steam.konyak-bottle.tar',
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tapAt(
+      tester.getCenter(find.byKey(const ValueKey('sidebar-bottle-steam'))),
+      buttons: kSecondaryMouseButton,
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Export as Archive...'));
+    await tester.pumpAndSettle();
+
+    expect(runner.argumentsLog, const [
+      ['list-bottles', '--json'],
+      [
+        'export-bottle-archive',
+        'steam',
+        '--archive',
+        '/exports/steam.konyak-bottle.tar',
+        '--json',
+      ],
+    ]);
+    expect(find.text('Exported Steam'), findsOneWidget);
   });
 
   testWidgets('bottle context menu removes a bottle through confirmation', (
@@ -2445,7 +2513,7 @@ void main() {
     expect(find.text('Delete bottle'), findsNothing);
   });
 
-  testWidgets('Linux shows only the app menu in a screen-top menu bar', (
+  testWidgets('Linux shows File and app menus in a screen-top menu bar', (
     WidgetTester tester,
   ) async {
     final runner = _QueuedProcessRunner([
@@ -2496,6 +2564,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const ValueKey('linux-menu-bar')), findsOneWidget);
+    expect(find.text('File'), findsOneWidget);
     expect(find.text('Konyak'), findsOneWidget);
     expect(find.text('Bottle'), findsNothing);
     expect(find.text('Tools'), findsNothing);
@@ -2564,6 +2633,66 @@ void main() {
       ['get-app-settings', '--json'],
       ['list-runtimes', '--json'],
     ]);
+  });
+
+  testWidgets('Linux File menu imports a bottle archive', (
+    WidgetTester tester,
+  ) async {
+    final runner = _QueuedProcessRunner([
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '{"schemaVersion":1,"bottles":[]}',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottle": {
+              "id": "steam",
+              "name": "Steam",
+              "path": "/home/user/.local/share/konyak/bottles/steam",
+              "windowsVersion": "win10"
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+    ]);
+
+    await tester.pumpWidget(
+      _testKonyakApp(
+        platform: KonyakPlatform.linux,
+        cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
+        bottleArchivePicker: const _FakeBottleArchivePicker(
+          importPath: '/imports/steam.konyak-bottle.tar',
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(
+      find.descendant(
+        of: find.byKey(const ValueKey('linux-menu-bar')),
+        matching: find.text('File'),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Import Bottle').last);
+    await tester.pumpAndSettle();
+
+    expect(runner.argumentsLog, const [
+      ['list-bottles', '--json'],
+      [
+        'import-bottle-archive',
+        '--archive',
+        '/imports/steam.konyak-bottle.tar',
+        '--json',
+      ],
+    ]);
+    expect(find.text('Steam'), findsWidgets);
+    expect(find.text('Imported Steam'), findsOneWidget);
   });
 
   testWidgets('Linux screen menu exposes the about dialog', (
@@ -3799,6 +3928,65 @@ void main() {
     ]);
   });
 
+  testWidgets('macOS File menu command imports a bottle archive', (
+    WidgetTester tester,
+  ) async {
+    final runner = _QueuedProcessRunner([
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '{"schemaVersion":1,"bottles":[]}',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottle": {
+              "id": "steam",
+              "name": "Steam",
+              "path": "/Users/user/Library/Application Support/Konyak/Bottles/steam",
+              "windowsVersion": "win10"
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+    ]);
+
+    await tester.pumpWidget(
+      _testKonyakApp(
+        cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
+        bottleArchivePicker: const _FakeBottleArchivePicker(
+          importPath: '/imports/steam.konyak-bottle.tar',
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final result = Completer<ByteData?>();
+    await tester.binding.defaultBinaryMessenger.handlePlatformMessage(
+      'konyak/menu',
+      const StandardMethodCodec().encodeMethodCall(
+        const MethodCall('importBottleArchive'),
+      ),
+      result.complete,
+    );
+    await result.future;
+    await tester.pumpAndSettle();
+
+    expect(runner.argumentsLog, const [
+      ['list-bottles', '--json'],
+      [
+        'import-bottle-archive',
+        '--archive',
+        '/imports/steam.konyak-bottle.tar',
+        '--json',
+      ],
+    ]);
+    expect(find.text('Imported Steam'), findsOneWidget);
+  });
+
   testWidgets('enabled update checks install available updates on startup', (
     WidgetTester tester,
   ) async {
@@ -4288,6 +4476,7 @@ KonyakApp _testKonyakApp({
   LogReader? logReader,
   ProgramFilePicker? programFilePicker,
   DirectoryPicker? directoryPicker,
+  BottleArchivePicker? bottleArchivePicker,
   bool enableBackgroundServices = false,
 }) {
   return KonyakApp(
@@ -4296,6 +4485,7 @@ KonyakApp _testKonyakApp({
     logReader: logReader,
     programFilePicker: programFilePicker,
     directoryPicker: directoryPicker,
+    bottleArchivePicker: bottleArchivePicker,
     enableBackgroundServices: enableBackgroundServices,
   );
 }
@@ -4449,4 +4639,19 @@ final class _FakeDirectoryPicker implements DirectoryPicker {
 
   @override
   Future<String?> pickDirectoryPath() async => path;
+}
+
+final class _FakeBottleArchivePicker implements BottleArchivePicker {
+  const _FakeBottleArchivePicker({this.importPath, this.exportPath});
+
+  final String? importPath;
+  final String? exportPath;
+
+  @override
+  Future<String?> pickArchiveToImport() async => importPath;
+
+  @override
+  Future<String?> pickArchiveExportPath({required String suggestedName}) async {
+    return exportPath;
+  }
 }

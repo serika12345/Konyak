@@ -65,6 +65,18 @@
                         </items>
                     </menu>
                 </menuItem>
+                <menuItem title="File" id="jJq-WE-ySy">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <menu key="submenu" title="File" id="xmF-RB-jh8">
+                        <items>
+                            <menuItem title="Import Bottle" keyEquivalent="i" id="f0e-8R-7ve">
+                                <connections>
+                                    <action selector="importBottleArchive:" target="Voe-Tx-rLC" id="AVp-Gp-s41"/>
+                                </connections>
+                            </menuItem>
+                        </items>
+                    </menu>
+                </menuItem>
             </items>
             <point key="canvasLocation" x="142" y="-258"/>
         </menu>

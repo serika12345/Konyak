@@ -750,6 +750,14 @@ abstract interface class AppSettingsRepository {
 abstract interface class BottleRepository implements BottleCatalog {
   BottleCreateResult createBottle(BottleCreateRequest request);
 
+  BottleArchiveExportResult exportBottleArchive(
+    BottleArchiveExportRequest request,
+  );
+
+  BottleArchiveImportResult importBottleArchive(
+    BottleArchiveImportRequest request,
+  );
+
   BottleDeleteResult deleteBottle(String id);
 
   BottleRenameResult renameBottle(BottleRenameRequest request);
@@ -1315,6 +1323,36 @@ class BottleCreateRequest {
   final String windowsVersion;
 }
 
+class BottleArchiveExportRequest {
+  const BottleArchiveExportRequest({
+    required this.bottleId,
+    required this.archivePath,
+  });
+
+  final String bottleId;
+  final String archivePath;
+}
+
+class BottleArchiveImportRequest {
+  const BottleArchiveImportRequest({required this.archivePath});
+
+  final String archivePath;
+}
+
+class BottleArchiveRecord {
+  const BottleArchiveRecord({
+    required this.bottleId,
+    required this.archivePath,
+  });
+
+  final String bottleId;
+  final String archivePath;
+
+  Map<String, Object?> toJson() {
+    return <String, Object?>{'bottleId': bottleId, 'archivePath': archivePath};
+  }
+}
+
 sealed class BottleCreateResult {
   const BottleCreateResult();
 }
@@ -1329,6 +1367,50 @@ class BottleCreateConflict extends BottleCreateResult {
   const BottleCreateConflict(this.bottleId);
 
   final String bottleId;
+}
+
+sealed class BottleArchiveExportResult {
+  const BottleArchiveExportResult();
+}
+
+class BottleArchiveExported extends BottleArchiveExportResult {
+  const BottleArchiveExported(this.archive);
+
+  final BottleArchiveRecord archive;
+}
+
+class BottleArchiveExportMissing extends BottleArchiveExportResult {
+  const BottleArchiveExportMissing(this.bottleId);
+
+  final String bottleId;
+}
+
+class BottleArchiveExportFailed extends BottleArchiveExportResult {
+  const BottleArchiveExportFailed(this.message);
+
+  final String message;
+}
+
+sealed class BottleArchiveImportResult {
+  const BottleArchiveImportResult();
+}
+
+class BottleArchiveImported extends BottleArchiveImportResult {
+  const BottleArchiveImported(this.bottle);
+
+  final BottleRecord bottle;
+}
+
+class BottleArchiveImportConflict extends BottleArchiveImportResult {
+  const BottleArchiveImportConflict(this.bottleId);
+
+  final String bottleId;
+}
+
+class BottleArchiveImportFailed extends BottleArchiveImportResult {
+  const BottleArchiveImportFailed(this.message);
+
+  final String message;
 }
 
 sealed class BottleDeleteResult {
@@ -1827,6 +1909,35 @@ class MemoryBottleRepository implements BottleRepository {
   }
 
   @override
+  BottleArchiveExportResult exportBottleArchive(
+    BottleArchiveExportRequest request,
+  ) {
+    final bottle = findBottle(request.bottleId);
+    if (bottle == null) {
+      return BottleArchiveExportMissing(request.bottleId);
+    }
+
+    return _exportBottleArchive(
+      bottle: bottle,
+      archivePath: request.archivePath,
+    );
+  }
+
+  @override
+  BottleArchiveImportResult importBottleArchive(
+    BottleArchiveImportRequest request,
+  ) {
+    return _importBottleArchive(
+      archivePath: request.archivePath,
+      bottleDirectory: _joinPath(dataHome, const ['bottles']),
+      hasBottle: _bottles.containsKey,
+      onImported: (bottle) {
+        _bottles[bottle.id] = bottle;
+      },
+    );
+  }
+
+  @override
   BottleDeleteResult deleteBottle(String id) {
     final bottle = _bottles.remove(id);
     if (bottle == null) {
@@ -2042,6 +2153,28 @@ class CompositeBottleRepository implements BottleRepository {
   @override
   BottleCreateResult createBottle(BottleCreateRequest request) {
     return writableRepository.createBottle(request);
+  }
+
+  @override
+  BottleArchiveExportResult exportBottleArchive(
+    BottleArchiveExportRequest request,
+  ) {
+    final bottle = findBottle(request.bottleId);
+    if (bottle == null) {
+      return BottleArchiveExportMissing(request.bottleId);
+    }
+
+    return _exportBottleArchive(
+      bottle: bottle,
+      archivePath: request.archivePath,
+    );
+  }
+
+  @override
+  BottleArchiveImportResult importBottleArchive(
+    BottleArchiveImportRequest request,
+  ) {
+    return writableRepository.importBottleArchive(request);
   }
 
   @override
@@ -2354,6 +2487,32 @@ class FileBottleRepository implements BottleRepository {
     }
 
     return BottleCreated(bottle);
+  }
+
+  @override
+  BottleArchiveExportResult exportBottleArchive(
+    BottleArchiveExportRequest request,
+  ) {
+    final bottle = findBottle(request.bottleId);
+    if (bottle == null) {
+      return BottleArchiveExportMissing(request.bottleId);
+    }
+
+    return _exportBottleArchive(
+      bottle: bottle,
+      archivePath: request.archivePath,
+    );
+  }
+
+  @override
+  BottleArchiveImportResult importBottleArchive(
+    BottleArchiveImportRequest request,
+  ) {
+    return _importBottleArchive(
+      archivePath: request.archivePath,
+      bottleDirectory: bottleDirectory,
+      hasBottle: (bottleId) => findBottle(bottleId) != null,
+    );
   }
 
   @override
@@ -5505,6 +5664,51 @@ CliResult _programUpdateJsonResult(ProgramUpdateResult result) {
   };
 }
 
+CliResult _bottleArchiveExportJsonResult(BottleArchiveExportResult result) {
+  return switch (result) {
+    BottleArchiveExported(:final archive) => CliResult(
+      exitCode: 0,
+      stdout: jsonEncode(<String, Object?>{
+        'schemaVersion': cliSchemaVersion,
+        'bottleArchive': archive.toJson(),
+      }),
+      stderr: '',
+    ),
+    BottleArchiveExportMissing(:final bottleId) => _bottleNotFoundError(
+      bottleId,
+    ),
+    BottleArchiveExportFailed(:final message) => _jsonError(
+      exitCode: 75,
+      code: 'bottleArchiveExportFailed',
+      message: message,
+    ),
+  };
+}
+
+CliResult _bottleArchiveImportJsonResult(BottleArchiveImportResult result) {
+  return switch (result) {
+    BottleArchiveImported(:final bottle) => CliResult(
+      exitCode: 0,
+      stdout: jsonEncode(<String, Object?>{
+        'schemaVersion': cliSchemaVersion,
+        'bottle': bottle.toJson(),
+      }),
+      stderr: '',
+    ),
+    BottleArchiveImportConflict(:final bottleId) => _jsonError(
+      exitCode: 73,
+      code: 'bottleAlreadyExists',
+      message: 'Bottle already exists.',
+      extra: <String, Object?>{'bottleId': bottleId},
+    ),
+    BottleArchiveImportFailed(:final message) => _jsonError(
+      exitCode: 65,
+      code: 'invalidBottleArchive',
+      message: message,
+    ),
+  };
+}
+
 CliResult _appSettingsJsonResult(AppSettingsRecord settings) {
   return CliResult(
     exitCode: 0,
@@ -6314,6 +6518,40 @@ CliResult _runCli(
         extra: <String, Object?>{'bottleId': bottleId},
       ),
     };
+  }
+
+  final bottleArchiveExportRequest = _parseJsonBottleArchiveExportRequest(
+    arguments,
+  );
+  if (bottleArchiveExportRequest != null) {
+    if (bottleRepository == null) {
+      return _jsonError(
+        exitCode: 74,
+        code: 'bottleRepositoryUnavailable',
+        message: 'Bottle repository is not configured.',
+      );
+    }
+
+    return _bottleArchiveExportJsonResult(
+      bottleRepository.exportBottleArchive(bottleArchiveExportRequest),
+    );
+  }
+
+  final bottleArchiveImportRequest = _parseJsonBottleArchiveImportRequest(
+    arguments,
+  );
+  if (bottleArchiveImportRequest != null) {
+    if (bottleRepository == null) {
+      return _jsonError(
+        exitCode: 74,
+        code: 'bottleRepositoryUnavailable',
+        message: 'Bottle repository is not configured.',
+      );
+    }
+
+    return _bottleArchiveImportJsonResult(
+      bottleRepository.importBottleArchive(bottleArchiveImportRequest),
+    );
   }
 
   final deleteBottleId = _parseJsonBottleDeleteCommand(arguments);
@@ -7134,6 +7372,8 @@ Usage:
   konyak list-bottle-programs <id> --json
   konyak list-winetricks-verbs --json
   konyak create-bottle --name <name> [--windows-version <version>] --json
+  konyak export-bottle-archive <id> --archive <path> --json
+  konyak import-bottle-archive --archive <path> --json
   konyak delete-bottle <id> --json
   konyak rename-bottle <id> --name <name> --json
   konyak move-bottle <id> --path <path> --json
@@ -7299,6 +7539,46 @@ BottleCreateRequest? _parseJsonBottleCreateRequest(List<String> arguments) {
   }
 
   return BottleCreateRequest(name: name, windowsVersion: windowsVersion);
+}
+
+BottleArchiveExportRequest? _parseJsonBottleArchiveExportRequest(
+  List<String> arguments,
+) {
+  if (arguments.length != 5 ||
+      arguments.first != 'export-bottle-archive' ||
+      arguments[2] != '--archive' ||
+      arguments.last != '--json') {
+    return null;
+  }
+
+  final bottleId = arguments[1].trim();
+  final archivePath = arguments[3].trim();
+  if (bottleId.isEmpty || archivePath.isEmpty) {
+    return null;
+  }
+
+  return BottleArchiveExportRequest(
+    bottleId: bottleId,
+    archivePath: archivePath,
+  );
+}
+
+BottleArchiveImportRequest? _parseJsonBottleArchiveImportRequest(
+  List<String> arguments,
+) {
+  if (arguments.length != 4 ||
+      arguments.first != 'import-bottle-archive' ||
+      arguments[1] != '--archive' ||
+      arguments.last != '--json') {
+    return null;
+  }
+
+  final archivePath = arguments[2].trim();
+  if (archivePath.isEmpty) {
+    return null;
+  }
+
+  return BottleArchiveImportRequest(archivePath: archivePath);
 }
 
 String? _parseJsonBottleDeleteCommand(List<String> arguments) {
@@ -11556,6 +11836,230 @@ void _moveDirectory({required String from, required String to}) {
     _copyDirectory(source: source, destination: destination);
     source.deleteSync(recursive: true);
   }
+}
+
+BottleArchiveExportResult _exportBottleArchive({
+  required BottleRecord bottle,
+  required String archivePath,
+}) {
+  final normalizedBottlePath = _normalizeFilesystemPath(bottle.path);
+  final bottleDirectory = Directory(normalizedBottlePath);
+  if (!bottleDirectory.existsSync()) {
+    return BottleArchiveExportFailed('Bottle directory was not found.');
+  }
+
+  try {
+    final normalizedArchivePath = _normalizeFilesystemPath(archivePath);
+    if (normalizedArchivePath == normalizedBottlePath ||
+        normalizedArchivePath.startsWith('$normalizedBottlePath/')) {
+      return BottleArchiveExportFailed(
+        'Bottle archive path must be outside the bottle directory.',
+      );
+    }
+
+    final archive = File(archivePath);
+    archive.parent.createSync(recursive: true);
+    final result = Process.runSync('tar', [
+      '-cf',
+      archive.path,
+      '-C',
+      _dirname(normalizedBottlePath),
+      _basename(normalizedBottlePath),
+    ], runInShell: false);
+    if (result.exitCode != 0) {
+      return BottleArchiveExportFailed(
+        _commandFailureMessage('export bottle archive', result),
+      );
+    }
+  } on FileSystemException catch (error) {
+    return BottleArchiveExportFailed(error.message);
+  } on ProcessException catch (error) {
+    return BottleArchiveExportFailed(error.message);
+  }
+
+  return BottleArchiveExported(
+    BottleArchiveRecord(bottleId: bottle.id, archivePath: archivePath),
+  );
+}
+
+BottleArchiveImportResult _importBottleArchive({
+  required String archivePath,
+  required String bottleDirectory,
+  required bool Function(String bottleId) hasBottle,
+  void Function(BottleRecord bottle)? onImported,
+}) {
+  final archive = File(archivePath);
+  if (!archive.existsSync()) {
+    return BottleArchiveImportFailed('Bottle archive was not found.');
+  }
+
+  final listing = _validatedBottleArchiveListing(archivePath);
+  switch (listing) {
+    case _InvalidBottleArchiveListing(:final message):
+      return BottleArchiveImportFailed(message);
+    case _ValidBottleArchiveListing():
+      break;
+  }
+
+  final tempDirectory = Directory.systemTemp.createTempSync(
+    'konyak-bottle-import-',
+  );
+  try {
+    final extraction = Process.runSync('tar', [
+      '-xf',
+      archivePath,
+      '-C',
+      tempDirectory.path,
+    ], runInShell: false);
+    if (extraction.exitCode != 0) {
+      return BottleArchiveImportFailed(
+        _commandFailureMessage('import bottle archive', extraction),
+      );
+    }
+
+    final extractedBottlePath = _joinPath(tempDirectory.path, [
+      listing.topLevelDirectory,
+    ]);
+    final extractedBottleDirectory = Directory(extractedBottlePath);
+    if (!extractedBottleDirectory.existsSync()) {
+      return const BottleArchiveImportFailed(
+        'Bottle archive does not contain a bottle directory.',
+      );
+    }
+
+    final imported = _readBottleMetadata(extractedBottlePath);
+    if (!_isValidBottleArchiveId(imported.id)) {
+      return const BottleArchiveImportFailed(
+        'Bottle archive metadata contains an invalid bottle id.',
+      );
+    }
+    if (hasBottle(imported.id)) {
+      return BottleArchiveImportConflict(imported.id);
+    }
+
+    final destinationPath = _joinPath(bottleDirectory, [imported.id]);
+    if (Directory(destinationPath).existsSync()) {
+      return BottleArchiveImportConflict(imported.id);
+    }
+
+    final relocated = imported.copyWith(path: destinationPath);
+    _moveDirectory(from: extractedBottlePath, to: destinationPath);
+    _writeBottleMetadata(relocated);
+    onImported?.call(relocated);
+
+    return BottleArchiveImported(relocated);
+  } on FileSystemException catch (error) {
+    return BottleArchiveImportFailed(error.message);
+  } on FormatException catch (error) {
+    return BottleArchiveImportFailed(error.message);
+  } on ProcessException catch (error) {
+    return BottleArchiveImportFailed(error.message);
+  } finally {
+    if (tempDirectory.existsSync()) {
+      tempDirectory.deleteSync(recursive: true);
+    }
+  }
+}
+
+sealed class _BottleArchiveListing {
+  const _BottleArchiveListing();
+}
+
+final class _ValidBottleArchiveListing extends _BottleArchiveListing {
+  const _ValidBottleArchiveListing({required this.topLevelDirectory});
+
+  final String topLevelDirectory;
+}
+
+final class _InvalidBottleArchiveListing extends _BottleArchiveListing {
+  const _InvalidBottleArchiveListing(this.message);
+
+  final String message;
+}
+
+_BottleArchiveListing _validatedBottleArchiveListing(String archivePath) {
+  final result = Process.runSync('tar', [
+    '-tf',
+    archivePath,
+  ], runInShell: false);
+  if (result.exitCode != 0) {
+    return _InvalidBottleArchiveListing(
+      _commandFailureMessage('inspect bottle archive', result),
+    );
+  }
+
+  final entries = _processOutputToString(result.stdout)
+      .split('\n')
+      .map((entry) => entry.trim())
+      .where((entry) => entry.isNotEmpty)
+      .toList(growable: false);
+  if (entries.isEmpty) {
+    return const _InvalidBottleArchiveListing('Bottle archive is empty.');
+  }
+
+  final topLevelDirectories = <String>{};
+  var hasMetadata = false;
+  for (final entry in entries) {
+    if (!_isSafeArchiveEntryPath(entry)) {
+      return const _InvalidBottleArchiveListing(
+        'Bottle archive contains an unsafe path.',
+      );
+    }
+
+    final segments = entry
+        .split('/')
+        .where((segment) => segment.isNotEmpty)
+        .toList(growable: false);
+    topLevelDirectories.add(segments.first);
+    if (segments.length == 2 && segments.last == 'metadata.json') {
+      hasMetadata = true;
+    }
+  }
+
+  if (topLevelDirectories.length != 1) {
+    return const _InvalidBottleArchiveListing(
+      'Bottle archive must contain exactly one bottle directory.',
+    );
+  }
+  if (!hasMetadata) {
+    return const _InvalidBottleArchiveListing(
+      'Bottle archive does not contain bottle metadata.',
+    );
+  }
+
+  return _ValidBottleArchiveListing(
+    topLevelDirectory: topLevelDirectories.single,
+  );
+}
+
+bool _isSafeArchiveEntryPath(String path) {
+  if (path.startsWith('/') ||
+      path.startsWith(r'\') ||
+      path.contains('\u0000')) {
+    return false;
+  }
+  if (path.contains(r'\')) {
+    return false;
+  }
+
+  final segments = path.split('/').where((segment) => segment.isNotEmpty);
+  var hasSegment = false;
+  for (final segment in segments) {
+    hasSegment = true;
+    if (segment == '.' || segment == '..') {
+      return false;
+    }
+  }
+
+  return hasSegment;
+}
+
+bool _isValidBottleArchiveId(String id) {
+  return id.isNotEmpty &&
+      !id.contains('/') &&
+      !id.contains(r'\') &&
+      id != '.' &&
+      id != '..';
 }
 
 void _copyDirectory({

@@ -19,6 +19,8 @@ class KonyakHome extends StatefulWidget {
     this.onShowSettings,
     this.onShowAbout,
     this.onCreateBottle,
+    this.onImportBottleArchive,
+    this.onExportBottleArchive,
     this.onInstallMacosWine,
     this.onViewLatestLog,
     this.onRuntimeSettingsChanged,
@@ -51,6 +53,8 @@ class KonyakHome extends StatefulWidget {
   final VoidCallback? onShowSettings;
   final VoidCallback? onShowAbout;
   final VoidCallback? onCreateBottle;
+  final VoidCallback? onImportBottleArchive;
+  final ValueChanged<BottleSummary>? onExportBottleArchive;
   final VoidCallback? onInstallMacosWine;
   final VoidCallback? onViewLatestLog;
   final void Function(
@@ -153,6 +157,16 @@ class _KonyakHomeState extends State<KonyakHome> {
           if (widget.platform.isLinux)
             KonyakMenuBar(
               menus: [
+                KonyakMenuDefinition(
+                  label: 'File',
+                  items: [
+                    KonyakMenuItemDefinition(
+                      label: 'Import Bottle',
+                      icon: Icons.file_upload_outlined,
+                      onPressed: widget.onImportBottleArchive,
+                    ),
+                  ],
+                ),
                 KonyakMenuDefinition(
                   label: 'Konyak',
                   items: [
@@ -325,13 +339,7 @@ class _KonyakHomeState extends State<KonyakHome> {
       case BottleContextMenuAction.showInFinder:
         widget.onOpenBottleLocation?.call(bottle, 'root');
       case BottleContextMenuAction.exportArchive:
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              '${bottleContextMenuActionLabel(action)} unavailable',
-            ),
-          ),
-        );
+        widget.onExportBottleArchive?.call(bottle);
     }
   }
 }
