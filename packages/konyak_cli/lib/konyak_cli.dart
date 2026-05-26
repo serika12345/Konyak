@@ -8591,6 +8591,7 @@ RuntimeStack _linuxWineRuntimeStack({
         ),
         relativePaths: const <List<String>>[
           <String>['bin', 'wine'],
+          <String>['bin', 'winedbg'],
           <String>['bin', 'wineserver'],
         ],
       ),

@@ -3750,6 +3750,7 @@ corefonts                Microsoft Core Fonts
         },
         fileStatusProbe: const StaticFileStatusProbe({
           '/home/user/.local/share/konyak/Runtimes/linux-wine/bin/wine',
+          '/home/user/.local/share/konyak/Runtimes/linux-wine/bin/winedbg',
           '/home/user/.local/share/konyak/Runtimes/linux-wine/bin/wineserver',
           '/home/user/.local/share/konyak/Runtimes/linux-wine/winetricks',
           '/home/user/.local/share/konyak/Runtimes/linux-wine/vkd3d-proton/x64/d3d12.dll',
@@ -3795,6 +3796,7 @@ corefonts                Microsoft Core Fonts
                 'isInstalled': true,
                 'paths': [
                   '/home/user/.local/share/konyak/Runtimes/linux-wine/bin/wine',
+                  '/home/user/.local/share/konyak/Runtimes/linux-wine/bin/winedbg',
                   '/home/user/.local/share/konyak/Runtimes/linux-wine/bin/wineserver',
                 ],
                 'missingPaths': <Object?>[],
@@ -6140,6 +6142,19 @@ corefonts                Microsoft Core Fonts
       ).existsSync(),
       isTrue,
     );
+    expect(
+      File(
+        _joinTestPath(tempDirectory.path, const [
+          'xdg-data',
+          'konyak',
+          'Runtimes',
+          'linux-wine',
+          'bin',
+          'winedbg',
+        ]),
+      ).existsSync(),
+      isTrue,
+    );
   });
 
   test('install-linux-wine builds a stack from component archives', () {
@@ -7027,6 +7042,7 @@ String _createLinuxWineRuntimeArchive(String tempPath) {
   for (final relativePath in const <List<String>>[
     <String>['bin', 'wine'],
     <String>['bin', 'wineboot'],
+    <String>['bin', 'winedbg'],
     <String>['bin', 'wineserver'],
     <String>['winetricks'],
   ]) {

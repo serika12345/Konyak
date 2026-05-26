@@ -31,6 +31,7 @@ mkdir -p \
 ln -sfn "$wine_root/bin/wine" "$runtime_root/bin/wine"
 ln -sfn "$wine_root/bin/wine" "$runtime_root/bin/wine64"
 ln -sfn "$wine_root/bin/wineboot" "$runtime_root/bin/wineboot"
+ln -sfn "$wine_root/bin/winedbg" "$runtime_root/bin/winedbg"
 ln -sfn "$wine_root/bin/wineserver" "$runtime_root/bin/wineserver"
 ln -sfn "$winetricks_root/bin/winetricks" "$runtime_root/winetricks"
 ln -sfn "$vkd3d_root/lib/libvkd3d-proton-d3d12.so" \
