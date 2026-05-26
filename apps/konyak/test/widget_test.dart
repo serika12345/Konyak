@@ -2568,6 +2568,9 @@ void main() {
     expect(find.text('Konyak'), findsOneWidget);
     expect(find.text('Bottle'), findsNothing);
     expect(find.text('Tools'), findsNothing);
+    final konyakMenuLeft = tester.getTopLeft(find.text('Konyak')).dx;
+    final fileMenuLeft = tester.getTopLeft(find.text('File')).dx;
+    expect(konyakMenuLeft, lessThan(fileMenuLeft));
     expect(find.byKey(const ValueKey('bottom-bar')), findsOneWidget);
     expect(find.byTooltip('Install macOS Wine'), findsNothing);
 

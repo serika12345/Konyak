@@ -158,16 +158,6 @@ class _KonyakHomeState extends State<KonyakHome> {
             KonyakMenuBar(
               menus: [
                 KonyakMenuDefinition(
-                  label: 'File',
-                  items: [
-                    KonyakMenuItemDefinition(
-                      label: 'Import Bottle',
-                      icon: Icons.file_upload_outlined,
-                      onPressed: widget.onImportBottleArchive,
-                    ),
-                  ],
-                ),
-                KonyakMenuDefinition(
                   label: 'Konyak',
                   items: [
                     KonyakMenuItemDefinition(
@@ -179,6 +169,16 @@ class _KonyakHomeState extends State<KonyakHome> {
                       label: 'Settings…',
                       icon: Icons.settings_outlined,
                       onPressed: widget.onShowSettings,
+                    ),
+                  ],
+                ),
+                KonyakMenuDefinition(
+                  label: 'File',
+                  items: [
+                    KonyakMenuItemDefinition(
+                      label: 'Import Bottle',
+                      icon: Icons.file_upload_outlined,
+                      onPressed: widget.onImportBottleArchive,
                     ),
                   ],
                 ),
