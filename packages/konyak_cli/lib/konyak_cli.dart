@@ -11663,13 +11663,25 @@ BottleRecord _renamedFileBottle({
   return bottle.copyWith(id: id, name: name, path: _joinPath(directory, [id]));
 }
 
+final _bottleIdLetterOrNumber = RegExp(r'[\p{L}\p{N}]', unicode: true);
+
 String _bottleIdFromName(String name) {
-  return name
-      .trim()
-      .toLowerCase()
-      .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
-      .replaceAll(RegExp('-+'), '-')
-      .replaceAll(RegExp(r'^-|-$'), '');
+  final buffer = StringBuffer();
+  var lastWasSeparator = false;
+
+  for (final rune in name.trim().toLowerCase().runes) {
+    final character = String.fromCharCode(rune);
+    if (_bottleIdLetterOrNumber.hasMatch(character)) {
+      buffer.write(character);
+      lastWasSeparator = false;
+    } else if (buffer.isNotEmpty && !lastWasSeparator) {
+      buffer.write('-');
+      lastWasSeparator = true;
+    }
+  }
+
+  final id = buffer.toString();
+  return id.endsWith('-') ? id.substring(0, id.length - 1) : id;
 }
 
 String _resolveDataHome(Map<String, String> environment) {

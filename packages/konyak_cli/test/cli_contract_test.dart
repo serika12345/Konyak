@@ -561,6 +561,35 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
     });
   });
 
+  test('create-bottle --json supports non-ASCII bottle names', () {
+    final repository = MemoryBottleRepository(
+      dataHome: '/home/user/.local/share/konyak',
+    );
+
+    final result = runCli(const [
+      'create-bottle',
+      '--name',
+      '日本語',
+      '--json',
+    ], bottleRepository: repository);
+
+    expect(result.exitCode, 0);
+    expect(result.stderr, isEmpty);
+
+    final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+    expect(payload, {
+      'schemaVersion': 1,
+      'bottle': {
+        'id': '日本語',
+        'name': '日本語',
+        'path': '/home/user/.local/share/konyak/bottles/日本語',
+        'windowsVersion': 'win10',
+      },
+    });
+
+    expect(repository.findBottle('日本語')?.name, '日本語');
+  });
+
   test('create-bottle --json initializes the Wine prefix when configured', () {
     final repository = MemoryBottleRepository(
       dataHome: '/home/user/.local/share/konyak',
