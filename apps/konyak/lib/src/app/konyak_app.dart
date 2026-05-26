@@ -19,6 +19,7 @@ class KonyakApp extends StatefulWidget {
     ProgramFilePicker? programFilePicker,
     DirectoryPicker? directoryPicker,
     BottleArchivePicker? bottleArchivePicker,
+    this.initialExecutablePaths = const <String>[],
     this.enableBackgroundServices = false,
   }) : platform = platform ?? currentKonyakPlatform(),
        cliClient = cliClient ?? createDefaultKonyakCliClient(),
@@ -35,6 +36,7 @@ class KonyakApp extends StatefulWidget {
   final ProgramFilePicker programFilePicker;
   final DirectoryPicker directoryPicker;
   final BottleArchivePicker bottleArchivePicker;
+  final List<String> initialExecutablePaths;
   final bool enableBackgroundServices;
 
   @override
@@ -63,6 +65,7 @@ class _KonyakAppState extends State<KonyakApp> {
         programFilePicker: widget.programFilePicker,
         directoryPicker: widget.directoryPicker,
         bottleArchivePicker: widget.bottleArchivePicker,
+        initialExecutablePaths: widget.initialExecutablePaths,
         enableBackgroundServices: widget.enableBackgroundServices,
         onAppSettingsLoaded: _handleAppSettingsLoaded,
         onAppearanceModeChanged: _setAppearanceMode,

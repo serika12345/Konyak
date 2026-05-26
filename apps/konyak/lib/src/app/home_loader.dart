@@ -17,6 +17,7 @@ import 'dialogs/app_settings_dialog.dart';
 import 'dialogs/bottle_management_dialogs.dart';
 import 'dialogs/bottle_programs_dialog.dart';
 import 'dialogs/create_bottle_dialog.dart';
+import 'dialogs/open_executable_dialog.dart';
 import 'dialogs/pin_program_dialog.dart';
 import 'dialogs/process_manager_dialog.dart';
 import 'dialogs/run_program_dialog.dart';
@@ -30,6 +31,30 @@ import 'widgets/blocking_progress_overlay.dart';
 
 const _macosMenuChannel = MethodChannel('konyak/menu');
 
+List<String> _validExecutableOpenPathsFromChannel(Object? arguments) {
+  if (arguments is! List<Object?>) {
+    return const <String>[];
+  }
+
+  return _validExecutableOpenPaths(arguments.whereType<String>());
+}
+
+List<String> _validExecutableOpenPaths(Iterable<String> paths) {
+  final validPaths = <String>[];
+  for (final path in paths) {
+    final trimmedPath = path.trim();
+    if (_isWindowsExecutablePath(trimmedPath)) {
+      validPaths.add(trimmedPath);
+    }
+  }
+
+  return validPaths;
+}
+
+bool _isWindowsExecutablePath(String path) {
+  return path.isNotEmpty && path.toLowerCase().endsWith('.exe');
+}
+
 class KonyakHomeLoader extends StatefulWidget {
   const KonyakHomeLoader({
     super.key,
@@ -39,6 +64,7 @@ class KonyakHomeLoader extends StatefulWidget {
     required this.programFilePicker,
     required this.directoryPicker,
     required this.bottleArchivePicker,
+    this.initialExecutablePaths = const <String>[],
     required this.enableBackgroundServices,
     required this.onAppSettingsLoaded,
     required this.onAppearanceModeChanged,
@@ -50,6 +76,7 @@ class KonyakHomeLoader extends StatefulWidget {
   final ProgramFilePicker programFilePicker;
   final DirectoryPicker directoryPicker;
   final BottleArchivePicker bottleArchivePicker;
+  final List<String> initialExecutablePaths;
   final bool enableBackgroundServices;
   final ValueChanged<AppSettingsSummary> onAppSettingsLoaded;
   final ValueChanged<AppAppearanceMode> onAppearanceModeChanged;
@@ -72,6 +99,8 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
   AppSettingsSummary? _appSettings;
   String? _errorMessage;
   String? _latestRunLogPath;
+  final List<String> _pendingExecutableOpenPaths = <String>[];
+  bool _isHandlingExecutableOpen = false;
   final Map<String, ProgramSettingsSummary> _programSettings =
       <String, ProgramSettingsSummary>{};
   final Set<String> _loadingProgramSettings = <String>{};
@@ -82,7 +111,11 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
     if (widget.enableBackgroundServices) {
       WidgetsBinding.instance.addObserver(this);
     }
+    _pendingExecutableOpenPaths.addAll(
+      _validExecutableOpenPaths(widget.initialExecutablePaths),
+    );
     _macosMenuChannel.setMethodCallHandler(_handleMacosMenuMethodCall);
+    unawaited(_loadPendingExecutableOpenPathsFromPlatform());
     _loadBottles();
     if (widget.enableBackgroundServices) {
       unawaited(_initializeBackgroundServices());
@@ -114,10 +147,38 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
       case 'importBottleArchive':
         unawaited(_importBottleArchive());
         return;
+      case 'openExecutableFiles':
+        _pendingExecutableOpenPaths.addAll(
+          _validExecutableOpenPathsFromChannel(call.arguments),
+        );
+        unawaited(_drainPendingExecutableOpenPaths());
+        return;
       default:
         throw MissingPluginException(
           'Unsupported macOS menu method: ${call.method}',
         );
+    }
+  }
+
+  Future<void> _loadPendingExecutableOpenPathsFromPlatform() async {
+    if (!widget.platform.isMacOS) {
+      return;
+    }
+
+    try {
+      final arguments = await _macosMenuChannel.invokeMethod<Object?>(
+        'takePendingExecutableOpenPaths',
+      );
+      if (!mounted) {
+        return;
+      }
+
+      _pendingExecutableOpenPaths.addAll(
+        _validExecutableOpenPathsFromChannel(arguments),
+      );
+      unawaited(_drainPendingExecutableOpenPaths());
+    } on MissingPluginException {
+      return;
     }
   }
 
@@ -144,6 +205,8 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
           _errorMessage = message;
       }
     });
+
+    unawaited(_drainPendingExecutableOpenPaths());
   }
 
   Future<void> _initializeBackgroundServices() async {
@@ -374,15 +437,23 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
   }
 
   Future<void> _createBottle() async {
+    await _createBottleFromDialog();
+  }
+
+  Future<BottleSummary?> _createBottleFromDialog() async {
     final input = await showDialog<CreateBottleInput>(
       context: context,
       builder: (context) => const CreateBottleDialog(),
     );
 
     if (input == null) {
-      return;
+      return null;
     }
 
+    return _createBottleFromInput(input);
+  }
+
+  Future<BottleSummary?> _createBottleFromInput(CreateBottleInput input) async {
     setState(() {
       _isCreatingBottle = true;
     });
@@ -402,7 +473,7 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
     }
 
     if (!mounted) {
-      return;
+      return null;
     }
 
     switch (result) {
@@ -411,11 +482,55 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
           _bottles = upsertBottle(_bottles, bottle);
           _errorMessage = null;
         });
+        return bottle;
       case ExistingBottle(:final message) ||
           BottleCreateLoadFailure(:final message):
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(message)));
+        return null;
+    }
+  }
+
+  Future<void> _drainPendingExecutableOpenPaths() async {
+    if (!mounted || _isLoading || _isHandlingExecutableOpen) {
+      return;
+    }
+
+    _isHandlingExecutableOpen = true;
+    try {
+      while (mounted && !_isLoading && _pendingExecutableOpenPaths.isNotEmpty) {
+        final programPath = _pendingExecutableOpenPaths.removeAt(0);
+        await _showOpenExecutable(programPath);
+      }
+    } finally {
+      _isHandlingExecutableOpen = false;
+      if (mounted && !_isLoading && _pendingExecutableOpenPaths.isNotEmpty) {
+        unawaited(_drainPendingExecutableOpenPaths());
+      }
+    }
+  }
+
+  Future<void> _showOpenExecutable(String programPath) async {
+    final decision = await showDialog<OpenExecutableDecision>(
+      context: context,
+      builder: (context) =>
+          OpenExecutableDialog(programPath: programPath, bottles: _bottles),
+    );
+
+    if (!mounted || decision == null) {
+      return;
+    }
+
+    switch (decision) {
+      case RunExecutableInBottle(:final bottle):
+        await _runProgramPath(bottle: bottle, programPath: programPath);
+      case CreateBottleForExecutable():
+        final bottle = await _createBottleFromDialog();
+        if (!mounted || bottle == null) {
+          return;
+        }
+        await _runProgramPath(bottle: bottle, programPath: programPath);
     }
   }
 

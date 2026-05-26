@@ -3990,6 +3990,245 @@ void main() {
     expect(find.text('Imported Steam'), findsOneWidget);
   });
 
+  testWidgets('macOS open executable event asks for a bottle before running', (
+    WidgetTester tester,
+  ) async {
+    final runner = _QueuedProcessRunner([
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottles": [
+              {
+                "id": "steam",
+                "name": "Steam",
+                "path": "/Users/user/Library/Application Support/Konyak/Bottles/steam",
+                "windowsVersion": "win10"
+              }
+            ]
+          }
+        ''',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "run": {
+              "bottleId": "steam",
+              "programPath": "/downloads/setup.exe",
+              "runnerKind": "wine",
+              "executable": "wine",
+              "workingDirectory": null,
+              "argv": ["wine", "/downloads/setup.exe"],
+              "logPath": "/Users/user/Library/Application Support/Konyak/Bottles/steam/logs/latest.log",
+              "processExitCode": 0
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+    ]);
+
+    await tester.pumpWidget(
+      _testKonyakApp(
+        cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final result = Completer<ByteData?>();
+    await tester.binding.defaultBinaryMessenger.handlePlatformMessage(
+      'konyak/menu',
+      const StandardMethodCodec().encodeMethodCall(
+        const MethodCall('openExecutableFiles', [
+          '/downloads/setup.exe',
+          '/downloads/readme.txt',
+          '',
+          42,
+        ]),
+      ),
+      result.complete,
+    );
+    await result.future;
+    await tester.pumpAndSettle();
+
+    expect(find.text('Open executable'), findsOneWidget);
+    expect(find.text('/downloads/setup.exe'), findsOneWidget);
+    expect(find.text('/downloads/readme.txt'), findsNothing);
+    expect(find.text('Steam'), findsWidgets);
+
+    await tester.tap(find.widgetWithText(FilledButton, 'Run'));
+    await tester.pumpAndSettle();
+
+    expect(runner.argumentsLog, const [
+      ['list-bottles', '--json'],
+      ['run-program', 'steam', '--program', '/downloads/setup.exe', '--json'],
+    ]);
+  });
+
+  testWidgets('macOS startup drains pending native executable files', (
+    WidgetTester tester,
+  ) async {
+    final nativeCalls = <String>[];
+    const macosMenuChannel = MethodChannel('konyak/menu');
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      macosMenuChannel,
+      (call) async {
+        nativeCalls.add(call.method);
+        if (call.method == 'takePendingExecutableOpenPaths') {
+          return const ['/downloads/setup.exe', '/downloads/readme.txt'];
+        }
+
+        return null;
+      },
+    );
+    addTearDown(() {
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        macosMenuChannel,
+        null,
+      );
+    });
+
+    final runner = _QueuedProcessRunner([
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottles": [
+              {
+                "id": "steam",
+                "name": "Steam",
+                "path": "/Users/user/Library/Application Support/Konyak/Bottles/steam",
+                "windowsVersion": "win10"
+              }
+            ]
+          }
+        ''',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "run": {
+              "bottleId": "steam",
+              "programPath": "/downloads/setup.exe",
+              "runnerKind": "wine",
+              "executable": "wine",
+              "workingDirectory": null,
+              "argv": ["wine", "/downloads/setup.exe"],
+              "logPath": "/Users/user/Library/Application Support/Konyak/Bottles/steam/logs/latest.log",
+              "processExitCode": 0
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+    ]);
+
+    await tester.pumpWidget(
+      _testKonyakApp(
+        cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(nativeCalls, contains('takePendingExecutableOpenPaths'));
+    expect(find.text('Open executable'), findsOneWidget);
+    expect(find.text('/downloads/setup.exe'), findsOneWidget);
+    expect(find.text('/downloads/readme.txt'), findsNothing);
+
+    await tester.tap(find.widgetWithText(FilledButton, 'Run'));
+    await tester.pumpAndSettle();
+
+    expect(runner.argumentsLog, const [
+      ['list-bottles', '--json'],
+      ['run-program', 'steam', '--program', '/downloads/setup.exe', '--json'],
+    ]);
+  });
+
+  testWidgets('launch executable argument can create a bottle before running', (
+    WidgetTester tester,
+  ) async {
+    final runner = _QueuedProcessRunner([
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '{"schemaVersion":1,"bottles":[]}',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottle": {
+              "id": "games",
+              "name": "Games",
+              "path": "/Users/user/Library/Application Support/Konyak/Bottles/games",
+              "windowsVersion": "win10"
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "run": {
+              "bottleId": "games",
+              "programPath": "/downloads/setup.EXE",
+              "runnerKind": "wine",
+              "executable": "wine",
+              "workingDirectory": null,
+              "argv": ["wine", "/downloads/setup.EXE"],
+              "logPath": "/Users/user/Library/Application Support/Konyak/Bottles/games/logs/latest.log",
+              "processExitCode": 0
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+    ]);
+
+    await tester.pumpWidget(
+      _testKonyakApp(
+        cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
+        initialExecutablePaths: const ['/downloads/setup.EXE'],
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Open executable'), findsOneWidget);
+    expect(find.text('/downloads/setup.EXE'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(TextButton, 'Create Bottle'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.widgetWithText(TextField, 'Name'), 'Games');
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Create'));
+    await tester.pumpAndSettle();
+
+    expect(runner.argumentsLog, const [
+      ['list-bottles', '--json'],
+      [
+        'create-bottle',
+        '--name',
+        'Games',
+        '--windows-version',
+        'win10',
+        '--json',
+      ],
+      ['run-program', 'games', '--program', '/downloads/setup.EXE', '--json'],
+    ]);
+  });
+
   testWidgets('enabled update checks install available updates on startup', (
     WidgetTester tester,
   ) async {
@@ -4480,6 +4719,7 @@ KonyakApp _testKonyakApp({
   ProgramFilePicker? programFilePicker,
   DirectoryPicker? directoryPicker,
   BottleArchivePicker? bottleArchivePicker,
+  List<String> initialExecutablePaths = const <String>[],
   bool enableBackgroundServices = false,
 }) {
   return KonyakApp(
@@ -4489,6 +4729,7 @@ KonyakApp _testKonyakApp({
     programFilePicker: programFilePicker,
     directoryPicker: directoryPicker,
     bottleArchivePicker: bottleArchivePicker,
+    initialExecutablePaths: initialExecutablePaths,
     enableBackgroundServices: enableBackgroundServices,
   );
 }

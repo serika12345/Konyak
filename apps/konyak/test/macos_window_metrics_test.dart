@@ -74,6 +74,31 @@ void main() {
     expect(appDelegate, contains('invokeMethod("importBottleArchive"'));
   });
 
+  test('macOS app registers and forwards Windows executable files', () {
+    final infoPlist = File('macos/Runner/Info.plist').readAsStringSync();
+    final appDelegate = File(
+      'macos/Runner/AppDelegate.swift',
+    ).readAsStringSync();
+
+    expect(infoPlist, contains('<key>CFBundleDocumentTypes</key>'));
+    expect(infoPlist, contains('<string>Windows executable</string>'));
+    expect(infoPlist, contains('<string>exe</string>'));
+    expect(infoPlist, contains('<key>CFBundleTypeRole</key>'));
+    expect(infoPlist, contains('<string>Viewer</string>'));
+    expect(
+      appDelegate,
+      contains('application(_ sender: NSApplication, openFiles'),
+    );
+    expect(
+      appDelegate,
+      contains('application(_ application: NSApplication, open urls'),
+    );
+    expect(appDelegate, contains('openExecutableFiles'));
+    expect(appDelegate, contains('takePendingExecutableOpenPaths'));
+    expect(appDelegate, contains('setMethodCallHandler'));
+    expect(appDelegate, contains('url.pathExtension.lowercased() == "exe"'));
+  });
+
   test('macOS app menu omits unused default items', () {
     final xib = File('macos/Runner/Base.lproj/MainMenu.xib').readAsStringSync();
 

@@ -63,8 +63,8 @@ echo "Building Flutter macOS app..."
 
 mkdir -p "$resources_dir/Licenses"
 rm -f \
-  "$resources_dir"/SOURCE-*.txt \
-  "$resources_dir"/Licenses/Konyak-*.txt
+  "$resources_dir"/SOURCE-*.txt(N) \
+  "$resources_dir"/Licenses/Konyak-*.txt(N)
 cp "$cli_executable" "$resources_dir/konyak-cli"
 chmod 755 "$resources_dir/konyak-cli"
 cp LICENSE "$resources_dir/Licenses/Konyak-MIT.txt"

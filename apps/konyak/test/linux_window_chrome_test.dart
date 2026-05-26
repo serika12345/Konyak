@@ -30,4 +30,14 @@ void main() {
       expect(source, contains('gtk_window_set_title(window, "")'));
     },
   );
+
+  test('Linux desktop entry accepts Windows executable files', () {
+    final desktopEntry = File(
+      'linux/runner/resources/app.konyak.Konyak.desktop.in',
+    ).readAsStringSync();
+
+    expect(desktopEntry, contains('Exec=@BINARY_NAME@ %f'));
+    expect(desktopEntry, contains('MimeType=application/x-ms-dos-executable;'));
+    expect(desktopEntry, contains('application/x-msdownload;'));
+  });
 }
