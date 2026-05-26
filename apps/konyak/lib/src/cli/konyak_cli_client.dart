@@ -15,7 +15,11 @@ import 'runtime_install_contract.dart';
 import 'runtime_list_contract.dart';
 
 abstract interface class ProcessRunner {
-  Future<ProcessRunResult> run(String executable, List<String> arguments);
+  Future<ProcessRunResult> run(
+    String executable,
+    List<String> arguments, {
+    String? workingDirectory,
+  });
 }
 
 final class ProcessRunResult {
@@ -36,8 +40,9 @@ final class DartIoProcessRunner implements ProcessRunner {
   @override
   Future<ProcessRunResult> run(
     String executable,
-    List<String> arguments,
-  ) async {
+    List<String> arguments, {
+    String? workingDirectory,
+  }) async {
     final ProcessResult result;
 
     try {
@@ -46,6 +51,7 @@ final class DartIoProcessRunner implements ProcessRunner {
         arguments,
         environment: _konyakCliChildEnvironment(),
         runInShell: false,
+        workingDirectory: workingDirectory,
       );
     } on ProcessException catch (error) {
       return ProcessRunResult(
@@ -128,19 +134,27 @@ KonyakCliClient createDefaultKonyakCliClient({
     );
   }
 
+  final cliScriptPath = _resolveCliScriptPath(
+    activeEnvironment,
+    cliScriptDefine: cliScriptDefine,
+    repoRootDefine: repoRootDefine,
+  );
+  final cliScriptWorkingDirectory = _resolveCliScriptWorkingDirectory(
+    cliScriptPath,
+  );
+  final cliScriptRunTarget = _resolveCliScriptRunTarget(cliScriptPath);
+
   return KonyakCliClient(
     executable: _resolveDartExecutable(
       activeEnvironment,
       dartExecutableDefine: dartExecutableDefine,
       flutterRootDefine: flutterRootDefine,
     ),
-    baseArguments: <String>[
-      _resolveCliScriptPath(
-        activeEnvironment,
-        cliScriptDefine: cliScriptDefine,
-        repoRootDefine: repoRootDefine,
-      ),
-    ],
+    baseArguments:
+        cliScriptWorkingDirectory == null || cliScriptRunTarget == null
+        ? <String>[cliScriptPath]
+        : <String>['run', cliScriptRunTarget],
+    workingDirectory: cliScriptWorkingDirectory,
     processRunner: processRunner,
   );
 }
@@ -195,11 +209,13 @@ final class KonyakCliClient {
   const KonyakCliClient({
     required this.executable,
     this.baseArguments = const <String>[],
+    this.workingDirectory,
     required this.processRunner,
   });
 
   final String executable;
   final List<String> baseArguments;
+  final String? workingDirectory;
   final ProcessRunner processRunner;
 
   Future<BottleListLoadResult> listBottles() async {
@@ -982,7 +998,7 @@ final class KonyakCliClient {
     return processRunner.run(executable, <String>[
       ...baseArguments,
       ...arguments,
-    ]);
+    ], workingDirectory: workingDirectory);
   }
 }
 
@@ -1923,6 +1939,47 @@ String _resolveCliScriptPath(
   }
 
   return '../../packages/konyak_cli/bin/konyak.dart';
+}
+
+String? _resolveCliScriptWorkingDirectory(String cliScriptPath) {
+  final pathSegments = _splitPathSegments(cliScriptPath);
+  if (pathSegments.length < 2 ||
+      pathSegments[pathSegments.length - 2] != 'bin') {
+    return null;
+  }
+
+  return _joinPath(
+    _pathPrefixForSegmentCount(cliScriptPath, pathSegments.length - 2),
+    const <String>[],
+  );
+}
+
+String? _resolveCliScriptRunTarget(String cliScriptPath) {
+  final pathSegments = _splitPathSegments(cliScriptPath);
+  if (pathSegments.length < 2 ||
+      pathSegments[pathSegments.length - 2] != 'bin') {
+    return null;
+  }
+
+  return pathSegments.skip(pathSegments.length - 2).join('/');
+}
+
+List<String> _splitPathSegments(String path) {
+  final normalized = path.replaceAll('\\', '/');
+  return normalized.split('/').where((segment) => segment.isNotEmpty).toList();
+}
+
+String _pathPrefixForSegmentCount(String path, int segmentCount) {
+  final normalized = path.replaceAll('\\', '/');
+  final isAbsolute = normalized.startsWith('/');
+  final segments = _splitPathSegments(path);
+  final prefixSegments = segments.take(segmentCount).toList();
+  if (prefixSegments.isEmpty) {
+    return isAbsolute ? '/' : '.';
+  }
+
+  final prefix = prefixSegments.join('/');
+  return isAbsolute ? '/$prefix' : prefix;
 }
 
 sealed class BottleListLoadResult {

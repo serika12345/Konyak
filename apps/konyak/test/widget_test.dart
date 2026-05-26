@@ -4566,8 +4566,9 @@ final class _QueuedProcessRunner implements ProcessRunner {
   @override
   Future<ProcessRunResult> run(
     String executable,
-    List<String> arguments,
-  ) async {
+    List<String> arguments, {
+    String? workingDirectory,
+  }) async {
     argumentsLog.add(List.unmodifiable(arguments));
 
     if (_results.isEmpty) {
@@ -4590,7 +4591,11 @@ final class _FutureQueuedProcessRunner implements ProcessRunner {
   final List<List<String>> argumentsLog = [];
 
   @override
-  Future<ProcessRunResult> run(String executable, List<String> arguments) {
+  Future<ProcessRunResult> run(
+    String executable,
+    List<String> arguments, {
+    String? workingDirectory,
+  }) {
     argumentsLog.add(List.unmodifiable(arguments));
 
     if (_results.isEmpty) {

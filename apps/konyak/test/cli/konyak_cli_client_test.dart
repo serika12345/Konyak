@@ -102,15 +102,18 @@ void main() {
       );
       final client = KonyakCliClient(
         executable: 'dart',
-        baseArguments: const ['../../packages/konyak_cli/bin/konyak.dart'],
+        baseArguments: const ['run', 'bin/konyak.dart'],
+        workingDirectory: '/repo/packages/konyak_cli',
         processRunner: runner,
       );
 
       await client.listBottles();
 
       expect(runner.executable, 'dart');
+      expect(runner.workingDirectory, '/repo/packages/konyak_cli');
       expect(runner.arguments, const [
-        '../../packages/konyak_cli/bin/konyak.dart',
+        'run',
+        'bin/konyak.dart',
         'list-bottles',
         '--json',
       ]);
@@ -206,9 +209,8 @@ void main() {
     );
 
     expect(client.executable, '/repo/.dart_tool/konyak/flutter-sdk/bin/dart');
-    expect(client.baseArguments, const [
-      '/repo/packages/konyak_cli/bin/konyak.dart',
-    ]);
+    expect(client.baseArguments, const ['run', 'bin/konyak.dart']);
+    expect(client.workingDirectory, '/repo/packages/konyak_cli');
   });
 
   test('default CLI client prefers dart defines over process environment', () {
@@ -225,16 +227,17 @@ void main() {
         'FLUTTER_ROOT': '/env/flutter',
         'KONYAK_REPO_ROOT': '/env/repo',
         'KONYAK_DART_EXECUTABLE': '/env/dart',
-        'KONYAK_CLI_SCRIPT': '/env/konyak.dart',
+        'KONYAK_CLI_SCRIPT': '/env/bin/konyak.dart',
       },
       dartExecutableDefine: '/define/dart',
-      cliScriptDefine: '/define/konyak.dart',
+      cliScriptDefine: '/define/bin/konyak.dart',
       repoRootDefine: '/define/repo',
       processRunner: runner,
     );
 
     expect(client.executable, '/define/dart');
-    expect(client.baseArguments, const ['/define/konyak.dart']);
+    expect(client.baseArguments, const ['run', 'bin/konyak.dart']);
+    expect(client.workingDirectory, '/define');
   });
 
   test('default CLI client prefers bundled executable over Dart script', () {
@@ -332,6 +335,7 @@ void main() {
 
       expect(client.executable, '/custom/dart');
       expect(client.baseArguments, const ['/custom/konyak.dart']);
+      expect(client.workingDirectory, isNull);
     },
   );
 
@@ -2104,15 +2108,18 @@ final class _FakeProcessRunner implements ProcessRunner {
 
   final ProcessRunResult result;
   String? executable;
+  String? workingDirectory;
   List<String> arguments = const [];
 
   @override
   Future<ProcessRunResult> run(
     String executable,
-    List<String> arguments,
-  ) async {
+    List<String> arguments, {
+    String? workingDirectory,
+  }) async {
     this.executable = executable;
     this.arguments = List.unmodifiable(arguments);
+    this.workingDirectory = workingDirectory;
 
     return result;
   }
