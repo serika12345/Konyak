@@ -91,7 +91,6 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
   bool _isLoading = true;
   bool _isCreatingBottle = false;
   bool _isLoadingWinetricks = false;
-  bool _isInstallingMacosWine = false;
   String? _archiveProgressMessage;
   String? _runtimeInstallProgressMessage;
   bool _isShowingSettings = false;
@@ -1341,38 +1340,6 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
     }
   }
 
-  Future<void> _installMacosWine() async {
-    setState(() {
-      _isInstallingMacosWine = true;
-      _runtimeInstallProgressMessage = 'Downloading Konyak macOS Wine...';
-    });
-
-    late final RuntimeInstallLoadResult result;
-    try {
-      result = await widget.cliClient.installMacosWine();
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isInstallingMacosWine = false;
-          _runtimeInstallProgressMessage = null;
-        });
-      }
-    }
-
-    if (!mounted) {
-      return;
-    }
-
-    final message = switch (result) {
-      InstalledRuntime(:final runtime) => 'Installed ${runtime.name}',
-      RuntimeInstallLoadFailure(:final message) => message,
-    };
-
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
-  }
-
   Future<void> _showSettings() async {
     if (_isShowingSettings) {
       return;
@@ -1486,9 +1453,6 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
           onCreateBottle: _createBottle,
           onImportBottleArchive: _importBottleArchive,
           onExportBottleArchive: _exportBottleArchive,
-          onInstallMacosWine: widget.platform.isMacOS && !_isInstallingMacosWine
-              ? _installMacosWine
-              : null,
           onViewLatestLog: _latestRunLogPath == null ? null : _showLatestLog,
           onRuntimeSettingsChanged: (bottle, runtimeSettings) {
             _setRuntimeSettings(

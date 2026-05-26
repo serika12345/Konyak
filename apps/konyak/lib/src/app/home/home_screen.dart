@@ -21,7 +21,6 @@ class KonyakHome extends StatefulWidget {
     this.onCreateBottle,
     this.onImportBottleArchive,
     this.onExportBottleArchive,
-    this.onInstallMacosWine,
     this.onViewLatestLog,
     this.onRuntimeSettingsChanged,
     this.onLoadBottleConfiguration,
@@ -55,7 +54,6 @@ class KonyakHome extends StatefulWidget {
   final VoidCallback? onCreateBottle;
   final VoidCallback? onImportBottleArchive;
   final ValueChanged<BottleSummary>? onExportBottleArchive;
-  final VoidCallback? onInstallMacosWine;
   final VoidCallback? onViewLatestLog;
   final void Function(
     BottleSummary bottle,
@@ -224,7 +222,6 @@ class _KonyakHomeState extends State<KonyakHome> {
                     onRefresh: widget.onRefresh,
                     onShowSettings: widget.onShowSettings,
                     onCreateBottle: widget.onCreateBottle,
-                    onInstallMacosWine: widget.onInstallMacosWine,
                     onViewLatestLog: widget.onViewLatestLog,
                     detailMode: _detailMode,
                     selectedProgram: selectedProgram,

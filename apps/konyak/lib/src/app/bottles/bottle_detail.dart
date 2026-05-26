@@ -21,7 +21,6 @@ class KonyakBottleDetail extends StatelessWidget {
     required this.onRefresh,
     required this.onShowSettings,
     required this.onCreateBottle,
-    required this.onInstallMacosWine,
     required this.onViewLatestLog,
     required this.detailMode,
     required this.selectedProgram,
@@ -53,7 +52,6 @@ class KonyakBottleDetail extends StatelessWidget {
   final VoidCallback? onRefresh;
   final VoidCallback? onShowSettings;
   final VoidCallback? onCreateBottle;
-  final VoidCallback? onInstallMacosWine;
   final VoidCallback? onViewLatestLog;
   final BottleDetailMode detailMode;
   final PinnedProgramSummary? selectedProgram;
@@ -122,8 +120,6 @@ class KonyakBottleDetail extends StatelessWidget {
             onShowProcessManager: onShowProcessManager,
             onShowSettings: onShowSettings,
             onCreateBottle: onCreateBottle,
-            onInstallMacosWine: onInstallMacosWine,
-            showInstallMacosWine: platform.isMacOS,
             onViewLatestLog: onViewLatestLog,
           ),
           Expanded(

@@ -4656,56 +4656,29 @@ void main() {
     ]);
   });
 
-  testWidgets(
-    'install Konyak macOS Wine toolbar action invokes the CLI client',
-    (WidgetTester tester) async {
-      final runner = _QueuedProcessRunner([
-        const ProcessRunResult(
-          exitCode: 0,
-          stdout: '{"schemaVersion":1,"bottles":[]}',
-          stderr: '',
-        ),
-        const ProcessRunResult(
-          exitCode: 0,
-          stdout: '''
-          {
-            "schemaVersion": 1,
-            "runtime": {
-              "id": "konyak-macos-wine",
-              "name": "Konyak macOS Wine",
-              "platform": "macos",
-              "architecture": "x86_64",
-              "runnerKind": "macosWine",
-              "isBundled": false,
-              "isUpdateable": true,
-              "isInstalled": true
-            }
-          }
-        ''',
-          stderr: '',
-        ),
-      ]);
+  testWidgets('macOS runtime install is not exposed as a toolbar action', (
+    WidgetTester tester,
+  ) async {
+    final runner = _QueuedProcessRunner([
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '{"schemaVersion":1,"bottles":[]}',
+        stderr: '',
+      ),
+    ]);
 
-      await tester.pumpWidget(
-        _testKonyakApp(
-          cliClient: KonyakCliClient(
-            executable: 'konyak',
-            processRunner: runner,
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(
+      _testKonyakApp(
+        cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
+      ),
+    );
+    await tester.pumpAndSettle();
 
-      await tester.tap(find.byTooltip('Install macOS Wine'));
-      await tester.pumpAndSettle();
-
-      expect(runner.argumentsLog, const [
-        ['list-bottles', '--json'],
-        ['install-macos-wine', '--json'],
-      ]);
-      expect(find.text('Installed Konyak macOS Wine'), findsOneWidget);
-    },
-  );
+    expect(find.byTooltip('Install macOS Wine'), findsNothing);
+    expect(runner.argumentsLog, const [
+      ['list-bottles', '--json'],
+    ]);
+  });
 }
 
 final Matcher _regularTextWeight = anyOf(isNull, FontWeight.normal);

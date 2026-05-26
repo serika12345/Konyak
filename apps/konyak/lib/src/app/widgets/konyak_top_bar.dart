@@ -12,8 +12,6 @@ class KonyakTopBar extends StatelessWidget {
     required this.onShowProcessManager,
     required this.onShowSettings,
     required this.onCreateBottle,
-    required this.onInstallMacosWine,
-    required this.showInstallMacosWine,
     required this.onViewLatestLog,
   });
 
@@ -23,8 +21,6 @@ class KonyakTopBar extends StatelessWidget {
   final VoidCallback? onShowProcessManager;
   final VoidCallback? onShowSettings;
   final VoidCallback? onCreateBottle;
-  final VoidCallback? onInstallMacosWine;
-  final bool showInstallMacosWine;
   final VoidCallback? onViewLatestLog;
 
   @override
@@ -78,12 +74,6 @@ class KonyakTopBar extends StatelessWidget {
                 icon: Icons.description_outlined,
                 onPressed: onViewLatestLog,
               ),
-              if (showInstallMacosWine)
-                KonyakToolbarAction(
-                  tooltip: 'Install macOS Wine',
-                  icon: Icons.download,
-                  onPressed: onInstallMacosWine,
-                ),
             ],
           ),
         ),
