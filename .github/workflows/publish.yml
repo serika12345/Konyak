@@ -1,0 +1,111 @@
+name: Konyak Release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  linux:
+    name: Linux AppImage
+    runs-on: ubuntu-24.04
+    env:
+      KONYAK_RUNTIME_STACK_SOURCE_MANIFEST: ${{ vars.KONYAK_RUNTIME_STACK_SOURCE_MANIFEST }}
+      KONYAK_RUNTIME_STACK_PUBLIC_KEY: ${{ vars.KONYAK_RUNTIME_STACK_PUBLIC_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: cachix/install-nix-action@v31
+
+      - name: Build Linux release artifact
+        run: nix run .#linux-release
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: konyak-linux-release
+          path: |
+            .dart_tool/konyak/release/linux/Konyak-*.AppImage
+            .dart_tool/konyak/release/linux/Konyak-*.AppImage.sha256
+            .dart_tool/konyak/release/linux/Konyak-*.release.json
+            .dart_tool/konyak/release/linux/SHA256SUMS
+            .dart_tool/konyak/release/linux/release-notes.md
+            .dart_tool/konyak/release/linux/konyak-linux-wine-runtime-stack-source.json
+            .dart_tool/konyak/release/linux/konyak-runtime-stack-public-key.pem
+          if-no-files-found: ignore
+
+      - name: Publish GitHub release assets
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          tag="${GITHUB_REF_NAME}"
+          release_dir=".dart_tool/konyak/release/linux"
+          assets=(
+            "$release_dir"/Konyak-*.AppImage
+            "$release_dir"/Konyak-*.AppImage.sha256
+            "$release_dir"/Konyak-*.release.json
+            "$release_dir"/SHA256SUMS
+          )
+          optional_assets=(
+            "$release_dir"/konyak-linux-wine-runtime-stack-source.json
+            "$release_dir"/konyak-runtime-stack-public-key.pem
+          )
+          for optional_asset in "${optional_assets[@]}"; do
+            if [[ -f "$optional_asset" ]]; then
+              assets+=("$optional_asset")
+            fi
+          done
+          quoted_assets=()
+          for asset in "${assets[@]}"; do
+            printf -v quoted_asset '%q' "$asset"
+            quoted_assets+=("$quoted_asset")
+          done
+          assets_command="${quoted_assets[*]}"
+
+          if nix develop -c zsh -lc "gh release view '$tag' >/dev/null 2>&1"; then
+            nix develop -c zsh -lc "gh release upload '$tag' $assets_command --clobber"
+          else
+            nix develop -c zsh -lc "gh release create '$tag' $assets_command --title '$tag' --notes-file '$release_dir'/release-notes.md --verify-tag"
+          fi
+
+  macos:
+    name: macOS app
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: cachix/install-nix-action@v31
+
+      - name: Build unnotarized macOS release artifact
+        run: nix run .#macos-release
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: konyak-macos-release
+          path: |
+            .dart_tool/konyak/release/macos/Konyak-*.zip
+            .dart_tool/konyak/release/macos/Konyak-*.zip.sha256
+            .dart_tool/konyak/release/macos/Konyak-*.release.json
+            .dart_tool/konyak/release/macos/SHA256SUMS
+            .dart_tool/konyak/release/macos/release-notes.md
+
+      - name: Publish GitHub release assets
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME}"
+          release_dir=".dart_tool/konyak/release/macos"
+
+          if nix develop -c zsh -lc "gh release view '$tag' >/dev/null 2>&1"; then
+            nix develop -c zsh -lc "gh release upload '$tag' '$release_dir'/Konyak-*.zip '$release_dir'/Konyak-*.zip.sha256 '$release_dir'/Konyak-*.release.json '$release_dir'/SHA256SUMS --clobber"
+          else
+            nix develop -c zsh -lc "gh release create '$tag' '$release_dir'/Konyak-*.zip '$release_dir'/Konyak-*.zip.sha256 '$release_dir'/Konyak-*.release.json '$release_dir'/SHA256SUMS --title '$tag' --notes-file '$release_dir'/release-notes.md --verify-tag"
+          fi

@@ -1,0 +1,186 @@
+# TODO
+
+This list tracks the next implementation work after the initial Flutter shell
+and CLI boundary. Keep completed items in commits and update this file when a
+task changes scope.
+
+## Current Direction
+
+- Konyak owns its runtime, metadata, and distribution decisions.
+- arm64 macOS is the first complete runtime target.
+- x86_64 Linux is the second complete runtime target.
+- macOS uses a Konyak-managed Wine launch plan for Windows program execution.
+- macOS targets a Konyak-managed runtime stack assembled from explicit
+  components.
+- Linux uses the Linux Wine/Proton path and stays Vulkan-oriented.
+- Flutter continues to call the backend through a separate CLI process.
+- Runtime-specific details stay behind CLI/backend platform services.
+- The Flutter app and Dart CLI are the source of truth for application
+  behavior.
+- Konyak app settings are implemented for the first app-level settings:
+  close-time Wine process termination, default bottle path selection, update
+  checks, and update installation triggers.
+
+## Completed Foundation
+
+- [x] Establish the Konyak project foundation.
+  - [x] Add Konyak-owned README, contribution guidance, issue templates, and CI
+    metadata.
+  - [x] Keep repository scope focused on the Flutter app, Dart CLI, runtime
+    packaging, and release automation.
+- [x] Split initial run planning from process execution in
+  `packages/konyak_cli`.
+  - Pure planning should produce executable, argv, environment, runner kind,
+    and log path without touching the filesystem or starting processes.
+  - Process execution should consume that plan through the existing
+    `ProgramRunner` boundary.
+- [x] Add the first platform-aware runner selection layer.
+  - macOS: use Konyak-managed macOS Wine.
+  - Linux: use Linux Wine/Proton.
+  - Tests must cover platform selection without relying on the host platform.
+- [x] Implement the first macOS Wine startup planner.
+  - Use Konyak-managed macOS Wine `wine64` instead of plain `wine`.
+  - Launch programs as `wine64 start /unix <program>`.
+
+## Next Tasks
+
+- [x] Complete the macOS Wine startup path.
+  - [x] Preserve macOS bottle environment behavior: `WINEPREFIX`, `WINEDEBUG`,
+    `GST_DEBUG`, and bottle settings environment variables.
+  - [x] Preserve Konyak log output for failed and completed launches.
+- [x] Add Konyak-managed macOS Wine acquisition.
+  - [x] Use an upstream Wine archive source:
+    `https://github.com/Gcenx/macOS_Wine_builds/releases/download/11.9/wine-devel-11.9-osx64.tar.xz`.
+  - [x] Use upstream release metadata:
+    `https://api.github.com/repos/Gcenx/macOS_Wine_builds/releases/latest`.
+  - [x] Install using the Konyak runtime layout:
+    `Runtimes/macos-wine/bin/wine64`.
+  - [x] Keep download and extraction behind the CLI/backend runtime service.
+  - [x] Extract `.tar.xz` archives through the runtime service.
+  - [x] Add archive verification behind the CLI/backend runtime service.
+  - [x] Add update checks behind the CLI/backend runtime service.
+- [x] Move macOS runtime acquisition toward a Konyak-managed component stack.
+  - [x] Expose the initial macOS runtime stack manifest from
+    `list-runtimes --json` and `install-macos-wine --json`.
+  - [x] Validate component presence for Wine, Wine32-on-64 support,
+    DXVK-macOS, MoltenVK, GStreamer, wine-mono, winetricks, and optional
+    GPTK/D3DMetal.
+  - [x] Add component version detection to the runtime manifest.
+  - [x] Treat Gcenx Wine as an initial bootstrap runtime, not the final full
+    Konyak macOS runtime package.
+  - [x] Add runtime validation that checks required dylib search paths and
+    loader behavior.
+  - [x] Keep GPTK/D3DMetal optional until the redistribution and user-provided
+    installation model is explicitly decided.
+  - [x] Normalize Konyak runtime component archives for DXVK-macOS, MoltenVK,
+    GStreamer, wine-mono, and winetricks, and allow incomplete Wine-only
+    runtime installs to be repaired from a full stack archive.
+  - [x] Start runtime stack construction from separate component archives by
+    layering Wine, DXVK-macOS, MoltenVK, GStreamer, wine-mono, and winetricks
+    archives during `install-macos-wine`.
+  - [x] Define a checksum-validated component source manifest that maps each
+    stack component to its archive URL, version, and checksum.
+  - [x] Install a full stack from a component source manifest and use source
+    manifests for runtime updates when release metadata points at one.
+  - [x] Document the release-time manifest handoff for default runtime stack
+    manifests once full Konyak component archives exist.
+- [x] Use Konyak-owned macOS bottle metadata.
+  - [x] Drop live external plist metadata from the supported spec.
+  - [x] Store macOS bottle records as Konyak `metadata.json`.
+  - [x] Keep run planning backed by the Konyak bottle record model.
+  - [x] Add write/create support for Konyak bottle metadata.
+  - [x] Create the initial `drive_c` directory when creating bottles.
+  - [x] Delete bottles through the CLI and remove their Konyak metadata
+    directories.
+  - [x] Expose Windows version choices in Flutter:
+    XP, 7, 8, 8.1, 10, and 11.
+  - [x] Persist Konyak runtime settings from Flutter Bottle
+    Configuration: Enhanced Sync, AVX advertising, DXVK, DXVK HUD, Metal HUD,
+    Metal Trace, and DXR.
+  - [x] Move Bottle Configuration into a separate Flutter detail screen with
+    Wine, DXVK, and Metal sections plus Control Panel, Registry Editor, and
+    Wine Configuration actions.
+  - [x] Add registry-backed Bottle Configuration fields for Windows Version,
+    Retina Mode, and DPI Scaling.
+- [x] Add macOS setup checks.
+  - [x] Detect whether Konyak-managed macOS Wine is installed.
+  - [x] Detect Rosetta when required by the selected runtime.
+  - [x] Return machine-readable JSON errors for missing prerequisites.
+- [x] Add first macOS bottle utility commands.
+  - [x] Launch Wine configuration through `run-bottle-command`.
+  - [x] Launch Registry Editor through `run-bottle-command`.
+  - [x] Launch Control Panel through `run-bottle-command`.
+  - [x] Open the Konyak C drive and bottle folder through
+    `open-bottle-location`.
+  - [x] Expose the bottle utility menu in Flutter.
+  - [x] Confirm and delete bottles from the Flutter utility menu.
+- [x] Add first Start Menu shortcut support.
+  - [x] Treat `.lnk` files as runnable program inputs.
+  - [x] Expose global and user Start Menu shortcuts through
+    `list-bottle-programs`.
+  - [x] Expose installed program listing in Flutter.
+  - [x] Launch installed programs from the Flutter listing.
+- [x] Add first pinned program support.
+  - [x] Read and write Konyak pinned program metadata.
+  - [x] Expose `pin-program <id> --name <name> --program <path> --json`.
+  - [x] Show pinned programs in Flutter and launch them through `run-program`.
+  - [x] Keep Apple-provided CLI helpers on the macOS system path where
+    applicable, such as `/usr/bin/open`.
+- [x] Add first Wine prefix and PE metadata support.
+  - [x] Initialize bottle prefixes through `wineboot --init` after bottle
+    creation.
+  - [x] Extract PE architecture and version string metadata for listed
+    programs.
+  - [x] Extract PE group icon resources into Konyak's icon cache.
+  - [x] Surface extracted metadata and icons through
+    `list-bottle-programs --json` and the Flutter installed-program dialog.
+- [x] Add Winetricks verb support.
+  - [x] Expose parsed Winetricks verbs through `list-winetricks-verbs`.
+  - [x] Run selected verbs through `run-winetricks`.
+  - [x] Expose a Flutter verb picker from the Konyak bottom bar.
+- [x] Add Konyak app settings.
+  - [x] Load and persist app settings through versioned CLI JSON.
+  - [x] Terminate Wine processes on app close when the setting is enabled.
+  - [x] Check for Konyak and Konyak Wine updates on startup when enabled.
+  - [x] Install available Konyak Wine runtime updates automatically.
+  - [x] Download and apply available Konyak app update artifacts automatically.
+- [x] Keep Linux Wine/Proton behavior separate.
+  - [x] Hide macOS-only runtime controls, including Konyak macOS Wine
+    installation, when the Flutter UI is running on Linux.
+  - [x] Do not expose GPTK, D3DMetal, Metal HUD/capture, or Rosetta controls in
+    Linux defaults.
+  - [x] Keep Linux graphics defaults oriented around DXVK and vkd3d-proton.
+- [x] Add runtime management.
+  - [x] Define the first bootstrap/update metadata exposed through the CLI.
+  - [x] Download and verify runtime archives.
+  - [x] Install runtimes into platform-specific Konyak data directories.
+  - [x] Make updates rollback-safe.
+  - [x] Expose automatic update installation through the Flutter startup path.
+- [x] Complete packaged Konyak app update installation.
+  - [x] Check release metadata through `check-app-update --json`.
+  - [x] Download and apply release artifacts through `install-app-update --json`.
+  - [x] Verify update artifact checksums before install.
+  - [x] Fix the macOS packaged updater handoff format by producing ad-hoc
+    signed, unnotarized zip artifacts with SHA-256 release metadata.
+- [x] Package distribution builds.
+  - [x] Build the CLI executable.
+  - [x] Bundle it with the Flutter app.
+  - [x] Pass the bundled path through `KONYAK_CLI_EXECUTABLE` in packaged
+    builds.
+  - [x] Generate license and third-party notice materials for bundled components.
+- [x] Improve run feedback in the Flutter UI.
+  - [x] Show runner kind and resolved executable in failure details.
+  - [x] Link directly to the latest log when available.
+  - [x] Keep the compact snackbar for short errors.
+- [x] Add process manager UI.
+  - [x] Expose Wine process listing through the CLI.
+  - [x] Show executable icons in the Process Manager when metadata is available.
+  - [x] Kill one Wine process at a time from Flutter.
+
+## Deferred
+
+- Linux ARM64 Windows execution research.
+- Publication of the actual default Konyak runtime stack manifest and public
+  key, once the full component archives are produced.
+- Removal of the bootstrap Wine-only fallback after that runtime stack
+  manifest becomes the default release input.

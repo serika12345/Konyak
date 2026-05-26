@@ -1,0 +1,17 @@
+{
+  "dart.getFlutterSdkCommand": {
+    "executable": "/bin/sh",
+    "args": [
+      "-c",
+      "nix_bin=$(command -v nix 2>/dev/null || true); if [ -z \"$nix_bin\" ] && [ -x /run/current-system/sw/bin/nix ]; then nix_bin=/run/current-system/sw/bin/nix; fi; if [ -z \"$nix_bin\" ] && [ -x /nix/var/nix/profiles/default/bin/nix ]; then nix_bin=/nix/var/nix/profiles/default/bin/nix; fi; if [ -z \"$nix_bin\" ]; then echo 'nix not found; install Nix or open VSCode from a Nix-enabled shell.' >&2; exit 69; fi; export __NIX_DARWIN_SET_ENVIRONMENT_DONE=1; exec \"$nix_bin\" develop -c zsh -lc './scripts/resolve_vscode_flutter_sdk.zsh'"
+    ],
+    "cwd": "."
+  },
+  "dart.flutterHotReloadOnSave": "all",
+  "dart.runPubGetOnPubspecChanges": "always",
+  "files.exclude": {
+    "**/.dart_tool": true,
+    "**/build": true
+  },
+  "cmake.ignoreCMakeListsMissing": true
+}

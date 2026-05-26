@@ -1,0 +1,14 @@
+name: konyak_cli
+description: CLI backend contract for Konyak.
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: ^3.11.4
+
+dependencies:
+  crypto: ^3.0.7
+
+dev_dependencies:
+  lints: ^6.0.0
+  test: ^1.30.0

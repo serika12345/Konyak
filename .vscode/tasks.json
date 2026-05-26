@@ -1,0 +1,80 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Konyak: Prepare Linux Dev Runtime",
+      "type": "shell",
+      "command": "nix develop -c zsh -lc './scripts/prepare_linux_dev_runtime.zsh --print-runtime-path >/dev/null'",
+      "problemMatcher": [],
+      "presentation": {
+        "panel": "dedicated",
+        "reveal": "silent"
+      }
+    },
+    {
+      "label": "Konyak: Prepare Flutter SDK macOS",
+      "type": "shell",
+      "command": "nix develop -c zsh -lc './scripts/prepare_flutter_macos_sdk.zsh --print-sdk-path'",
+      "problemMatcher": [],
+      "presentation": {
+        "panel": "dedicated",
+        "reveal": "silent"
+      }
+    },
+    {
+      "label": "Konyak: Flutter Doctor macOS",
+      "type": "shell",
+      "command": "nix develop -c zsh -lc 'sdk=$(./scripts/prepare_flutter_macos_sdk.zsh --print-sdk-path) && DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer PATH=\"/usr/bin:/bin:/usr/sbin:/sbin:$sdk/bin:$PATH\" xcrun --find xcodebuild && cd apps/konyak && DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer PATH=\"/usr/bin:/bin:/usr/sbin:/sbin:$sdk/bin:$PATH\" \"$sdk/bin/flutter\" doctor -v'",
+      "problemMatcher": []
+    },
+    {
+      "label": "Konyak: Flutter Pub Get",
+      "type": "shell",
+      "command": "nix develop -c zsh -lc 'sdk=$(./scripts/prepare_flutter_macos_sdk.zsh --print-sdk-path) && cd apps/konyak && DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer PATH=\"/usr/bin:/bin:/usr/sbin:/sbin:$sdk/bin:$PATH\" \"$sdk/bin/flutter\" pub get'",
+      "problemMatcher": []
+    },
+    {
+      "label": "Konyak: Flutter Run macOS (Nix Terminal)",
+      "type": "shell",
+      "command": "nix develop -c zsh -lc 'sdk=$(./scripts/prepare_flutter_macos_sdk.zsh --print-sdk-path) && repo=$PWD && cd apps/konyak && FLUTTER_ROOT=\"$sdk\" KONYAK_REPO_ROOT=\"$repo\" KONYAK_DART_EXECUTABLE=\"$sdk/bin/dart\" KONYAK_CLI_SCRIPT=\"$repo/packages/konyak_cli/bin/konyak.dart\" DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer PATH=\"/usr/bin:/bin:/usr/sbin:/sbin:$sdk/bin:$PATH\" \"$sdk/bin/flutter\" run -d macos --dart-define=KONYAK_REPO_ROOT=\"$repo\" --dart-define=KONYAK_DART_EXECUTABLE=\"$sdk/bin/dart\" --dart-define=KONYAK_CLI_SCRIPT=\"$repo/packages/konyak_cli/bin/konyak.dart\"'",
+      "problemMatcher": [],
+      "group": "build",
+      "presentation": {
+        "clear": true,
+        "panel": "dedicated",
+        "reveal": "always"
+      }
+    },
+    {
+      "label": "Konyak: Flutter Run macOS (Agent Watch)",
+      "type": "shell",
+      "command": "nix develop -c zsh -lc 'python3 scripts/flutter_macos_agent_watch.py'",
+      "problemMatcher": [],
+      "group": "build",
+      "presentation": {
+        "clear": true,
+        "panel": "dedicated",
+        "reveal": "always"
+      }
+    },
+    {
+      "label": "Konyak: Flutter Run Linux (.desktop Bundle)",
+      "type": "shell",
+      "command": "nix develop -c zsh -lc 'cd apps/konyak && flutter build linux --debug && bundle_dir=\"$PWD/build/linux/x64/debug/bundle\" && desktop_id=\"app.konyak.Konyak\" && xdg_data_home=\"${XDG_DATA_HOME:-$HOME/.local/share}\" && bundle_desktop_file=\"$bundle_dir/share/applications/$desktop_id.desktop\" && executable=\"$bundle_dir/konyak\" && icon_source=\"$bundle_dir/share/icons/hicolor/256x256/apps/$desktop_id.png\" && desktop_target_dir=\"$xdg_data_home/applications\" && icon_target_dir=\"$xdg_data_home/icons/hicolor/256x256/apps\" && desktop_target_file=\"$desktop_target_dir/$desktop_id.desktop\" && if [ ! -f \"$bundle_desktop_file\" ]; then echo \"desktop file not found: $bundle_desktop_file\" >&2; exit 1; fi && if [ ! -x \"$executable\" ]; then echo \"bundle executable not found: $executable\" >&2; exit 1; fi && if [ ! -f \"$icon_source\" ]; then echo \"bundle icon not found: $icon_source\" >&2; exit 1; fi && mkdir -p \"$desktop_target_dir\" \"$icon_target_dir\" && cp \"$icon_source\" \"$icon_target_dir/$desktop_id.png\" && sed \"s|^Exec=.*$|Exec=$executable|\" \"$bundle_desktop_file\" > \"$desktop_target_file\" && command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database \"$desktop_target_dir\" || true && command -v gtk-update-icon-cache >/dev/null 2>&1 && gtk-update-icon-cache -f -t \"$xdg_data_home/icons/hicolor\" || true && before_pids=(\"${(@f)$(pgrep -f -- \"$executable\" || true)}\") && XDG_DATA_HOME=\"$xdg_data_home\" gtk-launch \"$desktop_id\" && app_pid=\"\" && for _ in {1..50}; do after_pids=(\"${(@f)$(pgrep -f -- \"$executable\" || true)}\") && for pid in \"${after_pids[@]}\"; do if [[ -n \"$pid\" ]] && (( ${before_pids[(Ie)$pid]} == 0 )); then app_pid=\"$pid\"; break; fi; done; if [[ -n \"$app_pid\" ]]; then break; fi; sleep 0.2; done && if [[ -z \"$app_pid\" ]]; then echo \"gtk-launch returned success, but no new Konyak process was detected.\" >&2; exit 1; fi && echo \"Konyak launched via .desktop (pid $app_pid). Synced desktop entry: $desktop_target_file\" && while kill -0 \"$app_pid\" 2>/dev/null; do sleep 1; done'",
+      "problemMatcher": [],
+      "group": "build",
+      "presentation": {
+        "clear": true,
+        "panel": "dedicated",
+        "reveal": "always"
+      }
+    },
+    {
+      "label": "Konyak: Verify",
+      "type": "shell",
+      "command": "nix develop -c zsh -lc 'just verify'",
+      "problemMatcher": [],
+      "group": "test"
+    }
+  ]
+}

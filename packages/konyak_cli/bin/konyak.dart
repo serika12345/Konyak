@@ -1,0 +1,51 @@
+import 'dart:io';
+
+import 'package:konyak_cli/konyak_cli.dart';
+
+void main(List<String> arguments) {
+  final environment = Platform.environment;
+  final runtimeCatalog = KonyakRuntimeCatalog.current();
+  final programRunPlanner = ProgramRunPlanner.current();
+  final appSettingsRepository = defaultAppSettingsRepositoryFromEnvironment(
+    environment,
+  );
+  final appSettings = appSettingsRepository.read();
+  const programRunner = DartIoProgramRunner();
+  final result = runCli(
+    arguments,
+    bottleRepository: defaultBottleRepositoryFromEnvironment(
+      environment,
+      appSettings: appSettings,
+    ),
+    appSettingsRepository: appSettingsRepository,
+    runtimeCatalog: runtimeCatalog,
+    programRunPlanner: programRunPlanner,
+    programRunner: programRunner,
+    bottlePrefixInitializer: DartIoBottlePrefixInitializer(
+      programRunPlanner: programRunPlanner,
+      programRunner: programRunner,
+    ),
+    pathOpener: const DartIoPathOpener(),
+    macosWineInstaller: DartIoMacosWineInstaller.current(),
+    linuxWineInstaller: DartIoLinuxWineInstaller.current(),
+    runtimeUpdateChecker: DartIoRuntimeUpdateChecker(
+      runtimeCatalog: runtimeCatalog,
+    ),
+    appUpdateChecker: DartIoAppUpdateChecker.fromEnvironment(environment),
+    appUpdateInstaller: DartIoAppUpdateInstaller.fromEnvironment(environment),
+    runtimeValidator: DartIoMacosWineRuntimeValidator(
+      runtimeCatalog: runtimeCatalog,
+    ),
+    macosSetupChecker: DartIoMacosSetupChecker.current(runtimeCatalog),
+  );
+
+  if (result.stdout.isNotEmpty) {
+    stdout.writeln(result.stdout);
+  }
+
+  if (result.stderr.isNotEmpty) {
+    stderr.write(result.stderr);
+  }
+
+  exitCode = result.exitCode;
+}

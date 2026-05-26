@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>app.konyak.Konyak</id>
+  <name>Konyak</name>
+  <summary>Manage Wine-based bottles for Windows apps and games.</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <launchable type="desktop-id">app.konyak.Konyak.desktop</launchable>
+  <description>
+    <p>
+      Konyak is a Flutter desktop front end backed by a CLI runtime manager for
+      running Windows software in isolated Wine-based bottles.
+    </p>
+    <p>
+      It manages Konyak-owned runtimes, bottle metadata, pinned programs, and
+      packaged Linux updates from a single desktop shell.
+    </p>
+  </description>
+  <categories>
+    <category>Utility</category>
+  </categories>
+  <url type="homepage">https://github.com/masatokinugawa/Konyak</url>
+  <content_rating type="oars-1.1"/>
+</component>

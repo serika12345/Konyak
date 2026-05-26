@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Konyak is a desktop app for managing Wine and Proton bottles with a clean Flutter UI and a stable CLI backend."
+    />
+    <title>Konyak - Wine and Proton bottle management</title>
+    <link rel="icon" href="assets/konyak.png" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header" aria-label="Site navigation">
+      <a class="brand" href="#top" aria-label="Konyak home">
+        <img src="assets/konyak.png" alt="" width="30" height="30" />
+        <span>Konyak</span>
+      </a>
+      <nav aria-label="Primary navigation">
+        <a href="#features">Features</a>
+        <a href="#platforms">Platforms</a>
+        <a href="#workflow">Workflow</a>
+        <a class="nav-pill" href="https://github.com/serika12345/Konyak" rel="noreferrer">GitHub</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-scene" aria-hidden="true">
+          <img
+            class="app-screenshot"
+            src="assets/konyak-app-screenshot.png"
+            alt=""
+            width="2536"
+            height="1576"
+          />
+        </div>
+
+        <div class="hero-copy">
+          <img class="hero-icon" src="assets/konyak.png" alt="" width="92" height="92" />
+          <p class="eyebrow">Wine and Proton, organized</p>
+          <h1 id="hero-title">Konyak</h1>
+          <p class="hero-lede">
+            A quiet desktop home for Windows apps on arm64 macOS first, with a
+            Flutter interface, versioned bottle metadata, and a stable JSON CLI
+            boundary.
+          </p>
+          <div class="hero-actions" aria-label="Primary actions">
+            <a class="primary-action" href="#download">Get ready for release</a>
+            <a class="secondary-action" href="#features">Explore features</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="intro-band" aria-label="Project highlights">
+        <p>Built for predictable bottle management, runtime updates, and launcher workflows.</p>
+        <div class="stat-strip" aria-label="Konyak highlights">
+          <span>arm64 macOS first</span>
+          <span>x86_64 Linux second</span>
+          <span>Flutter desktop UI</span>
+          <span>JSON CLI contracts</span>
+        </div>
+      </section>
+
+      <section id="features" class="feature-grid section-pad" aria-labelledby="features-title">
+        <div class="section-heading">
+          <p class="eyebrow">Less ceremony</p>
+          <h2 id="features-title">Bottles that feel like an app, not a terminal session.</h2>
+        </div>
+        <article class="feature-tile large">
+          <span class="tile-kicker">Bottles</span>
+          <h3>Create, rename, move, and tune bottles from one surface.</h3>
+          <p>
+            Konyak-owned metadata stays the source of truth, so future imports
+            and platform behavior can be explicit instead of accidental.
+          </p>
+          <div class="mini-list">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </article>
+        <article class="feature-tile">
+          <span class="tile-kicker">Programs</span>
+          <h3>Pin launchers and run installed shortcuts.</h3>
+          <p>Keep common Windows apps close, with icon extraction and per-program settings.</p>
+        </article>
+        <article class="feature-tile">
+          <span class="tile-kicker">Winetricks</span>
+          <h3>Search and run package verbs without leaving Konyak.</h3>
+          <p>Utility workflows stay visible, logged, and routed through the backend.</p>
+        </article>
+      </section>
+
+      <section id="platforms" class="platform-section section-pad" aria-labelledby="platforms-title">
+        <div class="section-heading centered">
+          <p class="eyebrow">Platform aware</p>
+          <h2 id="platforms-title">macOS first. Linux next.</h2>
+          <p>
+            Konyak starts with arm64 macOS runtime support while keeping
+            x86_64 Linux behavior isolated behind platform services.
+          </p>
+        </div>
+        <div class="platform-columns">
+          <article>
+            <h3>macOS</h3>
+            <p>
+              Konyak-managed Wine runtime support for arm64 hosts, with
+              platform-specific settings isolated from Linux.
+            </p>
+          </article>
+          <article>
+            <h3>Linux</h3>
+            <p>
+              Wine and Proton runtimes for x86_64, DXVK for D3D8-D3D11, and
+              vkd3d-proton for D3D12.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section id="workflow" class="workflow section-pad" aria-labelledby="workflow-title">
+        <div class="section-heading">
+          <p class="eyebrow">Designed boundary</p>
+          <h2 id="workflow-title">A native-feeling UI with a backend you can test.</h2>
+        </div>
+        <ol class="workflow-steps">
+          <li>
+            <span>1</span>
+            <h3>Choose a bottle</h3>
+            <p>Keep application state and runtime settings in versioned records.</p>
+          </li>
+          <li>
+            <span>2</span>
+            <h3>Run through the CLI</h3>
+            <p>Flutter consumes schema-stable JSON instead of parsing human output.</p>
+          </li>
+          <li>
+            <span>3</span>
+            <h3>Update with intent</h3>
+            <p>Runtimes are Konyak-managed and updateable per channel where practical.</p>
+          </li>
+        </ol>
+      </section>
+
+      <section id="download" class="download-band" aria-labelledby="download-title">
+        <div>
+          <p class="eyebrow">Open development</p>
+          <h2 id="download-title">Follow the build toward a packaged release.</h2>
+          <p>
+            Konyak is under active development. The repository contains the
+            Flutter app, CLI backend, and project verification workflow.
+          </p>
+        </div>
+        <a class="primary-action dark" href="https://github.com/serika12345/Konyak" rel="noreferrer">View on GitHub</a>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <span>Konyak</span>
+      <span>Wine/Proton bottle management.</span>
+    </footer>
+  </body>
+</html>

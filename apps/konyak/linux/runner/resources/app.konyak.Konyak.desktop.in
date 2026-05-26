@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Konyak
+Comment=Flutter desktop UI for Konyak.
+Exec=@BINARY_NAME@
+Icon=app.konyak.Konyak
+StartupWMClass=app.konyak.Konyak
+Terminal=false
+Categories=Utility;
+StartupNotify=true

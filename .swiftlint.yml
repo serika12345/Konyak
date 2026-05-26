@@ -1,0 +1,23 @@
+opt_in_rules:
+  - force_unwrapping
+  - file_header
+
+excluded:
+  - .build
+  - .dart_tool
+  - apps/konyak/.dart_tool
+  - apps/konyak/build
+  - apps/konyak/macos/Flutter
+  - apps/konyak/macos/Runner/AppDelegate.swift
+  - apps/konyak/macos/RunnerTests
+
+file_header:
+    severity: error
+    required_pattern: |
+                      \/\/  .*?\.swift
+                      \/\/  .*?
+                      \/\/
+                      \/\/  This file is part of Konyak\.
+                      \/\/
+                      \/\/  SPDX-License-Identifier: MIT
+                      \/\/

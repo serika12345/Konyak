@@ -1,0 +1,49 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Konyak Flutter (Linux)",
+      "type": "dart",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/apps/konyak",
+      "program": "lib/main.dart",
+      "deviceId": "linux",
+      "flutterMode": "debug",
+      "toolArgs": [
+        "--dart-define=KONYAK_REPO_ROOT=${workspaceFolder}",
+        "--dart-define=KONYAK_DART_EXECUTABLE=dart",
+        "--dart-define=KONYAK_CLI_SCRIPT=${workspaceFolder}/packages/konyak_cli/bin/konyak.dart"
+      ],
+      "preLaunchTask": "Konyak: Prepare Linux Dev Runtime",
+      "env": {
+        "KONYAK_REPO_ROOT": "${workspaceFolder}",
+        "KONYAK_DART_EXECUTABLE": "dart",
+        "KONYAK_CLI_SCRIPT": "${workspaceFolder}/packages/konyak_cli/bin/konyak.dart",
+        "KONYAK_LINUX_WINE_HOME": "${workspaceFolder}/.dart_tool/konyak/dev-runtime/linux-wine"
+      }
+    },
+    {
+      "name": "Konyak Flutter (macOS)",
+      "type": "dart",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/apps/konyak",
+      "program": "lib/main.dart",
+      "deviceId": "macos",
+      "flutterMode": "debug",
+      "toolArgs": [
+        "--dart-define=KONYAK_REPO_ROOT=${workspaceFolder}",
+        "--dart-define=KONYAK_DART_EXECUTABLE=${workspaceFolder}/.dart_tool/konyak/flutter-sdk/bin/dart",
+        "--dart-define=KONYAK_CLI_SCRIPT=${workspaceFolder}/packages/konyak_cli/bin/konyak.dart"
+      ],
+      "preLaunchTask": "Konyak: Prepare Flutter SDK macOS",
+      "env": {
+        "FLUTTER_ROOT": "${workspaceFolder}/.dart_tool/konyak/flutter-sdk",
+        "KONYAK_REPO_ROOT": "${workspaceFolder}",
+        "KONYAK_DART_EXECUTABLE": "${workspaceFolder}/.dart_tool/konyak/flutter-sdk/bin/dart",
+        "KONYAK_CLI_SCRIPT": "${workspaceFolder}/packages/konyak_cli/bin/konyak.dart",
+        "DEVELOPER_DIR": "/Applications/Xcode.app/Contents/Developer",
+        "PATH": "${workspaceFolder}/.dart_tool/konyak/vscode-bin:/usr/bin:/bin:/usr/sbin:/sbin:${workspaceFolder}/.dart_tool/konyak/flutter-sdk/bin:${env:PATH}"
+      }
+    }
+  ]
+}
