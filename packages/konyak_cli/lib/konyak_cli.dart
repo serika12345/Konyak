@@ -9,6 +9,7 @@ const cliSchemaVersion = 1;
 const runtimeStackSchemaVersion = 1;
 const konyakAppId = 'konyak';
 const konyakAppVersion = '1.0.0';
+const konyakMacosBundleIdentifier = 'app.konyak.Konyak';
 const konyakAppVersionUrl =
     'https://api.github.com/repos/serika12345/Konyak/releases/latest';
 const runtimeStackManifestFileName = '.konyak-runtime-stack.json';
@@ -1577,6 +1578,31 @@ class ProgramRenameRequest {
   final String bottleId;
   final String programPath;
   final String name;
+}
+
+class _PinnedProgramLauncherManifest {
+  const _PinnedProgramLauncherManifest({
+    required this.launcherId,
+    required this.bottleId,
+    required this.programPath,
+    required this.programName,
+  });
+
+  final String launcherId;
+  final String bottleId;
+  final String programPath;
+  final String programName;
+
+  Map<String, Object?> toJson() {
+    return <String, Object?>{
+      'schemaVersion': cliSchemaVersion,
+      'createdBy': konyakMacosBundleIdentifier,
+      'launcherId': launcherId,
+      'bottleId': bottleId,
+      'programPath': programPath,
+      'programName': programName,
+    };
+  }
 }
 
 class WineProcessTerminationRequest {
@@ -5664,6 +5690,97 @@ CliResult _programUpdateJsonResult(ProgramUpdateResult result) {
   };
 }
 
+CliResult _runPinnedProgramLauncherCli({
+  required _PinnedProgramLaunchCliRequest request,
+  required BottleRepository? bottleRepository,
+  required ProgramRunPlanner programRunPlanner,
+  required ProgramRunner? programRunner,
+}) {
+  final launcherManifest = _readPinnedProgramLauncherManifest(
+    request.manifestPath,
+  );
+  if (launcherManifest == null) {
+    return _jsonError(
+      exitCode: 65,
+      code: 'invalidPinnedProgramLauncher',
+      message: 'Pinned program launcher manifest is invalid.',
+      extra: <String, Object?>{'manifestPath': request.manifestPath},
+    );
+  }
+
+  if (bottleRepository == null) {
+    return _jsonError(
+      exitCode: 74,
+      code: 'bottleRepositoryUnavailable',
+      message: 'Bottle repository is not configured.',
+    );
+  }
+
+  if (programRunner == null) {
+    return _jsonError(
+      exitCode: 74,
+      code: 'programRunnerUnavailable',
+      message: 'Program runner is not configured.',
+    );
+  }
+
+  final bottle = bottleRepository.findBottle(launcherManifest.bottleId);
+  if (bottle == null) {
+    return _bottleNotFoundError(launcherManifest.bottleId);
+  }
+
+  final expectedLauncherId = _pinnedProgramLauncherId(
+    bottleId: launcherManifest.bottleId,
+    programPath: launcherManifest.programPath,
+  );
+  if (launcherManifest.launcherId != expectedLauncherId ||
+      !_hasPinnedProgram(bottle, launcherManifest.programPath)) {
+    return _jsonError(
+      exitCode: 66,
+      code: 'programNotPinned',
+      message: 'Program is not pinned.',
+      extra: <String, Object?>{'programPath': launcherManifest.programPath},
+    );
+  }
+
+  final settingsResult = bottleRepository.readProgramSettings(
+    ProgramSettingsRequest(
+      bottleId: bottle.id,
+      programPath: launcherManifest.programPath,
+    ),
+  );
+  final programSettings = switch (settingsResult) {
+    ProgramSettingsRead(:final settings) => settings,
+    ProgramSettingsReadMissingBottle() => const ProgramSettingsRecord(),
+  };
+  final programRunRequest = programRunPlanner.plan(
+    bottle: bottle,
+    programPath: launcherManifest.programPath,
+    programSettings: programSettings,
+  );
+  if (programRunRequest == null) {
+    return _jsonError(
+      exitCode: 65,
+      code: 'unsupportedProgramType',
+      message: 'Program type is not supported.',
+      extra: <String, Object?>{'programPath': launcherManifest.programPath},
+    );
+  }
+
+  final runResult = programRunner.run(programRunRequest);
+
+  return switch (runResult) {
+    ProgramRunCompleted(:final processExitCode) => _programRunJsonResult(
+      request: programRunRequest,
+      processExitCode: processExitCode,
+    ),
+    ProgramRunFailed(:final message) => _programRunFailedJsonResult(
+      request: programRunRequest,
+      message: message,
+    ),
+  };
+}
+
 CliResult _bottleArchiveExportJsonResult(BottleArchiveExportResult result) {
   return switch (result) {
     BottleArchiveExported(:final archive) => CliResult(
@@ -6753,6 +6870,13 @@ CliResult _runCli(
     }
 
     final pinResult = bottleRepository.pinProgram(programPinRequest);
+    if (pinResult is ProgramPinned) {
+      _synchronizeMacosPinnedProgramLaunchers(
+        hostPlatform: programRunPlanner.hostPlatform,
+        environment: programRunPlanner.environment,
+        bottles: bottleRepository.listBottles(),
+      );
+    }
 
     return switch (pinResult) {
       ProgramPinned(:final bottle) => CliResult(
@@ -6784,6 +6908,13 @@ CliResult _runCli(
     }
 
     final updateResult = bottleRepository.unpinProgram(programUnpinRequest);
+    if (updateResult is ProgramUpdated) {
+      _synchronizeMacosPinnedProgramLaunchers(
+        hostPlatform: programRunPlanner.hostPlatform,
+        environment: programRunPlanner.environment,
+        bottles: bottleRepository.listBottles(),
+      );
+    }
 
     return _programUpdateJsonResult(updateResult);
   }
@@ -6801,6 +6932,13 @@ CliResult _runCli(
     final updateResult = bottleRepository.renamePinnedProgram(
       programRenameRequest,
     );
+    if (updateResult is ProgramUpdated) {
+      _synchronizeMacosPinnedProgramLaunchers(
+        hostPlatform: programRunPlanner.hostPlatform,
+        environment: programRunPlanner.environment,
+        bottles: bottleRepository.listBottles(),
+      );
+    }
 
     return _programUpdateJsonResult(updateResult);
   }
@@ -6844,6 +6982,18 @@ CliResult _runCli(
     return _programSettingsUpdateJsonResult(
       request: programSettingsUpdateRequest,
       result: updateResult,
+    );
+  }
+
+  final pinnedProgramLaunchCliRequest = _parseJsonPinnedProgramLaunchCliRequest(
+    arguments,
+  );
+  if (pinnedProgramLaunchCliRequest != null) {
+    return _runPinnedProgramLauncherCli(
+      request: pinnedProgramLaunchCliRequest,
+      bottleRepository: bottleRepository,
+      programRunPlanner: programRunPlanner,
+      programRunner: programRunner,
     );
   }
 
@@ -7391,6 +7541,7 @@ Usage:
   konyak rename-pinned-program <id> --program <path> --name <name> --json
   konyak get-program-settings <id> --program <path> --json
   konyak set-program-settings <id> --program <path> --settings-json <json> --json
+  konyak launch-pinned-program --manifest <path> --json
   konyak run-program <id> --program <path> --json
   konyak run-winetricks <id> --verb <verb> --json
   konyak run-bottle-command <id> --command <winecfg|regedit|control|terminal|winetricks> --json
@@ -8008,6 +8159,30 @@ _ProgramRunCliRequest? _parseJsonProgramRunCliRequest(List<String> arguments) {
   }
 
   return _ProgramRunCliRequest(bottleId: bottleId, programPath: programPath);
+}
+
+class _PinnedProgramLaunchCliRequest {
+  const _PinnedProgramLaunchCliRequest({required this.manifestPath});
+
+  final String manifestPath;
+}
+
+_PinnedProgramLaunchCliRequest? _parseJsonPinnedProgramLaunchCliRequest(
+  List<String> arguments,
+) {
+  if (arguments.length != 4 ||
+      arguments.first != 'launch-pinned-program' ||
+      arguments[1] != '--manifest' ||
+      arguments.last != '--json') {
+    return null;
+  }
+
+  final manifestPath = arguments[2].trim();
+  if (manifestPath.isEmpty) {
+    return null;
+  }
+
+  return _PinnedProgramLaunchCliRequest(manifestPath: manifestPath);
 }
 
 class _WinetricksRunCliRequest {
@@ -11780,6 +11955,508 @@ void _synchronizeLinuxDesktopLauncherForProgramRun({
   } on StateError {
     return;
   }
+}
+
+const _macosPinnedLauncherManifestFileName = 'konyak-launcher.json';
+const _macosPinnedLauncherExecutableName = 'konyak-launcher';
+
+void _synchronizeMacosPinnedProgramLaunchers({
+  required KonyakHostPlatform hostPlatform,
+  required Map<String, String> environment,
+  required List<BottleRecord> bottles,
+}) {
+  if (hostPlatform != KonyakHostPlatform.macos) {
+    return;
+  }
+
+  final launcherHome = _macosPinnedProgramLaunchersHome(environment);
+  final cliExecutable = _macosPinnedProgramLauncherCliExecutable(environment);
+  if (launcherHome == null || cliExecutable == null) {
+    return;
+  }
+
+  try {
+    final desiredLauncherIds = <String>{};
+    final desiredLauncherPaths = <String, String>{};
+    final usedDisplayNames = <String>{};
+    final usedBundleNames = _unmanagedMacosLauncherBundleNames(launcherHome);
+    for (final bottle in bottles) {
+      for (final program in bottle.pinnedPrograms) {
+        final launcherId = _pinnedProgramLauncherId(
+          bottleId: bottle.id,
+          programPath: program.path,
+        );
+        final displayName = _uniqueMacosLauncherDisplayName(
+          program.name,
+          usedDisplayNames: usedDisplayNames,
+          usedBundleNames: usedBundleNames,
+        );
+        final bundlePath = _joinPath(launcherHome, [
+          _macosLauncherBundleName(displayName),
+        ]);
+        desiredLauncherIds.add(launcherId);
+        desiredLauncherPaths[launcherId] = _normalizeFilesystemPath(bundlePath);
+        _writeMacosPinnedProgramLauncher(
+          bundlePath: bundlePath,
+          cliExecutable: cliExecutable,
+          displayName: displayName,
+          iconPath: program.iconPath,
+          manifest: _PinnedProgramLauncherManifest(
+            launcherId: launcherId,
+            bottleId: bottle.id,
+            programPath: program.path,
+            programName: program.name,
+          ),
+        );
+      }
+    }
+
+    _deleteStaleMacosPinnedProgramLaunchers(
+      launcherHome: launcherHome,
+      desiredLauncherIds: desiredLauncherIds,
+      desiredLauncherPaths: desiredLauncherPaths,
+    );
+  } on FileSystemException {
+    return;
+  } on ProcessException {
+    return;
+  }
+}
+
+String? _macosPinnedProgramLaunchersHome(Map<String, String> environment) {
+  final override = environment['KONYAK_MACOS_PINNED_LAUNCHERS_HOME'];
+  if (override != null && override.trim().isNotEmpty) {
+    return override.trim();
+  }
+
+  final home = environment['HOME'];
+  if (home == null || home.trim().isEmpty) {
+    return null;
+  }
+
+  return _joinPath(home.trim(), const ['Applications', 'Konyak']);
+}
+
+String? _macosPinnedProgramLauncherCliExecutable(
+  Map<String, String> environment,
+) {
+  final override = environment['KONYAK_PINNED_PROGRAM_LAUNCHER_CLI'];
+  if (override != null && override.trim().isNotEmpty) {
+    return override.trim();
+  }
+
+  final bundlePath = _macosAppBundlePath(environment);
+  if (bundlePath == null) {
+    return null;
+  }
+
+  final cliExecutable = _joinPath(bundlePath, const [
+    'Contents',
+    'Resources',
+    'konyak-cli',
+  ]);
+  if (!File(cliExecutable).existsSync()) {
+    return null;
+  }
+
+  return cliExecutable;
+}
+
+String _pinnedProgramLauncherId({
+  required String bottleId,
+  required String programPath,
+}) {
+  return sha256
+      .convert(
+        utf8.encode('$bottleId\u0000${_normalizeFilesystemPath(programPath)}'),
+      )
+      .toString()
+      .substring(0, 16);
+}
+
+void _writeMacosPinnedProgramLauncher({
+  required String bundlePath,
+  required String cliExecutable,
+  required String displayName,
+  required String? iconPath,
+  required _PinnedProgramLauncherManifest manifest,
+}) {
+  final contentsPath = _joinPath(bundlePath, const ['Contents']);
+  final macosPath = _joinPath(contentsPath, const ['MacOS']);
+  final resourcesPath = _joinPath(contentsPath, const ['Resources']);
+  final executablePath = _joinPath(macosPath, const [
+    _macosPinnedLauncherExecutableName,
+  ]);
+  final manifestPath = _joinPath(resourcesPath, const [
+    _macosPinnedLauncherManifestFileName,
+  ]);
+
+  Directory(macosPath).createSync(recursive: true);
+  Directory(resourcesPath).createSync(recursive: true);
+  final iconFileName = _writeMacosPinnedProgramLauncherIcon(
+    resourcesPath: resourcesPath,
+    iconPath: iconPath,
+  );
+  File(_joinPath(contentsPath, const ['Info.plist'])).writeAsStringSync(
+    _macosPinnedProgramInfoPlist(
+      manifest: manifest,
+      displayName: displayName,
+      iconFileName: iconFileName,
+    ),
+  );
+  File(manifestPath).writeAsStringSync(jsonEncode(manifest.toJson()));
+  File(
+    executablePath,
+  ).writeAsStringSync(_macosPinnedProgramLauncherScript(cliExecutable));
+  final executableChmodResult = Process.runSync('chmod', <String>[
+    '755',
+    executablePath,
+  ], runInShell: false);
+  if (executableChmodResult.exitCode != 0) {
+    throw FileSystemException(
+      'Unable to mark launcher executable.',
+      executablePath,
+    );
+  }
+}
+
+String _macosPinnedProgramInfoPlist({
+  required _PinnedProgramLauncherManifest manifest,
+  required String displayName,
+  required String? iconFileName,
+}) {
+  final bundleIdentifier =
+      '$konyakMacosBundleIdentifier.pinned.${manifest.launcherId}';
+  final iconPlistEntry = iconFileName == null
+      ? ''
+      : '''
+  <key>CFBundleIconFile</key>
+  <string>${_xmlEscape(iconFileName)}</string>
+''';
+
+  return '''
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleDevelopmentRegion</key>
+  <string>en</string>
+  <key>CFBundleDisplayName</key>
+  <string>${_xmlEscape(displayName)}</string>
+  <key>CFBundleExecutable</key>
+  <string>$_macosPinnedLauncherExecutableName</string>
+$iconPlistEntry
+  <key>CFBundleIdentifier</key>
+  <string>${_xmlEscape(bundleIdentifier)}</string>
+  <key>CFBundleInfoDictionaryVersion</key>
+  <string>6.0</string>
+  <key>CFBundleName</key>
+  <string>${_xmlEscape(displayName)}</string>
+  <key>CFBundlePackageType</key>
+  <string>APPL</string>
+  <key>CFBundleShortVersionString</key>
+  <string>$konyakAppVersion</string>
+  <key>CFBundleVersion</key>
+  <string>1</string>
+</dict>
+</plist>
+''';
+}
+
+String _macosLauncherDisplayName(String name) {
+  final normalized = name.trim();
+  return normalized.isEmpty ? 'Konyak Program' : normalized;
+}
+
+String _uniqueMacosLauncherDisplayName(
+  String name, {
+  required Set<String> usedDisplayNames,
+  required Set<String> usedBundleNames,
+}) {
+  final baseName = _macosLauncherDisplayName(name);
+  var index = 1;
+
+  while (true) {
+    final displayName = index == 1 ? baseName : '$baseName ($index)';
+    final displayKey = displayName.toLowerCase();
+    final bundleName = _macosLauncherBundleName(displayName);
+    final bundleKey = bundleName.toLowerCase();
+    if (!usedDisplayNames.contains(displayKey) &&
+        !usedBundleNames.contains(bundleKey)) {
+      usedDisplayNames.add(displayKey);
+      usedBundleNames.add(bundleKey);
+      return displayName;
+    }
+
+    index += 1;
+  }
+}
+
+String _macosLauncherBundleName(String displayName) {
+  return '${_macosLauncherBundleBaseName(displayName)}.app';
+}
+
+String _macosLauncherBundleBaseName(String displayName) {
+  final safeName = displayName
+      .replaceAll(RegExp(r'[/\\:]'), '-')
+      .replaceAll(RegExp(r'[\u0000-\u001f]'), '')
+      .trim();
+  return safeName.isEmpty ? 'Konyak Program' : safeName;
+}
+
+String _macosPinnedProgramLauncherScript(String cliExecutable) {
+  return '''
+#!/bin/sh
+set -eu
+manifest_dir=\$(CDPATH= cd -- "\$(dirname -- "\$0")/../Resources" && pwd -P)
+manifest="\$manifest_dir/$_macosPinnedLauncherManifestFileName"
+exec ${_posixShellSingleQuote(cliExecutable)} launch-pinned-program --manifest "\$manifest" --json
+''';
+}
+
+void _deleteStaleMacosPinnedProgramLaunchers({
+  required String launcherHome,
+  required Set<String> desiredLauncherIds,
+  required Map<String, String> desiredLauncherPaths,
+}) {
+  final launcherDirectory = Directory(launcherHome);
+  if (!launcherDirectory.existsSync()) {
+    return;
+  }
+
+  for (final entity in launcherDirectory.listSync(followLinks: false)) {
+    if (entity is! Directory || !entity.path.endsWith('.app')) {
+      continue;
+    }
+
+    final manifest = _readPinnedProgramLauncherManifest(
+      _joinPath(entity.path, const [
+        'Contents',
+        'Resources',
+        _macosPinnedLauncherManifestFileName,
+      ]),
+    );
+    final desiredPath = manifest == null
+        ? null
+        : desiredLauncherPaths[manifest.launcherId];
+    if (manifest == null ||
+        (desiredLauncherIds.contains(manifest.launcherId) &&
+            desiredPath == _normalizeFilesystemPath(entity.path))) {
+      continue;
+    }
+
+    entity.deleteSync(recursive: true);
+  }
+}
+
+Set<String> _unmanagedMacosLauncherBundleNames(String launcherHome) {
+  final launcherDirectory = Directory(launcherHome);
+  if (!launcherDirectory.existsSync()) {
+    return <String>{};
+  }
+
+  final bundleNames = <String>{};
+  for (final entity in launcherDirectory.listSync(followLinks: false)) {
+    if (entity is! Directory || !entity.path.endsWith('.app')) {
+      continue;
+    }
+
+    final manifest = _readPinnedProgramLauncherManifest(
+      _joinPath(entity.path, const [
+        'Contents',
+        'Resources',
+        _macosPinnedLauncherManifestFileName,
+      ]),
+    );
+    if (manifest == null) {
+      bundleNames.add(_baseName(entity.path).toLowerCase());
+    }
+  }
+
+  return bundleNames;
+}
+
+const _macosPinnedLauncherIconFileName = 'KonyakPinnedProgram.icns';
+
+String? _writeMacosPinnedProgramLauncherIcon({
+  required String resourcesPath,
+  required String? iconPath,
+}) {
+  final sourcePath = iconPath?.trim();
+  if (sourcePath == null || sourcePath.isEmpty) {
+    return null;
+  }
+
+  final source = File(sourcePath);
+  if (!source.existsSync()) {
+    return null;
+  }
+
+  if (sourcePath.toLowerCase().endsWith('.icns')) {
+    source.copySync(
+      _joinPath(resourcesPath, const [_macosPinnedLauncherIconFileName]),
+    );
+    return _macosPinnedLauncherIconFileName;
+  }
+
+  final convertedIcon = _convertMacosLauncherIconToIcns(
+    sourcePath: sourcePath,
+    resourcesPath: resourcesPath,
+  );
+  if (convertedIcon != null) {
+    return convertedIcon;
+  }
+
+  final fallbackFileName = _macosPinnedLauncherFallbackIconFileName(sourcePath);
+  source.copySync(_joinPath(resourcesPath, [fallbackFileName]));
+  return fallbackFileName;
+}
+
+String? _convertMacosLauncherIconToIcns({
+  required String sourcePath,
+  required String resourcesPath,
+}) {
+  final workDirectory = Directory(
+    _joinPath(resourcesPath, const ['KonyakPinnedProgramIconWork']),
+  );
+  final iconset = Directory(
+    _joinPath(workDirectory.path, const ['KonyakPinnedProgram.iconset']),
+  );
+  final sourcePngPath = _joinPath(workDirectory.path, const ['source.png']);
+  final icnsPath = _joinPath(resourcesPath, const [
+    _macosPinnedLauncherIconFileName,
+  ]);
+
+  try {
+    if (workDirectory.existsSync()) {
+      workDirectory.deleteSync(recursive: true);
+    }
+    iconset.createSync(recursive: true);
+
+    final convertResult = Process.runSync('sips', <String>[
+      '-s',
+      'format',
+      'png',
+      sourcePath,
+      '--out',
+      sourcePngPath,
+    ], runInShell: false);
+    if (convertResult.exitCode != 0 || !File(sourcePngPath).existsSync()) {
+      return null;
+    }
+
+    for (final size in const <int>[16, 32, 128, 256, 512]) {
+      final resized = _joinPath(iconset.path, ['icon_${size}x$size.png']);
+      final resized2x = _joinPath(iconset.path, ['icon_${size}x$size@2x.png']);
+      final resizeResult = Process.runSync('sips', <String>[
+        '-z',
+        '$size',
+        '$size',
+        sourcePngPath,
+        '--out',
+        resized,
+      ], runInShell: false);
+      final resize2xResult = Process.runSync('sips', <String>[
+        '-z',
+        '${size * 2}',
+        '${size * 2}',
+        sourcePngPath,
+        '--out',
+        resized2x,
+      ], runInShell: false);
+      if (resizeResult.exitCode != 0 || resize2xResult.exitCode != 0) {
+        return null;
+      }
+    }
+
+    final iconutilResult = Process.runSync('iconutil', <String>[
+      '-c',
+      'icns',
+      iconset.path,
+      '-o',
+      icnsPath,
+    ], runInShell: false);
+    if (iconutilResult.exitCode != 0 || !File(icnsPath).existsSync()) {
+      return null;
+    }
+
+    return _macosPinnedLauncherIconFileName;
+  } on FileSystemException {
+    return null;
+  } on ProcessException {
+    return null;
+  } finally {
+    if (workDirectory.existsSync()) {
+      workDirectory.deleteSync(recursive: true);
+    }
+  }
+}
+
+String _macosPinnedLauncherFallbackIconFileName(String sourcePath) {
+  final baseName = _baseName(sourcePath);
+  final extensionStart = baseName.lastIndexOf('.');
+  final extension = extensionStart == -1
+      ? ''
+      : baseName.substring(extensionStart).toLowerCase();
+  if (extension.isEmpty || !RegExp(r'^\.[a-z0-9]+$').hasMatch(extension)) {
+    return 'KonyakPinnedProgramIcon';
+  }
+
+  return 'KonyakPinnedProgram$extension';
+}
+
+_PinnedProgramLauncherManifest? _readPinnedProgramLauncherManifest(
+  String manifestPath,
+) {
+  try {
+    final decoded = jsonDecode(File(manifestPath).readAsStringSync());
+    if (decoded is! Map<String, dynamic>) {
+      return null;
+    }
+
+    final schemaVersion = decoded['schemaVersion'];
+    final createdBy = decoded['createdBy'];
+    final launcherId = decoded['launcherId'];
+    final bottleId = decoded['bottleId'];
+    final programPath = decoded['programPath'];
+    final programName = decoded['programName'];
+    if (schemaVersion != cliSchemaVersion ||
+        createdBy != konyakMacosBundleIdentifier ||
+        launcherId is! String ||
+        launcherId.trim().isEmpty ||
+        bottleId is! String ||
+        bottleId.trim().isEmpty ||
+        programPath is! String ||
+        programPath.trim().isEmpty ||
+        programName is! String ||
+        programName.trim().isEmpty) {
+      return null;
+    }
+
+    return _PinnedProgramLauncherManifest(
+      launcherId: launcherId,
+      bottleId: bottleId,
+      programPath: programPath,
+      programName: programName,
+    );
+  } on FileSystemException {
+    return null;
+  } on FormatException {
+    return null;
+  }
+}
+
+String _xmlEscape(String value) {
+  return value
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&apos;');
+}
+
+String _posixShellSingleQuote(String value) {
+  return "'${value.replaceAll("'", "'\\''")}'";
 }
 
 void _recordExternalProgramLaunch({

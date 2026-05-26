@@ -1271,6 +1271,331 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
     );
   });
 
+  test('pin-program --json on macOS writes a Launchpad app launcher', () {
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-macos-pinned-launcher-test-',
+    );
+    addTearDown(() {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    });
+    final appBundle = _createTestMacosAppBundle(tempDirectory.path);
+    final iconPath = _joinTestPath(tempDirectory.path, const [
+      'steam-icon.icns',
+    ]);
+    File(iconPath).writeAsBytesSync(const <int>[0, 1, 2, 3]);
+    final repository = MemoryBottleRepository(
+      dataHome: _joinTestPath(tempDirectory.path, const ['data']),
+      programMetadataExtractor: FixedProgramMetadataExtractor(
+        programPath: '/downloads/Steam.exe',
+        metadata: ProgramMetadataRecord(iconPath: iconPath),
+      ),
+    );
+    runCli(const [
+      'create-bottle',
+      '--name',
+      'Steam',
+      '--json',
+    ], bottleRepository: repository);
+
+    final result = runCli(
+      const [
+        'pin-program',
+        'steam',
+        '--name',
+        'Steam',
+        '--program',
+        '/downloads/Steam.exe',
+        '--json',
+      ],
+      bottleRepository: repository,
+      programRunPlanner: ProgramRunPlanner(
+        hostPlatform: KonyakHostPlatform.macos,
+        environment: {
+          'HOME': tempDirectory.path,
+          'KONYAK_APP_EXECUTABLE': _joinTestPath(appBundle.path, const [
+            'Contents',
+            'MacOS',
+            'Konyak',
+          ]),
+        },
+      ),
+    );
+
+    expect(result.exitCode, 0);
+
+    final launcherBundle = _singleGeneratedMacosLauncher(tempDirectory.path);
+    expect(launcherBundle.path, endsWith('/Steam.app'));
+
+    final infoPlist = File(
+      _joinTestPath(launcherBundle.path, const ['Contents', 'Info.plist']),
+    ).readAsStringSync();
+    expect(infoPlist, contains('<string>app.konyak.Konyak.pinned.'));
+    expect(infoPlist, contains('<key>CFBundleDisplayName</key>'));
+    expect(infoPlist, contains('<string>Steam</string>'));
+    expect(infoPlist, contains('<key>CFBundleIconFile</key>'));
+    expect(infoPlist, contains('<string>KonyakPinnedProgram.icns</string>'));
+    expect(infoPlist, contains('<string>konyak-launcher</string>'));
+    expect(
+      File(
+        _joinTestPath(launcherBundle.path, const [
+          'Contents',
+          'Resources',
+          'KonyakPinnedProgram.icns',
+        ]),
+      ).readAsBytesSync(),
+      const <int>[0, 1, 2, 3],
+    );
+
+    final manifest =
+        jsonDecode(
+              File(
+                _joinTestPath(launcherBundle.path, const [
+                  'Contents',
+                  'Resources',
+                  'konyak-launcher.json',
+                ]),
+              ).readAsStringSync(),
+            )
+            as Map<String, Object?>;
+    expect(manifest['schemaVersion'], 1);
+    expect(manifest['createdBy'], 'app.konyak.Konyak');
+    expect(manifest['bottleId'], 'steam');
+    expect(manifest['programName'], 'Steam');
+    expect(manifest['programPath'], '/downloads/Steam.exe');
+    expect(manifest['launcherId'], isA<String>());
+
+    final launcherExecutable = File(
+      _joinTestPath(launcherBundle.path, const [
+        'Contents',
+        'MacOS',
+        'konyak-launcher',
+      ]),
+    );
+    final launcherScript = launcherExecutable.readAsStringSync();
+    expect(
+      launcherScript,
+      contains(
+        _joinTestPath(appBundle.path, const [
+          'Contents',
+          'Resources',
+          'konyak-cli',
+        ]),
+      ),
+    );
+    expect(launcherScript, contains('launch-pinned-program'));
+    expect(launcherScript, contains(r'--manifest "$manifest" --json'));
+    expect(launcherExecutable.statSync().mode & 0x40, isNonZero);
+  });
+
+  test('pin-program --json on macOS disambiguates duplicate app names', () {
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-macos-pinned-duplicate-launcher-test-',
+    );
+    addTearDown(() {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    });
+    final appBundle = _createTestMacosAppBundle(tempDirectory.path);
+    final repository = MemoryBottleRepository(
+      dataHome: _joinTestPath(tempDirectory.path, const ['data']),
+    );
+    runCli(const [
+      'create-bottle',
+      '--name',
+      'Steam',
+      '--json',
+    ], bottleRepository: repository);
+    runCli(const [
+      'create-bottle',
+      '--name',
+      'Tools',
+      '--json',
+    ], bottleRepository: repository);
+    final planner = ProgramRunPlanner(
+      hostPlatform: KonyakHostPlatform.macos,
+      environment: {
+        'HOME': tempDirectory.path,
+        'KONYAK_APP_EXECUTABLE': _joinTestPath(appBundle.path, const [
+          'Contents',
+          'MacOS',
+          'Konyak',
+        ]),
+      },
+    );
+
+    runCli(
+      const [
+        'pin-program',
+        'steam',
+        '--name',
+        'Steam',
+        '--program',
+        '/downloads/Steam.exe',
+        '--json',
+      ],
+      bottleRepository: repository,
+      programRunPlanner: planner,
+    );
+    runCli(
+      const [
+        'pin-program',
+        'tools',
+        '--name',
+        'Steam',
+        '--program',
+        '/downloads/ToolsSteam.exe',
+        '--json',
+      ],
+      bottleRepository: repository,
+      programRunPlanner: planner,
+    );
+
+    final launcherNames = _generatedMacosLaunchers(
+      tempDirectory.path,
+    ).map((directory) => directory.path.split('/').last).toList();
+    expect(launcherNames, const ['Steam (2).app', 'Steam.app']);
+    final duplicateInfoPlist = File(
+      _joinTestPath(
+        _generatedMacosLaunchers(tempDirectory.path).first.path,
+        const ['Contents', 'Info.plist'],
+      ),
+    ).readAsStringSync();
+    expect(duplicateInfoPlist, contains('<string>Steam (2)</string>'));
+  });
+
+  test('unpin-program --json on macOS removes the Launchpad app launcher', () {
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-macos-pinned-unpin-launcher-test-',
+    );
+    addTearDown(() {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    });
+    final appBundle = _createTestMacosAppBundle(tempDirectory.path);
+    final repository = MemoryBottleRepository(
+      dataHome: _joinTestPath(tempDirectory.path, const ['data']),
+    );
+    runCli(const [
+      'create-bottle',
+      '--name',
+      'Steam',
+      '--json',
+    ], bottleRepository: repository);
+    final planner = ProgramRunPlanner(
+      hostPlatform: KonyakHostPlatform.macos,
+      environment: {
+        'HOME': tempDirectory.path,
+        'KONYAK_APP_EXECUTABLE': _joinTestPath(appBundle.path, const [
+          'Contents',
+          'MacOS',
+          'Konyak',
+        ]),
+      },
+    );
+    runCli(
+      const [
+        'pin-program',
+        'steam',
+        '--name',
+        'Steam',
+        '--program',
+        '/downloads/Steam.exe',
+        '--json',
+      ],
+      bottleRepository: repository,
+      programRunPlanner: planner,
+    );
+
+    expect(_generatedMacosLaunchers(tempDirectory.path), hasLength(1));
+
+    final result = runCli(
+      const [
+        'unpin-program',
+        'steam',
+        '--program',
+        '/downloads/Steam.exe',
+        '--json',
+      ],
+      bottleRepository: repository,
+      programRunPlanner: planner,
+    );
+
+    expect(result.exitCode, 0);
+    expect(_generatedMacosLaunchers(tempDirectory.path), isEmpty);
+  });
+
+  test('launch-pinned-program --json runs the pinned program manifest', () {
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-macos-pinned-launch-test-',
+    );
+    addTearDown(() {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    });
+    final appBundle = _createTestMacosAppBundle(tempDirectory.path);
+    final repository = MemoryBottleRepository(
+      dataHome: _joinTestPath(tempDirectory.path, const ['data']),
+    );
+    runCli(const [
+      'create-bottle',
+      '--name',
+      'Steam',
+      '--json',
+    ], bottleRepository: repository);
+    final planner = ProgramRunPlanner(
+      hostPlatform: KonyakHostPlatform.macos,
+      environment: {
+        'HOME': tempDirectory.path,
+        'KONYAK_APP_EXECUTABLE': _joinTestPath(appBundle.path, const [
+          'Contents',
+          'MacOS',
+          'Konyak',
+        ]),
+      },
+    );
+    runCli(
+      const [
+        'pin-program',
+        'steam',
+        '--name',
+        'Steam',
+        '--program',
+        '/downloads/Steam.exe',
+        '--json',
+      ],
+      bottleRepository: repository,
+      programRunPlanner: planner,
+    );
+    final manifestPath = _joinTestPath(
+      _singleGeneratedMacosLauncher(tempDirectory.path).path,
+      const ['Contents', 'Resources', 'konyak-launcher.json'],
+    );
+    final runner = RecordingProgramRunner(
+      result: const ProgramRunCompleted(processExitCode: 0),
+    );
+
+    final result = runCli(
+      ['launch-pinned-program', '--manifest', manifestPath, '--json'],
+      bottleRepository: repository,
+      programRunPlanner: planner,
+      programRunner: runner,
+    );
+
+    expect(result.exitCode, 0);
+    expect(result.stderr, isEmpty);
+    final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+    expect(payload['schemaVersion'], 1);
+    expect(payload['run'], isA<Map<String, Object?>>());
+    expect(runner.lastRequest?.bottleId, 'steam');
+    expect(runner.lastRequest?.programPath, '/downloads/Steam.exe');
+    expect(runner.lastRequest?.runnerKind, 'macosWine');
+  });
+
   test('pin-program --json extracts an icon for pinned PE programs', () async {
     final tempDirectory = await Directory.systemTemp.createTemp(
       'konyak-pin-program-icon-test-',
@@ -7381,6 +7706,49 @@ String _createLinuxWineRuntimeArchive(String tempPath) {
   expect(result.exitCode, 0, reason: result.stderr.toString());
 
   return archivePath;
+}
+
+Directory _createTestMacosAppBundle(String tempPath) {
+  final appBundle = Directory(_joinTestPath(tempPath, const ['Konyak.app']));
+  File(_joinTestPath(appBundle.path, const ['Contents', 'MacOS', 'Konyak']))
+    ..createSync(recursive: true)
+    ..writeAsStringSync('app executable');
+  File(
+      _joinTestPath(appBundle.path, const [
+        'Contents',
+        'Resources',
+        'konyak-cli',
+      ]),
+    )
+    ..createSync(recursive: true)
+    ..writeAsStringSync('cli executable');
+
+  return appBundle;
+}
+
+List<Directory> _generatedMacosLaunchers(String home) {
+  final launcherDirectory = Directory(
+    _joinTestPath(home, const ['Applications', 'Konyak']),
+  );
+  if (!launcherDirectory.existsSync()) {
+    return const <Directory>[];
+  }
+
+  final launchers = launcherDirectory
+      .listSync(followLinks: false)
+      .whereType<Directory>()
+      .where((directory) => directory.path.endsWith('.app'))
+      .toList(growable: false);
+  launchers.sort((left, right) => left.path.compareTo(right.path));
+
+  return launchers;
+}
+
+Directory _singleGeneratedMacosLauncher(String home) {
+  final launchers = _generatedMacosLaunchers(home);
+  expect(launchers, hasLength(1));
+
+  return launchers.single;
 }
 
 String _joinTestPath(String root, List<String> segments) {
