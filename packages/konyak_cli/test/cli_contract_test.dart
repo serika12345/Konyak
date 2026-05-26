@@ -1466,6 +1466,127 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
     expect(duplicateInfoPlist, contains('<string>Steam (2)</string>'));
   });
 
+  test('pin-program --json on macOS writes a development CLI launcher', () {
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-macos-pinned-dev-launcher-test-',
+    );
+    addTearDown(() {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    });
+    final repository = MemoryBottleRepository(
+      dataHome: _joinTestPath(tempDirectory.path, const ['data']),
+    );
+    runCli(const [
+      'create-bottle',
+      '--name',
+      'Steam',
+      '--json',
+    ], bottleRepository: repository);
+
+    final result = runCli(
+      const [
+        'pin-program',
+        'steam',
+        '--name',
+        'Steam',
+        '--program',
+        '/downloads/Steam.exe',
+        '--json',
+      ],
+      bottleRepository: repository,
+      programRunPlanner: ProgramRunPlanner(
+        hostPlatform: KonyakHostPlatform.macos,
+        environment: {
+          'HOME': tempDirectory.path,
+          'KONYAK_PINNED_PROGRAM_LAUNCHER_EXECUTABLE': '/env/flutter/bin/dart',
+          'KONYAK_PINNED_PROGRAM_LAUNCHER_ARGUMENTS_JSON':
+              '["run","bin/konyak.dart"]',
+          'KONYAK_PINNED_PROGRAM_LAUNCHER_WORKING_DIRECTORY':
+              '/repo/packages/konyak_cli',
+        },
+      ),
+    );
+
+    expect(result.exitCode, 0);
+    final launcherExecutable = File(
+      _joinTestPath(
+        _singleGeneratedMacosLauncher(tempDirectory.path).path,
+        const ['Contents', 'MacOS', 'konyak-launcher'],
+      ),
+    );
+    final launcherScript = launcherExecutable.readAsStringSync();
+    expect(launcherScript, contains("cd '/repo/packages/konyak_cli'"));
+    expect(
+      launcherScript,
+      contains(
+        "exec '/env/flutter/bin/dart' 'run' 'bin/konyak.dart' launch-pinned-program",
+      ),
+    );
+  });
+
+  test('list-bottles --json on macOS refreshes app launchers', () {
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-macos-pinned-list-refresh-test-',
+    );
+    addTearDown(() {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    });
+    final repository = MemoryBottleRepository(
+      dataHome: _joinTestPath(tempDirectory.path, const ['data']),
+    );
+    runCli(const [
+      'create-bottle',
+      '--name',
+      'Steam',
+      '--json',
+    ], bottleRepository: repository);
+    runCli(
+      const [
+        'pin-program',
+        'steam',
+        '--name',
+        'Steam',
+        '--program',
+        '/downloads/Steam.exe',
+        '--json',
+      ],
+      bottleRepository: repository,
+      programRunPlanner: ProgramRunPlanner(
+        hostPlatform: KonyakHostPlatform.linux,
+        environment: {'HOME': tempDirectory.path},
+      ),
+    );
+
+    final result = runCli(
+      const ['list-bottles', '--json'],
+      bottleRepository: repository,
+      programRunPlanner: ProgramRunPlanner(
+        hostPlatform: KonyakHostPlatform.macos,
+        environment: {
+          'HOME': tempDirectory.path,
+          'KONYAK_PINNED_PROGRAM_LAUNCHER_EXECUTABLE': '/env/bin/dart',
+          'KONYAK_PINNED_PROGRAM_LAUNCHER_ARGUMENTS_JSON':
+              '["run","bin/konyak.dart"]',
+          'KONYAK_PINNED_PROGRAM_LAUNCHER_WORKING_DIRECTORY':
+              '/repo/packages/konyak_cli',
+        },
+      ),
+    );
+
+    expect(result.exitCode, 0);
+    final launcherScript = File(
+      _joinTestPath(
+        _singleGeneratedMacosLauncher(tempDirectory.path).path,
+        const ['Contents', 'MacOS', 'konyak-launcher'],
+      ),
+    ).readAsStringSync();
+    expect(launcherScript, contains("exec '/env/bin/dart' 'run'"));
+  });
+
   test('unpin-program --json on macOS removes the Launchpad app launcher', () {
     final tempDirectory = Directory.systemTemp.createTempSync(
       'konyak-macos-pinned-unpin-launcher-test-',

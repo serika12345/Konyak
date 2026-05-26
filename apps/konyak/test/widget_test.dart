@@ -4812,6 +4812,7 @@ final class _QueuedProcessRunner implements ProcessRunner {
     String executable,
     List<String> arguments, {
     String? workingDirectory,
+    Map<String, String> environment = const <String, String>{},
   }) async {
     argumentsLog.add(List.unmodifiable(arguments));
 
@@ -4839,6 +4840,7 @@ final class _FutureQueuedProcessRunner implements ProcessRunner {
     String executable,
     List<String> arguments, {
     String? workingDirectory,
+    Map<String, String> environment = const <String, String>{},
   }) {
     argumentsLog.add(List.unmodifiable(arguments));
 

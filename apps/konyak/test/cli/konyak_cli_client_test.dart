@@ -45,6 +45,40 @@ void main() {
     },
   );
 
+  test(
+    'passes CLI launcher environment for generated pinned app bundles',
+    () async {
+      final runner = _FakeProcessRunner(
+        result: const ProcessRunResult(
+          exitCode: 0,
+          stdout: '{"schemaVersion":1,"bottles":[]}',
+          stderr: '',
+        ),
+      );
+      final client = KonyakCliClient(
+        executable: '/env/flutter/bin/dart',
+        baseArguments: const ['run', 'bin/konyak.dart'],
+        workingDirectory: '/repo/packages/konyak_cli',
+        processRunner: runner,
+      );
+
+      await client.listBottles();
+
+      expect(
+        runner.environment['KONYAK_PINNED_PROGRAM_LAUNCHER_EXECUTABLE'],
+        '/env/flutter/bin/dart',
+      );
+      expect(
+        runner.environment['KONYAK_PINNED_PROGRAM_LAUNCHER_ARGUMENTS_JSON'],
+        '["run","bin/konyak.dart"]',
+      );
+      expect(
+        runner.environment['KONYAK_PINNED_PROGRAM_LAUNCHER_WORKING_DIRECTORY'],
+        '/repo/packages/konyak_cli',
+      );
+    },
+  );
+
   test('loads pinned programs from bottle records', () async {
     final runner = _FakeProcessRunner(
       result: const ProcessRunResult(
@@ -2110,16 +2144,19 @@ final class _FakeProcessRunner implements ProcessRunner {
   String? executable;
   String? workingDirectory;
   List<String> arguments = const [];
+  Map<String, String> environment = const <String, String>{};
 
   @override
   Future<ProcessRunResult> run(
     String executable,
     List<String> arguments, {
     String? workingDirectory,
+    Map<String, String> environment = const <String, String>{},
   }) async {
     this.executable = executable;
     this.arguments = List.unmodifiable(arguments);
     this.workingDirectory = workingDirectory;
+    this.environment = Map.unmodifiable(environment);
 
     return result;
   }

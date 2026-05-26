@@ -19,6 +19,7 @@ abstract interface class ProcessRunner {
     String executable,
     List<String> arguments, {
     String? workingDirectory,
+    Map<String, String> environment = const <String, String>{},
   });
 }
 
@@ -42,14 +43,19 @@ final class DartIoProcessRunner implements ProcessRunner {
     String executable,
     List<String> arguments, {
     String? workingDirectory,
+    Map<String, String> environment = const <String, String>{},
   }) async {
     final ProcessResult result;
+    final childEnvironment = <String, String>{
+      ..._konyakCliChildEnvironment(),
+      ...environment,
+    };
 
     try {
       result = await Process.run(
         executable,
         arguments,
-        environment: _konyakCliChildEnvironment(),
+        environment: childEnvironment,
         runInShell: false,
         workingDirectory: workingDirectory,
       );
@@ -995,10 +1001,27 @@ final class KonyakCliClient {
   }
 
   Future<ProcessRunResult> _run(List<String> arguments) {
-    return processRunner.run(executable, <String>[
-      ...baseArguments,
-      ...arguments,
-    ], workingDirectory: workingDirectory);
+    return processRunner.run(
+      executable,
+      <String>[...baseArguments, ...arguments],
+      workingDirectory: workingDirectory,
+      environment: _launcherEnvironment(),
+    );
+  }
+
+  Map<String, String> _launcherEnvironment() {
+    final environment = <String, String>{
+      'KONYAK_PINNED_PROGRAM_LAUNCHER_EXECUTABLE': executable,
+      'KONYAK_PINNED_PROGRAM_LAUNCHER_ARGUMENTS_JSON': jsonEncode(
+        baseArguments,
+      ),
+    };
+    final launcherWorkingDirectory = workingDirectory;
+    if (launcherWorkingDirectory != null) {
+      environment['KONYAK_PINNED_PROGRAM_LAUNCHER_WORKING_DIRECTORY'] =
+          launcherWorkingDirectory;
+    }
+    return environment;
   }
 }
 

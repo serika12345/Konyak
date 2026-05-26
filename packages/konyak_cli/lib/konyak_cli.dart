@@ -6516,12 +6516,17 @@ CliResult _runCli(
   }
 
   if (_isJsonBottleListCommand(arguments)) {
+    final bottles = activeBottleCatalog.listBottles();
+    _synchronizeMacosPinnedProgramLaunchers(
+      hostPlatform: programRunPlanner.hostPlatform,
+      environment: programRunPlanner.environment,
+      bottles: bottles,
+    );
     return CliResult(
       exitCode: 0,
       stdout: jsonEncode(<String, Object?>{
         'schemaVersion': cliSchemaVersion,
-        'bottles': activeBottleCatalog
-            .listBottles()
+        'bottles': bottles
             .map((bottle) => bottle.toJson())
             .toList(growable: false),
       }),
@@ -11960,6 +11965,18 @@ void _synchronizeLinuxDesktopLauncherForProgramRun({
 const _macosPinnedLauncherManifestFileName = 'konyak-launcher.json';
 const _macosPinnedLauncherExecutableName = 'konyak-launcher';
 
+class _MacosPinnedProgramLauncherCommand {
+  const _MacosPinnedProgramLauncherCommand({
+    required this.executable,
+    required this.arguments,
+    required this.workingDirectory,
+  });
+
+  final String executable;
+  final List<String> arguments;
+  final String? workingDirectory;
+}
+
 void _synchronizeMacosPinnedProgramLaunchers({
   required KonyakHostPlatform hostPlatform,
   required Map<String, String> environment,
@@ -11970,8 +11987,8 @@ void _synchronizeMacosPinnedProgramLaunchers({
   }
 
   final launcherHome = _macosPinnedProgramLaunchersHome(environment);
-  final cliExecutable = _macosPinnedProgramLauncherCliExecutable(environment);
-  if (launcherHome == null || cliExecutable == null) {
+  final launcherCommand = _macosPinnedProgramLauncherCommand(environment);
+  if (launcherHome == null || launcherCommand == null) {
     return;
   }
 
@@ -11998,7 +12015,7 @@ void _synchronizeMacosPinnedProgramLaunchers({
         desiredLauncherPaths[launcherId] = _normalizeFilesystemPath(bundlePath);
         _writeMacosPinnedProgramLauncher(
           bundlePath: bundlePath,
-          cliExecutable: cliExecutable,
+          launcherCommand: launcherCommand,
           displayName: displayName,
           iconPath: program.iconPath,
           manifest: _PinnedProgramLauncherManifest(
@@ -12037,12 +12054,39 @@ String? _macosPinnedProgramLaunchersHome(Map<String, String> environment) {
   return _joinPath(home.trim(), const ['Applications', 'Konyak']);
 }
 
-String? _macosPinnedProgramLauncherCliExecutable(
+_MacosPinnedProgramLauncherCommand? _macosPinnedProgramLauncherCommand(
   Map<String, String> environment,
 ) {
+  final developmentExecutable =
+      environment['KONYAK_PINNED_PROGRAM_LAUNCHER_EXECUTABLE'];
+  if (developmentExecutable != null &&
+      developmentExecutable.trim().isNotEmpty) {
+    final developmentArguments = _macosPinnedProgramLauncherArguments(
+      environment['KONYAK_PINNED_PROGRAM_LAUNCHER_ARGUMENTS_JSON'],
+    );
+    if (developmentArguments == null) {
+      return null;
+    }
+
+    final workingDirectory =
+        environment['KONYAK_PINNED_PROGRAM_LAUNCHER_WORKING_DIRECTORY'];
+    return _MacosPinnedProgramLauncherCommand(
+      executable: developmentExecutable.trim(),
+      arguments: developmentArguments,
+      workingDirectory:
+          workingDirectory == null || workingDirectory.trim().isEmpty
+          ? null
+          : workingDirectory.trim(),
+    );
+  }
+
   final override = environment['KONYAK_PINNED_PROGRAM_LAUNCHER_CLI'];
   if (override != null && override.trim().isNotEmpty) {
-    return override.trim();
+    return _MacosPinnedProgramLauncherCommand(
+      executable: override.trim(),
+      arguments: const <String>[],
+      workingDirectory: null,
+    );
   }
 
   final bundlePath = _macosAppBundlePath(environment);
@@ -12059,7 +12103,38 @@ String? _macosPinnedProgramLauncherCliExecutable(
     return null;
   }
 
-  return cliExecutable;
+  return _MacosPinnedProgramLauncherCommand(
+    executable: cliExecutable,
+    arguments: const <String>[],
+    workingDirectory: null,
+  );
+}
+
+List<String>? _macosPinnedProgramLauncherArguments(String? value) {
+  if (value == null || value.trim().isEmpty) {
+    return const <String>[];
+  }
+
+  final Object? decoded;
+  try {
+    decoded = jsonDecode(value);
+  } on FormatException {
+    return null;
+  }
+
+  if (decoded is! List<Object?>) {
+    return null;
+  }
+
+  final arguments = <String>[];
+  for (final argument in decoded) {
+    if (argument is! String) {
+      return null;
+    }
+    arguments.add(argument);
+  }
+
+  return List.unmodifiable(arguments);
 }
 
 String _pinnedProgramLauncherId({
@@ -12076,7 +12151,7 @@ String _pinnedProgramLauncherId({
 
 void _writeMacosPinnedProgramLauncher({
   required String bundlePath,
-  required String cliExecutable,
+  required _MacosPinnedProgramLauncherCommand launcherCommand,
   required String displayName,
   required String? iconPath,
   required _PinnedProgramLauncherManifest manifest,
@@ -12107,7 +12182,7 @@ void _writeMacosPinnedProgramLauncher({
   File(manifestPath).writeAsStringSync(jsonEncode(manifest.toJson()));
   File(
     executablePath,
-  ).writeAsStringSync(_macosPinnedProgramLauncherScript(cliExecutable));
+  ).writeAsStringSync(_macosPinnedProgramLauncherScript(launcherCommand));
   final executableChmodResult = Process.runSync('chmod', <String>[
     '755',
     executablePath,
@@ -12204,13 +12279,28 @@ String _macosLauncherBundleBaseName(String displayName) {
   return safeName.isEmpty ? 'Konyak Program' : safeName;
 }
 
-String _macosPinnedProgramLauncherScript(String cliExecutable) {
+String _macosPinnedProgramLauncherScript(
+  _MacosPinnedProgramLauncherCommand command,
+) {
+  final workingDirectory = command.workingDirectory;
+  final changeDirectory = workingDirectory == null
+      ? ''
+      : 'cd ${_posixShellSingleQuote(workingDirectory)}\n';
+  final launcherCommand = <String>[
+    _posixShellSingleQuote(command.executable),
+    ...command.arguments.map(_posixShellSingleQuote),
+    'launch-pinned-program',
+    '--manifest',
+    r'"$manifest"',
+    '--json',
+  ].join(' ');
+
   return '''
 #!/bin/sh
 set -eu
 manifest_dir=\$(CDPATH= cd -- "\$(dirname -- "\$0")/../Resources" && pwd -P)
 manifest="\$manifest_dir/$_macosPinnedLauncherManifestFileName"
-exec ${_posixShellSingleQuote(cliExecutable)} launch-pinned-program --manifest "\$manifest" --json
+${changeDirectory}exec $launcherCommand
 ''';
 }
 
