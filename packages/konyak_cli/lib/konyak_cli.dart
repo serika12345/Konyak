@@ -7052,6 +7052,7 @@ CliResult _runCli(
       );
     }
 
+    _recordExternalProgramRun(bottle: bottle, request: programRunRequest);
     _synchronizeLinuxDesktopLauncherForProgramRun(
       hostPlatform: programRunPlanner.hostPlatform,
       environment: programRunPlanner.environment,
@@ -11898,6 +11899,23 @@ String _resolveBottleDataHome(
     KonyakHostPlatform.macos => _konyakApplicationSupportFolder(environment),
     KonyakHostPlatform.linux => _resolveDataHome(environment),
   };
+}
+
+void _recordExternalProgramRun({
+  required BottleRecord bottle,
+  required ProgramRunRequest request,
+}) {
+  final normalizedProgramPath = request.programPath.trim();
+  if (normalizedProgramPath.isEmpty ||
+      !normalizedProgramPath.startsWith('/') ||
+      _isPathWithinRoot(path: normalizedProgramPath, root: bottle.path)) {
+    return;
+  }
+
+  _recordExternalProgramLaunch(
+    bottle: bottle,
+    programPath: normalizedProgramPath,
+  );
 }
 
 void _synchronizeLinuxDesktopLauncherForProgramRun({
