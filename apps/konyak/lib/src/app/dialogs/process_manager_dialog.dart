@@ -205,14 +205,19 @@ class _ProcessIcon extends StatelessWidget {
       return const Icon(Icons.memory_outlined);
     }
 
-    return Image.file(
-      File(iconPath),
-      key: ValueKey('process-manager-process-icon-${_processKey(process)}'),
-      width: 28,
-      height: 28,
-      errorBuilder: (context, error, stackTrace) =>
-          const Icon(Icons.memory_outlined),
-    );
+    try {
+      return Image.memory(
+        File(iconPath).readAsBytesSync(),
+        key: ValueKey('process-manager-process-icon-${_processKey(process)}'),
+        width: 28,
+        height: 28,
+        fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) =>
+            const Icon(Icons.memory_outlined),
+      );
+    } on FileSystemException {
+      return const Icon(Icons.memory_outlined);
+    }
   }
 }
 

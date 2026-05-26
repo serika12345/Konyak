@@ -3117,6 +3117,89 @@ corefonts                Microsoft Core Fonts
     });
   });
 
+  test(
+    'run-program --json on Linux writes a desktop launcher for external executables',
+    () async {
+      final tempDirectory = await Directory.systemTemp.createTemp(
+        'konyak-linux-external-launcher-test-',
+      );
+      addTearDown(() async {
+        if (await tempDirectory.exists()) {
+          await tempDirectory.delete(recursive: true);
+        }
+      });
+
+      final repository = MemoryBottleRepository(dataHome: tempDirectory.path);
+      runCli(const [
+        'create-bottle',
+        '--name',
+        'Steam',
+        '--json',
+      ], bottleRepository: repository);
+
+      final programPath = _joinTestPath(tempDirectory.path, const [
+        'downloads',
+        'setup.exe',
+      ]);
+      File(programPath)
+        ..createSync(recursive: true)
+        ..writeAsBytesSync(_syntheticPortableExecutableBytes());
+
+      final runner = RecordingProgramRunner(
+        result: const ProgramRunCompleted(processExitCode: 0),
+      );
+      final xdgDataHome = _joinTestPath(tempDirectory.path, const ['xdg-data']);
+
+      final result = runCli(
+        ['run-program', 'steam', '--program', programPath, '--json'],
+        bottleRepository: repository,
+        programRunPlanner: ProgramRunPlanner(
+          hostPlatform: KonyakHostPlatform.linux,
+          environment: {
+            'HOME': tempDirectory.path,
+            'XDG_DATA_HOME': xdgDataHome,
+          },
+        ),
+        programRunner: runner,
+      );
+
+      expect(result.exitCode, 0);
+      final launcherDirectory = Directory(
+        _joinTestPath(xdgDataHome, const ['applications', 'konyak']),
+      );
+      expect(launcherDirectory.existsSync(), isTrue);
+
+      final launcherFiles = launcherDirectory
+          .listSync()
+          .whereType<File>()
+          .where((file) => file.path.endsWith('.desktop'))
+          .toList(growable: false);
+      expect(launcherFiles, hasLength(1));
+
+      final launcher = launcherFiles.single.readAsStringSync();
+      expect(launcher, contains('[Desktop Entry]'));
+      expect(launcher, contains('Type=Application'));
+      expect(launcher, contains('Name=Fixture Suite'));
+      expect(launcher, contains('StartupWMClass=setup.exe'));
+      expect(
+        launcher,
+        contains(
+          'Path=${_joinTestPath(tempDirectory.path, const ['downloads'])}',
+        ),
+      );
+      expect(
+        launcher,
+        contains(
+          'Exec=env "WINEPREFIX=${repository.findBottle('steam')!.path}" wine "$programPath"',
+        ),
+      );
+      expect(
+        launcher,
+        contains('Icon=${repository.findBottle('steam')!.path}/cache/icons/'),
+      );
+    },
+  );
+
   test('program runner writes a Konyak completed launch log', () {
     final logDirectory = Directory.systemTemp.createTempSync('konyak-run-log-');
     addTearDown(() async {
@@ -3224,7 +3307,7 @@ corefonts                Microsoft Core Fonts
       final cliEnvironment = <String, String>{
         'KONYAK_DATA_HOME': dataHome.path,
         'KONYAK_CONFIG_HOME': _joinTestPath(dataHome.path, const ['config']),
-        'KONYAK_MACOS_WINE_HOME': fakeRuntimeRoot.path,
+        'KONYAK_LINUX_WINE_HOME': fakeRuntimeRoot.path,
         'PATH': fakeBin.path,
       };
 
@@ -4074,6 +4157,213 @@ corefonts                Microsoft Core Fonts
       },
     });
   });
+
+  test(
+    'list-wine-processes --json strips winedbg tree prefixes before resolving metadata',
+    () {
+      final tempDirectory = Directory.systemTemp.createTempSync(
+        'konyak-process-list-tree-prefix-test-',
+      );
+      addTearDown(() {
+        if (tempDirectory.existsSync()) {
+          tempDirectory.deleteSync(recursive: true);
+        }
+      });
+      final bottlePath = _joinTestPath(tempDirectory.path, const ['a']);
+      final programPath = _joinTestPath(tempDirectory.path, const [
+        'Downloads',
+        'Ardour-9.5.0-w64-Setup.exe',
+      ]);
+      Directory(
+        _joinTestPath(bottlePath, const ['cache']),
+      ).createSync(recursive: true);
+      File(
+        _joinTestPath(bottlePath, const [
+          'cache',
+          'external-program-launches.json',
+        ]),
+      ).writeAsStringSync(
+        jsonEncode({
+          'schemaVersion': 1,
+          'launches': [
+            {
+              'programPath': programPath,
+              'executableName': 'ardour-9.5.0-w64-setup.exe',
+            },
+          ],
+        }),
+      );
+      final repository = MemoryBottleRepository(
+        dataHome: '/data',
+        bottles: [
+          BottleRecord(
+            id: 'a',
+            name: 'a',
+            path: bottlePath,
+            windowsVersion: 'win11',
+          ),
+        ],
+      );
+      final runner = RecordingProgramRunner(
+        result: const ProgramRunCompleted(
+          processExitCode: 0,
+          stdout: '''
+          pid      threads  executable (all id:s are in hex)
+          00000020 2        'C:\\windows\\system32\\services.exe'
+          000000d8 5        \\_ 'Ardour-9.5.0-w64-Setup.exe'
+        ''',
+        ),
+      );
+
+      final result = runCli(
+        const ['list-wine-processes', '--json'],
+        bottleCatalog: repository,
+        programRunPlanner: ProgramRunPlanner(
+          hostPlatform: KonyakHostPlatform.linux,
+        ),
+        programRunner: runner,
+        programMetadataExtractor: FixedProgramMetadataExtractor(
+          programPath: programPath,
+          metadata: ProgramMetadataRecord(
+            fileDescription: 'Ardour Installer',
+            iconPath: _joinTestPath(bottlePath, const [
+              'cache',
+              'icons',
+              'ardour.ico',
+            ]),
+          ),
+        ),
+      );
+
+      expect(result.exitCode, 0);
+      final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+      expect(payload, {
+        'schemaVersion': 1,
+        'wineProcesses': {
+          'processes': [
+            {
+              'bottleId': 'a',
+              'processId': '000000d8',
+              'executable': 'Ardour-9.5.0-w64-Setup.exe',
+              'hostPath': programPath,
+              'metadata': {
+                'fileDescription': 'Ardour Installer',
+                'iconPath': _joinTestPath(bottlePath, const [
+                  'cache',
+                  'icons',
+                  'ardour.ico',
+                ]),
+              },
+            },
+          ],
+        },
+      });
+    },
+  );
+
+  test(
+    'list-wine-processes --json uses recorded external launches when latest.log is unavailable',
+    () {
+      final tempDirectory = Directory.systemTemp.createTempSync(
+        'konyak-process-list-recorded-launch-test-',
+      );
+      addTearDown(() {
+        if (tempDirectory.existsSync()) {
+          tempDirectory.deleteSync(recursive: true);
+        }
+      });
+      final bottlePath = _joinTestPath(tempDirectory.path, const ['a']);
+      final programPath = _joinTestPath(tempDirectory.path, const [
+        'Downloads',
+        'Ardour-9.5.0-w64-Setup.exe',
+      ]);
+      final repository = MemoryBottleRepository(
+        dataHome: '/data',
+        bottles: [
+          BottleRecord(
+            id: 'a',
+            name: 'a',
+            path: bottlePath,
+            windowsVersion: 'win11',
+          ),
+        ],
+      );
+      Directory(
+        _joinTestPath(bottlePath, const ['cache']),
+      ).createSync(recursive: true);
+      File(
+        _joinTestPath(bottlePath, const [
+          'cache',
+          'external-program-launches.json',
+        ]),
+      ).writeAsStringSync(
+        jsonEncode({
+          'schemaVersion': 1,
+          'launches': [
+            {
+              'programPath': programPath,
+              'executableName': 'ardour-9.5.0-w64-setup.exe',
+            },
+          ],
+        }),
+      );
+
+      final runner = RecordingProgramRunner(
+        result: const ProgramRunCompleted(
+          processExitCode: 0,
+          stdout: '''
+          pid      threads  executable (all id:s are in hex)
+          00000020 2        'C:\\windows\\system32\\services.exe'
+          000000d8 5        Ardour-9.5.0-w64-Setup.exe
+        ''',
+        ),
+      );
+
+      final result = runCli(
+        const ['list-wine-processes', '--json'],
+        bottleCatalog: repository,
+        programRunPlanner: ProgramRunPlanner(
+          hostPlatform: KonyakHostPlatform.linux,
+        ),
+        programRunner: runner,
+        programMetadataExtractor: FixedProgramMetadataExtractor(
+          programPath: programPath,
+          metadata: ProgramMetadataRecord(
+            fileDescription: 'Ardour Installer',
+            iconPath: _joinTestPath(bottlePath, const [
+              'cache',
+              'icons',
+              'ardour.ico',
+            ]),
+          ),
+        ),
+      );
+
+      expect(result.exitCode, 0);
+      final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+      expect(payload, {
+        'schemaVersion': 1,
+        'wineProcesses': {
+          'processes': [
+            {
+              'bottleId': 'a',
+              'processId': '000000d8',
+              'executable': 'Ardour-9.5.0-w64-Setup.exe',
+              'hostPath': programPath,
+              'metadata': {
+                'fileDescription': 'Ardour Installer',
+                'iconPath': _joinTestPath(bottlePath, const [
+                  'cache',
+                  'icons',
+                  'ardour.ico',
+                ]),
+              },
+            },
+          ],
+        },
+      });
+    },
+  );
 
   test('terminate-wine-process --json kills one Wine process', () {
     final repository = MemoryBottleRepository(
