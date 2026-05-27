@@ -164,6 +164,7 @@
                 export KONYAK_DEV_WINE_VERSION="${pkgs.wineWow64Packages.stable.version}"
                 export KONYAK_DEV_WINETRICKS_VERSION="${pkgs.winetricks.version}"
                 export KONYAK_DEV_VKD3D_PROTON_VERSION="${pkgs.vkd3d-proton.version}"
+                export KONYAK_RUNTIME_PROFILE="development"
                 export KONYAK_LINUX_WINE_HOME="$PWD/.dart_tool/konyak/dev-runtime/linux-wine"
                 ./scripts/prepare_linux_dev_runtime.zsh >/dev/null
               ''}

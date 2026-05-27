@@ -19,6 +19,16 @@ dev shell directly. The macOS-only `FLUTTER_ROOT`, `DEVELOPER_DIR`, and
 sanitized `PATH` overrides live in the macOS launch/task configuration so they
 do not interfere with Linux daemon startup.
 
+The Linux Nix dev shell and VSCode launch profile both set
+`KONYAK_RUNTIME_PROFILE=development` and point `KONYAK_LINUX_WINE_HOME` at
+`.dart_tool/konyak/dev-runtime/linux-wine`. The dev shell prepares that runtime
+from Nix-provided Wine, winetricks, and vkd3d-proton packages.
+
+Local runtime stack fixtures must use the development-only
+`KONYAK_DEV_LINUX_WINE_STACK_MANIFEST` environment variable. Keep release
+variables such as `KONYAK_LINUX_WINE_STACK_MANIFEST` for published runtime stack
+manifests.
+
 ## Hot Reload Launch
 
 Use the VSCode Run and Debug panel and select:

@@ -3696,15 +3696,17 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
     );
     final sourceManifest =
         request.sourceManifest ??
-        _nonEmptyEnvironmentValue(
+        _runtimeProfileEnvironmentValue(
           environment,
-          'KONYAK_MACOS_WINE_STACK_MANIFEST',
+          developmentKey: 'KONYAK_DEV_MACOS_WINE_STACK_MANIFEST',
+          releaseKey: 'KONYAK_MACOS_WINE_STACK_MANIFEST',
         );
     final sourceManifestSignature =
         request.sourceManifestSignature ??
-        _nonEmptyEnvironmentValue(
+        _runtimeProfileEnvironmentValue(
           environment,
-          'KONYAK_MACOS_WINE_STACK_SIGNATURE_URL',
+          developmentKey: 'KONYAK_DEV_MACOS_WINE_STACK_SIGNATURE_URL',
+          releaseKey: 'KONYAK_MACOS_WINE_STACK_SIGNATURE_URL',
         );
     if (!request.force &&
         request.archivePath == null &&
@@ -4117,15 +4119,17 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
     );
     final sourceManifest =
         request.sourceManifest ??
-        _nonEmptyEnvironmentValue(
+        _runtimeProfileEnvironmentValue(
           environment,
-          'KONYAK_LINUX_WINE_STACK_MANIFEST',
+          developmentKey: 'KONYAK_DEV_LINUX_WINE_STACK_MANIFEST',
+          releaseKey: 'KONYAK_LINUX_WINE_STACK_MANIFEST',
         );
     final sourceManifestSignature =
         request.sourceManifestSignature ??
-        _nonEmptyEnvironmentValue(
+        _runtimeProfileEnvironmentValue(
           environment,
-          'KONYAK_LINUX_WINE_STACK_SIGNATURE_URL',
+          developmentKey: 'KONYAK_DEV_LINUX_WINE_STACK_SIGNATURE_URL',
+          releaseKey: 'KONYAK_LINUX_WINE_STACK_SIGNATURE_URL',
         );
     if (!request.force &&
         request.archivePath == null &&
@@ -8438,7 +8442,7 @@ RuntimeRecord _macosWineRuntimeRecord({
     runnerKind: 'macosWine',
     isBundled: false,
     isUpdateable: true,
-    distributionKind: 'bootstrap',
+    distributionKind: _runtimeDistributionKind(environment, 'bootstrap'),
     isInstalled: isInstalled,
     applicationSupportPath: applicationSupportPath,
     libraryPath: libraryPath,
@@ -8468,11 +8472,6 @@ RuntimeRecord _linuxWineRuntimeRecord({
     environment,
     'KONYAK_LINUX_WINE_VERSION_URL',
   );
-  final sourceManifestUrl = _nonEmptyEnvironmentValue(
-    environment,
-    'KONYAK_LINUX_WINE_STACK_MANIFEST',
-  );
-
   return RuntimeRecord(
     id: linuxWineRuntimeId,
     name: 'Konyak Linux Wine',
@@ -8480,9 +8479,8 @@ RuntimeRecord _linuxWineRuntimeRecord({
     architecture: 'x86_64',
     runnerKind: 'wine',
     isBundled: false,
-    isUpdateable:
-        sourceManifestUrl != null || archiveUrl != null || versionUrl != null,
-    distributionKind: 'managed',
+    isUpdateable: archiveUrl != null || versionUrl != null,
+    distributionKind: _runtimeDistributionKind(environment, 'managed'),
     isInstalled: fileStatusProbe.exists(executablePath),
     libraryPath: runtimeRoot,
     executablePath: executablePath,
@@ -13072,6 +13070,34 @@ String? _nonEmptyEnvironmentValue(Map<String, String> environment, String key) {
   }
 
   return value;
+}
+
+String? _runtimeProfileEnvironmentValue(
+  Map<String, String> environment, {
+  required String developmentKey,
+  required String releaseKey,
+}) {
+  if (_isDevelopmentRuntimeProfile(environment)) {
+    return _nonEmptyEnvironmentValue(environment, developmentKey);
+  }
+
+  return _nonEmptyEnvironmentValue(environment, releaseKey);
+}
+
+String _runtimeDistributionKind(
+  Map<String, String> environment,
+  String defaultKind,
+) {
+  if (_isDevelopmentRuntimeProfile(environment)) {
+    return 'development';
+  }
+
+  return defaultKind;
+}
+
+bool _isDevelopmentRuntimeProfile(Map<String, String> environment) {
+  return _nonEmptyEnvironmentValue(environment, 'KONYAK_RUNTIME_PROFILE') ==
+      'development';
 }
 
 Map<String, Object?>? _objectMap(Object? value) {

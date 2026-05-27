@@ -19,6 +19,7 @@
         "KONYAK_REPO_ROOT": "${workspaceFolder}",
         "KONYAK_DART_EXECUTABLE": "dart",
         "KONYAK_CLI_SCRIPT": "${workspaceFolder}/packages/konyak_cli/bin/konyak.dart",
+        "KONYAK_RUNTIME_PROFILE": "development",
         "KONYAK_LINUX_WINE_HOME": "${workspaceFolder}/.dart_tool/konyak/dev-runtime/linux-wine"
       }
     },

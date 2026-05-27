@@ -4387,6 +4387,44 @@ corefonts                Microsoft Core Fonts
     });
   });
 
+  test('list-runtimes --json reports the Linux development runtime profile', () {
+    final result = runCli(
+      const ['list-runtimes', '--json'],
+      runtimeCatalog: KonyakRuntimeCatalog(
+        hostPlatform: KonyakHostPlatform.linux,
+        environment: const {
+          'HOME': '/home/user',
+          'KONYAK_RUNTIME_PROFILE': 'development',
+          'KONYAK_DEV_LINUX_WINE_STACK_MANIFEST':
+              'file:///workspace/fixtures/linux-runtime-stack-source.json',
+        },
+        fileStatusProbe: const StaticFileStatusProbe({
+          '/home/user/.local/share/konyak/Runtimes/linux-wine/bin/wine',
+          '/home/user/.local/share/konyak/Runtimes/linux-wine/bin/winedbg',
+          '/home/user/.local/share/konyak/Runtimes/linux-wine/bin/wineserver',
+          '/home/user/.local/share/konyak/Runtimes/linux-wine/winetricks',
+          '/home/user/.local/share/konyak/Runtimes/linux-wine/vkd3d-proton/x64/d3d12.dll',
+          '/home/user/.local/share/konyak/Runtimes/linux-wine/vkd3d-proton/x86/d3d12.dll',
+        }),
+      ),
+    );
+
+    expect(result.exitCode, 0);
+    expect(result.stderr, isEmpty);
+
+    final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+    final runtimes = (payload['runtimes'] as List<Object?>)
+        .cast<Map<String, Object?>>();
+    final runtime = runtimes.single;
+    expect(runtime['id'], 'konyak-linux-wine');
+    expect(runtime['distributionKind'], 'development');
+    expect(runtime['isInstalled'], isTrue);
+    expect(runtime['isUpdateable'], isFalse);
+    expect(runtime, isNot(contains('archiveUrl')));
+    expect(runtime, isNot(contains('versionUrl')));
+    expect(runtime, isNot(contains('sourceManifestUrl')));
+  });
+
   test('check-runtime-update --json returns machine-readable update status', () {
     final checker = RecordingRuntimeUpdateChecker(
       result: const RuntimeUpdateCheckCompleted(
@@ -7333,7 +7371,12 @@ corefonts                Microsoft Core Fonts
       environment: {
         'HOME': tempDirectory.path,
         'XDG_DATA_HOME': dataHome,
-        'KONYAK_LINUX_WINE_STACK_MANIFEST': sourceManifestPath,
+        'KONYAK_RUNTIME_PROFILE': 'development',
+        'KONYAK_LINUX_WINE_STACK_MANIFEST': _joinTestPath(
+          tempDirectory.path,
+          const ['release-runtime-stack-source.json'],
+        ),
+        'KONYAK_DEV_LINUX_WINE_STACK_MANIFEST': sourceManifestPath,
       },
       fileStatusProbe: const DartIoFileStatusProbe(),
     );

@@ -213,12 +213,12 @@ task changes scope.
   - [x] Disable bottle-level graphics/runtime toggles when the required runtime
     capability is missing or unknown.
 - Development runtime profile rework.
-  - [ ] Add an explicit development runtime profile instead of using release
+  - [x] Add an explicit development runtime profile instead of using release
     source-manifest environment variables for local fixtures.
-  - [ ] Keep fixture manifests separate from published runtime stack manifests,
+  - [x] Keep fixture manifests separate from published runtime stack manifests,
     so update checks cannot accidentally consume component-only development
     inputs as full runtime update sources.
-  - [ ] Make VSCode and Nix dev-shell launch paths use the same documented
+  - [x] Make VSCode and Nix dev-shell launch paths use the same documented
     development profile.
 - Required tests for the rework.
   - [x] Linux install repairs an incomplete runtime when required components are
