@@ -3783,107 +3783,20 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
     List<String> componentArchivePaths = const <String>[],
     Map<String, String> componentVersions = const <String, String>{},
   }) {
-    final archivePaths = <String>[archivePath, ...componentArchivePaths];
-
-    final expectedSha256 = archiveSha256;
-    if (expectedSha256 != null) {
-      try {
-        final archive = File(archivePath);
-        if (!archive.existsSync()) {
-          return MacosWineInstallFailed(
-            'macOS Wine archive `$archivePath` was not found.',
-          );
-        }
-        final actualSha256 = _sha256HexDigest(archive);
-        if (actualSha256.toLowerCase() != expectedSha256.toLowerCase()) {
-          return MacosWineInstallFailed(
-            'macOS Wine archive checksum mismatch: expected '
-            '$expectedSha256, got $actualSha256.',
-          );
-        }
-      } on FileSystemException catch (error) {
-        return MacosWineInstallFailed(error.message);
-      }
-    }
-
-    final runtimeRoot = Directory(_macosWineRuntimeRoot(environment));
-    final stagingRoot = Directory(
-      _runtimeSiblingPathForInstall(runtimeRoot, 'install'),
+    final installFailure = _installRuntimeArchives(
+      runtimeLabel: 'macOS Wine',
+      archivePath: archivePath,
+      archiveSha256: archiveSha256,
+      componentArchivePaths: componentArchivePaths,
+      componentVersions: componentVersions,
+      runtimeRoot: Directory(_macosWineRuntimeRoot(environment)),
+      requiredExecutableRelativePath: const <String>['bin', 'wine64'],
+      expectedExecutablePath: _macosWineExecutable(environment),
+      normalizeStagingRoot: _normalizeMacosWineRuntimeLayout,
+      afterManifestWrite: _ensureMacosWine64Alias,
     );
-    final backupRoot = Directory(
-      _runtimeSiblingPathForInstall(runtimeRoot, 'previous'),
-    );
-    final resolvedComponentVersions = <String, String>{...componentVersions};
-
-    try {
-      runtimeRoot.parent.createSync(recursive: true);
-      if (stagingRoot.existsSync()) {
-        stagingRoot.deleteSync(recursive: true);
-      }
-      stagingRoot.createSync(recursive: true);
-
-      for (final archivePath in archivePaths) {
-        final archive = File(archivePath);
-        if (!archive.existsSync()) {
-          return MacosWineInstallFailed(
-            'macOS Wine archive `$archivePath` was not found.',
-          );
-        }
-
-        final extraction = Process.runSync('tar', [
-          '-xf',
-          archivePath,
-          '-C',
-          stagingRoot.path,
-          '--strip-components',
-          '1',
-        ], runInShell: false);
-
-        if (extraction.exitCode != 0) {
-          return MacosWineInstallFailed(
-            _commandFailureMessage('extract macOS Wine', extraction),
-          );
-        }
-
-        _mergeRuntimeStackManifest(
-          runtimeRoot: stagingRoot,
-          componentVersions: resolvedComponentVersions,
-        );
-      }
-
-      _normalizeMacosWineRuntimeLayout(stagingRoot);
-      _writeRuntimeStackManifest(
-        runtimeRoot: stagingRoot,
-        componentVersions: resolvedComponentVersions,
-      );
-      _ensureMacosWine64Alias(stagingRoot);
-
-      final stagedWine64 = File(
-        _joinPath(stagingRoot.path, const ['bin', 'wine64']),
-      );
-      if (!stagedWine64.existsSync()) {
-        return MacosWineInstallFailed(
-          'macOS Wine archive did not install '
-          '`${_macosWineExecutable(environment)}`.',
-        );
-      }
-
-      _replaceRuntimeRootInPlace(
-        runtimeRoot: runtimeRoot,
-        stagingRoot: stagingRoot,
-        backupRoot: backupRoot,
-      );
-    } on ProcessException catch (error) {
-      return MacosWineInstallFailed(error.message);
-    } on FileSystemException catch (error) {
-      return MacosWineInstallFailed(error.message);
-    } finally {
-      if (stagingRoot.existsSync()) {
-        stagingRoot.deleteSync(recursive: true);
-      }
-      if (backupRoot.existsSync()) {
-        backupRoot.deleteSync(recursive: true);
-      }
+    if (installFailure != null) {
+      return MacosWineInstallFailed(installFailure);
     }
 
     final runtime = _macosWineRuntimeRecord(
@@ -4043,47 +3956,6 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
     }
 
     return null;
-  }
-
-  void _mergeRuntimeStackManifest({
-    required Directory runtimeRoot,
-    required Map<String, String> componentVersions,
-  }) {
-    final manifest = File(
-      _joinPath(runtimeRoot.path, const [runtimeStackManifestFileName]),
-    );
-    if (!manifest.existsSync()) {
-      return;
-    }
-
-    try {
-      componentVersions.addAll(
-        _runtimeStackComponentVersions(jsonDecode(manifest.readAsStringSync())),
-      );
-    } on FileSystemException {
-      return;
-    } on FormatException {
-      return;
-    }
-  }
-
-  void _writeRuntimeStackManifest({
-    required Directory runtimeRoot,
-    required Map<String, String> componentVersions,
-  }) {
-    if (componentVersions.isEmpty) {
-      return;
-    }
-
-    final manifest = File(
-      _joinPath(runtimeRoot.path, const [runtimeStackManifestFileName]),
-    );
-    manifest.writeAsStringSync(
-      jsonEncode(<String, Object?>{
-        'schemaVersion': runtimeStackSchemaVersion,
-        'components': componentVersions,
-      }),
-    );
   }
 
   void _normalizeMacosWineRuntimeLayout(Directory runtimeRoot) {
@@ -4337,102 +4209,18 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
     List<String> componentArchivePaths = const <String>[],
     Map<String, String> componentVersions = const <String, String>{},
   }) {
-    final archivePaths = <String>[archivePath, ...componentArchivePaths];
-    final expectedSha256 = archiveSha256;
-    if (expectedSha256 != null) {
-      try {
-        final archive = File(archivePath);
-        if (!archive.existsSync()) {
-          return LinuxWineInstallFailed(
-            'Linux Wine archive `$archivePath` was not found.',
-          );
-        }
-        final actualSha256 = _sha256HexDigest(archive);
-        if (actualSha256.toLowerCase() != expectedSha256.toLowerCase()) {
-          return LinuxWineInstallFailed(
-            'Linux Wine archive checksum mismatch: expected '
-            '$expectedSha256, got $actualSha256.',
-          );
-        }
-      } on FileSystemException catch (error) {
-        return LinuxWineInstallFailed(error.message);
-      }
-    }
-
-    final runtimeRoot = Directory(_linuxWineRuntimeRoot(environment));
-    final stagingRoot = Directory(
-      _runtimeSiblingPathForInstall(runtimeRoot, 'install'),
+    final installFailure = _installRuntimeArchives(
+      runtimeLabel: 'Linux Wine',
+      archivePath: archivePath,
+      archiveSha256: archiveSha256,
+      componentArchivePaths: componentArchivePaths,
+      componentVersions: componentVersions,
+      runtimeRoot: Directory(_linuxWineRuntimeRoot(environment)),
+      requiredExecutableRelativePath: const <String>['bin', 'wine'],
+      expectedExecutablePath: _linuxWineExecutable(environment),
     );
-    final backupRoot = Directory(
-      _runtimeSiblingPathForInstall(runtimeRoot, 'previous'),
-    );
-    final resolvedComponentVersions = <String, String>{...componentVersions};
-
-    try {
-      runtimeRoot.parent.createSync(recursive: true);
-      if (stagingRoot.existsSync()) {
-        stagingRoot.deleteSync(recursive: true);
-      }
-      stagingRoot.createSync(recursive: true);
-
-      for (final archivePath in archivePaths) {
-        final archive = File(archivePath);
-        if (!archive.existsSync()) {
-          return LinuxWineInstallFailed(
-            'Linux Wine archive `$archivePath` was not found.',
-          );
-        }
-
-        final extraction = Process.runSync('tar', [
-          '-xf',
-          archivePath,
-          '-C',
-          stagingRoot.path,
-          '--strip-components',
-          '1',
-        ], runInShell: false);
-        if (extraction.exitCode != 0) {
-          return LinuxWineInstallFailed(
-            _commandFailureMessage('extract Linux Wine', extraction),
-          );
-        }
-
-        _mergeRuntimeStackManifest(
-          runtimeRoot: stagingRoot,
-          componentVersions: resolvedComponentVersions,
-        );
-      }
-
-      _writeRuntimeStackManifest(
-        runtimeRoot: stagingRoot,
-        componentVersions: resolvedComponentVersions,
-      );
-
-      final stagedWine = File(
-        _joinPath(stagingRoot.path, const ['bin', 'wine']),
-      );
-      if (!stagedWine.existsSync()) {
-        return LinuxWineInstallFailed(
-          'Linux Wine archive did not install `${_linuxWineExecutable(environment)}`.',
-        );
-      }
-
-      _replaceRuntimeRootInPlace(
-        runtimeRoot: runtimeRoot,
-        stagingRoot: stagingRoot,
-        backupRoot: backupRoot,
-      );
-    } on ProcessException catch (error) {
-      return LinuxWineInstallFailed(error.message);
-    } on FileSystemException catch (error) {
-      return LinuxWineInstallFailed(error.message);
-    } finally {
-      if (stagingRoot.existsSync()) {
-        stagingRoot.deleteSync(recursive: true);
-      }
-      if (backupRoot.existsSync()) {
-        backupRoot.deleteSync(recursive: true);
-      }
+    if (installFailure != null) {
+      return LinuxWineInstallFailed(installFailure);
     }
 
     final runtime = _linuxWineRuntimeRecord(
@@ -4590,47 +4378,6 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
     }
 
     return null;
-  }
-
-  void _mergeRuntimeStackManifest({
-    required Directory runtimeRoot,
-    required Map<String, String> componentVersions,
-  }) {
-    final manifest = File(
-      _joinPath(runtimeRoot.path, const [runtimeStackManifestFileName]),
-    );
-    if (!manifest.existsSync()) {
-      return;
-    }
-
-    try {
-      componentVersions.addAll(
-        _runtimeStackComponentVersions(jsonDecode(manifest.readAsStringSync())),
-      );
-    } on FileSystemException {
-      return;
-    } on FormatException {
-      return;
-    }
-  }
-
-  void _writeRuntimeStackManifest({
-    required Directory runtimeRoot,
-    required Map<String, String> componentVersions,
-  }) {
-    if (componentVersions.isEmpty) {
-      return;
-    }
-
-    final manifest = File(
-      _joinPath(runtimeRoot.path, const [runtimeStackManifestFileName]),
-    );
-    manifest.writeAsStringSync(
-      jsonEncode(<String, Object?>{
-        'schemaVersion': runtimeStackSchemaVersion,
-        'components': componentVersions,
-      }),
-    );
   }
 }
 
@@ -9085,6 +8832,151 @@ Map<String, String> _runtimeStackComponentVersions(Object? decoded) {
   }
 
   return Map.unmodifiable(versions);
+}
+
+String? _installRuntimeArchives({
+  required String runtimeLabel,
+  required String archivePath,
+  required String? archiveSha256,
+  required List<String> componentArchivePaths,
+  required Map<String, String> componentVersions,
+  required Directory runtimeRoot,
+  required List<String> requiredExecutableRelativePath,
+  required String expectedExecutablePath,
+  void Function(Directory runtimeRoot)? normalizeStagingRoot,
+  void Function(Directory runtimeRoot)? afterManifestWrite,
+}) {
+  final expectedSha256 = archiveSha256;
+  if (expectedSha256 != null) {
+    try {
+      final archive = File(archivePath);
+      if (!archive.existsSync()) {
+        return '$runtimeLabel archive `$archivePath` was not found.';
+      }
+      final actualSha256 = _sha256HexDigest(archive);
+      if (actualSha256.toLowerCase() != expectedSha256.toLowerCase()) {
+        return '$runtimeLabel archive checksum mismatch: expected '
+            '$expectedSha256, got $actualSha256.';
+      }
+    } on FileSystemException catch (error) {
+      return error.message;
+    }
+  }
+
+  final stagingRoot = Directory(
+    _runtimeSiblingPathForInstall(runtimeRoot, 'install'),
+  );
+  final backupRoot = Directory(
+    _runtimeSiblingPathForInstall(runtimeRoot, 'previous'),
+  );
+  final resolvedComponentVersions = <String, String>{...componentVersions};
+  final archivePaths = <String>[archivePath, ...componentArchivePaths];
+
+  try {
+    runtimeRoot.parent.createSync(recursive: true);
+    if (stagingRoot.existsSync()) {
+      stagingRoot.deleteSync(recursive: true);
+    }
+    stagingRoot.createSync(recursive: true);
+
+    for (final currentArchivePath in archivePaths) {
+      final archive = File(currentArchivePath);
+      if (!archive.existsSync()) {
+        return '$runtimeLabel archive `$currentArchivePath` was not found.';
+      }
+
+      final extraction = Process.runSync('tar', [
+        '-xf',
+        currentArchivePath,
+        '-C',
+        stagingRoot.path,
+        '--strip-components',
+        '1',
+      ], runInShell: false);
+      if (extraction.exitCode != 0) {
+        return _commandFailureMessage('extract $runtimeLabel', extraction);
+      }
+
+      _mergeRuntimeStackManifest(
+        runtimeRoot: stagingRoot,
+        componentVersions: resolvedComponentVersions,
+      );
+    }
+
+    normalizeStagingRoot?.call(stagingRoot);
+    _writeRuntimeStackManifest(
+      runtimeRoot: stagingRoot,
+      componentVersions: resolvedComponentVersions,
+    );
+    afterManifestWrite?.call(stagingRoot);
+
+    final stagedExecutable = File(
+      _joinPath(stagingRoot.path, requiredExecutableRelativePath),
+    );
+    if (!stagedExecutable.existsSync()) {
+      return '$runtimeLabel archive did not install `$expectedExecutablePath`.';
+    }
+
+    _replaceRuntimeRootInPlace(
+      runtimeRoot: runtimeRoot,
+      stagingRoot: stagingRoot,
+      backupRoot: backupRoot,
+    );
+  } on ProcessException catch (error) {
+    return error.message;
+  } on FileSystemException catch (error) {
+    return error.message;
+  } finally {
+    if (stagingRoot.existsSync()) {
+      stagingRoot.deleteSync(recursive: true);
+    }
+    if (backupRoot.existsSync()) {
+      backupRoot.deleteSync(recursive: true);
+    }
+  }
+
+  return null;
+}
+
+void _mergeRuntimeStackManifest({
+  required Directory runtimeRoot,
+  required Map<String, String> componentVersions,
+}) {
+  final manifest = File(
+    _joinPath(runtimeRoot.path, const [runtimeStackManifestFileName]),
+  );
+  if (!manifest.existsSync()) {
+    return;
+  }
+
+  try {
+    componentVersions.addAll(
+      _runtimeStackComponentVersions(jsonDecode(manifest.readAsStringSync())),
+    );
+  } on FileSystemException {
+    return;
+  } on FormatException {
+    return;
+  }
+}
+
+void _writeRuntimeStackManifest({
+  required Directory runtimeRoot,
+  required Map<String, String> componentVersions,
+}) {
+  if (componentVersions.isEmpty) {
+    return;
+  }
+
+  final manifest = File(
+    _joinPath(runtimeRoot.path, const [runtimeStackManifestFileName]),
+  );
+  manifest.writeAsStringSync(
+    jsonEncode(<String, Object?>{
+      'schemaVersion': runtimeStackSchemaVersion,
+      'components': componentVersions,
+    }),
+  );
 }
 
 RuntimeRecord? _runtimeById(List<RuntimeRecord> runtimes, String runtimeId) {
