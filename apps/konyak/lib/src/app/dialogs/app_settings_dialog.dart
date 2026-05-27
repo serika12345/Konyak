@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../cli/konyak_cli_client.dart';
 import '../../files/directory_picker.dart';
 import '../../runtimes/runtime_summary.dart';
 import '../../settings/app_settings_summary.dart';
@@ -15,6 +16,7 @@ class AppSettingsDialog extends StatefulWidget {
     required this.directoryPicker,
     this.runtimes = const <RuntimeSummary>[],
     this.runtimeLoadError,
+    this.onInstallRuntime,
     required this.onSettingsChanged,
   });
 
@@ -23,6 +25,7 @@ class AppSettingsDialog extends StatefulWidget {
   final DirectoryPicker directoryPicker;
   final List<RuntimeSummary> runtimes;
   final String? runtimeLoadError;
+  final Future<RuntimeInstallLoadResult> Function()? onInstallRuntime;
   final Future<AppSettingsSummary?> Function(AppSettingsSummary settings)
   onSettingsChanged;
 
@@ -32,7 +35,10 @@ class AppSettingsDialog extends StatefulWidget {
 
 class _AppSettingsDialogState extends State<AppSettingsDialog> {
   late AppSettingsSummary _settings = widget.initialSettings;
+  late List<RuntimeSummary> _runtimes = widget.runtimes;
+  late String? _runtimeLoadError = widget.runtimeLoadError;
   bool _isSaving = false;
+  bool _isInstallingRuntime = false;
 
   Future<void> _save(AppSettingsSummary settings) async {
     final previousSettings = _settings;
@@ -60,6 +66,35 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
     }
 
     await _save(_settings.copyWith(defaultBottlePath: path));
+  }
+
+  Future<void> _installRuntime() async {
+    final installRuntime = widget.onInstallRuntime;
+    if (installRuntime == null || _isInstallingRuntime) {
+      return;
+    }
+
+    setState(() {
+      _isInstallingRuntime = true;
+      _runtimeLoadError = null;
+    });
+
+    final result = await installRuntime();
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      switch (result) {
+        case InstalledRuntime(:final runtime):
+          _runtimes = _upsertRuntime(_runtimes, runtime);
+          _runtimeLoadError = null;
+        case RuntimeInstallLoadFailure(:final message):
+          _runtimeLoadError = message;
+      }
+      _isInstallingRuntime = false;
+    });
   }
 
   @override
@@ -144,9 +179,15 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
             ),
             if (widget.platform.isLinux) ...[
               const SizedBox(height: 26),
-              _LinuxRuntimeSection(
-                runtimes: widget.runtimes,
-                loadError: widget.runtimeLoadError,
+              _RuntimeSection(
+                title: 'Linux Runtime',
+                platform: 'linux',
+                runtimes: _runtimes,
+                loadError: _runtimeLoadError,
+                isInstalling: _isInstallingRuntime,
+                onInstallRuntime: widget.onInstallRuntime == null
+                    ? null
+                    : _installRuntime,
               ),
             ],
           ],
@@ -162,16 +203,49 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
   }
 }
 
-class _LinuxRuntimeSection extends StatelessWidget {
-  const _LinuxRuntimeSection({required this.runtimes, required this.loadError});
+List<RuntimeSummary> _upsertRuntime(
+  List<RuntimeSummary> runtimes,
+  RuntimeSummary runtime,
+) {
+  final updated = <RuntimeSummary>[];
+  var replaced = false;
+  for (final existingRuntime in runtimes) {
+    if (existingRuntime.id == runtime.id) {
+      updated.add(runtime);
+      replaced = true;
+    } else {
+      updated.add(existingRuntime);
+    }
+  }
 
+  if (!replaced) {
+    updated.add(runtime);
+  }
+
+  return List.unmodifiable(updated);
+}
+
+class _RuntimeSection extends StatelessWidget {
+  const _RuntimeSection({
+    required this.title,
+    required this.platform,
+    required this.runtimes,
+    required this.loadError,
+    required this.isInstalling,
+    required this.onInstallRuntime,
+  });
+
+  final String title;
+  final String platform;
   final List<RuntimeSummary> runtimes;
   final String? loadError;
+  final bool isInstalling;
+  final VoidCallback? onInstallRuntime;
 
   @override
   Widget build(BuildContext context) {
     final runtime = runtimes
-        .where((runtime) => runtime.platform == 'linux')
+        .where((runtime) => runtime.platform == platform)
         .fold<RuntimeSummary?>(
           null,
           (selected, runtime) => runtime.stack != null ? runtime : selected,
@@ -180,32 +254,36 @@ class _LinuxRuntimeSection extends StatelessWidget {
 
     if (loadError != null) {
       return _AppSettingsSection(
-        title: 'Linux Runtime',
+        title: title,
         children: [
           _AppSettingsDetailRow(
             label: 'Status',
             value: 'Unavailable',
             detail: loadError,
           ),
+          if (onInstallRuntime != null) _installButton(),
         ],
       );
     }
 
     if (runtime == null || stack == null) {
-      return const _AppSettingsSection(
-        title: 'Linux Runtime',
+      return _AppSettingsSection(
+        title: title,
         children: [
-          _AppSettingsDetailRow(
+          const _AppSettingsDetailRow(
             label: 'Status',
             value: 'Unavailable',
-            detail: 'No managed Linux runtime stack detected.',
+            detail: 'No managed runtime stack detected.',
           ),
+          if (onInstallRuntime != null) _installButton(),
         ],
       );
     }
 
+    final shouldOfferInstall = runtime.isInstalled != true || !stack.isComplete;
+
     return _AppSettingsSection(
-      title: 'Linux Runtime',
+      title: title,
       children: [
         _AppSettingsDetailRow(
           label: stack.name,
@@ -220,7 +298,25 @@ class _LinuxRuntimeSection extends StatelessWidget {
                 ? null
                 : component.missingPaths.join('\n'),
           ),
+        if (shouldOfferInstall && onInstallRuntime != null) _installButton(),
       ],
+    );
+  }
+
+  Widget _installButton() {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: FilledButton.icon(
+        key: const ValueKey('app-settings-install-runtime-button'),
+        onPressed: isInstalling ? null : onInstallRuntime,
+        icon: isInstalling
+            ? const SizedBox.square(
+                dimension: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : const Icon(Icons.download),
+        label: Text(isInstalling ? 'Installing' : 'Install'),
+      ),
     );
   }
 

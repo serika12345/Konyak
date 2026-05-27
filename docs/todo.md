@@ -208,8 +208,10 @@ task changes scope.
     introduced.
   - [ ] Put first-time runtime installation behind an explicit onboarding or
     Settings action.
+    - [x] Add the Linux Settings runtime install/repair action.
   - [ ] Add Settings install buttons only after the runtime capability contract
     and transactional installer are in place.
+    - [x] Wire the Linux Settings button to `install-linux-wine --json`.
   - [x] Disable bottle-level graphics/runtime toggles when the required runtime
     capability is missing or unknown.
 - Development runtime profile rework.

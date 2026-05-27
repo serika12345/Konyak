@@ -3812,6 +3812,145 @@ void main() {
     ]);
   });
 
+  testWidgets('Linux settings dialog installs a missing runtime explicitly', (
+    WidgetTester tester,
+  ) async {
+    final runner = _QueuedProcessRunner([
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '{"schemaVersion":1,"bottles":[]}',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "appSettings": {
+              "terminateWineProcessesOnClose": false,
+              "defaultBottlePath": "/home/user/.local/share/konyak/bottles",
+              "appearanceMode": "dark",
+              "automaticallyCheckForKonyakUpdates": false,
+              "automaticallyCheckForWineUpdates": false
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "runtimes": [
+              {
+                "id": "konyak-linux-wine",
+                "name": "Konyak Linux Wine",
+                "platform": "linux",
+                "architecture": "x86_64",
+                "runnerKind": "wine",
+                "isBundled": false,
+                "isUpdateable": false,
+                "isInstalled": false,
+                "stack": {
+                  "schemaVersion": 1,
+                  "id": "linux-runtime-stack",
+                  "name": "Konyak Linux runtime stack",
+                  "compatibilityTarget": "proton-linux-runtime-stack",
+                  "isComplete": false,
+                  "components": [
+                    {
+                      "id": "wine",
+                      "name": "Wine",
+                      "role": "windows-runner",
+                      "isRequired": true,
+                      "isInstalled": false,
+                      "paths": ["/runtime/bin/wine"],
+                      "missingPaths": ["/runtime/bin/wine"]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ''',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "runtime": {
+              "id": "konyak-linux-wine",
+              "name": "Konyak Linux Wine",
+              "platform": "linux",
+              "architecture": "x86_64",
+              "runnerKind": "wine",
+              "isBundled": false,
+              "isUpdateable": false,
+              "isInstalled": true,
+              "stack": {
+                "schemaVersion": 1,
+                "id": "linux-runtime-stack",
+                "name": "Konyak Linux runtime stack",
+                "compatibilityTarget": "proton-linux-runtime-stack",
+                "isComplete": true,
+                "components": [
+                  {
+                    "id": "wine",
+                    "name": "Wine",
+                    "role": "windows-runner",
+                    "isRequired": true,
+                    "isInstalled": true,
+                    "paths": ["/runtime/bin/wine"],
+                    "missingPaths": []
+                  }
+                ]
+              }
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+    ]);
+
+    await tester.pumpWidget(
+      _testKonyakApp(
+        platform: KonyakPlatform.linux,
+        cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Settings'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Linux Runtime'), findsOneWidget);
+    expect(find.text('Incomplete'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('app-settings-install-runtime-button')),
+      findsOneWidget,
+    );
+
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('app-settings-install-runtime-button')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(const ValueKey('app-settings-install-runtime-button')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Complete'), findsOneWidget);
+    expect(runner.argumentsLog, const [
+      ['list-bottles', '--json'],
+      ['get-app-settings', '--json'],
+      ['list-runtimes', '--json'],
+      ['install-linux-wine', '--json'],
+    ]);
+  });
+
   testWidgets('settings dialog fits compact desktop windows without overflow', (
     WidgetTester tester,
   ) async {

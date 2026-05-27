@@ -69,6 +69,28 @@ RuntimeSummary? _runtimeForPlatform(
   return null;
 }
 
+List<RuntimeSummary> _upsertRuntimeSummary(
+  List<RuntimeSummary> runtimes,
+  RuntimeSummary runtime,
+) {
+  final updated = <RuntimeSummary>[];
+  var replaced = false;
+  for (final existingRuntime in runtimes) {
+    if (existingRuntime.id == runtime.id) {
+      updated.add(runtime);
+      replaced = true;
+    } else {
+      updated.add(existingRuntime);
+    }
+  }
+
+  if (!replaced) {
+    updated.add(runtime);
+  }
+
+  return List.unmodifiable(updated);
+}
+
 class KonyakHomeLoader extends StatefulWidget {
   const KonyakHomeLoader({
     super.key,
@@ -1260,10 +1282,10 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
             }
             switch (runtimeResult) {
               case LoadedRuntimeList(:final runtimes):
-                final linuxRuntimes = runtimes
+                final platformRuntimes = runtimes
                     .where((runtime) => runtime.platform == 'linux')
                     .toList(growable: false);
-                knownRuntimes = List.unmodifiable(linuxRuntimes);
+                knownRuntimes = List.unmodifiable(platformRuntimes);
                 _knownRuntimes = runtimes;
               case RuntimeListLoadFailure(:final message):
                 runtimeLoadError = message;
@@ -1277,6 +1299,9 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
               directoryPicker: widget.directoryPicker,
               runtimes: knownRuntimes,
               runtimeLoadError: runtimeLoadError,
+              onInstallRuntime: widget.platform.isLinux
+                  ? _installSettingsRuntime
+                  : null,
               onSettingsChanged: _setAppSettings,
             ),
           );
@@ -1288,6 +1313,25 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
     } finally {
       _isShowingSettings = false;
     }
+  }
+
+  Future<RuntimeInstallLoadResult> _installSettingsRuntime() async {
+    final result = await widget.cliClient.installLinuxWine();
+
+    if (!mounted) {
+      return result;
+    }
+
+    switch (result) {
+      case InstalledRuntime(:final runtime):
+        setState(() {
+          _knownRuntimes = _upsertRuntimeSummary(_knownRuntimes, runtime);
+        });
+      case RuntimeInstallLoadFailure():
+        break;
+    }
+
+    return result;
   }
 
   Future<void> _showAbout() async {
