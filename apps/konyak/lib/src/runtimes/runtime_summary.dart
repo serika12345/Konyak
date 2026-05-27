@@ -12,8 +12,6 @@ class RuntimeSummary {
     this.applicationSupportPath,
     this.libraryPath,
     this.executablePath,
-    this.archiveUrl,
-    this.versionUrl,
     this.stack,
   });
 
@@ -29,8 +27,6 @@ class RuntimeSummary {
   final String? applicationSupportPath;
   final String? libraryPath;
   final String? executablePath;
-  final String? archiveUrl;
-  final String? versionUrl;
   final RuntimeStackSummary? stack;
 }
 

@@ -2826,8 +2826,6 @@ class RuntimeRecord {
         'applicationSupportPath': applicationSupportPath,
       if (libraryPath != null) 'libraryPath': libraryPath,
       if (executablePath != null) 'executablePath': executablePath,
-      if (archiveUrl != null) 'archiveUrl': archiveUrl,
-      if (versionUrl != null) 'versionUrl': versionUrl,
       if (runtimeStack != null) 'stack': runtimeStack.toJson(),
     };
   }

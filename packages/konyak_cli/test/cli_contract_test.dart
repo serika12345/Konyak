@@ -4132,10 +4132,6 @@ corefonts                Microsoft Core Fonts
               '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
           'executablePath':
               '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wine64',
-          'archiveUrl':
-              'https://github.com/Gcenx/macOS_Wine_builds/releases/download/11.9/wine-devel-11.9-osx64.tar.xz',
-          'versionUrl':
-              'https://api.github.com/repos/Gcenx/macOS_Wine_builds/releases/latest',
           'stack': {
             'schemaVersion': 1,
             'id': 'macos-konyak-runtime-stack',
@@ -4303,6 +4299,10 @@ corefonts                Microsoft Core Fonts
         hostPlatform: KonyakHostPlatform.linux,
         environment: const {
           'HOME': '/home/user',
+          'KONYAK_LINUX_WINE_ARCHIVE_URL':
+              'https://example.invalid/linux-wine.tar.xz',
+          'KONYAK_LINUX_WINE_VERSION_URL':
+              'https://example.invalid/releases/latest',
           'KONYAK_LINUX_WINE_STACK_MANIFEST':
               'https://example.invalid/linux-runtime-stack-source.json',
         },
@@ -6106,10 +6106,6 @@ corefonts                Microsoft Core Fonts
             '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
         'executablePath':
             '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wine64',
-        'archiveUrl':
-            'https://github.com/Gcenx/macOS_Wine_builds/releases/download/11.9/wine-devel-11.9-osx64.tar.xz',
-        'versionUrl':
-            'https://api.github.com/repos/Gcenx/macOS_Wine_builds/releases/latest',
       },
     });
   });

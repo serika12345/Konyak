@@ -91,8 +91,6 @@ RuntimeSummary? parseRuntimeRecord(Object? value) {
   final Object? applicationSupportPath = value['applicationSupportPath'];
   final Object? libraryPath = value['libraryPath'];
   final Object? executablePath = value['executablePath'];
-  final Object? archiveUrl = value['archiveUrl'];
-  final Object? versionUrl = value['versionUrl'];
   final Object? stack = value['stack'];
 
   if (id is! String ||
@@ -109,9 +107,7 @@ RuntimeSummary? parseRuntimeRecord(Object? value) {
       !_isOptionalString(distributionKind) ||
       !_isOptionalString(applicationSupportPath) ||
       !_isOptionalString(libraryPath) ||
-      !_isOptionalString(executablePath) ||
-      !_isOptionalString(archiveUrl) ||
-      !_isOptionalString(versionUrl)) {
+      !_isOptionalString(executablePath)) {
     return null;
   }
 
@@ -133,8 +129,6 @@ RuntimeSummary? parseRuntimeRecord(Object? value) {
     applicationSupportPath: applicationSupportPath as String?,
     libraryPath: libraryPath as String?,
     executablePath: executablePath as String?,
-    archiveUrl: archiveUrl as String?,
-    versionUrl: versionUrl as String?,
     stack: runtimeStack,
   );
 }

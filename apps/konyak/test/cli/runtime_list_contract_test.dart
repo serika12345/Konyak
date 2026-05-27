@@ -27,9 +27,7 @@ void main() {
             "isInstalled": true,
             "applicationSupportPath": "/Users/user/Library/Application Support/Konyak",
             "libraryPath": "/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine",
-            "executablePath": "/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wine64",
-            "archiveUrl": "https://github.com/Gcenx/macOS_Wine_builds/releases/download/11.9/wine-devel-11.9-osx64.tar.xz",
-            "versionUrl": "https://api.github.com/repos/Gcenx/macOS_Wine_builds/releases/latest"
+            "executablePath": "/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wine64"
           }
         ]
       }

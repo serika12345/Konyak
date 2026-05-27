@@ -183,7 +183,7 @@ task changes scope.
   - [ ] Split runtime data into separate concepts:
     `RuntimeDefinition`, `InstalledRuntimeState`, `RuntimeSourceManifest`, and
     `RuntimeCapabilities`.
-  - [ ] Keep source manifests as installer inputs. `list-runtimes --json`
+  - [x] Keep source manifests as installer inputs. `list-runtimes --json`
     should expose installed state and capabilities, not release/source
     manifest mechanics.
   - [ ] Replace the current multi-purpose installer request shape with explicit
