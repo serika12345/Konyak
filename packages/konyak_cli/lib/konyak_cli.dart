@@ -8868,11 +8868,19 @@ String? _installRuntimeArchives({
   final backupRoot = Directory(
     _runtimeSiblingPathForInstall(runtimeRoot, 'previous'),
   );
+  final lockFile = File(_runtimeInstallLockPath(runtimeRoot));
   final resolvedComponentVersions = <String, String>{...componentVersions};
   final archivePaths = <String>[archivePath, ...componentArchivePaths];
+  var lockCreated = false;
 
   try {
     runtimeRoot.parent.createSync(recursive: true);
+    try {
+      lockFile.createSync(exclusive: true);
+      lockCreated = true;
+    } on FileSystemException {
+      return '$runtimeLabel installation is already running.';
+    }
     if (stagingRoot.existsSync()) {
       stagingRoot.deleteSync(recursive: true);
     }
@@ -8932,9 +8940,16 @@ String? _installRuntimeArchives({
     if (backupRoot.existsSync()) {
       backupRoot.deleteSync(recursive: true);
     }
+    if (lockCreated && lockFile.existsSync()) {
+      lockFile.deleteSync();
+    }
   }
 
   return null;
+}
+
+String _runtimeInstallLockPath(Directory runtimeRoot) {
+  return '${runtimeRoot.path}.install.lock';
 }
 
 void _mergeRuntimeStackManifest({

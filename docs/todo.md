@@ -195,10 +195,10 @@ task changes scope.
   - [ ] Keep macOS and Linux differences in small platform specifications:
     runtime id, stack id, required paths, optional components, normalization
     rules, and default source selection.
-  - [ ] Make component installation transactional. Stage the next runtime root,
+  - [x] Make component installation transactional. Stage the next runtime root,
     validate it, then replace the current runtime root; do not overlay directly
     into the live runtime directory.
-  - [ ] Add a runtime install lock so concurrent installs, repairs, and updates
+  - [x] Add a runtime install lock so concurrent installs, repairs, and updates
     cannot mutate the same runtime root.
   - [x] Treat required stack completeness as part of install no-op detection on
     Linux and macOS; the presence of the Wine executable alone is not enough.

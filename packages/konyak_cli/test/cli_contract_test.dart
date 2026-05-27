@@ -6353,6 +6353,49 @@ corefonts                Microsoft Core Fonts
     },
   );
 
+  test('install-macos-wine refuses to mutate a locked runtime root', () async {
+    final tempDirectory = await Directory.systemTemp.createTemp(
+      'konyak-runtime-install-lock-test-',
+    );
+    addTearDown(() async {
+      if (await tempDirectory.exists()) {
+        await tempDirectory.delete(recursive: true);
+      }
+    });
+
+    final runtimeHome = _joinTestPath(tempDirectory.path, const [
+      'Application Support',
+      'Konyak',
+    ]);
+    final runtimeRoot = _joinTestPath(runtimeHome, const [
+      'Runtimes',
+      'macos-wine',
+    ]);
+    final existingWine = File(
+      _joinTestPath(runtimeRoot, const ['bin', 'wine64']),
+    );
+    existingWine.parent.createSync(recursive: true);
+    existingWine.writeAsStringSync('existing-runtime');
+    Directory('$runtimeRoot.install.lock').createSync(recursive: true);
+
+    final archivePath = _createKonyakComponentRuntimeArchive(
+      tempDirectory.path,
+    );
+    final installer = DartIoMacosWineInstaller(
+      hostPlatform: KonyakHostPlatform.macos,
+      environment: {'KONYAK_APPLICATION_SUPPORT': runtimeHome},
+      fileStatusProbe: const StaticFileStatusProbe({}),
+    );
+
+    final result = installer.install(
+      MacosWineInstallRequest(archivePath: archivePath),
+    );
+
+    expect(result, isA<MacosWineInstallFailed>());
+    expect((result as MacosWineInstallFailed).message, contains('already'));
+    expect(existingWine.readAsStringSync(), 'existing-runtime');
+  });
+
   test(
     'install-macos-wine normalizes Konyak runtime component layout',
     () async {
