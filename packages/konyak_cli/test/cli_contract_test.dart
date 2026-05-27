@@ -6248,6 +6248,57 @@ corefonts                Microsoft Core Fonts
   );
 
   test(
+    'install-macos-wine keeps the existing runtime when component extraction fails',
+    () async {
+      final tempDirectory = await Directory.systemTemp.createTemp(
+        'konyak-runtime-component-rollback-test-',
+      );
+      addTearDown(() async {
+        if (await tempDirectory.exists()) {
+          await tempDirectory.delete(recursive: true);
+        }
+      });
+
+      final runtimeHome = _joinTestPath(tempDirectory.path, const [
+        'Application Support',
+        'Konyak',
+      ]);
+      final existingWine = File(
+        _joinTestPath(runtimeHome, const [
+          'Runtimes',
+          'macos-wine',
+          'bin',
+          'wine64',
+        ]),
+      );
+      existingWine.parent.createSync(recursive: true);
+      existingWine.writeAsStringSync('existing-runtime');
+
+      final archivePath = _createKonyakComponentRuntimeArchive(
+        tempDirectory.path,
+      );
+      final badComponentArchive = _createInvalidRuntimeArchive(
+        tempDirectory.path,
+      );
+      final installer = DartIoMacosWineInstaller(
+        hostPlatform: KonyakHostPlatform.macos,
+        environment: {'KONYAK_APPLICATION_SUPPORT': runtimeHome},
+        fileStatusProbe: const StaticFileStatusProbe({}),
+      );
+
+      final result = installer.install(
+        MacosWineInstallRequest(
+          archivePath: archivePath,
+          componentArchivePaths: [badComponentArchive],
+        ),
+      );
+
+      expect(result, isA<MacosWineInstallFailed>());
+      expect(existingWine.readAsStringSync(), 'existing-runtime');
+    },
+  );
+
+  test(
     'install-macos-wine normalizes Konyak runtime component layout',
     () async {
       final tempDirectory = await Directory.systemTemp.createTemp(
@@ -7962,6 +8013,13 @@ String _createBrokenRuntimeArchive(String tempPath) {
     'README.txt',
   ]);
   expect(result.exitCode, 0, reason: result.stderr.toString());
+
+  return archivePath;
+}
+
+String _createInvalidRuntimeArchive(String tempPath) {
+  final archivePath = _joinTestPath(tempPath, const ['invalid-runtime.tar.xz']);
+  File(archivePath).writeAsStringSync('not a tar archive');
 
   return archivePath;
 }

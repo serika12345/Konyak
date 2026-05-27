@@ -223,7 +223,7 @@ task changes scope.
 - Required tests for the rework.
   - [x] Linux install repairs an incomplete runtime when required components are
     missing even if `bin/wine` exists.
-  - [ ] Component install failure leaves the previous runtime root unchanged.
+  - [x] Component install failure leaves the previous runtime root unchanged.
   - [ ] Component-only development manifests cannot be used as full runtime
     update manifests.
   - [x] Startup update checks do not call install commands.
