@@ -4137,7 +4137,8 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
         request.archiveUrl == null &&
         componentArchivePaths.isEmpty &&
         request.sourceManifest == null &&
-        currentRuntime.isInstalled == true) {
+        currentRuntime.isInstalled == true &&
+        currentRuntime.stack?.isComplete == true) {
       return LinuxWineInstallCompleted(runtime: currentRuntime);
     }
 

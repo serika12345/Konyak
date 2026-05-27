@@ -7140,6 +7140,80 @@ corefonts                Microsoft Core Fonts
     );
   });
 
+  test('install-linux-wine repairs an incomplete installed runtime', () {
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-linux-runtime-repair-test-',
+    );
+    addTearDown(() {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    });
+
+    final dataHome = _joinTestPath(tempDirectory.path, const ['xdg-data']);
+    final runtimeRoot = _joinTestPath(dataHome, const [
+      'konyak',
+      'Runtimes',
+      'linux-wine',
+    ]);
+    final existingWine = File(
+      _joinTestPath(runtimeRoot, const ['bin', 'wine']),
+    );
+    existingWine.parent.createSync(recursive: true);
+    existingWine.writeAsStringSync('incomplete-runtime');
+
+    final wineArchive = _createLinuxWineRuntimeArchive(tempDirectory.path);
+    final vkd3dArchive = _createKonyakRuntimeComponentArchive(
+      tempDirectory.path,
+      archiveName: 'repair-vkd3d-proton',
+      relativePaths: const <List<String>>[
+        <String>['vkd3d-proton', 'x64', 'd3d12.dll'],
+        <String>['vkd3d-proton', 'x86', 'd3d12.dll'],
+      ],
+      versions: const <String, String>{},
+    );
+    final sourceManifestPath = _createRuntimeStackSourceManifest(
+      tempDirectory.path,
+      runtimeId: 'konyak-linux-wine',
+      stackId: 'linux-wine-runtime-stack',
+      components: <Map<String, String>>[
+        _runtimeStackSourceComponent(
+          id: 'wine',
+          version: 'wine-linux-repair',
+          archivePath: wineArchive,
+        ),
+        _runtimeStackSourceComponent(
+          id: 'vkd3d-proton',
+          version: 'vkd3d-linux-repair',
+          archivePath: vkd3dArchive,
+        ),
+      ],
+    );
+    final installer = DartIoLinuxWineInstaller(
+      hostPlatform: KonyakHostPlatform.linux,
+      environment: {
+        'HOME': tempDirectory.path,
+        'XDG_DATA_HOME': dataHome,
+        'KONYAK_LINUX_WINE_STACK_MANIFEST': sourceManifestPath,
+      },
+      fileStatusProbe: const DartIoFileStatusProbe(),
+    );
+
+    final result = installer.install(const LinuxWineInstallRequest());
+
+    expect(result, isA<LinuxWineInstallCompleted>());
+    final runtime = (result as LinuxWineInstallCompleted).runtime;
+    expect(runtime.stack?.isComplete, isTrue);
+    expect(existingWine.readAsStringSync(), 'fixture');
+    expect(
+      runtime.stack?.components
+          .where((component) => component.id == 'vkd3d-proton')
+          .single
+          .version,
+      'vkd3d-linux-repair',
+    );
+  });
+
   test('install-linux-wine verifies a signed source manifest', () {
     final tempDirectory = Directory.systemTemp.createTempSync(
       'konyak-linux-runtime-stack-signed-source-test-',
