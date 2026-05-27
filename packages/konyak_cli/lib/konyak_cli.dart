@@ -4670,7 +4670,6 @@ class DartIoRuntimeUpdateChecker implements RuntimeUpdateChecker {
           status: 'unknown',
           currentVersion: _runtimeWineVersion(runtime),
           archiveUrl: runtime.archiveUrl,
-          sourceManifestUrl: runtime.sourceManifestUrl,
         ),
       );
     }
@@ -4689,8 +4688,7 @@ class DartIoRuntimeUpdateChecker implements RuntimeUpdateChecker {
             latestVersion: metadata.version,
             versionUrl: versionUrl,
             archiveUrl: metadata.archiveUrl ?? runtime.archiveUrl,
-            sourceManifestUrl:
-                metadata.sourceManifestUrl ?? runtime.sourceManifestUrl,
+            sourceManifestUrl: metadata.sourceManifestUrl,
             sourceManifestSignatureUrl: metadata.sourceManifestSignatureUrl,
           ),
         ),

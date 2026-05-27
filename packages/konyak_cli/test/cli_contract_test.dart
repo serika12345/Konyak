@@ -5679,7 +5679,7 @@ corefonts                Microsoft Core Fonts
   );
 
   test(
-    'runtime update checker prefers source manifests from runtime metadata',
+    'runtime update checker uses source manifests from release metadata',
     () {
       final checker = DartIoRuntimeUpdateChecker(
         runtimeCatalog: StaticRuntimeCatalog([
@@ -5693,7 +5693,7 @@ corefonts                Microsoft Core Fonts
             isUpdateable: true,
             versionUrl: 'https://example.invalid/releases/latest',
             sourceManifestUrl:
-                'https://example.invalid/linux-runtime-stack-source.json',
+                'file:///dev/component-only-linux-runtime-stack-source.json',
             stack: RuntimeStack(
               id: 'linux-wine-runtime-stack',
               name: 'Linux Wine/Proton runtime stack',
@@ -5737,6 +5737,61 @@ corefonts                Microsoft Core Fonts
         'https://example.invalid/linux-runtime-stack-source.json.sig',
       );
       expect(completed.update.archiveUrl, isNull);
+    },
+  );
+
+  test(
+    'runtime update checker ignores runtime source manifests as update sources',
+    () {
+      final checker = DartIoRuntimeUpdateChecker(
+        runtimeCatalog: StaticRuntimeCatalog([
+          RuntimeRecord(
+            id: 'konyak-linux-wine',
+            name: 'Konyak Linux Wine',
+            platform: 'linux',
+            architecture: 'x86_64',
+            runnerKind: 'wine',
+            isBundled: false,
+            isUpdateable: true,
+            versionUrl: 'https://example.invalid/releases/latest',
+            sourceManifestUrl:
+                'file:///dev/component-only-linux-runtime-stack-source.json',
+            stack: RuntimeStack(
+              id: 'linux-wine-runtime-stack',
+              name: 'Linux Wine/Proton runtime stack',
+              compatibilityTarget: 'linux-wine-runtime-stack',
+              components: [
+                RuntimeStackComponent(
+                  id: 'wine',
+                  name: 'Wine',
+                  role: 'windows-runner',
+                  isRequired: true,
+                  paths: const <String>[],
+                  missingPaths: const <String>[],
+                  version: 'wine-10.0',
+                ),
+              ],
+            ),
+          ),
+        ]),
+        releaseMetadataFetcher: const StaticRuntimeReleaseMetadataFetcher(
+          RuntimeReleaseMetadata(
+            version: 'wine-10.1',
+            archiveUrl: 'https://example.invalid/linux-wine-10.1.tar.xz',
+          ),
+        ),
+      );
+
+      final result = checker.check('konyak-linux-wine');
+
+      expect(result, isA<RuntimeUpdateCheckCompleted>());
+      final completed = result as RuntimeUpdateCheckCompleted;
+      expect(completed.update.status, 'available');
+      expect(completed.update.sourceManifestUrl, isNull);
+      expect(
+        completed.update.archiveUrl,
+        'https://example.invalid/linux-wine-10.1.tar.xz',
+      );
     },
   );
 

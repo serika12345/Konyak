@@ -224,7 +224,7 @@ task changes scope.
   - [x] Linux install repairs an incomplete runtime when required components are
     missing even if `bin/wine` exists.
   - [x] Component install failure leaves the previous runtime root unchanged.
-  - [ ] Component-only development manifests cannot be used as full runtime
+  - [x] Component-only development manifests cannot be used as full runtime
     update manifests.
   - [x] Startup update checks do not call install commands.
   - [ ] Runtime-dependent UI controls are disabled when capabilities are
