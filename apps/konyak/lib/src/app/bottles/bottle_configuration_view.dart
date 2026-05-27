@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../bottles/bottle_summary.dart';
+import '../../runtimes/runtime_summary.dart';
 import '../app_platform.dart';
 import '../configuration_labels.dart';
 import '../widgets/configuration_controls.dart';
@@ -9,11 +10,13 @@ class BottleConfigurationView extends StatelessWidget {
   const BottleConfigurationView({
     super.key,
     required this.platform,
+    required this.runtime,
     required this.bottle,
     required this.onRuntimeSettingsChanged,
   });
 
   final KonyakPlatform platform;
+  final RuntimeSummary? runtime;
   final BottleSummary bottle;
   final void Function(
     BottleSummary bottle,
@@ -25,6 +28,18 @@ class BottleConfigurationView extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = bottle.runtimeSettings;
     final showMacosRuntimeSettings = platform.isMacOS;
+    final canChangeSettings = onRuntimeSettingsChanged != null;
+    final canUseWineRuntime =
+        canChangeSettings && runtime?.isInstalled == true && _isStackComplete();
+    final canUseDxvk =
+        canChangeSettings &&
+        (platform.isMacOS
+            ? _isRuntimeComponentAvailable('dxvk-macos')
+            : _isRuntimeComponentAvailable('dxvk'));
+    final canUseMetal =
+        canChangeSettings && _isRuntimeComponentAvailable('moltenvk');
+    final canUseDxr =
+        canChangeSettings && _isRuntimeComponentAvailable('gptk-d3dmetal');
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
@@ -41,7 +56,7 @@ class BottleConfigurationView extends StatelessWidget {
                   value: settings.buildVersion.toString(),
                   labels: buildVersionLabels,
                   width: 210,
-                  onChanged: onRuntimeSettingsChanged == null
+                  onChanged: !canUseWineRuntime
                       ? null
                       : (value) {
                           _updateRuntimeSettings(
@@ -55,7 +70,7 @@ class BottleConfigurationView extends StatelessWidget {
                   switchKey: const ValueKey('config-retina-mode-switch'),
                   label: 'Retina Mode',
                   value: settings.retinaMode,
-                  onChanged: onRuntimeSettingsChanged == null
+                  onChanged: !canUseWineRuntime
                       ? null
                       : (value) {
                           _updateRuntimeSettings(
@@ -69,7 +84,7 @@ class BottleConfigurationView extends StatelessWidget {
                   key: const ValueKey('config-enhanced-sync'),
                   value: settings.enhancedSync,
                   labels: enhancedSyncLabels,
-                  onChanged: onRuntimeSettingsChanged == null
+                  onChanged: !canUseWineRuntime
                       ? null
                       : (value) {
                           _updateRuntimeSettings(
@@ -85,7 +100,7 @@ class BottleConfigurationView extends StatelessWidget {
                   value: settings.dpiScaling.toString(),
                   labels: dpiScalingLabels,
                   width: 110,
-                  onChanged: onRuntimeSettingsChanged == null
+                  onChanged: !canUseWineRuntime
                       ? null
                       : (value) {
                           _updateRuntimeSettings(
@@ -98,7 +113,7 @@ class BottleConfigurationView extends StatelessWidget {
                 BottleConfigurationSwitchRow(
                   label: 'Advertise AVX Support',
                   value: settings.avxEnabled,
-                  onChanged: onRuntimeSettingsChanged == null
+                  onChanged: !canUseWineRuntime
                       ? null
                       : (value) {
                           _updateRuntimeSettings(
@@ -116,7 +131,7 @@ class BottleConfigurationView extends StatelessWidget {
                 switchKey: const ValueKey('config-dxvk-switch'),
                 label: 'DXVK',
                 value: settings.dxvk,
-                onChanged: onRuntimeSettingsChanged == null
+                onChanged: !canUseDxvk
                     ? null
                     : (value) {
                         _updateRuntimeSettings(settings.copyWith(dxvk: value));
@@ -125,7 +140,7 @@ class BottleConfigurationView extends StatelessWidget {
               BottleConfigurationSwitchRow(
                 label: 'DXVK Async',
                 value: settings.dxvkAsync,
-                onChanged: settings.dxvk && onRuntimeSettingsChanged != null
+                onChanged: settings.dxvk && canUseDxvk
                     ? (value) {
                         _updateRuntimeSettings(
                           settings.copyWith(dxvkAsync: value),
@@ -138,7 +153,7 @@ class BottleConfigurationView extends StatelessWidget {
                 trailing: ConfigurationDropdown(
                   value: settings.dxvkHud,
                   labels: dxvkHudLabels,
-                  onChanged: settings.dxvk && onRuntimeSettingsChanged != null
+                  onChanged: settings.dxvk && canUseDxvk
                       ? (value) {
                           _updateRuntimeSettings(
                             settings.copyWith(dxvkHud: value),
@@ -169,7 +184,7 @@ class BottleConfigurationView extends StatelessWidget {
                 BottleConfigurationSwitchRow(
                   label: 'Metal HUD',
                   value: settings.metalHud,
-                  onChanged: onRuntimeSettingsChanged == null
+                  onChanged: !canUseMetal
                       ? null
                       : (value) {
                           _updateRuntimeSettings(
@@ -180,7 +195,7 @@ class BottleConfigurationView extends StatelessWidget {
                 BottleConfigurationSwitchRow(
                   label: 'Metal Trace',
                   value: settings.metalTrace,
-                  onChanged: onRuntimeSettingsChanged == null
+                  onChanged: !canUseMetal
                       ? null
                       : (value) {
                           _updateRuntimeSettings(
@@ -191,7 +206,7 @@ class BottleConfigurationView extends StatelessWidget {
                 BottleConfigurationSwitchRow(
                   label: 'DXR',
                   value: settings.dxrEnabled,
-                  onChanged: onRuntimeSettingsChanged == null
+                  onChanged: !canUseDxr
                       ? null
                       : (value) {
                           _updateRuntimeSettings(
@@ -209,5 +224,28 @@ class BottleConfigurationView extends StatelessWidget {
 
   void _updateRuntimeSettings(BottleRuntimeSettingsSummary runtimeSettings) {
     onRuntimeSettingsChanged?.call(bottle, runtimeSettings);
+  }
+
+  bool _isStackComplete() {
+    return runtime?.stack?.isComplete == true;
+  }
+
+  bool _isRuntimeComponentAvailable(String componentId) {
+    if (runtime?.isInstalled != true) {
+      return false;
+    }
+
+    final stack = runtime?.stack;
+    if (stack == null) {
+      return false;
+    }
+
+    for (final component in stack.components) {
+      if (component.id == componentId) {
+        return component.missingPaths.isEmpty;
+      }
+    }
+
+    return false;
   }
 }

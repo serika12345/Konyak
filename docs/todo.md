@@ -210,7 +210,7 @@ task changes scope.
     Settings action.
   - [ ] Add Settings install buttons only after the runtime capability contract
     and transactional installer are in place.
-  - [ ] Disable bottle-level graphics/runtime toggles when the required runtime
+  - [x] Disable bottle-level graphics/runtime toggles when the required runtime
     capability is missing or unknown.
 - Development runtime profile rework.
   - [ ] Add an explicit development runtime profile instead of using release
@@ -227,7 +227,7 @@ task changes scope.
   - [x] Component-only development manifests cannot be used as full runtime
     update manifests.
   - [x] Startup update checks do not call install commands.
-  - [ ] Runtime-dependent UI controls are disabled when capabilities are
+  - [x] Runtime-dependent UI controls are disabled when capabilities are
     missing or unknown.
 - Linux ARM64 Windows execution research.
 - Publication of the actual default Konyak runtime stack manifest and public

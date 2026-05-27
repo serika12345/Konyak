@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../bottles/bottle_summary.dart';
+import '../../runtimes/runtime_summary.dart';
 import '../app_constants.dart';
 import '../app_platform.dart';
 import '../programs/program_configuration_view.dart';
@@ -15,6 +16,7 @@ class KonyakBottleDetail extends StatelessWidget {
   const KonyakBottleDetail({
     super.key,
     required this.platform,
+    required this.runtime,
     required this.bottle,
     required this.isLoading,
     required this.errorMessage,
@@ -46,6 +48,7 @@ class KonyakBottleDetail extends StatelessWidget {
   });
 
   final KonyakPlatform platform;
+  final RuntimeSummary? runtime;
   final BottleSummary? bottle;
   final bool isLoading;
   final String? errorMessage;
@@ -134,6 +137,7 @@ class KonyakBottleDetail extends StatelessWidget {
                 : isConfiguration
                 ? BottleConfigurationView(
                     platform: platform,
+                    runtime: runtime,
                     bottle: activeBottle,
                     onRuntimeSettingsChanged: onRuntimeSettingsChanged,
                   )

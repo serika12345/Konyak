@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../bottles/bottle_summary.dart';
+import '../../runtimes/runtime_summary.dart';
 import '../app_constants.dart';
 import '../app_platform.dart';
 import '../bottles/bottle_detail.dart';
@@ -12,6 +13,7 @@ class KonyakHome extends StatefulWidget {
   const KonyakHome({
     super.key,
     required this.platform,
+    this.runtime,
     this.bottles = const [],
     this.isLoading = false,
     this.errorMessage,
@@ -45,6 +47,7 @@ class KonyakHome extends StatefulWidget {
   });
 
   final KonyakPlatform platform;
+  final RuntimeSummary? runtime;
   final List<BottleSummary> bottles;
   final bool isLoading;
   final String? errorMessage;
@@ -216,6 +219,7 @@ class _KonyakHomeState extends State<KonyakHome> {
                 Expanded(
                   child: KonyakBottleDetail(
                     platform: widget.platform,
+                    runtime: widget.runtime,
                     bottle: selectedBottle,
                     isLoading: widget.isLoading,
                     errorMessage: widget.errorMessage,

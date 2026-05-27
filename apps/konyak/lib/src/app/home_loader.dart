@@ -55,6 +55,20 @@ bool _isWindowsExecutablePath(String path) {
   return path.isNotEmpty && path.toLowerCase().endsWith('.exe');
 }
 
+RuntimeSummary? _runtimeForPlatform(
+  KonyakPlatform platform,
+  List<RuntimeSummary> runtimes,
+) {
+  final runtimeId = platform.isMacOS ? macosWineRuntimeId : linuxWineRuntimeId;
+  for (final runtime in runtimes) {
+    if (runtime.id == runtimeId) {
+      return runtime;
+    }
+  }
+
+  return null;
+}
+
 class KonyakHomeLoader extends StatefulWidget {
   const KonyakHomeLoader({
     super.key,
@@ -97,6 +111,7 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
   AppSettingsSummary? _appSettings;
   String? _errorMessage;
   String? _latestRunLogPath;
+  List<RuntimeSummary> _knownRuntimes = const <RuntimeSummary>[];
   final List<String> _pendingExecutableOpenPaths = <String>[];
   bool _isHandlingExecutableOpen = false;
   final Map<String, ProgramSettingsSummary> _programSettings =
@@ -498,6 +513,27 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(message)));
+    }
+
+    await _loadRuntimeCapabilities();
+  }
+
+  Future<void> _loadRuntimeCapabilities() async {
+    final result = await widget.cliClient.listKnownRuntimes();
+
+    if (!mounted) {
+      return;
+    }
+
+    switch (result) {
+      case LoadedRuntimeList(:final runtimes):
+        setState(() {
+          _knownRuntimes = runtimes;
+        });
+      case RuntimeListLoadFailure():
+        setState(() {
+          _knownRuntimes = const <RuntimeSummary>[];
+        });
     }
   }
 
@@ -1228,6 +1264,7 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
                     .where((runtime) => runtime.platform == 'linux')
                     .toList(growable: false);
                 knownRuntimes = List.unmodifiable(linuxRuntimes);
+                _knownRuntimes = runtimes;
               case RuntimeListLoadFailure(:final message):
                 runtimeLoadError = message;
             }
@@ -1302,6 +1339,7 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
       children: [
         KonyakHome(
           platform: widget.platform,
+          runtime: _runtimeForPlatform(widget.platform, _knownRuntimes),
           bottles: _bottles,
           isLoading: _isLoading,
           errorMessage: _errorMessage,

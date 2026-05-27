@@ -1140,6 +1140,11 @@ void main() {
         ''',
         stderr: '',
       ),
+      ProcessRunResult(
+        exitCode: 0,
+        stdout: _macosRuntimeListPayload(),
+        stderr: '',
+      ),
       const ProcessRunResult(
         exitCode: 0,
         stdout: '''
@@ -1192,18 +1197,19 @@ void main() {
     await tester.tap(find.text('Windows 7 SP1 (7601)').last);
     await tester.pumpAndSettle();
 
-    expect(runner.argumentsLog.take(2).toList(growable: false), const [
+    expect(runner.argumentsLog.take(3).toList(growable: false), const [
       ['list-bottles', '--json'],
       ['inspect-bottle', 'steam', '--json'],
+      ['list-runtimes', '--json'],
     ]);
-    expect(runner.argumentsLog[2].take(3).toList(growable: false), const [
+    expect(runner.argumentsLog[3].take(3).toList(growable: false), const [
       'set-runtime-settings',
       'steam',
       '--settings-json',
     ]);
-    expect(runner.argumentsLog[2].last, '--json');
+    expect(runner.argumentsLog[3].last, '--json');
     final settings =
-        jsonDecode(runner.argumentsLog[2][3]) as Map<String, Object?>;
+        jsonDecode(runner.argumentsLog[3][3]) as Map<String, Object?>;
     expect(settings, containsPair('buildVersion', 7601));
     expect(find.text('Windows 7 SP1 (7601)'), findsOneWidget);
   });
@@ -2129,6 +2135,11 @@ void main() {
 	        ''',
           stderr: '',
         ),
+        ProcessRunResult(
+          exitCode: 0,
+          stdout: _macosRuntimeListPayload(),
+          stderr: '',
+        ),
         const ProcessRunResult(
           exitCode: 0,
           stdout: '''
@@ -2279,32 +2290,33 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('config-dxvk-switch')));
       await tester.pumpAndSettle();
 
-      expect(runner.argumentsLog.length, 4);
+      expect(runner.argumentsLog.length, 5);
       expect(runner.argumentsLog[0], const ['list-bottles', '--json']);
       expect(runner.argumentsLog[1], const [
         'inspect-bottle',
         'steam',
         '--json',
       ]);
-      expect(runner.argumentsLog[2].take(3).toList(growable: false), const [
-        'set-runtime-settings',
-        'steam',
-        '--settings-json',
-      ]);
-      expect(runner.argumentsLog[2].last, '--json');
-      final buildSettings =
-          jsonDecode(runner.argumentsLog[2][3]) as Map<String, Object?>;
-      expect(buildSettings, containsPair('buildVersion', 22631));
-      expect(buildSettings, containsPair('dpiScaling', 144));
-
+      expect(runner.argumentsLog[2], const ['list-runtimes', '--json']);
       expect(runner.argumentsLog[3].take(3).toList(growable: false), const [
         'set-runtime-settings',
         'steam',
         '--settings-json',
       ]);
       expect(runner.argumentsLog[3].last, '--json');
-      final settings =
+      final buildSettings =
           jsonDecode(runner.argumentsLog[3][3]) as Map<String, Object?>;
+      expect(buildSettings, containsPair('buildVersion', 22631));
+      expect(buildSettings, containsPair('dpiScaling', 144));
+
+      expect(runner.argumentsLog[4].take(3).toList(growable: false), const [
+        'set-runtime-settings',
+        'steam',
+        '--settings-json',
+      ]);
+      expect(runner.argumentsLog[4].last, '--json');
+      final settings =
+          jsonDecode(runner.argumentsLog[4][3]) as Map<String, Object?>;
       expect(settings, containsPair('dxvk', true));
       expect(settings, containsPair('dxvkAsync', true));
       expect(settings, containsPair('dxvkHud', 'off'));
@@ -2315,14 +2327,14 @@ void main() {
       await tester.tap(find.text('Open Wine Configuration'));
       await tester.pumpAndSettle();
 
-      expect(runner.argumentsLog[4], const [
+      expect(runner.argumentsLog[5], const [
         'run-bottle-command',
         'steam',
         '--command',
         'winecfg',
         '--json',
       ]);
-      expect(runner.argumentsLog[5], const [
+      expect(runner.argumentsLog[6], const [
         'inspect-bottle',
         'steam',
         '--json',
@@ -2407,6 +2419,13 @@ void main() {
           stderr: '',
         ),
       ),
+      Future.value(
+        ProcessRunResult(
+          exitCode: 0,
+          stdout: _macosRuntimeListPayload(),
+          stderr: '',
+        ),
+      ),
       runtimeUpdateCompleter.future,
     ]);
 
@@ -2438,7 +2457,7 @@ void main() {
           .isToggled,
       Tristate.isTrue,
     );
-    expect(runner.argumentsLog.length, 3);
+    expect(runner.argumentsLog.length, 4);
 
     runtimeUpdateCompleter.complete(
       const ProcessRunResult(
@@ -2473,6 +2492,109 @@ void main() {
     await tester.pumpAndSettle();
     semantics.dispose();
   });
+
+  testWidgets(
+    'bottle configuration disables runtime toggles when capabilities are missing',
+    (WidgetTester tester) async {
+      final semantics = tester.ensureSemantics();
+      final runner = _QueuedProcessRunner([
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottles": [
+              {
+                "id": "steam",
+                "name": "Steam",
+                "path": "/Users/user/Library/Application Support/Konyak/Bottles/Steam",
+                "windowsVersion": "win10",
+                "runtimeSettings": {
+                  "enhancedSync": "msync",
+                  "metalHud": false,
+                  "metalTrace": false,
+                  "avxEnabled": false,
+                  "dxrEnabled": false,
+                  "dxvk": false,
+                  "dxvkAsync": true,
+                  "dxvkHud": "off",
+                  "buildVersion": 19045,
+                  "retinaMode": false,
+                  "dpiScaling": 144
+                }
+              }
+            ]
+          }
+        ''',
+          stderr: '',
+        ),
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottle": {
+              "id": "steam",
+              "name": "Steam",
+              "path": "/Users/user/Library/Application Support/Konyak/Bottles/Steam",
+              "windowsVersion": "win10",
+              "runtimeSettings": {
+                "enhancedSync": "msync",
+                "metalHud": false,
+                "metalTrace": false,
+                "avxEnabled": false,
+                "dxrEnabled": false,
+                "dxvk": false,
+                "dxvkAsync": true,
+                "dxvkHud": "off",
+                "buildVersion": 19045,
+                "retinaMode": false,
+                "dpiScaling": 144
+              }
+            }
+          }
+        ''',
+          stderr: '',
+        ),
+        ProcessRunResult(
+          exitCode: 0,
+          stdout: _macosRuntimeListPayload(dxvkAvailable: false),
+          stderr: '',
+        ),
+      ]);
+
+      await tester.pumpWidget(
+        _testKonyakApp(
+          cliClient: KonyakCliClient(
+            executable: 'konyak',
+            processRunner: runner,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Bottle Configuration'));
+      await tester.pumpAndSettle();
+
+      expect(
+        tester
+            .getSemantics(find.byKey(const ValueKey('config-dxvk-switch')))
+            .flagsCollection
+            .isEnabled,
+        Tristate.isFalse,
+      );
+
+      await tester.tap(find.byKey(const ValueKey('config-dxvk-switch')));
+      await tester.pumpAndSettle();
+
+      expect(runner.argumentsLog, const [
+        ['list-bottles', '--json'],
+        ['inspect-bottle', 'steam', '--json'],
+        ['list-runtimes', '--json'],
+      ]);
+      semantics.dispose();
+    },
+  );
 
   testWidgets('bottle utilities menu is not shown in the top bar', (
     WidgetTester tester,
@@ -4634,6 +4756,95 @@ Uint8List _singlePixelIcoBytes() {
   bytes[pixelOffset + 3] = 0xff;
 
   return bytes;
+}
+
+String _macosRuntimeListPayload({bool dxvkAvailable = true}) {
+  return jsonEncode(<String, Object?>{
+    'schemaVersion': 1,
+    'runtimes': <Object?>[
+      <String, Object?>{
+        'id': 'konyak-macos-wine',
+        'name': 'Konyak macOS Wine',
+        'platform': 'macos',
+        'architecture': 'x86_64',
+        'runnerKind': 'macosWine',
+        'isBundled': false,
+        'isUpdateable': true,
+        'isInstalled': true,
+        'stack': <String, Object?>{
+          'schemaVersion': 1,
+          'id': 'macos-konyak-runtime-stack',
+          'name': 'Konyak macOS runtime stack',
+          'compatibilityTarget': 'macos-konyak-runtime-stack',
+          'isComplete': dxvkAvailable,
+          'components': <Object?>[
+            _runtimeStackComponentPayload(
+              id: 'wine',
+              name: 'Wine',
+              role: 'windows-runner',
+            ),
+            _runtimeStackComponentPayload(
+              id: 'wine32on64',
+              name: 'Wine32-on-64 support',
+              role: '32-bit-windows-support',
+            ),
+            _runtimeStackComponentPayload(
+              id: 'dxvk-macos',
+              name: 'DXVK-macOS',
+              role: 'd3d9-d3d11-translation',
+              missingPaths: dxvkAvailable
+                  ? const <String>[]
+                  : ['/runtime/DXVK'],
+            ),
+            _runtimeStackComponentPayload(
+              id: 'moltenvk',
+              name: 'MoltenVK',
+              role: 'vulkan-metal-translation',
+            ),
+            _runtimeStackComponentPayload(
+              id: 'gstreamer',
+              name: 'GStreamer runtime',
+              role: 'media-runtime',
+            ),
+            _runtimeStackComponentPayload(
+              id: 'wine-mono',
+              name: 'wine-mono',
+              role: 'dotnet-runtime',
+            ),
+            _runtimeStackComponentPayload(
+              id: 'winetricks',
+              name: 'winetricks',
+              role: 'verb-installer',
+            ),
+            _runtimeStackComponentPayload(
+              id: 'gptk-d3dmetal',
+              name: 'GPTK/D3DMetal',
+              role: 'd3d12-metal-translation',
+              isRequired: false,
+            ),
+          ],
+        },
+      },
+    ],
+  });
+}
+
+Map<String, Object?> _runtimeStackComponentPayload({
+  required String id,
+  required String name,
+  required String role,
+  bool isRequired = true,
+  List<String> missingPaths = const <String>[],
+}) {
+  return <String, Object?>{
+    'id': id,
+    'name': name,
+    'role': role,
+    'isRequired': isRequired,
+    'isInstalled': missingPaths.isEmpty,
+    'paths': const <String>[],
+    'missingPaths': missingPaths,
+  };
 }
 
 void _writeU16(Uint8List bytes, int offset, int value) {
