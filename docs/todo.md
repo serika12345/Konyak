@@ -200,10 +200,10 @@ task changes scope.
     into the live runtime directory.
   - [ ] Add a runtime install lock so concurrent installs, repairs, and updates
     cannot mutate the same runtime root.
-  - [ ] Treat required stack completeness as part of install no-op detection on
+  - [x] Treat required stack completeness as part of install no-op detection on
     Linux and macOS; the presence of the Wine executable alone is not enough.
 - Runtime install and update product flow rework.
-  - [ ] Startup update checks must not mutate app or runtime state. They should
+  - [x] Startup update checks must not mutate app or runtime state. They should
     only check and notify unless a separate explicit auto-install setting is
     introduced.
   - [ ] Put first-time runtime installation behind an explicit onboarding or
@@ -221,12 +221,12 @@ task changes scope.
   - [ ] Make VSCode and Nix dev-shell launch paths use the same documented
     development profile.
 - Required tests for the rework.
-  - [ ] Linux install repairs an incomplete runtime when required components are
+  - [x] Linux install repairs an incomplete runtime when required components are
     missing even if `bin/wine` exists.
   - [ ] Component install failure leaves the previous runtime root unchanged.
   - [ ] Component-only development manifests cannot be used as full runtime
     update manifests.
-  - [ ] Startup update checks do not call install commands.
+  - [x] Startup update checks do not call install commands.
   - [ ] Runtime-dependent UI controls are disabled when capabilities are
     missing or unknown.
 - Linux ARM64 Windows execution research.

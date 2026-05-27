@@ -92,7 +92,6 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
   bool _isCreatingBottle = false;
   bool _isLoadingWinetricks = false;
   String? _archiveProgressMessage;
-  String? _runtimeInstallProgressMessage;
   bool _isShowingSettings = false;
   bool _hasTerminatedWineProcesses = false;
   AppSettingsSummary? _appSettings;
@@ -231,9 +230,7 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
       return;
     }
 
-    final installedUpdates = <String>[];
     final availableUpdates = <String>[];
-    final installFailures = <String>[];
 
     if (settings.automaticallyCheckForKonyakUpdates) {
       final result = await widget.cliClient.checkKonyakUpdate();
@@ -242,19 +239,7 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
       }
       switch (result) {
         case LoadedUpdateCheck(:final update) when update.status == 'available':
-          final installResult = await widget.cliClient.installKonyakUpdate();
-          if (!mounted) {
-            return;
-          }
-          switch (installResult) {
-            case InstalledUpdate(update: final installedUpdate):
-              installedUpdates.add(
-                installedUpdateLabel(installedUpdate, 'Konyak'),
-              );
-            case UpdateInstallLoadFailure(:final message):
-              installFailures.add('Konyak: $message');
-              availableUpdates.add(updateCheckLabel(update, 'Konyak'));
-          }
+          availableUpdates.add(updateCheckLabel(update, 'Konyak'));
         case LoadedUpdateCheck() || UpdateCheckLoadFailure():
           break;
       }
@@ -275,23 +260,7 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
               break;
             }
           }
-          if (linuxRuntime?.isInstalled != true) {
-            final installResult = await _confirmAndInstallManagedRuntime(
-              runtimeName: linuxRuntime?.name ?? 'Konyak Linux Wine',
-              installRuntime: widget.cliClient.installLinuxWine,
-            );
-            if (!mounted) {
-              return;
-            }
-            if (installResult != null) {
-              switch (installResult) {
-                case InstalledRuntime(:final runtime):
-                  installedUpdates.add(runtime.name);
-                case RuntimeInstallLoadFailure(:final message):
-                  installFailures.add('Konyak Linux Wine: $message');
-              }
-            }
-          } else {
+          if (linuxRuntime?.isInstalled == true) {
             final updateResult = await widget.cliClient.checkRuntimeUpdate(
               linuxWineRuntimeId,
             );
@@ -301,22 +270,9 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
             switch (updateResult) {
               case LoadedUpdateCheck(:final update)
                   when update.status == 'available':
-                final installResult = await widget.cliClient
-                    .installRuntimeUpdate(linuxWineRuntimeId);
-                if (!mounted) {
-                  return;
-                }
-                switch (installResult) {
-                  case InstalledRuntime():
-                    installedUpdates.add(
-                      updateCheckLabel(update, 'Konyak Linux Wine'),
-                    );
-                  case RuntimeInstallLoadFailure(:final message):
-                    installFailures.add('Konyak Linux Wine: $message');
-                    availableUpdates.add(
-                      updateCheckLabel(update, 'Konyak Linux Wine'),
-                    );
-                }
+                availableUpdates.add(
+                  updateCheckLabel(update, 'Konyak Linux Wine'),
+                );
               case LoadedUpdateCheck() || UpdateCheckLoadFailure():
                 break;
             }
@@ -341,23 +297,7 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
               break;
             }
           }
-          if (macosRuntime?.isInstalled != true) {
-            final installResult = await _confirmAndInstallManagedRuntime(
-              runtimeName: macosRuntime?.name ?? 'Konyak macOS Wine',
-              installRuntime: widget.cliClient.installMacosWine,
-            );
-            if (!mounted) {
-              return;
-            }
-            if (installResult != null) {
-              switch (installResult) {
-                case InstalledRuntime(:final runtime):
-                  installedUpdates.add(runtime.name);
-                case RuntimeInstallLoadFailure(:final message):
-                  installFailures.add('Konyak Wine: $message');
-              }
-            }
-          } else {
+          if (macosRuntime?.isInstalled == true) {
             final result = await widget.cliClient.checkRuntimeUpdate(
               macosWineRuntimeId,
             );
@@ -367,22 +307,7 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
             switch (result) {
               case LoadedUpdateCheck(:final update)
                   when update.status == 'available':
-                final installResult = await widget.cliClient
-                    .installRuntimeUpdate(macosWineRuntimeId);
-                if (!mounted) {
-                  return;
-                }
-                switch (installResult) {
-                  case InstalledRuntime():
-                    installedUpdates.add(
-                      updateCheckLabel(update, 'Konyak Wine'),
-                    );
-                  case RuntimeInstallLoadFailure(:final message):
-                    installFailures.add('Konyak Wine: $message');
-                    availableUpdates.add(
-                      updateCheckLabel(update, 'Konyak Wine'),
-                    );
-                }
+                availableUpdates.add(updateCheckLabel(update, 'Konyak Wine'));
               case LoadedUpdateCheck() || UpdateCheckLoadFailure():
                 break;
             }
@@ -390,24 +315,6 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
         case RuntimeListLoadFailure():
           break;
       }
-    }
-
-    if (installedUpdates.isNotEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Installed updates: ${installedUpdates.join(', ')}'),
-        ),
-      );
-      return;
-    }
-
-    if (installFailures.isNotEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Update install failed: ${installFailures.join(', ')}'),
-        ),
-      );
-      return;
     }
 
     if (availableUpdates.isEmpty) {
@@ -1254,55 +1161,6 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
     );
   }
 
-  Future<RuntimeInstallLoadResult?> _confirmAndInstallManagedRuntime({
-    required String runtimeName,
-    required Future<RuntimeInstallLoadResult> Function() installRuntime,
-  }) async {
-    final confirmed = await _confirmRuntimeDownload(runtimeName);
-    if (!mounted || !confirmed) {
-      return null;
-    }
-
-    setState(() {
-      _runtimeInstallProgressMessage = 'Downloading $runtimeName...';
-    });
-
-    try {
-      return await installRuntime();
-    } finally {
-      if (mounted) {
-        setState(() {
-          _runtimeInstallProgressMessage = null;
-        });
-      }
-    }
-  }
-
-  Future<bool> _confirmRuntimeDownload(String runtimeName) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Download $runtimeName?'),
-        content: Text(
-          'Konyak will download $runtimeName into your Konyak runtime directory. '
-          'The runtime is separate from the application and remains under its own license.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Download'),
-          ),
-        ],
-      ),
-    );
-
-    return confirmed ?? false;
-  }
-
   Future<void> _showLatestLog() async {
     final logPath = _latestRunLogPath;
     if (logPath == null) {
@@ -1513,11 +1371,6 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
         if (_archiveProgressMessage case final message?)
           BlockingProgressOverlay(
             key: const ValueKey('bottle-archive-progress'),
-            message: message,
-          ),
-        if (_runtimeInstallProgressMessage case final message?)
-          BlockingProgressOverlay(
-            key: const ValueKey('runtime-install-progress'),
             message: message,
           ),
       ],

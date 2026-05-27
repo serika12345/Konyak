@@ -4229,18 +4229,18 @@ void main() {
     ]);
   });
 
-  testWidgets('enabled update checks install available updates on startup', (
-    WidgetTester tester,
-  ) async {
-    final runner = _QueuedProcessRunner([
-      const ProcessRunResult(
-        exitCode: 0,
-        stdout: '{"schemaVersion":1,"bottles":[]}',
-        stderr: '',
-      ),
-      const ProcessRunResult(
-        exitCode: 0,
-        stdout: '''
+  testWidgets(
+    'enabled update checks only notify available updates on startup',
+    (WidgetTester tester) async {
+      final runner = _QueuedProcessRunner([
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '{"schemaVersion":1,"bottles":[]}',
+          stderr: '',
+        ),
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
           {
             "schemaVersion": 1,
             "appSettings": {
@@ -4251,11 +4251,11 @@ void main() {
             }
           }
         ''',
-        stderr: '',
-      ),
-      const ProcessRunResult(
-        exitCode: 0,
-        stdout: '''
+          stderr: '',
+        ),
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
           {
             "schemaVersion": 1,
             "appUpdate": {
@@ -4266,26 +4266,11 @@ void main() {
             }
           }
         ''',
-        stderr: '',
-      ),
-      const ProcessRunResult(
-        exitCode: 0,
-        stdout: '''
-          {
-            "schemaVersion": 1,
-            "appUpdateInstall": {
-              "appId": "konyak",
-              "status": "installed",
-              "currentVersion": "1.0.0",
-              "installedVersion": "1.1.0"
-            }
-          }
-        ''',
-        stderr: '',
-      ),
-      const ProcessRunResult(
-        exitCode: 0,
-        stdout: '''
+          stderr: '',
+        ),
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
           {
             "schemaVersion": 1,
             "runtimes": [
@@ -4302,11 +4287,11 @@ void main() {
             ]
           }
         ''',
-        stderr: '',
-      ),
-      const ProcessRunResult(
-        exitCode: 0,
-        stdout: '''
+          stderr: '',
+        ),
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
           {
             "schemaVersion": 1,
             "runtimeUpdate": {
@@ -4317,68 +4302,47 @@ void main() {
             }
           }
         ''',
-        stderr: '',
-      ),
-      const ProcessRunResult(
-        exitCode: 0,
-        stdout: '''
-          {
-            "schemaVersion": 1,
-            "runtime": {
-              "id": "konyak-macos-wine",
-              "name": "Konyak macOS Wine",
-              "platform": "macos",
-              "architecture": "x86_64",
-              "runnerKind": "macosWine",
-              "isBundled": false,
-              "isUpdateable": true,
-              "isInstalled": true
-            }
-          }
-        ''',
-        stderr: '',
-      ),
-    ]);
+          stderr: '',
+        ),
+      ]);
 
-    await tester.pumpWidget(
-      _testKonyakApp(
-        cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
-        enableBackgroundServices: true,
-      ),
-    );
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(
+        _testKonyakApp(
+          cliClient: KonyakCliClient(
+            executable: 'konyak',
+            processRunner: runner,
+          ),
+          enableBackgroundServices: true,
+        ),
+      );
+      await tester.pumpAndSettle();
 
-    expect(
-      find.text('Installed updates: Konyak 1.1.0, Konyak Wine 12.0'),
-      findsOneWidget,
-    );
-    expect(runner.argumentsLog, const [
-      ['list-bottles', '--json'],
-      ['get-app-settings', '--json'],
-      ['check-app-update', '--json'],
-      ['install-app-update', '--json'],
-      ['list-runtimes', '--json'],
-      ['check-runtime-update', 'konyak-macos-wine', '--json'],
-      ['install-runtime-update', 'konyak-macos-wine', '--json'],
-    ]);
-  });
+      expect(
+        find.text('Updates available: Konyak 1.1.0, Konyak Wine 12.0'),
+        findsOneWidget,
+      );
+      expect(runner.argumentsLog, const [
+        ['list-bottles', '--json'],
+        ['get-app-settings', '--json'],
+        ['check-app-update', '--json'],
+        ['list-runtimes', '--json'],
+        ['check-runtime-update', 'konyak-macos-wine', '--json'],
+      ]);
+    },
+  );
 
   testWidgets(
-    'macOS prompts before downloading the managed runtime on launch',
+    'macOS startup update checks do not prompt for missing managed runtime',
     (WidgetTester tester) async {
-      final installCompleter = Completer<ProcessRunResult>();
-      final runner = _FutureQueuedProcessRunner([
-        Future.value(
-          const ProcessRunResult(
-            exitCode: 0,
-            stdout: '{"schemaVersion":1,"bottles":[]}',
-            stderr: '',
-          ),
+      final runner = _QueuedProcessRunner([
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '{"schemaVersion":1,"bottles":[]}',
+          stderr: '',
         ),
-        Future.value(
-          const ProcessRunResult(
-            exitCode: 0,
-            stdout: '''
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
           {
             "schemaVersion": 1,
             "appSettings": {
@@ -4389,13 +4353,11 @@ void main() {
             }
           }
         ''',
-            stderr: '',
-          ),
+          stderr: '',
         ),
-        Future.value(
-          const ProcessRunResult(
-            exitCode: 0,
-            stdout: '''
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
           {
             "schemaVersion": 1,
             "runtimes": [
@@ -4412,10 +4374,8 @@ void main() {
             ]
           }
         ''',
-            stderr: '',
-          ),
+          stderr: '',
         ),
-        installCompleter.future,
       ]);
 
       await tester.pumpWidget(
@@ -4429,74 +4389,31 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Download Konyak macOS Wine?'), findsOneWidget);
-      expect(find.text('Download'), findsOneWidget);
-      expect(runner.argumentsLog, const [
-        ['list-bottles', '--json'],
-        ['get-app-settings', '--json'],
-        ['list-runtimes', '--json'],
-      ]);
-
-      await tester.tap(find.text('Download'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 250));
-
+      expect(find.text('Download Konyak macOS Wine?'), findsNothing);
       expect(
         find.byKey(const ValueKey('runtime-install-progress')),
-        findsOneWidget,
+        findsNothing,
       );
-      expect(find.text('Downloading Konyak macOS Wine...'), findsOneWidget);
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
-
-      installCompleter.complete(
-        const ProcessRunResult(
-          exitCode: 0,
-          stdout: '''
-          {
-            "schemaVersion": 1,
-            "runtime": {
-              "id": "konyak-macos-wine",
-              "name": "Konyak macOS Wine",
-              "platform": "macos",
-              "architecture": "x86_64",
-              "runnerKind": "macosWine",
-              "isBundled": false,
-              "isUpdateable": true,
-              "isInstalled": true
-            }
-          }
-        ''',
-          stderr: '',
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      expect(find.text('Installed updates: Konyak macOS Wine'), findsOneWidget);
       expect(runner.argumentsLog, const [
         ['list-bottles', '--json'],
         ['get-app-settings', '--json'],
         ['list-runtimes', '--json'],
-        ['install-macos-wine', '--json'],
       ]);
     },
   );
 
   testWidgets(
-    'Linux prompts before downloading the managed runtime on launch',
+    'Linux startup update checks do not prompt for missing managed runtime',
     (WidgetTester tester) async {
-      final installCompleter = Completer<ProcessRunResult>();
-      final runner = _FutureQueuedProcessRunner([
-        Future.value(
-          const ProcessRunResult(
-            exitCode: 0,
-            stdout: '{"schemaVersion":1,"bottles":[]}',
-            stderr: '',
-          ),
+      final runner = _QueuedProcessRunner([
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '{"schemaVersion":1,"bottles":[]}',
+          stderr: '',
         ),
-        Future.value(
-          const ProcessRunResult(
-            exitCode: 0,
-            stdout: '''
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
           {
             "schemaVersion": 1,
             "appSettings": {
@@ -4507,13 +4424,11 @@ void main() {
             }
           }
         ''',
-            stderr: '',
-          ),
+          stderr: '',
         ),
-        Future.value(
-          const ProcessRunResult(
-            exitCode: 0,
-            stdout: '''
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
           {
             "schemaVersion": 1,
             "runtimes": [
@@ -4530,10 +4445,8 @@ void main() {
             ]
           }
         ''',
-            stderr: '',
-          ),
+          stderr: '',
         ),
-        installCompleter.future,
       ]);
 
       await tester.pumpWidget(
@@ -4548,53 +4461,15 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Download Konyak Linux Wine?'), findsOneWidget);
-      expect(find.text('Download'), findsOneWidget);
-      expect(runner.argumentsLog, const [
-        ['list-bottles', '--json'],
-        ['get-app-settings', '--json'],
-        ['list-runtimes', '--json'],
-      ]);
-
-      await tester.tap(find.text('Download'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 250));
-
+      expect(find.text('Download Konyak Linux Wine?'), findsNothing);
       expect(
         find.byKey(const ValueKey('runtime-install-progress')),
-        findsOneWidget,
+        findsNothing,
       );
-      expect(find.text('Downloading Konyak Linux Wine...'), findsOneWidget);
-
-      installCompleter.complete(
-        const ProcessRunResult(
-          exitCode: 0,
-          stdout: '''
-          {
-            "schemaVersion": 1,
-            "runtime": {
-              "id": "konyak-linux-wine",
-              "name": "Konyak Linux Wine",
-              "platform": "linux",
-              "architecture": "x86_64",
-              "runnerKind": "wine",
-              "isBundled": false,
-              "isUpdateable": true,
-              "isInstalled": true
-            }
-          }
-        ''',
-          stderr: '',
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      expect(find.text('Installed updates: Konyak Linux Wine'), findsOneWidget);
       expect(runner.argumentsLog, const [
         ['list-bottles', '--json'],
         ['get-app-settings', '--json'],
         ['list-runtimes', '--json'],
-        ['install-linux-wine', '--json'],
       ]);
     },
   );
