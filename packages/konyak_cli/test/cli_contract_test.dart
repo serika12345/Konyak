@@ -4337,8 +4337,6 @@ corefonts                Microsoft Core Fonts
           'libraryPath': '/home/user/.local/share/konyak/Runtimes/linux-wine',
           'executablePath':
               '/home/user/.local/share/konyak/Runtimes/linux-wine/bin/wine',
-          'sourceManifestUrl':
-              'https://example.invalid/linux-runtime-stack-source.json',
           'stack': {
             'schemaVersion': 1,
             'id': 'linux-wine-runtime-stack',
@@ -5692,8 +5690,6 @@ corefonts                Microsoft Core Fonts
             isBundled: false,
             isUpdateable: true,
             versionUrl: 'https://example.invalid/releases/latest',
-            sourceManifestUrl:
-                'file:///dev/component-only-linux-runtime-stack-source.json',
             stack: RuntimeStack(
               id: 'linux-wine-runtime-stack',
               name: 'Linux Wine/Proton runtime stack',
@@ -5741,7 +5737,7 @@ corefonts                Microsoft Core Fonts
   );
 
   test(
-    'runtime update checker ignores runtime source manifests as update sources',
+    'runtime update checker ignores missing source manifests in release metadata',
     () {
       final checker = DartIoRuntimeUpdateChecker(
         runtimeCatalog: StaticRuntimeCatalog([
@@ -5754,8 +5750,6 @@ corefonts                Microsoft Core Fonts
             isBundled: false,
             isUpdateable: true,
             versionUrl: 'https://example.invalid/releases/latest',
-            sourceManifestUrl:
-                'file:///dev/component-only-linux-runtime-stack-source.json',
             stack: RuntimeStack(
               id: 'linux-wine-runtime-stack',
               name: 'Linux Wine/Proton runtime stack',

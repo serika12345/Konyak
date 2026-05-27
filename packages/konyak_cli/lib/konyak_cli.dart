@@ -2790,7 +2790,6 @@ class RuntimeRecord {
     this.executablePath,
     this.archiveUrl,
     this.versionUrl,
-    this.sourceManifestUrl,
     this.stack,
   });
 
@@ -2808,7 +2807,6 @@ class RuntimeRecord {
   final String? executablePath;
   final String? archiveUrl;
   final String? versionUrl;
-  final String? sourceManifestUrl;
   final RuntimeStack? stack;
 
   Map<String, Object?> toJson() {
@@ -2830,7 +2828,6 @@ class RuntimeRecord {
       if (executablePath != null) 'executablePath': executablePath,
       if (archiveUrl != null) 'archiveUrl': archiveUrl,
       if (versionUrl != null) 'versionUrl': versionUrl,
-      if (sourceManifestUrl != null) 'sourceManifestUrl': sourceManifestUrl,
       if (runtimeStack != null) 'stack': runtimeStack.toJson(),
     };
   }
@@ -8493,7 +8490,6 @@ RuntimeRecord _linuxWineRuntimeRecord({
     executablePath: executablePath,
     archiveUrl: archiveUrl,
     versionUrl: versionUrl,
-    sourceManifestUrl: sourceManifestUrl,
     stack: _linuxWineRuntimeStack(
       runtimeRoot: runtimeRoot,
       fileStatusProbe: fileStatusProbe,
