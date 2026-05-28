@@ -4096,6 +4096,137 @@ void main() {
     ]);
   });
 
+  testWidgets(
+    'macOS settings dialog distinguishes installed incomplete runtime',
+    (WidgetTester tester) async {
+      final runner = _QueuedProcessRunner([
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '{"schemaVersion":1,"bottles":[]}',
+          stderr: '',
+        ),
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+          {
+            "schemaVersion": 1,
+            "appSettings": {
+              "terminateWineProcessesOnClose": false,
+              "defaultBottlePath": "/Users/user/Library/Application Support/Konyak/Bottles",
+              "appearanceMode": "dark",
+              "automaticallyCheckForKonyakUpdates": false,
+              "automaticallyCheckForWineUpdates": false
+            }
+          }
+        ''',
+          stderr: '',
+        ),
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+          {
+            "schemaVersion": 1,
+            "runtimes": [
+              {
+                "id": "konyak-macos-wine",
+                "name": "Konyak macOS Wine",
+                "platform": "macos",
+                "architecture": "x86_64",
+                "runnerKind": "macosWine",
+                "isBundled": false,
+                "isUpdateable": false,
+                "distributionKind": "bootstrap",
+                "isInstalled": true,
+                "stack": {
+                  "schemaVersion": 1,
+                  "id": "macos-konyak-runtime-stack",
+                  "name": "Konyak macOS runtime stack",
+                  "compatibilityTarget": "macos-konyak-runtime-stack",
+                  "isComplete": false,
+                  "components": [
+                    {
+                      "id": "wine",
+                      "name": "Wine",
+                      "role": "windows-runner",
+                      "isRequired": true,
+                      "isInstalled": true,
+                      "paths": ["/runtime/bin/wine64"],
+                      "missingPaths": []
+                    },
+                    {
+                      "id": "winetricks",
+                      "name": "winetricks",
+                      "role": "verb-installer",
+                      "isRequired": true,
+                      "isInstalled": false,
+                      "paths": ["/runtime/winetricks"],
+                      "missingPaths": ["/runtime/winetricks"]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ''',
+          stderr: '',
+        ),
+        const ProcessRunResult(
+          exitCode: 75,
+          stdout: '''
+          {
+            "schemaVersion": 1,
+            "error": {
+              "code": "macosWineInstallFailed",
+              "message": "Konyak macOS Wine is installed, but the runtime stack is incomplete. Configure KONYAK_DEV_MACOS_WINE_STACK_MANIFEST or KONYAK_MACOS_WINE_STACK_MANIFEST, or pass --source-manifest or --component-archive to repair it."
+            }
+          }
+        ''',
+          stderr: '',
+        ),
+      ]);
+
+      await tester.pumpWidget(
+        _testKonyakApp(
+          platform: KonyakPlatform.macos,
+          cliClient: KonyakCliClient(
+            executable: 'konyak',
+            processRunner: runner,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byTooltip('Settings'));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(
+        find.byKey(const ValueKey('app-settings-install-runtime-button')),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.byKey(const ValueKey('app-settings-install-runtime-button')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Konyak macOS Wine'), findsOneWidget);
+      expect(find.text('Installed'), findsWidgets);
+      expect(find.text('Distribution: bootstrap'), findsOneWidget);
+      expect(find.text('Incomplete'), findsOneWidget);
+      expect(find.text('Runtime install'), findsOneWidget);
+      expect(find.text('Failed'), findsOneWidget);
+      expect(
+        find.textContaining('KONYAK_DEV_MACOS_WINE_STACK_MANIFEST'),
+        findsOneWidget,
+      );
+      expect(find.widgetWithText(FilledButton, 'Repair'), findsOneWidget);
+      expect(runner.argumentsLog, const [
+        ['list-bottles', '--json'],
+        ['get-app-settings', '--json'],
+        ['list-runtimes', '--json'],
+        ['install-macos-wine', '--json'],
+      ]);
+    },
+  );
+
   testWidgets('settings dialog fits compact desktop windows without overflow', (
     WidgetTester tester,
   ) async {

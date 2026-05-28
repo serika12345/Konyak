@@ -3749,6 +3749,11 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
           developmentKey: 'KONYAK_DEV_MACOS_WINE_STACK_SIGNATURE_URL',
           releaseKey: 'KONYAK_MACOS_WINE_STACK_SIGNATURE_URL',
         );
+    final hasExplicitInstallSource =
+        request.archivePath != null ||
+        request.archiveUrl != null ||
+        componentArchivePaths.isNotEmpty ||
+        request.sourceManifest != null;
     if (!request.force &&
         request.archivePath == null &&
         request.archiveUrl == null &&
@@ -3757,6 +3762,18 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
         currentRuntime.isInstalled == true &&
         currentRuntime.stack?.isComplete == true) {
       return MacosWineInstallCompleted(runtime: currentRuntime);
+    }
+    if (!request.force &&
+        currentRuntime.isInstalled == true &&
+        currentRuntime.stack?.isComplete != true &&
+        !hasExplicitInstallSource &&
+        sourceManifest == null) {
+      return const MacosWineInstallFailed(
+        'Konyak macOS Wine is installed, but the runtime stack is incomplete. '
+        'Configure KONYAK_DEV_MACOS_WINE_STACK_MANIFEST or '
+        'KONYAK_MACOS_WINE_STACK_MANIFEST, or pass --source-manifest or '
+        '--component-archive to repair it.',
+      );
     }
 
     if (sourceManifest != null) {

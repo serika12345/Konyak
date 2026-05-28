@@ -264,39 +264,41 @@ class _RuntimeSection extends StatelessWidget {
         );
     final stack = runtime?.stack;
 
-    if (loadError != null) {
+    if (runtime == null || stack == null) {
       return _AppSettingsSection(
         title: title,
         children: [
           _AppSettingsDetailRow(
             label: 'Status',
             value: 'Unavailable',
-            detail: loadError,
+            detail: loadError ?? 'No managed runtime stack detected.',
           ),
-          if (onInstallRuntime != null) _installButton(),
-        ],
-      );
-    }
-
-    if (runtime == null || stack == null) {
-      return _AppSettingsSection(
-        title: title,
-        children: [
-          const _AppSettingsDetailRow(
-            label: 'Status',
-            value: 'Unavailable',
-            detail: 'No managed runtime stack detected.',
-          ),
-          if (onInstallRuntime != null) _installButton(),
+          if (onInstallRuntime != null) _installButton('Install'),
         ],
       );
     }
 
     final shouldOfferInstall = runtime.isInstalled != true || !stack.isComplete;
+    final installButtonLabel = runtime.isInstalled == true
+        ? 'Repair'
+        : 'Install';
 
     return _AppSettingsSection(
       title: title,
       children: [
+        if (loadError != null)
+          _AppSettingsDetailRow(
+            label: 'Runtime install',
+            value: 'Failed',
+            detail: loadError,
+          ),
+        _AppSettingsDetailRow(
+          label: runtime.name,
+          value: runtime.isInstalled == true ? 'Installed' : 'Not installed',
+          detail: runtime.distributionKind == null
+              ? null
+              : 'Distribution: ${runtime.distributionKind}',
+        ),
         _AppSettingsDetailRow(
           label: stack.name,
           value: stack.isComplete ? 'Complete' : 'Incomplete',
@@ -310,12 +312,13 @@ class _RuntimeSection extends StatelessWidget {
                 ? null
                 : component.missingPaths.join('\n'),
           ),
-        if (shouldOfferInstall && onInstallRuntime != null) _installButton(),
+        if (shouldOfferInstall && onInstallRuntime != null)
+          _installButton(installButtonLabel),
       ],
     );
   }
 
-  Widget _installButton() {
+  Widget _installButton(String label) {
     return Align(
       alignment: Alignment.centerLeft,
       child: FilledButton.icon(
@@ -327,7 +330,7 @@ class _RuntimeSection extends StatelessWidget {
                 child: CircularProgressIndicator(strokeWidth: 2),
               )
             : const Icon(Icons.download),
-        label: Text(isInstalling ? 'Installing' : 'Install'),
+        label: Text(isInstalling ? 'Installing' : label),
       ),
     );
   }

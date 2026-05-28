@@ -6247,6 +6247,30 @@ corefonts                Microsoft Core Fonts
     },
   );
 
+  test(
+    'install-macos-wine reports incomplete installed runtime without a full stack source',
+    () {
+      final installer = DartIoMacosWineInstaller(
+        hostPlatform: KonyakHostPlatform.macos,
+        environment: const {'HOME': '/Users/user'},
+        fileStatusProbe: const StaticFileStatusProbe({
+          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wine64',
+          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wineserver',
+          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wine',
+        }),
+      );
+
+      final result = installer.install(const MacosWineInstallRequest());
+
+      expect(result, isA<MacosWineInstallFailed>());
+      expect(
+        (result as MacosWineInstallFailed).message,
+        contains('runtime stack is incomplete'),
+      );
+      expect(result.message, contains('KONYAK_MACOS_WINE_STACK_MANIFEST'));
+    },
+  );
+
   test('install-macos-wine normalizes a component stack archive', () async {
     final tempDirectory = await Directory.systemTemp.createTemp(
       'konyak-runtime-stack-test-',
