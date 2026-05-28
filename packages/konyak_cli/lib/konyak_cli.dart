@@ -3841,7 +3841,7 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
         );
       }
       if (manifest.runtimeId != macosWineRuntimeId ||
-          manifest.stackId != 'macos-konyak-runtime-stack') {
+          manifest.stackId != _macosKonyakRuntimeStackId) {
         return const MacosWineInstallFailed(
           'Runtime stack source manifest targets an unsupported runtime.',
         );
@@ -4267,7 +4267,7 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
         );
       }
       if (manifest.runtimeId != linuxWineRuntimeId ||
-          manifest.stackId != 'linux-wine-runtime-stack') {
+          manifest.stackId != _linuxWineRuntimeStackId) {
         return const LinuxWineInstallFailed(
           'Runtime stack source manifest targets an unsupported runtime.',
         );
@@ -5012,6 +5012,22 @@ class DartIoAppUpdateInstaller implements AppUpdateInstaller {
       ),
     };
   }
+}
+
+class _RuntimeStackComponentDefinition {
+  const _RuntimeStackComponentDefinition({
+    required this.id,
+    required this.name,
+    required this.role,
+    required this.isRequired,
+    required this.relativePaths,
+  });
+
+  final String id;
+  final String name;
+  final String role;
+  final bool isRequired;
+  final List<List<String>> relativePaths;
 }
 
 class RuntimeValidationRecord {
@@ -8463,6 +8479,122 @@ ProgramRunRequest _macosWinetricksCommandRequest({
   );
 }
 
+const _macosKonyakRuntimeStackId = 'macos-konyak-runtime-stack';
+const _linuxWineRuntimeStackId = 'linux-wine-runtime-stack';
+
+const _linuxWineRuntimeComponentDefinitions =
+    <_RuntimeStackComponentDefinition>[
+      _RuntimeStackComponentDefinition(
+        id: 'wine',
+        name: 'Wine',
+        role: 'windows-runner',
+        isRequired: true,
+        relativePaths: <List<String>>[
+          <String>['bin', 'wine'],
+          <String>['bin', 'winedbg'],
+          <String>['bin', 'wineserver'],
+        ],
+      ),
+      _RuntimeStackComponentDefinition(
+        id: 'winetricks',
+        name: 'winetricks',
+        role: 'verb-installer',
+        isRequired: true,
+        relativePaths: <List<String>>[
+          <String>['winetricks'],
+        ],
+      ),
+      _RuntimeStackComponentDefinition(
+        id: 'vkd3d-proton',
+        name: 'vkd3d-proton',
+        role: 'd3d12-vulkan-translation',
+        isRequired: true,
+        relativePaths: <List<String>>[
+          <String>['vkd3d-proton', 'x64', 'd3d12.dll'],
+          <String>['vkd3d-proton', 'x86', 'd3d12.dll'],
+        ],
+      ),
+    ];
+
+const _macosKonyakRuntimeComponentDefinitions =
+    <_RuntimeStackComponentDefinition>[
+      _RuntimeStackComponentDefinition(
+        id: 'wine',
+        name: 'Wine',
+        role: 'windows-runner',
+        isRequired: true,
+        relativePaths: <List<String>>[
+          <String>['bin', 'wine64'],
+          <String>['bin', 'wineserver'],
+        ],
+      ),
+      _RuntimeStackComponentDefinition(
+        id: 'wine32on64',
+        name: 'Wine32-on-64 support',
+        role: '32-bit-windows-support',
+        isRequired: true,
+        relativePaths: <List<String>>[
+          <String>['bin', 'wine'],
+        ],
+      ),
+      _RuntimeStackComponentDefinition(
+        id: 'dxvk-macos',
+        name: 'DXVK-macOS',
+        role: 'd3d9-d3d11-translation',
+        isRequired: true,
+        relativePaths: <List<String>>[
+          <String>['DXVK', 'x64', 'dxgi.dll'],
+          <String>['DXVK', 'x32', 'dxgi.dll'],
+        ],
+      ),
+      _RuntimeStackComponentDefinition(
+        id: 'moltenvk',
+        name: 'MoltenVK',
+        role: 'vulkan-metal-translation',
+        isRequired: true,
+        relativePaths: <List<String>>[
+          <String>['lib', 'libMoltenVK.dylib'],
+        ],
+      ),
+      _RuntimeStackComponentDefinition(
+        id: 'gstreamer',
+        name: 'GStreamer runtime',
+        role: 'media-runtime',
+        isRequired: true,
+        relativePaths: <List<String>>[
+          <String>['lib', 'libgstreamer-1.0.0.dylib'],
+        ],
+      ),
+      _RuntimeStackComponentDefinition(
+        id: 'wine-mono',
+        name: 'wine-mono',
+        role: 'dotnet-runtime',
+        isRequired: true,
+        relativePaths: <List<String>>[
+          <String>['share', 'wine', 'mono'],
+        ],
+      ),
+      _RuntimeStackComponentDefinition(
+        id: 'winetricks',
+        name: 'winetricks',
+        role: 'verb-installer',
+        isRequired: true,
+        relativePaths: <List<String>>[
+          <String>['winetricks'],
+        ],
+      ),
+      _RuntimeStackComponentDefinition(
+        id: 'gptk-d3dmetal',
+        name: 'GPTK/D3DMetal',
+        role: 'd3d12-metal-translation',
+        isRequired: false,
+        relativePaths: <List<String>>[
+          <String>['lib', 'external', 'D3DMetal.framework'],
+          <String>['lib', 'external', 'libd3dshared.dylib'],
+        ],
+      ),
+    ];
+
 RuntimeRecord _macosWineRuntimeRecord({
   required Map<String, String> environment,
   required FileStatusProbe fileStatusProbe,
@@ -8538,60 +8670,14 @@ RuntimeStack _linuxWineRuntimeStack({
   required FileStatusProbe fileStatusProbe,
   required RuntimeStackVersionProbe runtimeStackVersionProbe,
 }) {
-  return RuntimeStack(
-    id: 'linux-wine-runtime-stack',
+  return _runtimeStackFromDefinitions(
+    id: _linuxWineRuntimeStackId,
     name: 'Linux Wine/Proton runtime stack',
-    compatibilityTarget: 'linux-wine-runtime-stack',
-    components: <RuntimeStackComponent>[
-      _runtimeStackComponent(
-        runtimeRoot: runtimeRoot,
-        fileStatusProbe: fileStatusProbe,
-        id: 'wine',
-        name: 'Wine',
-        role: 'windows-runner',
-        isRequired: true,
-        version: runtimeStackVersionProbe.versionFor(
-          runtimeRoot: runtimeRoot,
-          componentId: 'wine',
-        ),
-        relativePaths: const <List<String>>[
-          <String>['bin', 'wine'],
-          <String>['bin', 'winedbg'],
-          <String>['bin', 'wineserver'],
-        ],
-      ),
-      _runtimeStackComponent(
-        runtimeRoot: runtimeRoot,
-        fileStatusProbe: fileStatusProbe,
-        id: 'winetricks',
-        name: 'winetricks',
-        role: 'verb-installer',
-        isRequired: true,
-        version: runtimeStackVersionProbe.versionFor(
-          runtimeRoot: runtimeRoot,
-          componentId: 'winetricks',
-        ),
-        relativePaths: const <List<String>>[
-          <String>['winetricks'],
-        ],
-      ),
-      _runtimeStackComponent(
-        runtimeRoot: runtimeRoot,
-        fileStatusProbe: fileStatusProbe,
-        id: 'vkd3d-proton',
-        name: 'vkd3d-proton',
-        role: 'd3d12-vulkan-translation',
-        isRequired: true,
-        version: runtimeStackVersionProbe.versionFor(
-          runtimeRoot: runtimeRoot,
-          componentId: 'vkd3d-proton',
-        ),
-        relativePaths: const <List<String>>[
-          <String>['vkd3d-proton', 'x64', 'd3d12.dll'],
-          <String>['vkd3d-proton', 'x86', 'd3d12.dll'],
-        ],
-      ),
-    ],
+    compatibilityTarget: _linuxWineRuntimeStackId,
+    runtimeRoot: runtimeRoot,
+    fileStatusProbe: fileStatusProbe,
+    runtimeStackVersionProbe: runtimeStackVersionProbe,
+    componentDefinitions: _linuxWineRuntimeComponentDefinitions,
   );
 }
 
@@ -8600,149 +8686,50 @@ RuntimeStack _macosKonyakRuntimeStack({
   required FileStatusProbe fileStatusProbe,
   required RuntimeStackVersionProbe runtimeStackVersionProbe,
 }) {
-  return RuntimeStack(
-    id: 'macos-konyak-runtime-stack',
+  return _runtimeStackFromDefinitions(
+    id: _macosKonyakRuntimeStackId,
     name: 'Konyak macOS runtime stack',
-    compatibilityTarget: 'macos-konyak-runtime-stack',
-    components: <RuntimeStackComponent>[
-      _runtimeStackComponent(
-        runtimeRoot: runtimeRoot,
-        fileStatusProbe: fileStatusProbe,
-        id: 'wine',
-        name: 'Wine',
-        role: 'windows-runner',
-        isRequired: true,
-        version: runtimeStackVersionProbe.versionFor(
-          runtimeRoot: runtimeRoot,
-          componentId: 'wine',
-        ),
-        relativePaths: const <List<String>>[
-          <String>['bin', 'wine64'],
-          <String>['bin', 'wineserver'],
-        ],
-      ),
-      _runtimeStackComponent(
-        runtimeRoot: runtimeRoot,
-        fileStatusProbe: fileStatusProbe,
-        id: 'wine32on64',
-        name: 'Wine32-on-64 support',
-        role: '32-bit-windows-support',
-        isRequired: true,
-        version: runtimeStackVersionProbe.versionFor(
-          runtimeRoot: runtimeRoot,
-          componentId: 'wine32on64',
-        ),
-        relativePaths: const <List<String>>[
-          <String>['bin', 'wine'],
-        ],
-      ),
-      _runtimeStackComponent(
-        runtimeRoot: runtimeRoot,
-        fileStatusProbe: fileStatusProbe,
-        id: 'dxvk-macos',
-        name: 'DXVK-macOS',
-        role: 'd3d9-d3d11-translation',
-        isRequired: true,
-        version: runtimeStackVersionProbe.versionFor(
-          runtimeRoot: runtimeRoot,
-          componentId: 'dxvk-macos',
-        ),
-        relativePaths: const <List<String>>[
-          <String>['DXVK', 'x64', 'dxgi.dll'],
-          <String>['DXVK', 'x32', 'dxgi.dll'],
-        ],
-      ),
-      _runtimeStackComponent(
-        runtimeRoot: runtimeRoot,
-        fileStatusProbe: fileStatusProbe,
-        id: 'moltenvk',
-        name: 'MoltenVK',
-        role: 'vulkan-metal-translation',
-        isRequired: true,
-        version: runtimeStackVersionProbe.versionFor(
-          runtimeRoot: runtimeRoot,
-          componentId: 'moltenvk',
-        ),
-        relativePaths: const <List<String>>[
-          <String>['lib', 'libMoltenVK.dylib'],
-        ],
-      ),
-      _runtimeStackComponent(
-        runtimeRoot: runtimeRoot,
-        fileStatusProbe: fileStatusProbe,
-        id: 'gstreamer',
-        name: 'GStreamer runtime',
-        role: 'media-runtime',
-        isRequired: true,
-        version: runtimeStackVersionProbe.versionFor(
-          runtimeRoot: runtimeRoot,
-          componentId: 'gstreamer',
-        ),
-        relativePaths: const <List<String>>[
-          <String>['lib', 'libgstreamer-1.0.0.dylib'],
-        ],
-      ),
-      _runtimeStackComponent(
-        runtimeRoot: runtimeRoot,
-        fileStatusProbe: fileStatusProbe,
-        id: 'wine-mono',
-        name: 'wine-mono',
-        role: 'dotnet-runtime',
-        isRequired: true,
-        version: runtimeStackVersionProbe.versionFor(
-          runtimeRoot: runtimeRoot,
-          componentId: 'wine-mono',
-        ),
-        relativePaths: const <List<String>>[
-          <String>['share', 'wine', 'mono'],
-        ],
-      ),
-      _runtimeStackComponent(
-        runtimeRoot: runtimeRoot,
-        fileStatusProbe: fileStatusProbe,
-        id: 'winetricks',
-        name: 'winetricks',
-        role: 'verb-installer',
-        isRequired: true,
-        version: runtimeStackVersionProbe.versionFor(
-          runtimeRoot: runtimeRoot,
-          componentId: 'winetricks',
-        ),
-        relativePaths: const <List<String>>[
-          <String>['winetricks'],
-        ],
-      ),
-      _runtimeStackComponent(
-        runtimeRoot: runtimeRoot,
-        fileStatusProbe: fileStatusProbe,
-        id: 'gptk-d3dmetal',
-        name: 'GPTK/D3DMetal',
-        role: 'd3d12-metal-translation',
-        isRequired: false,
-        version: runtimeStackVersionProbe.versionFor(
-          runtimeRoot: runtimeRoot,
-          componentId: 'gptk-d3dmetal',
-        ),
-        relativePaths: const <List<String>>[
-          <String>['lib', 'external', 'D3DMetal.framework'],
-          <String>['lib', 'external', 'libd3dshared.dylib'],
-        ],
-      ),
-    ],
+    compatibilityTarget: _macosKonyakRuntimeStackId,
+    runtimeRoot: runtimeRoot,
+    fileStatusProbe: fileStatusProbe,
+    runtimeStackVersionProbe: runtimeStackVersionProbe,
+    componentDefinitions: _macosKonyakRuntimeComponentDefinitions,
+  );
+}
+
+RuntimeStack _runtimeStackFromDefinitions({
+  required String id,
+  required String name,
+  required String compatibilityTarget,
+  required String runtimeRoot,
+  required FileStatusProbe fileStatusProbe,
+  required RuntimeStackVersionProbe runtimeStackVersionProbe,
+  required List<_RuntimeStackComponentDefinition> componentDefinitions,
+}) {
+  return RuntimeStack(
+    id: id,
+    name: name,
+    compatibilityTarget: compatibilityTarget,
+    components: componentDefinitions
+        .map(
+          (definition) => _runtimeStackComponent(
+            runtimeRoot: runtimeRoot,
+            fileStatusProbe: fileStatusProbe,
+            runtimeStackVersionProbe: runtimeStackVersionProbe,
+            definition: definition,
+          ),
+        )
+        .toList(growable: false),
   );
 }
 
 RuntimeStackComponent _runtimeStackComponent({
   required String runtimeRoot,
   required FileStatusProbe fileStatusProbe,
-  required String id,
-  required String name,
-  required String role,
-  required bool isRequired,
-  String? version,
-  required List<List<String>> relativePaths,
+  required RuntimeStackVersionProbe runtimeStackVersionProbe,
+  required _RuntimeStackComponentDefinition definition,
 }) {
-  final paths = relativePaths
+  final paths = definition.relativePaths
       .map((pathSegments) => _joinPath(runtimeRoot, pathSegments))
       .toList(growable: false);
   final missingPaths = paths
@@ -8750,13 +8737,16 @@ RuntimeStackComponent _runtimeStackComponent({
       .toList(growable: false);
 
   return RuntimeStackComponent(
-    id: id,
-    name: name,
-    role: role,
-    isRequired: isRequired,
+    id: definition.id,
+    name: definition.name,
+    role: definition.role,
+    isRequired: definition.isRequired,
     paths: paths,
     missingPaths: missingPaths,
-    version: version,
+    version: runtimeStackVersionProbe.versionFor(
+      runtimeRoot: runtimeRoot,
+      componentId: definition.id,
+    ),
   );
 }
 

@@ -197,6 +197,8 @@ task changes scope.
   - [ ] Keep macOS and Linux differences in small platform specifications:
     runtime id, stack id, required paths, optional components, normalization
     rules, and default source selection.
+    - [x] Move runtime stack component ids, roles, and required paths into
+      platform component definitions.
   - [x] Make component installation transactional. Stage the next runtime root,
     validate it, then replace the current runtime root; do not overlay directly
     into the live runtime directory.
