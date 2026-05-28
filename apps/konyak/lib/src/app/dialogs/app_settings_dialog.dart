@@ -177,11 +177,11 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
                 ),
               ],
             ),
-            if (widget.platform.isLinux) ...[
+            if (_showsRuntimeSection(widget.platform)) ...[
               const SizedBox(height: 26),
               _RuntimeSection(
-                title: 'Linux Runtime',
-                platform: 'linux',
+                title: _runtimeSectionTitle(widget.platform),
+                platform: _runtimeSectionPlatform(widget.platform),
                 runtimes: _runtimes,
                 loadError: _runtimeLoadError,
                 isInstalling: _isInstallingRuntime,
@@ -223,6 +223,18 @@ List<RuntimeSummary> _upsertRuntime(
   }
 
   return List.unmodifiable(updated);
+}
+
+bool _showsRuntimeSection(KonyakPlatform platform) {
+  return platform.isMacOS || platform.isLinux;
+}
+
+String _runtimeSectionTitle(KonyakPlatform platform) {
+  return platform.isMacOS ? 'macOS Runtime' : 'Linux Runtime';
+}
+
+String _runtimeSectionPlatform(KonyakPlatform platform) {
+  return platform.isMacOS ? 'macos' : 'linux';
 }
 
 class _RuntimeSection extends StatelessWidget {

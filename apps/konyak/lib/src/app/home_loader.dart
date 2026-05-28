@@ -69,6 +69,14 @@ RuntimeSummary? _runtimeForPlatform(
   return null;
 }
 
+bool _supportsSettingsRuntime(KonyakPlatform platform) {
+  return platform.isMacOS || platform.isLinux;
+}
+
+String _runtimePlatformName(KonyakPlatform platform) {
+  return platform.isMacOS ? 'macos' : 'linux';
+}
+
 List<RuntimeSummary> _upsertRuntimeSummary(
   List<RuntimeSummary> runtimes,
   RuntimeSummary runtime,
@@ -1275,15 +1283,16 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
           widget.onAppSettingsLoaded(settings);
           var knownRuntimes = const <RuntimeSummary>[];
           String? runtimeLoadError;
-          if (widget.platform.isLinux) {
+          if (_supportsSettingsRuntime(widget.platform)) {
             final runtimeResult = await widget.cliClient.listKnownRuntimes();
             if (!mounted) {
               return;
             }
             switch (runtimeResult) {
               case LoadedRuntimeList(:final runtimes):
+                final platformName = _runtimePlatformName(widget.platform);
                 final platformRuntimes = runtimes
-                    .where((runtime) => runtime.platform == 'linux')
+                    .where((runtime) => runtime.platform == platformName)
                     .toList(growable: false);
                 knownRuntimes = List.unmodifiable(platformRuntimes);
                 _knownRuntimes = runtimes;
@@ -1299,7 +1308,7 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
               directoryPicker: widget.directoryPicker,
               runtimes: knownRuntimes,
               runtimeLoadError: runtimeLoadError,
-              onInstallRuntime: widget.platform.isLinux
+              onInstallRuntime: _supportsSettingsRuntime(widget.platform)
                   ? _installSettingsRuntime
                   : null,
               onSettingsChanged: _setAppSettings,
@@ -1316,7 +1325,9 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
   }
 
   Future<RuntimeInstallLoadResult> _installSettingsRuntime() async {
-    final result = await widget.cliClient.installLinuxWine();
+    final result = widget.platform.isMacOS
+        ? await widget.cliClient.installMacosWine()
+        : await widget.cliClient.installLinuxWine();
 
     if (!mounted) {
       return result;

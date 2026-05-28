@@ -214,12 +214,14 @@ task changes scope.
   - [x] Startup update checks must not mutate app or runtime state. They should
     only check and notify unless a separate explicit auto-install setting is
     introduced.
-  - [ ] Put first-time runtime installation behind an explicit onboarding or
+  - [x] Put first-time runtime installation behind an explicit onboarding or
     Settings action.
     - [x] Add the Linux Settings runtime install/repair action.
-  - [ ] Add Settings install buttons only after the runtime capability contract
+    - [x] Add the macOS Settings runtime install/repair action.
+  - [x] Add Settings install buttons only after the runtime capability contract
     and transactional installer are in place.
     - [x] Wire the Linux Settings button to `install-linux-wine --json`.
+    - [x] Wire the macOS Settings button to `install-macos-wine --json`.
   - [x] Disable bottle-level graphics/runtime toggles when the required runtime
     capability is missing or unknown.
 - Development runtime profile rework.

@@ -3626,6 +3626,11 @@ void main() {
       ),
       const ProcessRunResult(
         exitCode: 0,
+        stdout: '{"schemaVersion":1,"runtimes":[]}',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
         stdout: '''
           {
             "schemaVersion": 1,
@@ -3689,6 +3694,7 @@ void main() {
     expect(runner.argumentsLog, const [
       ['list-bottles', '--json'],
       ['get-app-settings', '--json'],
+      ['list-runtimes', '--json'],
       [
         'set-app-settings',
         '--settings-json',
@@ -3951,6 +3957,145 @@ void main() {
     ]);
   });
 
+  testWidgets('macOS settings dialog installs a missing runtime explicitly', (
+    WidgetTester tester,
+  ) async {
+    final runner = _QueuedProcessRunner([
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '{"schemaVersion":1,"bottles":[]}',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "appSettings": {
+              "terminateWineProcessesOnClose": false,
+              "defaultBottlePath": "/Users/user/Library/Application Support/Konyak/Bottles",
+              "appearanceMode": "dark",
+              "automaticallyCheckForKonyakUpdates": false,
+              "automaticallyCheckForWineUpdates": false
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "runtimes": [
+              {
+                "id": "konyak-macos-wine",
+                "name": "Konyak macOS Wine",
+                "platform": "macos",
+                "architecture": "x86_64",
+                "runnerKind": "macosWine",
+                "isBundled": false,
+                "isUpdateable": false,
+                "isInstalled": false,
+                "stack": {
+                  "schemaVersion": 1,
+                  "id": "macos-konyak-runtime-stack",
+                  "name": "Konyak macOS runtime stack",
+                  "compatibilityTarget": "macos-konyak-runtime-stack",
+                  "isComplete": false,
+                  "components": [
+                    {
+                      "id": "wine",
+                      "name": "Wine",
+                      "role": "windows-runner",
+                      "isRequired": true,
+                      "isInstalled": false,
+                      "paths": ["/runtime/bin/wine64"],
+                      "missingPaths": ["/runtime/bin/wine64"]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ''',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "runtime": {
+              "id": "konyak-macos-wine",
+              "name": "Konyak macOS Wine",
+              "platform": "macos",
+              "architecture": "x86_64",
+              "runnerKind": "macosWine",
+              "isBundled": false,
+              "isUpdateable": false,
+              "isInstalled": true,
+              "stack": {
+                "schemaVersion": 1,
+                "id": "macos-konyak-runtime-stack",
+                "name": "Konyak macOS runtime stack",
+                "compatibilityTarget": "macos-konyak-runtime-stack",
+                "isComplete": true,
+                "components": [
+                  {
+                    "id": "wine",
+                    "name": "Wine",
+                    "role": "windows-runner",
+                    "isRequired": true,
+                    "isInstalled": true,
+                    "paths": ["/runtime/bin/wine64"],
+                    "missingPaths": []
+                  }
+                ]
+              }
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+    ]);
+
+    await tester.pumpWidget(
+      _testKonyakApp(
+        platform: KonyakPlatform.macos,
+        cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Settings'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('macOS Runtime'), findsOneWidget);
+    expect(find.text('Incomplete'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('app-settings-install-runtime-button')),
+      findsOneWidget,
+    );
+
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('app-settings-install-runtime-button')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(const ValueKey('app-settings-install-runtime-button')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Complete'), findsOneWidget);
+    expect(runner.argumentsLog, const [
+      ['list-bottles', '--json'],
+      ['get-app-settings', '--json'],
+      ['list-runtimes', '--json'],
+      ['install-macos-wine', '--json'],
+    ]);
+  });
+
   testWidgets('settings dialog fits compact desktop windows without overflow', (
     WidgetTester tester,
   ) async {
@@ -4027,6 +4172,11 @@ void main() {
       ),
       const ProcessRunResult(
         exitCode: 0,
+        stdout: '{"schemaVersion":1,"runtimes":[]}',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
         stdout: '''
           {
             "schemaVersion": 1,
@@ -4060,6 +4210,7 @@ void main() {
     expect(runner.argumentsLog, const [
       ['list-bottles', '--json'],
       ['get-app-settings', '--json'],
+      ['list-runtimes', '--json'],
       [
         'set-app-settings',
         '--settings-json',
@@ -4099,6 +4250,11 @@ void main() {
       ),
       const ProcessRunResult(
         exitCode: 0,
+        stdout: '{"schemaVersion":1,"runtimes":[]}',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
         stdout: '''
           {
             "schemaVersion": 1,
@@ -4132,6 +4288,7 @@ void main() {
     expect(runner.argumentsLog, const [
       ['list-bottles', '--json'],
       ['get-app-settings', '--json'],
+      ['list-runtimes', '--json'],
       [
         'set-app-settings',
         '--settings-json',
@@ -4165,6 +4322,11 @@ void main() {
         ''',
         stderr: '',
       ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '{"schemaVersion":1,"runtimes":[]}',
+        stderr: '',
+      ),
     ]);
 
     await tester.pumpWidget(
@@ -4189,6 +4351,7 @@ void main() {
     expect(runner.argumentsLog, const [
       ['list-bottles', '--json'],
       ['get-app-settings', '--json'],
+      ['list-runtimes', '--json'],
     ]);
   });
 
