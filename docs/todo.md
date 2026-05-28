@@ -194,6 +194,8 @@ task changes scope.
   - [ ] Move shared download, checksum verification, extraction, staging,
     validation, and runtime-root replacement behind one runtime package
     installer service.
+    - [x] Share source-manifest component archive download and checksum
+      resolution between macOS and Linux installers.
   - [ ] Keep macOS and Linux differences in small platform specifications:
     runtime id, stack id, required paths, optional components, normalization
     rules, and default source selection.

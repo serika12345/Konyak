@@ -2938,6 +2938,36 @@ class _RuntimeStackSourceComponent {
   final String sha256;
 }
 
+class _RuntimeStackSourceArchiveBundle {
+  const _RuntimeStackSourceArchiveBundle({
+    required this.wineArchivePath,
+    required this.componentArchivePaths,
+    required this.componentVersions,
+  });
+
+  final String wineArchivePath;
+  final List<String> componentArchivePaths;
+  final Map<String, String> componentVersions;
+}
+
+sealed class _RuntimeStackSourceArchiveBundleResult {
+  const _RuntimeStackSourceArchiveBundleResult();
+}
+
+class _RuntimeStackSourceArchiveBundleResolved
+    extends _RuntimeStackSourceArchiveBundleResult {
+  const _RuntimeStackSourceArchiveBundleResolved(this.bundle);
+
+  final _RuntimeStackSourceArchiveBundle bundle;
+}
+
+class _RuntimeStackSourceArchiveBundleFailed
+    extends _RuntimeStackSourceArchiveBundleResult {
+  const _RuntimeStackSourceArchiveBundleFailed(this.message);
+
+  final String message;
+}
+
 abstract interface class RuntimeCatalog {
   List<RuntimeRecord> listRuntimes();
 }
@@ -3840,66 +3870,22 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
           'Runtime stack source manifest is invalid.',
         );
       }
-      if (manifest.runtimeId != _macosKonyakRuntimePlatformSpec.runtimeId ||
-          manifest.stackId != _macosKonyakRuntimePlatformSpec.stackId) {
-        return const MacosWineInstallFailed(
-          'Runtime stack source manifest targets an unsupported runtime.',
-        );
-      }
-
-      final wineComponent = manifest.componentById('wine');
-      if (wineComponent == null) {
-        return const MacosWineInstallFailed(
-          'Runtime stack source manifest does not contain a Wine component.',
-        );
-      }
-
-      final archivePaths = <String, String>{};
-      for (final component in manifest.components) {
-        final fileName =
-            _fileNameFromUrl(component.archiveUrl) ?? '${component.id}.tar.xz';
-        final archivePath = _joinPath(tempDirectory.path, [
-          '${archivePaths.length}-$fileName',
-        ]);
-        final downloadFailure = _downloadRuntimeStackSourceArchive(
-          source: component.archiveUrl,
-          targetPath: archivePath,
-        );
-        if (downloadFailure != null) {
-          return downloadFailure;
-        }
-
-        final archive = File(archivePath);
-        final actualSha256 = _sha256HexDigest(archive);
-        if (actualSha256.toLowerCase() != component.sha256.toLowerCase()) {
-          return MacosWineInstallFailed(
-            'Runtime stack component `${component.id}` checksum mismatch: '
-            'expected ${component.sha256}, got $actualSha256.',
-          );
-        }
-
-        archivePaths[component.id] = archivePath;
-      }
-
-      final wineArchivePath = archivePaths[wineComponent.id];
-      if (wineArchivePath == null) {
-        return const MacosWineInstallFailed(
-          'Runtime stack source manifest did not resolve a Wine archive.',
-        );
-      }
-
-      return _installMacosWineArchive(
-        archivePath: wineArchivePath,
-        archiveSha256: null,
-        componentArchivePaths: <String>[
-          for (final component in manifest.components)
-            if (component.id != wineComponent.id) archivePaths[component.id]!,
-        ],
-        componentVersions: <String, String>{
-          for (final component in manifest.components)
-            component.id: component.version,
-        },
+      final bundleResult = _resolveRuntimeStackSourceArchiveBundle(
+        manifest: manifest,
+        platformSpec: _macosKonyakRuntimePlatformSpec,
+        tempDirectory: tempDirectory,
       );
+      return switch (bundleResult) {
+        _RuntimeStackSourceArchiveBundleFailed(:final message) =>
+          MacosWineInstallFailed(message),
+        _RuntimeStackSourceArchiveBundleResolved(:final bundle) =>
+          _installMacosWineArchive(
+            archivePath: bundle.wineArchivePath,
+            archiveSha256: null,
+            componentArchivePaths: bundle.componentArchivePaths,
+            componentVersions: bundle.componentVersions,
+          ),
+      };
     } on FileSystemException catch (error) {
       return MacosWineInstallFailed(error.message);
     } on ProcessException catch (error) {
@@ -3937,33 +3923,6 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
             'KONYAK_MACOS_WINE_STACK_PUBLIC_KEY',
           ),
     );
-  }
-
-  MacosWineInstallFailed? _downloadRuntimeStackSourceArchive({
-    required String source,
-    required String targetPath,
-  }) {
-    final localPath = _localSourcePath(source);
-    if (localPath != null) {
-      File(targetPath).parent.createSync(recursive: true);
-      File(localPath).copySync(targetPath);
-      return null;
-    }
-
-    final result = Process.runSync('curl', [
-      '--fail',
-      '--location',
-      '--output',
-      targetPath,
-      source,
-    ], runInShell: false);
-    if (result.exitCode != 0) {
-      return MacosWineInstallFailed(
-        _commandFailureMessage('download runtime stack component', result),
-      );
-    }
-
-    return null;
   }
 
   void _normalizeMacosWineRuntimeLayout(Directory runtimeRoot) {
@@ -4266,65 +4225,22 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
           'Runtime stack source manifest is invalid.',
         );
       }
-      if (manifest.runtimeId != _linuxWineRuntimePlatformSpec.runtimeId ||
-          manifest.stackId != _linuxWineRuntimePlatformSpec.stackId) {
-        return const LinuxWineInstallFailed(
-          'Runtime stack source manifest targets an unsupported runtime.',
-        );
-      }
-
-      final wineComponent = manifest.componentById('wine');
-      if (wineComponent == null) {
-        return const LinuxWineInstallFailed(
-          'Runtime stack source manifest does not contain a Wine component.',
-        );
-      }
-
-      final archivePaths = <String, String>{};
-      for (final component in manifest.components) {
-        final fileName =
-            _fileNameFromUrl(component.archiveUrl) ?? '${component.id}.tar.xz';
-        final archivePath = _joinPath(tempDirectory.path, [
-          '${archivePaths.length}-$fileName',
-        ]);
-        final downloadFailure = _downloadRuntimeStackSourceArchive(
-          source: component.archiveUrl,
-          targetPath: archivePath,
-        );
-        if (downloadFailure != null) {
-          return downloadFailure;
-        }
-
-        final actualSha256 = _sha256HexDigest(File(archivePath));
-        if (actualSha256.toLowerCase() != component.sha256.toLowerCase()) {
-          return LinuxWineInstallFailed(
-            'Runtime stack component `${component.id}` checksum mismatch: '
-            'expected ${component.sha256}, got $actualSha256.',
-          );
-        }
-
-        archivePaths[component.id] = archivePath;
-      }
-
-      final wineArchivePath = archivePaths[wineComponent.id];
-      if (wineArchivePath == null) {
-        return const LinuxWineInstallFailed(
-          'Runtime stack source manifest did not resolve a Wine archive.',
-        );
-      }
-
-      return _installLinuxWineArchive(
-        archivePath: wineArchivePath,
-        archiveSha256: null,
-        componentArchivePaths: <String>[
-          for (final component in manifest.components)
-            if (component.id != wineComponent.id) archivePaths[component.id]!,
-        ],
-        componentVersions: <String, String>{
-          for (final component in manifest.components)
-            component.id: component.version,
-        },
+      final bundleResult = _resolveRuntimeStackSourceArchiveBundle(
+        manifest: manifest,
+        platformSpec: _linuxWineRuntimePlatformSpec,
+        tempDirectory: tempDirectory,
       );
+      return switch (bundleResult) {
+        _RuntimeStackSourceArchiveBundleFailed(:final message) =>
+          LinuxWineInstallFailed(message),
+        _RuntimeStackSourceArchiveBundleResolved(:final bundle) =>
+          _installLinuxWineArchive(
+            archivePath: bundle.wineArchivePath,
+            archiveSha256: null,
+            componentArchivePaths: bundle.componentArchivePaths,
+            componentVersions: bundle.componentVersions,
+          ),
+      };
     } on FileSystemException catch (error) {
       return LinuxWineInstallFailed(error.message);
     } on ProcessException catch (error) {
@@ -4362,33 +4278,6 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
             'KONYAK_LINUX_WINE_STACK_PUBLIC_KEY',
           ),
     );
-  }
-
-  LinuxWineInstallFailed? _downloadRuntimeStackSourceArchive({
-    required String source,
-    required String targetPath,
-  }) {
-    final localPath = _localSourcePath(source);
-    if (localPath != null) {
-      File(targetPath).parent.createSync(recursive: true);
-      File(localPath).copySync(targetPath);
-      return null;
-    }
-
-    final result = Process.runSync('curl', [
-      '--fail',
-      '--location',
-      '--output',
-      targetPath,
-      source,
-    ], runInShell: false);
-    if (result.exitCode != 0) {
-      return LinuxWineInstallFailed(
-        _commandFailureMessage('download runtime stack component', result),
-      );
-    }
-
-    return null;
   }
 }
 
@@ -8833,6 +8722,98 @@ _RuntimeStackSourceComponent? _runtimeStackSourceComponent(Object? value) {
     archiveUrl: archiveUrl,
     sha256: sha256,
   );
+}
+
+_RuntimeStackSourceArchiveBundleResult _resolveRuntimeStackSourceArchiveBundle({
+  required _RuntimeStackSourceManifest manifest,
+  required _RuntimePlatformSpec platformSpec,
+  required Directory tempDirectory,
+}) {
+  if (manifest.runtimeId != platformSpec.runtimeId ||
+      manifest.stackId != platformSpec.stackId) {
+    return const _RuntimeStackSourceArchiveBundleFailed(
+      'Runtime stack source manifest targets an unsupported runtime.',
+    );
+  }
+
+  final wineComponent = manifest.componentById('wine');
+  if (wineComponent == null) {
+    return const _RuntimeStackSourceArchiveBundleFailed(
+      'Runtime stack source manifest does not contain a Wine component.',
+    );
+  }
+
+  final archivePaths = <String, String>{};
+  for (final component in manifest.components) {
+    final fileName =
+        _fileNameFromUrl(component.archiveUrl) ?? '${component.id}.tar.xz';
+    final archivePath = _joinPath(tempDirectory.path, [
+      '${archivePaths.length}-$fileName',
+    ]);
+    final downloadFailure = _downloadRuntimeStackSourceArchive(
+      source: component.archiveUrl,
+      targetPath: archivePath,
+    );
+    if (downloadFailure != null) {
+      return _RuntimeStackSourceArchiveBundleFailed(downloadFailure);
+    }
+
+    final actualSha256 = _sha256HexDigest(File(archivePath));
+    if (actualSha256.toLowerCase() != component.sha256.toLowerCase()) {
+      return _RuntimeStackSourceArchiveBundleFailed(
+        'Runtime stack component `${component.id}` checksum mismatch: '
+        'expected ${component.sha256}, got $actualSha256.',
+      );
+    }
+
+    archivePaths[component.id] = archivePath;
+  }
+
+  final wineArchivePath = archivePaths[wineComponent.id];
+  if (wineArchivePath == null) {
+    return const _RuntimeStackSourceArchiveBundleFailed(
+      'Runtime stack source manifest did not resolve a Wine archive.',
+    );
+  }
+
+  return _RuntimeStackSourceArchiveBundleResolved(
+    _RuntimeStackSourceArchiveBundle(
+      wineArchivePath: wineArchivePath,
+      componentArchivePaths: <String>[
+        for (final component in manifest.components)
+          if (component.id != wineComponent.id) archivePaths[component.id]!,
+      ],
+      componentVersions: <String, String>{
+        for (final component in manifest.components)
+          component.id: component.version,
+      },
+    ),
+  );
+}
+
+String? _downloadRuntimeStackSourceArchive({
+  required String source,
+  required String targetPath,
+}) {
+  final localPath = _localSourcePath(source);
+  if (localPath != null) {
+    File(targetPath).parent.createSync(recursive: true);
+    File(localPath).copySync(targetPath);
+    return null;
+  }
+
+  final result = Process.runSync('curl', [
+    '--fail',
+    '--location',
+    '--output',
+    targetPath,
+    source,
+  ], runInShell: false);
+  if (result.exitCode != 0) {
+    return _commandFailureMessage('download runtime stack component', result);
+  }
+
+  return null;
 }
 
 String? _runtimeStackComponentVersion(Object? decoded, String componentId) {
