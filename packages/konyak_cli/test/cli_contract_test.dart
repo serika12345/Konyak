@@ -5571,6 +5571,10 @@ corefonts                Microsoft Core Fonts
       installer.lastRequest?.archiveUrl,
       'https://example.invalid/wine-devel-12.0-osx64.tar.xz',
     );
+    expect(
+      installer.lastRequest?.operation,
+      RuntimeInstallOperation.updateInstall,
+    );
     expect(installer.lastRequest?.force, isTrue);
 
     final payload = jsonDecode(result.stdout) as Map<String, Object?>;
@@ -5616,6 +5620,10 @@ corefonts                Microsoft Core Fonts
       installer.lastRequest?.sourceManifest,
       'https://example.invalid/runtime-stack-source.json',
     );
+    expect(
+      installer.lastRequest?.operation,
+      RuntimeInstallOperation.updateInstall,
+    );
     expect(installer.lastRequest?.force, isTrue);
   });
 
@@ -5657,6 +5665,10 @@ corefonts                Microsoft Core Fonts
     expect(
       installer.lastRequest?.archiveUrl,
       'https://example.invalid/linux-wine-10.1.tar.xz',
+    );
+    expect(
+      installer.lastRequest?.operation,
+      RuntimeInstallOperation.updateInstall,
     );
     expect(installer.lastRequest?.force, isTrue);
   });
@@ -5708,6 +5720,10 @@ corefonts                Microsoft Core Fonts
       expect(
         installer.lastRequest?.sourceManifestSignature,
         'https://example.invalid/linux-runtime-stack.json.sig',
+      );
+      expect(
+        installer.lastRequest?.operation,
+        RuntimeInstallOperation.updateInstall,
       );
       expect(installer.lastRequest?.archiveUrl, isNull);
       expect(installer.lastRequest?.force, isTrue);
@@ -6959,6 +6975,10 @@ corefonts                Microsoft Core Fonts
       '/tmp/dxvk.tar.xz',
       '/tmp/moltenvk.tar.xz',
     ]);
+    expect(
+      installer.lastRequest?.operation,
+      RuntimeInstallOperation.componentInstall,
+    );
   });
 
   test('install-macos-wine --source-manifest passes the source manifest', () {
@@ -7095,6 +7115,10 @@ corefonts                Microsoft Core Fonts
     expect(installer.lastRequest?.componentArchivePaths, const [
       '/tmp/vkd3d-proton.tar.xz',
     ]);
+    expect(
+      installer.lastRequest?.operation,
+      RuntimeInstallOperation.componentInstall,
+    );
   });
 
   test('install-linux-wine --source-manifest passes the source manifest', () {

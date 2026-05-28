@@ -189,6 +189,8 @@ task changes scope.
   - [ ] Replace the current multi-purpose installer request shape with explicit
     operations: full runtime install, runtime repair, component install, and
     runtime update install.
+    - [x] Record update installs and component installs as explicit internal
+      request operations.
   - [ ] Move shared download, checksum verification, extraction, staging,
     validation, and runtime-root replacement behind one runtime package
     installer service.

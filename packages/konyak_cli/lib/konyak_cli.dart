@@ -3575,8 +3575,16 @@ class DartIoDetachedProcessStarter implements DetachedProcessStarter {
   }
 }
 
+enum RuntimeInstallOperation {
+  fullInstall,
+  repair,
+  componentInstall,
+  updateInstall,
+}
+
 class MacosWineInstallRequest {
   const MacosWineInstallRequest({
+    this.operation = RuntimeInstallOperation.fullInstall,
     this.archivePath,
     this.archiveUrl,
     this.archiveSha256,
@@ -3586,6 +3594,7 @@ class MacosWineInstallRequest {
     this.force = false,
   });
 
+  final RuntimeInstallOperation operation;
   final String? archivePath;
   final String? archiveUrl;
   final String? archiveSha256;
@@ -3597,6 +3606,7 @@ class MacosWineInstallRequest {
 
 class LinuxWineInstallRequest {
   const LinuxWineInstallRequest({
+    this.operation = RuntimeInstallOperation.fullInstall,
     this.archivePath,
     this.archiveUrl,
     this.archiveSha256,
@@ -3606,6 +3616,7 @@ class LinuxWineInstallRequest {
     this.force = false,
   });
 
+  final RuntimeInstallOperation operation;
   final String? archivePath;
   final String? archiveUrl;
   final String? archiveSha256;
@@ -6115,16 +6126,25 @@ MacosWineInstallRequest _macosWineInstallRequestForRuntimeUpdate(
   final sourceManifestUrl = update.sourceManifestUrl;
   if (sourceManifestUrl != null && sourceManifestUrl.trim().isNotEmpty) {
     return MacosWineInstallRequest(
+      operation: RuntimeInstallOperation.updateInstall,
       sourceManifest: sourceManifestUrl,
       sourceManifestSignature: update.sourceManifestSignatureUrl,
       force: true,
     );
   }
   if (archiveUrl != null && _isRuntimeStackSourceManifestSource(archiveUrl)) {
-    return MacosWineInstallRequest(sourceManifest: archiveUrl, force: true);
+    return MacosWineInstallRequest(
+      operation: RuntimeInstallOperation.updateInstall,
+      sourceManifest: archiveUrl,
+      force: true,
+    );
   }
 
-  return MacosWineInstallRequest(archiveUrl: archiveUrl, force: true);
+  return MacosWineInstallRequest(
+    operation: RuntimeInstallOperation.updateInstall,
+    archiveUrl: archiveUrl,
+    force: true,
+  );
 }
 
 LinuxWineInstallRequest _linuxWineInstallRequestForRuntimeUpdate(
@@ -6134,16 +6154,25 @@ LinuxWineInstallRequest _linuxWineInstallRequestForRuntimeUpdate(
   final sourceManifestUrl = update.sourceManifestUrl;
   if (sourceManifestUrl != null && sourceManifestUrl.trim().isNotEmpty) {
     return LinuxWineInstallRequest(
+      operation: RuntimeInstallOperation.updateInstall,
       sourceManifest: sourceManifestUrl,
       sourceManifestSignature: update.sourceManifestSignatureUrl,
       force: true,
     );
   }
   if (archiveUrl != null && _isRuntimeStackSourceManifestSource(archiveUrl)) {
-    return LinuxWineInstallRequest(sourceManifest: archiveUrl, force: true);
+    return LinuxWineInstallRequest(
+      operation: RuntimeInstallOperation.updateInstall,
+      sourceManifest: archiveUrl,
+      force: true,
+    );
   }
 
-  return LinuxWineInstallRequest(archiveUrl: archiveUrl, force: true);
+  return LinuxWineInstallRequest(
+    operation: RuntimeInstallOperation.updateInstall,
+    archiveUrl: archiveUrl,
+    force: true,
+  );
 }
 
 bool _isRuntimeStackSourceManifestSource(String source) {
@@ -7803,7 +7832,12 @@ MacosWineInstallRequest? _parseJsonMacosWineInstallRequest(
     return null;
   }
 
+  final operation = componentArchivePaths.isEmpty
+      ? RuntimeInstallOperation.fullInstall
+      : RuntimeInstallOperation.componentInstall;
+
   return MacosWineInstallRequest(
+    operation: operation,
     archivePath: archivePath,
     archiveUrl: archiveUrl,
     archiveSha256: archiveSha256,
@@ -7875,7 +7909,12 @@ LinuxWineInstallRequest? _parseJsonLinuxWineInstallRequest(
     return null;
   }
 
+  final operation = componentArchivePaths.isEmpty
+      ? RuntimeInstallOperation.fullInstall
+      : RuntimeInstallOperation.componentInstall;
+
   return LinuxWineInstallRequest(
+    operation: operation,
     archivePath: archivePath,
     archiveUrl: archiveUrl,
     archiveSha256: archiveSha256,
