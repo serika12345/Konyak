@@ -199,6 +199,8 @@ task changes scope.
     rules, and default source selection.
     - [x] Move runtime stack component ids, roles, and required paths into
       platform component definitions.
+    - [x] Move runtime ids, stack ids, runtime names, and runner kinds into
+      platform runtime specifications.
   - [x] Make component installation transactional. Stage the next runtime root,
     validate it, then replace the current runtime root; do not overlay directly
     into the live runtime directory.

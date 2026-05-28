@@ -3840,8 +3840,8 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
           'Runtime stack source manifest is invalid.',
         );
       }
-      if (manifest.runtimeId != macosWineRuntimeId ||
-          manifest.stackId != _macosKonyakRuntimeStackId) {
+      if (manifest.runtimeId != _macosKonyakRuntimePlatformSpec.runtimeId ||
+          manifest.stackId != _macosKonyakRuntimePlatformSpec.stackId) {
         return const MacosWineInstallFailed(
           'Runtime stack source manifest targets an unsupported runtime.',
         );
@@ -4266,8 +4266,8 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
           'Runtime stack source manifest is invalid.',
         );
       }
-      if (manifest.runtimeId != linuxWineRuntimeId ||
-          manifest.stackId != _linuxWineRuntimeStackId) {
+      if (manifest.runtimeId != _linuxWineRuntimePlatformSpec.runtimeId ||
+          manifest.stackId != _linuxWineRuntimePlatformSpec.stackId) {
         return const LinuxWineInstallFailed(
           'Runtime stack source manifest targets an unsupported runtime.',
         );
@@ -5028,6 +5028,28 @@ class _RuntimeStackComponentDefinition {
   final String role;
   final bool isRequired;
   final List<List<String>> relativePaths;
+}
+
+class _RuntimePlatformSpec {
+  const _RuntimePlatformSpec({
+    required this.runtimeId,
+    required this.runtimeName,
+    required this.platform,
+    required this.architecture,
+    required this.runnerKind,
+    required this.stackId,
+    required this.stackName,
+    required this.componentDefinitions,
+  });
+
+  final String runtimeId;
+  final String runtimeName;
+  final String platform;
+  final String architecture;
+  final String runnerKind;
+  final String stackId;
+  final String stackName;
+  final List<_RuntimeStackComponentDefinition> componentDefinitions;
 }
 
 class RuntimeValidationRecord {
@@ -8479,9 +8501,6 @@ ProgramRunRequest _macosWinetricksCommandRequest({
   );
 }
 
-const _macosKonyakRuntimeStackId = 'macos-konyak-runtime-stack';
-const _linuxWineRuntimeStackId = 'linux-wine-runtime-stack';
-
 const _linuxWineRuntimeComponentDefinitions =
     <_RuntimeStackComponentDefinition>[
       _RuntimeStackComponentDefinition(
@@ -8595,22 +8614,45 @@ const _macosKonyakRuntimeComponentDefinitions =
       ),
     ];
 
+const _linuxWineRuntimePlatformSpec = _RuntimePlatformSpec(
+  runtimeId: linuxWineRuntimeId,
+  runtimeName: 'Konyak Linux Wine',
+  platform: 'linux',
+  architecture: 'x86_64',
+  runnerKind: 'wine',
+  stackId: 'linux-wine-runtime-stack',
+  stackName: 'Linux Wine/Proton runtime stack',
+  componentDefinitions: _linuxWineRuntimeComponentDefinitions,
+);
+
+const _macosKonyakRuntimePlatformSpec = _RuntimePlatformSpec(
+  runtimeId: macosWineRuntimeId,
+  runtimeName: 'Konyak macOS Wine',
+  platform: 'macos',
+  architecture: 'x86_64',
+  runnerKind: 'macosWine',
+  stackId: 'macos-konyak-runtime-stack',
+  stackName: 'Konyak macOS runtime stack',
+  componentDefinitions: _macosKonyakRuntimeComponentDefinitions,
+);
+
 RuntimeRecord _macosWineRuntimeRecord({
   required Map<String, String> environment,
   required FileStatusProbe fileStatusProbe,
   required RuntimeStackVersionProbe runtimeStackVersionProbe,
 }) {
+  const platformSpec = _macosKonyakRuntimePlatformSpec;
   final applicationSupportPath = _konyakApplicationSupportFolder(environment);
   final libraryPath = _macosWineRuntimeRoot(environment);
   final executablePath = _macosWineExecutable(environment);
   final isInstalled = fileStatusProbe.exists(executablePath);
 
   return RuntimeRecord(
-    id: macosWineRuntimeId,
-    name: 'Konyak macOS Wine',
-    platform: 'macos',
-    architecture: 'x86_64',
-    runnerKind: 'macosWine',
+    id: platformSpec.runtimeId,
+    name: platformSpec.runtimeName,
+    platform: platformSpec.platform,
+    architecture: platformSpec.architecture,
+    runnerKind: platformSpec.runnerKind,
     isBundled: false,
     isUpdateable: true,
     distributionKind: _runtimeDistributionKind(environment, 'bootstrap'),
@@ -8620,7 +8662,8 @@ RuntimeRecord _macosWineRuntimeRecord({
     executablePath: executablePath,
     archiveUrl: macosWineArchiveUrl,
     versionUrl: macosWineVersionUrl,
-    stack: _macosKonyakRuntimeStack(
+    stack: _runtimeStackForPlatform(
+      platformSpec: platformSpec,
       runtimeRoot: libraryPath,
       fileStatusProbe: fileStatusProbe,
       runtimeStackVersionProbe: runtimeStackVersionProbe,
@@ -8633,6 +8676,7 @@ RuntimeRecord _linuxWineRuntimeRecord({
   required FileStatusProbe fileStatusProbe,
   required RuntimeStackVersionProbe runtimeStackVersionProbe,
 }) {
+  const platformSpec = _linuxWineRuntimePlatformSpec;
   final runtimeRoot = _linuxWineRuntimeRoot(environment);
   final executablePath = _joinPath(runtimeRoot, const ['bin', 'wine']);
   final archiveUrl = _nonEmptyEnvironmentValue(
@@ -8644,11 +8688,11 @@ RuntimeRecord _linuxWineRuntimeRecord({
     'KONYAK_LINUX_WINE_VERSION_URL',
   );
   return RuntimeRecord(
-    id: linuxWineRuntimeId,
-    name: 'Konyak Linux Wine',
-    platform: 'linux',
-    architecture: 'x86_64',
-    runnerKind: 'wine',
+    id: platformSpec.runtimeId,
+    name: platformSpec.runtimeName,
+    platform: platformSpec.platform,
+    architecture: platformSpec.architecture,
+    runnerKind: platformSpec.runnerKind,
     isBundled: false,
     isUpdateable: archiveUrl != null || versionUrl != null,
     distributionKind: _runtimeDistributionKind(environment, 'managed'),
@@ -8657,7 +8701,8 @@ RuntimeRecord _linuxWineRuntimeRecord({
     executablePath: executablePath,
     archiveUrl: archiveUrl,
     versionUrl: versionUrl,
-    stack: _linuxWineRuntimeStack(
+    stack: _runtimeStackForPlatform(
+      platformSpec: platformSpec,
       runtimeRoot: runtimeRoot,
       fileStatusProbe: fileStatusProbe,
       runtimeStackVersionProbe: runtimeStackVersionProbe,
@@ -8665,52 +8710,17 @@ RuntimeRecord _linuxWineRuntimeRecord({
   );
 }
 
-RuntimeStack _linuxWineRuntimeStack({
+RuntimeStack _runtimeStackForPlatform({
+  required _RuntimePlatformSpec platformSpec,
   required String runtimeRoot,
   required FileStatusProbe fileStatusProbe,
   required RuntimeStackVersionProbe runtimeStackVersionProbe,
-}) {
-  return _runtimeStackFromDefinitions(
-    id: _linuxWineRuntimeStackId,
-    name: 'Linux Wine/Proton runtime stack',
-    compatibilityTarget: _linuxWineRuntimeStackId,
-    runtimeRoot: runtimeRoot,
-    fileStatusProbe: fileStatusProbe,
-    runtimeStackVersionProbe: runtimeStackVersionProbe,
-    componentDefinitions: _linuxWineRuntimeComponentDefinitions,
-  );
-}
-
-RuntimeStack _macosKonyakRuntimeStack({
-  required String runtimeRoot,
-  required FileStatusProbe fileStatusProbe,
-  required RuntimeStackVersionProbe runtimeStackVersionProbe,
-}) {
-  return _runtimeStackFromDefinitions(
-    id: _macosKonyakRuntimeStackId,
-    name: 'Konyak macOS runtime stack',
-    compatibilityTarget: _macosKonyakRuntimeStackId,
-    runtimeRoot: runtimeRoot,
-    fileStatusProbe: fileStatusProbe,
-    runtimeStackVersionProbe: runtimeStackVersionProbe,
-    componentDefinitions: _macosKonyakRuntimeComponentDefinitions,
-  );
-}
-
-RuntimeStack _runtimeStackFromDefinitions({
-  required String id,
-  required String name,
-  required String compatibilityTarget,
-  required String runtimeRoot,
-  required FileStatusProbe fileStatusProbe,
-  required RuntimeStackVersionProbe runtimeStackVersionProbe,
-  required List<_RuntimeStackComponentDefinition> componentDefinitions,
 }) {
   return RuntimeStack(
-    id: id,
-    name: name,
-    compatibilityTarget: compatibilityTarget,
-    components: componentDefinitions
+    id: platformSpec.stackId,
+    name: platformSpec.stackName,
+    compatibilityTarget: platformSpec.stackId,
+    components: platformSpec.componentDefinitions
         .map(
           (definition) => _runtimeStackComponent(
             runtimeRoot: runtimeRoot,
