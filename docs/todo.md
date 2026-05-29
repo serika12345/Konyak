@@ -227,6 +227,8 @@ task changes scope.
 - Development runtime profile rework.
   - [x] Add an explicit development runtime profile instead of using release
     source-manifest environment variables for local fixtures.
+  - [x] Prepare a macOS development runtime stack source manifest and connect it
+    to the Nix/VSCode launch path through `KONYAK_DEV_MACOS_WINE_STACK_MANIFEST`.
   - [x] Keep fixture manifests separate from published runtime stack manifests,
     so update checks cannot accidentally consume component-only development
     inputs as full runtime update sources.

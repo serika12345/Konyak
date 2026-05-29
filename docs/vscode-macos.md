@@ -29,6 +29,14 @@ Local runtime stack fixtures must use the development-only
 variables such as `KONYAK_LINUX_WINE_STACK_MANIFEST` for published runtime stack
 manifests.
 
+The macOS VSCode launch profile uses the same development runtime profile. It
+sets `KONYAK_RUNTIME_PROFILE=development`, points `KONYAK_MACOS_WINE_HOME` at
+`.dart_tool/konyak/dev-runtime/macos-wine`, and points
+`KONYAK_DEV_MACOS_WINE_STACK_MANIFEST` at the generated development source
+manifest under `.dart_tool/konyak/dev-runtime-source/macos-wine-stack`.
+`scripts/prepare_macos_dev_runtime_stack.zsh` prepares that manifest and the
+small local component archives used by the Settings install/repair button.
+
 ## Hot Reload Launch
 
 Use the VSCode Run and Debug panel and select:
@@ -51,6 +59,11 @@ The task creates `.dart_tool/konyak/flutter-sdk`, a local Flutter SDK view that
 symlinks most of the Nix-provided SDK while copying the macOS engine artifacts
 as writable files. The first run can take a little time because the copied
 artifacts are hundreds of megabytes. The directory is ignored by git.
+
+The same task also runs `scripts/prepare_macos_dev_runtime_stack.zsh`. It does
+not install the runtime eagerly; it prepares the development source manifest so
+the Konyak Settings runtime action can install or repair
+`.dart_tool/konyak/dev-runtime/macos-wine` through the normal CLI contract.
 
 The launch configuration forces macOS Flutter builds to use the real Xcode
 toolchain:

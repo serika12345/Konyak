@@ -6015,52 +6015,55 @@ corefonts                Microsoft Core Fonts
     expect(status.runtime.isInstalled, isTrue);
   });
 
-  test('macOS runtime validator checks dylibs before loader execution', () {
-    final executableProbe = RecordingRuntimeExecutableProbe(
-      result: const RuntimeExecutableProbeResult(
-        exitCode: 0,
-        stdout: 'wine-11.9',
-        stderr: '',
-      ),
-    );
-    final validator = DartIoMacosWineRuntimeValidator(
-      runtimeCatalog: const StaticRuntimeCatalog([
-        RuntimeRecord(
-          id: 'konyak-macos-wine',
-          name: 'Konyak macOS Wine',
-          platform: 'macos',
-          architecture: 'x86_64',
-          runnerKind: 'macosWine',
-          isBundled: false,
-          isUpdateable: true,
-          libraryPath: '/runtime',
-          executablePath: '/runtime/bin/wine64',
+  test(
+    'macOS runtime validator checks library paths before loader execution',
+    () {
+      final executableProbe = RecordingRuntimeExecutableProbe(
+        result: const RuntimeExecutableProbeResult(
+          exitCode: 0,
+          stdout: 'wine-11.9',
+          stderr: '',
         ),
-      ]),
-      fileStatusProbe: const StaticFileStatusProbe({
-        '/runtime',
-        '/runtime/bin/wine64',
-      }),
-      executableProbe: executableProbe,
-    );
-
-    final result = validator.validate('konyak-macos-wine');
-
-    expect(result, isA<RuntimeValidationCompleted>());
-    final validation = (result as RuntimeValidationCompleted).validation;
-    expect(validation.isValid, isFalse);
-    expect(
-      validation.checks.where((check) => check.id == 'loader-dylibs').single,
-      isA<RuntimeValidationCheck>()
-          .having((check) => check.isPassed, 'isPassed', isFalse)
-          .having(
-            (check) => check.message,
-            'message',
-            contains('/runtime/lib/libwine.1.dylib'),
+      );
+      final validator = DartIoMacosWineRuntimeValidator(
+        runtimeCatalog: const StaticRuntimeCatalog([
+          RuntimeRecord(
+            id: 'konyak-macos-wine',
+            name: 'Konyak macOS Wine',
+            platform: 'macos',
+            architecture: 'x86_64',
+            runnerKind: 'macosWine',
+            isBundled: false,
+            isUpdateable: true,
+            libraryPath: '/runtime',
+            executablePath: '/runtime/bin/wine64',
           ),
-    );
-    expect(executableProbe.lastExecutable, isNull);
-  });
+        ]),
+        fileStatusProbe: const StaticFileStatusProbe({
+          '/runtime',
+          '/runtime/bin/wine64',
+        }),
+        executableProbe: executableProbe,
+      );
+
+      final result = validator.validate('konyak-macos-wine');
+
+      expect(result, isA<RuntimeValidationCompleted>());
+      final validation = (result as RuntimeValidationCompleted).validation;
+      expect(validation.isValid, isFalse);
+      expect(
+        validation.checks.where((check) => check.id == 'loader-dylibs').single,
+        isA<RuntimeValidationCheck>()
+            .having((check) => check.isPassed, 'isPassed', isFalse)
+            .having(
+              (check) => check.message,
+              'message',
+              contains('/runtime/lib'),
+            ),
+      );
+      expect(executableProbe.lastExecutable, isNull);
+    },
+  );
 
   test('macOS runtime validator runs wine64 with dylib search paths', () {
     final executableProbe = RecordingRuntimeExecutableProbe(
@@ -6088,7 +6091,7 @@ corefonts                Microsoft Core Fonts
         '/runtime',
         '/runtime/bin/wine64',
         '/runtime/bin/wineserver',
-        '/runtime/lib/libwine.1.dylib',
+        '/runtime/lib',
       }),
       executableProbe: executableProbe,
     );

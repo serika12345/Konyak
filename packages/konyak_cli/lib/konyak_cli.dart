@@ -5138,8 +5138,8 @@ class DartIoMacosWineRuntimeValidator implements RuntimeValidator {
       ),
       _runtimeAnyPathCheck(
         id: 'loader-dylibs',
-        name: 'Wine loader dylibs',
-        paths: _macosWineLoaderDylibPaths(runtimeRoot),
+        name: 'Wine loader libraries',
+        paths: _macosWineLoaderLibraryPaths(runtimeRoot),
         fileStatusProbe: fileStatusProbe,
       ),
     ];
@@ -9407,10 +9407,10 @@ RuntimeValidationCheck _runtimeAnyPathCheck({
   );
 }
 
-List<String> _macosWineLoaderDylibPaths(String runtimeRoot) {
+List<String> _macosWineLoaderLibraryPaths(String runtimeRoot) {
   return <String>[
-    _joinPath(runtimeRoot, const ['lib', 'libwine.1.dylib']),
-    _joinPath(runtimeRoot, const ['lib64', 'libwine.1.dylib']),
+    _joinPath(runtimeRoot, const ['lib']),
+    _joinPath(runtimeRoot, const ['lib64']),
   ];
 }
 

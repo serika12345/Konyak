@@ -16,6 +16,16 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 FLUTTER_PROJECT = ROOT / "apps" / "konyak"
 SDK_PREPARE_SCRIPT = ROOT / "scripts" / "prepare_flutter_macos_sdk.zsh"
+RUNTIME_STACK_PREPARE_SCRIPT = ROOT / "scripts" / "prepare_macos_dev_runtime_stack.zsh"
+DEV_RUNTIME_ROOT = ROOT / ".dart_tool" / "konyak" / "dev-runtime" / "macos-wine"
+DEV_RUNTIME_STACK_MANIFEST = (
+    ROOT
+    / ".dart_tool"
+    / "konyak"
+    / "dev-runtime-source"
+    / "macos-wine-stack"
+    / "konyak-macos-wine-runtime-stack-source.json"
+)
 POLL_SECONDS = 0.5
 DEBOUNCE_SECONDS = 0.35
 READY_MARKERS = (
@@ -40,6 +50,16 @@ def prepare_sdk() -> Path:
     if not lines:
         raise RuntimeError("prepare_flutter_macos_sdk.zsh did not print an SDK path")
     return Path(lines[-1])
+
+
+def prepare_runtime_stack() -> None:
+    subprocess.run(
+        [str(RUNTIME_STACK_PREPARE_SCRIPT), "--print-manifest-path"],
+        cwd=ROOT,
+        check=True,
+        stdout=subprocess.DEVNULL,
+        text=True,
+    )
 
 
 def should_watch(path: Path) -> bool:
@@ -87,6 +107,9 @@ def flutter_environment(sdk: Path) -> dict[str, str]:
             "KONYAK_CLI_SCRIPT": str(
                 ROOT / "packages" / "konyak_cli" / "bin" / "konyak.dart",
             ),
+            "KONYAK_RUNTIME_PROFILE": "development",
+            "KONYAK_MACOS_WINE_HOME": str(DEV_RUNTIME_ROOT),
+            "KONYAK_DEV_MACOS_WINE_STACK_MANIFEST": str(DEV_RUNTIME_STACK_MANIFEST),
             "DEVELOPER_DIR": "/Applications/Xcode.app/Contents/Developer",
             "PATH": f"/usr/bin:/bin:/usr/sbin:/sbin:{sdk_bin}:{env.get('PATH', '')}",
         },
@@ -133,6 +156,7 @@ def print_changed_paths(paths: list[Path]) -> None:
 
 def run() -> int:
     sdk = prepare_sdk()
+    prepare_runtime_stack()
     master_fd, slave_fd = pty.openpty()
     process = subprocess.Popen(
         flutter_command(sdk),

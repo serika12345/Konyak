@@ -13,6 +13,11 @@ The Flutter app lives under `apps/konyak` and discovers the development
 CLI through `KONYAK_DART_EXECUTABLE`, `KONYAK_CLI_SCRIPT`, or the default
 repository-relative paths supplied by the VSCode launch configuration.
 
+macOS development launches also use `KONYAK_RUNTIME_PROFILE=development`,
+`KONYAK_MACOS_WINE_HOME`, and `KONYAK_DEV_MACOS_WINE_STACK_MANIFEST`.
+`scripts/prepare_macos_dev_runtime_stack.zsh` prepares the development source
+manifest and local component archives consumed by `install-macos-wine --json`.
+
 ## Packaged Builds
 
 Distribution builds bundle a compiled CLI executable and pass its path to the

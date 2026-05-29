@@ -208,6 +208,24 @@ def main() -> None:
     require_contains("docs/vscode-macos.md", "Agent Edit Watch")
     require_contains("docs/vscode-macos.md", "Konyak: Flutter Run macOS (Agent Watch)")
     require_contains("docs/vscode-macos.md", ".dart_tool/konyak/flutter-sdk")
+    require_contains("docs/vscode-macos.md", "prepare_macos_dev_runtime_stack.zsh")
+    require_contains("docs/vscode-macos.md", "KONYAK_DEV_MACOS_WINE_STACK_MANIFEST")
+    require_contains("docs/vscode-macos.md", "KONYAK_MACOS_WINE_HOME")
+
+    for expected in [
+        "scripts/prepare_macos_dev_runtime_stack.zsh",
+        "KONYAK_RUNTIME_PROFILE",
+        "KONYAK_MACOS_WINE_HOME",
+        "KONYAK_DEV_MACOS_WINE_STACK_MANIFEST",
+    ]:
+        require_contains(".vscode/launch.json", expected)
+        require_contains(".vscode/tasks.json", expected)
+
+    for expected in [
+        "KONYAK_DEV_NIX_GSTREAMER_PATH",
+        "prepare_macos_dev_runtime_stack.zsh",
+    ]:
+        require_contains("flake.nix", expected)
 
     for expected in [
         "MACOS_ENGINE_ARTIFACTS",

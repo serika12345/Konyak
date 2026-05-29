@@ -42,6 +42,10 @@
         "KONYAK_REPO_ROOT": "${workspaceFolder}",
         "KONYAK_DART_EXECUTABLE": "${workspaceFolder}/.dart_tool/konyak/flutter-sdk/bin/dart",
         "KONYAK_CLI_SCRIPT": "${workspaceFolder}/packages/konyak_cli/bin/konyak.dart",
+        "KONYAK_RUNTIME_PROFILE": "development",
+        "KONYAK_MACOS_WINE_HOME": "${workspaceFolder}/.dart_tool/konyak/dev-runtime/macos-wine",
+        "KONYAK_DEV_MACOS_WINE_STACK_MANIFEST": "${workspaceFolder}/.dart_tool/konyak/dev-runtime-source/macos-wine-stack/konyak-macos-wine-runtime-stack-source.json",
+        "KONYAK_MACOS_DEV_RUNTIME_PREPARE_SCRIPT": "${workspaceFolder}/scripts/prepare_macos_dev_runtime_stack.zsh",
         "DEVELOPER_DIR": "/Applications/Xcode.app/Contents/Developer",
         "PATH": "${workspaceFolder}/.dart_tool/konyak/vscode-bin:/usr/bin:/bin:/usr/sbin:/sbin:${workspaceFolder}/.dart_tool/konyak/flutter-sdk/bin:${env:PATH}"
       }

@@ -80,6 +80,7 @@
 
           darwinPackages = with pkgs; [
             cocoapods
+            gst_all_1.gstreamer
             libiconv
             swiftformat
             swiftlint
@@ -169,6 +170,13 @@
                 ./scripts/prepare_linux_dev_runtime.zsh >/dev/null
               ''}
               ${lib.optionalString pkgs.stdenv.isDarwin darwinXcodeEnvironment}
+              ${lib.optionalString pkgs.stdenv.isDarwin ''
+                export KONYAK_RUNTIME_PROFILE="development"
+                export KONYAK_MACOS_WINE_HOME="$PWD/.dart_tool/konyak/dev-runtime/macos-wine"
+                export KONYAK_DEV_MACOS_WINE_STACK_MANIFEST="$PWD/.dart_tool/konyak/dev-runtime-source/macos-wine-stack/konyak-macos-wine-runtime-stack-source.json"
+                export KONYAK_DEV_NIX_GSTREAMER_PATH="${pkgs.gst_all_1.gstreamer.out}"
+                export KONYAK_MACOS_DEV_RUNTIME_PREPARE_SCRIPT="$PWD/scripts/prepare_macos_dev_runtime_stack.zsh"
+              ''}
               if [ -t 1 ]; then
                 echo "Konyak dev shell ready. Run: just --list" >&2
               fi
