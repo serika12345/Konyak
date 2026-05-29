@@ -36,6 +36,9 @@ sets `KONYAK_RUNTIME_PROFILE=development`, points `KONYAK_MACOS_WINE_HOME` at
 manifest under `.dart_tool/konyak/dev-runtime-source/macos-wine-stack`.
 `scripts/prepare_macos_dev_runtime_stack.zsh` prepares that manifest and the
 small local component archives used by the Settings install/repair button.
+These runtime values are passed both as process environment and as
+`--dart-define` values so the Flutter app can forward them explicitly to the
+CLI child process.
 
 ## Hot Reload Launch
 

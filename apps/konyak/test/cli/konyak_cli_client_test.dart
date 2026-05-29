@@ -247,6 +247,49 @@ void main() {
     expect(client.workingDirectory, '/repo/packages/konyak_cli');
   });
 
+  test('passes development runtime defines to CLI commands', () async {
+    final runner = _FakeProcessRunner(
+      result: const ProcessRunResult(
+        exitCode: 0,
+        stdout: '{"schemaVersion":1,"runtimes":[]}',
+        stderr: '',
+      ),
+    );
+
+    final client = createDefaultKonyakCliClient(
+      environment: const {
+        'FLUTTER_ROOT': '/repo/.dart_tool/konyak/flutter-sdk',
+      },
+      repoRootDefine: '/repo',
+      runtimeProfileDefine: 'development',
+      macosWineHomeDefine: '/repo/.dart_tool/konyak/dev-runtime/macos-wine',
+      macosWineStackManifestDefine:
+          '/repo/.dart_tool/konyak/dev-runtime-source/macos-wine-stack/konyak-macos-wine-runtime-stack-source.json',
+      macosDevRuntimePrepareScriptDefine:
+          '/repo/scripts/prepare_macos_dev_runtime_stack.zsh',
+      processRunner: runner,
+    );
+
+    final result = await client.listKnownRuntimes();
+
+    expect(result, isA<LoadedRuntimeList>());
+    expect(runner.environment, {
+      'KONYAK_RUNTIME_PROFILE': 'development',
+      'KONYAK_MACOS_WINE_HOME':
+          '/repo/.dart_tool/konyak/dev-runtime/macos-wine',
+      'KONYAK_DEV_MACOS_WINE_STACK_MANIFEST':
+          '/repo/.dart_tool/konyak/dev-runtime-source/macos-wine-stack/konyak-macos-wine-runtime-stack-source.json',
+      'KONYAK_MACOS_DEV_RUNTIME_PREPARE_SCRIPT':
+          '/repo/scripts/prepare_macos_dev_runtime_stack.zsh',
+      'KONYAK_PINNED_PROGRAM_LAUNCHER_EXECUTABLE':
+          '/repo/.dart_tool/konyak/flutter-sdk/bin/dart',
+      'KONYAK_PINNED_PROGRAM_LAUNCHER_ARGUMENTS_JSON':
+          '["run","bin/konyak.dart"]',
+      'KONYAK_PINNED_PROGRAM_LAUNCHER_WORKING_DIRECTORY':
+          '/repo/packages/konyak_cli',
+    });
+  });
+
   test('default CLI client prefers dart defines over process environment', () {
     final runner = _FakeProcessRunner(
       result: const ProcessRunResult(

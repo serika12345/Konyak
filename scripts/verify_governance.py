@@ -217,9 +217,19 @@ def main() -> None:
         "KONYAK_RUNTIME_PROFILE",
         "KONYAK_MACOS_WINE_HOME",
         "KONYAK_DEV_MACOS_WINE_STACK_MANIFEST",
+        "--dart-define=KONYAK_RUNTIME_PROFILE",
+        "--dart-define=KONYAK_MACOS_WINE_HOME",
+        "--dart-define=KONYAK_DEV_MACOS_WINE_STACK_MANIFEST",
     ]:
         require_contains(".vscode/launch.json", expected)
         require_contains(".vscode/tasks.json", expected)
+
+    for expected in [
+        "--dart-define=KONYAK_RUNTIME_PROFILE",
+        "--dart-define=KONYAK_MACOS_WINE_HOME",
+        "--dart-define=KONYAK_DEV_MACOS_WINE_STACK_MANIFEST",
+    ]:
+        require_contains("scripts/flutter_macos_agent_watch.py", expected)
 
     for expected in [
         "KONYAK_DEV_NIX_GSTREAMER_PATH",

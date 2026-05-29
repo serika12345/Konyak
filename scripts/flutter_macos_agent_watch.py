@@ -128,6 +128,10 @@ def flutter_command(sdk: Path) -> list[str]:
         f"--dart-define=KONYAK_REPO_ROOT={ROOT}",
         f"--dart-define=KONYAK_DART_EXECUTABLE={dart_executable}",
         f"--dart-define=KONYAK_CLI_SCRIPT={cli_script}",
+        "--dart-define=KONYAK_RUNTIME_PROFILE=development",
+        f"--dart-define=KONYAK_MACOS_WINE_HOME={DEV_RUNTIME_ROOT}",
+        f"--dart-define=KONYAK_DEV_MACOS_WINE_STACK_MANIFEST={DEV_RUNTIME_STACK_MANIFEST}",
+        f"--dart-define=KONYAK_MACOS_DEV_RUNTIME_PREPARE_SCRIPT={RUNTIME_STACK_PREPARE_SCRIPT}",
     ]
 
 

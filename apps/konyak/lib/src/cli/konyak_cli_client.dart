@@ -113,6 +113,18 @@ KonyakCliClient createDefaultKonyakCliClient({
   String appExecutableDefine = const String.fromEnvironment(
     'KONYAK_APP_EXECUTABLE',
   ),
+  String runtimeProfileDefine = const String.fromEnvironment(
+    'KONYAK_RUNTIME_PROFILE',
+  ),
+  String macosWineHomeDefine = const String.fromEnvironment(
+    'KONYAK_MACOS_WINE_HOME',
+  ),
+  String macosWineStackManifestDefine = const String.fromEnvironment(
+    'KONYAK_DEV_MACOS_WINE_STACK_MANIFEST',
+  ),
+  String macosDevRuntimePrepareScriptDefine = const String.fromEnvironment(
+    'KONYAK_MACOS_DEV_RUNTIME_PREPARE_SCRIPT',
+  ),
   String bundleResourcesDefine = const String.fromEnvironment(
     'KONYAK_BUNDLE_RESOURCES',
   ),
@@ -123,6 +135,14 @@ KonyakCliClient createDefaultKonyakCliClient({
   final activeEnvironment = environment.isEmpty
       ? Platform.environment
       : environment;
+  final runtimeEnvironment = _runtimeEnvironmentOverrides(
+    activeEnvironment,
+    repoRootDefine: repoRootDefine,
+    runtimeProfileDefine: runtimeProfileDefine,
+    macosWineHomeDefine: macosWineHomeDefine,
+    macosWineStackManifestDefine: macosWineStackManifestDefine,
+    macosDevRuntimePrepareScriptDefine: macosDevRuntimePrepareScriptDefine,
+  );
 
   final cliExecutable = _resolvePackagedCliExecutable(
     _firstNonEmpty(
@@ -136,6 +156,7 @@ KonyakCliClient createDefaultKonyakCliClient({
   if (cliExecutable != null) {
     return KonyakCliClient(
       executable: cliExecutable,
+      environment: runtimeEnvironment,
       processRunner: processRunner,
     );
   }
@@ -156,6 +177,7 @@ KonyakCliClient createDefaultKonyakCliClient({
       dartExecutableDefine: dartExecutableDefine,
       flutterRootDefine: flutterRootDefine,
     ),
+    environment: runtimeEnvironment,
     baseArguments:
         cliScriptWorkingDirectory == null || cliScriptRunTarget == null
         ? <String>[cliScriptPath]
@@ -215,12 +237,14 @@ final class KonyakCliClient {
   const KonyakCliClient({
     required this.executable,
     this.baseArguments = const <String>[],
+    this.environment = const <String, String>{},
     this.workingDirectory,
     required this.processRunner,
   });
 
   final String executable;
   final List<String> baseArguments;
+  final Map<String, String> environment;
   final String? workingDirectory;
   final ProcessRunner processRunner;
 
@@ -1005,7 +1029,7 @@ final class KonyakCliClient {
       executable,
       <String>[...baseArguments, ...arguments],
       workingDirectory: workingDirectory,
-      environment: _launcherEnvironment(),
+      environment: <String, String>{...environment, ..._launcherEnvironment()},
     );
   }
 
@@ -1962,6 +1986,74 @@ String _resolveCliScriptPath(
   }
 
   return '../../packages/konyak_cli/bin/konyak.dart';
+}
+
+Map<String, String> _runtimeEnvironmentOverrides(
+  Map<String, String> environment, {
+  required String repoRootDefine,
+  required String runtimeProfileDefine,
+  required String macosWineHomeDefine,
+  required String macosWineStackManifestDefine,
+  required String macosDevRuntimePrepareScriptDefine,
+}) {
+  final runtimeProfile = _firstNonEmpty(
+    runtimeProfileDefine,
+    environment['KONYAK_RUNTIME_PROFILE'],
+  );
+  final repoRoot = _firstNonEmpty(
+    repoRootDefine,
+    environment['KONYAK_REPO_ROOT'],
+  );
+  final isDevelopment = runtimeProfile == 'development';
+  final macosWineHome = _firstNonEmpty(
+    macosWineHomeDefine,
+    environment['KONYAK_MACOS_WINE_HOME'],
+    isDevelopment && repoRoot != null
+        ? _joinPath(repoRoot, const [
+            '.dart_tool',
+            'konyak',
+            'dev-runtime',
+            'macos-wine',
+          ])
+        : null,
+  );
+  final macosStackManifest = _firstNonEmpty(
+    macosWineStackManifestDefine,
+    environment['KONYAK_DEV_MACOS_WINE_STACK_MANIFEST'],
+    isDevelopment && repoRoot != null
+        ? _joinPath(repoRoot, const [
+            '.dart_tool',
+            'konyak',
+            'dev-runtime-source',
+            'macos-wine-stack',
+            'konyak-macos-wine-runtime-stack-source.json',
+          ])
+        : null,
+  );
+  final macosPrepareScript = _firstNonEmpty(
+    macosDevRuntimePrepareScriptDefine,
+    environment['KONYAK_MACOS_DEV_RUNTIME_PREPARE_SCRIPT'],
+    isDevelopment && repoRoot != null
+        ? _joinPath(repoRoot, const [
+            'scripts',
+            'prepare_macos_dev_runtime_stack.zsh',
+          ])
+        : null,
+  );
+
+  final overrides = <String, String>{};
+  void addIfPresent(String key, String? value) {
+    if (value != null && value.trim().isNotEmpty) {
+      overrides[key] = value.trim();
+    }
+  }
+
+  addIfPresent('KONYAK_RUNTIME_PROFILE', runtimeProfile);
+  addIfPresent('KONYAK_MACOS_WINE_HOME', macosWineHome);
+  addIfPresent('KONYAK_DEV_MACOS_WINE_STACK_MANIFEST', macosStackManifest);
+  addIfPresent('KONYAK_MACOS_DEV_RUNTIME_PREPARE_SCRIPT', macosPrepareScript);
+
+  return Map.unmodifiable(overrides);
 }
 
 String? _resolveCliScriptWorkingDirectory(String cliScriptPath) {
