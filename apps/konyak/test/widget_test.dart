@@ -1062,7 +1062,8 @@ void main() {
       ),
       findsOneWidget,
     );
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.byType(LinearProgressIndicator), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
 
     createBottleCompleter.complete(
       const ProcessRunResult(
@@ -3200,7 +3201,8 @@ void main() {
 
     expect(find.byKey(const ValueKey('winetricks-progress')), findsOneWidget);
     expect(find.text('Loading winetricks packages...'), findsOneWidget);
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.byType(LinearProgressIndicator), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
 
     listWinetricksCompleter.complete(
       const ProcessRunResult(
@@ -4962,6 +4964,8 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Downloading Konyak macOS Wine...'), findsOneWidget);
+    expect(find.byType(LinearProgressIndicator), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
 
     installCompleter.complete(
       const ProcessRunResult(
@@ -5076,6 +5080,8 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Downloading Konyak Linux Wine...'), findsOneWidget);
+    expect(find.byType(LinearProgressIndicator), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
 
     installCompleter.complete(
       const ProcessRunResult(

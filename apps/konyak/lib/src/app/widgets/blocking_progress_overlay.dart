@@ -33,30 +33,37 @@ class BlockingProgressOverlay extends StatelessWidget {
                 ),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 18,
-                    vertical: 16,
+                    horizontal: 22,
+                    vertical: 18,
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: CircularProgressIndicator(
-                          color: colors.accent,
-                          strokeWidth: 2.5,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(
+                      minWidth: 360,
+                      maxWidth: 520,
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          message,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: colors.text,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        message,
-                        style: TextStyle(
-                          color: colors.text,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
+                        const SizedBox(height: 14),
+                        SizedBox(
+                          width: double.infinity,
+                          child: LinearProgressIndicator(
+                            color: colors.accent,
+                            backgroundColor: colors.border,
+                            minHeight: 4,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
