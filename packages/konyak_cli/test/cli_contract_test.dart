@@ -8660,7 +8660,7 @@ String _createLinuxWineRuntimeArchive(String tempPath) {
     <String>['bin', 'winedbg'],
     <String>['bin', 'wineserver'],
     <String>['winetricks'],
-    <String>['share', 'wine', 'mono', 'wine-mono.marker'],
+    <String>['share', 'wine', 'mono', 'wine-mono-11.1.0-x86.msi'],
   ]) {
     final file = File(_joinTestPath(runtimeRoot.path, relativePath));
     file.parent.createSync(recursive: true);

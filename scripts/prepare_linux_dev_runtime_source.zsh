@@ -52,8 +52,8 @@ readonly DEFAULT_WINETRICKS_SCRIPT_URL="https://raw.githubusercontent.com/Winetr
 readonly DEFAULT_WINETRICKS_SCRIPT_SHA256="431f82fc74000e6c864409f1d8fb495d696c03928808e3e8acffc45179312a7b"
 
 readonly DEFAULT_WINE_MONO_VERSION="11.1.0"
-readonly DEFAULT_WINE_MONO_ARCHIVE_URL="https://github.com/wine-mono/wine-mono/releases/download/wine-mono-11.1.0/wine-mono-11.1.0-x86.tar.xz"
-readonly DEFAULT_WINE_MONO_ARCHIVE_SHA256="01a7cdc0184c5b22fdf6e7417d50648467b566a107cd51df9c4f3a4acd960c9c"
+readonly DEFAULT_WINE_MONO_ARCHIVE_URL="https://github.com/wine-mono/wine-mono/releases/download/wine-mono-11.1.0/wine-mono-11.1.0-x86.msi"
+readonly DEFAULT_WINE_MONO_ARCHIVE_SHA256="deb0341431f8260b209fff6bc79ddcc5414b97f8e9236ab9fbdca4ce59e0a9b9"
 
 readonly DEFAULT_VKD3D_PROTON_VERSION="3.0.1"
 readonly DEFAULT_VKD3D_PROTON_ARCHIVE_URL="https://github.com/HansKristian-Work/vkd3d-proton/releases/download/v3.0.1/vkd3d-proton-3.0.1.tar.zst"
@@ -227,28 +227,15 @@ prepare_wine_mono_component() {
   local version="${KONYAK_DEV_LINUX_WINE_MONO_VERSION:-${DEFAULT_WINE_MONO_VERSION}}"
   local archive_url="${KONYAK_DEV_LINUX_WINE_MONO_UPSTREAM_ARCHIVE_URL:-${DEFAULT_WINE_MONO_ARCHIVE_URL}}"
   local archive_sha="${KONYAK_DEV_LINUX_WINE_MONO_UPSTREAM_ARCHIVE_SHA256:-${DEFAULT_WINE_MONO_ARCHIVE_SHA256}}"
-  local archive_cache="${KONYAK_DEV_LINUX_WINE_MONO_UPSTREAM_ARCHIVE_CACHE:-${DOWNLOAD_CACHE}/wine-mono-${version}-x86.tar.xz}"
+  local archive_cache="${KONYAK_DEV_LINUX_WINE_MONO_UPSTREAM_ARCHIVE_CACHE:-${DOWNLOAD_CACHE}/wine-mono-${version}-x86.msi}"
   local work_root="${SOURCE_ROOT}/work/wine-mono"
-  local extract_root="${work_root}/extract"
   local payload_root="${work_root}/payload/konyak-linux-wine-mono"
   local archive_path="${SOURCE_ROOT}/components/wine-mono.tar.xz"
-  local mono_root
 
   download_if_missing "${archive_url}" "${archive_cache}" "${archive_sha}"
   reset_dir "${work_root}"
-  mkdir -p "${extract_root}" "${payload_root}/share/wine"
-  "${TAR_BIN}" -xJf "${archive_cache}" -C "${extract_root}"
-
-  mono_root="$(find "${extract_root}" -path '*/share/wine/mono' -type d | head -n 1)"
-  if [[ -z "${mono_root}" ]]; then
-    mono_root="$(find "${extract_root}" -name mono -type d | head -n 1)"
-  fi
-  if [[ -z "${mono_root}" ]]; then
-    print -u2 "wine-mono archive does not contain a mono runtime directory."
-    exit 65
-  fi
-
-  cp -R "${mono_root}" "${payload_root}/share/wine/mono"
+  mkdir -p "${payload_root}/share/wine/mono"
+  cp -f "${archive_cache}" "${payload_root}/share/wine/mono/wine-mono-${version}-x86.msi"
   write_stack_manifest \
     "${payload_root}/.konyak-runtime-stack.json" \
     "wine-mono" \
