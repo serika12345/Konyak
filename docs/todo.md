@@ -180,7 +180,7 @@ task changes scope.
 ## Deferred
 
 - Runtime installation rework before adding more install UI.
-  - [ ] Split runtime data into separate concepts:
+  - [x] Split runtime data into separate concepts:
     `RuntimeDefinition`, `InstalledRuntimeState`, `RuntimeSourceManifest`, and
     `RuntimeCapabilities`.
   - [x] Keep source manifests as installer inputs. `list-runtimes --json`

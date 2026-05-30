@@ -2775,6 +2775,60 @@ class FileBottleRepository implements BottleRepository {
   }
 }
 
+class RuntimeDefinition {
+  const RuntimeDefinition({
+    required this.id,
+    required this.name,
+    required this.platform,
+    required this.architecture,
+    required this.runnerKind,
+    required this.isBundled,
+    required this.isUpdateable,
+    this.distributionKind,
+    this.archiveUrl,
+    this.versionUrl,
+  });
+
+  final String id;
+  final String name;
+  final String platform;
+  final String architecture;
+  final String runnerKind;
+  final bool isBundled;
+  final bool isUpdateable;
+  final String? distributionKind;
+  final String? archiveUrl;
+  final String? versionUrl;
+}
+
+class InstalledRuntimeState {
+  const InstalledRuntimeState({
+    this.isInstalled,
+    this.applicationSupportPath,
+    this.libraryPath,
+    this.executablePath,
+  });
+
+  const InstalledRuntimeState.unknown()
+    : isInstalled = null,
+      applicationSupportPath = null,
+      libraryPath = null,
+      executablePath = null;
+
+  final bool? isInstalled;
+  final String? applicationSupportPath;
+  final String? libraryPath;
+  final String? executablePath;
+}
+
+class RuntimeCapabilities {
+  const RuntimeCapabilities({this.stack});
+
+  const RuntimeCapabilities.empty() : stack = null;
+
+  final RuntimeStack? stack;
+}
+
 class RuntimeRecord {
   const RuntimeRecord({
     required this.id,
@@ -2793,6 +2847,27 @@ class RuntimeRecord {
     this.versionUrl,
     this.stack,
   });
+
+  RuntimeRecord.fromParts({
+    required RuntimeDefinition definition,
+    InstalledRuntimeState installedState =
+        const InstalledRuntimeState.unknown(),
+    RuntimeCapabilities capabilities = const RuntimeCapabilities.empty(),
+  }) : id = definition.id,
+       name = definition.name,
+       platform = definition.platform,
+       architecture = definition.architecture,
+       runnerKind = definition.runnerKind,
+       isBundled = definition.isBundled,
+       isUpdateable = definition.isUpdateable,
+       distributionKind = definition.distributionKind,
+       isInstalled = installedState.isInstalled,
+       applicationSupportPath = installedState.applicationSupportPath,
+       libraryPath = installedState.libraryPath,
+       executablePath = installedState.executablePath,
+       archiveUrl = definition.archiveUrl,
+       versionUrl = definition.versionUrl,
+       stack = capabilities.stack;
 
   final String id;
   final String name;
@@ -2903,18 +2978,18 @@ class RuntimeStackComponent {
   }
 }
 
-class _RuntimeStackSourceManifest {
-  _RuntimeStackSourceManifest({
+class RuntimeSourceManifest {
+  RuntimeSourceManifest({
     required this.runtimeId,
     required this.stackId,
-    required Iterable<_RuntimeStackSourceComponent> components,
+    required Iterable<RuntimeSourceComponent> components,
   }) : components = List.unmodifiable(components);
 
   final String runtimeId;
   final String stackId;
-  final List<_RuntimeStackSourceComponent> components;
+  final List<RuntimeSourceComponent> components;
 
-  _RuntimeStackSourceComponent? componentById(String id) {
+  RuntimeSourceComponent? componentById(String id) {
     for (final component in components) {
       if (component.id == id) {
         return component;
@@ -2925,8 +3000,8 @@ class _RuntimeStackSourceManifest {
   }
 }
 
-class _RuntimeStackSourceComponent {
-  const _RuntimeStackSourceComponent({
+class RuntimeSourceComponent {
+  const RuntimeSourceComponent({
     required this.id,
     required this.version,
     required this.archiveUrl,
@@ -9184,26 +9259,32 @@ RuntimeRecord _macosWineRuntimeRecord({
   final executablePath = _macosWineExecutable(environment);
   final isInstalled = fileStatusProbe.exists(executablePath);
 
-  return RuntimeRecord(
-    id: platformSpec.runtimeId,
-    name: platformSpec.runtimeName,
-    platform: platformSpec.platform,
-    architecture: platformSpec.architecture,
-    runnerKind: platformSpec.runnerKind,
-    isBundled: false,
-    isUpdateable: true,
-    distributionKind: _runtimeDistributionKind(environment, 'bootstrap'),
-    isInstalled: isInstalled,
-    applicationSupportPath: applicationSupportPath,
-    libraryPath: libraryPath,
-    executablePath: executablePath,
-    archiveUrl: macosWineArchiveUrl,
-    versionUrl: macosWineVersionUrl,
-    stack: _runtimeStackForPlatform(
-      platformSpec: platformSpec,
-      runtimeRoot: libraryPath,
-      fileStatusProbe: fileStatusProbe,
-      runtimeStackVersionProbe: runtimeStackVersionProbe,
+  return RuntimeRecord.fromParts(
+    definition: RuntimeDefinition(
+      id: platformSpec.runtimeId,
+      name: platformSpec.runtimeName,
+      platform: platformSpec.platform,
+      architecture: platformSpec.architecture,
+      runnerKind: platformSpec.runnerKind,
+      isBundled: false,
+      isUpdateable: true,
+      distributionKind: _runtimeDistributionKind(environment, 'bootstrap'),
+      archiveUrl: macosWineArchiveUrl,
+      versionUrl: macosWineVersionUrl,
+    ),
+    installedState: InstalledRuntimeState(
+      isInstalled: isInstalled,
+      applicationSupportPath: applicationSupportPath,
+      libraryPath: libraryPath,
+      executablePath: executablePath,
+    ),
+    capabilities: RuntimeCapabilities(
+      stack: _runtimeStackForPlatform(
+        platformSpec: platformSpec,
+        runtimeRoot: libraryPath,
+        fileStatusProbe: fileStatusProbe,
+        runtimeStackVersionProbe: runtimeStackVersionProbe,
+      ),
     ),
   );
 }
@@ -9224,25 +9305,31 @@ RuntimeRecord _linuxWineRuntimeRecord({
     environment,
     'KONYAK_LINUX_WINE_VERSION_URL',
   );
-  return RuntimeRecord(
-    id: platformSpec.runtimeId,
-    name: platformSpec.runtimeName,
-    platform: platformSpec.platform,
-    architecture: platformSpec.architecture,
-    runnerKind: platformSpec.runnerKind,
-    isBundled: false,
-    isUpdateable: archiveUrl != null || versionUrl != null,
-    distributionKind: _runtimeDistributionKind(environment, 'managed'),
-    isInstalled: fileStatusProbe.exists(executablePath),
-    libraryPath: runtimeRoot,
-    executablePath: executablePath,
-    archiveUrl: archiveUrl,
-    versionUrl: versionUrl,
-    stack: _runtimeStackForPlatform(
-      platformSpec: platformSpec,
-      runtimeRoot: runtimeRoot,
-      fileStatusProbe: fileStatusProbe,
-      runtimeStackVersionProbe: runtimeStackVersionProbe,
+  return RuntimeRecord.fromParts(
+    definition: RuntimeDefinition(
+      id: platformSpec.runtimeId,
+      name: platformSpec.runtimeName,
+      platform: platformSpec.platform,
+      architecture: platformSpec.architecture,
+      runnerKind: platformSpec.runnerKind,
+      isBundled: false,
+      isUpdateable: archiveUrl != null || versionUrl != null,
+      distributionKind: _runtimeDistributionKind(environment, 'managed'),
+      archiveUrl: archiveUrl,
+      versionUrl: versionUrl,
+    ),
+    installedState: InstalledRuntimeState(
+      isInstalled: fileStatusProbe.exists(executablePath),
+      libraryPath: runtimeRoot,
+      executablePath: executablePath,
+    ),
+    capabilities: RuntimeCapabilities(
+      stack: _runtimeStackForPlatform(
+        platformSpec: platformSpec,
+        runtimeRoot: runtimeRoot,
+        fileStatusProbe: fileStatusProbe,
+        runtimeStackVersionProbe: runtimeStackVersionProbe,
+      ),
     ),
   );
 }
@@ -9297,9 +9384,7 @@ RuntimeStackComponent _runtimeStackComponent({
   );
 }
 
-_RuntimeStackSourceManifest? _runtimeStackSourceManifestFromPayload(
-  String payload,
-) {
+RuntimeSourceManifest? _runtimeStackSourceManifestFromPayload(String payload) {
   final Object? decoded;
   try {
     decoded = jsonDecode(payload);
@@ -9323,7 +9408,7 @@ _RuntimeStackSourceManifest? _runtimeStackSourceManifestFromPayload(
     return null;
   }
 
-  final parsedComponents = <_RuntimeStackSourceComponent>[];
+  final parsedComponents = <RuntimeSourceComponent>[];
   for (final component in components) {
     final parsedComponent = _runtimeStackSourceComponent(component);
     if (parsedComponent == null) {
@@ -9336,14 +9421,14 @@ _RuntimeStackSourceManifest? _runtimeStackSourceManifestFromPayload(
     return null;
   }
 
-  return _RuntimeStackSourceManifest(
+  return RuntimeSourceManifest(
     runtimeId: runtimeId,
     stackId: stackId,
     components: parsedComponents,
   );
 }
 
-_RuntimeStackSourceComponent? _runtimeStackSourceComponent(Object? value) {
+RuntimeSourceComponent? _runtimeStackSourceComponent(Object? value) {
   if (value is! Map<String, dynamic>) {
     return null;
   }
@@ -9364,7 +9449,7 @@ _RuntimeStackSourceComponent? _runtimeStackSourceComponent(Object? value) {
     return null;
   }
 
-  return _RuntimeStackSourceComponent(
+  return RuntimeSourceComponent(
     id: id,
     version: version,
     archiveUrl: archiveUrl,
@@ -9373,7 +9458,7 @@ _RuntimeStackSourceComponent? _runtimeStackSourceComponent(Object? value) {
 }
 
 _RuntimeStackSourceArchiveBundleResult _resolveRuntimeStackSourceArchiveBundle({
-  required _RuntimeStackSourceManifest manifest,
+  required RuntimeSourceManifest manifest,
   required _RuntimePlatformSpec platformSpec,
   required Directory tempDirectory,
   required RuntimeInstallProgressSink? progressSink,
@@ -9457,7 +9542,7 @@ _RuntimeStackSourceArchiveBundleResult _resolveRuntimeStackSourceArchiveBundle({
 
 Future<_RuntimeStackSourceArchiveBundleResult>
 _resolveRuntimeStackSourceArchiveBundleStreaming({
-  required _RuntimeStackSourceManifest manifest,
+  required RuntimeSourceManifest manifest,
   required _RuntimePlatformSpec platformSpec,
   required Directory tempDirectory,
   required RuntimeInstallProgressSink? progressSink,

@@ -4089,6 +4089,85 @@ corefonts                Microsoft Core Fonts
     });
   });
 
+  test('runtime records compose definition state and capabilities', () {
+    final runtime = RuntimeRecord.fromParts(
+      definition: const RuntimeDefinition(
+        id: 'konyak-linux-wine',
+        name: 'Konyak Linux Wine',
+        platform: 'linux',
+        architecture: 'x86_64',
+        runnerKind: 'wine',
+        isBundled: false,
+        isUpdateable: true,
+        distributionKind: 'managed',
+        archiveUrl: 'https://example.invalid/linux-wine.tar.xz',
+        versionUrl: 'https://example.invalid/releases/latest',
+      ),
+      installedState: const InstalledRuntimeState(
+        isInstalled: true,
+        libraryPath: '/home/user/.local/share/konyak/Runtimes/linux-wine',
+        executablePath:
+            '/home/user/.local/share/konyak/Runtimes/linux-wine/bin/wine',
+      ),
+      capabilities: RuntimeCapabilities(
+        stack: RuntimeStack(
+          id: 'linux-wine-runtime-stack',
+          name: 'Linux Wine/Proton runtime stack',
+          compatibilityTarget: 'linux-wine-runtime-stack',
+          components: [
+            RuntimeStackComponent(
+              id: 'wine',
+              name: 'Wine',
+              role: 'windows-runner',
+              isRequired: true,
+              paths: const [
+                '/home/user/.local/share/konyak/Runtimes/linux-wine/bin/wine',
+              ],
+              missingPaths: const [],
+            ),
+          ],
+        ),
+      ),
+    );
+
+    expect(runtime.archiveUrl, 'https://example.invalid/linux-wine.tar.xz');
+    expect(runtime.versionUrl, 'https://example.invalid/releases/latest');
+    expect(runtime.toJson(), {
+      'id': 'konyak-linux-wine',
+      'name': 'Konyak Linux Wine',
+      'platform': 'linux',
+      'architecture': 'x86_64',
+      'runnerKind': 'wine',
+      'isBundled': false,
+      'isUpdateable': true,
+      'distributionKind': 'managed',
+      'isInstalled': true,
+      'libraryPath': '/home/user/.local/share/konyak/Runtimes/linux-wine',
+      'executablePath':
+          '/home/user/.local/share/konyak/Runtimes/linux-wine/bin/wine',
+      'stack': {
+        'schemaVersion': 1,
+        'id': 'linux-wine-runtime-stack',
+        'name': 'Linux Wine/Proton runtime stack',
+        'compatibilityTarget': 'linux-wine-runtime-stack',
+        'isComplete': true,
+        'components': [
+          {
+            'id': 'wine',
+            'name': 'Wine',
+            'role': 'windows-runner',
+            'isRequired': true,
+            'isInstalled': true,
+            'paths': [
+              '/home/user/.local/share/konyak/Runtimes/linux-wine/bin/wine',
+            ],
+            'missingPaths': <Object?>[],
+          },
+        ],
+      },
+    });
+  });
+
   test('list-runtimes --json reports the Konyak macOS Wine runtime', () {
     final result = runCli(
       const ['list-runtimes', '--json'],
