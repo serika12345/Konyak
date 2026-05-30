@@ -264,6 +264,7 @@ void main() {
       repoRootDefine: '/repo',
       runtimeProfileDefine: 'development',
       macosWineHomeDefine: '/repo/.dart_tool/konyak/dev-runtime/macos-wine',
+      linuxWineHomeDefine: '/repo/.dart_tool/konyak/dev-runtime/linux-wine',
       macosWineStackManifestDefine:
           '/repo/.dart_tool/konyak/dev-runtime-source/macos-wine-stack/konyak-macos-wine-runtime-stack-source.json',
       macosDevRuntimePrepareScriptDefine:
@@ -278,6 +279,8 @@ void main() {
       'KONYAK_RUNTIME_PROFILE': 'development',
       'KONYAK_MACOS_WINE_HOME':
           '/repo/.dart_tool/konyak/dev-runtime/macos-wine',
+      'KONYAK_LINUX_WINE_HOME':
+          '/repo/.dart_tool/konyak/dev-runtime/linux-wine',
       'KONYAK_DEV_MACOS_WINE_STACK_MANIFEST':
           '/repo/.dart_tool/konyak/dev-runtime-source/macos-wine-stack/konyak-macos-wine-runtime-stack-source.json',
       'KONYAK_MACOS_DEV_RUNTIME_PREPARE_SCRIPT':

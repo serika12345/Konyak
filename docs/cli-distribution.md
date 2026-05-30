@@ -23,6 +23,12 @@ script plus its real `list-all` verb catalog, not a stub. Override
 override `KONYAK_DEV_WINETRICKS_SCRIPT_URL` and
 `KONYAK_DEV_WINETRICKS_SCRIPT_SHA256` to change the pinned upstream source.
 
+Linux development launches use `KONYAK_RUNTIME_PROFILE=development` and
+`KONYAK_LINUX_WINE_HOME`, but the Nix dev shell does not provide Wine,
+winetricks, or vkd3d-proton. Linux runtime contents must be installed through
+`install-linux-wine` from a configured archive or source manifest, matching the
+packaged runtime acquisition path.
+
 ## Packaged Builds
 
 Distribution builds bundle a compiled CLI executable and pass its path to the

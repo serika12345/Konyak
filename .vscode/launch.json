@@ -12,9 +12,10 @@
       "toolArgs": [
         "--dart-define=KONYAK_REPO_ROOT=${workspaceFolder}",
         "--dart-define=KONYAK_DART_EXECUTABLE=dart",
-        "--dart-define=KONYAK_CLI_SCRIPT=${workspaceFolder}/packages/konyak_cli/bin/konyak.dart"
+        "--dart-define=KONYAK_CLI_SCRIPT=${workspaceFolder}/packages/konyak_cli/bin/konyak.dart",
+        "--dart-define=KONYAK_RUNTIME_PROFILE=development",
+        "--dart-define=KONYAK_LINUX_WINE_HOME=${workspaceFolder}/.dart_tool/konyak/dev-runtime/linux-wine"
       ],
-      "preLaunchTask": "Konyak: Prepare Linux Dev Runtime",
       "env": {
         "KONYAK_REPO_ROOT": "${workspaceFolder}",
         "KONYAK_DART_EXECUTABLE": "dart",

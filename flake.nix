@@ -64,12 +64,9 @@
             ninja
             pkg-config
             vulkan-loader
-            vkd3d-proton
             vulkan-tools
             vulkan-validation-layers
             wayland
-            wineWow64Packages.stable
-            winetricks
             xdg-utils
             libx11
             libxcursor
@@ -159,15 +156,8 @@
               export PUB_CACHE="$PWD/.dart_tool/pub-cache"
               export FLUTTER_SUPPRESS_ANALYTICS=true
               ${lib.optionalString pkgs.stdenv.isLinux ''
-                export KONYAK_DEV_NIX_WINE_PATH="${pkgs.wineWow64Packages.stable}"
-                export KONYAK_DEV_NIX_WINETRICKS_PATH="${pkgs.winetricks}"
-                export KONYAK_DEV_NIX_VKD3D_PROTON_PATH="${pkgs.vkd3d-proton}"
-                export KONYAK_DEV_WINE_VERSION="${pkgs.wineWow64Packages.stable.version}"
-                export KONYAK_DEV_WINETRICKS_VERSION="${pkgs.winetricks.version}"
-                export KONYAK_DEV_VKD3D_PROTON_VERSION="${pkgs.vkd3d-proton.version}"
                 export KONYAK_RUNTIME_PROFILE="development"
                 export KONYAK_LINUX_WINE_HOME="$PWD/.dart_tool/konyak/dev-runtime/linux-wine"
-                ./scripts/prepare_linux_dev_runtime.zsh >/dev/null
               ''}
               ${lib.optionalString pkgs.stdenv.isDarwin darwinXcodeEnvironment}
               ${lib.optionalString pkgs.stdenv.isDarwin ''

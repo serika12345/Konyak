@@ -237,6 +237,9 @@ task changes scope.
     inputs as full runtime update sources.
   - [x] Make VSCode and Nix dev-shell launch paths use the same documented
     development profile.
+  - [x] Remove Nix-provided Wine, winetricks, and vkd3d-proton from the Linux
+    dev shell. Linux development runtime contents now come only from managed
+    install archives or source manifests.
 - Required tests for the rework.
   - [x] Linux install repairs an incomplete runtime when required components are
     missing even if `bin/wine` exists.

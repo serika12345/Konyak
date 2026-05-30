@@ -64,12 +64,23 @@ def main() -> None:
         "swiftlint",
         "swiftformat",
         "gh",
-        "wineWow64Packages.stable",
-        "winetricks",
         "xz",
         "[ -t 1 ]",
     ]:
         require_contains("flake.nix", expected)
+
+    for unexpected in [
+        "wineWow64Packages",
+        "vkd3d-proton",
+        "KONYAK_DEV_NIX_WINE_PATH",
+        "KONYAK_DEV_NIX_WINETRICKS_PATH",
+        "KONYAK_DEV_NIX_VKD3D_PROTON_PATH",
+        "KONYAK_DEV_WINE_VERSION",
+        "KONYAK_DEV_WINETRICKS_VERSION",
+        "KONYAK_DEV_VKD3D_PROTON_VERSION",
+        "prepare_linux_dev_runtime.zsh",
+    ]:
+        require_not_contains("flake.nix", unexpected)
 
     for expected in [
         "verify-governance",
@@ -147,6 +158,7 @@ def main() -> None:
         ".github/FUNDING.yml",
         ".github/workflows/Release.yml",
         ".github/workflows/SwiftLint.yml",
+        "scripts/prepare_linux_dev_runtime.zsh",
     ]:
         require_missing(removed_path)
 
@@ -211,6 +223,10 @@ def main() -> None:
     require_contains("docs/vscode-macos.md", "prepare_macos_dev_runtime_stack.zsh")
     require_contains("docs/vscode-macos.md", "KONYAK_DEV_MACOS_WINE_STACK_MANIFEST")
     require_contains("docs/vscode-macos.md", "KONYAK_MACOS_WINE_HOME")
+    require_not_contains("docs/vscode-macos.md", "Nix-provided Wine")
+    require_not_contains(".vscode/tasks.json", "Prepare Linux Dev Runtime")
+    require_not_contains(".vscode/tasks.json", "prepare_linux_dev_runtime.zsh")
+    require_not_contains(".vscode/launch.json", "Prepare Linux Dev Runtime")
 
     for expected in [
         "scripts/prepare_macos_dev_runtime_stack.zsh",
@@ -238,6 +254,10 @@ def main() -> None:
         require_contains("flake.nix", expected)
     require_contains("scripts/prepare_macos_dev_runtime_stack.zsh", "WINETRICKS_SCRIPT_SHA256")
     require_contains("scripts/prepare_macos_dev_runtime_stack.zsh", "winetricks list-all")
+    require_not_contains(
+        "scripts/prepare_macos_dev_runtime_stack.zsh",
+        "KONYAK_DEV_NIX_WINETRICKS_PATH",
+    )
     require_not_contains("scripts/prepare_macos_dev_runtime_stack.zsh", "konyak-dev-stub")
     require_not_contains(
         "scripts/prepare_macos_dev_runtime_stack.zsh",

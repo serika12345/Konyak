@@ -21,8 +21,10 @@ do not interfere with Linux daemon startup.
 
 The Linux Nix dev shell and VSCode launch profile both set
 `KONYAK_RUNTIME_PROFILE=development` and point `KONYAK_LINUX_WINE_HOME` at
-`.dart_tool/konyak/dev-runtime/linux-wine`. The dev shell prepares that runtime
-from Nix-provided Wine, winetricks, and vkd3d-proton packages.
+`.dart_tool/konyak/dev-runtime/linux-wine`. The dev shell does not provide or
+symlink Wine, winetricks, or vkd3d-proton from Nix. Install or repair the Linux
+runtime through Konyak's `install-linux-wine` flow using a configured archive or
+source manifest.
 
 Local runtime stack fixtures must use the development-only
 `KONYAK_DEV_LINUX_WINE_STACK_MANIFEST` environment variable. Keep release

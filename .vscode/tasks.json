@@ -2,16 +2,6 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Konyak: Prepare Linux Dev Runtime",
-      "type": "shell",
-      "command": "nix develop -c zsh -lc './scripts/prepare_linux_dev_runtime.zsh --print-runtime-path >/dev/null'",
-      "problemMatcher": [],
-      "presentation": {
-        "panel": "dedicated",
-        "reveal": "silent"
-      }
-    },
-    {
       "label": "Konyak: Prepare Flutter SDK macOS",
       "type": "shell",
       "command": "nix develop -c zsh -lc './scripts/prepare_flutter_macos_sdk.zsh --print-sdk-path && KONYAK_RUNTIME_PROFILE=development KONYAK_MACOS_WINE_HOME=\"$PWD/.dart_tool/konyak/dev-runtime/macos-wine\" KONYAK_DEV_MACOS_WINE_STACK_MANIFEST=\"$PWD/.dart_tool/konyak/dev-runtime-source/macos-wine-stack/konyak-macos-wine-runtime-stack-source.json\" ./scripts/prepare_macos_dev_runtime_stack.zsh --print-manifest-path >/dev/null'",
