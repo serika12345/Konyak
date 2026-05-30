@@ -191,12 +191,12 @@ task changes scope.
     runtime update install.
     - [x] Record update installs and component installs as explicit internal
       request operations.
-  - [ ] Move shared download, checksum verification, extraction, staging,
+  - [x] Move shared download, checksum verification, extraction, staging,
     validation, and runtime-root replacement behind one runtime package
     installer service.
     - [x] Share source-manifest component archive download and checksum
       resolution between macOS and Linux installers.
-  - [ ] Keep macOS and Linux differences in small platform specifications:
+  - [x] Keep macOS and Linux differences in small platform specifications:
     runtime id, stack id, required paths, optional components, normalization
     rules, and default source selection.
     - [x] Move runtime stack component ids, roles, and required paths into

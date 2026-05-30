@@ -6193,6 +6193,43 @@ corefonts                Microsoft Core Fonts
     );
   });
 
+  test('runtime package installer stages and replaces runtime roots', () {
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-runtime-package-installer-test-',
+    );
+    addTearDown(() {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    });
+
+    final archivePath = _createLinuxWineRuntimeArchive(tempDirectory.path);
+    final runtimeRoot = Directory(
+      _joinTestPath(tempDirectory.path, const ['runtime']),
+    );
+    final executablePath = _joinTestPath(runtimeRoot.path, const [
+      'bin',
+      'wine',
+    ]);
+
+    final result = const DartIoRuntimePackageInstaller().install(
+      RuntimePackageInstallRequest(
+        runtimeLabel: 'Linux Wine',
+        archivePath: archivePath,
+        archiveSha256: null,
+        componentArchivePaths: const [],
+        componentVersions: const {},
+        runtimeRoot: runtimeRoot,
+        requiredExecutableRelativePath: const ['bin', 'wine'],
+        expectedExecutablePath: executablePath,
+      ),
+    );
+
+    expect(result, isA<RuntimePackageInstallCompleted>());
+    expect(File(executablePath).existsSync(), isTrue);
+    expect(File('${runtimeRoot.path}.install.lock').existsSync(), isFalse);
+  });
+
   test('install-macos-wine --json installs from a configured archive source', () {
     final installer = RecordingMacosWineInstaller(
       result: const MacosWineInstallCompleted(

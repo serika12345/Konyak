@@ -4006,6 +4006,77 @@ class LinuxWineInstallRequest {
   bool get force => requestOperation.force;
 }
 
+class RuntimePackageInstallRequest {
+  const RuntimePackageInstallRequest({
+    required this.runtimeLabel,
+    required this.archivePath,
+    required this.archiveSha256,
+    required this.componentArchivePaths,
+    required this.componentVersions,
+    required this.runtimeRoot,
+    required this.requiredExecutableRelativePath,
+    required this.expectedExecutablePath,
+    this.normalizeStagingRoot,
+    this.afterManifestWrite,
+    this.progressSink,
+  });
+
+  final String runtimeLabel;
+  final String archivePath;
+  final String? archiveSha256;
+  final List<String> componentArchivePaths;
+  final Map<String, String> componentVersions;
+  final Directory runtimeRoot;
+  final List<String> requiredExecutableRelativePath;
+  final String expectedExecutablePath;
+  final void Function(Directory runtimeRoot)? normalizeStagingRoot;
+  final void Function(Directory runtimeRoot)? afterManifestWrite;
+  final RuntimeInstallProgressSink? progressSink;
+}
+
+sealed class RuntimePackageInstallResult {
+  const RuntimePackageInstallResult();
+}
+
+class RuntimePackageInstallCompleted extends RuntimePackageInstallResult {
+  const RuntimePackageInstallCompleted();
+}
+
+class RuntimePackageInstallFailed extends RuntimePackageInstallResult {
+  const RuntimePackageInstallFailed(this.message);
+
+  final String message;
+}
+
+abstract interface class RuntimePackageInstaller {
+  RuntimePackageInstallResult install(RuntimePackageInstallRequest request);
+}
+
+class DartIoRuntimePackageInstaller implements RuntimePackageInstaller {
+  const DartIoRuntimePackageInstaller();
+
+  @override
+  RuntimePackageInstallResult install(RuntimePackageInstallRequest request) {
+    final failure = _installRuntimeArchives(
+      runtimeLabel: request.runtimeLabel,
+      archivePath: request.archivePath,
+      archiveSha256: request.archiveSha256,
+      componentArchivePaths: request.componentArchivePaths,
+      componentVersions: request.componentVersions,
+      runtimeRoot: request.runtimeRoot,
+      requiredExecutableRelativePath: request.requiredExecutableRelativePath,
+      expectedExecutablePath: request.expectedExecutablePath,
+      normalizeStagingRoot: request.normalizeStagingRoot,
+      afterManifestWrite: request.afterManifestWrite,
+      progressSink: request.progressSink,
+    );
+
+    return failure == null
+        ? const RuntimePackageInstallCompleted()
+        : RuntimePackageInstallFailed(failure);
+  }
+}
+
 class RuntimeInstallProgress {
   const RuntimeInstallProgress({
     required this.stage,
@@ -4100,9 +4171,12 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
     FileStatusProbe fileStatusProbe = const DartIoFileStatusProbe(),
     RuntimeStackVersionProbe runtimeStackVersionProbe =
         const DartIoRuntimeStackVersionProbe(),
+    RuntimePackageInstaller runtimePackageInstaller =
+        const DartIoRuntimePackageInstaller(),
   }) : environment = Map.unmodifiable(environment),
        _fileStatusProbe = fileStatusProbe,
-       _runtimeStackVersionProbe = runtimeStackVersionProbe;
+       _runtimeStackVersionProbe = runtimeStackVersionProbe,
+       _runtimePackageInstaller = runtimePackageInstaller;
 
   factory DartIoMacosWineInstaller.current() {
     return DartIoMacosWineInstaller(
@@ -4115,6 +4189,7 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
   final Map<String, String> environment;
   final FileStatusProbe _fileStatusProbe;
   final RuntimeStackVersionProbe _runtimeStackVersionProbe;
+  final RuntimePackageInstaller _runtimePackageInstaller;
 
   @override
   MacosWineInstallResult install(
@@ -4145,17 +4220,15 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
     );
     final sourceManifest =
         request.sourceManifest ??
-        _runtimeProfileEnvironmentValue(
-          environment,
-          developmentKey: 'KONYAK_DEV_MACOS_WINE_STACK_MANIFEST',
-          releaseKey: 'KONYAK_MACOS_WINE_STACK_MANIFEST',
+        _runtimeSourceManifestForPlatform(
+          platformSpec: _macosKonyakRuntimePlatformSpec,
+          environment: environment,
         );
     final sourceManifestSignature =
         request.sourceManifestSignature ??
-        _runtimeProfileEnvironmentValue(
-          environment,
-          developmentKey: 'KONYAK_DEV_MACOS_WINE_STACK_SIGNATURE_URL',
-          releaseKey: 'KONYAK_MACOS_WINE_STACK_SIGNATURE_URL',
+        _runtimeSourceManifestSignatureForPlatform(
+          platformSpec: _macosKonyakRuntimePlatformSpec,
+          environment: environment,
         );
     final hasExplicitInstallSource =
         request.archivePath != null ||
@@ -4211,9 +4284,15 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
     final tempDirectory = Directory.systemTemp.createTempSync(
       'konyak-macos-wine-',
     );
-    final archiveUrl = request.archiveUrl ?? macosWineArchiveUrl;
+    final archiveUrl =
+        request.archiveUrl ??
+        _runtimeDefaultArchiveUrl(
+          platformSpec: _macosKonyakRuntimePlatformSpec,
+          environment: environment,
+        )!;
     final archiveFileName =
-        _fileNameFromUrl(archiveUrl) ?? macosWineArchiveFileName;
+        _fileNameFromUrl(archiveUrl) ??
+        _macosKonyakRuntimePlatformSpec.defaultArchiveFileName;
     final downloadedArchivePath = _joinPath(tempDirectory.path, [
       archiveFileName,
     ]);
@@ -4277,17 +4356,15 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
     );
     final sourceManifest =
         request.sourceManifest ??
-        _runtimeProfileEnvironmentValue(
-          environment,
-          developmentKey: 'KONYAK_DEV_MACOS_WINE_STACK_MANIFEST',
-          releaseKey: 'KONYAK_MACOS_WINE_STACK_MANIFEST',
+        _runtimeSourceManifestForPlatform(
+          platformSpec: _macosKonyakRuntimePlatformSpec,
+          environment: environment,
         );
     final sourceManifestSignature =
         request.sourceManifestSignature ??
-        _runtimeProfileEnvironmentValue(
-          environment,
-          developmentKey: 'KONYAK_DEV_MACOS_WINE_STACK_SIGNATURE_URL',
-          releaseKey: 'KONYAK_MACOS_WINE_STACK_SIGNATURE_URL',
+        _runtimeSourceManifestSignatureForPlatform(
+          platformSpec: _macosKonyakRuntimePlatformSpec,
+          environment: environment,
         );
     final hasExplicitInstallSource =
         request.archivePath != null ||
@@ -4343,9 +4420,15 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
     final tempDirectory = Directory.systemTemp.createTempSync(
       'konyak-macos-wine-',
     );
-    final archiveUrl = request.archiveUrl ?? macosWineArchiveUrl;
+    final archiveUrl =
+        request.archiveUrl ??
+        _runtimeDefaultArchiveUrl(
+          platformSpec: _macosKonyakRuntimePlatformSpec,
+          environment: environment,
+        )!;
     final archiveFileName =
-        _fileNameFromUrl(archiveUrl) ?? macosWineArchiveFileName;
+        _fileNameFromUrl(archiveUrl) ??
+        _macosKonyakRuntimePlatformSpec.defaultArchiveFileName;
     final downloadedArchivePath = _joinPath(tempDirectory.path, [
       archiveFileName,
     ]);
@@ -4388,21 +4471,35 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
     Map<String, String> componentVersions = const <String, String>{},
     RuntimeInstallProgressSink? progressSink,
   }) {
-    final installFailure = _installRuntimeArchives(
-      runtimeLabel: 'macOS Wine',
-      archivePath: archivePath,
-      archiveSha256: archiveSha256,
-      componentArchivePaths: componentArchivePaths,
-      componentVersions: componentVersions,
-      runtimeRoot: Directory(_macosWineRuntimeRoot(environment)),
-      requiredExecutableRelativePath: const <String>['bin', 'wine64'],
-      expectedExecutablePath: _macosWineExecutable(environment),
-      normalizeStagingRoot: _normalizeMacosWineRuntimeLayout,
-      afterManifestWrite: _ensureMacosWine64Alias,
-      progressSink: progressSink,
+    final installResult = _runtimePackageInstaller.install(
+      RuntimePackageInstallRequest(
+        runtimeLabel: 'macOS Wine',
+        archivePath: archivePath,
+        archiveSha256: archiveSha256,
+        componentArchivePaths: componentArchivePaths,
+        componentVersions: componentVersions,
+        runtimeRoot: Directory(_macosWineRuntimeRoot(environment)),
+        requiredExecutableRelativePath:
+            _macosKonyakRuntimePlatformSpec.requiredExecutableRelativePath,
+        expectedExecutablePath: _macosWineExecutable(environment),
+        normalizeStagingRoot:
+            _macosKonyakRuntimePlatformSpec.layoutNormalization ==
+                _RuntimeLayoutNormalization.macosWineBundle
+            ? _normalizeMacosWineRuntimeLayout
+            : null,
+        afterManifestWrite:
+            _macosKonyakRuntimePlatformSpec.layoutNormalization ==
+                _RuntimeLayoutNormalization.macosWineBundle
+            ? _ensureMacosWine64Alias
+            : null,
+        progressSink: progressSink,
+      ),
     );
-    if (installFailure != null) {
-      return MacosWineInstallFailed(installFailure);
+    switch (installResult) {
+      case RuntimePackageInstallFailed(:final message):
+        return MacosWineInstallFailed(message);
+      case RuntimePackageInstallCompleted():
+        break;
     }
 
     final runtime = _macosWineRuntimeRecord(
@@ -4695,9 +4792,12 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
     FileStatusProbe fileStatusProbe = const DartIoFileStatusProbe(),
     RuntimeStackVersionProbe runtimeStackVersionProbe =
         const DartIoRuntimeStackVersionProbe(),
+    RuntimePackageInstaller runtimePackageInstaller =
+        const DartIoRuntimePackageInstaller(),
   }) : environment = Map.unmodifiable(environment),
        _fileStatusProbe = fileStatusProbe,
-       _runtimeStackVersionProbe = runtimeStackVersionProbe;
+       _runtimeStackVersionProbe = runtimeStackVersionProbe,
+       _runtimePackageInstaller = runtimePackageInstaller;
 
   factory DartIoLinuxWineInstaller.current() {
     return DartIoLinuxWineInstaller(
@@ -4710,6 +4810,7 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
   final Map<String, String> environment;
   final FileStatusProbe _fileStatusProbe;
   final RuntimeStackVersionProbe _runtimeStackVersionProbe;
+  final RuntimePackageInstaller _runtimePackageInstaller;
 
   @override
   LinuxWineInstallResult install(
@@ -4740,17 +4841,15 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
     );
     final sourceManifest =
         request.sourceManifest ??
-        _runtimeProfileEnvironmentValue(
-          environment,
-          developmentKey: 'KONYAK_DEV_LINUX_WINE_STACK_MANIFEST',
-          releaseKey: 'KONYAK_LINUX_WINE_STACK_MANIFEST',
+        _runtimeSourceManifestForPlatform(
+          platformSpec: _linuxWineRuntimePlatformSpec,
+          environment: environment,
         );
     final sourceManifestSignature =
         request.sourceManifestSignature ??
-        _runtimeProfileEnvironmentValue(
-          environment,
-          developmentKey: 'KONYAK_DEV_LINUX_WINE_STACK_SIGNATURE_URL',
-          releaseKey: 'KONYAK_LINUX_WINE_STACK_SIGNATURE_URL',
+        _runtimeSourceManifestSignatureForPlatform(
+          platformSpec: _linuxWineRuntimePlatformSpec,
+          environment: environment,
         );
     if (!request.force &&
         request.archivePath == null &&
@@ -4788,7 +4887,10 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
 
     final archiveUrl =
         request.archiveUrl ??
-        _nonEmptyEnvironmentValue(environment, 'KONYAK_LINUX_WINE_ARCHIVE_URL');
+        _runtimeDefaultArchiveUrl(
+          platformSpec: _linuxWineRuntimePlatformSpec,
+          environment: environment,
+        );
     if (archiveUrl == null) {
       return const LinuxWineInstallFailed(
         'Linux Wine archive is not configured.',
@@ -4798,7 +4900,9 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
     final tempDirectory = Directory.systemTemp.createTempSync(
       'konyak-linux-wine-',
     );
-    final archiveFileName = _fileNameFromUrl(archiveUrl) ?? 'linux-wine.tar.xz';
+    final archiveFileName =
+        _fileNameFromUrl(archiveUrl) ??
+        _linuxWineRuntimePlatformSpec.defaultArchiveFileName;
     final downloadedArchivePath = _joinPath(tempDirectory.path, [
       archiveFileName,
     ]);
@@ -4862,17 +4966,15 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
     );
     final sourceManifest =
         request.sourceManifest ??
-        _runtimeProfileEnvironmentValue(
-          environment,
-          developmentKey: 'KONYAK_DEV_LINUX_WINE_STACK_MANIFEST',
-          releaseKey: 'KONYAK_LINUX_WINE_STACK_MANIFEST',
+        _runtimeSourceManifestForPlatform(
+          platformSpec: _linuxWineRuntimePlatformSpec,
+          environment: environment,
         );
     final sourceManifestSignature =
         request.sourceManifestSignature ??
-        _runtimeProfileEnvironmentValue(
-          environment,
-          developmentKey: 'KONYAK_DEV_LINUX_WINE_STACK_SIGNATURE_URL',
-          releaseKey: 'KONYAK_LINUX_WINE_STACK_SIGNATURE_URL',
+        _runtimeSourceManifestSignatureForPlatform(
+          platformSpec: _linuxWineRuntimePlatformSpec,
+          environment: environment,
         );
     if (!request.force &&
         request.archivePath == null &&
@@ -4910,7 +5012,10 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
 
     final archiveUrl =
         request.archiveUrl ??
-        _nonEmptyEnvironmentValue(environment, 'KONYAK_LINUX_WINE_ARCHIVE_URL');
+        _runtimeDefaultArchiveUrl(
+          platformSpec: _linuxWineRuntimePlatformSpec,
+          environment: environment,
+        );
     if (archiveUrl == null) {
       return const LinuxWineInstallFailed(
         'Linux Wine archive is not configured.',
@@ -4920,7 +5025,9 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
     final tempDirectory = Directory.systemTemp.createTempSync(
       'konyak-linux-wine-',
     );
-    final archiveFileName = _fileNameFromUrl(archiveUrl) ?? 'linux-wine.tar.xz';
+    final archiveFileName =
+        _fileNameFromUrl(archiveUrl) ??
+        _linuxWineRuntimePlatformSpec.defaultArchiveFileName;
     final downloadedArchivePath = _joinPath(tempDirectory.path, [
       archiveFileName,
     ]);
@@ -4963,19 +5070,25 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
     Map<String, String> componentVersions = const <String, String>{},
     RuntimeInstallProgressSink? progressSink,
   }) {
-    final installFailure = _installRuntimeArchives(
-      runtimeLabel: 'Linux Wine',
-      archivePath: archivePath,
-      archiveSha256: archiveSha256,
-      componentArchivePaths: componentArchivePaths,
-      componentVersions: componentVersions,
-      runtimeRoot: Directory(_linuxWineRuntimeRoot(environment)),
-      requiredExecutableRelativePath: const <String>['bin', 'wine'],
-      expectedExecutablePath: _linuxWineExecutable(environment),
-      progressSink: progressSink,
+    final installResult = _runtimePackageInstaller.install(
+      RuntimePackageInstallRequest(
+        runtimeLabel: 'Linux Wine',
+        archivePath: archivePath,
+        archiveSha256: archiveSha256,
+        componentArchivePaths: componentArchivePaths,
+        componentVersions: componentVersions,
+        runtimeRoot: Directory(_linuxWineRuntimeRoot(environment)),
+        requiredExecutableRelativePath:
+            _linuxWineRuntimePlatformSpec.requiredExecutableRelativePath,
+        expectedExecutablePath: _linuxWineExecutable(environment),
+        progressSink: progressSink,
+      ),
     );
-    if (installFailure != null) {
-      return LinuxWineInstallFailed(installFailure);
+    switch (installResult) {
+      case RuntimePackageInstallFailed(:final message):
+        return LinuxWineInstallFailed(message);
+      case RuntimePackageInstallCompleted():
+        break;
     }
 
     final runtime = _linuxWineRuntimeRecord(
@@ -5785,7 +5898,16 @@ class _RuntimePlatformSpec {
     required this.runnerKind,
     required this.stackId,
     required this.stackName,
+    required this.requiredExecutableRelativePath,
+    required this.defaultArchiveFileName,
+    required this.developmentSourceManifestEnvironmentKey,
+    required this.releaseSourceManifestEnvironmentKey,
+    required this.developmentSourceSignatureEnvironmentKey,
+    required this.releaseSourceSignatureEnvironmentKey,
     required this.componentDefinitions,
+    this.defaultArchiveUrl,
+    this.archiveUrlEnvironmentKey,
+    this.layoutNormalization = _RuntimeLayoutNormalization.none,
   });
 
   final String runtimeId;
@@ -5795,8 +5917,19 @@ class _RuntimePlatformSpec {
   final String runnerKind;
   final String stackId;
   final String stackName;
+  final List<String> requiredExecutableRelativePath;
+  final String defaultArchiveFileName;
+  final String developmentSourceManifestEnvironmentKey;
+  final String releaseSourceManifestEnvironmentKey;
+  final String developmentSourceSignatureEnvironmentKey;
+  final String releaseSourceSignatureEnvironmentKey;
   final List<_RuntimeStackComponentDefinition> componentDefinitions;
+  final String? defaultArchiveUrl;
+  final String? archiveUrlEnvironmentKey;
+  final _RuntimeLayoutNormalization layoutNormalization;
 }
+
+enum _RuntimeLayoutNormalization { none, macosWineBundle }
 
 class RuntimeValidationRecord {
   RuntimeValidationRecord({
@@ -9492,6 +9625,15 @@ const _linuxWineRuntimePlatformSpec = _RuntimePlatformSpec(
   runnerKind: 'wine',
   stackId: 'linux-wine-runtime-stack',
   stackName: 'Linux Wine/Proton runtime stack',
+  requiredExecutableRelativePath: <String>['bin', 'wine'],
+  defaultArchiveFileName: 'linux-wine.tar.xz',
+  archiveUrlEnvironmentKey: 'KONYAK_LINUX_WINE_ARCHIVE_URL',
+  developmentSourceManifestEnvironmentKey:
+      'KONYAK_DEV_LINUX_WINE_STACK_MANIFEST',
+  releaseSourceManifestEnvironmentKey: 'KONYAK_LINUX_WINE_STACK_MANIFEST',
+  developmentSourceSignatureEnvironmentKey:
+      'KONYAK_DEV_LINUX_WINE_STACK_SIGNATURE_URL',
+  releaseSourceSignatureEnvironmentKey: 'KONYAK_LINUX_WINE_STACK_SIGNATURE_URL',
   componentDefinitions: _linuxWineRuntimeComponentDefinitions,
 );
 
@@ -9503,8 +9645,52 @@ const _macosKonyakRuntimePlatformSpec = _RuntimePlatformSpec(
   runnerKind: 'macosWine',
   stackId: 'macos-konyak-runtime-stack',
   stackName: 'Konyak macOS runtime stack',
+  requiredExecutableRelativePath: <String>['bin', 'wine64'],
+  defaultArchiveUrl: macosWineArchiveUrl,
+  defaultArchiveFileName: macosWineArchiveFileName,
+  developmentSourceManifestEnvironmentKey:
+      'KONYAK_DEV_MACOS_WINE_STACK_MANIFEST',
+  releaseSourceManifestEnvironmentKey: 'KONYAK_MACOS_WINE_STACK_MANIFEST',
+  developmentSourceSignatureEnvironmentKey:
+      'KONYAK_DEV_MACOS_WINE_STACK_SIGNATURE_URL',
+  releaseSourceSignatureEnvironmentKey: 'KONYAK_MACOS_WINE_STACK_SIGNATURE_URL',
+  layoutNormalization: _RuntimeLayoutNormalization.macosWineBundle,
   componentDefinitions: _macosKonyakRuntimeComponentDefinitions,
 );
+
+String? _runtimeSourceManifestForPlatform({
+  required _RuntimePlatformSpec platformSpec,
+  required Map<String, String> environment,
+}) {
+  return _runtimeProfileEnvironmentValue(
+    environment,
+    developmentKey: platformSpec.developmentSourceManifestEnvironmentKey,
+    releaseKey: platformSpec.releaseSourceManifestEnvironmentKey,
+  );
+}
+
+String? _runtimeSourceManifestSignatureForPlatform({
+  required _RuntimePlatformSpec platformSpec,
+  required Map<String, String> environment,
+}) {
+  return _runtimeProfileEnvironmentValue(
+    environment,
+    developmentKey: platformSpec.developmentSourceSignatureEnvironmentKey,
+    releaseKey: platformSpec.releaseSourceSignatureEnvironmentKey,
+  );
+}
+
+String? _runtimeDefaultArchiveUrl({
+  required _RuntimePlatformSpec platformSpec,
+  required Map<String, String> environment,
+}) {
+  final archiveUrlEnvironmentKey = platformSpec.archiveUrlEnvironmentKey;
+  if (archiveUrlEnvironmentKey != null) {
+    return _nonEmptyEnvironmentValue(environment, archiveUrlEnvironmentKey);
+  }
+
+  return platformSpec.defaultArchiveUrl;
+}
 
 RuntimeRecord _macosWineRuntimeRecord({
   required Map<String, String> environment,
@@ -9527,7 +9713,7 @@ RuntimeRecord _macosWineRuntimeRecord({
       isBundled: false,
       isUpdateable: true,
       distributionKind: _runtimeDistributionKind(environment, 'bootstrap'),
-      archiveUrl: macosWineArchiveUrl,
+      archiveUrl: platformSpec.defaultArchiveUrl,
       versionUrl: macosWineVersionUrl,
     ),
     installedState: InstalledRuntimeState(
@@ -9555,9 +9741,9 @@ RuntimeRecord _linuxWineRuntimeRecord({
   const platformSpec = _linuxWineRuntimePlatformSpec;
   final runtimeRoot = _linuxWineRuntimeRoot(environment);
   final executablePath = _joinPath(runtimeRoot, const ['bin', 'wine']);
-  final archiveUrl = _nonEmptyEnvironmentValue(
-    environment,
-    'KONYAK_LINUX_WINE_ARCHIVE_URL',
+  final archiveUrl = _runtimeDefaultArchiveUrl(
+    platformSpec: platformSpec,
+    environment: environment,
   );
   final versionUrl = _nonEmptyEnvironmentValue(
     environment,
