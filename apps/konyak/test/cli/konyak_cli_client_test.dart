@@ -265,8 +265,11 @@ void main() {
       runtimeProfileDefine: 'development',
       macosWineHomeDefine: '/repo/.dart_tool/konyak/dev-runtime/macos-wine',
       linuxWineHomeDefine: '/repo/.dart_tool/konyak/dev-runtime/linux-wine',
+      linuxWineLibraryPathDefine: '/nix/store/linux-wine-host-libs/lib',
       macosWineStackManifestDefine:
           '/repo/.dart_tool/konyak/dev-runtime-source/macos-wine-stack/konyak-macos-wine-runtime-stack-source.json',
+      linuxWineStackManifestDefine:
+          '/repo/.dart_tool/konyak/dev-runtime-source/linux-wine-stack/konyak-linux-wine-runtime-stack-source.json',
       macosDevRuntimePrepareScriptDefine:
           '/repo/scripts/prepare_macos_dev_runtime_stack.zsh',
       processRunner: runner,
@@ -281,8 +284,11 @@ void main() {
           '/repo/.dart_tool/konyak/dev-runtime/macos-wine',
       'KONYAK_LINUX_WINE_HOME':
           '/repo/.dart_tool/konyak/dev-runtime/linux-wine',
+      'KONYAK_LINUX_WINE_LIBRARY_PATH': '/nix/store/linux-wine-host-libs/lib',
       'KONYAK_DEV_MACOS_WINE_STACK_MANIFEST':
           '/repo/.dart_tool/konyak/dev-runtime-source/macos-wine-stack/konyak-macos-wine-runtime-stack-source.json',
+      'KONYAK_DEV_LINUX_WINE_STACK_MANIFEST':
+          '/repo/.dart_tool/konyak/dev-runtime-source/linux-wine-stack/konyak-linux-wine-runtime-stack-source.json',
       'KONYAK_MACOS_DEV_RUNTIME_PREPARE_SCRIPT':
           '/repo/scripts/prepare_macos_dev_runtime_stack.zsh',
       'KONYAK_PINNED_PROGRAM_LAUNCHER_EXECUTABLE':

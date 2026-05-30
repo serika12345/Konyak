@@ -21,10 +21,25 @@ do not interfere with Linux daemon startup.
 
 The Linux Nix dev shell and VSCode launch profile both set
 `KONYAK_RUNTIME_PROFILE=development` and point `KONYAK_LINUX_WINE_HOME` at
-`.dart_tool/konyak/dev-runtime/linux-wine`. The dev shell does not provide or
-symlink Wine, winetricks, or vkd3d-proton from Nix. Install or repair the Linux
-runtime through Konyak's `install-linux-wine` flow using a configured archive or
-source manifest.
+`.dart_tool/konyak/dev-runtime/linux-wine`. The Linux VSCode launch profile runs
+`scripts/prepare_linux_dev_runtime_source.zsh` before launch and passes
+`KONYAK_DEV_LINUX_WINE_STACK_MANIFEST` to Flutter and the CLI. That script does
+not use Nix store packages as runtime payloads. It downloads pinned upstream
+development sources, normalizes winetricks, wine-mono, and vkd3d-proton into
+Konyak component archives, and writes a source manifest under
+`.dart_tool/konyak/dev-runtime-source/linux-wine-stack`. The first Settings or
+startup install action still goes through Konyak's normal `install-linux-wine`
+contract and installs into `.dart_tool/konyak/dev-runtime/linux-wine`.
+The dev shell also exports `KONYAK_LINUX_WINE_LIBRARY_PATH` so the managed
+Linux Wine can find NixOS host libraries such as FreeType, Vulkan, EGL, and
+GnuTLS without making those libraries part of the Konyak runtime payload.
+
+The default Linux development sources can be overridden with
+`KONYAK_DEV_LINUX_WINE_ARCHIVE_URL`, `KONYAK_DEV_LINUX_WINETRICKS_ARCHIVE_URL`,
+`KONYAK_DEV_LINUX_WINE_MONO_ARCHIVE_URL`, and
+`KONYAK_DEV_LINUX_VKD3D_PROTON_ARCHIVE_URL`; each source must also provide the
+matching `_SHA256` variable. Local archive paths may use the same names with
+`_ARCHIVE` instead of `_URL`.
 
 Local runtime stack fixtures must use the development-only
 `KONYAK_DEV_LINUX_WINE_STACK_MANIFEST` environment variable. Keep release

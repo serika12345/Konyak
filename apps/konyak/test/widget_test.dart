@@ -3765,6 +3765,16 @@ void main() {
                       "version": "wine-10.0"
                     },
                     {
+                      "id": "wine-mono",
+                      "name": "wine-mono",
+                      "role": "dotnet-runtime",
+                      "isRequired": true,
+                      "isInstalled": true,
+                      "paths": ["/runtime/share/wine/mono"],
+                      "missingPaths": [],
+                      "version": "wine-mono-10.0.0"
+                    },
+                    {
                       "id": "vkd3d-proton",
                       "name": "vkd3d-proton",
                       "role": "d3d12-vulkan-translation",
@@ -3803,6 +3813,8 @@ void main() {
     );
     expect(find.text('Wine'), findsWidgets);
     expect(find.text('Installed | wine-10.0'), findsOneWidget);
+    expect(find.text('wine-mono'), findsOneWidget);
+    expect(find.text('Installed | wine-mono-10.0.0'), findsOneWidget);
     expect(find.text('vkd3d-proton'), findsOneWidget);
     expect(find.text('Missing | v2.14'), findsOneWidget);
     expect(

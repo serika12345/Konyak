@@ -9530,6 +9530,15 @@ const _linuxWineRuntimeComponentDefinitions =
         ],
       ),
       _RuntimeStackComponentDefinition(
+        id: 'wine-mono',
+        name: 'wine-mono',
+        role: 'dotnet-runtime',
+        isRequired: true,
+        relativePaths: <List<String>>[
+          <String>['share', 'wine', 'mono'],
+        ],
+      ),
+      _RuntimeStackComponentDefinition(
         id: 'vkd3d-proton',
         name: 'vkd3d-proton',
         role: 'd3d12-vulkan-translation',
@@ -12578,13 +12587,25 @@ String _linuxWinetricksExecutable(Map<String, String> environment) {
 
 Map<String, String> _linuxRuntimeEnvironment(Map<String, String> environment) {
   final runtimeBin = _linuxManagedRuntimeBinFolder(environment);
-  if (runtimeBin == null) {
+  final wineLibraryPath = environment['KONYAK_LINUX_WINE_LIBRARY_PATH'];
+  final hasWineLibraryPath =
+      wineLibraryPath != null && wineLibraryPath.trim().isNotEmpty;
+  if (runtimeBin == null && !hasWineLibraryPath) {
     return const <String, String>{};
   }
 
-  return <String, String>{
-    'PATH': _prependPath(runtimeBin, environment['PATH']),
-  };
+  final runtimeEnvironment = <String, String>{};
+  if (runtimeBin != null) {
+    runtimeEnvironment['PATH'] = _prependPath(runtimeBin, environment['PATH']);
+  }
+  if (hasWineLibraryPath) {
+    runtimeEnvironment['LD_LIBRARY_PATH'] = _prependPath(
+      wineLibraryPath.trim(),
+      environment['LD_LIBRARY_PATH'],
+    );
+  }
+
+  return Map.unmodifiable(runtimeEnvironment);
 }
 
 String _appUpdateCacheDirectory(Map<String, String> environment) {
@@ -13064,10 +13085,13 @@ String _linuxWineTerminalShellCommandWithEnvironment({
 }) {
   final executable = _linuxWineExecutable(environment);
   final runtimeBin = _linuxManagedRuntimeBinFolder(environment);
+  final wineLibraryPath = environment['KONYAK_LINUX_WINE_LIBRARY_PATH'];
   final exports = <String>[
     'cd ${_shellQuote(bottle.path)}',
     'export WINEPREFIX=${_shellQuote(bottle.path)}',
     if (runtimeBin != null) 'export PATH=${_shellQuote(runtimeBin)}:\$PATH',
+    if (wineLibraryPath != null && wineLibraryPath.trim().isNotEmpty)
+      'export LD_LIBRARY_PATH=${_shellQuote(wineLibraryPath.trim())}:\${LD_LIBRARY_PATH:-}',
     'alias wine=${_shellQuote(executable)}',
     'alias winecfg=${_shellQuote('$executable winecfg')}',
     'alias msiexec=${_shellQuote('$executable msiexec')}',

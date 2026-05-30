@@ -41,6 +41,7 @@
             jq
             openssl
             xz
+            zstd
             zsh
           ];
 
@@ -89,6 +90,43 @@
             vulkan-validation-layers
             xdg-utils
           ];
+
+          linuxWineHostLibraryPackages = with pkgs; [
+            alsa-lib
+            cups
+            dbus
+            fontconfig
+            freetype
+            gnutls
+            glib
+            gtk3
+            libdrm
+            libglvnd
+            libpulseaudio
+            libusb1
+            libxkbcommon
+            mesa
+            udev
+            vulkan-loader
+            wayland
+            libx11
+            libxcomposite
+            libxcursor
+            libxdamage
+            libxext
+            libxfixes
+            libxi
+            libxinerama
+            libxrandr
+            libxrender
+            libxxf86vm
+            libxcb
+            libxshmfence
+          ];
+
+          linuxWineHostLibraryPath =
+            lib.makeLibraryPath linuxWineHostLibraryPackages
+            + ":/run/opengl-driver/lib:/run/opengl-driver-32/lib";
 
           darwinFlutterBuildPackages = with pkgs; [
             cocoapods
@@ -197,6 +235,8 @@
               ${lib.optionalString pkgs.stdenv.isLinux ''
                 export KONYAK_RUNTIME_PROFILE="development"
                 export KONYAK_LINUX_WINE_HOME="$PWD/.dart_tool/konyak/dev-runtime/linux-wine"
+                export KONYAK_DEV_LINUX_WINE_STACK_MANIFEST="$PWD/.dart_tool/konyak/dev-runtime-source/linux-wine-stack/konyak-linux-wine-runtime-stack-source.json"
+                export KONYAK_LINUX_WINE_LIBRARY_PATH="${linuxWineHostLibraryPath}"
               ''}
               ${lib.optionalString pkgs.stdenv.isDarwin darwinXcodeEnvironment}
               ${lib.optionalString pkgs.stdenv.isDarwin ''

@@ -65,6 +65,7 @@ def main() -> None:
         "swiftformat",
         "gh",
         "xz",
+        "zstd",
         "[ -t 1 ]",
     ]:
         require_contains("flake.nix", expected)
@@ -248,6 +249,9 @@ def main() -> None:
     require_contains("docs/vscode-macos.md", ".dart_tool/konyak/flutter-sdk")
     require_contains("docs/vscode-macos.md", "prepare_macos_dev_runtime_stack.zsh")
     require_contains("docs/vscode-macos.md", "KONYAK_DEV_MACOS_WINE_STACK_MANIFEST")
+    require_contains("docs/vscode-macos.md", "prepare_linux_dev_runtime_source.zsh")
+    require_contains("docs/vscode-macos.md", "KONYAK_DEV_LINUX_WINE_STACK_MANIFEST")
+    require_contains("docs/vscode-macos.md", "KONYAK_LINUX_WINE_LIBRARY_PATH")
     require_contains("docs/vscode-macos.md", "KONYAK_MACOS_WINE_HOME")
     require_not_contains("docs/vscode-macos.md", "Nix-provided Wine")
     require_not_contains(".vscode/tasks.json", "Prepare Linux Dev Runtime")
@@ -259,12 +263,18 @@ def main() -> None:
         "KONYAK_RUNTIME_PROFILE",
         "KONYAK_MACOS_WINE_HOME",
         "KONYAK_DEV_MACOS_WINE_STACK_MANIFEST",
+        "KONYAK_DEV_LINUX_WINE_STACK_MANIFEST",
         "--dart-define=KONYAK_RUNTIME_PROFILE",
         "--dart-define=KONYAK_MACOS_WINE_HOME",
         "--dart-define=KONYAK_DEV_MACOS_WINE_STACK_MANIFEST",
     ]:
         require_contains(".vscode/launch.json", expected)
         require_contains(".vscode/tasks.json", expected)
+    require_contains(".vscode/tasks.json", "scripts/prepare_linux_dev_runtime_source.zsh")
+    require_contains(".vscode/launch.json", "Konyak: Prepare Linux Runtime Source")
+    require_contains(
+        ".vscode/launch.json", "--dart-define=KONYAK_DEV_LINUX_WINE_STACK_MANIFEST"
+    )
 
     for expected in [
         "--dart-define=KONYAK_RUNTIME_PROFILE",
@@ -276,8 +286,22 @@ def main() -> None:
     for expected in [
         "KONYAK_DEV_NIX_GSTREAMER_PATH",
         "prepare_macos_dev_runtime_stack.zsh",
+        "KONYAK_DEV_LINUX_WINE_STACK_MANIFEST",
+        "KONYAK_LINUX_WINE_LIBRARY_PATH",
     ]:
         require_contains("flake.nix", expected)
+    for expected in [
+        "KONYAK_DEV_LINUX_WINE_ARCHIVE",
+        "KONYAK_DEV_LINUX_WINETRICKS_ARCHIVE",
+        "KONYAK_DEV_LINUX_WINE_MONO_ARCHIVE",
+        "KONYAK_DEV_LINUX_VKD3D_PROTON_ARCHIVE",
+        "ARCHIVE_SHA256",
+        "wine-mono",
+        "vkd3d-proton",
+    ]:
+        require_contains("scripts/prepare_linux_dev_runtime_source.zsh", expected)
+    require_not_contains("scripts/prepare_linux_dev_runtime_source.zsh", "winetricks list-all")
+    require_not_contains("scripts/prepare_linux_dev_runtime_source.zsh", "/nix/store")
     require_contains("scripts/prepare_macos_dev_runtime_stack.zsh", "WINETRICKS_SCRIPT_SHA256")
     require_contains("scripts/prepare_macos_dev_runtime_stack.zsh", "winetricks list-all")
     require_not_contains(

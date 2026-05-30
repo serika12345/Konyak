@@ -182,8 +182,14 @@ KonyakCliClient createDefaultKonyakCliClient({
   String linuxWineHomeDefine = const String.fromEnvironment(
     'KONYAK_LINUX_WINE_HOME',
   ),
+  String linuxWineLibraryPathDefine = const String.fromEnvironment(
+    'KONYAK_LINUX_WINE_LIBRARY_PATH',
+  ),
   String macosWineStackManifestDefine = const String.fromEnvironment(
     'KONYAK_DEV_MACOS_WINE_STACK_MANIFEST',
+  ),
+  String linuxWineStackManifestDefine = const String.fromEnvironment(
+    'KONYAK_DEV_LINUX_WINE_STACK_MANIFEST',
   ),
   String macosDevRuntimePrepareScriptDefine = const String.fromEnvironment(
     'KONYAK_MACOS_DEV_RUNTIME_PREPARE_SCRIPT',
@@ -204,7 +210,9 @@ KonyakCliClient createDefaultKonyakCliClient({
     runtimeProfileDefine: runtimeProfileDefine,
     macosWineHomeDefine: macosWineHomeDefine,
     linuxWineHomeDefine: linuxWineHomeDefine,
+    linuxWineLibraryPathDefine: linuxWineLibraryPathDefine,
     macosWineStackManifestDefine: macosWineStackManifestDefine,
+    linuxWineStackManifestDefine: linuxWineStackManifestDefine,
     macosDevRuntimePrepareScriptDefine: macosDevRuntimePrepareScriptDefine,
   );
 
@@ -2090,7 +2098,9 @@ Map<String, String> _runtimeEnvironmentOverrides(
   required String runtimeProfileDefine,
   required String macosWineHomeDefine,
   required String linuxWineHomeDefine,
+  required String linuxWineLibraryPathDefine,
   required String macosWineStackManifestDefine,
+  required String linuxWineStackManifestDefine,
   required String macosDevRuntimePrepareScriptDefine,
 }) {
   final runtimeProfile = _firstNonEmpty(
@@ -2126,6 +2136,10 @@ Map<String, String> _runtimeEnvironmentOverrides(
           ])
         : null,
   );
+  final linuxWineLibraryPath = _firstNonEmpty(
+    linuxWineLibraryPathDefine,
+    environment['KONYAK_LINUX_WINE_LIBRARY_PATH'],
+  );
   final macosStackManifest = _firstNonEmpty(
     macosWineStackManifestDefine,
     environment['KONYAK_DEV_MACOS_WINE_STACK_MANIFEST'],
@@ -2136,6 +2150,19 @@ Map<String, String> _runtimeEnvironmentOverrides(
             'dev-runtime-source',
             'macos-wine-stack',
             'konyak-macos-wine-runtime-stack-source.json',
+          ])
+        : null,
+  );
+  final linuxStackManifest = _firstNonEmpty(
+    linuxWineStackManifestDefine,
+    environment['KONYAK_DEV_LINUX_WINE_STACK_MANIFEST'],
+    isDevelopment && repoRoot != null
+        ? _joinPath(repoRoot, const [
+            '.dart_tool',
+            'konyak',
+            'dev-runtime-source',
+            'linux-wine-stack',
+            'konyak-linux-wine-runtime-stack-source.json',
           ])
         : null,
   );
@@ -2160,7 +2187,9 @@ Map<String, String> _runtimeEnvironmentOverrides(
   addIfPresent('KONYAK_RUNTIME_PROFILE', runtimeProfile);
   addIfPresent('KONYAK_MACOS_WINE_HOME', macosWineHome);
   addIfPresent('KONYAK_LINUX_WINE_HOME', linuxWineHome);
+  addIfPresent('KONYAK_LINUX_WINE_LIBRARY_PATH', linuxWineLibraryPath);
   addIfPresent('KONYAK_DEV_MACOS_WINE_STACK_MANIFEST', macosStackManifest);
+  addIfPresent('KONYAK_DEV_LINUX_WINE_STACK_MANIFEST', linuxStackManifest);
   addIfPresent('KONYAK_MACOS_DEV_RUNTIME_PREPARE_SCRIPT', macosPrepareScript);
 
   return Map.unmodifiable(overrides);

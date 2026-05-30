@@ -2613,7 +2613,10 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       bottleRepository: repository,
       programRunPlanner: ProgramRunPlanner(
         hostPlatform: KonyakHostPlatform.linux,
-        environment: {'HOME': '/home/user'},
+        environment: {
+          'HOME': '/home/user',
+          'KONYAK_LINUX_WINE_LIBRARY_PATH': '/runtime-host-libs',
+        },
       ),
       programRunner: runner,
     );
@@ -2635,6 +2638,10 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       contains('/home/user/.local/share/konyak/bottles/steam'),
     );
     expect(runner.lastRequest?.arguments.last, contains('WINEPREFIX'));
+    expect(
+      runner.lastRequest?.arguments.last,
+      contains("LD_LIBRARY_PATH='/runtime-host-libs'"),
+    );
 
     final payload = jsonDecode(result.stdout) as Map<String, Object?>;
     final run = payload['run'] as Map<String, Object?>;
@@ -2659,7 +2666,9 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       environment: const {
         'HOME': '/home/user',
         'PATH': '/usr/bin:/bin',
+        'LD_LIBRARY_PATH': '/host/lib',
         'KONYAK_LINUX_WINE_HOME': '/opt/konyak/runtime/linux-wine',
+        'KONYAK_LINUX_WINE_LIBRARY_PATH': '/opt/konyak/runtime-host-libs',
       },
     ).plan(bottle: bottle, programPath: 'C:/Program Files/Steam/steam.exe');
 
@@ -2668,6 +2677,13 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
     expect(
       request?.environment,
       containsPair('PATH', '/opt/konyak/runtime/linux-wine/bin:/usr/bin:/bin'),
+    );
+    expect(
+      request?.environment,
+      containsPair(
+        'LD_LIBRARY_PATH',
+        '/opt/konyak/runtime-host-libs:/host/lib',
+      ),
     );
     expect(
       request?.environment,
@@ -4390,6 +4406,7 @@ corefonts                Microsoft Core Fonts
           '/home/user/.local/share/konyak/Runtimes/linux-wine/bin/winedbg',
           '/home/user/.local/share/konyak/Runtimes/linux-wine/bin/wineserver',
           '/home/user/.local/share/konyak/Runtimes/linux-wine/winetricks',
+          '/home/user/.local/share/konyak/Runtimes/linux-wine/share/wine/mono',
           '/home/user/.local/share/konyak/Runtimes/linux-wine/vkd3d-proton/x64/d3d12.dll',
           '/home/user/.local/share/konyak/Runtimes/linux-wine/vkd3d-proton/x86/d3d12.dll',
         }),
@@ -4448,6 +4465,17 @@ corefonts                Microsoft Core Fonts
                 'missingPaths': <Object?>[],
               },
               {
+                'id': 'wine-mono',
+                'name': 'wine-mono',
+                'role': 'dotnet-runtime',
+                'isRequired': true,
+                'isInstalled': true,
+                'paths': [
+                  '/home/user/.local/share/konyak/Runtimes/linux-wine/share/wine/mono',
+                ],
+                'missingPaths': <Object?>[],
+              },
+              {
                 'id': 'vkd3d-proton',
                 'name': 'vkd3d-proton',
                 'role': 'd3d12-vulkan-translation',
@@ -4482,6 +4510,7 @@ corefonts                Microsoft Core Fonts
           '/home/user/.local/share/konyak/Runtimes/linux-wine/bin/winedbg',
           '/home/user/.local/share/konyak/Runtimes/linux-wine/bin/wineserver',
           '/home/user/.local/share/konyak/Runtimes/linux-wine/winetricks',
+          '/home/user/.local/share/konyak/Runtimes/linux-wine/share/wine/mono',
           '/home/user/.local/share/konyak/Runtimes/linux-wine/vkd3d-proton/x64/d3d12.dll',
           '/home/user/.local/share/konyak/Runtimes/linux-wine/vkd3d-proton/x86/d3d12.dll',
         }),
@@ -4503,7 +4532,6 @@ corefonts                Microsoft Core Fonts
     expect(runtime, isNot(contains('versionUrl')));
     expect(runtime, isNot(contains('sourceManifestUrl')));
   });
-
   test('check-runtime-update --json returns machine-readable update status', () {
     final checker = RecordingRuntimeUpdateChecker(
       result: const RuntimeUpdateCheckCompleted(
@@ -8632,6 +8660,7 @@ String _createLinuxWineRuntimeArchive(String tempPath) {
     <String>['bin', 'winedbg'],
     <String>['bin', 'wineserver'],
     <String>['winetricks'],
+    <String>['share', 'wine', 'mono', 'wine-mono.marker'],
   ]) {
     final file = File(_joinTestPath(runtimeRoot.path, relativePath));
     file.parent.createSync(recursive: true);
