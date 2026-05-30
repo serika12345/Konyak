@@ -36,55 +36,106 @@ class BlockingProgressOverlay extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 22,
-                    vertical: 18,
-                  ),
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(
-                      minWidth: 360,
-                      maxWidth: 520,
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          message,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: colors.text,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const SizedBox(height: 14),
-                        SizedBox(
-                          width: double.infinity,
-                          child: LinearProgressIndicator(
-                            value: progress,
-                            color: colors.accent,
-                            backgroundColor: colors.border,
-                            minHeight: 4,
-                          ),
-                        ),
-                        if (progress case final progress?) ...[
-                          const SizedBox(height: 8),
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: Text(
-                              '${(progress * 100).round()}%',
-                              style: TextStyle(
-                                color: colors.mutedText,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
+                child: progress == null
+                    ? _BlockingSpinnerContent(message: message, colors: colors)
+                    : _BlockingProgressContent(
+                        message: message,
+                        progress: progress!,
+                        colors: colors,
+                      ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _BlockingSpinnerContent extends StatelessWidget {
+  const _BlockingSpinnerContent({required this.message, required this.colors});
+
+  final String message;
+  final KonyakThemeColors colors;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: 22,
+            height: 22,
+            child: CircularProgressIndicator(
+              color: colors.accent,
+              strokeWidth: 2.5,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            message,
+            style: TextStyle(
+              color: colors.text,
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BlockingProgressContent extends StatelessWidget {
+  const _BlockingProgressContent({
+    required this.message,
+    required this.progress,
+    required this.colors,
+  });
+
+  final String message;
+  final double progress;
+  final KonyakThemeColors colors;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 18),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minWidth: 360, maxWidth: 520),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: colors.text,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 14),
+            SizedBox(
+              width: double.infinity,
+              child: LinearProgressIndicator(
+                value: progress,
+                color: colors.accent,
+                backgroundColor: colors.border,
+                minHeight: 4,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                '${(progress * 100).round()}%',
+                style: TextStyle(
+                  color: colors.mutedText,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ),
