@@ -240,6 +240,9 @@ task changes scope.
   - [x] Remove Nix-provided Wine, winetricks, and vkd3d-proton from the Linux
     dev shell. Linux development runtime contents now come only from managed
     install archives or source manifests.
+  - [x] Split Flake packages by release build, verification/workflow, host
+    runtime support, and development runtime source roles; remove unused
+    convenience/archive tools from the dev shell.
 - Required tests for the rework.
   - [x] Linux install repairs an incomplete runtime when required components are
     missing even if `bin/wine` exists.

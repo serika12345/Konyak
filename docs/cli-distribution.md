@@ -29,6 +29,13 @@ winetricks, or vkd3d-proton. Linux runtime contents must be installed through
 `install-linux-wine` from a configured archive or source manifest, matching the
 packaged runtime acquisition path.
 
+The flake keeps those concerns separate. `releaseBuildPackages` and the
+platform build or packaging groups are for producing app artifacts. Verification
+and workflow tools only enter the dev shell. `linuxHostRuntimePackages` are
+Linux host helpers for local desktop/runtime testing, not Konyak-managed Wine
+runtime contents. `darwinDevelopmentRuntimeSourcePackages` are only source
+inputs for local macOS development runtime components.
+
 ## Packaged Builds
 
 Distribution builds bundle a compiled CLI executable and pass its path to the

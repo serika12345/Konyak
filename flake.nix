@@ -24,50 +24,49 @@
           pkgs = nixpkgs.legacyPackages.${system};
           inherit (pkgs) lib;
 
-          commonPackages = with pkgs; [
-            bashInteractive
-            cabextract
-            curl
+          dartFlutterPackages = with pkgs; [
             dart
-            deadnix
-            fd
             flutter
-            gh
             git
-            git-lfs
+          ];
+
+          scriptRuntimePackages = with pkgs; [
+            bashInteractive
+            coreutils
+            curl
+            gawk
+            gnused
             gnutar
             gzip
             jq
-            just
-            melos
-            nixfmt
-            p7zip
-            python3
-            ripgrep
-            rsync
-            statix
-            tree
-            unzip
+            openssl
             xz
             zsh
           ];
 
-          linuxPackages = with pkgs; [
-            appimage-run
+          verificationPackages = with pkgs; [
+            deadnix
+            nixfmt
+            statix
+          ];
+
+          workflowPackages = with pkgs; [
+            gh
+            just
+            python3
+            ripgrep
+          ];
+
+          linuxFlutterBuildPackages = with pkgs; [
             clang
             cmake
-            dbus
             glib
             gtk3
             libepoxy
             libxkbcommon
             ninja
             pkg-config
-            vulkan-loader
-            vulkan-tools
-            vulkan-validation-layers
             wayland
-            xdg-utils
             libx11
             libxcursor
             libxi
@@ -75,13 +74,56 @@
             libxcb
           ];
 
-          darwinPackages = with pkgs; [
+          linuxReleasePackagingPackages = with pkgs; [
+            appimage-run
+            curl
+            gnused
+            openssl
+            rsync
+          ];
+
+          linuxHostRuntimePackages = with pkgs; [
+            dbus
+            vulkan-loader
+            vulkan-tools
+            vulkan-validation-layers
+            xdg-utils
+          ];
+
+          darwinFlutterBuildPackages = with pkgs; [
             cocoapods
-            gst_all_1.gstreamer
             libiconv
+          ];
+
+          darwinVerificationPackages = with pkgs; [
             swiftformat
             swiftlint
           ];
+
+          darwinDevelopmentRuntimeSourcePackages = with pkgs; [
+            gst_all_1.gstreamer
+          ];
+
+          releaseBuildPackages =
+            dartFlutterPackages
+            ++ (with pkgs; [
+              coreutils
+              gawk
+              jq
+              zsh
+            ]);
+
+          devShellPackages =
+            dartFlutterPackages
+            ++ scriptRuntimePackages
+            ++ verificationPackages
+            ++ workflowPackages
+            ++ lib.optionals pkgs.stdenv.isLinux (
+              linuxFlutterBuildPackages ++ linuxReleasePackagingPackages ++ linuxHostRuntimePackages
+            )
+            ++ lib.optionals pkgs.stdenv.isDarwin (
+              darwinFlutterBuildPackages ++ darwinVerificationPackages ++ darwinDevelopmentRuntimeSourcePackages
+            );
 
           darwinXcodeEnvironment = ''
             if [ -x /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild ]; then
@@ -98,7 +140,7 @@
               let
                 macosReleaseApp = pkgs.writeShellApplication {
                   name = "konyak-macos-release";
-                  runtimeInputs = commonPackages ++ darwinPackages;
+                  runtimeInputs = releaseBuildPackages ++ darwinFlutterBuildPackages;
                   text = ''
                     export KONYAK_NIX_RELEASE_APP=1
                     export KONYAK_REPO_ROOT="$PWD"
@@ -118,7 +160,7 @@
               let
                 linuxReleaseApp = pkgs.writeShellApplication {
                   name = "konyak-linux-release";
-                  runtimeInputs = commonPackages ++ linuxPackages;
+                  runtimeInputs = releaseBuildPackages ++ linuxFlutterBuildPackages ++ linuxReleasePackagingPackages;
                   text = ''
                     export KONYAK_NIX_RELEASE_APP=1
                     export KONYAK_REPO_ROOT="$PWD"
@@ -146,10 +188,7 @@
           '';
 
           devShells.default = pkgs.mkShell {
-            packages =
-              commonPackages
-              ++ lib.optionals pkgs.stdenv.isLinux linuxPackages
-              ++ lib.optionals pkgs.stdenv.isDarwin darwinPackages;
+            packages = devShellPackages;
 
             shellHook = ''
               export KONYAK_REPO_ROOT="$PWD"

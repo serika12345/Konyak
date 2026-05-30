@@ -69,7 +69,33 @@ def main() -> None:
     ]:
         require_contains("flake.nix", expected)
 
+    for expected in [
+        "dartFlutterPackages",
+        "scriptRuntimePackages",
+        "verificationPackages",
+        "workflowPackages",
+        "linuxFlutterBuildPackages",
+        "linuxReleasePackagingPackages",
+        "linuxHostRuntimePackages",
+        "darwinFlutterBuildPackages",
+        "darwinVerificationPackages",
+        "darwinDevelopmentRuntimeSourcePackages",
+        "releaseBuildPackages",
+        "devShellPackages",
+    ]:
+        require_contains("flake.nix", expected)
+
     for unexpected in [
+        "commonPackages",
+        "linuxPackages =",
+        "darwinPackages =",
+        "cabextract",
+        "fd",
+        "git-lfs",
+        "melos",
+        "p7zip",
+        "tree",
+        "unzip",
         "wineWow64Packages",
         "vkd3d-proton",
         "KONYAK_DEV_NIX_WINE_PATH",
