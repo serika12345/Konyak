@@ -2490,6 +2490,133 @@ void main() {
     semantics.dispose();
   });
 
+  testWidgets('Linux bottle configuration enables DXVK when runtime has DXVK', (
+    WidgetTester tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    final runner = _QueuedProcessRunner([
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottles": [
+              {
+                "id": "steam",
+                "name": "Steam",
+                "path": "/home/user/.local/share/konyak/bottles/steam",
+                "windowsVersion": "win10",
+                "runtimeSettings": {
+                  "enhancedSync": "msync",
+                  "metalHud": false,
+                  "metalTrace": false,
+                  "avxEnabled": false,
+                  "dxrEnabled": false,
+                  "dxvk": false,
+                  "dxvkAsync": true,
+                  "dxvkHud": "off",
+                  "buildVersion": 19045,
+                  "retinaMode": false,
+                  "dpiScaling": 144
+                }
+              }
+            ]
+          }
+        ''',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottle": {
+              "id": "steam",
+              "name": "Steam",
+              "path": "/home/user/.local/share/konyak/bottles/steam",
+              "windowsVersion": "win10",
+              "runtimeSettings": {
+                "enhancedSync": "msync",
+                "metalHud": false,
+                "metalTrace": false,
+                "avxEnabled": false,
+                "dxrEnabled": false,
+                "dxvk": false,
+                "dxvkAsync": true,
+                "dxvkHud": "off",
+                "buildVersion": 19045,
+                "retinaMode": false,
+                "dpiScaling": 144
+              }
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+      ProcessRunResult(
+        exitCode: 0,
+        stdout: _linuxRuntimeListPayload(),
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottle": {
+              "id": "steam",
+              "name": "Steam",
+              "path": "/home/user/.local/share/konyak/bottles/steam",
+              "windowsVersion": "win10",
+              "runtimeSettings": {
+                "enhancedSync": "msync",
+                "metalHud": false,
+                "metalTrace": false,
+                "avxEnabled": false,
+                "dxrEnabled": false,
+                "dxvk": true,
+                "dxvkAsync": true,
+                "dxvkHud": "off",
+                "buildVersion": 19045,
+                "retinaMode": false,
+                "dpiScaling": 144
+              }
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+    ]);
+
+    await tester.pumpWidget(
+      _testKonyakApp(
+        platform: KonyakPlatform.linux,
+        cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Bottle Configuration'));
+    await tester.pumpAndSettle();
+
+    expect(
+      tester
+          .getSemantics(find.byKey(const ValueKey('config-dxvk-switch')))
+          .flagsCollection
+          .isEnabled,
+      Tristate.isTrue,
+    );
+
+    await tester.tap(find.byKey(const ValueKey('config-dxvk-switch')));
+    await tester.pumpAndSettle();
+
+    final settings =
+        jsonDecode(runner.argumentsLog[3][3]) as Map<String, Object?>;
+    expect(settings, containsPair('dxvk', true));
+    expect(runner.argumentsLog[3].last, '--json');
+    semantics.dispose();
+  });
+
   testWidgets(
     'bottle configuration disables runtime toggles when capabilities are missing',
     (WidgetTester tester) async {
@@ -5369,6 +5496,61 @@ String _macosRuntimeListPayload({bool dxvkAvailable = true}) {
               name: 'GPTK/D3DMetal',
               role: 'd3d12-metal-translation',
               isRequired: false,
+            ),
+          ],
+        },
+      },
+    ],
+  });
+}
+
+String _linuxRuntimeListPayload({bool dxvkAvailable = true}) {
+  return jsonEncode(<String, Object?>{
+    'schemaVersion': 1,
+    'runtimes': <Object?>[
+      <String, Object?>{
+        'id': 'konyak-linux-wine',
+        'name': 'Konyak Linux Wine',
+        'platform': 'linux',
+        'architecture': 'x86_64',
+        'runnerKind': 'wine',
+        'isBundled': false,
+        'isUpdateable': true,
+        'isInstalled': true,
+        'stack': <String, Object?>{
+          'schemaVersion': 1,
+          'id': 'linux-wine-runtime-stack',
+          'name': 'Linux Wine/Proton runtime stack',
+          'compatibilityTarget': 'linux-wine-runtime-stack',
+          'isComplete': dxvkAvailable,
+          'components': <Object?>[
+            _runtimeStackComponentPayload(
+              id: 'wine',
+              name: 'Wine',
+              role: 'windows-runner',
+            ),
+            _runtimeStackComponentPayload(
+              id: 'winetricks',
+              name: 'winetricks',
+              role: 'verb-installer',
+            ),
+            _runtimeStackComponentPayload(
+              id: 'wine-mono',
+              name: 'wine-mono',
+              role: 'dotnet-runtime',
+            ),
+            _runtimeStackComponentPayload(
+              id: 'dxvk',
+              name: 'DXVK',
+              role: 'd3d9-d3d11-vulkan-translation',
+              missingPaths: dxvkAvailable
+                  ? const <String>[]
+                  : ['/runtime/dxvk/x64/dxgi.dll'],
+            ),
+            _runtimeStackComponentPayload(
+              id: 'vkd3d-proton',
+              name: 'vkd3d-proton',
+              role: 'd3d12-vulkan-translation',
             ),
           ],
         },

@@ -55,6 +55,10 @@ readonly DEFAULT_WINE_MONO_VERSION="11.1.0"
 readonly DEFAULT_WINE_MONO_ARCHIVE_URL="https://github.com/wine-mono/wine-mono/releases/download/wine-mono-11.1.0/wine-mono-11.1.0-x86.msi"
 readonly DEFAULT_WINE_MONO_ARCHIVE_SHA256="deb0341431f8260b209fff6bc79ddcc5414b97f8e9236ab9fbdca4ce59e0a9b9"
 
+readonly DEFAULT_DXVK_VERSION="2.7.1"
+readonly DEFAULT_DXVK_ARCHIVE_URL="https://github.com/doitsujin/dxvk/releases/download/v2.7.1/dxvk-2.7.1.tar.gz"
+readonly DEFAULT_DXVK_ARCHIVE_SHA256="d85ce7c79f57ecd765aaa1b9e7007cb875e6fde9f6d331df799bce73d513ce87"
+
 readonly DEFAULT_VKD3D_PROTON_VERSION="3.0.1"
 readonly DEFAULT_VKD3D_PROTON_ARCHIVE_URL="https://github.com/HansKristian-Work/vkd3d-proton/releases/download/v3.0.1/vkd3d-proton-3.0.1.tar.zst"
 readonly DEFAULT_VKD3D_PROTON_ARCHIVE_SHA256="3cf2315522af5e43605ef6d3c41dad91387040bf97199934f3f7ab76caaa2f0c"
@@ -63,6 +67,7 @@ readonly DEFAULT_VKD3D_PROTON_ARCHIVE_SHA256="3cf2315522af5e43605ef6d3c41dad9138
 # KONYAK_DEV_LINUX_WINE_ARCHIVE_URL or KONYAK_DEV_LINUX_WINE_ARCHIVE
 # KONYAK_DEV_LINUX_WINETRICKS_ARCHIVE_URL or KONYAK_DEV_LINUX_WINETRICKS_ARCHIVE
 # KONYAK_DEV_LINUX_WINE_MONO_ARCHIVE_URL or KONYAK_DEV_LINUX_WINE_MONO_ARCHIVE
+# KONYAK_DEV_LINUX_DXVK_ARCHIVE_URL or KONYAK_DEV_LINUX_DXVK_ARCHIVE
 # KONYAK_DEV_LINUX_VKD3D_PROTON_ARCHIVE_URL or KONYAK_DEV_LINUX_VKD3D_PROTON_ARCHIVE
 # Each source override must also provide a matching *_ARCHIVE_SHA256 value.
 
@@ -244,6 +249,48 @@ prepare_wine_mono_component() {
   component_source wine-mono "wine-mono-${version}" "${archive_path}" "$(sha256_file "${archive_path}")"
 }
 
+prepare_dxvk_component() {
+  local version="${KONYAK_DEV_LINUX_DXVK_VERSION:-${DEFAULT_DXVK_VERSION}}"
+  local archive_url="${KONYAK_DEV_LINUX_DXVK_UPSTREAM_ARCHIVE_URL:-${DEFAULT_DXVK_ARCHIVE_URL}}"
+  local archive_sha="${KONYAK_DEV_LINUX_DXVK_UPSTREAM_ARCHIVE_SHA256:-${DEFAULT_DXVK_ARCHIVE_SHA256}}"
+  local archive_cache="${KONYAK_DEV_LINUX_DXVK_UPSTREAM_ARCHIVE_CACHE:-${DOWNLOAD_CACHE}/dxvk-${version}.tar.gz}"
+  local work_root="${SOURCE_ROOT}/work/dxvk"
+  local extract_root="${work_root}/extract"
+  local payload_root="${work_root}/payload/konyak-linux-dxvk"
+  local archive_path="${SOURCE_ROOT}/components/dxvk.tar.xz"
+  local source_x64_dxgi
+  local source_x64_d3d11
+  local source_x86_dxgi
+  local source_x86_d3d11
+
+  download_if_missing "${archive_url}" "${archive_cache}" "${archive_sha}"
+  reset_dir "${work_root}"
+  mkdir -p "${extract_root}" \
+    "${payload_root}/dxvk/x64" \
+    "${payload_root}/dxvk/x86"
+  "${TAR_BIN}" -xzf "${archive_cache}" -C "${extract_root}"
+
+  source_x64_dxgi="$(find "${extract_root}" -path '*/x64/dxgi.dll' -type f | head -n 1)"
+  source_x64_d3d11="$(find "${extract_root}" -path '*/x64/d3d11.dll' -type f | head -n 1)"
+  source_x86_dxgi="$(find "${extract_root}" -path '*/x32/dxgi.dll' -type f | head -n 1)"
+  source_x86_d3d11="$(find "${extract_root}" -path '*/x32/d3d11.dll' -type f | head -n 1)"
+  if [[ -z "${source_x64_dxgi}" || -z "${source_x64_d3d11}" || -z "${source_x86_dxgi}" || -z "${source_x86_d3d11}" ]]; then
+    print -u2 "DXVK archive does not contain x64/x32 dxgi.dll and d3d11.dll."
+    exit 65
+  fi
+
+  cp -f "${source_x64_dxgi}" "${payload_root}/dxvk/x64/dxgi.dll"
+  cp -f "${source_x64_d3d11}" "${payload_root}/dxvk/x64/d3d11.dll"
+  cp -f "${source_x86_dxgi}" "${payload_root}/dxvk/x86/dxgi.dll"
+  cp -f "${source_x86_d3d11}" "${payload_root}/dxvk/x86/d3d11.dll"
+  write_stack_manifest \
+    "${payload_root}/.konyak-runtime-stack.json" \
+    "dxvk" \
+    "v${version}"
+  archive_payload "${payload_root}" "${archive_path}"
+  component_source dxvk "v${version}" "${archive_path}" "$(sha256_file "${archive_path}")"
+}
+
 prepare_vkd3d_proton_component() {
   local version="${KONYAK_DEV_LINUX_VKD3D_PROTON_VERSION:-${DEFAULT_VKD3D_PROTON_VERSION}}"
   local archive_url="${KONYAK_DEV_LINUX_VKD3D_PROTON_UPSTREAM_ARCHIVE_URL:-${DEFAULT_VKD3D_PROTON_ARCHIVE_URL}}"
@@ -284,7 +331,8 @@ write_source_manifest() {
   local wine_source="$1"
   local winetricks_source="$2"
   local mono_source="$3"
-  local vkd3d_source="$4"
+  local dxvk_source="$4"
+  local vkd3d_source="$5"
 
   mkdir -p "${MANIFEST_PATH:h}"
   "${PYTHON3_BIN}" - \
@@ -292,6 +340,7 @@ write_source_manifest() {
     "${wine_source}" \
     "${winetricks_source}" \
     "${mono_source}" \
+    "${dxvk_source}" \
     "${vkd3d_source}" <<'PY'
 import json
 import sys
@@ -342,6 +391,11 @@ if [[ -z "${mono_source}" ]]; then
   mono_source="$(prepare_wine_mono_component)"
 fi
 
+dxvk_source="$(component_source_override dxvk KONYAK_DEV_LINUX_DXVK || true)"
+if [[ -z "${dxvk_source}" ]]; then
+  dxvk_source="$(prepare_dxvk_component)"
+fi
+
 vkd3d_source="$(component_source_override vkd3d-proton KONYAK_DEV_LINUX_VKD3D_PROTON || true)"
 if [[ -z "${vkd3d_source}" ]]; then
   vkd3d_source="$(prepare_vkd3d_proton_component)"
@@ -351,6 +405,7 @@ write_source_manifest \
   "${wine_source}" \
   "${winetricks_source}" \
   "${mono_source}" \
+  "${dxvk_source}" \
   "${vkd3d_source}"
 
 if [[ "${print_manifest_path}" == true ]]; then

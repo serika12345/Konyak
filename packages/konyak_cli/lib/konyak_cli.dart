@@ -348,7 +348,7 @@ class BottleRuntimeSettings {
       }
     }
 
-    if (dxvkAsync) {
+    if (dxvk && dxvkAsync) {
       environment['DXVK_ASYNC'] = '1';
     }
 
@@ -9159,7 +9159,10 @@ ProgramRunRequest _linuxWineRequest({
     environment: <String, String>{
       ..._linuxRuntimeEnvironment(environment),
       ..._programSettingsEnvironment(programSettings),
-      ..._linuxWineEnvironment(bottle),
+      ..._linuxWineEnvironmentWithRuntime(
+        bottle: bottle,
+        environment: environment,
+      ),
     },
     logPath: _joinPath(bottle.path, const ['logs', 'latest.log']),
   );
@@ -9178,7 +9181,10 @@ ProgramRunRequest _linuxWineCommandRequest({
     arguments: <String>[command],
     environment: <String, String>{
       ..._linuxRuntimeEnvironment(environment),
-      ..._linuxWineEnvironment(bottle),
+      ..._linuxWineEnvironmentWithRuntime(
+        bottle: bottle,
+        environment: environment,
+      ),
     },
     logPath: _joinPath(bottle.path, const ['logs', 'latest.log']),
   );
@@ -9197,7 +9203,10 @@ ProgramRunRequest _linuxRegistryUpdateRequest({
     arguments: _registryUpdateArguments(update),
     environment: <String, String>{
       ..._linuxRuntimeEnvironment(environment),
-      ..._linuxWineEnvironment(bottle),
+      ..._linuxWineEnvironmentWithRuntime(
+        bottle: bottle,
+        environment: environment,
+      ),
     },
     logPath: _joinPath(bottle.path, const ['logs', 'latest.log']),
   );
@@ -9216,7 +9225,10 @@ ProgramRunRequest _linuxRegistryQueryRequest({
     arguments: _registryQueryArguments(query),
     environment: <String, String>{
       ..._linuxRuntimeEnvironment(environment),
-      ..._linuxWineEnvironment(bottle),
+      ..._linuxWineEnvironmentWithRuntime(
+        bottle: bottle,
+        environment: environment,
+      ),
     },
     logPath: _joinPath(bottle.path, const ['logs', 'registry.log']),
   );
@@ -9234,7 +9246,10 @@ ProgramRunRequest _linuxWinebootRequest({
     arguments: const <String>['--init'],
     environment: <String, String>{
       ..._linuxRuntimeEnvironment(environment),
-      ..._linuxWineEnvironment(bottle),
+      ..._linuxWineEnvironmentWithRuntime(
+        bottle: bottle,
+        environment: environment,
+      ),
     },
     logPath: _joinPath(bottle.path, const ['logs', 'prefix-init.log']),
   );
@@ -9252,7 +9267,7 @@ ProgramRunRequest _linuxWineserverKillRequest({
     arguments: const <String>['-k'],
     environment: <String, String>{
       ..._linuxRuntimeEnvironment(environment),
-      ..._linuxWineEnvironment(bottle),
+      ..._linuxWinePrefixEnvironment(bottle),
     },
     logPath: _joinPath(bottle.path, const ['logs', 'wineserver-kill.log']),
   );
@@ -9273,7 +9288,7 @@ ProgramRunRequest _linuxWinedbgRequest({
     arguments: <String>['--command', command, ...trailingArguments],
     environment: <String, String>{
       ..._linuxRuntimeEnvironment(environment),
-      ..._linuxWineEnvironment(bottle),
+      ..._linuxWinePrefixEnvironment(bottle),
     },
     logPath: _joinPath(bottle.path, <String>['logs', logName]),
   );
@@ -9367,7 +9382,30 @@ Map<String, String> _macosWineEnvironment(BottleRecord bottle) {
 }
 
 Map<String, String> _linuxWineEnvironment(BottleRecord bottle) {
+  return <String, String>{
+    ..._linuxWinePrefixEnvironment(bottle),
+    ...bottle.runtimeSettings.macosEnvironmentVariables(),
+  };
+}
+
+Map<String, String> _linuxWinePrefixEnvironment(BottleRecord bottle) {
   return <String, String>{'WINEPREFIX': bottle.path};
+}
+
+Map<String, String> _linuxWineEnvironmentWithRuntime({
+  required BottleRecord bottle,
+  required Map<String, String> environment,
+}) {
+  final wineEnvironment = <String, String>{..._linuxWineEnvironment(bottle)};
+  if (bottle.runtimeSettings.dxvk) {
+    final runtimeRoot = _linuxWineRuntimeRoot(environment);
+    wineEnvironment['WINEDLLPATH'] = [
+      _joinPath(runtimeRoot, const ['dxvk', 'x64']),
+      _joinPath(runtimeRoot, const ['dxvk', 'x86']),
+    ].join(':');
+  }
+
+  return Map.unmodifiable(wineEnvironment);
 }
 
 ProgramRunRequest _macosWineCommandRequest({
@@ -9477,7 +9515,10 @@ ProgramRunRequest _linuxWinetricksCommandRequest({
     arguments: verb == null ? const <String>[] : <String>[verb],
     environment: <String, String>{
       ..._linuxRuntimeEnvironment(environment),
-      ..._linuxWineEnvironment(bottle),
+      ..._linuxWineEnvironmentWithRuntime(
+        bottle: bottle,
+        environment: environment,
+      ),
     },
     logPath: _joinPath(bottle.path, const ['logs', 'latest.log']),
   );
@@ -9536,6 +9577,18 @@ const _linuxWineRuntimeComponentDefinitions =
         isRequired: true,
         relativePaths: <List<String>>[
           <String>['share', 'wine', 'mono'],
+        ],
+      ),
+      _RuntimeStackComponentDefinition(
+        id: 'dxvk',
+        name: 'DXVK',
+        role: 'd3d9-d3d11-vulkan-translation',
+        isRequired: true,
+        relativePaths: <List<String>>[
+          <String>['dxvk', 'x64', 'dxgi.dll'],
+          <String>['dxvk', 'x64', 'd3d11.dll'],
+          <String>['dxvk', 'x86', 'dxgi.dll'],
+          <String>['dxvk', 'x86', 'd3d11.dll'],
         ],
       ),
       _RuntimeStackComponentDefinition(

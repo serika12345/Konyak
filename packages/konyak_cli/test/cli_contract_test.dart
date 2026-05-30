@@ -2279,6 +2279,8 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       'STEAM_COMPAT_DATA_PATH': '/compat',
       'LC_ALL': 'ja_JP.UTF-8',
       'WINEPREFIX': '/home/user/.local/share/konyak/bottles/steam',
+      'WINEMSYNC': '1',
+      'WINEESYNC': '1',
     });
   });
 
@@ -2434,6 +2436,64 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
     expect(
       runner.lastRequest?.environment,
       containsPair('WINEDLLOVERRIDES', 'dxgi,d3d9,d3d10core,d3d11=n,b'),
+    );
+  });
+
+  test('run-program --json applies DXVK settings on Linux', () {
+    final repository = MemoryBottleRepository(
+      dataHome: '/home/user/.local/share/konyak',
+      bottles: const [
+        BottleRecord(
+          id: 'steam',
+          name: 'Steam',
+          path: '/home/user/.local/share/konyak/bottles/steam',
+          windowsVersion: 'win10',
+          runtimeSettings: BottleRuntimeSettings(
+            enhancedSync: 'msync',
+            dxvk: true,
+            dxvkHud: 'fps',
+          ),
+        ),
+      ],
+    );
+    final runner = RecordingProgramRunner(
+      result: const ProgramRunCompleted(processExitCode: 0),
+    );
+
+    final result = runCli(
+      const [
+        'run-program',
+        'steam',
+        '--program',
+        '/downloads/setup.exe',
+        '--json',
+      ],
+      bottleRepository: repository,
+      programRunPlanner: ProgramRunPlanner(
+        hostPlatform: KonyakHostPlatform.linux,
+        environment: const {
+          'HOME': '/home/user',
+          'KONYAK_LINUX_WINE_HOME': '/runtime/linux-wine',
+        },
+      ),
+      programRunner: runner,
+    );
+
+    expect(result.exitCode, 0);
+    expect(runner.lastRequest?.environment, containsPair('WINEMSYNC', '1'));
+    expect(runner.lastRequest?.environment, containsPair('WINEESYNC', '1'));
+    expect(runner.lastRequest?.environment, containsPair('DXVK_HUD', 'fps'));
+    expect(runner.lastRequest?.environment, containsPair('DXVK_ASYNC', '1'));
+    expect(
+      runner.lastRequest?.environment,
+      containsPair('WINEDLLOVERRIDES', 'dxgi,d3d9,d3d10core,d3d11=n,b'),
+    );
+    expect(
+      runner.lastRequest?.environment,
+      containsPair(
+        'WINEDLLPATH',
+        '/runtime/linux-wine/dxvk/x64:/runtime/linux-wine/dxvk/x86',
+      ),
     );
   });
 
@@ -4425,6 +4485,10 @@ corefonts                Microsoft Core Fonts
           '/home/user/.local/share/konyak/Runtimes/linux-wine/bin/wineserver',
           '/home/user/.local/share/konyak/Runtimes/linux-wine/winetricks',
           '/home/user/.local/share/konyak/Runtimes/linux-wine/share/wine/mono',
+          '/home/user/.local/share/konyak/Runtimes/linux-wine/dxvk/x64/dxgi.dll',
+          '/home/user/.local/share/konyak/Runtimes/linux-wine/dxvk/x64/d3d11.dll',
+          '/home/user/.local/share/konyak/Runtimes/linux-wine/dxvk/x86/dxgi.dll',
+          '/home/user/.local/share/konyak/Runtimes/linux-wine/dxvk/x86/d3d11.dll',
           '/home/user/.local/share/konyak/Runtimes/linux-wine/vkd3d-proton/x64/d3d12.dll',
           '/home/user/.local/share/konyak/Runtimes/linux-wine/vkd3d-proton/x86/d3d12.dll',
         }),
@@ -4494,6 +4558,20 @@ corefonts                Microsoft Core Fonts
                 'missingPaths': <Object?>[],
               },
               {
+                'id': 'dxvk',
+                'name': 'DXVK',
+                'role': 'd3d9-d3d11-vulkan-translation',
+                'isRequired': true,
+                'isInstalled': true,
+                'paths': [
+                  '/home/user/.local/share/konyak/Runtimes/linux-wine/dxvk/x64/dxgi.dll',
+                  '/home/user/.local/share/konyak/Runtimes/linux-wine/dxvk/x64/d3d11.dll',
+                  '/home/user/.local/share/konyak/Runtimes/linux-wine/dxvk/x86/dxgi.dll',
+                  '/home/user/.local/share/konyak/Runtimes/linux-wine/dxvk/x86/d3d11.dll',
+                ],
+                'missingPaths': <Object?>[],
+              },
+              {
                 'id': 'vkd3d-proton',
                 'name': 'vkd3d-proton',
                 'role': 'd3d12-vulkan-translation',
@@ -4529,6 +4607,10 @@ corefonts                Microsoft Core Fonts
           '/home/user/.local/share/konyak/Runtimes/linux-wine/bin/wineserver',
           '/home/user/.local/share/konyak/Runtimes/linux-wine/winetricks',
           '/home/user/.local/share/konyak/Runtimes/linux-wine/share/wine/mono',
+          '/home/user/.local/share/konyak/Runtimes/linux-wine/dxvk/x64/dxgi.dll',
+          '/home/user/.local/share/konyak/Runtimes/linux-wine/dxvk/x64/d3d11.dll',
+          '/home/user/.local/share/konyak/Runtimes/linux-wine/dxvk/x86/dxgi.dll',
+          '/home/user/.local/share/konyak/Runtimes/linux-wine/dxvk/x86/d3d11.dll',
           '/home/user/.local/share/konyak/Runtimes/linux-wine/vkd3d-proton/x64/d3d12.dll',
           '/home/user/.local/share/konyak/Runtimes/linux-wine/vkd3d-proton/x86/d3d12.dll',
         }),
@@ -8679,6 +8761,10 @@ String _createLinuxWineRuntimeArchive(String tempPath) {
     <String>['bin', 'wineserver'],
     <String>['winetricks'],
     <String>['share', 'wine', 'mono', 'wine-mono-11.1.0-x86.msi'],
+    <String>['dxvk', 'x64', 'dxgi.dll'],
+    <String>['dxvk', 'x64', 'd3d11.dll'],
+    <String>['dxvk', 'x86', 'dxgi.dll'],
+    <String>['dxvk', 'x86', 'd3d11.dll'],
   ]) {
     final file = File(_joinTestPath(runtimeRoot.path, relativePath));
     file.parent.createSync(recursive: true);
