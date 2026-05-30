@@ -13086,19 +13086,25 @@ String _linuxWineTerminalShellCommandWithEnvironment({
   final executable = _linuxWineExecutable(environment);
   final runtimeBin = _linuxManagedRuntimeBinFolder(environment);
   final wineLibraryPath = environment['KONYAK_LINUX_WINE_LIBRARY_PATH'];
-  final exports = <String>[
+  final shellSetup = <String>[
     'cd ${_shellQuote(bottle.path)}',
     'export WINEPREFIX=${_shellQuote(bottle.path)}',
+    'export WINE=${_shellQuote(executable)}',
     if (runtimeBin != null) 'export PATH=${_shellQuote(runtimeBin)}:\$PATH',
     if (wineLibraryPath != null && wineLibraryPath.trim().isNotEmpty)
       'export LD_LIBRARY_PATH=${_shellQuote(wineLibraryPath.trim())}:\${LD_LIBRARY_PATH:-}',
     'alias wine=${_shellQuote(executable)}',
+    'alias wine64=${_shellQuote(executable)}',
     'alias winecfg=${_shellQuote('$executable winecfg')}',
     'alias msiexec=${_shellQuote('$executable msiexec')}',
-    'exec ${_shellQuote('bash')} -l',
   ];
 
-  return exports.join('; ');
+  return <String>[
+    "exec bash --noprofile --rcfile <(cat <<'KONYAK_BASHRC'",
+    ...shellSetup,
+    'KONYAK_BASHRC',
+    ') -i',
+  ].join('\n');
 }
 
 String _macosWineTerminalShellCommand({

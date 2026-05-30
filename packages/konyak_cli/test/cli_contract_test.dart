@@ -2615,6 +2615,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
         hostPlatform: KonyakHostPlatform.linux,
         environment: {
           'HOME': '/home/user',
+          'KONYAK_LINUX_WINE_HOME': '/runtime',
           'KONYAK_LINUX_WINE_LIBRARY_PATH': '/runtime-host-libs',
         },
       ),
@@ -2640,8 +2641,25 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
     expect(runner.lastRequest?.arguments.last, contains('WINEPREFIX'));
     expect(
       runner.lastRequest?.arguments.last,
+      contains("export WINE='/runtime/bin/wine'"),
+    );
+    expect(
+      runner.lastRequest?.arguments.last,
+      contains("export PATH='/runtime/bin':\$PATH"),
+    );
+    expect(
+      runner.lastRequest?.arguments.last,
+      contains("alias wine64='/runtime/bin/wine'"),
+    );
+    expect(
+      runner.lastRequest?.arguments.last,
       contains("LD_LIBRARY_PATH='/runtime-host-libs'"),
     );
+    expect(
+      runner.lastRequest?.arguments.last,
+      contains('exec bash --noprofile --rcfile'),
+    );
+    expect(runner.lastRequest?.arguments.last, isNot(contains('exec bash -l')));
 
     final payload = jsonDecode(result.stdout) as Map<String, Object?>;
     final run = payload['run'] as Map<String, Object?>;
