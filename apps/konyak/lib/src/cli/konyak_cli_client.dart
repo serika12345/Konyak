@@ -20,6 +20,7 @@ abstract interface class ProcessRunner {
     List<String> arguments, {
     String? workingDirectory,
     Map<String, String> environment = const <String, String>{},
+    void Function(String line)? onStdoutLine,
   });
 }
 
@@ -44,13 +45,24 @@ final class DartIoProcessRunner implements ProcessRunner {
     List<String> arguments, {
     String? workingDirectory,
     Map<String, String> environment = const <String, String>{},
+    void Function(String line)? onStdoutLine,
   }) async {
-    final ProcessResult result;
     final childEnvironment = <String, String>{
       ..._konyakCliChildEnvironment(),
       ...environment,
     };
 
+    if (onStdoutLine != null) {
+      return _runStreaming(
+        executable,
+        arguments,
+        workingDirectory: workingDirectory,
+        environment: childEnvironment,
+        onStdoutLine: onStdoutLine,
+      );
+    }
+
+    final ProcessResult result;
     try {
       result = await Process.run(
         executable,
@@ -71,6 +83,54 @@ final class DartIoProcessRunner implements ProcessRunner {
       exitCode: result.exitCode,
       stdout: _processOutputToString(result.stdout),
       stderr: _processOutputToString(result.stderr),
+    );
+  }
+
+  Future<ProcessRunResult> _runStreaming(
+    String executable,
+    List<String> arguments, {
+    required String? workingDirectory,
+    required Map<String, String> environment,
+    required void Function(String line) onStdoutLine,
+  }) async {
+    final Process process;
+    try {
+      process = await Process.start(
+        executable,
+        arguments,
+        environment: environment,
+        runInShell: false,
+        workingDirectory: workingDirectory,
+      );
+    } on ProcessException catch (error) {
+      return ProcessRunResult(
+        exitCode: 127,
+        stdout: '',
+        stderr: 'Failed to start $executable: ${error.message}',
+      );
+    }
+
+    final stdoutLines = <String>[];
+    final stderrBuffer = StringBuffer();
+    final stdoutFuture = process.stdout
+        .transform(utf8.decoder)
+        .transform(const LineSplitter())
+        .forEach((line) {
+          stdoutLines.add(line);
+          onStdoutLine(line);
+        });
+    final stderrFuture = process.stderr
+        .transform(utf8.decoder)
+        .forEach(stderrBuffer.write);
+
+    final exitCode = await process.exitCode;
+    await stdoutFuture;
+    await stderrFuture;
+
+    return ProcessRunResult(
+      exitCode: exitCode,
+      stdout: stdoutLines.join('\n'),
+      stderr: stderrBuffer.toString(),
     );
   }
 }
@@ -376,9 +436,14 @@ final class KonyakCliClient {
     };
   }
 
-  Future<RuntimeInstallLoadResult> installMacosWine() async {
-    final result = await _run(const ['install-macos-wine', '--json']);
-    final parsed = parseRuntimeInstallPayload(result.stdout);
+  Future<RuntimeInstallLoadResult> installMacosWine({
+    void Function(RuntimeInstallProgress progress)? onProgress,
+  }) async {
+    final result = await _runRuntimeInstall(
+      command: 'install-macos-wine',
+      onProgress: onProgress,
+    );
+    final parsed = _parseRuntimeInstallCommandPayload(result.stdout);
 
     return switch (parsed) {
       ParsedRuntimeInstall(:final runtime) when result.exitCode == 0 =>
@@ -399,9 +464,14 @@ final class KonyakCliClient {
     };
   }
 
-  Future<RuntimeInstallLoadResult> installLinuxWine() async {
-    final result = await _run(const ['install-linux-wine', '--json']);
-    final parsed = parseRuntimeInstallPayload(result.stdout);
+  Future<RuntimeInstallLoadResult> installLinuxWine({
+    void Function(RuntimeInstallProgress progress)? onProgress,
+  }) async {
+    final result = await _runRuntimeInstall(
+      command: 'install-linux-wine',
+      onProgress: onProgress,
+    );
+    final parsed = _parseRuntimeInstallCommandPayload(result.stdout);
 
     return switch (parsed) {
       ParsedRuntimeInstall(:final runtime) when result.exitCode == 0 =>
@@ -1030,6 +1100,28 @@ final class KonyakCliClient {
       <String>[...baseArguments, ...arguments],
       workingDirectory: workingDirectory,
       environment: <String, String>{...environment, ..._launcherEnvironment()},
+    );
+  }
+
+  Future<ProcessRunResult> _runRuntimeInstall({
+    required String command,
+    required void Function(RuntimeInstallProgress progress)? onProgress,
+  }) {
+    if (onProgress == null) {
+      return _run(<String>[command, '--json']);
+    }
+
+    return processRunner.run(
+      executable,
+      <String>[...baseArguments, command, '--progress-json', '--json'],
+      workingDirectory: workingDirectory,
+      environment: <String, String>{...environment, ..._launcherEnvironment()},
+      onStdoutLine: (line) {
+        final progress = parseRuntimeInstallProgressPayload(line);
+        if (progress != null) {
+          onProgress(progress);
+        }
+      },
     );
   }
 
@@ -2963,7 +3055,7 @@ String _programRunFailureMessage(ProcessRunResult result) {
 
 String _installRuntimeFailureMessage(ProcessRunResult result) {
   if (result.exitCode == 0) {
-    final parsed = parseRuntimeInstallPayload(result.stdout);
+    final parsed = _parseRuntimeInstallCommandPayload(result.stdout);
 
     return switch (parsed) {
       RuntimeInstallParseFailure(:final message) => message,
@@ -2972,12 +3064,33 @@ String _installRuntimeFailureMessage(ProcessRunResult result) {
     };
   }
 
-  final parsed = parseRuntimeInstallPayload(result.stdout);
+  final parsed = _parseRuntimeInstallCommandPayload(result.stdout);
   if (parsed case RuntimeInstallCommandFailure(:final message)) {
     return message;
   }
 
   return _commandFailureMessage('install-macos-wine', result);
+}
+
+RuntimeInstallParseResult _parseRuntimeInstallCommandPayload(String stdout) {
+  final parsed = parseRuntimeInstallPayload(stdout);
+  if (parsed is! RuntimeInstallParseFailure) {
+    return parsed;
+  }
+
+  final lines = const LineSplitter()
+      .convert(stdout)
+      .map((line) => line.trim())
+      .where((line) => line.isNotEmpty)
+      .toList(growable: false);
+  for (final line in lines.reversed) {
+    final lineParsed = parseRuntimeInstallPayload(line);
+    if (lineParsed is! RuntimeInstallParseFailure) {
+      return lineParsed;
+    }
+  }
+
+  return parsed;
 }
 
 String _commandFailureMessage(String command, ProcessRunResult result) {

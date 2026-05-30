@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
@@ -3622,6 +3623,7 @@ class MacosWineInstallRequest {
     this.sourceManifest,
     this.sourceManifestSignature,
     this.force = false,
+    this.emitProgress = false,
   });
 
   final RuntimeInstallOperation operation;
@@ -3632,6 +3634,7 @@ class MacosWineInstallRequest {
   final String? sourceManifest;
   final String? sourceManifestSignature;
   final bool force;
+  final bool emitProgress;
 }
 
 class LinuxWineInstallRequest {
@@ -3644,6 +3647,7 @@ class LinuxWineInstallRequest {
     this.sourceManifest,
     this.sourceManifestSignature,
     this.force = false,
+    this.emitProgress = false,
   });
 
   final RuntimeInstallOperation operation;
@@ -3654,6 +3658,48 @@ class LinuxWineInstallRequest {
   final String? sourceManifest;
   final String? sourceManifestSignature;
   final bool force;
+  final bool emitProgress;
+}
+
+class RuntimeInstallProgress {
+  const RuntimeInstallProgress({
+    required this.stage,
+    required this.message,
+    required this.fraction,
+  });
+
+  final String stage;
+  final String message;
+  final double fraction;
+
+  Map<String, Object?> toJson() {
+    return <String, Object?>{
+      'stage': stage,
+      'message': message,
+      'fraction': fraction,
+    };
+  }
+}
+
+abstract interface class RuntimeInstallProgressSink {
+  void emit(RuntimeInstallProgress progress);
+}
+
+final class JsonRuntimeInstallProgressSink
+    implements RuntimeInstallProgressSink {
+  const JsonRuntimeInstallProgressSink(this.output);
+
+  final StringSink output;
+
+  @override
+  void emit(RuntimeInstallProgress progress) {
+    output.writeln(
+      jsonEncode(<String, Object?>{
+        'schemaVersion': cliSchemaVersion,
+        'runtimeInstallProgress': progress.toJson(),
+      }),
+    );
+  }
 }
 
 sealed class MacosWineInstallResult {
@@ -3673,7 +3719,10 @@ class MacosWineInstallFailed extends MacosWineInstallResult {
 }
 
 abstract interface class MacosWineInstaller {
-  MacosWineInstallResult install(MacosWineInstallRequest request);
+  MacosWineInstallResult install(
+    MacosWineInstallRequest request, {
+    RuntimeInstallProgressSink? progressSink,
+  });
 }
 
 sealed class LinuxWineInstallResult {
@@ -3693,7 +3742,10 @@ class LinuxWineInstallFailed extends LinuxWineInstallResult {
 }
 
 abstract interface class LinuxWineInstaller {
-  LinuxWineInstallResult install(LinuxWineInstallRequest request);
+  LinuxWineInstallResult install(
+    LinuxWineInstallRequest request, {
+    RuntimeInstallProgressSink? progressSink,
+  });
 }
 
 class DartIoMacosWineInstaller implements MacosWineInstaller {
@@ -3720,7 +3772,18 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
   final RuntimeStackVersionProbe _runtimeStackVersionProbe;
 
   @override
-  MacosWineInstallResult install(MacosWineInstallRequest request) {
+  MacosWineInstallResult install(
+    MacosWineInstallRequest request, {
+    RuntimeInstallProgressSink? progressSink,
+  }) {
+    final progress = request.emitProgress ? progressSink : null;
+    _emitRuntimeInstallProgress(
+      progress,
+      stage: 'preparing',
+      message: 'Preparing Konyak macOS Wine install...',
+      fraction: 0,
+    );
+
     if (hostPlatform != KonyakHostPlatform.macos) {
       return const MacosWineInstallFailed(
         'macOS Wine installation is supported on macOS only.',
@@ -3761,6 +3824,12 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
         request.sourceManifest == null &&
         currentRuntime.isInstalled == true &&
         currentRuntime.stack?.isComplete == true) {
+      _emitRuntimeInstallProgress(
+        progress,
+        stage: 'complete',
+        message: 'Konyak macOS Wine is already installed.',
+        fraction: 1,
+      );
       return MacosWineInstallCompleted(runtime: currentRuntime);
     }
     if (!request.force &&
@@ -3780,6 +3849,7 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
       return _installMacosWineStackFromSourceManifest(
         sourceManifest,
         sourceManifestSignature: sourceManifestSignature,
+        progressSink: progress,
       );
     }
 
@@ -3789,6 +3859,7 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
         archivePath: archive,
         archiveSha256: request.archiveSha256,
         componentArchivePaths: componentArchivePaths,
+        progressSink: progress,
       );
     }
 
@@ -3803,23 +3874,156 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
     ]);
 
     try {
-      final download = Process.runSync(
-        'curl',
-        ['--fail', '--location', '--output', archiveFileName, archiveUrl],
-        workingDirectory: tempDirectory.path,
-        runInShell: false,
+      final downloadFailure = _downloadRuntimeStackSourceArchive(
+        source: archiveUrl,
+        targetPath: downloadedArchivePath,
+        progressSink: progress,
+        stage: 'downloading',
+        message: 'Downloading Konyak macOS Wine...',
+        startFraction: 0.05,
+        endFraction: 0.65,
       );
-
-      if (download.exitCode != 0) {
-        return MacosWineInstallFailed(
-          _commandFailureMessage('download macOS Wine', download),
-        );
+      if (downloadFailure != null) {
+        return MacosWineInstallFailed(downloadFailure);
       }
 
       return _installMacosWineArchive(
         archivePath: downloadedArchivePath,
         archiveSha256: request.archiveSha256,
         componentArchivePaths: componentArchivePaths,
+        progressSink: progress,
+      );
+    } on FileSystemException catch (error) {
+      return MacosWineInstallFailed(error.message);
+    } on ProcessException catch (error) {
+      return MacosWineInstallFailed(error.message);
+    } finally {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    }
+  }
+
+  Future<MacosWineInstallResult> installStreaming(
+    MacosWineInstallRequest request, {
+    RuntimeInstallProgressSink? progressSink,
+  }) async {
+    final progress = request.emitProgress ? progressSink : null;
+    _emitRuntimeInstallProgress(
+      progress,
+      stage: 'preparing',
+      message: 'Preparing Konyak macOS Wine install...',
+      fraction: 0,
+    );
+
+    if (hostPlatform != KonyakHostPlatform.macos) {
+      return const MacosWineInstallFailed(
+        'macOS Wine installation is supported on macOS only.',
+      );
+    }
+
+    final currentRuntime = _macosWineRuntimeRecord(
+      environment: environment,
+      fileStatusProbe: _fileStatusProbe,
+      runtimeStackVersionProbe: _runtimeStackVersionProbe,
+    );
+    final componentArchivePaths = List<String>.unmodifiable(
+      request.componentArchivePaths,
+    );
+    final sourceManifest =
+        request.sourceManifest ??
+        _runtimeProfileEnvironmentValue(
+          environment,
+          developmentKey: 'KONYAK_DEV_MACOS_WINE_STACK_MANIFEST',
+          releaseKey: 'KONYAK_MACOS_WINE_STACK_MANIFEST',
+        );
+    final sourceManifestSignature =
+        request.sourceManifestSignature ??
+        _runtimeProfileEnvironmentValue(
+          environment,
+          developmentKey: 'KONYAK_DEV_MACOS_WINE_STACK_SIGNATURE_URL',
+          releaseKey: 'KONYAK_MACOS_WINE_STACK_SIGNATURE_URL',
+        );
+    final hasExplicitInstallSource =
+        request.archivePath != null ||
+        request.archiveUrl != null ||
+        componentArchivePaths.isNotEmpty ||
+        request.sourceManifest != null;
+    if (!request.force &&
+        request.archivePath == null &&
+        request.archiveUrl == null &&
+        componentArchivePaths.isEmpty &&
+        request.sourceManifest == null &&
+        currentRuntime.isInstalled == true &&
+        currentRuntime.stack?.isComplete == true) {
+      _emitRuntimeInstallProgress(
+        progress,
+        stage: 'complete',
+        message: 'Konyak macOS Wine is already installed.',
+        fraction: 1,
+      );
+      return MacosWineInstallCompleted(runtime: currentRuntime);
+    }
+    if (!request.force &&
+        currentRuntime.isInstalled == true &&
+        currentRuntime.stack?.isComplete != true &&
+        !hasExplicitInstallSource &&
+        sourceManifest == null) {
+      return const MacosWineInstallFailed(
+        'Konyak macOS Wine is installed, but the runtime stack is incomplete. '
+        'Configure KONYAK_DEV_MACOS_WINE_STACK_MANIFEST or '
+        'KONYAK_MACOS_WINE_STACK_MANIFEST, or pass --source-manifest or '
+        '--component-archive to repair it.',
+      );
+    }
+
+    if (sourceManifest != null) {
+      return _installMacosWineStackFromSourceManifestStreaming(
+        sourceManifest,
+        sourceManifestSignature: sourceManifestSignature,
+        progressSink: progress,
+      );
+    }
+
+    final archive = request.archivePath;
+    if (archive != null) {
+      return _installMacosWineArchive(
+        archivePath: archive,
+        archiveSha256: request.archiveSha256,
+        componentArchivePaths: componentArchivePaths,
+        progressSink: progress,
+      );
+    }
+
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-macos-wine-',
+    );
+    final archiveUrl = request.archiveUrl ?? macosWineArchiveUrl;
+    final archiveFileName =
+        _fileNameFromUrl(archiveUrl) ?? macosWineArchiveFileName;
+    final downloadedArchivePath = _joinPath(tempDirectory.path, [
+      archiveFileName,
+    ]);
+
+    try {
+      final downloadFailure = await _downloadRuntimeStackSourceArchiveStreaming(
+        source: archiveUrl,
+        targetPath: downloadedArchivePath,
+        progressSink: progress,
+        stage: 'downloading',
+        message: 'Downloading Konyak macOS Wine...',
+        startFraction: 0.05,
+        endFraction: 0.65,
+      );
+      if (downloadFailure != null) {
+        return MacosWineInstallFailed(downloadFailure);
+      }
+
+      return _installMacosWineArchive(
+        archivePath: downloadedArchivePath,
+        archiveSha256: request.archiveSha256,
+        componentArchivePaths: componentArchivePaths,
+        progressSink: progress,
       );
     } on FileSystemException catch (error) {
       return MacosWineInstallFailed(error.message);
@@ -3837,6 +4041,7 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
     required String? archiveSha256,
     List<String> componentArchivePaths = const <String>[],
     Map<String, String> componentVersions = const <String, String>{},
+    RuntimeInstallProgressSink? progressSink,
   }) {
     final installFailure = _installRuntimeArchives(
       runtimeLabel: 'macOS Wine',
@@ -3849,6 +4054,7 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
       expectedExecutablePath: _macosWineExecutable(environment),
       normalizeStagingRoot: _normalizeMacosWineRuntimeLayout,
       afterManifestWrite: _ensureMacosWine64Alias,
+      progressSink: progressSink,
     );
     if (installFailure != null) {
       return MacosWineInstallFailed(installFailure);
@@ -3866,17 +4072,31 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
       );
     }
 
+    _emitRuntimeInstallProgress(
+      progressSink,
+      stage: 'complete',
+      message: 'Installed Konyak macOS Wine.',
+      fraction: 1,
+    );
+
     return MacosWineInstallCompleted(runtime: runtime);
   }
 
   MacosWineInstallResult _installMacosWineStackFromSourceManifest(
     String sourceManifest, {
     required String? sourceManifestSignature,
+    required RuntimeInstallProgressSink? progressSink,
   }) {
     final tempDirectory = Directory.systemTemp.createTempSync(
       'konyak-macos-wine-stack-',
     );
     try {
+      _emitRuntimeInstallProgress(
+        progressSink,
+        stage: 'readingManifest',
+        message: 'Reading Konyak macOS Wine manifest...',
+        fraction: 0.02,
+      );
       final manifestPayload = _readRuntimeStackSourceText(
         sourceManifest,
         signatureSource: sourceManifestSignature,
@@ -3891,6 +4111,7 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
         manifest: manifest,
         platformSpec: _macosKonyakRuntimePlatformSpec,
         tempDirectory: tempDirectory,
+        progressSink: progressSink,
       );
       return switch (bundleResult) {
         _RuntimeStackSourceArchiveBundleFailed(:final message) =>
@@ -3901,6 +4122,63 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
             archiveSha256: null,
             componentArchivePaths: bundle.componentArchivePaths,
             componentVersions: bundle.componentVersions,
+            progressSink: progressSink,
+          ),
+      };
+    } on FileSystemException catch (error) {
+      return MacosWineInstallFailed(error.message);
+    } on ProcessException catch (error) {
+      return MacosWineInstallFailed(error.message);
+    } finally {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    }
+  }
+
+  Future<MacosWineInstallResult>
+  _installMacosWineStackFromSourceManifestStreaming(
+    String sourceManifest, {
+    required String? sourceManifestSignature,
+    required RuntimeInstallProgressSink? progressSink,
+  }) async {
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-macos-wine-stack-',
+    );
+    try {
+      _emitRuntimeInstallProgress(
+        progressSink,
+        stage: 'readingManifest',
+        message: 'Reading Konyak macOS Wine manifest...',
+        fraction: 0.02,
+      );
+      final manifestPayload = _readRuntimeStackSourceText(
+        sourceManifest,
+        signatureSource: sourceManifestSignature,
+      );
+      final manifest = _runtimeStackSourceManifestFromPayload(manifestPayload);
+      if (manifest == null) {
+        return const MacosWineInstallFailed(
+          'Runtime stack source manifest is invalid.',
+        );
+      }
+      final bundleResult =
+          await _resolveRuntimeStackSourceArchiveBundleStreaming(
+            manifest: manifest,
+            platformSpec: _macosKonyakRuntimePlatformSpec,
+            tempDirectory: tempDirectory,
+            progressSink: progressSink,
+          );
+      return switch (bundleResult) {
+        _RuntimeStackSourceArchiveBundleFailed(:final message) =>
+          MacosWineInstallFailed(message),
+        _RuntimeStackSourceArchiveBundleResolved(:final bundle) =>
+          _installMacosWineArchive(
+            archivePath: bundle.wineArchivePath,
+            archiveSha256: null,
+            componentArchivePaths: bundle.componentArchivePaths,
+            componentVersions: bundle.componentVersions,
+            progressSink: progressSink,
           ),
       };
     } on FileSystemException catch (error) {
@@ -4089,7 +4367,18 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
   final RuntimeStackVersionProbe _runtimeStackVersionProbe;
 
   @override
-  LinuxWineInstallResult install(LinuxWineInstallRequest request) {
+  LinuxWineInstallResult install(
+    LinuxWineInstallRequest request, {
+    RuntimeInstallProgressSink? progressSink,
+  }) {
+    final progress = request.emitProgress ? progressSink : null;
+    _emitRuntimeInstallProgress(
+      progress,
+      stage: 'preparing',
+      message: 'Preparing Konyak Linux Wine install...',
+      fraction: 0,
+    );
+
     if (hostPlatform != KonyakHostPlatform.linux) {
       return const LinuxWineInstallFailed(
         'Linux Wine installation is supported on Linux only.',
@@ -4125,6 +4414,12 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
         request.sourceManifest == null &&
         currentRuntime.isInstalled == true &&
         currentRuntime.stack?.isComplete == true) {
+      _emitRuntimeInstallProgress(
+        progress,
+        stage: 'complete',
+        message: 'Konyak Linux Wine is already installed.',
+        fraction: 1,
+      );
       return LinuxWineInstallCompleted(runtime: currentRuntime);
     }
 
@@ -4132,6 +4427,7 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
       return _installLinuxWineStackFromSourceManifest(
         sourceManifest,
         sourceManifestSignature: sourceManifestSignature,
+        progressSink: progress,
       );
     }
 
@@ -4141,6 +4437,7 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
         archivePath: archivePath,
         archiveSha256: request.archiveSha256,
         componentArchivePaths: componentArchivePaths,
+        progressSink: progress,
       );
     }
 
@@ -4162,22 +4459,146 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
     ]);
 
     try {
-      final download = Process.runSync(
-        'curl',
-        ['--fail', '--location', '--output', archiveFileName, archiveUrl],
-        workingDirectory: tempDirectory.path,
-        runInShell: false,
+      final downloadFailure = _downloadRuntimeStackSourceArchive(
+        source: archiveUrl,
+        targetPath: downloadedArchivePath,
+        progressSink: progress,
+        stage: 'downloading',
+        message: 'Downloading Konyak Linux Wine...',
+        startFraction: 0.05,
+        endFraction: 0.65,
       );
-      if (download.exitCode != 0) {
-        return LinuxWineInstallFailed(
-          _commandFailureMessage('download Linux Wine', download),
-        );
+      if (downloadFailure != null) {
+        return LinuxWineInstallFailed(downloadFailure);
       }
 
       return _installLinuxWineArchive(
         archivePath: downloadedArchivePath,
         archiveSha256: request.archiveSha256,
         componentArchivePaths: componentArchivePaths,
+        progressSink: progress,
+      );
+    } on FileSystemException catch (error) {
+      return LinuxWineInstallFailed(error.message);
+    } on ProcessException catch (error) {
+      return LinuxWineInstallFailed(error.message);
+    } finally {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    }
+  }
+
+  Future<LinuxWineInstallResult> installStreaming(
+    LinuxWineInstallRequest request, {
+    RuntimeInstallProgressSink? progressSink,
+  }) async {
+    final progress = request.emitProgress ? progressSink : null;
+    _emitRuntimeInstallProgress(
+      progress,
+      stage: 'preparing',
+      message: 'Preparing Konyak Linux Wine install...',
+      fraction: 0,
+    );
+
+    if (hostPlatform != KonyakHostPlatform.linux) {
+      return const LinuxWineInstallFailed(
+        'Linux Wine installation is supported on Linux only.',
+      );
+    }
+
+    final currentRuntime = _linuxWineRuntimeRecord(
+      environment: environment,
+      fileStatusProbe: _fileStatusProbe,
+      runtimeStackVersionProbe: _runtimeStackVersionProbe,
+    );
+    final componentArchivePaths = List<String>.unmodifiable(
+      request.componentArchivePaths,
+    );
+    final sourceManifest =
+        request.sourceManifest ??
+        _runtimeProfileEnvironmentValue(
+          environment,
+          developmentKey: 'KONYAK_DEV_LINUX_WINE_STACK_MANIFEST',
+          releaseKey: 'KONYAK_LINUX_WINE_STACK_MANIFEST',
+        );
+    final sourceManifestSignature =
+        request.sourceManifestSignature ??
+        _runtimeProfileEnvironmentValue(
+          environment,
+          developmentKey: 'KONYAK_DEV_LINUX_WINE_STACK_SIGNATURE_URL',
+          releaseKey: 'KONYAK_LINUX_WINE_STACK_SIGNATURE_URL',
+        );
+    if (!request.force &&
+        request.archivePath == null &&
+        request.archiveUrl == null &&
+        componentArchivePaths.isEmpty &&
+        request.sourceManifest == null &&
+        currentRuntime.isInstalled == true &&
+        currentRuntime.stack?.isComplete == true) {
+      _emitRuntimeInstallProgress(
+        progress,
+        stage: 'complete',
+        message: 'Konyak Linux Wine is already installed.',
+        fraction: 1,
+      );
+      return LinuxWineInstallCompleted(runtime: currentRuntime);
+    }
+
+    if (sourceManifest != null) {
+      return _installLinuxWineStackFromSourceManifestStreaming(
+        sourceManifest,
+        sourceManifestSignature: sourceManifestSignature,
+        progressSink: progress,
+      );
+    }
+
+    final archivePath = request.archivePath;
+    if (archivePath != null) {
+      return _installLinuxWineArchive(
+        archivePath: archivePath,
+        archiveSha256: request.archiveSha256,
+        componentArchivePaths: componentArchivePaths,
+        progressSink: progress,
+      );
+    }
+
+    final archiveUrl =
+        request.archiveUrl ??
+        _nonEmptyEnvironmentValue(environment, 'KONYAK_LINUX_WINE_ARCHIVE_URL');
+    if (archiveUrl == null) {
+      return const LinuxWineInstallFailed(
+        'Linux Wine archive is not configured.',
+      );
+    }
+
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-linux-wine-',
+    );
+    final archiveFileName = _fileNameFromUrl(archiveUrl) ?? 'linux-wine.tar.xz';
+    final downloadedArchivePath = _joinPath(tempDirectory.path, [
+      archiveFileName,
+    ]);
+
+    try {
+      final downloadFailure = await _downloadRuntimeStackSourceArchiveStreaming(
+        source: archiveUrl,
+        targetPath: downloadedArchivePath,
+        progressSink: progress,
+        stage: 'downloading',
+        message: 'Downloading Konyak Linux Wine...',
+        startFraction: 0.05,
+        endFraction: 0.65,
+      );
+      if (downloadFailure != null) {
+        return LinuxWineInstallFailed(downloadFailure);
+      }
+
+      return _installLinuxWineArchive(
+        archivePath: downloadedArchivePath,
+        archiveSha256: request.archiveSha256,
+        componentArchivePaths: componentArchivePaths,
+        progressSink: progress,
       );
     } on FileSystemException catch (error) {
       return LinuxWineInstallFailed(error.message);
@@ -4195,6 +4616,7 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
     required String? archiveSha256,
     List<String> componentArchivePaths = const <String>[],
     Map<String, String> componentVersions = const <String, String>{},
+    RuntimeInstallProgressSink? progressSink,
   }) {
     final installFailure = _installRuntimeArchives(
       runtimeLabel: 'Linux Wine',
@@ -4205,6 +4627,7 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
       runtimeRoot: Directory(_linuxWineRuntimeRoot(environment)),
       requiredExecutableRelativePath: const <String>['bin', 'wine'],
       expectedExecutablePath: _linuxWineExecutable(environment),
+      progressSink: progressSink,
     );
     if (installFailure != null) {
       return LinuxWineInstallFailed(installFailure);
@@ -4221,17 +4644,31 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
       );
     }
 
+    _emitRuntimeInstallProgress(
+      progressSink,
+      stage: 'complete',
+      message: 'Installed Konyak Linux Wine.',
+      fraction: 1,
+    );
+
     return LinuxWineInstallCompleted(runtime: runtime);
   }
 
   LinuxWineInstallResult _installLinuxWineStackFromSourceManifest(
     String sourceManifest, {
     required String? sourceManifestSignature,
+    required RuntimeInstallProgressSink? progressSink,
   }) {
     final tempDirectory = Directory.systemTemp.createTempSync(
       'konyak-linux-wine-stack-',
     );
     try {
+      _emitRuntimeInstallProgress(
+        progressSink,
+        stage: 'readingManifest',
+        message: 'Reading Konyak Linux Wine manifest...',
+        fraction: 0.02,
+      );
       final manifestPayload = _readRuntimeStackSourceText(
         sourceManifest,
         signatureSource: sourceManifestSignature,
@@ -4246,6 +4683,7 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
         manifest: manifest,
         platformSpec: _linuxWineRuntimePlatformSpec,
         tempDirectory: tempDirectory,
+        progressSink: progressSink,
       );
       return switch (bundleResult) {
         _RuntimeStackSourceArchiveBundleFailed(:final message) =>
@@ -4256,6 +4694,63 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
             archiveSha256: null,
             componentArchivePaths: bundle.componentArchivePaths,
             componentVersions: bundle.componentVersions,
+            progressSink: progressSink,
+          ),
+      };
+    } on FileSystemException catch (error) {
+      return LinuxWineInstallFailed(error.message);
+    } on ProcessException catch (error) {
+      return LinuxWineInstallFailed(error.message);
+    } finally {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    }
+  }
+
+  Future<LinuxWineInstallResult>
+  _installLinuxWineStackFromSourceManifestStreaming(
+    String sourceManifest, {
+    required String? sourceManifestSignature,
+    required RuntimeInstallProgressSink? progressSink,
+  }) async {
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-linux-wine-stack-',
+    );
+    try {
+      _emitRuntimeInstallProgress(
+        progressSink,
+        stage: 'readingManifest',
+        message: 'Reading Konyak Linux Wine manifest...',
+        fraction: 0.02,
+      );
+      final manifestPayload = _readRuntimeStackSourceText(
+        sourceManifest,
+        signatureSource: sourceManifestSignature,
+      );
+      final manifest = _runtimeStackSourceManifestFromPayload(manifestPayload);
+      if (manifest == null) {
+        return const LinuxWineInstallFailed(
+          'Runtime stack source manifest is invalid.',
+        );
+      }
+      final bundleResult =
+          await _resolveRuntimeStackSourceArchiveBundleStreaming(
+            manifest: manifest,
+            platformSpec: _linuxWineRuntimePlatformSpec,
+            tempDirectory: tempDirectory,
+            progressSink: progressSink,
+          );
+      return switch (bundleResult) {
+        _RuntimeStackSourceArchiveBundleFailed(:final message) =>
+          LinuxWineInstallFailed(message),
+        _RuntimeStackSourceArchiveBundleResolved(:final bundle) =>
+          _installLinuxWineArchive(
+            archivePath: bundle.wineArchivePath,
+            archiveSha256: null,
+            componentArchivePaths: bundle.componentArchivePaths,
+            componentVersions: bundle.componentVersions,
+            progressSink: progressSink,
           ),
       };
     } on FileSystemException catch (error) {
@@ -5328,6 +5823,7 @@ CliResult runCli(
   RuntimeValidator? runtimeValidator,
   MacosSetupChecker? macosSetupChecker,
   AppSettingsRepository? appSettingsRepository,
+  RuntimeInstallProgressSink? runtimeInstallProgressSink,
 }) {
   try {
     return _runCli(
@@ -5352,6 +5848,7 @@ CliResult runCli(
       runtimeValidator: runtimeValidator,
       macosSetupChecker: macosSetupChecker,
       appSettingsRepository: appSettingsRepository,
+      runtimeInstallProgressSink: runtimeInstallProgressSink,
     );
   } on BottleRepositoryException catch (error) {
     return _jsonError(
@@ -5366,6 +5863,77 @@ CliResult runCli(
       message: error.message,
     );
   }
+}
+
+Future<CliResult> runCliStreaming(
+  List<String> arguments, {
+  BottleCatalog bottleCatalog = const StaticBottleCatalog(<BottleRecord>[]),
+  BottleRepository? bottleRepository,
+  BottleProgramRepository bottleProgramRepository =
+      const DartIoBottleProgramRepository(),
+  ProgramMetadataExtractor programMetadataExtractor =
+      const DartIoProgramMetadataExtractor(),
+  WinetricksVerbRepository? winetricksVerbRepository,
+  WinetricksScriptInstaller winetricksScriptInstaller =
+      const DartIoWinetricksScriptInstaller(),
+  RuntimeCatalog runtimeCatalog = const StaticRuntimeCatalog(<RuntimeRecord>[]),
+  ProgramRunPlanner? programRunPlanner,
+  ProgramRunner? programRunner,
+  BottlePrefixInitializer? bottlePrefixInitializer,
+  PathOpener? pathOpener,
+  MacosWineInstaller? macosWineInstaller,
+  LinuxWineInstaller? linuxWineInstaller,
+  RuntimeUpdateChecker? runtimeUpdateChecker,
+  AppUpdateChecker? appUpdateChecker,
+  AppUpdateInstaller? appUpdateInstaller,
+  RuntimeValidator? runtimeValidator,
+  MacosSetupChecker? macosSetupChecker,
+  AppSettingsRepository? appSettingsRepository,
+  RuntimeInstallProgressSink? runtimeInstallProgressSink,
+}) async {
+  final macosWineInstallRequest = _parseJsonMacosWineInstallRequest(arguments);
+  if (macosWineInstallRequest?.emitProgress == true &&
+      macosWineInstaller is DartIoMacosWineInstaller) {
+    final installResult = await macosWineInstaller.installStreaming(
+      macosWineInstallRequest!,
+      progressSink: runtimeInstallProgressSink,
+    );
+    return _macosWineInstallCliResult(installResult);
+  }
+
+  final linuxWineInstallRequest = _parseJsonLinuxWineInstallRequest(arguments);
+  if (linuxWineInstallRequest?.emitProgress == true &&
+      linuxWineInstaller is DartIoLinuxWineInstaller) {
+    final installResult = await linuxWineInstaller.installStreaming(
+      linuxWineInstallRequest!,
+      progressSink: runtimeInstallProgressSink,
+    );
+    return _linuxWineInstallCliResult(installResult);
+  }
+
+  return runCli(
+    arguments,
+    bottleCatalog: bottleCatalog,
+    bottleRepository: bottleRepository,
+    bottleProgramRepository: bottleProgramRepository,
+    programMetadataExtractor: programMetadataExtractor,
+    winetricksVerbRepository: winetricksVerbRepository,
+    winetricksScriptInstaller: winetricksScriptInstaller,
+    runtimeCatalog: runtimeCatalog,
+    programRunPlanner: programRunPlanner,
+    programRunner: programRunner,
+    bottlePrefixInitializer: bottlePrefixInitializer,
+    pathOpener: pathOpener,
+    macosWineInstaller: macosWineInstaller,
+    linuxWineInstaller: linuxWineInstaller,
+    runtimeUpdateChecker: runtimeUpdateChecker,
+    appUpdateChecker: appUpdateChecker,
+    appUpdateInstaller: appUpdateInstaller,
+    runtimeValidator: runtimeValidator,
+    macosSetupChecker: macosSetupChecker,
+    appSettingsRepository: appSettingsRepository,
+    runtimeInstallProgressSink: runtimeInstallProgressSink,
+  );
 }
 
 CliResult _programUpdateJsonResult(ProgramUpdateResult result) {
@@ -6063,6 +6631,42 @@ CliResult _installRuntimeUpdateJsonResult({
   };
 }
 
+CliResult _macosWineInstallCliResult(MacosWineInstallResult installResult) {
+  return switch (installResult) {
+    MacosWineInstallCompleted(:final runtime) => CliResult(
+      exitCode: 0,
+      stdout: jsonEncode(<String, Object?>{
+        'schemaVersion': cliSchemaVersion,
+        'runtime': runtime.toJson(),
+      }),
+      stderr: '',
+    ),
+    MacosWineInstallFailed(:final message) => _jsonError(
+      exitCode: 75,
+      code: 'macosWineInstallFailed',
+      message: message,
+    ),
+  };
+}
+
+CliResult _linuxWineInstallCliResult(LinuxWineInstallResult installResult) {
+  return switch (installResult) {
+    LinuxWineInstallCompleted(:final runtime) => CliResult(
+      exitCode: 0,
+      stdout: jsonEncode(<String, Object?>{
+        'schemaVersion': cliSchemaVersion,
+        'runtime': runtime.toJson(),
+      }),
+      stderr: '',
+    ),
+    LinuxWineInstallFailed(:final message) => _jsonError(
+      exitCode: 75,
+      code: 'linuxWineInstallFailed',
+      message: message,
+    ),
+  };
+}
+
 MacosWineInstallRequest _macosWineInstallRequestForRuntimeUpdate(
   RuntimeUpdateRecord update,
 ) {
@@ -6145,6 +6749,7 @@ CliResult _runCli(
   required RuntimeValidator? runtimeValidator,
   required MacosSetupChecker? macosSetupChecker,
   required AppSettingsRepository? appSettingsRepository,
+  required RuntimeInstallProgressSink? runtimeInstallProgressSink,
 }) {
   final activeBottleCatalog = bottleRepository ?? bottleCatalog;
 
@@ -7189,7 +7794,12 @@ CliResult _runCli(
       );
     }
 
-    final installResult = macosWineInstaller.install(macosWineInstallRequest);
+    final installResult = macosWineInstaller.install(
+      macosWineInstallRequest,
+      progressSink: macosWineInstallRequest.emitProgress
+          ? runtimeInstallProgressSink
+          : null,
+    );
 
     return switch (installResult) {
       MacosWineInstallCompleted(:final runtime) => CliResult(
@@ -7219,7 +7829,12 @@ CliResult _runCli(
       );
     }
 
-    return switch (installer.install(linuxWineInstallRequest)) {
+    return switch (installer.install(
+      linuxWineInstallRequest,
+      progressSink: linuxWineInstallRequest.emitProgress
+          ? runtimeInstallProgressSink
+          : null,
+    )) {
       LinuxWineInstallCompleted(:final runtime) => CliResult(
         exitCode: 0,
         stdout: jsonEncode(<String, Object?>{
@@ -7731,10 +8346,17 @@ MacosWineInstallRequest? _parseJsonMacosWineInstallRequest(
   String? archiveSha256;
   final componentArchivePaths = <String>[];
   String? sourceManifest;
+  var emitProgress = false;
 
   var index = 1;
   while (index < arguments.length - 1) {
     final option = arguments[index];
+    if (option == '--progress-json') {
+      emitProgress = true;
+      index += 1;
+      continue;
+    }
+
     if (index + 1 >= arguments.length - 1) {
       return null;
     }
@@ -7787,6 +8409,7 @@ MacosWineInstallRequest? _parseJsonMacosWineInstallRequest(
     archiveSha256: archiveSha256,
     componentArchivePaths: componentArchivePaths,
     sourceManifest: sourceManifest,
+    emitProgress: emitProgress,
   );
 }
 
@@ -7808,10 +8431,17 @@ LinuxWineInstallRequest? _parseJsonLinuxWineInstallRequest(
   String? archiveSha256;
   final componentArchivePaths = <String>[];
   String? sourceManifest;
+  var emitProgress = false;
 
   var index = 1;
   while (index < arguments.length - 1) {
     final option = arguments[index];
+    if (option == '--progress-json') {
+      emitProgress = true;
+      index += 1;
+      continue;
+    }
+
     if (index + 1 >= arguments.length - 1) {
       return null;
     }
@@ -7864,6 +8494,7 @@ LinuxWineInstallRequest? _parseJsonLinuxWineInstallRequest(
     archiveSha256: archiveSha256,
     componentArchivePaths: componentArchivePaths,
     sourceManifest: sourceManifest,
+    emitProgress: emitProgress,
   );
 }
 
@@ -8745,6 +9376,7 @@ _RuntimeStackSourceArchiveBundleResult _resolveRuntimeStackSourceArchiveBundle({
   required _RuntimeStackSourceManifest manifest,
   required _RuntimePlatformSpec platformSpec,
   required Directory tempDirectory,
+  required RuntimeInstallProgressSink? progressSink,
 }) {
   if (manifest.runtimeId != platformSpec.runtimeId ||
       manifest.stackId != platformSpec.stackId) {
@@ -8761,20 +9393,119 @@ _RuntimeStackSourceArchiveBundleResult _resolveRuntimeStackSourceArchiveBundle({
   }
 
   final archivePaths = <String, String>{};
+  final componentCount = manifest.components.length;
   for (final component in manifest.components) {
     final fileName =
         _fileNameFromUrl(component.archiveUrl) ?? '${component.id}.tar.xz';
     final archivePath = _joinPath(tempDirectory.path, [
       '${archivePaths.length}-$fileName',
     ]);
+    final componentIndex = archivePaths.length;
+    final startFraction = 0.05 + (componentIndex / componentCount) * 0.55;
+    final endFraction = 0.05 + ((componentIndex + 1) / componentCount) * 0.55;
     final downloadFailure = _downloadRuntimeStackSourceArchive(
       source: component.archiveUrl,
       targetPath: archivePath,
+      progressSink: progressSink,
+      stage: 'downloading',
+      message: 'Downloading ${component.id}...',
+      startFraction: startFraction,
+      endFraction: endFraction,
     );
     if (downloadFailure != null) {
       return _RuntimeStackSourceArchiveBundleFailed(downloadFailure);
     }
 
+    _emitRuntimeInstallProgress(
+      progressSink,
+      stage: 'verifying',
+      message: 'Verifying ${component.id}...',
+      fraction: endFraction,
+    );
+    final actualSha256 = _sha256HexDigest(File(archivePath));
+    if (actualSha256.toLowerCase() != component.sha256.toLowerCase()) {
+      return _RuntimeStackSourceArchiveBundleFailed(
+        'Runtime stack component `${component.id}` checksum mismatch: '
+        'expected ${component.sha256}, got $actualSha256.',
+      );
+    }
+
+    archivePaths[component.id] = archivePath;
+  }
+
+  final wineArchivePath = archivePaths[wineComponent.id];
+  if (wineArchivePath == null) {
+    return const _RuntimeStackSourceArchiveBundleFailed(
+      'Runtime stack source manifest did not resolve a Wine archive.',
+    );
+  }
+
+  return _RuntimeStackSourceArchiveBundleResolved(
+    _RuntimeStackSourceArchiveBundle(
+      wineArchivePath: wineArchivePath,
+      componentArchivePaths: <String>[
+        for (final component in manifest.components)
+          if (component.id != wineComponent.id) archivePaths[component.id]!,
+      ],
+      componentVersions: <String, String>{
+        for (final component in manifest.components)
+          component.id: component.version,
+      },
+    ),
+  );
+}
+
+Future<_RuntimeStackSourceArchiveBundleResult>
+_resolveRuntimeStackSourceArchiveBundleStreaming({
+  required _RuntimeStackSourceManifest manifest,
+  required _RuntimePlatformSpec platformSpec,
+  required Directory tempDirectory,
+  required RuntimeInstallProgressSink? progressSink,
+}) async {
+  if (manifest.runtimeId != platformSpec.runtimeId ||
+      manifest.stackId != platformSpec.stackId) {
+    return const _RuntimeStackSourceArchiveBundleFailed(
+      'Runtime stack source manifest targets an unsupported runtime.',
+    );
+  }
+
+  final wineComponent = manifest.componentById('wine');
+  if (wineComponent == null) {
+    return const _RuntimeStackSourceArchiveBundleFailed(
+      'Runtime stack source manifest does not contain a Wine component.',
+    );
+  }
+
+  final archivePaths = <String, String>{};
+  final componentCount = manifest.components.length;
+  for (final component in manifest.components) {
+    final fileName =
+        _fileNameFromUrl(component.archiveUrl) ?? '${component.id}.tar.xz';
+    final archivePath = _joinPath(tempDirectory.path, [
+      '${archivePaths.length}-$fileName',
+    ]);
+    final componentIndex = archivePaths.length;
+    final startFraction = 0.05 + (componentIndex / componentCount) * 0.55;
+    final endFraction = 0.05 + ((componentIndex + 1) / componentCount) * 0.55;
+    final downloadFailure = await _downloadRuntimeStackSourceArchiveStreaming(
+      source: component.archiveUrl,
+      targetPath: archivePath,
+      progressSink: progressSink,
+      stage: 'downloading',
+      message: 'Downloading ${component.id}...',
+      startFraction: startFraction,
+      endFraction: endFraction,
+    );
+    if (downloadFailure != null) {
+      return _RuntimeStackSourceArchiveBundleFailed(downloadFailure);
+    }
+
+    _emitRuntimeInstallProgress(
+      progressSink,
+      stage: 'verifying',
+      message: 'Verifying ${component.id}...',
+      fraction: endFraction,
+    );
     final actualSha256 = _sha256HexDigest(File(archivePath));
     if (actualSha256.toLowerCase() != component.sha256.toLowerCase()) {
       return _RuntimeStackSourceArchiveBundleFailed(
@@ -8811,14 +9542,37 @@ _RuntimeStackSourceArchiveBundleResult _resolveRuntimeStackSourceArchiveBundle({
 String? _downloadRuntimeStackSourceArchive({
   required String source,
   required String targetPath,
+  required RuntimeInstallProgressSink? progressSink,
+  required String stage,
+  required String message,
+  required double startFraction,
+  required double endFraction,
 }) {
   final localPath = _localSourcePath(source);
   if (localPath != null) {
+    _emitRuntimeInstallProgress(
+      progressSink,
+      stage: stage,
+      message: message,
+      fraction: startFraction,
+    );
     File(targetPath).parent.createSync(recursive: true);
     File(localPath).copySync(targetPath);
+    _emitRuntimeInstallProgress(
+      progressSink,
+      stage: stage,
+      message: message,
+      fraction: endFraction,
+    );
     return null;
   }
 
+  _emitRuntimeInstallProgress(
+    progressSink,
+    stage: stage,
+    message: message,
+    fraction: startFraction,
+  );
   final result = Process.runSync('curl', [
     '--fail',
     '--location',
@@ -8829,8 +9583,208 @@ String? _downloadRuntimeStackSourceArchive({
   if (result.exitCode != 0) {
     return _commandFailureMessage('download runtime stack component', result);
   }
-
+  _emitRuntimeInstallProgress(
+    progressSink,
+    stage: stage,
+    message: message,
+    fraction: endFraction,
+  );
   return null;
+}
+
+Future<String?> _downloadRuntimeStackSourceArchiveStreaming({
+  required String source,
+  required String targetPath,
+  required RuntimeInstallProgressSink? progressSink,
+  required String stage,
+  required String message,
+  required double startFraction,
+  required double endFraction,
+}) {
+  final localPath = _localSourcePath(source);
+  if (localPath != null) {
+    return _copyRuntimeStackSourceArchiveStreaming(
+      sourcePath: localPath,
+      targetPath: targetPath,
+      progressSink: progressSink,
+      stage: stage,
+      message: message,
+      startFraction: startFraction,
+      endFraction: endFraction,
+    );
+  }
+
+  return _downloadRuntimeStackSourceUriStreaming(
+    source: source,
+    targetPath: targetPath,
+    progressSink: progressSink,
+    stage: stage,
+    message: message,
+    startFraction: startFraction,
+    endFraction: endFraction,
+  );
+}
+
+Future<String?> _copyRuntimeStackSourceArchiveStreaming({
+  required String sourcePath,
+  required String targetPath,
+  required RuntimeInstallProgressSink? progressSink,
+  required String stage,
+  required String message,
+  required double startFraction,
+  required double endFraction,
+}) async {
+  try {
+    final source = File(sourcePath);
+    final totalBytes = await source.length();
+    var copiedBytes = 0;
+    File(targetPath).parent.createSync(recursive: true);
+    final sink = File(targetPath).openWrite();
+
+    _emitRuntimeInstallProgress(
+      progressSink,
+      stage: stage,
+      message: message,
+      fraction: startFraction,
+    );
+    try {
+      await for (final chunk in source.openRead()) {
+        copiedBytes += chunk.length;
+        sink.add(chunk);
+        _emitRuntimeInstallByteProgress(
+          progressSink,
+          stage: stage,
+          message: message,
+          copiedBytes: copiedBytes,
+          totalBytes: totalBytes,
+          startFraction: startFraction,
+          endFraction: endFraction,
+        );
+      }
+    } finally {
+      await sink.close();
+    }
+
+    _emitRuntimeInstallProgress(
+      progressSink,
+      stage: stage,
+      message: message,
+      fraction: endFraction,
+    );
+    return null;
+  } on FileSystemException catch (error) {
+    return error.message;
+  }
+}
+
+Future<String?> _downloadRuntimeStackSourceUriStreaming({
+  required String source,
+  required String targetPath,
+  required RuntimeInstallProgressSink? progressSink,
+  required String stage,
+  required String message,
+  required double startFraction,
+  required double endFraction,
+}) async {
+  final uri = Uri.tryParse(source);
+  if (uri == null || !uri.hasScheme) {
+    return 'Runtime stack component URL is invalid: $source';
+  }
+
+  final client = HttpClient();
+  try {
+    _emitRuntimeInstallProgress(
+      progressSink,
+      stage: stage,
+      message: message,
+      fraction: startFraction,
+    );
+
+    final request = await client.getUrl(uri);
+    request.headers.set(
+      HttpHeaders.userAgentHeader,
+      'Konyak/$konyakAppVersion',
+    );
+    final response = await request.close();
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      return 'download runtime stack component failed with HTTP status '
+          '${response.statusCode}.';
+    }
+
+    final totalBytes = response.contentLength;
+    var receivedBytes = 0;
+    File(targetPath).parent.createSync(recursive: true);
+    final sink = File(targetPath).openWrite();
+    try {
+      await for (final chunk in response) {
+        receivedBytes += chunk.length;
+        sink.add(chunk);
+        _emitRuntimeInstallByteProgress(
+          progressSink,
+          stage: stage,
+          message: message,
+          copiedBytes: receivedBytes,
+          totalBytes: totalBytes,
+          startFraction: startFraction,
+          endFraction: endFraction,
+        );
+      }
+    } finally {
+      await sink.close();
+    }
+
+    _emitRuntimeInstallProgress(
+      progressSink,
+      stage: stage,
+      message: message,
+      fraction: endFraction,
+    );
+    return null;
+  } on HttpException catch (error) {
+    return error.message;
+  } on IOException catch (error) {
+    return error.toString();
+  } finally {
+    client.close(force: true);
+  }
+}
+
+void _emitRuntimeInstallByteProgress(
+  RuntimeInstallProgressSink? progressSink, {
+  required String stage,
+  required String message,
+  required int copiedBytes,
+  required int totalBytes,
+  required double startFraction,
+  required double endFraction,
+}) {
+  if (totalBytes <= 0) {
+    return;
+  }
+
+  final byteFraction = copiedBytes / totalBytes;
+  _emitRuntimeInstallProgress(
+    progressSink,
+    stage: stage,
+    message: message,
+    fraction: startFraction + (endFraction - startFraction) * byteFraction,
+  );
+}
+
+void _emitRuntimeInstallProgress(
+  RuntimeInstallProgressSink? progressSink, {
+  required String stage,
+  required String message,
+  required double fraction,
+}) {
+  final normalizedFraction = fraction.clamp(0, 1).toDouble();
+  progressSink?.emit(
+    RuntimeInstallProgress(
+      stage: stage,
+      message: message,
+      fraction: normalizedFraction,
+    ),
+  );
 }
 
 String? _runtimeStackComponentVersion(Object? decoded, String componentId) {
@@ -8873,9 +9827,16 @@ String? _installRuntimeArchives({
   required String expectedExecutablePath,
   void Function(Directory runtimeRoot)? normalizeStagingRoot,
   void Function(Directory runtimeRoot)? afterManifestWrite,
+  RuntimeInstallProgressSink? progressSink,
 }) {
   final expectedSha256 = archiveSha256;
   if (expectedSha256 != null) {
+    _emitRuntimeInstallProgress(
+      progressSink,
+      stage: 'verifying',
+      message: 'Verifying $runtimeLabel archive...',
+      fraction: 0.62,
+    );
     try {
       final archive = File(archivePath);
       if (!archive.existsSync()) {
@@ -8915,12 +9876,21 @@ String? _installRuntimeArchives({
     }
     stagingRoot.createSync(recursive: true);
 
-    for (final currentArchivePath in archivePaths) {
+    for (var index = 0; index < archivePaths.length; index += 1) {
+      final currentArchivePath = archivePaths[index];
       final archive = File(currentArchivePath);
       if (!archive.existsSync()) {
         return '$runtimeLabel archive `$currentArchivePath` was not found.';
       }
 
+      final startFraction = 0.65 + (index / archivePaths.length) * 0.25;
+      final endFraction = 0.65 + ((index + 1) / archivePaths.length) * 0.25;
+      _emitRuntimeInstallProgress(
+        progressSink,
+        stage: 'extracting',
+        message: 'Extracting ${_basename(currentArchivePath)}...',
+        fraction: startFraction,
+      );
       final extraction = Process.runSync('tar', [
         '-xf',
         currentArchivePath,
@@ -8937,8 +9907,20 @@ String? _installRuntimeArchives({
         runtimeRoot: stagingRoot,
         componentVersions: resolvedComponentVersions,
       );
+      _emitRuntimeInstallProgress(
+        progressSink,
+        stage: 'extracting',
+        message: 'Extracted ${_basename(currentArchivePath)}.',
+        fraction: endFraction,
+      );
     }
 
+    _emitRuntimeInstallProgress(
+      progressSink,
+      stage: 'finalizing',
+      message: 'Finalizing $runtimeLabel install...',
+      fraction: 0.92,
+    );
     normalizeStagingRoot?.call(stagingRoot);
     _writeRuntimeStackManifest(
       runtimeRoot: stagingRoot,
@@ -8957,6 +9939,12 @@ String? _installRuntimeArchives({
       runtimeRoot: runtimeRoot,
       stagingRoot: stagingRoot,
       backupRoot: backupRoot,
+    );
+    _emitRuntimeInstallProgress(
+      progressSink,
+      stage: 'finalizing',
+      message: 'Installed $runtimeLabel files.',
+      fraction: 0.98,
     );
   } on ProcessException catch (error) {
     return error.message;

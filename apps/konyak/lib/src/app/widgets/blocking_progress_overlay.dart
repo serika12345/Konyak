@@ -3,9 +3,14 @@ import 'package:flutter/material.dart';
 import '../app_constants.dart';
 
 class BlockingProgressOverlay extends StatelessWidget {
-  const BlockingProgressOverlay({super.key, required this.message});
+  const BlockingProgressOverlay({
+    super.key,
+    required this.message,
+    this.progress,
+  });
 
   final String message;
+  final double? progress;
 
   @override
   Widget build(BuildContext context) {
@@ -57,11 +62,26 @@ class BlockingProgressOverlay extends StatelessWidget {
                         SizedBox(
                           width: double.infinity,
                           child: LinearProgressIndicator(
+                            value: progress,
                             color: colors.accent,
                             backgroundColor: colors.border,
                             minHeight: 4,
                           ),
                         ),
+                        if (progress case final progress?) ...[
+                          const SizedBox(height: 8),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: Text(
+                              '${(progress * 100).round()}%',
+                              style: TextStyle(
+                                color: colors.mutedText,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),

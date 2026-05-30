@@ -3951,7 +3951,7 @@ void main() {
       ['list-bottles', '--json'],
       ['get-app-settings', '--json'],
       ['list-runtimes', '--json'],
-      ['install-linux-wine', '--json'],
+      ['install-linux-wine', '--progress-json', '--json'],
     ]);
   });
 
@@ -4090,7 +4090,7 @@ void main() {
       ['list-bottles', '--json'],
       ['get-app-settings', '--json'],
       ['list-runtimes', '--json'],
-      ['install-macos-wine', '--json'],
+      ['install-macos-wine', '--progress-json', '--json'],
     ]);
   });
 
@@ -4220,7 +4220,7 @@ void main() {
         ['list-bottles', '--json'],
         ['get-app-settings', '--json'],
         ['list-runtimes', '--json'],
-        ['install-macos-wine', '--json'],
+        ['install-macos-wine', '--progress-json', '--json'],
       ]);
     },
   );
@@ -4957,6 +4957,9 @@ void main() {
 
     await tester.tap(find.text('Download'));
     await tester.pump();
+    runner.emitStdoutLine(
+      '{"schemaVersion":1,"runtimeInstallProgress":{"stage":"downloading","message":"Downloading Konyak macOS Wine...","fraction":0.42}}',
+    );
     await tester.pump(const Duration(milliseconds: 250));
 
     expect(
@@ -4965,6 +4968,11 @@ void main() {
     );
     expect(find.text('Downloading Konyak macOS Wine...'), findsOneWidget);
     expect(find.byType(LinearProgressIndicator), findsOneWidget);
+    final progress = tester.widget<LinearProgressIndicator>(
+      find.byType(LinearProgressIndicator),
+    );
+    expect(progress.value, 0.42);
+    expect(find.text('42%'), findsOneWidget);
     expect(find.byType(CircularProgressIndicator), findsNothing);
 
     installCompleter.complete(
@@ -4995,7 +5003,7 @@ void main() {
       ['list-bottles', '--json'],
       ['get-app-settings', '--json'],
       ['list-runtimes', '--json'],
-      ['install-macos-wine', '--json'],
+      ['install-macos-wine', '--progress-json', '--json'],
     ]);
   });
 
@@ -5073,6 +5081,9 @@ void main() {
 
     await tester.tap(find.text('Download'));
     await tester.pump();
+    runner.emitStdoutLine(
+      '{"schemaVersion":1,"runtimeInstallProgress":{"stage":"downloading","message":"Downloading Konyak Linux Wine...","fraction":0.37}}',
+    );
     await tester.pump(const Duration(milliseconds: 250));
 
     expect(
@@ -5081,6 +5092,11 @@ void main() {
     );
     expect(find.text('Downloading Konyak Linux Wine...'), findsOneWidget);
     expect(find.byType(LinearProgressIndicator), findsOneWidget);
+    final progress = tester.widget<LinearProgressIndicator>(
+      find.byType(LinearProgressIndicator),
+    );
+    expect(progress.value, 0.37);
+    expect(find.text('37%'), findsOneWidget);
     expect(find.byType(CircularProgressIndicator), findsNothing);
 
     installCompleter.complete(
@@ -5111,7 +5127,7 @@ void main() {
       ['list-bottles', '--json'],
       ['get-app-settings', '--json'],
       ['list-runtimes', '--json'],
-      ['install-linux-wine', '--json'],
+      ['install-linux-wine', '--progress-json', '--json'],
     ]);
   });
 
@@ -5392,6 +5408,7 @@ final class _QueuedProcessRunner implements ProcessRunner {
     List<String> arguments, {
     String? workingDirectory,
     Map<String, String> environment = const <String, String>{},
+    void Function(String line)? onStdoutLine,
   }) async {
     argumentsLog.add(List.unmodifiable(arguments));
 
@@ -5420,8 +5437,10 @@ final class _FutureQueuedProcessRunner implements ProcessRunner {
     List<String> arguments, {
     String? workingDirectory,
     Map<String, String> environment = const <String, String>{},
+    void Function(String line)? onStdoutLine,
   }) {
     argumentsLog.add(List.unmodifiable(arguments));
+    _onStdoutLine = onStdoutLine;
 
     if (_results.isEmpty) {
       return Future.value(
@@ -5435,6 +5454,12 @@ final class _FutureQueuedProcessRunner implements ProcessRunner {
 
     return _results.removeAt(0);
   }
+
+  void emitStdoutLine(String line) {
+    _onStdoutLine?.call(line);
+  }
+
+  void Function(String line)? _onStdoutLine;
 }
 
 final class _FakeLogReader implements LogReader {

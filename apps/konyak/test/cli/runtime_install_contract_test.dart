@@ -49,4 +49,31 @@ void main() {
 
     expect(result, isA<RuntimeInstallParseFailure>());
   });
+
+  test('parses runtime install progress payloads', () {
+    final progress = parseRuntimeInstallProgressPayload('''
+      {
+        "schemaVersion": 1,
+        "runtimeInstallProgress": {
+          "stage": "downloading",
+          "message": "Downloading Konyak macOS Wine...",
+          "fraction": 0.42
+        }
+      }
+      ''');
+
+    expect(progress, isNotNull);
+    expect(progress!.stage, 'downloading');
+    expect(progress.message, 'Downloading Konyak macOS Wine...');
+    expect(progress.fraction, 0.42);
+  });
+
+  test('rejects invalid runtime install progress payloads', () {
+    expect(
+      parseRuntimeInstallProgressPayload(
+        '{"schemaVersion":1,"runtimeInstallProgress":{"stage":"x","message":"x","fraction":1.5}}',
+      ),
+      isNull,
+    );
+  });
 }

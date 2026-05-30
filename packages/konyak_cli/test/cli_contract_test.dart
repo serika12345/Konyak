@@ -7035,6 +7035,46 @@ corefonts                Microsoft Core Fonts
     expect(installer.lastRequest?.sourceManifest, '/tmp/runtime-stack.json');
   });
 
+  test('install-macos-wine --progress-json emits progress events', () {
+    final progressOutput = StringBuffer();
+    final installer = RecordingMacosWineInstaller(
+      result: const MacosWineInstallCompleted(
+        runtime: RuntimeRecord(
+          id: 'konyak-macos-wine',
+          name: 'Konyak macOS Wine',
+          platform: 'macos',
+          architecture: 'x86_64',
+          runnerKind: 'macosWine',
+          isBundled: false,
+          isUpdateable: true,
+          isInstalled: true,
+        ),
+      ),
+    );
+
+    final result = runCli(
+      const ['install-macos-wine', '--progress-json', '--json'],
+      macosWineInstaller: installer,
+      runtimeInstallProgressSink: JsonRuntimeInstallProgressSink(
+        progressOutput,
+      ),
+    );
+
+    expect(result.exitCode, 0);
+    expect(installer.lastRequest?.emitProgress, isTrue);
+
+    final progress =
+        jsonDecode(progressOutput.toString().trim()) as Map<String, Object?>;
+    expect(progress['schemaVersion'], 1);
+    expect(
+      progress['runtimeInstallProgress'],
+      containsPair('message', 'Installing test runtime...'),
+    );
+
+    final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+    expect(payload['runtime'], containsPair('id', 'konyak-macos-wine'));
+  });
+
   test('install-macos-wine rejects archive checksum mismatches', () async {
     final tempDirectory = await Directory.systemTemp.createTemp(
       'konyak-runtime-checksum-test-',
@@ -7176,6 +7216,104 @@ corefonts                Microsoft Core Fonts
       '/tmp/linux-runtime-stack.json',
     );
   });
+
+  test('install-linux-wine --progress-json emits progress events', () {
+    final progressOutput = StringBuffer();
+    final installer = RecordingLinuxWineInstaller(
+      result: const LinuxWineInstallCompleted(
+        runtime: RuntimeRecord(
+          id: 'konyak-linux-wine',
+          name: 'Konyak Linux Wine',
+          platform: 'linux',
+          architecture: 'x86_64',
+          runnerKind: 'wine',
+          isBundled: false,
+          isUpdateable: true,
+          isInstalled: true,
+        ),
+      ),
+    );
+
+    final result = runCli(
+      const ['install-linux-wine', '--progress-json', '--json'],
+      linuxWineInstaller: installer,
+      runtimeInstallProgressSink: JsonRuntimeInstallProgressSink(
+        progressOutput,
+      ),
+    );
+
+    expect(result.exitCode, 0);
+    expect(installer.lastRequest?.emitProgress, isTrue);
+
+    final progress =
+        jsonDecode(progressOutput.toString().trim()) as Map<String, Object?>;
+    expect(progress['schemaVersion'], 1);
+    expect(
+      progress['runtimeInstallProgress'],
+      containsPair('message', 'Installing test runtime...'),
+    );
+
+    final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+    expect(payload['runtime'], containsPair('id', 'konyak-linux-wine'));
+  });
+
+  test(
+    'runCliStreaming streams archive copy progress before final JSON',
+    () async {
+      final tempDirectory = await Directory.systemTemp.createTemp(
+        'konyak-runtime-progress-test-',
+      );
+      addTearDown(() async {
+        if (await tempDirectory.exists()) {
+          await tempDirectory.delete(recursive: true);
+        }
+      });
+      final sourceArchive = File(
+        _joinTestPath(tempDirectory.path, const ['linux-wine.tar.xz']),
+      )..writeAsBytesSync(List<int>.filled(128 * 1024, 1));
+      final progressOutput = StringBuffer();
+
+      final result = await runCliStreaming(
+        [
+          'install-linux-wine',
+          '--archive-url',
+          sourceArchive.uri.toString(),
+          '--progress-json',
+          '--json',
+        ],
+        linuxWineInstaller: DartIoLinuxWineInstaller(
+          hostPlatform: KonyakHostPlatform.linux,
+          environment: {'XDG_DATA_HOME': tempDirectory.path},
+        ),
+        runtimeInstallProgressSink: JsonRuntimeInstallProgressSink(
+          progressOutput,
+        ),
+      );
+
+      expect(result.exitCode, 75);
+      final progressLines = progressOutput
+          .toString()
+          .trim()
+          .split('\n')
+          .where((line) => line.isNotEmpty)
+          .toList(growable: false);
+      expect(progressLines.length, greaterThanOrEqualTo(3));
+
+      final fractions = progressLines
+          .map((line) => jsonDecode(line) as Map<String, Object?>)
+          .map((payload) {
+            final progress =
+                payload['runtimeInstallProgress'] as Map<String, Object?>;
+            return progress['fraction'] as num;
+          })
+          .toList(growable: false);
+      expect(fractions, contains(0));
+      expect(fractions.any((fraction) => fraction > 0.05), isTrue);
+
+      final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+      expect(payload['error'], containsPair('code', 'linuxWineInstallFailed'));
+    },
+  );
 
   test('install-linux-wine installs a managed runtime under XDG data home', () {
     final tempDirectory = Directory.systemTemp.createTempSync(
@@ -7738,8 +7876,18 @@ final class RecordingMacosWineInstaller implements MacosWineInstaller {
   MacosWineInstallRequest? lastRequest;
 
   @override
-  MacosWineInstallResult install(MacosWineInstallRequest request) {
+  MacosWineInstallResult install(
+    MacosWineInstallRequest request, {
+    RuntimeInstallProgressSink? progressSink,
+  }) {
     lastRequest = request;
+    progressSink?.emit(
+      const RuntimeInstallProgress(
+        stage: 'test',
+        message: 'Installing test runtime...',
+        fraction: 0.5,
+      ),
+    );
 
     return result;
   }
@@ -7752,8 +7900,18 @@ final class RecordingLinuxWineInstaller implements LinuxWineInstaller {
   LinuxWineInstallRequest? lastRequest;
 
   @override
-  LinuxWineInstallResult install(LinuxWineInstallRequest request) {
+  LinuxWineInstallResult install(
+    LinuxWineInstallRequest request, {
+    RuntimeInstallProgressSink? progressSink,
+  }) {
     lastRequest = request;
+    progressSink?.emit(
+      const RuntimeInstallProgress(
+        stage: 'test',
+        message: 'Installing test runtime...',
+        fraction: 0.5,
+      ),
+    );
 
     return result;
   }

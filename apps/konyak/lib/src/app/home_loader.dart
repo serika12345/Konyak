@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 
 import '../bottles/bottle_summary.dart';
 import '../cli/konyak_cli_client.dart';
+import '../cli/runtime_install_contract.dart';
 import '../files/bottle_archive_picker.dart';
 import '../files/directory_picker.dart';
 import '../files/program_file_picker.dart';
@@ -141,6 +142,7 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
   bool _isLoadingWinetricks = false;
   String? _archiveProgressMessage;
   String? _runtimeInstallProgressMessage;
+  double? _runtimeInstallProgressFraction;
   bool _isShowingSettings = false;
   bool _hasTerminatedWineProcesses = false;
   AppSettingsSummary? _appSettings;
@@ -466,8 +468,19 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
 
   Future<RuntimeInstallLoadResult> _installManagedRuntimeForPlatform() {
     return widget.platform.isMacOS
-        ? widget.cliClient.installMacosWine()
-        : widget.cliClient.installLinuxWine();
+        ? widget.cliClient.installMacosWine(onProgress: _setRuntimeProgress)
+        : widget.cliClient.installLinuxWine(onProgress: _setRuntimeProgress);
+  }
+
+  void _setRuntimeProgress(RuntimeInstallProgress progress) {
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _runtimeInstallProgressMessage = progress.message;
+      _runtimeInstallProgressFraction = progress.fraction;
+    });
   }
 
   Future<RuntimeInstallLoadResult?> _confirmAndInstallManagedRuntime({
@@ -481,6 +494,7 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
 
     setState(() {
       _runtimeInstallProgressMessage = 'Downloading $runtimeName...';
+      _runtimeInstallProgressFraction = 0;
     });
 
     try {
@@ -489,6 +503,7 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
       if (mounted) {
         setState(() {
           _runtimeInstallProgressMessage = null;
+          _runtimeInstallProgressFraction = null;
         });
       }
     }
@@ -1467,9 +1482,29 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
   }
 
   Future<RuntimeInstallLoadResult> _installSettingsRuntime() async {
-    final result = widget.platform.isMacOS
-        ? await widget.cliClient.installMacosWine()
-        : await widget.cliClient.installLinuxWine();
+    setState(() {
+      _runtimeInstallProgressMessage =
+          'Downloading ${_managedRuntimeName(widget.platform)}...';
+      _runtimeInstallProgressFraction = 0;
+    });
+
+    final RuntimeInstallLoadResult result;
+    try {
+      result = widget.platform.isMacOS
+          ? await widget.cliClient.installMacosWine(
+              onProgress: _setRuntimeProgress,
+            )
+          : await widget.cliClient.installLinuxWine(
+              onProgress: _setRuntimeProgress,
+            );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _runtimeInstallProgressMessage = null;
+          _runtimeInstallProgressFraction = null;
+        });
+      }
+    }
 
     if (!mounted) {
       return result;
@@ -1613,6 +1648,7 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
           BlockingProgressOverlay(
             key: const ValueKey('runtime-install-progress'),
             message: message,
+            progress: _runtimeInstallProgressFraction,
           ),
       ],
     );

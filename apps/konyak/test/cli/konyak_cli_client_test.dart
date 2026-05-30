@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:konyak/src/bottles/bottle_summary.dart';
 import 'package:konyak/src/cli/konyak_cli_client.dart';
+import 'package:konyak/src/cli/runtime_install_contract.dart';
 import 'package:konyak/src/settings/app_settings_summary.dart';
 
 void main() {
@@ -716,6 +717,39 @@ void main() {
       expect(installed.runtime.isInstalled, isTrue);
     },
   );
+
+  test('reports runtime install progress from JSON lines', () async {
+    final progressEvents = <RuntimeInstallProgress>[];
+    final runner = _FakeProcessRunner(
+      stdoutLines: const [
+        '{"schemaVersion":1,"runtimeInstallProgress":{"stage":"downloading","message":"Downloading Konyak macOS Wine...","fraction":0.42}}',
+        '{"schemaVersion":1,"runtime":{"id":"konyak-macos-wine","name":"Konyak macOS Wine","platform":"macos","architecture":"x86_64","runnerKind":"macosWine","isBundled":false,"isUpdateable":true,"isInstalled":true}}',
+      ],
+      result: const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {"schemaVersion":1,"runtimeInstallProgress":{"stage":"downloading","message":"Downloading Konyak macOS Wine...","fraction":0.42}}
+          {"schemaVersion":1,"runtime":{"id":"konyak-macos-wine","name":"Konyak macOS Wine","platform":"macos","architecture":"x86_64","runnerKind":"macosWine","isBundled":false,"isUpdateable":true,"isInstalled":true}}
+        ''',
+        stderr: '',
+      ),
+    );
+    final client = KonyakCliClient(executable: 'konyak', processRunner: runner);
+
+    final result = await client.installMacosWine(
+      onProgress: progressEvents.add,
+    );
+
+    expect(runner.arguments, const [
+      'install-macos-wine',
+      '--progress-json',
+      '--json',
+    ]);
+    expect(progressEvents, hasLength(1));
+    expect(progressEvents.single.message, 'Downloading Konyak macOS Wine...');
+    expect(progressEvents.single.fraction, 0.42);
+    expect(result, isA<InstalledRuntime>());
+  });
 
   test('returns install failures from install-macos-wine JSON', () async {
     final client = KonyakCliClient(
@@ -2181,9 +2215,13 @@ void main() {
 }
 
 final class _FakeProcessRunner implements ProcessRunner {
-  _FakeProcessRunner({required this.result});
+  _FakeProcessRunner({
+    required this.result,
+    this.stdoutLines = const <String>[],
+  });
 
   final ProcessRunResult result;
+  final List<String> stdoutLines;
   String? executable;
   String? workingDirectory;
   List<String> arguments = const [];
@@ -2195,11 +2233,16 @@ final class _FakeProcessRunner implements ProcessRunner {
     List<String> arguments, {
     String? workingDirectory,
     Map<String, String> environment = const <String, String>{},
+    void Function(String line)? onStdoutLine,
   }) async {
     this.executable = executable;
     this.arguments = List.unmodifiable(arguments);
     this.workingDirectory = workingDirectory;
     this.environment = Map.unmodifiable(environment);
+
+    for (final line in stdoutLines) {
+      onStdoutLine?.call(line);
+    }
 
     return result;
   }

@@ -1,8 +1,9 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:konyak_cli/konyak_cli.dart';
 
-void main(List<String> arguments) {
+Future<void> main(List<String> arguments) async {
   final environment = Platform.environment;
   final runtimeCatalog = KonyakRuntimeCatalog.current();
   final programRunPlanner = ProgramRunPlanner.current();
@@ -11,7 +12,7 @@ void main(List<String> arguments) {
   );
   final appSettings = appSettingsRepository.read();
   const programRunner = DartIoProgramRunner();
-  final result = runCli(
+  final result = await runCliStreaming(
     arguments,
     bottleRepository: defaultBottleRepositoryFromEnvironment(
       environment,
@@ -37,6 +38,7 @@ void main(List<String> arguments) {
       runtimeCatalog: runtimeCatalog,
     ),
     macosSetupChecker: DartIoMacosSetupChecker.current(runtimeCatalog),
+    runtimeInstallProgressSink: JsonRuntimeInstallProgressSink(stdout),
   );
 
   if (result.stdout.isNotEmpty) {

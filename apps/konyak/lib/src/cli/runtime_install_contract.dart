@@ -27,6 +27,18 @@ final class RuntimeInstallParseFailure extends RuntimeInstallParseResult {
   final String message;
 }
 
+final class RuntimeInstallProgress {
+  const RuntimeInstallProgress({
+    required this.stage,
+    required this.message,
+    required this.fraction,
+  });
+
+  final String stage;
+  final String message;
+  final double fraction;
+}
+
 RuntimeInstallParseResult parseRuntimeInstallPayload(String payload) {
   final Object? decoded;
 
@@ -63,6 +75,49 @@ RuntimeInstallParseResult parseRuntimeInstallPayload(String payload) {
 
   return const RuntimeInstallParseFailure(
     'Runtime install payload must contain a runtime or error object.',
+  );
+}
+
+RuntimeInstallProgress? parseRuntimeInstallProgressPayload(String payload) {
+  final Object? decoded;
+
+  try {
+    decoded = jsonDecode(payload);
+  } on FormatException {
+    return null;
+  }
+
+  if (decoded is! Map<String, dynamic>) {
+    return null;
+  }
+
+  final Object? schemaVersion = decoded['schemaVersion'];
+  if (schemaVersion != runtimeInstallSchemaVersion) {
+    return null;
+  }
+
+  final progress = decoded['runtimeInstallProgress'];
+  if (progress is! Map<String, dynamic>) {
+    return null;
+  }
+
+  final stage = progress['stage'];
+  final message = progress['message'];
+  final fraction = progress['fraction'];
+  if (stage is! String ||
+      stage.trim().isEmpty ||
+      message is! String ||
+      message.trim().isEmpty ||
+      fraction is! num ||
+      fraction < 0 ||
+      fraction > 1) {
+    return null;
+  }
+
+  return RuntimeInstallProgress(
+    stage: stage,
+    message: message,
+    fraction: fraction.toDouble(),
   );
 }
 
