@@ -236,6 +236,13 @@ def main() -> None:
         "prepare_macos_dev_runtime_stack.zsh",
     ]:
         require_contains("flake.nix", expected)
+    require_contains("scripts/prepare_macos_dev_runtime_stack.zsh", "WINETRICKS_SCRIPT_SHA256")
+    require_contains("scripts/prepare_macos_dev_runtime_stack.zsh", "winetricks list-all")
+    require_not_contains("scripts/prepare_macos_dev_runtime_stack.zsh", "konyak-dev-stub")
+    require_not_contains(
+        "scripts/prepare_macos_dev_runtime_stack.zsh",
+        "Konyak development winetricks stub",
+    )
 
     for expected in [
         "MACOS_ENGINE_ARTIFACTS",

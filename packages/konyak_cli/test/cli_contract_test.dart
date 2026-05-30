@@ -6627,6 +6627,13 @@ corefonts                Microsoft Core Fonts
         'dxvk-macos-fixture',
       );
       expect(
+        completed.runtime.stack?.components
+            .where((component) => component.id == 'gptk-d3dmetal')
+            .single
+            .version,
+        'gptk-d3dmetal-fixture',
+      );
+      expect(
         File(
           _joinTestPath(runtimeHome, const [
             'Runtimes',
@@ -6645,6 +6652,30 @@ corefonts                Microsoft Core Fonts
             'macos-wine',
             'lib',
             'libMoltenVK.dylib',
+          ]),
+        ).existsSync(),
+        isTrue,
+      );
+      expect(
+        Directory(
+          _joinTestPath(runtimeHome, const [
+            'Runtimes',
+            'macos-wine',
+            'lib',
+            'external',
+            'D3DMetal.framework',
+          ]),
+        ).existsSync(),
+        isTrue,
+      );
+      expect(
+        File(
+          _joinTestPath(runtimeHome, const [
+            'Runtimes',
+            'macos-wine',
+            'lib',
+            'external',
+            'libd3dshared.dylib',
           ]),
         ).existsSync(),
         isTrue,
@@ -6736,6 +6767,30 @@ corefonts                Microsoft Core Fonts
       ],
       versions: const <String, String>{'winetricks': 'winetricks-fixture'},
     );
+    final gptkD3dMetalArchive = _createKonyakRuntimeComponentArchive(
+      tempDirectory.path,
+      archiveName: 'gptk-d3dmetal',
+      relativePaths: const <List<String>>[
+        <String>[
+          'Components',
+          'GPTK-D3DMetal',
+          'lib',
+          'external',
+          'D3DMetal.framework',
+          'D3DMetal',
+        ],
+        <String>[
+          'Components',
+          'GPTK-D3DMetal',
+          'lib',
+          'external',
+          'libd3dshared.dylib',
+        ],
+      ],
+      versions: const <String, String>{
+        'gptk-d3dmetal': 'gptk-d3dmetal-fixture',
+      },
+    );
     final runtimeHome = _joinTestPath(tempDirectory.path, const [
       'Application Support',
       'Konyak',
@@ -6755,6 +6810,7 @@ corefonts                Microsoft Core Fonts
           gstreamerArchive,
           monoArchive,
           winetricksArchive,
+          gptkD3dMetalArchive,
         ],
       ),
     );
@@ -6777,6 +6833,13 @@ corefonts                Microsoft Core Fonts
       'moltenvk-fixture',
     );
     expect(
+      completed.runtime.stack?.components
+          .where((component) => component.id == 'gptk-d3dmetal')
+          .single
+          .version,
+      'gptk-d3dmetal-fixture',
+    );
+    expect(
       File(
         _joinTestPath(runtimeHome, const [
           'Runtimes',
@@ -6793,6 +6856,18 @@ corefonts                Microsoft Core Fonts
           'Runtimes',
           'macos-wine',
           'winetricks',
+        ]),
+      ).existsSync(),
+      isTrue,
+    );
+    expect(
+      Directory(
+        _joinTestPath(runtimeHome, const [
+          'Runtimes',
+          'macos-wine',
+          'lib',
+          'external',
+          'D3DMetal.framework',
         ]),
       ).existsSync(),
       isTrue,
@@ -6851,6 +6926,28 @@ corefonts                Microsoft Core Fonts
       ],
       versions: const <String, String>{},
     );
+    final gptkD3dMetalArchive = _createKonyakRuntimeComponentArchive(
+      tempDirectory.path,
+      archiveName: 'source-gptk-d3dmetal',
+      relativePaths: const <List<String>>[
+        <String>[
+          'Components',
+          'GPTK-D3DMetal',
+          'lib',
+          'external',
+          'D3DMetal.framework',
+          'D3DMetal',
+        ],
+        <String>[
+          'Components',
+          'GPTK-D3DMetal',
+          'lib',
+          'external',
+          'libd3dshared.dylib',
+        ],
+      ],
+      versions: const <String, String>{},
+    );
     final sourceManifestPath = _createRuntimeStackSourceManifest(
       tempDirectory.path,
       components: <Map<String, String>>[
@@ -6884,6 +6981,11 @@ corefonts                Microsoft Core Fonts
           version: 'winetricks-source',
           archivePath: winetricksArchive,
         ),
+        _runtimeStackSourceComponent(
+          id: 'gptk-d3dmetal',
+          version: 'gptk-d3dmetal-source',
+          archivePath: gptkD3dMetalArchive,
+        ),
       ],
     );
     final runtimeHome = _joinTestPath(tempDirectory.path, const [
@@ -6916,6 +7018,20 @@ corefonts                Microsoft Core Fonts
           .single
           .version,
       'winetricks-source',
+    );
+    expect(
+      completed.runtime.stack?.components
+          .where((component) => component.id == 'gptk-d3dmetal')
+          .single
+          .version,
+      'gptk-d3dmetal-source',
+    );
+    expect(
+      completed.runtime.stack?.components
+          .where((component) => component.id == 'gptk-d3dmetal')
+          .single
+          .isInstalled,
+      isTrue,
     );
   });
 
@@ -8244,6 +8360,21 @@ String _createKonyakComponentRuntimeArchive(String tempPath) {
     <String>['Components', 'GStreamer', 'lib', 'libgstreamer-1.0.0.dylib'],
     <String>['Components', 'wine-mono', 'share', 'wine', 'mono', 'marker'],
     <String>['Components', 'winetricks', 'winetricks'],
+    <String>[
+      'Components',
+      'GPTK-D3DMetal',
+      'lib',
+      'external',
+      'D3DMetal.framework',
+      'D3DMetal',
+    ],
+    <String>[
+      'Components',
+      'GPTK-D3DMetal',
+      'lib',
+      'external',
+      'libd3dshared.dylib',
+    ],
   ]) {
     final file = File(_joinTestPath(runtimeRoot.path, relativePath));
     file.parent.createSync(recursive: true);
@@ -8261,6 +8392,7 @@ String _createKonyakComponentRuntimeArchive(String tempPath) {
         'gstreamer': 'gstreamer-fixture',
         'wine-mono': 'wine-mono-fixture',
         'winetricks': 'winetricks-fixture',
+        'gptk-d3dmetal': 'gptk-d3dmetal-fixture',
       },
     }),
   );

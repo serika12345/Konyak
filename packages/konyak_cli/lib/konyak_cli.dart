@@ -4705,6 +4705,9 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
       'GStreamer',
       'wine-mono',
       'winetricks',
+      'GPTK-D3DMetal',
+      'gptk-d3dmetal',
+      'D3DMetal',
     ]) {
       _moveRuntimeLayoutChildrenToRoot(
         runtimeRoot: runtimeRoot,

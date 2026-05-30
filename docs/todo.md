@@ -63,21 +63,24 @@ task changes scope.
   - [x] Expose the initial macOS runtime stack manifest from
     `list-runtimes --json` and `install-macos-wine --json`.
   - [x] Validate component presence for Wine, Wine32-on-64 support,
-    DXVK-macOS, MoltenVK, GStreamer, wine-mono, winetricks, and optional
-    GPTK/D3DMetal.
+    DXVK-macOS, MoltenVK, GStreamer, wine-mono, winetricks, and macOS-only
+    GPTK/D3DMetal when the runtime package provides it.
   - [x] Add component version detection to the runtime manifest.
   - [x] Treat Gcenx Wine as an initial bootstrap runtime, not the final full
     Konyak macOS runtime package.
   - [x] Add runtime validation that checks required dylib search paths and
     loader behavior.
-  - [x] Keep GPTK/D3DMetal optional until the redistribution and user-provided
-    installation model is explicitly decided.
+  - [x] Treat GPTK/D3DMetal like Whisky's D3DMetal layer: it belongs to the
+    selected macOS runtime package, not to a separate user-facing install flow.
   - [x] Normalize Konyak runtime component archives for DXVK-macOS, MoltenVK,
-    GStreamer, wine-mono, and winetricks, and allow incomplete Wine-only
-    runtime installs to be repaired from a full stack archive.
+    GStreamer, wine-mono, winetricks, and macOS-only GPTK/D3DMetal, and allow
+    incomplete Wine-only runtime installs to be repaired from a full stack
+    archive.
   - [x] Start runtime stack construction from separate component archives by
-    layering Wine, DXVK-macOS, MoltenVK, GStreamer, wine-mono, and winetricks
-    archives during `install-macos-wine`.
+    layering Wine, DXVK-macOS, MoltenVK, GStreamer, wine-mono, winetricks, and
+    macOS-only GPTK/D3DMetal archives during `install-macos-wine`.
+  - [x] Build the macOS development winetricks component from a real,
+    checksum-verified upstream winetricks script and verb catalog, not a stub.
   - [x] Define a checksum-validated component source manifest that maps each
     stack component to its archive URL, version, and checksum.
   - [x] Install a full stack from a component source manifest and use source

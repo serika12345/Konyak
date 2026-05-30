@@ -37,6 +37,21 @@ readonly DXVK_ARCHIVE_URL="${KONYAK_DEV_DXVK_MACOS_ARCHIVE_URL:-https://github.c
 readonly DXVK_ARCHIVE_SHA256="${KONYAK_DEV_DXVK_MACOS_ARCHIVE_SHA256:-f67d99d0a8eeedd7d406b283a3df9f939b5965acb00efcb33d0c6235c195a516}"
 readonly DXVK_ARCHIVE_CACHE="${KONYAK_DEV_DXVK_MACOS_ARCHIVE_CACHE:-${DOWNLOAD_CACHE}/dxvk-macOS-async-v1.10.3-20230507.tar.gz}"
 readonly GSTREAMER_ROOT="${KONYAK_DEV_NIX_GSTREAMER_PATH:-}"
+readonly WINETRICKS_SOURCE="${KONYAK_DEV_WINETRICKS_PATH:-${KONYAK_DEV_NIX_WINETRICKS_PATH:-}}"
+readonly WINETRICKS_SCRIPT_URL="${KONYAK_DEV_WINETRICKS_SCRIPT_URL:-https://raw.githubusercontent.com/Winetricks/winetricks/20260125/src/winetricks}"
+readonly WINETRICKS_SCRIPT_SHA256="${KONYAK_DEV_WINETRICKS_SCRIPT_SHA256:-431f82fc74000e6c864409f1d8fb495d696c03928808e3e8acffc45179312a7b}"
+readonly WINETRICKS_SCRIPT_CACHE="${KONYAK_DEV_WINETRICKS_SCRIPT_CACHE:-${DOWNLOAD_CACHE}/winetricks-20260125}"
+readonly WINETRICKS_VERSION="${KONYAK_DEV_WINETRICKS_VERSION:-20260125}"
+readonly DEFAULT_GPTK_D3DMETAL_ROOT="${ROOT}/.dart_tool/konyak/dev-runtime/macos-components/source-gptk-d3dmetal/Runtime"
+if [[ -n "${KONYAK_DEV_GPTK_D3DMETAL_PATH:-}" ]]; then
+  GPTK_D3DMETAL_ROOT="${KONYAK_DEV_GPTK_D3DMETAL_PATH}"
+elif [[ -d "${DEFAULT_GPTK_D3DMETAL_ROOT}" ]]; then
+  GPTK_D3DMETAL_ROOT="${DEFAULT_GPTK_D3DMETAL_ROOT}"
+else
+  GPTK_D3DMETAL_ROOT=""
+fi
+readonly GPTK_D3DMETAL_ROOT
+readonly GPTK_D3DMETAL_VERSION="${KONYAK_DEV_GPTK_D3DMETAL_VERSION:-local-gptk-d3dmetal}"
 
 print_manifest_path=false
 print_runtime_path=false
@@ -199,49 +214,118 @@ prepare_gstreamer_component() {
   print -r -- "${archive_path}"
 }
 
+resolve_winetricks_executable() {
+  local source_path="$1"
+
+  if [[ -x "${source_path}" && ! -d "${source_path}" ]]; then
+    print -r -- "${source_path}"
+    return 0
+  fi
+
+  if [[ -x "${source_path}/bin/winetricks" ]]; then
+    print -r -- "${source_path}/bin/winetricks"
+    return 0
+  fi
+
+  return 1
+}
+
 prepare_winetricks_component() {
   local work_root="${SOURCE_ROOT}/work/winetricks"
   local payload_root="${work_root}/payload/winetricks"
   local archive_path="${SOURCE_ROOT}/components/winetricks.tar.xz"
   local executable="${payload_root}/Components/winetricks/winetricks"
   local verbs="${payload_root}/Components/winetricks/verbs.txt"
+  local source_executable
+
+  if [[ -n "${WINETRICKS_SOURCE}" ]]; then
+    source_executable="$(resolve_winetricks_executable "${WINETRICKS_SOURCE}" || true)"
+    if [[ -z "${source_executable}" ]]; then
+      print -u2 "winetricks executable not found: ${WINETRICKS_SOURCE}"
+      exit 69
+    fi
+  else
+    download_if_missing \
+      "${WINETRICKS_SCRIPT_URL}" \
+      "${WINETRICKS_SCRIPT_CACHE}" \
+      "${WINETRICKS_SCRIPT_SHA256}"
+    source_executable="${WINETRICKS_SCRIPT_CACHE}"
+  fi
 
   reset_dir "${work_root}"
   mkdir -p "${payload_root}/Components/winetricks"
-  cat >"${executable}" <<'EOF'
-#!/bin/sh
-set -eu
-
-if [ "${1:-}" = "list-all" ]; then
-  cat <<'VERBS'
-===== apps =====
-steam                    Steam Client
-
-===== dlls =====
-corefonts                Microsoft Core Fonts
-d3dx9                    DirectX 9 libraries
-VERBS
-  exit 0
-fi
-
-printf 'Konyak development winetricks stub: %s\n' "$*" >&2
-exit 0
-EOF
+  cp -Lf "${source_executable}" "${executable}"
   chmod +x "${executable}"
 
-  cat >"${verbs}" <<'EOF'
-===== apps =====
-steam                    Steam Client
-
-===== dlls =====
-corefonts                Microsoft Core Fonts
-d3dx9                    DirectX 9 libraries
-EOF
+  WINETRICKS_LATEST_VERSION_CHECK=disabled "${executable}" list-all 2>/dev/null |
+    awk 'seen || /^===== / { seen = 1; print }' >"${verbs}"
+  if ! grep -q '^===== ' "${verbs}"; then
+    print -u2 "winetricks list-all did not produce a verb catalog."
+    exit 69
+  fi
 
   write_stack_manifest \
     "${payload_root}/.konyak-runtime-stack.json" \
     "winetricks" \
-    "konyak-dev-stub"
+    "${WINETRICKS_VERSION}"
+  archive_payload "${payload_root}" "${archive_path}"
+  print -r -- "${archive_path}"
+}
+
+resolve_gptk_d3dmetal_path() {
+  local source_root="$1"
+  local relative_path="$2"
+  local candidate
+
+  for candidate in \
+    "${source_root}/${relative_path}" \
+    "${source_root}/lib/external/${relative_path}" \
+    "${source_root}/Wine/lib/external/${relative_path}" \
+    "${source_root}/Libraries/Wine/lib/external/${relative_path}" \
+    "${source_root}/Contents/Resources/wine/lib/external/${relative_path}"; do
+    if [[ -e "${candidate}" ]]; then
+      print -r -- "${candidate}"
+      return 0
+    fi
+  done
+
+  return 1
+}
+
+prepare_gptk_d3dmetal_component() {
+  local work_root="${SOURCE_ROOT}/work/gptk-d3dmetal"
+  local payload_root="${work_root}/payload/gptk-d3dmetal"
+  local archive_path="${SOURCE_ROOT}/components/gptk-d3dmetal.tar.xz"
+  local source_framework
+  local source_dylib
+
+  if [[ -z "${GPTK_D3DMETAL_ROOT}" ]]; then
+    print -r -- ""
+    return 0
+  fi
+
+  if [[ ! -d "${GPTK_D3DMETAL_ROOT}" ]]; then
+    print -u2 "GPTK/D3DMetal source directory not found: ${GPTK_D3DMETAL_ROOT}"
+    exit 69
+  fi
+
+  source_framework="$(resolve_gptk_d3dmetal_path "${GPTK_D3DMETAL_ROOT}" "D3DMetal.framework" || true)"
+  source_dylib="$(resolve_gptk_d3dmetal_path "${GPTK_D3DMETAL_ROOT}" "libd3dshared.dylib" || true)"
+  if [[ -z "${source_framework}" || -z "${source_dylib}" ]]; then
+    print -u2 "GPTK/D3DMetal source must contain D3DMetal.framework and libd3dshared.dylib."
+    exit 69
+  fi
+
+  reset_dir "${work_root}"
+  mkdir -p "${payload_root}/Components/GPTK-D3DMetal/lib/external"
+  cp -R "${source_framework}" \
+    "${payload_root}/Components/GPTK-D3DMetal/lib/external/D3DMetal.framework"
+  cp -Lf "${source_dylib}" \
+    "${payload_root}/Components/GPTK-D3DMetal/lib/external/libd3dshared.dylib"
+  write_stack_manifest \
+    "${payload_root}/.konyak-runtime-stack.json" \
+    "gptk-d3dmetal" \
+    "${GPTK_D3DMETAL_VERSION}"
   archive_payload "${payload_root}" "${archive_path}"
   print -r -- "${archive_path}"
 }
@@ -251,13 +335,18 @@ write_source_manifest() {
   local dxvk_archive="$2"
   local gstreamer_archive="$3"
   local winetricks_archive="$4"
+  local gptk_d3dmetal_archive="${5:-}"
   local dxvk_sha
   local gstreamer_sha
   local winetricks_sha
+  local gptk_d3dmetal_sha=""
 
   dxvk_sha="$(sha256_file "${dxvk_archive}")"
   gstreamer_sha="$(sha256_file "${gstreamer_archive}")"
   winetricks_sha="$(sha256_file "${winetricks_archive}")"
+  if [[ -n "${gptk_d3dmetal_archive}" ]]; then
+    gptk_d3dmetal_sha="$(sha256_file "${gptk_d3dmetal_archive}")"
+  fi
 
   mkdir -p "${MANIFEST_PATH:h}"
   "${PYTHON3_BIN}" - \
@@ -269,7 +358,11 @@ write_source_manifest() {
     "${gstreamer_archive}" \
     "${gstreamer_sha}" \
     "${winetricks_archive}" \
-    "${winetricks_sha}" <<'PY'
+    "${winetricks_sha}" \
+    "${gptk_d3dmetal_archive}" \
+    "${gptk_d3dmetal_sha}" \
+    "${GPTK_D3DMETAL_VERSION}" \
+    "${WINETRICKS_VERSION}" <<'PY'
 import json
 import sys
 
@@ -283,38 +376,54 @@ import sys
     gstreamer_sha,
     winetricks_archive,
     winetricks_sha,
-) = sys.argv[1:10]
+    gptk_d3dmetal_archive,
+    gptk_d3dmetal_sha,
+    gptk_d3dmetal_version,
+    winetricks_version,
+) = sys.argv[1:14]
+
+components = [
+    {
+        "id": "wine",
+        "version": "wine-devel-11.9",
+        "archiveUrl": wine_archive,
+        "sha256": wine_sha,
+    },
+    {
+        "id": "dxvk-macos",
+        "version": "v1.10.3-20230507",
+        "archiveUrl": dxvk_archive,
+        "sha256": dxvk_sha,
+    },
+    {
+        "id": "gstreamer",
+        "version": "nix-gstreamer",
+        "archiveUrl": gstreamer_archive,
+        "sha256": gstreamer_sha,
+    },
+    {
+        "id": "winetricks",
+        "version": winetricks_version,
+        "archiveUrl": winetricks_archive,
+        "sha256": winetricks_sha,
+    },
+]
+
+if gptk_d3dmetal_archive:
+    components.append(
+        {
+            "id": "gptk-d3dmetal",
+            "version": gptk_d3dmetal_version,
+            "archiveUrl": gptk_d3dmetal_archive,
+            "sha256": gptk_d3dmetal_sha,
+        }
+    )
 
 payload = {
     "schemaVersion": 1,
     "runtimeId": "konyak-macos-wine",
     "stackId": "macos-konyak-runtime-stack",
-    "components": [
-        {
-            "id": "wine",
-            "version": "wine-devel-11.9",
-            "archiveUrl": wine_archive,
-            "sha256": wine_sha,
-        },
-        {
-            "id": "dxvk-macos",
-            "version": "v1.10.3-20230507",
-            "archiveUrl": dxvk_archive,
-            "sha256": dxvk_sha,
-        },
-        {
-            "id": "gstreamer",
-            "version": "nix-gstreamer",
-            "archiveUrl": gstreamer_archive,
-            "sha256": gstreamer_sha,
-        },
-        {
-            "id": "winetricks",
-            "version": "konyak-dev-stub",
-            "archiveUrl": winetricks_archive,
-            "sha256": winetricks_sha,
-        },
-    ],
+    "components": components,
 }
 
 with open(manifest_path, "w", encoding="utf-8") as handle:
@@ -338,11 +447,13 @@ fi
 dxvk_archive="$(prepare_dxvk_component)"
 gstreamer_archive="$(prepare_gstreamer_component)"
 winetricks_archive="$(prepare_winetricks_component)"
+gptk_d3dmetal_archive="$(prepare_gptk_d3dmetal_component)"
 write_source_manifest \
   "${wine_archive_source}" \
   "${dxvk_archive}" \
   "${gstreamer_archive}" \
-  "${winetricks_archive}"
+  "${winetricks_archive}" \
+  "${gptk_d3dmetal_archive}"
 
 if [[ "${print_manifest_path}" == true ]]; then
   print -r -- "${MANIFEST_PATH}"

@@ -19,8 +19,8 @@ the actionable backlog, use `docs/todo.md`.
 - macOS runtime target: Konyak should own its runtime package while keeping the
   practical layers needed for Windows application support: Wine, Wine32-on-64
   support where required, DXVK-macOS, MoltenVK, GStreamer runtime pieces,
-  wine-mono, winetricks, and an optional GPTK/D3DMetal layer when licensing and
-  user installation model permit it.
+  wine-mono, winetricks, and GPTK/D3DMetal when a macOS runtime package is
+  allowed to carry that component.
 - Bottle metadata: Konyak-owned versioned JSON is the source of truth. External
   plist metadata is not part of the supported data model.
 - Development environment: Nix flake plus direnv.
@@ -102,10 +102,13 @@ The macOS target is a Konyak-managed runtime stack assembled from explicit,
 versioned components. The runtime may come from Konyak-built or third-party
 components as long as the resulting stack exposes the required operational
 capabilities: `wine64`, Wine32-on-64 where needed, DXVK-macOS, MoltenVK,
-GStreamer support, wine-mono, winetricks, Rosetta-aware x86 execution, and an
-optional GPTK/D3DMetal path. GPTK/D3DMetal must stay
-behind a platform service and must not be bundled until its redistribution
-model is explicitly cleared.
+GStreamer support, wine-mono, winetricks, Rosetta-aware x86 execution, and the
+GPTK/D3DMetal files when the selected macOS runtime package provides them.
+Konyak treats GPTK/D3DMetal like Whisky treats D3DMetal: it is part of the
+macOS runtime package, not a separate in-app installation flow. The CLI still
+validates the expected files when present and the Flutter UI only enables DXR
+when the `gptk-d3dmetal` runtime component is installed. GPTK/D3DMetal must
+stay macOS-only and behind the platform/runtime service boundary.
 
 Winetricks, Start Menu shortcuts, PE metadata, and icon extraction now flow
 through the same CLI and Flutter boundaries as program launching. Linux

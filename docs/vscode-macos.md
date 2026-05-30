@@ -35,7 +35,9 @@ sets `KONYAK_RUNTIME_PROFILE=development`, points `KONYAK_MACOS_WINE_HOME` at
 `KONYAK_DEV_MACOS_WINE_STACK_MANIFEST` at the generated development source
 manifest under `.dart_tool/konyak/dev-runtime-source/macos-wine-stack`.
 `scripts/prepare_macos_dev_runtime_stack.zsh` prepares that manifest and the
-small local component archives used by the Settings install/repair button.
+local component archives used by the Settings install/repair button. The macOS
+development winetricks archive is built from a checksum-verified upstream
+winetricks script and a real `winetricks list-all` catalog.
 These runtime values are passed both as process environment and as
 `--dart-define` values so the Flutter app can forward them explicitly to the
 CLI child process.
