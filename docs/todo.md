@@ -186,7 +186,7 @@ task changes scope.
   - [x] Keep source manifests as installer inputs. `list-runtimes --json`
     should expose installed state and capabilities, not release/source
     manifest mechanics.
-  - [ ] Replace the current multi-purpose installer request shape with explicit
+  - [x] Replace the current multi-purpose installer request shape with explicit
     operations: full runtime install, runtime repair, component install, and
     runtime update install.
     - [x] Record update installs and component installs as explicit internal

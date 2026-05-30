@@ -3688,52 +3688,322 @@ enum RuntimeInstallOperation {
   updateInstall,
 }
 
-class MacosWineInstallRequest {
-  const MacosWineInstallRequest({
-    this.operation = RuntimeInstallOperation.fullInstall,
+sealed class RuntimeInstallRequestOperation {
+  const RuntimeInstallRequestOperation();
+
+  RuntimeInstallOperation get operation;
+
+  bool get force;
+
+  String? get archivePath => null;
+
+  String? get archiveUrl => null;
+
+  String? get archiveSha256 => null;
+
+  List<String> get componentArchivePaths => const <String>[];
+
+  String? get sourceManifest => null;
+
+  String? get sourceManifestSignature => null;
+}
+
+final class RuntimeFullInstallOperation extends RuntimeInstallRequestOperation {
+  const RuntimeFullInstallOperation({
     this.archivePath,
     this.archiveUrl,
     this.archiveSha256,
-    this.componentArchivePaths = const <String>[],
     this.sourceManifest,
     this.sourceManifestSignature,
     this.force = false,
-    this.emitProgress = false,
   });
 
-  final RuntimeInstallOperation operation;
+  @override
+  RuntimeInstallOperation get operation => RuntimeInstallOperation.fullInstall;
+
+  @override
   final String? archivePath;
+
+  @override
   final String? archiveUrl;
+
+  @override
   final String? archiveSha256;
-  final List<String> componentArchivePaths;
+
+  @override
   final String? sourceManifest;
+
+  @override
   final String? sourceManifestSignature;
+
+  @override
   final bool force;
+}
+
+final class RuntimeRepairOperation extends RuntimeInstallRequestOperation {
+  const RuntimeRepairOperation({
+    this.archivePath,
+    this.archiveUrl,
+    this.archiveSha256,
+    this.sourceManifest,
+    this.sourceManifestSignature,
+    this.force = true,
+  });
+
+  @override
+  RuntimeInstallOperation get operation => RuntimeInstallOperation.repair;
+
+  @override
+  final String? archivePath;
+
+  @override
+  final String? archiveUrl;
+
+  @override
+  final String? archiveSha256;
+
+  @override
+  final String? sourceManifest;
+
+  @override
+  final String? sourceManifestSignature;
+
+  @override
+  final bool force;
+}
+
+final class RuntimeComponentInstallOperation
+    extends RuntimeInstallRequestOperation {
+  RuntimeComponentInstallOperation({
+    this.archivePath,
+    this.archiveUrl,
+    this.archiveSha256,
+    Iterable<String> componentArchivePaths = const <String>[],
+    this.force = false,
+  }) : componentArchivePaths = List.unmodifiable(componentArchivePaths);
+
+  @override
+  RuntimeInstallOperation get operation =>
+      RuntimeInstallOperation.componentInstall;
+
+  @override
+  final String? archivePath;
+
+  @override
+  final String? archiveUrl;
+
+  @override
+  final String? archiveSha256;
+
+  @override
+  final List<String> componentArchivePaths;
+
+  @override
+  final bool force;
+}
+
+final class RuntimeUpdateInstallOperation
+    extends RuntimeInstallRequestOperation {
+  const RuntimeUpdateInstallOperation({
+    this.archiveUrl,
+    this.archiveSha256,
+    this.sourceManifest,
+    this.sourceManifestSignature,
+    this.force = true,
+  });
+
+  @override
+  RuntimeInstallOperation get operation =>
+      RuntimeInstallOperation.updateInstall;
+
+  @override
+  final String? archiveUrl;
+
+  @override
+  final String? archiveSha256;
+
+  @override
+  final String? sourceManifest;
+
+  @override
+  final String? sourceManifestSignature;
+
+  @override
+  final bool force;
+}
+
+class MacosWineInstallRequest {
+  MacosWineInstallRequest.fullInstall({
+    String? archivePath,
+    String? archiveUrl,
+    String? archiveSha256,
+    String? sourceManifest,
+    String? sourceManifestSignature,
+    bool force = false,
+    this.emitProgress = false,
+  }) : requestOperation = RuntimeFullInstallOperation(
+         archivePath: archivePath,
+         archiveUrl: archiveUrl,
+         archiveSha256: archiveSha256,
+         sourceManifest: sourceManifest,
+         sourceManifestSignature: sourceManifestSignature,
+         force: force,
+       );
+
+  MacosWineInstallRequest.repair({
+    String? archivePath,
+    String? archiveUrl,
+    String? archiveSha256,
+    String? sourceManifest,
+    String? sourceManifestSignature,
+    bool force = true,
+    this.emitProgress = false,
+  }) : requestOperation = RuntimeRepairOperation(
+         archivePath: archivePath,
+         archiveUrl: archiveUrl,
+         archiveSha256: archiveSha256,
+         sourceManifest: sourceManifest,
+         sourceManifestSignature: sourceManifestSignature,
+         force: force,
+       );
+
+  MacosWineInstallRequest.componentInstall({
+    String? archivePath,
+    String? archiveUrl,
+    String? archiveSha256,
+    Iterable<String> componentArchivePaths = const <String>[],
+    bool force = false,
+    this.emitProgress = false,
+  }) : requestOperation = RuntimeComponentInstallOperation(
+         archivePath: archivePath,
+         archiveUrl: archiveUrl,
+         archiveSha256: archiveSha256,
+         componentArchivePaths: componentArchivePaths,
+         force: force,
+       );
+
+  MacosWineInstallRequest.updateInstall({
+    String? archiveUrl,
+    String? archiveSha256,
+    String? sourceManifest,
+    String? sourceManifestSignature,
+    bool force = true,
+    this.emitProgress = false,
+  }) : requestOperation = RuntimeUpdateInstallOperation(
+         archiveUrl: archiveUrl,
+         archiveSha256: archiveSha256,
+         sourceManifest: sourceManifest,
+         sourceManifestSignature: sourceManifestSignature,
+         force: force,
+       );
+
+  final RuntimeInstallRequestOperation requestOperation;
   final bool emitProgress;
+
+  RuntimeInstallOperation get operation => requestOperation.operation;
+
+  String? get archivePath => requestOperation.archivePath;
+
+  String? get archiveUrl => requestOperation.archiveUrl;
+
+  String? get archiveSha256 => requestOperation.archiveSha256;
+
+  List<String> get componentArchivePaths =>
+      requestOperation.componentArchivePaths;
+
+  String? get sourceManifest => requestOperation.sourceManifest;
+
+  String? get sourceManifestSignature =>
+      requestOperation.sourceManifestSignature;
+
+  bool get force => requestOperation.force;
 }
 
 class LinuxWineInstallRequest {
-  const LinuxWineInstallRequest({
-    this.operation = RuntimeInstallOperation.fullInstall,
-    this.archivePath,
-    this.archiveUrl,
-    this.archiveSha256,
-    this.componentArchivePaths = const <String>[],
-    this.sourceManifest,
-    this.sourceManifestSignature,
-    this.force = false,
+  LinuxWineInstallRequest.fullInstall({
+    String? archivePath,
+    String? archiveUrl,
+    String? archiveSha256,
+    String? sourceManifest,
+    String? sourceManifestSignature,
+    bool force = false,
     this.emitProgress = false,
-  });
+  }) : requestOperation = RuntimeFullInstallOperation(
+         archivePath: archivePath,
+         archiveUrl: archiveUrl,
+         archiveSha256: archiveSha256,
+         sourceManifest: sourceManifest,
+         sourceManifestSignature: sourceManifestSignature,
+         force: force,
+       );
 
-  final RuntimeInstallOperation operation;
-  final String? archivePath;
-  final String? archiveUrl;
-  final String? archiveSha256;
-  final List<String> componentArchivePaths;
-  final String? sourceManifest;
-  final String? sourceManifestSignature;
-  final bool force;
+  LinuxWineInstallRequest.repair({
+    String? archivePath,
+    String? archiveUrl,
+    String? archiveSha256,
+    String? sourceManifest,
+    String? sourceManifestSignature,
+    bool force = true,
+    this.emitProgress = false,
+  }) : requestOperation = RuntimeRepairOperation(
+         archivePath: archivePath,
+         archiveUrl: archiveUrl,
+         archiveSha256: archiveSha256,
+         sourceManifest: sourceManifest,
+         sourceManifestSignature: sourceManifestSignature,
+         force: force,
+       );
+
+  LinuxWineInstallRequest.componentInstall({
+    String? archivePath,
+    String? archiveUrl,
+    String? archiveSha256,
+    Iterable<String> componentArchivePaths = const <String>[],
+    bool force = false,
+    this.emitProgress = false,
+  }) : requestOperation = RuntimeComponentInstallOperation(
+         archivePath: archivePath,
+         archiveUrl: archiveUrl,
+         archiveSha256: archiveSha256,
+         componentArchivePaths: componentArchivePaths,
+         force: force,
+       );
+
+  LinuxWineInstallRequest.updateInstall({
+    String? archiveUrl,
+    String? archiveSha256,
+    String? sourceManifest,
+    String? sourceManifestSignature,
+    bool force = true,
+    this.emitProgress = false,
+  }) : requestOperation = RuntimeUpdateInstallOperation(
+         archiveUrl: archiveUrl,
+         archiveSha256: archiveSha256,
+         sourceManifest: sourceManifest,
+         sourceManifestSignature: sourceManifestSignature,
+         force: force,
+       );
+
+  final RuntimeInstallRequestOperation requestOperation;
   final bool emitProgress;
+
+  RuntimeInstallOperation get operation => requestOperation.operation;
+
+  String? get archivePath => requestOperation.archivePath;
+
+  String? get archiveUrl => requestOperation.archiveUrl;
+
+  String? get archiveSha256 => requestOperation.archiveSha256;
+
+  List<String> get componentArchivePaths =>
+      requestOperation.componentArchivePaths;
+
+  String? get sourceManifest => requestOperation.sourceManifest;
+
+  String? get sourceManifestSignature =>
+      requestOperation.sourceManifestSignature;
+
+  bool get force => requestOperation.force;
 }
 
 class RuntimeInstallProgress {
@@ -6748,26 +7018,16 @@ MacosWineInstallRequest _macosWineInstallRequestForRuntimeUpdate(
   final archiveUrl = update.archiveUrl;
   final sourceManifestUrl = update.sourceManifestUrl;
   if (sourceManifestUrl != null && sourceManifestUrl.trim().isNotEmpty) {
-    return MacosWineInstallRequest(
-      operation: RuntimeInstallOperation.updateInstall,
+    return MacosWineInstallRequest.updateInstall(
       sourceManifest: sourceManifestUrl,
       sourceManifestSignature: update.sourceManifestSignatureUrl,
-      force: true,
     );
   }
   if (archiveUrl != null && _isRuntimeStackSourceManifestSource(archiveUrl)) {
-    return MacosWineInstallRequest(
-      operation: RuntimeInstallOperation.updateInstall,
-      sourceManifest: archiveUrl,
-      force: true,
-    );
+    return MacosWineInstallRequest.updateInstall(sourceManifest: archiveUrl);
   }
 
-  return MacosWineInstallRequest(
-    operation: RuntimeInstallOperation.updateInstall,
-    archiveUrl: archiveUrl,
-    force: true,
-  );
+  return MacosWineInstallRequest.updateInstall(archiveUrl: archiveUrl);
 }
 
 LinuxWineInstallRequest _linuxWineInstallRequestForRuntimeUpdate(
@@ -6776,26 +7036,16 @@ LinuxWineInstallRequest _linuxWineInstallRequestForRuntimeUpdate(
   final archiveUrl = update.archiveUrl;
   final sourceManifestUrl = update.sourceManifestUrl;
   if (sourceManifestUrl != null && sourceManifestUrl.trim().isNotEmpty) {
-    return LinuxWineInstallRequest(
-      operation: RuntimeInstallOperation.updateInstall,
+    return LinuxWineInstallRequest.updateInstall(
       sourceManifest: sourceManifestUrl,
       sourceManifestSignature: update.sourceManifestSignatureUrl,
-      force: true,
     );
   }
   if (archiveUrl != null && _isRuntimeStackSourceManifestSource(archiveUrl)) {
-    return LinuxWineInstallRequest(
-      operation: RuntimeInstallOperation.updateInstall,
-      sourceManifest: archiveUrl,
-      force: true,
-    );
+    return LinuxWineInstallRequest.updateInstall(sourceManifest: archiveUrl);
   }
 
-  return LinuxWineInstallRequest(
-    operation: RuntimeInstallOperation.updateInstall,
-    archiveUrl: archiveUrl,
-    force: true,
-  );
+  return LinuxWineInstallRequest.updateInstall(archiveUrl: archiveUrl);
 }
 
 bool _isRuntimeStackSourceManifestSource(String source) {
@@ -8409,7 +8659,7 @@ MacosWineInstallRequest? _parseJsonMacosWineInstallRequest(
   if (arguments.length == 2 &&
       arguments.first == 'install-macos-wine' &&
       arguments.last == '--json') {
-    return const MacosWineInstallRequest();
+    return MacosWineInstallRequest.fullInstall();
   }
 
   if (arguments.first != 'install-macos-wine' || arguments.last != '--json') {
@@ -8473,16 +8723,20 @@ MacosWineInstallRequest? _parseJsonMacosWineInstallRequest(
     return null;
   }
 
-  final operation = componentArchivePaths.isEmpty
-      ? RuntimeInstallOperation.fullInstall
-      : RuntimeInstallOperation.componentInstall;
+  if (componentArchivePaths.isNotEmpty) {
+    return MacosWineInstallRequest.componentInstall(
+      archivePath: archivePath,
+      archiveUrl: archiveUrl,
+      archiveSha256: archiveSha256,
+      componentArchivePaths: componentArchivePaths,
+      emitProgress: emitProgress,
+    );
+  }
 
-  return MacosWineInstallRequest(
-    operation: operation,
+  return MacosWineInstallRequest.fullInstall(
     archivePath: archivePath,
     archiveUrl: archiveUrl,
     archiveSha256: archiveSha256,
-    componentArchivePaths: componentArchivePaths,
     sourceManifest: sourceManifest,
     emitProgress: emitProgress,
   );
@@ -8494,7 +8748,7 @@ LinuxWineInstallRequest? _parseJsonLinuxWineInstallRequest(
   if (arguments.length == 2 &&
       arguments.first == 'install-linux-wine' &&
       arguments.last == '--json') {
-    return const LinuxWineInstallRequest();
+    return LinuxWineInstallRequest.fullInstall();
   }
 
   if (arguments.first != 'install-linux-wine' || arguments.last != '--json') {
@@ -8558,16 +8812,20 @@ LinuxWineInstallRequest? _parseJsonLinuxWineInstallRequest(
     return null;
   }
 
-  final operation = componentArchivePaths.isEmpty
-      ? RuntimeInstallOperation.fullInstall
-      : RuntimeInstallOperation.componentInstall;
+  if (componentArchivePaths.isNotEmpty) {
+    return LinuxWineInstallRequest.componentInstall(
+      archivePath: archivePath,
+      archiveUrl: archiveUrl,
+      archiveSha256: archiveSha256,
+      componentArchivePaths: componentArchivePaths,
+      emitProgress: emitProgress,
+    );
+  }
 
-  return LinuxWineInstallRequest(
-    operation: operation,
+  return LinuxWineInstallRequest.fullInstall(
     archivePath: archivePath,
     archiveUrl: archiveUrl,
     archiveSha256: archiveSha256,
-    componentArchivePaths: componentArchivePaths,
     sourceManifest: sourceManifest,
     emitProgress: emitProgress,
   );

@@ -5654,6 +5654,10 @@ corefonts                Microsoft Core Fonts
       installer.lastRequest?.operation,
       RuntimeInstallOperation.updateInstall,
     );
+    expect(
+      installer.lastRequest?.requestOperation,
+      isA<RuntimeUpdateInstallOperation>(),
+    );
     expect(installer.lastRequest?.force, isTrue);
 
     final payload = jsonDecode(result.stdout) as Map<String, Object?>;
@@ -6319,7 +6323,7 @@ corefonts                Microsoft Core Fonts
       );
 
       final result = installer.install(
-        MacosWineInstallRequest(archivePath: archivePath),
+        MacosWineInstallRequest.fullInstall(archivePath: archivePath),
       );
 
       expect(result, isA<MacosWineInstallCompleted>());
@@ -6342,7 +6346,7 @@ corefonts                Microsoft Core Fonts
         }),
       );
 
-      final result = installer.install(const MacosWineInstallRequest());
+      final result = installer.install(MacosWineInstallRequest.fullInstall());
 
       expect(result, isA<MacosWineInstallFailed>());
       expect(
@@ -6375,7 +6379,7 @@ corefonts                Microsoft Core Fonts
     );
 
     final result = installer.install(
-      MacosWineInstallRequest(archivePath: archivePath),
+      MacosWineInstallRequest.fullInstall(archivePath: archivePath),
     );
 
     expect(result, isA<MacosWineInstallCompleted>());
@@ -6444,7 +6448,7 @@ corefonts                Microsoft Core Fonts
       );
 
       final result = installer.install(
-        MacosWineInstallRequest(archivePath: badArchive),
+        MacosWineInstallRequest.fullInstall(archivePath: badArchive),
       );
 
       expect(result, isA<MacosWineInstallFailed>());
@@ -6492,7 +6496,7 @@ corefonts                Microsoft Core Fonts
       );
 
       final result = installer.install(
-        MacosWineInstallRequest(
+        MacosWineInstallRequest.componentInstall(
           archivePath: archivePath,
           componentArchivePaths: [badComponentArchive],
         ),
@@ -6538,7 +6542,7 @@ corefonts                Microsoft Core Fonts
     );
 
     final result = installer.install(
-      MacosWineInstallRequest(archivePath: archivePath),
+      MacosWineInstallRequest.fullInstall(archivePath: archivePath),
     );
 
     expect(result, isA<MacosWineInstallFailed>());
@@ -6572,7 +6576,7 @@ corefonts                Microsoft Core Fonts
       );
 
       final result = installer.install(
-        MacosWineInstallRequest(archivePath: archivePath),
+        MacosWineInstallRequest.fullInstall(archivePath: archivePath),
       );
 
       expect(result, isA<MacosWineInstallCompleted>());
@@ -6706,7 +6710,7 @@ corefonts                Microsoft Core Fonts
     );
 
     final result = installer.install(
-      MacosWineInstallRequest(
+      MacosWineInstallRequest.componentInstall(
         archivePath: wineArchive,
         componentArchivePaths: [
           dxvkArchive,
@@ -6856,7 +6860,7 @@ corefonts                Microsoft Core Fonts
     );
 
     final result = installer.install(
-      MacosWineInstallRequest(sourceManifest: sourceManifestPath),
+      MacosWineInstallRequest.fullInstall(sourceManifest: sourceManifestPath),
     );
 
     expect(result, isA<MacosWineInstallCompleted>());
@@ -6912,7 +6916,7 @@ corefonts                Microsoft Core Fonts
       );
 
       final result = installer.install(
-        MacosWineInstallRequest(sourceManifest: sourceManifestPath),
+        MacosWineInstallRequest.fullInstall(sourceManifest: sourceManifestPath),
       );
 
       expect(result, isA<MacosWineInstallFailed>());
@@ -6947,7 +6951,7 @@ corefonts                Microsoft Core Fonts
       );
 
       final result = installer.install(
-        MacosWineInstallRequest(archivePath: archivePath),
+        MacosWineInstallRequest.fullInstall(archivePath: archivePath),
       );
 
       expect(result, isA<MacosWineInstallCompleted>());
@@ -7085,6 +7089,10 @@ corefonts                Microsoft Core Fonts
       installer.lastRequest?.operation,
       RuntimeInstallOperation.componentInstall,
     );
+    expect(
+      installer.lastRequest?.requestOperation,
+      isA<RuntimeComponentInstallOperation>(),
+    );
   });
 
   test('install-macos-wine --source-manifest passes the source manifest', () {
@@ -7174,7 +7182,7 @@ corefonts                Microsoft Core Fonts
     );
 
     final result = installer.install(
-      MacosWineInstallRequest(
+      MacosWineInstallRequest.fullInstall(
         archivePath: archive.path,
         archiveSha256:
             'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
@@ -7415,7 +7423,7 @@ corefonts                Microsoft Core Fonts
     );
 
     final result = installer.install(
-      LinuxWineInstallRequest(archivePath: archivePath),
+      LinuxWineInstallRequest.fullInstall(archivePath: archivePath),
     );
 
     expect(result, isA<LinuxWineInstallCompleted>());
@@ -7491,7 +7499,7 @@ corefonts                Microsoft Core Fonts
     );
 
     final result = installer.install(
-      LinuxWineInstallRequest(
+      LinuxWineInstallRequest.componentInstall(
         archivePath: wineArchive,
         componentArchivePaths: [vkd3dArchive],
       ),
@@ -7570,7 +7578,7 @@ corefonts                Microsoft Core Fonts
     );
 
     final result = installer.install(
-      LinuxWineInstallRequest(sourceManifest: sourceManifestPath),
+      LinuxWineInstallRequest.fullInstall(sourceManifest: sourceManifestPath),
     );
 
     expect(result, isA<LinuxWineInstallCompleted>());
@@ -7649,7 +7657,7 @@ corefonts                Microsoft Core Fonts
       fileStatusProbe: const DartIoFileStatusProbe(),
     );
 
-    final result = installer.install(const LinuxWineInstallRequest());
+    final result = installer.install(LinuxWineInstallRequest.fullInstall());
 
     expect(result, isA<LinuxWineInstallCompleted>());
     final runtime = (result as LinuxWineInstallCompleted).runtime;
@@ -7716,7 +7724,7 @@ corefonts                Microsoft Core Fonts
     );
 
     final result = installer.install(
-      LinuxWineInstallRequest(
+      LinuxWineInstallRequest.fullInstall(
         sourceManifest: sourceManifestPath,
         sourceManifestSignature: signature.signaturePath,
       ),
@@ -7780,7 +7788,7 @@ corefonts                Microsoft Core Fonts
     );
 
     final result = installer.install(
-      LinuxWineInstallRequest(
+      LinuxWineInstallRequest.fullInstall(
         sourceManifest: sourceManifestPath,
         sourceManifestSignature: signature.signaturePath,
       ),
