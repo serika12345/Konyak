@@ -148,6 +148,7 @@ void main() {
     expect(runner.argumentsLog, const [
       ['list-bottles', '--json'],
       ['get-app-settings', '--json'],
+      ['list-runtimes', '--json'],
     ]);
   });
 
@@ -437,11 +438,6 @@ void main() {
             }
           }
         ''',
-        stderr: '',
-      ),
-      const ProcessRunResult(
-        exitCode: 0,
-        stdout: '{"schemaVersion":1,"runtimes":[]}',
         stderr: '',
       ),
     ]);
@@ -4886,15 +4882,19 @@ void main() {
     },
   );
 
-  testWidgets(
-    'macOS startup update checks do not prompt for missing managed runtime',
-    (WidgetTester tester) async {
-      final runner = _QueuedProcessRunner([
+  testWidgets('macOS prompts to install a missing managed runtime on launch', (
+    WidgetTester tester,
+  ) async {
+    final installCompleter = Completer<ProcessRunResult>();
+    final runner = _FutureQueuedProcessRunner([
+      Future.value(
         const ProcessRunResult(
           exitCode: 0,
           stdout: '{"schemaVersion":1,"bottles":[]}',
           stderr: '',
         ),
+      ),
+      Future.value(
         const ProcessRunResult(
           exitCode: 0,
           stdout: '''
@@ -4904,12 +4904,14 @@ void main() {
               "terminateWineProcessesOnClose": false,
               "defaultBottlePath": "/Users/user/Library/Application Support/Konyak/Bottles",
               "automaticallyCheckForKonyakUpdates": false,
-              "automaticallyCheckForWineUpdates": true
+              "automaticallyCheckForWineUpdates": false
             }
           }
         ''',
           stderr: '',
         ),
+      ),
+      Future.value(
         const ProcessRunResult(
           exitCode: 0,
           stdout: '''
@@ -4931,41 +4933,81 @@ void main() {
         ''',
           stderr: '',
         ),
-      ]);
+      ),
+      installCompleter.future,
+    ]);
 
-      await tester.pumpWidget(
-        _testKonyakApp(
-          cliClient: KonyakCliClient(
-            executable: 'konyak',
-            processRunner: runner,
-          ),
-          enableBackgroundServices: true,
-        ),
-      );
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(
+      _testKonyakApp(
+        cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
+        enableBackgroundServices: true,
+      ),
+    );
+    await tester.pumpAndSettle();
 
-      expect(find.text('Download Konyak macOS Wine?'), findsNothing);
-      expect(
-        find.byKey(const ValueKey('runtime-install-progress')),
-        findsNothing,
-      );
-      expect(runner.argumentsLog, const [
-        ['list-bottles', '--json'],
-        ['get-app-settings', '--json'],
-        ['list-runtimes', '--json'],
-      ]);
-    },
-  );
+    expect(find.text('Download Konyak macOS Wine?'), findsOneWidget);
+    expect(find.text('Download'), findsOneWidget);
+    expect(runner.argumentsLog, const [
+      ['list-bottles', '--json'],
+      ['get-app-settings', '--json'],
+      ['list-runtimes', '--json'],
+    ]);
 
-  testWidgets(
-    'Linux startup update checks do not prompt for missing managed runtime',
-    (WidgetTester tester) async {
-      final runner = _QueuedProcessRunner([
+    await tester.tap(find.text('Download'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 250));
+
+    expect(
+      find.byKey(const ValueKey('runtime-install-progress')),
+      findsOneWidget,
+    );
+    expect(find.text('Downloading Konyak macOS Wine...'), findsOneWidget);
+
+    installCompleter.complete(
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "runtime": {
+              "id": "konyak-macos-wine",
+              "name": "Konyak macOS Wine",
+              "platform": "macos",
+              "architecture": "x86_64",
+              "runnerKind": "macosWine",
+              "isBundled": false,
+              "isUpdateable": true,
+              "isInstalled": true
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Installed Konyak macOS Wine'), findsOneWidget);
+    expect(runner.argumentsLog, const [
+      ['list-bottles', '--json'],
+      ['get-app-settings', '--json'],
+      ['list-runtimes', '--json'],
+      ['install-macos-wine', '--json'],
+    ]);
+  });
+
+  testWidgets('Linux prompts to install a missing managed runtime on launch', (
+    WidgetTester tester,
+  ) async {
+    final installCompleter = Completer<ProcessRunResult>();
+    final runner = _FutureQueuedProcessRunner([
+      Future.value(
         const ProcessRunResult(
           exitCode: 0,
           stdout: '{"schemaVersion":1,"bottles":[]}',
           stderr: '',
         ),
+      ),
+      Future.value(
         const ProcessRunResult(
           exitCode: 0,
           stdout: '''
@@ -4975,12 +5017,14 @@ void main() {
               "terminateWineProcessesOnClose": false,
               "defaultBottlePath": "/home/user/.local/share/konyak/bottles",
               "automaticallyCheckForKonyakUpdates": false,
-              "automaticallyCheckForWineUpdates": true
+              "automaticallyCheckForWineUpdates": false
             }
           }
         ''',
           stderr: '',
         ),
+      ),
+      Future.value(
         const ProcessRunResult(
           exitCode: 0,
           stdout: '''
@@ -5002,32 +5046,68 @@ void main() {
         ''',
           stderr: '',
         ),
-      ]);
+      ),
+      installCompleter.future,
+    ]);
 
-      await tester.pumpWidget(
-        _testKonyakApp(
-          platform: KonyakPlatform.linux,
-          cliClient: KonyakCliClient(
-            executable: 'konyak',
-            processRunner: runner,
-          ),
-          enableBackgroundServices: true,
-        ),
-      );
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(
+      _testKonyakApp(
+        platform: KonyakPlatform.linux,
+        cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
+        enableBackgroundServices: true,
+      ),
+    );
+    await tester.pumpAndSettle();
 
-      expect(find.text('Download Konyak Linux Wine?'), findsNothing);
-      expect(
-        find.byKey(const ValueKey('runtime-install-progress')),
-        findsNothing,
-      );
-      expect(runner.argumentsLog, const [
-        ['list-bottles', '--json'],
-        ['get-app-settings', '--json'],
-        ['list-runtimes', '--json'],
-      ]);
-    },
-  );
+    expect(find.text('Download Konyak Linux Wine?'), findsOneWidget);
+    expect(find.text('Download'), findsOneWidget);
+    expect(runner.argumentsLog, const [
+      ['list-bottles', '--json'],
+      ['get-app-settings', '--json'],
+      ['list-runtimes', '--json'],
+    ]);
+
+    await tester.tap(find.text('Download'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 250));
+
+    expect(
+      find.byKey(const ValueKey('runtime-install-progress')),
+      findsOneWidget,
+    );
+    expect(find.text('Downloading Konyak Linux Wine...'), findsOneWidget);
+
+    installCompleter.complete(
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "runtime": {
+              "id": "konyak-linux-wine",
+              "name": "Konyak Linux Wine",
+              "platform": "linux",
+              "architecture": "x86_64",
+              "runnerKind": "wine",
+              "isBundled": false,
+              "isUpdateable": true,
+              "isInstalled": true
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Installed Konyak Linux Wine'), findsOneWidget);
+    expect(runner.argumentsLog, const [
+      ['list-bottles', '--json'],
+      ['get-app-settings', '--json'],
+      ['list-runtimes', '--json'],
+      ['install-linux-wine', '--json'],
+    ]);
+  });
 
   testWidgets('enabled close behavior terminates Wine processes on dispose', (
     WidgetTester tester,
@@ -5082,6 +5162,7 @@ void main() {
     expect(runner.argumentsLog, const [
       ['list-bottles', '--json'],
       ['get-app-settings', '--json'],
+      ['list-runtimes', '--json'],
       ['terminate-wine-processes', '--json'],
     ]);
   });

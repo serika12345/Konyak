@@ -77,6 +77,10 @@ String _runtimePlatformName(KonyakPlatform platform) {
   return platform.isMacOS ? 'macos' : 'linux';
 }
 
+String _managedRuntimeName(KonyakPlatform platform) {
+  return platform.isMacOS ? 'Konyak macOS Wine' : 'Konyak Linux Wine';
+}
+
 List<RuntimeSummary> _upsertRuntimeSummary(
   List<RuntimeSummary> runtimes,
   RuntimeSummary runtime,
@@ -136,12 +140,14 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
   bool _isCreatingBottle = false;
   bool _isLoadingWinetricks = false;
   String? _archiveProgressMessage;
+  String? _runtimeInstallProgressMessage;
   bool _isShowingSettings = false;
   bool _hasTerminatedWineProcesses = false;
   AppSettingsSummary? _appSettings;
   String? _errorMessage;
   String? _latestRunLogPath;
   List<RuntimeSummary> _knownRuntimes = const <RuntimeSummary>[];
+  bool _hasLoadedKnownRuntimes = false;
   final List<String> _pendingExecutableOpenPaths = <String>[];
   bool _isHandlingExecutableOpen = false;
   final Map<String, ProgramSettingsSummary> _programSettings =
@@ -264,6 +270,7 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
         _appSettings = settings;
         widget.onAppSettingsLoaded(settings);
         await _checkConfiguredUpdates(settings);
+        await _promptForMissingManagedRuntime();
       case AppSettingsLoadFailure():
         break;
     }
@@ -298,6 +305,7 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
 
       switch (runtimeResult) {
         case LoadedRuntimeList(:final runtimes):
+          _setKnownRuntimes(runtimes);
           RuntimeSummary? linuxRuntime;
           for (final runtime in runtimes) {
             if (runtime.id == linuxWineRuntimeId) {
@@ -323,6 +331,7 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
             }
           }
         case RuntimeListLoadFailure():
+          _setKnownRuntimes(const <RuntimeSummary>[]);
           break;
       }
     }
@@ -335,6 +344,7 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
 
       switch (runtimeResult) {
         case LoadedRuntimeList(:final runtimes):
+          _setKnownRuntimes(runtimes);
           RuntimeSummary? macosRuntime;
           for (final runtime in runtimes) {
             if (runtime.id == macosWineRuntimeId) {
@@ -358,6 +368,7 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
             }
           }
         case RuntimeListLoadFailure():
+          _setKnownRuntimes(const <RuntimeSummary>[]);
           break;
       }
     }
@@ -371,6 +382,141 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
         content: Text('Updates available: ${availableUpdates.join(', ')}'),
       ),
     );
+  }
+
+  void _setKnownRuntimes(List<RuntimeSummary> runtimes) {
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _knownRuntimes = List.unmodifiable(runtimes);
+      _hasLoadedKnownRuntimes = true;
+    });
+  }
+
+  Future<List<RuntimeSummary>?> _loadKnownRuntimes() async {
+    final runtimeResult = await widget.cliClient.listKnownRuntimes();
+
+    if (!mounted) {
+      return null;
+    }
+
+    switch (runtimeResult) {
+      case LoadedRuntimeList(:final runtimes):
+        _setKnownRuntimes(runtimes);
+        return runtimes;
+      case RuntimeListLoadFailure():
+        _setKnownRuntimes(const <RuntimeSummary>[]);
+        return null;
+    }
+  }
+
+  Future<RuntimeSummary?> _ensureRuntimeForPlatformLoaded() async {
+    if (!_hasLoadedKnownRuntimes) {
+      final runtimes = await _loadKnownRuntimes();
+      if (!mounted) {
+        return null;
+      }
+
+      if (runtimes == null) {
+        return null;
+      }
+
+      return _runtimeForPlatform(widget.platform, runtimes);
+    }
+
+    return _runtimeForPlatform(widget.platform, _knownRuntimes);
+  }
+
+  Future<void> _promptForMissingManagedRuntime() async {
+    if (!_supportsSettingsRuntime(widget.platform)) {
+      return;
+    }
+
+    final runtime = await _ensureRuntimeForPlatformLoaded();
+    if (!mounted || runtime?.isInstalled == true) {
+      return;
+    }
+
+    final installResult = await _confirmAndInstallManagedRuntime(
+      runtimeName: runtime?.name ?? _managedRuntimeName(widget.platform),
+      installRuntime: _installManagedRuntimeForPlatform,
+    );
+
+    if (!mounted || installResult == null) {
+      return;
+    }
+
+    switch (installResult) {
+      case InstalledRuntime(:final runtime):
+        setState(() {
+          _knownRuntimes = _upsertRuntimeSummary(_knownRuntimes, runtime);
+          _hasLoadedKnownRuntimes = true;
+        });
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Installed ${runtime.name}')));
+      case RuntimeInstallLoadFailure(:final message):
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Runtime install failed: $message')),
+        );
+    }
+  }
+
+  Future<RuntimeInstallLoadResult> _installManagedRuntimeForPlatform() {
+    return widget.platform.isMacOS
+        ? widget.cliClient.installMacosWine()
+        : widget.cliClient.installLinuxWine();
+  }
+
+  Future<RuntimeInstallLoadResult?> _confirmAndInstallManagedRuntime({
+    required String runtimeName,
+    required Future<RuntimeInstallLoadResult> Function() installRuntime,
+  }) async {
+    final confirmed = await _confirmRuntimeDownload(runtimeName);
+    if (!mounted || !confirmed) {
+      return null;
+    }
+
+    setState(() {
+      _runtimeInstallProgressMessage = 'Downloading $runtimeName...';
+    });
+
+    try {
+      return await installRuntime();
+    } finally {
+      if (mounted) {
+        setState(() {
+          _runtimeInstallProgressMessage = null;
+        });
+      }
+    }
+  }
+
+  Future<bool> _confirmRuntimeDownload(String runtimeName) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Download $runtimeName?'),
+        content: Text(
+          'Konyak will download $runtimeName into your Konyak runtime directory. '
+          'The runtime is separate from the application and remains under its own license.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Download'),
+          ),
+        ],
+      ),
+    );
+
+    return confirmed ?? false;
   }
 
   void _terminateWineProcessesOnClose() {
@@ -557,13 +703,9 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
 
     switch (result) {
       case LoadedRuntimeList(:final runtimes):
-        setState(() {
-          _knownRuntimes = runtimes;
-        });
+        _setKnownRuntimes(runtimes);
       case RuntimeListLoadFailure():
-        setState(() {
-          _knownRuntimes = const <RuntimeSummary>[];
-        });
+        _setKnownRuntimes(const <RuntimeSummary>[]);
     }
   }
 
@@ -1337,6 +1479,7 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
       case InstalledRuntime(:final runtime):
         setState(() {
           _knownRuntimes = _upsertRuntimeSummary(_knownRuntimes, runtime);
+          _hasLoadedKnownRuntimes = true;
         });
       case RuntimeInstallLoadFailure():
         break;
@@ -1464,6 +1607,11 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
         if (_archiveProgressMessage case final message?)
           BlockingProgressOverlay(
             key: const ValueKey('bottle-archive-progress'),
+            message: message,
+          ),
+        if (_runtimeInstallProgressMessage case final message?)
+          BlockingProgressOverlay(
+            key: const ValueKey('runtime-install-progress'),
             message: message,
           ),
       ],
