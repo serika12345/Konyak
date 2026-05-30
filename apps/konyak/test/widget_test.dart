@@ -5161,6 +5161,14 @@ void main() {
       Future.value(
         const ProcessRunResult(
           exitCode: 0,
+          stdout:
+              '{"schemaVersion":1,"linuxFileAssociations":{"desktopEntryPath":"/apps/app.konyak.Konyak.desktop","mimeAppsPath":"/config/mimeapps.list","mimeTypes":["application/x-ms-dos-executable"]}}',
+          stderr: '',
+        ),
+      ),
+      Future.value(
+        const ProcessRunResult(
+          exitCode: 0,
           stdout: '''
           {
             "schemaVersion": 1,
@@ -5214,6 +5222,7 @@ void main() {
     expect(find.text('Download'), findsOneWidget);
     expect(runner.argumentsLog, const [
       ['list-bottles', '--json'],
+      ['install-linux-file-associations', '--json'],
       ['get-app-settings', '--json'],
       ['list-runtimes', '--json'],
     ]);
@@ -5264,6 +5273,7 @@ void main() {
     expect(find.text('Installed Konyak Linux Wine'), findsOneWidget);
     expect(runner.argumentsLog, const [
       ['list-bottles', '--json'],
+      ['install-linux-file-associations', '--json'],
       ['get-app-settings', '--json'],
       ['list-runtimes', '--json'],
       ['install-linux-wine', '--progress-json', '--json'],

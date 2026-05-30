@@ -152,6 +152,12 @@ Map<String, String> _konyakCliChildEnvironment() {
     environment['KONYAK_APP_PID'] = '$pid';
   }
 
+  final inheritedAppImagePath = Platform.environment['KONYAK_APPIMAGE_PATH'];
+  if (inheritedAppImagePath != null &&
+      inheritedAppImagePath.trim().isNotEmpty) {
+    environment['KONYAK_APPIMAGE_PATH'] = inheritedAppImagePath.trim();
+  }
+
   final inheritedAppBundlePath = Platform.environment['KONYAK_APP_BUNDLE_PATH'];
   if (inheritedAppBundlePath != null &&
       inheritedAppBundlePath.trim().isNotEmpty) {
@@ -385,6 +391,10 @@ final class KonyakCliClient {
         diagnostic: result.stderr,
       ),
     };
+  }
+
+  Future<ProcessRunResult> installLinuxFileAssociations() {
+    return _run(const ['install-linux-file-associations', '--json']);
   }
 
   Future<BottleProgramListLoadResult> listBottlePrograms(

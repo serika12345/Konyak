@@ -39,5 +39,14 @@ void main() {
     expect(desktopEntry, contains('Exec=@BINARY_NAME@ %f'));
     expect(desktopEntry, contains('MimeType=application/x-ms-dos-executable;'));
     expect(desktopEntry, contains('application/x-msdownload;'));
+    expect(
+      desktopEntry,
+      contains('application/vnd.microsoft.portable-executable;'),
+    );
+    expect(desktopEntry, contains('application/x-msi;'));
+    expect(desktopEntry, contains('application/x-ms-installer;'));
+    expect(desktopEntry, contains('application/x-ms-shortcut;'));
+    expect(desktopEntry, contains('application/x-msdos-program;'));
+    expect(desktopEntry, contains('text/x-msdos-batch;'));
   });
 }

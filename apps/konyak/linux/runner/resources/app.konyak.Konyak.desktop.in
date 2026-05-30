@@ -8,5 +8,5 @@ Icon=app.konyak.Konyak
 StartupWMClass=app.konyak.Konyak
 Terminal=false
 Categories=Utility;
-MimeType=application/x-ms-dos-executable;application/x-msdownload;application/vnd.microsoft.portable-executable;
+MimeType=application/x-ms-dos-executable;application/x-msdownload;application/vnd.microsoft.portable-executable;application/x-msi;application/x-ms-installer;application/x-ms-shortcut;application/x-msdos-program;text/x-msdos-batch;
 StartupNotify=true

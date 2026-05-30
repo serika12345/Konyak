@@ -1102,6 +1102,32 @@ void main() {
     expect(loaded.settings.automaticallyCheckForWineUpdates, isFalse);
   });
 
+  test(
+    'installs Linux file associations through the JSON CLI contract',
+    () async {
+      final runner = _FakeProcessRunner(
+        result: const ProcessRunResult(
+          exitCode: 0,
+          stdout:
+              '{"schemaVersion":1,"linuxFileAssociations":{"desktopEntryPath":"/apps/app.konyak.Konyak.desktop","mimeAppsPath":"/config/mimeapps.list","mimeTypes":["application/x-ms-dos-executable"]}}',
+          stderr: '',
+        ),
+      );
+      final client = KonyakCliClient(
+        executable: 'konyak',
+        processRunner: runner,
+      );
+
+      final result = await client.installLinuxFileAssociations();
+
+      expect(result.exitCode, 0);
+      expect(runner.arguments, const [
+        'install-linux-file-associations',
+        '--json',
+      ]);
+    },
+  );
+
   test('sets app settings through the JSON CLI contract', () async {
     final runner = _FakeProcessRunner(
       result: const ProcessRunResult(

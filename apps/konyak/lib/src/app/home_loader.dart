@@ -261,6 +261,13 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
   }
 
   Future<void> _initializeBackgroundServices() async {
+    if (widget.platform.isLinux) {
+      await widget.cliClient.installLinuxFileAssociations();
+      if (!mounted) {
+        return;
+      }
+    }
+
     final result = await widget.cliClient.getAppSettings();
 
     if (!mounted) {

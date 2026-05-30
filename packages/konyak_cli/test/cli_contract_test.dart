@@ -3769,6 +3769,112 @@ corefonts                Microsoft Core Fonts
     },
   );
 
+  test('install-linux-file-associations --json writes XDG MIME associations', () {
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-linux-file-association-test-',
+    );
+    addTearDown(() {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    });
+
+    final xdgDataHome = _joinTestPath(tempDirectory.path, const ['xdg-data']);
+    final xdgConfigHome = _joinTestPath(tempDirectory.path, const [
+      'xdg-config',
+    ]);
+    final appExecutable = _joinTestPath(tempDirectory.path, const [
+      'Konyak.AppImage',
+    ]);
+    File(appExecutable).writeAsStringSync('appimage');
+
+    final result = runCli(
+      const ['install-linux-file-associations', '--json'],
+      programRunPlanner: ProgramRunPlanner(
+        hostPlatform: KonyakHostPlatform.linux,
+        environment: {
+          'HOME': tempDirectory.path,
+          'XDG_DATA_HOME': xdgDataHome,
+          'XDG_CONFIG_HOME': xdgConfigHome,
+          'KONYAK_APP_EXECUTABLE': appExecutable,
+        },
+      ),
+    );
+
+    expect(result.exitCode, 0);
+    expect(result.stderr, isEmpty);
+
+    final desktopPath = _joinTestPath(xdgDataHome, const [
+      'applications',
+      'app.konyak.Konyak.desktop',
+    ]);
+    final desktopEntry = File(desktopPath).readAsStringSync();
+    expect(desktopEntry, contains('Name=Konyak'));
+    expect(desktopEntry, contains('Exec="$appExecutable" %f'));
+    expect(desktopEntry, contains('MimeType=application/x-ms-dos-executable;'));
+    expect(desktopEntry, contains('application/x-msdownload;'));
+    expect(
+      desktopEntry,
+      contains('application/vnd.microsoft.portable-executable;'),
+    );
+    expect(desktopEntry, contains('application/x-msi;'));
+    expect(desktopEntry, contains('application/x-ms-installer;'));
+    expect(desktopEntry, contains('application/x-ms-shortcut;'));
+    expect(desktopEntry, contains('application/x-msdos-program;'));
+    expect(desktopEntry, contains('text/x-msdos-batch;'));
+
+    final mimeAppsPath = _joinTestPath(xdgConfigHome, const ['mimeapps.list']);
+    final mimeApps = File(mimeAppsPath).readAsStringSync();
+    expect(mimeApps, contains('[Default Applications]'));
+    expect(
+      mimeApps,
+      contains('application/x-ms-dos-executable=app.konyak.Konyak.desktop'),
+    );
+    expect(
+      mimeApps,
+      contains('application/x-msdownload=app.konyak.Konyak.desktop'),
+    );
+    expect(
+      mimeApps,
+      contains(
+        'application/vnd.microsoft.portable-executable=app.konyak.Konyak.desktop',
+      ),
+    );
+    expect(mimeApps, contains('application/x-msi=app.konyak.Konyak.desktop'));
+    expect(
+      mimeApps,
+      contains('application/x-ms-installer=app.konyak.Konyak.desktop'),
+    );
+    expect(
+      mimeApps,
+      contains('application/x-ms-shortcut=app.konyak.Konyak.desktop'),
+    );
+    expect(
+      mimeApps,
+      contains('application/x-msdos-program=app.konyak.Konyak.desktop'),
+    );
+    expect(mimeApps, contains('text/x-msdos-batch=app.konyak.Konyak.desktop'));
+
+    final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+    expect(payload, {
+      'schemaVersion': 1,
+      'linuxFileAssociations': {
+        'desktopEntryPath': desktopPath,
+        'mimeAppsPath': mimeAppsPath,
+        'mimeTypes': [
+          'application/x-ms-dos-executable',
+          'application/x-msdownload',
+          'application/vnd.microsoft.portable-executable',
+          'application/x-msi',
+          'application/x-ms-installer',
+          'application/x-ms-shortcut',
+          'application/x-msdos-program',
+          'text/x-msdos-batch',
+        ],
+      },
+    });
+  });
+
   test('program runner writes a Konyak completed launch log', () {
     final logDirectory = Directory.systemTemp.createTempSync('konyak-run-log-');
     addTearDown(() async {
