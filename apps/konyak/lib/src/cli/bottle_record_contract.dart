@@ -63,6 +63,7 @@ BottleRuntimeSettingsSummary? _parseRuntimeSettings(Object? value) {
     allowedValues: const {'full', 'partial', 'fps', 'off'},
     defaultValue: 'off',
   );
+  final vkd3dProton = _runtimeSettingsBool(value, 'vkd3dProton');
   final buildVersion = _runtimeSettingsInt(
     value,
     'buildVersion',
@@ -88,6 +89,7 @@ BottleRuntimeSettingsSummary? _parseRuntimeSettings(Object? value) {
       dxvk == null ||
       dxvkAsync == null ||
       dxvkHud == null ||
+      vkd3dProton == null ||
       buildVersion == null ||
       retinaMode == null ||
       dpiScaling == null) {
@@ -103,6 +105,7 @@ BottleRuntimeSettingsSummary? _parseRuntimeSettings(Object? value) {
     dxvk: dxvk,
     dxvkAsync: dxvkAsync,
     dxvkHud: dxvkHud,
+    vkd3dProton: vkd3dProton,
     buildVersion: buildVersion,
     retinaMode: retinaMode,
     dpiScaling: dpiScaling,

@@ -193,6 +193,7 @@ class BottleRuntimeSettings {
     this.dxvk = false,
     this.dxvkAsync = true,
     this.dxvkHud = 'off',
+    this.vkd3dProton = false,
     this.buildVersion = 0,
     this.retinaMode = false,
     this.dpiScaling = 96,
@@ -206,6 +207,7 @@ class BottleRuntimeSettings {
   final bool dxvk;
   final bool dxvkAsync;
   final String dxvkHud;
+  final bool vkd3dProton;
   final int buildVersion;
   final bool retinaMode;
   final int dpiScaling;
@@ -219,6 +221,7 @@ class BottleRuntimeSettings {
     bool? dxvk,
     bool? dxvkAsync,
     String? dxvkHud,
+    bool? vkd3dProton,
     int? buildVersion,
     bool? retinaMode,
     int? dpiScaling,
@@ -232,6 +235,7 @@ class BottleRuntimeSettings {
       dxvk: dxvk ?? this.dxvk,
       dxvkAsync: dxvkAsync ?? this.dxvkAsync,
       dxvkHud: dxvkHud ?? this.dxvkHud,
+      vkd3dProton: vkd3dProton ?? this.vkd3dProton,
       buildVersion: buildVersion ?? this.buildVersion,
       retinaMode: retinaMode ?? this.retinaMode,
       dpiScaling: dpiScaling ?? this.dpiScaling,
@@ -270,6 +274,7 @@ class BottleRuntimeSettings {
       allowedValues: const {'full', 'partial', 'fps', 'off'},
       defaultValue: 'off',
     );
+    final vkd3dProton = _runtimeSettingsBool(settings, 'vkd3dProton');
     final buildVersion = _runtimeSettingsInt(
       settings,
       'buildVersion',
@@ -295,6 +300,7 @@ class BottleRuntimeSettings {
         dxvk == null ||
         dxvkAsync == null ||
         dxvkHud == null ||
+        vkd3dProton == null ||
         buildVersion == null ||
         retinaMode == null ||
         dpiScaling == null) {
@@ -310,6 +316,7 @@ class BottleRuntimeSettings {
       dxvk: dxvk,
       dxvkAsync: dxvkAsync,
       dxvkHud: dxvkHud,
+      vkd3dProton: vkd3dProton,
       buildVersion: buildVersion,
       retinaMode: retinaMode,
       dpiScaling: dpiScaling,
@@ -326,6 +333,7 @@ class BottleRuntimeSettings {
       'dxvk': dxvk,
       'dxvkAsync': dxvkAsync,
       'dxvkHud': dxvkHud,
+      'vkd3dProton': vkd3dProton,
       'buildVersion': buildVersion,
       'retinaMode': retinaMode,
       'dpiScaling': dpiScaling,
@@ -392,6 +400,7 @@ class BottleRuntimeSettings {
         other.dxvk == dxvk &&
         other.dxvkAsync == dxvkAsync &&
         other.dxvkHud == dxvkHud &&
+        other.vkd3dProton == vkd3dProton &&
         other.buildVersion == buildVersion &&
         other.retinaMode == retinaMode &&
         other.dpiScaling == dpiScaling;
@@ -408,6 +417,7 @@ class BottleRuntimeSettings {
       dxvk,
       dxvkAsync,
       dxvkHud,
+      vkd3dProton,
       buildVersion,
       retinaMode,
       dpiScaling,
@@ -9888,12 +9898,31 @@ Map<String, String> _linuxWineEnvironmentWithRuntime({
   required Map<String, String> environment,
 }) {
   final wineEnvironment = <String, String>{..._linuxWineEnvironment(bottle)};
+  final dllPathEntries = <String>[];
   if (bottle.runtimeSettings.dxvk) {
     final runtimeRoot = _linuxWineRuntimeRoot(environment);
-    wineEnvironment['WINEDLLPATH'] = [
+    dllPathEntries.addAll([
       _joinPath(runtimeRoot, const ['dxvk', 'x64']),
       _joinPath(runtimeRoot, const ['dxvk', 'x86']),
-    ].join(':');
+    ]);
+  }
+  if (bottle.runtimeSettings.vkd3dProton) {
+    final runtimeRoot = _linuxWineRuntimeRoot(environment);
+    dllPathEntries.addAll([
+      _joinPath(runtimeRoot, const ['vkd3d-proton', 'x64']),
+      _joinPath(runtimeRoot, const ['vkd3d-proton', 'x86']),
+    ]);
+  }
+  if (dllPathEntries.isNotEmpty) {
+    wineEnvironment['WINEDLLPATH'] = dllPathEntries.join(':');
+  }
+
+  final dllOverrides = <String>[
+    if (bottle.runtimeSettings.dxvk) 'dxgi,d3d9,d3d10core,d3d11',
+    if (bottle.runtimeSettings.vkd3dProton) 'd3d12,d3d12core',
+  ];
+  if (dllOverrides.isNotEmpty) {
+    wineEnvironment['WINEDLLOVERRIDES'] = '${dllOverrides.join(',')}=n,b';
   }
 
   return Map.unmodifiable(wineEnvironment);

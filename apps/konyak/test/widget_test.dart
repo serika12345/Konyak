@@ -2888,6 +2888,144 @@ void main() {
   });
 
   testWidgets(
+    'Linux bottle configuration enables vkd3d-proton when runtime has vkd3d-proton',
+    (WidgetTester tester) async {
+      final semantics = tester.ensureSemantics();
+      final runner = _QueuedProcessRunner([
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottles": [
+              {
+                "id": "steam",
+                "name": "Steam",
+                "path": "/home/user/.local/share/konyak/bottles/steam",
+                "windowsVersion": "win10",
+                "runtimeSettings": {
+                  "enhancedSync": "msync",
+                  "metalHud": false,
+                  "metalTrace": false,
+                  "avxEnabled": false,
+                  "dxrEnabled": false,
+                  "dxvk": false,
+                  "dxvkAsync": true,
+                  "dxvkHud": "off",
+                  "vkd3dProton": false,
+                  "buildVersion": 19045,
+                  "retinaMode": false,
+                  "dpiScaling": 144
+                }
+              }
+            ]
+          }
+        ''',
+          stderr: '',
+        ),
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottle": {
+              "id": "steam",
+              "name": "Steam",
+              "path": "/home/user/.local/share/konyak/bottles/steam",
+              "windowsVersion": "win10",
+              "runtimeSettings": {
+                "enhancedSync": "msync",
+                "metalHud": false,
+                "metalTrace": false,
+                "avxEnabled": false,
+                "dxrEnabled": false,
+                "dxvk": false,
+                "dxvkAsync": true,
+                "dxvkHud": "off",
+                "vkd3dProton": false,
+                "buildVersion": 19045,
+                "retinaMode": false,
+                "dpiScaling": 144
+              }
+            }
+          }
+        ''',
+          stderr: '',
+        ),
+        ProcessRunResult(
+          exitCode: 0,
+          stdout: _linuxRuntimeListPayload(),
+          stderr: '',
+        ),
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottle": {
+              "id": "steam",
+              "name": "Steam",
+              "path": "/home/user/.local/share/konyak/bottles/steam",
+              "windowsVersion": "win10",
+              "runtimeSettings": {
+                "enhancedSync": "msync",
+                "metalHud": false,
+                "metalTrace": false,
+                "avxEnabled": false,
+                "dxrEnabled": false,
+                "dxvk": false,
+                "dxvkAsync": true,
+                "dxvkHud": "off",
+                "vkd3dProton": true,
+                "buildVersion": 19045,
+                "retinaMode": false,
+                "dpiScaling": 144
+              }
+            }
+          }
+        ''',
+          stderr: '',
+        ),
+      ]);
+
+      await tester.pumpWidget(
+        _testKonyakApp(
+          platform: KonyakPlatform.linux,
+          cliClient: KonyakCliClient(
+            executable: 'konyak',
+            processRunner: runner,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Bottle Configuration'));
+      await tester.pumpAndSettle();
+
+      expect(
+        tester
+            .getSemantics(
+              find.byKey(const ValueKey('config-vkd3d-proton-switch')),
+            )
+            .flagsCollection
+            .isEnabled,
+        Tristate.isTrue,
+      );
+
+      await tester.tap(
+        find.byKey(const ValueKey('config-vkd3d-proton-switch')),
+      );
+      await tester.pumpAndSettle();
+
+      final settings =
+          jsonDecode(runner.argumentsLog[3][3]) as Map<String, Object?>;
+      expect(settings, containsPair('vkd3dProton', true));
+      expect(runner.argumentsLog[3].last, '--json');
+      semantics.dispose();
+    },
+  );
+
+  testWidgets(
     'bottle configuration disables runtime toggles when capabilities are missing',
     (WidgetTester tester) async {
       final semantics = tester.ensureSemantics();

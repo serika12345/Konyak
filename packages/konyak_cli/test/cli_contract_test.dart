@@ -431,6 +431,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
         'dxvk': false,
         'dxvkAsync': true,
         'dxvkHud': 'off',
+        'vkd3dProton': false,
         'buildVersion': 22631,
         'retinaMode': true,
         'dpiScaling': 144,
@@ -698,6 +699,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       'dxvk': true,
       'dxvkAsync': false,
       'dxvkHud': 'fps',
+      'vkd3dProton': true,
       'buildVersion': 19045,
       'retinaMode': true,
       'dpiScaling': 144,
@@ -735,6 +737,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
         'dxvk': true,
         'dxvkAsync': false,
         'dxvkHud': 'fps',
+        'vkd3dProton': true,
         'buildVersion': 19045,
         'retinaMode': true,
         'dpiScaling': 144,
@@ -751,6 +754,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
         dxvk: true,
         dxvkAsync: false,
         dxvkHud: 'fps',
+        vkd3dProton: true,
         buildVersion: 19045,
         retinaMode: true,
         dpiScaling: 144,
@@ -2600,6 +2604,61 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       containsPair(
         'WINEDLLPATH',
         '/runtime/linux-wine/dxvk/x64:/runtime/linux-wine/dxvk/x86',
+      ),
+    );
+  });
+
+  test('run-program --json applies vkd3d-proton settings on Linux', () {
+    final repository = MemoryBottleRepository(
+      dataHome: '/home/user/.local/share/konyak',
+      bottles: const [
+        BottleRecord(
+          id: 'steam',
+          name: 'Steam',
+          path: '/home/user/.local/share/konyak/bottles/steam',
+          windowsVersion: 'win10',
+          runtimeSettings: BottleRuntimeSettings(
+            enhancedSync: 'msync',
+            vkd3dProton: true,
+          ),
+        ),
+      ],
+    );
+    final runner = RecordingProgramRunner(
+      result: const ProgramRunCompleted(processExitCode: 0),
+    );
+
+    final result = runCli(
+      const [
+        'run-program',
+        'steam',
+        '--program',
+        '/downloads/setup.exe',
+        '--json',
+      ],
+      bottleRepository: repository,
+      programRunPlanner: ProgramRunPlanner(
+        hostPlatform: KonyakHostPlatform.linux,
+        environment: const {
+          'HOME': '/home/user',
+          'KONYAK_LINUX_WINE_HOME': '/runtime/linux-wine',
+        },
+      ),
+      programRunner: runner,
+    );
+
+    expect(result.exitCode, 0);
+    expect(runner.lastRequest?.environment, containsPair('WINEMSYNC', '1'));
+    expect(runner.lastRequest?.environment, containsPair('WINEESYNC', '1'));
+    expect(
+      runner.lastRequest?.environment,
+      containsPair('WINEDLLOVERRIDES', 'd3d12,d3d12core=n,b'),
+    );
+    expect(
+      runner.lastRequest?.environment,
+      containsPair(
+        'WINEDLLPATH',
+        '/runtime/linux-wine/vkd3d-proton/x64:/runtime/linux-wine/vkd3d-proton/x86',
       ),
     );
   });

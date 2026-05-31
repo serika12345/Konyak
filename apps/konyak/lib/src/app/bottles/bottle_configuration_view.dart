@@ -54,6 +54,8 @@ class BottleConfigurationView extends StatelessWidget {
         (platform.isMacOS
             ? _isRuntimeComponentAvailable('dxvk-macos')
             : _isRuntimeComponentAvailable('dxvk'));
+    final canUseVkd3dProton =
+        canChangeSettings && _isRuntimeComponentAvailable('vkd3d-proton');
     final canUseMetal =
         canChangeSettings &&
         !hasPendingRuntimeSettings &&
@@ -226,12 +228,20 @@ class BottleConfigurationView extends StatelessWidget {
           ),
           if (platform.isLinux) ...[
             const SizedBox(height: 14),
-            const BottleConfigurationSection(
+            BottleConfigurationSection(
               title: 'Vulkan',
               children: [
-                BottleConfigurationRow(
-                  label: 'D3D12',
-                  trailing: Text('vkd3d-proton'),
+                BottleConfigurationSwitchRow(
+                  switchKey: const ValueKey('config-vkd3d-proton-switch'),
+                  label: 'vkd3d-proton',
+                  value: settings.vkd3dProton,
+                  onChanged: !canUseVkd3dProton
+                      ? null
+                      : (value) {
+                          _updateRuntimeSettings(
+                            settings.copyWith(vkd3dProton: value),
+                          );
+                        },
                 ),
               ],
             ),

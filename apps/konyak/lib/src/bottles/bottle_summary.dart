@@ -44,6 +44,7 @@ class BottleRuntimeSettingsSummary {
     this.dxvk = false,
     this.dxvkAsync = true,
     this.dxvkHud = 'off',
+    this.vkd3dProton = false,
     this.buildVersion = 0,
     this.retinaMode = false,
     this.dpiScaling = 96,
@@ -57,6 +58,7 @@ class BottleRuntimeSettingsSummary {
   final bool dxvk;
   final bool dxvkAsync;
   final String dxvkHud;
+  final bool vkd3dProton;
   final int buildVersion;
   final bool retinaMode;
   final int dpiScaling;
@@ -70,6 +72,7 @@ class BottleRuntimeSettingsSummary {
     bool? dxvk,
     bool? dxvkAsync,
     String? dxvkHud,
+    bool? vkd3dProton,
     int? buildVersion,
     bool? retinaMode,
     int? dpiScaling,
@@ -83,6 +86,7 @@ class BottleRuntimeSettingsSummary {
       dxvk: dxvk ?? this.dxvk,
       dxvkAsync: dxvkAsync ?? this.dxvkAsync,
       dxvkHud: dxvkHud ?? this.dxvkHud,
+      vkd3dProton: vkd3dProton ?? this.vkd3dProton,
       buildVersion: buildVersion ?? this.buildVersion,
       retinaMode: retinaMode ?? this.retinaMode,
       dpiScaling: dpiScaling ?? this.dpiScaling,
@@ -99,6 +103,7 @@ class BottleRuntimeSettingsSummary {
       'dxvk': dxvk,
       'dxvkAsync': dxvkAsync,
       'dxvkHud': dxvkHud,
+      'vkd3dProton': vkd3dProton,
       'buildVersion': buildVersion,
       'retinaMode': retinaMode,
       'dpiScaling': dpiScaling,
