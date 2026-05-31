@@ -35,6 +35,7 @@ class KonyakHome extends StatefulWidget {
     this.onPinProgram,
     this.programSettings = const <String, ProgramSettingsSummary>{},
     this.loadingProgramSettings = const <String>{},
+    this.isRuntimeCapabilitiesLoading = false,
     this.pendingRuntimeSettingsControls = const <String, String>{},
     this.onLoadPinnedProgramSettings,
     this.onProgramSettingsChanged,
@@ -72,6 +73,7 @@ class KonyakHome extends StatefulWidget {
   final ValueChanged<BottleSummary>? onPinProgram;
   final Map<String, ProgramSettingsSummary> programSettings;
   final Set<String> loadingProgramSettings;
+  final bool isRuntimeCapabilitiesLoading;
   final Map<String, String> pendingRuntimeSettingsControls;
   final void Function(BottleSummary bottle, PinnedProgramSummary program)?
   onLoadPinnedProgramSettings;
@@ -253,6 +255,8 @@ class _KonyakHomeState extends State<KonyakHome> {
                             programPath: selectedProgram.path,
                           ),
                         ),
+                    isRuntimeCapabilitiesLoading:
+                        widget.isRuntimeCapabilitiesLoading,
                     pendingRuntimeSettingsControlKey: selectedBottle == null
                         ? null
                         : widget.pendingRuntimeSettingsControls[selectedBottle

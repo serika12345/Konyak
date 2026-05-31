@@ -24,6 +24,7 @@ class BottleConfigurationView extends StatelessWidget {
     super.key,
     required this.platform,
     required this.runtime,
+    required this.isRuntimeCapabilitiesLoading,
     required this.bottle,
     required this.pendingRuntimeSettingsControlKey,
     required this.onRuntimeSettingsChanged,
@@ -31,6 +32,7 @@ class BottleConfigurationView extends StatelessWidget {
 
   final KonyakPlatform platform;
   final RuntimeSummary? runtime;
+  final bool isRuntimeCapabilitiesLoading;
   final BottleSummary bottle;
   final String? pendingRuntimeSettingsControlKey;
   final RuntimeSettingsChanged? onRuntimeSettingsChanged;
@@ -60,6 +62,16 @@ class BottleConfigurationView extends StatelessWidget {
         canChangeSettings &&
         !hasPendingRuntimeSettings &&
         _isRuntimeComponentAvailable('gptk-d3dmetal');
+
+    if (isRuntimeCapabilitiesLoading) {
+      return const Center(
+        child: SizedBox.square(
+          key: ValueKey('bottle-configuration-runtime-loading'),
+          dimension: 24,
+          child: CircularProgressIndicator(strokeWidth: 2.5),
+        ),
+      );
+    }
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),

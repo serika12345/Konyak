@@ -29,6 +29,7 @@ class KonyakBottleDetail extends StatelessWidget {
     required this.selectedProgram,
     required this.programSettings,
     required this.isProgramSettingsLoading,
+    required this.isRuntimeCapabilitiesLoading,
     required this.pendingRuntimeSettingsControlKey,
     required this.onBackToBottle,
     required this.onShowBottleConfiguration,
@@ -62,6 +63,7 @@ class KonyakBottleDetail extends StatelessWidget {
   final PinnedProgramSummary? selectedProgram;
   final ProgramSettingsSummary? programSettings;
   final bool isProgramSettingsLoading;
+  final bool isRuntimeCapabilitiesLoading;
   final String? pendingRuntimeSettingsControlKey;
   final VoidCallback? onBackToBottle;
   final ValueChanged<BottleSummary>? onShowBottleConfiguration;
@@ -137,6 +139,7 @@ class KonyakBottleDetail extends StatelessWidget {
                 ? BottleConfigurationView(
                     platform: platform,
                     runtime: runtime,
+                    isRuntimeCapabilitiesLoading: isRuntimeCapabilitiesLoading,
                     bottle: activeBottle,
                     pendingRuntimeSettingsControlKey:
                         pendingRuntimeSettingsControlKey,

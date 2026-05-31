@@ -1791,6 +1791,7 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
           onPinProgram: _pinProgram,
           programSettings: _programSettings,
           loadingProgramSettings: _loadingProgramSettings,
+          isRuntimeCapabilitiesLoading: !_hasLoadedKnownRuntimes,
           onLoadPinnedProgramSettings: (bottle, program) {
             _loadPinnedProgramSettings(bottle: bottle, program: program);
           },

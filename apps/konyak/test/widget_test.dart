@@ -2607,6 +2607,159 @@ void main() {
     semantics.dispose();
   });
 
+  testWidgets('bottle configuration waits for capabilities before toggles', (
+    WidgetTester tester,
+  ) async {
+    final runtimeListCompleter = Completer<ProcessRunResult>();
+    final runner = _FutureQueuedProcessRunner([
+      Future.value(
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottles": [
+              {
+                "id": "steam",
+                "name": "Steam",
+                "path": "/Users/user/Library/Application Support/Konyak/Bottles/Steam",
+                "windowsVersion": "win10",
+                "runtimeSettings": {
+                  "enhancedSync": "msync",
+                  "metalHud": false,
+                  "metalTrace": false,
+                  "avxEnabled": false,
+                  "dxrEnabled": false,
+                  "dxvk": false,
+                  "dxvkAsync": true,
+                  "dxvkHud": "off",
+                  "buildVersion": 19045,
+                  "retinaMode": false,
+                  "dpiScaling": 144
+                }
+              }
+            ]
+          }
+        ''',
+          stderr: '',
+        ),
+      ),
+      Future.value(
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottle": {
+              "id": "steam",
+              "name": "Steam",
+              "path": "/Users/user/Library/Application Support/Konyak/Bottles/Steam",
+              "windowsVersion": "win10",
+              "runtimeSettings": {
+                "enhancedSync": "msync",
+                "metalHud": false,
+                "metalTrace": false,
+                "avxEnabled": false,
+                "dxrEnabled": false,
+                "dxvk": false,
+                "dxvkAsync": true,
+                "dxvkHud": "off",
+                "buildVersion": 19045,
+                "retinaMode": false,
+                "dpiScaling": 144
+              }
+            }
+          }
+        ''',
+          stderr: '',
+        ),
+      ),
+      runtimeListCompleter.future,
+      Future.value(
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottle": {
+              "id": "steam",
+              "name": "Steam",
+              "path": "/Users/user/Library/Application Support/Konyak/Bottles/Steam",
+              "windowsVersion": "win10",
+              "runtimeSettings": {
+                "enhancedSync": "msync",
+                "metalHud": false,
+                "metalTrace": false,
+                "avxEnabled": false,
+                "dxrEnabled": false,
+                "dxvk": true,
+                "dxvkAsync": true,
+                "dxvkHud": "off",
+                "buildVersion": 19045,
+                "retinaMode": false,
+                "dpiScaling": 144
+              }
+            }
+          }
+        ''',
+          stderr: '',
+        ),
+      ),
+    ]);
+
+    await tester.pumpWidget(
+      _testKonyakApp(
+        cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Bottle Configuration'));
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.text('Bottle Configuration'), findsOneWidget);
+    expect(find.byTooltip('Back to bottle'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('bottle-configuration-runtime-loading')),
+      findsOneWidget,
+    );
+    expect(find.byKey(const ValueKey('config-dxvk-switch')), findsNothing);
+    expect(runner.argumentsLog, const [
+      ['list-bottles', '--json'],
+      ['inspect-bottle', 'steam', '--json'],
+      ['list-runtimes', '--json'],
+    ]);
+
+    runtimeListCompleter.complete(
+      ProcessRunResult(
+        exitCode: 0,
+        stdout: _macosRuntimeListPayload(),
+        stderr: '',
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byTooltip('Back to bottle'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('bottle-configuration-runtime-loading')),
+      findsNothing,
+    );
+    expect(find.byKey(const ValueKey('config-dxvk-switch')), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('config-dxvk-switch')));
+    await tester.pumpAndSettle();
+
+    expect(runner.argumentsLog[3].take(3).toList(growable: false), const [
+      'set-runtime-settings',
+      'steam',
+      '--settings-json',
+    ]);
+    final settings =
+        jsonDecode(runner.argumentsLog[3][3]) as Map<String, Object?>;
+    expect(settings, containsPair('dxvk', true));
+  });
+
   testWidgets('Linux bottle configuration enables DXVK when runtime has DXVK', (
     WidgetTester tester,
   ) async {
