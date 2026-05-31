@@ -4885,6 +4885,118 @@ corefonts                Microsoft Core Fonts
     });
   });
 
+  test(
+    'terminate-wine-processes --bottle --json terminates one bottle prefix',
+    () {
+      final repository = MemoryBottleRepository(
+        dataHome: '/data',
+        bottles: const [
+          BottleRecord(
+            id: 'alpha',
+            name: 'Alpha',
+            path: '/bottles/alpha',
+            windowsVersion: 'win10',
+          ),
+          BottleRecord(
+            id: 'beta',
+            name: 'Beta',
+            path: '/bottles/beta',
+            windowsVersion: 'win11',
+          ),
+        ],
+      );
+      final runner = RecordingProgramRunner(
+        result: const ProgramRunCompleted(processExitCode: 0),
+      );
+
+      final result = runCli(
+        const ['terminate-wine-processes', '--bottle', 'beta', '--json'],
+        bottleCatalog: repository,
+        programRunPlanner: ProgramRunPlanner(
+          hostPlatform: KonyakHostPlatform.linux,
+        ),
+        programRunner: runner,
+      );
+
+      expect(result.exitCode, 0);
+      expect(result.stderr, isEmpty);
+      expect(runner.requests, hasLength(1));
+      expect(runner.requests.single.executable, 'wineserver');
+      expect(runner.requests.single.arguments, const ['-k']);
+      expect(runner.requests.single.environment, {
+        'WINEPREFIX': '/bottles/beta',
+      });
+
+      final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+      expect(payload, {
+        'schemaVersion': 1,
+        'wineProcessTermination': {
+          'hasFailures': false,
+          'bottles': [
+            {
+              'bottleId': 'beta',
+              'status': 'terminated',
+              'runnerKind': 'wineserver',
+              'executable': 'wineserver',
+              'argv': ['wineserver', '-k'],
+              'processExitCode': 0,
+            },
+          ],
+        },
+      });
+    },
+  );
+
+  test(
+    'terminate-wine-processes --bottle --json treats no running processes as success',
+    () {
+      final repository = MemoryBottleRepository(
+        dataHome: '/data',
+        bottles: const [
+          BottleRecord(
+            id: 'steam',
+            name: 'Steam',
+            path: '/bottles/steam',
+            windowsVersion: 'win10',
+          ),
+        ],
+      );
+      final runner = RecordingProgramRunner(
+        result: const ProgramRunCompleted(processExitCode: 1),
+      );
+
+      final result = runCli(
+        const ['terminate-wine-processes', '--bottle', 'steam', '--json'],
+        bottleCatalog: repository,
+        programRunPlanner: ProgramRunPlanner(
+          hostPlatform: KonyakHostPlatform.linux,
+        ),
+        programRunner: runner,
+      );
+
+      expect(result.exitCode, 0);
+      expect(result.stderr, isEmpty);
+
+      final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+      expect(payload, {
+        'schemaVersion': 1,
+        'wineProcessTermination': {
+          'hasFailures': false,
+          'bottles': [
+            {
+              'bottleId': 'steam',
+              'status': 'terminated',
+              'runnerKind': 'wineserver',
+              'executable': 'wineserver',
+              'argv': ['wineserver', '-k'],
+              'processExitCode': 1,
+            },
+          ],
+        },
+      });
+    },
+  );
+
   test('list-wine-processes --json lists process records with icons', () {
     final tempDirectory = Directory.systemTemp.createTempSync(
       'konyak-process-list-test-',

@@ -1616,6 +1616,12 @@ class WineProcessTerminationRequest {
   final String processId;
 }
 
+class WineProcessGroupTerminationRequest {
+  const WineProcessGroupTerminationRequest({this.bottleId});
+
+  final String? bottleId;
+}
+
 sealed class ProgramUpdateResult {
   const ProgramUpdateResult();
 }
@@ -6798,6 +6804,7 @@ CliResult _terminateWineProcessesJsonResult({
   required BottleCatalog bottleCatalog,
   required ProgramRunPlanner programRunPlanner,
   required ProgramRunner? programRunner,
+  String? bottleId,
 }) {
   final runner = programRunner;
   if (runner == null) {
@@ -6809,7 +6816,15 @@ CliResult _terminateWineProcessesJsonResult({
   }
 
   final records = <WineProcessTerminationRecord>[];
-  for (final bottle in bottleCatalog.listBottles()) {
+  final bottles = bottleCatalog.listBottles();
+  final targetBottles = bottleId == null
+      ? bottles
+      : <BottleRecord>[?_findBottle(bottles, bottleId)];
+  if (bottleId != null && targetBottles.isEmpty) {
+    return _bottleNotFoundError(bottleId);
+  }
+
+  for (final bottle in targetBottles) {
     final request = programRunPlanner.planWineProcessTermination(
       bottle: bottle,
     );
@@ -6819,7 +6834,9 @@ CliResult _terminateWineProcessesJsonResult({
         records.add(
           WineProcessTerminationRecord(
             bottleId: bottle.id,
-            status: processExitCode == 0 ? 'terminated' : 'failed',
+            status: _isSuccessfulWineServerTerminationExit(processExitCode)
+                ? 'terminated'
+                : 'failed',
             runnerKind: request.runnerKind,
             executable: request.executable,
             argv: request.argv,
@@ -6841,6 +6858,10 @@ CliResult _terminateWineProcessesJsonResult({
   }
 
   return _wineProcessTerminationJsonResult(records);
+}
+
+bool _isSuccessfulWineServerTerminationExit(int processExitCode) {
+  return processExitCode == 0 || processExitCode == 1;
 }
 
 CliResult _listWineProcessesJsonResult({
@@ -7314,11 +7335,14 @@ CliResult _runCli(
     );
   }
 
-  if (_isJsonWineProcessTerminationCommand(arguments)) {
+  final wineProcessGroupTerminationRequest =
+      _parseJsonWineProcessGroupTerminationRequest(arguments);
+  if (wineProcessGroupTerminationRequest != null) {
     return _terminateWineProcessesJsonResult(
       bottleCatalog: activeBottleCatalog,
       programRunPlanner: programRunPlanner,
       programRunner: programRunner,
+      bottleId: wineProcessGroupTerminationRequest.bottleId,
     );
   }
 
@@ -8354,7 +8378,7 @@ Usage:
   konyak install-linux-file-associations --json
   konyak list-wine-processes --json
   konyak terminate-wine-process --bottle <id> --process <pid> --json
-  konyak terminate-wine-processes --json
+  konyak terminate-wine-processes [--bottle <id>] --json
   konyak list-bottles --json
   konyak inspect-bottle <id> --json
   konyak list-bottle-programs <id> --json
@@ -8474,10 +8498,27 @@ WineProcessTerminationRequest? _parseJsonWineProcessTerminationRequest(
   );
 }
 
-bool _isJsonWineProcessTerminationCommand(List<String> arguments) {
-  return arguments.length == 2 &&
+WineProcessGroupTerminationRequest?
+_parseJsonWineProcessGroupTerminationRequest(List<String> arguments) {
+  if (arguments.length == 2 &&
       arguments.first == 'terminate-wine-processes' &&
-      arguments.last == '--json';
+      arguments.last == '--json') {
+    return const WineProcessGroupTerminationRequest();
+  }
+
+  if (arguments.length != 4 ||
+      arguments.first != 'terminate-wine-processes' ||
+      arguments[1] != '--bottle' ||
+      arguments.last != '--json') {
+    return null;
+  }
+
+  final bottleId = arguments[2].trim();
+  if (bottleId.isEmpty) {
+    return null;
+  }
+
+  return WineProcessGroupTerminationRequest(bottleId: bottleId);
 }
 
 bool _isJsonBottleInspectCommand(List<String> arguments) {

@@ -557,8 +557,14 @@ final class KonyakCliClient {
     );
   }
 
-  Future<WineProcessTerminationLoadResult> terminateWineProcesses() async {
-    final result = await _run(const ['terminate-wine-processes', '--json']);
+  Future<WineProcessTerminationLoadResult> terminateWineProcesses({
+    String? bottleId,
+  }) async {
+    final result = await _run([
+      'terminate-wine-processes',
+      if (bottleId != null) ...['--bottle', bottleId],
+      '--json',
+    ]);
     return _wineProcessTerminationResultFromCommand(result);
   }
 

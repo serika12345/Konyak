@@ -311,6 +311,7 @@ enum BottleContextMenuAction {
   remove,
   move,
   exportArchive,
+  terminateProcesses,
   showInFinder,
 }
 
@@ -343,6 +344,15 @@ const List<PopupMenuEntry<BottleContextMenuAction>> _bottleContextMenuItems = [
     child: BottleContextMenuItem(
       icon: Icons.ios_share_outlined,
       label: 'Export as Archive...',
+    ),
+  ),
+  PopupMenuDivider(height: 8),
+  PopupMenuItem<BottleContextMenuAction>(
+    value: BottleContextMenuAction.terminateProcesses,
+    height: 34,
+    child: BottleContextMenuItem(
+      icon: Icons.stop_circle_outlined,
+      label: 'Stop All Processes',
     ),
   ),
   PopupMenuDivider(height: 8),
@@ -395,6 +405,7 @@ String bottleContextMenuActionLabel(BottleContextMenuAction action) {
     BottleContextMenuAction.remove => 'Remove',
     BottleContextMenuAction.move => 'Move',
     BottleContextMenuAction.exportArchive => 'Export as Archive',
+    BottleContextMenuAction.terminateProcesses => 'Stop All Processes',
     BottleContextMenuAction.showInFinder => 'Show in Finder',
   };
 }

@@ -556,6 +556,25 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
     unawaited(widget.cliClient.terminateWineProcesses());
   }
 
+  Future<void> _terminateBottleProcesses(BottleSummary bottle) async {
+    final result = await widget.cliClient.terminateWineProcesses(
+      bottleId: bottle.id,
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    final message = switch (result) {
+      TerminatedWineProcesses() => 'Stopped processes in ${bottle.name}',
+      WineProcessTerminationLoadFailure(:final message) => message,
+    };
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
   Future<void> _createBottle() async {
     await _createBottleFromDialog();
   }
@@ -1649,6 +1668,7 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
           },
           onShowBottlePrograms: _showBottlePrograms,
           onShowProcessManager: _showProcessManager,
+          onTerminateBottleProcesses: _terminateBottleProcesses,
         ),
         if (_isCreatingBottle)
           const BlockingProgressOverlay(

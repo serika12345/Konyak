@@ -438,7 +438,75 @@ void main() {
     expect(find.text('Remove...'), findsOneWidget);
     expect(find.text('Move...'), findsOneWidget);
     expect(find.text('Export as Archive...'), findsOneWidget);
+    expect(find.text('Stop All Processes'), findsOneWidget);
     expect(find.text('Show in Finder'), findsOneWidget);
+  });
+
+  testWidgets('bottle context menu stops all Wine processes in the bottle', (
+    WidgetTester tester,
+  ) async {
+    final runner = _QueuedProcessRunner([
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottles": [
+              {
+                "id": "steam",
+                "name": "Steam",
+                "path": "/Users/user/Library/Application Support/Konyak/Bottles/Steam",
+                "windowsVersion": "win10"
+              }
+            ]
+          }
+        ''',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "wineProcessTermination": {
+              "hasFailures": false,
+              "bottles": [
+                {
+                  "bottleId": "steam",
+                  "status": "terminated",
+                  "runnerKind": "wineserver",
+                  "executable": "wineserver",
+                  "argv": ["wineserver", "-k"],
+                  "processExitCode": 0
+                }
+              ]
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+    ]);
+
+    await tester.pumpWidget(
+      _testKonyakApp(
+        cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tapAt(
+      tester.getCenter(find.byKey(const ValueKey('sidebar-bottle-steam'))),
+      buttons: kSecondaryMouseButton,
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Stop All Processes'));
+    await tester.pumpAndSettle();
+
+    expect(runner.argumentsLog, const [
+      ['list-bottles', '--json'],
+      ['terminate-wine-processes', '--bottle', 'steam', '--json'],
+    ]);
+    expect(find.text('Stopped processes in Steam'), findsOneWidget);
   });
 
   testWidgets('bottle context menu opens the bottle folder', (

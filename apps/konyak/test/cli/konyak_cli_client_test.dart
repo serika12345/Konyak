@@ -916,6 +916,50 @@ void main() {
     expect(result, isA<TerminatedWineProcesses>());
   });
 
+  test(
+    'terminates Wine processes in one bottle through the JSON CLI contract',
+    () async {
+      final runner = _FakeProcessRunner(
+        result: const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+          {
+            "schemaVersion": 1,
+            "wineProcessTermination": {
+              "hasFailures": false,
+              "bottles": [
+                {
+                  "bottleId": "steam",
+                  "status": "terminated",
+                  "runnerKind": "wineserver",
+                  "executable": "wineserver",
+                  "argv": ["wineserver", "-k"],
+                  "processExitCode": 0
+                }
+              ]
+            }
+          }
+        ''',
+          stderr: '',
+        ),
+      );
+      final client = KonyakCliClient(
+        executable: 'konyak',
+        processRunner: runner,
+      );
+
+      final result = await client.terminateWineProcesses(bottleId: 'steam');
+
+      expect(runner.arguments, const [
+        'terminate-wine-processes',
+        '--bottle',
+        'steam',
+        '--json',
+      ]);
+      expect(result, isA<TerminatedWineProcesses>());
+    },
+  );
+
   test('lists Wine processes through the JSON CLI contract', () async {
     final runner = _FakeProcessRunner(
       result: const ProcessRunResult(

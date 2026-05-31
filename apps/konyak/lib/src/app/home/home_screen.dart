@@ -44,6 +44,7 @@ class KonyakHome extends StatefulWidget {
     this.onOpenBottleLocation,
     this.onShowBottlePrograms,
     this.onShowProcessManager,
+    this.onTerminateBottleProcesses,
   });
 
   final KonyakPlatform platform;
@@ -93,6 +94,7 @@ class KonyakHome extends StatefulWidget {
   onOpenBottleLocation;
   final ValueChanged<BottleSummary>? onShowBottlePrograms;
   final VoidCallback? onShowProcessManager;
+  final ValueChanged<BottleSummary>? onTerminateBottleProcesses;
 
   @override
   State<KonyakHome> createState() => _KonyakHomeState();
@@ -343,6 +345,8 @@ class _KonyakHomeState extends State<KonyakHome> {
         widget.onOpenBottleLocation?.call(bottle, 'root');
       case BottleContextMenuAction.exportArchive:
         widget.onExportBottleArchive?.call(bottle);
+      case BottleContextMenuAction.terminateProcesses:
+        widget.onTerminateBottleProcesses?.call(bottle);
     }
   }
 }
