@@ -193,6 +193,7 @@ class _KonyakHomeState extends State<KonyakHome> {
                   showExpandedContent: _showExpandedSidebarContent,
                   onAnimationEnd: _handleSidebarAnimationEnd,
                   expandedSidebar: KonyakSidebar(
+                    reserveLeadingWindowControlsSpace: widget.platform.isMacOS,
                     bottles: filteredBottles,
                     selectedBottleId: selectedBottle?.id,
                     searchController: _searchController,
@@ -208,6 +209,7 @@ class _KonyakHomeState extends State<KonyakHome> {
                     onBottleContextMenuAction: _handleBottleContextMenuAction,
                   ),
                   collapsedSidebar: CollapsedSidebarToggle(
+                    reserveLeadingWindowControlsSpace: widget.platform.isMacOS,
                     onToggleSidebar: _toggleSidebar,
                   ),
                 ),

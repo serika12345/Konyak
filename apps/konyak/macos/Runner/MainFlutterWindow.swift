@@ -19,6 +19,10 @@ class MainFlutterWindow: NSWindow {
     self.contentViewController = flutterViewController
     self.contentMinSize = NSSize(width: 600, height: 316)
     self.titleVisibility = .hidden
+    // ネイティブっぽい見た目にするため、タイトルバーを透明にして、ウィンドウ全体をコンテンツビューとして使用する
+    self.titlebarAppearsTransparent = true
+    self.styleMask.insert(.fullSizeContentView)
+    self.isMovableByWindowBackground = true
     if let appDelegate = NSApplication.shared.delegate as? AppDelegate {
       appDelegate.configureMenuChannel(
         binaryMessenger: flutterViewController.engine.binaryMessenger

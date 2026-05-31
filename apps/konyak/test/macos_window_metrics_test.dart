@@ -41,6 +41,19 @@ void main() {
     expect(source, matches(RegExp(r'titleVisibility\s*=\s*\.hidden')));
   });
 
+  test('macOS runner extends Flutter content into the titlebar', () {
+    final source = File(
+      'macos/Runner/MainFlutterWindow.swift',
+    ).readAsStringSync();
+
+    expect(source, matches(RegExp(r'titlebarAppearsTransparent\s*=\s*true')));
+    expect(
+      source,
+      matches(RegExp(r'styleMask\.insert\(\.fullSizeContentView\)')),
+    );
+    expect(source, matches(RegExp(r'isMovableByWindowBackground\s*=\s*true')));
+  });
+
   test('macOS app menu opens Settings with the standard shortcut', () {
     final xib = File('macos/Runner/Base.lproj/MainMenu.xib').readAsStringSync();
     final appDelegate = File(

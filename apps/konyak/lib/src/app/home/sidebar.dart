@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import '../../bottles/bottle_summary.dart';
 import '../app_constants.dart';
 
+const _defaultSidebarTopPadding = 12.0;
+const _sidebarTopPaddingWithWindowControls = 52.0;
+
 class AnimatedSidebarSlot extends StatelessWidget {
   const AnimatedSidebarSlot({
     super.key,
@@ -46,6 +49,7 @@ class AnimatedSidebarSlot extends StatelessWidget {
 class KonyakSidebar extends StatelessWidget {
   const KonyakSidebar({
     super.key,
+    required this.reserveLeadingWindowControlsSpace,
     required this.bottles,
     required this.selectedBottleId,
     required this.searchController,
@@ -55,6 +59,7 @@ class KonyakSidebar extends StatelessWidget {
     required this.onBottleContextMenuAction,
   });
 
+  final bool reserveLeadingWindowControlsSpace;
   final List<BottleSummary> bottles;
   final String? selectedBottleId;
   final TextEditingController searchController;
@@ -67,6 +72,9 @@ class KonyakSidebar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = KonyakThemeColors.of(context);
+    final topPadding = reserveLeadingWindowControlsSpace
+        ? _sidebarTopPaddingWithWindowControls
+        : _defaultSidebarTopPadding;
 
     return Container(
       width: sidebarExpandedWidth,
@@ -77,7 +85,7 @@ class KonyakSidebar extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(10, 12, 10, 0),
+              padding: EdgeInsets.fromLTRB(10, topPadding, 10, 0),
               child: Row(
                 children: [
                   IconButton(
@@ -179,13 +187,21 @@ class KonyakSidebar extends StatelessWidget {
 }
 
 class CollapsedSidebarToggle extends StatelessWidget {
-  const CollapsedSidebarToggle({super.key, required this.onToggleSidebar});
+  const CollapsedSidebarToggle({
+    super.key,
+    required this.reserveLeadingWindowControlsSpace,
+    required this.onToggleSidebar,
+  });
 
+  final bool reserveLeadingWindowControlsSpace;
   final VoidCallback onToggleSidebar;
 
   @override
   Widget build(BuildContext context) {
     final colors = KonyakThemeColors.of(context);
+    final topPadding = reserveLeadingWindowControlsSpace
+        ? _sidebarTopPaddingWithWindowControls
+        : _defaultSidebarTopPadding;
 
     return Container(
       width: sidebarCollapsedWidth,
@@ -195,7 +211,7 @@ class CollapsedSidebarToggle extends StatelessWidget {
         child: Align(
           alignment: Alignment.topCenter,
           child: Padding(
-            padding: const EdgeInsets.only(top: 12),
+            padding: EdgeInsets.only(top: topPadding),
             child: IconButton(
               tooltip: 'Toggle sidebar',
               onPressed: onToggleSidebar,

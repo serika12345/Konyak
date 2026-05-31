@@ -11,6 +11,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:konyak/main.dart';
 import 'package:konyak/src/app/app_constants.dart';
+import 'package:konyak/src/app/home/sidebar.dart';
+import 'package:konyak/src/bottles/bottle_summary.dart';
 import 'package:konyak/src/cli/konyak_cli_client.dart';
 import 'package:konyak/src/files/bottle_archive_picker.dart';
 import 'package:konyak/src/files/directory_picker.dart';
@@ -218,6 +220,40 @@ void main() {
       expect(toggleCenter.dx, lessThan(searchCenter.dx));
     },
   );
+
+  testWidgets('macOS sidebar reserves titlebar control space', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      _testSidebar(reserveLeadingWindowControlsSpace: true),
+    );
+
+    expect(
+      tester.getTopLeft(find.byTooltip('Toggle sidebar')).dy,
+      greaterThanOrEqualTo(52),
+    );
+    expect(
+      tester.getTopLeft(find.widgetWithText(TextField, 'Search')).dy,
+      greaterThanOrEqualTo(52),
+    );
+  });
+
+  testWidgets('default sidebar keeps compact top padding', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      _testSidebar(reserveLeadingWindowControlsSpace: false),
+    );
+
+    expect(
+      tester.getTopLeft(find.byTooltip('Toggle sidebar')).dy,
+      lessThan(32),
+    );
+    expect(
+      tester.getTopLeft(find.widgetWithText(TextField, 'Search')).dy,
+      lessThan(32),
+    );
+  });
 
   testWidgets('sidebar toggle hides and restores the sidebar', (
     WidgetTester tester,
@@ -5386,6 +5422,24 @@ KonyakApp _testKonyakApp({
     bottleArchivePicker: bottleArchivePicker,
     initialExecutablePaths: initialExecutablePaths,
     enableBackgroundServices: enableBackgroundServices,
+  );
+}
+
+Widget _testSidebar({required bool reserveLeadingWindowControlsSpace}) {
+  return MaterialApp(
+    theme: konyakThemeData(konyakDarkColors),
+    home: Scaffold(
+      body: KonyakSidebar(
+        reserveLeadingWindowControlsSpace: reserveLeadingWindowControlsSpace,
+        bottles: const <BottleSummary>[],
+        selectedBottleId: null,
+        searchController: TextEditingController(),
+        onSearchChanged: (_) {},
+        onToggleSidebar: () {},
+        onBottleSelected: (_) {},
+        onBottleContextMenuAction: (_, _) {},
+      ),
+    ),
   );
 }
 
