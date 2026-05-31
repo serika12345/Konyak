@@ -3400,6 +3400,103 @@ void main() {
     expect(find.text('corefonts'), findsOneWidget);
   });
 
+  testWidgets('winetricks shows progress while installing a selected verb', (
+    WidgetTester tester,
+  ) async {
+    final installCompleter = Completer<ProcessRunResult>();
+    final runner = _FutureQueuedProcessRunner([
+      Future.value(
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottles": [
+              {
+                "id": "steam",
+                "name": "Steam",
+                "path": "/Users/user/Library/Application Support/Konyak/Bottles/Steam",
+                "windowsVersion": "win10"
+              }
+            ]
+          }
+        ''',
+          stderr: '',
+        ),
+      ),
+      Future.value(
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+          {
+            "schemaVersion": 1,
+            "winetricks": {
+              "categories": [
+                {
+                  "id": "fonts",
+                  "name": "Fonts",
+                  "verbs": [
+                    {
+                      "id": "corefonts",
+                      "name": "corefonts",
+                      "description": "Microsoft Core Fonts"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ''',
+          stderr: '',
+        ),
+      ),
+      installCompleter.future,
+    ]);
+
+    await tester.pumpWidget(
+      _testKonyakApp(
+        cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.widgetWithText(TextButton, 'Winetricks'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('corefonts'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Run'));
+    await tester.pump();
+
+    expect(find.byKey(const ValueKey('winetricks-progress')), findsOneWidget);
+    expect(find.text('Installing corefonts...'), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+
+    installCompleter.complete(
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "run": {
+              "bottleId": "steam",
+              "programPath": "corefonts",
+              "runnerKind": "macosWinetricks",
+              "executable": "/runtime/winetricks",
+              "workingDirectory": "/runtime",
+              "argv": ["/runtime/winetricks", "corefonts"],
+              "logPath": "/bottles/steam/logs/latest.log",
+              "processExitCode": 0
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('winetricks-progress')), findsNothing);
+  });
+
   testWidgets('winetricks dialog filters verbs by search query', (
     WidgetTester tester,
   ) async {

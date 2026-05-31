@@ -140,6 +140,7 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
   bool _isLoading = true;
   bool _isCreatingBottle = false;
   bool _isLoadingWinetricks = false;
+  String? _winetricksInstallProgressMessage;
   String? _archiveProgressMessage;
   String? _runtimeInstallProgressMessage;
   double? _runtimeInstallProgressFraction;
@@ -1277,10 +1278,23 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
           return;
         }
 
-        final runResult = await widget.cliClient.runWinetricksVerb(
-          bottleId: bottle.id,
-          verb: verb,
-        );
+        setState(() {
+          _winetricksInstallProgressMessage = 'Installing $verb...';
+        });
+
+        late final ProgramRunLoadResult runResult;
+        try {
+          runResult = await widget.cliClient.runWinetricksVerb(
+            bottleId: bottle.id,
+            verb: verb,
+          );
+        } finally {
+          if (mounted) {
+            setState(() {
+              _winetricksInstallProgressMessage = null;
+            });
+          }
+        }
 
         if (!mounted) {
           return;
@@ -1645,6 +1659,11 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
           const BlockingProgressOverlay(
             key: ValueKey('winetricks-progress'),
             message: 'Loading winetricks packages...',
+          ),
+        if (_winetricksInstallProgressMessage case final message?)
+          BlockingProgressOverlay(
+            key: const ValueKey('winetricks-progress'),
+            message: message,
           ),
         if (_archiveProgressMessage case final message?)
           BlockingProgressOverlay(
