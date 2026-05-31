@@ -10,6 +10,7 @@ fi
 
 vulkan_probe_exe="$("$repo_root/scripts/build_vulkan_probe_exe.zsh")"
 d3d11_probe_exe="$("$repo_root/scripts/build_d3d11_probe_exe.zsh")"
+d3d12_probe_exe="$("$repo_root/scripts/build_d3d12_probe_exe.zsh")"
 cli_dir="$repo_root/packages/konyak_cli"
 
 run_cli_json() {
@@ -120,10 +121,18 @@ prepare_probe \
   "$d3d11_probe_exe" \
   '{"dxvk":true,"dxvkAsync":true,"dxvkHud":"partial","metalHud":false,"metalTrace":false}'
 
+prepare_probe \
+  "gptk-d3d12-probe" \
+  "GPTK D3D12 Probe" \
+  "D3D12 GPTK Probe" \
+  "$d3d12_probe_exe" \
+  '{"dxvk":false,"dxrEnabled":true,"metalHud":false,"metalTrace":false}'
+
 echo "Prepared optional runtime probe bottles:"
 echo "  Vulkan Probe: Vulkan/MoltenVK triangle"
 echo "  Metal HUD Probe: Vulkan triangle with MTL_HUD_ENABLED=1"
 echo "  Metal Trace Probe: Vulkan triangle with METAL_CAPTURE_ENABLED=1"
 echo "  DXVK Probe: D3D11 swapchain with DXVK enabled"
 echo "  DXVK HUD Probe: D3D11 swapchain with DXVK HUD enabled"
+echo "  GPTK D3D12 Probe: D3D12 swapchain through D3DMetal/GPTK"
 echo "Open Konyak and launch each pinned probe from its bottle."

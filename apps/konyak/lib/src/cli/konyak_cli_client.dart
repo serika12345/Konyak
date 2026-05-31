@@ -514,6 +514,14 @@ final class KonyakCliClient {
     };
   }
 
+  Future<ProcessRunResult> installGptkWine({required String sourcePath}) {
+    return _run(['install-gptk-wine', '--from', sourcePath, '--json']);
+  }
+
+  Future<ProcessRunResult> openUrl(String url) {
+    return _run(['open-url', url, '--json']);
+  }
+
   Future<AppSettingsLoadResult> getAppSettings() async {
     final result = await _run(const ['get-app-settings', '--json']);
     return _appSettingsResultFromCommand(

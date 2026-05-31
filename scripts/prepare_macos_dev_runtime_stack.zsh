@@ -42,11 +42,8 @@ readonly WINETRICKS_SCRIPT_URL="${KONYAK_DEV_WINETRICKS_SCRIPT_URL:-https://raw.
 readonly WINETRICKS_SCRIPT_SHA256="${KONYAK_DEV_WINETRICKS_SCRIPT_SHA256:-431f82fc74000e6c864409f1d8fb495d696c03928808e3e8acffc45179312a7b}"
 readonly WINETRICKS_SCRIPT_CACHE="${KONYAK_DEV_WINETRICKS_SCRIPT_CACHE:-${DOWNLOAD_CACHE}/winetricks-20260125}"
 readonly WINETRICKS_VERSION="${KONYAK_DEV_WINETRICKS_VERSION:-20260125}"
-readonly DEFAULT_GPTK_D3DMETAL_ROOT="${ROOT}/.dart_tool/konyak/dev-runtime/macos-components/source-gptk-d3dmetal/Runtime"
 if [[ -n "${KONYAK_DEV_GPTK_D3DMETAL_PATH:-}" ]]; then
   GPTK_D3DMETAL_ROOT="${KONYAK_DEV_GPTK_D3DMETAL_PATH}"
-elif [[ -d "${DEFAULT_GPTK_D3DMETAL_ROOT}" ]]; then
-  GPTK_D3DMETAL_ROOT="${DEFAULT_GPTK_D3DMETAL_ROOT}"
 else
   GPTK_D3DMETAL_ROOT=""
 fi
@@ -282,10 +279,74 @@ resolve_gptk_d3dmetal_path() {
   for candidate in \
     "${source_root}/${relative_path}" \
     "${source_root}/lib/external/${relative_path}" \
+    "${source_root}/redist/lib/external/${relative_path}" \
     "${source_root}/Wine/lib/external/${relative_path}" \
     "${source_root}/Libraries/Wine/lib/external/${relative_path}" \
     "${source_root}/Contents/Resources/wine/lib/external/${relative_path}"; do
     if [[ -e "${candidate}" ]]; then
+      print -r -- "${candidate}"
+      return 0
+    fi
+  done
+
+  return 1
+}
+
+resolve_gptk_d3dmetal_windows_dll() {
+  local source_root="$1"
+  local dll_name="$2"
+  local candidate
+
+  for candidate in \
+    "${source_root}/${dll_name}" \
+    "${source_root}/wine/x86_64-windows/${dll_name}" \
+    "${source_root}/../wine/x86_64-windows/${dll_name}" \
+    "${source_root}/../../wine/x86_64-windows/${dll_name}" \
+    "${source_root}/lib/wine/x86_64-windows/${dll_name}" \
+    "${source_root}/redist/lib/wine/x86_64-windows/${dll_name}" \
+    "${source_root}/Wine/lib/wine/x86_64-windows/${dll_name}" \
+    "${source_root}/Libraries/Wine/lib/wine/x86_64-windows/${dll_name}"; do
+    if [[ -f "${candidate}" ]]; then
+      print -r -- "${candidate}"
+      return 0
+    fi
+  done
+
+  return 1
+}
+
+verify_gptk_macho_file() {
+  local path="$1"
+  local label="$2"
+  local kind
+
+  kind="$(file -b "${path}")"
+  if [[ "${kind}" != *"Mach-O"* ]]; then
+    print -u2 "GPTK/D3DMetal ${label} must be a Mach-O binary, got: ${kind}"
+    return 1
+  fi
+}
+
+verify_gptk_pe_file() {
+  local path="$1"
+  local label="$2"
+  local kind
+
+  kind="$(file -b "${path}")"
+  if [[ "${kind}" != *"PE32"* ]]; then
+    print -u2 "GPTK/D3DMetal ${label} must be a PE binary, got: ${kind}"
+    return 1
+  fi
+}
+
+gptk_framework_binary() {
+  local framework="$1"
+  local candidate
+
+  for candidate in \
+    "${framework}/D3DMetal" \
+    "${framework}/Versions/A/D3DMetal"; do
+    if [[ -f "${candidate}" ]]; then
       print -r -- "${candidate}"
       return 0
     fi
@@ -299,7 +360,10 @@ prepare_gptk_d3dmetal_component() {
   local payload_root="${work_root}/payload/gptk-d3dmetal"
   local archive_path="${SOURCE_ROOT}/components/gptk-d3dmetal.tar.xz"
   local source_framework
+  local source_framework_binary
   local source_dylib
+  local source_d3d12
+  local source_dxgi
 
   if [[ -z "${GPTK_D3DMETAL_ROOT}" ]]; then
     print -r -- ""
@@ -313,17 +377,33 @@ prepare_gptk_d3dmetal_component() {
 
   source_framework="$(resolve_gptk_d3dmetal_path "${GPTK_D3DMETAL_ROOT}" "D3DMetal.framework" || true)"
   source_dylib="$(resolve_gptk_d3dmetal_path "${GPTK_D3DMETAL_ROOT}" "libd3dshared.dylib" || true)"
-  if [[ -z "${source_framework}" || -z "${source_dylib}" ]]; then
-    print -u2 "GPTK/D3DMetal source must contain D3DMetal.framework and libd3dshared.dylib."
+  source_d3d12="$(resolve_gptk_d3dmetal_windows_dll "${GPTK_D3DMETAL_ROOT}" "d3d12.dll" || true)"
+  source_dxgi="$(resolve_gptk_d3dmetal_windows_dll "${GPTK_D3DMETAL_ROOT}" "dxgi.dll" || true)"
+  if [[ -z "${source_framework}" || -z "${source_dylib}" || -z "${source_d3d12}" || -z "${source_dxgi}" ]]; then
+    print -u2 "GPTK/D3DMetal source must contain D3DMetal.framework, libd3dshared.dylib, d3d12.dll, and dxgi.dll."
     exit 69
   fi
+  source_framework_binary="$(gptk_framework_binary "${source_framework}" || true)"
+  if [[ -z "${source_framework_binary}" ]]; then
+    print -u2 "GPTK/D3DMetal source framework must contain a D3DMetal binary."
+    exit 69
+  fi
+  verify_gptk_macho_file "${source_framework_binary}" "framework binary" || exit 69
+  verify_gptk_macho_file "${source_dylib}" "shared library" || exit 69
+  verify_gptk_pe_file "${source_d3d12}" "d3d12.dll" || exit 69
+  verify_gptk_pe_file "${source_dxgi}" "dxgi.dll" || exit 69
 
   reset_dir "${work_root}"
   mkdir -p "${payload_root}/Components/GPTK-D3DMetal/lib/external"
+  mkdir -p "${payload_root}/Components/GPTK-D3DMetal/lib/wine/x86_64-windows"
   cp -R "${source_framework}" \
     "${payload_root}/Components/GPTK-D3DMetal/lib/external/D3DMetal.framework"
   cp -Lf "${source_dylib}" \
     "${payload_root}/Components/GPTK-D3DMetal/lib/external/libd3dshared.dylib"
+  cp -f "${source_d3d12}" \
+    "${payload_root}/Components/GPTK-D3DMetal/lib/wine/x86_64-windows/d3d12.dll"
+  cp -f "${source_dxgi}" \
+    "${payload_root}/Components/GPTK-D3DMetal/lib/wine/x86_64-windows/dxgi.dll"
   write_stack_manifest \
     "${payload_root}/.konyak-runtime-stack.json" \
     "gptk-d3dmetal" \

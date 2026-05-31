@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -8,6 +9,7 @@ import '../cli/konyak_cli_client.dart';
 import '../cli/runtime_install_contract.dart';
 import '../files/bottle_archive_picker.dart';
 import '../files/directory_picker.dart';
+import '../files/gptk_wine_source_picker.dart';
 import '../files/program_file_picker.dart';
 import '../logs/log_reader.dart';
 import '../runtimes/runtime_summary.dart';
@@ -70,6 +72,65 @@ RuntimeSummary? _runtimeForPlatform(
   return null;
 }
 
+RuntimeInstallLoadResult _installedRuntimeForPlatform(
+  List<RuntimeSummary> runtimes,
+  KonyakPlatform platform,
+) {
+  final runtime = _runtimeForPlatform(platform, runtimes);
+  if (runtime == null) {
+    return const RuntimeInstallLoadFailure(
+      exitCode: 75,
+      message: 'Runtime was installed but could not be reloaded.',
+      diagnostic: '',
+    );
+  }
+  return InstalledRuntime(runtime);
+}
+
+String _installGptkFailureMessage(
+  ProcessRunResult result, {
+  required String command,
+}) {
+  final message = _jsonErrorMessage(result.stdout);
+  if (message != null) {
+    return message;
+  }
+  final diagnostic = result.stderr.trim();
+  if (diagnostic.isEmpty) {
+    return '$command failed with exit code ${result.exitCode}.';
+  }
+  return '$command failed with exit code ${result.exitCode}: $diagnostic';
+}
+
+String _openUrlFailureMessage(ProcessRunResult result) {
+  final message = _jsonErrorMessage(result.stdout);
+  if (message != null) {
+    return message;
+  }
+  final diagnostic = result.stderr.trim();
+  if (diagnostic.isEmpty) {
+    return 'open-url failed with exit code ${result.exitCode}.';
+  }
+  return 'open-url failed with exit code ${result.exitCode}: $diagnostic';
+}
+
+String? _jsonErrorMessage(String payload) {
+  try {
+    final decoded = jsonDecode(payload);
+    if (decoded is! Map<String, dynamic>) {
+      return null;
+    }
+    final error = decoded['error'];
+    if (error is! Map<String, dynamic>) {
+      return null;
+    }
+    final message = error['message'];
+    return message is String && message.isNotEmpty ? message : null;
+  } on FormatException {
+    return null;
+  }
+}
+
 bool _supportsSettingsRuntime(KonyakPlatform platform) {
   return platform.isMacOS || platform.isLinux;
 }
@@ -112,6 +173,7 @@ class KonyakHomeLoader extends StatefulWidget {
     required this.logReader,
     required this.programFilePicker,
     required this.directoryPicker,
+    required this.gptkWineSourcePicker,
     required this.bottleArchivePicker,
     this.initialExecutablePaths = const <String>[],
     required this.enableBackgroundServices,
@@ -124,6 +186,7 @@ class KonyakHomeLoader extends StatefulWidget {
   final LogReader logReader;
   final ProgramFilePicker programFilePicker;
   final DirectoryPicker directoryPicker;
+  final GptkWineSourcePicker gptkWineSourcePicker;
   final BottleArchivePicker bottleArchivePicker;
   final List<String> initialExecutablePaths;
   final bool enableBackgroundServices;
@@ -1516,6 +1579,10 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
               onInstallRuntime: _supportsSettingsRuntime(widget.platform)
                   ? _installSettingsRuntime
                   : null,
+              onInstallGptkWine: widget.platform.isMacOS
+                  ? _installGptkWine
+                  : null,
+              onOpenGptkPage: widget.platform.isMacOS ? _openGptkPage : null,
               onSettingsChanged: _setAppSettings,
             ),
           );
@@ -1569,6 +1636,80 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
     }
 
     return result;
+  }
+
+  Future<RuntimeInstallLoadResult> _installGptkWine() async {
+    final sourcePath = await widget.gptkWineSourcePicker.pickSourcePath();
+    if (sourcePath == null || sourcePath.trim().isEmpty) {
+      return const RuntimeInstallLoadFailure(
+        exitCode: 64,
+        message: 'GPTK-compatible Wine source was not selected.',
+        diagnostic: '',
+      );
+    }
+
+    setState(() {
+      _runtimeInstallProgressMessage = 'Installing GPTK-compatible Wine...';
+      _runtimeInstallProgressFraction = 0;
+    });
+
+    final ProcessRunResult installResult;
+    try {
+      installResult = await widget.cliClient.installGptkWine(
+        sourcePath: sourcePath,
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _runtimeInstallProgressMessage = null;
+          _runtimeInstallProgressFraction = null;
+        });
+      }
+    }
+
+    if (installResult.exitCode != 0) {
+      return RuntimeInstallLoadFailure(
+        exitCode: installResult.exitCode,
+        message: _installGptkFailureMessage(
+          installResult,
+          command: 'install-gptk-wine',
+        ),
+        diagnostic: installResult.stderr,
+      );
+    }
+
+    final runtimesResult = await widget.cliClient.listKnownRuntimes();
+    switch (runtimesResult) {
+      case LoadedRuntimeList(:final runtimes):
+        if (mounted) {
+          setState(() {
+            _knownRuntimes = runtimes;
+            _hasLoadedKnownRuntimes = true;
+          });
+        }
+        return _installedRuntimeForPlatform(runtimes, widget.platform);
+      case RuntimeListLoadFailure(
+        :final exitCode,
+        :final message,
+        :final diagnostic,
+      ):
+        return RuntimeInstallLoadFailure(
+          exitCode: exitCode,
+          message: message,
+          diagnostic: diagnostic,
+        );
+    }
+  }
+
+  Future<void> _openGptkPage() async {
+    const url = 'https://github.com/Gcenx/game-porting-toolkit/releases';
+    final result = await widget.cliClient.openUrl(url);
+    if (!mounted || result.exitCode == 0) {
+      return;
+    }
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(_openUrlFailureMessage(result))));
   }
 
   Future<void> _showAbout() async {

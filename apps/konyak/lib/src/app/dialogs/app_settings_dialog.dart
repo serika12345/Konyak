@@ -17,6 +17,8 @@ class AppSettingsDialog extends StatefulWidget {
     this.runtimes = const <RuntimeSummary>[],
     this.runtimeLoadError,
     this.onInstallRuntime,
+    this.onInstallGptkWine,
+    this.onOpenGptkPage,
     required this.onSettingsChanged,
   });
 
@@ -26,6 +28,8 @@ class AppSettingsDialog extends StatefulWidget {
   final List<RuntimeSummary> runtimes;
   final String? runtimeLoadError;
   final Future<RuntimeInstallLoadResult> Function()? onInstallRuntime;
+  final Future<RuntimeInstallLoadResult> Function()? onInstallGptkWine;
+  final Future<void> Function()? onOpenGptkPage;
   final Future<AppSettingsSummary?> Function(AppSettingsSummary settings)
   onSettingsChanged;
 
@@ -39,6 +43,7 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
   late String? _runtimeLoadError = widget.runtimeLoadError;
   bool _isSaving = false;
   bool _isInstallingRuntime = false;
+  bool _isInstallingGptkWine = false;
 
   Future<void> _save(AppSettingsSummary settings) async {
     final previousSettings = _settings;
@@ -94,6 +99,61 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
           _runtimeLoadError = message;
       }
       _isInstallingRuntime = false;
+    });
+  }
+
+  Future<void> _installGptkWine() async {
+    final installGptkWine = widget.onInstallGptkWine;
+    if (installGptkWine == null || _isInstallingGptkWine) {
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Replace Wine Runtime?'),
+        content: const Text(
+          'Importing GPTK-compatible Wine replaces the current macOS Wine '
+          'runtime. Existing bottles are kept, but running Wine processes '
+          'should be stopped before continuing.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            key: const ValueKey('app-settings-confirm-gptk-wine-button'),
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Replace Wine'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) {
+      return;
+    }
+
+    setState(() {
+      _isInstallingGptkWine = true;
+      _runtimeLoadError = null;
+    });
+
+    final result = await installGptkWine();
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      switch (result) {
+        case InstalledRuntime(:final runtime):
+          _runtimes = _upsertRuntime(_runtimes, runtime);
+          _runtimeLoadError = null;
+        case RuntimeInstallLoadFailure(:final message):
+          _runtimeLoadError = message;
+      }
+      _isInstallingGptkWine = false;
     });
   }
 
@@ -185,9 +245,14 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
                 runtimes: _runtimes,
                 loadError: _runtimeLoadError,
                 isInstalling: _isInstallingRuntime,
+                isInstallingGptkWine: _isInstallingGptkWine,
                 onInstallRuntime: widget.onInstallRuntime == null
                     ? null
                     : _installRuntime,
+                onInstallGptkWine: widget.onInstallGptkWine == null
+                    ? null
+                    : _installGptkWine,
+                onOpenGptkPage: widget.onOpenGptkPage,
               ),
             ],
           ],
@@ -244,7 +309,10 @@ class _RuntimeSection extends StatelessWidget {
     required this.runtimes,
     required this.loadError,
     required this.isInstalling,
+    required this.isInstallingGptkWine,
     required this.onInstallRuntime,
+    required this.onInstallGptkWine,
+    required this.onOpenGptkPage,
   });
 
   final String title;
@@ -252,7 +320,10 @@ class _RuntimeSection extends StatelessWidget {
   final List<RuntimeSummary> runtimes;
   final String? loadError;
   final bool isInstalling;
+  final bool isInstallingGptkWine;
   final VoidCallback? onInstallRuntime;
+  final VoidCallback? onInstallGptkWine;
+  final VoidCallback? onOpenGptkPage;
 
   @override
   Widget build(BuildContext context) {
@@ -273,7 +344,7 @@ class _RuntimeSection extends StatelessWidget {
             value: 'Unavailable',
             detail: loadError ?? 'No managed runtime stack detected.',
           ),
-          if (onInstallRuntime != null) _installButton('Install'),
+          if (onInstallRuntime != null) _installButtonBlock('Install'),
         ],
       );
     }
@@ -303,6 +374,9 @@ class _RuntimeSection extends StatelessWidget {
           label: stack.name,
           value: stack.isComplete ? 'Complete' : 'Incomplete',
           detail: 'Compatibility: ${stack.compatibilityTarget}',
+          trailing: shouldOfferInstall && onInstallRuntime != null
+              ? _installButton(installButtonLabel)
+              : null,
         ),
         for (final component in stack.components)
           _AppSettingsDetailRow(
@@ -312,25 +386,78 @@ class _RuntimeSection extends StatelessWidget {
                 ? null
                 : component.missingPaths.join('\n'),
           ),
-        if (shouldOfferInstall && onInstallRuntime != null)
-          _installButton(installButtonLabel),
+        if (platform == 'macos') _gptkInstallPanel(stack),
       ],
     );
   }
 
+  Widget _installButtonBlock(String label) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: _installButton(label),
+      ),
+    );
+  }
+
   Widget _installButton(String label) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: FilledButton.icon(
-        key: const ValueKey('app-settings-install-runtime-button'),
-        onPressed: isInstalling ? null : onInstallRuntime,
-        icon: isInstalling
-            ? const SizedBox.square(
-                dimension: 16,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            : const Icon(Icons.download),
-        label: Text(isInstalling ? 'Installing' : label),
+    return FilledButton.icon(
+      key: const ValueKey('app-settings-install-runtime-button'),
+      onPressed: isInstalling ? null : onInstallRuntime,
+      style: FilledButton.styleFrom(
+        minimumSize: const Size(0, 32),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      ),
+      icon: isInstalling
+          ? const SizedBox.square(
+              dimension: 16,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : const Icon(Icons.download),
+      label: Text(isInstalling ? 'Installing' : label),
+    );
+  }
+
+  Widget _gptkInstallPanel(RuntimeStackSummary stack) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'D3DMetal is included in Apple Game Porting Toolkit. Konyak does '
+            'not bundle or redistribute it. Download a GPTK-compatible Wine '
+            'app from the releases page, select the app bundle, and review '
+            'Apple License.pdf for commercial use or redistribution.',
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              OutlinedButton.icon(
+                key: const ValueKey('app-settings-open-gptk-page-button'),
+                onPressed: onOpenGptkPage,
+                icon: const Icon(Icons.open_in_browser),
+                label: const Text('Open GPTK releases'),
+              ),
+              FilledButton.icon(
+                key: const ValueKey('app-settings-install-gptk-wine-button'),
+                onPressed: isInstallingGptkWine ? null : onInstallGptkWine,
+                icon: isInstallingGptkWine
+                    ? const SizedBox.square(
+                        dimension: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.folder_copy),
+                label: Text(
+                  isInstallingGptkWine ? 'Adding GPTK Wine' : 'Select GPTK app',
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -576,11 +703,13 @@ class _AppSettingsDetailRow extends StatelessWidget {
     required this.label,
     required this.value,
     this.detail,
+    this.trailing,
   });
 
   final String label;
   final String value;
   final String? detail;
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -607,15 +736,35 @@ class _AppSettingsDetailRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 14),
-          Text(
-            value,
-            style: TextStyle(
-              color: colors.text,
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
+          if (trailing == null)
+            Text(
+              value,
+              style: TextStyle(
+                color: colors.text,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+              textAlign: TextAlign.end,
+            )
+          else
+            Wrap(
+              spacing: 10,
+              runSpacing: 8,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              alignment: WrapAlignment.end,
+              children: [
+                Text(
+                  value,
+                  style: TextStyle(
+                    color: colors.text,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  textAlign: TextAlign.end,
+                ),
+                trailing!,
+              ],
             ),
-            textAlign: TextAlign.end,
-          ),
         ],
       ),
     );

@@ -4089,6 +4089,7 @@ corefonts                Microsoft Core Fonts
       final cliEnvironment = <String, String>{
         'KONYAK_DATA_HOME': dataHome.path,
         'KONYAK_CONFIG_HOME': _joinTestPath(dataHome.path, const ['config']),
+        'KONYAK_MACOS_WINE_HOME': fakeRuntimeRoot.path,
         'KONYAK_LINUX_WINE_HOME': fakeRuntimeRoot.path,
         'PATH': fakeBin.path,
       };
@@ -4625,10 +4626,14 @@ corefonts                Microsoft Core Fonts
                 'paths': [
                   '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/external/D3DMetal.framework',
                   '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/external/libd3dshared.dylib',
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-windows/d3d12.dll',
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-windows/dxgi.dll',
                 ],
                 'missingPaths': [
                   '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/external/D3DMetal.framework',
                   '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/external/libd3dshared.dylib',
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-windows/d3d12.dll',
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-windows/dxgi.dll',
                 ],
               },
             ],
@@ -4673,6 +4678,87 @@ corefonts                Microsoft Core Fonts
     expect(dxvk['id'], 'dxvk-macos');
     expect(dxvk['isInstalled'], isFalse);
   });
+
+  test(
+    'list-runtimes --json does not treat GPTK fixture text as installed',
+    () {
+      final tempDirectory = Directory.systemTemp.createTempSync(
+        'konyak-gptk-runtime-fixture-test-',
+      );
+      addTearDown(() {
+        if (tempDirectory.existsSync()) {
+          tempDirectory.deleteSync(recursive: true);
+        }
+      });
+      final runtimeHome = _joinTestPath(tempDirectory.path, const ['runtime']);
+      _createInstalledMacosRuntime(runtimeHome);
+      for (final relativePath in _macosDxvkComponentPaths) {
+        final file = File(
+          _joinTestPath(runtimeHome, relativePath.skip(2).toList()),
+        );
+        file.parent.createSync(recursive: true);
+        file.writeAsStringSync('fixture');
+      }
+      for (final relativePath in const <List<String>>[
+        <String>['lib', 'libMoltenVK.dylib'],
+        <String>['lib', 'libgstreamer-1.0.0.dylib'],
+        <String>['winetricks'],
+      ]) {
+        final file = File(_joinTestPath(runtimeHome, relativePath));
+        file.parent.createSync(recursive: true);
+        file.writeAsStringSync('fixture');
+      }
+      final frameworkBinary = File(
+        _joinTestPath(runtimeHome, const [
+          'lib',
+          'external',
+          'D3DMetal.framework',
+          'Versions',
+          'A',
+          'D3DMetal',
+        ]),
+      );
+      frameworkBinary.parent.createSync(recursive: true);
+      frameworkBinary.writeAsStringSync('Konyak macOS dev runtime fixture');
+      File(
+        _joinTestPath(runtimeHome, const [
+          'lib',
+          'external',
+          'libd3dshared.dylib',
+        ]),
+      ).writeAsStringSync('fixture');
+      File(
+        _joinTestPath(runtimeHome, const [runtimeStackManifestFileName]),
+      ).writeAsStringSync(
+        jsonEncode({
+          'schemaVersion': 1,
+          'components': {'gptk-d3dmetal': 'local-gptk-d3dmetal'},
+        }),
+      );
+
+      final result = runCli(
+        const ['list-runtimes', '--json'],
+        runtimeCatalog: MacosWineRuntimeCatalog(
+          hostPlatform: KonyakHostPlatform.macos,
+          environment: {'KONYAK_MACOS_WINE_HOME': runtimeHome},
+        ),
+      );
+
+      expect(result.exitCode, 0);
+      final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+      final runtimes = payload['runtimes'] as List<Object?>;
+      final runtime = runtimes.single as Map<String, Object?>;
+      final stack = runtime['stack'] as Map<String, Object?>;
+      final components = stack['components'] as List<Object?>;
+      final gptk = components.cast<Map<String, Object?>>().singleWhere(
+        (component) => component['id'] == 'gptk-d3dmetal',
+      );
+
+      expect(gptk['isInstalled'], isFalse);
+      expect(gptk.containsKey('version'), isFalse);
+      expect(gptk['missingPaths'], contains(contains('D3DMetal.framework')));
+    },
+  );
 
   test('list-runtimes --json omits Konyak macOS Wine outside macOS', () {
     final result = runCli(
@@ -7308,6 +7394,22 @@ corefonts                Microsoft Core Fonts
           'external',
           'libd3dshared.dylib',
         ],
+        <String>[
+          'Components',
+          'GPTK-D3DMetal',
+          'lib',
+          'wine',
+          'x86_64-windows',
+          'd3d12.dll',
+        ],
+        <String>[
+          'Components',
+          'GPTK-D3DMetal',
+          'lib',
+          'wine',
+          'x86_64-windows',
+          'dxgi.dll',
+        ],
       ],
       versions: const <String, String>{
         'gptk-d3dmetal': 'gptk-d3dmetal-fixture',
@@ -7464,6 +7566,22 @@ corefonts                Microsoft Core Fonts
           'external',
           'libd3dshared.dylib',
         ],
+        <String>[
+          'Components',
+          'GPTK-D3DMetal',
+          'lib',
+          'wine',
+          'x86_64-windows',
+          'd3d12.dll',
+        ],
+        <String>[
+          'Components',
+          'GPTK-D3DMetal',
+          'lib',
+          'wine',
+          'x86_64-windows',
+          'dxgi.dll',
+        ],
       ],
       versions: const <String, String>{},
     );
@@ -7553,6 +7671,213 @@ corefonts                Microsoft Core Fonts
       isTrue,
     );
   });
+
+  test(
+    'install-macos-wine repairs required components without removing GPTK',
+    () async {
+      final tempDirectory = await Directory.systemTemp.createTemp(
+        'konyak-runtime-stack-repair-gptk-test-',
+      );
+      addTearDown(() async {
+        if (await tempDirectory.exists()) {
+          await tempDirectory.delete(recursive: true);
+        }
+      });
+
+      final wineArchive = _createMacosAppBundleWineArchive(tempDirectory.path);
+      final dxvkArchive = _createKonyakRuntimeComponentArchive(
+        tempDirectory.path,
+        archiveName: 'repair-dxvk-macos',
+        relativePaths: _macosDxvkComponentPaths,
+        versions: const <String, String>{},
+      );
+      final moltenVkArchive = _createKonyakRuntimeComponentArchive(
+        tempDirectory.path,
+        archiveName: 'repair-moltenvk',
+        relativePaths: const <List<String>>[
+          <String>['Components', 'MoltenVK', 'lib', 'libMoltenVK.dylib'],
+        ],
+        versions: const <String, String>{},
+      );
+      final gstreamerArchive = _createKonyakRuntimeComponentArchive(
+        tempDirectory.path,
+        archiveName: 'repair-gstreamer',
+        relativePaths: const <List<String>>[
+          <String>[
+            'Components',
+            'GStreamer',
+            'lib',
+            'libgstreamer-1.0.0.dylib',
+          ],
+        ],
+        versions: const <String, String>{},
+      );
+      final monoArchive = _createKonyakRuntimeComponentArchive(
+        tempDirectory.path,
+        archiveName: 'repair-wine-mono',
+        relativePaths: const <List<String>>[
+          <String>[
+            'Components',
+            'wine-mono',
+            'share',
+            'wine',
+            'mono',
+            'marker',
+          ],
+        ],
+        versions: const <String, String>{},
+      );
+      final winetricksArchive = _createKonyakRuntimeComponentArchive(
+        tempDirectory.path,
+        archiveName: 'repair-winetricks',
+        relativePaths: const <List<String>>[
+          <String>['Components', 'winetricks', 'winetricks'],
+        ],
+        versions: const <String, String>{},
+      );
+      final sourceManifestPath = _createRuntimeStackSourceManifest(
+        tempDirectory.path,
+        components: <Map<String, String>>[
+          _runtimeStackSourceComponent(
+            id: 'wine',
+            version: 'wine-devel-source',
+            archivePath: wineArchive,
+          ),
+          _runtimeStackSourceComponent(
+            id: 'dxvk-macos',
+            version: 'dxvk-source',
+            archivePath: dxvkArchive,
+          ),
+          _runtimeStackSourceComponent(
+            id: 'moltenvk',
+            version: 'moltenvk-source',
+            archivePath: moltenVkArchive,
+          ),
+          _runtimeStackSourceComponent(
+            id: 'gstreamer',
+            version: 'gstreamer-source',
+            archivePath: gstreamerArchive,
+          ),
+          _runtimeStackSourceComponent(
+            id: 'wine-mono',
+            version: 'wine-mono-source',
+            archivePath: monoArchive,
+          ),
+          _runtimeStackSourceComponent(
+            id: 'winetricks',
+            version: 'winetricks-source',
+            archivePath: winetricksArchive,
+          ),
+        ],
+      );
+      final runtimeHome = _joinTestPath(tempDirectory.path, const [
+        'Application Support',
+        'Konyak',
+      ]);
+      final runtimeRoot = _joinTestPath(runtimeHome, const [
+        'Runtimes',
+        'macos-wine',
+      ]);
+      for (final relativePath in const <List<String>>[
+        <String>['bin', 'wine64'],
+        <String>['bin', 'wineserver'],
+        <String>['bin', 'wine'],
+        <String>['lib', 'libwine.1.dylib'],
+        ..._macosDxvkInstalledPaths,
+        <String>['lib', 'libMoltenVK.dylib'],
+        <String>['lib', 'libgstreamer-1.0.0.dylib'],
+        <String>['share', 'wine', 'mono', 'wine-mono.marker'],
+      ]) {
+        final file = File(_joinTestPath(runtimeRoot, relativePath));
+        file.parent.createSync(recursive: true);
+        file.writeAsStringSync('existing-gptk-wine');
+      }
+      _createMachOFile(
+        _joinTestPath(runtimeRoot, const [
+          'lib',
+          'external',
+          'D3DMetal.framework',
+          'Versions',
+          'A',
+          'D3DMetal',
+        ]),
+      );
+      _createMachOFile(
+        _joinTestPath(runtimeRoot, const [
+          'lib',
+          'external',
+          'libd3dshared.dylib',
+        ]),
+      );
+      _createPEFile(
+        _joinTestPath(runtimeRoot, const [
+          'lib',
+          'wine',
+          'x86_64-windows',
+          'd3d12.dll',
+        ]),
+      );
+      _createPEFile(
+        _joinTestPath(runtimeRoot, const [
+          'lib',
+          'wine',
+          'x86_64-windows',
+          'dxgi.dll',
+        ]),
+      );
+      File(
+        _joinTestPath(runtimeRoot, const ['.konyak-runtime-stack.json']),
+      ).writeAsStringSync(
+        jsonEncode(<String, Object?>{
+          'schemaVersion': 1,
+          'components': <String, String>{
+            'wine': 'user-provided-gptk-wine',
+            'dxvk-macos': 'dxvk-existing',
+            'moltenvk': 'moltenvk-existing',
+            'gstreamer': 'gstreamer-existing',
+            'wine-mono': 'wine-mono-existing',
+            'gptk-d3dmetal': 'user-provided',
+          },
+        }),
+      );
+      final installer = DartIoMacosWineInstaller(
+        hostPlatform: KonyakHostPlatform.macos,
+        environment: {
+          'KONYAK_RUNTIME_PROFILE': 'development',
+          'KONYAK_APPLICATION_SUPPORT': runtimeHome,
+          'KONYAK_DEV_MACOS_WINE_STACK_MANIFEST': sourceManifestPath,
+        },
+      );
+
+      final result = installer.install(MacosWineInstallRequest.fullInstall());
+
+      if (result is MacosWineInstallFailed) {
+        fail(result.message);
+      }
+      expect(result, isA<MacosWineInstallCompleted>());
+      final completed = result as MacosWineInstallCompleted;
+      expect(completed.runtime.stack?.isComplete, isTrue);
+      expect(
+        File(_joinTestPath(runtimeRoot, const ['winetricks'])).existsSync(),
+        isTrue,
+      );
+      expect(
+        File(
+          _joinTestPath(runtimeRoot, const ['bin', 'wine']),
+        ).readAsStringSync(),
+        'existing-gptk-wine',
+      );
+      final wineComponent = completed.runtime.stack?.components
+          .where((component) => component.id == 'wine')
+          .single;
+      final gptkComponent = completed.runtime.stack?.components
+          .where((component) => component.id == 'gptk-d3dmetal')
+          .single;
+      expect(wineComponent?.version, 'user-provided-gptk-wine');
+      expect(gptkComponent?.isInstalled, isTrue);
+      expect(gptkComponent?.version, 'user-provided');
+    },
+  );
 
   test(
     'install-macos-wine rejects source manifest checksum mismatches',
@@ -7765,6 +8090,204 @@ corefonts                Microsoft Core Fonts
       installer.lastRequest?.requestOperation,
       isA<RuntimeComponentInstallOperation>(),
     );
+  });
+
+  test('install-gptk-wine rejects non-app sources', () {
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-gptk-wine-test-',
+    );
+    addTearDown(() {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    });
+
+    final sourceRoot = _createGptkWineRoot(
+      tempDirectory.path,
+      includeD3DMetal: true,
+    );
+    final runtimeRoot = Directory(
+      _joinTestPath(tempDirectory.path, const ['runtime']),
+    );
+
+    final result = runCli(
+      ['install-gptk-wine', '--from', sourceRoot.path, '--json'],
+      gptkWineInstaller: DartIoGptkWineInstaller(
+        environment: {'KONYAK_MACOS_WINE_HOME': runtimeRoot.path},
+      ),
+    );
+
+    expect(result.exitCode, 75);
+    final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+    final error = payload['error'] as Map<String, Object?>;
+    expect(error['code'], 'gptkWineInstallFailed');
+    expect(error['message'], contains('Game Porting Toolkit.app'));
+  });
+
+  test('install-gptk-wine requires D3DMetal in the selected app', () {
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-gptk-wine-missing-d3dmetal-test-',
+    );
+    addTearDown(() {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    });
+
+    final appBundle = _createGptkWineAppBundle(tempDirectory.path);
+    final runtimeRoot = Directory(
+      _joinTestPath(tempDirectory.path, const ['runtime']),
+    );
+    _createInstalledMacosRuntime(runtimeRoot.path);
+
+    final result = runCli(
+      ['install-gptk-wine', '--from', appBundle.path, '--json'],
+      gptkWineInstaller: DartIoGptkWineInstaller(
+        environment: {'KONYAK_MACOS_WINE_HOME': runtimeRoot.path},
+      ),
+    );
+
+    expect(result.exitCode, 75);
+    final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+    final error = payload['error'] as Map<String, Object?>;
+    expect(error['message'], contains('D3DMetal.framework'));
+  });
+
+  test('install-gptk-wine imports a Game Porting Toolkit app bundle', () {
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-gptk-wine-app-test-',
+    );
+    addTearDown(() {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    });
+
+    final appBundle = _createGptkWineAppBundle(
+      tempDirectory.path,
+      includeD3DMetal: true,
+    );
+    final runtimeRoot = Directory(
+      _joinTestPath(tempDirectory.path, const ['runtime']),
+    );
+    _createInstalledMacosRuntime(runtimeRoot.path);
+    File(_joinTestPath(runtimeRoot.path, const ['winetricks']))
+      ..parent.createSync(recursive: true)
+      ..writeAsStringSync('existing winetricks');
+    File(
+        _joinTestPath(runtimeRoot.path, const [
+          'lib',
+          'libgstreamer-1.0.0.dylib',
+        ]),
+      )
+      ..parent.createSync(recursive: true)
+      ..writeAsStringSync('existing gstreamer');
+    File(
+        _joinTestPath(appBundle.path, const [
+          'Contents',
+          'Resources',
+          'wine',
+          'share',
+          'wine',
+          'mono',
+          'wine-mono.marker',
+        ]),
+      )
+      ..parent.createSync(recursive: true)
+      ..writeAsStringSync('source mono');
+
+    final result = runCli(
+      ['install-gptk-wine', '--from', appBundle.path, '--json'],
+      gptkWineInstaller: DartIoGptkWineInstaller(
+        environment: {'KONYAK_MACOS_WINE_HOME': runtimeRoot.path},
+      ),
+    );
+
+    expect(result.exitCode, 0, reason: result.stderr);
+    final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+    final install = payload['gptkWineInstall'] as Map<String, Object?>;
+    expect(
+      install['sourceDirectory'],
+      endsWith('Game Porting Toolkit.app/Contents/Resources/wine'),
+    );
+    expect(
+      File(
+        _joinTestPath(runtimeRoot.path, const ['bin', 'wine64']),
+      ).existsSync(),
+      isTrue,
+    );
+    expect(
+      File(
+        _joinTestPath(runtimeRoot.path, const [
+          'lib',
+          'external',
+          'D3DMetal.framework',
+          'Versions',
+          'A',
+          'D3DMetal',
+        ]),
+      ).existsSync(),
+      isTrue,
+    );
+    expect(
+      File(
+        _joinTestPath(runtimeRoot.path, const ['winetricks']),
+      ).readAsStringSync(),
+      'existing winetricks',
+    );
+    expect(
+      File(
+        _joinTestPath(runtimeRoot.path, const [
+          'lib',
+          'libgstreamer-1.0.0.dylib',
+        ]),
+      ).readAsStringSync(),
+      'existing gstreamer',
+    );
+    expect(
+      File(
+        _joinTestPath(runtimeRoot.path, const [
+          'share',
+          'wine',
+          'mono',
+          'wine-mono.marker',
+        ]),
+      ).readAsStringSync(),
+      'fixture',
+    );
+  });
+
+  test('install-gptk-wine rejects fixture text binaries as JSON', () {
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-gptk-wine-fixture-test-',
+    );
+    addTearDown(() {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    });
+
+    final appBundle = _createGptkWineAppBundle(
+      tempDirectory.path,
+      validBinaries: false,
+      includeD3DMetal: true,
+    );
+    final result = runCli(
+      ['install-gptk-wine', '--from', appBundle.path, '--json'],
+      gptkWineInstaller: DartIoGptkWineInstaller(
+        environment: {
+          'KONYAK_MACOS_WINE_HOME': _joinTestPath(tempDirectory.path, const [
+            'runtime',
+          ]),
+        },
+      ),
+    );
+
+    expect(result.exitCode, 75);
+    final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+    final error = payload['error'] as Map<String, Object?>;
+    expect(error['code'], 'gptkWineInstallFailed');
+    expect(error['message'], contains('not a Mach-O'));
   });
 
   test('install-macos-wine --source-manifest passes the source manifest', () {
@@ -8809,6 +9332,17 @@ const _macosDxvkComponentPaths = <List<String>>[
   <String>['Components', 'DXVK-macOS', 'DXVK', 'x32', 'd3d11.dll'],
 ];
 
+const _macosDxvkInstalledPaths = <List<String>>[
+  <String>['DXVK', 'x64', 'dxgi.dll'],
+  <String>['DXVK', 'x64', 'd3d9.dll'],
+  <String>['DXVK', 'x64', 'd3d10core.dll'],
+  <String>['DXVK', 'x64', 'd3d11.dll'],
+  <String>['DXVK', 'x32', 'dxgi.dll'],
+  <String>['DXVK', 'x32', 'd3d9.dll'],
+  <String>['DXVK', 'x32', 'd3d10core.dll'],
+  <String>['DXVK', 'x32', 'd3d11.dll'],
+];
+
 String _createComponentRuntimeArchive(String tempPath) {
   final sourceRoot = Directory(_joinTestPath(tempPath, const ['source']));
   final librariesRoot = Directory(
@@ -8910,10 +9444,33 @@ String _createKonyakComponentRuntimeArchive(String tempPath) {
       'external',
       'libd3dshared.dylib',
     ],
+    <String>[
+      'Components',
+      'GPTK-D3DMetal',
+      'lib',
+      'wine',
+      'x86_64-windows',
+      'd3d12.dll',
+    ],
+    <String>[
+      'Components',
+      'GPTK-D3DMetal',
+      'lib',
+      'wine',
+      'x86_64-windows',
+      'dxgi.dll',
+    ],
   ]) {
     final file = File(_joinTestPath(runtimeRoot.path, relativePath));
     file.parent.createSync(recursive: true);
-    file.writeAsStringSync('fixture');
+    if (relativePath.contains('d3d12.dll') ||
+        relativePath.contains('dxgi.dll')) {
+      _createPEFile(file.path);
+    } else if (relativePath.contains('GPTK-D3DMetal')) {
+      _createMachOFile(file.path);
+    } else {
+      file.writeAsStringSync('fixture');
+    }
   }
   File(
     _joinTestPath(runtimeRoot.path, const ['.konyak-runtime-stack.json']),
@@ -8963,7 +9520,15 @@ String _createKonyakRuntimeComponentArchive(
   for (final relativePath in relativePaths) {
     final file = File(_joinTestPath(runtimeRoot.path, relativePath));
     file.parent.createSync(recursive: true);
-    file.writeAsStringSync('fixture');
+    if (relativePath.contains('d3d12.dll') ||
+        relativePath.contains('dxgi.dll')) {
+      _createPEFile(file.path);
+    } else if (relativePath.contains('D3DMetal.framework') ||
+        relativePath.contains('libd3dshared.dylib')) {
+      _createMachOFile(file.path);
+    } else {
+      file.writeAsStringSync('fixture');
+    }
   }
   File(
     _joinTestPath(runtimeRoot.path, const ['.konyak-runtime-stack.json']),
@@ -9127,6 +9692,118 @@ String _createMacosAppBundleWineArchive(String tempPath) {
   expect(result.exitCode, 0, reason: result.stderr.toString());
 
   return archivePath;
+}
+
+void _createInstalledMacosRuntime(String runtimeHome) {
+  for (final relativePath in const <List<String>>[
+    <String>['bin', 'wine'],
+    <String>['bin', 'wineserver'],
+    <String>['lib', 'libwine.1.dylib'],
+    <String>['share', 'wine', 'mono', 'wine-mono.marker'],
+  ]) {
+    final file = File(_joinTestPath(runtimeHome, relativePath));
+    file.parent.createSync(recursive: true);
+    file.writeAsStringSync('fixture');
+  }
+}
+
+Directory _createGptkD3DMetalSource(
+  String tempPath,
+  List<String> externalRelativePath,
+) {
+  final sourceRoot = Directory(_joinTestPath(tempPath, externalRelativePath))
+    ..createSync(recursive: true);
+  _createMachOFile(
+    _joinTestPath(sourceRoot.path, const [
+      'D3DMetal.framework',
+      'Versions',
+      'A',
+      'D3DMetal',
+    ]),
+  );
+  _createMachOFile(
+    _joinTestPath(sourceRoot.path, const ['libd3dshared.dylib']),
+  );
+  final dllRoot = _gptkFixtureDllRoot(sourceRoot);
+  _createPEFile(_joinTestPath(dllRoot.path, const ['d3d12.dll']));
+  _createPEFile(_joinTestPath(dllRoot.path, const ['dxgi.dll']));
+  return sourceRoot;
+}
+
+Directory _createGptkWineRoot(
+  String tempPath, {
+  bool validBinaries = true,
+  bool includeD3DMetal = false,
+}) {
+  final wineRoot = Directory(_joinTestPath(tempPath, const ['gptk-wine']));
+  final wine64 = File(_joinTestPath(wineRoot.path, const ['bin', 'wine64']));
+  final wineserver = File(
+    _joinTestPath(wineRoot.path, const ['bin', 'wineserver']),
+  );
+  wine64.parent.createSync(recursive: true);
+  if (validBinaries) {
+    _createMachOFile(wine64.path);
+    _createMachOFile(wineserver.path);
+  } else {
+    wine64.writeAsStringSync('fixture');
+    wineserver.writeAsStringSync('fixture');
+  }
+  File(_joinTestPath(wineRoot.path, const ['lib', 'libwine.1.dylib']))
+    ..parent.createSync(recursive: true)
+    ..writeAsStringSync('fixture');
+  if (includeD3DMetal) {
+    _createGptkD3DMetalSource(wineRoot.path, const ['lib', 'external']);
+  }
+  return wineRoot;
+}
+
+Directory _createGptkWineAppBundle(
+  String tempPath, {
+  bool validBinaries = true,
+  bool includeD3DMetal = false,
+}) {
+  final appBundle = Directory(
+    _joinTestPath(tempPath, const ['Game Porting Toolkit.app']),
+  );
+  final wineRoot = _createGptkWineRoot(
+    appBundle.path,
+    validBinaries: validBinaries,
+    includeD3DMetal: includeD3DMetal,
+  );
+  final targetWineRoot = Directory(
+    _joinTestPath(appBundle.path, const ['Contents', 'Resources', 'wine']),
+  );
+  targetWineRoot.parent.createSync(recursive: true);
+  wineRoot.renameSync(targetWineRoot.path);
+  return appBundle;
+}
+
+Directory _gptkFixtureDllRoot(Directory externalRoot) {
+  final segments = externalRoot.path.split('/');
+  final libRoot = segments.last == 'external'
+      ? Directory(segments.take(segments.length - 1).join('/'))
+      : externalRoot;
+  return Directory(
+    _joinTestPath(libRoot.path, const ['wine', 'x86_64-windows']),
+  );
+}
+
+void _createMachOFile(String path) {
+  final file = File(path);
+  file.parent.createSync(recursive: true);
+  file.writeAsBytesSync(<int>[
+    0xcf,
+    0xfa,
+    0xed,
+    0xfe,
+    ...List<int>.filled(64, 0),
+  ]);
+}
+
+void _createPEFile(String path) {
+  final file = File(path);
+  file.parent.createSync(recursive: true);
+  file.writeAsBytesSync(<int>[0x4d, 0x5a, ...List<int>.filled(64, 0)]);
 }
 
 String _createBrokenRuntimeArchive(String tempPath) {

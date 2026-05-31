@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../cli/konyak_cli_client.dart';
 import '../files/bottle_archive_picker.dart';
 import '../files/directory_picker.dart';
+import '../files/gptk_wine_source_picker.dart';
 import '../files/program_file_picker.dart';
 import '../logs/log_reader.dart';
 import '../settings/app_settings_summary.dart';
@@ -18,6 +19,7 @@ class KonyakApp extends StatefulWidget {
     LogReader? logReader,
     ProgramFilePicker? programFilePicker,
     DirectoryPicker? directoryPicker,
+    GptkWineSourcePicker? gptkWineSourcePicker,
     BottleArchivePicker? bottleArchivePicker,
     this.initialExecutablePaths = const <String>[],
     this.enableBackgroundServices = false,
@@ -27,6 +29,8 @@ class KonyakApp extends StatefulWidget {
        programFilePicker =
            programFilePicker ?? const FileSelectorProgramFilePicker(),
        directoryPicker = directoryPicker ?? const FileSelectorDirectoryPicker(),
+       gptkWineSourcePicker =
+           gptkWineSourcePicker ?? const FileSelectorGptkWineSourcePicker(),
        bottleArchivePicker =
            bottleArchivePicker ?? const FileSelectorBottleArchivePicker();
 
@@ -35,6 +39,7 @@ class KonyakApp extends StatefulWidget {
   final LogReader logReader;
   final ProgramFilePicker programFilePicker;
   final DirectoryPicker directoryPicker;
+  final GptkWineSourcePicker gptkWineSourcePicker;
   final BottleArchivePicker bottleArchivePicker;
   final List<String> initialExecutablePaths;
   final bool enableBackgroundServices;
@@ -64,6 +69,7 @@ class _KonyakAppState extends State<KonyakApp> {
         logReader: widget.logReader,
         programFilePicker: widget.programFilePicker,
         directoryPicker: widget.directoryPicker,
+        gptkWineSourcePicker: widget.gptkWineSourcePicker,
         bottleArchivePicker: widget.bottleArchivePicker,
         initialExecutablePaths: widget.initialExecutablePaths,
         enableBackgroundServices: widget.enableBackgroundServices,

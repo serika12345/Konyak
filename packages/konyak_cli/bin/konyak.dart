@@ -29,6 +29,7 @@ Future<void> main(List<String> arguments) async {
     pathOpener: const DartIoPathOpener(),
     macosWineInstaller: DartIoMacosWineInstaller.current(),
     linuxWineInstaller: DartIoLinuxWineInstaller.current(),
+    gptkWineInstaller: DartIoGptkWineInstaller.current(),
     runtimeUpdateChecker: DartIoRuntimeUpdateChecker(
       runtimeCatalog: runtimeCatalog,
     ),

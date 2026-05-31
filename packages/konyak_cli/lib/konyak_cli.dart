@@ -4022,6 +4022,7 @@ class RuntimePackageInstallRequest {
     required this.runtimeRoot,
     required this.requiredExecutableRelativePath,
     required this.expectedExecutablePath,
+    this.preserveExistingRuntimeFiles = false,
     this.normalizeStagingRoot,
     this.afterManifestWrite,
     this.progressSink,
@@ -4035,6 +4036,7 @@ class RuntimePackageInstallRequest {
   final Directory runtimeRoot;
   final List<String> requiredExecutableRelativePath;
   final String expectedExecutablePath;
+  final bool preserveExistingRuntimeFiles;
   final void Function(Directory runtimeRoot)? normalizeStagingRoot;
   final void Function(Directory runtimeRoot)? afterManifestWrite;
   final RuntimeInstallProgressSink? progressSink;
@@ -4072,6 +4074,7 @@ class DartIoRuntimePackageInstaller implements RuntimePackageInstaller {
       runtimeRoot: request.runtimeRoot,
       requiredExecutableRelativePath: request.requiredExecutableRelativePath,
       expectedExecutablePath: request.expectedExecutablePath,
+      preserveExistingRuntimeFiles: request.preserveExistingRuntimeFiles,
       normalizeStagingRoot: request.normalizeStagingRoot,
       afterManifestWrite: request.afterManifestWrite,
       progressSink: request.progressSink,
@@ -4147,6 +4150,55 @@ abstract interface class MacosWineInstaller {
   });
 }
 
+class GptkWineInstallRequest {
+  const GptkWineInstallRequest({required this.sourcePath});
+
+  final String sourcePath;
+}
+
+class GptkWineInstallRecord {
+  const GptkWineInstallRecord({
+    required this.componentId,
+    required this.sourceDirectory,
+    required this.runtimeRoot,
+    required this.installedExecutablePath,
+  });
+
+  final String componentId;
+  final String sourceDirectory;
+  final String runtimeRoot;
+  final String installedExecutablePath;
+
+  Map<String, Object?> toJson() {
+    return <String, Object?>{
+      'componentId': componentId,
+      'sourceDirectory': sourceDirectory,
+      'runtimeRoot': runtimeRoot,
+      'installedExecutablePath': installedExecutablePath,
+    };
+  }
+}
+
+sealed class GptkWineInstallResult {
+  const GptkWineInstallResult();
+}
+
+class GptkWineInstallCompleted extends GptkWineInstallResult {
+  const GptkWineInstallCompleted(this.record);
+
+  final GptkWineInstallRecord record;
+}
+
+class GptkWineInstallFailed extends GptkWineInstallResult {
+  const GptkWineInstallFailed(this.message);
+
+  final String message;
+}
+
+abstract interface class GptkWineInstaller {
+  GptkWineInstallResult install(GptkWineInstallRequest request);
+}
+
 sealed class LinuxWineInstallResult {
   const LinuxWineInstallResult();
 }
@@ -4169,6 +4221,145 @@ abstract interface class LinuxWineInstaller {
     RuntimeInstallProgressSink? progressSink,
   });
 }
+
+class DartIoGptkWineInstaller implements GptkWineInstaller {
+  const DartIoGptkWineInstaller({required this.environment});
+
+  factory DartIoGptkWineInstaller.current() {
+    return DartIoGptkWineInstaller(environment: Platform.environment);
+  }
+
+  static const componentId = 'wine';
+  static const componentVersion = 'user-provided-gptk-wine';
+
+  final Map<String, String> environment;
+
+  @override
+  GptkWineInstallResult install(GptkWineInstallRequest request) {
+    final sourcePath = request.sourcePath.trim();
+    if (sourcePath.isEmpty) {
+      return const GptkWineInstallFailed('GPTK Wine source path is empty.');
+    }
+
+    final sourceRoot = _resolveGptkWineRoot(sourcePath);
+    if (sourceRoot == null) {
+      return const GptkWineInstallFailed(
+        'Select a Game Porting Toolkit.app bundle that contains '
+        'Contents/Resources/wine.',
+      );
+    }
+
+    final validationFailure = _validateGptkWineRoot(sourceRoot);
+    if (validationFailure != null) {
+      return GptkWineInstallFailed(validationFailure);
+    }
+
+    final runtimeRoot = Directory(_macosWineRuntimeRoot(environment));
+    final backupRoot = Directory('${runtimeRoot.path}.backup');
+    final lockFile = File(_runtimeInstallLockPath(runtimeRoot));
+    var lockCreated = false;
+    var backupCreated = false;
+
+    try {
+      try {
+        lockFile.createSync(exclusive: true);
+        lockCreated = true;
+      } on FileSystemException {
+        return const GptkWineInstallFailed(
+          'Konyak macOS Wine installation is already running.',
+        );
+      }
+
+      final bundledD3DMetal = _resolveGptkD3DMetalSource(sourceRoot.path);
+      if (bundledD3DMetal == null) {
+        return const GptkWineInstallFailed(
+          'Selected GPTK app does not contain D3DMetal.framework, '
+          'libd3dshared.dylib, d3d12.dll, and dxgi.dll.',
+        );
+      }
+      final d3dMetalValidationFailure = _validateGptkD3DMetalSource(
+        bundledD3DMetal,
+      );
+      if (d3dMetalValidationFailure != null) {
+        return GptkWineInstallFailed(d3dMetalValidationFailure);
+      }
+
+      runtimeRoot.parent.createSync(recursive: true);
+      if (backupRoot.existsSync()) {
+        backupRoot.deleteSync(recursive: true);
+      }
+      if (runtimeRoot.existsSync()) {
+        runtimeRoot.renameSync(backupRoot.path);
+        backupCreated = true;
+        _copyDirectoryContentsReplacing(
+          source: backupRoot,
+          destination: runtimeRoot,
+        );
+      }
+      _copyDirectoryContentsReplacing(
+        source: sourceRoot,
+        destination: runtimeRoot,
+        skipRelativePaths: const <List<String>>[
+          <String>['share', 'wine', 'mono'],
+        ],
+      );
+      _upsertRuntimeStackComponentVersion(
+        runtimeRoot: runtimeRoot,
+        componentId: _gptkD3DMetalComponentId,
+        version: 'user-provided',
+      );
+      _upsertRuntimeStackComponentVersion(
+        runtimeRoot: runtimeRoot,
+        componentId: componentId,
+        version: componentVersion,
+      );
+    } on FileSystemException catch (error) {
+      if (backupCreated) {
+        if (runtimeRoot.existsSync()) {
+          runtimeRoot.deleteSync(recursive: true);
+        }
+        if (backupRoot.existsSync()) {
+          backupRoot.renameSync(runtimeRoot.path);
+        }
+      }
+      return GptkWineInstallFailed(error.message);
+    } finally {
+      if (backupRoot.existsSync()) {
+        backupRoot.deleteSync(recursive: true);
+      }
+      if (lockCreated && lockFile.existsSync()) {
+        lockFile.deleteSync();
+      }
+    }
+
+    return GptkWineInstallCompleted(
+      GptkWineInstallRecord(
+        componentId: componentId,
+        sourceDirectory: sourceRoot.path,
+        runtimeRoot: runtimeRoot.path,
+        installedExecutablePath: _macosWineExecutable(environment),
+      ),
+    );
+  }
+}
+
+class _GptkD3DMetalSource {
+  const _GptkD3DMetalSource({
+    required this.directory,
+    required this.framework,
+    required this.dylib,
+    required this.d3d12Dll,
+    required this.dxgiDll,
+  });
+
+  final Directory directory;
+  final Directory framework;
+  final File dylib;
+  final File d3d12Dll;
+  final File dxgiDll;
+}
+
+const _gptkD3DMetalComponentId = 'gptk-d3dmetal';
 
 class DartIoMacosWineInstaller implements MacosWineInstaller {
   DartIoMacosWineInstaller({
@@ -4241,6 +4432,11 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
         request.archiveUrl != null ||
         componentArchivePaths.isNotEmpty ||
         request.sourceManifest != null;
+    final shouldPreserveExistingRuntimeFiles =
+        !request.force &&
+        currentRuntime.isInstalled == true &&
+        currentRuntime.stack?.isComplete != true &&
+        !hasExplicitInstallSource;
     if (!request.force &&
         request.archivePath == null &&
         request.archiveUrl == null &&
@@ -4273,6 +4469,7 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
       return _installMacosWineStackFromSourceManifest(
         sourceManifest,
         sourceManifestSignature: sourceManifestSignature,
+        preserveExistingRuntimeFiles: shouldPreserveExistingRuntimeFiles,
         progressSink: progress,
       );
     }
@@ -4283,6 +4480,7 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
         archivePath: archive,
         archiveSha256: request.archiveSha256,
         componentArchivePaths: componentArchivePaths,
+        preserveExistingRuntimeFiles: shouldPreserveExistingRuntimeFiles,
         progressSink: progress,
       );
     }
@@ -4321,6 +4519,7 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
         archivePath: downloadedArchivePath,
         archiveSha256: request.archiveSha256,
         componentArchivePaths: componentArchivePaths,
+        preserveExistingRuntimeFiles: shouldPreserveExistingRuntimeFiles,
         progressSink: progress,
       );
     } on FileSystemException catch (error) {
@@ -4377,6 +4576,11 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
         request.archiveUrl != null ||
         componentArchivePaths.isNotEmpty ||
         request.sourceManifest != null;
+    final shouldPreserveExistingRuntimeFiles =
+        !request.force &&
+        currentRuntime.isInstalled == true &&
+        currentRuntime.stack?.isComplete != true &&
+        !hasExplicitInstallSource;
     if (!request.force &&
         request.archivePath == null &&
         request.archiveUrl == null &&
@@ -4409,6 +4613,7 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
       return _installMacosWineStackFromSourceManifestStreaming(
         sourceManifest,
         sourceManifestSignature: sourceManifestSignature,
+        preserveExistingRuntimeFiles: shouldPreserveExistingRuntimeFiles,
         progressSink: progress,
       );
     }
@@ -4419,6 +4624,7 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
         archivePath: archive,
         archiveSha256: request.archiveSha256,
         componentArchivePaths: componentArchivePaths,
+        preserveExistingRuntimeFiles: shouldPreserveExistingRuntimeFiles,
         progressSink: progress,
       );
     }
@@ -4457,6 +4663,7 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
         archivePath: downloadedArchivePath,
         archiveSha256: request.archiveSha256,
         componentArchivePaths: componentArchivePaths,
+        preserveExistingRuntimeFiles: shouldPreserveExistingRuntimeFiles,
         progressSink: progress,
       );
     } on FileSystemException catch (error) {
@@ -4475,6 +4682,7 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
     required String? archiveSha256,
     List<String> componentArchivePaths = const <String>[],
     Map<String, String> componentVersions = const <String, String>{},
+    bool preserveExistingRuntimeFiles = false,
     RuntimeInstallProgressSink? progressSink,
   }) {
     final installResult = _runtimePackageInstaller.install(
@@ -4488,6 +4696,7 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
         requiredExecutableRelativePath:
             _macosKonyakRuntimePlatformSpec.requiredExecutableRelativePath,
         expectedExecutablePath: _macosWineExecutable(environment),
+        preserveExistingRuntimeFiles: preserveExistingRuntimeFiles,
         normalizeStagingRoot:
             _macosKonyakRuntimePlatformSpec.layoutNormalization ==
                 _RuntimeLayoutNormalization.macosWineBundle
@@ -4533,6 +4742,7 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
   MacosWineInstallResult _installMacosWineStackFromSourceManifest(
     String sourceManifest, {
     required String? sourceManifestSignature,
+    required bool preserveExistingRuntimeFiles,
     required RuntimeInstallProgressSink? progressSink,
   }) {
     final tempDirectory = Directory.systemTemp.createTempSync(
@@ -4570,6 +4780,7 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
             archiveSha256: null,
             componentArchivePaths: bundle.componentArchivePaths,
             componentVersions: bundle.componentVersions,
+            preserveExistingRuntimeFiles: preserveExistingRuntimeFiles,
             progressSink: progressSink,
           ),
       };
@@ -4588,6 +4799,7 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
   _installMacosWineStackFromSourceManifestStreaming(
     String sourceManifest, {
     required String? sourceManifestSignature,
+    required bool preserveExistingRuntimeFiles,
     required RuntimeInstallProgressSink? progressSink,
   }) async {
     final tempDirectory = Directory.systemTemp.createTempSync(
@@ -4626,6 +4838,7 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
             archiveSha256: null,
             componentArchivePaths: bundle.componentArchivePaths,
             componentVersions: bundle.componentVersions,
+            preserveExistingRuntimeFiles: preserveExistingRuntimeFiles,
             progressSink: progressSink,
           ),
       };
@@ -6304,6 +6517,7 @@ CliResult runCli(
   PathOpener? pathOpener,
   MacosWineInstaller? macosWineInstaller,
   LinuxWineInstaller? linuxWineInstaller,
+  GptkWineInstaller? gptkWineInstaller,
   RuntimeUpdateChecker? runtimeUpdateChecker,
   AppUpdateChecker? appUpdateChecker,
   AppUpdateInstaller? appUpdateInstaller,
@@ -6329,6 +6543,7 @@ CliResult runCli(
       pathOpener: pathOpener,
       macosWineInstaller: macosWineInstaller,
       linuxWineInstaller: linuxWineInstaller,
+      gptkWineInstaller: gptkWineInstaller,
       runtimeUpdateChecker: runtimeUpdateChecker,
       appUpdateChecker: appUpdateChecker,
       appUpdateInstaller: appUpdateInstaller,
@@ -6370,6 +6585,7 @@ Future<CliResult> runCliStreaming(
   PathOpener? pathOpener,
   MacosWineInstaller? macosWineInstaller,
   LinuxWineInstaller? linuxWineInstaller,
+  GptkWineInstaller? gptkWineInstaller,
   RuntimeUpdateChecker? runtimeUpdateChecker,
   AppUpdateChecker? appUpdateChecker,
   AppUpdateInstaller? appUpdateInstaller,
@@ -6413,6 +6629,7 @@ Future<CliResult> runCliStreaming(
     pathOpener: pathOpener,
     macosWineInstaller: macosWineInstaller,
     linuxWineInstaller: linuxWineInstaller,
+    gptkWineInstaller: gptkWineInstaller,
     runtimeUpdateChecker: runtimeUpdateChecker,
     appUpdateChecker: appUpdateChecker,
     appUpdateInstaller: appUpdateInstaller,
@@ -7256,6 +7473,7 @@ CliResult _runCli(
   required PathOpener? pathOpener,
   required MacosWineInstaller? macosWineInstaller,
   required LinuxWineInstaller? linuxWineInstaller,
+  required GptkWineInstaller? gptkWineInstaller,
   required RuntimeUpdateChecker? runtimeUpdateChecker,
   required AppUpdateChecker? appUpdateChecker,
   required AppUpdateInstaller? appUpdateInstaller,
@@ -8252,6 +8470,62 @@ CliResult _runCli(
     };
   }
 
+  final gptkWineInstallRequest = _parseJsonGptkWineInstallRequest(arguments);
+  if (gptkWineInstallRequest != null) {
+    final installer = gptkWineInstaller;
+    if (installer == null) {
+      return _jsonError(
+        exitCode: 74,
+        code: 'gptkWineInstallerUnavailable',
+        message: 'GPTK-compatible Wine installer is not configured.',
+      );
+    }
+
+    return switch (installer.install(gptkWineInstallRequest)) {
+      GptkWineInstallCompleted(:final record) => CliResult(
+        exitCode: 0,
+        stdout: jsonEncode(<String, Object?>{
+          'schemaVersion': cliSchemaVersion,
+          'gptkWineInstall': record.toJson(),
+        }),
+        stderr: '',
+      ),
+      GptkWineInstallFailed(:final message) => _jsonError(
+        exitCode: 75,
+        code: 'gptkWineInstallFailed',
+        message: message,
+      ),
+    };
+  }
+
+  final openUrl = _parseJsonOpenUrlCommand(arguments);
+  if (openUrl != null) {
+    if (pathOpener == null) {
+      return _jsonError(
+        exitCode: 74,
+        code: 'pathOpenerUnavailable',
+        message: 'Path opener is not configured.',
+      );
+    }
+    final openResult = pathOpener.openPath(openUrl);
+    return switch (openResult) {
+      PathOpenCompleted() => CliResult(
+        exitCode: 0,
+        stdout: jsonEncode(<String, Object?>{
+          'schemaVersion': cliSchemaVersion,
+          'openedUrl': <String, Object?>{'url': openUrl},
+        }),
+        stderr: '',
+      ),
+      PathOpenFailed(:final message) => _jsonError(
+        exitCode: 75,
+        code: 'urlOpenFailed',
+        message: message,
+        extra: <String, Object?>{'url': openUrl},
+      ),
+    };
+  }
+
   final runtimeUpdateId = _parseJsonRuntimeIdCommand(
     arguments,
     'check-runtime-update',
@@ -8444,6 +8718,8 @@ Usage:
   konyak open-program-location <id> --program <path> --json
   konyak list-runtimes --json
   konyak check-macos-setup --json
+  konyak install-gptk-wine --from <path> --json
+  konyak open-url <https-url> --json
   konyak check-runtime-update <id> --json
   konyak install-runtime-update <id> --json
   konyak validate-runtime <id> --json
@@ -8890,6 +9166,39 @@ bool _isJsonMacosSetupCheckCommand(List<String> arguments) {
   return arguments.length == 2 &&
       arguments.first == 'check-macos-setup' &&
       arguments.last == '--json';
+}
+
+GptkWineInstallRequest? _parseJsonGptkWineInstallRequest(
+  List<String> arguments,
+) {
+  if (arguments.length != 4 ||
+      arguments.first != 'install-gptk-wine' ||
+      arguments[1] != '--from' ||
+      arguments.last != '--json') {
+    return null;
+  }
+
+  final sourcePath = arguments[2].trim();
+  if (sourcePath.isEmpty) {
+    return null;
+  }
+
+  return GptkWineInstallRequest(sourcePath: sourcePath);
+}
+
+String? _parseJsonOpenUrlCommand(List<String> arguments) {
+  if (arguments.length != 3 ||
+      arguments.first != 'open-url' ||
+      arguments.last != '--json') {
+    return null;
+  }
+
+  final url = arguments[1].trim();
+  if (url.startsWith('https://') || url.startsWith('http://')) {
+    return url;
+  }
+
+  return null;
 }
 
 String? _parseJsonRuntimeIdCommand(List<String> arguments, String command) {
@@ -9879,6 +10188,8 @@ const _macosKonyakRuntimeComponentDefinitions =
         relativePaths: <List<String>>[
           <String>['lib', 'external', 'D3DMetal.framework'],
           <String>['lib', 'external', 'libd3dshared.dylib'],
+          <String>['lib', 'wine', 'x86_64-windows', 'd3d12.dll'],
+          <String>['lib', 'wine', 'x86_64-windows', 'dxgi.dll'],
         ],
       ),
     ];
@@ -10078,7 +10389,20 @@ RuntimeStackComponent _runtimeStackComponent({
       .toList(growable: false);
   final missingPaths = paths
       .where((path) => !fileStatusProbe.exists(path))
-      .toList(growable: false);
+      .toList();
+  if (definition.id == 'gptk-d3dmetal') {
+    final frameworkBinary = _d3dMetalFrameworkBinary(paths.first);
+    if (frameworkBinary == null || !_looksLikeMachO(File(frameworkBinary))) {
+      if (!missingPaths.contains(paths.first)) {
+        missingPaths.add(paths.first);
+      }
+    }
+    if (!_looksLikeMachO(File(paths[1]))) {
+      if (!missingPaths.contains(paths[1])) {
+        missingPaths.add(paths[1]);
+      }
+    }
+  }
 
   return RuntimeStackComponent(
     id: definition.id,
@@ -10087,10 +10411,12 @@ RuntimeStackComponent _runtimeStackComponent({
     isRequired: definition.isRequired,
     paths: paths,
     missingPaths: missingPaths,
-    version: runtimeStackVersionProbe.versionFor(
-      runtimeRoot: runtimeRoot,
-      componentId: definition.id,
-    ),
+    version: missingPaths.isEmpty
+        ? runtimeStackVersionProbe.versionFor(
+            runtimeRoot: runtimeRoot,
+            componentId: definition.id,
+          )
+        : null,
   );
 }
 
@@ -10620,6 +10946,7 @@ String? _installRuntimeArchives({
   required Directory runtimeRoot,
   required List<String> requiredExecutableRelativePath,
   required String expectedExecutablePath,
+  required bool preserveExistingRuntimeFiles,
   void Function(Directory runtimeRoot)? normalizeStagingRoot,
   void Function(Directory runtimeRoot)? afterManifestWrite,
   RuntimeInstallProgressSink? progressSink,
@@ -10717,6 +11044,16 @@ String? _installRuntimeArchives({
       fraction: 0.92,
     );
     normalizeStagingRoot?.call(stagingRoot);
+    if (preserveExistingRuntimeFiles && runtimeRoot.existsSync()) {
+      _copyDirectoryContentsReplacing(
+        source: runtimeRoot,
+        destination: stagingRoot,
+      );
+      _mergeRuntimeStackManifest(
+        runtimeRoot: runtimeRoot,
+        componentVersions: resolvedComponentVersions,
+      );
+    }
     _writeRuntimeStackManifest(
       runtimeRoot: stagingRoot,
       componentVersions: resolvedComponentVersions,
@@ -10803,6 +11140,247 @@ void _writeRuntimeStackManifest({
       'components': componentVersions,
     }),
   );
+}
+
+void _upsertRuntimeStackComponentVersion({
+  required Directory runtimeRoot,
+  required String componentId,
+  required String version,
+}) {
+  final componentVersions = <String, String>{};
+  _mergeRuntimeStackManifest(
+    runtimeRoot: runtimeRoot,
+    componentVersions: componentVersions,
+  );
+  componentVersions[componentId] = version;
+  _writeRuntimeStackManifest(
+    runtimeRoot: runtimeRoot,
+    componentVersions: componentVersions,
+  );
+}
+
+Directory? _resolveGptkWineRoot(String sourcePath) {
+  final sourceType = FileSystemEntity.typeSync(sourcePath);
+  if (sourceType != FileSystemEntityType.directory) {
+    return null;
+  }
+
+  if (!_baseName(sourcePath).endsWith('.app')) {
+    return null;
+  }
+
+  final candidate = Directory(
+    _joinPath(sourcePath, const ['Contents', 'Resources', 'wine']),
+  );
+  if (_isGptkWineRootCandidate(candidate)) {
+    return candidate;
+  }
+
+  return null;
+}
+
+bool _isGptkWineRootCandidate(Directory directory) {
+  if (!directory.existsSync()) {
+    return false;
+  }
+  final wine64 = File(_joinPath(directory.path, const ['bin', 'wine64']));
+  final wineserver = File(
+    _joinPath(directory.path, const ['bin', 'wineserver']),
+  );
+  final lib = Directory(_joinPath(directory.path, const ['lib']));
+  final lib64 = Directory(_joinPath(directory.path, const ['lib64']));
+  return wine64.existsSync() &&
+      wineserver.existsSync() &&
+      (lib.existsSync() || lib64.existsSync());
+}
+
+String? _validateGptkWineRoot(Directory sourceRoot) {
+  final wine64 = File(_joinPath(sourceRoot.path, const ['bin', 'wine64']));
+  final wineserver = File(
+    _joinPath(sourceRoot.path, const ['bin', 'wineserver']),
+  );
+  if (!wine64.existsSync()) {
+    return 'GPTK-compatible Wine source is missing bin/wine64.';
+  }
+  if (!wineserver.existsSync()) {
+    return 'GPTK-compatible Wine source is missing bin/wineserver.';
+  }
+  if (!_looksLikeMachO(wine64)) {
+    return 'bin/wine64 is not a Mach-O binary. Konyak rejects fixture text '
+        'files and incomplete Wine copies.';
+  }
+  if (!_looksLikeMachO(wineserver)) {
+    return 'bin/wineserver is not a Mach-O binary. Konyak rejects fixture text '
+        'files and incomplete Wine copies.';
+  }
+
+  final lib = Directory(_joinPath(sourceRoot.path, const ['lib']));
+  final lib64 = Directory(_joinPath(sourceRoot.path, const ['lib64']));
+  if (!lib.existsSync() && !lib64.existsSync()) {
+    return 'GPTK-compatible Wine source is missing lib or lib64.';
+  }
+
+  return null;
+}
+
+String? _validateGptkD3DMetalSource(_GptkD3DMetalSource source) {
+  final frameworkBinary = _d3dMetalFrameworkBinary(source.framework.path);
+  if (frameworkBinary == null || !File(frameworkBinary).existsSync()) {
+    return 'D3DMetal.framework does not contain a D3DMetal binary.';
+  }
+  if (!_looksLikeMachO(File(frameworkBinary))) {
+    return 'D3DMetal.framework is not a Mach-O framework binary. Konyak '
+        'rejects fixture text files and incomplete GPTK copies.';
+  }
+  if (!_looksLikeMachO(source.dylib)) {
+    return 'libd3dshared.dylib is not a Mach-O binary. Konyak rejects fixture '
+        'text files and incomplete GPTK copies.';
+  }
+  if (!_looksLikePE(source.d3d12Dll)) {
+    return 'd3d12.dll is not a Windows PE binary. Select an official or '
+        'compatible Game Porting Toolkit distribution.';
+  }
+  if (!_looksLikePE(source.dxgiDll)) {
+    return 'dxgi.dll is not a Windows PE binary. Select an official or '
+        'compatible Game Porting Toolkit distribution.';
+  }
+  return null;
+}
+
+_GptkD3DMetalSource? _resolveGptkD3DMetalSource(String sourcePath) {
+  final sourceType = FileSystemEntity.typeSync(sourcePath);
+  if (sourceType == FileSystemEntityType.notFound) {
+    return null;
+  }
+
+  if (sourceType == FileSystemEntityType.directory &&
+      _baseName(sourcePath) == 'D3DMetal.framework') {
+    final framework = Directory(sourcePath);
+    final siblingDylib = File(
+      _joinPath(_dirname(sourcePath), const ['libd3dshared.dylib']),
+    );
+    final dllSource = _resolveGptkD3DMetalWindowsDlls(
+      Directory(_dirname(sourcePath)),
+    );
+    if (siblingDylib.existsSync() && dllSource != null) {
+      return _GptkD3DMetalSource(
+        directory: Directory(_dirname(sourcePath)),
+        framework: framework,
+        dylib: siblingDylib,
+        d3d12Dll: dllSource.d3d12Dll,
+        dxgiDll: dllSource.dxgiDll,
+      );
+    }
+    return null;
+  }
+
+  if (sourceType != FileSystemEntityType.directory) {
+    return null;
+  }
+
+  final candidate = Directory(_joinPath(sourcePath, const ['lib', 'external']));
+  final framework = Directory(
+    _joinPath(candidate.path, const ['D3DMetal.framework']),
+  );
+  final dylib = File(_joinPath(candidate.path, const ['libd3dshared.dylib']));
+  final dllSource = _resolveGptkD3DMetalWindowsDlls(candidate);
+  if (framework.existsSync() && dylib.existsSync() && dllSource != null) {
+    return _GptkD3DMetalSource(
+      directory: candidate,
+      framework: framework,
+      dylib: dylib,
+      d3d12Dll: dllSource.d3d12Dll,
+      dxgiDll: dllSource.dxgiDll,
+    );
+  }
+
+  return null;
+}
+
+class _GptkD3DMetalWindowsDllSource {
+  const _GptkD3DMetalWindowsDllSource({
+    required this.d3d12Dll,
+    required this.dxgiDll,
+  });
+
+  final File d3d12Dll;
+  final File dxgiDll;
+}
+
+_GptkD3DMetalWindowsDllSource? _resolveGptkD3DMetalWindowsDlls(
+  Directory sourceDirectory,
+) {
+  final d3d12 = File(
+    _joinPath(sourceDirectory.path, const [
+      '..',
+      'wine',
+      'x86_64-windows',
+      'd3d12.dll',
+    ]),
+  );
+  final dxgi = File(_joinPath(_dirname(d3d12.path), const ['dxgi.dll']));
+  if (d3d12.existsSync() && dxgi.existsSync()) {
+    return _GptkD3DMetalWindowsDllSource(d3d12Dll: d3d12, dxgiDll: dxgi);
+  }
+
+  return null;
+}
+
+String? _d3dMetalFrameworkBinary(String frameworkPath) {
+  for (final relativePath in const <List<String>>[
+    <String>['D3DMetal'],
+    <String>['Versions', 'A', 'D3DMetal'],
+  ]) {
+    final path = _joinPath(frameworkPath, relativePath);
+    if (File(path).existsSync()) {
+      return path;
+    }
+  }
+  return null;
+}
+
+bool _looksLikeMachO(File file) {
+  try {
+    if (!file.existsSync() || file.lengthSync() < 4) {
+      return false;
+    }
+    final bytes = file.openSync();
+    try {
+      final header = bytes.readSync(4);
+      if (header.length < 4) {
+        return false;
+      }
+      final magic =
+          header[0] << 24 | header[1] << 16 | header[2] << 8 | header[3];
+      return magic == 0xfeedface ||
+          magic == 0xcefaedfe ||
+          magic == 0xfeedfacf ||
+          magic == 0xcffaedfe ||
+          magic == 0xcafebabe ||
+          magic == 0xbebafeca;
+    } finally {
+      bytes.closeSync();
+    }
+  } on FileSystemException {
+    return false;
+  }
+}
+
+bool _looksLikePE(File file) {
+  try {
+    if (!file.existsSync() || file.lengthSync() < 2) {
+      return false;
+    }
+    final bytes = file.openSync();
+    try {
+      final header = bytes.readSync(2);
+      return header.length == 2 && header[0] == 0x4d && header[1] == 0x5a;
+    } finally {
+      bytes.closeSync();
+    }
+  } on FileSystemException {
+    return false;
+  }
 }
 
 RuntimeRecord? _runtimeById(List<RuntimeRecord> runtimes, String runtimeId) {
@@ -15100,6 +15678,95 @@ void _copyDirectory({
       Link(targetPath).createSync(entity.targetSync());
     }
   }
+}
+
+void _copyDirectoryContentsReplacing({
+  required Directory source,
+  required Directory destination,
+  List<List<String>> skipRelativePaths = const <List<String>>[],
+}) {
+  destination.createSync(recursive: true);
+  _copyDirectoryEntriesReplacing(
+    source: source,
+    destination: destination,
+    relativePath: const <String>[],
+    skipRelativePaths: skipRelativePaths,
+  );
+}
+
+void _copyDirectoryEntriesReplacing({
+  required Directory source,
+  required Directory destination,
+  required List<String> relativePath,
+  required List<List<String>> skipRelativePaths,
+}) {
+  for (final entity in source.listSync(followLinks: false)) {
+    final name = _baseName(entity.path);
+    final entityRelativePath = <String>[...relativePath, name];
+    if (_isSkippedRelativePath(entityRelativePath, skipRelativePaths)) {
+      continue;
+    }
+    final targetPath = _joinPath(destination.path, [name]);
+    if (entity is Directory) {
+      final targetType = FileSystemEntity.typeSync(targetPath);
+      if (targetType != FileSystemEntityType.notFound &&
+          targetType != FileSystemEntityType.directory) {
+        _deleteFileSystemEntitySync(targetPath, targetType);
+      }
+      final targetDirectory = Directory(targetPath)
+        ..createSync(recursive: true);
+      _copyDirectoryEntriesReplacing(
+        source: entity,
+        destination: targetDirectory,
+        relativePath: entityRelativePath,
+        skipRelativePaths: skipRelativePaths,
+      );
+    } else if (entity is File) {
+      final targetType = FileSystemEntity.typeSync(targetPath);
+      if (targetType == FileSystemEntityType.directory) {
+        Directory(targetPath).deleteSync(recursive: true);
+      }
+      entity.copySync(targetPath);
+    } else if (entity is Link) {
+      final targetType = FileSystemEntity.typeSync(targetPath);
+      if (targetType != FileSystemEntityType.notFound) {
+        _deleteFileSystemEntitySync(targetPath, targetType);
+      }
+      Link(targetPath).createSync(entity.targetSync());
+    }
+  }
+}
+
+void _deleteFileSystemEntitySync(String path, FileSystemEntityType type) {
+  if (type == FileSystemEntityType.directory) {
+    Directory(path).deleteSync(recursive: true);
+  } else if (type == FileSystemEntityType.link) {
+    Link(path).deleteSync();
+  } else {
+    File(path).deleteSync();
+  }
+}
+
+bool _isSkippedRelativePath(
+  List<String> relativePath,
+  List<List<String>> skipRelativePaths,
+) {
+  for (final skipped in skipRelativePaths) {
+    if (relativePath.length < skipped.length) {
+      continue;
+    }
+    var matches = true;
+    for (var index = 0; index < skipped.length; index += 1) {
+      if (relativePath[index] != skipped[index]) {
+        matches = false;
+        break;
+      }
+    }
+    if (matches) {
+      return true;
+    }
+  }
+  return false;
 }
 
 String? _nonEmptyEnvironmentValue(Map<String, String> environment, String key) {

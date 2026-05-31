@@ -16,6 +16,7 @@ import 'package:konyak/src/bottles/bottle_summary.dart';
 import 'package:konyak/src/cli/konyak_cli_client.dart';
 import 'package:konyak/src/files/bottle_archive_picker.dart';
 import 'package:konyak/src/files/directory_picker.dart';
+import 'package:konyak/src/files/gptk_wine_source_picker.dart';
 import 'package:konyak/src/files/program_file_picker.dart';
 import 'package:konyak/src/logs/log_reader.dart';
 
@@ -4446,6 +4447,122 @@ void main() {
     ]);
   });
 
+  testWidgets('macOS settings dialog installs GPTK-compatible Wine', (
+    WidgetTester tester,
+  ) async {
+    final runner = _QueuedProcessRunner([
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '{"schemaVersion":1,"bottles":[]}',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "appSettings": {
+              "terminateWineProcessesOnClose": false,
+              "defaultBottlePath": "/Users/user/Library/Application Support/Konyak/Bottles",
+              "appearanceMode": "dark",
+              "automaticallyCheckForKonyakUpdates": false,
+              "automaticallyCheckForWineUpdates": false
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+      ProcessRunResult(
+        exitCode: 0,
+        stdout: _macosRuntimeListPayload(gptkAvailable: true),
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout:
+            '{"schemaVersion":1,"openedUrl":{"url":"https://github.com/Gcenx/game-porting-toolkit/releases"}}',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '{"schemaVersion":1,"gptkWineInstall":{"componentId":"wine"}}',
+        stderr: '',
+      ),
+      ProcessRunResult(
+        exitCode: 0,
+        stdout: _macosRuntimeListPayload(gptkAvailable: true),
+        stderr: '',
+      ),
+    ]);
+
+    await tester.pumpWidget(
+      _testKonyakApp(
+        platform: KonyakPlatform.macos,
+        cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
+        gptkWineSourcePicker: const _FakeGptkWineSourcePicker(
+          path: '/Applications/Game Porting Toolkit.app',
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Settings'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Open GPTK releases'), findsOneWidget);
+    expect(find.text('Select GPTK app'), findsOneWidget);
+    expect(find.text('Replace D3DMetal'), findsNothing);
+    expect(
+      find.textContaining('Konyak does not bundle or redistribute it'),
+      findsOneWidget,
+    );
+
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('app-settings-open-gptk-page-button')),
+    );
+    await tester.tap(
+      find.byKey(const ValueKey('app-settings-open-gptk-page-button')),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('app-settings-install-gptk-wine-button')),
+    );
+    await tester.tap(
+      find.byKey(const ValueKey('app-settings-install-gptk-wine-button')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Replace Wine Runtime?'), findsOneWidget);
+    expect(
+      find.textContaining('replaces the current macOS Wine runtime'),
+      findsOneWidget,
+    );
+
+    await tester.tap(
+      find.byKey(const ValueKey('app-settings-confirm-gptk-wine-button')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(runner.argumentsLog, const [
+      ['list-bottles', '--json'],
+      ['get-app-settings', '--json'],
+      ['list-runtimes', '--json'],
+      [
+        'open-url',
+        'https://github.com/Gcenx/game-porting-toolkit/releases',
+        '--json',
+      ],
+      [
+        'install-gptk-wine',
+        '--from',
+        '/Applications/Game Porting Toolkit.app',
+        '--json',
+      ],
+      ['list-runtimes', '--json'],
+    ]);
+  });
+
   testWidgets(
     'macOS settings dialog distinguishes installed incomplete runtime',
     (WidgetTester tester) async {
@@ -4552,6 +4669,12 @@ void main() {
         find.byKey(const ValueKey('app-settings-install-runtime-button')),
       );
       await tester.pumpAndSettle();
+      expect(
+        (tester.getCenter(find.widgetWithText(FilledButton, 'Repair')).dy -
+                tester.getCenter(find.text('Incomplete')).dy)
+            .abs(),
+        lessThan(24),
+      );
       await tester.tap(
         find.byKey(const ValueKey('app-settings-install-runtime-button')),
       );
@@ -5586,6 +5709,7 @@ KonyakApp _testKonyakApp({
   LogReader? logReader,
   ProgramFilePicker? programFilePicker,
   DirectoryPicker? directoryPicker,
+  GptkWineSourcePicker? gptkWineSourcePicker,
   BottleArchivePicker? bottleArchivePicker,
   List<String> initialExecutablePaths = const <String>[],
   bool enableBackgroundServices = false,
@@ -5596,6 +5720,7 @@ KonyakApp _testKonyakApp({
     logReader: logReader,
     programFilePicker: programFilePicker,
     directoryPicker: directoryPicker,
+    gptkWineSourcePicker: gptkWineSourcePicker,
     bottleArchivePicker: bottleArchivePicker,
     initialExecutablePaths: initialExecutablePaths,
     enableBackgroundServices: enableBackgroundServices,
@@ -5674,7 +5799,10 @@ Uint8List _singlePixelIcoBytes() {
   return bytes;
 }
 
-String _macosRuntimeListPayload({bool dxvkAvailable = true}) {
+String _macosRuntimeListPayload({
+  bool dxvkAvailable = true,
+  bool gptkAvailable = true,
+}) {
   return jsonEncode(<String, Object?>{
     'schemaVersion': 1,
     'runtimes': <Object?>[
@@ -5737,6 +5865,10 @@ String _macosRuntimeListPayload({bool dxvkAvailable = true}) {
               name: 'GPTK/D3DMetal',
               role: 'd3d12-metal-translation',
               isRequired: false,
+              version: gptkAvailable ? 'user-provided' : null,
+              missingPaths: gptkAvailable
+                  ? const <String>[]
+                  : ['/runtime/lib/external/D3DMetal.framework'],
             ),
           ],
         },
@@ -5805,6 +5937,7 @@ Map<String, Object?> _runtimeStackComponentPayload({
   required String name,
   required String role,
   bool isRequired = true,
+  String? version,
   List<String> missingPaths = const <String>[],
 }) {
   return <String, Object?>{
@@ -5815,6 +5948,7 @@ Map<String, Object?> _runtimeStackComponentPayload({
     'isInstalled': missingPaths.isEmpty,
     'paths': const <String>[],
     'missingPaths': missingPaths,
+    ...?version == null ? null : <String, Object?>{'version': version},
   };
 }
 
@@ -5929,6 +6063,15 @@ final class _FakeDirectoryPicker implements DirectoryPicker {
 
   @override
   Future<String?> pickDirectoryPath() async => path;
+}
+
+final class _FakeGptkWineSourcePicker implements GptkWineSourcePicker {
+  const _FakeGptkWineSourcePicker({required this.path});
+
+  final String? path;
+
+  @override
+  Future<String?> pickSourcePath() async => path;
 }
 
 final class _FakeBottleArchivePicker implements BottleArchivePicker {
