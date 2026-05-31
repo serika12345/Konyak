@@ -15,6 +15,7 @@ const runtimeSettingsControlAvxEnabled = 'avxEnabled';
 const runtimeSettingsControlDxvk = 'dxvk';
 const runtimeSettingsControlDxvkAsync = 'dxvkAsync';
 const runtimeSettingsControlDxvkHud = 'dxvkHud';
+const runtimeSettingsControlVkd3dProton = 'vkd3dProton';
 const runtimeSettingsControlMetalHud = 'metalHud';
 const runtimeSettingsControlMetalTrace = 'metalTrace';
 const runtimeSettingsControlDxrEnabled = 'dxrEnabled';
@@ -55,7 +56,9 @@ class BottleConfigurationView extends StatelessWidget {
             ? _isRuntimeComponentAvailable('dxvk-macos')
             : _isRuntimeComponentAvailable('dxvk'));
     final canUseVkd3dProton =
-        canChangeSettings && _isRuntimeComponentAvailable('vkd3d-proton');
+        canChangeSettings &&
+        !hasPendingRuntimeSettings &&
+        _isRuntimeComponentAvailable('vkd3d-proton');
     final canUseMetal =
         canChangeSettings &&
         !hasPendingRuntimeSettings &&
@@ -233,13 +236,20 @@ class BottleConfigurationView extends StatelessWidget {
               children: [
                 BottleConfigurationSwitchRow(
                   switchKey: const ValueKey('config-vkd3d-proton-switch'),
+                  loadingKey: const ValueKey(
+                    'config-vkd3d-proton-switch-loading',
+                  ),
                   label: 'vkd3d-proton',
                   value: settings.vkd3dProton,
+                  isLoading:
+                      pendingRuntimeSettingsControlKey ==
+                      runtimeSettingsControlVkd3dProton,
                   onChanged: !canUseVkd3dProton
                       ? null
                       : (value) {
                           _updateRuntimeSettings(
                             settings.copyWith(vkd3dProton: value),
+                            runtimeSettingsControlVkd3dProton,
                           );
                         },
                 ),
