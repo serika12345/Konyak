@@ -9,6 +9,7 @@ import '../widgets/konyak_top_bar.dart';
 import 'bottle_configuration_view.dart';
 import 'bottle_overview.dart';
 import 'bottom_bars.dart';
+import 'runtime_settings_change.dart';
 
 enum BottleDetailMode { overview, configuration, programConfiguration }
 
@@ -28,6 +29,7 @@ class KonyakBottleDetail extends StatelessWidget {
     required this.selectedProgram,
     required this.programSettings,
     required this.isProgramSettingsLoading,
+    required this.pendingRuntimeSettingsControlKey,
     required this.onBackToBottle,
     required this.onShowBottleConfiguration,
     required this.onRuntimeSettingsChanged,
@@ -60,13 +62,10 @@ class KonyakBottleDetail extends StatelessWidget {
   final PinnedProgramSummary? selectedProgram;
   final ProgramSettingsSummary? programSettings;
   final bool isProgramSettingsLoading;
+  final String? pendingRuntimeSettingsControlKey;
   final VoidCallback? onBackToBottle;
   final ValueChanged<BottleSummary>? onShowBottleConfiguration;
-  final void Function(
-    BottleSummary bottle,
-    BottleRuntimeSettingsSummary runtimeSettings,
-  )?
-  onRuntimeSettingsChanged;
+  final RuntimeSettingsChanged? onRuntimeSettingsChanged;
   final ValueChanged<BottleSummary>? onDeleteBottle;
   final ValueChanged<BottleSummary>? onRunProgram;
   final void Function(BottleSummary bottle, String programPath)?
@@ -139,6 +138,8 @@ class KonyakBottleDetail extends StatelessWidget {
                     platform: platform,
                     runtime: runtime,
                     bottle: activeBottle,
+                    pendingRuntimeSettingsControlKey:
+                        pendingRuntimeSettingsControlKey,
                     onRuntimeSettingsChanged: onRuntimeSettingsChanged,
                   )
                 : BottleOverview(

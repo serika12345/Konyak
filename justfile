@@ -48,6 +48,18 @@ cli-analyze:
 cli-test:
   if [ -d packages/konyak_cli ]; then cd packages/konyak_cli && dart test; fi
 
+linux-vulkan-wine-smoke:
+  zsh scripts/run_linux_vulkan_wine_smoke.zsh
+
+macos-vulkan-wine-smoke:
+  zsh scripts/run_macos_vulkan_wine_smoke.zsh
+
+macos-vulkan-probe-bottle:
+  zsh scripts/prepare_macos_vulkan_probe_bottle.zsh
+
+macos-optional-runtime-probe-bottles:
+  zsh scripts/prepare_macos_optional_runtime_probe_bottles.zsh
+
 swift-lint:
   if [ "$(uname -s)" = "Darwin" ] && [ -d /Applications/Xcode.app/Contents/Developer ]; then DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer PATH=/usr/bin:$PATH swiftlint; else swiftlint; fi
 

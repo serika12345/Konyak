@@ -5,6 +5,7 @@ import '../../runtimes/runtime_summary.dart';
 import '../app_constants.dart';
 import '../app_platform.dart';
 import '../bottles/bottle_detail.dart';
+import '../bottles/runtime_settings_change.dart';
 import '../utils/bottle_lists.dart';
 import '../widgets/konyak_menu_bar.dart';
 import 'sidebar.dart';
@@ -34,6 +35,7 @@ class KonyakHome extends StatefulWidget {
     this.onPinProgram,
     this.programSettings = const <String, ProgramSettingsSummary>{},
     this.loadingProgramSettings = const <String>{},
+    this.pendingRuntimeSettingsControls = const <String, String>{},
     this.onLoadPinnedProgramSettings,
     this.onProgramSettingsChanged,
     this.onUnpinProgram,
@@ -59,11 +61,7 @@ class KonyakHome extends StatefulWidget {
   final VoidCallback? onImportBottleArchive;
   final ValueChanged<BottleSummary>? onExportBottleArchive;
   final VoidCallback? onViewLatestLog;
-  final void Function(
-    BottleSummary bottle,
-    BottleRuntimeSettingsSummary runtimeSettings,
-  )?
-  onRuntimeSettingsChanged;
+  final RuntimeSettingsChanged? onRuntimeSettingsChanged;
   final ValueChanged<BottleSummary>? onLoadBottleConfiguration;
   final ValueChanged<BottleSummary>? onDeleteBottle;
   final ValueChanged<BottleSummary>? onRenameBottle;
@@ -74,6 +72,7 @@ class KonyakHome extends StatefulWidget {
   final ValueChanged<BottleSummary>? onPinProgram;
   final Map<String, ProgramSettingsSummary> programSettings;
   final Set<String> loadingProgramSettings;
+  final Map<String, String> pendingRuntimeSettingsControls;
   final void Function(BottleSummary bottle, PinnedProgramSummary program)?
   onLoadPinnedProgramSettings;
   final void Function(
@@ -153,6 +152,9 @@ class _KonyakHomeState extends State<KonyakHome> {
       selectedBottle,
       _selectedProgramPath,
     );
+    final selectedBottleHasPendingRuntimeSettings =
+        selectedBottle != null &&
+        widget.pendingRuntimeSettingsControls.containsKey(selectedBottle.id);
 
     return Scaffold(
       body: Column(
@@ -201,13 +203,15 @@ class _KonyakHomeState extends State<KonyakHome> {
                     searchController: _searchController,
                     onSearchChanged: (_) => setState(() {}),
                     onToggleSidebar: _toggleSidebar,
-                    onBottleSelected: (bottle) {
-                      setState(() {
-                        _selectedBottleId = bottle.id;
-                        _detailMode = BottleDetailMode.overview;
-                        _selectedProgramPath = null;
-                      });
-                    },
+                    onBottleSelected: selectedBottleHasPendingRuntimeSettings
+                        ? null
+                        : (bottle) {
+                            setState(() {
+                              _selectedBottleId = bottle.id;
+                              _detailMode = BottleDetailMode.overview;
+                              _selectedProgramPath = null;
+                            });
+                          },
                     onBottleContextMenuAction: _handleBottleContextMenuAction,
                   ),
                   collapsedSidebar: CollapsedSidebarToggle(
@@ -249,7 +253,13 @@ class _KonyakHomeState extends State<KonyakHome> {
                             programPath: selectedProgram.path,
                           ),
                         ),
-                    onBackToBottle: _showBottleOverview,
+                    pendingRuntimeSettingsControlKey: selectedBottle == null
+                        ? null
+                        : widget.pendingRuntimeSettingsControls[selectedBottle
+                              .id],
+                    onBackToBottle: selectedBottleHasPendingRuntimeSettings
+                        ? null
+                        : _showBottleOverview,
                     onShowBottleConfiguration: _showBottleConfiguration,
                     onRuntimeSettingsChanged: widget.onRuntimeSettingsChanged,
                     onDeleteBottle: widget.onDeleteBottle,
@@ -299,6 +309,9 @@ class _KonyakHomeState extends State<KonyakHome> {
   }
 
   void _showBottleConfiguration(BottleSummary bottle) {
+    if (widget.pendingRuntimeSettingsControls.containsKey(bottle.id)) {
+      return;
+    }
     setState(() {
       _selectedBottleId = bottle.id;
       _detailMode = BottleDetailMode.configuration;
@@ -311,6 +324,9 @@ class _KonyakHomeState extends State<KonyakHome> {
     BottleSummary bottle,
     PinnedProgramSummary program,
   ) {
+    if (widget.pendingRuntimeSettingsControls.containsKey(bottle.id)) {
+      return;
+    }
     setState(() {
       _selectedBottleId = bottle.id;
       _selectedProgramPath = program.path;
@@ -320,6 +336,14 @@ class _KonyakHomeState extends State<KonyakHome> {
   }
 
   void _showBottleOverview() {
+    final selectedBottle = findSelectedBottle(
+      widget.bottles,
+      _selectedBottleId,
+    );
+    if (selectedBottle != null &&
+        widget.pendingRuntimeSettingsControls.containsKey(selectedBottle.id)) {
+      return;
+    }
     setState(() {
       _detailMode = BottleDetailMode.overview;
       _selectedProgramPath = null;

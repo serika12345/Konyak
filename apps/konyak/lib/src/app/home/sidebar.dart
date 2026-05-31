@@ -65,7 +65,7 @@ class KonyakSidebar extends StatelessWidget {
   final TextEditingController searchController;
   final ValueChanged<String> onSearchChanged;
   final VoidCallback onToggleSidebar;
-  final ValueChanged<BottleSummary> onBottleSelected;
+  final ValueChanged<BottleSummary>? onBottleSelected;
   final void Function(BottleSummary bottle, BottleContextMenuAction action)
   onBottleContextMenuAction;
 
@@ -171,7 +171,9 @@ class KonyakSidebar extends StatelessWidget {
                         return SidebarBottleItem(
                           bottle: bottle,
                           isSelected: isSelected,
-                          onTap: () => onBottleSelected(bottle),
+                          onTap: onBottleSelected == null
+                              ? null
+                              : () => onBottleSelected!(bottle),
                           onContextMenuAction: (action) {
                             onBottleContextMenuAction(bottle, action);
                           },
@@ -239,7 +241,7 @@ class SidebarBottleItem extends StatelessWidget {
 
   final BottleSummary bottle;
   final bool isSelected;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final ValueChanged<BottleContextMenuAction> onContextMenuAction;
 
   @override
@@ -249,7 +251,7 @@ class SidebarBottleItem extends StatelessWidget {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onSecondaryTapDown: (details) {
-        onTap();
+        onTap?.call();
         _showBottleContextMenu(context, details.globalPosition);
       },
       child: Material(

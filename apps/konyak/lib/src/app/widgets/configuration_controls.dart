@@ -147,25 +147,37 @@ class BottleConfigurationSwitchRow extends StatelessWidget {
   const BottleConfigurationSwitchRow({
     super.key,
     this.switchKey,
+    this.loadingKey,
     required this.label,
     required this.value,
     required this.onChanged,
+    this.isLoading = false,
   });
 
   final Key? switchKey;
+  final Key? loadingKey;
   final String label;
   final bool value;
   final ValueChanged<bool>? onChanged;
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
     return BottleConfigurationRow(
       label: label,
-      trailing: KonyakToggle(
-        key: switchKey,
-        value: value,
-        onChanged: onChanged,
-      ),
+      trailing: isLoading
+          ? SizedBox(
+              key: loadingKey,
+              width: 36,
+              height: 20,
+              child: const Center(
+                child: SizedBox.square(
+                  dimension: 14,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            )
+          : KonyakToggle(key: switchKey, value: value, onChanged: onChanged),
     );
   }
 }

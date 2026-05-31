@@ -34,12 +34,14 @@
             bashInteractive
             coreutils
             curl
+            glslang
             gawk
             gnused
             gnutar
             gzip
             jq
             openssl
+            vulkan-headers
             xz
             zstd
             zsh
@@ -85,6 +87,7 @@
 
           linuxHostRuntimePackages = with pkgs; [
             dbus
+            pkgsCross.mingwW64.stdenv.cc
             vulkan-loader
             vulkan-tools
             vulkan-validation-layers
@@ -140,6 +143,7 @@
 
           darwinDevelopmentRuntimeSourcePackages = with pkgs; [
             gst_all_1.gstreamer
+            pkgsCross.mingwW64.stdenv.cc
           ];
 
           releaseBuildPackages =

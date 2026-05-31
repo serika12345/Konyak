@@ -2451,7 +2451,7 @@ void main() {
     },
   );
 
-  testWidgets('bottle configuration toggles update immediately', (
+  testWidgets('bottle configuration toggles show pending state until saved', (
     WidgetTester tester,
   ) async {
     final semantics = tester.ensureSemantics();
@@ -2551,14 +2551,15 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('config-dxvk-switch')));
     await tester.pump();
 
+    expect(find.byKey(const ValueKey('config-dxvk-switch')), findsNothing);
     expect(
-      tester
-          .getSemantics(find.byKey(const ValueKey('config-dxvk-switch')))
-          .flagsCollection
-          .isToggled,
-      Tristate.isTrue,
+      find.byKey(const ValueKey('config-dxvk-switch-loading')),
+      findsOneWidget,
     );
     expect(runner.argumentsLog.length, 4);
+
+    expect(find.byTooltip('Back to bottle'), findsNothing);
+    expect(find.text('Bottle Configuration'), findsOneWidget);
 
     runtimeUpdateCompleter.complete(
       const ProcessRunResult(
@@ -2591,6 +2592,17 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey('config-dxvk-switch-loading')),
+      findsNothing,
+    );
+    expect(
+      tester
+          .getSemantics(find.byKey(const ValueKey('config-dxvk-switch')))
+          .flagsCollection
+          .isToggled,
+      Tristate.isTrue,
+    );
     semantics.dispose();
   });
 

@@ -703,13 +703,19 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       'dpiScaling': 144,
     });
 
-    final result = runCli([
-      'set-runtime-settings',
-      'steam',
-      '--settings-json',
-      settingsJson,
-      '--json',
-    ], bottleRepository: repository);
+    final result = runCli(
+      [
+        'set-runtime-settings',
+        'steam',
+        '--settings-json',
+        settingsJson,
+        '--json',
+      ],
+      bottleRepository: repository,
+      programRunPlanner: ProgramRunPlanner(
+        hostPlatform: KonyakHostPlatform.linux,
+      ),
+    );
 
     expect(result.exitCode, 0);
     expect(result.stderr, isEmpty);
@@ -750,6 +756,93 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
         dpiScaling: 144,
       ),
     );
+  });
+
+  test('set-runtime-settings --json installs macOS DXVK DLL overrides', () {
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-dxvk-overrides-test-',
+    );
+    addTearDown(() {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    });
+
+    final runtimeRoot = _joinTestPath(tempDirectory.path, const ['runtime']);
+    final bottlePath = _joinTestPath(tempDirectory.path, const [
+      'bottles',
+      'steam',
+    ]);
+    for (final arch in const ['x64', 'x32']) {
+      for (final dllName in const [
+        'dxgi.dll',
+        'd3d9.dll',
+        'd3d10core.dll',
+        'd3d11.dll',
+      ]) {
+        final file = File(_joinTestPath(runtimeRoot, ['DXVK', arch, dllName]));
+        file.parent.createSync(recursive: true);
+        file.writeAsStringSync('$arch/$dllName');
+      }
+    }
+    final repository = MemoryBottleRepository(
+      dataHome: _joinTestPath(tempDirectory.path, const ['data']),
+      bottles: [
+        BottleRecord(
+          id: 'steam',
+          name: 'Steam',
+          path: bottlePath,
+          windowsVersion: 'win10',
+        ),
+      ],
+    );
+
+    final result = runCli(
+      [
+        'set-runtime-settings',
+        'steam',
+        '--settings-json',
+        jsonEncode({'dxvk': true}),
+        '--json',
+      ],
+      bottleRepository: repository,
+      programRunPlanner: ProgramRunPlanner(
+        hostPlatform: KonyakHostPlatform.macos,
+        environment: {'KONYAK_MACOS_WINE_HOME': runtimeRoot},
+      ),
+    );
+
+    expect(result.exitCode, 0);
+    expect(result.stderr, isEmpty);
+    for (final dllName in const [
+      'dxgi.dll',
+      'd3d9.dll',
+      'd3d10core.dll',
+      'd3d11.dll',
+    ]) {
+      expect(
+        File(
+          _joinTestPath(bottlePath, [
+            'drive_c',
+            'windows',
+            'system32',
+            dllName,
+          ]),
+        ).readAsStringSync(),
+        'x64/$dllName',
+      );
+      expect(
+        File(
+          _joinTestPath(bottlePath, [
+            'drive_c',
+            'windows',
+            'syswow64',
+            dllName,
+          ]),
+        ).readAsStringSync(),
+        'x32/$dllName',
+      );
+    }
   });
 
   test('set-runtime-settings --json applies registry-backed settings', () {
@@ -2343,6 +2436,13 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       containsPair('WINEDEBUG', 'fixme-all'),
     );
     expect(runner.lastRequest?.environment, containsPair('GST_DEBUG', '1'));
+    expect(
+      runner.lastRequest?.environment,
+      containsPair(
+        'DYLD_LIBRARY_PATH',
+        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib',
+      ),
+    );
 
     final payload = jsonDecode(result.stdout) as Map<String, Object?>;
     expect(payload, {
@@ -2436,6 +2536,13 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
     expect(
       runner.lastRequest?.environment,
       containsPair('WINEDLLOVERRIDES', 'dxgi,d3d9,d3d10core,d3d11=n,b'),
+    );
+    expect(
+      runner.lastRequest?.environment,
+      containsPair(
+        'WINEDLLPATH',
+        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/DXVK/x64:/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/DXVK/x32',
+      ),
     );
   });
 
@@ -4379,7 +4486,13 @@ corefonts                Microsoft Core Fonts
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wineserver',
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wine',
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/DXVK/x64/dxgi.dll',
+          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/DXVK/x64/d3d9.dll',
+          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/DXVK/x64/d3d10core.dll',
+          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/DXVK/x64/d3d11.dll',
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/DXVK/x32/dxgi.dll',
+          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/DXVK/x32/d3d9.dll',
+          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/DXVK/x32/d3d10core.dll',
+          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/DXVK/x32/d3d11.dll',
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/libMoltenVK.dylib',
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/libgstreamer-1.0.0.dylib',
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/share/wine/mono',
@@ -4449,7 +4562,13 @@ corefonts                Microsoft Core Fonts
                 'isInstalled': true,
                 'paths': [
                   '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/DXVK/x64/dxgi.dll',
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/DXVK/x64/d3d9.dll',
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/DXVK/x64/d3d10core.dll',
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/DXVK/x64/d3d11.dll',
                   '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/DXVK/x32/dxgi.dll',
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/DXVK/x32/d3d9.dll',
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/DXVK/x32/d3d10core.dll',
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/DXVK/x32/d3d11.dll',
                 ],
                 'missingPaths': <Object?>[],
               },
@@ -4592,8 +4711,12 @@ corefonts                Microsoft Core Fonts
           '/home/user/.local/share/konyak/Runtimes/linux-wine/winetricks',
           '/home/user/.local/share/konyak/Runtimes/linux-wine/share/wine/mono',
           '/home/user/.local/share/konyak/Runtimes/linux-wine/dxvk/x64/dxgi.dll',
+          '/home/user/.local/share/konyak/Runtimes/linux-wine/dxvk/x64/d3d9.dll',
+          '/home/user/.local/share/konyak/Runtimes/linux-wine/dxvk/x64/d3d10core.dll',
           '/home/user/.local/share/konyak/Runtimes/linux-wine/dxvk/x64/d3d11.dll',
           '/home/user/.local/share/konyak/Runtimes/linux-wine/dxvk/x86/dxgi.dll',
+          '/home/user/.local/share/konyak/Runtimes/linux-wine/dxvk/x86/d3d9.dll',
+          '/home/user/.local/share/konyak/Runtimes/linux-wine/dxvk/x86/d3d10core.dll',
           '/home/user/.local/share/konyak/Runtimes/linux-wine/dxvk/x86/d3d11.dll',
           '/home/user/.local/share/konyak/Runtimes/linux-wine/vkd3d-proton/x64/d3d12.dll',
           '/home/user/.local/share/konyak/Runtimes/linux-wine/vkd3d-proton/x86/d3d12.dll',
@@ -4671,8 +4794,12 @@ corefonts                Microsoft Core Fonts
                 'isInstalled': true,
                 'paths': [
                   '/home/user/.local/share/konyak/Runtimes/linux-wine/dxvk/x64/dxgi.dll',
+                  '/home/user/.local/share/konyak/Runtimes/linux-wine/dxvk/x64/d3d9.dll',
+                  '/home/user/.local/share/konyak/Runtimes/linux-wine/dxvk/x64/d3d10core.dll',
                   '/home/user/.local/share/konyak/Runtimes/linux-wine/dxvk/x64/d3d11.dll',
                   '/home/user/.local/share/konyak/Runtimes/linux-wine/dxvk/x86/dxgi.dll',
+                  '/home/user/.local/share/konyak/Runtimes/linux-wine/dxvk/x86/d3d9.dll',
+                  '/home/user/.local/share/konyak/Runtimes/linux-wine/dxvk/x86/d3d10core.dll',
                   '/home/user/.local/share/konyak/Runtimes/linux-wine/dxvk/x86/d3d11.dll',
                 ],
                 'missingPaths': <Object?>[],
@@ -4694,6 +4821,52 @@ corefonts                Microsoft Core Fonts
         },
       ],
     });
+  });
+
+  test('list-runtimes --json requires every Linux DXVK override DLL', () {
+    final result = runCli(
+      const ['list-runtimes', '--json'],
+      runtimeCatalog: KonyakRuntimeCatalog(
+        hostPlatform: KonyakHostPlatform.linux,
+        environment: const {'HOME': '/home/user'},
+        fileStatusProbe: const StaticFileStatusProbe({
+          '/home/user/.local/share/konyak/Runtimes/linux-wine/bin/wine',
+          '/home/user/.local/share/konyak/Runtimes/linux-wine/bin/winedbg',
+          '/home/user/.local/share/konyak/Runtimes/linux-wine/bin/wineserver',
+          '/home/user/.local/share/konyak/Runtimes/linux-wine/winetricks',
+          '/home/user/.local/share/konyak/Runtimes/linux-wine/share/wine/mono',
+          '/home/user/.local/share/konyak/Runtimes/linux-wine/dxvk/x64/dxgi.dll',
+          '/home/user/.local/share/konyak/Runtimes/linux-wine/dxvk/x64/d3d11.dll',
+          '/home/user/.local/share/konyak/Runtimes/linux-wine/dxvk/x86/dxgi.dll',
+          '/home/user/.local/share/konyak/Runtimes/linux-wine/dxvk/x86/d3d11.dll',
+          '/home/user/.local/share/konyak/Runtimes/linux-wine/vkd3d-proton/x64/d3d12.dll',
+          '/home/user/.local/share/konyak/Runtimes/linux-wine/vkd3d-proton/x86/d3d12.dll',
+        }),
+      ),
+    );
+
+    expect(result.exitCode, 0);
+
+    final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+    final runtime =
+        (payload['runtimes'] as List<Object?>).single as Map<String, Object?>;
+    final stack = runtime['stack'] as Map<String, Object?>;
+    final components = stack['components'] as List<Object?>;
+    final dxvk = components.cast<Map<String, Object?>>().singleWhere(
+      (component) => component['id'] == 'dxvk',
+    );
+
+    expect(stack['isComplete'], isFalse);
+    expect(dxvk['isInstalled'], isFalse);
+    expect(
+      dxvk['missingPaths'],
+      containsAll(<String>[
+        '/home/user/.local/share/konyak/Runtimes/linux-wine/dxvk/x64/d3d9.dll',
+        '/home/user/.local/share/konyak/Runtimes/linux-wine/dxvk/x64/d3d10core.dll',
+        '/home/user/.local/share/konyak/Runtimes/linux-wine/dxvk/x86/d3d9.dll',
+        '/home/user/.local/share/konyak/Runtimes/linux-wine/dxvk/x86/d3d10core.dll',
+      ]),
+    );
   });
 
   test('list-runtimes --json reports the Linux development runtime profile', () {
@@ -6642,7 +6815,13 @@ corefonts                Microsoft Core Fonts
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wineserver',
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wine',
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/DXVK/x64/dxgi.dll',
+        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/DXVK/x64/d3d9.dll',
+        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/DXVK/x64/d3d10core.dll',
+        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/DXVK/x64/d3d11.dll',
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/DXVK/x32/dxgi.dll',
+        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/DXVK/x32/d3d9.dll',
+        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/DXVK/x32/d3d10core.dll',
+        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/DXVK/x32/d3d11.dll',
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/libMoltenVK.dylib',
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/libgstreamer-1.0.0.dylib',
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/share/wine/mono',
@@ -7075,10 +7254,7 @@ corefonts                Microsoft Core Fonts
     final dxvkArchive = _createKonyakRuntimeComponentArchive(
       tempDirectory.path,
       archiveName: 'dxvk-macos',
-      relativePaths: const <List<String>>[
-        <String>['Components', 'DXVK-macOS', 'DXVK', 'x64', 'dxgi.dll'],
-        <String>['Components', 'DXVK-macOS', 'DXVK', 'x32', 'dxgi.dll'],
-      ],
+      relativePaths: _macosDxvkComponentPaths,
       versions: const <String, String>{'dxvk-macos': 'dxvk-macos-fixture'},
     );
     final moltenVkArchive = _createKonyakRuntimeComponentArchive(
@@ -7234,10 +7410,7 @@ corefonts                Microsoft Core Fonts
     final dxvkArchive = _createKonyakRuntimeComponentArchive(
       tempDirectory.path,
       archiveName: 'source-dxvk-macos',
-      relativePaths: const <List<String>>[
-        <String>['Components', 'DXVK-macOS', 'DXVK', 'x64', 'dxgi.dll'],
-        <String>['Components', 'DXVK-macOS', 'DXVK', 'x32', 'dxgi.dll'],
-      ],
+      relativePaths: _macosDxvkComponentPaths,
       versions: const <String, String>{},
     );
     final moltenVkArchive = _createKonyakRuntimeComponentArchive(
@@ -8625,6 +8798,17 @@ final class StaticFileStatusProbe implements FileStatusProbe {
   }
 }
 
+const _macosDxvkComponentPaths = <List<String>>[
+  <String>['Components', 'DXVK-macOS', 'DXVK', 'x64', 'dxgi.dll'],
+  <String>['Components', 'DXVK-macOS', 'DXVK', 'x64', 'd3d9.dll'],
+  <String>['Components', 'DXVK-macOS', 'DXVK', 'x64', 'd3d10core.dll'],
+  <String>['Components', 'DXVK-macOS', 'DXVK', 'x64', 'd3d11.dll'],
+  <String>['Components', 'DXVK-macOS', 'DXVK', 'x32', 'dxgi.dll'],
+  <String>['Components', 'DXVK-macOS', 'DXVK', 'x32', 'd3d9.dll'],
+  <String>['Components', 'DXVK-macOS', 'DXVK', 'x32', 'd3d10core.dll'],
+  <String>['Components', 'DXVK-macOS', 'DXVK', 'x32', 'd3d11.dll'],
+];
+
 String _createComponentRuntimeArchive(String tempPath) {
   final sourceRoot = Directory(_joinTestPath(tempPath, const ['source']));
   final librariesRoot = Directory(
@@ -8637,7 +8821,13 @@ String _createComponentRuntimeArchive(String tempPath) {
     <String>['Wine', 'bin', 'wineserver'],
     <String>['Wine', 'bin', 'wine'],
     <String>['DXVK', 'x64', 'dxgi.dll'],
+    <String>['DXVK', 'x64', 'd3d9.dll'],
+    <String>['DXVK', 'x64', 'd3d10core.dll'],
+    <String>['DXVK', 'x64', 'd3d11.dll'],
     <String>['DXVK', 'x32', 'dxgi.dll'],
+    <String>['DXVK', 'x32', 'd3d9.dll'],
+    <String>['DXVK', 'x32', 'd3d10core.dll'],
+    <String>['DXVK', 'x32', 'd3d11.dll'],
     <String>['Wine', 'lib', 'libMoltenVK.dylib'],
     <String>['Wine', 'lib', 'libgstreamer-1.0.0.dylib'],
     <String>['Wine', 'share', 'wine', 'mono', 'wine-mono.marker'],
@@ -8700,8 +8890,7 @@ String _createKonyakComponentRuntimeArchive(String tempPath) {
       'lib',
       'libwine.1.dylib',
     ],
-    <String>['Components', 'DXVK-macOS', 'DXVK', 'x64', 'dxgi.dll'],
-    <String>['Components', 'DXVK-macOS', 'DXVK', 'x32', 'dxgi.dll'],
+    ..._macosDxvkComponentPaths,
     <String>['Components', 'MoltenVK', 'lib', 'libMoltenVK.dylib'],
     <String>['Components', 'GStreamer', 'lib', 'libgstreamer-1.0.0.dylib'],
     <String>['Components', 'wine-mono', 'share', 'wine', 'mono', 'marker'],
@@ -8980,8 +9169,12 @@ String _createLinuxWineRuntimeArchive(String tempPath) {
     <String>['winetricks'],
     <String>['share', 'wine', 'mono', 'wine-mono-11.1.0-x86.msi'],
     <String>['dxvk', 'x64', 'dxgi.dll'],
+    <String>['dxvk', 'x64', 'd3d9.dll'],
+    <String>['dxvk', 'x64', 'd3d10core.dll'],
     <String>['dxvk', 'x64', 'd3d11.dll'],
     <String>['dxvk', 'x86', 'dxgi.dll'],
+    <String>['dxvk', 'x86', 'd3d9.dll'],
+    <String>['dxvk', 'x86', 'd3d10core.dll'],
     <String>['dxvk', 'x86', 'd3d11.dll'],
   ]) {
     final file = File(_joinTestPath(runtimeRoot.path, relativePath));

@@ -165,18 +165,20 @@ prepare_dxvk_component() {
   mkdir -p "${extract_root}"
   tar --warning=no-unknown-keyword -xzf "${DXVK_ARCHIVE_CACHE}" -C "${extract_root}"
 
-  source_x64="$(find "${extract_root}" -path '*/x64/dxgi.dll' -type f | head -n 1)"
-  source_x32="$(find "${extract_root}" -path '*/x32/dxgi.dll' -type f | head -n 1)"
-  if [[ -z "${source_x64}" || -z "${source_x32}" ]]; then
-    print -u2 "DXVK-macOS archive does not contain x64/x32 dxgi.dll."
-    exit 65
-  fi
-
   mkdir -p \
     "${payload_root}/Components/DXVK-macOS/DXVK/x64" \
     "${payload_root}/Components/DXVK-macOS/DXVK/x32"
-  cp -f "${source_x64}" "${payload_root}/Components/DXVK-macOS/DXVK/x64/dxgi.dll"
-  cp -f "${source_x32}" "${payload_root}/Components/DXVK-macOS/DXVK/x32/dxgi.dll"
+  for dll_name in dxgi.dll d3d9.dll d3d10core.dll d3d11.dll; do
+    source_x64="$(find "${extract_root}" -path "*/x64/${dll_name}" -type f | head -n 1)"
+    source_x32="$(find "${extract_root}" -path "*/x32/${dll_name}" -type f | head -n 1)"
+    if [[ -z "${source_x64}" || -z "${source_x32}" ]]; then
+      print -u2 "DXVK-macOS archive does not contain x64/x32 ${dll_name}."
+      exit 65
+    fi
+
+    cp -f "${source_x64}" "${payload_root}/Components/DXVK-macOS/DXVK/x64/${dll_name}"
+    cp -f "${source_x32}" "${payload_root}/Components/DXVK-macOS/DXVK/x32/${dll_name}"
+  done
   write_stack_manifest \
     "${payload_root}/.konyak-runtime-stack.json" \
     "dxvk-macos" \

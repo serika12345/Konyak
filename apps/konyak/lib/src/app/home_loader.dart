@@ -156,6 +156,8 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
   final Map<String, ProgramSettingsSummary> _programSettings =
       <String, ProgramSettingsSummary>{};
   final Set<String> _loadingProgramSettings = <String>{};
+  final Map<String, String> _pendingRuntimeSettingsControls =
+      <String, String>{};
 
   @override
   void initState() {
@@ -676,21 +678,30 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
   Future<void> _setRuntimeSettings({
     required BottleSummary bottle,
     required BottleRuntimeSettingsSummary runtimeSettings,
+    required String controlKey,
   }) async {
-    final previousBottle = findSelectedBottle(_bottles, bottle.id) ?? bottle;
+    if (_pendingRuntimeSettingsControls.containsKey(bottle.id)) {
+      return;
+    }
 
     setState(() {
-      _bottles = upsertBottle(
-        _bottles,
-        previousBottle.copyWith(runtimeSettings: runtimeSettings),
-      );
+      _pendingRuntimeSettingsControls[bottle.id] = controlKey;
       _errorMessage = null;
     });
 
-    final result = await widget.cliClient.setRuntimeSettings(
-      bottleId: bottle.id,
-      runtimeSettings: runtimeSettings,
-    );
+    final BottleUpdateLoadResult result;
+    try {
+      result = await widget.cliClient.setRuntimeSettings(
+        bottleId: bottle.id,
+        runtimeSettings: runtimeSettings,
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _pendingRuntimeSettingsControls.remove(bottle.id);
+        });
+      }
+    }
 
     if (!mounted) {
       return;
@@ -704,9 +715,6 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
         });
       case MissingBottleUpdate(:final message) ||
           BottleUpdateLoadFailure(:final message):
-        setState(() {
-          _bottles = upsertBottle(_bottles, previousBottle);
-        });
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(message)));
@@ -1623,10 +1631,12 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
           onImportBottleArchive: _importBottleArchive,
           onExportBottleArchive: _exportBottleArchive,
           onViewLatestLog: _latestRunLogPath == null ? null : _showLatestLog,
-          onRuntimeSettingsChanged: (bottle, runtimeSettings) {
+          pendingRuntimeSettingsControls: _pendingRuntimeSettingsControls,
+          onRuntimeSettingsChanged: (bottle, runtimeSettings, controlKey) {
             _setRuntimeSettings(
               bottle: bottle,
               runtimeSettings: runtimeSettings,
+              controlKey: controlKey,
             );
           },
           onLoadBottleConfiguration: _loadBottleConfiguration,

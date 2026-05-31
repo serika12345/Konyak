@@ -6716,6 +6716,37 @@ CliResult? _applyRuntimeSettingsRegistryUpdates({
   );
 }
 
+CliResult? _syncRuntimeSettingsDllOverrides({
+  required BottleRecord bottle,
+  required BottleRuntimeSettings runtimeSettings,
+  required ProgramRunPlanner programRunPlanner,
+}) {
+  if (programRunPlanner.hostPlatform != KonyakHostPlatform.macos ||
+      !runtimeSettings.dxvk) {
+    return null;
+  }
+
+  try {
+    _syncMacosDxvkDllOverrides(
+      bottle: bottle,
+      environment: programRunPlanner.environment,
+    );
+    return null;
+  } on FileSystemException catch (error) {
+    return _jsonError(
+      exitCode: 74,
+      code: 'runtimeSettingsDllSyncFailed',
+      message: 'Failed to synchronize runtime DLL overrides.',
+      extra: <String, Object?>{
+        'details': <String, Object?>{
+          if (error.path != null) 'path': error.path,
+          'osError': error.osError?.message ?? error.message,
+        },
+      },
+    );
+  }
+}
+
 CliResult? _applyWindowsVersionRegistryUpdates({
   required BottleRecord bottle,
   required String windowsVersion,
@@ -7674,6 +7705,15 @@ CliResult _runCli(
     );
     if (registryUpdateFailure != null) {
       return registryUpdateFailure;
+    }
+
+    final dllSyncFailure = _syncRuntimeSettingsDllOverrides(
+      bottle: bottle,
+      runtimeSettings: runtimeSettingsUpdateRequest.runtimeSettings,
+      programRunPlanner: programRunPlanner,
+    );
+    if (dllSyncFailure != null) {
+      return dllSyncFailure;
     }
 
     final updateResult = bottleRepository.setRuntimeSettings(
@@ -9390,7 +9430,7 @@ ProgramRunRequest _macosWineRequest({
       ..._programSettingsArguments(programSettings),
     ],
     environment: <String, String>{
-      ..._macosWineEnvironment(bottle),
+      ..._macosWineEnvironment(bottle: bottle, environment: environment),
       ..._programSettingsEnvironment(programSettings),
       'WINEPREFIX': bottle.path,
     },
@@ -9409,7 +9449,10 @@ ProgramRunRequest _macosWinebootRequest({
     runnerKind: 'macosWine',
     executable: _macosWineExecutable(environment),
     arguments: const <String>['wineboot', '--init'],
-    environment: _macosWineEnvironment(bottle),
+    environment: _macosWineEnvironment(
+      bottle: bottle,
+      environment: environment,
+    ),
     logPath: _joinPath(bottle.path, const ['logs', 'prefix-init.log']),
     workingDirectory: _macosWineBinFolder(environment),
   );
@@ -9425,7 +9468,10 @@ ProgramRunRequest _macosWineserverKillRequest({
     runnerKind: 'macosWineserver',
     executable: _macosWineserverExecutable(environment),
     arguments: const <String>['-k'],
-    environment: _macosWineEnvironment(bottle),
+    environment: _macosWineEnvironment(
+      bottle: bottle,
+      environment: environment,
+    ),
     logPath: _joinPath(bottle.path, const ['logs', 'wineserver-kill.log']),
     workingDirectory: _macosWineBinFolder(environment),
   );
@@ -9444,19 +9490,77 @@ ProgramRunRequest _macosWinedbgRequest({
     runnerKind: 'macosWinedbg',
     executable: _macosWineExecutable(environment),
     arguments: <String>['winedbg', '--command', command, ...trailingArguments],
-    environment: _macosWineEnvironment(bottle),
+    environment: _macosWineEnvironment(
+      bottle: bottle,
+      environment: environment,
+    ),
     logPath: _joinPath(bottle.path, <String>['logs', logName]),
     workingDirectory: _macosWineBinFolder(environment),
   );
 }
 
-Map<String, String> _macosWineEnvironment(BottleRecord bottle) {
-  return <String, String>{
+Map<String, String> _macosWineEnvironment({
+  required BottleRecord bottle,
+  required Map<String, String> environment,
+}) {
+  final wineEnvironment = <String, String>{
     'WINEPREFIX': bottle.path,
     'WINEDEBUG': 'fixme-all',
     'GST_DEBUG': '1',
+    'DYLD_LIBRARY_PATH': _prependPath(
+      _joinPath(_macosWineRuntimeRoot(environment), const ['lib']),
+      environment['DYLD_LIBRARY_PATH'],
+    ),
     ...bottle.runtimeSettings.macosEnvironmentVariables(),
   };
+  if (bottle.runtimeSettings.dxvk) {
+    final runtimeRoot = _macosWineRuntimeRoot(environment);
+    wineEnvironment['WINEDLLPATH'] = [
+      _joinPath(runtimeRoot, const ['DXVK', 'x64']),
+      _joinPath(runtimeRoot, const ['DXVK', 'x32']),
+    ].join(':');
+  }
+
+  return Map.unmodifiable(wineEnvironment);
+}
+
+const _dxvkOverrideDllNames = <String>[
+  'dxgi.dll',
+  'd3d9.dll',
+  'd3d10core.dll',
+  'd3d11.dll',
+];
+
+void _syncMacosDxvkDllOverrides({
+  required BottleRecord bottle,
+  required Map<String, String> environment,
+}) {
+  final runtimeRoot = _macosWineRuntimeRoot(environment);
+  for (final arch in const <(String, String)>[
+    ('x64', 'system32'),
+    ('x32', 'syswow64'),
+  ]) {
+    final (runtimeArch, windowsDirectory) = arch;
+    final destinationDirectory = Directory(
+      _joinPath(bottle.path, <String>['drive_c', 'windows', windowsDirectory]),
+    )..createSync(recursive: true);
+
+    for (final dllName in _dxvkOverrideDllNames) {
+      final sourcePath = _joinPath(runtimeRoot, <String>[
+        'DXVK',
+        runtimeArch,
+        dllName,
+      ]);
+      final sourceFile = File(sourcePath);
+      if (!sourceFile.existsSync()) {
+        throw FileSystemException(
+          'DXVK override DLL was not found.',
+          sourcePath,
+        );
+      }
+      sourceFile.copySync(_joinPath(destinationDirectory.path, [dllName]));
+    }
+  }
 }
 
 Map<String, String> _linuxWineEnvironment(BottleRecord bottle) {
@@ -9497,7 +9601,10 @@ ProgramRunRequest _macosWineCommandRequest({
     runnerKind: 'macosWine',
     executable: _macosWineExecutable(environment),
     arguments: <String>[command],
-    environment: _macosWineEnvironment(bottle),
+    environment: _macosWineEnvironment(
+      bottle: bottle,
+      environment: environment,
+    ),
     logPath: _joinPath(bottle.path, const ['logs', 'latest.log']),
     workingDirectory: _macosWineBinFolder(environment),
   );
@@ -9514,7 +9621,10 @@ ProgramRunRequest _macosRegistryUpdateRequest({
     runnerKind: 'macosWineRegistry',
     executable: _macosWineExecutable(environment),
     arguments: _registryUpdateArguments(update),
-    environment: _macosWineEnvironment(bottle),
+    environment: _macosWineEnvironment(
+      bottle: bottle,
+      environment: environment,
+    ),
     logPath: _joinPath(bottle.path, const ['logs', 'latest.log']),
     workingDirectory: _macosWineBinFolder(environment),
   );
@@ -9531,7 +9641,10 @@ ProgramRunRequest _macosRegistryQueryRequest({
     runnerKind: 'macosWineRegistryQuery',
     executable: _macosWineExecutable(environment),
     arguments: _registryQueryArguments(query),
-    environment: _macosWineEnvironment(bottle),
+    environment: _macosWineEnvironment(
+      bottle: bottle,
+      environment: environment,
+    ),
     logPath: _joinPath(bottle.path, const ['logs', 'registry.log']),
     workingDirectory: _macosWineBinFolder(environment),
   );
@@ -9617,7 +9730,7 @@ ProgramRunRequest _macosWinetricksCommandRequest({
     executable: _macosWinetricksExecutable(environment),
     arguments: verb == null ? const <String>[] : <String>[verb],
     environment: <String, String>{
-      ..._macosWineEnvironment(bottle),
+      ..._macosWineEnvironment(bottle: bottle, environment: environment),
       'WINE': 'wine64',
       'PATH': _prependPath(runtimeBin, environment['PATH']),
     },
@@ -9664,8 +9777,12 @@ const _linuxWineRuntimeComponentDefinitions =
         isRequired: true,
         relativePaths: <List<String>>[
           <String>['dxvk', 'x64', 'dxgi.dll'],
+          <String>['dxvk', 'x64', 'd3d9.dll'],
+          <String>['dxvk', 'x64', 'd3d10core.dll'],
           <String>['dxvk', 'x64', 'd3d11.dll'],
           <String>['dxvk', 'x86', 'dxgi.dll'],
+          <String>['dxvk', 'x86', 'd3d9.dll'],
+          <String>['dxvk', 'x86', 'd3d10core.dll'],
           <String>['dxvk', 'x86', 'd3d11.dll'],
         ],
       ),
@@ -9709,7 +9826,13 @@ const _macosKonyakRuntimeComponentDefinitions =
         isRequired: true,
         relativePaths: <List<String>>[
           <String>['DXVK', 'x64', 'dxgi.dll'],
+          <String>['DXVK', 'x64', 'd3d9.dll'],
+          <String>['DXVK', 'x64', 'd3d10core.dll'],
+          <String>['DXVK', 'x64', 'd3d11.dll'],
           <String>['DXVK', 'x32', 'dxgi.dll'],
+          <String>['DXVK', 'x32', 'd3d9.dll'],
+          <String>['DXVK', 'x32', 'd3d10core.dll'],
+          <String>['DXVK', 'x32', 'd3d11.dll'],
         ],
       ),
       _RuntimeStackComponentDefinition(
@@ -13259,7 +13382,10 @@ String _macosWineTerminalShellCommand({
     'alias winepath=${_shellQuote('wine64 winepath')}',
   ];
 
-  _macosWineEnvironment(bottle).forEach((key, value) {
+  _macosWineEnvironment(bottle: bottle, environment: environment).forEach((
+    key,
+    value,
+  ) {
     commands.add('export $key=${_shellQuote(value)}');
   });
 

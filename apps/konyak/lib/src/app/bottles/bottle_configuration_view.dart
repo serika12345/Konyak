@@ -5,6 +5,19 @@ import '../../runtimes/runtime_summary.dart';
 import '../app_platform.dart';
 import '../configuration_labels.dart';
 import '../widgets/configuration_controls.dart';
+import 'runtime_settings_change.dart';
+
+const runtimeSettingsControlRetinaMode = 'retinaMode';
+const runtimeSettingsControlBuildVersion = 'buildVersion';
+const runtimeSettingsControlEnhancedSync = 'enhancedSync';
+const runtimeSettingsControlDpiScaling = 'dpiScaling';
+const runtimeSettingsControlAvxEnabled = 'avxEnabled';
+const runtimeSettingsControlDxvk = 'dxvk';
+const runtimeSettingsControlDxvkAsync = 'dxvkAsync';
+const runtimeSettingsControlDxvkHud = 'dxvkHud';
+const runtimeSettingsControlMetalHud = 'metalHud';
+const runtimeSettingsControlMetalTrace = 'metalTrace';
+const runtimeSettingsControlDxrEnabled = 'dxrEnabled';
 
 class BottleConfigurationView extends StatelessWidget {
   const BottleConfigurationView({
@@ -12,34 +25,41 @@ class BottleConfigurationView extends StatelessWidget {
     required this.platform,
     required this.runtime,
     required this.bottle,
+    required this.pendingRuntimeSettingsControlKey,
     required this.onRuntimeSettingsChanged,
   });
 
   final KonyakPlatform platform;
   final RuntimeSummary? runtime;
   final BottleSummary bottle;
-  final void Function(
-    BottleSummary bottle,
-    BottleRuntimeSettingsSummary runtimeSettings,
-  )?
-  onRuntimeSettingsChanged;
+  final String? pendingRuntimeSettingsControlKey;
+  final RuntimeSettingsChanged? onRuntimeSettingsChanged;
 
   @override
   Widget build(BuildContext context) {
     final settings = bottle.runtimeSettings;
     final showMacosRuntimeSettings = platform.isMacOS;
     final canChangeSettings = onRuntimeSettingsChanged != null;
+    final hasPendingRuntimeSettings = pendingRuntimeSettingsControlKey != null;
     final canUseWineRuntime =
-        canChangeSettings && runtime?.isInstalled == true && _isStackComplete();
+        canChangeSettings &&
+        !hasPendingRuntimeSettings &&
+        runtime?.isInstalled == true &&
+        _isStackComplete();
     final canUseDxvk =
         canChangeSettings &&
+        !hasPendingRuntimeSettings &&
         (platform.isMacOS
             ? _isRuntimeComponentAvailable('dxvk-macos')
             : _isRuntimeComponentAvailable('dxvk'));
     final canUseMetal =
-        canChangeSettings && _isRuntimeComponentAvailable('moltenvk');
+        canChangeSettings &&
+        !hasPendingRuntimeSettings &&
+        _isRuntimeComponentAvailable('moltenvk');
     final canUseDxr =
-        canChangeSettings && _isRuntimeComponentAvailable('gptk-d3dmetal');
+        canChangeSettings &&
+        !hasPendingRuntimeSettings &&
+        _isRuntimeComponentAvailable('gptk-d3dmetal');
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
@@ -61,6 +81,7 @@ class BottleConfigurationView extends StatelessWidget {
                       : (value) {
                           _updateRuntimeSettings(
                             settings.copyWith(buildVersion: int.parse(value)),
+                            runtimeSettingsControlBuildVersion,
                           );
                         },
                 ),
@@ -68,13 +89,20 @@ class BottleConfigurationView extends StatelessWidget {
               if (showMacosRuntimeSettings)
                 BottleConfigurationSwitchRow(
                   switchKey: const ValueKey('config-retina-mode-switch'),
+                  loadingKey: const ValueKey(
+                    'config-retina-mode-switch-loading',
+                  ),
                   label: 'Retina Mode',
                   value: settings.retinaMode,
+                  isLoading:
+                      pendingRuntimeSettingsControlKey ==
+                      runtimeSettingsControlRetinaMode,
                   onChanged: !canUseWineRuntime
                       ? null
                       : (value) {
                           _updateRuntimeSettings(
                             settings.copyWith(retinaMode: value),
+                            runtimeSettingsControlRetinaMode,
                           );
                         },
                 ),
@@ -89,6 +117,7 @@ class BottleConfigurationView extends StatelessWidget {
                       : (value) {
                           _updateRuntimeSettings(
                             settings.copyWith(enhancedSync: value),
+                            runtimeSettingsControlEnhancedSync,
                           );
                         },
                 ),
@@ -105,19 +134,25 @@ class BottleConfigurationView extends StatelessWidget {
                       : (value) {
                           _updateRuntimeSettings(
                             settings.copyWith(dpiScaling: int.parse(value)),
+                            runtimeSettingsControlDpiScaling,
                           );
                         },
                 ),
               ),
               if (showMacosRuntimeSettings)
                 BottleConfigurationSwitchRow(
+                  loadingKey: const ValueKey('config-avx-switch-loading'),
                   label: 'Advertise AVX Support',
                   value: settings.avxEnabled,
+                  isLoading:
+                      pendingRuntimeSettingsControlKey ==
+                      runtimeSettingsControlAvxEnabled,
                   onChanged: !canUseWineRuntime
                       ? null
                       : (value) {
                           _updateRuntimeSettings(
                             settings.copyWith(avxEnabled: value),
+                            runtimeSettingsControlAvxEnabled,
                           );
                         },
                 ),
@@ -129,21 +164,33 @@ class BottleConfigurationView extends StatelessWidget {
             children: [
               BottleConfigurationSwitchRow(
                 switchKey: const ValueKey('config-dxvk-switch'),
+                loadingKey: const ValueKey('config-dxvk-switch-loading'),
                 label: 'DXVK',
                 value: settings.dxvk,
+                isLoading:
+                    pendingRuntimeSettingsControlKey ==
+                    runtimeSettingsControlDxvk,
                 onChanged: !canUseDxvk
                     ? null
                     : (value) {
-                        _updateRuntimeSettings(settings.copyWith(dxvk: value));
+                        _updateRuntimeSettings(
+                          settings.copyWith(dxvk: value),
+                          runtimeSettingsControlDxvk,
+                        );
                       },
               ),
               BottleConfigurationSwitchRow(
+                loadingKey: const ValueKey('config-dxvk-async-switch-loading'),
                 label: 'DXVK Async',
                 value: settings.dxvkAsync,
+                isLoading:
+                    pendingRuntimeSettingsControlKey ==
+                    runtimeSettingsControlDxvkAsync,
                 onChanged: settings.dxvk && canUseDxvk
                     ? (value) {
                         _updateRuntimeSettings(
                           settings.copyWith(dxvkAsync: value),
+                          runtimeSettingsControlDxvkAsync,
                         );
                       }
                     : null,
@@ -157,6 +204,7 @@ class BottleConfigurationView extends StatelessWidget {
                       ? (value) {
                           _updateRuntimeSettings(
                             settings.copyWith(dxvkHud: value),
+                            runtimeSettingsControlDxvkHud,
                           );
                         }
                       : null,
@@ -182,35 +230,52 @@ class BottleConfigurationView extends StatelessWidget {
               title: 'Metal',
               children: [
                 BottleConfigurationSwitchRow(
+                  loadingKey: const ValueKey('config-metal-hud-switch-loading'),
                   label: 'Metal HUD',
                   value: settings.metalHud,
+                  isLoading:
+                      pendingRuntimeSettingsControlKey ==
+                      runtimeSettingsControlMetalHud,
                   onChanged: !canUseMetal
                       ? null
                       : (value) {
                           _updateRuntimeSettings(
                             settings.copyWith(metalHud: value),
+                            runtimeSettingsControlMetalHud,
                           );
                         },
                 ),
                 BottleConfigurationSwitchRow(
+                  loadingKey: const ValueKey(
+                    'config-metal-trace-switch-loading',
+                  ),
                   label: 'Metal Trace',
                   value: settings.metalTrace,
+                  isLoading:
+                      pendingRuntimeSettingsControlKey ==
+                      runtimeSettingsControlMetalTrace,
                   onChanged: !canUseMetal
                       ? null
                       : (value) {
                           _updateRuntimeSettings(
                             settings.copyWith(metalTrace: value),
+                            runtimeSettingsControlMetalTrace,
                           );
                         },
                 ),
                 BottleConfigurationSwitchRow(
+                  loadingKey: const ValueKey('config-dxr-switch-loading'),
                   label: 'DXR',
                   value: settings.dxrEnabled,
+                  isLoading:
+                      pendingRuntimeSettingsControlKey ==
+                      runtimeSettingsControlDxrEnabled,
                   onChanged: !canUseDxr
                       ? null
                       : (value) {
                           _updateRuntimeSettings(
                             settings.copyWith(dxrEnabled: value),
+                            runtimeSettingsControlDxrEnabled,
                           );
                         },
                 ),
@@ -222,8 +287,11 @@ class BottleConfigurationView extends StatelessWidget {
     );
   }
 
-  void _updateRuntimeSettings(BottleRuntimeSettingsSummary runtimeSettings) {
-    onRuntimeSettingsChanged?.call(bottle, runtimeSettings);
+  void _updateRuntimeSettings(
+    BottleRuntimeSettingsSummary runtimeSettings,
+    String controlKey,
+  ) {
+    onRuntimeSettingsChanged?.call(bottle, runtimeSettings, controlKey);
   }
 
   bool _isStackComplete() {

@@ -258,10 +258,8 @@ prepare_dxvk_component() {
   local extract_root="${work_root}/extract"
   local payload_root="${work_root}/payload/konyak-linux-dxvk"
   local archive_path="${SOURCE_ROOT}/components/dxvk.tar.xz"
-  local source_x64_dxgi
-  local source_x64_d3d11
-  local source_x86_dxgi
-  local source_x86_d3d11
+  local source_x64
+  local source_x86
 
   download_if_missing "${archive_url}" "${archive_cache}" "${archive_sha}"
   reset_dir "${work_root}"
@@ -270,19 +268,17 @@ prepare_dxvk_component() {
     "${payload_root}/dxvk/x86"
   "${TAR_BIN}" -xzf "${archive_cache}" -C "${extract_root}"
 
-  source_x64_dxgi="$(find "${extract_root}" -path '*/x64/dxgi.dll' -type f | head -n 1)"
-  source_x64_d3d11="$(find "${extract_root}" -path '*/x64/d3d11.dll' -type f | head -n 1)"
-  source_x86_dxgi="$(find "${extract_root}" -path '*/x32/dxgi.dll' -type f | head -n 1)"
-  source_x86_d3d11="$(find "${extract_root}" -path '*/x32/d3d11.dll' -type f | head -n 1)"
-  if [[ -z "${source_x64_dxgi}" || -z "${source_x64_d3d11}" || -z "${source_x86_dxgi}" || -z "${source_x86_d3d11}" ]]; then
-    print -u2 "DXVK archive does not contain x64/x32 dxgi.dll and d3d11.dll."
-    exit 65
-  fi
+  for dll_name in dxgi.dll d3d9.dll d3d10core.dll d3d11.dll; do
+    source_x64="$(find "${extract_root}" -path "*/x64/${dll_name}" -type f | head -n 1)"
+    source_x86="$(find "${extract_root}" -path "*/x32/${dll_name}" -type f | head -n 1)"
+    if [[ -z "${source_x64}" || -z "${source_x86}" ]]; then
+      print -u2 "DXVK archive does not contain x64/x32 ${dll_name}."
+      exit 65
+    fi
 
-  cp -f "${source_x64_dxgi}" "${payload_root}/dxvk/x64/dxgi.dll"
-  cp -f "${source_x64_d3d11}" "${payload_root}/dxvk/x64/d3d11.dll"
-  cp -f "${source_x86_dxgi}" "${payload_root}/dxvk/x86/dxgi.dll"
-  cp -f "${source_x86_d3d11}" "${payload_root}/dxvk/x86/d3d11.dll"
+    cp -f "${source_x64}" "${payload_root}/dxvk/x64/${dll_name}"
+    cp -f "${source_x86}" "${payload_root}/dxvk/x86/${dll_name}"
+  done
   write_stack_manifest \
     "${payload_root}/.konyak-runtime-stack.json" \
     "dxvk" \
