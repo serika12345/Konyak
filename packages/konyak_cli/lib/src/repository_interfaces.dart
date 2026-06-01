@@ -1,0 +1,82 @@
+part of '../konyak_cli.dart';
+
+abstract interface class BottleCatalog {
+  List<BottleRecord> listBottles();
+
+  BottleRecord? findBottle(String id);
+}
+
+abstract interface class AppSettingsRepository {
+  AppSettingsRecord read();
+
+  AppSettingsRecord write(AppSettingsRecord settings);
+}
+
+abstract interface class BottleRepository implements BottleCatalog {
+  BottleCreateResult createBottle(BottleCreateRequest request);
+
+  BottleArchiveExportResult exportBottleArchive(
+    BottleArchiveExportRequest request,
+  );
+
+  BottleArchiveImportResult importBottleArchive(
+    BottleArchiveImportRequest request,
+  );
+
+  BottleDeleteResult deleteBottle(String id);
+
+  BottleRenameResult renameBottle(BottleRenameRequest request);
+
+  BottleMoveResult moveBottle(BottleMoveRequest request);
+
+  BottleUpdateResult setWindowsVersion(WindowsVersionUpdateRequest request);
+
+  BottleUpdateResult setRuntimeSettings(RuntimeSettingsUpdateRequest request);
+
+  ProgramPinResult pinProgram(ProgramPinRequest request);
+
+  ProgramUpdateResult unpinProgram(ProgramUnpinRequest request);
+
+  ProgramUpdateResult renamePinnedProgram(ProgramRenameRequest request);
+
+  ProgramSettingsReadResult readProgramSettings(ProgramSettingsRequest request);
+
+  ProgramSettingsUpdateResult setProgramSettings(
+    ProgramSettingsUpdateRequest request,
+  );
+}
+
+abstract interface class BottleProgramRepository {
+  List<BottleProgramRecord> listPrograms(BottleRecord bottle);
+}
+
+abstract interface class BottlePrefixInitializer {
+  BottlePrefixInitializationResult initialize(BottleRecord bottle);
+}
+
+sealed class BottlePrefixInitializationResult {
+  const BottlePrefixInitializationResult();
+}
+
+class BottlePrefixInitialized extends BottlePrefixInitializationResult {
+  const BottlePrefixInitialized();
+}
+
+class BottlePrefixInitializationFailed
+    extends BottlePrefixInitializationResult {
+  const BottlePrefixInitializationFailed(this.message);
+
+  final String message;
+}
+
+abstract interface class WinetricksVerbRepository {
+  WinetricksVerbListResult listVerbs();
+}
+
+abstract interface class WinetricksVerbLister {
+  WinetricksVerbListResult listVerbs({required String executable});
+}
+
+abstract interface class WinetricksScriptInstaller {
+  WinetricksScriptInstallResult installIfMissing({required String executable});
+}
