@@ -385,8 +385,9 @@ CliResult? _handleBottleReadCommand(
     });
   }
 
-  if (_isJsonBottleInspectCommand(arguments)) {
-    final bottleId = arguments[1];
+  final inspectedBottleId = _parseJsonBottleInspectCommand(arguments);
+  if (inspectedBottleId != null) {
+    final bottleId = inspectedBottleId;
     final bottle = activeBottleCatalog.findBottle(bottleId);
     if (bottle == null) {
       return _bottleNotFoundError(bottleId);

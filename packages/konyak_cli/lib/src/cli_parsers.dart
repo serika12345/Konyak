@@ -185,11 +185,13 @@ _parseJsonWineProcessGroupTerminationRequest(List<String> arguments) {
   return WineProcessGroupTerminationRequest(bottleId: bottleId);
 }
 
-bool _isJsonBottleInspectCommand(List<String> arguments) {
+String? _parseJsonBottleInspectCommand(List<String> arguments) {
   final results = _parseJsonCliCommand(arguments, command: 'inspect-bottle');
-  return results != null &&
-      _hasRestCount(results, 1) &&
-      _requiredCliRest(results) != null;
+  if (results == null || !_hasRestCount(results, 1)) {
+    return null;
+  }
+
+  return _requiredCliRest(results);
 }
 
 String? _parseJsonBottleProgramsListCommand(List<String> arguments) {

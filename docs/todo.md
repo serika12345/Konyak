@@ -182,6 +182,17 @@ task changes scope.
 
 ## Deferred
 
+- CLI refactoring cleanup.
+  - [x] Replace remaining handler-level argv indexing with parser request
+    objects.
+  - [x] Move app/program settings and bottle metadata/path helpers out of
+    `konyak_cli.dart`.
+  - [x] Move macOS pinned launcher helpers out of `konyak_cli.dart`.
+  - [x] Move Linux desktop launcher and file-association helpers out of
+    `konyak_cli.dart`.
+  - [x] Move bottle archive and filesystem replacement helpers out of
+    `konyak_cli.dart`.
+  - [x] Move low-level JSON, path, and binary helpers out of `konyak_cli.dart`.
 - Runtime installation rework before adding more install UI.
   - [x] Split runtime data into separate concepts:
     `RuntimeDefinition`, `InstalledRuntimeState`, `RuntimeSourceManifest`, and

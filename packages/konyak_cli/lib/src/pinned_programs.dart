@@ -1,0 +1,103 @@
+part of '../konyak_cli.dart';
+
+bool _hasPinnedProgram(BottleRecord bottle, String programPath) {
+  final normalizedProgramPath = _normalizeFilesystemPath(programPath);
+  return bottle.pinnedPrograms.any(
+    (program) => _isPinnedProgramPath(program, normalizedProgramPath),
+  );
+}
+
+bool _isPinnedProgramPath(PinnedProgramRecord program, String normalizedPath) {
+  return _normalizeFilesystemPath(program.path) == normalizedPath;
+}
+
+BottleRecord _bottleWithPinnedProgram(
+  BottleRecord bottle,
+  ProgramPinRequest request, {
+  required ProgramMetadataExtractor programMetadataExtractor,
+}) {
+  final metadata = programMetadataExtractor.extract(
+    bottle: bottle,
+    programPath: _metadataProgramPath(
+      bottle: bottle,
+      programPath: request.programPath,
+    ),
+  );
+
+  return bottle.copyWith(
+    pinnedPrograms: <PinnedProgramRecord>[
+      ...bottle.pinnedPrograms,
+      PinnedProgramRecord(
+        name: request.name,
+        path: request.programPath,
+        iconPath: metadata?.iconPath,
+      ),
+    ],
+  );
+}
+
+BottleRecord _bottleWithPinnedProgramIcons(
+  BottleRecord bottle, {
+  required ProgramMetadataExtractor programMetadataExtractor,
+}) {
+  var changed = false;
+  final pinnedPrograms = bottle.pinnedPrograms
+      .map((program) {
+        final existingIconPath = program.iconPath;
+        if (existingIconPath != null && existingIconPath.trim().isNotEmpty) {
+          return program;
+        }
+
+        final metadata = programMetadataExtractor.extract(
+          bottle: bottle,
+          programPath: _metadataProgramPath(
+            bottle: bottle,
+            programPath: program.path,
+          ),
+        );
+        final iconPath = metadata?.iconPath;
+        if (iconPath == null || iconPath.trim().isEmpty) {
+          return program;
+        }
+
+        changed = true;
+        return program.copyWith(iconPath: iconPath);
+      })
+      .toList(growable: false);
+
+  if (!changed) {
+    return bottle;
+  }
+
+  return bottle.copyWith(pinnedPrograms: pinnedPrograms);
+}
+
+BottleRecord _bottleWithoutPinnedProgram(
+  BottleRecord bottle,
+  String programPath,
+) {
+  final normalizedProgramPath = _normalizeFilesystemPath(programPath);
+  return bottle.copyWith(
+    pinnedPrograms: bottle.pinnedPrograms
+        .where(
+          (program) => !_isPinnedProgramPath(program, normalizedProgramPath),
+        )
+        .toList(growable: false),
+  );
+}
+
+BottleRecord _bottleWithRenamedPinnedProgram(
+  BottleRecord bottle,
+  ProgramRenameRequest request,
+) {
+  final normalizedProgramPath = _normalizeFilesystemPath(request.programPath);
+  return bottle.copyWith(
+    pinnedPrograms: bottle.pinnedPrograms
+        .map(
+          (program) => _isPinnedProgramPath(program, normalizedProgramPath)
+              ? program.copyWith(name: request.name)
+              : program,
+        )
+        .toList(growable: false),
+  );
+}
