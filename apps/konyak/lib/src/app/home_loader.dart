@@ -907,6 +907,10 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
       return;
     }
 
+    _handleProgramRunResult(result);
+  }
+
+  void _handleProgramRunResult(ProgramRunLoadResult result) {
     switch (result) {
       case CompletedProgramRun(:final run):
         setState(() {
@@ -1166,27 +1170,7 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
       return;
     }
 
-    switch (result) {
-      case CompletedProgramRun(:final run):
-        setState(() {
-          _latestRunLogPath = run.logPath;
-        });
-      case FailedProgramRun(:final logPath):
-        setState(() {
-          _latestRunLogPath = logPath;
-        });
-      case UnsupportedProgramRun() ||
-          MissingProgramRunBottle() ||
-          ProgramRunLoadFailure():
-        break;
-    }
-
-    final feedbackMessage = programRunFeedback(result);
-    if (feedbackMessage != null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(feedbackMessage)));
-    }
+    _handleProgramRunResult(result);
 
     if (shouldRefreshBottleAfterCommand(command) &&
         result is CompletedProgramRun) {
@@ -1248,27 +1232,7 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
           return;
         }
 
-        switch (runResult) {
-          case CompletedProgramRun(:final run):
-            setState(() {
-              _latestRunLogPath = run.logPath;
-            });
-          case FailedProgramRun(:final logPath):
-            setState(() {
-              _latestRunLogPath = logPath;
-            });
-          case UnsupportedProgramRun() ||
-              MissingProgramRunBottle() ||
-              ProgramRunLoadFailure():
-            break;
-        }
-
-        final feedbackMessage = programRunFeedback(runResult);
-        if (feedbackMessage != null) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(feedbackMessage)));
-        }
+        _handleProgramRunResult(runResult);
       case WinetricksVerbListLoadFailure(:final message):
         ScaffoldMessenger.of(
           context,
