@@ -460,58 +460,20 @@ final class KonyakCliClient {
 
   Future<RuntimeInstallLoadResult> installMacosWine({
     void Function(RuntimeInstallProgress progress)? onProgress,
-  }) async {
-    final result = await _runRuntimeInstall(
+  }) {
+    return _runtimeInstallResultFromCommand(
       command: 'install-macos-wine',
       onProgress: onProgress,
     );
-    final parsed = _parseRuntimeInstallCommandPayload(result.stdout);
-
-    return switch (parsed) {
-      ParsedRuntimeInstall(:final runtime) when result.exitCode == 0 =>
-        InstalledRuntime(runtime),
-      RuntimeInstallCommandFailure(:final message) when result.exitCode == 75 =>
-        RuntimeInstallLoadFailure(
-          exitCode: result.exitCode,
-          message: message,
-          diagnostic: result.stderr,
-        ),
-      ParsedRuntimeInstall() ||
-      RuntimeInstallCommandFailure() ||
-      RuntimeInstallParseFailure() => RuntimeInstallLoadFailure(
-        exitCode: result.exitCode,
-        message: _installRuntimeFailureMessage(result),
-        diagnostic: result.stderr,
-      ),
-    };
   }
 
   Future<RuntimeInstallLoadResult> installLinuxWine({
     void Function(RuntimeInstallProgress progress)? onProgress,
-  }) async {
-    final result = await _runRuntimeInstall(
+  }) {
+    return _runtimeInstallResultFromCommand(
       command: 'install-linux-wine',
       onProgress: onProgress,
     );
-    final parsed = _parseRuntimeInstallCommandPayload(result.stdout);
-
-    return switch (parsed) {
-      ParsedRuntimeInstall(:final runtime) when result.exitCode == 0 =>
-        InstalledRuntime(runtime),
-      RuntimeInstallCommandFailure(:final message) when result.exitCode == 75 =>
-        RuntimeInstallLoadFailure(
-          exitCode: result.exitCode,
-          message: message,
-          diagnostic: result.stderr,
-        ),
-      ParsedRuntimeInstall() ||
-      RuntimeInstallCommandFailure() ||
-      RuntimeInstallParseFailure() => RuntimeInstallLoadFailure(
-        exitCode: result.exitCode,
-        message: _installRuntimeFailureMessage(result),
-        diagnostic: result.stderr,
-      ),
-    };
   }
 
   Future<ProcessRunResult> installGptkWine({required String sourcePath}) {
@@ -808,57 +770,11 @@ final class KonyakCliClient {
   Future<ProgramRunLoadResult> runProgram({
     required String bottleId,
     required String programPath,
-  }) async {
-    final result = await _run([
-      'run-program',
-      bottleId,
-      '--program',
-      programPath,
-      '--json',
-    ]);
-
-    final parsed = parseProgramRunPayload(result.stdout);
-
-    return switch (parsed) {
-      ParsedProgramRun(:final run) when result.exitCode == 0 =>
-        CompletedProgramRun(run),
-      ProgramRunUnsupportedProgramType(:final programPath, :final message)
-          when result.exitCode == 65 =>
-        UnsupportedProgramRun(programPath: programPath, message: message),
-      ProgramRunBottleNotFound(:final bottleId, :final message)
-          when result.exitCode == 66 =>
-        MissingProgramRunBottle(bottleId: bottleId, message: message),
-      ProgramRunExecutionFailure(
-        :final bottleId,
-        :final programPath,
-        :final message,
-        :final runnerKind,
-        :final executable,
-        :final workingDirectory,
-        :final argv,
-        :final logPath,
-      )
-          when result.exitCode == 75 =>
-        FailedProgramRun(
-          bottleId: bottleId,
-          programPath: programPath,
-          message: message,
-          runnerKind: runnerKind,
-          executable: executable,
-          workingDirectory: workingDirectory,
-          argv: argv,
-          logPath: logPath,
-        ),
-      ParsedProgramRun() ||
-      ProgramRunUnsupportedProgramType() ||
-      ProgramRunBottleNotFound() ||
-      ProgramRunExecutionFailure() ||
-      ProgramRunParseFailure() => ProgramRunLoadFailure(
-        exitCode: result.exitCode,
-        message: _programRunFailureMessage(result),
-        diagnostic: result.stderr,
-      ),
-    };
+  }) {
+    return _programRunResultFromCommand(
+      arguments: ['run-program', bottleId, '--program', programPath, '--json'],
+      failureMessage: _programRunFailureMessage,
+    );
   }
 
   Future<BottleUpdateLoadResult> pinProgram({
@@ -963,113 +879,29 @@ final class KonyakCliClient {
   Future<ProgramRunLoadResult> runBottleCommand({
     required String bottleId,
     required String command,
-  }) async {
-    final result = await _run([
-      'run-bottle-command',
-      bottleId,
-      '--command',
-      command,
-      '--json',
-    ]);
-
-    final parsed = parseProgramRunPayload(result.stdout);
-
-    return switch (parsed) {
-      ParsedProgramRun(:final run) when result.exitCode == 0 =>
-        CompletedProgramRun(run),
-      ProgramRunUnsupportedProgramType(:final programPath, :final message)
-          when result.exitCode == 65 =>
-        UnsupportedProgramRun(programPath: programPath, message: message),
-      ProgramRunBottleNotFound(:final bottleId, :final message)
-          when result.exitCode == 66 =>
-        MissingProgramRunBottle(bottleId: bottleId, message: message),
-      ProgramRunExecutionFailure(
-        :final bottleId,
-        :final programPath,
-        :final message,
-        :final runnerKind,
-        :final executable,
-        :final workingDirectory,
-        :final argv,
-        :final logPath,
-      )
-          when result.exitCode == 75 =>
-        FailedProgramRun(
-          bottleId: bottleId,
-          programPath: programPath,
-          message: message,
-          runnerKind: runnerKind,
-          executable: executable,
-          workingDirectory: workingDirectory,
-          argv: argv,
-          logPath: logPath,
-        ),
-      ParsedProgramRun() ||
-      ProgramRunUnsupportedProgramType() ||
-      ProgramRunBottleNotFound() ||
-      ProgramRunExecutionFailure() ||
-      ProgramRunParseFailure() => ProgramRunLoadFailure(
-        exitCode: result.exitCode,
-        message: _commandFailureMessage('run-bottle-command', result),
-        diagnostic: result.stderr,
-      ),
-    };
+  }) {
+    return _programRunResultFromCommand(
+      arguments: [
+        'run-bottle-command',
+        bottleId,
+        '--command',
+        command,
+        '--json',
+      ],
+      failureMessage: (result) =>
+          _commandFailureMessage('run-bottle-command', result),
+    );
   }
 
   Future<ProgramRunLoadResult> runWinetricksVerb({
     required String bottleId,
     required String verb,
-  }) async {
-    final result = await _run([
-      'run-winetricks',
-      bottleId,
-      '--verb',
-      verb,
-      '--json',
-    ]);
-
-    final parsed = parseProgramRunPayload(result.stdout);
-
-    return switch (parsed) {
-      ParsedProgramRun(:final run) when result.exitCode == 0 =>
-        CompletedProgramRun(run),
-      ProgramRunUnsupportedProgramType(:final programPath, :final message)
-          when result.exitCode == 65 =>
-        UnsupportedProgramRun(programPath: programPath, message: message),
-      ProgramRunBottleNotFound(:final bottleId, :final message)
-          when result.exitCode == 66 =>
-        MissingProgramRunBottle(bottleId: bottleId, message: message),
-      ProgramRunExecutionFailure(
-        :final bottleId,
-        :final programPath,
-        :final message,
-        :final runnerKind,
-        :final executable,
-        :final workingDirectory,
-        :final argv,
-        :final logPath,
-      )
-          when result.exitCode == 75 =>
-        FailedProgramRun(
-          bottleId: bottleId,
-          programPath: programPath,
-          message: message,
-          runnerKind: runnerKind,
-          executable: executable,
-          workingDirectory: workingDirectory,
-          argv: argv,
-          logPath: logPath,
-        ),
-      ParsedProgramRun() ||
-      ProgramRunUnsupportedProgramType() ||
-      ProgramRunBottleNotFound() ||
-      ProgramRunExecutionFailure() ||
-      ProgramRunParseFailure() => ProgramRunLoadFailure(
-        exitCode: result.exitCode,
-        message: _operationFailureMessage(result, 'run-winetricks'),
-        diagnostic: result.stderr,
-      ),
-    };
+  }) {
+    return _programRunResultFromCommand(
+      arguments: ['run-winetricks', bottleId, '--verb', verb, '--json'],
+      failureMessage: (result) =>
+          _operationFailureMessage(result, 'run-winetricks'),
+    );
   }
 
   Future<BottleLocationOpenResult> openBottleLocation({
@@ -1125,6 +957,84 @@ final class KonyakCliClient {
       OpenedProgramLocation() => ProgramLocationOpenFailure(
         exitCode: result.exitCode,
         message: _commandFailureMessage('open-program-location', result),
+        diagnostic: result.stderr,
+      ),
+    };
+  }
+
+  Future<RuntimeInstallLoadResult> _runtimeInstallResultFromCommand({
+    required String command,
+    required void Function(RuntimeInstallProgress progress)? onProgress,
+  }) async {
+    final result = await _runRuntimeInstall(
+      command: command,
+      onProgress: onProgress,
+    );
+    final parsed = _parseRuntimeInstallCommandPayload(result.stdout);
+
+    return switch (parsed) {
+      ParsedRuntimeInstall(:final runtime) when result.exitCode == 0 =>
+        InstalledRuntime(runtime),
+      RuntimeInstallCommandFailure(:final message) when result.exitCode == 75 =>
+        RuntimeInstallLoadFailure(
+          exitCode: result.exitCode,
+          message: message,
+          diagnostic: result.stderr,
+        ),
+      ParsedRuntimeInstall() ||
+      RuntimeInstallCommandFailure() ||
+      RuntimeInstallParseFailure() => RuntimeInstallLoadFailure(
+        exitCode: result.exitCode,
+        message: _installRuntimeFailureMessage(result),
+        diagnostic: result.stderr,
+      ),
+    };
+  }
+
+  Future<ProgramRunLoadResult> _programRunResultFromCommand({
+    required List<String> arguments,
+    required String Function(ProcessRunResult result) failureMessage,
+  }) async {
+    final result = await _run(arguments);
+    final parsed = parseProgramRunPayload(result.stdout);
+
+    return switch (parsed) {
+      ParsedProgramRun(:final run) when result.exitCode == 0 =>
+        CompletedProgramRun(run),
+      ProgramRunUnsupportedProgramType(:final programPath, :final message)
+          when result.exitCode == 65 =>
+        UnsupportedProgramRun(programPath: programPath, message: message),
+      ProgramRunBottleNotFound(:final bottleId, :final message)
+          when result.exitCode == 66 =>
+        MissingProgramRunBottle(bottleId: bottleId, message: message),
+      ProgramRunExecutionFailure(
+        :final bottleId,
+        :final programPath,
+        :final message,
+        :final runnerKind,
+        :final executable,
+        :final workingDirectory,
+        :final argv,
+        :final logPath,
+      )
+          when result.exitCode == 75 =>
+        FailedProgramRun(
+          bottleId: bottleId,
+          programPath: programPath,
+          message: message,
+          runnerKind: runnerKind,
+          executable: executable,
+          workingDirectory: workingDirectory,
+          argv: argv,
+          logPath: logPath,
+        ),
+      ParsedProgramRun() ||
+      ProgramRunUnsupportedProgramType() ||
+      ProgramRunBottleNotFound() ||
+      ProgramRunExecutionFailure() ||
+      ProgramRunParseFailure() => ProgramRunLoadFailure(
+        exitCode: result.exitCode,
+        message: failureMessage(result),
         diagnostic: result.stderr,
       ),
     };
