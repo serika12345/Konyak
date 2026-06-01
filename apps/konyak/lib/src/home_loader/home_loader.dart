@@ -35,7 +35,10 @@ import '../settings/app_settings_summary.dart';
 part '../home_loader_parts/home_loader_platform_helpers.part.dart';
 part '../home_loader_parts/home_loader_bottles.part.dart';
 part '../home_loader_parts/home_loader_executables.part.dart';
+part '../home_loader_parts/home_loader_pinned_programs.part.dart';
 part '../home_loader_parts/home_loader_programs.part.dart';
+part '../home_loader_parts/home_loader_wine_processes.part.dart';
+part '../home_loader_parts/home_loader_winetricks.part.dart';
 part '../home_loader_parts/home_loader_runtimes.part.dart';
 part '../home_loader_parts/home_loader_settings.part.dart';
 
