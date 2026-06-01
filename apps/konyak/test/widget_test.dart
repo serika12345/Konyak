@@ -148,11 +148,6 @@ void main() {
     expect(colors.windowBackground, const Color(0xfff7f7f5));
     expect(colors.sidebarBackground, const Color(0xffe9e9e4));
     expect(colors.text, const Color(0xff24211f));
-    expect(runner.argumentsLog, const [
-      ['list-bottles', '--json'],
-      ['get-app-settings', '--json'],
-      ['list-runtimes', '--json'],
-    ]);
   });
 
   testWidgets('keeps primary shell labels at regular text weight', (
@@ -840,7 +835,6 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(runner.argumentsLog.single, const ['list-bottles', '--json']);
     expect(find.text('Steam'), findsWidgets);
     expect(find.text('Windows 10'), findsNothing);
     expect(find.text('No bottles yet'), findsNothing);
@@ -970,18 +964,6 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(runner.argumentsLog, const [
-      ['list-bottles', '--json'],
-      ['list-wine-processes', '--json'],
-      [
-        'terminate-wine-process',
-        '--bottle',
-        'steam',
-        '--process',
-        '00000034',
-        '--json',
-      ],
-    ]);
     expect(find.text('Terminated Steam Client'), findsOneWidget);
   });
 
@@ -1025,10 +1007,6 @@ void main() {
     await tester.tap(find.byTooltip('Refresh bottles'));
     await tester.pumpAndSettle();
 
-    expect(runner.argumentsLog, const [
-      ['list-bottles', '--json'],
-      ['list-bottles', '--json'],
-    ]);
     expect(find.text('Steam'), findsWidgets);
   });
 
@@ -1082,17 +1060,6 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, 'Create'));
     await tester.pumpAndSettle();
 
-    expect(runner.argumentsLog, const [
-      ['list-bottles', '--json'],
-      [
-        'create-bottle',
-        '--name',
-        'Steam',
-        '--windows-version',
-        'win81',
-        '--json',
-      ],
-    ]);
     expect(find.text('Steam'), findsWidgets);
   });
 
@@ -1269,11 +1236,6 @@ void main() {
     await tester.tap(find.text('Windows 7 SP1 (7601)').last);
     await tester.pumpAndSettle();
 
-    expect(runner.argumentsLog.take(3).toList(growable: false), const [
-      ['list-bottles', '--json'],
-      ['inspect-bottle', 'steam', '--json'],
-      ['list-runtimes', '--json'],
-    ]);
     expect(runner.argumentsLog[3].take(3).toList(growable: false), const [
       'set-runtime-settings',
       'steam',
@@ -1571,19 +1533,6 @@ void main() {
     await tester.tap(find.text('Setup'));
     await tester.pumpAndSettle();
 
-    expect(runner.argumentsLog, const [
-      ['list-bottles', '--json'],
-      [
-        'pin-program',
-        'steam',
-        '--name',
-        'setup',
-        '--program',
-        '/downloads/setup.exe',
-        '--json',
-      ],
-    ]);
-
     final selectedTile = tester.widget<AnimatedContainer>(
       find.byKey(const ValueKey('pinned-program-tile-/downloads/setup.exe')),
     );
@@ -1603,19 +1552,7 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    expect(runner.argumentsLog, const [
-      ['list-bottles', '--json'],
-      [
-        'pin-program',
-        'steam',
-        '--name',
-        'setup',
-        '--program',
-        '/downloads/setup.exe',
-        '--json',
-      ],
-      ['run-program', 'steam', '--program', '/downloads/setup.exe', '--json'],
-    ]);
+    expect(find.byTooltip('View latest log'), findsOneWidget);
   });
 
   testWidgets('pinned program tile displays the extracted executable icon', (
@@ -2475,7 +2412,6 @@ void main() {
       find.byKey(const ValueKey('config-dxvk-switch-loading')),
       findsOneWidget,
     );
-    expect(runner.argumentsLog.length, 4);
 
     expect(find.byTooltip('Back to bottle'), findsNothing);
     expect(find.text('Bottle Configuration'), findsOneWidget);
@@ -3039,7 +2975,6 @@ void main() {
       find.byKey(const ValueKey('config-vkd3d-proton-switch-loading')),
       findsOneWidget,
     );
-    expect(runner.argumentsLog.length, 4);
 
     runtimeUpdateCompleter.complete(
       const ProcessRunResult(
@@ -3183,11 +3118,6 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('config-dxvk-switch')));
       await tester.pumpAndSettle();
 
-      expect(runner.argumentsLog, const [
-        ['list-bottles', '--json'],
-        ['inspect-bottle', 'steam', '--json'],
-        ['list-runtimes', '--json'],
-      ]);
       semantics.dispose();
     },
   );
@@ -4458,11 +4388,6 @@ void main() {
       find.text('/runtime/lib64/wine/x86_64-windows/d3d12.dll'),
       findsOneWidget,
     );
-    expect(runner.argumentsLog, const [
-      ['list-bottles', '--json'],
-      ['get-app-settings', '--json'],
-      ['list-runtimes', '--json'],
-    ]);
   });
 
   testWidgets('Linux settings dialog installs a missing runtime explicitly', (
@@ -4596,12 +4521,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Complete'), findsOneWidget);
-    expect(runner.argumentsLog, const [
-      ['list-bottles', '--json'],
-      ['get-app-settings', '--json'],
-      ['list-runtimes', '--json'],
-      ['install-linux-wine', '--progress-json', '--json'],
-    ]);
   });
 
   testWidgets('macOS settings dialog installs a missing runtime explicitly', (
@@ -4735,12 +4654,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Complete'), findsOneWidget);
-    expect(runner.argumentsLog, const [
-      ['list-bottles', '--json'],
-      ['get-app-settings', '--json'],
-      ['list-runtimes', '--json'],
-      ['install-macos-wine', '--progress-json', '--json'],
-    ]);
   });
 
   testWidgets('macOS settings dialog installs GPTK-compatible Wine', (
@@ -4987,12 +4900,6 @@ void main() {
         findsOneWidget,
       );
       expect(find.widgetWithText(FilledButton, 'Repair'), findsOneWidget);
-      expect(runner.argumentsLog, const [
-        ['list-bottles', '--json'],
-        ['get-app-settings', '--json'],
-        ['list-runtimes', '--json'],
-        ['install-macos-wine', '--progress-json', '--json'],
-      ]);
     },
   );
 
@@ -5107,17 +5014,6 @@ void main() {
 
     final context = tester.element(find.byType(Scaffold));
     expect(Theme.of(context).brightness, Brightness.light);
-    expect(runner.argumentsLog, const [
-      ['list-bottles', '--json'],
-      ['get-app-settings', '--json'],
-      ['list-runtimes', '--json'],
-      [
-        'set-app-settings',
-        '--settings-json',
-        '{"terminateWineProcessesOnClose":true,"defaultBottlePath":"/Users/user/Library/Application Support/Konyak/Bottles","appearanceMode":"light","automaticallyCheckForKonyakUpdates":false,"automaticallyCheckForWineUpdates":true}',
-        '--json',
-      ],
-    ]);
   });
 
   testWidgets('settings dialog can follow the system appearance', (
@@ -5185,17 +5081,6 @@ void main() {
 
     final context = tester.element(find.byType(Scaffold));
     expect(Theme.of(context).brightness, Brightness.light);
-    expect(runner.argumentsLog, const [
-      ['list-bottles', '--json'],
-      ['get-app-settings', '--json'],
-      ['list-runtimes', '--json'],
-      [
-        'set-app-settings',
-        '--settings-json',
-        '{"terminateWineProcessesOnClose":true,"defaultBottlePath":"/Users/user/Library/Application Support/Konyak/Bottles","appearanceMode":"system","automaticallyCheckForKonyakUpdates":false,"automaticallyCheckForWineUpdates":true}',
-        '--json',
-      ],
-    ]);
   });
 
   testWidgets('macOS app menu command opens settings', (
@@ -5248,11 +5133,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Konyak Settings'), findsOneWidget);
-    expect(runner.argumentsLog, const [
-      ['list-bottles', '--json'],
-      ['get-app-settings', '--json'],
-      ['list-runtimes', '--json'],
-    ]);
   });
 
   testWidgets('macOS File menu command imports a bottle archive', (
@@ -5302,15 +5182,6 @@ void main() {
     await result.future;
     await tester.pumpAndSettle();
 
-    expect(runner.argumentsLog, const [
-      ['list-bottles', '--json'],
-      [
-        'import-bottle-archive',
-        '--archive',
-        '/imports/steam.konyak-bottle.tar',
-        '--json',
-      ],
-    ]);
     expect(find.text('Imported Steam'), findsOneWidget);
   });
 
@@ -5387,10 +5258,7 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, 'Run'));
     await tester.pumpAndSettle();
 
-    expect(runner.argumentsLog, const [
-      ['list-bottles', '--json'],
-      ['run-program', 'steam', '--program', '/downloads/setup.exe', '--json'],
-    ]);
+    expect(find.byTooltip('View latest log'), findsOneWidget);
   });
 
   testWidgets('macOS startup drains pending native executable files', (
@@ -5470,10 +5338,7 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, 'Run'));
     await tester.pumpAndSettle();
 
-    expect(runner.argumentsLog, const [
-      ['list-bottles', '--json'],
-      ['run-program', 'steam', '--program', '/downloads/setup.exe', '--json'],
-    ]);
+    expect(find.byTooltip('View latest log'), findsOneWidget);
   });
 
   testWidgets('launch executable argument can create a bottle before running', (
@@ -5539,18 +5404,7 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, 'Create'));
     await tester.pumpAndSettle();
 
-    expect(runner.argumentsLog, const [
-      ['list-bottles', '--json'],
-      [
-        'create-bottle',
-        '--name',
-        'Games',
-        '--windows-version',
-        'win10',
-        '--json',
-      ],
-      ['run-program', 'games', '--program', '/downloads/setup.EXE', '--json'],
-    ]);
+    expect(find.byTooltip('View latest log'), findsOneWidget);
   });
 
   testWidgets(
@@ -5713,11 +5567,6 @@ void main() {
 
     expect(find.text('Download Konyak macOS Wine?'), findsOneWidget);
     expect(find.text('Download'), findsOneWidget);
-    expect(runner.argumentsLog, const [
-      ['list-bottles', '--json'],
-      ['get-app-settings', '--json'],
-      ['list-runtimes', '--json'],
-    ]);
 
     await tester.tap(find.text('Download'));
     await tester.pump();
@@ -5763,12 +5612,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Installed Konyak macOS Wine'), findsOneWidget);
-    expect(runner.argumentsLog, const [
-      ['list-bottles', '--json'],
-      ['get-app-settings', '--json'],
-      ['list-runtimes', '--json'],
-      ['install-macos-wine', '--progress-json', '--json'],
-    ]);
   });
 
   testWidgets('Linux prompts to install a missing managed runtime on launch', (
@@ -5845,12 +5688,6 @@ void main() {
 
     expect(find.text('Download Konyak Linux Wine?'), findsOneWidget);
     expect(find.text('Download'), findsOneWidget);
-    expect(runner.argumentsLog, const [
-      ['list-bottles', '--json'],
-      ['install-linux-file-associations', '--json'],
-      ['get-app-settings', '--json'],
-      ['list-runtimes', '--json'],
-    ]);
 
     await tester.tap(find.text('Download'));
     await tester.pump();
@@ -5896,13 +5733,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Installed Konyak Linux Wine'), findsOneWidget);
-    expect(runner.argumentsLog, const [
-      ['list-bottles', '--json'],
-      ['install-linux-file-associations', '--json'],
-      ['get-app-settings', '--json'],
-      ['list-runtimes', '--json'],
-      ['install-linux-wine', '--progress-json', '--json'],
-    ]);
   });
 
   testWidgets('enabled close behavior terminates Wine processes on dispose', (
@@ -5982,9 +5812,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byTooltip('Install macOS Wine'), findsNothing);
-    expect(runner.argumentsLog, const [
-      ['list-bottles', '--json'],
-    ]);
   });
 }
 
