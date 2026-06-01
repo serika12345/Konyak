@@ -9918,11 +9918,13 @@ Map<String, String> _linuxWineEnvironmentWithRuntime({
   }
 
   final dllOverrides = <String>[
-    if (bottle.runtimeSettings.dxvk) 'dxgi,d3d9,d3d10core,d3d11',
-    if (bottle.runtimeSettings.vkd3dProton) 'd3d12,d3d12core',
+    if (bottle.runtimeSettings.dxvk) ...['dxgi', 'd3d9', 'd3d10core', 'd3d11'],
+    if (bottle.runtimeSettings.vkd3dProton) ...['d3d12', 'd3d12core'],
   ];
   if (dllOverrides.isNotEmpty) {
-    wineEnvironment['WINEDLLOVERRIDES'] = '${dllOverrides.join(',')}=n,b';
+    wineEnvironment['WINEDLLOVERRIDES'] = dllOverrides
+        .map((dllName) => '$dllName=n,b')
+        .join(';');
   }
 
   return Map.unmodifiable(wineEnvironment);
@@ -10131,7 +10133,9 @@ const _linuxWineRuntimeComponentDefinitions =
         isRequired: true,
         relativePaths: <List<String>>[
           <String>['vkd3d-proton', 'x64', 'd3d12.dll'],
+          <String>['vkd3d-proton', 'x64', 'd3d12core.dll'],
           <String>['vkd3d-proton', 'x86', 'd3d12.dll'],
+          <String>['vkd3d-proton', 'x86', 'd3d12core.dll'],
         ],
       ),
     ];

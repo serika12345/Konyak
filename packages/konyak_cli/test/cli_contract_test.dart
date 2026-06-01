@@ -2597,7 +2597,10 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
     expect(runner.lastRequest?.environment, containsPair('DXVK_ASYNC', '1'));
     expect(
       runner.lastRequest?.environment,
-      containsPair('WINEDLLOVERRIDES', 'dxgi,d3d9,d3d10core,d3d11=n,b'),
+      containsPair(
+        'WINEDLLOVERRIDES',
+        'dxgi=n,b;d3d9=n,b;d3d10core=n,b;d3d11=n,b',
+      ),
     );
     expect(
       runner.lastRequest?.environment,
@@ -2652,7 +2655,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
     expect(runner.lastRequest?.environment, containsPair('WINEESYNC', '1'));
     expect(
       runner.lastRequest?.environment,
-      containsPair('WINEDLLOVERRIDES', 'd3d12,d3d12core=n,b'),
+      containsPair('WINEDLLOVERRIDES', 'd3d12=n,b;d3d12core=n,b'),
     );
     expect(
       runner.lastRequest?.environment,
@@ -4864,7 +4867,9 @@ corefonts                Microsoft Core Fonts
           '/home/user/.local/share/konyak/Runtimes/linux-wine/dxvk/x86/d3d10core.dll',
           '/home/user/.local/share/konyak/Runtimes/linux-wine/dxvk/x86/d3d11.dll',
           '/home/user/.local/share/konyak/Runtimes/linux-wine/vkd3d-proton/x64/d3d12.dll',
+          '/home/user/.local/share/konyak/Runtimes/linux-wine/vkd3d-proton/x64/d3d12core.dll',
           '/home/user/.local/share/konyak/Runtimes/linux-wine/vkd3d-proton/x86/d3d12.dll',
+          '/home/user/.local/share/konyak/Runtimes/linux-wine/vkd3d-proton/x86/d3d12core.dll',
         }),
       ),
     );
@@ -4957,7 +4962,9 @@ corefonts                Microsoft Core Fonts
                 'isInstalled': true,
                 'paths': [
                   '/home/user/.local/share/konyak/Runtimes/linux-wine/vkd3d-proton/x64/d3d12.dll',
+                  '/home/user/.local/share/konyak/Runtimes/linux-wine/vkd3d-proton/x64/d3d12core.dll',
                   '/home/user/.local/share/konyak/Runtimes/linux-wine/vkd3d-proton/x86/d3d12.dll',
+                  '/home/user/.local/share/konyak/Runtimes/linux-wine/vkd3d-proton/x86/d3d12core.dll',
                 ],
                 'missingPaths': <Object?>[],
               },
@@ -4985,7 +4992,9 @@ corefonts                Microsoft Core Fonts
           '/home/user/.local/share/konyak/Runtimes/linux-wine/dxvk/x86/dxgi.dll',
           '/home/user/.local/share/konyak/Runtimes/linux-wine/dxvk/x86/d3d11.dll',
           '/home/user/.local/share/konyak/Runtimes/linux-wine/vkd3d-proton/x64/d3d12.dll',
+          '/home/user/.local/share/konyak/Runtimes/linux-wine/vkd3d-proton/x64/d3d12core.dll',
           '/home/user/.local/share/konyak/Runtimes/linux-wine/vkd3d-proton/x86/d3d12.dll',
+          '/home/user/.local/share/konyak/Runtimes/linux-wine/vkd3d-proton/x86/d3d12core.dll',
         }),
       ),
     );
@@ -5036,7 +5045,9 @@ corefonts                Microsoft Core Fonts
           '/home/user/.local/share/konyak/Runtimes/linux-wine/dxvk/x86/dxgi.dll',
           '/home/user/.local/share/konyak/Runtimes/linux-wine/dxvk/x86/d3d11.dll',
           '/home/user/.local/share/konyak/Runtimes/linux-wine/vkd3d-proton/x64/d3d12.dll',
+          '/home/user/.local/share/konyak/Runtimes/linux-wine/vkd3d-proton/x64/d3d12core.dll',
           '/home/user/.local/share/konyak/Runtimes/linux-wine/vkd3d-proton/x86/d3d12.dll',
+          '/home/user/.local/share/konyak/Runtimes/linux-wine/vkd3d-proton/x86/d3d12core.dll',
         }),
       ),
     );
@@ -8739,7 +8750,9 @@ corefonts                Microsoft Core Fonts
       archiveName: 'vkd3d-proton',
       relativePaths: const <List<String>>[
         <String>['vkd3d-proton', 'x64', 'd3d12.dll'],
+        <String>['vkd3d-proton', 'x64', 'd3d12core.dll'],
         <String>['vkd3d-proton', 'x86', 'd3d12.dll'],
+        <String>['vkd3d-proton', 'x86', 'd3d12core.dll'],
       ],
       versions: const <String, String>{'vkd3d-proton': 'vkd3d-proton-fixture'},
     );
@@ -8801,7 +8814,9 @@ corefonts                Microsoft Core Fonts
       archiveName: 'source-vkd3d-proton',
       relativePaths: const <List<String>>[
         <String>['vkd3d-proton', 'x64', 'd3d12.dll'],
+        <String>['vkd3d-proton', 'x64', 'd3d12core.dll'],
         <String>['vkd3d-proton', 'x86', 'd3d12.dll'],
+        <String>['vkd3d-proton', 'x86', 'd3d12core.dll'],
       ],
       versions: const <String, String>{},
     );
@@ -8875,7 +8890,9 @@ corefonts                Microsoft Core Fonts
       archiveName: 'repair-vkd3d-proton',
       relativePaths: const <List<String>>[
         <String>['vkd3d-proton', 'x64', 'd3d12.dll'],
+        <String>['vkd3d-proton', 'x64', 'd3d12core.dll'],
         <String>['vkd3d-proton', 'x86', 'd3d12.dll'],
+        <String>['vkd3d-proton', 'x86', 'd3d12core.dll'],
       ],
       versions: const <String, String>{},
     );
@@ -8942,7 +8959,9 @@ corefonts                Microsoft Core Fonts
       archiveName: 'signed-source-vkd3d-proton',
       relativePaths: const <List<String>>[
         <String>['vkd3d-proton', 'x64', 'd3d12.dll'],
+        <String>['vkd3d-proton', 'x64', 'd3d12core.dll'],
         <String>['vkd3d-proton', 'x86', 'd3d12.dll'],
+        <String>['vkd3d-proton', 'x86', 'd3d12core.dll'],
       ],
       versions: const <String, String>{},
     );
@@ -9003,7 +9022,9 @@ corefonts                Microsoft Core Fonts
       archiveName: 'invalid-signed-source-vkd3d-proton',
       relativePaths: const <List<String>>[
         <String>['vkd3d-proton', 'x64', 'd3d12.dll'],
+        <String>['vkd3d-proton', 'x64', 'd3d12core.dll'],
         <String>['vkd3d-proton', 'x86', 'd3d12.dll'],
+        <String>['vkd3d-proton', 'x86', 'd3d12core.dll'],
       ],
       versions: const <String, String>{},
     );

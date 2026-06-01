@@ -296,8 +296,10 @@ prepare_vkd3d_proton_component() {
   local extract_root="${work_root}/extract"
   local payload_root="${work_root}/payload/konyak-linux-vkd3d-proton"
   local archive_path="${SOURCE_ROOT}/components/vkd3d-proton.tar.xz"
-  local source_x64
-  local source_x86
+  local source_d3d12_x64
+  local source_d3d12_x86
+  local source_d3d12core_x64
+  local source_d3d12core_x86
 
   download_if_missing "${archive_url}" "${archive_cache}" "${archive_sha}"
   reset_dir "${work_root}"
@@ -306,15 +308,22 @@ prepare_vkd3d_proton_component() {
     "${payload_root}/vkd3d-proton/x86"
   "${TAR_BIN}" --use-compress-program="${ZSTD_BIN}" -xf "${archive_cache}" -C "${extract_root}"
 
-  source_x64="$(find "${extract_root}" -path '*/x64/d3d12.dll' -type f | head -n 1)"
-  source_x86="$(find "${extract_root}" -path '*/x86/d3d12.dll' -type f | head -n 1)"
-  if [[ -z "${source_x64}" || -z "${source_x86}" ]]; then
-    print -u2 "vkd3d-proton archive does not contain x64/x86 d3d12.dll."
+  source_d3d12_x64="$(find "${extract_root}" -path '*/x64/d3d12.dll' -type f | head -n 1)"
+  source_d3d12_x86="$(find "${extract_root}" -path '*/x86/d3d12.dll' -type f | head -n 1)"
+  source_d3d12core_x64="$(find "${extract_root}" -path '*/x64/d3d12core.dll' -type f | head -n 1)"
+  source_d3d12core_x86="$(find "${extract_root}" -path '*/x86/d3d12core.dll' -type f | head -n 1)"
+  if [[ -z "${source_d3d12_x64}" ||
+        -z "${source_d3d12_x86}" ||
+        -z "${source_d3d12core_x64}" ||
+        -z "${source_d3d12core_x86}" ]]; then
+    print -u2 "vkd3d-proton archive does not contain x64/x86 d3d12.dll and d3d12core.dll."
     exit 65
   fi
 
-  cp -f "${source_x64}" "${payload_root}/vkd3d-proton/x64/d3d12.dll"
-  cp -f "${source_x86}" "${payload_root}/vkd3d-proton/x86/d3d12.dll"
+  cp -f "${source_d3d12_x64}" "${payload_root}/vkd3d-proton/x64/d3d12.dll"
+  cp -f "${source_d3d12_x86}" "${payload_root}/vkd3d-proton/x86/d3d12.dll"
+  cp -f "${source_d3d12core_x64}" "${payload_root}/vkd3d-proton/x64/d3d12core.dll"
+  cp -f "${source_d3d12core_x86}" "${payload_root}/vkd3d-proton/x86/d3d12core.dll"
   write_stack_manifest \
     "${payload_root}/.konyak-runtime-stack.json" \
     "vkd3d-proton" \
