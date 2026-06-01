@@ -8729,95 +8729,48 @@ CliResult _winetricksVerbListJsonResult(WinetricksVerbListResult result) {
   };
 }
 
+typedef _CliCommandHandler = CliResult? Function();
+
+CliResult? _firstCliResult(Iterable<_CliCommandHandler> handlers) {
+  for (final handler in handlers) {
+    final result = handler();
+    if (result != null) {
+      return result;
+    }
+  }
+
+  return null;
+}
+
 CliResult _runCli(List<String> arguments, _CliCommandContext context) {
   final bottleCatalog = context.bottleCatalog;
   final bottleRepository = context.bottleRepository;
   final activeBottleCatalog = bottleRepository ?? bottleCatalog;
 
-  final appCommandResult = _handleAppCommand(arguments, context);
-  if (appCommandResult != null) {
-    return appCommandResult;
-  }
-
-  final hostIntegrationCommandResult = _handleHostIntegrationCommand(
-    arguments,
-    context,
-  );
-  if (hostIntegrationCommandResult != null) {
-    return hostIntegrationCommandResult;
-  }
-
-  final wineProcessCommandResult = _handleWineProcessCommand(
-    arguments,
-    context: context,
-    activeBottleCatalog: activeBottleCatalog,
-  );
-  if (wineProcessCommandResult != null) {
-    return wineProcessCommandResult;
-  }
-
-  final bottleReadCommandResult = _handleBottleReadCommand(
-    arguments,
-    context: context,
-    activeBottleCatalog: activeBottleCatalog,
-  );
-  if (bottleReadCommandResult != null) {
-    return bottleReadCommandResult;
-  }
-
-  final winetricksVerbCommandResult = _handleWinetricksVerbCommand(
-    arguments,
-    context,
-  );
-  if (winetricksVerbCommandResult != null) {
-    return winetricksVerbCommandResult;
-  }
-
-  final bottleMutationCommandResult = _handleBottleMutationCommand(
-    arguments,
-    context,
-  );
-  if (bottleMutationCommandResult != null) {
-    return bottleMutationCommandResult;
-  }
-
-  final bottleConfigurationCommandResult = _handleBottleConfigurationCommand(
-    arguments,
-    context,
-  );
-  if (bottleConfigurationCommandResult != null) {
-    return bottleConfigurationCommandResult;
-  }
-
-  final pinnedProgramCommandResult = _handlePinnedProgramCommand(
-    arguments,
-    context,
-  );
-  if (pinnedProgramCommandResult != null) {
-    return pinnedProgramCommandResult;
-  }
-
-  final programSettingsCommandResult = _handleProgramSettingsCommand(
-    arguments,
-    context,
-  );
-  if (programSettingsCommandResult != null) {
-    return programSettingsCommandResult;
-  }
-
-  final programRunCommandResult = _handleProgramRunCommand(arguments, context);
-  if (programRunCommandResult != null) {
-    return programRunCommandResult;
-  }
-
-  final locationCommandResult = _handleLocationCommand(arguments, context);
-  if (locationCommandResult != null) {
-    return locationCommandResult;
-  }
-
-  final runtimeCommandResult = _handleRuntimeCommand(arguments, context);
-  if (runtimeCommandResult != null) {
-    return runtimeCommandResult;
+  final commandResult = _firstCliResult(<_CliCommandHandler>[
+    () => _handleAppCommand(arguments, context),
+    () => _handleHostIntegrationCommand(arguments, context),
+    () => _handleWineProcessCommand(
+      arguments,
+      context: context,
+      activeBottleCatalog: activeBottleCatalog,
+    ),
+    () => _handleBottleReadCommand(
+      arguments,
+      context: context,
+      activeBottleCatalog: activeBottleCatalog,
+    ),
+    () => _handleWinetricksVerbCommand(arguments, context),
+    () => _handleBottleMutationCommand(arguments, context),
+    () => _handleBottleConfigurationCommand(arguments, context),
+    () => _handlePinnedProgramCommand(arguments, context),
+    () => _handleProgramSettingsCommand(arguments, context),
+    () => _handleProgramRunCommand(arguments, context),
+    () => _handleLocationCommand(arguments, context),
+    () => _handleRuntimeCommand(arguments, context),
+  ]);
+  if (commandResult != null) {
+    return commandResult;
   }
 
   return const CliResult(
