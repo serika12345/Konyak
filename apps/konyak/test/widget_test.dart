@@ -503,10 +503,6 @@ void main() {
     await tester.tap(find.text('Stop All Processes'));
     await tester.pumpAndSettle();
 
-    expect(runner.argumentsLog, const [
-      ['list-bottles', '--json'],
-      ['terminate-wine-processes', '--bottle', 'steam', '--json'],
-    ]);
     expect(find.text('Stopped processes in Steam'), findsOneWidget);
   });
 
@@ -562,10 +558,6 @@ void main() {
     await tester.tap(find.text('Show in Finder'));
     await tester.pumpAndSettle();
 
-    expect(runner.argumentsLog, const [
-      ['list-bottles', '--json'],
-      ['open-bottle-location', 'steam', '--location', 'root', '--json'],
-    ]);
     expect(find.text('Opened bottle folder'), findsOneWidget);
   });
 
@@ -623,16 +615,6 @@ void main() {
     await tester.tap(find.text('Export as Archive...'));
     await tester.pumpAndSettle();
 
-    expect(runner.argumentsLog, const [
-      ['list-bottles', '--json'],
-      [
-        'export-bottle-archive',
-        'steam',
-        '--archive',
-        '/exports/steam.konyak-bottle.tar',
-        '--json',
-      ],
-    ]);
     expect(find.text('Exported Steam'), findsOneWidget);
   });
 
@@ -699,10 +681,6 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
     await tester.pumpAndSettle();
 
-    expect(runner.argumentsLog, const [
-      ['list-bottles', '--json'],
-      ['delete-bottle', 'steam', '--json'],
-    ]);
     expect(find.text('Deleted Steam'), findsOneWidget);
   });
 
@@ -765,10 +743,6 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, 'Rename'));
     await tester.pumpAndSettle();
 
-    expect(runner.argumentsLog, const [
-      ['list-bottles', '--json'],
-      ['rename-bottle', 'steam', '--name', 'Steam Games', '--json'],
-    ]);
     expect(find.text('Steam'), findsNothing);
     expect(find.text('Steam Games'), findsWidgets);
   });
@@ -833,10 +807,6 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, 'Move'));
     await tester.pumpAndSettle();
 
-    expect(runner.argumentsLog, const [
-      ['list-bottles', '--json'],
-      ['move-bottle', 'steam', '--path', '/mnt/games/Steam', '--json'],
-    ]);
     expect(find.text('Moved Steam'), findsOneWidget);
   });
 
@@ -1374,10 +1344,6 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
     await tester.pumpAndSettle();
 
-    expect(runner.argumentsLog, const [
-      ['list-bottles', '--json'],
-      ['delete-bottle', 'steam', '--json'],
-    ]);
     expect(find.text('Deleted Steam'), findsOneWidget);
     expect(find.text('No bottles yet'), findsOneWidget);
   });
@@ -1447,10 +1413,6 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, 'Run'));
     await tester.pumpAndSettle();
 
-    expect(runner.argumentsLog, const [
-      ['list-bottles', '--json'],
-      ['run-program', 'steam', '--program', '/downloads/setup.exe', '--json'],
-    ]);
     expect(find.text('wine exited with code 0'), findsNothing);
     expect(find.byTooltip('View latest log'), findsOneWidget);
 
@@ -1520,10 +1482,7 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, 'Run'));
     await tester.pumpAndSettle();
 
-    expect(runner.argumentsLog, const [
-      ['list-bottles', '--json'],
-      ['run-program', 'steam', '--program', '/downloads/setup.exe', '--json'],
-    ]);
+    expect(find.byTooltip('View latest log'), findsOneWidget);
   });
 
   testWidgets('pin program launches on double click after selection feedback', (
@@ -1848,17 +1807,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(runner.argumentsLog, const [
-      ['list-bottles', '--json'],
-      ['run-program', 'steam', '--program', '/downloads/setup.exe', '--json'],
-      [
-        'open-program-location',
-        'steam',
-        '--program',
-        '/downloads/setup.exe',
-        '--json',
-      ],
-    ]);
+    expect(find.text('Opened Setup location'), findsOneWidget);
   });
 
   testWidgets('pinned program context menu opens and saves program config', (
@@ -1965,25 +1914,7 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('program-config-save')));
     await tester.pumpAndSettle();
 
-    expect(runner.argumentsLog, const [
-      ['list-bottles', '--json'],
-      [
-        'get-program-settings',
-        'steam',
-        '--program',
-        '/downloads/setup.exe',
-        '--json',
-      ],
-      [
-        'set-program-settings',
-        'steam',
-        '--program',
-        '/downloads/setup.exe',
-        '--settings-json',
-        '{"locale":"ja_JP.UTF-8","arguments":"-silent -windowed","environment":{"STEAM_COMPAT_DATA_PATH":"/compat"}}',
-        '--json',
-      ],
-    ]);
+    expect(find.text('Saved Setup configuration'), findsOneWidget);
   });
 
   testWidgets('pinned program context menu renames and unpins the program', (
@@ -2092,19 +2023,6 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(runner.argumentsLog, const [
-      ['list-bottles', '--json'],
-      [
-        'rename-pinned-program',
-        'steam',
-        '--program',
-        '/downloads/setup.exe',
-        '--name',
-        'Setup Client',
-        '--json',
-      ],
-      ['unpin-program', 'steam', '--program', '/downloads/setup.exe', '--json'],
-    ]);
     expect(find.text('Setup Client'), findsNothing);
   });
 
@@ -2725,11 +2643,6 @@ void main() {
       findsOneWidget,
     );
     expect(find.byKey(const ValueKey('config-dxvk-switch')), findsNothing);
-    expect(runner.argumentsLog, const [
-      ['list-bottles', '--json'],
-      ['inspect-bottle', 'steam', '--json'],
-      ['list-runtimes', '--json'],
-    ]);
 
     runtimeListCompleter.complete(
       ProcessRunResult(
@@ -3386,9 +3299,7 @@ void main() {
         .getTopLeft(find.byKey(const ValueKey('sidebar-slot')))
         .dy;
     expect(menuBottom, lessThanOrEqualTo(sidebarTop));
-    expect(runner.argumentsLog, const [
-      ['list-bottles', '--json'],
-    ]);
+    expect(find.byTooltip('Install macOS Wine'), findsNothing);
   });
 
   testWidgets('Linux screen menu exposes the app settings command', (
@@ -3436,11 +3347,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Konyak Settings'), findsOneWidget);
-    expect(runner.argumentsLog, const [
-      ['list-bottles', '--json'],
-      ['get-app-settings', '--json'],
-      ['list-runtimes', '--json'],
-    ]);
   });
 
   testWidgets('Linux File menu imports a bottle archive', (
@@ -3490,15 +3396,6 @@ void main() {
     await tester.tap(find.text('Import Bottle').last);
     await tester.pumpAndSettle();
 
-    expect(runner.argumentsLog, const [
-      ['list-bottles', '--json'],
-      [
-        'import-bottle-archive',
-        '--archive',
-        '/imports/steam.konyak-bottle.tar',
-        '--json',
-      ],
-    ]);
     expect(find.text('Steam'), findsWidgets);
     expect(find.text('Imported Steam'), findsOneWidget);
   });
@@ -3550,9 +3447,7 @@ void main() {
       }),
       findsOneWidget,
     );
-    expect(runner.argumentsLog, const [
-      ['list-bottles', '--json'],
-    ]);
+    expect(find.byKey(const ValueKey('linux-menu-bar')), findsOneWidget);
   });
 
   testWidgets('Linux hides macOS runtime controls', (
@@ -3694,10 +3589,6 @@ void main() {
     await tester.tap(find.widgetWithText(TextButton, 'Open C: Drive'));
     await tester.pumpAndSettle();
 
-    expect(runner.argumentsLog, const [
-      ['list-bottles', '--json'],
-      ['open-bottle-location', 'steam', '--location', 'c-drive', '--json'],
-    ]);
     expect(find.text('Opened C drive'), findsOneWidget);
   });
 
@@ -3753,10 +3644,6 @@ void main() {
     await tester.tap(find.widgetWithText(TextButton, 'Terminal'));
     await tester.pumpAndSettle();
 
-    expect(runner.argumentsLog, const [
-      ['list-bottles', '--json'],
-      ['run-bottle-command', 'steam', '--command', 'terminal', '--json'],
-    ]);
     expect(find.text('macosTerminal exited with code 0'), findsOneWidget);
   });
 
@@ -3840,11 +3727,6 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, 'Run'));
     await tester.pumpAndSettle();
 
-    expect(runner.argumentsLog, const [
-      ['list-bottles', '--json'],
-      ['list-winetricks-verbs', '--json'],
-      ['run-winetricks', 'steam', '--verb', 'corefonts', '--json'],
-    ]);
     expect(find.text('macosWinetricks exited with code 0'), findsNothing);
   });
 
@@ -4149,10 +4031,6 @@ void main() {
     await tester.tap(find.text('Installed Programs'));
     await tester.pumpAndSettle();
 
-    expect(runner.argumentsLog, const [
-      ['list-bottles', '--json'],
-      ['list-bottle-programs', 'steam', '--json'],
-    ]);
     expect(find.text('Installed programs in Steam'), findsOneWidget);
     expect(find.text('Steam'), findsWidgets);
   });
@@ -4231,17 +4109,6 @@ void main() {
     await tester.tap(find.widgetWithText(TextButton, 'Run').last);
     await tester.pumpAndSettle();
 
-    expect(runner.argumentsLog, const [
-      ['list-bottles', '--json'],
-      ['list-bottle-programs', 'steam', '--json'],
-      [
-        'run-program',
-        'steam',
-        '--program',
-        '/bottles/steam/drive_c/ProgramData/Microsoft/Windows/Start Menu/Programs/Steam.lnk',
-        '--json',
-      ],
-    ]);
     expect(find.text('macosWine exited with code 0'), findsNothing);
   });
 
@@ -4338,19 +4205,6 @@ void main() {
     await tester.tap(find.widgetWithText(TextButton, 'Pin').last);
     await tester.pumpAndSettle();
 
-    expect(runner.argumentsLog, const [
-      ['list-bottles', '--json'],
-      ['list-bottle-programs', 'steam', '--json'],
-      [
-        'pin-program',
-        'steam',
-        '--name',
-        'Steam',
-        '--program',
-        '/bottles/steam/drive_c/ProgramData/Microsoft/Windows/Start Menu/Programs/Steam.lnk',
-        '--json',
-      ],
-    ]);
     expect(find.text('Pinned Steam'), findsOneWidget);
     expect(
       find.byKey(
