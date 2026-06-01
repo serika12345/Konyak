@@ -6703,14 +6703,9 @@ Future<CliResult> runCliStreaming(
 
 CliResult _programUpdateJsonResult(ProgramUpdateResult result) {
   return switch (result) {
-    ProgramUpdated(:final bottle) => CliResult(
-      exitCode: 0,
-      stdout: jsonEncode(<String, Object?>{
-        'schemaVersion': cliSchemaVersion,
-        'bottle': bottle.toJson(),
-      }),
-      stderr: '',
-    ),
+    ProgramUpdated(:final bottle) => _jsonSuccess(<String, Object?>{
+      'bottle': bottle.toJson(),
+    }),
     ProgramUpdateMissingBottle(:final bottleId) => _bottleNotFoundError(
       bottleId,
     ),
@@ -6816,14 +6811,9 @@ CliResult _runPinnedProgramLauncherCli({
 
 CliResult _bottleArchiveExportJsonResult(BottleArchiveExportResult result) {
   return switch (result) {
-    BottleArchiveExported(:final archive) => CliResult(
-      exitCode: 0,
-      stdout: jsonEncode(<String, Object?>{
-        'schemaVersion': cliSchemaVersion,
-        'bottleArchive': archive.toJson(),
-      }),
-      stderr: '',
-    ),
+    BottleArchiveExported(:final archive) => _jsonSuccess(<String, Object?>{
+      'bottleArchive': archive.toJson(),
+    }),
     BottleArchiveExportMissing(:final bottleId) => _bottleNotFoundError(
       bottleId,
     ),
@@ -6837,14 +6827,9 @@ CliResult _bottleArchiveExportJsonResult(BottleArchiveExportResult result) {
 
 CliResult _bottleArchiveImportJsonResult(BottleArchiveImportResult result) {
   return switch (result) {
-    BottleArchiveImported(:final bottle) => CliResult(
-      exitCode: 0,
-      stdout: jsonEncode(<String, Object?>{
-        'schemaVersion': cliSchemaVersion,
-        'bottle': bottle.toJson(),
-      }),
-      stderr: '',
-    ),
+    BottleArchiveImported(:final bottle) => _jsonSuccess(<String, Object?>{
+      'bottle': bottle.toJson(),
+    }),
     BottleArchiveImportConflict(:final bottleId) => _jsonError(
       exitCode: 73,
       code: 'bottleAlreadyExists',
@@ -6860,36 +6845,15 @@ CliResult _bottleArchiveImportJsonResult(BottleArchiveImportResult result) {
 }
 
 CliResult _appSettingsJsonResult(AppSettingsRecord settings) {
-  return CliResult(
-    exitCode: 0,
-    stdout: jsonEncode(<String, Object?>{
-      'schemaVersion': cliSchemaVersion,
-      'appSettings': settings.toJson(),
-    }),
-    stderr: '',
-  );
+  return _jsonSuccess(<String, Object?>{'appSettings': settings.toJson()});
 }
 
 CliResult _appUpdateJsonResult(AppUpdateRecord update) {
-  return CliResult(
-    exitCode: 0,
-    stdout: jsonEncode(<String, Object?>{
-      'schemaVersion': cliSchemaVersion,
-      'appUpdate': update.toJson(),
-    }),
-    stderr: '',
-  );
+  return _jsonSuccess(<String, Object?>{'appUpdate': update.toJson()});
 }
 
 CliResult _appUpdateInstallJsonResult(AppUpdateInstallRecord install) {
-  return CliResult(
-    exitCode: 0,
-    stdout: jsonEncode(<String, Object?>{
-      'schemaVersion': cliSchemaVersion,
-      'appUpdateInstall': install.toJson(),
-    }),
-    stderr: '',
-  );
+  return _jsonSuccess(<String, Object?>{'appUpdateInstall': install.toJson()});
 }
 
 CliResult _wineProcessTerminationJsonResult(
@@ -6897,34 +6861,24 @@ CliResult _wineProcessTerminationJsonResult(
   String recordsKey = 'bottles',
 }) {
   final hasFailures = records.any((record) => record.status != 'terminated');
-  return CliResult(
-    exitCode: hasFailures ? 75 : 0,
-    stdout: jsonEncode(<String, Object?>{
-      'schemaVersion': cliSchemaVersion,
-      'wineProcessTermination': <String, Object?>{
-        'hasFailures': hasFailures,
-        recordsKey: records
-            .map((record) => record.toJson())
-            .toList(growable: false),
-      },
-    }),
-    stderr: '',
-  );
+  return _jsonSuccess(<String, Object?>{
+    'wineProcessTermination': <String, Object?>{
+      'hasFailures': hasFailures,
+      recordsKey: records
+          .map((record) => record.toJson())
+          .toList(growable: false),
+    },
+  }, exitCode: hasFailures ? 75 : 0);
 }
 
 CliResult _wineProcessListJsonResult(List<WineProcessRecord> records) {
-  return CliResult(
-    exitCode: 0,
-    stdout: jsonEncode(<String, Object?>{
-      'schemaVersion': cliSchemaVersion,
-      'wineProcesses': <String, Object?>{
-        'processes': records
-            .map((record) => record.toJson())
-            .toList(growable: false),
-      },
-    }),
-    stderr: '',
-  );
+  return _jsonSuccess(<String, Object?>{
+    'wineProcesses': <String, Object?>{
+      'processes': records
+          .map((record) => record.toJson())
+          .toList(growable: false),
+    },
+  });
 }
 
 CliResult _programSettingsReadJsonResult({
@@ -6964,18 +6918,13 @@ CliResult _programSettingsJsonResult({
   required String programPath,
   required ProgramSettingsRecord settings,
 }) {
-  return CliResult(
-    exitCode: 0,
-    stdout: jsonEncode(<String, Object?>{
-      'schemaVersion': cliSchemaVersion,
-      'programSettings': <String, Object?>{
-        'bottleId': bottleId,
-        'programPath': programPath,
-        'settings': settings.toJson(),
-      },
-    }),
-    stderr: '',
-  );
+  return _jsonSuccess(<String, Object?>{
+    'programSettings': <String, Object?>{
+      'bottleId': bottleId,
+      'programPath': programPath,
+      'settings': settings.toJson(),
+    },
+  });
 }
 
 CliResult? _applyRuntimeSettingsRegistryUpdates({
@@ -7382,13 +7331,8 @@ CliResult _installRuntimeUpdateJsonResult({
         final installer => switch (installer.install(
           _macosWineInstallRequestForRuntimeUpdate(update),
         )) {
-          MacosWineInstallCompleted(:final runtime) => CliResult(
-            exitCode: 0,
-            stdout: jsonEncode(<String, Object?>{
-              'schemaVersion': cliSchemaVersion,
-              'runtime': runtime.toJson(),
-            }),
-            stderr: '',
+          MacosWineInstallCompleted(:final runtime) => _runtimeJsonResult(
+            runtime,
           ),
           MacosWineInstallFailed(:final message) => _jsonError(
             exitCode: 75,
@@ -7406,13 +7350,8 @@ CliResult _installRuntimeUpdateJsonResult({
         final installer => switch (installer.install(
           _linuxWineInstallRequestForRuntimeUpdate(update),
         )) {
-          LinuxWineInstallCompleted(:final runtime) => CliResult(
-            exitCode: 0,
-            stdout: jsonEncode(<String, Object?>{
-              'schemaVersion': cliSchemaVersion,
-              'runtime': runtime.toJson(),
-            }),
-            stderr: '',
+          LinuxWineInstallCompleted(:final runtime) => _runtimeJsonResult(
+            runtime,
           ),
           LinuxWineInstallFailed(:final message) => _jsonError(
             exitCode: 75,
@@ -7442,16 +7381,13 @@ CliResult _installRuntimeUpdateJsonResult({
   };
 }
 
+CliResult _runtimeJsonResult(RuntimeRecord runtime) {
+  return _jsonSuccess(<String, Object?>{'runtime': runtime.toJson()});
+}
+
 CliResult _macosWineInstallCliResult(MacosWineInstallResult installResult) {
   return switch (installResult) {
-    MacosWineInstallCompleted(:final runtime) => CliResult(
-      exitCode: 0,
-      stdout: jsonEncode(<String, Object?>{
-        'schemaVersion': cliSchemaVersion,
-        'runtime': runtime.toJson(),
-      }),
-      stderr: '',
-    ),
+    MacosWineInstallCompleted(:final runtime) => _runtimeJsonResult(runtime),
     MacosWineInstallFailed(:final message) => _jsonError(
       exitCode: 75,
       code: 'macosWineInstallFailed',
@@ -7462,14 +7398,7 @@ CliResult _macosWineInstallCliResult(MacosWineInstallResult installResult) {
 
 CliResult _linuxWineInstallCliResult(LinuxWineInstallResult installResult) {
   return switch (installResult) {
-    LinuxWineInstallCompleted(:final runtime) => CliResult(
-      exitCode: 0,
-      stdout: jsonEncode(<String, Object?>{
-        'schemaVersion': cliSchemaVersion,
-        'runtime': runtime.toJson(),
-      }),
-      stderr: '',
-    ),
+    LinuxWineInstallCompleted(:final runtime) => _runtimeJsonResult(runtime),
     LinuxWineInstallFailed(:final message) => _jsonError(
       exitCode: 75,
       code: 'linuxWineInstallFailed',
@@ -15942,6 +15871,17 @@ String _baseName(String path) {
   }
 
   return normalized.substring(index + 1);
+}
+
+CliResult _jsonSuccess(Map<String, Object?> payload, {int exitCode = 0}) {
+  return CliResult(
+    exitCode: exitCode,
+    stdout: jsonEncode(<String, Object?>{
+      'schemaVersion': cliSchemaVersion,
+      ...payload,
+    }),
+    stderr: '',
+  );
 }
 
 CliResult _jsonError({
