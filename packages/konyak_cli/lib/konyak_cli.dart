@@ -71,6 +71,12 @@ part 'src/runtime_update_support.dart';
 part 'src/runtime_validation_support.dart';
 part 'src/wine_run_requests.dart';
 part 'src/runtime_validation.dart';
+part 'src/runtime_validation_models.dart';
+part 'src/runtime_executable_probe.dart';
+part 'src/macos_runtime_validator.dart';
+part 'src/macos_setup_checker.dart';
+part 'src/linux_program_run_requests.dart';
+part 'src/macos_program_run_requests.dart';
 part 'src/updates.dart';
 part 'src/runtimes.dart';
 
