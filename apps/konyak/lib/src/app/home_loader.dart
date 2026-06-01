@@ -307,12 +307,8 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Updates available: ${result.availableUpdateLabels.join(', ')}',
-        ),
-      ),
+    _showSnackBar(
+      'Updates available: ${result.availableUpdateLabels.join(', ')}',
     );
   }
 
@@ -387,13 +383,9 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
           _knownRuntimes = upsertRuntimeSummary(_knownRuntimes, runtime);
           _hasLoadedKnownRuntimes = true;
         });
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Installed ${runtime.name}')));
+        _showSnackBar('Installed ${runtime.name}');
       case RuntimeInstallLoadFailure(:final message):
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Runtime install failed: $message')),
-        );
+        _showSnackBar('Runtime install failed: $message');
     }
   }
 
@@ -493,9 +485,7 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
       WineProcessTerminationLoadFailure(:final message) => message,
     };
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    _showSnackBar(message);
   }
 
   Future<void> _createBottle() async {
@@ -900,9 +890,7 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
 
     final feedbackMessage = programRunFeedback(result);
     if (feedbackMessage != null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(feedbackMessage)));
+      _showSnackBar(feedbackMessage);
     }
   }
 
@@ -1008,9 +996,7 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
       ProgramLocationOpenFailure(:final message) => message,
     };
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    _showSnackBar(message);
   }
 
   Future<void> _loadPinnedProgramSettings({
@@ -1049,9 +1035,7 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
         break;
       case MissingProgramSettingsBottle(:final message) ||
           ProgramSettingsLoadFailure(:final message):
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(message)));
+        _showSnackBar(message);
     }
   }
 
@@ -1079,14 +1063,10 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
               )] =
               settings;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Saved ${program.name} configuration')),
-        );
+        _showSnackBar('Saved ${program.name} configuration');
       case MissingProgramSettingsBottle(:final message) ||
           ProgramSettingsLoadFailure(:final message):
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(message)));
+        _showSnackBar(message);
     }
   }
 
@@ -1167,9 +1147,7 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
 
         _handleProgramRunResult(runResult);
       case WinetricksVerbListLoadFailure(:final message):
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(message)));
+        _showSnackBar(message);
     }
   }
 
@@ -1192,9 +1170,7 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
       BottleLocationOpenFailure(:final message) => message,
     };
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    _showSnackBar(message);
   }
 
   Future<void> _showBottlePrograms(BottleSummary bottle) async {
@@ -1228,9 +1204,7 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
           ),
         );
       case BottleProgramListLoadFailure(:final message):
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(message)));
+        _showSnackBar(message);
     }
   }
 
@@ -1281,9 +1255,7 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
           ),
         );
       case LogReadFailure(:final message):
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(message)));
+        _showSnackBar(message);
     }
   }
 
@@ -1339,9 +1311,7 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
             ),
           );
         case AppSettingsLoadFailure(:final message):
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(message)));
+          _showSnackBar(message);
       }
     } finally {
       _isShowingSettings = false;
@@ -1468,9 +1438,7 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
     if (!mounted || result.exitCode == 0) {
       return;
     }
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(_openUrlFailureMessage(result))));
+    _showSnackBar(_openUrlFailureMessage(result));
   }
 
   Future<void> _showAbout() async {
@@ -1509,9 +1477,7 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
         widget.onAppearanceModeChanged(settings.appearanceMode);
         return settings;
       case AppSettingsLoadFailure(:final message):
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(message)));
+        _showSnackBar(message);
         return null;
     }
   }
