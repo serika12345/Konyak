@@ -15,6 +15,15 @@ def require_contains(relative_path: str, expected: str) -> None:
         raise AssertionError(f"{relative_path} must contain: {expected}")
 
 
+def require_any_contains(relative_paths: list[str], expected: str) -> None:
+    for relative_path in relative_paths:
+        if expected in read_text(relative_path):
+            return
+
+    joined_paths = ", ".join(relative_paths)
+    raise AssertionError(f"one of {joined_paths} must contain: {expected}")
+
+
 def require_not_contains(relative_path: str, unexpected: str) -> None:
     text = read_text(relative_path)
     if unexpected in text:
@@ -441,15 +450,22 @@ def main() -> None:
         ]:
             require_contains("packages/konyak_cli/analysis_options.yaml", expected)
 
-        require_contains("packages/konyak_cli/test/cli_contract_test.dart", "schemaVersion")
-        require_contains("packages/konyak_cli/test/cli_contract_test.dart", "list-bottles")
-        require_contains("packages/konyak_cli/test/cli_contract_test.dart", "inspect-bottle")
-        require_contains("packages/konyak_cli/test/cli_contract_test.dart", "create-bottle")
-        require_contains("packages/konyak_cli/test/cli_contract_test.dart", "rename-bottle")
-        require_contains("packages/konyak_cli/test/cli_contract_test.dart", "move-bottle")
-        require_contains("packages/konyak_cli/test/cli_contract_test.dart", "set-windows-version")
-        require_contains("packages/konyak_cli/test/cli_contract_test.dart", "run-program")
-        require_contains("packages/konyak_cli/test/cli_contract_test.dart", "list-runtimes")
+        cli_contract_tests = [
+            str(path.relative_to(ROOT))
+            for path in sorted((ROOT / "packages/konyak_cli/test").glob("cli_contract*.dart"))
+        ]
+        for expected in [
+            "schemaVersion",
+            "list-bottles",
+            "inspect-bottle",
+            "create-bottle",
+            "rename-bottle",
+            "move-bottle",
+            "set-windows-version",
+            "run-program",
+            "list-runtimes",
+        ]:
+            require_any_contains(cli_contract_tests, expected)
 
 
 if __name__ == "__main__":
