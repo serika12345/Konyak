@@ -1,46 +1,126 @@
 part of '../konyak_cli.dart';
 
+bool _isJsonFlagOnlyCommand(List<String> arguments, String command) {
+  final results = _parseJsonCliCommand(arguments, command: command);
+  return results != null && results.rest.isEmpty;
+}
+
+ArgResults? _parseJsonCliCommand(
+  List<String> arguments, {
+  required String command,
+  Iterable<String> options = const <String>[],
+  Iterable<String> multiOptions = const <String>[],
+  Iterable<String> flags = const <String>[],
+}) {
+  if (arguments.length < 2 ||
+      arguments.first != command ||
+      arguments.last != '--json') {
+    return null;
+  }
+
+  final parser = ArgParser();
+  for (final option in options) {
+    parser.addOption(option);
+  }
+  for (final option in multiOptions) {
+    parser.addMultiOption(option);
+  }
+  for (final flag in flags) {
+    parser.addFlag(flag, negatable: false);
+  }
+  parser.addFlag('json', negatable: false);
+
+  final ArgResults results;
+  try {
+    results = parser.parse(arguments.sublist(1));
+  } on FormatException {
+    return null;
+  }
+
+  if (results['json'] != true) {
+    return null;
+  }
+
+  return results;
+}
+
+String? _requiredCliOption(ArgResults results, String name) {
+  if (!results.wasParsed(name)) {
+    return null;
+  }
+
+  final value = results[name] as String?;
+  final normalized = value?.trim();
+  return normalized == null || normalized.isEmpty ? null : normalized;
+}
+
+String? _optionalCliOption(ArgResults results, String name) {
+  if (!results.wasParsed(name)) {
+    return null;
+  }
+
+  return _requiredCliOption(results, name);
+}
+
+String? _requiredCliRest(ArgResults results, {int index = 0}) {
+  if (results.rest.length <= index) {
+    return null;
+  }
+
+  final value = results.rest[index].trim();
+  return value.isEmpty ? null : value;
+}
+
+bool _hasRestCount(ArgResults results, int count) {
+  return results.rest.length == count;
+}
+
+bool _hasEmptyParsedCliOption(ArgResults results, String name) {
+  if (!results.wasParsed(name)) {
+    return false;
+  }
+
+  final value = results[name] as String?;
+  return value == null || value.trim().isEmpty;
+}
+
 bool _isJsonBottleListCommand(List<String> arguments) {
-  return arguments.length == 2 &&
-      arguments.first == 'list-bottles' &&
-      arguments.last == '--json';
+  return _isJsonFlagOnlyCommand(arguments, 'list-bottles');
 }
 
 bool _isJsonAppUpdateCheckCommand(List<String> arguments) {
-  return arguments.length == 2 &&
-      arguments.first == 'check-app-update' &&
-      arguments.last == '--json';
+  return _isJsonFlagOnlyCommand(arguments, 'check-app-update');
 }
 
 bool _isJsonAppUpdateInstallCommand(List<String> arguments) {
-  return arguments.length == 2 &&
-      arguments.first == 'install-app-update' &&
-      arguments.last == '--json';
+  return _isJsonFlagOnlyCommand(arguments, 'install-app-update');
 }
 
 bool _isJsonAppSettingsGetCommand(List<String> arguments) {
-  return arguments.length == 2 &&
-      arguments.first == 'get-app-settings' &&
-      arguments.last == '--json';
+  return _isJsonFlagOnlyCommand(arguments, 'get-app-settings');
 }
 
 bool _isJsonLinuxFileAssociationInstallCommand(List<String> arguments) {
-  return arguments.length == 2 &&
-      arguments.first == 'install-linux-file-associations' &&
-      arguments.last == '--json';
+  return _isJsonFlagOnlyCommand(arguments, 'install-linux-file-associations');
 }
 
 AppSettingsRecord? _parseJsonAppSettingsUpdateRequest(List<String> arguments) {
-  if (arguments.length != 4 ||
-      arguments.first != 'set-app-settings' ||
-      arguments[1] != '--settings-json' ||
-      arguments.last != '--json') {
+  final results = _parseJsonCliCommand(
+    arguments,
+    command: 'set-app-settings',
+    options: const <String>['settings-json'],
+  );
+  if (results == null || !_hasRestCount(results, 0)) {
+    return null;
+  }
+  final settingsJson = _requiredCliOption(results, 'settings-json');
+  if (settingsJson == null) {
     return null;
   }
 
   final Object? decoded;
   try {
-    decoded = jsonDecode(arguments[2]);
+    decoded = jsonDecode(settingsJson);
   } on FormatException {
     return null;
   }
@@ -57,25 +137,24 @@ AppSettingsRecord? _parseJsonAppSettingsUpdateRequest(List<String> arguments) {
 }
 
 bool _isJsonWineProcessListCommand(List<String> arguments) {
-  return arguments.length == 2 &&
-      arguments.first == 'list-wine-processes' &&
-      arguments.last == '--json';
+  return _isJsonFlagOnlyCommand(arguments, 'list-wine-processes');
 }
 
 WineProcessTerminationRequest? _parseJsonWineProcessTerminationRequest(
   List<String> arguments,
 ) {
-  if (arguments.length != 6 ||
-      arguments.first != 'terminate-wine-process' ||
-      arguments[1] != '--bottle' ||
-      arguments[3] != '--process' ||
-      arguments.last != '--json') {
+  final results = _parseJsonCliCommand(
+    arguments,
+    command: 'terminate-wine-process',
+    options: const <String>['bottle', 'process'],
+  );
+  if (results == null || !_hasRestCount(results, 0)) {
     return null;
   }
 
-  final bottleId = arguments[2].trim();
-  final processId = arguments[4].trim();
-  if (bottleId.isEmpty || processId.isEmpty) {
+  final bottleId = _requiredCliOption(results, 'bottle');
+  final processId = _requiredCliOption(results, 'process');
+  if (bottleId == null || processId == null) {
     return null;
   }
 
@@ -87,78 +166,69 @@ WineProcessTerminationRequest? _parseJsonWineProcessTerminationRequest(
 
 WineProcessGroupTerminationRequest?
 _parseJsonWineProcessGroupTerminationRequest(List<String> arguments) {
-  if (arguments.length == 2 &&
-      arguments.first == 'terminate-wine-processes' &&
-      arguments.last == '--json') {
-    return const WineProcessGroupTerminationRequest();
-  }
-
-  if (arguments.length != 4 ||
-      arguments.first != 'terminate-wine-processes' ||
-      arguments[1] != '--bottle' ||
-      arguments.last != '--json') {
+  final results = _parseJsonCliCommand(
+    arguments,
+    command: 'terminate-wine-processes',
+    options: const <String>['bottle'],
+  );
+  if (results == null || !_hasRestCount(results, 0)) {
     return null;
   }
 
-  final bottleId = arguments[2].trim();
-  if (bottleId.isEmpty) {
-    return null;
+  final bottleId = _optionalCliOption(results, 'bottle');
+  if (bottleId == null) {
+    return results.wasParsed('bottle')
+        ? null
+        : const WineProcessGroupTerminationRequest();
   }
 
   return WineProcessGroupTerminationRequest(bottleId: bottleId);
 }
 
 bool _isJsonBottleInspectCommand(List<String> arguments) {
-  return arguments.length == 3 &&
-      arguments.first == 'inspect-bottle' &&
-      arguments[1].isNotEmpty &&
-      arguments.last == '--json';
+  final results = _parseJsonCliCommand(arguments, command: 'inspect-bottle');
+  return results != null &&
+      _hasRestCount(results, 1) &&
+      _requiredCliRest(results) != null;
 }
 
 String? _parseJsonBottleProgramsListCommand(List<String> arguments) {
-  if (arguments.length != 3 ||
-      arguments.first != 'list-bottle-programs' ||
-      arguments.last != '--json') {
+  final results = _parseJsonCliCommand(
+    arguments,
+    command: 'list-bottle-programs',
+  );
+  if (results == null || !_hasRestCount(results, 1)) {
     return null;
   }
 
-  final bottleId = arguments[1].trim();
-  return bottleId.isEmpty ? null : bottleId;
+  return _requiredCliRest(results);
 }
 
 bool _isJsonWinetricksVerbListCommand(List<String> arguments) {
-  return arguments.length == 2 &&
-      arguments.first == 'list-winetricks-verbs' &&
-      arguments.last == '--json';
+  return _isJsonFlagOnlyCommand(arguments, 'list-winetricks-verbs');
 }
 
 BottleCreateRequest? _parseJsonBottleCreateRequest(List<String> arguments) {
-  if (arguments.length != 4 && arguments.length != 6) {
+  final results = _parseJsonCliCommand(
+    arguments,
+    command: 'create-bottle',
+    options: const <String>['name', 'windows-version'],
+  );
+  if (results == null || !_hasRestCount(results, 0)) {
     return null;
   }
 
-  if (arguments.first != 'create-bottle' ||
-      arguments[1] != '--name' ||
-      arguments.last != '--json') {
+  final name = _requiredCliOption(results, 'name');
+  if (name == null) {
     return null;
   }
 
-  final name = arguments[2].trim();
-  if (name.isEmpty) {
-    return null;
-  }
-
-  if (arguments.length == 4) {
+  final windowsVersion = _optionalCliOption(results, 'windows-version');
+  if (windowsVersion == null) {
+    if (results.wasParsed('windows-version')) {
+      return null;
+    }
     return BottleCreateRequest(name: name, windowsVersion: 'win10');
-  }
-
-  if (arguments[3] != '--windows-version') {
-    return null;
-  }
-
-  final windowsVersion = arguments[4].trim();
-  if (windowsVersion.isEmpty) {
-    return null;
   }
 
   return BottleCreateRequest(name: name, windowsVersion: windowsVersion);
@@ -167,16 +237,18 @@ BottleCreateRequest? _parseJsonBottleCreateRequest(List<String> arguments) {
 BottleArchiveExportRequest? _parseJsonBottleArchiveExportRequest(
   List<String> arguments,
 ) {
-  if (arguments.length != 5 ||
-      arguments.first != 'export-bottle-archive' ||
-      arguments[2] != '--archive' ||
-      arguments.last != '--json') {
+  final results = _parseJsonCliCommand(
+    arguments,
+    command: 'export-bottle-archive',
+    options: const <String>['archive'],
+  );
+  if (results == null || !_hasRestCount(results, 1)) {
     return null;
   }
 
-  final bottleId = arguments[1].trim();
-  final archivePath = arguments[3].trim();
-  if (bottleId.isEmpty || archivePath.isEmpty) {
+  final bottleId = _requiredCliRest(results);
+  final archivePath = _requiredCliOption(results, 'archive');
+  if (bottleId == null || archivePath == null) {
     return null;
   }
 
@@ -189,15 +261,17 @@ BottleArchiveExportRequest? _parseJsonBottleArchiveExportRequest(
 BottleArchiveImportRequest? _parseJsonBottleArchiveImportRequest(
   List<String> arguments,
 ) {
-  if (arguments.length != 4 ||
-      arguments.first != 'import-bottle-archive' ||
-      arguments[1] != '--archive' ||
-      arguments.last != '--json') {
+  final results = _parseJsonCliCommand(
+    arguments,
+    command: 'import-bottle-archive',
+    options: const <String>['archive'],
+  );
+  if (results == null || !_hasRestCount(results, 0)) {
     return null;
   }
 
-  final archivePath = arguments[2].trim();
-  if (archivePath.isEmpty) {
+  final archivePath = _requiredCliOption(results, 'archive');
+  if (archivePath == null) {
     return null;
   }
 
@@ -205,27 +279,27 @@ BottleArchiveImportRequest? _parseJsonBottleArchiveImportRequest(
 }
 
 String? _parseJsonBottleDeleteCommand(List<String> arguments) {
-  if (arguments.length != 3 ||
-      arguments.first != 'delete-bottle' ||
-      arguments.last != '--json') {
+  final results = _parseJsonCliCommand(arguments, command: 'delete-bottle');
+  if (results == null || !_hasRestCount(results, 1)) {
     return null;
   }
 
-  final bottleId = arguments[1].trim();
-  return bottleId.isEmpty ? null : bottleId;
+  return _requiredCliRest(results);
 }
 
 BottleRenameRequest? _parseJsonBottleRenameRequest(List<String> arguments) {
-  if (arguments.length != 5 ||
-      arguments.first != 'rename-bottle' ||
-      arguments[2] != '--name' ||
-      arguments.last != '--json') {
+  final results = _parseJsonCliCommand(
+    arguments,
+    command: 'rename-bottle',
+    options: const <String>['name'],
+  );
+  if (results == null || !_hasRestCount(results, 1)) {
     return null;
   }
 
-  final bottleId = arguments[1].trim();
-  final name = arguments[3].trim();
-  if (bottleId.isEmpty || name.isEmpty) {
+  final bottleId = _requiredCliRest(results);
+  final name = _requiredCliOption(results, 'name');
+  if (bottleId == null || name == null) {
     return null;
   }
 
@@ -233,16 +307,18 @@ BottleRenameRequest? _parseJsonBottleRenameRequest(List<String> arguments) {
 }
 
 BottleMoveRequest? _parseJsonBottleMoveRequest(List<String> arguments) {
-  if (arguments.length != 5 ||
-      arguments.first != 'move-bottle' ||
-      arguments[2] != '--path' ||
-      arguments.last != '--json') {
+  final results = _parseJsonCliCommand(
+    arguments,
+    command: 'move-bottle',
+    options: const <String>['path'],
+  );
+  if (results == null || !_hasRestCount(results, 1)) {
     return null;
   }
 
-  final bottleId = arguments[1].trim();
-  final path = arguments[3].trim();
-  if (bottleId.isEmpty || path.isEmpty) {
+  final bottleId = _requiredCliRest(results);
+  final path = _requiredCliOption(results, 'path');
+  if (bottleId == null || path == null) {
     return null;
   }
 
@@ -252,17 +328,18 @@ BottleMoveRequest? _parseJsonBottleMoveRequest(List<String> arguments) {
 WindowsVersionUpdateRequest? _parseJsonWindowsVersionUpdateRequest(
   List<String> arguments,
 ) {
-  if (arguments.length != 5 ||
-      arguments.first != 'set-windows-version' ||
-      arguments[2] != '--windows-version' ||
-      arguments.last != '--json') {
+  final results = _parseJsonCliCommand(
+    arguments,
+    command: 'set-windows-version',
+    options: const <String>['windows-version'],
+  );
+  if (results == null || !_hasRestCount(results, 1)) {
     return null;
   }
 
-  final bottleId = arguments[1].trim();
-  final windowsVersion = arguments[3].trim();
-
-  if (bottleId.isEmpty || windowsVersion.isEmpty) {
+  final bottleId = _requiredCliRest(results);
+  final windowsVersion = _requiredCliOption(results, 'windows-version');
+  if (bottleId == null || windowsVersion == null) {
     return null;
   }
 
@@ -275,21 +352,24 @@ WindowsVersionUpdateRequest? _parseJsonWindowsVersionUpdateRequest(
 RuntimeSettingsUpdateRequest? _parseJsonRuntimeSettingsUpdateRequest(
   List<String> arguments,
 ) {
-  if (arguments.length != 5 ||
-      arguments.first != 'set-runtime-settings' ||
-      arguments[2] != '--settings-json' ||
-      arguments.last != '--json') {
+  final results = _parseJsonCliCommand(
+    arguments,
+    command: 'set-runtime-settings',
+    options: const <String>['settings-json'],
+  );
+  if (results == null || !_hasRestCount(results, 1)) {
     return null;
   }
 
-  final bottleId = arguments[1].trim();
-  if (bottleId.isEmpty) {
+  final bottleId = _requiredCliRest(results);
+  final settingsJson = _requiredCliOption(results, 'settings-json');
+  if (bottleId == null || settingsJson == null) {
     return null;
   }
 
   final Object? decoded;
   try {
-    decoded = jsonDecode(arguments[3]);
+    decoded = jsonDecode(settingsJson);
   } on FormatException {
     return null;
   }
@@ -310,18 +390,19 @@ RuntimeSettingsUpdateRequest? _parseJsonRuntimeSettingsUpdateRequest(
 }
 
 ProgramPinRequest? _parseJsonProgramPinRequest(List<String> arguments) {
-  if (arguments.length != 7 ||
-      arguments.first != 'pin-program' ||
-      arguments[2] != '--name' ||
-      arguments[4] != '--program' ||
-      arguments.last != '--json') {
+  final results = _parseJsonCliCommand(
+    arguments,
+    command: 'pin-program',
+    options: const <String>['name', 'program'],
+  );
+  if (results == null || !_hasRestCount(results, 1)) {
     return null;
   }
 
-  final bottleId = arguments[1].trim();
-  final name = arguments[3].trim();
-  final programPath = arguments[5].trim();
-  if (bottleId.isEmpty || name.isEmpty || programPath.isEmpty) {
+  final bottleId = _requiredCliRest(results);
+  final name = _requiredCliOption(results, 'name');
+  final programPath = _requiredCliOption(results, 'program');
+  if (bottleId == null || name == null || programPath == null) {
     return null;
   }
 
@@ -333,16 +414,18 @@ ProgramPinRequest? _parseJsonProgramPinRequest(List<String> arguments) {
 }
 
 ProgramUnpinRequest? _parseJsonProgramUnpinRequest(List<String> arguments) {
-  if (arguments.length != 5 ||
-      arguments.first != 'unpin-program' ||
-      arguments[2] != '--program' ||
-      arguments.last != '--json') {
+  final results = _parseJsonCliCommand(
+    arguments,
+    command: 'unpin-program',
+    options: const <String>['program'],
+  );
+  if (results == null || !_hasRestCount(results, 1)) {
     return null;
   }
 
-  final bottleId = arguments[1].trim();
-  final programPath = arguments[3].trim();
-  if (bottleId.isEmpty || programPath.isEmpty) {
+  final bottleId = _requiredCliRest(results);
+  final programPath = _requiredCliOption(results, 'program');
+  if (bottleId == null || programPath == null) {
     return null;
   }
 
@@ -350,18 +433,19 @@ ProgramUnpinRequest? _parseJsonProgramUnpinRequest(List<String> arguments) {
 }
 
 ProgramRenameRequest? _parseJsonProgramRenameRequest(List<String> arguments) {
-  if (arguments.length != 7 ||
-      arguments.first != 'rename-pinned-program' ||
-      arguments[2] != '--program' ||
-      arguments[4] != '--name' ||
-      arguments.last != '--json') {
+  final results = _parseJsonCliCommand(
+    arguments,
+    command: 'rename-pinned-program',
+    options: const <String>['program', 'name'],
+  );
+  if (results == null || !_hasRestCount(results, 1)) {
     return null;
   }
 
-  final bottleId = arguments[1].trim();
-  final programPath = arguments[3].trim();
-  final name = arguments[5].trim();
-  if (bottleId.isEmpty || programPath.isEmpty || name.isEmpty) {
+  final bottleId = _requiredCliRest(results);
+  final programPath = _requiredCliOption(results, 'program');
+  final name = _requiredCliOption(results, 'name');
+  if (bottleId == null || programPath == null || name == null) {
     return null;
   }
 
@@ -375,16 +459,18 @@ ProgramRenameRequest? _parseJsonProgramRenameRequest(List<String> arguments) {
 ProgramSettingsRequest? _parseJsonProgramSettingsRequest(
   List<String> arguments,
 ) {
-  if (arguments.length != 5 ||
-      arguments.first != 'get-program-settings' ||
-      arguments[2] != '--program' ||
-      arguments.last != '--json') {
+  final results = _parseJsonCliCommand(
+    arguments,
+    command: 'get-program-settings',
+    options: const <String>['program'],
+  );
+  if (results == null || !_hasRestCount(results, 1)) {
     return null;
   }
 
-  final bottleId = arguments[1].trim();
-  final programPath = arguments[3].trim();
-  if (bottleId.isEmpty || programPath.isEmpty) {
+  final bottleId = _requiredCliRest(results);
+  final programPath = _requiredCliOption(results, 'program');
+  if (bottleId == null || programPath == null) {
     return null;
   }
 
@@ -394,23 +480,25 @@ ProgramSettingsRequest? _parseJsonProgramSettingsRequest(
 ProgramSettingsUpdateRequest? _parseJsonProgramSettingsUpdateRequest(
   List<String> arguments,
 ) {
-  if (arguments.length != 7 ||
-      arguments.first != 'set-program-settings' ||
-      arguments[2] != '--program' ||
-      arguments[4] != '--settings-json' ||
-      arguments.last != '--json') {
+  final results = _parseJsonCliCommand(
+    arguments,
+    command: 'set-program-settings',
+    options: const <String>['program', 'settings-json'],
+  );
+  if (results == null || !_hasRestCount(results, 1)) {
     return null;
   }
 
-  final bottleId = arguments[1].trim();
-  final programPath = arguments[3].trim();
-  if (bottleId.isEmpty || programPath.isEmpty) {
+  final bottleId = _requiredCliRest(results);
+  final programPath = _requiredCliOption(results, 'program');
+  final settingsJson = _requiredCliOption(results, 'settings-json');
+  if (bottleId == null || programPath == null || settingsJson == null) {
     return null;
   }
 
   final Object? decoded;
   try {
-    decoded = jsonDecode(arguments[5]);
+    decoded = jsonDecode(settingsJson);
   } on FormatException {
     return null;
   }
@@ -428,29 +516,27 @@ ProgramSettingsUpdateRequest? _parseJsonProgramSettingsUpdateRequest(
 }
 
 bool _isJsonRuntimeListCommand(List<String> arguments) {
-  return arguments.length == 2 &&
-      arguments.first == 'list-runtimes' &&
-      arguments.last == '--json';
+  return _isJsonFlagOnlyCommand(arguments, 'list-runtimes');
 }
 
 bool _isJsonMacosSetupCheckCommand(List<String> arguments) {
-  return arguments.length == 2 &&
-      arguments.first == 'check-macos-setup' &&
-      arguments.last == '--json';
+  return _isJsonFlagOnlyCommand(arguments, 'check-macos-setup');
 }
 
 GptkWineInstallRequest? _parseJsonGptkWineInstallRequest(
   List<String> arguments,
 ) {
-  if (arguments.length != 4 ||
-      arguments.first != 'install-gptk-wine' ||
-      arguments[1] != '--from' ||
-      arguments.last != '--json') {
+  final results = _parseJsonCliCommand(
+    arguments,
+    command: 'install-gptk-wine',
+    options: const <String>['from'],
+  );
+  if (results == null || !_hasRestCount(results, 0)) {
     return null;
   }
 
-  final sourcePath = arguments[2].trim();
-  if (sourcePath.isEmpty) {
+  final sourcePath = _requiredCliOption(results, 'from');
+  if (sourcePath == null) {
     return null;
   }
 
@@ -458,14 +544,14 @@ GptkWineInstallRequest? _parseJsonGptkWineInstallRequest(
 }
 
 String? _parseJsonOpenUrlCommand(List<String> arguments) {
-  if (arguments.length != 3 ||
-      arguments.first != 'open-url' ||
-      arguments.last != '--json') {
+  final results = _parseJsonCliCommand(arguments, command: 'open-url');
+  if (results == null || !_hasRestCount(results, 1)) {
     return null;
   }
 
-  final url = arguments[1].trim();
-  if (url.startsWith('https://') || url.startsWith('http://')) {
+  final url = _requiredCliRest(results);
+  if (url != null &&
+      (url.startsWith('https://') || url.startsWith('http://'))) {
     return url;
   }
 
@@ -473,18 +559,12 @@ String? _parseJsonOpenUrlCommand(List<String> arguments) {
 }
 
 String? _parseJsonRuntimeIdCommand(List<String> arguments, String command) {
-  if (arguments.length != 3 ||
-      arguments.first != command ||
-      arguments.last != '--json') {
+  final results = _parseJsonCliCommand(arguments, command: command);
+  if (results == null || !_hasRestCount(results, 1)) {
     return null;
   }
 
-  final runtimeId = arguments[1].trim();
-  if (runtimeId.isEmpty) {
-    return null;
-  }
-
-  return runtimeId;
+  return _requiredCliRest(results);
 }
 
 MacosWineInstallRequest? _parseJsonMacosWineInstallRequest(
@@ -595,6 +675,17 @@ _RuntimeInstallCliOptions? _parseRuntimeInstallCliOptions(
     return null;
   }
 
+  for (final name in const <String>[
+    'archive',
+    'archive-url',
+    'archive-sha256',
+    'source-manifest',
+  ]) {
+    if (_hasEmptyParsedCliOption(results, name)) {
+      return null;
+    }
+  }
+
   final archivePath = _nonEmptyCliOption(results, 'archive');
   final archiveUrl = _nonEmptyCliOption(results, 'archive-url');
   final archiveSha256 = _nonEmptyCliOption(results, 'archive-sha256');
@@ -666,17 +757,18 @@ class _ProgramRunCliRequest {
 }
 
 _ProgramRunCliRequest? _parseJsonProgramRunCliRequest(List<String> arguments) {
-  if (arguments.length != 5 ||
-      arguments.first != 'run-program' ||
-      arguments[2] != '--program' ||
-      arguments.last != '--json') {
+  final results = _parseJsonCliCommand(
+    arguments,
+    command: 'run-program',
+    options: const <String>['program'],
+  );
+  if (results == null || !_hasRestCount(results, 1)) {
     return null;
   }
 
-  final bottleId = arguments[1].trim();
-  final programPath = arguments[3].trim();
-
-  if (bottleId.isEmpty || programPath.isEmpty) {
+  final bottleId = _requiredCliRest(results);
+  final programPath = _requiredCliOption(results, 'program');
+  if (bottleId == null || programPath == null) {
     return null;
   }
 
@@ -692,15 +784,17 @@ class _PinnedProgramLaunchCliRequest {
 _PinnedProgramLaunchCliRequest? _parseJsonPinnedProgramLaunchCliRequest(
   List<String> arguments,
 ) {
-  if (arguments.length != 4 ||
-      arguments.first != 'launch-pinned-program' ||
-      arguments[1] != '--manifest' ||
-      arguments.last != '--json') {
+  final results = _parseJsonCliCommand(
+    arguments,
+    command: 'launch-pinned-program',
+    options: const <String>['manifest'],
+  );
+  if (results == null || !_hasRestCount(results, 0)) {
     return null;
   }
 
-  final manifestPath = arguments[2].trim();
-  if (manifestPath.isEmpty) {
+  final manifestPath = _requiredCliOption(results, 'manifest');
+  if (manifestPath == null) {
     return null;
   }
 
@@ -717,17 +811,18 @@ class _WinetricksRunCliRequest {
 _WinetricksRunCliRequest? _parseJsonWinetricksRunCliRequest(
   List<String> arguments,
 ) {
-  if (arguments.length != 5 ||
-      arguments.first != 'run-winetricks' ||
-      arguments[2] != '--verb' ||
-      arguments.last != '--json') {
+  final results = _parseJsonCliCommand(
+    arguments,
+    command: 'run-winetricks',
+    options: const <String>['verb'],
+  );
+  if (results == null || !_hasRestCount(results, 1)) {
     return null;
   }
 
-  final bottleId = arguments[1].trim();
-  final verb = arguments[3].trim();
-
-  if (bottleId.isEmpty || verb.isEmpty) {
+  final bottleId = _requiredCliRest(results);
+  final verb = _requiredCliOption(results, 'verb');
+  if (bottleId == null || verb == null) {
     return null;
   }
 
@@ -747,17 +842,18 @@ class _BottleCommandRunCliRequest {
 _BottleCommandRunCliRequest? _parseJsonBottleCommandRunCliRequest(
   List<String> arguments,
 ) {
-  if (arguments.length != 5 ||
-      arguments.first != 'run-bottle-command' ||
-      arguments[2] != '--command' ||
-      arguments.last != '--json') {
+  final results = _parseJsonCliCommand(
+    arguments,
+    command: 'run-bottle-command',
+    options: const <String>['command'],
+  );
+  if (results == null || !_hasRestCount(results, 1)) {
     return null;
   }
 
-  final bottleId = arguments[1].trim();
-  final command = arguments[3].trim();
-
-  if (bottleId.isEmpty || command.isEmpty) {
+  final bottleId = _requiredCliRest(results);
+  final command = _requiredCliOption(results, 'command');
+  if (bottleId == null || command == null) {
     return null;
   }
 
@@ -777,17 +873,18 @@ class _BottleLocationOpenCliRequest {
 _BottleLocationOpenCliRequest? _parseJsonBottleLocationOpenCliRequest(
   List<String> arguments,
 ) {
-  if (arguments.length != 5 ||
-      arguments.first != 'open-bottle-location' ||
-      arguments[2] != '--location' ||
-      arguments.last != '--json') {
+  final results = _parseJsonCliCommand(
+    arguments,
+    command: 'open-bottle-location',
+    options: const <String>['location'],
+  );
+  if (results == null || !_hasRestCount(results, 1)) {
     return null;
   }
 
-  final bottleId = arguments[1].trim();
-  final location = arguments[3].trim();
-
-  if (bottleId.isEmpty || location.isEmpty) {
+  final bottleId = _requiredCliRest(results);
+  final location = _requiredCliOption(results, 'location');
+  if (bottleId == null || location == null) {
     return null;
   }
 
@@ -807,17 +904,18 @@ class _ProgramLocationOpenCliRequest {
 _ProgramLocationOpenCliRequest? _parseJsonProgramLocationOpenCliRequest(
   List<String> arguments,
 ) {
-  if (arguments.length != 5 ||
-      arguments.first != 'open-program-location' ||
-      arguments[2] != '--program' ||
-      arguments.last != '--json') {
+  final results = _parseJsonCliCommand(
+    arguments,
+    command: 'open-program-location',
+    options: const <String>['program'],
+  );
+  if (results == null || !_hasRestCount(results, 1)) {
     return null;
   }
 
-  final bottleId = arguments[1].trim();
-  final programPath = arguments[3].trim();
-
-  if (bottleId.isEmpty || programPath.isEmpty) {
+  final bottleId = _requiredCliRest(results);
+  final programPath = _requiredCliOption(results, 'program');
+  if (bottleId == null || programPath == null) {
     return null;
   }
 
