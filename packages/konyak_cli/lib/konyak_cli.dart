@@ -76,6 +76,7 @@ part 'src/macos_wine_installation.dart';
 part 'src/macos_wine_archive_installation.dart';
 part 'src/macos_wine_layout_normalization.dart';
 part 'src/linux_wine_installation.dart';
+part 'src/linux_wine_install_operations.dart';
 part 'src/runtime_platform_support.dart';
 part 'src/runtime_source_manifest_support.dart';
 part 'src/runtime_source_archive_support.dart';
