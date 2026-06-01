@@ -6735,19 +6735,11 @@ CliResult _runPinnedProgramLauncherCli({
   }
 
   if (bottleRepository == null) {
-    return _jsonError(
-      exitCode: 74,
-      code: 'bottleRepositoryUnavailable',
-      message: 'Bottle repository is not configured.',
-    );
+    return _bottleRepositoryUnavailableError();
   }
 
   if (programRunner == null) {
-    return _jsonError(
-      exitCode: 74,
-      code: 'programRunnerUnavailable',
-      message: 'Program runner is not configured.',
-    );
+    return _programRunnerUnavailableError();
   }
 
   final bottle = bottleRepository.findBottle(launcherManifest.bottleId);
@@ -7062,11 +7054,7 @@ CliResult _terminateWineProcessesJsonResult({
 }) {
   final runner = programRunner;
   if (runner == null) {
-    return _jsonError(
-      exitCode: 74,
-      code: 'programRunnerUnavailable',
-      message: 'Program runner is not configured.',
-    );
+    return _programRunnerUnavailableError();
   }
 
   final records = <WineProcessTerminationRecord>[];
@@ -7126,11 +7114,7 @@ CliResult _listWineProcessesJsonResult({
 }) {
   final runner = programRunner;
   if (runner == null) {
-    return _jsonError(
-      exitCode: 74,
-      code: 'programRunnerUnavailable',
-      message: 'Program runner is not configured.',
-    );
+    return _programRunnerUnavailableError();
   }
 
   final records = <WineProcessRecord>[];
@@ -7195,11 +7179,7 @@ CliResult _terminateWineProcessJsonResult({
 }) {
   final runner = programRunner;
   if (runner == null) {
-    return _jsonError(
-      exitCode: 74,
-      code: 'programRunnerUnavailable',
-      message: 'Program runner is not configured.',
-    );
+    return _programRunnerUnavailableError();
   }
 
   final bottle = _findBottle(bottleCatalog.listBottles(), bottleId);
@@ -7244,19 +7224,17 @@ CliResult _installAppUpdateJsonResult({
 }) {
   final checker = appUpdateChecker;
   if (checker == null) {
-    return _jsonError(
-      exitCode: 74,
+    return _unavailableJsonError(
       code: 'appUpdateCheckerUnavailable',
-      message: 'App update checker is not configured.',
+      subject: 'App update checker',
     );
   }
 
   final installer = appUpdateInstaller;
   if (installer == null) {
-    return _jsonError(
-      exitCode: 74,
+    return _unavailableJsonError(
       code: 'appUpdateInstallerUnavailable',
-      message: 'App update installer is not configured.',
+      subject: 'App update installer',
     );
   }
 
@@ -7300,10 +7278,9 @@ CliResult _installRuntimeUpdateJsonResult({
 }) {
   final checker = runtimeUpdateChecker;
   if (checker == null) {
-    return _jsonError(
-      exitCode: 74,
+    return _unavailableJsonError(
       code: 'runtimeUpdateCheckerUnavailable',
-      message: 'Runtime update checker is not configured.',
+      subject: 'Runtime update checker',
     );
   }
 
@@ -7319,10 +7296,9 @@ CliResult _installRuntimeUpdateJsonResult({
       ),
     RuntimeUpdateCheckCompleted(:final update) => switch (runtimeId) {
       macosWineRuntimeId => switch (macosWineInstaller) {
-        null => _jsonError(
-          exitCode: 74,
+        null => _unavailableJsonError(
           code: 'macosWineInstallerUnavailable',
-          message: 'macOS Wine installer is not configured.',
+          subject: 'macOS Wine installer',
         ),
         final installer => switch (installer.install(
           _macosWineInstallRequestForRuntimeUpdate(update),
@@ -7338,10 +7314,9 @@ CliResult _installRuntimeUpdateJsonResult({
         },
       },
       linuxWineRuntimeId => switch (linuxWineInstaller) {
-        null => _jsonError(
-          exitCode: 74,
+        null => _unavailableJsonError(
           code: 'linuxWineInstallerUnavailable',
-          message: 'Linux Wine installer is not configured.',
+          subject: 'Linux Wine installer',
         ),
         final installer => switch (installer.install(
           _linuxWineInstallRequestForRuntimeUpdate(update),
@@ -7455,10 +7430,9 @@ CliResult? _handleAppCommand(
   if (_isJsonAppUpdateCheckCommand(arguments)) {
     final checker = context.appUpdateChecker;
     if (checker == null) {
-      return _jsonError(
-        exitCode: 74,
+      return _unavailableJsonError(
         code: 'appUpdateCheckerUnavailable',
-        message: 'App update checker is not configured.',
+        subject: 'App update checker',
       );
     }
 
@@ -7534,10 +7508,9 @@ CliResult? _handleHostIntegrationCommand(
 }
 
 CliResult _appSettingsRepositoryUnavailableError() {
-  return _jsonError(
-    exitCode: 74,
+  return _unavailableJsonError(
     code: 'appSettingsRepositoryUnavailable',
-    message: 'App settings repository is not configured.',
+    subject: 'App settings repository',
   );
 }
 
@@ -7557,10 +7530,9 @@ CliResult? _handleRuntimeCommand(
   if (_isJsonMacosSetupCheckCommand(arguments)) {
     final checker = context.macosSetupChecker;
     if (checker == null) {
-      return _jsonError(
-        exitCode: 74,
+      return _unavailableJsonError(
         code: 'macosSetupCheckerUnavailable',
-        message: 'macOS setup checker is not configured.',
+        subject: 'macOS setup checker',
       );
     }
 
@@ -7580,10 +7552,9 @@ CliResult? _handleRuntimeCommand(
   if (gptkWineInstallRequest != null) {
     final installer = context.gptkWineInstaller;
     if (installer == null) {
-      return _jsonError(
-        exitCode: 74,
+      return _unavailableJsonError(
         code: 'gptkWineInstallerUnavailable',
-        message: 'GPTK-compatible Wine installer is not configured.',
+        subject: 'GPTK-compatible Wine installer',
       );
     }
 
@@ -7662,11 +7633,7 @@ CliResult? _handleRuntimeCommand(
 
 CliResult _openUrlJsonResult(String openUrl, PathOpener? pathOpener) {
   if (pathOpener == null) {
-    return _jsonError(
-      exitCode: 74,
-      code: 'pathOpenerUnavailable',
-      message: 'Path opener is not configured.',
-    );
+    return _pathOpenerUnavailableError();
   }
   final openResult = pathOpener.openPath(openUrl);
   return switch (openResult) {
@@ -7687,10 +7654,9 @@ CliResult _runtimeUpdateCheckJsonResult({
   required RuntimeUpdateChecker? runtimeUpdateChecker,
 }) {
   if (runtimeUpdateChecker == null) {
-    return _jsonError(
-      exitCode: 74,
+    return _unavailableJsonError(
       code: 'runtimeUpdateCheckerUnavailable',
-      message: 'Runtime update checker is not configured.',
+      subject: 'Runtime update checker',
     );
   }
 
@@ -7717,10 +7683,9 @@ CliResult _runtimeValidationJsonResult({
   required RuntimeValidator? runtimeValidator,
 }) {
   if (runtimeValidator == null) {
-    return _jsonError(
-      exitCode: 74,
+    return _unavailableJsonError(
       code: 'runtimeValidatorUnavailable',
-      message: 'Runtime validator is not configured.',
+      subject: 'Runtime validator',
     );
   }
 
@@ -7749,10 +7714,9 @@ CliResult _macosWineInstallJsonResult({
   required RuntimeInstallProgressSink? progressSink,
 }) {
   if (installer == null) {
-    return _jsonError(
-      exitCode: 74,
+    return _unavailableJsonError(
       code: 'macosWineInstallerUnavailable',
-      message: 'macOS Wine installer is not configured.',
+      subject: 'macOS Wine installer',
     );
   }
 
@@ -7770,10 +7734,9 @@ CliResult _linuxWineInstallJsonResult({
   required RuntimeInstallProgressSink? progressSink,
 }) {
   if (installer == null) {
-    return _jsonError(
-      exitCode: 74,
+    return _unavailableJsonError(
       code: 'linuxWineInstallerUnavailable',
-      message: 'Linux Wine installer is not configured.',
+      subject: 'Linux Wine installer',
     );
   }
 
@@ -7991,10 +7954,9 @@ CliResult? _handleBottleMutationCommand(
 }
 
 CliResult _bottleRepositoryUnavailableError() {
-  return _jsonError(
-    exitCode: 74,
+  return _unavailableJsonError(
     code: 'bottleRepositoryUnavailable',
-    message: 'Bottle repository is not configured.',
+    subject: 'Bottle repository',
   );
 }
 
@@ -8390,10 +8352,9 @@ CliResult _programRunResultJson(
 }
 
 CliResult _programRunnerUnavailableError() {
-  return _jsonError(
-    exitCode: 74,
+  return _unavailableJsonError(
     code: 'programRunnerUnavailable',
-    message: 'Program runner is not configured.',
+    subject: 'Program runner',
   );
 }
 
@@ -8522,10 +8483,9 @@ CliResult _openProgramLocationJsonResult(
 }
 
 CliResult _pathOpenerUnavailableError() {
-  return _jsonError(
-    exitCode: 74,
+  return _unavailableJsonError(
     code: 'pathOpenerUnavailable',
-    message: 'Path opener is not configured.',
+    subject: 'Path opener',
   );
 }
 
@@ -15784,6 +15744,17 @@ CliResult _jsonSuccess(Map<String, Object?> payload, {int exitCode = 0}) {
       ...payload,
     }),
     stderr: '',
+  );
+}
+
+CliResult _unavailableJsonError({
+  required String code,
+  required String subject,
+}) {
+  return _jsonError(
+    exitCode: 74,
+    code: code,
+    message: '$subject is not configured.',
   );
 }
 
