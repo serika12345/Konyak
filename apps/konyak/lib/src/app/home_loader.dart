@@ -14,7 +14,6 @@ import '../files/program_file_picker.dart';
 import '../logs/log_reader.dart';
 import '../runtimes/runtime_summary.dart';
 import '../settings/app_settings_summary.dart';
-import 'app_constants.dart';
 import 'app_platform.dart';
 import 'dialogs/app_settings_dialog.dart';
 import 'dialogs/bottle_management_dialogs.dart';
@@ -26,10 +25,11 @@ import 'dialogs/process_manager_dialog.dart';
 import 'dialogs/run_program_dialog.dart';
 import 'dialogs/winetricks_dialog.dart';
 import 'home/home_screen.dart';
+import 'runtime/runtime_platform.dart';
+import 'startup/startup_update_checker.dart';
 import 'utils/bottle_lists.dart';
 import 'utils/program_labels.dart';
 import 'utils/program_run_feedback.dart';
-import 'utils/update_labels.dart';
 import 'widgets/blocking_progress_overlay.dart';
 
 const _macosMenuChannel = MethodChannel('konyak/menu');
@@ -56,35 +56,6 @@ List<String> _validExecutableOpenPaths(Iterable<String> paths) {
 
 bool _isWindowsExecutablePath(String path) {
   return path.isNotEmpty && path.toLowerCase().endsWith('.exe');
-}
-
-RuntimeSummary? _runtimeForPlatform(
-  KonyakPlatform platform,
-  List<RuntimeSummary> runtimes,
-) {
-  final runtimeId = platform.isMacOS ? macosWineRuntimeId : linuxWineRuntimeId;
-  for (final runtime in runtimes) {
-    if (runtime.id == runtimeId) {
-      return runtime;
-    }
-  }
-
-  return null;
-}
-
-RuntimeInstallLoadResult _installedRuntimeForPlatform(
-  List<RuntimeSummary> runtimes,
-  KonyakPlatform platform,
-) {
-  final runtime = _runtimeForPlatform(platform, runtimes);
-  if (runtime == null) {
-    return const RuntimeInstallLoadFailure(
-      exitCode: 75,
-      message: 'Runtime was installed but could not be reloaded.',
-      diagnostic: '',
-    );
-  }
-  return InstalledRuntime(runtime);
 }
 
 String _installGptkFailureMessage(
@@ -129,40 +100,6 @@ String? _jsonErrorMessage(String payload) {
   } on FormatException {
     return null;
   }
-}
-
-bool _supportsSettingsRuntime(KonyakPlatform platform) {
-  return platform.isMacOS || platform.isLinux;
-}
-
-String _runtimePlatformName(KonyakPlatform platform) {
-  return platform.isMacOS ? 'macos' : 'linux';
-}
-
-String _managedRuntimeName(KonyakPlatform platform) {
-  return platform.isMacOS ? 'Konyak macOS Wine' : 'Konyak Linux Wine';
-}
-
-List<RuntimeSummary> _upsertRuntimeSummary(
-  List<RuntimeSummary> runtimes,
-  RuntimeSummary runtime,
-) {
-  final updated = <RuntimeSummary>[];
-  var replaced = false;
-  for (final existingRuntime in runtimes) {
-    if (existingRuntime.id == runtime.id) {
-      updated.add(runtime);
-      replaced = true;
-    } else {
-      updated.add(existingRuntime);
-    }
-  }
-
-  if (!replaced) {
-    updated.add(runtime);
-  }
-
-  return List.unmodifiable(updated);
 }
 
 class KonyakHomeLoader extends StatefulWidget {
@@ -352,109 +289,29 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
   }
 
   Future<void> _checkConfiguredUpdates(AppSettingsSummary settings) async {
-    if (!settings.automaticallyCheckForKonyakUpdates &&
-        !settings.automaticallyCheckForWineUpdates) {
+    final result = await StartupUpdateChecker(
+      platform: widget.platform,
+      cliClient: widget.cliClient,
+    ).check(settings);
+
+    if (!mounted) {
       return;
     }
 
-    final availableUpdates = <String>[];
-
-    if (settings.automaticallyCheckForKonyakUpdates) {
-      final result = await widget.cliClient.checkKonyakUpdate();
-      if (!mounted) {
-        return;
-      }
-      switch (result) {
-        case LoadedUpdateCheck(:final update) when update.status == 'available':
-          availableUpdates.add(updateCheckLabel(update, 'Konyak'));
-        case LoadedUpdateCheck() || UpdateCheckLoadFailure():
-          break;
-      }
+    final knownRuntimes = result.knownRuntimes;
+    if (knownRuntimes != null) {
+      _setKnownRuntimes(knownRuntimes);
     }
 
-    if (widget.platform.isLinux && settings.automaticallyCheckForWineUpdates) {
-      final runtimeResult = await widget.cliClient.listKnownRuntimes();
-      if (!mounted) {
-        return;
-      }
-
-      switch (runtimeResult) {
-        case LoadedRuntimeList(:final runtimes):
-          _setKnownRuntimes(runtimes);
-          RuntimeSummary? linuxRuntime;
-          for (final runtime in runtimes) {
-            if (runtime.id == linuxWineRuntimeId) {
-              linuxRuntime = runtime;
-              break;
-            }
-          }
-          if (linuxRuntime?.isInstalled == true) {
-            final updateResult = await widget.cliClient.checkRuntimeUpdate(
-              linuxWineRuntimeId,
-            );
-            if (!mounted) {
-              return;
-            }
-            switch (updateResult) {
-              case LoadedUpdateCheck(:final update)
-                  when update.status == 'available':
-                availableUpdates.add(
-                  updateCheckLabel(update, 'Konyak Linux Wine'),
-                );
-              case LoadedUpdateCheck() || UpdateCheckLoadFailure():
-                break;
-            }
-          }
-        case RuntimeListLoadFailure():
-          _setKnownRuntimes(const <RuntimeSummary>[]);
-          break;
-      }
-    }
-
-    if (widget.platform.isMacOS && settings.automaticallyCheckForWineUpdates) {
-      final runtimeResult = await widget.cliClient.listKnownRuntimes();
-      if (!mounted) {
-        return;
-      }
-
-      switch (runtimeResult) {
-        case LoadedRuntimeList(:final runtimes):
-          _setKnownRuntimes(runtimes);
-          RuntimeSummary? macosRuntime;
-          for (final runtime in runtimes) {
-            if (runtime.id == macosWineRuntimeId) {
-              macosRuntime = runtime;
-              break;
-            }
-          }
-          if (macosRuntime?.isInstalled == true) {
-            final result = await widget.cliClient.checkRuntimeUpdate(
-              macosWineRuntimeId,
-            );
-            if (!mounted) {
-              return;
-            }
-            switch (result) {
-              case LoadedUpdateCheck(:final update)
-                  when update.status == 'available':
-                availableUpdates.add(updateCheckLabel(update, 'Konyak Wine'));
-              case LoadedUpdateCheck() || UpdateCheckLoadFailure():
-                break;
-            }
-          }
-        case RuntimeListLoadFailure():
-          _setKnownRuntimes(const <RuntimeSummary>[]);
-          break;
-      }
-    }
-
-    if (availableUpdates.isEmpty) {
+    if (result.availableUpdateLabels.isEmpty) {
       return;
     }
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Updates available: ${availableUpdates.join(', ')}'),
+        content: Text(
+          'Updates available: ${result.availableUpdateLabels.join(', ')}',
+        ),
       ),
     );
   }
@@ -498,14 +355,15 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
         return null;
       }
 
-      return _runtimeForPlatform(widget.platform, runtimes);
+      return runtimeForPlatform(widget.platform, runtimes);
     }
 
-    return _runtimeForPlatform(widget.platform, _knownRuntimes);
+    return runtimeForPlatform(widget.platform, _knownRuntimes);
   }
 
   Future<void> _promptForMissingManagedRuntime() async {
-    if (!_supportsSettingsRuntime(widget.platform)) {
+    final managedRuntime = managedRuntimePlatform(widget.platform);
+    if (managedRuntime == null) {
       return;
     }
 
@@ -515,7 +373,7 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
     }
 
     final installResult = await _confirmAndInstallManagedRuntime(
-      runtimeName: runtime?.name ?? _managedRuntimeName(widget.platform),
+      runtimeName: runtime?.name ?? managedRuntime.displayName,
       installRuntime: _installManagedRuntimeForPlatform,
     );
 
@@ -526,7 +384,7 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
     switch (installResult) {
       case InstalledRuntime(:final runtime):
         setState(() {
-          _knownRuntimes = _upsertRuntimeSummary(_knownRuntimes, runtime);
+          _knownRuntimes = upsertRuntimeSummary(_knownRuntimes, runtime);
           _hasLoadedKnownRuntimes = true;
         });
         ScaffoldMessenger.of(
@@ -1551,18 +1409,15 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
           widget.onAppSettingsLoaded(settings);
           var knownRuntimes = const <RuntimeSummary>[];
           String? runtimeLoadError;
-          if (_supportsSettingsRuntime(widget.platform)) {
+          final managedRuntime = managedRuntimePlatform(widget.platform);
+          if (managedRuntime != null) {
             final runtimeResult = await widget.cliClient.listKnownRuntimes();
             if (!mounted) {
               return;
             }
             switch (runtimeResult) {
               case LoadedRuntimeList(:final runtimes):
-                final platformName = _runtimePlatformName(widget.platform);
-                final platformRuntimes = runtimes
-                    .where((runtime) => runtime.platform == platformName)
-                    .toList(growable: false);
-                knownRuntimes = List.unmodifiable(platformRuntimes);
+                knownRuntimes = runtimesForPlatform(widget.platform, runtimes);
                 _knownRuntimes = runtimes;
               case RuntimeListLoadFailure(:final message):
                 runtimeLoadError = message;
@@ -1576,7 +1431,7 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
               directoryPicker: widget.directoryPicker,
               runtimes: knownRuntimes,
               runtimeLoadError: runtimeLoadError,
-              onInstallRuntime: _supportsSettingsRuntime(widget.platform)
+              onInstallRuntime: managedRuntime != null
                   ? _installSettingsRuntime
                   : null,
               onInstallGptkWine: widget.platform.isMacOS
@@ -1597,9 +1452,18 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
   }
 
   Future<RuntimeInstallLoadResult> _installSettingsRuntime() async {
+    final managedRuntime = managedRuntimePlatform(widget.platform);
+    if (managedRuntime == null) {
+      return const RuntimeInstallLoadFailure(
+        exitCode: 64,
+        message: 'Managed runtime installation is not supported.',
+        diagnostic: '',
+      );
+    }
+
     setState(() {
       _runtimeInstallProgressMessage =
-          'Downloading ${_managedRuntimeName(widget.platform)}...';
+          'Downloading ${managedRuntime.displayName}...';
       _runtimeInstallProgressFraction = 0;
     });
 
@@ -1628,7 +1492,7 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
     switch (result) {
       case InstalledRuntime(:final runtime):
         setState(() {
-          _knownRuntimes = _upsertRuntimeSummary(_knownRuntimes, runtime);
+          _knownRuntimes = upsertRuntimeSummary(_knownRuntimes, runtime);
           _hasLoadedKnownRuntimes = true;
         });
       case RuntimeInstallLoadFailure():
@@ -1687,7 +1551,7 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
             _hasLoadedKnownRuntimes = true;
           });
         }
-        return _installedRuntimeForPlatform(runtimes, widget.platform);
+        return installedRuntimeForPlatform(runtimes, widget.platform);
       case RuntimeListLoadFailure(
         :final exitCode,
         :final message,
@@ -1761,7 +1625,7 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
       children: [
         KonyakHome(
           platform: widget.platform,
-          runtime: _runtimeForPlatform(widget.platform, _knownRuntimes),
+          runtime: runtimeForPlatform(widget.platform, _knownRuntimes),
           bottles: _bottles,
           isLoading: _isLoading,
           errorMessage: _errorMessage,

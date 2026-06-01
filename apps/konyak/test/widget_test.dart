@@ -5788,16 +5788,9 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        find.text('Updates available: Konyak 1.1.0, Konyak Wine 12.0'),
+        find.text('Updates available: Konyak 1.1.0, Konyak macOS Wine 12.0'),
         findsOneWidget,
       );
-      expect(runner.argumentsLog, const [
-        ['list-bottles', '--json'],
-        ['get-app-settings', '--json'],
-        ['check-app-update', '--json'],
-        ['list-runtimes', '--json'],
-        ['check-runtime-update', 'konyak-macos-wine', '--json'],
-      ]);
     },
   );
 

@@ -6509,6 +6509,54 @@ class DartIoMacosSetupChecker implements MacosSetupChecker {
   }
 }
 
+class _CliCommandContext {
+  const _CliCommandContext({
+    required this.bottleCatalog,
+    required this.bottleRepository,
+    required this.bottleProgramRepository,
+    required this.programMetadataExtractor,
+    required this.winetricksVerbRepository,
+    required this.winetricksScriptInstaller,
+    required this.runtimeCatalog,
+    required this.programRunPlanner,
+    required this.programRunner,
+    required this.bottlePrefixInitializer,
+    required this.pathOpener,
+    required this.macosWineInstaller,
+    required this.linuxWineInstaller,
+    required this.gptkWineInstaller,
+    required this.runtimeUpdateChecker,
+    required this.appUpdateChecker,
+    required this.appUpdateInstaller,
+    required this.runtimeValidator,
+    required this.macosSetupChecker,
+    required this.appSettingsRepository,
+    required this.runtimeInstallProgressSink,
+  });
+
+  final BottleCatalog bottleCatalog;
+  final BottleRepository? bottleRepository;
+  final BottleProgramRepository bottleProgramRepository;
+  final ProgramMetadataExtractor programMetadataExtractor;
+  final WinetricksVerbRepository winetricksVerbRepository;
+  final WinetricksScriptInstaller winetricksScriptInstaller;
+  final RuntimeCatalog runtimeCatalog;
+  final ProgramRunPlanner programRunPlanner;
+  final ProgramRunner? programRunner;
+  final BottlePrefixInitializer? bottlePrefixInitializer;
+  final PathOpener? pathOpener;
+  final MacosWineInstaller? macosWineInstaller;
+  final LinuxWineInstaller? linuxWineInstaller;
+  final GptkWineInstaller? gptkWineInstaller;
+  final RuntimeUpdateChecker? runtimeUpdateChecker;
+  final AppUpdateChecker? appUpdateChecker;
+  final AppUpdateInstaller? appUpdateInstaller;
+  final RuntimeValidator? runtimeValidator;
+  final MacosSetupChecker? macosSetupChecker;
+  final AppSettingsRepository? appSettingsRepository;
+  final RuntimeInstallProgressSink? runtimeInstallProgressSink;
+}
+
 CliResult runCli(
   List<String> arguments, {
   BottleCatalog bottleCatalog = const StaticBottleCatalog(<BottleRecord>[]),
@@ -6539,28 +6587,31 @@ CliResult runCli(
   try {
     return _runCli(
       arguments,
-      bottleCatalog: bottleCatalog,
-      bottleRepository: bottleRepository,
-      bottleProgramRepository: bottleProgramRepository,
-      programMetadataExtractor: programMetadataExtractor,
-      winetricksVerbRepository:
-          winetricksVerbRepository ?? DartIoWinetricksVerbRepository.current(),
-      winetricksScriptInstaller: winetricksScriptInstaller,
-      runtimeCatalog: runtimeCatalog,
-      programRunPlanner: programRunPlanner ?? ProgramRunPlanner.current(),
-      programRunner: programRunner,
-      bottlePrefixInitializer: bottlePrefixInitializer,
-      pathOpener: pathOpener,
-      macosWineInstaller: macosWineInstaller,
-      linuxWineInstaller: linuxWineInstaller,
-      gptkWineInstaller: gptkWineInstaller,
-      runtimeUpdateChecker: runtimeUpdateChecker,
-      appUpdateChecker: appUpdateChecker,
-      appUpdateInstaller: appUpdateInstaller,
-      runtimeValidator: runtimeValidator,
-      macosSetupChecker: macosSetupChecker,
-      appSettingsRepository: appSettingsRepository,
-      runtimeInstallProgressSink: runtimeInstallProgressSink,
+      _CliCommandContext(
+        bottleCatalog: bottleCatalog,
+        bottleRepository: bottleRepository,
+        bottleProgramRepository: bottleProgramRepository,
+        programMetadataExtractor: programMetadataExtractor,
+        winetricksVerbRepository:
+            winetricksVerbRepository ??
+            DartIoWinetricksVerbRepository.current(),
+        winetricksScriptInstaller: winetricksScriptInstaller,
+        runtimeCatalog: runtimeCatalog,
+        programRunPlanner: programRunPlanner ?? ProgramRunPlanner.current(),
+        programRunner: programRunner,
+        bottlePrefixInitializer: bottlePrefixInitializer,
+        pathOpener: pathOpener,
+        macosWineInstaller: macosWineInstaller,
+        linuxWineInstaller: linuxWineInstaller,
+        gptkWineInstaller: gptkWineInstaller,
+        runtimeUpdateChecker: runtimeUpdateChecker,
+        appUpdateChecker: appUpdateChecker,
+        appUpdateInstaller: appUpdateInstaller,
+        runtimeValidator: runtimeValidator,
+        macosSetupChecker: macosSetupChecker,
+        appSettingsRepository: appSettingsRepository,
+        runtimeInstallProgressSink: runtimeInstallProgressSink,
+      ),
     );
   } on BottleRepositoryException catch (error) {
     return _jsonError(
@@ -7468,30 +7519,28 @@ bool _isRuntimeStackSourceManifestSource(String source) {
   return normalized.endsWith('.json') || normalized.contains('manifest');
 }
 
-CliResult _runCli(
-  List<String> arguments, {
-  required BottleCatalog bottleCatalog,
-  required BottleRepository? bottleRepository,
-  required BottleProgramRepository bottleProgramRepository,
-  required ProgramMetadataExtractor programMetadataExtractor,
-  required WinetricksVerbRepository winetricksVerbRepository,
-  required WinetricksScriptInstaller winetricksScriptInstaller,
-  required RuntimeCatalog runtimeCatalog,
-  required ProgramRunPlanner programRunPlanner,
-  required ProgramRunner? programRunner,
-  required BottlePrefixInitializer? bottlePrefixInitializer,
-  required PathOpener? pathOpener,
-  required MacosWineInstaller? macosWineInstaller,
-  required LinuxWineInstaller? linuxWineInstaller,
-  required GptkWineInstaller? gptkWineInstaller,
-  required RuntimeUpdateChecker? runtimeUpdateChecker,
-  required AppUpdateChecker? appUpdateChecker,
-  required AppUpdateInstaller? appUpdateInstaller,
-  required RuntimeValidator? runtimeValidator,
-  required MacosSetupChecker? macosSetupChecker,
-  required AppSettingsRepository? appSettingsRepository,
-  required RuntimeInstallProgressSink? runtimeInstallProgressSink,
-}) {
+CliResult _runCli(List<String> arguments, _CliCommandContext context) {
+  final bottleCatalog = context.bottleCatalog;
+  final bottleRepository = context.bottleRepository;
+  final bottleProgramRepository = context.bottleProgramRepository;
+  final programMetadataExtractor = context.programMetadataExtractor;
+  final winetricksVerbRepository = context.winetricksVerbRepository;
+  final winetricksScriptInstaller = context.winetricksScriptInstaller;
+  final runtimeCatalog = context.runtimeCatalog;
+  final programRunPlanner = context.programRunPlanner;
+  final programRunner = context.programRunner;
+  final bottlePrefixInitializer = context.bottlePrefixInitializer;
+  final pathOpener = context.pathOpener;
+  final macosWineInstaller = context.macosWineInstaller;
+  final linuxWineInstaller = context.linuxWineInstaller;
+  final gptkWineInstaller = context.gptkWineInstaller;
+  final runtimeUpdateChecker = context.runtimeUpdateChecker;
+  final appUpdateChecker = context.appUpdateChecker;
+  final appUpdateInstaller = context.appUpdateInstaller;
+  final runtimeValidator = context.runtimeValidator;
+  final macosSetupChecker = context.macosSetupChecker;
+  final appSettingsRepository = context.appSettingsRepository;
+  final runtimeInstallProgressSink = context.runtimeInstallProgressSink;
   final activeBottleCatalog = bottleRepository ?? bottleCatalog;
 
   if (_isJsonAppUpdateCheckCommand(arguments)) {

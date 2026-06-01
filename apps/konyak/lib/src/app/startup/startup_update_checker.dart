@@ -1,0 +1,77 @@
+import '../../cli/konyak_cli_client.dart';
+import '../../runtimes/runtime_summary.dart';
+import '../../settings/app_settings_summary.dart';
+import '../app_platform.dart';
+import '../runtime/runtime_platform.dart';
+import '../utils/update_labels.dart';
+
+final class StartupUpdateCheckResult {
+  const StartupUpdateCheckResult({
+    required this.availableUpdateLabels,
+    required this.knownRuntimes,
+  });
+
+  final List<String> availableUpdateLabels;
+  final List<RuntimeSummary>? knownRuntimes;
+}
+
+final class StartupUpdateChecker {
+  const StartupUpdateChecker({required this.platform, required this.cliClient});
+
+  final KonyakPlatform platform;
+  final KonyakCliClient cliClient;
+
+  Future<StartupUpdateCheckResult> check(AppSettingsSummary settings) async {
+    if (!settings.automaticallyCheckForKonyakUpdates &&
+        !settings.automaticallyCheckForWineUpdates) {
+      return const StartupUpdateCheckResult(
+        availableUpdateLabels: <String>[],
+        knownRuntimes: null,
+      );
+    }
+
+    final labels = <String>[];
+    List<RuntimeSummary>? knownRuntimes;
+
+    if (settings.automaticallyCheckForKonyakUpdates) {
+      final result = await cliClient.checkKonyakUpdate();
+      switch (result) {
+        case LoadedUpdateCheck(:final update) when update.status == 'available':
+          labels.add(updateCheckLabel(update, 'Konyak'));
+        case LoadedUpdateCheck() || UpdateCheckLoadFailure():
+          break;
+      }
+    }
+
+    final managedRuntime = managedRuntimePlatform(platform);
+    if (managedRuntime != null && settings.automaticallyCheckForWineUpdates) {
+      final runtimeResult = await cliClient.listKnownRuntimes();
+      switch (runtimeResult) {
+        case LoadedRuntimeList(:final runtimes):
+          knownRuntimes = runtimes;
+          final runtime = runtimeForPlatform(platform, runtimes);
+          if (runtime?.isInstalled == true) {
+            final updateResult = await cliClient.checkRuntimeUpdate(
+              managedRuntime.runtimeId,
+            );
+            switch (updateResult) {
+              case LoadedUpdateCheck(:final update)
+                  when update.status == 'available':
+                labels.add(
+                  updateCheckLabel(update, managedRuntime.displayName),
+                );
+              case LoadedUpdateCheck() || UpdateCheckLoadFailure():
+                break;
+            }
+          }
+        case RuntimeListLoadFailure():
+          knownRuntimes = const <RuntimeSummary>[];
+      }
+    }
+
+    return StartupUpdateCheckResult(
+      availableUpdateLabels: List.unmodifiable(labels),
+      knownRuntimes: knownRuntimes,
+    );
+  }
+}
