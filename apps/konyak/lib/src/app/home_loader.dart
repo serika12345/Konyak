@@ -540,17 +540,45 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
 
     switch (result) {
       case CreatedBottle(:final bottle):
-        setState(() {
-          _bottles = upsertBottle(_bottles, bottle);
-          _errorMessage = null;
-        });
+        _storeBottle(bottle);
         return bottle;
       case ExistingBottle(:final message) ||
           BottleCreateLoadFailure(:final message):
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(message)));
+        _showSnackBar(message);
         return null;
+    }
+  }
+
+  void _storeBottle(BottleSummary bottle, {String? oldBottleId}) {
+    setState(() {
+      _bottles = oldBottleId == null
+          ? upsertBottle(_bottles, bottle)
+          : replaceBottle(_bottles, oldBottleId: oldBottleId, bottle: bottle);
+      _errorMessage = null;
+    });
+  }
+
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  void _handleBottleUpdateResult(
+    BottleUpdateLoadResult result, {
+    String? oldBottleId,
+    String Function(BottleSummary bottle)? successMessage,
+  }) {
+    switch (result) {
+      case UpdatedBottle(:final bottle):
+        _storeBottle(bottle, oldBottleId: oldBottleId);
+        final message = successMessage?.call(bottle);
+        if (message != null) {
+          _showSnackBar(message);
+        }
+      case MissingBottleUpdate(:final message) ||
+          BottleUpdateLoadFailure(:final message):
+        _showSnackBar(message);
     }
   }
 
@@ -628,18 +656,7 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
       return;
     }
 
-    switch (result) {
-      case UpdatedBottle(:final bottle):
-        setState(() {
-          _bottles = upsertBottle(_bottles, bottle);
-          _errorMessage = null;
-        });
-      case MissingBottleUpdate(:final message) ||
-          BottleUpdateLoadFailure(:final message):
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(message)));
-    }
+    _handleBottleUpdateResult(result);
   }
 
   Future<void> _loadBottleConfiguration(BottleSummary bottle) async {
@@ -651,15 +668,10 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
 
     switch (result) {
       case LoadedBottleDetail(:final bottle):
-        setState(() {
-          _bottles = upsertBottle(_bottles, bottle);
-          _errorMessage = null;
-        });
+        _storeBottle(bottle);
       case MissingBottleDetail(:final message) ||
           BottleDetailLoadFailure(:final message):
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(message)));
+        _showSnackBar(message);
     }
 
     await _loadRuntimeCapabilities();
@@ -702,14 +714,10 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
           _bottles = removeBottle(_bottles, bottle.id);
           _errorMessage = null;
         });
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Deleted ${bottle.name}')));
+        _showSnackBar('Deleted ${bottle.name}');
       case MissingBottleDelete(:final message) ||
           BottleDeleteLoadFailure(:final message):
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(message)));
+        _showSnackBar(message);
     }
   }
 
@@ -732,25 +740,11 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
       return;
     }
 
-    switch (result) {
-      case UpdatedBottle(bottle: final renamedBottle):
-        setState(() {
-          _bottles = replaceBottle(
-            _bottles,
-            oldBottleId: bottle.id,
-            bottle: renamedBottle,
-          );
-          _errorMessage = null;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Renamed ${renamedBottle.name}')),
-        );
-      case MissingBottleUpdate(:final message) ||
-          BottleUpdateLoadFailure(:final message):
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(message)));
-    }
+    _handleBottleUpdateResult(
+      result,
+      oldBottleId: bottle.id,
+      successMessage: (bottle) => 'Renamed ${bottle.name}',
+    );
   }
 
   Future<void> _moveBottle(BottleSummary bottle) async {
@@ -776,21 +770,10 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
       return;
     }
 
-    switch (result) {
-      case UpdatedBottle(:final bottle):
-        setState(() {
-          _bottles = upsertBottle(_bottles, bottle);
-          _errorMessage = null;
-        });
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Moved ${bottle.name}')));
-      case MissingBottleUpdate(:final message) ||
-          BottleUpdateLoadFailure(:final message):
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(message)));
-    }
+    _handleBottleUpdateResult(
+      result,
+      successMessage: (bottle) => 'Moved ${bottle.name}',
+    );
   }
 
   Future<void> _exportBottleArchive(BottleSummary bottle) async {
@@ -825,13 +808,9 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
 
     switch (result) {
       case ExportedBottleArchive():
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Exported ${bottle.name}')));
+        _showSnackBar('Exported ${bottle.name}');
       case BottleArchiveExportLoadFailure(:final message):
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(message)));
+        _showSnackBar(message);
     }
   }
 
@@ -864,17 +843,10 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
 
     switch (result) {
       case ImportedBottleArchive(:final bottle):
-        setState(() {
-          _bottles = upsertBottle(_bottles, bottle);
-          _errorMessage = null;
-        });
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Imported ${bottle.name}')));
+        _storeBottle(bottle);
+        _showSnackBar('Imported ${bottle.name}');
       case BottleArchiveImportLoadFailure(:final message):
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(message)));
+        _showSnackBar(message);
     }
   }
 
@@ -969,21 +941,7 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
       return;
     }
 
-    switch (result) {
-      case UpdatedBottle(:final bottle):
-        setState(() {
-          _bottles = upsertBottle(_bottles, bottle);
-          _errorMessage = null;
-        });
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Pinned $name')));
-      case MissingBottleUpdate(:final message) ||
-          BottleUpdateLoadFailure(:final message):
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(message)));
-    }
+    _handleBottleUpdateResult(result, successMessage: (_) => 'Pinned $name');
   }
 
   Future<void> _unpinProgram({
@@ -999,21 +957,10 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
       return;
     }
 
-    switch (result) {
-      case UpdatedBottle(:final bottle):
-        setState(() {
-          _bottles = upsertBottle(_bottles, bottle);
-          _errorMessage = null;
-        });
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Unpinned ${program.name}')));
-      case MissingBottleUpdate(:final message) ||
-          BottleUpdateLoadFailure(:final message):
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(message)));
-    }
+    _handleBottleUpdateResult(
+      result,
+      successMessage: (_) => 'Unpinned ${program.name}',
+    );
   }
 
   Future<void> _renamePinnedProgram({
@@ -1040,21 +987,7 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
       return;
     }
 
-    switch (result) {
-      case UpdatedBottle(:final bottle):
-        setState(() {
-          _bottles = upsertBottle(_bottles, bottle);
-          _errorMessage = null;
-        });
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Renamed $name')));
-      case MissingBottleUpdate(:final message) ||
-          BottleUpdateLoadFailure(:final message):
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(message)));
-    }
+    _handleBottleUpdateResult(result, successMessage: (_) => 'Renamed $name');
   }
 
   Future<void> _openPinnedProgramLocation({
