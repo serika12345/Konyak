@@ -4,9 +4,11 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:args/args.dart';
 import 'package:crypto/crypto.dart';
 
 part 'src/cli_commands.dart';
+part 'src/cli_parsers.dart';
 part 'src/models.dart';
 part 'src/program_discovery.dart';
 part 'src/platform_io.dart';
