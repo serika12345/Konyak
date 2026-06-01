@@ -7931,15 +7931,309 @@ CliResult? _handleWineProcessCommand(
   return null;
 }
 
+CliResult? _handleBottleReadCommand(
+  List<String> arguments, {
+  required _CliCommandContext context,
+  required BottleCatalog activeBottleCatalog,
+}) {
+  if (_isJsonBottleListCommand(arguments)) {
+    final bottles = activeBottleCatalog.listBottles();
+    _synchronizeMacosPinnedProgramLaunchers(
+      hostPlatform: context.programRunPlanner.hostPlatform,
+      environment: context.programRunPlanner.environment,
+      bottles: bottles,
+    );
+    return CliResult(
+      exitCode: 0,
+      stdout: jsonEncode(<String, Object?>{
+        'schemaVersion': cliSchemaVersion,
+        'bottles': bottles
+            .map((bottle) => bottle.toJson())
+            .toList(growable: false),
+      }),
+      stderr: '',
+    );
+  }
+
+  if (_isJsonBottleInspectCommand(arguments)) {
+    final bottleId = arguments[1];
+    final bottle = activeBottleCatalog.findBottle(bottleId);
+    if (bottle == null) {
+      return _bottleNotFoundError(bottleId);
+    }
+
+    final inspectedBottle = _bottleWithRegistrySettings(
+      bottle: bottle,
+      programRunPlanner: context.programRunPlanner,
+      programRunner: context.programRunner,
+    );
+    return CliResult(
+      exitCode: 0,
+      stdout: jsonEncode(<String, Object?>{
+        'schemaVersion': cliSchemaVersion,
+        'bottle': inspectedBottle.toJson(),
+      }),
+      stderr: '',
+    );
+  }
+
+  final bottleProgramsListId = _parseJsonBottleProgramsListCommand(arguments);
+  if (bottleProgramsListId != null) {
+    final bottle = activeBottleCatalog.findBottle(bottleProgramsListId);
+    if (bottle == null) {
+      return _bottleNotFoundError(bottleProgramsListId);
+    }
+
+    return CliResult(
+      exitCode: 0,
+      stdout: jsonEncode(<String, Object?>{
+        'schemaVersion': cliSchemaVersion,
+        'bottlePrograms': <String, Object?>{
+          'bottleId': bottle.id,
+          'programs': context.bottleProgramRepository
+              .listPrograms(bottle)
+              .map((program) => program.toJson())
+              .toList(growable: false),
+        },
+      }),
+      stderr: '',
+    );
+  }
+
+  return null;
+}
+
+CliResult? _handleBottleMutationCommand(
+  List<String> arguments,
+  _CliCommandContext context,
+) {
+  final createBottleRequest = _parseJsonBottleCreateRequest(arguments);
+  if (createBottleRequest != null) {
+    final repository = context.bottleRepository;
+    if (repository == null) {
+      return _bottleRepositoryUnavailableError();
+    }
+
+    return switch (repository.createBottle(createBottleRequest)) {
+      BottleCreated(:final bottle) => _createdBottleJsonResult(
+        bottle: bottle,
+        bottlePrefixInitializer: context.bottlePrefixInitializer,
+      ),
+      BottleCreateConflict(:final bottleId) => _jsonError(
+        exitCode: 73,
+        code: 'bottleAlreadyExists',
+        message: 'Bottle already exists.',
+        extra: <String, Object?>{'bottleId': bottleId},
+      ),
+    };
+  }
+
+  final bottleArchiveExportRequest = _parseJsonBottleArchiveExportRequest(
+    arguments,
+  );
+  if (bottleArchiveExportRequest != null) {
+    final repository = context.bottleRepository;
+    if (repository == null) {
+      return _bottleRepositoryUnavailableError();
+    }
+
+    return _bottleArchiveExportJsonResult(
+      repository.exportBottleArchive(bottleArchiveExportRequest),
+    );
+  }
+
+  final bottleArchiveImportRequest = _parseJsonBottleArchiveImportRequest(
+    arguments,
+  );
+  if (bottleArchiveImportRequest != null) {
+    final repository = context.bottleRepository;
+    if (repository == null) {
+      return _bottleRepositoryUnavailableError();
+    }
+
+    return _bottleArchiveImportJsonResult(
+      repository.importBottleArchive(bottleArchiveImportRequest),
+    );
+  }
+
+  final deleteBottleId = _parseJsonBottleDeleteCommand(arguments);
+  if (deleteBottleId != null) {
+    final repository = context.bottleRepository;
+    if (repository == null) {
+      return _bottleRepositoryUnavailableError();
+    }
+
+    return switch (repository.deleteBottle(deleteBottleId)) {
+      BottleDeleted(:final bottle) => CliResult(
+        exitCode: 0,
+        stdout: jsonEncode(<String, Object?>{
+          'schemaVersion': cliSchemaVersion,
+          'deletedBottle': bottle.toJson(),
+        }),
+        stderr: '',
+      ),
+      BottleDeleteMissing(:final bottleId) => _bottleNotFoundError(bottleId),
+    };
+  }
+
+  final renameBottleRequest = _parseJsonBottleRenameRequest(arguments);
+  if (renameBottleRequest != null) {
+    final repository = context.bottleRepository;
+    if (repository == null) {
+      return _bottleRepositoryUnavailableError();
+    }
+
+    return switch (repository.renameBottle(renameBottleRequest)) {
+      BottleRenamed(:final bottle) => CliResult(
+        exitCode: 0,
+        stdout: jsonEncode(<String, Object?>{
+          'schemaVersion': cliSchemaVersion,
+          'bottle': bottle.toJson(),
+        }),
+        stderr: '',
+      ),
+      BottleRenameMissing(:final bottleId) => _bottleNotFoundError(bottleId),
+      BottleRenameConflict(:final bottleId) => _jsonError(
+        exitCode: 73,
+        code: 'bottleAlreadyExists',
+        message: 'Bottle already exists.',
+        extra: <String, Object?>{'bottleId': bottleId},
+      ),
+    };
+  }
+
+  final moveBottleRequest = _parseJsonBottleMoveRequest(arguments);
+  if (moveBottleRequest != null) {
+    final repository = context.bottleRepository;
+    if (repository == null) {
+      return _bottleRepositoryUnavailableError();
+    }
+
+    return switch (repository.moveBottle(moveBottleRequest)) {
+      BottleMoved(:final bottle) => CliResult(
+        exitCode: 0,
+        stdout: jsonEncode(<String, Object?>{
+          'schemaVersion': cliSchemaVersion,
+          'bottle': bottle.toJson(),
+        }),
+        stderr: '',
+      ),
+      BottleMoveMissing(:final bottleId) => _bottleNotFoundError(bottleId),
+      BottleMoveConflict(:final path) => _jsonError(
+        exitCode: 73,
+        code: 'bottleMoveDestinationExists',
+        message: 'Bottle move destination exists.',
+        extra: <String, Object?>{'path': path},
+      ),
+    };
+  }
+
+  return null;
+}
+
+CliResult _bottleRepositoryUnavailableError() {
+  return _jsonError(
+    exitCode: 74,
+    code: 'bottleRepositoryUnavailable',
+    message: 'Bottle repository is not configured.',
+  );
+}
+
+CliResult? _handleBottleConfigurationCommand(
+  List<String> arguments,
+  _CliCommandContext context,
+) {
+  final windowsVersionUpdateRequest = _parseJsonWindowsVersionUpdateRequest(
+    arguments,
+  );
+  if (windowsVersionUpdateRequest != null) {
+    final repository = context.bottleRepository;
+    if (repository == null) {
+      return _bottleRepositoryUnavailableError();
+    }
+
+    final bottle = repository.findBottle(windowsVersionUpdateRequest.bottleId);
+    if (bottle == null) {
+      return _bottleNotFoundError(windowsVersionUpdateRequest.bottleId);
+    }
+
+    final registryUpdateFailure = _applyWindowsVersionRegistryUpdates(
+      bottle: bottle,
+      windowsVersion: windowsVersionUpdateRequest.windowsVersion,
+      programRunPlanner: context.programRunPlanner,
+      programRunner: context.programRunner,
+    );
+    if (registryUpdateFailure != null) {
+      return registryUpdateFailure;
+    }
+
+    return _bottleUpdateJsonResult(
+      repository.setWindowsVersion(windowsVersionUpdateRequest),
+    );
+  }
+
+  final runtimeSettingsUpdateRequest = _parseJsonRuntimeSettingsUpdateRequest(
+    arguments,
+  );
+  if (runtimeSettingsUpdateRequest != null) {
+    final repository = context.bottleRepository;
+    if (repository == null) {
+      return _bottleRepositoryUnavailableError();
+    }
+
+    final bottle = repository.findBottle(runtimeSettingsUpdateRequest.bottleId);
+    if (bottle == null) {
+      return _bottleNotFoundError(runtimeSettingsUpdateRequest.bottleId);
+    }
+
+    final registryUpdateFailure = _applyRuntimeSettingsRegistryUpdates(
+      bottle: bottle,
+      runtimeSettings: runtimeSettingsUpdateRequest.runtimeSettings,
+      programRunPlanner: context.programRunPlanner,
+      programRunner: context.programRunner,
+    );
+    if (registryUpdateFailure != null) {
+      return registryUpdateFailure;
+    }
+
+    final dllSyncFailure = _syncRuntimeSettingsDllOverrides(
+      bottle: bottle,
+      runtimeSettings: runtimeSettingsUpdateRequest.runtimeSettings,
+      programRunPlanner: context.programRunPlanner,
+    );
+    if (dllSyncFailure != null) {
+      return dllSyncFailure;
+    }
+
+    return _bottleUpdateJsonResult(
+      repository.setRuntimeSettings(runtimeSettingsUpdateRequest),
+    );
+  }
+
+  return null;
+}
+
+CliResult _bottleUpdateJsonResult(BottleUpdateResult result) {
+  return switch (result) {
+    BottleUpdated(:final bottle) => CliResult(
+      exitCode: 0,
+      stdout: jsonEncode(<String, Object?>{
+        'schemaVersion': cliSchemaVersion,
+        'bottle': bottle.toJson(),
+      }),
+      stderr: '',
+    ),
+    BottleUpdateMissing(:final bottleId) => _bottleNotFoundError(bottleId),
+  };
+}
+
 CliResult _runCli(List<String> arguments, _CliCommandContext context) {
   final bottleCatalog = context.bottleCatalog;
   final bottleRepository = context.bottleRepository;
-  final bottleProgramRepository = context.bottleProgramRepository;
   final winetricksVerbRepository = context.winetricksVerbRepository;
   final winetricksScriptInstaller = context.winetricksScriptInstaller;
   final programRunPlanner = context.programRunPlanner;
   final programRunner = context.programRunner;
-  final bottlePrefixInitializer = context.bottlePrefixInitializer;
   final pathOpener = context.pathOpener;
   final activeBottleCatalog = bottleRepository ?? bottleCatalog;
 
@@ -7965,82 +8259,13 @@ CliResult _runCli(List<String> arguments, _CliCommandContext context) {
     return wineProcessCommandResult;
   }
 
-  if (_isJsonBottleListCommand(arguments)) {
-    final bottles = activeBottleCatalog.listBottles();
-    _synchronizeMacosPinnedProgramLaunchers(
-      hostPlatform: programRunPlanner.hostPlatform,
-      environment: programRunPlanner.environment,
-      bottles: bottles,
-    );
-    return CliResult(
-      exitCode: 0,
-      stdout: jsonEncode(<String, Object?>{
-        'schemaVersion': cliSchemaVersion,
-        'bottles': bottles
-            .map((bottle) => bottle.toJson())
-            .toList(growable: false),
-      }),
-      stderr: '',
-    );
-  }
-
-  if (_isJsonBottleInspectCommand(arguments)) {
-    final bottleId = arguments[1];
-    final bottle = activeBottleCatalog.findBottle(bottleId);
-
-    if (bottle == null) {
-      return CliResult(
-        exitCode: 66,
-        stdout: jsonEncode(<String, Object?>{
-          'schemaVersion': cliSchemaVersion,
-          'error': <String, Object?>{
-            'code': 'bottleNotFound',
-            'message': 'Bottle not found.',
-            'bottleId': bottleId,
-          },
-        }),
-        stderr: '',
-      );
-    }
-
-    final inspectedBottle = _bottleWithRegistrySettings(
-      bottle: bottle,
-      programRunPlanner: programRunPlanner,
-      programRunner: programRunner,
-    );
-
-    return CliResult(
-      exitCode: 0,
-      stdout: jsonEncode(<String, Object?>{
-        'schemaVersion': cliSchemaVersion,
-        'bottle': inspectedBottle.toJson(),
-      }),
-      stderr: '',
-    );
-  }
-
-  final bottleProgramsListId = _parseJsonBottleProgramsListCommand(arguments);
-  if (bottleProgramsListId != null) {
-    final bottle = activeBottleCatalog.findBottle(bottleProgramsListId);
-
-    if (bottle == null) {
-      return _bottleNotFoundError(bottleProgramsListId);
-    }
-
-    return CliResult(
-      exitCode: 0,
-      stdout: jsonEncode(<String, Object?>{
-        'schemaVersion': cliSchemaVersion,
-        'bottlePrograms': <String, Object?>{
-          'bottleId': bottle.id,
-          'programs': bottleProgramRepository
-              .listPrograms(bottle)
-              .map((program) => program.toJson())
-              .toList(growable: false),
-        },
-      }),
-      stderr: '',
-    );
+  final bottleReadCommandResult = _handleBottleReadCommand(
+    arguments,
+    context: context,
+    activeBottleCatalog: activeBottleCatalog,
+  );
+  if (bottleReadCommandResult != null) {
+    return bottleReadCommandResult;
   }
 
   if (_isJsonWinetricksVerbListCommand(arguments)) {
@@ -8066,252 +8291,20 @@ CliResult _runCli(List<String> arguments, _CliCommandContext context) {
     };
   }
 
-  final createBottleRequest = _parseJsonBottleCreateRequest(arguments);
-  if (createBottleRequest != null) {
-    if (bottleRepository == null) {
-      return _jsonError(
-        exitCode: 74,
-        code: 'bottleRepositoryUnavailable',
-        message: 'Bottle repository is not configured.',
-      );
-    }
-
-    final createResult = bottleRepository.createBottle(createBottleRequest);
-
-    return switch (createResult) {
-      BottleCreated(:final bottle) => _createdBottleJsonResult(
-        bottle: bottle,
-        bottlePrefixInitializer: bottlePrefixInitializer,
-      ),
-      BottleCreateConflict(:final bottleId) => _jsonError(
-        exitCode: 73,
-        code: 'bottleAlreadyExists',
-        message: 'Bottle already exists.',
-        extra: <String, Object?>{'bottleId': bottleId},
-      ),
-    };
-  }
-
-  final bottleArchiveExportRequest = _parseJsonBottleArchiveExportRequest(
+  final bottleMutationCommandResult = _handleBottleMutationCommand(
     arguments,
+    context,
   );
-  if (bottleArchiveExportRequest != null) {
-    if (bottleRepository == null) {
-      return _jsonError(
-        exitCode: 74,
-        code: 'bottleRepositoryUnavailable',
-        message: 'Bottle repository is not configured.',
-      );
-    }
-
-    return _bottleArchiveExportJsonResult(
-      bottleRepository.exportBottleArchive(bottleArchiveExportRequest),
-    );
+  if (bottleMutationCommandResult != null) {
+    return bottleMutationCommandResult;
   }
 
-  final bottleArchiveImportRequest = _parseJsonBottleArchiveImportRequest(
+  final bottleConfigurationCommandResult = _handleBottleConfigurationCommand(
     arguments,
+    context,
   );
-  if (bottleArchiveImportRequest != null) {
-    if (bottleRepository == null) {
-      return _jsonError(
-        exitCode: 74,
-        code: 'bottleRepositoryUnavailable',
-        message: 'Bottle repository is not configured.',
-      );
-    }
-
-    return _bottleArchiveImportJsonResult(
-      bottleRepository.importBottleArchive(bottleArchiveImportRequest),
-    );
-  }
-
-  final deleteBottleId = _parseJsonBottleDeleteCommand(arguments);
-  if (deleteBottleId != null) {
-    if (bottleRepository == null) {
-      return _jsonError(
-        exitCode: 74,
-        code: 'bottleRepositoryUnavailable',
-        message: 'Bottle repository is not configured.',
-      );
-    }
-
-    final deleteResult = bottleRepository.deleteBottle(deleteBottleId);
-
-    return switch (deleteResult) {
-      BottleDeleted(:final bottle) => CliResult(
-        exitCode: 0,
-        stdout: jsonEncode(<String, Object?>{
-          'schemaVersion': cliSchemaVersion,
-          'deletedBottle': bottle.toJson(),
-        }),
-        stderr: '',
-      ),
-      BottleDeleteMissing(:final bottleId) => _bottleNotFoundError(bottleId),
-    };
-  }
-
-  final renameBottleRequest = _parseJsonBottleRenameRequest(arguments);
-  if (renameBottleRequest != null) {
-    if (bottleRepository == null) {
-      return _jsonError(
-        exitCode: 74,
-        code: 'bottleRepositoryUnavailable',
-        message: 'Bottle repository is not configured.',
-      );
-    }
-
-    final renameResult = bottleRepository.renameBottle(renameBottleRequest);
-
-    return switch (renameResult) {
-      BottleRenamed(:final bottle) => CliResult(
-        exitCode: 0,
-        stdout: jsonEncode(<String, Object?>{
-          'schemaVersion': cliSchemaVersion,
-          'bottle': bottle.toJson(),
-        }),
-        stderr: '',
-      ),
-      BottleRenameMissing(:final bottleId) => _bottleNotFoundError(bottleId),
-      BottleRenameConflict(:final bottleId) => _jsonError(
-        exitCode: 73,
-        code: 'bottleAlreadyExists',
-        message: 'Bottle already exists.',
-        extra: <String, Object?>{'bottleId': bottleId},
-      ),
-    };
-  }
-
-  final moveBottleRequest = _parseJsonBottleMoveRequest(arguments);
-  if (moveBottleRequest != null) {
-    if (bottleRepository == null) {
-      return _jsonError(
-        exitCode: 74,
-        code: 'bottleRepositoryUnavailable',
-        message: 'Bottle repository is not configured.',
-      );
-    }
-
-    final moveResult = bottleRepository.moveBottle(moveBottleRequest);
-
-    return switch (moveResult) {
-      BottleMoved(:final bottle) => CliResult(
-        exitCode: 0,
-        stdout: jsonEncode(<String, Object?>{
-          'schemaVersion': cliSchemaVersion,
-          'bottle': bottle.toJson(),
-        }),
-        stderr: '',
-      ),
-      BottleMoveMissing(:final bottleId) => _bottleNotFoundError(bottleId),
-      BottleMoveConflict(:final path) => _jsonError(
-        exitCode: 73,
-        code: 'bottleMoveDestinationExists',
-        message: 'Bottle move destination exists.',
-        extra: <String, Object?>{'path': path},
-      ),
-    };
-  }
-
-  final windowsVersionUpdateRequest = _parseJsonWindowsVersionUpdateRequest(
-    arguments,
-  );
-  if (windowsVersionUpdateRequest != null) {
-    if (bottleRepository == null) {
-      return _jsonError(
-        exitCode: 74,
-        code: 'bottleRepositoryUnavailable',
-        message: 'Bottle repository is not configured.',
-      );
-    }
-
-    final bottle = bottleRepository.findBottle(
-      windowsVersionUpdateRequest.bottleId,
-    );
-    if (bottle == null) {
-      return _bottleNotFoundError(windowsVersionUpdateRequest.bottleId);
-    }
-
-    final registryUpdateFailure = _applyWindowsVersionRegistryUpdates(
-      bottle: bottle,
-      windowsVersion: windowsVersionUpdateRequest.windowsVersion,
-      programRunPlanner: programRunPlanner,
-      programRunner: programRunner,
-    );
-    if (registryUpdateFailure != null) {
-      return registryUpdateFailure;
-    }
-
-    final updateResult = bottleRepository.setWindowsVersion(
-      windowsVersionUpdateRequest,
-    );
-
-    return switch (updateResult) {
-      BottleUpdated(:final bottle) => CliResult(
-        exitCode: 0,
-        stdout: jsonEncode(<String, Object?>{
-          'schemaVersion': cliSchemaVersion,
-          'bottle': bottle.toJson(),
-        }),
-        stderr: '',
-      ),
-      BottleUpdateMissing(:final bottleId) => _bottleNotFoundError(bottleId),
-    };
-  }
-
-  final runtimeSettingsUpdateRequest = _parseJsonRuntimeSettingsUpdateRequest(
-    arguments,
-  );
-  if (runtimeSettingsUpdateRequest != null) {
-    if (bottleRepository == null) {
-      return _jsonError(
-        exitCode: 74,
-        code: 'bottleRepositoryUnavailable',
-        message: 'Bottle repository is not configured.',
-      );
-    }
-
-    final bottle = bottleRepository.findBottle(
-      runtimeSettingsUpdateRequest.bottleId,
-    );
-    if (bottle == null) {
-      return _bottleNotFoundError(runtimeSettingsUpdateRequest.bottleId);
-    }
-
-    final registryUpdateFailure = _applyRuntimeSettingsRegistryUpdates(
-      bottle: bottle,
-      runtimeSettings: runtimeSettingsUpdateRequest.runtimeSettings,
-      programRunPlanner: programRunPlanner,
-      programRunner: programRunner,
-    );
-    if (registryUpdateFailure != null) {
-      return registryUpdateFailure;
-    }
-
-    final dllSyncFailure = _syncRuntimeSettingsDllOverrides(
-      bottle: bottle,
-      runtimeSettings: runtimeSettingsUpdateRequest.runtimeSettings,
-      programRunPlanner: programRunPlanner,
-    );
-    if (dllSyncFailure != null) {
-      return dllSyncFailure;
-    }
-
-    final updateResult = bottleRepository.setRuntimeSettings(
-      runtimeSettingsUpdateRequest,
-    );
-
-    return switch (updateResult) {
-      BottleUpdated(:final bottle) => CliResult(
-        exitCode: 0,
-        stdout: jsonEncode(<String, Object?>{
-          'schemaVersion': cliSchemaVersion,
-          'bottle': bottle.toJson(),
-        }),
-        stderr: '',
-      ),
-      BottleUpdateMissing(:final bottleId) => _bottleNotFoundError(bottleId),
-    };
+  if (bottleConfigurationCommandResult != null) {
+    return bottleConfigurationCommandResult;
   }
 
   final programPinRequest = _parseJsonProgramPinRequest(arguments);
