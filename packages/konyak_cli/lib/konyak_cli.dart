@@ -8,7 +8,13 @@ import 'package:args/args.dart';
 import 'package:crypto/crypto.dart';
 
 part 'src/cli_commands.dart';
-part 'src/cli_handlers.dart';
+part 'src/cli_app_runtime_handlers.dart';
+part 'src/cli_wine_process_handlers.dart';
+part 'src/cli_bottle_read_handlers.dart';
+part 'src/cli_bottle_mutation_handlers.dart';
+part 'src/cli_pinned_program_handlers.dart';
+part 'src/cli_program_run_handlers.dart';
+part 'src/cli_location_winetricks_handlers.dart';
 part 'src/cli_parsers.dart';
 part 'src/cli_results.dart';
 part 'src/common_helpers.dart';
