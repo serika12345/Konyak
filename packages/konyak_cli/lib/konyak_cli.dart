@@ -8694,10 +8694,44 @@ CliResult _pathOpenerUnavailableError() {
   );
 }
 
+CliResult? _handleWinetricksVerbCommand(
+  List<String> arguments,
+  _CliCommandContext context,
+) {
+  if (!_isJsonWinetricksVerbListCommand(arguments)) {
+    return null;
+  }
+
+  return _winetricksVerbListJsonResult(
+    context.winetricksVerbRepository.listVerbs(),
+  );
+}
+
+CliResult _winetricksVerbListJsonResult(WinetricksVerbListResult result) {
+  return switch (result) {
+    WinetricksVerbListCompleted(:final categories) => CliResult(
+      exitCode: 0,
+      stdout: jsonEncode(<String, Object?>{
+        'schemaVersion': cliSchemaVersion,
+        'winetricks': <String, Object?>{
+          'categories': categories
+              .map((category) => category.toJson())
+              .toList(growable: false),
+        },
+      }),
+      stderr: '',
+    ),
+    WinetricksVerbListFailed(:final message) => _jsonError(
+      exitCode: 75,
+      code: 'winetricksVerbsUnavailable',
+      message: message,
+    ),
+  };
+}
+
 CliResult _runCli(List<String> arguments, _CliCommandContext context) {
   final bottleCatalog = context.bottleCatalog;
   final bottleRepository = context.bottleRepository;
-  final winetricksVerbRepository = context.winetricksVerbRepository;
   final activeBottleCatalog = bottleRepository ?? bottleCatalog;
 
   final appCommandResult = _handleAppCommand(arguments, context);
@@ -8731,27 +8765,12 @@ CliResult _runCli(List<String> arguments, _CliCommandContext context) {
     return bottleReadCommandResult;
   }
 
-  if (_isJsonWinetricksVerbListCommand(arguments)) {
-    final listResult = winetricksVerbRepository.listVerbs();
-    return switch (listResult) {
-      WinetricksVerbListCompleted(:final categories) => CliResult(
-        exitCode: 0,
-        stdout: jsonEncode(<String, Object?>{
-          'schemaVersion': cliSchemaVersion,
-          'winetricks': <String, Object?>{
-            'categories': categories
-                .map((category) => category.toJson())
-                .toList(growable: false),
-          },
-        }),
-        stderr: '',
-      ),
-      WinetricksVerbListFailed(:final message) => _jsonError(
-        exitCode: 75,
-        code: 'winetricksVerbsUnavailable',
-        message: message,
-      ),
-    };
+  final winetricksVerbCommandResult = _handleWinetricksVerbCommand(
+    arguments,
+    context,
+  );
+  if (winetricksVerbCommandResult != null) {
+    return winetricksVerbCommandResult;
   }
 
   final bottleMutationCommandResult = _handleBottleMutationCommand(
