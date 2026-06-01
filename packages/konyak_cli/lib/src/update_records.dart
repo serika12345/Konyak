@@ -1,0 +1,216 @@
+part of '../konyak_cli.dart';
+
+class RuntimeUpdateRecord {
+  const RuntimeUpdateRecord({
+    required this.runtimeId,
+    required this.status,
+    this.currentVersion,
+    this.latestVersion,
+    this.versionUrl,
+    this.archiveUrl,
+    this.sourceManifestUrl,
+    this.sourceManifestSignatureUrl,
+  });
+
+  final String runtimeId;
+  final String status;
+  final String? currentVersion;
+  final String? latestVersion;
+  final String? versionUrl;
+  final String? archiveUrl;
+  final String? sourceManifestUrl;
+  final String? sourceManifestSignatureUrl;
+
+  Map<String, Object?> toJson() {
+    return <String, Object?>{
+      'runtimeId': runtimeId,
+      'status': status,
+      if (currentVersion != null) 'currentVersion': currentVersion,
+      if (latestVersion != null) 'latestVersion': latestVersion,
+      if (versionUrl != null) 'versionUrl': versionUrl,
+      if (archiveUrl != null) 'archiveUrl': archiveUrl,
+      if (sourceManifestUrl != null) 'sourceManifestUrl': sourceManifestUrl,
+      if (sourceManifestSignatureUrl != null)
+        'sourceManifestSignatureUrl': sourceManifestSignatureUrl,
+    };
+  }
+}
+
+sealed class RuntimeUpdateCheckResult {
+  const RuntimeUpdateCheckResult();
+}
+
+class RuntimeUpdateCheckCompleted extends RuntimeUpdateCheckResult {
+  const RuntimeUpdateCheckCompleted(this.update);
+
+  final RuntimeUpdateRecord update;
+}
+
+class RuntimeUpdateCheckFailed extends RuntimeUpdateCheckResult {
+  const RuntimeUpdateCheckFailed(this.message);
+
+  final String message;
+}
+
+class RuntimeUpdateRuntimeNotFound extends RuntimeUpdateCheckResult {
+  const RuntimeUpdateRuntimeNotFound(this.runtimeId);
+
+  final String runtimeId;
+}
+
+abstract interface class RuntimeUpdateChecker {
+  RuntimeUpdateCheckResult check(String runtimeId);
+}
+
+class AppUpdateRecord {
+  const AppUpdateRecord({
+    required this.appId,
+    required this.status,
+    this.currentVersion,
+    this.latestVersion,
+    this.versionUrl,
+    this.archiveUrl,
+    this.archiveSha256,
+  });
+
+  final String appId;
+  final String status;
+  final String? currentVersion;
+  final String? latestVersion;
+  final String? versionUrl;
+  final String? archiveUrl;
+  final String? archiveSha256;
+
+  Map<String, Object?> toJson() {
+    return <String, Object?>{
+      'appId': appId,
+      'status': status,
+      if (currentVersion != null) 'currentVersion': currentVersion,
+      if (latestVersion != null) 'latestVersion': latestVersion,
+      if (versionUrl != null) 'versionUrl': versionUrl,
+      if (archiveUrl != null) 'archiveUrl': archiveUrl,
+      if (archiveSha256 != null) 'archiveSha256': archiveSha256,
+    };
+  }
+}
+
+sealed class AppUpdateCheckResult {
+  const AppUpdateCheckResult();
+}
+
+class AppUpdateCheckCompleted extends AppUpdateCheckResult {
+  const AppUpdateCheckCompleted(this.update);
+
+  final AppUpdateRecord update;
+}
+
+class AppUpdateCheckFailed extends AppUpdateCheckResult {
+  const AppUpdateCheckFailed(this.message);
+
+  final String message;
+}
+
+abstract interface class AppUpdateChecker {
+  AppUpdateCheckResult check();
+}
+
+class AppUpdateInstallRecord {
+  const AppUpdateInstallRecord({
+    required this.appId,
+    required this.status,
+    this.currentVersion,
+    this.installedVersion,
+    this.archiveUrl,
+    this.archiveSha256,
+    this.installPath,
+  });
+
+  final String appId;
+  final String status;
+  final String? currentVersion;
+  final String? installedVersion;
+  final String? archiveUrl;
+  final String? archiveSha256;
+  final String? installPath;
+
+  Map<String, Object?> toJson() {
+    return <String, Object?>{
+      'appId': appId,
+      'status': status,
+      if (currentVersion != null) 'currentVersion': currentVersion,
+      if (installedVersion != null) 'installedVersion': installedVersion,
+      if (archiveUrl != null) 'archiveUrl': archiveUrl,
+      if (archiveSha256 != null) 'archiveSha256': archiveSha256,
+      if (installPath != null) 'installPath': installPath,
+    };
+  }
+}
+
+sealed class AppUpdateInstallResult {
+  const AppUpdateInstallResult();
+}
+
+class AppUpdateInstallCompleted extends AppUpdateInstallResult {
+  const AppUpdateInstallCompleted(this.install);
+
+  final AppUpdateInstallRecord install;
+}
+
+class AppUpdateInstallFailed extends AppUpdateInstallResult {
+  const AppUpdateInstallFailed(this.message);
+
+  final String message;
+}
+
+abstract interface class AppUpdateInstaller {
+  AppUpdateInstallResult install(AppUpdateRecord update);
+}
+
+class RuntimeReleaseMetadata {
+  const RuntimeReleaseMetadata({
+    required this.version,
+    this.archiveUrl,
+    this.archiveSha256,
+    this.sourceManifestUrl,
+    this.sourceManifestSignatureUrl,
+  });
+
+  final String version;
+  final String? archiveUrl;
+  final String? archiveSha256;
+  final String? sourceManifestUrl;
+  final String? sourceManifestSignatureUrl;
+}
+
+sealed class RuntimeReleaseMetadataFetchResult {
+  const RuntimeReleaseMetadataFetchResult();
+}
+
+class RuntimeReleaseMetadataFetched extends RuntimeReleaseMetadataFetchResult {
+  const RuntimeReleaseMetadataFetched(this.metadata);
+
+  final RuntimeReleaseMetadata metadata;
+}
+
+class RuntimeReleaseMetadataFetchFailed
+    extends RuntimeReleaseMetadataFetchResult {
+  const RuntimeReleaseMetadataFetchFailed(this.message);
+
+  final String message;
+}
+
+abstract interface class RuntimeReleaseMetadataFetcher {
+  RuntimeReleaseMetadataFetchResult fetch(String versionUrl);
+}
+
+class StaticRuntimeReleaseMetadataFetcher
+    implements RuntimeReleaseMetadataFetcher {
+  const StaticRuntimeReleaseMetadataFetcher(this.metadata);
+
+  final RuntimeReleaseMetadata metadata;
+
+  @override
+  RuntimeReleaseMetadataFetchResult fetch(String versionUrl) {
+    return RuntimeReleaseMetadataFetched(metadata);
+  }
+}

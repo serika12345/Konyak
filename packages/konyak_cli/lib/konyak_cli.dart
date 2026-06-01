@@ -80,6 +80,12 @@ part 'src/macos_setup_checker.dart';
 part 'src/linux_program_run_requests.dart';
 part 'src/macos_program_run_requests.dart';
 part 'src/updates.dart';
+part 'src/update_records.dart';
+part 'src/release_metadata_fetcher.dart';
+part 'src/runtime_update_checker.dart';
+part 'src/app_update_checker.dart';
+part 'src/app_update_installer.dart';
+part 'src/app_update_handoff_installers.dart';
 part 'src/runtimes.dart';
 
 CliResult _jsonSuccess(Map<String, Object?> payload, {int exitCode = 0}) {
