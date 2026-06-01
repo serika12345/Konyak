@@ -8227,14 +8227,477 @@ CliResult _bottleUpdateJsonResult(BottleUpdateResult result) {
   };
 }
 
+CliResult? _handlePinnedProgramCommand(
+  List<String> arguments,
+  _CliCommandContext context,
+) {
+  final programPinRequest = _parseJsonProgramPinRequest(arguments);
+  if (programPinRequest != null) {
+    if (!_isSupportedProgramPath(programPinRequest.programPath)) {
+      return _jsonError(
+        exitCode: 65,
+        code: 'unsupportedProgramType',
+        message: 'Program type is not supported.',
+        extra: <String, Object?>{'programPath': programPinRequest.programPath},
+      );
+    }
+
+    final repository = context.bottleRepository;
+    if (repository == null) {
+      return _bottleRepositoryUnavailableError();
+    }
+
+    final pinResult = repository.pinProgram(programPinRequest);
+    if (pinResult is ProgramPinned) {
+      _synchronizeMacosPinnedProgramLaunchers(
+        hostPlatform: context.programRunPlanner.hostPlatform,
+        environment: context.programRunPlanner.environment,
+        bottles: repository.listBottles(),
+      );
+    }
+
+    return switch (pinResult) {
+      ProgramPinned(:final bottle) => CliResult(
+        exitCode: 0,
+        stdout: jsonEncode(<String, Object?>{
+          'schemaVersion': cliSchemaVersion,
+          'bottle': bottle.toJson(),
+        }),
+        stderr: '',
+      ),
+      ProgramPinMissing(:final bottleId) => _bottleNotFoundError(bottleId),
+      ProgramPinConflict(:final programPath) => _jsonError(
+        exitCode: 73,
+        code: 'programAlreadyPinned',
+        message: 'Program is already pinned.',
+        extra: <String, Object?>{'programPath': programPath},
+      ),
+    };
+  }
+
+  final programUnpinRequest = _parseJsonProgramUnpinRequest(arguments);
+  if (programUnpinRequest != null) {
+    final repository = context.bottleRepository;
+    if (repository == null) {
+      return _bottleRepositoryUnavailableError();
+    }
+
+    final updateResult = repository.unpinProgram(programUnpinRequest);
+    if (updateResult is ProgramUpdated) {
+      _synchronizeMacosPinnedProgramLaunchers(
+        hostPlatform: context.programRunPlanner.hostPlatform,
+        environment: context.programRunPlanner.environment,
+        bottles: repository.listBottles(),
+      );
+    }
+
+    return _programUpdateJsonResult(updateResult);
+  }
+
+  final programRenameRequest = _parseJsonProgramRenameRequest(arguments);
+  if (programRenameRequest != null) {
+    final repository = context.bottleRepository;
+    if (repository == null) {
+      return _bottleRepositoryUnavailableError();
+    }
+
+    final updateResult = repository.renamePinnedProgram(programRenameRequest);
+    if (updateResult is ProgramUpdated) {
+      _synchronizeMacosPinnedProgramLaunchers(
+        hostPlatform: context.programRunPlanner.hostPlatform,
+        environment: context.programRunPlanner.environment,
+        bottles: repository.listBottles(),
+      );
+    }
+
+    return _programUpdateJsonResult(updateResult);
+  }
+
+  final pinnedProgramLaunchCliRequest = _parseJsonPinnedProgramLaunchCliRequest(
+    arguments,
+  );
+  if (pinnedProgramLaunchCliRequest != null) {
+    return _runPinnedProgramLauncherCli(
+      request: pinnedProgramLaunchCliRequest,
+      bottleRepository: context.bottleRepository,
+      programRunPlanner: context.programRunPlanner,
+      programRunner: context.programRunner,
+    );
+  }
+
+  return null;
+}
+
+CliResult? _handleProgramSettingsCommand(
+  List<String> arguments,
+  _CliCommandContext context,
+) {
+  final programSettingsRequest = _parseJsonProgramSettingsRequest(arguments);
+  if (programSettingsRequest != null) {
+    final repository = context.bottleRepository;
+    if (repository == null) {
+      return _bottleRepositoryUnavailableError();
+    }
+
+    return _programSettingsReadJsonResult(
+      request: programSettingsRequest,
+      result: repository.readProgramSettings(programSettingsRequest),
+    );
+  }
+
+  final programSettingsUpdateRequest = _parseJsonProgramSettingsUpdateRequest(
+    arguments,
+  );
+  if (programSettingsUpdateRequest != null) {
+    final repository = context.bottleRepository;
+    if (repository == null) {
+      return _bottleRepositoryUnavailableError();
+    }
+
+    return _programSettingsUpdateJsonResult(
+      request: programSettingsUpdateRequest,
+      result: repository.setProgramSettings(programSettingsUpdateRequest),
+    );
+  }
+
+  return null;
+}
+
+CliResult? _handleProgramRunCommand(
+  List<String> arguments,
+  _CliCommandContext context,
+) {
+  final programRunCliRequest = _parseJsonProgramRunCliRequest(arguments);
+  if (programRunCliRequest != null) {
+    return _runProgramJsonResult(programRunCliRequest, context);
+  }
+
+  final winetricksRunCliRequest = _parseJsonWinetricksRunCliRequest(arguments);
+  if (winetricksRunCliRequest != null) {
+    return _runWinetricksJsonResult(winetricksRunCliRequest, context);
+  }
+
+  final bottleCommandRunCliRequest = _parseJsonBottleCommandRunCliRequest(
+    arguments,
+  );
+  if (bottleCommandRunCliRequest != null) {
+    return _runBottleCommandJsonResult(bottleCommandRunCliRequest, context);
+  }
+
+  return null;
+}
+
+CliResult _runProgramJsonResult(
+  _ProgramRunCliRequest request,
+  _CliCommandContext context,
+) {
+  final repository = context.bottleRepository;
+  if (repository == null) {
+    return _bottleRepositoryUnavailableError();
+  }
+
+  final runner = context.programRunner;
+  if (runner == null) {
+    return _programRunnerUnavailableError();
+  }
+
+  final bottle = repository.findBottle(request.bottleId);
+  if (bottle == null) {
+    return _bottleNotFoundError(request.bottleId);
+  }
+
+  final settingsResult = repository.readProgramSettings(
+    ProgramSettingsRequest(
+      bottleId: bottle.id,
+      programPath: request.programPath,
+    ),
+  );
+  final programSettings = switch (settingsResult) {
+    ProgramSettingsRead(:final settings) => settings,
+    ProgramSettingsReadMissingBottle() => const ProgramSettingsRecord(),
+  };
+
+  final programRunRequest = context.programRunPlanner.plan(
+    bottle: bottle,
+    programPath: request.programPath,
+    programSettings: programSettings,
+  );
+  if (programRunRequest == null) {
+    return _jsonError(
+      exitCode: 65,
+      code: 'unsupportedProgramType',
+      message: 'Program type is not supported.',
+      extra: <String, Object?>{'programPath': request.programPath},
+    );
+  }
+
+  _recordExternalProgramRun(bottle: bottle, request: programRunRequest);
+  _synchronizeLinuxDesktopLauncherForProgramRun(
+    hostPlatform: context.programRunPlanner.hostPlatform,
+    environment: context.programRunPlanner.environment,
+    bottle: bottle,
+    request: programRunRequest,
+  );
+
+  return _programRunResultJson(programRunRequest, runner);
+}
+
+CliResult _runWinetricksJsonResult(
+  _WinetricksRunCliRequest request,
+  _CliCommandContext context,
+) {
+  final repository = context.bottleRepository;
+  if (repository == null) {
+    return _bottleRepositoryUnavailableError();
+  }
+
+  final runner = context.programRunner;
+  if (runner == null) {
+    return _programRunnerUnavailableError();
+  }
+
+  final bottle = repository.findBottle(request.bottleId);
+  if (bottle == null) {
+    return _bottleNotFoundError(request.bottleId);
+  }
+
+  final programRunRequest = context.programRunPlanner.planWinetricksVerb(
+    bottle: bottle,
+    verb: request.verb,
+  );
+  if (programRunRequest == null) {
+    return _jsonError(
+      exitCode: 65,
+      code: 'unsupportedWinetricksVerb',
+      message: 'Winetricks verb is not supported.',
+      extra: <String, Object?>{'verb': request.verb},
+    );
+  }
+
+  final winetricksReady = _ensureWinetricksScriptForRun(
+    request: programRunRequest,
+    scriptInstaller: context.winetricksScriptInstaller,
+  );
+  if (winetricksReady != null) {
+    return winetricksReady;
+  }
+
+  return _programRunResultJson(programRunRequest, runner);
+}
+
+CliResult _runBottleCommandJsonResult(
+  _BottleCommandRunCliRequest request,
+  _CliCommandContext context,
+) {
+  final repository = context.bottleRepository;
+  if (repository == null) {
+    return _bottleRepositoryUnavailableError();
+  }
+
+  final runner = context.programRunner;
+  if (runner == null) {
+    return _programRunnerUnavailableError();
+  }
+
+  final bottle = repository.findBottle(request.bottleId);
+  if (bottle == null) {
+    return _bottleNotFoundError(request.bottleId);
+  }
+
+  final programRunRequest = context.programRunPlanner.planBottleCommand(
+    bottle: bottle,
+    command: request.command,
+  );
+  if (programRunRequest == null) {
+    return _jsonError(
+      exitCode: 65,
+      code: 'unsupportedBottleCommand',
+      message: 'Bottle command is not supported.',
+      extra: <String, Object?>{'command': request.command},
+    );
+  }
+
+  final winetricksReady = _ensureWinetricksScriptForRun(
+    request: programRunRequest,
+    scriptInstaller: context.winetricksScriptInstaller,
+  );
+  if (winetricksReady != null) {
+    return winetricksReady;
+  }
+
+  return _programRunResultJson(programRunRequest, runner);
+}
+
+CliResult _programRunResultJson(
+  ProgramRunRequest request,
+  ProgramRunner runner,
+) {
+  return switch (runner.run(request)) {
+    ProgramRunCompleted(:final processExitCode) => _programRunJsonResult(
+      request: request,
+      processExitCode: processExitCode,
+    ),
+    ProgramRunFailed(:final message) => _programRunFailedJsonResult(
+      request: request,
+      message: message,
+    ),
+  };
+}
+
+CliResult _programRunnerUnavailableError() {
+  return _jsonError(
+    exitCode: 74,
+    code: 'programRunnerUnavailable',
+    message: 'Program runner is not configured.',
+  );
+}
+
+CliResult? _handleLocationCommand(
+  List<String> arguments,
+  _CliCommandContext context,
+) {
+  final bottleLocationOpenCliRequest = _parseJsonBottleLocationOpenCliRequest(
+    arguments,
+  );
+  if (bottleLocationOpenCliRequest != null) {
+    return _openBottleLocationJsonResult(bottleLocationOpenCliRequest, context);
+  }
+
+  final programLocationOpenCliRequest = _parseJsonProgramLocationOpenCliRequest(
+    arguments,
+  );
+  if (programLocationOpenCliRequest != null) {
+    return _openProgramLocationJsonResult(
+      programLocationOpenCliRequest,
+      context,
+    );
+  }
+
+  return null;
+}
+
+CliResult _openBottleLocationJsonResult(
+  _BottleLocationOpenCliRequest request,
+  _CliCommandContext context,
+) {
+  final repository = context.bottleRepository;
+  if (repository == null) {
+    return _bottleRepositoryUnavailableError();
+  }
+
+  final opener = context.pathOpener;
+  if (opener == null) {
+    return _pathOpenerUnavailableError();
+  }
+
+  final bottle = repository.findBottle(request.bottleId);
+  if (bottle == null) {
+    return _bottleNotFoundError(request.bottleId);
+  }
+
+  final path = _bottleLocationPath(bottle: bottle, location: request.location);
+  if (path == null) {
+    return _jsonError(
+      exitCode: 65,
+      code: 'unsupportedBottleLocation',
+      message: 'Bottle location is not supported.',
+      extra: <String, Object?>{'location': request.location},
+    );
+  }
+
+  return switch (opener.openPath(path)) {
+    PathOpenCompleted() => CliResult(
+      exitCode: 0,
+      stdout: jsonEncode(<String, Object?>{
+        'schemaVersion': cliSchemaVersion,
+        'openedLocation': <String, Object?>{
+          'bottleId': bottle.id,
+          'location': request.location,
+          'path': path,
+        },
+      }),
+      stderr: '',
+    ),
+    PathOpenFailed(:final message) => _jsonError(
+      exitCode: 75,
+      code: 'bottleLocationOpenFailed',
+      message: message,
+      extra: <String, Object?>{
+        'bottleId': bottle.id,
+        'location': request.location,
+        'path': path,
+      },
+    ),
+  };
+}
+
+CliResult _openProgramLocationJsonResult(
+  _ProgramLocationOpenCliRequest request,
+  _CliCommandContext context,
+) {
+  final repository = context.bottleRepository;
+  if (repository == null) {
+    return _bottleRepositoryUnavailableError();
+  }
+
+  final opener = context.pathOpener;
+  if (opener == null) {
+    return _pathOpenerUnavailableError();
+  }
+
+  final bottle = repository.findBottle(request.bottleId);
+  if (bottle == null) {
+    return _bottleNotFoundError(request.bottleId);
+  }
+
+  if (!_hasPinnedProgram(bottle, request.programPath)) {
+    return _jsonError(
+      exitCode: 66,
+      code: 'programNotPinned',
+      message: 'Program is not pinned.',
+      extra: <String, Object?>{'programPath': request.programPath},
+    );
+  }
+
+  final path = request.programPath;
+  return switch (opener.revealPath(path)) {
+    PathOpenCompleted() => CliResult(
+      exitCode: 0,
+      stdout: jsonEncode(<String, Object?>{
+        'schemaVersion': cliSchemaVersion,
+        'openedProgramLocation': <String, Object?>{
+          'bottleId': bottle.id,
+          'programPath': request.programPath,
+          'path': path,
+        },
+      }),
+      stderr: '',
+    ),
+    PathOpenFailed(:final message) => _jsonError(
+      exitCode: 75,
+      code: 'programLocationOpenFailed',
+      message: message,
+      extra: <String, Object?>{
+        'bottleId': bottle.id,
+        'programPath': request.programPath,
+        'path': path,
+      },
+    ),
+  };
+}
+
+CliResult _pathOpenerUnavailableError() {
+  return _jsonError(
+    exitCode: 74,
+    code: 'pathOpenerUnavailable',
+    message: 'Path opener is not configured.',
+  );
+}
+
 CliResult _runCli(List<String> arguments, _CliCommandContext context) {
   final bottleCatalog = context.bottleCatalog;
   final bottleRepository = context.bottleRepository;
   final winetricksVerbRepository = context.winetricksVerbRepository;
-  final winetricksScriptInstaller = context.winetricksScriptInstaller;
-  final programRunPlanner = context.programRunPlanner;
-  final programRunner = context.programRunner;
-  final pathOpener = context.pathOpener;
   final activeBottleCatalog = bottleRepository ?? bottleCatalog;
 
   final appCommandResult = _handleAppCommand(arguments, context);
@@ -8307,482 +8770,30 @@ CliResult _runCli(List<String> arguments, _CliCommandContext context) {
     return bottleConfigurationCommandResult;
   }
 
-  final programPinRequest = _parseJsonProgramPinRequest(arguments);
-  if (programPinRequest != null) {
-    if (!_isSupportedProgramPath(programPinRequest.programPath)) {
-      return _jsonError(
-        exitCode: 65,
-        code: 'unsupportedProgramType',
-        message: 'Program type is not supported.',
-        extra: <String, Object?>{'programPath': programPinRequest.programPath},
-      );
-    }
-
-    if (bottleRepository == null) {
-      return _jsonError(
-        exitCode: 74,
-        code: 'bottleRepositoryUnavailable',
-        message: 'Bottle repository is not configured.',
-      );
-    }
-
-    final pinResult = bottleRepository.pinProgram(programPinRequest);
-    if (pinResult is ProgramPinned) {
-      _synchronizeMacosPinnedProgramLaunchers(
-        hostPlatform: programRunPlanner.hostPlatform,
-        environment: programRunPlanner.environment,
-        bottles: bottleRepository.listBottles(),
-      );
-    }
-
-    return switch (pinResult) {
-      ProgramPinned(:final bottle) => CliResult(
-        exitCode: 0,
-        stdout: jsonEncode(<String, Object?>{
-          'schemaVersion': cliSchemaVersion,
-          'bottle': bottle.toJson(),
-        }),
-        stderr: '',
-      ),
-      ProgramPinMissing(:final bottleId) => _bottleNotFoundError(bottleId),
-      ProgramPinConflict(:final programPath) => _jsonError(
-        exitCode: 73,
-        code: 'programAlreadyPinned',
-        message: 'Program is already pinned.',
-        extra: <String, Object?>{'programPath': programPath},
-      ),
-    };
-  }
-
-  final programUnpinRequest = _parseJsonProgramUnpinRequest(arguments);
-  if (programUnpinRequest != null) {
-    if (bottleRepository == null) {
-      return _jsonError(
-        exitCode: 74,
-        code: 'bottleRepositoryUnavailable',
-        message: 'Bottle repository is not configured.',
-      );
-    }
-
-    final updateResult = bottleRepository.unpinProgram(programUnpinRequest);
-    if (updateResult is ProgramUpdated) {
-      _synchronizeMacosPinnedProgramLaunchers(
-        hostPlatform: programRunPlanner.hostPlatform,
-        environment: programRunPlanner.environment,
-        bottles: bottleRepository.listBottles(),
-      );
-    }
-
-    return _programUpdateJsonResult(updateResult);
-  }
-
-  final programRenameRequest = _parseJsonProgramRenameRequest(arguments);
-  if (programRenameRequest != null) {
-    if (bottleRepository == null) {
-      return _jsonError(
-        exitCode: 74,
-        code: 'bottleRepositoryUnavailable',
-        message: 'Bottle repository is not configured.',
-      );
-    }
-
-    final updateResult = bottleRepository.renamePinnedProgram(
-      programRenameRequest,
-    );
-    if (updateResult is ProgramUpdated) {
-      _synchronizeMacosPinnedProgramLaunchers(
-        hostPlatform: programRunPlanner.hostPlatform,
-        environment: programRunPlanner.environment,
-        bottles: bottleRepository.listBottles(),
-      );
-    }
-
-    return _programUpdateJsonResult(updateResult);
-  }
-
-  final programSettingsRequest = _parseJsonProgramSettingsRequest(arguments);
-  if (programSettingsRequest != null) {
-    if (bottleRepository == null) {
-      return _jsonError(
-        exitCode: 74,
-        code: 'bottleRepositoryUnavailable',
-        message: 'Bottle repository is not configured.',
-      );
-    }
-
-    final readResult = bottleRepository.readProgramSettings(
-      programSettingsRequest,
-    );
-
-    return _programSettingsReadJsonResult(
-      request: programSettingsRequest,
-      result: readResult,
-    );
-  }
-
-  final programSettingsUpdateRequest = _parseJsonProgramSettingsUpdateRequest(
+  final pinnedProgramCommandResult = _handlePinnedProgramCommand(
     arguments,
+    context,
   );
-  if (programSettingsUpdateRequest != null) {
-    if (bottleRepository == null) {
-      return _jsonError(
-        exitCode: 74,
-        code: 'bottleRepositoryUnavailable',
-        message: 'Bottle repository is not configured.',
-      );
-    }
-
-    final updateResult = bottleRepository.setProgramSettings(
-      programSettingsUpdateRequest,
-    );
-
-    return _programSettingsUpdateJsonResult(
-      request: programSettingsUpdateRequest,
-      result: updateResult,
-    );
+  if (pinnedProgramCommandResult != null) {
+    return pinnedProgramCommandResult;
   }
 
-  final pinnedProgramLaunchCliRequest = _parseJsonPinnedProgramLaunchCliRequest(
+  final programSettingsCommandResult = _handleProgramSettingsCommand(
     arguments,
+    context,
   );
-  if (pinnedProgramLaunchCliRequest != null) {
-    return _runPinnedProgramLauncherCli(
-      request: pinnedProgramLaunchCliRequest,
-      bottleRepository: bottleRepository,
-      programRunPlanner: programRunPlanner,
-      programRunner: programRunner,
-    );
+  if (programSettingsCommandResult != null) {
+    return programSettingsCommandResult;
   }
 
-  final programRunCliRequest = _parseJsonProgramRunCliRequest(arguments);
-  if (programRunCliRequest != null) {
-    if (bottleRepository == null) {
-      return _jsonError(
-        exitCode: 74,
-        code: 'bottleRepositoryUnavailable',
-        message: 'Bottle repository is not configured.',
-      );
-    }
-
-    if (programRunner == null) {
-      return _jsonError(
-        exitCode: 74,
-        code: 'programRunnerUnavailable',
-        message: 'Program runner is not configured.',
-      );
-    }
-
-    final bottle = bottleRepository.findBottle(programRunCliRequest.bottleId);
-    if (bottle == null) {
-      return _bottleNotFoundError(programRunCliRequest.bottleId);
-    }
-
-    final settingsResult = bottleRepository.readProgramSettings(
-      ProgramSettingsRequest(
-        bottleId: bottle.id,
-        programPath: programRunCliRequest.programPath,
-      ),
-    );
-    final programSettings = switch (settingsResult) {
-      ProgramSettingsRead(:final settings) => settings,
-      ProgramSettingsReadMissingBottle() => const ProgramSettingsRecord(),
-    };
-
-    final programRunRequest = programRunPlanner.plan(
-      bottle: bottle,
-      programPath: programRunCliRequest.programPath,
-      programSettings: programSettings,
-    );
-    if (programRunRequest == null) {
-      return _jsonError(
-        exitCode: 65,
-        code: 'unsupportedProgramType',
-        message: 'Program type is not supported.',
-        extra: <String, Object?>{
-          'programPath': programRunCliRequest.programPath,
-        },
-      );
-    }
-
-    _recordExternalProgramRun(bottle: bottle, request: programRunRequest);
-    _synchronizeLinuxDesktopLauncherForProgramRun(
-      hostPlatform: programRunPlanner.hostPlatform,
-      environment: programRunPlanner.environment,
-      bottle: bottle,
-      request: programRunRequest,
-    );
-
-    final runResult = programRunner.run(programRunRequest);
-
-    return switch (runResult) {
-      ProgramRunCompleted(:final processExitCode) => _programRunJsonResult(
-        request: programRunRequest,
-        processExitCode: processExitCode,
-      ),
-      ProgramRunFailed(:final message) => _programRunFailedJsonResult(
-        request: programRunRequest,
-        message: message,
-      ),
-    };
+  final programRunCommandResult = _handleProgramRunCommand(arguments, context);
+  if (programRunCommandResult != null) {
+    return programRunCommandResult;
   }
 
-  final winetricksRunCliRequest = _parseJsonWinetricksRunCliRequest(arguments);
-  if (winetricksRunCliRequest != null) {
-    if (bottleRepository == null) {
-      return _jsonError(
-        exitCode: 74,
-        code: 'bottleRepositoryUnavailable',
-        message: 'Bottle repository is not configured.',
-      );
-    }
-
-    if (programRunner == null) {
-      return _jsonError(
-        exitCode: 74,
-        code: 'programRunnerUnavailable',
-        message: 'Program runner is not configured.',
-      );
-    }
-
-    final bottle = bottleRepository.findBottle(
-      winetricksRunCliRequest.bottleId,
-    );
-    if (bottle == null) {
-      return _bottleNotFoundError(winetricksRunCliRequest.bottleId);
-    }
-
-    final programRunRequest = programRunPlanner.planWinetricksVerb(
-      bottle: bottle,
-      verb: winetricksRunCliRequest.verb,
-    );
-    if (programRunRequest == null) {
-      return _jsonError(
-        exitCode: 65,
-        code: 'unsupportedWinetricksVerb',
-        message: 'Winetricks verb is not supported.',
-        extra: <String, Object?>{'verb': winetricksRunCliRequest.verb},
-      );
-    }
-
-    final winetricksReady = _ensureWinetricksScriptForRun(
-      request: programRunRequest,
-      scriptInstaller: winetricksScriptInstaller,
-    );
-    if (winetricksReady != null) {
-      return winetricksReady;
-    }
-
-    final runResult = programRunner.run(programRunRequest);
-
-    return switch (runResult) {
-      ProgramRunCompleted(:final processExitCode) => _programRunJsonResult(
-        request: programRunRequest,
-        processExitCode: processExitCode,
-      ),
-      ProgramRunFailed(:final message) => _programRunFailedJsonResult(
-        request: programRunRequest,
-        message: message,
-      ),
-    };
-  }
-
-  final bottleCommandRunCliRequest = _parseJsonBottleCommandRunCliRequest(
-    arguments,
-  );
-  if (bottleCommandRunCliRequest != null) {
-    if (bottleRepository == null) {
-      return _jsonError(
-        exitCode: 74,
-        code: 'bottleRepositoryUnavailable',
-        message: 'Bottle repository is not configured.',
-      );
-    }
-
-    if (programRunner == null) {
-      return _jsonError(
-        exitCode: 74,
-        code: 'programRunnerUnavailable',
-        message: 'Program runner is not configured.',
-      );
-    }
-
-    final bottle = bottleRepository.findBottle(
-      bottleCommandRunCliRequest.bottleId,
-    );
-    if (bottle == null) {
-      return _bottleNotFoundError(bottleCommandRunCliRequest.bottleId);
-    }
-
-    final programRunRequest = programRunPlanner.planBottleCommand(
-      bottle: bottle,
-      command: bottleCommandRunCliRequest.command,
-    );
-    if (programRunRequest == null) {
-      return _jsonError(
-        exitCode: 65,
-        code: 'unsupportedBottleCommand',
-        message: 'Bottle command is not supported.',
-        extra: <String, Object?>{'command': bottleCommandRunCliRequest.command},
-      );
-    }
-
-    final winetricksReady = _ensureWinetricksScriptForRun(
-      request: programRunRequest,
-      scriptInstaller: winetricksScriptInstaller,
-    );
-    if (winetricksReady != null) {
-      return winetricksReady;
-    }
-
-    final runResult = programRunner.run(programRunRequest);
-
-    return switch (runResult) {
-      ProgramRunCompleted(:final processExitCode) => _programRunJsonResult(
-        request: programRunRequest,
-        processExitCode: processExitCode,
-      ),
-      ProgramRunFailed(:final message) => _programRunFailedJsonResult(
-        request: programRunRequest,
-        message: message,
-      ),
-    };
-  }
-
-  final bottleLocationOpenCliRequest = _parseJsonBottleLocationOpenCliRequest(
-    arguments,
-  );
-  if (bottleLocationOpenCliRequest != null) {
-    if (bottleRepository == null) {
-      return _jsonError(
-        exitCode: 74,
-        code: 'bottleRepositoryUnavailable',
-        message: 'Bottle repository is not configured.',
-      );
-    }
-
-    if (pathOpener == null) {
-      return _jsonError(
-        exitCode: 74,
-        code: 'pathOpenerUnavailable',
-        message: 'Path opener is not configured.',
-      );
-    }
-
-    final bottle = bottleRepository.findBottle(
-      bottleLocationOpenCliRequest.bottleId,
-    );
-    if (bottle == null) {
-      return _bottleNotFoundError(bottleLocationOpenCliRequest.bottleId);
-    }
-
-    final path = _bottleLocationPath(
-      bottle: bottle,
-      location: bottleLocationOpenCliRequest.location,
-    );
-    if (path == null) {
-      return _jsonError(
-        exitCode: 65,
-        code: 'unsupportedBottleLocation',
-        message: 'Bottle location is not supported.',
-        extra: <String, Object?>{
-          'location': bottleLocationOpenCliRequest.location,
-        },
-      );
-    }
-
-    final openResult = pathOpener.openPath(path);
-
-    return switch (openResult) {
-      PathOpenCompleted() => CliResult(
-        exitCode: 0,
-        stdout: jsonEncode(<String, Object?>{
-          'schemaVersion': cliSchemaVersion,
-          'openedLocation': <String, Object?>{
-            'bottleId': bottle.id,
-            'location': bottleLocationOpenCliRequest.location,
-            'path': path,
-          },
-        }),
-        stderr: '',
-      ),
-      PathOpenFailed(:final message) => _jsonError(
-        exitCode: 75,
-        code: 'bottleLocationOpenFailed',
-        message: message,
-        extra: <String, Object?>{
-          'bottleId': bottle.id,
-          'location': bottleLocationOpenCliRequest.location,
-          'path': path,
-        },
-      ),
-    };
-  }
-
-  final programLocationOpenCliRequest = _parseJsonProgramLocationOpenCliRequest(
-    arguments,
-  );
-  if (programLocationOpenCliRequest != null) {
-    if (bottleRepository == null) {
-      return _jsonError(
-        exitCode: 74,
-        code: 'bottleRepositoryUnavailable',
-        message: 'Bottle repository is not configured.',
-      );
-    }
-
-    if (pathOpener == null) {
-      return _jsonError(
-        exitCode: 74,
-        code: 'pathOpenerUnavailable',
-        message: 'Path opener is not configured.',
-      );
-    }
-
-    final bottle = bottleRepository.findBottle(
-      programLocationOpenCliRequest.bottleId,
-    );
-    if (bottle == null) {
-      return _bottleNotFoundError(programLocationOpenCliRequest.bottleId);
-    }
-
-    if (!_hasPinnedProgram(bottle, programLocationOpenCliRequest.programPath)) {
-      return _jsonError(
-        exitCode: 66,
-        code: 'programNotPinned',
-        message: 'Program is not pinned.',
-        extra: <String, Object?>{
-          'programPath': programLocationOpenCliRequest.programPath,
-        },
-      );
-    }
-
-    final path = programLocationOpenCliRequest.programPath;
-    final openResult = pathOpener.revealPath(path);
-
-    return switch (openResult) {
-      PathOpenCompleted() => CliResult(
-        exitCode: 0,
-        stdout: jsonEncode(<String, Object?>{
-          'schemaVersion': cliSchemaVersion,
-          'openedProgramLocation': <String, Object?>{
-            'bottleId': bottle.id,
-            'programPath': programLocationOpenCliRequest.programPath,
-            'path': path,
-          },
-        }),
-        stderr: '',
-      ),
-      PathOpenFailed(:final message) => _jsonError(
-        exitCode: 75,
-        code: 'programLocationOpenFailed',
-        message: message,
-        extra: <String, Object?>{
-          'bottleId': bottle.id,
-          'programPath': programLocationOpenCliRequest.programPath,
-          'path': path,
-        },
-      ),
-    };
+  final locationCommandResult = _handleLocationCommand(arguments, context);
+  if (locationCommandResult != null) {
+    return locationCommandResult;
   }
 
   final runtimeCommandResult = _handleRuntimeCommand(arguments, context);
