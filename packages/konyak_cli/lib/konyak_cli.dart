@@ -7519,32 +7519,12 @@ bool _isRuntimeStackSourceManifestSource(String source) {
   return normalized.endsWith('.json') || normalized.contains('manifest');
 }
 
-CliResult _runCli(List<String> arguments, _CliCommandContext context) {
-  final bottleCatalog = context.bottleCatalog;
-  final bottleRepository = context.bottleRepository;
-  final bottleProgramRepository = context.bottleProgramRepository;
-  final programMetadataExtractor = context.programMetadataExtractor;
-  final winetricksVerbRepository = context.winetricksVerbRepository;
-  final winetricksScriptInstaller = context.winetricksScriptInstaller;
-  final runtimeCatalog = context.runtimeCatalog;
-  final programRunPlanner = context.programRunPlanner;
-  final programRunner = context.programRunner;
-  final bottlePrefixInitializer = context.bottlePrefixInitializer;
-  final pathOpener = context.pathOpener;
-  final macosWineInstaller = context.macosWineInstaller;
-  final linuxWineInstaller = context.linuxWineInstaller;
-  final gptkWineInstaller = context.gptkWineInstaller;
-  final runtimeUpdateChecker = context.runtimeUpdateChecker;
-  final appUpdateChecker = context.appUpdateChecker;
-  final appUpdateInstaller = context.appUpdateInstaller;
-  final runtimeValidator = context.runtimeValidator;
-  final macosSetupChecker = context.macosSetupChecker;
-  final appSettingsRepository = context.appSettingsRepository;
-  final runtimeInstallProgressSink = context.runtimeInstallProgressSink;
-  final activeBottleCatalog = bottleRepository ?? bottleCatalog;
-
+CliResult? _handleAppCommand(
+  List<String> arguments,
+  _CliCommandContext context,
+) {
   if (_isJsonAppUpdateCheckCommand(arguments)) {
-    final checker = appUpdateChecker;
+    final checker = context.appUpdateChecker;
     if (checker == null) {
       return _jsonError(
         exitCode: 74,
@@ -7553,8 +7533,7 @@ CliResult _runCli(List<String> arguments, _CliCommandContext context) {
       );
     }
 
-    final updateResult = checker.check();
-    return switch (updateResult) {
+    return switch (checker.check()) {
       AppUpdateCheckCompleted(:final update) => _appUpdateJsonResult(update),
       AppUpdateCheckFailed(:final message) => _jsonError(
         exitCode: 75,
@@ -7565,13 +7544,9 @@ CliResult _runCli(List<String> arguments, _CliCommandContext context) {
   }
 
   if (_isJsonAppSettingsGetCommand(arguments)) {
-    final repository = appSettingsRepository;
+    final repository = context.appSettingsRepository;
     if (repository == null) {
-      return _jsonError(
-        exitCode: 74,
-        code: 'appSettingsRepositoryUnavailable',
-        message: 'App settings repository is not configured.',
-      );
+      return _appSettingsRepositoryUnavailableError();
     }
 
     return _appSettingsJsonResult(repository.read());
@@ -7579,46 +7554,366 @@ CliResult _runCli(List<String> arguments, _CliCommandContext context) {
 
   final appSettingsUpdate = _parseJsonAppSettingsUpdateRequest(arguments);
   if (appSettingsUpdate != null) {
-    final repository = appSettingsRepository;
+    final repository = context.appSettingsRepository;
     if (repository == null) {
-      return _jsonError(
-        exitCode: 74,
-        code: 'appSettingsRepositoryUnavailable',
-        message: 'App settings repository is not configured.',
-      );
+      return _appSettingsRepositoryUnavailableError();
     }
 
     return _appSettingsJsonResult(repository.write(appSettingsUpdate));
   }
 
-  if (_isJsonLinuxFileAssociationInstallCommand(arguments)) {
-    final result = _installLinuxFileAssociations(
-      hostPlatform: programRunPlanner.hostPlatform,
-      environment: programRunPlanner.environment,
+  if (_isJsonAppUpdateInstallCommand(arguments)) {
+    return _installAppUpdateJsonResult(
+      appUpdateChecker: context.appUpdateChecker,
+      appUpdateInstaller: context.appUpdateInstaller,
     );
-    return switch (result) {
-      _LinuxFileAssociationsInstalled(
-        :final desktopEntryPath,
-        :final mimeAppsPath,
-      ) =>
-        CliResult(
-          exitCode: 0,
-          stdout: jsonEncode(<String, Object?>{
-            'schemaVersion': cliSchemaVersion,
-            'linuxFileAssociations': <String, Object?>{
-              'desktopEntryPath': desktopEntryPath,
-              'mimeAppsPath': mimeAppsPath,
-              'mimeTypes': _linuxExecutableMimeTypes,
-            },
-          }),
-          stderr: '',
-        ),
-      _LinuxFileAssociationInstallFailed(:final message) => _jsonError(
+  }
+
+  return null;
+}
+
+CliResult? _handleHostIntegrationCommand(
+  List<String> arguments,
+  _CliCommandContext context,
+) {
+  if (!_isJsonLinuxFileAssociationInstallCommand(arguments)) {
+    return null;
+  }
+
+  final result = _installLinuxFileAssociations(
+    hostPlatform: context.programRunPlanner.hostPlatform,
+    environment: context.programRunPlanner.environment,
+  );
+  return switch (result) {
+    _LinuxFileAssociationsInstalled(
+      :final desktopEntryPath,
+      :final mimeAppsPath,
+    ) =>
+      CliResult(
+        exitCode: 0,
+        stdout: jsonEncode(<String, Object?>{
+          'schemaVersion': cliSchemaVersion,
+          'linuxFileAssociations': <String, Object?>{
+            'desktopEntryPath': desktopEntryPath,
+            'mimeAppsPath': mimeAppsPath,
+            'mimeTypes': _linuxExecutableMimeTypes,
+          },
+        }),
+        stderr: '',
+      ),
+    _LinuxFileAssociationInstallFailed(:final message) => _jsonError(
+      exitCode: 75,
+      code: 'linuxFileAssociationInstallFailed',
+      message: message,
+    ),
+  };
+}
+
+CliResult _appSettingsRepositoryUnavailableError() {
+  return _jsonError(
+    exitCode: 74,
+    code: 'appSettingsRepositoryUnavailable',
+    message: 'App settings repository is not configured.',
+  );
+}
+
+CliResult? _handleRuntimeCommand(
+  List<String> arguments,
+  _CliCommandContext context,
+) {
+  if (_isJsonRuntimeListCommand(arguments)) {
+    return CliResult(
+      exitCode: 0,
+      stdout: jsonEncode(<String, Object?>{
+        'schemaVersion': cliSchemaVersion,
+        'runtimes': context.runtimeCatalog
+            .listRuntimes()
+            .map((runtime) => runtime.toJson())
+            .toList(growable: false),
+      }),
+      stderr: '',
+    );
+  }
+
+  if (_isJsonMacosSetupCheckCommand(arguments)) {
+    final checker = context.macosSetupChecker;
+    if (checker == null) {
+      return _jsonError(
+        exitCode: 74,
+        code: 'macosSetupCheckerUnavailable',
+        message: 'macOS setup checker is not configured.',
+      );
+    }
+
+    return switch (checker.check()) {
+      MacosSetupCheckCompleted(:final status) => CliResult(
+        exitCode: 0,
+        stdout: jsonEncode(<String, Object?>{
+          'schemaVersion': cliSchemaVersion,
+          'macosSetup': status.toJson(),
+        }),
+        stderr: '',
+      ),
+      MacosSetupCheckFailed(:final message) => _jsonError(
         exitCode: 75,
-        code: 'linuxFileAssociationInstallFailed',
+        code: 'macosSetupCheckFailed',
         message: message,
       ),
     };
+  }
+
+  final gptkWineInstallRequest = _parseJsonGptkWineInstallRequest(arguments);
+  if (gptkWineInstallRequest != null) {
+    final installer = context.gptkWineInstaller;
+    if (installer == null) {
+      return _jsonError(
+        exitCode: 74,
+        code: 'gptkWineInstallerUnavailable',
+        message: 'GPTK-compatible Wine installer is not configured.',
+      );
+    }
+
+    return switch (installer.install(gptkWineInstallRequest)) {
+      GptkWineInstallCompleted(:final record) => CliResult(
+        exitCode: 0,
+        stdout: jsonEncode(<String, Object?>{
+          'schemaVersion': cliSchemaVersion,
+          'gptkWineInstall': record.toJson(),
+        }),
+        stderr: '',
+      ),
+      GptkWineInstallFailed(:final message) => _jsonError(
+        exitCode: 75,
+        code: 'gptkWineInstallFailed',
+        message: message,
+      ),
+    };
+  }
+
+  final openUrl = _parseJsonOpenUrlCommand(arguments);
+  if (openUrl != null) {
+    return _openUrlJsonResult(openUrl, context.pathOpener);
+  }
+
+  final runtimeUpdateId = _parseJsonRuntimeIdCommand(
+    arguments,
+    'check-runtime-update',
+  );
+  if (runtimeUpdateId != null) {
+    return _runtimeUpdateCheckJsonResult(
+      runtimeId: runtimeUpdateId,
+      runtimeUpdateChecker: context.runtimeUpdateChecker,
+    );
+  }
+
+  final runtimeUpdateInstallId = _parseJsonRuntimeIdCommand(
+    arguments,
+    'install-runtime-update',
+  );
+  if (runtimeUpdateInstallId != null) {
+    return _installRuntimeUpdateJsonResult(
+      runtimeId: runtimeUpdateInstallId,
+      runtimeUpdateChecker: context.runtimeUpdateChecker,
+      macosWineInstaller: context.macosWineInstaller,
+      linuxWineInstaller: context.linuxWineInstaller,
+    );
+  }
+
+  final runtimeValidationId = _parseJsonRuntimeIdCommand(
+    arguments,
+    'validate-runtime',
+  );
+  if (runtimeValidationId != null) {
+    return _runtimeValidationJsonResult(
+      runtimeId: runtimeValidationId,
+      runtimeValidator: context.runtimeValidator,
+    );
+  }
+
+  final macosWineInstallRequest = _parseJsonMacosWineInstallRequest(arguments);
+  if (macosWineInstallRequest != null) {
+    return _macosWineInstallJsonResult(
+      request: macosWineInstallRequest,
+      installer: context.macosWineInstaller,
+      progressSink: context.runtimeInstallProgressSink,
+    );
+  }
+
+  final linuxWineInstallRequest = _parseJsonLinuxWineInstallRequest(arguments);
+  if (linuxWineInstallRequest != null) {
+    return _linuxWineInstallJsonResult(
+      request: linuxWineInstallRequest,
+      installer: context.linuxWineInstaller,
+      progressSink: context.runtimeInstallProgressSink,
+    );
+  }
+
+  return null;
+}
+
+CliResult _openUrlJsonResult(String openUrl, PathOpener? pathOpener) {
+  if (pathOpener == null) {
+    return _jsonError(
+      exitCode: 74,
+      code: 'pathOpenerUnavailable',
+      message: 'Path opener is not configured.',
+    );
+  }
+  final openResult = pathOpener.openPath(openUrl);
+  return switch (openResult) {
+    PathOpenCompleted() => CliResult(
+      exitCode: 0,
+      stdout: jsonEncode(<String, Object?>{
+        'schemaVersion': cliSchemaVersion,
+        'openedUrl': <String, Object?>{'url': openUrl},
+      }),
+      stderr: '',
+    ),
+    PathOpenFailed(:final message) => _jsonError(
+      exitCode: 75,
+      code: 'urlOpenFailed',
+      message: message,
+      extra: <String, Object?>{'url': openUrl},
+    ),
+  };
+}
+
+CliResult _runtimeUpdateCheckJsonResult({
+  required String runtimeId,
+  required RuntimeUpdateChecker? runtimeUpdateChecker,
+}) {
+  if (runtimeUpdateChecker == null) {
+    return _jsonError(
+      exitCode: 74,
+      code: 'runtimeUpdateCheckerUnavailable',
+      message: 'Runtime update checker is not configured.',
+    );
+  }
+
+  return switch (runtimeUpdateChecker.check(runtimeId)) {
+    RuntimeUpdateCheckCompleted(:final update) => CliResult(
+      exitCode: 0,
+      stdout: jsonEncode(<String, Object?>{
+        'schemaVersion': cliSchemaVersion,
+        'runtimeUpdate': update.toJson(),
+      }),
+      stderr: '',
+    ),
+    RuntimeUpdateRuntimeNotFound(:final runtimeId) => _jsonError(
+      exitCode: 66,
+      code: 'runtimeNotFound',
+      message: 'Runtime not found.',
+      extra: <String, Object?>{'runtimeId': runtimeId},
+    ),
+    RuntimeUpdateCheckFailed(:final message) => _jsonError(
+      exitCode: 75,
+      code: 'runtimeUpdateCheckFailed',
+      message: message,
+    ),
+  };
+}
+
+CliResult _runtimeValidationJsonResult({
+  required String runtimeId,
+  required RuntimeValidator? runtimeValidator,
+}) {
+  if (runtimeValidator == null) {
+    return _jsonError(
+      exitCode: 74,
+      code: 'runtimeValidatorUnavailable',
+      message: 'Runtime validator is not configured.',
+    );
+  }
+
+  return switch (runtimeValidator.validate(runtimeId)) {
+    RuntimeValidationCompleted(:final validation) => CliResult(
+      exitCode: validation.isValid ? 0 : 75,
+      stdout: jsonEncode(<String, Object?>{
+        'schemaVersion': cliSchemaVersion,
+        'runtimeValidation': validation.toJson(),
+      }),
+      stderr: '',
+    ),
+    RuntimeValidationRuntimeNotFound(:final runtimeId) => _jsonError(
+      exitCode: 66,
+      code: 'runtimeNotFound',
+      message: 'Runtime not found.',
+      extra: <String, Object?>{'runtimeId': runtimeId},
+    ),
+    RuntimeValidationFailed(:final message) => _jsonError(
+      exitCode: 75,
+      code: 'runtimeValidationFailed',
+      message: message,
+    ),
+  };
+}
+
+CliResult _macosWineInstallJsonResult({
+  required MacosWineInstallRequest request,
+  required MacosWineInstaller? installer,
+  required RuntimeInstallProgressSink? progressSink,
+}) {
+  if (installer == null) {
+    return _jsonError(
+      exitCode: 74,
+      code: 'macosWineInstallerUnavailable',
+      message: 'macOS Wine installer is not configured.',
+    );
+  }
+
+  return _macosWineInstallCliResult(
+    installer.install(
+      request,
+      progressSink: request.emitProgress ? progressSink : null,
+    ),
+  );
+}
+
+CliResult _linuxWineInstallJsonResult({
+  required LinuxWineInstallRequest request,
+  required LinuxWineInstaller? installer,
+  required RuntimeInstallProgressSink? progressSink,
+}) {
+  if (installer == null) {
+    return _jsonError(
+      exitCode: 74,
+      code: 'linuxWineInstallerUnavailable',
+      message: 'Linux Wine installer is not configured.',
+    );
+  }
+
+  return _linuxWineInstallCliResult(
+    installer.install(
+      request,
+      progressSink: request.emitProgress ? progressSink : null,
+    ),
+  );
+}
+
+CliResult _runCli(List<String> arguments, _CliCommandContext context) {
+  final bottleCatalog = context.bottleCatalog;
+  final bottleRepository = context.bottleRepository;
+  final bottleProgramRepository = context.bottleProgramRepository;
+  final programMetadataExtractor = context.programMetadataExtractor;
+  final winetricksVerbRepository = context.winetricksVerbRepository;
+  final winetricksScriptInstaller = context.winetricksScriptInstaller;
+  final programRunPlanner = context.programRunPlanner;
+  final programRunner = context.programRunner;
+  final bottlePrefixInitializer = context.bottlePrefixInitializer;
+  final pathOpener = context.pathOpener;
+  final activeBottleCatalog = bottleRepository ?? bottleCatalog;
+
+  final appCommandResult = _handleAppCommand(arguments, context);
+  if (appCommandResult != null) {
+    return appCommandResult;
+  }
+
+  final hostIntegrationCommandResult = _handleHostIntegrationCommand(
+    arguments,
+    context,
+  );
+  if (hostIntegrationCommandResult != null) {
+    return hostIntegrationCommandResult;
   }
 
   if (_isJsonWineProcessListCommand(arguments)) {
@@ -7651,13 +7946,6 @@ CliResult _runCli(List<String> arguments, _CliCommandContext context) {
       programRunPlanner: programRunPlanner,
       programRunner: programRunner,
       bottleId: wineProcessGroupTerminationRequest.bottleId,
-    );
-  }
-
-  if (_isJsonAppUpdateInstallCommand(arguments)) {
-    return _installAppUpdateJsonResult(
-      appUpdateChecker: appUpdateChecker,
-      appUpdateInstaller: appUpdateInstaller,
     );
   }
 
@@ -8488,255 +8776,9 @@ CliResult _runCli(List<String> arguments, _CliCommandContext context) {
     };
   }
 
-  if (_isJsonRuntimeListCommand(arguments)) {
-    return CliResult(
-      exitCode: 0,
-      stdout: jsonEncode(<String, Object?>{
-        'schemaVersion': cliSchemaVersion,
-        'runtimes': runtimeCatalog
-            .listRuntimes()
-            .map((runtime) => runtime.toJson())
-            .toList(growable: false),
-      }),
-      stderr: '',
-    );
-  }
-
-  if (_isJsonMacosSetupCheckCommand(arguments)) {
-    if (macosSetupChecker == null) {
-      return _jsonError(
-        exitCode: 74,
-        code: 'macosSetupCheckerUnavailable',
-        message: 'macOS setup checker is not configured.',
-      );
-    }
-
-    final setupResult = macosSetupChecker.check();
-    return switch (setupResult) {
-      MacosSetupCheckCompleted(:final status) => CliResult(
-        exitCode: 0,
-        stdout: jsonEncode(<String, Object?>{
-          'schemaVersion': cliSchemaVersion,
-          'macosSetup': status.toJson(),
-        }),
-        stderr: '',
-      ),
-      MacosSetupCheckFailed(:final message) => _jsonError(
-        exitCode: 75,
-        code: 'macosSetupCheckFailed',
-        message: message,
-      ),
-    };
-  }
-
-  final gptkWineInstallRequest = _parseJsonGptkWineInstallRequest(arguments);
-  if (gptkWineInstallRequest != null) {
-    final installer = gptkWineInstaller;
-    if (installer == null) {
-      return _jsonError(
-        exitCode: 74,
-        code: 'gptkWineInstallerUnavailable',
-        message: 'GPTK-compatible Wine installer is not configured.',
-      );
-    }
-
-    return switch (installer.install(gptkWineInstallRequest)) {
-      GptkWineInstallCompleted(:final record) => CliResult(
-        exitCode: 0,
-        stdout: jsonEncode(<String, Object?>{
-          'schemaVersion': cliSchemaVersion,
-          'gptkWineInstall': record.toJson(),
-        }),
-        stderr: '',
-      ),
-      GptkWineInstallFailed(:final message) => _jsonError(
-        exitCode: 75,
-        code: 'gptkWineInstallFailed',
-        message: message,
-      ),
-    };
-  }
-
-  final openUrl = _parseJsonOpenUrlCommand(arguments);
-  if (openUrl != null) {
-    if (pathOpener == null) {
-      return _jsonError(
-        exitCode: 74,
-        code: 'pathOpenerUnavailable',
-        message: 'Path opener is not configured.',
-      );
-    }
-    final openResult = pathOpener.openPath(openUrl);
-    return switch (openResult) {
-      PathOpenCompleted() => CliResult(
-        exitCode: 0,
-        stdout: jsonEncode(<String, Object?>{
-          'schemaVersion': cliSchemaVersion,
-          'openedUrl': <String, Object?>{'url': openUrl},
-        }),
-        stderr: '',
-      ),
-      PathOpenFailed(:final message) => _jsonError(
-        exitCode: 75,
-        code: 'urlOpenFailed',
-        message: message,
-        extra: <String, Object?>{'url': openUrl},
-      ),
-    };
-  }
-
-  final runtimeUpdateId = _parseJsonRuntimeIdCommand(
-    arguments,
-    'check-runtime-update',
-  );
-  if (runtimeUpdateId != null) {
-    if (runtimeUpdateChecker == null) {
-      return _jsonError(
-        exitCode: 74,
-        code: 'runtimeUpdateCheckerUnavailable',
-        message: 'Runtime update checker is not configured.',
-      );
-    }
-
-    final updateResult = runtimeUpdateChecker.check(runtimeUpdateId);
-    return switch (updateResult) {
-      RuntimeUpdateCheckCompleted(:final update) => CliResult(
-        exitCode: 0,
-        stdout: jsonEncode(<String, Object?>{
-          'schemaVersion': cliSchemaVersion,
-          'runtimeUpdate': update.toJson(),
-        }),
-        stderr: '',
-      ),
-      RuntimeUpdateRuntimeNotFound(:final runtimeId) => _jsonError(
-        exitCode: 66,
-        code: 'runtimeNotFound',
-        message: 'Runtime not found.',
-        extra: <String, Object?>{'runtimeId': runtimeId},
-      ),
-      RuntimeUpdateCheckFailed(:final message) => _jsonError(
-        exitCode: 75,
-        code: 'runtimeUpdateCheckFailed',
-        message: message,
-      ),
-    };
-  }
-
-  final runtimeUpdateInstallId = _parseJsonRuntimeIdCommand(
-    arguments,
-    'install-runtime-update',
-  );
-  if (runtimeUpdateInstallId != null) {
-    return _installRuntimeUpdateJsonResult(
-      runtimeId: runtimeUpdateInstallId,
-      runtimeUpdateChecker: runtimeUpdateChecker,
-      macosWineInstaller: macosWineInstaller,
-      linuxWineInstaller: linuxWineInstaller,
-    );
-  }
-
-  final runtimeValidationId = _parseJsonRuntimeIdCommand(
-    arguments,
-    'validate-runtime',
-  );
-  if (runtimeValidationId != null) {
-    if (runtimeValidator == null) {
-      return _jsonError(
-        exitCode: 74,
-        code: 'runtimeValidatorUnavailable',
-        message: 'Runtime validator is not configured.',
-      );
-    }
-
-    final validationResult = runtimeValidator.validate(runtimeValidationId);
-    return switch (validationResult) {
-      RuntimeValidationCompleted(:final validation) => CliResult(
-        exitCode: validation.isValid ? 0 : 75,
-        stdout: jsonEncode(<String, Object?>{
-          'schemaVersion': cliSchemaVersion,
-          'runtimeValidation': validation.toJson(),
-        }),
-        stderr: '',
-      ),
-      RuntimeValidationRuntimeNotFound(:final runtimeId) => _jsonError(
-        exitCode: 66,
-        code: 'runtimeNotFound',
-        message: 'Runtime not found.',
-        extra: <String, Object?>{'runtimeId': runtimeId},
-      ),
-      RuntimeValidationFailed(:final message) => _jsonError(
-        exitCode: 75,
-        code: 'runtimeValidationFailed',
-        message: message,
-      ),
-    };
-  }
-
-  final macosWineInstallRequest = _parseJsonMacosWineInstallRequest(arguments);
-  if (macosWineInstallRequest != null) {
-    if (macosWineInstaller == null) {
-      return _jsonError(
-        exitCode: 74,
-        code: 'macosWineInstallerUnavailable',
-        message: 'macOS Wine installer is not configured.',
-      );
-    }
-
-    final installResult = macosWineInstaller.install(
-      macosWineInstallRequest,
-      progressSink: macosWineInstallRequest.emitProgress
-          ? runtimeInstallProgressSink
-          : null,
-    );
-
-    return switch (installResult) {
-      MacosWineInstallCompleted(:final runtime) => CliResult(
-        exitCode: 0,
-        stdout: jsonEncode(<String, Object?>{
-          'schemaVersion': cliSchemaVersion,
-          'runtime': runtime.toJson(),
-        }),
-        stderr: '',
-      ),
-      MacosWineInstallFailed(:final message) => _jsonError(
-        exitCode: 75,
-        code: 'macosWineInstallFailed',
-        message: message,
-      ),
-    };
-  }
-
-  final linuxWineInstallRequest = _parseJsonLinuxWineInstallRequest(arguments);
-  if (linuxWineInstallRequest != null) {
-    final installer = linuxWineInstaller;
-    if (installer == null) {
-      return _jsonError(
-        exitCode: 74,
-        code: 'linuxWineInstallerUnavailable',
-        message: 'Linux Wine installer is not configured.',
-      );
-    }
-
-    return switch (installer.install(
-      linuxWineInstallRequest,
-      progressSink: linuxWineInstallRequest.emitProgress
-          ? runtimeInstallProgressSink
-          : null,
-    )) {
-      LinuxWineInstallCompleted(:final runtime) => CliResult(
-        exitCode: 0,
-        stdout: jsonEncode(<String, Object?>{
-          'schemaVersion': cliSchemaVersion,
-          'runtime': runtime.toJson(),
-        }),
-        stderr: '',
-      ),
-      LinuxWineInstallFailed(:final message) => _jsonError(
-        exitCode: 75,
-        code: 'linuxWineInstallFailed',
-        message: message,
-      ),
-    };
+  final runtimeCommandResult = _handleRuntimeCommand(arguments, context);
+  if (runtimeCommandResult != null) {
+    return runtimeCommandResult;
   }
 
   return const CliResult(
