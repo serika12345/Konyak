@@ -141,6 +141,58 @@ void _writeUint32(Uint8List bytes, int offset, int value) {
   bytes[offset + 3] = value >> 24 & 0xff;
 }
 
+String? _nullTerminatedAsciiString(
+  Uint8List bytes,
+  int offset,
+  int maximumOffset,
+) {
+  if (offset < 0 || offset >= bytes.length || offset >= maximumOffset) {
+    return null;
+  }
+
+  final endOffset = _nullByteOffset(bytes, offset, maximumOffset);
+  if (endOffset == null) {
+    return null;
+  }
+
+  return ascii.decode(
+    Uint8List.sublistView(bytes, offset, endOffset),
+    allowInvalid: true,
+  );
+}
+
+String? _nullTerminatedUtf16LeString(
+  Uint8List bytes,
+  int offset,
+  int maximumOffset,
+) {
+  if (offset < 0 || offset + 1 >= bytes.length || offset >= maximumOffset) {
+    return null;
+  }
+
+  final codeUnits = <int>[];
+  for (var cursor = offset; cursor + 1 < maximumOffset; cursor += 2) {
+    final codeUnit = _readUint16(bytes, cursor);
+    if (codeUnit == null || codeUnit == 0) {
+      break;
+    }
+    codeUnits.add(codeUnit);
+  }
+
+  return codeUnits.isEmpty ? null : String.fromCharCodes(codeUnits);
+}
+
+int? _nullByteOffset(Uint8List bytes, int offset, int maximumOffset) {
+  final boundedMaximum = min(maximumOffset, bytes.length);
+  for (var cursor = offset; cursor < boundedMaximum; cursor += 1) {
+    if (bytes[cursor] == 0) {
+      return cursor;
+    }
+  }
+
+  return null;
+}
+
 bool _listEquals<T>(List<T> left, List<T> right) {
   if (identical(left, right)) {
     return true;
