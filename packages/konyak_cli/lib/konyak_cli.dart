@@ -7890,11 +7890,51 @@ CliResult _linuxWineInstallJsonResult({
   );
 }
 
+CliResult? _handleWineProcessCommand(
+  List<String> arguments, {
+  required _CliCommandContext context,
+  required BottleCatalog activeBottleCatalog,
+}) {
+  if (_isJsonWineProcessListCommand(arguments)) {
+    return _listWineProcessesJsonResult(
+      bottleCatalog: activeBottleCatalog,
+      programRunPlanner: context.programRunPlanner,
+      programRunner: context.programRunner,
+      programMetadataExtractor: context.programMetadataExtractor,
+    );
+  }
+
+  final wineProcessTerminationRequest = _parseJsonWineProcessTerminationRequest(
+    arguments,
+  );
+  if (wineProcessTerminationRequest != null) {
+    return _terminateWineProcessJsonResult(
+      bottleCatalog: activeBottleCatalog,
+      programRunPlanner: context.programRunPlanner,
+      programRunner: context.programRunner,
+      bottleId: wineProcessTerminationRequest.bottleId,
+      processId: wineProcessTerminationRequest.processId,
+    );
+  }
+
+  final wineProcessGroupTerminationRequest =
+      _parseJsonWineProcessGroupTerminationRequest(arguments);
+  if (wineProcessGroupTerminationRequest != null) {
+    return _terminateWineProcessesJsonResult(
+      bottleCatalog: activeBottleCatalog,
+      programRunPlanner: context.programRunPlanner,
+      programRunner: context.programRunner,
+      bottleId: wineProcessGroupTerminationRequest.bottleId,
+    );
+  }
+
+  return null;
+}
+
 CliResult _runCli(List<String> arguments, _CliCommandContext context) {
   final bottleCatalog = context.bottleCatalog;
   final bottleRepository = context.bottleRepository;
   final bottleProgramRepository = context.bottleProgramRepository;
-  final programMetadataExtractor = context.programMetadataExtractor;
   final winetricksVerbRepository = context.winetricksVerbRepository;
   final winetricksScriptInstaller = context.winetricksScriptInstaller;
   final programRunPlanner = context.programRunPlanner;
@@ -7916,37 +7956,13 @@ CliResult _runCli(List<String> arguments, _CliCommandContext context) {
     return hostIntegrationCommandResult;
   }
 
-  if (_isJsonWineProcessListCommand(arguments)) {
-    return _listWineProcessesJsonResult(
-      bottleCatalog: activeBottleCatalog,
-      programRunPlanner: programRunPlanner,
-      programRunner: programRunner,
-      programMetadataExtractor: programMetadataExtractor,
-    );
-  }
-
-  final wineProcessTerminationRequest = _parseJsonWineProcessTerminationRequest(
+  final wineProcessCommandResult = _handleWineProcessCommand(
     arguments,
+    context: context,
+    activeBottleCatalog: activeBottleCatalog,
   );
-  if (wineProcessTerminationRequest != null) {
-    return _terminateWineProcessJsonResult(
-      bottleCatalog: activeBottleCatalog,
-      programRunPlanner: programRunPlanner,
-      programRunner: programRunner,
-      bottleId: wineProcessTerminationRequest.bottleId,
-      processId: wineProcessTerminationRequest.processId,
-    );
-  }
-
-  final wineProcessGroupTerminationRequest =
-      _parseJsonWineProcessGroupTerminationRequest(arguments);
-  if (wineProcessGroupTerminationRequest != null) {
-    return _terminateWineProcessesJsonResult(
-      bottleCatalog: activeBottleCatalog,
-      programRunPlanner: programRunPlanner,
-      programRunner: programRunner,
-      bottleId: wineProcessGroupTerminationRequest.bottleId,
-    );
+  if (wineProcessCommandResult != null) {
+    return wineProcessCommandResult;
   }
 
   if (_isJsonBottleListCommand(arguments)) {
