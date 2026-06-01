@@ -6703,9 +6703,7 @@ Future<CliResult> runCliStreaming(
 
 CliResult _programUpdateJsonResult(ProgramUpdateResult result) {
   return switch (result) {
-    ProgramUpdated(:final bottle) => _jsonSuccess(<String, Object?>{
-      'bottle': bottle.toJson(),
-    }),
+    ProgramUpdated(:final bottle) => _bottleJsonResult(bottle),
     ProgramUpdateMissingBottle(:final bottleId) => _bottleNotFoundError(
       bottleId,
     ),
@@ -6827,9 +6825,7 @@ CliResult _bottleArchiveExportJsonResult(BottleArchiveExportResult result) {
 
 CliResult _bottleArchiveImportJsonResult(BottleArchiveImportResult result) {
   return switch (result) {
-    BottleArchiveImported(:final bottle) => _jsonSuccess(<String, Object?>{
-      'bottle': bottle.toJson(),
-    }),
+    BottleArchiveImported(:final bottle) => _bottleJsonResult(bottle),
     BottleArchiveImportConflict(:final bottleId) => _jsonError(
       exitCode: 73,
       code: 'bottleAlreadyExists',
@@ -7385,6 +7381,10 @@ CliResult _runtimeJsonResult(RuntimeRecord runtime) {
   return _jsonSuccess(<String, Object?>{'runtime': runtime.toJson()});
 }
 
+CliResult _bottleJsonResult(BottleRecord bottle) {
+  return _jsonSuccess(<String, Object?>{'bottle': bottle.toJson()});
+}
+
 CliResult _macosWineInstallCliResult(MacosWineInstallResult installResult) {
   return switch (installResult) {
     MacosWineInstallCompleted(:final runtime) => _runtimeJsonResult(runtime),
@@ -7518,18 +7518,13 @@ CliResult? _handleHostIntegrationCommand(
       :final desktopEntryPath,
       :final mimeAppsPath,
     ) =>
-      CliResult(
-        exitCode: 0,
-        stdout: jsonEncode(<String, Object?>{
-          'schemaVersion': cliSchemaVersion,
-          'linuxFileAssociations': <String, Object?>{
-            'desktopEntryPath': desktopEntryPath,
-            'mimeAppsPath': mimeAppsPath,
-            'mimeTypes': _linuxExecutableMimeTypes,
-          },
-        }),
-        stderr: '',
-      ),
+      _jsonSuccess(<String, Object?>{
+        'linuxFileAssociations': <String, Object?>{
+          'desktopEntryPath': desktopEntryPath,
+          'mimeAppsPath': mimeAppsPath,
+          'mimeTypes': _linuxExecutableMimeTypes,
+        },
+      }),
     _LinuxFileAssociationInstallFailed(:final message) => _jsonError(
       exitCode: 75,
       code: 'linuxFileAssociationInstallFailed',
@@ -7551,17 +7546,12 @@ CliResult? _handleRuntimeCommand(
   _CliCommandContext context,
 ) {
   if (_isJsonRuntimeListCommand(arguments)) {
-    return CliResult(
-      exitCode: 0,
-      stdout: jsonEncode(<String, Object?>{
-        'schemaVersion': cliSchemaVersion,
-        'runtimes': context.runtimeCatalog
-            .listRuntimes()
-            .map((runtime) => runtime.toJson())
-            .toList(growable: false),
-      }),
-      stderr: '',
-    );
+    return _jsonSuccess(<String, Object?>{
+      'runtimes': context.runtimeCatalog
+          .listRuntimes()
+          .map((runtime) => runtime.toJson())
+          .toList(growable: false),
+    });
   }
 
   if (_isJsonMacosSetupCheckCommand(arguments)) {
@@ -7575,14 +7565,9 @@ CliResult? _handleRuntimeCommand(
     }
 
     return switch (checker.check()) {
-      MacosSetupCheckCompleted(:final status) => CliResult(
-        exitCode: 0,
-        stdout: jsonEncode(<String, Object?>{
-          'schemaVersion': cliSchemaVersion,
-          'macosSetup': status.toJson(),
-        }),
-        stderr: '',
-      ),
+      MacosSetupCheckCompleted(:final status) => _jsonSuccess(<String, Object?>{
+        'macosSetup': status.toJson(),
+      }),
       MacosSetupCheckFailed(:final message) => _jsonError(
         exitCode: 75,
         code: 'macosSetupCheckFailed',
@@ -7603,14 +7588,9 @@ CliResult? _handleRuntimeCommand(
     }
 
     return switch (installer.install(gptkWineInstallRequest)) {
-      GptkWineInstallCompleted(:final record) => CliResult(
-        exitCode: 0,
-        stdout: jsonEncode(<String, Object?>{
-          'schemaVersion': cliSchemaVersion,
-          'gptkWineInstall': record.toJson(),
-        }),
-        stderr: '',
-      ),
+      GptkWineInstallCompleted(:final record) => _jsonSuccess(<String, Object?>{
+        'gptkWineInstall': record.toJson(),
+      }),
       GptkWineInstallFailed(:final message) => _jsonError(
         exitCode: 75,
         code: 'gptkWineInstallFailed',
@@ -7690,14 +7670,9 @@ CliResult _openUrlJsonResult(String openUrl, PathOpener? pathOpener) {
   }
   final openResult = pathOpener.openPath(openUrl);
   return switch (openResult) {
-    PathOpenCompleted() => CliResult(
-      exitCode: 0,
-      stdout: jsonEncode(<String, Object?>{
-        'schemaVersion': cliSchemaVersion,
-        'openedUrl': <String, Object?>{'url': openUrl},
-      }),
-      stderr: '',
-    ),
+    PathOpenCompleted() => _jsonSuccess(<String, Object?>{
+      'openedUrl': <String, Object?>{'url': openUrl},
+    }),
     PathOpenFailed(:final message) => _jsonError(
       exitCode: 75,
       code: 'urlOpenFailed',
@@ -7720,13 +7695,8 @@ CliResult _runtimeUpdateCheckJsonResult({
   }
 
   return switch (runtimeUpdateChecker.check(runtimeId)) {
-    RuntimeUpdateCheckCompleted(:final update) => CliResult(
-      exitCode: 0,
-      stdout: jsonEncode(<String, Object?>{
-        'schemaVersion': cliSchemaVersion,
-        'runtimeUpdate': update.toJson(),
-      }),
-      stderr: '',
+    RuntimeUpdateCheckCompleted(:final update) => _jsonSuccess(
+      <String, Object?>{'runtimeUpdate': update.toJson()},
     ),
     RuntimeUpdateRuntimeNotFound(:final runtimeId) => _jsonError(
       exitCode: 66,
@@ -7755,13 +7725,9 @@ CliResult _runtimeValidationJsonResult({
   }
 
   return switch (runtimeValidator.validate(runtimeId)) {
-    RuntimeValidationCompleted(:final validation) => CliResult(
+    RuntimeValidationCompleted(:final validation) => _jsonSuccess(
+      <String, Object?>{'runtimeValidation': validation.toJson()},
       exitCode: validation.isValid ? 0 : 75,
-      stdout: jsonEncode(<String, Object?>{
-        'schemaVersion': cliSchemaVersion,
-        'runtimeValidation': validation.toJson(),
-      }),
-      stderr: '',
     ),
     RuntimeValidationRuntimeNotFound(:final runtimeId) => _jsonError(
       exitCode: 66,
@@ -7872,16 +7838,11 @@ CliResult? _handleBottleReadCommand(
       environment: context.programRunPlanner.environment,
       bottles: bottles,
     );
-    return CliResult(
-      exitCode: 0,
-      stdout: jsonEncode(<String, Object?>{
-        'schemaVersion': cliSchemaVersion,
-        'bottles': bottles
-            .map((bottle) => bottle.toJson())
-            .toList(growable: false),
-      }),
-      stderr: '',
-    );
+    return _jsonSuccess(<String, Object?>{
+      'bottles': bottles
+          .map((bottle) => bottle.toJson())
+          .toList(growable: false),
+    });
   }
 
   if (_isJsonBottleInspectCommand(arguments)) {
@@ -7896,14 +7857,7 @@ CliResult? _handleBottleReadCommand(
       programRunPlanner: context.programRunPlanner,
       programRunner: context.programRunner,
     );
-    return CliResult(
-      exitCode: 0,
-      stdout: jsonEncode(<String, Object?>{
-        'schemaVersion': cliSchemaVersion,
-        'bottle': inspectedBottle.toJson(),
-      }),
-      stderr: '',
-    );
+    return _bottleJsonResult(inspectedBottle);
   }
 
   final bottleProgramsListId = _parseJsonBottleProgramsListCommand(arguments);
@@ -7913,20 +7867,15 @@ CliResult? _handleBottleReadCommand(
       return _bottleNotFoundError(bottleProgramsListId);
     }
 
-    return CliResult(
-      exitCode: 0,
-      stdout: jsonEncode(<String, Object?>{
-        'schemaVersion': cliSchemaVersion,
-        'bottlePrograms': <String, Object?>{
-          'bottleId': bottle.id,
-          'programs': context.bottleProgramRepository
-              .listPrograms(bottle)
-              .map((program) => program.toJson())
-              .toList(growable: false),
-        },
-      }),
-      stderr: '',
-    );
+    return _jsonSuccess(<String, Object?>{
+      'bottlePrograms': <String, Object?>{
+        'bottleId': bottle.id,
+        'programs': context.bottleProgramRepository
+            .listPrograms(bottle)
+            .map((program) => program.toJson())
+            .toList(growable: false),
+      },
+    });
   }
 
   return null;
@@ -7993,14 +7942,9 @@ CliResult? _handleBottleMutationCommand(
     }
 
     return switch (repository.deleteBottle(deleteBottleId)) {
-      BottleDeleted(:final bottle) => CliResult(
-        exitCode: 0,
-        stdout: jsonEncode(<String, Object?>{
-          'schemaVersion': cliSchemaVersion,
-          'deletedBottle': bottle.toJson(),
-        }),
-        stderr: '',
-      ),
+      BottleDeleted(:final bottle) => _jsonSuccess(<String, Object?>{
+        'deletedBottle': bottle.toJson(),
+      }),
       BottleDeleteMissing(:final bottleId) => _bottleNotFoundError(bottleId),
     };
   }
@@ -8013,14 +7957,7 @@ CliResult? _handleBottleMutationCommand(
     }
 
     return switch (repository.renameBottle(renameBottleRequest)) {
-      BottleRenamed(:final bottle) => CliResult(
-        exitCode: 0,
-        stdout: jsonEncode(<String, Object?>{
-          'schemaVersion': cliSchemaVersion,
-          'bottle': bottle.toJson(),
-        }),
-        stderr: '',
-      ),
+      BottleRenamed(:final bottle) => _bottleJsonResult(bottle),
       BottleRenameMissing(:final bottleId) => _bottleNotFoundError(bottleId),
       BottleRenameConflict(:final bottleId) => _jsonError(
         exitCode: 73,
@@ -8039,14 +7976,7 @@ CliResult? _handleBottleMutationCommand(
     }
 
     return switch (repository.moveBottle(moveBottleRequest)) {
-      BottleMoved(:final bottle) => CliResult(
-        exitCode: 0,
-        stdout: jsonEncode(<String, Object?>{
-          'schemaVersion': cliSchemaVersion,
-          'bottle': bottle.toJson(),
-        }),
-        stderr: '',
-      ),
+      BottleMoved(:final bottle) => _bottleJsonResult(bottle),
       BottleMoveMissing(:final bottleId) => _bottleNotFoundError(bottleId),
       BottleMoveConflict(:final path) => _jsonError(
         exitCode: 73,
@@ -8144,14 +8074,7 @@ CliResult? _handleBottleConfigurationCommand(
 
 CliResult _bottleUpdateJsonResult(BottleUpdateResult result) {
   return switch (result) {
-    BottleUpdated(:final bottle) => CliResult(
-      exitCode: 0,
-      stdout: jsonEncode(<String, Object?>{
-        'schemaVersion': cliSchemaVersion,
-        'bottle': bottle.toJson(),
-      }),
-      stderr: '',
-    ),
+    BottleUpdated(:final bottle) => _bottleJsonResult(bottle),
     BottleUpdateMissing(:final bottleId) => _bottleNotFoundError(bottleId),
   };
 }
@@ -8186,14 +8109,7 @@ CliResult? _handlePinnedProgramCommand(
     }
 
     return switch (pinResult) {
-      ProgramPinned(:final bottle) => CliResult(
-        exitCode: 0,
-        stdout: jsonEncode(<String, Object?>{
-          'schemaVersion': cliSchemaVersion,
-          'bottle': bottle.toJson(),
-        }),
-        stderr: '',
-      ),
+      ProgramPinned(:final bottle) => _bottleJsonResult(bottle),
       ProgramPinMissing(:final bottleId) => _bottleNotFoundError(bottleId),
       ProgramPinConflict(:final programPath) => _jsonError(
         exitCode: 73,
@@ -8535,18 +8451,13 @@ CliResult _openBottleLocationJsonResult(
   }
 
   return switch (opener.openPath(path)) {
-    PathOpenCompleted() => CliResult(
-      exitCode: 0,
-      stdout: jsonEncode(<String, Object?>{
-        'schemaVersion': cliSchemaVersion,
-        'openedLocation': <String, Object?>{
-          'bottleId': bottle.id,
-          'location': request.location,
-          'path': path,
-        },
-      }),
-      stderr: '',
-    ),
+    PathOpenCompleted() => _jsonSuccess(<String, Object?>{
+      'openedLocation': <String, Object?>{
+        'bottleId': bottle.id,
+        'location': request.location,
+        'path': path,
+      },
+    }),
     PathOpenFailed(:final message) => _jsonError(
       exitCode: 75,
       code: 'bottleLocationOpenFailed',
@@ -8590,18 +8501,13 @@ CliResult _openProgramLocationJsonResult(
 
   final path = request.programPath;
   return switch (opener.revealPath(path)) {
-    PathOpenCompleted() => CliResult(
-      exitCode: 0,
-      stdout: jsonEncode(<String, Object?>{
-        'schemaVersion': cliSchemaVersion,
-        'openedProgramLocation': <String, Object?>{
-          'bottleId': bottle.id,
-          'programPath': request.programPath,
-          'path': path,
-        },
-      }),
-      stderr: '',
-    ),
+    PathOpenCompleted() => _jsonSuccess(<String, Object?>{
+      'openedProgramLocation': <String, Object?>{
+        'bottleId': bottle.id,
+        'programPath': request.programPath,
+        'path': path,
+      },
+    }),
     PathOpenFailed(:final message) => _jsonError(
       exitCode: 75,
       code: 'programLocationOpenFailed',
@@ -8638,17 +8544,14 @@ CliResult? _handleWinetricksVerbCommand(
 
 CliResult _winetricksVerbListJsonResult(WinetricksVerbListResult result) {
   return switch (result) {
-    WinetricksVerbListCompleted(:final categories) => CliResult(
-      exitCode: 0,
-      stdout: jsonEncode(<String, Object?>{
-        'schemaVersion': cliSchemaVersion,
+    WinetricksVerbListCompleted(:final categories) => _jsonSuccess(
+      <String, Object?>{
         'winetricks': <String, Object?>{
           'categories': categories
               .map((category) => category.toJson())
               .toList(growable: false),
         },
-      }),
-      stderr: '',
+      },
     ),
     WinetricksVerbListFailed(:final message) => _jsonError(
       exitCode: 75,
@@ -15932,37 +15835,25 @@ CliResult _createdBottleJsonResult({
     }
   }
 
-  return CliResult(
-    exitCode: 0,
-    stdout: jsonEncode(<String, Object?>{
-      'schemaVersion': cliSchemaVersion,
-      'bottle': bottle.toJson(),
-    }),
-    stderr: '',
-  );
+  return _bottleJsonResult(bottle);
 }
 
 CliResult _programRunJsonResult({
   required ProgramRunRequest request,
   required int processExitCode,
 }) {
-  return CliResult(
-    exitCode: 0,
-    stdout: jsonEncode(<String, Object?>{
-      'schemaVersion': cliSchemaVersion,
-      'run': <String, Object?>{
-        'bottleId': request.bottleId,
-        'programPath': request.programPath,
-        'runnerKind': request.runnerKind,
-        'executable': request.executable,
-        'workingDirectory': request.workingDirectory,
-        'argv': request.argv,
-        'logPath': request.logPath,
-        'processExitCode': processExitCode,
-      },
-    }),
-    stderr: '',
-  );
+  return _jsonSuccess(<String, Object?>{
+    'run': <String, Object?>{
+      'bottleId': request.bottleId,
+      'programPath': request.programPath,
+      'runnerKind': request.runnerKind,
+      'executable': request.executable,
+      'workingDirectory': request.workingDirectory,
+      'argv': request.argv,
+      'logPath': request.logPath,
+      'processExitCode': processExitCode,
+    },
+  });
 }
 
 CliResult _programRunFailedJsonResult({
