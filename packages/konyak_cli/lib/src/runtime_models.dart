@@ -33,11 +33,12 @@ class RuntimeDefinition {
 
 class InstalledRuntimeState {
   InstalledRuntimeState({
-    this.isInstalled,
+    bool? isInstalled,
     String? applicationSupportPath,
     String? libraryPath,
     String? executablePath,
-  }) : applicationSupportPath = _optionalRuntimeModelValue(
+  }) : isInstalled = Option.fromNullable(isInstalled),
+       applicationSupportPath = _optionalRuntimeModelValue(
          applicationSupportPath,
          'applicationSupportPath',
        ),
@@ -48,27 +49,28 @@ class InstalledRuntimeState {
        );
 
   const InstalledRuntimeState.unknown()
-    : isInstalled = null,
+    : isInstalled = const Option.none(),
       applicationSupportPath = const Option.none(),
       libraryPath = const Option.none(),
       executablePath = const Option.none();
 
-  final bool? isInstalled;
+  final Option<bool> isInstalled;
   final Option<String> applicationSupportPath;
   final Option<String> libraryPath;
   final Option<String> executablePath;
 }
 
 class RuntimeCapabilities {
-  const RuntimeCapabilities({this.stack});
+  RuntimeCapabilities({RuntimeStack? stack})
+    : stack = Option.fromNullable(stack);
 
-  const RuntimeCapabilities.empty() : stack = null;
+  const RuntimeCapabilities.empty() : stack = const Option.none();
 
-  final RuntimeStack? stack;
+  final Option<RuntimeStack> stack;
 }
 
 class RuntimeRecord {
-  const RuntimeRecord({
+  RuntimeRecord({
     required this.id,
     required this.name,
     required this.platform,
@@ -76,15 +78,31 @@ class RuntimeRecord {
     required this.runnerKind,
     required this.isBundled,
     required this.isUpdateable,
-    this.distributionKind,
-    this.isInstalled,
-    this.applicationSupportPath,
-    this.libraryPath,
-    this.executablePath,
-    this.archiveUrl,
-    this.versionUrl,
-    this.stack,
-  });
+    String? distributionKind,
+    bool? isInstalled,
+    String? applicationSupportPath,
+    String? libraryPath,
+    String? executablePath,
+    String? archiveUrl,
+    String? versionUrl,
+    RuntimeStack? stack,
+  }) : distributionKind = _optionalRuntimeModelValue(
+         distributionKind,
+         'distributionKind',
+       ),
+       isInstalled = Option.fromNullable(isInstalled),
+       applicationSupportPath = _optionalRuntimeModelValue(
+         applicationSupportPath,
+         'applicationSupportPath',
+       ),
+       libraryPath = _optionalRuntimeModelValue(libraryPath, 'libraryPath'),
+       executablePath = _optionalRuntimeModelValue(
+         executablePath,
+         'executablePath',
+       ),
+       archiveUrl = _optionalRuntimeModelValue(archiveUrl, 'archiveUrl'),
+       versionUrl = _optionalRuntimeModelValue(versionUrl, 'versionUrl'),
+       stack = Option.fromNullable(stack);
 
   RuntimeRecord.fromParts({
     required RuntimeDefinition definition,
@@ -98,14 +116,13 @@ class RuntimeRecord {
        runnerKind = definition.runnerKind,
        isBundled = definition.isBundled,
        isUpdateable = definition.isUpdateable,
-       distributionKind = definition.distributionKind.toNullable(),
+       distributionKind = definition.distributionKind,
        isInstalled = installedState.isInstalled,
-       applicationSupportPath = installedState.applicationSupportPath
-           .toNullable(),
-       libraryPath = installedState.libraryPath.toNullable(),
-       executablePath = installedState.executablePath.toNullable(),
-       archiveUrl = definition.archiveUrl.toNullable(),
-       versionUrl = definition.versionUrl.toNullable(),
+       applicationSupportPath = installedState.applicationSupportPath,
+       libraryPath = installedState.libraryPath,
+       executablePath = installedState.executablePath,
+       archiveUrl = definition.archiveUrl,
+       versionUrl = definition.versionUrl,
        stack = capabilities.stack;
 
   final String id;
@@ -115,18 +132,16 @@ class RuntimeRecord {
   final String runnerKind;
   final bool isBundled;
   final bool isUpdateable;
-  final String? distributionKind;
-  final bool? isInstalled;
-  final String? applicationSupportPath;
-  final String? libraryPath;
-  final String? executablePath;
-  final String? archiveUrl;
-  final String? versionUrl;
-  final RuntimeStack? stack;
+  final Option<String> distributionKind;
+  final Option<bool> isInstalled;
+  final Option<String> applicationSupportPath;
+  final Option<String> libraryPath;
+  final Option<String> executablePath;
+  final Option<String> archiveUrl;
+  final Option<String> versionUrl;
+  final Option<RuntimeStack> stack;
 
   Map<String, Object?> toJson() {
-    final runtimeStack = stack;
-
     return <String, Object?>{
       'id': id,
       'name': name,
@@ -135,13 +150,21 @@ class RuntimeRecord {
       'runnerKind': runnerKind,
       'isBundled': isBundled,
       'isUpdateable': isUpdateable,
-      if (distributionKind != null) 'distributionKind': distributionKind,
-      if (isInstalled != null) 'isInstalled': isInstalled,
-      if (applicationSupportPath != null)
-        'applicationSupportPath': applicationSupportPath,
-      if (libraryPath != null) 'libraryPath': libraryPath,
-      if (executablePath != null) 'executablePath': executablePath,
-      if (runtimeStack != null) 'stack': runtimeStack.toJson(),
+      ..._runtimeJsonStringField('distributionKind', distributionKind),
+      ...isInstalled.match(
+        () => const <String, Object?>{},
+        (value) => <String, Object?>{'isInstalled': value},
+      ),
+      ..._runtimeJsonStringField(
+        'applicationSupportPath',
+        applicationSupportPath,
+      ),
+      ..._runtimeJsonStringField('libraryPath', libraryPath),
+      ..._runtimeJsonStringField('executablePath', executablePath),
+      ...stack.match(
+        () => const <String, Object?>{},
+        (value) => <String, Object?>{'stack': value.toJson()},
+      ),
     };
   }
 }

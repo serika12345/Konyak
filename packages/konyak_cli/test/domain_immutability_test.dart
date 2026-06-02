@@ -464,15 +464,55 @@ void main() {
 
   test('installed runtime states model absent layout paths with Option', () {
     final state = InstalledRuntimeState(isInstalled: false);
+    const unknown = InstalledRuntimeState.unknown();
 
+    expect(state.isInstalled.toNullable(), isFalse);
     expect(state.applicationSupportPath.isNone(), isTrue);
     expect(state.libraryPath.isNone(), isTrue);
     expect(state.executablePath.isNone(), isTrue);
+    expect(unknown.isInstalled.isNone(), isTrue);
   });
 
   test('installed runtime states reject blank present layout paths', () {
     expect(
       () => InstalledRuntimeState(isInstalled: true, executablePath: ' '),
+      throwsA(isA<ArgumentError>()),
+    );
+  });
+
+  test('runtime records model absent state with Option', () {
+    final runtime = RuntimeRecord(
+      id: 'wine',
+      name: 'Wine',
+      platform: 'linux',
+      architecture: 'x86_64',
+      runnerKind: 'wine',
+      isBundled: false,
+      isUpdateable: true,
+    );
+
+    expect(runtime.distributionKind.isNone(), isTrue);
+    expect(runtime.isInstalled.isNone(), isTrue);
+    expect(runtime.libraryPath.isNone(), isTrue);
+    expect(runtime.executablePath.isNone(), isTrue);
+    expect(runtime.archiveUrl.isNone(), isTrue);
+    expect(runtime.versionUrl.isNone(), isTrue);
+    expect(runtime.stack.isNone(), isTrue);
+    expect(runtime.toJson(), isNot(contains('isInstalled')));
+  });
+
+  test('runtime records reject blank present state fields', () {
+    expect(
+      () => RuntimeRecord(
+        id: 'wine',
+        name: 'Wine',
+        platform: 'linux',
+        architecture: 'x86_64',
+        runnerKind: 'wine',
+        isBundled: false,
+        isUpdateable: true,
+        executablePath: ' ',
+      ),
       throwsA(isA<ArgumentError>()),
     );
   });
@@ -497,7 +537,7 @@ void main() {
     );
 
     final runtimes = <RuntimeRecord>[
-      const RuntimeRecord(
+      RuntimeRecord(
         id: 'wine',
         name: 'Wine',
         platform: 'linux',

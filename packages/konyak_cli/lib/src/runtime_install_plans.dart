@@ -105,8 +105,8 @@ _RuntimeWineInstallPlan _runtimeWineInstallPlan({
       requestOperation.sourceManifest.isSome();
   final shouldPreserveExistingRuntimeFiles =
       !requestOperation.force &&
-      currentRuntime.isInstalled == true &&
-      currentRuntime.stack?.isComplete != true &&
+      currentRuntime.isInstalled.toNullable() == true &&
+      currentRuntime.stack.toNullable()?.isComplete != true &&
       !hasExplicitInstallSource;
 
   if (!requestOperation.force &&
@@ -114,14 +114,14 @@ _RuntimeWineInstallPlan _runtimeWineInstallPlan({
       requestOperation.archiveUrl.isNone() &&
       componentArchivePaths.isEmpty &&
       requestOperation.sourceManifest.isNone() &&
-      currentRuntime.isInstalled == true &&
-      currentRuntime.stack?.isComplete == true) {
+      currentRuntime.isInstalled.toNullable() == true &&
+      currentRuntime.stack.toNullable()?.isComplete == true) {
     return _RuntimeWineInstallAlreadyInstalled(currentRuntime);
   }
 
   if (!requestOperation.force &&
-      currentRuntime.isInstalled == true &&
-      currentRuntime.stack?.isComplete != true &&
+      currentRuntime.isInstalled.toNullable() == true &&
+      currentRuntime.stack.toNullable()?.isComplete != true &&
       !hasExplicitInstallSource &&
       sourceManifest == null) {
     final message = incompleteRuntimeMessage;

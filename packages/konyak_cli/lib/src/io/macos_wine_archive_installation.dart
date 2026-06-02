@@ -47,9 +47,10 @@ extension _MacosWineArchiveInstallation on DartIoMacosWineInstaller {
       runtimeStackVersionProbe: _runtimeStackVersionProbe,
     );
 
-    if (runtime.isInstalled != true) {
+    if (runtime.isInstalled.toNullable() != true) {
       return MacosWineInstallFailed(
-        'macOS Wine archive did not install `${runtime.executablePath}`.',
+        'macOS Wine archive did not install '
+        '`${runtime.executablePath.toNullable()}`.',
       );
     }
 

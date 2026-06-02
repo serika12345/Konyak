@@ -88,8 +88,14 @@ void defineRuntimeProcessAndUpdateContractTests() {
       ),
     );
 
-    expect(runtime.archiveUrl, 'https://example.invalid/linux-wine.tar.xz');
-    expect(runtime.versionUrl, 'https://example.invalid/releases/latest');
+    expect(
+      runtime.archiveUrl.toNullable(),
+      'https://example.invalid/linux-wine.tar.xz',
+    );
+    expect(
+      runtime.versionUrl.toNullable(),
+      'https://example.invalid/releases/latest',
+    );
     expect(runtime.toJson(), {
       'id': 'konyak-linux-wine',
       'name': 'Konyak Linux Wine',
@@ -1894,7 +1900,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
       ),
     );
     final installer = RecordingMacosWineInstaller(
-      result: const MacosWineInstallCompleted(
+      result: MacosWineInstallCompleted(
         runtime: RuntimeRecord(
           id: 'konyak-macos-wine',
           name: 'Konyak macOS Wine',
@@ -1951,7 +1957,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
       ),
     );
     final installer = RecordingMacosWineInstaller(
-      result: const MacosWineInstallCompleted(
+      result: MacosWineInstallCompleted(
         runtime: RuntimeRecord(
           id: 'konyak-macos-wine',
           name: 'Konyak macOS Wine',
@@ -1998,7 +2004,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
       ),
     );
     final installer = RecordingLinuxWineInstaller(
-      result: const LinuxWineInstallCompleted(
+      result: LinuxWineInstallCompleted(
         runtime: RuntimeRecord(
           id: 'konyak-linux-wine',
           name: 'Konyak Linux Wine',
@@ -2054,7 +2060,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
         ),
       );
       final installer = RecordingLinuxWineInstaller(
-        result: const LinuxWineInstallCompleted(
+        result: LinuxWineInstallCompleted(
           runtime: RuntimeRecord(
             id: 'konyak-linux-wine',
             name: 'Konyak Linux Wine',

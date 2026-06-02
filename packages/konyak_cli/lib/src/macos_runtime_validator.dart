@@ -18,8 +18,8 @@ class DartIoMacosWineRuntimeValidator implements RuntimeValidator {
       return RuntimeValidationRuntimeNotFound(runtimeId);
     }
 
-    final runtimeRoot = runtime.libraryPath;
-    final executablePath = runtime.executablePath;
+    final runtimeRoot = runtime.libraryPath.toNullable();
+    final executablePath = runtime.executablePath.toNullable();
     if (runtimeRoot == null || executablePath == null) {
       return RuntimeValidationCompleted(
         RuntimeValidationRecord(

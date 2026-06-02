@@ -40,7 +40,7 @@ void defineRuntimeInstallContractTests() {
 
   test('install-macos-wine --json installs from a configured archive source', () {
     final installer = RecordingMacosWineInstaller(
-      result: const MacosWineInstallCompleted(
+      result: MacosWineInstallCompleted(
         runtime: RuntimeRecord(
           id: 'konyak-macos-wine',
           name: 'Konyak macOS Wine',
@@ -179,7 +179,7 @@ void defineRuntimeInstallContractTests() {
 
       expect(result, isA<MacosWineInstallCompleted>());
       final completed = result as MacosWineInstallCompleted;
-      expect(completed.runtime.stack?.isComplete, isTrue);
+      expect(completed.runtime.stack.toNullable()?.isComplete, isTrue);
       expect(existingWine.readAsStringSync(), 'fixture');
     },
   );
@@ -235,14 +235,19 @@ void defineRuntimeInstallContractTests() {
 
     expect(result, isA<MacosWineInstallCompleted>());
     final completed = result as MacosWineInstallCompleted;
-    expect(completed.runtime.isInstalled, isTrue);
-    expect(completed.runtime.stack?.isComplete, isTrue);
+    expect(completed.runtime.isInstalled.toNullable(), isTrue);
+    expect(completed.runtime.stack.toNullable()?.isComplete, isTrue);
     expect(
-      completed.runtime.stack?.components.first.version.toNullable(),
+      completed.runtime.stack
+          .toNullable()
+          ?.components
+          .first
+          .version
+          .toNullable(),
       'wine-devel-11.9',
     );
     expect(
-      completed.runtime.stack?.components[2].version.toNullable(),
+      completed.runtime.stack.toNullable()?.components[2].version.toNullable(),
       'dxvk-macos-fixture',
     );
     expect(
@@ -432,9 +437,11 @@ void defineRuntimeInstallContractTests() {
 
       expect(result, isA<MacosWineInstallCompleted>());
       final completed = result as MacosWineInstallCompleted;
-      expect(completed.runtime.stack?.isComplete, isTrue);
+      expect(completed.runtime.stack.toNullable()?.isComplete, isTrue);
       expect(
-        completed.runtime.stack?.components
+        completed.runtime.stack
+            .toNullable()
+            ?.components
             .where((component) => component.id == 'dxvk-macos')
             .single
             .version
@@ -442,7 +449,9 @@ void defineRuntimeInstallContractTests() {
         'dxvk-macos-fixture',
       );
       expect(
-        completed.runtime.stack?.components
+        completed.runtime.stack
+            .toNullable()
+            ?.components
             .where((component) => component.id == 'gptk-d3dmetal')
             .single
             .version
@@ -646,9 +655,11 @@ void defineRuntimeInstallContractTests() {
 
     expect(result, isA<MacosWineInstallCompleted>());
     final completed = result as MacosWineInstallCompleted;
-    expect(completed.runtime.stack?.isComplete, isTrue);
+    expect(completed.runtime.stack.toNullable()?.isComplete, isTrue);
     expect(
-      completed.runtime.stack?.components
+      completed.runtime.stack
+          .toNullable()
+          ?.components
           .where((component) => component.id == 'dxvk-macos')
           .single
           .version
@@ -656,7 +667,9 @@ void defineRuntimeInstallContractTests() {
       'dxvk-macos-fixture',
     );
     expect(
-      completed.runtime.stack?.components
+      completed.runtime.stack
+          .toNullable()
+          ?.components
           .where((component) => component.id == 'moltenvk')
           .single
           .version
@@ -664,7 +677,9 @@ void defineRuntimeInstallContractTests() {
       'moltenvk-fixture',
     );
     expect(
-      completed.runtime.stack?.components
+      completed.runtime.stack
+          .toNullable()
+          ?.components
           .where((component) => component.id == 'gptk-d3dmetal')
           .single
           .version
@@ -849,9 +864,11 @@ void defineRuntimeInstallContractTests() {
 
     expect(result, isA<MacosWineInstallCompleted>());
     final completed = result as MacosWineInstallCompleted;
-    expect(completed.runtime.stack?.isComplete, isTrue);
+    expect(completed.runtime.stack.toNullable()?.isComplete, isTrue);
     expect(
-      completed.runtime.stack?.components
+      completed.runtime.stack
+          .toNullable()
+          ?.components
           .where((component) => component.id == 'wine')
           .single
           .version
@@ -859,7 +876,9 @@ void defineRuntimeInstallContractTests() {
       'wine-devel-source',
     );
     expect(
-      completed.runtime.stack?.components
+      completed.runtime.stack
+          .toNullable()
+          ?.components
           .where((component) => component.id == 'winetricks')
           .single
           .version
@@ -867,7 +886,9 @@ void defineRuntimeInstallContractTests() {
       'winetricks-source',
     );
     expect(
-      completed.runtime.stack?.components
+      completed.runtime.stack
+          .toNullable()
+          ?.components
           .where((component) => component.id == 'gptk-d3dmetal')
           .single
           .version
@@ -875,7 +896,9 @@ void defineRuntimeInstallContractTests() {
       'gptk-d3dmetal-source',
     );
     expect(
-      completed.runtime.stack?.components
+      completed.runtime.stack
+          .toNullable()
+          ?.components
           .where((component) => component.id == 'gptk-d3dmetal')
           .single
           .isInstalled,
@@ -1067,7 +1090,7 @@ void defineRuntimeInstallContractTests() {
       }
       expect(result, isA<MacosWineInstallCompleted>());
       final completed = result as MacosWineInstallCompleted;
-      expect(completed.runtime.stack?.isComplete, isTrue);
+      expect(completed.runtime.stack.toNullable()?.isComplete, isTrue);
       expect(
         File(_joinTestPath(runtimeRoot, const ['winetricks'])).existsSync(),
         isTrue,
@@ -1078,10 +1101,14 @@ void defineRuntimeInstallContractTests() {
         ).readAsStringSync(),
         'existing-gptk-wine',
       );
-      final wineComponent = completed.runtime.stack?.components
+      final wineComponent = completed.runtime.stack
+          .toNullable()
+          ?.components
           .where((component) => component.id == 'wine')
           .single;
-      final gptkComponent = completed.runtime.stack?.components
+      final gptkComponent = completed.runtime.stack
+          .toNullable()
+          ?.components
           .where((component) => component.id == 'gptk-d3dmetal')
           .single;
       expect(wineComponent?.version.toNullable(), 'user-provided-gptk-wine');
@@ -1164,7 +1191,7 @@ void defineRuntimeInstallContractTests() {
 
       expect(result, isA<MacosWineInstallCompleted>());
       final completed = result as MacosWineInstallCompleted;
-      expect(completed.runtime.isInstalled, isTrue);
+      expect(completed.runtime.isInstalled.toNullable(), isTrue);
       expect(
         File(
           _joinTestPath(runtimeHome, const [
@@ -1204,7 +1231,7 @@ void defineRuntimeInstallContractTests() {
 
   test('install-macos-wine --archive passes an explicit archive path', () {
     final installer = RecordingMacosWineInstaller(
-      result: const MacosWineInstallCompleted(
+      result: MacosWineInstallCompleted(
         runtime: RuntimeRecord(
           id: 'konyak-macos-wine',
           name: 'Konyak macOS Wine',
@@ -1233,7 +1260,7 @@ void defineRuntimeInstallContractTests() {
 
   test('install-macos-wine --archive-sha256 passes an expected digest', () {
     final installer = RecordingMacosWineInstaller(
-      result: const MacosWineInstallCompleted(
+      result: MacosWineInstallCompleted(
         runtime: RuntimeRecord(
           id: 'konyak-macos-wine',
           name: 'Konyak macOS Wine',
@@ -1268,7 +1295,7 @@ void defineRuntimeInstallContractTests() {
 
   test('install-macos-wine --component-archive passes component archives', () {
     final installer = RecordingMacosWineInstaller(
-      result: const MacosWineInstallCompleted(
+      result: MacosWineInstallCompleted(
         runtime: RuntimeRecord(
           id: 'konyak-macos-wine',
           name: 'Konyak macOS Wine',
@@ -1509,7 +1536,7 @@ void defineRuntimeInstallContractTests() {
 
   test('install-macos-wine --source-manifest passes the source manifest', () {
     final installer = RecordingMacosWineInstaller(
-      result: const MacosWineInstallCompleted(
+      result: MacosWineInstallCompleted(
         runtime: RuntimeRecord(
           id: 'konyak-macos-wine',
           name: 'Konyak macOS Wine',
@@ -1540,7 +1567,7 @@ void defineRuntimeInstallContractTests() {
   test('install-macos-wine --progress-json emits progress events', () {
     final progressOutput = StringBuffer();
     final installer = RecordingMacosWineInstaller(
-      result: const MacosWineInstallCompleted(
+      result: MacosWineInstallCompleted(
         runtime: RuntimeRecord(
           id: 'konyak-macos-wine',
           name: 'Konyak macOS Wine',
@@ -1631,7 +1658,7 @@ void defineRuntimeInstallContractTests() {
 
   test('install-linux-wine --archive passes an explicit archive path', () {
     final installer = RecordingLinuxWineInstaller(
-      result: const LinuxWineInstallCompleted(
+      result: LinuxWineInstallCompleted(
         runtime: RuntimeRecord(
           id: 'konyak-linux-wine',
           name: 'Konyak Linux Wine',
@@ -1660,7 +1687,7 @@ void defineRuntimeInstallContractTests() {
 
   test('install-linux-wine --component-archive passes component archives', () {
     final installer = RecordingLinuxWineInstaller(
-      result: const LinuxWineInstallCompleted(
+      result: LinuxWineInstallCompleted(
         runtime: RuntimeRecord(
           id: 'konyak-linux-wine',
           name: 'Konyak Linux Wine',
@@ -1698,7 +1725,7 @@ void defineRuntimeInstallContractTests() {
 
   test('install-linux-wine --source-manifest passes the source manifest', () {
     final installer = RecordingLinuxWineInstaller(
-      result: const LinuxWineInstallCompleted(
+      result: LinuxWineInstallCompleted(
         runtime: RuntimeRecord(
           id: 'konyak-linux-wine',
           name: 'Konyak Linux Wine',
@@ -1728,7 +1755,7 @@ void defineRuntimeInstallContractTests() {
   test('install-linux-wine --progress-json emits progress events', () {
     final progressOutput = StringBuffer();
     final installer = RecordingLinuxWineInstaller(
-      result: const LinuxWineInstallCompleted(
+      result: LinuxWineInstallCompleted(
         runtime: RuntimeRecord(
           id: 'konyak-linux-wine',
           name: 'Konyak Linux Wine',
@@ -1849,9 +1876,9 @@ void defineRuntimeInstallContractTests() {
 
     expect(result, isA<LinuxWineInstallCompleted>());
     final runtime = (result as LinuxWineInstallCompleted).runtime;
-    expect(runtime.isInstalled, isTrue);
+    expect(runtime.isInstalled.toNullable(), isTrue);
     expect(
-      runtime.executablePath,
+      runtime.executablePath.toNullable(),
       _joinTestPath(tempDirectory.path, const [
         'xdg-data',
         'konyak',
@@ -1861,7 +1888,7 @@ void defineRuntimeInstallContractTests() {
         'wine',
       ]),
     );
-    expect(File(runtime.executablePath!).existsSync(), isTrue);
+    expect(File(runtime.executablePath.toNullable()!).existsSync(), isTrue);
     expect(
       File(
         _joinTestPath(tempDirectory.path, const [
@@ -1930,9 +1957,11 @@ void defineRuntimeInstallContractTests() {
 
     expect(result, isA<LinuxWineInstallCompleted>());
     final runtime = (result as LinuxWineInstallCompleted).runtime;
-    expect(runtime.stack?.isComplete, isTrue);
+    expect(runtime.stack.toNullable()?.isComplete, isTrue);
     expect(
-      runtime.stack?.components
+      runtime.stack
+          .toNullable()
+          ?.components
           .where((component) => component.id == 'vkd3d-proton')
           .single
           .version
@@ -2009,9 +2038,11 @@ void defineRuntimeInstallContractTests() {
 
     expect(result, isA<LinuxWineInstallCompleted>());
     final runtime = (result as LinuxWineInstallCompleted).runtime;
-    expect(runtime.stack?.isComplete, isTrue);
+    expect(runtime.stack.toNullable()?.isComplete, isTrue);
     expect(
-      runtime.stack?.components
+      runtime.stack
+          .toNullable()
+          ?.components
           .where((component) => component.id == 'vkd3d-proton')
           .single
           .version
@@ -2090,10 +2121,12 @@ void defineRuntimeInstallContractTests() {
 
     expect(result, isA<LinuxWineInstallCompleted>());
     final runtime = (result as LinuxWineInstallCompleted).runtime;
-    expect(runtime.stack?.isComplete, isTrue);
+    expect(runtime.stack.toNullable()?.isComplete, isTrue);
     expect(existingWine.readAsStringSync(), 'fixture');
     expect(
-      runtime.stack?.components
+      runtime.stack
+          .toNullable()
+          ?.components
           .where((component) => component.id == 'vkd3d-proton')
           .single
           .version

@@ -34,9 +34,10 @@ extension _DartIoLinuxWineInstallerOperations on DartIoLinuxWineInstaller {
       fileStatusProbe: const DartIoFileStatusProbe(),
       runtimeStackVersionProbe: _runtimeStackVersionProbe,
     );
-    if (runtime.isInstalled != true) {
+    if (runtime.isInstalled.toNullable() != true) {
       return LinuxWineInstallFailed(
-        'Linux Wine archive did not install `${runtime.executablePath}`.',
+        'Linux Wine archive did not install '
+        '`${runtime.executablePath.toNullable()}`.',
       );
     }
 

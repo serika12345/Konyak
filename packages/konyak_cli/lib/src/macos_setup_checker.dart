@@ -112,7 +112,7 @@ class DartIoMacosSetupChecker implements MacosSetupChecker {
         ),
         runtime: RuntimeSetupStatus(
           runtimeId: macosWineRuntimeId,
-          isInstalled: runtime?.isInstalled == true,
+          isInstalled: runtime?.isInstalled.toNullable() == true,
         ),
       ),
     );

@@ -247,13 +247,26 @@ def require_result_boundary_rules() -> None:
     )
     for expected in [
         "final Option<String> distributionKind;",
+        "final Option<bool> isInstalled;",
         "final Option<String> archiveUrl;",
         "final Option<String> versionUrl;",
         "final Option<String> applicationSupportPath;",
         "final Option<String> libraryPath;",
         "final Option<String> executablePath;",
+        "final Option<RuntimeStack> stack;",
     ]:
         require_contains("packages/konyak_cli/lib/src/runtime_models.dart", expected)
+    for forbidden in [
+        "final String? distributionKind;",
+        "final bool? isInstalled;",
+        "final String? applicationSupportPath;",
+        "final String? libraryPath;",
+        "final String? executablePath;",
+        "final String? archiveUrl;",
+        "final String? versionUrl;",
+        "final RuntimeStack? stack;",
+    ]:
+        require_not_contains("packages/konyak_cli/lib/src/runtime_models.dart", forbidden)
 
     result_wrapped_repository_operation_files = [
         "packages/konyak_cli/lib/src/file_bottle_repository_mutation_operations.dart",

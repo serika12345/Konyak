@@ -16,14 +16,14 @@ class DartIoRuntimeUpdateChecker implements RuntimeUpdateChecker {
       return RuntimeUpdateRuntimeNotFound(runtimeId);
     }
 
-    final versionUrl = runtime.versionUrl;
+    final versionUrl = runtime.versionUrl.toNullable();
     if (versionUrl == null || versionUrl.trim().isEmpty) {
       return RuntimeUpdateCheckCompleted(
         RuntimeUpdateRecord(
           runtimeId: runtime.id,
           status: 'unknown',
           currentVersion: Option.fromNullable(_runtimeWineVersion(runtime)),
-          archiveUrl: Option.fromNullable(runtime.archiveUrl),
+          archiveUrl: runtime.archiveUrl,
         ),
       );
     }
@@ -42,7 +42,8 @@ class DartIoRuntimeUpdateChecker implements RuntimeUpdateChecker {
             latestVersion: Option.of(metadata.version),
             versionUrl: Option.of(versionUrl),
             archiveUrl: Option.fromNullable(
-              metadata.archiveUrl.toNullable() ?? runtime.archiveUrl,
+              metadata.archiveUrl.toNullable() ??
+                  runtime.archiveUrl.toNullable(),
             ),
             sourceManifestUrl: metadata.sourceManifestUrl,
             sourceManifestSignatureUrl: metadata.sourceManifestSignatureUrl,

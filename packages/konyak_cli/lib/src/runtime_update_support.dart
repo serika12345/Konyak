@@ -11,7 +11,7 @@ RuntimeRecord? _runtimeById(List<RuntimeRecord> runtimes, String runtimeId) {
 }
 
 String? _runtimeWineVersion(RuntimeRecord runtime) {
-  final stack = runtime.stack;
+  final stack = runtime.stack.toNullable();
   if (stack == null) {
     return null;
   }
