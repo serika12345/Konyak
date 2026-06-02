@@ -27,11 +27,10 @@ void _recordExternalProgramLaunch({
         decoded,
         programPath: programPath,
       );
-      if (parsedEntries == null) {
-        return;
-      }
-
-      existingEntries.addAll(parsedEntries);
+      parsedEntries.match(
+        () => throw const FormatException('Invalid launch index payload.'),
+        existingEntries.addAll,
+      );
     }
 
     launchIndexFile.parent.createSync(recursive: true);

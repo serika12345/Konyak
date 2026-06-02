@@ -13,21 +13,21 @@ Map<String, Object?> _externalProgramLaunchIndexPayload({
   };
 }
 
-List<Map<String, Object?>>? _externalProgramLaunchEntriesFromDecoded(
+Option<List<Map<String, Object?>>> _externalProgramLaunchEntriesFromDecoded(
   Object? decoded, {
   required String programPath,
 }) {
   if (decoded is! Map<String, Object?>) {
-    return null;
+    return const Option.none();
   }
 
   if (decoded['schemaVersion'] != 1) {
-    return <Map<String, Object?>>[];
+    return Option.of(const <Map<String, Object?>>[]);
   }
 
   final launches = decoded['launches'];
   if (launches is! List<Object?>) {
-    return <Map<String, Object?>>[];
+    return Option.of(const <Map<String, Object?>>[]);
   }
 
   final entry = _externalProgramLaunchEntry(programPath);
@@ -56,7 +56,7 @@ List<Map<String, Object?>>? _externalProgramLaunchEntriesFromDecoded(
     });
   }
 
-  return entries;
+  return Option.of(List.unmodifiable(entries));
 }
 
 Map<String, Object?> _externalProgramLaunchEntry(String programPath) {
@@ -66,7 +66,7 @@ Map<String, Object?> _externalProgramLaunchEntry(String programPath) {
   };
 }
 
-String? _externalProgramRunPath({
+Option<String> _externalProgramRunPath({
   required BottleRecord bottle,
   required ProgramRunRequest request,
 }) {
@@ -74,8 +74,8 @@ String? _externalProgramRunPath({
   if (normalizedProgramPath.isEmpty ||
       !normalizedProgramPath.startsWith('/') ||
       _isPathWithinRoot(path: normalizedProgramPath, root: bottle.path)) {
-    return null;
+    return const Option.none();
   }
 
-  return normalizedProgramPath;
+  return Option.of(normalizedProgramPath);
 }

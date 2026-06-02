@@ -8,13 +8,10 @@ void _recordExternalProgramRun({
     bottle: bottle,
     request: request,
   );
-  if (normalizedProgramPath == null) {
-    return;
-  }
-
-  _recordExternalProgramLaunch(
-    bottle: bottle,
-    programPath: normalizedProgramPath,
+  normalizedProgramPath.match(
+    () {},
+    (programPath) =>
+        _recordExternalProgramLaunch(bottle: bottle, programPath: programPath),
   );
 }
 
@@ -35,50 +32,45 @@ void _synchronizeLinuxDesktopLauncherForProgramRun({
     bottle: bottle,
     request: request,
   );
-  if (normalizedProgramPath == null) {
-    return;
-  }
-
-  try {
-    _recordExternalProgramLaunch(
-      bottle: bottle,
-      programPath: normalizedProgramPath,
-    );
-    final launcherPath = _linuxExternalProgramLauncherPath(
-      environment: environment,
-      bottleId: bottle.id,
-      programPath: normalizedProgramPath,
-    );
-    final metadata = programMetadataExtractor.extract(
-      bottle: bottle,
-      programPath: _metadataProgramPath(
+  normalizedProgramPath.match(() {}, (programPath) {
+    try {
+      _recordExternalProgramLaunch(bottle: bottle, programPath: programPath);
+      final launcherPath = _linuxExternalProgramLauncherPath(
+        environment: environment,
+        bottleId: bottle.id,
+        programPath: programPath,
+      );
+      final metadata = programMetadataExtractor.extract(
         bottle: bottle,
-        programPath: normalizedProgramPath,
-      ),
-    );
-    final launcherContents = _linuxExternalProgramDesktopEntry(
-      bottle: bottle,
-      request: request,
-      launcherName: _linuxExternalProgramLauncherName(
-        programPath: normalizedProgramPath,
-        metadata: metadata,
-      ),
-      iconPath: metadata.match(
-        () => null,
-        (programMetadata) => programMetadata.iconPath.toNullable(),
-      ),
-    );
-    _writeLinuxExternalProgramDesktopLauncher(
-      launcherPath: launcherPath,
-      launcherContents: launcherContents,
-    );
-  } on FileSystemException {
-    return;
-  } on BottleRepositoryException {
-    return;
-  } on StateError {
-    return;
-  }
+        programPath: _metadataProgramPath(
+          bottle: bottle,
+          programPath: programPath,
+        ),
+      );
+      final launcherContents = _linuxExternalProgramDesktopEntry(
+        bottle: bottle,
+        request: request,
+        launcherName: _linuxExternalProgramLauncherName(
+          programPath: programPath,
+          metadata: metadata,
+        ),
+        iconPath: metadata.match(
+          () => null,
+          (programMetadata) => programMetadata.iconPath.toNullable(),
+        ),
+      );
+      _writeLinuxExternalProgramDesktopLauncher(
+        launcherPath: launcherPath,
+        launcherContents: launcherContents,
+      );
+    } on FileSystemException {
+      return;
+    } on BottleRepositoryException {
+      return;
+    } on StateError {
+      return;
+    }
+  });
 }
 
 String _linuxExternalProgramLauncherName({
