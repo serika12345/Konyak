@@ -3,10 +3,10 @@ part of '../../../konyak_cli.dart';
 ProgramRunRequest _linuxWineRequest({
   required BottleRecord bottle,
   required String programPath,
-  required Map<String, String> environment,
+  required HostEnvironment environment,
   required ProgramSettingsRecord programSettings,
 }) {
-  final hostEnvironment = HostEnvironment(environment);
+  final hostEnvironment = environment;
   final arguments = <String>[
     ..._wineArgumentsForProgramPath(programPath),
     ..._programSettingsArguments(programSettings),
@@ -33,9 +33,9 @@ ProgramRunRequest _linuxWineRequest({
 ProgramRunRequest _linuxWineCommandRequest({
   required BottleRecord bottle,
   required String command,
-  required Map<String, String> environment,
+  required HostEnvironment environment,
 }) {
-  final hostEnvironment = HostEnvironment(environment);
+  final hostEnvironment = environment;
   return ProgramRunRequest(
     bottleId: bottle.id,
     programPath: command,
@@ -56,9 +56,9 @@ ProgramRunRequest _linuxWineCommandRequest({
 ProgramRunRequest _linuxRegistryUpdateRequest({
   required BottleRecord bottle,
   required _RegistryValueUpdate update,
-  required Map<String, String> environment,
+  required HostEnvironment environment,
 }) {
-  final hostEnvironment = HostEnvironment(environment);
+  final hostEnvironment = environment;
   return ProgramRunRequest(
     bottleId: bottle.id,
     programPath: 'reg',
@@ -79,9 +79,9 @@ ProgramRunRequest _linuxRegistryUpdateRequest({
 ProgramRunRequest _linuxRegistryQueryRequest({
   required BottleRecord bottle,
   required _RegistryValueQuery query,
-  required Map<String, String> environment,
+  required HostEnvironment environment,
 }) {
-  final hostEnvironment = HostEnvironment(environment);
+  final hostEnvironment = environment;
   return ProgramRunRequest(
     bottleId: bottle.id,
     programPath: 'reg',
@@ -101,9 +101,9 @@ ProgramRunRequest _linuxRegistryQueryRequest({
 
 ProgramRunRequest _linuxWinebootRequest({
   required BottleRecord bottle,
-  required Map<String, String> environment,
+  required HostEnvironment environment,
 }) {
-  final hostEnvironment = HostEnvironment(environment);
+  final hostEnvironment = environment;
   return ProgramRunRequest(
     bottleId: bottle.id,
     programPath: 'wineboot',
@@ -123,9 +123,9 @@ ProgramRunRequest _linuxWinebootRequest({
 
 ProgramRunRequest _linuxWineserverKillRequest({
   required BottleRecord bottle,
-  required Map<String, String> environment,
+  required HostEnvironment environment,
 }) {
-  final hostEnvironment = HostEnvironment(environment);
+  final hostEnvironment = environment;
   return ProgramRunRequest(
     bottleId: bottle.id,
     programPath: 'wineserver',
@@ -142,12 +142,12 @@ ProgramRunRequest _linuxWineserverKillRequest({
 
 ProgramRunRequest _linuxWinedbgRequest({
   required BottleRecord bottle,
-  required Map<String, String> environment,
+  required HostEnvironment environment,
   required String command,
   required String logName,
   List<String> trailingArguments = const <String>[],
 }) {
-  final hostEnvironment = HostEnvironment(environment);
+  final hostEnvironment = environment;
   return ProgramRunRequest(
     bottleId: bottle.id,
     programPath: 'winedbg',

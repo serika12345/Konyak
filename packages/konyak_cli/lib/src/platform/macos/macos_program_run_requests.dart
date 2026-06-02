@@ -3,10 +3,10 @@ part of '../../../konyak_cli.dart';
 ProgramRunRequest _macosWineRequest({
   required BottleRecord bottle,
   required String programPath,
-  required Map<String, String> environment,
+  required HostEnvironment environment,
   required ProgramSettingsRecord programSettings,
 }) {
-  final hostEnvironment = HostEnvironment(environment);
+  final hostEnvironment = environment;
   return ProgramRunRequest(
     bottleId: bottle.id,
     programPath: programPath,
@@ -30,9 +30,9 @@ ProgramRunRequest _macosWineRequest({
 
 ProgramRunRequest _macosWinebootRequest({
   required BottleRecord bottle,
-  required Map<String, String> environment,
+  required HostEnvironment environment,
 }) {
-  final hostEnvironment = HostEnvironment(environment);
+  final hostEnvironment = environment;
   return ProgramRunRequest(
     bottleId: bottle.id,
     programPath: 'wineboot',
@@ -49,9 +49,9 @@ ProgramRunRequest _macosWinebootRequest({
 
 ProgramRunRequest _macosWineserverKillRequest({
   required BottleRecord bottle,
-  required Map<String, String> environment,
+  required HostEnvironment environment,
 }) {
-  final hostEnvironment = HostEnvironment(environment);
+  final hostEnvironment = environment;
   return ProgramRunRequest(
     bottleId: bottle.id,
     programPath: 'wineserver',
@@ -68,12 +68,12 @@ ProgramRunRequest _macosWineserverKillRequest({
 
 ProgramRunRequest _macosWinedbgRequest({
   required BottleRecord bottle,
-  required Map<String, String> environment,
+  required HostEnvironment environment,
   required String command,
   required String logName,
   List<String> trailingArguments = const <String>[],
 }) {
-  final hostEnvironment = HostEnvironment(environment);
+  final hostEnvironment = environment;
   return ProgramRunRequest(
     bottleId: bottle.id,
     programPath: 'winedbg',
@@ -90,9 +90,9 @@ ProgramRunRequest _macosWinedbgRequest({
 
 Map<String, String> _macosWineEnvironment({
   required BottleRecord bottle,
-  required Map<String, String> environment,
+  required HostEnvironment environment,
 }) {
-  final hostEnvironment = HostEnvironment(environment);
+  final hostEnvironment = environment;
   final wineEnvironment = <String, String>{
     'WINEPREFIX': bottle.path,
     'WINEDEBUG': 'fixme-all',

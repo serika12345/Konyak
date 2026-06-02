@@ -53,10 +53,10 @@ Map<String, String> _linuxWinePrefixEnvironment(BottleRecord bottle) {
 
 Map<String, String> _linuxWineEnvironmentWithRuntime({
   required BottleRecord bottle,
-  required Map<String, String> environment,
+  required HostEnvironment environment,
 }) {
   final wineEnvironment = <String, String>{..._linuxWineEnvironment(bottle)};
-  final hostEnvironment = HostEnvironment(environment);
+  final hostEnvironment = environment;
   final dllPathEntries = <String>[];
   if (bottle.runtimeSettings.dxvk) {
     final runtimeRoot = _linuxWineRuntimeRoot(hostEnvironment);
@@ -92,9 +92,9 @@ Map<String, String> _linuxWineEnvironmentWithRuntime({
 ProgramRunRequest _macosWineCommandRequest({
   required BottleRecord bottle,
   required String command,
-  required Map<String, String> environment,
+  required HostEnvironment environment,
 }) {
-  final hostEnvironment = HostEnvironment(environment);
+  final hostEnvironment = environment;
   return ProgramRunRequest(
     bottleId: bottle.id,
     programPath: command,
@@ -112,9 +112,9 @@ ProgramRunRequest _macosWineCommandRequest({
 ProgramRunRequest _macosRegistryUpdateRequest({
   required BottleRecord bottle,
   required _RegistryValueUpdate update,
-  required Map<String, String> environment,
+  required HostEnvironment environment,
 }) {
-  final hostEnvironment = HostEnvironment(environment);
+  final hostEnvironment = environment;
   return ProgramRunRequest(
     bottleId: bottle.id,
     programPath: 'reg',
@@ -132,9 +132,9 @@ ProgramRunRequest _macosRegistryUpdateRequest({
 ProgramRunRequest _macosRegistryQueryRequest({
   required BottleRecord bottle,
   required _RegistryValueQuery query,
-  required Map<String, String> environment,
+  required HostEnvironment environment,
 }) {
-  final hostEnvironment = HostEnvironment(environment);
+  final hostEnvironment = environment;
   return ProgramRunRequest(
     bottleId: bottle.id,
     programPath: 'reg',
@@ -151,7 +151,7 @@ ProgramRunRequest _macosRegistryQueryRequest({
 
 ProgramRunRequest _linuxTerminalCommandRequest({
   required BottleRecord bottle,
-  required Map<String, String> environment,
+  required HostEnvironment environment,
 }) {
   return ProgramRunRequest(
     bottleId: bottle.id,
@@ -174,7 +174,7 @@ ProgramRunRequest _linuxTerminalCommandRequest({
 
 ProgramRunRequest _macosTerminalCommandRequest({
   required BottleRecord bottle,
-  required Map<String, String> environment,
+  required HostEnvironment environment,
 }) {
   final shellCommand = _macosWineTerminalShellCommand(
     bottle: bottle,
@@ -194,10 +194,10 @@ ProgramRunRequest _macosTerminalCommandRequest({
 
 ProgramRunRequest _linuxWinetricksCommandRequest({
   required BottleRecord bottle,
-  required Map<String, String> environment,
+  required HostEnvironment environment,
   String? verb,
 }) {
-  final hostEnvironment = HostEnvironment(environment);
+  final hostEnvironment = environment;
   return ProgramRunRequest(
     bottleId: bottle.id,
     programPath: verb ?? 'winetricks',
@@ -217,10 +217,10 @@ ProgramRunRequest _linuxWinetricksCommandRequest({
 
 ProgramRunRequest _macosWinetricksCommandRequest({
   required BottleRecord bottle,
-  required Map<String, String> environment,
+  required HostEnvironment environment,
   required String? verb,
 }) {
-  final hostEnvironment = HostEnvironment(environment);
+  final hostEnvironment = environment;
   final runtimeRoot = _macosWineRuntimeRoot(hostEnvironment);
   final runtimeBin = _macosWineBinFolder(hostEnvironment);
 

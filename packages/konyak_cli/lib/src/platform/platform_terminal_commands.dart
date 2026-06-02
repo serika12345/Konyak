@@ -1,15 +1,10 @@
 part of '../../konyak_cli.dart';
 
-Option<String> _linuxTerminalOverride(Map<String, String> environment) {
-  final terminal = environment['TERMINAL'];
-  if (terminal != null && terminal.trim().isNotEmpty) {
-    return Option.of(terminal.trim());
-  }
-
-  return const Option.none();
+Option<String> _linuxTerminalOverride(HostEnvironment environment) {
+  return Option.fromNullable(environment.nonEmptyValue('TERMINAL'));
 }
 
-String _linuxTerminalLauncherCommand(Map<String, String> environment) {
+String _linuxTerminalLauncherCommand(HostEnvironment environment) {
   final override = _linuxTerminalOverride(environment);
   final candidates = <String>[
     ...override.match(
@@ -38,9 +33,9 @@ String _linuxTerminalLauncherCommand(Map<String, String> environment) {
 
 String _linuxWineTerminalShellCommandWithEnvironment({
   required BottleRecord bottle,
-  required Map<String, String> environment,
+  required HostEnvironment environment,
 }) {
-  final hostEnvironment = HostEnvironment(environment);
+  final hostEnvironment = environment;
   final executable = _linuxWineExecutable(hostEnvironment);
   final runtimeBin = _linuxManagedRuntimeBinFolder(hostEnvironment);
   final wineLibraryPath = hostEnvironment.nonEmptyValue(
@@ -72,9 +67,9 @@ String _linuxWineTerminalShellCommandWithEnvironment({
 
 String _macosWineTerminalShellCommand({
   required BottleRecord bottle,
-  required Map<String, String> environment,
+  required HostEnvironment environment,
 }) {
-  final runtimeBin = _macosWineBinFolder(HostEnvironment(environment));
+  final runtimeBin = _macosWineBinFolder(environment);
   final commands = <String>[
     'cd ${_shellQuote(bottle.path)}',
     'export PATH=${_shellQuote(runtimeBin)}:\$PATH',

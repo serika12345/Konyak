@@ -42,13 +42,13 @@ class ProgramRunPlanner {
       KonyakHostPlatform.linux => _linuxWineRequest(
         bottle: bottle,
         programPath: programPath,
-        environment: environment.toMap(),
+        environment: environment,
         programSettings: programSettings.getOrElse(ProgramSettingsRecord.new),
       ),
       KonyakHostPlatform.macos => _macosWineRequest(
         bottle: bottle,
         programPath: programPath,
-        environment: environment.toMap(),
+        environment: environment,
         programSettings: programSettings.getOrElse(ProgramSettingsRecord.new),
       ),
     });
@@ -75,11 +75,11 @@ class ProgramRunPlanner {
       return Option.of(switch (hostPlatform) {
         KonyakHostPlatform.linux => _linuxTerminalCommandRequest(
           bottle: bottle,
-          environment: environment.toMap(),
+          environment: environment,
         ),
         KonyakHostPlatform.macos => _macosTerminalCommandRequest(
           bottle: bottle,
-          environment: environment.toMap(),
+          environment: environment,
         ),
       });
     }
@@ -88,11 +88,11 @@ class ProgramRunPlanner {
       return Option.of(switch (hostPlatform) {
         KonyakHostPlatform.linux => _linuxWinetricksCommandRequest(
           bottle: bottle,
-          environment: environment.toMap(),
+          environment: environment,
         ),
         KonyakHostPlatform.macos => _macosWinetricksCommandRequest(
           bottle: bottle,
-          environment: environment.toMap(),
+          environment: environment,
           verb: null,
         ),
       });
@@ -102,12 +102,12 @@ class ProgramRunPlanner {
       KonyakHostPlatform.linux => _linuxWineCommandRequest(
         bottle: bottle,
         command: supportedCommand,
-        environment: environment.toMap(),
+        environment: environment,
       ),
       KonyakHostPlatform.macos => _macosWineCommandRequest(
         bottle: bottle,
         command: supportedCommand,
-        environment: environment.toMap(),
+        environment: environment,
       ),
     });
   }
@@ -116,11 +116,11 @@ class ProgramRunPlanner {
     return switch (hostPlatform) {
       KonyakHostPlatform.linux => _linuxWinebootRequest(
         bottle: bottle,
-        environment: environment.toMap(),
+        environment: environment,
       ),
       KonyakHostPlatform.macos => _macosWinebootRequest(
         bottle: bottle,
-        environment: environment.toMap(),
+        environment: environment,
       ),
     };
   }
@@ -129,11 +129,11 @@ class ProgramRunPlanner {
     return switch (hostPlatform) {
       KonyakHostPlatform.linux => _linuxWineserverKillRequest(
         bottle: bottle,
-        environment: environment.toMap(),
+        environment: environment,
       ),
       KonyakHostPlatform.macos => _macosWineserverKillRequest(
         bottle: bottle,
-        environment: environment.toMap(),
+        environment: environment,
       ),
     };
   }
@@ -142,13 +142,13 @@ class ProgramRunPlanner {
     return switch (hostPlatform) {
       KonyakHostPlatform.linux => _linuxWinedbgRequest(
         bottle: bottle,
-        environment: environment.toMap(),
+        environment: environment,
         command: 'info proc',
         logName: 'wine-processes.log',
       ),
       KonyakHostPlatform.macos => _macosWinedbgRequest(
         bottle: bottle,
-        environment: environment.toMap(),
+        environment: environment,
         command: 'info proc',
         logName: 'wine-processes.log',
       ),
@@ -163,14 +163,14 @@ class ProgramRunPlanner {
     return switch (hostPlatform) {
       KonyakHostPlatform.linux => _linuxWinedbgRequest(
         bottle: bottle,
-        environment: environment.toMap(),
+        environment: environment,
         command: 'kill',
         logName: 'wine-process-kill.log',
         trailingArguments: <String>[attachProcessId],
       ),
       KonyakHostPlatform.macos => _macosWinedbgRequest(
         bottle: bottle,
-        environment: environment.toMap(),
+        environment: environment,
         command: 'kill',
         logName: 'wine-process-kill.log',
         trailingArguments: <String>[attachProcessId],
@@ -189,12 +189,12 @@ class ProgramRunPlanner {
     return Option.of(switch (hostPlatform) {
       KonyakHostPlatform.linux => _linuxWinetricksCommandRequest(
         bottle: bottle,
-        environment: environment.toMap(),
+        environment: environment,
         verb: verb,
       ),
       KonyakHostPlatform.macos => _macosWinetricksCommandRequest(
         bottle: bottle,
-        environment: environment.toMap(),
+        environment: environment,
         verb: verb,
       ),
     });
@@ -212,12 +212,12 @@ class ProgramRunPlanner {
           KonyakHostPlatform.linux => _linuxRegistryUpdateRequest(
             bottle: bottle,
             update: update,
-            environment: environment.toMap(),
+            environment: environment,
           ),
           KonyakHostPlatform.macos => _macosRegistryUpdateRequest(
             bottle: bottle,
             update: update,
-            environment: environment.toMap(),
+            environment: environment,
           ),
         };
       }),
@@ -241,12 +241,12 @@ class ProgramRunPlanner {
           KonyakHostPlatform.linux => _linuxRegistryUpdateRequest(
             bottle: bottle,
             update: update,
-            environment: environment.toMap(),
+            environment: environment,
           ),
           KonyakHostPlatform.macos => _macosRegistryUpdateRequest(
             bottle: bottle,
             update: update,
-            environment: environment.toMap(),
+            environment: environment,
           ),
         };
       }),
@@ -266,12 +266,12 @@ class ProgramRunPlanner {
           KonyakHostPlatform.linux => _linuxRegistryQueryRequest(
             bottle: bottle,
             query: query,
-            environment: environment.toMap(),
+            environment: environment,
           ),
           KonyakHostPlatform.macos => _macosRegistryQueryRequest(
             bottle: bottle,
             query: query,
-            environment: environment.toMap(),
+            environment: environment,
           ),
         };
       }),
