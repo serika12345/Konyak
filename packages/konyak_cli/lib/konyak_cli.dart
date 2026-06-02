@@ -8,6 +8,8 @@ import 'package:args/args.dart';
 import 'package:crypto/crypto.dart';
 
 part 'src/cli_commands.dart';
+part 'src/cli_app_handlers.dart';
+part 'src/cli_host_integration_handlers.dart';
 part 'src/cli_app_runtime_handlers.dart';
 part 'src/cli_wine_process_handlers.dart';
 part 'src/cli_bottle_read_handlers.dart';
