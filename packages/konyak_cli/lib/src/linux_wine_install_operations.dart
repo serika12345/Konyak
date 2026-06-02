@@ -98,9 +98,7 @@ extension _DartIoLinuxWineInstallerOperations on DartIoLinuxWineInstaller {
     } on ProcessException catch (error) {
       return LinuxWineInstallFailed(error.message);
     } finally {
-      if (tempDirectory.existsSync()) {
-        tempDirectory.deleteSync(recursive: true);
-      }
+      _deleteDirectoryIfPresent(tempDirectory);
     }
   }
 
@@ -154,9 +152,7 @@ extension _DartIoLinuxWineInstallerOperations on DartIoLinuxWineInstaller {
     } on ProcessException catch (error) {
       return LinuxWineInstallFailed(error.message);
     } finally {
-      if (tempDirectory.existsSync()) {
-        tempDirectory.deleteSync(recursive: true);
-      }
+      _deleteDirectoryIfPresent(tempDirectory);
     }
   }
 

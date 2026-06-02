@@ -113,9 +113,7 @@ extension _MacosWineArchiveInstallation on DartIoMacosWineInstaller {
     } on ProcessException catch (error) {
       return MacosWineInstallFailed(error.message);
     } finally {
-      if (tempDirectory.existsSync()) {
-        tempDirectory.deleteSync(recursive: true);
-      }
+      _deleteDirectoryIfPresent(tempDirectory);
     }
   }
 
@@ -171,9 +169,7 @@ extension _MacosWineArchiveInstallation on DartIoMacosWineInstaller {
     } on ProcessException catch (error) {
       return MacosWineInstallFailed(error.message);
     } finally {
-      if (tempDirectory.existsSync()) {
-        tempDirectory.deleteSync(recursive: true);
-      }
+      _deleteDirectoryIfPresent(tempDirectory);
     }
   }
 

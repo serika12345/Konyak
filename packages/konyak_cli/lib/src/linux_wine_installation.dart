@@ -147,9 +147,7 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
     } on ProcessException catch (error) {
       return LinuxWineInstallFailed(error.message);
     } finally {
-      if (tempDirectory.existsSync()) {
-        tempDirectory.deleteSync(recursive: true);
-      }
+      _deleteDirectoryIfPresent(tempDirectory);
     }
   }
 
@@ -272,9 +270,7 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
     } on ProcessException catch (error) {
       return LinuxWineInstallFailed(error.message);
     } finally {
-      if (tempDirectory.existsSync()) {
-        tempDirectory.deleteSync(recursive: true);
-      }
+      _deleteDirectoryIfPresent(tempDirectory);
     }
   }
 }

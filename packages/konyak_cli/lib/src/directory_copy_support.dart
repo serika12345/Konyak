@@ -108,6 +108,12 @@ void _deleteFileSystemEntitySync(String path, FileSystemEntityType type) {
   }
 }
 
+void _deleteDirectoryIfPresent(Directory directory) {
+  if (directory.existsSync()) {
+    directory.deleteSync(recursive: true);
+  }
+}
+
 bool _isSkippedRelativePath(
   List<String> relativePath,
   List<List<String>> skipRelativePaths,
