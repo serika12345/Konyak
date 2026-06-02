@@ -12,17 +12,17 @@ Map<String, String> _peVersionStrings(_PortableExecutableImage image) {
       'FileVersion',
       'ProductVersion',
     ]) {
-      values.putIfAbsent(key, () => _valueAfterToken(strings, key) ?? '');
-      if (values[key] == '') {
-        values.remove(key);
-      }
+      _valueAfterToken(
+        strings,
+        key,
+      ).match(() {}, (value) => values.putIfAbsent(key, () => value));
     }
   }
 
   return Map.unmodifiable(values);
 }
 
-String? _valueAfterToken(List<String> values, String key) {
+Option<String> _valueAfterToken(List<String> values, String key) {
   final knownKeys = const <String>{
     'FileDescription',
     'ProductName',
@@ -44,12 +44,12 @@ String? _valueAfterToken(List<String> values, String key) {
         break;
       }
       if (value.isNotEmpty) {
-        return value;
+        return Option.of(value);
       }
     }
   }
 
-  return null;
+  return const Option.none();
 }
 
 List<String> _utf16LeTokens(Uint8List bytes) {

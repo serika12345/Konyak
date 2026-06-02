@@ -50,41 +50,40 @@ String _shortcutProgramName(String path) {
   return baseName.substring(0, extensionStart);
 }
 
-String? _shortcutTargetProgramPathFromBytes({
+Option<String> _shortcutTargetProgramPathFromBytes({
   required BottleRecord bottle,
   required Uint8List bytes,
 }) {
   try {
-    final windowsPath = _shellLinkLocalBasePath(bytes);
-    if (windowsPath == null) {
-      return null;
-    }
-
-    return _wineWindowsPathToHostPath(bottle: bottle, windowsPath: windowsPath);
+    return _shellLinkLocalBasePath(bytes).flatMap(
+      (windowsPath) => Option.fromNullable(
+        _wineWindowsPathToHostPath(bottle: bottle, windowsPath: windowsPath),
+      ),
+    );
   } on RangeError {
-    return null;
+    return const Option.none();
   }
 }
 
-String? _shellLinkLocalBasePath(Uint8List bytes) {
+Option<String> _shellLinkLocalBasePath(Uint8List bytes) {
   const shellLinkHeaderSize = 0x4c;
   final headerSize = _readUint32(bytes, 0);
   final linkFlags = _readUint32(bytes, 0x14);
   if (headerSize != shellLinkHeaderSize || linkFlags == null) {
-    return null;
+    return const Option.none();
   }
 
   var offset = shellLinkHeaderSize;
   if (linkFlags & 0x00000001 != 0) {
     final idListSize = _readUint16(bytes, offset);
     if (idListSize == null) {
-      return null;
+      return const Option.none();
     }
     offset += 2 + idListSize;
   }
 
   if (linkFlags & 0x00000002 == 0) {
-    return null;
+    return const Option.none();
   }
 
   final linkInfoSize = _readUint32(bytes, offset);
@@ -95,23 +94,27 @@ String? _shellLinkLocalBasePath(Uint8List bytes) {
       localBasePathOffset == null ||
       linkInfoSize <= 0 ||
       offset + linkInfoSize > bytes.length) {
-    return null;
+    return const Option.none();
   }
 
   if (linkInfoHeaderSize >= 0x24) {
     final localBasePathUnicodeOffset = _readUint32(bytes, offset + 28);
     if (localBasePathUnicodeOffset != null && localBasePathUnicodeOffset > 0) {
-      return _nullTerminatedUtf16LeString(
-        bytes,
-        offset + localBasePathUnicodeOffset,
-        offset + linkInfoSize,
+      return Option.fromNullable(
+        _nullTerminatedUtf16LeString(
+          bytes,
+          offset + localBasePathUnicodeOffset,
+          offset + linkInfoSize,
+        ),
       );
     }
   }
 
-  return _nullTerminatedAsciiString(
-    bytes,
-    offset + localBasePathOffset,
-    offset + linkInfoSize,
+  return Option.fromNullable(
+    _nullTerminatedAsciiString(
+      bytes,
+      offset + localBasePathOffset,
+      offset + linkInfoSize,
+    ),
   );
 }

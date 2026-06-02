@@ -1,6 +1,6 @@
 part of '../../konyak_cli.dart';
 
-String? _shortcutTargetProgramPath({
+Option<String> _shortcutTargetProgramPath({
   required BottleRecord bottle,
   required String shortcutPath,
 }) {
@@ -10,7 +10,7 @@ String? _shortcutTargetProgramPath({
       bytes: File(shortcutPath).readAsBytesSync(),
     );
   } on FileSystemException {
-    return null;
+    return const Option.none();
   }
 }
 
@@ -23,8 +23,7 @@ String _metadataProgramPath({
   }
 
   return _shortcutTargetProgramPath(
-        bottle: bottle,
-        shortcutPath: programPath,
-      ) ??
-      programPath;
+    bottle: bottle,
+    shortcutPath: programPath,
+  ).match(() => programPath, (targetPath) => targetPath);
 }
