@@ -22,8 +22,8 @@ class DartIoRuntimeUpdateChecker implements RuntimeUpdateChecker {
         RuntimeUpdateRecord(
           runtimeId: runtime.id,
           status: 'unknown',
-          currentVersion: _runtimeWineVersion(runtime),
-          archiveUrl: runtime.archiveUrl,
+          currentVersion: Option.fromNullable(_runtimeWineVersion(runtime)),
+          archiveUrl: Option.fromNullable(runtime.archiveUrl),
         ),
       );
     }
@@ -38,13 +38,14 @@ class DartIoRuntimeUpdateChecker implements RuntimeUpdateChecker {
               currentVersion: _runtimeWineVersion(runtime),
               latestVersion: metadata.version,
             ),
-            currentVersion: _runtimeWineVersion(runtime),
-            latestVersion: metadata.version,
-            versionUrl: versionUrl,
-            archiveUrl: metadata.archiveUrl.toNullable() ?? runtime.archiveUrl,
-            sourceManifestUrl: metadata.sourceManifestUrl.toNullable(),
-            sourceManifestSignatureUrl: metadata.sourceManifestSignatureUrl
-                .toNullable(),
+            currentVersion: Option.fromNullable(_runtimeWineVersion(runtime)),
+            latestVersion: Option.of(metadata.version),
+            versionUrl: Option.of(versionUrl),
+            archiveUrl: Option.fromNullable(
+              metadata.archiveUrl.toNullable() ?? runtime.archiveUrl,
+            ),
+            sourceManifestUrl: metadata.sourceManifestUrl,
+            sourceManifestSignatureUrl: metadata.sourceManifestSignatureUrl,
           ),
         ),
       RuntimeReleaseMetadataFetchFailed(:final message) =>

@@ -176,6 +176,9 @@ def require_result_boundary_rules() -> None:
         "final String? hostPath;",
     )
     for expected in [
+        "final Option<String> currentVersion;",
+        "final Option<String> latestVersion;",
+        "final Option<String> versionUrl;",
         "final Option<String> archiveUrl;",
         "final Option<String> archiveSha256;",
         "final Option<String> sourceManifestUrl;",

@@ -169,6 +169,45 @@ void main() {
     );
   });
 
+  test('runtime update records model absent fields with Option', () {
+    final update = RuntimeUpdateRecord(runtimeId: 'wine', status: 'unknown');
+    final available = RuntimeUpdateRecord(
+      runtimeId: 'wine',
+      status: 'available',
+      currentVersion: Option.of('1.0.0'),
+      latestVersion: Option.of('1.1.0'),
+      archiveUrl: Option.of('https://example.invalid/wine.tar.xz'),
+    );
+
+    expect(update.currentVersion.isNone(), isTrue);
+    expect(update.archiveUrl.isNone(), isTrue);
+    expect(update.toJson(), isNot(contains('archiveUrl')));
+    expect(available.toJson(), containsPair('currentVersion', '1.0.0'));
+    expect(
+      available.toJson(),
+      containsPair('archiveUrl', 'https://example.invalid/wine.tar.xz'),
+    );
+  });
+
+  test('runtime update records reject blank present fields', () {
+    expect(
+      () => RuntimeUpdateRecord(runtimeId: ' ', status: 'unknown'),
+      throwsA(isA<ArgumentError>()),
+    );
+    expect(
+      () => RuntimeUpdateRecord(runtimeId: 'wine', status: ' '),
+      throwsA(isA<ArgumentError>()),
+    );
+    expect(
+      () => RuntimeUpdateRecord(
+        runtimeId: 'wine',
+        status: 'unknown',
+        archiveUrl: Option.of(' '),
+      ),
+      throwsA(isA<ArgumentError>()),
+    );
+  });
+
   test('program settings expose immutable environment snapshots', () {
     final environment = <String, String>{'LANG': 'ja_JP.UTF-8'};
     final settings = ProgramSettingsRecord(environment: environment);

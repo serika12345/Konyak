@@ -1,39 +1,67 @@
 part of '../konyak_cli.dart';
 
 class RuntimeUpdateRecord {
-  const RuntimeUpdateRecord({
-    required this.runtimeId,
-    required this.status,
-    this.currentVersion,
-    this.latestVersion,
-    this.versionUrl,
-    this.archiveUrl,
-    this.sourceManifestUrl,
-    this.sourceManifestSignatureUrl,
-  });
+  RuntimeUpdateRecord({
+    required String runtimeId,
+    required String status,
+    Option<String> currentVersion = const Option.none(),
+    Option<String> latestVersion = const Option.none(),
+    Option<String> versionUrl = const Option.none(),
+    Option<String> archiveUrl = const Option.none(),
+    Option<String> sourceManifestUrl = const Option.none(),
+    Option<String> sourceManifestSignatureUrl = const Option.none(),
+  }) : runtimeId = _requiredNonBlankDomainString(runtimeId, 'runtimeId'),
+       status = _requiredNonBlankDomainString(status, 'status'),
+       currentVersion = _requiredNonBlankUpdateOption(
+         currentVersion,
+         'currentVersion',
+       ),
+       latestVersion = _requiredNonBlankUpdateOption(
+         latestVersion,
+         'latestVersion',
+       ),
+       versionUrl = _requiredNonBlankUpdateOption(versionUrl, 'versionUrl'),
+       archiveUrl = _requiredNonBlankUpdateOption(archiveUrl, 'archiveUrl'),
+       sourceManifestUrl = _requiredNonBlankUpdateOption(
+         sourceManifestUrl,
+         'sourceManifestUrl',
+       ),
+       sourceManifestSignatureUrl = _requiredNonBlankUpdateOption(
+         sourceManifestSignatureUrl,
+         'sourceManifestSignatureUrl',
+       );
 
   final String runtimeId;
   final String status;
-  final String? currentVersion;
-  final String? latestVersion;
-  final String? versionUrl;
-  final String? archiveUrl;
-  final String? sourceManifestUrl;
-  final String? sourceManifestSignatureUrl;
+  final Option<String> currentVersion;
+  final Option<String> latestVersion;
+  final Option<String> versionUrl;
+  final Option<String> archiveUrl;
+  final Option<String> sourceManifestUrl;
+  final Option<String> sourceManifestSignatureUrl;
 
   Map<String, Object?> toJson() {
     return <String, Object?>{
       'runtimeId': runtimeId,
       'status': status,
-      if (currentVersion != null) 'currentVersion': currentVersion,
-      if (latestVersion != null) 'latestVersion': latestVersion,
-      if (versionUrl != null) 'versionUrl': versionUrl,
-      if (archiveUrl != null) 'archiveUrl': archiveUrl,
-      if (sourceManifestUrl != null) 'sourceManifestUrl': sourceManifestUrl,
-      if (sourceManifestSignatureUrl != null)
-        'sourceManifestSignatureUrl': sourceManifestSignatureUrl,
+      ..._updateJsonField('currentVersion', currentVersion),
+      ..._updateJsonField('latestVersion', latestVersion),
+      ..._updateJsonField('versionUrl', versionUrl),
+      ..._updateJsonField('archiveUrl', archiveUrl),
+      ..._updateJsonField('sourceManifestUrl', sourceManifestUrl),
+      ..._updateJsonField(
+        'sourceManifestSignatureUrl',
+        sourceManifestSignatureUrl,
+      ),
     };
   }
+}
+
+Map<String, Object?> _updateJsonField(String key, Option<String> value) {
+  return value.match(
+    () => const <String, Object?>{},
+    (item) => <String, Object?>{key: item},
+  );
 }
 
 sealed class RuntimeUpdateCheckResult {

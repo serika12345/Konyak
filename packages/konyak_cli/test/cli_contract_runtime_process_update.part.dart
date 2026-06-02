@@ -657,16 +657,18 @@ void defineRuntimeProcessAndUpdateContractTests() {
   });
   test('check-runtime-update --json returns machine-readable update status', () {
     final checker = RecordingRuntimeUpdateChecker(
-      result: const RuntimeUpdateCheckCompleted(
+      result: RuntimeUpdateCheckCompleted(
         RuntimeUpdateRecord(
           runtimeId: 'konyak-macos-wine',
           status: 'available',
-          currentVersion: 'wine-devel-11.9',
-          latestVersion: '12.0',
-          versionUrl:
-              'https://api.github.com/repos/Gcenx/macOS_Wine_builds/releases/latest',
-          archiveUrl:
-              'https://github.com/Gcenx/macOS_Wine_builds/releases/download/11.9/wine-devel-11.9-osx64.tar.xz',
+          currentVersion: Option.of('wine-devel-11.9'),
+          latestVersion: Option.of('12.0'),
+          versionUrl: Option.of(
+            'https://api.github.com/repos/Gcenx/macOS_Wine_builds/releases/latest',
+          ),
+          archiveUrl: Option.of(
+            'https://github.com/Gcenx/macOS_Wine_builds/releases/download/11.9/wine-devel-11.9-osx64.tar.xz',
+          ),
         ),
       ),
     );
@@ -1870,13 +1872,15 @@ void defineRuntimeProcessAndUpdateContractTests() {
 
   test('install-runtime-update --json installs available runtime updates', () {
     final checker = RecordingRuntimeUpdateChecker(
-      result: const RuntimeUpdateCheckCompleted(
+      result: RuntimeUpdateCheckCompleted(
         RuntimeUpdateRecord(
           runtimeId: 'konyak-macos-wine',
           status: 'available',
-          currentVersion: 'wine-devel-11.9',
-          latestVersion: '12.0',
-          archiveUrl: 'https://example.invalid/wine-devel-12.0-osx64.tar.xz',
+          currentVersion: Option.of('wine-devel-11.9'),
+          latestVersion: Option.of('12.0'),
+          archiveUrl: Option.of(
+            'https://example.invalid/wine-devel-12.0-osx64.tar.xz',
+          ),
         ),
       ),
     );
@@ -1925,13 +1929,15 @@ void defineRuntimeProcessAndUpdateContractTests() {
 
   test('install-runtime-update uses stack source manifests when available', () {
     final checker = RecordingRuntimeUpdateChecker(
-      result: const RuntimeUpdateCheckCompleted(
+      result: RuntimeUpdateCheckCompleted(
         RuntimeUpdateRecord(
           runtimeId: 'konyak-macos-wine',
           status: 'available',
-          currentVersion: 'wine-devel-11.9',
-          latestVersion: '12.0',
-          archiveUrl: 'https://example.invalid/runtime-stack-source.json',
+          currentVersion: Option.of('wine-devel-11.9'),
+          latestVersion: Option.of('12.0'),
+          archiveUrl: Option.of(
+            'https://example.invalid/runtime-stack-source.json',
+          ),
         ),
       ),
     );
@@ -1970,13 +1976,15 @@ void defineRuntimeProcessAndUpdateContractTests() {
 
   test('install-runtime-update installs available Linux runtime updates', () {
     final checker = RecordingRuntimeUpdateChecker(
-      result: const RuntimeUpdateCheckCompleted(
+      result: RuntimeUpdateCheckCompleted(
         RuntimeUpdateRecord(
           runtimeId: 'konyak-linux-wine',
           status: 'available',
-          currentVersion: 'wine-10.0',
-          latestVersion: 'wine-10.1',
-          archiveUrl: 'https://example.invalid/linux-wine-10.1.tar.xz',
+          currentVersion: Option.of('wine-10.0'),
+          latestVersion: Option.of('wine-10.1'),
+          archiveUrl: Option.of(
+            'https://example.invalid/linux-wine-10.1.tar.xz',
+          ),
         ),
       ),
     );
@@ -2018,17 +2026,21 @@ void defineRuntimeProcessAndUpdateContractTests() {
     'install-runtime-update uses stack source manifests for Linux when available',
     () {
       final checker = RecordingRuntimeUpdateChecker(
-        result: const RuntimeUpdateCheckCompleted(
+        result: RuntimeUpdateCheckCompleted(
           RuntimeUpdateRecord(
             runtimeId: 'konyak-linux-wine',
             status: 'available',
-            currentVersion: 'wine-10.0',
-            latestVersion: 'wine-10.1',
-            sourceManifestUrl:
-                'https://example.invalid/linux-runtime-stack.json',
-            sourceManifestSignatureUrl:
-                'https://example.invalid/linux-runtime-stack.json.sig',
-            archiveUrl: 'https://example.invalid/linux-runtime-stack.json',
+            currentVersion: Option.of('wine-10.0'),
+            latestVersion: Option.of('wine-10.1'),
+            sourceManifestUrl: Option.of(
+              'https://example.invalid/linux-runtime-stack.json',
+            ),
+            sourceManifestSignatureUrl: Option.of(
+              'https://example.invalid/linux-runtime-stack.json.sig',
+            ),
+            archiveUrl: Option.of(
+              'https://example.invalid/linux-runtime-stack.json',
+            ),
           ),
         ),
       );
@@ -2122,14 +2134,14 @@ void defineRuntimeProcessAndUpdateContractTests() {
       final completed = result as RuntimeUpdateCheckCompleted;
       expect(completed.update.status, 'available');
       expect(
-        completed.update.sourceManifestUrl,
+        completed.update.sourceManifestUrl.toNullable(),
         'https://example.invalid/linux-runtime-stack-source.json',
       );
       expect(
-        completed.update.sourceManifestSignatureUrl,
+        completed.update.sourceManifestSignatureUrl.toNullable(),
         'https://example.invalid/linux-runtime-stack-source.json.sig',
       );
-      expect(completed.update.archiveUrl, isNull);
+      expect(completed.update.archiveUrl.isNone(), isTrue);
     },
   );
 
@@ -2180,9 +2192,9 @@ void defineRuntimeProcessAndUpdateContractTests() {
       expect(result, isA<RuntimeUpdateCheckCompleted>());
       final completed = result as RuntimeUpdateCheckCompleted;
       expect(completed.update.status, 'available');
-      expect(completed.update.sourceManifestUrl, isNull);
+      expect(completed.update.sourceManifestUrl.isNone(), isTrue);
       expect(
-        completed.update.archiveUrl,
+        completed.update.archiveUrl.toNullable(),
         'https://example.invalid/linux-wine-10.1.tar.xz',
       );
     },
@@ -2231,8 +2243,8 @@ void defineRuntimeProcessAndUpdateContractTests() {
       expect(result, isA<RuntimeUpdateCheckCompleted>());
       final completed = result as RuntimeUpdateCheckCompleted;
       expect(completed.update.status, 'current');
-      expect(completed.update.currentVersion, 'wine-devel-11.9');
-      expect(completed.update.latestVersion, '11.9');
+      expect(completed.update.currentVersion.toNullable(), 'wine-devel-11.9');
+      expect(completed.update.latestVersion.toNullable(), '11.9');
     },
   );
 
