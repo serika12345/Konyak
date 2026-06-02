@@ -1,11 +1,16 @@
 part of '../konyak_cli.dart';
 
-mixin _FileBottleRepositoryMutationOperations {
-  String get dataHome;
+class _FileBottleRepositoryMutationOperations {
+  const _FileBottleRepositoryMutationOperations({
+    required this.dataHome,
+    required this.bottleDirectory,
+    required BottleRecord? Function(String id) findBottle,
+  }) : _findBottle = findBottle;
 
-  String get bottleDirectory;
+  final String dataHome;
+  final String bottleDirectory;
+  final BottleRecord? Function(String id) _findBottle;
 
-  BottleRecord? findBottle(String id);
   BottleCreateResult createBottle(BottleCreateRequest request) {
     final bottle = _bottleFromCreateRequest(
       request,
@@ -27,7 +32,7 @@ mixin _FileBottleRepositoryMutationOperations {
   }
 
   BottleDeleteResult deleteBottle(String id) {
-    final bottle = findBottle(id);
+    final bottle = _findBottle(id);
     if (bottle == null) {
       return BottleDeleteMissing(id);
     }
@@ -42,7 +47,7 @@ mixin _FileBottleRepositoryMutationOperations {
   }
 
   BottleRenameResult renameBottle(BottleRenameRequest request) {
-    final bottle = findBottle(request.bottleId);
+    final bottle = _findBottle(request.bottleId);
     if (bottle == null) {
       return BottleRenameMissing(request.bottleId);
     }
@@ -68,7 +73,7 @@ mixin _FileBottleRepositoryMutationOperations {
   }
 
   BottleMoveResult moveBottle(BottleMoveRequest request) {
-    final bottle = findBottle(request.bottleId);
+    final bottle = _findBottle(request.bottleId);
     if (bottle == null) {
       return BottleMoveMissing(request.bottleId);
     }
@@ -93,7 +98,7 @@ mixin _FileBottleRepositoryMutationOperations {
   }
 
   BottleUpdateResult setWindowsVersion(WindowsVersionUpdateRequest request) {
-    final bottle = findBottle(request.bottleId);
+    final bottle = _findBottle(request.bottleId);
     if (bottle == null) {
       return BottleUpdateMissing(request.bottleId);
     }
@@ -110,7 +115,7 @@ mixin _FileBottleRepositoryMutationOperations {
   }
 
   BottleUpdateResult setRuntimeSettings(RuntimeSettingsUpdateRequest request) {
-    final bottle = findBottle(request.bottleId);
+    final bottle = _findBottle(request.bottleId);
     if (bottle == null) {
       return BottleUpdateMissing(request.bottleId);
     }

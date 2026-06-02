@@ -1,9 +1,14 @@
 part of '../konyak_cli.dart';
 
-mixin _FileBottleRepositoryReadOperations {
-  String get bottleDirectory;
+class _FileBottleRepositoryReadOperations {
+  const _FileBottleRepositoryReadOperations({
+    required this.bottleDirectory,
+    required ProgramMetadataExtractor programMetadataExtractor,
+  }) : _programMetadataExtractor = programMetadataExtractor;
 
-  ProgramMetadataExtractor get _programMetadataExtractor;
+  final String bottleDirectory;
+  final ProgramMetadataExtractor _programMetadataExtractor;
+
   List<BottleRecord> listBottles() {
     if (!_fileBottleRepositoryDirectoryExists(bottleDirectory)) {
       return const <BottleRecord>[];

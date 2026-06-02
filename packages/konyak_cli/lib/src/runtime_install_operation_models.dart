@@ -151,8 +151,10 @@ final class RuntimeUpdateInstallOperation
   final bool force;
 }
 
-mixin _RuntimeWineInstallRequestAccessors {
-  RuntimeInstallRequestOperation get requestOperation;
+class _RuntimeWineInstallRequestAccessors {
+  const _RuntimeWineInstallRequestAccessors(this.requestOperation);
+
+  final RuntimeInstallRequestOperation requestOperation;
 
   RuntimeInstallOperation get operation => requestOperation.operation;
 

@@ -1,11 +1,17 @@
 part of '../konyak_cli.dart';
 
-mixin _FileBottleRepositoryProgramOperations {
-  ProgramMetadataExtractor get _programMetadataExtractor;
+class _FileBottleRepositoryProgramOperations {
+  const _FileBottleRepositoryProgramOperations({
+    required ProgramMetadataExtractor programMetadataExtractor,
+    required BottleRecord? Function(String id) findBottle,
+  }) : _programMetadataExtractor = programMetadataExtractor,
+       _findBottle = findBottle;
 
-  BottleRecord? findBottle(String id);
+  final ProgramMetadataExtractor _programMetadataExtractor;
+  final BottleRecord? Function(String id) _findBottle;
+
   ProgramPinResult pinProgram(ProgramPinRequest request) {
-    final bottle = findBottle(request.bottleId);
+    final bottle = _findBottle(request.bottleId);
     if (bottle == null) {
       return ProgramPinMissing(request.bottleId);
     }
@@ -30,7 +36,7 @@ mixin _FileBottleRepositoryProgramOperations {
   }
 
   ProgramUpdateResult unpinProgram(ProgramUnpinRequest request) {
-    final bottle = findBottle(request.bottleId);
+    final bottle = _findBottle(request.bottleId);
     if (bottle == null) {
       return ProgramUpdateMissingBottle(request.bottleId);
     }
@@ -51,7 +57,7 @@ mixin _FileBottleRepositoryProgramOperations {
   }
 
   ProgramUpdateResult renamePinnedProgram(ProgramRenameRequest request) {
-    final bottle = findBottle(request.bottleId);
+    final bottle = _findBottle(request.bottleId);
     if (bottle == null) {
       return ProgramUpdateMissingBottle(request.bottleId);
     }
@@ -74,7 +80,7 @@ mixin _FileBottleRepositoryProgramOperations {
   ProgramSettingsReadResult readProgramSettings(
     ProgramSettingsRequest request,
   ) {
-    final bottle = findBottle(request.bottleId);
+    final bottle = _findBottle(request.bottleId);
     if (bottle == null) {
       return ProgramSettingsReadMissingBottle(request.bottleId);
     }
@@ -98,7 +104,7 @@ mixin _FileBottleRepositoryProgramOperations {
   ProgramSettingsUpdateResult setProgramSettings(
     ProgramSettingsUpdateRequest request,
   ) {
-    final bottle = findBottle(request.bottleId);
+    final bottle = _findBottle(request.bottleId);
     if (bottle == null) {
       return ProgramSettingsUpdateMissingBottle(request.bottleId);
     }

@@ -1,6 +1,6 @@
 part of '../konyak_cli.dart';
 
-class LinuxWineInstallRequest with _RuntimeWineInstallRequestAccessors {
+class LinuxWineInstallRequest {
   LinuxWineInstallRequest.fullInstall({
     String? archivePath,
     String? archiveUrl,
@@ -8,14 +8,17 @@ class LinuxWineInstallRequest with _RuntimeWineInstallRequestAccessors {
     String? sourceManifest,
     String? sourceManifestSignature,
     bool force = false,
-    this.emitProgress = false,
-  }) : requestOperation = RuntimeFullInstallOperation(
-         archivePath: archivePath,
-         archiveUrl: archiveUrl,
-         archiveSha256: archiveSha256,
-         sourceManifest: sourceManifest,
-         sourceManifestSignature: sourceManifestSignature,
-         force: force,
+    bool emitProgress = false,
+  }) : this._(
+         requestOperation: RuntimeFullInstallOperation(
+           archivePath: archivePath,
+           archiveUrl: archiveUrl,
+           archiveSha256: archiveSha256,
+           sourceManifest: sourceManifest,
+           sourceManifestSignature: sourceManifestSignature,
+           force: force,
+         ),
+         emitProgress: emitProgress,
        );
 
   LinuxWineInstallRequest.repair({
@@ -25,14 +28,17 @@ class LinuxWineInstallRequest with _RuntimeWineInstallRequestAccessors {
     String? sourceManifest,
     String? sourceManifestSignature,
     bool force = true,
-    this.emitProgress = false,
-  }) : requestOperation = RuntimeRepairOperation(
-         archivePath: archivePath,
-         archiveUrl: archiveUrl,
-         archiveSha256: archiveSha256,
-         sourceManifest: sourceManifest,
-         sourceManifestSignature: sourceManifestSignature,
-         force: force,
+    bool emitProgress = false,
+  }) : this._(
+         requestOperation: RuntimeRepairOperation(
+           archivePath: archivePath,
+           archiveUrl: archiveUrl,
+           archiveSha256: archiveSha256,
+           sourceManifest: sourceManifest,
+           sourceManifestSignature: sourceManifestSignature,
+           force: force,
+         ),
+         emitProgress: emitProgress,
        );
 
   LinuxWineInstallRequest.componentInstall({
@@ -41,13 +47,16 @@ class LinuxWineInstallRequest with _RuntimeWineInstallRequestAccessors {
     String? archiveSha256,
     Iterable<String> componentArchivePaths = const <String>[],
     bool force = false,
-    this.emitProgress = false,
-  }) : requestOperation = RuntimeComponentInstallOperation(
-         archivePath: archivePath,
-         archiveUrl: archiveUrl,
-         archiveSha256: archiveSha256,
-         componentArchivePaths: componentArchivePaths,
-         force: force,
+    bool emitProgress = false,
+  }) : this._(
+         requestOperation: RuntimeComponentInstallOperation(
+           archivePath: archivePath,
+           archiveUrl: archiveUrl,
+           archiveSha256: archiveSha256,
+           componentArchivePaths: componentArchivePaths,
+           force: force,
+         ),
+         emitProgress: emitProgress,
        );
 
   LinuxWineInstallRequest.updateInstall({
@@ -56,16 +65,42 @@ class LinuxWineInstallRequest with _RuntimeWineInstallRequestAccessors {
     String? sourceManifest,
     String? sourceManifestSignature,
     bool force = true,
-    this.emitProgress = false,
-  }) : requestOperation = RuntimeUpdateInstallOperation(
-         archiveUrl: archiveUrl,
-         archiveSha256: archiveSha256,
-         sourceManifest: sourceManifest,
-         sourceManifestSignature: sourceManifestSignature,
-         force: force,
+    bool emitProgress = false,
+  }) : this._(
+         requestOperation: RuntimeUpdateInstallOperation(
+           archiveUrl: archiveUrl,
+           archiveSha256: archiveSha256,
+           sourceManifest: sourceManifest,
+           sourceManifestSignature: sourceManifestSignature,
+           force: force,
+         ),
+         emitProgress: emitProgress,
        );
 
-  @override
-  final RuntimeInstallRequestOperation requestOperation;
+  LinuxWineInstallRequest._({
+    required RuntimeInstallRequestOperation requestOperation,
+    required this.emitProgress,
+  }) : _accessors = _RuntimeWineInstallRequestAccessors(requestOperation);
+
+  final _RuntimeWineInstallRequestAccessors _accessors;
   final bool emitProgress;
+
+  RuntimeInstallRequestOperation get requestOperation =>
+      _accessors.requestOperation;
+
+  RuntimeInstallOperation get operation => _accessors.operation;
+
+  String? get archivePath => _accessors.archivePath;
+
+  String? get archiveUrl => _accessors.archiveUrl;
+
+  String? get archiveSha256 => _accessors.archiveSha256;
+
+  List<String> get componentArchivePaths => _accessors.componentArchivePaths;
+
+  String? get sourceManifest => _accessors.sourceManifest;
+
+  String? get sourceManifestSignature => _accessors.sourceManifestSignature;
+
+  bool get force => _accessors.force;
 }
