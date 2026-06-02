@@ -249,6 +249,9 @@ def require_result_boundary_rules() -> None:
         "final Option<String> distributionKind;",
         "final Option<String> archiveUrl;",
         "final Option<String> versionUrl;",
+        "final Option<String> applicationSupportPath;",
+        "final Option<String> libraryPath;",
+        "final Option<String> executablePath;",
     ]:
         require_contains("packages/konyak_cli/lib/src/runtime_models.dart", expected)
 

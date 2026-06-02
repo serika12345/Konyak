@@ -61,7 +61,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
         archiveUrl: 'https://example.invalid/linux-wine.tar.xz',
         versionUrl: 'https://example.invalid/releases/latest',
       ),
-      installedState: const InstalledRuntimeState(
+      installedState: InstalledRuntimeState(
         isInstalled: true,
         libraryPath: '/home/user/.local/share/konyak/Runtimes/linux-wine',
         executablePath:

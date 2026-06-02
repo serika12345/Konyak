@@ -462,6 +462,21 @@ void main() {
     );
   });
 
+  test('installed runtime states model absent layout paths with Option', () {
+    final state = InstalledRuntimeState(isInstalled: false);
+
+    expect(state.applicationSupportPath.isNone(), isTrue);
+    expect(state.libraryPath.isNone(), isTrue);
+    expect(state.executablePath.isNone(), isTrue);
+  });
+
+  test('installed runtime states reject blank present layout paths', () {
+    expect(
+      () => InstalledRuntimeState(isInstalled: true, executablePath: ' '),
+      throwsA(isA<ArgumentError>()),
+    );
+  });
+
   test('static catalogs expose immutable snapshots', () {
     final bottles = <BottleRecord>[
       BottleRecord(

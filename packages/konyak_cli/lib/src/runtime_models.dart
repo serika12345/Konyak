@@ -32,23 +32,31 @@ class RuntimeDefinition {
 }
 
 class InstalledRuntimeState {
-  const InstalledRuntimeState({
+  InstalledRuntimeState({
     this.isInstalled,
-    this.applicationSupportPath,
-    this.libraryPath,
-    this.executablePath,
-  });
+    String? applicationSupportPath,
+    String? libraryPath,
+    String? executablePath,
+  }) : applicationSupportPath = _optionalRuntimeModelValue(
+         applicationSupportPath,
+         'applicationSupportPath',
+       ),
+       libraryPath = _optionalRuntimeModelValue(libraryPath, 'libraryPath'),
+       executablePath = _optionalRuntimeModelValue(
+         executablePath,
+         'executablePath',
+       );
 
   const InstalledRuntimeState.unknown()
     : isInstalled = null,
-      applicationSupportPath = null,
-      libraryPath = null,
-      executablePath = null;
+      applicationSupportPath = const Option.none(),
+      libraryPath = const Option.none(),
+      executablePath = const Option.none();
 
   final bool? isInstalled;
-  final String? applicationSupportPath;
-  final String? libraryPath;
-  final String? executablePath;
+  final Option<String> applicationSupportPath;
+  final Option<String> libraryPath;
+  final Option<String> executablePath;
 }
 
 class RuntimeCapabilities {
@@ -92,9 +100,10 @@ class RuntimeRecord {
        isUpdateable = definition.isUpdateable,
        distributionKind = definition.distributionKind.toNullable(),
        isInstalled = installedState.isInstalled,
-       applicationSupportPath = installedState.applicationSupportPath,
-       libraryPath = installedState.libraryPath,
-       executablePath = installedState.executablePath,
+       applicationSupportPath = installedState.applicationSupportPath
+           .toNullable(),
+       libraryPath = installedState.libraryPath.toNullable(),
+       executablePath = installedState.executablePath.toNullable(),
        archiveUrl = definition.archiveUrl.toNullable(),
        versionUrl = definition.versionUrl.toNullable(),
        stack = capabilities.stack;
