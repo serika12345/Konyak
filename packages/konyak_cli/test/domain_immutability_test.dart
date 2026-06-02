@@ -532,7 +532,7 @@ void main() {
         runnerKind: 'wine',
         isBundled: false,
         isUpdateable: true,
-        executablePath: ' ',
+        executablePath: Option.of(' '),
       ),
       throwsA(isA<ArgumentError>()),
     );

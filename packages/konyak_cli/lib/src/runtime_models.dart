@@ -76,40 +76,29 @@ class RuntimeRecord {
     required this.runnerKind,
     required this.isBundled,
     required this.isUpdateable,
-    String? distributionKind,
-    bool? isInstalled,
-    String? applicationSupportPath,
-    String? libraryPath,
-    String? executablePath,
-    String? archiveUrl,
-    String? versionUrl,
-    RuntimeStack? stack,
-  }) : distributionKind = _optionalNullableRuntimeModelValue(
+    Option<String> distributionKind = const Option.none(),
+    this.isInstalled = const Option.none(),
+    Option<String> applicationSupportPath = const Option.none(),
+    Option<String> libraryPath = const Option.none(),
+    Option<String> executablePath = const Option.none(),
+    Option<String> archiveUrl = const Option.none(),
+    Option<String> versionUrl = const Option.none(),
+    this.stack = const Option.none(),
+  }) : distributionKind = _optionalRuntimeModelValue(
          distributionKind,
          'distributionKind',
        ),
-       isInstalled = Option.fromNullable(isInstalled),
-       applicationSupportPath = _optionalNullableRuntimeModelValue(
+       applicationSupportPath = _optionalRuntimeModelValue(
          applicationSupportPath,
          'applicationSupportPath',
        ),
-       libraryPath = _optionalNullableRuntimeModelValue(
-         libraryPath,
-         'libraryPath',
-       ),
-       executablePath = _optionalNullableRuntimeModelValue(
+       libraryPath = _optionalRuntimeModelValue(libraryPath, 'libraryPath'),
+       executablePath = _optionalRuntimeModelValue(
          executablePath,
          'executablePath',
        ),
-       archiveUrl = _optionalNullableRuntimeModelValue(
-         archiveUrl,
-         'archiveUrl',
-       ),
-       versionUrl = _optionalNullableRuntimeModelValue(
-         versionUrl,
-         'versionUrl',
-       ),
-       stack = Option.fromNullable(stack);
+       archiveUrl = _optionalRuntimeModelValue(archiveUrl, 'archiveUrl'),
+       versionUrl = _optionalRuntimeModelValue(versionUrl, 'versionUrl');
 
   RuntimeRecord.fromParts({
     required RuntimeDefinition definition,
@@ -260,13 +249,6 @@ Option<String> _optionalRuntimeModelValue(
   String fieldName,
 ) {
   return value.map((item) => _requiredNonBlankDomainString(item, fieldName));
-}
-
-Option<String> _optionalNullableRuntimeModelValue(
-  String? value,
-  String fieldName,
-) {
-  return _optionalRuntimeModelValue(Option.fromNullable(value), fieldName);
 }
 
 class RuntimeSourceManifest {

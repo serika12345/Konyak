@@ -1914,7 +1914,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
           runnerKind: 'macosWine',
           isBundled: false,
           isUpdateable: true,
-          isInstalled: true,
+          isInstalled: Option.of(true),
         ),
       ),
     );
@@ -1971,7 +1971,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
           runnerKind: 'macosWine',
           isBundled: false,
           isUpdateable: true,
-          isInstalled: true,
+          isInstalled: Option.of(true),
         ),
       ),
     );
@@ -2018,7 +2018,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
           runnerKind: 'wine',
           isBundled: false,
           isUpdateable: true,
-          isInstalled: true,
+          isInstalled: Option.of(true),
         ),
       ),
     );
@@ -2074,7 +2074,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
             runnerKind: 'wine',
             isBundled: false,
             isUpdateable: true,
-            isInstalled: true,
+            isInstalled: Option.of(true),
           ),
         ),
       );
@@ -2116,22 +2116,24 @@ void defineRuntimeProcessAndUpdateContractTests() {
             runnerKind: 'wine',
             isBundled: false,
             isUpdateable: true,
-            versionUrl: 'https://example.invalid/releases/latest',
-            stack: RuntimeStack(
-              id: 'linux-wine-runtime-stack',
-              name: 'Linux Wine/Proton runtime stack',
-              compatibilityTarget: 'linux-wine-runtime-stack',
-              components: [
-                RuntimeStackComponent(
-                  id: 'wine',
-                  name: 'Wine',
-                  role: 'windows-runner',
-                  isRequired: true,
-                  paths: const <String>[],
-                  missingPaths: const <String>[],
-                  version: Option.of('wine-10.0'),
-                ),
-              ],
+            versionUrl: Option.of('https://example.invalid/releases/latest'),
+            stack: Option.of(
+              RuntimeStack(
+                id: 'linux-wine-runtime-stack',
+                name: 'Linux Wine/Proton runtime stack',
+                compatibilityTarget: 'linux-wine-runtime-stack',
+                components: [
+                  RuntimeStackComponent(
+                    id: 'wine',
+                    name: 'Wine',
+                    role: 'windows-runner',
+                    isRequired: true,
+                    paths: const <String>[],
+                    missingPaths: const <String>[],
+                    version: Option.of('wine-10.0'),
+                  ),
+                ],
+              ),
             ),
           ),
         ]),
@@ -2178,22 +2180,24 @@ void defineRuntimeProcessAndUpdateContractTests() {
             runnerKind: 'wine',
             isBundled: false,
             isUpdateable: true,
-            versionUrl: 'https://example.invalid/releases/latest',
-            stack: RuntimeStack(
-              id: 'linux-wine-runtime-stack',
-              name: 'Linux Wine/Proton runtime stack',
-              compatibilityTarget: 'linux-wine-runtime-stack',
-              components: [
-                RuntimeStackComponent(
-                  id: 'wine',
-                  name: 'Wine',
-                  role: 'windows-runner',
-                  isRequired: true,
-                  paths: const <String>[],
-                  missingPaths: const <String>[],
-                  version: Option.of('wine-10.0'),
-                ),
-              ],
+            versionUrl: Option.of('https://example.invalid/releases/latest'),
+            stack: Option.of(
+              RuntimeStack(
+                id: 'linux-wine-runtime-stack',
+                name: 'Linux Wine/Proton runtime stack',
+                compatibilityTarget: 'linux-wine-runtime-stack',
+                components: [
+                  RuntimeStackComponent(
+                    id: 'wine',
+                    name: 'Wine',
+                    role: 'windows-runner',
+                    isRequired: true,
+                    paths: const <String>[],
+                    missingPaths: const <String>[],
+                    version: Option.of('wine-10.0'),
+                  ),
+                ],
+              ),
             ),
           ),
         ]),
@@ -2233,23 +2237,25 @@ void defineRuntimeProcessAndUpdateContractTests() {
             runnerKind: 'macosWine',
             isBundled: false,
             isUpdateable: true,
-            versionUrl: 'https://example.invalid/releases/latest',
-            archiveUrl: 'https://example.invalid/runtime.tar.xz',
-            stack: RuntimeStack(
-              id: 'macos-konyak-runtime-stack',
-              name: 'Konyak macOS runtime stack',
-              compatibilityTarget: 'macos-konyak-runtime-stack',
-              components: [
-                RuntimeStackComponent(
-                  id: 'wine',
-                  name: 'Wine',
-                  role: 'windows-runner',
-                  isRequired: true,
-                  paths: const <String>[],
-                  missingPaths: const <String>[],
-                  version: Option.of('wine-devel-11.9'),
-                ),
-              ],
+            versionUrl: Option.of('https://example.invalid/releases/latest'),
+            archiveUrl: Option.of('https://example.invalid/runtime.tar.xz'),
+            stack: Option.of(
+              RuntimeStack(
+                id: 'macos-konyak-runtime-stack',
+                name: 'Konyak macOS runtime stack',
+                compatibilityTarget: 'macos-konyak-runtime-stack',
+                components: [
+                  RuntimeStackComponent(
+                    id: 'wine',
+                    name: 'Wine',
+                    role: 'windows-runner',
+                    isRequired: true,
+                    paths: const <String>[],
+                    missingPaths: const <String>[],
+                    version: Option.of('wine-devel-11.9'),
+                  ),
+                ],
+              ),
             ),
           ),
         ]),
@@ -2412,8 +2418,8 @@ void defineRuntimeProcessAndUpdateContractTests() {
             runnerKind: 'macosWine',
             isBundled: false,
             isUpdateable: true,
-            libraryPath: '/runtime',
-            executablePath: '/runtime/bin/wine64',
+            libraryPath: Option.of('/runtime'),
+            executablePath: Option.of('/runtime/bin/wine64'),
           ),
         ]),
         fileStatusProbe: const StaticFileStatusProbe({
@@ -2460,8 +2466,8 @@ void defineRuntimeProcessAndUpdateContractTests() {
           runnerKind: 'macosWine',
           isBundled: false,
           isUpdateable: true,
-          libraryPath: '/runtime',
-          executablePath: '/runtime/bin/wine64',
+          libraryPath: Option.of('/runtime'),
+          executablePath: Option.of('/runtime/bin/wine64'),
         ),
       ]),
       fileStatusProbe: const StaticFileStatusProbe({
