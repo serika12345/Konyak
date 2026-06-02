@@ -7,11 +7,10 @@ class ProgramRunRequest {
     required this.runnerKind,
     required this.executable,
     required List<String> arguments,
-    required Map<String, String> environment,
+    required this.environment,
     required this.logPath,
     Option<String> workingDirectory = const Option.none(),
   }) : arguments = List.unmodifiable(arguments),
-       environment = Map.unmodifiable(environment),
        workingDirectory = _optionalNonBlankDomainString(
          workingDirectory,
          'workingDirectory',
@@ -22,7 +21,7 @@ class ProgramRunRequest {
   final String runnerKind;
   final String executable;
   final List<String> arguments;
-  final Map<String, String> environment;
+  final ProgramRunEnvironment environment;
   final String logPath;
   final Option<String> workingDirectory;
 

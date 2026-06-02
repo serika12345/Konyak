@@ -59,6 +59,7 @@ part 'src/repository/repository_interfaces.dart';
 part 'src/domain/program/program_catalog_models.dart';
 part 'src/domain/bottle/bottle_mutation_models.dart';
 part 'src/domain/program/program_mutation_models.dart';
+part 'src/domain/program/program_run_environment.dart';
 part 'src/domain/program/program_run_models.dart';
 part 'src/repository/repository_exceptions.dart';
 part 'src/io/io_result.dart';
@@ -313,7 +314,9 @@ String _programRunLogContent({
   String? startupError,
 }) {
   final environmentLines =
-      request.environment.entries
+      request.environment
+          .toMap()
+          .entries
           .map((entry) => MapEntry(entry.key, '${entry.key}=${entry.value}'))
           .toList(growable: false)
         ..sort((left, right) => left.key.compareTo(right.key));

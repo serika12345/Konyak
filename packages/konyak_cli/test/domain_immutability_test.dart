@@ -329,6 +329,23 @@ void main() {
     expect(settings.environment.unlockView, {'LANG': 'ja_JP.UTF-8'});
   });
 
+  test('program run environments expose immutable snapshots', () {
+    final variables = <String, String>{'WINEPREFIX': '/bottles/steam'};
+    final environment = ProgramRunEnvironment(variables);
+    variables['WINEPREFIX'] = '/changed';
+
+    expect(environment['WINEPREFIX'], '/bottles/steam');
+    expect(environment.toMap(), {'WINEPREFIX': '/bottles/steam'});
+    expect(
+      () => ProgramRunEnvironment(const <String, String>{' ': 'value'}),
+      throwsA(isA<ArgumentError>()),
+    );
+    expect(
+      () => ProgramRunEnvironment(const <String, String>{'A=B': 'value'}),
+      throwsA(isA<ArgumentError>()),
+    );
+  });
+
   test('process termination records expose immutable argv snapshots', () {
     final argv = <String>['wine', '/steam.exe'];
     final record = WineProcessTerminationRecord(

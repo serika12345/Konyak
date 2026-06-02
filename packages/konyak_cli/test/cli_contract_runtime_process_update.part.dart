@@ -786,8 +786,12 @@ void defineRuntimeProcessAndUpdateContractTests() {
     expect(runner.requests, hasLength(2));
     expect(runner.requests[0].executable, 'wineserver');
     expect(runner.requests[0].arguments, const ['-k']);
-    expect(runner.requests[0].environment, {'WINEPREFIX': '/bottles/alpha'});
-    expect(runner.requests[1].environment, {'WINEPREFIX': '/bottles/beta'});
+    expect(runner.requests[0].environment.toMap(), {
+      'WINEPREFIX': '/bottles/alpha',
+    });
+    expect(runner.requests[1].environment.toMap(), {
+      'WINEPREFIX': '/bottles/beta',
+    });
 
     final payload = jsonDecode(result.stdout) as Map<String, Object?>;
     expect(payload, {
@@ -854,7 +858,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
       expect(runner.requests, hasLength(1));
       expect(runner.requests.single.executable, 'wineserver');
       expect(runner.requests.single.arguments, const ['-k']);
-      expect(runner.requests.single.environment, {
+      expect(runner.requests.single.environment.toMap(), {
         'WINEPREFIX': '/bottles/beta',
       });
 
@@ -997,7 +1001,9 @@ void defineRuntimeProcessAndUpdateContractTests() {
     expect(runner.requests, hasLength(1));
     expect(runner.requests.single.executable, 'winedbg');
     expect(runner.requests.single.arguments, const ['--command', 'info proc']);
-    expect(runner.requests.single.environment, {'WINEPREFIX': bottlePath});
+    expect(runner.requests.single.environment.toMap(), {
+      'WINEPREFIX': bottlePath,
+    });
 
     final payload = jsonDecode(result.stdout) as Map<String, Object?>;
     expect(payload, {
@@ -1359,7 +1365,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
       'kill',
       '0x000000d8',
     ]);
-    expect(runner.requests.single.environment, {
+    expect(runner.requests.single.environment.toMap(), {
       'WINEPREFIX': '/bottles/steam',
     });
 

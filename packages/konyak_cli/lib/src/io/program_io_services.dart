@@ -9,7 +9,7 @@ class DartIoProgramRunner implements ProgramRunner {
       final result = Process.runSync(
         request.executable,
         request.arguments,
-        environment: request.environment,
+        environment: request.environment.toMap(),
         workingDirectory: request.workingDirectory.toNullable(),
         runInShell: false,
       );

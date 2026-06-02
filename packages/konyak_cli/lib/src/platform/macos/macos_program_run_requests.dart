@@ -17,11 +17,11 @@ ProgramRunRequest _macosWineRequest({
       programPath,
       ..._programSettingsArguments(programSettings),
     ],
-    environment: <String, String>{
+    environment: ProgramRunEnvironment(<String, String>{
       ..._macosWineEnvironment(bottle: bottle, environment: environment),
       ..._programSettingsEnvironment(programSettings),
       'WINEPREFIX': bottle.path,
-    },
+    }),
     logPath: _joinPath(bottle.path, const ['logs', 'latest.log']),
     workingDirectory: Option.of(_macosWineBinFolder(environment)),
   );
@@ -37,9 +37,8 @@ ProgramRunRequest _macosWinebootRequest({
     runnerKind: 'macosWine',
     executable: _macosWineExecutable(environment),
     arguments: const <String>['wineboot', '--init'],
-    environment: _macosWineEnvironment(
-      bottle: bottle,
-      environment: environment,
+    environment: ProgramRunEnvironment(
+      _macosWineEnvironment(bottle: bottle, environment: environment),
     ),
     logPath: _joinPath(bottle.path, const ['logs', 'prefix-init.log']),
     workingDirectory: Option.of(_macosWineBinFolder(environment)),
@@ -56,9 +55,8 @@ ProgramRunRequest _macosWineserverKillRequest({
     runnerKind: 'macosWineserver',
     executable: _macosWineserverExecutable(environment),
     arguments: const <String>['-k'],
-    environment: _macosWineEnvironment(
-      bottle: bottle,
-      environment: environment,
+    environment: ProgramRunEnvironment(
+      _macosWineEnvironment(bottle: bottle, environment: environment),
     ),
     logPath: _joinPath(bottle.path, const ['logs', 'wineserver-kill.log']),
     workingDirectory: Option.of(_macosWineBinFolder(environment)),
@@ -78,9 +76,8 @@ ProgramRunRequest _macosWinedbgRequest({
     runnerKind: 'macosWinedbg',
     executable: _macosWineExecutable(environment),
     arguments: <String>['winedbg', '--command', command, ...trailingArguments],
-    environment: _macosWineEnvironment(
-      bottle: bottle,
-      environment: environment,
+    environment: ProgramRunEnvironment(
+      _macosWineEnvironment(bottle: bottle, environment: environment),
     ),
     logPath: _joinPath(bottle.path, <String>['logs', logName]),
     workingDirectory: Option.of(_macosWineBinFolder(environment)),

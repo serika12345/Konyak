@@ -176,7 +176,10 @@ void defineProgramExecutionContractTests() {
     expect(result.stderr, isEmpty);
     expect(runner.lastRequest?.executable, 'wine');
     expect(runner.lastRequest?.arguments, const ['/downloads/setup.exe']);
-    expect(runner.lastRequest?.environment['WINEPREFIX'], contains('/steam'));
+    expect(
+      runner.lastRequest?.environment.toMap()['WINEPREFIX'],
+      contains('/steam'),
+    );
     expect(runner.lastRequest?.logPath, contains('/steam/logs/latest.log'));
 
     final payload = jsonDecode(result.stdout) as Map<String, Object?>;
@@ -247,7 +250,7 @@ void defineProgramExecutionContractTests() {
       '-silent',
       '-windowed',
     ]);
-    expect(runner.lastRequest?.environment, {
+    expect(runner.lastRequest?.environment.toMap(), {
       'STEAM_COMPAT_DATA_PATH': '/compat',
       'LC_ALL': 'ja_JP.UTF-8',
       'WINEPREFIX': '/home/user/.local/share/konyak/bottles/steam',
@@ -304,19 +307,22 @@ void defineProgramExecutionContractTests() {
     ]);
     expect(runner.lastRequest?.runnerKind, 'macosWine');
     expect(
-      runner.lastRequest?.environment,
+      runner.lastRequest?.environment.toMap(),
       containsPair(
         'WINEPREFIX',
         '/Users/user/Library/Application Support/Konyak/Bottles/Steam',
       ),
     );
     expect(
-      runner.lastRequest?.environment,
+      runner.lastRequest?.environment.toMap(),
       containsPair('WINEDEBUG', 'fixme-all'),
     );
-    expect(runner.lastRequest?.environment, containsPair('GST_DEBUG', '1'));
     expect(
-      runner.lastRequest?.environment,
+      runner.lastRequest?.environment.toMap(),
+      containsPair('GST_DEBUG', '1'),
+    );
+    expect(
+      runner.lastRequest?.environment.toMap(),
       containsPair(
         'DYLD_LIBRARY_PATH',
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib',
@@ -389,35 +395,44 @@ void defineProgramExecutionContractTests() {
     );
 
     expect(result.exitCode, 0);
-    expect(runner.lastRequest?.environment, containsPair('WINEMSYNC', '1'));
-    expect(runner.lastRequest?.environment, containsPair('WINEESYNC', '1'));
     expect(
-      runner.lastRequest?.environment,
+      runner.lastRequest?.environment.toMap(),
+      containsPair('WINEMSYNC', '1'),
+    );
+    expect(
+      runner.lastRequest?.environment.toMap(),
+      containsPair('WINEESYNC', '1'),
+    );
+    expect(
+      runner.lastRequest?.environment.toMap(),
       containsPair('MTL_HUD_ENABLED', '1'),
     );
     expect(
-      runner.lastRequest?.environment,
+      runner.lastRequest?.environment.toMap(),
       containsPair('METAL_CAPTURE_ENABLED', '1'),
     );
     expect(
-      runner.lastRequest?.environment,
+      runner.lastRequest?.environment.toMap(),
       containsPair('ROSETTA_ADVERTISE_AVX', '1'),
     );
     expect(
-      runner.lastRequest?.environment,
+      runner.lastRequest?.environment.toMap(),
       containsPair('D3DM_SUPPORT_DXR', '1'),
     );
     expect(
-      runner.lastRequest?.environment,
+      runner.lastRequest?.environment.toMap(),
       containsPair('DXVK_HUD', 'devinfo,fps,frametimes'),
     );
-    expect(runner.lastRequest?.environment, containsPair('DXVK_ASYNC', '1'));
     expect(
-      runner.lastRequest?.environment,
+      runner.lastRequest?.environment.toMap(),
+      containsPair('DXVK_ASYNC', '1'),
+    );
+    expect(
+      runner.lastRequest?.environment.toMap(),
       containsPair('WINEDLLOVERRIDES', 'dxgi,d3d9,d3d10core,d3d11=n,b'),
     );
     expect(
-      runner.lastRequest?.environment,
+      runner.lastRequest?.environment.toMap(),
       containsPair(
         'WINEDLLPATH',
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/DXVK/x64:/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/DXVK/x32',
@@ -466,19 +481,31 @@ void defineProgramExecutionContractTests() {
     );
 
     expect(result.exitCode, 0);
-    expect(runner.lastRequest?.environment, containsPair('WINEMSYNC', '1'));
-    expect(runner.lastRequest?.environment, containsPair('WINEESYNC', '1'));
-    expect(runner.lastRequest?.environment, containsPair('DXVK_HUD', 'fps'));
-    expect(runner.lastRequest?.environment, containsPair('DXVK_ASYNC', '1'));
     expect(
-      runner.lastRequest?.environment,
+      runner.lastRequest?.environment.toMap(),
+      containsPair('WINEMSYNC', '1'),
+    );
+    expect(
+      runner.lastRequest?.environment.toMap(),
+      containsPair('WINEESYNC', '1'),
+    );
+    expect(
+      runner.lastRequest?.environment.toMap(),
+      containsPair('DXVK_HUD', 'fps'),
+    );
+    expect(
+      runner.lastRequest?.environment.toMap(),
+      containsPair('DXVK_ASYNC', '1'),
+    );
+    expect(
+      runner.lastRequest?.environment.toMap(),
       containsPair(
         'WINEDLLOVERRIDES',
         'dxgi=n,b;d3d9=n,b;d3d10core=n,b;d3d11=n,b',
       ),
     );
     expect(
-      runner.lastRequest?.environment,
+      runner.lastRequest?.environment.toMap(),
       containsPair(
         'WINEDLLPATH',
         '/runtime/linux-wine/dxvk/x64:/runtime/linux-wine/dxvk/x86',
@@ -526,14 +553,20 @@ void defineProgramExecutionContractTests() {
     );
 
     expect(result.exitCode, 0);
-    expect(runner.lastRequest?.environment, containsPair('WINEMSYNC', '1'));
-    expect(runner.lastRequest?.environment, containsPair('WINEESYNC', '1'));
     expect(
-      runner.lastRequest?.environment,
+      runner.lastRequest?.environment.toMap(),
+      containsPair('WINEMSYNC', '1'),
+    );
+    expect(
+      runner.lastRequest?.environment.toMap(),
+      containsPair('WINEESYNC', '1'),
+    );
+    expect(
+      runner.lastRequest?.environment.toMap(),
       containsPair('WINEDLLOVERRIDES', 'd3d12=n,b;d3d12core=n,b'),
     );
     expect(
-      runner.lastRequest?.environment,
+      runner.lastRequest?.environment.toMap(),
       containsPair(
         'WINEDLLPATH',
         '/runtime/linux-wine/vkd3d-proton/x64:/runtime/linux-wine/vkd3d-proton/x86',
@@ -576,7 +609,7 @@ void defineProgramExecutionContractTests() {
     expect(runner.lastRequest?.programPath, 'winecfg');
     expect(runner.lastRequest?.runnerKind, 'macosWine');
     expect(
-      runner.lastRequest?.environment,
+      runner.lastRequest?.environment.toMap(),
       containsPair(
         'WINEPREFIX',
         '/Users/user/Library/Application Support/Konyak/Bottles/Steam',
@@ -629,7 +662,7 @@ void defineProgramExecutionContractTests() {
       '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin',
     );
     expect(
-      request.environment,
+      request.environment.toMap(),
       containsPair(
         'WINEPREFIX',
         '/Users/user/Library/Application Support/Konyak/Bottles/Steam',
@@ -801,18 +834,18 @@ void defineProgramExecutionContractTests() {
       '/opt/konyak/runtime/linux-wine/bin/wine',
     );
     expect(
-      plannedRequest?.environment,
+      plannedRequest?.environment.toMap(),
       containsPair('PATH', '/opt/konyak/runtime/linux-wine/bin:/usr/bin:/bin'),
     );
     expect(
-      plannedRequest?.environment,
+      plannedRequest?.environment.toMap(),
       containsPair(
         'LD_LIBRARY_PATH',
         '/opt/konyak/runtime-host-libs:/host/lib',
       ),
     );
     expect(
-      plannedRequest?.environment,
+      plannedRequest?.environment.toMap(),
       containsPair(
         'WINEPREFIX',
         '/home/user/.local/share/konyak/bottles/steam',
@@ -868,15 +901,18 @@ void defineProgramExecutionContractTests() {
       '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
     );
     expect(
-      runner.lastRequest?.environment,
+      runner.lastRequest?.environment.toMap(),
       containsPair(
         'WINEPREFIX',
         '/Users/user/Library/Application Support/Konyak/Bottles/Steam',
       ),
     );
-    expect(runner.lastRequest?.environment, containsPair('WINE', 'wine64'));
     expect(
-      runner.lastRequest?.environment,
+      runner.lastRequest?.environment.toMap(),
+      containsPair('WINE', 'wine64'),
+    );
+    expect(
+      runner.lastRequest?.environment.toMap(),
       containsPair(
         'PATH',
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin',

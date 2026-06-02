@@ -123,7 +123,9 @@ void defineRepositoryAndRunnerContractTests() {
         runnerKind: 'macosWine',
         executable: Platform.resolvedExecutable,
         arguments: const ['--version'],
-        environment: const <String, String>{'WINEPREFIX': '/bottles/steam'},
+        environment: ProgramRunEnvironment(const <String, String>{
+          'WINEPREFIX': '/bottles/steam',
+        }),
         logPath: logPath,
         workingDirectory: Option.of(logDirectory.path),
       ),
@@ -161,7 +163,7 @@ void defineRepositoryAndRunnerContractTests() {
         runnerKind: 'wine',
         executable: '/definitely/missing/konyak-runner',
         arguments: const ['/downloads/setup.exe'],
-        environment: const <String, String>{},
+        environment: const ProgramRunEnvironment.empty(),
         logPath: logPath,
       ),
     );
