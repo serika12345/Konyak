@@ -94,6 +94,7 @@ part 'src/linux_wine_installation.dart';
 part 'src/linux_wine_install_operations.dart';
 part 'src/runtime_platform_support.dart';
 part 'src/runtime_platform_records.dart';
+part 'src/runtime_stack_manifest_io.dart';
 part 'src/runtime_source_manifest_support.dart';
 part 'src/runtime_source_archive_planning.dart';
 part 'src/runtime_source_archive_downloads.dart';
