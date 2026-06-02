@@ -30,13 +30,14 @@ List<WinetricksCategoryRecord> parseWinetricksVerbs(String content) {
     }
 
     final categoryId = _winetricksCategoryId(trimmed);
-    if (categoryId != null) {
+    categoryId.match(() {}, (id) {
       flushCurrentCategory();
-      final categoryName = _winetricksCategoryName(categoryId);
-      if (categoryName != null) {
-        currentCategoryId = categoryId;
-        currentCategoryName = categoryName;
-      }
+      _winetricksCategoryName(id).match(() {}, (name) {
+        currentCategoryId = id;
+        currentCategoryName = name;
+      });
+    });
+    if (categoryId.isSome()) {
       continue;
     }
 
@@ -45,9 +46,7 @@ List<WinetricksCategoryRecord> parseWinetricksVerbs(String content) {
     }
 
     final verb = _parseWinetricksVerbLine(trimmed);
-    if (verb != null) {
-      currentVerbs.add(verb);
-    }
+    verb.match(() {}, currentVerbs.add);
   }
 
   flushCurrentCategory();
@@ -57,42 +56,44 @@ List<WinetricksCategoryRecord> parseWinetricksVerbs(String content) {
   );
 }
 
-String? _winetricksCategoryId(String line) {
+Option<String> _winetricksCategoryId(String line) {
   if (!line.startsWith('=====') || !line.endsWith('=====')) {
-    return null;
+    return const Option.none();
   }
 
   final id = line.replaceAll('=', '').trim().toLowerCase();
-  return id.isEmpty ? null : id;
+  return id.isEmpty ? const Option.none() : Option.of(id);
 }
 
-String? _winetricksCategoryName(String id) {
+Option<String> _winetricksCategoryName(String id) {
   return switch (id) {
-    'apps' => 'Apps',
-    'benchmarks' => 'Benchmarks',
-    'dlls' => 'DLLs',
-    'fonts' => 'Fonts',
-    'games' => 'Games',
-    'settings' => 'Settings',
-    _ => null,
+    'apps' => Option.of('Apps'),
+    'benchmarks' => Option.of('Benchmarks'),
+    'dlls' => Option.of('DLLs'),
+    'fonts' => Option.of('Fonts'),
+    'games' => Option.of('Games'),
+    'settings' => Option.of('Settings'),
+    _ => const Option.none(),
   };
 }
 
-WinetricksVerbRecord? _parseWinetricksVerbLine(String line) {
+Option<WinetricksVerbRecord> _parseWinetricksVerbLine(String line) {
   final match = RegExp(r'^(\S+)\s*(.*)$').firstMatch(line);
   if (match == null) {
-    return null;
+    return const Option.none();
   }
 
   final name = match.group(1)?.trim() ?? '';
   if (!_isSupportedWinetricksVerb(name)) {
-    return null;
+    return const Option.none();
   }
 
-  return WinetricksVerbRecord(
-    id: name,
-    name: name,
-    description: match.group(2)?.trim() ?? '',
+  return Option.of(
+    WinetricksVerbRecord(
+      id: name,
+      name: name,
+      description: match.group(2)?.trim() ?? '',
+    ),
   );
 }
 

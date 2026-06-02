@@ -24,9 +24,9 @@ List<_RegistryValueUpdate> _runtimeSettingsRegistryUpdates({
     final windowsVersion = _windowsVersionForBuildVersion(
       runtimeSettings.buildVersion,
     );
-    if (windowsVersion != null) {
-      updates.addAll(_windowsVersionRegistryUpdates(windowsVersion));
-    }
+    windowsVersion.match(() {}, (version) {
+      updates.addAll(_windowsVersionRegistryUpdates(version));
+    });
 
     updates
       ..add(
@@ -73,27 +73,27 @@ List<_RegistryValueUpdate> _runtimeSettingsRegistryUpdates({
   return List.unmodifiable(updates);
 }
 
-String? _windowsVersionForBuildVersion(int buildVersion) {
+Option<String> _windowsVersionForBuildVersion(int buildVersion) {
   if (buildVersion >= 22000) {
-    return 'win11';
+    return Option.of('win11');
   }
   if (buildVersion >= 10000) {
-    return 'win10';
+    return Option.of('win10');
   }
   if (buildVersion >= 9600) {
-    return 'win81';
+    return Option.of('win81');
   }
   if (buildVersion >= 9200) {
-    return 'win8';
+    return Option.of('win8');
   }
   if (buildVersion >= 7600) {
-    return 'win7';
+    return Option.of('win7');
   }
   if (buildVersion >= 3790) {
-    return 'winxp64';
+    return Option.of('winxp64');
   }
 
-  return null;
+  return const Option.none();
 }
 
 List<_RegistryValueQuery> _bottleSettingsRegistryQueries({
