@@ -71,7 +71,7 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
       ):
         return _installLinuxWineStackFromSourceManifest(
           sourceManifest,
-          sourceManifestSignature: sourceManifestSignature,
+          sourceManifestSignature: sourceManifestSignature.toNullable(),
           progressSink: progress,
         );
       case _RuntimeWineInstallFromArchive(
@@ -81,7 +81,7 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
       ):
         return _installLinuxWineArchive(
           archivePath: archivePath,
-          archiveSha256: archiveSha256,
+          archiveSha256: archiveSha256.toNullable(),
           componentArchivePaths: componentArchivePaths,
           progressSink: progress,
         );
@@ -116,7 +116,7 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
 
           return _installLinuxWineArchive(
             archivePath: downloadedArchivePath,
-            archiveSha256: archiveSha256,
+            archiveSha256: archiveSha256.toNullable(),
             componentArchivePaths: componentArchivePaths,
             progressSink: progress,
           );
@@ -173,7 +173,7 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
       ):
         return _installLinuxWineStackFromSourceManifestStreaming(
           sourceManifest,
-          sourceManifestSignature: sourceManifestSignature,
+          sourceManifestSignature: sourceManifestSignature.toNullable(),
           progressSink: progress,
         );
       case _RuntimeWineInstallFromArchive(
@@ -183,7 +183,7 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
       ):
         return _installLinuxWineArchive(
           archivePath: archivePath,
-          archiveSha256: archiveSha256,
+          archiveSha256: archiveSha256.toNullable(),
           componentArchivePaths: componentArchivePaths,
           progressSink: progress,
         );
@@ -219,7 +219,7 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
 
           return _installLinuxWineArchive(
             archivePath: downloadedArchivePath,
-            archiveSha256: archiveSha256,
+            archiveSha256: archiveSha256.toNullable(),
             componentArchivePaths: componentArchivePaths,
             progressSink: progress,
           );

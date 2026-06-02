@@ -71,7 +71,7 @@ void defineRuntimeInstallContractTests() {
 
     expect(result.exitCode, 0);
     expect(result.stderr, isEmpty);
-    expect(installer.lastRequest?.archivePath, isNull);
+    expect(installer.lastRequest?.archivePath.isNone(), isTrue);
 
     final payload = jsonDecode(result.stdout) as Map<String, Object?>;
     expect(payload, {
@@ -1217,7 +1217,10 @@ void defineRuntimeInstallContractTests() {
     ], macosWineInstaller: installer);
 
     expect(result.exitCode, 0);
-    expect(installer.lastRequest?.archivePath, '/tmp/macos-wine.tar.xz');
+    expect(
+      installer.lastRequest?.archivePath.toNullable(),
+      '/tmp/macos-wine.tar.xz',
+    );
   });
 
   test('install-macos-wine --archive-sha256 passes an expected digest', () {
@@ -1245,9 +1248,12 @@ void defineRuntimeInstallContractTests() {
     ], macosWineInstaller: installer);
 
     expect(result.exitCode, 0);
-    expect(installer.lastRequest?.archivePath, '/tmp/macos-wine.tar.xz');
     expect(
-      installer.lastRequest?.archiveSha256,
+      installer.lastRequest?.archivePath.toNullable(),
+      '/tmp/macos-wine.tar.xz',
+    );
+    expect(
+      installer.lastRequest?.archiveSha256.toNullable(),
       '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
     );
   });
@@ -1280,7 +1286,7 @@ void defineRuntimeInstallContractTests() {
     ], macosWineInstaller: installer);
 
     expect(result.exitCode, 0);
-    expect(installer.lastRequest?.archivePath, '/tmp/wine.tar.xz');
+    expect(installer.lastRequest?.archivePath.toNullable(), '/tmp/wine.tar.xz');
     expect(installer.lastRequest?.componentArchivePaths, [
       '/tmp/dxvk.tar.xz',
       '/tmp/moltenvk.tar.xz',
@@ -1517,7 +1523,10 @@ void defineRuntimeInstallContractTests() {
     ], macosWineInstaller: installer);
 
     expect(result.exitCode, 0);
-    expect(installer.lastRequest?.sourceManifest, '/tmp/runtime-stack.json');
+    expect(
+      installer.lastRequest?.sourceManifest.toNullable(),
+      '/tmp/runtime-stack.json',
+    );
   });
 
   test('install-macos-wine --progress-json emits progress events', () {
@@ -1635,7 +1644,10 @@ void defineRuntimeInstallContractTests() {
     ], linuxWineInstaller: installer);
 
     expect(result.exitCode, 0);
-    expect(installer.lastRequest?.archivePath, '/tmp/linux-wine.tar.xz');
+    expect(
+      installer.lastRequest?.archivePath.toNullable(),
+      '/tmp/linux-wine.tar.xz',
+    );
   });
 
   test('install-linux-wine --component-archive passes component archives', () {
@@ -1663,7 +1675,10 @@ void defineRuntimeInstallContractTests() {
     ], linuxWineInstaller: installer);
 
     expect(result.exitCode, 0);
-    expect(installer.lastRequest?.archivePath, '/tmp/linux-wine.tar.xz');
+    expect(
+      installer.lastRequest?.archivePath.toNullable(),
+      '/tmp/linux-wine.tar.xz',
+    );
     expect(installer.lastRequest?.componentArchivePaths, const [
       '/tmp/vkd3d-proton.tar.xz',
     ]);
@@ -1697,7 +1712,7 @@ void defineRuntimeInstallContractTests() {
 
     expect(result.exitCode, 0);
     expect(
-      installer.lastRequest?.sourceManifest,
+      installer.lastRequest?.sourceManifest.toNullable(),
       '/tmp/linux-runtime-stack.json',
     );
   });

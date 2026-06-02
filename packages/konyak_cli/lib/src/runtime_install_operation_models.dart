@@ -14,78 +14,104 @@ sealed class RuntimeInstallRequestOperation {
 
   bool get force;
 
-  String? get archivePath => null;
+  Option<String> get archivePath => const Option.none();
 
-  String? get archiveUrl => null;
+  Option<String> get archiveUrl => const Option.none();
 
-  String? get archiveSha256 => null;
+  Option<String> get archiveSha256 => const Option.none();
 
   List<String> get componentArchivePaths => const <String>[];
 
-  String? get sourceManifest => null;
+  Option<String> get sourceManifest => const Option.none();
 
-  String? get sourceManifestSignature => null;
+  Option<String> get sourceManifestSignature => const Option.none();
 }
 
 final class RuntimeFullInstallOperation extends RuntimeInstallRequestOperation {
-  const RuntimeFullInstallOperation({
-    this.archivePath,
-    this.archiveUrl,
-    this.archiveSha256,
-    this.sourceManifest,
-    this.sourceManifestSignature,
+  RuntimeFullInstallOperation({
+    String? archivePath,
+    String? archiveUrl,
+    String? archiveSha256,
+    String? sourceManifest,
+    String? sourceManifestSignature,
     this.force = false,
-  });
+  }) : archivePath = _optionalRuntimeInstallSource(archivePath, 'archivePath'),
+       archiveUrl = _optionalRuntimeInstallSource(archiveUrl, 'archiveUrl'),
+       archiveSha256 = _optionalRuntimeInstallSource(
+         archiveSha256,
+         'archiveSha256',
+       ),
+       sourceManifest = _optionalRuntimeInstallSource(
+         sourceManifest,
+         'sourceManifest',
+       ),
+       sourceManifestSignature = _optionalRuntimeInstallSource(
+         sourceManifestSignature,
+         'sourceManifestSignature',
+       );
 
   @override
   RuntimeInstallOperation get operation => RuntimeInstallOperation.fullInstall;
 
   @override
-  final String? archivePath;
+  final Option<String> archivePath;
 
   @override
-  final String? archiveUrl;
+  final Option<String> archiveUrl;
 
   @override
-  final String? archiveSha256;
+  final Option<String> archiveSha256;
 
   @override
-  final String? sourceManifest;
+  final Option<String> sourceManifest;
 
   @override
-  final String? sourceManifestSignature;
+  final Option<String> sourceManifestSignature;
 
   @override
   final bool force;
 }
 
 final class RuntimeRepairOperation extends RuntimeInstallRequestOperation {
-  const RuntimeRepairOperation({
-    this.archivePath,
-    this.archiveUrl,
-    this.archiveSha256,
-    this.sourceManifest,
-    this.sourceManifestSignature,
+  RuntimeRepairOperation({
+    String? archivePath,
+    String? archiveUrl,
+    String? archiveSha256,
+    String? sourceManifest,
+    String? sourceManifestSignature,
     this.force = true,
-  });
+  }) : archivePath = _optionalRuntimeInstallSource(archivePath, 'archivePath'),
+       archiveUrl = _optionalRuntimeInstallSource(archiveUrl, 'archiveUrl'),
+       archiveSha256 = _optionalRuntimeInstallSource(
+         archiveSha256,
+         'archiveSha256',
+       ),
+       sourceManifest = _optionalRuntimeInstallSource(
+         sourceManifest,
+         'sourceManifest',
+       ),
+       sourceManifestSignature = _optionalRuntimeInstallSource(
+         sourceManifestSignature,
+         'sourceManifestSignature',
+       );
 
   @override
   RuntimeInstallOperation get operation => RuntimeInstallOperation.repair;
 
   @override
-  final String? archivePath;
+  final Option<String> archivePath;
 
   @override
-  final String? archiveUrl;
+  final Option<String> archiveUrl;
 
   @override
-  final String? archiveSha256;
+  final Option<String> archiveSha256;
 
   @override
-  final String? sourceManifest;
+  final Option<String> sourceManifest;
 
   @override
-  final String? sourceManifestSignature;
+  final Option<String> sourceManifestSignature;
 
   @override
   final bool force;
@@ -94,25 +120,31 @@ final class RuntimeRepairOperation extends RuntimeInstallRequestOperation {
 final class RuntimeComponentInstallOperation
     extends RuntimeInstallRequestOperation {
   RuntimeComponentInstallOperation({
-    this.archivePath,
-    this.archiveUrl,
-    this.archiveSha256,
+    String? archivePath,
+    String? archiveUrl,
+    String? archiveSha256,
     Iterable<String> componentArchivePaths = const <String>[],
     this.force = false,
-  }) : componentArchivePaths = List.unmodifiable(componentArchivePaths);
+  }) : archivePath = _optionalRuntimeInstallSource(archivePath, 'archivePath'),
+       archiveUrl = _optionalRuntimeInstallSource(archiveUrl, 'archiveUrl'),
+       archiveSha256 = _optionalRuntimeInstallSource(
+         archiveSha256,
+         'archiveSha256',
+       ),
+       componentArchivePaths = List.unmodifiable(componentArchivePaths);
 
   @override
   RuntimeInstallOperation get operation =>
       RuntimeInstallOperation.componentInstall;
 
   @override
-  final String? archivePath;
+  final Option<String> archivePath;
 
   @override
-  final String? archiveUrl;
+  final Option<String> archiveUrl;
 
   @override
-  final String? archiveSha256;
+  final Option<String> archiveSha256;
 
   @override
   final List<String> componentArchivePaths;
@@ -123,29 +155,41 @@ final class RuntimeComponentInstallOperation
 
 final class RuntimeUpdateInstallOperation
     extends RuntimeInstallRequestOperation {
-  const RuntimeUpdateInstallOperation({
-    this.archiveUrl,
-    this.archiveSha256,
-    this.sourceManifest,
-    this.sourceManifestSignature,
+  RuntimeUpdateInstallOperation({
+    String? archiveUrl,
+    String? archiveSha256,
+    String? sourceManifest,
+    String? sourceManifestSignature,
     this.force = true,
-  });
+  }) : archiveUrl = _optionalRuntimeInstallSource(archiveUrl, 'archiveUrl'),
+       archiveSha256 = _optionalRuntimeInstallSource(
+         archiveSha256,
+         'archiveSha256',
+       ),
+       sourceManifest = _optionalRuntimeInstallSource(
+         sourceManifest,
+         'sourceManifest',
+       ),
+       sourceManifestSignature = _optionalRuntimeInstallSource(
+         sourceManifestSignature,
+         'sourceManifestSignature',
+       );
 
   @override
   RuntimeInstallOperation get operation =>
       RuntimeInstallOperation.updateInstall;
 
   @override
-  final String? archiveUrl;
+  final Option<String> archiveUrl;
 
   @override
-  final String? archiveSha256;
+  final Option<String> archiveSha256;
 
   @override
-  final String? sourceManifest;
+  final Option<String> sourceManifest;
 
   @override
-  final String? sourceManifestSignature;
+  final Option<String> sourceManifestSignature;
 
   @override
   final bool force;
@@ -158,19 +202,25 @@ class _RuntimeWineInstallRequestAccessors {
 
   RuntimeInstallOperation get operation => requestOperation.operation;
 
-  String? get archivePath => requestOperation.archivePath;
+  Option<String> get archivePath => requestOperation.archivePath;
 
-  String? get archiveUrl => requestOperation.archiveUrl;
+  Option<String> get archiveUrl => requestOperation.archiveUrl;
 
-  String? get archiveSha256 => requestOperation.archiveSha256;
+  Option<String> get archiveSha256 => requestOperation.archiveSha256;
 
   List<String> get componentArchivePaths =>
       requestOperation.componentArchivePaths;
 
-  String? get sourceManifest => requestOperation.sourceManifest;
+  Option<String> get sourceManifest => requestOperation.sourceManifest;
 
-  String? get sourceManifestSignature =>
+  Option<String> get sourceManifestSignature =>
       requestOperation.sourceManifestSignature;
 
   bool get force => requestOperation.force;
+}
+
+Option<String> _optionalRuntimeInstallSource(String? value, String fieldName) {
+  return Option.fromNullable(
+    value,
+  ).map((item) => _requiredNonBlankDomainString(item, fieldName));
 }

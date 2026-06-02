@@ -90,17 +90,18 @@ class MacosWineInstallRequest {
 
   RuntimeInstallOperation get operation => _accessors.operation;
 
-  String? get archivePath => _accessors.archivePath;
+  Option<String> get archivePath => _accessors.archivePath;
 
-  String? get archiveUrl => _accessors.archiveUrl;
+  Option<String> get archiveUrl => _accessors.archiveUrl;
 
-  String? get archiveSha256 => _accessors.archiveSha256;
+  Option<String> get archiveSha256 => _accessors.archiveSha256;
 
   List<String> get componentArchivePaths => _accessors.componentArchivePaths;
 
-  String? get sourceManifest => _accessors.sourceManifest;
+  Option<String> get sourceManifest => _accessors.sourceManifest;
 
-  String? get sourceManifestSignature => _accessors.sourceManifestSignature;
+  Option<String> get sourceManifestSignature =>
+      _accessors.sourceManifestSignature;
 
   bool get force => _accessors.force;
 }

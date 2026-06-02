@@ -33,7 +33,7 @@ final class _RuntimeWineInstallFromSourceManifest
   });
 
   final String sourceManifest;
-  final String? sourceManifestSignature;
+  final Option<String> sourceManifestSignature;
   final bool preserveExistingRuntimeFiles;
 }
 
@@ -46,7 +46,7 @@ final class _RuntimeWineInstallFromArchive extends _RuntimeWineInstallPlan {
   }) : componentArchivePaths = List.unmodifiable(componentArchivePaths);
 
   final String archivePath;
-  final String? archiveSha256;
+  final Option<String> archiveSha256;
   final List<String> componentArchivePaths;
   final bool preserveExistingRuntimeFiles;
 }
@@ -62,7 +62,7 @@ final class _RuntimeWineInstallDownloadArchive extends _RuntimeWineInstallPlan {
 
   final String archiveUrl;
   final String archiveFileName;
-  final String? archiveSha256;
+  final Option<String> archiveSha256;
   final List<String> componentArchivePaths;
   final bool preserveExistingRuntimeFiles;
 }
@@ -94,15 +94,15 @@ _RuntimeWineInstallPlan _runtimeWineInstallPlan({
     requestOperation.componentArchivePaths,
   );
   final sourceManifest =
-      requestOperation.sourceManifest ?? configuredSourceManifest;
+      requestOperation.sourceManifest.toNullable() ?? configuredSourceManifest;
   final sourceManifestSignature =
-      requestOperation.sourceManifestSignature ??
+      requestOperation.sourceManifestSignature.toNullable() ??
       configuredSourceManifestSignature;
   final hasExplicitInstallSource =
-      requestOperation.archivePath != null ||
-      requestOperation.archiveUrl != null ||
+      requestOperation.archivePath.isSome() ||
+      requestOperation.archiveUrl.isSome() ||
       componentArchivePaths.isNotEmpty ||
-      requestOperation.sourceManifest != null;
+      requestOperation.sourceManifest.isSome();
   final shouldPreserveExistingRuntimeFiles =
       !requestOperation.force &&
       currentRuntime.isInstalled == true &&
@@ -110,10 +110,10 @@ _RuntimeWineInstallPlan _runtimeWineInstallPlan({
       !hasExplicitInstallSource;
 
   if (!requestOperation.force &&
-      requestOperation.archivePath == null &&
-      requestOperation.archiveUrl == null &&
+      requestOperation.archivePath.isNone() &&
+      requestOperation.archiveUrl.isNone() &&
       componentArchivePaths.isEmpty &&
-      requestOperation.sourceManifest == null &&
+      requestOperation.sourceManifest.isNone() &&
       currentRuntime.isInstalled == true &&
       currentRuntime.stack?.isComplete == true) {
     return _RuntimeWineInstallAlreadyInstalled(currentRuntime);
@@ -133,12 +133,12 @@ _RuntimeWineInstallPlan _runtimeWineInstallPlan({
   if (sourceManifest != null) {
     return _RuntimeWineInstallFromSourceManifest(
       sourceManifest: sourceManifest,
-      sourceManifestSignature: sourceManifestSignature,
+      sourceManifestSignature: Option.fromNullable(sourceManifestSignature),
       preserveExistingRuntimeFiles: shouldPreserveExistingRuntimeFiles,
     );
   }
 
-  final archivePath = requestOperation.archivePath;
+  final archivePath = requestOperation.archivePath.toNullable();
   if (archivePath != null) {
     return _RuntimeWineInstallFromArchive(
       archivePath: archivePath,
@@ -148,7 +148,8 @@ _RuntimeWineInstallPlan _runtimeWineInstallPlan({
     );
   }
 
-  final archiveUrl = requestOperation.archiveUrl ?? defaultArchiveUrl;
+  final archiveUrl =
+      requestOperation.archiveUrl.toNullable() ?? defaultArchiveUrl;
   if (archiveUrl == null) {
     return _RuntimeWineInstallMissingArchiveSource(
       missingArchiveMessage ?? 'Runtime archive is not configured.',

@@ -1918,7 +1918,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
     expect(result.stderr, isEmpty);
     expect(checker.lastRuntimeId, 'konyak-macos-wine');
     expect(
-      installer.lastRequest?.archiveUrl,
+      installer.lastRequest?.archiveUrl.toNullable(),
       'https://example.invalid/wine-devel-12.0-osx64.tar.xz',
     );
     expect(
@@ -1973,7 +1973,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
 
     expect(result.exitCode, 0);
     expect(
-      installer.lastRequest?.sourceManifest,
+      installer.lastRequest?.sourceManifest.toNullable(),
       'https://example.invalid/runtime-stack-source.json',
     );
     expect(
@@ -2021,7 +2021,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
     expect(result.exitCode, 0);
     expect(checker.lastRuntimeId, 'konyak-linux-wine');
     expect(
-      installer.lastRequest?.archiveUrl,
+      installer.lastRequest?.archiveUrl.toNullable(),
       'https://example.invalid/linux-wine-10.1.tar.xz',
     );
     expect(
@@ -2076,18 +2076,18 @@ void defineRuntimeProcessAndUpdateContractTests() {
 
       expect(result.exitCode, 0);
       expect(
-        installer.lastRequest?.sourceManifest,
+        installer.lastRequest?.sourceManifest.toNullable(),
         'https://example.invalid/linux-runtime-stack.json',
       );
       expect(
-        installer.lastRequest?.sourceManifestSignature,
+        installer.lastRequest?.sourceManifestSignature.toNullable(),
         'https://example.invalid/linux-runtime-stack.json.sig',
       );
       expect(
         installer.lastRequest?.operation,
         RuntimeInstallOperation.updateInstall,
       );
-      expect(installer.lastRequest?.archiveUrl, isNull);
+      expect(installer.lastRequest?.archiveUrl.isNone(), isTrue);
       expect(installer.lastRequest?.force, isTrue);
     },
   );

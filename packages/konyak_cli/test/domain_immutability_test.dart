@@ -267,6 +267,31 @@ void main() {
     );
   });
 
+  test('runtime install operations model absent sources with Option', () {
+    final operation = RuntimeFullInstallOperation();
+
+    expect(operation.archivePath.isNone(), isTrue);
+    expect(operation.archiveUrl.isNone(), isTrue);
+    expect(operation.archiveSha256.isNone(), isTrue);
+    expect(operation.sourceManifest.isNone(), isTrue);
+    expect(operation.sourceManifestSignature.isNone(), isTrue);
+  });
+
+  test('runtime install operations reject blank present sources', () {
+    expect(
+      () => RuntimeFullInstallOperation(archivePath: ' '),
+      throwsA(isA<ArgumentError>()),
+    );
+    expect(
+      () => RuntimeRepairOperation(sourceManifest: ' '),
+      throwsA(isA<ArgumentError>()),
+    );
+    expect(
+      () => RuntimeUpdateInstallOperation(archiveSha256: ' '),
+      throwsA(isA<ArgumentError>()),
+    );
+  });
+
   test('program settings expose immutable environment snapshots', () {
     final environment = <String, String>{'LANG': 'ja_JP.UTF-8'};
     final settings = ProgramSettingsRecord(environment: environment);

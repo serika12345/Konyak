@@ -197,6 +197,38 @@ def require_result_boundary_rules() -> None:
         "final String? installPath;",
     ]:
         require_not_contains("packages/konyak_cli/lib/src/update_records.dart", forbidden)
+    for expected in [
+        "Option<String> get archivePath => const Option.none();",
+        "Option<String> get archiveUrl => const Option.none();",
+        "Option<String> get archiveSha256 => const Option.none();",
+        "Option<String> get sourceManifest => const Option.none();",
+        "Option<String> get sourceManifestSignature => const Option.none();",
+        "final Option<String> archivePath;",
+        "final Option<String> archiveUrl;",
+        "final Option<String> archiveSha256;",
+        "final Option<String> sourceManifest;",
+        "final Option<String> sourceManifestSignature;",
+    ]:
+        require_contains(
+            "packages/konyak_cli/lib/src/runtime_install_operation_models.dart",
+            expected,
+        )
+    for forbidden in [
+        "String? get archivePath",
+        "String? get archiveUrl",
+        "String? get archiveSha256",
+        "String? get sourceManifest",
+        "String? get sourceManifestSignature",
+        "final String? archivePath;",
+        "final String? archiveUrl;",
+        "final String? archiveSha256;",
+        "final String? sourceManifest;",
+        "final String? sourceManifestSignature;",
+    ]:
+        require_not_contains(
+            "packages/konyak_cli/lib/src/runtime_install_operation_models.dart",
+            forbidden,
+        )
 
     result_wrapped_repository_operation_files = [
         "packages/konyak_cli/lib/src/file_bottle_repository_mutation_operations.dart",
