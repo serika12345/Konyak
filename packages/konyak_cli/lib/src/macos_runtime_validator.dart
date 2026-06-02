@@ -14,10 +14,13 @@ class DartIoMacosWineRuntimeValidator implements RuntimeValidator {
   @override
   RuntimeValidationResult validate(String runtimeId) {
     final runtime = _runtimeById(runtimeCatalog.listRuntimes(), runtimeId);
-    if (runtime == null) {
-      return RuntimeValidationRuntimeNotFound(runtimeId);
-    }
+    return runtime.match(
+      () => RuntimeValidationRuntimeNotFound(runtimeId),
+      _validateRuntime,
+    );
+  }
 
+  RuntimeValidationResult _validateRuntime(RuntimeRecord runtime) {
     final runtimeRoot = runtime.libraryPath.toNullable();
     final executablePath = runtime.executablePath.toNullable();
     if (runtimeRoot == null || executablePath == null) {

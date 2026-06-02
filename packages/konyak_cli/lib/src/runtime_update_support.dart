@@ -1,44 +1,46 @@
 part of '../konyak_cli.dart';
 
-RuntimeRecord? _runtimeById(List<RuntimeRecord> runtimes, String runtimeId) {
+Option<RuntimeRecord> _runtimeById(
+  List<RuntimeRecord> runtimes,
+  String runtimeId,
+) {
   for (final runtime in runtimes) {
     if (runtime.id == runtimeId) {
-      return runtime;
+      return Option.of(runtime);
     }
   }
 
-  return null;
+  return const Option.none();
 }
 
-String? _runtimeWineVersion(RuntimeRecord runtime) {
-  final stack = runtime.stack.toNullable();
-  if (stack == null) {
-    return null;
-  }
-
-  for (final component in stack.components) {
-    if (component.id == 'wine') {
-      return component.version.toNullable();
+Option<String> _runtimeWineVersion(RuntimeRecord runtime) {
+  return runtime.stack.flatMap((stack) {
+    for (final component in stack.components) {
+      if (component.id == 'wine') {
+        return component.version;
+      }
     }
-  }
 
-  return null;
+    return const Option.none();
+  });
 }
 
 String _updateStatus({
-  required String? currentVersion,
+  required Option<String> currentVersion,
   required String latestVersion,
 }) {
-  if (currentVersion == null || currentVersion.trim().isEmpty) {
-    return 'unknown';
-  }
+  return currentVersion.match(() => 'unknown', (version) {
+    if (version.trim().isEmpty) {
+      return 'unknown';
+    }
 
-  if (_normalizeRuntimeVersion(currentVersion) ==
-      _normalizeRuntimeVersion(latestVersion)) {
-    return 'current';
-  }
+    if (_normalizeRuntimeVersion(version) ==
+        _normalizeRuntimeVersion(latestVersion)) {
+      return 'current';
+    }
 
-  return 'available';
+    return 'available';
+  });
 }
 
 String _normalizeRuntimeVersion(String version) {

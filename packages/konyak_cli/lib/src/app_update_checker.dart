@@ -5,8 +5,8 @@ class DartIoAppUpdateChecker implements AppUpdateChecker {
     required this.appId,
     required this.currentVersion,
     required this.versionUrl,
-    this.archiveUrl,
-    this.archiveSha256,
+    this.archiveUrl = const Option.none(),
+    this.archiveSha256 = const Option.none(),
     this.releaseMetadataFetcher = const DartIoRuntimeReleaseMetadataFetcher(),
   });
 
@@ -23,13 +23,11 @@ class DartIoAppUpdateChecker implements AppUpdateChecker {
       versionUrl:
           _nonEmptyEnvironmentValue(environment, 'KONYAK_APP_VERSION_URL') ??
           konyakAppVersionUrl,
-      archiveUrl: _nonEmptyEnvironmentValue(
-        environment,
-        'KONYAK_APP_ARCHIVE_URL',
+      archiveUrl: Option.fromNullable(
+        _nonEmptyEnvironmentValue(environment, 'KONYAK_APP_ARCHIVE_URL'),
       ),
-      archiveSha256: _nonEmptyEnvironmentValue(
-        environment,
-        'KONYAK_APP_ARCHIVE_SHA256',
+      archiveSha256: Option.fromNullable(
+        _nonEmptyEnvironmentValue(environment, 'KONYAK_APP_ARCHIVE_SHA256'),
       ),
     );
   }
@@ -37,8 +35,8 @@ class DartIoAppUpdateChecker implements AppUpdateChecker {
   final String appId;
   final String currentVersion;
   final String versionUrl;
-  final String? archiveUrl;
-  final String? archiveSha256;
+  final Option<String> archiveUrl;
+  final Option<String> archiveSha256;
   final RuntimeReleaseMetadataFetcher releaseMetadataFetcher;
 
   @override
@@ -49,8 +47,8 @@ class DartIoAppUpdateChecker implements AppUpdateChecker {
           appId: appId,
           status: 'unknown',
           currentVersion: Option.of(currentVersion),
-          archiveUrl: Option.fromNullable(archiveUrl),
-          archiveSha256: Option.fromNullable(archiveSha256),
+          archiveUrl: archiveUrl,
+          archiveSha256: archiveSha256,
         ),
       );
     }
@@ -61,17 +59,16 @@ class DartIoAppUpdateChecker implements AppUpdateChecker {
         AppUpdateRecord(
           appId: appId,
           status: _updateStatus(
-            currentVersion: currentVersion,
+            currentVersion: Option.of(currentVersion),
             latestVersion: metadata.version,
           ),
           currentVersion: Option.of(currentVersion),
           latestVersion: Option.of(metadata.version),
           versionUrl: Option.of(versionUrl),
-          archiveUrl: Option.fromNullable(
-            metadata.archiveUrl.toNullable() ?? archiveUrl,
-          ),
-          archiveSha256: Option.fromNullable(
-            metadata.archiveSha256.toNullable() ?? archiveSha256,
+          archiveUrl: metadata.archiveUrl.match(() => archiveUrl, Option.of),
+          archiveSha256: metadata.archiveSha256.match(
+            () => archiveSha256,
+            Option.of,
           ),
         ),
       ),
