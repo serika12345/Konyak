@@ -102,6 +102,7 @@ part 'src/updates.dart';
 part 'src/update_records.dart';
 part 'src/release_metadata_fetcher.dart';
 part 'src/runtime_update_checker.dart';
+part 'src/runtime_release_metadata_parsers.dart';
 part 'src/app_update_checker.dart';
 part 'src/app_update_installer.dart';
 part 'src/app_update_handoff_installers.dart';
