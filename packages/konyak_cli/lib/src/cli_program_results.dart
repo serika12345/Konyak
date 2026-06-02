@@ -68,7 +68,7 @@ CliResult _runPinnedProgramLauncherCli({
   );
   final programSettings = switch (settingsResult) {
     ProgramSettingsRead(:final settings) => settings,
-    ProgramSettingsReadMissingBottle() => const ProgramSettingsRecord(),
+    ProgramSettingsReadMissingBottle() => ProgramSettingsRecord(),
   };
   final programRunRequest = programRunPlanner.plan(
     bottle: bottle,

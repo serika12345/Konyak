@@ -1,11 +1,11 @@
 part of '../konyak_cli.dart';
 
 class ProgramSettingsRecord {
-  const ProgramSettingsRecord({
+  ProgramSettingsRecord({
     this.locale = '',
     this.arguments = '',
-    this.environment = const <String, String>{},
-  });
+    Map<String, String> environment = const <String, String>{},
+  }) : environment = Map.unmodifiable(environment);
 
   final String locale;
   final String arguments;

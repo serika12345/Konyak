@@ -17,7 +17,7 @@ void defineAppAndBottleContractTests() {
   test('list-bottles --json serializes bottle records from the catalog', () {
     final result = runCli(
       const ['list-bottles', '--json'],
-      bottleCatalog: const StaticBottleCatalog([
+      bottleCatalog: StaticBottleCatalog([
         BottleRecord(
           id: 'steam',
           name: 'Steam',
@@ -331,7 +331,7 @@ void defineAppAndBottleContractTests() {
   test('inspect-bottle --json returns a versioned bottle detail contract', () {
     final result = runCli(
       const ['inspect-bottle', 'steam', '--json'],
-      bottleCatalog: const StaticBottleCatalog([
+      bottleCatalog: StaticBottleCatalog([
         BottleRecord(
           id: 'steam',
           name: 'Steam',
@@ -392,7 +392,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
 
     final result = runCli(
       const ['inspect-bottle', 'steam', '--json'],
-      bottleCatalog: const StaticBottleCatalog([
+      bottleCatalog: StaticBottleCatalog([
         BottleRecord(
           id: 'steam',
           name: 'Steam',
@@ -464,7 +464,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
   test('set-windows-version --json applies registry-backed setting', () {
     final repository = MemoryBottleRepository(
       dataHome: '/home/user/.local/share/konyak',
-      bottles: const [
+      bottles: [
         BottleRecord(
           id: 'steam',
           name: 'Steam',
@@ -673,7 +673,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
   test('set-runtime-settings --json updates bottle runtime settings', () {
     final repository = MemoryBottleRepository(
       dataHome: '/home/user/.local/share/konyak',
-      bottles: const [
+      bottles: [
         BottleRecord(
           id: 'steam',
           name: 'Steam',
@@ -845,7 +845,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
   test('set-runtime-settings --json applies registry-backed settings', () {
     final repository = MemoryBottleRepository(
       dataHome: '/home/user/.local/share/konyak',
-      bottles: const [
+      bottles: [
         BottleRecord(
           id: 'steam',
           name: 'Steam',
@@ -960,7 +960,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
   test('set-runtime-settings --json maps build version to winecfg version', () {
     final repository = MemoryBottleRepository(
       dataHome: '/home/user/.local/share/konyak',
-      bottles: const [
+      bottles: [
         BottleRecord(
           id: 'steam',
           name: 'Steam',
@@ -1014,7 +1014,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
     () {
       final repository = MemoryBottleRepository(
         dataHome: '/home/user/.local/share/konyak',
-        bottles: const [
+        bottles: [
           BottleRecord(
             id: 'steam',
             name: 'Steam',

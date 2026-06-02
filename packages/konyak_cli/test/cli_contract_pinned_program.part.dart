@@ -751,7 +751,7 @@ void definePinnedProgramContractTests() {
     () {
       final repository = MemoryBottleRepository(
         dataHome: '/home/user/.local/share/konyak',
-        bottles: const [
+        bottles: [
           BottleRecord(
             id: 'steam',
             name: 'Steam',
@@ -792,7 +792,7 @@ void definePinnedProgramContractTests() {
   test('rename-pinned-program --json renames a pinned program', () {
     final repository = MemoryBottleRepository(
       dataHome: '/home/user/.local/share/konyak',
-      bottles: const [
+      bottles: [
         BottleRecord(
           id: 'steam',
           name: 'Steam',

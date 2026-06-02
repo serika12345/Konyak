@@ -1,7 +1,8 @@
 part of '../konyak_cli.dart';
 
 class StaticBottleCatalog implements BottleCatalog {
-  const StaticBottleCatalog(this._bottles);
+  StaticBottleCatalog(Iterable<BottleRecord> bottles)
+    : _bottles = List.unmodifiable(bottles);
 
   final List<BottleRecord> _bottles;
 
@@ -269,7 +270,7 @@ class MemoryBottleRepository implements BottleRepository {
             bottleId: request.bottleId,
             programPath: request.programPath,
           )] ??
-          const ProgramSettingsRecord(),
+          ProgramSettingsRecord(),
     );
   }
 

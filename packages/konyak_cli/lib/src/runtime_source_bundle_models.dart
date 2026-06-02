@@ -1,11 +1,12 @@
 part of '../konyak_cli.dart';
 
 class _RuntimeStackSourceArchiveBundle {
-  const _RuntimeStackSourceArchiveBundle({
+  _RuntimeStackSourceArchiveBundle({
     required this.wineArchivePath,
-    required this.componentArchivePaths,
-    required this.componentVersions,
-  });
+    required List<String> componentArchivePaths,
+    required Map<String, String> componentVersions,
+  }) : componentArchivePaths = List.unmodifiable(componentArchivePaths),
+       componentVersions = Map.unmodifiable(componentVersions);
 
   final String wineArchivePath;
   final List<String> componentArchivePaths;

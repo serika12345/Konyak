@@ -14,7 +14,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
   test('list-runtimes --json serializes runtime records from the catalog', () {
     final result = runCli(
       const ['list-runtimes', '--json'],
-      runtimeCatalog: const StaticRuntimeCatalog([
+      runtimeCatalog: StaticRuntimeCatalog([
         RuntimeRecord(
           id: 'wine-stable-linux-x86_64',
           name: 'Wine Stable',
@@ -739,7 +739,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
   test('terminate-wine-processes --json terminates each bottle prefix', () {
     final repository = MemoryBottleRepository(
       dataHome: '/data',
-      bottles: const [
+      bottles: [
         BottleRecord(
           id: 'alpha',
           name: 'Alpha',
@@ -807,7 +807,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
     () {
       final repository = MemoryBottleRepository(
         dataHome: '/data',
-        bottles: const [
+        bottles: [
           BottleRecord(
             id: 'alpha',
             name: 'Alpha',
@@ -869,7 +869,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
     () {
       final repository = MemoryBottleRepository(
         dataHome: '/data',
-        bottles: const [
+        bottles: [
           BottleRecord(
             id: 'steam',
             name: 'Steam',
@@ -1315,7 +1315,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
   test('terminate-wine-process --json kills one Wine process', () {
     final repository = MemoryBottleRepository(
       dataHome: '/data',
-      bottles: const [
+      bottles: [
         BottleRecord(
           id: 'steam',
           name: 'Steam',
@@ -2287,7 +2287,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
 
   test('check-macos-setup --json returns Rosetta and runtime status', () {
     final checker = RecordingMacosSetupChecker(
-      result: const MacosSetupCheckCompleted(
+      result: MacosSetupCheckCompleted(
         MacosSetupStatus(
           isSupported: true,
           rosetta: RosettaSetupStatus(
@@ -2372,7 +2372,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
         ),
       );
       final validator = DartIoMacosWineRuntimeValidator(
-        runtimeCatalog: const StaticRuntimeCatalog([
+        runtimeCatalog: StaticRuntimeCatalog([
           RuntimeRecord(
             id: 'konyak-macos-wine',
             name: 'Konyak macOS Wine',
@@ -2420,7 +2420,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
       ),
     );
     final validator = DartIoMacosWineRuntimeValidator(
-      runtimeCatalog: const StaticRuntimeCatalog([
+      runtimeCatalog: StaticRuntimeCatalog([
         RuntimeRecord(
           id: 'konyak-macos-wine',
           name: 'Konyak macOS Wine',

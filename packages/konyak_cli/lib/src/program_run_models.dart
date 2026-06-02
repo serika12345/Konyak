@@ -50,16 +50,16 @@ class ProgramRunFailed extends ProgramRunResult {
 }
 
 class WineProcessTerminationRecord {
-  const WineProcessTerminationRecord({
+  WineProcessTerminationRecord({
     required this.bottleId,
     required this.status,
     required this.runnerKind,
     required this.executable,
-    required this.argv,
+    required List<String> argv,
     this.processId,
     this.processExitCode,
     this.message,
-  });
+  }) : argv = List.unmodifiable(argv);
 
   final String bottleId;
   final String status;

@@ -31,7 +31,7 @@ class ProgramRunPlanner {
   ProgramRunRequest? plan({
     required BottleRecord bottle,
     required String programPath,
-    ProgramSettingsRecord programSettings = const ProgramSettingsRecord(),
+    ProgramSettingsRecord? programSettings,
   }) {
     final supportedProgramPath = _isSupportedProgramPath(programPath);
     if (!supportedProgramPath) {
@@ -43,13 +43,13 @@ class ProgramRunPlanner {
         bottle: bottle,
         programPath: programPath,
         environment: environment,
-        programSettings: programSettings,
+        programSettings: programSettings ?? ProgramSettingsRecord(),
       ),
       KonyakHostPlatform.macos => _macosWineRequest(
         bottle: bottle,
         programPath: programPath,
         environment: environment,
-        programSettings: programSettings,
+        programSettings: programSettings ?? ProgramSettingsRecord(),
       ),
     };
   }

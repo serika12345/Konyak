@@ -3,7 +3,7 @@ part of '../konyak_cli.dart';
 ProgramSettingsRecord _readProgramSettingsJson(String path) {
   final file = File(path);
   if (!file.existsSync()) {
-    return const ProgramSettingsRecord();
+    return ProgramSettingsRecord();
   }
 
   final decoded = jsonDecode(file.readAsStringSync());

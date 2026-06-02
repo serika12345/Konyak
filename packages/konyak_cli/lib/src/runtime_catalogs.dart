@@ -5,7 +5,8 @@ abstract interface class RuntimeCatalog {
 }
 
 class StaticRuntimeCatalog implements RuntimeCatalog {
-  const StaticRuntimeCatalog(this._runtimes);
+  StaticRuntimeCatalog(Iterable<RuntimeRecord> runtimes)
+    : _runtimes = List.unmodifiable(runtimes);
 
   final List<RuntimeRecord> _runtimes;
 

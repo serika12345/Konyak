@@ -1,20 +1,24 @@
 part of '../konyak_cli.dart';
 
 class RuntimePackageInstallRequest {
-  const RuntimePackageInstallRequest({
+  RuntimePackageInstallRequest({
     required this.runtimeLabel,
     required this.archivePath,
     required this.archiveSha256,
-    required this.componentArchivePaths,
-    required this.componentVersions,
+    required List<String> componentArchivePaths,
+    required Map<String, String> componentVersions,
     required this.runtimeRoot,
-    required this.requiredExecutableRelativePath,
+    required List<String> requiredExecutableRelativePath,
     required this.expectedExecutablePath,
     this.preserveExistingRuntimeFiles = false,
     this.normalizeStagingRoot,
     this.afterManifestWrite,
     this.progressSink,
-  });
+  }) : componentArchivePaths = List.unmodifiable(componentArchivePaths),
+       componentVersions = Map.unmodifiable(componentVersions),
+       requiredExecutableRelativePath = List.unmodifiable(
+         requiredExecutableRelativePath,
+       );
 
   final String runtimeLabel;
   final String archivePath;

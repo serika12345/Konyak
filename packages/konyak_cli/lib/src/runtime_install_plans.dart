@@ -38,12 +38,12 @@ final class _RuntimeWineInstallFromSourceManifest
 }
 
 final class _RuntimeWineInstallFromArchive extends _RuntimeWineInstallPlan {
-  const _RuntimeWineInstallFromArchive({
+  _RuntimeWineInstallFromArchive({
     required this.archivePath,
     required this.archiveSha256,
-    required this.componentArchivePaths,
+    required List<String> componentArchivePaths,
     required this.preserveExistingRuntimeFiles,
-  });
+  }) : componentArchivePaths = List.unmodifiable(componentArchivePaths);
 
   final String archivePath;
   final String? archiveSha256;
@@ -52,13 +52,13 @@ final class _RuntimeWineInstallFromArchive extends _RuntimeWineInstallPlan {
 }
 
 final class _RuntimeWineInstallDownloadArchive extends _RuntimeWineInstallPlan {
-  const _RuntimeWineInstallDownloadArchive({
+  _RuntimeWineInstallDownloadArchive({
     required this.archiveUrl,
     required this.archiveFileName,
     required this.archiveSha256,
-    required this.componentArchivePaths,
+    required List<String> componentArchivePaths,
     required this.preserveExistingRuntimeFiles,
-  });
+  }) : componentArchivePaths = List.unmodifiable(componentArchivePaths);
 
   final String archiveUrl;
   final String archiveFileName;

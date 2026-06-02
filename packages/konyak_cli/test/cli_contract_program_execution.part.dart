@@ -4,7 +4,7 @@ void defineProgramExecutionContractTests() {
   test('get-program-settings --json returns default program settings', () {
     final repository = MemoryBottleRepository(
       dataHome: '/home/user/.local/share/konyak',
-      bottles: const [
+      bottles: [
         BottleRecord(
           id: 'steam',
           name: 'Steam',
@@ -46,7 +46,7 @@ void defineProgramExecutionContractTests() {
   test('set-program-settings --json persists program settings', () {
     final repository = MemoryBottleRepository(
       dataHome: '/home/user/.local/share/konyak',
-      bottles: const [
+      bottles: [
         BottleRecord(
           id: 'steam',
           name: 'Steam',
@@ -160,7 +160,7 @@ void defineProgramExecutionContractTests() {
   test('run-program --json applies persisted program settings', () {
     final repository = MemoryBottleRepository(
       dataHome: '/home/user/.local/share/konyak',
-      bottles: const [
+      bottles: [
         BottleRecord(
           id: 'steam',
           name: 'Steam',
@@ -173,7 +173,7 @@ void defineProgramExecutionContractTests() {
       ],
     );
     repository.setProgramSettings(
-      const ProgramSettingsUpdateRequest(
+      ProgramSettingsUpdateRequest(
         bottleId: 'steam',
         programPath: '/downloads/Steam.exe',
         settings: ProgramSettingsRecord(
@@ -220,7 +220,7 @@ void defineProgramExecutionContractTests() {
   test('run-program --json uses the Konyak macOS Wine startup path on macOS', () {
     final repository = MemoryBottleRepository(
       dataHome: '/Users/user/Library/Application Support/Konyak',
-      bottles: const [
+      bottles: [
         BottleRecord(
           id: 'steam',
           name: 'Steam',
@@ -311,7 +311,7 @@ void defineProgramExecutionContractTests() {
   test('run-program --json preserves macOS bottle environment on macOS', () {
     final repository = MemoryBottleRepository(
       dataHome: '/Users/user/Library/Application Support/Konyak',
-      bottles: const [
+      bottles: [
         BottleRecord(
           id: 'steam',
           name: 'Steam',
@@ -389,7 +389,7 @@ void defineProgramExecutionContractTests() {
   test('run-program --json applies DXVK settings on Linux', () {
     final repository = MemoryBottleRepository(
       dataHome: '/home/user/.local/share/konyak',
-      bottles: const [
+      bottles: [
         BottleRecord(
           id: 'steam',
           name: 'Steam',
@@ -450,7 +450,7 @@ void defineProgramExecutionContractTests() {
   test('run-program --json applies vkd3d-proton settings on Linux', () {
     final repository = MemoryBottleRepository(
       dataHome: '/home/user/.local/share/konyak',
-      bottles: const [
+      bottles: [
         BottleRecord(
           id: 'steam',
           name: 'Steam',
@@ -505,7 +505,7 @@ void defineProgramExecutionContractTests() {
   test('run-bottle-command --json launches winecfg through macOS Wine', () {
     final repository = MemoryBottleRepository(
       dataHome: '/Users/user/Library/Application Support/Konyak',
-      bottles: const [
+      bottles: [
         BottleRecord(
           id: 'steam',
           name: 'Steam',
@@ -567,7 +567,7 @@ void defineProgramExecutionContractTests() {
   });
 
   test('prefix initialization uses Konyak macOS Wine on macOS', () {
-    const bottle = BottleRecord(
+    final bottle = BottleRecord(
       id: 'steam',
       name: 'Steam',
       path: '/Users/user/Library/Application Support/Konyak/Bottles/Steam',
@@ -605,7 +605,7 @@ void defineProgramExecutionContractTests() {
   test('run-bottle-command --json opens a macOS bottle terminal', () {
     final repository = MemoryBottleRepository(
       dataHome: '/Users/user/Library/Application Support/Konyak',
-      bottles: const [
+      bottles: [
         BottleRecord(
           id: 'steam',
           name: 'Steam',
@@ -660,7 +660,7 @@ void defineProgramExecutionContractTests() {
   test('run-bottle-command --json opens a Linux bottle terminal', () {
     final repository = MemoryBottleRepository(
       dataHome: '/home/user/.local/share/konyak',
-      bottles: const [
+      bottles: [
         BottleRecord(
           id: 'steam',
           name: 'Steam',
@@ -737,7 +737,7 @@ void defineProgramExecutionContractTests() {
   });
 
   test('Linux planner uses a configured Konyak-managed runtime', () {
-    const bottle = BottleRecord(
+    final bottle = BottleRecord(
       id: 'steam',
       name: 'Steam',
       path: '/home/user/.local/share/konyak/bottles/steam',
@@ -780,7 +780,7 @@ void defineProgramExecutionContractTests() {
   test('run-bottle-command --json launches winetricks with bottle env', () {
     final repository = MemoryBottleRepository(
       dataHome: '/Users/user/Library/Application Support/Konyak',
-      bottles: const [
+      bottles: [
         BottleRecord(
           id: 'steam',
           name: 'Steam',
@@ -1052,7 +1052,7 @@ corefonts                Microsoft Core Fonts
   test('run-winetricks --json launches a selected verb', () {
     final repository = MemoryBottleRepository(
       dataHome: '/Users/user/Library/Application Support/Konyak',
-      bottles: const [
+      bottles: [
         BottleRecord(
           id: 'steam',
           name: 'Steam',
@@ -1102,7 +1102,7 @@ corefonts                Microsoft Core Fonts
   test('run-winetricks --json reports script installation failures', () {
     final repository = MemoryBottleRepository(
       dataHome: '/Users/user/Library/Application Support/Konyak',
-      bottles: const [
+      bottles: [
         BottleRecord(
           id: 'steam',
           name: 'Steam',
@@ -1146,7 +1146,7 @@ corefonts                Microsoft Core Fonts
   test('run-winetricks --json rejects unsafe verb names', () {
     final repository = MemoryBottleRepository(
       dataHome: '/Users/user/Library/Application Support/Konyak',
-      bottles: const [
+      bottles: [
         BottleRecord(
           id: 'steam',
           name: 'Steam',
@@ -1186,7 +1186,7 @@ corefonts                Microsoft Core Fonts
   test('run-bottle-command --json rejects unsupported commands', () {
     final repository = MemoryBottleRepository(
       dataHome: '/Users/user/Library/Application Support/Konyak',
-      bottles: const [
+      bottles: [
         BottleRecord(
           id: 'steam',
           name: 'Steam',
@@ -1226,7 +1226,7 @@ corefonts                Microsoft Core Fonts
   test('open-bottle-location --json opens the Konyak C drive path', () {
     final repository = MemoryBottleRepository(
       dataHome: '/Users/user/Library/Application Support/Konyak',
-      bottles: const [
+      bottles: [
         BottleRecord(
           id: 'steam',
           name: 'Steam',
@@ -1270,7 +1270,7 @@ corefonts                Microsoft Core Fonts
   test('open-bottle-location --json rejects unsupported locations', () {
     final repository = MemoryBottleRepository(
       dataHome: '/Users/user/Library/Application Support/Konyak',
-      bottles: const [
+      bottles: [
         BottleRecord(
           id: 'steam',
           name: 'Steam',
@@ -1368,7 +1368,7 @@ corefonts                Microsoft Core Fonts
   test('open-program-location --json reveals the pinned program path', () {
     final repository = MemoryBottleRepository(
       dataHome: '/Users/user/Library/Application Support/Konyak',
-      bottles: const [
+      bottles: [
         BottleRecord(
           id: 'steam',
           name: 'Steam',

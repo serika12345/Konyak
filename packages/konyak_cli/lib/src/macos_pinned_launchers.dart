@@ -4,11 +4,11 @@ const _macosPinnedLauncherManifestFileName = 'konyak-launcher.json';
 const _macosPinnedLauncherExecutableName = 'konyak-launcher';
 
 class _MacosPinnedProgramLauncherCommand {
-  const _MacosPinnedProgramLauncherCommand({
+  _MacosPinnedProgramLauncherCommand({
     required this.executable,
-    required this.arguments,
+    required List<String> arguments,
     required this.workingDirectory,
-  });
+  }) : arguments = List.unmodifiable(arguments);
 
   final String executable;
   final List<String> arguments;

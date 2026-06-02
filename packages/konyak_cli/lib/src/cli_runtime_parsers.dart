@@ -114,13 +114,13 @@ LinuxWineInstallRequest? _parseJsonLinuxWineInstallRequest(
 
 class _RuntimeInstallCliOptions {
   _RuntimeInstallCliOptions({
-    required this.componentArchivePaths,
+    required List<String> componentArchivePaths,
     this.archivePath,
     this.archiveUrl,
     this.archiveSha256,
     this.sourceManifest,
     this.emitProgress = false,
-  });
+  }) : componentArchivePaths = List.unmodifiable(componentArchivePaths);
 
   final String? archivePath;
   final String? archiveUrl;

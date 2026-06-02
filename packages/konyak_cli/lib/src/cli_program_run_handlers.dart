@@ -51,7 +51,7 @@ CliResult _runProgramJsonResult(
   );
   final programSettings = switch (settingsResult) {
     ProgramSettingsRead(:final settings) => settings,
-    ProgramSettingsReadMissingBottle() => const ProgramSettingsRecord(),
+    ProgramSettingsReadMissingBottle() => ProgramSettingsRecord(),
   };
 
   final programRunRequest = context.programRunPlanner.plan(

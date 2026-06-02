@@ -1,14 +1,14 @@
 part of '../konyak_cli.dart';
 
 class BottleRecord {
-  const BottleRecord({
+  BottleRecord({
     required this.id,
     required this.name,
     required this.path,
     required this.windowsVersion,
     this.runtimeSettings = const BottleRuntimeSettings(),
-    this.pinnedPrograms = const <PinnedProgramRecord>[],
-  });
+    List<PinnedProgramRecord> pinnedPrograms = const <PinnedProgramRecord>[],
+  }) : pinnedPrograms = List.unmodifiable(pinnedPrograms);
 
   final String id;
   final String name;

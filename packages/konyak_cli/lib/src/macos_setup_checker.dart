@@ -21,11 +21,11 @@ class MacosSetupStatus {
 }
 
 class RosettaSetupStatus {
-  const RosettaSetupStatus({
+  RosettaSetupStatus({
     required this.isRequired,
     required this.isInstalled,
-    required this.installCommand,
-  });
+    required List<String> installCommand,
+  }) : installCommand = List.unmodifiable(installCommand);
 
   final bool isRequired;
   final bool isInstalled;

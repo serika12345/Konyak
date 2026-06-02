@@ -50,7 +50,7 @@ class _CliCommandContext {
 
 CliResult runCli(
   List<String> arguments, {
-  BottleCatalog bottleCatalog = const StaticBottleCatalog(<BottleRecord>[]),
+  BottleCatalog? bottleCatalog,
   BottleRepository? bottleRepository,
   BottleProgramRepository bottleProgramRepository =
       const DartIoBottleProgramRepository(),
@@ -59,7 +59,7 @@ CliResult runCli(
   WinetricksVerbRepository? winetricksVerbRepository,
   WinetricksScriptInstaller winetricksScriptInstaller =
       const DartIoWinetricksScriptInstaller(),
-  RuntimeCatalog runtimeCatalog = const StaticRuntimeCatalog(<RuntimeRecord>[]),
+  RuntimeCatalog? runtimeCatalog,
   ProgramRunPlanner? programRunPlanner,
   ProgramRunner? programRunner,
   BottlePrefixInitializer? bottlePrefixInitializer,
@@ -79,7 +79,7 @@ CliResult runCli(
     return _runCli(
       arguments,
       _CliCommandContext(
-        bottleCatalog: bottleCatalog,
+        bottleCatalog: bottleCatalog ?? StaticBottleCatalog(const []),
         bottleRepository: bottleRepository,
         bottleProgramRepository: bottleProgramRepository,
         programMetadataExtractor: programMetadataExtractor,
@@ -87,7 +87,7 @@ CliResult runCli(
             winetricksVerbRepository ??
             DartIoWinetricksVerbRepository.current(),
         winetricksScriptInstaller: winetricksScriptInstaller,
-        runtimeCatalog: runtimeCatalog,
+        runtimeCatalog: runtimeCatalog ?? StaticRuntimeCatalog(const []),
         programRunPlanner: programRunPlanner ?? ProgramRunPlanner.current(),
         programRunner: programRunner,
         bottlePrefixInitializer: bottlePrefixInitializer,
@@ -121,7 +121,7 @@ CliResult runCli(
 
 Future<CliResult> runCliStreaming(
   List<String> arguments, {
-  BottleCatalog bottleCatalog = const StaticBottleCatalog(<BottleRecord>[]),
+  BottleCatalog? bottleCatalog,
   BottleRepository? bottleRepository,
   BottleProgramRepository bottleProgramRepository =
       const DartIoBottleProgramRepository(),
@@ -130,7 +130,7 @@ Future<CliResult> runCliStreaming(
   WinetricksVerbRepository? winetricksVerbRepository,
   WinetricksScriptInstaller winetricksScriptInstaller =
       const DartIoWinetricksScriptInstaller(),
-  RuntimeCatalog runtimeCatalog = const StaticRuntimeCatalog(<RuntimeRecord>[]),
+  RuntimeCatalog? runtimeCatalog,
   ProgramRunPlanner? programRunPlanner,
   ProgramRunner? programRunner,
   BottlePrefixInitializer? bottlePrefixInitializer,

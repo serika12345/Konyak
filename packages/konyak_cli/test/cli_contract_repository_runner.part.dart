@@ -407,7 +407,7 @@ void defineRepositoryAndRunnerContractTests() {
     () {
       final writableRepository = MemoryBottleRepository(
         dataHome: '/home/user/.local/share/konyak',
-        bottles: const [
+        bottles: [
           BottleRecord(
             id: 'local',
             name: 'Local',
@@ -417,7 +417,7 @@ void defineRepositoryAndRunnerContractTests() {
         ],
       );
       final repository = CompositeBottleRepository(
-        catalogs: const [
+        catalogs: [
           StaticBottleCatalog([
             BottleRecord(
               id: 'imported',
@@ -451,7 +451,7 @@ void defineRepositoryAndRunnerContractTests() {
     );
     final importedRepository = MemoryBottleRepository(
       dataHome: '/home/user/.local/share/konyak',
-      bottles: const [
+      bottles: [
         BottleRecord(
           id: 'imported',
           name: 'Imported',
