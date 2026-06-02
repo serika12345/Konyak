@@ -265,14 +265,14 @@ class RuntimeSourceManifest {
   final String stackId;
   final List<RuntimeSourceComponent> components;
 
-  RuntimeSourceComponent? componentById(String id) {
+  Option<RuntimeSourceComponent> componentById(String id) {
     for (final component in components) {
       if (component.id == id) {
-        return component;
+        return Option.of(component);
       }
     }
 
-    return null;
+    return const Option.none();
   }
 }
 

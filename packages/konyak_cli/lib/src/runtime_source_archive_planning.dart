@@ -88,26 +88,26 @@ _RuntimeStackSourceArchivePlanResult _runtimeStackSourceArchivePlan({
     );
   }
 
-  final wineComponent = manifest.componentById('wine');
-  if (wineComponent == null) {
-    return const _RuntimeStackSourceArchivePlanFailed(
-      'Runtime stack source manifest does not contain a Wine component.',
-    );
-  }
+  final wineComponentResult = manifest.componentById('wine');
 
   final componentCount = manifest.components.length;
-  return _RuntimeStackSourceArchivePlanResolved(
-    _RuntimeStackSourceArchivePlan(
-      wineComponent: wineComponent,
-      components: <_RuntimeStackSourceArchiveComponentPlan>[
-        for (var index = 0; index < componentCount; index += 1)
-          _runtimeStackSourceArchiveComponentPlan(
-            component: manifest.components[index],
-            componentIndex: index,
-            componentCount: componentCount,
-            tempDirectoryPath: tempDirectoryPath,
-          ),
-      ],
+  return wineComponentResult.match(
+    () => const _RuntimeStackSourceArchivePlanFailed(
+      'Runtime stack source manifest does not contain a Wine component.',
+    ),
+    (wineComponent) => _RuntimeStackSourceArchivePlanResolved(
+      _RuntimeStackSourceArchivePlan(
+        wineComponent: wineComponent,
+        components: <_RuntimeStackSourceArchiveComponentPlan>[
+          for (var index = 0; index < componentCount; index += 1)
+            _runtimeStackSourceArchiveComponentPlan(
+              component: manifest.components[index],
+              componentIndex: index,
+              componentCount: componentCount,
+              tempDirectoryPath: tempDirectoryPath,
+            ),
+        ],
+      ),
     ),
   );
 }

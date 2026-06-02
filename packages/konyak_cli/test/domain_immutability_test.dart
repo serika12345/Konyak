@@ -430,6 +430,24 @@ void main() {
     );
   });
 
+  test('runtime source manifests model missing components with Option', () {
+    final manifest = RuntimeSourceManifest(
+      runtimeId: 'wine',
+      stackId: 'konyak',
+      components: const <RuntimeSourceComponent>[
+        RuntimeSourceComponent(
+          id: 'wine',
+          version: '1.0.0',
+          archiveUrl: 'https://example.invalid/wine.tar.xz',
+          sha256: 'digest',
+        ),
+      ],
+    );
+
+    expect(manifest.componentById('wine').toNullable()?.id, 'wine');
+    expect(manifest.componentById('dxvk').isNone(), isTrue);
+  });
+
   test('runtime definitions model absent source URLs with Option', () {
     final definition = RuntimeDefinition(
       id: 'konyak-linux-wine',
