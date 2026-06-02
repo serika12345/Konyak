@@ -50,38 +50,20 @@ String _shortcutProgramName(String path) {
   return baseName.substring(0, extensionStart);
 }
 
-String? _shortcutTargetProgramPath({
+String? _shortcutTargetProgramPathFromBytes({
   required BottleRecord bottle,
-  required String shortcutPath,
+  required Uint8List bytes,
 }) {
   try {
-    final bytes = File(shortcutPath).readAsBytesSync();
     final windowsPath = _shellLinkLocalBasePath(bytes);
     if (windowsPath == null) {
       return null;
     }
 
     return _wineWindowsPathToHostPath(bottle: bottle, windowsPath: windowsPath);
-  } on FileSystemException {
-    return null;
   } on RangeError {
     return null;
   }
-}
-
-String _metadataProgramPath({
-  required BottleRecord bottle,
-  required String programPath,
-}) {
-  if (!_isShortcutPath(programPath)) {
-    return programPath;
-  }
-
-  return _shortcutTargetProgramPath(
-        bottle: bottle,
-        shortcutPath: programPath,
-      ) ??
-      programPath;
 }
 
 String? _shellLinkLocalBasePath(Uint8List bytes) {

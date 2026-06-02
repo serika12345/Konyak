@@ -58,6 +58,7 @@ part 'src/platform_runtime_sources.dart';
 part 'src/platform_update_handoff.dart';
 part 'src/platform_terminal_commands.dart';
 part 'src/program_shortcut_metadata.dart';
+part 'src/program_shortcut_metadata_io.dart';
 part 'src/wine_process_metadata.dart';
 part 'src/wine_process_metadata_io.dart';
 part 'src/pe_program_metadata.dart';
