@@ -311,11 +311,11 @@ task changes scope.
     - Verify with bottle configuration command tests plus `just cli-test`.
   - [ ] Split large pure parser/helper buckets only after the higher-risk I/O
     boundaries are stable.
-    - `runtime_release_metadata_parsers.dart`: separate release asset parsing
+    - [x] `runtime_release_metadata_parsers.dart`: separate release asset parsing
       from source-manifest metadata parsing.
-    - `cli_program_parsers.dart`: separate Start Menu shortcut parsing, PE
+    - [ ] `cli_program_parsers.dart`: separate Start Menu shortcut parsing, PE
       metadata conversion, and JSON response conversion.
-    - `common_helpers.dart` and `platform_paths.dart`: keep only generic,
+    - [ ] `common_helpers.dart` and `platform_paths.dart`: keep only generic,
       dependency-free helpers; move platform-specific helpers next to their
       platform services.
     - Treat these as mechanical behavior-preserving moves with analyzer and
