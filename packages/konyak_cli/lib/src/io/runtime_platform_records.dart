@@ -20,9 +20,11 @@ RuntimeRecord _macosWineRuntimeRecord({
       runnerKind: platformSpec.runnerKind,
       isBundled: false,
       isUpdateable: true,
-      distributionKind: _runtimeDistributionKind(environment, 'bootstrap'),
-      archiveUrl: platformSpec.defaultArchiveUrl,
-      versionUrl: macosWineVersionUrl,
+      distributionKind: Option.fromNullable(
+        _runtimeDistributionKind(environment, 'bootstrap'),
+      ),
+      archiveUrl: Option.fromNullable(platformSpec.defaultArchiveUrl),
+      versionUrl: Option.fromNullable(macosWineVersionUrl),
     ),
     installedState: InstalledRuntimeState(
       isInstalled: isInstalled,
@@ -66,9 +68,11 @@ RuntimeRecord _linuxWineRuntimeRecord({
       runnerKind: platformSpec.runnerKind,
       isBundled: false,
       isUpdateable: archiveUrl != null || versionUrl != null,
-      distributionKind: _runtimeDistributionKind(environment, 'managed'),
-      archiveUrl: archiveUrl,
-      versionUrl: versionUrl,
+      distributionKind: Option.fromNullable(
+        _runtimeDistributionKind(environment, 'managed'),
+      ),
+      archiveUrl: Option.fromNullable(archiveUrl),
+      versionUrl: Option.fromNullable(versionUrl),
     ),
     installedState: InstalledRuntimeState(
       isInstalled: fileStatusProbe.exists(executablePath),

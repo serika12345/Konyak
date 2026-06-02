@@ -9,9 +9,9 @@ class RuntimeDefinition {
     required this.runnerKind,
     required this.isBundled,
     required this.isUpdateable,
-    String? distributionKind,
-    String? archiveUrl,
-    String? versionUrl,
+    Option<String> distributionKind = const Option.none(),
+    Option<String> archiveUrl = const Option.none(),
+    Option<String> versionUrl = const Option.none(),
   }) : distributionKind = _optionalRuntimeModelValue(
          distributionKind,
          'distributionKind',
@@ -38,12 +38,15 @@ class InstalledRuntimeState {
     String? libraryPath,
     String? executablePath,
   }) : isInstalled = Option.fromNullable(isInstalled),
-       applicationSupportPath = _optionalRuntimeModelValue(
+       applicationSupportPath = _optionalNullableRuntimeModelValue(
          applicationSupportPath,
          'applicationSupportPath',
        ),
-       libraryPath = _optionalRuntimeModelValue(libraryPath, 'libraryPath'),
-       executablePath = _optionalRuntimeModelValue(
+       libraryPath = _optionalNullableRuntimeModelValue(
+         libraryPath,
+         'libraryPath',
+       ),
+       executablePath = _optionalNullableRuntimeModelValue(
          executablePath,
          'executablePath',
        );
@@ -86,22 +89,31 @@ class RuntimeRecord {
     String? archiveUrl,
     String? versionUrl,
     RuntimeStack? stack,
-  }) : distributionKind = _optionalRuntimeModelValue(
+  }) : distributionKind = _optionalNullableRuntimeModelValue(
          distributionKind,
          'distributionKind',
        ),
        isInstalled = Option.fromNullable(isInstalled),
-       applicationSupportPath = _optionalRuntimeModelValue(
+       applicationSupportPath = _optionalNullableRuntimeModelValue(
          applicationSupportPath,
          'applicationSupportPath',
        ),
-       libraryPath = _optionalRuntimeModelValue(libraryPath, 'libraryPath'),
-       executablePath = _optionalRuntimeModelValue(
+       libraryPath = _optionalNullableRuntimeModelValue(
+         libraryPath,
+         'libraryPath',
+       ),
+       executablePath = _optionalNullableRuntimeModelValue(
          executablePath,
          'executablePath',
        ),
-       archiveUrl = _optionalRuntimeModelValue(archiveUrl, 'archiveUrl'),
-       versionUrl = _optionalRuntimeModelValue(versionUrl, 'versionUrl'),
+       archiveUrl = _optionalNullableRuntimeModelValue(
+         archiveUrl,
+         'archiveUrl',
+       ),
+       versionUrl = _optionalNullableRuntimeModelValue(
+         versionUrl,
+         'versionUrl',
+       ),
        stack = Option.fromNullable(stack);
 
   RuntimeRecord.fromParts({
@@ -213,7 +225,7 @@ class RuntimeStackComponent {
     String? version,
   }) : paths = List.unmodifiable(paths),
        missingPaths = List.unmodifiable(missingPaths),
-       version = _optionalRuntimeModelValue(version, 'version');
+       version = _optionalNullableRuntimeModelValue(version, 'version');
 
   final String id;
   final String name;
@@ -248,10 +260,18 @@ Map<String, Object?> _runtimeJsonStringField(String key, Option<String> value) {
   );
 }
 
-Option<String> _optionalRuntimeModelValue(String? value, String fieldName) {
-  return Option.fromNullable(
-    value,
-  ).map((item) => _requiredNonBlankDomainString(item, fieldName));
+Option<String> _optionalRuntimeModelValue(
+  Option<String> value,
+  String fieldName,
+) {
+  return value.map((item) => _requiredNonBlankDomainString(item, fieldName));
+}
+
+Option<String> _optionalNullableRuntimeModelValue(
+  String? value,
+  String fieldName,
+) {
+  return _optionalRuntimeModelValue(Option.fromNullable(value), fieldName);
 }
 
 class RuntimeSourceManifest {

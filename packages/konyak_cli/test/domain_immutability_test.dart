@@ -474,7 +474,7 @@ void main() {
         runnerKind: 'wine',
         isBundled: false,
         isUpdateable: true,
-        archiveUrl: ' ',
+        archiveUrl: Option.of(' '),
       ),
       throwsA(isA<ArgumentError>()),
     );

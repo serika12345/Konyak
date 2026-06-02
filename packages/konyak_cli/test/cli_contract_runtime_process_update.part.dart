@@ -57,9 +57,9 @@ void defineRuntimeProcessAndUpdateContractTests() {
         runnerKind: 'wine',
         isBundled: false,
         isUpdateable: true,
-        distributionKind: 'managed',
-        archiveUrl: 'https://example.invalid/linux-wine.tar.xz',
-        versionUrl: 'https://example.invalid/releases/latest',
+        distributionKind: Option.of('managed'),
+        archiveUrl: Option.of('https://example.invalid/linux-wine.tar.xz'),
+        versionUrl: Option.of('https://example.invalid/releases/latest'),
       ),
       installedState: InstalledRuntimeState(
         isInstalled: true,
