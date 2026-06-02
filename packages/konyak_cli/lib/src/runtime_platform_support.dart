@@ -158,7 +158,7 @@ const _linuxWineRuntimePlatformSpec = _RuntimePlatformSpec(
   stackName: 'Linux Wine/Proton runtime stack',
   requiredExecutableRelativePath: <String>['bin', 'wine'],
   defaultArchiveFileName: 'linux-wine.tar.xz',
-  archiveUrlEnvironmentKey: 'KONYAK_LINUX_WINE_ARCHIVE_URL',
+  archiveUrlEnvironmentKey: Option.of('KONYAK_LINUX_WINE_ARCHIVE_URL'),
   developmentSourceManifestEnvironmentKey:
       'KONYAK_DEV_LINUX_WINE_STACK_MANIFEST',
   releaseSourceManifestEnvironmentKey: 'KONYAK_LINUX_WINE_STACK_MANIFEST',
@@ -177,7 +177,7 @@ const _macosKonyakRuntimePlatformSpec = _RuntimePlatformSpec(
   stackId: 'macos-konyak-runtime-stack',
   stackName: 'Konyak macOS runtime stack',
   requiredExecutableRelativePath: <String>['bin', 'wine64'],
-  defaultArchiveUrl: macosWineArchiveUrl,
+  defaultArchiveUrl: Option.of(macosWineArchiveUrl),
   defaultArchiveFileName: macosWineArchiveFileName,
   developmentSourceManifestEnvironmentKey:
       'KONYAK_DEV_MACOS_WINE_STACK_MANIFEST',
@@ -215,10 +215,9 @@ String? _runtimeDefaultArchiveUrl({
   required _RuntimePlatformSpec platformSpec,
   required Map<String, String> environment,
 }) {
-  final archiveUrlEnvironmentKey = platformSpec.archiveUrlEnvironmentKey;
-  if (archiveUrlEnvironmentKey != null) {
-    return _nonEmptyEnvironmentValue(environment, archiveUrlEnvironmentKey);
-  }
-
-  return platformSpec.defaultArchiveUrl;
+  return platformSpec.archiveUrlEnvironmentKey.match(
+    () => platformSpec.defaultArchiveUrl.toNullable(),
+    (archiveUrlEnvironmentKey) =>
+        _nonEmptyEnvironmentValue(environment, archiveUrlEnvironmentKey),
+  );
 }

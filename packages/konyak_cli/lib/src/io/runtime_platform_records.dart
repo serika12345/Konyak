@@ -23,7 +23,7 @@ RuntimeRecord _macosWineRuntimeRecord({
       distributionKind: Option.fromNullable(
         _runtimeDistributionKind(environment, 'bootstrap'),
       ),
-      archiveUrl: Option.fromNullable(platformSpec.defaultArchiveUrl),
+      archiveUrl: platformSpec.defaultArchiveUrl,
       versionUrl: Option.fromNullable(macosWineVersionUrl),
     ),
     installedState: InstalledRuntimeState(
