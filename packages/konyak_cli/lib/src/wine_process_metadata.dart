@@ -80,19 +80,13 @@ String? _pinnedProgramPathForExecutable({
   return null;
 }
 
-String? _latestRunProgramPathForExecutable({
+String? _latestRunProgramPathFromLog({
   required BottleRecord bottle,
   required String executable,
+  required String logContents,
 }) {
-  final logFile = File(_joinPath(bottle.path, const ['logs', 'latest.log']));
-  if (!logFile.existsSync()) {
-    return null;
-  }
-
   try {
-    for (final line in const LineSplitter().convert(
-      logFile.readAsStringSync(),
-    )) {
+    for (final line in const LineSplitter().convert(logContents)) {
       final argumentsJson = line.startsWith('Arguments: ')
           ? line.substring('Arguments: '.length)
           : null;
@@ -117,8 +111,6 @@ String? _latestRunProgramPathForExecutable({
         return _metadataProgramPath(bottle: bottle, programPath: hostPath);
       }
     }
-  } on FileSystemException {
-    return null;
   } on FormatException {
     return null;
   }
@@ -126,51 +118,37 @@ String? _latestRunProgramPathForExecutable({
   return null;
 }
 
-String? _recordedExternalProgramPathForExecutable({
+String? _recordedExternalProgramPathFromLaunchIndex({
   required BottleRecord bottle,
   required String executable,
+  required Map<String, Object?> decoded,
 }) {
-  final launchIndexFile = File(
-    _joinPath(bottle.path, const ['cache', 'external-program-launches.json']),
-  );
-  if (!launchIndexFile.existsSync()) {
+  if (decoded['schemaVersion'] != 1) {
     return null;
   }
 
-  try {
-    final decoded =
-        jsonDecode(launchIndexFile.readAsStringSync()) as Map<String, Object?>;
-    if (decoded['schemaVersion'] != 1) {
-      return null;
-    }
-
-    final launches = decoded['launches'];
-    if (launches is! List<Object?>) {
-      return null;
-    }
-
-    for (final launch in launches.reversed) {
-      if (launch is! Map<String, Object?>) {
-        continue;
-      }
-
-      final programPath = launch['programPath'];
-      final executableName = launch['executableName'];
-      if (programPath is! String || executableName is! String) {
-        continue;
-      }
-
-      if (_normalizedExecutableName(executableName) !=
-          _normalizedExecutableName(executable)) {
-        continue;
-      }
-
-      return _metadataProgramPath(bottle: bottle, programPath: programPath);
-    }
-  } on FileSystemException {
+  final launches = decoded['launches'];
+  if (launches is! List<Object?>) {
     return null;
-  } on FormatException {
-    return null;
+  }
+
+  for (final launch in launches.reversed) {
+    if (launch is! Map<String, Object?>) {
+      continue;
+    }
+
+    final programPath = launch['programPath'];
+    final executableName = launch['executableName'];
+    if (programPath is! String || executableName is! String) {
+      continue;
+    }
+
+    if (_normalizedExecutableName(executableName) !=
+        _normalizedExecutableName(executable)) {
+      continue;
+    }
+
+    return _metadataProgramPath(bottle: bottle, programPath: programPath);
   }
 
   return null;
