@@ -97,7 +97,7 @@ Map<String, String> _macosWineEnvironment({
     'GST_DEBUG': '1',
     'DYLD_LIBRARY_PATH': _prependPath(
       _joinPath(_macosWineRuntimeRoot(environment), const ['lib']),
-      environment['DYLD_LIBRARY_PATH'],
+      Option.fromNullable(environment['DYLD_LIBRARY_PATH']),
     ),
     ...bottle.runtimeSettings.macosEnvironmentVariables(),
   };

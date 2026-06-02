@@ -69,11 +69,11 @@ RuntimeRecord _linuxWineRuntimeRecord({
       architecture: platformSpec.architecture,
       runnerKind: platformSpec.runnerKind,
       isBundled: false,
-      isUpdateable: archiveUrl != null || versionUrl != null,
-      distributionKind: Option.fromNullable(
+      isUpdateable: archiveUrl.isSome() || versionUrl != null,
+      distributionKind: Option.of(
         _runtimeDistributionKind(environment, 'managed'),
       ),
-      archiveUrl: Option.fromNullable(archiveUrl),
+      archiveUrl: archiveUrl,
       versionUrl: Option.fromNullable(versionUrl),
     ),
     installedState: InstalledRuntimeState(

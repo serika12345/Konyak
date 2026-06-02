@@ -1,15 +1,19 @@
 part of '../konyak_cli.dart';
 
-String? _runtimeProfileEnvironmentValue(
+Option<String> _runtimeProfileEnvironmentValue(
   Map<String, String> environment, {
   required String developmentKey,
   required String releaseKey,
 }) {
   if (_isDevelopmentRuntimeProfile(environment)) {
-    return _nonEmptyEnvironmentValue(environment, developmentKey);
+    return Option.fromNullable(
+      _nonEmptyEnvironmentValue(environment, developmentKey),
+    );
   }
 
-  return _nonEmptyEnvironmentValue(environment, releaseKey);
+  return Option.fromNullable(
+    _nonEmptyEnvironmentValue(environment, releaseKey),
+  );
 }
 
 String _runtimeDistributionKind(

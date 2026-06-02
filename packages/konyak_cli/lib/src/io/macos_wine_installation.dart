@@ -258,23 +258,18 @@ _RuntimeWineInstallPlan _macosWineInstallPlan({
         'macOS Wine installation is supported on macOS only.',
     requestOperation: request.requestOperation,
     currentRuntime: currentRuntime,
-    configuredSourceManifest: Option.fromNullable(
-      _runtimeSourceManifestForPlatform(
-        platformSpec: _macosKonyakRuntimePlatformSpec,
-        environment: environment,
-      ),
+    configuredSourceManifest: _runtimeSourceManifestForPlatform(
+      platformSpec: _macosKonyakRuntimePlatformSpec,
+      environment: environment,
     ),
-    configuredSourceManifestSignature: Option.fromNullable(
-      _runtimeSourceManifestSignatureForPlatform(
-        platformSpec: _macosKonyakRuntimePlatformSpec,
-        environment: environment,
-      ),
-    ),
-    defaultArchiveUrl: Option.fromNullable(
-      _runtimeDefaultArchiveUrl(
-        platformSpec: _macosKonyakRuntimePlatformSpec,
-        environment: environment,
-      ),
+    configuredSourceManifestSignature:
+        _runtimeSourceManifestSignatureForPlatform(
+          platformSpec: _macosKonyakRuntimePlatformSpec,
+          environment: environment,
+        ),
+    defaultArchiveUrl: _runtimeDefaultArchiveUrl(
+      platformSpec: _macosKonyakRuntimePlatformSpec,
+      environment: environment,
     ),
     defaultArchiveFileName:
         _macosKonyakRuntimePlatformSpec.defaultArchiveFileName,

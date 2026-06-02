@@ -46,34 +46,33 @@ CliResult _openBottleLocationJsonResult(
         bottle: bottle,
         location: request.location,
       );
-      if (path == null) {
-        return _jsonError(
+      return path.match(
+        () => _jsonError(
           exitCode: 65,
           code: 'unsupportedBottleLocation',
           message: 'Bottle location is not supported.',
           extra: <String, Object?>{'location': request.location},
-        );
-      }
-
-      return switch (opener.openPath(path)) {
-        PathOpenCompleted() => _jsonSuccess(<String, Object?>{
-          'openedLocation': <String, Object?>{
-            'bottleId': bottle.id,
-            'location': request.location,
-            'path': path,
-          },
-        }),
-        PathOpenFailed(:final message) => _jsonError(
-          exitCode: 75,
-          code: 'bottleLocationOpenFailed',
-          message: message,
-          extra: <String, Object?>{
-            'bottleId': bottle.id,
-            'location': request.location,
-            'path': path,
-          },
         ),
-      };
+        (path) => switch (opener.openPath(path)) {
+          PathOpenCompleted() => _jsonSuccess(<String, Object?>{
+            'openedLocation': <String, Object?>{
+              'bottleId': bottle.id,
+              'location': request.location,
+              'path': path,
+            },
+          }),
+          PathOpenFailed(:final message) => _jsonError(
+            exitCode: 75,
+            code: 'bottleLocationOpenFailed',
+            message: message,
+            extra: <String, Object?>{
+              'bottleId': bottle.id,
+              'location': request.location,
+              'path': path,
+            },
+          ),
+        },
+      );
     },
   );
 }

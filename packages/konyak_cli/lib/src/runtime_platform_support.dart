@@ -189,7 +189,7 @@ const _macosKonyakRuntimePlatformSpec = _RuntimePlatformSpec(
   componentDefinitions: _macosKonyakRuntimeComponentDefinitions,
 );
 
-String? _runtimeSourceManifestForPlatform({
+Option<String> _runtimeSourceManifestForPlatform({
   required _RuntimePlatformSpec platformSpec,
   required Map<String, String> environment,
 }) {
@@ -200,7 +200,7 @@ String? _runtimeSourceManifestForPlatform({
   );
 }
 
-String? _runtimeSourceManifestSignatureForPlatform({
+Option<String> _runtimeSourceManifestSignatureForPlatform({
   required _RuntimePlatformSpec platformSpec,
   required Map<String, String> environment,
 }) {
@@ -211,13 +211,14 @@ String? _runtimeSourceManifestSignatureForPlatform({
   );
 }
 
-String? _runtimeDefaultArchiveUrl({
+Option<String> _runtimeDefaultArchiveUrl({
   required _RuntimePlatformSpec platformSpec,
   required Map<String, String> environment,
 }) {
   return platformSpec.archiveUrlEnvironmentKey.match(
-    () => platformSpec.defaultArchiveUrl.toNullable(),
-    (archiveUrlEnvironmentKey) =>
-        _nonEmptyEnvironmentValue(environment, archiveUrlEnvironmentKey),
+    () => platformSpec.defaultArchiveUrl,
+    (archiveUrlEnvironmentKey) => Option.fromNullable(
+      _nonEmptyEnvironmentValue(environment, archiveUrlEnvironmentKey),
+    ),
   );
 }

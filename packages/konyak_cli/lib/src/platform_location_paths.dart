@@ -1,14 +1,14 @@
 part of '../konyak_cli.dart';
 
-String? _bottleLocationPath({
+Option<String> _bottleLocationPath({
   required BottleRecord bottle,
   required String location,
 }) {
   final normalized = location.trim().toLowerCase();
   return switch (normalized) {
-    'root' => bottle.path,
-    'c-drive' => _joinPath(bottle.path, const ['drive_c']),
-    _ => null,
+    'root' => Option.of(bottle.path),
+    'c-drive' => Option.of(_joinPath(bottle.path, const ['drive_c'])),
+    _ => const Option.none(),
   };
 }
 

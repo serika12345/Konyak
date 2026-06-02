@@ -1,18 +1,23 @@
 part of '../konyak_cli.dart';
 
-String? _linuxTerminalOverride(Map<String, String> environment) {
+Option<String> _linuxTerminalOverride(Map<String, String> environment) {
   final terminal = environment['TERMINAL'];
   if (terminal != null && terminal.trim().isNotEmpty) {
-    return terminal.trim();
+    return Option.of(terminal.trim());
   }
 
-  return null;
+  return const Option.none();
 }
 
 String _linuxTerminalLauncherCommand(Map<String, String> environment) {
   final override = _linuxTerminalOverride(environment);
   final candidates = <String>[
-    if (override != null) 'exec ${_shellQuote(override)} -e bash -lc "\$0" sh',
+    ...override.match(
+      () => const <String>[],
+      (terminal) => <String>[
+        'exec ${_shellQuote(terminal)} -e bash -lc "\$0" sh',
+      ],
+    ),
     'if command -v x-terminal-emulator >/dev/null 2>&1; then exec x-terminal-emulator -e bash -lc "\$0" sh; fi',
     'if command -v kgx >/dev/null 2>&1; then exec kgx -- bash -lc "\$0"; fi',
     'if command -v gnome-terminal >/dev/null 2>&1; then exec gnome-terminal -- bash -lc "\$0"; fi',
@@ -42,7 +47,10 @@ String _linuxWineTerminalShellCommandWithEnvironment({
     'cd ${_shellQuote(bottle.path)}',
     'export WINEPREFIX=${_shellQuote(bottle.path)}',
     'export WINE=${_shellQuote(executable)}',
-    if (runtimeBin != null) 'export PATH=${_shellQuote(runtimeBin)}:\$PATH',
+    ...runtimeBin.match(
+      () => const <String>[],
+      (path) => <String>['export PATH=${_shellQuote(path)}:\$PATH'],
+    ),
     if (wineLibraryPath != null && wineLibraryPath.trim().isNotEmpty)
       'export LD_LIBRARY_PATH=${_shellQuote(wineLibraryPath.trim())}:\${LD_LIBRARY_PATH:-}',
     'alias wine=${_shellQuote(executable)}',
@@ -111,12 +119,14 @@ String _shellQuote(String value) {
   return "'${value.replaceAll("'", "'\"'\"'")}'";
 }
 
-String _prependPath(String path, String? existingPath) {
-  if (existingPath == null || existingPath.trim().isEmpty) {
-    return path;
-  }
+String _prependPath(String path, Option<String> existingPath) {
+  return existingPath.match(() => path, (existingPath) {
+    if (existingPath.trim().isEmpty) {
+      return path;
+    }
 
-  return '$path:$existingPath';
+    return '$path:$existingPath';
+  });
 }
 
 String _basename(String path) {

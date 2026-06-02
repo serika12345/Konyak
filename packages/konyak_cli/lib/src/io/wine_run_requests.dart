@@ -229,7 +229,10 @@ ProgramRunRequest _macosWinetricksCommandRequest({
     environment: <String, String>{
       ..._macosWineEnvironment(bottle: bottle, environment: environment),
       'WINE': 'wine64',
-      'PATH': _prependPath(runtimeBin, environment['PATH']),
+      'PATH': _prependPath(
+        runtimeBin,
+        Option.fromNullable(environment['PATH']),
+      ),
     },
     logPath: _joinPath(bottle.path, const ['logs', 'latest.log']),
     workingDirectory: Option.of(runtimeRoot),

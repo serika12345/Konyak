@@ -246,23 +246,18 @@ _RuntimeWineInstallPlan _linuxWineInstallPlan({
         'Linux Wine installation is supported on Linux only.',
     requestOperation: request.requestOperation,
     currentRuntime: currentRuntime,
-    configuredSourceManifest: Option.fromNullable(
-      _runtimeSourceManifestForPlatform(
-        platformSpec: _linuxWineRuntimePlatformSpec,
-        environment: environment,
-      ),
+    configuredSourceManifest: _runtimeSourceManifestForPlatform(
+      platformSpec: _linuxWineRuntimePlatformSpec,
+      environment: environment,
     ),
-    configuredSourceManifestSignature: Option.fromNullable(
-      _runtimeSourceManifestSignatureForPlatform(
-        platformSpec: _linuxWineRuntimePlatformSpec,
-        environment: environment,
-      ),
-    ),
-    defaultArchiveUrl: Option.fromNullable(
-      _runtimeDefaultArchiveUrl(
-        platformSpec: _linuxWineRuntimePlatformSpec,
-        environment: environment,
-      ),
+    configuredSourceManifestSignature:
+        _runtimeSourceManifestSignatureForPlatform(
+          platformSpec: _linuxWineRuntimePlatformSpec,
+          environment: environment,
+        ),
+    defaultArchiveUrl: _runtimeDefaultArchiveUrl(
+      platformSpec: _linuxWineRuntimePlatformSpec,
+      environment: environment,
     ),
     defaultArchiveFileName:
         _linuxWineRuntimePlatformSpec.defaultArchiveFileName,
