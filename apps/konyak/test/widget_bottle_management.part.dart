@@ -456,16 +456,7 @@ void defineBottleManagementWidgetTests() {
   testWidgets('process manager lists Wine processes with icons and kills one', (
     WidgetTester tester,
   ) async {
-    final tempDirectory = io.Directory.systemTemp.createTempSync(
-      'konyak-process-manager-icon-test-',
-    );
-    addTearDown(() {
-      if (tempDirectory.existsSync()) {
-        tempDirectory.deleteSync(recursive: true);
-      }
-    });
-    final iconFile = io.File('${tempDirectory.path}/steam.ico')
-      ..writeAsBytesSync(_singlePixelIcoBytes());
+    const iconPath = '/icons/steam.ico';
     final runner = _QueuedProcessRunner([
       const ProcessRunResult(
         exitCode: 0,
@@ -490,7 +481,7 @@ void defineBottleManagementWidgetTests() {
         ''',
         stderr: '',
       ),
-      ProcessRunResult(
+      const ProcessRunResult(
         exitCode: 0,
         stdout:
             '''
@@ -505,7 +496,7 @@ void defineBottleManagementWidgetTests() {
                   "hostPath": "/home/user/.local/share/konyak/bottles/steam/drive_c/Program Files/Steam/steam.exe",
                   "metadata": {
                     "fileDescription": "Steam Client",
-                    "iconPath": "${iconFile.path}"
+                    "iconPath": "$iconPath"
                   }
                 }
               ]
@@ -542,6 +533,9 @@ void defineBottleManagementWidgetTests() {
     await tester.pumpWidget(
       _testKonyakApp(
         cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
+        iconFileLoader: _FakeIconFileLoader(
+          icons: <String, Uint8List>{iconPath: _singlePixelIcoBytes()},
+        ),
       ),
     );
     await tester.pumpAndSettle();

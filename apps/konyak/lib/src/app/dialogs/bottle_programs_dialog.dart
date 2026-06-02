@@ -1,9 +1,8 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 
 import '../../cli/konyak_cli_client.dart';
 import '../utils/program_labels.dart';
+import '../widgets/icon_file_image.dart';
 
 class BottleProgramsDialog extends StatelessWidget {
   const BottleProgramsDialog({
@@ -73,16 +72,11 @@ class _ProgramIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final iconPath = program.metadata?.iconPath;
-    if (iconPath == null || iconPath.trim().isEmpty) {
-      return const Icon(Icons.shortcut);
-    }
-
-    return Image.file(
-      File(iconPath),
+    return IconFileImage(
+      path: program.metadata?.iconPath,
       width: 28,
       height: 28,
-      errorBuilder: (context, error, stackTrace) => const Icon(Icons.shortcut),
+      fallback: const Icon(Icons.shortcut),
     );
   }
 }

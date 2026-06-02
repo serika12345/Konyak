@@ -1,11 +1,11 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 
 import '../../bottles/bottle_summary.dart';
 import '../../cli/konyak_cli_client.dart';
 import '../utils/program_labels.dart';
+import '../widgets/icon_file_image.dart';
 
 class ProcessManagerDialog extends StatefulWidget {
   const ProcessManagerDialog({
@@ -200,24 +200,13 @@ class _ProcessIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final iconPath = process.metadata?.iconPath;
-    if (iconPath == null || iconPath.trim().isEmpty) {
-      return const Icon(Icons.memory_outlined);
-    }
-
-    try {
-      return Image.memory(
-        File(iconPath).readAsBytesSync(),
-        key: ValueKey('process-manager-process-icon-${_processKey(process)}'),
-        width: 28,
-        height: 28,
-        fit: BoxFit.contain,
-        errorBuilder: (context, error, stackTrace) =>
-            const Icon(Icons.memory_outlined),
-      );
-    } on FileSystemException {
-      return const Icon(Icons.memory_outlined);
-    }
+    return IconFileImage(
+      key: ValueKey('process-manager-process-icon-${_processKey(process)}'),
+      path: process.metadata?.iconPath,
+      width: 28,
+      height: 28,
+      fallback: const Icon(Icons.memory_outlined),
+    );
   }
 }
 

@@ -924,16 +924,7 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
   testWidgets('installed programs dialog pins a selected shortcut', (
     WidgetTester tester,
   ) async {
-    final tempDirectory = io.Directory.systemTemp.createTempSync(
-      'konyak-installed-program-pin-icon-test-',
-    );
-    addTearDown(() {
-      if (tempDirectory.existsSync()) {
-        tempDirectory.deleteSync(recursive: true);
-      }
-    });
-    final iconFile = io.File('${tempDirectory.path}/steam.ico')
-      ..writeAsBytesSync(_singlePixelIcoBytes());
+    const iconPath = '/icons/steam.ico';
     final runner = _QueuedProcessRunner([
       const ProcessRunResult(
         exitCode: 0,
@@ -952,7 +943,7 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
         ''',
         stderr: '',
       ),
-      ProcessRunResult(
+      const ProcessRunResult(
         exitCode: 0,
         stdout:
             '''
@@ -967,7 +958,7 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
                   "path": "/bottles/steam/drive_c/ProgramData/Microsoft/Windows/Start Menu/Programs/Steam.lnk",
                   "source": "globalStartMenu",
                   "metadata": {
-                    "iconPath": "${iconFile.path}"
+                    "iconPath": "$iconPath"
                   }
                 }
               ]
@@ -976,7 +967,7 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
         ''',
         stderr: '',
       ),
-      ProcessRunResult(
+      const ProcessRunResult(
         exitCode: 0,
         stdout:
             '''
@@ -992,7 +983,7 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
                   "name": "Steam",
                   "path": "/bottles/steam/drive_c/ProgramData/Microsoft/Windows/Start Menu/Programs/Steam.lnk",
                   "removable": true,
-                  "iconPath": "${iconFile.path}"
+                  "iconPath": "$iconPath"
                 }
               ]
             }
@@ -1005,6 +996,9 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
     await tester.pumpWidget(
       _testKonyakApp(
         cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
+        iconFileLoader: _FakeIconFileLoader(
+          icons: <String, Uint8List>{iconPath: _singlePixelIcoBytes()},
+        ),
       ),
     );
     await tester.pumpAndSettle();

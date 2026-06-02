@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io' as io;
 import 'dart:typed_data';
 import 'dart:ui' show Tristate;
 
@@ -18,6 +17,7 @@ import 'package:konyak/src/files/bottle_archive_picker.dart';
 import 'package:konyak/src/files/directory_picker.dart';
 import 'package:konyak/src/files/gptk_wine_source_picker.dart';
 import 'package:konyak/src/files/program_file_picker.dart';
+import 'package:konyak/src/icons/icon_file_loader.dart';
 import 'package:konyak/src/logs/log_reader.dart';
 
 part 'widget_shell_sidebar.part.dart';
@@ -50,6 +50,7 @@ KonyakApp _testKonyakApp({
   DirectoryPicker? directoryPicker,
   GptkWineSourcePicker? gptkWineSourcePicker,
   BottleArchivePicker? bottleArchivePicker,
+  IconFileLoader? iconFileLoader,
   List<String> initialExecutablePaths = const <String>[],
   bool enableBackgroundServices = false,
 }) {
@@ -61,6 +62,7 @@ KonyakApp _testKonyakApp({
     directoryPicker: directoryPicker,
     gptkWineSourcePicker: gptkWineSourcePicker,
     bottleArchivePicker: bottleArchivePicker,
+    iconFileLoader: iconFileLoader,
     initialExecutablePaths: initialExecutablePaths,
     enableBackgroundServices: enableBackgroundServices,
   );
@@ -384,6 +386,15 @@ final class _FakeLogReader implements LogReader {
 
     return ReadLog(content: content);
   }
+}
+
+final class _FakeIconFileLoader implements IconFileLoader {
+  const _FakeIconFileLoader({required this.icons});
+
+  final Map<String, Uint8List> icons;
+
+  @override
+  Future<Uint8List?> loadIconBytes(String path) async => icons[path];
 }
 
 final class _FakeProgramFilePicker implements ProgramFilePicker {

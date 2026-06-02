@@ -5,11 +5,14 @@ import '../files/bottle_archive_picker.dart';
 import '../files/directory_picker.dart';
 import '../files/gptk_wine_source_picker.dart';
 import '../files/program_file_picker.dart';
+import '../icons/icon_file_loader.dart';
+import '../icons/icon_file_loader_io.dart';
 import '../logs/log_reader.dart';
 import '../settings/app_settings_summary.dart';
 import 'app_constants.dart';
 import 'app_platform.dart';
 import 'home_loader.dart';
+import 'widgets/icon_file_image.dart';
 
 class KonyakApp extends StatefulWidget {
   KonyakApp({
@@ -21,6 +24,7 @@ class KonyakApp extends StatefulWidget {
     DirectoryPicker? directoryPicker,
     GptkWineSourcePicker? gptkWineSourcePicker,
     BottleArchivePicker? bottleArchivePicker,
+    IconFileLoader? iconFileLoader,
     this.initialExecutablePaths = const <String>[],
     this.enableBackgroundServices = false,
   }) : platform = platform ?? currentKonyakPlatform(),
@@ -32,7 +36,8 @@ class KonyakApp extends StatefulWidget {
        gptkWineSourcePicker =
            gptkWineSourcePicker ?? const FileSelectorGptkWineSourcePicker(),
        bottleArchivePicker =
-           bottleArchivePicker ?? const FileSelectorBottleArchivePicker();
+           bottleArchivePicker ?? const FileSelectorBottleArchivePicker(),
+       iconFileLoader = iconFileLoader ?? const DartIoIconFileLoader();
 
   final KonyakPlatform platform;
   final KonyakCliClient cliClient;
@@ -41,6 +46,7 @@ class KonyakApp extends StatefulWidget {
   final DirectoryPicker directoryPicker;
   final GptkWineSourcePicker gptkWineSourcePicker;
   final BottleArchivePicker bottleArchivePicker;
+  final IconFileLoader iconFileLoader;
   final List<String> initialExecutablePaths;
   final bool enableBackgroundServices;
 
@@ -53,28 +59,31 @@ class _KonyakAppState extends State<KonyakApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Konyak',
-      theme: konyakThemeData(konyakLightColors),
-      darkTheme: konyakThemeData(konyakDarkColors),
-      themeMode: switch (_appearanceMode) {
-        AppAppearanceMode.dark => ThemeMode.dark,
-        AppAppearanceMode.light => ThemeMode.light,
-        AppAppearanceMode.system => ThemeMode.system,
-      },
-      home: KonyakHomeLoader(
-        platform: widget.platform,
-        cliClient: widget.cliClient,
-        logReader: widget.logReader,
-        programFilePicker: widget.programFilePicker,
-        directoryPicker: widget.directoryPicker,
-        gptkWineSourcePicker: widget.gptkWineSourcePicker,
-        bottleArchivePicker: widget.bottleArchivePicker,
-        initialExecutablePaths: widget.initialExecutablePaths,
-        enableBackgroundServices: widget.enableBackgroundServices,
-        onAppSettingsLoaded: _handleAppSettingsLoaded,
-        onAppearanceModeChanged: _setAppearanceMode,
+    return IconFileLoaderScope(
+      loader: widget.iconFileLoader,
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'Konyak',
+        theme: konyakThemeData(konyakLightColors),
+        darkTheme: konyakThemeData(konyakDarkColors),
+        themeMode: switch (_appearanceMode) {
+          AppAppearanceMode.dark => ThemeMode.dark,
+          AppAppearanceMode.light => ThemeMode.light,
+          AppAppearanceMode.system => ThemeMode.system,
+        },
+        home: KonyakHomeLoader(
+          platform: widget.platform,
+          cliClient: widget.cliClient,
+          logReader: widget.logReader,
+          programFilePicker: widget.programFilePicker,
+          directoryPicker: widget.directoryPicker,
+          gptkWineSourcePicker: widget.gptkWineSourcePicker,
+          bottleArchivePicker: widget.bottleArchivePicker,
+          initialExecutablePaths: widget.initialExecutablePaths,
+          enableBackgroundServices: widget.enableBackgroundServices,
+          onAppSettingsLoaded: _handleAppSettingsLoaded,
+          onAppearanceModeChanged: _setAppearanceMode,
+        ),
       ),
     );
   }

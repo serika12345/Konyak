@@ -249,18 +249,9 @@ void defineProgramWidgetTests() {
   testWidgets('pinned program tile displays the extracted executable icon', (
     WidgetTester tester,
   ) async {
-    final tempDirectory = io.Directory.systemTemp.createTempSync(
-      'konyak-pinned-program-icon-test-',
-    );
-    addTearDown(() {
-      if (tempDirectory.existsSync()) {
-        tempDirectory.deleteSync(recursive: true);
-      }
-    });
-    final iconFile = io.File('${tempDirectory.path}/setup.ico')
-      ..writeAsBytesSync(_singlePixelIcoBytes());
+    const iconPath = '/icons/setup.ico';
     final runner = _QueuedProcessRunner([
-      ProcessRunResult(
+      const ProcessRunResult(
         exitCode: 0,
         stdout:
             '''
@@ -277,7 +268,7 @@ void defineProgramWidgetTests() {
                     "name": "Setup",
                     "path": "/downloads/setup.exe",
                     "removable": false,
-                    "iconPath": "${iconFile.path}"
+                    "iconPath": "$iconPath"
                   }
                 ]
               }
@@ -291,6 +282,9 @@ void defineProgramWidgetTests() {
     await tester.pumpWidget(
       _testKonyakApp(
         cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
+        iconFileLoader: _FakeIconFileLoader(
+          icons: <String, Uint8List>{iconPath: _singlePixelIcoBytes()},
+        ),
       ),
     );
     await tester.pump();
