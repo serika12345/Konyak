@@ -76,6 +76,7 @@ part 'src/program_io_services.dart';
 part 'src/app_settings_repositories.dart';
 part 'src/memory_bottle_repository.dart';
 part 'src/composite_bottle_repository.dart';
+part 'src/file_bottle_repository_io.dart';
 part 'src/file_bottle_repository.dart';
 part 'src/runtime_install_operations.dart';
 part 'src/runtime_package_installation.dart';

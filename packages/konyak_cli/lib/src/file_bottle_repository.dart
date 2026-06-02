@@ -26,21 +26,13 @@ class FileBottleRepository implements BottleRepository {
 
   @override
   List<BottleRecord> listBottles() {
-    final directory = Directory(bottleDirectory);
-    if (!directory.existsSync()) {
+    if (!_fileBottleRepositoryDirectoryExists(bottleDirectory)) {
       return const <BottleRecord>[];
     }
 
     try {
       final bottles =
-          directory
-              .listSync()
-              .whereType<Directory>()
-              .where((entry) {
-                return File(
-                  _joinPath(entry.path, const ['metadata.json']),
-                ).existsSync();
-              })
+          _fileBottleRepositoryBottleDirectories(bottleDirectory)
               .map((entry) => _readBottleMetadata(entry.path))
               .map(
                 (bottle) => _bottleWithPinnedProgramIcons(
@@ -61,16 +53,13 @@ class FileBottleRepository implements BottleRepository {
 
   @override
   BottleRecord? findBottle(String id) {
-    final directory = Directory(bottleDirectory);
-    final metadata = File(_joinPath(directory.path, [id, 'metadata.json']));
-
-    if (!metadata.existsSync()) {
+    if (!_fileBottleMetadataExists(bottleDirectory: bottleDirectory, id: id)) {
       return null;
     }
 
     try {
       return _bottleWithPinnedProgramIcons(
-        _readBottleMetadata(_joinPath(directory.path, [id])),
+        _readBottleMetadata(_fileBottlePath(bottleDirectory, id)),
         programMetadataExtractor: _programMetadataExtractor,
       );
     } on FileSystemException catch (error) {
@@ -87,18 +76,12 @@ class FileBottleRepository implements BottleRepository {
       dataHome,
       bottleDirectory: bottleDirectory,
     );
-    final bottlePathDirectory = Directory(bottle.path);
-    final metadata = File(_joinPath(bottle.path, const ['metadata.json']));
-
-    if (bottlePathDirectory.existsSync() || metadata.existsSync()) {
+    if (_fileBottlePathExists(bottle.path)) {
       return BottleCreateConflict(bottle.id);
     }
 
     try {
-      bottlePathDirectory.createSync(recursive: true);
-      Directory(
-        _joinPath(bottle.path, const ['drive_c']),
-      ).createSync(recursive: true);
+      _createFileBottleDirectories(bottle.path);
       _writeBottleMetadata(bottle);
     } on FileSystemException catch (error) {
       throw BottleRepositoryException(error.message);
@@ -141,10 +124,7 @@ class FileBottleRepository implements BottleRepository {
     }
 
     try {
-      final bottleDirectory = Directory(bottle.path);
-      if (bottleDirectory.existsSync()) {
-        bottleDirectory.deleteSync(recursive: true);
-      }
+      _deleteFileBottleDirectoryIfPresent(bottle.path);
     } on FileSystemException catch (error) {
       throw BottleRepositoryException(error.message);
     }
@@ -165,14 +145,12 @@ class FileBottleRepository implements BottleRepository {
       dataHome: dataHome,
       bottleDirectory: bottleDirectory,
     );
-    if (renamed.id != bottle.id && Directory(renamed.path).existsSync()) {
+    if (renamed.id != bottle.id && _fileBottleDirectoryExists(renamed.path)) {
       return BottleRenameConflict(renamed.id);
     }
 
     try {
-      if (renamed.path != bottle.path) {
-        _moveDirectory(from: bottle.path, to: renamed.path);
-      }
+      _moveFileBottleDirectoryIfChanged(from: bottle.path, to: renamed.path);
       _writeBottleMetadata(renamed);
     } on FileSystemException catch (error) {
       throw BottleRepositoryException(error.message);
@@ -191,17 +169,14 @@ class FileBottleRepository implements BottleRepository {
     final destinationPath = request.path;
     if (_normalizeFilesystemPath(destinationPath) !=
             _normalizeFilesystemPath(bottle.path) &&
-        Directory(destinationPath).existsSync()) {
+        _fileBottleDirectoryExists(destinationPath)) {
       return BottleMoveConflict(destinationPath);
     }
 
     final moved = bottle.copyWith(path: destinationPath);
 
     try {
-      if (_normalizeFilesystemPath(destinationPath) !=
-          _normalizeFilesystemPath(bottle.path)) {
-        _moveDirectory(from: bottle.path, to: destinationPath);
-      }
+      _moveFileBottleDirectoryIfChanged(from: bottle.path, to: destinationPath);
       _writeBottleMetadata(moved);
     } on FileSystemException catch (error) {
       throw BottleRepositoryException(error.message);
