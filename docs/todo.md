@@ -263,6 +263,73 @@ task changes scope.
   - [x] Startup update checks do not call install commands.
   - [x] Runtime-dependent UI controls are disabled when capabilities are
     missing or unknown.
+- Large refactor design plan before more feature work.
+  - [ ] Split `FileBottleRepository` into a stable facade and operation
+    collaborators.
+    - Keep the public `BottleRepository` contract and `FileBottleRepository`
+      constructor stable.
+    - Extract bottle read/list enrichment, create/delete/rename/move/update,
+      pinned program mutation, program settings mutation, and archive
+      import/export into separate files.
+    - Keep metadata validation and path planning pure where possible; keep
+      directory creation, deletion, rename, archive, and metadata writes behind
+      explicit I/O helpers.
+    - Preserve command-level behavior for list/create/delete/rename/move,
+      archive import/export, pinning, and program settings.
+    - Verify with targeted CLI contract tests first, then `just cli-test`,
+      `just verify-governance`, `just format-check`, and `just lint`.
+  - [ ] Split runtime install request/result models from install execution.
+    - Move operation models, macOS request factories, Linux request factories,
+      and install results into small model files.
+    - Keep request accessors pure and shared; do not let filesystem, process,
+      download, or platform probes enter model files.
+    - Preserve `install-macos-wine` and `install-linux-wine` JSON output and
+      exit-code behavior.
+    - Verify with runtime install command tests, `just cli-test`,
+      `just verify-governance`, `just format-check`, and `just lint`.
+  - [ ] Extract runtime install decision planning before simplifying macOS and
+    Linux installers.
+    - Add a pure planner that consumes host platform, current runtime state,
+      request operation, explicit source inputs, default archive/source-manifest
+      configuration, and component archive paths.
+    - Return explicit decisions such as unsupported platform, already
+      installed, incomplete runtime without repair source, install from source
+      manifest, install from local archive, and download-then-install.
+    - Let sync and streaming installers execute those decisions through the
+      existing runtime package installer and download boundaries.
+    - Keep progress emission at the installer boundary, not inside the planner.
+    - Verify existing no-op, repair, incomplete runtime, source manifest,
+      archive, and streaming progress tests before removing duplicated code.
+  - [ ] Split registry settings planning and parsing.
+    - Move registry update/query argument construction into a pure planning
+      file.
+    - Move `reg query` stdout parsing and runtime settings merge logic into a
+      parser file with final-state tests.
+    - Keep tests focused on resulting `BottleRecord` and
+      `BottleRuntimeSettings`, not on incidental command count unless command
+      count is the public contract.
+    - Verify with bottle configuration command tests plus `just cli-test`.
+  - [ ] Split large pure parser/helper buckets only after the higher-risk I/O
+    boundaries are stable.
+    - `runtime_release_metadata_parsers.dart`: separate release asset parsing
+      from source-manifest metadata parsing.
+    - `cli_program_parsers.dart`: separate Start Menu shortcut parsing, PE
+      metadata conversion, and JSON response conversion.
+    - `common_helpers.dart` and `platform_paths.dart`: keep only generic,
+      dependency-free helpers; move platform-specific helpers next to their
+      platform services.
+    - Treat these as mechanical behavior-preserving moves with analyzer and
+      command-level tests as the safety net.
+  - [ ] Split Flutter large UI files after backend boundaries are smaller.
+    - Keep widgets responsible for rendering and event wiring only.
+    - Move bottle/program/runtime view models and action selection out of
+      `home_screen.dart`, `sidebar.dart`, `program_configuration_view.dart`,
+      and `bottle_configuration_view.dart`.
+    - Keep CLI process launch and failure mapping behind the existing Flutter
+      CLI service boundary.
+    - Verify with `just flutter-format-check`, `just flutter-analyze`, and
+      `just flutter-test`; add focused widget tests when visible behavior
+      changes.
 - Linux ARM64 Windows execution research.
 - Publication of the actual default Konyak runtime stack manifest and public
   key, once the full component archives are produced.
