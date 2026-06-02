@@ -60,6 +60,7 @@ part 'src/domain/program/program_catalog_models.dart';
 part 'src/domain/bottle/bottle_mutation_models.dart';
 part 'src/domain/program/program_mutation_models.dart';
 part 'src/domain/program/program_run_environment.dart';
+part 'src/domain/runtime/host_environment.dart';
 part 'src/domain/program/program_run_models.dart';
 part 'src/repository/repository_exceptions.dart';
 part 'src/io/io_result.dart';

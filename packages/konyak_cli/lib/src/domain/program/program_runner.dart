@@ -16,7 +16,7 @@ class ProgramRunPlanner {
   ProgramRunPlanner({
     required this.hostPlatform,
     Map<String, String> environment = const <String, String>{},
-  }) : environment = Map.unmodifiable(environment);
+  }) : environment = HostEnvironment(environment);
 
   factory ProgramRunPlanner.current() {
     return ProgramRunPlanner(
@@ -26,7 +26,7 @@ class ProgramRunPlanner {
   }
 
   final KonyakHostPlatform hostPlatform;
-  final Map<String, String> environment;
+  final HostEnvironment environment;
 
   Option<ProgramRunRequest> plan({
     required BottleRecord bottle,
@@ -42,13 +42,13 @@ class ProgramRunPlanner {
       KonyakHostPlatform.linux => _linuxWineRequest(
         bottle: bottle,
         programPath: programPath,
-        environment: environment,
+        environment: environment.toMap(),
         programSettings: programSettings.getOrElse(ProgramSettingsRecord.new),
       ),
       KonyakHostPlatform.macos => _macosWineRequest(
         bottle: bottle,
         programPath: programPath,
-        environment: environment,
+        environment: environment.toMap(),
         programSettings: programSettings.getOrElse(ProgramSettingsRecord.new),
       ),
     });
@@ -75,11 +75,11 @@ class ProgramRunPlanner {
       return Option.of(switch (hostPlatform) {
         KonyakHostPlatform.linux => _linuxTerminalCommandRequest(
           bottle: bottle,
-          environment: environment,
+          environment: environment.toMap(),
         ),
         KonyakHostPlatform.macos => _macosTerminalCommandRequest(
           bottle: bottle,
-          environment: environment,
+          environment: environment.toMap(),
         ),
       });
     }
@@ -88,11 +88,11 @@ class ProgramRunPlanner {
       return Option.of(switch (hostPlatform) {
         KonyakHostPlatform.linux => _linuxWinetricksCommandRequest(
           bottle: bottle,
-          environment: environment,
+          environment: environment.toMap(),
         ),
         KonyakHostPlatform.macos => _macosWinetricksCommandRequest(
           bottle: bottle,
-          environment: environment,
+          environment: environment.toMap(),
           verb: null,
         ),
       });
@@ -102,12 +102,12 @@ class ProgramRunPlanner {
       KonyakHostPlatform.linux => _linuxWineCommandRequest(
         bottle: bottle,
         command: supportedCommand,
-        environment: environment,
+        environment: environment.toMap(),
       ),
       KonyakHostPlatform.macos => _macosWineCommandRequest(
         bottle: bottle,
         command: supportedCommand,
-        environment: environment,
+        environment: environment.toMap(),
       ),
     });
   }
@@ -116,11 +116,11 @@ class ProgramRunPlanner {
     return switch (hostPlatform) {
       KonyakHostPlatform.linux => _linuxWinebootRequest(
         bottle: bottle,
-        environment: environment,
+        environment: environment.toMap(),
       ),
       KonyakHostPlatform.macos => _macosWinebootRequest(
         bottle: bottle,
-        environment: environment,
+        environment: environment.toMap(),
       ),
     };
   }
@@ -129,11 +129,11 @@ class ProgramRunPlanner {
     return switch (hostPlatform) {
       KonyakHostPlatform.linux => _linuxWineserverKillRequest(
         bottle: bottle,
-        environment: environment,
+        environment: environment.toMap(),
       ),
       KonyakHostPlatform.macos => _macosWineserverKillRequest(
         bottle: bottle,
-        environment: environment,
+        environment: environment.toMap(),
       ),
     };
   }
@@ -142,13 +142,13 @@ class ProgramRunPlanner {
     return switch (hostPlatform) {
       KonyakHostPlatform.linux => _linuxWinedbgRequest(
         bottle: bottle,
-        environment: environment,
+        environment: environment.toMap(),
         command: 'info proc',
         logName: 'wine-processes.log',
       ),
       KonyakHostPlatform.macos => _macosWinedbgRequest(
         bottle: bottle,
-        environment: environment,
+        environment: environment.toMap(),
         command: 'info proc',
         logName: 'wine-processes.log',
       ),
@@ -163,14 +163,14 @@ class ProgramRunPlanner {
     return switch (hostPlatform) {
       KonyakHostPlatform.linux => _linuxWinedbgRequest(
         bottle: bottle,
-        environment: environment,
+        environment: environment.toMap(),
         command: 'kill',
         logName: 'wine-process-kill.log',
         trailingArguments: <String>[attachProcessId],
       ),
       KonyakHostPlatform.macos => _macosWinedbgRequest(
         bottle: bottle,
-        environment: environment,
+        environment: environment.toMap(),
         command: 'kill',
         logName: 'wine-process-kill.log',
         trailingArguments: <String>[attachProcessId],
@@ -189,12 +189,12 @@ class ProgramRunPlanner {
     return Option.of(switch (hostPlatform) {
       KonyakHostPlatform.linux => _linuxWinetricksCommandRequest(
         bottle: bottle,
-        environment: environment,
+        environment: environment.toMap(),
         verb: verb,
       ),
       KonyakHostPlatform.macos => _macosWinetricksCommandRequest(
         bottle: bottle,
-        environment: environment,
+        environment: environment.toMap(),
         verb: verb,
       ),
     });
@@ -212,12 +212,12 @@ class ProgramRunPlanner {
           KonyakHostPlatform.linux => _linuxRegistryUpdateRequest(
             bottle: bottle,
             update: update,
-            environment: environment,
+            environment: environment.toMap(),
           ),
           KonyakHostPlatform.macos => _macosRegistryUpdateRequest(
             bottle: bottle,
             update: update,
-            environment: environment,
+            environment: environment.toMap(),
           ),
         };
       }),
@@ -241,12 +241,12 @@ class ProgramRunPlanner {
           KonyakHostPlatform.linux => _linuxRegistryUpdateRequest(
             bottle: bottle,
             update: update,
-            environment: environment,
+            environment: environment.toMap(),
           ),
           KonyakHostPlatform.macos => _macosRegistryUpdateRequest(
             bottle: bottle,
             update: update,
-            environment: environment,
+            environment: environment.toMap(),
           ),
         };
       }),
@@ -266,12 +266,12 @@ class ProgramRunPlanner {
           KonyakHostPlatform.linux => _linuxRegistryQueryRequest(
             bottle: bottle,
             query: query,
-            environment: environment,
+            environment: environment.toMap(),
           ),
           KonyakHostPlatform.macos => _macosRegistryQueryRequest(
             bottle: bottle,
             query: query,
-            environment: environment,
+            environment: environment.toMap(),
           ),
         };
       }),

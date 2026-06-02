@@ -10,7 +10,7 @@ CliResult? _handleHostIntegrationCommand(
 
   final result = _installLinuxFileAssociations(
     hostPlatform: context.programRunPlanner.hostPlatform,
-    environment: context.programRunPlanner.environment,
+    environment: context.programRunPlanner.environment.toMap(),
   );
   return switch (result) {
     _LinuxFileAssociationsInstalled(

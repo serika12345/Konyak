@@ -17,7 +17,7 @@ CliResult? _handleBottleReadCommand(
     final bottles = bottlesResult.getOrElse((_) => const <BottleRecord>[]);
     _synchronizeMacosPinnedProgramLaunchers(
       hostPlatform: context.programRunPlanner.hostPlatform,
-      environment: context.programRunPlanner.environment,
+      environment: context.programRunPlanner.environment.toMap(),
       bottles: bottles,
     );
     return _jsonSuccess(<String, Object?>{

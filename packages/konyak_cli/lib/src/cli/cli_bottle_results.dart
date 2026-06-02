@@ -85,7 +85,7 @@ CliResult? _syncRuntimeSettingsDllOverrides({
   final syncResult = _ioResult(() {
     _syncMacosDxvkDllOverrides(
       bottle: bottle,
-      environment: programRunPlanner.environment,
+      environment: programRunPlanner.environment.toMap(),
     );
   });
   final failureMessage = syncResult.fold<String?>(

@@ -32,7 +32,7 @@ CliResult? _handlePinnedProgramCommand(
       }
       _synchronizeMacosPinnedProgramLaunchers(
         hostPlatform: context.programRunPlanner.hostPlatform,
-        environment: context.programRunPlanner.environment,
+        environment: context.programRunPlanner.environment.toMap(),
         bottles: bottlesResult.getOrElse((_) => const <BottleRecord>[]),
       );
     }
@@ -71,7 +71,7 @@ CliResult? _handlePinnedProgramCommand(
       }
       _synchronizeMacosPinnedProgramLaunchers(
         hostPlatform: context.programRunPlanner.hostPlatform,
-        environment: context.programRunPlanner.environment,
+        environment: context.programRunPlanner.environment.toMap(),
         bottles: bottlesResult.getOrElse((_) => const <BottleRecord>[]),
       );
     }
@@ -98,7 +98,7 @@ CliResult? _handlePinnedProgramCommand(
       }
       _synchronizeMacosPinnedProgramLaunchers(
         hostPlatform: context.programRunPlanner.hostPlatform,
-        environment: context.programRunPlanner.environment,
+        environment: context.programRunPlanner.environment.toMap(),
         bottles: bottlesResult.getOrElse((_) => const <BottleRecord>[]),
       );
     }

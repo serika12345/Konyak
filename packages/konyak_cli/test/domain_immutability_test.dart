@@ -348,6 +348,23 @@ void main() {
     );
   });
 
+  test('host environments expose immutable snapshots', () {
+    final variables = <String, String>{'HOME': '/Users/user'};
+    final environment = HostEnvironment(variables);
+    variables['HOME'] = '/changed';
+
+    expect(environment['HOME'], '/Users/user');
+    expect(environment.toMap(), {'HOME': '/Users/user'});
+    expect(
+      () => HostEnvironment(const <String, String>{' ': 'value'}),
+      throwsA(isA<ArgumentError>()),
+    );
+    expect(
+      () => HostEnvironment(const <String, String>{'A=B': 'value'}),
+      throwsA(isA<ArgumentError>()),
+    );
+  });
+
   test('process termination records expose immutable argv snapshots', () {
     final argv = <String>['wine', '/steam.exe'];
     final record = WineProcessTerminationRecord(

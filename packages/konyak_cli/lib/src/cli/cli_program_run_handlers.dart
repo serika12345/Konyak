@@ -74,7 +74,7 @@ CliResult _runProgramJsonResult(
           _recordExternalProgramRun(bottle: bottle, request: request);
           _synchronizeLinuxDesktopLauncherForProgramRun(
             hostPlatform: context.programRunPlanner.hostPlatform,
-            environment: context.programRunPlanner.environment,
+            environment: context.programRunPlanner.environment.toMap(),
             bottle: bottle,
             request: request,
           );
