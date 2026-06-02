@@ -57,19 +57,10 @@ _LinuxFileAssociationInstallResult _installLinuxFileAssociations({
       _linuxKonyakDesktopEntryId,
     ]);
     final mimeAppsPath = _linuxMimeAppsPath(environment);
-
-    final desktopEntry = File(desktopEntryPath);
-    desktopEntry.parent.createSync(recursive: true);
-    desktopEntry.writeAsStringSync(
-      _linuxKonyakDesktopEntry(appExecutable: appExecutable),
-    );
-
-    final mimeApps = File(mimeAppsPath);
-    mimeApps.parent.createSync(recursive: true);
-    mimeApps.writeAsStringSync(
-      _linuxMimeAppsWithKonyakDefaults(
-        existing: mimeApps.existsSync() ? mimeApps.readAsStringSync() : '',
-      ),
+    _writeLinuxFileAssociationFiles(
+      desktopEntryPath: desktopEntryPath,
+      desktopEntry: _linuxKonyakDesktopEntry(appExecutable: appExecutable),
+      mimeAppsPath: mimeAppsPath,
     );
 
     return _LinuxFileAssociationsInstalled(
