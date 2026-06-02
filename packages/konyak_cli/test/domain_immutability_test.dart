@@ -328,7 +328,7 @@ void main() {
       final request = RuntimePackageInstallRequest(
         runtimeLabel: 'Konyak Wine',
         archivePath: '/wine.tar.gz',
-        archiveSha256: null,
+        archiveSha256: const Option.none(),
         componentArchivePaths: componentArchivePaths,
         componentVersions: componentVersions,
         runtimeRoot: Directory('/tmp/konyak-runtime'),
@@ -360,7 +360,7 @@ void main() {
       final request = RuntimePackageInstallRequest(
         runtimeLabel: 'Konyak Wine',
         archivePath: '/wine.tar.gz',
-        archiveSha256: null,
+        archiveSha256: const Option.none(),
         componentArchivePaths: const <String>[],
         componentVersions: const <String, String>{},
         runtimeRoot: Directory('/tmp/konyak-runtime'),
@@ -377,7 +377,7 @@ void main() {
       () => RuntimePackageInstallRequest(
         runtimeLabel: ' ',
         archivePath: '/wine.tar.gz',
-        archiveSha256: null,
+        archiveSha256: const Option.none(),
         componentArchivePaths: const <String>[],
         componentVersions: const <String, String>{},
         runtimeRoot: Directory('/tmp/konyak-runtime'),
@@ -390,7 +390,7 @@ void main() {
       () => RuntimePackageInstallRequest(
         runtimeLabel: 'Konyak Wine',
         archivePath: '/wine.tar.gz',
-        archiveSha256: ' ',
+        archiveSha256: Option.of(' '),
         componentArchivePaths: const <String>[],
         componentVersions: const <String, String>{},
         runtimeRoot: Directory('/tmp/konyak-runtime'),

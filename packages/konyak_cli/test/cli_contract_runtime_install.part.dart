@@ -24,7 +24,7 @@ void defineRuntimeInstallContractTests() {
       RuntimePackageInstallRequest(
         runtimeLabel: 'Linux Wine',
         archivePath: archivePath,
-        archiveSha256: null,
+        archiveSha256: const Option.none(),
         componentArchivePaths: const [],
         componentVersions: const {},
         runtimeRoot: runtimeRoot,

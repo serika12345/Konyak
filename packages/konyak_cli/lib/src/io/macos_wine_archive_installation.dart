@@ -3,7 +3,7 @@ part of '../../konyak_cli.dart';
 extension _MacosWineArchiveInstallation on DartIoMacosWineInstaller {
   MacosWineInstallResult _installMacosWineArchive({
     required String archivePath,
-    required String? archiveSha256,
+    required Option<String> archiveSha256,
     List<String> componentArchivePaths = const <String>[],
     Map<String, String> componentVersions = const <String, String>{},
     bool preserveExistingRuntimeFiles = false,
@@ -102,7 +102,7 @@ extension _MacosWineArchiveInstallation on DartIoMacosWineInstaller {
         _RuntimeStackSourceArchiveBundleResolved(:final bundle) =>
           _installMacosWineArchive(
             archivePath: bundle.wineArchivePath,
-            archiveSha256: null,
+            archiveSha256: const Option.none(),
             componentArchivePaths: bundle.componentArchivePaths,
             componentVersions: bundle.componentVersions,
             preserveExistingRuntimeFiles: preserveExistingRuntimeFiles,
@@ -158,7 +158,7 @@ extension _MacosWineArchiveInstallation on DartIoMacosWineInstaller {
         _RuntimeStackSourceArchiveBundleResolved(:final bundle) =>
           _installMacosWineArchive(
             archivePath: bundle.wineArchivePath,
-            archiveSha256: null,
+            archiveSha256: const Option.none(),
             componentArchivePaths: bundle.componentArchivePaths,
             componentVersions: bundle.componentVersions,
             preserveExistingRuntimeFiles: preserveExistingRuntimeFiles,

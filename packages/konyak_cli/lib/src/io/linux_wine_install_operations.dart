@@ -3,7 +3,7 @@ part of '../../konyak_cli.dart';
 extension _DartIoLinuxWineInstallerOperations on DartIoLinuxWineInstaller {
   LinuxWineInstallResult _installLinuxWineArchive({
     required String archivePath,
-    required String? archiveSha256,
+    required Option<String> archiveSha256,
     List<String> componentArchivePaths = const <String>[],
     Map<String, String> componentVersions = const <String, String>{},
     RuntimeInstallProgressSink? progressSink,
@@ -88,7 +88,7 @@ extension _DartIoLinuxWineInstallerOperations on DartIoLinuxWineInstaller {
         _RuntimeStackSourceArchiveBundleResolved(:final bundle) =>
           _installLinuxWineArchive(
             archivePath: bundle.wineArchivePath,
-            archiveSha256: null,
+            archiveSha256: const Option.none(),
             componentArchivePaths: bundle.componentArchivePaths,
             componentVersions: bundle.componentVersions,
             progressSink: progressSink,
@@ -142,7 +142,7 @@ extension _DartIoLinuxWineInstallerOperations on DartIoLinuxWineInstaller {
         _RuntimeStackSourceArchiveBundleResolved(:final bundle) =>
           _installLinuxWineArchive(
             archivePath: bundle.wineArchivePath,
-            archiveSha256: null,
+            archiveSha256: const Option.none(),
             componentArchivePaths: bundle.componentArchivePaths,
             componentVersions: bundle.componentVersions,
             progressSink: progressSink,

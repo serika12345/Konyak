@@ -81,7 +81,7 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
       ):
         return _installLinuxWineArchive(
           archivePath: archivePath,
-          archiveSha256: archiveSha256.toNullable(),
+          archiveSha256: archiveSha256,
           componentArchivePaths: componentArchivePaths,
           progressSink: progress,
         );
@@ -116,7 +116,7 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
 
           return _installLinuxWineArchive(
             archivePath: downloadedArchivePath,
-            archiveSha256: archiveSha256.toNullable(),
+            archiveSha256: archiveSha256,
             componentArchivePaths: componentArchivePaths,
             progressSink: progress,
           );
@@ -183,7 +183,7 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
       ):
         return _installLinuxWineArchive(
           archivePath: archivePath,
-          archiveSha256: archiveSha256.toNullable(),
+          archiveSha256: archiveSha256,
           componentArchivePaths: componentArchivePaths,
           progressSink: progress,
         );
@@ -219,7 +219,7 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
 
           return _installLinuxWineArchive(
             archivePath: downloadedArchivePath,
-            archiveSha256: archiveSha256.toNullable(),
+            archiveSha256: archiveSha256,
             componentArchivePaths: componentArchivePaths,
             progressSink: progress,
           );

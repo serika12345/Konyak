@@ -4,7 +4,7 @@ class RuntimePackageInstallRequest {
   RuntimePackageInstallRequest({
     required String runtimeLabel,
     required String archivePath,
-    required String? archiveSha256,
+    required Option<String> archiveSha256,
     required List<String> componentArchivePaths,
     required Map<String, String> componentVersions,
     required this.runtimeRoot,
@@ -92,12 +92,10 @@ class DartIoRuntimePackageInstaller implements RuntimePackageInstaller {
 }
 
 Option<String> _optionalRuntimePackageInstallValue(
-  String? value,
+  Option<String> value,
   String fieldName,
 ) {
-  return Option.fromNullable(
-    value,
-  ).map((item) => _requiredNonBlankDomainString(item, fieldName));
+  return value.map((item) => _requiredNonBlankDomainString(item, fieldName));
 }
 
 class RuntimeInstallProgress {
