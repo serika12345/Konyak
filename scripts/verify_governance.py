@@ -387,9 +387,25 @@ def main() -> None:
         "Wine/Proton runtimes are managed by Konyak",
         "External plist",
         "Prefer immutable data and pure functions",
+        "just verify-safety",
         "Use XDG paths on Linux",
     ]:
         require_contains("AGENTS.md", expected)
+
+    for expected in [
+        "verify-safety:",
+        "scripts/verify_no_invisible_chars.py",
+        "scripts/verify_pub_licenses.py",
+        "scripts/verify_cves.py",
+    ]:
+        require_contains("justfile", expected)
+
+    for expected in [
+        "osv-scanner",
+    ]:
+        require_contains("flake.nix", expected)
+    require_contains("scripts/pub_license_policy.json", "allowedLicenses")
+    require_contains("scripts/cve_audit_baseline.json", '"osv"')
 
     require_result_boundary_rules()
 

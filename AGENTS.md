@@ -31,8 +31,8 @@
 
 When instructions conflict, follow this order:
 
-1. Mechanical gates (`just verify`, `just format-check`, `just lint`,
-   `just test`, and narrower targets listed in this file)
+1. Mechanical gates (`just verify`, `just verify-safety`, `just format-check`,
+   `just lint`, `just test`, and narrower targets listed in this file)
 2. Public CLI contracts and persisted data compatibility
 3. Existing repository architecture
 4. Design principles in this file
@@ -63,6 +63,7 @@ Use TDD as the default development loop:
 ### 5.1 Any repository or tooling change
 
 - `just verify-governance`
+- `just verify-safety`
 - `just format-check`
 - `just lint`
 

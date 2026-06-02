@@ -3,7 +3,7 @@ set shell := ["zsh", "-lc"]
 default:
   just --list
 
-verify: verify-governance format-check lint test
+verify: verify-governance format-check lint verify-safety test
 
 flutter-pub-get:
   if [ -d apps/konyak ]; then cd apps/konyak && flutter pub get; fi
@@ -29,6 +29,11 @@ nix-lint:
   statix check flake.nix
 
 test: flutter-pub-get cli-pub-get flutter-test cli-test
+
+verify-safety: flutter-pub-get cli-pub-get
+  python3 scripts/verify_no_invisible_chars.py
+  python3 scripts/verify_pub_licenses.py
+  python3 scripts/verify_cves.py
 
 flutter-format-check:
   if [ -d apps/konyak ]; then cd apps/konyak && dart format --set-exit-if-changed .; fi

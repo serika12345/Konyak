@@ -50,6 +50,7 @@
           verificationPackages = with pkgs; [
             deadnix
             nixfmt
+            osv-scanner
             statix
           ];
 
