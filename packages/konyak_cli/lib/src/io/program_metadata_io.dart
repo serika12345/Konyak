@@ -4,19 +4,19 @@ class DartIoProgramMetadataExtractor implements ProgramMetadataExtractor {
   const DartIoProgramMetadataExtractor();
 
   @override
-  ProgramMetadataRecord? extract({
+  Option<ProgramMetadataRecord> extract({
     required BottleRecord bottle,
     required String programPath,
   }) {
     try {
       final file = File(programPath);
       if (!file.existsSync()) {
-        return null;
+        return const Option.none();
       }
 
       final image = _PortableExecutableImage.parse(file.readAsBytesSync());
       if (image == null) {
-        return null;
+        return const Option.none();
       }
 
       final versionStrings = _peVersionStrings(image);
@@ -36,13 +36,13 @@ class DartIoProgramMetadataExtractor implements ProgramMetadataExtractor {
         iconPath: Option.fromNullable(iconPath),
       );
 
-      return metadata.isEmpty ? null : metadata;
+      return metadata.isEmpty ? const Option.none() : Option.of(metadata);
     } on FileSystemException {
-      return null;
+      return const Option.none();
     } on FormatException {
-      return null;
+      return const Option.none();
     } on RangeError {
-      return null;
+      return const Option.none();
     }
   }
 }

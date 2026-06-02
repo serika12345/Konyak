@@ -142,7 +142,7 @@ CliResult _listWineProcessesJsonResult({
                   executable: process.executable,
                 );
                 final metadata = hostPath == null
-                    ? null
+                    ? const Option<ProgramMetadataRecord>.none()
                     : programMetadataExtractor.extract(
                         bottle: bottle,
                         programPath: hostPath,

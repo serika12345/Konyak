@@ -63,7 +63,10 @@ void _synchronizeLinuxDesktopLauncherForProgramRun({
         programPath: normalizedProgramPath,
         metadata: metadata,
       ),
-      iconPath: metadata?.iconPath.toNullable(),
+      iconPath: metadata.match(
+        () => null,
+        (programMetadata) => programMetadata.iconPath.toNullable(),
+      ),
     );
     _writeLinuxExternalProgramDesktopLauncher(
       launcherPath: launcherPath,
@@ -80,10 +83,9 @@ void _synchronizeLinuxDesktopLauncherForProgramRun({
 
 String _linuxExternalProgramLauncherName({
   required String programPath,
-  required ProgramMetadataRecord? metadata,
+  required Option<ProgramMetadataRecord> metadata,
 }) {
-  final programMetadata = metadata;
-  if (programMetadata != null) {
+  return metadata.match(() => _baseName(programPath), (programMetadata) {
     final productName = _presentMetadataValue(programMetadata.productName);
     if (productName != null) {
       return productName;
@@ -95,8 +97,9 @@ String _linuxExternalProgramLauncherName({
     if (fileDescription != null) {
       return fileDescription;
     }
-  }
-  return _baseName(programPath);
+
+    return _baseName(programPath);
+  });
 }
 
 String? _presentMetadataValue(Option<String> value) {

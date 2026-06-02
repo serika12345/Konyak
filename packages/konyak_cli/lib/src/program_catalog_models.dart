@@ -6,24 +6,27 @@ class BottleProgramRecord {
     required this.name,
     required this.path,
     required this.source,
-    this.metadata,
+    this.metadata = const Option.none(),
   });
 
   final String id;
   final String name;
   final String path;
   final String source;
-  final ProgramMetadataRecord? metadata;
+  final Option<ProgramMetadataRecord> metadata;
 
   Map<String, Object?> toJson() {
-    final programMetadata = metadata;
-
     return <String, Object?>{
       'id': id,
       'name': name,
       'path': path,
       'source': source,
-      if (programMetadata != null) 'metadata': programMetadata.toJson(),
+      ...metadata.match(
+        () => const <String, Object?>{},
+        (programMetadata) => <String, Object?>{
+          'metadata': programMetadata.toJson(),
+        },
+      ),
     };
   }
 }
@@ -114,30 +117,33 @@ class WineProcessRecord {
     required this.processId,
     required this.executable,
     this.hostPath,
-    this.metadata,
+    this.metadata = const Option.none(),
   });
 
   final String bottleId;
   final String processId;
   final String executable;
   final String? hostPath;
-  final ProgramMetadataRecord? metadata;
+  final Option<ProgramMetadataRecord> metadata;
 
   Map<String, Object?> toJson() {
-    final processMetadata = metadata;
-
     return <String, Object?>{
       'bottleId': bottleId,
       'processId': processId,
       'executable': executable,
       if (hostPath != null) 'hostPath': hostPath,
-      if (processMetadata != null) 'metadata': processMetadata.toJson(),
+      ...metadata.match(
+        () => const <String, Object?>{},
+        (processMetadata) => <String, Object?>{
+          'metadata': processMetadata.toJson(),
+        },
+      ),
     };
   }
 }
 
 abstract interface class ProgramMetadataExtractor {
-  ProgramMetadataRecord? extract({
+  Option<ProgramMetadataRecord> extract({
     required BottleRecord bottle,
     required String programPath,
   });

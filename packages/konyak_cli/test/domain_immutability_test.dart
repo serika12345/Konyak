@@ -127,6 +127,25 @@ void main() {
     );
   });
 
+  test('program and process records model absent metadata with Option', () {
+    final program = BottleProgramRecord(
+      id: 'steam',
+      name: 'Steam',
+      path: '/steam.exe',
+      source: 'pinned',
+    );
+    final process = WineProcessRecord(
+      bottleId: 'steam',
+      processId: '42',
+      executable: 'steam.exe',
+    );
+
+    expect(program.metadata.isNone(), isTrue);
+    expect(process.metadata.isNone(), isTrue);
+    expect(program.toJson(), isNot(contains('metadata')));
+    expect(process.toJson(), isNot(contains('metadata')));
+  });
+
   test('program settings expose immutable environment snapshots', () {
     final environment = <String, String>{'LANG': 'ja_JP.UTF-8'};
     final settings = ProgramSettingsRecord(environment: environment);

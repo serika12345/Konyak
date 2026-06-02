@@ -63,11 +63,13 @@ final class FixedProgramMetadataExtractor implements ProgramMetadataExtractor {
   final ProgramMetadataRecord metadata;
 
   @override
-  ProgramMetadataRecord? extract({
+  Option<ProgramMetadataRecord> extract({
     required BottleRecord bottle,
     required String programPath,
   }) {
-    return programPath == this.programPath ? metadata : null;
+    return programPath == this.programPath
+        ? Option.of(metadata)
+        : const Option.none();
   }
 }
 

@@ -30,7 +30,10 @@ BottleRecord _bottleWithPinnedProgram(
       PinnedProgramRecord(
         name: request.name,
         path: request.programPath,
-        iconPath: metadata?.iconPath ?? const Option.none(),
+        iconPath: metadata.match(
+          () => const Option<String>.none(),
+          (programMetadata) => programMetadata.iconPath,
+        ),
       ),
     ],
   );
@@ -54,7 +57,10 @@ BottleRecord _bottleWithPinnedProgramIcons(
             programPath: program.path,
           ),
         );
-        final iconPath = metadata?.iconPath ?? const Option.none();
+        final iconPath = metadata.match(
+          () => const Option<String>.none(),
+          (programMetadata) => programMetadata.iconPath,
+        );
         if (iconPath.isNone()) {
           return program;
         }
