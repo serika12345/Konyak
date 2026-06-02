@@ -151,7 +151,29 @@ final class RuntimeUpdateInstallOperation
   final bool force;
 }
 
-class MacosWineInstallRequest {
+mixin _RuntimeWineInstallRequestAccessors {
+  RuntimeInstallRequestOperation get requestOperation;
+
+  RuntimeInstallOperation get operation => requestOperation.operation;
+
+  String? get archivePath => requestOperation.archivePath;
+
+  String? get archiveUrl => requestOperation.archiveUrl;
+
+  String? get archiveSha256 => requestOperation.archiveSha256;
+
+  List<String> get componentArchivePaths =>
+      requestOperation.componentArchivePaths;
+
+  String? get sourceManifest => requestOperation.sourceManifest;
+
+  String? get sourceManifestSignature =>
+      requestOperation.sourceManifestSignature;
+
+  bool get force => requestOperation.force;
+}
+
+class MacosWineInstallRequest with _RuntimeWineInstallRequestAccessors {
   MacosWineInstallRequest.fullInstall({
     String? archivePath,
     String? archiveUrl,
@@ -216,29 +238,12 @@ class MacosWineInstallRequest {
          force: force,
        );
 
+  @override
   final RuntimeInstallRequestOperation requestOperation;
   final bool emitProgress;
-
-  RuntimeInstallOperation get operation => requestOperation.operation;
-
-  String? get archivePath => requestOperation.archivePath;
-
-  String? get archiveUrl => requestOperation.archiveUrl;
-
-  String? get archiveSha256 => requestOperation.archiveSha256;
-
-  List<String> get componentArchivePaths =>
-      requestOperation.componentArchivePaths;
-
-  String? get sourceManifest => requestOperation.sourceManifest;
-
-  String? get sourceManifestSignature =>
-      requestOperation.sourceManifestSignature;
-
-  bool get force => requestOperation.force;
 }
 
-class LinuxWineInstallRequest {
+class LinuxWineInstallRequest with _RuntimeWineInstallRequestAccessors {
   LinuxWineInstallRequest.fullInstall({
     String? archivePath,
     String? archiveUrl,
@@ -303,24 +308,7 @@ class LinuxWineInstallRequest {
          force: force,
        );
 
+  @override
   final RuntimeInstallRequestOperation requestOperation;
   final bool emitProgress;
-
-  RuntimeInstallOperation get operation => requestOperation.operation;
-
-  String? get archivePath => requestOperation.archivePath;
-
-  String? get archiveUrl => requestOperation.archiveUrl;
-
-  String? get archiveSha256 => requestOperation.archiveSha256;
-
-  List<String> get componentArchivePaths =>
-      requestOperation.componentArchivePaths;
-
-  String? get sourceManifest => requestOperation.sourceManifest;
-
-  String? get sourceManifestSignature =>
-      requestOperation.sourceManifestSignature;
-
-  bool get force => requestOperation.force;
 }
