@@ -173,9 +173,10 @@ class RuntimeStackComponent {
     required this.isRequired,
     required Iterable<String> paths,
     required Iterable<String> missingPaths,
-    this.version,
+    String? version,
   }) : paths = List.unmodifiable(paths),
-       missingPaths = List.unmodifiable(missingPaths);
+       missingPaths = List.unmodifiable(missingPaths),
+       version = _optionalRuntimeModelValue(version, 'version');
 
   final String id;
   final String name;
@@ -183,7 +184,7 @@ class RuntimeStackComponent {
   final bool isRequired;
   final List<String> paths;
   final List<String> missingPaths;
-  final String? version;
+  final Option<String> version;
 
   bool get isInstalled {
     return missingPaths.isEmpty;
@@ -198,9 +199,22 @@ class RuntimeStackComponent {
       'isInstalled': isInstalled,
       'paths': paths,
       'missingPaths': missingPaths,
-      if (version != null) 'version': version,
+      ..._runtimeJsonStringField('version', version),
     };
   }
+}
+
+Map<String, Object?> _runtimeJsonStringField(String key, Option<String> value) {
+  return value.match(
+    () => const <String, Object?>{},
+    (item) => <String, Object?>{key: item},
+  );
+}
+
+Option<String> _optionalRuntimeModelValue(String? value, String fieldName) {
+  return Option.fromNullable(
+    value,
+  ).map((item) => _requiredNonBlankDomainString(item, fieldName));
 }
 
 class RuntimeSourceManifest {

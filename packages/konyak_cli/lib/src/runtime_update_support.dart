@@ -18,7 +18,7 @@ String? _runtimeWineVersion(RuntimeRecord runtime) {
 
   for (final component in stack.components) {
     if (component.id == 'wine') {
-      return component.version;
+      return component.version.toNullable();
     }
   }
 

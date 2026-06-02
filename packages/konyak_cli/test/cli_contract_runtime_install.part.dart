@@ -238,11 +238,11 @@ void defineRuntimeInstallContractTests() {
     expect(completed.runtime.isInstalled, isTrue);
     expect(completed.runtime.stack?.isComplete, isTrue);
     expect(
-      completed.runtime.stack?.components.first.version,
+      completed.runtime.stack?.components.first.version.toNullable(),
       'wine-devel-11.9',
     );
     expect(
-      completed.runtime.stack?.components[2].version,
+      completed.runtime.stack?.components[2].version.toNullable(),
       'dxvk-macos-fixture',
     );
     expect(
@@ -437,14 +437,16 @@ void defineRuntimeInstallContractTests() {
         completed.runtime.stack?.components
             .where((component) => component.id == 'dxvk-macos')
             .single
-            .version,
+            .version
+            .toNullable(),
         'dxvk-macos-fixture',
       );
       expect(
         completed.runtime.stack?.components
             .where((component) => component.id == 'gptk-d3dmetal')
             .single
-            .version,
+            .version
+            .toNullable(),
         'gptk-d3dmetal-fixture',
       );
       expect(
@@ -649,21 +651,24 @@ void defineRuntimeInstallContractTests() {
       completed.runtime.stack?.components
           .where((component) => component.id == 'dxvk-macos')
           .single
-          .version,
+          .version
+          .toNullable(),
       'dxvk-macos-fixture',
     );
     expect(
       completed.runtime.stack?.components
           .where((component) => component.id == 'moltenvk')
           .single
-          .version,
+          .version
+          .toNullable(),
       'moltenvk-fixture',
     );
     expect(
       completed.runtime.stack?.components
           .where((component) => component.id == 'gptk-d3dmetal')
           .single
-          .version,
+          .version
+          .toNullable(),
       'gptk-d3dmetal-fixture',
     );
     expect(
@@ -849,21 +854,24 @@ void defineRuntimeInstallContractTests() {
       completed.runtime.stack?.components
           .where((component) => component.id == 'wine')
           .single
-          .version,
+          .version
+          .toNullable(),
       'wine-devel-source',
     );
     expect(
       completed.runtime.stack?.components
           .where((component) => component.id == 'winetricks')
           .single
-          .version,
+          .version
+          .toNullable(),
       'winetricks-source',
     );
     expect(
       completed.runtime.stack?.components
           .where((component) => component.id == 'gptk-d3dmetal')
           .single
-          .version,
+          .version
+          .toNullable(),
       'gptk-d3dmetal-source',
     );
     expect(
@@ -1076,9 +1084,9 @@ void defineRuntimeInstallContractTests() {
       final gptkComponent = completed.runtime.stack?.components
           .where((component) => component.id == 'gptk-d3dmetal')
           .single;
-      expect(wineComponent?.version, 'user-provided-gptk-wine');
+      expect(wineComponent?.version.toNullable(), 'user-provided-gptk-wine');
       expect(gptkComponent?.isInstalled, isTrue);
-      expect(gptkComponent?.version, 'user-provided');
+      expect(gptkComponent?.version.toNullable(), 'user-provided');
     },
   );
 
@@ -1927,7 +1935,8 @@ void defineRuntimeInstallContractTests() {
       runtime.stack?.components
           .where((component) => component.id == 'vkd3d-proton')
           .single
-          .version,
+          .version
+          .toNullable(),
       'vkd3d-proton-fixture',
     );
     expect(
@@ -2005,7 +2014,8 @@ void defineRuntimeInstallContractTests() {
       runtime.stack?.components
           .where((component) => component.id == 'vkd3d-proton')
           .single
-          .version,
+          .version
+          .toNullable(),
       'vkd3d-linux-source',
     );
   });
@@ -2086,7 +2096,8 @@ void defineRuntimeInstallContractTests() {
       runtime.stack?.components
           .where((component) => component.id == 'vkd3d-proton')
           .single
-          .version,
+          .version
+          .toNullable(),
       'vkd3d-linux-repair',
     );
   });

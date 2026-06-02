@@ -401,6 +401,35 @@ void main() {
     );
   });
 
+  test('runtime stack components model absent versions with Option', () {
+    final component = RuntimeStackComponent(
+      id: 'wine',
+      name: 'Wine',
+      role: 'runner',
+      isRequired: true,
+      paths: const <String>['/runtime/bin/wine'],
+      missingPaths: const <String>[],
+    );
+
+    expect(component.version.isNone(), isTrue);
+    expect(component.toJson(), isNot(contains('version')));
+  });
+
+  test('runtime stack components reject blank present versions', () {
+    expect(
+      () => RuntimeStackComponent(
+        id: 'wine',
+        name: 'Wine',
+        role: 'runner',
+        isRequired: true,
+        paths: const <String>['/runtime/bin/wine'],
+        missingPaths: const <String>[],
+        version: ' ',
+      ),
+      throwsA(isA<ArgumentError>()),
+    );
+  });
+
   test('static catalogs expose immutable snapshots', () {
     final bottles = <BottleRecord>[
       BottleRecord(
