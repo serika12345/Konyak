@@ -66,6 +66,7 @@ part 'src/pe_program_versions.dart';
 part 'src/program_argument_support.dart';
 part 'src/program_registry_settings.dart';
 part 'src/program_winetricks_support.dart';
+part 'src/winetricks_io.dart';
 part 'src/pinned_programs.dart';
 part 'src/program_runner.dart';
 part 'src/program_io_services.dart';
