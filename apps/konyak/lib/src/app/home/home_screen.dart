@@ -7,7 +7,8 @@ import '../app_platform.dart';
 import '../bottles/bottle_detail.dart';
 import '../bottles/runtime_settings_change.dart';
 import '../utils/bottle_lists.dart';
-import '../widgets/konyak_menu_bar.dart';
+import 'home_menu_bar.dart';
+import 'home_sidebar_pane.dart';
 import 'sidebar.dart';
 
 class KonyakHome extends StatefulWidget {
@@ -162,64 +163,28 @@ class _KonyakHomeState extends State<KonyakHome> {
       body: Column(
         children: [
           if (widget.platform.isLinux)
-            KonyakMenuBar(
-              menus: [
-                KonyakMenuDefinition(
-                  label: 'Konyak',
-                  items: [
-                    KonyakMenuItemDefinition(
-                      label: 'About Konyak',
-                      icon: Icons.info_outline,
-                      onPressed: widget.onShowAbout,
-                    ),
-                    KonyakMenuItemDefinition(
-                      label: 'Settings…',
-                      icon: Icons.settings_outlined,
-                      onPressed: widget.onShowSettings,
-                    ),
-                  ],
-                ),
-                KonyakMenuDefinition(
-                  label: 'File',
-                  items: [
-                    KonyakMenuItemDefinition(
-                      label: 'Import Bottle',
-                      icon: Icons.file_upload_outlined,
-                      onPressed: widget.onImportBottleArchive,
-                    ),
-                  ],
-                ),
-              ],
+            KonyakHomeMenuBar(
+              onShowAbout: widget.onShowAbout,
+              onShowSettings: widget.onShowSettings,
+              onImportBottleArchive: widget.onImportBottleArchive,
             ),
           Expanded(
             child: Row(
               children: [
-                AnimatedSidebarSlot(
+                KonyakHomeSidebarPane(
+                  platform: widget.platform,
+                  bottles: filteredBottles,
+                  selectedBottleId: selectedBottle?.id,
+                  searchController: _searchController,
                   isExpanded: _isSidebarVisible,
                   showExpandedContent: _showExpandedSidebarContent,
+                  isBottleSelectionLocked:
+                      selectedBottleHasPendingRuntimeSettings,
+                  onSearchChanged: (_) => setState(() {}),
                   onAnimationEnd: _handleSidebarAnimationEnd,
-                  expandedSidebar: KonyakSidebar(
-                    reserveLeadingWindowControlsSpace: widget.platform.isMacOS,
-                    bottles: filteredBottles,
-                    selectedBottleId: selectedBottle?.id,
-                    searchController: _searchController,
-                    onSearchChanged: (_) => setState(() {}),
-                    onToggleSidebar: _toggleSidebar,
-                    onBottleSelected: selectedBottleHasPendingRuntimeSettings
-                        ? null
-                        : (bottle) {
-                            setState(() {
-                              _selectedBottleId = bottle.id;
-                              _detailMode = BottleDetailMode.overview;
-                              _selectedProgramPath = null;
-                            });
-                          },
-                    onBottleContextMenuAction: _handleBottleContextMenuAction,
-                  ),
-                  collapsedSidebar: CollapsedSidebarToggle(
-                    reserveLeadingWindowControlsSpace: widget.platform.isMacOS,
-                    onToggleSidebar: _toggleSidebar,
-                  ),
+                  onToggleSidebar: _toggleSidebar,
+                  onBottleSelected: _selectBottle,
+                  onBottleContextMenuAction: _handleBottleContextMenuAction,
                 ),
                 VerticalDivider(
                   width: 1,
@@ -349,6 +314,14 @@ class _KonyakHomeState extends State<KonyakHome> {
       return;
     }
     setState(() {
+      _detailMode = BottleDetailMode.overview;
+      _selectedProgramPath = null;
+    });
+  }
+
+  void _selectBottle(BottleSummary bottle) {
+    setState(() {
+      _selectedBottleId = bottle.id;
       _detailMode = BottleDetailMode.overview;
       _selectedProgramPath = null;
     });
