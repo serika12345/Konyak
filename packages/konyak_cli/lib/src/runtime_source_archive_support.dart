@@ -1,5 +1,88 @@
 part of '../konyak_cli.dart';
 
+_RuntimeStackSourceArchiveBundleResult _resolveRuntimeStackSourceArchiveBundle({
+  required RuntimeSourceManifest manifest,
+  required _RuntimePlatformSpec platformSpec,
+  required Directory tempDirectory,
+  required RuntimeInstallProgressSink? progressSink,
+}) {
+  if (manifest.runtimeId != platformSpec.runtimeId ||
+      manifest.stackId != platformSpec.stackId) {
+    return const _RuntimeStackSourceArchiveBundleFailed(
+      'Runtime stack source manifest targets an unsupported runtime.',
+    );
+  }
+
+  final wineComponent = manifest.componentById('wine');
+  if (wineComponent == null) {
+    return const _RuntimeStackSourceArchiveBundleFailed(
+      'Runtime stack source manifest does not contain a Wine component.',
+    );
+  }
+
+  final archivePaths = <String, String>{};
+  final componentCount = manifest.components.length;
+  for (final component in manifest.components) {
+    final fileName =
+        _fileNameFromUrl(component.archiveUrl) ?? '${component.id}.tar.xz';
+    final archivePath = _joinPath(tempDirectory.path, [
+      '${archivePaths.length}-$fileName',
+    ]);
+    final componentIndex = archivePaths.length;
+    final startFraction = 0.05 + (componentIndex / componentCount) * 0.55;
+    final endFraction = 0.05 + ((componentIndex + 1) / componentCount) * 0.55;
+    final downloadFailure = _downloadRuntimeStackSourceArchive(
+      source: component.archiveUrl,
+      targetPath: archivePath,
+      progressSink: progressSink,
+      stage: 'downloading',
+      message: 'Downloading ${component.id}...',
+      startFraction: startFraction,
+      endFraction: endFraction,
+    );
+    if (downloadFailure != null) {
+      return _RuntimeStackSourceArchiveBundleFailed(downloadFailure);
+    }
+
+    _emitRuntimeInstallProgress(
+      progressSink,
+      stage: 'verifying',
+      message: 'Verifying ${component.id}...',
+      fraction: endFraction,
+    );
+    final actualSha256 = _sha256HexDigest(File(archivePath));
+    if (actualSha256.toLowerCase() != component.sha256.toLowerCase()) {
+      return _RuntimeStackSourceArchiveBundleFailed(
+        'Runtime stack component `${component.id}` checksum mismatch: '
+        'expected ${component.sha256}, got $actualSha256.',
+      );
+    }
+
+    archivePaths[component.id] = archivePath;
+  }
+
+  final wineArchivePath = archivePaths[wineComponent.id];
+  if (wineArchivePath == null) {
+    return const _RuntimeStackSourceArchiveBundleFailed(
+      'Runtime stack source manifest did not resolve a Wine archive.',
+    );
+  }
+
+  return _RuntimeStackSourceArchiveBundleResolved(
+    _RuntimeStackSourceArchiveBundle(
+      wineArchivePath: wineArchivePath,
+      componentArchivePaths: <String>[
+        for (final component in manifest.components)
+          if (component.id != wineComponent.id) archivePaths[component.id]!,
+      ],
+      componentVersions: <String, String>{
+        for (final component in manifest.components)
+          component.id: component.version,
+      },
+    ),
+  );
+}
+
 Future<_RuntimeStackSourceArchiveBundleResult>
 _resolveRuntimeStackSourceArchiveBundleStreaming({
   required RuntimeSourceManifest manifest,
