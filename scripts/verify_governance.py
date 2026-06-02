@@ -41,6 +41,12 @@ def require_missing(relative_path: str) -> None:
         raise AssertionError(f"{relative_path} must not exist in the Konyak project")
 
 
+def require_no_files_under(relative_directory: str, glob_pattern: str) -> None:
+    for path in sorted((ROOT / relative_directory).glob(glob_pattern)):
+        relative_path = path.relative_to(ROOT)
+        raise AssertionError(f"{relative_path} must be placed in a concern-specific folder")
+
+
 def require_not_contains_under(
     relative_directory: str,
     glob_pattern: str,
@@ -69,7 +75,7 @@ def require_io_implementation_boundaries() -> None:
         "SocketException",
     ]
     allowed_paths = {
-        "packages/konyak_cli/lib/src/common_helpers.dart",
+        "packages/konyak_cli/lib/src/shared/common_helpers.dart",
     }
     for path in sorted((ROOT / "packages/konyak_cli/lib/src").rglob("*.dart")):
         relative_path = str(path.relative_to(ROOT))
@@ -108,6 +114,7 @@ def require_result_boundary_rules() -> None:
         require_contains("AGENTS.md", expected)
 
     if (ROOT / "apps/konyak").exists():
+        require_no_files_under("apps/konyak/lib/src", "*.dart")
         require_not_contains("apps/konyak/pubspec.yaml", "fpdart")
         require_not_contains_under("apps/konyak", "*.dart", "package:fpdart")
         require_contains("apps/konyak/pubspec.yaml", "fast_immutable_collections:")
@@ -130,6 +137,7 @@ def require_result_boundary_rules() -> None:
     )
     require_contains("packages/konyak_cli/lib/konyak_cli.dart", "package:fpdart/fpdart.dart")
     require_contains("packages/konyak_cli/lib/konyak_cli.dart", "part 'src/io/io_result.dart';")
+    require_no_files_under("packages/konyak_cli/lib/src", "*.dart")
     require_io_implementation_boundaries()
     require_external_payload_parser_boundaries()
 
@@ -142,11 +150,11 @@ def require_result_boundary_rules() -> None:
         require_contains("packages/konyak_cli/lib/src/io/io_result.dart", expected)
 
     require_contains(
-        "packages/konyak_cli/lib/src/repository_interfaces.dart",
+        "packages/konyak_cli/lib/src/repository/repository_interfaces.dart",
         "IoResult<Option<BottleRecord>> findBottle(String id);",
     )
     require_not_contains(
-        "packages/konyak_cli/lib/src/repository_interfaces.dart",
+        "packages/konyak_cli/lib/src/repository/repository_interfaces.dart",
         "IoResult<BottleRecord?> findBottle",
     )
     for expected in [
@@ -156,21 +164,21 @@ def require_result_boundary_rules() -> None:
         "iconPath.map(",
         "throw ArgumentError.value",
     ]:
-        require_contains("packages/konyak_cli/lib/src/bottle_models.dart", expected)
+        require_contains("packages/konyak_cli/lib/src/domain/bottle/bottle_models.dart", expected)
     require_not_contains(
-        "packages/konyak_cli/lib/src/bottle_models.dart",
+        "packages/konyak_cli/lib/src/domain/bottle/bottle_models.dart",
         "final String? iconPath;",
     )
     require_not_contains(
-        "packages/konyak_cli/lib/src/bottle_models.dart",
+        "packages/konyak_cli/lib/src/domain/bottle/bottle_models.dart",
         "final List<PinnedProgramRecord> pinnedPrograms;",
     )
     require_contains(
-        "packages/konyak_cli/lib/src/program_settings_models.dart",
+        "packages/konyak_cli/lib/src/domain/program/program_settings_models.dart",
         "final IMap<String, String> environment;",
     )
     require_not_contains(
-        "packages/konyak_cli/lib/src/program_settings_models.dart",
+        "packages/konyak_cli/lib/src/domain/program/program_settings_models.dart",
         "final Map<String, String> environment;",
     )
     for expected in [
@@ -185,21 +193,21 @@ def require_result_boundary_rules() -> None:
         "final Option<String> productVersion;",
         "final Option<String> iconPath;",
     ]:
-        require_contains("packages/konyak_cli/lib/src/program_catalog_models.dart", expected)
+        require_contains("packages/konyak_cli/lib/src/domain/program/program_catalog_models.dart", expected)
     require_not_contains(
-        "packages/konyak_cli/lib/src/program_catalog_models.dart",
+        "packages/konyak_cli/lib/src/domain/program/program_catalog_models.dart",
         "final String? iconPath;",
     )
     require_not_contains(
-        "packages/konyak_cli/lib/src/program_catalog_models.dart",
+        "packages/konyak_cli/lib/src/domain/program/program_catalog_models.dart",
         "ProgramMetadataRecord? metadata",
     )
     require_not_contains(
-        "packages/konyak_cli/lib/src/program_catalog_models.dart",
+        "packages/konyak_cli/lib/src/domain/program/program_catalog_models.dart",
         "ProgramMetadataRecord? extract",
     )
     require_not_contains(
-        "packages/konyak_cli/lib/src/program_catalog_models.dart",
+        "packages/konyak_cli/lib/src/domain/program/program_catalog_models.dart",
         "final String? hostPath;",
     )
     for expected in [
@@ -211,7 +219,7 @@ def require_result_boundary_rules() -> None:
         "final Option<String> sourceManifestUrl;",
         "final Option<String> sourceManifestSignatureUrl;",
     ]:
-        require_contains("packages/konyak_cli/lib/src/update_records.dart", expected)
+        require_contains("packages/konyak_cli/lib/src/domain/update/update_records.dart", expected)
     for forbidden in [
         "final String? currentVersion;",
         "final String? latestVersion;",
@@ -223,7 +231,7 @@ def require_result_boundary_rules() -> None:
         "final String? sourceManifestSignatureUrl;",
         "final String? installPath;",
     ]:
-        require_not_contains("packages/konyak_cli/lib/src/update_records.dart", forbidden)
+        require_not_contains("packages/konyak_cli/lib/src/domain/update/update_records.dart", forbidden)
     for expected in [
         "RuntimeInstallSource get installSource;",
         "sealed class RuntimeInstallSource",
@@ -234,7 +242,7 @@ def require_result_boundary_rules() -> None:
         "final RuntimeInstallSource installSource;",
     ]:
         require_contains(
-            "packages/konyak_cli/lib/src/runtime_install_operation_models.dart",
+            "packages/konyak_cli/lib/src/domain/runtime/runtime_install_operation_models.dart",
             expected,
         )
     for forbidden in [
@@ -255,23 +263,23 @@ def require_result_boundary_rules() -> None:
         "final Option<String> sourceManifestSignature;",
     ]:
         require_not_contains(
-            "packages/konyak_cli/lib/src/runtime_install_operation_models.dart",
+            "packages/konyak_cli/lib/src/domain/runtime/runtime_install_operation_models.dart",
             forbidden,
         )
     require_contains(
-        "packages/konyak_cli/lib/src/runtime_package_installation.dart",
+        "packages/konyak_cli/lib/src/domain/runtime/runtime_package_installation.dart",
         "final Option<String> archiveSha256;",
     )
     require_not_contains(
-        "packages/konyak_cli/lib/src/runtime_package_installation.dart",
+        "packages/konyak_cli/lib/src/domain/runtime/runtime_package_installation.dart",
         "final String? archiveSha256;",
     )
     require_contains(
-        "packages/konyak_cli/lib/src/runtime_models.dart",
+        "packages/konyak_cli/lib/src/domain/runtime/runtime_models.dart",
         "final Option<String> version;",
     )
     require_not_contains(
-        "packages/konyak_cli/lib/src/runtime_models.dart",
+        "packages/konyak_cli/lib/src/domain/runtime/runtime_models.dart",
         "final String? version;",
     )
     for expected in [
@@ -284,7 +292,7 @@ def require_result_boundary_rules() -> None:
         "final Option<String> executablePath;",
         "final Option<RuntimeStack> stack;",
     ]:
-        require_contains("packages/konyak_cli/lib/src/runtime_models.dart", expected)
+        require_contains("packages/konyak_cli/lib/src/domain/runtime/runtime_models.dart", expected)
     for forbidden in [
         "final String? distributionKind;",
         "final bool? isInstalled;",
@@ -295,11 +303,11 @@ def require_result_boundary_rules() -> None:
         "final String? versionUrl;",
         "final RuntimeStack? stack;",
     ]:
-        require_not_contains("packages/konyak_cli/lib/src/runtime_models.dart", forbidden)
+        require_not_contains("packages/konyak_cli/lib/src/domain/runtime/runtime_models.dart", forbidden)
 
     result_wrapped_repository_operation_files = [
-        "packages/konyak_cli/lib/src/file_bottle_repository_mutation_operations.dart",
-        "packages/konyak_cli/lib/src/file_bottle_repository_program_operations.dart",
+        "packages/konyak_cli/lib/src/repository/file_bottle_repository_mutation_operations.dart",
+        "packages/konyak_cli/lib/src/repository/file_bottle_repository_program_operations.dart",
     ]
     for relative_path in result_wrapped_repository_operation_files:
         require_contains(relative_path, "_ioResult(")
@@ -314,7 +322,7 @@ def require_result_boundary_rules() -> None:
         "class BottleMoveFailed",
         "class BottleUpdateFailed",
     ]:
-        require_contains("packages/konyak_cli/lib/src/bottle_mutation_models.dart", expected)
+        require_contains("packages/konyak_cli/lib/src/domain/bottle/bottle_mutation_models.dart", expected)
 
     for expected in [
         "class ProgramPinFailed",
@@ -322,20 +330,20 @@ def require_result_boundary_rules() -> None:
         "class ProgramSettingsReadFailed",
         "class ProgramSettingsUpdateFailed",
     ]:
-        require_contains("packages/konyak_cli/lib/src/program_mutation_models.dart", expected)
+        require_contains("packages/konyak_cli/lib/src/domain/program/program_mutation_models.dart", expected)
 
     require_contains(
-        "packages/konyak_cli/lib/src/cli_bottle_results.dart",
+        "packages/konyak_cli/lib/src/cli/cli_bottle_results.dart",
         "code: 'bottleRepositoryError'",
     )
 
 
 def require_external_payload_parser_boundaries() -> None:
     for relative_path in [
-        "packages/konyak_cli/lib/src/app_settings_models.dart",
-        "packages/konyak_cli/lib/src/bottle_models.dart",
-        "packages/konyak_cli/lib/src/bottle_runtime_settings_models.dart",
-        "packages/konyak_cli/lib/src/program_settings_models.dart",
+        "packages/konyak_cli/lib/src/domain/app/app_settings_models.dart",
+        "packages/konyak_cli/lib/src/domain/bottle/bottle_models.dart",
+        "packages/konyak_cli/lib/src/domain/bottle/bottle_runtime_settings_models.dart",
+        "packages/konyak_cli/lib/src/domain/program/program_settings_models.dart",
     ]:
         require_not_contains(relative_path, "fromJson(")
         require_not_contains(relative_path, "Object? value")
@@ -564,10 +572,17 @@ def main() -> None:
     require_not_contains("docs/todo.md", "BottleVM.plist")
     require_not_contains("packages/konyak_cli/lib/konyak_cli.dart", "BottleVM.plist")
     require_not_contains("packages/konyak_cli/lib/konyak_cli.dart", "Metadata.plist")
-    require_contains("packages/konyak_cli/lib/src/runtime_models.dart", "RuntimeStackComponent")
+    require_contains(
+        "packages/konyak_cli/lib/src/domain/runtime/runtime_models.dart",
+        "RuntimeStackComponent",
+    )
     runtime_support_files = [
         str(path.relative_to(ROOT))
-        for path in sorted((ROOT / "packages/konyak_cli/lib/src").glob("runtime_*support.dart"))
+        for path in sorted(
+            (ROOT / "packages/konyak_cli/lib/src/domain/runtime").glob(
+                "runtime_*support.dart"
+            )
+        )
     ]
     require_any_contains(runtime_support_files, "macos-konyak-runtime-stack")
     require_contains("docs/todo.md", "Linux Wine/Proton")

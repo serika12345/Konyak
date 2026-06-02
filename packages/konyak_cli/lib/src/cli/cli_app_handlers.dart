@@ -1,0 +1,73 @@
+part of '../../konyak_cli.dart';
+
+CliResult? _handleAppCommand(
+  List<String> arguments,
+  _CliCommandContext context,
+) {
+  if (_isJsonAppUpdateCheckCommand(arguments)) {
+    final checker = context.appUpdateChecker;
+    if (checker == null) {
+      return _unavailableJsonError(
+        code: 'appUpdateCheckerUnavailable',
+        subject: 'App update checker',
+      );
+    }
+
+    return switch (checker.check()) {
+      AppUpdateCheckCompleted(:final update) => _appUpdateJsonResult(update),
+      AppUpdateCheckFailed(:final message) => _jsonError(
+        exitCode: 75,
+        code: 'appUpdateCheckFailed',
+        message: message,
+      ),
+    };
+  }
+
+  if (_isJsonAppSettingsGetCommand(arguments)) {
+    final repository = context.appSettingsRepository;
+    if (repository == null) {
+      return _appSettingsRepositoryUnavailableError();
+    }
+
+    return repository.read().fold(
+      _appSettingsRepositoryFailureJsonResult,
+      _appSettingsJsonResult,
+    );
+  }
+
+  final appSettingsUpdate = _parseJsonAppSettingsUpdateRequest(arguments);
+  if (appSettingsUpdate != null) {
+    final repository = context.appSettingsRepository;
+    if (repository == null) {
+      return _appSettingsRepositoryUnavailableError();
+    }
+
+    return repository
+        .write(appSettingsUpdate)
+        .fold(_appSettingsRepositoryFailureJsonResult, _appSettingsJsonResult);
+  }
+
+  if (_isJsonAppUpdateInstallCommand(arguments)) {
+    return _installAppUpdateJsonResult(
+      appUpdateChecker: context.appUpdateChecker,
+      appUpdateInstaller: context.appUpdateInstaller,
+    );
+  }
+
+  return null;
+}
+
+CliResult _appSettingsRepositoryFailureJsonResult(String message) {
+  return _jsonError(
+    exitCode: 74,
+    code: 'appSettingsRepositoryError',
+    message: message,
+  );
+}
+
+CliResult _appSettingsRepositoryUnavailableError() {
+  return _unavailableJsonError(
+    code: 'appSettingsRepositoryUnavailable',
+    subject: 'App settings repository',
+  );
+}
