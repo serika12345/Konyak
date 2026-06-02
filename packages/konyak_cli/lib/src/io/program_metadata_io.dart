@@ -27,13 +27,13 @@ class DartIoProgramMetadataExtractor implements ProgramMetadataExtractor {
         fileStat: file.statSync(),
       );
       final metadata = ProgramMetadataRecord(
-        architecture: image.architecture,
-        fileDescription: versionStrings['FileDescription'],
-        productName: versionStrings['ProductName'],
-        companyName: versionStrings['CompanyName'],
-        fileVersion: versionStrings['FileVersion'],
-        productVersion: versionStrings['ProductVersion'],
-        iconPath: iconPath,
+        architecture: Option.fromNullable(image.architecture),
+        fileDescription: Option.fromNullable(versionStrings['FileDescription']),
+        productName: Option.fromNullable(versionStrings['ProductName']),
+        companyName: Option.fromNullable(versionStrings['CompanyName']),
+        fileVersion: Option.fromNullable(versionStrings['FileVersion']),
+        productVersion: Option.fromNullable(versionStrings['ProductVersion']),
+        iconPath: Option.fromNullable(iconPath),
       );
 
       return metadata.isEmpty ? null : metadata;

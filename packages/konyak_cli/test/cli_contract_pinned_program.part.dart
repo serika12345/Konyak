@@ -62,7 +62,7 @@ void definePinnedProgramContractTests() {
       dataHome: _joinTestPath(tempDirectory.path, const ['data']),
       programMetadataExtractor: FixedProgramMetadataExtractor(
         programPath: '/downloads/Steam.exe',
-        metadata: ProgramMetadataRecord(iconPath: iconPath),
+        metadata: ProgramMetadataRecord(iconPath: Option.of(iconPath)),
       ),
     );
     runCli(const [

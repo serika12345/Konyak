@@ -97,6 +97,36 @@ void main() {
     expect(clearedIcon.toJson(), isNot(contains('iconPath')));
   });
 
+  test('program metadata records model absent fields with Option', () {
+    final emptyMetadata = ProgramMetadataRecord();
+    final metadata = ProgramMetadataRecord(
+      architecture: Option.of('x86_64'),
+      fileDescription: Option.of('Steam'),
+      iconPath: Option.of('/steam.icns'),
+    );
+
+    expect(emptyMetadata.isEmpty, isTrue);
+    expect(emptyMetadata.iconPath.isNone(), isTrue);
+    expect(metadata.isEmpty, isFalse);
+    expect(metadata.architecture.toNullable(), 'x86_64');
+    expect(metadata.toJson(), {
+      'architecture': 'x86_64',
+      'fileDescription': 'Steam',
+      'iconPath': '/steam.icns',
+    });
+  });
+
+  test('program metadata records reject blank present fields', () {
+    expect(
+      () => ProgramMetadataRecord(architecture: Option.of(' ')),
+      throwsA(isA<ArgumentError>()),
+    );
+    expect(
+      () => ProgramMetadataRecord(iconPath: Option.of(' ')),
+      throwsA(isA<ArgumentError>()),
+    );
+  });
+
   test('program settings expose immutable environment snapshots', () {
     final environment = <String, String>{'LANG': 'ja_JP.UTF-8'};
     final settings = ProgramSettingsRecord(environment: environment);

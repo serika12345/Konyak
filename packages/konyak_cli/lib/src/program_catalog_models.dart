@@ -29,45 +29,83 @@ class BottleProgramRecord {
 }
 
 class ProgramMetadataRecord {
-  const ProgramMetadataRecord({
-    this.architecture,
-    this.fileDescription,
-    this.productName,
-    this.companyName,
-    this.fileVersion,
-    this.productVersion,
-    this.iconPath,
-  });
+  ProgramMetadataRecord({
+    Option<String> architecture = const Option.none(),
+    Option<String> fileDescription = const Option.none(),
+    Option<String> productName = const Option.none(),
+    Option<String> companyName = const Option.none(),
+    Option<String> fileVersion = const Option.none(),
+    Option<String> productVersion = const Option.none(),
+    Option<String> iconPath = const Option.none(),
+  }) : architecture = _requiredNonBlankMetadataOption(
+         architecture,
+         'architecture',
+       ),
+       fileDescription = _requiredNonBlankMetadataOption(
+         fileDescription,
+         'fileDescription',
+       ),
+       productName = _requiredNonBlankMetadataOption(
+         productName,
+         'productName',
+       ),
+       companyName = _requiredNonBlankMetadataOption(
+         companyName,
+         'companyName',
+       ),
+       fileVersion = _requiredNonBlankMetadataOption(
+         fileVersion,
+         'fileVersion',
+       ),
+       productVersion = _requiredNonBlankMetadataOption(
+         productVersion,
+         'productVersion',
+       ),
+       iconPath = _requiredNonBlankMetadataOption(iconPath, 'iconPath');
 
-  final String? architecture;
-  final String? fileDescription;
-  final String? productName;
-  final String? companyName;
-  final String? fileVersion;
-  final String? productVersion;
-  final String? iconPath;
+  final Option<String> architecture;
+  final Option<String> fileDescription;
+  final Option<String> productName;
+  final Option<String> companyName;
+  final Option<String> fileVersion;
+  final Option<String> productVersion;
+  final Option<String> iconPath;
 
   bool get isEmpty {
-    return architecture == null &&
-        fileDescription == null &&
-        productName == null &&
-        companyName == null &&
-        fileVersion == null &&
-        productVersion == null &&
-        iconPath == null;
+    return architecture.isNone() &&
+        fileDescription.isNone() &&
+        productName.isNone() &&
+        companyName.isNone() &&
+        fileVersion.isNone() &&
+        productVersion.isNone() &&
+        iconPath.isNone();
   }
 
   Map<String, Object?> toJson() {
     return <String, Object?>{
-      if (architecture != null) 'architecture': architecture,
-      if (fileDescription != null) 'fileDescription': fileDescription,
-      if (productName != null) 'productName': productName,
-      if (companyName != null) 'companyName': companyName,
-      if (fileVersion != null) 'fileVersion': fileVersion,
-      if (productVersion != null) 'productVersion': productVersion,
-      if (iconPath != null) 'iconPath': iconPath,
+      ..._metadataJsonField('architecture', architecture),
+      ..._metadataJsonField('fileDescription', fileDescription),
+      ..._metadataJsonField('productName', productName),
+      ..._metadataJsonField('companyName', companyName),
+      ..._metadataJsonField('fileVersion', fileVersion),
+      ..._metadataJsonField('productVersion', productVersion),
+      ..._metadataJsonField('iconPath', iconPath),
     };
   }
+}
+
+Option<String> _requiredNonBlankMetadataOption(
+  Option<String> value,
+  String fieldName,
+) {
+  return value.map((item) => _requiredNonBlankDomainString(item, fieldName));
+}
+
+Map<String, Object?> _metadataJsonField(String key, Option<String> value) {
+  return value.match(
+    () => const <String, Object?>{},
+    (item) => <String, Object?>{key: item},
+  );
 }
 
 class WineProcessRecord {

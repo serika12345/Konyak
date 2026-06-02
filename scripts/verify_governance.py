@@ -146,6 +146,20 @@ def require_result_boundary_rules() -> None:
         "packages/konyak_cli/lib/src/bottle_models.dart",
         "final String? iconPath;",
     )
+    for expected in [
+        "final Option<String> architecture;",
+        "final Option<String> fileDescription;",
+        "final Option<String> productName;",
+        "final Option<String> companyName;",
+        "final Option<String> fileVersion;",
+        "final Option<String> productVersion;",
+        "final Option<String> iconPath;",
+    ]:
+        require_contains("packages/konyak_cli/lib/src/program_catalog_models.dart", expected)
+    require_not_contains(
+        "packages/konyak_cli/lib/src/program_catalog_models.dart",
+        "final String? iconPath;",
+    )
 
     result_wrapped_repository_operation_files = [
         "packages/konyak_cli/lib/src/file_bottle_repository_mutation_operations.dart",

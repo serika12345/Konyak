@@ -970,12 +970,10 @@ void defineRuntimeProcessAndUpdateContractTests() {
       programMetadataExtractor: FixedProgramMetadataExtractor(
         programPath: programPath,
         metadata: ProgramMetadataRecord(
-          fileDescription: 'Ardour Installer',
-          iconPath: _joinTestPath(bottlePath, const [
-            'cache',
-            'icons',
-            'ardour.ico',
-          ]),
+          fileDescription: Option.of('Ardour Installer'),
+          iconPath: Option.of(
+            _joinTestPath(bottlePath, const ['cache', 'icons', 'ardour.ico']),
+          ),
         ),
       ),
     );
@@ -1078,12 +1076,10 @@ void defineRuntimeProcessAndUpdateContractTests() {
         programMetadataExtractor: FixedProgramMetadataExtractor(
           programPath: programPath,
           metadata: ProgramMetadataRecord(
-            fileDescription: 'Ardour Installer',
-            iconPath: _joinTestPath(bottlePath, const [
-              'cache',
-              'icons',
-              'ardour.ico',
-            ]),
+            fileDescription: Option.of('Ardour Installer'),
+            iconPath: Option.of(
+              _joinTestPath(bottlePath, const ['cache', 'icons', 'ardour.ico']),
+            ),
           ),
         ),
       );
@@ -1182,12 +1178,10 @@ void defineRuntimeProcessAndUpdateContractTests() {
         programMetadataExtractor: FixedProgramMetadataExtractor(
           programPath: programPath,
           metadata: ProgramMetadataRecord(
-            fileDescription: 'Ardour Installer',
-            iconPath: _joinTestPath(bottlePath, const [
-              'cache',
-              'icons',
-              'ardour.ico',
-            ]),
+            fileDescription: Option.of('Ardour Installer'),
+            iconPath: Option.of(
+              _joinTestPath(bottlePath, const ['cache', 'icons', 'ardour.ico']),
+            ),
           ),
         ),
       );
@@ -1276,12 +1270,10 @@ void defineRuntimeProcessAndUpdateContractTests() {
         programMetadataExtractor: FixedProgramMetadataExtractor(
           programPath: programPath,
           metadata: ProgramMetadataRecord(
-            fileDescription: 'Ardour Installer',
-            iconPath: _joinTestPath(bottlePath, const [
-              'cache',
-              'icons',
-              'ardour.ico',
-            ]),
+            fileDescription: Option.of('Ardour Installer'),
+            iconPath: Option.of(
+              _joinTestPath(bottlePath, const ['cache', 'icons', 'ardour.ico']),
+            ),
           ),
         ),
       );
