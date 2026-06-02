@@ -11,11 +11,13 @@ class MacosWineInstallRequest {
     bool emitProgress = false,
   }) : this._(
          requestOperation: RuntimeFullInstallOperation(
-           archivePath: archivePath,
-           archiveUrl: archiveUrl,
-           archiveSha256: archiveSha256,
-           sourceManifest: sourceManifest,
-           sourceManifestSignature: sourceManifestSignature,
+           archivePath: Option.fromNullable(archivePath),
+           archiveUrl: Option.fromNullable(archiveUrl),
+           archiveSha256: Option.fromNullable(archiveSha256),
+           sourceManifest: Option.fromNullable(sourceManifest),
+           sourceManifestSignature: Option.fromNullable(
+             sourceManifestSignature,
+           ),
            force: force,
          ),
          emitProgress: emitProgress,
@@ -31,11 +33,13 @@ class MacosWineInstallRequest {
     bool emitProgress = false,
   }) : this._(
          requestOperation: RuntimeRepairOperation(
-           archivePath: archivePath,
-           archiveUrl: archiveUrl,
-           archiveSha256: archiveSha256,
-           sourceManifest: sourceManifest,
-           sourceManifestSignature: sourceManifestSignature,
+           archivePath: Option.fromNullable(archivePath),
+           archiveUrl: Option.fromNullable(archiveUrl),
+           archiveSha256: Option.fromNullable(archiveSha256),
+           sourceManifest: Option.fromNullable(sourceManifest),
+           sourceManifestSignature: Option.fromNullable(
+             sourceManifestSignature,
+           ),
            force: force,
          ),
          emitProgress: emitProgress,
@@ -50,9 +54,9 @@ class MacosWineInstallRequest {
     bool emitProgress = false,
   }) : this._(
          requestOperation: RuntimeComponentInstallOperation(
-           archivePath: archivePath,
-           archiveUrl: archiveUrl,
-           archiveSha256: archiveSha256,
+           archivePath: Option.fromNullable(archivePath),
+           archiveUrl: Option.fromNullable(archiveUrl),
+           archiveSha256: Option.fromNullable(archiveSha256),
            componentArchivePaths: componentArchivePaths,
            force: force,
          ),
@@ -68,10 +72,12 @@ class MacosWineInstallRequest {
     bool emitProgress = false,
   }) : this._(
          requestOperation: RuntimeUpdateInstallOperation(
-           archiveUrl: archiveUrl,
-           archiveSha256: archiveSha256,
-           sourceManifest: sourceManifest,
-           sourceManifestSignature: sourceManifestSignature,
+           archiveUrl: Option.fromNullable(archiveUrl),
+           archiveSha256: Option.fromNullable(archiveSha256),
+           sourceManifest: Option.fromNullable(sourceManifest),
+           sourceManifestSignature: Option.fromNullable(
+             sourceManifestSignature,
+           ),
            force: force,
          ),
          emitProgress: emitProgress,

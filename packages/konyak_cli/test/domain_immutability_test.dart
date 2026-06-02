@@ -279,15 +279,15 @@ void main() {
 
   test('runtime install operations reject blank present sources', () {
     expect(
-      () => RuntimeFullInstallOperation(archivePath: ' '),
+      () => RuntimeFullInstallOperation(archivePath: Option.of(' ')),
       throwsA(isA<ArgumentError>()),
     );
     expect(
-      () => RuntimeRepairOperation(sourceManifest: ' '),
+      () => RuntimeRepairOperation(sourceManifest: Option.of(' ')),
       throwsA(isA<ArgumentError>()),
     );
     expect(
-      () => RuntimeUpdateInstallOperation(archiveSha256: ' '),
+      () => RuntimeUpdateInstallOperation(archiveSha256: Option.of(' ')),
       throwsA(isA<ArgumentError>()),
     );
   });

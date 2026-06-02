@@ -29,11 +29,11 @@ sealed class RuntimeInstallRequestOperation {
 
 final class RuntimeFullInstallOperation extends RuntimeInstallRequestOperation {
   RuntimeFullInstallOperation({
-    String? archivePath,
-    String? archiveUrl,
-    String? archiveSha256,
-    String? sourceManifest,
-    String? sourceManifestSignature,
+    Option<String> archivePath = const Option.none(),
+    Option<String> archiveUrl = const Option.none(),
+    Option<String> archiveSha256 = const Option.none(),
+    Option<String> sourceManifest = const Option.none(),
+    Option<String> sourceManifestSignature = const Option.none(),
     this.force = false,
   }) : archivePath = _optionalRuntimeInstallSource(archivePath, 'archivePath'),
        archiveUrl = _optionalRuntimeInstallSource(archiveUrl, 'archiveUrl'),
@@ -74,11 +74,11 @@ final class RuntimeFullInstallOperation extends RuntimeInstallRequestOperation {
 
 final class RuntimeRepairOperation extends RuntimeInstallRequestOperation {
   RuntimeRepairOperation({
-    String? archivePath,
-    String? archiveUrl,
-    String? archiveSha256,
-    String? sourceManifest,
-    String? sourceManifestSignature,
+    Option<String> archivePath = const Option.none(),
+    Option<String> archiveUrl = const Option.none(),
+    Option<String> archiveSha256 = const Option.none(),
+    Option<String> sourceManifest = const Option.none(),
+    Option<String> sourceManifestSignature = const Option.none(),
     this.force = true,
   }) : archivePath = _optionalRuntimeInstallSource(archivePath, 'archivePath'),
        archiveUrl = _optionalRuntimeInstallSource(archiveUrl, 'archiveUrl'),
@@ -120,9 +120,9 @@ final class RuntimeRepairOperation extends RuntimeInstallRequestOperation {
 final class RuntimeComponentInstallOperation
     extends RuntimeInstallRequestOperation {
   RuntimeComponentInstallOperation({
-    String? archivePath,
-    String? archiveUrl,
-    String? archiveSha256,
+    Option<String> archivePath = const Option.none(),
+    Option<String> archiveUrl = const Option.none(),
+    Option<String> archiveSha256 = const Option.none(),
     Iterable<String> componentArchivePaths = const <String>[],
     this.force = false,
   }) : archivePath = _optionalRuntimeInstallSource(archivePath, 'archivePath'),
@@ -156,10 +156,10 @@ final class RuntimeComponentInstallOperation
 final class RuntimeUpdateInstallOperation
     extends RuntimeInstallRequestOperation {
   RuntimeUpdateInstallOperation({
-    String? archiveUrl,
-    String? archiveSha256,
-    String? sourceManifest,
-    String? sourceManifestSignature,
+    Option<String> archiveUrl = const Option.none(),
+    Option<String> archiveSha256 = const Option.none(),
+    Option<String> sourceManifest = const Option.none(),
+    Option<String> sourceManifestSignature = const Option.none(),
     this.force = true,
   }) : archiveUrl = _optionalRuntimeInstallSource(archiveUrl, 'archiveUrl'),
        archiveSha256 = _optionalRuntimeInstallSource(
@@ -219,8 +219,9 @@ class _RuntimeWineInstallRequestAccessors {
   bool get force => requestOperation.force;
 }
 
-Option<String> _optionalRuntimeInstallSource(String? value, String fieldName) {
-  return Option.fromNullable(
-    value,
-  ).map((item) => _requiredNonBlankDomainString(item, fieldName));
+Option<String> _optionalRuntimeInstallSource(
+  Option<String> value,
+  String fieldName,
+) {
+  return value.map((item) => _requiredNonBlankDomainString(item, fieldName));
 }
