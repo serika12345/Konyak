@@ -4,10 +4,11 @@ void _recordExternalProgramRun({
   required BottleRecord bottle,
   required ProgramRunRequest request,
 }) {
-  final normalizedProgramPath = request.programPath.trim();
-  if (normalizedProgramPath.isEmpty ||
-      !normalizedProgramPath.startsWith('/') ||
-      _isPathWithinRoot(path: normalizedProgramPath, root: bottle.path)) {
+  final normalizedProgramPath = _externalProgramRunPath(
+    bottle: bottle,
+    request: request,
+  );
+  if (normalizedProgramPath == null) {
     return;
   }
 
@@ -30,10 +31,11 @@ void _synchronizeLinuxDesktopLauncherForProgramRun({
     return;
   }
 
-  final normalizedProgramPath = request.programPath.trim();
-  if (normalizedProgramPath.isEmpty ||
-      !normalizedProgramPath.startsWith('/') ||
-      _isPathWithinRoot(path: normalizedProgramPath, root: bottle.path)) {
+  final normalizedProgramPath = _externalProgramRunPath(
+    bottle: bottle,
+    request: request,
+  );
+  if (normalizedProgramPath == null) {
     return;
   }
 
@@ -87,49 +89,29 @@ void _recordExternalProgramLaunch({
     final launchIndexFile = File(
       _joinPath(bottle.path, const ['cache', 'external-program-launches.json']),
     );
-    final entry = <String, Object?>{
-      'programPath': programPath,
-      'executableName': _normalizedExecutableName(programPath),
-    };
 
     final existingEntries = <Map<String, Object?>>[];
     if (launchIndexFile.existsSync()) {
-      final decoded =
-          jsonDecode(launchIndexFile.readAsStringSync())
-              as Map<String, Object?>;
-      if (decoded['schemaVersion'] == 1) {
-        final launches = decoded['launches'];
-        if (launches is List<Object?>) {
-          for (final launch in launches) {
-            if (launch is Map<String, Object?>) {
-              final existingProgramPath = launch['programPath'];
-              final existingExecutableName = launch['executableName'];
-              if (existingProgramPath is! String ||
-                  existingExecutableName is! String) {
-                continue;
-              }
-
-              if (_normalizeFilesystemPath(existingProgramPath) ==
-                      _normalizeFilesystemPath(programPath) &&
-                  _normalizedExecutableName(existingExecutableName) ==
-                      entry['executableName']) {
-                continue;
-              }
-
-              existingEntries.add(<String, Object?>{
-                'programPath': existingProgramPath,
-                'executableName': existingExecutableName,
-              });
-            }
-          }
-        }
+      final decoded = jsonDecode(launchIndexFile.readAsStringSync());
+      final parsedEntries = _externalProgramLaunchEntriesFromDecoded(
+        decoded,
+        programPath: programPath,
+      );
+      if (parsedEntries == null) {
+        return;
       }
+
+      existingEntries.addAll(parsedEntries);
     }
 
-    final launches = <Map<String, Object?>>[...existingEntries.take(31), entry];
     launchIndexFile.parent.createSync(recursive: true);
     launchIndexFile.writeAsStringSync(
-      jsonEncode({'schemaVersion': 1, 'launches': launches}),
+      jsonEncode(
+        _externalProgramLaunchIndexPayload(
+          existingEntries: existingEntries,
+          programPath: programPath,
+        ),
+      ),
     );
   } on FileSystemException {
     return;

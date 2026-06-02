@@ -34,6 +34,7 @@ part 'src/macos_pinned_launcher_icons.dart';
 part 'src/macos_pinned_launcher_manifests.dart';
 part 'src/macos_pinned_launcher_templates.dart';
 part 'src/linux_integration.dart';
+part 'src/external_program_launch_records.dart';
 part 'src/linux_external_program_launchers.dart';
 part 'src/linux_file_associations.dart';
 part 'src/bottle_archives.dart';
