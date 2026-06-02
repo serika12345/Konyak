@@ -258,26 +258,32 @@ _RuntimeWineInstallPlan _macosWineInstallPlan({
         'macOS Wine installation is supported on macOS only.',
     requestOperation: request.requestOperation,
     currentRuntime: currentRuntime,
-    configuredSourceManifest: _runtimeSourceManifestForPlatform(
-      platformSpec: _macosKonyakRuntimePlatformSpec,
-      environment: environment,
+    configuredSourceManifest: Option.fromNullable(
+      _runtimeSourceManifestForPlatform(
+        platformSpec: _macosKonyakRuntimePlatformSpec,
+        environment: environment,
+      ),
     ),
-    configuredSourceManifestSignature:
-        _runtimeSourceManifestSignatureForPlatform(
-          platformSpec: _macosKonyakRuntimePlatformSpec,
-          environment: environment,
-        ),
-    defaultArchiveUrl: _runtimeDefaultArchiveUrl(
-      platformSpec: _macosKonyakRuntimePlatformSpec,
-      environment: environment,
+    configuredSourceManifestSignature: Option.fromNullable(
+      _runtimeSourceManifestSignatureForPlatform(
+        platformSpec: _macosKonyakRuntimePlatformSpec,
+        environment: environment,
+      ),
+    ),
+    defaultArchiveUrl: Option.fromNullable(
+      _runtimeDefaultArchiveUrl(
+        platformSpec: _macosKonyakRuntimePlatformSpec,
+        environment: environment,
+      ),
     ),
     defaultArchiveFileName:
         _macosKonyakRuntimePlatformSpec.defaultArchiveFileName,
-    missingArchiveMessage: 'macOS Wine archive is not configured.',
-    incompleteRuntimeMessage:
-        'Konyak macOS Wine is installed, but the runtime stack is incomplete. '
-        'Configure KONYAK_DEV_MACOS_WINE_STACK_MANIFEST or '
-        'KONYAK_MACOS_WINE_STACK_MANIFEST, or pass --source-manifest or '
-        '--component-archive to repair it.',
+    missingArchiveMessage: Option.of('macOS Wine archive is not configured.'),
+    incompleteRuntimeMessage: Option.of(
+      'Konyak macOS Wine is installed, but the runtime stack is incomplete. '
+      'Configure KONYAK_DEV_MACOS_WINE_STACK_MANIFEST or '
+      'KONYAK_MACOS_WINE_STACK_MANIFEST, or pass --source-manifest or '
+      '--component-archive to repair it.',
+    ),
   );
 }

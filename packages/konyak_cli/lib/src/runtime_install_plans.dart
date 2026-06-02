@@ -79,12 +79,12 @@ _RuntimeWineInstallPlan _runtimeWineInstallPlan({
   required String unsupportedPlatformMessage,
   required RuntimeInstallRequestOperation requestOperation,
   required RuntimeRecord currentRuntime,
-  required String? configuredSourceManifest,
-  required String? configuredSourceManifestSignature,
-  required String? defaultArchiveUrl,
+  required Option<String> configuredSourceManifest,
+  required Option<String> configuredSourceManifestSignature,
+  required Option<String> defaultArchiveUrl,
   required String defaultArchiveFileName,
-  required String? missingArchiveMessage,
-  required String? incompleteRuntimeMessage,
+  required Option<String> missingArchiveMessage,
+  required Option<String> incompleteRuntimeMessage,
 }) {
   if (!hostPlatformSupported) {
     return _RuntimeWineInstallUnsupported(unsupportedPlatformMessage);
@@ -93,11 +93,12 @@ _RuntimeWineInstallPlan _runtimeWineInstallPlan({
   final componentArchivePaths = List<String>.unmodifiable(
     requestOperation.componentArchivePaths,
   );
-  final sourceManifest =
-      requestOperation.sourceManifest.toNullable() ?? configuredSourceManifest;
-  final sourceManifestSignature =
-      requestOperation.sourceManifestSignature.toNullable() ??
-      configuredSourceManifestSignature;
+  final sourceManifest = requestOperation.sourceManifest.match(
+    () => configuredSourceManifest,
+    Option.of,
+  );
+  final sourceManifestSignature = requestOperation.sourceManifestSignature
+      .match(() => configuredSourceManifestSignature, Option.of);
   final hasExplicitInstallSource =
       requestOperation.archivePath.isSome() ||
       requestOperation.archiveUrl.isSome() ||
@@ -123,44 +124,63 @@ _RuntimeWineInstallPlan _runtimeWineInstallPlan({
       currentRuntime.isInstalled.toNullable() == true &&
       currentRuntime.stack.toNullable()?.isComplete != true &&
       !hasExplicitInstallSource &&
-      sourceManifest == null) {
-    final message = incompleteRuntimeMessage;
-    if (message != null) {
-      return _RuntimeWineInstallIncompleteWithoutSource(message);
+      sourceManifest.isNone()) {
+    final incompleteRuntimePlan = incompleteRuntimeMessage.map(
+      _RuntimeWineInstallIncompleteWithoutSource.new,
+    );
+    if (incompleteRuntimePlan.isSome()) {
+      return incompleteRuntimePlan.getOrElse(
+        () => throw StateError('Expected incomplete runtime install plan.'),
+      );
     }
   }
 
-  if (sourceManifest != null) {
-    return _RuntimeWineInstallFromSourceManifest(
-      sourceManifest: sourceManifest,
-      sourceManifestSignature: Option.fromNullable(sourceManifestSignature),
-      preserveExistingRuntimeFiles: shouldPreserveExistingRuntimeFiles,
+  final sourceManifestPlan = sourceManifest.match(
+    () => const Option<_RuntimeWineInstallPlan>.none(),
+    (sourceManifest) => Option<_RuntimeWineInstallPlan>.of(
+      _RuntimeWineInstallFromSourceManifest(
+        sourceManifest: sourceManifest,
+        sourceManifestSignature: sourceManifestSignature,
+        preserveExistingRuntimeFiles: shouldPreserveExistingRuntimeFiles,
+      ),
+    ),
+  );
+  if (sourceManifestPlan.isSome()) {
+    return sourceManifestPlan.getOrElse(
+      () => throw StateError('Expected source manifest install plan.'),
     );
   }
 
-  final archivePath = requestOperation.archivePath.toNullable();
-  if (archivePath != null) {
-    return _RuntimeWineInstallFromArchive(
+  final archivePathPlan = requestOperation.archivePath.map(
+    (archivePath) => _RuntimeWineInstallFromArchive(
       archivePath: archivePath,
       archiveSha256: requestOperation.archiveSha256,
       componentArchivePaths: componentArchivePaths,
       preserveExistingRuntimeFiles: shouldPreserveExistingRuntimeFiles,
+    ),
+  );
+  if (archivePathPlan.isSome()) {
+    return archivePathPlan.getOrElse(
+      () => throw StateError('Expected archive install plan.'),
     );
   }
 
-  final archiveUrl =
-      requestOperation.archiveUrl.toNullable() ?? defaultArchiveUrl;
-  if (archiveUrl == null) {
-    return _RuntimeWineInstallMissingArchiveSource(
-      missingArchiveMessage ?? 'Runtime archive is not configured.',
-    );
-  }
-
-  return _RuntimeWineInstallDownloadArchive(
-    archiveUrl: archiveUrl,
-    archiveFileName: _fileNameFromUrl(archiveUrl) ?? defaultArchiveFileName,
-    archiveSha256: requestOperation.archiveSha256,
-    componentArchivePaths: componentArchivePaths,
-    preserveExistingRuntimeFiles: shouldPreserveExistingRuntimeFiles,
+  final archiveUrl = requestOperation.archiveUrl.match(
+    () => defaultArchiveUrl,
+    Option.of,
+  );
+  return archiveUrl.match(
+    () => _RuntimeWineInstallMissingArchiveSource(
+      missingArchiveMessage.getOrElse(
+        () => 'Runtime archive is not configured.',
+      ),
+    ),
+    (archiveUrl) => _RuntimeWineInstallDownloadArchive(
+      archiveUrl: archiveUrl,
+      archiveFileName: _fileNameFromUrl(archiveUrl) ?? defaultArchiveFileName,
+      archiveSha256: requestOperation.archiveSha256,
+      componentArchivePaths: componentArchivePaths,
+      preserveExistingRuntimeFiles: shouldPreserveExistingRuntimeFiles,
+    ),
   );
 }
