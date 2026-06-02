@@ -8,6 +8,7 @@ import '../app_constants.dart';
 import '../app_platform.dart';
 import 'app_settings_rows.dart';
 import 'app_settings_runtime_section.dart';
+import 'app_settings_runtime_view_model.dart';
 
 class AppSettingsDialog extends StatefulWidget {
   const AppSettingsDialog({

@@ -1,42 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../runtimes/runtime_summary.dart';
-import '../app_platform.dart';
 import 'app_settings_rows.dart';
-
-List<RuntimeSummary> upsertRuntime(
-  List<RuntimeSummary> runtimes,
-  RuntimeSummary runtime,
-) {
-  final updated = <RuntimeSummary>[];
-  var replaced = false;
-  for (final existingRuntime in runtimes) {
-    if (existingRuntime.id == runtime.id) {
-      updated.add(runtime);
-      replaced = true;
-    } else {
-      updated.add(existingRuntime);
-    }
-  }
-
-  if (!replaced) {
-    updated.add(runtime);
-  }
-
-  return List.unmodifiable(updated);
-}
-
-bool showsRuntimeSection(KonyakPlatform platform) {
-  return platform.isMacOS || platform.isLinux;
-}
-
-String runtimeSectionTitle(KonyakPlatform platform) {
-  return platform.isMacOS ? 'macOS Runtime' : 'Linux Runtime';
-}
-
-String runtimeSectionPlatform(KonyakPlatform platform) {
-  return platform.isMacOS ? 'macos' : 'linux';
-}
+import 'app_settings_runtime_view_model.dart';
 
 class AppSettingsRuntimeSection extends StatelessWidget {
   const AppSettingsRuntimeSection({
@@ -64,13 +30,12 @@ class AppSettingsRuntimeSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final runtime = runtimes
-        .where((runtime) => runtime.platform == platform)
-        .fold<RuntimeSummary?>(
-          null,
-          (selected, runtime) => runtime.stack != null ? runtime : selected,
-        );
-    final stack = runtime?.stack;
+    final runtimeState = resolveRuntimeSectionState(
+      runtimes: runtimes,
+      platform: platform,
+    );
+    final runtime = runtimeState.runtime;
+    final stack = runtimeState.stack;
 
     if (runtime == null || stack == null) {
       return AppSettingsSection(
@@ -85,11 +50,6 @@ class AppSettingsRuntimeSection extends StatelessWidget {
         ],
       );
     }
-
-    final shouldOfferInstall = runtime.isInstalled != true || !stack.isComplete;
-    final installButtonLabel = runtime.isInstalled == true
-        ? 'Repair'
-        : 'Install';
 
     return AppSettingsSection(
       title: title,
@@ -111,8 +71,8 @@ class AppSettingsRuntimeSection extends StatelessWidget {
           label: stack.name,
           value: stack.isComplete ? 'Complete' : 'Incomplete',
           detail: 'Compatibility: ${stack.compatibilityTarget}',
-          trailing: shouldOfferInstall && onInstallRuntime != null
-              ? _installButton(installButtonLabel)
+          trailing: runtimeState.shouldOfferInstall && onInstallRuntime != null
+              ? _installButton(runtimeState.installButtonLabel)
               : null,
         ),
         for (final component in stack.components)
@@ -197,14 +157,5 @@ class AppSettingsRuntimeSection extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  static String componentStatusLabel(RuntimeStackComponentSummary component) {
-    final status = component.isInstalled ? 'Installed' : 'Missing';
-    if (component.version == null || component.version!.trim().isEmpty) {
-      return status;
-    }
-
-    return '$status | ${component.version}';
   }
 }
