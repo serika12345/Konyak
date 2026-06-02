@@ -339,6 +339,12 @@ task changes scope.
     - [x] Split Program Configuration form environment editing from the
       surrounding program settings screen.
 - Linux ARM64 Windows execution research.
+- Add E2E tests.
+  - Decide the target level before implementation: Flutter integration tests
+    with a fake CLI, real CLI tests against temporary directories, or a small
+    full-stack Flutter + real CLI smoke suite.
+  - Keep the E2E target separate from the default fast verification gate until
+    its runtime cost and flake rate are known.
 - Publication of the actual default Konyak runtime stack manifest and public
   key, once the full component archives are produced.
 - Removal of the bootstrap Wine-only fallback after that runtime stack
