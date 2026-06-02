@@ -217,10 +217,10 @@ class RuntimeStackComponent {
     required this.isRequired,
     required Iterable<String> paths,
     required Iterable<String> missingPaths,
-    String? version,
+    Option<String> version = const Option.none(),
   }) : paths = List.unmodifiable(paths),
        missingPaths = List.unmodifiable(missingPaths),
-       version = _optionalNullableRuntimeModelValue(version, 'version');
+       version = _optionalRuntimeModelValue(version, 'version');
 
   final String id;
   final String name;

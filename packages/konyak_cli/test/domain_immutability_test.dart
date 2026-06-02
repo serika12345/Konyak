@@ -424,7 +424,7 @@ void main() {
         isRequired: true,
         paths: const <String>['/runtime/bin/wine'],
         missingPaths: const <String>[],
-        version: ' ',
+        version: Option.of(' '),
       ),
       throwsA(isA<ArgumentError>()),
     );

@@ -150,11 +150,13 @@ RuntimeStackComponent _runtimeStackComponent({
     isRequired: definition.isRequired,
     paths: paths,
     missingPaths: missingPaths,
-    version: missingPaths.isEmpty
-        ? runtimeStackVersionProbe.versionFor(
-            runtimeRoot: runtimeRoot,
-            componentId: definition.id,
-          )
-        : null,
+    version: Option.fromNullable(
+      missingPaths.isEmpty
+          ? runtimeStackVersionProbe.versionFor(
+              runtimeRoot: runtimeRoot,
+              componentId: definition.id,
+            )
+          : null,
+    ),
   );
 }
