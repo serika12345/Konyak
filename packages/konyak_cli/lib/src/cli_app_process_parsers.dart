@@ -94,5 +94,5 @@ _parseJsonWineProcessGroupTerminationRequest(List<String> arguments) {
         : const WineProcessGroupTerminationRequest();
   }
 
-  return WineProcessGroupTerminationRequest(bottleId: bottleId);
+  return WineProcessGroupTerminationRequest(bottleId: Option.of(bottleId));
 }

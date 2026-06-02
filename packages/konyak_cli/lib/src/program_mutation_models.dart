@@ -98,9 +98,11 @@ class WineProcessTerminationRequest {
 }
 
 class WineProcessGroupTerminationRequest {
-  const WineProcessGroupTerminationRequest({this.bottleId});
+  const WineProcessGroupTerminationRequest({
+    this.bottleId = const Option.none(),
+  });
 
-  final String? bottleId;
+  final Option<String> bottleId;
 }
 
 sealed class ProgramUpdateResult {

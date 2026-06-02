@@ -41,7 +41,7 @@ CliResult _terminateWineProcessesJsonResult({
   required BottleCatalog bottleCatalog,
   required ProgramRunPlanner programRunPlanner,
   required ProgramRunner? programRunner,
-  String? bottleId,
+  Option<String> bottleId = const Option.none(),
 }) {
   final runner = programRunner;
   if (runner == null) {
@@ -58,11 +58,12 @@ CliResult _terminateWineProcessesJsonResult({
     return failure;
   }
   final bottles = bottlesResult.getOrElse((_) => const <BottleRecord>[]);
-  final targetBottles = bottleId == null
-      ? bottles
-      : <BottleRecord>[?_findBottle(bottles, bottleId)];
-  if (bottleId != null && targetBottles.isEmpty) {
-    return _bottleNotFoundError(bottleId);
+  final targetBottles = bottleId.match(
+    () => bottles,
+    (id) => <BottleRecord>[?_findBottle(bottles, id)],
+  );
+  if (bottleId.isSome() && targetBottles.isEmpty) {
+    return bottleId.match(() => _bottleNotFoundError(''), _bottleNotFoundError);
   }
 
   for (final bottle in targetBottles) {
