@@ -56,22 +56,19 @@ void _synchronizeLinuxDesktopLauncherForProgramRun({
         programPath: normalizedProgramPath,
       ),
     );
-    final launcherName = metadata?.productName?.trim().isNotEmpty == true
-        ? metadata!.productName!.trim()
-        : metadata?.fileDescription?.trim().isNotEmpty == true
-        ? metadata!.fileDescription!.trim()
-        : _baseName(normalizedProgramPath);
-    final launcherDirectory = File(launcherPath).parent
-      ..createSync(recursive: true);
     final launcherContents = _linuxExternalProgramDesktopEntry(
       bottle: bottle,
       request: request,
-      launcherName: launcherName,
+      launcherName: _linuxExternalProgramLauncherName(
+        programPath: normalizedProgramPath,
+        metadata: metadata,
+      ),
       iconPath: metadata?.iconPath,
     );
-    File(_joinPath(launcherDirectory.path, [_baseName(launcherPath)]))
-      ..createSync(recursive: true)
-      ..writeAsStringSync(launcherContents);
+    _writeLinuxExternalProgramDesktopLauncher(
+      launcherPath: launcherPath,
+      launcherContents: launcherContents,
+    );
   } on FileSystemException {
     return;
   } on BottleRepositoryException {
@@ -81,45 +78,18 @@ void _synchronizeLinuxDesktopLauncherForProgramRun({
   }
 }
 
-void _recordExternalProgramLaunch({
-  required BottleRecord bottle,
+String _linuxExternalProgramLauncherName({
   required String programPath,
+  required ProgramMetadataRecord? metadata,
 }) {
-  try {
-    final launchIndexFile = File(
-      _joinPath(bottle.path, const ['cache', 'external-program-launches.json']),
-    );
-
-    final existingEntries = <Map<String, Object?>>[];
-    if (launchIndexFile.existsSync()) {
-      final decoded = jsonDecode(launchIndexFile.readAsStringSync());
-      final parsedEntries = _externalProgramLaunchEntriesFromDecoded(
-        decoded,
-        programPath: programPath,
-      );
-      if (parsedEntries == null) {
-        return;
-      }
-
-      existingEntries.addAll(parsedEntries);
-    }
-
-    launchIndexFile.parent.createSync(recursive: true);
-    launchIndexFile.writeAsStringSync(
-      jsonEncode(
-        _externalProgramLaunchIndexPayload(
-          existingEntries: existingEntries,
-          programPath: programPath,
-        ),
-      ),
-    );
-  } on FileSystemException {
-    return;
-  } on FormatException {
-    return;
-  } on TypeError {
-    return;
+  if (metadata?.productName?.trim().isNotEmpty == true) {
+    return metadata!.productName!.trim();
   }
+  if (metadata?.fileDescription?.trim().isNotEmpty == true) {
+    return metadata!.fileDescription!.trim();
+  }
+
+  return _baseName(programPath);
 }
 
 String _linuxExternalProgramLauncherPath({
