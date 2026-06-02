@@ -91,33 +91,48 @@ abstract interface class RuntimeUpdateChecker {
 }
 
 class AppUpdateRecord {
-  const AppUpdateRecord({
-    required this.appId,
-    required this.status,
-    this.currentVersion,
-    this.latestVersion,
-    this.versionUrl,
-    this.archiveUrl,
-    this.archiveSha256,
-  });
+  AppUpdateRecord({
+    required String appId,
+    required String status,
+    Option<String> currentVersion = const Option.none(),
+    Option<String> latestVersion = const Option.none(),
+    Option<String> versionUrl = const Option.none(),
+    Option<String> archiveUrl = const Option.none(),
+    Option<String> archiveSha256 = const Option.none(),
+  }) : appId = _requiredNonBlankDomainString(appId, 'appId'),
+       status = _requiredNonBlankDomainString(status, 'status'),
+       currentVersion = _requiredNonBlankUpdateOption(
+         currentVersion,
+         'currentVersion',
+       ),
+       latestVersion = _requiredNonBlankUpdateOption(
+         latestVersion,
+         'latestVersion',
+       ),
+       versionUrl = _requiredNonBlankUpdateOption(versionUrl, 'versionUrl'),
+       archiveUrl = _requiredNonBlankUpdateOption(archiveUrl, 'archiveUrl'),
+       archiveSha256 = _requiredNonBlankUpdateOption(
+         archiveSha256,
+         'archiveSha256',
+       );
 
   final String appId;
   final String status;
-  final String? currentVersion;
-  final String? latestVersion;
-  final String? versionUrl;
-  final String? archiveUrl;
-  final String? archiveSha256;
+  final Option<String> currentVersion;
+  final Option<String> latestVersion;
+  final Option<String> versionUrl;
+  final Option<String> archiveUrl;
+  final Option<String> archiveSha256;
 
   Map<String, Object?> toJson() {
     return <String, Object?>{
       'appId': appId,
       'status': status,
-      if (currentVersion != null) 'currentVersion': currentVersion,
-      if (latestVersion != null) 'latestVersion': latestVersion,
-      if (versionUrl != null) 'versionUrl': versionUrl,
-      if (archiveUrl != null) 'archiveUrl': archiveUrl,
-      if (archiveSha256 != null) 'archiveSha256': archiveSha256,
+      ..._updateJsonField('currentVersion', currentVersion),
+      ..._updateJsonField('latestVersion', latestVersion),
+      ..._updateJsonField('versionUrl', versionUrl),
+      ..._updateJsonField('archiveUrl', archiveUrl),
+      ..._updateJsonField('archiveSha256', archiveSha256),
     };
   }
 }

@@ -48,9 +48,9 @@ class DartIoAppUpdateChecker implements AppUpdateChecker {
         AppUpdateRecord(
           appId: appId,
           status: 'unknown',
-          currentVersion: currentVersion,
-          archiveUrl: archiveUrl,
-          archiveSha256: archiveSha256,
+          currentVersion: Option.of(currentVersion),
+          archiveUrl: Option.fromNullable(archiveUrl),
+          archiveSha256: Option.fromNullable(archiveSha256),
         ),
       );
     }
@@ -64,11 +64,15 @@ class DartIoAppUpdateChecker implements AppUpdateChecker {
             currentVersion: currentVersion,
             latestVersion: metadata.version,
           ),
-          currentVersion: currentVersion,
-          latestVersion: metadata.version,
-          versionUrl: versionUrl,
-          archiveUrl: metadata.archiveUrl.toNullable() ?? archiveUrl,
-          archiveSha256: metadata.archiveSha256.toNullable() ?? archiveSha256,
+          currentVersion: Option.of(currentVersion),
+          latestVersion: Option.of(metadata.version),
+          versionUrl: Option.of(versionUrl),
+          archiveUrl: Option.fromNullable(
+            metadata.archiveUrl.toNullable() ?? archiveUrl,
+          ),
+          archiveSha256: Option.fromNullable(
+            metadata.archiveSha256.toNullable() ?? archiveSha256,
+          ),
         ),
       ),
       RuntimeReleaseMetadataFetchFailed(:final message) => AppUpdateCheckFailed(

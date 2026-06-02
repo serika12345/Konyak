@@ -701,15 +701,16 @@ void defineRuntimeProcessAndUpdateContractTests() {
 
   test('check-app-update --json returns machine-readable update status', () {
     final checker = RecordingAppUpdateChecker(
-      result: const AppUpdateCheckCompleted(
+      result: AppUpdateCheckCompleted(
         AppUpdateRecord(
           appId: 'konyak',
           status: 'available',
-          currentVersion: '1.0.0',
-          latestVersion: '1.1.0',
-          versionUrl:
-              'https://api.github.com/repos/serika12345/Konyak/releases/latest',
-          archiveUrl: 'https://example.invalid/Konyak.dmg',
+          currentVersion: Option.of('1.0.0'),
+          latestVersion: Option.of('1.1.0'),
+          versionUrl: Option.of(
+            'https://api.github.com/repos/serika12345/Konyak/releases/latest',
+          ),
+          archiveUrl: Option.of('https://example.invalid/Konyak.dmg'),
         ),
       ),
     );
@@ -1386,8 +1387,8 @@ void defineRuntimeProcessAndUpdateContractTests() {
     expect(result, isA<AppUpdateCheckCompleted>());
     final completed = result as AppUpdateCheckCompleted;
     expect(completed.update.status, 'current');
-    expect(completed.update.currentVersion, '1.0.0');
-    expect(completed.update.latestVersion, 'v1.0.0');
+    expect(completed.update.currentVersion.toNullable(), '1.0.0');
+    expect(completed.update.latestVersion.toNullable(), 'v1.0.0');
   });
 
   test('release metadata fetcher selects archives over checksum assets', () {
@@ -1542,22 +1543,23 @@ void defineRuntimeProcessAndUpdateContractTests() {
     expect(result, isA<AppUpdateCheckCompleted>());
     final completed = result as AppUpdateCheckCompleted;
     expect(
-      completed.update.archiveSha256,
+      completed.update.archiveSha256.toNullable(),
       'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
     );
   });
 
   test('install-app-update --json installs available Konyak updates', () {
     final checker = RecordingAppUpdateChecker(
-      result: const AppUpdateCheckCompleted(
+      result: AppUpdateCheckCompleted(
         AppUpdateRecord(
           appId: 'konyak',
           status: 'available',
-          currentVersion: '1.0.0',
-          latestVersion: '1.1.0',
-          versionUrl:
-              'https://api.github.com/repos/serika12345/Konyak/releases/latest',
-          archiveUrl: 'https://example.invalid/Konyak-1.1.0.dmg',
+          currentVersion: Option.of('1.0.0'),
+          latestVersion: Option.of('1.1.0'),
+          versionUrl: Option.of(
+            'https://api.github.com/repos/serika12345/Konyak/releases/latest',
+          ),
+          archiveUrl: Option.of('https://example.invalid/Konyak-1.1.0.dmg'),
         ),
       ),
     );
@@ -1583,7 +1585,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
     expect(result.exitCode, 0);
     expect(result.stderr, isEmpty);
     expect(checker.checkCount, 1);
-    expect(installer.lastUpdate?.latestVersion, '1.1.0');
+    expect(installer.lastUpdate?.latestVersion.toNullable(), '1.1.0');
 
     final payload = jsonDecode(result.stdout) as Map<String, Object?>;
     expect(payload, {
@@ -1623,10 +1625,10 @@ void defineRuntimeProcessAndUpdateContractTests() {
       AppUpdateRecord(
         appId: 'konyak',
         status: 'available',
-        currentVersion: '1.0.0',
-        latestVersion: '1.1.0',
-        archiveUrl: sourceArchive.uri.toString(),
-        archiveSha256: _fileSha256(sourceArchive.path),
+        currentVersion: Option.of('1.0.0'),
+        latestVersion: Option.of('1.1.0'),
+        archiveUrl: Option.of(sourceArchive.uri.toString()),
+        archiveSha256: Option.of(_fileSha256(sourceArchive.path)),
       ),
     );
 
@@ -1665,9 +1667,9 @@ void defineRuntimeProcessAndUpdateContractTests() {
       AppUpdateRecord(
         appId: 'konyak',
         status: 'available',
-        currentVersion: '1.0.0',
-        latestVersion: '1.1.0',
-        archiveUrl: sourceArchive.uri.toString(),
+        currentVersion: Option.of('1.0.0'),
+        latestVersion: Option.of('1.1.0'),
+        archiveUrl: Option.of(sourceArchive.uri.toString()),
       ),
     );
 
@@ -1705,11 +1707,12 @@ void defineRuntimeProcessAndUpdateContractTests() {
       AppUpdateRecord(
         appId: 'konyak',
         status: 'available',
-        currentVersion: '1.0.0',
-        latestVersion: '1.1.0',
-        archiveUrl: sourceArchive.uri.toString(),
-        archiveSha256:
-            'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+        currentVersion: Option.of('1.0.0'),
+        latestVersion: Option.of('1.1.0'),
+        archiveUrl: Option.of(sourceArchive.uri.toString()),
+        archiveSha256: Option.of(
+          'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+        ),
       ),
     );
 
@@ -1754,10 +1757,10 @@ void defineRuntimeProcessAndUpdateContractTests() {
       AppUpdateRecord(
         appId: 'konyak',
         status: 'available',
-        currentVersion: '1.0.0',
-        latestVersion: '1.1.0',
-        archiveUrl: sourceArchive.uri.toString(),
-        archiveSha256: _fileSha256(sourceArchive.path),
+        currentVersion: Option.of('1.0.0'),
+        latestVersion: Option.of('1.1.0'),
+        archiveUrl: Option.of(sourceArchive.uri.toString()),
+        archiveSha256: Option.of(_fileSha256(sourceArchive.path)),
       ),
     );
 
@@ -1835,10 +1838,10 @@ void defineRuntimeProcessAndUpdateContractTests() {
       AppUpdateRecord(
         appId: 'konyak',
         status: 'available',
-        currentVersion: '1.0.0',
-        latestVersion: '1.1.0',
-        archiveUrl: sourceArchive.uri.toString(),
-        archiveSha256: _fileSha256(sourceArchive.path),
+        currentVersion: Option.of('1.0.0'),
+        latestVersion: Option.of('1.1.0'),
+        archiveUrl: Option.of(sourceArchive.uri.toString()),
+        archiveSha256: Option.of(_fileSha256(sourceArchive.path)),
       ),
     );
 

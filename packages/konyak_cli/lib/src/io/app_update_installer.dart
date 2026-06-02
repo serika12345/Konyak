@@ -25,13 +25,13 @@ class DartIoAppUpdateInstaller implements AppUpdateInstaller {
 
   @override
   AppUpdateInstallResult install(AppUpdateRecord update) {
-    final archiveUrl = update.archiveUrl;
+    final archiveUrl = update.archiveUrl.toNullable();
     if (archiveUrl == null || archiveUrl.trim().isEmpty) {
       return const AppUpdateInstallFailed(
         'Konyak update metadata does not contain an archive URL.',
       );
     }
-    final expectedSha256 = update.archiveSha256;
+    final expectedSha256 = update.archiveSha256.toNullable();
     if (expectedSha256 == null || !_isSha256Hex(expectedSha256)) {
       return const AppUpdateInstallFailed(
         'Konyak update metadata does not contain a valid archive checksum.',
@@ -99,8 +99,8 @@ class DartIoAppUpdateInstaller implements AppUpdateInstaller {
           AppUpdateInstallRecord(
             appId: update.appId,
             status: 'installed',
-            currentVersion: update.currentVersion,
-            installedVersion: update.latestVersion,
+            currentVersion: update.currentVersion.toNullable(),
+            installedVersion: update.latestVersion.toNullable(),
             archiveUrl: archiveUrl,
             archiveSha256: actualSha256,
             installPath: archivePath,

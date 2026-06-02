@@ -208,6 +208,35 @@ void main() {
     );
   });
 
+  test('app update records model absent fields with Option', () {
+    final update = AppUpdateRecord(appId: 'konyak', status: 'unknown');
+
+    expect(update.currentVersion.isNone(), isTrue);
+    expect(update.latestVersion.isNone(), isTrue);
+    expect(update.archiveUrl.isNone(), isTrue);
+    expect(update.archiveSha256.isNone(), isTrue);
+    expect(update.toJson(), isNot(contains('archiveUrl')));
+  });
+
+  test('app update records reject blank present fields', () {
+    expect(
+      () => AppUpdateRecord(appId: ' ', status: 'unknown'),
+      throwsA(isA<ArgumentError>()),
+    );
+    expect(
+      () => AppUpdateRecord(appId: 'konyak', status: ' '),
+      throwsA(isA<ArgumentError>()),
+    );
+    expect(
+      () => AppUpdateRecord(
+        appId: 'konyak',
+        status: 'unknown',
+        archiveSha256: Option.of(' '),
+      ),
+      throwsA(isA<ArgumentError>()),
+    );
+  });
+
   test('program settings expose immutable environment snapshots', () {
     final environment = <String, String>{'LANG': 'ja_JP.UTF-8'};
     final settings = ProgramSettingsRecord(environment: environment);
