@@ -36,14 +36,14 @@ sealed class RuntimeInstallRequestOperation {
     RuntimeSourceManifestInstallSource() => const Option.none(),
   };
 
-  List<String> get componentArchivePaths => switch (installSource) {
+  IList<String> get componentArchivePaths => switch (installSource) {
     RuntimeConfiguredArchiveSource(:final componentArchivePaths) =>
       componentArchivePaths,
     RuntimeLocalArchiveSource(:final componentArchivePaths) =>
       componentArchivePaths,
     RuntimeRemoteArchiveSource(:final componentArchivePaths) =>
       componentArchivePaths,
-    RuntimeSourceManifestInstallSource() => const <String>[],
+    RuntimeSourceManifestInstallSource() => const IList<String>.empty(),
   };
 
   Option<String> get sourceManifest => switch (installSource) {
@@ -189,7 +189,7 @@ final class RuntimeConfiguredArchiveSource extends RuntimeInstallSource {
        );
 
   final RuntimeArchiveChecksum archiveChecksum;
-  final List<String> componentArchivePaths;
+  final IList<String> componentArchivePaths;
 
   @override
   bool get hasExplicitInstallSource => componentArchivePaths.isNotEmpty;
@@ -207,7 +207,7 @@ final class RuntimeLocalArchiveSource extends RuntimeInstallSource {
 
   final String archivePath;
   final RuntimeArchiveChecksum archiveChecksum;
-  final List<String> componentArchivePaths;
+  final IList<String> componentArchivePaths;
 
   @override
   bool get hasExplicitInstallSource => true;
@@ -225,7 +225,7 @@ final class RuntimeRemoteArchiveSource extends RuntimeInstallSource {
 
   final String archiveUrl;
   final RuntimeArchiveChecksum archiveChecksum;
-  final List<String> componentArchivePaths;
+  final IList<String> componentArchivePaths;
 
   @override
   bool get hasExplicitInstallSource => true;
@@ -366,7 +366,7 @@ class _RuntimeWineInstallRequestAccessors {
 
   Option<String> get archiveSha256 => requestOperation.archiveSha256;
 
-  List<String> get componentArchivePaths =>
+  IList<String> get componentArchivePaths =>
       requestOperation.componentArchivePaths;
 
   Option<String> get sourceManifest => requestOperation.sourceManifest;
@@ -393,10 +393,10 @@ RuntimeSourceManifestSignature _runtimeSourceManifestSignature(
   );
 }
 
-List<String> _runtimeComponentArchivePaths(Iterable<String> paths) {
-  return List.unmodifiable(
-    paths.map(
-      (path) => _requiredNonBlankDomainString(path, 'componentArchivePath'),
-    ),
-  );
+IList<String> _runtimeComponentArchivePaths(Iterable<String> paths) {
+  return paths
+      .map(
+        (path) => _requiredNonBlankDomainString(path, 'componentArchivePath'),
+      )
+      .toIList();
 }

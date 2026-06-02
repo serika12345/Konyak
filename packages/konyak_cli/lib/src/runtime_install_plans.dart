@@ -41,13 +41,13 @@ final class _RuntimeWineInstallFromArchive extends _RuntimeWineInstallPlan {
   _RuntimeWineInstallFromArchive({
     required this.archivePath,
     required this.archiveSha256,
-    required List<String> componentArchivePaths,
+    required Iterable<String> componentArchivePaths,
     required this.preserveExistingRuntimeFiles,
-  }) : componentArchivePaths = List.unmodifiable(componentArchivePaths);
+  }) : componentArchivePaths = componentArchivePaths.toIList();
 
   final String archivePath;
   final RuntimeArchiveChecksum archiveSha256;
-  final List<String> componentArchivePaths;
+  final IList<String> componentArchivePaths;
   final bool preserveExistingRuntimeFiles;
 }
 
@@ -56,14 +56,14 @@ final class _RuntimeWineInstallDownloadArchive extends _RuntimeWineInstallPlan {
     required this.archiveUrl,
     required this.archiveFileName,
     required this.archiveSha256,
-    required List<String> componentArchivePaths,
+    required Iterable<String> componentArchivePaths,
     required this.preserveExistingRuntimeFiles,
-  }) : componentArchivePaths = List.unmodifiable(componentArchivePaths);
+  }) : componentArchivePaths = componentArchivePaths.toIList();
 
   final String archiveUrl;
   final String archiveFileName;
   final RuntimeArchiveChecksum archiveSha256;
-  final List<String> componentArchivePaths;
+  final IList<String> componentArchivePaths;
   final bool preserveExistingRuntimeFiles;
 }
 

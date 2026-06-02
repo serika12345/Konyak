@@ -33,7 +33,7 @@ String? _installRuntimeArchives({
   required String runtimeLabel,
   required String archivePath,
   required String? archiveSha256,
-  required List<String> componentArchivePaths,
+  required Iterable<String> componentArchivePaths,
   required Map<String, String> componentVersions,
   required Directory runtimeRoot,
   required List<String> requiredExecutableRelativePath,

@@ -1,3 +1,5 @@
+import 'package:fast_immutable_collections/fast_immutable_collections.dart';
+
 class BottleSummary {
   BottleSummary({
     required this.id,
@@ -5,15 +7,16 @@ class BottleSummary {
     required this.path,
     required this.windowsVersion,
     this.runtimeSettings = const BottleRuntimeSettingsSummary(),
-    List<PinnedProgramSummary> pinnedPrograms = const <PinnedProgramSummary>[],
-  }) : pinnedPrograms = List.unmodifiable(pinnedPrograms);
+    Iterable<PinnedProgramSummary> pinnedPrograms =
+        const <PinnedProgramSummary>[],
+  }) : pinnedPrograms = pinnedPrograms.toIList();
 
   final String id;
   final String name;
   final String path;
   final String windowsVersion;
   final BottleRuntimeSettingsSummary runtimeSettings;
-  final List<PinnedProgramSummary> pinnedPrograms;
+  final IList<PinnedProgramSummary> pinnedPrograms;
 }
 
 class BottleRuntimeSettingsSummary {
@@ -286,17 +289,17 @@ class ProgramSettingsSummary {
     this.locale = '',
     this.arguments = '',
     Map<String, String> environment = const <String, String>{},
-  }) : environment = Map.unmodifiable(environment);
+  }) : environment = environment.lock;
 
   final String locale;
   final String arguments;
-  final Map<String, String> environment;
+  final IMap<String, String> environment;
 
   Map<String, Object?> toJson() {
     return <String, Object?>{
       'locale': locale,
       'arguments': arguments,
-      'environment': environment,
+      'environment': environment.unlockView,
     };
   }
 }

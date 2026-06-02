@@ -25,25 +25,27 @@ void main() {
 
     expect(bottle.pinnedPrograms, hasLength(1));
     expect(
-      () => bottle.pinnedPrograms.add(
+      bottle.pinnedPrograms.add(
         const PinnedProgramSummary(
           name: 'Other',
           path: '/other.exe',
           removable: true,
         ),
       ),
-      throwsUnsupportedError,
+      hasLength(2),
     );
+    expect(bottle.pinnedPrograms, hasLength(1));
 
     final environment = <String, String>{'LANG': 'ja_JP.UTF-8'};
     final settings = ProgramSettingsSummary(environment: environment);
     environment['LANG'] = 'en_US.UTF-8';
 
-    expect(settings.environment, {'LANG': 'ja_JP.UTF-8'});
-    expect(
-      () => settings.environment['WINEDEBUG'] = '-all',
-      throwsUnsupportedError,
-    );
+    expect(settings.environment.unlockView, {'LANG': 'ja_JP.UTF-8'});
+    expect(settings.environment.add('WINEDEBUG', '-all').unlockView, {
+      'LANG': 'ja_JP.UTF-8',
+      'WINEDEBUG': '-all',
+    });
+    expect(settings.environment.unlockView, {'LANG': 'ja_JP.UTF-8'});
   });
 
   test('menu and CLI configuration collections are immutable snapshots', () {

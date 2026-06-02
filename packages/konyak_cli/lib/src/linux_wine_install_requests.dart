@@ -102,7 +102,7 @@ class LinuxWineInstallRequest {
 
   Option<String> get archiveSha256 => _accessors.archiveSha256;
 
-  List<String> get componentArchivePaths => _accessors.componentArchivePaths;
+  IList<String> get componentArchivePaths => _accessors.componentArchivePaths;
 
   Option<String> get sourceManifest => _accessors.sourceManifest;
 

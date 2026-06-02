@@ -9,6 +9,7 @@ environment:
 dependencies:
   args: ^2.7.0
   crypto: ^3.0.7
+  fast_immutable_collections: ^11.2.0
   fpdart: ^1.2.0
 
 dev_dependencies:

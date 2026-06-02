@@ -1826,7 +1826,7 @@ void main() {
       expect(loaded.programPath, '/downloads/Steam.exe');
       expect(loaded.settings.locale, 'ja_JP.UTF-8');
       expect(loaded.settings.arguments, '-silent');
-      expect(loaded.settings.environment, {
+      expect(loaded.settings.environment.unlockView, {
         'STEAM_COMPAT_DATA_PATH': '/compat',
       });
     },
@@ -1885,7 +1885,7 @@ void main() {
       final loaded = result as LoadedProgramSettings;
       expect(loaded.settings.locale, 'ja_JP.UTF-8');
       expect(loaded.settings.arguments, '-silent');
-      expect(loaded.settings.environment, {
+      expect(loaded.settings.environment.unlockView, {
         'STEAM_COMPAT_DATA_PATH': '/compat',
       });
     },

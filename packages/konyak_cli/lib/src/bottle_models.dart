@@ -7,7 +7,8 @@ class BottleRecord {
     required String path,
     required String windowsVersion,
     this.runtimeSettings = const BottleRuntimeSettings(),
-    List<PinnedProgramRecord> pinnedPrograms = const <PinnedProgramRecord>[],
+    Iterable<PinnedProgramRecord> pinnedPrograms =
+        const <PinnedProgramRecord>[],
   }) : id = _requiredNonBlankDomainString(id, 'id'),
        name = _requiredNonBlankDomainString(name, 'name'),
        path = _requiredNonBlankDomainString(path, 'path'),
@@ -15,14 +16,14 @@ class BottleRecord {
          windowsVersion,
          'windowsVersion',
        ),
-       pinnedPrograms = List.unmodifiable(pinnedPrograms);
+       pinnedPrograms = pinnedPrograms.toIList();
 
   final String id;
   final String name;
   final String path;
   final String windowsVersion;
   final BottleRuntimeSettings runtimeSettings;
-  final List<PinnedProgramRecord> pinnedPrograms;
+  final IList<PinnedProgramRecord> pinnedPrograms;
 
   BottleRecord withIdentity({
     required String id,
@@ -72,7 +73,9 @@ class BottleRecord {
     );
   }
 
-  BottleRecord withPinnedPrograms(List<PinnedProgramRecord> pinnedPrograms) {
+  BottleRecord withPinnedPrograms(
+    Iterable<PinnedProgramRecord> pinnedPrograms,
+  ) {
     return BottleRecord(
       id: id,
       name: name,
@@ -94,7 +97,7 @@ class BottleRecord {
       if (pinnedPrograms.isNotEmpty)
         'pinnedPrograms': pinnedPrograms
             .map((program) => program.toJson())
-            .toList(growable: false),
+            .toList(),
     };
   }
 
@@ -106,7 +109,7 @@ class BottleRecord {
         other.path == path &&
         other.windowsVersion == windowsVersion &&
         other.runtimeSettings == runtimeSettings &&
-        _listEquals(other.pinnedPrograms, pinnedPrograms);
+        other.pinnedPrograms == pinnedPrograms;
   }
 
   @override
@@ -117,7 +120,7 @@ class BottleRecord {
       path,
       windowsVersion,
       runtimeSettings,
-      Object.hashAll(pinnedPrograms),
+      pinnedPrograms,
     );
   }
 }

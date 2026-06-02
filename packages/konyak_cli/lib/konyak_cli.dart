@@ -6,6 +6,7 @@ import 'dart:typed_data';
 
 import 'package:args/args.dart' hide Option;
 import 'package:crypto/crypto.dart';
+import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:fpdart/fpdart.dart';
 
 part 'src/cli_commands.dart';

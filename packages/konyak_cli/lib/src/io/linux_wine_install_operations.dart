@@ -4,7 +4,7 @@ extension _DartIoLinuxWineInstallerOperations on DartIoLinuxWineInstaller {
   LinuxWineInstallResult _installLinuxWineArchive({
     required String archivePath,
     required Option<String> archiveSha256,
-    List<String> componentArchivePaths = const <String>[],
+    Iterable<String> componentArchivePaths = const <String>[],
     Map<String, String> componentVersions = const <String, String>{},
     RuntimeInstallProgressSink? progressSink,
   }) {
@@ -92,7 +92,7 @@ extension _DartIoLinuxWineInstallerOperations on DartIoLinuxWineInstaller {
             archivePath: bundle.wineArchivePath,
             archiveSha256: const Option.none(),
             componentArchivePaths: bundle.componentArchivePaths,
-            componentVersions: bundle.componentVersions,
+            componentVersions: bundle.componentVersions.unlockView,
             progressSink: progressSink,
           ),
       };
@@ -148,7 +148,7 @@ extension _DartIoLinuxWineInstallerOperations on DartIoLinuxWineInstaller {
             archivePath: bundle.wineArchivePath,
             archiveSha256: const Option.none(),
             componentArchivePaths: bundle.componentArchivePaths,
-            componentVersions: bundle.componentVersions,
+            componentVersions: bundle.componentVersions.unlockView,
             progressSink: progressSink,
           ),
       };

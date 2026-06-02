@@ -32,19 +32,5 @@ bool sameProgramSettings(
 
   return left.locale == right.locale &&
       left.arguments == right.arguments &&
-      _stringMapEquals(left.environment, right.environment);
-}
-
-bool _stringMapEquals(Map<String, String> left, Map<String, String> right) {
-  if (left.length != right.length) {
-    return false;
-  }
-
-  for (final entry in left.entries) {
-    if (right[entry.key] != entry.value) {
-      return false;
-    }
-  }
-
-  return true;
+      left.environment == right.environment;
 }

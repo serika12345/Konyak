@@ -138,7 +138,7 @@ void defineProgramExecutionContractTests() {
     expect(settings, isA<ProgramSettingsRead>());
     expect((settings as ProgramSettingsRead).settings.locale, 'ja_JP.UTF-8');
     expect(settings.settings.arguments, '-silent -windowed');
-    expect(settings.settings.environment, {
+    expect(settings.settings.environment.unlockView, {
       'STEAM_COMPAT_DATA_PATH': '/compat',
     });
   });

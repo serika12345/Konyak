@@ -3,14 +3,14 @@ part of '../konyak_cli.dart';
 class _RuntimeStackSourceArchiveBundle {
   _RuntimeStackSourceArchiveBundle({
     required this.wineArchivePath,
-    required List<String> componentArchivePaths,
+    required Iterable<String> componentArchivePaths,
     required Map<String, String> componentVersions,
-  }) : componentArchivePaths = List.unmodifiable(componentArchivePaths),
-       componentVersions = Map.unmodifiable(componentVersions);
+  }) : componentArchivePaths = componentArchivePaths.toIList(),
+       componentVersions = componentVersions.lock;
 
   final String wineArchivePath;
-  final List<String> componentArchivePaths;
-  final Map<String, String> componentVersions;
+  final IList<String> componentArchivePaths;
+  final IMap<String, String> componentVersions;
 }
 
 sealed class _RuntimeStackSourceArchiveBundleResult {

@@ -31,11 +31,12 @@ void main() {
 
     expect(bottle.pinnedPrograms, hasLength(1));
     expect(
-      () => bottle.pinnedPrograms.add(
+      bottle.pinnedPrograms.add(
         PinnedProgramRecord(name: 'Other', path: '/other.exe'),
       ),
-      throwsUnsupportedError,
+      hasLength(2),
     );
+    expect(bottle.pinnedPrograms, hasLength(1));
   });
 
   test('bottle records reject blank required fields', () {
@@ -320,11 +321,12 @@ void main() {
     final settings = ProgramSettingsRecord(environment: environment);
     environment['LANG'] = 'en_US.UTF-8';
 
-    expect(settings.environment, {'LANG': 'ja_JP.UTF-8'});
-    expect(
-      () => settings.environment['WINEDEBUG'] = '-all',
-      throwsUnsupportedError,
-    );
+    expect(settings.environment.unlockView, {'LANG': 'ja_JP.UTF-8'});
+    expect(settings.environment.add('WINEDEBUG', '-all').unlockView, {
+      'LANG': 'ja_JP.UTF-8',
+      'WINEDEBUG': '-all',
+    });
+    expect(settings.environment.unlockView, {'LANG': 'ja_JP.UTF-8'});
   });
 
   test('process termination records expose immutable argv snapshots', () {
@@ -363,13 +365,18 @@ void main() {
       requiredExecutableRelativePath.add('changed');
 
       expect(request.componentArchivePaths, ['/dxvk.tar.gz']);
-      expect(request.componentVersions, {'dxvk': '2.7'});
+      expect(request.componentVersions.unlockView, {'dxvk': '2.7'});
       expect(request.requiredExecutableRelativePath, ['bin', 'wine']);
-      expect(request.componentArchivePaths.clear, throwsUnsupportedError);
-      expect(
-        () => request.componentVersions['vkd3d'] = '2.14',
-        throwsUnsupportedError,
-      );
+      expect(request.componentArchivePaths.add('/vkd3d.tar.gz'), [
+        '/dxvk.tar.gz',
+        '/vkd3d.tar.gz',
+      ]);
+      expect(request.componentArchivePaths, ['/dxvk.tar.gz']);
+      expect(request.componentVersions.add('vkd3d', '2.14').unlockView, {
+        'dxvk': '2.7',
+        'vkd3d': '2.14',
+      });
+      expect(request.componentVersions.unlockView, {'dxvk': '2.7'});
       expect(
         request.requiredExecutableRelativePath.clear,
         throwsUnsupportedError,

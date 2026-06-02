@@ -165,42 +165,6 @@ int? _nullByteOffset(Uint8List bytes, int offset, int maximumOffset) {
   return null;
 }
 
-bool _listEquals<T>(List<T> left, List<T> right) {
-  if (identical(left, right)) {
-    return true;
-  }
-
-  if (left.length != right.length) {
-    return false;
-  }
-
-  for (var index = 0; index < left.length; index += 1) {
-    if (left[index] != right[index]) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-bool _mapEquals<K, V>(Map<K, V> left, Map<K, V> right) {
-  if (identical(left, right)) {
-    return true;
-  }
-
-  if (left.length != right.length) {
-    return false;
-  }
-
-  for (final entry in left.entries) {
-    if (!right.containsKey(entry.key) || right[entry.key] != entry.value) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
 Map<String, String>? _stringMap(Object? value) {
   if (value == null) {
     return const <String, String>{};

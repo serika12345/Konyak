@@ -34,7 +34,7 @@ List<String> _programSettingsArguments(ProgramSettingsRecord settings) {
 Map<String, String> _programSettingsEnvironment(
   ProgramSettingsRecord settings,
 ) {
-  final environment = <String, String>{...settings.environment};
+  final environment = <String, String>{...settings.environment.unlockView};
   if (settings.locale.trim().isNotEmpty) {
     environment['LC_ALL'] = settings.locale;
   }

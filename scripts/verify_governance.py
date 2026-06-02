@@ -110,11 +110,24 @@ def require_result_boundary_rules() -> None:
     if (ROOT / "apps/konyak").exists():
         require_not_contains("apps/konyak/pubspec.yaml", "fpdart")
         require_not_contains_under("apps/konyak", "*.dart", "package:fpdart")
+        require_contains("apps/konyak/pubspec.yaml", "fast_immutable_collections:")
+        require_contains(
+            "apps/konyak/lib/src/bottles/bottle_summary.dart",
+            "package:fast_immutable_collections/fast_immutable_collections.dart",
+        )
 
     if not (ROOT / "packages/konyak_cli").exists():
         return
 
     require_contains("packages/konyak_cli/pubspec.yaml", "fpdart:")
+    require_contains(
+        "packages/konyak_cli/pubspec.yaml",
+        "fast_immutable_collections:",
+    )
+    require_contains(
+        "packages/konyak_cli/lib/konyak_cli.dart",
+        "package:fast_immutable_collections/fast_immutable_collections.dart",
+    )
     require_contains("packages/konyak_cli/lib/konyak_cli.dart", "package:fpdart/fpdart.dart")
     require_contains("packages/konyak_cli/lib/konyak_cli.dart", "part 'src/io/io_result.dart';")
     require_io_implementation_boundaries()
@@ -137,6 +150,7 @@ def require_result_boundary_rules() -> None:
         "IoResult<BottleRecord?> findBottle",
     )
     for expected in [
+        "final IList<PinnedProgramRecord> pinnedPrograms;",
         "final Option<String> iconPath;",
         "Option<String> iconPath = const Option.none()",
         "iconPath.map(",
@@ -146,6 +160,18 @@ def require_result_boundary_rules() -> None:
     require_not_contains(
         "packages/konyak_cli/lib/src/bottle_models.dart",
         "final String? iconPath;",
+    )
+    require_not_contains(
+        "packages/konyak_cli/lib/src/bottle_models.dart",
+        "final List<PinnedProgramRecord> pinnedPrograms;",
+    )
+    require_contains(
+        "packages/konyak_cli/lib/src/program_settings_models.dart",
+        "final IMap<String, String> environment;",
+    )
+    require_not_contains(
+        "packages/konyak_cli/lib/src/program_settings_models.dart",
+        "final Map<String, String> environment;",
     )
     for expected in [
         "final Option<ProgramMetadataRecord> metadata;",
