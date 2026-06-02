@@ -101,7 +101,10 @@ part 'src/runtime_update_checker.dart';
 part 'src/app_update_checker.dart';
 part 'src/app_update_installer.dart';
 part 'src/app_update_handoff_installers.dart';
-part 'src/runtimes.dart';
+part 'src/runtime_models.dart';
+part 'src/runtime_source_bundle_models.dart';
+part 'src/runtime_probes.dart';
+part 'src/runtime_catalogs.dart';
 
 CliResult _jsonSuccess(Map<String, Object?> payload, {int exitCode = 0}) {
   return CliResult(

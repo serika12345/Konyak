@@ -243,7 +243,7 @@ def main() -> None:
     require_not_contains("docs/todo.md", "BottleVM.plist")
     require_not_contains("packages/konyak_cli/lib/konyak_cli.dart", "BottleVM.plist")
     require_not_contains("packages/konyak_cli/lib/konyak_cli.dart", "Metadata.plist")
-    require_contains("packages/konyak_cli/lib/src/runtimes.dart", "RuntimeStackComponent")
+    require_contains("packages/konyak_cli/lib/src/runtime_models.dart", "RuntimeStackComponent")
     runtime_support_files = [
         str(path.relative_to(ROOT))
         for path in sorted((ROOT / "packages/konyak_cli/lib/src").glob("runtime_*support.dart"))
