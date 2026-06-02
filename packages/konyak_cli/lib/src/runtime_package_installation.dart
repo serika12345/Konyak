@@ -2,19 +2,32 @@ part of '../konyak_cli.dart';
 
 class RuntimePackageInstallRequest {
   RuntimePackageInstallRequest({
-    required this.runtimeLabel,
-    required this.archivePath,
-    required this.archiveSha256,
+    required String runtimeLabel,
+    required String archivePath,
+    required String? archiveSha256,
     required List<String> componentArchivePaths,
     required Map<String, String> componentVersions,
     required this.runtimeRoot,
     required List<String> requiredExecutableRelativePath,
-    required this.expectedExecutablePath,
+    required String expectedExecutablePath,
     this.preserveExistingRuntimeFiles = false,
     this.normalizeStagingRoot,
     this.afterManifestWrite,
     this.progressSink,
-  }) : componentArchivePaths = List.unmodifiable(componentArchivePaths),
+  }) : runtimeLabel = _requiredNonBlankDomainString(
+         runtimeLabel,
+         'runtimeLabel',
+       ),
+       archivePath = _requiredNonBlankDomainString(archivePath, 'archivePath'),
+       archiveSha256 = _optionalRuntimePackageInstallValue(
+         archiveSha256,
+         'archiveSha256',
+       ),
+       expectedExecutablePath = _requiredNonBlankDomainString(
+         expectedExecutablePath,
+         'expectedExecutablePath',
+       ),
+       componentArchivePaths = List.unmodifiable(componentArchivePaths),
        componentVersions = Map.unmodifiable(componentVersions),
        requiredExecutableRelativePath = List.unmodifiable(
          requiredExecutableRelativePath,
@@ -22,7 +35,7 @@ class RuntimePackageInstallRequest {
 
   final String runtimeLabel;
   final String archivePath;
-  final String? archiveSha256;
+  final Option<String> archiveSha256;
   final List<String> componentArchivePaths;
   final Map<String, String> componentVersions;
   final Directory runtimeRoot;
@@ -60,7 +73,7 @@ class DartIoRuntimePackageInstaller implements RuntimePackageInstaller {
     final failure = _installRuntimeArchives(
       runtimeLabel: request.runtimeLabel,
       archivePath: request.archivePath,
-      archiveSha256: request.archiveSha256,
+      archiveSha256: request.archiveSha256.toNullable(),
       componentArchivePaths: request.componentArchivePaths,
       componentVersions: request.componentVersions,
       runtimeRoot: request.runtimeRoot,
@@ -76,6 +89,15 @@ class DartIoRuntimePackageInstaller implements RuntimePackageInstaller {
         ? const RuntimePackageInstallCompleted()
         : RuntimePackageInstallFailed(failure);
   }
+}
+
+Option<String> _optionalRuntimePackageInstallValue(
+  String? value,
+  String fieldName,
+) {
+  return Option.fromNullable(
+    value,
+  ).map((item) => _requiredNonBlankDomainString(item, fieldName));
 }
 
 class RuntimeInstallProgress {

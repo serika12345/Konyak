@@ -229,6 +229,14 @@ def require_result_boundary_rules() -> None:
             "packages/konyak_cli/lib/src/runtime_install_operation_models.dart",
             forbidden,
         )
+    require_contains(
+        "packages/konyak_cli/lib/src/runtime_package_installation.dart",
+        "final Option<String> archiveSha256;",
+    )
+    require_not_contains(
+        "packages/konyak_cli/lib/src/runtime_package_installation.dart",
+        "final String? archiveSha256;",
+    )
 
     result_wrapped_repository_operation_files = [
         "packages/konyak_cli/lib/src/file_bottle_repository_mutation_operations.dart",

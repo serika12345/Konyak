@@ -354,6 +354,53 @@ void main() {
     },
   );
 
+  test(
+    'runtime package install requests model absent checksums with Option',
+    () {
+      final request = RuntimePackageInstallRequest(
+        runtimeLabel: 'Konyak Wine',
+        archivePath: '/wine.tar.gz',
+        archiveSha256: null,
+        componentArchivePaths: const <String>[],
+        componentVersions: const <String, String>{},
+        runtimeRoot: Directory('/tmp/konyak-runtime'),
+        requiredExecutableRelativePath: const <String>['bin', 'wine'],
+        expectedExecutablePath: '/tmp/konyak-runtime/bin/wine',
+      );
+
+      expect(request.archiveSha256.isNone(), isTrue);
+    },
+  );
+
+  test('runtime package install requests reject blank required values', () {
+    expect(
+      () => RuntimePackageInstallRequest(
+        runtimeLabel: ' ',
+        archivePath: '/wine.tar.gz',
+        archiveSha256: null,
+        componentArchivePaths: const <String>[],
+        componentVersions: const <String, String>{},
+        runtimeRoot: Directory('/tmp/konyak-runtime'),
+        requiredExecutableRelativePath: const <String>['bin', 'wine'],
+        expectedExecutablePath: '/tmp/konyak-runtime/bin/wine',
+      ),
+      throwsA(isA<ArgumentError>()),
+    );
+    expect(
+      () => RuntimePackageInstallRequest(
+        runtimeLabel: 'Konyak Wine',
+        archivePath: '/wine.tar.gz',
+        archiveSha256: ' ',
+        componentArchivePaths: const <String>[],
+        componentVersions: const <String, String>{},
+        runtimeRoot: Directory('/tmp/konyak-runtime'),
+        requiredExecutableRelativePath: const <String>['bin', 'wine'],
+        expectedExecutablePath: '/tmp/konyak-runtime/bin/wine',
+      ),
+      throwsA(isA<ArgumentError>()),
+    );
+  });
+
   test('static catalogs expose immutable snapshots', () {
     final bottles = <BottleRecord>[
       BottleRecord(
