@@ -61,26 +61,27 @@ CliResult _runProgramJsonResult(
       final programRunRequest = context.programRunPlanner.plan(
         bottle: bottle,
         programPath: request.programPath,
-        programSettings: programSettings,
+        programSettings: Option.of(programSettings),
       );
-      if (programRunRequest == null) {
-        return _jsonError(
+      return programRunRequest.match(
+        () => _jsonError(
           exitCode: 65,
           code: 'unsupportedProgramType',
           message: 'Program type is not supported.',
           extra: <String, Object?>{'programPath': request.programPath},
-        );
-      }
+        ),
+        (request) {
+          _recordExternalProgramRun(bottle: bottle, request: request);
+          _synchronizeLinuxDesktopLauncherForProgramRun(
+            hostPlatform: context.programRunPlanner.hostPlatform,
+            environment: context.programRunPlanner.environment,
+            bottle: bottle,
+            request: request,
+          );
 
-      _recordExternalProgramRun(bottle: bottle, request: programRunRequest);
-      _synchronizeLinuxDesktopLauncherForProgramRun(
-        hostPlatform: context.programRunPlanner.hostPlatform,
-        environment: context.programRunPlanner.environment,
-        bottle: bottle,
-        request: programRunRequest,
+          return _programRunResultJson(request, runner);
+        },
       );
-
-      return _programRunResultJson(programRunRequest, runner);
     },
   );
 }
@@ -107,24 +108,25 @@ CliResult _runWinetricksJsonResult(
         bottle: bottle,
         verb: request.verb,
       );
-      if (programRunRequest == null) {
-        return _jsonError(
+      return programRunRequest.match(
+        () => _jsonError(
           exitCode: 65,
           code: 'unsupportedWinetricksVerb',
           message: 'Winetricks verb is not supported.',
           extra: <String, Object?>{'verb': request.verb},
-        );
-      }
+        ),
+        (request) {
+          final winetricksReady = _ensureWinetricksScriptForRun(
+            request: request,
+            scriptInstaller: context.winetricksScriptInstaller,
+          );
+          if (winetricksReady != null) {
+            return winetricksReady;
+          }
 
-      final winetricksReady = _ensureWinetricksScriptForRun(
-        request: programRunRequest,
-        scriptInstaller: context.winetricksScriptInstaller,
+          return _programRunResultJson(request, runner);
+        },
       );
-      if (winetricksReady != null) {
-        return winetricksReady;
-      }
-
-      return _programRunResultJson(programRunRequest, runner);
     },
   );
 }
@@ -151,24 +153,25 @@ CliResult _runBottleCommandJsonResult(
         bottle: bottle,
         command: request.command,
       );
-      if (programRunRequest == null) {
-        return _jsonError(
+      return programRunRequest.match(
+        () => _jsonError(
           exitCode: 65,
           code: 'unsupportedBottleCommand',
           message: 'Bottle command is not supported.',
           extra: <String, Object?>{'command': request.command},
-        );
-      }
+        ),
+        (request) {
+          final winetricksReady = _ensureWinetricksScriptForRun(
+            request: request,
+            scriptInstaller: context.winetricksScriptInstaller,
+          );
+          if (winetricksReady != null) {
+            return winetricksReady;
+          }
 
-      final winetricksReady = _ensureWinetricksScriptForRun(
-        request: programRunRequest,
-        scriptInstaller: context.winetricksScriptInstaller,
+          return _programRunResultJson(request, runner);
+        },
       );
-      if (winetricksReady != null) {
-        return winetricksReady;
-      }
-
-      return _programRunResultJson(programRunRequest, runner);
     },
   );
 }

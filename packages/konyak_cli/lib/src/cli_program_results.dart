@@ -80,29 +80,31 @@ CliResult _runPinnedProgramLauncherCli({
       final programRunRequest = programRunPlanner.plan(
         bottle: bottle,
         programPath: launcherManifest.programPath,
-        programSettings: programSettings,
+        programSettings: Option.of(programSettings),
       );
-      if (programRunRequest == null) {
-        return _jsonError(
+      return programRunRequest.match(
+        () => _jsonError(
           exitCode: 65,
           code: 'unsupportedProgramType',
           message: 'Program type is not supported.',
           extra: <String, Object?>{'programPath': launcherManifest.programPath},
-        );
-      }
-
-      final runResult = programRunner.run(programRunRequest);
-
-      return switch (runResult) {
-        ProgramRunCompleted(:final processExitCode) => _programRunJsonResult(
-          request: programRunRequest,
-          processExitCode: processExitCode,
         ),
-        ProgramRunFailed(:final message) => _programRunFailedJsonResult(
-          request: programRunRequest,
-          message: message,
-        ),
-      };
+        (request) {
+          final runResult = programRunner.run(request);
+
+          return switch (runResult) {
+            ProgramRunCompleted(:final processExitCode) =>
+              _programRunJsonResult(
+                request: request,
+                processExitCode: processExitCode,
+              ),
+            ProgramRunFailed(:final message) => _programRunFailedJsonResult(
+              request: request,
+              message: message,
+            ),
+          };
+        },
+      );
     },
   );
 }

@@ -28,43 +28,51 @@ class ProgramRunPlanner {
   final KonyakHostPlatform hostPlatform;
   final Map<String, String> environment;
 
-  ProgramRunRequest? plan({
+  Option<ProgramRunRequest> plan({
     required BottleRecord bottle,
     required String programPath,
-    ProgramSettingsRecord? programSettings,
+    Option<ProgramSettingsRecord> programSettings = const Option.none(),
   }) {
     final supportedProgramPath = _isSupportedProgramPath(programPath);
     if (!supportedProgramPath) {
-      return null;
+      return const Option.none();
     }
 
-    return switch (hostPlatform) {
+    return Option.of(switch (hostPlatform) {
       KonyakHostPlatform.linux => _linuxWineRequest(
         bottle: bottle,
         programPath: programPath,
         environment: environment,
-        programSettings: programSettings ?? ProgramSettingsRecord(),
+        programSettings: programSettings.getOrElse(ProgramSettingsRecord.new),
       ),
       KonyakHostPlatform.macos => _macosWineRequest(
         bottle: bottle,
         programPath: programPath,
         environment: environment,
-        programSettings: programSettings ?? ProgramSettingsRecord(),
+        programSettings: programSettings.getOrElse(ProgramSettingsRecord.new),
       ),
-    };
+    });
   }
 
-  ProgramRunRequest? planBottleCommand({
+  Option<ProgramRunRequest> planBottleCommand({
     required BottleRecord bottle,
     required String command,
   }) {
-    final supportedCommand = _supportedBottleCommand(command);
-    if (supportedCommand == null) {
-      return null;
-    }
+    return _supportedBottleCommand(command).match(
+      () => const Option.none(),
+      (supportedCommand) => _planSupportedBottleCommand(
+        bottle: bottle,
+        supportedCommand: supportedCommand,
+      ),
+    );
+  }
 
+  Option<ProgramRunRequest> _planSupportedBottleCommand({
+    required BottleRecord bottle,
+    required String supportedCommand,
+  }) {
     if (supportedCommand == 'terminal') {
-      return switch (hostPlatform) {
+      return Option.of(switch (hostPlatform) {
         KonyakHostPlatform.linux => _linuxTerminalCommandRequest(
           bottle: bottle,
           environment: environment,
@@ -73,11 +81,11 @@ class ProgramRunPlanner {
           bottle: bottle,
           environment: environment,
         ),
-      };
+      });
     }
 
     if (supportedCommand == 'winetricks') {
-      return switch (hostPlatform) {
+      return Option.of(switch (hostPlatform) {
         KonyakHostPlatform.linux => _linuxWinetricksCommandRequest(
           bottle: bottle,
           environment: environment,
@@ -87,10 +95,10 @@ class ProgramRunPlanner {
           environment: environment,
           verb: null,
         ),
-      };
+      });
     }
 
-    return switch (hostPlatform) {
+    return Option.of(switch (hostPlatform) {
       KonyakHostPlatform.linux => _linuxWineCommandRequest(
         bottle: bottle,
         command: supportedCommand,
@@ -101,7 +109,7 @@ class ProgramRunPlanner {
         command: supportedCommand,
         environment: environment,
       ),
-    };
+    });
   }
 
   ProgramRunRequest planPrefixInitialization({required BottleRecord bottle}) {
@@ -170,15 +178,15 @@ class ProgramRunPlanner {
     };
   }
 
-  ProgramRunRequest? planWinetricksVerb({
+  Option<ProgramRunRequest> planWinetricksVerb({
     required BottleRecord bottle,
     required String verb,
   }) {
     if (!_isSupportedWinetricksVerb(verb)) {
-      return null;
+      return const Option.none();
     }
 
-    return switch (hostPlatform) {
+    return Option.of(switch (hostPlatform) {
       KonyakHostPlatform.linux => _linuxWinetricksCommandRequest(
         bottle: bottle,
         environment: environment,
@@ -189,7 +197,7 @@ class ProgramRunPlanner {
         environment: environment,
         verb: verb,
       ),
-    };
+    });
   }
 
   List<ProgramRunRequest> planWindowsVersionRegistryUpdates({

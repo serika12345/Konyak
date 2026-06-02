@@ -52,14 +52,14 @@ bool _isSupportedProgramPath(String programPath) {
       lowerCasePath.endsWith('.lnk');
 }
 
-String? _supportedBottleCommand(String command) {
+Option<String> _supportedBottleCommand(String command) {
   final normalized = command.trim().toLowerCase();
   return switch (normalized) {
     'winecfg' ||
     'regedit' ||
     'control' ||
     'terminal' ||
-    'winetricks' => normalized,
-    _ => null,
+    'winetricks' => Option.of(normalized),
+    _ => const Option.none(),
   };
 }

@@ -794,21 +794,25 @@ void defineProgramExecutionContractTests() {
       },
     ).plan(bottle: bottle, programPath: 'C:/Program Files/Steam/steam.exe');
 
-    expect(request, isNotNull);
-    expect(request?.executable, '/opt/konyak/runtime/linux-wine/bin/wine');
+    expect(request.isSome(), isTrue);
+    final plannedRequest = request.toNullable();
     expect(
-      request?.environment,
+      plannedRequest?.executable,
+      '/opt/konyak/runtime/linux-wine/bin/wine',
+    );
+    expect(
+      plannedRequest?.environment,
       containsPair('PATH', '/opt/konyak/runtime/linux-wine/bin:/usr/bin:/bin'),
     );
     expect(
-      request?.environment,
+      plannedRequest?.environment,
       containsPair(
         'LD_LIBRARY_PATH',
         '/opt/konyak/runtime-host-libs:/host/lib',
       ),
     );
     expect(
-      request?.environment,
+      plannedRequest?.environment,
       containsPair(
         'WINEPREFIX',
         '/home/user/.local/share/konyak/bottles/steam',
