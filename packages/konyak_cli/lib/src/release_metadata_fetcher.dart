@@ -20,35 +20,21 @@ class DartIoRuntimeReleaseMetadataFetcher
       }
 
       final decoded = jsonDecode(_processOutputToString(result.stdout));
-      final version = _runtimeReleaseVersion(decoded);
-      if (version == null) {
+      final releaseMetadataAssetUrl = _runtimeReleaseMetadataAssetUrl(decoded);
+      final releaseMetadata = releaseMetadataAssetUrl == null
+          ? null
+          : _fetchRuntimeReleaseMetadataAsset(releaseMetadataAssetUrl);
+      final releaseMetadataRecord = _runtimeReleaseMetadataFromDecoded(
+        release: decoded,
+        releaseMetadata: releaseMetadata,
+      );
+      if (releaseMetadataRecord == null) {
         return const RuntimeReleaseMetadataFetchFailed(
           'Runtime release metadata does not contain a version.',
         );
       }
 
-      final archiveUrl = _runtimeReleaseArchiveUrl(decoded);
-      final releaseMetadataAssetUrl = _runtimeReleaseMetadataAssetUrl(decoded);
-      final releaseMetadata = releaseMetadataAssetUrl == null
-          ? null
-          : _fetchRuntimeReleaseMetadataAsset(releaseMetadataAssetUrl);
-      return RuntimeReleaseMetadataFetched(
-        RuntimeReleaseMetadata(
-          version: version,
-          archiveUrl: archiveUrl,
-          archiveSha256: _runtimeReleaseArchiveSha256(decoded, archiveUrl),
-          sourceManifestUrl: _runtimeReleaseSourceManifestUrl(
-            release: decoded,
-            releaseMetadataAssetUrl: releaseMetadataAssetUrl,
-            releaseMetadata: releaseMetadata,
-          ),
-          sourceManifestSignatureUrl: _runtimeReleaseSourceManifestSignatureUrl(
-            release: decoded,
-            releaseMetadataAssetUrl: releaseMetadataAssetUrl,
-            releaseMetadata: releaseMetadata,
-          ),
-        ),
-      );
+      return RuntimeReleaseMetadataFetched(releaseMetadataRecord);
     } on FormatException {
       return const RuntimeReleaseMetadataFetchFailed(
         'Runtime release metadata is not valid JSON.',
@@ -70,16 +56,13 @@ class DartIoRuntimeReleaseMetadataFetcher
         return null;
       }
 
-      final decoded = jsonDecode(_processOutputToString(result.stdout));
-      if (decoded is Map<String, dynamic>) {
-        return decoded;
-      }
+      return _runtimeReleaseMetadataAssetFromPayload(
+        _processOutputToString(result.stdout),
+      );
     } on FormatException {
       return null;
     } on ProcessException {
       return null;
     }
-
-    return null;
   }
 }
