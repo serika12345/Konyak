@@ -141,33 +141,24 @@ CliResult? _handleBottleConfigurationCommand(
       return _bottleRepositoryUnavailableError();
     }
 
-    final bottleResult = repository.findBottle(
-      windowsVersionUpdateRequest.bottleId,
-    );
-    final failure = bottleResult.fold<CliResult?>(
-      _bottleCatalogFailureJsonResult,
-      (_) => null,
-    );
-    if (failure != null) {
-      return failure;
-    }
-    final bottle = bottleResult.getOrElse((_) => null);
-    if (bottle == null) {
-      return _bottleNotFoundError(windowsVersionUpdateRequest.bottleId);
-    }
+    return _foundBottleJsonResult(
+      result: repository.findBottle(windowsVersionUpdateRequest.bottleId),
+      bottleId: windowsVersionUpdateRequest.bottleId,
+      onFound: (bottle) {
+        final registryUpdateFailure = _applyWindowsVersionRegistryUpdates(
+          bottle: bottle,
+          windowsVersion: windowsVersionUpdateRequest.windowsVersion,
+          programRunPlanner: context.programRunPlanner,
+          programRunner: context.programRunner,
+        );
+        if (registryUpdateFailure != null) {
+          return registryUpdateFailure;
+        }
 
-    final registryUpdateFailure = _applyWindowsVersionRegistryUpdates(
-      bottle: bottle,
-      windowsVersion: windowsVersionUpdateRequest.windowsVersion,
-      programRunPlanner: context.programRunPlanner,
-      programRunner: context.programRunner,
-    );
-    if (registryUpdateFailure != null) {
-      return registryUpdateFailure;
-    }
-
-    return _bottleUpdateJsonResult(
-      repository.setWindowsVersion(windowsVersionUpdateRequest),
+        return _bottleUpdateJsonResult(
+          repository.setWindowsVersion(windowsVersionUpdateRequest),
+        );
+      },
     );
   }
 
@@ -180,42 +171,33 @@ CliResult? _handleBottleConfigurationCommand(
       return _bottleRepositoryUnavailableError();
     }
 
-    final bottleResult = repository.findBottle(
-      runtimeSettingsUpdateRequest.bottleId,
-    );
-    final failure = bottleResult.fold<CliResult?>(
-      _bottleCatalogFailureJsonResult,
-      (_) => null,
-    );
-    if (failure != null) {
-      return failure;
-    }
-    final bottle = bottleResult.getOrElse((_) => null);
-    if (bottle == null) {
-      return _bottleNotFoundError(runtimeSettingsUpdateRequest.bottleId);
-    }
+    return _foundBottleJsonResult(
+      result: repository.findBottle(runtimeSettingsUpdateRequest.bottleId),
+      bottleId: runtimeSettingsUpdateRequest.bottleId,
+      onFound: (bottle) {
+        final registryUpdateFailure = _applyRuntimeSettingsRegistryUpdates(
+          bottle: bottle,
+          runtimeSettings: runtimeSettingsUpdateRequest.runtimeSettings,
+          programRunPlanner: context.programRunPlanner,
+          programRunner: context.programRunner,
+        );
+        if (registryUpdateFailure != null) {
+          return registryUpdateFailure;
+        }
 
-    final registryUpdateFailure = _applyRuntimeSettingsRegistryUpdates(
-      bottle: bottle,
-      runtimeSettings: runtimeSettingsUpdateRequest.runtimeSettings,
-      programRunPlanner: context.programRunPlanner,
-      programRunner: context.programRunner,
-    );
-    if (registryUpdateFailure != null) {
-      return registryUpdateFailure;
-    }
+        final dllSyncFailure = _syncRuntimeSettingsDllOverrides(
+          bottle: bottle,
+          runtimeSettings: runtimeSettingsUpdateRequest.runtimeSettings,
+          programRunPlanner: context.programRunPlanner,
+        );
+        if (dllSyncFailure != null) {
+          return dllSyncFailure;
+        }
 
-    final dllSyncFailure = _syncRuntimeSettingsDllOverrides(
-      bottle: bottle,
-      runtimeSettings: runtimeSettingsUpdateRequest.runtimeSettings,
-      programRunPlanner: context.programRunPlanner,
-    );
-    if (dllSyncFailure != null) {
-      return dllSyncFailure;
-    }
-
-    return _bottleUpdateJsonResult(
-      repository.setRuntimeSettings(runtimeSettingsUpdateRequest),
+        return _bottleUpdateJsonResult(
+          repository.setRuntimeSettings(runtimeSettingsUpdateRequest),
+        );
+      },
     );
   }
 

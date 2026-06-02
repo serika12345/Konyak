@@ -325,7 +325,7 @@ void defineAppAndBottleContractTests() {
       ).readAsStringSync(),
       'installed',
     );
-    expect(_expectIo(repository.findBottle('steam'))?.path, importedPath);
+    expect(_expectFound(repository.findBottle('steam')).path, importedPath);
   });
 
   test('inspect-bottle --json returns a versioned bottle detail contract', () {
@@ -508,7 +508,10 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
         '-f',
       ],
     ]);
-    expect(_expectIo(repository.findBottle('steam'))?.windowsVersion, 'win11');
+    expect(
+      _expectFound(repository.findBottle('steam')).windowsVersion,
+      'win11',
+    );
   });
 
   test('create-bottle --json creates a bottle in the repository', () {
@@ -600,7 +603,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       },
     });
 
-    expect(_expectIo(repository.findBottle('日本語'))?.name, '日本語');
+    expect(_expectFound(repository.findBottle('日本語')).name, '日本語');
   });
 
   test('create-bottle --json initializes the Wine prefix when configured', () {
@@ -756,7 +759,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       },
     });
     expect(
-      _expectIo(repository.findBottle('steam'))?.runtimeSettings,
+      _expectFound(repository.findBottle('steam')).runtimeSettings,
       const BottleRuntimeSettings(
         enhancedSync: 'esync',
         metalHud: true,
@@ -967,7 +970,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       ),
     );
     expect(
-      _expectIo(repository.findBottle('steam'))?.runtimeSettings,
+      _expectFound(repository.findBottle('steam')).runtimeSettings,
       const BottleRuntimeSettings(
         buildVersion: 22631,
         retinaMode: true,
@@ -1067,7 +1070,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       final payload = jsonDecode(result.stdout) as Map<String, Object?>;
       expect(payload['error'], containsPair('code', 'registryUpdateFailed'));
       expect(
-        _expectIo(repository.findBottle('steam'))?.runtimeSettings,
+        _expectFound(repository.findBottle('steam')).runtimeSettings,
         const BottleRuntimeSettings(),
       );
     },
@@ -1197,9 +1200,9 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
         'windowsVersion': 'win10',
       },
     });
-    expect(_expectIo(repository.findBottle('steam')), isNull);
+    _expectMissing(repository.findBottle('steam'));
     expect(
-      _expectIo(repository.findBottle('steam-games'))?.name,
+      _expectFound(repository.findBottle('steam-games')).name,
       'Steam Games',
     );
   });
@@ -1275,7 +1278,10 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
         'windowsVersion': 'win10',
       },
     });
-    expect(_expectIo(repository.findBottle('steam'))?.path, '/mnt/games/Steam');
+    expect(
+      _expectFound(repository.findBottle('steam')).path,
+      '/mnt/games/Steam',
+    );
   });
 
   test('set-windows-version --json updates a bottle in the repository', () {

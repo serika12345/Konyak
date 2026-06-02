@@ -435,14 +435,14 @@ void defineRepositoryAndRunnerContractTests() {
         _expectIo(repository.listBottles()).map((bottle) => bottle.id),
         const ['imported', 'local'],
       );
-      expect(_expectIo(repository.findBottle('imported'))?.name, 'Imported');
+      expect(_expectFound(repository.findBottle('imported')).name, 'Imported');
 
       final createResult = repository.createBottle(
         const BottleCreateRequest(name: 'Created', windowsVersion: 'win10'),
       );
 
       expect(createResult, isA<BottleCreated>());
-      expect(_expectIo(repository.findBottle('created'))?.name, 'Created');
+      expect(_expectFound(repository.findBottle('created')).name, 'Created');
     },
   );
 

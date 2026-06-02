@@ -100,6 +100,7 @@ def require_result_boundary_rules() -> None:
         "I/O and routinely fallible business operations must return explicit",
         "CLI I/O implementations must live under `packages/konyak_cli/lib/src/io`",
         "Result/Either values or sealed result variants",
+        "Expected absence in CLI/domain logic must use Option",
         "Complete-constructor invariant violations may throw",
         "must not be represented by business-logic exceptions",
         "fpdart is limited to CLI/domain code",
@@ -125,6 +126,26 @@ def require_result_boundary_rules() -> None:
         "Left<String, T>",
     ]:
         require_contains("packages/konyak_cli/lib/src/io/io_result.dart", expected)
+
+    require_contains(
+        "packages/konyak_cli/lib/src/repository_interfaces.dart",
+        "IoResult<Option<BottleRecord>> findBottle(String id);",
+    )
+    require_not_contains(
+        "packages/konyak_cli/lib/src/repository_interfaces.dart",
+        "IoResult<BottleRecord?> findBottle",
+    )
+    for expected in [
+        "final Option<String> iconPath;",
+        "Option<String> iconPath = const Option.none()",
+        "iconPath.map(",
+        "throw ArgumentError.value",
+    ]:
+        require_contains("packages/konyak_cli/lib/src/bottle_models.dart", expected)
+    require_not_contains(
+        "packages/konyak_cli/lib/src/bottle_models.dart",
+        "final String? iconPath;",
+    )
 
     result_wrapped_repository_operation_files = [
         "packages/konyak_cli/lib/src/file_bottle_repository_mutation_operations.dart",

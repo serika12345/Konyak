@@ -12,14 +12,14 @@ class StaticBottleCatalog implements BottleCatalog {
   }
 
   @override
-  IoResult<BottleRecord?> findBottle(String id) {
+  IoResult<Option<BottleRecord>> findBottle(String id) {
     for (final bottle in _bottles) {
       if (bottle.id == id) {
-        return Right<String, BottleRecord?>(bottle);
+        return Right<String, Option<BottleRecord>>(Option.of(bottle));
       }
     }
 
-    return const Right<String, BottleRecord?>(null);
+    return const Right<String, Option<BottleRecord>>(Option.none());
   }
 }
 
@@ -66,10 +66,10 @@ class MemoryBottleRepository implements BottleRepository {
   }
 
   @override
-  IoResult<BottleRecord?> findBottle(String id) {
+  IoResult<Option<BottleRecord>> findBottle(String id) {
     final bottle = _bottles[id];
     if (bottle == null) {
-      return const Right<String, BottleRecord?>(null);
+      return const Right<String, Option<BottleRecord>>(Option.none());
     }
 
     final updated = _bottleWithPinnedProgramIcons(
@@ -80,7 +80,7 @@ class MemoryBottleRepository implements BottleRepository {
       _bottles[id] = updated;
     }
 
-    return Right<String, BottleRecord?>(updated);
+    return Right<String, Option<BottleRecord>>(Option.of(updated));
   }
 
   @override
@@ -100,18 +100,16 @@ class MemoryBottleRepository implements BottleRepository {
   BottleArchiveExportResult exportBottleArchive(
     BottleArchiveExportRequest request,
   ) {
-    return findBottle(request.bottleId).fold(BottleArchiveExportFailed.new, (
-      bottle,
-    ) {
-      if (bottle == null) {
-        return BottleArchiveExportMissing(request.bottleId);
-      }
-
-      return _exportBottleArchive(
-        bottle: bottle,
-        archivePath: request.archivePath,
-      );
-    });
+    return findBottle(request.bottleId).fold(
+      BottleArchiveExportFailed.new,
+      (bottle) => bottle.match(
+        () => BottleArchiveExportMissing(request.bottleId),
+        (bottle) => _exportBottleArchive(
+          bottle: bottle,
+          archivePath: request.archivePath,
+        ),
+      ),
+    );
   }
 
   @override

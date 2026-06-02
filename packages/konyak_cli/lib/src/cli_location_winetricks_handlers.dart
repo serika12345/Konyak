@@ -38,48 +38,44 @@ CliResult _openBottleLocationJsonResult(
     return _pathOpenerUnavailableError();
   }
 
-  final bottleResult = repository.findBottle(request.bottleId);
-  final failure = bottleResult.fold<CliResult?>(
-    _bottleCatalogFailureJsonResult,
-    (_) => null,
+  return _foundBottleJsonResult(
+    result: repository.findBottle(request.bottleId),
+    bottleId: request.bottleId,
+    onFound: (bottle) {
+      final path = _bottleLocationPath(
+        bottle: bottle,
+        location: request.location,
+      );
+      if (path == null) {
+        return _jsonError(
+          exitCode: 65,
+          code: 'unsupportedBottleLocation',
+          message: 'Bottle location is not supported.',
+          extra: <String, Object?>{'location': request.location},
+        );
+      }
+
+      return switch (opener.openPath(path)) {
+        PathOpenCompleted() => _jsonSuccess(<String, Object?>{
+          'openedLocation': <String, Object?>{
+            'bottleId': bottle.id,
+            'location': request.location,
+            'path': path,
+          },
+        }),
+        PathOpenFailed(:final message) => _jsonError(
+          exitCode: 75,
+          code: 'bottleLocationOpenFailed',
+          message: message,
+          extra: <String, Object?>{
+            'bottleId': bottle.id,
+            'location': request.location,
+            'path': path,
+          },
+        ),
+      };
+    },
   );
-  if (failure != null) {
-    return failure;
-  }
-  final bottle = bottleResult.getOrElse((_) => null);
-  if (bottle == null) {
-    return _bottleNotFoundError(request.bottleId);
-  }
-
-  final path = _bottleLocationPath(bottle: bottle, location: request.location);
-  if (path == null) {
-    return _jsonError(
-      exitCode: 65,
-      code: 'unsupportedBottleLocation',
-      message: 'Bottle location is not supported.',
-      extra: <String, Object?>{'location': request.location},
-    );
-  }
-
-  return switch (opener.openPath(path)) {
-    PathOpenCompleted() => _jsonSuccess(<String, Object?>{
-      'openedLocation': <String, Object?>{
-        'bottleId': bottle.id,
-        'location': request.location,
-        'path': path,
-      },
-    }),
-    PathOpenFailed(:final message) => _jsonError(
-      exitCode: 75,
-      code: 'bottleLocationOpenFailed',
-      message: message,
-      extra: <String, Object?>{
-        'bottleId': bottle.id,
-        'location': request.location,
-        'path': path,
-      },
-    ),
-  };
 }
 
 CliResult _openProgramLocationJsonResult(
@@ -96,48 +92,41 @@ CliResult _openProgramLocationJsonResult(
     return _pathOpenerUnavailableError();
   }
 
-  final bottleResult = repository.findBottle(request.bottleId);
-  final failure = bottleResult.fold<CliResult?>(
-    _bottleCatalogFailureJsonResult,
-    (_) => null,
+  return _foundBottleJsonResult(
+    result: repository.findBottle(request.bottleId),
+    bottleId: request.bottleId,
+    onFound: (bottle) {
+      if (!_hasPinnedProgram(bottle, request.programPath)) {
+        return _jsonError(
+          exitCode: 66,
+          code: 'programNotPinned',
+          message: 'Program is not pinned.',
+          extra: <String, Object?>{'programPath': request.programPath},
+        );
+      }
+
+      final path = request.programPath;
+      return switch (opener.revealPath(path)) {
+        PathOpenCompleted() => _jsonSuccess(<String, Object?>{
+          'openedProgramLocation': <String, Object?>{
+            'bottleId': bottle.id,
+            'programPath': request.programPath,
+            'path': path,
+          },
+        }),
+        PathOpenFailed(:final message) => _jsonError(
+          exitCode: 75,
+          code: 'programLocationOpenFailed',
+          message: message,
+          extra: <String, Object?>{
+            'bottleId': bottle.id,
+            'programPath': request.programPath,
+            'path': path,
+          },
+        ),
+      };
+    },
   );
-  if (failure != null) {
-    return failure;
-  }
-  final bottle = bottleResult.getOrElse((_) => null);
-  if (bottle == null) {
-    return _bottleNotFoundError(request.bottleId);
-  }
-
-  if (!_hasPinnedProgram(bottle, request.programPath)) {
-    return _jsonError(
-      exitCode: 66,
-      code: 'programNotPinned',
-      message: 'Program is not pinned.',
-      extra: <String, Object?>{'programPath': request.programPath},
-    );
-  }
-
-  final path = request.programPath;
-  return switch (opener.revealPath(path)) {
-    PathOpenCompleted() => _jsonSuccess(<String, Object?>{
-      'openedProgramLocation': <String, Object?>{
-        'bottleId': bottle.id,
-        'programPath': request.programPath,
-        'path': path,
-      },
-    }),
-    PathOpenFailed(:final message) => _jsonError(
-      exitCode: 75,
-      code: 'programLocationOpenFailed',
-      message: message,
-      extra: <String, Object?>{
-        'bottleId': bottle.id,
-        'programPath': request.programPath,
-        'path': path,
-      },
-    ),
-  };
 }
 
 CliResult _pathOpenerUnavailableError() {

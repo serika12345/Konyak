@@ -51,36 +51,36 @@ class CompositeBottleRepository implements BottleRepository {
   }
 
   @override
-  IoResult<BottleRecord?> findBottle(String id) {
+  IoResult<Option<BottleRecord>> findBottle(String id) {
     final localBottle = writableRepository.findBottle(id);
-    final localFailure = localBottle.fold<IoResult<BottleRecord?>?>(
-      Left<String, BottleRecord?>.new,
+    final localFailure = localBottle.fold<IoResult<Option<BottleRecord>>?>(
+      Left<String, Option<BottleRecord>>.new,
       (_) => null,
     );
     if (localFailure != null) {
       return localFailure;
     }
-    final localRecord = localBottle.getOrElse((_) => null);
-    if (localRecord != null) {
-      return Right<String, BottleRecord?>(localRecord);
+    final localRecord = localBottle.getOrElse((_) => const Option.none());
+    if (localRecord.isSome()) {
+      return Right<String, Option<BottleRecord>>(localRecord);
     }
 
     for (final catalog in _catalogs) {
       final bottle = catalog.findBottle(id);
-      final failure = bottle.fold<IoResult<BottleRecord?>?>(
-        Left<String, BottleRecord?>.new,
+      final failure = bottle.fold<IoResult<Option<BottleRecord>>?>(
+        Left<String, Option<BottleRecord>>.new,
         (_) => null,
       );
       if (failure != null) {
         return failure;
       }
-      final record = bottle.getOrElse((_) => null);
-      if (record != null) {
-        return Right<String, BottleRecord?>(record);
+      final record = bottle.getOrElse((_) => const Option.none());
+      if (record.isSome()) {
+        return Right<String, Option<BottleRecord>>(record);
       }
     }
 
-    return const Right<String, BottleRecord?>(null);
+    return const Right<String, Option<BottleRecord>>(Option.none());
   }
 
   @override
@@ -92,18 +92,16 @@ class CompositeBottleRepository implements BottleRepository {
   BottleArchiveExportResult exportBottleArchive(
     BottleArchiveExportRequest request,
   ) {
-    return findBottle(request.bottleId).fold(BottleArchiveExportFailed.new, (
-      bottle,
-    ) {
-      if (bottle == null) {
-        return BottleArchiveExportMissing(request.bottleId);
-      }
-
-      return _exportBottleArchive(
-        bottle: bottle,
-        archivePath: request.archivePath,
-      );
-    });
+    return findBottle(request.bottleId).fold(
+      BottleArchiveExportFailed.new,
+      (bottle) => bottle.match(
+        () => BottleArchiveExportMissing(request.bottleId),
+        (bottle) => _exportBottleArchive(
+          bottle: bottle,
+          archivePath: request.archivePath,
+        ),
+      ),
+    );
   }
 
   @override

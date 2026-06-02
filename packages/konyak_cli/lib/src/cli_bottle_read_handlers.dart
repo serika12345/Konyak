@@ -30,51 +30,35 @@ CliResult? _handleBottleReadCommand(
   final inspectedBottleId = _parseJsonBottleInspectCommand(arguments);
   if (inspectedBottleId != null) {
     final bottleId = inspectedBottleId;
-    final bottleResult = activeBottleCatalog.findBottle(bottleId);
-    final failure = bottleResult.fold<CliResult?>(
-      _bottleCatalogFailureJsonResult,
-      (_) => null,
+    return _foundBottleJsonResult(
+      result: activeBottleCatalog.findBottle(bottleId),
+      bottleId: bottleId,
+      onFound: (bottle) {
+        final inspectedBottle = _bottleWithRegistrySettings(
+          bottle: bottle,
+          programRunPlanner: context.programRunPlanner,
+          programRunner: context.programRunner,
+        );
+        return _bottleJsonResult(inspectedBottle);
+      },
     );
-    if (failure != null) {
-      return failure;
-    }
-    final bottle = bottleResult.getOrElse((_) => null);
-    if (bottle == null) {
-      return _bottleNotFoundError(bottleId);
-    }
-
-    final inspectedBottle = _bottleWithRegistrySettings(
-      bottle: bottle,
-      programRunPlanner: context.programRunPlanner,
-      programRunner: context.programRunner,
-    );
-    return _bottleJsonResult(inspectedBottle);
   }
 
   final bottleProgramsListId = _parseJsonBottleProgramsListCommand(arguments);
   if (bottleProgramsListId != null) {
-    final bottleResult = activeBottleCatalog.findBottle(bottleProgramsListId);
-    final failure = bottleResult.fold<CliResult?>(
-      _bottleCatalogFailureJsonResult,
-      (_) => null,
+    return _foundBottleJsonResult(
+      result: activeBottleCatalog.findBottle(bottleProgramsListId),
+      bottleId: bottleProgramsListId,
+      onFound: (bottle) => _jsonSuccess(<String, Object?>{
+        'bottlePrograms': <String, Object?>{
+          'bottleId': bottle.id,
+          'programs': context.bottleProgramRepository
+              .listPrograms(bottle)
+              .map((program) => program.toJson())
+              .toList(growable: false),
+        },
+      }),
     );
-    if (failure != null) {
-      return failure;
-    }
-    final bottle = bottleResult.getOrElse((_) => null);
-    if (bottle == null) {
-      return _bottleNotFoundError(bottleProgramsListId);
-    }
-
-    return _jsonSuccess(<String, Object?>{
-      'bottlePrograms': <String, Object?>{
-        'bottleId': bottle.id,
-        'programs': context.bottleProgramRepository
-            .listPrograms(bottle)
-            .map((program) => program.toJson())
-            .toList(growable: false),
-      },
-    });
   }
 
   return null;

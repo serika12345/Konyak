@@ -44,74 +44,67 @@ CliResult _runPinnedProgramLauncherCli({
     return _programRunnerUnavailableError();
   }
 
-  final bottleResult = bottleRepository.findBottle(launcherManifest.bottleId);
-  final failure = bottleResult.fold<CliResult?>(
-    _bottleCatalogFailureJsonResult,
-    (_) => null,
-  );
-  if (failure != null) {
-    return failure;
-  }
-  final bottle = bottleResult.getOrElse((_) => null);
-  if (bottle == null) {
-    return _bottleNotFoundError(launcherManifest.bottleId);
-  }
-
-  final expectedLauncherId = _pinnedProgramLauncherId(
+  return _foundBottleJsonResult(
+    result: bottleRepository.findBottle(launcherManifest.bottleId),
     bottleId: launcherManifest.bottleId,
-    programPath: launcherManifest.programPath,
-  );
-  if (launcherManifest.launcherId != expectedLauncherId ||
-      !_hasPinnedProgram(bottle, launcherManifest.programPath)) {
-    return _jsonError(
-      exitCode: 66,
-      code: 'programNotPinned',
-      message: 'Program is not pinned.',
-      extra: <String, Object?>{'programPath': launcherManifest.programPath},
-    );
-  }
+    onFound: (bottle) {
+      final expectedLauncherId = _pinnedProgramLauncherId(
+        bottleId: launcherManifest.bottleId,
+        programPath: launcherManifest.programPath,
+      );
+      if (launcherManifest.launcherId != expectedLauncherId ||
+          !_hasPinnedProgram(bottle, launcherManifest.programPath)) {
+        return _jsonError(
+          exitCode: 66,
+          code: 'programNotPinned',
+          message: 'Program is not pinned.',
+          extra: <String, Object?>{'programPath': launcherManifest.programPath},
+        );
+      }
 
-  final settingsResult = bottleRepository.readProgramSettings(
-    ProgramSettingsRequest(
-      bottleId: bottle.id,
-      programPath: launcherManifest.programPath,
-    ),
-  );
-  final ProgramSettingsRecord programSettings;
-  switch (settingsResult) {
-    case ProgramSettingsRead(:final settings):
-      programSettings = settings;
-    case ProgramSettingsReadMissingBottle():
-      programSettings = ProgramSettingsRecord();
-    case ProgramSettingsReadFailed(:final message):
-      return _bottleRepositoryFailureJsonResult(message);
-  }
-  final programRunRequest = programRunPlanner.plan(
-    bottle: bottle,
-    programPath: launcherManifest.programPath,
-    programSettings: programSettings,
-  );
-  if (programRunRequest == null) {
-    return _jsonError(
-      exitCode: 65,
-      code: 'unsupportedProgramType',
-      message: 'Program type is not supported.',
-      extra: <String, Object?>{'programPath': launcherManifest.programPath},
-    );
-  }
+      final settingsResult = bottleRepository.readProgramSettings(
+        ProgramSettingsRequest(
+          bottleId: bottle.id,
+          programPath: launcherManifest.programPath,
+        ),
+      );
+      final ProgramSettingsRecord programSettings;
+      switch (settingsResult) {
+        case ProgramSettingsRead(:final settings):
+          programSettings = settings;
+        case ProgramSettingsReadMissingBottle():
+          programSettings = ProgramSettingsRecord();
+        case ProgramSettingsReadFailed(:final message):
+          return _bottleRepositoryFailureJsonResult(message);
+      }
+      final programRunRequest = programRunPlanner.plan(
+        bottle: bottle,
+        programPath: launcherManifest.programPath,
+        programSettings: programSettings,
+      );
+      if (programRunRequest == null) {
+        return _jsonError(
+          exitCode: 65,
+          code: 'unsupportedProgramType',
+          message: 'Program type is not supported.',
+          extra: <String, Object?>{'programPath': launcherManifest.programPath},
+        );
+      }
 
-  final runResult = programRunner.run(programRunRequest);
+      final runResult = programRunner.run(programRunRequest);
 
-  return switch (runResult) {
-    ProgramRunCompleted(:final processExitCode) => _programRunJsonResult(
-      request: programRunRequest,
-      processExitCode: processExitCode,
-    ),
-    ProgramRunFailed(:final message) => _programRunFailedJsonResult(
-      request: programRunRequest,
-      message: message,
-    ),
-  };
+      return switch (runResult) {
+        ProgramRunCompleted(:final processExitCode) => _programRunJsonResult(
+          request: programRunRequest,
+          processExitCode: processExitCode,
+        ),
+        ProgramRunFailed(:final message) => _programRunFailedJsonResult(
+          request: programRunRequest,
+          message: message,
+        ),
+      };
+    },
+  );
 }
 
 CliResult _programSettingsReadJsonResult({

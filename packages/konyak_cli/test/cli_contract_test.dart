@@ -4,6 +4,7 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
+import 'package:fpdart/fpdart.dart';
 import 'package:konyak_cli/konyak_cli.dart';
 import 'package:test/test.dart';
 
@@ -89,6 +90,21 @@ List<ProgramRunResult> _recordingProgramResults({
 
 T _expectIo<T>(IoResult<T> result) {
   return result.fold((message) => throw TestFailure(message), (value) => value);
+}
+
+BottleRecord _expectFound(IoResult<Option<BottleRecord>> result) {
+  return _expectIo(result).match(
+    () => throw TestFailure('Expected bottle to exist.'),
+    (bottle) => bottle,
+  );
+}
+
+void _expectMissing(IoResult<Option<BottleRecord>> result) {
+  _expectIo(result).match(
+    () {},
+    (bottle) =>
+        throw TestFailure('Expected bottle to be missing: ${bottle.id}'),
+  );
 }
 
 final class RecordingBottlePrefixInitializer

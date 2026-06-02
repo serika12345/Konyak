@@ -3,7 +3,7 @@ part of '../konyak_cli.dart';
 abstract interface class BottleCatalog {
   IoResult<List<BottleRecord>> listBottles();
 
-  IoResult<BottleRecord?> findBottle(String id);
+  IoResult<Option<BottleRecord>> findBottle(String id);
 }
 
 abstract interface class AppSettingsRepository {

@@ -2,13 +2,20 @@ part of '../konyak_cli.dart';
 
 class BottleRecord {
   BottleRecord({
-    required this.id,
-    required this.name,
-    required this.path,
-    required this.windowsVersion,
+    required String id,
+    required String name,
+    required String path,
+    required String windowsVersion,
     this.runtimeSettings = const BottleRuntimeSettings(),
     List<PinnedProgramRecord> pinnedPrograms = const <PinnedProgramRecord>[],
-  }) : pinnedPrograms = List.unmodifiable(pinnedPrograms);
+  }) : id = _requiredNonBlankDomainString(id, 'id'),
+       name = _requiredNonBlankDomainString(name, 'name'),
+       path = _requiredNonBlankDomainString(path, 'path'),
+       windowsVersion = _requiredNonBlankDomainString(
+         windowsVersion,
+         'windowsVersion',
+       ),
+       pinnedPrograms = List.unmodifiable(pinnedPrograms);
 
   final String id;
   final String name;
@@ -59,14 +66,18 @@ class BottleRecord {
       return null;
     }
 
-    return BottleRecord(
-      id: id,
-      name: name,
-      path: path,
-      windowsVersion: windowsVersion,
-      runtimeSettings: runtimeSettings,
-      pinnedPrograms: _parsePinnedPrograms(value['pinnedPrograms']),
-    );
+    try {
+      return BottleRecord(
+        id: id,
+        name: name,
+        path: path,
+        windowsVersion: windowsVersion,
+        runtimeSettings: runtimeSettings,
+        pinnedPrograms: _parsePinnedPrograms(value['pinnedPrograms']),
+      );
+    } on ArgumentError {
+      return null;
+    }
   }
 
   Map<String, Object?> toJson() {
@@ -109,23 +120,27 @@ class BottleRecord {
 }
 
 class PinnedProgramRecord {
-  const PinnedProgramRecord({
-    required this.name,
-    required this.path,
+  PinnedProgramRecord({
+    required String name,
+    required String path,
     this.removable = false,
-    this.iconPath,
-  });
+    Option<String> iconPath = const Option.none(),
+  }) : name = _requiredNonBlankDomainString(name, 'name'),
+       path = _requiredNonBlankDomainString(path, 'path'),
+       iconPath = iconPath.map(
+         (value) => _requiredNonBlankDomainString(value, 'iconPath'),
+       );
 
   final String name;
   final String path;
   final bool removable;
-  final String? iconPath;
+  final Option<String> iconPath;
 
   PinnedProgramRecord copyWith({
     String? name,
     String? path,
     bool? removable,
-    String? iconPath,
+    Option<String>? iconPath,
   }) {
     return PinnedProgramRecord(
       name: name ?? this.name,
@@ -140,7 +155,10 @@ class PinnedProgramRecord {
       'name': name,
       'path': path,
       'removable': removable,
-      if (iconPath != null) 'iconPath': iconPath,
+      ...iconPath.match(
+        () => const <String, Object?>{},
+        (value) => <String, Object?>{'iconPath': value},
+      ),
     };
   }
 
@@ -155,4 +173,11 @@ class PinnedProgramRecord {
 
   @override
   int get hashCode => Object.hash(name, path, removable, iconPath);
+}
+
+String _requiredNonBlankDomainString(String value, String fieldName) {
+  if (value.trim().isEmpty) {
+    throw ArgumentError.value(value, fieldName, 'must not be blank');
+  }
+  return value;
 }

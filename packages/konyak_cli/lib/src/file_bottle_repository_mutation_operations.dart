@@ -4,12 +4,12 @@ class _FileBottleRepositoryMutationOperations {
   const _FileBottleRepositoryMutationOperations({
     required this.dataHome,
     required this.bottleDirectory,
-    required IoResult<BottleRecord?> Function(String id) findBottle,
+    required IoResult<Option<BottleRecord>> Function(String id) findBottle,
   }) : _findBottle = findBottle;
 
   final String dataHome;
   final String bottleDirectory;
-  final IoResult<BottleRecord?> Function(String id) _findBottle;
+  final IoResult<Option<BottleRecord>> Function(String id) _findBottle;
 
   BottleCreateResult createBottle(BottleCreateRequest request) {
     final bottle = _bottleFromCreateRequest(
@@ -45,23 +45,23 @@ class _FileBottleRepositoryMutationOperations {
     if (failure != null) {
       return failure;
     }
-    final bottle = bottleResult.getOrElse((_) => null);
-    if (bottle == null) {
-      return BottleDeleteMissing(id);
-    }
+    return bottleResult.getOrElse((_) => const Option.none()).match(
+      () => BottleDeleteMissing(id),
+      (bottle) {
+        final deleteResult = _ioResult(() {
+          _deleteFileBottleDirectoryIfPresent(bottle.path);
+        });
+        final deleteFailure = deleteResult.fold<BottleDeleteResult?>(
+          BottleDeleteFailed.new,
+          (_) => null,
+        );
+        if (deleteFailure != null) {
+          return deleteFailure;
+        }
 
-    final deleteResult = _ioResult(() {
-      _deleteFileBottleDirectoryIfPresent(bottle.path);
-    });
-    final deleteFailure = deleteResult.fold<BottleDeleteResult?>(
-      BottleDeleteFailed.new,
-      (_) => null,
+        return BottleDeleted(bottle);
+      },
     );
-    if (deleteFailure != null) {
-      return deleteFailure;
-    }
-
-    return BottleDeleted(bottle);
   }
 
   BottleRenameResult renameBottle(BottleRenameRequest request) {
@@ -73,34 +73,38 @@ class _FileBottleRepositoryMutationOperations {
     if (readFailure != null) {
       return readFailure;
     }
-    final bottle = bottleResult.getOrElse((_) => null);
-    if (bottle == null) {
-      return BottleRenameMissing(request.bottleId);
-    }
+    return bottleResult.getOrElse((_) => const Option.none()).match(
+      () => BottleRenameMissing(request.bottleId),
+      (bottle) {
+        final renamed = _renamedFileBottle(
+          bottle: bottle,
+          name: request.name,
+          dataHome: dataHome,
+          bottleDirectory: bottleDirectory,
+        );
+        if (renamed.id != bottle.id &&
+            _fileBottleDirectoryExists(renamed.path)) {
+          return BottleRenameConflict(renamed.id);
+        }
 
-    final renamed = _renamedFileBottle(
-      bottle: bottle,
-      name: request.name,
-      dataHome: dataHome,
-      bottleDirectory: bottleDirectory,
+        final writeResult = _ioResult(() {
+          _moveFileBottleDirectoryIfChanged(
+            from: bottle.path,
+            to: renamed.path,
+          );
+          _writeBottleMetadata(renamed);
+        });
+        final failure = writeResult.fold<BottleRenameResult?>(
+          BottleRenameFailed.new,
+          (_) => null,
+        );
+        if (failure != null) {
+          return failure;
+        }
+
+        return BottleRenamed(renamed);
+      },
     );
-    if (renamed.id != bottle.id && _fileBottleDirectoryExists(renamed.path)) {
-      return BottleRenameConflict(renamed.id);
-    }
-
-    final writeResult = _ioResult(() {
-      _moveFileBottleDirectoryIfChanged(from: bottle.path, to: renamed.path);
-      _writeBottleMetadata(renamed);
-    });
-    final failure = writeResult.fold<BottleRenameResult?>(
-      BottleRenameFailed.new,
-      (_) => null,
-    );
-    if (failure != null) {
-      return failure;
-    }
-
-    return BottleRenamed(renamed);
   }
 
   BottleMoveResult moveBottle(BottleMoveRequest request) {
@@ -112,33 +116,36 @@ class _FileBottleRepositoryMutationOperations {
     if (readFailure != null) {
       return readFailure;
     }
-    final bottle = bottleResult.getOrElse((_) => null);
-    if (bottle == null) {
-      return BottleMoveMissing(request.bottleId);
-    }
+    return bottleResult.getOrElse((_) => const Option.none()).match(
+      () => BottleMoveMissing(request.bottleId),
+      (bottle) {
+        final destinationPath = request.path;
+        if (_normalizeFilesystemPath(destinationPath) !=
+                _normalizeFilesystemPath(bottle.path) &&
+            _fileBottleDirectoryExists(destinationPath)) {
+          return BottleMoveConflict(destinationPath);
+        }
 
-    final destinationPath = request.path;
-    if (_normalizeFilesystemPath(destinationPath) !=
-            _normalizeFilesystemPath(bottle.path) &&
-        _fileBottleDirectoryExists(destinationPath)) {
-      return BottleMoveConflict(destinationPath);
-    }
+        final moved = bottle.copyWith(path: destinationPath);
 
-    final moved = bottle.copyWith(path: destinationPath);
+        final writeResult = _ioResult(() {
+          _moveFileBottleDirectoryIfChanged(
+            from: bottle.path,
+            to: destinationPath,
+          );
+          _writeBottleMetadata(moved);
+        });
+        final failure = writeResult.fold<BottleMoveResult?>(
+          BottleMoveFailed.new,
+          (_) => null,
+        );
+        if (failure != null) {
+          return failure;
+        }
 
-    final writeResult = _ioResult(() {
-      _moveFileBottleDirectoryIfChanged(from: bottle.path, to: destinationPath);
-      _writeBottleMetadata(moved);
-    });
-    final failure = writeResult.fold<BottleMoveResult?>(
-      BottleMoveFailed.new,
-      (_) => null,
+        return BottleMoved(moved);
+      },
     );
-    if (failure != null) {
-      return failure;
-    }
-
-    return BottleMoved(moved);
   }
 
   BottleUpdateResult setWindowsVersion(WindowsVersionUpdateRequest request) {
@@ -150,25 +157,25 @@ class _FileBottleRepositoryMutationOperations {
     if (readFailure != null) {
       return readFailure;
     }
-    final bottle = bottleResult.getOrElse((_) => null);
-    if (bottle == null) {
-      return BottleUpdateMissing(request.bottleId);
-    }
+    return bottleResult.getOrElse((_) => const Option.none()).match(
+      () => BottleUpdateMissing(request.bottleId),
+      (bottle) {
+        final updated = bottle.copyWith(windowsVersion: request.windowsVersion);
 
-    final updated = bottle.copyWith(windowsVersion: request.windowsVersion);
+        final writeResult = _ioResult(() {
+          _writeBottleMetadata(updated);
+        });
+        final failure = writeResult.fold<BottleUpdateResult?>(
+          BottleUpdateFailed.new,
+          (_) => null,
+        );
+        if (failure != null) {
+          return failure;
+        }
 
-    final writeResult = _ioResult(() {
-      _writeBottleMetadata(updated);
-    });
-    final failure = writeResult.fold<BottleUpdateResult?>(
-      BottleUpdateFailed.new,
-      (_) => null,
+        return BottleUpdated(updated);
+      },
     );
-    if (failure != null) {
-      return failure;
-    }
-
-    return BottleUpdated(updated);
   }
 
   BottleUpdateResult setRuntimeSettings(RuntimeSettingsUpdateRequest request) {
@@ -180,24 +187,26 @@ class _FileBottleRepositoryMutationOperations {
     if (readFailure != null) {
       return readFailure;
     }
-    final bottle = bottleResult.getOrElse((_) => null);
-    if (bottle == null) {
-      return BottleUpdateMissing(request.bottleId);
-    }
+    return bottleResult.getOrElse((_) => const Option.none()).match(
+      () => BottleUpdateMissing(request.bottleId),
+      (bottle) {
+        final updated = bottle.copyWith(
+          runtimeSettings: request.runtimeSettings,
+        );
 
-    final updated = bottle.copyWith(runtimeSettings: request.runtimeSettings);
+        final writeResult = _ioResult(() {
+          _writeBottleMetadata(updated);
+        });
+        final failure = writeResult.fold<BottleUpdateResult?>(
+          BottleUpdateFailed.new,
+          (_) => null,
+        );
+        if (failure != null) {
+          return failure;
+        }
 
-    final writeResult = _ioResult(() {
-      _writeBottleMetadata(updated);
-    });
-    final failure = writeResult.fold<BottleUpdateResult?>(
-      BottleUpdateFailed.new,
-      (_) => null,
+        return BottleUpdated(updated);
+      },
     );
-    if (failure != null) {
-      return failure;
-    }
-
-    return BottleUpdated(updated);
   }
 }

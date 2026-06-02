@@ -31,15 +31,17 @@ class _FileBottleRepositoryReadOperations {
     });
   }
 
-  IoResult<BottleRecord?> findBottle(String id) {
+  IoResult<Option<BottleRecord>> findBottle(String id) {
     if (!_fileBottleMetadataExists(bottleDirectory: bottleDirectory, id: id)) {
-      return const Right<String, BottleRecord?>(null);
+      return const Right<String, Option<BottleRecord>>(Option.none());
     }
 
     return _ioResult(
-      () => _bottleWithPinnedProgramIcons(
-        _readBottleMetadata(_fileBottlePath(bottleDirectory, id)),
-        programMetadataExtractor: _programMetadataExtractor,
+      () => Option.of(
+        _bottleWithPinnedProgramIcons(
+          _readBottleMetadata(_fileBottlePath(bottleDirectory, id)),
+          programMetadataExtractor: _programMetadataExtractor,
+        ),
       ),
     );
   }

@@ -1803,13 +1803,13 @@ corefonts                Microsoft Core Fonts
       expect(
         launcher,
         contains(
-          'Exec=env "WINEPREFIX=${_expectIo(repository.findBottle('steam'))!.path}" wine "$programPath"',
+          'Exec=env "WINEPREFIX=${_expectFound(repository.findBottle('steam')).path}" wine "$programPath"',
         ),
       );
       expect(
         launcher,
         contains(
-          'Icon=${_expectIo(repository.findBottle('steam'))!.path}/cache/icons/',
+          'Icon=${_expectFound(repository.findBottle('steam')).path}/cache/icons/',
         ),
       );
     },

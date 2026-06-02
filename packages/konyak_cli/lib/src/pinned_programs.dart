@@ -30,7 +30,7 @@ BottleRecord _bottleWithPinnedProgram(
       PinnedProgramRecord(
         name: request.name,
         path: request.programPath,
-        iconPath: metadata?.iconPath,
+        iconPath: Option.fromNullable(metadata?.iconPath),
       ),
     ],
   );
@@ -43,8 +43,7 @@ BottleRecord _bottleWithPinnedProgramIcons(
   var changed = false;
   final pinnedPrograms = bottle.pinnedPrograms
       .map((program) {
-        final existingIconPath = program.iconPath;
-        if (existingIconPath != null && existingIconPath.trim().isNotEmpty) {
+        if (program.iconPath.isSome()) {
           return program;
         }
 
@@ -55,8 +54,8 @@ BottleRecord _bottleWithPinnedProgramIcons(
             programPath: program.path,
           ),
         );
-        final iconPath = metadata?.iconPath;
-        if (iconPath == null || iconPath.trim().isEmpty) {
+        final iconPath = Option.fromNullable(metadata?.iconPath);
+        if (iconPath.isNone()) {
           return program;
         }
 

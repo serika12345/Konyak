@@ -45,6 +45,17 @@ CliResult _bottleCatalogFailureJsonResult(String message) {
   return _bottleRepositoryFailureJsonResult(message);
 }
 
+CliResult _foundBottleJsonResult({
+  required IoResult<Option<BottleRecord>> result,
+  required String bottleId,
+  required CliResult Function(BottleRecord bottle) onFound,
+}) {
+  return result.fold(
+    _bottleCatalogFailureJsonResult,
+    (bottle) => bottle.match(() => _bottleNotFoundError(bottleId), onFound),
+  );
+}
+
 CliResult? _applyRuntimeSettingsRegistryUpdates({
   required BottleRecord bottle,
   required BottleRuntimeSettings runtimeSettings,

@@ -4,7 +4,7 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:args/args.dart';
+import 'package:args/args.dart' hide Option;
 import 'package:crypto/crypto.dart';
 import 'package:fpdart/fpdart.dart';
 

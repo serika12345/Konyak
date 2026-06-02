@@ -55,7 +55,7 @@ void _synchronizeMacosPinnedProgramLaunchers({
           bundlePath: bundlePath,
           launcherCommand: launcherCommand,
           displayName: displayName,
-          iconPath: program.iconPath,
+          iconPath: program.iconPath.toNullable(),
           manifest: _PinnedProgramLauncherManifest(
             launcherId: launcherId,
             bottleId: bottle.id,

@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:fpdart/fpdart.dart';
 import 'package:konyak_cli/konyak_cli.dart';
 import 'package:test/test.dart';
 
@@ -7,10 +8,17 @@ T _expectIo<T>(IoResult<T> result) {
   return result.fold((message) => throw TestFailure(message), (value) => value);
 }
 
+BottleRecord _expectFound(IoResult<Option<BottleRecord>> result) {
+  return _expectIo(result).match(
+    () => throw TestFailure('Expected bottle to exist.'),
+    (bottle) => bottle,
+  );
+}
+
 void main() {
   test('bottle records expose immutable pinned program snapshots', () {
     final pinnedPrograms = <PinnedProgramRecord>[
-      const PinnedProgramRecord(name: 'Steam', path: '/steam.exe'),
+      PinnedProgramRecord(name: 'Steam', path: '/steam.exe'),
     ];
     final bottle = BottleRecord(
       id: 'steam',
@@ -24,10 +32,69 @@ void main() {
     expect(bottle.pinnedPrograms, hasLength(1));
     expect(
       () => bottle.pinnedPrograms.add(
-        const PinnedProgramRecord(name: 'Other', path: '/other.exe'),
+        PinnedProgramRecord(name: 'Other', path: '/other.exe'),
       ),
       throwsUnsupportedError,
     );
+  });
+
+  test('bottle records reject blank required fields', () {
+    BottleRecord validBottle() {
+      return BottleRecord(
+        id: 'steam',
+        name: 'Steam',
+        path: '/bottles/steam',
+        windowsVersion: 'win10',
+      );
+    }
+
+    expect(
+      () => validBottle().copyWith(id: ' '),
+      throwsA(isA<ArgumentError>()),
+    );
+    expect(
+      () => validBottle().copyWith(name: ' '),
+      throwsA(isA<ArgumentError>()),
+    );
+    expect(
+      () => validBottle().copyWith(path: ' '),
+      throwsA(isA<ArgumentError>()),
+    );
+    expect(
+      () => validBottle().copyWith(windowsVersion: ' '),
+      throwsA(isA<ArgumentError>()),
+    );
+  });
+
+  test('pinned program records reject blank required fields', () {
+    expect(
+      () => PinnedProgramRecord(name: ' ', path: '/steam.exe'),
+      throwsA(isA<ArgumentError>()),
+    );
+    expect(
+      () => PinnedProgramRecord(name: 'Steam', path: ' '),
+      throwsA(isA<ArgumentError>()),
+    );
+    expect(
+      () => PinnedProgramRecord(
+        name: 'Steam',
+        path: '/steam.exe',
+        iconPath: Option.of(' '),
+      ),
+      throwsA(isA<ArgumentError>()),
+    );
+  });
+
+  test('pinned program records model absent icons with Option', () {
+    final withoutIcon = PinnedProgramRecord(name: 'Steam', path: '/steam.exe');
+    final withIcon = withoutIcon.copyWith(iconPath: Option.of('/steam.icns'));
+    final clearedIcon = withIcon.copyWith(iconPath: const Option.none());
+
+    expect(withoutIcon.iconPath.isNone(), isTrue);
+    expect(withIcon.iconPath.toNullable(), '/steam.icns');
+    expect(clearedIcon.iconPath.isNone(), isTrue);
+    expect(withIcon.toJson(), containsPair('iconPath', '/steam.icns'));
+    expect(clearedIcon.toJson(), isNot(contains('iconPath')));
   });
 
   test('program settings expose immutable environment snapshots', () {
@@ -105,7 +172,7 @@ void main() {
     bottles.clear();
 
     expect(_expectIo(bottleCatalog.listBottles()), hasLength(1));
-    expect(_expectIo(bottleCatalog.findBottle('steam')), isNotNull);
+    expect(_expectFound(bottleCatalog.findBottle('steam')), isNotNull);
     expect(
       _expectIo(bottleCatalog.listBottles()).clear,
       throwsUnsupportedError,

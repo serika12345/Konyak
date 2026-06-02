@@ -84,14 +84,18 @@ List<PinnedProgramRecord> _parsePinnedPrograms(Object? value) {
       return const <PinnedProgramRecord>[];
     }
 
-    programs.add(
-      PinnedProgramRecord(
-        name: name,
-        path: path,
-        removable: removable is bool && removable,
-        iconPath: iconPath is String ? iconPath : null,
-      ),
-    );
+    try {
+      programs.add(
+        PinnedProgramRecord(
+          name: name,
+          path: path,
+          removable: removable is bool && removable,
+          iconPath: Option.fromNullable(iconPath is String ? iconPath : null),
+        ),
+      );
+    } on ArgumentError {
+      return const <PinnedProgramRecord>[];
+    }
   }
 
   return List.unmodifiable(programs);

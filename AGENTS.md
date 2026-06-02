@@ -98,6 +98,8 @@ before the implementation when practical.
 - CLI I/O implementations must live under `packages/konyak_cli/lib/src/io`.
 - I/O and routinely fallible business operations must return explicit
   Result/Either values or sealed result variants.
+- Expected absence in CLI/domain logic must use Option rather than nullable
+  domain values.
 - Complete-constructor invariant violations may throw; ordinary I/O failure
   must not be represented by business-logic exceptions.
 - fpdart is limited to CLI/domain code. Flutter UI must consume explicit app or
