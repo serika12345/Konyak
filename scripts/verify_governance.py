@@ -148,6 +148,7 @@ def require_result_boundary_rules() -> None:
     )
     for expected in [
         "final Option<ProgramMetadataRecord> metadata;",
+        "final Option<String> hostPath;",
         "Option<ProgramMetadataRecord> extract({",
         "final Option<String> architecture;",
         "final Option<String> fileDescription;",
@@ -169,6 +170,10 @@ def require_result_boundary_rules() -> None:
     require_not_contains(
         "packages/konyak_cli/lib/src/program_catalog_models.dart",
         "ProgramMetadataRecord? extract",
+    )
+    require_not_contains(
+        "packages/konyak_cli/lib/src/program_catalog_models.dart",
+        "final String? hostPath;",
     )
 
     result_wrapped_repository_operation_files = [

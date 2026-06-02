@@ -116,14 +116,14 @@ class WineProcessRecord {
     required this.bottleId,
     required this.processId,
     required this.executable,
-    this.hostPath,
+    this.hostPath = const Option.none(),
     this.metadata = const Option.none(),
   });
 
   final String bottleId;
   final String processId;
   final String executable;
-  final String? hostPath;
+  final Option<String> hostPath;
   final Option<ProgramMetadataRecord> metadata;
 
   Map<String, Object?> toJson() {
@@ -131,7 +131,7 @@ class WineProcessRecord {
       'bottleId': bottleId,
       'processId': processId,
       'executable': executable,
-      if (hostPath != null) 'hostPath': hostPath,
+      ..._metadataJsonField('hostPath', hostPath),
       ...metadata.match(
         () => const <String, Object?>{},
         (processMetadata) => <String, Object?>{

@@ -151,7 +151,7 @@ CliResult _listWineProcessesJsonResult({
                   bottleId: bottle.id,
                   processId: process.processId,
                   executable: process.executable,
-                  hostPath: hostPath,
+                  hostPath: Option.fromNullable(hostPath),
                   metadata: metadata,
                 );
               }),

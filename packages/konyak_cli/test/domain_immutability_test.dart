@@ -142,8 +142,10 @@ void main() {
 
     expect(program.metadata.isNone(), isTrue);
     expect(process.metadata.isNone(), isTrue);
+    expect(process.hostPath.isNone(), isTrue);
     expect(program.toJson(), isNot(contains('metadata')));
     expect(process.toJson(), isNot(contains('metadata')));
+    expect(process.toJson(), isNot(contains('hostPath')));
   });
 
   test('program settings expose immutable environment snapshots', () {
