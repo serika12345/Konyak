@@ -187,11 +187,11 @@ String _pinnedProgramLauncherId({
       .substring(0, 16);
 }
 
-void _writeMacosPinnedProgramLauncher({
+_MacosPinnedProgramLauncherBundlePlan _macosPinnedProgramLauncherBundlePlan({
   required String bundlePath,
   required _MacosPinnedProgramLauncherCommand launcherCommand,
   required String displayName,
-  required String? iconPath,
+  required String? iconFileName,
   required _PinnedProgramLauncherManifest manifest,
 }) {
   final contentsPath = _joinPath(bundlePath, const ['Contents']);
@@ -204,31 +204,16 @@ void _writeMacosPinnedProgramLauncher({
     _macosPinnedLauncherManifestFileName,
   ]);
 
-  Directory(macosPath).createSync(recursive: true);
-  Directory(resourcesPath).createSync(recursive: true);
-  final iconFileName = _writeMacosPinnedProgramLauncherIcon(
-    resourcesPath: resourcesPath,
-    iconPath: iconPath,
-  );
-  File(_joinPath(contentsPath, const ['Info.plist'])).writeAsStringSync(
-    _macosPinnedProgramInfoPlist(
+  return _MacosPinnedProgramLauncherBundlePlan(
+    infoPlistPath: _joinPath(contentsPath, const ['Info.plist']),
+    manifestPath: manifestPath,
+    executablePath: executablePath,
+    infoPlist: _macosPinnedProgramInfoPlist(
       manifest: manifest,
       displayName: displayName,
       iconFileName: iconFileName,
     ),
+    manifestJson: jsonEncode(manifest.toJson()),
+    launcherScript: _macosPinnedProgramLauncherScript(launcherCommand),
   );
-  File(manifestPath).writeAsStringSync(jsonEncode(manifest.toJson()));
-  File(
-    executablePath,
-  ).writeAsStringSync(_macosPinnedProgramLauncherScript(launcherCommand));
-  final executableChmodResult = Process.runSync('chmod', <String>[
-    '755',
-    executablePath,
-  ], runInShell: false);
-  if (executableChmodResult.exitCode != 0) {
-    throw FileSystemException(
-      'Unable to mark launcher executable.',
-      executablePath,
-    );
-  }
 }

@@ -32,6 +32,7 @@ part 'src/storage_paths.dart';
 part 'src/repository_storage_io.dart';
 part 'src/macos_pinned_launchers.dart';
 part 'src/macos_pinned_launcher_cleanup.dart';
+part 'src/macos_pinned_launcher_bundle_io.dart';
 part 'src/macos_pinned_launcher_icons.dart';
 part 'src/macos_pinned_launcher_manifest_io.dart';
 part 'src/macos_pinned_launcher_manifests.dart';
