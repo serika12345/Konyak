@@ -32,34 +32,6 @@ String? _nonEmptyEnvironmentValue(Map<String, String> environment, String key) {
   return value;
 }
 
-String? _runtimeProfileEnvironmentValue(
-  Map<String, String> environment, {
-  required String developmentKey,
-  required String releaseKey,
-}) {
-  if (_isDevelopmentRuntimeProfile(environment)) {
-    return _nonEmptyEnvironmentValue(environment, developmentKey);
-  }
-
-  return _nonEmptyEnvironmentValue(environment, releaseKey);
-}
-
-String _runtimeDistributionKind(
-  Map<String, String> environment,
-  String defaultKind,
-) {
-  if (_isDevelopmentRuntimeProfile(environment)) {
-    return 'development';
-  }
-
-  return defaultKind;
-}
-
-bool _isDevelopmentRuntimeProfile(Map<String, String> environment) {
-  return _nonEmptyEnvironmentValue(environment, 'KONYAK_RUNTIME_PROFILE') ==
-      'development';
-}
-
 Map<String, Object?>? _objectMap(Object? value) {
   if (value is Map<String, dynamic>) {
     return value.cast<String, Object?>();
@@ -260,4 +232,17 @@ String _joinPath(String root, Iterable<String> components) {
   }
 
   return path;
+}
+
+String? _fileNameFromUrl(String url) {
+  final parsed = Uri.tryParse(url);
+  final segments = parsed?.pathSegments;
+  final candidate = segments == null || segments.isEmpty
+      ? null
+      : segments.last.trim();
+  if (candidate == null || candidate.isEmpty) {
+    return null;
+  }
+
+  return candidate.replaceAll(RegExp(r'[^A-Za-z0-9._+-]'), '_');
 }

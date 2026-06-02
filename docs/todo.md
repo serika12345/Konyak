@@ -309,13 +309,13 @@ task changes scope.
       `BottleRuntimeSettings`, not on incidental command count unless command
       count is the public contract.
     - Verify with bottle configuration command tests plus `just cli-test`.
-  - [ ] Split large pure parser/helper buckets only after the higher-risk I/O
+  - [x] Split large pure parser/helper buckets only after the higher-risk I/O
     boundaries are stable.
     - [x] `runtime_release_metadata_parsers.dart`: separate release asset parsing
       from source-manifest metadata parsing.
     - [x] `cli_program_parsers.dart`: separate Start Menu shortcut parsing, PE
       metadata conversion, and JSON response conversion.
-    - [ ] `common_helpers.dart` and `platform_paths.dart`: keep only generic,
+    - [x] `common_helpers.dart` and `platform_paths.dart`: keep only generic,
       dependency-free helpers; move platform-specific helpers next to their
       platform services.
     - Treat these as mechanical behavior-preserving moves with analyzer and
