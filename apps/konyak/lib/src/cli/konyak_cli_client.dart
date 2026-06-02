@@ -15,6 +15,7 @@ import 'runtime_install_contract.dart';
 import 'runtime_list_contract.dart';
 
 part 'konyak_cli_process_runner.dart';
+part 'konyak_cli_launch_config.dart';
 part 'konyak_cli_client_factory.dart';
 part 'konyak_cli_bottle_payload_parsers.dart';
 part 'konyak_cli_program_payload_parsers.dart';
@@ -29,6 +30,7 @@ part 'konyak_cli_settings_result_types.dart';
 part 'konyak_cli_update_result_types.dart';
 part 'konyak_cli_wine_process_result_types.dart';
 part 'konyak_cli_winetricks_result_types.dart';
+part 'konyak_cli_failure_messages.dart';
 part 'konyak_cli_result_helpers.dart';
 part 'konyak_cli_read_commands.dart';
 part 'konyak_cli_runtime_commands.dart';
