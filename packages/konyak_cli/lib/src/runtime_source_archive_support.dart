@@ -6,39 +6,36 @@ _RuntimeStackSourceArchiveBundleResult _resolveRuntimeStackSourceArchiveBundle({
   required Directory tempDirectory,
   required RuntimeInstallProgressSink? progressSink,
 }) {
-  if (manifest.runtimeId != platformSpec.runtimeId ||
-      manifest.stackId != platformSpec.stackId) {
-    return const _RuntimeStackSourceArchiveBundleFailed(
-      'Runtime stack source manifest targets an unsupported runtime.',
-    );
+  final planResult = _runtimeStackSourceArchivePlan(
+    manifest: manifest,
+    platformSpec: platformSpec,
+    tempDirectoryPath: tempDirectory.path,
+  );
+  switch (planResult) {
+    case _RuntimeStackSourceArchivePlanResolved(:final plan):
+      return _resolveRuntimeStackSourceArchiveBundleFromPlan(
+        plan: plan,
+        progressSink: progressSink,
+      );
+    case _RuntimeStackSourceArchivePlanFailed(:final message):
+      return _RuntimeStackSourceArchiveBundleFailed(message);
   }
+}
 
-  final wineComponent = manifest.componentById('wine');
-  if (wineComponent == null) {
-    return const _RuntimeStackSourceArchiveBundleFailed(
-      'Runtime stack source manifest does not contain a Wine component.',
-    );
-  }
-
-  final archivePaths = <String, String>{};
-  final componentCount = manifest.components.length;
-  for (final component in manifest.components) {
-    final fileName =
-        _fileNameFromUrl(component.archiveUrl) ?? '${component.id}.tar.xz';
-    final archivePath = _joinPath(tempDirectory.path, [
-      '${archivePaths.length}-$fileName',
-    ]);
-    final componentIndex = archivePaths.length;
-    final startFraction = 0.05 + (componentIndex / componentCount) * 0.55;
-    final endFraction = 0.05 + ((componentIndex + 1) / componentCount) * 0.55;
+_RuntimeStackSourceArchiveBundleResult
+_resolveRuntimeStackSourceArchiveBundleFromPlan({
+  required _RuntimeStackSourceArchivePlan plan,
+  required RuntimeInstallProgressSink? progressSink,
+}) {
+  for (final componentPlan in plan.components) {
     final downloadFailure = _downloadRuntimeStackSourceArchive(
-      source: component.archiveUrl,
-      targetPath: archivePath,
+      source: componentPlan.component.archiveUrl,
+      targetPath: componentPlan.archivePath,
       progressSink: progressSink,
       stage: 'downloading',
-      message: 'Downloading ${component.id}...',
-      startFraction: startFraction,
-      endFraction: endFraction,
+      message: componentPlan.downloadingMessage,
+      startFraction: componentPlan.startFraction,
+      endFraction: componentPlan.endFraction,
     );
     if (downloadFailure != null) {
       return _RuntimeStackSourceArchiveBundleFailed(downloadFailure);
@@ -47,40 +44,21 @@ _RuntimeStackSourceArchiveBundleResult _resolveRuntimeStackSourceArchiveBundle({
     _emitRuntimeInstallProgress(
       progressSink,
       stage: 'verifying',
-      message: 'Verifying ${component.id}...',
-      fraction: endFraction,
+      message: componentPlan.verifyingMessage,
+      fraction: componentPlan.endFraction,
     );
-    final actualSha256 = _sha256HexDigest(File(archivePath));
-    if (actualSha256.toLowerCase() != component.sha256.toLowerCase()) {
+    final actualSha256 = _sha256HexDigest(File(componentPlan.archivePath));
+    if (actualSha256.toLowerCase() !=
+        componentPlan.component.sha256.toLowerCase()) {
       return _RuntimeStackSourceArchiveBundleFailed(
-        'Runtime stack component `${component.id}` checksum mismatch: '
-        'expected ${component.sha256}, got $actualSha256.',
+        'Runtime stack component `${componentPlan.component.id}` checksum '
+        'mismatch: expected ${componentPlan.component.sha256}, '
+        'got $actualSha256.',
       );
     }
-
-    archivePaths[component.id] = archivePath;
   }
 
-  final wineArchivePath = archivePaths[wineComponent.id];
-  if (wineArchivePath == null) {
-    return const _RuntimeStackSourceArchiveBundleFailed(
-      'Runtime stack source manifest did not resolve a Wine archive.',
-    );
-  }
-
-  return _RuntimeStackSourceArchiveBundleResolved(
-    _RuntimeStackSourceArchiveBundle(
-      wineArchivePath: wineArchivePath,
-      componentArchivePaths: <String>[
-        for (final component in manifest.components)
-          if (component.id != wineComponent.id) archivePaths[component.id]!,
-      ],
-      componentVersions: <String, String>{
-        for (final component in manifest.components)
-          component.id: component.version,
-      },
-    ),
-  );
+  return _RuntimeStackSourceArchiveBundleResolved(plan.toBundle());
 }
 
 Future<_RuntimeStackSourceArchiveBundleResult>
@@ -90,39 +68,36 @@ _resolveRuntimeStackSourceArchiveBundleStreaming({
   required Directory tempDirectory,
   required RuntimeInstallProgressSink? progressSink,
 }) async {
-  if (manifest.runtimeId != platformSpec.runtimeId ||
-      manifest.stackId != platformSpec.stackId) {
-    return const _RuntimeStackSourceArchiveBundleFailed(
-      'Runtime stack source manifest targets an unsupported runtime.',
-    );
+  final planResult = _runtimeStackSourceArchivePlan(
+    manifest: manifest,
+    platformSpec: platformSpec,
+    tempDirectoryPath: tempDirectory.path,
+  );
+  switch (planResult) {
+    case _RuntimeStackSourceArchivePlanResolved(:final plan):
+      return _resolveRuntimeStackSourceArchiveBundleFromPlanStreaming(
+        plan: plan,
+        progressSink: progressSink,
+      );
+    case _RuntimeStackSourceArchivePlanFailed(:final message):
+      return _RuntimeStackSourceArchiveBundleFailed(message);
   }
+}
 
-  final wineComponent = manifest.componentById('wine');
-  if (wineComponent == null) {
-    return const _RuntimeStackSourceArchiveBundleFailed(
-      'Runtime stack source manifest does not contain a Wine component.',
-    );
-  }
-
-  final archivePaths = <String, String>{};
-  final componentCount = manifest.components.length;
-  for (final component in manifest.components) {
-    final fileName =
-        _fileNameFromUrl(component.archiveUrl) ?? '${component.id}.tar.xz';
-    final archivePath = _joinPath(tempDirectory.path, [
-      '${archivePaths.length}-$fileName',
-    ]);
-    final componentIndex = archivePaths.length;
-    final startFraction = 0.05 + (componentIndex / componentCount) * 0.55;
-    final endFraction = 0.05 + ((componentIndex + 1) / componentCount) * 0.55;
+Future<_RuntimeStackSourceArchiveBundleResult>
+_resolveRuntimeStackSourceArchiveBundleFromPlanStreaming({
+  required _RuntimeStackSourceArchivePlan plan,
+  required RuntimeInstallProgressSink? progressSink,
+}) async {
+  for (final componentPlan in plan.components) {
     final downloadFailure = await _downloadRuntimeStackSourceArchiveStreaming(
-      source: component.archiveUrl,
-      targetPath: archivePath,
+      source: componentPlan.component.archiveUrl,
+      targetPath: componentPlan.archivePath,
       progressSink: progressSink,
       stage: 'downloading',
-      message: 'Downloading ${component.id}...',
-      startFraction: startFraction,
-      endFraction: endFraction,
+      message: componentPlan.downloadingMessage,
+      startFraction: componentPlan.startFraction,
+      endFraction: componentPlan.endFraction,
     );
     if (downloadFailure != null) {
       return _RuntimeStackSourceArchiveBundleFailed(downloadFailure);
@@ -131,40 +106,21 @@ _resolveRuntimeStackSourceArchiveBundleStreaming({
     _emitRuntimeInstallProgress(
       progressSink,
       stage: 'verifying',
-      message: 'Verifying ${component.id}...',
-      fraction: endFraction,
+      message: componentPlan.verifyingMessage,
+      fraction: componentPlan.endFraction,
     );
-    final actualSha256 = _sha256HexDigest(File(archivePath));
-    if (actualSha256.toLowerCase() != component.sha256.toLowerCase()) {
+    final actualSha256 = _sha256HexDigest(File(componentPlan.archivePath));
+    if (actualSha256.toLowerCase() !=
+        componentPlan.component.sha256.toLowerCase()) {
       return _RuntimeStackSourceArchiveBundleFailed(
-        'Runtime stack component `${component.id}` checksum mismatch: '
-        'expected ${component.sha256}, got $actualSha256.',
+        'Runtime stack component `${componentPlan.component.id}` checksum '
+        'mismatch: expected ${componentPlan.component.sha256}, '
+        'got $actualSha256.',
       );
     }
-
-    archivePaths[component.id] = archivePath;
   }
 
-  final wineArchivePath = archivePaths[wineComponent.id];
-  if (wineArchivePath == null) {
-    return const _RuntimeStackSourceArchiveBundleFailed(
-      'Runtime stack source manifest did not resolve a Wine archive.',
-    );
-  }
-
-  return _RuntimeStackSourceArchiveBundleResolved(
-    _RuntimeStackSourceArchiveBundle(
-      wineArchivePath: wineArchivePath,
-      componentArchivePaths: <String>[
-        for (final component in manifest.components)
-          if (component.id != wineComponent.id) archivePaths[component.id]!,
-      ],
-      componentVersions: <String, String>{
-        for (final component in manifest.components)
-          component.id: component.version,
-      },
-    ),
-  );
+  return _RuntimeStackSourceArchiveBundleResolved(plan.toBundle());
 }
 
 String? _downloadRuntimeStackSourceArchive({

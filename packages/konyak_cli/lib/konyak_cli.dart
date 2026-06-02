@@ -83,6 +83,7 @@ part 'src/linux_wine_install_operations.dart';
 part 'src/runtime_platform_support.dart';
 part 'src/runtime_platform_records.dart';
 part 'src/runtime_source_manifest_support.dart';
+part 'src/runtime_source_archive_planning.dart';
 part 'src/runtime_source_archive_support.dart';
 part 'src/runtime_archive_install_support.dart';
 part 'src/runtime_gptk_support.dart';
