@@ -75,9 +75,9 @@ class DartIoMacosWineRuntimeValidator implements RuntimeValidator {
     final loaderResult = executableProbe.run(
       executable: executablePath,
       arguments: const ['--version'],
-      environment: <String, String>{
+      environment: ProgramRunEnvironment(<String, String>{
         'DYLD_LIBRARY_PATH': _joinPath(runtimeRoot, const ['lib']),
-      },
+      }),
       workingDirectory: _dirname(executablePath),
     );
     final loaderCheck = RuntimeValidationCheck(

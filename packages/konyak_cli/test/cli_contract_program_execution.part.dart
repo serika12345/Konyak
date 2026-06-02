@@ -288,7 +288,7 @@ void defineProgramExecutionContractTests() {
       bottleRepository: repository,
       programRunPlanner: ProgramRunPlanner(
         hostPlatform: KonyakHostPlatform.macos,
-        environment: {'HOME': '/Users/user'},
+        environment: HostEnvironment({'HOME': '/Users/user'}),
       ),
       programRunner: runner,
     );
@@ -391,7 +391,7 @@ void defineProgramExecutionContractTests() {
       bottleRepository: repository,
       programRunPlanner: ProgramRunPlanner(
         hostPlatform: KonyakHostPlatform.macos,
-        environment: {'HOME': '/Users/user'},
+        environment: HostEnvironment({'HOME': '/Users/user'}),
       ),
       programRunner: runner,
     );
@@ -474,10 +474,10 @@ void defineProgramExecutionContractTests() {
       bottleRepository: repository,
       programRunPlanner: ProgramRunPlanner(
         hostPlatform: KonyakHostPlatform.linux,
-        environment: const {
+        environment: HostEnvironment(const {
           'HOME': '/home/user',
           'KONYAK_LINUX_WINE_HOME': '/runtime/linux-wine',
-        },
+        }),
       ),
       programRunner: runner,
     );
@@ -546,10 +546,10 @@ void defineProgramExecutionContractTests() {
       bottleRepository: repository,
       programRunPlanner: ProgramRunPlanner(
         hostPlatform: KonyakHostPlatform.linux,
-        environment: const {
+        environment: HostEnvironment(const {
           'HOME': '/home/user',
           'KONYAK_LINUX_WINE_HOME': '/runtime/linux-wine',
-        },
+        }),
       ),
       programRunner: runner,
     );
@@ -597,7 +597,7 @@ void defineProgramExecutionContractTests() {
       bottleRepository: repository,
       programRunPlanner: ProgramRunPlanner(
         hostPlatform: KonyakHostPlatform.macos,
-        environment: {'HOME': '/Users/user'},
+        environment: HostEnvironment({'HOME': '/Users/user'}),
       ),
       programRunner: runner,
     );
@@ -649,7 +649,7 @@ void defineProgramExecutionContractTests() {
     );
     final request = ProgramRunPlanner(
       hostPlatform: KonyakHostPlatform.macos,
-      environment: const {'HOME': '/Users/user'},
+      environment: HostEnvironment(const {'HOME': '/Users/user'}),
     ).planPrefixInitialization(bottle: bottle);
 
     expect(
@@ -697,7 +697,7 @@ void defineProgramExecutionContractTests() {
       bottleRepository: repository,
       programRunPlanner: ProgramRunPlanner(
         hostPlatform: KonyakHostPlatform.macos,
-        environment: {'HOME': '/Users/user'},
+        environment: HostEnvironment({'HOME': '/Users/user'}),
       ),
       programRunner: runner,
     );
@@ -752,11 +752,11 @@ void defineProgramExecutionContractTests() {
       bottleRepository: repository,
       programRunPlanner: ProgramRunPlanner(
         hostPlatform: KonyakHostPlatform.linux,
-        environment: {
+        environment: HostEnvironment({
           'HOME': '/home/user',
           'KONYAK_LINUX_WINE_HOME': '/runtime',
           'KONYAK_LINUX_WINE_LIBRARY_PATH': '/runtime-host-libs',
-        },
+        }),
       ),
       programRunner: runner,
     );
@@ -820,13 +820,13 @@ void defineProgramExecutionContractTests() {
 
     final request = ProgramRunPlanner(
       hostPlatform: KonyakHostPlatform.linux,
-      environment: const {
+      environment: HostEnvironment(const {
         'HOME': '/home/user',
         'PATH': '/usr/bin:/bin',
         'LD_LIBRARY_PATH': '/host/lib',
         'KONYAK_LINUX_WINE_HOME': '/opt/konyak/runtime/linux-wine',
         'KONYAK_LINUX_WINE_LIBRARY_PATH': '/opt/konyak/runtime-host-libs',
-      },
+      }),
     ).plan(bottle: bottle, programPath: 'C:/Program Files/Steam/steam.exe');
 
     expect(request.isSome(), isTrue);
@@ -882,7 +882,7 @@ void defineProgramExecutionContractTests() {
       bottleRepository: repository,
       programRunPlanner: ProgramRunPlanner(
         hostPlatform: KonyakHostPlatform.macos,
-        environment: {'HOME': '/Users/user'},
+        environment: HostEnvironment({'HOME': '/Users/user'}),
       ),
       programRunner: runner,
       winetricksScriptInstaller: RecordingWinetricksScriptInstaller(
@@ -1151,7 +1151,7 @@ corefonts                Microsoft Core Fonts
       bottleRepository: repository,
       programRunPlanner: ProgramRunPlanner(
         hostPlatform: KonyakHostPlatform.macos,
-        environment: {'HOME': '/Users/user'},
+        environment: HostEnvironment({'HOME': '/Users/user'}),
       ),
       programRunner: runner,
       winetricksScriptInstaller: RecordingWinetricksScriptInstaller(
@@ -1201,7 +1201,7 @@ corefonts                Microsoft Core Fonts
       bottleRepository: repository,
       programRunPlanner: ProgramRunPlanner(
         hostPlatform: KonyakHostPlatform.macos,
-        environment: {'HOME': '/Users/user'},
+        environment: HostEnvironment({'HOME': '/Users/user'}),
       ),
       programRunner: runner,
       winetricksScriptInstaller: RecordingWinetricksScriptInstaller(
@@ -1245,7 +1245,7 @@ corefonts                Microsoft Core Fonts
       bottleRepository: repository,
       programRunPlanner: ProgramRunPlanner(
         hostPlatform: KonyakHostPlatform.macos,
-        environment: {'HOME': '/Users/user'},
+        environment: HostEnvironment({'HOME': '/Users/user'}),
       ),
       programRunner: runner,
     );
@@ -1285,7 +1285,7 @@ corefonts                Microsoft Core Fonts
       bottleRepository: repository,
       programRunPlanner: ProgramRunPlanner(
         hostPlatform: KonyakHostPlatform.macos,
-        environment: {'HOME': '/Users/user'},
+        environment: HostEnvironment({'HOME': '/Users/user'}),
       ),
       programRunner: runner,
     );
@@ -1810,10 +1810,10 @@ corefonts                Microsoft Core Fonts
         bottleRepository: repository,
         programRunPlanner: ProgramRunPlanner(
           hostPlatform: KonyakHostPlatform.linux,
-          environment: {
+          environment: HostEnvironment({
             'HOME': tempDirectory.path,
             'XDG_DATA_HOME': xdgDataHome,
-          },
+          }),
         ),
         programRunner: runner,
       );

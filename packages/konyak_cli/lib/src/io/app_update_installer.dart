@@ -2,23 +2,22 @@ part of '../../konyak_cli.dart';
 
 class DartIoAppUpdateInstaller implements AppUpdateInstaller {
   DartIoAppUpdateInstaller({
-    required Map<String, String> environment,
+    required this.environment,
     KonyakHostPlatform? hostPlatform,
     PathOpener pathOpener = const DartIoPathOpener(),
     DetachedProcessStarter detachedProcessStarter =
         const DartIoDetachedProcessStarter(),
-  }) : environment = Map.unmodifiable(environment),
-       hostPlatform = hostPlatform ?? _currentHostPlatform(),
+  }) : hostPlatform = hostPlatform ?? _currentHostPlatform(),
        _pathOpener = pathOpener,
        _detachedProcessStarter = detachedProcessStarter;
 
   factory DartIoAppUpdateInstaller.fromEnvironment(
     Map<String, String> environment,
   ) {
-    return DartIoAppUpdateInstaller(environment: environment);
+    return DartIoAppUpdateInstaller(environment: HostEnvironment(environment));
   }
 
-  final Map<String, String> environment;
+  final HostEnvironment environment;
   final KonyakHostPlatform hostPlatform;
   final PathOpener _pathOpener;
   final DetachedProcessStarter _detachedProcessStarter;

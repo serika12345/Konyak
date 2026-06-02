@@ -54,6 +54,18 @@ final class ProgramRunEnvironment {
     return _variables.unlockView;
   }
 
+  ProgramRunEnvironment merge(ProgramRunEnvironment other) {
+    return ProgramRunEnvironment(
+      _variables.addAll(other._variables).unlockView,
+    );
+  }
+
+  ProgramRunEnvironment add(String name, String value) {
+    return ProgramRunEnvironment(
+      _variables.add(_requiredEnvironmentVariableName(name), value).unlockView,
+    );
+  }
+
   @override
   bool operator ==(Object other) {
     return other is ProgramRunEnvironment && other._variables == _variables;

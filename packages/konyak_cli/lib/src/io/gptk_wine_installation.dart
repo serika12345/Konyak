@@ -53,13 +53,15 @@ class DartIoGptkWineInstaller implements GptkWineInstaller {
   const DartIoGptkWineInstaller({required this.environment});
 
   factory DartIoGptkWineInstaller.current() {
-    return DartIoGptkWineInstaller(environment: Platform.environment);
+    return DartIoGptkWineInstaller(
+      environment: HostEnvironment(Platform.environment),
+    );
   }
 
   static const componentId = 'wine';
   static const componentVersion = 'user-provided-gptk-wine';
 
-  final Map<String, String> environment;
+  final HostEnvironment environment;
 
   @override
   GptkWineInstallResult install(GptkWineInstallRequest request) {
@@ -81,8 +83,7 @@ class DartIoGptkWineInstaller implements GptkWineInstaller {
       return GptkWineInstallFailed(validationFailure);
     }
 
-    final hostEnvironment = HostEnvironment(environment);
-    final runtimeRoot = Directory(_macosWineRuntimeRoot(hostEnvironment));
+    final runtimeRoot = Directory(_macosWineRuntimeRoot(environment));
     final backupRoot = Directory('${runtimeRoot.path}.backup');
     final lockFile = File(_runtimeInstallLockPath(runtimeRoot));
     var lockCreated = false;
@@ -165,7 +166,7 @@ class DartIoGptkWineInstaller implements GptkWineInstaller {
         componentId: componentId,
         sourceDirectory: sourceRoot.path,
         runtimeRoot: runtimeRoot.path,
-        installedExecutablePath: _macosWineExecutable(hostEnvironment),
+        installedExecutablePath: _macosWineExecutable(environment),
       ),
     );
   }

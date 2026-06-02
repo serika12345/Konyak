@@ -15,13 +15,13 @@ enum KonyakHostPlatform { linux, macos }
 class ProgramRunPlanner {
   ProgramRunPlanner({
     required this.hostPlatform,
-    Map<String, String> environment = const <String, String>{},
-  }) : environment = HostEnvironment(environment);
+    this.environment = const HostEnvironment.empty(),
+  });
 
   factory ProgramRunPlanner.current() {
     return ProgramRunPlanner(
       hostPlatform: _currentHostPlatform(),
-      environment: Platform.environment,
+      environment: HostEnvironment(Platform.environment),
     );
   }
 

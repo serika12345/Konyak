@@ -103,7 +103,7 @@ void defineRuntimeInstallContractTests() {
   test('install-macos-wine --json is a no-op when Konyak macOS Wine is installed', () {
     final installer = DartIoMacosWineInstaller(
       hostPlatform: KonyakHostPlatform.macos,
-      environment: const {'HOME': '/Users/user'},
+      environment: HostEnvironment(const {'HOME': '/Users/user'}),
       fileStatusProbe: const StaticFileStatusProbe({
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wine64',
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wineserver',
@@ -174,7 +174,9 @@ void defineRuntimeInstallContractTests() {
       );
       final installer = DartIoMacosWineInstaller(
         hostPlatform: KonyakHostPlatform.macos,
-        environment: {'KONYAK_APPLICATION_SUPPORT': runtimeHome},
+        environment: HostEnvironment({
+          'KONYAK_APPLICATION_SUPPORT': runtimeHome,
+        }),
         fileStatusProbe: StaticFileStatusProbe({existingWine.path}),
       );
 
@@ -194,7 +196,7 @@ void defineRuntimeInstallContractTests() {
     () {
       final installer = DartIoMacosWineInstaller(
         hostPlatform: KonyakHostPlatform.macos,
-        environment: const {'HOME': '/Users/user'},
+        environment: HostEnvironment(const {'HOME': '/Users/user'}),
         fileStatusProbe: const StaticFileStatusProbe({
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wine64',
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wineserver',
@@ -230,7 +232,7 @@ void defineRuntimeInstallContractTests() {
     ]);
     final installer = DartIoMacosWineInstaller(
       hostPlatform: KonyakHostPlatform.macos,
-      environment: {'KONYAK_APPLICATION_SUPPORT': runtimeHome},
+      environment: HostEnvironment({'KONYAK_APPLICATION_SUPPORT': runtimeHome}),
       fileStatusProbe: const StaticFileStatusProbe({}),
     );
 
@@ -304,7 +306,9 @@ void defineRuntimeInstallContractTests() {
       final badArchive = _createBrokenRuntimeArchive(tempDirectory.path);
       final installer = DartIoMacosWineInstaller(
         hostPlatform: KonyakHostPlatform.macos,
-        environment: {'KONYAK_APPLICATION_SUPPORT': runtimeHome},
+        environment: HostEnvironment({
+          'KONYAK_APPLICATION_SUPPORT': runtimeHome,
+        }),
         fileStatusProbe: const StaticFileStatusProbe({}),
       );
 
@@ -352,7 +356,9 @@ void defineRuntimeInstallContractTests() {
       );
       final installer = DartIoMacosWineInstaller(
         hostPlatform: KonyakHostPlatform.macos,
-        environment: {'KONYAK_APPLICATION_SUPPORT': runtimeHome},
+        environment: HostEnvironment({
+          'KONYAK_APPLICATION_SUPPORT': runtimeHome,
+        }),
         fileStatusProbe: const StaticFileStatusProbe({}),
       );
 
@@ -398,7 +404,7 @@ void defineRuntimeInstallContractTests() {
     );
     final installer = DartIoMacosWineInstaller(
       hostPlatform: KonyakHostPlatform.macos,
-      environment: {'KONYAK_APPLICATION_SUPPORT': runtimeHome},
+      environment: HostEnvironment({'KONYAK_APPLICATION_SUPPORT': runtimeHome}),
       fileStatusProbe: const StaticFileStatusProbe({}),
     );
 
@@ -432,7 +438,9 @@ void defineRuntimeInstallContractTests() {
       ]);
       final installer = DartIoMacosWineInstaller(
         hostPlatform: KonyakHostPlatform.macos,
-        environment: {'KONYAK_APPLICATION_SUPPORT': runtimeHome},
+        environment: HostEnvironment({
+          'KONYAK_APPLICATION_SUPPORT': runtimeHome,
+        }),
         fileStatusProbe: const StaticFileStatusProbe({}),
       );
 
@@ -640,7 +648,7 @@ void defineRuntimeInstallContractTests() {
     ]);
     final installer = DartIoMacosWineInstaller(
       hostPlatform: KonyakHostPlatform.macos,
-      environment: {'KONYAK_APPLICATION_SUPPORT': runtimeHome},
+      environment: HostEnvironment({'KONYAK_APPLICATION_SUPPORT': runtimeHome}),
       fileStatusProbe: const StaticFileStatusProbe({}),
     );
 
@@ -859,7 +867,7 @@ void defineRuntimeInstallContractTests() {
     ]);
     final installer = DartIoMacosWineInstaller(
       hostPlatform: KonyakHostPlatform.macos,
-      environment: {'KONYAK_APPLICATION_SUPPORT': runtimeHome},
+      environment: HostEnvironment({'KONYAK_APPLICATION_SUPPORT': runtimeHome}),
       fileStatusProbe: const StaticFileStatusProbe({}),
     );
 
@@ -1081,11 +1089,11 @@ void defineRuntimeInstallContractTests() {
       );
       final installer = DartIoMacosWineInstaller(
         hostPlatform: KonyakHostPlatform.macos,
-        environment: {
+        environment: HostEnvironment({
           'KONYAK_RUNTIME_PROFILE': 'development',
           'KONYAK_APPLICATION_SUPPORT': runtimeHome,
           'KONYAK_DEV_MACOS_WINE_STACK_MANIFEST': sourceManifestPath,
-        },
+        }),
       );
 
       final result = installer.install(MacosWineInstallRequest.fullInstall());
@@ -1151,7 +1159,9 @@ void defineRuntimeInstallContractTests() {
       );
       final installer = DartIoMacosWineInstaller(
         hostPlatform: KonyakHostPlatform.macos,
-        environment: {'KONYAK_APPLICATION_SUPPORT': tempDirectory.path},
+        environment: HostEnvironment({
+          'KONYAK_APPLICATION_SUPPORT': tempDirectory.path,
+        }),
         fileStatusProbe: const StaticFileStatusProbe({}),
       );
 
@@ -1186,7 +1196,9 @@ void defineRuntimeInstallContractTests() {
       ]);
       final installer = DartIoMacosWineInstaller(
         hostPlatform: KonyakHostPlatform.macos,
-        environment: {'KONYAK_APPLICATION_SUPPORT': runtimeHome},
+        environment: HostEnvironment({
+          'KONYAK_APPLICATION_SUPPORT': runtimeHome,
+        }),
         fileStatusProbe: const StaticFileStatusProbe({}),
       );
 
@@ -1362,7 +1374,9 @@ void defineRuntimeInstallContractTests() {
     final result = runCli(
       ['install-gptk-wine', '--from', sourceRoot.path, '--json'],
       gptkWineInstaller: DartIoGptkWineInstaller(
-        environment: {'KONYAK_MACOS_WINE_HOME': runtimeRoot.path},
+        environment: HostEnvironment({
+          'KONYAK_MACOS_WINE_HOME': runtimeRoot.path,
+        }),
       ),
     );
 
@@ -1392,7 +1406,9 @@ void defineRuntimeInstallContractTests() {
     final result = runCli(
       ['install-gptk-wine', '--from', appBundle.path, '--json'],
       gptkWineInstaller: DartIoGptkWineInstaller(
-        environment: {'KONYAK_MACOS_WINE_HOME': runtimeRoot.path},
+        environment: HostEnvironment({
+          'KONYAK_MACOS_WINE_HOME': runtimeRoot.path,
+        }),
       ),
     );
 
@@ -1448,7 +1464,9 @@ void defineRuntimeInstallContractTests() {
     final result = runCli(
       ['install-gptk-wine', '--from', appBundle.path, '--json'],
       gptkWineInstaller: DartIoGptkWineInstaller(
-        environment: {'KONYAK_MACOS_WINE_HOME': runtimeRoot.path},
+        environment: HostEnvironment({
+          'KONYAK_MACOS_WINE_HOME': runtimeRoot.path,
+        }),
       ),
     );
 
@@ -1524,11 +1542,11 @@ void defineRuntimeInstallContractTests() {
     final result = runCli(
       ['install-gptk-wine', '--from', appBundle.path, '--json'],
       gptkWineInstaller: DartIoGptkWineInstaller(
-        environment: {
+        environment: HostEnvironment({
           'KONYAK_MACOS_WINE_HOME': _joinTestPath(tempDirectory.path, const [
             'runtime',
           ]),
-        },
+        }),
       ),
     );
 
@@ -1624,7 +1642,9 @@ void defineRuntimeInstallContractTests() {
     )..writeAsStringSync('not a runtime');
     final installer = DartIoMacosWineInstaller(
       hostPlatform: KonyakHostPlatform.macos,
-      environment: {'KONYAK_APPLICATION_SUPPORT': tempDirectory.path},
+      environment: HostEnvironment({
+        'KONYAK_APPLICATION_SUPPORT': tempDirectory.path,
+      }),
       fileStatusProbe: const StaticFileStatusProbe({}),
     );
 
@@ -1823,7 +1843,7 @@ void defineRuntimeInstallContractTests() {
         ],
         linuxWineInstaller: DartIoLinuxWineInstaller(
           hostPlatform: KonyakHostPlatform.linux,
-          environment: {'XDG_DATA_HOME': tempDirectory.path},
+          environment: HostEnvironment({'XDG_DATA_HOME': tempDirectory.path}),
         ),
         runtimeInstallProgressSink: JsonRuntimeInstallProgressSink(
           progressOutput,
@@ -1868,10 +1888,10 @@ void defineRuntimeInstallContractTests() {
     final archivePath = _createLinuxWineRuntimeArchive(tempDirectory.path);
     final installer = DartIoLinuxWineInstaller(
       hostPlatform: KonyakHostPlatform.linux,
-      environment: {
+      environment: HostEnvironment({
         'HOME': tempDirectory.path,
         'XDG_DATA_HOME': _joinTestPath(tempDirectory.path, const ['xdg-data']),
-      },
+      }),
       fileStatusProbe: const DartIoFileStatusProbe(),
     );
 
@@ -1946,10 +1966,10 @@ void defineRuntimeInstallContractTests() {
     );
     final installer = DartIoLinuxWineInstaller(
       hostPlatform: KonyakHostPlatform.linux,
-      environment: {
+      environment: HostEnvironment({
         'HOME': tempDirectory.path,
         'XDG_DATA_HOME': _joinTestPath(tempDirectory.path, const ['xdg-data']),
-      },
+      }),
       fileStatusProbe: const DartIoFileStatusProbe(),
     );
 
@@ -2030,10 +2050,10 @@ void defineRuntimeInstallContractTests() {
     );
     final installer = DartIoLinuxWineInstaller(
       hostPlatform: KonyakHostPlatform.linux,
-      environment: {
+      environment: HostEnvironment({
         'HOME': tempDirectory.path,
         'XDG_DATA_HOME': _joinTestPath(tempDirectory.path, const ['xdg-data']),
-      },
+      }),
       fileStatusProbe: const DartIoFileStatusProbe(),
     );
 
@@ -2109,7 +2129,7 @@ void defineRuntimeInstallContractTests() {
     );
     final installer = DartIoLinuxWineInstaller(
       hostPlatform: KonyakHostPlatform.linux,
-      environment: {
+      environment: HostEnvironment({
         'HOME': tempDirectory.path,
         'XDG_DATA_HOME': dataHome,
         'KONYAK_RUNTIME_PROFILE': 'development',
@@ -2118,7 +2138,7 @@ void defineRuntimeInstallContractTests() {
           const ['release-runtime-stack-source.json'],
         ),
         'KONYAK_DEV_LINUX_WINE_STACK_MANIFEST': sourceManifestPath,
-      },
+      }),
       fileStatusProbe: const DartIoFileStatusProbe(),
     );
 
@@ -2185,11 +2205,11 @@ void defineRuntimeInstallContractTests() {
     );
     final installer = DartIoLinuxWineInstaller(
       hostPlatform: KonyakHostPlatform.linux,
-      environment: {
+      environment: HostEnvironment({
         'HOME': tempDirectory.path,
         'XDG_DATA_HOME': _joinTestPath(tempDirectory.path, const ['xdg-data']),
         'KONYAK_RUNTIME_STACK_PUBLIC_KEY_PATH': signature.publicKeyPath,
-      },
+      }),
       fileStatusProbe: const DartIoFileStatusProbe(),
     );
 
@@ -2251,11 +2271,11 @@ void defineRuntimeInstallContractTests() {
     ).writeAsStringSync('${File(sourceManifestPath).readAsStringSync()}\n');
     final installer = DartIoLinuxWineInstaller(
       hostPlatform: KonyakHostPlatform.linux,
-      environment: {
+      environment: HostEnvironment({
         'HOME': tempDirectory.path,
         'XDG_DATA_HOME': _joinTestPath(tempDirectory.path, const ['xdg-data']),
         'KONYAK_RUNTIME_STACK_PUBLIC_KEY_PATH': signature.publicKeyPath,
-      },
+      }),
       fileStatusProbe: const DartIoFileStatusProbe(),
     );
 

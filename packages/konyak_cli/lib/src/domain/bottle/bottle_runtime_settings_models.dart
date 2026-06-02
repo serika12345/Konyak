@@ -250,7 +250,7 @@ class BottleRuntimeSettings {
     };
   }
 
-  Map<String, String> macosEnvironmentVariables() {
+  ProgramRunEnvironment macosEnvironment() {
     final environment = <String, String>{};
 
     if (dxvk) {
@@ -296,7 +296,7 @@ class BottleRuntimeSettings {
       environment['D3DM_SUPPORT_DXR'] = '1';
     }
 
-    return Map.unmodifiable(environment);
+    return ProgramRunEnvironment(environment);
   }
 
   @override

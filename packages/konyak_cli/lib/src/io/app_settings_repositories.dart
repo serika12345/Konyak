@@ -6,11 +6,12 @@ BottleRepository defaultBottleRepositoryFromEnvironment(
   AppSettingsRecord? appSettings,
 }) {
   final platform = hostPlatform ?? _currentHostPlatform();
+  final hostEnvironment = HostEnvironment(environment);
   return _defaultFileBottleRepository(
-    dataHome: _resolveBottleDataHome(environment, hostPlatform: platform),
+    dataHome: _resolveBottleDataHome(hostEnvironment, hostPlatform: platform),
     defaultBottlePath:
         appSettings?.defaultBottlePath ??
-        _defaultBottlePath(environment, hostPlatform: platform),
+        _defaultBottlePath(hostEnvironment, hostPlatform: platform),
   );
 }
 
@@ -76,10 +77,11 @@ class FileAppSettingsRepository implements AppSettingsRepository {
     KonyakHostPlatform? hostPlatform,
   }) {
     final platform = hostPlatform ?? _currentHostPlatform();
+    final hostEnvironment = HostEnvironment(environment);
     return FileAppSettingsRepository(
-      configHome: _resolveConfigHome(environment, hostPlatform: platform),
+      configHome: _resolveConfigHome(hostEnvironment, hostPlatform: platform),
       fallbackDefaultBottlePath: _defaultBottlePath(
-        environment,
+        hostEnvironment,
         hostPlatform: platform,
       ),
     );

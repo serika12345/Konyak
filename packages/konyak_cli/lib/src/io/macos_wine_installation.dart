@@ -3,26 +3,25 @@ part of '../../konyak_cli.dart';
 class DartIoMacosWineInstaller implements MacosWineInstaller {
   DartIoMacosWineInstaller({
     required this.hostPlatform,
-    required Map<String, String> environment,
+    required this.environment,
     FileStatusProbe fileStatusProbe = const DartIoFileStatusProbe(),
     RuntimeStackVersionProbe runtimeStackVersionProbe =
         const DartIoRuntimeStackVersionProbe(),
     RuntimePackageInstaller runtimePackageInstaller =
         const DartIoRuntimePackageInstaller(),
-  }) : environment = Map.unmodifiable(environment),
-       _fileStatusProbe = fileStatusProbe,
+  }) : _fileStatusProbe = fileStatusProbe,
        _runtimeStackVersionProbe = runtimeStackVersionProbe,
        _runtimePackageInstaller = runtimePackageInstaller;
 
   factory DartIoMacosWineInstaller.current() {
     return DartIoMacosWineInstaller(
       hostPlatform: _currentHostPlatform(),
-      environment: Platform.environment,
+      environment: HostEnvironment(Platform.environment),
     );
   }
 
   final KonyakHostPlatform hostPlatform;
-  final Map<String, String> environment;
+  final HostEnvironment environment;
   final FileStatusProbe _fileStatusProbe;
   final RuntimeStackVersionProbe _runtimeStackVersionProbe;
   final RuntimePackageInstaller _runtimePackageInstaller;
@@ -250,11 +249,10 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
 
 _RuntimeWineInstallPlan _macosWineInstallPlan({
   required KonyakHostPlatform hostPlatform,
-  required Map<String, String> environment,
+  required HostEnvironment environment,
   required MacosWineInstallRequest request,
   required RuntimeRecord currentRuntime,
 }) {
-  final hostEnvironment = HostEnvironment(environment);
   return _runtimeWineInstallPlan(
     hostPlatformSupported: hostPlatform == KonyakHostPlatform.macos,
     unsupportedPlatformMessage:
@@ -263,16 +261,16 @@ _RuntimeWineInstallPlan _macosWineInstallPlan({
     currentRuntime: currentRuntime,
     configuredSourceManifest: _runtimeSourceManifestForPlatform(
       platformSpec: _macosKonyakRuntimePlatformSpec,
-      environment: hostEnvironment,
+      environment: environment,
     ),
     configuredSourceManifestSignature:
         _runtimeSourceManifestSignatureForPlatform(
           platformSpec: _macosKonyakRuntimePlatformSpec,
-          environment: hostEnvironment,
+          environment: environment,
         ),
     defaultArchiveUrl: _runtimeDefaultArchiveUrl(
       platformSpec: _macosKonyakRuntimePlatformSpec,
-      environment: hostEnvironment,
+      environment: environment,
     ),
     defaultArchiveFileName:
         _macosKonyakRuntimePlatformSpec.defaultArchiveFileName,

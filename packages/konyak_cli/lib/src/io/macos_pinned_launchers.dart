@@ -20,12 +20,13 @@ void _synchronizeMacosPinnedProgramLaunchers({
   required Map<String, String> environment,
   required List<BottleRecord> bottles,
 }) {
+  final hostEnvironment = HostEnvironment(environment);
   if (hostPlatform != KonyakHostPlatform.macos) {
     return;
   }
 
-  final launcherHome = _macosPinnedProgramLaunchersHome(environment);
-  final launcherCommand = _macosPinnedProgramLauncherCommand(environment);
+  final launcherHome = _macosPinnedProgramLaunchersHome(hostEnvironment);
+  final launcherCommand = _macosPinnedProgramLauncherCommand(hostEnvironment);
   if (launcherHome == null || launcherCommand == null) {
     return;
   }
@@ -78,27 +79,29 @@ void _synchronizeMacosPinnedProgramLaunchers({
   }
 }
 
-String? _macosPinnedProgramLaunchersHome(Map<String, String> environment) {
-  final override = environment['KONYAK_MACOS_PINNED_LAUNCHERS_HOME'];
-  if (override != null && override.trim().isNotEmpty) {
-    return override.trim();
+String? _macosPinnedProgramLaunchersHome(HostEnvironment environment) {
+  final override = environment.nonEmptyValue(
+    'KONYAK_MACOS_PINNED_LAUNCHERS_HOME',
+  );
+  if (override != null) {
+    return override;
   }
 
-  final home = environment['HOME'];
-  if (home == null || home.trim().isEmpty) {
+  final home = environment.nonEmptyValue('HOME');
+  if (home == null) {
     return null;
   }
 
-  return _joinPath(home.trim(), const ['Applications', 'Konyak']);
+  return _joinPath(home, const ['Applications', 'Konyak']);
 }
 
 _MacosPinnedProgramLauncherCommand? _macosPinnedProgramLauncherCommand(
-  Map<String, String> environment,
+  HostEnvironment environment,
 ) {
-  final developmentExecutable =
-      environment['KONYAK_PINNED_PROGRAM_LAUNCHER_EXECUTABLE'];
-  if (developmentExecutable != null &&
-      developmentExecutable.trim().isNotEmpty) {
+  final developmentExecutable = environment.nonEmptyValue(
+    'KONYAK_PINNED_PROGRAM_LAUNCHER_EXECUTABLE',
+  );
+  if (developmentExecutable != null) {
     final developmentArguments = _macosPinnedProgramLauncherArguments(
       environment['KONYAK_PINNED_PROGRAM_LAUNCHER_ARGUMENTS_JSON'],
     );
@@ -106,22 +109,22 @@ _MacosPinnedProgramLauncherCommand? _macosPinnedProgramLauncherCommand(
       return null;
     }
 
-    final workingDirectory =
-        environment['KONYAK_PINNED_PROGRAM_LAUNCHER_WORKING_DIRECTORY'];
+    final workingDirectory = environment.nonEmptyValue(
+      'KONYAK_PINNED_PROGRAM_LAUNCHER_WORKING_DIRECTORY',
+    );
     return _MacosPinnedProgramLauncherCommand(
-      executable: developmentExecutable.trim(),
+      executable: developmentExecutable,
       arguments: developmentArguments,
-      workingDirectory:
-          workingDirectory == null || workingDirectory.trim().isEmpty
-          ? null
-          : workingDirectory.trim(),
+      workingDirectory: workingDirectory,
     );
   }
 
-  final override = environment['KONYAK_PINNED_PROGRAM_LAUNCHER_CLI'];
-  if (override != null && override.trim().isNotEmpty) {
+  final override = environment.nonEmptyValue(
+    'KONYAK_PINNED_PROGRAM_LAUNCHER_CLI',
+  );
+  if (override != null) {
     return _MacosPinnedProgramLauncherCommand(
-      executable: override.trim(),
+      executable: override,
       arguments: const <String>[],
       workingDirectory: null,
     );

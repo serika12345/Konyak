@@ -19,18 +19,17 @@ class StaticRuntimeCatalog implements RuntimeCatalog {
 class MacosWineRuntimeCatalog implements RuntimeCatalog {
   MacosWineRuntimeCatalog({
     required this.hostPlatform,
-    required Map<String, String> environment,
+    required this.environment,
     FileStatusProbe fileStatusProbe = const DartIoFileStatusProbe(),
     RuntimeStackVersionProbe runtimeStackVersionProbe =
         const DartIoRuntimeStackVersionProbe(),
-  }) : environment = HostEnvironment(environment),
-       _fileStatusProbe = fileStatusProbe,
+  }) : _fileStatusProbe = fileStatusProbe,
        _runtimeStackVersionProbe = runtimeStackVersionProbe;
 
   factory MacosWineRuntimeCatalog.current() {
     return MacosWineRuntimeCatalog(
       hostPlatform: _currentHostPlatform(),
-      environment: Platform.environment,
+      environment: HostEnvironment(Platform.environment),
     );
   }
 
@@ -44,7 +43,7 @@ class MacosWineRuntimeCatalog implements RuntimeCatalog {
     return switch (hostPlatform) {
       KonyakHostPlatform.macos => <RuntimeRecord>[
         _macosWineRuntimeRecord(
-          environment: environment.toMap(),
+          environment: environment,
           fileStatusProbe: _fileStatusProbe,
           runtimeStackVersionProbe: _runtimeStackVersionProbe,
         ),
@@ -57,18 +56,17 @@ class MacosWineRuntimeCatalog implements RuntimeCatalog {
 class KonyakRuntimeCatalog implements RuntimeCatalog {
   KonyakRuntimeCatalog({
     required this.hostPlatform,
-    required Map<String, String> environment,
+    required this.environment,
     FileStatusProbe fileStatusProbe = const DartIoFileStatusProbe(),
     RuntimeStackVersionProbe runtimeStackVersionProbe =
         const DartIoRuntimeStackVersionProbe(),
-  }) : environment = HostEnvironment(environment),
-       _fileStatusProbe = fileStatusProbe,
+  }) : _fileStatusProbe = fileStatusProbe,
        _runtimeStackVersionProbe = runtimeStackVersionProbe;
 
   factory KonyakRuntimeCatalog.current() {
     return KonyakRuntimeCatalog(
       hostPlatform: _currentHostPlatform(),
-      environment: Platform.environment,
+      environment: HostEnvironment(Platform.environment),
     );
   }
 
@@ -82,14 +80,14 @@ class KonyakRuntimeCatalog implements RuntimeCatalog {
     return switch (hostPlatform) {
       KonyakHostPlatform.macos => <RuntimeRecord>[
         _macosWineRuntimeRecord(
-          environment: environment.toMap(),
+          environment: environment,
           fileStatusProbe: _fileStatusProbe,
           runtimeStackVersionProbe: _runtimeStackVersionProbe,
         ),
       ],
       KonyakHostPlatform.linux => <RuntimeRecord>[
         _linuxWineRuntimeRecord(
-          environment: environment.toMap(),
+          environment: environment,
           fileStatusProbe: _fileStatusProbe,
           runtimeStackVersionProbe: _runtimeStackVersionProbe,
         ),

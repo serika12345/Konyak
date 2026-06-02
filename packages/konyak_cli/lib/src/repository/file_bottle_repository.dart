@@ -47,7 +47,7 @@ class FileBottleRepository implements BottleRepository {
        _programOperations = programOperations;
 
   factory FileBottleRepository.fromEnvironment(
-    Map<String, String> environment, {
+    HostEnvironment environment, {
     String? bottleDirectory,
   }) {
     return FileBottleRepository(

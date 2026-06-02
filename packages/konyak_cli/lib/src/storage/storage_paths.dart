@@ -109,19 +109,19 @@ String _bottleIdFromName(String name) {
   return id.endsWith('-') ? id.substring(0, id.length - 1) : id;
 }
 
-String _resolveDataHome(Map<String, String> environment) {
-  final override = environment['KONYAK_DATA_HOME'];
-  if (override != null && override.trim().isNotEmpty) {
+String _resolveDataHome(HostEnvironment environment) {
+  final override = environment.nonEmptyValue('KONYAK_DATA_HOME');
+  if (override != null) {
     return override;
   }
 
-  final xdgDataHome = environment['XDG_DATA_HOME'];
-  if (xdgDataHome != null && xdgDataHome.trim().isNotEmpty) {
+  final xdgDataHome = environment.nonEmptyValue('XDG_DATA_HOME');
+  if (xdgDataHome != null) {
     return _joinPath(xdgDataHome, const ['konyak']);
   }
 
-  final home = environment['HOME'];
-  if (home != null && home.trim().isNotEmpty) {
+  final home = environment.nonEmptyValue('HOME');
+  if (home != null) {
     return _joinPath(home, const ['.local', 'share', 'konyak']);
   }
 
@@ -131,35 +131,33 @@ String _resolveDataHome(Map<String, String> environment) {
 }
 
 String _resolveBottleDataHome(
-  Map<String, String> environment, {
+  HostEnvironment environment, {
   required KonyakHostPlatform hostPlatform,
 }) {
-  final override = environment['KONYAK_DATA_HOME'];
-  if (override != null && override.trim().isNotEmpty) {
+  final override = environment.nonEmptyValue('KONYAK_DATA_HOME');
+  if (override != null) {
     return override;
   }
 
   return switch (hostPlatform) {
-    KonyakHostPlatform.macos => _konyakApplicationSupportFolder(
-      HostEnvironment(environment),
-    ),
+    KonyakHostPlatform.macos => _konyakApplicationSupportFolder(environment),
     KonyakHostPlatform.linux => _resolveDataHome(environment),
   };
 }
 
 String _resolveConfigHome(
-  Map<String, String> environment, {
+  HostEnvironment environment, {
   required KonyakHostPlatform hostPlatform,
 }) {
-  final override = environment['KONYAK_CONFIG_HOME'];
-  if (override != null && override.trim().isNotEmpty) {
+  final override = environment.nonEmptyValue('KONYAK_CONFIG_HOME');
+  if (override != null) {
     return override;
   }
 
   switch (hostPlatform) {
     case KonyakHostPlatform.macos:
-      final home = environment['HOME'];
-      if (home != null && home.trim().isNotEmpty) {
+      final home = environment.nonEmptyValue('HOME');
+      if (home != null) {
         return _joinPath(home, const [
           'Library',
           'Application Support',
@@ -167,13 +165,13 @@ String _resolveConfigHome(
         ]);
       }
     case KonyakHostPlatform.linux:
-      final xdgConfigHome = environment['XDG_CONFIG_HOME'];
-      if (xdgConfigHome != null && xdgConfigHome.trim().isNotEmpty) {
+      final xdgConfigHome = environment.nonEmptyValue('XDG_CONFIG_HOME');
+      if (xdgConfigHome != null) {
         return _joinPath(xdgConfigHome, const ['konyak']);
       }
 
-      final home = environment['HOME'];
-      if (home != null && home.trim().isNotEmpty) {
+      final home = environment.nonEmptyValue('HOME');
+      if (home != null) {
         return _joinPath(home, const ['.config', 'konyak']);
       }
   }
@@ -184,15 +182,15 @@ String _resolveConfigHome(
 }
 
 String _defaultBottlePath(
-  Map<String, String> environment, {
+  HostEnvironment environment, {
   required KonyakHostPlatform hostPlatform,
 }) {
-  final override = environment['KONYAK_DEFAULT_BOTTLE_PATH'];
-  if (override != null && override.trim().isNotEmpty) {
+  final override = environment.nonEmptyValue('KONYAK_DEFAULT_BOTTLE_PATH');
+  if (override != null) {
     return override;
   }
 
-  final dataHome = _nonEmptyEnvironmentValue(environment, 'KONYAK_DATA_HOME');
+  final dataHome = environment.nonEmptyValue('KONYAK_DATA_HOME');
   if (dataHome != null) {
     return _joinPath(dataHome, const ['bottles']);
   }

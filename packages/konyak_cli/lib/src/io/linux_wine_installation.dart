@@ -3,26 +3,25 @@ part of '../../konyak_cli.dart';
 class DartIoLinuxWineInstaller implements LinuxWineInstaller {
   DartIoLinuxWineInstaller({
     required this.hostPlatform,
-    required Map<String, String> environment,
+    required this.environment,
     FileStatusProbe fileStatusProbe = const DartIoFileStatusProbe(),
     RuntimeStackVersionProbe runtimeStackVersionProbe =
         const DartIoRuntimeStackVersionProbe(),
     RuntimePackageInstaller runtimePackageInstaller =
         const DartIoRuntimePackageInstaller(),
-  }) : environment = Map.unmodifiable(environment),
-       _fileStatusProbe = fileStatusProbe,
+  }) : _fileStatusProbe = fileStatusProbe,
        _runtimeStackVersionProbe = runtimeStackVersionProbe,
        _runtimePackageInstaller = runtimePackageInstaller;
 
   factory DartIoLinuxWineInstaller.current() {
     return DartIoLinuxWineInstaller(
       hostPlatform: _currentHostPlatform(),
-      environment: Platform.environment,
+      environment: HostEnvironment(Platform.environment),
     );
   }
 
   final KonyakHostPlatform hostPlatform;
-  final Map<String, String> environment;
+  final HostEnvironment environment;
   final FileStatusProbe _fileStatusProbe;
   final RuntimeStackVersionProbe _runtimeStackVersionProbe;
   final RuntimePackageInstaller _runtimePackageInstaller;
@@ -238,11 +237,10 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
 
 _RuntimeWineInstallPlan _linuxWineInstallPlan({
   required KonyakHostPlatform hostPlatform,
-  required Map<String, String> environment,
+  required HostEnvironment environment,
   required LinuxWineInstallRequest request,
   required RuntimeRecord currentRuntime,
 }) {
-  final hostEnvironment = HostEnvironment(environment);
   return _runtimeWineInstallPlan(
     hostPlatformSupported: hostPlatform == KonyakHostPlatform.linux,
     unsupportedPlatformMessage:
@@ -251,16 +249,16 @@ _RuntimeWineInstallPlan _linuxWineInstallPlan({
     currentRuntime: currentRuntime,
     configuredSourceManifest: _runtimeSourceManifestForPlatform(
       platformSpec: _linuxWineRuntimePlatformSpec,
-      environment: hostEnvironment,
+      environment: environment,
     ),
     configuredSourceManifestSignature:
         _runtimeSourceManifestSignatureForPlatform(
           platformSpec: _linuxWineRuntimePlatformSpec,
-          environment: hostEnvironment,
+          environment: environment,
         ),
     defaultArchiveUrl: _runtimeDefaultArchiveUrl(
       platformSpec: _linuxWineRuntimePlatformSpec,
-      environment: hostEnvironment,
+      environment: environment,
     ),
     defaultArchiveFileName:
         _linuxWineRuntimePlatformSpec.defaultArchiveFileName,

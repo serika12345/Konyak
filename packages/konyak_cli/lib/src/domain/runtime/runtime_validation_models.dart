@@ -146,7 +146,7 @@ abstract interface class RuntimeExecutableProbe {
   RuntimeExecutableProbeResult run({
     required String executable,
     required List<String> arguments,
-    required Map<String, String> environment,
+    required ProgramRunEnvironment environment,
     required String workingDirectory,
   });
 }

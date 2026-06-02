@@ -27,6 +27,7 @@ void _synchronizeLinuxDesktopLauncherForProgramRun({
       request.runnerKind != 'wine') {
     return;
   }
+  final hostEnvironment = HostEnvironment(environment);
 
   final normalizedProgramPath = _externalProgramRunPath(
     bottle: bottle,
@@ -36,7 +37,7 @@ void _synchronizeLinuxDesktopLauncherForProgramRun({
     try {
       _recordExternalProgramLaunch(bottle: bottle, programPath: programPath);
       final launcherPath = _linuxExternalProgramLauncherPath(
-        environment: environment,
+        environment: hostEnvironment,
         bottleId: bottle.id,
         programPath: programPath,
       );
@@ -99,7 +100,7 @@ String? _presentMetadataValue(Option<String> value) {
 }
 
 String _linuxExternalProgramLauncherPath({
-  required Map<String, String> environment,
+  required HostEnvironment environment,
   required String bottleId,
   required String programPath,
 }) {

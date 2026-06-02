@@ -5,21 +5,21 @@ extension _DartIoLinuxWineInstallerOperations on DartIoLinuxWineInstaller {
     required String archivePath,
     required Option<String> archiveSha256,
     Iterable<String> componentArchivePaths = const <String>[],
-    Map<String, String> componentVersions = const <String, String>{},
+    RuntimeComponentVersions componentVersions =
+        const RuntimeComponentVersions.empty(),
     RuntimeInstallProgressSink? progressSink,
   }) {
-    final hostEnvironment = HostEnvironment(environment);
     final installResult = _runtimePackageInstaller.install(
       RuntimePackageInstallRequest(
         runtimeLabel: 'Linux Wine',
         archivePath: archivePath,
         archiveSha256: archiveSha256,
         componentArchivePaths: componentArchivePaths,
-        componentVersions: RuntimeComponentVersions(componentVersions),
-        runtimeRoot: Directory(_linuxWineRuntimeRoot(hostEnvironment)),
+        componentVersions: componentVersions,
+        runtimeRoot: Directory(_linuxWineRuntimeRoot(environment)),
         requiredExecutableRelativePath:
             _linuxWineRuntimePlatformSpec.requiredExecutableRelativePath,
-        expectedExecutablePath: _linuxWineExecutable(hostEnvironment),
+        expectedExecutablePath: _linuxWineExecutable(environment),
         progressSink: progressSink,
       ),
     );
@@ -93,7 +93,7 @@ extension _DartIoLinuxWineInstallerOperations on DartIoLinuxWineInstaller {
             archivePath: bundle.wineArchivePath,
             archiveSha256: const Option.none(),
             componentArchivePaths: bundle.componentArchivePaths,
-            componentVersions: bundle.componentVersions.toMap(),
+            componentVersions: bundle.componentVersions,
             progressSink: progressSink,
           ),
       };
@@ -149,7 +149,7 @@ extension _DartIoLinuxWineInstallerOperations on DartIoLinuxWineInstaller {
             archivePath: bundle.wineArchivePath,
             archiveSha256: const Option.none(),
             componentArchivePaths: bundle.componentArchivePaths,
-            componentVersions: bundle.componentVersions.toMap(),
+            componentVersions: bundle.componentVersions,
             progressSink: progressSink,
           ),
       };
@@ -170,23 +170,11 @@ extension _DartIoLinuxWineInstallerOperations on DartIoLinuxWineInstaller {
       source: source,
       signatureSource: signatureSource,
       publicKeyPath:
-          _nonEmptyEnvironmentValue(
-            environment,
-            'KONYAK_RUNTIME_STACK_PUBLIC_KEY_PATH',
-          ) ??
-          _nonEmptyEnvironmentValue(
-            environment,
-            'KONYAK_LINUX_WINE_STACK_PUBLIC_KEY_PATH',
-          ),
+          environment.nonEmptyValue('KONYAK_RUNTIME_STACK_PUBLIC_KEY_PATH') ??
+          environment.nonEmptyValue('KONYAK_LINUX_WINE_STACK_PUBLIC_KEY_PATH'),
       publicKeyText:
-          _nonEmptyEnvironmentValue(
-            environment,
-            'KONYAK_RUNTIME_STACK_PUBLIC_KEY',
-          ) ??
-          _nonEmptyEnvironmentValue(
-            environment,
-            'KONYAK_LINUX_WINE_STACK_PUBLIC_KEY',
-          ),
+          environment.nonEmptyValue('KONYAK_RUNTIME_STACK_PUBLIC_KEY') ??
+          environment.nonEmptyValue('KONYAK_LINUX_WINE_STACK_PUBLIC_KEY'),
     );
   }
 }

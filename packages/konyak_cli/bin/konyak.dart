@@ -36,7 +36,9 @@ Future<void> main(List<String> arguments) async {
     runtimeUpdateChecker: DartIoRuntimeUpdateChecker(
       runtimeCatalog: runtimeCatalog,
     ),
-    appUpdateChecker: DartIoAppUpdateChecker.fromEnvironment(environment),
+    appUpdateChecker: DartIoAppUpdateChecker.fromEnvironment(
+      HostEnvironment(environment),
+    ),
     appUpdateInstaller: DartIoAppUpdateInstaller.fromEnvironment(environment),
     runtimeValidator: DartIoMacosWineRuntimeValidator(
       runtimeCatalog: runtimeCatalog,

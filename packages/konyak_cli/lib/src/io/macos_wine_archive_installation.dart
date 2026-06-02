@@ -5,22 +5,22 @@ extension _MacosWineArchiveInstallation on DartIoMacosWineInstaller {
     required String archivePath,
     required Option<String> archiveSha256,
     Iterable<String> componentArchivePaths = const <String>[],
-    Map<String, String> componentVersions = const <String, String>{},
+    RuntimeComponentVersions componentVersions =
+        const RuntimeComponentVersions.empty(),
     bool preserveExistingRuntimeFiles = false,
     RuntimeInstallProgressSink? progressSink,
   }) {
-    final hostEnvironment = HostEnvironment(environment);
     final installResult = _runtimePackageInstaller.install(
       RuntimePackageInstallRequest(
         runtimeLabel: 'macOS Wine',
         archivePath: archivePath,
         archiveSha256: archiveSha256,
         componentArchivePaths: componentArchivePaths,
-        componentVersions: RuntimeComponentVersions(componentVersions),
-        runtimeRoot: Directory(_macosWineRuntimeRoot(hostEnvironment)),
+        componentVersions: componentVersions,
+        runtimeRoot: Directory(_macosWineRuntimeRoot(environment)),
         requiredExecutableRelativePath:
             _macosKonyakRuntimePlatformSpec.requiredExecutableRelativePath,
-        expectedExecutablePath: _macosWineExecutable(hostEnvironment),
+        expectedExecutablePath: _macosWineExecutable(environment),
         preserveExistingRuntimeFiles: preserveExistingRuntimeFiles,
         normalizeStagingRoot:
             _macosKonyakRuntimePlatformSpec.layoutNormalization ==
@@ -107,7 +107,7 @@ extension _MacosWineArchiveInstallation on DartIoMacosWineInstaller {
             archivePath: bundle.wineArchivePath,
             archiveSha256: const Option.none(),
             componentArchivePaths: bundle.componentArchivePaths,
-            componentVersions: bundle.componentVersions.toMap(),
+            componentVersions: bundle.componentVersions,
             preserveExistingRuntimeFiles: preserveExistingRuntimeFiles,
             progressSink: progressSink,
           ),
@@ -165,7 +165,7 @@ extension _MacosWineArchiveInstallation on DartIoMacosWineInstaller {
             archivePath: bundle.wineArchivePath,
             archiveSha256: const Option.none(),
             componentArchivePaths: bundle.componentArchivePaths,
-            componentVersions: bundle.componentVersions.toMap(),
+            componentVersions: bundle.componentVersions,
             preserveExistingRuntimeFiles: preserveExistingRuntimeFiles,
             progressSink: progressSink,
           ),
@@ -187,23 +187,11 @@ extension _MacosWineArchiveInstallation on DartIoMacosWineInstaller {
       source: source,
       signatureSource: signatureSource,
       publicKeyPath:
-          _nonEmptyEnvironmentValue(
-            environment,
-            'KONYAK_RUNTIME_STACK_PUBLIC_KEY_PATH',
-          ) ??
-          _nonEmptyEnvironmentValue(
-            environment,
-            'KONYAK_MACOS_WINE_STACK_PUBLIC_KEY_PATH',
-          ),
+          environment.nonEmptyValue('KONYAK_RUNTIME_STACK_PUBLIC_KEY_PATH') ??
+          environment.nonEmptyValue('KONYAK_MACOS_WINE_STACK_PUBLIC_KEY_PATH'),
       publicKeyText:
-          _nonEmptyEnvironmentValue(
-            environment,
-            'KONYAK_RUNTIME_STACK_PUBLIC_KEY',
-          ) ??
-          _nonEmptyEnvironmentValue(
-            environment,
-            'KONYAK_MACOS_WINE_STACK_PUBLIC_KEY',
-          ),
+          environment.nonEmptyValue('KONYAK_RUNTIME_STACK_PUBLIC_KEY') ??
+          environment.nonEmptyValue('KONYAK_MACOS_WINE_STACK_PUBLIC_KEY'),
     );
   }
 }

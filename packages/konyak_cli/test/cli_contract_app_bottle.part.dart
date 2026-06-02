@@ -402,7 +402,9 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       ]),
       programRunPlanner: ProgramRunPlanner(
         hostPlatform: KonyakHostPlatform.macos,
-        environment: const {'KONYAK_MACOS_WINE_ROOT': '/runtime'},
+        environment: HostEnvironment(const {
+          'KONYAK_MACOS_WINE_ROOT': '/runtime',
+        }),
       ),
       programRunner: runner,
     );
@@ -488,7 +490,9 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       bottleRepository: repository,
       programRunPlanner: ProgramRunPlanner(
         hostPlatform: KonyakHostPlatform.macos,
-        environment: const {'KONYAK_MACOS_WINE_ROOT': '/runtime'},
+        environment: HostEnvironment(const {
+          'KONYAK_MACOS_WINE_ROOT': '/runtime',
+        }),
       ),
       programRunner: runner,
     );
@@ -827,7 +831,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       bottleRepository: repository,
       programRunPlanner: ProgramRunPlanner(
         hostPlatform: KonyakHostPlatform.macos,
-        environment: {'KONYAK_MACOS_WINE_HOME': runtimeRoot},
+        environment: HostEnvironment({'KONYAK_MACOS_WINE_HOME': runtimeRoot}),
       ),
     );
 
@@ -895,7 +899,9 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       bottleRepository: repository,
       programRunPlanner: ProgramRunPlanner(
         hostPlatform: KonyakHostPlatform.macos,
-        environment: const {'KONYAK_MACOS_WINE_ROOT': '/runtime'},
+        environment: HostEnvironment(const {
+          'KONYAK_MACOS_WINE_ROOT': '/runtime',
+        }),
       ),
       programRunner: runner,
     );
@@ -1006,7 +1012,9 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       bottleRepository: repository,
       programRunPlanner: ProgramRunPlanner(
         hostPlatform: KonyakHostPlatform.macos,
-        environment: const {'KONYAK_MACOS_WINE_ROOT': '/runtime'},
+        environment: HostEnvironment(const {
+          'KONYAK_MACOS_WINE_ROOT': '/runtime',
+        }),
       ),
       programRunner: runner,
     );
@@ -1061,7 +1069,9 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
         bottleRepository: repository,
         programRunPlanner: ProgramRunPlanner(
           hostPlatform: KonyakHostPlatform.macos,
-          environment: const {'KONYAK_MACOS_WINE_ROOT': '/runtime'},
+          environment: HostEnvironment(const {
+            'KONYAK_MACOS_WINE_ROOT': '/runtime',
+          }),
         ),
         programRunner: runner,
       );

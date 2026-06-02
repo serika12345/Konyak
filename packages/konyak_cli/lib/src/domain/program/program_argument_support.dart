@@ -31,7 +31,7 @@ List<String> _programSettingsArguments(ProgramSettingsRecord settings) {
   return arguments.split(RegExp(r'\s+'));
 }
 
-Map<String, String> _programSettingsEnvironment(
+ProgramRunEnvironment _programSettingsEnvironment(
   ProgramSettingsRecord settings,
 ) {
   final environment = <String, String>{...settings.environment.toMap()};
@@ -39,7 +39,7 @@ Map<String, String> _programSettingsEnvironment(
     environment['LC_ALL'] = settings.locale;
   }
 
-  return environment;
+  return ProgramRunEnvironment(environment);
 }
 
 bool _isSupportedProgramPath(String programPath) {

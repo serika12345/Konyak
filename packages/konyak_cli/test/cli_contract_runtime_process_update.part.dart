@@ -142,7 +142,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
       const ['list-runtimes', '--json'],
       runtimeCatalog: MacosWineRuntimeCatalog(
         hostPlatform: KonyakHostPlatform.macos,
-        environment: const {'HOME': '/Users/user'},
+        environment: HostEnvironment(const {'HOME': '/Users/user'}),
         fileStatusProbe: const StaticFileStatusProbe({
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wine64',
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wineserver',
@@ -309,7 +309,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
       const ['list-runtimes', '--json'],
       runtimeCatalog: MacosWineRuntimeCatalog(
         hostPlatform: KonyakHostPlatform.macos,
-        environment: const {'HOME': '/Users/user'},
+        environment: HostEnvironment(const {'HOME': '/Users/user'}),
         fileStatusProbe: const StaticFileStatusProbe({
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wine64',
         }),
@@ -401,7 +401,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
         const ['list-runtimes', '--json'],
         runtimeCatalog: MacosWineRuntimeCatalog(
           hostPlatform: KonyakHostPlatform.macos,
-          environment: {'KONYAK_MACOS_WINE_HOME': runtimeHome},
+          environment: HostEnvironment({'KONYAK_MACOS_WINE_HOME': runtimeHome}),
         ),
       );
 
@@ -426,7 +426,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
       const ['list-runtimes', '--json'],
       runtimeCatalog: MacosWineRuntimeCatalog(
         hostPlatform: KonyakHostPlatform.linux,
-        environment: const {'HOME': '/home/user'},
+        environment: HostEnvironment(const {'HOME': '/home/user'}),
         fileStatusProbe: const StaticFileStatusProbe({}),
       ),
     );
@@ -442,7 +442,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
       const ['list-runtimes', '--json'],
       runtimeCatalog: KonyakRuntimeCatalog(
         hostPlatform: KonyakHostPlatform.linux,
-        environment: const {
+        environment: HostEnvironment(const {
           'HOME': '/home/user',
           'KONYAK_LINUX_WINE_ARCHIVE_URL':
               'https://example.invalid/linux-wine.tar.xz',
@@ -450,7 +450,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
               'https://example.invalid/releases/latest',
           'KONYAK_LINUX_WINE_STACK_MANIFEST':
               'https://example.invalid/linux-runtime-stack-source.json',
-        },
+        }),
         fileStatusProbe: const StaticFileStatusProbe({
           '/home/user/.local/share/konyak/Runtimes/linux-wine/bin/wine',
           '/home/user/.local/share/konyak/Runtimes/linux-wine/bin/winedbg',
@@ -579,7 +579,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
       const ['list-runtimes', '--json'],
       runtimeCatalog: KonyakRuntimeCatalog(
         hostPlatform: KonyakHostPlatform.linux,
-        environment: const {'HOME': '/home/user'},
+        environment: HostEnvironment(const {'HOME': '/home/user'}),
         fileStatusProbe: const StaticFileStatusProbe({
           '/home/user/.local/share/konyak/Runtimes/linux-wine/bin/wine',
           '/home/user/.local/share/konyak/Runtimes/linux-wine/bin/winedbg',
@@ -627,12 +627,12 @@ void defineRuntimeProcessAndUpdateContractTests() {
       const ['list-runtimes', '--json'],
       runtimeCatalog: KonyakRuntimeCatalog(
         hostPlatform: KonyakHostPlatform.linux,
-        environment: const {
+        environment: HostEnvironment(const {
           'HOME': '/home/user',
           'KONYAK_RUNTIME_PROFILE': 'development',
           'KONYAK_DEV_LINUX_WINE_STACK_MANIFEST':
               'file:///workspace/fixtures/linux-runtime-stack-source.json',
-        },
+        }),
         fileStatusProbe: const StaticFileStatusProbe({
           '/home/user/.local/share/konyak/Runtimes/linux-wine/bin/wine',
           '/home/user/.local/share/konyak/Runtimes/linux-wine/bin/winedbg',
@@ -1633,7 +1633,9 @@ void defineRuntimeProcessAndUpdateContractTests() {
     final updateCache = _joinTestPath(tempDirectory.path, const ['cache']);
     final pathOpener = RecordingPathOpener(result: const PathOpenCompleted());
     final installer = DartIoAppUpdateInstaller(
-      environment: {'KONYAK_APP_UPDATE_CACHE_HOME': updateCache},
+      environment: HostEnvironment({
+        'KONYAK_APP_UPDATE_CACHE_HOME': updateCache,
+      }),
       hostPlatform: KonyakHostPlatform.macos,
       pathOpener: pathOpener,
     );
@@ -1676,12 +1678,12 @@ void defineRuntimeProcessAndUpdateContractTests() {
     )..writeAsStringSync('unsigned app update');
     final pathOpener = RecordingPathOpener(result: const PathOpenCompleted());
     final installer = DartIoAppUpdateInstaller(
-      environment: {
+      environment: HostEnvironment({
         'KONYAK_APP_UPDATE_CACHE_HOME': _joinTestPath(
           tempDirectory.path,
           const ['cache'],
         ),
-      },
+      }),
       hostPlatform: KonyakHostPlatform.macos,
       pathOpener: pathOpener,
     );
@@ -1716,12 +1718,12 @@ void defineRuntimeProcessAndUpdateContractTests() {
     )..writeAsStringSync('tampered app update');
     final pathOpener = RecordingPathOpener(result: const PathOpenCompleted());
     final installer = DartIoAppUpdateInstaller(
-      environment: {
+      environment: HostEnvironment({
         'KONYAK_APP_UPDATE_CACHE_HOME': _joinTestPath(
           tempDirectory.path,
           const ['cache'],
         ),
-      },
+      }),
       hostPlatform: KonyakHostPlatform.macos,
       pathOpener: pathOpener,
     );
@@ -1764,14 +1766,14 @@ void defineRuntimeProcessAndUpdateContractTests() {
       result: const DetachedProcessStartCompleted(),
     );
     final installer = DartIoAppUpdateInstaller(
-      environment: {
+      environment: HostEnvironment({
         'KONYAK_APP_UPDATE_CACHE_HOME': _joinTestPath(
           tempDirectory.path,
           const ['cache'],
         ),
         'KONYAK_APPIMAGE_PATH': currentAppImage.path,
         'KONYAK_APP_PID': '4242',
-      },
+      }),
       hostPlatform: KonyakHostPlatform.linux,
       detachedProcessStarter: detachedProcessStarter,
     );
@@ -1840,7 +1842,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
     );
     final pathOpener = RecordingPathOpener(result: const PathOpenCompleted());
     final installer = DartIoAppUpdateInstaller(
-      environment: {
+      environment: HostEnvironment({
         'KONYAK_APP_UPDATE_CACHE_HOME': _joinTestPath(
           tempDirectory.path,
           const ['cache'],
@@ -1851,7 +1853,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
           'Konyak',
         ]),
         'KONYAK_APP_PID': '5150',
-      },
+      }),
       hostPlatform: KonyakHostPlatform.macos,
       pathOpener: pathOpener,
       detachedProcessStarter: detachedProcessStarter,
@@ -2386,7 +2388,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
       }),
       runtimeCatalog: MacosWineRuntimeCatalog(
         hostPlatform: KonyakHostPlatform.macos,
-        environment: const {'HOME': '/Users/user'},
+        environment: HostEnvironment(const {'HOME': '/Users/user'}),
         fileStatusProbe: const StaticFileStatusProbe({
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wine64',
         }),

@@ -24,12 +24,12 @@ void defineRepositoryAndRunnerContractTests() {
       const ['install-linux-file-associations', '--json'],
       programRunPlanner: ProgramRunPlanner(
         hostPlatform: KonyakHostPlatform.linux,
-        environment: {
+        environment: HostEnvironment({
           'HOME': tempDirectory.path,
           'XDG_DATA_HOME': xdgDataHome,
           'XDG_CONFIG_HOME': xdgConfigHome,
           'KONYAK_APP_EXECUTABLE': appExecutable,
-        },
+        }),
       ),
     );
 

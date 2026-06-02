@@ -38,14 +38,15 @@ _LinuxFileAssociationInstallResult _installLinuxFileAssociations({
   required KonyakHostPlatform hostPlatform,
   required Map<String, String> environment,
 }) {
+  final hostEnvironment = HostEnvironment(environment);
   if (hostPlatform != KonyakHostPlatform.linux &&
-      environment['KONYAK_FORCE_LINUX_FILE_ASSOCIATIONS'] != '1') {
+      hostEnvironment['KONYAK_FORCE_LINUX_FILE_ASSOCIATIONS'] != '1') {
     return const _LinuxFileAssociationInstallFailed(
       'Linux file associations are supported on Linux only.',
     );
   }
 
-  final appExecutable = _linuxFileAssociationAppExecutable(environment);
+  final appExecutable = _linuxFileAssociationAppExecutable(hostEnvironment);
   if (appExecutable == null) {
     return const _LinuxFileAssociationInstallFailed(
       'Unable to resolve the Konyak application executable.',
@@ -53,10 +54,11 @@ _LinuxFileAssociationInstallResult _installLinuxFileAssociations({
   }
 
   try {
-    final desktopEntryPath = _joinPath(_linuxApplicationsHome(environment), [
-      _linuxKonyakDesktopEntryId,
-    ]);
-    final mimeAppsPath = _linuxMimeAppsPath(environment);
+    final desktopEntryPath = _joinPath(
+      _linuxApplicationsHome(hostEnvironment),
+      [_linuxKonyakDesktopEntryId],
+    );
+    final mimeAppsPath = _linuxMimeAppsPath(hostEnvironment);
     _writeLinuxFileAssociationFiles(
       desktopEntryPath: desktopEntryPath,
       desktopEntry: _linuxKonyakDesktopEntry(appExecutable: appExecutable),
@@ -74,14 +76,14 @@ _LinuxFileAssociationInstallResult _installLinuxFileAssociations({
   }
 }
 
-String? _linuxFileAssociationAppExecutable(Map<String, String> environment) {
+String? _linuxFileAssociationAppExecutable(HostEnvironment environment) {
   for (final key in const <String>[
     'KONYAK_APPIMAGE_PATH',
     'KONYAK_APP_EXECUTABLE',
   ]) {
-    final value = environment[key];
-    if (value != null && value.trim().isNotEmpty) {
-      return value.trim();
+    final value = environment.nonEmptyValue(key);
+    if (value != null) {
+      return value;
     }
   }
 
@@ -107,14 +109,14 @@ String _linuxKonyakDesktopEntry({required String appExecutable}) {
   ].join('\n');
 }
 
-String _linuxMimeAppsPath(Map<String, String> environment) {
-  final xdgConfigHome = environment['XDG_CONFIG_HOME'];
-  if (xdgConfigHome != null && xdgConfigHome.trim().isNotEmpty) {
+String _linuxMimeAppsPath(HostEnvironment environment) {
+  final xdgConfigHome = environment.nonEmptyValue('XDG_CONFIG_HOME');
+  if (xdgConfigHome != null) {
     return _joinPath(xdgConfigHome, const ['mimeapps.list']);
   }
 
-  final home = environment['HOME'];
-  if (home != null && home.trim().isNotEmpty) {
+  final home = environment.nonEmptyValue('HOME');
+  if (home != null) {
     return _joinPath(home, const ['.config', 'mimeapps.list']);
   }
 

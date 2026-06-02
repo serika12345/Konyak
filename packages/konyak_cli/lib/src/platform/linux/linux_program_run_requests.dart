@@ -18,14 +18,14 @@ ProgramRunRequest _linuxWineRequest({
     runnerKind: 'wine',
     executable: _linuxWineExecutable(hostEnvironment),
     arguments: arguments,
-    environment: ProgramRunEnvironment(<String, String>{
-      ..._linuxRuntimeEnvironment(hostEnvironment),
-      ..._programSettingsEnvironment(programSettings),
-      ..._linuxWineEnvironmentWithRuntime(
-        bottle: bottle,
-        environment: environment,
-      ),
-    }),
+    environment: _linuxRuntimeEnvironment(hostEnvironment)
+        .merge(_programSettingsEnvironment(programSettings))
+        .merge(
+          _linuxWineEnvironmentWithRuntime(
+            bottle: bottle,
+            environment: environment,
+          ),
+        ),
     logPath: _joinPath(bottle.path, const ['logs', 'latest.log']),
   );
 }
@@ -42,13 +42,12 @@ ProgramRunRequest _linuxWineCommandRequest({
     runnerKind: 'wine',
     executable: _linuxWineExecutable(hostEnvironment),
     arguments: <String>[command],
-    environment: ProgramRunEnvironment(<String, String>{
-      ..._linuxRuntimeEnvironment(hostEnvironment),
-      ..._linuxWineEnvironmentWithRuntime(
+    environment: _linuxRuntimeEnvironment(hostEnvironment).merge(
+      _linuxWineEnvironmentWithRuntime(
         bottle: bottle,
         environment: environment,
       ),
-    }),
+    ),
     logPath: _joinPath(bottle.path, const ['logs', 'latest.log']),
   );
 }
@@ -65,13 +64,12 @@ ProgramRunRequest _linuxRegistryUpdateRequest({
     runnerKind: 'wineRegistry',
     executable: _linuxWineExecutable(hostEnvironment),
     arguments: _registryUpdateArguments(update),
-    environment: ProgramRunEnvironment(<String, String>{
-      ..._linuxRuntimeEnvironment(hostEnvironment),
-      ..._linuxWineEnvironmentWithRuntime(
+    environment: _linuxRuntimeEnvironment(hostEnvironment).merge(
+      _linuxWineEnvironmentWithRuntime(
         bottle: bottle,
         environment: environment,
       ),
-    }),
+    ),
     logPath: _joinPath(bottle.path, const ['logs', 'latest.log']),
   );
 }
@@ -88,13 +86,12 @@ ProgramRunRequest _linuxRegistryQueryRequest({
     runnerKind: 'wineRegistryQuery',
     executable: _linuxWineExecutable(hostEnvironment),
     arguments: _registryQueryArguments(query),
-    environment: ProgramRunEnvironment(<String, String>{
-      ..._linuxRuntimeEnvironment(hostEnvironment),
-      ..._linuxWineEnvironmentWithRuntime(
+    environment: _linuxRuntimeEnvironment(hostEnvironment).merge(
+      _linuxWineEnvironmentWithRuntime(
         bottle: bottle,
         environment: environment,
       ),
-    }),
+    ),
     logPath: _joinPath(bottle.path, const ['logs', 'registry.log']),
   );
 }
@@ -110,13 +107,12 @@ ProgramRunRequest _linuxWinebootRequest({
     runnerKind: 'wineboot',
     executable: _linuxWinebootExecutable(hostEnvironment),
     arguments: const <String>['--init'],
-    environment: ProgramRunEnvironment(<String, String>{
-      ..._linuxRuntimeEnvironment(hostEnvironment),
-      ..._linuxWineEnvironmentWithRuntime(
+    environment: _linuxRuntimeEnvironment(hostEnvironment).merge(
+      _linuxWineEnvironmentWithRuntime(
         bottle: bottle,
         environment: environment,
       ),
-    }),
+    ),
     logPath: _joinPath(bottle.path, const ['logs', 'prefix-init.log']),
   );
 }
@@ -132,10 +128,9 @@ ProgramRunRequest _linuxWineserverKillRequest({
     runnerKind: 'wineserver',
     executable: _linuxWineserverExecutable(hostEnvironment),
     arguments: const <String>['-k'],
-    environment: ProgramRunEnvironment(<String, String>{
-      ..._linuxRuntimeEnvironment(hostEnvironment),
-      ..._linuxWinePrefixEnvironment(bottle),
-    }),
+    environment: _linuxRuntimeEnvironment(
+      hostEnvironment,
+    ).merge(_linuxWinePrefixEnvironment(bottle)),
     logPath: _joinPath(bottle.path, const ['logs', 'wineserver-kill.log']),
   );
 }
@@ -154,10 +149,9 @@ ProgramRunRequest _linuxWinedbgRequest({
     runnerKind: 'winedbg',
     executable: _linuxWinedbgExecutable(hostEnvironment),
     arguments: <String>['--command', command, ...trailingArguments],
-    environment: ProgramRunEnvironment(<String, String>{
-      ..._linuxRuntimeEnvironment(hostEnvironment),
-      ..._linuxWinePrefixEnvironment(bottle),
-    }),
+    environment: _linuxRuntimeEnvironment(
+      hostEnvironment,
+    ).merge(_linuxWinePrefixEnvironment(bottle)),
     logPath: _joinPath(bottle.path, <String>['logs', logName]),
   );
 }

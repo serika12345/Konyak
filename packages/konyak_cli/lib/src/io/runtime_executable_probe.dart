@@ -7,14 +7,14 @@ class DartIoRuntimeExecutableProbe implements RuntimeExecutableProbe {
   RuntimeExecutableProbeResult run({
     required String executable,
     required List<String> arguments,
-    required Map<String, String> environment,
+    required ProgramRunEnvironment environment,
     required String workingDirectory,
   }) {
     try {
       final result = Process.runSync(
         executable,
         arguments,
-        environment: environment,
+        environment: environment.toMap(),
         workingDirectory: workingDirectory,
         runInShell: false,
       );

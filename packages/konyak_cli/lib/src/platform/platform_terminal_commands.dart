@@ -86,10 +86,10 @@ String _macosWineTerminalShellCommand({
     'alias winepath=${_shellQuote('wine64 winepath')}',
   ];
 
-  _macosWineEnvironment(bottle: bottle, environment: environment).forEach((
-    key,
-    value,
-  ) {
+  _macosWineEnvironment(
+    bottle: bottle,
+    environment: environment,
+  ).toMap().forEach((key, value) {
     commands.add('export $key=${_shellQuote(value)}');
   });
 

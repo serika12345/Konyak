@@ -1,17 +1,14 @@
 part of '../../konyak_cli.dart';
 
 RuntimeRecord _macosWineRuntimeRecord({
-  required Map<String, String> environment,
+  required HostEnvironment environment,
   required FileStatusProbe fileStatusProbe,
   required RuntimeStackVersionProbe runtimeStackVersionProbe,
 }) {
   const platformSpec = _macosKonyakRuntimePlatformSpec;
-  final hostEnvironment = HostEnvironment(environment);
-  final applicationSupportPath = _konyakApplicationSupportFolder(
-    hostEnvironment,
-  );
-  final libraryPath = _macosWineRuntimeRoot(hostEnvironment);
-  final executablePath = _macosWineExecutable(hostEnvironment);
+  final applicationSupportPath = _konyakApplicationSupportFolder(environment);
+  final libraryPath = _macosWineRuntimeRoot(environment);
+  final executablePath = _macosWineExecutable(environment);
   final isInstalled = fileStatusProbe.exists(executablePath);
 
   return RuntimeRecord.fromParts(
@@ -24,7 +21,7 @@ RuntimeRecord _macosWineRuntimeRecord({
       isBundled: false,
       isUpdateable: true,
       distributionKind: Option.fromNullable(
-        _runtimeDistributionKind(hostEnvironment, 'bootstrap'),
+        _runtimeDistributionKind(environment, 'bootstrap'),
       ),
       archiveUrl: platformSpec.defaultArchiveUrl,
       versionUrl: Option.fromNullable(macosWineVersionUrl),
@@ -49,22 +46,18 @@ RuntimeRecord _macosWineRuntimeRecord({
 }
 
 RuntimeRecord _linuxWineRuntimeRecord({
-  required Map<String, String> environment,
+  required HostEnvironment environment,
   required FileStatusProbe fileStatusProbe,
   required RuntimeStackVersionProbe runtimeStackVersionProbe,
 }) {
   const platformSpec = _linuxWineRuntimePlatformSpec;
-  final hostEnvironment = HostEnvironment(environment);
-  final runtimeRoot = _linuxWineRuntimeRoot(hostEnvironment);
+  final runtimeRoot = _linuxWineRuntimeRoot(environment);
   final executablePath = _joinPath(runtimeRoot, const ['bin', 'wine']);
   final archiveUrl = _runtimeDefaultArchiveUrl(
     platformSpec: platformSpec,
-    environment: hostEnvironment,
+    environment: environment,
   );
-  final versionUrl = _nonEmptyEnvironmentValue(
-    environment,
-    'KONYAK_LINUX_WINE_VERSION_URL',
-  );
+  final versionUrl = environment.nonEmptyValue('KONYAK_LINUX_WINE_VERSION_URL');
   return RuntimeRecord.fromParts(
     definition: RuntimeDefinition(
       id: platformSpec.runtimeId,
@@ -75,7 +68,7 @@ RuntimeRecord _linuxWineRuntimeRecord({
       isBundled: false,
       isUpdateable: archiveUrl.isSome() || versionUrl != null,
       distributionKind: Option.of(
-        _runtimeDistributionKind(hostEnvironment, 'managed'),
+        _runtimeDistributionKind(environment, 'managed'),
       ),
       archiveUrl: archiveUrl,
       versionUrl: Option.fromNullable(versionUrl),

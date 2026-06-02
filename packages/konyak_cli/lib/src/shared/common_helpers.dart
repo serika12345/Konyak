@@ -23,15 +23,6 @@ String _normalizeFilesystemPath(String path) {
   return path.trim().replaceAll(RegExp(r'/+$'), '');
 }
 
-String? _nonEmptyEnvironmentValue(Map<String, String> environment, String key) {
-  final value = environment[key];
-  if (value == null || value.trim().isEmpty) {
-    return null;
-  }
-
-  return value;
-}
-
 Map<String, Object?>? _objectMap(Object? value) {
   if (value is Map<String, dynamic>) {
     return value.cast<String, Object?>();

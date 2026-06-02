@@ -344,12 +344,12 @@ final class RecordingRuntimeExecutableProbe implements RuntimeExecutableProbe {
   RuntimeExecutableProbeResult run({
     required String executable,
     required List<String> arguments,
-    required Map<String, String> environment,
+    required ProgramRunEnvironment environment,
     required String workingDirectory,
   }) {
     lastExecutable = executable;
     lastArguments = List.unmodifiable(arguments);
-    lastEnvironment = Map.unmodifiable(environment);
+    lastEnvironment = Map.unmodifiable(environment.toMap());
     lastWorkingDirectory = workingDirectory;
 
     return result;

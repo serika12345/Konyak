@@ -10,24 +10,19 @@ class DartIoAppUpdateChecker implements AppUpdateChecker {
     this.releaseMetadataFetcher = const DartIoRuntimeReleaseMetadataFetcher(),
   });
 
-  factory DartIoAppUpdateChecker.fromEnvironment(
-    Map<String, String> environment,
-  ) {
+  factory DartIoAppUpdateChecker.fromEnvironment(HostEnvironment environment) {
     return DartIoAppUpdateChecker(
-      appId:
-          _nonEmptyEnvironmentValue(environment, 'KONYAK_APP_ID') ??
-          konyakAppId,
+      appId: environment.nonEmptyValue('KONYAK_APP_ID') ?? konyakAppId,
       currentVersion:
-          _nonEmptyEnvironmentValue(environment, 'KONYAK_APP_VERSION') ??
-          konyakAppVersion,
+          environment.nonEmptyValue('KONYAK_APP_VERSION') ?? konyakAppVersion,
       versionUrl:
-          _nonEmptyEnvironmentValue(environment, 'KONYAK_APP_VERSION_URL') ??
+          environment.nonEmptyValue('KONYAK_APP_VERSION_URL') ??
           konyakAppVersionUrl,
       archiveUrl: Option.fromNullable(
-        _nonEmptyEnvironmentValue(environment, 'KONYAK_APP_ARCHIVE_URL'),
+        environment.nonEmptyValue('KONYAK_APP_ARCHIVE_URL'),
       ),
       archiveSha256: Option.fromNullable(
-        _nonEmptyEnvironmentValue(environment, 'KONYAK_APP_ARCHIVE_SHA256'),
+        environment.nonEmptyValue('KONYAK_APP_ARCHIVE_SHA256'),
       ),
     );
   }

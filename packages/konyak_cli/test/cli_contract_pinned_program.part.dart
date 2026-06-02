@@ -85,14 +85,14 @@ void definePinnedProgramContractTests() {
       bottleRepository: repository,
       programRunPlanner: ProgramRunPlanner(
         hostPlatform: KonyakHostPlatform.macos,
-        environment: {
+        environment: HostEnvironment({
           'HOME': tempDirectory.path,
           'KONYAK_APP_EXECUTABLE': _joinTestPath(appBundle.path, const [
             'Contents',
             'MacOS',
             'Konyak',
           ]),
-        },
+        }),
       ),
     );
 
@@ -189,14 +189,14 @@ void definePinnedProgramContractTests() {
     ], bottleRepository: repository);
     final planner = ProgramRunPlanner(
       hostPlatform: KonyakHostPlatform.macos,
-      environment: {
+      environment: HostEnvironment({
         'HOME': tempDirectory.path,
         'KONYAK_APP_EXECUTABLE': _joinTestPath(appBundle.path, const [
           'Contents',
           'MacOS',
           'Konyak',
         ]),
-      },
+      }),
     );
 
     runCli(
@@ -271,14 +271,14 @@ void definePinnedProgramContractTests() {
       bottleRepository: repository,
       programRunPlanner: ProgramRunPlanner(
         hostPlatform: KonyakHostPlatform.macos,
-        environment: {
+        environment: HostEnvironment({
           'HOME': tempDirectory.path,
           'KONYAK_PINNED_PROGRAM_LAUNCHER_EXECUTABLE': '/env/flutter/bin/dart',
           'KONYAK_PINNED_PROGRAM_LAUNCHER_ARGUMENTS_JSON':
               '["run","bin/konyak.dart"]',
           'KONYAK_PINNED_PROGRAM_LAUNCHER_WORKING_DIRECTORY':
               '/repo/packages/konyak_cli',
-        },
+        }),
       ),
     );
 
@@ -330,7 +330,7 @@ void definePinnedProgramContractTests() {
       bottleRepository: repository,
       programRunPlanner: ProgramRunPlanner(
         hostPlatform: KonyakHostPlatform.linux,
-        environment: {'HOME': tempDirectory.path},
+        environment: HostEnvironment({'HOME': tempDirectory.path}),
       ),
     );
 
@@ -339,14 +339,14 @@ void definePinnedProgramContractTests() {
       bottleRepository: repository,
       programRunPlanner: ProgramRunPlanner(
         hostPlatform: KonyakHostPlatform.macos,
-        environment: {
+        environment: HostEnvironment({
           'HOME': tempDirectory.path,
           'KONYAK_PINNED_PROGRAM_LAUNCHER_EXECUTABLE': '/env/bin/dart',
           'KONYAK_PINNED_PROGRAM_LAUNCHER_ARGUMENTS_JSON':
               '["run","bin/konyak.dart"]',
           'KONYAK_PINNED_PROGRAM_LAUNCHER_WORKING_DIRECTORY':
               '/repo/packages/konyak_cli',
-        },
+        }),
       ),
     );
 
@@ -381,14 +381,14 @@ void definePinnedProgramContractTests() {
     ], bottleRepository: repository);
     final planner = ProgramRunPlanner(
       hostPlatform: KonyakHostPlatform.macos,
-      environment: {
+      environment: HostEnvironment({
         'HOME': tempDirectory.path,
         'KONYAK_APP_EXECUTABLE': _joinTestPath(appBundle.path, const [
           'Contents',
           'MacOS',
           'Konyak',
         ]),
-      },
+      }),
     );
     runCli(
       const [
@@ -443,14 +443,14 @@ void definePinnedProgramContractTests() {
     ], bottleRepository: repository);
     final planner = ProgramRunPlanner(
       hostPlatform: KonyakHostPlatform.macos,
-      environment: {
+      environment: HostEnvironment({
         'HOME': tempDirectory.path,
         'KONYAK_APP_EXECUTABLE': _joinTestPath(appBundle.path, const [
           'Contents',
           'MacOS',
           'Konyak',
         ]),
-      },
+      }),
     );
     runCli(
       const [

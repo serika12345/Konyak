@@ -32,7 +32,7 @@ String _linuxWineRuntimeRoot(HostEnvironment environment) {
     return override;
   }
 
-  return _joinPath(_resolveDataHome(environment.toMap()), const [
+  return _joinPath(_resolveDataHome(environment), const [
     'Runtimes',
     'linux-wine',
   ]);
@@ -99,13 +99,13 @@ String _linuxWinetricksExecutable(HostEnvironment environment) {
   return 'winetricks';
 }
 
-Map<String, String> _linuxRuntimeEnvironment(HostEnvironment environment) {
+ProgramRunEnvironment _linuxRuntimeEnvironment(HostEnvironment environment) {
   final runtimeBin = _linuxManagedRuntimeBinFolder(environment);
   final wineLibraryPath = environment.nonEmptyValue(
     'KONYAK_LINUX_WINE_LIBRARY_PATH',
   );
   if (runtimeBin.isNone() && wineLibraryPath == null) {
-    return const <String, String>{};
+    return const ProgramRunEnvironment.empty();
   }
 
   final runtimeEnvironment = <String, String>{};
@@ -122,5 +122,5 @@ Map<String, String> _linuxRuntimeEnvironment(HostEnvironment environment) {
     );
   }
 
-  return Map.unmodifiable(runtimeEnvironment);
+  return ProgramRunEnvironment(runtimeEnvironment);
 }

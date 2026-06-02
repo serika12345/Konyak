@@ -379,7 +379,7 @@ void main() {
     };
     final catalog = KonyakRuntimeCatalog(
       hostPlatform: KonyakHostPlatform.linux,
-      environment: variables,
+      environment: HostEnvironment(variables),
     );
     variables['KONYAK_RUNTIME_PROFILE'] = 'managed';
 
