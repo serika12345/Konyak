@@ -60,7 +60,10 @@ CliResult _terminateWineProcessesJsonResult({
   final bottles = bottlesResult.getOrElse((_) => const <BottleRecord>[]);
   final targetBottles = bottleId.match(
     () => bottles,
-    (id) => <BottleRecord>[?_findBottle(bottles, id)],
+    (id) => _findBottle(
+      bottles,
+      id,
+    ).match(() => const <BottleRecord>[], (bottle) => <BottleRecord>[bottle]),
   );
   if (bottleId.isSome() && targetBottles.isEmpty) {
     return bottleId.match(() => _bottleNotFoundError(''), _bottleNotFoundError);
@@ -142,17 +145,18 @@ CliResult _listWineProcessesJsonResult({
                   bottle: bottle,
                   executable: process.executable,
                 );
-                final metadata = hostPath == null
-                    ? const Option<ProgramMetadataRecord>.none()
-                    : programMetadataExtractor.extract(
-                        bottle: bottle,
-                        programPath: hostPath,
-                      );
+                final metadata = hostPath.match(
+                  () => const Option<ProgramMetadataRecord>.none(),
+                  (path) => programMetadataExtractor.extract(
+                    bottle: bottle,
+                    programPath: path,
+                  ),
+                );
                 return WineProcessRecord(
                   bottleId: bottle.id,
                   processId: process.processId,
                   executable: process.executable,
-                  hostPath: Option.fromNullable(hostPath),
+                  hostPath: hostPath,
                   metadata: metadata,
                 );
               }),
@@ -198,41 +202,40 @@ CliResult _terminateWineProcessJsonResult({
   if (failure != null) {
     return failure;
   }
-  final bottle = _findBottle(
+  final bottleOption = _findBottle(
     bottlesResult.getOrElse((_) => const <BottleRecord>[]),
     bottleId,
   );
-  if (bottle == null) {
-    return _bottleNotFoundError(bottleId);
-  }
+  return bottleOption.match(() => _bottleNotFoundError(bottleId), (bottle) {
+    final request = programRunPlanner.planWineProcessKill(
+      bottle: bottle,
+      processId: processId,
+    );
+    final result = runner.run(request);
+    final record = switch (result) {
+      ProgramRunCompleted(:final processExitCode) =>
+        WineProcessTerminationRecord(
+          bottleId: bottle.id,
+          processId: Option.of(processId),
+          status: processExitCode == 0 ? 'terminated' : 'failed',
+          runnerKind: request.runnerKind,
+          executable: request.executable,
+          argv: request.argv,
+          processExitCode: Option.of(processExitCode),
+        ),
+      ProgramRunFailed(:final message) => WineProcessTerminationRecord(
+        bottleId: bottle.id,
+        processId: Option.of(processId),
+        status: 'failed',
+        runnerKind: request.runnerKind,
+        executable: request.executable,
+        argv: request.argv,
+        message: Option.of(message),
+      ),
+    };
 
-  final request = programRunPlanner.planWineProcessKill(
-    bottle: bottle,
-    processId: processId,
-  );
-  final result = runner.run(request);
-  final record = switch (result) {
-    ProgramRunCompleted(:final processExitCode) => WineProcessTerminationRecord(
-      bottleId: bottle.id,
-      processId: Option.of(processId),
-      status: processExitCode == 0 ? 'terminated' : 'failed',
-      runnerKind: request.runnerKind,
-      executable: request.executable,
-      argv: request.argv,
-      processExitCode: Option.of(processExitCode),
-    ),
-    ProgramRunFailed(:final message) => WineProcessTerminationRecord(
-      bottleId: bottle.id,
-      processId: Option.of(processId),
-      status: 'failed',
-      runnerKind: request.runnerKind,
-      executable: request.executable,
-      argv: request.argv,
-      message: Option.of(message),
-    ),
-  };
-
-  return _wineProcessTerminationJsonResult(<WineProcessTerminationRecord>[
-    record,
-  ], recordsKey: 'processes');
+    return _wineProcessTerminationJsonResult(<WineProcessTerminationRecord>[
+      record,
+    ], recordsKey: 'processes');
+  });
 }

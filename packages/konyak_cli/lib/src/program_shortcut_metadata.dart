@@ -56,9 +56,8 @@ Option<String> _shortcutTargetProgramPathFromBytes({
 }) {
   try {
     return _shellLinkLocalBasePath(bytes).flatMap(
-      (windowsPath) => Option.fromNullable(
-        _wineWindowsPathToHostPath(bottle: bottle, windowsPath: windowsPath),
-      ),
+      (windowsPath) =>
+          _wineWindowsPathToHostPath(bottle: bottle, windowsPath: windowsPath),
     );
   } on RangeError {
     return const Option.none();

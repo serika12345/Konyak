@@ -1,12 +1,12 @@
 part of '../../konyak_cli.dart';
 
-String? _latestRunProgramPathForExecutable({
+Option<String> _latestRunProgramPathForExecutable({
   required BottleRecord bottle,
   required String executable,
 }) {
   final logFile = File(_joinPath(bottle.path, const ['logs', 'latest.log']));
   if (!logFile.existsSync()) {
-    return null;
+    return const Option.none();
   }
 
   try {
@@ -16,11 +16,11 @@ String? _latestRunProgramPathForExecutable({
       logContents: logFile.readAsStringSync(),
     );
   } on FileSystemException {
-    return null;
+    return const Option.none();
   }
 }
 
-String? _recordedExternalProgramPathForExecutable({
+Option<String> _recordedExternalProgramPathForExecutable({
   required BottleRecord bottle,
   required String executable,
 }) {
@@ -28,7 +28,7 @@ String? _recordedExternalProgramPathForExecutable({
     _joinPath(bottle.path, const ['cache', 'external-program-launches.json']),
   );
   if (!launchIndexFile.existsSync()) {
-    return null;
+    return const Option.none();
   }
 
   try {
@@ -40,8 +40,8 @@ String? _recordedExternalProgramPathForExecutable({
               as Map<String, Object?>,
     );
   } on FileSystemException {
-    return null;
+    return const Option.none();
   } on FormatException {
-    return null;
+    return const Option.none();
   }
 }

@@ -1,13 +1,15 @@
 part of '../konyak_cli.dart';
 
-String? _wineWindowsPathToHostPath({
+Option<String> _wineWindowsPathToHostPath({
   required BottleRecord bottle,
   required String windowsPath,
 }) {
   final normalized = windowsPath.trim().replaceAll('\\', '/');
   final driveMatch = RegExp(r'^([A-Za-z]):/?(.*)$').firstMatch(normalized);
   if (driveMatch == null) {
-    return normalized.startsWith('/') ? normalized : null;
+    return normalized.startsWith('/')
+        ? Option.of(normalized)
+        : const Option.none();
   }
 
   final drive = driveMatch.group(1)?.toLowerCase();
@@ -18,13 +20,13 @@ String? _wineWindowsPathToHostPath({
       .toList(growable: false);
 
   return switch (drive) {
-    'c' => _joinPath(bottle.path, <String>['drive_c', ...parts]),
-    'z' => '/${parts.join('/')}',
-    _ => null,
+    'c' => Option.of(_joinPath(bottle.path, <String>['drive_c', ...parts])),
+    'z' => Option.of('/${parts.join('/')}'),
+    _ => const Option.none(),
   };
 }
 
-String? _wineProcessHostPath({
+Option<String> _wineProcessHostPath({
   required BottleRecord bottle,
   required String executable,
 }) {
@@ -32,20 +34,20 @@ String? _wineProcessHostPath({
     bottle: bottle,
     windowsPath: executable,
   );
-  if (hostPath != null) {
+  if (hostPath.isSome()) {
     return hostPath;
   }
 
   final normalized = executable.trim();
   if (normalized.startsWith('/') && !normalized.startsWith('/_')) {
-    return normalized;
+    return Option.of(normalized);
   }
 
   final pinnedProgramPath = _pinnedProgramPathForExecutable(
     bottle: bottle,
     executable: executable,
   );
-  if (pinnedProgramPath != null) {
+  if (pinnedProgramPath.isSome()) {
     return pinnedProgramPath;
   }
 
@@ -53,7 +55,7 @@ String? _wineProcessHostPath({
     bottle: bottle,
     executable: executable,
   );
-  if (recordedExternalProgramPath != null) {
+  if (recordedExternalProgramPath.isSome()) {
     return recordedExternalProgramPath;
   }
 
@@ -63,7 +65,7 @@ String? _wineProcessHostPath({
   );
 }
 
-String? _pinnedProgramPathForExecutable({
+Option<String> _pinnedProgramPathForExecutable({
   required BottleRecord bottle,
   required String executable,
 }) {
@@ -73,14 +75,14 @@ String? _pinnedProgramPathForExecutable({
       programPath: program.path,
     );
     if (_executableNamesMatch(metadataPath, executable)) {
-      return metadataPath;
+      return Option.of(metadataPath);
     }
   }
 
-  return null;
+  return const Option.none();
 }
 
-String? _latestRunProgramPathFromLog({
+Option<String> _latestRunProgramPathFromLog({
   required BottleRecord bottle,
   required String executable,
   required String logContents,
@@ -104,32 +106,37 @@ String? _latestRunProgramPathFromLog({
           bottle: bottle,
           argument: argument,
         );
-        if (hostPath == null || !_executableNamesMatch(hostPath, executable)) {
+        if (hostPath.match(
+          () => true,
+          (path) => !_executableNamesMatch(path, executable),
+        )) {
           continue;
         }
 
-        return _metadataProgramPath(bottle: bottle, programPath: hostPath);
+        return hostPath.map(
+          (path) => _metadataProgramPath(bottle: bottle, programPath: path),
+        );
       }
     }
   } on FormatException {
-    return null;
+    return const Option.none();
   }
 
-  return null;
+  return const Option.none();
 }
 
-String? _recordedExternalProgramPathFromLaunchIndex({
+Option<String> _recordedExternalProgramPathFromLaunchIndex({
   required BottleRecord bottle,
   required String executable,
   required Map<String, Object?> decoded,
 }) {
   if (decoded['schemaVersion'] != 1) {
-    return null;
+    return const Option.none();
   }
 
   final launches = decoded['launches'];
   if (launches is! List<Object?>) {
-    return null;
+    return const Option.none();
   }
 
   for (final launch in launches.reversed) {
@@ -148,13 +155,15 @@ String? _recordedExternalProgramPathFromLaunchIndex({
       continue;
     }
 
-    return _metadataProgramPath(bottle: bottle, programPath: programPath);
+    return Option.of(
+      _metadataProgramPath(bottle: bottle, programPath: programPath),
+    );
   }
 
-  return null;
+  return const Option.none();
 }
 
-String? _runArgumentHostPath({
+Option<String> _runArgumentHostPath({
   required BottleRecord bottle,
   required String argument,
 }) {
@@ -162,12 +171,14 @@ String? _runArgumentHostPath({
     bottle: bottle,
     windowsPath: argument,
   );
-  if (hostPath != null) {
+  if (hostPath.isSome()) {
     return hostPath;
   }
 
   final normalized = argument.trim();
-  return normalized.startsWith('/') ? normalized : null;
+  return normalized.startsWith('/')
+      ? Option.of(normalized)
+      : const Option.none();
 }
 
 bool _executableNamesMatch(String candidatePath, String executable) {
@@ -275,12 +286,15 @@ class _WinedbgProcess {
   final String executable;
 }
 
-BottleRecord? _findBottle(Iterable<BottleRecord> bottles, String bottleId) {
+Option<BottleRecord> _findBottle(
+  Iterable<BottleRecord> bottles,
+  String bottleId,
+) {
   for (final bottle in bottles) {
     if (bottle.id == bottleId) {
-      return bottle;
+      return Option.of(bottle);
     }
   }
 
-  return null;
+  return const Option.none();
 }
