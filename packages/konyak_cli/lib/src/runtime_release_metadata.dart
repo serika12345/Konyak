@@ -1,31 +1,23 @@
 part of '../konyak_cli.dart';
 
-RuntimeReleaseMetadata? _runtimeReleaseMetadataFromDecoded({
+Option<RuntimeReleaseMetadata> _runtimeReleaseMetadataFromDecoded({
   required Object? release,
   required Object? releaseMetadata,
 }) {
   final version = _runtimeReleaseVersion(release);
-  if (version == null) {
-    return null;
-  }
-
   final archiveUrl = _runtimeReleaseArchiveUrl(release);
   final releaseMetadataAssetUrl = _runtimeReleaseMetadataAssetUrl(release);
-  return RuntimeReleaseMetadata(
-    version: version,
-    archiveUrl: Option.fromNullable(archiveUrl),
-    archiveSha256: Option.fromNullable(
-      _runtimeReleaseArchiveSha256(release, archiveUrl),
-    ),
-    sourceManifestUrl: Option.fromNullable(
-      _runtimeReleaseSourceManifestUrl(
+  return version.map(
+    (value) => RuntimeReleaseMetadata(
+      version: value,
+      archiveUrl: archiveUrl,
+      archiveSha256: _runtimeReleaseArchiveSha256(release, archiveUrl),
+      sourceManifestUrl: _runtimeReleaseSourceManifestUrl(
         release: release,
         releaseMetadataAssetUrl: releaseMetadataAssetUrl,
         releaseMetadata: releaseMetadata,
       ),
-    ),
-    sourceManifestSignatureUrl: Option.fromNullable(
-      _runtimeReleaseSourceManifestSignatureUrl(
+      sourceManifestSignatureUrl: _runtimeReleaseSourceManifestSignatureUrl(
         release: release,
         releaseMetadataAssetUrl: releaseMetadataAssetUrl,
         releaseMetadata: releaseMetadata,
@@ -34,29 +26,31 @@ RuntimeReleaseMetadata? _runtimeReleaseMetadataFromDecoded({
   );
 }
 
-Map<String, dynamic>? _runtimeReleaseMetadataAssetFromPayload(String payload) {
+Option<Map<String, dynamic>> _runtimeReleaseMetadataAssetFromPayload(
+  String payload,
+) {
   final decoded = jsonDecode(payload);
   if (decoded is Map<String, dynamic>) {
-    return decoded;
+    return Option.of(decoded);
   }
 
-  return null;
+  return const Option.none();
 }
 
-String? _runtimeReleaseVersion(Object? decoded) {
+Option<String> _runtimeReleaseVersion(Object? decoded) {
   if (decoded is! Map<String, dynamic>) {
-    return null;
+    return const Option.none();
   }
 
   final tagName = decoded['tag_name'];
   if (tagName is String && tagName.trim().isNotEmpty) {
-    return tagName;
+    return Option.of(tagName);
   }
 
   final name = decoded['name'];
   if (name is String && name.trim().isNotEmpty) {
-    return name;
+    return Option.of(name);
   }
 
-  return null;
+  return const Option.none();
 }

@@ -1,106 +1,101 @@
 part of '../konyak_cli.dart';
 
-String? _runtimeReleaseSourceManifestUrl({
+Option<String> _runtimeReleaseSourceManifestUrl({
   required Object? release,
-  required String? releaseMetadataAssetUrl,
+  required Option<String> releaseMetadataAssetUrl,
   required Object? releaseMetadata,
 }) {
-  if (release is! Map<String, dynamic> || releaseMetadataAssetUrl == null) {
-    return null;
+  if (release is! Map<String, dynamic> || releaseMetadataAssetUrl.isNone()) {
+    return const Option.none();
   }
 
   if (releaseMetadata == null) {
-    return null;
+    return const Option.none();
   }
 
-  final fileName = _runtimeReleaseSourceManifestFileName(releaseMetadata);
-  if (fileName == null) {
-    return null;
-  }
-
-  final assetUrl = _runtimeReleaseAssetUrlByFileName(release, fileName);
-  if (assetUrl != null) {
-    return assetUrl;
-  }
-
-  return _resolveReleaseMetadataAssetUrl(releaseMetadataAssetUrl, fileName);
-}
-
-String? _runtimeReleaseSourceManifestSignatureUrl({
-  required Object? release,
-  required String? releaseMetadataAssetUrl,
-  required Object? releaseMetadata,
-}) {
-  if (release is! Map<String, dynamic> || releaseMetadataAssetUrl == null) {
-    return null;
-  }
-
-  if (releaseMetadata == null) {
-    return null;
-  }
-
-  final fileName = _runtimeReleaseSourceManifestSignatureFileName(
-    releaseMetadata,
+  return _runtimeReleaseSourceManifestFileName(releaseMetadata).flatMap(
+    (fileName) => _runtimeReleaseAssetUrlByFileName(release, fileName).alt(
+      () => releaseMetadataAssetUrl.flatMap(
+        (metadataUrl) => _resolveReleaseMetadataAssetUrl(metadataUrl, fileName),
+      ),
+    ),
   );
-  if (fileName == null) {
-    return null;
-  }
-
-  final assetUrl = _runtimeReleaseAssetUrlByFileName(release, fileName);
-  if (assetUrl != null) {
-    return assetUrl;
-  }
-
-  return _resolveReleaseMetadataAssetUrl(releaseMetadataAssetUrl, fileName);
 }
 
-String? _runtimeReleaseSourceManifestFileName(Object? decoded) {
+Option<String> _runtimeReleaseSourceManifestSignatureUrl({
+  required Object? release,
+  required Option<String> releaseMetadataAssetUrl,
+  required Object? releaseMetadata,
+}) {
+  if (release is! Map<String, dynamic> || releaseMetadataAssetUrl.isNone()) {
+    return const Option.none();
+  }
+
+  if (releaseMetadata == null) {
+    return const Option.none();
+  }
+
+  return _runtimeReleaseSourceManifestSignatureFileName(
+    releaseMetadata,
+  ).flatMap(
+    (fileName) => _runtimeReleaseAssetUrlByFileName(release, fileName).alt(
+      () => releaseMetadataAssetUrl.flatMap(
+        (metadataUrl) => _resolveReleaseMetadataAssetUrl(metadataUrl, fileName),
+      ),
+    ),
+  );
+}
+
+Option<String> _runtimeReleaseSourceManifestFileName(Object? decoded) {
   if (decoded is! Map<String, dynamic>) {
-    return null;
+    return const Option.none();
   }
 
   final runtimeStack = decoded['runtimeStack'];
   if (runtimeStack is! Map<String, dynamic>) {
-    return null;
+    return const Option.none();
   }
 
   final fileName = runtimeStack['sourceManifestFileName'];
   if (fileName is String && fileName.trim().isNotEmpty) {
-    return fileName;
+    return Option.of(fileName);
   }
 
-  return null;
+  return const Option.none();
 }
 
-String? _runtimeReleaseSourceManifestSignatureFileName(Object? decoded) {
+Option<String> _runtimeReleaseSourceManifestSignatureFileName(Object? decoded) {
   if (decoded is! Map<String, dynamic>) {
-    return null;
+    return const Option.none();
   }
 
   final runtimeStack = decoded['runtimeStack'];
   if (runtimeStack is! Map<String, dynamic>) {
-    return null;
+    return const Option.none();
   }
 
   final fileName = runtimeStack['signatureFileName'];
   if (fileName is String && fileName.trim().isNotEmpty) {
-    return fileName;
+    return Option.of(fileName);
   }
 
-  return null;
+  return const Option.none();
 }
 
-String? _resolveReleaseMetadataAssetUrl(String metadataUrl, String fileName) {
+Option<String> _resolveReleaseMetadataAssetUrl(
+  String metadataUrl,
+  String fileName,
+) {
   final metadataUri = Uri.tryParse(metadataUrl);
   if (metadataUri == null) {
-    return null;
+    return const Option.none();
   }
 
   final segments = List<String>.from(metadataUri.pathSegments);
   if (segments.isEmpty) {
-    return null;
+    return const Option.none();
   }
 
   segments[segments.length - 1] = fileName;
-  return metadataUri.replace(pathSegments: segments).toString();
+  return Option.of(metadataUri.replace(pathSegments: segments).toString());
 }

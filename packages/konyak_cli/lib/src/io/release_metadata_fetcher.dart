@@ -21,20 +21,20 @@ class DartIoRuntimeReleaseMetadataFetcher
 
       final decoded = jsonDecode(_processOutputToString(result.stdout));
       final releaseMetadataAssetUrl = _runtimeReleaseMetadataAssetUrl(decoded);
-      final releaseMetadata = releaseMetadataAssetUrl == null
-          ? null
-          : _fetchRuntimeReleaseMetadataAsset(releaseMetadataAssetUrl);
+      final releaseMetadata = releaseMetadataAssetUrl.match(
+        () => null,
+        _fetchRuntimeReleaseMetadataAsset,
+      );
       final releaseMetadataRecord = _runtimeReleaseMetadataFromDecoded(
         release: decoded,
         releaseMetadata: releaseMetadata,
       );
-      if (releaseMetadataRecord == null) {
-        return const RuntimeReleaseMetadataFetchFailed(
+      return releaseMetadataRecord.match(
+        () => const RuntimeReleaseMetadataFetchFailed(
           'Runtime release metadata does not contain a version.',
-        );
-      }
-
-      return RuntimeReleaseMetadataFetched(releaseMetadataRecord);
+        ),
+        RuntimeReleaseMetadataFetched.new,
+      );
     } on FormatException {
       return const RuntimeReleaseMetadataFetchFailed(
         'Runtime release metadata is not valid JSON.',
@@ -58,7 +58,7 @@ class DartIoRuntimeReleaseMetadataFetcher
 
       return _runtimeReleaseMetadataAssetFromPayload(
         _processOutputToString(result.stdout),
-      );
+      ).toNullable();
     } on FormatException {
       return null;
     } on ProcessException {

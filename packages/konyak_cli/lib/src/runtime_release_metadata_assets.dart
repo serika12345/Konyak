@@ -1,13 +1,13 @@
 part of '../konyak_cli.dart';
 
-String? _runtimeReleaseArchiveUrl(Object? decoded) {
+Option<String> _runtimeReleaseArchiveUrl(Object? decoded) {
   if (decoded is! Map<String, dynamic>) {
-    return null;
+    return const Option.none();
   }
 
   final assets = decoded['assets'];
   if (assets is! List<dynamic>) {
-    return null;
+    return const Option.none();
   }
 
   final urls = <String>[];
@@ -25,7 +25,7 @@ String? _runtimeReleaseArchiveUrl(Object? decoded) {
   }
 
   if (urls.isEmpty) {
-    return null;
+    return const Option.none();
   }
 
   for (final extension in const <String>[
@@ -37,22 +37,22 @@ String? _runtimeReleaseArchiveUrl(Object? decoded) {
   ]) {
     for (final url in urls) {
       if (url.toLowerCase().contains(extension)) {
-        return url;
+        return Option.of(url);
       }
     }
   }
 
-  return urls.first;
+  return Option.of(urls.first);
 }
 
-String? _runtimeReleaseMetadataAssetUrl(Object? decoded) {
+Option<String> _runtimeReleaseMetadataAssetUrl(Object? decoded) {
   if (decoded is! Map<String, dynamic>) {
-    return null;
+    return const Option.none();
   }
 
   final assets = decoded['assets'];
   if (assets is! List<dynamic>) {
-    return null;
+    return const Option.none();
   }
 
   for (final asset in assets) {
@@ -64,21 +64,24 @@ String? _runtimeReleaseMetadataAssetUrl(Object? decoded) {
     if (url is String &&
         url.trim().isNotEmpty &&
         url.trim().toLowerCase().endsWith('.release.json')) {
-      return url;
+      return Option.of(url);
     }
   }
 
-  return null;
+  return const Option.none();
 }
 
-String? _runtimeReleaseAssetUrlByFileName(Object? decoded, String fileName) {
+Option<String> _runtimeReleaseAssetUrlByFileName(
+  Object? decoded,
+  String fileName,
+) {
   if (decoded is! Map<String, dynamic>) {
-    return null;
+    return const Option.none();
   }
 
   final assets = decoded['assets'];
   if (assets is! List<dynamic>) {
-    return null;
+    return const Option.none();
   }
 
   for (final asset in assets) {
@@ -92,11 +95,11 @@ String? _runtimeReleaseAssetUrlByFileName(Object? decoded, String fileName) {
         _fileNameFromUrl(
           url,
         ).match(() => false, (value) => value == fileName)) {
-      return url;
+      return Option.of(url);
     }
   }
 
-  return null;
+  return const Option.none();
 }
 
 bool _isReleaseMetadataAssetUrl(String url) {
@@ -109,26 +112,27 @@ bool _isReleaseMetadataAssetUrl(String url) {
       normalized.endsWith('.release.json');
 }
 
-String? _runtimeReleaseArchiveSha256(Object? decoded, String? archiveUrl) {
+Option<String> _runtimeReleaseArchiveSha256(
+  Object? decoded,
+  Option<String> archiveUrl,
+) {
   if (decoded is! Map<String, dynamic>) {
-    return null;
+    return const Option.none();
   }
 
   for (final key in const <String>['archiveSha256', 'archive_sha256']) {
     final value = decoded[key];
     if (value is String && _isSha256Hex(value)) {
-      return value;
+      return Option.of(value);
     }
   }
 
   final body = decoded['body'];
   if (body is! String || body.trim().isEmpty) {
-    return null;
+    return const Option.none();
   }
 
-  final archiveFileName = archiveUrl == null
-      ? const Option<String>.none()
-      : _fileNameFromUrl(archiveUrl);
+  final archiveFileName = archiveUrl.flatMap(_fileNameFromUrl);
   final digestPattern = RegExp(r'\b[0-9a-fA-F]{64}\b');
   for (final line in const LineSplitter().convert(body)) {
     if (archiveFileName.match(
@@ -140,13 +144,13 @@ String? _runtimeReleaseArchiveSha256(Object? decoded, String? archiveUrl) {
 
     final digest = digestPattern.firstMatch(line)?.group(0);
     if (digest != null && _isSha256Hex(digest)) {
-      return digest;
+      return Option.of(digest);
     }
   }
 
   if (archiveFileName.isNone()) {
-    return digestPattern.firstMatch(body)?.group(0);
+    return Option.fromNullable(digestPattern.firstMatch(body)?.group(0));
   }
 
-  return null;
+  return const Option.none();
 }
