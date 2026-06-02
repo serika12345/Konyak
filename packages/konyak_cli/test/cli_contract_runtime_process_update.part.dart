@@ -62,10 +62,13 @@ void defineRuntimeProcessAndUpdateContractTests() {
         versionUrl: Option.of('https://example.invalid/releases/latest'),
       ),
       installedState: InstalledRuntimeState(
-        isInstalled: true,
-        libraryPath: '/home/user/.local/share/konyak/Runtimes/linux-wine',
-        executablePath:
-            '/home/user/.local/share/konyak/Runtimes/linux-wine/bin/wine',
+        isInstalled: Option.of(true),
+        libraryPath: Option.of(
+          '/home/user/.local/share/konyak/Runtimes/linux-wine',
+        ),
+        executablePath: Option.of(
+          '/home/user/.local/share/konyak/Runtimes/linux-wine/bin/wine',
+        ),
       ),
       capabilities: RuntimeCapabilities(
         stack: RuntimeStack(

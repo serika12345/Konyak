@@ -27,10 +27,10 @@ RuntimeRecord _macosWineRuntimeRecord({
       versionUrl: Option.fromNullable(macosWineVersionUrl),
     ),
     installedState: InstalledRuntimeState(
-      isInstalled: isInstalled,
-      applicationSupportPath: applicationSupportPath,
-      libraryPath: libraryPath,
-      executablePath: executablePath,
+      isInstalled: Option.of(isInstalled),
+      applicationSupportPath: Option.of(applicationSupportPath),
+      libraryPath: Option.of(libraryPath),
+      executablePath: Option.of(executablePath),
     ),
     capabilities: RuntimeCapabilities(
       stack: _runtimeStackForPlatform(
@@ -75,9 +75,9 @@ RuntimeRecord _linuxWineRuntimeRecord({
       versionUrl: Option.fromNullable(versionUrl),
     ),
     installedState: InstalledRuntimeState(
-      isInstalled: fileStatusProbe.exists(executablePath),
-      libraryPath: runtimeRoot,
-      executablePath: executablePath,
+      isInstalled: Option.of(fileStatusProbe.exists(executablePath)),
+      libraryPath: Option.of(runtimeRoot),
+      executablePath: Option.of(executablePath),
     ),
     capabilities: RuntimeCapabilities(
       stack: _runtimeStackForPlatform(

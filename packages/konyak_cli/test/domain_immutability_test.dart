@@ -481,7 +481,7 @@ void main() {
   });
 
   test('installed runtime states model absent layout paths with Option', () {
-    final state = InstalledRuntimeState(isInstalled: false);
+    final state = InstalledRuntimeState(isInstalled: Option.of(false));
     const unknown = InstalledRuntimeState.unknown();
 
     expect(state.isInstalled.toNullable(), isFalse);
@@ -493,7 +493,10 @@ void main() {
 
   test('installed runtime states reject blank present layout paths', () {
     expect(
-      () => InstalledRuntimeState(isInstalled: true, executablePath: ' '),
+      () => InstalledRuntimeState(
+        isInstalled: Option.of(true),
+        executablePath: Option.of(' '),
+      ),
       throwsA(isA<ArgumentError>()),
     );
   });

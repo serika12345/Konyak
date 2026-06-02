@@ -33,20 +33,16 @@ class RuntimeDefinition {
 
 class InstalledRuntimeState {
   InstalledRuntimeState({
-    bool? isInstalled,
-    String? applicationSupportPath,
-    String? libraryPath,
-    String? executablePath,
-  }) : isInstalled = Option.fromNullable(isInstalled),
-       applicationSupportPath = _optionalNullableRuntimeModelValue(
+    this.isInstalled = const Option.none(),
+    Option<String> applicationSupportPath = const Option.none(),
+    Option<String> libraryPath = const Option.none(),
+    Option<String> executablePath = const Option.none(),
+  }) : applicationSupportPath = _optionalRuntimeModelValue(
          applicationSupportPath,
          'applicationSupportPath',
        ),
-       libraryPath = _optionalNullableRuntimeModelValue(
-         libraryPath,
-         'libraryPath',
-       ),
-       executablePath = _optionalNullableRuntimeModelValue(
+       libraryPath = _optionalRuntimeModelValue(libraryPath, 'libraryPath'),
+       executablePath = _optionalRuntimeModelValue(
          executablePath,
          'executablePath',
        );
