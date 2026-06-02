@@ -71,13 +71,15 @@ extension _DartIoLinuxWineInstallerOperations on DartIoLinuxWineInstaller {
         signatureSource: sourceManifestSignature,
       );
       final manifest = _runtimeStackSourceManifestFromPayload(manifestPayload);
-      if (manifest == null) {
+      if (manifest.isNone()) {
         return const LinuxWineInstallFailed(
           'Runtime stack source manifest is invalid.',
         );
       }
       final bundleResult = _resolveRuntimeStackSourceArchiveBundle(
-        manifest: manifest,
+        manifest: manifest.getOrElse(
+          () => throw StateError('Expected runtime stack source manifest.'),
+        ),
         platformSpec: _linuxWineRuntimePlatformSpec,
         tempDirectory: tempDirectory,
         progressSink: progressSink,
@@ -124,14 +126,16 @@ extension _DartIoLinuxWineInstallerOperations on DartIoLinuxWineInstaller {
         signatureSource: sourceManifestSignature,
       );
       final manifest = _runtimeStackSourceManifestFromPayload(manifestPayload);
-      if (manifest == null) {
+      if (manifest.isNone()) {
         return const LinuxWineInstallFailed(
           'Runtime stack source manifest is invalid.',
         );
       }
       final bundleResult =
           await _resolveRuntimeStackSourceArchiveBundleStreaming(
-            manifest: manifest,
+            manifest: manifest.getOrElse(
+              () => throw StateError('Expected runtime stack source manifest.'),
+            ),
             platformSpec: _linuxWineRuntimePlatformSpec,
             tempDirectory: tempDirectory,
             progressSink: progressSink,

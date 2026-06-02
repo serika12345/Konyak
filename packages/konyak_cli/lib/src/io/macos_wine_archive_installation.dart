@@ -85,13 +85,15 @@ extension _MacosWineArchiveInstallation on DartIoMacosWineInstaller {
         signatureSource: sourceManifestSignature,
       );
       final manifest = _runtimeStackSourceManifestFromPayload(manifestPayload);
-      if (manifest == null) {
+      if (manifest.isNone()) {
         return const MacosWineInstallFailed(
           'Runtime stack source manifest is invalid.',
         );
       }
       final bundleResult = _resolveRuntimeStackSourceArchiveBundle(
-        manifest: manifest,
+        manifest: manifest.getOrElse(
+          () => throw StateError('Expected runtime stack source manifest.'),
+        ),
         platformSpec: _macosKonyakRuntimePlatformSpec,
         tempDirectory: tempDirectory,
         progressSink: progressSink,
@@ -140,14 +142,16 @@ extension _MacosWineArchiveInstallation on DartIoMacosWineInstaller {
         signatureSource: sourceManifestSignature,
       );
       final manifest = _runtimeStackSourceManifestFromPayload(manifestPayload);
-      if (manifest == null) {
+      if (manifest.isNone()) {
         return const MacosWineInstallFailed(
           'Runtime stack source manifest is invalid.',
         );
       }
       final bundleResult =
           await _resolveRuntimeStackSourceArchiveBundleStreaming(
-            manifest: manifest,
+            manifest: manifest.getOrElse(
+              () => throw StateError('Expected runtime stack source manifest.'),
+            ),
             platformSpec: _macosKonyakRuntimePlatformSpec,
             tempDirectory: tempDirectory,
             progressSink: progressSink,

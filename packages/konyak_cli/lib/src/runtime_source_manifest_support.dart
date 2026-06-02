@@ -1,16 +1,18 @@
 part of '../konyak_cli.dart';
 
-RuntimeSourceManifest? _runtimeStackSourceManifestFromPayload(String payload) {
+Option<RuntimeSourceManifest> _runtimeStackSourceManifestFromPayload(
+  String payload,
+) {
   final Object? decoded;
   try {
     decoded = jsonDecode(payload);
   } on FormatException {
-    return null;
+    return const Option.none();
   }
 
   if (decoded is! Map<String, dynamic> ||
       decoded['schemaVersion'] != runtimeStackSchemaVersion) {
-    return null;
+    return const Option.none();
   }
 
   final runtimeId = decoded['runtimeId'];
@@ -21,32 +23,38 @@ RuntimeSourceManifest? _runtimeStackSourceManifestFromPayload(String payload) {
       stackId is! String ||
       stackId.trim().isEmpty ||
       components is! List<dynamic>) {
-    return null;
+    return const Option.none();
   }
 
   final parsedComponents = <RuntimeSourceComponent>[];
   for (final component in components) {
     final parsedComponent = _runtimeStackSourceComponent(component);
-    if (parsedComponent == null) {
-      return null;
+    if (parsedComponent.isNone()) {
+      return const Option.none();
     }
-    parsedComponents.add(parsedComponent);
+    parsedComponents.add(
+      parsedComponent.getOrElse(
+        () => throw StateError('Expected parsed runtime source component.'),
+      ),
+    );
   }
 
   if (parsedComponents.isEmpty) {
-    return null;
+    return const Option.none();
   }
 
-  return RuntimeSourceManifest(
-    runtimeId: runtimeId,
-    stackId: stackId,
-    components: parsedComponents,
+  return Option.of(
+    RuntimeSourceManifest(
+      runtimeId: runtimeId,
+      stackId: stackId,
+      components: parsedComponents,
+    ),
   );
 }
 
-RuntimeSourceComponent? _runtimeStackSourceComponent(Object? value) {
+Option<RuntimeSourceComponent> _runtimeStackSourceComponent(Object? value) {
   if (value is! Map<String, dynamic>) {
-    return null;
+    return const Option.none();
   }
 
   final id = value['id'];
@@ -62,13 +70,15 @@ RuntimeSourceComponent? _runtimeStackSourceComponent(Object? value) {
       archiveUrl.trim().isEmpty ||
       sha256 is! String ||
       !_isSha256Hex(sha256)) {
-    return null;
+    return const Option.none();
   }
 
-  return RuntimeSourceComponent(
-    id: id,
-    version: version,
-    archiveUrl: archiveUrl,
-    sha256: sha256,
+  return Option.of(
+    RuntimeSourceComponent(
+      id: id,
+      version: version,
+      archiveUrl: archiveUrl,
+      sha256: sha256,
+    ),
   );
 }
