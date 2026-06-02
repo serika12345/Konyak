@@ -71,22 +71,24 @@ void defineRuntimeProcessAndUpdateContractTests() {
         ),
       ),
       capabilities: RuntimeCapabilities(
-        stack: RuntimeStack(
-          id: 'linux-wine-runtime-stack',
-          name: 'Linux Wine/Proton runtime stack',
-          compatibilityTarget: 'linux-wine-runtime-stack',
-          components: [
-            RuntimeStackComponent(
-              id: 'wine',
-              name: 'Wine',
-              role: 'windows-runner',
-              isRequired: true,
-              paths: const [
-                '/home/user/.local/share/konyak/Runtimes/linux-wine/bin/wine',
-              ],
-              missingPaths: const [],
-            ),
-          ],
+        stack: Option.of(
+          RuntimeStack(
+            id: 'linux-wine-runtime-stack',
+            name: 'Linux Wine/Proton runtime stack',
+            compatibilityTarget: 'linux-wine-runtime-stack',
+            components: [
+              RuntimeStackComponent(
+                id: 'wine',
+                name: 'Wine',
+                role: 'windows-runner',
+                isRequired: true,
+                paths: const [
+                  '/home/user/.local/share/konyak/Runtimes/linux-wine/bin/wine',
+                ],
+                missingPaths: const [],
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -60,8 +60,7 @@ class InstalledRuntimeState {
 }
 
 class RuntimeCapabilities {
-  RuntimeCapabilities({RuntimeStack? stack})
-    : stack = Option.fromNullable(stack);
+  const RuntimeCapabilities({this.stack = const Option.none()});
 
   const RuntimeCapabilities.empty() : stack = const Option.none();
 

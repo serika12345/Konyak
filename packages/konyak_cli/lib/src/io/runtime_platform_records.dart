@@ -33,11 +33,13 @@ RuntimeRecord _macosWineRuntimeRecord({
       executablePath: Option.of(executablePath),
     ),
     capabilities: RuntimeCapabilities(
-      stack: _runtimeStackForPlatform(
-        platformSpec: platformSpec,
-        runtimeRoot: libraryPath,
-        fileStatusProbe: fileStatusProbe,
-        runtimeStackVersionProbe: runtimeStackVersionProbe,
+      stack: Option.of(
+        _runtimeStackForPlatform(
+          platformSpec: platformSpec,
+          runtimeRoot: libraryPath,
+          fileStatusProbe: fileStatusProbe,
+          runtimeStackVersionProbe: runtimeStackVersionProbe,
+        ),
       ),
     ),
   );
@@ -80,11 +82,13 @@ RuntimeRecord _linuxWineRuntimeRecord({
       executablePath: Option.of(executablePath),
     ),
     capabilities: RuntimeCapabilities(
-      stack: _runtimeStackForPlatform(
-        platformSpec: platformSpec,
-        runtimeRoot: runtimeRoot,
-        fileStatusProbe: fileStatusProbe,
-        runtimeStackVersionProbe: runtimeStackVersionProbe,
+      stack: Option.of(
+        _runtimeStackForPlatform(
+          platformSpec: platformSpec,
+          runtimeRoot: runtimeRoot,
+          fileStatusProbe: fileStatusProbe,
+          runtimeStackVersionProbe: runtimeStackVersionProbe,
+        ),
       ),
     ),
   );
