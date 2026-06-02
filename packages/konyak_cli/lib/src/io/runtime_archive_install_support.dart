@@ -34,7 +34,7 @@ String? _installRuntimeArchives({
   required String archivePath,
   required String? archiveSha256,
   required Iterable<String> componentArchivePaths,
-  required Map<String, String> componentVersions,
+  required RuntimeComponentVersions componentVersions,
   required Directory runtimeRoot,
   required List<String> requiredExecutableRelativePath,
   required String expectedExecutablePath,
@@ -73,7 +73,9 @@ String? _installRuntimeArchives({
     _runtimeSiblingPathForInstall(runtimeRoot, 'previous'),
   );
   final lockFile = File(_runtimeInstallLockPath(runtimeRoot));
-  final resolvedComponentVersions = <String, String>{...componentVersions};
+  final resolvedComponentVersions = <String, String>{
+    ...componentVersions.toMap(),
+  };
   final archivePaths = <String>[archivePath, ...componentArchivePaths];
   var lockCreated = false;
 

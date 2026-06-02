@@ -355,7 +355,7 @@ void main() {
         archivePath: '/wine.tar.gz',
         archiveSha256: const Option.none(),
         componentArchivePaths: componentArchivePaths,
-        componentVersions: componentVersions,
+        componentVersions: RuntimeComponentVersions(componentVersions),
         runtimeRoot: Directory('/tmp/konyak-runtime'),
         requiredExecutableRelativePath: requiredExecutableRelativePath,
         expectedExecutablePath: '/tmp/konyak-runtime/bin/wine',
@@ -365,18 +365,18 @@ void main() {
       requiredExecutableRelativePath.add('changed');
 
       expect(request.componentArchivePaths, ['/dxvk.tar.gz']);
-      expect(request.componentVersions.unlockView, {'dxvk': '2.7'});
+      expect(request.componentVersions.toMap(), {'dxvk': '2.7'});
       expect(request.requiredExecutableRelativePath, ['bin', 'wine']);
       expect(request.componentArchivePaths.add('/vkd3d.tar.gz'), [
         '/dxvk.tar.gz',
         '/vkd3d.tar.gz',
       ]);
       expect(request.componentArchivePaths, ['/dxvk.tar.gz']);
-      expect(request.componentVersions.add('vkd3d', '2.14').unlockView, {
+      expect(request.componentVersions.add('vkd3d', '2.14').toMap(), {
         'dxvk': '2.7',
         'vkd3d': '2.14',
       });
-      expect(request.componentVersions.unlockView, {'dxvk': '2.7'});
+      expect(request.componentVersions.toMap(), {'dxvk': '2.7'});
       expect(
         request.requiredExecutableRelativePath.clear,
         throwsUnsupportedError,
@@ -392,7 +392,7 @@ void main() {
         archivePath: '/wine.tar.gz',
         archiveSha256: const Option.none(),
         componentArchivePaths: const <String>[],
-        componentVersions: const <String, String>{},
+        componentVersions: const RuntimeComponentVersions.empty(),
         runtimeRoot: Directory('/tmp/konyak-runtime'),
         requiredExecutableRelativePath: const <String>['bin', 'wine'],
         expectedExecutablePath: '/tmp/konyak-runtime/bin/wine',
@@ -409,7 +409,7 @@ void main() {
         archivePath: '/wine.tar.gz',
         archiveSha256: const Option.none(),
         componentArchivePaths: const <String>[],
-        componentVersions: const <String, String>{},
+        componentVersions: const RuntimeComponentVersions.empty(),
         runtimeRoot: Directory('/tmp/konyak-runtime'),
         requiredExecutableRelativePath: const <String>['bin', 'wine'],
         expectedExecutablePath: '/tmp/konyak-runtime/bin/wine',
@@ -422,7 +422,7 @@ void main() {
         archivePath: '/wine.tar.gz',
         archiveSha256: Option.of(' '),
         componentArchivePaths: const <String>[],
-        componentVersions: const <String, String>{},
+        componentVersions: const RuntimeComponentVersions.empty(),
         runtimeRoot: Directory('/tmp/konyak-runtime'),
         requiredExecutableRelativePath: const <String>['bin', 'wine'],
         expectedExecutablePath: '/tmp/konyak-runtime/bin/wine',

@@ -182,6 +182,16 @@ task changes scope.
 
 ## Deferred
 
+- Strengthen typed domain maps.
+  - [x] Replace runtime component version maps with a dedicated
+    `RuntimeComponentVersions` value object.
+  - [ ] Replace process and host environment maps in CLI/domain code with
+    dedicated environment value objects, converting to `Map<String, String>`
+    only at I/O boundaries.
+  - [ ] Replace program settings environment maps with a dedicated
+    `ProgramEnvironmentOverrides` value object.
+  - [ ] Add governance checks that forbid raw `Map<String, String>` in
+    CLI/domain layers except for approved boundary adapters.
 - CLI refactoring cleanup.
   - [x] Replace remaining handler-level argv indexing with parser request
     objects.

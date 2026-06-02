@@ -34,10 +34,10 @@ final class _RuntimeStackSourceArchivePlan {
         for (final component in components)
           if (component.component.id != wineComponent.id) component.archivePath,
       ],
-      componentVersions: <String, String>{
+      componentVersions: RuntimeComponentVersions(<String, String>{
         for (final component in components)
           component.component.id: component.component.version,
-      },
+      }),
     );
   }
 

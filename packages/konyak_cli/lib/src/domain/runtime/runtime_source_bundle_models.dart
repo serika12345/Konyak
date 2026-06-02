@@ -4,13 +4,12 @@ class _RuntimeStackSourceArchiveBundle {
   _RuntimeStackSourceArchiveBundle({
     required this.wineArchivePath,
     required Iterable<String> componentArchivePaths,
-    required Map<String, String> componentVersions,
-  }) : componentArchivePaths = componentArchivePaths.toIList(),
-       componentVersions = componentVersions.lock;
+    required this.componentVersions,
+  }) : componentArchivePaths = componentArchivePaths.toIList();
 
   final String wineArchivePath;
   final IList<String> componentArchivePaths;
-  final IMap<String, String> componentVersions;
+  final RuntimeComponentVersions componentVersions;
 }
 
 sealed class _RuntimeStackSourceArchiveBundleResult {

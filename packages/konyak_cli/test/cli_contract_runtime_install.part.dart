@@ -26,7 +26,7 @@ void defineRuntimeInstallContractTests() {
         archivePath: archivePath,
         archiveSha256: const Option.none(),
         componentArchivePaths: const [],
-        componentVersions: const {},
+        componentVersions: const RuntimeComponentVersions.empty(),
         runtimeRoot: runtimeRoot,
         requiredExecutableRelativePath: const ['bin', 'wine'],
         expectedExecutablePath: executablePath,

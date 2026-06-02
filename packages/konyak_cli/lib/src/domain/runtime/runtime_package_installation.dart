@@ -6,7 +6,7 @@ class RuntimePackageInstallRequest {
     required String archivePath,
     required Option<String> archiveSha256,
     required Iterable<String> componentArchivePaths,
-    required Map<String, String> componentVersions,
+    required this.componentVersions,
     required this.runtimeRoot,
     required List<String> requiredExecutableRelativePath,
     required String expectedExecutablePath,
@@ -28,7 +28,6 @@ class RuntimePackageInstallRequest {
          'expectedExecutablePath',
        ),
        componentArchivePaths = componentArchivePaths.toIList(),
-       componentVersions = componentVersions.lock,
        requiredExecutableRelativePath = List.unmodifiable(
          requiredExecutableRelativePath,
        );
@@ -37,7 +36,7 @@ class RuntimePackageInstallRequest {
   final String archivePath;
   final Option<String> archiveSha256;
   final IList<String> componentArchivePaths;
-  final IMap<String, String> componentVersions;
+  final RuntimeComponentVersions componentVersions;
   final Directory runtimeRoot;
   final List<String> requiredExecutableRelativePath;
   final String expectedExecutablePath;
@@ -75,7 +74,7 @@ class DartIoRuntimePackageInstaller implements RuntimePackageInstaller {
       archivePath: request.archivePath,
       archiveSha256: request.archiveSha256.toNullable(),
       componentArchivePaths: request.componentArchivePaths,
-      componentVersions: request.componentVersions.unlockView,
+      componentVersions: request.componentVersions,
       runtimeRoot: request.runtimeRoot,
       requiredExecutableRelativePath: request.requiredExecutableRelativePath,
       expectedExecutablePath: request.expectedExecutablePath,

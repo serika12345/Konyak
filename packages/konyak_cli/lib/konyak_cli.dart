@@ -102,6 +102,7 @@ part 'src/repository/file_bottle_repository_program_operations.dart';
 part 'src/repository/file_bottle_repository_read_operations.dart';
 part 'src/repository/file_bottle_repository.dart';
 part 'src/domain/runtime/runtime_install_operation_models.dart';
+part 'src/domain/runtime/runtime_component_versions.dart';
 part 'src/platform/macos/macos_wine_install_requests.dart';
 part 'src/platform/linux/linux_wine_install_requests.dart';
 part 'src/platform/macos/macos_wine_install_results.dart';
