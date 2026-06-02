@@ -45,7 +45,7 @@ Option<ProgramSettingsRecord> _programSettingsRecordFromJson(Object? value) {
     ProgramSettingsRecord(
       locale: locale is String ? locale : '',
       arguments: arguments is String ? arguments : '',
-      environment: environment,
+      environment: ProgramEnvironmentOverrides(environment),
     ),
   );
 }

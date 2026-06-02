@@ -188,7 +188,7 @@ task changes scope.
   - [ ] Replace process and host environment maps in CLI/domain code with
     dedicated environment value objects, converting to `Map<String, String>`
     only at I/O boundaries.
-  - [ ] Replace program settings environment maps with a dedicated
+  - [x] Replace program settings environment maps with a dedicated
     `ProgramEnvironmentOverrides` value object.
   - [ ] Add governance checks that forbid raw `Map<String, String>` in
     CLI/domain layers except for approved boundary adapters.

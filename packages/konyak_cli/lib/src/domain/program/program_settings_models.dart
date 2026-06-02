@@ -1,21 +1,21 @@
 part of '../../../konyak_cli.dart';
 
 class ProgramSettingsRecord {
-  ProgramSettingsRecord({
+  const ProgramSettingsRecord({
     this.locale = '',
     this.arguments = '',
-    Map<String, String> environment = const <String, String>{},
-  }) : environment = environment.lock;
+    this.environment = const ProgramEnvironmentOverrides.empty(),
+  });
 
   final String locale;
   final String arguments;
-  final IMap<String, String> environment;
+  final ProgramEnvironmentOverrides environment;
 
   Map<String, Object?> toJson() {
     return <String, Object?>{
       'locale': locale,
       'arguments': arguments,
-      'environment': environment.unlockView,
+      'environment': environment.toMap(),
     };
   }
 

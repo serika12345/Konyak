@@ -175,6 +175,10 @@ def require_result_boundary_rules() -> None:
     )
     require_contains(
         "packages/konyak_cli/lib/src/domain/program/program_settings_models.dart",
+        "final ProgramEnvironmentOverrides environment;",
+    )
+    require_not_contains(
+        "packages/konyak_cli/lib/src/domain/program/program_settings_models.dart",
         "final IMap<String, String> environment;",
     )
     require_not_contains(

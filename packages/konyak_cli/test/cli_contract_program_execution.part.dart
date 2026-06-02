@@ -138,7 +138,7 @@ void defineProgramExecutionContractTests() {
     expect(settings, isA<ProgramSettingsRead>());
     expect((settings as ProgramSettingsRead).settings.locale, 'ja_JP.UTF-8');
     expect(settings.settings.arguments, '-silent -windowed');
-    expect(settings.settings.environment.unlockView, {
+    expect(settings.settings.environment.toMap(), {
       'STEAM_COMPAT_DATA_PATH': '/compat',
     });
   });
@@ -221,7 +221,9 @@ void defineProgramExecutionContractTests() {
         settings: ProgramSettingsRecord(
           locale: 'ja_JP.UTF-8',
           arguments: '-silent -windowed',
-          environment: {'STEAM_COMPAT_DATA_PATH': '/compat'},
+          environment: ProgramEnvironmentOverrides(const {
+            'STEAM_COMPAT_DATA_PATH': '/compat',
+          }),
         ),
       ),
     );

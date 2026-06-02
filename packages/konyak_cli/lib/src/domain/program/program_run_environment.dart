@@ -1,5 +1,38 @@
 part of '../../../konyak_cli.dart';
 
+final class ProgramEnvironmentOverrides {
+  ProgramEnvironmentOverrides(Map<String, String> variables)
+    : _variables = variables
+          .map(
+            (name, value) =>
+                MapEntry(_requiredEnvironmentVariableName(name), value),
+          )
+          .lock;
+
+  const ProgramEnvironmentOverrides.empty() : _variables = const IMapConst({});
+
+  final IMap<String, String> _variables;
+
+  Map<String, String> toMap() {
+    return _variables.unlockView;
+  }
+
+  ProgramEnvironmentOverrides add(String name, String value) {
+    return ProgramEnvironmentOverrides(
+      _variables.add(_requiredEnvironmentVariableName(name), value).unlockView,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is ProgramEnvironmentOverrides &&
+        other._variables == _variables;
+  }
+
+  @override
+  int get hashCode => _variables.hashCode;
+}
+
 final class ProgramRunEnvironment {
   ProgramRunEnvironment(Map<String, String> variables)
     : _variables = variables

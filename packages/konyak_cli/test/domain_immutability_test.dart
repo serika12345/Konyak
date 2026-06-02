@@ -318,15 +318,17 @@ void main() {
 
   test('program settings expose immutable environment snapshots', () {
     final environment = <String, String>{'LANG': 'ja_JP.UTF-8'};
-    final settings = ProgramSettingsRecord(environment: environment);
+    final settings = ProgramSettingsRecord(
+      environment: ProgramEnvironmentOverrides(environment),
+    );
     environment['LANG'] = 'en_US.UTF-8';
 
-    expect(settings.environment.unlockView, {'LANG': 'ja_JP.UTF-8'});
-    expect(settings.environment.add('WINEDEBUG', '-all').unlockView, {
+    expect(settings.environment.toMap(), {'LANG': 'ja_JP.UTF-8'});
+    expect(settings.environment.add('WINEDEBUG', '-all').toMap(), {
       'LANG': 'ja_JP.UTF-8',
       'WINEDEBUG': '-all',
     });
-    expect(settings.environment.unlockView, {'LANG': 'ja_JP.UTF-8'});
+    expect(settings.environment.toMap(), {'LANG': 'ja_JP.UTF-8'});
   });
 
   test('program run environments expose immutable snapshots', () {
