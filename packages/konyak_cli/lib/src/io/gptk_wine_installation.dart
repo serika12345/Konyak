@@ -81,7 +81,8 @@ class DartIoGptkWineInstaller implements GptkWineInstaller {
       return GptkWineInstallFailed(validationFailure);
     }
 
-    final runtimeRoot = Directory(_macosWineRuntimeRoot(environment));
+    final hostEnvironment = HostEnvironment(environment);
+    final runtimeRoot = Directory(_macosWineRuntimeRoot(hostEnvironment));
     final backupRoot = Directory('${runtimeRoot.path}.backup');
     final lockFile = File(_runtimeInstallLockPath(runtimeRoot));
     var lockCreated = false;
@@ -164,7 +165,7 @@ class DartIoGptkWineInstaller implements GptkWineInstaller {
         componentId: componentId,
         sourceDirectory: sourceRoot.path,
         runtimeRoot: runtimeRoot.path,
-        installedExecutablePath: _macosWineExecutable(environment),
+        installedExecutablePath: _macosWineExecutable(hostEnvironment),
       ),
     );
   }

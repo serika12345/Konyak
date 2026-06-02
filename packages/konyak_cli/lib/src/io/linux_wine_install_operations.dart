@@ -8,6 +8,7 @@ extension _DartIoLinuxWineInstallerOperations on DartIoLinuxWineInstaller {
     Map<String, String> componentVersions = const <String, String>{},
     RuntimeInstallProgressSink? progressSink,
   }) {
+    final hostEnvironment = HostEnvironment(environment);
     final installResult = _runtimePackageInstaller.install(
       RuntimePackageInstallRequest(
         runtimeLabel: 'Linux Wine',
@@ -15,10 +16,10 @@ extension _DartIoLinuxWineInstallerOperations on DartIoLinuxWineInstaller {
         archiveSha256: archiveSha256,
         componentArchivePaths: componentArchivePaths,
         componentVersions: RuntimeComponentVersions(componentVersions),
-        runtimeRoot: Directory(_linuxWineRuntimeRoot(environment)),
+        runtimeRoot: Directory(_linuxWineRuntimeRoot(hostEnvironment)),
         requiredExecutableRelativePath:
             _linuxWineRuntimePlatformSpec.requiredExecutableRelativePath,
-        expectedExecutablePath: _linuxWineExecutable(environment),
+        expectedExecutablePath: _linuxWineExecutable(hostEnvironment),
         progressSink: progressSink,
       ),
     );

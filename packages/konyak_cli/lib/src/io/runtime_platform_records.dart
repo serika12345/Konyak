@@ -7,9 +7,11 @@ RuntimeRecord _macosWineRuntimeRecord({
 }) {
   const platformSpec = _macosKonyakRuntimePlatformSpec;
   final hostEnvironment = HostEnvironment(environment);
-  final applicationSupportPath = _konyakApplicationSupportFolder(environment);
-  final libraryPath = _macosWineRuntimeRoot(environment);
-  final executablePath = _macosWineExecutable(environment);
+  final applicationSupportPath = _konyakApplicationSupportFolder(
+    hostEnvironment,
+  );
+  final libraryPath = _macosWineRuntimeRoot(hostEnvironment);
+  final executablePath = _macosWineExecutable(hostEnvironment);
   final isInstalled = fileStatusProbe.exists(executablePath);
 
   return RuntimeRecord.fromParts(
@@ -53,7 +55,7 @@ RuntimeRecord _linuxWineRuntimeRecord({
 }) {
   const platformSpec = _linuxWineRuntimePlatformSpec;
   final hostEnvironment = HostEnvironment(environment);
-  final runtimeRoot = _linuxWineRuntimeRoot(environment);
+  final runtimeRoot = _linuxWineRuntimeRoot(hostEnvironment);
   final executablePath = _joinPath(runtimeRoot, const ['bin', 'wine']);
   final archiveUrl = _runtimeDefaultArchiveUrl(
     platformSpec: platformSpec,

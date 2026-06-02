@@ -17,10 +17,11 @@ class DartIoWinetricksVerbRepository implements WinetricksVerbRepository {
   }) {
     final resolvedEnvironment = environment ?? Platform.environment;
     final resolvedHostPlatform = hostPlatform ?? _currentHostPlatform();
+    final hostEnvironment = HostEnvironment(resolvedEnvironment);
     return DartIoWinetricksVerbRepository(
       runtimeRoot: switch (resolvedHostPlatform) {
-        KonyakHostPlatform.macos => _macosWineRuntimeRoot(resolvedEnvironment),
-        KonyakHostPlatform.linux => _linuxWineRuntimeRoot(resolvedEnvironment),
+        KonyakHostPlatform.macos => _macosWineRuntimeRoot(hostEnvironment),
+        KonyakHostPlatform.linux => _linuxWineRuntimeRoot(hostEnvironment),
       },
       hostPlatform: resolvedHostPlatform,
       lister: lister,

@@ -40,9 +40,12 @@ String _linuxWineTerminalShellCommandWithEnvironment({
   required BottleRecord bottle,
   required Map<String, String> environment,
 }) {
-  final executable = _linuxWineExecutable(environment);
-  final runtimeBin = _linuxManagedRuntimeBinFolder(environment);
-  final wineLibraryPath = environment['KONYAK_LINUX_WINE_LIBRARY_PATH'];
+  final hostEnvironment = HostEnvironment(environment);
+  final executable = _linuxWineExecutable(hostEnvironment);
+  final runtimeBin = _linuxManagedRuntimeBinFolder(hostEnvironment);
+  final wineLibraryPath = hostEnvironment.nonEmptyValue(
+    'KONYAK_LINUX_WINE_LIBRARY_PATH',
+  );
   final shellSetup = <String>[
     'cd ${_shellQuote(bottle.path)}',
     'export WINEPREFIX=${_shellQuote(bottle.path)}',
@@ -51,8 +54,8 @@ String _linuxWineTerminalShellCommandWithEnvironment({
       () => const <String>[],
       (path) => <String>['export PATH=${_shellQuote(path)}:\$PATH'],
     ),
-    if (wineLibraryPath != null && wineLibraryPath.trim().isNotEmpty)
-      'export LD_LIBRARY_PATH=${_shellQuote(wineLibraryPath.trim())}:\${LD_LIBRARY_PATH:-}',
+    if (wineLibraryPath != null)
+      'export LD_LIBRARY_PATH=${_shellQuote(wineLibraryPath)}:\${LD_LIBRARY_PATH:-}',
     'alias wine=${_shellQuote(executable)}',
     'alias wine64=${_shellQuote(executable)}',
     'alias winecfg=${_shellQuote('$executable winecfg')}',
@@ -71,7 +74,7 @@ String _macosWineTerminalShellCommand({
   required BottleRecord bottle,
   required Map<String, String> environment,
 }) {
-  final runtimeBin = _macosWineBinFolder(environment);
+  final runtimeBin = _macosWineBinFolder(HostEnvironment(environment));
   final commands = <String>[
     'cd ${_shellQuote(bottle.path)}',
     'export PATH=${_shellQuote(runtimeBin)}:\$PATH',

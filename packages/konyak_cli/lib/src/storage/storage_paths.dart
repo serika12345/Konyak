@@ -140,7 +140,9 @@ String _resolveBottleDataHome(
   }
 
   return switch (hostPlatform) {
-    KonyakHostPlatform.macos => _konyakApplicationSupportFolder(environment),
+    KonyakHostPlatform.macos => _konyakApplicationSupportFolder(
+      HostEnvironment(environment),
+    ),
     KonyakHostPlatform.linux => _resolveDataHome(environment),
   };
 }

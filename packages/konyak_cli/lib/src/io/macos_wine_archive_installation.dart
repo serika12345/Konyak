@@ -9,6 +9,7 @@ extension _MacosWineArchiveInstallation on DartIoMacosWineInstaller {
     bool preserveExistingRuntimeFiles = false,
     RuntimeInstallProgressSink? progressSink,
   }) {
+    final hostEnvironment = HostEnvironment(environment);
     final installResult = _runtimePackageInstaller.install(
       RuntimePackageInstallRequest(
         runtimeLabel: 'macOS Wine',
@@ -16,10 +17,10 @@ extension _MacosWineArchiveInstallation on DartIoMacosWineInstaller {
         archiveSha256: archiveSha256,
         componentArchivePaths: componentArchivePaths,
         componentVersions: RuntimeComponentVersions(componentVersions),
-        runtimeRoot: Directory(_macosWineRuntimeRoot(environment)),
+        runtimeRoot: Directory(_macosWineRuntimeRoot(hostEnvironment)),
         requiredExecutableRelativePath:
             _macosKonyakRuntimePlatformSpec.requiredExecutableRelativePath,
-        expectedExecutablePath: _macosWineExecutable(environment),
+        expectedExecutablePath: _macosWineExecutable(hostEnvironment),
         preserveExistingRuntimeFiles: preserveExistingRuntimeFiles,
         normalizeStagingRoot:
             _macosKonyakRuntimePlatformSpec.layoutNormalization ==
