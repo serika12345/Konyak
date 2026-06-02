@@ -300,7 +300,7 @@ task changes scope.
     - Keep progress emission at the installer boundary, not inside the planner.
     - Verify existing no-op, repair, incomplete runtime, source manifest,
       archive, and streaming progress tests before removing duplicated code.
-  - [ ] Split registry settings planning and parsing.
+  - [x] Split registry settings planning and parsing.
     - Move registry update/query argument construction into a pure planning
       file.
     - Move `reg query` stdout parsing and runtime settings merge logic into a
