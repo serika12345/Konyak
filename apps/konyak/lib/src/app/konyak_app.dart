@@ -12,6 +12,7 @@ import '../logs/log_reader_io.dart';
 import '../settings/app_settings_summary.dart';
 import 'app_constants.dart';
 import 'app_platform.dart';
+import 'app_platform_io.dart';
 import 'home_loader.dart';
 import 'widgets/icon_file_image.dart';
 
