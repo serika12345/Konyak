@@ -23,7 +23,7 @@ class MacosWineRuntimeCatalog implements RuntimeCatalog {
     FileStatusProbe fileStatusProbe = const DartIoFileStatusProbe(),
     RuntimeStackVersionProbe runtimeStackVersionProbe =
         const DartIoRuntimeStackVersionProbe(),
-  }) : environment = Map.unmodifiable(environment),
+  }) : environment = HostEnvironment(environment),
        _fileStatusProbe = fileStatusProbe,
        _runtimeStackVersionProbe = runtimeStackVersionProbe;
 
@@ -35,7 +35,7 @@ class MacosWineRuntimeCatalog implements RuntimeCatalog {
   }
 
   final KonyakHostPlatform hostPlatform;
-  final Map<String, String> environment;
+  final HostEnvironment environment;
   final FileStatusProbe _fileStatusProbe;
   final RuntimeStackVersionProbe _runtimeStackVersionProbe;
 
@@ -44,7 +44,7 @@ class MacosWineRuntimeCatalog implements RuntimeCatalog {
     return switch (hostPlatform) {
       KonyakHostPlatform.macos => <RuntimeRecord>[
         _macosWineRuntimeRecord(
-          environment: environment,
+          environment: environment.toMap(),
           fileStatusProbe: _fileStatusProbe,
           runtimeStackVersionProbe: _runtimeStackVersionProbe,
         ),
@@ -61,7 +61,7 @@ class KonyakRuntimeCatalog implements RuntimeCatalog {
     FileStatusProbe fileStatusProbe = const DartIoFileStatusProbe(),
     RuntimeStackVersionProbe runtimeStackVersionProbe =
         const DartIoRuntimeStackVersionProbe(),
-  }) : environment = Map.unmodifiable(environment),
+  }) : environment = HostEnvironment(environment),
        _fileStatusProbe = fileStatusProbe,
        _runtimeStackVersionProbe = runtimeStackVersionProbe;
 
@@ -73,7 +73,7 @@ class KonyakRuntimeCatalog implements RuntimeCatalog {
   }
 
   final KonyakHostPlatform hostPlatform;
-  final Map<String, String> environment;
+  final HostEnvironment environment;
   final FileStatusProbe _fileStatusProbe;
   final RuntimeStackVersionProbe _runtimeStackVersionProbe;
 
@@ -82,14 +82,14 @@ class KonyakRuntimeCatalog implements RuntimeCatalog {
     return switch (hostPlatform) {
       KonyakHostPlatform.macos => <RuntimeRecord>[
         _macosWineRuntimeRecord(
-          environment: environment,
+          environment: environment.toMap(),
           fileStatusProbe: _fileStatusProbe,
           runtimeStackVersionProbe: _runtimeStackVersionProbe,
         ),
       ],
       KonyakHostPlatform.linux => <RuntimeRecord>[
         _linuxWineRuntimeRecord(
-          environment: environment,
+          environment: environment.toMap(),
           fileStatusProbe: _fileStatusProbe,
           runtimeStackVersionProbe: _runtimeStackVersionProbe,
         ),

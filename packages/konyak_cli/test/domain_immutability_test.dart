@@ -365,6 +365,22 @@ void main() {
     );
   });
 
+  test('runtime catalogs expose immutable host environment snapshots', () {
+    final variables = <String, String>{
+      'KONYAK_RUNTIME_PROFILE': 'development',
+      'XDG_DATA_HOME': '/home/user/.local/share',
+    };
+    final catalog = KonyakRuntimeCatalog(
+      hostPlatform: KonyakHostPlatform.linux,
+      environment: variables,
+    );
+    variables['KONYAK_RUNTIME_PROFILE'] = 'managed';
+
+    final runtime = catalog.listRuntimes().single;
+
+    expect(runtime.distributionKind.toNullable(), 'development');
+  });
+
   test('process termination records expose immutable argv snapshots', () {
     final argv = <String>['wine', '/steam.exe'];
     final record = WineProcessTerminationRecord(
