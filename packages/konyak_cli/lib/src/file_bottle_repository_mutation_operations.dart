@@ -21,11 +21,16 @@ class _FileBottleRepositoryMutationOperations {
       return BottleCreateConflict(bottle.id);
     }
 
-    try {
+    final writeResult = _repositoryIoResult(() {
       _createFileBottleDirectories(bottle.path);
       _writeBottleMetadata(bottle);
-    } on FileSystemException catch (error) {
-      throw BottleRepositoryException(error.message);
+    });
+    final failure = writeResult.fold<BottleCreateResult?>(
+      BottleCreateFailed.new,
+      (_) => null,
+    );
+    if (failure != null) {
+      return failure;
     }
 
     return BottleCreated(bottle);
@@ -37,10 +42,15 @@ class _FileBottleRepositoryMutationOperations {
       return BottleDeleteMissing(id);
     }
 
-    try {
+    final deleteResult = _repositoryIoResult(() {
       _deleteFileBottleDirectoryIfPresent(bottle.path);
-    } on FileSystemException catch (error) {
-      throw BottleRepositoryException(error.message);
+    });
+    final failure = deleteResult.fold<BottleDeleteResult?>(
+      BottleDeleteFailed.new,
+      (_) => null,
+    );
+    if (failure != null) {
+      return failure;
     }
 
     return BottleDeleted(bottle);
@@ -62,11 +72,16 @@ class _FileBottleRepositoryMutationOperations {
       return BottleRenameConflict(renamed.id);
     }
 
-    try {
+    final writeResult = _repositoryIoResult(() {
       _moveFileBottleDirectoryIfChanged(from: bottle.path, to: renamed.path);
       _writeBottleMetadata(renamed);
-    } on FileSystemException catch (error) {
-      throw BottleRepositoryException(error.message);
+    });
+    final failure = writeResult.fold<BottleRenameResult?>(
+      BottleRenameFailed.new,
+      (_) => null,
+    );
+    if (failure != null) {
+      return failure;
     }
 
     return BottleRenamed(renamed);
@@ -87,11 +102,16 @@ class _FileBottleRepositoryMutationOperations {
 
     final moved = bottle.copyWith(path: destinationPath);
 
-    try {
+    final writeResult = _repositoryIoResult(() {
       _moveFileBottleDirectoryIfChanged(from: bottle.path, to: destinationPath);
       _writeBottleMetadata(moved);
-    } on FileSystemException catch (error) {
-      throw BottleRepositoryException(error.message);
+    });
+    final failure = writeResult.fold<BottleMoveResult?>(
+      BottleMoveFailed.new,
+      (_) => null,
+    );
+    if (failure != null) {
+      return failure;
     }
 
     return BottleMoved(moved);
@@ -105,10 +125,15 @@ class _FileBottleRepositoryMutationOperations {
 
     final updated = bottle.copyWith(windowsVersion: request.windowsVersion);
 
-    try {
+    final writeResult = _repositoryIoResult(() {
       _writeBottleMetadata(updated);
-    } on FileSystemException catch (error) {
-      throw BottleRepositoryException(error.message);
+    });
+    final failure = writeResult.fold<BottleUpdateResult?>(
+      BottleUpdateFailed.new,
+      (_) => null,
+    );
+    if (failure != null) {
+      return failure;
     }
 
     return BottleUpdated(updated);
@@ -122,10 +147,15 @@ class _FileBottleRepositoryMutationOperations {
 
     final updated = bottle.copyWith(runtimeSettings: request.runtimeSettings);
 
-    try {
+    final writeResult = _repositoryIoResult(() {
       _writeBottleMetadata(updated);
-    } on FileSystemException catch (error) {
-      throw BottleRepositoryException(error.message);
+    });
+    final failure = writeResult.fold<BottleUpdateResult?>(
+      BottleUpdateFailed.new,
+      (_) => null,
+    );
+    if (failure != null) {
+      return failure;
     }
 
     return BottleUpdated(updated);

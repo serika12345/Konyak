@@ -43,6 +43,45 @@ void defineProgramExecutionContractTests() {
     });
   });
 
+  test(
+    'get-program-settings --json reports repository I/O failures as JSON',
+    () {
+      final result = runCli(
+        const [
+          'get-program-settings',
+          'steam',
+          '--program',
+          '/downloads/Steam.exe',
+          '--json',
+        ],
+        bottleRepository: FailingBottleRepository(
+          dataHome: '/home/user/.local/share/konyak',
+          message: 'settings file is unreadable',
+          bottles: [
+            BottleRecord(
+              id: 'steam',
+              name: 'Steam',
+              path: '/home/user/.local/share/konyak/bottles/steam',
+              windowsVersion: 'win10',
+            ),
+          ],
+        ),
+      );
+
+      expect(result.exitCode, 74);
+      expect(result.stderr, isEmpty);
+
+      final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+      expect(payload, {
+        'schemaVersion': 1,
+        'error': {
+          'code': 'bottleRepositoryError',
+          'message': 'settings file is unreadable',
+        },
+      });
+    },
+  );
+
   test('set-program-settings --json persists program settings', () {
     final repository = MemoryBottleRepository(
       dataHome: '/home/user/.local/share/konyak',

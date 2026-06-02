@@ -555,6 +555,25 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
     });
   });
 
+  test('create-bottle --json reports repository I/O failures as JSON', () {
+    final result = runCli(
+      const ['create-bottle', '--name', 'Steam', '--json'],
+      bottleRepository: FailingBottleRepository(
+        dataHome: '/home/user/.local/share/konyak',
+        message: 'disk is full',
+      ),
+    );
+
+    expect(result.exitCode, 74);
+    expect(result.stderr, isEmpty);
+
+    final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+    expect(payload, {
+      'schemaVersion': 1,
+      'error': {'code': 'bottleRepositoryError', 'message': 'disk is full'},
+    });
+  });
+
   test('create-bottle --json supports non-ASCII bottle names', () {
     final repository = MemoryBottleRepository(
       dataHome: '/home/user/.local/share/konyak',

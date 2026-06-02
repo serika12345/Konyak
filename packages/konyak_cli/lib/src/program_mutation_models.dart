@@ -34,6 +34,12 @@ class ProgramPinConflict extends ProgramPinResult {
   final String programPath;
 }
 
+class ProgramPinFailed extends ProgramPinResult {
+  const ProgramPinFailed(this.message);
+
+  final String message;
+}
+
 class ProgramUnpinRequest {
   const ProgramUnpinRequest({
     required this.bottleId,
@@ -119,6 +125,12 @@ class ProgramUpdateMissingProgram extends ProgramUpdateResult {
   final String programPath;
 }
 
+class ProgramUpdateFailed extends ProgramUpdateResult {
+  const ProgramUpdateFailed(this.message);
+
+  final String message;
+}
+
 class ProgramSettingsRequest {
   const ProgramSettingsRequest({
     required this.bottleId,
@@ -157,6 +169,12 @@ class ProgramSettingsReadMissingBottle extends ProgramSettingsReadResult {
   final String bottleId;
 }
 
+class ProgramSettingsReadFailed extends ProgramSettingsReadResult {
+  const ProgramSettingsReadFailed(this.message);
+
+  final String message;
+}
+
 sealed class ProgramSettingsUpdateResult {
   const ProgramSettingsUpdateResult();
 }
@@ -171,4 +189,10 @@ class ProgramSettingsUpdateMissingBottle extends ProgramSettingsUpdateResult {
   const ProgramSettingsUpdateMissingBottle(this.bottleId);
 
   final String bottleId;
+}
+
+class ProgramSettingsUpdateFailed extends ProgramSettingsUpdateResult {
+  const ProgramSettingsUpdateFailed(this.message);
+
+  final String message;
 }

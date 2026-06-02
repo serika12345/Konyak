@@ -38,6 +38,9 @@ CliResult? _handlePinnedProgramCommand(
         message: 'Program is already pinned.',
         extra: <String, Object?>{'programPath': programPath},
       ),
+      ProgramPinFailed(:final message) => _bottleRepositoryFailureJsonResult(
+        message,
+      ),
     };
   }
 

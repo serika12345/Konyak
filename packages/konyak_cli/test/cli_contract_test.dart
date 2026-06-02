@@ -102,6 +102,28 @@ final class RecordingBottlePrefixInitializer
   }
 }
 
+final class FailingBottleRepository extends MemoryBottleRepository {
+  FailingBottleRepository({
+    required super.dataHome,
+    required this.message,
+    super.bottles,
+  });
+
+  final String message;
+
+  @override
+  BottleCreateResult createBottle(BottleCreateRequest request) {
+    return BottleCreateFailed(message);
+  }
+
+  @override
+  ProgramSettingsReadResult readProgramSettings(
+    ProgramSettingsRequest request,
+  ) {
+    return ProgramSettingsReadFailed(message);
+  }
+}
+
 final class RecordingPathOpener implements PathOpener {
   RecordingPathOpener({required this.result});
 

@@ -12,6 +12,9 @@ CliResult _programUpdateJsonResult(ProgramUpdateResult result) {
       message: 'Program is not pinned.',
       extra: <String, Object?>{'programPath': programPath},
     ),
+    ProgramUpdateFailed(:final message) => _bottleRepositoryFailureJsonResult(
+      message,
+    ),
   };
 }
 
@@ -66,10 +69,15 @@ CliResult _runPinnedProgramLauncherCli({
       programPath: launcherManifest.programPath,
     ),
   );
-  final programSettings = switch (settingsResult) {
-    ProgramSettingsRead(:final settings) => settings,
-    ProgramSettingsReadMissingBottle() => ProgramSettingsRecord(),
-  };
+  final ProgramSettingsRecord programSettings;
+  switch (settingsResult) {
+    case ProgramSettingsRead(:final settings):
+      programSettings = settings;
+    case ProgramSettingsReadMissingBottle():
+      programSettings = ProgramSettingsRecord();
+    case ProgramSettingsReadFailed(:final message):
+      return _bottleRepositoryFailureJsonResult(message);
+  }
   final programRunRequest = programRunPlanner.plan(
     bottle: bottle,
     programPath: launcherManifest.programPath,
@@ -111,6 +119,8 @@ CliResult _programSettingsReadJsonResult({
     ProgramSettingsReadMissingBottle(:final bottleId) => _bottleNotFoundError(
       bottleId,
     ),
+    ProgramSettingsReadFailed(:final message) =>
+      _bottleRepositoryFailureJsonResult(message),
   };
 }
 
@@ -127,6 +137,8 @@ CliResult _programSettingsUpdateJsonResult({
     ProgramSettingsUpdateMissingBottle(:final bottleId) => _bottleNotFoundError(
       bottleId,
     ),
+    ProgramSettingsUpdateFailed(:final message) =>
+      _bottleRepositoryFailureJsonResult(message),
   };
 }
 

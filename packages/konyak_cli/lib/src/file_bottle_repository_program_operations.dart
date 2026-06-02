@@ -26,10 +26,15 @@ class _FileBottleRepositoryProgramOperations {
       programMetadataExtractor: _programMetadataExtractor,
     );
 
-    try {
+    final writeResult = _repositoryIoResult(() {
       _writeBottleMetadata(updated);
-    } on FileSystemException catch (error) {
-      throw BottleRepositoryException(error.message);
+    });
+    final failure = writeResult.fold<ProgramPinResult?>(
+      ProgramPinFailed.new,
+      (_) => null,
+    );
+    if (failure != null) {
+      return failure;
     }
 
     return ProgramPinned(updated);
@@ -47,10 +52,15 @@ class _FileBottleRepositoryProgramOperations {
 
     final updated = _bottleWithoutPinnedProgram(bottle, request.programPath);
 
-    try {
+    final writeResult = _repositoryIoResult(() {
       _writeBottleMetadata(updated);
-    } on FileSystemException catch (error) {
-      throw BottleRepositoryException(error.message);
+    });
+    final failure = writeResult.fold<ProgramUpdateResult?>(
+      ProgramUpdateFailed.new,
+      (_) => null,
+    );
+    if (failure != null) {
+      return failure;
     }
 
     return ProgramUpdated(updated);
@@ -68,10 +78,15 @@ class _FileBottleRepositoryProgramOperations {
 
     final updated = _bottleWithRenamedPinnedProgram(bottle, request);
 
-    try {
+    final writeResult = _repositoryIoResult(() {
       _writeBottleMetadata(updated);
-    } on FileSystemException catch (error) {
-      throw BottleRepositoryException(error.message);
+    });
+    final failure = writeResult.fold<ProgramUpdateResult?>(
+      ProgramUpdateFailed.new,
+      (_) => null,
+    );
+    if (failure != null) {
+      return failure;
     }
 
     return ProgramUpdated(updated);
@@ -85,20 +100,18 @@ class _FileBottleRepositoryProgramOperations {
       return ProgramSettingsReadMissingBottle(request.bottleId);
     }
 
-    try {
-      return ProgramSettingsRead(
-        _readProgramSettingsJson(
-          _programSettingsJsonPath(
-            bottle: bottle,
-            programPath: request.programPath,
-          ),
+    final readResult = _repositoryIoResult(
+      () => _readProgramSettingsJson(
+        _programSettingsJsonPath(
+          bottle: bottle,
+          programPath: request.programPath,
         ),
-      );
-    } on FileSystemException catch (error) {
-      throw BottleRepositoryException(error.message);
-    } on FormatException catch (error) {
-      throw BottleRepositoryException(error.message);
-    }
+      ),
+    );
+    return readResult.fold<ProgramSettingsReadResult>(
+      ProgramSettingsReadFailed.new,
+      ProgramSettingsRead.new,
+    );
   }
 
   ProgramSettingsUpdateResult setProgramSettings(
@@ -109,7 +122,7 @@ class _FileBottleRepositoryProgramOperations {
       return ProgramSettingsUpdateMissingBottle(request.bottleId);
     }
 
-    try {
+    final writeResult = _repositoryIoResult(() {
       _writeProgramSettingsJson(
         path: _programSettingsJsonPath(
           bottle: bottle,
@@ -117,8 +130,13 @@ class _FileBottleRepositoryProgramOperations {
         ),
         settings: request.settings,
       );
-    } on FileSystemException catch (error) {
-      throw BottleRepositoryException(error.message);
+    });
+    final failure = writeResult.fold<ProgramSettingsUpdateResult?>(
+      ProgramSettingsUpdateFailed.new,
+      (_) => null,
+    );
+    if (failure != null) {
+      return failure;
     }
 
     return ProgramSettingsUpdated(request.settings);

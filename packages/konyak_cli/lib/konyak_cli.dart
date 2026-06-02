@@ -6,6 +6,7 @@ import 'dart:typed_data';
 
 import 'package:args/args.dart';
 import 'package:crypto/crypto.dart';
+import 'package:fpdart/fpdart.dart';
 
 part 'src/cli_commands.dart';
 part 'src/cli_app_handlers.dart';

@@ -22,6 +22,9 @@ CliResult? _handleBottleMutationCommand(
         message: 'Bottle already exists.',
         extra: <String, Object?>{'bottleId': bottleId},
       ),
+      BottleCreateFailed(:final message) => _bottleRepositoryFailureJsonResult(
+        message,
+      ),
     };
   }
 
@@ -65,6 +68,9 @@ CliResult? _handleBottleMutationCommand(
         'deletedBottle': bottle.toJson(),
       }),
       BottleDeleteMissing(:final bottleId) => _bottleNotFoundError(bottleId),
+      BottleDeleteFailed(:final message) => _bottleRepositoryFailureJsonResult(
+        message,
+      ),
     };
   }
 
@@ -84,6 +90,9 @@ CliResult? _handleBottleMutationCommand(
         message: 'Bottle already exists.',
         extra: <String, Object?>{'bottleId': bottleId},
       ),
+      BottleRenameFailed(:final message) => _bottleRepositoryFailureJsonResult(
+        message,
+      ),
     };
   }
 
@@ -102,6 +111,9 @@ CliResult? _handleBottleMutationCommand(
         code: 'bottleMoveDestinationExists',
         message: 'Bottle move destination exists.',
         extra: <String, Object?>{'path': path},
+      ),
+      BottleMoveFailed(:final message) => _bottleRepositoryFailureJsonResult(
+        message,
       ),
     };
   }
@@ -194,5 +206,8 @@ CliResult _bottleUpdateJsonResult(BottleUpdateResult result) {
   return switch (result) {
     BottleUpdated(:final bottle) => _bottleJsonResult(bottle),
     BottleUpdateMissing(:final bottleId) => _bottleNotFoundError(bottleId),
+    BottleUpdateFailed(:final message) => _bottleRepositoryFailureJsonResult(
+      message,
+    ),
   };
 }

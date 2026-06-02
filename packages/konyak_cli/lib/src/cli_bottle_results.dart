@@ -33,6 +33,14 @@ CliResult _bottleArchiveImportJsonResult(BottleArchiveImportResult result) {
   };
 }
 
+CliResult _bottleRepositoryFailureJsonResult(String message) {
+  return _jsonError(
+    exitCode: 74,
+    code: 'bottleRepositoryError',
+    message: message,
+  );
+}
+
 CliResult? _applyRuntimeSettingsRegistryUpdates({
   required BottleRecord bottle,
   required BottleRuntimeSettings runtimeSettings,

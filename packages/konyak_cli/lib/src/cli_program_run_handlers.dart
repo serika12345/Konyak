@@ -49,10 +49,15 @@ CliResult _runProgramJsonResult(
       programPath: request.programPath,
     ),
   );
-  final programSettings = switch (settingsResult) {
-    ProgramSettingsRead(:final settings) => settings,
-    ProgramSettingsReadMissingBottle() => ProgramSettingsRecord(),
-  };
+  final ProgramSettingsRecord programSettings;
+  switch (settingsResult) {
+    case ProgramSettingsRead(:final settings):
+      programSettings = settings;
+    case ProgramSettingsReadMissingBottle():
+      programSettings = ProgramSettingsRecord();
+    case ProgramSettingsReadFailed(:final message):
+      return _bottleRepositoryFailureJsonResult(message);
+  }
 
   final programRunRequest = context.programRunPlanner.plan(
     bottle: bottle,

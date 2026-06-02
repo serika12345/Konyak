@@ -11,3 +11,13 @@ class AppSettingsRepositoryException implements Exception {
 
   final String message;
 }
+
+Either<String, T> _repositoryIoResult<T>(T Function() operation) {
+  try {
+    return Right<String, T>(operation());
+  } on FileSystemException catch (error) {
+    return Left<String, T>(error.message);
+  } on FormatException catch (error) {
+    return Left<String, T>(error.message);
+  }
+}

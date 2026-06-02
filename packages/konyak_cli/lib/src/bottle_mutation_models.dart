@@ -53,6 +53,12 @@ class BottleCreateConflict extends BottleCreateResult {
   final String bottleId;
 }
 
+class BottleCreateFailed extends BottleCreateResult {
+  const BottleCreateFailed(this.message);
+
+  final String message;
+}
+
 sealed class BottleArchiveExportResult {
   const BottleArchiveExportResult();
 }
@@ -113,6 +119,12 @@ class BottleDeleteMissing extends BottleDeleteResult {
   final String bottleId;
 }
 
+class BottleDeleteFailed extends BottleDeleteResult {
+  const BottleDeleteFailed(this.message);
+
+  final String message;
+}
+
 class BottleRenameRequest {
   const BottleRenameRequest({required this.bottleId, required this.name});
 
@@ -142,6 +154,12 @@ class BottleRenameConflict extends BottleRenameResult {
   final String bottleId;
 }
 
+class BottleRenameFailed extends BottleRenameResult {
+  const BottleRenameFailed(this.message);
+
+  final String message;
+}
+
 class BottleMoveRequest {
   const BottleMoveRequest({required this.bottleId, required this.path});
 
@@ -169,6 +187,12 @@ class BottleMoveConflict extends BottleMoveResult {
   const BottleMoveConflict(this.path);
 
   final String path;
+}
+
+class BottleMoveFailed extends BottleMoveResult {
+  const BottleMoveFailed(this.message);
+
+  final String message;
 }
 
 class WindowsVersionUpdateRequest {
@@ -205,4 +229,10 @@ class BottleUpdateMissing extends BottleUpdateResult {
   const BottleUpdateMissing(this.bottleId);
 
   final String bottleId;
+}
+
+class BottleUpdateFailed extends BottleUpdateResult {
+  const BottleUpdateFailed(this.message);
+
+  final String message;
 }
