@@ -95,6 +95,7 @@ part 'src/macos_wine_install_requests.dart';
 part 'src/linux_wine_install_requests.dart';
 part 'src/macos_wine_install_results.dart';
 part 'src/linux_wine_install_results.dart';
+part 'src/runtime_install_plans.dart';
 part 'src/runtime_package_installation.dart';
 part 'src/gptk_wine_installation.dart';
 part 'src/macos_wine_installation.dart';

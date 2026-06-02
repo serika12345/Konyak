@@ -40,114 +40,93 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
       fraction: 0,
     );
 
-    if (hostPlatform != KonyakHostPlatform.linux) {
-      return const LinuxWineInstallFailed(
-        'Linux Wine installation is supported on Linux only.',
-      );
-    }
-
     final currentRuntime = _linuxWineRuntimeRecord(
       environment: environment,
       fileStatusProbe: _fileStatusProbe,
       runtimeStackVersionProbe: _runtimeStackVersionProbe,
     );
-    final componentArchivePaths = List<String>.unmodifiable(
-      request.componentArchivePaths,
+    final plan = _linuxWineInstallPlan(
+      hostPlatform: hostPlatform,
+      environment: environment,
+      request: request,
+      currentRuntime: currentRuntime,
     );
-    final sourceManifest =
-        request.sourceManifest ??
-        _runtimeSourceManifestForPlatform(
-          platformSpec: _linuxWineRuntimePlatformSpec,
-          environment: environment,
+
+    switch (plan) {
+      case _RuntimeWineInstallUnsupported(:final message):
+        return LinuxWineInstallFailed(message);
+      case _RuntimeWineInstallAlreadyInstalled(:final runtime):
+        _emitRuntimeInstallProgress(
+          progress,
+          stage: 'complete',
+          message: 'Konyak Linux Wine is already installed.',
+          fraction: 1,
         );
-    final sourceManifestSignature =
-        request.sourceManifestSignature ??
-        _runtimeSourceManifestSignatureForPlatform(
-          platformSpec: _linuxWineRuntimePlatformSpec,
-          environment: environment,
+        return LinuxWineInstallCompleted(runtime: runtime);
+      case _RuntimeWineInstallIncompleteWithoutSource(:final message):
+        return LinuxWineInstallFailed(message);
+      case _RuntimeWineInstallFromSourceManifest(
+        :final sourceManifest,
+        :final sourceManifestSignature,
+      ):
+        return _installLinuxWineStackFromSourceManifest(
+          sourceManifest,
+          sourceManifestSignature: sourceManifestSignature,
+          progressSink: progress,
         );
-    if (!request.force &&
-        request.archivePath == null &&
-        request.archiveUrl == null &&
-        componentArchivePaths.isEmpty &&
-        request.sourceManifest == null &&
-        currentRuntime.isInstalled == true &&
-        currentRuntime.stack?.isComplete == true) {
-      _emitRuntimeInstallProgress(
-        progress,
-        stage: 'complete',
-        message: 'Konyak Linux Wine is already installed.',
-        fraction: 1,
-      );
-      return LinuxWineInstallCompleted(runtime: currentRuntime);
-    }
-
-    if (sourceManifest != null) {
-      return _installLinuxWineStackFromSourceManifest(
-        sourceManifest,
-        sourceManifestSignature: sourceManifestSignature,
-        progressSink: progress,
-      );
-    }
-
-    final archivePath = request.archivePath;
-    if (archivePath != null) {
-      return _installLinuxWineArchive(
-        archivePath: archivePath,
-        archiveSha256: request.archiveSha256,
-        componentArchivePaths: componentArchivePaths,
-        progressSink: progress,
-      );
-    }
-
-    final archiveUrl =
-        request.archiveUrl ??
-        _runtimeDefaultArchiveUrl(
-          platformSpec: _linuxWineRuntimePlatformSpec,
-          environment: environment,
+      case _RuntimeWineInstallFromArchive(
+        :final archivePath,
+        :final archiveSha256,
+        :final componentArchivePaths,
+      ):
+        return _installLinuxWineArchive(
+          archivePath: archivePath,
+          archiveSha256: archiveSha256,
+          componentArchivePaths: componentArchivePaths,
+          progressSink: progress,
         );
-    if (archiveUrl == null) {
-      return const LinuxWineInstallFailed(
-        'Linux Wine archive is not configured.',
-      );
-    }
+      case _RuntimeWineInstallMissingArchiveSource(:final message):
+        return LinuxWineInstallFailed(message);
+      case _RuntimeWineInstallDownloadArchive(
+        :final archiveUrl,
+        :final archiveFileName,
+        :final archiveSha256,
+        :final componentArchivePaths,
+      ):
+        final tempDirectory = Directory.systemTemp.createTempSync(
+          'konyak-linux-wine-',
+        );
+        final downloadedArchivePath = _joinPath(tempDirectory.path, [
+          archiveFileName,
+        ]);
 
-    final tempDirectory = Directory.systemTemp.createTempSync(
-      'konyak-linux-wine-',
-    );
-    final archiveFileName =
-        _fileNameFromUrl(archiveUrl) ??
-        _linuxWineRuntimePlatformSpec.defaultArchiveFileName;
-    final downloadedArchivePath = _joinPath(tempDirectory.path, [
-      archiveFileName,
-    ]);
+        try {
+          final downloadFailure = _downloadRuntimeStackSourceArchive(
+            source: archiveUrl,
+            targetPath: downloadedArchivePath,
+            progressSink: progress,
+            stage: 'downloading',
+            message: 'Downloading Konyak Linux Wine...',
+            startFraction: 0.05,
+            endFraction: 0.65,
+          );
+          if (downloadFailure != null) {
+            return LinuxWineInstallFailed(downloadFailure);
+          }
 
-    try {
-      final downloadFailure = _downloadRuntimeStackSourceArchive(
-        source: archiveUrl,
-        targetPath: downloadedArchivePath,
-        progressSink: progress,
-        stage: 'downloading',
-        message: 'Downloading Konyak Linux Wine...',
-        startFraction: 0.05,
-        endFraction: 0.65,
-      );
-      if (downloadFailure != null) {
-        return LinuxWineInstallFailed(downloadFailure);
-      }
-
-      return _installLinuxWineArchive(
-        archivePath: downloadedArchivePath,
-        archiveSha256: request.archiveSha256,
-        componentArchivePaths: componentArchivePaths,
-        progressSink: progress,
-      );
-    } on FileSystemException catch (error) {
-      return LinuxWineInstallFailed(error.message);
-    } on ProcessException catch (error) {
-      return LinuxWineInstallFailed(error.message);
-    } finally {
-      _deleteDirectoryIfPresent(tempDirectory);
+          return _installLinuxWineArchive(
+            archivePath: downloadedArchivePath,
+            archiveSha256: archiveSha256,
+            componentArchivePaths: componentArchivePaths,
+            progressSink: progress,
+          );
+        } on FileSystemException catch (error) {
+          return LinuxWineInstallFailed(error.message);
+        } on ProcessException catch (error) {
+          return LinuxWineInstallFailed(error.message);
+        } finally {
+          _deleteDirectoryIfPresent(tempDirectory);
+        }
     }
   }
 
@@ -163,114 +142,126 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
       fraction: 0,
     );
 
-    if (hostPlatform != KonyakHostPlatform.linux) {
-      return const LinuxWineInstallFailed(
-        'Linux Wine installation is supported on Linux only.',
-      );
-    }
-
     final currentRuntime = _linuxWineRuntimeRecord(
       environment: environment,
       fileStatusProbe: _fileStatusProbe,
       runtimeStackVersionProbe: _runtimeStackVersionProbe,
     );
-    final componentArchivePaths = List<String>.unmodifiable(
-      request.componentArchivePaths,
+    final plan = _linuxWineInstallPlan(
+      hostPlatform: hostPlatform,
+      environment: environment,
+      request: request,
+      currentRuntime: currentRuntime,
     );
-    final sourceManifest =
-        request.sourceManifest ??
-        _runtimeSourceManifestForPlatform(
-          platformSpec: _linuxWineRuntimePlatformSpec,
-          environment: environment,
+
+    switch (plan) {
+      case _RuntimeWineInstallUnsupported(:final message):
+        return LinuxWineInstallFailed(message);
+      case _RuntimeWineInstallAlreadyInstalled(:final runtime):
+        _emitRuntimeInstallProgress(
+          progress,
+          stage: 'complete',
+          message: 'Konyak Linux Wine is already installed.',
+          fraction: 1,
         );
-    final sourceManifestSignature =
-        request.sourceManifestSignature ??
+        return LinuxWineInstallCompleted(runtime: runtime);
+      case _RuntimeWineInstallIncompleteWithoutSource(:final message):
+        return LinuxWineInstallFailed(message);
+      case _RuntimeWineInstallFromSourceManifest(
+        :final sourceManifest,
+        :final sourceManifestSignature,
+      ):
+        return _installLinuxWineStackFromSourceManifestStreaming(
+          sourceManifest,
+          sourceManifestSignature: sourceManifestSignature,
+          progressSink: progress,
+        );
+      case _RuntimeWineInstallFromArchive(
+        :final archivePath,
+        :final archiveSha256,
+        :final componentArchivePaths,
+      ):
+        return _installLinuxWineArchive(
+          archivePath: archivePath,
+          archiveSha256: archiveSha256,
+          componentArchivePaths: componentArchivePaths,
+          progressSink: progress,
+        );
+      case _RuntimeWineInstallMissingArchiveSource(:final message):
+        return LinuxWineInstallFailed(message);
+      case _RuntimeWineInstallDownloadArchive(
+        :final archiveUrl,
+        :final archiveFileName,
+        :final archiveSha256,
+        :final componentArchivePaths,
+      ):
+        final tempDirectory = Directory.systemTemp.createTempSync(
+          'konyak-linux-wine-',
+        );
+        final downloadedArchivePath = _joinPath(tempDirectory.path, [
+          archiveFileName,
+        ]);
+
+        try {
+          final downloadFailure =
+              await _downloadRuntimeStackSourceArchiveStreaming(
+                source: archiveUrl,
+                targetPath: downloadedArchivePath,
+                progressSink: progress,
+                stage: 'downloading',
+                message: 'Downloading Konyak Linux Wine...',
+                startFraction: 0.05,
+                endFraction: 0.65,
+              );
+          if (downloadFailure != null) {
+            return LinuxWineInstallFailed(downloadFailure);
+          }
+
+          return _installLinuxWineArchive(
+            archivePath: downloadedArchivePath,
+            archiveSha256: archiveSha256,
+            componentArchivePaths: componentArchivePaths,
+            progressSink: progress,
+          );
+        } on FileSystemException catch (error) {
+          return LinuxWineInstallFailed(error.message);
+        } on ProcessException catch (error) {
+          return LinuxWineInstallFailed(error.message);
+        } finally {
+          _deleteDirectoryIfPresent(tempDirectory);
+        }
+    }
+  }
+}
+
+_RuntimeWineInstallPlan _linuxWineInstallPlan({
+  required KonyakHostPlatform hostPlatform,
+  required Map<String, String> environment,
+  required LinuxWineInstallRequest request,
+  required RuntimeRecord currentRuntime,
+}) {
+  return _runtimeWineInstallPlan(
+    hostPlatformSupported: hostPlatform == KonyakHostPlatform.linux,
+    unsupportedPlatformMessage:
+        'Linux Wine installation is supported on Linux only.',
+    requestOperation: request.requestOperation,
+    currentRuntime: currentRuntime,
+    configuredSourceManifest: _runtimeSourceManifestForPlatform(
+      platformSpec: _linuxWineRuntimePlatformSpec,
+      environment: environment,
+    ),
+    configuredSourceManifestSignature:
         _runtimeSourceManifestSignatureForPlatform(
           platformSpec: _linuxWineRuntimePlatformSpec,
           environment: environment,
-        );
-    if (!request.force &&
-        request.archivePath == null &&
-        request.archiveUrl == null &&
-        componentArchivePaths.isEmpty &&
-        request.sourceManifest == null &&
-        currentRuntime.isInstalled == true &&
-        currentRuntime.stack?.isComplete == true) {
-      _emitRuntimeInstallProgress(
-        progress,
-        stage: 'complete',
-        message: 'Konyak Linux Wine is already installed.',
-        fraction: 1,
-      );
-      return LinuxWineInstallCompleted(runtime: currentRuntime);
-    }
-
-    if (sourceManifest != null) {
-      return _installLinuxWineStackFromSourceManifestStreaming(
-        sourceManifest,
-        sourceManifestSignature: sourceManifestSignature,
-        progressSink: progress,
-      );
-    }
-
-    final archivePath = request.archivePath;
-    if (archivePath != null) {
-      return _installLinuxWineArchive(
-        archivePath: archivePath,
-        archiveSha256: request.archiveSha256,
-        componentArchivePaths: componentArchivePaths,
-        progressSink: progress,
-      );
-    }
-
-    final archiveUrl =
-        request.archiveUrl ??
-        _runtimeDefaultArchiveUrl(
-          platformSpec: _linuxWineRuntimePlatformSpec,
-          environment: environment,
-        );
-    if (archiveUrl == null) {
-      return const LinuxWineInstallFailed(
-        'Linux Wine archive is not configured.',
-      );
-    }
-
-    final tempDirectory = Directory.systemTemp.createTempSync(
-      'konyak-linux-wine-',
-    );
-    final archiveFileName =
-        _fileNameFromUrl(archiveUrl) ??
-        _linuxWineRuntimePlatformSpec.defaultArchiveFileName;
-    final downloadedArchivePath = _joinPath(tempDirectory.path, [
-      archiveFileName,
-    ]);
-
-    try {
-      final downloadFailure = await _downloadRuntimeStackSourceArchiveStreaming(
-        source: archiveUrl,
-        targetPath: downloadedArchivePath,
-        progressSink: progress,
-        stage: 'downloading',
-        message: 'Downloading Konyak Linux Wine...',
-        startFraction: 0.05,
-        endFraction: 0.65,
-      );
-      if (downloadFailure != null) {
-        return LinuxWineInstallFailed(downloadFailure);
-      }
-
-      return _installLinuxWineArchive(
-        archivePath: downloadedArchivePath,
-        archiveSha256: request.archiveSha256,
-        componentArchivePaths: componentArchivePaths,
-        progressSink: progress,
-      );
-    } on FileSystemException catch (error) {
-      return LinuxWineInstallFailed(error.message);
-    } on ProcessException catch (error) {
-      return LinuxWineInstallFailed(error.message);
-    } finally {
-      _deleteDirectoryIfPresent(tempDirectory);
-    }
-  }
+        ),
+    defaultArchiveUrl: _runtimeDefaultArchiveUrl(
+      platformSpec: _linuxWineRuntimePlatformSpec,
+      environment: environment,
+    ),
+    defaultArchiveFileName:
+        _linuxWineRuntimePlatformSpec.defaultArchiveFileName,
+    missingArchiveMessage: 'Linux Wine archive is not configured.',
+    incompleteRuntimeMessage: null,
+  );
 }

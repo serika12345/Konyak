@@ -40,133 +40,99 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
       fraction: 0,
     );
 
-    if (hostPlatform != KonyakHostPlatform.macos) {
-      return const MacosWineInstallFailed(
-        'macOS Wine installation is supported on macOS only.',
-      );
-    }
-
     final currentRuntime = _macosWineRuntimeRecord(
       environment: environment,
       fileStatusProbe: _fileStatusProbe,
       runtimeStackVersionProbe: _runtimeStackVersionProbe,
     );
-    final componentArchivePaths = List<String>.unmodifiable(
-      request.componentArchivePaths,
+    final plan = _macosWineInstallPlan(
+      hostPlatform: hostPlatform,
+      environment: environment,
+      request: request,
+      currentRuntime: currentRuntime,
     );
-    final sourceManifest =
-        request.sourceManifest ??
-        _runtimeSourceManifestForPlatform(
-          platformSpec: _macosKonyakRuntimePlatformSpec,
-          environment: environment,
+
+    switch (plan) {
+      case _RuntimeWineInstallUnsupported(:final message):
+        return MacosWineInstallFailed(message);
+      case _RuntimeWineInstallAlreadyInstalled(:final runtime):
+        _emitRuntimeInstallProgress(
+          progress,
+          stage: 'complete',
+          message: 'Konyak macOS Wine is already installed.',
+          fraction: 1,
         );
-    final sourceManifestSignature =
-        request.sourceManifestSignature ??
-        _runtimeSourceManifestSignatureForPlatform(
-          platformSpec: _macosKonyakRuntimePlatformSpec,
-          environment: environment,
+        return MacosWineInstallCompleted(runtime: runtime);
+      case _RuntimeWineInstallIncompleteWithoutSource(:final message):
+        return MacosWineInstallFailed(message);
+      case _RuntimeWineInstallFromSourceManifest(
+        :final sourceManifest,
+        :final sourceManifestSignature,
+        :final preserveExistingRuntimeFiles,
+      ):
+        return _installMacosWineStackFromSourceManifest(
+          sourceManifest,
+          sourceManifestSignature: sourceManifestSignature,
+          preserveExistingRuntimeFiles: preserveExistingRuntimeFiles,
+          progressSink: progress,
         );
-    final hasExplicitInstallSource =
-        request.archivePath != null ||
-        request.archiveUrl != null ||
-        componentArchivePaths.isNotEmpty ||
-        request.sourceManifest != null;
-    final shouldPreserveExistingRuntimeFiles =
-        !request.force &&
-        currentRuntime.isInstalled == true &&
-        currentRuntime.stack?.isComplete != true &&
-        !hasExplicitInstallSource;
-    if (!request.force &&
-        request.archivePath == null &&
-        request.archiveUrl == null &&
-        componentArchivePaths.isEmpty &&
-        request.sourceManifest == null &&
-        currentRuntime.isInstalled == true &&
-        currentRuntime.stack?.isComplete == true) {
-      _emitRuntimeInstallProgress(
-        progress,
-        stage: 'complete',
-        message: 'Konyak macOS Wine is already installed.',
-        fraction: 1,
-      );
-      return MacosWineInstallCompleted(runtime: currentRuntime);
-    }
-    if (!request.force &&
-        currentRuntime.isInstalled == true &&
-        currentRuntime.stack?.isComplete != true &&
-        !hasExplicitInstallSource &&
-        sourceManifest == null) {
-      return const MacosWineInstallFailed(
-        'Konyak macOS Wine is installed, but the runtime stack is incomplete. '
-        'Configure KONYAK_DEV_MACOS_WINE_STACK_MANIFEST or '
-        'KONYAK_MACOS_WINE_STACK_MANIFEST, or pass --source-manifest or '
-        '--component-archive to repair it.',
-      );
-    }
+      case _RuntimeWineInstallFromArchive(
+        :final archivePath,
+        :final archiveSha256,
+        :final componentArchivePaths,
+        :final preserveExistingRuntimeFiles,
+      ):
+        return _installMacosWineArchive(
+          archivePath: archivePath,
+          archiveSha256: archiveSha256,
+          componentArchivePaths: componentArchivePaths,
+          preserveExistingRuntimeFiles: preserveExistingRuntimeFiles,
+          progressSink: progress,
+        );
+      case _RuntimeWineInstallMissingArchiveSource(:final message):
+        return MacosWineInstallFailed(message);
+      case _RuntimeWineInstallDownloadArchive(
+        :final archiveUrl,
+        :final archiveFileName,
+        :final archiveSha256,
+        :final componentArchivePaths,
+        :final preserveExistingRuntimeFiles,
+      ):
+        final tempDirectory = Directory.systemTemp.createTempSync(
+          'konyak-macos-wine-',
+        );
+        final downloadedArchivePath = _joinPath(tempDirectory.path, [
+          archiveFileName,
+        ]);
 
-    if (sourceManifest != null) {
-      return _installMacosWineStackFromSourceManifest(
-        sourceManifest,
-        sourceManifestSignature: sourceManifestSignature,
-        preserveExistingRuntimeFiles: shouldPreserveExistingRuntimeFiles,
-        progressSink: progress,
-      );
-    }
+        try {
+          final downloadFailure = _downloadRuntimeStackSourceArchive(
+            source: archiveUrl,
+            targetPath: downloadedArchivePath,
+            progressSink: progress,
+            stage: 'downloading',
+            message: 'Downloading Konyak macOS Wine...',
+            startFraction: 0.05,
+            endFraction: 0.65,
+          );
+          if (downloadFailure != null) {
+            return MacosWineInstallFailed(downloadFailure);
+          }
 
-    final archive = request.archivePath;
-    if (archive != null) {
-      return _installMacosWineArchive(
-        archivePath: archive,
-        archiveSha256: request.archiveSha256,
-        componentArchivePaths: componentArchivePaths,
-        preserveExistingRuntimeFiles: shouldPreserveExistingRuntimeFiles,
-        progressSink: progress,
-      );
-    }
-
-    final tempDirectory = Directory.systemTemp.createTempSync(
-      'konyak-macos-wine-',
-    );
-    final archiveUrl =
-        request.archiveUrl ??
-        _runtimeDefaultArchiveUrl(
-          platformSpec: _macosKonyakRuntimePlatformSpec,
-          environment: environment,
-        )!;
-    final archiveFileName =
-        _fileNameFromUrl(archiveUrl) ??
-        _macosKonyakRuntimePlatformSpec.defaultArchiveFileName;
-    final downloadedArchivePath = _joinPath(tempDirectory.path, [
-      archiveFileName,
-    ]);
-
-    try {
-      final downloadFailure = _downloadRuntimeStackSourceArchive(
-        source: archiveUrl,
-        targetPath: downloadedArchivePath,
-        progressSink: progress,
-        stage: 'downloading',
-        message: 'Downloading Konyak macOS Wine...',
-        startFraction: 0.05,
-        endFraction: 0.65,
-      );
-      if (downloadFailure != null) {
-        return MacosWineInstallFailed(downloadFailure);
-      }
-
-      return _installMacosWineArchive(
-        archivePath: downloadedArchivePath,
-        archiveSha256: request.archiveSha256,
-        componentArchivePaths: componentArchivePaths,
-        preserveExistingRuntimeFiles: shouldPreserveExistingRuntimeFiles,
-        progressSink: progress,
-      );
-    } on FileSystemException catch (error) {
-      return MacosWineInstallFailed(error.message);
-    } on ProcessException catch (error) {
-      return MacosWineInstallFailed(error.message);
-    } finally {
-      _deleteDirectoryIfPresent(tempDirectory);
+          return _installMacosWineArchive(
+            archivePath: downloadedArchivePath,
+            archiveSha256: archiveSha256,
+            componentArchivePaths: componentArchivePaths,
+            preserveExistingRuntimeFiles: preserveExistingRuntimeFiles,
+            progressSink: progress,
+          );
+        } on FileSystemException catch (error) {
+          return MacosWineInstallFailed(error.message);
+        } on ProcessException catch (error) {
+          return MacosWineInstallFailed(error.message);
+        } finally {
+          _deleteDirectoryIfPresent(tempDirectory);
+        }
     }
   }
 
@@ -182,133 +148,136 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
       fraction: 0,
     );
 
-    if (hostPlatform != KonyakHostPlatform.macos) {
-      return const MacosWineInstallFailed(
-        'macOS Wine installation is supported on macOS only.',
-      );
-    }
-
     final currentRuntime = _macosWineRuntimeRecord(
       environment: environment,
       fileStatusProbe: _fileStatusProbe,
       runtimeStackVersionProbe: _runtimeStackVersionProbe,
     );
-    final componentArchivePaths = List<String>.unmodifiable(
-      request.componentArchivePaths,
+    final plan = _macosWineInstallPlan(
+      hostPlatform: hostPlatform,
+      environment: environment,
+      request: request,
+      currentRuntime: currentRuntime,
     );
-    final sourceManifest =
-        request.sourceManifest ??
-        _runtimeSourceManifestForPlatform(
-          platformSpec: _macosKonyakRuntimePlatformSpec,
-          environment: environment,
+
+    switch (plan) {
+      case _RuntimeWineInstallUnsupported(:final message):
+        return MacosWineInstallFailed(message);
+      case _RuntimeWineInstallAlreadyInstalled(:final runtime):
+        _emitRuntimeInstallProgress(
+          progress,
+          stage: 'complete',
+          message: 'Konyak macOS Wine is already installed.',
+          fraction: 1,
         );
-    final sourceManifestSignature =
-        request.sourceManifestSignature ??
+        return MacosWineInstallCompleted(runtime: runtime);
+      case _RuntimeWineInstallIncompleteWithoutSource(:final message):
+        return MacosWineInstallFailed(message);
+      case _RuntimeWineInstallFromSourceManifest(
+        :final sourceManifest,
+        :final sourceManifestSignature,
+        :final preserveExistingRuntimeFiles,
+      ):
+        return _installMacosWineStackFromSourceManifestStreaming(
+          sourceManifest,
+          sourceManifestSignature: sourceManifestSignature,
+          preserveExistingRuntimeFiles: preserveExistingRuntimeFiles,
+          progressSink: progress,
+        );
+      case _RuntimeWineInstallFromArchive(
+        :final archivePath,
+        :final archiveSha256,
+        :final componentArchivePaths,
+        :final preserveExistingRuntimeFiles,
+      ):
+        return _installMacosWineArchive(
+          archivePath: archivePath,
+          archiveSha256: archiveSha256,
+          componentArchivePaths: componentArchivePaths,
+          preserveExistingRuntimeFiles: preserveExistingRuntimeFiles,
+          progressSink: progress,
+        );
+      case _RuntimeWineInstallMissingArchiveSource(:final message):
+        return MacosWineInstallFailed(message);
+      case _RuntimeWineInstallDownloadArchive(
+        :final archiveUrl,
+        :final archiveFileName,
+        :final archiveSha256,
+        :final componentArchivePaths,
+        :final preserveExistingRuntimeFiles,
+      ):
+        final tempDirectory = Directory.systemTemp.createTempSync(
+          'konyak-macos-wine-',
+        );
+        final downloadedArchivePath = _joinPath(tempDirectory.path, [
+          archiveFileName,
+        ]);
+
+        try {
+          final downloadFailure =
+              await _downloadRuntimeStackSourceArchiveStreaming(
+                source: archiveUrl,
+                targetPath: downloadedArchivePath,
+                progressSink: progress,
+                stage: 'downloading',
+                message: 'Downloading Konyak macOS Wine...',
+                startFraction: 0.05,
+                endFraction: 0.65,
+              );
+          if (downloadFailure != null) {
+            return MacosWineInstallFailed(downloadFailure);
+          }
+
+          return _installMacosWineArchive(
+            archivePath: downloadedArchivePath,
+            archiveSha256: archiveSha256,
+            componentArchivePaths: componentArchivePaths,
+            preserveExistingRuntimeFiles: preserveExistingRuntimeFiles,
+            progressSink: progress,
+          );
+        } on FileSystemException catch (error) {
+          return MacosWineInstallFailed(error.message);
+        } on ProcessException catch (error) {
+          return MacosWineInstallFailed(error.message);
+        } finally {
+          _deleteDirectoryIfPresent(tempDirectory);
+        }
+    }
+  }
+}
+
+_RuntimeWineInstallPlan _macosWineInstallPlan({
+  required KonyakHostPlatform hostPlatform,
+  required Map<String, String> environment,
+  required MacosWineInstallRequest request,
+  required RuntimeRecord currentRuntime,
+}) {
+  return _runtimeWineInstallPlan(
+    hostPlatformSupported: hostPlatform == KonyakHostPlatform.macos,
+    unsupportedPlatformMessage:
+        'macOS Wine installation is supported on macOS only.',
+    requestOperation: request.requestOperation,
+    currentRuntime: currentRuntime,
+    configuredSourceManifest: _runtimeSourceManifestForPlatform(
+      platformSpec: _macosKonyakRuntimePlatformSpec,
+      environment: environment,
+    ),
+    configuredSourceManifestSignature:
         _runtimeSourceManifestSignatureForPlatform(
           platformSpec: _macosKonyakRuntimePlatformSpec,
           environment: environment,
-        );
-    final hasExplicitInstallSource =
-        request.archivePath != null ||
-        request.archiveUrl != null ||
-        componentArchivePaths.isNotEmpty ||
-        request.sourceManifest != null;
-    final shouldPreserveExistingRuntimeFiles =
-        !request.force &&
-        currentRuntime.isInstalled == true &&
-        currentRuntime.stack?.isComplete != true &&
-        !hasExplicitInstallSource;
-    if (!request.force &&
-        request.archivePath == null &&
-        request.archiveUrl == null &&
-        componentArchivePaths.isEmpty &&
-        request.sourceManifest == null &&
-        currentRuntime.isInstalled == true &&
-        currentRuntime.stack?.isComplete == true) {
-      _emitRuntimeInstallProgress(
-        progress,
-        stage: 'complete',
-        message: 'Konyak macOS Wine is already installed.',
-        fraction: 1,
-      );
-      return MacosWineInstallCompleted(runtime: currentRuntime);
-    }
-    if (!request.force &&
-        currentRuntime.isInstalled == true &&
-        currentRuntime.stack?.isComplete != true &&
-        !hasExplicitInstallSource &&
-        sourceManifest == null) {
-      return const MacosWineInstallFailed(
+        ),
+    defaultArchiveUrl: _runtimeDefaultArchiveUrl(
+      platformSpec: _macosKonyakRuntimePlatformSpec,
+      environment: environment,
+    ),
+    defaultArchiveFileName:
+        _macosKonyakRuntimePlatformSpec.defaultArchiveFileName,
+    missingArchiveMessage: 'macOS Wine archive is not configured.',
+    incompleteRuntimeMessage:
         'Konyak macOS Wine is installed, but the runtime stack is incomplete. '
         'Configure KONYAK_DEV_MACOS_WINE_STACK_MANIFEST or '
         'KONYAK_MACOS_WINE_STACK_MANIFEST, or pass --source-manifest or '
         '--component-archive to repair it.',
-      );
-    }
-
-    if (sourceManifest != null) {
-      return _installMacosWineStackFromSourceManifestStreaming(
-        sourceManifest,
-        sourceManifestSignature: sourceManifestSignature,
-        preserveExistingRuntimeFiles: shouldPreserveExistingRuntimeFiles,
-        progressSink: progress,
-      );
-    }
-
-    final archive = request.archivePath;
-    if (archive != null) {
-      return _installMacosWineArchive(
-        archivePath: archive,
-        archiveSha256: request.archiveSha256,
-        componentArchivePaths: componentArchivePaths,
-        preserveExistingRuntimeFiles: shouldPreserveExistingRuntimeFiles,
-        progressSink: progress,
-      );
-    }
-
-    final tempDirectory = Directory.systemTemp.createTempSync(
-      'konyak-macos-wine-',
-    );
-    final archiveUrl =
-        request.archiveUrl ??
-        _runtimeDefaultArchiveUrl(
-          platformSpec: _macosKonyakRuntimePlatformSpec,
-          environment: environment,
-        )!;
-    final archiveFileName =
-        _fileNameFromUrl(archiveUrl) ??
-        _macosKonyakRuntimePlatformSpec.defaultArchiveFileName;
-    final downloadedArchivePath = _joinPath(tempDirectory.path, [
-      archiveFileName,
-    ]);
-
-    try {
-      final downloadFailure = await _downloadRuntimeStackSourceArchiveStreaming(
-        source: archiveUrl,
-        targetPath: downloadedArchivePath,
-        progressSink: progress,
-        stage: 'downloading',
-        message: 'Downloading Konyak macOS Wine...',
-        startFraction: 0.05,
-        endFraction: 0.65,
-      );
-      if (downloadFailure != null) {
-        return MacosWineInstallFailed(downloadFailure);
-      }
-
-      return _installMacosWineArchive(
-        archivePath: downloadedArchivePath,
-        archiveSha256: request.archiveSha256,
-        componentArchivePaths: componentArchivePaths,
-        preserveExistingRuntimeFiles: shouldPreserveExistingRuntimeFiles,
-        progressSink: progress,
-      );
-    } on FileSystemException catch (error) {
-      return MacosWineInstallFailed(error.message);
-    } on ProcessException catch (error) {
-      return MacosWineInstallFailed(error.message);
-    } finally {
-      _deleteDirectoryIfPresent(tempDirectory);
-    }
-  }
+  );
 }

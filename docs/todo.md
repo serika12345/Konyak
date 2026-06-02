@@ -287,7 +287,7 @@ task changes scope.
       exit-code behavior.
     - Verify with runtime install command tests, `just cli-test`,
       `just verify-governance`, `just format-check`, and `just lint`.
-  - [ ] Extract runtime install decision planning before simplifying macOS and
+  - [x] Extract runtime install decision planning before simplifying macOS and
     Linux installers.
     - Add a pure planner that consumes host platform, current runtime state,
       request operation, explicit source inputs, default archive/source-manifest
