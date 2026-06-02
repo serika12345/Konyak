@@ -9,12 +9,12 @@ class _FileBottleRepositoryReadOperations {
   final String bottleDirectory;
   final ProgramMetadataExtractor _programMetadataExtractor;
 
-  List<BottleRecord> listBottles() {
+  IoResult<List<BottleRecord>> listBottles() {
     if (!_fileBottleRepositoryDirectoryExists(bottleDirectory)) {
-      return const <BottleRecord>[];
+      return const Right<String, List<BottleRecord>>(<BottleRecord>[]);
     }
 
-    try {
+    return _ioResult(() {
       final bottles =
           _fileBottleRepositoryBottleDirectories(bottleDirectory)
               .map((entry) => _readBottleMetadata(entry.path))
@@ -28,27 +28,19 @@ class _FileBottleRepositoryReadOperations {
             ..sort((left, right) => left.id.compareTo(right.id));
 
       return List.unmodifiable(bottles);
-    } on FileSystemException catch (error) {
-      throw BottleRepositoryException(error.message);
-    } on FormatException catch (error) {
-      throw BottleRepositoryException(error.message);
-    }
+    });
   }
 
-  BottleRecord? findBottle(String id) {
+  IoResult<BottleRecord?> findBottle(String id) {
     if (!_fileBottleMetadataExists(bottleDirectory: bottleDirectory, id: id)) {
-      return null;
+      return const Right<String, BottleRecord?>(null);
     }
 
-    try {
-      return _bottleWithPinnedProgramIcons(
+    return _ioResult(
+      () => _bottleWithPinnedProgramIcons(
         _readBottleMetadata(_fileBottlePath(bottleDirectory, id)),
         programMetadataExtractor: _programMetadataExtractor,
-      );
-    } on FileSystemException catch (error) {
-      throw BottleRepositoryException(error.message);
-    } on FormatException catch (error) {
-      throw BottleRepositoryException(error.message);
-    }
+      ),
+    );
   }
 }

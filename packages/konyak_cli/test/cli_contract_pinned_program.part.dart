@@ -39,7 +39,7 @@ void definePinnedProgramContractTests() {
       },
     });
     expect(
-      repository.findBottle('steam')?.pinnedPrograms.single.path,
+      _expectIo(repository.findBottle('steam'))?.pinnedPrograms.single.path,
       '/downloads/Steam.exe',
     );
   });
@@ -785,7 +785,10 @@ void definePinnedProgramContractTests() {
           'windowsVersion': 'win10',
         },
       });
-      expect(repository.findBottle('steam')?.pinnedPrograms, isEmpty);
+      expect(
+        _expectIo(repository.findBottle('steam'))?.pinnedPrograms,
+        isEmpty,
+      );
     },
   );
 
@@ -836,7 +839,7 @@ void definePinnedProgramContractTests() {
       },
     });
     expect(
-      repository.findBottle('steam')?.pinnedPrograms.single.name,
+      _expectIo(repository.findBottle('steam'))?.pinnedPrograms.single.name,
       'Steam Client',
     );
   });

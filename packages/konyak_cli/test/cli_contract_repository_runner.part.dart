@@ -315,7 +315,7 @@ void defineRepositoryAndRunnerContractTests() {
         'HOME': tempDirectory.path,
       }, hostPlatform: KonyakHostPlatform.macos);
 
-      expect(repository.listBottles(), isEmpty);
+      expect(_expectIo(repository.listBottles()), isEmpty);
     },
   );
 
@@ -389,16 +389,17 @@ void defineRepositoryAndRunnerContractTests() {
         'HOME': tempDirectory.path,
       }, hostPlatform: KonyakHostPlatform.macos);
 
-      expect(repository.listBottles(), isEmpty);
+      expect(_expectIo(repository.listBottles()), isEmpty);
 
       final createResult = repository.createBottle(
         const BottleCreateRequest(name: 'Managed', windowsVersion: 'win10'),
       );
 
       expect(createResult, isA<BottleCreated>());
-      expect(repository.listBottles().map((bottle) => bottle.id), const [
-        'managed',
-      ]);
+      expect(
+        _expectIo(repository.listBottles()).map((bottle) => bottle.id),
+        const ['managed'],
+      );
     },
   );
 
@@ -430,18 +431,18 @@ void defineRepositoryAndRunnerContractTests() {
         writableRepository: writableRepository,
       );
 
-      expect(repository.listBottles().map((bottle) => bottle.id), const [
-        'imported',
-        'local',
-      ]);
-      expect(repository.findBottle('imported')?.name, 'Imported');
+      expect(
+        _expectIo(repository.listBottles()).map((bottle) => bottle.id),
+        const ['imported', 'local'],
+      );
+      expect(_expectIo(repository.findBottle('imported'))?.name, 'Imported');
 
       final createResult = repository.createBottle(
         const BottleCreateRequest(name: 'Created', windowsVersion: 'win10'),
       );
 
       expect(createResult, isA<BottleCreated>());
-      expect(repository.findBottle('created')?.name, 'Created');
+      expect(_expectIo(repository.findBottle('created'))?.name, 'Created');
     },
   );
 
@@ -465,14 +466,15 @@ void defineRepositoryAndRunnerContractTests() {
       writableRepository: writableRepository,
     );
 
-    expect(repository.listBottles().map((bottle) => bottle.id), const [
-      'imported',
-    ]);
+    expect(
+      _expectIo(repository.listBottles()).map((bottle) => bottle.id),
+      const ['imported'],
+    );
 
     final deleteResult = repository.deleteBottle('imported');
 
     expect(deleteResult, isA<BottleDeleted>());
-    expect(importedRepository.listBottles(), isEmpty);
-    expect(repository.listBottles(), isEmpty);
+    expect(_expectIo(importedRepository.listBottles()), isEmpty);
+    expect(_expectIo(repository.listBottles()), isEmpty);
   });
 }

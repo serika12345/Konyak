@@ -29,7 +29,10 @@ CliResult? _handleAppCommand(
       return _appSettingsRepositoryUnavailableError();
     }
 
-    return _appSettingsJsonResult(repository.read());
+    return repository.read().fold(
+      _appSettingsRepositoryFailureJsonResult,
+      _appSettingsJsonResult,
+    );
   }
 
   final appSettingsUpdate = _parseJsonAppSettingsUpdateRequest(arguments);
@@ -39,7 +42,9 @@ CliResult? _handleAppCommand(
       return _appSettingsRepositoryUnavailableError();
     }
 
-    return _appSettingsJsonResult(repository.write(appSettingsUpdate));
+    return repository
+        .write(appSettingsUpdate)
+        .fold(_appSettingsRepositoryFailureJsonResult, _appSettingsJsonResult);
   }
 
   if (_isJsonAppUpdateInstallCommand(arguments)) {
@@ -50,6 +55,14 @@ CliResult? _handleAppCommand(
   }
 
   return null;
+}
+
+CliResult _appSettingsRepositoryFailureJsonResult(String message) {
+  return _jsonError(
+    exitCode: 74,
+    code: 'appSettingsRepositoryError',
+    message: message,
+  );
 }
 
 CliResult _appSettingsRepositoryUnavailableError() {

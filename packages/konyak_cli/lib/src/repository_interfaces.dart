@@ -1,15 +1,15 @@
 part of '../konyak_cli.dart';
 
 abstract interface class BottleCatalog {
-  List<BottleRecord> listBottles();
+  IoResult<List<BottleRecord>> listBottles();
 
-  BottleRecord? findBottle(String id);
+  IoResult<BottleRecord?> findBottle(String id);
 }
 
 abstract interface class AppSettingsRepository {
-  AppSettingsRecord read();
+  IoResult<AppSettingsRecord> read();
 
-  AppSettingsRecord write(AppSettingsRecord settings);
+  IoResult<AppSettingsRecord> write(AppSettingsRecord settings);
 }
 
 abstract interface class BottleRepository implements BottleCatalog {

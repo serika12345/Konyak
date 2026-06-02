@@ -44,7 +44,15 @@ CliResult _runPinnedProgramLauncherCli({
     return _programRunnerUnavailableError();
   }
 
-  final bottle = bottleRepository.findBottle(launcherManifest.bottleId);
+  final bottleResult = bottleRepository.findBottle(launcherManifest.bottleId);
+  final failure = bottleResult.fold<CliResult?>(
+    _bottleCatalogFailureJsonResult,
+    (_) => null,
+  );
+  if (failure != null) {
+    return failure;
+  }
+  final bottle = bottleResult.getOrElse((_) => null);
   if (bottle == null) {
     return _bottleNotFoundError(launcherManifest.bottleId);
   }

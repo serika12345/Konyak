@@ -3,24 +3,27 @@ part of '../konyak_cli.dart';
 class _FileBottleRepositoryArchiveOperations {
   const _FileBottleRepositoryArchiveOperations({
     required this.bottleDirectory,
-    required BottleRecord? Function(String id) findBottle,
+    required IoResult<BottleRecord?> Function(String id) findBottle,
   }) : _findBottle = findBottle;
 
   final String bottleDirectory;
-  final BottleRecord? Function(String id) _findBottle;
+  final IoResult<BottleRecord?> Function(String id) _findBottle;
 
   BottleArchiveExportResult exportBottleArchive(
     BottleArchiveExportRequest request,
   ) {
-    final bottle = _findBottle(request.bottleId);
-    if (bottle == null) {
-      return BottleArchiveExportMissing(request.bottleId);
-    }
+    return _findBottle(request.bottleId).fold(BottleArchiveExportFailed.new, (
+      bottle,
+    ) {
+      if (bottle == null) {
+        return BottleArchiveExportMissing(request.bottleId);
+      }
 
-    return _exportBottleArchive(
-      bottle: bottle,
-      archivePath: request.archivePath,
-    );
+      return _exportBottleArchive(
+        bottle: bottle,
+        archivePath: request.archivePath,
+      );
+    });
   }
 
   BottleArchiveImportResult importBottleArchive(
@@ -29,7 +32,8 @@ class _FileBottleRepositoryArchiveOperations {
     return _importBottleArchive(
       archivePath: request.archivePath,
       bottleDirectory: bottleDirectory,
-      hasBottle: (bottleId) => _findBottle(bottleId) != null,
+      hasBottle: (bottleId) =>
+          _findBottle(bottleId).getOrElse((_) => null) != null,
     );
   }
 }

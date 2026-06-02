@@ -41,6 +41,51 @@ def require_missing(relative_path: str) -> None:
         raise AssertionError(f"{relative_path} must not exist in the Konyak project")
 
 
+def require_not_contains_under(
+    relative_directory: str,
+    glob_pattern: str,
+    unexpected: str,
+) -> None:
+    for path in sorted((ROOT / relative_directory).rglob(glob_pattern)):
+        text = path.read_text(encoding="utf-8")
+        if unexpected in text:
+            relative_path = path.relative_to(ROOT)
+            raise AssertionError(f"{relative_path} must not contain: {unexpected}")
+
+
+def require_io_implementation_boundaries() -> None:
+    if not (ROOT / "packages/konyak_cli/lib/src").exists():
+        return
+
+    io_patterns = [
+        "File(",
+        "Directory(",
+        "Process.",
+        "HttpClient(",
+        "FileSystemEntity",
+        "FileSystemException",
+        "ProcessException",
+        "IOException",
+        "SocketException",
+    ]
+    allowed_paths = {
+        "packages/konyak_cli/lib/src/common_helpers.dart",
+    }
+    for path in sorted((ROOT / "packages/konyak_cli/lib/src").rglob("*.dart")):
+        relative_path = str(path.relative_to(ROOT))
+        if relative_path.startswith("packages/konyak_cli/lib/src/io/"):
+            continue
+        if relative_path in allowed_paths:
+            continue
+
+        text = path.read_text(encoding="utf-8")
+        for pattern in io_patterns:
+            if pattern in text:
+                raise AssertionError(
+                    f"{relative_path} must not contain I/O pattern outside src/io: {pattern}"
+                )
+
+
 def require_plist_key(relative_path: str, key: str, expected: object) -> None:
     with (ROOT / relative_path).open("rb") as file:
         plist = plistlib.load(file)
@@ -48,6 +93,70 @@ def require_plist_key(relative_path: str, key: str, expected: object) -> None:
     actual = plist.get(key)
     if actual != expected:
         raise AssertionError(f"{relative_path} must set {key} to {expected!r}, got {actual!r}")
+
+
+def require_result_boundary_rules() -> None:
+    for expected in [
+        "I/O and routinely fallible business operations must return explicit",
+        "CLI I/O implementations must live under `packages/konyak_cli/lib/src/io`",
+        "Result/Either values or sealed result variants",
+        "Complete-constructor invariant violations may throw",
+        "must not be represented by business-logic exceptions",
+        "fpdart is limited to CLI/domain code",
+    ]:
+        require_contains("AGENTS.md", expected)
+
+    if (ROOT / "apps/konyak").exists():
+        require_not_contains("apps/konyak/pubspec.yaml", "fpdart")
+        require_not_contains_under("apps/konyak", "*.dart", "package:fpdart")
+
+    if not (ROOT / "packages/konyak_cli").exists():
+        return
+
+    require_contains("packages/konyak_cli/pubspec.yaml", "fpdart:")
+    require_contains("packages/konyak_cli/lib/konyak_cli.dart", "package:fpdart/fpdart.dart")
+    require_contains("packages/konyak_cli/lib/konyak_cli.dart", "part 'src/io/io_result.dart';")
+    require_io_implementation_boundaries()
+
+    for expected in [
+        "typedef IoResult<T> = Either<String, T>",
+        "Either<String, T> _ioResult<T>",
+        "Right<String, T>",
+        "Left<String, T>",
+    ]:
+        require_contains("packages/konyak_cli/lib/src/io/io_result.dart", expected)
+
+    result_wrapped_repository_operation_files = [
+        "packages/konyak_cli/lib/src/file_bottle_repository_mutation_operations.dart",
+        "packages/konyak_cli/lib/src/file_bottle_repository_program_operations.dart",
+    ]
+    for relative_path in result_wrapped_repository_operation_files:
+        require_contains(relative_path, "_ioResult(")
+        require_not_contains(relative_path, "throw BottleRepositoryException")
+        require_not_contains(relative_path, "} on FileSystemException")
+        require_not_contains(relative_path, "} on FormatException")
+
+    for expected in [
+        "class BottleCreateFailed",
+        "class BottleDeleteFailed",
+        "class BottleRenameFailed",
+        "class BottleMoveFailed",
+        "class BottleUpdateFailed",
+    ]:
+        require_contains("packages/konyak_cli/lib/src/bottle_mutation_models.dart", expected)
+
+    for expected in [
+        "class ProgramPinFailed",
+        "class ProgramUpdateFailed",
+        "class ProgramSettingsReadFailed",
+        "class ProgramSettingsUpdateFailed",
+    ]:
+        require_contains("packages/konyak_cli/lib/src/program_mutation_models.dart", expected)
+
+    require_contains(
+        "packages/konyak_cli/lib/src/cli_bottle_results.dart",
+        "code: 'bottleRepositoryError'",
+    )
 
 
 def main() -> None:
@@ -63,6 +172,8 @@ def main() -> None:
         "Use XDG paths on Linux",
     ]:
         require_contains("AGENTS.md", expected)
+
+    require_result_boundary_rules()
 
     for expected in [
         "flutter",

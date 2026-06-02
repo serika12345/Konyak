@@ -7,19 +7,19 @@ class StaticBottleCatalog implements BottleCatalog {
   final List<BottleRecord> _bottles;
 
   @override
-  List<BottleRecord> listBottles() {
-    return List.unmodifiable(_bottles);
+  IoResult<List<BottleRecord>> listBottles() {
+    return Right<String, List<BottleRecord>>(List.unmodifiable(_bottles));
   }
 
   @override
-  BottleRecord? findBottle(String id) {
+  IoResult<BottleRecord?> findBottle(String id) {
     for (final bottle in _bottles) {
       if (bottle.id == id) {
-        return bottle;
+        return Right<String, BottleRecord?>(bottle);
       }
     }
 
-    return null;
+    return const Right<String, BottleRecord?>(null);
   }
 }
 
@@ -45,7 +45,7 @@ class MemoryBottleRepository implements BottleRepository {
   final ProgramMetadataExtractor _programMetadataExtractor;
 
   @override
-  List<BottleRecord> listBottles() {
+  IoResult<List<BottleRecord>> listBottles() {
     final bottles =
         _bottles.values
             .toList(growable: false)
@@ -62,14 +62,14 @@ class MemoryBottleRepository implements BottleRepository {
             .toList(growable: false)
           ..sort((left, right) => left.id.compareTo(right.id));
 
-    return List.unmodifiable(bottles);
+    return Right<String, List<BottleRecord>>(List.unmodifiable(bottles));
   }
 
   @override
-  BottleRecord? findBottle(String id) {
+  IoResult<BottleRecord?> findBottle(String id) {
     final bottle = _bottles[id];
     if (bottle == null) {
-      return null;
+      return const Right<String, BottleRecord?>(null);
     }
 
     final updated = _bottleWithPinnedProgramIcons(
@@ -80,7 +80,7 @@ class MemoryBottleRepository implements BottleRepository {
       _bottles[id] = updated;
     }
 
-    return updated;
+    return Right<String, BottleRecord?>(updated);
   }
 
   @override
@@ -100,15 +100,18 @@ class MemoryBottleRepository implements BottleRepository {
   BottleArchiveExportResult exportBottleArchive(
     BottleArchiveExportRequest request,
   ) {
-    final bottle = findBottle(request.bottleId);
-    if (bottle == null) {
-      return BottleArchiveExportMissing(request.bottleId);
-    }
+    return findBottle(request.bottleId).fold(BottleArchiveExportFailed.new, (
+      bottle,
+    ) {
+      if (bottle == null) {
+        return BottleArchiveExportMissing(request.bottleId);
+      }
 
-    return _exportBottleArchive(
-      bottle: bottle,
-      archivePath: request.archivePath,
-    );
+      return _exportBottleArchive(
+        bottle: bottle,
+        archivePath: request.archivePath,
+      );
+    });
   }
 
   @override

@@ -3,15 +3,23 @@ part of '../konyak_cli.dart';
 class _FileBottleRepositoryProgramOperations {
   const _FileBottleRepositoryProgramOperations({
     required ProgramMetadataExtractor programMetadataExtractor,
-    required BottleRecord? Function(String id) findBottle,
+    required IoResult<BottleRecord?> Function(String id) findBottle,
   }) : _programMetadataExtractor = programMetadataExtractor,
        _findBottle = findBottle;
 
   final ProgramMetadataExtractor _programMetadataExtractor;
-  final BottleRecord? Function(String id) _findBottle;
+  final IoResult<BottleRecord?> Function(String id) _findBottle;
 
   ProgramPinResult pinProgram(ProgramPinRequest request) {
-    final bottle = _findBottle(request.bottleId);
+    final bottleResult = _findBottle(request.bottleId);
+    final readFailure = bottleResult.fold<ProgramPinResult?>(
+      ProgramPinFailed.new,
+      (_) => null,
+    );
+    if (readFailure != null) {
+      return readFailure;
+    }
+    final bottle = bottleResult.getOrElse((_) => null);
     if (bottle == null) {
       return ProgramPinMissing(request.bottleId);
     }
@@ -26,7 +34,7 @@ class _FileBottleRepositoryProgramOperations {
       programMetadataExtractor: _programMetadataExtractor,
     );
 
-    final writeResult = _repositoryIoResult(() {
+    final writeResult = _ioResult(() {
       _writeBottleMetadata(updated);
     });
     final failure = writeResult.fold<ProgramPinResult?>(
@@ -41,7 +49,15 @@ class _FileBottleRepositoryProgramOperations {
   }
 
   ProgramUpdateResult unpinProgram(ProgramUnpinRequest request) {
-    final bottle = _findBottle(request.bottleId);
+    final bottleResult = _findBottle(request.bottleId);
+    final readFailure = bottleResult.fold<ProgramUpdateResult?>(
+      ProgramUpdateFailed.new,
+      (_) => null,
+    );
+    if (readFailure != null) {
+      return readFailure;
+    }
+    final bottle = bottleResult.getOrElse((_) => null);
     if (bottle == null) {
       return ProgramUpdateMissingBottle(request.bottleId);
     }
@@ -52,7 +68,7 @@ class _FileBottleRepositoryProgramOperations {
 
     final updated = _bottleWithoutPinnedProgram(bottle, request.programPath);
 
-    final writeResult = _repositoryIoResult(() {
+    final writeResult = _ioResult(() {
       _writeBottleMetadata(updated);
     });
     final failure = writeResult.fold<ProgramUpdateResult?>(
@@ -67,7 +83,15 @@ class _FileBottleRepositoryProgramOperations {
   }
 
   ProgramUpdateResult renamePinnedProgram(ProgramRenameRequest request) {
-    final bottle = _findBottle(request.bottleId);
+    final bottleResult = _findBottle(request.bottleId);
+    final readFailure = bottleResult.fold<ProgramUpdateResult?>(
+      ProgramUpdateFailed.new,
+      (_) => null,
+    );
+    if (readFailure != null) {
+      return readFailure;
+    }
+    final bottle = bottleResult.getOrElse((_) => null);
     if (bottle == null) {
       return ProgramUpdateMissingBottle(request.bottleId);
     }
@@ -78,7 +102,7 @@ class _FileBottleRepositoryProgramOperations {
 
     final updated = _bottleWithRenamedPinnedProgram(bottle, request);
 
-    final writeResult = _repositoryIoResult(() {
+    final writeResult = _ioResult(() {
       _writeBottleMetadata(updated);
     });
     final failure = writeResult.fold<ProgramUpdateResult?>(
@@ -95,12 +119,20 @@ class _FileBottleRepositoryProgramOperations {
   ProgramSettingsReadResult readProgramSettings(
     ProgramSettingsRequest request,
   ) {
-    final bottle = _findBottle(request.bottleId);
+    final bottleResult = _findBottle(request.bottleId);
+    final readFailure = bottleResult.fold<ProgramSettingsReadResult?>(
+      ProgramSettingsReadFailed.new,
+      (_) => null,
+    );
+    if (readFailure != null) {
+      return readFailure;
+    }
+    final bottle = bottleResult.getOrElse((_) => null);
     if (bottle == null) {
       return ProgramSettingsReadMissingBottle(request.bottleId);
     }
 
-    final readResult = _repositoryIoResult(
+    final readResult = _ioResult(
       () => _readProgramSettingsJson(
         _programSettingsJsonPath(
           bottle: bottle,
@@ -117,12 +149,20 @@ class _FileBottleRepositoryProgramOperations {
   ProgramSettingsUpdateResult setProgramSettings(
     ProgramSettingsUpdateRequest request,
   ) {
-    final bottle = _findBottle(request.bottleId);
+    final bottleResult = _findBottle(request.bottleId);
+    final readFailure = bottleResult.fold<ProgramSettingsUpdateResult?>(
+      ProgramSettingsUpdateFailed.new,
+      (_) => null,
+    );
+    if (readFailure != null) {
+      return readFailure;
+    }
+    final bottle = bottleResult.getOrElse((_) => null);
     if (bottle == null) {
       return ProgramSettingsUpdateMissingBottle(request.bottleId);
     }
 
-    final writeResult = _repositoryIoResult(() {
+    final writeResult = _ioResult(() {
       _writeProgramSettingsJson(
         path: _programSettingsJsonPath(
           bottle: bottle,

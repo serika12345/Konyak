@@ -6,7 +6,15 @@ CliResult? _handleBottleReadCommand(
   required BottleCatalog activeBottleCatalog,
 }) {
   if (_isJsonBottleListCommand(arguments)) {
-    final bottles = activeBottleCatalog.listBottles();
+    final bottlesResult = activeBottleCatalog.listBottles();
+    final failure = bottlesResult.fold<CliResult?>(
+      _bottleCatalogFailureJsonResult,
+      (_) => null,
+    );
+    if (failure != null) {
+      return failure;
+    }
+    final bottles = bottlesResult.getOrElse((_) => const <BottleRecord>[]);
     _synchronizeMacosPinnedProgramLaunchers(
       hostPlatform: context.programRunPlanner.hostPlatform,
       environment: context.programRunPlanner.environment,
@@ -22,7 +30,15 @@ CliResult? _handleBottleReadCommand(
   final inspectedBottleId = _parseJsonBottleInspectCommand(arguments);
   if (inspectedBottleId != null) {
     final bottleId = inspectedBottleId;
-    final bottle = activeBottleCatalog.findBottle(bottleId);
+    final bottleResult = activeBottleCatalog.findBottle(bottleId);
+    final failure = bottleResult.fold<CliResult?>(
+      _bottleCatalogFailureJsonResult,
+      (_) => null,
+    );
+    if (failure != null) {
+      return failure;
+    }
+    final bottle = bottleResult.getOrElse((_) => null);
     if (bottle == null) {
       return _bottleNotFoundError(bottleId);
     }
@@ -37,7 +53,15 @@ CliResult? _handleBottleReadCommand(
 
   final bottleProgramsListId = _parseJsonBottleProgramsListCommand(arguments);
   if (bottleProgramsListId != null) {
-    final bottle = activeBottleCatalog.findBottle(bottleProgramsListId);
+    final bottleResult = activeBottleCatalog.findBottle(bottleProgramsListId);
+    final failure = bottleResult.fold<CliResult?>(
+      _bottleCatalogFailureJsonResult,
+      (_) => null,
+    );
+    if (failure != null) {
+      return failure;
+    }
+    final bottle = bottleResult.getOrElse((_) => null);
     if (bottle == null) {
       return _bottleNotFoundError(bottleProgramsListId);
     }

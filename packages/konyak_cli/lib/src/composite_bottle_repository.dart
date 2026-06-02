@@ -10,14 +10,36 @@ class CompositeBottleRepository implements BottleRepository {
   final BottleRepository writableRepository;
 
   @override
-  List<BottleRecord> listBottles() {
+  IoResult<List<BottleRecord>> listBottles() {
     final records = <String, BottleRecord>{};
-    for (final bottle in writableRepository.listBottles()) {
+    final writableBottles = writableRepository.listBottles();
+    final writableFailure = writableBottles.fold<IoResult<List<BottleRecord>>?>(
+      Left<String, List<BottleRecord>>.new,
+      (_) => null,
+    );
+    if (writableFailure != null) {
+      return writableFailure;
+    }
+
+    for (final bottle in writableBottles.getOrElse(
+      (_) => const <BottleRecord>[],
+    )) {
       records[bottle.id] = bottle;
     }
 
     for (final catalog in _catalogs) {
-      for (final bottle in catalog.listBottles()) {
+      final catalogBottles = catalog.listBottles();
+      final catalogFailure = catalogBottles.fold<IoResult<List<BottleRecord>>?>(
+        Left<String, List<BottleRecord>>.new,
+        (_) => null,
+      );
+      if (catalogFailure != null) {
+        return catalogFailure;
+      }
+
+      for (final bottle in catalogBottles.getOrElse(
+        (_) => const <BottleRecord>[],
+      )) {
         records.putIfAbsent(bottle.id, () => bottle);
       }
     }
@@ -25,24 +47,40 @@ class CompositeBottleRepository implements BottleRepository {
     final bottles = records.values.toList(growable: false)
       ..sort((left, right) => left.id.compareTo(right.id));
 
-    return List.unmodifiable(bottles);
+    return Right<String, List<BottleRecord>>(List.unmodifiable(bottles));
   }
 
   @override
-  BottleRecord? findBottle(String id) {
+  IoResult<BottleRecord?> findBottle(String id) {
     final localBottle = writableRepository.findBottle(id);
-    if (localBottle != null) {
-      return localBottle;
+    final localFailure = localBottle.fold<IoResult<BottleRecord?>?>(
+      Left<String, BottleRecord?>.new,
+      (_) => null,
+    );
+    if (localFailure != null) {
+      return localFailure;
+    }
+    final localRecord = localBottle.getOrElse((_) => null);
+    if (localRecord != null) {
+      return Right<String, BottleRecord?>(localRecord);
     }
 
     for (final catalog in _catalogs) {
       final bottle = catalog.findBottle(id);
-      if (bottle != null) {
-        return bottle;
+      final failure = bottle.fold<IoResult<BottleRecord?>?>(
+        Left<String, BottleRecord?>.new,
+        (_) => null,
+      );
+      if (failure != null) {
+        return failure;
+      }
+      final record = bottle.getOrElse((_) => null);
+      if (record != null) {
+        return Right<String, BottleRecord?>(record);
       }
     }
 
-    return null;
+    return const Right<String, BottleRecord?>(null);
   }
 
   @override
@@ -54,15 +92,18 @@ class CompositeBottleRepository implements BottleRepository {
   BottleArchiveExportResult exportBottleArchive(
     BottleArchiveExportRequest request,
   ) {
-    final bottle = findBottle(request.bottleId);
-    if (bottle == null) {
-      return BottleArchiveExportMissing(request.bottleId);
-    }
+    return findBottle(request.bottleId).fold(BottleArchiveExportFailed.new, (
+      bottle,
+    ) {
+      if (bottle == null) {
+        return BottleArchiveExportMissing(request.bottleId);
+      }
 
-    return _exportBottleArchive(
-      bottle: bottle,
-      archivePath: request.archivePath,
-    );
+      return _exportBottleArchive(
+        bottle: bottle,
+        archivePath: request.archivePath,
+      );
+    });
   }
 
   @override

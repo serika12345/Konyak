@@ -49,7 +49,15 @@ CliResult _terminateWineProcessesJsonResult({
   }
 
   final records = <WineProcessTerminationRecord>[];
-  final bottles = bottleCatalog.listBottles();
+  final bottlesResult = bottleCatalog.listBottles();
+  final failure = bottlesResult.fold<CliResult?>(
+    _bottleCatalogFailureJsonResult,
+    (_) => null,
+  );
+  if (failure != null) {
+    return failure;
+  }
+  final bottles = bottlesResult.getOrElse((_) => const <BottleRecord>[]);
   final targetBottles = bottleId == null
       ? bottles
       : <BottleRecord>[?_findBottle(bottles, bottleId)];
@@ -109,7 +117,15 @@ CliResult _listWineProcessesJsonResult({
   }
 
   final records = <WineProcessRecord>[];
-  for (final bottle in bottleCatalog.listBottles()) {
+  final bottlesResult = bottleCatalog.listBottles();
+  final failure = bottlesResult.fold<CliResult?>(
+    _bottleCatalogFailureJsonResult,
+    (_) => null,
+  );
+  if (failure != null) {
+    return failure;
+  }
+  for (final bottle in bottlesResult.getOrElse((_) => const <BottleRecord>[])) {
     final request = programRunPlanner.planWineProcessList(bottle: bottle);
     final result = runner.run(request);
     switch (result) {
@@ -173,7 +189,18 @@ CliResult _terminateWineProcessJsonResult({
     return _programRunnerUnavailableError();
   }
 
-  final bottle = _findBottle(bottleCatalog.listBottles(), bottleId);
+  final bottlesResult = bottleCatalog.listBottles();
+  final failure = bottlesResult.fold<CliResult?>(
+    _bottleCatalogFailureJsonResult,
+    (_) => null,
+  );
+  if (failure != null) {
+    return failure;
+  }
+  final bottle = _findBottle(
+    bottlesResult.getOrElse((_) => const <BottleRecord>[]),
+    bottleId,
+  );
   if (bottle == null) {
     return _bottleNotFoundError(bottleId);
   }

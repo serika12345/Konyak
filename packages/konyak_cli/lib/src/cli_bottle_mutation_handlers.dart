@@ -141,7 +141,17 @@ CliResult? _handleBottleConfigurationCommand(
       return _bottleRepositoryUnavailableError();
     }
 
-    final bottle = repository.findBottle(windowsVersionUpdateRequest.bottleId);
+    final bottleResult = repository.findBottle(
+      windowsVersionUpdateRequest.bottleId,
+    );
+    final failure = bottleResult.fold<CliResult?>(
+      _bottleCatalogFailureJsonResult,
+      (_) => null,
+    );
+    if (failure != null) {
+      return failure;
+    }
+    final bottle = bottleResult.getOrElse((_) => null);
     if (bottle == null) {
       return _bottleNotFoundError(windowsVersionUpdateRequest.bottleId);
     }
@@ -170,7 +180,17 @@ CliResult? _handleBottleConfigurationCommand(
       return _bottleRepositoryUnavailableError();
     }
 
-    final bottle = repository.findBottle(runtimeSettingsUpdateRequest.bottleId);
+    final bottleResult = repository.findBottle(
+      runtimeSettingsUpdateRequest.bottleId,
+    );
+    final failure = bottleResult.fold<CliResult?>(
+      _bottleCatalogFailureJsonResult,
+      (_) => null,
+    );
+    if (failure != null) {
+      return failure;
+    }
+    final bottle = bottleResult.getOrElse((_) => null);
     if (bottle == null) {
       return _bottleNotFoundError(runtimeSettingsUpdateRequest.bottleId);
     }

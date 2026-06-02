@@ -22,10 +22,18 @@ CliResult? _handlePinnedProgramCommand(
 
     final pinResult = repository.pinProgram(programPinRequest);
     if (pinResult is ProgramPinned) {
+      final bottlesResult = repository.listBottles();
+      final failure = bottlesResult.fold<CliResult?>(
+        _bottleCatalogFailureJsonResult,
+        (_) => null,
+      );
+      if (failure != null) {
+        return failure;
+      }
       _synchronizeMacosPinnedProgramLaunchers(
         hostPlatform: context.programRunPlanner.hostPlatform,
         environment: context.programRunPlanner.environment,
-        bottles: repository.listBottles(),
+        bottles: bottlesResult.getOrElse((_) => const <BottleRecord>[]),
       );
     }
 
@@ -53,10 +61,18 @@ CliResult? _handlePinnedProgramCommand(
 
     final updateResult = repository.unpinProgram(programUnpinRequest);
     if (updateResult is ProgramUpdated) {
+      final bottlesResult = repository.listBottles();
+      final failure = bottlesResult.fold<CliResult?>(
+        _bottleCatalogFailureJsonResult,
+        (_) => null,
+      );
+      if (failure != null) {
+        return failure;
+      }
       _synchronizeMacosPinnedProgramLaunchers(
         hostPlatform: context.programRunPlanner.hostPlatform,
         environment: context.programRunPlanner.environment,
-        bottles: repository.listBottles(),
+        bottles: bottlesResult.getOrElse((_) => const <BottleRecord>[]),
       );
     }
 
@@ -72,10 +88,18 @@ CliResult? _handlePinnedProgramCommand(
 
     final updateResult = repository.renamePinnedProgram(programRenameRequest);
     if (updateResult is ProgramUpdated) {
+      final bottlesResult = repository.listBottles();
+      final failure = bottlesResult.fold<CliResult?>(
+        _bottleCatalogFailureJsonResult,
+        (_) => null,
+      );
+      if (failure != null) {
+        return failure;
+      }
       _synchronizeMacosPinnedProgramLaunchers(
         hostPlatform: context.programRunPlanner.hostPlatform,
         environment: context.programRunPlanner.environment,
-        bottles: repository.listBottles(),
+        bottles: bottlesResult.getOrElse((_) => const <BottleRecord>[]),
       );
     }
 

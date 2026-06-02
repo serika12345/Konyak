@@ -3,6 +3,10 @@ import 'dart:io';
 import 'package:konyak_cli/konyak_cli.dart';
 import 'package:test/test.dart';
 
+T _expectIo<T>(IoResult<T> result) {
+  return result.fold((message) => throw TestFailure(message), (value) => value);
+}
+
 void main() {
   test('bottle records expose immutable pinned program snapshots', () {
     final pinnedPrograms = <PinnedProgramRecord>[
@@ -100,9 +104,12 @@ void main() {
     final bottleCatalog = StaticBottleCatalog(bottles);
     bottles.clear();
 
-    expect(bottleCatalog.listBottles(), hasLength(1));
-    expect(bottleCatalog.findBottle('steam'), isNotNull);
-    expect(bottleCatalog.listBottles().clear, throwsUnsupportedError);
+    expect(_expectIo(bottleCatalog.listBottles()), hasLength(1));
+    expect(_expectIo(bottleCatalog.findBottle('steam')), isNotNull);
+    expect(
+      _expectIo(bottleCatalog.listBottles()).clear,
+      throwsUnsupportedError,
+    );
 
     final runtimes = <RuntimeRecord>[
       const RuntimeRecord(

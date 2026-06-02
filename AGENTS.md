@@ -95,6 +95,13 @@ before the implementation when practical.
 - Prefer immutable data and pure functions for domain transformations.
 - Keep I/O at explicit boundaries: filesystem, process execution, network, and
   platform services must not leak into domain logic.
+- CLI I/O implementations must live under `packages/konyak_cli/lib/src/io`.
+- I/O and routinely fallible business operations must return explicit
+  Result/Either values or sealed result variants.
+- Complete-constructor invariant violations may throw; ordinary I/O failure
+  must not be represented by business-logic exceptions.
+- fpdart is limited to CLI/domain code. Flutter UI must consume explicit app or
+  CLI result models instead of importing fpdart.
 - Model absence and failure explicitly. Do not hide failures behind default
   empty strings, empty lists, or broad catch-all branches.
 - Validate all external data before it enters domain state. This includes plist

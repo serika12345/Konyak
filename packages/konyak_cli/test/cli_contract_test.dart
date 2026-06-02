@@ -87,6 +87,10 @@ List<ProgramRunResult> _recordingProgramResults({
   return const <ProgramRunResult>[];
 }
 
+T _expectIo<T>(IoResult<T> result) {
+  return result.fold((message) => throw TestFailure(message), (value) => value);
+}
+
 final class RecordingBottlePrefixInitializer
     implements BottlePrefixInitializer {
   RecordingBottlePrefixInitializer({required this.result});

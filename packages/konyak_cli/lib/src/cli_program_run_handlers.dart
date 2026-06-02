@@ -38,7 +38,15 @@ CliResult _runProgramJsonResult(
     return _programRunnerUnavailableError();
   }
 
-  final bottle = repository.findBottle(request.bottleId);
+  final bottleResult = repository.findBottle(request.bottleId);
+  final failure = bottleResult.fold<CliResult?>(
+    _bottleCatalogFailureJsonResult,
+    (_) => null,
+  );
+  if (failure != null) {
+    return failure;
+  }
+  final bottle = bottleResult.getOrElse((_) => null);
   if (bottle == null) {
     return _bottleNotFoundError(request.bottleId);
   }
@@ -98,7 +106,15 @@ CliResult _runWinetricksJsonResult(
     return _programRunnerUnavailableError();
   }
 
-  final bottle = repository.findBottle(request.bottleId);
+  final bottleResult = repository.findBottle(request.bottleId);
+  final failure = bottleResult.fold<CliResult?>(
+    _bottleCatalogFailureJsonResult,
+    (_) => null,
+  );
+  if (failure != null) {
+    return failure;
+  }
+  final bottle = bottleResult.getOrElse((_) => null);
   if (bottle == null) {
     return _bottleNotFoundError(request.bottleId);
   }
@@ -141,7 +157,15 @@ CliResult _runBottleCommandJsonResult(
     return _programRunnerUnavailableError();
   }
 
-  final bottle = repository.findBottle(request.bottleId);
+  final bottleResult = repository.findBottle(request.bottleId);
+  final failure = bottleResult.fold<CliResult?>(
+    _bottleCatalogFailureJsonResult,
+    (_) => null,
+  );
+  if (failure != null) {
+    return failure;
+  }
+  final bottle = bottleResult.getOrElse((_) => null);
   if (bottle == null) {
     return _bottleNotFoundError(request.bottleId);
   }

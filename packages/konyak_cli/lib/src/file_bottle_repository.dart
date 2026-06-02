@@ -64,10 +64,12 @@ class FileBottleRepository implements BottleRepository {
   final _FileBottleRepositoryProgramOperations _programOperations;
 
   @override
-  List<BottleRecord> listBottles() => _readOperations.listBottles();
+  IoResult<List<BottleRecord>> listBottles() => _readOperations.listBottles();
 
   @override
-  BottleRecord? findBottle(String id) => _readOperations.findBottle(id);
+  IoResult<BottleRecord?> findBottle(String id) {
+    return _readOperations.findBottle(id);
+  }
 
   @override
   BottleCreateResult createBottle(BottleCreateRequest request) {

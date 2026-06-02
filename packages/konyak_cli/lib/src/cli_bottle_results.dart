@@ -41,6 +41,10 @@ CliResult _bottleRepositoryFailureJsonResult(String message) {
   );
 }
 
+CliResult _bottleCatalogFailureJsonResult(String message) {
+  return _bottleRepositoryFailureJsonResult(message);
+}
+
 CliResult? _applyRuntimeSettingsRegistryUpdates({
   required BottleRecord bottle,
   required BottleRuntimeSettings runtimeSettings,
@@ -67,25 +71,28 @@ CliResult? _syncRuntimeSettingsDllOverrides({
     return null;
   }
 
-  try {
+  final syncResult = _ioResult(() {
     _syncMacosDxvkDllOverrides(
       bottle: bottle,
       environment: programRunPlanner.environment,
     );
-    return null;
-  } on FileSystemException catch (error) {
+  });
+  final failureMessage = syncResult.fold<String?>(
+    (message) => message,
+    (_) => null,
+  );
+  if (failureMessage != null) {
     return _jsonError(
       exitCode: 74,
       code: 'runtimeSettingsDllSyncFailed',
       message: 'Failed to synchronize runtime DLL overrides.',
       extra: <String, Object?>{
-        'details': <String, Object?>{
-          if (error.path != null) 'path': error.path,
-          'osError': error.osError?.message ?? error.message,
-        },
+        'details': <String, Object?>{'message': failureMessage},
       },
     );
   }
+
+  return null;
 }
 
 CliResult? _applyWindowsVersionRegistryUpdates({
