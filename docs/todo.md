@@ -264,7 +264,7 @@ task changes scope.
   - [x] Runtime-dependent UI controls are disabled when capabilities are
     missing or unknown.
 - Large refactor design plan before more feature work.
-  - [ ] Split `FileBottleRepository` into a stable facade and operation
+  - [x] Split `FileBottleRepository` into a stable facade and operation
     collaborators.
     - Keep the public `BottleRepository` contract and `FileBottleRepository`
       constructor stable.
