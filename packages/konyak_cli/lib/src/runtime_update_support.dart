@@ -112,17 +112,15 @@ String? _runtimeReleaseArchiveUrl(Object? decoded) {
   return urls.first;
 }
 
-String? _runtimeReleaseSourceManifestUrl(Object? decoded) {
-  if (decoded is! Map<String, dynamic>) {
+String? _runtimeReleaseSourceManifestUrl({
+  required Object? release,
+  required String? releaseMetadataAssetUrl,
+  required Object? releaseMetadata,
+}) {
+  if (release is! Map<String, dynamic> || releaseMetadataAssetUrl == null) {
     return null;
   }
 
-  final releaseAssetUrl = _runtimeReleaseMetadataAssetUrl(decoded);
-  if (releaseAssetUrl == null) {
-    return null;
-  }
-
-  final releaseMetadata = _runtimeReleaseEmbeddedMetadata(releaseAssetUrl);
   if (releaseMetadata == null) {
     return null;
   }
@@ -132,25 +130,23 @@ String? _runtimeReleaseSourceManifestUrl(Object? decoded) {
     return null;
   }
 
-  final assetUrl = _runtimeReleaseAssetUrlByFileName(decoded, fileName);
+  final assetUrl = _runtimeReleaseAssetUrlByFileName(release, fileName);
   if (assetUrl != null) {
     return assetUrl;
   }
 
-  return _resolveReleaseMetadataAssetUrl(releaseAssetUrl, fileName);
+  return _resolveReleaseMetadataAssetUrl(releaseMetadataAssetUrl, fileName);
 }
 
-String? _runtimeReleaseSourceManifestSignatureUrl(Object? decoded) {
-  if (decoded is! Map<String, dynamic>) {
+String? _runtimeReleaseSourceManifestSignatureUrl({
+  required Object? release,
+  required String? releaseMetadataAssetUrl,
+  required Object? releaseMetadata,
+}) {
+  if (release is! Map<String, dynamic> || releaseMetadataAssetUrl == null) {
     return null;
   }
 
-  final releaseAssetUrl = _runtimeReleaseMetadataAssetUrl(decoded);
-  if (releaseAssetUrl == null) {
-    return null;
-  }
-
-  final releaseMetadata = _runtimeReleaseEmbeddedMetadata(releaseAssetUrl);
   if (releaseMetadata == null) {
     return null;
   }
@@ -162,12 +158,12 @@ String? _runtimeReleaseSourceManifestSignatureUrl(Object? decoded) {
     return null;
   }
 
-  final assetUrl = _runtimeReleaseAssetUrlByFileName(decoded, fileName);
+  final assetUrl = _runtimeReleaseAssetUrlByFileName(release, fileName);
   if (assetUrl != null) {
     return assetUrl;
   }
 
-  return _resolveReleaseMetadataAssetUrl(releaseAssetUrl, fileName);
+  return _resolveReleaseMetadataAssetUrl(releaseMetadataAssetUrl, fileName);
 }
 
 String? _runtimeReleaseMetadataAssetUrl(Object? decoded) {
@@ -191,31 +187,6 @@ String? _runtimeReleaseMetadataAssetUrl(Object? decoded) {
         url.trim().toLowerCase().endsWith('.release.json')) {
       return url;
     }
-  }
-
-  return null;
-}
-
-Map<String, dynamic>? _runtimeReleaseEmbeddedMetadata(String assetUrl) {
-  try {
-    final result = Process.runSync('curl', [
-      '--fail',
-      '--location',
-      '--silent',
-      assetUrl,
-    ], runInShell: false);
-    if (result.exitCode != 0) {
-      return null;
-    }
-
-    final decoded = jsonDecode(_processOutputToString(result.stdout));
-    if (decoded is Map<String, dynamic>) {
-      return decoded;
-    }
-  } on FormatException {
-    return null;
-  } on ProcessException {
-    return null;
   }
 
   return null;

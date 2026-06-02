@@ -28,14 +28,24 @@ class DartIoRuntimeReleaseMetadataFetcher
       }
 
       final archiveUrl = _runtimeReleaseArchiveUrl(decoded);
+      final releaseMetadataAssetUrl = _runtimeReleaseMetadataAssetUrl(decoded);
+      final releaseMetadata = releaseMetadataAssetUrl == null
+          ? null
+          : _fetchRuntimeReleaseMetadataAsset(releaseMetadataAssetUrl);
       return RuntimeReleaseMetadataFetched(
         RuntimeReleaseMetadata(
           version: version,
           archiveUrl: archiveUrl,
           archiveSha256: _runtimeReleaseArchiveSha256(decoded, archiveUrl),
-          sourceManifestUrl: _runtimeReleaseSourceManifestUrl(decoded),
+          sourceManifestUrl: _runtimeReleaseSourceManifestUrl(
+            release: decoded,
+            releaseMetadataAssetUrl: releaseMetadataAssetUrl,
+            releaseMetadata: releaseMetadata,
+          ),
           sourceManifestSignatureUrl: _runtimeReleaseSourceManifestSignatureUrl(
-            decoded,
+            release: decoded,
+            releaseMetadataAssetUrl: releaseMetadataAssetUrl,
+            releaseMetadata: releaseMetadata,
           ),
         ),
       );
@@ -46,5 +56,30 @@ class DartIoRuntimeReleaseMetadataFetcher
     } on ProcessException catch (error) {
       return RuntimeReleaseMetadataFetchFailed(error.message);
     }
+  }
+
+  Map<String, dynamic>? _fetchRuntimeReleaseMetadataAsset(String assetUrl) {
+    try {
+      final result = Process.runSync('curl', [
+        '--fail',
+        '--location',
+        '--silent',
+        assetUrl,
+      ], runInShell: false);
+      if (result.exitCode != 0) {
+        return null;
+      }
+
+      final decoded = jsonDecode(_processOutputToString(result.stdout));
+      if (decoded is Map<String, dynamic>) {
+        return decoded;
+      }
+    } on FormatException {
+      return null;
+    } on ProcessException {
+      return null;
+    }
+
+    return null;
   }
 }
