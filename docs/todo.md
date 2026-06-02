@@ -332,11 +332,11 @@ task changes scope.
       changes.
     - [x] Split `sidebar.dart` into sidebar layout, collapsed/animated sidebar
       chrome, and bottle-row/context-menu widgets.
-    - [ ] Split `home_screen.dart` by extracting rendering surfaces while
+    - [x] Split `home_screen.dart` by extracting rendering surfaces while
       keeping selection state and event orchestration in `KonyakHome`.
     - [x] Move Bottle Configuration runtime-control availability into a pure
       view model and split the visible configuration sections.
-    - [ ] Split Program Configuration form environment editing from the
+    - [x] Split Program Configuration form environment editing from the
       surrounding program settings screen.
 - Linux ARM64 Windows execution research.
 - Publication of the actual default Konyak runtime stack manifest and public

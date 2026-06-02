@@ -1,0 +1,136 @@
+import 'package:flutter/material.dart';
+
+import '../app_constants.dart';
+import '../widgets/configuration_controls.dart';
+import 'program_configuration_settings.dart';
+
+class ProgramEnvironmentControllers {
+  ProgramEnvironmentControllers({String name = '', String value = ''})
+    : nameController = TextEditingController(text: name),
+      valueController = TextEditingController(text: value);
+
+  final TextEditingController nameController;
+  final TextEditingController valueController;
+
+  ProgramEnvironmentEntry toEntry() {
+    return ProgramEnvironmentEntry(
+      name: nameController.text,
+      value: valueController.text,
+    );
+  }
+
+  void dispose() {
+    nameController.dispose();
+    valueController.dispose();
+  }
+}
+
+class ProgramEnvironmentEditor extends StatelessWidget {
+  const ProgramEnvironmentEditor({
+    super.key,
+    required this.controllers,
+    required this.onAdd,
+    required this.onRemove,
+  });
+
+  final List<ProgramEnvironmentControllers> controllers;
+  final VoidCallback onAdd;
+  final ValueChanged<int> onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        for (final (index, controller) in controllers.indexed)
+          ProgramEnvironmentRow(
+            index: index,
+            controllers: controller,
+            onRemove: () {
+              onRemove(index);
+            },
+          ),
+        AddEnvironmentRow(onPressed: onAdd),
+      ],
+    );
+  }
+}
+
+class ProgramEnvironmentRow extends StatelessWidget {
+  const ProgramEnvironmentRow({
+    super.key,
+    required this.index,
+    required this.controllers,
+    required this.onRemove,
+  });
+
+  final int index;
+  final ProgramEnvironmentControllers controllers;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 46,
+      child: Row(
+        children: [
+          const SizedBox(width: 14),
+          Expanded(
+            child: ConfigurationTextField(
+              key: ValueKey('program-config-env-key-$index'),
+              controller: controllers.nameController,
+              hintText: 'NAME',
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: ConfigurationTextField(
+              key: ValueKey('program-config-env-value-$index'),
+              controller: controllers.valueController,
+              hintText: 'Value',
+            ),
+          ),
+          IconButton(
+            tooltip: 'Remove environment variable',
+            onPressed: onRemove,
+            color: KonyakThemeColors.of(context).mutedText,
+            iconSize: 18,
+            constraints: const BoxConstraints.tightFor(width: 34, height: 34),
+            padding: EdgeInsets.zero,
+            icon: const Icon(Icons.remove_circle_outline),
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
+    );
+  }
+}
+
+class AddEnvironmentRow extends StatelessWidget {
+  const AddEnvironmentRow({super.key, required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 42,
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: TextButton.icon(
+          key: const ValueKey('program-config-add-environment'),
+          onPressed: onPressed,
+          style: TextButton.styleFrom(
+            foregroundColor: KonyakThemeColors.of(context).text,
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+          icon: const Icon(Icons.add, size: 17),
+          label: const Text(
+            'Add',
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+          ),
+        ),
+      ),
+    );
+  }
+}

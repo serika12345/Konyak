@@ -7,6 +7,7 @@ import '../app_platform.dart';
 import '../bottles/bottle_detail.dart';
 import '../bottles/runtime_settings_change.dart';
 import '../utils/bottle_lists.dart';
+import 'home_detail_pane.dart';
 import 'home_menu_bar.dart';
 import 'home_sidebar_pane.dart';
 import 'sidebar.dart';
@@ -192,7 +193,7 @@ class _KonyakHomeState extends State<KonyakHome> {
                   color: colors.strongBorder,
                 ),
                 Expanded(
-                  child: KonyakBottleDetail(
+                  child: KonyakHomeDetailPane(
                     platform: widget.platform,
                     runtime: widget.runtime,
                     bottle: selectedBottle,
@@ -204,31 +205,17 @@ class _KonyakHomeState extends State<KonyakHome> {
                     onViewLatestLog: widget.onViewLatestLog,
                     detailMode: _detailMode,
                     selectedProgram: selectedProgram,
-                    programSettings:
-                        selectedProgram == null || selectedBottle == null
-                        ? null
-                        : widget.programSettings[programSettingsKey(
-                            bottleId: selectedBottle.id,
-                            programPath: selectedProgram.path,
-                          )],
-                    isProgramSettingsLoading:
-                        selectedProgram != null &&
-                        selectedBottle != null &&
-                        widget.loadingProgramSettings.contains(
-                          programSettingsKey(
-                            bottleId: selectedBottle.id,
-                            programPath: selectedProgram.path,
-                          ),
-                        ),
+                    programSettings: widget.programSettings,
+                    loadingProgramSettings: widget.loadingProgramSettings,
                     isRuntimeCapabilitiesLoading:
                         widget.isRuntimeCapabilitiesLoading,
                     pendingRuntimeSettingsControlKey: selectedBottle == null
                         ? null
                         : widget.pendingRuntimeSettingsControls[selectedBottle
                               .id],
-                    onBackToBottle: selectedBottleHasPendingRuntimeSettings
-                        ? null
-                        : _showBottleOverview,
+                    isBottleNavigationLocked:
+                        selectedBottleHasPendingRuntimeSettings,
+                    onBackToBottle: _showBottleOverview,
                     onShowBottleConfiguration: _showBottleConfiguration,
                     onRuntimeSettingsChanged: widget.onRuntimeSettingsChanged,
                     onDeleteBottle: widget.onDeleteBottle,
