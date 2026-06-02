@@ -313,7 +313,7 @@ task changes scope.
     boundaries are stable.
     - [x] `runtime_release_metadata_parsers.dart`: separate release asset parsing
       from source-manifest metadata parsing.
-    - [ ] `cli_program_parsers.dart`: separate Start Menu shortcut parsing, PE
+    - [x] `cli_program_parsers.dart`: separate Start Menu shortcut parsing, PE
       metadata conversion, and JSON response conversion.
     - [ ] `common_helpers.dart` and `platform_paths.dart`: keep only generic,
       dependency-free helpers; move platform-specific helpers next to their
