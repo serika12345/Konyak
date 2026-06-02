@@ -1,28 +1,5 @@
 part of '../konyak_cli.dart';
 
-sealed class MacosWineInstallResult {
-  const MacosWineInstallResult();
-}
-
-class MacosWineInstallCompleted extends MacosWineInstallResult {
-  const MacosWineInstallCompleted({required this.runtime});
-
-  final RuntimeRecord runtime;
-}
-
-class MacosWineInstallFailed extends MacosWineInstallResult {
-  const MacosWineInstallFailed(this.message);
-
-  final String message;
-}
-
-abstract interface class MacosWineInstaller {
-  MacosWineInstallResult install(
-    MacosWineInstallRequest request, {
-    RuntimeInstallProgressSink? progressSink,
-  });
-}
-
 class GptkWineInstallRequest {
   const GptkWineInstallRequest({required this.sourcePath});
 
@@ -70,29 +47,6 @@ class GptkWineInstallFailed extends GptkWineInstallResult {
 
 abstract interface class GptkWineInstaller {
   GptkWineInstallResult install(GptkWineInstallRequest request);
-}
-
-sealed class LinuxWineInstallResult {
-  const LinuxWineInstallResult();
-}
-
-class LinuxWineInstallCompleted extends LinuxWineInstallResult {
-  const LinuxWineInstallCompleted({required this.runtime});
-
-  final RuntimeRecord runtime;
-}
-
-class LinuxWineInstallFailed extends LinuxWineInstallResult {
-  const LinuxWineInstallFailed(this.message);
-
-  final String message;
-}
-
-abstract interface class LinuxWineInstaller {
-  LinuxWineInstallResult install(
-    LinuxWineInstallRequest request, {
-    RuntimeInstallProgressSink? progressSink,
-  });
 }
 
 class DartIoGptkWineInstaller implements GptkWineInstaller {

@@ -278,7 +278,7 @@ task changes scope.
       archive import/export, pinning, and program settings.
     - Verify with targeted CLI contract tests first, then `just cli-test`,
       `just verify-governance`, `just format-check`, and `just lint`.
-  - [ ] Split runtime install request/result models from install execution.
+  - [x] Split runtime install request/result models from install execution.
     - Move operation models, macOS request factories, Linux request factories,
       and install results into small model files.
     - Keep request accessors pure and shared; do not let filesystem, process,
