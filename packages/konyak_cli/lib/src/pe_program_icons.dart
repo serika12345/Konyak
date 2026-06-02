@@ -1,38 +1,5 @@
 part of '../konyak_cli.dart';
 
-String? _extractPeIcon({
-  required _PortableExecutableImage image,
-  required BottleRecord bottle,
-  required String programPath,
-  required FileStat fileStat,
-}) {
-  final icoBytes = _peIconBytes(image);
-  if (icoBytes == null) {
-    return null;
-  }
-
-  final cacheKey = sha256
-      .convert(
-        utf8.encode(
-          '$programPath|${fileStat.size}|'
-          '${fileStat.modified.millisecondsSinceEpoch}',
-        ),
-      )
-      .toString()
-      .substring(0, 24);
-  final iconPath = _joinPath(bottle.path, ['cache', 'icons', '$cacheKey.ico']);
-
-  try {
-    final iconFile = File(iconPath);
-    iconFile.parent.createSync(recursive: true);
-    iconFile.writeAsBytesSync(icoBytes);
-
-    return iconPath;
-  } on FileSystemException {
-    return null;
-  }
-}
-
 Uint8List? _peIconBytes(_PortableExecutableImage image) {
   final groupResources = _peResourceLeaves(image, 14);
   if (groupResources.isEmpty) {
@@ -58,6 +25,23 @@ Uint8List? _peIconBytes(_PortableExecutableImage image) {
   }
 
   return null;
+}
+
+String _peIconCachePath({
+  required BottleRecord bottle,
+  required String programPath,
+  required FileStat fileStat,
+}) {
+  final cacheKey = sha256
+      .convert(
+        utf8.encode(
+          '$programPath|${fileStat.size}|'
+          '${fileStat.modified.millisecondsSinceEpoch}',
+        ),
+      )
+      .toString()
+      .substring(0, 24);
+  return _joinPath(bottle.path, ['cache', 'icons', '$cacheKey.ico']);
 }
 
 Uint8List? _icoFromGroupIconResource(

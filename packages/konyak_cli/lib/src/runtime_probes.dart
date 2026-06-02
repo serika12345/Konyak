@@ -36,12 +36,21 @@ class DartIoRuntimeStackVersionProbe implements RuntimeStackVersionProbe {
     }
 
     try {
-      final decoded = jsonDecode(manifest.readAsStringSync());
-      return _runtimeStackComponentVersion(decoded, componentId);
+      return _runtimeStackComponentVersionFromManifestPayload(
+        manifest.readAsStringSync(),
+        componentId,
+      );
     } on FileSystemException {
       return null;
     } on FormatException {
       return null;
     }
   }
+}
+
+String? _runtimeStackComponentVersionFromManifestPayload(
+  String payload,
+  String componentId,
+) {
+  return _runtimeStackComponentVersion(jsonDecode(payload), componentId);
 }
