@@ -175,6 +175,13 @@ def require_result_boundary_rules() -> None:
         "packages/konyak_cli/lib/src/program_catalog_models.dart",
         "final String? hostPath;",
     )
+    for expected in [
+        "final Option<String> archiveUrl;",
+        "final Option<String> archiveSha256;",
+        "final Option<String> sourceManifestUrl;",
+        "final Option<String> sourceManifestSignatureUrl;",
+    ]:
+        require_contains("packages/konyak_cli/lib/src/update_records.dart", expected)
 
     result_wrapped_repository_operation_files = [
         "packages/konyak_cli/lib/src/file_bottle_repository_mutation_operations.dart",

@@ -1374,7 +1374,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
       appId: 'konyak',
       currentVersion: '1.0.0',
       versionUrl: 'https://example.invalid/releases/latest',
-      releaseMetadataFetcher: const StaticRuntimeReleaseMetadataFetcher(
+      releaseMetadataFetcher: StaticRuntimeReleaseMetadataFetcher(
         RuntimeReleaseMetadata(version: 'v1.0.0'),
       ),
     );
@@ -1428,11 +1428,11 @@ void defineRuntimeProcessAndUpdateContractTests() {
     expect(result, isA<RuntimeReleaseMetadataFetched>());
     final fetched = result as RuntimeReleaseMetadataFetched;
     expect(
-      fetched.metadata.archiveUrl,
+      fetched.metadata.archiveUrl.toNullable(),
       'https://example.invalid/Konyak-1.1.0-macos-arm64.zip',
     );
     expect(
-      fetched.metadata.archiveSha256,
+      fetched.metadata.archiveSha256.toNullable(),
       'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
     );
   });
@@ -1508,11 +1508,11 @@ void defineRuntimeProcessAndUpdateContractTests() {
     expect(result, isA<RuntimeReleaseMetadataFetched>());
     final fetched = result as RuntimeReleaseMetadataFetched;
     expect(
-      fetched.metadata.sourceManifestUrl,
+      fetched.metadata.sourceManifestUrl.toNullable(),
       'https://example.invalid/konyak-linux-wine-runtime-stack-source.json',
     );
     expect(
-      fetched.metadata.sourceManifestSignatureUrl,
+      fetched.metadata.sourceManifestSignatureUrl.toNullable(),
       'https://example.invalid/konyak-linux-wine-runtime-stack-source.json.sig',
     );
   });
@@ -1522,12 +1522,15 @@ void defineRuntimeProcessAndUpdateContractTests() {
       appId: 'konyak',
       currentVersion: '1.0.0',
       versionUrl: 'https://example.invalid/releases/latest',
-      releaseMetadataFetcher: const StaticRuntimeReleaseMetadataFetcher(
+      releaseMetadataFetcher: StaticRuntimeReleaseMetadataFetcher(
         RuntimeReleaseMetadata(
           version: 'v1.1.0',
-          archiveUrl: 'https://example.invalid/Konyak-1.1.0-macos.zip',
-          archiveSha256:
-              'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+          archiveUrl: Option.of(
+            'https://example.invalid/Konyak-1.1.0-macos.zip',
+          ),
+          archiveSha256: Option.of(
+            'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+          ),
         ),
       ),
     );
@@ -2100,13 +2103,15 @@ void defineRuntimeProcessAndUpdateContractTests() {
             ),
           ),
         ]),
-        releaseMetadataFetcher: const StaticRuntimeReleaseMetadataFetcher(
+        releaseMetadataFetcher: StaticRuntimeReleaseMetadataFetcher(
           RuntimeReleaseMetadata(
             version: 'wine-10.1',
-            sourceManifestUrl:
-                'https://example.invalid/linux-runtime-stack-source.json',
-            sourceManifestSignatureUrl:
-                'https://example.invalid/linux-runtime-stack-source.json.sig',
+            sourceManifestUrl: Option.of(
+              'https://example.invalid/linux-runtime-stack-source.json',
+            ),
+            sourceManifestSignatureUrl: Option.of(
+              'https://example.invalid/linux-runtime-stack-source.json.sig',
+            ),
           ),
         ),
       );
@@ -2160,10 +2165,12 @@ void defineRuntimeProcessAndUpdateContractTests() {
             ),
           ),
         ]),
-        releaseMetadataFetcher: const StaticRuntimeReleaseMetadataFetcher(
+        releaseMetadataFetcher: StaticRuntimeReleaseMetadataFetcher(
           RuntimeReleaseMetadata(
             version: 'wine-10.1',
-            archiveUrl: 'https://example.invalid/linux-wine-10.1.tar.xz',
+            archiveUrl: Option.of(
+              'https://example.invalid/linux-wine-10.1.tar.xz',
+            ),
           ),
         ),
       );
@@ -2214,7 +2221,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
             ),
           ),
         ]),
-        releaseMetadataFetcher: const StaticRuntimeReleaseMetadataFetcher(
+        releaseMetadataFetcher: StaticRuntimeReleaseMetadataFetcher(
           RuntimeReleaseMetadata(version: '11.9'),
         ),
       );

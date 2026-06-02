@@ -67,8 +67,8 @@ class DartIoAppUpdateChecker implements AppUpdateChecker {
           currentVersion: currentVersion,
           latestVersion: metadata.version,
           versionUrl: versionUrl,
-          archiveUrl: metadata.archiveUrl ?? archiveUrl,
-          archiveSha256: metadata.archiveSha256 ?? archiveSha256,
+          archiveUrl: metadata.archiveUrl.toNullable() ?? archiveUrl,
+          archiveSha256: metadata.archiveSha256.toNullable() ?? archiveSha256,
         ),
       ),
       RuntimeReleaseMetadataFetchFailed(:final message) => AppUpdateCheckFailed(

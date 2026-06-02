@@ -41,9 +41,10 @@ class DartIoRuntimeUpdateChecker implements RuntimeUpdateChecker {
             currentVersion: _runtimeWineVersion(runtime),
             latestVersion: metadata.version,
             versionUrl: versionUrl,
-            archiveUrl: metadata.archiveUrl ?? runtime.archiveUrl,
-            sourceManifestUrl: metadata.sourceManifestUrl,
-            sourceManifestSignatureUrl: metadata.sourceManifestSignatureUrl,
+            archiveUrl: metadata.archiveUrl.toNullable() ?? runtime.archiveUrl,
+            sourceManifestUrl: metadata.sourceManifestUrl.toNullable(),
+            sourceManifestSignatureUrl: metadata.sourceManifestSignatureUrl
+                .toNullable(),
           ),
         ),
       RuntimeReleaseMetadataFetchFailed(:final message) =>

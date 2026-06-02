@@ -148,6 +148,27 @@ void main() {
     expect(process.toJson(), isNot(contains('hostPath')));
   });
 
+  test('runtime release metadata models absent fields with Option', () {
+    final metadata = RuntimeReleaseMetadata(version: '1.0.0');
+
+    expect(metadata.archiveUrl.isNone(), isTrue);
+    expect(metadata.archiveSha256.isNone(), isTrue);
+    expect(metadata.sourceManifestUrl.isNone(), isTrue);
+    expect(metadata.sourceManifestSignatureUrl.isNone(), isTrue);
+  });
+
+  test('runtime release metadata rejects blank present fields', () {
+    expect(
+      () => RuntimeReleaseMetadata(version: ' '),
+      throwsA(isA<ArgumentError>()),
+    );
+    expect(
+      () =>
+          RuntimeReleaseMetadata(version: '1.0.0', archiveUrl: Option.of(' ')),
+      throwsA(isA<ArgumentError>()),
+    );
+  });
+
   test('program settings expose immutable environment snapshots', () {
     final environment = <String, String>{'LANG': 'ja_JP.UTF-8'};
     final settings = ProgramSettingsRecord(environment: environment);

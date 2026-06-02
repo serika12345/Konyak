@@ -167,19 +167,39 @@ abstract interface class AppUpdateInstaller {
 }
 
 class RuntimeReleaseMetadata {
-  const RuntimeReleaseMetadata({
-    required this.version,
-    this.archiveUrl,
-    this.archiveSha256,
-    this.sourceManifestUrl,
-    this.sourceManifestSignatureUrl,
-  });
+  RuntimeReleaseMetadata({
+    required String version,
+    Option<String> archiveUrl = const Option.none(),
+    Option<String> archiveSha256 = const Option.none(),
+    Option<String> sourceManifestUrl = const Option.none(),
+    Option<String> sourceManifestSignatureUrl = const Option.none(),
+  }) : version = _requiredNonBlankDomainString(version, 'version'),
+       archiveUrl = _requiredNonBlankUpdateOption(archiveUrl, 'archiveUrl'),
+       archiveSha256 = _requiredNonBlankUpdateOption(
+         archiveSha256,
+         'archiveSha256',
+       ),
+       sourceManifestUrl = _requiredNonBlankUpdateOption(
+         sourceManifestUrl,
+         'sourceManifestUrl',
+       ),
+       sourceManifestSignatureUrl = _requiredNonBlankUpdateOption(
+         sourceManifestSignatureUrl,
+         'sourceManifestSignatureUrl',
+       );
 
   final String version;
-  final String? archiveUrl;
-  final String? archiveSha256;
-  final String? sourceManifestUrl;
-  final String? sourceManifestSignatureUrl;
+  final Option<String> archiveUrl;
+  final Option<String> archiveSha256;
+  final Option<String> sourceManifestUrl;
+  final Option<String> sourceManifestSignatureUrl;
+}
+
+Option<String> _requiredNonBlankUpdateOption(
+  Option<String> value,
+  String fieldName,
+) {
+  return value.map((item) => _requiredNonBlankDomainString(item, fieldName));
 }
 
 sealed class RuntimeReleaseMetadataFetchResult {

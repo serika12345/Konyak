@@ -13,17 +13,23 @@ RuntimeReleaseMetadata? _runtimeReleaseMetadataFromDecoded({
   final releaseMetadataAssetUrl = _runtimeReleaseMetadataAssetUrl(release);
   return RuntimeReleaseMetadata(
     version: version,
-    archiveUrl: archiveUrl,
-    archiveSha256: _runtimeReleaseArchiveSha256(release, archiveUrl),
-    sourceManifestUrl: _runtimeReleaseSourceManifestUrl(
-      release: release,
-      releaseMetadataAssetUrl: releaseMetadataAssetUrl,
-      releaseMetadata: releaseMetadata,
+    archiveUrl: Option.fromNullable(archiveUrl),
+    archiveSha256: Option.fromNullable(
+      _runtimeReleaseArchiveSha256(release, archiveUrl),
     ),
-    sourceManifestSignatureUrl: _runtimeReleaseSourceManifestSignatureUrl(
-      release: release,
-      releaseMetadataAssetUrl: releaseMetadataAssetUrl,
-      releaseMetadata: releaseMetadata,
+    sourceManifestUrl: Option.fromNullable(
+      _runtimeReleaseSourceManifestUrl(
+        release: release,
+        releaseMetadataAssetUrl: releaseMetadataAssetUrl,
+        releaseMetadata: releaseMetadata,
+      ),
+    ),
+    sourceManifestSignatureUrl: Option.fromNullable(
+      _runtimeReleaseSourceManifestSignatureUrl(
+        release: release,
+        releaseMetadataAssetUrl: releaseMetadataAssetUrl,
+        releaseMetadata: releaseMetadata,
+      ),
     ),
   );
 }
