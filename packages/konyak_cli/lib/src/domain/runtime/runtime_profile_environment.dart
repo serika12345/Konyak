@@ -1,23 +1,19 @@
 part of '../../../konyak_cli.dart';
 
 Option<String> _runtimeProfileEnvironmentValue(
-  Map<String, String> environment, {
+  HostEnvironment environment, {
   required String developmentKey,
   required String releaseKey,
 }) {
   if (_isDevelopmentRuntimeProfile(environment)) {
-    return Option.fromNullable(
-      _nonEmptyEnvironmentValue(environment, developmentKey),
-    );
+    return Option.fromNullable(environment.nonEmptyValue(developmentKey));
   }
 
-  return Option.fromNullable(
-    _nonEmptyEnvironmentValue(environment, releaseKey),
-  );
+  return Option.fromNullable(environment.nonEmptyValue(releaseKey));
 }
 
 String _runtimeDistributionKind(
-  Map<String, String> environment,
+  HostEnvironment environment,
   String defaultKind,
 ) {
   if (_isDevelopmentRuntimeProfile(environment)) {
@@ -27,7 +23,6 @@ String _runtimeDistributionKind(
   return defaultKind;
 }
 
-bool _isDevelopmentRuntimeProfile(Map<String, String> environment) {
-  return _nonEmptyEnvironmentValue(environment, 'KONYAK_RUNTIME_PROFILE') ==
-      'development';
+bool _isDevelopmentRuntimeProfile(HostEnvironment environment) {
+  return environment.nonEmptyValue('KONYAK_RUNTIME_PROFILE') == 'development';
 }

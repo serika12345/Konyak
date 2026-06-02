@@ -254,6 +254,7 @@ _RuntimeWineInstallPlan _macosWineInstallPlan({
   required MacosWineInstallRequest request,
   required RuntimeRecord currentRuntime,
 }) {
+  final hostEnvironment = HostEnvironment(environment);
   return _runtimeWineInstallPlan(
     hostPlatformSupported: hostPlatform == KonyakHostPlatform.macos,
     unsupportedPlatformMessage:
@@ -262,16 +263,16 @@ _RuntimeWineInstallPlan _macosWineInstallPlan({
     currentRuntime: currentRuntime,
     configuredSourceManifest: _runtimeSourceManifestForPlatform(
       platformSpec: _macosKonyakRuntimePlatformSpec,
-      environment: environment,
+      environment: hostEnvironment,
     ),
     configuredSourceManifestSignature:
         _runtimeSourceManifestSignatureForPlatform(
           platformSpec: _macosKonyakRuntimePlatformSpec,
-          environment: environment,
+          environment: hostEnvironment,
         ),
     defaultArchiveUrl: _runtimeDefaultArchiveUrl(
       platformSpec: _macosKonyakRuntimePlatformSpec,
-      environment: environment,
+      environment: hostEnvironment,
     ),
     defaultArchiveFileName:
         _macosKonyakRuntimePlatformSpec.defaultArchiveFileName,

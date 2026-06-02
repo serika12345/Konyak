@@ -6,6 +6,7 @@ RuntimeRecord _macosWineRuntimeRecord({
   required RuntimeStackVersionProbe runtimeStackVersionProbe,
 }) {
   const platformSpec = _macosKonyakRuntimePlatformSpec;
+  final hostEnvironment = HostEnvironment(environment);
   final applicationSupportPath = _konyakApplicationSupportFolder(environment);
   final libraryPath = _macosWineRuntimeRoot(environment);
   final executablePath = _macosWineExecutable(environment);
@@ -21,7 +22,7 @@ RuntimeRecord _macosWineRuntimeRecord({
       isBundled: false,
       isUpdateable: true,
       distributionKind: Option.fromNullable(
-        _runtimeDistributionKind(environment, 'bootstrap'),
+        _runtimeDistributionKind(hostEnvironment, 'bootstrap'),
       ),
       archiveUrl: platformSpec.defaultArchiveUrl,
       versionUrl: Option.fromNullable(macosWineVersionUrl),
@@ -51,11 +52,12 @@ RuntimeRecord _linuxWineRuntimeRecord({
   required RuntimeStackVersionProbe runtimeStackVersionProbe,
 }) {
   const platformSpec = _linuxWineRuntimePlatformSpec;
+  final hostEnvironment = HostEnvironment(environment);
   final runtimeRoot = _linuxWineRuntimeRoot(environment);
   final executablePath = _joinPath(runtimeRoot, const ['bin', 'wine']);
   final archiveUrl = _runtimeDefaultArchiveUrl(
     platformSpec: platformSpec,
-    environment: environment,
+    environment: hostEnvironment,
   );
   final versionUrl = _nonEmptyEnvironmentValue(
     environment,
@@ -71,7 +73,7 @@ RuntimeRecord _linuxWineRuntimeRecord({
       isBundled: false,
       isUpdateable: archiveUrl.isSome() || versionUrl != null,
       distributionKind: Option.of(
-        _runtimeDistributionKind(environment, 'managed'),
+        _runtimeDistributionKind(hostEnvironment, 'managed'),
       ),
       archiveUrl: archiveUrl,
       versionUrl: Option.fromNullable(versionUrl),

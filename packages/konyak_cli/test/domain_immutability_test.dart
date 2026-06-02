@@ -354,7 +354,14 @@ void main() {
     variables['HOME'] = '/changed';
 
     expect(environment['HOME'], '/Users/user');
+    expect(environment.nonEmptyValue('HOME'), '/Users/user');
     expect(environment.toMap(), {'HOME': '/Users/user'});
+    expect(
+      HostEnvironment(const <String, String>{
+        'EMPTY': ' ',
+      }).nonEmptyValue('EMPTY'),
+      isNull,
+    );
     expect(
       () => HostEnvironment(const <String, String>{' ': 'value'}),
       throwsA(isA<ArgumentError>()),

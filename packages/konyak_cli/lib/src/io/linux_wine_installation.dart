@@ -242,6 +242,7 @@ _RuntimeWineInstallPlan _linuxWineInstallPlan({
   required LinuxWineInstallRequest request,
   required RuntimeRecord currentRuntime,
 }) {
+  final hostEnvironment = HostEnvironment(environment);
   return _runtimeWineInstallPlan(
     hostPlatformSupported: hostPlatform == KonyakHostPlatform.linux,
     unsupportedPlatformMessage:
@@ -250,16 +251,16 @@ _RuntimeWineInstallPlan _linuxWineInstallPlan({
     currentRuntime: currentRuntime,
     configuredSourceManifest: _runtimeSourceManifestForPlatform(
       platformSpec: _linuxWineRuntimePlatformSpec,
-      environment: environment,
+      environment: hostEnvironment,
     ),
     configuredSourceManifestSignature:
         _runtimeSourceManifestSignatureForPlatform(
           platformSpec: _linuxWineRuntimePlatformSpec,
-          environment: environment,
+          environment: hostEnvironment,
         ),
     defaultArchiveUrl: _runtimeDefaultArchiveUrl(
       platformSpec: _linuxWineRuntimePlatformSpec,
-      environment: environment,
+      environment: hostEnvironment,
     ),
     defaultArchiveFileName:
         _linuxWineRuntimePlatformSpec.defaultArchiveFileName,

@@ -17,6 +17,15 @@ final class HostEnvironment {
     return _variables[name];
   }
 
+  String? nonEmptyValue(String name) {
+    final value = _variables[_requiredEnvironmentVariableName(name)];
+    if (value == null || value.trim().isEmpty) {
+      return null;
+    }
+
+    return value;
+  }
+
   Map<String, String> toMap() {
     return _variables.unlockView;
   }
