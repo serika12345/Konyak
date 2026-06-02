@@ -1,7 +1,7 @@
 part of '../konyak_cli.dart';
 
 class RuntimeDefinition {
-  const RuntimeDefinition({
+  RuntimeDefinition({
     required this.id,
     required this.name,
     required this.platform,
@@ -9,10 +9,15 @@ class RuntimeDefinition {
     required this.runnerKind,
     required this.isBundled,
     required this.isUpdateable,
-    this.distributionKind,
-    this.archiveUrl,
-    this.versionUrl,
-  });
+    String? distributionKind,
+    String? archiveUrl,
+    String? versionUrl,
+  }) : distributionKind = _optionalRuntimeModelValue(
+         distributionKind,
+         'distributionKind',
+       ),
+       archiveUrl = _optionalRuntimeModelValue(archiveUrl, 'archiveUrl'),
+       versionUrl = _optionalRuntimeModelValue(versionUrl, 'versionUrl');
 
   final String id;
   final String name;
@@ -21,9 +26,9 @@ class RuntimeDefinition {
   final String runnerKind;
   final bool isBundled;
   final bool isUpdateable;
-  final String? distributionKind;
-  final String? archiveUrl;
-  final String? versionUrl;
+  final Option<String> distributionKind;
+  final Option<String> archiveUrl;
+  final Option<String> versionUrl;
 }
 
 class InstalledRuntimeState {
@@ -85,13 +90,13 @@ class RuntimeRecord {
        runnerKind = definition.runnerKind,
        isBundled = definition.isBundled,
        isUpdateable = definition.isUpdateable,
-       distributionKind = definition.distributionKind,
+       distributionKind = definition.distributionKind.toNullable(),
        isInstalled = installedState.isInstalled,
        applicationSupportPath = installedState.applicationSupportPath,
        libraryPath = installedState.libraryPath,
        executablePath = installedState.executablePath,
-       archiveUrl = definition.archiveUrl,
-       versionUrl = definition.versionUrl,
+       archiveUrl = definition.archiveUrl.toNullable(),
+       versionUrl = definition.versionUrl.toNullable(),
        stack = capabilities.stack;
 
   final String id;

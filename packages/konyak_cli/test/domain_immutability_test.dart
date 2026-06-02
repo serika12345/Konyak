@@ -430,6 +430,38 @@ void main() {
     );
   });
 
+  test('runtime definitions model absent source URLs with Option', () {
+    final definition = RuntimeDefinition(
+      id: 'konyak-linux-wine',
+      name: 'Konyak Linux Wine',
+      platform: 'linux',
+      architecture: 'x86_64',
+      runnerKind: 'wine',
+      isBundled: false,
+      isUpdateable: true,
+    );
+
+    expect(definition.distributionKind.isNone(), isTrue);
+    expect(definition.archiveUrl.isNone(), isTrue);
+    expect(definition.versionUrl.isNone(), isTrue);
+  });
+
+  test('runtime definitions reject blank present source URLs', () {
+    expect(
+      () => RuntimeDefinition(
+        id: 'konyak-linux-wine',
+        name: 'Konyak Linux Wine',
+        platform: 'linux',
+        architecture: 'x86_64',
+        runnerKind: 'wine',
+        isBundled: false,
+        isUpdateable: true,
+        archiveUrl: ' ',
+      ),
+      throwsA(isA<ArgumentError>()),
+    );
+  });
+
   test('static catalogs expose immutable snapshots', () {
     final bottles = <BottleRecord>[
       BottleRecord(

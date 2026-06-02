@@ -49,7 +49,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
 
   test('runtime records compose definition state and capabilities', () {
     final runtime = RuntimeRecord.fromParts(
-      definition: const RuntimeDefinition(
+      definition: RuntimeDefinition(
         id: 'konyak-linux-wine',
         name: 'Konyak Linux Wine',
         platform: 'linux',

@@ -245,6 +245,12 @@ def require_result_boundary_rules() -> None:
         "packages/konyak_cli/lib/src/runtime_models.dart",
         "final String? version;",
     )
+    for expected in [
+        "final Option<String> distributionKind;",
+        "final Option<String> archiveUrl;",
+        "final Option<String> versionUrl;",
+    ]:
+        require_contains("packages/konyak_cli/lib/src/runtime_models.dart", expected)
 
     result_wrapped_repository_operation_files = [
         "packages/konyak_cli/lib/src/file_bottle_repository_mutation_operations.dart",
