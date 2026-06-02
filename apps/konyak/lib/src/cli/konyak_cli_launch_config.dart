@@ -37,12 +37,13 @@ final class _KonyakCliLaunchDefines {
 }
 
 final class _KonyakCliLaunchConfig {
-  const _KonyakCliLaunchConfig({
+  _KonyakCliLaunchConfig({
     required this.executable,
-    required this.baseArguments,
-    required this.environment,
+    required List<String> baseArguments,
+    required Map<String, String> environment,
     required this.workingDirectory,
-  });
+  }) : baseArguments = List.unmodifiable(baseArguments),
+       environment = Map.unmodifiable(environment);
 
   final String executable;
   final List<String> baseArguments;

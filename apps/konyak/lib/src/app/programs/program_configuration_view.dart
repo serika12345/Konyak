@@ -44,7 +44,7 @@ class _ProgramConfigurationViewState extends State<ProgramConfigurationView> {
     super.initState();
     _argumentsController = TextEditingController();
     _environmentControllers = <ProgramEnvironmentControllers>[];
-    _replaceSettings(widget.settings ?? const ProgramSettingsSummary());
+    _replaceSettings(widget.settings ?? ProgramSettingsSummary());
   }
 
   @override
@@ -53,7 +53,7 @@ class _ProgramConfigurationViewState extends State<ProgramConfigurationView> {
 
     if (oldWidget.program.path != widget.program.path ||
         !sameProgramSettings(oldWidget.settings, widget.settings)) {
-      _replaceSettings(widget.settings ?? const ProgramSettingsSummary());
+      _replaceSettings(widget.settings ?? ProgramSettingsSummary());
     }
   }
 

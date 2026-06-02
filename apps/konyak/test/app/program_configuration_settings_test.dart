@@ -19,12 +19,12 @@ void main() {
   });
 
   test('compares program settings by final values', () {
-    const left = ProgramSettingsSummary(
+    final left = ProgramSettingsSummary(
       locale: 'ja_JP.UTF-8',
       arguments: '-windowed',
       environment: <String, String>{'LANG': 'ja_JP.UTF-8', 'WINEDEBUG': '-all'},
     );
-    const right = ProgramSettingsSummary(
+    final right = ProgramSettingsSummary(
       locale: 'ja_JP.UTF-8',
       arguments: '-windowed',
       environment: <String, String>{'WINEDEBUG': '-all', 'LANG': 'ja_JP.UTF-8'},
@@ -35,6 +35,6 @@ void main() {
 
   test('treats null settings explicitly', () {
     expect(sameProgramSettings(null, null), isTrue);
-    expect(sameProgramSettings(null, const ProgramSettingsSummary()), isFalse);
+    expect(sameProgramSettings(null, ProgramSettingsSummary()), isFalse);
   });
 }

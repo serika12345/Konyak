@@ -1,12 +1,12 @@
 class BottleSummary {
-  const BottleSummary({
+  BottleSummary({
     required this.id,
     required this.name,
     required this.path,
     required this.windowsVersion,
     this.runtimeSettings = const BottleRuntimeSettingsSummary(),
-    this.pinnedPrograms = const <PinnedProgramSummary>[],
-  });
+    List<PinnedProgramSummary> pinnedPrograms = const <PinnedProgramSummary>[],
+  }) : pinnedPrograms = List.unmodifiable(pinnedPrograms);
 
   final String id;
   final String name;
@@ -126,11 +126,11 @@ class PinnedProgramSummary {
 }
 
 class ProgramSettingsSummary {
-  const ProgramSettingsSummary({
+  ProgramSettingsSummary({
     this.locale = '',
     this.arguments = '',
-    this.environment = const <String, String>{},
-  });
+    Map<String, String> environment = const <String, String>{},
+  }) : environment = Map.unmodifiable(environment);
 
   final String locale;
   final String arguments;

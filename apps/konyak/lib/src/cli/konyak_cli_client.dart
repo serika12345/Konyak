@@ -39,13 +39,14 @@ part 'konyak_cli_bottle_commands.dart';
 part 'konyak_cli_program_commands.dart';
 
 final class KonyakCliClient {
-  const KonyakCliClient({
+  KonyakCliClient({
     required this.executable,
-    this.baseArguments = const <String>[],
-    this.environment = const <String, String>{},
+    List<String> baseArguments = const <String>[],
+    Map<String, String> environment = const <String, String>{},
     this.workingDirectory,
     required this.processRunner,
-  });
+  }) : baseArguments = List.unmodifiable(baseArguments),
+       environment = Map.unmodifiable(environment);
 
   final String executable;
   final List<String> baseArguments;

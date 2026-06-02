@@ -1865,7 +1865,7 @@ void main() {
       final result = await client.setProgramSettings(
         bottleId: 'steam',
         programPath: '/downloads/Steam.exe',
-        settings: const ProgramSettingsSummary(
+        settings: ProgramSettingsSummary(
           locale: 'ja_JP.UTF-8',
           arguments: '-silent',
           environment: {'STEAM_COMPAT_DATA_PATH': '/compat'},

@@ -3,7 +3,10 @@ import 'package:flutter/material.dart';
 import '../app_constants.dart';
 
 class KonyakMenuDefinition {
-  const KonyakMenuDefinition({required this.label, required this.items});
+  KonyakMenuDefinition({
+    required this.label,
+    required List<KonyakMenuItemDefinition> items,
+  }) : items = List.unmodifiable(items);
 
   final String label;
   final List<KonyakMenuItemDefinition> items;
@@ -22,7 +25,8 @@ class KonyakMenuItemDefinition {
 }
 
 class KonyakMenuBar extends StatelessWidget {
-  const KonyakMenuBar({super.key, required this.menus});
+  KonyakMenuBar({super.key, required List<KonyakMenuDefinition> menus})
+    : menus = List.unmodifiable(menus);
 
   final List<KonyakMenuDefinition> menus;
 

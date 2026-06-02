@@ -6,10 +6,13 @@ import '../runtime/runtime_platform.dart';
 import '../utils/update_labels.dart';
 
 final class StartupUpdateCheckResult {
-  const StartupUpdateCheckResult({
-    required this.availableUpdateLabels,
-    required this.knownRuntimes,
-  });
+  StartupUpdateCheckResult({
+    required List<String> availableUpdateLabels,
+    required List<RuntimeSummary>? knownRuntimes,
+  }) : availableUpdateLabels = List.unmodifiable(availableUpdateLabels),
+       knownRuntimes = knownRuntimes == null
+           ? null
+           : List.unmodifiable(knownRuntimes);
 
   final List<String> availableUpdateLabels;
   final List<RuntimeSummary>? knownRuntimes;
@@ -24,7 +27,7 @@ final class StartupUpdateChecker {
   Future<StartupUpdateCheckResult> check(AppSettingsSummary settings) async {
     if (!settings.automaticallyCheckForKonyakUpdates &&
         !settings.automaticallyCheckForWineUpdates) {
-      return const StartupUpdateCheckResult(
+      return StartupUpdateCheckResult(
         availableUpdateLabels: <String>[],
         knownRuntimes: null,
       );
