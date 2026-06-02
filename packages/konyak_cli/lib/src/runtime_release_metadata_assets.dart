@@ -89,7 +89,9 @@ String? _runtimeReleaseAssetUrlByFileName(Object? decoded, String fileName) {
     final url = asset['browser_download_url'];
     if (url is String &&
         url.trim().isNotEmpty &&
-        _fileNameFromUrl(url) == fileName) {
+        _fileNameFromUrl(
+          url,
+        ).match(() => false, (value) => value == fileName)) {
       return url;
     }
   }
@@ -125,11 +127,14 @@ String? _runtimeReleaseArchiveSha256(Object? decoded, String? archiveUrl) {
   }
 
   final archiveFileName = archiveUrl == null
-      ? null
+      ? const Option<String>.none()
       : _fileNameFromUrl(archiveUrl);
   final digestPattern = RegExp(r'\b[0-9a-fA-F]{64}\b');
   for (final line in const LineSplitter().convert(body)) {
-    if (archiveFileName != null && !line.contains(archiveFileName)) {
+    if (archiveFileName.match(
+      () => false,
+      (fileName) => !line.contains(fileName),
+    )) {
       continue;
     }
 
@@ -139,7 +144,7 @@ String? _runtimeReleaseArchiveSha256(Object? decoded, String? archiveUrl) {
     }
   }
 
-  if (archiveFileName == null) {
+  if (archiveFileName.isNone()) {
     return digestPattern.firstMatch(body)?.group(0);
   }
 

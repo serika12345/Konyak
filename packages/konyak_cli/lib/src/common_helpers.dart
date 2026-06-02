@@ -9,14 +9,14 @@ bool _isPathWithinRoot({required String path, required String root}) {
       normalizedPath.startsWith('$normalizedRoot/');
 }
 
-String? _parentDirectory(String path) {
+Option<String> _parentDirectory(String path) {
   final normalized = path.replaceAll('\\', '/').replaceAll(RegExp(r'/+$'), '');
   final index = normalized.lastIndexOf('/');
   if (index <= 0) {
-    return index == 0 ? '/' : null;
+    return index == 0 ? Option.of('/') : const Option.none();
   }
 
-  return normalized.substring(0, index);
+  return Option.of(normalized.substring(0, index));
 }
 
 String _normalizeFilesystemPath(String path) {
@@ -234,15 +234,15 @@ String _joinPath(String root, Iterable<String> components) {
   return path;
 }
 
-String? _fileNameFromUrl(String url) {
+Option<String> _fileNameFromUrl(String url) {
   final parsed = Uri.tryParse(url);
   final segments = parsed?.pathSegments;
   final candidate = segments == null || segments.isEmpty
       ? null
       : segments.last.trim();
   if (candidate == null || candidate.isEmpty) {
-    return null;
+    return const Option.none();
   }
 
-  return candidate.replaceAll(RegExp(r'[^A-Za-z0-9._+-]'), '_');
+  return Option.of(candidate.replaceAll(RegExp(r'[^A-Za-z0-9._+-]'), '_'));
 }

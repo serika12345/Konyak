@@ -38,7 +38,9 @@ class DartIoAppUpdateInstaller implements AppUpdateInstaller {
       );
     }
 
-    final fileName = _fileNameFromUrl(archiveUrl) ?? 'Konyak-update';
+    final fileName = _fileNameFromUrl(
+      archiveUrl,
+    ).match(() => 'Konyak-update', (value) => value);
     final updatesDirectory = Directory(_appUpdateCacheDirectory(environment));
     final archivePath = _joinPath(updatesDirectory.path, [fileName]);
 

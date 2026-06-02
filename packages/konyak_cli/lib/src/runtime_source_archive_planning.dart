@@ -119,8 +119,9 @@ _runtimeStackSourceArchiveComponentPlan({
   required int componentCount,
   required String tempDirectoryPath,
 }) {
-  final fileName =
-      _fileNameFromUrl(component.archiveUrl) ?? '${component.id}.tar.xz';
+  final fileName = _fileNameFromUrl(
+    component.archiveUrl,
+  ).match(() => '${component.id}.tar.xz', (value) => value);
   return _RuntimeStackSourceArchiveComponentPlan(
     component: component,
     archivePath: _joinPath(tempDirectoryPath, ['$componentIndex-$fileName']),

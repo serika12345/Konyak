@@ -177,7 +177,9 @@ _RuntimeWineInstallPlan _runtimeWineInstallPlan({
     ),
     (archiveUrl) => _RuntimeWineInstallDownloadArchive(
       archiveUrl: archiveUrl,
-      archiveFileName: _fileNameFromUrl(archiveUrl) ?? defaultArchiveFileName,
+      archiveFileName: _fileNameFromUrl(
+        archiveUrl,
+      ).match(() => defaultArchiveFileName, (value) => value),
       archiveSha256: requestOperation.archiveSha256,
       componentArchivePaths: componentArchivePaths,
       preserveExistingRuntimeFiles: shouldPreserveExistingRuntimeFiles,

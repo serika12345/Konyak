@@ -132,7 +132,7 @@ String _linuxExternalProgramDesktopEntry({
     'NoDisplay=true',
     'StartupNotify=true',
     'StartupWMClass=${_normalizedExecutableName(request.programPath)}',
-    'Path=${_parentDirectory(request.programPath) ?? bottle.path}',
+    'Path=${_parentDirectory(request.programPath).match(() => bottle.path, (value) => value)}',
   ];
 
   if (iconPath != null && iconPath.trim().isNotEmpty) {
