@@ -339,6 +339,52 @@ def require_result_boundary_rules() -> None:
 
 
 def require_external_payload_parser_boundaries() -> None:
+    cli_non_boundary_directories = [
+        "packages/konyak_cli/lib/src/domain",
+        "packages/konyak_cli/lib/src/platform",
+        "packages/konyak_cli/lib/src/repository",
+        "packages/konyak_cli/lib/src/storage",
+    ]
+    for relative_directory in cli_non_boundary_directories:
+        for unexpected in [
+            "jsonDecode(",
+            "fromJson(",
+            "Map<String, dynamic>",
+            "List<dynamic>",
+            " as Map<String",
+            " as List<",
+        ]:
+            require_not_contains_under(relative_directory, "*.dart", unexpected)
+
+    for relative_directory in [
+        "packages/konyak_cli/lib/src/domain",
+        "packages/konyak_cli/lib/src/platform",
+        "packages/konyak_cli/lib/src/repository",
+        "packages/konyak_cli/lib/src/storage",
+    ]:
+        require_not_contains_under(relative_directory, "*.dart", "Object? value")
+
+    flutter_external_payload_boundary_paths = {
+        "apps/konyak/lib/src/home_loader_parts/home_loader_platform_helpers.part.dart",
+    }
+    for path in sorted((ROOT / "apps/konyak/lib/src").rglob("*.dart")):
+        relative_path = str(path.relative_to(ROOT))
+        if relative_path.startswith("apps/konyak/lib/src/cli/"):
+            continue
+        if relative_path in flutter_external_payload_boundary_paths:
+            continue
+
+        text = path.read_text(encoding="utf-8")
+        for unexpected in [
+            "jsonDecode(",
+            "Map<String, dynamic>",
+            "List<dynamic>",
+            " as Map<String",
+            " as List<",
+        ]:
+            if unexpected in text:
+                raise AssertionError(f"{relative_path} must not contain: {unexpected}")
+
     for relative_path in [
         "packages/konyak_cli/lib/src/domain/app/app_settings_models.dart",
         "packages/konyak_cli/lib/src/domain/bottle/bottle_models.dart",
