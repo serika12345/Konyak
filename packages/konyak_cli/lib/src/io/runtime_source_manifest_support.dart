@@ -1,4 +1,4 @@
-part of '../konyak_cli.dart';
+part of '../../konyak_cli.dart';
 
 Option<RuntimeSourceManifest> _runtimeStackSourceManifestFromPayload(
   String payload,
@@ -28,15 +28,13 @@ Option<RuntimeSourceManifest> _runtimeStackSourceManifestFromPayload(
 
   final parsedComponents = <RuntimeSourceComponent>[];
   for (final component in components) {
-    final parsedComponent = _runtimeStackSourceComponent(component);
-    if (parsedComponent.isNone()) {
+    final parsedComponent = _runtimeStackSourceComponent(
+      component,
+    ).match(() => null, (value) => value);
+    if (parsedComponent == null) {
       return const Option.none();
     }
-    parsedComponents.add(
-      parsedComponent.getOrElse(
-        () => throw StateError('Expected parsed runtime source component.'),
-      ),
-    );
+    parsedComponents.add(parsedComponent);
   }
 
   if (parsedComponents.isEmpty) {

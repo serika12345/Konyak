@@ -104,7 +104,7 @@ BottleArchiveImportResult _importBottleArchive({
       return BottleArchiveImportConflict(imported.id);
     }
 
-    final relocated = imported.copyWith(path: destinationPath);
+    final relocated = imported.withPath(destinationPath);
     _moveDirectory(from: extractedBottlePath, to: destinationPath);
     _writeBottleMetadata(relocated);
     onImported?.call(relocated);

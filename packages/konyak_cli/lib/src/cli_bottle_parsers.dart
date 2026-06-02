@@ -195,17 +195,11 @@ RuntimeSettingsUpdateRequest? _parseJsonRuntimeSettingsUpdateRequest(
     return null;
   }
 
-  if (decoded == null) {
-    return null;
-  }
-
-  final runtimeSettings = BottleRuntimeSettings.fromJson(decoded);
-  if (runtimeSettings == null) {
-    return null;
-  }
-
-  return RuntimeSettingsUpdateRequest(
-    bottleId: bottleId,
-    runtimeSettings: runtimeSettings,
+  return _bottleRuntimeSettingsFromJson(decoded).match(
+    () => null,
+    (runtimeSettings) => RuntimeSettingsUpdateRequest(
+      bottleId: bottleId,
+      runtimeSettings: runtimeSettings,
+    ),
   );
 }

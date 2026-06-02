@@ -104,15 +104,14 @@ class FileAppSettingsRepository implements AppSettingsRepository {
         throw const FormatException('Unsupported app settings schema.');
       }
 
-      final settings = AppSettingsRecord.fromJson(
+      final settings = _appSettingsRecordFromJson(
         decoded['appSettings'],
         fallbackDefaultBottlePath: fallbackDefaultBottlePath,
       );
-      if (settings == null) {
-        throw const FormatException('Invalid app settings record.');
-      }
-
-      return settings;
+      return settings.match(
+        () => throw const FormatException('Invalid app settings record.'),
+        (value) => value,
+      );
     });
   }
 
@@ -130,4 +129,83 @@ class FileAppSettingsRepository implements AppSettingsRepository {
       return settings;
     });
   }
+}
+
+Option<AppSettingsRecord> _appSettingsRecordFromJson(
+  Object? value, {
+  required String fallbackDefaultBottlePath,
+}) {
+  final settings = _objectMap(value);
+  if (settings == null) {
+    return const Option.none();
+  }
+
+  final terminateWineProcessesOnClose =
+      settings['terminateWineProcessesOnClose'];
+  final defaultBottlePath = settings['defaultBottlePath'];
+  final appearanceMode = _appAppearanceModeFromJson(settings['appearanceMode']);
+  final automaticallyCheckForKonyakUpdates =
+      settings['automaticallyCheckForKonyakUpdates'];
+  final automaticallyCheckForWineUpdates =
+      settings['automaticallyCheckForWineUpdates'];
+
+  if (terminateWineProcessesOnClose != null &&
+      terminateWineProcessesOnClose is! bool) {
+    return const Option.none();
+  }
+  if (defaultBottlePath != null &&
+      (defaultBottlePath is! String || defaultBottlePath.trim().isEmpty)) {
+    return const Option.none();
+  }
+  final parsedAppearanceMode = appearanceMode.match<AppAppearanceMode?>(
+    () => null,
+    (value) => value,
+  );
+  if (parsedAppearanceMode == null) {
+    return const Option.none();
+  }
+  if (automaticallyCheckForKonyakUpdates != null &&
+      automaticallyCheckForKonyakUpdates is! bool) {
+    return const Option.none();
+  }
+  if (automaticallyCheckForWineUpdates != null &&
+      automaticallyCheckForWineUpdates is! bool) {
+    return const Option.none();
+  }
+
+  return Option.of(
+    AppSettingsRecord(
+      terminateWineProcessesOnClose: terminateWineProcessesOnClose is bool
+          ? terminateWineProcessesOnClose
+          : true,
+      defaultBottlePath: defaultBottlePath is String
+          ? defaultBottlePath
+          : fallbackDefaultBottlePath,
+      appearanceMode: parsedAppearanceMode,
+      automaticallyCheckForKonyakUpdates:
+          automaticallyCheckForKonyakUpdates is bool
+          ? automaticallyCheckForKonyakUpdates
+          : false,
+      automaticallyCheckForWineUpdates: automaticallyCheckForWineUpdates is bool
+          ? automaticallyCheckForWineUpdates
+          : true,
+    ),
+  );
+}
+
+Option<AppAppearanceMode> _appAppearanceModeFromJson(Object? value) {
+  if (value == null) {
+    return Option.of(AppAppearanceMode.dark);
+  }
+  if (value is! String) {
+    return const Option.none();
+  }
+
+  for (final mode in AppAppearanceMode.values) {
+    if (mode.jsonValue == value) {
+      return Option.of(mode);
+    }
+  }
+
+  return const Option.none();
 }

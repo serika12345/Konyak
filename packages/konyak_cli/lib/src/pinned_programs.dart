@@ -24,19 +24,17 @@ BottleRecord _bottleWithPinnedProgram(
     ),
   );
 
-  return bottle.copyWith(
-    pinnedPrograms: <PinnedProgramRecord>[
-      ...bottle.pinnedPrograms,
-      PinnedProgramRecord(
-        name: request.name,
-        path: request.programPath,
-        iconPath: metadata.match(
-          () => const Option<String>.none(),
-          (programMetadata) => programMetadata.iconPath,
-        ),
+  return bottle.withPinnedPrograms(<PinnedProgramRecord>[
+    ...bottle.pinnedPrograms,
+    PinnedProgramRecord(
+      name: request.name,
+      path: request.programPath,
+      iconPath: metadata.match(
+        () => const Option<String>.none(),
+        (programMetadata) => programMetadata.iconPath,
       ),
-    ],
-  );
+    ),
+  ]);
 }
 
 BottleRecord _bottleWithPinnedProgramIcons(
@@ -66,7 +64,7 @@ BottleRecord _bottleWithPinnedProgramIcons(
         }
 
         changed = true;
-        return program.copyWith(iconPath: iconPath);
+        return program.withIconPath(iconPath);
       })
       .toList(growable: false);
 
@@ -74,7 +72,7 @@ BottleRecord _bottleWithPinnedProgramIcons(
     return bottle;
   }
 
-  return bottle.copyWith(pinnedPrograms: pinnedPrograms);
+  return bottle.withPinnedPrograms(pinnedPrograms);
 }
 
 BottleRecord _bottleWithoutPinnedProgram(
@@ -82,8 +80,8 @@ BottleRecord _bottleWithoutPinnedProgram(
   String programPath,
 ) {
   final normalizedProgramPath = _normalizeFilesystemPath(programPath);
-  return bottle.copyWith(
-    pinnedPrograms: bottle.pinnedPrograms
+  return bottle.withPinnedPrograms(
+    bottle.pinnedPrograms
         .where(
           (program) => !_isPinnedProgramPath(program, normalizedProgramPath),
         )
@@ -96,11 +94,11 @@ BottleRecord _bottleWithRenamedPinnedProgram(
   ProgramRenameRequest request,
 ) {
   final normalizedProgramPath = _normalizeFilesystemPath(request.programPath);
-  return bottle.copyWith(
-    pinnedPrograms: bottle.pinnedPrograms
+  return bottle.withPinnedPrograms(
+    bottle.pinnedPrograms
         .map(
           (program) => _isPinnedProgramPath(program, normalizedProgramPath)
-              ? program.copyWith(name: request.name)
+              ? program.withName(request.name)
               : program,
         )
         .toList(growable: false),

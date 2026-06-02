@@ -23,24 +23,59 @@ class AppSettingsSummary {
   final bool automaticallyCheckForKonyakUpdates;
   final bool automaticallyCheckForWineUpdates;
 
-  AppSettingsSummary copyWith({
-    bool? terminateWineProcessesOnClose,
-    String? defaultBottlePath,
-    AppAppearanceMode? appearanceMode,
-    bool? automaticallyCheckForKonyakUpdates,
-    bool? automaticallyCheckForWineUpdates,
-  }) {
+  AppSettingsSummary withTerminateWineProcessesOnClose(
+    bool terminateWineProcessesOnClose,
+  ) {
     return AppSettingsSummary(
-      terminateWineProcessesOnClose:
-          terminateWineProcessesOnClose ?? this.terminateWineProcessesOnClose,
-      defaultBottlePath: defaultBottlePath ?? this.defaultBottlePath,
-      appearanceMode: appearanceMode ?? this.appearanceMode,
-      automaticallyCheckForKonyakUpdates:
-          automaticallyCheckForKonyakUpdates ??
-          this.automaticallyCheckForKonyakUpdates,
-      automaticallyCheckForWineUpdates:
-          automaticallyCheckForWineUpdates ??
-          this.automaticallyCheckForWineUpdates,
+      terminateWineProcessesOnClose: terminateWineProcessesOnClose,
+      defaultBottlePath: defaultBottlePath,
+      appearanceMode: appearanceMode,
+      automaticallyCheckForKonyakUpdates: automaticallyCheckForKonyakUpdates,
+      automaticallyCheckForWineUpdates: automaticallyCheckForWineUpdates,
+    );
+  }
+
+  AppSettingsSummary withDefaultBottlePath(String defaultBottlePath) {
+    return AppSettingsSummary(
+      terminateWineProcessesOnClose: terminateWineProcessesOnClose,
+      defaultBottlePath: defaultBottlePath,
+      appearanceMode: appearanceMode,
+      automaticallyCheckForKonyakUpdates: automaticallyCheckForKonyakUpdates,
+      automaticallyCheckForWineUpdates: automaticallyCheckForWineUpdates,
+    );
+  }
+
+  AppSettingsSummary withAppearanceMode(AppAppearanceMode appearanceMode) {
+    return AppSettingsSummary(
+      terminateWineProcessesOnClose: terminateWineProcessesOnClose,
+      defaultBottlePath: defaultBottlePath,
+      appearanceMode: appearanceMode,
+      automaticallyCheckForKonyakUpdates: automaticallyCheckForKonyakUpdates,
+      automaticallyCheckForWineUpdates: automaticallyCheckForWineUpdates,
+    );
+  }
+
+  AppSettingsSummary withAutomaticallyCheckForKonyakUpdates(
+    bool automaticallyCheckForKonyakUpdates,
+  ) {
+    return AppSettingsSummary(
+      terminateWineProcessesOnClose: terminateWineProcessesOnClose,
+      defaultBottlePath: defaultBottlePath,
+      appearanceMode: appearanceMode,
+      automaticallyCheckForKonyakUpdates: automaticallyCheckForKonyakUpdates,
+      automaticallyCheckForWineUpdates: automaticallyCheckForWineUpdates,
+    );
+  }
+
+  AppSettingsSummary withAutomaticallyCheckForWineUpdates(
+    bool automaticallyCheckForWineUpdates,
+  ) {
+    return AppSettingsSummary(
+      terminateWineProcessesOnClose: terminateWineProcessesOnClose,
+      defaultBottlePath: defaultBottlePath,
+      appearanceMode: appearanceMode,
+      automaticallyCheckForKonyakUpdates: automaticallyCheckForKonyakUpdates,
+      automaticallyCheckForWineUpdates: automaticallyCheckForWineUpdates,
     );
   }
 

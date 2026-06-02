@@ -81,7 +81,11 @@ BottleRecord _renamedFileBottle({
   }
 
   final directory = bottleDirectory ?? _joinPath(dataHome, const ['bottles']);
-  return bottle.copyWith(id: id, name: name, path: _joinPath(directory, [id]));
+  return bottle.withIdentity(
+    id: id,
+    name: name,
+    path: _joinPath(directory, [id]),
+  );
 }
 
 final _bottleIdLetterOrNumber = RegExp(r'[\p{L}\p{N}]', unicode: true);

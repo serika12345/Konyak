@@ -72,7 +72,7 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
       return;
     }
 
-    await _save(_settings.copyWith(defaultBottlePath: path));
+    await _save(_settings.withDefaultBottlePath(path));
   }
 
   Future<void> _installRuntime() async {
@@ -185,17 +185,14 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
                   onChanged: _isSaving
                       ? null
                       : (value) => _save(
-                          _settings.copyWith(
-                            terminateWineProcessesOnClose: value,
-                          ),
+                          _settings.withTerminateWineProcessesOnClose(value),
                         ),
                 ),
                 AppSettingsAppearanceRow(
                   mode: _settings.appearanceMode,
                   onChanged: _isSaving
                       ? null
-                      : (mode) =>
-                            _save(_settings.copyWith(appearanceMode: mode)),
+                      : (mode) => _save(_settings.withAppearanceMode(mode)),
                 ),
                 AppSettingsPathRow(
                   label: 'Default bottle path:',
@@ -218,8 +215,8 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
                   onChanged: _isSaving
                       ? null
                       : (value) => _save(
-                          _settings.copyWith(
-                            automaticallyCheckForKonyakUpdates: value,
+                          _settings.withAutomaticallyCheckForKonyakUpdates(
+                            value,
                           ),
                         ),
                 ),
@@ -232,9 +229,7 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
                   onChanged: _isSaving
                       ? null
                       : (value) => _save(
-                          _settings.copyWith(
-                            automaticallyCheckForWineUpdates: value,
-                          ),
+                          _settings.withAutomaticallyCheckForWineUpdates(value),
                         ),
                 ),
               ],

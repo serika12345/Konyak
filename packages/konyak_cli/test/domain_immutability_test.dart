@@ -49,19 +49,24 @@ void main() {
     }
 
     expect(
-      () => validBottle().copyWith(id: ' '),
+      () => validBottle().withIdentity(
+        id: ' ',
+        name: 'Steam',
+        path: '/bottles/steam',
+      ),
       throwsA(isA<ArgumentError>()),
     );
     expect(
-      () => validBottle().copyWith(name: ' '),
+      () => validBottle().withIdentity(
+        id: 'steam',
+        name: ' ',
+        path: '/bottles/steam',
+      ),
       throwsA(isA<ArgumentError>()),
     );
+    expect(() => validBottle().withPath(' '), throwsA(isA<ArgumentError>()));
     expect(
-      () => validBottle().copyWith(path: ' '),
-      throwsA(isA<ArgumentError>()),
-    );
-    expect(
-      () => validBottle().copyWith(windowsVersion: ' '),
+      () => validBottle().withWindowsVersion(' '),
       throwsA(isA<ArgumentError>()),
     );
   });
@@ -87,8 +92,8 @@ void main() {
 
   test('pinned program records model absent icons with Option', () {
     final withoutIcon = PinnedProgramRecord(name: 'Steam', path: '/steam.exe');
-    final withIcon = withoutIcon.copyWith(iconPath: Option.of('/steam.icns'));
-    final clearedIcon = withIcon.copyWith(iconPath: const Option.none());
+    final withIcon = withoutIcon.withIconPath(Option.of('/steam.icns'));
+    final clearedIcon = withIcon.withIconPath(const Option.none());
 
     expect(withoutIcon.iconPath.isNone(), isTrue);
     expect(withIcon.iconPath.toNullable(), '/steam.icns');

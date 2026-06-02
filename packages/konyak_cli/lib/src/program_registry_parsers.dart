@@ -19,8 +19,8 @@ BottleRecord _bottleWithRegistryValue({
     return _bottleWithWindowsVersion(bottle, data);
   }
 
-  return bottle.copyWith(
-    runtimeSettings: _runtimeSettingsWithRegistryValue(
+  return bottle.withRuntimeSettings(
+    _runtimeSettingsWithRegistryValue(
       runtimeSettings: bottle.runtimeSettings,
       arguments: arguments,
       stdout: stdout,
@@ -57,7 +57,7 @@ BottleRecord _bottleWithWindowsVersion(BottleRecord bottle, String data) {
     return bottle;
   }
 
-  return bottle.copyWith(windowsVersion: windowsVersion);
+  return bottle.withWindowsVersion(windowsVersion);
 }
 
 String? _registryWindowsVersion(String data) {
@@ -82,7 +82,7 @@ BottleRuntimeSettings _runtimeSettingsWithBuildVersion(
     return runtimeSettings;
   }
 
-  return runtimeSettings.copyWith(buildVersion: buildVersion);
+  return runtimeSettings.withBuildVersion(buildVersion);
 }
 
 BottleRuntimeSettings _runtimeSettingsWithRetinaMode(
@@ -90,8 +90,8 @@ BottleRuntimeSettings _runtimeSettingsWithRetinaMode(
   String data,
 ) {
   return switch (data.trim().toLowerCase()) {
-    'y' => runtimeSettings.copyWith(retinaMode: true),
-    'n' => runtimeSettings.copyWith(retinaMode: false),
+    'y' => runtimeSettings.withRetinaMode(true),
+    'n' => runtimeSettings.withRetinaMode(false),
     _ => runtimeSettings,
   };
 }
@@ -108,7 +108,7 @@ BottleRuntimeSettings _runtimeSettingsWithDpiScaling(
     return runtimeSettings;
   }
 
-  return runtimeSettings.copyWith(dpiScaling: dpiScaling);
+  return runtimeSettings.withDpiScaling(dpiScaling);
 }
 
 String? _registryValueNameFromArguments(List<String> arguments) {

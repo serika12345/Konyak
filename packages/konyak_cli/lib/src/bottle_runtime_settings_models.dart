@@ -29,101 +29,194 @@ class BottleRuntimeSettings {
   final bool retinaMode;
   final int dpiScaling;
 
-  BottleRuntimeSettings copyWith({
-    String? enhancedSync,
-    bool? metalHud,
-    bool? metalTrace,
-    bool? avxEnabled,
-    bool? dxrEnabled,
-    bool? dxvk,
-    bool? dxvkAsync,
-    String? dxvkHud,
-    bool? vkd3dProton,
-    int? buildVersion,
-    bool? retinaMode,
-    int? dpiScaling,
-  }) {
+  BottleRuntimeSettings withEnhancedSync(String enhancedSync) {
     return BottleRuntimeSettings(
-      enhancedSync: enhancedSync ?? this.enhancedSync,
-      metalHud: metalHud ?? this.metalHud,
-      metalTrace: metalTrace ?? this.metalTrace,
-      avxEnabled: avxEnabled ?? this.avxEnabled,
-      dxrEnabled: dxrEnabled ?? this.dxrEnabled,
-      dxvk: dxvk ?? this.dxvk,
-      dxvkAsync: dxvkAsync ?? this.dxvkAsync,
-      dxvkHud: dxvkHud ?? this.dxvkHud,
-      vkd3dProton: vkd3dProton ?? this.vkd3dProton,
-      buildVersion: buildVersion ?? this.buildVersion,
-      retinaMode: retinaMode ?? this.retinaMode,
-      dpiScaling: dpiScaling ?? this.dpiScaling,
+      enhancedSync: enhancedSync,
+      metalHud: metalHud,
+      metalTrace: metalTrace,
+      avxEnabled: avxEnabled,
+      dxrEnabled: dxrEnabled,
+      dxvk: dxvk,
+      dxvkAsync: dxvkAsync,
+      dxvkHud: dxvkHud,
+      vkd3dProton: vkd3dProton,
+      buildVersion: buildVersion,
+      retinaMode: retinaMode,
+      dpiScaling: dpiScaling,
     );
   }
 
-  static BottleRuntimeSettings? fromJson(Object? value) {
-    if (value == null) {
-      return const BottleRuntimeSettings();
-    }
+  BottleRuntimeSettings withMetalHud(bool metalHud) {
+    return BottleRuntimeSettings(
+      enhancedSync: enhancedSync,
+      metalHud: metalHud,
+      metalTrace: metalTrace,
+      avxEnabled: avxEnabled,
+      dxrEnabled: dxrEnabled,
+      dxvk: dxvk,
+      dxvkAsync: dxvkAsync,
+      dxvkHud: dxvkHud,
+      vkd3dProton: vkd3dProton,
+      buildVersion: buildVersion,
+      retinaMode: retinaMode,
+      dpiScaling: dpiScaling,
+    );
+  }
 
-    final settings = _objectMap(value);
-    if (settings == null) {
-      return null;
-    }
+  BottleRuntimeSettings withMetalTrace(bool metalTrace) {
+    return BottleRuntimeSettings(
+      enhancedSync: enhancedSync,
+      metalHud: metalHud,
+      metalTrace: metalTrace,
+      avxEnabled: avxEnabled,
+      dxrEnabled: dxrEnabled,
+      dxvk: dxvk,
+      dxvkAsync: dxvkAsync,
+      dxvkHud: dxvkHud,
+      vkd3dProton: vkd3dProton,
+      buildVersion: buildVersion,
+      retinaMode: retinaMode,
+      dpiScaling: dpiScaling,
+    );
+  }
 
-    final enhancedSync = _runtimeSettingsString(
-      settings,
-      'enhancedSync',
-      allowedValues: const {'none', 'esync', 'msync'},
-      defaultValue: 'msync',
+  BottleRuntimeSettings withAvxEnabled(bool avxEnabled) {
+    return BottleRuntimeSettings(
+      enhancedSync: enhancedSync,
+      metalHud: metalHud,
+      metalTrace: metalTrace,
+      avxEnabled: avxEnabled,
+      dxrEnabled: dxrEnabled,
+      dxvk: dxvk,
+      dxvkAsync: dxvkAsync,
+      dxvkHud: dxvkHud,
+      vkd3dProton: vkd3dProton,
+      buildVersion: buildVersion,
+      retinaMode: retinaMode,
+      dpiScaling: dpiScaling,
     );
-    final metalHud = _runtimeSettingsBool(settings, 'metalHud');
-    final metalTrace = _runtimeSettingsBool(settings, 'metalTrace');
-    final avxEnabled = _runtimeSettingsBool(settings, 'avxEnabled');
-    final dxrEnabled = _runtimeSettingsBool(settings, 'dxrEnabled');
-    final dxvk = _runtimeSettingsBool(settings, 'dxvk');
-    final dxvkAsync = _runtimeSettingsBool(
-      settings,
-      'dxvkAsync',
-      defaultValue: true,
-    );
-    final dxvkHud = _runtimeSettingsString(
-      settings,
-      'dxvkHud',
-      allowedValues: const {'full', 'partial', 'fps', 'off'},
-      defaultValue: 'off',
-    );
-    final vkd3dProton = _runtimeSettingsBool(settings, 'vkd3dProton');
-    final buildVersion = _runtimeSettingsInt(
-      settings,
-      'buildVersion',
-      defaultValue: 0,
-      minimum: 0,
-      maximum: 999999,
-    );
-    final retinaMode = _runtimeSettingsBool(settings, 'retinaMode');
-    final dpiScaling = _runtimeSettingsInt(
-      settings,
-      'dpiScaling',
-      defaultValue: 96,
-      minimum: 96,
-      maximum: 480,
-      step: 24,
-    );
+  }
 
-    if (enhancedSync == null ||
-        metalHud == null ||
-        metalTrace == null ||
-        avxEnabled == null ||
-        dxrEnabled == null ||
-        dxvk == null ||
-        dxvkAsync == null ||
-        dxvkHud == null ||
-        vkd3dProton == null ||
-        buildVersion == null ||
-        retinaMode == null ||
-        dpiScaling == null) {
-      return null;
-    }
+  BottleRuntimeSettings withDxrEnabled(bool dxrEnabled) {
+    return BottleRuntimeSettings(
+      enhancedSync: enhancedSync,
+      metalHud: metalHud,
+      metalTrace: metalTrace,
+      avxEnabled: avxEnabled,
+      dxrEnabled: dxrEnabled,
+      dxvk: dxvk,
+      dxvkAsync: dxvkAsync,
+      dxvkHud: dxvkHud,
+      vkd3dProton: vkd3dProton,
+      buildVersion: buildVersion,
+      retinaMode: retinaMode,
+      dpiScaling: dpiScaling,
+    );
+  }
 
+  BottleRuntimeSettings withDxvk(bool dxvk) {
+    return BottleRuntimeSettings(
+      enhancedSync: enhancedSync,
+      metalHud: metalHud,
+      metalTrace: metalTrace,
+      avxEnabled: avxEnabled,
+      dxrEnabled: dxrEnabled,
+      dxvk: dxvk,
+      dxvkAsync: dxvkAsync,
+      dxvkHud: dxvkHud,
+      vkd3dProton: vkd3dProton,
+      buildVersion: buildVersion,
+      retinaMode: retinaMode,
+      dpiScaling: dpiScaling,
+    );
+  }
+
+  BottleRuntimeSettings withDxvkAsync(bool dxvkAsync) {
+    return BottleRuntimeSettings(
+      enhancedSync: enhancedSync,
+      metalHud: metalHud,
+      metalTrace: metalTrace,
+      avxEnabled: avxEnabled,
+      dxrEnabled: dxrEnabled,
+      dxvk: dxvk,
+      dxvkAsync: dxvkAsync,
+      dxvkHud: dxvkHud,
+      vkd3dProton: vkd3dProton,
+      buildVersion: buildVersion,
+      retinaMode: retinaMode,
+      dpiScaling: dpiScaling,
+    );
+  }
+
+  BottleRuntimeSettings withDxvkHud(String dxvkHud) {
+    return BottleRuntimeSettings(
+      enhancedSync: enhancedSync,
+      metalHud: metalHud,
+      metalTrace: metalTrace,
+      avxEnabled: avxEnabled,
+      dxrEnabled: dxrEnabled,
+      dxvk: dxvk,
+      dxvkAsync: dxvkAsync,
+      dxvkHud: dxvkHud,
+      vkd3dProton: vkd3dProton,
+      buildVersion: buildVersion,
+      retinaMode: retinaMode,
+      dpiScaling: dpiScaling,
+    );
+  }
+
+  BottleRuntimeSettings withVkd3dProton(bool vkd3dProton) {
+    return BottleRuntimeSettings(
+      enhancedSync: enhancedSync,
+      metalHud: metalHud,
+      metalTrace: metalTrace,
+      avxEnabled: avxEnabled,
+      dxrEnabled: dxrEnabled,
+      dxvk: dxvk,
+      dxvkAsync: dxvkAsync,
+      dxvkHud: dxvkHud,
+      vkd3dProton: vkd3dProton,
+      buildVersion: buildVersion,
+      retinaMode: retinaMode,
+      dpiScaling: dpiScaling,
+    );
+  }
+
+  BottleRuntimeSettings withBuildVersion(int buildVersion) {
+    return BottleRuntimeSettings(
+      enhancedSync: enhancedSync,
+      metalHud: metalHud,
+      metalTrace: metalTrace,
+      avxEnabled: avxEnabled,
+      dxrEnabled: dxrEnabled,
+      dxvk: dxvk,
+      dxvkAsync: dxvkAsync,
+      dxvkHud: dxvkHud,
+      vkd3dProton: vkd3dProton,
+      buildVersion: buildVersion,
+      retinaMode: retinaMode,
+      dpiScaling: dpiScaling,
+    );
+  }
+
+  BottleRuntimeSettings withRetinaMode(bool retinaMode) {
+    return BottleRuntimeSettings(
+      enhancedSync: enhancedSync,
+      metalHud: metalHud,
+      metalTrace: metalTrace,
+      avxEnabled: avxEnabled,
+      dxrEnabled: dxrEnabled,
+      dxvk: dxvk,
+      dxvkAsync: dxvkAsync,
+      dxvkHud: dxvkHud,
+      vkd3dProton: vkd3dProton,
+      buildVersion: buildVersion,
+      retinaMode: retinaMode,
+      dpiScaling: dpiScaling,
+    );
+  }
+
+  BottleRuntimeSettings withDpiScaling(int dpiScaling) {
     return BottleRuntimeSettings(
       enhancedSync: enhancedSync,
       metalHud: metalHud,
@@ -240,60 +333,4 @@ class BottleRuntimeSettings {
       dpiScaling,
     );
   }
-}
-
-String? _runtimeSettingsString(
-  Map<String, Object?> settings,
-  String key, {
-  required Set<String> allowedValues,
-  required String defaultValue,
-}) {
-  if (!settings.containsKey(key)) {
-    return defaultValue;
-  }
-
-  final value = settings[key];
-  if (value is! String || value.trim().isEmpty) {
-    return null;
-  }
-
-  return allowedValues.contains(value) ? value : null;
-}
-
-bool? _runtimeSettingsBool(
-  Map<String, Object?> settings,
-  String key, {
-  bool defaultValue = false,
-}) {
-  if (!settings.containsKey(key)) {
-    return defaultValue;
-  }
-
-  final value = settings[key];
-  return value is bool ? value : null;
-}
-
-int? _runtimeSettingsInt(
-  Map<String, Object?> settings,
-  String key, {
-  required int defaultValue,
-  required int minimum,
-  required int maximum,
-  int? step,
-}) {
-  if (!settings.containsKey(key)) {
-    return defaultValue;
-  }
-
-  final value = settings[key];
-  if (value is! int || value < minimum || value > maximum) {
-    return null;
-  }
-
-  final requiredStep = step;
-  if (requiredStep != null && (value - minimum) % requiredStep != 0) {
-    return null;
-  }
-
-  return value;
 }

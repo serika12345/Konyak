@@ -118,6 +118,7 @@ def require_result_boundary_rules() -> None:
     require_contains("packages/konyak_cli/lib/konyak_cli.dart", "package:fpdart/fpdart.dart")
     require_contains("packages/konyak_cli/lib/konyak_cli.dart", "part 'src/io/io_result.dart';")
     require_io_implementation_boundaries()
+    require_external_payload_parser_boundaries()
 
     for expected in [
         "typedef IoResult<T> = Either<String, T>",
@@ -301,6 +302,45 @@ def require_result_boundary_rules() -> None:
         "packages/konyak_cli/lib/src/cli_bottle_results.dart",
         "code: 'bottleRepositoryError'",
     )
+
+
+def require_external_payload_parser_boundaries() -> None:
+    for relative_path in [
+        "packages/konyak_cli/lib/src/app_settings_models.dart",
+        "packages/konyak_cli/lib/src/bottle_models.dart",
+        "packages/konyak_cli/lib/src/bottle_runtime_settings_models.dart",
+        "packages/konyak_cli/lib/src/program_settings_models.dart",
+    ]:
+        require_not_contains(relative_path, "fromJson(")
+        require_not_contains(relative_path, "Object? value")
+        require_not_contains(relative_path, " copyWith(")
+
+    for relative_path in [
+        "apps/konyak/lib/src/bottles/bottle_summary.dart",
+        "apps/konyak/lib/src/settings/app_settings_summary.dart",
+    ]:
+        if (ROOT / relative_path).exists():
+            require_not_contains(relative_path, " copyWith(")
+
+    for relative_path in [
+        "packages/konyak_cli/lib/src/macos_pinned_launcher_manifests.dart",
+        "packages/konyak_cli/lib/src/runtime_release_metadata.dart",
+        "packages/konyak_cli/lib/src/runtime_release_metadata_assets.dart",
+        "packages/konyak_cli/lib/src/runtime_release_metadata_source_manifests.dart",
+        "packages/konyak_cli/lib/src/runtime_source_manifest_support.dart",
+    ]:
+        require_missing(relative_path)
+
+    for relative_path in [
+        "packages/konyak_cli/lib/src/io/app_settings_repositories.dart",
+        "packages/konyak_cli/lib/src/io/macos_pinned_launcher_manifests.dart",
+        "packages/konyak_cli/lib/src/io/repository_storage_io.dart",
+        "packages/konyak_cli/lib/src/io/runtime_release_metadata.dart",
+        "packages/konyak_cli/lib/src/io/runtime_release_metadata_assets.dart",
+        "packages/konyak_cli/lib/src/io/runtime_release_metadata_source_manifests.dart",
+        "packages/konyak_cli/lib/src/io/runtime_source_manifest_support.dart",
+    ]:
+        require_contains(relative_path, "part of '../../konyak_cli.dart';")
 
 
 def main() -> None:

@@ -24,60 +24,63 @@ class BottleRecord {
   final BottleRuntimeSettings runtimeSettings;
   final List<PinnedProgramRecord> pinnedPrograms;
 
-  BottleRecord copyWith({
-    String? id,
-    String? name,
-    String? path,
-    String? windowsVersion,
-    BottleRuntimeSettings? runtimeSettings,
-    List<PinnedProgramRecord>? pinnedPrograms,
+  BottleRecord withIdentity({
+    required String id,
+    required String name,
+    required String path,
   }) {
     return BottleRecord(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      path: path ?? this.path,
-      windowsVersion: windowsVersion ?? this.windowsVersion,
-      runtimeSettings: runtimeSettings ?? this.runtimeSettings,
-      pinnedPrograms: pinnedPrograms ?? this.pinnedPrograms,
+      id: id,
+      name: name,
+      path: path,
+      windowsVersion: windowsVersion,
+      runtimeSettings: runtimeSettings,
+      pinnedPrograms: pinnedPrograms,
     );
   }
 
-  static BottleRecord? fromJson(Object? value) {
-    if (value is! Map<String, dynamic>) {
-      return null;
-    }
-
-    final Object? id = value['id'];
-    final Object? name = value['name'];
-    final Object? path = value['path'];
-    final Object? windowsVersion = value['windowsVersion'];
-
-    if (id is! String ||
-        name is! String ||
-        path is! String ||
-        windowsVersion is! String) {
-      return null;
-    }
-
-    final runtimeSettings = BottleRuntimeSettings.fromJson(
-      value['runtimeSettings'],
+  BottleRecord withPath(String path) {
+    return BottleRecord(
+      id: id,
+      name: name,
+      path: path,
+      windowsVersion: windowsVersion,
+      runtimeSettings: runtimeSettings,
+      pinnedPrograms: pinnedPrograms,
     );
-    if (runtimeSettings == null) {
-      return null;
-    }
+  }
 
-    try {
-      return BottleRecord(
-        id: id,
-        name: name,
-        path: path,
-        windowsVersion: windowsVersion,
-        runtimeSettings: runtimeSettings,
-        pinnedPrograms: _parsePinnedPrograms(value['pinnedPrograms']),
-      );
-    } on ArgumentError {
-      return null;
-    }
+  BottleRecord withWindowsVersion(String windowsVersion) {
+    return BottleRecord(
+      id: id,
+      name: name,
+      path: path,
+      windowsVersion: windowsVersion,
+      runtimeSettings: runtimeSettings,
+      pinnedPrograms: pinnedPrograms,
+    );
+  }
+
+  BottleRecord withRuntimeSettings(BottleRuntimeSettings runtimeSettings) {
+    return BottleRecord(
+      id: id,
+      name: name,
+      path: path,
+      windowsVersion: windowsVersion,
+      runtimeSettings: runtimeSettings,
+      pinnedPrograms: pinnedPrograms,
+    );
+  }
+
+  BottleRecord withPinnedPrograms(List<PinnedProgramRecord> pinnedPrograms) {
+    return BottleRecord(
+      id: id,
+      name: name,
+      path: path,
+      windowsVersion: windowsVersion,
+      runtimeSettings: runtimeSettings,
+      pinnedPrograms: pinnedPrograms,
+    );
   }
 
   Map<String, Object?> toJson() {
@@ -136,17 +139,21 @@ class PinnedProgramRecord {
   final bool removable;
   final Option<String> iconPath;
 
-  PinnedProgramRecord copyWith({
-    String? name,
-    String? path,
-    bool? removable,
-    Option<String>? iconPath,
-  }) {
+  PinnedProgramRecord withName(String name) {
     return PinnedProgramRecord(
-      name: name ?? this.name,
-      path: path ?? this.path,
-      removable: removable ?? this.removable,
-      iconPath: iconPath ?? this.iconPath,
+      name: name,
+      path: path,
+      removable: removable,
+      iconPath: iconPath,
+    );
+  }
+
+  PinnedProgramRecord withIconPath(Option<String> iconPath) {
+    return PinnedProgramRecord(
+      name: name,
+      path: path,
+      removable: removable,
+      iconPath: iconPath,
     );
   }
 

@@ -1,4 +1,4 @@
-part of '../konyak_cli.dart';
+part of '../../konyak_cli.dart';
 
 Option<String> _runtimeReleaseArchiveUrl(Object? decoded) {
   if (decoded is! Map<String, dynamic>) {

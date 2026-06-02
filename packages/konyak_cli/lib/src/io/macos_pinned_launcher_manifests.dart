@@ -1,4 +1,4 @@
-part of '../konyak_cli.dart';
+part of '../../konyak_cli.dart';
 
 Option<_PinnedProgramLauncherManifest>
 _pinnedProgramLauncherManifestFromPayload(String payload) {

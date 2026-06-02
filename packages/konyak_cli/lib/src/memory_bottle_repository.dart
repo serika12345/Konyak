@@ -170,7 +170,7 @@ class MemoryBottleRepository implements BottleRepository {
       return BottleMoveConflict(request.path);
     }
 
-    final moved = bottle.copyWith(path: request.path);
+    final moved = bottle.withPath(request.path);
     _bottles[bottle.id] = moved;
 
     return BottleMoved(moved);
@@ -183,7 +183,7 @@ class MemoryBottleRepository implements BottleRepository {
       return BottleUpdateMissing(request.bottleId);
     }
 
-    final updated = bottle.copyWith(windowsVersion: request.windowsVersion);
+    final updated = bottle.withWindowsVersion(request.windowsVersion);
     _bottles[request.bottleId] = updated;
 
     return BottleUpdated(updated);
@@ -196,7 +196,7 @@ class MemoryBottleRepository implements BottleRepository {
       return BottleUpdateMissing(request.bottleId);
     }
 
-    final updated = bottle.copyWith(runtimeSettings: request.runtimeSettings);
+    final updated = bottle.withRuntimeSettings(request.runtimeSettings);
     _bottles[request.bottleId] = updated;
 
     return BottleUpdated(updated);

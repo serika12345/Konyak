@@ -114,15 +114,13 @@ ProgramSettingsUpdateRequest? _parseJsonProgramSettingsUpdateRequest(
     return null;
   }
 
-  final settings = ProgramSettingsRecord.fromJson(decoded);
-  if (settings == null) {
-    return null;
-  }
-
-  return ProgramSettingsUpdateRequest(
-    bottleId: bottleId,
-    programPath: programPath,
-    settings: settings,
+  return _programSettingsRecordFromJson(decoded).match(
+    () => null,
+    (settings) => ProgramSettingsUpdateRequest(
+      bottleId: bottleId,
+      programPath: programPath,
+      settings: settings,
+    ),
   );
 }
 

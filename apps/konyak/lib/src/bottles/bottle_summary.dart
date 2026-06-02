@@ -14,24 +14,6 @@ class BottleSummary {
   final String windowsVersion;
   final BottleRuntimeSettingsSummary runtimeSettings;
   final List<PinnedProgramSummary> pinnedPrograms;
-
-  BottleSummary copyWith({
-    String? id,
-    String? name,
-    String? path,
-    String? windowsVersion,
-    BottleRuntimeSettingsSummary? runtimeSettings,
-    List<PinnedProgramSummary>? pinnedPrograms,
-  }) {
-    return BottleSummary(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      path: path ?? this.path,
-      windowsVersion: windowsVersion ?? this.windowsVersion,
-      runtimeSettings: runtimeSettings ?? this.runtimeSettings,
-      pinnedPrograms: pinnedPrograms ?? this.pinnedPrograms,
-    );
-  }
 }
 
 class BottleRuntimeSettingsSummary {
@@ -63,33 +45,207 @@ class BottleRuntimeSettingsSummary {
   final bool retinaMode;
   final int dpiScaling;
 
-  BottleRuntimeSettingsSummary copyWith({
-    String? enhancedSync,
-    bool? metalHud,
-    bool? metalTrace,
-    bool? avxEnabled,
-    bool? dxrEnabled,
-    bool? dxvk,
-    bool? dxvkAsync,
-    String? dxvkHud,
-    bool? vkd3dProton,
-    int? buildVersion,
-    bool? retinaMode,
-    int? dpiScaling,
-  }) {
+  BottleRuntimeSettingsSummary withEnhancedSync(String enhancedSync) {
     return BottleRuntimeSettingsSummary(
-      enhancedSync: enhancedSync ?? this.enhancedSync,
-      metalHud: metalHud ?? this.metalHud,
-      metalTrace: metalTrace ?? this.metalTrace,
-      avxEnabled: avxEnabled ?? this.avxEnabled,
-      dxrEnabled: dxrEnabled ?? this.dxrEnabled,
-      dxvk: dxvk ?? this.dxvk,
-      dxvkAsync: dxvkAsync ?? this.dxvkAsync,
-      dxvkHud: dxvkHud ?? this.dxvkHud,
-      vkd3dProton: vkd3dProton ?? this.vkd3dProton,
-      buildVersion: buildVersion ?? this.buildVersion,
-      retinaMode: retinaMode ?? this.retinaMode,
-      dpiScaling: dpiScaling ?? this.dpiScaling,
+      enhancedSync: enhancedSync,
+      metalHud: metalHud,
+      metalTrace: metalTrace,
+      avxEnabled: avxEnabled,
+      dxrEnabled: dxrEnabled,
+      dxvk: dxvk,
+      dxvkAsync: dxvkAsync,
+      dxvkHud: dxvkHud,
+      vkd3dProton: vkd3dProton,
+      buildVersion: buildVersion,
+      retinaMode: retinaMode,
+      dpiScaling: dpiScaling,
+    );
+  }
+
+  BottleRuntimeSettingsSummary withMetalHud(bool metalHud) {
+    return BottleRuntimeSettingsSummary(
+      enhancedSync: enhancedSync,
+      metalHud: metalHud,
+      metalTrace: metalTrace,
+      avxEnabled: avxEnabled,
+      dxrEnabled: dxrEnabled,
+      dxvk: dxvk,
+      dxvkAsync: dxvkAsync,
+      dxvkHud: dxvkHud,
+      vkd3dProton: vkd3dProton,
+      buildVersion: buildVersion,
+      retinaMode: retinaMode,
+      dpiScaling: dpiScaling,
+    );
+  }
+
+  BottleRuntimeSettingsSummary withMetalTrace(bool metalTrace) {
+    return BottleRuntimeSettingsSummary(
+      enhancedSync: enhancedSync,
+      metalHud: metalHud,
+      metalTrace: metalTrace,
+      avxEnabled: avxEnabled,
+      dxrEnabled: dxrEnabled,
+      dxvk: dxvk,
+      dxvkAsync: dxvkAsync,
+      dxvkHud: dxvkHud,
+      vkd3dProton: vkd3dProton,
+      buildVersion: buildVersion,
+      retinaMode: retinaMode,
+      dpiScaling: dpiScaling,
+    );
+  }
+
+  BottleRuntimeSettingsSummary withAvxEnabled(bool avxEnabled) {
+    return BottleRuntimeSettingsSummary(
+      enhancedSync: enhancedSync,
+      metalHud: metalHud,
+      metalTrace: metalTrace,
+      avxEnabled: avxEnabled,
+      dxrEnabled: dxrEnabled,
+      dxvk: dxvk,
+      dxvkAsync: dxvkAsync,
+      dxvkHud: dxvkHud,
+      vkd3dProton: vkd3dProton,
+      buildVersion: buildVersion,
+      retinaMode: retinaMode,
+      dpiScaling: dpiScaling,
+    );
+  }
+
+  BottleRuntimeSettingsSummary withDxrEnabled(bool dxrEnabled) {
+    return BottleRuntimeSettingsSummary(
+      enhancedSync: enhancedSync,
+      metalHud: metalHud,
+      metalTrace: metalTrace,
+      avxEnabled: avxEnabled,
+      dxrEnabled: dxrEnabled,
+      dxvk: dxvk,
+      dxvkAsync: dxvkAsync,
+      dxvkHud: dxvkHud,
+      vkd3dProton: vkd3dProton,
+      buildVersion: buildVersion,
+      retinaMode: retinaMode,
+      dpiScaling: dpiScaling,
+    );
+  }
+
+  BottleRuntimeSettingsSummary withDxvk(bool dxvk) {
+    return BottleRuntimeSettingsSummary(
+      enhancedSync: enhancedSync,
+      metalHud: metalHud,
+      metalTrace: metalTrace,
+      avxEnabled: avxEnabled,
+      dxrEnabled: dxrEnabled,
+      dxvk: dxvk,
+      dxvkAsync: dxvkAsync,
+      dxvkHud: dxvkHud,
+      vkd3dProton: vkd3dProton,
+      buildVersion: buildVersion,
+      retinaMode: retinaMode,
+      dpiScaling: dpiScaling,
+    );
+  }
+
+  BottleRuntimeSettingsSummary withDxvkAsync(bool dxvkAsync) {
+    return BottleRuntimeSettingsSummary(
+      enhancedSync: enhancedSync,
+      metalHud: metalHud,
+      metalTrace: metalTrace,
+      avxEnabled: avxEnabled,
+      dxrEnabled: dxrEnabled,
+      dxvk: dxvk,
+      dxvkAsync: dxvkAsync,
+      dxvkHud: dxvkHud,
+      vkd3dProton: vkd3dProton,
+      buildVersion: buildVersion,
+      retinaMode: retinaMode,
+      dpiScaling: dpiScaling,
+    );
+  }
+
+  BottleRuntimeSettingsSummary withDxvkHud(String dxvkHud) {
+    return BottleRuntimeSettingsSummary(
+      enhancedSync: enhancedSync,
+      metalHud: metalHud,
+      metalTrace: metalTrace,
+      avxEnabled: avxEnabled,
+      dxrEnabled: dxrEnabled,
+      dxvk: dxvk,
+      dxvkAsync: dxvkAsync,
+      dxvkHud: dxvkHud,
+      vkd3dProton: vkd3dProton,
+      buildVersion: buildVersion,
+      retinaMode: retinaMode,
+      dpiScaling: dpiScaling,
+    );
+  }
+
+  BottleRuntimeSettingsSummary withVkd3dProton(bool vkd3dProton) {
+    return BottleRuntimeSettingsSummary(
+      enhancedSync: enhancedSync,
+      metalHud: metalHud,
+      metalTrace: metalTrace,
+      avxEnabled: avxEnabled,
+      dxrEnabled: dxrEnabled,
+      dxvk: dxvk,
+      dxvkAsync: dxvkAsync,
+      dxvkHud: dxvkHud,
+      vkd3dProton: vkd3dProton,
+      buildVersion: buildVersion,
+      retinaMode: retinaMode,
+      dpiScaling: dpiScaling,
+    );
+  }
+
+  BottleRuntimeSettingsSummary withBuildVersion(int buildVersion) {
+    return BottleRuntimeSettingsSummary(
+      enhancedSync: enhancedSync,
+      metalHud: metalHud,
+      metalTrace: metalTrace,
+      avxEnabled: avxEnabled,
+      dxrEnabled: dxrEnabled,
+      dxvk: dxvk,
+      dxvkAsync: dxvkAsync,
+      dxvkHud: dxvkHud,
+      vkd3dProton: vkd3dProton,
+      buildVersion: buildVersion,
+      retinaMode: retinaMode,
+      dpiScaling: dpiScaling,
+    );
+  }
+
+  BottleRuntimeSettingsSummary withRetinaMode(bool retinaMode) {
+    return BottleRuntimeSettingsSummary(
+      enhancedSync: enhancedSync,
+      metalHud: metalHud,
+      metalTrace: metalTrace,
+      avxEnabled: avxEnabled,
+      dxrEnabled: dxrEnabled,
+      dxvk: dxvk,
+      dxvkAsync: dxvkAsync,
+      dxvkHud: dxvkHud,
+      vkd3dProton: vkd3dProton,
+      buildVersion: buildVersion,
+      retinaMode: retinaMode,
+      dpiScaling: dpiScaling,
+    );
+  }
+
+  BottleRuntimeSettingsSummary withDpiScaling(int dpiScaling) {
+    return BottleRuntimeSettingsSummary(
+      enhancedSync: enhancedSync,
+      metalHud: metalHud,
+      metalTrace: metalTrace,
+      avxEnabled: avxEnabled,
+      dxrEnabled: dxrEnabled,
+      dxvk: dxvk,
+      dxvkAsync: dxvkAsync,
+      dxvkHud: dxvkHud,
+      vkd3dProton: vkd3dProton,
+      buildVersion: buildVersion,
+      retinaMode: retinaMode,
+      dpiScaling: dpiScaling,
     );
   }
 
@@ -135,18 +291,6 @@ class ProgramSettingsSummary {
   final String locale;
   final String arguments;
   final Map<String, String> environment;
-
-  ProgramSettingsSummary copyWith({
-    String? locale,
-    String? arguments,
-    Map<String, String>? environment,
-  }) {
-    return ProgramSettingsSummary(
-      locale: locale ?? this.locale,
-      arguments: arguments ?? this.arguments,
-      environment: environment ?? this.environment,
-    );
-  }
 
   Map<String, Object?> toJson() {
     return <String, Object?>{

@@ -41,7 +41,7 @@ class BottleWineSettingsSection extends StatelessWidget {
                 ? null
                 : (value) {
                     onChanged(
-                      settings.copyWith(buildVersion: int.parse(value)),
+                      settings.withBuildVersion(int.parse(value)),
                       runtimeSettingsControlBuildVersion,
                     );
                   },
@@ -60,7 +60,7 @@ class BottleWineSettingsSection extends StatelessWidget {
                 ? null
                 : (value) {
                     onChanged(
-                      settings.copyWith(retinaMode: value),
+                      settings.withRetinaMode(value),
                       runtimeSettingsControlRetinaMode,
                     );
                   },
@@ -75,7 +75,7 @@ class BottleWineSettingsSection extends StatelessWidget {
                 ? null
                 : (value) {
                     onChanged(
-                      settings.copyWith(enhancedSync: value),
+                      settings.withEnhancedSync(value),
                       runtimeSettingsControlEnhancedSync,
                     );
                   },
@@ -92,7 +92,7 @@ class BottleWineSettingsSection extends StatelessWidget {
                 ? null
                 : (value) {
                     onChanged(
-                      settings.copyWith(dpiScaling: int.parse(value)),
+                      settings.withDpiScaling(int.parse(value)),
                       runtimeSettingsControlDpiScaling,
                     );
                   },
@@ -110,7 +110,7 @@ class BottleWineSettingsSection extends StatelessWidget {
                 ? null
                 : (value) {
                     onChanged(
-                      settings.copyWith(avxEnabled: value),
+                      settings.withAvxEnabled(value),
                       runtimeSettingsControlAvxEnabled,
                     );
                   },
@@ -150,7 +150,7 @@ class BottleDxvkSettingsSection extends StatelessWidget {
               ? null
               : (value) {
                   onChanged(
-                    settings.copyWith(dxvk: value),
+                    settings.withDxvk(value),
                     runtimeSettingsControlDxvk,
                   );
                 },
@@ -165,7 +165,7 @@ class BottleDxvkSettingsSection extends StatelessWidget {
           onChanged: settings.dxvk && availability.canUseDxvk
               ? (value) {
                   onChanged(
-                    settings.copyWith(dxvkAsync: value),
+                    settings.withDxvkAsync(value),
                     runtimeSettingsControlDxvkAsync,
                   );
                 }
@@ -179,7 +179,7 @@ class BottleDxvkSettingsSection extends StatelessWidget {
             onChanged: settings.dxvk && availability.canUseDxvk
                 ? (value) {
                     onChanged(
-                      settings.copyWith(dxvkHud: value),
+                      settings.withDxvkHud(value),
                       runtimeSettingsControlDxvkHud,
                     );
                   }
@@ -222,7 +222,7 @@ class BottleVulkanSettingsSection extends StatelessWidget {
               ? null
               : (value) {
                   onChanged(
-                    settings.copyWith(vkd3dProton: value),
+                    settings.withVkd3dProton(value),
                     runtimeSettingsControlVkd3dProton,
                   );
                 },
@@ -262,7 +262,7 @@ class BottleMetalSettingsSection extends StatelessWidget {
               ? null
               : (value) {
                   onChanged(
-                    settings.copyWith(metalHud: value),
+                    settings.withMetalHud(value),
                     runtimeSettingsControlMetalHud,
                   );
                 },
@@ -278,7 +278,7 @@ class BottleMetalSettingsSection extends StatelessWidget {
               ? null
               : (value) {
                   onChanged(
-                    settings.copyWith(metalTrace: value),
+                    settings.withMetalTrace(value),
                     runtimeSettingsControlMetalTrace,
                   );
                 },
@@ -294,7 +294,7 @@ class BottleMetalSettingsSection extends StatelessWidget {
               ? null
               : (value) {
                   onChanged(
-                    settings.copyWith(dxrEnabled: value),
+                    settings.withDxrEnabled(value),
                     runtimeSettingsControlDxrEnabled,
                   );
                 },

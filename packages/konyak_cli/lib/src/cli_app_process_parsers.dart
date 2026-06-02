@@ -37,15 +37,14 @@ AppSettingsRecord? _parseJsonAppSettingsUpdateRequest(List<String> arguments) {
     return null;
   }
 
-  final settings = AppSettingsRecord.fromJson(
+  final settings = _appSettingsRecordFromJson(
     decoded,
     fallbackDefaultBottlePath: '',
   );
-  if (settings == null || settings.defaultBottlePath.trim().isEmpty) {
-    return null;
-  }
-
-  return settings;
+  return settings.match(
+    () => null,
+    (value) => value.defaultBottlePath.trim().isEmpty ? null : value,
+  );
 }
 
 bool _isJsonWineProcessListCommand(List<String> arguments) {
