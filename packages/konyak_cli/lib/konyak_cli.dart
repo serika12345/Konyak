@@ -33,6 +33,7 @@ part 'src/repository_storage_io.dart';
 part 'src/macos_pinned_launchers.dart';
 part 'src/macos_pinned_launcher_cleanup.dart';
 part 'src/macos_pinned_launcher_icons.dart';
+part 'src/macos_pinned_launcher_manifest_io.dart';
 part 'src/macos_pinned_launcher_manifests.dart';
 part 'src/macos_pinned_launcher_templates.dart';
 part 'src/linux_integration.dart';
