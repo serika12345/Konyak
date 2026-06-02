@@ -27,82 +27,83 @@ CliResult _runPinnedProgramLauncherCli({
   final launcherManifest = _readPinnedProgramLauncherManifest(
     request.manifestPath,
   );
-  if (launcherManifest == null) {
-    return _jsonError(
+  return launcherManifest.match(
+    () => _jsonError(
       exitCode: 65,
       code: 'invalidPinnedProgramLauncher',
       message: 'Pinned program launcher manifest is invalid.',
       extra: <String, Object?>{'manifestPath': request.manifestPath},
-    );
-  }
-
-  if (bottleRepository == null) {
-    return _bottleRepositoryUnavailableError();
-  }
-
-  if (programRunner == null) {
-    return _programRunnerUnavailableError();
-  }
-
-  return _foundBottleJsonResult(
-    result: bottleRepository.findBottle(launcherManifest.bottleId),
-    bottleId: launcherManifest.bottleId,
-    onFound: (bottle) {
-      final expectedLauncherId = _pinnedProgramLauncherId(
-        bottleId: launcherManifest.bottleId,
-        programPath: launcherManifest.programPath,
-      );
-      if (launcherManifest.launcherId != expectedLauncherId ||
-          !_hasPinnedProgram(bottle, launcherManifest.programPath)) {
-        return _jsonError(
-          exitCode: 66,
-          code: 'programNotPinned',
-          message: 'Program is not pinned.',
-          extra: <String, Object?>{'programPath': launcherManifest.programPath},
-        );
+    ),
+    (manifest) {
+      if (bottleRepository == null) {
+        return _bottleRepositoryUnavailableError();
       }
 
-      final settingsResult = bottleRepository.readProgramSettings(
-        ProgramSettingsRequest(
-          bottleId: bottle.id,
-          programPath: launcherManifest.programPath,
-        ),
-      );
-      final ProgramSettingsRecord programSettings;
-      switch (settingsResult) {
-        case ProgramSettingsRead(:final settings):
-          programSettings = settings;
-        case ProgramSettingsReadMissingBottle():
-          programSettings = ProgramSettingsRecord();
-        case ProgramSettingsReadFailed(:final message):
-          return _bottleRepositoryFailureJsonResult(message);
+      if (programRunner == null) {
+        return _programRunnerUnavailableError();
       }
-      final programRunRequest = programRunPlanner.plan(
-        bottle: bottle,
-        programPath: launcherManifest.programPath,
-        programSettings: Option.of(programSettings),
-      );
-      return programRunRequest.match(
-        () => _jsonError(
-          exitCode: 65,
-          code: 'unsupportedProgramType',
-          message: 'Program type is not supported.',
-          extra: <String, Object?>{'programPath': launcherManifest.programPath},
-        ),
-        (request) {
-          final runResult = programRunner.run(request);
 
-          return switch (runResult) {
-            ProgramRunCompleted(:final processExitCode) =>
-              _programRunJsonResult(
-                request: request,
-                processExitCode: processExitCode,
-              ),
-            ProgramRunFailed(:final message) => _programRunFailedJsonResult(
-              request: request,
-              message: message,
+      return _foundBottleJsonResult(
+        result: bottleRepository.findBottle(manifest.bottleId),
+        bottleId: manifest.bottleId,
+        onFound: (bottle) {
+          final expectedLauncherId = _pinnedProgramLauncherId(
+            bottleId: manifest.bottleId,
+            programPath: manifest.programPath,
+          );
+          if (manifest.launcherId != expectedLauncherId ||
+              !_hasPinnedProgram(bottle, manifest.programPath)) {
+            return _jsonError(
+              exitCode: 66,
+              code: 'programNotPinned',
+              message: 'Program is not pinned.',
+              extra: <String, Object?>{'programPath': manifest.programPath},
+            );
+          }
+
+          final settingsResult = bottleRepository.readProgramSettings(
+            ProgramSettingsRequest(
+              bottleId: bottle.id,
+              programPath: manifest.programPath,
             ),
-          };
+          );
+          final ProgramSettingsRecord programSettings;
+          switch (settingsResult) {
+            case ProgramSettingsRead(:final settings):
+              programSettings = settings;
+            case ProgramSettingsReadMissingBottle():
+              programSettings = ProgramSettingsRecord();
+            case ProgramSettingsReadFailed(:final message):
+              return _bottleRepositoryFailureJsonResult(message);
+          }
+          final programRunRequest = programRunPlanner.plan(
+            bottle: bottle,
+            programPath: manifest.programPath,
+            programSettings: Option.of(programSettings),
+          );
+          return programRunRequest.match(
+            () => _jsonError(
+              exitCode: 65,
+              code: 'unsupportedProgramType',
+              message: 'Program type is not supported.',
+              extra: <String, Object?>{'programPath': manifest.programPath},
+            ),
+            (request) {
+              final runResult = programRunner.run(request);
+
+              return switch (runResult) {
+                ProgramRunCompleted(:final processExitCode) =>
+                  _programRunJsonResult(
+                    request: request,
+                    processExitCode: processExitCode,
+                  ),
+                ProgramRunFailed(:final message) => _programRunFailedJsonResult(
+                  request: request,
+                  message: message,
+                ),
+              };
+            },
+          );
         },
       );
     },

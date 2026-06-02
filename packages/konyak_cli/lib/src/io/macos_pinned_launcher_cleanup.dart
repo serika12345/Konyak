@@ -22,12 +22,14 @@ void _deleteStaleMacosPinnedProgramLaunchers({
         _macosPinnedLauncherManifestFileName,
       ]),
     );
-    final desiredPath = manifest == null
-        ? null
-        : desiredLauncherPaths[manifest.launcherId];
-    if (manifest == null ||
-        (desiredLauncherIds.contains(manifest.launcherId) &&
-            desiredPath == _normalizeFilesystemPath(entity.path))) {
+    final shouldKeep = manifest.match(
+      () => true,
+      (value) =>
+          desiredLauncherIds.contains(value.launcherId) &&
+          desiredLauncherPaths[value.launcherId] ==
+              _normalizeFilesystemPath(entity.path),
+    );
+    if (shouldKeep) {
       continue;
     }
 
@@ -54,7 +56,7 @@ Set<String> _unmanagedMacosLauncherBundleNames(String launcherHome) {
         _macosPinnedLauncherManifestFileName,
       ]),
     );
-    if (manifest == null) {
+    if (manifest.isNone()) {
       bundleNames.add(_baseName(entity.path).toLowerCase());
     }
   }

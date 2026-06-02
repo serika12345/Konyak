@@ -1,6 +1,6 @@
 part of '../../konyak_cli.dart';
 
-_PinnedProgramLauncherManifest? _readPinnedProgramLauncherManifest(
+Option<_PinnedProgramLauncherManifest> _readPinnedProgramLauncherManifest(
   String manifestPath,
 ) {
   try {
@@ -8,8 +8,8 @@ _PinnedProgramLauncherManifest? _readPinnedProgramLauncherManifest(
       File(manifestPath).readAsStringSync(),
     );
   } on FileSystemException {
-    return null;
+    return const Option.none();
   } on FormatException {
-    return null;
+    return const Option.none();
   }
 }

@@ -1,11 +1,10 @@
 part of '../konyak_cli.dart';
 
-_PinnedProgramLauncherManifest? _pinnedProgramLauncherManifestFromPayload(
-  String payload,
-) {
+Option<_PinnedProgramLauncherManifest>
+_pinnedProgramLauncherManifestFromPayload(String payload) {
   final decoded = jsonDecode(payload);
   if (decoded is! Map<String, dynamic>) {
-    return null;
+    return const Option.none();
   }
 
   final schemaVersion = decoded['schemaVersion'];
@@ -24,13 +23,15 @@ _PinnedProgramLauncherManifest? _pinnedProgramLauncherManifestFromPayload(
       programPath.trim().isEmpty ||
       programName is! String ||
       programName.trim().isEmpty) {
-    return null;
+    return const Option.none();
   }
 
-  return _PinnedProgramLauncherManifest(
-    launcherId: launcherId,
-    bottleId: bottleId,
-    programPath: programPath,
-    programName: programName,
+  return Option.of(
+    _PinnedProgramLauncherManifest(
+      launcherId: launcherId,
+      bottleId: bottleId,
+      programPath: programPath,
+      programName: programName,
+    ),
   );
 }
