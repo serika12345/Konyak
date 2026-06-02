@@ -1,5 +1,3 @@
-import 'dart:io';
-
 abstract interface class LogReader {
   Future<LogReadResult> readLog(String path);
 }
@@ -18,19 +16,4 @@ final class LogReadFailure extends LogReadResult {
   const LogReadFailure({required this.message});
 
   final String message;
-}
-
-final class DartIoLogReader implements LogReader {
-  const DartIoLogReader();
-
-  @override
-  Future<LogReadResult> readLog(String path) async {
-    try {
-      final content = await File(path).readAsString();
-
-      return ReadLog(content: content);
-    } on FileSystemException catch (error) {
-      return LogReadFailure(message: error.message);
-    }
-  }
 }

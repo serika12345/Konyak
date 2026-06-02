@@ -8,6 +8,7 @@ import '../files/program_file_picker.dart';
 import '../icons/icon_file_loader.dart';
 import '../icons/icon_file_loader_io.dart';
 import '../logs/log_reader.dart';
+import '../logs/log_reader_io.dart';
 import '../settings/app_settings_summary.dart';
 import 'app_constants.dart';
 import 'app_platform.dart';
