@@ -10,7 +10,7 @@ class DartIoProgramRunner implements ProgramRunner {
         request.executable,
         request.arguments,
         environment: request.environment,
-        workingDirectory: request.workingDirectory,
+        workingDirectory: request.workingDirectory.toNullable(),
         runInShell: false,
       );
 

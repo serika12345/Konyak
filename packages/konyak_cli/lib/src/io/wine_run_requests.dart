@@ -103,7 +103,7 @@ ProgramRunRequest _macosWineCommandRequest({
       environment: environment,
     ),
     logPath: _joinPath(bottle.path, const ['logs', 'latest.log']),
-    workingDirectory: _macosWineBinFolder(environment),
+    workingDirectory: Option.of(_macosWineBinFolder(environment)),
   );
 }
 
@@ -123,7 +123,7 @@ ProgramRunRequest _macosRegistryUpdateRequest({
       environment: environment,
     ),
     logPath: _joinPath(bottle.path, const ['logs', 'latest.log']),
-    workingDirectory: _macosWineBinFolder(environment),
+    workingDirectory: Option.of(_macosWineBinFolder(environment)),
   );
 }
 
@@ -143,7 +143,7 @@ ProgramRunRequest _macosRegistryQueryRequest({
       environment: environment,
     ),
     logPath: _joinPath(bottle.path, const ['logs', 'registry.log']),
-    workingDirectory: _macosWineBinFolder(environment),
+    workingDirectory: Option.of(_macosWineBinFolder(environment)),
   );
 }
 
@@ -166,7 +166,7 @@ ProgramRunRequest _linuxTerminalCommandRequest({
     ],
     environment: const <String, String>{},
     logPath: _joinPath(bottle.path, const ['logs', 'latest.log']),
-    workingDirectory: bottle.path,
+    workingDirectory: Option.of(bottle.path),
   );
 }
 
@@ -232,6 +232,6 @@ ProgramRunRequest _macosWinetricksCommandRequest({
       'PATH': _prependPath(runtimeBin, environment['PATH']),
     },
     logPath: _joinPath(bottle.path, const ['logs', 'latest.log']),
-    workingDirectory: runtimeRoot,
+    workingDirectory: Option.of(runtimeRoot),
   );
 }

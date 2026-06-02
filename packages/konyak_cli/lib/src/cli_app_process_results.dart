@@ -81,7 +81,7 @@ CliResult _terminateWineProcessesJsonResult({
             runnerKind: request.runnerKind,
             executable: request.executable,
             argv: request.argv,
-            processExitCode: processExitCode,
+            processExitCode: Option.of(processExitCode),
           ),
         );
       case ProgramRunFailed(:final message):
@@ -92,7 +92,7 @@ CliResult _terminateWineProcessesJsonResult({
             runnerKind: request.runnerKind,
             executable: request.executable,
             argv: request.argv,
-            message: message,
+            message: Option.of(message),
           ),
         );
     }
@@ -213,21 +213,21 @@ CliResult _terminateWineProcessJsonResult({
   final record = switch (result) {
     ProgramRunCompleted(:final processExitCode) => WineProcessTerminationRecord(
       bottleId: bottle.id,
-      processId: processId,
+      processId: Option.of(processId),
       status: processExitCode == 0 ? 'terminated' : 'failed',
       runnerKind: request.runnerKind,
       executable: request.executable,
       argv: request.argv,
-      processExitCode: processExitCode,
+      processExitCode: Option.of(processExitCode),
     ),
     ProgramRunFailed(:final message) => WineProcessTerminationRecord(
       bottleId: bottle.id,
-      processId: processId,
+      processId: Option.of(processId),
       status: 'failed',
       runnerKind: request.runnerKind,
       executable: request.executable,
       argv: request.argv,
-      message: message,
+      message: Option.of(message),
     ),
   };
 

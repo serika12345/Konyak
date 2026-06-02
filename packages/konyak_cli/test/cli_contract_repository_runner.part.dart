@@ -125,7 +125,7 @@ void defineRepositoryAndRunnerContractTests() {
         arguments: const ['--version'],
         environment: const <String, String>{'WINEPREFIX': '/bottles/steam'},
         logPath: logPath,
-        workingDirectory: logDirectory.path,
+        workingDirectory: Option.of(logDirectory.path),
       ),
     );
 

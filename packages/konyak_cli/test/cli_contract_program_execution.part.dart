@@ -294,7 +294,7 @@ void defineProgramExecutionContractTests() {
       '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wine64',
     );
     expect(
-      runner.lastRequest?.workingDirectory,
+      runner.lastRequest?.workingDirectory.toNullable(),
       '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin',
     );
     expect(runner.lastRequest?.arguments, const [
@@ -625,7 +625,7 @@ void defineProgramExecutionContractTests() {
     expect(request.programPath, 'wineboot');
     expect(request.runnerKind, 'macosWine');
     expect(
-      request.workingDirectory,
+      request.workingDirectory.toNullable(),
       '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin',
     );
     expect(
@@ -860,7 +860,7 @@ void defineProgramExecutionContractTests() {
     );
     expect(runner.lastRequest?.arguments, isEmpty);
     expect(
-      runner.lastRequest?.workingDirectory,
+      runner.lastRequest?.workingDirectory.toNullable(),
       '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
     );
     expect(

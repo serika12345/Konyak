@@ -23,7 +23,7 @@ ProgramRunRequest _macosWineRequest({
       'WINEPREFIX': bottle.path,
     },
     logPath: _joinPath(bottle.path, const ['logs', 'latest.log']),
-    workingDirectory: _macosWineBinFolder(environment),
+    workingDirectory: Option.of(_macosWineBinFolder(environment)),
   );
 }
 
@@ -42,7 +42,7 @@ ProgramRunRequest _macosWinebootRequest({
       environment: environment,
     ),
     logPath: _joinPath(bottle.path, const ['logs', 'prefix-init.log']),
-    workingDirectory: _macosWineBinFolder(environment),
+    workingDirectory: Option.of(_macosWineBinFolder(environment)),
   );
 }
 
@@ -61,7 +61,7 @@ ProgramRunRequest _macosWineserverKillRequest({
       environment: environment,
     ),
     logPath: _joinPath(bottle.path, const ['logs', 'wineserver-kill.log']),
-    workingDirectory: _macosWineBinFolder(environment),
+    workingDirectory: Option.of(_macosWineBinFolder(environment)),
   );
 }
 
@@ -83,7 +83,7 @@ ProgramRunRequest _macosWinedbgRequest({
       environment: environment,
     ),
     logPath: _joinPath(bottle.path, <String>['logs', logName]),
-    workingDirectory: _macosWineBinFolder(environment),
+    workingDirectory: Option.of(_macosWineBinFolder(environment)),
   );
 }
 
