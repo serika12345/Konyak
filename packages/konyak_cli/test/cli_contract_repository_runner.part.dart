@@ -448,7 +448,7 @@ void defineRepositoryAndRunnerContractTests() {
     },
   );
 
-  test('composite bottle repository deletes from readable repositories', () {
+  test('composite bottle repository does not mutate catalog repositories', () {
     final writableRepository = MemoryBottleRepository(
       dataHome: '/home/user/.local/share/konyak',
     );
@@ -475,8 +475,55 @@ void defineRepositoryAndRunnerContractTests() {
 
     final deleteResult = repository.deleteBottle('imported');
 
-    expect(deleteResult, isA<BottleDeleted>());
-    expect(_expectIo(importedRepository.listBottles()), isEmpty);
-    expect(_expectIo(repository.listBottles()), isEmpty);
+    expect(deleteResult, isA<BottleDeleteMissing>());
+
+    final renameResult = repository.renameBottle(
+      const BottleRenameRequest(bottleId: 'imported', name: 'Renamed'),
+    );
+    expect(renameResult, isA<BottleRenameMissing>());
+
+    final moveResult = repository.moveBottle(
+      const BottleMoveRequest(
+        bottleId: 'imported',
+        path: '/home/user/.local/share/konyak/bottles/moved',
+      ),
+    );
+    expect(moveResult, isA<BottleMoveMissing>());
+
+    final runtimeSettingsResult = repository.setRuntimeSettings(
+      const RuntimeSettingsUpdateRequest(
+        bottleId: 'imported',
+        runtimeSettings: BottleRuntimeSettings(metalHud: true),
+      ),
+    );
+    expect(runtimeSettingsResult, isA<BottleUpdateMissing>());
+
+    final pinResult = repository.pinProgram(
+      const ProgramPinRequest(
+        bottleId: 'imported',
+        name: 'Setup',
+        programPath: '/downloads/setup.exe',
+      ),
+    );
+    expect(pinResult, isA<ProgramPinMissing>());
+
+    final importedBottle = _expectFound(
+      importedRepository.findBottle('imported'),
+    );
+    expect(importedBottle.name, 'Imported');
+    expect(
+      importedBottle.path,
+      '/home/user/.local/share/konyak/bottles/imported',
+    );
+    expect(importedBottle.runtimeSettings, const BottleRuntimeSettings());
+    expect(importedBottle.pinnedPrograms, isEmpty);
+    expect(
+      _expectIo(importedRepository.listBottles()).map((bottle) => bottle.id),
+      const ['imported'],
+    );
+    expect(
+      _expectIo(repository.listBottles()).map((bottle) => bottle.id),
+      const ['imported'],
+    );
   });
 }

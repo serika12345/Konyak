@@ -77,6 +77,8 @@ CliResult _runProgramJsonResult(
             environment: context.programRunPlanner.environment.toMap(),
             bottle: bottle,
             request: request,
+            programMetadataExtractor: context.programMetadataExtractor,
+            diagnosticSink: context.linuxExternalProgramLauncherDiagnosticSink,
           );
 
           return _programRunResultJson(request, runner);

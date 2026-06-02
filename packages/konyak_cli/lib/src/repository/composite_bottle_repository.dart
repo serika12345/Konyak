@@ -113,67 +113,17 @@ class CompositeBottleRepository implements BottleRepository {
 
   @override
   BottleDeleteResult deleteBottle(String id) {
-    final writableDelete = writableRepository.deleteBottle(id);
-    if (writableDelete is BottleDeleted) {
-      return writableDelete;
-    }
-
-    for (final catalog in _catalogs) {
-      if (catalog is! BottleRepository) {
-        continue;
-      }
-
-      final catalogDelete = catalog.deleteBottle(id);
-      if (catalogDelete is BottleDeleted) {
-        return catalogDelete;
-      }
-    }
-
-    return BottleDeleteMissing(id);
+    return writableRepository.deleteBottle(id);
   }
 
   @override
   BottleRenameResult renameBottle(BottleRenameRequest request) {
-    final writableRename = writableRepository.renameBottle(request);
-    if (writableRename is BottleRenamed ||
-        writableRename is BottleRenameConflict) {
-      return writableRename;
-    }
-
-    for (final catalog in _catalogs) {
-      if (catalog is! BottleRepository) {
-        continue;
-      }
-
-      final catalogRename = catalog.renameBottle(request);
-      if (catalogRename is BottleRenamed ||
-          catalogRename is BottleRenameConflict) {
-        return catalogRename;
-      }
-    }
-
-    return BottleRenameMissing(request.bottleId);
+    return writableRepository.renameBottle(request);
   }
 
   @override
   BottleMoveResult moveBottle(BottleMoveRequest request) {
-    final writableMove = writableRepository.moveBottle(request);
-    if (writableMove is BottleMoved || writableMove is BottleMoveConflict) {
-      return writableMove;
-    }
-
-    for (final catalog in _catalogs) {
-      if (catalog is! BottleRepository) {
-        continue;
-      }
-
-      final catalogMove = catalog.moveBottle(request);
-      if (catalogMove is BottleMoved || catalogMove is BottleMoveConflict) {
-        return catalogMove;
-      }
-    }
-
-    return BottleMoveMissing(request.bottleId);
+    return writableRepository.moveBottle(request);
   }
 
   @override
@@ -183,90 +133,22 @@ class CompositeBottleRepository implements BottleRepository {
 
   @override
   BottleUpdateResult setRuntimeSettings(RuntimeSettingsUpdateRequest request) {
-    final writableUpdate = writableRepository.setRuntimeSettings(request);
-    if (writableUpdate is BottleUpdated) {
-      return writableUpdate;
-    }
-
-    for (final catalog in _catalogs) {
-      if (catalog is! BottleRepository) {
-        continue;
-      }
-
-      final catalogUpdate = catalog.setRuntimeSettings(request);
-      if (catalogUpdate is BottleUpdated) {
-        return catalogUpdate;
-      }
-    }
-
-    return BottleUpdateMissing(request.bottleId);
+    return writableRepository.setRuntimeSettings(request);
   }
 
   @override
   ProgramPinResult pinProgram(ProgramPinRequest request) {
-    final writablePin = writableRepository.pinProgram(request);
-    if (writablePin is ProgramPinned || writablePin is ProgramPinConflict) {
-      return writablePin;
-    }
-
-    for (final catalog in _catalogs) {
-      if (catalog is! BottleRepository) {
-        continue;
-      }
-
-      final catalogPin = catalog.pinProgram(request);
-      if (catalogPin is ProgramPinned || catalogPin is ProgramPinConflict) {
-        return catalogPin;
-      }
-    }
-
-    return ProgramPinMissing(request.bottleId);
+    return writableRepository.pinProgram(request);
   }
 
   @override
   ProgramUpdateResult unpinProgram(ProgramUnpinRequest request) {
-    final writableUpdate = writableRepository.unpinProgram(request);
-    if (writableUpdate is ProgramUpdated ||
-        writableUpdate is ProgramUpdateMissingProgram) {
-      return writableUpdate;
-    }
-
-    for (final catalog in _catalogs) {
-      if (catalog is! BottleRepository) {
-        continue;
-      }
-
-      final catalogUpdate = catalog.unpinProgram(request);
-      if (catalogUpdate is ProgramUpdated ||
-          catalogUpdate is ProgramUpdateMissingProgram) {
-        return catalogUpdate;
-      }
-    }
-
-    return ProgramUpdateMissingBottle(request.bottleId);
+    return writableRepository.unpinProgram(request);
   }
 
   @override
   ProgramUpdateResult renamePinnedProgram(ProgramRenameRequest request) {
-    final writableUpdate = writableRepository.renamePinnedProgram(request);
-    if (writableUpdate is ProgramUpdated ||
-        writableUpdate is ProgramUpdateMissingProgram) {
-      return writableUpdate;
-    }
-
-    for (final catalog in _catalogs) {
-      if (catalog is! BottleRepository) {
-        continue;
-      }
-
-      final catalogUpdate = catalog.renamePinnedProgram(request);
-      if (catalogUpdate is ProgramUpdated ||
-          catalogUpdate is ProgramUpdateMissingProgram) {
-        return catalogUpdate;
-      }
-    }
-
-    return ProgramUpdateMissingBottle(request.bottleId);
+    return writableRepository.renamePinnedProgram(request);
   }
 
   @override
@@ -296,22 +178,6 @@ class CompositeBottleRepository implements BottleRepository {
   ProgramSettingsUpdateResult setProgramSettings(
     ProgramSettingsUpdateRequest request,
   ) {
-    final writableUpdate = writableRepository.setProgramSettings(request);
-    if (writableUpdate is ProgramSettingsUpdated) {
-      return writableUpdate;
-    }
-
-    for (final catalog in _catalogs) {
-      if (catalog is! BottleRepository) {
-        continue;
-      }
-
-      final catalogUpdate = catalog.setProgramSettings(request);
-      if (catalogUpdate is ProgramSettingsUpdated) {
-        return catalogUpdate;
-      }
-    }
-
-    return ProgramSettingsUpdateMissingBottle(request.bottleId);
+    return writableRepository.setProgramSettings(request);
   }
 }

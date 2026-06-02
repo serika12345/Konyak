@@ -1856,4 +1856,77 @@ corefonts                Microsoft Core Fonts
       );
     },
   );
+
+  test(
+    'run-program --json on Linux records desktop launcher sync diagnostics',
+    () async {
+      final tempDirectory = await Directory.systemTemp.createTemp(
+        'konyak-linux-external-launcher-diagnostic-test-',
+      );
+      addTearDown(() async {
+        if (await tempDirectory.exists()) {
+          await tempDirectory.delete(recursive: true);
+        }
+      });
+
+      final repository = MemoryBottleRepository(dataHome: tempDirectory.path);
+      runCli(const [
+        'create-bottle',
+        '--name',
+        'Steam',
+        '--json',
+      ], bottleRepository: repository);
+
+      final programPath = _joinTestPath(tempDirectory.path, const [
+        'downloads',
+        'setup.exe',
+      ]);
+      File(programPath)
+        ..createSync(recursive: true)
+        ..writeAsBytesSync(_syntheticPortableExecutableBytes());
+
+      final runner = RecordingProgramRunner(
+        result: const ProgramRunCompleted(processExitCode: 0),
+      );
+      final diagnosticSink =
+          RecordingLinuxExternalProgramLauncherDiagnosticSink();
+      final xdgDataHome = _joinTestPath(tempDirectory.path, const ['xdg-data']);
+
+      final result = runCli(
+        ['run-program', 'steam', '--program', programPath, '--json'],
+        bottleRepository: repository,
+        programMetadataExtractor: ThrowingProgramMetadataExtractor(
+          StateError('metadata unavailable'),
+        ),
+        programRunPlanner: ProgramRunPlanner(
+          hostPlatform: KonyakHostPlatform.linux,
+          environment: HostEnvironment({
+            'HOME': tempDirectory.path,
+            'XDG_DATA_HOME': xdgDataHome,
+          }),
+        ),
+        programRunner: runner,
+        linuxExternalProgramLauncherDiagnosticSink: diagnosticSink,
+      );
+
+      expect(result.exitCode, 0);
+      expect(result.stderr, isEmpty);
+      final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+      expect(payload.keys, containsAll(const ['schemaVersion', 'run']));
+      expect(payload.keys, isNot(contains('diagnostic')));
+      final run = payload['run'] as Map<String, Object?>;
+      expect(run['programPath'], programPath);
+      expect(run['processExitCode'], 0);
+
+      expect(diagnosticSink.failures, hasLength(1));
+      final failure = diagnosticSink.failures.single;
+      expect(
+        failure.kind,
+        LinuxExternalProgramLauncherSyncFailureKind.invalidState,
+      );
+      expect(failure.bottleId, 'steam');
+      expect(failure.programPath, programPath);
+      expect(failure.message, 'metadata unavailable');
+    },
+  );
 }

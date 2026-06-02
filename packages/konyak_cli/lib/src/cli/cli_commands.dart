@@ -23,6 +23,7 @@ class _CliCommandContext {
     required this.macosSetupChecker,
     required this.appSettingsRepository,
     required this.runtimeInstallProgressSink,
+    required this.linuxExternalProgramLauncherDiagnosticSink,
   });
 
   final BottleCatalog bottleCatalog;
@@ -46,6 +47,8 @@ class _CliCommandContext {
   final MacosSetupChecker? macosSetupChecker;
   final AppSettingsRepository? appSettingsRepository;
   final RuntimeInstallProgressSink? runtimeInstallProgressSink;
+  final LinuxExternalProgramLauncherDiagnosticSink?
+  linuxExternalProgramLauncherDiagnosticSink;
 }
 
 CliResult runCli(
@@ -74,6 +77,8 @@ CliResult runCli(
   MacosSetupChecker? macosSetupChecker,
   AppSettingsRepository? appSettingsRepository,
   RuntimeInstallProgressSink? runtimeInstallProgressSink,
+  LinuxExternalProgramLauncherDiagnosticSink?
+  linuxExternalProgramLauncherDiagnosticSink,
 }) {
   try {
     return _runCli(
@@ -102,6 +107,8 @@ CliResult runCli(
         macosSetupChecker: macosSetupChecker,
         appSettingsRepository: appSettingsRepository,
         runtimeInstallProgressSink: runtimeInstallProgressSink,
+        linuxExternalProgramLauncherDiagnosticSink:
+            linuxExternalProgramLauncherDiagnosticSink,
       ),
     );
   } on BottleRepositoryException catch (error) {
@@ -145,6 +152,8 @@ Future<CliResult> runCliStreaming(
   MacosSetupChecker? macosSetupChecker,
   AppSettingsRepository? appSettingsRepository,
   RuntimeInstallProgressSink? runtimeInstallProgressSink,
+  LinuxExternalProgramLauncherDiagnosticSink?
+  linuxExternalProgramLauncherDiagnosticSink,
 }) async {
   final macosWineInstallRequest = _parseJsonMacosWineInstallRequest(arguments);
   if (macosWineInstallRequest?.emitProgress == true &&
@@ -189,6 +198,8 @@ Future<CliResult> runCliStreaming(
     macosSetupChecker: macosSetupChecker,
     appSettingsRepository: appSettingsRepository,
     runtimeInstallProgressSink: runtimeInstallProgressSink,
+    linuxExternalProgramLauncherDiagnosticSink:
+        linuxExternalProgramLauncherDiagnosticSink,
   );
 }
 

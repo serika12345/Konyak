@@ -73,6 +73,31 @@ final class FixedProgramMetadataExtractor implements ProgramMetadataExtractor {
   }
 }
 
+final class ThrowingProgramMetadataExtractor
+    implements ProgramMetadataExtractor {
+  const ThrowingProgramMetadataExtractor(this.error);
+
+  final StateError error;
+
+  @override
+  Option<ProgramMetadataRecord> extract({
+    required BottleRecord bottle,
+    required String programPath,
+  }) {
+    throw error;
+  }
+}
+
+final class RecordingLinuxExternalProgramLauncherDiagnosticSink
+    implements LinuxExternalProgramLauncherDiagnosticSink {
+  final failures = <LinuxExternalProgramLauncherSyncFailure>[];
+
+  @override
+  void emit(LinuxExternalProgramLauncherSyncFailure failure) {
+    failures.add(failure);
+  }
+}
+
 List<ProgramRunResult> _recordingProgramResults({
   required ProgramRunResult? result,
   required List<ProgramRunResult>? results,

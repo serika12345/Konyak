@@ -22,6 +22,7 @@ void _synchronizeLinuxDesktopLauncherForProgramRun({
   required ProgramRunRequest request,
   ProgramMetadataExtractor programMetadataExtractor =
       const DartIoProgramMetadataExtractor(),
+  LinuxExternalProgramLauncherDiagnosticSink? diagnosticSink,
 }) {
   if (hostPlatform != KonyakHostPlatform.linux ||
       request.runnerKind != 'wine') {
@@ -64,14 +65,98 @@ void _synchronizeLinuxDesktopLauncherForProgramRun({
         launcherPath: launcherPath,
         launcherContents: launcherContents,
       );
-    } on FileSystemException {
+    } on FileSystemException catch (error) {
+      diagnosticSink?.emit(
+        LinuxExternalProgramLauncherSyncFailure.fileSystem(
+          bottleId: bottle.id,
+          programPath: programPath,
+          message: error.message,
+        ),
+      );
       return;
-    } on BottleRepositoryException {
+    } on BottleRepositoryException catch (error) {
+      diagnosticSink?.emit(
+        LinuxExternalProgramLauncherSyncFailure.bottleRepository(
+          bottleId: bottle.id,
+          programPath: programPath,
+          message: error.message,
+        ),
+      );
       return;
-    } on StateError {
+    } on StateError catch (error) {
+      diagnosticSink?.emit(
+        LinuxExternalProgramLauncherSyncFailure.invalidState(
+          bottleId: bottle.id,
+          programPath: programPath,
+          message: error.message,
+        ),
+      );
       return;
     }
   });
+}
+
+abstract interface class LinuxExternalProgramLauncherDiagnosticSink {
+  void emit(LinuxExternalProgramLauncherSyncFailure failure);
+}
+
+enum LinuxExternalProgramLauncherSyncFailureKind {
+  fileSystem,
+  bottleRepository,
+  invalidState,
+}
+
+final class LinuxExternalProgramLauncherSyncFailure {
+  const LinuxExternalProgramLauncherSyncFailure._({
+    required this.kind,
+    required this.bottleId,
+    required this.programPath,
+    required this.message,
+  });
+
+  factory LinuxExternalProgramLauncherSyncFailure.fileSystem({
+    required String bottleId,
+    required String programPath,
+    required String message,
+  }) {
+    return LinuxExternalProgramLauncherSyncFailure._(
+      kind: LinuxExternalProgramLauncherSyncFailureKind.fileSystem,
+      bottleId: bottleId,
+      programPath: programPath,
+      message: message,
+    );
+  }
+
+  factory LinuxExternalProgramLauncherSyncFailure.bottleRepository({
+    required String bottleId,
+    required String programPath,
+    required String message,
+  }) {
+    return LinuxExternalProgramLauncherSyncFailure._(
+      kind: LinuxExternalProgramLauncherSyncFailureKind.bottleRepository,
+      bottleId: bottleId,
+      programPath: programPath,
+      message: message,
+    );
+  }
+
+  factory LinuxExternalProgramLauncherSyncFailure.invalidState({
+    required String bottleId,
+    required String programPath,
+    required String message,
+  }) {
+    return LinuxExternalProgramLauncherSyncFailure._(
+      kind: LinuxExternalProgramLauncherSyncFailureKind.invalidState,
+      bottleId: bottleId,
+      programPath: programPath,
+      message: message,
+    );
+  }
+
+  final LinuxExternalProgramLauncherSyncFailureKind kind;
+  final String bottleId;
+  final String programPath;
+  final String message;
 }
 
 String _linuxExternalProgramLauncherName({
