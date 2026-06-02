@@ -185,6 +185,18 @@ def require_result_boundary_rules() -> None:
         "final Option<String> sourceManifestSignatureUrl;",
     ]:
         require_contains("packages/konyak_cli/lib/src/update_records.dart", expected)
+    for forbidden in [
+        "final String? currentVersion;",
+        "final String? latestVersion;",
+        "final String? installedVersion;",
+        "final String? versionUrl;",
+        "final String? archiveUrl;",
+        "final String? archiveSha256;",
+        "final String? sourceManifestUrl;",
+        "final String? sourceManifestSignatureUrl;",
+        "final String? installPath;",
+    ]:
+        require_not_contains("packages/konyak_cli/lib/src/update_records.dart", forbidden)
 
     result_wrapped_repository_operation_files = [
         "packages/konyak_cli/lib/src/file_bottle_repository_mutation_operations.dart",

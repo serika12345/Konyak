@@ -237,6 +237,36 @@ void main() {
     );
   });
 
+  test('app update install records model absent fields with Option', () {
+    final install = AppUpdateInstallRecord(appId: 'konyak', status: 'skipped');
+
+    expect(install.currentVersion.isNone(), isTrue);
+    expect(install.installedVersion.isNone(), isTrue);
+    expect(install.archiveUrl.isNone(), isTrue);
+    expect(install.archiveSha256.isNone(), isTrue);
+    expect(install.installPath.isNone(), isTrue);
+    expect(install.toJson(), isNot(contains('installPath')));
+  });
+
+  test('app update install records reject blank present fields', () {
+    expect(
+      () => AppUpdateInstallRecord(appId: ' ', status: 'skipped'),
+      throwsA(isA<ArgumentError>()),
+    );
+    expect(
+      () => AppUpdateInstallRecord(appId: 'konyak', status: ' '),
+      throwsA(isA<ArgumentError>()),
+    );
+    expect(
+      () => AppUpdateInstallRecord(
+        appId: 'konyak',
+        status: 'installed',
+        installPath: Option.of(' '),
+      ),
+      throwsA(isA<ArgumentError>()),
+    );
+  });
+
   test('program settings expose immutable environment snapshots', () {
     final environment = <String, String>{'LANG': 'ja_JP.UTF-8'};
     final settings = ProgramSettingsRecord(environment: environment);

@@ -1564,14 +1564,14 @@ void defineRuntimeProcessAndUpdateContractTests() {
       ),
     );
     final installer = RecordingAppUpdateInstaller(
-      result: const AppUpdateInstallCompleted(
+      result: AppUpdateInstallCompleted(
         AppUpdateInstallRecord(
           appId: 'konyak',
           status: 'installed',
-          currentVersion: '1.0.0',
-          installedVersion: '1.1.0',
-          archiveUrl: 'https://example.invalid/Konyak-1.1.0.dmg',
-          installPath: '/tmp/Konyak-1.1.0.dmg',
+          currentVersion: Option.of('1.0.0'),
+          installedVersion: Option.of('1.1.0'),
+          archiveUrl: Option.of('https://example.invalid/Konyak-1.1.0.dmg'),
+          installPath: Option.of('/tmp/Konyak-1.1.0.dmg'),
         ),
       ),
     );
@@ -1634,9 +1634,15 @@ void defineRuntimeProcessAndUpdateContractTests() {
 
     expect(result, isA<AppUpdateInstallCompleted>());
     final completed = result as AppUpdateInstallCompleted;
-    expect(completed.install.archiveSha256, _fileSha256(sourceArchive.path));
-    expect(pathOpener.lastPath, completed.install.installPath);
-    expect(File(completed.install.installPath!).existsSync(), isTrue);
+    expect(
+      completed.install.archiveSha256.toNullable(),
+      _fileSha256(sourceArchive.path),
+    );
+    expect(pathOpener.lastPath, completed.install.installPath.toNullable());
+    expect(
+      File(completed.install.installPath.toNullable()!).existsSync(),
+      isTrue,
+    );
   });
 
   test('app update installer rejects updates without checksums', () {
@@ -1766,7 +1772,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
 
     expect(result, isA<AppUpdateInstallCompleted>());
     final completed = result as AppUpdateInstallCompleted;
-    expect(completed.install.installPath, currentAppImage.path);
+    expect(completed.install.installPath.toNullable(), currentAppImage.path);
     expect(detachedProcessStarter.lastExecutable, 'bash');
     expect(detachedProcessStarter.lastArguments, hasLength(4));
     expect(detachedProcessStarter.lastArguments[2], currentAppImage.path);
@@ -1847,7 +1853,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
 
     expect(result, isA<AppUpdateInstallCompleted>());
     final completed = result as AppUpdateInstallCompleted;
-    expect(completed.install.installPath, currentBundle.path);
+    expect(completed.install.installPath.toNullable(), currentBundle.path);
     expect(pathOpener.lastPath, isNull);
     expect(detachedProcessStarter.lastExecutable, 'bash');
     expect(detachedProcessStarter.lastArguments, hasLength(4));

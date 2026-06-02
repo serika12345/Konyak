@@ -158,33 +158,48 @@ abstract interface class AppUpdateChecker {
 }
 
 class AppUpdateInstallRecord {
-  const AppUpdateInstallRecord({
-    required this.appId,
-    required this.status,
-    this.currentVersion,
-    this.installedVersion,
-    this.archiveUrl,
-    this.archiveSha256,
-    this.installPath,
-  });
+  AppUpdateInstallRecord({
+    required String appId,
+    required String status,
+    Option<String> currentVersion = const Option.none(),
+    Option<String> installedVersion = const Option.none(),
+    Option<String> archiveUrl = const Option.none(),
+    Option<String> archiveSha256 = const Option.none(),
+    Option<String> installPath = const Option.none(),
+  }) : appId = _requiredNonBlankDomainString(appId, 'appId'),
+       status = _requiredNonBlankDomainString(status, 'status'),
+       currentVersion = _requiredNonBlankUpdateOption(
+         currentVersion,
+         'currentVersion',
+       ),
+       installedVersion = _requiredNonBlankUpdateOption(
+         installedVersion,
+         'installedVersion',
+       ),
+       archiveUrl = _requiredNonBlankUpdateOption(archiveUrl, 'archiveUrl'),
+       archiveSha256 = _requiredNonBlankUpdateOption(
+         archiveSha256,
+         'archiveSha256',
+       ),
+       installPath = _requiredNonBlankUpdateOption(installPath, 'installPath');
 
   final String appId;
   final String status;
-  final String? currentVersion;
-  final String? installedVersion;
-  final String? archiveUrl;
-  final String? archiveSha256;
-  final String? installPath;
+  final Option<String> currentVersion;
+  final Option<String> installedVersion;
+  final Option<String> archiveUrl;
+  final Option<String> archiveSha256;
+  final Option<String> installPath;
 
   Map<String, Object?> toJson() {
     return <String, Object?>{
       'appId': appId,
       'status': status,
-      if (currentVersion != null) 'currentVersion': currentVersion,
-      if (installedVersion != null) 'installedVersion': installedVersion,
-      if (archiveUrl != null) 'archiveUrl': archiveUrl,
-      if (archiveSha256 != null) 'archiveSha256': archiveSha256,
-      if (installPath != null) 'installPath': installPath,
+      ..._updateJsonField('currentVersion', currentVersion),
+      ..._updateJsonField('installedVersion', installedVersion),
+      ..._updateJsonField('archiveUrl', archiveUrl),
+      ..._updateJsonField('archiveSha256', archiveSha256),
+      ..._updateJsonField('installPath', installPath),
     };
   }
 }

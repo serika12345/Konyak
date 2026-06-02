@@ -50,11 +50,11 @@ extension _AppUpdateHandoffInstallers on DartIoAppUpdateInstaller {
         AppUpdateInstallRecord(
           appId: update.appId,
           status: 'installed',
-          currentVersion: update.currentVersion.toNullable(),
-          installedVersion: update.latestVersion.toNullable(),
-          archiveUrl: update.archiveUrl.toNullable(),
-          archiveSha256: actualSha256,
-          installPath: targetBundlePath,
+          currentVersion: update.currentVersion,
+          installedVersion: update.latestVersion,
+          archiveUrl: update.archiveUrl,
+          archiveSha256: Option.of(actualSha256),
+          installPath: Option.of(targetBundlePath),
         ),
       ),
       DetachedProcessStartFailed(:final message) => AppUpdateInstallFailed(
@@ -100,11 +100,11 @@ extension _AppUpdateHandoffInstallers on DartIoAppUpdateInstaller {
         AppUpdateInstallRecord(
           appId: update.appId,
           status: 'installed',
-          currentVersion: update.currentVersion.toNullable(),
-          installedVersion: update.latestVersion.toNullable(),
-          archiveUrl: update.archiveUrl.toNullable(),
-          archiveSha256: actualSha256,
-          installPath: targetPath,
+          currentVersion: update.currentVersion,
+          installedVersion: update.latestVersion,
+          archiveUrl: update.archiveUrl,
+          archiveSha256: Option.of(actualSha256),
+          installPath: Option.of(targetPath),
         ),
       ),
       DetachedProcessStartFailed(:final message) => AppUpdateInstallFailed(

@@ -27,9 +27,9 @@ CliResult _installAppUpdateJsonResult({
         AppUpdateInstallRecord(
           appId: update.appId,
           status: update.status,
-          currentVersion: update.currentVersion.toNullable(),
-          installedVersion: update.currentVersion.toNullable(),
-          archiveUrl: update.archiveUrl.toNullable(),
+          currentVersion: update.currentVersion,
+          installedVersion: update.currentVersion,
+          archiveUrl: update.archiveUrl,
         ),
       ),
     AppUpdateCheckCompleted(:final update) => switch (installer.install(
