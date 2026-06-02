@@ -267,14 +267,32 @@ void main() {
     );
   });
 
-  test('runtime install operations model absent sources with Option', () {
+  test('runtime install operations group install source as a domain value', () {
     final operation = RuntimeFullInstallOperation();
 
-    expect(operation.archivePath.isNone(), isTrue);
-    expect(operation.archiveUrl.isNone(), isTrue);
-    expect(operation.archiveSha256.isNone(), isTrue);
-    expect(operation.sourceManifest.isNone(), isTrue);
-    expect(operation.sourceManifestSignature.isNone(), isTrue);
+    final source = operation.installSource;
+
+    expect(source, isA<RuntimeConfiguredArchiveSource>());
+    expect(source.hasExplicitInstallSource, isFalse);
+  });
+
+  test('runtime install operations model source manifest explicitly', () {
+    final operation = RuntimeRepairOperation(
+      sourceManifest: Option.of('https://example.invalid/source.json'),
+      sourceManifestSignature: Option.of(
+        'https://example.invalid/source.json.sig',
+      ),
+    );
+
+    final source = operation.installSource;
+
+    expect(source, isA<RuntimeSourceManifestInstallSource>());
+    final manifestSource = source as RuntimeSourceManifestInstallSource;
+    expect(
+      manifestSource.sourceManifest,
+      'https://example.invalid/source.json',
+    );
+    expect(manifestSource.signature, isA<RuntimeSourceManifestSigned>());
   });
 
   test('runtime install operations reject blank present sources', () {

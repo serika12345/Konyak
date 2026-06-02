@@ -72,7 +72,8 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
       ):
         return _installMacosWineStackFromSourceManifest(
           sourceManifest,
-          sourceManifestSignature: sourceManifestSignature.toNullable(),
+          sourceManifestSignature: sourceManifestSignature.asOption
+              .toNullable(),
           preserveExistingRuntimeFiles: preserveExistingRuntimeFiles,
           progressSink: progress,
         );
@@ -84,7 +85,7 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
       ):
         return _installMacosWineArchive(
           archivePath: archivePath,
-          archiveSha256: archiveSha256,
+          archiveSha256: archiveSha256.asOption,
           componentArchivePaths: componentArchivePaths,
           preserveExistingRuntimeFiles: preserveExistingRuntimeFiles,
           progressSink: progress,
@@ -121,7 +122,7 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
 
           return _installMacosWineArchive(
             archivePath: downloadedArchivePath,
-            archiveSha256: archiveSha256,
+            archiveSha256: archiveSha256.asOption,
             componentArchivePaths: componentArchivePaths,
             preserveExistingRuntimeFiles: preserveExistingRuntimeFiles,
             progressSink: progress,
@@ -180,7 +181,8 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
       ):
         return _installMacosWineStackFromSourceManifestStreaming(
           sourceManifest,
-          sourceManifestSignature: sourceManifestSignature.toNullable(),
+          sourceManifestSignature: sourceManifestSignature.asOption
+              .toNullable(),
           preserveExistingRuntimeFiles: preserveExistingRuntimeFiles,
           progressSink: progress,
         );
@@ -192,7 +194,7 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
       ):
         return _installMacosWineArchive(
           archivePath: archivePath,
-          archiveSha256: archiveSha256,
+          archiveSha256: archiveSha256.asOption,
           componentArchivePaths: componentArchivePaths,
           preserveExistingRuntimeFiles: preserveExistingRuntimeFiles,
           progressSink: progress,
@@ -230,7 +232,7 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
 
           return _installMacosWineArchive(
             archivePath: downloadedArchivePath,
-            archiveSha256: archiveSha256,
+            archiveSha256: archiveSha256.asOption,
             componentArchivePaths: componentArchivePaths,
             preserveExistingRuntimeFiles: preserveExistingRuntimeFiles,
             progressSink: progress,

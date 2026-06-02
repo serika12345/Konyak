@@ -71,7 +71,8 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
       ):
         return _installLinuxWineStackFromSourceManifest(
           sourceManifest,
-          sourceManifestSignature: sourceManifestSignature.toNullable(),
+          sourceManifestSignature: sourceManifestSignature.asOption
+              .toNullable(),
           progressSink: progress,
         );
       case _RuntimeWineInstallFromArchive(
@@ -81,7 +82,7 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
       ):
         return _installLinuxWineArchive(
           archivePath: archivePath,
-          archiveSha256: archiveSha256,
+          archiveSha256: archiveSha256.asOption,
           componentArchivePaths: componentArchivePaths,
           progressSink: progress,
         );
@@ -116,7 +117,7 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
 
           return _installLinuxWineArchive(
             archivePath: downloadedArchivePath,
-            archiveSha256: archiveSha256,
+            archiveSha256: archiveSha256.asOption,
             componentArchivePaths: componentArchivePaths,
             progressSink: progress,
           );
@@ -173,7 +174,8 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
       ):
         return _installLinuxWineStackFromSourceManifestStreaming(
           sourceManifest,
-          sourceManifestSignature: sourceManifestSignature.toNullable(),
+          sourceManifestSignature: sourceManifestSignature.asOption
+              .toNullable(),
           progressSink: progress,
         );
       case _RuntimeWineInstallFromArchive(
@@ -183,7 +185,7 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
       ):
         return _installLinuxWineArchive(
           archivePath: archivePath,
-          archiveSha256: archiveSha256,
+          archiveSha256: archiveSha256.asOption,
           componentArchivePaths: componentArchivePaths,
           progressSink: progress,
         );
@@ -219,7 +221,7 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
 
           return _installLinuxWineArchive(
             archivePath: downloadedArchivePath,
-            archiveSha256: archiveSha256,
+            archiveSha256: archiveSha256.asOption,
             componentArchivePaths: componentArchivePaths,
             progressSink: progress,
           );
