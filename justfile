@@ -3,7 +3,7 @@ set shell := ["zsh", "-lc"]
 default:
   just --list
 
-verify: verify-governance format-check lint verify-safety test
+verify: verify-governance verify-architecture format-check lint verify-safety test
 
 flutter-pub-get:
   if [ -d apps/konyak ]; then cd apps/konyak && flutter pub get; fi
@@ -13,6 +13,9 @@ cli-pub-get:
 
 verify-governance:
   python3 scripts/verify_governance.py
+
+verify-architecture:
+  python3 scripts/verify_architecture.py
 
 format: flutter-pub-get cli-pub-get
   nixfmt flake.nix

@@ -13,9 +13,13 @@ analyzer:
 linter:
   rules:
     always_declare_return_types: true
+    avoid_catches_without_on_clauses: true
     avoid_dynamic_calls: true
     avoid_print: true
+    cancel_subscriptions: true
+    close_sinks: true
     directives_ordering: true
+    only_throw_errors: true
     prefer_const_constructors: true
     prefer_const_literals_to_create_immutables: true
     prefer_final_fields: true
