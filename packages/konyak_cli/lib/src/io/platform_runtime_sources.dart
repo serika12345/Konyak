@@ -146,7 +146,7 @@ String _readTextSource(String source, {required String action}) {
     throw ProcessException(
       'curl',
       const <String>[],
-      _commandFailureMessage(action, result),
+      '${_commandFailureMessage(action, result)} Source: $source',
       result.exitCode,
     );
   }
@@ -178,7 +178,7 @@ void _writeSourceBytes({
     throw ProcessException(
       'curl',
       const <String>[],
-      _commandFailureMessage(action, result),
+      '${_commandFailureMessage(action, result)} Source: $source',
       result.exitCode,
     );
   }

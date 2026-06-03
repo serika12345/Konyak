@@ -146,6 +146,19 @@ const _macosKonyakRuntimeComponentDefinitions =
           <String>['lib', 'wine', 'x86_64-windows', 'dxgi.dll'],
         ],
       ),
+      _RuntimeStackComponentDefinition(
+        id: 'dxmt',
+        name: 'DXMT',
+        role: 'd3d10-d3d11-metal-translation',
+        isRequired: false,
+        relativePaths: <List<String>>[
+          <String>['components', 'dxmt', 'x86_64-windows', 'd3d10core.dll'],
+          <String>['components', 'dxmt', 'x86_64-windows', 'd3d11.dll'],
+          <String>['components', 'dxmt', 'x86_64-windows', 'dxgi.dll'],
+          <String>['components', 'dxmt', 'x86_64-windows', 'winemetal.dll'],
+          <String>['components', 'dxmt', 'x86_64-unix', 'winemetal.so'],
+        ],
+      ),
     ];
 
 const _linuxWineRuntimePlatformSpec = _RuntimePlatformSpec(
@@ -178,6 +191,7 @@ const _macosKonyakRuntimePlatformSpec = _RuntimePlatformSpec(
   stackName: 'Konyak macOS runtime stack',
   requiredExecutableRelativePath: <String>['bin', 'wine64'],
   defaultArchiveUrl: Option.of(macosWineArchiveUrl),
+  defaultSourceManifestUrl: Option.of(macosWineRuntimeSourceManifestUrl),
   defaultArchiveFileName: macosWineArchiveFileName,
   developmentSourceManifestEnvironmentKey:
       'KONYAK_DEV_MACOS_WINE_STACK_MANIFEST',
@@ -193,11 +207,16 @@ Option<String> _runtimeSourceManifestForPlatform({
   required _RuntimePlatformSpec platformSpec,
   required HostEnvironment environment,
 }) {
-  return _runtimeProfileEnvironmentValue(
+  final configuredManifest = _runtimeProfileEnvironmentValue(
     environment,
     developmentKey: platformSpec.developmentSourceManifestEnvironmentKey,
     releaseKey: platformSpec.releaseSourceManifestEnvironmentKey,
   );
+  if (_isDevelopmentRuntimeProfile(environment)) {
+    return configuredManifest;
+  }
+
+  return configuredManifest.alt(() => platformSpec.defaultSourceManifestUrl);
 }
 
 Option<String> _runtimeSourceManifestSignatureForPlatform({

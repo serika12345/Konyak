@@ -191,12 +191,31 @@ void defineRuntimeInstallContractTests() {
     },
   );
 
+  test('install-macos-wine uses the bundled macOS runtime source manifest', () {
+    final installer = DartIoMacosWineInstaller(
+      hostPlatform: KonyakHostPlatform.macos,
+      environment: HostEnvironment(const {'HOME': '/Users/user'}),
+      fileStatusProbe: const StaticFileStatusProbe({}),
+    );
+
+    final result = installer.install(MacosWineInstallRequest.fullInstall());
+
+    expect(result, isA<MacosWineInstallFailed>());
+    expect(
+      (result as MacosWineInstallFailed).message,
+      contains('konyak-macos-wine-runtime-stack-source.json'),
+    );
+  });
+
   test(
-    'install-macos-wine reports incomplete installed runtime without a full stack source',
+    'install-macos-wine reports incomplete installed runtime without a configured stack source in development',
     () {
       final installer = DartIoMacosWineInstaller(
         hostPlatform: KonyakHostPlatform.macos,
-        environment: HostEnvironment(const {'HOME': '/Users/user'}),
+        environment: HostEnvironment(const {
+          'HOME': '/Users/user',
+          'KONYAK_RUNTIME_PROFILE': 'development',
+        }),
         fileStatusProbe: const StaticFileStatusProbe({
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wine64',
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wineserver',
