@@ -77,16 +77,27 @@ CliResult? _syncRuntimeSettingsDllOverrides({
   required BottleRuntimeSettings runtimeSettings,
   required ProgramRunPlanner programRunPlanner,
 }) {
-  if (programRunPlanner.hostPlatform != KonyakHostPlatform.macos ||
-      !runtimeSettings.dxvk) {
+  if (programRunPlanner.hostPlatform != KonyakHostPlatform.macos) {
+    return null;
+  }
+  if (bottle.runtimeSettings.dxvk == runtimeSettings.dxvk &&
+      bottle.runtimeSettings.dxmt == runtimeSettings.dxmt) {
     return null;
   }
 
   final syncResult = _ioResult(() {
-    _syncMacosDxvkDllOverrides(
-      bottle: bottle,
-      environment: programRunPlanner.environment.toMap(),
-    );
+    _removeMacosD3DTranslationDllOverrides(bottle: bottle);
+    if (runtimeSettings.dxvk) {
+      _syncMacosDxvkDllOverrides(
+        bottle: bottle,
+        environment: programRunPlanner.environment.toMap(),
+      );
+    } else if (!runtimeSettings.dxmt) {
+      _syncMacosBuiltinD3DDllOverrides(
+        bottle: bottle,
+        environment: programRunPlanner.environment.toMap(),
+      );
+    }
   });
   final failureMessage = syncResult.fold<String?>(
     (message) => message,

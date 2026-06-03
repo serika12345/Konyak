@@ -58,9 +58,6 @@ class DartIoGptkWineInstaller implements GptkWineInstaller {
     );
   }
 
-  static const componentId = 'wine';
-  static const componentVersion = 'user-provided-gptk-wine';
-
   final HostEnvironment environment;
 
   @override
@@ -78,16 +75,18 @@ class DartIoGptkWineInstaller implements GptkWineInstaller {
       );
     }
 
-    final validationFailure = _validateGptkWineRoot(sourceRoot);
-    if (validationFailure != null) {
-      return GptkWineInstallFailed(validationFailure);
+    final runtimeRoot = Directory(_macosWineRuntimeRoot(environment));
+    if (!File(_macosWineExecutable(environment)).existsSync()) {
+      return const GptkWineInstallFailed(
+        'Install Konyak macOS Wine before importing GPTK/D3DMetal.',
+      );
     }
 
-    final runtimeRoot = Directory(_macosWineRuntimeRoot(environment));
     final backupRoot = Directory('${runtimeRoot.path}.backup');
     final lockFile = File(_runtimeInstallLockPath(runtimeRoot));
     var lockCreated = false;
     var backupCreated = false;
+    late _GptkD3DMetalSource installedD3DMetal;
 
     try {
       try {
@@ -112,6 +111,7 @@ class DartIoGptkWineInstaller implements GptkWineInstaller {
       if (d3dMetalValidationFailure != null) {
         return GptkWineInstallFailed(d3dMetalValidationFailure);
       }
+      installedD3DMetal = bundledD3DMetal;
 
       runtimeRoot.parent.createSync(recursive: true);
       if (backupRoot.existsSync()) {
@@ -125,22 +125,14 @@ class DartIoGptkWineInstaller implements GptkWineInstaller {
           destination: runtimeRoot,
         );
       }
-      _copyDirectoryContentsReplacing(
-        source: sourceRoot,
-        destination: runtimeRoot,
-        skipRelativePaths: const <List<String>>[
-          <String>['share', 'wine', 'mono'],
-        ],
+      _installGptkD3DMetalComponent(
+        source: bundledD3DMetal,
+        runtimeRoot: runtimeRoot,
       );
       _upsertRuntimeStackComponentVersion(
         runtimeRoot: runtimeRoot,
         componentId: _gptkD3DMetalComponentId,
         version: 'user-provided',
-      );
-      _upsertRuntimeStackComponentVersion(
-        runtimeRoot: runtimeRoot,
-        componentId: componentId,
-        version: componentVersion,
       );
     } on FileSystemException catch (error) {
       if (backupCreated) {
@@ -163,12 +155,64 @@ class DartIoGptkWineInstaller implements GptkWineInstaller {
 
     return GptkWineInstallCompleted(
       GptkWineInstallRecord(
-        componentId: componentId,
-        sourceDirectory: sourceRoot.path,
+        componentId: _gptkD3DMetalComponentId,
+        sourceDirectory: installedD3DMetal.directory.path,
         runtimeRoot: runtimeRoot.path,
         installedExecutablePath: _macosWineExecutable(environment),
       ),
     );
+  }
+
+  void _installGptkD3DMetalComponent({
+    required _GptkD3DMetalSource source,
+    required Directory runtimeRoot,
+  }) {
+    final externalRoot = Directory(
+      _joinPath(runtimeRoot.path, const ['lib', 'external']),
+    )..createSync(recursive: true);
+    _copyDirectoryReplacing(
+      source: source.framework,
+      destination: Directory(
+        _joinPath(externalRoot.path, const ['D3DMetal.framework']),
+      ),
+    );
+    _copyFileReplacing(
+      source: source.dylib,
+      destination: File(
+        _joinPath(externalRoot.path, const ['libd3dshared.dylib']),
+      ),
+    );
+
+    final windowsDllRoot = Directory(
+      _joinPath(runtimeRoot.path, const ['lib', 'wine', 'x86_64-windows']),
+    )..createSync(recursive: true);
+    _copyFileReplacing(
+      source: source.d3d12Dll,
+      destination: File(_joinPath(windowsDllRoot.path, const ['d3d12.dll'])),
+    );
+    _copyFileReplacing(
+      source: source.dxgiDll,
+      destination: File(_joinPath(windowsDllRoot.path, const ['dxgi.dll'])),
+    );
+  }
+
+  void _copyDirectoryReplacing({
+    required Directory source,
+    required Directory destination,
+  }) {
+    if (destination.existsSync()) {
+      destination.deleteSync(recursive: true);
+    }
+    _copyDirectory(source: source, destination: destination);
+  }
+
+  void _copyFileReplacing({required File source, required File destination}) {
+    destination.parent.createSync(recursive: true);
+    final destinationType = FileSystemEntity.typeSync(destination.path);
+    if (destinationType != FileSystemEntityType.notFound) {
+      _deleteFileSystemEntitySync(destination.path, destinationType);
+    }
+    source.copySync(destination.path);
   }
 }
 

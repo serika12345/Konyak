@@ -142,6 +142,7 @@ Uint8List _singlePixelIcoBytes() {
 
 String _macosRuntimeListPayload({
   bool dxvkAvailable = true,
+  bool dxmtAvailable = true,
   bool gptkAvailable = true,
 }) {
   return jsonEncode(<String, Object?>{
@@ -180,6 +181,14 @@ String _macosRuntimeListPayload({
               missingPaths: dxvkAvailable
                   ? const <String>[]
                   : ['/runtime/DXVK'],
+            ),
+            _runtimeStackComponentPayload(
+              id: 'dxmt',
+              name: 'DXMT',
+              role: 'd3d10-d3d11-metal-translation',
+              missingPaths: dxmtAvailable
+                  ? const <String>[]
+                  : ['/runtime/components/dxmt'],
             ),
             _runtimeStackComponentPayload(
               id: 'moltenvk',

@@ -5,6 +5,7 @@ class BottleRuntimeControlAvailability {
   const BottleRuntimeControlAvailability({
     required this.canUseWineRuntime,
     required this.canUseDxvk,
+    required this.canUseDxmt,
     required this.canUseVkd3dProton,
     required this.canUseMetal,
     required this.canUseDxr,
@@ -12,6 +13,7 @@ class BottleRuntimeControlAvailability {
 
   final bool canUseWineRuntime;
   final bool canUseDxvk;
+  final bool canUseDxmt;
   final bool canUseVkd3dProton;
   final bool canUseMetal;
   final bool canUseDxr;
@@ -36,6 +38,10 @@ BottleRuntimeControlAvailability resolveBottleRuntimeControlAvailability({
           runtime,
           platform.isMacOS ? 'dxvk-macos' : 'dxvk',
         ),
+    canUseDxmt:
+        canUseRuntimeState &&
+        platform.isMacOS &&
+        _isRuntimeComponentAvailable(runtime, 'dxmt'),
     canUseVkd3dProton:
         canUseRuntimeState &&
         _isRuntimeComponentAvailable(runtime, 'vkd3d-proton'),

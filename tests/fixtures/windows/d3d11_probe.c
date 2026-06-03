@@ -13,6 +13,20 @@ static const int kWindowWidth = 960;
 static const int kWindowHeight = 540;
 static wchar_t g_status_text[256] = L"Konyak D3D11 Probe";
 
+typedef HRESULT(WINAPI *D3D11CreateDeviceAndSwapChainProc)(
+    IDXGIAdapter *,
+    D3D_DRIVER_TYPE,
+    HMODULE,
+    UINT,
+    const D3D_FEATURE_LEVEL *,
+    UINT,
+    UINT,
+    const DXGI_SWAP_CHAIN_DESC *,
+    IDXGISwapChain **,
+    ID3D11Device **,
+    D3D_FEATURE_LEVEL *,
+    ID3D11DeviceContext **);
+
 static LRESULT CALLBACK window_proc(
     HWND window,
     UINT message,
@@ -159,7 +173,29 @@ int main(void) {
   ID3D11Device *device = NULL;
   ID3D11DeviceContext *context = NULL;
 
-  HRESULT result = D3D11CreateDeviceAndSwapChain(
+  HMODULE d3d11_module = LoadLibraryA("d3d11.dll");
+  if (d3d11_module == NULL) {
+    return show_failure(
+        window,
+        "LoadLibraryA(d3d11.dll)",
+        HRESULT_FROM_WIN32(GetLastError()));
+  }
+  union {
+    FARPROC symbol;
+    D3D11CreateDeviceAndSwapChainProc function;
+  } create_device_and_swap_chain;
+  create_device_and_swap_chain.symbol =
+      GetProcAddress(d3d11_module, "D3D11CreateDeviceAndSwapChain");
+  if (create_device_and_swap_chain.symbol == NULL) {
+    const HRESULT failure = HRESULT_FROM_WIN32(GetLastError());
+    FreeLibrary(d3d11_module);
+    return show_failure(
+        window,
+        "GetProcAddress(D3D11CreateDeviceAndSwapChain)",
+        failure);
+  }
+
+  HRESULT result = create_device_and_swap_chain.function(
       NULL,
       D3D_DRIVER_TYPE_HARDWARE,
       NULL,
@@ -234,6 +270,7 @@ done:
   ID3D11DeviceContext_Release(context);
   ID3D11Device_Release(device);
   IDXGISwapChain_Release(swap_chain);
+  FreeLibrary(d3d11_module);
   DestroyWindow(window);
   return 0;
 }

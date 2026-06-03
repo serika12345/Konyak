@@ -8,6 +8,7 @@ class BottleRuntimeSettings {
     this.avxEnabled = false,
     this.dxrEnabled = false,
     this.dxvk = false,
+    this.dxmt = false,
     this.dxvkAsync = true,
     this.dxvkHud = 'off',
     this.vkd3dProton = false,
@@ -22,6 +23,7 @@ class BottleRuntimeSettings {
   final bool avxEnabled;
   final bool dxrEnabled;
   final bool dxvk;
+  final bool dxmt;
   final bool dxvkAsync;
   final String dxvkHud;
   final bool vkd3dProton;
@@ -37,6 +39,7 @@ class BottleRuntimeSettings {
       avxEnabled: avxEnabled,
       dxrEnabled: dxrEnabled,
       dxvk: dxvk,
+      dxmt: dxmt,
       dxvkAsync: dxvkAsync,
       dxvkHud: dxvkHud,
       vkd3dProton: vkd3dProton,
@@ -54,6 +57,7 @@ class BottleRuntimeSettings {
       avxEnabled: avxEnabled,
       dxrEnabled: dxrEnabled,
       dxvk: dxvk,
+      dxmt: dxmt,
       dxvkAsync: dxvkAsync,
       dxvkHud: dxvkHud,
       vkd3dProton: vkd3dProton,
@@ -71,6 +75,7 @@ class BottleRuntimeSettings {
       avxEnabled: avxEnabled,
       dxrEnabled: dxrEnabled,
       dxvk: dxvk,
+      dxmt: dxmt,
       dxvkAsync: dxvkAsync,
       dxvkHud: dxvkHud,
       vkd3dProton: vkd3dProton,
@@ -88,6 +93,7 @@ class BottleRuntimeSettings {
       avxEnabled: avxEnabled,
       dxrEnabled: dxrEnabled,
       dxvk: dxvk,
+      dxmt: dxmt,
       dxvkAsync: dxvkAsync,
       dxvkHud: dxvkHud,
       vkd3dProton: vkd3dProton,
@@ -105,6 +111,7 @@ class BottleRuntimeSettings {
       avxEnabled: avxEnabled,
       dxrEnabled: dxrEnabled,
       dxvk: dxvk,
+      dxmt: dxmt,
       dxvkAsync: dxvkAsync,
       dxvkHud: dxvkHud,
       vkd3dProton: vkd3dProton,
@@ -122,6 +129,25 @@ class BottleRuntimeSettings {
       avxEnabled: avxEnabled,
       dxrEnabled: dxrEnabled,
       dxvk: dxvk,
+      dxmt: dxvk ? false : dxmt,
+      dxvkAsync: dxvkAsync,
+      dxvkHud: dxvkHud,
+      vkd3dProton: vkd3dProton,
+      buildVersion: buildVersion,
+      retinaMode: retinaMode,
+      dpiScaling: dpiScaling,
+    );
+  }
+
+  BottleRuntimeSettings withDxmt(bool dxmt) {
+    return BottleRuntimeSettings(
+      enhancedSync: enhancedSync,
+      metalHud: metalHud,
+      metalTrace: metalTrace,
+      avxEnabled: avxEnabled,
+      dxrEnabled: dxrEnabled,
+      dxvk: dxmt ? false : dxvk,
+      dxmt: dxmt,
       dxvkAsync: dxvkAsync,
       dxvkHud: dxvkHud,
       vkd3dProton: vkd3dProton,
@@ -139,6 +165,7 @@ class BottleRuntimeSettings {
       avxEnabled: avxEnabled,
       dxrEnabled: dxrEnabled,
       dxvk: dxvk,
+      dxmt: dxmt,
       dxvkAsync: dxvkAsync,
       dxvkHud: dxvkHud,
       vkd3dProton: vkd3dProton,
@@ -156,6 +183,7 @@ class BottleRuntimeSettings {
       avxEnabled: avxEnabled,
       dxrEnabled: dxrEnabled,
       dxvk: dxvk,
+      dxmt: dxmt,
       dxvkAsync: dxvkAsync,
       dxvkHud: dxvkHud,
       vkd3dProton: vkd3dProton,
@@ -173,6 +201,7 @@ class BottleRuntimeSettings {
       avxEnabled: avxEnabled,
       dxrEnabled: dxrEnabled,
       dxvk: dxvk,
+      dxmt: dxmt,
       dxvkAsync: dxvkAsync,
       dxvkHud: dxvkHud,
       vkd3dProton: vkd3dProton,
@@ -190,6 +219,7 @@ class BottleRuntimeSettings {
       avxEnabled: avxEnabled,
       dxrEnabled: dxrEnabled,
       dxvk: dxvk,
+      dxmt: dxmt,
       dxvkAsync: dxvkAsync,
       dxvkHud: dxvkHud,
       vkd3dProton: vkd3dProton,
@@ -207,6 +237,7 @@ class BottleRuntimeSettings {
       avxEnabled: avxEnabled,
       dxrEnabled: dxrEnabled,
       dxvk: dxvk,
+      dxmt: dxmt,
       dxvkAsync: dxvkAsync,
       dxvkHud: dxvkHud,
       vkd3dProton: vkd3dProton,
@@ -224,6 +255,7 @@ class BottleRuntimeSettings {
       avxEnabled: avxEnabled,
       dxrEnabled: dxrEnabled,
       dxvk: dxvk,
+      dxmt: dxmt,
       dxvkAsync: dxvkAsync,
       dxvkHud: dxvkHud,
       vkd3dProton: vkd3dProton,
@@ -241,6 +273,7 @@ class BottleRuntimeSettings {
       'avxEnabled': avxEnabled,
       'dxrEnabled': dxrEnabled,
       'dxvk': dxvk,
+      'dxmt': dxmt,
       'dxvkAsync': dxvkAsync,
       'dxvkHud': dxvkHud,
       'vkd3dProton': vkd3dProton,
@@ -253,7 +286,9 @@ class BottleRuntimeSettings {
   ProgramRunEnvironment macosEnvironment() {
     final environment = <String, String>{};
 
-    if (dxvk) {
+    if (dxmt) {
+      environment['WINEDLLOVERRIDES'] = 'dxgi,d3d10core,d3d11,winemetal=n,b';
+    } else if (dxvk) {
       environment['WINEDLLOVERRIDES'] = 'dxgi,d3d9,d3d10core,d3d11=n,b';
       final hud = switch (dxvkHud) {
         'full' => 'full',
@@ -308,6 +343,7 @@ class BottleRuntimeSettings {
         other.avxEnabled == avxEnabled &&
         other.dxrEnabled == dxrEnabled &&
         other.dxvk == dxvk &&
+        other.dxmt == dxmt &&
         other.dxvkAsync == dxvkAsync &&
         other.dxvkHud == dxvkHud &&
         other.vkd3dProton == vkd3dProton &&
@@ -325,6 +361,7 @@ class BottleRuntimeSettings {
       avxEnabled,
       dxrEnabled,
       dxvk,
+      dxmt,
       dxvkAsync,
       dxvkHud,
       vkd3dProton,

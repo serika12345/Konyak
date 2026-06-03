@@ -35,35 +35,6 @@ bool _isGptkWineRootCandidate(Directory directory) {
       (lib.existsSync() || lib64.existsSync());
 }
 
-String? _validateGptkWineRoot(Directory sourceRoot) {
-  final wine64 = File(_joinPath(sourceRoot.path, const ['bin', 'wine64']));
-  final wineserver = File(
-    _joinPath(sourceRoot.path, const ['bin', 'wineserver']),
-  );
-  if (!wine64.existsSync()) {
-    return 'GPTK-compatible Wine source is missing bin/wine64.';
-  }
-  if (!wineserver.existsSync()) {
-    return 'GPTK-compatible Wine source is missing bin/wineserver.';
-  }
-  if (!_looksLikeMachO(wine64)) {
-    return 'bin/wine64 is not a Mach-O binary. Konyak rejects fixture text '
-        'files and incomplete Wine copies.';
-  }
-  if (!_looksLikeMachO(wineserver)) {
-    return 'bin/wineserver is not a Mach-O binary. Konyak rejects fixture text '
-        'files and incomplete Wine copies.';
-  }
-
-  final lib = Directory(_joinPath(sourceRoot.path, const ['lib']));
-  final lib64 = Directory(_joinPath(sourceRoot.path, const ['lib64']));
-  if (!lib.existsSync() && !lib64.existsSync()) {
-    return 'GPTK-compatible Wine source is missing lib or lib64.';
-  }
-
-  return null;
-}
-
 String? _validateGptkD3DMetalSource(_GptkD3DMetalSource source) {
   final frameworkBinary = _d3dMetalFrameworkBinary(source.framework.path);
   if (frameworkBinary == null || !File(frameworkBinary).existsSync()) {

@@ -566,6 +566,7 @@ void defineBottleConfigurationWidgetTests() {
       findsNothing,
     );
     expect(find.byKey(const ValueKey('config-dxvk-switch')), findsOneWidget);
+    expect(find.byKey(const ValueKey('config-dxmt-switch')), findsOneWidget);
 
     await tester.tap(find.byKey(const ValueKey('config-dxvk-switch')));
     await tester.pumpAndSettle();
@@ -578,6 +579,7 @@ void defineBottleConfigurationWidgetTests() {
     final settings =
         jsonDecode(runner.argumentsLog[3][3]) as Map<String, Object?>;
     expect(settings, containsPair('dxvk', true));
+    expect(settings, containsPair('dxmt', false));
   });
 
   testWidgets('Linux bottle configuration enables DXVK when runtime has DXVK', (

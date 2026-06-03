@@ -36,6 +36,10 @@ readonly WINE_ARCHIVE_CACHE="${KONYAK_DEV_MACOS_WINE_ARCHIVE_CACHE:-${DOWNLOAD_C
 readonly DXVK_ARCHIVE_URL="${KONYAK_DEV_DXVK_MACOS_ARCHIVE_URL:-https://github.com/Gcenx/DXVK-macOS/releases/download/v1.10.3-20230507/dxvk-macOS-async-v1.10.3-20230507.tar.gz}"
 readonly DXVK_ARCHIVE_SHA256="${KONYAK_DEV_DXVK_MACOS_ARCHIVE_SHA256:-f67d99d0a8eeedd7d406b283a3df9f939b5965acb00efcb33d0c6235c195a516}"
 readonly DXVK_ARCHIVE_CACHE="${KONYAK_DEV_DXVK_MACOS_ARCHIVE_CACHE:-${DOWNLOAD_CACHE}/dxvk-macOS-async-v1.10.3-20230507.tar.gz}"
+readonly DXMT_ARCHIVE_URL="${KONYAK_DEV_DXMT_ARCHIVE_URL:-https://github.com/serika12345/konyak-macos-runtime/releases/download/crossover-26.1.0-konyak.0/konyak-macos-dxmt.tar.zst}"
+readonly DXMT_ARCHIVE_SHA256="${KONYAK_DEV_DXMT_ARCHIVE_SHA256:-2f3851e4fddc66074ba512146ddb6240646989000e8ba2a555ca6706eac8e611}"
+readonly DXMT_ARCHIVE_CACHE="${KONYAK_DEV_DXMT_ARCHIVE_CACHE:-${DOWNLOAD_CACHE}/konyak-macos-dxmt.tar.zst}"
+readonly DXMT_VERSION="${KONYAK_DEV_DXMT_VERSION:-aa9df0b86b041dc836a08f3a499f2a203cdbd4d7-konyak.0}"
 readonly GSTREAMER_ROOT="${KONYAK_DEV_NIX_GSTREAMER_PATH:-}"
 readonly WINETRICKS_SOURCE="${KONYAK_DEV_WINETRICKS_PATH:-}"
 readonly WINETRICKS_SCRIPT_URL="${KONYAK_DEV_WINETRICKS_SCRIPT_URL:-https://raw.githubusercontent.com/Winetricks/winetricks/20260125/src/winetricks}"
@@ -180,6 +184,34 @@ prepare_dxvk_component() {
     "${payload_root}/.konyak-runtime-stack.json" \
     "dxvk-macos" \
     "v1.10.3-20230507"
+  archive_payload "${payload_root}" "${archive_path}"
+  print -r -- "${archive_path}"
+}
+
+prepare_dxmt_component() {
+  local work_root="${SOURCE_ROOT}/work/dxmt"
+  local extract_root="${work_root}/extract"
+  local payload_root="${work_root}/payload/dxmt"
+  local archive_path="${SOURCE_ROOT}/components/dxmt.tar.xz"
+
+  download_if_missing "${DXMT_ARCHIVE_URL}" "${DXMT_ARCHIVE_CACHE}" "${DXMT_ARCHIVE_SHA256}"
+  reset_dir "${work_root}"
+  mkdir -p "${extract_root}"
+  tar --warning=no-unknown-keyword --zstd -xf "${DXMT_ARCHIVE_CACHE}" -C "${extract_root}"
+
+  if [[ ! -f "${extract_root}/components/dxmt/x86_64-windows/d3d11.dll" ||
+        ! -f "${extract_root}/components/dxmt/x86_64-unix/winemetal.so" ]]; then
+    print -u2 "DXMT archive does not contain the expected component layout."
+    exit 65
+  fi
+
+  mkdir -p "${payload_root}/Components/DXMT/components"
+  cp -R "${extract_root}/components/dxmt" \
+    "${payload_root}/Components/DXMT/components/dxmt"
+  write_stack_manifest \
+    "${payload_root}/.konyak-runtime-stack.json" \
+    "dxmt" \
+    "${DXMT_VERSION}"
   archive_payload "${payload_root}" "${archive_path}"
   print -r -- "${archive_path}"
 }
@@ -415,15 +447,18 @@ prepare_gptk_d3dmetal_component() {
 write_source_manifest() {
   local wine_archive_source="$1"
   local dxvk_archive="$2"
-  local gstreamer_archive="$3"
-  local winetricks_archive="$4"
-  local gptk_d3dmetal_archive="${5:-}"
+  local dxmt_archive="$3"
+  local gstreamer_archive="$4"
+  local winetricks_archive="$5"
+  local gptk_d3dmetal_archive="${6:-}"
   local dxvk_sha
+  local dxmt_sha
   local gstreamer_sha
   local winetricks_sha
   local gptk_d3dmetal_sha=""
 
   dxvk_sha="$(sha256_file "${dxvk_archive}")"
+  dxmt_sha="$(sha256_file "${dxmt_archive}")"
   gstreamer_sha="$(sha256_file "${gstreamer_archive}")"
   winetricks_sha="$(sha256_file "${winetricks_archive}")"
   if [[ -n "${gptk_d3dmetal_archive}" ]]; then
@@ -437,6 +472,9 @@ write_source_manifest() {
     "${WINE_ARCHIVE_SHA256}" \
     "${dxvk_archive}" \
     "${dxvk_sha}" \
+    "${dxmt_archive}" \
+    "${dxmt_sha}" \
+    "${DXMT_VERSION}" \
     "${gstreamer_archive}" \
     "${gstreamer_sha}" \
     "${winetricks_archive}" \
@@ -454,6 +492,9 @@ import sys
     wine_sha,
     dxvk_archive,
     dxvk_sha,
+    dxmt_archive,
+    dxmt_sha,
+    dxmt_version,
     gstreamer_archive,
     gstreamer_sha,
     winetricks_archive,
@@ -462,7 +503,7 @@ import sys
     gptk_d3dmetal_sha,
     gptk_d3dmetal_version,
     winetricks_version,
-) = sys.argv[1:14]
+) = sys.argv[1:17]
 
 components = [
     {
@@ -476,6 +517,12 @@ components = [
         "version": "v1.10.3-20230507",
         "archiveUrl": dxvk_archive,
         "sha256": dxvk_sha,
+    },
+    {
+        "id": "dxmt",
+        "version": dxmt_version,
+        "archiveUrl": dxmt_archive,
+        "sha256": dxmt_sha,
     },
     {
         "id": "gstreamer",
@@ -527,12 +574,14 @@ if [[ -f "${WINE_ARCHIVE_CACHE}" ]]; then
 fi
 
 dxvk_archive="$(prepare_dxvk_component)"
+dxmt_archive="$(prepare_dxmt_component)"
 gstreamer_archive="$(prepare_gstreamer_component)"
 winetricks_archive="$(prepare_winetricks_component)"
 gptk_d3dmetal_archive="$(prepare_gptk_d3dmetal_component)"
 write_source_manifest \
   "${wine_archive_source}" \
   "${dxvk_archive}" \
+  "${dxmt_archive}" \
   "${gstreamer_archive}" \
   "${winetricks_archive}" \
   "${gptk_d3dmetal_archive}"

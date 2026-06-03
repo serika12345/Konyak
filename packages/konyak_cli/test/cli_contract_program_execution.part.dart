@@ -442,6 +442,53 @@ void defineProgramExecutionContractTests() {
     );
   });
 
+  test('run-program --json applies DXMT settings on macOS', () {
+    final repository = MemoryBottleRepository(
+      dataHome: '/Users/user/Library/Application Support/Konyak',
+      bottles: [
+        BottleRecord(
+          id: 'steam',
+          name: 'Steam',
+          path: '/Users/user/Library/Application Support/Konyak/Bottles/Steam',
+          windowsVersion: 'win10',
+          runtimeSettings: const BottleRuntimeSettings(dxmt: true),
+        ),
+      ],
+    );
+    final runner = RecordingProgramRunner(
+      result: const ProgramRunCompleted(processExitCode: 0),
+    );
+
+    final result = runCli(
+      const [
+        'run-program',
+        'steam',
+        '--program',
+        '/downloads/setup.exe',
+        '--json',
+      ],
+      bottleRepository: repository,
+      programRunPlanner: ProgramRunPlanner(
+        hostPlatform: KonyakHostPlatform.macos,
+        environment: HostEnvironment({'HOME': '/Users/user'}),
+      ),
+      programRunner: runner,
+    );
+
+    expect(result.exitCode, 0);
+    expect(
+      runner.lastRequest?.environment.toMap(),
+      containsPair('WINEDLLOVERRIDES', 'dxgi,d3d10core,d3d11,winemetal=n,b'),
+    );
+    expect(
+      runner.lastRequest?.environment.toMap(),
+      containsPair(
+        'WINEDLLPATH',
+        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/components/dxmt/x86_64-windows:/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/components/dxmt/x86_64-unix',
+      ),
+    );
+  });
+
   test('run-program --json applies DXVK settings on Linux', () {
     final repository = MemoryBottleRepository(
       dataHome: '/home/user/.local/share/konyak',

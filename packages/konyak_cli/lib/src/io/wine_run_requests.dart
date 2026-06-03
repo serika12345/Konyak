@@ -7,6 +7,29 @@ const _dxvkOverrideDllNames = <String>[
   'd3d11.dll',
 ];
 
+const _macosD3DTranslationOverrideDllNames = <String>[
+  ..._dxvkOverrideDllNames,
+  'winemetal.dll',
+];
+
+void _removeMacosD3DTranslationDllOverrides({required BottleRecord bottle}) {
+  for (final windowsDirectory in const <String>['system32', 'syswow64']) {
+    for (final dllName in _macosD3DTranslationOverrideDllNames) {
+      final dllPath = _joinPath(bottle.path, <String>[
+        'drive_c',
+        'windows',
+        windowsDirectory,
+        dllName,
+      ]);
+      final type = FileSystemEntity.typeSync(dllPath);
+      if (type == FileSystemEntityType.notFound) {
+        continue;
+      }
+      _deleteFileSystemEntitySync(dllPath, type);
+    }
+  }
+}
+
 void _syncMacosDxvkDllOverrides({
   required BottleRecord bottle,
   required Map<String, String> environment,
@@ -32,6 +55,40 @@ void _syncMacosDxvkDllOverrides({
       if (!sourceFile.existsSync()) {
         throw FileSystemException(
           'DXVK override DLL was not found.',
+          sourcePath,
+        );
+      }
+      sourceFile.copySync(_joinPath(destinationDirectory.path, [dllName]));
+    }
+  }
+}
+
+void _syncMacosBuiltinD3DDllOverrides({
+  required BottleRecord bottle,
+  required Map<String, String> environment,
+}) {
+  final hostEnvironment = HostEnvironment(environment);
+  final runtimeRoot = _macosWineRuntimeRoot(hostEnvironment);
+  for (final arch in const <(String, String)>[
+    ('x86_64-windows', 'system32'),
+    ('i386-windows', 'syswow64'),
+  ]) {
+    final (runtimeArch, windowsDirectory) = arch;
+    final destinationDirectory = Directory(
+      _joinPath(bottle.path, <String>['drive_c', 'windows', windowsDirectory]),
+    )..createSync(recursive: true);
+
+    for (final dllName in _dxvkOverrideDllNames) {
+      final sourcePath = _joinPath(runtimeRoot, <String>[
+        'lib',
+        'wine',
+        runtimeArch,
+        dllName,
+      ]);
+      final sourceFile = File(sourcePath);
+      if (!sourceFile.existsSync()) {
+        throw FileSystemException(
+          'Wine builtin D3D DLL was not found.',
           sourcePath,
         );
       }

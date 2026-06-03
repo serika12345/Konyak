@@ -424,6 +424,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
         'avxEnabled': false,
         'dxrEnabled': false,
         'dxvk': false,
+        'dxmt': false,
         'dxvkAsync': true,
         'dxvkHud': 'off',
         'vkd3dProton': false,
@@ -716,6 +717,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       'avxEnabled': true,
       'dxrEnabled': true,
       'dxvk': true,
+      'dxmt': false,
       'dxvkAsync': false,
       'dxvkHud': 'fps',
       'vkd3dProton': true,
@@ -754,6 +756,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
         'avxEnabled': true,
         'dxrEnabled': true,
         'dxvk': true,
+        'dxmt': false,
         'dxvkAsync': false,
         'dxvkHud': 'fps',
         'vkd3dProton': true,
@@ -867,6 +870,159 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       );
     }
   });
+
+  test('set-runtime-settings --json restores macOS builtin D3D DLLs', () {
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-dxvk-overrides-remove-test-',
+    );
+    addTearDown(() {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    });
+
+    final runtimeRoot = _joinTestPath(tempDirectory.path, const ['runtime']);
+    final bottlePath = _joinTestPath(tempDirectory.path, const [
+      'bottles',
+      'steam',
+    ]);
+    for (final arch in const ['x86_64-windows', 'i386-windows']) {
+      for (final dllName in const [
+        'dxgi.dll',
+        'd3d9.dll',
+        'd3d10core.dll',
+        'd3d11.dll',
+      ]) {
+        final file = File(
+          _joinTestPath(runtimeRoot, ['lib', 'wine', arch, dllName]),
+        );
+        file.parent.createSync(recursive: true);
+        file.writeAsStringSync('$arch/$dllName');
+      }
+    }
+    for (final windowsDirectory in const ['system32', 'syswow64']) {
+      for (final dllName in const [
+        'dxgi.dll',
+        'd3d9.dll',
+        'd3d10core.dll',
+        'd3d11.dll',
+        'winemetal.dll',
+      ]) {
+        final file = File(
+          _joinTestPath(bottlePath, [
+            'drive_c',
+            'windows',
+            windowsDirectory,
+            dllName,
+          ]),
+        );
+        file.parent.createSync(recursive: true);
+        file.writeAsStringSync('stale $dllName');
+      }
+    }
+    final repository = MemoryBottleRepository(
+      dataHome: _joinTestPath(tempDirectory.path, const ['data']),
+      bottles: [
+        BottleRecord(
+          id: 'steam',
+          name: 'Steam',
+          path: bottlePath,
+          windowsVersion: 'win10',
+          runtimeSettings: const BottleRuntimeSettings(dxvk: true),
+        ),
+      ],
+    );
+
+    final result = runCli(
+      [
+        'set-runtime-settings',
+        'steam',
+        '--settings-json',
+        jsonEncode({'dxvk': false, 'dxmt': false}),
+        '--json',
+      ],
+      bottleRepository: repository,
+      programRunPlanner: ProgramRunPlanner(
+        hostPlatform: KonyakHostPlatform.macos,
+        environment: HostEnvironment({'KONYAK_MACOS_WINE_HOME': runtimeRoot}),
+      ),
+    );
+
+    expect(result.exitCode, 0);
+    for (final entry in const [
+      ('system32', 'x86_64-windows'),
+      ('syswow64', 'i386-windows'),
+    ]) {
+      final (windowsDirectory, runtimeArch) = entry;
+      for (final dllName in const [
+        'dxgi.dll',
+        'd3d9.dll',
+        'd3d10core.dll',
+        'd3d11.dll',
+      ]) {
+        expect(
+          File(
+            _joinTestPath(bottlePath, [
+              'drive_c',
+              'windows',
+              windowsDirectory,
+              dllName,
+            ]),
+          ).readAsStringSync(),
+          '$runtimeArch/$dllName',
+        );
+      }
+      expect(
+        File(
+          _joinTestPath(bottlePath, [
+            'drive_c',
+            'windows',
+            windowsDirectory,
+            'winemetal.dll',
+          ]),
+        ).existsSync(),
+        isFalse,
+      );
+    }
+  });
+
+  test(
+    'set-runtime-settings --json makes DXVK and DXMT mutually exclusive',
+    () {
+      final repository = MemoryBottleRepository(
+        dataHome: '/home/user/.local/share/konyak',
+        bottles: [
+          BottleRecord(
+            id: 'steam',
+            name: 'Steam',
+            path:
+                '/Users/user/Library/Application Support/Konyak/Bottles/Steam',
+            windowsVersion: 'win10',
+          ),
+        ],
+      );
+
+      final result = runCli(
+        [
+          'set-runtime-settings',
+          'steam',
+          '--settings-json',
+          jsonEncode({'dxvk': true, 'dxmt': true}),
+          '--json',
+        ],
+        bottleRepository: repository,
+        programRunPlanner: ProgramRunPlanner(
+          hostPlatform: KonyakHostPlatform.macos,
+          environment: HostEnvironment(const {'HOME': '/Users/user'}),
+        ),
+      );
+
+      expect(result.exitCode, 0);
+      final updated = _expectFound(repository.findBottle('steam'));
+      expect(updated.runtimeSettings.dxvk, isFalse);
+      expect(updated.runtimeSettings.dxmt, isTrue);
+    },
+  );
 
   test('set-runtime-settings --json applies registry-backed settings', () {
     final repository = MemoryBottleRepository(

@@ -37,6 +37,11 @@ extension _MacosWineLayoutNormalization on DartIoMacosWineInstaller {
       return;
     }
 
+    _normalizeDxmtComponent(
+      runtimeRoot: runtimeRoot,
+      componentsRoot: componentsRoot,
+    );
+
     for (final componentId in const <String>[
       'DXVK-macOS',
       'DXVK',
@@ -57,6 +62,37 @@ extension _MacosWineLayoutNormalization on DartIoMacosWineInstaller {
     if (componentsRoot.existsSync() && componentsRoot.listSync().isEmpty) {
       componentsRoot.deleteSync(recursive: true);
     }
+  }
+
+  void _normalizeDxmtComponent({
+    required Directory runtimeRoot,
+    required Directory componentsRoot,
+  }) {
+    final sourceRoot = Directory(
+      _joinPath(componentsRoot.path, const ['DXMT', 'components', 'dxmt']),
+    );
+    if (!sourceRoot.existsSync()) {
+      return;
+    }
+
+    final targetParent = Directory(
+      _joinPath(runtimeRoot.path, const ['components']),
+    );
+    final temporaryDxmtRoot = _joinPath(runtimeRoot.path, const [
+      '.konyak-dxmt-normalized',
+    ]);
+    _moveFileSystemEntity(sourceRoot, temporaryDxmtRoot);
+    final dxmtComponentRoot = Directory(
+      _joinPath(componentsRoot.path, const ['DXMT']),
+    );
+    if (dxmtComponentRoot.existsSync()) {
+      dxmtComponentRoot.deleteSync(recursive: true);
+    }
+    targetParent.createSync(recursive: true);
+    _moveFileSystemEntity(
+      Directory(temporaryDxmtRoot),
+      _joinPath(targetParent.path, const ['dxmt']),
+    );
   }
 
   void _moveRuntimeLayoutChildrenToRoot({

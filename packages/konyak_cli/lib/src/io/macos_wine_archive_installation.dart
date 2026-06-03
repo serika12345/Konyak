@@ -103,19 +103,28 @@ extension _MacosWineArchiveInstallation on DartIoMacosWineInstaller {
         _RuntimeStackSourceArchiveBundleFailed(:final message) =>
           MacosWineInstallFailed(message),
         _RuntimeStackSourceArchiveBundleResolved(:final bundle) =>
-          _installMacosWineArchive(
-            archivePath: bundle.wineArchivePath,
-            archiveSha256: const Option.none(),
-            componentArchivePaths: bundle.componentArchivePaths,
-            componentVersions: bundle.componentVersions,
-            preserveExistingRuntimeFiles: preserveExistingRuntimeFiles,
-            progressSink: progressSink,
+          _macosWineSourceManifestInstallResult(
+            sourceManifest: sourceManifest,
+            result: _installMacosWineArchive(
+              archivePath: bundle.wineArchivePath,
+              archiveSha256: const Option.none(),
+              componentArchivePaths: bundle.componentArchivePaths,
+              componentVersions: bundle.componentVersions,
+              preserveExistingRuntimeFiles: preserveExistingRuntimeFiles,
+              progressSink: progressSink,
+            ),
           ),
       };
     } on FileSystemException catch (error) {
-      return MacosWineInstallFailed(error.message);
+      return MacosWineInstallFailed(
+        'Runtime stack source manifest $sourceManifest failed: '
+        '${error.message}',
+      );
     } on ProcessException catch (error) {
-      return MacosWineInstallFailed(error.message);
+      return MacosWineInstallFailed(
+        'Runtime stack source manifest $sourceManifest failed: '
+        '${error.message}',
+      );
     } finally {
       _deleteDirectoryIfPresent(tempDirectory);
     }
@@ -161,19 +170,28 @@ extension _MacosWineArchiveInstallation on DartIoMacosWineInstaller {
         _RuntimeStackSourceArchiveBundleFailed(:final message) =>
           MacosWineInstallFailed(message),
         _RuntimeStackSourceArchiveBundleResolved(:final bundle) =>
-          _installMacosWineArchive(
-            archivePath: bundle.wineArchivePath,
-            archiveSha256: const Option.none(),
-            componentArchivePaths: bundle.componentArchivePaths,
-            componentVersions: bundle.componentVersions,
-            preserveExistingRuntimeFiles: preserveExistingRuntimeFiles,
-            progressSink: progressSink,
+          _macosWineSourceManifestInstallResult(
+            sourceManifest: sourceManifest,
+            result: _installMacosWineArchive(
+              archivePath: bundle.wineArchivePath,
+              archiveSha256: const Option.none(),
+              componentArchivePaths: bundle.componentArchivePaths,
+              componentVersions: bundle.componentVersions,
+              preserveExistingRuntimeFiles: preserveExistingRuntimeFiles,
+              progressSink: progressSink,
+            ),
           ),
       };
     } on FileSystemException catch (error) {
-      return MacosWineInstallFailed(error.message);
+      return MacosWineInstallFailed(
+        'Runtime stack source manifest $sourceManifest failed: '
+        '${error.message}',
+      );
     } on ProcessException catch (error) {
-      return MacosWineInstallFailed(error.message);
+      return MacosWineInstallFailed(
+        'Runtime stack source manifest $sourceManifest failed: '
+        '${error.message}',
+      );
     } finally {
       _deleteDirectoryIfPresent(tempDirectory);
     }
@@ -194,4 +212,16 @@ extension _MacosWineArchiveInstallation on DartIoMacosWineInstaller {
           environment.nonEmptyValue('KONYAK_MACOS_WINE_STACK_PUBLIC_KEY'),
     );
   }
+}
+
+MacosWineInstallResult _macosWineSourceManifestInstallResult({
+  required String sourceManifest,
+  required MacosWineInstallResult result,
+}) {
+  return switch (result) {
+    MacosWineInstallCompleted() => result,
+    MacosWineInstallFailed(:final message) => MacosWineInstallFailed(
+      'Runtime stack source manifest $sourceManifest failed: $message',
+    ),
+  };
 }

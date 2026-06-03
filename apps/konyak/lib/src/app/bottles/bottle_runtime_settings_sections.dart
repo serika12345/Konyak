@@ -252,6 +252,22 @@ class BottleMetalSettingsSection extends StatelessWidget {
       title: 'Metal',
       children: [
         BottleConfigurationSwitchRow(
+          switchKey: const ValueKey('config-dxmt-switch'),
+          loadingKey: const ValueKey('config-dxmt-switch-loading'),
+          label: 'DXMT',
+          value: settings.dxmt,
+          isLoading:
+              pendingRuntimeSettingsControlKey == runtimeSettingsControlDxmt,
+          onChanged: !availability.canUseDxmt
+              ? null
+              : (value) {
+                  onChanged(
+                    settings.withDxmt(value),
+                    runtimeSettingsControlDxmt,
+                  );
+                },
+        ),
+        BottleConfigurationSwitchRow(
           loadingKey: const ValueKey('config-metal-hud-switch-loading'),
           label: 'Metal HUD',
           value: settings.metalHud,

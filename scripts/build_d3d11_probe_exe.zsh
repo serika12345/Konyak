@@ -21,8 +21,6 @@ mkdir -p "$build_dir"
   -Werror \
   -O2 \
   "$source_file" \
-  -ld3d11 \
-  -ldxgi \
   -luuid \
   -lgdi32 \
   -o "$probe_exe"

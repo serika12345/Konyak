@@ -150,7 +150,7 @@ const _macosKonyakRuntimeComponentDefinitions =
         id: 'dxmt',
         name: 'DXMT',
         role: 'd3d10-d3d11-metal-translation',
-        isRequired: false,
+        isRequired: true,
         relativePaths: <List<String>>[
           <String>['components', 'dxmt', 'x86_64-windows', 'd3d10core.dll'],
           <String>['components', 'dxmt', 'x86_64-windows', 'd3d11.dll'],

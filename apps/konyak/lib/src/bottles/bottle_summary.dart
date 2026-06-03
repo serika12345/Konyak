@@ -27,6 +27,7 @@ class BottleRuntimeSettingsSummary {
     this.avxEnabled = false,
     this.dxrEnabled = false,
     this.dxvk = false,
+    this.dxmt = false,
     this.dxvkAsync = true,
     this.dxvkHud = 'off',
     this.vkd3dProton = false,
@@ -41,6 +42,7 @@ class BottleRuntimeSettingsSummary {
   final bool avxEnabled;
   final bool dxrEnabled;
   final bool dxvk;
+  final bool dxmt;
   final bool dxvkAsync;
   final String dxvkHud;
   final bool vkd3dProton;
@@ -56,6 +58,7 @@ class BottleRuntimeSettingsSummary {
       avxEnabled: avxEnabled,
       dxrEnabled: dxrEnabled,
       dxvk: dxvk,
+      dxmt: dxmt,
       dxvkAsync: dxvkAsync,
       dxvkHud: dxvkHud,
       vkd3dProton: vkd3dProton,
@@ -73,6 +76,7 @@ class BottleRuntimeSettingsSummary {
       avxEnabled: avxEnabled,
       dxrEnabled: dxrEnabled,
       dxvk: dxvk,
+      dxmt: dxmt,
       dxvkAsync: dxvkAsync,
       dxvkHud: dxvkHud,
       vkd3dProton: vkd3dProton,
@@ -90,6 +94,7 @@ class BottleRuntimeSettingsSummary {
       avxEnabled: avxEnabled,
       dxrEnabled: dxrEnabled,
       dxvk: dxvk,
+      dxmt: dxmt,
       dxvkAsync: dxvkAsync,
       dxvkHud: dxvkHud,
       vkd3dProton: vkd3dProton,
@@ -107,6 +112,7 @@ class BottleRuntimeSettingsSummary {
       avxEnabled: avxEnabled,
       dxrEnabled: dxrEnabled,
       dxvk: dxvk,
+      dxmt: dxmt,
       dxvkAsync: dxvkAsync,
       dxvkHud: dxvkHud,
       vkd3dProton: vkd3dProton,
@@ -124,6 +130,7 @@ class BottleRuntimeSettingsSummary {
       avxEnabled: avxEnabled,
       dxrEnabled: dxrEnabled,
       dxvk: dxvk,
+      dxmt: dxmt,
       dxvkAsync: dxvkAsync,
       dxvkHud: dxvkHud,
       vkd3dProton: vkd3dProton,
@@ -141,6 +148,25 @@ class BottleRuntimeSettingsSummary {
       avxEnabled: avxEnabled,
       dxrEnabled: dxrEnabled,
       dxvk: dxvk,
+      dxmt: dxvk ? false : dxmt,
+      dxvkAsync: dxvkAsync,
+      dxvkHud: dxvkHud,
+      vkd3dProton: vkd3dProton,
+      buildVersion: buildVersion,
+      retinaMode: retinaMode,
+      dpiScaling: dpiScaling,
+    );
+  }
+
+  BottleRuntimeSettingsSummary withDxmt(bool dxmt) {
+    return BottleRuntimeSettingsSummary(
+      enhancedSync: enhancedSync,
+      metalHud: metalHud,
+      metalTrace: metalTrace,
+      avxEnabled: avxEnabled,
+      dxrEnabled: dxrEnabled,
+      dxvk: dxmt ? false : dxvk,
+      dxmt: dxmt,
       dxvkAsync: dxvkAsync,
       dxvkHud: dxvkHud,
       vkd3dProton: vkd3dProton,
@@ -158,6 +184,7 @@ class BottleRuntimeSettingsSummary {
       avxEnabled: avxEnabled,
       dxrEnabled: dxrEnabled,
       dxvk: dxvk,
+      dxmt: dxmt,
       dxvkAsync: dxvkAsync,
       dxvkHud: dxvkHud,
       vkd3dProton: vkd3dProton,
@@ -175,6 +202,7 @@ class BottleRuntimeSettingsSummary {
       avxEnabled: avxEnabled,
       dxrEnabled: dxrEnabled,
       dxvk: dxvk,
+      dxmt: dxmt,
       dxvkAsync: dxvkAsync,
       dxvkHud: dxvkHud,
       vkd3dProton: vkd3dProton,
@@ -192,6 +220,7 @@ class BottleRuntimeSettingsSummary {
       avxEnabled: avxEnabled,
       dxrEnabled: dxrEnabled,
       dxvk: dxvk,
+      dxmt: dxmt,
       dxvkAsync: dxvkAsync,
       dxvkHud: dxvkHud,
       vkd3dProton: vkd3dProton,
@@ -209,6 +238,7 @@ class BottleRuntimeSettingsSummary {
       avxEnabled: avxEnabled,
       dxrEnabled: dxrEnabled,
       dxvk: dxvk,
+      dxmt: dxmt,
       dxvkAsync: dxvkAsync,
       dxvkHud: dxvkHud,
       vkd3dProton: vkd3dProton,
@@ -226,6 +256,7 @@ class BottleRuntimeSettingsSummary {
       avxEnabled: avxEnabled,
       dxrEnabled: dxrEnabled,
       dxvk: dxvk,
+      dxmt: dxmt,
       dxvkAsync: dxvkAsync,
       dxvkHud: dxvkHud,
       vkd3dProton: vkd3dProton,
@@ -243,6 +274,7 @@ class BottleRuntimeSettingsSummary {
       avxEnabled: avxEnabled,
       dxrEnabled: dxrEnabled,
       dxvk: dxvk,
+      dxmt: dxmt,
       dxvkAsync: dxvkAsync,
       dxvkHud: dxvkHud,
       vkd3dProton: vkd3dProton,
@@ -260,6 +292,7 @@ class BottleRuntimeSettingsSummary {
       'avxEnabled': avxEnabled,
       'dxrEnabled': dxrEnabled,
       'dxvk': dxvk,
+      'dxmt': dxmt,
       'dxvkAsync': dxvkAsync,
       'dxvkHud': dxvkHud,
       'vkd3dProton': vkd3dProton,

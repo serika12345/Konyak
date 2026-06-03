@@ -109,7 +109,13 @@ ProgramRunEnvironment _macosWineEnvironment({
     ),
     ...bottle.runtimeSettings.macosEnvironment().toMap(),
   };
-  if (bottle.runtimeSettings.dxvk) {
+  if (bottle.runtimeSettings.dxmt) {
+    final runtimeRoot = _macosWineRuntimeRoot(hostEnvironment);
+    wineEnvironment['WINEDLLPATH'] = [
+      _joinPath(runtimeRoot, const ['components', 'dxmt', 'x86_64-windows']),
+      _joinPath(runtimeRoot, const ['components', 'dxmt', 'x86_64-unix']),
+    ].join(':');
+  } else if (bottle.runtimeSettings.dxvk) {
     final runtimeRoot = _macosWineRuntimeRoot(hostEnvironment);
     wineEnvironment['WINEDLLPATH'] = [
       _joinPath(runtimeRoot, const ['DXVK', 'x64']),

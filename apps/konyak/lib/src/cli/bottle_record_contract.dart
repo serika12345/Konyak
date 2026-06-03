@@ -52,6 +52,7 @@ BottleRuntimeSettingsSummary? _parseRuntimeSettings(Object? value) {
   final avxEnabled = _runtimeSettingsBool(value, 'avxEnabled');
   final dxrEnabled = _runtimeSettingsBool(value, 'dxrEnabled');
   final dxvk = _runtimeSettingsBool(value, 'dxvk');
+  final dxmt = _runtimeSettingsBool(value, 'dxmt');
   final dxvkAsync = _runtimeSettingsBool(
     value,
     'dxvkAsync',
@@ -87,6 +88,7 @@ BottleRuntimeSettingsSummary? _parseRuntimeSettings(Object? value) {
       avxEnabled == null ||
       dxrEnabled == null ||
       dxvk == null ||
+      dxmt == null ||
       dxvkAsync == null ||
       dxvkHud == null ||
       vkd3dProton == null ||
@@ -102,7 +104,8 @@ BottleRuntimeSettingsSummary? _parseRuntimeSettings(Object? value) {
     metalTrace: metalTrace,
     avxEnabled: avxEnabled,
     dxrEnabled: dxrEnabled,
-    dxvk: dxvk,
+    dxvk: dxmt ? false : dxvk,
+    dxmt: dxmt,
     dxvkAsync: dxvkAsync,
     dxvkHud: dxvkHud,
     vkd3dProton: vkd3dProton,

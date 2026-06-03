@@ -414,6 +414,57 @@ const _macosDxvkInstalledPaths = <List<String>>[
   <String>['DXVK', 'x32', 'd3d11.dll'],
 ];
 
+const _macosDxmtComponentPaths = <List<String>>[
+  <String>[
+    'Components',
+    'DXMT',
+    'components',
+    'dxmt',
+    'x86_64-windows',
+    'd3d10core.dll',
+  ],
+  <String>[
+    'Components',
+    'DXMT',
+    'components',
+    'dxmt',
+    'x86_64-windows',
+    'd3d11.dll',
+  ],
+  <String>[
+    'Components',
+    'DXMT',
+    'components',
+    'dxmt',
+    'x86_64-windows',
+    'dxgi.dll',
+  ],
+  <String>[
+    'Components',
+    'DXMT',
+    'components',
+    'dxmt',
+    'x86_64-windows',
+    'winemetal.dll',
+  ],
+  <String>[
+    'Components',
+    'DXMT',
+    'components',
+    'dxmt',
+    'x86_64-unix',
+    'winemetal.so',
+  ],
+];
+
+const _macosDxmtInstalledPaths = <List<String>>[
+  <String>['components', 'dxmt', 'x86_64-windows', 'd3d10core.dll'],
+  <String>['components', 'dxmt', 'x86_64-windows', 'd3d11.dll'],
+  <String>['components', 'dxmt', 'x86_64-windows', 'dxgi.dll'],
+  <String>['components', 'dxmt', 'x86_64-windows', 'winemetal.dll'],
+  <String>['components', 'dxmt', 'x86_64-unix', 'winemetal.so'],
+];
+
 String _createComponentRuntimeArchive(String tempPath) {
   final sourceRoot = Directory(_joinTestPath(tempPath, const ['source']));
   final librariesRoot = Directory(
@@ -436,6 +487,11 @@ String _createComponentRuntimeArchive(String tempPath) {
     <String>['Wine', 'lib', 'libMoltenVK.dylib'],
     <String>['Wine', 'lib', 'libgstreamer-1.0.0.dylib'],
     <String>['Wine', 'share', 'wine', 'mono', 'wine-mono.marker'],
+    <String>['Wine', 'components', 'dxmt', 'x86_64-windows', 'd3d10core.dll'],
+    <String>['Wine', 'components', 'dxmt', 'x86_64-windows', 'd3d11.dll'],
+    <String>['Wine', 'components', 'dxmt', 'x86_64-windows', 'dxgi.dll'],
+    <String>['Wine', 'components', 'dxmt', 'x86_64-windows', 'winemetal.dll'],
+    <String>['Wine', 'components', 'dxmt', 'x86_64-unix', 'winemetal.so'],
     <String>['winetricks'],
   ]) {
     final file = File(_joinTestPath(librariesRoot.path, relativePath));
@@ -450,6 +506,7 @@ String _createComponentRuntimeArchive(String tempPath) {
       'components': {
         'wine': 'wine-devel-11.9',
         'dxvk-macos': 'dxvk-macos-fixture',
+        'dxmt': 'dxmt-fixture',
       },
     }),
   );
@@ -496,6 +553,7 @@ String _createKonyakComponentRuntimeArchive(String tempPath) {
       'libwine.1.dylib',
     ],
     ..._macosDxvkComponentPaths,
+    ..._macosDxmtComponentPaths,
     <String>['Components', 'MoltenVK', 'lib', 'libMoltenVK.dylib'],
     <String>['Components', 'GStreamer', 'lib', 'libgstreamer-1.0.0.dylib'],
     <String>['Components', 'wine-mono', 'share', 'wine', 'mono', 'marker'],
@@ -551,6 +609,7 @@ String _createKonyakComponentRuntimeArchive(String tempPath) {
       'components': {
         'wine': 'wine-devel-11.9',
         'dxvk-macos': 'dxvk-macos-fixture',
+        'dxmt': 'dxmt-fixture',
         'moltenvk': 'moltenvk-fixture',
         'gstreamer': 'gstreamer-fixture',
         'wine-mono': 'wine-mono-fixture',
@@ -767,6 +826,7 @@ String _createMacosAppBundleWineArchive(String tempPath) {
 
 void _createInstalledMacosRuntime(String runtimeHome) {
   for (final relativePath in const <List<String>>[
+    <String>['bin', 'wine64'],
     <String>['bin', 'wine'],
     <String>['bin', 'wineserver'],
     <String>['lib', 'libwine.1.dylib'],

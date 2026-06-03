@@ -191,7 +191,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
             'id': 'macos-konyak-runtime-stack',
             'name': 'Konyak macOS runtime stack',
             'compatibilityTarget': 'macos-konyak-runtime-stack',
-            'isComplete': true,
+            'isComplete': false,
             'components': [
               {
                 'id': 'wine',
@@ -301,7 +301,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
                 'id': 'dxmt',
                 'name': 'DXMT',
                 'role': 'd3d10-d3d11-metal-translation',
-                'isRequired': false,
+                'isRequired': true,
                 'isInstalled': false,
                 'paths': [
                   '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/components/dxmt/x86_64-windows/d3d10core.dll',

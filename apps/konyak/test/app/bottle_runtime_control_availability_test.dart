@@ -9,7 +9,12 @@ void main() {
       platform: KonyakPlatform.macos,
       runtime: _runtime(
         isComplete: true,
-        components: const <String>['dxvk-macos', 'moltenvk', 'gptk-d3dmetal'],
+        components: const <String>[
+          'dxvk-macos',
+          'dxmt',
+          'moltenvk',
+          'gptk-d3dmetal',
+        ],
       ),
       canChangeSettings: true,
       hasPendingRuntimeSettings: true,
@@ -17,6 +22,7 @@ void main() {
 
     expect(availability.canUseWineRuntime, isFalse);
     expect(availability.canUseDxvk, isFalse);
+    expect(availability.canUseDxmt, isFalse);
     expect(availability.canUseVkd3dProton, isFalse);
     expect(availability.canUseMetal, isFalse);
     expect(availability.canUseDxr, isFalse);
@@ -27,7 +33,12 @@ void main() {
       platform: KonyakPlatform.macos,
       runtime: _runtime(
         isComplete: true,
-        components: const <String>['dxvk-macos', 'moltenvk', 'gptk-d3dmetal'],
+        components: const <String>[
+          'dxvk-macos',
+          'dxmt',
+          'moltenvk',
+          'gptk-d3dmetal',
+        ],
       ),
       canChangeSettings: true,
       hasPendingRuntimeSettings: false,
@@ -35,6 +46,7 @@ void main() {
 
     expect(availability.canUseWineRuntime, isTrue);
     expect(availability.canUseDxvk, isTrue);
+    expect(availability.canUseDxmt, isTrue);
     expect(availability.canUseMetal, isTrue);
     expect(availability.canUseDxr, isTrue);
     expect(availability.canUseVkd3dProton, isFalse);
@@ -53,6 +65,7 @@ void main() {
 
     expect(availability.canUseWineRuntime, isTrue);
     expect(availability.canUseDxvk, isTrue);
+    expect(availability.canUseDxmt, isFalse);
     expect(availability.canUseVkd3dProton, isTrue);
     expect(availability.canUseMetal, isFalse);
     expect(availability.canUseDxr, isFalse);

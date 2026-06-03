@@ -4,6 +4,7 @@ const runtimeSettingsControlEnhancedSync = 'enhancedSync';
 const runtimeSettingsControlDpiScaling = 'dpiScaling';
 const runtimeSettingsControlAvxEnabled = 'avxEnabled';
 const runtimeSettingsControlDxvk = 'dxvk';
+const runtimeSettingsControlDxmt = 'dxmt';
 const runtimeSettingsControlDxvkAsync = 'dxvkAsync';
 const runtimeSettingsControlDxvkHud = 'dxvkHud';
 const runtimeSettingsControlVkd3dProton = 'vkd3dProton';
