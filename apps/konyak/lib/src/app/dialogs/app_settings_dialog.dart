@@ -113,11 +113,11 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Replace Wine Runtime?'),
+        title: const Text('Import D3DMetal Backend?'),
         content: const Text(
-          'Importing GPTK-compatible Wine replaces the current macOS Wine '
-          'runtime. Existing bottles are kept, but running Wine processes '
-          'should be stopped before continuing.',
+          'Importing a GPTK app adds Apple D3DMetal files to the current macOS '
+          'Wine runtime without replacing the Wine executable. Running Wine '
+          'processes should be stopped before continuing.',
         ),
         actions: [
           TextButton(
@@ -127,7 +127,7 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
           FilledButton(
             key: const ValueKey('app-settings-confirm-gptk-wine-button'),
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Replace Wine'),
+            child: const Text('Import D3DMetal'),
           ),
         ],
       ),

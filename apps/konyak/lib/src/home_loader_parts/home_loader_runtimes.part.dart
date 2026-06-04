@@ -195,7 +195,9 @@ extension _KonyakHomeLoaderRuntimes on _KonyakHomeLoaderState {
     return confirmed ?? false;
   }
 
-  Future<RuntimeInstallLoadResult> _installSettingsRuntime() async {
+  Future<RuntimeInstallLoadResult> _installSettingsRuntime({
+    bool reinstallMacos = false,
+  }) async {
     final managedRuntime = managedRuntimePlatform(widget.platform);
     if (managedRuntime == null) {
       return const RuntimeInstallLoadFailure(
@@ -215,6 +217,7 @@ extension _KonyakHomeLoaderRuntimes on _KonyakHomeLoaderState {
     try {
       result = widget.platform.isMacOS
           ? await widget.cliClient.installMacosWine(
+              reinstall: reinstallMacos,
               onProgress: _setRuntimeProgress,
             )
           : await widget.cliClient.installLinuxWine(
@@ -246,18 +249,36 @@ extension _KonyakHomeLoaderRuntimes on _KonyakHomeLoaderState {
     return result;
   }
 
+  Future<void> _reinstallMacosRuntimeFromMenu() async {
+    if (!widget.platform.isMacOS) {
+      return;
+    }
+
+    final result = await _installSettingsRuntime(reinstallMacos: true);
+    if (!mounted) {
+      return;
+    }
+
+    switch (result) {
+      case InstalledRuntime(:final runtime):
+        _showSnackBar('Reinstalled ${runtime.name}');
+      case RuntimeInstallLoadFailure(:final message):
+        _showSnackBar('Runtime reinstall failed: $message');
+    }
+  }
+
   Future<RuntimeInstallLoadResult> _installGptkWine() async {
     final sourcePath = await widget.gptkWineSourcePicker.pickSourcePath();
     if (sourcePath == null || sourcePath.trim().isEmpty) {
       return const RuntimeInstallLoadFailure(
         exitCode: 64,
-        message: 'GPTK-compatible Wine source was not selected.',
+        message: 'GPTK/D3DMetal source was not selected.',
         diagnostic: '',
       );
     }
 
     _updateState(() {
-      _runtimeInstallProgressMessage = 'Installing GPTK-compatible Wine...';
+      _runtimeInstallProgressMessage = 'Importing GPTK/D3DMetal...';
       _runtimeInstallProgressFraction = 0;
     });
 
@@ -310,7 +331,7 @@ extension _KonyakHomeLoaderRuntimes on _KonyakHomeLoaderState {
   }
 
   Future<void> _openGptkPage() async {
-    const url = 'https://github.com/Gcenx/game-porting-toolkit/releases';
+    const url = 'https://developer.apple.com/games/game-porting-toolkit/';
     final result = await widget.cliClient.openUrl(url);
     if (!mounted || result.exitCode == 0) {
       return;

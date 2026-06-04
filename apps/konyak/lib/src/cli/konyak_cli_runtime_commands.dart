@@ -2,10 +2,12 @@ part of 'konyak_cli_client.dart';
 
 extension KonyakCliRuntimeCommands on KonyakCliClient {
   Future<RuntimeInstallLoadResult> installMacosWine({
+    bool reinstall = false,
     void Function(RuntimeInstallProgress progress)? onProgress,
   }) {
     return _runtimeInstallResultFromCommand(
       command: 'install-macos-wine',
+      arguments: reinstall ? const <String>['--reinstall'] : const <String>[],
       onProgress: onProgress,
     );
   }

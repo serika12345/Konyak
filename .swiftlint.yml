@@ -10,6 +10,7 @@ excluded:
   - apps/konyak/macos/Flutter
   - apps/konyak/macos/Runner/AppDelegate.swift
   - apps/konyak/macos/RunnerTests
+  - packages/konyak_cli/.dart_tool
 
 file_header:
     severity: error

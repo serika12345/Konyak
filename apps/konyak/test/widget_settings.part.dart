@@ -492,7 +492,7 @@ void defineSettingsWidgetTests() {
     expect(find.text('Complete'), findsOneWidget);
   });
 
-  testWidgets('macOS settings dialog installs GPTK-compatible Wine', (
+  testWidgets('macOS settings dialog imports GPTK/D3DMetal', (
     WidgetTester tester,
   ) async {
     final runner = _QueuedProcessRunner([
@@ -525,7 +525,7 @@ void defineSettingsWidgetTests() {
       const ProcessRunResult(
         exitCode: 0,
         stdout:
-            '{"schemaVersion":1,"openedUrl":{"url":"https://github.com/Gcenx/game-porting-toolkit/releases"}}',
+            '{"schemaVersion":1,"openedUrl":{"url":"https://developer.apple.com/games/game-porting-toolkit/"}}',
         stderr: '',
       ),
       const ProcessRunResult(
@@ -545,7 +545,7 @@ void defineSettingsWidgetTests() {
         platform: KonyakPlatform.macos,
         cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
         gptkWineSourcePicker: const _FakeGptkWineSourcePicker(
-          path: '/Applications/Game Porting Toolkit.app',
+          path: '/Users/user/Downloads/Game_Porting_Toolkit_3.0.dmg',
         ),
       ),
     );
@@ -554,9 +554,9 @@ void defineSettingsWidgetTests() {
     await tester.tap(find.byTooltip('Settings'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Open GPTK releases'), findsOneWidget);
-    expect(find.text('Select GPTK app'), findsOneWidget);
-    expect(find.text('Replace D3DMetal'), findsNothing);
+    expect(find.text('Open GPTK Source'), findsOneWidget);
+    expect(find.text('Select GPTK DMG'), findsOneWidget);
+    expect(find.text('Import D3DMetal'), findsNothing);
     expect(
       find.textContaining('Konyak does not bundle or redistribute it'),
       findsOneWidget,
@@ -578,9 +578,9 @@ void defineSettingsWidgetTests() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Replace Wine Runtime?'), findsOneWidget);
+    expect(find.text('Import D3DMetal Backend?'), findsOneWidget);
     expect(
-      find.textContaining('replaces the current macOS Wine runtime'),
+      find.textContaining('without replacing the Wine executable'),
       findsOneWidget,
     );
 
@@ -595,13 +595,13 @@ void defineSettingsWidgetTests() {
       ['list-runtimes', '--json'],
       [
         'open-url',
-        'https://github.com/Gcenx/game-porting-toolkit/releases',
+        'https://developer.apple.com/games/game-porting-toolkit/',
         '--json',
       ],
       [
         'install-gptk-wine',
         '--from',
-        '/Applications/Game Porting Toolkit.app',
+        '/Users/user/Downloads/Game_Porting_Toolkit_3.0.dmg',
         '--json',
       ],
       ['list-runtimes', '--json'],

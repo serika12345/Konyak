@@ -35,6 +35,10 @@ class AppDelegate: FlutterAppDelegate {
     menuChannel?.invokeMethod("openSettings", arguments: nil)
   }
 
+  @IBAction func reinstallMacosRuntime(_ _: Any?) {
+    menuChannel?.invokeMethod("reinstallMacosRuntime", arguments: nil)
+  }
+
   @IBAction func importBottleArchive(_ _: Any?) {
     menuChannel?.invokeMethod("importBottleArchive", arguments: nil)
   }

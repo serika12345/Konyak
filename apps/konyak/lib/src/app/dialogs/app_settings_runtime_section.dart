@@ -124,9 +124,9 @@ class AppSettingsRuntimeSection extends StatelessWidget {
         children: [
           const Text(
             'D3DMetal is included in Apple Game Porting Toolkit. Konyak does '
-            'not bundle or redistribute it. Download a GPTK-compatible Wine '
-            'app from the releases page, select the app bundle, and review '
-            'Apple License.pdf for commercial use or redistribution.',
+            'not bundle or redistribute it. Download the GPTK DMG from Apple '
+            'Developer, select the DMG, and review Apple License.pdf for '
+            'commercial use or redistribution.',
           ),
           const SizedBox(height: 12),
           Wrap(
@@ -137,7 +137,7 @@ class AppSettingsRuntimeSection extends StatelessWidget {
                 key: const ValueKey('app-settings-open-gptk-page-button'),
                 onPressed: onOpenGptkPage,
                 icon: const Icon(Icons.open_in_browser),
-                label: const Text('Open GPTK releases'),
+                label: const Text('Open GPTK Source'),
               ),
               FilledButton.icon(
                 key: const ValueKey('app-settings-install-gptk-wine-button'),
@@ -149,7 +149,7 @@ class AppSettingsRuntimeSection extends StatelessWidget {
                       )
                     : const Icon(Icons.folder_copy),
                 label: Text(
-                  isInstallingGptkWine ? 'Adding GPTK Wine' : 'Select GPTK app',
+                  isInstallingGptkWine ? 'Adding GPTK Wine' : 'Select GPTK DMG',
                 ),
               ),
             ],

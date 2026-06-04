@@ -38,6 +38,12 @@
                                     <action selector="openSettings:" target="Voe-Tx-rLC" id="Lhe-cA-vPD"/>
                                 </connections>
                             </menuItem>
+                            <menuItem title="Reinstall macOS Runtime" id="rnt-rI-mac">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="reinstallMacosRuntime:" target="Voe-Tx-rLC" id="rnt-rI-act"/>
+                                </connections>
+                            </menuItem>
                             <menuItem isSeparatorItem="YES" id="wFC-TO-SCJ"/>
                             <menuItem title="Hide APP_NAME" keyEquivalent="h" id="Olw-nP-bQN">
                                 <connections>

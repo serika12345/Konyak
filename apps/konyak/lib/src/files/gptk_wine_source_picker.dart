@@ -9,18 +9,15 @@ final class FileSelectorGptkWineSourcePicker implements GptkWineSourcePicker {
 
   @override
   Future<String?> pickSourcePath() async {
-    final app = await openFile(
+    final dmg = await openFile(
       acceptedTypeGroups: const [
         XTypeGroup(
-          label: 'Applications',
-          uniformTypeIdentifiers: ['com.apple.application-bundle'],
+          label: 'Game Porting Toolkit DMG',
+          extensions: ['dmg'],
+          uniformTypeIdentifiers: ['com.apple.disk-image'],
         ),
       ],
     );
-    if (app != null) {
-      return app.path;
-    }
-
-    return getDirectoryPath();
+    return dmg?.path;
   }
 }

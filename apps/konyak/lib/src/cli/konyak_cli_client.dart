@@ -56,10 +56,12 @@ final class KonyakCliClient {
 
   Future<RuntimeInstallLoadResult> _runtimeInstallResultFromCommand({
     required String command,
+    List<String> arguments = const <String>[],
     required void Function(RuntimeInstallProgress progress)? onProgress,
   }) async {
     final result = await _runRuntimeInstall(
       command: command,
+      arguments: arguments,
       onProgress: onProgress,
     );
     final parsed = _parseRuntimeInstallCommandPayload(result.stdout);
@@ -143,15 +145,22 @@ final class KonyakCliClient {
 
   Future<ProcessRunResult> _runRuntimeInstall({
     required String command,
+    List<String> arguments = const <String>[],
     required void Function(RuntimeInstallProgress progress)? onProgress,
   }) {
     if (onProgress == null) {
-      return _run(<String>[command, '--json']);
+      return _run(<String>[command, ...arguments, '--json']);
     }
 
     return processRunner.run(
       executable,
-      <String>[...baseArguments, command, '--progress-json', '--json'],
+      <String>[
+        ...baseArguments,
+        command,
+        ...arguments,
+        '--progress-json',
+        '--json',
+      ],
       workingDirectory: workingDirectory,
       environment: <String, String>{...environment, ..._launcherEnvironment()},
       onStdoutLine: (line) {

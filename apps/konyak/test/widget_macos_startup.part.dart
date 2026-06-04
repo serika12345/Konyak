@@ -103,6 +103,61 @@ void defineMacosStartupAndRuntimeWidgetTests() {
     expect(find.text('Imported Steam'), findsOneWidget);
   });
 
+  testWidgets('macOS app menu command reinstalls the managed runtime', (
+    WidgetTester tester,
+  ) async {
+    final runner = _QueuedProcessRunner([
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '{"schemaVersion":1,"bottles":[]}',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "runtime": {
+              "id": "konyak-macos-wine",
+              "name": "Konyak macOS Wine",
+              "platform": "macos",
+              "architecture": "x86_64",
+              "runnerKind": "macosWine",
+              "isBundled": false,
+              "isUpdateable": true,
+              "isInstalled": true
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+    ]);
+
+    await tester.pumpWidget(
+      _testKonyakApp(
+        cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final result = Completer<ByteData?>();
+    await tester.binding.defaultBinaryMessenger.handlePlatformMessage(
+      'konyak/menu',
+      const StandardMethodCodec().encodeMethodCall(
+        const MethodCall('reinstallMacosRuntime'),
+      ),
+      result.complete,
+    );
+    await result.future;
+    await tester.pumpAndSettle();
+
+    expect(find.text('Reinstalled Konyak macOS Wine'), findsOneWidget);
+    expect(runner.argumentsLog, const [
+      ['list-bottles', '--json'],
+      ['install-macos-wine', '--reinstall', '--progress-json', '--json'],
+    ]);
+  });
+
   testWidgets('macOS open executable event asks for a bottle before running', (
     WidgetTester tester,
   ) async {

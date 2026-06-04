@@ -300,6 +300,68 @@ void main() {
     });
   });
 
+  test(
+    'passes configured development macOS runtime release manifest',
+    () async {
+      final runner = _FakeProcessRunner(
+        result: const ProcessRunResult(
+          exitCode: 0,
+          stdout: '{"schemaVersion":1,"runtimes":[]}',
+          stderr: '',
+        ),
+      );
+      const manifest =
+          'https://github.com/serika12345/konyak-macos-runtime/releases/'
+          'download/crossover-26.1.0-konyak.0/'
+          'konyak-macos-wine-runtime-stack-source.json';
+
+      final client = createDefaultKonyakCliClient(
+        environment: const {
+          'FLUTTER_ROOT': '/repo/.dart_tool/konyak/flutter-sdk',
+          'KONYAK_DEV_MACOS_WINE_STACK_MANIFEST': manifest,
+        },
+        repoRootDefine: '/repo',
+        runtimeProfileDefine: 'development',
+        processRunner: runner,
+      );
+
+      final result = await client.listKnownRuntimes();
+
+      expect(result, isA<LoadedRuntimeList>());
+      expect(
+        runner.environment['KONYAK_DEV_MACOS_WINE_STACK_MANIFEST'],
+        manifest,
+      );
+    },
+  );
+
+  test('does not invent a development macOS runtime manifest path', () async {
+    final runner = _FakeProcessRunner(
+      result: const ProcessRunResult(
+        exitCode: 0,
+        stdout: '{"schemaVersion":1,"runtimes":[]}',
+        stderr: '',
+      ),
+    );
+
+    final client = createDefaultKonyakCliClient(
+      environment: const {
+        'FLUTTER_ROOT': '/repo/.dart_tool/konyak/flutter-sdk',
+      },
+      repoRootDefine: '/repo',
+      runtimeProfileDefine: 'development',
+      processRunner: runner,
+    );
+
+    final result = await client.listKnownRuntimes();
+
+    expect(result, isA<LoadedRuntimeList>());
+    expect(
+      runner.environment,
+      isNot(contains('KONYAK_DEV_MACOS_WINE_STACK_MANIFEST')),
+    );
+  });
+
   test('default CLI client prefers dart defines over process environment', () {
     final runner = _FakeProcessRunner(
       result: const ProcessRunResult(
@@ -724,6 +786,46 @@ void main() {
       final installed = result as InstalledRuntime;
       expect(installed.runtime.id, 'konyak-macos-wine');
       expect(installed.runtime.isInstalled, isTrue);
+    },
+  );
+
+  test(
+    'reinstalls Konyak macOS Wine by passing reinstall to the CLI',
+    () async {
+      final runner = _FakeProcessRunner(
+        result: const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+          {
+            "schemaVersion": 1,
+            "runtime": {
+              "id": "konyak-macos-wine",
+              "name": "Konyak macOS Wine",
+              "platform": "macos",
+              "architecture": "x86_64",
+              "runnerKind": "macosWine",
+              "isBundled": false,
+              "isUpdateable": true,
+              "isInstalled": true
+            }
+          }
+        ''',
+          stderr: '',
+        ),
+      );
+      final client = KonyakCliClient(
+        executable: 'konyak',
+        processRunner: runner,
+      );
+
+      final result = await client.installMacosWine(reinstall: true);
+
+      expect(runner.arguments, const [
+        'install-macos-wine',
+        '--reinstall',
+        '--json',
+      ]);
+      expect(result, isA<InstalledRuntime>());
     },
   );
 
