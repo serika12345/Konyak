@@ -10,13 +10,16 @@ const konyakAppVersionUrl =
 const runtimeStackManifestFileName = '.konyak-runtime-stack.json';
 const linuxWineRuntimeId = 'konyak-linux-wine';
 const macosWineRuntimeId = 'konyak-macos-wine';
-const macosWineArchiveUrl =
-    'https://github.com/Gcenx/macOS_Wine_builds/releases/download/11.9/wine-devel-11.9-osx64.tar.xz';
 const macosWineArchiveFileName = 'macos-wine.tar.xz';
+const macosWineRuntimeRepository = 'serika12345/konyak-macos-runtime';
+const macosWineRuntimeDefaultReleaseTag = 'crossover-26.1.0-konyak.0';
+const macosWineRuntimeSourceManifestFileName =
+    'konyak-macos-wine-runtime-stack-source.json';
 const macosWineRuntimeReleaseUrl =
-    'https://api.github.com/repos/serika12345/konyak-macos-runtime/releases/latest';
+    'https://api.github.com/repos/$macosWineRuntimeRepository/releases/latest';
 const macosWineRuntimeSourceManifestUrl =
-    'https://github.com/serika12345/konyak-macos-runtime/releases/latest/download/konyak-macos-wine-runtime-stack-source.json';
+    'https://github.com/$macosWineRuntimeRepository/releases/download/'
+    '$macosWineRuntimeDefaultReleaseTag/$macosWineRuntimeSourceManifestFileName';
 const macosWineVersionUrl = macosWineRuntimeReleaseUrl;
 const winetricksScriptUrl =
     'https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks';

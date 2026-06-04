@@ -15,10 +15,16 @@ repository-relative paths supplied by the VSCode launch configuration.
 
 macOS development launches also use `KONYAK_RUNTIME_PROFILE=development`,
 `KONYAK_MACOS_WINE_HOME`, and `KONYAK_DEV_MACOS_WINE_STACK_MANIFEST`.
-`scripts/prepare_macos_dev_runtime_stack.zsh` prepares the development source
-manifest and local component archives consumed by `install-macos-wine --json`.
-The development winetricks component is a checksum-verified upstream winetricks
-script plus its real `list-all` verb catalog, not a stub. Override
+`scripts/prepare_macos_dev_runtime_stack.zsh` resolves the selected Konyak
+macOS runtime release from `runtime/macos-wine-release.json` and caches the
+release source manifest consumed by `install-macos-wine --json`. Set
+`KONYAK_DEV_MACOS_RUNTIME_RELEASE_TAG` to switch the development build to a
+different published runtime release, or set
+`KONYAK_DEV_MACOS_WINE_STACK_MANIFEST` to a complete manifest URL. Local
+component archive generation is available only through
+`KONYAK_DEV_MACOS_RUNTIME_SOURCE_MODE=local`. In that mode, the development
+winetricks component is a checksum-verified upstream winetricks script plus its
+real `list-all` verb catalog, not a stub. Override
 `KONYAK_DEV_WINETRICKS_PATH` to use a local executable or package root, or
 override `KONYAK_DEV_WINETRICKS_SCRIPT_URL` and
 `KONYAK_DEV_WINETRICKS_SCRIPT_SHA256` to change the pinned upstream source.
@@ -123,30 +129,27 @@ updates route through the same stack installer when release metadata points at a
 manifest artifact. macOS GPTK/D3DMetal support uses the same mechanism as the
 other macOS runtime components: a source manifest may include a
 `gptk-d3dmetal` archive, and the installer normalizes it into
-`lib/external/D3DMetal.framework` and `lib/external/libd3dshared.dylib`.
+`lib/external`, `lib/wine/x86_64-windows`, and `lib/wine/x86_64-unix`.
 
-Official Apple GPTK DMGs do not include the Wine runtime that D3DMetal expects.
-Konyak points users at the Gcenx Game Porting Toolkit release page
-(`https://github.com/Gcenx/game-porting-toolkit/releases`) for a prebuilt
-GPTK-compatible Wine package. The primary import target is
-`Game Porting Toolkit.app`; Homebrew installs the same app bundle and also
-exposes `Contents/Resources/wine/bin/wine64` and `wineserver` as binaries.
-Users import the app bundle with `install-gptk-wine --from <path> --json`.
-Konyak validates `bin/wine64`, `bin/wineserver`, the runtime library directory,
-and the bundled D3DMetal files, then installs the result as the `wine` and
-`gptk-d3dmetal` components. This replaces the previous macOS Wine runtime;
+Konyak keeps the CrossOver-derived macOS Wine runtime as the default Wine
+component. Users may import Apple GPTK DMGs, app bundles, or extracted redist
+trees with
+`install-gptk-wine --from <path> --json` to add Apple-provided D3DMetal files
+without replacing the default Wine executable. Konyak validates the bundled
+D3DMetal files and installs them as the optional `gptk-d3dmetal` component;
 bottle prefixes are kept outside the runtime root.
 
 The development stack script follows that model without assuming Konyak can
 redistribute GPTK/D3DMetal in every environment. Set
 `KONYAK_DEV_GPTK_D3DMETAL_PATH` to a local directory that contains
-`D3DMetal.framework`, `libd3dshared.dylib`, `d3d12.dll`, and `dxgi.dll` to add a
-`gptk-d3dmetal` component to the generated development source manifest. The
-script accepts the external files at the directory root, under
-`redist/lib/external`, under `lib/external`, under `Wine/lib/external`, or under
-`Libraries/Wine/lib/external`, and resolves the matching
-`wine/x86_64-windows` DLL directory from the same GPTK tree. If that variable is
-unset, the script omits GPTK/D3DMetal from the generated stack.
+`D3DMetal.framework`, `libd3dshared.dylib`, the GPTK PE DLLs, and the matching
+Unix libraries to add a `gptk-d3dmetal` component to the generated development
+source manifest. The script accepts the external files at the directory root,
+under `redist/lib/external`, under `lib/external`, under `Wine/lib/external`,
+or under `Libraries/Wine/lib/external`, and resolves the matching
+`wine/x86_64-windows` DLL directory and `wine/x86_64-unix` Unix library directory
+from the same GPTK tree. If that variable is unset, the script omits
+GPTK/D3DMetal from the generated stack.
 
 Linux runtime construction now follows the same pattern through
 `install-linux-wine`. A managed Linux stack may layer `vkd3d-proton` component

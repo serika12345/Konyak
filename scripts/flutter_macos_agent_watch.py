@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import errno
+import json
 import os
 import pty
 import selectors
@@ -18,14 +19,7 @@ FLUTTER_PROJECT = ROOT / "apps" / "konyak"
 SDK_PREPARE_SCRIPT = ROOT / "scripts" / "prepare_flutter_macos_sdk.zsh"
 RUNTIME_STACK_PREPARE_SCRIPT = ROOT / "scripts" / "prepare_macos_dev_runtime_stack.zsh"
 DEV_RUNTIME_ROOT = ROOT / ".dart_tool" / "konyak" / "dev-runtime" / "macos-wine"
-DEV_RUNTIME_STACK_MANIFEST = (
-    ROOT
-    / ".dart_tool"
-    / "konyak"
-    / "dev-runtime-source"
-    / "macos-wine-stack"
-    / "konyak-macos-wine-runtime-stack-source.json"
-)
+RUNTIME_RELEASE_REFERENCE = ROOT / "runtime" / "macos-wine-release.json"
 POLL_SECONDS = 0.5
 DEBOUNCE_SECONDS = 0.35
 READY_MARKERS = (
@@ -36,6 +30,46 @@ WATCH_PATHS = (
     FLUTTER_PROJECT / "lib",
     FLUTTER_PROJECT / "pubspec.yaml",
 )
+
+
+def macos_runtime_release_reference() -> dict[str, object]:
+    with RUNTIME_RELEASE_REFERENCE.open(encoding="utf-8") as handle:
+        data = json.load(handle)
+    if not isinstance(data, dict):
+        raise RuntimeError("macOS runtime release reference must be a JSON object")
+    return data
+
+
+def macos_runtime_source_manifest_url() -> str:
+    reference = macos_runtime_release_reference()
+    repository = os.environ.get(
+        "KONYAK_DEV_MACOS_RUNTIME_RELEASE_REPO",
+        str(reference["repository"]),
+    )
+    release_tag = os.environ.get(
+        "KONYAK_DEV_MACOS_RUNTIME_RELEASE_TAG",
+        str(reference["defaultReleaseTag"]),
+    )
+    manifest_name = str(reference["sourceManifestFileName"])
+    if release_tag == "latest":
+        return (
+            f"https://github.com/{repository}/releases/latest/download/"
+            f"{manifest_name}"
+        )
+    return (
+        f"https://github.com/{repository}/releases/download/{release_tag}/"
+        f"{manifest_name}"
+    )
+
+
+DEV_RUNTIME_STACK_MANIFEST = os.environ.get(
+    "KONYAK_DEV_MACOS_WINE_STACK_MANIFEST",
+    macos_runtime_source_manifest_url(),
+)
+
+
+def is_remote_manifest(value: str) -> bool:
+    return value.startswith("https://") or value.startswith("http://")
 
 
 def prepare_sdk() -> Path:
@@ -53,6 +87,9 @@ def prepare_sdk() -> Path:
 
 
 def prepare_runtime_stack() -> None:
+    if is_remote_manifest(DEV_RUNTIME_STACK_MANIFEST):
+        return
+
     subprocess.run(
         [str(RUNTIME_STACK_PREPARE_SCRIPT), "--print-manifest-path"],
         cwd=ROOT,
@@ -109,7 +146,7 @@ def flutter_environment(sdk: Path) -> dict[str, str]:
             ),
             "KONYAK_RUNTIME_PROFILE": "development",
             "KONYAK_MACOS_WINE_HOME": str(DEV_RUNTIME_ROOT),
-            "KONYAK_DEV_MACOS_WINE_STACK_MANIFEST": str(DEV_RUNTIME_STACK_MANIFEST),
+            "KONYAK_DEV_MACOS_WINE_STACK_MANIFEST": DEV_RUNTIME_STACK_MANIFEST,
             "DEVELOPER_DIR": "/Applications/Xcode.app/Contents/Developer",
             "PATH": f"/usr/bin:/bin:/usr/sbin:/sbin:{sdk_bin}:{env.get('PATH', '')}",
         },

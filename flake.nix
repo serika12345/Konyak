@@ -247,7 +247,20 @@
               ${lib.optionalString pkgs.stdenv.isDarwin ''
                 export KONYAK_RUNTIME_PROFILE="development"
                 export KONYAK_MACOS_WINE_HOME="$PWD/.dart_tool/konyak/dev-runtime/macos-wine"
-                export KONYAK_DEV_MACOS_WINE_STACK_MANIFEST="$PWD/.dart_tool/konyak/dev-runtime-source/macos-wine-stack/konyak-macos-wine-runtime-stack-source.json"
+                macos_runtime_reference="$PWD/runtime/macos-wine-release.json"
+                macos_runtime_reference_value() {
+                  python3 -c 'import json,sys; print(json.load(open(sys.argv[1], encoding="utf-8"))[sys.argv[2]])' "$macos_runtime_reference" "$1"
+                }
+                export KONYAK_DEV_MACOS_RUNTIME_RELEASE_REPO="''${KONYAK_DEV_MACOS_RUNTIME_RELEASE_REPO:-$(macos_runtime_reference_value repository)}"
+                export KONYAK_DEV_MACOS_RUNTIME_RELEASE_TAG="''${KONYAK_DEV_MACOS_RUNTIME_RELEASE_TAG:-$(macos_runtime_reference_value defaultReleaseTag)}"
+                macos_runtime_source_manifest_file_name="$(macos_runtime_reference_value sourceManifestFileName)"
+                if [ -z "''${KONYAK_DEV_MACOS_WINE_STACK_MANIFEST:-}" ]; then
+                  if [ "''${KONYAK_DEV_MACOS_RUNTIME_RELEASE_TAG}" = "latest" ]; then
+                    export KONYAK_DEV_MACOS_WINE_STACK_MANIFEST="https://github.com/''${KONYAK_DEV_MACOS_RUNTIME_RELEASE_REPO}/releases/latest/download/$macos_runtime_source_manifest_file_name"
+                  else
+                    export KONYAK_DEV_MACOS_WINE_STACK_MANIFEST="https://github.com/''${KONYAK_DEV_MACOS_RUNTIME_RELEASE_REPO}/releases/download/''${KONYAK_DEV_MACOS_RUNTIME_RELEASE_TAG}/$macos_runtime_source_manifest_file_name"
+                  fi
+                fi
                 export KONYAK_DEV_NIX_GSTREAMER_PATH="${pkgs.gst_all_1.gstreamer.out}"
                 export KONYAK_MACOS_DEV_RUNTIME_PREPARE_SCRIPT="$PWD/scripts/prepare_macos_dev_runtime_stack.zsh"
               ''}

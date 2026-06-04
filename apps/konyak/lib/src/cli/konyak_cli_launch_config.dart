@@ -232,15 +232,6 @@ Map<String, String> _runtimeEnvironmentOverrides(
   final macosStackManifest = _firstNonEmpty(
     defines.macosWineStackManifest,
     environment['KONYAK_DEV_MACOS_WINE_STACK_MANIFEST'],
-    isDevelopment && repoRoot != null
-        ? _joinPath(repoRoot, const [
-            '.dart_tool',
-            'konyak',
-            'dev-runtime-source',
-            'macos-wine-stack',
-            'konyak-macos-wine-runtime-stack-source.json',
-          ])
-        : null,
   );
   final linuxStackManifest = _firstNonEmpty(
     defines.linuxWineStackManifest,

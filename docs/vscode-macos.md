@@ -49,12 +49,16 @@ manifests.
 The macOS VSCode launch profile uses the same development runtime profile. It
 sets `KONYAK_RUNTIME_PROFILE=development`, points `KONYAK_MACOS_WINE_HOME` at
 `.dart_tool/konyak/dev-runtime/macos-wine`, and points
-`KONYAK_DEV_MACOS_WINE_STACK_MANIFEST` at the generated development source
+`KONYAK_DEV_MACOS_WINE_STACK_MANIFEST` at the cached development source
 manifest under `.dart_tool/konyak/dev-runtime-source/macos-wine-stack`.
-`scripts/prepare_macos_dev_runtime_stack.zsh` prepares that manifest and the
-local component archives used by the Settings install/repair button. The macOS
-development winetricks archive is built from a checksum-verified upstream
-winetricks script and a real `winetricks list-all` catalog.
+`scripts/prepare_macos_dev_runtime_stack.zsh` resolves the selected Konyak
+macOS runtime release from `runtime/macos-wine-release.json` and refreshes that
+cache before launch. To switch the development build to another published
+runtime release, set `KONYAK_DEV_MACOS_RUNTIME_RELEASE_TAG` before launching
+VSCode or the Nix terminal task; use `latest` for the latest release. A complete
+manifest URL can be forced with `KONYAK_DEV_MACOS_WINE_STACK_MANIFEST`.
+Set `KONYAK_DEV_MACOS_RUNTIME_SOURCE_MODE=local` only when intentionally
+building a local component manifest from explicit archive URL/SHA256 overrides.
 These runtime values are passed both as process environment and as
 `--dart-define` values so the Flutter app can forward them explicitly to the
 CLI child process.

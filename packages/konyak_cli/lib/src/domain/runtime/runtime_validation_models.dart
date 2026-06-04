@@ -32,7 +32,6 @@ class _RuntimePlatformSpec {
     required this.developmentSourceSignatureEnvironmentKey,
     required this.releaseSourceSignatureEnvironmentKey,
     required this.componentDefinitions,
-    this.defaultArchiveUrl = const Option.none(),
     this.defaultSourceManifestUrl = const Option.none(),
     this.archiveUrlEnvironmentKey = const Option.none(),
     this.layoutNormalization = _RuntimeLayoutNormalization.none,
@@ -52,7 +51,6 @@ class _RuntimePlatformSpec {
   final String developmentSourceSignatureEnvironmentKey;
   final String releaseSourceSignatureEnvironmentKey;
   final List<_RuntimeStackComponentDefinition> componentDefinitions;
-  final Option<String> defaultArchiveUrl;
   final Option<String> defaultSourceManifestUrl;
   final Option<String> archiveUrlEnvironmentKey;
   final _RuntimeLayoutNormalization layoutNormalization;

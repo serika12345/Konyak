@@ -44,15 +44,28 @@ task changes scope.
 
 ## Next Tasks
 
+- [x] Align macOS backend selection with the CrossOver-derived runtime stack.
+  - [x] Treat Konyak macOS Wine as the default CrossOver-derived runtime, not
+    as a GPTK Wine replacement target.
+  - [x] Keep D3DMetal/GPTK, DXMT, and DXVK as mutually exclusive backend
+    component directories selected at run time.
+  - [x] Use CrossOver-style backend search paths:
+    `lib/wine`, `lib/dxmt`, and `lib/dxvk` when those components
+    are selected.
+  - [x] Preserve GPTK imports as user-provided D3DMetal backend files only; do
+    not replace the default macOS Wine executable with imported GPTK Wine.
+  - [x] Validate the run plan with CLI contract tests before changing the
+    planner.
 - [x] Complete the macOS Wine startup path.
   - [x] Preserve macOS bottle environment behavior: `WINEPREFIX`, `WINEDEBUG`,
     `GST_DEBUG`, and bottle settings environment variables.
   - [x] Preserve Konyak log output for failed and completed launches.
 - [x] Add Konyak-managed macOS Wine acquisition.
-  - [x] Use an upstream Wine archive source:
-    `https://github.com/Gcenx/macOS_Wine_builds/releases/download/11.9/wine-devel-11.9-osx64.tar.xz`.
-  - [x] Use upstream release metadata:
-    `https://api.github.com/repos/Gcenx/macOS_Wine_builds/releases/latest`.
+  - [x] Use the Konyak-managed macOS runtime release source manifest:
+    `https://github.com/serika12345/konyak-macos-runtime/releases/download/crossover-26.1.0-konyak.0/konyak-macos-wine-runtime-stack-source.json`.
+  - [x] Keep the release reference metadata in
+    `runtime/macos-wine-release.json` as the single source of truth for the
+    default repository, release tag, and manifest file name.
   - [x] Install using the Konyak runtime layout:
     `Runtimes/macos-wine/bin/wine64`.
   - [x] Keep download and extraction behind the CLI/backend runtime service.
