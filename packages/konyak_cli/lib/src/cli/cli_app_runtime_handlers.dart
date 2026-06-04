@@ -40,7 +40,7 @@ CliResult? _handleRuntimeCommand(
     if (installer == null) {
       return _unavailableJsonError(
         code: 'gptkWineInstallerUnavailable',
-        subject: 'GPTK-compatible Wine installer',
+        subject: 'GPTK/D3DMetal importer',
       );
     }
 

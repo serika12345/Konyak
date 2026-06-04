@@ -180,7 +180,7 @@ String _macosRuntimeListPayload({
               role: 'd3d9-d3d11-translation',
               missingPaths: dxvkAvailable
                   ? const <String>[]
-                  : ['/runtime/DXVK'],
+                  : ['/runtime/lib/dxvk/x86_64-windows/dxgi.dll'],
             ),
             _runtimeStackComponentPayload(
               id: 'dxmt',
@@ -188,7 +188,7 @@ String _macosRuntimeListPayload({
               role: 'd3d10-d3d11-metal-translation',
               missingPaths: dxmtAvailable
                   ? const <String>[]
-                  : ['/runtime/components/dxmt'],
+                  : ['/runtime/lib/dxmt/x86_64-windows/d3d11.dll'],
             ),
             _runtimeStackComponentPayload(
               id: 'moltenvk',

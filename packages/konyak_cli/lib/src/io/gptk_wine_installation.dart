@@ -67,18 +67,19 @@ class DartIoGptkWineInstaller implements GptkWineInstaller {
       return const GptkWineInstallFailed('GPTK Wine source path is empty.');
     }
 
-    final sourceRoot = _resolveGptkWineRoot(sourcePath);
-    if (sourceRoot == null) {
-      return const GptkWineInstallFailed(
-        'Select a Game Porting Toolkit.app bundle that contains '
-        'Contents/Resources/wine.',
-      );
-    }
-
     final runtimeRoot = Directory(_macosWineRuntimeRoot(environment));
     if (!File(_macosWineExecutable(environment)).existsSync()) {
       return const GptkWineInstallFailed(
         'Install Konyak macOS Wine before importing GPTK/D3DMetal.',
+      );
+    }
+
+    final sourceResolution = _resolveGptkD3DMetalSourcePath(sourcePath);
+    if (sourceResolution == null) {
+      return const GptkWineInstallFailed(
+        'Select an Apple Game Porting Toolkit DMG, app bundle, or extracted '
+        'redist payload that contains D3DMetal.framework, libd3dshared.dylib, '
+        'and the matching Wine D3DMetal DLL/SO files.',
       );
     }
 
@@ -98,13 +99,7 @@ class DartIoGptkWineInstaller implements GptkWineInstaller {
         );
       }
 
-      final bundledD3DMetal = _resolveGptkD3DMetalSource(sourceRoot.path);
-      if (bundledD3DMetal == null) {
-        return const GptkWineInstallFailed(
-          'Selected GPTK app does not contain D3DMetal.framework, '
-          'libd3dshared.dylib, d3d12.dll, and dxgi.dll.',
-        );
-      }
+      final bundledD3DMetal = sourceResolution.source;
       final d3dMetalValidationFailure = _validateGptkD3DMetalSource(
         bundledD3DMetal,
       );
@@ -145,6 +140,7 @@ class DartIoGptkWineInstaller implements GptkWineInstaller {
       }
       return GptkWineInstallFailed(error.message);
     } finally {
+      sourceResolution.dispose();
       if (backupRoot.existsSync()) {
         backupRoot.deleteSync(recursive: true);
       }
@@ -156,7 +152,7 @@ class DartIoGptkWineInstaller implements GptkWineInstaller {
     return GptkWineInstallCompleted(
       GptkWineInstallRecord(
         componentId: _gptkD3DMetalComponentId,
-        sourceDirectory: installedD3DMetal.directory.path,
+        sourceDirectory: installedD3DMetal.payloadRoot.path,
         runtimeRoot: runtimeRoot.path,
         installedExecutablePath: _macosWineExecutable(environment),
       ),
@@ -186,14 +182,22 @@ class DartIoGptkWineInstaller implements GptkWineInstaller {
     final windowsDllRoot = Directory(
       _joinPath(runtimeRoot.path, const ['lib', 'wine', 'x86_64-windows']),
     )..createSync(recursive: true);
-    _copyFileReplacing(
-      source: source.d3d12Dll,
-      destination: File(_joinPath(windowsDllRoot.path, const ['d3d12.dll'])),
-    );
-    _copyFileReplacing(
-      source: source.dxgiDll,
-      destination: File(_joinPath(windowsDllRoot.path, const ['dxgi.dll'])),
-    );
+    for (final fileName in _requiredGptkD3DMetalWindowsFileNames) {
+      _copyFileReplacing(
+        source: File(_joinPath(source.windowsDllRoot.path, [fileName])),
+        destination: File(_joinPath(windowsDllRoot.path, [fileName])),
+      );
+    }
+
+    final unixLibraryRoot = Directory(
+      _joinPath(runtimeRoot.path, const ['lib', 'wine', 'x86_64-unix']),
+    )..createSync(recursive: true);
+    for (final fileName in _requiredGptkD3DMetalUnixFileNames) {
+      _copyFileSystemEntityReplacing(
+        sourcePath: _joinPath(source.unixLibraryRoot.path, [fileName]),
+        destinationPath: _joinPath(unixLibraryRoot.path, [fileName]),
+      );
+    }
   }
 
   void _copyDirectoryReplacing({
@@ -208,26 +212,70 @@ class DartIoGptkWineInstaller implements GptkWineInstaller {
 
   void _copyFileReplacing({required File source, required File destination}) {
     destination.parent.createSync(recursive: true);
-    final destinationType = FileSystemEntity.typeSync(destination.path);
+    final destinationType = FileSystemEntity.typeSync(
+      destination.path,
+      followLinks: false,
+    );
     if (destinationType != FileSystemEntityType.notFound) {
       _deleteFileSystemEntitySync(destination.path, destinationType);
     }
     source.copySync(destination.path);
   }
+
+  void _copyFileSystemEntityReplacing({
+    required String sourcePath,
+    required String destinationPath,
+  }) {
+    Directory(_dirname(destinationPath)).createSync(recursive: true);
+    final destinationType = FileSystemEntity.typeSync(
+      destinationPath,
+      followLinks: false,
+    );
+    if (destinationType != FileSystemEntityType.notFound) {
+      _deleteFileSystemEntitySync(destinationPath, destinationType);
+    }
+
+    final sourceType = FileSystemEntity.typeSync(
+      sourcePath,
+      followLinks: false,
+    );
+    switch (sourceType) {
+      case FileSystemEntityType.file:
+        File(sourcePath).copySync(destinationPath);
+      case FileSystemEntityType.link:
+        Link(destinationPath).createSync(Link(sourcePath).targetSync());
+      case FileSystemEntityType.directory:
+      case FileSystemEntityType.pipe:
+      case FileSystemEntityType.unixDomainSock:
+      case FileSystemEntityType.notFound:
+        throw FileSystemException(
+          'Unsupported GPTK/D3DMetal payload path.',
+          sourcePath,
+        );
+    }
+  }
 }
 
 class _GptkD3DMetalSource {
   const _GptkD3DMetalSource({
-    required this.directory,
+    required this.payloadRoot,
+    required this.externalRoot,
+    required this.windowsDllRoot,
+    required this.unixLibraryRoot,
     required this.framework,
     required this.dylib,
+    required this.d3d11Dll,
     required this.d3d12Dll,
     required this.dxgiDll,
   });
 
-  final Directory directory;
+  final Directory payloadRoot;
+  final Directory externalRoot;
+  final Directory windowsDllRoot;
+  final Directory unixLibraryRoot;
   final Directory framework;
   final File dylib;
+  final File d3d11Dll;
   final File d3d12Dll;
   final File dxgiDll;
 }

@@ -147,14 +147,14 @@ void defineRuntimeProcessAndUpdateContractTests() {
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wine64',
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wineserver',
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wine',
-          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/DXVK/x64/dxgi.dll',
-          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/DXVK/x64/d3d9.dll',
-          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/DXVK/x64/d3d10core.dll',
-          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/DXVK/x64/d3d11.dll',
-          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/DXVK/x32/dxgi.dll',
-          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/DXVK/x32/d3d9.dll',
-          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/DXVK/x32/d3d10core.dll',
-          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/DXVK/x32/d3d11.dll',
+          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxvk/x86_64-windows/dxgi.dll',
+          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxvk/x86_64-windows/d3d9.dll',
+          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxvk/x86_64-windows/d3d10core.dll',
+          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxvk/x86_64-windows/d3d11.dll',
+          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxvk/i386-windows/dxgi.dll',
+          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxvk/i386-windows/d3d9.dll',
+          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxvk/i386-windows/d3d10core.dll',
+          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxvk/i386-windows/d3d11.dll',
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/libMoltenVK.dylib',
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/libgstreamer-1.0.0.dylib',
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/share/wine/mono',
@@ -223,14 +223,14 @@ void defineRuntimeProcessAndUpdateContractTests() {
                 'isRequired': true,
                 'isInstalled': true,
                 'paths': [
-                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/DXVK/x64/dxgi.dll',
-                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/DXVK/x64/d3d9.dll',
-                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/DXVK/x64/d3d10core.dll',
-                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/DXVK/x64/d3d11.dll',
-                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/DXVK/x32/dxgi.dll',
-                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/DXVK/x32/d3d9.dll',
-                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/DXVK/x32/d3d10core.dll',
-                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/DXVK/x32/d3d11.dll',
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxvk/x86_64-windows/dxgi.dll',
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxvk/x86_64-windows/d3d9.dll',
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxvk/x86_64-windows/d3d10core.dll',
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxvk/x86_64-windows/d3d11.dll',
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxvk/i386-windows/dxgi.dll',
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxvk/i386-windows/d3d9.dll',
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxvk/i386-windows/d3d10core.dll',
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxvk/i386-windows/d3d11.dll',
                 ],
                 'missingPaths': <Object?>[],
               },
@@ -287,14 +287,38 @@ void defineRuntimeProcessAndUpdateContractTests() {
                 'paths': [
                   '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/external/D3DMetal.framework',
                   '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/external/libd3dshared.dylib',
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-windows/atidxx64.dll',
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-windows/d3d10.dll',
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-windows/d3d11.dll',
                   '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-windows/d3d12.dll',
                   '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-windows/dxgi.dll',
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-windows/nvapi64.dll',
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-windows/nvngx-on-metalfx.dll',
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-unix/atidxx64.so',
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-unix/d3d10.so',
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-unix/d3d11.so',
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-unix/d3d12.so',
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-unix/dxgi.so',
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-unix/nvapi64.so',
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-unix/nvngx-on-metalfx.so',
                 ],
                 'missingPaths': [
                   '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/external/D3DMetal.framework',
                   '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/external/libd3dshared.dylib',
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-windows/atidxx64.dll',
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-windows/d3d10.dll',
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-windows/d3d11.dll',
                   '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-windows/d3d12.dll',
                   '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-windows/dxgi.dll',
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-windows/nvapi64.dll',
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-windows/nvngx-on-metalfx.dll',
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-unix/atidxx64.so',
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-unix/d3d10.so',
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-unix/d3d11.so',
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-unix/d3d12.so',
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-unix/dxgi.so',
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-unix/nvapi64.so',
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-unix/nvngx-on-metalfx.so',
                 ],
               },
               {
@@ -304,18 +328,16 @@ void defineRuntimeProcessAndUpdateContractTests() {
                 'isRequired': true,
                 'isInstalled': false,
                 'paths': [
-                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/components/dxmt/x86_64-windows/d3d10core.dll',
-                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/components/dxmt/x86_64-windows/d3d11.dll',
-                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/components/dxmt/x86_64-windows/dxgi.dll',
-                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/components/dxmt/x86_64-windows/winemetal.dll',
-                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/components/dxmt/x86_64-unix/winemetal.so',
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxmt/x86_64-windows/d3d10core.dll',
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxmt/x86_64-windows/d3d11.dll',
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxmt/x86_64-windows/dxgi.dll',
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxmt/x86_64-windows/winemetal.dll',
                 ],
                 'missingPaths': [
-                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/components/dxmt/x86_64-windows/d3d10core.dll',
-                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/components/dxmt/x86_64-windows/d3d11.dll',
-                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/components/dxmt/x86_64-windows/dxgi.dll',
-                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/components/dxmt/x86_64-windows/winemetal.dll',
-                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/components/dxmt/x86_64-unix/winemetal.so',
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxmt/x86_64-windows/d3d10core.dll',
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxmt/x86_64-windows/d3d11.dll',
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxmt/x86_64-windows/dxgi.dll',
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxmt/x86_64-windows/winemetal.dll',
                 ],
               },
             ],
@@ -687,49 +709,46 @@ void defineRuntimeProcessAndUpdateContractTests() {
     expect(runtime, isNot(contains('versionUrl')));
     expect(runtime, isNot(contains('sourceManifestUrl')));
   });
-  test('check-runtime-update --json returns machine-readable update status', () {
-    final checker = RecordingRuntimeUpdateChecker(
-      result: RuntimeUpdateCheckCompleted(
-        RuntimeUpdateRecord(
-          runtimeId: 'konyak-macos-wine',
-          status: 'available',
-          currentVersion: Option.of('wine-devel-11.9'),
-          latestVersion: Option.of('12.0'),
-          versionUrl: Option.of(
-            'https://api.github.com/repos/Gcenx/macOS_Wine_builds/releases/latest',
-          ),
-          archiveUrl: Option.of(
-            'https://github.com/Gcenx/macOS_Wine_builds/releases/download/11.9/wine-devel-11.9-osx64.tar.xz',
+  test(
+    'check-runtime-update --json returns machine-readable update status',
+    () {
+      final checker = RecordingRuntimeUpdateChecker(
+        result: RuntimeUpdateCheckCompleted(
+          RuntimeUpdateRecord(
+            runtimeId: 'konyak-macos-wine',
+            status: 'available',
+            currentVersion: Option.of('wine-devel-11.9'),
+            latestVersion: Option.of('12.0'),
+            versionUrl: Option.of(macosWineRuntimeReleaseUrl),
+            sourceManifestUrl: Option.of(macosWineRuntimeSourceManifestUrl),
           ),
         ),
-      ),
-    );
+      );
 
-    final result = runCli(const [
-      'check-runtime-update',
-      'konyak-macos-wine',
-      '--json',
-    ], runtimeUpdateChecker: checker);
+      final result = runCli(const [
+        'check-runtime-update',
+        'konyak-macos-wine',
+        '--json',
+      ], runtimeUpdateChecker: checker);
 
-    expect(result.exitCode, 0);
-    expect(result.stderr, isEmpty);
-    expect(checker.lastRuntimeId, 'konyak-macos-wine');
+      expect(result.exitCode, 0);
+      expect(result.stderr, isEmpty);
+      expect(checker.lastRuntimeId, 'konyak-macos-wine');
 
-    final payload = jsonDecode(result.stdout) as Map<String, Object?>;
-    expect(payload, {
-      'schemaVersion': 1,
-      'runtimeUpdate': {
-        'runtimeId': 'konyak-macos-wine',
-        'status': 'available',
-        'currentVersion': 'wine-devel-11.9',
-        'latestVersion': '12.0',
-        'versionUrl':
-            'https://api.github.com/repos/Gcenx/macOS_Wine_builds/releases/latest',
-        'archiveUrl':
-            'https://github.com/Gcenx/macOS_Wine_builds/releases/download/11.9/wine-devel-11.9-osx64.tar.xz',
-      },
-    });
-  });
+      final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+      expect(payload, {
+        'schemaVersion': 1,
+        'runtimeUpdate': {
+          'runtimeId': 'konyak-macos-wine',
+          'status': 'available',
+          'currentVersion': 'wine-devel-11.9',
+          'latestVersion': '12.0',
+          'versionUrl': macosWineRuntimeReleaseUrl,
+          'sourceManifestUrl': macosWineRuntimeSourceManifestUrl,
+        },
+      });
+    },
+  );
 
   test('check-app-update --json returns machine-readable update status', () {
     final checker = RecordingAppUpdateChecker(

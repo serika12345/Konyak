@@ -16,7 +16,86 @@ part 'cli_contract_runtime_process_update.part.dart';
 part 'cli_contract_runtime_install.part.dart';
 part 'cli_contract_executable.part.dart';
 
+const _gptkD3DMetalWindowsFileNames = <String>[
+  'atidxx64.dll',
+  'd3d10.dll',
+  'd3d11.dll',
+  'd3d12.dll',
+  'dxgi.dll',
+  'nvapi64.dll',
+  'nvngx-on-metalfx.dll',
+];
+
+const _gptkD3DMetalUnixFileNames = <String>[
+  'atidxx64.so',
+  'd3d10.so',
+  'd3d11.so',
+  'd3d12.so',
+  'dxgi.so',
+  'nvapi64.so',
+  'nvngx-on-metalfx.so',
+];
+
+final _gptkD3DMetalComponentArchivePaths = <List<String>>[
+  <String>[
+    'Components',
+    'GPTK-D3DMetal',
+    'lib',
+    'external',
+    'D3DMetal.framework',
+    'D3DMetal',
+  ],
+  <String>[
+    'Components',
+    'GPTK-D3DMetal',
+    'lib',
+    'external',
+    'libd3dshared.dylib',
+  ],
+  for (final fileName in _gptkD3DMetalWindowsFileNames)
+    <String>[
+      'Components',
+      'GPTK-D3DMetal',
+      'lib',
+      'wine',
+      'x86_64-windows',
+      fileName,
+    ],
+  for (final fileName in _gptkD3DMetalUnixFileNames)
+    <String>[
+      'Components',
+      'GPTK-D3DMetal',
+      'lib',
+      'wine',
+      'x86_64-unix',
+      fileName,
+    ],
+];
+
 void main() {
+  test('macOS runtime release references match the repository SSOT', () {
+    final referenceFile = _repoFile('runtime/macos-wine-release.json');
+    final reference =
+        jsonDecode(referenceFile.readAsStringSync()) as Map<String, Object?>;
+
+    expect(reference['repository'], macosWineRuntimeRepository);
+    expect(reference['defaultReleaseTag'], macosWineRuntimeDefaultReleaseTag);
+    expect(
+      reference['sourceManifestFileName'],
+      macosWineRuntimeSourceManifestFileName,
+    );
+    expect(
+      macosWineRuntimeSourceManifestUrl,
+      'https://github.com/$macosWineRuntimeRepository/releases/download/'
+      '$macosWineRuntimeDefaultReleaseTag/'
+      '$macosWineRuntimeSourceManifestFileName',
+    );
+    expect(
+      macosWineRuntimeReleaseUrl,
+      'https://api.github.com/repos/$macosWineRuntimeRepository/releases/latest',
+    );
+  });
+
   defineAppAndBottleContractTests();
   definePinnedProgramContractTests();
   defineProgramExecutionContractTests();
@@ -24,6 +103,20 @@ void main() {
   defineRuntimeProcessAndUpdateContractTests();
   defineRuntimeInstallContractTests();
   defineExecutableContractTests();
+}
+
+File _repoFile(String relativePath) {
+  final direct = File(relativePath);
+  if (direct.existsSync()) {
+    return direct;
+  }
+
+  final fromPackage = File('../../$relativePath');
+  if (fromPackage.existsSync()) {
+    return fromPackage;
+  }
+
+  return direct;
 }
 
 final class RecordingProgramRunner implements ProgramRunner {
@@ -458,11 +551,10 @@ const _macosDxmtComponentPaths = <List<String>>[
 ];
 
 const _macosDxmtInstalledPaths = <List<String>>[
-  <String>['components', 'dxmt', 'x86_64-windows', 'd3d10core.dll'],
-  <String>['components', 'dxmt', 'x86_64-windows', 'd3d11.dll'],
-  <String>['components', 'dxmt', 'x86_64-windows', 'dxgi.dll'],
-  <String>['components', 'dxmt', 'x86_64-windows', 'winemetal.dll'],
-  <String>['components', 'dxmt', 'x86_64-unix', 'winemetal.so'],
+  <String>['lib', 'dxmt', 'x86_64-windows', 'd3d10core.dll'],
+  <String>['lib', 'dxmt', 'x86_64-windows', 'd3d11.dll'],
+  <String>['lib', 'dxmt', 'x86_64-windows', 'dxgi.dll'],
+  <String>['lib', 'dxmt', 'x86_64-windows', 'winemetal.dll'],
 ];
 
 String _createComponentRuntimeArchive(String tempPath) {
@@ -472,26 +564,25 @@ String _createComponentRuntimeArchive(String tempPath) {
   );
   final wineRoot = Directory(_joinTestPath(librariesRoot.path, const ['Wine']));
 
-  for (final relativePath in const <List<String>>[
+  for (final relativePath in <List<String>>[
     <String>['Wine', 'bin', 'wine64'],
     <String>['Wine', 'bin', 'wineserver'],
     <String>['Wine', 'bin', 'wine'],
-    <String>['DXVK', 'x64', 'dxgi.dll'],
-    <String>['DXVK', 'x64', 'd3d9.dll'],
-    <String>['DXVK', 'x64', 'd3d10core.dll'],
-    <String>['DXVK', 'x64', 'd3d11.dll'],
-    <String>['DXVK', 'x32', 'dxgi.dll'],
-    <String>['DXVK', 'x32', 'd3d9.dll'],
-    <String>['DXVK', 'x32', 'd3d10core.dll'],
-    <String>['DXVK', 'x32', 'd3d11.dll'],
+    <String>['Wine', 'lib', 'dxvk', 'x86_64-windows', 'dxgi.dll'],
+    <String>['Wine', 'lib', 'dxvk', 'x86_64-windows', 'd3d9.dll'],
+    <String>['Wine', 'lib', 'dxvk', 'x86_64-windows', 'd3d10core.dll'],
+    <String>['Wine', 'lib', 'dxvk', 'x86_64-windows', 'd3d11.dll'],
+    <String>['Wine', 'lib', 'dxvk', 'i386-windows', 'dxgi.dll'],
+    <String>['Wine', 'lib', 'dxvk', 'i386-windows', 'd3d9.dll'],
+    <String>['Wine', 'lib', 'dxvk', 'i386-windows', 'd3d10core.dll'],
+    <String>['Wine', 'lib', 'dxvk', 'i386-windows', 'd3d11.dll'],
     <String>['Wine', 'lib', 'libMoltenVK.dylib'],
     <String>['Wine', 'lib', 'libgstreamer-1.0.0.dylib'],
     <String>['Wine', 'share', 'wine', 'mono', 'wine-mono.marker'],
-    <String>['Wine', 'components', 'dxmt', 'x86_64-windows', 'd3d10core.dll'],
-    <String>['Wine', 'components', 'dxmt', 'x86_64-windows', 'd3d11.dll'],
-    <String>['Wine', 'components', 'dxmt', 'x86_64-windows', 'dxgi.dll'],
-    <String>['Wine', 'components', 'dxmt', 'x86_64-windows', 'winemetal.dll'],
-    <String>['Wine', 'components', 'dxmt', 'x86_64-unix', 'winemetal.so'],
+    <String>['Wine', 'lib', 'dxmt', 'x86_64-windows', 'd3d10core.dll'],
+    <String>['Wine', 'lib', 'dxmt', 'x86_64-windows', 'd3d11.dll'],
+    <String>['Wine', 'lib', 'dxmt', 'x86_64-windows', 'dxgi.dll'],
+    <String>['Wine', 'lib', 'dxmt', 'x86_64-windows', 'winemetal.dll'],
     <String>['winetricks'],
   ]) {
     final file = File(_joinTestPath(librariesRoot.path, relativePath));
@@ -534,7 +625,7 @@ String _createKonyakComponentRuntimeArchive(String tempPath) {
     _joinTestPath(sourceRoot.path, const ['Runtime']),
   );
 
-  for (final relativePath in const <List<String>>[
+  for (final relativePath in <List<String>>[
     <String>['Wine Devel.app', 'Contents', 'Resources', 'wine', 'bin', 'wine'],
     <String>[
       'Wine Devel.app',
@@ -558,44 +649,16 @@ String _createKonyakComponentRuntimeArchive(String tempPath) {
     <String>['Components', 'GStreamer', 'lib', 'libgstreamer-1.0.0.dylib'],
     <String>['Components', 'wine-mono', 'share', 'wine', 'mono', 'marker'],
     <String>['Components', 'winetricks', 'winetricks'],
-    <String>[
-      'Components',
-      'GPTK-D3DMetal',
-      'lib',
-      'external',
-      'D3DMetal.framework',
-      'D3DMetal',
-    ],
-    <String>[
-      'Components',
-      'GPTK-D3DMetal',
-      'lib',
-      'external',
-      'libd3dshared.dylib',
-    ],
-    <String>[
-      'Components',
-      'GPTK-D3DMetal',
-      'lib',
-      'wine',
-      'x86_64-windows',
-      'd3d12.dll',
-    ],
-    <String>[
-      'Components',
-      'GPTK-D3DMetal',
-      'lib',
-      'wine',
-      'x86_64-windows',
-      'dxgi.dll',
-    ],
+    ..._gptkD3DMetalComponentArchivePaths,
   ]) {
     final file = File(_joinTestPath(runtimeRoot.path, relativePath));
     file.parent.createSync(recursive: true);
-    if (relativePath.contains('d3d12.dll') ||
-        relativePath.contains('dxgi.dll')) {
+    if (_isGptkD3DMetalUnixSymlinkPath(relativePath)) {
+      Link(file.path).createSync('../../external/libd3dshared.dylib');
+    } else if (_gptkD3DMetalWindowsFileNames.contains(relativePath.last)) {
       _createPEFile(file.path);
-    } else if (relativePath.contains('GPTK-D3DMetal')) {
+    } else if (relativePath.contains('GPTK-D3DMetal') ||
+        _gptkD3DMetalUnixFileNames.contains(relativePath.last)) {
       _createMachOFile(file.path);
     } else {
       file.writeAsStringSync('fixture');
@@ -650,11 +713,13 @@ String _createKonyakRuntimeComponentArchive(
   for (final relativePath in relativePaths) {
     final file = File(_joinTestPath(runtimeRoot.path, relativePath));
     file.parent.createSync(recursive: true);
-    if (relativePath.contains('d3d12.dll') ||
-        relativePath.contains('dxgi.dll')) {
+    if (_isGptkD3DMetalUnixSymlinkPath(relativePath)) {
+      Link(file.path).createSync('../../external/libd3dshared.dylib');
+    } else if (_gptkD3DMetalWindowsFileNames.contains(relativePath.last)) {
       _createPEFile(file.path);
     } else if (relativePath.contains('D3DMetal.framework') ||
-        relativePath.contains('libd3dshared.dylib')) {
+        relativePath.contains('libd3dshared.dylib') ||
+        _gptkD3DMetalUnixFileNames.contains(relativePath.last)) {
       _createMachOFile(file.path);
     } else {
       file.writeAsStringSync('fixture');
@@ -856,8 +921,19 @@ Directory _createGptkD3DMetalSource(
     _joinTestPath(sourceRoot.path, const ['libd3dshared.dylib']),
   );
   final dllRoot = _gptkFixtureDllRoot(sourceRoot);
-  _createPEFile(_joinTestPath(dllRoot.path, const ['d3d12.dll']));
-  _createPEFile(_joinTestPath(dllRoot.path, const ['dxgi.dll']));
+  for (final fileName in _gptkD3DMetalWindowsFileNames) {
+    _createPEFile(_joinTestPath(dllRoot.path, [fileName]));
+  }
+  final unixRoot = _gptkFixtureUnixRoot(sourceRoot);
+  for (final fileName in _gptkD3DMetalUnixFileNames) {
+    final path = _joinTestPath(unixRoot.path, [fileName]);
+    File(path).parent.createSync(recursive: true);
+    if (const <String>['d3d11.so', 'd3d12.so', 'dxgi.so'].contains(fileName)) {
+      Link(path).createSync('../../external/libd3dshared.dylib');
+    } else {
+      _createMachOFile(path);
+    }
+  }
   return sourceRoot;
 }
 
@@ -917,6 +993,23 @@ Directory _gptkFixtureDllRoot(Directory externalRoot) {
   return Directory(
     _joinTestPath(libRoot.path, const ['wine', 'x86_64-windows']),
   );
+}
+
+Directory _gptkFixtureUnixRoot(Directory externalRoot) {
+  final segments = externalRoot.path.split('/');
+  final libRoot = segments.last == 'external'
+      ? Directory(segments.take(segments.length - 1).join('/'))
+      : externalRoot;
+  return Directory(_joinTestPath(libRoot.path, const ['wine', 'x86_64-unix']));
+}
+
+bool _isGptkD3DMetalUnixSymlinkPath(List<String> relativePath) {
+  return relativePath.contains('x86_64-unix') &&
+      const <String>[
+        'd3d11.so',
+        'd3d12.so',
+        'dxgi.so',
+      ].contains(relativePath.last);
 }
 
 void _createMachOFile(String path) {

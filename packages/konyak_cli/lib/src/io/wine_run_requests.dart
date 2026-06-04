@@ -9,7 +9,14 @@ const _dxvkOverrideDllNames = <String>[
 
 const _macosD3DTranslationOverrideDllNames = <String>[
   ..._dxvkOverrideDllNames,
+  'd3d12.dll',
   'winemetal.dll',
+];
+
+const _d3dMetalOverrideDllNames = <String>[
+  'dxgi.dll',
+  'd3d11.dll',
+  'd3d12.dll',
 ];
 
 void _removeMacosD3DTranslationDllOverrides({required BottleRecord bottle}) {
@@ -37,8 +44,8 @@ void _syncMacosDxvkDllOverrides({
   final hostEnvironment = HostEnvironment(environment);
   final runtimeRoot = _macosWineRuntimeRoot(hostEnvironment);
   for (final arch in const <(String, String)>[
-    ('x64', 'system32'),
-    ('x32', 'syswow64'),
+    ('x86_64-windows', 'system32'),
+    ('i386-windows', 'syswow64'),
   ]) {
     final (runtimeArch, windowsDirectory) = arch;
     final destinationDirectory = Directory(
@@ -47,7 +54,8 @@ void _syncMacosDxvkDllOverrides({
 
     for (final dllName in _dxvkOverrideDllNames) {
       final sourcePath = _joinPath(runtimeRoot, <String>[
-        'DXVK',
+        'lib',
+        'dxvk',
         runtimeArch,
         dllName,
       ]);
@@ -94,6 +102,34 @@ void _syncMacosBuiltinD3DDllOverrides({
       }
       sourceFile.copySync(_joinPath(destinationDirectory.path, [dllName]));
     }
+  }
+}
+
+void _syncMacosD3DMetalDllOverrides({
+  required BottleRecord bottle,
+  required Map<String, String> environment,
+}) {
+  final hostEnvironment = HostEnvironment(environment);
+  final runtimeRoot = _macosWineRuntimeRoot(hostEnvironment);
+  final destinationDirectory = Directory(
+    _joinPath(bottle.path, const ['drive_c', 'windows', 'system32']),
+  )..createSync(recursive: true);
+
+  for (final dllName in _d3dMetalOverrideDllNames) {
+    final sourcePath = _joinPath(runtimeRoot, <String>[
+      'lib',
+      'wine',
+      'x86_64-windows',
+      dllName,
+    ]);
+    final sourceFile = File(sourcePath);
+    if (!sourceFile.existsSync()) {
+      throw FileSystemException(
+        'D3DMetal override DLL was not found.',
+        sourcePath,
+      );
+    }
+    sourceFile.copySync(_joinPath(destinationDirectory.path, [dllName]));
   }
 }
 

@@ -59,12 +59,8 @@ void defineRuntimeInstallContractTests() {
           executablePath: Option.of(
             '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wine64',
           ),
-          archiveUrl: Option.of(
-            'https://github.com/Gcenx/macOS_Wine_builds/releases/download/11.9/wine-devel-11.9-osx64.tar.xz',
-          ),
-          versionUrl: Option.of(
-            'https://api.github.com/repos/Gcenx/macOS_Wine_builds/releases/latest',
-          ),
+          archiveUrl: const Option.none(),
+          versionUrl: Option.of(macosWineRuntimeReleaseUrl),
         ),
       ),
     );
@@ -108,23 +104,22 @@ void defineRuntimeInstallContractTests() {
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wine64',
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wineserver',
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wine',
-        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/DXVK/x64/dxgi.dll',
-        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/DXVK/x64/d3d9.dll',
-        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/DXVK/x64/d3d10core.dll',
-        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/DXVK/x64/d3d11.dll',
-        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/DXVK/x32/dxgi.dll',
-        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/DXVK/x32/d3d9.dll',
-        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/DXVK/x32/d3d10core.dll',
-        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/DXVK/x32/d3d11.dll',
+        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxvk/x86_64-windows/dxgi.dll',
+        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxvk/x86_64-windows/d3d9.dll',
+        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxvk/x86_64-windows/d3d10core.dll',
+        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxvk/x86_64-windows/d3d11.dll',
+        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxvk/i386-windows/dxgi.dll',
+        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxvk/i386-windows/d3d9.dll',
+        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxvk/i386-windows/d3d10core.dll',
+        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxvk/i386-windows/d3d11.dll',
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/libMoltenVK.dylib',
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/libgstreamer-1.0.0.dylib',
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/share/wine/mono',
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/winetricks',
-        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/components/dxmt/x86_64-windows/d3d10core.dll',
-        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/components/dxmt/x86_64-windows/d3d11.dll',
-        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/components/dxmt/x86_64-windows/dxgi.dll',
-        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/components/dxmt/x86_64-windows/winemetal.dll',
-        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/components/dxmt/x86_64-unix/winemetal.so',
+        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxmt/x86_64-windows/d3d10core.dll',
+        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxmt/x86_64-windows/d3d11.dll',
+        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxmt/x86_64-windows/dxgi.dll',
+        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxmt/x86_64-windows/winemetal.dll',
       }),
     );
 
@@ -500,8 +495,9 @@ void defineRuntimeInstallContractTests() {
           _joinTestPath(runtimeHome, const [
             'Runtimes',
             'macos-wine',
-            'DXVK',
-            'x64',
+            'lib',
+            'dxvk',
+            'x86_64-windows',
             'dxgi.dll',
           ]),
         ).existsSync(),
@@ -637,39 +633,7 @@ void defineRuntimeInstallContractTests() {
     final gptkD3dMetalArchive = _createKonyakRuntimeComponentArchive(
       tempDirectory.path,
       archiveName: 'gptk-d3dmetal',
-      relativePaths: const <List<String>>[
-        <String>[
-          'Components',
-          'GPTK-D3DMetal',
-          'lib',
-          'external',
-          'D3DMetal.framework',
-          'D3DMetal',
-        ],
-        <String>[
-          'Components',
-          'GPTK-D3DMetal',
-          'lib',
-          'external',
-          'libd3dshared.dylib',
-        ],
-        <String>[
-          'Components',
-          'GPTK-D3DMetal',
-          'lib',
-          'wine',
-          'x86_64-windows',
-          'd3d12.dll',
-        ],
-        <String>[
-          'Components',
-          'GPTK-D3DMetal',
-          'lib',
-          'wine',
-          'x86_64-windows',
-          'dxgi.dll',
-        ],
-      ],
+      relativePaths: _gptkD3DMetalComponentArchivePaths,
       versions: const <String, String>{
         'gptk-d3dmetal': 'gptk-d3dmetal-fixture',
       },
@@ -847,39 +811,7 @@ void defineRuntimeInstallContractTests() {
     final gptkD3dMetalArchive = _createKonyakRuntimeComponentArchive(
       tempDirectory.path,
       archiveName: 'source-gptk-d3dmetal',
-      relativePaths: const <List<String>>[
-        <String>[
-          'Components',
-          'GPTK-D3DMetal',
-          'lib',
-          'external',
-          'D3DMetal.framework',
-          'D3DMetal',
-        ],
-        <String>[
-          'Components',
-          'GPTK-D3DMetal',
-          'lib',
-          'external',
-          'libd3dshared.dylib',
-        ],
-        <String>[
-          'Components',
-          'GPTK-D3DMetal',
-          'lib',
-          'wine',
-          'x86_64-windows',
-          'd3d12.dll',
-        ],
-        <String>[
-          'Components',
-          'GPTK-D3DMetal',
-          'lib',
-          'wine',
-          'x86_64-windows',
-          'dxgi.dll',
-        ],
-      ],
+      relativePaths: _gptkD3DMetalComponentArchivePaths,
       versions: const <String, String>{},
     );
     final sourceManifestPath = _createRuntimeStackSourceManifest(
@@ -1126,39 +1058,7 @@ void defineRuntimeInstallContractTests() {
         file.parent.createSync(recursive: true);
         file.writeAsStringSync('existing-gptk-wine');
       }
-      _createMachOFile(
-        _joinTestPath(runtimeRoot, const [
-          'lib',
-          'external',
-          'D3DMetal.framework',
-          'Versions',
-          'A',
-          'D3DMetal',
-        ]),
-      );
-      _createMachOFile(
-        _joinTestPath(runtimeRoot, const [
-          'lib',
-          'external',
-          'libd3dshared.dylib',
-        ]),
-      );
-      _createPEFile(
-        _joinTestPath(runtimeRoot, const [
-          'lib',
-          'wine',
-          'x86_64-windows',
-          'd3d12.dll',
-        ]),
-      );
-      _createPEFile(
-        _joinTestPath(runtimeRoot, const [
-          'lib',
-          'wine',
-          'x86_64-windows',
-          'dxgi.dll',
-        ]),
-      );
+      _createGptkD3DMetalSource(runtimeRoot, const ['lib', 'external']);
       File(
         _joinTestPath(runtimeRoot, const ['.konyak-runtime-stack.json']),
       ).writeAsStringSync(
@@ -1447,7 +1347,7 @@ void defineRuntimeInstallContractTests() {
     );
   });
 
-  test('install-gptk-wine rejects non-app sources', () {
+  test('install-gptk-wine rejects sources without an installed runtime', () {
     final tempDirectory = Directory.systemTemp.createTempSync(
       'konyak-gptk-wine-test-',
     );
@@ -1478,7 +1378,7 @@ void defineRuntimeInstallContractTests() {
     final payload = jsonDecode(result.stdout) as Map<String, Object?>;
     final error = payload['error'] as Map<String, Object?>;
     expect(error['code'], 'gptkWineInstallFailed');
-    expect(error['message'], contains('Game Porting Toolkit.app'));
+    expect(error['message'], contains('Install Konyak macOS Wine'));
   });
 
   test('install-gptk-wine requires D3DMetal in the selected app', () {
@@ -1530,6 +1430,17 @@ void defineRuntimeInstallContractTests() {
       _joinTestPath(tempDirectory.path, const ['runtime']),
     );
     _createInstalledMacosRuntime(runtimeRoot.path);
+    final builtinDxgi =
+        File(
+            _joinTestPath(runtimeRoot.path, const [
+              'lib',
+              'wine',
+              'x86_64-windows',
+              'dxgi.dll',
+            ]),
+          )
+          ..parent.createSync(recursive: true)
+          ..writeAsStringSync('builtin dxgi');
     File(_joinTestPath(runtimeRoot.path, const ['winetricks']))
       ..parent.createSync(recursive: true)
       ..writeAsStringSync('existing winetricks');
@@ -1570,7 +1481,7 @@ void defineRuntimeInstallContractTests() {
     expect(install['componentId'], 'gptk-d3dmetal');
     expect(
       install['sourceDirectory'],
-      endsWith('Game Porting Toolkit.app/Contents/Resources/wine/lib/external'),
+      endsWith('Game Porting Toolkit.app/Contents/Resources/wine'),
     );
     expect(
       File(
@@ -1591,6 +1502,37 @@ void defineRuntimeInstallContractTests() {
       ).existsSync(),
       isTrue,
     );
+    for (final dllName in _gptkD3DMetalWindowsFileNames) {
+      expect(
+        File(
+          _joinTestPath(runtimeRoot.path, [
+            'lib',
+            'wine',
+            'x86_64-windows',
+            dllName,
+          ]),
+        ).existsSync(),
+        isTrue,
+      );
+    }
+    for (final unixName in _gptkD3DMetalUnixFileNames) {
+      final path = _joinTestPath(runtimeRoot.path, [
+        'lib',
+        'wine',
+        'x86_64-unix',
+        unixName,
+      ]);
+      if (const <String>[
+        'd3d11.so',
+        'd3d12.so',
+        'dxgi.so',
+      ].contains(unixName)) {
+        expect(Link(path).targetSync(), '../../external/libd3dshared.dylib');
+      } else {
+        expect(File(path).existsSync(), isTrue);
+      }
+    }
+    expect(builtinDxgi.readAsBytesSync().take(2), [0x4d, 0x5a]);
     expect(
       File(
         _joinTestPath(runtimeRoot.path, const ['winetricks']),
@@ -1690,6 +1632,36 @@ void defineRuntimeInstallContractTests() {
       installer.lastRequest?.sourceManifest.toNullable(),
       '/tmp/runtime-stack.json',
     );
+  });
+
+  test('install-macos-wine --reinstall forces a full install', () {
+    final installer = RecordingMacosWineInstaller(
+      result: MacosWineInstallCompleted(
+        runtime: RuntimeRecord(
+          id: 'konyak-macos-wine',
+          name: 'Konyak macOS Wine',
+          platform: 'macos',
+          architecture: 'x86_64',
+          runnerKind: 'macosWine',
+          isBundled: false,
+          isUpdateable: true,
+          isInstalled: Option.of(true),
+        ),
+      ),
+    );
+
+    final result = runCli(const [
+      'install-macos-wine',
+      '--reinstall',
+      '--json',
+    ], macosWineInstaller: installer);
+
+    expect(result.exitCode, 0);
+    expect(
+      installer.lastRequest?.operation,
+      RuntimeInstallOperation.fullInstall,
+    );
+    expect(installer.lastRequest?.force, isTrue);
   });
 
   test('install-macos-wine --progress-json emits progress events', () {

@@ -1,38 +1,203 @@
 part of '../../konyak_cli.dart';
 
-Directory? _resolveGptkWineRoot(String sourcePath) {
-  final sourceType = FileSystemEntity.typeSync(sourcePath);
-  if (sourceType != FileSystemEntityType.directory) {
+const _requiredGptkD3DMetalWindowsFileNames = <String>[
+  'atidxx64.dll',
+  'd3d10.dll',
+  'd3d11.dll',
+  'd3d12.dll',
+  'dxgi.dll',
+  'nvapi64.dll',
+  'nvngx-on-metalfx.dll',
+];
+
+const _requiredGptkD3DMetalUnixFileNames = <String>[
+  'atidxx64.so',
+  'd3d10.so',
+  'd3d11.so',
+  'd3d12.so',
+  'dxgi.so',
+  'nvapi64.so',
+  'nvngx-on-metalfx.so',
+];
+
+final class _GptkD3DMetalSourceResolution {
+  _GptkD3DMetalSourceResolution({
+    required this.source,
+    required Iterable<String> mountRoots,
+  }) : mountRoots = List.unmodifiable(mountRoots);
+
+  final _GptkD3DMetalSource source;
+  final List<String> mountRoots;
+
+  void dispose() {
+    for (var index = mountRoots.length - 1; index >= 0; index -= 1) {
+      Process.runSync('hdiutil', <String>['detach', mountRoots[index]]);
+    }
+  }
+}
+
+_GptkD3DMetalSourceResolution? _resolveGptkD3DMetalSourcePath(
+  String sourcePath,
+) {
+  final mountRoots = <String>[];
+  try {
+    final source = _resolveGptkD3DMetalSourceKeepingMounts(
+      sourcePath,
+      mountRoots,
+    );
+    if (source == null) {
+      _disposeGptkMountRoots(mountRoots);
+      return null;
+    }
+    return _GptkD3DMetalSourceResolution(
+      source: source,
+      mountRoots: mountRoots,
+    );
+  } on FileSystemException {
+    _disposeGptkMountRoots(mountRoots);
+    rethrow;
+  } on ProcessException {
+    _disposeGptkMountRoots(mountRoots);
+    rethrow;
+  }
+}
+
+_GptkD3DMetalSource? _resolveGptkD3DMetalSourceKeepingMounts(
+  String sourcePath,
+  List<String> mountRoots,
+) {
+  final sourceType = FileSystemEntity.typeSync(sourcePath, followLinks: false);
+  if (sourceType == FileSystemEntityType.notFound) {
     return null;
   }
 
-  if (!_baseName(sourcePath).endsWith('.app')) {
+  if (sourceType == FileSystemEntityType.directory) {
+    final appWineRoot = _baseName(sourcePath).endsWith('.app')
+        ? Directory(
+            _joinPath(sourcePath, const ['Contents', 'Resources', 'wine']),
+          )
+        : null;
+    final appSource = appWineRoot == null
+        ? null
+        : _resolveGptkD3DMetalSource(appWineRoot.path);
+    if (appSource != null) {
+      return appSource;
+    }
+
+    final directSource = _resolveGptkD3DMetalSource(sourcePath);
+    if (directSource != null) {
+      return directSource;
+    }
+
+    final redist = _findDirectoryNamed(
+      Directory(sourcePath),
+      name: 'redist',
+      maxDepth: 3,
+    );
+    if (redist != null) {
+      return _resolveGptkD3DMetalSource(redist.path);
+    }
     return null;
   }
 
-  final candidate = Directory(
-    _joinPath(sourcePath, const ['Contents', 'Resources', 'wine']),
-  );
-  if (_isGptkWineRootCandidate(candidate)) {
-    return candidate;
+  if (sourceType == FileSystemEntityType.file && sourcePath.endsWith('.dmg')) {
+    final mountRoot = _mountGptkDmg(sourcePath);
+    if (mountRoot == null) {
+      return null;
+    }
+    mountRoots.add(mountRoot);
+
+    final mountedSource = _resolveGptkD3DMetalSourceKeepingMounts(
+      mountRoot,
+      mountRoots,
+    );
+    if (mountedSource != null) {
+      return mountedSource;
+    }
+
+    final nestedDmg = _findDmgFile(Directory(mountRoot), maxDepth: 2);
+    if (nestedDmg != null) {
+      return _resolveGptkD3DMetalSourceKeepingMounts(
+        nestedDmg.path,
+        mountRoots,
+      );
+    }
   }
 
   return null;
 }
 
-bool _isGptkWineRootCandidate(Directory directory) {
-  if (!directory.existsSync()) {
-    return false;
+String? _mountGptkDmg(String dmgPath) {
+  final mountRoot = Directory.systemTemp.createTempSync('konyak-gptk-mount-');
+  final result = Process.runSync('hdiutil', <String>[
+    'attach',
+    dmgPath,
+    '-readonly',
+    '-nobrowse',
+    '-mountpoint',
+    mountRoot.path,
+  ]);
+  if (result.exitCode != 0) {
+    _deleteDirectoryIfPresent(mountRoot);
+    return null;
   }
-  final wine64 = File(_joinPath(directory.path, const ['bin', 'wine64']));
-  final wineserver = File(
-    _joinPath(directory.path, const ['bin', 'wineserver']),
-  );
-  final lib = Directory(_joinPath(directory.path, const ['lib']));
-  final lib64 = Directory(_joinPath(directory.path, const ['lib64']));
-  return wine64.existsSync() &&
-      wineserver.existsSync() &&
-      (lib.existsSync() || lib64.existsSync());
+  return mountRoot.path;
+}
+
+void _disposeGptkMountRoots(List<String> mountRoots) {
+  for (var index = mountRoots.length - 1; index >= 0; index -= 1) {
+    Process.runSync('hdiutil', <String>['detach', mountRoots[index]]);
+  }
+}
+
+Directory? _findDirectoryNamed(
+  Directory root, {
+  required String name,
+  required int maxDepth,
+}) {
+  if (maxDepth < 0 || !root.existsSync()) {
+    return null;
+  }
+  for (final entry in root.listSync(followLinks: false)) {
+    if (entry is Directory && _baseName(entry.path) == name) {
+      return entry;
+    }
+  }
+  for (final entry in root.listSync(followLinks: false)) {
+    if (entry is! Directory) {
+      continue;
+    }
+    final found = _findDirectoryNamed(
+      entry,
+      name: name,
+      maxDepth: maxDepth - 1,
+    );
+    if (found != null) {
+      return found;
+    }
+  }
+  return null;
+}
+
+File? _findDmgFile(Directory root, {required int maxDepth}) {
+  if (maxDepth < 0 || !root.existsSync()) {
+    return null;
+  }
+  for (final entry in root.listSync(followLinks: false)) {
+    if (entry is File && entry.path.endsWith('.dmg')) {
+      return entry;
+    }
+  }
+  for (final entry in root.listSync(followLinks: false)) {
+    if (entry is! Directory) {
+      continue;
+    }
+    final found = _findDmgFile(entry, maxDepth: maxDepth - 1);
+    if (found != null) {
+      return found;
+    }
+  }
+  return null;
 }
 
 String? _validateGptkD3DMetalSource(_GptkD3DMetalSource source) {
@@ -52,9 +217,35 @@ String? _validateGptkD3DMetalSource(_GptkD3DMetalSource source) {
     return 'd3d12.dll is not a Windows PE binary. Select an official or '
         'compatible Game Porting Toolkit distribution.';
   }
+  if (!_looksLikePE(source.d3d11Dll)) {
+    return 'd3d11.dll is not a Windows PE binary. Select an official or '
+        'compatible Game Porting Toolkit distribution.';
+  }
   if (!_looksLikePE(source.dxgiDll)) {
     return 'dxgi.dll is not a Windows PE binary. Select an official or '
         'compatible Game Porting Toolkit distribution.';
+  }
+  for (final dllName in _requiredGptkD3DMetalWindowsFileNames) {
+    final file = File(_joinPath(source.windowsDllRoot.path, [dllName]));
+    if (!file.existsSync()) {
+      return 'GPTK/D3DMetal payload is missing $dllName.';
+    }
+  }
+  for (final libraryName in _requiredGptkD3DMetalUnixFileNames) {
+    final path = _joinPath(source.unixLibraryRoot.path, [libraryName]);
+    if (FileSystemEntity.typeSync(path, followLinks: false) ==
+        FileSystemEntityType.notFound) {
+      return 'GPTK/D3DMetal payload is missing $libraryName.';
+    }
+  }
+  for (final libraryName in const <String>['d3d11.so', 'd3d12.so', 'dxgi.so']) {
+    final path = _joinPath(source.unixLibraryRoot.path, [libraryName]);
+    if (FileSystemEntity.typeSync(path, followLinks: false) !=
+            FileSystemEntityType.link ||
+        Link(path).targetSync() != '../../external/libd3dshared.dylib') {
+      return '$libraryName must be a symlink to '
+          '../../external/libd3dshared.dylib.';
+    }
   }
   return null;
 }
@@ -67,40 +258,54 @@ _GptkD3DMetalSource? _resolveGptkD3DMetalSource(String sourcePath) {
 
   if (sourceType == FileSystemEntityType.directory &&
       _baseName(sourcePath) == 'D3DMetal.framework') {
-    final framework = Directory(sourcePath);
-    final siblingDylib = File(
-      _joinPath(_dirname(sourcePath), const ['libd3dshared.dylib']),
-    );
-    final dllSource = _resolveGptkD3DMetalWindowsDlls(
-      Directory(_dirname(sourcePath)),
-    );
-    if (siblingDylib.existsSync() && dllSource != null) {
-      return _GptkD3DMetalSource(
-        directory: Directory(_dirname(sourcePath)),
-        framework: framework,
-        dylib: siblingDylib,
-        d3d12Dll: dllSource.d3d12Dll,
-        dxgiDll: dllSource.dxgiDll,
-      );
-    }
-    return null;
+    return _gptkD3DMetalSourceFromExternalRoot(Directory(_dirname(sourcePath)));
   }
 
   if (sourceType != FileSystemEntityType.directory) {
     return null;
   }
 
-  final candidate = Directory(_joinPath(sourcePath, const ['lib', 'external']));
-  final framework = Directory(
-    _joinPath(candidate.path, const ['D3DMetal.framework']),
+  final directSource = _gptkD3DMetalSourceFromExternalRoot(
+    Directory(sourcePath),
   );
-  final dylib = File(_joinPath(candidate.path, const ['libd3dshared.dylib']));
-  final dllSource = _resolveGptkD3DMetalWindowsDlls(candidate);
-  if (framework.existsSync() && dylib.existsSync() && dllSource != null) {
+  if (directSource != null) {
+    return directSource;
+  }
+
+  final candidate = Directory(_joinPath(sourcePath, const ['lib', 'external']));
+  return _gptkD3DMetalSourceFromExternalRoot(candidate);
+}
+
+_GptkD3DMetalSource? _gptkD3DMetalSourceFromExternalRoot(
+  Directory externalRoot,
+) {
+  final framework = Directory(
+    _joinPath(externalRoot.path, const ['D3DMetal.framework']),
+  );
+  final dylib = File(
+    _joinPath(externalRoot.path, const ['libd3dshared.dylib']),
+  );
+  final libRoot = Directory(_dirname(externalRoot.path));
+  final payloadRoot = Directory(_dirname(libRoot.path));
+  final windowsDllRoot = Directory(
+    _joinPath(libRoot.path, const ['wine', 'x86_64-windows']),
+  );
+  final unixLibraryRoot = Directory(
+    _joinPath(libRoot.path, const ['wine', 'x86_64-unix']),
+  );
+  final dllSource = _resolveGptkD3DMetalWindowsDlls(windowsDllRoot);
+  if (framework.existsSync() &&
+      dylib.existsSync() &&
+      unixLibraryRoot.existsSync() &&
+      dllSource != null) {
     return _GptkD3DMetalSource(
-      directory: candidate,
+      payloadRoot: payloadRoot,
+      externalRoot: externalRoot,
+      windowsDllRoot: windowsDllRoot,
+      unixLibraryRoot: unixLibraryRoot,
       framework: framework,
       dylib: dylib,
+      d3d11Dll: dllSource.d3d11Dll,
       d3d12Dll: dllSource.d3d12Dll,
       dxgiDll: dllSource.dxgiDll,
     );
@@ -111,28 +316,28 @@ _GptkD3DMetalSource? _resolveGptkD3DMetalSource(String sourcePath) {
 
 class _GptkD3DMetalWindowsDllSource {
   const _GptkD3DMetalWindowsDllSource({
+    required this.d3d11Dll,
     required this.d3d12Dll,
     required this.dxgiDll,
   });
 
+  final File d3d11Dll;
   final File d3d12Dll;
   final File dxgiDll;
 }
 
 _GptkD3DMetalWindowsDllSource? _resolveGptkD3DMetalWindowsDlls(
-  Directory sourceDirectory,
+  Directory windowsDllRoot,
 ) {
-  final d3d12 = File(
-    _joinPath(sourceDirectory.path, const [
-      '..',
-      'wine',
-      'x86_64-windows',
-      'd3d12.dll',
-    ]),
-  );
+  final d3d12 = File(_joinPath(windowsDllRoot.path, const ['d3d12.dll']));
+  final d3d11 = File(_joinPath(_dirname(d3d12.path), const ['d3d11.dll']));
   final dxgi = File(_joinPath(_dirname(d3d12.path), const ['dxgi.dll']));
-  if (d3d12.existsSync() && dxgi.existsSync()) {
-    return _GptkD3DMetalWindowsDllSource(d3d12Dll: d3d12, dxgiDll: dxgi);
+  if (d3d11.existsSync() && d3d12.existsSync() && dxgi.existsSync()) {
+    return _GptkD3DMetalWindowsDllSource(
+      d3d11Dll: d3d11,
+      d3d12Dll: d3d12,
+      dxgiDll: dxgi,
+    );
   }
 
   return null;

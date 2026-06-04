@@ -61,6 +61,25 @@ const _linuxWineRuntimeComponentDefinitions =
       ),
     ];
 
+const _macosGptkD3DMetalComponentPaths = <List<String>>[
+  <String>['lib', 'external', 'D3DMetal.framework'],
+  <String>['lib', 'external', 'libd3dshared.dylib'],
+  <String>['lib', 'wine', 'x86_64-windows', 'atidxx64.dll'],
+  <String>['lib', 'wine', 'x86_64-windows', 'd3d10.dll'],
+  <String>['lib', 'wine', 'x86_64-windows', 'd3d11.dll'],
+  <String>['lib', 'wine', 'x86_64-windows', 'd3d12.dll'],
+  <String>['lib', 'wine', 'x86_64-windows', 'dxgi.dll'],
+  <String>['lib', 'wine', 'x86_64-windows', 'nvapi64.dll'],
+  <String>['lib', 'wine', 'x86_64-windows', 'nvngx-on-metalfx.dll'],
+  <String>['lib', 'wine', 'x86_64-unix', 'atidxx64.so'],
+  <String>['lib', 'wine', 'x86_64-unix', 'd3d10.so'],
+  <String>['lib', 'wine', 'x86_64-unix', 'd3d11.so'],
+  <String>['lib', 'wine', 'x86_64-unix', 'd3d12.so'],
+  <String>['lib', 'wine', 'x86_64-unix', 'dxgi.so'],
+  <String>['lib', 'wine', 'x86_64-unix', 'nvapi64.so'],
+  <String>['lib', 'wine', 'x86_64-unix', 'nvngx-on-metalfx.so'],
+];
+
 const _macosKonyakRuntimeComponentDefinitions =
     <_RuntimeStackComponentDefinition>[
       _RuntimeStackComponentDefinition(
@@ -88,14 +107,14 @@ const _macosKonyakRuntimeComponentDefinitions =
         role: 'd3d9-d3d11-translation',
         isRequired: true,
         relativePaths: <List<String>>[
-          <String>['DXVK', 'x64', 'dxgi.dll'],
-          <String>['DXVK', 'x64', 'd3d9.dll'],
-          <String>['DXVK', 'x64', 'd3d10core.dll'],
-          <String>['DXVK', 'x64', 'd3d11.dll'],
-          <String>['DXVK', 'x32', 'dxgi.dll'],
-          <String>['DXVK', 'x32', 'd3d9.dll'],
-          <String>['DXVK', 'x32', 'd3d10core.dll'],
-          <String>['DXVK', 'x32', 'd3d11.dll'],
+          <String>['lib', 'dxvk', 'x86_64-windows', 'dxgi.dll'],
+          <String>['lib', 'dxvk', 'x86_64-windows', 'd3d9.dll'],
+          <String>['lib', 'dxvk', 'x86_64-windows', 'd3d10core.dll'],
+          <String>['lib', 'dxvk', 'x86_64-windows', 'd3d11.dll'],
+          <String>['lib', 'dxvk', 'i386-windows', 'dxgi.dll'],
+          <String>['lib', 'dxvk', 'i386-windows', 'd3d9.dll'],
+          <String>['lib', 'dxvk', 'i386-windows', 'd3d10core.dll'],
+          <String>['lib', 'dxvk', 'i386-windows', 'd3d11.dll'],
         ],
       ),
       _RuntimeStackComponentDefinition(
@@ -139,12 +158,7 @@ const _macosKonyakRuntimeComponentDefinitions =
         name: 'GPTK/D3DMetal',
         role: 'd3d12-metal-translation',
         isRequired: false,
-        relativePaths: <List<String>>[
-          <String>['lib', 'external', 'D3DMetal.framework'],
-          <String>['lib', 'external', 'libd3dshared.dylib'],
-          <String>['lib', 'wine', 'x86_64-windows', 'd3d12.dll'],
-          <String>['lib', 'wine', 'x86_64-windows', 'dxgi.dll'],
-        ],
+        relativePaths: _macosGptkD3DMetalComponentPaths,
       ),
       _RuntimeStackComponentDefinition(
         id: 'dxmt',
@@ -152,11 +166,10 @@ const _macosKonyakRuntimeComponentDefinitions =
         role: 'd3d10-d3d11-metal-translation',
         isRequired: true,
         relativePaths: <List<String>>[
-          <String>['components', 'dxmt', 'x86_64-windows', 'd3d10core.dll'],
-          <String>['components', 'dxmt', 'x86_64-windows', 'd3d11.dll'],
-          <String>['components', 'dxmt', 'x86_64-windows', 'dxgi.dll'],
-          <String>['components', 'dxmt', 'x86_64-windows', 'winemetal.dll'],
-          <String>['components', 'dxmt', 'x86_64-unix', 'winemetal.so'],
+          <String>['lib', 'dxmt', 'x86_64-windows', 'd3d10core.dll'],
+          <String>['lib', 'dxmt', 'x86_64-windows', 'd3d11.dll'],
+          <String>['lib', 'dxmt', 'x86_64-windows', 'dxgi.dll'],
+          <String>['lib', 'dxmt', 'x86_64-windows', 'winemetal.dll'],
         ],
       ),
     ];
@@ -190,7 +203,6 @@ const _macosKonyakRuntimePlatformSpec = _RuntimePlatformSpec(
   stackId: 'macos-konyak-runtime-stack',
   stackName: 'Konyak macOS runtime stack',
   requiredExecutableRelativePath: <String>['bin', 'wine64'],
-  defaultArchiveUrl: Option.of(macosWineArchiveUrl),
   defaultSourceManifestUrl: Option.of(macosWineRuntimeSourceManifestUrl),
   defaultArchiveFileName: macosWineArchiveFileName,
   developmentSourceManifestEnvironmentKey:
@@ -235,7 +247,7 @@ Option<String> _runtimeDefaultArchiveUrl({
   required HostEnvironment environment,
 }) {
   return platformSpec.archiveUrlEnvironmentKey.match(
-    () => platformSpec.defaultArchiveUrl,
+    () => const Option.none(),
     (archiveUrlEnvironmentKey) => Option.fromNullable(
       environment.nonEmptyValue(archiveUrlEnvironmentKey),
     ),

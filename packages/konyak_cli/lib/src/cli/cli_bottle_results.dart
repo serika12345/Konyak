@@ -81,13 +81,20 @@ CliResult? _syncRuntimeSettingsDllOverrides({
     return null;
   }
   if (bottle.runtimeSettings.dxvk == runtimeSettings.dxvk &&
-      bottle.runtimeSettings.dxmt == runtimeSettings.dxmt) {
+      bottle.runtimeSettings.dxmt == runtimeSettings.dxmt &&
+      bottle.runtimeSettings.dxrEnabled == runtimeSettings.dxrEnabled &&
+      !runtimeSettings.dxrEnabled) {
     return null;
   }
 
   final syncResult = _ioResult(() {
     _removeMacosD3DTranslationDllOverrides(bottle: bottle);
-    if (runtimeSettings.dxvk) {
+    if (runtimeSettings.dxrEnabled) {
+      _syncMacosD3DMetalDllOverrides(
+        bottle: bottle,
+        environment: programRunPlanner.environment.toMap(),
+      );
+    } else if (runtimeSettings.dxvk) {
       _syncMacosDxvkDllOverrides(
         bottle: bottle,
         environment: programRunPlanner.environment.toMap(),

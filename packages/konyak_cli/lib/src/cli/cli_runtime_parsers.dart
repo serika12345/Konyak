@@ -58,6 +58,7 @@ MacosWineInstallRequest? _parseJsonMacosWineInstallRequest(
   final options = _parseRuntimeInstallCliOptions(
     arguments,
     command: 'install-macos-wine',
+    allowReinstall: true,
   );
   if (options == null) {
     return null;
@@ -78,6 +79,7 @@ MacosWineInstallRequest? _parseJsonMacosWineInstallRequest(
     archiveUrl: options.archiveUrl,
     archiveSha256: options.archiveSha256,
     sourceManifest: options.sourceManifest,
+    force: options.reinstall,
     emitProgress: options.emitProgress,
   );
 }
@@ -119,6 +121,7 @@ class _RuntimeInstallCliOptions {
     this.archiveUrl,
     this.archiveSha256,
     this.sourceManifest,
+    this.reinstall = false,
     this.emitProgress = false,
   }) : componentArchivePaths = List.unmodifiable(componentArchivePaths);
 
@@ -127,12 +130,14 @@ class _RuntimeInstallCliOptions {
   final String? archiveSha256;
   final List<String> componentArchivePaths;
   final String? sourceManifest;
+  final bool reinstall;
   final bool emitProgress;
 }
 
 _RuntimeInstallCliOptions? _parseRuntimeInstallCliOptions(
   List<String> arguments, {
   required String command,
+  bool allowReinstall = false,
 }) {
   if (arguments.length < 2 ||
       arguments.first != command ||
@@ -146,6 +151,7 @@ _RuntimeInstallCliOptions? _parseRuntimeInstallCliOptions(
     ..addOption('archive-sha256')
     ..addMultiOption('component-archive')
     ..addOption('source-manifest')
+    ..addFlag('reinstall', negatable: false)
     ..addFlag('progress-json', negatable: false)
     ..addFlag('json', negatable: false);
 
@@ -182,6 +188,10 @@ _RuntimeInstallCliOptions? _parseRuntimeInstallCliOptions(
   if (componentArchivePaths == null) {
     return null;
   }
+  final reinstall = results['reinstall'] == true;
+  if (reinstall && !allowReinstall) {
+    return null;
+  }
 
   if (archivePath != null && archiveUrl != null) {
     return null;
@@ -196,6 +206,9 @@ _RuntimeInstallCliOptions? _parseRuntimeInstallCliOptions(
           componentArchivePaths.isNotEmpty)) {
     return null;
   }
+  if (reinstall && componentArchivePaths.isNotEmpty) {
+    return null;
+  }
 
   return _RuntimeInstallCliOptions(
     archivePath: archivePath,
@@ -203,6 +216,7 @@ _RuntimeInstallCliOptions? _parseRuntimeInstallCliOptions(
     archiveSha256: archiveSha256,
     componentArchivePaths: componentArchivePaths,
     sourceManifest: sourceManifest,
+    reinstall: reinstall,
     emitProgress: results['progress-json'] == true,
   );
 }

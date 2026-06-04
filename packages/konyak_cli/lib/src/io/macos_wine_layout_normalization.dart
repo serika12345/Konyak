@@ -41,17 +41,20 @@ extension _MacosWineLayoutNormalization on DartIoMacosWineInstaller {
       runtimeRoot: runtimeRoot,
       componentsRoot: componentsRoot,
     );
+    _normalizeDxvkComponent(
+      runtimeRoot: runtimeRoot,
+      componentsRoot: componentsRoot,
+    );
+    _normalizeGptkD3DMetalComponent(
+      runtimeRoot: runtimeRoot,
+      componentsRoot: componentsRoot,
+    );
 
     for (final componentId in const <String>[
-      'DXVK-macOS',
-      'DXVK',
       'MoltenVK',
       'GStreamer',
       'wine-mono',
       'winetricks',
-      'GPTK-D3DMetal',
-      'gptk-d3dmetal',
-      'D3DMetal',
     ]) {
       _moveRuntimeLayoutChildrenToRoot(
         runtimeRoot: runtimeRoot,
@@ -75,9 +78,7 @@ extension _MacosWineLayoutNormalization on DartIoMacosWineInstaller {
       return;
     }
 
-    final targetParent = Directory(
-      _joinPath(runtimeRoot.path, const ['components']),
-    );
+    final targetParent = Directory(_joinPath(runtimeRoot.path, const ['lib']));
     final temporaryDxmtRoot = _joinPath(runtimeRoot.path, const [
       '.konyak-dxmt-normalized',
     ]);
@@ -93,6 +94,102 @@ extension _MacosWineLayoutNormalization on DartIoMacosWineInstaller {
       Directory(temporaryDxmtRoot),
       _joinPath(targetParent.path, const ['dxmt']),
     );
+  }
+
+  void _normalizeDxvkComponent({
+    required Directory runtimeRoot,
+    required Directory componentsRoot,
+  }) {
+    for (final sourceRoot in <Directory>[
+      Directory(_joinPath(componentsRoot.path, const ['DXVK-macOS', 'DXVK'])),
+      Directory(_joinPath(componentsRoot.path, const ['DXVK'])),
+    ]) {
+      if (!sourceRoot.existsSync()) {
+        continue;
+      }
+
+      final targetRoot = Directory(
+        _joinPath(runtimeRoot.path, const ['lib', 'dxvk']),
+      )..createSync(recursive: true);
+      _moveDirectoryIfExists(
+        Directory(_joinPath(targetRoot.path, const ['x64'])),
+        Directory(_joinPath(targetRoot.path, const ['x86_64-windows'])),
+      );
+      _moveDirectoryIfExists(
+        Directory(_joinPath(targetRoot.path, const ['x32'])),
+        Directory(_joinPath(targetRoot.path, const ['i386-windows'])),
+      );
+      _moveDirectoryIfExists(
+        Directory(_joinPath(sourceRoot.path, const ['x64'])),
+        Directory(_joinPath(targetRoot.path, const ['x86_64-windows'])),
+      );
+      _moveDirectoryIfExists(
+        Directory(_joinPath(sourceRoot.path, const ['x32'])),
+        Directory(_joinPath(targetRoot.path, const ['i386-windows'])),
+      );
+      _moveDirectoryIfExists(
+        Directory(_joinPath(sourceRoot.path, const ['x86_64-windows'])),
+        Directory(_joinPath(targetRoot.path, const ['x86_64-windows'])),
+      );
+      _moveDirectoryIfExists(
+        Directory(_joinPath(sourceRoot.path, const ['i386-windows'])),
+        Directory(_joinPath(targetRoot.path, const ['i386-windows'])),
+      );
+      if (sourceRoot.existsSync()) {
+        sourceRoot.deleteSync(recursive: true);
+      }
+    }
+  }
+
+  void _normalizeGptkD3DMetalComponent({
+    required Directory runtimeRoot,
+    required Directory componentsRoot,
+  }) {
+    for (final sourceRoot in <Directory>[
+      Directory(_joinPath(componentsRoot.path, const ['GPTK-D3DMetal'])),
+      Directory(_joinPath(componentsRoot.path, const ['gptk-d3dmetal'])),
+      Directory(_joinPath(componentsRoot.path, const ['D3DMetal'])),
+    ]) {
+      if (!sourceRoot.existsSync()) {
+        continue;
+      }
+
+      final runtimeLibRoot = Directory(
+        _joinPath(runtimeRoot.path, const ['lib']),
+      )..createSync(recursive: true);
+      final sourceLibRoot = Directory(
+        _joinPath(sourceRoot.path, const ['lib']),
+      );
+      if (sourceLibRoot.existsSync()) {
+        _moveRuntimeLayoutChildrenToRoot(
+          runtimeRoot: runtimeLibRoot,
+          sourceRoot: sourceLibRoot,
+        );
+        if (sourceRoot.existsSync() && sourceRoot.listSync().isEmpty) {
+          sourceRoot.deleteSync();
+        }
+        continue;
+      }
+      _moveRuntimeLayoutChildrenToRoot(
+        runtimeRoot: runtimeLibRoot,
+        sourceRoot: sourceRoot,
+      );
+    }
+  }
+
+  void _moveDirectoryIfExists(Directory source, Directory destination) {
+    if (!source.existsSync()) {
+      return;
+    }
+    if (destination.existsSync()) {
+      _moveRuntimeLayoutChildrenToRoot(
+        runtimeRoot: destination,
+        sourceRoot: source,
+      );
+      return;
+    }
+    destination.parent.createSync(recursive: true);
+    source.renameSync(destination.path);
   }
 
   void _moveRuntimeLayoutChildrenToRoot({

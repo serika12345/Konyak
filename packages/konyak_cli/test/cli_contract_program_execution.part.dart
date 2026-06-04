@@ -369,7 +369,6 @@ void defineProgramExecutionContractTests() {
             metalHud: true,
             metalTrace: true,
             avxEnabled: true,
-            dxrEnabled: true,
             dxvk: true,
             dxvkHud: 'partial',
           ),
@@ -419,10 +418,6 @@ void defineProgramExecutionContractTests() {
     );
     expect(
       runner.lastRequest?.environment.toMap(),
-      containsPair('D3DM_SUPPORT_DXR', '1'),
-    );
-    expect(
-      runner.lastRequest?.environment.toMap(),
       containsPair('DXVK_HUD', 'devinfo,fps,frametimes'),
     );
     expect(
@@ -437,10 +432,143 @@ void defineProgramExecutionContractTests() {
       runner.lastRequest?.environment.toMap(),
       containsPair(
         'WINEDLLPATH',
-        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/DXVK/x64:/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/DXVK/x32',
+        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxvk/x86_64-windows:/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxvk/i386-windows',
       ),
     );
   });
+
+  test('run-program --json applies D3DMetal settings on macOS', () {
+    final repository = MemoryBottleRepository(
+      dataHome: '/Users/user/Library/Application Support/Konyak',
+      bottles: [
+        BottleRecord(
+          id: 'steam',
+          name: 'Steam',
+          path: '/Users/user/Library/Application Support/Konyak/Bottles/Steam',
+          windowsVersion: 'win10',
+          runtimeSettings: const BottleRuntimeSettings(dxrEnabled: true),
+        ),
+      ],
+    );
+    final runner = RecordingProgramRunner(
+      result: const ProgramRunCompleted(processExitCode: 0),
+    );
+
+    final result = runCli(
+      const [
+        'run-program',
+        'steam',
+        '--program',
+        '/downloads/setup.exe',
+        '--json',
+      ],
+      bottleRepository: repository,
+      programRunPlanner: ProgramRunPlanner(
+        hostPlatform: KonyakHostPlatform.macos,
+        environment: HostEnvironment({'HOME': '/Users/user'}),
+      ),
+      programRunner: runner,
+    );
+
+    expect(result.exitCode, 0);
+    expect(
+      runner.lastRequest?.environment.toMap(),
+      containsPair('WINEDLLOVERRIDES', 'dxgi,d3d11,d3d12=n,b'),
+    );
+    expect(
+      runner.lastRequest?.environment.toMap(),
+      isNot(contains('WINEDLLPATH')),
+    );
+    expect(
+      runner.lastRequest?.environment.toMap(),
+      containsPair(
+        'DYLD_LIBRARY_PATH',
+        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/external:/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-unix:/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib',
+      ),
+    );
+    expect(
+      runner.lastRequest?.environment.toMap(),
+      containsPair(
+        'DYLD_FRAMEWORK_PATH',
+        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/external',
+      ),
+    );
+    expect(
+      runner.lastRequest?.environment.toMap(),
+      containsPair(
+        'CX_APPLEGPTK_LIBD3DSHARED_PATH',
+        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/external/libd3dshared.dylib',
+      ),
+    );
+    expect(
+      runner.lastRequest?.environment.toMap(),
+      containsPair('D3DM_SUPPORT_DXR', '1'),
+    );
+  });
+
+  test(
+    'run-program --json prefers D3DMetal over stale DXMT settings on macOS',
+    () {
+      final repository = MemoryBottleRepository(
+        dataHome: '/Users/user/Library/Application Support/Konyak',
+        bottles: [
+          BottleRecord(
+            id: 'steam',
+            name: 'Steam',
+            path:
+                '/Users/user/Library/Application Support/Konyak/Bottles/Steam',
+            windowsVersion: 'win10',
+            runtimeSettings: const BottleRuntimeSettings(
+              dxrEnabled: true,
+              dxmt: true,
+            ),
+          ),
+        ],
+      );
+      final runner = RecordingProgramRunner(
+        result: const ProgramRunCompleted(processExitCode: 0),
+      );
+
+      final result = runCli(
+        [
+          'run-program',
+          'steam',
+          '--program',
+          '/Applications/Steam/steam.exe',
+          '--json',
+        ],
+        bottleRepository: repository,
+        programRunPlanner: ProgramRunPlanner(
+          hostPlatform: KonyakHostPlatform.macos,
+          environment: HostEnvironment(const {'HOME': '/Users/user'}),
+        ),
+        programRunner: runner,
+      );
+
+      expect(result.exitCode, 0);
+      final environment = runner.lastRequest?.environment.toMap();
+      expect(environment?['WINEDLLOVERRIDES'], 'dxgi,d3d11,d3d12=n,b');
+      expect(environment, isNot(contains('WINEDLLPATH')));
+      expect(
+        environment?['DYLD_LIBRARY_PATH'],
+        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/'
+        'lib/external:'
+        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/'
+        'lib/wine/x86_64-unix:'
+        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib',
+      );
+      expect(
+        environment?['DYLD_FRAMEWORK_PATH'],
+        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/'
+        'lib/external',
+      );
+      expect(
+        environment?['CX_APPLEGPTK_LIBD3DSHARED_PATH'],
+        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/'
+        'lib/external/libd3dshared.dylib',
+      );
+    },
+  );
 
   test('run-program --json applies DXMT settings on macOS', () {
     final repository = MemoryBottleRepository(
@@ -484,7 +612,7 @@ void defineProgramExecutionContractTests() {
       runner.lastRequest?.environment.toMap(),
       containsPair(
         'WINEDLLPATH',
-        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/components/dxmt/x86_64-windows:/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/components/dxmt/x86_64-unix',
+        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxmt/x86_64-windows:/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxmt/i386-windows',
       ),
     );
   });

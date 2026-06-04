@@ -23,7 +23,7 @@ RuntimeRecord _macosWineRuntimeRecord({
       distributionKind: Option.fromNullable(
         _runtimeDistributionKind(environment, 'bootstrap'),
       ),
-      archiveUrl: platformSpec.defaultArchiveUrl,
+      archiveUrl: const Option.none(),
       versionUrl: Option.fromNullable(macosWineVersionUrl),
     ),
     installedState: InstalledRuntimeState(
@@ -129,13 +129,19 @@ RuntimeStackComponent _runtimeStackComponent({
   if (definition.id == 'gptk-d3dmetal') {
     final frameworkBinary = _d3dMetalFrameworkBinary(paths.first);
     if (frameworkBinary == null || !_looksLikeMachO(File(frameworkBinary))) {
-      if (!missingPaths.contains(paths.first)) {
-        missingPaths.add(paths.first);
-      }
+      _addMissingRuntimePath(missingPaths, paths.first);
     }
     if (!_looksLikeMachO(File(paths[1]))) {
-      if (!missingPaths.contains(paths[1])) {
-        missingPaths.add(paths[1]);
+      _addMissingRuntimePath(missingPaths, paths[1]);
+    }
+    for (final path in const <String>[
+      'lib/wine/x86_64-unix/d3d11.so',
+      'lib/wine/x86_64-unix/d3d12.so',
+      'lib/wine/x86_64-unix/dxgi.so',
+    ]) {
+      final fullPath = _joinPath(runtimeRoot, path.split('/'));
+      if (!_isGptkD3DMetalUnixLibraryLink(fullPath)) {
+        _addMissingRuntimePath(missingPaths, fullPath);
       }
     }
   }
@@ -156,4 +162,20 @@ RuntimeStackComponent _runtimeStackComponent({
           : null,
     ),
   );
+}
+
+void _addMissingRuntimePath(List<String> missingPaths, String path) {
+  if (!missingPaths.contains(path)) {
+    missingPaths.add(path);
+  }
+}
+
+bool _isGptkD3DMetalUnixLibraryLink(String path) {
+  try {
+    return FileSystemEntity.typeSync(path, followLinks: false) ==
+            FileSystemEntityType.link &&
+        Link(path).targetSync() == '../../external/libd3dshared.dylib';
+  } on FileSystemException {
+    return false;
+  }
 }

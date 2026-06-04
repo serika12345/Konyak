@@ -99,29 +99,59 @@ ProgramRunEnvironment _macosWineEnvironment({
   required HostEnvironment environment,
 }) {
   final hostEnvironment = environment;
+  final runtimeRoot = _macosWineRuntimeRoot(hostEnvironment);
+  final d3dMetalSelected = bottle.runtimeSettings.dxrEnabled;
   final wineEnvironment = <String, String>{
     'WINEPREFIX': bottle.path,
     'WINEDEBUG': 'fixme-all',
     'GST_DEBUG': '1',
-    'DYLD_LIBRARY_PATH': _prependPath(
-      _joinPath(_macosWineRuntimeRoot(hostEnvironment), const ['lib']),
-      Option.fromNullable(environment['DYLD_LIBRARY_PATH']),
-    ),
+    'DYLD_LIBRARY_PATH': _prependPaths(<String>[
+      if (d3dMetalSelected) _macosD3DMetalExternalPath(runtimeRoot),
+      if (d3dMetalSelected) _macosD3DMetalUnixPath(runtimeRoot),
+      _joinPath(runtimeRoot, const ['lib']),
+    ], Option.fromNullable(environment['DYLD_LIBRARY_PATH'])),
+    if (d3dMetalSelected)
+      'DYLD_FRAMEWORK_PATH': _prependPaths(<String>[
+        _macosD3DMetalExternalPath(runtimeRoot),
+      ], Option.fromNullable(environment['DYLD_FRAMEWORK_PATH'])),
+    if (d3dMetalSelected)
+      'CX_APPLEGPTK_LIBD3DSHARED_PATH': _joinPath(runtimeRoot, const [
+        'lib',
+        'external',
+        'libd3dshared.dylib',
+      ]),
     ...bottle.runtimeSettings.macosEnvironment().toMap(),
   };
-  if (bottle.runtimeSettings.dxmt) {
-    final runtimeRoot = _macosWineRuntimeRoot(hostEnvironment);
+  if (!d3dMetalSelected && bottle.runtimeSettings.dxmt) {
     wineEnvironment['WINEDLLPATH'] = [
-      _joinPath(runtimeRoot, const ['components', 'dxmt', 'x86_64-windows']),
-      _joinPath(runtimeRoot, const ['components', 'dxmt', 'x86_64-unix']),
+      _joinPath(runtimeRoot, const ['lib', 'dxmt', 'x86_64-windows']),
+      _joinPath(runtimeRoot, const ['lib', 'dxmt', 'i386-windows']),
     ].join(':');
   } else if (bottle.runtimeSettings.dxvk) {
-    final runtimeRoot = _macosWineRuntimeRoot(hostEnvironment);
     wineEnvironment['WINEDLLPATH'] = [
-      _joinPath(runtimeRoot, const ['DXVK', 'x64']),
-      _joinPath(runtimeRoot, const ['DXVK', 'x32']),
+      _joinPath(runtimeRoot, const ['lib', 'dxvk', 'x86_64-windows']),
+      _joinPath(runtimeRoot, const ['lib', 'dxvk', 'i386-windows']),
     ].join(':');
   }
 
   return ProgramRunEnvironment(wineEnvironment);
+}
+
+String _macosD3DMetalExternalPath(String runtimeRoot) {
+  return _joinPath(runtimeRoot, const ['lib', 'external']);
+}
+
+String _macosD3DMetalUnixPath(String runtimeRoot) {
+  return _joinPath(runtimeRoot, const ['lib', 'wine', 'x86_64-unix']);
+}
+
+String _prependPaths(Iterable<String> paths, Option<String> existingPath) {
+  final prefix = paths.where((path) => path.trim().isNotEmpty).join(':');
+  return existingPath.match(() => prefix, (existingPath) {
+    if (existingPath.trim().isEmpty) {
+      return prefix;
+    }
+
+    return '$prefix:$existingPath';
+  });
 }

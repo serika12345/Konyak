@@ -110,8 +110,8 @@ class BottleRuntimeSettings {
       metalTrace: metalTrace,
       avxEnabled: avxEnabled,
       dxrEnabled: dxrEnabled,
-      dxvk: dxvk,
-      dxmt: dxmt,
+      dxvk: dxrEnabled ? false : dxvk,
+      dxmt: dxrEnabled ? false : dxmt,
       dxvkAsync: dxvkAsync,
       dxvkHud: dxvkHud,
       vkd3dProton: vkd3dProton,
@@ -127,7 +127,7 @@ class BottleRuntimeSettings {
       metalHud: metalHud,
       metalTrace: metalTrace,
       avxEnabled: avxEnabled,
-      dxrEnabled: dxrEnabled,
+      dxrEnabled: dxvk ? false : dxrEnabled,
       dxvk: dxvk,
       dxmt: dxvk ? false : dxmt,
       dxvkAsync: dxvkAsync,
@@ -145,7 +145,7 @@ class BottleRuntimeSettings {
       metalHud: metalHud,
       metalTrace: metalTrace,
       avxEnabled: avxEnabled,
-      dxrEnabled: dxrEnabled,
+      dxrEnabled: dxmt ? false : dxrEnabled,
       dxvk: dxmt ? false : dxvk,
       dxmt: dxmt,
       dxvkAsync: dxvkAsync,
@@ -286,7 +286,9 @@ class BottleRuntimeSettings {
   ProgramRunEnvironment macosEnvironment() {
     final environment = <String, String>{};
 
-    if (dxmt) {
+    if (dxrEnabled) {
+      environment['WINEDLLOVERRIDES'] = 'dxgi,d3d11,d3d12=n,b';
+    } else if (dxmt) {
       environment['WINEDLLOVERRIDES'] = 'dxgi,d3d10core,d3d11,winemetal=n,b';
     } else if (dxvk) {
       environment['WINEDLLOVERRIDES'] = 'dxgi,d3d9,d3d10core,d3d11=n,b';
