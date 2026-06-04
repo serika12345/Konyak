@@ -26,13 +26,53 @@ if [[ -z "${PYTHON3_BIN}" ]]; then
 fi
 
 readonly ROOT="${0:A:h:h}"
+readonly RELEASE_REFERENCE_PATH="${ROOT}/runtime/macos-wine-release.json"
 readonly RUNTIME_ROOT="${KONYAK_MACOS_WINE_HOME:-${ROOT}/.dart_tool/konyak/dev-runtime/macos-wine}"
 readonly SOURCE_ROOT="${ROOT}/.dart_tool/konyak/dev-runtime-source/macos-wine-stack"
 readonly DOWNLOAD_CACHE="${ROOT}/.dart_tool/konyak/download-cache"
 readonly MANIFEST_PATH="${SOURCE_ROOT}/konyak-macos-wine-runtime-stack-source.json"
-readonly WINE_ARCHIVE_URL="${KONYAK_DEV_MACOS_WINE_ARCHIVE_URL:-https://github.com/Gcenx/macOS_Wine_builds/releases/download/11.9/wine-devel-11.9-osx64.tar.xz}"
-readonly WINE_ARCHIVE_SHA256="${KONYAK_DEV_MACOS_WINE_ARCHIVE_SHA256:-e0ac24b3c525d7dd2c88e6447e94fa106fd05a581a178773f47c7a254d4f6296}"
-readonly WINE_ARCHIVE_CACHE="${KONYAK_DEV_MACOS_WINE_ARCHIVE_CACHE:-${DOWNLOAD_CACHE}/wine-devel-11.9-osx64.tar.xz}"
+
+release_reference_value() {
+  "${PYTHON3_BIN}" - "${RELEASE_REFERENCE_PATH}" "$1" <<'PY'
+import json
+import sys
+
+with open(sys.argv[1], encoding="utf-8") as handle:
+    data = json.load(handle)
+print(data[sys.argv[2]])
+PY
+}
+
+release_source_manifest_url() {
+  local repository="$1"
+  local release_tag="$2"
+  local manifest_name="$3"
+
+  if [[ "${release_tag}" == "latest" ]]; then
+    print -r -- "https://github.com/${repository}/releases/latest/download/${manifest_name}"
+    return 0
+  fi
+
+  print -r -- "https://github.com/${repository}/releases/download/${release_tag}/${manifest_name}"
+}
+
+readonly DEFAULT_RUNTIME_RELEASE_REPOSITORY="$(release_reference_value repository)"
+readonly DEFAULT_RUNTIME_RELEASE_TAG="$(release_reference_value defaultReleaseTag)"
+readonly RUNTIME_SOURCE_MANIFEST_FILE_NAME="$(release_reference_value sourceManifestFileName)"
+readonly RUNTIME_SOURCE_MODE="${KONYAK_DEV_MACOS_RUNTIME_SOURCE_MODE:-release}"
+readonly RUNTIME_RELEASE_REPOSITORY="${KONYAK_DEV_MACOS_RUNTIME_RELEASE_REPO:-${DEFAULT_RUNTIME_RELEASE_REPOSITORY}}"
+readonly RUNTIME_RELEASE_TAG="${KONYAK_DEV_MACOS_RUNTIME_RELEASE_TAG:-${DEFAULT_RUNTIME_RELEASE_TAG}}"
+if [[ "${KONYAK_DEV_MACOS_WINE_STACK_MANIFEST:-}" == http://* ||
+      "${KONYAK_DEV_MACOS_WINE_STACK_MANIFEST:-}" == https://* ]]; then
+  RUNTIME_RELEASE_SOURCE_MANIFEST_URL="${KONYAK_DEV_MACOS_WINE_STACK_MANIFEST}"
+else
+  RUNTIME_RELEASE_SOURCE_MANIFEST_URL="${KONYAK_DEV_MACOS_WINE_STACK_MANIFEST_URL:-$(release_source_manifest_url "${RUNTIME_RELEASE_REPOSITORY}" "${RUNTIME_RELEASE_TAG}" "${RUNTIME_SOURCE_MANIFEST_FILE_NAME}")}"
+fi
+readonly RUNTIME_RELEASE_SOURCE_MANIFEST_URL
+readonly WINE_ARCHIVE_URL="${KONYAK_DEV_MACOS_WINE_ARCHIVE_URL:-}"
+readonly WINE_ARCHIVE_SHA256="${KONYAK_DEV_MACOS_WINE_ARCHIVE_SHA256:-}"
+readonly WINE_ARCHIVE_CACHE="${KONYAK_DEV_MACOS_WINE_ARCHIVE_CACHE:-${DOWNLOAD_CACHE}/macos-wine-component.tar.xz}"
+readonly WINE_VERSION="${KONYAK_DEV_MACOS_WINE_VERSION:-local-macos-wine}"
 readonly DXVK_ARCHIVE_URL="${KONYAK_DEV_DXVK_MACOS_ARCHIVE_URL:-https://github.com/Gcenx/DXVK-macOS/releases/download/v1.10.3-20230507/dxvk-macOS-async-v1.10.3-20230507.tar.gz}"
 readonly DXVK_ARCHIVE_SHA256="${KONYAK_DEV_DXVK_MACOS_ARCHIVE_SHA256:-f67d99d0a8eeedd7d406b283a3df9f939b5965acb00efcb33d0c6235c195a516}"
 readonly DXVK_ARCHIVE_CACHE="${KONYAK_DEV_DXVK_MACOS_ARCHIVE_CACHE:-${DOWNLOAD_CACHE}/dxvk-macOS-async-v1.10.3-20230507.tar.gz}"
@@ -118,6 +158,19 @@ download_if_missing() {
   verify_sha256 "${target}" "${expected_sha256}"
 }
 
+download_release_manifest_if_needed() {
+  local target="${MANIFEST_PATH}"
+  local source_url="${RUNTIME_RELEASE_SOURCE_MANIFEST_URL}"
+  local source_marker="${target}.source-url"
+  local temp_target="${target}.tmp.$$"
+
+  mkdir -p "${target:h}"
+  rm -f "${temp_target}"
+  curl --fail --location --output "${temp_target}" "${source_url}"
+  mv -f "${temp_target}" "${target}"
+  print -r -- "${source_url}" >"${source_marker}"
+}
+
 reset_dir() {
   local target_path="$1"
   rm -rf "${target_path}"
@@ -131,6 +184,18 @@ archive_payload() {
   rm -f "${archive_path}"
   mkdir -p "${archive_path:h}"
   tar -cJf "${archive_path}" -C "${payload_root:h}" "${payload_root:t}"
+}
+
+extract_archive() {
+  local archive_path="$1"
+  local extract_root="$2"
+  shift 2
+
+  if tar --help 2>/dev/null | grep -q -- "--warning"; then
+    tar --warning=no-unknown-keyword "$@" -f "${archive_path}" -C "${extract_root}"
+  else
+    tar "$@" -f "${archive_path}" -C "${extract_root}"
+  fi
 }
 
 write_stack_manifest() {
@@ -164,7 +229,7 @@ prepare_dxvk_component() {
   download_if_missing "${DXVK_ARCHIVE_URL}" "${DXVK_ARCHIVE_CACHE}" "${DXVK_ARCHIVE_SHA256}"
   reset_dir "${work_root}"
   mkdir -p "${extract_root}"
-  tar --warning=no-unknown-keyword -xzf "${DXVK_ARCHIVE_CACHE}" -C "${extract_root}"
+  extract_archive "${DXVK_ARCHIVE_CACHE}" "${extract_root}" -xz
 
   mkdir -p \
     "${payload_root}/Components/DXVK-macOS/DXVK/x64" \
@@ -197,7 +262,7 @@ prepare_dxmt_component() {
   download_if_missing "${DXMT_ARCHIVE_URL}" "${DXMT_ARCHIVE_CACHE}" "${DXMT_ARCHIVE_SHA256}"
   reset_dir "${work_root}"
   mkdir -p "${extract_root}"
-  tar --warning=no-unknown-keyword --zstd -xf "${DXMT_ARCHIVE_CACHE}" -C "${extract_root}"
+  extract_archive "${DXMT_ARCHIVE_CACHE}" "${extract_root}" --zstd -x
 
   if [[ ! -f "${extract_root}/components/dxmt/x86_64-windows/d3d11.dll" ||
         ! -f "${extract_root}/components/dxmt/x86_64-unix/winemetal.so" ]]; then
@@ -347,6 +412,30 @@ resolve_gptk_d3dmetal_windows_dll() {
   return 1
 }
 
+resolve_gptk_d3dmetal_unix_library() {
+  local source_root="$1"
+  local library_name="$2"
+  local candidate
+
+  for candidate in \
+    "${source_root}/${library_name}" \
+    "${source_root}/wine/x86_64-unix/${library_name}" \
+    "${source_root}/../wine/x86_64-unix/${library_name}" \
+    "${source_root}/../../wine/x86_64-unix/${library_name}" \
+    "${source_root}/lib/wine/x86_64-unix/${library_name}" \
+    "${source_root}/redist/lib/wine/x86_64-unix/${library_name}" \
+    "${source_root}/Wine/lib/wine/x86_64-unix/${library_name}" \
+    "${source_root}/Libraries/Wine/lib/wine/x86_64-unix/${library_name}" \
+    "${source_root}/Contents/Resources/wine/lib/wine/x86_64-unix/${library_name}"; do
+    if [[ -e "${candidate}" || -L "${candidate}" ]]; then
+      print -r -- "${candidate}"
+      return 0
+    fi
+  done
+
+  return 1
+}
+
 verify_gptk_macho_file() {
   local path="$1"
   local label="$2"
@@ -394,8 +483,25 @@ prepare_gptk_d3dmetal_component() {
   local source_framework
   local source_framework_binary
   local source_dylib
-  local source_d3d12
-  local source_dxgi
+  local source_path
+  local windows_files=(
+    atidxx64.dll
+    d3d10.dll
+    d3d11.dll
+    d3d12.dll
+    dxgi.dll
+    nvapi64.dll
+    nvngx-on-metalfx.dll
+  )
+  local unix_files=(
+    atidxx64.so
+    d3d10.so
+    d3d11.so
+    d3d12.so
+    dxgi.so
+    nvapi64.so
+    nvngx-on-metalfx.so
+  )
 
   if [[ -z "${GPTK_D3DMETAL_ROOT}" ]]; then
     print -r -- ""
@@ -409,10 +515,8 @@ prepare_gptk_d3dmetal_component() {
 
   source_framework="$(resolve_gptk_d3dmetal_path "${GPTK_D3DMETAL_ROOT}" "D3DMetal.framework" || true)"
   source_dylib="$(resolve_gptk_d3dmetal_path "${GPTK_D3DMETAL_ROOT}" "libd3dshared.dylib" || true)"
-  source_d3d12="$(resolve_gptk_d3dmetal_windows_dll "${GPTK_D3DMETAL_ROOT}" "d3d12.dll" || true)"
-  source_dxgi="$(resolve_gptk_d3dmetal_windows_dll "${GPTK_D3DMETAL_ROOT}" "dxgi.dll" || true)"
-  if [[ -z "${source_framework}" || -z "${source_dylib}" || -z "${source_d3d12}" || -z "${source_dxgi}" ]]; then
-    print -u2 "GPTK/D3DMetal source must contain D3DMetal.framework, libd3dshared.dylib, d3d12.dll, and dxgi.dll."
+  if [[ -z "${source_framework}" || -z "${source_dylib}" ]]; then
+    print -u2 "GPTK/D3DMetal source must contain D3DMetal.framework and libd3dshared.dylib."
     exit 69
   fi
   source_framework_binary="$(gptk_framework_binary "${source_framework}" || true)"
@@ -422,20 +526,46 @@ prepare_gptk_d3dmetal_component() {
   fi
   verify_gptk_macho_file "${source_framework_binary}" "framework binary" || exit 69
   verify_gptk_macho_file "${source_dylib}" "shared library" || exit 69
-  verify_gptk_pe_file "${source_d3d12}" "d3d12.dll" || exit 69
-  verify_gptk_pe_file "${source_dxgi}" "dxgi.dll" || exit 69
+  for file_name in "${windows_files[@]}"; do
+    source_path="$(resolve_gptk_d3dmetal_windows_dll "${GPTK_D3DMETAL_ROOT}" "${file_name}" || true)"
+    if [[ -z "${source_path}" ]]; then
+      print -u2 "GPTK/D3DMetal source is missing ${file_name}."
+      exit 69
+    fi
+    verify_gptk_pe_file "${source_path}" "${file_name}" || exit 69
+  done
+  for file_name in "${unix_files[@]}"; do
+    source_path="$(resolve_gptk_d3dmetal_unix_library "${GPTK_D3DMETAL_ROOT}" "${file_name}" || true)"
+    if [[ -z "${source_path}" ]]; then
+      print -u2 "GPTK/D3DMetal source is missing ${file_name}."
+      exit 69
+    fi
+    if [[ "${file_name}" == "d3d11.so" || "${file_name}" == "d3d12.so" || "${file_name}" == "dxgi.so" ]]; then
+      if [[ ! -L "${source_path}" || "$(/usr/bin/stat -f '%Y' "${source_path}")" != "../../external/libd3dshared.dylib" ]]; then
+        print -u2 "GPTK/D3DMetal ${file_name} must be a symlink to ../../external/libd3dshared.dylib."
+        exit 69
+      fi
+    fi
+  done
 
   reset_dir "${work_root}"
   mkdir -p "${payload_root}/Components/GPTK-D3DMetal/lib/external"
   mkdir -p "${payload_root}/Components/GPTK-D3DMetal/lib/wine/x86_64-windows"
+  mkdir -p "${payload_root}/Components/GPTK-D3DMetal/lib/wine/x86_64-unix"
   cp -R "${source_framework}" \
     "${payload_root}/Components/GPTK-D3DMetal/lib/external/D3DMetal.framework"
   cp -Lf "${source_dylib}" \
     "${payload_root}/Components/GPTK-D3DMetal/lib/external/libd3dshared.dylib"
-  cp -f "${source_d3d12}" \
-    "${payload_root}/Components/GPTK-D3DMetal/lib/wine/x86_64-windows/d3d12.dll"
-  cp -f "${source_dxgi}" \
-    "${payload_root}/Components/GPTK-D3DMetal/lib/wine/x86_64-windows/dxgi.dll"
+  for file_name in "${windows_files[@]}"; do
+    source_path="$(resolve_gptk_d3dmetal_windows_dll "${GPTK_D3DMETAL_ROOT}" "${file_name}")"
+    cp -f "${source_path}" \
+      "${payload_root}/Components/GPTK-D3DMetal/lib/wine/x86_64-windows/${file_name}"
+  done
+  for file_name in "${unix_files[@]}"; do
+    source_path="$(resolve_gptk_d3dmetal_unix_library "${GPTK_D3DMETAL_ROOT}" "${file_name}")"
+    cp -a "${source_path}" \
+      "${payload_root}/Components/GPTK-D3DMetal/lib/wine/x86_64-unix/${file_name}"
+  done
   write_stack_manifest \
     "${payload_root}/.konyak-runtime-stack.json" \
     "gptk-d3dmetal" \
@@ -470,6 +600,7 @@ write_source_manifest() {
     "${MANIFEST_PATH}" \
     "${wine_archive_source}" \
     "${WINE_ARCHIVE_SHA256}" \
+    "${WINE_VERSION}" \
     "${dxvk_archive}" \
     "${dxvk_sha}" \
     "${dxmt_archive}" \
@@ -490,6 +621,7 @@ import sys
     manifest_path,
     wine_archive,
     wine_sha,
+    wine_version,
     dxvk_archive,
     dxvk_sha,
     dxmt_archive,
@@ -503,12 +635,12 @@ import sys
     gptk_d3dmetal_sha,
     gptk_d3dmetal_version,
     winetricks_version,
-) = sys.argv[1:17]
+) = sys.argv[1:18]
 
 components = [
     {
         "id": "wine",
-        "version": "wine-devel-11.9",
+        "version": wine_version,
         "archiveUrl": wine_archive,
         "sha256": wine_sha,
     },
@@ -561,7 +693,44 @@ with open(manifest_path, "w", encoding="utf-8") as handle:
 PY
 }
 
+case "${RUNTIME_SOURCE_MODE}" in
+  release)
+    download_release_manifest_if_needed
+
+    if [[ "${print_manifest_path}" == true ]]; then
+      print -r -- "${MANIFEST_PATH}"
+    fi
+
+    if [[ "${print_runtime_path}" == true ]]; then
+      print -r -- "${RUNTIME_ROOT}"
+    fi
+
+    exit 0
+    ;;
+  local)
+    ;;
+  *)
+    print -u2 "unknown KONYAK_DEV_MACOS_RUNTIME_SOURCE_MODE: ${RUNTIME_SOURCE_MODE}"
+    exit 64
+    ;;
+esac
+
 mkdir -p "${SOURCE_ROOT}" "${DOWNLOAD_CACHE}" "${RUNTIME_ROOT:h}"
+
+if [[ -z "${WINE_ARCHIVE_SHA256}" ]]; then
+  print -u2 "KONYAK_DEV_MACOS_WINE_ARCHIVE_SHA256 is required in local macOS runtime source mode."
+  exit 69
+fi
+
+if [[ -z "${WINE_ARCHIVE_URL}" && ! -f "${WINE_ARCHIVE_CACHE}" ]]; then
+  print -u2 "KONYAK_DEV_MACOS_WINE_ARCHIVE_URL or KONYAK_DEV_MACOS_WINE_ARCHIVE_CACHE is required in local macOS runtime source mode."
+  exit 69
+fi
+
+if [[ "${download_wine}" == true && -z "${WINE_ARCHIVE_URL}" ]]; then
+  print -u2 "KONYAK_DEV_MACOS_WINE_ARCHIVE_URL is required with --download-wine in local macOS runtime source mode."
+  exit 69
+fi
 
 if [[ "${download_wine}" == true ]]; then
   download_if_missing "${WINE_ARCHIVE_URL}" "${WINE_ARCHIVE_CACHE}" "${WINE_ARCHIVE_SHA256}"
