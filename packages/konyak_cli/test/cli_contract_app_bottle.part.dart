@@ -898,6 +898,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       for (final dllName in const [
         'dxgi.dll',
         'd3d9.dll',
+        'd3d10.dll',
         'd3d10core.dll',
         'd3d11.dll',
         'd3d12.dll',
@@ -970,6 +971,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
     }
     for (final dllName in const [
       'd3d9.dll',
+      'd3d10.dll',
       'd3d10core.dll',
       'winemetal.dll',
     ]) {
@@ -1065,7 +1067,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
     }
   });
 
-  test('set-runtime-settings --json restores macOS builtin D3D DLLs', () {
+  test('set-runtime-settings --json removes macOS D3D DLL overrides', () {
     final tempDirectory = Directory.systemTemp.createTempSync(
       'konyak-dxvk-overrides-remove-test-',
     );
@@ -1080,26 +1082,14 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       'bottles',
       'steam',
     ]);
-    for (final arch in const ['x86_64-windows', 'i386-windows']) {
-      for (final dllName in const [
-        'dxgi.dll',
-        'd3d9.dll',
-        'd3d10core.dll',
-        'd3d11.dll',
-      ]) {
-        final file = File(
-          _joinTestPath(runtimeRoot, ['lib', 'wine', arch, dllName]),
-        );
-        file.parent.createSync(recursive: true);
-        file.writeAsStringSync('$arch/$dllName');
-      }
-    }
     for (final windowsDirectory in const ['system32', 'syswow64']) {
       for (final dllName in const [
         'dxgi.dll',
         'd3d9.dll',
+        'd3d10.dll',
         'd3d10core.dll',
         'd3d11.dll',
+        'd3d12.dll',
         'winemetal.dll',
       ]) {
         final file = File(
@@ -1143,16 +1133,16 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
     );
 
     expect(result.exitCode, 0);
-    for (final entry in const [
-      ('system32', 'x86_64-windows'),
-      ('syswow64', 'i386-windows'),
-    ]) {
-      final (windowsDirectory, runtimeArch) = entry;
+    expect(result.stderr, isEmpty);
+    for (final windowsDirectory in const ['system32', 'syswow64']) {
       for (final dllName in const [
         'dxgi.dll',
         'd3d9.dll',
+        'd3d10.dll',
         'd3d10core.dll',
         'd3d11.dll',
+        'd3d12.dll',
+        'winemetal.dll',
       ]) {
         expect(
           File(
@@ -1162,23 +1152,204 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
               windowsDirectory,
               dllName,
             ]),
-          ).readAsStringSync(),
-          '$runtimeArch/$dllName',
+          ).existsSync(),
+          isFalse,
         );
       }
-      expect(
-        File(
-          _joinTestPath(bottlePath, [
-            'drive_c',
-            'windows',
-            windowsDirectory,
-            'winemetal.dll',
-          ]),
-        ).existsSync(),
-        isFalse,
-      );
     }
   });
+
+  test(
+    'set-runtime-settings --json disables macOS D3DMetal without i386 Wine DLLs',
+    () {
+      final tempDirectory = Directory.systemTemp.createTempSync(
+        'konyak-d3dmetal-disable-x64-runtime-test-',
+      );
+      addTearDown(() {
+        if (tempDirectory.existsSync()) {
+          tempDirectory.deleteSync(recursive: true);
+        }
+      });
+
+      final runtimeRoot = _joinTestPath(tempDirectory.path, const ['runtime']);
+      final bottlePath = _joinTestPath(tempDirectory.path, const [
+        'bottles',
+        'steam',
+      ]);
+      for (final windowsDirectory in const ['system32', 'syswow64']) {
+        for (final dllName in const [
+          'dxgi.dll',
+          'd3d9.dll',
+          'd3d10.dll',
+          'd3d10core.dll',
+          'd3d11.dll',
+          'd3d12.dll',
+          'winemetal.dll',
+        ]) {
+          final file = File(
+            _joinTestPath(bottlePath, [
+              'drive_c',
+              'windows',
+              windowsDirectory,
+              dllName,
+            ]),
+          );
+          file.parent.createSync(recursive: true);
+          file.writeAsStringSync('stale $dllName');
+        }
+      }
+      final repository = MemoryBottleRepository(
+        dataHome: _joinTestPath(tempDirectory.path, const ['data']),
+        bottles: [
+          BottleRecord(
+            id: 'steam',
+            name: 'Steam',
+            path: bottlePath,
+            windowsVersion: 'win10',
+            runtimeSettings: const BottleRuntimeSettings(dxrEnabled: true),
+          ),
+        ],
+      );
+
+      final result = runCli(
+        [
+          'set-runtime-settings',
+          'steam',
+          '--settings-json',
+          jsonEncode({'dxrEnabled': false}),
+          '--json',
+        ],
+        bottleRepository: repository,
+        programRunPlanner: ProgramRunPlanner(
+          hostPlatform: KonyakHostPlatform.macos,
+          environment: HostEnvironment({'KONYAK_MACOS_WINE_HOME': runtimeRoot}),
+        ),
+      );
+
+      expect(result.exitCode, 0);
+      expect(result.stderr, isEmpty);
+      expect(
+        _expectFound(repository.findBottle('steam')).runtimeSettings.dxrEnabled,
+        isFalse,
+      );
+      for (final windowsDirectory in const ['system32', 'syswow64']) {
+        for (final dllName in const [
+          'dxgi.dll',
+          'd3d9.dll',
+          'd3d10.dll',
+          'd3d10core.dll',
+          'd3d11.dll',
+          'd3d12.dll',
+          'winemetal.dll',
+        ]) {
+          expect(
+            File(
+              _joinTestPath(bottlePath, [
+                'drive_c',
+                'windows',
+                windowsDirectory,
+                dllName,
+              ]),
+            ).existsSync(),
+            isFalse,
+          );
+        }
+      }
+    },
+  );
+
+  test(
+    'set-runtime-settings --json repairs stale macOS D3D overrides when disabled',
+    () {
+      final tempDirectory = Directory.systemTemp.createTempSync(
+        'konyak-d3d-overrides-disabled-repair-test-',
+      );
+      addTearDown(() {
+        if (tempDirectory.existsSync()) {
+          tempDirectory.deleteSync(recursive: true);
+        }
+      });
+
+      final runtimeRoot = _joinTestPath(tempDirectory.path, const ['runtime']);
+      final bottlePath = _joinTestPath(tempDirectory.path, const [
+        'bottles',
+        'steam',
+      ]);
+      for (final windowsDirectory in const ['system32', 'syswow64']) {
+        for (final dllName in const [
+          'dxgi.dll',
+          'd3d9.dll',
+          'd3d10.dll',
+          'd3d10core.dll',
+          'd3d11.dll',
+          'd3d12.dll',
+          'winemetal.dll',
+        ]) {
+          final file = File(
+            _joinTestPath(bottlePath, [
+              'drive_c',
+              'windows',
+              windowsDirectory,
+              dllName,
+            ]),
+          );
+          file.parent.createSync(recursive: true);
+          file.writeAsStringSync('stale $dllName');
+        }
+      }
+      final repository = MemoryBottleRepository(
+        dataHome: _joinTestPath(tempDirectory.path, const ['data']),
+        bottles: [
+          BottleRecord(
+            id: 'steam',
+            name: 'Steam',
+            path: bottlePath,
+            windowsVersion: 'win10',
+          ),
+        ],
+      );
+
+      final result = runCli(
+        [
+          'set-runtime-settings',
+          'steam',
+          '--settings-json',
+          jsonEncode({'dxrEnabled': false}),
+          '--json',
+        ],
+        bottleRepository: repository,
+        programRunPlanner: ProgramRunPlanner(
+          hostPlatform: KonyakHostPlatform.macos,
+          environment: HostEnvironment({'KONYAK_MACOS_WINE_HOME': runtimeRoot}),
+        ),
+      );
+
+      expect(result.exitCode, 0);
+      expect(result.stderr, isEmpty);
+      for (final windowsDirectory in const ['system32', 'syswow64']) {
+        for (final dllName in const [
+          'dxgi.dll',
+          'd3d9.dll',
+          'd3d10core.dll',
+          'd3d11.dll',
+          'd3d12.dll',
+          'winemetal.dll',
+        ]) {
+          expect(
+            File(
+              _joinTestPath(bottlePath, [
+                'drive_c',
+                'windows',
+                windowsDirectory,
+                dllName,
+              ]),
+            ).existsSync(),
+            isFalse,
+          );
+        }
+      }
+    },
+  );
 
   test(
     'set-runtime-settings --json makes DXVK and DXMT mutually exclusive',

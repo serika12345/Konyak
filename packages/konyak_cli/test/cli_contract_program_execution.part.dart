@@ -356,13 +356,42 @@ void defineProgramExecutionContractTests() {
   });
 
   test('run-program --json preserves macOS bottle environment on macOS', () {
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-macos-run-env-test-',
+    );
+    addTearDown(() {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    });
+
+    final runtimeRoot = _joinTestPath(tempDirectory.path, const ['runtime']);
+    final bottlePath = _joinTestPath(tempDirectory.path, const [
+      'bottles',
+      'steam',
+    ]);
+    for (final arch in const ['x86_64-windows', 'i386-windows']) {
+      for (final dllName in const [
+        'dxgi.dll',
+        'd3d9.dll',
+        'd3d10core.dll',
+        'd3d11.dll',
+      ]) {
+        final file = File(
+          _joinTestPath(runtimeRoot, ['lib', 'dxvk', arch, dllName]),
+        );
+        file.parent.createSync(recursive: true);
+        file.writeAsStringSync('$arch/$dllName');
+      }
+    }
+
     final repository = MemoryBottleRepository(
-      dataHome: '/Users/user/Library/Application Support/Konyak',
+      dataHome: _joinTestPath(tempDirectory.path, const ['data']),
       bottles: [
         BottleRecord(
           id: 'steam',
           name: 'Steam',
-          path: '/Users/user/Library/Application Support/Konyak/Bottles/Steam',
+          path: bottlePath,
           windowsVersion: 'win10',
           runtimeSettings: BottleRuntimeSettings(
             enhancedSync: 'msync',
@@ -390,7 +419,7 @@ void defineProgramExecutionContractTests() {
       bottleRepository: repository,
       programRunPlanner: ProgramRunPlanner(
         hostPlatform: KonyakHostPlatform.macos,
-        environment: HostEnvironment({'HOME': '/Users/user'}),
+        environment: HostEnvironment({'KONYAK_MACOS_WINE_HOME': runtimeRoot}),
       ),
       programRunner: runner,
     );
@@ -432,19 +461,42 @@ void defineProgramExecutionContractTests() {
       runner.lastRequest?.environment.toMap(),
       containsPair(
         'WINEDLLPATH',
-        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxvk/x86_64-windows:/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxvk/i386-windows',
+        '$runtimeRoot/lib/dxvk/x86_64-windows:'
+            '$runtimeRoot/lib/dxvk/i386-windows',
       ),
     );
   });
 
   test('run-program --json applies D3DMetal settings on macOS', () {
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-d3dmetal-run-env-test-',
+    );
+    addTearDown(() {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    });
+
+    final runtimeRoot = _joinTestPath(tempDirectory.path, const ['runtime']);
+    final bottlePath = _joinTestPath(tempDirectory.path, const [
+      'bottles',
+      'steam',
+    ]);
+    for (final dllName in const ['dxgi.dll', 'd3d11.dll', 'd3d12.dll']) {
+      final file = File(
+        _joinTestPath(runtimeRoot, ['lib', 'wine', 'x86_64-windows', dllName]),
+      );
+      file.parent.createSync(recursive: true);
+      file.writeAsStringSync('d3dmetal/$dllName');
+    }
+
     final repository = MemoryBottleRepository(
-      dataHome: '/Users/user/Library/Application Support/Konyak',
+      dataHome: _joinTestPath(tempDirectory.path, const ['data']),
       bottles: [
         BottleRecord(
           id: 'steam',
           name: 'Steam',
-          path: '/Users/user/Library/Application Support/Konyak/Bottles/Steam',
+          path: bottlePath,
           windowsVersion: 'win10',
           runtimeSettings: const BottleRuntimeSettings(dxrEnabled: true),
         ),
@@ -465,7 +517,7 @@ void defineProgramExecutionContractTests() {
       bottleRepository: repository,
       programRunPlanner: ProgramRunPlanner(
         hostPlatform: KonyakHostPlatform.macos,
-        environment: HostEnvironment({'HOME': '/Users/user'}),
+        environment: HostEnvironment({'KONYAK_MACOS_WINE_HOME': runtimeRoot}),
       ),
       programRunner: runner,
     );
@@ -477,27 +529,25 @@ void defineProgramExecutionContractTests() {
     );
     expect(
       runner.lastRequest?.environment.toMap(),
-      isNot(contains('WINEDLLPATH')),
+      containsPair('WINEDLLPATH', '$runtimeRoot/lib/wine/x86_64-windows'),
     );
     expect(
       runner.lastRequest?.environment.toMap(),
       containsPair(
         'DYLD_LIBRARY_PATH',
-        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/external:/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-unix:/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib',
+        '$runtimeRoot/lib/external:$runtimeRoot/lib/wine/x86_64-unix:'
+            '$runtimeRoot/lib',
       ),
     );
     expect(
       runner.lastRequest?.environment.toMap(),
-      containsPair(
-        'DYLD_FRAMEWORK_PATH',
-        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/external',
-      ),
+      containsPair('DYLD_FRAMEWORK_PATH', '$runtimeRoot/lib/external'),
     );
     expect(
       runner.lastRequest?.environment.toMap(),
       containsPair(
         'CX_APPLEGPTK_LIBD3DSHARED_PATH',
-        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/external/libd3dshared.dylib',
+        '$runtimeRoot/lib/external/libd3dshared.dylib',
       ),
     );
     expect(
@@ -509,14 +559,40 @@ void defineProgramExecutionContractTests() {
   test(
     'run-program --json prefers D3DMetal over stale DXMT settings on macOS',
     () {
+      final tempDirectory = Directory.systemTemp.createTempSync(
+        'konyak-d3dmetal-run-stale-dxmt-test-',
+      );
+      addTearDown(() {
+        if (tempDirectory.existsSync()) {
+          tempDirectory.deleteSync(recursive: true);
+        }
+      });
+
+      final runtimeRoot = _joinTestPath(tempDirectory.path, const ['runtime']);
+      final bottlePath = _joinTestPath(tempDirectory.path, const [
+        'bottles',
+        'steam',
+      ]);
+      for (final dllName in const ['dxgi.dll', 'd3d11.dll', 'd3d12.dll']) {
+        final file = File(
+          _joinTestPath(runtimeRoot, [
+            'lib',
+            'wine',
+            'x86_64-windows',
+            dllName,
+          ]),
+        );
+        file.parent.createSync(recursive: true);
+        file.writeAsStringSync('d3dmetal/$dllName');
+      }
+
       final repository = MemoryBottleRepository(
-        dataHome: '/Users/user/Library/Application Support/Konyak',
+        dataHome: _joinTestPath(tempDirectory.path, const ['data']),
         bottles: [
           BottleRecord(
             id: 'steam',
             name: 'Steam',
-            path:
-                '/Users/user/Library/Application Support/Konyak/Bottles/Steam',
+            path: bottlePath,
             windowsVersion: 'win10',
             runtimeSettings: const BottleRuntimeSettings(
               dxrEnabled: true,
@@ -540,7 +616,7 @@ void defineProgramExecutionContractTests() {
         bottleRepository: repository,
         programRunPlanner: ProgramRunPlanner(
           hostPlatform: KonyakHostPlatform.macos,
-          environment: HostEnvironment(const {'HOME': '/Users/user'}),
+          environment: HostEnvironment({'KONYAK_MACOS_WINE_HOME': runtimeRoot}),
         ),
         programRunner: runner,
       );
@@ -548,27 +624,101 @@ void defineProgramExecutionContractTests() {
       expect(result.exitCode, 0);
       final environment = runner.lastRequest?.environment.toMap();
       expect(environment?['WINEDLLOVERRIDES'], 'dxgi,d3d11,d3d12=n,b');
-      expect(environment, isNot(contains('WINEDLLPATH')));
+      expect(
+        environment?['WINEDLLPATH'],
+        '$runtimeRoot/lib/wine/x86_64-windows',
+      );
       expect(
         environment?['DYLD_LIBRARY_PATH'],
-        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/'
-        'lib/external:'
-        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/'
-        'lib/wine/x86_64-unix:'
-        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib',
+        '$runtimeRoot/lib/external:$runtimeRoot/lib/wine/x86_64-unix:'
+        '$runtimeRoot/lib',
       );
-      expect(
-        environment?['DYLD_FRAMEWORK_PATH'],
-        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/'
-        'lib/external',
-      );
+      expect(environment?['DYLD_FRAMEWORK_PATH'], '$runtimeRoot/lib/external');
       expect(
         environment?['CX_APPLEGPTK_LIBD3DSHARED_PATH'],
-        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/'
-        'lib/external/libd3dshared.dylib',
+        '$runtimeRoot/lib/external/libd3dshared.dylib',
       );
     },
   );
+
+  test('run-program --json repairs stale macOS D3DMetal DLL overrides', () {
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-d3dmetal-run-repair-test-',
+    );
+    addTearDown(() {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    });
+
+    final runtimeRoot = _joinTestPath(tempDirectory.path, const ['runtime']);
+    final bottlePath = _joinTestPath(tempDirectory.path, const [
+      'bottles',
+      'steam',
+    ]);
+    for (final dllName in const ['dxgi.dll', 'd3d11.dll', 'd3d12.dll']) {
+      final file = File(
+        _joinTestPath(runtimeRoot, ['lib', 'wine', 'x86_64-windows', dllName]),
+      );
+      file.parent.createSync(recursive: true);
+      file.writeAsStringSync('d3dmetal/$dllName');
+    }
+    for (final dllName in const ['dxgi.dll', 'd3d11.dll', 'd3d12.dll']) {
+      final file = File(
+        _joinTestPath(bottlePath, ['drive_c', 'windows', 'system32', dllName]),
+      );
+      file.parent.createSync(recursive: true);
+      file.writeAsStringSync('stale $dllName');
+    }
+
+    final repository = MemoryBottleRepository(
+      dataHome: _joinTestPath(tempDirectory.path, const ['data']),
+      bottles: [
+        BottleRecord(
+          id: 'steam',
+          name: 'Steam',
+          path: bottlePath,
+          windowsVersion: 'win10',
+          runtimeSettings: const BottleRuntimeSettings(dxrEnabled: true),
+        ),
+      ],
+    );
+    final runner = RecordingProgramRunner(
+      result: const ProgramRunCompleted(processExitCode: 0),
+    );
+
+    final result = runCli(
+      const [
+        'run-program',
+        'steam',
+        '--program',
+        '/downloads/setup.exe',
+        '--json',
+      ],
+      bottleRepository: repository,
+      programRunPlanner: ProgramRunPlanner(
+        hostPlatform: KonyakHostPlatform.macos,
+        environment: HostEnvironment({'KONYAK_MACOS_WINE_HOME': runtimeRoot}),
+      ),
+      programRunner: runner,
+    );
+
+    expect(result.exitCode, 0);
+    expect(result.stderr, isEmpty);
+    for (final dllName in const ['dxgi.dll', 'd3d11.dll', 'd3d12.dll']) {
+      expect(
+        File(
+          _joinTestPath(bottlePath, [
+            'drive_c',
+            'windows',
+            'system32',
+            dllName,
+          ]),
+        ).readAsStringSync(),
+        'd3dmetal/$dllName',
+      );
+    }
+  });
 
   test('run-program --json applies DXMT settings on macOS', () {
     final repository = MemoryBottleRepository(

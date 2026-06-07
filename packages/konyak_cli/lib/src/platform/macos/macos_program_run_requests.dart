@@ -122,7 +122,9 @@ ProgramRunEnvironment _macosWineEnvironment({
       ]),
     ...bottle.runtimeSettings.macosEnvironment().toMap(),
   };
-  if (!d3dMetalSelected && bottle.runtimeSettings.dxmt) {
+  if (d3dMetalSelected) {
+    wineEnvironment['WINEDLLPATH'] = _macosD3DMetalWindowsPath(runtimeRoot);
+  } else if (bottle.runtimeSettings.dxmt) {
     wineEnvironment['WINEDLLPATH'] = [
       _joinPath(runtimeRoot, const ['lib', 'dxmt', 'x86_64-windows']),
       _joinPath(runtimeRoot, const ['lib', 'dxmt', 'i386-windows']),
@@ -139,6 +141,10 @@ ProgramRunEnvironment _macosWineEnvironment({
 
 String _macosD3DMetalExternalPath(String runtimeRoot) {
   return _joinPath(runtimeRoot, const ['lib', 'external']);
+}
+
+String _macosD3DMetalWindowsPath(String runtimeRoot) {
+  return _joinPath(runtimeRoot, const ['lib', 'wine', 'x86_64-windows']);
 }
 
 String _macosD3DMetalUnixPath(String runtimeRoot) {

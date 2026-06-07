@@ -71,6 +71,15 @@ CliResult _runProgramJsonResult(
           extra: <String, Object?>{'programPath': request.programPath},
         ),
         (request) {
+          final dllSyncFailure = _syncRuntimeSettingsDllOverrides(
+            bottle: bottle,
+            runtimeSettings: bottle.runtimeSettings,
+            programRunPlanner: context.programRunPlanner,
+          );
+          if (dllSyncFailure != null) {
+            return dllSyncFailure;
+          }
+
           _recordExternalProgramRun(bottle: bottle, request: request);
           _synchronizeLinuxDesktopLauncherForProgramRun(
             hostPlatform: context.programRunPlanner.hostPlatform,
