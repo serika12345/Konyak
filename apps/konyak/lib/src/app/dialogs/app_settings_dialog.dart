@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../cli/konyak_cli_client.dart';
@@ -17,7 +19,9 @@ class AppSettingsDialog extends StatefulWidget {
     required this.initialSettings,
     required this.directoryPicker,
     this.runtimes = const <RuntimeSummary>[],
+    this.isLoadingRuntimes = false,
     this.runtimeLoadError,
+    this.onLoadRuntimes,
     this.onInstallRuntime,
     this.onInstallGptkWine,
     this.onOpenGptkPage,
@@ -28,7 +32,9 @@ class AppSettingsDialog extends StatefulWidget {
   final AppSettingsSummary initialSettings;
   final DirectoryPicker directoryPicker;
   final List<RuntimeSummary> runtimes;
+  final bool isLoadingRuntimes;
   final String? runtimeLoadError;
+  final Future<RuntimeListLoadResult> Function()? onLoadRuntimes;
   final Future<RuntimeInstallLoadResult> Function()? onInstallRuntime;
   final Future<RuntimeInstallLoadResult> Function()? onInstallGptkWine;
   final Future<void> Function()? onOpenGptkPage;
@@ -42,10 +48,46 @@ class AppSettingsDialog extends StatefulWidget {
 class _AppSettingsDialogState extends State<AppSettingsDialog> {
   late AppSettingsSummary _settings = widget.initialSettings;
   late List<RuntimeSummary> _runtimes = widget.runtimes;
+  late bool _isLoadingRuntimes = widget.isLoadingRuntimes;
   late String? _runtimeLoadError = widget.runtimeLoadError;
   bool _isSaving = false;
   bool _isInstallingRuntime = false;
   bool _isInstallingGptkWine = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_isLoadingRuntimes) {
+      unawaited(_loadRuntimes());
+    }
+  }
+
+  Future<void> _loadRuntimes() async {
+    final loadRuntimes = widget.onLoadRuntimes;
+    if (loadRuntimes == null) {
+      setState(() {
+        _isLoadingRuntimes = false;
+      });
+      return;
+    }
+
+    final result = await loadRuntimes();
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      switch (result) {
+        case LoadedRuntimeList(:final runtimes):
+          _runtimes = runtimes;
+          _runtimeLoadError = null;
+        case RuntimeListLoadFailure(:final message):
+          _runtimeLoadError = message;
+      }
+      _isLoadingRuntimes = false;
+    });
+  }
 
   Future<void> _save(AppSettingsSummary settings) async {
     final previousSettings = _settings;
@@ -240,6 +282,7 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
                 title: runtimeSectionTitle(widget.platform),
                 platform: runtimeSectionPlatform(widget.platform),
                 runtimes: _runtimes,
+                isLoading: _isLoadingRuntimes,
                 loadError: _runtimeLoadError,
                 isInstalling: _isInstallingRuntime,
                 isInstallingGptkWine: _isInstallingGptkWine,

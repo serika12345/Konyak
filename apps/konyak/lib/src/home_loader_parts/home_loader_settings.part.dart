@@ -18,30 +18,19 @@ extension _KonyakHomeLoaderSettings on _KonyakHomeLoaderState {
         case LoadedAppSettings(:final settings):
           _appSettings = settings;
           widget.onAppSettingsLoaded(settings);
-          var knownRuntimes = const <RuntimeSummary>[];
-          String? runtimeLoadError;
           final managedRuntime = managedRuntimePlatform(widget.platform);
-          if (managedRuntime != null) {
-            final runtimeResult = await widget.cliClient.listKnownRuntimes();
-            if (!mounted) {
-              return;
-            }
-            switch (runtimeResult) {
-              case LoadedRuntimeList(:final runtimes):
-                knownRuntimes = runtimesForPlatform(widget.platform, runtimes);
-                _knownRuntimes = runtimes;
-              case RuntimeListLoadFailure(:final message):
-                runtimeLoadError = message;
-            }
-          }
           await showDialog<void>(
             context: context,
             builder: (context) => AppSettingsDialog(
               platform: widget.platform,
               initialSettings: settings,
               directoryPicker: widget.directoryPicker,
-              runtimes: knownRuntimes,
-              runtimeLoadError: runtimeLoadError,
+              runtimes: runtimesForPlatform(widget.platform, _knownRuntimes),
+              isLoadingRuntimes:
+                  managedRuntime != null && !_hasLoadedKnownRuntimes,
+              onLoadRuntimes: managedRuntime == null || _hasLoadedKnownRuntimes
+                  ? null
+                  : _loadSettingsRuntimes,
               onInstallRuntime: managedRuntime != null
                   ? _installSettingsRuntime
                   : null,
@@ -58,6 +47,23 @@ extension _KonyakHomeLoaderSettings on _KonyakHomeLoaderState {
     } finally {
       _isShowingSettings = false;
     }
+  }
+
+  Future<RuntimeListLoadResult> _loadSettingsRuntimes() async {
+    final result = await widget.cliClient.listKnownRuntimes();
+
+    if (!mounted) {
+      return result;
+    }
+
+    switch (result) {
+      case LoadedRuntimeList(:final runtimes):
+        _setKnownRuntimes(runtimes);
+      case RuntimeListLoadFailure():
+        break;
+    }
+
+    return result;
   }
 
   Future<void> _showAbout() async {

@@ -226,6 +226,97 @@ void defineSettingsWidgetTests() {
     );
   });
 
+  testWidgets('settings dialog opens before runtime list finishes loading', (
+    WidgetTester tester,
+  ) async {
+    final runtimeCompleter = Completer<ProcessRunResult>();
+    final runner = _FutureQueuedProcessRunner([
+      Future.value(
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '{"schemaVersion":1,"bottles":[]}',
+          stderr: '',
+        ),
+      ),
+      Future.value(
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+            {
+              "schemaVersion": 1,
+              "appSettings": {
+                "terminateWineProcessesOnClose": true,
+                "defaultBottlePath": "/home/user/.local/share/konyak/bottles",
+                "appearanceMode": "dark",
+                "automaticallyCheckForKonyakUpdates": false,
+                "automaticallyCheckForWineUpdates": true
+              }
+            }
+          ''',
+          stderr: '',
+        ),
+      ),
+      runtimeCompleter.future,
+    ]);
+
+    await tester.pumpWidget(
+      _testKonyakApp(
+        platform: KonyakPlatform.linux,
+        cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Settings'));
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.text('Konyak Settings'), findsOneWidget);
+    expect(find.text('General'), findsOneWidget);
+    expect(find.text('Linux Runtime'), findsOneWidget);
+    expect(find.text('Loading'), findsOneWidget);
+    expect(runner.argumentsLog, const [
+      ['list-bottles', '--json'],
+      ['get-app-settings', '--json'],
+      ['list-runtimes', '--json'],
+    ]);
+
+    runtimeCompleter.complete(
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "runtimes": [
+              {
+                "id": "konyak-linux-wine",
+                "name": "Konyak Linux Wine",
+                "platform": "linux",
+                "architecture": "x86_64",
+                "runnerKind": "wine",
+                "isBundled": false,
+                "isUpdateable": true,
+                "stack": {
+                  "schemaVersion": 1,
+                  "id": "linux-runtime-stack",
+                  "name": "Konyak Linux runtime stack",
+                  "compatibilityTarget": "proton-linux-runtime-stack",
+                  "isComplete": true,
+                  "components": []
+                }
+              }
+            ]
+          }
+        ''',
+        stderr: '',
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Loading'), findsNothing);
+    expect(find.text('Konyak Linux runtime stack'), findsOneWidget);
+  });
+
   testWidgets('Linux settings dialog installs a missing runtime explicitly', (
     WidgetTester tester,
   ) async {

@@ -10,6 +10,7 @@ class AppSettingsRuntimeSection extends StatelessWidget {
     required this.title,
     required this.platform,
     required this.runtimes,
+    required this.isLoading,
     required this.loadError,
     required this.isInstalling,
     required this.isInstallingGptkWine,
@@ -21,6 +22,7 @@ class AppSettingsRuntimeSection extends StatelessWidget {
   final String title;
   final String platform;
   final List<RuntimeSummary> runtimes;
+  final bool isLoading;
   final String? loadError;
   final bool isInstalling;
   final bool isInstallingGptkWine;
@@ -36,6 +38,15 @@ class AppSettingsRuntimeSection extends StatelessWidget {
     );
     final runtime = runtimeState.runtime;
     final stack = runtimeState.stack;
+
+    if (isLoading && (runtime == null || stack == null)) {
+      return AppSettingsSection(
+        title: title,
+        children: const [
+          AppSettingsDetailRow(label: 'Status', value: 'Loading'),
+        ],
+      );
+    }
 
     if (runtime == null || stack == null) {
       return AppSettingsSection(
