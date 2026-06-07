@@ -1,0 +1,3 @@
+[submodule "runtime/konyak-macos-runtime"]
+	path = runtime/konyak-macos-runtime
+	url = https://github.com/serika12345/konyak-macos-runtime.git
