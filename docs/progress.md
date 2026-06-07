@@ -9,29 +9,34 @@ handoff notes.
 
 ## Current Work Snapshot
 
-- Timestamp: 2026-06-07 21:23 JST
-- State: `completed`
+- Timestamp: 2026-06-07 21:37 JST
+- State: `paused`
 - Branch: `main`
-- Latest known parent commit before this documentation-policy change:
-  `b29f812 feat(cli): require FreeType in macOS runtime stack`
+- Latest known parent commit:
+  `982a35a docs: add progress handoff discipline`
 - Latest known macOS runtime submodule commit:
   `e7628e0 feat: package FreeType runtime component`
-- Related work: repository policy and continuation discipline
-- Purpose: adopt the useful parts of Bara's development discipline so it is
-  always clear what work is active, why it is being done, what has already been
-  verified, and how to resume after context is lost.
+- Related work: macOS 32-bit Windows executable support
+- Purpose: review the plan before implementation because CrossOver supports
+  32-bit Windows executables through Wine32-on-64, while Konyak currently
+  claims `wine32on64` support but the submodule runtime build is still
+  `--enable-win64`-only.
 - Completed:
-  - Compared Bara's `AGENTS.md` and `README.md` workflow rules with Konyak's
-    existing `AGENTS.md` and `docs/todo.md`.
-  - Added a Konyak-specific progress discipline to `AGENTS.md`.
-  - Added this initial progress file as the current-state handoff surface.
-  - Verified the repository-policy change through the required governance,
-    safety, formatting, and lint gates.
+  - Compared `/Users/masato/Downloads/CrossOver.app` with Konyak's runtime
+    contract.
+  - Confirmed CrossOver carries `lib/wine/i386-windows`,
+    `lib/wine/x86_64-windows`, and `lib/wine/x86_64-unix`, with no
+    `lib/wine/i386-unix`.
+  - Confirmed Konyak's submodule runtime recipe currently uses
+    `--enable-win64`, which is not enough for Win32 executable support.
+  - Added a reviewable TODO plan for restoring macOS 32-bit Windows executable
+    support before implementation starts.
 - Remaining:
-  - None for this documentation-policy change.
-- Next action: use `docs/progress.md` before `docs/todo.md` when resuming
-  unspecified work, and update this snapshot whenever active work starts,
-  pauses, blocks, is superseded, or completes.
+  - Review the TODO plan.
+  - After approval, implement the submodule runtime fix first, then update the
+    parent CLI contract and run-plan behavior.
+- Next action: wait for plan review. Do not implement 32-bit support until the
+  TODO plan is accepted or revised.
 - Verification performed:
   - `just verify-governance`: passed.
   - `just verify-safety`: passed.
@@ -40,6 +45,9 @@ handoff notes.
 
 ## Completed Milestones
 
+- 2026-06-07: Bara-style progress handoff discipline was added through
+  `docs/progress.md` and `AGENTS.md`, so active work and continuation state can
+  be recovered without chat history.
 - 2026-06-07: FreeType was added to the macOS runtime stack contract in the
   parent repository and packaged as a separate component in the
   `runtime/konyak-macos-runtime` submodule. The parent repository consumes the
