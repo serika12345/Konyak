@@ -67,16 +67,73 @@ Use TDD as the default development loop:
 2. Implement the smallest change that makes it pass.
 3. Refactor only while the test stays green.
 
-## 5. Verification Matrix
+## 5. Roadmap and Progress Discipline
 
-### 5.1 Any repository or tooling change
+Before starting implementation, refactoring, architecture work, runtime
+packaging work, or major repository-policy work, read the relevant entries in
+`docs/todo.md` and the current work state in `docs/progress.md`.
+
+Use these files for different responsibilities:
+
+- `docs/todo.md` tracks implementation milestones, deferred work, and large
+  product goals.
+- `docs/progress.md` tracks completed milestones, current active work, why that
+  work is being done, verification already performed, remaining work, and the
+  next action needed to continue after context is lost.
+- Architecture documents such as `docs/flutter-architecture-plan.md` track
+  stable design decisions and system shape.
+
+Project progress must be understandable from documentation alone. Do not rely
+on chat history or git history as the only record of what is currently being
+advanced or why.
+
+When starting, pausing, blocking, superseding, or completing TODO-backed
+implementation, refactoring, architecture work, runtime/submodule work, or
+major documentation/policy work, update the timestamped
+`Current Work Snapshot` in `docs/progress.md` in the same change. Include:
+
+- timestamp in `YYYY-MM-DD HH:MM JST`
+- state: `planned`, `in_progress`, `paused`, `blocked`, `completed`, or
+  `superseded`
+- related TODO, design document, issue, branch, and latest commit when known
+- the purpose of the work
+- completed work
+- remaining work
+- next action
+- verification performed or deliberately skipped
+
+Do not leave stale `in_progress` entries behind. If work is handed off,
+interrupted, or intentionally stopped without completion, mark it `paused` or
+`blocked` with the exact next action needed to resume.
+
+When a change completes, invalidates, or materially changes a roadmap item,
+update the appropriate document in the same change:
+
+- implementation progress belongs in `docs/todo.md`
+- current state, completed milestone summaries, and handoff notes belong in
+  `docs/progress.md`
+- durable architecture decisions belong in the relevant design document
+
+Do not mark a TODO item complete until the implementation, tests or fixtures,
+and required verification have actually been completed. Do not leave a TODO
+item marked incomplete when the implementation and verification for that item
+are complete.
+
+When the user asks to continue work without naming a specific task, use
+`docs/progress.md` first, then `docs/todo.md`, to identify the safest next
+coherent step. Prefer the earliest unfinished relevant TODO unless the current
+work snapshot points to a more specific continuation.
+
+## 6. Verification Matrix
+
+### 6.1 Any repository or tooling change
 
 - `just verify-governance`
 - `just verify-safety`
 - `just format-check`
 - `just lint`
 
-### 5.2 Flutter code change
+### 6.2 Flutter code change
 
 - `just flutter-format-check`
 - `just flutter-analyze`
@@ -85,14 +142,14 @@ Use TDD as the default development loop:
 If visible behavior or navigation changes, add an integration or golden test
 before the implementation when practical.
 
-### 5.3 CLI backend change
+### 6.3 CLI backend change
 
 - Add or update command-level tests before changing behavior.
 - CLI output intended for Flutter must be JSON, versioned, and schema-stable.
 - Human-readable output must not be parsed by Flutter.
 - Add a `just cli-test` target before the first CLI implementation lands.
 
-### 5.4 Swift platform change
+### 6.4 Swift platform change
 
 - Keep changes scoped.
 - Do not mass-format Swift platform code unless the task explicitly requires it.
@@ -100,7 +157,7 @@ before the implementation when practical.
 - Prefer extracting behavior into the CLI/backend boundary over adding SwiftUI
   dependencies.
 
-## 6. Non-Negotiable Coding Constraints
+## 7. Non-Negotiable Coding Constraints
 
 - Prefer immutable data and pure functions for domain transformations.
 - Keep I/O at explicit boundaries: filesystem, process execution, network, and
@@ -125,7 +182,7 @@ before the implementation when practical.
 - Avoid local lint disables. If a disable is unavoidable, scope it to the
   smallest line or block and include the reason in the code review.
 
-## 7. Dart and Flutter Guidance
+## 8. Dart and Flutter Guidance
 
 - Use `final` by default.
 - Prefer small pure functions and immutable value objects.
@@ -140,7 +197,7 @@ before the implementation when practical.
 - Do not add dependencies before a test or concrete feature demonstrates the
   need.
 
-## 8. CLI Boundary Rules
+## 9. CLI Boundary Rules
 
 - Commands consumed by Flutter must support machine output with `--json`.
 - JSON output must include a schema or contract version when it can be persisted
@@ -150,7 +207,7 @@ before the implementation when practical.
 - Process wrappers must preserve argv boundaries. Do not build shell commands by
   string concatenation unless launching a user-visible terminal is the feature.
 
-## 9. Platform Rules
+## 10. Platform Rules
 
 - Use XDG paths on Linux:
   - config: `~/.config/konyak`
@@ -163,7 +220,7 @@ before the implementation when practical.
 - macOS graphics defaults may keep GPTK/D3DMetal concepts, but those concepts
   must not appear in Linux UI or Linux domain defaults.
 
-## 10. Completion Criteria
+## 11. Completion Criteria
 
 A coding task is not complete unless all of the following are true:
 
@@ -171,6 +228,8 @@ A coding task is not complete unless all of the following are true:
 - Tests were added or updated first when behavior was observable.
 - Required format, lint, and test commands passed.
 - New external-data paths are validated.
+- `docs/progress.md` and `docs/todo.md` reflect any changed current state,
+  completed milestone, or roadmap item.
 - No unrelated files were reformatted or refactored.
 
 Final reports must include what changed, which commands ran, whether they

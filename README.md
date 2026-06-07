@@ -21,10 +21,12 @@ installed program workflows, Bottle Configuration, app settings, update checks,
 runtime install/update commands, PE icon extraction, and macOS Wine utility
 launches through the CLI boundary.
 
-Remaining product work is tracked in `docs/todo.md`. The main open areas are
-runtime stack publication, Linux-specific UI/default separation, and the native
-in-place updater framework that will eventually replace the current verified
-package handoff.
+Remaining product work is tracked in `docs/todo.md`. The current active work,
+handoff notes, completed milestone summaries, and next continuation step are
+tracked in `docs/progress.md`. The main open areas are runtime stack
+publication, Linux-specific UI/default separation, and the native in-place
+updater framework that will eventually replace the current verified package
+handoff.
 
 ## Repository Layout
 
