@@ -136,6 +136,15 @@ const _macosKonyakRuntimeComponentDefinitions =
         ],
       ),
       _RuntimeStackComponentDefinition(
+        id: 'freetype',
+        name: 'FreeType font runtime',
+        role: 'font-rendering',
+        isRequired: true,
+        relativePaths: <List<String>>[
+          <String>['lib', 'libfreetype.6.dylib'],
+        ],
+      ),
+      _RuntimeStackComponentDefinition(
         id: 'wine-mono',
         name: 'wine-mono',
         role: 'dotnet-runtime',

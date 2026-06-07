@@ -157,6 +157,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxvk/i386-windows/d3d11.dll',
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/libMoltenVK.dylib',
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/libgstreamer-1.0.0.dylib',
+          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/libfreetype.6.dylib',
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/share/wine/mono',
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/winetricks',
         }),
@@ -253,6 +254,17 @@ void defineRuntimeProcessAndUpdateContractTests() {
                 'isInstalled': true,
                 'paths': [
                   '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/libgstreamer-1.0.0.dylib',
+                ],
+                'missingPaths': <Object?>[],
+              },
+              {
+                'id': 'freetype',
+                'name': 'FreeType font runtime',
+                'role': 'font-rendering',
+                'isRequired': true,
+                'isInstalled': true,
+                'paths': [
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/libfreetype.6.dylib',
                 ],
                 'missingPaths': <Object?>[],
               },
@@ -406,6 +418,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
       for (final relativePath in const <List<String>>[
         <String>['lib', 'libMoltenVK.dylib'],
         <String>['lib', 'libgstreamer-1.0.0.dylib'],
+        <String>['lib', 'libfreetype.6.dylib'],
         <String>['winetricks'],
       ]) {
         final file = File(_joinTestPath(runtimeHome, relativePath));

@@ -557,6 +557,10 @@ const _macosDxmtInstalledPaths = <List<String>>[
   <String>['lib', 'dxmt', 'x86_64-windows', 'winemetal.dll'],
 ];
 
+const _macosFreetypeComponentPaths = <List<String>>[
+  <String>['Components', 'FreeType', 'lib', 'libfreetype.6.dylib'],
+];
+
 String _createComponentRuntimeArchive(String tempPath) {
   final sourceRoot = Directory(_joinTestPath(tempPath, const ['source']));
   final librariesRoot = Directory(
@@ -578,6 +582,7 @@ String _createComponentRuntimeArchive(String tempPath) {
     <String>['Wine', 'lib', 'dxvk', 'i386-windows', 'd3d11.dll'],
     <String>['Wine', 'lib', 'libMoltenVK.dylib'],
     <String>['Wine', 'lib', 'libgstreamer-1.0.0.dylib'],
+    <String>['Wine', 'lib', 'libfreetype.6.dylib'],
     <String>['Wine', 'share', 'wine', 'mono', 'wine-mono.marker'],
     <String>['Wine', 'lib', 'dxmt', 'x86_64-windows', 'd3d10core.dll'],
     <String>['Wine', 'lib', 'dxmt', 'x86_64-windows', 'd3d11.dll'],
@@ -647,6 +652,7 @@ String _createKonyakComponentRuntimeArchive(String tempPath) {
     ..._macosDxmtComponentPaths,
     <String>['Components', 'MoltenVK', 'lib', 'libMoltenVK.dylib'],
     <String>['Components', 'GStreamer', 'lib', 'libgstreamer-1.0.0.dylib'],
+    ..._macosFreetypeComponentPaths,
     <String>['Components', 'wine-mono', 'share', 'wine', 'mono', 'marker'],
     <String>['Components', 'winetricks', 'winetricks'],
     ..._gptkD3DMetalComponentArchivePaths,
@@ -675,6 +681,7 @@ String _createKonyakComponentRuntimeArchive(String tempPath) {
         'dxmt': 'dxmt-fixture',
         'moltenvk': 'moltenvk-fixture',
         'gstreamer': 'gstreamer-fixture',
+        'freetype': 'freetype-fixture',
         'wine-mono': 'wine-mono-fixture',
         'winetricks': 'winetricks-fixture',
         'gptk-d3dmetal': 'gptk-d3dmetal-fixture',

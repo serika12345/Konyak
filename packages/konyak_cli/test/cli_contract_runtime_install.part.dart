@@ -114,6 +114,7 @@ void defineRuntimeInstallContractTests() {
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxvk/i386-windows/d3d11.dll',
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/libMoltenVK.dylib',
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/libgstreamer-1.0.0.dylib',
+        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/libfreetype.6.dylib',
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/share/wine/mono',
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/winetricks',
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxmt/x86_64-windows/d3d10core.dll',
@@ -614,6 +615,12 @@ void defineRuntimeInstallContractTests() {
       ],
       versions: const <String, String>{'gstreamer': 'gstreamer-fixture'},
     );
+    final freetypeArchive = _createKonyakRuntimeComponentArchive(
+      tempDirectory.path,
+      archiveName: 'freetype',
+      relativePaths: _macosFreetypeComponentPaths,
+      versions: const <String, String>{'freetype': 'freetype-fixture'},
+    );
     final monoArchive = _createKonyakRuntimeComponentArchive(
       tempDirectory.path,
       archiveName: 'wine-mono',
@@ -656,6 +663,7 @@ void defineRuntimeInstallContractTests() {
           dxmtArchive,
           moltenVkArchive,
           gstreamerArchive,
+          freetypeArchive,
           monoArchive,
           winetricksArchive,
           gptkD3dMetalArchive,
@@ -706,6 +714,16 @@ void defineRuntimeInstallContractTests() {
           .toNullable(),
       'gptk-d3dmetal-fixture',
     );
+    expect(
+      completed.runtime.stack
+          .toNullable()
+          ?.components
+          .where((component) => component.id == 'freetype')
+          .single
+          .version
+          .toNullable(),
+      'freetype-fixture',
+    );
     for (final relativePath in _macosDxmtInstalledPaths) {
       expect(
         File(
@@ -725,6 +743,17 @@ void defineRuntimeInstallContractTests() {
           'macos-wine',
           'lib',
           'libgstreamer-1.0.0.dylib',
+        ]),
+      ).existsSync(),
+      isTrue,
+    );
+    expect(
+      File(
+        _joinTestPath(runtimeHome, const [
+          'Runtimes',
+          'macos-wine',
+          'lib',
+          'libfreetype.6.dylib',
         ]),
       ).existsSync(),
       isTrue,
@@ -792,6 +821,12 @@ void defineRuntimeInstallContractTests() {
       ],
       versions: const <String, String>{},
     );
+    final freetypeArchive = _createKonyakRuntimeComponentArchive(
+      tempDirectory.path,
+      archiveName: 'source-freetype',
+      relativePaths: _macosFreetypeComponentPaths,
+      versions: const <String, String>{},
+    );
     final monoArchive = _createKonyakRuntimeComponentArchive(
       tempDirectory.path,
       archiveName: 'source-wine-mono',
@@ -841,6 +876,11 @@ void defineRuntimeInstallContractTests() {
           id: 'gstreamer',
           version: 'gstreamer-source',
           archivePath: gstreamerArchive,
+        ),
+        _runtimeStackSourceComponent(
+          id: 'freetype',
+          version: 'freetype-source',
+          archivePath: freetypeArchive,
         ),
         _runtimeStackSourceComponent(
           id: 'wine-mono',
@@ -910,6 +950,16 @@ void defineRuntimeInstallContractTests() {
       completed.runtime.stack
           .toNullable()
           ?.components
+          .where((component) => component.id == 'freetype')
+          .single
+          .version
+          .toNullable(),
+      'freetype-source',
+    );
+    expect(
+      completed.runtime.stack
+          .toNullable()
+          ?.components
           .where((component) => component.id == 'gptk-d3dmetal')
           .single
           .version
@@ -973,6 +1023,12 @@ void defineRuntimeInstallContractTests() {
         ],
         versions: const <String, String>{},
       );
+      final freetypeArchive = _createKonyakRuntimeComponentArchive(
+        tempDirectory.path,
+        archiveName: 'repair-freetype',
+        relativePaths: _macosFreetypeComponentPaths,
+        versions: const <String, String>{},
+      );
       final monoArchive = _createKonyakRuntimeComponentArchive(
         tempDirectory.path,
         archiveName: 'repair-wine-mono',
@@ -1025,6 +1081,11 @@ void defineRuntimeInstallContractTests() {
             archivePath: gstreamerArchive,
           ),
           _runtimeStackSourceComponent(
+            id: 'freetype',
+            version: 'freetype-source',
+            archivePath: freetypeArchive,
+          ),
+          _runtimeStackSourceComponent(
             id: 'wine-mono',
             version: 'wine-mono-source',
             archivePath: monoArchive,
@@ -1052,6 +1113,7 @@ void defineRuntimeInstallContractTests() {
         ..._macosDxvkInstalledPaths,
         <String>['lib', 'libMoltenVK.dylib'],
         <String>['lib', 'libgstreamer-1.0.0.dylib'],
+        <String>['lib', 'libfreetype.6.dylib'],
         <String>['share', 'wine', 'mono', 'wine-mono.marker'],
       ]) {
         final file = File(_joinTestPath(runtimeRoot, relativePath));
@@ -1069,6 +1131,7 @@ void defineRuntimeInstallContractTests() {
             'dxvk-macos': 'dxvk-existing',
             'moltenvk': 'moltenvk-existing',
             'gstreamer': 'gstreamer-existing',
+            'freetype': 'freetype-existing',
             'wine-mono': 'wine-mono-existing',
             'gptk-d3dmetal': 'user-provided',
           },
@@ -1452,6 +1515,9 @@ void defineRuntimeInstallContractTests() {
       )
       ..parent.createSync(recursive: true)
       ..writeAsStringSync('existing gstreamer');
+    File(_joinTestPath(runtimeRoot.path, const ['lib', 'libfreetype.6.dylib']))
+      ..parent.createSync(recursive: true)
+      ..writeAsStringSync('existing freetype');
     File(
         _joinTestPath(appBundle.path, const [
           'Contents',
@@ -1547,6 +1613,12 @@ void defineRuntimeInstallContractTests() {
         ]),
       ).readAsStringSync(),
       'existing gstreamer',
+    );
+    expect(
+      File(
+        _joinTestPath(runtimeRoot.path, const ['lib', 'libfreetype.6.dylib']),
+      ).readAsStringSync(),
+      'existing freetype',
     );
     expect(
       File(

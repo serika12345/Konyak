@@ -53,6 +53,7 @@ extension _MacosWineLayoutNormalization on DartIoMacosWineInstaller {
     for (final componentId in const <String>[
       'MoltenVK',
       'GStreamer',
+      'FreeType',
       'wine-mono',
       'winetricks',
     ]) {

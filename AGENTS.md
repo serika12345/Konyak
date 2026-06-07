@@ -20,6 +20,15 @@
   before considering FFI or embedded native libraries.
 - Wine/Proton runtimes are managed by Konyak, bundled per channel where
   practical, and updateable by the application.
+- macOS runtime bug fixes must be coordinated with the
+  `runtime/konyak-macos-runtime` submodule. If a fix changes runtime files,
+  component archives, release manifests, loader behavior, or bundled runtime
+  dependencies, update the submodule-side build/release tooling together with
+  the parent repository consumer contracts.
+- Keep the runtime submodule artifacts and source manifests as the source of
+  truth for macOS runtime dependencies. Do not add parent-repository Nix flake
+  or dev-shell dependencies just to supply runtime libraries; consume the
+  submodule-produced runtime stack instead.
 - Konyak-owned bottle metadata is the source of truth. External plist
   metadata is not accepted as live input; any future import path must be
   explicit import tooling rather than shared live metadata.
