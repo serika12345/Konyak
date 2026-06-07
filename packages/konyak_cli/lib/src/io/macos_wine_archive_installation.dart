@@ -101,7 +101,10 @@ extension _MacosWineArchiveInstallation on DartIoMacosWineInstaller {
       );
       return switch (bundleResult) {
         _RuntimeStackSourceArchiveBundleFailed(:final message) =>
-          MacosWineInstallFailed(message),
+          _macosWineSourceManifestInstallResult(
+            sourceManifest: sourceManifest,
+            result: MacosWineInstallFailed(message),
+          ),
         _RuntimeStackSourceArchiveBundleResolved(:final bundle) =>
           _macosWineSourceManifestInstallResult(
             sourceManifest: sourceManifest,
@@ -168,7 +171,10 @@ extension _MacosWineArchiveInstallation on DartIoMacosWineInstaller {
           );
       return switch (bundleResult) {
         _RuntimeStackSourceArchiveBundleFailed(:final message) =>
-          MacosWineInstallFailed(message),
+          _macosWineSourceManifestInstallResult(
+            sourceManifest: sourceManifest,
+            result: MacosWineInstallFailed(message),
+          ),
         _RuntimeStackSourceArchiveBundleResolved(:final bundle) =>
           _macosWineSourceManifestInstallResult(
             sourceManifest: sourceManifest,

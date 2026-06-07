@@ -143,10 +143,12 @@ void defineRuntimeProcessAndUpdateContractTests() {
       runtimeCatalog: MacosWineRuntimeCatalog(
         hostPlatform: KonyakHostPlatform.macos,
         environment: HostEnvironment(const {'HOME': '/Users/user'}),
-        fileStatusProbe: const StaticFileStatusProbe({
+        fileStatusProbe: StaticFileStatusProbe({
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wine64',
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wineserver',
-          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wine',
+          ..._macosWine32On64ExistingPaths(
+            '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
+          ),
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxvk/x86_64-windows/dxgi.dll',
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxvk/x86_64-windows/d3d9.dll',
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxvk/x86_64-windows/d3d10core.dll',
@@ -212,9 +214,9 @@ void defineRuntimeProcessAndUpdateContractTests() {
                 'role': '32-bit-windows-support',
                 'isRequired': true,
                 'isInstalled': true,
-                'paths': [
-                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wine',
-                ],
+                'paths': _macosWine32On64ExpectedPaths(
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
+                ),
                 'missingPaths': <Object?>[],
               },
               {

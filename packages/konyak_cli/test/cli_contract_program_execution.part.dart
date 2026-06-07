@@ -330,6 +330,15 @@ void defineProgramExecutionContractTests() {
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib',
       ),
     );
+    expect(
+      runner.lastRequest?.environment.toMap(),
+      containsPair(
+        'WINEDLLPATH',
+        _macosManagedWineDllPath(
+          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
+        ),
+      ),
+    );
 
     final payload = jsonDecode(result.stdout) as Map<String, Object?>;
     expect(payload, {
@@ -461,8 +470,10 @@ void defineProgramExecutionContractTests() {
       runner.lastRequest?.environment.toMap(),
       containsPair(
         'WINEDLLPATH',
-        '$runtimeRoot/lib/dxvk/x86_64-windows:'
-            '$runtimeRoot/lib/dxvk/i386-windows',
+        _macosManagedWineDllPathWithOverrides(runtimeRoot, const [
+          ['lib', 'dxvk', 'x86_64-windows'],
+          ['lib', 'dxvk', 'i386-windows'],
+        ]),
       ),
     );
   });
@@ -529,7 +540,7 @@ void defineProgramExecutionContractTests() {
     );
     expect(
       runner.lastRequest?.environment.toMap(),
-      containsPair('WINEDLLPATH', '$runtimeRoot/lib/wine/x86_64-windows'),
+      containsPair('WINEDLLPATH', _macosManagedWineDllPath(runtimeRoot)),
     );
     expect(
       runner.lastRequest?.environment.toMap(),
@@ -626,7 +637,7 @@ void defineProgramExecutionContractTests() {
       expect(environment?['WINEDLLOVERRIDES'], 'dxgi,d3d11,d3d12=n,b');
       expect(
         environment?['WINEDLLPATH'],
-        '$runtimeRoot/lib/wine/x86_64-windows',
+        _macosManagedWineDllPath(runtimeRoot),
       );
       expect(
         environment?['DYLD_LIBRARY_PATH'],
@@ -762,7 +773,13 @@ void defineProgramExecutionContractTests() {
       runner.lastRequest?.environment.toMap(),
       containsPair(
         'WINEDLLPATH',
-        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxmt/x86_64-windows:/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxmt/i386-windows',
+        _macosManagedWineDllPathWithOverrides(
+          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
+          const [
+            ['lib', 'dxmt', 'x86_64-windows'],
+            ['lib', 'dxmt', 'i386-windows'],
+          ],
+        ),
       ),
     );
   });

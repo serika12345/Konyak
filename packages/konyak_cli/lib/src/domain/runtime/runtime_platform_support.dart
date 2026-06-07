@@ -80,6 +80,15 @@ const _macosGptkD3DMetalComponentPaths = <List<String>>[
   <String>['lib', 'wine', 'x86_64-unix', 'nvngx-on-metalfx.so'],
 ];
 
+const _macosWine32On64ComponentPaths = <List<String>>[
+  <String>['bin', 'wine'],
+  <String>['lib', 'wine', 'i386-windows', 'ntdll.dll'],
+  <String>['lib', 'wine', 'x86_64-windows', 'wow64.dll'],
+  <String>['lib', 'wine', 'x86_64-windows', 'wow64cpu.dll'],
+  <String>['lib', 'wine', 'x86_64-windows', 'wow64win.dll'],
+  <String>['lib', 'wine', 'x86_64-unix', 'ntdll.so'],
+];
+
 const _macosKonyakRuntimeComponentDefinitions =
     <_RuntimeStackComponentDefinition>[
       _RuntimeStackComponentDefinition(
@@ -97,9 +106,7 @@ const _macosKonyakRuntimeComponentDefinitions =
         name: 'Wine32-on-64 support',
         role: '32-bit-windows-support',
         isRequired: true,
-        relativePaths: <List<String>>[
-          <String>['bin', 'wine'],
-        ],
+        relativePaths: _macosWine32On64ComponentPaths,
       ),
       _RuntimeStackComponentDefinition(
         id: 'dxvk-macos',

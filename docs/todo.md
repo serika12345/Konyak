@@ -192,41 +192,44 @@ task changes scope.
   - [x] Expose Wine process listing through the CLI.
   - [x] Show executable icons in the Process Manager when metadata is available.
   - [x] Kill one Wine process at a time from Flutter.
-- [ ] Restore macOS 32-bit Windows executable support.
-  - [ ] Treat CrossOver's observed macOS layout as the compatibility target for
+- [x] Restore macOS 32-bit Windows executable support.
+  - [x] Treat CrossOver's observed macOS layout as the compatibility target for
     32-bit Windows execution:
     `lib/wine/i386-windows`, `lib/wine/x86_64-windows`, and
     `lib/wine/x86_64-unix` are present; `lib/wine/i386-unix` is not required.
-  - [ ] Fix the `runtime/konyak-macos-runtime` submodule first so the Konyak
+  - [x] Fix the `runtime/konyak-macos-runtime` submodule first so the Konyak
     macOS Wine artifact is not a `--enable-win64`-only build when the parent
     repository claims Wine32-on-64 support.
-  - [ ] Add submodule-side build/release checks for the actual Wine32-on-64
+  - [x] Add submodule-side build/release checks for the actual Wine32-on-64
     payload, including at least `lib/wine/i386-windows/ntdll.dll`,
-    `lib/wine/i386-windows/winewrapper.exe`,
     `lib/wine/x86_64-windows/wow64.dll`,
     `lib/wine/x86_64-windows/wow64cpu.dll`,
     `lib/wine/x86_64-windows/wow64win.dll`, and
-    `lib/wine/x86_64-unix/ntdll.so`.
-  - [ ] Update the parent CLI runtime stack contract so `wine32on64`
+    the host Unix `ntdll.so` under `lib/wine/x86_64-unix` for release
+    artifacts. CrossOver's `winewrapper.exe` is not a Konyak required payload
+    because the upstream Wine build used by the runtime submodule does not
+    install it.
+  - [x] Update the parent CLI runtime stack contract so `wine32on64`
     completeness is validated by the real Wine32-on-64 files, not only by
     `bin/wine`.
-  - [ ] Align the macOS launch environment with the CrossOver wrapper where it
-    matters for Wine32-on-64: confirm whether Konyak must set `WINELOADER`,
-    `WINEWRAPPER`, `WINESERVER`, and a base `WINEDLLPATH` containing
-    `i386-windows`, `x86_64-windows`, and `lib/wine` even when no graphics
-    override is selected.
-  - [ ] Keep D3DMetal/GPTK x86_64-only unless a 32-bit-capable payload is
+  - [x] Align the macOS launch environment with the CrossOver wrapper where it
+    matters for Wine32-on-64 by always setting a base `WINEDLLPATH` containing
+    `i386-windows`, `x86_64-windows`, and `lib/wine`, even when no graphics
+    override is selected. `WINELOADER`, `WINEWRAPPER`, and `WINESERVER` remain
+    runtime-wrapper responsibilities because Konyak launches the runtime-owned
+    `bin/wine` or `bin/wine64` entry point.
+  - [x] Keep D3DMetal/GPTK x86_64-only unless a 32-bit-capable payload is
     explicitly produced. Do not claim 32-bit D3DMetal support from the parent
     repository.
-  - [ ] Preserve the current DXVK-macOS 32-bit path by keeping
+  - [x] Preserve the current DXVK-macOS 32-bit path by keeping
     `lib/dxvk/i386-windows` required and covered by install/repair tests.
-  - [ ] Add regression coverage before implementation:
-    - submodule checks for the built runtime layout and architecture;
-    - parent CLI contract tests for install, repair, and runtime listing;
-    - run-plan tests for the macOS Wine32-on-64 environment;
-    - a real 32-bit PE smoke test only if it can run reliably in the runtime
-      build or a dedicated non-default verification target.
-  - [ ] Verify with submodule script/build checks, parent `just cli-test`,
+  - [x] Add regression coverage before implementation:
+    submodule checks for the built runtime layout and architecture; parent CLI
+    contract tests for install, repair, and runtime listing; and run-plan tests
+    for the macOS Wine32-on-64 environment.
+  - [x] Defer a real 32-bit PE smoke test until it can run reliably in the
+    runtime build or a dedicated non-default verification target.
+  - [x] Verify with submodule script/build checks, parent `just cli-test`,
     `just verify-governance`, `just verify-safety`, `just format-check`, and
     `just lint`.
 

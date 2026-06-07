@@ -101,10 +101,21 @@ ProgramRunEnvironment _macosWineEnvironment({
   final hostEnvironment = environment;
   final runtimeRoot = _macosWineRuntimeRoot(hostEnvironment);
   final d3dMetalSelected = bottle.runtimeSettings.dxrEnabled;
+  final wineDllPathEntries = <String>[
+    if (!d3dMetalSelected && bottle.runtimeSettings.dxmt) ...[
+      _joinPath(runtimeRoot, const ['lib', 'dxmt', 'x86_64-windows']),
+      _joinPath(runtimeRoot, const ['lib', 'dxmt', 'i386-windows']),
+    ] else if (!d3dMetalSelected && bottle.runtimeSettings.dxvk) ...[
+      _joinPath(runtimeRoot, const ['lib', 'dxvk', 'x86_64-windows']),
+      _joinPath(runtimeRoot, const ['lib', 'dxvk', 'i386-windows']),
+    ],
+    ..._macosWineWindowsDllPaths(runtimeRoot),
+  ];
   final wineEnvironment = <String, String>{
     'WINEPREFIX': bottle.path,
     'WINEDEBUG': 'fixme-all',
     'GST_DEBUG': '1',
+    'WINEDLLPATH': wineDllPathEntries.join(':'),
     'DYLD_LIBRARY_PATH': _prependPaths(<String>[
       if (d3dMetalSelected) _macosD3DMetalExternalPath(runtimeRoot),
       if (d3dMetalSelected) _macosD3DMetalUnixPath(runtimeRoot),
@@ -122,19 +133,6 @@ ProgramRunEnvironment _macosWineEnvironment({
       ]),
     ...bottle.runtimeSettings.macosEnvironment().toMap(),
   };
-  if (d3dMetalSelected) {
-    wineEnvironment['WINEDLLPATH'] = _macosD3DMetalWindowsPath(runtimeRoot);
-  } else if (bottle.runtimeSettings.dxmt) {
-    wineEnvironment['WINEDLLPATH'] = [
-      _joinPath(runtimeRoot, const ['lib', 'dxmt', 'x86_64-windows']),
-      _joinPath(runtimeRoot, const ['lib', 'dxmt', 'i386-windows']),
-    ].join(':');
-  } else if (bottle.runtimeSettings.dxvk) {
-    wineEnvironment['WINEDLLPATH'] = [
-      _joinPath(runtimeRoot, const ['lib', 'dxvk', 'x86_64-windows']),
-      _joinPath(runtimeRoot, const ['lib', 'dxvk', 'i386-windows']),
-    ].join(':');
-  }
 
   return ProgramRunEnvironment(wineEnvironment);
 }
@@ -145,6 +143,14 @@ String _macosD3DMetalExternalPath(String runtimeRoot) {
 
 String _macosD3DMetalWindowsPath(String runtimeRoot) {
   return _joinPath(runtimeRoot, const ['lib', 'wine', 'x86_64-windows']);
+}
+
+List<String> _macosWineWindowsDllPaths(String runtimeRoot) {
+  return <String>[
+    _macosD3DMetalWindowsPath(runtimeRoot),
+    _joinPath(runtimeRoot, const ['lib', 'wine', 'i386-windows']),
+    _joinPath(runtimeRoot, const ['lib', 'wine']),
+  ];
 }
 
 String _macosD3DMetalUnixPath(String runtimeRoot) {

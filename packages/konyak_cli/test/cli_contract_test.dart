@@ -561,6 +561,48 @@ const _macosFreetypeComponentPaths = <List<String>>[
   <String>['Components', 'FreeType', 'lib', 'libfreetype.6.dylib'],
 ];
 
+const _macosWine32On64InstalledPaths = <List<String>>[
+  <String>['bin', 'wine'],
+  <String>['lib', 'wine', 'i386-windows', 'ntdll.dll'],
+  <String>['lib', 'wine', 'x86_64-windows', 'wow64.dll'],
+  <String>['lib', 'wine', 'x86_64-windows', 'wow64cpu.dll'],
+  <String>['lib', 'wine', 'x86_64-windows', 'wow64win.dll'],
+  <String>['lib', 'wine', 'x86_64-unix', 'ntdll.so'],
+];
+
+Set<String> _macosWine32On64ExistingPaths(String runtimeRoot) {
+  return <String>{
+    for (final relativePath in _macosWine32On64InstalledPaths)
+      _joinTestPath(runtimeRoot, relativePath),
+  };
+}
+
+List<String> _macosWine32On64ExpectedPaths(String runtimeRoot) {
+  return <String>[
+    for (final relativePath in _macosWine32On64InstalledPaths)
+      _joinTestPath(runtimeRoot, relativePath),
+  ];
+}
+
+String _macosManagedWineDllPath(String runtimeRoot) {
+  return <String>[
+    _joinTestPath(runtimeRoot, const ['lib', 'wine', 'x86_64-windows']),
+    _joinTestPath(runtimeRoot, const ['lib', 'wine', 'i386-windows']),
+    _joinTestPath(runtimeRoot, const ['lib', 'wine']),
+  ].join(':');
+}
+
+String _macosManagedWineDllPathWithOverrides(
+  String runtimeRoot,
+  List<List<String>> overridePaths,
+) {
+  return <String>[
+    for (final relativePath in overridePaths)
+      _joinTestPath(runtimeRoot, relativePath),
+    _macosManagedWineDllPath(runtimeRoot),
+  ].join(':');
+}
+
 String _createComponentRuntimeArchive(String tempPath) {
   final sourceRoot = Directory(_joinTestPath(tempPath, const ['source']));
   final librariesRoot = Directory(
@@ -571,7 +613,8 @@ String _createComponentRuntimeArchive(String tempPath) {
   for (final relativePath in <List<String>>[
     <String>['Wine', 'bin', 'wine64'],
     <String>['Wine', 'bin', 'wineserver'],
-    <String>['Wine', 'bin', 'wine'],
+    for (final relativePath in _macosWine32On64InstalledPaths)
+      <String>['Wine', ...relativePath],
     <String>['Wine', 'lib', 'dxvk', 'x86_64-windows', 'dxgi.dll'],
     <String>['Wine', 'lib', 'dxvk', 'x86_64-windows', 'd3d9.dll'],
     <String>['Wine', 'lib', 'dxvk', 'x86_64-windows', 'd3d10core.dll'],
@@ -631,7 +674,14 @@ String _createKonyakComponentRuntimeArchive(String tempPath) {
   );
 
   for (final relativePath in <List<String>>[
-    <String>['Wine Devel.app', 'Contents', 'Resources', 'wine', 'bin', 'wine'],
+    for (final relativePath in _macosWine32On64InstalledPaths)
+      <String>[
+        'Wine Devel.app',
+        'Contents',
+        'Resources',
+        'wine',
+        ...relativePath,
+      ],
     <String>[
       'Wine Devel.app',
       'Contents',
@@ -751,13 +801,12 @@ String _createKonyakRuntimeComponentArchive(
 
 String _createRuntimeStackSourceManifest(
   String tempPath, {
+  String fileName = 'runtime-stack-source.json',
   String runtimeId = 'konyak-macos-wine',
   String stackId = 'macos-konyak-runtime-stack',
   required List<Map<String, String>> components,
 }) {
-  final manifestPath = _joinTestPath(tempPath, const [
-    'runtime-stack-source.json',
-  ]);
+  final manifestPath = _joinTestPath(tempPath, [fileName]);
   File(manifestPath).writeAsStringSync(
     jsonEncode(<String, Object?>{
       'schemaVersion': 1,
@@ -870,9 +919,9 @@ String _createMacosAppBundleWineArchive(String tempPath) {
     ]),
   );
 
-  for (final relativePath in const <List<String>>[
+  for (final relativePath in <List<String>>[
     <String>['bin', 'wineserver'],
-    <String>['bin', 'wine'],
+    ..._macosWine32On64InstalledPaths,
     <String>['lib', 'libwine.1.dylib'],
     <String>['share', 'wine', 'mono', 'wine-mono.marker'],
   ]) {
@@ -897,10 +946,10 @@ String _createMacosAppBundleWineArchive(String tempPath) {
 }
 
 void _createInstalledMacosRuntime(String runtimeHome) {
-  for (final relativePath in const <List<String>>[
+  for (final relativePath in <List<String>>[
     <String>['bin', 'wine64'],
-    <String>['bin', 'wine'],
     <String>['bin', 'wineserver'],
+    ..._macosWine32On64InstalledPaths,
     <String>['lib', 'libwine.1.dylib'],
     <String>['share', 'wine', 'mono', 'wine-mono.marker'],
   ]) {

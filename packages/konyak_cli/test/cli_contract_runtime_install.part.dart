@@ -100,10 +100,12 @@ void defineRuntimeInstallContractTests() {
     final installer = DartIoMacosWineInstaller(
       hostPlatform: KonyakHostPlatform.macos,
       environment: HostEnvironment(const {'HOME': '/Users/user'}),
-      fileStatusProbe: const StaticFileStatusProbe({
+      fileStatusProbe: StaticFileStatusProbe({
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wine64',
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wineserver',
-        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wine',
+        ..._macosWine32On64ExistingPaths(
+          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
+        ),
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxvk/x86_64-windows/dxgi.dll',
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxvk/x86_64-windows/d3d9.dll',
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxvk/x86_64-windows/d3d10core.dll',
@@ -192,10 +194,37 @@ void defineRuntimeInstallContractTests() {
     },
   );
 
-  test('install-macos-wine uses the bundled macOS runtime source manifest', () {
+  test('install-macos-wine reports macOS runtime source manifest failures', () {
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-runtime-source-manifest-failure-test-',
+    );
+    addTearDown(() {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    });
+
+    final invalidArchivePath = _joinTestPath(tempDirectory.path, const [
+      'invalid-runtime.tar.xz',
+    ]);
+    File(invalidArchivePath).writeAsStringSync('not a runtime archive');
+    final sourceManifestPath = _createRuntimeStackSourceManifest(
+      tempDirectory.path,
+      fileName: macosWineRuntimeSourceManifestFileName,
+      components: [
+        _runtimeStackSourceComponent(
+          id: 'wine',
+          version: 'crossover-26.1.0-konyak.0',
+          archivePath: invalidArchivePath,
+        ),
+      ],
+    );
     final installer = DartIoMacosWineInstaller(
       hostPlatform: KonyakHostPlatform.macos,
-      environment: HostEnvironment(const {'HOME': '/Users/user'}),
+      environment: HostEnvironment({
+        'HOME': '/Users/user',
+        'KONYAK_MACOS_WINE_STACK_MANIFEST': sourceManifestPath,
+      }),
       fileStatusProbe: const StaticFileStatusProbe({}),
     );
 
@@ -206,6 +235,7 @@ void defineRuntimeInstallContractTests() {
       (result as MacosWineInstallFailed).message,
       contains('konyak-macos-wine-runtime-stack-source.json'),
     );
+    expect(result.message, contains('Runtime stack source manifest'));
   });
 
   test(
