@@ -9,18 +9,21 @@ handoff notes.
 
 ## Current Work Snapshot
 
-- Timestamp: 2026-06-08 13:30 JST
+- Timestamp: 2026-06-08 13:41 JST
 - State: `in_progress`
 - Branch: `main`
 - Latest known parent commit:
-  `ff4c464 docs: require Actions parity for local runtime smoke`
+  `633ac14 docs: track runtime Actions smoke rerun`
 - Latest known macOS runtime submodule commit:
-  `d6b64f3 ci: preserve Wine runtime result for launch smoke`
+  `95fa51a ci: split runtime build and smoke jobs`
 - Related work: macOS 32-bit Windows executable support
 - Purpose: restore macOS 32-bit Windows executable support while keeping the
   `runtime/konyak-macos-runtime` submodule as the runtime artifact SSOT. The
   parent repository must validate and consume the submodule-produced Wine32-on-64
-  payload instead of adding runtime dependencies to the parent Nix flake.
+  payload instead of adding runtime dependencies to the parent Nix flake. Runtime
+  Actions should keep validate, build/package, smoke, and publish work separate
+  so failed smoke or publish reruns do not force unrelated release work to run
+  again.
 - Completed:
   - Compared `/Users/masato/Downloads/CrossOver.app` with Konyak's runtime
     contract.
@@ -72,12 +75,21 @@ handoff notes.
     smoke always copies the Wine runtime before overlaying component archives.
   - Cancelled obsolete manual run `27113613086` and pushed the submodule fix,
     starting push run `27116103755`.
+  - Split the runtime workflow into `validate`, `build-and-package`,
+    `smoke-wine32on64`, and `publish-release` jobs.
+  - Added the Determinate Systems magic Nix cache action to the runtime workflow
+    jobs so repeated Actions runs can reuse cached Nix work where available.
+  - Made the build job upload the assembled `dist/` runtime artifacts, then made
+    smoke and publish jobs download those artifacts instead of depending on the
+    mutable local `result` out-link.
+  - Pushed submodule commit `95fa51a`, starting push run `27116433190`.
+  - Submitted a cancellation request for obsolete push run `27116103755`.
 - Remaining:
-  - Wait for GitHub Actions run `27116103755` to finish.
+  - Wait for GitHub Actions run `27116433190` to finish.
   - If the run succeeds, confirm the generated release assets and update the
     development runtime if needed.
   - If the run fails, inspect the failed step logs before changing code.
-- Next action: monitor GitHub Actions run `27116103755`.
+- Next action: monitor GitHub Actions run `27116433190`.
 - Verification performed:
   - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && nix build .#packages.x86_64-darwin.konyak-macos-wine-runtime -L --no-link'`:
     passed; verified output
@@ -109,6 +121,16 @@ handoff notes.
     because this machine lacks the `metal` tool. The failed Actions run already
     showed DXMT builds on the GitHub macOS runner after its Metal toolchain
     setup step.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && zsh -n scripts/check-wine32on64-runtime.zsh scripts/smoke-wine32on64-launch.zsh scripts/package-binary-components.zsh scripts/make-source-manifest.zsh && git diff --check'`:
+    passed for the split workflow change.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && nix shell nixpkgs#actionlint -c actionlint .github/workflows/build-runtime.yml'`:
+    passed.
+  - Local workflow artifact smoke path check passed: the Wine runtime archive was
+    extracted into a fresh smoke root, packaged binary component archives were
+    overlaid, and `scripts/smoke-wine32on64-launch.zsh` launched the runtime's
+    32-bit `cmd.exe` through Wine32-on-64. The local DXMT archive was represented
+    by a placeholder because this machine lacks the `metal` tool; GitHub Actions
+    still builds the real DXMT component after installing the Metal toolchain.
 
 ## Completed Milestones
 
