@@ -9,11 +9,11 @@ handoff notes.
 
 ## Current Work Snapshot
 
-- Timestamp: 2026-06-08 19:26 JST
+- Timestamp: 2026-06-08 19:54 JST
 - State: `in_progress`
 - Branch: `main`
 - Latest known parent commit:
-  `b21f926 docs: track runtime dylib closure fix`
+  `36fc487 docs: track component dylib closure fix`
 - Latest known macOS runtime submodule commit:
   `b7a3e8b fix: bundle component dylib closures`
 - Related work: macOS 32-bit Windows executable support
@@ -21,9 +21,10 @@ handoff notes.
   `runtime/konyak-macos-runtime` submodule as the runtime artifact SSOT. The
   parent repository must validate and consume the submodule-produced Wine32-on-64
   payload instead of adding runtime dependencies to the parent Nix flake. Runtime
-  Actions should keep validate, build/package, smoke, and publish work separate
-  so failed smoke or publish reruns do not force unrelated release work to run
-  again.
+  Actions must keep expensive Wine builds, DXMT builds, binary component
+  packaging, metadata generation, smoke, and publish work in separate rerunnable
+  jobs so a failed component, metadata, smoke, or publish rerun does not force a
+  successful Wine runtime build to run again.
 - Completed:
   - Compared `/Users/masato/Downloads/CrossOver.app` with Konyak's runtime
     contract.
@@ -124,13 +125,53 @@ handoff notes.
     `check-wine32on64-runtime.zsh` after overlaying component archives, before
     launching the Wine32-on-64 smoke.
   - Pushed submodule commit `b7a3e8b`, starting push run `27131441556`.
+  - Cancelled Actions run `27131441556` after noticing the workflow still kept
+    Wine runtime build, DXMT build, binary component packaging, metadata, and
+    artifact upload inside one `build-and-package` job. That previous split was
+    insufficient because a DXMT or component packaging failure still forced a
+    successful Wine runtime build to be rerun.
+  - Reworked the runtime workflow into narrower jobs:
+    `build-wine-runtime`, `build-dxmt-component`, `package-binary-components`,
+    `generate-release-metadata`, `smoke-wine32on64`, and `publish-release`.
+  - Added the rerun-unit rule to `AGENTS.md`: runtime Actions must not combine
+    expensive Wine builds, DXMT builds, binary component packaging, metadata,
+    smoke, and publish work into one monolithic job.
+  - Updated the DXMT package path to accept `KONYAK_WINE_RUNTIME_ROOT`, allowing
+    CI to build DXMT against an already extracted Wine runtime artifact instead
+    of depending on the CrossOver Wine derivation.
+  - Updated `build-dxmt-component` to download `konyak-macos-wine-runtime`,
+    extract it into `$RUNNER_TEMP`, validate it with
+    `check-wine32on64-runtime.zsh`, and pass that path to Nix via
+    `KONYAK_WINE_RUNTIME_ROOT`.
+  - Made uploaded runtime artifacts explicit rerun inputs by setting
+    `if-no-files-found: error` and `retention-days: 14` on Wine, DXMT, binary
+    component, and release metadata artifact uploads.
+  - Tightened `AGENTS.md` so downstream runtime jobs must download and use the
+    uploaded Wine runtime artifact instead of depending on the CrossOver Wine
+    derivation in a way that can rebuild CrossOver during a rerun.
 - Remaining:
-  - Wait for GitHub Actions run `27131441556` to finish.
+  - Review and commit the runtime workflow split before pushing.
+  - Run the new split workflow and confirm failed-job reruns no longer require
+    a successful Wine runtime build to run again.
   - If the run succeeds, confirm the generated release assets and update the
     development runtime if needed.
   - If the run fails, inspect the failed step logs before changing code.
-- Next action: monitor GitHub Actions run `27131441556`.
+- Next action: review and commit the split runtime workflow; do not push until
+  the rerun structure is accepted.
 - Verification performed:
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && KONYAK_WINE_RUNTIME_ROOT=/tmp/konyak-runtime-artifact-27125217605/runtime nix build --impure --dry-run .#packages.x86_64-darwin.konyak-macos-dxmt 2>&1 | tee /tmp/konyak-dxmt-artifact-root-dry-run.log && if rg "konyak-macos-wine-runtime" /tmp/konyak-dxmt-artifact-root-dry-run.log; then echo "DXMT dry-run still wants to build the Wine runtime" >&2; exit 1; fi'`:
+    passed; with a Wine runtime artifact root supplied, the dry-run listed only
+    the DXMT derivation and did not list `konyak-macos-wine-runtime`.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && nix shell nixpkgs#actionlint -c actionlint .github/workflows/build-runtime.yml'`:
+    passed after adding artifact extraction and retention settings.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && zsh -n scripts/check-wine32on64-runtime.zsh scripts/smoke-wine32on64-launch.zsh scripts/package-binary-components.zsh scripts/make-source-manifest.zsh && git diff --check'`:
+    passed after adding the Wine artifact root override.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && nix flake check -L --show-trace --all-systems'`:
+    passed after adding `KONYAK_WINE_RUNTIME_ROOT` support.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && nix shell nixpkgs#actionlint -c actionlint .github/workflows/build-runtime.yml'`:
+    passed for the narrowed runtime workflow jobs.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && zsh -n scripts/check-wine32on64-runtime.zsh scripts/smoke-wine32on64-launch.zsh scripts/package-binary-components.zsh scripts/make-source-manifest.zsh && git diff --check'`:
+    passed after the workflow split.
   - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && zsh -n scripts/check-wine32on64-runtime.zsh scripts/smoke-wine32on64-launch.zsh scripts/package-binary-components.zsh scripts/make-source-manifest.zsh && git diff --check'`:
     passed for the component closure fix.
   - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && nix shell nixpkgs#actionlint -c actionlint .github/workflows/build-runtime.yml'`:

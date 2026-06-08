@@ -68,6 +68,15 @@ closely as practical. If Actions cannot mirror the local execution, document the
 reason in `docs/progress.md` and leave an explicit TODO or follow-up before
 finishing.
 
+Runtime Actions must keep rerun units narrow. Do not combine expensive Wine
+runtime builds, DXMT builds, binary component packaging, release metadata,
+smoke verification, and publish work into one monolithic job. A failed smoke,
+metadata, component packaging, or DXMT job must be rerunnable without forcing a
+successful Wine runtime build to run again.
+Jobs that need a built Wine runtime after `build-wine-runtime` must download and
+use the uploaded Wine runtime artifact. They must not depend on the CrossOver
+Wine derivation in a way that can rebuild CrossOver during a downstream rerun.
+
 Use TDD as the default development loop:
 
 1. Write a failing test that describes the intended behavior.
