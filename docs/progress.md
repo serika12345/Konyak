@@ -15,7 +15,7 @@ handoff notes.
 - Latest known parent commit:
   `9b89498 docs: track runtime workflow rerun policy`
 - Latest known macOS runtime submodule commit:
-  `740dc6a ci: add smoke-only runtime artifact rerun`
+  `a9dece7 ci: run Wine32 smoke on arm64 macOS`
 - Related work: macOS 32-bit Windows executable support
 - Purpose: restore macOS 32-bit Windows executable support while keeping the
   `runtime/konyak-macos-runtime` submodule as the runtime artifact SSOT. The
@@ -179,18 +179,41 @@ handoff notes.
   - Triggered smoke-only artifact run `27141987789` against retained artifacts
     from failed run `27135965212` to verify the downstream path without rebuilding
     CrossOver.
+  - Smoke-only artifact run `27141987789` reproduced the CI-only problem without
+    rebuilding CrossOver: all artifacts downloaded and layout verification
+    passed, but the Intel `macos-15-intel` runner hung during fresh Wine prefix
+    initialization for 300 seconds. Diagnostics confirmed both i386 and x86_64
+    `kernel32.dll`, `ntdll.dll`, and `cmd.exe` files were present with the
+    expected PE formats.
+  - Cancelled full build run `27141947475` after the smoke-only reproduction,
+    because the same smoke path would fail and there was no value in continuing a
+    known-bad run.
+  - Moved Wine32-on-64 launch smoke jobs to the `macos-15` arm64 runner and added
+    explicit Rosetta installation. The expensive Wine, DXMT, and component build
+    jobs remain on `macos-15-intel`; only the launch smoke now runs on the primary
+    arm64 macOS target with the downloaded x86_64 runtime artifacts.
+  - Pushed submodule commit `a9dece7`, starting full `Build runtime` run
+    `27142828121`.
+  - Triggered smoke-only artifact run `27142850162` against retained artifacts
+    from failed run `27135965212`; it passed in 4m1s without rebuilding CrossOver.
 - Remaining:
-  - Monitor smoke-only artifact run `27141987789` first. It should exercise the
-    changed smoke path against existing artifacts without a CrossOver rebuild.
-  - Monitor `Build runtime` run `27141947475` for full workflow coverage after
-    the push.
-  - If either smoke fails, inspect the new runtime diagnostics before changing
+  - Monitor `Build runtime` run `27142828121` for full workflow coverage after
+    the arm64 smoke runner change.
+  - If full-run smoke fails, inspect the new runtime diagnostics before changing
     code.
   - If the full run succeeds, confirm release asset publication and update the
     development runtime if needed.
-- Next action: check `27141987789` and `27141947475`; do not make another
-  runtime build change until the smoke-only artifact run result is known.
+- Next action: wait for `27142828121`; the smoke-only artifact rerun path is
+  confirmed by `27142850162`.
 - Verification performed:
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && nix shell nixpkgs#actionlint -c actionlint .github/workflows/build-runtime.yml .github/workflows/smoke-runtime-artifacts.yml'`:
+    passed after moving smoke jobs to arm64 macOS runners.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && zsh -n scripts/assemble-runtime-stack.zsh scripts/check-wine32on64-runtime.zsh scripts/smoke-wine32on64-launch.zsh scripts/package-binary-components.zsh scripts/make-source-manifest.zsh && git diff --check'`:
+    passed after moving smoke jobs to arm64 macOS runners.
+  - GitHub Actions smoke-only artifact run `27142850162`: passed; it downloaded
+    retained artifacts from run `27135965212`, installed Rosetta on the arm64
+    macOS runner, assembled the runtime stack, and passed Wine32-on-64 launch
+    smoke without rebuilding CrossOver.
   - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && zsh -n scripts/assemble-runtime-stack.zsh scripts/check-wine32on64-runtime.zsh scripts/smoke-wine32on64-launch.zsh scripts/package-binary-components.zsh scripts/make-source-manifest.zsh && git diff --check'`:
     passed after adding the shared artifact assembly script and smoke
     diagnostics.
