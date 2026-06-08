@@ -9,13 +9,13 @@ handoff notes.
 
 ## Current Work Snapshot
 
-- Timestamp: 2026-06-08 19:54 JST
+- Timestamp: 2026-06-08 22:45 JST
 - State: `in_progress`
 - Branch: `main`
 - Latest known parent commit:
-  `36fc487 docs: track component dylib closure fix`
+  `9b89498 docs: track runtime workflow rerun policy`
 - Latest known macOS runtime submodule commit:
-  `b7a3e8b fix: bundle component dylib closures`
+  `740dc6a ci: add smoke-only runtime artifact rerun`
 - Related work: macOS 32-bit Windows executable support
 - Purpose: restore macOS 32-bit Windows executable support while keeping the
   `runtime/konyak-macos-runtime` submodule as the runtime artifact SSOT. The
@@ -149,16 +149,57 @@ handoff notes.
   - Tightened `AGENTS.md` so downstream runtime jobs must download and use the
     uploaded Wine runtime artifact instead of depending on the CrossOver Wine
     derivation in a way that can rebuild CrossOver during a rerun.
+  - Investigated failed GitHub Actions run `27135965212`: `build-wine-runtime`,
+    `build-dxmt-component`, `package-binary-components`, and
+    `generate-release-metadata` succeeded and retained artifacts, but
+    `smoke-wine32on64` failed on `macos-15-intel` after the assembled runtime
+    layout check passed. The failing launch timed out with
+    `wine: could not load kernel32.dll, status c0000135`.
+  - Downloaded the `27135965212` runtime artifacts and confirmed the same
+    artifact stack passed `check-wine32on64-runtime.zsh` and
+    `smoke-wine32on64-launch.zsh` locally under both `/tmp` and
+    `/Users/masato/work/_temp`, so the artifact set itself is not missing the
+    required Wine32-on-64 files.
+  - Added `scripts/assemble-runtime-stack.zsh` so CI and local smoke tests
+    assemble the Wine runtime, DXMT, DXVK-macOS, MoltenVK, GStreamer, FreeType,
+    wine-mono, and winetricks archives through one shared path.
+  - Updated `build-runtime.yml` smoke to assemble under `/tmp` and call the
+    shared runtime stack assembly script before layout and launch checks.
+  - Added `smoke-runtime-artifacts.yml`, a `workflow_dispatch` smoke-only
+    workflow that accepts an `artifact_run_id` and downloads retained artifacts
+    from a previous run. Use this for smoke/debug reruns so CrossOver Wine does
+    not rebuild when the build artifact already exists.
+  - Tightened the runtime layout check to require both i386 and x86_64
+    `kernel32.dll` and `cmd.exe` payloads.
+  - Updated the launch smoke to initialize the fresh prefix through the x86_64
+    `cmd.exe`, wait for wineserver, then run the i386 `cmd.exe` sentinel. It now
+    prints targeted runtime diagnostics if `kernel32.dll` resolution fails again.
+  - Pushed submodule commit `740dc6a`, starting `Build runtime` run
+    `27141947475`.
+  - Triggered smoke-only artifact run `27141987789` against retained artifacts
+    from failed run `27135965212` to verify the downstream path without rebuilding
+    CrossOver.
 - Remaining:
-  - Review and commit the runtime workflow split before pushing.
-  - Run the new split workflow and confirm failed-job reruns no longer require
-    a successful Wine runtime build to run again.
-  - If the run succeeds, confirm the generated release assets and update the
+  - Monitor smoke-only artifact run `27141987789` first. It should exercise the
+    changed smoke path against existing artifacts without a CrossOver rebuild.
+  - Monitor `Build runtime` run `27141947475` for full workflow coverage after
+    the push.
+  - If either smoke fails, inspect the new runtime diagnostics before changing
+    code.
+  - If the full run succeeds, confirm release asset publication and update the
     development runtime if needed.
-  - If the run fails, inspect the failed step logs before changing code.
-- Next action: review and commit the split runtime workflow; do not push until
-  the rerun structure is accepted.
+- Next action: check `27141987789` and `27141947475`; do not make another
+  runtime build change until the smoke-only artifact run result is known.
 - Verification performed:
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && zsh -n scripts/assemble-runtime-stack.zsh scripts/check-wine32on64-runtime.zsh scripts/smoke-wine32on64-launch.zsh scripts/package-binary-components.zsh scripts/make-source-manifest.zsh && git diff --check'`:
+    passed after adding the shared artifact assembly script and smoke
+    diagnostics.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && nix shell nixpkgs#actionlint -c actionlint .github/workflows/build-runtime.yml .github/workflows/smoke-runtime-artifacts.yml'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && set -euo pipefail; smoke_root=/tmp/konyak-wine32on64-smoke-runtime-script; ./scripts/assemble-runtime-stack.zsh /tmp/konyak-runtime-artifact-27135965212/dist "$smoke_root"; ./scripts/check-wine32on64-runtime.zsh "$smoke_root"; ./scripts/smoke-wine32on64-launch.zsh "$smoke_root"'`:
+    passed with the downloaded artifacts from failed Actions run `27135965212`.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && nix flake check -L --show-trace --all-systems'`:
+    passed.
   - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && KONYAK_WINE_RUNTIME_ROOT=/tmp/konyak-runtime-artifact-27125217605/runtime nix build --impure --dry-run .#packages.x86_64-darwin.konyak-macos-dxmt 2>&1 | tee /tmp/konyak-dxmt-artifact-root-dry-run.log && if rg "konyak-macos-wine-runtime" /tmp/konyak-dxmt-artifact-root-dry-run.log; then echo "DXMT dry-run still wants to build the Wine runtime" >&2; exit 1; fi'`:
     passed; with a Wine runtime artifact root supplied, the dry-run listed only
     the DXMT derivation and did not list `konyak-macos-wine-runtime`.
