@@ -160,6 +160,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/libMoltenVK.dylib',
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/libgstreamer-1.0.0.dylib',
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/libfreetype.6.dylib',
+          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/libfreetype.dylib',
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/share/wine/mono',
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/winetricks',
         }),
@@ -267,6 +268,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
                 'isInstalled': true,
                 'paths': [
                   '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/libfreetype.6.dylib',
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/libfreetype.dylib',
                 ],
                 'missingPaths': <Object?>[],
               },
@@ -421,6 +423,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
         <String>['lib', 'libMoltenVK.dylib'],
         <String>['lib', 'libgstreamer-1.0.0.dylib'],
         <String>['lib', 'libfreetype.6.dylib'],
+        <String>['lib', 'libfreetype.dylib'],
         <String>['winetricks'],
       ]) {
         final file = File(_joinTestPath(runtimeHome, relativePath));

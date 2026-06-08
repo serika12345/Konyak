@@ -9,13 +9,13 @@ handoff notes.
 
 ## Current Work Snapshot
 
-- Timestamp: 2026-06-07 23:35 JST
-- State: `ready_to_commit`
+- Timestamp: 2026-06-08 11:53 JST
+- State: `ready_for_review`
 - Branch: `main`
 - Latest known parent commit:
-  `0351013 docs: plan macOS 32-bit runtime support`
+  `3a63ae6 feat(cli): require macOS Wine32-on-64 runtime payload`
 - Latest known macOS runtime submodule commit:
-  `ad73f93 feat: enable macOS Wine32-on-64 runtime`
+  `6db07a6 fix: load runtime FreeType for Wine32-on-64`
 - Related work: macOS 32-bit Windows executable support
 - Purpose: restore macOS 32-bit Windows executable support while keeping the
   `runtime/konyak-macos-runtime` submodule as the runtime artifact SSOT. The
@@ -44,38 +44,49 @@ handoff notes.
   - Updated macOS run planning to always set base `WINEDLLPATH` for Wine,
     including `x86_64-windows`, `i386-windows`, and `lib/wine`; DXMT and DXVK
     prepend their own x86_64/i386 Windows DLL paths when selected.
+  - Added `scripts/smoke-wine32on64-launch.zsh` in the runtime submodule. It
+    verifies the assembled runtime stack, confirms FreeType is x86_64, and runs
+    the runtime's 32-bit `cmd.exe` through Wine32-on-64.
+  - Added release CI coverage that overlays runtime component archives before
+    running the 32-bit launch smoke.
+  - Fixed the runtime FreeType component packaging contract so it ships
+    `lib/libfreetype.6.dylib`, the `lib/libfreetype.dylib` alias, and the
+    needed Nix dylib closure.
+  - Made binary component packaging reject non-x86_64 macOS GStreamer and
+    FreeType dylibs, so Apple Silicon local runs do not accidentally package
+    arm64 dylibs for the x86_64 Wine runtime.
+  - Patched Wine's macOS FreeType late-loading path in the runtime submodule so
+    it can load the Konyak runtime stack FreeType from the assembled runtime
+    instead of relying on parent Nix dependencies.
   - Kept D3DMetal/GPTK x86_64-only unless a 32-bit-capable payload is produced.
   - Removed the external release archive dependency from the macOS source
     manifest failure contract test; the release manifest URL remains covered by
     the repository SSOT test.
 - Remaining:
-  - Commit the parent repository changes that consume submodule commit
-    `ad73f93`.
-  - Add a real 32-bit PE smoke test later, once there is a reliable dedicated
-    runtime verification target. Current coverage validates the built payload
-    and launch environment, not actual 32-bit process startup.
-- Next action: commit the parent CLI/runtime-contract update and submodule
-  pointer.
+  - Review the committed parent and submodule changes, then run the release
+    workflow if a published runtime artifact is needed.
+- Next action: review the 32-bit launch smoke and runtime contract commits.
 - Verification performed:
-  - `zsh -n scripts/check-wine32on64-runtime.zsh scripts/package-binary-components.zsh scripts/make-source-manifest.zsh`
-    in `runtime/konyak-macos-runtime`: passed.
-  - `git -C runtime/konyak-macos-runtime diff --check`: passed.
-  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && nix flake check -L --show-trace'`:
-    passed.
   - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && nix build .#packages.x86_64-darwin.konyak-macos-wine-runtime -L --no-link'`:
     passed; verified output
-    `/nix/store/25r6j7wk964g1fzx8n14w9yfqha5iafz-konyak-macos-wine-runtime-crossover-26.1.0-konyak.0`.
-  - `./scripts/check-wine32on64-runtime.zsh /nix/store/25r6j7wk964g1fzx8n14w9yfqha5iafz-konyak-macos-wine-runtime-crossover-26.1.0-konyak.0`:
+    `/nix/store/4gx8261mak5j6kpa9s4agv2qfhyh19fa-konyak-macos-wine-runtime-crossover-26.1.0-konyak.0`.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && runtime_root="$(nix path-info .#packages.x86_64-darwin.konyak-macos-wine-runtime)" && ./scripts/check-wine32on64-runtime.zsh "$runtime_root" && zsh -n scripts/check-wine32on64-runtime.zsh scripts/smoke-wine32on64-launch.zsh scripts/package-binary-components.zsh scripts/make-source-manifest.zsh && git diff --check'`:
+    passed.
+  - Runtime smoke with FreeType + wine-mono components overlaid on the built
+    x86_64 runtime: passed.
+  - Runtime smoke with DXVK-macOS, MoltenVK, GStreamer, FreeType, wine-mono,
+    and winetricks components overlaid on the built x86_64 runtime: passed.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && nix flake check -L --show-trace'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && nix flake check -L --show-trace --all-systems'`:
     passed.
   - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart'`:
     passed.
-  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "install-macos-wine reports macOS runtime source manifest failures"'`:
-    passed.
   - `nix develop -c zsh -lc 'just cli-test'`: passed.
-  - `just verify-governance`: passed.
-  - `just verify-safety`: passed.
-  - `just format-check`: passed.
-  - `just lint`: passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
 
 ## Completed Milestones
 

@@ -117,6 +117,7 @@ void defineRuntimeInstallContractTests() {
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/libMoltenVK.dylib',
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/libgstreamer-1.0.0.dylib',
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/libfreetype.6.dylib',
+        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/libfreetype.dylib',
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/share/wine/mono',
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/winetricks',
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxmt/x86_64-windows/d3d10core.dll',
@@ -793,6 +794,17 @@ void defineRuntimeInstallContractTests() {
         _joinTestPath(runtimeHome, const [
           'Runtimes',
           'macos-wine',
+          'lib',
+          'libfreetype.dylib',
+        ]),
+      ).existsSync(),
+      isTrue,
+    );
+    expect(
+      File(
+        _joinTestPath(runtimeHome, const [
+          'Runtimes',
+          'macos-wine',
           'winetricks',
         ]),
       ).existsSync(),
@@ -1144,6 +1156,7 @@ void defineRuntimeInstallContractTests() {
         <String>['lib', 'libMoltenVK.dylib'],
         <String>['lib', 'libgstreamer-1.0.0.dylib'],
         <String>['lib', 'libfreetype.6.dylib'],
+        <String>['lib', 'libfreetype.dylib'],
         <String>['share', 'wine', 'mono', 'wine-mono.marker'],
       ]) {
         final file = File(_joinTestPath(runtimeRoot, relativePath));
@@ -1548,6 +1561,9 @@ void defineRuntimeInstallContractTests() {
     File(_joinTestPath(runtimeRoot.path, const ['lib', 'libfreetype.6.dylib']))
       ..parent.createSync(recursive: true)
       ..writeAsStringSync('existing freetype');
+    File(_joinTestPath(runtimeRoot.path, const ['lib', 'libfreetype.dylib']))
+      ..parent.createSync(recursive: true)
+      ..writeAsStringSync('existing freetype alias');
     File(
         _joinTestPath(appBundle.path, const [
           'Contents',
@@ -1649,6 +1665,12 @@ void defineRuntimeInstallContractTests() {
         _joinTestPath(runtimeRoot.path, const ['lib', 'libfreetype.6.dylib']),
       ).readAsStringSync(),
       'existing freetype',
+    );
+    expect(
+      File(
+        _joinTestPath(runtimeRoot.path, const ['lib', 'libfreetype.dylib']),
+      ).readAsStringSync(),
+      'existing freetype alias',
     );
     expect(
       File(

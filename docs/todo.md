@@ -227,8 +227,8 @@ task changes scope.
     submodule checks for the built runtime layout and architecture; parent CLI
     contract tests for install, repair, and runtime listing; and run-plan tests
     for the macOS Wine32-on-64 environment.
-  - [x] Defer a real 32-bit PE smoke test until it can run reliably in the
-    runtime build or a dedicated non-default verification target.
+  - [x] Add a real Wine32-on-64 smoke test in the runtime submodule that runs
+    the runtime's 32-bit `cmd.exe` against an assembled runtime stack.
   - [x] Verify with submodule script/build checks, parent `just cli-test`,
     `just verify-governance`, `just verify-safety`, `just format-check`, and
     `just lint`.

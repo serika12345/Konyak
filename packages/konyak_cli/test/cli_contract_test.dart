@@ -559,6 +559,7 @@ const _macosDxmtInstalledPaths = <List<String>>[
 
 const _macosFreetypeComponentPaths = <List<String>>[
   <String>['Components', 'FreeType', 'lib', 'libfreetype.6.dylib'],
+  <String>['Components', 'FreeType', 'lib', 'libfreetype.dylib'],
 ];
 
 const _macosWine32On64InstalledPaths = <List<String>>[
@@ -626,6 +627,7 @@ String _createComponentRuntimeArchive(String tempPath) {
     <String>['Wine', 'lib', 'libMoltenVK.dylib'],
     <String>['Wine', 'lib', 'libgstreamer-1.0.0.dylib'],
     <String>['Wine', 'lib', 'libfreetype.6.dylib'],
+    <String>['Wine', 'lib', 'libfreetype.dylib'],
     <String>['Wine', 'share', 'wine', 'mono', 'wine-mono.marker'],
     <String>['Wine', 'lib', 'dxmt', 'x86_64-windows', 'd3d10core.dll'],
     <String>['Wine', 'lib', 'dxmt', 'x86_64-windows', 'd3d11.dll'],

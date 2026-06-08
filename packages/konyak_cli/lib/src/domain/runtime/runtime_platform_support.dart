@@ -149,6 +149,7 @@ const _macosKonyakRuntimeComponentDefinitions =
         isRequired: true,
         relativePaths: <List<String>>[
           <String>['lib', 'libfreetype.6.dylib'],
+          <String>['lib', 'libfreetype.dylib'],
         ],
       ),
       _RuntimeStackComponentDefinition(
