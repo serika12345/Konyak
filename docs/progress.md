@@ -9,13 +9,13 @@ handoff notes.
 
 ## Current Work Snapshot
 
-- Timestamp: 2026-06-08 13:41 JST
+- Timestamp: 2026-06-08 17:28 JST
 - State: `in_progress`
 - Branch: `main`
 - Latest known parent commit:
-  `633ac14 docs: track runtime Actions smoke rerun`
+  `cb1b293 docs: track split runtime Actions workflow`
 - Latest known macOS runtime submodule commit:
-  `95fa51a ci: split runtime build and smoke jobs`
+  `6dc7bb6 fix: bundle Wine runtime dylib closure`
 - Related work: macOS 32-bit Windows executable support
 - Purpose: restore macOS 32-bit Windows executable support while keeping the
   `runtime/konyak-macos-runtime` submodule as the runtime artifact SSOT. The
@@ -84,13 +84,47 @@ handoff notes.
     mutable local `result` out-link.
   - Pushed submodule commit `95fa51a`, starting push run `27116433190`.
   - Submitted a cancellation request for obsolete push run `27116103755`.
+  - Investigated failed GitHub Actions run `27116433190`: `Verify
+    Wine32-on-64 launch smoke` failed on the clean runner with
+    `wine: could not load kernel32.dll, status c0000135`.
+  - Confirmed the cause was the Wine runtime artifact retaining `/nix/store`
+    dylib references in Mach-O files such as `bin/wine`, `ntdll.so`, and
+    `winegstreamer.so`. Local smoke runs were masked by this machine's local
+    Nix store, but the extracted CI artifact did not contain those store paths.
+  - Updated the runtime submodule build to copy the needed Nix dylib closure
+    into `$out/lib`, rewrite Mach-O load commands to runtime-relative
+    `@loader_path` or `@rpath`, and fail the build if packaged Wine files still
+    reference `/nix/store/*.dylib`.
+  - Updated the runtime payload checker to reject unpackaged Nix dylib
+    references under `bin` and `lib`.
+  - Built the Wine runtime locally, checked representative `otool -L` output,
+    and ran the Wine32-on-64 launch smoke with the Wine runtime tarball plus the
+    FreeType component overlay.
+  - Pushed submodule commit `6dc7bb6`, starting push run `27125217605`.
 - Remaining:
-  - Wait for GitHub Actions run `27116433190` to finish.
+  - Wait for GitHub Actions run `27125217605` to finish.
   - If the run succeeds, confirm the generated release assets and update the
     development runtime if needed.
   - If the run fails, inspect the failed step logs before changing code.
-- Next action: monitor GitHub Actions run `27116433190`.
+- Next action: monitor GitHub Actions run `27125217605`.
 - Verification performed:
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && nix build .#packages.x86_64-darwin.konyak-macos-wine-runtime -L --show-trace --out-link result-wine-runtime'`:
+    passed; produced
+    `/nix/store/bw07d68rqzq9q0ryw79hwwjnf1yzfc2r-konyak-macos-wine-runtime-crossover-26.1.0-konyak.0`.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && ./scripts/check-wine32on64-runtime.zsh result-wine-runtime'`:
+    passed.
+  - Representative `otool -L` checks for `bin/wine`,
+    `lib/wine/x86_64-unix/ntdll.so`,
+    `lib/wine/x86_64-unix/winegstreamer.so`, and
+    `lib/libgstreamer-1.0.0.dylib`: passed; no `/nix/store/*.dylib`
+    references remained.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && zsh -n scripts/check-wine32on64-runtime.zsh scripts/smoke-wine32on64-launch.zsh scripts/package-binary-components.zsh scripts/make-source-manifest.zsh && git diff --check'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && runtime_out="$(nix build --no-link --print-out-paths .#packages.x86_64-darwin.konyak-macos-wine-runtime)" && ./scripts/check-wine32on64-runtime.zsh "$runtime_out"'`:
+    passed.
+  - Temporary local smoke assembly with Wine runtime tarball plus the FreeType
+    component overlay: passed; `scripts/smoke-wine32on64-launch.zsh` launched
+    the runtime's 32-bit `cmd.exe` through Wine32-on-64.
   - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && nix build .#packages.x86_64-darwin.konyak-macos-wine-runtime -L --no-link'`:
     passed; verified output
     `/nix/store/4gx8261mak5j6kpa9s4agv2qfhyh19fa-konyak-macos-wine-runtime-crossover-26.1.0-konyak.0`.
