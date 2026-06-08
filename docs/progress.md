@@ -9,13 +9,13 @@ handoff notes.
 
 ## Current Work Snapshot
 
-- Timestamp: 2026-06-08 11:53 JST
-- State: `ready_for_review`
+- Timestamp: 2026-06-08 13:30 JST
+- State: `in_progress`
 - Branch: `main`
 - Latest known parent commit:
-  `3a63ae6 feat(cli): require macOS Wine32-on-64 runtime payload`
+  `ff4c464 docs: require Actions parity for local runtime smoke`
 - Latest known macOS runtime submodule commit:
-  `6db07a6 fix: load runtime FreeType for Wine32-on-64`
+  `d6b64f3 ci: preserve Wine runtime result for launch smoke`
 - Related work: macOS 32-bit Windows executable support
 - Purpose: restore macOS 32-bit Windows executable support while keeping the
   `runtime/konyak-macos-runtime` submodule as the runtime artifact SSOT. The
@@ -62,10 +62,22 @@ handoff notes.
   - Removed the external release archive dependency from the macOS source
     manifest failure contract test; the release manifest URL remains covered by
     the repository SSOT test.
+  - Investigated failed GitHub Actions run `27113459002`: the runtime build,
+    Wine32-on-64 payload check, Wine runtime package, DXMT build, and component
+    packaging passed, then `Verify Wine32-on-64 launch smoke` failed because
+    `result` had been overwritten by the DXMT build output before smoke
+    assembly.
+  - Updated the runtime workflow to use separate out-links:
+    `result-wine-runtime` for Wine and `result-dxmt` for DXMT, so the launch
+    smoke always copies the Wine runtime before overlaying component archives.
+  - Cancelled obsolete manual run `27113613086` and pushed the submodule fix,
+    starting push run `27116103755`.
 - Remaining:
-  - Review the committed parent and submodule changes, then run the release
-    workflow if a published runtime artifact is needed.
-- Next action: review the 32-bit launch smoke and runtime contract commits.
+  - Wait for GitHub Actions run `27116103755` to finish.
+  - If the run succeeds, confirm the generated release assets and update the
+    development runtime if needed.
+  - If the run fails, inspect the failed step logs before changing code.
+- Next action: monitor GitHub Actions run `27116103755`.
 - Verification performed:
   - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && nix build .#packages.x86_64-darwin.konyak-macos-wine-runtime -L --no-link'`:
     passed; verified output
@@ -87,6 +99,16 @@ handoff notes.
   - `nix develop -c zsh -lc 'just verify-safety'`: passed.
   - `nix develop -c zsh -lc 'just format-check'`: passed.
   - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && zsh -n scripts/check-wine32on64-runtime.zsh scripts/smoke-wine32on64-launch.zsh scripts/package-binary-components.zsh scripts/make-source-manifest.zsh && git diff --check'`:
+    passed for the workflow out-link fix.
+  - Local workflow assembly check using `result-wine-runtime` passed:
+    `check-wine32on64-runtime.zsh result-wine-runtime` succeeded, and copying
+    `result-wine-runtime` into a smoke runtime root preserved `bin/wine` and
+    `bin/wineserver` even with a separate `result-dxmt` out-link present.
+  - Local DXMT build was not used as verification for this workflow-only fix
+    because this machine lacks the `metal` tool. The failed Actions run already
+    showed DXMT builds on the GitHub macOS runner after its Metal toolchain
+    setup step.
 
 ## Completed Milestones
 
