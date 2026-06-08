@@ -61,6 +61,13 @@ For every task, follow this sequence:
 5. Run the required verification commands for the change scope.
 6. Do not finish while required commands are failing.
 
+When local build plus execution or smoke verification proves a runtime,
+packaging, launcher, or other CI-relevant workflow, update the corresponding
+GitHub Actions workflow in the same change so CI exercises the same path as
+closely as practical. If Actions cannot mirror the local execution, document the
+reason in `docs/progress.md` and leave an explicit TODO or follow-up before
+finishing.
+
 Use TDD as the default development loop:
 
 1. Write a failing test that describes the intended behavior.
@@ -228,6 +235,10 @@ A coding task is not complete unless all of the following are true:
 - Tests were added or updated first when behavior was observable.
 - Required format, lint, and test commands passed.
 - New external-data paths are validated.
+- Any runtime, packaging, launcher, or CI-relevant behavior that was verified by
+  local build plus execution or smoke testing is reflected in the corresponding
+  GitHub Actions workflow, or the documented exception and follow-up are
+  recorded.
 - `docs/progress.md` and `docs/todo.md` reflect any changed current state,
   completed milestone, or roadmap item.
 - No unrelated files were reformatted or refactored.
