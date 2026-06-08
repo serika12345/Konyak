@@ -9,13 +9,13 @@ handoff notes.
 
 ## Current Work Snapshot
 
-- Timestamp: 2026-06-08 22:45 JST
-- State: `in_progress`
+- Timestamp: 2026-06-08 23:46 JST
+- State: `actions_passed`
 - Branch: `main`
 - Latest known parent commit:
-  `9b89498 docs: track runtime workflow rerun policy`
+  `98cc340 docs: track arm64 runtime smoke rerun`
 - Latest known macOS runtime submodule commit:
-  `a9dece7 ci: run Wine32 smoke on arm64 macOS`
+  `e00e1da ci: publish release without checkout`
 - Related work: macOS 32-bit Windows executable support
 - Purpose: restore macOS 32-bit Windows executable support while keeping the
   `runtime/konyak-macos-runtime` submodule as the runtime artifact SSOT. The
@@ -196,16 +196,32 @@ handoff notes.
     `27142828121`.
   - Triggered smoke-only artifact run `27142850162` against retained artifacts
     from failed run `27135965212`; it passed in 4m1s without rebuilding CrossOver.
+  - Investigated failed full `Build runtime` run `27142828121`: Wine runtime
+    build, DXMT build, binary component packaging, release metadata generation,
+    and arm64 Wine32-on-64 smoke passed; only `publish-release` failed because
+    the job intentionally had no checkout, so `gh release` had no repository
+    context.
+  - Updated runtime release publishing to pass `--repo "$GITHUB_REPOSITORY"` to
+    every `gh release` command, keeping the no-checkout publish job while
+    removing its dependency on a local Git worktree.
+  - Pushed submodule commit `e00e1da`, starting full `Build runtime` run
+    `27144374021`; the full workflow passed, including publish, in about 21
+    minutes.
 - Remaining:
-  - Monitor `Build runtime` run `27142828121` for full workflow coverage after
-    the arm64 smoke runner change.
-  - If full-run smoke fails, inspect the new runtime diagnostics before changing
-    code.
-  - If the full run succeeds, confirm release asset publication and update the
-    development runtime if needed.
-- Next action: wait for `27142828121`; the smoke-only artifact rerun path is
-  confirmed by `27142850162`.
+  - Update the development runtime if needed from the newly published runtime
+    release.
+  - Track GitHub's Node.js 20 action deprecation warnings separately; they are
+    annotations only and did not fail the runtime workflow.
+- Next action: consume the newly published runtime in the development
+  environment if another local verification pass is required.
 - Verification performed:
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && nix shell nixpkgs#actionlint -c actionlint .github/workflows/build-runtime.yml .github/workflows/smoke-runtime-artifacts.yml'`:
+    passed after the publish `--repo` fix.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && zsh -n scripts/assemble-runtime-stack.zsh scripts/check-wine32on64-runtime.zsh scripts/smoke-wine32on64-launch.zsh scripts/package-binary-components.zsh scripts/make-source-manifest.zsh && git diff --check'`:
+    passed after the publish `--repo` fix.
+  - GitHub Actions full `Build runtime` run `27144374021`: passed; Wine runtime
+    build, DXMT build, binary component packaging, release metadata generation,
+    arm64 Wine32-on-64 smoke, and publish all completed successfully.
   - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && nix shell nixpkgs#actionlint -c actionlint .github/workflows/build-runtime.yml .github/workflows/smoke-runtime-artifacts.yml'`:
     passed after moving smoke jobs to arm64 macOS runners.
   - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && zsh -n scripts/assemble-runtime-stack.zsh scripts/check-wine32on64-runtime.zsh scripts/smoke-wine32on64-launch.zsh scripts/package-binary-components.zsh scripts/make-source-manifest.zsh && git diff --check'`:
