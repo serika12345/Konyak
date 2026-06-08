@@ -9,13 +9,13 @@ handoff notes.
 
 ## Current Work Snapshot
 
-- Timestamp: 2026-06-08 17:28 JST
+- Timestamp: 2026-06-08 19:26 JST
 - State: `in_progress`
 - Branch: `main`
 - Latest known parent commit:
-  `cb1b293 docs: track split runtime Actions workflow`
+  `b21f926 docs: track runtime dylib closure fix`
 - Latest known macOS runtime submodule commit:
-  `6dc7bb6 fix: bundle Wine runtime dylib closure`
+  `b7a3e8b fix: bundle component dylib closures`
 - Related work: macOS 32-bit Windows executable support
 - Purpose: restore macOS 32-bit Windows executable support while keeping the
   `runtime/konyak-macos-runtime` submodule as the runtime artifact SSOT. The
@@ -101,13 +101,57 @@ handoff notes.
     and ran the Wine32-on-64 launch smoke with the Wine runtime tarball plus the
     FreeType component overlay.
   - Pushed submodule commit `6dc7bb6`, starting push run `27125217605`.
+  - Investigated failed GitHub Actions run `27125217605`: Wine runtime build,
+    runtime payload check, artifact packaging, and DXMT build passed, then the
+    assembled launch smoke failed again with
+    `wine: could not load kernel32.dll, status c0000135`.
+  - Downloaded Actions artifact `7476762619` and confirmed the Wine runtime
+    archive itself contained the required `kernel32.dll` files and passed
+    `check-wine32on64-runtime.zsh`.
+  - Reproduced the real failure surface by overlaying all component archives:
+    `lib/libgstreamer-1.0.0.dylib` and
+    `lib/dxmt/x86_64-unix/winemetal.so` still referenced unpackaged
+    `/nix/store/*.dylib` dependencies.
+  - Updated GStreamer component packaging to copy and rewrite its Nix dylib
+    closure instead of copying only `libgstreamer-1.0.0.dylib`.
+  - Added a component packaging guard that rejects Mach-O files with
+    unpackaged `/nix/store/*.dylib` references before creating component
+    archives.
+  - Updated the DXMT derivation to copy `winemetal.so`'s Nix dylib closure into
+    `x86_64-unix`, rewrite references to `@loader_path`, and fail if any
+    unpackaged Nix dylib references remain.
+  - Updated the runtime workflow smoke job to run
+    `check-wine32on64-runtime.zsh` after overlaying component archives, before
+    launching the Wine32-on-64 smoke.
+  - Pushed submodule commit `b7a3e8b`, starting push run `27131441556`.
 - Remaining:
-  - Wait for GitHub Actions run `27125217605` to finish.
+  - Wait for GitHub Actions run `27131441556` to finish.
   - If the run succeeds, confirm the generated release assets and update the
     development runtime if needed.
   - If the run fails, inspect the failed step logs before changing code.
-- Next action: monitor GitHub Actions run `27125217605`.
+- Next action: monitor GitHub Actions run `27131441556`.
 - Verification performed:
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && zsh -n scripts/check-wine32on64-runtime.zsh scripts/smoke-wine32on64-launch.zsh scripts/package-binary-components.zsh scripts/make-source-manifest.zsh && git diff --check'`:
+    passed for the component closure fix.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && nix shell nixpkgs#actionlint -c actionlint .github/workflows/build-runtime.yml'`:
+    passed for the overlay-after-check workflow change.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && nix build --dry-run .#packages.x86_64-darwin.konyak-macos-dxmt'`:
+    passed; this verified DXMT derivation evaluation without requiring the
+    local machine to have the GitHub runner's Metal toolchain.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && nix flake check -L --show-trace'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && nix flake check -L --show-trace --all-systems'`:
+    passed.
+  - Local GStreamer component-only package test: passed; the generated
+    `konyak-macos-gstreamer.tar.zst` included the GStreamer dylib closure and
+    had no unpackaged `/nix/store/*.dylib` references.
+  - Local DXMT closure rewrite reproduction using the failed Actions artifact:
+    passed; `winemetal.so` and copied dylibs had no unpackaged
+    `/nix/store/*.dylib` references after applying the same rewrite logic.
+  - Assembled runtime smoke using the failed Actions artifact plus fixed
+    GStreamer and DXMT payloads: passed; `check-wine32on64-runtime.zsh` passed
+    after all overlays, then `scripts/smoke-wine32on64-launch.zsh` launched the
+    runtime's 32-bit `cmd.exe` through Wine32-on-64.
   - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && nix build .#packages.x86_64-darwin.konyak-macos-wine-runtime -L --show-trace --out-link result-wine-runtime'`:
     passed; produced
     `/nix/store/bw07d68rqzq9q0ryw79hwwjnf1yzfc2r-konyak-macos-wine-runtime-crossover-26.1.0-konyak.0`.
