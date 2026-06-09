@@ -115,30 +115,45 @@ extension _KonyakHomeLoaderBottles on _KonyakHomeLoaderState {
       return;
     }
 
+    final previousBottle = findSelectedBottle(_bottles, bottle.id) ?? bottle;
     _updateState(() {
       _pendingRuntimeSettingsControls[bottle.id] = controlKey;
+      _bottles = upsertBottle(
+        _bottles,
+        previousBottle.withRuntimeSettings(runtimeSettings),
+      );
       _errorMessage = null;
     });
 
     final BottleUpdateLoadResult result;
-    try {
-      result = await widget.cliClient.setRuntimeSettings(
-        bottleId: bottle.id,
-        runtimeSettings: runtimeSettings,
-      );
-    } finally {
-      if (mounted) {
-        _updateState(() {
-          _pendingRuntimeSettingsControls.remove(bottle.id);
-        });
-      }
-    }
+    result = await widget.cliClient.setRuntimeSettings(
+      bottleId: bottle.id,
+      runtimeSettings: runtimeSettings,
+    );
 
     if (!mounted) {
       return;
     }
 
-    _handleBottleUpdateResult(result);
+    String? failureMessage;
+    _updateState(() {
+      _pendingRuntimeSettingsControls.remove(bottle.id);
+      switch (result) {
+        case UpdatedBottle(:final bottle):
+          _bottles = upsertBottle(_bottles, bottle);
+          _errorMessage = null;
+        case MissingBottleUpdate(:final message) ||
+            BottleUpdateLoadFailure(:final message):
+          _bottles = upsertBottle(_bottles, previousBottle);
+          _errorMessage = null;
+          failureMessage = message;
+      }
+    });
+
+    final resolvedFailureMessage = failureMessage;
+    if (resolvedFailureMessage != null) {
+      _showSnackBar(resolvedFailureMessage);
+    }
   }
 
   Future<void> _loadBottleConfiguration(BottleSummary bottle) async {

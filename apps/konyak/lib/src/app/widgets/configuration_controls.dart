@@ -170,11 +170,15 @@ class BottleConfigurationSwitchRow extends StatelessWidget {
               key: loadingKey,
               width: 36,
               height: 20,
-              child: const Center(
-                child: SizedBox.square(
-                  dimension: 14,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  KonyakToggle(key: switchKey, value: value, onChanged: null),
+                  const SizedBox.square(
+                    dimension: 12,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ],
               ),
             )
           : KonyakToggle(key: switchKey, value: value, onChanged: onChanged),

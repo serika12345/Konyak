@@ -17,6 +17,19 @@ class BottleSummary {
   final String windowsVersion;
   final BottleRuntimeSettingsSummary runtimeSettings;
   final IList<PinnedProgramSummary> pinnedPrograms;
+
+  BottleSummary withRuntimeSettings(
+    BottleRuntimeSettingsSummary runtimeSettings,
+  ) {
+    return BottleSummary(
+      id: id,
+      name: name,
+      path: path,
+      windowsVersion: windowsVersion,
+      runtimeSettings: runtimeSettings,
+      pinnedPrograms: pinnedPrograms,
+    );
+  }
 }
 
 class BottleRuntimeSettingsSummary {

@@ -378,7 +378,14 @@ void defineBottleConfigurationWidgetTests() {
     await tester.tap(find.byKey(const ValueKey('config-dxvk-switch')));
     await tester.pump();
 
-    expect(find.byKey(const ValueKey('config-dxvk-switch')), findsNothing);
+    expect(find.byKey(const ValueKey('config-dxvk-switch')), findsOneWidget);
+    expect(
+      tester
+          .getSemantics(find.byKey(const ValueKey('config-dxvk-switch')))
+          .flagsCollection
+          .isToggled,
+      Tristate.isTrue,
+    );
     expect(
       find.byKey(const ValueKey('config-dxvk-switch-loading')),
       findsOneWidget,
@@ -429,6 +436,142 @@ void defineBottleConfigurationWidgetTests() {
           .isToggled,
       Tristate.isTrue,
     );
+    semantics.dispose();
+  });
+
+  testWidgets('bottle configuration restores toggle state when saving fails', (
+    WidgetTester tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+
+    final runtimeUpdateCompleter = Completer<ProcessRunResult>();
+    final runner = _FutureQueuedProcessRunner([
+      Future.value(
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottles": [
+              {
+                "id": "steam",
+                "name": "Steam",
+                "path": "/Users/user/Library/Application Support/Konyak/Bottles/Steam",
+                "windowsVersion": "win10",
+                "runtimeSettings": {
+                  "enhancedSync": "msync",
+                  "metalHud": false,
+                  "metalTrace": false,
+                  "avxEnabled": false,
+                  "dxrEnabled": false,
+                  "dxvk": false,
+                  "dxvkAsync": true,
+                  "dxvkHud": "off",
+                  "buildVersion": 19045,
+                  "retinaMode": false,
+                  "dpiScaling": 144
+                }
+              }
+            ]
+          }
+        ''',
+          stderr: '',
+        ),
+      ),
+      Future.value(
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottle": {
+              "id": "steam",
+              "name": "Steam",
+              "path": "/Users/user/Library/Application Support/Konyak/Bottles/Steam",
+              "windowsVersion": "win10",
+              "runtimeSettings": {
+                "enhancedSync": "msync",
+                "metalHud": false,
+                "metalTrace": false,
+                "avxEnabled": false,
+                "dxrEnabled": false,
+                "dxvk": false,
+                "dxvkAsync": true,
+                "dxvkHud": "off",
+                "buildVersion": 19045,
+                "retinaMode": false,
+                "dpiScaling": 144
+              }
+            }
+          }
+        ''',
+          stderr: '',
+        ),
+      ),
+      Future.value(
+        ProcessRunResult(
+          exitCode: 0,
+          stdout: _macosRuntimeListPayload(),
+          stderr: '',
+        ),
+      ),
+      runtimeUpdateCompleter.future,
+    ]);
+
+    await tester.pumpWidget(
+      _testKonyakApp(
+        cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Bottle Configuration'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('config-dxvk-switch')));
+    await tester.pump();
+
+    expect(
+      tester
+          .getSemantics(find.byKey(const ValueKey('config-dxvk-switch')))
+          .flagsCollection
+          .isToggled,
+      Tristate.isTrue,
+    );
+    expect(
+      find.byKey(const ValueKey('config-dxvk-switch-loading')),
+      findsOneWidget,
+    );
+
+    runtimeUpdateCompleter.complete(
+      const ProcessRunResult(
+        exitCode: 75,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "error": {
+              "code": "runtimeSettingsFailed",
+              "message": "Runtime settings update failed."
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const ValueKey('config-dxvk-switch-loading')),
+      findsNothing,
+    );
+    expect(
+      tester
+          .getSemantics(find.byKey(const ValueKey('config-dxvk-switch')))
+          .flagsCollection
+          .isToggled,
+      Tristate.isFalse,
+    );
+    expect(find.text('Runtime settings update failed.'), findsOneWidget);
     semantics.dispose();
   });
 
@@ -942,7 +1085,16 @@ void defineBottleConfigurationWidgetTests() {
 
     expect(
       find.byKey(const ValueKey('config-vkd3d-proton-switch')),
-      findsNothing,
+      findsOneWidget,
+    );
+    expect(
+      tester
+          .getSemantics(
+            find.byKey(const ValueKey('config-vkd3d-proton-switch')),
+          )
+          .flagsCollection
+          .isToggled,
+      Tristate.isTrue,
     );
     expect(
       find.byKey(const ValueKey('config-vkd3d-proton-switch-loading')),
