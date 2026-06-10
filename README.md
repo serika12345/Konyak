@@ -23,10 +23,11 @@ launches through the CLI boundary.
 
 Remaining product work is tracked in `docs/todo.md`. The current active work,
 handoff notes, completed milestone summaries, and next continuation step are
-tracked in `docs/progress.md`. The main open areas are runtime stack
-publication, Linux-specific UI/default separation, and the native in-place
-updater framework that will eventually replace the current verified package
-handoff.
+tracked in `docs/progress.md`. The main open areas are explicit backend
+selection for Wine/DXVK/DXMT/GPTK, backend-specific runtime probes, GPTK import
+cleanup so user-provided D3DMetal files do not overwrite the base Wine payload,
+Linux runtime stack publication, and the native in-place updater framework that
+will eventually replace the current verified package handoff.
 
 ## Repository Layout
 

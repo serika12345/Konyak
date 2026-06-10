@@ -23,8 +23,12 @@ different published runtime release, or set
 `KONYAK_DEV_MACOS_WINE_STACK_MANIFEST` to a complete manifest URL. Local
 component archive generation is available only through
 `KONYAK_DEV_MACOS_RUNTIME_SOURCE_MODE=local`. In that mode, the development
-winetricks component is a checksum-verified upstream winetricks script plus its
-real `list-all` verb catalog, not a stub. Override
+runtime source helper mirrors the released component layout instead of pulling
+runtime libraries from the parent flake. The `dxvk-macos` component keeps the
+pinned Gcenx DXVK-macOS payload and supplements only `d3d10.dll` and
+`d3d10_1.dll` from upstream DXVK `v1.10.3` for both i386 and x86_64 Windows
+payloads. The development winetricks component is a checksum-verified upstream
+winetricks script plus its real `list-all` verb catalog, not a stub. Override
 `KONYAK_DEV_WINETRICKS_PATH` to use a local executable or package root, or
 override `KONYAK_DEV_WINETRICKS_SCRIPT_URL` and
 `KONYAK_DEV_WINETRICKS_SCRIPT_SHA256` to change the pinned upstream source.
@@ -131,6 +135,14 @@ other macOS runtime components: a source manifest may include a
 `gptk-d3dmetal` archive, and the installer normalizes it into
 `lib/external`, `lib/wine/x86_64-windows`, and `lib/wine/x86_64-unix`.
 
+The default macOS runtime release is produced by the
+`runtime/konyak-macos-runtime` submodule. Its source manifest currently
+includes the CrossOver-derived Wine component, DXVK-macOS, DXMT, MoltenVK,
+GStreamer, FreeType, wine-mono, and winetricks archives. The `dxvk-macos`
+component is complete for D3D9, D3D10, D3D11, and DXGI on both
+`i386-windows` and `x86_64-windows`; Actions verify that layout before
+publishing the release.
+
 Konyak keeps the CrossOver-derived macOS Wine runtime as the default Wine
 component. Users may import Apple GPTK DMGs, app bundles, or extracted redist
 trees with
@@ -170,9 +182,8 @@ under `usr/share/konyak` and export `KONYAK_RUNTIME_STACK_PUBLIC_KEY_PATH` from
 `AppRun` so the CLI can verify signed manifest updates at runtime.
 
 The release secret handoff for signed default Konyak runtime stack manifests is
-documented in `docs/release.md`. The actual default full-stack manifest remains
-deferred until the Konyak component archives exist, so the bootstrap Wine-only
-fallback remains part of the CLI behavior.
+documented in `docs/release.md`. Linux default full-stack manifest publication
+and signing remain deferred until the Linux component archives exist.
 
 Do not replace this boundary with FFI or in-process linking unless the license
 and platform implications are reviewed first.

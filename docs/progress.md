@@ -11,6 +11,33 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-10 21:52 JST
+- State: `docs_refreshed`
+- Branch: `main`
+- Related work: macOS runtime component documentation
+- Purpose: make the repository documentation match the current runtime state
+  after the DXVK D3D10 component update and release republish, so the next
+  continuation can resume from docs without relying on chat history.
+- Completed:
+  - Documented that the macOS runtime release is the SSOT for Wine, DXMT,
+    DXVK-macOS, and binary runtime components.
+  - Documented that `dxvk-macos` is currently built from the Gcenx DXVK-macOS
+    payload plus upstream DXVK `v1.10.3` only for `d3d10.dll` and
+    `d3d10_1.dll`.
+  - Brought the runtime submodule DXMT/DXVK TODO state up to date: DXMT build,
+    Metal toolchain handoff, Actions coverage, DXVK independence, and
+    backend-specific launch environment generation are complete.
+  - Left the remaining runtime follow-ups explicit: GPTK import must stop
+    overwriting `lib/wine/*`, backend selection still needs an explicit enum,
+    and backend-specific probes are still missing.
+- Verification:
+  - `git diff --check` passed for the parent repository and runtime submodule.
+  - `just verify-governance` passed.
+  - `just verify-safety` passed.
+  - `just format-check` passed.
+  - `just lint` passed.
+- Next: commit this documentation update if requested.
+
 - Timestamp: 2026-06-10 21:35 JST
 - State: `dxvk_d3d10_runtime_updated`
 - Branch: `main`

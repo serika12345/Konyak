@@ -232,6 +232,23 @@ task changes scope.
   - [x] Verify with submodule script/build checks, parent `just cli-test`,
     `just verify-governance`, `just verify-safety`, `just format-check`, and
     `just lint`.
+- [x] Complete the macOS DXVK component payload for D3D10.
+  - [x] Keep `runtime/konyak-macos-runtime` as the runtime component artifact
+    SSOT and keep the parent repository's Nix flake free of runtime library
+    dependencies.
+  - [x] Confirm the pinned Gcenx DXVK-macOS payload lacks `d3d10.dll` and
+    `d3d10_1.dll`.
+  - [x] Supplement only `d3d10.dll` and `d3d10_1.dll` from upstream DXVK
+    `v1.10.3` for both `i386-windows` and `x86_64-windows`.
+  - [x] Validate the DXVK component archive with
+    `runtime/konyak-macos-runtime/scripts/check-dxvk-component.zsh`.
+  - [x] Include DXVK component verification in runtime Actions and the
+    assembled Wine32-on-64 smoke runtime.
+  - [x] Update the parent CLI runtime contract, dev runtime source helper, and
+    macOS DXVK `WINEDLLOVERRIDES` so install/repair/listing and launch plans
+    require and use `d3d10.dll` and `d3d10_1.dll`.
+  - [x] Republish the `crossover-26.1.0-konyak.0` macOS runtime release assets
+    from the runtime submodule Actions run.
 
 ## Deferred
 
@@ -408,7 +425,7 @@ task changes scope.
     full-stack Flutter + real CLI smoke suite.
   - Keep the E2E target separate from the default fast verification gate until
     its runtime cost and flake rate are known.
-- Publication of the actual default Konyak runtime stack manifest and public
-  key, once the full component archives are produced.
-- Removal of the bootstrap Wine-only fallback after that runtime stack
-  manifest becomes the default release input.
+- Publication and signing of the default Linux runtime stack manifest and
+  public key, once the Linux component archives are produced.
+- Removal of any remaining bootstrap Wine-only fallback only after each target
+  platform has a complete default runtime stack manifest as its release input.

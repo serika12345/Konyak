@@ -129,6 +129,16 @@ macOS runtime stack manifests remain checksum-validated JSON consumed by
 archives and manifests together, with manifest signing handled by repository
 secrets once the default full Konyak stack artifacts are available.
 
+The macOS runtime stack itself is released from the
+`runtime/konyak-macos-runtime` submodule. Its workflow keeps the expensive
+CrossOver-derived Wine build, DXMT build, binary component packaging, metadata
+generation, Wine32-on-64 smoke, and publish steps as separate rerunnable jobs.
+The published manifest for `crossover-26.1.0-konyak.0` includes Wine,
+DXVK-macOS, DXMT, MoltenVK, GStreamer, FreeType, wine-mono, and winetricks
+component archives. Release verification checks Wine32-on-64 payloads, the
+assembled 32-bit `cmd.exe` smoke, DXMT layout, and DXVK layout including
+`d3d10.dll` and `d3d10_1.dll` for both i386 and x86_64 Windows payloads.
+
 Reserved runtime-stack release inputs:
 
 - `KONYAK_RUNTIME_STACK_SOURCE_MANIFEST`: path or generated artifact name for
