@@ -383,6 +383,8 @@ void defineProgramExecutionContractTests() {
       for (final dllName in const [
         'dxgi.dll',
         'd3d9.dll',
+        'd3d10.dll',
+        'd3d10_1.dll',
         'd3d10core.dll',
         'd3d11.dll',
       ]) {
@@ -464,7 +466,10 @@ void defineProgramExecutionContractTests() {
     );
     expect(
       runner.lastRequest?.environment.toMap(),
-      containsPair('WINEDLLOVERRIDES', 'dxgi,d3d9,d3d10core,d3d11=n,b'),
+      containsPair(
+        'WINEDLLOVERRIDES',
+        'dxgi,d3d9,d3d10,d3d10_1,d3d10core,d3d11=n,b',
+      ),
     );
     expect(
       runner.lastRequest?.environment.toMap(),
@@ -845,7 +850,7 @@ void defineProgramExecutionContractTests() {
       runner.lastRequest?.environment.toMap(),
       containsPair(
         'WINEDLLOVERRIDES',
-        'dxgi=n,b;d3d9=n,b;d3d10core=n,b;d3d11=n,b',
+        'dxgi=n,b;d3d9=n,b;d3d10=n,b;d3d10_1=n,b;d3d10core=n,b;d3d11=n,b',
       ),
     );
     expect(

@@ -802,6 +802,8 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       for (final dllName in const [
         'dxgi.dll',
         'd3d9.dll',
+        'd3d10.dll',
+        'd3d10_1.dll',
         'd3d10core.dll',
         'd3d11.dll',
       ]) {
@@ -844,6 +846,8 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
     for (final dllName in const [
       'dxgi.dll',
       'd3d9.dll',
+      'd3d10.dll',
+      'd3d10_1.dll',
       'd3d10core.dll',
       'd3d11.dll',
     ]) {
@@ -1330,6 +1334,8 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
         for (final dllName in const [
           'dxgi.dll',
           'd3d9.dll',
+          'd3d10.dll',
+          'd3d10_1.dll',
           'd3d10core.dll',
           'd3d11.dll',
           'd3d12.dll',

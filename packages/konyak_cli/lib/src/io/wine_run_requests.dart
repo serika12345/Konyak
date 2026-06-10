@@ -3,13 +3,14 @@ part of '../../konyak_cli.dart';
 const _dxvkOverrideDllNames = <String>[
   'dxgi.dll',
   'd3d9.dll',
+  'd3d10.dll',
+  'd3d10_1.dll',
   'd3d10core.dll',
   'd3d11.dll',
 ];
 
 const _macosD3DTranslationOverrideDllNames = <String>[
   ..._dxvkOverrideDllNames,
-  'd3d10.dll',
   'd3d12.dll',
   'winemetal.dll',
 ];
@@ -153,7 +154,14 @@ ProgramRunEnvironment _linuxWineEnvironmentWithDllOverrides({
   required BottleRecord bottle,
 }) {
   final dllOverrides = <String>[
-    if (bottle.runtimeSettings.dxvk) ...['dxgi', 'd3d9', 'd3d10core', 'd3d11'],
+    if (bottle.runtimeSettings.dxvk) ...[
+      'dxgi',
+      'd3d9',
+      'd3d10',
+      'd3d10_1',
+      'd3d10core',
+      'd3d11',
+    ],
     if (bottle.runtimeSettings.vkd3dProton) ...['d3d12', 'd3d12core'],
   ];
   if (dllOverrides.isNotEmpty) {

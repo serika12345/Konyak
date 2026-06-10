@@ -9,6 +9,62 @@ handoff notes.
 
 ## Current Work Snapshot
 
+### Latest Update
+
+- Timestamp: 2026-06-10 21:35 JST
+- State: `dxvk_d3d10_runtime_updated`
+- Branch: `main`
+- Related work: macOS DXVK runtime component completeness
+- Purpose: include DXVK's `d3d10.dll` and `d3d10_1.dll` in the macOS runtime
+  stack without moving runtime dependencies into the parent Nix flake. The
+  `runtime/konyak-macos-runtime` submodule remains the release artifact SSOT;
+  the parent dev-runtime source helper is only kept in sync with the same DXVK
+  component payload shape.
+- Completed:
+  - Confirmed the pinned Gcenx `dxvk-macOS-async-v1.10.3-20230507` archive has
+    `dxgi.dll`, `d3d9.dll`, `d3d10core.dll`, and `d3d11.dll`, but not
+    `d3d10.dll` or `d3d10_1.dll`.
+  - Confirmed upstream DXVK `v1.10.3` contains `d3d10.dll` and `d3d10_1.dll`
+    for both `x32` and `x64`.
+  - Updated runtime binary component packaging to keep the Gcenx DXVK-macOS
+    DLLs and supplement only `d3d10.dll` / `d3d10_1.dll` from upstream DXVK
+    `v1.10.3`.
+  - Added `scripts/check-dxvk-component.zsh` in the runtime submodule to verify
+    both i386 and x86_64 DXVK DLL payloads and file types.
+  - Updated runtime Actions to verify the DXVK component archive immediately
+    after packaging and again after assembling the smoke runtime stack.
+  - Updated the parent dev runtime source helper to package the same DXVK
+    D3D10 DLLs for local dev sources.
+  - Updated the parent CLI runtime contract so `dxvk-macos` completeness and
+    macOS DXVK DLL overrides include `d3d10.dll` and `d3d10_1.dll`.
+  - Pushed runtime submodule commit
+    `a390185 feat: include DXVK D3D10 loader DLLs`.
+  - GitHub Actions run `27274534375` passed and republished the
+    `crossover-26.1.0-konyak.0` runtime release assets.
+  - Refreshed the local development runtime source manifest and reinstalled
+    `.dart_tool/konyak/dev-runtime/macos-wine` from that release.
+- Verification:
+  - Runtime binary component packaging succeeded using `/tmp` dist/cache.
+  - `scripts/check-dxvk-component.zsh` passed for the extracted DXVK component.
+  - Release Wine/DXMT archives plus the locally generated binary components
+    assembled successfully; Wine32-on-64, DXMT, and DXVK layout checks passed.
+  - `scripts/smoke-wine32on64-launch.zsh` passed against the assembled runtime
+    stack.
+  - Runtime Actions jobs passed: validate, Wine artifact, binary components
+    with DXVK component verification, DXMT artifact, release metadata,
+    Wine32-on-64 smoke, and release publish.
+  - Local `install-macos-wine --reinstall --source-manifest ... --json`
+    completed and reported `dxvk-macos` version
+    `v1.10.3-20230507+dxvk-1.10.3-d3d10`.
+  - The reinstalled dev runtime passed `scripts/check-dxvk-component.zsh`, and
+    `list-runtimes --json` reported all four added DXVK D3D10 paths.
+  - `cd packages/konyak_cli && dart test test/cli_contract_test.dart` passed
+    after the parent CLI contract update.
+  - `zsh -n`, `git diff --check`, and `actionlint` passed.
+  - `just verify-governance`, `just verify-safety`, `just format-check`, and
+    `just lint` passed after this progress note was added.
+- Next: no active follow-up for this change.
+
 - Timestamp: 2026-06-08 23:46 JST
 - State: `actions_passed`
 - Branch: `main`

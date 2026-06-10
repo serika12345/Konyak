@@ -76,6 +76,10 @@ readonly WINE_VERSION="${KONYAK_DEV_MACOS_WINE_VERSION:-local-macos-wine}"
 readonly DXVK_ARCHIVE_URL="${KONYAK_DEV_DXVK_MACOS_ARCHIVE_URL:-https://github.com/Gcenx/DXVK-macOS/releases/download/v1.10.3-20230507/dxvk-macOS-async-v1.10.3-20230507.tar.gz}"
 readonly DXVK_ARCHIVE_SHA256="${KONYAK_DEV_DXVK_MACOS_ARCHIVE_SHA256:-f67d99d0a8eeedd7d406b283a3df9f939b5965acb00efcb33d0c6235c195a516}"
 readonly DXVK_ARCHIVE_CACHE="${KONYAK_DEV_DXVK_MACOS_ARCHIVE_CACHE:-${DOWNLOAD_CACHE}/dxvk-macOS-async-v1.10.3-20230507.tar.gz}"
+readonly DXVK_D3D10_ARCHIVE_URL="${KONYAK_DEV_DXVK_D3D10_ARCHIVE_URL:-https://github.com/doitsujin/dxvk/releases/download/v1.10.3/dxvk-1.10.3.tar.gz}"
+readonly DXVK_D3D10_ARCHIVE_SHA256="${KONYAK_DEV_DXVK_D3D10_ARCHIVE_SHA256:-8d1a3c912761b450c879f98478ae64f6f6639e40ce6848170a0f6b8596fd53c6}"
+readonly DXVK_D3D10_ARCHIVE_CACHE="${KONYAK_DEV_DXVK_D3D10_ARCHIVE_CACHE:-${DOWNLOAD_CACHE}/dxvk-1.10.3.tar.gz}"
+readonly DXVK_VERSION="${KONYAK_DEV_DXVK_VERSION:-v1.10.3-20230507+dxvk-1.10.3-d3d10}"
 readonly DXMT_ARCHIVE_URL="${KONYAK_DEV_DXMT_ARCHIVE_URL:-https://github.com/serika12345/konyak-macos-runtime/releases/download/crossover-26.1.0-konyak.0/konyak-macos-dxmt.tar.zst}"
 readonly DXMT_ARCHIVE_SHA256="${KONYAK_DEV_DXMT_ARCHIVE_SHA256:-2f3851e4fddc66074ba512146ddb6240646989000e8ba2a555ca6706eac8e611}"
 readonly DXMT_ARCHIVE_CACHE="${KONYAK_DEV_DXMT_ARCHIVE_CACHE:-${DOWNLOAD_CACHE}/konyak-macos-dxmt.tar.zst}"
@@ -221,15 +225,18 @@ PY
 prepare_dxvk_component() {
   local work_root="${SOURCE_ROOT}/work/dxvk"
   local extract_root="${work_root}/extract"
+  local d3d10_extract_root="${work_root}/extract-d3d10"
   local payload_root="${work_root}/payload/dxvk-macos"
   local archive_path="${SOURCE_ROOT}/components/dxvk-macos.tar.xz"
   local source_x64
   local source_x32
 
   download_if_missing "${DXVK_ARCHIVE_URL}" "${DXVK_ARCHIVE_CACHE}" "${DXVK_ARCHIVE_SHA256}"
+  download_if_missing "${DXVK_D3D10_ARCHIVE_URL}" "${DXVK_D3D10_ARCHIVE_CACHE}" "${DXVK_D3D10_ARCHIVE_SHA256}"
   reset_dir "${work_root}"
-  mkdir -p "${extract_root}"
+  mkdir -p "${extract_root}" "${d3d10_extract_root}"
   extract_archive "${DXVK_ARCHIVE_CACHE}" "${extract_root}" -xz
+  extract_archive "${DXVK_D3D10_ARCHIVE_CACHE}" "${d3d10_extract_root}" -xz
 
   mkdir -p \
     "${payload_root}/Components/DXVK-macOS/DXVK/x64" \
@@ -245,10 +252,22 @@ prepare_dxvk_component() {
     cp -f "${source_x64}" "${payload_root}/Components/DXVK-macOS/DXVK/x64/${dll_name}"
     cp -f "${source_x32}" "${payload_root}/Components/DXVK-macOS/DXVK/x32/${dll_name}"
   done
+
+  for dll_name in d3d10.dll d3d10_1.dll; do
+    source_x64="$(find "${d3d10_extract_root}" -path "*/x64/${dll_name}" -type f | head -n 1)"
+    source_x32="$(find "${d3d10_extract_root}" -path "*/x32/${dll_name}" -type f | head -n 1)"
+    if [[ -z "${source_x64}" || -z "${source_x32}" ]]; then
+      print -u2 "DXVK upstream archive does not contain x64/x32 ${dll_name}."
+      exit 65
+    fi
+
+    cp -f "${source_x64}" "${payload_root}/Components/DXVK-macOS/DXVK/x64/${dll_name}"
+    cp -f "${source_x32}" "${payload_root}/Components/DXVK-macOS/DXVK/x32/${dll_name}"
+  done
   write_stack_manifest \
     "${payload_root}/.konyak-runtime-stack.json" \
     "dxvk-macos" \
-    "v1.10.3-20230507"
+    "${DXVK_VERSION}"
   archive_payload "${payload_root}" "${archive_path}"
   print -r -- "${archive_path}"
 }
@@ -603,6 +622,7 @@ write_source_manifest() {
     "${WINE_VERSION}" \
     "${dxvk_archive}" \
     "${dxvk_sha}" \
+    "${DXVK_VERSION}" \
     "${dxmt_archive}" \
     "${dxmt_sha}" \
     "${DXMT_VERSION}" \
@@ -624,6 +644,7 @@ import sys
     wine_version,
     dxvk_archive,
     dxvk_sha,
+    dxvk_version,
     dxmt_archive,
     dxmt_sha,
     dxmt_version,
@@ -635,7 +656,7 @@ import sys
     gptk_d3dmetal_sha,
     gptk_d3dmetal_version,
     winetricks_version,
-) = sys.argv[1:18]
+) = sys.argv[1:19]
 
 components = [
     {
@@ -646,7 +667,7 @@ components = [
     },
     {
         "id": "dxvk-macos",
-        "version": "v1.10.3-20230507",
+        "version": dxvk_version,
         "archiveUrl": dxvk_archive,
         "sha256": dxvk_sha,
     },

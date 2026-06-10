@@ -291,7 +291,8 @@ class BottleRuntimeSettings {
     } else if (dxmt) {
       environment['WINEDLLOVERRIDES'] = 'dxgi,d3d10core,d3d11,winemetal=n,b';
     } else if (dxvk) {
-      environment['WINEDLLOVERRIDES'] = 'dxgi,d3d9,d3d10core,d3d11=n,b';
+      environment['WINEDLLOVERRIDES'] =
+          'dxgi,d3d9,d3d10,d3d10_1,d3d10core,d3d11=n,b';
       final hud = switch (dxvkHud) {
         'full' => 'full',
         'partial' => 'devinfo,fps,frametimes',
