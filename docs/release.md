@@ -138,6 +138,9 @@ DXVK-macOS, DXMT, MoltenVK, GStreamer, FreeType, wine-mono, and winetricks
 component archives. Release verification checks Wine32-on-64 payloads, the
 assembled 32-bit `cmd.exe` smoke, DXMT layout, and DXVK layout including
 `d3d10.dll` and `d3d10_1.dll` for both i386 and x86_64 Windows payloads.
+It also verifies that the GStreamer component contains the plugin directory,
+plugin scanner, representative media plugins, and no unpackaged Nix store dylib
+references.
 
 Reserved runtime-stack release inputs:
 

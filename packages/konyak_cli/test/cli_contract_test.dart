@@ -570,6 +570,36 @@ const _macosFreetypeComponentPaths = <List<String>>[
   <String>['Components', 'FreeType', 'lib', 'libfreetype.dylib'],
 ];
 
+const _macosGstreamerInstalledPaths = <List<String>>[
+  <String>['lib', 'libgstreamer-1.0.0.dylib'],
+  <String>['lib', 'gstreamer-1.0', 'libgstcoreelements.dylib'],
+  <String>['lib', 'gstreamer-1.0', 'libgstplayback.dylib'],
+  <String>['lib', 'gstreamer-1.0', 'libgsttypefindfunctions.dylib'],
+  <String>['lib', 'gstreamer-1.0', 'libgstisomp4.dylib'],
+  <String>['lib', 'gstreamer-1.0', 'libgstwavparse.dylib'],
+  <String>['lib', 'gstreamer-1.0', 'libgstapplemedia.dylib'],
+  <String>['libexec', 'gstreamer-1.0', 'gst-plugin-scanner'],
+];
+
+final _macosGstreamerComponentPaths = <List<String>>[
+  for (final relativePath in _macosGstreamerInstalledPaths)
+    <String>['Components', 'GStreamer', ...relativePath],
+];
+
+Set<String> _macosGstreamerExistingPaths(String runtimeRoot) {
+  return <String>{
+    for (final relativePath in _macosGstreamerInstalledPaths)
+      _joinTestPath(runtimeRoot, relativePath),
+  };
+}
+
+List<String> _macosGstreamerExpectedPaths(String runtimeRoot) {
+  return <String>[
+    for (final relativePath in _macosGstreamerInstalledPaths)
+      _joinTestPath(runtimeRoot, relativePath),
+  ];
+}
+
 const _macosWine32On64InstalledPaths = <List<String>>[
   <String>['bin', 'wine'],
   <String>['lib', 'wine', 'i386-windows', 'ntdll.dll'],
@@ -637,7 +667,8 @@ String _createComponentRuntimeArchive(String tempPath) {
     <String>['Wine', 'lib', 'dxvk', 'i386-windows', 'd3d10core.dll'],
     <String>['Wine', 'lib', 'dxvk', 'i386-windows', 'd3d11.dll'],
     <String>['Wine', 'lib', 'libMoltenVK.dylib'],
-    <String>['Wine', 'lib', 'libgstreamer-1.0.0.dylib'],
+    for (final relativePath in _macosGstreamerInstalledPaths)
+      <String>['Wine', ...relativePath],
     <String>['Wine', 'lib', 'libfreetype.6.dylib'],
     <String>['Wine', 'lib', 'libfreetype.dylib'],
     <String>['Wine', 'share', 'wine', 'mono', 'wine-mono.marker'],
@@ -715,7 +746,7 @@ String _createKonyakComponentRuntimeArchive(String tempPath) {
     ..._macosDxvkComponentPaths,
     ..._macosDxmtComponentPaths,
     <String>['Components', 'MoltenVK', 'lib', 'libMoltenVK.dylib'],
-    <String>['Components', 'GStreamer', 'lib', 'libgstreamer-1.0.0.dylib'],
+    ..._macosGstreamerComponentPaths,
     ..._macosFreetypeComponentPaths,
     <String>['Components', 'wine-mono', 'share', 'wine', 'mono', 'marker'],
     <String>['Components', 'winetricks', 'winetricks'],

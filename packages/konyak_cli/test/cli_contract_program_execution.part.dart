@@ -326,6 +326,27 @@ void defineProgramExecutionContractTests() {
     expect(
       runner.lastRequest?.environment.toMap(),
       containsPair(
+        'GST_PLUGIN_SYSTEM_PATH',
+        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/gstreamer-1.0',
+      ),
+    );
+    expect(
+      runner.lastRequest?.environment.toMap(),
+      containsPair(
+        'GST_PLUGIN_SCANNER',
+        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/libexec/gstreamer-1.0/gst-plugin-scanner',
+      ),
+    );
+    expect(
+      runner.lastRequest?.environment.toMap(),
+      containsPair(
+        'GST_REGISTRY',
+        '/Users/user/Library/Application Support/Konyak/Bottles/Steam/gstreamer-1.0-registry.x86_64.bin',
+      ),
+    );
+    expect(
+      runner.lastRequest?.environment.toMap(),
+      containsPair(
         'DYLD_LIBRARY_PATH',
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib',
       ),

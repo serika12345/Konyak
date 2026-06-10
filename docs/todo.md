@@ -249,6 +249,20 @@ task changes scope.
     require and use `d3d10.dll` and `d3d10_1.dll`.
   - [x] Republish the `crossover-26.1.0-konyak.0` macOS runtime release assets
     from the runtime submodule Actions run.
+- [x] Complete the macOS GStreamer runtime component payload.
+  - [x] Keep the component in `runtime/konyak-macos-runtime`; do not move
+    media runtime dependencies into the parent Nix flake.
+  - [x] Package GStreamer plugin dylibs under `lib/gstreamer-1.0`, including
+    representative core, playback/typefind, MP4/WAV, and Apple media plugins.
+  - [x] Package `libexec/gstreamer-1.0/gst-plugin-scanner`.
+  - [x] Add submodule-side component verification that rejects missing plugins,
+    missing scanner, wrong architecture, and unpackaged Nix store dylib
+    references.
+  - [x] Add runtime Actions coverage for the packaged GStreamer component and
+    assembled smoke runtime.
+  - [x] Update the parent CLI runtime contract and macOS launch environment so
+    Wine receives `GST_PLUGIN_SYSTEM_PATH`, `GST_PLUGIN_SCANNER`, and a
+    bottle-local `GST_REGISTRY`.
 
 ## Deferred
 

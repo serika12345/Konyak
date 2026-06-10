@@ -119,7 +119,9 @@ void defineRuntimeInstallContractTests() {
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxvk/i386-windows/d3d10core.dll',
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxvk/i386-windows/d3d11.dll',
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/libMoltenVK.dylib',
-        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/libgstreamer-1.0.0.dylib',
+        ..._macosGstreamerExistingPaths(
+          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
+        ),
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/libfreetype.6.dylib',
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/libfreetype.dylib',
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/share/wine/mono',
@@ -645,9 +647,7 @@ void defineRuntimeInstallContractTests() {
     final gstreamerArchive = _createKonyakRuntimeComponentArchive(
       tempDirectory.path,
       archiveName: 'gstreamer',
-      relativePaths: const <List<String>>[
-        <String>['Components', 'GStreamer', 'lib', 'libgstreamer-1.0.0.dylib'],
-      ],
+      relativePaths: _macosGstreamerComponentPaths,
       versions: const <String, String>{'gstreamer': 'gstreamer-fixture'},
     );
     final freetypeArchive = _createKonyakRuntimeComponentArchive(
@@ -771,17 +771,18 @@ void defineRuntimeInstallContractTests() {
         isTrue,
       );
     }
-    expect(
-      File(
-        _joinTestPath(runtimeHome, const [
-          'Runtimes',
-          'macos-wine',
-          'lib',
-          'libgstreamer-1.0.0.dylib',
-        ]),
-      ).existsSync(),
-      isTrue,
-    );
+    for (final relativePath in _macosGstreamerInstalledPaths) {
+      expect(
+        File(
+          _joinTestPath(runtimeHome, [
+            'Runtimes',
+            'macos-wine',
+            ...relativePath,
+          ]),
+        ).existsSync(),
+        isTrue,
+      );
+    }
     expect(
       File(
         _joinTestPath(runtimeHome, const [
@@ -862,9 +863,7 @@ void defineRuntimeInstallContractTests() {
     final gstreamerArchive = _createKonyakRuntimeComponentArchive(
       tempDirectory.path,
       archiveName: 'source-gstreamer',
-      relativePaths: const <List<String>>[
-        <String>['Components', 'GStreamer', 'lib', 'libgstreamer-1.0.0.dylib'],
-      ],
+      relativePaths: _macosGstreamerComponentPaths,
       versions: const <String, String>{},
     );
     final freetypeArchive = _createKonyakRuntimeComponentArchive(
@@ -1059,14 +1058,7 @@ void defineRuntimeInstallContractTests() {
       final gstreamerArchive = _createKonyakRuntimeComponentArchive(
         tempDirectory.path,
         archiveName: 'repair-gstreamer',
-        relativePaths: const <List<String>>[
-          <String>[
-            'Components',
-            'GStreamer',
-            'lib',
-            'libgstreamer-1.0.0.dylib',
-          ],
-        ],
+        relativePaths: _macosGstreamerComponentPaths,
         versions: const <String, String>{},
       );
       final freetypeArchive = _createKonyakRuntimeComponentArchive(
@@ -1158,7 +1150,7 @@ void defineRuntimeInstallContractTests() {
         <String>['lib', 'libwine.1.dylib'],
         ..._macosDxvkInstalledPaths,
         <String>['lib', 'libMoltenVK.dylib'],
-        <String>['lib', 'libgstreamer-1.0.0.dylib'],
+        ..._macosGstreamerInstalledPaths,
         <String>['lib', 'libfreetype.6.dylib'],
         <String>['lib', 'libfreetype.dylib'],
         <String>['share', 'wine', 'mono', 'wine-mono.marker'],
@@ -1554,14 +1546,11 @@ void defineRuntimeInstallContractTests() {
     File(_joinTestPath(runtimeRoot.path, const ['winetricks']))
       ..parent.createSync(recursive: true)
       ..writeAsStringSync('existing winetricks');
-    File(
-        _joinTestPath(runtimeRoot.path, const [
-          'lib',
-          'libgstreamer-1.0.0.dylib',
-        ]),
-      )
-      ..parent.createSync(recursive: true)
-      ..writeAsStringSync('existing gstreamer');
+    for (final relativePath in _macosGstreamerInstalledPaths) {
+      File(_joinTestPath(runtimeRoot.path, relativePath))
+        ..parent.createSync(recursive: true)
+        ..writeAsStringSync('existing gstreamer');
+    }
     File(_joinTestPath(runtimeRoot.path, const ['lib', 'libfreetype.6.dylib']))
       ..parent.createSync(recursive: true)
       ..writeAsStringSync('existing freetype');
@@ -1655,15 +1644,12 @@ void defineRuntimeInstallContractTests() {
       ).readAsStringSync(),
       'existing winetricks',
     );
-    expect(
-      File(
-        _joinTestPath(runtimeRoot.path, const [
-          'lib',
-          'libgstreamer-1.0.0.dylib',
-        ]),
-      ).readAsStringSync(),
-      'existing gstreamer',
-    );
+    for (final relativePath in _macosGstreamerInstalledPaths) {
+      expect(
+        File(_joinTestPath(runtimeRoot.path, relativePath)).readAsStringSync(),
+        'existing gstreamer',
+      );
+    }
     expect(
       File(
         _joinTestPath(runtimeRoot.path, const ['lib', 'libfreetype.6.dylib']),

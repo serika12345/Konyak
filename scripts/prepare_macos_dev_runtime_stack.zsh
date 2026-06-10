@@ -85,6 +85,7 @@ readonly DXMT_ARCHIVE_SHA256="${KONYAK_DEV_DXMT_ARCHIVE_SHA256:-2f3851e4fddc6607
 readonly DXMT_ARCHIVE_CACHE="${KONYAK_DEV_DXMT_ARCHIVE_CACHE:-${DOWNLOAD_CACHE}/konyak-macos-dxmt.tar.zst}"
 readonly DXMT_VERSION="${KONYAK_DEV_DXMT_VERSION:-aa9df0b86b041dc836a08f3a499f2a203cdbd4d7-konyak.0}"
 readonly GSTREAMER_ROOT="${KONYAK_DEV_NIX_GSTREAMER_PATH:-}"
+readonly GSTREAMER_PLUGIN_ROOTS_RAW="${KONYAK_DEV_NIX_GSTREAMER_PLUGIN_PATHS:-}"
 readonly WINETRICKS_SOURCE="${KONYAK_DEV_WINETRICKS_PATH:-}"
 readonly WINETRICKS_SCRIPT_URL="${KONYAK_DEV_WINETRICKS_SCRIPT_URL:-https://raw.githubusercontent.com/Winetricks/winetricks/20260125/src/winetricks}"
 readonly WINETRICKS_SCRIPT_SHA256="${KONYAK_DEV_WINETRICKS_SCRIPT_SHA256:-431f82fc74000e6c864409f1d8fb495d696c03928808e3e8acffc45179312a7b}"
@@ -305,9 +306,19 @@ prepare_gstreamer_component() {
   local payload_root="${work_root}/payload/gstreamer"
   local archive_path="${SOURCE_ROOT}/components/gstreamer.tar.xz"
   local source_dylib
+  local source_scanner
+  local plugin_root
+  local plugin_dir
+  local plugin_path
+  local plugin_roots=("${(@s.:.)GSTREAMER_PLUGIN_ROOTS_RAW}")
+  local copied_plugins=0
 
   if [[ -z "${GSTREAMER_ROOT}" ]]; then
     print -u2 "KONYAK_DEV_NIX_GSTREAMER_PATH is required. Run inside nix develop."
+    exit 69
+  fi
+  if [[ -z "${GSTREAMER_PLUGIN_ROOTS_RAW}" ]]; then
+    print -u2 "KONYAK_DEV_NIX_GSTREAMER_PLUGIN_PATHS is required in local macOS runtime source mode."
     exit 69
   fi
 
@@ -316,15 +327,55 @@ prepare_gstreamer_component() {
     print -u2 "GStreamer dylib not found: ${source_dylib}"
     exit 69
   fi
+  source_scanner="${GSTREAMER_ROOT}/libexec/gstreamer-1.0/gst-plugin-scanner"
+  if [[ ! -x "${source_scanner}" ]]; then
+    print -u2 "GStreamer plugin scanner not found: ${source_scanner}"
+    exit 69
+  fi
 
   reset_dir "${work_root}"
-  mkdir -p "${payload_root}/Components/GStreamer/lib"
+  mkdir -p \
+    "${payload_root}/Components/GStreamer/lib" \
+    "${payload_root}/Components/GStreamer/lib/gstreamer-1.0" \
+    "${payload_root}/Components/GStreamer/libexec/gstreamer-1.0"
   cp -Lf "${source_dylib}" \
     "${payload_root}/Components/GStreamer/lib/libgstreamer-1.0.0.dylib"
+  cp -Lf "${source_scanner}" \
+    "${payload_root}/Components/GStreamer/libexec/gstreamer-1.0/gst-plugin-scanner"
+  chmod +x "${payload_root}/Components/GStreamer/libexec/gstreamer-1.0/gst-plugin-scanner"
+  for plugin_root in "${plugin_roots[@]}"; do
+    plugin_dir="${plugin_root}/lib/gstreamer-1.0"
+    if [[ ! -d "${plugin_dir}" ]]; then
+      print -u2 "GStreamer plugin directory not found: ${plugin_dir}"
+      exit 69
+    fi
+
+    while IFS= read -r plugin_path; do
+      cp -Lf "${plugin_path}" \
+        "${payload_root}/Components/GStreamer/lib/gstreamer-1.0/${plugin_path:t}"
+      copied_plugins=$((copied_plugins + 1))
+    done < <(/usr/bin/find "${plugin_dir}" -maxdepth 1 -type f -name '*.dylib' -print)
+  done
+  if [[ "${copied_plugins}" -eq 0 ]]; then
+    print -u2 "No GStreamer plugins were copied."
+    exit 69
+  fi
+  for required_path in \
+    lib/gstreamer-1.0/libgstcoreelements.dylib \
+    lib/gstreamer-1.0/libgstplayback.dylib \
+    lib/gstreamer-1.0/libgsttypefindfunctions.dylib \
+    lib/gstreamer-1.0/libgstisomp4.dylib \
+    lib/gstreamer-1.0/libgstwavparse.dylib \
+    lib/gstreamer-1.0/libgstapplemedia.dylib; do
+    if [[ ! -f "${payload_root}/Components/GStreamer/${required_path}" ]]; then
+      print -u2 "GStreamer plugin payload is missing ${required_path}."
+      exit 69
+    fi
+  done
   write_stack_manifest \
     "${payload_root}/.konyak-runtime-stack.json" \
     "gstreamer" \
-    "${GSTREAMER_ROOT:t}"
+    "${GSTREAMER_ROOT:t}+plugins"
   archive_payload "${payload_root}" "${archive_path}"
   print -r -- "${archive_path}"
 }
@@ -679,7 +730,7 @@ components = [
     },
     {
         "id": "gstreamer",
-        "version": "nix-gstreamer",
+        "version": "nix-gstreamer+plugins",
         "archiveUrl": gstreamer_archive,
         "sha256": gstreamer_sha,
     },

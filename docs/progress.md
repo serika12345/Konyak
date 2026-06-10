@@ -11,6 +11,70 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-10 23:13 JST
+- State: `gstreamer_plugins_release_verified`
+- Branch: `main`
+- Related work: macOS runtime media component completeness
+- Purpose: make the macOS GStreamer runtime component usable for Wine media
+  playback by shipping plugin dylibs and the plugin scanner, not only
+  `libgstreamer-1.0.0.dylib`.
+- Completed:
+  - Updated runtime component packaging to include GStreamer core, base, good,
+    and bad plugin roots in `lib/gstreamer-1.0`.
+  - Added `libexec/gstreamer-1.0/gst-plugin-scanner` to the GStreamer component.
+  - Added `scripts/check-gstreamer-component.zsh` in the runtime submodule to
+    require representative playback/demux/plugin files and reject unpackaged
+    `/nix/store/*.dylib` references.
+  - Updated runtime Actions to pass the plugin roots, verify the GStreamer
+    component archive, and verify the assembled smoke runtime.
+  - Updated the parent runtime completeness contract to require the plugin
+    directory and scanner.
+  - Updated macOS launch planning to set `GST_PLUGIN_SYSTEM_PATH`,
+    `GST_PLUGIN_SCANNER`, and a bottle-local `GST_REGISTRY`.
+  - Updated the parent local development source helper to mirror the same
+    GStreamer payload shape when explicit plugin roots are provided.
+  - Installed the published macOS runtime release into the local development
+    runtime root from the refreshed source manifest and verified the parent CLI
+    sees the complete GStreamer component.
+- Verification:
+  - Runtime submodule Actions run `27280426574` passed through release
+    publishing for commit `799dae2`.
+  - `scripts/prepare_macos_dev_runtime_stack.zsh --print-manifest-path
+    --print-runtime-path` refreshed the release source manifest.
+  - `cd packages/konyak_cli && dart run bin/konyak.dart install-macos-wine
+    --reinstall --source-manifest <manifest> --progress-json --json` installed
+    the published release into `.dart_tool/konyak/dev-runtime/macos-wine`.
+  - `runtime/konyak-macos-runtime/scripts/check-gstreamer-component.zsh
+    .dart_tool/konyak/dev-runtime/macos-wine` passed.
+  - `runtime/konyak-macos-runtime/scripts/check-dxvk-component.zsh
+    .dart_tool/konyak/dev-runtime/macos-wine` passed.
+  - `runtime/konyak-macos-runtime/scripts/check-wine32on64-runtime.zsh
+    .dart_tool/konyak/dev-runtime/macos-wine` passed.
+  - `cd packages/konyak_cli && dart run bin/konyak.dart validate-runtime
+    konyak-macos-wine --json` passed with `isValid: true`.
+  - `runtime/konyak-macos-runtime/scripts/smoke-wine32on64-launch.zsh
+    .dart_tool/konyak/dev-runtime/macos-wine` passed.
+  - `zsh -n scripts/prepare_macos_dev_runtime_stack.zsh
+    runtime/konyak-macos-runtime/scripts/package-binary-components.zsh
+    runtime/konyak-macos-runtime/scripts/check-gstreamer-component.zsh
+    runtime/konyak-macos-runtime/scripts/make-source-manifest.zsh` passed.
+  - `cd runtime/konyak-macos-runtime && nix shell nixpkgs#actionlint -c
+    actionlint .github/workflows/build-runtime.yml` passed.
+  - `cd packages/konyak_cli && dart test test/cli_contract_test.dart` passed.
+  - Runtime binary component packaging succeeded locally using x86_64-darwin
+    GStreamer core/base/good/bad plugin roots.
+  - `runtime/konyak-macos-runtime/scripts/check-gstreamer-component.zsh` passed
+    for the extracted GStreamer component.
+  - `just cli-test` passed.
+  - `git diff --check && git -C runtime/konyak-macos-runtime diff --check`
+    passed.
+  - `just verify-governance` passed.
+  - `just verify-safety` passed.
+  - `just format-check` passed.
+  - `just lint` passed.
+- Next: continue with the remaining runtime component checks such as NVIDIA shim
+  and vkd3d.
+
 - Timestamp: 2026-06-10 21:52 JST
 - State: `docs_refreshed`
 - Branch: `main`

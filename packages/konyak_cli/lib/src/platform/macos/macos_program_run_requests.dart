@@ -115,6 +115,9 @@ ProgramRunEnvironment _macosWineEnvironment({
     'WINEPREFIX': bottle.path,
     'WINEDEBUG': 'fixme-all',
     'GST_DEBUG': '1',
+    'GST_PLUGIN_SYSTEM_PATH': _macosGstreamerPluginPath(runtimeRoot),
+    'GST_PLUGIN_SCANNER': _macosGstreamerPluginScanner(runtimeRoot),
+    'GST_REGISTRY': _macosGstreamerRegistryPath(bottle.path),
     'WINEDLLPATH': wineDllPathEntries.join(':'),
     'DYLD_LIBRARY_PATH': _prependPaths(<String>[
       if (d3dMetalSelected) _macosD3DMetalExternalPath(runtimeRoot),
@@ -139,6 +142,22 @@ ProgramRunEnvironment _macosWineEnvironment({
 
 String _macosD3DMetalExternalPath(String runtimeRoot) {
   return _joinPath(runtimeRoot, const ['lib', 'external']);
+}
+
+String _macosGstreamerPluginPath(String runtimeRoot) {
+  return _joinPath(runtimeRoot, const ['lib', 'gstreamer-1.0']);
+}
+
+String _macosGstreamerPluginScanner(String runtimeRoot) {
+  return _joinPath(runtimeRoot, const [
+    'libexec',
+    'gstreamer-1.0',
+    'gst-plugin-scanner',
+  ]);
+}
+
+String _macosGstreamerRegistryPath(String bottlePath) {
+  return _joinPath(bottlePath, const ['gstreamer-1.0-registry.x86_64.bin']);
 }
 
 String _macosD3DMetalWindowsPath(String runtimeRoot) {

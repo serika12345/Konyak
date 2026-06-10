@@ -144,6 +144,13 @@ const _macosKonyakRuntimeComponentDefinitions =
         isRequired: true,
         relativePaths: <List<String>>[
           <String>['lib', 'libgstreamer-1.0.0.dylib'],
+          <String>['lib', 'gstreamer-1.0', 'libgstcoreelements.dylib'],
+          <String>['lib', 'gstreamer-1.0', 'libgstplayback.dylib'],
+          <String>['lib', 'gstreamer-1.0', 'libgsttypefindfunctions.dylib'],
+          <String>['lib', 'gstreamer-1.0', 'libgstisomp4.dylib'],
+          <String>['lib', 'gstreamer-1.0', 'libgstwavparse.dylib'],
+          <String>['lib', 'gstreamer-1.0', 'libgstapplemedia.dylib'],
+          <String>['libexec', 'gstreamer-1.0', 'gst-plugin-scanner'],
         ],
       ),
       _RuntimeStackComponentDefinition(

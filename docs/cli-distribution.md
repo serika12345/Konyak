@@ -27,8 +27,12 @@ runtime source helper mirrors the released component layout instead of pulling
 runtime libraries from the parent flake. The `dxvk-macos` component keeps the
 pinned Gcenx DXVK-macOS payload and supplements only `d3d10.dll` and
 `d3d10_1.dll` from upstream DXVK `v1.10.3` for both i386 and x86_64 Windows
-payloads. The development winetricks component is a checksum-verified upstream
-winetricks script plus its real `list-all` verb catalog, not a stub. Override
+payloads. If local source mode is used, the GStreamer component must be given
+explicit plugin roots through `KONYAK_DEV_NIX_GSTREAMER_PLUGIN_PATHS` so it can
+mirror the release component's `lib/gstreamer-1.0` plugin directory and
+`libexec/gstreamer-1.0/gst-plugin-scanner`. The development winetricks
+component is a checksum-verified upstream winetricks script plus its real
+`list-all` verb catalog, not a stub. Override
 `KONYAK_DEV_WINETRICKS_PATH` to use a local executable or package root, or
 override `KONYAK_DEV_WINETRICKS_SCRIPT_URL` and
 `KONYAK_DEV_WINETRICKS_SCRIPT_SHA256` to change the pinned upstream source.
@@ -141,7 +145,12 @@ includes the CrossOver-derived Wine component, DXVK-macOS, DXMT, MoltenVK,
 GStreamer, FreeType, wine-mono, and winetricks archives. The `dxvk-macos`
 component is complete for D3D9, D3D10, D3D11, and DXGI on both
 `i386-windows` and `x86_64-windows`; Actions verify that layout before
-publishing the release.
+publishing the release. The `gstreamer` component includes
+`libgstreamer-1.0.0.dylib`, plugin dylibs under `lib/gstreamer-1.0`, and
+`libexec/gstreamer-1.0/gst-plugin-scanner`. macOS launch plans set
+`GST_PLUGIN_SYSTEM_PATH`, `GST_PLUGIN_SCANNER`, and a bottle-local
+`GST_REGISTRY` so Wine's media stack does not fall back to host GStreamer
+plugins.
 
 Konyak keeps the CrossOver-derived macOS Wine runtime as the default Wine
 component. Users may import Apple GPTK DMGs, app bundles, or extracted redist

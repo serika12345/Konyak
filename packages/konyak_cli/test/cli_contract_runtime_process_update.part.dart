@@ -162,7 +162,9 @@ void defineRuntimeProcessAndUpdateContractTests() {
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxvk/i386-windows/d3d10core.dll',
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxvk/i386-windows/d3d11.dll',
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/libMoltenVK.dylib',
-          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/libgstreamer-1.0.0.dylib',
+          ..._macosGstreamerExistingPaths(
+            '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
+          ),
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/libfreetype.6.dylib',
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/libfreetype.dylib',
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/share/wine/mono',
@@ -263,9 +265,9 @@ void defineRuntimeProcessAndUpdateContractTests() {
                 'role': 'media-runtime',
                 'isRequired': true,
                 'isInstalled': true,
-                'paths': [
-                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/libgstreamer-1.0.0.dylib',
-                ],
+                'paths': _macosGstreamerExpectedPaths(
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
+                ),
                 'missingPaths': <Object?>[],
               },
               {
@@ -429,7 +431,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
       }
       for (final relativePath in const <List<String>>[
         <String>['lib', 'libMoltenVK.dylib'],
-        <String>['lib', 'libgstreamer-1.0.0.dylib'],
+        ..._macosGstreamerInstalledPaths,
         <String>['lib', 'libfreetype.6.dylib'],
         <String>['lib', 'libfreetype.dylib'],
         <String>['winetricks'],
