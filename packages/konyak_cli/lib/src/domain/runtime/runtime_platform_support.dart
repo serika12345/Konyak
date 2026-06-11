@@ -87,6 +87,15 @@ const _macosWine32On64ComponentPaths = <List<String>>[
   <String>['lib', 'wine', 'x86_64-unix', 'ntdll.so'],
 ];
 
+const _macosVkd3dComponentPaths = <List<String>>[
+  <String>['lib', 'wine', 'x86_64-windows', 'libvkd3d-1.dll'],
+  <String>['lib', 'wine', 'x86_64-windows', 'libvkd3d-shader-1.dll'],
+  <String>['lib', 'wine', 'x86_64-windows', 'libvkd3d-utils-1.dll'],
+  <String>['lib', 'wine', 'i386-windows', 'libvkd3d-1.dll'],
+  <String>['lib', 'wine', 'i386-windows', 'libvkd3d-shader-1.dll'],
+  <String>['lib', 'wine', 'i386-windows', 'libvkd3d-utils-1.dll'],
+];
+
 const _macosKonyakRuntimeComponentDefinitions =
     <_RuntimeStackComponentDefinition>[
       _RuntimeStackComponentDefinition(
@@ -178,6 +187,13 @@ const _macosKonyakRuntimeComponentDefinitions =
         relativePaths: <List<String>>[
           <String>['winetricks'],
         ],
+      ),
+      _RuntimeStackComponentDefinition(
+        id: 'vkd3d',
+        name: 'vkd3d',
+        role: 'd3d12-vulkan-runtime',
+        isRequired: true,
+        relativePaths: _macosVkd3dComponentPaths,
       ),
       _RuntimeStackComponentDefinition(
         id: 'gptk-d3dmetal',

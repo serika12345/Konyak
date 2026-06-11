@@ -126,6 +126,9 @@ void defineRuntimeInstallContractTests() {
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/libfreetype.dylib',
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/share/wine/mono',
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/winetricks',
+        ..._macosVkd3dExistingPaths(
+          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
+        ),
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxmt/x86_64-windows/d3d10core.dll',
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxmt/x86_64-windows/d3d11.dll',
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxmt/x86_64-windows/dxgi.dll',
@@ -672,6 +675,12 @@ void defineRuntimeInstallContractTests() {
       ],
       versions: const <String, String>{'winetricks': 'winetricks-fixture'},
     );
+    final vkd3dArchive = _createKonyakRuntimeComponentArchive(
+      tempDirectory.path,
+      archiveName: 'vkd3d',
+      relativePaths: _macosVkd3dComponentPaths,
+      versions: const <String, String>{'vkd3d': 'vkd3d-fixture'},
+    );
     final gptkD3dMetalArchive = _createKonyakRuntimeComponentArchive(
       tempDirectory.path,
       archiveName: 'gptk-d3dmetal',
@@ -701,6 +710,7 @@ void defineRuntimeInstallContractTests() {
           freetypeArchive,
           monoArchive,
           winetricksArchive,
+          vkd3dArchive,
           gptkD3dMetalArchive,
         ],
       ),
@@ -759,6 +769,16 @@ void defineRuntimeInstallContractTests() {
           .toNullable(),
       'freetype-fixture',
     );
+    expect(
+      completed.runtime.stack
+          .toNullable()
+          ?.components
+          .where((component) => component.id == 'vkd3d')
+          .single
+          .version
+          .toNullable(),
+      'vkd3d-fixture',
+    );
     for (final relativePath in _macosDxmtInstalledPaths) {
       expect(
         File(
@@ -772,6 +792,18 @@ void defineRuntimeInstallContractTests() {
       );
     }
     for (final relativePath in _macosGstreamerInstalledPaths) {
+      expect(
+        File(
+          _joinTestPath(runtimeHome, [
+            'Runtimes',
+            'macos-wine',
+            ...relativePath,
+          ]),
+        ).existsSync(),
+        isTrue,
+      );
+    }
+    for (final relativePath in _macosVkd3dInstalledPaths) {
       expect(
         File(
           _joinTestPath(runtimeHome, [
@@ -888,6 +920,12 @@ void defineRuntimeInstallContractTests() {
       ],
       versions: const <String, String>{},
     );
+    final vkd3dArchive = _createKonyakRuntimeComponentArchive(
+      tempDirectory.path,
+      archiveName: 'source-vkd3d',
+      relativePaths: _macosVkd3dComponentPaths,
+      versions: const <String, String>{},
+    );
     final gptkD3dMetalArchive = _createKonyakRuntimeComponentArchive(
       tempDirectory.path,
       archiveName: 'source-gptk-d3dmetal',
@@ -936,6 +974,11 @@ void defineRuntimeInstallContractTests() {
           id: 'winetricks',
           version: 'winetricks-source',
           archivePath: winetricksArchive,
+        ),
+        _runtimeStackSourceComponent(
+          id: 'vkd3d',
+          version: 'vkd3d-source',
+          archivePath: vkd3dArchive,
         ),
         _runtimeStackSourceComponent(
           id: 'gptk-d3dmetal',
@@ -1000,6 +1043,16 @@ void defineRuntimeInstallContractTests() {
           .version
           .toNullable(),
       'freetype-source',
+    );
+    expect(
+      completed.runtime.stack
+          .toNullable()
+          ?.components
+          .where((component) => component.id == 'vkd3d')
+          .single
+          .version
+          .toNullable(),
+      'vkd3d-source',
     );
     expect(
       completed.runtime.stack
@@ -1090,6 +1143,12 @@ void defineRuntimeInstallContractTests() {
         ],
         versions: const <String, String>{},
       );
+      final vkd3dArchive = _createKonyakRuntimeComponentArchive(
+        tempDirectory.path,
+        archiveName: 'repair-vkd3d',
+        relativePaths: _macosVkd3dComponentPaths,
+        versions: const <String, String>{},
+      );
       final sourceManifestPath = _createRuntimeStackSourceManifest(
         tempDirectory.path,
         components: <Map<String, String>>[
@@ -1133,6 +1192,11 @@ void defineRuntimeInstallContractTests() {
             version: 'winetricks-source',
             archivePath: winetricksArchive,
           ),
+          _runtimeStackSourceComponent(
+            id: 'vkd3d',
+            version: 'vkd3d-source',
+            archivePath: vkd3dArchive,
+          ),
         ],
       );
       final runtimeHome = _joinTestPath(tempDirectory.path, const [
@@ -1154,6 +1218,7 @@ void defineRuntimeInstallContractTests() {
         <String>['lib', 'libfreetype.6.dylib'],
         <String>['lib', 'libfreetype.dylib'],
         <String>['share', 'wine', 'mono', 'wine-mono.marker'],
+        ..._macosVkd3dInstalledPaths,
       ]) {
         final file = File(_joinTestPath(runtimeRoot, relativePath));
         file.parent.createSync(recursive: true);
@@ -1172,6 +1237,7 @@ void defineRuntimeInstallContractTests() {
             'gstreamer': 'gstreamer-existing',
             'freetype': 'freetype-existing',
             'wine-mono': 'wine-mono-existing',
+            'vkd3d': 'vkd3d-existing',
             'gptk-d3dmetal': 'user-provided',
           },
         }),

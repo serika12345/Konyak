@@ -11,6 +11,46 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-11 12:49 JST
+- State: `macos_vkd3d_runtime_component_implemented`
+- Branch: `main`
+- Related work: macOS runtime parity with CrossOver
+- Purpose: add CrossOver-derived vkd3d DLLs to the Konyak macOS runtime stack
+  without adding runtime dependencies to the parent Nix flake.
+- Completed:
+  - Added a runtime submodule vkd3d Nix package that builds from the pinned
+    CrossOver FOSS source archive and reuses the extracted Wine runtime
+    artifact for `widl` without rebuilding the Wine runtime.
+  - Added a separate runtime Actions job so vkd3d can be rebuilt or rerun
+    without rebuilding Wine.
+  - Added parent CLI runtime completeness requirements for
+    `libvkd3d-1.dll`, `libvkd3d-shader-1.dll`, and `libvkd3d-utils-1.dll` on
+    both `i386-windows` and `x86_64-windows`.
+  - Updated the macOS development runtime stack source flow to consume the
+    submodule vkd3d component archive instead of sourcing vkd3d from the parent
+    flake.
+- Verification:
+  - `cd runtime/konyak-macos-runtime && KONYAK_WINE_RUNTIME_ROOT="$PWD/../../.dart_tool/konyak/dev-runtime/macos-wine" nix build --impure .#packages.x86_64-darwin.konyak-macos-vkd3d -L --show-trace --out-link result-vkd3d && ./scripts/check-vkd3d-component.zsh result-vkd3d`:
+    passed.
+  - Runtime vkd3d component `tar.zst` package/extract smoke check: passed.
+  - Runtime vkd3d dry-run check confirmed `konyak-macos-wine-runtime` is not
+    rebuilt when `KONYAK_WINE_RUNTIME_ROOT` is set.
+  - `cd packages/konyak_cli && dart test test/cli_contract_test.dart`: passed.
+  - `zsh -n` for touched macOS runtime and parent runtime-prep scripts: passed.
+  - `just cli-test`: passed.
+  - `just verify-governance`: passed.
+  - `just verify-safety`: passed.
+  - `just format-check`: passed.
+  - `just lint`: passed.
+  - Runtime submodule commit `43f53bb` was pushed, and runtime Actions run
+    `27321085521` completed successfully, including vkd3d build, smoke, release
+    metadata, and publish jobs.
+  - Parent-side verification passed after the runtime Actions release was
+    published: `cd packages/konyak_cli && dart test test/cli_contract_test.dart`,
+    `just cli-test`, `just verify-governance`, `just verify-safety`,
+    `just format-check`, and `just lint`.
+- Next: push the parent Konyak commit and run parent CI when ready.
+
 - Timestamp: 2026-06-11 09:21 JST
 - State: `gptk_d3dmetal_nvidia_shim_implemented`
 - Branch: `main`

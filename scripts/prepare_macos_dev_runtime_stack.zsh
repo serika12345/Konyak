@@ -84,6 +84,10 @@ readonly DXMT_ARCHIVE_URL="${KONYAK_DEV_DXMT_ARCHIVE_URL:-https://github.com/ser
 readonly DXMT_ARCHIVE_SHA256="${KONYAK_DEV_DXMT_ARCHIVE_SHA256:-2f3851e4fddc66074ba512146ddb6240646989000e8ba2a555ca6706eac8e611}"
 readonly DXMT_ARCHIVE_CACHE="${KONYAK_DEV_DXMT_ARCHIVE_CACHE:-${DOWNLOAD_CACHE}/konyak-macos-dxmt.tar.zst}"
 readonly DXMT_VERSION="${KONYAK_DEV_DXMT_VERSION:-aa9df0b86b041dc836a08f3a499f2a203cdbd4d7-konyak.0}"
+readonly VKD3D_ARCHIVE_URL="${KONYAK_DEV_VKD3D_ARCHIVE_URL:-}"
+readonly VKD3D_ARCHIVE_SHA256="${KONYAK_DEV_VKD3D_ARCHIVE_SHA256:-}"
+readonly VKD3D_ARCHIVE_CACHE="${KONYAK_DEV_VKD3D_ARCHIVE_CACHE:-${DOWNLOAD_CACHE}/konyak-macos-vkd3d.tar.zst}"
+readonly VKD3D_VERSION="${KONYAK_DEV_VKD3D_VERSION:-crossover-26.1.0-vkd3d-1.18-konyak.0}"
 readonly GSTREAMER_ROOT="${KONYAK_DEV_NIX_GSTREAMER_PATH:-}"
 readonly GSTREAMER_PLUGIN_ROOTS_RAW="${KONYAK_DEV_NIX_GSTREAMER_PLUGIN_PATHS:-}"
 readonly WINETRICKS_SOURCE="${KONYAK_DEV_WINETRICKS_PATH:-}"
@@ -299,6 +303,29 @@ prepare_dxmt_component() {
     "${DXMT_VERSION}"
   archive_payload "${payload_root}" "${archive_path}"
   print -r -- "${archive_path}"
+}
+
+prepare_vkd3d_component() {
+  if [[ -z "${VKD3D_ARCHIVE_SHA256}" ]]; then
+    print -u2 "KONYAK_DEV_VKD3D_ARCHIVE_SHA256 is required in local macOS runtime source mode."
+    exit 69
+  fi
+
+  if [[ -z "${VKD3D_ARCHIVE_URL}" && ! -f "${VKD3D_ARCHIVE_CACHE}" ]]; then
+    print -u2 "KONYAK_DEV_VKD3D_ARCHIVE_URL or KONYAK_DEV_VKD3D_ARCHIVE_CACHE is required in local macOS runtime source mode."
+    exit 69
+  fi
+
+  if [[ -n "${VKD3D_ARCHIVE_URL}" ]]; then
+    download_if_missing \
+      "${VKD3D_ARCHIVE_URL}" \
+      "${VKD3D_ARCHIVE_CACHE}" \
+      "${VKD3D_ARCHIVE_SHA256}"
+  else
+    verify_sha256 "${VKD3D_ARCHIVE_CACHE}" "${VKD3D_ARCHIVE_SHA256}"
+  fi
+
+  print -r -- "${VKD3D_ARCHIVE_CACHE}"
 }
 
 prepare_gstreamer_component() {
@@ -675,17 +702,20 @@ write_source_manifest() {
   local wine_archive_source="$1"
   local dxvk_archive="$2"
   local dxmt_archive="$3"
-  local gstreamer_archive="$4"
-  local winetricks_archive="$5"
-  local gptk_d3dmetal_archive="${6:-}"
+  local vkd3d_archive="$4"
+  local gstreamer_archive="$5"
+  local winetricks_archive="$6"
+  local gptk_d3dmetal_archive="${7:-}"
   local dxvk_sha
   local dxmt_sha
+  local vkd3d_sha
   local gstreamer_sha
   local winetricks_sha
   local gptk_d3dmetal_sha=""
 
   dxvk_sha="$(sha256_file "${dxvk_archive}")"
   dxmt_sha="$(sha256_file "${dxmt_archive}")"
+  vkd3d_sha="$(sha256_file "${vkd3d_archive}")"
   gstreamer_sha="$(sha256_file "${gstreamer_archive}")"
   winetricks_sha="$(sha256_file "${winetricks_archive}")"
   if [[ -n "${gptk_d3dmetal_archive}" ]]; then
@@ -704,6 +734,9 @@ write_source_manifest() {
     "${dxmt_archive}" \
     "${dxmt_sha}" \
     "${DXMT_VERSION}" \
+    "${vkd3d_archive}" \
+    "${vkd3d_sha}" \
+    "${VKD3D_VERSION}" \
     "${gstreamer_archive}" \
     "${gstreamer_sha}" \
     "${winetricks_archive}" \
@@ -726,6 +759,9 @@ import sys
     dxmt_archive,
     dxmt_sha,
     dxmt_version,
+    vkd3d_archive,
+    vkd3d_sha,
+    vkd3d_version,
     gstreamer_archive,
     gstreamer_sha,
     winetricks_archive,
@@ -734,7 +770,7 @@ import sys
     gptk_d3dmetal_sha,
     gptk_d3dmetal_version,
     winetricks_version,
-) = sys.argv[1:19]
+) = sys.argv[1:22]
 
 components = [
     {
@@ -754,6 +790,12 @@ components = [
         "version": dxmt_version,
         "archiveUrl": dxmt_archive,
         "sha256": dxmt_sha,
+    },
+    {
+        "id": "vkd3d",
+        "version": vkd3d_version,
+        "archiveUrl": vkd3d_archive,
+        "sha256": vkd3d_sha,
     },
     {
         "id": "gstreamer",
@@ -843,6 +885,7 @@ fi
 
 dxvk_archive="$(prepare_dxvk_component)"
 dxmt_archive="$(prepare_dxmt_component)"
+vkd3d_archive="$(prepare_vkd3d_component)"
 gstreamer_archive="$(prepare_gstreamer_component)"
 winetricks_archive="$(prepare_winetricks_component)"
 gptk_d3dmetal_archive="$(prepare_gptk_d3dmetal_component)"
@@ -850,6 +893,7 @@ write_source_manifest \
   "${wine_archive_source}" \
   "${dxvk_archive}" \
   "${dxmt_archive}" \
+  "${vkd3d_archive}" \
   "${gstreamer_archive}" \
   "${winetricks_archive}" \
   "${gptk_d3dmetal_archive}"

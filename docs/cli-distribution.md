@@ -141,11 +141,15 @@ other macOS runtime components: a source manifest may include a
 
 The default macOS runtime release is produced by the
 `runtime/konyak-macos-runtime` submodule. Its source manifest currently
-includes the CrossOver-derived Wine component, DXVK-macOS, DXMT, MoltenVK,
-GStreamer, FreeType, wine-mono, and winetricks archives. The `dxvk-macos`
-component is complete for D3D9, D3D10, D3D11, and DXGI on both
+includes the CrossOver-derived Wine component, DXVK-macOS, DXMT, vkd3d,
+MoltenVK, GStreamer, FreeType, wine-mono, and winetricks archives. The
+`dxvk-macos` component is complete for D3D9, D3D10, D3D11, and DXGI on both
 `i386-windows` and `x86_64-windows`; Actions verify that layout before
-publishing the release. The `gstreamer` component includes
+publishing the release. The `vkd3d` component is built in the runtime
+submodule from the pinned CrossOver FOSS source and is overlaid into
+`lib/wine/{i386,x86_64}-windows`; the parent repository must consume that
+artifact instead of adding runtime vkd3d dependencies to the parent Nix flake.
+The `gstreamer` component includes
 `libgstreamer-1.0.0.dylib`, plugin dylibs under `lib/gstreamer-1.0`, and
 `libexec/gstreamer-1.0/gst-plugin-scanner`. macOS launch plans set
 `GST_PLUGIN_SYSTEM_PATH`, `GST_PLUGIN_SCANNER`, and a bottle-local
@@ -178,6 +182,11 @@ matching `wine/x86_64-windows` DLL directory and `wine/x86_64-unix` Unix library
 directory from the same GPTK tree. Older `nvngx-on-metalfx` inputs are accepted
 as source names and normalized to `nvngx` in the generated component. If that
 variable is unset, the script omits GPTK/D3DMetal from the generated stack.
+
+When local macOS runtime source mode is used, vkd3d still comes from a runtime
+component archive. Provide `KONYAK_DEV_VKD3D_ARCHIVE_URL` or
+`KONYAK_DEV_VKD3D_ARCHIVE_CACHE` plus `KONYAK_DEV_VKD3D_ARCHIVE_SHA256`; do not
+source vkd3d from the parent flake.
 
 Linux runtime construction now follows the same pattern through
 `install-linux-wine`. A managed Linux stack may layer `vkd3d-proton` component

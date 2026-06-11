@@ -169,6 +169,9 @@ void defineRuntimeProcessAndUpdateContractTests() {
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/libfreetype.dylib',
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/share/wine/mono',
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/winetricks',
+          ..._macosVkd3dExistingPaths(
+            '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
+          ),
         }),
       ),
     );
@@ -302,6 +305,17 @@ void defineRuntimeProcessAndUpdateContractTests() {
                 'paths': [
                   '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/winetricks',
                 ],
+                'missingPaths': <Object?>[],
+              },
+              {
+                'id': 'vkd3d',
+                'name': 'vkd3d',
+                'role': 'd3d12-vulkan-runtime',
+                'isRequired': true,
+                'isInstalled': true,
+                'paths': _macosVkd3dExpectedPaths(
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
+                ),
                 'missingPaths': <Object?>[],
               },
               {

@@ -56,6 +56,7 @@ extension _MacosWineLayoutNormalization on DartIoMacosWineInstaller {
       'FreeType',
       'wine-mono',
       'winetricks',
+      'vkd3d',
     ]) {
       _moveRuntimeLayoutChildrenToRoot(
         runtimeRoot: runtimeRoot,

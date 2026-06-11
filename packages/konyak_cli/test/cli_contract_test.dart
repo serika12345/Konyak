@@ -615,6 +615,34 @@ const _macosWine32On64InstalledPaths = <List<String>>[
   <String>['lib', 'wine', 'x86_64-unix', 'ntdll.so'],
 ];
 
+const _macosVkd3dInstalledPaths = <List<String>>[
+  <String>['lib', 'wine', 'x86_64-windows', 'libvkd3d-1.dll'],
+  <String>['lib', 'wine', 'x86_64-windows', 'libvkd3d-shader-1.dll'],
+  <String>['lib', 'wine', 'x86_64-windows', 'libvkd3d-utils-1.dll'],
+  <String>['lib', 'wine', 'i386-windows', 'libvkd3d-1.dll'],
+  <String>['lib', 'wine', 'i386-windows', 'libvkd3d-shader-1.dll'],
+  <String>['lib', 'wine', 'i386-windows', 'libvkd3d-utils-1.dll'],
+];
+
+final _macosVkd3dComponentPaths = <List<String>>[
+  for (final relativePath in _macosVkd3dInstalledPaths)
+    <String>['Components', 'vkd3d', ...relativePath],
+];
+
+Set<String> _macosVkd3dExistingPaths(String runtimeRoot) {
+  return <String>{
+    for (final relativePath in _macosVkd3dInstalledPaths)
+      _joinTestPath(runtimeRoot, relativePath),
+  };
+}
+
+List<String> _macosVkd3dExpectedPaths(String runtimeRoot) {
+  return <String>[
+    for (final relativePath in _macosVkd3dInstalledPaths)
+      _joinTestPath(runtimeRoot, relativePath),
+  ];
+}
+
 Set<String> _macosWine32On64ExistingPaths(String runtimeRoot) {
   return <String>{
     for (final relativePath in _macosWine32On64InstalledPaths)
@@ -682,6 +710,8 @@ String _createComponentRuntimeArchive(String tempPath) {
     <String>['Wine', 'lib', 'dxmt', 'x86_64-windows', 'd3d11.dll'],
     <String>['Wine', 'lib', 'dxmt', 'x86_64-windows', 'dxgi.dll'],
     <String>['Wine', 'lib', 'dxmt', 'x86_64-windows', 'winemetal.dll'],
+    for (final relativePath in _macosVkd3dInstalledPaths)
+      <String>['Wine', ...relativePath],
     <String>['winetricks'],
   ]) {
     final file = File(_joinTestPath(librariesRoot.path, relativePath));
@@ -697,6 +727,7 @@ String _createComponentRuntimeArchive(String tempPath) {
         'wine': 'wine-devel-11.9',
         'dxvk-macos': 'dxvk-macos-fixture',
         'dxmt': 'dxmt-fixture',
+        'vkd3d': 'vkd3d-fixture',
       },
     }),
   );
@@ -756,6 +787,7 @@ String _createKonyakComponentRuntimeArchive(String tempPath) {
     ..._macosFreetypeComponentPaths,
     <String>['Components', 'wine-mono', 'share', 'wine', 'mono', 'marker'],
     <String>['Components', 'winetricks', 'winetricks'],
+    ..._macosVkd3dComponentPaths,
     ..._gptkD3DMetalComponentArchivePaths,
   ]) {
     final file = File(_joinTestPath(runtimeRoot.path, relativePath));
@@ -785,6 +817,7 @@ String _createKonyakComponentRuntimeArchive(String tempPath) {
         'freetype': 'freetype-fixture',
         'wine-mono': 'wine-mono-fixture',
         'winetricks': 'winetricks-fixture',
+        'vkd3d': 'vkd3d-fixture',
         'gptk-d3dmetal': 'gptk-d3dmetal-fixture',
       },
     }),
