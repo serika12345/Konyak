@@ -124,6 +124,8 @@ ProgramRunEnvironment _macosWineEnvironment({
     'DYLD_LIBRARY_PATH': _prependPaths(<String>[
       if (d3dMetalSelected) _macosD3DMetalExternalPath(runtimeRoot),
       if (d3dMetalSelected) _macosD3DMetalUnixPath(runtimeRoot),
+      if (bottle.runtimeSettings.dxmt && !d3dMetalSelected)
+        _macosDxmtUnixPath(runtimeRoot),
       _joinPath(runtimeRoot, const ['lib']),
     ], Option.fromNullable(environment['DYLD_LIBRARY_PATH'])),
     if (d3dMetalSelected)
@@ -187,6 +189,10 @@ String _macosD3DMetalUnixPath(String runtimeRoot) {
     'wine',
     'x86_64-unix',
   ]);
+}
+
+String _macosDxmtUnixPath(String runtimeRoot) {
+  return _joinPath(runtimeRoot, const ['lib', 'dxmt', 'x86_64-unix']);
 }
 
 String _prependPaths(Iterable<String> paths, Option<String> existingPath) {

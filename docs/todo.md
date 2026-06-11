@@ -286,6 +286,22 @@ task changes scope.
     covered by DXVK/DXMT components.
   - [x] Include `nvapi64` and `nvngx` in the D3DMetal `WINEDLLOVERRIDES` and
     bottle DLL override repair path.
+- [ ] Strengthen macOS runtime automated smoke coverage.
+  - [x] Keep layout/hash comparisons out of the required gate; test runtime
+    behavior through Wine execution instead.
+  - [x] Add runtime submodule Windows probe executables for headless D3D11 and
+    D3D12 device creation.
+  - [x] Add runtime submodule smoke runners for DXVK D3D11, DXMT D3D11, and
+    vkd3d D3D12 against an assembled runtime artifact stack.
+  - [x] Split runtime Actions smoke jobs by backend so failed backend checks can
+    be rerun without rebuilding Wine or unrelated components.
+  - [x] Fix parent macOS DXMT launch environment so `lib/dxmt/x86_64-unix` is
+    present in `DYLD_LIBRARY_PATH` when DXMT is selected.
+  - [ ] Add parent repository coverage that installs the published macOS runtime
+    manifest, validates backend availability, and runs the same probes through
+    the CLI boundary.
+  - [ ] Keep GPTK/D3DMetal smoke as local/manual workflow coverage unless a
+    redistributable payload becomes available.
 
 ## Deferred
 

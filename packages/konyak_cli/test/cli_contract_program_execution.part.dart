@@ -856,6 +856,14 @@ void defineProgramExecutionContractTests() {
         ),
       ),
     );
+    expect(
+      runner.lastRequest?.environment.toMap(),
+      containsPair(
+        'DYLD_LIBRARY_PATH',
+        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxmt/x86_64-unix:'
+            '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib',
+      ),
+    );
   });
 
   test('run-program --json applies DXVK settings on Linux', () {

@@ -11,6 +11,124 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-11 18:28 JST
+- State: `completed`
+- Branch: `main`
+- Related work: macOS runtime automated smoke coverage
+- Purpose: prove the Konyak macOS runtime works through Wine execution and
+  backend device probes rather than by comparing CrossOver file hashes or
+  layouts.
+- Completed:
+  - Reviewed the current runtime roadmap, progress notes, submodule TODO, and
+    runtime Actions jobs.
+  - Split the runtime submodule TODO into payload checks, Wine32-on-64 launch
+    smoke, backend device smoke jobs, MoltenVK follow-up, and manual
+    GPTK/D3DMetal coverage.
+  - Added a parent roadmap item for macOS runtime automated smoke coverage,
+    separating submodule artifact smoke from parent CLI install/run coverage.
+  - Added runtime submodule mingw-built Windows probes for D3D11 and D3D12
+    backend smoke tests.
+  - Added `scripts/smoke-backend-device.zsh`, which creates an isolated
+    prefix, suppresses Wine mono/gecko installer prompts, applies macOS backend
+    DLL overrides, syncs native override DLLs into `system32`/`syswow64`, and
+    runs DXVK D3D11, DXMT D3D11, or vkd3d D3D12 probes.
+  - Added separate runtime Actions jobs for `smoke-dxvk-d3d11`,
+    `smoke-dxmt-d3d11`, and `smoke-vkd3d-d3d12`, and wired release publishing
+    to require those smoke jobs.
+  - Fixed the parent macOS run environment so DXMT runs include
+    `lib/dxmt/x86_64-unix` in `DYLD_LIBRARY_PATH`; the new DXMT smoke exposed
+    this missing runtime path as a real load failure.
+  - Committed and pushed the runtime submodule change as
+    `cb7f2cdcee87cca162c73357976626518166b8ec`
+    (`Add macOS runtime backend smoke tests`) to
+    `serika12345/konyak-macos-runtime@main`.
+  - Confirmed runtime submodule GitHub Actions run `27335407227` completed
+    successfully, including the new DXVK D3D11, DXMT D3D11, and vkd3d D3D12
+    backend smoke jobs plus Wine32-on-64 launch smoke, metadata generation, and
+    release publishing.
+  - Re-fetched the published macOS runtime source manifest from the default
+    release and reinstalled the runtime into the parent repository development
+    runtime root through `install-macos-wine --reinstall`.
+  - Verified the installed published runtime locally with parent CLI runtime
+    validation, component layout checks, DXVK D3D11 smoke, DXMT D3D11 smoke,
+    vkd3d D3D12 smoke, and Wine32-on-64 launch smoke.
+- Remaining:
+  - Add parent repository coverage that installs the published macOS runtime
+    manifest and runs the same probes through the CLI boundary.
+  - Add MoltenVK/Vulkan-only smoke and manual GPTK/D3DMetal smoke coverage.
+- Next: add parent-side CI coverage that installs the published runtime and
+  runs the backend probes through the CLI boundary.
+- Verification:
+  - `zsh -n runtime/konyak-macos-runtime/scripts/build-backend-probes.zsh
+    runtime/konyak-macos-runtime/scripts/smoke-backend-device.zsh
+    runtime/konyak-macos-runtime/scripts/smoke-wine32on64-launch.zsh
+    runtime/konyak-macos-runtime/scripts/assemble-runtime-stack.zsh`: passed.
+  - `cd runtime/konyak-macos-runtime && nix develop -c zsh -lc
+    "./scripts/build-backend-probes.zsh .dart_tool/backend-probes && file
+    .dart_tool/backend-probes/*.exe"`: passed; both probes identify as PE32+
+    x86-64 Windows executables.
+  - `cd runtime/konyak-macos-runtime && nix flake check -L --show-trace`:
+    passed for the current host system.
+  - `runtime/konyak-macos-runtime/scripts/smoke-backend-device.zsh
+    .dart_tool/konyak/dev-runtime/macos-wine dxvk-d3d11`: passed after the
+    runner copied DXVK override DLLs into the temporary prefix.
+  - `runtime/konyak-macos-runtime/scripts/smoke-backend-device.zsh
+    .dart_tool/konyak/dev-runtime/macos-wine dxmt-d3d11`: passed after adding
+    `lib/dxmt/x86_64-unix` to `DYLD_LIBRARY_PATH`.
+  - `runtime/konyak-macos-runtime/scripts/smoke-backend-device.zsh
+    .dart_tool/konyak/dev-runtime/macos-wine vkd3d-d3d12`: passed.
+  - `cd packages/konyak_cli && dart test test/cli_contract_test.dart`: passed.
+  - `just cli-test`: passed.
+  - `just verify-governance`: passed.
+  - `just verify-safety`: passed.
+  - `just format-check`: passed.
+  - `just lint`: passed.
+  - `git diff --check && git -C runtime/konyak-macos-runtime diff --check`:
+    passed.
+  - Runtime submodule GitHub Actions run `27335407227` passed for commit
+    `cb7f2cdcee87cca162c73357976626518166b8ec`; the run completed validate,
+    binary component packaging, Wine runtime artifact build, DXMT component
+    build and verification, vkd3d component build and verification, Wine32-on-64
+    launch smoke, DXVK D3D11 backend smoke, DXMT D3D11 backend smoke, vkd3d
+    D3D12 backend smoke, release metadata generation, and release publishing.
+  - `scripts/prepare_macos_dev_runtime_stack.zsh --force --print-manifest-path`
+    refreshed the published source manifest from
+    `https://github.com/serika12345/konyak-macos-runtime/releases/download/crossover-26.1.0-konyak.0/konyak-macos-wine-runtime-stack-source.json`.
+  - `cd packages/konyak_cli && KONYAK_RUNTIME_PROFILE=development
+    KONYAK_MACOS_WINE_HOME="$runtime_path"
+    KONYAK_DEV_MACOS_WINE_STACK_MANIFEST="$manifest_path" dart run
+    bin/konyak.dart install-macos-wine --reinstall --source-manifest
+    "$manifest_path" --progress-json --json`: passed; final runtime JSON
+    reported `isInstalled: true`, stack `isComplete: true`, and DXVK, DXMT,
+    GPTK/D3DMetal, and vkd3d backends available.
+  - `runtime/konyak-macos-runtime/scripts/check-dxmt-component.zsh
+    .dart_tool/konyak/dev-runtime/macos-wine`: passed.
+  - `runtime/konyak-macos-runtime/scripts/check-vkd3d-component.zsh
+    .dart_tool/konyak/dev-runtime/macos-wine`: passed.
+  - `runtime/konyak-macos-runtime/scripts/check-dxvk-component.zsh
+    .dart_tool/konyak/dev-runtime/macos-wine`: passed.
+  - `runtime/konyak-macos-runtime/scripts/check-gstreamer-component.zsh
+    .dart_tool/konyak/dev-runtime/macos-wine`: passed.
+  - `runtime/konyak-macos-runtime/scripts/check-wine32on64-runtime.zsh
+    .dart_tool/konyak/dev-runtime/macos-wine`: passed.
+  - `cd packages/konyak_cli && KONYAK_RUNTIME_PROFILE=development
+    KONYAK_MACOS_WINE_HOME="$runtime_path" dart run bin/konyak.dart
+    validate-runtime konyak-macos-wine --json`: passed with `isValid: true`.
+  - `cd packages/konyak_cli && KONYAK_RUNTIME_PROFILE=development
+    KONYAK_MACOS_WINE_HOME="$runtime_path" dart run bin/konyak.dart
+    list-runtimes --json`: passed; the installed macOS runtime reported stack
+    complete and DXVK, DXMT, GPTK/D3DMetal, and vkd3d backends available.
+  - `cd runtime/konyak-macos-runtime && nix develop -c zsh -lc
+    "./scripts/build-backend-probes.zsh .dart_tool/backend-probes &&
+    ./scripts/smoke-backend-device.zsh ../../.dart_tool/konyak/dev-runtime/macos-wine
+    dxvk-d3d11 .dart_tool/backend-probes &&
+    ./scripts/smoke-backend-device.zsh ../../.dart_tool/konyak/dev-runtime/macos-wine
+    dxmt-d3d11 .dart_tool/backend-probes &&
+    ./scripts/smoke-backend-device.zsh ../../.dart_tool/konyak/dev-runtime/macos-wine
+    vkd3d-d3d12 .dart_tool/backend-probes &&
+    ./scripts/smoke-wine32on64-launch.zsh ../../.dart_tool/konyak/dev-runtime/macos-wine"`:
+    passed.
+
 - Timestamp: 2026-06-11 16:40 JST
 - State: `completed`
 - Branch: `main`
