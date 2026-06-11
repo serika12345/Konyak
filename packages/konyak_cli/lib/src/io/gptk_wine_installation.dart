@@ -183,8 +183,18 @@ class DartIoGptkWineInstaller implements GptkWineInstaller {
       _joinPath(runtimeRoot.path, const ['lib', 'wine', 'x86_64-windows']),
     )..createSync(recursive: true);
     for (final fileName in _requiredGptkD3DMetalWindowsFileNames) {
+      final sourcePath = _gptkD3DMetalWindowsPayloadPath(
+        source.windowsDllRoot,
+        fileName,
+      );
+      if (sourcePath == null) {
+        throw FileSystemException(
+          'GPTK/D3DMetal Windows DLL was not found.',
+          _joinPath(source.windowsDllRoot.path, [fileName]),
+        );
+      }
       _copyFileReplacing(
-        source: File(_joinPath(source.windowsDllRoot.path, [fileName])),
+        source: File(sourcePath),
         destination: File(_joinPath(windowsDllRoot.path, [fileName])),
       );
     }
@@ -193,8 +203,18 @@ class DartIoGptkWineInstaller implements GptkWineInstaller {
       _joinPath(runtimeRoot.path, const ['lib', 'wine', 'x86_64-unix']),
     )..createSync(recursive: true);
     for (final fileName in _requiredGptkD3DMetalUnixFileNames) {
+      final sourcePath = _gptkD3DMetalUnixPayloadPath(
+        source.unixLibraryRoot,
+        fileName,
+      );
+      if (sourcePath == null) {
+        throw FileSystemException(
+          'GPTK/D3DMetal Unix library was not found.',
+          _joinPath(source.unixLibraryRoot.path, [fileName]),
+        );
+      }
       _copyFileSystemEntityReplacing(
-        sourcePath: _joinPath(source.unixLibraryRoot.path, [fileName]),
+        sourcePath: sourcePath,
         destinationPath: _joinPath(unixLibraryRoot.path, [fileName]),
       );
     }

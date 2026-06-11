@@ -287,7 +287,7 @@ class BottleRuntimeSettings {
     final environment = <String, String>{};
 
     if (dxrEnabled) {
-      environment['WINEDLLOVERRIDES'] = 'dxgi,d3d11,d3d12=n,b';
+      environment['WINEDLLOVERRIDES'] = 'dxgi,d3d11,d3d12,nvapi64,nvngx=n,b';
     } else if (dxmt) {
       environment['WINEDLLOVERRIDES'] = 'dxgi,d3d10core,d3d11,winemetal=n,b';
     } else if (dxvk) {

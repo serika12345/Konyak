@@ -65,19 +65,17 @@ const _macosGptkD3DMetalComponentPaths = <List<String>>[
   <String>['lib', 'external', 'D3DMetal.framework'],
   <String>['lib', 'external', 'libd3dshared.dylib'],
   <String>['lib', 'wine', 'x86_64-windows', 'atidxx64.dll'],
-  <String>['lib', 'wine', 'x86_64-windows', 'd3d10.dll'],
   <String>['lib', 'wine', 'x86_64-windows', 'd3d11.dll'],
   <String>['lib', 'wine', 'x86_64-windows', 'd3d12.dll'],
   <String>['lib', 'wine', 'x86_64-windows', 'dxgi.dll'],
   <String>['lib', 'wine', 'x86_64-windows', 'nvapi64.dll'],
-  <String>['lib', 'wine', 'x86_64-windows', 'nvngx-on-metalfx.dll'],
+  <String>['lib', 'wine', 'x86_64-windows', 'nvngx.dll'],
   <String>['lib', 'wine', 'x86_64-unix', 'atidxx64.so'],
-  <String>['lib', 'wine', 'x86_64-unix', 'd3d10.so'],
   <String>['lib', 'wine', 'x86_64-unix', 'd3d11.so'],
   <String>['lib', 'wine', 'x86_64-unix', 'd3d12.so'],
   <String>['lib', 'wine', 'x86_64-unix', 'dxgi.so'],
   <String>['lib', 'wine', 'x86_64-unix', 'nvapi64.so'],
-  <String>['lib', 'wine', 'x86_64-unix', 'nvngx-on-metalfx.so'],
+  <String>['lib', 'wine', 'x86_64-unix', 'nvngx.so'],
 ];
 
 const _macosWine32On64ComponentPaths = <List<String>>[

@@ -18,22 +18,28 @@ part 'cli_contract_executable.part.dart';
 
 const _gptkD3DMetalWindowsFileNames = <String>[
   'atidxx64.dll',
-  'd3d10.dll',
   'd3d11.dll',
   'd3d12.dll',
   'dxgi.dll',
   'nvapi64.dll',
-  'nvngx-on-metalfx.dll',
+  'nvngx.dll',
 ];
 
 const _gptkD3DMetalUnixFileNames = <String>[
   'atidxx64.so',
-  'd3d10.so',
   'd3d11.so',
   'd3d12.so',
   'dxgi.so',
   'nvapi64.so',
-  'nvngx-on-metalfx.so',
+  'nvngx.so',
+];
+
+const _gptkD3DMetalOverrideDllNames = <String>[
+  'dxgi.dll',
+  'd3d11.dll',
+  'd3d12.dll',
+  'nvapi64.dll',
+  'nvngx.dll',
 ];
 
 final _gptkD3DMetalComponentArchivePaths = <List<String>>[
@@ -1029,7 +1035,12 @@ Directory _createGptkD3DMetalSource(
   for (final fileName in _gptkD3DMetalUnixFileNames) {
     final path = _joinTestPath(unixRoot.path, [fileName]);
     File(path).parent.createSync(recursive: true);
-    if (const <String>['d3d11.so', 'd3d12.so', 'dxgi.so'].contains(fileName)) {
+    if (_isGptkD3DMetalUnixSymlinkPath(<String>[
+      'lib',
+      'wine',
+      'x86_64-unix',
+      fileName,
+    ])) {
       Link(path).createSync('../../external/libd3dshared.dylib');
     } else {
       _createMachOFile(path);
@@ -1107,9 +1118,12 @@ Directory _gptkFixtureUnixRoot(Directory externalRoot) {
 bool _isGptkD3DMetalUnixSymlinkPath(List<String> relativePath) {
   return relativePath.contains('x86_64-unix') &&
       const <String>[
+        'atidxx64.so',
         'd3d11.so',
         'd3d12.so',
         'dxgi.so',
+        'nvapi64.so',
+        'nvngx.so',
       ].contains(relativePath.last);
 }
 

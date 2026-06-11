@@ -263,6 +263,22 @@ task changes scope.
   - [x] Update the parent CLI runtime contract and macOS launch environment so
     Wine receives `GST_PLUGIN_SYSTEM_PATH`, `GST_PLUGIN_SCANNER`, and a
     bottle-local `GST_REGISTRY`.
+- [x] Align GPTK/D3DMetal NVIDIA shim handling with CrossOver 26.1.
+  - [x] Treat `runtime/konyak-macos-runtime` and imported GPTK/D3DMetal payloads
+    as the SSOT for runtime files; do not add GPTK dependencies to the parent
+    Nix flake.
+  - [x] Accept CrossOver.app's
+    `Contents/SharedSupport/CrossOver/lib64/apple_gptk` layout as an import
+    source.
+  - [x] Require and validate `nvapi64.dll`, `nvngx.dll`, `nvapi64.so`, and
+    `nvngx.so` in the GPTK/D3DMetal payload.
+  - [x] Use `nvngx.dll` / `nvngx.so` as the canonical runtime layout while
+    accepting older `nvngx-on-metalfx` source names and normalizing them during
+    import.
+  - [x] Keep GPTK/D3DMetal D3D10 out of the required payload; D3D10 remains
+    covered by DXVK/DXMT components.
+  - [x] Include `nvapi64` and `nvngx` in the D3DMetal `WINEDLLOVERRIDES` and
+    bottle DLL override repair path.
 
 ## Deferred
 

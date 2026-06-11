@@ -1627,11 +1627,12 @@ void defineRuntimeInstallContractTests() {
         'x86_64-unix',
         unixName,
       ]);
-      if (const <String>[
-        'd3d11.so',
-        'd3d12.so',
-        'dxgi.so',
-      ].contains(unixName)) {
+      if (_isGptkD3DMetalUnixSymlinkPath(<String>[
+        'lib',
+        'wine',
+        'x86_64-unix',
+        unixName,
+      ])) {
         expect(Link(path).targetSync(), '../../external/libd3dshared.dylib');
       } else {
         expect(File(path).existsSync(), isTrue);
@@ -1673,6 +1674,75 @@ void defineRuntimeInstallContractTests() {
       ).readAsStringSync(),
       'fixture',
     );
+  });
+
+  test('install-gptk-wine imports the CrossOver apple_gptk layout', () {
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-gptk-wine-crossover-app-test-',
+    );
+    addTearDown(() {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    });
+
+    final appBundle = Directory(
+      _joinTestPath(tempDirectory.path, const ['CrossOver.app']),
+    );
+    final appleGptkRoot = Directory(
+      _joinTestPath(appBundle.path, const [
+        'Contents',
+        'SharedSupport',
+        'CrossOver',
+        'lib64',
+        'apple_gptk',
+      ]),
+    );
+    _createGptkD3DMetalSource(appleGptkRoot.path, const ['external']);
+    final runtimeRoot = Directory(
+      _joinTestPath(tempDirectory.path, const ['runtime']),
+    );
+    _createInstalledMacosRuntime(runtimeRoot.path);
+
+    final result = runCli(
+      ['install-gptk-wine', '--from', appBundle.path, '--json'],
+      gptkWineInstaller: DartIoGptkWineInstaller(
+        environment: HostEnvironment({
+          'KONYAK_MACOS_WINE_HOME': runtimeRoot.path,
+        }),
+      ),
+    );
+
+    expect(result.exitCode, 0, reason: result.stderr);
+    final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+    final install = payload['gptkWineInstall'] as Map<String, Object?>;
+    expect(install['sourceDirectory'], appleGptkRoot.path);
+    for (final dllName in const <String>['nvapi64.dll', 'nvngx.dll']) {
+      expect(
+        File(
+          _joinTestPath(runtimeRoot.path, [
+            'lib',
+            'wine',
+            'x86_64-windows',
+            dllName,
+          ]),
+        ).existsSync(),
+        isTrue,
+      );
+    }
+    for (final unixName in const <String>['nvapi64.so', 'nvngx.so']) {
+      expect(
+        Link(
+          _joinTestPath(runtimeRoot.path, [
+            'lib',
+            'wine',
+            'x86_64-unix',
+            unixName,
+          ]),
+        ).targetSync(),
+        '../../external/libd3dshared.dylib',
+      );
+    }
   });
 
   test('install-gptk-wine rejects fixture text D3DMetal binaries as JSON', () {

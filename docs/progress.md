@@ -11,6 +11,50 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-11 09:21 JST
+- State: `gptk_d3dmetal_nvidia_shim_implemented`
+- Branch: `main`
+- Related work: GPTK/D3DMetal NVIDIA shim compatibility
+- Purpose: align Konyak's GPTK/D3DMetal import and launch contract with the
+  actual CrossOver 26.1 `apple_gptk` payload so NVIDIA shim DLLs are imported,
+  validated, copied into bottle overrides, and enabled at launch.
+- Completed:
+  - Confirmed the CrossOver 26.1 payload lives under
+    `Contents/SharedSupport/CrossOver/lib64/apple_gptk` and includes
+    `nvapi64.dll`, `nvngx.dll`, `nvapi64.so`, and `nvngx.so`.
+  - Updated the parent GPTK/D3DMetal runtime contract to require canonical
+    `nvngx.dll` / `nvngx.so`, not the older `nvngx-on-metalfx` file names.
+  - Removed obsolete GPTK/D3DMetal `d3d10` requirements from the GPTK contract;
+    D3D10 remains owned by DXVK/DXMT components instead.
+  - Updated the CLI importer to resolve CrossOver.app's `apple_gptk` layout,
+    validate NVIDIA shim PE/Mach-O or symlink payloads, and normalize older
+    `nvngx-on-metalfx` inputs to canonical `nvngx` runtime paths.
+  - Updated macOS D3DMetal bottle override repair/run behavior to copy
+    `nvapi64.dll` and `nvngx.dll`, and to remove stale
+    `nvngx-on-metalfx.dll` overrides when switching graphics backends.
+  - Updated the D3DMetal launch override to
+    `dxgi,d3d11,d3d12,nvapi64,nvngx=n,b`.
+  - Updated the runtime submodule import script and build-info contract to use
+    the same canonical `nvngx` layout and CrossOver.app source path.
+- Verification:
+  - `cd packages/konyak_cli && dart test test/cli_contract_test.dart` passed.
+  - `zsh -n scripts/prepare_macos_dev_runtime_stack.zsh
+    runtime/konyak-macos-runtime/scripts/import-gptk-d3dmetal-redist.zsh`
+    passed.
+  - CLI import from `/Users/masato/Downloads/CrossOver.app` into a temporary
+    runtime root passed and preserved the NVIDIA shim symlinks.
+  - Runtime submodule `scripts/import-gptk-d3dmetal-redist.zsh` import from
+    `/Users/masato/Downloads/CrossOver.app` into a temporary runtime root
+    passed and preserved the NVIDIA shim symlinks.
+  - `just cli-test` passed.
+  - `git diff --check && git -C runtime/konyak-macos-runtime diff --check`
+    passed.
+  - `just verify-governance` passed.
+  - `just verify-safety` passed.
+  - `just format-check` passed.
+  - `just lint` passed.
+- Next: continue with vkd3d and remaining backend probes.
+
 - Timestamp: 2026-06-10 23:13 JST
 - State: `gstreamer_plugins_release_verified`
 - Branch: `main`

@@ -12,6 +12,9 @@ const _dxvkOverrideDllNames = <String>[
 const _macosD3DTranslationOverrideDllNames = <String>[
   ..._dxvkOverrideDllNames,
   'd3d12.dll',
+  'nvapi64.dll',
+  'nvngx.dll',
+  'nvngx-on-metalfx.dll',
   'winemetal.dll',
 ];
 
@@ -19,6 +22,8 @@ const _d3dMetalOverrideDllNames = <String>[
   'dxgi.dll',
   'd3d11.dll',
   'd3d12.dll',
+  'nvapi64.dll',
+  'nvngx.dll',
 ];
 
 void _removeMacosD3DTranslationDllOverrides({required BottleRecord bottle}) {
@@ -84,21 +89,49 @@ void _syncMacosD3DMetalDllOverrides({
   )..createSync(recursive: true);
 
   for (final dllName in _d3dMetalOverrideDllNames) {
+    final sourcePath = _d3DMetalOverrideSourcePath(
+      runtimeRoot: runtimeRoot,
+      dllName: dllName,
+    );
+    if (sourcePath == null) {
+      throw FileSystemException(
+        'D3DMetal override DLL was not found.',
+        _joinPath(runtimeRoot, <String>[
+          'lib',
+          'wine',
+          'x86_64-windows',
+          dllName,
+        ]),
+      );
+    }
+    final sourceFile = File(sourcePath);
+    sourceFile.copySync(_joinPath(destinationDirectory.path, [dllName]));
+  }
+}
+
+String? _d3DMetalOverrideSourcePath({
+  required String runtimeRoot,
+  required String dllName,
+}) {
+  for (final sourceName in _d3DMetalOverrideSourceNames(dllName)) {
     final sourcePath = _joinPath(runtimeRoot, <String>[
       'lib',
       'wine',
       'x86_64-windows',
-      dllName,
+      sourceName,
     ]);
-    final sourceFile = File(sourcePath);
-    if (!sourceFile.existsSync()) {
-      throw FileSystemException(
-        'D3DMetal override DLL was not found.',
-        sourcePath,
-      );
+    if (File(sourcePath).existsSync()) {
+      return sourcePath;
     }
-    sourceFile.copySync(_joinPath(destinationDirectory.path, [dllName]));
   }
+  return null;
+}
+
+List<String> _d3DMetalOverrideSourceNames(String dllName) {
+  return switch (dllName) {
+    'nvngx.dll' => const <String>['nvngx.dll', 'nvngx-on-metalfx.dll'],
+    _ => <String>[dllName],
+  };
 }
 
 ProgramRunEnvironment _linuxWineEnvironment(BottleRecord bottle) {

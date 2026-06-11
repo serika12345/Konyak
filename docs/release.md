@@ -142,6 +142,12 @@ It also verifies that the GStreamer component contains the plugin directory,
 plugin scanner, representative media plugins, and no unpackaged Nix store dylib
 references.
 
+GPTK/D3DMetal remains user-imported rather than redistributed from release
+assets. The runtime and CLI import contract accepts CrossOver.app's
+`Contents/SharedSupport/CrossOver/lib64/apple_gptk` payload, requires
+`nvapi64` and canonical `nvngx` NVIDIA shim files, and normalizes older
+`nvngx-on-metalfx` source names into the installed runtime layout.
+
 Reserved runtime-stack release inputs:
 
 - `KONYAK_RUNTIME_STACK_SOURCE_MANIFEST`: path or generated artifact name for

@@ -158,19 +158,26 @@ trees with
 `install-gptk-wine --from <path> --json` to add Apple-provided D3DMetal files
 without replacing the default Wine executable. Konyak validates the bundled
 D3DMetal files and installs them as the optional `gptk-d3dmetal` component;
-bottle prefixes are kept outside the runtime root.
+bottle prefixes are kept outside the runtime root. CrossOver.app imports use
+`Contents/SharedSupport/CrossOver/lib64/apple_gptk`, require the NVIDIA shim
+files `nvapi64` and `nvngx`, and normalize older `nvngx-on-metalfx` source
+names to the canonical `nvngx` runtime layout.
 
 The development stack script follows that model without assuming Konyak can
 redistribute GPTK/D3DMetal in every environment. Set
 `KONYAK_DEV_GPTK_D3DMETAL_PATH` to a local directory that contains
-`D3DMetal.framework`, `libd3dshared.dylib`, the GPTK PE DLLs, and the matching
-Unix libraries to add a `gptk-d3dmetal` component to the generated development
-source manifest. The script accepts the external files at the directory root,
-under `redist/lib/external`, under `lib/external`, under `Wine/lib/external`,
-or under `Libraries/Wine/lib/external`, and resolves the matching
-`wine/x86_64-windows` DLL directory and `wine/x86_64-unix` Unix library directory
-from the same GPTK tree. If that variable is unset, the script omits
-GPTK/D3DMetal from the generated stack.
+`D3DMetal.framework`, `libd3dshared.dylib`, the GPTK PE DLLs, including
+`nvapi64.dll` and canonical `nvngx.dll`, and the matching Unix libraries,
+including `nvapi64.so` and canonical `nvngx.so`, to add a `gptk-d3dmetal`
+component to the generated development source manifest. The script accepts the
+external files at the directory root, under `redist/lib/external`, under
+`lib/external`, under `Wine/lib/external`, under `Libraries/Wine/lib/external`,
+or under CrossOver.app's
+`Contents/SharedSupport/CrossOver/lib64/apple_gptk/external`, and resolves the
+matching `wine/x86_64-windows` DLL directory and `wine/x86_64-unix` Unix library
+directory from the same GPTK tree. Older `nvngx-on-metalfx` inputs are accepted
+as source names and normalized to `nvngx` in the generated component. If that
+variable is unset, the script omits GPTK/D3DMetal from the generated stack.
 
 Linux runtime construction now follows the same pattern through
 `install-linux-wine`. A managed Linux stack may layer `vkd3d-proton` component

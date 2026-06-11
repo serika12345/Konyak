@@ -519,7 +519,7 @@ void defineProgramExecutionContractTests() {
       'bottles',
       'steam',
     ]);
-    for (final dllName in const ['dxgi.dll', 'd3d11.dll', 'd3d12.dll']) {
+    for (final dllName in _gptkD3DMetalOverrideDllNames) {
       final file = File(
         _joinTestPath(runtimeRoot, ['lib', 'wine', 'x86_64-windows', dllName]),
       );
@@ -562,7 +562,7 @@ void defineProgramExecutionContractTests() {
     expect(result.exitCode, 0);
     expect(
       runner.lastRequest?.environment.toMap(),
-      containsPair('WINEDLLOVERRIDES', 'dxgi,d3d11,d3d12=n,b'),
+      containsPair('WINEDLLOVERRIDES', 'dxgi,d3d11,d3d12,nvapi64,nvngx=n,b'),
     );
     expect(
       runner.lastRequest?.environment.toMap(),
@@ -610,7 +610,7 @@ void defineProgramExecutionContractTests() {
         'bottles',
         'steam',
       ]);
-      for (final dllName in const ['dxgi.dll', 'd3d11.dll', 'd3d12.dll']) {
+      for (final dllName in _gptkD3DMetalOverrideDllNames) {
         final file = File(
           _joinTestPath(runtimeRoot, [
             'lib',
@@ -660,7 +660,10 @@ void defineProgramExecutionContractTests() {
 
       expect(result.exitCode, 0);
       final environment = runner.lastRequest?.environment.toMap();
-      expect(environment?['WINEDLLOVERRIDES'], 'dxgi,d3d11,d3d12=n,b');
+      expect(
+        environment?['WINEDLLOVERRIDES'],
+        'dxgi,d3d11,d3d12,nvapi64,nvngx=n,b',
+      );
       expect(
         environment?['WINEDLLPATH'],
         _macosManagedWineDllPath(runtimeRoot),
@@ -693,14 +696,14 @@ void defineProgramExecutionContractTests() {
       'bottles',
       'steam',
     ]);
-    for (final dllName in const ['dxgi.dll', 'd3d11.dll', 'd3d12.dll']) {
+    for (final dllName in _gptkD3DMetalOverrideDllNames) {
       final file = File(
         _joinTestPath(runtimeRoot, ['lib', 'wine', 'x86_64-windows', dllName]),
       );
       file.parent.createSync(recursive: true);
       file.writeAsStringSync('d3dmetal/$dllName');
     }
-    for (final dllName in const ['dxgi.dll', 'd3d11.dll', 'd3d12.dll']) {
+    for (final dllName in _gptkD3DMetalOverrideDllNames) {
       final file = File(
         _joinTestPath(bottlePath, ['drive_c', 'windows', 'system32', dllName]),
       );
@@ -742,7 +745,7 @@ void defineProgramExecutionContractTests() {
 
     expect(result.exitCode, 0);
     expect(result.stderr, isEmpty);
-    for (final dllName in const ['dxgi.dll', 'd3d11.dll', 'd3d12.dll']) {
+    for (final dllName in _gptkD3DMetalOverrideDllNames) {
       expect(
         File(
           _joinTestPath(bottlePath, [

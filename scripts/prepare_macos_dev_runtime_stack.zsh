@@ -446,10 +446,12 @@ resolve_gptk_d3dmetal_path() {
   for candidate in \
     "${source_root}/${relative_path}" \
     "${source_root}/lib/external/${relative_path}" \
+    "${source_root}/external/${relative_path}" \
     "${source_root}/redist/lib/external/${relative_path}" \
     "${source_root}/Wine/lib/external/${relative_path}" \
     "${source_root}/Libraries/Wine/lib/external/${relative_path}" \
-    "${source_root}/Contents/Resources/wine/lib/external/${relative_path}"; do
+    "${source_root}/Contents/Resources/wine/lib/external/${relative_path}" \
+    "${source_root}/Contents/SharedSupport/CrossOver/lib64/apple_gptk/external/${relative_path}"; do
     if [[ -e "${candidate}" ]]; then
       print -r -- "${candidate}"
       return 0
@@ -463,20 +465,25 @@ resolve_gptk_d3dmetal_windows_dll() {
   local source_root="$1"
   local dll_name="$2"
   local candidate
+  local source_name
 
-  for candidate in \
-    "${source_root}/${dll_name}" \
-    "${source_root}/wine/x86_64-windows/${dll_name}" \
-    "${source_root}/../wine/x86_64-windows/${dll_name}" \
-    "${source_root}/../../wine/x86_64-windows/${dll_name}" \
-    "${source_root}/lib/wine/x86_64-windows/${dll_name}" \
-    "${source_root}/redist/lib/wine/x86_64-windows/${dll_name}" \
-    "${source_root}/Wine/lib/wine/x86_64-windows/${dll_name}" \
-    "${source_root}/Libraries/Wine/lib/wine/x86_64-windows/${dll_name}"; do
-    if [[ -f "${candidate}" ]]; then
-      print -r -- "${candidate}"
-      return 0
-    fi
+  for source_name in $(gptk_d3dmetal_source_names "${dll_name}"); do
+    for candidate in \
+      "${source_root}/${source_name}" \
+      "${source_root}/wine/x86_64-windows/${source_name}" \
+      "${source_root}/../wine/x86_64-windows/${source_name}" \
+      "${source_root}/../../wine/x86_64-windows/${source_name}" \
+      "${source_root}/lib/wine/x86_64-windows/${source_name}" \
+      "${source_root}/redist/lib/wine/x86_64-windows/${source_name}" \
+      "${source_root}/Wine/lib/wine/x86_64-windows/${source_name}" \
+      "${source_root}/Libraries/Wine/lib/wine/x86_64-windows/${source_name}" \
+      "${source_root}/Contents/Resources/wine/lib/wine/x86_64-windows/${source_name}" \
+      "${source_root}/Contents/SharedSupport/CrossOver/lib64/apple_gptk/wine/x86_64-windows/${source_name}"; do
+      if [[ -f "${candidate}" ]]; then
+        print -r -- "${candidate}"
+        return 0
+      fi
+    done
   done
 
   return 1
@@ -486,24 +493,46 @@ resolve_gptk_d3dmetal_unix_library() {
   local source_root="$1"
   local library_name="$2"
   local candidate
+  local source_name
 
-  for candidate in \
-    "${source_root}/${library_name}" \
-    "${source_root}/wine/x86_64-unix/${library_name}" \
-    "${source_root}/../wine/x86_64-unix/${library_name}" \
-    "${source_root}/../../wine/x86_64-unix/${library_name}" \
-    "${source_root}/lib/wine/x86_64-unix/${library_name}" \
-    "${source_root}/redist/lib/wine/x86_64-unix/${library_name}" \
-    "${source_root}/Wine/lib/wine/x86_64-unix/${library_name}" \
-    "${source_root}/Libraries/Wine/lib/wine/x86_64-unix/${library_name}" \
-    "${source_root}/Contents/Resources/wine/lib/wine/x86_64-unix/${library_name}"; do
-    if [[ -e "${candidate}" || -L "${candidate}" ]]; then
-      print -r -- "${candidate}"
-      return 0
-    fi
+  for source_name in $(gptk_d3dmetal_source_names "${library_name}"); do
+    for candidate in \
+      "${source_root}/${source_name}" \
+      "${source_root}/wine/x86_64-unix/${source_name}" \
+      "${source_root}/../wine/x86_64-unix/${source_name}" \
+      "${source_root}/../../wine/x86_64-unix/${source_name}" \
+      "${source_root}/lib/wine/x86_64-unix/${source_name}" \
+      "${source_root}/redist/lib/wine/x86_64-unix/${source_name}" \
+      "${source_root}/Wine/lib/wine/x86_64-unix/${source_name}" \
+      "${source_root}/Libraries/Wine/lib/wine/x86_64-unix/${source_name}" \
+      "${source_root}/Contents/Resources/wine/lib/wine/x86_64-unix/${source_name}" \
+      "${source_root}/Contents/SharedSupport/CrossOver/lib64/apple_gptk/wine/x86_64-unix/${source_name}"; do
+      if [[ -e "${candidate}" || -L "${candidate}" ]]; then
+        print -r -- "${candidate}"
+        return 0
+      fi
+    done
   done
 
   return 1
+}
+
+gptk_d3dmetal_source_names() {
+  local destination_name="$1"
+
+  case "${destination_name}" in
+    nvngx.dll)
+      print -r -- "nvngx.dll"
+      print -r -- "nvngx-on-metalfx.dll"
+      ;;
+    nvngx.so)
+      print -r -- "nvngx.so"
+      print -r -- "nvngx-on-metalfx.so"
+      ;;
+    *)
+      print -r -- "${destination_name}"
+      ;;
+  esac
 }
 
 verify_gptk_macho_file() {
@@ -556,21 +585,19 @@ prepare_gptk_d3dmetal_component() {
   local source_path
   local windows_files=(
     atidxx64.dll
-    d3d10.dll
     d3d11.dll
     d3d12.dll
     dxgi.dll
     nvapi64.dll
-    nvngx-on-metalfx.dll
+    nvngx.dll
   )
   local unix_files=(
     atidxx64.so
-    d3d10.so
     d3d11.so
     d3d12.so
     dxgi.so
     nvapi64.so
-    nvngx-on-metalfx.so
+    nvngx.so
   )
 
   if [[ -z "${GPTK_D3DMETAL_ROOT}" ]]; then

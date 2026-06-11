@@ -2,22 +2,20 @@ part of '../../konyak_cli.dart';
 
 const _requiredGptkD3DMetalWindowsFileNames = <String>[
   'atidxx64.dll',
-  'd3d10.dll',
   'd3d11.dll',
   'd3d12.dll',
   'dxgi.dll',
   'nvapi64.dll',
-  'nvngx-on-metalfx.dll',
+  'nvngx.dll',
 ];
 
 const _requiredGptkD3DMetalUnixFileNames = <String>[
   'atidxx64.so',
-  'd3d10.so',
   'd3d11.so',
   'd3d12.so',
   'dxgi.so',
   'nvapi64.so',
-  'nvngx-on-metalfx.so',
+  'nvngx.so',
 ];
 
 final class _GptkD3DMetalSourceResolution {
@@ -72,16 +70,13 @@ _GptkD3DMetalSource? _resolveGptkD3DMetalSourceKeepingMounts(
   }
 
   if (sourceType == FileSystemEntityType.directory) {
-    final appWineRoot = _baseName(sourcePath).endsWith('.app')
-        ? Directory(
-            _joinPath(sourcePath, const ['Contents', 'Resources', 'wine']),
-          )
-        : null;
-    final appSource = appWineRoot == null
-        ? null
-        : _resolveGptkD3DMetalSource(appWineRoot.path);
-    if (appSource != null) {
-      return appSource;
+    if (_baseName(sourcePath).endsWith('.app')) {
+      for (final appSourceRoot in _gptkD3DMetalAppSourceRoots(sourcePath)) {
+        final appSource = _resolveGptkD3DMetalSource(appSourceRoot.path);
+        if (appSource != null) {
+          return appSource;
+        }
+      }
     }
 
     final directSource = _resolveGptkD3DMetalSource(sourcePath);
@@ -125,6 +120,23 @@ _GptkD3DMetalSource? _resolveGptkD3DMetalSourceKeepingMounts(
   }
 
   return null;
+}
+
+List<Directory> _gptkD3DMetalAppSourceRoots(String appBundlePath) {
+  return <Directory>[
+    Directory(
+      _joinPath(appBundlePath, const ['Contents', 'Resources', 'wine']),
+    ),
+    Directory(
+      _joinPath(appBundlePath, const [
+        'Contents',
+        'SharedSupport',
+        'CrossOver',
+        'lib64',
+        'apple_gptk',
+      ]),
+    ),
+  ];
 }
 
 String? _mountGptkDmg(String dmgPath) {
@@ -226,21 +238,48 @@ String? _validateGptkD3DMetalSource(_GptkD3DMetalSource source) {
         'compatible Game Porting Toolkit distribution.';
   }
   for (final dllName in _requiredGptkD3DMetalWindowsFileNames) {
-    final file = File(_joinPath(source.windowsDllRoot.path, [dllName]));
-    if (!file.existsSync()) {
+    final path = _gptkD3DMetalWindowsPayloadPath(
+      source.windowsDllRoot,
+      dllName,
+    );
+    if (path == null) {
       return 'GPTK/D3DMetal payload is missing $dllName.';
+    }
+    if (!_looksLikePE(File(path))) {
+      return '$dllName is not a Windows PE binary. Select an official or '
+          'compatible Game Porting Toolkit distribution.';
     }
   }
   for (final libraryName in _requiredGptkD3DMetalUnixFileNames) {
-    final path = _joinPath(source.unixLibraryRoot.path, [libraryName]);
-    if (FileSystemEntity.typeSync(path, followLinks: false) ==
-        FileSystemEntityType.notFound) {
+    final path = _gptkD3DMetalUnixPayloadPath(
+      source.unixLibraryRoot,
+      libraryName,
+    );
+    if (path == null) {
       return 'GPTK/D3DMetal payload is missing $libraryName.';
+    }
+    final type = FileSystemEntity.typeSync(path, followLinks: false);
+    if (type == FileSystemEntityType.link) {
+      if (Link(path).targetSync() != '../../external/libd3dshared.dylib') {
+        return '$libraryName must be a symlink to '
+            '../../external/libd3dshared.dylib.';
+      }
+    } else if (type == FileSystemEntityType.file) {
+      if (!_looksLikeMachO(File(path))) {
+        return '$libraryName is not a Mach-O binary. Select an official or '
+            'compatible Game Porting Toolkit distribution.';
+      }
+    } else {
+      return 'GPTK/D3DMetal payload path is unsupported: $libraryName.';
     }
   }
   for (final libraryName in const <String>['d3d11.so', 'd3d12.so', 'dxgi.so']) {
-    final path = _joinPath(source.unixLibraryRoot.path, [libraryName]);
-    if (FileSystemEntity.typeSync(path, followLinks: false) !=
+    final path = _gptkD3DMetalUnixPayloadPath(
+      source.unixLibraryRoot,
+      libraryName,
+    );
+    if (path == null ||
+        FileSystemEntity.typeSync(path, followLinks: false) !=
             FileSystemEntityType.link ||
         Link(path).targetSync() != '../../external/libd3dshared.dylib') {
       return '$libraryName must be a symlink to '
@@ -272,6 +311,16 @@ _GptkD3DMetalSource? _resolveGptkD3DMetalSource(String sourcePath) {
     return directSource;
   }
 
+  final directExternalCandidate = Directory(
+    _joinPath(sourcePath, const ['external']),
+  );
+  final directExternalSource = _gptkD3DMetalSourceFromExternalRoot(
+    directExternalCandidate,
+  );
+  if (directExternalSource != null) {
+    return directExternalSource;
+  }
+
   final candidate = Directory(_joinPath(sourcePath, const ['lib', 'external']));
   return _gptkD3DMetalSourceFromExternalRoot(candidate);
 }
@@ -286,7 +335,9 @@ _GptkD3DMetalSource? _gptkD3DMetalSourceFromExternalRoot(
     _joinPath(externalRoot.path, const ['libd3dshared.dylib']),
   );
   final libRoot = Directory(_dirname(externalRoot.path));
-  final payloadRoot = Directory(_dirname(libRoot.path));
+  final payloadRoot = _baseName(libRoot.path) == 'lib'
+      ? Directory(_dirname(libRoot.path))
+      : libRoot;
   final windowsDllRoot = Directory(
     _joinPath(libRoot.path, const ['wine', 'x86_64-windows']),
   );
@@ -340,6 +391,55 @@ _GptkD3DMetalWindowsDllSource? _resolveGptkD3DMetalWindowsDlls(
     );
   }
 
+  return null;
+}
+
+String? _gptkD3DMetalWindowsPayloadPath(
+  Directory windowsDllRoot,
+  String destinationName,
+) {
+  return _firstExistingFile(
+    windowsDllRoot,
+    _gptkD3DMetalSourceNames(destinationName),
+  );
+}
+
+String? _gptkD3DMetalUnixPayloadPath(
+  Directory unixLibraryRoot,
+  String destinationName,
+) {
+  return _firstExistingFileSystemEntity(
+    unixLibraryRoot,
+    _gptkD3DMetalSourceNames(destinationName),
+  );
+}
+
+List<String> _gptkD3DMetalSourceNames(String destinationName) {
+  return switch (destinationName) {
+    'nvngx.dll' => const <String>['nvngx.dll', 'nvngx-on-metalfx.dll'],
+    'nvngx.so' => const <String>['nvngx.so', 'nvngx-on-metalfx.so'],
+    _ => <String>[destinationName],
+  };
+}
+
+String? _firstExistingFile(Directory root, Iterable<String> names) {
+  for (final name in names) {
+    final path = _joinPath(root.path, [name]);
+    if (File(path).existsSync()) {
+      return path;
+    }
+  }
+  return null;
+}
+
+String? _firstExistingFileSystemEntity(Directory root, Iterable<String> names) {
+  for (final name in names) {
+    final path = _joinPath(root.path, [name]);
+    if (FileSystemEntity.typeSync(path, followLinks: false) !=
+        FileSystemEntityType.notFound) {
+      return path;
+    }
+  }
   return null;
 }
 

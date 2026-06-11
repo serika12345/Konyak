@@ -891,7 +891,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       'bottles',
       'steam',
     ]);
-    for (final dllName in const ['dxgi.dll', 'd3d11.dll', 'd3d12.dll']) {
+    for (final dllName in _gptkD3DMetalOverrideDllNames) {
       final file = File(
         _joinTestPath(runtimeRoot, ['lib', 'wine', 'x86_64-windows', dllName]),
       );
@@ -906,6 +906,9 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
         'd3d10core.dll',
         'd3d11.dll',
         'd3d12.dll',
+        'nvapi64.dll',
+        'nvngx.dll',
+        'nvngx-on-metalfx.dll',
         'winemetal.dll',
       ]) {
         final file = File(
@@ -949,7 +952,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
 
     expect(result.exitCode, 0);
     expect(result.stderr, isEmpty);
-    for (final dllName in const ['dxgi.dll', 'd3d11.dll', 'd3d12.dll']) {
+    for (final dllName in _gptkD3DMetalOverrideDllNames) {
       expect(
         File(
           _joinTestPath(bottlePath, [
@@ -977,6 +980,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       'd3d9.dll',
       'd3d10.dll',
       'd3d10core.dll',
+      'nvngx-on-metalfx.dll',
       'winemetal.dll',
     ]) {
       expect(
@@ -1008,7 +1012,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       'bottles',
       'steam',
     ]);
-    for (final dllName in const ['dxgi.dll', 'd3d11.dll', 'd3d12.dll']) {
+    for (final dllName in _gptkD3DMetalOverrideDllNames) {
       final file = File(
         _joinTestPath(runtimeRoot, ['lib', 'wine', 'x86_64-windows', dllName]),
       );
@@ -1056,7 +1060,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
 
     expect(result.exitCode, 0);
     expect(result.stderr, isEmpty);
-    for (final dllName in const ['dxgi.dll', 'd3d11.dll', 'd3d12.dll']) {
+    for (final dllName in _gptkD3DMetalOverrideDllNames) {
       expect(
         File(
           _joinTestPath(bottlePath, [
@@ -1094,6 +1098,9 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
         'd3d10core.dll',
         'd3d11.dll',
         'd3d12.dll',
+        'nvapi64.dll',
+        'nvngx.dll',
+        'nvngx-on-metalfx.dll',
         'winemetal.dll',
       ]) {
         final file = File(
@@ -1146,6 +1153,9 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
         'd3d10core.dll',
         'd3d11.dll',
         'd3d12.dll',
+        'nvapi64.dll',
+        'nvngx.dll',
+        'nvngx-on-metalfx.dll',
         'winemetal.dll',
       ]) {
         expect(
@@ -1188,6 +1198,9 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
           'd3d10core.dll',
           'd3d11.dll',
           'd3d12.dll',
+          'nvapi64.dll',
+          'nvngx.dll',
+          'nvngx-on-metalfx.dll',
           'winemetal.dll',
         ]) {
           final file = File(
@@ -1244,6 +1257,9 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
           'd3d10core.dll',
           'd3d11.dll',
           'd3d12.dll',
+          'nvapi64.dll',
+          'nvngx.dll',
+          'nvngx-on-metalfx.dll',
           'winemetal.dll',
         ]) {
           expect(
@@ -1412,7 +1428,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
         'bottles',
         'steam',
       ]);
-      for (final dllName in const ['dxgi.dll', 'd3d11.dll', 'd3d12.dll']) {
+      for (final dllName in _gptkD3DMetalOverrideDllNames) {
         final file = File(
           _joinTestPath(runtimeRoot, [
             'lib',
