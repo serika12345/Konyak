@@ -306,9 +306,13 @@ task changes scope.
     be rerun without rebuilding Wine or unrelated components.
   - [x] Fix parent macOS DXMT launch environment so `lib/dxmt/x86_64-unix` is
     present in `DYLD_LIBRARY_PATH` when DXMT is selected.
-  - [ ] Add parent repository coverage that installs the published macOS runtime
-    manifest, validates backend availability, and runs the same probes through
-    the CLI boundary.
+  - [x] Add parent repository coverage that installs the published macOS runtime
+    manifest, validates required backend component availability through the CLI
+    runtime catalog, and includes a headless `create-bottle`
+    prefix-initialization smoke that catches Wine Mono/Gecko installer prompts.
+  - [ ] Add parent CLI-bound DXVK/DXMT/vkd3d backend probe execution smoke once
+    the probe runner path can stay headless and non-flaky on GitHub-hosted
+    arm64 macOS.
   - [ ] Keep GPTK/D3DMetal smoke as local/manual workflow coverage unless a
     redistributable payload becomes available.
 

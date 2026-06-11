@@ -42,7 +42,7 @@ ProgramRunRequest _macosWinebootRequest({
     runnerKind: 'macosWine',
     executable: _macosWineExecutable(hostEnvironment),
     arguments: const <String>['wineboot', '--init'],
-    environment: _macosWineEnvironment(
+    environment: _macosPrefixInitializationEnvironment(
       bottle: bottle,
       environment: environment,
     ),
@@ -120,6 +120,7 @@ ProgramRunEnvironment _macosWineEnvironment({
     'GST_PLUGIN_SYSTEM_PATH': _macosGstreamerPluginPath(runtimeRoot),
     'GST_PLUGIN_SCANNER': _macosGstreamerPluginScanner(runtimeRoot),
     'GST_REGISTRY': _macosGstreamerRegistryPath(bottle.path),
+    'WINEDATADIR': _macosWineDataDir(runtimeRoot),
     'WINEDLLPATH': wineDllPathEntries.join(':'),
     'DYLD_LIBRARY_PATH': _prependPaths(<String>[
       if (d3dMetalSelected) _macosD3DMetalExternalPath(runtimeRoot),
@@ -142,6 +143,34 @@ ProgramRunEnvironment _macosWineEnvironment({
   };
 
   return ProgramRunEnvironment(wineEnvironment);
+}
+
+ProgramRunEnvironment _macosPrefixInitializationEnvironment({
+  required BottleRecord bottle,
+  required HostEnvironment environment,
+}) {
+  final variables = Map<String, String>.of(
+    _macosWineEnvironment(bottle: bottle, environment: environment).toMap(),
+  );
+  variables['WINEDLLOVERRIDES'] = _appendWineDllOverrides(
+    variables['WINEDLLOVERRIDES'],
+    'mscoree,mshtml=',
+  );
+
+  return ProgramRunEnvironment(variables);
+}
+
+String _appendWineDllOverrides(String? existingOverrides, String overrides) {
+  final existing = existingOverrides?.trim();
+  if (existing == null || existing.isEmpty) {
+    return overrides;
+  }
+
+  return '$existing;$overrides';
+}
+
+String _macosWineDataDir(String runtimeRoot) {
+  return _joinPath(runtimeRoot, const ['share', 'wine']);
 }
 
 String _macosD3DMetalExternalPath(String runtimeRoot) {

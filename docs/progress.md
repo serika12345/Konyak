@@ -11,6 +11,101 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-11 21:59 JST
+- State: `completed`
+- Branch: `main`
+- Related work: parent macOS published-runtime CLI smoke CI
+- Purpose: add parent-repository CI coverage for the CrossOver-derived macOS
+  runtime consumer path so future prefix-initialization regressions, including
+  Wine Mono/Gecko installer prompts during bottle creation, are caught before
+  release.
+- Completed:
+  - Reviewed the existing Linux-only `Konyak Verify` workflow, macOS runtime
+    source manifest helper, CLI runtime JSON contracts, and submodule backend
+    smoke helpers.
+  - Added `scripts/run_macos_runtime_cli_smoke.zsh`, which installs the
+    published macOS runtime source manifest through `install-macos-wine
+    --reinstall`, validates the installed runtime and required backend component
+    availability through CLI JSON contracts, and runs a timeout-bounded
+    `create-bottle` smoke against an isolated data/config/runtime root.
+  - Added `.github/workflows/macos-runtime-cli-smoke.yml` as an independent
+    macOS `macos-15` workflow so the parent consumer path can be rerun without
+    rerunning the Linux verify job or rebuilding the runtime submodule.
+  - Split the parent runtime-smoke TODO so published-runtime install/catalog/
+    prefix-init coverage is complete while CLI-bound DXVK/DXMT/vkd3d executable
+    probe smoke remains explicit follow-up work.
+- Remaining:
+  - Parent CLI-bound DXVK/DXMT/vkd3d executable probe smoke is still pending;
+    this change validates backend component availability, not actual D3D device
+    creation through `run-program`.
+- Next: add the parent CLI-bound backend probe smoke after the runner path is
+  confirmed headless and non-flaky on GitHub-hosted arm64 macOS.
+- Verification:
+  - `zsh -n scripts/run_macos_runtime_cli_smoke.zsh`: passed.
+  - `nix shell nixpkgs#actionlint -c actionlint
+    .github/workflows/macos-runtime-cli-smoke.yml .github/workflows/verify.yml`:
+    passed.
+  - `./scripts/run_macos_runtime_cli_smoke.zsh`: passed; it installed the
+    published `crossover-26.1.0-konyak.0` runtime manifest, validated
+    `list-runtimes`, `validate-runtime`, and completed `create-bottle --name
+    "CI Prefix Smoke"` without Wine Mono/Gecko prompts.
+  - `dart format packages/konyak_cli/lib/src/platform/macos/macos_program_run_requests.dart
+    packages/konyak_cli/test/cli_contract_program_execution.part.dart`:
+    passed with no changes.
+  - `just cli-test`: passed.
+  - `just verify-governance`: passed.
+  - `just verify-safety`: passed.
+  - `just format-check`: passed.
+  - `just lint`: passed.
+
+- Timestamp: 2026-06-11 21:30 JST
+- State: `completed`
+- Branch: `main`
+- Related work: macOS bottle prefix initialization with CrossOver runtime
+- Purpose: stop the Wine Mono installer prompt from appearing during bottle
+  creation when using the Konyak CrossOver-derived macOS runtime stack.
+- Completed:
+  - Confirmed the macOS Wine prefix initialization plan used the Konyak runtime
+    `wine64 wineboot --init` path but did not expose the runtime stack's
+    `share/wine` data directory to Wine.
+  - Confirmed Wine's addon lookup supports `WINEDATADIR`, while the packaged
+    Wine binaries retain a build-time Nix store data-dir reference that is not
+    present in redistributed runtime installs.
+  - Added `WINEDATADIR=<runtime>/share/wine` to the shared macOS Wine
+    environment so Wine can find bundled addon payloads such as wine-mono.
+  - Added prefix-initialization-only `WINEDLLOVERRIDES=mscoree,mshtml=` so
+    bottle creation cannot show Wine Mono/Gecko installer prompts.
+  - Added CLI contract coverage for both environment values on macOS prefix
+    initialization.
+  - Updated the macOS runtime smoke follow-up TODO so parent CI coverage must
+    include a headless `create-bottle` prefix-initialization smoke. No GitHub
+    Actions workflow was changed in this fix because the parent repository does
+    not yet install the published runtime and run real macOS Wine smoke tests;
+    that gap remains tracked under `docs/todo.md`.
+- Remaining: none for the immediate installer prompt fix.
+- Next: add the parent-side published-runtime CLI smoke workflow, including
+  `create-bottle`, when continuing macOS runtime automated smoke coverage.
+- Verification:
+  - `cd packages/konyak_cli && dart test test/cli_contract_test.dart
+    --plain-name "prefix initialization uses Konyak macOS Wine on macOS"`:
+    failed before implementation because `WINEDATADIR` and
+    `WINEDLLOVERRIDES=mscoree,mshtml=` were missing; passed after
+    implementation.
+  - `KONYAK_DATA_HOME="$tmp/data" KONYAK_CONFIG_HOME="$tmp/config"
+    KONYAK_MACOS_WINE_HOME="$runtime" timeout 180s dart run
+    packages/konyak_cli/bin/konyak.dart create-bottle --name MonoSmoke2
+    --json`: passed against the local development macOS runtime in about 24
+    seconds with no Wine installer prompt.
+  - `dart format packages/konyak_cli/lib/src/platform/macos/macos_program_run_requests.dart
+    packages/konyak_cli/test/cli_contract_program_execution.part.dart`:
+    passed with no changes.
+  - `just cli-test`: passed.
+  - `just verify-governance`: passed.
+  - `just verify-safety`: passed.
+  - `just format-check`: passed.
+  - `just lint`: passed.
+  - `git diff --check`: passed.
+
 - Timestamp: 2026-06-11 19:38 JST
 - State: `completed`
 - Branch: `main`

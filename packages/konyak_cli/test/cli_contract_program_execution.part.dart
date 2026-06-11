@@ -1095,6 +1095,17 @@ void defineProgramExecutionContractTests() {
       ),
     );
     expect(
+      request.environment.toMap(),
+      containsPair(
+        'WINEDATADIR',
+        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/share/wine',
+      ),
+    );
+    expect(
+      request.environment.toMap(),
+      containsPair('WINEDLLOVERRIDES', 'mscoree,mshtml='),
+    );
+    expect(
       request.logPath,
       '/Users/user/Library/Application Support/Konyak/Bottles/Steam/logs/prefix-init.log',
     );

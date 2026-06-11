@@ -1,0 +1,45 @@
+name: macOS Runtime CLI Smoke
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/macos-runtime-cli-smoke.yml
+      - flake.lock
+      - flake.nix
+      - packages/konyak_cli/**
+      - runtime/konyak-macos-runtime
+      - runtime/macos-wine-release.json
+      - scripts/prepare_macos_dev_runtime_stack.zsh
+      - scripts/run_macos_runtime_cli_smoke.zsh
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/macos-runtime-cli-smoke.yml
+      - flake.lock
+      - flake.nix
+      - packages/konyak_cli/**
+      - runtime/konyak-macos-runtime
+      - runtime/macos-wine-release.json
+      - scripts/prepare_macos_dev_runtime_stack.zsh
+      - scripts/run_macos_runtime_cli_smoke.zsh
+  workflow_dispatch:
+
+jobs:
+  published-runtime-cli-smoke:
+    name: Published runtime CLI smoke
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: cachix/install-nix-action@v31
+
+      - name: Install Rosetta when needed
+        run: |
+          if [[ "$(uname -m)" == "arm64" ]]; then
+            /usr/sbin/softwareupdate --install-rosetta --agree-to-license || true
+          fi
+
+      - name: Run published runtime CLI smoke
+        run: nix develop -c zsh -lc './scripts/run_macos_runtime_cli_smoke.zsh'
