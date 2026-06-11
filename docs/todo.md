@@ -54,6 +54,9 @@ task changes scope.
     are selected.
   - [x] Preserve GPTK imports as user-provided D3DMetal backend files only; do
     not replace the default macOS Wine executable with imported GPTK Wine.
+  - [x] Isolate GPTK imports under `components/gptk-d3dmetal` so base
+    `lib/wine/*` files are not overwritten, and preserve that component across
+    macOS runtime reinstall/update operations.
   - [x] Validate the run plan with CLI contract tests before changing the
     planner.
 - [x] Complete the macOS Wine startup path.

@@ -146,7 +146,10 @@ GPTK/D3DMetal remains user-imported rather than redistributed from release
 assets. The runtime and CLI import contract accepts CrossOver.app's
 `Contents/SharedSupport/CrossOver/lib64/apple_gptk` payload, requires
 `nvapi64` and canonical `nvngx` NVIDIA shim files, and normalizes older
-`nvngx-on-metalfx` source names into the installed runtime layout.
+`nvngx-on-metalfx` source names into the installed runtime layout. The imported
+payload is isolated under `components/gptk-d3dmetal`; macOS runtime reinstall
+and update operations preserve that user-provided component instead of
+overwriting base `lib/wine/*` files.
 
 Reserved runtime-stack release inputs:
 

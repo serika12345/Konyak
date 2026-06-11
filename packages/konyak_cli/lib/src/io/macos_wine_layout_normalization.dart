@@ -156,26 +156,38 @@ extension _MacosWineLayoutNormalization on DartIoMacosWineInstaller {
         continue;
       }
 
-      final runtimeLibRoot = Directory(
-        _joinPath(runtimeRoot.path, const ['lib']),
+      final targetRoot = Directory(
+        _joinPath(runtimeRoot.path, _gptkD3DMetalComponentRelativePath),
       )..createSync(recursive: true);
+      if (_sameDirectory(sourceRoot, targetRoot)) {
+        continue;
+      }
       final sourceLibRoot = Directory(
         _joinPath(sourceRoot.path, const ['lib']),
       );
       if (sourceLibRoot.existsSync()) {
         _moveRuntimeLayoutChildrenToRoot(
-          runtimeRoot: runtimeLibRoot,
-          sourceRoot: sourceLibRoot,
+          runtimeRoot: targetRoot,
+          sourceRoot: sourceRoot,
         );
-        if (sourceRoot.existsSync() && sourceRoot.listSync().isEmpty) {
-          sourceRoot.deleteSync();
-        }
         continue;
       }
+
+      final targetLibRoot = Directory(_joinPath(targetRoot.path, const ['lib']))
+        ..createSync(recursive: true);
       _moveRuntimeLayoutChildrenToRoot(
-        runtimeRoot: runtimeLibRoot,
+        runtimeRoot: targetLibRoot,
         sourceRoot: sourceRoot,
       );
+    }
+  }
+
+  bool _sameDirectory(Directory left, Directory right) {
+    try {
+      return left.resolveSymbolicLinksSync() ==
+          right.resolveSymbolicLinksSync();
+    } on FileSystemException {
+      return left.path == right.path;
     }
   }
 

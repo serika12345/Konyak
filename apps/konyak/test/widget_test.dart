@@ -218,7 +218,10 @@ String _macosRuntimeListPayload({
               version: gptkAvailable ? 'user-provided' : null,
               missingPaths: gptkAvailable
                   ? const <String>[]
-                  : ['/runtime/lib/external/D3DMetal.framework'],
+                  : [
+                      '/runtime/components/gptk-d3dmetal/lib/external/'
+                          'D3DMetal.framework',
+                    ],
             ),
           ],
         },

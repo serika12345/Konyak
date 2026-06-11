@@ -89,8 +89,8 @@ void main() {
                   "role": "d3d12-metal-translation",
                   "isRequired": false,
                   "isInstalled": false,
-                  "paths": ["/runtime/lib/external/D3DMetal.framework"],
-                  "missingPaths": ["/runtime/lib/external/D3DMetal.framework"]
+                  "paths": ["/runtime/components/gptk-d3dmetal/lib/external/D3DMetal.framework"],
+                  "missingPaths": ["/runtime/components/gptk-d3dmetal/lib/external/D3DMetal.framework"]
                 }
               ]
             }

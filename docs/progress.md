@@ -11,6 +11,47 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-11 13:14 JST
+- State: `gptk_import_isolated_and_preserved`
+- Branch: `main`
+- Related work: GPTK/D3DMetal component isolation
+- Purpose: keep user-imported GPTK/D3DMetal as an optional runtime component
+  without overwriting the base Wine payload, and preserve that import across
+  macOS runtime reinstall/update operations.
+- Completed:
+  - Moved GPTK/D3DMetal import output to
+    `components/gptk-d3dmetal/lib/...` for CLI import, runtime stack component
+    normalization, and the runtime submodule import script.
+  - Updated macOS launch environment generation so D3DMetal uses the isolated
+    component's `WINEDLLPATH`, `DYLD_LIBRARY_PATH`,
+    `DYLD_FRAMEWORK_PATH`, and `CX_APPLEGPTK_LIBD3DSHARED_PATH`.
+  - Added runtime package preservation logic that keeps `gptk-d3dmetal` during
+    full reinstall/update and migrates older `lib/external` +
+    `lib/wine/x86_64-*` overlay imports into the isolated component layout.
+  - Updated bottle DLL override repair/sync to read D3DMetal DLLs from the
+    component layout, with legacy overlay paths only as a read fallback.
+  - Updated CLI, Flutter contract tests, release/distribution docs, runtime
+    import contract docs, and the runtime submodule Wine build-info contract.
+- Verification:
+  - `cd packages/konyak_cli && dart test test/cli_contract_test.dart`: passed.
+  - `zsh -n runtime/konyak-macos-runtime/scripts/import-gptk-d3dmetal-redist.zsh`:
+    passed.
+  - `just cli-test`: passed.
+  - `just flutter-test`: passed.
+  - `just format-check`: passed.
+  - `just verify-governance`: passed.
+  - `just lint`: passed.
+  - `just verify-safety`: passed.
+  - Runtime submodule import script smoke using
+    `/Users/masato/Downloads/CrossOver.app` into a temporary runtime root:
+    passed; the payload landed under `components/gptk-d3dmetal`, and
+    `lib/wine/x86_64-windows/nvapi64.dll` was not created in the base Wine
+    tree.
+  - `git diff --check && git -C runtime/konyak-macos-runtime diff --check`:
+    passed.
+- Next: commit parent and runtime submodule changes together, then run CI if
+  requested.
+
 - Timestamp: 2026-06-11 12:49 JST
 - State: `macos_vkd3d_runtime_component_implemented`
 - Branch: `main`

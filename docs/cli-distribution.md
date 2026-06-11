@@ -137,7 +137,9 @@ updates route through the same stack installer when release metadata points at a
 manifest artifact. macOS GPTK/D3DMetal support uses the same mechanism as the
 other macOS runtime components: a source manifest may include a
 `gptk-d3dmetal` archive, and the installer normalizes it into
-`lib/external`, `lib/wine/x86_64-windows`, and `lib/wine/x86_64-unix`.
+`components/gptk-d3dmetal/lib/external`,
+`components/gptk-d3dmetal/lib/wine/x86_64-windows`, and
+`components/gptk-d3dmetal/lib/wine/x86_64-unix`.
 
 The default macOS runtime release is produced by the
 `runtime/konyak-macos-runtime` submodule. Its source manifest currently
@@ -165,7 +167,10 @@ D3DMetal files and installs them as the optional `gptk-d3dmetal` component;
 bottle prefixes are kept outside the runtime root. CrossOver.app imports use
 `Contents/SharedSupport/CrossOver/lib64/apple_gptk`, require the NVIDIA shim
 files `nvapi64` and `nvngx`, and normalize older `nvngx-on-metalfx` source
-names to the canonical `nvngx` runtime layout.
+names to the canonical `nvngx` runtime layout. User-imported GPTK/D3DMetal is
+kept isolated from the base Wine payload under `lib/wine/*`; reinstalling or
+updating the managed macOS runtime preserves the `components/gptk-d3dmetal`
+component and migrates older overlay imports into that component layout.
 
 The development stack script follows that model without assuming Konyak can
 redistribute GPTK/D3DMetal in every environment. Set

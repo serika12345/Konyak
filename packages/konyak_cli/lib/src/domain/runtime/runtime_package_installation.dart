@@ -11,6 +11,9 @@ class RuntimePackageInstallRequest {
     required List<String> requiredExecutableRelativePath,
     required String expectedExecutablePath,
     this.preserveExistingRuntimeFiles = false,
+    List<List<String>> preserveExistingRuntimeSkipRelativePaths =
+        const <List<String>>[],
+    this.preserveExistingRuntimeComponents,
     this.normalizeStagingRoot,
     this.afterManifestWrite,
     this.progressSink,
@@ -30,7 +33,11 @@ class RuntimePackageInstallRequest {
        componentArchivePaths = componentArchivePaths.toIList(),
        requiredExecutableRelativePath = List.unmodifiable(
          requiredExecutableRelativePath,
-       );
+       ),
+       preserveExistingRuntimeSkipRelativePaths =
+           preserveExistingRuntimeSkipRelativePaths
+               .map(List<String>.unmodifiable)
+               .toList(growable: false);
 
   final String runtimeLabel;
   final String archivePath;
@@ -41,6 +48,13 @@ class RuntimePackageInstallRequest {
   final List<String> requiredExecutableRelativePath;
   final String expectedExecutablePath;
   final bool preserveExistingRuntimeFiles;
+  final List<List<String>> preserveExistingRuntimeSkipRelativePaths;
+  final void Function({
+    required Directory existingRuntimeRoot,
+    required Directory stagingRuntimeRoot,
+    required Map<String, String> componentVersions,
+  })?
+  preserveExistingRuntimeComponents;
   final void Function(Directory runtimeRoot)? normalizeStagingRoot;
   final void Function(Directory runtimeRoot)? afterManifestWrite;
   final RuntimeInstallProgressSink? progressSink;
@@ -79,6 +93,10 @@ class DartIoRuntimePackageInstaller implements RuntimePackageInstaller {
       requiredExecutableRelativePath: request.requiredExecutableRelativePath,
       expectedExecutablePath: request.expectedExecutablePath,
       preserveExistingRuntimeFiles: request.preserveExistingRuntimeFiles,
+      preserveExistingRuntimeSkipRelativePaths:
+          request.preserveExistingRuntimeSkipRelativePaths,
+      preserveExistingRuntimeComponents:
+          request.preserveExistingRuntimeComponents,
       normalizeStagingRoot: request.normalizeStagingRoot,
       afterManifestWrite: request.afterManifestWrite,
       progressSink: request.progressSink,

@@ -135,9 +135,9 @@ RuntimeStackComponent _runtimeStackComponent({
       _addMissingRuntimePath(missingPaths, paths[1]);
     }
     for (final path in const <String>[
-      'lib/wine/x86_64-unix/d3d11.so',
-      'lib/wine/x86_64-unix/d3d12.so',
-      'lib/wine/x86_64-unix/dxgi.so',
+      'components/gptk-d3dmetal/lib/wine/x86_64-unix/d3d11.so',
+      'components/gptk-d3dmetal/lib/wine/x86_64-unix/d3d12.so',
+      'components/gptk-d3dmetal/lib/wine/x86_64-unix/dxgi.so',
     ]) {
       final fullPath = _joinPath(runtimeRoot, path.split('/'));
       if (!_isGptkD3DMetalUnixLibraryLink(fullPath)) {

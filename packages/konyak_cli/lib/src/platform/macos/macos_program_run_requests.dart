@@ -102,10 +102,12 @@ ProgramRunEnvironment _macosWineEnvironment({
   final runtimeRoot = _macosWineRuntimeRoot(hostEnvironment);
   final d3dMetalSelected = bottle.runtimeSettings.dxrEnabled;
   final wineDllPathEntries = <String>[
-    if (!d3dMetalSelected && bottle.runtimeSettings.dxmt) ...[
+    if (d3dMetalSelected) ...[
+      _macosD3DMetalWindowsPath(runtimeRoot),
+    ] else if (bottle.runtimeSettings.dxmt) ...[
       _joinPath(runtimeRoot, const ['lib', 'dxmt', 'x86_64-windows']),
       _joinPath(runtimeRoot, const ['lib', 'dxmt', 'i386-windows']),
-    ] else if (!d3dMetalSelected && bottle.runtimeSettings.dxvk) ...[
+    ] else if (bottle.runtimeSettings.dxvk) ...[
       _joinPath(runtimeRoot, const ['lib', 'dxvk', 'x86_64-windows']),
       _joinPath(runtimeRoot, const ['lib', 'dxvk', 'i386-windows']),
     ],
@@ -130,7 +132,7 @@ ProgramRunEnvironment _macosWineEnvironment({
       ], Option.fromNullable(environment['DYLD_FRAMEWORK_PATH'])),
     if (d3dMetalSelected)
       'CX_APPLEGPTK_LIBD3DSHARED_PATH': _joinPath(runtimeRoot, const [
-        'lib',
+        ..._gptkD3DMetalComponentLibRelativePath,
         'external',
         'libd3dshared.dylib',
       ]),
@@ -141,7 +143,10 @@ ProgramRunEnvironment _macosWineEnvironment({
 }
 
 String _macosD3DMetalExternalPath(String runtimeRoot) {
-  return _joinPath(runtimeRoot, const ['lib', 'external']);
+  return _joinPath(runtimeRoot, const [
+    ..._gptkD3DMetalComponentLibRelativePath,
+    'external',
+  ]);
 }
 
 String _macosGstreamerPluginPath(String runtimeRoot) {
@@ -161,19 +166,27 @@ String _macosGstreamerRegistryPath(String bottlePath) {
 }
 
 String _macosD3DMetalWindowsPath(String runtimeRoot) {
-  return _joinPath(runtimeRoot, const ['lib', 'wine', 'x86_64-windows']);
+  return _joinPath(runtimeRoot, const [
+    ..._gptkD3DMetalComponentLibRelativePath,
+    'wine',
+    'x86_64-windows',
+  ]);
 }
 
 List<String> _macosWineWindowsDllPaths(String runtimeRoot) {
   return <String>[
-    _macosD3DMetalWindowsPath(runtimeRoot),
+    _joinPath(runtimeRoot, const ['lib', 'wine', 'x86_64-windows']),
     _joinPath(runtimeRoot, const ['lib', 'wine', 'i386-windows']),
     _joinPath(runtimeRoot, const ['lib', 'wine']),
   ];
 }
 
 String _macosD3DMetalUnixPath(String runtimeRoot) {
-  return _joinPath(runtimeRoot, const ['lib', 'wine', 'x86_64-unix']);
+  return _joinPath(runtimeRoot, const [
+    ..._gptkD3DMetalComponentLibRelativePath,
+    'wine',
+    'x86_64-unix',
+  ]);
 }
 
 String _prependPaths(Iterable<String> paths, Option<String> existingPath) {

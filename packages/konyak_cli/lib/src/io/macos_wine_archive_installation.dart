@@ -22,6 +22,10 @@ extension _MacosWineArchiveInstallation on DartIoMacosWineInstaller {
             _macosKonyakRuntimePlatformSpec.requiredExecutableRelativePath,
         expectedExecutablePath: _macosWineExecutable(environment),
         preserveExistingRuntimeFiles: preserveExistingRuntimeFiles,
+        preserveExistingRuntimeSkipRelativePaths:
+            _legacyGptkD3DMetalRuntimeRelativePaths,
+        preserveExistingRuntimeComponents:
+            _preserveImportedGptkD3DMetalComponent,
         normalizeStagingRoot:
             _macosKonyakRuntimePlatformSpec.layoutNormalization ==
                 _RuntimeLayoutNormalization.macosWineBundle
@@ -217,6 +221,63 @@ extension _MacosWineArchiveInstallation on DartIoMacosWineInstaller {
           environment.nonEmptyValue('KONYAK_RUNTIME_STACK_PUBLIC_KEY') ??
           environment.nonEmptyValue('KONYAK_MACOS_WINE_STACK_PUBLIC_KEY'),
     );
+  }
+}
+
+void _preserveImportedGptkD3DMetalComponent({
+  required Directory existingRuntimeRoot,
+  required Directory stagingRuntimeRoot,
+  required Map<String, String> componentVersions,
+}) {
+  final source = _existingGptkD3DMetalSource(existingRuntimeRoot);
+  if (source == null || _validateGptkD3DMetalSource(source) != null) {
+    return;
+  }
+
+  _installGptkD3DMetalComponentPayload(
+    source: source,
+    runtimeRoot: stagingRuntimeRoot,
+  );
+
+  componentVersions[_gptkD3DMetalComponentId] =
+      _runtimeStackComponentVersionFromRoot(
+        existingRuntimeRoot,
+        _gptkD3DMetalComponentId,
+      ) ??
+      'user-provided';
+}
+
+_GptkD3DMetalSource? _existingGptkD3DMetalSource(Directory runtimeRoot) {
+  final componentSource = _resolveGptkD3DMetalSource(
+    _joinPath(runtimeRoot.path, _gptkD3DMetalComponentRelativePath),
+  );
+  if (componentSource != null) {
+    return componentSource;
+  }
+
+  return _resolveGptkD3DMetalSource(runtimeRoot.path);
+}
+
+String? _runtimeStackComponentVersionFromRoot(
+  Directory runtimeRoot,
+  String componentId,
+) {
+  final manifest = File(
+    _joinPath(runtimeRoot.path, const [runtimeStackManifestFileName]),
+  );
+  if (!manifest.existsSync()) {
+    return null;
+  }
+
+  try {
+    return _runtimeStackComponentVersion(
+      jsonDecode(manifest.readAsStringSync()),
+      componentId,
+    );
+  } on FileSystemException {
+    return null;
+  } on FormatException {
+    return null;
   }
 }
 

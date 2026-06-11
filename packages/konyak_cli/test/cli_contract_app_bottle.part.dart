@@ -893,7 +893,14 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
     ]);
     for (final dllName in _gptkD3DMetalOverrideDllNames) {
       final file = File(
-        _joinTestPath(runtimeRoot, ['lib', 'wine', 'x86_64-windows', dllName]),
+        _joinTestPath(runtimeRoot, [
+          'components',
+          'gptk-d3dmetal',
+          'lib',
+          'wine',
+          'x86_64-windows',
+          dllName,
+        ]),
       );
       file.parent.createSync(recursive: true);
       file.writeAsStringSync('d3dmetal/$dllName');
@@ -1014,7 +1021,14 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
     ]);
     for (final dllName in _gptkD3DMetalOverrideDllNames) {
       final file = File(
-        _joinTestPath(runtimeRoot, ['lib', 'wine', 'x86_64-windows', dllName]),
+        _joinTestPath(runtimeRoot, [
+          'components',
+          'gptk-d3dmetal',
+          'lib',
+          'wine',
+          'x86_64-windows',
+          dllName,
+        ]),
       );
       file.parent.createSync(recursive: true);
       file.writeAsStringSync('d3dmetal/$dllName');

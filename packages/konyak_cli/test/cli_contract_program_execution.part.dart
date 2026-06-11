@@ -521,7 +521,14 @@ void defineProgramExecutionContractTests() {
     ]);
     for (final dllName in _gptkD3DMetalOverrideDllNames) {
       final file = File(
-        _joinTestPath(runtimeRoot, ['lib', 'wine', 'x86_64-windows', dllName]),
+        _joinTestPath(runtimeRoot, [
+          'components',
+          'gptk-d3dmetal',
+          'lib',
+          'wine',
+          'x86_64-windows',
+          dllName,
+        ]),
       );
       file.parent.createSync(recursive: true);
       file.writeAsStringSync('d3dmetal/$dllName');
@@ -566,25 +573,41 @@ void defineProgramExecutionContractTests() {
     );
     expect(
       runner.lastRequest?.environment.toMap(),
-      containsPair('WINEDLLPATH', _macosManagedWineDllPath(runtimeRoot)),
+      containsPair(
+        'WINEDLLPATH',
+        _macosManagedWineDllPathWithOverrides(runtimeRoot, const [
+          <String>[
+            'components',
+            'gptk-d3dmetal',
+            'lib',
+            'wine',
+            'x86_64-windows',
+          ],
+        ]),
+      ),
     );
     expect(
       runner.lastRequest?.environment.toMap(),
       containsPair(
         'DYLD_LIBRARY_PATH',
-        '$runtimeRoot/lib/external:$runtimeRoot/lib/wine/x86_64-unix:'
+        '$runtimeRoot/components/gptk-d3dmetal/lib/external:'
+            '$runtimeRoot/components/gptk-d3dmetal/lib/wine/x86_64-unix:'
             '$runtimeRoot/lib',
       ),
     );
     expect(
       runner.lastRequest?.environment.toMap(),
-      containsPair('DYLD_FRAMEWORK_PATH', '$runtimeRoot/lib/external'),
+      containsPair(
+        'DYLD_FRAMEWORK_PATH',
+        '$runtimeRoot/components/gptk-d3dmetal/lib/external',
+      ),
     );
     expect(
       runner.lastRequest?.environment.toMap(),
       containsPair(
         'CX_APPLEGPTK_LIBD3DSHARED_PATH',
-        '$runtimeRoot/lib/external/libd3dshared.dylib',
+        '$runtimeRoot/components/gptk-d3dmetal/lib/external/'
+            'libd3dshared.dylib',
       ),
     );
     expect(
@@ -613,6 +636,8 @@ void defineProgramExecutionContractTests() {
       for (final dllName in _gptkD3DMetalOverrideDllNames) {
         final file = File(
           _joinTestPath(runtimeRoot, [
+            'components',
+            'gptk-d3dmetal',
             'lib',
             'wine',
             'x86_64-windows',
@@ -666,17 +691,30 @@ void defineProgramExecutionContractTests() {
       );
       expect(
         environment?['WINEDLLPATH'],
-        _macosManagedWineDllPath(runtimeRoot),
+        _macosManagedWineDllPathWithOverrides(runtimeRoot, const [
+          <String>[
+            'components',
+            'gptk-d3dmetal',
+            'lib',
+            'wine',
+            'x86_64-windows',
+          ],
+        ]),
       );
       expect(
         environment?['DYLD_LIBRARY_PATH'],
-        '$runtimeRoot/lib/external:$runtimeRoot/lib/wine/x86_64-unix:'
+        '$runtimeRoot/components/gptk-d3dmetal/lib/external:'
+        '$runtimeRoot/components/gptk-d3dmetal/lib/wine/x86_64-unix:'
         '$runtimeRoot/lib',
       );
-      expect(environment?['DYLD_FRAMEWORK_PATH'], '$runtimeRoot/lib/external');
+      expect(
+        environment?['DYLD_FRAMEWORK_PATH'],
+        '$runtimeRoot/components/gptk-d3dmetal/lib/external',
+      );
       expect(
         environment?['CX_APPLEGPTK_LIBD3DSHARED_PATH'],
-        '$runtimeRoot/lib/external/libd3dshared.dylib',
+        '$runtimeRoot/components/gptk-d3dmetal/lib/external/'
+        'libd3dshared.dylib',
       );
     },
   );
@@ -698,7 +736,14 @@ void defineProgramExecutionContractTests() {
     ]);
     for (final dllName in _gptkD3DMetalOverrideDllNames) {
       final file = File(
-        _joinTestPath(runtimeRoot, ['lib', 'wine', 'x86_64-windows', dllName]),
+        _joinTestPath(runtimeRoot, [
+          'components',
+          'gptk-d3dmetal',
+          'lib',
+          'wine',
+          'x86_64-windows',
+          dllName,
+        ]),
       );
       file.parent.createSync(recursive: true);
       file.writeAsStringSync('d3dmetal/$dllName');

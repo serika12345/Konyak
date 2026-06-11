@@ -39,6 +39,13 @@ String? _installRuntimeArchives({
   required List<String> requiredExecutableRelativePath,
   required String expectedExecutablePath,
   required bool preserveExistingRuntimeFiles,
+  required List<List<String>> preserveExistingRuntimeSkipRelativePaths,
+  required void Function({
+    required Directory existingRuntimeRoot,
+    required Directory stagingRuntimeRoot,
+    required Map<String, String> componentVersions,
+  })?
+  preserveExistingRuntimeComponents,
   void Function(Directory runtimeRoot)? normalizeStagingRoot,
   void Function(Directory runtimeRoot)? afterManifestWrite,
   RuntimeInstallProgressSink? progressSink,
@@ -142,9 +149,17 @@ String? _installRuntimeArchives({
       _copyDirectoryContentsReplacing(
         source: runtimeRoot,
         destination: stagingRoot,
+        skipRelativePaths: preserveExistingRuntimeSkipRelativePaths,
       );
       _mergeRuntimeStackManifest(
         runtimeRoot: runtimeRoot,
+        componentVersions: resolvedComponentVersions,
+      );
+    }
+    if (runtimeRoot.existsSync()) {
+      preserveExistingRuntimeComponents?.call(
+        existingRuntimeRoot: runtimeRoot,
+        stagingRuntimeRoot: stagingRoot,
         componentVersions: resolvedComponentVersions,
       );
     }

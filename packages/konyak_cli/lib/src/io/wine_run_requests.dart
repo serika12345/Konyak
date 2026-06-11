@@ -97,7 +97,7 @@ void _syncMacosD3DMetalDllOverrides({
       throw FileSystemException(
         'D3DMetal override DLL was not found.',
         _joinPath(runtimeRoot, <String>[
-          'lib',
+          ..._gptkD3DMetalComponentLibRelativePath,
           'wine',
           'x86_64-windows',
           dllName,
@@ -114,14 +114,21 @@ String? _d3DMetalOverrideSourcePath({
   required String dllName,
 }) {
   for (final sourceName in _d3DMetalOverrideSourceNames(dllName)) {
-    final sourcePath = _joinPath(runtimeRoot, <String>[
-      'lib',
-      'wine',
-      'x86_64-windows',
-      sourceName,
-    ]);
-    if (File(sourcePath).existsSync()) {
-      return sourcePath;
+    for (final sourceRoot in <List<String>>[
+      <String>[
+        ..._gptkD3DMetalComponentLibRelativePath,
+        'wine',
+        'x86_64-windows',
+      ],
+      const <String>['lib', 'wine', 'x86_64-windows'],
+    ]) {
+      final sourcePath = _joinPath(runtimeRoot, <String>[
+        ...sourceRoot,
+        sourceName,
+      ]);
+      if (File(sourcePath).existsSync()) {
+        return sourcePath;
+      }
     }
   }
   return null;

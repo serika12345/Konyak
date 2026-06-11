@@ -78,6 +78,41 @@ final _gptkD3DMetalComponentArchivePaths = <List<String>>[
     ],
 ];
 
+final _gptkD3DMetalInstalledPaths = <List<String>>[
+  <String>[
+    'components',
+    'gptk-d3dmetal',
+    'lib',
+    'external',
+    'D3DMetal.framework',
+  ],
+  <String>[
+    'components',
+    'gptk-d3dmetal',
+    'lib',
+    'external',
+    'libd3dshared.dylib',
+  ],
+  for (final fileName in _gptkD3DMetalWindowsFileNames)
+    <String>[
+      'components',
+      'gptk-d3dmetal',
+      'lib',
+      'wine',
+      'x86_64-windows',
+      fileName,
+    ],
+  for (final fileName in _gptkD3DMetalUnixFileNames)
+    <String>[
+      'components',
+      'gptk-d3dmetal',
+      'lib',
+      'wine',
+      'x86_64-unix',
+      fileName,
+    ],
+];
+
 void main() {
   test('macOS runtime release references match the repository SSOT', () {
     final referenceFile = _repoFile('runtime/macos-wine-release.json');
@@ -663,6 +698,13 @@ String _macosManagedWineDllPath(String runtimeRoot) {
     _joinTestPath(runtimeRoot, const ['lib', 'wine', 'i386-windows']),
     _joinTestPath(runtimeRoot, const ['lib', 'wine']),
   ].join(':');
+}
+
+List<String> _gptkD3DMetalExpectedPaths(String runtimeRoot) {
+  return <String>[
+    for (final relativePath in _gptkD3DMetalInstalledPaths)
+      _joinTestPath(runtimeRoot, relativePath),
+  ];
 }
 
 String _macosManagedWineDllPathWithOverrides(

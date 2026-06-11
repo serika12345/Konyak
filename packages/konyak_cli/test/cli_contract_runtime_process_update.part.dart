@@ -324,38 +324,12 @@ void defineRuntimeProcessAndUpdateContractTests() {
                 'role': 'd3d12-metal-translation',
                 'isRequired': false,
                 'isInstalled': false,
-                'paths': [
-                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/external/D3DMetal.framework',
-                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/external/libd3dshared.dylib',
-                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-windows/atidxx64.dll',
-                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-windows/d3d11.dll',
-                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-windows/d3d12.dll',
-                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-windows/dxgi.dll',
-                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-windows/nvapi64.dll',
-                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-windows/nvngx.dll',
-                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-unix/atidxx64.so',
-                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-unix/d3d11.so',
-                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-unix/d3d12.so',
-                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-unix/dxgi.so',
-                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-unix/nvapi64.so',
-                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-unix/nvngx.so',
-                ],
-                'missingPaths': [
-                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/external/D3DMetal.framework',
-                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/external/libd3dshared.dylib',
-                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-windows/atidxx64.dll',
-                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-windows/d3d11.dll',
-                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-windows/d3d12.dll',
-                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-windows/dxgi.dll',
-                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-windows/nvapi64.dll',
-                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-windows/nvngx.dll',
-                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-unix/atidxx64.so',
-                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-unix/d3d11.so',
-                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-unix/d3d12.so',
-                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-unix/dxgi.so',
-                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-unix/nvapi64.so',
-                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/wine/x86_64-unix/nvngx.so',
-                ],
+                'paths': _gptkD3DMetalExpectedPaths(
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
+                ),
+                'missingPaths': _gptkD3DMetalExpectedPaths(
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
+                ),
               },
               {
                 'id': 'dxmt',
@@ -452,6 +426,8 @@ void defineRuntimeProcessAndUpdateContractTests() {
       }
       final frameworkBinary = File(
         _joinTestPath(runtimeHome, const [
+          'components',
+          'gptk-d3dmetal',
           'lib',
           'external',
           'D3DMetal.framework',
@@ -464,6 +440,8 @@ void defineRuntimeProcessAndUpdateContractTests() {
       frameworkBinary.writeAsStringSync('Konyak macOS dev runtime fixture');
       File(
         _joinTestPath(runtimeHome, const [
+          'components',
+          'gptk-d3dmetal',
           'lib',
           'external',
           'libd3dshared.dylib',
