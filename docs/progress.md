@@ -11,6 +11,104 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-11 16:40 JST
+- State: `completed`
+- Branch: `main`
+- Related work: macOS runtime parity with CrossOver
+- Purpose: include DXMT's x86_64 NVIDIA compatibility shim DLLs in the
+  Konyak-managed macOS runtime component and parent runtime completeness
+  contract.
+- Completed:
+  - Enabled DXMT's `nvapi` and `nvngx` Meson options for the win64 build while
+    keeping the win32 DXMT build limited to the existing DLL set.
+  - Packaged `x86_64-windows/nvapi64.dll` and
+    `x86_64-windows/nvngx.dll` in the DXMT component, recorded the NVIDIA
+    NVAPI license, and made the submodule DXMT component checker require both
+    files as PE32+ DLLs.
+  - Updated the parent CLI runtime platform support contract, install/update
+    fixtures, missing-path tests, and component archive fixtures so DXMT is
+    incomplete without the new shim DLLs.
+  - Updated runtime submodule DXMT documentation and parent runtime roadmap
+    notes to keep the release contract aligned with the generated component.
+  - Refreshed the local development runtime DXMT component under
+    `.dart_tool/konyak/dev-runtime/macos-wine/lib/dxmt` with the generated
+    `nvapi64.dll` and `nvngx.dll`.
+  - Committed and pushed the runtime submodule change as
+    `47c3dad54851665069ae4e3a7e3e202c8c435e06`
+    (`Add DXMT NVIDIA shim DLLs`) to
+    `serika12345/konyak-macos-runtime@main`.
+  - Published the refreshed runtime release assets from GitHub Actions run
+    `27325858054`.
+  - Reinstalled the published macOS runtime release into the parent repository
+    development runtime root from the refreshed source manifest.
+- Remaining: none.
+- Verification:
+  - Pre-implementation `cd packages/konyak_cli && dart test test/cli_contract_test.dart`:
+    failed as expected because the parent runtime contract did not yet include
+    the new DXMT paths.
+  - Pre-implementation
+    `runtime/konyak-macos-runtime/scripts/check-dxmt-component.zsh .dart_tool/konyak/dev-runtime/macos-wine`:
+    failed as expected because the installed development runtime did not yet
+    contain `x86_64-windows/nvapi64.dll`.
+  - `cd runtime/konyak-macos-runtime && KONYAK_WINE_RUNTIME_ROOT="$PWD/../../.dart_tool/konyak/dev-runtime/macos-wine" KONYAK_METAL_TOOLCHAIN_BIN="$metal_bin" nix build --impure .#packages.x86_64-darwin.konyak-macos-dxmt -L --show-trace --out-link result-dxmt && ./scripts/check-dxmt-component.zsh result-dxmt`:
+    passed; `result-dxmt/x86_64-windows/nvapi64.dll` and
+    `result-dxmt/x86_64-windows/nvngx.dll` were generated.
+  - `zsh -n runtime/konyak-macos-runtime/scripts/check-dxmt-component.zsh`:
+    passed.
+  - `git diff --check && git -C runtime/konyak-macos-runtime diff --check`:
+    passed.
+  - `cd packages/konyak_cli && dart test test/cli_contract_test.dart`: passed.
+  - `just cli-test`: passed.
+  - `just verify-governance`: passed.
+  - `just verify-safety`: passed.
+  - `just format-check`: passed.
+  - `just lint`: passed.
+  - Local development runtime DXMT overlay from the cached Nix build plus
+    `runtime/konyak-macos-runtime/scripts/check-dxmt-component.zsh .dart_tool/konyak/dev-runtime/macos-wine/lib/dxmt`:
+    passed; both new DLLs identify as PE32+ x86-64 Windows DLLs.
+  - Runtime submodule GitHub Actions run `27325858054` passed for commit
+    `47c3dad54851665069ae4e3a7e3e202c8c435e06`; the run completed validate,
+    binary component packaging, Wine runtime artifact build, DXMT component
+    build and verification, vkd3d component build and verification, assembled
+    Wine32-on-64 smoke, release metadata generation, and release publishing.
+  - `scripts/prepare_macos_dev_runtime_stack.zsh --force --print-manifest-path
+    --print-runtime-path` refreshed the published source manifest for
+    `crossover-26.1.0-konyak.0`.
+  - `cd packages/konyak_cli && KONYAK_RUNTIME_PROFILE=development
+    KONYAK_MACOS_WINE_HOME="$runtime_path"
+    KONYAK_DEV_MACOS_WINE_STACK_MANIFEST="$manifest_path" dart run
+    bin/konyak.dart install-macos-wine --reinstall --source-manifest
+    "$manifest_path" --progress-json --json` installed the published release
+    into `.dart_tool/konyak/dev-runtime/macos-wine`; the final runtime JSON
+    reported DXMT installed, DXMT backend available, and no DXMT missing paths.
+  - Refreshed source manifest DXMT component:
+    `https://github.com/serika12345/konyak-macos-runtime/releases/download/crossover-26.1.0-konyak.0/konyak-macos-dxmt.tar.zst`
+    with SHA-256
+    `995a4ea7bfb18aa14e78f68e29e2f0662ed607d83283ba5fd844891781504cf3`.
+  - `runtime/konyak-macos-runtime/scripts/check-dxmt-component.zsh
+    .dart_tool/konyak/dev-runtime/macos-wine`: passed.
+  - `runtime/konyak-macos-runtime/scripts/check-vkd3d-component.zsh
+    .dart_tool/konyak/dev-runtime/macos-wine`: passed.
+  - `runtime/konyak-macos-runtime/scripts/check-dxvk-component.zsh
+    .dart_tool/konyak/dev-runtime/macos-wine`: passed.
+  - `runtime/konyak-macos-runtime/scripts/check-gstreamer-component.zsh
+    .dart_tool/konyak/dev-runtime/macos-wine`: passed.
+  - `runtime/konyak-macos-runtime/scripts/check-wine32on64-runtime.zsh
+    .dart_tool/konyak/dev-runtime/macos-wine`: passed.
+  - `file .dart_tool/konyak/dev-runtime/macos-wine/lib/dxmt/x86_64-windows/nvapi64.dll
+    .dart_tool/konyak/dev-runtime/macos-wine/lib/dxmt/x86_64-windows/nvngx.dll`:
+    both files identify as PE32+ x86-64 Windows DLLs.
+  - `cd packages/konyak_cli && KONYAK_RUNTIME_PROFILE=development
+    KONYAK_MACOS_WINE_HOME="$runtime_root" dart run bin/konyak.dart
+    validate-runtime konyak-macos-wine --json`: passed with `isValid: true`.
+  - `cd packages/konyak_cli && KONYAK_RUNTIME_PROFILE=development
+    KONYAK_MACOS_WINE_HOME="$runtime_root" dart run bin/konyak.dart
+    list-runtimes --json`: passed; `konyak-macos-wine` reported DXMT installed
+    with no missing paths and the DXMT backend available.
+  - `runtime/konyak-macos-runtime/scripts/smoke-wine32on64-launch.zsh
+    .dart_tool/konyak/dev-runtime/macos-wine`: passed.
+- Next: commit the parent repository changes if requested.
+
 - Timestamp: 2026-06-11 13:31 JST
 - State: `runtime_backend_state_exposed`
 - Branch: `main`

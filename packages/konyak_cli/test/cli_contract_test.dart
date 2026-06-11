@@ -594,6 +594,22 @@ const _macosDxmtComponentPaths = <List<String>>[
     'DXMT',
     'components',
     'dxmt',
+    'x86_64-windows',
+    'nvapi64.dll',
+  ],
+  <String>[
+    'Components',
+    'DXMT',
+    'components',
+    'dxmt',
+    'x86_64-windows',
+    'nvngx.dll',
+  ],
+  <String>[
+    'Components',
+    'DXMT',
+    'components',
+    'dxmt',
     'x86_64-unix',
     'winemetal.so',
   ],
@@ -604,6 +620,8 @@ const _macosDxmtInstalledPaths = <List<String>>[
   <String>['lib', 'dxmt', 'x86_64-windows', 'd3d11.dll'],
   <String>['lib', 'dxmt', 'x86_64-windows', 'dxgi.dll'],
   <String>['lib', 'dxmt', 'x86_64-windows', 'winemetal.dll'],
+  <String>['lib', 'dxmt', 'x86_64-windows', 'nvapi64.dll'],
+  <String>['lib', 'dxmt', 'x86_64-windows', 'nvngx.dll'],
 ];
 
 const _macosFreetypeComponentPaths = <List<String>>[
@@ -748,10 +766,8 @@ String _createComponentRuntimeArchive(String tempPath) {
     <String>['Wine', 'lib', 'libfreetype.6.dylib'],
     <String>['Wine', 'lib', 'libfreetype.dylib'],
     <String>['Wine', 'share', 'wine', 'mono', 'wine-mono.marker'],
-    <String>['Wine', 'lib', 'dxmt', 'x86_64-windows', 'd3d10core.dll'],
-    <String>['Wine', 'lib', 'dxmt', 'x86_64-windows', 'd3d11.dll'],
-    <String>['Wine', 'lib', 'dxmt', 'x86_64-windows', 'dxgi.dll'],
-    <String>['Wine', 'lib', 'dxmt', 'x86_64-windows', 'winemetal.dll'],
+    for (final relativePath in _macosDxmtInstalledPaths)
+      <String>['Wine', ...relativePath],
     for (final relativePath in _macosVkd3dInstalledPaths)
       <String>['Wine', ...relativePath],
     <String>['winetricks'],

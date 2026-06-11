@@ -81,6 +81,9 @@ task changes scope.
   - [x] Validate component presence for Wine, Wine32-on-64 support,
     DXVK-macOS, vkd3d, MoltenVK, GStreamer, wine-mono, winetricks, and
     macOS-only GPTK/D3DMetal when the runtime package provides it.
+  - [x] Include DXMT x86_64 NVIDIA shim DLLs `nvapi64.dll` and `nvngx.dll`
+    in the submodule build/release checks and parent runtime completeness
+    contract.
   - [x] Add component version detection to the runtime manifest.
   - [x] Treat Gcenx Wine as an initial bootstrap runtime, not the final full
     Konyak macOS runtime package.
