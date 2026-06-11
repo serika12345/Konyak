@@ -61,6 +61,21 @@ const _linuxWineRuntimeComponentDefinitions =
       ),
     ];
 
+const _linuxWineRuntimeBackendDefinitions = <_RuntimeBackendDefinition>[
+  _RuntimeBackendDefinition(
+    id: 'dxvk',
+    name: 'DXVK',
+    role: 'd3d9-d3d11-vulkan-translation',
+    componentIds: <String>['dxvk'],
+  ),
+  _RuntimeBackendDefinition(
+    id: 'vkd3d-proton',
+    name: 'vkd3d-proton',
+    role: 'd3d12-vulkan-translation',
+    componentIds: <String>['vkd3d-proton'],
+  ),
+];
+
 const _macosGptkD3DMetalComponentPaths = <List<String>>[
   <String>[
     'components',
@@ -312,6 +327,33 @@ const _macosKonyakRuntimeComponentDefinitions =
       ),
     ];
 
+const _macosKonyakRuntimeBackendDefinitions = <_RuntimeBackendDefinition>[
+  _RuntimeBackendDefinition(
+    id: 'dxvk-macos',
+    name: 'DXVK-macOS',
+    role: 'd3d9-d3d11-metal-translation',
+    componentIds: <String>['dxvk-macos', 'moltenvk'],
+  ),
+  _RuntimeBackendDefinition(
+    id: 'dxmt',
+    name: 'DXMT',
+    role: 'd3d10-d3d11-metal-translation',
+    componentIds: <String>['dxmt'],
+  ),
+  _RuntimeBackendDefinition(
+    id: 'gptk-d3dmetal',
+    name: 'GPTK/D3DMetal',
+    role: 'd3d12-metal-translation',
+    componentIds: <String>['gptk-d3dmetal'],
+  ),
+  _RuntimeBackendDefinition(
+    id: 'vkd3d',
+    name: 'vkd3d',
+    role: 'd3d12-vulkan-metal-translation',
+    componentIds: <String>['vkd3d', 'moltenvk'],
+  ),
+];
+
 const _linuxWineRuntimePlatformSpec = _RuntimePlatformSpec(
   runtimeId: linuxWineRuntimeId,
   runtimeName: 'Konyak Linux Wine',
@@ -330,6 +372,7 @@ const _linuxWineRuntimePlatformSpec = _RuntimePlatformSpec(
       'KONYAK_DEV_LINUX_WINE_STACK_SIGNATURE_URL',
   releaseSourceSignatureEnvironmentKey: 'KONYAK_LINUX_WINE_STACK_SIGNATURE_URL',
   componentDefinitions: _linuxWineRuntimeComponentDefinitions,
+  backendDefinitions: _linuxWineRuntimeBackendDefinitions,
 );
 
 const _macosKonyakRuntimePlatformSpec = _RuntimePlatformSpec(
@@ -351,6 +394,7 @@ const _macosKonyakRuntimePlatformSpec = _RuntimePlatformSpec(
   releaseSourceSignatureEnvironmentKey: 'KONYAK_MACOS_WINE_STACK_SIGNATURE_URL',
   layoutNormalization: _RuntimeLayoutNormalization.macosWineBundle,
   componentDefinitions: _macosKonyakRuntimeComponentDefinitions,
+  backendDefinitions: _macosKonyakRuntimeBackendDefinitions,
 );
 
 Option<String> _runtimeSourceManifestForPlatform({

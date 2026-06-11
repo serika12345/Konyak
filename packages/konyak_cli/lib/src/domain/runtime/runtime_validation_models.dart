@@ -16,6 +16,20 @@ class _RuntimeStackComponentDefinition {
   final List<List<String>> relativePaths;
 }
 
+class _RuntimeBackendDefinition {
+  const _RuntimeBackendDefinition({
+    required this.id,
+    required this.name,
+    required this.role,
+    required this.componentIds,
+  });
+
+  final String id;
+  final String name;
+  final String role;
+  final List<String> componentIds;
+}
+
 class _RuntimePlatformSpec {
   const _RuntimePlatformSpec({
     required this.runtimeId,
@@ -32,6 +46,7 @@ class _RuntimePlatformSpec {
     required this.developmentSourceSignatureEnvironmentKey,
     required this.releaseSourceSignatureEnvironmentKey,
     required this.componentDefinitions,
+    this.backendDefinitions = const <_RuntimeBackendDefinition>[],
     this.defaultSourceManifestUrl = const Option.none(),
     this.archiveUrlEnvironmentKey = const Option.none(),
     this.layoutNormalization = _RuntimeLayoutNormalization.none,
@@ -51,6 +66,7 @@ class _RuntimePlatformSpec {
   final String developmentSourceSignatureEnvironmentKey;
   final String releaseSourceSignatureEnvironmentKey;
   final List<_RuntimeStackComponentDefinition> componentDefinitions;
+  final List<_RuntimeBackendDefinition> backendDefinitions;
   final Option<String> defaultSourceManifestUrl;
   final Option<String> archiveUrlEnvironmentKey;
   final _RuntimeLayoutNormalization layoutNormalization;

@@ -37,13 +37,39 @@ class RuntimeStackSummary {
     required this.compatibilityTarget,
     required this.isComplete,
     required List<RuntimeStackComponentSummary> components,
-  }) : components = List.unmodifiable(components);
+    List<RuntimeStackBackendSummary> backends =
+        const <RuntimeStackBackendSummary>[],
+  }) : components = List.unmodifiable(components),
+       backends = List.unmodifiable(backends);
 
   final String id;
   final String name;
   final String compatibilityTarget;
   final bool isComplete;
   final List<RuntimeStackComponentSummary> components;
+  final List<RuntimeStackBackendSummary> backends;
+}
+
+class RuntimeStackBackendSummary {
+  RuntimeStackBackendSummary({
+    required this.id,
+    required this.name,
+    required this.role,
+    required this.isAvailable,
+    required List<String> componentIds,
+    required List<String> missingComponentIds,
+    required List<String> missingPaths,
+  }) : componentIds = List.unmodifiable(componentIds),
+       missingComponentIds = List.unmodifiable(missingComponentIds),
+       missingPaths = List.unmodifiable(missingPaths);
+
+  final String id;
+  final String name;
+  final String role;
+  final bool isAvailable;
+  final List<String> componentIds;
+  final List<String> missingComponentIds;
+  final List<String> missingPaths;
 }
 
 class RuntimeStackComponentSummary {

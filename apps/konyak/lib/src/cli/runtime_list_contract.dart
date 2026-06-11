@@ -148,6 +148,7 @@ RuntimeStackSummary? _parseOptionalRuntimeStack(Object? value) {
   final Object? compatibilityTarget = value['compatibilityTarget'];
   final Object? isComplete = value['isComplete'];
   final Object? components = value['components'];
+  final Object? backends = value['backends'];
 
   if (schemaVersion != runtimeStackSchemaVersion ||
       id is! String ||
@@ -164,6 +165,10 @@ RuntimeStackSummary? _parseOptionalRuntimeStack(Object? value) {
   if (parsedComponents.any((component) => component == null)) {
     return null;
   }
+  final parsedBackends = _parseOptionalRuntimeStackBackends(backends);
+  if (parsedBackends == null) {
+    return null;
+  }
 
   return RuntimeStackSummary(
     id: id,
@@ -173,6 +178,64 @@ RuntimeStackSummary? _parseOptionalRuntimeStack(Object? value) {
     components: parsedComponents
         .whereType<RuntimeStackComponentSummary>()
         .toList(growable: false),
+    backends: parsedBackends,
+  );
+}
+
+List<RuntimeStackBackendSummary>? _parseOptionalRuntimeStackBackends(
+  Object? value,
+) {
+  if (value == null) {
+    return const <RuntimeStackBackendSummary>[];
+  }
+
+  if (value is! List<dynamic>) {
+    return null;
+  }
+
+  final parsedBackends = value
+      .map(_parseRuntimeStackBackend)
+      .toList(growable: false);
+  if (parsedBackends.any((backend) => backend == null)) {
+    return null;
+  }
+
+  return parsedBackends.whereType<RuntimeStackBackendSummary>().toList(
+    growable: false,
+  );
+}
+
+RuntimeStackBackendSummary? _parseRuntimeStackBackend(Object? value) {
+  if (value is! Map<String, dynamic>) {
+    return null;
+  }
+
+  final Object? id = value['id'];
+  final Object? name = value['name'];
+  final Object? role = value['role'];
+  final Object? isAvailable = value['isAvailable'];
+  final componentIds = _parseStringList(value['componentIds']);
+  final missingComponentIds = _parseStringList(value['missingComponentIds']);
+  final missingPaths = _parseStringList(value['missingPaths']);
+
+  if (id is! String ||
+      name is! String ||
+      role is! String ||
+      isAvailable is! bool ||
+      componentIds == null ||
+      missingComponentIds == null ||
+      missingPaths == null) {
+    return null;
+  }
+
+  return RuntimeStackBackendSummary(
+    id: id,
+    name: name,
+    role: role,
+    isAvailable: isAvailable,
+    componentIds: componentIds,
+    missingComponentIds: missingComponentIds,
+    missingPaths: missingPaths,
   );
 }
 

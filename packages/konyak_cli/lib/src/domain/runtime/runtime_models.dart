@@ -171,12 +171,15 @@ class RuntimeStack {
     required this.name,
     required this.compatibilityTarget,
     required Iterable<RuntimeStackComponent> components,
-  }) : components = List.unmodifiable(components);
+    Iterable<RuntimeStackBackend> backends = const <RuntimeStackBackend>[],
+  }) : components = List.unmodifiable(components),
+       backends = List.unmodifiable(backends);
 
   final String id;
   final String name;
   final String compatibilityTarget;
   final List<RuntimeStackComponent> components;
+  final List<RuntimeStackBackend> backends;
 
   bool get isComplete {
     return components
@@ -194,6 +197,46 @@ class RuntimeStack {
       'components': components
           .map((component) => component.toJson())
           .toList(growable: false),
+      if (backends.isNotEmpty)
+        'backends': backends
+            .map((backend) => backend.toJson())
+            .toList(growable: false),
+    };
+  }
+}
+
+class RuntimeStackBackend {
+  RuntimeStackBackend({
+    required this.id,
+    required this.name,
+    required this.role,
+    required Iterable<String> componentIds,
+    required Iterable<String> missingComponentIds,
+    required Iterable<String> missingPaths,
+  }) : componentIds = List.unmodifiable(componentIds),
+       missingComponentIds = List.unmodifiable(missingComponentIds),
+       missingPaths = List.unmodifiable(missingPaths);
+
+  final String id;
+  final String name;
+  final String role;
+  final List<String> componentIds;
+  final List<String> missingComponentIds;
+  final List<String> missingPaths;
+
+  bool get isAvailable {
+    return missingComponentIds.isEmpty && missingPaths.isEmpty;
+  }
+
+  Map<String, Object?> toJson() {
+    return <String, Object?>{
+      'id': id,
+      'name': name,
+      'role': role,
+      'isAvailable': isAvailable,
+      'componentIds': componentIds,
+      'missingComponentIds': missingComponentIds,
+      'missingPaths': missingPaths,
     };
   }
 }

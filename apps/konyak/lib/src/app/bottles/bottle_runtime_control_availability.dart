@@ -34,22 +34,22 @@ BottleRuntimeControlAvailability resolveBottleRuntimeControlAvailability({
     canUseWineRuntime: canUseRuntimeState && _isStackComplete(runtime),
     canUseDxvk:
         canUseRuntimeState &&
-        _isRuntimeComponentAvailable(
+        _isRuntimeBackendAvailable(
           runtime,
           platform.isMacOS ? 'dxvk-macos' : 'dxvk',
         ),
     canUseDxmt:
         canUseRuntimeState &&
         platform.isMacOS &&
-        _isRuntimeComponentAvailable(runtime, 'dxmt'),
+        _isRuntimeBackendAvailable(runtime, 'dxmt'),
     canUseVkd3dProton:
         canUseRuntimeState &&
-        _isRuntimeComponentAvailable(runtime, 'vkd3d-proton'),
+        _isRuntimeBackendAvailable(runtime, 'vkd3d-proton'),
     canUseMetal:
         canUseRuntimeState && _isRuntimeComponentAvailable(runtime, 'moltenvk'),
     canUseDxr:
         canUseRuntimeState &&
-        _isRuntimeComponentAvailable(runtime, 'gptk-d3dmetal'),
+        _isRuntimeBackendAvailable(runtime, 'gptk-d3dmetal'),
   );
 }
 
@@ -74,4 +74,23 @@ bool _isRuntimeComponentAvailable(RuntimeSummary? runtime, String componentId) {
   }
 
   return false;
+}
+
+bool _isRuntimeBackendAvailable(RuntimeSummary? runtime, String backendId) {
+  if (runtime?.isInstalled != true) {
+    return false;
+  }
+
+  final stack = runtime?.stack;
+  if (stack == null) {
+    return false;
+  }
+
+  for (final backend in stack.backends) {
+    if (backend.id == backendId) {
+      return backend.isAvailable;
+    }
+  }
+
+  return _isRuntimeComponentAvailable(runtime, backendId);
 }

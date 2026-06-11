@@ -52,6 +52,45 @@ void main() {
     expect(availability.canUseVkd3dProton, isFalse);
   });
 
+  test('uses backend availability before component availability', () {
+    final availability = resolveBottleRuntimeControlAvailability(
+      platform: KonyakPlatform.macos,
+      runtime: _runtime(
+        isComplete: true,
+        components: const <String>['dxvk-macos', 'moltenvk'],
+        backends: [
+          RuntimeStackBackendSummary(
+            id: 'dxvk-macos',
+            name: 'DXVK-macOS',
+            role: 'd3d9-d3d11-metal-translation',
+            isAvailable: false,
+            componentIds: const <String>['dxvk-macos', 'moltenvk'],
+            missingComponentIds: const <String>['moltenvk'],
+            missingPaths: const <String>['/runtime/lib/libMoltenVK.dylib'],
+          ),
+        ],
+      ),
+      canChangeSettings: true,
+      hasPendingRuntimeSettings: false,
+    );
+
+    expect(availability.canUseDxvk, isFalse);
+  });
+
+  test('falls back to component availability for older runtime payloads', () {
+    final availability = resolveBottleRuntimeControlAvailability(
+      platform: KonyakPlatform.macos,
+      runtime: _runtime(
+        isComplete: true,
+        components: const <String>['dxvk-macos', 'moltenvk'],
+      ),
+      canChangeSettings: true,
+      hasPendingRuntimeSettings: false,
+    );
+
+    expect(availability.canUseDxvk, isTrue);
+  });
+
   test('uses Linux runtime components for Vulkan controls', () {
     final availability = resolveBottleRuntimeControlAvailability(
       platform: KonyakPlatform.linux,
@@ -75,6 +114,8 @@ void main() {
 RuntimeSummary _runtime({
   required bool isComplete,
   required List<String> components,
+  List<RuntimeStackBackendSummary> backends =
+      const <RuntimeStackBackendSummary>[],
 }) {
   return RuntimeSummary(
     id: 'runtime',
@@ -90,6 +131,7 @@ RuntimeSummary _runtime({
       name: 'Stack',
       compatibilityTarget: 'stack',
       isComplete: isComplete,
+      backends: backends,
       components: components
           .map(
             (id) => RuntimeStackComponentSummary(

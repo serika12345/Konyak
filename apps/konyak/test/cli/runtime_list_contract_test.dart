@@ -92,6 +92,26 @@ void main() {
                   "paths": ["/runtime/components/gptk-d3dmetal/lib/external/D3DMetal.framework"],
                   "missingPaths": ["/runtime/components/gptk-d3dmetal/lib/external/D3DMetal.framework"]
                 }
+              ],
+              "backends": [
+                {
+                  "id": "dxvk-macos",
+                  "name": "DXVK-macOS",
+                  "role": "d3d9-d3d11-metal-translation",
+                  "isAvailable": true,
+                  "componentIds": ["dxvk-macos", "moltenvk"],
+                  "missingComponentIds": [],
+                  "missingPaths": []
+                },
+                {
+                  "id": "gptk-d3dmetal",
+                  "name": "GPTK/D3DMetal",
+                  "role": "d3d12-metal-translation",
+                  "isAvailable": false,
+                  "componentIds": ["gptk-d3dmetal"],
+                  "missingComponentIds": ["gptk-d3dmetal"],
+                  "missingPaths": ["/runtime/components/gptk-d3dmetal/lib/external/D3DMetal.framework"]
+                }
               ]
             }
           }
@@ -112,7 +132,17 @@ void main() {
     expect(components.first.version, 'wine-devel-11.9');
     expect(components.last.id, 'gptk-d3dmetal');
     expect(components.last.isRequired, isFalse);
+    expect(stack.backends.first.id, 'dxvk-macos');
+    expect(stack.backends.first.isAvailable, isTrue);
+    expect(stack.backends.first.componentIds, ['dxvk-macos', 'moltenvk']);
+    expect(stack.backends.last.id, 'gptk-d3dmetal');
+    expect(stack.backends.last.isAvailable, isFalse);
+    expect(stack.backends.last.missingComponentIds, ['gptk-d3dmetal']);
     expect(() => components.add(components.first), throwsUnsupportedError);
+    expect(
+      () => stack.backends.add(stack.backends.first),
+      throwsUnsupportedError,
+    );
   });
 
   test('rejects unsupported schema versions', () {

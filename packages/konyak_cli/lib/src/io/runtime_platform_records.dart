@@ -97,20 +97,62 @@ RuntimeStack _runtimeStackForPlatform({
   required FileStatusProbe fileStatusProbe,
   required RuntimeStackVersionProbe runtimeStackVersionProbe,
 }) {
+  final components = platformSpec.componentDefinitions
+      .map(
+        (definition) => _runtimeStackComponent(
+          runtimeRoot: runtimeRoot,
+          fileStatusProbe: fileStatusProbe,
+          runtimeStackVersionProbe: runtimeStackVersionProbe,
+          definition: definition,
+        ),
+      )
+      .toList(growable: false);
   return RuntimeStack(
     id: platformSpec.stackId,
     name: platformSpec.stackName,
     compatibilityTarget: platformSpec.stackId,
-    components: platformSpec.componentDefinitions
+    components: components,
+    backends: platformSpec.backendDefinitions
         .map(
-          (definition) => _runtimeStackComponent(
-            runtimeRoot: runtimeRoot,
-            fileStatusProbe: fileStatusProbe,
-            runtimeStackVersionProbe: runtimeStackVersionProbe,
+          (definition) => _runtimeStackBackend(
             definition: definition,
+            components: components,
           ),
         )
         .toList(growable: false),
+  );
+}
+
+RuntimeStackBackend _runtimeStackBackend({
+  required _RuntimeBackendDefinition definition,
+  required List<RuntimeStackComponent> components,
+}) {
+  final componentsById = <String, RuntimeStackComponent>{
+    for (final component in components) component.id: component,
+  };
+  final missingComponentIds = <String>[];
+  final missingPaths = <String>[];
+
+  for (final componentId in definition.componentIds) {
+    final component = componentsById[componentId];
+    if (component == null) {
+      missingComponentIds.add(componentId);
+      continue;
+    }
+
+    if (!component.isInstalled) {
+      missingComponentIds.add(componentId);
+      missingPaths.addAll(component.missingPaths);
+    }
+  }
+
+  return RuntimeStackBackend(
+    id: definition.id,
+    name: definition.name,
+    role: definition.role,
+    componentIds: definition.componentIds,
+    missingComponentIds: missingComponentIds,
+    missingPaths: missingPaths,
   );
 }
 

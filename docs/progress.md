@@ -11,6 +11,38 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-11 13:31 JST
+- State: `runtime_backend_state_exposed`
+- Branch: `main`
+- Related work: runtime backend availability contract
+- Purpose: make graphics backend availability explicit in the CLI/runtime
+  state instead of forcing Flutter to infer backend usability from individual
+  component paths.
+- Completed:
+  - Added `stack.backends` to runtime JSON with backend id, role, dependent
+    component ids, missing component ids, missing paths, and `isAvailable`.
+  - Added macOS backend states for DXVK-macOS, DXMT, GPTK/D3DMetal, and vkd3d;
+    added Linux backend states for DXVK and vkd3d-proton.
+  - Updated Flutter runtime parsing to accept `backends` while preserving
+    compatibility with older runtime payloads that only expose `components`.
+  - Updated bottle runtime control availability to prefer explicit backend
+    availability and fall back to component availability for old payloads.
+- Verification:
+  - `cd packages/konyak_cli && dart test test/cli_contract_test.dart test/domain_immutability_test.dart`:
+    passed.
+  - `cd apps/konyak && flutter test test/cli/runtime_list_contract_test.dart test/app/bottle_runtime_control_availability_test.dart`:
+    passed.
+  - `just cli-test`: passed.
+  - `just flutter-format-check`: passed.
+  - `just flutter-analyze`: passed.
+  - `just flutter-test`: passed.
+  - `just format-check`: passed.
+  - `just lint`: passed.
+  - `just verify-governance`: passed.
+  - `just verify-safety`: passed.
+  - `git diff --check`: passed.
+- Next: commit the backend state representation change if requested.
+
 - Timestamp: 2026-06-11 13:14 JST
 - State: `gptk_import_isolated_and_preserved`
 - Branch: `main`
