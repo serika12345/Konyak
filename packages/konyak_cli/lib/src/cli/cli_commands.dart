@@ -154,6 +154,13 @@ Future<CliResult> runCliStreaming(
   RuntimeInstallProgressSink? runtimeInstallProgressSink,
   LinuxExternalProgramLauncherDiagnosticSink?
   linuxExternalProgramLauncherDiagnosticSink,
+  AsyncProgramRunner asyncProgramRunner = const DartIoAsyncProgramRunner(
+    timeout: Duration(seconds: 4),
+  ),
+  AsyncProgramMetadataExtractor asyncProgramMetadataExtractor =
+      const DartIoAsyncProgramMetadataExtractor(),
+  HostProcessSnapshotReader hostProcessSnapshotReader =
+      const DartIoHostProcessSnapshotReader(),
 }) async {
   final macosWineInstallRequest = _parseJsonMacosWineInstallRequest(arguments);
   if (macosWineInstallRequest?.emitProgress == true &&
@@ -173,6 +180,32 @@ Future<CliResult> runCliStreaming(
       progressSink: runtimeInstallProgressSink,
     );
     return _linuxWineInstallCliResult(installResult);
+  }
+
+  if (_isJsonWineProcessListCommand(arguments)) {
+    try {
+      final activeBottleCatalog =
+          bottleRepository ?? bottleCatalog ?? StaticBottleCatalog(const []);
+      return await _listWineProcessesJsonResultAsync(
+        bottleCatalog: activeBottleCatalog,
+        programRunPlanner: programRunPlanner ?? ProgramRunPlanner.current(),
+        programRunner: asyncProgramRunner,
+        programMetadataExtractor: asyncProgramMetadataExtractor,
+        hostProcessSnapshotReader: hostProcessSnapshotReader,
+      );
+    } on BottleRepositoryException catch (error) {
+      return _jsonError(
+        exitCode: 74,
+        code: 'bottleRepositoryError',
+        message: error.message,
+      );
+    } on AppSettingsRepositoryException catch (error) {
+      return _jsonError(
+        exitCode: 74,
+        code: 'appSettingsRepositoryError',
+        message: error.message,
+      );
+    }
   }
 
   return runCli(

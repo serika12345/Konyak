@@ -199,6 +199,15 @@ task changes scope.
   - [x] Expose Wine process listing through the CLI.
   - [x] Show executable icons in the Process Manager when metadata is available.
   - [x] Kill one Wine process at a time from Flutter.
+- [x] Improve Process Manager listing performance.
+  - [x] Keep the existing Flutter-visible process list and termination behavior
+    stable.
+  - [x] Replace serial Wine process listing across bottles with bounded async
+    execution.
+  - [x] Skip Wine debugger probing for bottles that do not appear in the host
+    process table.
+  - [x] Avoid repeated process metadata and icon extraction work within one
+    listing request.
 - [x] Restore macOS 32-bit Windows executable support.
   - [x] Treat CrossOver's observed macOS layout as the compatibility target for
     32-bit Windows execution:

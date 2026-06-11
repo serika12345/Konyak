@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
@@ -219,6 +220,67 @@ final class ThrowingProgramMetadataExtractor
     required String programPath,
   }) {
     throw error;
+  }
+}
+
+final class ControlledAsyncProgramRunner implements AsyncProgramRunner {
+  final List<ProgramRunRequest> requests = <ProgramRunRequest>[];
+  final Map<String, Completer<ProgramRunResult>> _pending =
+      <String, Completer<ProgramRunResult>>{};
+
+  @override
+  Future<ProgramRunResult> run(ProgramRunRequest request) {
+    requests.add(request);
+    final completer = Completer<ProgramRunResult>();
+    _pending[request.bottleId] = completer;
+    return completer.future;
+  }
+
+  Future<void> waitForRequestCount(int count) async {
+    while (requests.length < count) {
+      await Future<void>.delayed(const Duration(milliseconds: 1));
+    }
+  }
+
+  void complete(String bottleId, ProgramRunResult result) {
+    final completer = _pending[bottleId];
+    if (completer == null) {
+      throw StateError('No pending request for bottle `$bottleId`.');
+    }
+    completer.complete(result);
+  }
+}
+
+final class FixedHostProcessSnapshotReader
+    implements HostProcessSnapshotReader {
+  const FixedHostProcessSnapshotReader(this.snapshot);
+
+  final String snapshot;
+
+  @override
+  Future<String> read() async => snapshot;
+}
+
+final class CountingAsyncProgramMetadataExtractor
+    implements AsyncProgramMetadataExtractor {
+  CountingAsyncProgramMetadataExtractor({
+    required this.programPath,
+    required this.metadata,
+  });
+
+  final String programPath;
+  final ProgramMetadataRecord metadata;
+  final List<String> requestedProgramPaths = <String>[];
+
+  @override
+  Future<Option<ProgramMetadataRecord>> extract({
+    required BottleRecord bottle,
+    required String programPath,
+  }) async {
+    requestedProgramPaths.add(programPath);
+    return programPath == this.programPath
+        ? Option.of(metadata)
+        : const Option.none();
   }
 }
 

@@ -149,6 +149,13 @@ abstract interface class ProgramMetadataExtractor {
   });
 }
 
+abstract interface class AsyncProgramMetadataExtractor {
+  Future<Option<ProgramMetadataRecord>> extract({
+    required BottleRecord bottle,
+    required String programPath,
+  });
+}
+
 class WinetricksVerbRecord {
   const WinetricksVerbRecord({
     required this.id,

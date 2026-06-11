@@ -63,6 +63,106 @@ Option<String> _latestRunProgramPathFromLog({
   return const Option.none();
 }
 
+class _AsyncWineProcessHostPathResolver {
+  _AsyncWineProcessHostPathResolver({required this.bottle});
+
+  final BottleRecord bottle;
+  Future<String?>? _latestLogContents;
+  Future<Map<String, Object?>?>? _launchIndex;
+
+  Future<Option<String>> hostPath(String executable) async {
+    final hostPath = _wineWindowsPathToHostPath(
+      bottle: bottle,
+      windowsPath: executable,
+    );
+    if (hostPath.isSome()) {
+      return hostPath;
+    }
+
+    final normalized = executable.trim();
+    if (normalized.startsWith('/') && !normalized.startsWith('/_')) {
+      return Option.of(normalized);
+    }
+
+    final pinnedProgramPath = _pinnedProgramPathForExecutable(
+      bottle: bottle,
+      executable: executable,
+    );
+    if (pinnedProgramPath.isSome()) {
+      return pinnedProgramPath;
+    }
+
+    final recordedExternalProgramPath =
+        await _recordedExternalProgramPathForExecutableAsync(executable);
+    if (recordedExternalProgramPath.isSome()) {
+      return recordedExternalProgramPath;
+    }
+
+    return _latestRunProgramPathForExecutableFromCachedLog(executable);
+  }
+
+  Future<Option<String>> _recordedExternalProgramPathForExecutableAsync(
+    String executable,
+  ) async {
+    final decoded = await (_launchIndex ??= _readLaunchIndex());
+    if (decoded == null) {
+      return const Option.none();
+    }
+
+    return _recordedExternalProgramPathFromLaunchIndex(
+      bottle: bottle,
+      executable: executable,
+      decoded: decoded,
+    );
+  }
+
+  Future<Map<String, Object?>?> _readLaunchIndex() async {
+    final launchIndexFile = File(
+      _joinPath(bottle.path, const ['cache', 'external-program-launches.json']),
+    );
+    if (!await launchIndexFile.exists()) {
+      return null;
+    }
+
+    try {
+      final decoded = jsonDecode(await launchIndexFile.readAsString());
+      return decoded is Map<String, Object?> ? decoded : null;
+    } on FileSystemException {
+      return null;
+    } on FormatException {
+      return null;
+    }
+  }
+
+  Future<Option<String>> _latestRunProgramPathForExecutableFromCachedLog(
+    String executable,
+  ) async {
+    final logContents = await (_latestLogContents ??= _readLatestLog());
+    if (logContents == null) {
+      return const Option.none();
+    }
+
+    return _latestRunProgramPathFromLog(
+      bottle: bottle,
+      executable: executable,
+      logContents: logContents,
+    );
+  }
+
+  Future<String?> _readLatestLog() async {
+    final logFile = File(_joinPath(bottle.path, const ['logs', 'latest.log']));
+    if (!await logFile.exists()) {
+      return null;
+    }
+
+    try {
+      return await logFile.readAsString();
+    } on FileSystemException {
+      return null;
+    }
+  }
+}
+
 Option<String> _recordedExternalProgramPathForExecutable({
   required BottleRecord bottle,
   required String executable,

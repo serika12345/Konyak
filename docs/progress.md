@@ -11,6 +11,85 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-11 19:38 JST
+- State: `completed`
+- Branch: `main`
+- Related work: Process Manager active-prefix filtering
+- Purpose: avoid Process Manager timeouts by not starting `winedbg info proc`
+  for bottles that do not appear in the host process table.
+- Completed:
+  - Confirmed the previous performance pass still used `winedbg` for every
+    bottle selected by the catalog, so slow inactive prefixes could still time
+    out.
+  - Added host process snapshot reading through `ps eww -axo command=` with a
+    short timeout and no administrator privileges.
+  - Filtered the async `list-wine-processes --json` path so only bottles whose
+    paths appear in the host process snapshot are probed with `winedbg`.
+  - Returned an empty process list immediately when no bottle appears active,
+    avoiding slow Wine debugger startup for inactive prefixes.
+  - Added path-boundary matching so `/bottles/a2` does not cause `/bottles/a`
+    to be probed.
+  - Added regression coverage for active-prefix filtering, empty fast return,
+    and prefix-boundary matching.
+- Remaining: none for this timeout follow-up.
+- Next: manually smoke the Process Manager against real running macOS Wine
+  programs, then continue with Dock/pinned launcher icon alignment.
+- Verification:
+  - `cd packages/konyak_cli && dart test test/cli_contract_test.dart
+    --plain-name "runCliStreaming list-wine-processes"`: failed before
+    implementation because `HostProcessSnapshotReader` and the injection point
+    did not exist; passed after implementation.
+  - `cd packages/konyak_cli && dart test test/cli_contract_test.dart`: passed.
+  - `just cli-test`: passed.
+  - `just flutter-test`: passed.
+  - `just verify-governance`: passed.
+  - `just verify-safety`: passed.
+  - `just format-check`: passed.
+  - `just lint`: passed.
+  - `cd packages/konyak_cli && time dart run bin/konyak.dart
+    list-wine-processes --json`: passed in about 1.2 seconds with an empty
+    process list on the current inactive local environment.
+
+- Timestamp: 2026-06-11 19:05 JST
+- State: `completed`
+- Branch: `main`
+- Related work: Process Manager performance
+- Purpose: keep the Process Manager GUI behavior stable while replacing the
+  Wine process listing path's serial and synchronous work with async bounded
+  concurrency and cached metadata resolution.
+- Completed:
+  - Reviewed the current Process Manager CLI, Flutter dialog, process metadata,
+    Wine runner, and pinned launcher icon paths.
+  - Added `runCliStreaming list-wine-processes` contract coverage proving
+    bottle probes are started concurrently while JSON process order remains
+    catalog-stable.
+  - Added contract coverage proving duplicate process host paths reuse one
+    metadata/icon extraction within a single listing request.
+  - Added async program runner and async program metadata extractor boundaries
+    for the streaming CLI path.
+  - Routed `runCliStreaming` `list-wine-processes --json` through async bounded
+    concurrency without changing the Flutter-visible JSON contract.
+  - Added a 4-second timeout to the async process runner used by the streaming
+    process listing path so a stuck Wine probe is killed and reported through
+    the existing `wineProcessListFailed` error shape.
+  - Cached per-bottle external launch index and `latest.log` reads during
+    process host-path resolution.
+- Remaining: none for this performance pass.
+- Next: continue with the next Process Manager improvement, such as aligning
+  displayed process icons with the Dock/pinned launcher icon source.
+- Verification:
+  - `cd packages/konyak_cli && dart test test/cli_contract_test.dart
+    --plain-name "runCliStreaming list-wine-processes"`: failed before
+    implementation because the async runner/extractor API and fast-path CLI
+    parameters did not exist; passed after implementation.
+  - `cd packages/konyak_cli && dart test test/cli_contract_test.dart`: passed.
+  - `just cli-test`: passed.
+  - `just flutter-test`: passed.
+  - `just verify-governance`: passed.
+  - `just verify-safety`: passed.
+  - `just format-check`: passed.
+  - `just lint`: passed.
+
 - Timestamp: 2026-06-11 18:28 JST
 - State: `completed`
 - Branch: `main`

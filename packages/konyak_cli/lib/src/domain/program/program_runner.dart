@@ -4,6 +4,14 @@ abstract interface class ProgramRunner {
   ProgramRunResult run(ProgramRunRequest request);
 }
 
+abstract interface class AsyncProgramRunner {
+  Future<ProgramRunResult> run(ProgramRunRequest request);
+}
+
+abstract interface class HostProcessSnapshotReader {
+  Future<String> read();
+}
+
 abstract interface class PathOpener {
   PathOpenResult openPath(String path);
 

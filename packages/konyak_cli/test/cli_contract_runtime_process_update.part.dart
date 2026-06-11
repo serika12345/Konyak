@@ -1178,6 +1178,341 @@ void defineRuntimeProcessAndUpdateContractTests() {
   });
 
   test(
+    'runCliStreaming list-wine-processes starts bottle probes concurrently and preserves order',
+    () async {
+      final repository = MemoryBottleRepository(
+        dataHome: '/data',
+        bottles: [
+          BottleRecord(
+            id: 'a',
+            name: 'A',
+            path: '/bottles/a',
+            windowsVersion: 'win11',
+          ),
+          BottleRecord(
+            id: 'b',
+            name: 'B',
+            path: '/bottles/b',
+            windowsVersion: 'win11',
+          ),
+          BottleRecord(
+            id: 'c',
+            name: 'C',
+            path: '/bottles/c',
+            windowsVersion: 'win11',
+          ),
+        ],
+      );
+      final runner = ControlledAsyncProgramRunner();
+
+      final resultFuture = runCliStreaming(
+        const ['list-wine-processes', '--json'],
+        bottleCatalog: repository,
+        programRunPlanner: ProgramRunPlanner(
+          hostPlatform: KonyakHostPlatform.linux,
+        ),
+        asyncProgramRunner: runner,
+        hostProcessSnapshotReader: const FixedHostProcessSnapshotReader('''
+          wine64 WINEPREFIX=/bottles/a
+          wine64 WINEPREFIX=/bottles/b
+          wine64 WINEPREFIX=/bottles/c
+        '''),
+      );
+
+      await runner.waitForRequestCount(3);
+      expect(runner.requests.map((request) => request.bottleId), [
+        'a',
+        'b',
+        'c',
+      ]);
+
+      runner.complete(
+        'c',
+        const ProgramRunCompleted(
+          processExitCode: 0,
+          stdout: '000000c0 1 CApp.exe',
+        ),
+      );
+      runner.complete(
+        'a',
+        const ProgramRunCompleted(
+          processExitCode: 0,
+          stdout: '000000a0 1 AApp.exe',
+        ),
+      );
+      runner.complete(
+        'b',
+        const ProgramRunCompleted(
+          processExitCode: 0,
+          stdout: '000000b0 1 BApp.exe',
+        ),
+      );
+
+      final result = await resultFuture;
+
+      expect(result.exitCode, 0);
+      final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+      expect(payload, {
+        'schemaVersion': 1,
+        'wineProcesses': {
+          'processes': [
+            {
+              'bottleId': 'a',
+              'processId': '000000a0',
+              'executable': 'AApp.exe',
+            },
+            {
+              'bottleId': 'b',
+              'processId': '000000b0',
+              'executable': 'BApp.exe',
+            },
+            {
+              'bottleId': 'c',
+              'processId': '000000c0',
+              'executable': 'CApp.exe',
+            },
+          ],
+        },
+      });
+    },
+  );
+
+  test(
+    'runCliStreaming list-wine-processes reuses metadata extraction for duplicate host paths',
+    () async {
+      final tempDirectory = Directory.systemTemp.createTempSync(
+        'konyak-process-list-metadata-cache-test-',
+      );
+      addTearDown(() {
+        if (tempDirectory.existsSync()) {
+          tempDirectory.deleteSync(recursive: true);
+        }
+      });
+      final bottlePath = _joinTestPath(tempDirectory.path, const ['a']);
+      final programPath = _joinTestPath(tempDirectory.path, const [
+        'Downloads',
+        'Setup.exe',
+      ]);
+      Directory(
+        _joinTestPath(bottlePath, const ['logs']),
+      ).createSync(recursive: true);
+      File(_joinTestPath(bottlePath, const ['logs', 'latest.log']))
+        ..createSync(recursive: true)
+        ..writeAsStringSync(
+          'Arguments: ${jsonEncode(<String>[programPath])}\n',
+        );
+      final repository = MemoryBottleRepository(
+        dataHome: '/data',
+        bottles: [
+          BottleRecord(
+            id: 'a',
+            name: 'A',
+            path: bottlePath,
+            windowsVersion: 'win11',
+          ),
+        ],
+      );
+      final runner = ControlledAsyncProgramRunner();
+      final metadataExtractor = CountingAsyncProgramMetadataExtractor(
+        programPath: programPath,
+        metadata: ProgramMetadataRecord(
+          fileDescription: Option.of('Setup'),
+          iconPath: Option.of(
+            _joinTestPath(bottlePath, const ['cache', 'icons', 'setup.ico']),
+          ),
+        ),
+      );
+
+      final resultFuture = runCliStreaming(
+        const ['list-wine-processes', '--json'],
+        bottleCatalog: repository,
+        programRunPlanner: ProgramRunPlanner(
+          hostPlatform: KonyakHostPlatform.linux,
+        ),
+        asyncProgramRunner: runner,
+        asyncProgramMetadataExtractor: metadataExtractor,
+        hostProcessSnapshotReader: FixedHostProcessSnapshotReader(
+          'wine64 WINEPREFIX=$bottlePath',
+        ),
+      );
+
+      await runner.waitForRequestCount(1);
+      runner.complete(
+        'a',
+        const ProgramRunCompleted(
+          processExitCode: 0,
+          stdout: '''
+          000000d8 5 Setup.exe
+          000000e0 3 Setup.exe
+        ''',
+        ),
+      );
+
+      final result = await resultFuture;
+
+      expect(result.exitCode, 0);
+      expect(metadataExtractor.requestedProgramPaths, [programPath]);
+      final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+      final wineProcesses = payload['wineProcesses'] as Map<String, Object?>;
+      final processes = wineProcesses['processes'] as List<Object?>;
+      expect(processes, hasLength(2));
+      for (final process in processes.cast<Map<String, Object?>>()) {
+        expect(process['metadata'], {
+          'fileDescription': 'Setup',
+          'iconPath': _joinTestPath(bottlePath, const [
+            'cache',
+            'icons',
+            'setup.ico',
+          ]),
+        });
+      }
+    },
+  );
+
+  test(
+    'runCliStreaming list-wine-processes skips bottles missing from the host process snapshot',
+    () async {
+      final repository = MemoryBottleRepository(
+        dataHome: '/data',
+        bottles: [
+          BottleRecord(
+            id: 'a',
+            name: 'A',
+            path: '/bottles/a',
+            windowsVersion: 'win11',
+          ),
+          BottleRecord(
+            id: 'b',
+            name: 'B',
+            path: '/bottles/b',
+            windowsVersion: 'win11',
+          ),
+          BottleRecord(
+            id: 'c',
+            name: 'C',
+            path: '/bottles/c',
+            windowsVersion: 'win11',
+          ),
+        ],
+      );
+      final runner = ControlledAsyncProgramRunner();
+
+      final resultFuture = runCliStreaming(
+        const ['list-wine-processes', '--json'],
+        bottleCatalog: repository,
+        programRunPlanner: ProgramRunPlanner(
+          hostPlatform: KonyakHostPlatform.linux,
+        ),
+        asyncProgramRunner: runner,
+        hostProcessSnapshotReader: const FixedHostProcessSnapshotReader(
+          'wine64 WINEPREFIX=/bottles/b',
+        ),
+      );
+
+      await runner.waitForRequestCount(1);
+      expect(runner.requests.single.bottleId, 'b');
+      runner.complete(
+        'b',
+        const ProgramRunCompleted(
+          processExitCode: 0,
+          stdout: '000000b0 1 BApp.exe',
+        ),
+      );
+
+      final result = await resultFuture;
+
+      expect(result.exitCode, 0);
+      final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+      expect(payload, {
+        'schemaVersion': 1,
+        'wineProcesses': {
+          'processes': [
+            {
+              'bottleId': 'b',
+              'processId': '000000b0',
+              'executable': 'BApp.exe',
+            },
+          ],
+        },
+      });
+    },
+  );
+
+  test(
+    'runCliStreaming list-wine-processes returns empty without probing when no bottle is active',
+    () async {
+      final repository = MemoryBottleRepository(
+        dataHome: '/data',
+        bottles: [
+          BottleRecord(
+            id: 'a',
+            name: 'A',
+            path: '/bottles/a',
+            windowsVersion: 'win11',
+          ),
+        ],
+      );
+      final runner = ControlledAsyncProgramRunner();
+
+      final result = await runCliStreaming(
+        const ['list-wine-processes', '--json'],
+        bottleCatalog: repository,
+        programRunPlanner: ProgramRunPlanner(
+          hostPlatform: KonyakHostPlatform.linux,
+        ),
+        asyncProgramRunner: runner,
+        hostProcessSnapshotReader: const FixedHostProcessSnapshotReader(
+          'Finder\nKonyak',
+        ),
+      );
+
+      expect(result.exitCode, 0);
+      expect(runner.requests, isEmpty);
+      expect(jsonDecode(result.stdout), {
+        'schemaVersion': 1,
+        'wineProcesses': {'processes': <Object?>[]},
+      });
+    },
+  );
+
+  test(
+    'runCliStreaming list-wine-processes does not match bottle path prefixes',
+    () async {
+      final repository = MemoryBottleRepository(
+        dataHome: '/data',
+        bottles: [
+          BottleRecord(
+            id: 'a',
+            name: 'A',
+            path: '/bottles/a',
+            windowsVersion: 'win11',
+          ),
+        ],
+      );
+      final runner = ControlledAsyncProgramRunner();
+
+      final result = await runCliStreaming(
+        const ['list-wine-processes', '--json'],
+        bottleCatalog: repository,
+        programRunPlanner: ProgramRunPlanner(
+          hostPlatform: KonyakHostPlatform.linux,
+        ),
+        asyncProgramRunner: runner,
+        hostProcessSnapshotReader: const FixedHostProcessSnapshotReader(
+          'wine64 WINEPREFIX=/bottles/a2',
+        ),
+      );
+
+      expect(result.exitCode, 0);
+      expect(runner.requests, isEmpty);
+      expect(jsonDecode(result.stdout), {
+        'schemaVersion': 1,
+        'wineProcesses': {'processes': <Object?>[]},
+      });
+    },
+  );
+
+  test(
     'list-wine-processes --json strips winedbg tree prefixes before resolving metadata',
     () {
       final tempDirectory = Directory.systemTemp.createTempSync(

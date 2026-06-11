@@ -26,3 +26,30 @@ String? _extractPeIcon({
     return null;
   }
 }
+
+Future<String?> _extractPeIconAsync({
+  required _PortableExecutableImage image,
+  required BottleRecord bottle,
+  required String programPath,
+  required FileStat fileStat,
+}) async {
+  final icoBytes = _peIconBytes(image);
+  if (icoBytes == null) {
+    return null;
+  }
+
+  final iconPath = _peIconCachePath(
+    bottle: bottle,
+    programPath: programPath,
+    fileStat: fileStat,
+  );
+  try {
+    final iconFile = File(iconPath);
+    await iconFile.parent.create(recursive: true);
+    await iconFile.writeAsBytes(icoBytes);
+
+    return iconPath;
+  } on FileSystemException {
+    return null;
+  }
+}
