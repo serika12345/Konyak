@@ -1370,6 +1370,123 @@ void defineRuntimeProcessAndUpdateContractTests() {
   );
 
   test(
+    'runCliStreaming list-wine-processes resolves shortcut targets for process icons',
+    () async {
+      final tempDirectory = Directory.systemTemp.createTempSync(
+        'konyak-process-list-shortcut-icon-test-',
+      );
+      addTearDown(() {
+        if (tempDirectory.existsSync()) {
+          tempDirectory.deleteSync(recursive: true);
+        }
+      });
+      final bottlePath = _joinTestPath(tempDirectory.path, const ['a']);
+      final programPath = _joinTestPath(bottlePath, const [
+        'drive_c',
+        'Program Files',
+        'Ardour',
+        'Ardour.exe',
+      ]);
+      final shortcutPath = _joinTestPath(bottlePath, const [
+        'drive_c',
+        'ProgramData',
+        'Microsoft',
+        'Windows',
+        'Start Menu',
+        'Programs',
+        'Ardour.lnk',
+      ]);
+      File(shortcutPath)
+        ..createSync(recursive: true)
+        ..writeAsBytesSync(
+          _syntheticShellLinkBytes(
+            localBasePath: r'C:\Program Files\Ardour\Ardour.exe',
+          ),
+        );
+      Directory(
+        _joinTestPath(bottlePath, const ['logs']),
+      ).createSync(recursive: true);
+      File(_joinTestPath(bottlePath, const ['logs', 'latest.log']))
+        ..createSync(recursive: true)
+        ..writeAsStringSync(
+          'Arguments: ${jsonEncode(<String>['start', '/unix', shortcutPath])}\n',
+        );
+      final repository = MemoryBottleRepository(
+        dataHome: '/data',
+        bottles: [
+          BottleRecord(
+            id: 'a',
+            name: 'A',
+            path: bottlePath,
+            windowsVersion: 'win11',
+          ),
+        ],
+      );
+      final runner = ControlledAsyncProgramRunner();
+      final metadataExtractor = CountingAsyncProgramMetadataExtractor(
+        programPath: programPath,
+        metadata: ProgramMetadataRecord(
+          fileDescription: Option.of('Ardour'),
+          iconPath: Option.of(
+            _joinTestPath(bottlePath, const ['cache', 'icons', 'ardour.ico']),
+          ),
+        ),
+      );
+
+      final resultFuture = runCliStreaming(
+        const ['list-wine-processes', '--json'],
+        bottleCatalog: repository,
+        programRunPlanner: ProgramRunPlanner(
+          hostPlatform: KonyakHostPlatform.linux,
+        ),
+        asyncProgramRunner: runner,
+        asyncProgramMetadataExtractor: metadataExtractor,
+        hostProcessSnapshotReader: FixedHostProcessSnapshotReader(
+          'wine64 WINEPREFIX=$bottlePath',
+        ),
+      );
+
+      await runner.waitForRequestCount(1);
+      runner.complete(
+        'a',
+        const ProgramRunCompleted(
+          processExitCode: 0,
+          stdout: '''
+          00000128 5 Ardour.exe
+        ''',
+        ),
+      );
+
+      final result = await resultFuture;
+
+      expect(result.exitCode, 0);
+      expect(metadataExtractor.requestedProgramPaths, [programPath]);
+      final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+      expect(payload, {
+        'schemaVersion': 1,
+        'wineProcesses': {
+          'processes': [
+            {
+              'bottleId': 'a',
+              'processId': '00000128',
+              'executable': 'Ardour.exe',
+              'hostPath': programPath,
+              'metadata': {
+                'fileDescription': 'Ardour',
+                'iconPath': _joinTestPath(bottlePath, const [
+                  'cache',
+                  'icons',
+                  'ardour.ico',
+                ]),
+              },
+            },
+          ],
+        },
+      });
+    },
+  );
+
+  test(
     'runCliStreaming list-wine-processes skips bottles missing from the host process snapshot',
     () async {
       final repository = MemoryBottleRepository(
@@ -1702,6 +1819,122 @@ void defineRuntimeProcessAndUpdateContractTests() {
               'hostPath': programPath,
               'metadata': {
                 'fileDescription': 'Ardour Installer',
+                'iconPath': _joinTestPath(bottlePath, const [
+                  'cache',
+                  'icons',
+                  'ardour.ico',
+                ]),
+              },
+            },
+          ],
+        },
+      });
+    },
+  );
+
+  test(
+    'list-wine-processes --json resolves recorded shortcut launches to target metadata',
+    () {
+      final tempDirectory = Directory.systemTemp.createTempSync(
+        'konyak-process-list-recorded-shortcut-launch-test-',
+      );
+      addTearDown(() {
+        if (tempDirectory.existsSync()) {
+          tempDirectory.deleteSync(recursive: true);
+        }
+      });
+      final bottlePath = _joinTestPath(tempDirectory.path, const ['a']);
+      final programPath = _joinTestPath(bottlePath, const [
+        'drive_c',
+        'Program Files',
+        'Ardour',
+        'Ardour.exe',
+      ]);
+      final shortcutPath = _joinTestPath(bottlePath, const [
+        'drive_c',
+        'ProgramData',
+        'Microsoft',
+        'Windows',
+        'Start Menu',
+        'Programs',
+        'Ardour.lnk',
+      ]);
+      File(shortcutPath)
+        ..createSync(recursive: true)
+        ..writeAsBytesSync(
+          _syntheticShellLinkBytes(
+            localBasePath: r'C:\Program Files\Ardour\Ardour.exe',
+          ),
+        );
+      final repository = MemoryBottleRepository(
+        dataHome: '/data',
+        bottles: [
+          BottleRecord(
+            id: 'a',
+            name: 'a',
+            path: bottlePath,
+            windowsVersion: 'win11',
+          ),
+        ],
+      );
+      Directory(
+        _joinTestPath(bottlePath, const ['cache']),
+      ).createSync(recursive: true);
+      File(
+        _joinTestPath(bottlePath, const [
+          'cache',
+          'external-program-launches.json',
+        ]),
+      ).writeAsStringSync(
+        jsonEncode({
+          'schemaVersion': 1,
+          'launches': [
+            {'programPath': shortcutPath, 'executableName': 'ardour.lnk'},
+          ],
+        }),
+      );
+
+      final runner = RecordingProgramRunner(
+        result: const ProgramRunCompleted(
+          processExitCode: 0,
+          stdout: '''
+          pid      threads  executable (all id:s are in hex)
+          00000128 5        Ardour.exe
+        ''',
+        ),
+      );
+
+      final result = runCli(
+        const ['list-wine-processes', '--json'],
+        bottleCatalog: repository,
+        programRunPlanner: ProgramRunPlanner(
+          hostPlatform: KonyakHostPlatform.linux,
+        ),
+        programRunner: runner,
+        programMetadataExtractor: FixedProgramMetadataExtractor(
+          programPath: programPath,
+          metadata: ProgramMetadataRecord(
+            fileDescription: Option.of('Ardour'),
+            iconPath: Option.of(
+              _joinTestPath(bottlePath, const ['cache', 'icons', 'ardour.ico']),
+            ),
+          ),
+        ),
+      );
+
+      expect(result.exitCode, 0);
+      final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+      expect(payload, {
+        'schemaVersion': 1,
+        'wineProcesses': {
+          'processes': [
+            {
+              'bottleId': 'a',
+              'processId': '00000128',
+              'executable': 'Ardour.exe',
+              'hostPath': programPath,
+              'metadata': {
+                'fileDescription': 'Ardour',
                 'iconPath': _joinTestPath(bottlePath, const [
                   'cache',
                   'icons',

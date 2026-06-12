@@ -44,16 +44,18 @@ Option<String> _latestRunProgramPathFromLog({
           bottle: bottle,
           argument: argument,
         );
-        if (hostPath.match(
-          () => true,
-          (path) => !_executableNamesMatch(path, executable),
-        )) {
+        final metadataPath = hostPath.flatMap(
+          (path) => _metadataProgramPathMatchingExecutable(
+            bottle: bottle,
+            programPath: path,
+            executable: executable,
+          ),
+        );
+        if (metadataPath.isNone()) {
           continue;
         }
 
-        return hostPath.map(
-          (path) => _metadataProgramPath(bottle: bottle, programPath: path),
-        );
+        return metadataPath;
       }
     }
   } on FormatException {
@@ -217,15 +219,31 @@ Option<String> _recordedExternalProgramPathFromLaunchIndex({
       continue;
     }
 
-    if (_normalizedExecutableName(executableName) !=
-        _normalizedExecutableName(executable)) {
+    final metadataPath = _metadataProgramPathMatchingExecutable(
+      bottle: bottle,
+      programPath: programPath,
+      executable: executable,
+    );
+    if (metadataPath.isNone()) {
       continue;
     }
 
-    return Option.of(
-      _metadataProgramPath(bottle: bottle, programPath: programPath),
-    );
+    return metadataPath;
   }
 
   return const Option.none();
+}
+
+Option<String> _metadataProgramPathMatchingExecutable({
+  required BottleRecord bottle,
+  required String programPath,
+  required String executable,
+}) {
+  final metadataPath = _metadataProgramPath(
+    bottle: bottle,
+    programPath: programPath,
+  );
+  return _executableNamesMatch(metadataPath, executable)
+      ? Option.of(metadataPath)
+      : const Option.none();
 }

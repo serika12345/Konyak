@@ -206,6 +206,9 @@ task changes scope.
 - [x] Add process manager UI.
   - [x] Expose Wine process listing through the CLI.
   - [x] Show executable icons in the Process Manager when metadata is available.
+    - Shortcut-launched processes resolve the shortcut target before matching
+      the reported Wine executable, so Start Menu `.lnk` launches can surface
+      target PE metadata and icons.
   - [x] Kill one Wine process at a time from Flutter.
 - [x] Improve Process Manager listing performance.
   - [x] Keep the existing Flutter-visible process list and termination behavior

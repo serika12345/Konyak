@@ -11,6 +11,40 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-12 22:07 JST
+- State: `completed`
+- Branch: `main`
+- Related work: Process Manager executable icons
+- Purpose: fix missing Process Manager icons for Wine processes launched from
+  Start Menu `.lnk` shortcuts.
+- Completed:
+  - Added regression coverage for `list-wine-processes --json` when the
+    latest run log records a shortcut path but `winedbg info proc` reports the
+    target executable name.
+  - Added regression coverage for recorded external launch entries that point
+    at shortcuts.
+  - Changed Wine process metadata resolution to resolve shortcut targets before
+    matching a recorded launch/log path against the reported process
+    executable.
+- Remaining:
+  - Manual smoke against a real shortcut-launched Windows app is still useful to
+    confirm the extracted `.ico` renders correctly in the Flutter engine.
+- Next: manually smoke a real shortcut-launched Windows app if icon rendering
+  still needs confirmation outside the synthetic CLI tests.
+- Verification:
+  - `cd packages/konyak_cli && dart test test/cli_contract_test.dart -n
+    "runCliStreaming list-wine-processes resolves shortcut targets for process
+    icons"`: failed before implementation because no metadata extraction was
+    attempted; passed after implementation.
+  - `cd packages/konyak_cli && dart test test/cli_contract_test.dart -n
+    "list-wine-processes --json resolves recorded shortcut launches to target
+    metadata"`: passed.
+  - `just cli-test`: passed.
+  - `just verify-governance`: passed.
+  - `just verify-safety`: passed.
+  - `just format-check`: passed.
+  - `just lint`: passed.
+
 - Timestamp: 2026-06-12 21:56 JST
 - State: `completed`
 - Branch: `main`
