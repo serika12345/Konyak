@@ -6,6 +6,7 @@ abstract interface class ProcessRunner {
     List<String> arguments, {
     String? workingDirectory,
     Map<String, String> environment = const <String, String>{},
+    void Function(int processId)? onStarted,
     void Function(String line)? onStdoutLine,
   });
 }
@@ -31,6 +32,7 @@ final class DartIoProcessRunner implements ProcessRunner {
     List<String> arguments, {
     String? workingDirectory,
     Map<String, String> environment = const <String, String>{},
+    void Function(int processId)? onStarted,
     void Function(String line)? onStdoutLine,
   }) async {
     final childEnvironment = <String, String>{
@@ -38,12 +40,13 @@ final class DartIoProcessRunner implements ProcessRunner {
       ...environment,
     };
 
-    if (onStdoutLine != null) {
-      return _runStreaming(
+    if (onStdoutLine != null || onStarted != null) {
+      return _runStarted(
         executable,
         arguments,
         workingDirectory: workingDirectory,
         environment: childEnvironment,
+        onStarted: onStarted,
         onStdoutLine: onStdoutLine,
       );
     }
@@ -72,12 +75,13 @@ final class DartIoProcessRunner implements ProcessRunner {
     );
   }
 
-  Future<ProcessRunResult> _runStreaming(
+  Future<ProcessRunResult> _runStarted(
     String executable,
     List<String> arguments, {
     required String? workingDirectory,
     required Map<String, String> environment,
-    required void Function(String line) onStdoutLine,
+    required void Function(int processId)? onStarted,
+    required void Function(String line)? onStdoutLine,
   }) async {
     final Process process;
     try {
@@ -96,18 +100,38 @@ final class DartIoProcessRunner implements ProcessRunner {
       );
     }
 
-    final stdoutLines = <String>[];
+    onStarted?.call(process.pid);
+
     final stderrBuffer = StringBuffer();
-    final stdoutFuture = process.stdout
+    final stderrFuture = process.stderr
+        .transform(utf8.decoder)
+        .forEach(stderrBuffer.write);
+    late final Future<void> stdoutFuture;
+    final stdoutCallback = onStdoutLine;
+    if (stdoutCallback == null) {
+      final stdoutBuffer = StringBuffer();
+      stdoutFuture = process.stdout
+          .transform(utf8.decoder)
+          .forEach(stdoutBuffer.write);
+      final exitCode = await process.exitCode;
+      await stdoutFuture;
+      await stderrFuture;
+
+      return ProcessRunResult(
+        exitCode: exitCode,
+        stdout: stdoutBuffer.toString(),
+        stderr: stderrBuffer.toString(),
+      );
+    }
+
+    final stdoutLines = <String>[];
+    stdoutFuture = process.stdout
         .transform(utf8.decoder)
         .transform(const LineSplitter())
         .forEach((line) {
           stdoutLines.add(line);
-          onStdoutLine(line);
+          stdoutCallback(line);
         });
-    final stderrFuture = process.stderr
-        .transform(utf8.decoder)
-        .forEach(stderrBuffer.write);
 
     final exitCode = await process.exitCode;
     await stdoutFuture;

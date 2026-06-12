@@ -15,6 +15,7 @@ import '../app/dialogs/process_manager_dialog.dart';
 import '../app/dialogs/run_program_dialog.dart';
 import '../app/dialogs/winetricks_dialog.dart';
 import '../app/home/home_screen.dart';
+import '../app/programs/program_window_probe.dart';
 import '../app/runtime/runtime_platform.dart';
 import '../app/startup/startup_update_checker.dart';
 import '../app/utils/bottle_lists.dart';
@@ -52,6 +53,7 @@ class KonyakHomeLoader extends StatefulWidget {
     required this.directoryPicker,
     required this.gptkWineSourcePicker,
     required this.bottleArchivePicker,
+    required this.programWindowProbe,
     this.initialExecutablePaths = const <String>[],
     required this.enableBackgroundServices,
     required this.onAppSettingsLoaded,
@@ -65,6 +67,7 @@ class KonyakHomeLoader extends StatefulWidget {
   final DirectoryPicker directoryPicker;
   final GptkWineSourcePicker gptkWineSourcePicker;
   final BottleArchivePicker bottleArchivePicker;
+  final ProgramWindowProbe programWindowProbe;
   final List<String> initialExecutablePaths;
   final bool enableBackgroundServices;
   final ValueChanged<AppSettingsSummary> onAppSettingsLoaded;
@@ -79,6 +82,8 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
   List<BottleSummary> _bottles = const <BottleSummary>[];
   bool _isLoading = true;
   bool _isCreatingBottle = false;
+  final Set<int> _activeProgramLaunchIds = <int>{};
+  int _nextProgramLaunchId = 0;
   bool _isLoadingWinetricks = false;
   String? _winetricksInstallProgressMessage;
   String? _archiveProgressMessage;
@@ -212,6 +217,11 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
           const BlockingProgressOverlay(
             key: ValueKey('create-bottle-progress'),
             message: 'Creating bottle...',
+          ),
+        if (_activeProgramLaunchIds.isNotEmpty)
+          const BlockingProgressOverlay(
+            key: ValueKey('program-launch-progress'),
+            message: 'Launching program...',
           ),
         if (_isLoadingWinetricks)
           const BlockingProgressOverlay(

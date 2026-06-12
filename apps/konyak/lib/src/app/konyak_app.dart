@@ -14,6 +14,7 @@ import 'app_constants.dart';
 import 'app_platform.dart';
 import 'app_platform_io.dart';
 import 'home_loader.dart';
+import 'programs/program_window_probe.dart';
 import 'widgets/icon_file_image.dart';
 
 class KonyakApp extends StatefulWidget {
@@ -27,6 +28,7 @@ class KonyakApp extends StatefulWidget {
     GptkWineSourcePicker? gptkWineSourcePicker,
     BottleArchivePicker? bottleArchivePicker,
     IconFileLoader? iconFileLoader,
+    ProgramWindowProbe? programWindowProbe,
     this.initialExecutablePaths = const <String>[],
     this.enableBackgroundServices = false,
   }) : platform = platform ?? currentKonyakPlatform(),
@@ -39,7 +41,9 @@ class KonyakApp extends StatefulWidget {
            gptkWineSourcePicker ?? const FileSelectorGptkWineSourcePicker(),
        bottleArchivePicker =
            bottleArchivePicker ?? const FileSelectorBottleArchivePicker(),
-       iconFileLoader = iconFileLoader ?? const DartIoIconFileLoader();
+       iconFileLoader = iconFileLoader ?? const DartIoIconFileLoader(),
+       programWindowProbe =
+           programWindowProbe ?? const NativeProgramWindowProbe();
 
   final KonyakPlatform platform;
   final KonyakCliClient cliClient;
@@ -49,6 +53,7 @@ class KonyakApp extends StatefulWidget {
   final GptkWineSourcePicker gptkWineSourcePicker;
   final BottleArchivePicker bottleArchivePicker;
   final IconFileLoader iconFileLoader;
+  final ProgramWindowProbe programWindowProbe;
   final List<String> initialExecutablePaths;
   final bool enableBackgroundServices;
 
@@ -81,6 +86,7 @@ class _KonyakAppState extends State<KonyakApp> {
           directoryPicker: widget.directoryPicker,
           gptkWineSourcePicker: widget.gptkWineSourcePicker,
           bottleArchivePicker: widget.bottleArchivePicker,
+          programWindowProbe: widget.programWindowProbe,
           initialExecutablePaths: widget.initialExecutablePaths,
           enableBackgroundServices: widget.enableBackgroundServices,
           onAppSettingsLoaded: _handleAppSettingsLoaded,

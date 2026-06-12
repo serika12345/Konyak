@@ -4,10 +4,12 @@ extension KonyakCliProgramCommands on KonyakCliClient {
   Future<ProgramRunLoadResult> runProgram({
     required String bottleId,
     required String programPath,
+    void Function(int processId)? onStarted,
   }) {
     return _programRunResultFromCommand(
       arguments: ['run-program', bottleId, '--program', programPath, '--json'],
       failureMessage: _programRunFailureMessage,
+      onStarted: onStarted,
     );
   }
 

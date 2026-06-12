@@ -11,6 +11,280 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-12 21:51 JST
+- State: `completed`
+- Branch: `main`
+- Related work: macOS Wine launch window detection without process
+  environment access
+- Purpose: replace the non-working `WINEPREFIX` environment-variable filter
+  with a macOS window owner process filter that can detect real Wine GUI
+  windows when the launch overlay is still visible.
+- Completed:
+  - Verified locally that `KERN_PROCARGS2` does not expose a child process
+    `WINEPREFIX` environment variable in this environment, so the previous
+    prefix-based filter could not be relied on.
+  - Changed Flutter launch detection to baseline existing Wine-process windows
+    before launch and dismiss only when a new matching window appears.
+  - Changed the macOS window bridge to match windows by the original
+    CLI-process descendant filter or by Wine-like owner process identity.
+  - Added native checks for `kCGWindowOwnerName` and `proc_pidpath` so windows
+    owned by processes such as `wine`, `wine64`, `wine-preloader`,
+    `wine64-preloader`, or CrossOver-derived executables can be detected.
+  - Kept unrelated non-Wine app windows from clearing the launch overlay, and
+    kept preexisting Wine windows from clearing it immediately.
+- Remaining:
+  - Linux still does not have equivalent X11/XWayland/Wayland-aware window
+    detection.
+  - Concurrent launch of another Wine app from outside Konyak could still
+    dismiss the overlay because this fallback is process-kind scoped rather than
+    bottle-prefix scoped.
+- Next: manually smoke a real macOS Wine installer launch and confirm the
+  overlay disappears when the Wine program window appears while unrelated
+  non-Wine apps do not dismiss it.
+- Verification:
+  - `swift` probe of `KERN_PROCARGS2` against a child process with
+    `WINEPREFIX=/tmp/konyak-prefix-test`: returned no `WINEPREFIX`, confirming
+    the prefix-based implementation was not viable in this environment.
+  - `cd apps/konyak && xcrun swiftc -parse-as-library -typecheck
+    macos/Runner/AppDelegate.swift -F build/macos/Build/Products/Debug`:
+    passed.
+  - `cd apps/konyak && flutter test test/widget_test.dart --plain-name "run program hides launch progress for a new Wine process window"`:
+    passed.
+  - `cd apps/konyak && flutter test test/widget_test.dart --plain-name "run program ignores preexisting Wine process windows"`:
+    passed.
+  - `cd apps/konyak && flutter test test/widget_test.dart --plain-name "run program ignores unrelated external windows while launch is pending"`:
+    passed.
+  - `cd apps/konyak && flutter test test/macos_window_metrics_test.dart --plain-name "macOS app exposes visible external window ids to Flutter"`:
+    passed.
+  - `dart format apps/konyak/lib/src/app/programs/program_window_probe.dart
+    apps/konyak/lib/src/home_loader_parts/home_loader_programs.part.dart
+    apps/konyak/test/widget_test.dart apps/konyak/test/widget_programs.part.dart
+    apps/konyak/test/macos_window_metrics_test.dart`: passed.
+  - `just flutter-format-check`: passed.
+  - `just flutter-analyze`: passed.
+  - `just flutter-test`: passed.
+  - `just swift-lint`: passed; note the current SwiftLint configuration
+    excludes `apps/konyak/macos/Runner/AppDelegate.swift`.
+  - `just verify-governance`: passed.
+  - `just verify-safety`: passed.
+  - `just format-check`: passed.
+  - `just lint`: passed.
+
+- Timestamp: 2026-06-12 21:39 JST
+- State: `completed`
+- Branch: `main`
+- Related work: macOS Wine launch window detection after process reparenting
+- Purpose: make the launch overlay disappear for real macOS Wine GUI windows
+  even when the window owner is no longer a descendant of the pending
+  `run-program` CLI process.
+- Completed:
+  - Reviewed the current PID-descendant-only launch window detection and the
+    reported behavior where the overlay remains visible.
+  - Added a widget regression test for a newly visible Wine window from the
+    launched bottle prefix whose owner is not associated with the CLI PID.
+  - Added a widget regression test that preexisting windows from the same
+    bottle prefix do not immediately dismiss the overlay.
+  - Changed Flutter launch detection to snapshot existing windows for the
+    bottle path before running the CLI, then dismiss only when a new matching
+    window appears.
+  - Extended the macOS window bridge to accept `winePrefixPath` alongside root
+    process IDs.
+  - Added native `KERN_PROCARGS2` environment parsing so CGWindow owner
+    processes or their ancestors can match `WINEPREFIX=<bottle path>`.
+  - Kept the previous PID-descendant filter as an additional match path, while
+    preserving unrelated non-Wine app filtering.
+- Remaining:
+  - Linux still does not have equivalent X11/XWayland/Wayland-aware window
+    detection.
+  - A real macOS Wine launch smoke is still useful to confirm the target runtime
+    processes expose `WINEPREFIX` through `KERN_PROCARGS2` in the packaged app.
+- Next: manually smoke a real macOS Wine installer launch and confirm the
+  overlay disappears when the Wine program window appears while unrelated apps
+  do not dismiss it.
+- Verification:
+  - `cd apps/konyak && flutter test test/widget_test.dart --plain-name "run program hides launch progress for a new bottle Wine window"`:
+    failed before implementation because the PID-only filter kept the overlay
+    visible; passed after implementation.
+  - `cd apps/konyak && flutter test test/widget_test.dart --plain-name "run program ignores preexisting bottle Wine windows"`:
+    passed.
+  - `cd apps/konyak && flutter test test/widget_test.dart --plain-name "run program ignores unrelated external windows while launch is pending"`:
+    passed.
+  - `cd apps/konyak && flutter test test/macos_window_metrics_test.dart --plain-name "macOS app exposes visible external window ids to Flutter"`:
+    passed.
+  - `dart format apps/konyak/lib/src/app/programs/program_window_probe.dart
+    apps/konyak/lib/src/home_loader_parts/home_loader_programs.part.dart
+    apps/konyak/test/widget_test.dart apps/konyak/test/widget_programs.part.dart
+    apps/konyak/test/macos_window_metrics_test.dart`: passed.
+  - `cd apps/konyak && xcrun swiftc -parse-as-library -typecheck
+    macos/Runner/AppDelegate.swift -F build/macos/Build/Products/Debug`:
+    passed.
+  - `just flutter-format-check`: passed.
+  - `just flutter-analyze`: passed.
+  - `just flutter-test`: passed.
+  - `just swift-lint`: passed; note the current SwiftLint configuration
+    excludes `apps/konyak/macos/Runner/AppDelegate.swift`.
+  - `just verify-governance`: passed.
+  - `just verify-safety`: passed.
+  - `just format-check`: passed.
+  - `just lint`: passed.
+
+- Timestamp: 2026-06-12 21:23 JST
+- State: `completed`
+- Branch: `main`
+- Related work: macOS program launch window false-positive reduction
+- Purpose: prevent unrelated macOS application windows from dismissing the
+  Windows program launch overlay while `run-program --json` is still pending.
+- Completed:
+  - Reviewed the existing launch overlay polling, macOS window-list bridge, and
+    Flutter CLI process runner boundary.
+  - Added a widget regression test that opens an unrelated external window while
+    launch is pending and expects the overlay to remain visible.
+  - Added started-process callbacks to the Flutter CLI process runner so
+    `run-program` launch tracking can capture the just-started CLI PID.
+  - Changed Flutter launch window polling to query only windows owned by
+    descendant processes of that CLI PID.
+  - Changed the macOS `visibleExternalWindowIds` bridge to accept root process
+    IDs and filter CGWindow owners by walking parent PIDs with
+    `sysctl(KERN_PROC_PID)`.
+  - Kept unrelated external application windows from clearing the launch
+    overlay while preserving early dismissal when a window from the launched
+    process tree appears.
+- Remaining:
+  - Linux still does not have equivalent X11/XWayland/Wayland-aware window
+    detection.
+  - Real macOS Wine launch smoke is still needed to confirm Wine windows remain
+    descendants of the pending `run-program` CLI process in the packaged app.
+- Next: manually smoke a real macOS Wine installer launch and confirm the
+  overlay ignores unrelated apps but disappears for the Wine program window.
+- Verification:
+  - `cd apps/konyak && flutter test test/widget_test.dart --plain-name "run program ignores unrelated external windows while launch is pending"`:
+    failed before implementation because any new external window dismissed the
+    overlay; passed after implementation.
+  - `cd apps/konyak && flutter test test/widget_test.dart --plain-name "run program hides launch progress when a new macOS window opens"`:
+    passed.
+  - `cd apps/konyak && flutter test test/cli/konyak_cli_client_test.dart --plain-name "run-program reports the started CLI process id"`:
+    passed.
+  - `cd apps/konyak && flutter test test/cli/konyak_cli_client_test.dart --plain-name "Dart process runner reports the started process id"`:
+    passed.
+  - `cd apps/konyak && flutter test test/macos_window_metrics_test.dart --plain-name "macOS app exposes visible external window ids to Flutter"`:
+    passed.
+  - `dart format apps/konyak/lib/src/cli/konyak_cli_client.dart
+    apps/konyak/lib/src/cli/konyak_cli_process_runner.dart
+    apps/konyak/lib/src/cli/konyak_cli_program_commands.dart
+    apps/konyak/lib/src/app/programs/program_window_probe.dart
+    apps/konyak/lib/src/home_loader_parts/home_loader_programs.part.dart
+    apps/konyak/test/widget_test.dart apps/konyak/test/widget_programs.part.dart
+    apps/konyak/test/cli/konyak_cli_client_test.dart
+    apps/konyak/test/app/immutability_test.dart
+    apps/konyak/test/macos_window_metrics_test.dart`: passed.
+  - `just flutter-format-check`: passed.
+  - `just flutter-analyze`: passed.
+  - `just flutter-test`: passed.
+  - `just swift-lint`: passed; note the current SwiftLint configuration
+    excludes `apps/konyak/macos/Runner/AppDelegate.swift`.
+  - `cd apps/konyak && xcrun swiftc -parse-as-library -typecheck
+    macos/Runner/AppDelegate.swift -F build/macos/Build/Products/Debug`:
+    passed.
+  - `just verify-governance`: passed.
+  - `just verify-safety`: passed.
+  - `just format-check`: passed.
+  - `just lint`: passed.
+  - `cd apps/konyak && flutter build macos --debug`: attempted as extra Swift
+    build validation, but failed before Runner compilation because Flutter's
+    `debug_unpack_macos` phase could not create a `FlutterMacOS.lipo` temporary
+    file inside the generated `FlutterMacOS.framework`; this is not one of the
+    required gates for this change.
+
+- Timestamp: 2026-06-11 22:36 JST
+- State: `completed`
+- Branch: `main`
+- Related work: macOS program launch window detection
+- Purpose: dismiss the Windows program launch overlay when the first Wine GUI
+  window appears, because GUI `run-program --json` invocations can remain
+  pending until the Windows program exits.
+- Completed:
+  - Confirmed the previous Flutter-only launch progress state waited for the
+    CLI process result, which is insufficient for GUI Windows programs that
+    keep the Wine command alive.
+  - Added a widget regression test that keeps `run-program --json` pending and
+    verifies the launch overlay disappears when the mocked macOS window list
+    gains a new external window ID.
+  - Added a macOS Runner source test for the native window-list method exposed
+    to Flutter.
+  - Added `visibleExternalWindowIds` on the existing `konyak/menu`
+    MethodChannel, backed by `CGWindowListCopyWindowInfo` with filtering for
+    onscreen, layer-0, non-Konyak, non-desktop windows with practical minimum
+    dimensions.
+  - Changed Flutter launch tracking to use per-launch IDs so CLI completion and
+    native window detection can both clear the same launch without corrupting
+    concurrent launch state.
+- Remaining:
+  - Linux does not yet have equivalent X11/XWayland/Wayland-aware window
+    detection.
+  - The CLI process is still allowed to finish normally later; latest-log
+    availability remains tied to the eventual CLI result.
+- Next: manually smoke a real macOS Wine installer launch and confirm the
+  overlay disappears when the Wine window appears.
+- Verification:
+  - `cd apps/konyak && flutter test test/widget_test.dart --plain-name "run program hides launch progress when a new macOS window opens"`:
+    failed before implementation because the launch overlay stayed visible
+    while the CLI Future was pending; passed after implementation.
+  - `cd apps/konyak && flutter test test/macos_window_metrics_test.dart --plain-name "macOS app exposes visible external window ids to Flutter"`:
+    passed after implementation.
+  - `dart format apps/konyak/lib/src/app/konyak_app.dart
+    apps/konyak/lib/src/home_loader/home_loader.dart
+    apps/konyak/lib/src/home_loader_parts/home_loader_programs.part.dart
+    apps/konyak/lib/src/app/programs/program_window_probe.dart
+    apps/konyak/test/widget_test.dart apps/konyak/test/widget_programs.part.dart
+    apps/konyak/test/macos_window_metrics_test.dart`: passed.
+  - `just swift-lint`: passed.
+  - `just flutter-format-check`: passed.
+  - `just flutter-analyze`: passed.
+  - `just flutter-test`: passed.
+  - `just verify-governance`: passed.
+  - `just verify-safety`: passed.
+  - `just format-check`: passed.
+  - `just lint`: passed.
+
+- Timestamp: 2026-06-11 22:24 JST
+- State: `completed`
+- Branch: `main`
+- Related work: Flutter program launch feedback
+- Purpose: make Windows program launches visibly active after the user starts
+  an executable so the app does not look idle while the CLI launch request is
+  pending.
+- Completed:
+  - Reviewed the existing Flutter `run-program` flow, CLI client run-result
+    parsing, blocking progress overlay, and program feedback tests.
+  - Added a widget regression test that holds the `run-program --json` command
+    pending and asserts that launch progress is shown until the CLI result
+    returns.
+  - Added a counted launch-progress state in `KonyakHomeLoader` and displayed
+    the existing blocking progress overlay with `Launching program...` while
+    one or more program launches are active.
+  - Left the CLI JSON contract unchanged; this is a minimal Flutter feedback
+    pass and does not yet detect native Wine window creation.
+- Remaining:
+  - True "until the first app window appears" detection still needs a later
+    backend/platform probe, likely macOS window-list polling first and a
+    Linux-specific strategy that accounts for X11/XWayland versus Wayland.
+- Next: decide whether to add a CLI/platform window-detection contract after
+  this minimal UI feedback is manually tried with real macOS Wine launches.
+- Verification:
+  - `cd apps/konyak && flutter test test/widget_test.dart --plain-name "run program shows launch progress while the CLI is pending"`:
+    failed before implementation because the launch overlay did not exist;
+    passed after implementation.
+  - `dart format apps/konyak/lib/src/home_loader/home_loader.dart
+    apps/konyak/lib/src/home_loader_parts/home_loader_programs.part.dart
+    apps/konyak/test/widget_programs.part.dart`: passed with no changes.
+  - `just flutter-format-check`: passed.
+  - `just flutter-analyze`: passed.
+  - `just flutter-test`: passed.
+  - `just verify-governance`: passed.
+  - `just verify-safety`: passed.
+  - `just format-check`: passed.
+  - `just lint`: passed.
+
 - Timestamp: 2026-06-11 21:59 JST
 - State: `completed`
 - Branch: `main`

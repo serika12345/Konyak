@@ -108,8 +108,28 @@ void main() {
     );
     expect(appDelegate, contains('openExecutableFiles'));
     expect(appDelegate, contains('takePendingExecutableOpenPaths'));
+    expect(appDelegate, contains('visibleExternalWindowIds'));
     expect(appDelegate, contains('setMethodCallHandler'));
     expect(appDelegate, contains('url.pathExtension.lowercased() == "exe"'));
+  });
+
+  test('macOS app exposes visible external window ids to Flutter', () {
+    final appDelegate = File(
+      'macos/Runner/AppDelegate.swift',
+    ).readAsStringSync();
+
+    expect(appDelegate, contains('CGWindowListCopyWindowInfo'));
+    expect(appDelegate, contains('.optionOnScreenOnly'));
+    expect(appDelegate, contains('.excludeDesktopElements'));
+    expect(appDelegate, contains('kCGWindowOwnerPID'));
+    expect(appDelegate, contains('kCGWindowNumber'));
+    expect(appDelegate, contains('windowFilter(from: call.arguments)'));
+    expect(appDelegate, contains('KERN_PROC_PID'));
+    expect(appDelegate, contains('kp_eproc.e_ppid'));
+    expect(appDelegate, contains('kCGWindowOwnerName'));
+    expect(appDelegate, contains('proc_pidpath'));
+    expect(appDelegate, contains('isWineProcessName'));
+    expect(appDelegate, contains('ProcessInfo.processInfo.processIdentifier'));
   });
 
   test('macOS app menu omits unused default items', () {

@@ -195,6 +195,11 @@ task changes scope.
   - [x] Show runner kind and resolved executable in failure details.
   - [x] Link directly to the latest log when available.
   - [x] Keep the compact snackbar for short errors.
+  - [x] Show launch progress while Flutter is waiting for `run-program --json`
+    to return.
+  - [x] On macOS, hide launch progress when a visible external window owned by
+    the launched CLI process tree or a Wine-like process is detected, even if
+    the GUI `run-program --json` process is still pending.
 - [x] Add process manager UI.
   - [x] Expose Wine process listing through the CLI.
   - [x] Show executable icons in the Process Manager when metadata is available.

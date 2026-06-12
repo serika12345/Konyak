@@ -88,8 +88,9 @@ final class KonyakCliClient {
   Future<ProgramRunLoadResult> _programRunResultFromCommand({
     required List<String> arguments,
     required String Function(ProcessRunResult result) failureMessage,
+    void Function(int processId)? onStarted,
   }) async {
-    final result = await _run(arguments);
+    final result = await _run(arguments, onStarted: onStarted);
     final parsed = parseProgramRunPayload(result.stdout);
 
     return switch (parsed) {
@@ -134,12 +135,16 @@ final class KonyakCliClient {
     };
   }
 
-  Future<ProcessRunResult> _run(List<String> arguments) {
+  Future<ProcessRunResult> _run(
+    List<String> arguments, {
+    void Function(int processId)? onStarted,
+  }) {
     return processRunner.run(
       executable,
       <String>[...baseArguments, ...arguments],
       workingDirectory: workingDirectory,
       environment: <String, String>{...environment, ..._launcherEnvironment()},
+      onStarted: onStarted,
     );
   }
 

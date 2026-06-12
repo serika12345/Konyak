@@ -109,6 +109,7 @@ final class _NoopProcessRunner implements ProcessRunner {
     List<String> arguments, {
     String? workingDirectory,
     Map<String, String> environment = const <String, String>{},
+    void Function(int processId)? onStarted,
     void Function(String line)? onStdoutLine,
   }) async {
     return const ProcessRunResult(exitCode: 0, stdout: '', stderr: '');

@@ -1,5 +1,8 @@
 part of '../home_loader/home_loader.dart';
 
+const _programLaunchWindowPollInterval = Duration(milliseconds: 250);
+const _programLaunchWindowWatchTimeout = Duration(minutes: 5);
+
 extension _KonyakHomeLoaderPrograms on _KonyakHomeLoaderState {
   Future<void> _runProgram(BottleSummary bottle) async {
     final programPath = await showDialog<String>(
@@ -21,16 +24,119 @@ extension _KonyakHomeLoaderPrograms on _KonyakHomeLoaderState {
     required BottleSummary bottle,
     required String programPath,
   }) async {
-    final result = await widget.cliClient.runProgram(
-      bottleId: bottle.id,
-      programPath: programPath,
-    );
+    final launchId = _beginProgramLaunch();
+    final baselineWindowIds =
+        await _visibleExternalWindowIds(
+          descendantOfProcessIds: const <int>{},
+          includeWineProcessWindows: true,
+        ) ??
+        const <String>{};
+
+    if (!mounted) {
+      _finishProgramLaunch(launchId);
+      return;
+    }
+
+    late final ProgramRunLoadResult result;
+    try {
+      result = await widget.cliClient.runProgram(
+        bottleId: bottle.id,
+        programPath: programPath,
+        onStarted: (processId) {
+          unawaited(
+            _finishProgramLaunchWhenMatchingWindowAppears(
+              launchId: launchId,
+              rootProcessId: processId,
+              baselineWindowIds: baselineWindowIds,
+            ),
+          );
+        },
+      );
+    } finally {
+      _finishProgramLaunch(launchId);
+    }
 
     if (!mounted) {
       return;
     }
 
     _handleProgramRunResult(result);
+  }
+
+  int _beginProgramLaunch() {
+    final launchId = _nextProgramLaunchId;
+    _nextProgramLaunchId += 1;
+
+    if (!mounted) {
+      return launchId;
+    }
+
+    _updateState(() {
+      _activeProgramLaunchIds.add(launchId);
+    });
+
+    return launchId;
+  }
+
+  void _finishProgramLaunch(int launchId) {
+    if (!mounted || !_activeProgramLaunchIds.contains(launchId)) {
+      return;
+    }
+
+    _updateState(() {
+      _activeProgramLaunchIds.remove(launchId);
+    });
+  }
+
+  Future<void> _finishProgramLaunchWhenMatchingWindowAppears({
+    required int launchId,
+    required int rootProcessId,
+    required Set<String> baselineWindowIds,
+  }) async {
+    if (rootProcessId <= 0) {
+      return;
+    }
+
+    final startedAt = DateTime.now();
+
+    while (mounted && _activeProgramLaunchIds.contains(launchId)) {
+      if (DateTime.now().difference(startedAt) >=
+          _programLaunchWindowWatchTimeout) {
+        return;
+      }
+
+      await Future<void>.delayed(_programLaunchWindowPollInterval);
+      if (!mounted || !_activeProgramLaunchIds.contains(launchId)) {
+        return;
+      }
+
+      final currentWindowIds = await _visibleExternalWindowIds(
+        descendantOfProcessIds: <int>{rootProcessId},
+        includeWineProcessWindows: true,
+      );
+      if (currentWindowIds == null) {
+        return;
+      }
+
+      final hasNewMatchingWindow = currentWindowIds.any(
+        (windowId) => !baselineWindowIds.contains(windowId),
+      );
+      if (hasNewMatchingWindow) {
+        _finishProgramLaunch(launchId);
+        return;
+      }
+    }
+  }
+
+  Future<Set<String>?> _visibleExternalWindowIds({
+    required Set<int> descendantOfProcessIds,
+    required bool includeWineProcessWindows,
+  }) async {
+    return widget.programWindowProbe.visibleExternalWindowIds(
+      widget.platform,
+      descendantOfProcessIds: descendantOfProcessIds,
+      includeWineProcessWindows: includeWineProcessWindows,
+    );
   }
 
   void _handleProgramRunResult(ProgramRunLoadResult result) {

@@ -11,6 +11,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:konyak/main.dart';
 import 'package:konyak/src/app/app_constants.dart';
 import 'package:konyak/src/app/home/sidebar.dart';
+import 'package:konyak/src/app/programs/program_window_probe.dart';
 import 'package:konyak/src/bottles/bottle_summary.dart';
 import 'package:konyak/src/cli/konyak_cli_client.dart';
 import 'package:konyak/src/files/bottle_archive_picker.dart';
@@ -51,6 +52,7 @@ KonyakApp _testKonyakApp({
   GptkWineSourcePicker? gptkWineSourcePicker,
   BottleArchivePicker? bottleArchivePicker,
   IconFileLoader? iconFileLoader,
+  ProgramWindowProbe? programWindowProbe,
   List<String> initialExecutablePaths = const <String>[],
   bool enableBackgroundServices = false,
 }) {
@@ -63,6 +65,7 @@ KonyakApp _testKonyakApp({
     gptkWineSourcePicker: gptkWineSourcePicker,
     bottleArchivePicker: bottleArchivePicker,
     iconFileLoader: iconFileLoader,
+    programWindowProbe: programWindowProbe ?? const _NoopProgramWindowProbe(),
     initialExecutablePaths: initialExecutablePaths,
     enableBackgroundServices: enableBackgroundServices,
   );
@@ -330,6 +333,7 @@ final class _QueuedProcessRunner implements ProcessRunner {
     List<String> arguments, {
     String? workingDirectory,
     Map<String, String> environment = const <String, String>{},
+    void Function(int processId)? onStarted,
     void Function(String line)? onStdoutLine,
   }) async {
     argumentsLog.add(List.unmodifiable(arguments));
@@ -347,10 +351,13 @@ final class _QueuedProcessRunner implements ProcessRunner {
 }
 
 final class _FutureQueuedProcessRunner implements ProcessRunner {
-  _FutureQueuedProcessRunner(List<Future<ProcessRunResult>> results)
-    : _results = List.of(results);
+  _FutureQueuedProcessRunner(
+    List<Future<ProcessRunResult>> results, {
+    this.startedProcessId,
+  }) : _results = List.of(results);
 
   final List<Future<ProcessRunResult>> _results;
+  final int? startedProcessId;
   final List<List<String>> argumentsLog = [];
 
   @override
@@ -359,10 +366,15 @@ final class _FutureQueuedProcessRunner implements ProcessRunner {
     List<String> arguments, {
     String? workingDirectory,
     Map<String, String> environment = const <String, String>{},
+    void Function(int processId)? onStarted,
     void Function(String line)? onStdoutLine,
   }) {
     argumentsLog.add(List.unmodifiable(arguments));
     _onStdoutLine = onStdoutLine;
+    final processId = startedProcessId;
+    if (processId != null) {
+      onStarted?.call(processId);
+    }
 
     if (_results.isEmpty) {
       return Future.value(
@@ -382,6 +394,42 @@ final class _FutureQueuedProcessRunner implements ProcessRunner {
   }
 
   void Function(String line)? _onStdoutLine;
+}
+
+final class _NoopProgramWindowProbe implements ProgramWindowProbe {
+  const _NoopProgramWindowProbe();
+
+  @override
+  Future<Set<String>?> visibleExternalWindowIds(
+    KonyakPlatform platform, {
+    Set<int> descendantOfProcessIds = const <int>{},
+    bool includeWineProcessWindows = false,
+  }) async {
+    return null;
+  }
+}
+
+final class _MutableProgramWindowProbe implements ProgramWindowProbe {
+  final Map<String, int> visibleWindowRootProcessIds = <String, int>{};
+  final Set<String> visibleWineWindowIds = <String>{};
+
+  @override
+  Future<Set<String>?> visibleExternalWindowIds(
+    KonyakPlatform platform, {
+    Set<int> descendantOfProcessIds = const <int>{},
+    bool includeWineProcessWindows = false,
+  }) async {
+    if (!platform.isMacOS ||
+        (descendantOfProcessIds.isEmpty && !includeWineProcessWindows)) {
+      return null;
+    }
+
+    return <String>{
+      for (final window in visibleWindowRootProcessIds.entries)
+        if (descendantOfProcessIds.contains(window.value)) window.key,
+      if (includeWineProcessWindows) ...visibleWineWindowIds,
+    };
+  }
 }
 
 final class _FakeLogReader implements LogReader {

@@ -532,6 +532,22 @@ void main() {
     expect(lines[1], '$pid');
   });
 
+  test('Dart process runner reports the started process id', () async {
+    int? startedProcessId;
+
+    final result = await const DartIoProcessRunner().run(
+      'sh',
+      const ['-c', r'printf "%s" "$$"'],
+      onStarted: (processId) {
+        startedProcessId = processId;
+      },
+    );
+
+    expect(result.exitCode, 0);
+    expect(startedProcessId, isNotNull);
+    expect(result.stdout.trim(), '$startedProcessId');
+  });
+
   test('returns a failure when the CLI exits with a non-zero code', () async {
     final client = KonyakCliClient(
       executable: 'konyak',
@@ -1737,6 +1753,41 @@ void main() {
     expect(completed.run.processExitCode, 0);
   });
 
+  test('run-program reports the started CLI process id', () async {
+    final runner = _FakeProcessRunner(
+      startedProcessId: 31415,
+      result: const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "run": {
+              "bottleId": "steam",
+              "programPath": "/downloads/setup.exe",
+              "runnerKind": "wine",
+              "executable": "wine",
+              "workingDirectory": null,
+              "argv": ["wine", "/downloads/setup.exe"],
+              "logPath": "/home/user/.local/share/konyak/bottles/steam/logs/latest.log",
+              "processExitCode": 0
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+    );
+    final client = KonyakCliClient(executable: 'konyak', processRunner: runner);
+    final startedProcessIds = <int>[];
+
+    await client.runProgram(
+      bottleId: 'steam',
+      programPath: '/downloads/setup.exe',
+      onStarted: startedProcessIds.add,
+    );
+
+    expect(startedProcessIds, const [31415]);
+  });
+
   test('pins a program through the JSON pin-program CLI contract', () async {
     final runner = _FakeProcessRunner(
       result: const ProcessRunResult(
@@ -2399,10 +2450,12 @@ final class _FakeProcessRunner implements ProcessRunner {
   _FakeProcessRunner({
     required this.result,
     this.stdoutLines = const <String>[],
+    this.startedProcessId,
   });
 
   final ProcessRunResult result;
   final List<String> stdoutLines;
+  final int? startedProcessId;
   String? executable;
   String? workingDirectory;
   List<String> arguments = const [];
@@ -2414,12 +2467,18 @@ final class _FakeProcessRunner implements ProcessRunner {
     List<String> arguments, {
     String? workingDirectory,
     Map<String, String> environment = const <String, String>{},
+    void Function(int processId)? onStarted,
     void Function(String line)? onStdoutLine,
   }) async {
     this.executable = executable;
     this.arguments = List.unmodifiable(arguments);
     this.workingDirectory = workingDirectory;
     this.environment = Map.unmodifiable(environment);
+
+    final processId = startedProcessId;
+    if (processId != null) {
+      onStarted?.call(processId);
+    }
 
     for (final line in stdoutLines) {
       onStdoutLine?.call(line);
