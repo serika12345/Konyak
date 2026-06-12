@@ -200,6 +200,9 @@ task changes scope.
   - [x] On macOS, hide launch progress when a visible external window owned by
     the launched CLI process tree or a Wine-like process is detected, even if
     the GUI `run-program --json` process is still pending.
+  - [ ] On Linux, hide launch progress when a newly visible Wine/Proton window
+    is detected, using an X11/XWayland-aware implementation first and a
+    documented Wayland fallback.
 - [x] Add process manager UI.
   - [x] Expose Wine process listing through the CLI.
   - [x] Show executable icons in the Process Manager when metadata is available.

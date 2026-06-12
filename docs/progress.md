@@ -11,6 +11,24 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-12 21:56 JST
+- State: `completed`
+- Branch: `main`
+- Related work: Linux program launch window detection TODO
+- Purpose: keep the Linux equivalent of macOS launch overlay dismissal visible
+  in the roadmap.
+- Completed:
+  - Added an incomplete TODO under Flutter run feedback for Linux Wine/Proton
+    window detection, scoped to X11/XWayland first with a documented Wayland
+    fallback.
+- Remaining:
+  - Implement and verify Linux launch window detection.
+- Next: design the Linux window-detection contract and decide how to handle
+  Wayland environments where global window enumeration is unavailable.
+- Verification:
+  - `just verify-governance`: passed.
+  - `git diff --check`: passed.
+
 - Timestamp: 2026-06-12 21:51 JST
 - State: `completed`
 - Branch: `main`
