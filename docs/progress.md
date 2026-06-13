@@ -11,8 +11,8 @@ handoff notes.
 
 ### Latest Update
 
-- Timestamp: 2026-06-13 15:28 JST
-- State: `completed`
+- Timestamp: 2026-06-14 01:22 JST
+- State: `in_progress`
 - Branch: `main`
 - Related work: CrossOver-derived macOS Wine compatibility repair, Phase 3;
   CI completion
@@ -35,14 +35,20 @@ handoff notes.
     job that consumes the uploaded assembled stack artifact instead of
     rebuilding CrossOver Wine.
   - Repaired the single stack archive assembly so component extraction cannot
-    replace Wine's GNU `libiconv.2.dylib` with Darwin libiconv, while Darwin
-    ABI consumers are retargeted to `libiconv-darwin.2.dylib`.
+    replace Wine's libiconv ABI split: standard `libiconv.2.dylib` stays
+    Darwin-compatible for macOS system libraries, while GNU consumers use
+    `libiconv-gnu.2.dylib`.
   - Verified `libgnutls.30.dylib` can be loaded from the assembled stack
     without host or fallback dylib paths.
+  - Confirmed the CI GUI smoke timeout no longer reports the previous
+    `libiconv` dyld override warnings after the Darwin/GNU iconv ABI split.
+  - Stabilized GUI smoke prefix initialization by disabling Wine Mono/MSHTML
+    probing with the same `WINEDLLOVERRIDES=mscoree,mshtml=` policy used by the
+    other runtime smoke scripts.
 - Remaining:
   - Push the resulting commits and monitor GitHub Actions to completion.
-- Next: commit the runtime submodule and parent repository changes, push both
-  branches, and address any CI failure from the failed job logs.
+- Next: commit and push the runtime and parent repository changes, then address
+  any CI failure from the failed job logs.
 - Verification:
   - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "run-program --json preserves macOS bottle environment on macOS"'`:
     failed before the sync-mode environment change and passed after
@@ -53,13 +59,25 @@ handoff notes.
     passed.
   - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && ./scripts/assemble-runtime-stack.zsh dist "$PWD/result-runtime-stack" dist/konyak-macos-wine-runtime-stack.tar.zst && ./scripts/check-wine32on64-runtime.zsh result-runtime-stack && ./scripts/check-dxmt-component.zsh result-runtime-stack && ./scripts/check-vkd3d-component.zsh result-runtime-stack && ./scripts/check-dxvk-component.zsh result-runtime-stack && ./scripts/check-gstreamer-component.zsh result-runtime-stack'`:
     passed.
-  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && <dlopen probe> "$PWD/result-runtime-stack/lib/libgnutls.30.dylib"'`:
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && nix build .#packages.x86_64-darwin.konyak-macos-wine-runtime -L --show-trace --out-link result-wine-runtime'`:
+    passed after the Darwin/GNU iconv ABI split.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && ./scripts/check-wine32on64-runtime.zsh result-wine-runtime'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && <x86_64 dlopen probe> "$PWD/result-wine-runtime/lib/libgnutls.30.dylib"'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && <x86_64 dlopen probe> "$PWD/result-runtime-stack/lib/libgnutls.30.dylib"'`:
     passed.
   - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && ./scripts/smoke-gui-launch.zsh result-runtime-stack .dart_tool/backend-probes-phase3'`:
-    passed.
+    passed after adding `WINEDLLOVERRIDES=mscoree,mshtml=` to the smoke
+    environment; before that, it timed out during prefix initialization without
+    the previous `libiconv` dyld warnings.
   - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && ./scripts/smoke-wine32on64-launch.zsh result-runtime-stack && ./scripts/smoke-backend-device.zsh result-runtime-stack dxvk-d3d11 .dart_tool/backend-probes-phase3 && ./scripts/smoke-backend-device.zsh result-runtime-stack dxmt-d3d11 .dart_tool/backend-probes-phase3 && ./scripts/smoke-backend-device.zsh result-runtime-stack vkd3d-d3d12 .dart_tool/backend-probes-phase3'`:
     passed.
   - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && KONYAK_SINGLE_STACK_ARCHIVE=1 KONYAK_RELEASE_ASSET_BASE_URL="https://example.invalid/runtime" nix shell nixpkgs#jq -c ./scripts/make-source-manifest.zsh ...'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && for f in scripts/build-backend-probes.zsh scripts/smoke-gui-launch.zsh scripts/smoke-wine32on64-launch.zsh scripts/smoke-backend-device.zsh scripts/assemble-runtime-stack.zsh scripts/check-wine32on64-runtime.zsh scripts/package-binary-components.zsh scripts/make-source-manifest.zsh scripts/check-wine-configure-flags.zsh; do zsh -n "$f"; done && nix shell nixpkgs#actionlint -c actionlint .github/workflows/build-runtime.yml .github/workflows/smoke-runtime-artifacts.yml && ./scripts/check-wine-configure-flags.zsh && nix flake check path:/Users/masato/Documents/Konyak/runtime/konyak-macos-runtime -L --show-trace'`:
+    passed.
+  - `nix develop -c zsh -lc 'just verify-governance && just verify-safety && just format-check && just lint && git diff --check && git -C runtime/konyak-macos-runtime diff --check'`:
     passed.
 
 - Timestamp: 2026-06-13 14:01 JST
