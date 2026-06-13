@@ -11,8 +11,8 @@ handoff notes.
 
 ### Latest Update
 
-- Timestamp: 2026-06-14 01:22 JST
-- State: `in_progress`
+- Timestamp: 2026-06-14 03:02 JST
+- State: `completed`
 - Branch: `main`
 - Related work: CrossOver-derived macOS Wine compatibility repair, Phase 3;
   CI completion
@@ -45,10 +45,16 @@ handoff notes.
   - Stabilized GUI smoke prefix initialization by disabling Wine Mono/MSHTML
     probing with the same `WINEDLLOVERRIDES=mscoree,mshtml=` policy used by the
     other runtime smoke scripts.
+  - Pushed runtime commit `43ce18f` and parent commit `c38f88b`.
+  - Confirmed runtime CI run `27472434310` completed successfully, including the
+    GUI `/unix`, Wine32-on-64, DXVK, DXMT, and vkd3d smoke jobs.
+  - Confirmed parent CI runs `27472442049`, `27472442066`, and `27472442044`
+    completed successfully.
 - Remaining:
-  - Push the resulting commits and monitor GitHub Actions to completion.
-- Next: commit and push the runtime and parent repository changes, then address
-  any CI failure from the failed job logs.
+  - None for this phase.
+- Next: use the rebuilt published runtime stack for manual real-application
+  validation such as the reported Ardour path if further launch issues are
+  reported.
 - Verification:
   - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "run-program --json preserves macOS bottle environment on macOS"'`:
     failed before the sync-mode environment change and passed after
@@ -79,6 +85,10 @@ handoff notes.
     passed.
   - `nix develop -c zsh -lc 'just verify-governance && just verify-safety && just format-check && just lint && git diff --check && git -C runtime/konyak-macos-runtime diff --check'`:
     passed.
+  - GitHub Actions `serika12345/konyak-macos-runtime` run `27472434310`:
+    passed.
+  - GitHub Actions `serika12345/Konyak` runs `27472442049`, `27472442066`, and
+    `27472442044`: passed.
 
 - Timestamp: 2026-06-13 14:01 JST
 - State: `completed`
