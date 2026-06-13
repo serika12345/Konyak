@@ -107,6 +107,9 @@ task changes scope.
     manifests for runtime updates when release metadata points at one.
   - [x] Document the release-time manifest handoff for default runtime stack
     manifests once full Konyak component archives exist.
+  - [x] Change the public macOS runtime distribution to a single assembled stack
+    archive while keeping component archives as internal build, verification,
+    and rerun units.
 - [x] Use Konyak-owned macOS bottle metadata.
   - [x] Drop live external plist metadata from the supported spec.
   - [x] Store macOS bottle records as Konyak `metadata.json`.
@@ -306,6 +309,73 @@ task changes scope.
     covered by DXVK/DXMT components.
   - [x] Include `nvapi64` and `nvngx` in the D3DMetal `WINEDLLOVERRIDES` and
     bottle DLL override repair path.
+- [ ] Restore normal Wine compatibility in the CrossOver-derived macOS
+  runtime.
+  - Reference:
+    `runtime/konyak-macos-runtime/docs/crossover-runtime-compatibility.md`
+    records the CrossOver/nixpkgs comparison, the public single-archive
+    decision, the adopted dylib layout policy, and the phased repair order.
+  - [x] Phase 1: remove unnecessary `--without-*` build flags from
+    `runtime/konyak-macos-runtime/nix/wine-crossover.nix`.
+    - Keep `--enable-archs=i386,x86_64`, `--with-vulkan`, and `--without-x`
+      as the Wine32-on-64 and macOS display baseline.
+    - Use nixpkgs Darwin `wineWow64Packages.stable` and CrossOver 26.1 source
+      as the compatibility baseline instead of a minimal hand-pruned feature
+      set.
+    - Re-enable Wine feature probes that nixpkgs or CrossOver expect on
+      Darwin, starting with `inotify`, `unwind`, `usb`, `krb5`, and related
+      support unless a source-level incompatibility is demonstrated.
+    - Keep every remaining `--without-*` justified by a macOS limitation,
+      missing redistributable dependency, or intentional product decision.
+    - [x] Add a runtime-submodule configure flag check that rejects unapproved
+      `--without-*` and `--disable-*` flags and requires every adopted
+      `--with-*` flag.
+    - [x] Remove the current hard-pruned `--without-*` flags other than
+      `--without-x`, remove `--disable-win16`, and add the adopted
+      `--with-coreaudio`, `--with-cups`, `--with-ffmpeg`, `--with-gettext`,
+      `--with-gssapi`, `--with-inotify`, `--with-krb5`, `--with-mingw`,
+      `--with-opencl`, `--with-pthread`, `--with-unwind`, and `--with-usb`
+      flags plus their Nix inputs.
+    - [x] Keep `--with-opengl` out of the adopted Darwin flag set because Wine
+      11 requires EGL development files when that flag is explicit, while
+      nixpkgs Darwin Wine does not enable OpenGL support dependencies on
+      Darwin.
+    - [x] Verify the updated CrossOver Wine derivation with a full x86_64-darwin
+      build before marking Phase 1 complete.
+  - [x] Phase 2: fix missing dependencies and runtime dylib placement.
+    - Add the dependencies needed by the re-enabled feature probes in the
+      runtime submodule, with nixpkgs Darwin Wine's dependency set as the first
+      reference point.
+    - Ensure Wine's dlopen users can resolve their runtime libraries without
+      relying on host shell state. In particular, `secur32` and `bcrypt` must
+      find `libgnutls.30.dylib` from the packaged runtime root.
+    - Align the packaged dylib layout and Mach-O `LC_RPATH` checks with the
+      CrossOver.app pattern where Unix-side Wine modules can find common
+      runtime libraries from the shared library root.
+    - Extend runtime component checks so they validate dlopen-facing dylibs,
+      `LC_RPATH`, and closure placement, not only `otool -L` Nix store
+      references.
+    - Update parent runtime contracts and source manifests when new required
+      runtime files become part of the macOS Wine component.
+    - Preserve separate component build and verification jobs, but assemble the
+      verified Wine, DXVK-macOS, DXMT, vkd3d, MoltenVK, GStreamer, FreeType,
+      wine-mono, and winetricks payloads into one public runtime archive.
+  - [ ] Phase 3: normalize launch and smoke behavior around the repaired
+    runtime.
+    - Compare Konyak's normal `.exe` path with CrossOver's observed wrapper
+      behavior and decide whether plain executable launch should continue to
+      use `start /unix` or a more direct run path.
+    - Add regression and smoke coverage for a regular GUI `.exe`, not only
+      backend probe executables or prefix initialization.
+    - Make CI smoke launch with the same dylib search environment used by the
+      app; remove `DYLD_FALLBACK_LIBRARY_PATH` or other smoke-only search paths
+      that can hide packaging mistakes.
+    - Keep runtime Actions rerun units narrow: dependency packaging, Wine
+      build, component assembly, launch smoke, backend smoke, and publish work
+      must remain independently rerunnable where practical.
+    - Review `WINEMSYNC` and `WINEESYNC` handling so Konyak does not enable
+      incompatible sync modes together blindly; document the default and keep
+      bottle settings explicit.
 - [ ] Strengthen macOS runtime automated smoke coverage.
   - [x] Keep layout/hash comparisons out of the required gate; test runtime
     behavior through Wine execution instead.

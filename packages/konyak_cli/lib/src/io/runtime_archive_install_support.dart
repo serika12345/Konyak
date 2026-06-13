@@ -154,6 +154,7 @@ String? _installRuntimeArchives({
       _mergeRuntimeStackManifest(
         runtimeRoot: runtimeRoot,
         componentVersions: resolvedComponentVersions,
+        overwriteExisting: true,
       );
     }
     if (runtimeRoot.existsSync()) {

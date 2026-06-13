@@ -124,23 +124,27 @@ relaunches the updated app.
 
 ## Runtime Stack Releases
 
+The detailed macOS runtime compatibility direction is tracked in
+`runtime/konyak-macos-runtime/docs/crossover-runtime-compatibility.md`.
+
 macOS runtime stack manifests remain checksum-validated JSON consumed by
-`install-macos-wine --source-manifest`. Release builds should publish component
-archives and manifests together, with manifest signing handled by repository
-secrets once the default full Konyak stack artifacts are available.
+`install-macos-wine --source-manifest`. The public release artifact should be a
+single assembled runtime stack archive for the default macOS runtime. Component
+archives may still be produced as internal CI artifacts so expensive Wine builds,
+DXMT builds, binary component packaging, smoke verification, metadata, and
+publishing remain separately rerunnable.
 
 The macOS runtime stack itself is released from the
 `runtime/konyak-macos-runtime` submodule. Its workflow keeps the expensive
 CrossOver-derived Wine build, DXMT build, binary component packaging, metadata
 generation, Wine32-on-64 smoke, and publish steps as separate rerunnable jobs.
-The published manifest for `crossover-26.1.0-konyak.0` includes Wine,
-DXVK-macOS, DXMT, MoltenVK, GStreamer, FreeType, wine-mono, and winetricks
-component archives. Release verification checks Wine32-on-64 payloads, the
-assembled 32-bit `cmd.exe` smoke, DXMT layout, and DXVK layout including
-`d3d10.dll` and `d3d10_1.dll` for both i386 and x86_64 Windows payloads.
-It also verifies that the GStreamer component contains the plugin directory,
-plugin scanner, representative media plugins, and no unpackaged Nix store dylib
-references.
+The published manifest for the default runtime stack should point at the single
+assembled archive containing Wine, DXVK-macOS, DXMT, MoltenVK, GStreamer,
+FreeType, wine-mono, and winetricks. Release verification checks the component
+artifacts before assembly, then checks the assembled archive for Wine32-on-64
+payloads, the 32-bit `cmd.exe` smoke, DXMT layout, DXVK layout including
+`d3d10.dll` and `d3d10_1.dll` for both i386 and x86_64 Windows payloads,
+GStreamer plugin/scanner presence, and no unpackaged Nix store dylib references.
 
 GPTK/D3DMetal remains user-imported rather than redistributed from release
 assets. The runtime and CLI import contract accepts CrossOver.app's

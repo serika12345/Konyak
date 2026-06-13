@@ -466,6 +466,16 @@ final class RecordingLinuxWineInstaller implements LinuxWineInstaller {
   }
 }
 
+final class RecordingRuntimeInstallProgressSink
+    implements RuntimeInstallProgressSink {
+  final List<RuntimeInstallProgress> events = <RuntimeInstallProgress>[];
+
+  @override
+  void emit(RuntimeInstallProgress progress) {
+    events.add(progress);
+  }
+}
+
 final class RecordingRuntimeUpdateChecker implements RuntimeUpdateChecker {
   RecordingRuntimeUpdateChecker({required this.result});
 

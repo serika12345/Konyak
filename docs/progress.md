@@ -11,6 +11,167 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-13 14:01 JST
+- State: `completed`
+- Branch: `main`
+- Related work: CrossOver-derived macOS Wine compatibility repair, Phase 2;
+  macOS runtime Actions artifact rebuild
+- Purpose: make the CrossOver-derived macOS runtime resolve normal Wine
+  dlopen-facing dependencies from the packaged runtime itself, then publish the
+  verified macOS runtime as one assembled public stack archive while preserving
+  narrow internal CI rerun units.
+- Completed:
+  - Packaged dlopen-facing runtime dylibs such as GnuTLS, GSSAPI/Kerberos,
+    OpenCL, and libusb into the Wine runtime shared library root.
+  - Normalized Wine runtime Mach-O install names and `LC_RPATH` entries so Wine
+    binaries, Unix modules, and copied dylib closures do not retain Nix store
+    dylib or RPATH references.
+  - Extended Wine runtime checks to validate dlopen-facing dylib presence,
+    install names, module RPATHs, and Nix store `LC_RPATH` absence.
+  - Extended DXMT and GStreamer component packaging/checks so copied Mach-O
+    payloads remove Nix store `LC_RPATH` entries and keep local
+    `@loader_path` resolution.
+  - Added single stack archive assembly for the verified Wine, DXMT, vkd3d,
+    DXVK-macOS, MoltenVK, GStreamer, FreeType, wine-mono, and winetricks
+    payloads.
+  - Updated runtime Actions so public release metadata and smoke jobs consume
+    the assembled stack archive, while Wine, DXMT, vkd3d, and binary component
+    artifacts remain separate internal build/rerun units.
+  - Updated the parent CLI runtime installer to dedupe identical archive URLs
+    in a single-archive source manifest while preserving per-component versions.
+  - Fixed incomplete-runtime repair so preserved existing runtime files also
+    preserve their existing component versions, including user-provided GPTK
+    Wine versions, while newly repaired components keep source-manifest
+    versions.
+  - Rebuilt the local Actions-equivalent artifacts: Wine runtime archive, DXMT
+    archive, vkd3d archive, binary component archives, assembled runtime stack
+    archive, source manifest, and release metadata.
+- Remaining:
+  - Phase 3: verify normal GUI `.exe` launch behavior against the repaired
+    runtime, align smoke launch environment with the app launch environment,
+    and settle `WINEMSYNC` / `WINEESYNC` defaults.
+  - Manual smoke of the reported Ardour launch is still needed to prove the
+    Phase 2 runtime layout fixes that specific application path.
+- Next: start Phase 3 from the normal `.exe` launch path, using the repaired
+  single stack runtime artifact and the Ardour path as the first real-world
+  smoke target.
+- Verification:
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --name "downloads a single-archive"'`:
+    failed before the planner change and passed after implementation.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --name "source manifest"'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "install-macos-wine repairs required components without removing GPTK"'`:
+    passed after preserving existing component versions during repair installs.
+  - `nix develop -c zsh -lc 'just cli-test'`: passed.
+  - `nix develop -c zsh -lc 'zsh -n scripts/package-binary-components.zsh scripts/check-gstreamer-component.zsh scripts/check-dxmt-component.zsh scripts/check-wine32on64-runtime.zsh scripts/assemble-runtime-stack.zsh scripts/make-source-manifest.zsh'`:
+    passed in `runtime/konyak-macos-runtime`.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && nix build .#packages.x86_64-darwin.konyak-macos-wine-runtime -L --show-trace --out-link result-wine-runtime'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && ./scripts/check-wine32on64-runtime.zsh result-wine-runtime'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && <package binary runtime components and verify DXVK/GStreamer>'`:
+    passed.
+  - `KONYAK_METAL_TOOLCHAIN_BIN="$(dirname "$(/usr/bin/xcrun -sdk macosx -find metal)")" nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && KONYAK_WINE_RUNTIME_ROOT="$PWD/result-wine-runtime" nix build --impure .#packages.x86_64-darwin.konyak-macos-dxmt -L --show-trace --out-link result-dxmt && ./scripts/check-dxmt-component.zsh result-dxmt'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && KONYAK_WINE_RUNTIME_ROOT="$PWD/result-wine-runtime" nix build --impure .#packages.x86_64-darwin.konyak-macos-vkd3d -L --show-trace --out-link result-vkd3d && ./scripts/check-vkd3d-component.zsh result-vkd3d'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && ./scripts/assemble-runtime-stack.zsh dist "$PWD/result-runtime-stack" dist/konyak-macos-wine-runtime-stack.tar.zst && ./scripts/check-wine32on64-runtime.zsh result-runtime-stack && ./scripts/check-dxmt-component.zsh result-runtime-stack && ./scripts/check-vkd3d-component.zsh result-runtime-stack && ./scripts/check-dxvk-component.zsh result-runtime-stack && ./scripts/check-gstreamer-component.zsh result-runtime-stack'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && KONYAK_SINGLE_STACK_ARCHIVE=1 KONYAK_RELEASE_ASSET_BASE_URL="https://example.invalid/runtime" nix shell nixpkgs#jq -c ./scripts/make-source-manifest.zsh ...'`:
+    passed; every component record pointed at
+    `konyak-macos-wine-runtime-stack.tar.zst` with the same stack SHA-256 while
+    preserving individual component versions.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && ./scripts/check-wine-configure-flags.zsh'`:
+    passed.
+  - `nix develop -c zsh -lc 'nix flake check path:/Users/masato/Documents/Konyak/runtime/konyak-macos-runtime -L --show-trace'`:
+    passed for the current host system; x86_64-darwin is omitted by this command
+    on the current host, but the x86_64-darwin Wine, DXMT, and vkd3d packages
+    were built directly above.
+  - `nix develop -c zsh -lc 'git diff --check && git -C runtime/konyak-macos-runtime diff --check'`:
+    passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+
+- Timestamp: 2026-06-13 01:13 JST
+- State: `completed`
+- Branch: `main`
+- Related work: CrossOver-derived macOS Wine compatibility repair, Phase 1
+- Purpose: restore the CrossOver-derived macOS Wine configure surface to a
+  normal Wine-compatible baseline while keeping Wine32-on-64, D3DMetal/GPTK,
+  DXVK, DXMT, vkd3d, MoltenVK, and GStreamer support available at Konyak
+  runtime quality.
+- Completed:
+  - Compared Konyak's current CrossOver Wine derivation with nixpkgs Darwin
+    `wineWow64Packages.stable` and `stableFull`, CrossOver 26.1 source, and
+    the installed CrossOver.app runtime layout.
+  - Identified that Konyak keeps the core Wine32-on-64 and Vulkan flags but
+    over-prunes normal Wine feature probes with several hard `--without-*`
+    flags.
+  - Identified that `--with-gnutls` is directionally correct, but the packaged
+    runtime currently places `libgnutls.30.dylib` where Wine's dlopen users do
+    not reliably find it.
+  - Recorded the intended repair order in `docs/todo.md`: remove unnecessary
+    `--without-*` flags, fix missing dependencies and dylib placement, then
+    normalize `.exe` launch, smoke coverage, CI search paths, and sync-mode
+    defaults.
+  - Decided to move public macOS runtime distribution to a single assembled
+    runtime stack archive, while keeping component archives as internal CI
+    build, verification, and rerun units.
+  - Added
+    `runtime/konyak-macos-runtime/docs/crossover-runtime-compatibility.md` as
+    the technical handoff for the runtime compatibility investigation,
+    GnuTLS/dlopen diagnosis, adopted and rejected runtime packaging patterns,
+    single-archive distribution direction, and phased repair plan.
+  - Added a runtime-submodule configure flag check that requires the adopted
+    `--with-*` set, rejects unapproved `--without-*` flags, and rejects
+    compatibility-reducing `--disable-*` flags other than `--disable-tests`.
+  - Updated `runtime/konyak-macos-runtime/nix/wine-crossover.nix` to remove the
+    current hard-pruned `--without-*` flags other than `--without-x`, remove
+    `--disable-win16`, and add the adopted `--with-*` flags and matching Nix
+    build inputs.
+  - Verified that forcing `--with-opengl` is not part of the Darwin baseline:
+    Wine 11 configure requires EGL development files when that flag is explicit,
+    and nixpkgs Darwin Wine does not add OpenGL support dependencies on Darwin.
+  - Fixed the concrete build issue exposed by the expanded configure surface:
+    `libinotify-kqueue` must be added to the compiler and linker search paths,
+    otherwise Unix-side modules such as `winebus.sys` can detect inotify at
+    configure time but fail to compile.
+  - Verified the updated CrossOver Wine derivation with a full x86_64-darwin
+    build.
+- Remaining:
+  - Phase 2 implementation: add the missing dependencies, package dlopen-facing
+    dylibs such as `libgnutls.30.dylib` in a loader-visible location, and
+    validate Mach-O `LC_RPATH` and closure placement. The verified payloads
+    should then be assembled into one public runtime archive.
+  - Phase 3 implementation: verify the normal `.exe` launch path, align CI
+    smoke environment with app launch environment, and settle `WINEMSYNC` /
+    `WINEESYNC` defaults.
+- Next: begin Phase 2 by moving dlopen-facing runtime dylibs such as
+  `libgnutls.30.dylib` into a loader-visible runtime library area, adding
+  closure checks for those libraries, and preparing the single assembled public
+  macOS runtime archive path.
+- Verification:
+  - `git diff --check`: passed.
+  - `runtime/konyak-macos-runtime/scripts/check-wine-configure-flags.zsh`:
+    passed.
+  - `nix develop -c zsh -lc 'nix flake check path:/Users/masato/Documents/Konyak/runtime/konyak-macos-runtime -L --show-trace'`:
+    passed for the current host system; x86_64-darwin is omitted by this command
+    on the current host.
+  - `nix develop -c zsh -lc 'nix build path:/Users/masato/Documents/Konyak/runtime/konyak-macos-runtime#checks.x86_64-darwin.wine-configure-flags -L --show-trace --no-link'`:
+    passed.
+  - `nix develop -c zsh -lc 'nix eval path:/Users/masato/Documents/Konyak/runtime/konyak-macos-runtime#packages.x86_64-darwin.konyak-macos-wine-runtime.drvPath && nix eval path:/Users/masato/Documents/Konyak/runtime/konyak-macos-runtime#packages.aarch64-darwin.konyak-macos-wine-runtime.drvPath'`:
+    passed.
+  - `nix develop path:/Users/masato/Documents/Konyak/runtime/konyak-macos-runtime#packages.x86_64-darwin.konyak-macos-wine-runtime -c zsh -lc 'echo wine-dev-env-ok'`:
+    passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `nix develop -c zsh -lc 'runtime/konyak-macos-runtime/scripts/check-wine-configure-flags.zsh && nix build path:/Users/masato/Documents/Konyak/runtime/konyak-macos-runtime#packages.x86_64-darwin.konyak-macos-wine-runtime -L --show-trace --no-link'`:
+    passed.
+
 - Timestamp: 2026-06-12 22:07 JST
 - State: `completed`
 - Branch: `main`

@@ -3,6 +3,7 @@ part of '../../konyak_cli.dart';
 void _mergeRuntimeStackManifest({
   required Directory runtimeRoot,
   required Map<String, String> componentVersions,
+  bool overwriteExisting = false,
 }) {
   final manifest = File(
     _joinPath(runtimeRoot.path, const [runtimeStackManifestFileName]),
@@ -12,9 +13,16 @@ void _mergeRuntimeStackManifest({
   }
 
   try {
-    componentVersions.addAll(
-      _runtimeStackComponentVersions(jsonDecode(manifest.readAsStringSync())),
+    final archivedVersions = _runtimeStackComponentVersions(
+      jsonDecode(manifest.readAsStringSync()),
     );
+    for (final entry in archivedVersions.entries) {
+      if (overwriteExisting) {
+        componentVersions[entry.key] = entry.value;
+      } else {
+        componentVersions.putIfAbsent(entry.key, () => entry.value);
+      }
+    }
   } on FileSystemException {
     return;
   } on FormatException {

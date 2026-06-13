@@ -21,35 +21,48 @@ final class _RuntimeStackSourceArchivePlanFailed
 final class _RuntimeStackSourceArchivePlan {
   _RuntimeStackSourceArchivePlan({
     required this.wineComponent,
+    required Iterable<RuntimeSourceComponent> sourceComponents,
     required Iterable<_RuntimeStackSourceArchiveComponentPlan> components,
-  }) : components = List.unmodifiable(components);
+  }) : sourceComponents = List.unmodifiable(sourceComponents),
+       components = List.unmodifiable(components);
 
   final RuntimeSourceComponent wineComponent;
+  final List<RuntimeSourceComponent> sourceComponents;
   final List<_RuntimeStackSourceArchiveComponentPlan> components;
 
   _RuntimeStackSourceArchiveBundle toBundle() {
+    final wineArchivePath = _archivePathForComponent(wineComponent);
+    final componentArchivePaths = <String>[];
+    for (final component in components) {
+      final archivePath = component.archivePath;
+      if (archivePath != wineArchivePath &&
+          !componentArchivePaths.contains(archivePath)) {
+        componentArchivePaths.add(archivePath);
+      }
+    }
+
     return _RuntimeStackSourceArchiveBundle(
-      wineArchivePath: _archivePathFor(wineComponent.id),
-      componentArchivePaths: <String>[
-        for (final component in components)
-          if (component.component.id != wineComponent.id) component.archivePath,
-      ],
+      wineArchivePath: wineArchivePath,
+      componentArchivePaths: componentArchivePaths,
       componentVersions: RuntimeComponentVersions(<String, String>{
-        for (final component in components)
-          component.component.id: component.component.version,
+        for (final component in sourceComponents)
+          component.id: component.version,
       }),
     );
   }
 
-  String _archivePathFor(String componentId) {
+  String _archivePathForComponent(RuntimeSourceComponent sourceComponent) {
     for (final component in components) {
-      if (component.component.id == componentId) {
+      if (_runtimeStackSourceArchiveMatches(
+        component.component,
+        sourceComponent,
+      )) {
         return component.archivePath;
       }
     }
 
     throw StateError(
-      'Runtime stack source archive plan does not contain $componentId.',
+      'Runtime stack source archive plan does not contain ${sourceComponent.id}.',
     );
   }
 }
@@ -90,7 +103,10 @@ _RuntimeStackSourceArchivePlanResult _runtimeStackSourceArchivePlan({
 
   final wineComponentResult = manifest.componentById('wine');
 
-  final componentCount = manifest.components.length;
+  final archiveComponents = _uniqueRuntimeStackSourceArchiveComponents(
+    manifest.components,
+  );
+  final componentCount = archiveComponents.length;
   return wineComponentResult.match(
     () => const _RuntimeStackSourceArchivePlanFailed(
       'Runtime stack source manifest does not contain a Wine component.',
@@ -98,10 +114,11 @@ _RuntimeStackSourceArchivePlanResult _runtimeStackSourceArchivePlan({
     (wineComponent) => _RuntimeStackSourceArchivePlanResolved(
       _RuntimeStackSourceArchivePlan(
         wineComponent: wineComponent,
+        sourceComponents: manifest.components,
         components: <_RuntimeStackSourceArchiveComponentPlan>[
           for (var index = 0; index < componentCount; index += 1)
             _runtimeStackSourceArchiveComponentPlan(
-              component: manifest.components[index],
+              component: archiveComponents[index],
               componentIndex: index,
               componentCount: componentCount,
               tempDirectoryPath: tempDirectoryPath,
@@ -110,6 +127,34 @@ _RuntimeStackSourceArchivePlanResult _runtimeStackSourceArchivePlan({
       ),
     ),
   );
+}
+
+List<RuntimeSourceComponent> _uniqueRuntimeStackSourceArchiveComponents(
+  Iterable<RuntimeSourceComponent> components,
+) {
+  final seenArchiveKeys = <String>{};
+  final uniqueComponents = <RuntimeSourceComponent>[];
+  for (final component in components) {
+    final archiveKey = _runtimeStackSourceArchiveKey(component);
+    if (!seenArchiveKeys.add(archiveKey)) {
+      continue;
+    }
+    uniqueComponents.add(component);
+  }
+
+  return List.unmodifiable(uniqueComponents);
+}
+
+bool _runtimeStackSourceArchiveMatches(
+  RuntimeSourceComponent left,
+  RuntimeSourceComponent right,
+) {
+  return _runtimeStackSourceArchiveKey(left) ==
+      _runtimeStackSourceArchiveKey(right);
+}
+
+String _runtimeStackSourceArchiveKey(RuntimeSourceComponent component) {
+  return '${component.archiveUrl}\u0000${component.sha256.toLowerCase()}';
 }
 
 _RuntimeStackSourceArchiveComponentPlan

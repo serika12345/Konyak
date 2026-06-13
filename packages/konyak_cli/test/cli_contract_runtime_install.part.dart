@@ -1084,6 +1084,122 @@ void defineRuntimeInstallContractTests() {
   });
 
   test(
+    'install-macos-wine downloads a single-archive source manifest once',
+    () async {
+      final tempDirectory = await Directory.systemTemp.createTemp(
+        'konyak-runtime-single-stack-source-test-',
+      );
+      addTearDown(() async {
+        if (await tempDirectory.exists()) {
+          await tempDirectory.delete(recursive: true);
+        }
+      });
+
+      final stackArchive = _createKonyakComponentRuntimeArchive(
+        tempDirectory.path,
+      );
+      final sourceManifestPath = _createRuntimeStackSourceManifest(
+        tempDirectory.path,
+        components: <Map<String, String>>[
+          _runtimeStackSourceComponent(
+            id: 'wine',
+            version: 'wine-devel-source',
+            archivePath: stackArchive,
+          ),
+          _runtimeStackSourceComponent(
+            id: 'dxvk-macos',
+            version: 'dxvk-source',
+            archivePath: stackArchive,
+          ),
+          _runtimeStackSourceComponent(
+            id: 'dxmt',
+            version: 'dxmt-source',
+            archivePath: stackArchive,
+          ),
+          _runtimeStackSourceComponent(
+            id: 'moltenvk',
+            version: 'moltenvk-source',
+            archivePath: stackArchive,
+          ),
+          _runtimeStackSourceComponent(
+            id: 'gstreamer',
+            version: 'gstreamer-source',
+            archivePath: stackArchive,
+          ),
+          _runtimeStackSourceComponent(
+            id: 'freetype',
+            version: 'freetype-source',
+            archivePath: stackArchive,
+          ),
+          _runtimeStackSourceComponent(
+            id: 'wine-mono',
+            version: 'wine-mono-source',
+            archivePath: stackArchive,
+          ),
+          _runtimeStackSourceComponent(
+            id: 'winetricks',
+            version: 'winetricks-source',
+            archivePath: stackArchive,
+          ),
+          _runtimeStackSourceComponent(
+            id: 'vkd3d',
+            version: 'vkd3d-source',
+            archivePath: stackArchive,
+          ),
+        ],
+      );
+      final runtimeHome = _joinTestPath(tempDirectory.path, const [
+        'Application Support',
+        'Konyak',
+      ]);
+      final installer = DartIoMacosWineInstaller(
+        hostPlatform: KonyakHostPlatform.macos,
+        environment: HostEnvironment({
+          'KONYAK_APPLICATION_SUPPORT': runtimeHome,
+        }),
+        fileStatusProbe: const StaticFileStatusProbe({}),
+      );
+      final progressSink = RecordingRuntimeInstallProgressSink();
+
+      final result = installer.install(
+        MacosWineInstallRequest.fullInstall(
+          sourceManifest: sourceManifestPath,
+          emitProgress: true,
+        ),
+        progressSink: progressSink,
+      );
+
+      expect(result, isA<MacosWineInstallCompleted>());
+      final downloadingEvents = progressSink.events
+          .where((event) => event.stage == 'downloading')
+          .toList();
+      expect(downloadingEvents, hasLength(2));
+      expect(downloadingEvents.map((event) => event.message).toSet(), {
+        'Downloading wine...',
+      });
+      final completed = result as MacosWineInstallCompleted;
+      final stack = completed.runtime.stack.toNullable();
+      expect(stack?.isComplete, isTrue);
+      expect(
+        stack?.components
+            .where((component) => component.id == 'dxmt')
+            .single
+            .version
+            .toNullable(),
+        'dxmt-source',
+      );
+      expect(
+        stack?.components
+            .where((component) => component.id == 'vkd3d')
+            .single
+            .version
+            .toNullable(),
+        'vkd3d-source',
+      );
+    },
+  );
+
+  test(
     'install-macos-wine repairs required components without removing GPTK',
     () async {
       final tempDirectory = await Directory.systemTemp.createTemp(
