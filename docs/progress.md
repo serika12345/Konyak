@@ -11,6 +11,57 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-13 15:28 JST
+- State: `completed`
+- Branch: `main`
+- Related work: CrossOver-derived macOS Wine compatibility repair, Phase 3;
+  CI completion
+- Purpose: finish the remaining launch and smoke behavior around the repaired
+  macOS runtime, keep the app launch environment aligned with CI, and prepare
+  the commits for GitHub Actions completion.
+- Completed:
+  - Read the Phase 3 TODO and current runtime smoke scripts.
+  - Confirmed the parent launch path still uses `wine64 start /unix <program>`
+    and already carries the runtime `lib` path in `DYLD_LIBRARY_PATH`.
+  - Added CLI contract coverage for macOS enhanced sync environment generation
+    and made `msync` set only `WINEMSYNC=1`; `WINEESYNC=1` is now reserved for
+    the explicit `esync` mode.
+  - Added a Win32 GUI probe and `scripts/smoke-gui-launch.zsh` so the assembled
+    runtime stack is tested through `wine64 start /unix <program>`, matching
+    the normal Konyak `.exe` launch path.
+  - Removed smoke-only `DYLD_FALLBACK_LIBRARY_PATH` usage from runtime smoke
+    scripts so CI does not hide missing runtime-library placement.
+  - Added runtime workflow coverage for the GUI launch smoke as a downstream
+    job that consumes the uploaded assembled stack artifact instead of
+    rebuilding CrossOver Wine.
+  - Repaired the single stack archive assembly so component extraction cannot
+    replace Wine's GNU `libiconv.2.dylib` with Darwin libiconv, while Darwin
+    ABI consumers are retargeted to `libiconv-darwin.2.dylib`.
+  - Verified `libgnutls.30.dylib` can be loaded from the assembled stack
+    without host or fallback dylib paths.
+- Remaining:
+  - Push the resulting commits and monitor GitHub Actions to completion.
+- Next: commit the runtime submodule and parent repository changes, push both
+  branches, and address any CI failure from the failed job logs.
+- Verification:
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "run-program --json preserves macOS bottle environment on macOS"'`:
+    failed before the sync-mode environment change and passed after
+    implementation.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --name "(preserves macOS bottle environment|applies DXVK settings on Linux|applies vkd3d-proton settings on Linux)"'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && zsh -n scripts/assemble-runtime-stack.zsh scripts/smoke-gui-launch.zsh scripts/check-wine32on64-runtime.zsh scripts/build-backend-probes.zsh scripts/smoke-wine32on64-launch.zsh scripts/smoke-backend-device.zsh'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && ./scripts/assemble-runtime-stack.zsh dist "$PWD/result-runtime-stack" dist/konyak-macos-wine-runtime-stack.tar.zst && ./scripts/check-wine32on64-runtime.zsh result-runtime-stack && ./scripts/check-dxmt-component.zsh result-runtime-stack && ./scripts/check-vkd3d-component.zsh result-runtime-stack && ./scripts/check-dxvk-component.zsh result-runtime-stack && ./scripts/check-gstreamer-component.zsh result-runtime-stack'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && <dlopen probe> "$PWD/result-runtime-stack/lib/libgnutls.30.dylib"'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && ./scripts/smoke-gui-launch.zsh result-runtime-stack .dart_tool/backend-probes-phase3'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && ./scripts/smoke-wine32on64-launch.zsh result-runtime-stack && ./scripts/smoke-backend-device.zsh result-runtime-stack dxvk-d3d11 .dart_tool/backend-probes-phase3 && ./scripts/smoke-backend-device.zsh result-runtime-stack dxmt-d3d11 .dart_tool/backend-probes-phase3 && ./scripts/smoke-backend-device.zsh result-runtime-stack vkd3d-d3d12 .dart_tool/backend-probes-phase3'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && KONYAK_SINGLE_STACK_ARCHIVE=1 KONYAK_RELEASE_ASSET_BASE_URL="https://example.invalid/runtime" nix shell nixpkgs#jq -c ./scripts/make-source-manifest.zsh ...'`:
+    passed.
+
 - Timestamp: 2026-06-13 14:01 JST
 - State: `completed`
 - Branch: `main`

@@ -313,7 +313,6 @@ class BottleRuntimeSettings {
         environment['WINEESYNC'] = '1';
       case 'msync':
         environment['WINEMSYNC'] = '1';
-        environment['WINEESYNC'] = '1';
       case 'none':
         break;
     }

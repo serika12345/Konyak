@@ -110,6 +110,11 @@ task changes scope.
   - [x] Change the public macOS runtime distribution to a single assembled stack
     archive while keeping component archives as internal build, verification,
     and rerun units.
+  - [x] Verify the assembled macOS runtime stack through the normal
+    `wine64 start /unix <program>` GUI `.exe` launch path, without relying on
+    smoke-only fallback dylib search paths.
+  - [x] Keep macOS enhanced sync mode environment generation explicit:
+    `msync` sets `WINEMSYNC=1`, and `esync` sets `WINEESYNC=1`.
 - [x] Use Konyak-owned macOS bottle metadata.
   - [x] Drop live external plist metadata from the supported spec.
   - [x] Store macOS bottle records as Konyak `metadata.json`.

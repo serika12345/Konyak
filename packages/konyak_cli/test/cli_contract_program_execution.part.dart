@@ -257,7 +257,6 @@ void defineProgramExecutionContractTests() {
       'LC_ALL': 'ja_JP.UTF-8',
       'WINEPREFIX': '/home/user/.local/share/konyak/bottles/steam',
       'WINEMSYNC': '1',
-      'WINEESYNC': '1',
     });
   });
 
@@ -463,7 +462,7 @@ void defineProgramExecutionContractTests() {
     );
     expect(
       runner.lastRequest?.environment.toMap(),
-      containsPair('WINEESYNC', '1'),
+      isNot(containsPair('WINEESYNC', '1')),
     );
     expect(
       runner.lastRequest?.environment.toMap(),
@@ -913,7 +912,7 @@ void defineProgramExecutionContractTests() {
     );
     expect(
       runner.lastRequest?.environment.toMap(),
-      containsPair('WINEESYNC', '1'),
+      isNot(containsPair('WINEESYNC', '1')),
     );
     expect(
       runner.lastRequest?.environment.toMap(),
@@ -985,7 +984,7 @@ void defineProgramExecutionContractTests() {
     );
     expect(
       runner.lastRequest?.environment.toMap(),
-      containsPair('WINEESYNC', '1'),
+      isNot(containsPair('WINEESYNC', '1')),
     );
     expect(
       runner.lastRequest?.environment.toMap(),
