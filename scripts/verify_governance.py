@@ -636,6 +636,43 @@ def main() -> None:
     require_contains("runtime/macos-wine-release.json", "defaultReleaseTag")
     require_contains("docs/todo.md", "Runtimes/macos-wine/bin/wine64")
     require_contains("docs/todo.md", "Drop live external plist metadata")
+    for expected in [
+        "Execution Path SSOT",
+        "Do not manually invoke packaged Wine executables",
+        "Do not create ad hoc `WINEPREFIX` values",
+        "Do not suppress Wine Mono/MSHTML addon probing",
+        "must match the versions and filenames compiled into",
+        "run-winetricks <bottle-id> --verb <verb> --json",
+        "macosWinetricks",
+        "scripts/run_macos_runtime_cli_smoke.zsh",
+    ]:
+        require_contains("AGENTS.md", expected)
+    require_contains(
+        "docs/runtime-integrity-debt-inventory.md",
+        "Prefix initialization suppresses Wine addon probing",
+    )
+    require_contains(
+        "docs/runtime-integrity-debt-inventory.md",
+        "Runtime install success does not require stack completeness",
+    )
+    require_contains(
+        "docs/todo.md",
+        "Remove runtime verification masking and prove prefix/addon integrity",
+    )
+    for expected in [
+        "wine-mono-10.4.1-x86.msi",
+        "wine-gecko-2.47.4-x86.msi",
+        "wine-gecko-2.47.4-x86_64.msi",
+    ]:
+        require_contains(
+            "runtime/konyak-macos-runtime/scripts/package-binary-components.zsh",
+            expected,
+        )
+    require_contains(
+        "runtime/konyak-macos-runtime/scripts/check-wine-addons-component.zsh",
+        "wine-gecko-2.47.4-x86_64.msi",
+    )
+    require_contains("scripts/run_macos_runtime_cli_smoke.zsh", "wine-gecko")
     require_not_contains("docs/todo.md", "BottleVM.plist")
     require_not_contains("packages/konyak_cli/lib/konyak_cli.dart", "BottleVM.plist")
     require_not_contains("packages/konyak_cli/lib/konyak_cli.dart", "Metadata.plist")

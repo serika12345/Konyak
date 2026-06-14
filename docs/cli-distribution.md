@@ -137,8 +137,9 @@ multiple component records point at the same `archiveUrl` and `sha256`, the
 installer downloads and extracts that archive once while preserving the
 per-component versions from the source manifest. This is the default macOS
 release shape: the public manifest keeps component records for Wine,
-DXVK-macOS, DXMT, vkd3d, MoltenVK, GStreamer, FreeType, wine-mono, and
-winetricks, but those records point at one assembled runtime stack archive.
+DXVK-macOS, DXMT, vkd3d, MoltenVK, GStreamer, FreeType, wine-mono,
+wine-gecko, and winetricks, but those records point at one assembled runtime
+stack archive.
 Runtime updates route through the same stack installer when release metadata
 points at a manifest artifact. macOS GPTK/D3DMetal support uses the same
 mechanism as the other macOS runtime components: a source manifest may include a
@@ -150,9 +151,9 @@ mechanism as the other macOS runtime components: a source manifest may include a
 The default macOS runtime release is produced by the
 `runtime/konyak-macos-runtime` submodule. Its source manifest includes the
 CrossOver-derived Wine component, DXVK-macOS, DXMT, vkd3d, MoltenVK,
-GStreamer, FreeType, wine-mono, and winetricks component records backed by the
-single public stack archive. Separate component archives remain internal build
-and verification artifacts in the runtime workflow. The
+GStreamer, FreeType, wine-mono, wine-gecko, and winetricks component records
+backed by the single public stack archive. Separate component archives remain
+internal build and verification artifacts in the runtime workflow. The
 `dxvk-macos` component is complete for D3D9, D3D10, D3D11, and DXGI on both
 `i386-windows` and `x86_64-windows`; Actions verify that layout before
 publishing the release. The `vkd3d` component is built in the runtime

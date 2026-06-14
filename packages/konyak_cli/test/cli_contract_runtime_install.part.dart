@@ -124,7 +124,12 @@ void defineRuntimeInstallContractTests() {
         ),
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/libfreetype.6.dylib',
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/libfreetype.dylib',
-        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/share/wine/mono',
+        ..._macosWineMonoExistingPaths(
+          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
+        ),
+        ..._macosWineGeckoExistingPaths(
+          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
+        ),
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/winetricks',
         ..._macosVkd3dExistingPaths(
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
@@ -668,10 +673,14 @@ void defineRuntimeInstallContractTests() {
     final monoArchive = _createKonyakRuntimeComponentArchive(
       tempDirectory.path,
       archiveName: 'wine-mono',
-      relativePaths: const <List<String>>[
-        <String>['Components', 'wine-mono', 'share', 'wine', 'mono', 'marker'],
-      ],
+      relativePaths: _macosWineMonoComponentPaths,
       versions: const <String, String>{'wine-mono': 'wine-mono-fixture'},
+    );
+    final geckoArchive = _createKonyakRuntimeComponentArchive(
+      tempDirectory.path,
+      archiveName: 'wine-gecko',
+      relativePaths: _macosWineGeckoComponentPaths,
+      versions: const <String, String>{'wine-gecko': 'wine-gecko-fixture'},
     );
     final winetricksArchive = _createKonyakRuntimeComponentArchive(
       tempDirectory.path,
@@ -715,6 +724,7 @@ void defineRuntimeInstallContractTests() {
           gstreamerArchive,
           freetypeArchive,
           monoArchive,
+          geckoArchive,
           winetricksArchive,
           vkd3dArchive,
           gptkD3dMetalArchive,
@@ -915,9 +925,13 @@ void defineRuntimeInstallContractTests() {
     final monoArchive = _createKonyakRuntimeComponentArchive(
       tempDirectory.path,
       archiveName: 'source-wine-mono',
-      relativePaths: const <List<String>>[
-        <String>['Components', 'wine-mono', 'share', 'wine', 'mono', 'marker'],
-      ],
+      relativePaths: _macosWineMonoComponentPaths,
+      versions: const <String, String>{},
+    );
+    final geckoArchive = _createKonyakRuntimeComponentArchive(
+      tempDirectory.path,
+      archiveName: 'source-wine-gecko',
+      relativePaths: _macosWineGeckoComponentPaths,
       versions: const <String, String>{},
     );
     final winetricksArchive = _createKonyakRuntimeComponentArchive(
@@ -977,6 +991,11 @@ void defineRuntimeInstallContractTests() {
           id: 'wine-mono',
           version: 'wine-mono-source',
           archivePath: monoArchive,
+        ),
+        _runtimeStackSourceComponent(
+          id: 'wine-gecko',
+          version: 'wine-gecko-source',
+          archivePath: geckoArchive,
         ),
         _runtimeStackSourceComponent(
           id: 'winetricks',
@@ -1137,6 +1156,11 @@ void defineRuntimeInstallContractTests() {
             archivePath: stackArchive,
           ),
           _runtimeStackSourceComponent(
+            id: 'wine-gecko',
+            version: 'wine-gecko-source',
+            archivePath: stackArchive,
+          ),
+          _runtimeStackSourceComponent(
             id: 'winetricks',
             version: 'winetricks-source',
             archivePath: stackArchive,
@@ -1211,7 +1235,9 @@ void defineRuntimeInstallContractTests() {
         }
       });
 
-      final wineArchive = _createMacosAppBundleWineArchive(tempDirectory.path);
+      final wineArchive = _createKonyakComponentRuntimeArchive(
+        tempDirectory.path,
+      );
       final dxvkArchive = _createKonyakRuntimeComponentArchive(
         tempDirectory.path,
         archiveName: 'repair-dxvk-macos',
@@ -1247,16 +1273,13 @@ void defineRuntimeInstallContractTests() {
       final monoArchive = _createKonyakRuntimeComponentArchive(
         tempDirectory.path,
         archiveName: 'repair-wine-mono',
-        relativePaths: const <List<String>>[
-          <String>[
-            'Components',
-            'wine-mono',
-            'share',
-            'wine',
-            'mono',
-            'marker',
-          ],
-        ],
+        relativePaths: _macosWineMonoComponentPaths,
+        versions: const <String, String>{},
+      );
+      final geckoArchive = _createKonyakRuntimeComponentArchive(
+        tempDirectory.path,
+        archiveName: 'repair-wine-gecko',
+        relativePaths: _macosWineGeckoComponentPaths,
         versions: const <String, String>{},
       );
       final winetricksArchive = _createKonyakRuntimeComponentArchive(
@@ -1312,6 +1335,11 @@ void defineRuntimeInstallContractTests() {
             archivePath: monoArchive,
           ),
           _runtimeStackSourceComponent(
+            id: 'wine-gecko',
+            version: 'wine-gecko-source',
+            archivePath: geckoArchive,
+          ),
+          _runtimeStackSourceComponent(
             id: 'winetricks',
             version: 'winetricks-source',
             archivePath: winetricksArchive,
@@ -1341,7 +1369,8 @@ void defineRuntimeInstallContractTests() {
         ..._macosGstreamerInstalledPaths,
         <String>['lib', 'libfreetype.6.dylib'],
         <String>['lib', 'libfreetype.dylib'],
-        <String>['share', 'wine', 'mono', 'wine-mono.marker'],
+        ..._macosWineMonoInstalledPaths,
+        ..._macosWineGeckoInstalledPaths,
         ..._macosVkd3dInstalledPaths,
       ]) {
         final file = File(_joinTestPath(runtimeRoot, relativePath));
@@ -1361,6 +1390,7 @@ void defineRuntimeInstallContractTests() {
             'gstreamer': 'gstreamer-existing',
             'freetype': 'freetype-existing',
             'wine-mono': 'wine-mono-existing',
+            'wine-gecko': 'wine-gecko-existing',
             'vkd3d': 'vkd3d-existing',
             'gptk-d3dmetal': 'user-provided',
           },
@@ -1428,7 +1458,9 @@ void defineRuntimeInstallContractTests() {
         }
       });
 
-      final wineArchive = _createMacosAppBundleWineArchive(tempDirectory.path);
+      final wineArchive = _createKonyakComponentRuntimeArchive(
+        tempDirectory.path,
+      );
       final runtimeHome = _joinTestPath(tempDirectory.path, const [
         'Application Support',
         'Konyak',
@@ -1555,6 +1587,44 @@ void defineRuntimeInstallContractTests() {
   );
 
   test(
+    'install-macos-wine rejects archives that leave required stack components missing',
+    () async {
+      final tempDirectory = await Directory.systemTemp.createTemp(
+        'konyak-runtime-incomplete-install-test-',
+      );
+      addTearDown(() async {
+        if (await tempDirectory.exists()) {
+          await tempDirectory.delete(recursive: true);
+        }
+      });
+
+      final archivePath = _createMacosAppBundleWineArchive(tempDirectory.path);
+      final runtimeHome = _joinTestPath(tempDirectory.path, const [
+        'Application Support',
+        'Konyak',
+      ]);
+      final installer = DartIoMacosWineInstaller(
+        hostPlatform: KonyakHostPlatform.macos,
+        environment: HostEnvironment({
+          'KONYAK_APPLICATION_SUPPORT': runtimeHome,
+        }),
+        fileStatusProbe: const StaticFileStatusProbe({}),
+      );
+
+      final result = installer.install(
+        MacosWineInstallRequest.fullInstall(archivePath: archivePath),
+      );
+
+      expect(result, isA<MacosWineInstallFailed>());
+      expect(
+        (result as MacosWineInstallFailed).message,
+        contains('runtime stack is incomplete'),
+      );
+      expect(result.message, contains('dxvk-macos'));
+    },
+  );
+
+  test(
     'install-macos-wine normalizes a macOS app bundle Wine archive',
     () async {
       final tempDirectory = await Directory.systemTemp.createTemp(
@@ -1566,7 +1636,9 @@ void defineRuntimeInstallContractTests() {
         }
       });
 
-      final archivePath = _createMacosAppBundleWineArchive(tempDirectory.path);
+      final archivePath = _createKonyakComponentRuntimeArchive(
+        tempDirectory.path,
+      );
       final runtimeHome = _joinTestPath(tempDirectory.path, const [
         'Application Support',
         'Konyak',
@@ -1839,14 +1911,11 @@ void defineRuntimeInstallContractTests() {
       ..parent.createSync(recursive: true)
       ..writeAsStringSync('existing freetype alias');
     File(
-        _joinTestPath(appBundle.path, const [
+        _joinTestPath(appBundle.path, <String>[
           'Contents',
           'Resources',
           'wine',
-          'share',
-          'wine',
-          'mono',
-          'wine-mono.marker',
+          ..._macosWineMonoInstalledPaths.first,
         ]),
       )
       ..parent.createSync(recursive: true)
@@ -1954,12 +2023,7 @@ void defineRuntimeInstallContractTests() {
     );
     expect(
       File(
-        _joinTestPath(runtimeRoot.path, const [
-          'share',
-          'wine',
-          'mono',
-          'wine-mono.marker',
-        ]),
+        _joinTestPath(runtimeRoot.path, _macosWineMonoInstalledPaths.first),
       ).readAsStringSync(),
       'fixture',
     );

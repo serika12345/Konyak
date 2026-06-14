@@ -21,10 +21,16 @@ class DartIoRuntimeReleaseMetadataFetcher
 
       final decoded = jsonDecode(_processOutputToString(result.stdout));
       final releaseMetadataAssetUrl = _runtimeReleaseMetadataAssetUrl(decoded);
-      final releaseMetadata = releaseMetadataAssetUrl.match(
-        () => null,
-        _fetchRuntimeReleaseMetadataAsset,
-      );
+      final releaseMetadataAsset = releaseMetadataAssetUrl.toNullable();
+      final releaseMetadata = releaseMetadataAsset == null
+          ? null
+          : _fetchRuntimeReleaseMetadataAsset(releaseMetadataAsset);
+      if (releaseMetadataAsset != null && releaseMetadata == null) {
+        return RuntimeReleaseMetadataFetchFailed(
+          'Runtime release metadata asset could not be fetched or parsed: '
+          '$releaseMetadataAsset',
+        );
+      }
       final releaseMetadataRecord = _runtimeReleaseMetadataFromDecoded(
         release: decoded,
         releaseMetadata: releaseMetadata,

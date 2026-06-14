@@ -11,6 +11,171 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-14 23:03 JST
+- State: `completed`
+- Branch: `main`
+- Related work: runtime integrity debt repair; macOS Mono/Gecko addon payloads;
+  execution path SSOT
+- Purpose: remove prefix/runtime verification masking, align packaged Wine
+  addon payloads with the built CrossOver/Wine expectation, and prove the
+  repair through Konyak's public CLI route plus runtime CI smoke scripts.
+- Completed:
+  - Discarded the earlier standalone Wine loader-path experiment before this
+    repair.
+  - Removed `WINEDLLOVERRIDES=mscoree,mshtml=` from macOS prefix
+    initialization and runtime smoke scripts.
+  - Packaged `wine-mono-10.4.1-x86.msi` and
+    `wine-gecko-2.47.4-{x86,x86_64}.msi` in the runtime submodule with checksum
+    verification and CI checks.
+  - Added `wine-gecko` to runtime stack assembly, source manifests, CLI
+    completeness contracts, install fixtures, docs, and local CLI smoke.
+  - Made macOS runtime archive install fail when required stack components are
+    still incomplete after normalization.
+  - Added `validate-runtime` stack completeness checks before loader execution.
+  - Stopped release metadata from silently ignoring unreadable `.release.json`
+    assets and made macOS runtime update checks require source manifests.
+  - Kept backend smoke DLL placement as a component diagnostic that mirrors
+    Konyak `set-runtime-settings`, while preventing it from masking Wine
+    Mono/Gecko prefix initialization.
+  - Updated AGENTS, TODO, release docs, CLI distribution docs, architecture docs,
+    and the runtime integrity debt inventory to reflect the repaired contract.
+- Remaining:
+  - None for this repair.
+- Next: future runtime changes should keep app behavior proof on
+  `scripts/run_macos_runtime_cli_smoke.zsh` or another maintained CLI-backed
+  route, and should update runtime submodule CI when changing stack contracts.
+- Verification:
+  - Targeted red tests failed before implementation for prefix override
+    removal, incomplete archive rejection, incomplete runtime validation, bad
+    release metadata fallback, and macOS update metadata without source
+    manifests.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart'`:
+    passed.
+  - `nix develop -c zsh -lc 'zsh -n runtime/konyak-macos-runtime/scripts/package-binary-components.zsh runtime/konyak-macos-runtime/scripts/assemble-runtime-stack.zsh runtime/konyak-macos-runtime/scripts/make-source-manifest.zsh runtime/konyak-macos-runtime/scripts/check-wine-addons-component.zsh runtime/konyak-macos-runtime/scripts/smoke-gui-launch.zsh runtime/konyak-macos-runtime/scripts/smoke-wine32on64-launch.zsh runtime/konyak-macos-runtime/scripts/smoke-backend-device.zsh scripts/run_macos_runtime_cli_smoke.zsh'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && nix shell nixpkgs#gnutar -c ./scripts/package-binary-components.zsh dist result-runtime-stack result-runtime-stack result-runtime-stack'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && nix shell nixpkgs#gnutar nixpkgs#jq -c ./scripts/assemble-runtime-stack.zsh dist result-runtime-stack dist/konyak-macos-wine-runtime-stack.tar.zst && ./scripts/check-wine-addons-component.zsh result-runtime-stack && ./scripts/check-wine32on64-runtime.zsh result-runtime-stack && ./scripts/check-dxmt-component.zsh result-runtime-stack && ./scripts/check-vkd3d-component.zsh result-runtime-stack && ./scripts/check-dxvk-component.zsh result-runtime-stack && ./scripts/check-gstreamer-component.zsh result-runtime-stack'`:
+    passed.
+  - `nix develop -c zsh -lc 'KONYAK_DEV_MACOS_WINE_STACK_MANIFEST="$PWD/runtime/konyak-macos-runtime/dist/konyak-macos-wine-runtime-stack-source.json" KONYAK_MACOS_RUNTIME_CLI_SMOKE_WORK_ROOT="$PWD/.dart_tool/konyak/macos-runtime-cli-smoke-root-fix" ./scripts/run_macos_runtime_cli_smoke.zsh'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && ./scripts/smoke-wine32on64-launch.zsh result-runtime-stack && ./scripts/smoke-gui-launch.zsh result-runtime-stack'`:
+    passed.
+  - `nix develop -c zsh -lc 'zsh -n runtime/konyak-macos-runtime/scripts/smoke-backend-device.zsh && cd runtime/konyak-macos-runtime && ./scripts/smoke-backend-device.zsh result-runtime-stack dxvk-d3d11 && ./scripts/smoke-backend-device.zsh result-runtime-stack dxmt-d3d11 && ./scripts/smoke-backend-device.zsh result-runtime-stack vkd3d-d3d12'`:
+    passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: failed once because Dart
+    formatting changed two touched files, then passed after formatting.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `nix develop -c zsh -lc 'git diff --check && git -C runtime/konyak-macos-runtime diff --check'`:
+    passed.
+
+- Timestamp: 2026-06-14 22:26 JST
+- State: `completed`
+- Branch: `main`
+- Related work: runtime integrity debt inventory; execution path SSOT policy
+  correction
+- Purpose: audit implementations and tests that make runtime verification pass
+  by suppressing, bypassing, or shallowly checking the behavior that Konyak
+  actually depends on.
+- Completed:
+  - Read the current progress and TODO state.
+  - Audited macOS prefix initialization, runtime component packaging,
+    runtime stack completeness checks, release metadata fallback behavior,
+    validate-runtime checks, raw Wine smoke scripts, and backend smoke setup.
+  - Recorded the debt inventory in
+    `docs/runtime-integrity-debt-inventory.md`.
+  - Corrected the AGENTS execution path policy so Mono/MSHTML addon probing must
+    not be suppressed to make prefix initialization, bottle creation, runtime
+    validation, winetricks, or CI smoke pass.
+  - Added governance checks that require the corrected policy and the inventory
+    document to remain present.
+  - Added a TODO item for removing runtime verification masking and proving
+    prefix/addon integrity through the normal application-owned path.
+- Remaining:
+  - Implement the repair items listed in
+    `docs/runtime-integrity-debt-inventory.md` and `docs/todo.md`.
+- Next: start with a failing CLI contract test that rejects
+  `WINEDLLOVERRIDES=mscoree,mshtml=` during macOS prefix initialization, then
+  align the runtime submodule's Mono/Gecko payload packaging with the built
+  Wine expectation.
+- Verification:
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `nix develop -c zsh -lc 'git diff --check'`: passed.
+  - `nix develop -c zsh -lc 'git -C runtime/konyak-macos-runtime diff --check'`:
+    passed.
+
+- Timestamp: 2026-06-14 22:06 JST
+- State: `completed`
+- Branch: `main`
+- Related work: execution path SSOT policy hardening; macOS winetricks runtime
+  verification discipline
+- Purpose: prevent runtime verification from bypassing the application-owned
+  Flutter/CLI execution path and accidentally exercising raw Wine prefix
+  initialization behavior such as Wine Mono installer prompts.
+- Completed:
+  - Read the current progress and TODO state.
+  - Identified the app-owned macOS winetricks path as the CLI
+    `run-winetricks <bottle-id> --verb <verb> --json` contract, which plans a
+    `macosWinetricks` runner request.
+  - Confirmed the previous raw `result-wine-runtime/bin/wine64 ...` smoke was
+    not the application path and triggered Wine Mono setup because it created a
+    new ad hoc prefix outside Konyak's CLI runner flow.
+  - Add AGENTS policy that makes the Flutter/CLI route and maintained smoke
+    scripts the single source of truth for app/runtime execution verification.
+  - Add governance checks so the policy cannot be removed silently.
+  - Verified the governance check fails before the AGENTS policy is present and
+    passes after the policy is added.
+- Remaining:
+  - None.
+- Next: any future macOS winetricks validation should use `run-winetricks` or a
+  maintained smoke script that wraps the same CLI contract.
+- Verification:
+  - Process cleanup confirmed no leftover `wineboot`, `wineserver`,
+    `install_mono`, `winetemp`, or `result-wine-runtime` smoke processes.
+  - `nix develop -c zsh -lc 'just verify-governance'`: failed before
+    `AGENTS.md` contained the new SSOT policy, then passed after the policy was
+    added.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `nix develop -c zsh -lc 'git diff --check && git -C runtime/konyak-macos-runtime diff --check'`:
+    passed.
+
+- Timestamp: 2026-06-14 20:56 JST
+- State: `superseded`
+- Branch: `main`
+- Related work: macOS runtime Phase 3 follow-up; winetricks Wine loader dylib
+  resolution
+- Purpose: fix macOS winetricks runs that fail when Wine creates temporary
+  loader executables such as `winedevice.exe` and the copied loader can no
+  longer resolve `libintl.8.dylib` from the packaged runtime.
+- Completed:
+  - Read the current progress and TODO state.
+  - Inspected the reported winetricks run log for the `cjkfonts` verb.
+  - Confirmed the failing process is a Wine temporary loader under
+    `/private/var/.../winetemp-*`, not the top-level winetricks script.
+  - Confirmed the packaged Wine loader at `lib/wine/x86_64-unix/wine`
+    references `@loader_path/../../libintl.8.dylib`, which works in-place but
+    breaks after Wine starts a temporary loader name outside the runtime tree.
+  - Confirmed setting `WINE`, `WINE64`, `WINE_BIN`, and `WINESERVER_BIN` to
+    absolute runtime paths is not sufficient because Wine still creates the
+    temporary loader executable during winetricks prefix probing.
+- Remaining:
+  - Folded into the execution path SSOT policy hardening snapshot above. Any
+    future winetricks smoke must use the app-owned CLI path, not a raw Wine
+    command.
+- Next: resume winetricks validation only through `run-winetricks` or a
+  maintained smoke script that wraps the same CLI contract.
+- Verification:
+  - The runtime loader packaging fix and checker were implemented after this
+    snapshot, but raw Wine smoke verification was intentionally stopped because
+    it bypassed the app-owned execution path.
+
 - Timestamp: 2026-06-14 19:25 JST
 - State: `completed`
 - Branch: `main`

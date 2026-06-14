@@ -58,6 +58,13 @@ extension _MacosWineArchiveInstallation on DartIoMacosWineInstaller {
         '`${runtime.executablePath.toNullable()}`.',
       );
     }
+    final stack = runtime.stack.toNullable();
+    if (stack == null || !stack.isComplete) {
+      return MacosWineInstallFailed(
+        'macOS Wine archive installed but runtime stack is incomplete: '
+        '${_incompleteMacosWineStackSummary(stack)}.',
+      );
+    }
 
     _emitRuntimeInstallProgress(
       progressSink,
@@ -222,6 +229,32 @@ extension _MacosWineArchiveInstallation on DartIoMacosWineInstaller {
           environment.nonEmptyValue('KONYAK_MACOS_WINE_STACK_PUBLIC_KEY'),
     );
   }
+}
+
+String _incompleteMacosWineStackSummary(RuntimeStack? stack) {
+  if (stack == null) {
+    return 'runtime stack metadata is missing';
+  }
+
+  final missingComponents = stack.components
+      .where((component) => component.isRequired && !component.isInstalled)
+      .map((component) => component.id)
+      .toList(growable: false);
+  final missingPaths = stack.components
+      .where((component) => component.isRequired)
+      .expand((component) => component.missingPaths)
+      .toList(growable: false);
+  final details = <String>[
+    if (missingComponents.isNotEmpty)
+      'missing components: ${missingComponents.join(', ')}',
+    if (missingPaths.isNotEmpty) 'missing paths: ${missingPaths.join(', ')}',
+  ];
+
+  if (details.isEmpty) {
+    return 'required component state is incomplete';
+  }
+
+  return details.join('; ');
 }
 
 void _preserveImportedGptkD3DMetalComponent({

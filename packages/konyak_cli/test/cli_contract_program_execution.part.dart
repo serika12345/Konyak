@@ -1102,7 +1102,7 @@ void defineProgramExecutionContractTests() {
     );
     expect(
       request.environment.toMap(),
-      containsPair('WINEDLLOVERRIDES', 'mscoree,mshtml='),
+      isNot(containsPair('WINEDLLOVERRIDES', 'mscoree,mshtml=')),
     );
     expect(
       request.logPath,

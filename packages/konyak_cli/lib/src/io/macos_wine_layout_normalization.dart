@@ -55,6 +55,7 @@ extension _MacosWineLayoutNormalization on DartIoMacosWineInstaller {
       'GStreamer',
       'FreeType',
       'wine-mono',
+      'wine-gecko',
       'winetricks',
       'vkd3d',
     ]) {

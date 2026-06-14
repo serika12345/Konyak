@@ -198,6 +198,15 @@ const _macosWine32On64ComponentPaths = <List<String>>[
   <String>['lib', 'wine', 'x86_64-unix', 'ntdll.so'],
 ];
 
+const _macosWineMonoComponentPaths = <List<String>>[
+  <String>['share', 'wine', 'mono', 'wine-mono-10.4.1-x86.msi'],
+];
+
+const _macosWineGeckoComponentPaths = <List<String>>[
+  <String>['share', 'wine', 'gecko', 'wine-gecko-2.47.4-x86.msi'],
+  <String>['share', 'wine', 'gecko', 'wine-gecko-2.47.4-x86_64.msi'],
+];
+
 const _macosVkd3dComponentPaths = <List<String>>[
   <String>['lib', 'wine', 'x86_64-windows', 'libvkd3d-1.dll'],
   <String>['lib', 'wine', 'x86_64-windows', 'libvkd3d-shader-1.dll'],
@@ -286,9 +295,14 @@ const _macosKonyakRuntimeComponentDefinitions =
         name: 'wine-mono',
         role: 'dotnet-runtime',
         isRequired: true,
-        relativePaths: <List<String>>[
-          <String>['share', 'wine', 'mono'],
-        ],
+        relativePaths: _macosWineMonoComponentPaths,
+      ),
+      _RuntimeStackComponentDefinition(
+        id: 'wine-gecko',
+        name: 'wine-gecko',
+        role: 'html-runtime',
+        isRequired: true,
+        relativePaths: _macosWineGeckoComponentPaths,
       ),
       _RuntimeStackComponentDefinition(
         id: 'winetricks',

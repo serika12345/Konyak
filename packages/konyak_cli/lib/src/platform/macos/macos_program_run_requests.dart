@@ -149,24 +149,7 @@ ProgramRunEnvironment _macosPrefixInitializationEnvironment({
   required BottleRecord bottle,
   required HostEnvironment environment,
 }) {
-  final variables = Map<String, String>.of(
-    _macosWineEnvironment(bottle: bottle, environment: environment).toMap(),
-  );
-  variables['WINEDLLOVERRIDES'] = _appendWineDllOverrides(
-    variables['WINEDLLOVERRIDES'],
-    'mscoree,mshtml=',
-  );
-
-  return ProgramRunEnvironment(variables);
-}
-
-String _appendWineDllOverrides(String? existingOverrides, String overrides) {
-  final existing = existingOverrides?.trim();
-  if (existing == null || existing.isEmpty) {
-    return overrides;
-  }
-
-  return '$existing;$overrides';
+  return _macosWineEnvironment(bottle: bottle, environment: environment);
 }
 
 String _macosWineDataDir(String runtimeRoot) {

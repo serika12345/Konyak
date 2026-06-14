@@ -60,6 +60,7 @@ class DartIoMacosWineRuntimeValidator implements RuntimeValidator {
         paths: _macosWineLoaderLibraryPaths(runtimeRoot),
         fileStatusProbe: fileStatusProbe,
       ),
+      _runtimeStackCompletenessCheck(runtime.stack),
     ];
 
     if (!checks.every((check) => !check.isRequired || check.isPassed)) {
@@ -101,4 +102,38 @@ class DartIoMacosWineRuntimeValidator implements RuntimeValidator {
       ),
     );
   }
+}
+
+RuntimeValidationCheck _runtimeStackCompletenessCheck(
+  Option<RuntimeStack> stackOption,
+) {
+  final stack = stackOption.toNullable();
+  if (stack == null) {
+    return const RuntimeValidationCheck(
+      id: 'runtime-stack',
+      name: 'Runtime stack',
+      isRequired: true,
+      isPassed: false,
+      message: 'Runtime stack metadata is missing.',
+    );
+  }
+
+  if (stack.isComplete) {
+    return const RuntimeValidationCheck(
+      id: 'runtime-stack',
+      name: 'Runtime stack',
+      isRequired: true,
+      isPassed: true,
+      message: 'Runtime stack is complete.',
+    );
+  }
+
+  return RuntimeValidationCheck(
+    id: 'runtime-stack',
+    name: 'Runtime stack',
+    isRequired: true,
+    isPassed: false,
+    message:
+        'Runtime stack is incomplete: ${_incompleteMacosWineStackSummary(stack)}.',
+  );
 }

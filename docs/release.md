@@ -140,11 +140,12 @@ CrossOver-derived Wine build, DXMT build, binary component packaging, metadata
 generation, Wine32-on-64 smoke, and publish steps as separate rerunnable jobs.
 The published manifest for the default runtime stack should point at the single
 assembled archive containing Wine, DXVK-macOS, DXMT, MoltenVK, GStreamer,
-FreeType, wine-mono, and winetricks. Release verification checks the component
-artifacts before assembly, then checks the assembled archive for Wine32-on-64
-payloads, the 32-bit `cmd.exe` smoke, DXMT layout, DXVK layout including
-`d3d10.dll` and `d3d10_1.dll` for both i386 and x86_64 Windows payloads,
-GStreamer plugin/scanner presence, and no unpackaged Nix store dylib references.
+FreeType, wine-mono, wine-gecko, and winetricks. Release verification checks the
+component artifacts before assembly, then checks the assembled archive for
+Wine32-on-64 payloads, Wine addon MSI payloads, the 32-bit `cmd.exe` smoke, DXMT
+layout, DXVK layout including `d3d10.dll` and `d3d10_1.dll` for both i386 and
+x86_64 Windows payloads, GStreamer plugin/scanner presence, and no unpackaged
+Nix store dylib references.
 
 GPTK/D3DMetal remains user-imported rather than redistributed from release
 assets. The runtime and CLI import contract accepts CrossOver.app's

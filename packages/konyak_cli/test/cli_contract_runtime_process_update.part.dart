@@ -188,7 +188,12 @@ void defineRuntimeProcessAndUpdateContractTests() {
           ),
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/libfreetype.6.dylib',
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/libfreetype.dylib',
-          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/share/wine/mono',
+          ..._macosWineMonoExistingPaths(
+            '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
+          ),
+          ..._macosWineGeckoExistingPaths(
+            '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
+          ),
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/winetricks',
           ..._macosVkd3dExistingPaths(
             '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
@@ -312,9 +317,20 @@ void defineRuntimeProcessAndUpdateContractTests() {
                 'role': 'dotnet-runtime',
                 'isRequired': true,
                 'isInstalled': true,
-                'paths': [
-                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/share/wine/mono',
-                ],
+                'paths': _macosWineMonoExpectedPaths(
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
+                ),
+                'missingPaths': <Object?>[],
+              },
+              {
+                'id': 'wine-gecko',
+                'name': 'wine-gecko',
+                'role': 'html-runtime',
+                'isRequired': true,
+                'isInstalled': true,
+                'paths': _macosWineGeckoExpectedPaths(
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
+                ),
                 'missingPaths': <Object?>[],
               },
               {
@@ -2148,10 +2164,6 @@ void defineRuntimeProcessAndUpdateContractTests() {
               },
               {
                 'browser_download_url':
-                    'https://example.invalid/Konyak-1.1.0-macos-arm64.release.json',
-              },
-              {
-                'browser_download_url':
                     'https://example.invalid/Konyak-1.1.0-macos-arm64.zip',
               },
             ],
@@ -2172,6 +2184,46 @@ void defineRuntimeProcessAndUpdateContractTests() {
       'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
     );
   });
+
+  test(
+    'release metadata fetcher rejects unreadable release metadata assets',
+    () {
+      final tempDirectory = Directory.systemTemp.createTempSync(
+        'konyak-release-metadata-asset-failure-test-',
+      );
+      addTearDown(() {
+        if (tempDirectory.existsSync()) {
+          tempDirectory.deleteSync(recursive: true);
+        }
+      });
+      final missingAsset = File(
+        _joinTestPath(tempDirectory.path, const ['missing.release.json']),
+      );
+      final metadataFile =
+          File(_joinTestPath(tempDirectory.path, const ['release.json']))
+            ..writeAsStringSync(
+              jsonEncode(<String, Object?>{
+                'tag_name': 'v1.1.0',
+                'assets': [
+                  {
+                    'browser_download_url':
+                        'https://example.invalid/Konyak-1.1.0-macos-arm64.zip',
+                  },
+                  {'browser_download_url': missingAsset.uri.toString()},
+                ],
+              }),
+            );
+      const fetcher = DartIoRuntimeReleaseMetadataFetcher();
+
+      final result = fetcher.fetch(metadataFile.uri.toString());
+
+      expect(result, isA<RuntimeReleaseMetadataFetchFailed>());
+      expect(
+        (result as RuntimeReleaseMetadataFetchFailed).message,
+        contains('release metadata asset'),
+      );
+    },
+  );
 
   test('release metadata fetcher resolves runtime stack source manifests', () {
     final tempDirectory = Directory.systemTemp.createTempSync(
@@ -2949,6 +3001,59 @@ void defineRuntimeProcessAndUpdateContractTests() {
   );
 
   test(
+    'runtime update checker rejects macOS releases without source manifests',
+    () {
+      final checker = DartIoRuntimeUpdateChecker(
+        runtimeCatalog: StaticRuntimeCatalog([
+          RuntimeRecord(
+            id: 'konyak-macos-wine',
+            name: 'Konyak macOS Wine',
+            platform: 'macos',
+            architecture: 'x86_64',
+            runnerKind: 'macosWine',
+            isBundled: false,
+            isUpdateable: true,
+            versionUrl: Option.of('https://example.invalid/releases/latest'),
+            archiveUrl: Option.of('https://example.invalid/runtime.tar.xz'),
+            stack: Option.of(
+              RuntimeStack(
+                id: 'macos-konyak-runtime-stack',
+                name: 'Konyak macOS runtime stack',
+                compatibilityTarget: 'macos-konyak-runtime-stack',
+                components: [
+                  RuntimeStackComponent(
+                    id: 'wine',
+                    name: 'Wine',
+                    role: 'windows-runner',
+                    isRequired: true,
+                    paths: const <String>[],
+                    missingPaths: const <String>[],
+                    version: Option.of('wine-devel-11.9'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ]),
+        releaseMetadataFetcher: StaticRuntimeReleaseMetadataFetcher(
+          RuntimeReleaseMetadata(
+            version: '11.10',
+            archiveUrl: Option.of('https://example.invalid/runtime.tar.xz'),
+          ),
+        ),
+      );
+
+      final result = checker.check('konyak-macos-wine');
+
+      expect(result, isA<RuntimeUpdateCheckFailed>());
+      expect(
+        (result as RuntimeUpdateCheckFailed).message,
+        contains('source manifest'),
+      );
+    },
+  );
+
+  test(
     'runtime update checker compares Wine component version to release tag',
     () {
       final checker = DartIoRuntimeUpdateChecker(
@@ -2984,7 +3089,12 @@ void defineRuntimeProcessAndUpdateContractTests() {
           ),
         ]),
         releaseMetadataFetcher: StaticRuntimeReleaseMetadataFetcher(
-          RuntimeReleaseMetadata(version: '11.9'),
+          RuntimeReleaseMetadata(
+            version: '11.9',
+            sourceManifestUrl: Option.of(
+              'https://example.invalid/macos-runtime-stack-source.json',
+            ),
+          ),
         ),
       );
 
@@ -3172,6 +3282,71 @@ void defineRuntimeProcessAndUpdateContractTests() {
     },
   );
 
+  test('macOS runtime validator rejects incomplete runtime stacks', () {
+    final executableProbe = RecordingRuntimeExecutableProbe(
+      result: const RuntimeExecutableProbeResult(
+        exitCode: 0,
+        stdout: 'wine-11.9',
+        stderr: '',
+      ),
+    );
+    final validator = DartIoMacosWineRuntimeValidator(
+      runtimeCatalog: StaticRuntimeCatalog([
+        RuntimeRecord(
+          id: 'konyak-macos-wine',
+          name: 'Konyak macOS Wine',
+          platform: 'macos',
+          architecture: 'x86_64',
+          runnerKind: 'macosWine',
+          isBundled: false,
+          isUpdateable: true,
+          libraryPath: Option.of('/runtime'),
+          executablePath: Option.of('/runtime/bin/wine64'),
+          stack: Option.of(
+            RuntimeStack(
+              id: 'macos-konyak-runtime-stack',
+              name: 'Konyak macOS runtime stack',
+              compatibilityTarget: 'macos-konyak-runtime-stack',
+              components: [
+                RuntimeStackComponent(
+                  id: 'wine-gecko',
+                  name: 'wine-gecko',
+                  role: 'html-runtime',
+                  isRequired: true,
+                  paths: const [
+                    '/runtime/share/wine/gecko/wine-gecko-2.47.4-x86.msi',
+                  ],
+                  missingPaths: const [
+                    '/runtime/share/wine/gecko/wine-gecko-2.47.4-x86.msi',
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ]),
+      fileStatusProbe: const StaticFileStatusProbe({
+        '/runtime',
+        '/runtime/bin/wine64',
+        '/runtime/lib',
+      }),
+      executableProbe: executableProbe,
+    );
+
+    final result = validator.validate('konyak-macos-wine');
+
+    expect(result, isA<RuntimeValidationCompleted>());
+    final validation = (result as RuntimeValidationCompleted).validation;
+    expect(validation.isValid, isFalse);
+    expect(
+      validation.checks.where((check) => check.id == 'runtime-stack').single,
+      isA<RuntimeValidationCheck>()
+          .having((check) => check.isPassed, 'isPassed', isFalse)
+          .having((check) => check.message, 'message', contains('wine-gecko')),
+    );
+    expect(executableProbe.lastExecutable, isNull);
+  });
+
   test('macOS runtime validator runs wine64 with dylib search paths', () {
     final executableProbe = RecordingRuntimeExecutableProbe(
       result: const RuntimeExecutableProbeResult(
@@ -3192,6 +3367,23 @@ void defineRuntimeProcessAndUpdateContractTests() {
           isUpdateable: true,
           libraryPath: Option.of('/runtime'),
           executablePath: Option.of('/runtime/bin/wine64'),
+          stack: Option.of(
+            RuntimeStack(
+              id: 'macos-konyak-runtime-stack',
+              name: 'Konyak macOS runtime stack',
+              compatibilityTarget: 'macos-konyak-runtime-stack',
+              components: [
+                RuntimeStackComponent(
+                  id: 'wine',
+                  name: 'Wine',
+                  role: 'windows-runner',
+                  isRequired: true,
+                  paths: const ['/runtime/bin/wine64'],
+                  missingPaths: const [],
+                ),
+              ],
+            ),
+          ),
         ),
       ]),
       fileStatusProbe: const StaticFileStatusProbe({

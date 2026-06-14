@@ -83,6 +83,36 @@ Use TDD as the default development loop:
 2. Implement the smallest change that makes it pass.
 3. Refactor only while the test stays green.
 
+### 4.1 Execution Path SSOT
+
+- Application and CLI behavior verification must use the same public execution
+  path that Konyak uses at runtime. Prefer Flutter-triggered CLI calls,
+  `dart run bin/konyak.dart ... --json`, or maintained smoke scripts that wrap
+  those contracts.
+- For macOS winetricks verification, the source of truth is
+  `run-winetricks <bottle-id> --verb <verb> --json`, which must produce and run
+  a `macosWinetricks` program request. The maintained local CLI smoke entry
+  point is `scripts/run_macos_runtime_cli_smoke.zsh`.
+- Do not manually invoke packaged Wine executables such as `wine`, `wine64`,
+  `wineserver`, or `wineboot`, and do not manually invoke packaged
+  `winetricks`, to prove application behavior.
+- Do not create ad hoc `WINEPREFIX` values.
+- Low-level runtime checks may inspect artifacts with tools such as `otool` or
+  run repository-maintained runtime scripts under `runtime/konyak-macos-runtime`
+  when the artifact layout or loader contract itself is the behavior under
+  test. If a new low-level runtime execution path is needed, add it as a
+  maintained script and document why the app/CLI path cannot cover that case in
+  `docs/progress.md`.
+- Do not suppress Wine Mono/MSHTML addon probing with `mscoree,mshtml=` to make
+  prefix initialization, bottle creation, runtime validation, winetricks, or CI
+  smoke pass. The runtime must instead package the Wine-expected addon payloads
+  and prove the normal installer/probe path succeeds locally through the
+  application-owned CLI route.
+- macOS Wine addon payloads must match the versions and filenames compiled into
+  the packaged Wine source. Parent runtime completeness checks must require the
+  exact Mono and Gecko MSI payload paths instead of accepting marker files or
+  addon directories.
+
 ## 5. Roadmap and Progress Discipline
 
 Before starting implementation, refactoring, architecture work, runtime

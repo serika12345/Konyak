@@ -197,6 +197,7 @@ for component_id in \
   gstreamer \
   freetype \
   wine-mono \
+  wine-gecko \
   winetricks \
   vkd3d \
   dxmt

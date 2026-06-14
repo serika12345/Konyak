@@ -717,6 +717,25 @@ final _macosGstreamerComponentPaths = <List<String>>[
     <String>['Components', 'GStreamer', ...relativePath],
 ];
 
+const _macosWineMonoInstalledPaths = <List<String>>[
+  <String>['share', 'wine', 'mono', 'wine-mono-10.4.1-x86.msi'],
+];
+
+final _macosWineMonoComponentPaths = <List<String>>[
+  for (final relativePath in _macosWineMonoInstalledPaths)
+    <String>['Components', 'wine-mono', ...relativePath],
+];
+
+const _macosWineGeckoInstalledPaths = <List<String>>[
+  <String>['share', 'wine', 'gecko', 'wine-gecko-2.47.4-x86.msi'],
+  <String>['share', 'wine', 'gecko', 'wine-gecko-2.47.4-x86_64.msi'],
+];
+
+final _macosWineGeckoComponentPaths = <List<String>>[
+  for (final relativePath in _macosWineGeckoInstalledPaths)
+    <String>['Components', 'wine-gecko', ...relativePath],
+];
+
 Set<String> _macosGstreamerExistingPaths(String runtimeRoot) {
   return <String>{
     for (final relativePath in _macosGstreamerInstalledPaths)
@@ -727,6 +746,34 @@ Set<String> _macosGstreamerExistingPaths(String runtimeRoot) {
 List<String> _macosGstreamerExpectedPaths(String runtimeRoot) {
   return <String>[
     for (final relativePath in _macosGstreamerInstalledPaths)
+      _joinTestPath(runtimeRoot, relativePath),
+  ];
+}
+
+Set<String> _macosWineMonoExistingPaths(String runtimeRoot) {
+  return <String>{
+    for (final relativePath in _macosWineMonoInstalledPaths)
+      _joinTestPath(runtimeRoot, relativePath),
+  };
+}
+
+List<String> _macosWineMonoExpectedPaths(String runtimeRoot) {
+  return <String>[
+    for (final relativePath in _macosWineMonoInstalledPaths)
+      _joinTestPath(runtimeRoot, relativePath),
+  ];
+}
+
+Set<String> _macosWineGeckoExistingPaths(String runtimeRoot) {
+  return <String>{
+    for (final relativePath in _macosWineGeckoInstalledPaths)
+      _joinTestPath(runtimeRoot, relativePath),
+  };
+}
+
+List<String> _macosWineGeckoExpectedPaths(String runtimeRoot) {
+  return <String>[
+    for (final relativePath in _macosWineGeckoInstalledPaths)
       _joinTestPath(runtimeRoot, relativePath),
   ];
 }
@@ -837,7 +884,10 @@ String _createComponentRuntimeArchive(String tempPath) {
       <String>['Wine', ...relativePath],
     <String>['Wine', 'lib', 'libfreetype.6.dylib'],
     <String>['Wine', 'lib', 'libfreetype.dylib'],
-    <String>['Wine', 'share', 'wine', 'mono', 'wine-mono.marker'],
+    for (final relativePath in _macosWineMonoInstalledPaths)
+      <String>['Wine', ...relativePath],
+    for (final relativePath in _macosWineGeckoInstalledPaths)
+      <String>['Wine', ...relativePath],
     for (final relativePath in _macosDxmtInstalledPaths)
       <String>['Wine', ...relativePath],
     for (final relativePath in _macosVkd3dInstalledPaths)
@@ -915,7 +965,8 @@ String _createKonyakComponentRuntimeArchive(String tempPath) {
     <String>['Components', 'MoltenVK', 'lib', 'libMoltenVK.dylib'],
     ..._macosGstreamerComponentPaths,
     ..._macosFreetypeComponentPaths,
-    <String>['Components', 'wine-mono', 'share', 'wine', 'mono', 'marker'],
+    ..._macosWineMonoComponentPaths,
+    ..._macosWineGeckoComponentPaths,
     <String>['Components', 'winetricks', 'winetricks'],
     ..._macosVkd3dComponentPaths,
     ..._gptkD3DMetalComponentArchivePaths,
@@ -946,6 +997,7 @@ String _createKonyakComponentRuntimeArchive(String tempPath) {
         'gstreamer': 'gstreamer-fixture',
         'freetype': 'freetype-fixture',
         'wine-mono': 'wine-mono-fixture',
+        'wine-gecko': 'wine-gecko-fixture',
         'winetricks': 'winetricks-fixture',
         'vkd3d': 'vkd3d-fixture',
         'gptk-d3dmetal': 'gptk-d3dmetal-fixture',
@@ -1137,7 +1189,8 @@ String _createMacosAppBundleWineArchive(String tempPath) {
     <String>['bin', 'wineserver'],
     ..._macosWine32On64InstalledPaths,
     <String>['lib', 'libwine.1.dylib'],
-    <String>['share', 'wine', 'mono', 'wine-mono.marker'],
+    ..._macosWineMonoInstalledPaths,
+    ..._macosWineGeckoInstalledPaths,
   ]) {
     final file = File(_joinTestPath(wineRoot.path, relativePath));
     file.parent.createSync(recursive: true);
@@ -1165,7 +1218,8 @@ void _createInstalledMacosRuntime(String runtimeHome) {
     <String>['bin', 'wineserver'],
     ..._macosWine32On64InstalledPaths,
     <String>['lib', 'libwine.1.dylib'],
-    <String>['share', 'wine', 'mono', 'wine-mono.marker'],
+    ..._macosWineMonoInstalledPaths,
+    ..._macosWineGeckoInstalledPaths,
   ]) {
     final file = File(_joinTestPath(runtimeHome, relativePath));
     file.parent.createSync(recursive: true);

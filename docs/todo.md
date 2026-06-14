@@ -44,6 +44,28 @@ task changes scope.
 
 ## Next Tasks
 
+- [x] Remove runtime verification masking and prove prefix/addon integrity.
+  - [x] Remove `mscoree,mshtml=` from application-owned macOS prefix
+    initialization and update CLI contract tests so prefix creation exercises
+    Wine's normal Mono/Gecko addon probing.
+  - [x] Package the Mono and Gecko MSI payloads expected by the built
+    CrossOver/Wine runtime, with runtime-submodule checks for the embedded
+    expected versions, file names, and checksums.
+  - [x] Replace parent runtime completeness checks for wine-mono with exact
+    payload checks, add a required wine-gecko component, and stop using marker
+    files as addon fixtures.
+  - [x] Make macOS full runtime install/update fail when the required runtime
+    stack is incomplete after layout normalization.
+  - [x] Make `validate-runtime` report stack completeness and keep loader-only
+    checks labeled as loader-only checks.
+  - [x] Require the configured macOS runtime source manifest asset during
+    release/update checks instead of silently falling back to arbitrary archive
+    assets when manifest metadata is missing.
+  - [x] Split raw Wine runtime diagnostics from app-owned CLI smoke coverage,
+    and ensure app behavior gates use the public CLI execution path.
+  - [x] Keep backend smoke coverage as a component diagnostic that mirrors
+    Konyak `set-runtime-settings` backend DLL placement, while preventing it
+    from hiding Mono/Gecko prefix initialization failures.
 - [x] Align macOS backend selection with the CrossOver-derived runtime stack.
   - [x] Treat Konyak macOS Wine as the default CrossOver-derived runtime, not
     as a GPTK Wine replacement target.
@@ -79,8 +101,9 @@ task changes scope.
   - [x] Expose the initial macOS runtime stack manifest from
     `list-runtimes --json` and `install-macos-wine --json`.
   - [x] Validate component presence for Wine, Wine32-on-64 support,
-    DXVK-macOS, vkd3d, MoltenVK, GStreamer, wine-mono, winetricks, and
-    macOS-only GPTK/D3DMetal when the runtime package provides it.
+    DXVK-macOS, vkd3d, MoltenVK, GStreamer, wine-mono, wine-gecko,
+    winetricks, and macOS-only GPTK/D3DMetal when the runtime package provides
+    it.
   - [x] Include DXMT x86_64 NVIDIA shim DLLs `nvapi64.dll` and `nvngx.dll`
     in the submodule build/release checks and parent runtime completeness
     contract.
@@ -92,12 +115,12 @@ task changes scope.
   - [x] Treat GPTK/D3DMetal like Whisky's D3DMetal layer: it belongs to the
     selected macOS runtime package, not to a separate user-facing install flow.
   - [x] Normalize Konyak runtime component archives for DXVK-macOS, vkd3d,
-    MoltenVK, GStreamer, wine-mono, winetricks, and macOS-only GPTK/D3DMetal,
-    and allow incomplete Wine-only runtime installs to be repaired from a full
-    stack archive.
+    MoltenVK, GStreamer, wine-mono, wine-gecko, winetricks, and macOS-only
+    GPTK/D3DMetal, and allow incomplete Wine-only runtime installs to be
+    repaired from a full stack archive.
   - [x] Start runtime stack construction from separate component archives by
     layering Wine, DXVK-macOS, vkd3d, MoltenVK, GStreamer, wine-mono,
-    winetricks, and macOS-only GPTK/D3DMetal archives during
+    wine-gecko, winetricks, and macOS-only GPTK/D3DMetal archives during
     `install-macos-wine`.
   - [x] Build the macOS development winetricks component from a real,
     checksum-verified upstream winetricks script and verb catalog, not a stub.
@@ -376,7 +399,8 @@ task changes scope.
       runtime files become part of the macOS Wine component.
     - Preserve separate component build and verification jobs, but assemble the
       verified Wine, DXVK-macOS, DXMT, vkd3d, MoltenVK, GStreamer, FreeType,
-      wine-mono, and winetricks payloads into one public runtime archive.
+      wine-mono, wine-gecko, and winetricks payloads into one public runtime
+      archive.
   - [ ] Phase 3: normalize launch and smoke behavior around the repaired
     runtime.
     - Compare Konyak's normal `.exe` path with CrossOver's observed wrapper

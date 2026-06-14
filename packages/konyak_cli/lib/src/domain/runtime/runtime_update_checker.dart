@@ -36,26 +36,51 @@ class DartIoRuntimeUpdateChecker implements RuntimeUpdateChecker {
     final metadata = releaseMetadataFetcher.fetch(versionUrl);
     return switch (metadata) {
       RuntimeReleaseMetadataFetched(:final metadata) =>
-        RuntimeUpdateCheckCompleted(
-          RuntimeUpdateRecord(
-            runtimeId: runtime.id,
-            status: _updateStatus(
-              currentVersion: currentVersion,
-              latestVersion: metadata.version,
-            ),
-            currentVersion: currentVersion,
-            latestVersion: Option.of(metadata.version),
-            versionUrl: Option.of(versionUrl),
-            archiveUrl: Option.fromNullable(
-              metadata.archiveUrl.toNullable() ??
-                  runtime.archiveUrl.toNullable(),
-            ),
-            sourceManifestUrl: metadata.sourceManifestUrl,
-            sourceManifestSignatureUrl: metadata.sourceManifestSignatureUrl,
-          ),
+        _runtimeUpdateFromMetadata(
+          runtime: runtime,
+          versionUrl: versionUrl,
+          currentVersion: currentVersion,
+          metadata: metadata,
         ),
       RuntimeReleaseMetadataFetchFailed(:final message) =>
         RuntimeUpdateCheckFailed(message),
     };
   }
+}
+
+RuntimeUpdateCheckResult _runtimeUpdateFromMetadata({
+  required RuntimeRecord runtime,
+  required String versionUrl,
+  required Option<String> currentVersion,
+  required RuntimeReleaseMetadata metadata,
+}) {
+  if (_requiresRuntimeStackSourceManifest(runtime) &&
+      metadata.sourceManifestUrl.isNone()) {
+    return RuntimeUpdateCheckFailed(
+      '${runtime.id} release metadata must include a runtime stack '
+      'source manifest.',
+    );
+  }
+
+  return RuntimeUpdateCheckCompleted(
+    RuntimeUpdateRecord(
+      runtimeId: runtime.id,
+      status: _updateStatus(
+        currentVersion: currentVersion,
+        latestVersion: metadata.version,
+      ),
+      currentVersion: currentVersion,
+      latestVersion: Option.of(metadata.version),
+      versionUrl: Option.of(versionUrl),
+      archiveUrl: Option.fromNullable(
+        metadata.archiveUrl.toNullable() ?? runtime.archiveUrl.toNullable(),
+      ),
+      sourceManifestUrl: metadata.sourceManifestUrl,
+      sourceManifestSignatureUrl: metadata.sourceManifestSignatureUrl,
+    ),
+  );
+}
+
+bool _requiresRuntimeStackSourceManifest(RuntimeRecord runtime) {
+  return runtime.id == macosWineRuntimeId && runtime.stack.isSome();
 }
