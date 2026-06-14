@@ -1893,6 +1893,74 @@ corefonts                Microsoft Core Fonts
     });
   });
 
+  test(
+    'list-bottle-programs --json does not duplicate pinned Start Menu shortcuts',
+    () async {
+      final tempDirectory = await Directory.systemTemp.createTemp(
+        'konyak-bottle-programs-pinned-shortcut-test-',
+      );
+      addTearDown(() async {
+        if (await tempDirectory.exists()) {
+          await tempDirectory.delete(recursive: true);
+        }
+      });
+      final bottlePath = _joinTestPath(tempDirectory.path, const ['Steam']);
+      final startMenuPath = _joinTestPath(bottlePath, const [
+        'drive_c',
+        'ProgramData',
+        'Microsoft',
+        'Windows',
+        'Start Menu',
+        'Programs',
+      ]);
+      Directory(startMenuPath).createSync(recursive: true);
+      final shortcutPath = _joinTestPath(startMenuPath, const ['Steam.lnk']);
+      File(shortcutPath)
+        ..createSync()
+        ..writeAsStringSync('shortcut');
+
+      final repository = MemoryBottleRepository(
+        dataHome: tempDirectory.path,
+        bottles: [
+          BottleRecord(
+            id: 'steam',
+            name: 'Steam',
+            path: bottlePath,
+            windowsVersion: 'win10',
+            pinnedPrograms: [
+              PinnedProgramRecord(name: 'Steam', path: shortcutPath),
+            ],
+          ),
+        ],
+      );
+
+      final result = runCli(
+        const ['list-bottle-programs', 'steam', '--json'],
+        bottleRepository: repository,
+        bottleProgramRepository: const DartIoBottleProgramRepository(),
+      );
+
+      expect(result.exitCode, 0);
+      expect(result.stderr, isEmpty);
+
+      final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+      expect(payload, {
+        'schemaVersion': 1,
+        'bottlePrograms': {
+          'bottleId': 'steam',
+          'programs': [
+            {
+              'id': 'steam',
+              'name': 'Steam',
+              'path': shortcutPath,
+              'source': 'globalStartMenu',
+            },
+          ],
+        },
+      });
+    },
+  );
+
   test('open-program-location --json reveals the pinned program path', () {
     final repository = MemoryBottleRepository(
       dataHome: '/Users/user/Library/Application Support/Konyak',

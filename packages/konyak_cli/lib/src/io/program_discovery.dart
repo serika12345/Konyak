@@ -50,6 +50,10 @@ class DartIoBottleProgramRepository implements BottleProgramRepository {
     }
 
     for (final pinnedProgram in bottle.pinnedPrograms) {
+      if (_hasDiscoveredProgramPath(programs, pinnedProgram.path)) {
+        continue;
+      }
+
       final id = _uniqueProgramId(
         baseId: _bottleIdFromName(pinnedProgram.name),
         existing: programs,
@@ -75,6 +79,17 @@ class DartIoBottleProgramRepository implements BottleProgramRepository {
     programs.sort((left, right) => left.name.compareTo(right.name));
     return List.unmodifiable(programs);
   }
+}
+
+bool _hasDiscoveredProgramPath(
+  List<BottleProgramRecord> programs,
+  String programPath,
+) {
+  final normalizedProgramPath = _normalizeFilesystemPath(programPath);
+  return programs.any(
+    (program) =>
+        _normalizeFilesystemPath(program.path) == normalizedProgramPath,
+  );
 }
 
 class DartIoBottlePrefixInitializer implements BottlePrefixInitializer {

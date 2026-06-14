@@ -11,6 +11,39 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-14 19:25 JST
+- State: `completed`
+- Branch: `main`
+- Related work: installed-program listing pinned shortcut deduplication
+- Purpose: fix the Installed Programs dialog so pinning a discovered Start Menu
+  shortcut does not make the same program appear twice on later listings.
+- Completed:
+  - Read the current progress and TODO state.
+  - Identified `list-bottle-programs --json` program discovery as the shared
+    source for the Installed Programs dialog.
+  - Added CLI contract coverage for a pinned Start Menu shortcut with the same
+    path as a discovered shortcut.
+  - Confirmed the new CLI contract failed before implementation by returning
+    both `globalStartMenu` and `pinned` entries for the same `.lnk`.
+  - Updated bottle program discovery to skip pinned entries when the same
+    normalized program path is already present in the discovered program list.
+- Remaining:
+  - None.
+- Next: manually reopen Installed Programs after pinning a Start Menu shortcut
+  if local UI smoke verification is desired.
+- Verification:
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "list-bottle-programs --json does not duplicate pinned Start Menu shortcuts"'`:
+    failed before implementation on the duplicate `pinned` entry, then passed
+    after implementation.
+  - `nix develop -c zsh -lc 'dart format packages/konyak_cli/lib/src/io/program_discovery.dart packages/konyak_cli/test/cli_contract_program_execution.part.dart'`:
+    passed.
+  - `nix develop -c zsh -lc 'just cli-test'`: passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `nix develop -c zsh -lc 'git diff --check'`: passed.
+
 - Timestamp: 2026-06-14 15:06 JST
 - State: `completed`
 - Branch: `main`
