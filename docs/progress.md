@@ -11,6 +11,78 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-15 01:46 JST
+- State: `completed`
+- Branch: `main`
+- Related work: macOS runtime Wine loader parity with CrossOver; winetricks CLI
+  smoke; execution path SSOT
+- Purpose: replace the earlier winetricks environment workaround with the root
+  runtime fix discovered by comparing Konyak's packaged Wine layout with
+  `/Users/masato/Downloads/CrossOver.app`.
+- Completed:
+  - Compared CrossOver's packaged Wine entrypoints and Unix loader with the
+    Konyak dev runtime. CrossOver's copied Wine loader depends only on system
+    libraries and carries an rpath back to CrossOver's `lib64`, while Konyak's
+    `lib/wine/x86_64-unix/wine` still linked
+    `@loader_path/../../libintl.8.dylib`.
+  - Confirmed the `libintl` dependency is the real failure mode for Wine's
+    temporary `winetemp-*` loader copy: after Wine copies the loader under
+    `/private/var/...`, `@loader_path/../../libintl.8.dylib` no longer points
+    at the runtime root.
+  - Removed the earlier parent-side `WINETRICKS_FALLBACK_LIBRARY_PATH` CLI
+    environment workaround and its contract expectations.
+  - Added a runtime layout check that fails if the Wine Unix loader depends on
+    packaged or third-party dylibs, so the temporary-copy hazard is caught by
+    maintained runtime verification instead of papered over in CLI process
+    environment.
+  - Updated the CrossOver Wine derivation to link with
+    `-Wl,-dead_strip_dylibs`, matching CrossOver's observable loader contract
+    by dropping unused direct dylib dependencies from the copied loader.
+  - Extended `scripts/run_macos_runtime_cli_smoke.zsh` so the maintained
+    CLI-backed smoke path creates a bottle and runs
+    `run-winetricks ci-prefix-smoke --verb win10 --json`.
+  - Built the x86_64-darwin runtime, assembled it with the existing component
+    archives, and ran the parent CLI smoke through `install-macos-wine`,
+    `create-bottle`, and `run-winetricks` using the local stack source
+    manifest.
+- Remaining:
+  - None for this CrossOver loader parity repair.
+- Next: when publishing the next macOS runtime, use the rebuilt runtime stack
+  path and rerun the runtime release workflow so the strengthened checker runs
+  on the published artifacts.
+- Verification:
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart -n "run-winetricks --json launches a selected verb|run-bottle-command --json launches winetricks with bottle env"'`:
+    passed after removing the earlier fallback workaround.
+  - `nix develop -c zsh -lc 'zsh -n runtime/konyak-macos-runtime/scripts/check-wine32on64-runtime.zsh scripts/run_macos_runtime_cli_smoke.zsh'`:
+    passed.
+  - `nix develop -c zsh -lc './runtime/konyak-macos-runtime/scripts/check-wine32on64-runtime.zsh .dart_tool/konyak/dev-runtime/macos-wine'`:
+    failed as expected before the runtime rebuild because
+    `lib/wine/x86_64-unix/wine` depended on
+    `@loader_path/../../libintl.8.dylib`.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && nix build .#konyak-macos-wine-runtime --print-build-logs'`:
+    passed.
+  - `nix develop -c zsh -lc 'runtime/konyak-macos-runtime/scripts/check-wine32on64-runtime.zsh runtime/konyak-macos-runtime/result'`:
+    passed for the current-system aarch64 build.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && nix build .#packages.x86_64-darwin.konyak-macos-wine-runtime --print-build-logs'`:
+    passed; the new `lib/wine/x86_64-unix/wine` depends only on
+    `/usr/lib/libSystem.B.dylib`.
+  - `nix develop -c zsh -lc 'runtime/konyak-macos-runtime/scripts/check-wine32on64-runtime.zsh runtime/konyak-macos-runtime/result'`:
+    passed for the x86_64-darwin build.
+  - `nix develop -c zsh -lc 'otool -L runtime/konyak-macos-runtime/result/lib/wine/x86_64-unix/wine runtime/konyak-macos-runtime/result/bin/wine runtime/konyak-macos-runtime/result/bin/wineserver'`:
+    confirmed the copied Unix loader no longer links `libintl`.
+  - `nix develop -c zsh -lc '<assemble local runtime stack from the rebuilt Wine archive and existing component archives; run check-wine-addons-component.zsh, check-wine32on64-runtime.zsh, check-dxmt-component.zsh, check-vkd3d-component.zsh, check-dxvk-component.zsh, and check-gstreamer-component.zsh>'`:
+    passed for `.dart_tool/konyak/macos-runtime-root-fix-dist/result-runtime-stack`.
+  - `nix develop -c zsh -lc 'KONYAK_DEV_MACOS_WINE_STACK_MANIFEST="$PWD/.dart_tool/konyak/macos-runtime-root-fix-dist/konyak-macos-wine-runtime-stack-source.json" KONYAK_MACOS_RUNTIME_CLI_SMOKE_WORK_ROOT="$PWD/.dart_tool/konyak/macos-runtime-cli-smoke-root-fix-crossover-parity" KONYAK_MACOS_RUNTIME_CLI_SMOKE_COMMAND_TIMEOUT=300s KONYAK_MACOS_RUNTIME_CLI_SMOKE_INSTALL_TIMEOUT=1200s ./scripts/run_macos_runtime_cli_smoke.zsh'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart'`:
+    passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `nix develop -c zsh -lc 'zsh -n runtime/konyak-macos-runtime/scripts/check-wine32on64-runtime.zsh scripts/run_macos_runtime_cli_smoke.zsh && git diff --check && git -C runtime/konyak-macos-runtime diff --check'`:
+    passed.
+
 - Timestamp: 2026-06-14 23:03 JST
 - State: `completed`
 - Branch: `main`

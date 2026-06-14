@@ -230,4 +230,16 @@ assert_jq "$create_bottle_json" \
     .bottle.path == ($dataHome + "/bottles/ci-prefix-smoke")
   '
 
+run_cli_capture run-winetricks "$command_timeout" run-winetricks ci-prefix-smoke --verb win10 --json
+run_winetricks_json="$captured_stdout_path"
+assert_jq "$run_winetricks_json" \
+  "run-winetricks did not complete through the published macOS runtime." \
+  '
+    .schemaVersion == 1 and
+    .run.bottleId == "ci-prefix-smoke" and
+    .run.runnerKind == "macosWinetricks" and
+    .run.programPath == "win10" and
+    .run.processExitCode == 0
+  '
+
 echo "macOS runtime CLI smoke passed."
