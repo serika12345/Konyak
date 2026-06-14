@@ -308,13 +308,20 @@ ProgramRunRequest _macosTerminalCommandRequest({
     bottle: bottle,
     environment: environment,
   );
+  final setupScriptPath = _macosTerminalSetupScriptPath(bottle);
 
   return ProgramRunRequest(
     bottleId: bottle.id,
     programPath: 'terminal',
     runnerKind: 'macosTerminal',
     executable: '/usr/bin/osascript',
-    arguments: <String>['-e', _macosTerminalAppleScript(shellCommand)],
+    arguments: <String>[
+      '-e',
+      _macosTerminalAppleScript(
+        shellCommand: shellCommand,
+        setupScriptPath: setupScriptPath,
+      ),
+    ],
     environment: const ProgramRunEnvironment.empty(),
     logPath: _joinPath(bottle.path, const ['logs', 'latest.log']),
   );

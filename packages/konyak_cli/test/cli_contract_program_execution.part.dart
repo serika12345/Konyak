@@ -1154,6 +1154,19 @@ void defineProgramExecutionContractTests() {
       ),
     );
     expect(runner.lastRequest?.arguments.last, contains('alias wine'));
+    expect(runner.lastRequest?.arguments.last, contains('set setupText to "'));
+    expect(
+      runner.lastRequest?.arguments.last,
+      contains(
+        "GST_REGISTRY='/Users/user/Library/Application Support/Konyak/Bottles/Steam/gstreamer-1.0-registry.x86_64.bin'",
+      ),
+    );
+    expect(runner.lastRequest?.arguments.last, contains('do script "source '));
+    final terminalCommand = _singleAppleScriptDoScriptCommand(
+      runner.lastRequest!.arguments.last,
+    );
+    expect(terminalCommand, contains('konyak-terminal-setup.zsh'));
+    expect(terminalCommand, isNot(contains('GST_REGISTRY')));
 
     final payload = jsonDecode(result.stdout) as Map<String, Object?>;
     final run = payload['run'] as Map<String, Object?>;
@@ -2363,4 +2376,19 @@ corefonts                Microsoft Core Fonts
       expect(failure.message, 'metadata unavailable');
     },
   );
+}
+
+String _singleAppleScriptDoScriptCommand(String appleScript) {
+  final commandLines = appleScript
+      .split('\n')
+      .map((line) => line.trim())
+      .where((line) => line.startsWith('do script '))
+      .toList(growable: false);
+  expect(commandLines, hasLength(1));
+
+  final commandLine = commandLines.single;
+  final match = RegExp(r'^do script "(.+)"$').firstMatch(commandLine);
+  expect(match, isNotNull);
+
+  return match!.group(1)!;
 }

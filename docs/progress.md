@@ -11,6 +11,40 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-14 15:06 JST
+- State: `completed`
+- Branch: `main`
+- Related work: macOS bottle Terminal launch repair
+- Purpose: fix the macOS bottle Terminal command so Terminal no longer opens
+  into zsh's unfinished quote prompt when the Wine environment contains the
+  GStreamer registry path and other runtime variables.
+- Completed:
+  - Read the current progress and TODO state.
+  - Identified the macOS Terminal command generator in the CLI.
+  - Added CLI contract coverage requiring macOS Terminal launches to keep the
+    full GStreamer registry setup in a generated setup script while passing
+    only a short `source .../konyak-terminal-setup.zsh` command to Terminal.
+  - Changed the macOS bottle Terminal AppleScript to write the generated shell
+    setup into a bottle-local logs script with restrictive permissions before
+    opening Terminal.
+  - Kept the existing Wine environment and aliases in the sourced setup script,
+    including `WINEPREFIX`, GStreamer variables, Wine DLL paths, and sync mode.
+- Remaining:
+  - None.
+- Next: manually retry the Bottle Terminal action from the Flutter app if a
+  local UI smoke is desired.
+- Verification:
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "run-bottle-command --json opens a macOS bottle terminal"'`:
+    failed before implementation on the missing setup-script handoff assertion,
+    then passed after implementation and formatting.
+  - `nix develop -c zsh -lc 'just cli-test'`: passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: failed once after formatting
+    the updated CLI contract test, then passed on rerun.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `nix develop -c zsh -lc 'git diff --check'`: passed.
+
 - Timestamp: 2026-06-14 03:02 JST
 - State: `completed`
 - Branch: `main`

@@ -96,12 +96,30 @@ String _macosWineTerminalShellCommand({
   return commands.join('; ');
 }
 
-String _macosTerminalAppleScript(String shellCommand) {
-  final escapedCommand = _appleScriptString(shellCommand);
+String _macosTerminalSetupScriptPath(BottleRecord bottle) {
+  return _joinPath(bottle.path, const ['logs', 'konyak-terminal-setup.zsh']);
+}
+
+String _macosTerminalAppleScript({
+  required String shellCommand,
+  required String setupScriptPath,
+}) {
+  final setupDirectory = _dirname(setupScriptPath);
+  final escapedSetupDirectory = _appleScriptString(setupDirectory);
+  final escapedSetupFile = _appleScriptString(setupScriptPath);
+  final escapedSetupText = _appleScriptString(shellCommand);
+  final escapedTerminalCommand = _appleScriptString(
+    'source ${_shellQuote(setupScriptPath)}',
+  );
+
   return '''
+set setupDirectory to "$escapedSetupDirectory"
+set setupFile to "$escapedSetupFile"
+set setupText to "$escapedSetupText"
+do shell script "umask 077; mkdir -p " & quoted form of setupDirectory & "; printf %s " & quoted form of setupText & " > " & quoted form of setupFile
 tell application "Terminal"
 activate
-do script "$escapedCommand"
+do script "$escapedTerminalCommand"
 end tell
 ''';
 }
