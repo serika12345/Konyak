@@ -145,6 +145,18 @@ task changes scope.
     `open-bottle-location`.
   - [x] Expose the bottle utility menu in Flutter.
   - [x] Confirm and delete bottles from the Flutter utility menu.
+- [ ] Add a Bottle Tools launcher surface for Wine built-in utilities.
+  - [ ] Keep the current Winetricks placement unchanged in the first pass.
+  - [ ] Group bottle-scoped utility launchers behind a Tools action, dialog,
+    or sheet instead of mixing them into Installed Programs.
+  - [ ] Preserve the existing Wine Configuration, Registry Editor, Control
+    Panel, Terminal, and location actions while giving them a clearer shared
+    home.
+  - [ ] Extend `run-bottle-command` through explicit allowlist command IDs,
+    not arbitrary shell strings, for utilities such as `uninstaller`,
+    `taskmgr`, `cmd`, `explorer`, `dxdiag`, and `winver`.
+  - [ ] Treat Uninstall Programs as the Wine uninstaller or Add/Remove
+    Programs path, separate from the Start Menu shortcut launcher list.
 - [x] Add first Start Menu shortcut support.
   - [x] Treat `.lnk` files as runnable program inputs.
   - [x] Expose global and user Start Menu shortcuts through
