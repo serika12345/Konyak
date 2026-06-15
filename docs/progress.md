@@ -11,11 +11,12 @@ handoff notes.
 
 ### Latest Update
 
-- Timestamp: 2026-06-15 10:47 JST
+- Timestamp: 2026-06-15 11:46 JST
 - State: `completed`
 - Branch: `main`
 - Related work: runtime SSOT hardening; parent runtime fallback removal;
-  macOS runtime submodule completeness guards
+  macOS runtime submodule completeness guards; parent commit `60711db`;
+  runtime submodule commit `984d41e`
 - Purpose: remove remaining parent-side runtime compensation paths so macOS
   runtime contents are complete in `runtime/konyak-macos-runtime` and consumed
   through source manifests instead of generated, downloaded, or overlaid by the
@@ -42,6 +43,9 @@ handoff notes.
     parent Nix packages do not act as managed runtime payload sources.
   - Updated AGENTS, TODO, CLI distribution docs, VSCode docs, and the runtime
     integrity inventory.
+  - Pushed runtime submodule commit `984d41e` and parent commit `60711db`.
+  - Republished the `crossover-26.1.0-konyak.0` macOS runtime stack assets from
+    runtime Actions run `27519923579`.
 - Remaining:
   - None for this SSOT hardening pass.
 - Next: keep macOS runtime fixes in `runtime/konyak-macos-runtime`; for Linux,
@@ -65,6 +69,13 @@ handoff notes.
   - `nix develop -c zsh -lc 'just lint'`: passed.
   - `nix develop -c zsh -lc 'git diff --check && git -C runtime/konyak-macos-runtime diff --check'`:
     passed.
+  - Runtime Actions run `27519923579`: passed through `Publish runtime release`.
+  - Release assets updated on 2026-06-15 02:43 UTC:
+    `konyak-macos-runtime.release.json`,
+    `konyak-macos-wine-runtime-stack-source.json`, and
+    `konyak-macos-wine-runtime-stack.tar.zst`.
+  - Parent Actions run `27520926939`
+    (`macOS Runtime CLI Smoke`, manually dispatched after republish): passed.
 
 - Timestamp: 2026-06-15 09:18 JST
 - State: `completed`
