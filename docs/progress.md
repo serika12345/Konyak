@@ -11,7 +11,7 @@ handoff notes.
 
 ### Latest Update
 
-- Timestamp: 2026-06-15 01:46 JST
+- Timestamp: 2026-06-15 09:18 JST
 - State: `completed`
 - Branch: `main`
 - Related work: macOS runtime Wine loader parity with CrossOver; winetricks CLI
@@ -45,11 +45,15 @@ handoff notes.
     archives, and ran the parent CLI smoke through `install-macos-wine`,
     `create-bottle`, and `run-winetricks` using the local stack source
     manifest.
+  - Published the rebuilt runtime stack from runtime Actions run `27505571080`
+    to the existing `crossover-26.1.0-konyak.0` release.
+  - Pushed the parent repository commit `15c219c` and verified the published
+    runtime through parent Actions run `27516631769`.
 - Remaining:
   - None for this CrossOver loader parity repair.
-- Next: when publishing the next macOS runtime, use the rebuilt runtime stack
-  path and rerun the runtime release workflow so the strengthened checker runs
-  on the published artifacts.
+- Next: if winetricks or prefix initialization regresses again, start from the
+  published-runtime CLI smoke and the runtime loader dependency check; do not
+  add parent-side dylib fallback environment as a workaround.
 - Verification:
   - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart -n "run-winetricks --json launches a selected verb|run-bottle-command --json launches winetricks with bottle env"'`:
     passed after removing the earlier fallback workaround.
@@ -82,6 +86,11 @@ handoff notes.
   - `nix develop -c zsh -lc 'just lint'`: passed.
   - `nix develop -c zsh -lc 'zsh -n runtime/konyak-macos-runtime/scripts/check-wine32on64-runtime.zsh scripts/run_macos_runtime_cli_smoke.zsh && git diff --check && git -C runtime/konyak-macos-runtime diff --check'`:
     passed.
+  - Runtime GitHub Actions run `27505571080`: passed, including build,
+    Wine32-on-64 runtime payload verification, stack assembly, launch/backend
+    smoke, release metadata, and `publish-release`.
+  - Parent GitHub Actions run `27516631769`: passed the published runtime CLI
+    smoke.
 
 - Timestamp: 2026-06-14 23:03 JST
 - State: `completed`
