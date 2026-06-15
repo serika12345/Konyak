@@ -138,6 +138,15 @@ The macOS runtime stack itself is released from the
 `runtime/konyak-macos-runtime` submodule. Its workflow keeps the expensive
 CrossOver-derived Wine build, DXMT build, binary component packaging, metadata
 generation, Wine32-on-64 smoke, and publish steps as separate rerunnable jobs.
+Final runtime Release assets are placed only after verification succeeds. CI
+builds publish through the `Build runtime` workflow after the assembled runtime
+stack passes layout checks and Wine32-on-64, GUI launch, DXVK, DXMT, and vkd3d
+smoke tests. Locally produced runtime stacks may be staged only as draft
+candidate releases in the runtime submodule; the `Promote runtime candidate`
+workflow downloads those candidate assets, recalculates the stack archive
+checksum, rewrites the source manifest to the final release URL, runs the same
+smoke gates, and publishes the final Release only if every verification job
+passes.
 The published manifest for the default runtime stack should point at the single
 assembled archive containing Wine, DXVK-macOS, DXMT, MoltenVK, GStreamer,
 FreeType, wine-mono, wine-gecko, and winetricks. Release verification checks the

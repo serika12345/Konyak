@@ -11,6 +11,47 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-15 12:42 JST
+- State: `completed`
+- Branch: `main`
+- Related work: macOS runtime release promotion; local artifact candidate flow
+- Purpose: allow locally built macOS runtime stack artifacts to become final
+  Release assets only after CI downloads, normalizes, verifies, smokes, and
+  promotes them.
+- Completed:
+  - Added a runtime submodule staging script for local release candidates.
+  - Added a runtime submodule candidate promotion workflow that normalizes
+    candidate manifests, runs Wine32-on-64, GUI, DXVK, DXMT, and vkd3d smoke
+    gates, and publishes the final Release only after every verification job
+    succeeds.
+  - Documented the candidate flow in runtime and parent release docs.
+  - Added GitHub CLI to the runtime submodule dev shell so candidate staging
+    stays inside the runtime submodule tooling boundary.
+- Remaining:
+  - None for the local-candidate release promotion path.
+- Next: stage local runtime artifacts only as candidate releases, then promote
+  them through `Promote runtime candidate`; keep direct final Release placement
+  reserved for verification-passing CI jobs.
+- Verification:
+  - `nix develop -c zsh -lc 'direnv allow'`: passed after the runtime
+    submodule `flake.nix` tooling change.
+  - `nix develop ./runtime/konyak-macos-runtime -c zsh -lc 'cd runtime/konyak-macos-runtime && command -v jq && command -v gh && zsh -n scripts/stage-runtime-release-candidate.zsh'`:
+    passed.
+  - `nix develop ./runtime/konyak-macos-runtime -c zsh -lc '<download existing runtime release assets; run scripts/stage-runtime-release-candidate.zsh --dry-run candidate-local-test>'`:
+    passed.
+  - `nix develop -c zsh -lc 'nixfmt --check runtime/konyak-macos-runtime/flake.nix'`:
+    passed.
+  - `nix develop -c zsh -lc '<promote-runtime-candidate workflow shape check>'`:
+    passed.
+  - `nix develop -c zsh -lc 'nix shell nixpkgs#actionlint -c actionlint runtime/konyak-macos-runtime/.github/workflows/promote-runtime-candidate.yml'`:
+    passed.
+  - `nix develop -c zsh -lc 'git diff --check && git -C runtime/konyak-macos-runtime diff --check'`:
+    passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+
 - Timestamp: 2026-06-15 11:46 JST
 - State: `completed`
 - Branch: `main`
