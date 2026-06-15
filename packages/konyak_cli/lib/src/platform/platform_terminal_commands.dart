@@ -45,10 +45,7 @@ String _linuxWineTerminalShellCommandWithEnvironment({
     'cd ${_shellQuote(bottle.path)}',
     'export WINEPREFIX=${_shellQuote(bottle.path)}',
     'export WINE=${_shellQuote(executable)}',
-    ...runtimeBin.match(
-      () => const <String>[],
-      (path) => <String>['export PATH=${_shellQuote(path)}:\$PATH'],
-    ),
+    'export PATH=${_shellQuote(runtimeBin)}:\$PATH',
     if (wineLibraryPath != null)
       'export LD_LIBRARY_PATH=${_shellQuote(wineLibraryPath)}:\${LD_LIBRARY_PATH:-}',
     'alias wine=${_shellQuote(executable)}',

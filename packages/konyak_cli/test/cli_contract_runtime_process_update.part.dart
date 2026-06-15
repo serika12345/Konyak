@@ -948,12 +948,17 @@ void defineRuntimeProcessAndUpdateContractTests() {
     expect(result.exitCode, 0);
     expect(result.stderr, isEmpty);
     expect(runner.requests, hasLength(2));
-    expect(runner.requests[0].executable, 'wineserver');
+    expect(
+      runner.requests[0].executable,
+      'Konyak/Runtimes/linux-wine/bin/wineserver',
+    );
     expect(runner.requests[0].arguments, const ['-k']);
     expect(runner.requests[0].environment.toMap(), {
+      'PATH': 'Konyak/Runtimes/linux-wine/bin',
       'WINEPREFIX': '/bottles/alpha',
     });
     expect(runner.requests[1].environment.toMap(), {
+      'PATH': 'Konyak/Runtimes/linux-wine/bin',
       'WINEPREFIX': '/bottles/beta',
     });
 
@@ -967,16 +972,16 @@ void defineRuntimeProcessAndUpdateContractTests() {
             'bottleId': 'alpha',
             'status': 'terminated',
             'runnerKind': 'wineserver',
-            'executable': 'wineserver',
-            'argv': ['wineserver', '-k'],
+            'executable': 'Konyak/Runtimes/linux-wine/bin/wineserver',
+            'argv': ['Konyak/Runtimes/linux-wine/bin/wineserver', '-k'],
             'processExitCode': 0,
           },
           {
             'bottleId': 'beta',
             'status': 'terminated',
             'runnerKind': 'wineserver',
-            'executable': 'wineserver',
-            'argv': ['wineserver', '-k'],
+            'executable': 'Konyak/Runtimes/linux-wine/bin/wineserver',
+            'argv': ['Konyak/Runtimes/linux-wine/bin/wineserver', '-k'],
             'processExitCode': 0,
           },
         ],
@@ -1020,9 +1025,13 @@ void defineRuntimeProcessAndUpdateContractTests() {
       expect(result.exitCode, 0);
       expect(result.stderr, isEmpty);
       expect(runner.requests, hasLength(1));
-      expect(runner.requests.single.executable, 'wineserver');
+      expect(
+        runner.requests.single.executable,
+        'Konyak/Runtimes/linux-wine/bin/wineserver',
+      );
       expect(runner.requests.single.arguments, const ['-k']);
       expect(runner.requests.single.environment.toMap(), {
+        'PATH': 'Konyak/Runtimes/linux-wine/bin',
         'WINEPREFIX': '/bottles/beta',
       });
 
@@ -1036,8 +1045,8 @@ void defineRuntimeProcessAndUpdateContractTests() {
               'bottleId': 'beta',
               'status': 'terminated',
               'runnerKind': 'wineserver',
-              'executable': 'wineserver',
-              'argv': ['wineserver', '-k'],
+              'executable': 'Konyak/Runtimes/linux-wine/bin/wineserver',
+              'argv': ['Konyak/Runtimes/linux-wine/bin/wineserver', '-k'],
               'processExitCode': 0,
             },
           ],
@@ -1086,8 +1095,8 @@ void defineRuntimeProcessAndUpdateContractTests() {
               'bottleId': 'steam',
               'status': 'terminated',
               'runnerKind': 'wineserver',
-              'executable': 'wineserver',
-              'argv': ['wineserver', '-k'],
+              'executable': 'Konyak/Runtimes/linux-wine/bin/wineserver',
+              'argv': ['Konyak/Runtimes/linux-wine/bin/wineserver', '-k'],
               'processExitCode': 1,
             },
           ],
@@ -1163,9 +1172,13 @@ void defineRuntimeProcessAndUpdateContractTests() {
     expect(result.exitCode, 0);
     expect(result.stderr, isEmpty);
     expect(runner.requests, hasLength(1));
-    expect(runner.requests.single.executable, 'winedbg');
+    expect(
+      runner.requests.single.executable,
+      'Konyak/Runtimes/linux-wine/bin/winedbg',
+    );
     expect(runner.requests.single.arguments, const ['--command', 'info proc']);
     expect(runner.requests.single.environment.toMap(), {
+      'PATH': 'Konyak/Runtimes/linux-wine/bin',
       'WINEPREFIX': bottlePath,
     });
 
@@ -2091,13 +2104,17 @@ void defineRuntimeProcessAndUpdateContractTests() {
     expect(result.exitCode, 0);
     expect(result.stderr, isEmpty);
     expect(runner.requests, hasLength(1));
-    expect(runner.requests.single.executable, 'winedbg');
+    expect(
+      runner.requests.single.executable,
+      'Konyak/Runtimes/linux-wine/bin/winedbg',
+    );
     expect(runner.requests.single.arguments, const [
       '--command',
       'kill',
       '0x000000d8',
     ]);
     expect(runner.requests.single.environment.toMap(), {
+      'PATH': 'Konyak/Runtimes/linux-wine/bin',
       'WINEPREFIX': '/bottles/steam',
     });
 
@@ -2112,8 +2129,13 @@ void defineRuntimeProcessAndUpdateContractTests() {
             'processId': '000000d8',
             'status': 'terminated',
             'runnerKind': 'winedbg',
-            'executable': 'winedbg',
-            'argv': ['winedbg', '--command', 'kill', '0x000000d8'],
+            'executable': 'Konyak/Runtimes/linux-wine/bin/winedbg',
+            'argv': [
+              'Konyak/Runtimes/linux-wine/bin/winedbg',
+              '--command',
+              'kill',
+              '0x000000d8',
+            ],
             'processExitCode': 0,
           },
         ],

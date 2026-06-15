@@ -262,27 +262,6 @@ CliResult _programRunFailedJsonResult({
   );
 }
 
-CliResult? _ensureWinetricksScriptForRun({
-  required ProgramRunRequest request,
-  required WinetricksScriptInstaller scriptInstaller,
-}) {
-  if (request.runnerKind != 'macosWinetricks') {
-    return null;
-  }
-
-  final installResult = scriptInstaller.installIfMissing(
-    executable: request.executable,
-  );
-  return switch (installResult) {
-    WinetricksScriptInstallCompleted() => null,
-    WinetricksScriptInstallFailed(:final message) => _jsonError(
-      exitCode: 75,
-      code: 'winetricksUnavailable',
-      message: message,
-    ),
-  };
-}
-
 String _programRunLog(ProgramRunRequest request, ProcessResult result) {
   final stdout = _processOutputToString(result.stdout);
   final stderr = _processOutputToString(result.stderr);

@@ -308,14 +308,7 @@ class BottleRuntimeSettings {
       environment['DXVK_ASYNC'] = '1';
     }
 
-    switch (enhancedSync) {
-      case 'esync':
-        environment['WINEESYNC'] = '1';
-      case 'msync':
-        environment['WINEMSYNC'] = '1';
-      case 'none':
-        break;
-    }
+    environment.addAll(_wineSyncEnvironment());
 
     if (metalHud) {
       environment['MTL_HUD_ENABLED'] = '1';
@@ -334,6 +327,39 @@ class BottleRuntimeSettings {
     }
 
     return ProgramRunEnvironment(environment);
+  }
+
+  ProgramRunEnvironment linuxEnvironment() {
+    final environment = <String, String>{};
+
+    if (dxvk) {
+      final hud = switch (dxvkHud) {
+        'full' => 'full',
+        'partial' => 'devinfo,fps,frametimes',
+        'fps' => 'fps',
+        _ => null,
+      };
+      if (hud != null) {
+        environment['DXVK_HUD'] = hud;
+      }
+    }
+
+    if (dxvk && dxvkAsync) {
+      environment['DXVK_ASYNC'] = '1';
+    }
+
+    environment.addAll(_wineSyncEnvironment());
+
+    return ProgramRunEnvironment(environment);
+  }
+
+  Map<String, String> _wineSyncEnvironment() {
+    return switch (enhancedSync) {
+      'esync' => const <String, String>{'WINEESYNC': '1'},
+      'msync' => const <String, String>{'WINEMSYNC': '1'},
+      'none' => const <String, String>{},
+      _ => const <String, String>{},
+    };
   }
 
   @override

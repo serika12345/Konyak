@@ -122,8 +122,9 @@ task changes scope.
     layering Wine, DXVK-macOS, vkd3d, MoltenVK, GStreamer, wine-mono,
     wine-gecko, winetricks, and macOS-only GPTK/D3DMetal archives during
     `install-macos-wine`.
-  - [x] Build the macOS development winetricks component from a real,
-    checksum-verified upstream winetricks script and verb catalog, not a stub.
+  - [x] Keep macOS development runtime manifests sourced from the
+    `runtime/konyak-macos-runtime` produced stack instead of generating or
+    overlaying runtime components in the parent repository.
   - [x] Define a checksum-validated component source manifest that maps each
     stack component to its archive URL, version, and checksum.
   - [x] Install a full stack from a component source manifest and use source
@@ -414,9 +415,13 @@ task changes scope.
     - Keep runtime Actions rerun units narrow: dependency packaging, Wine
       build, component assembly, launch smoke, backend smoke, and publish work
       must remain independently rerunnable where practical.
-    - Review `WINEMSYNC` and `WINEESYNC` handling so Konyak does not enable
+    - [x] Review `WINEMSYNC` and `WINEESYNC` handling so Konyak does not enable
       incompatible sync modes together blindly; document the default and keep
       bottle settings explicit.
+    - [x] Remove parent-side winetricks download/list-all fallback; the app path
+      requires the submodule-produced winetricks executable and verb catalog.
+    - [x] Rename parent raw Wine/Vulkan smoke targets as low-level diagnostics
+      so app behavior proof stays on the CLI smoke route.
 - [ ] Strengthen macOS runtime automated smoke coverage.
   - [x] Keep layout/hash comparisons out of the required gate; test runtime
     behavior through Wine execution instead.
@@ -516,6 +521,12 @@ task changes scope.
     inputs as full runtime update sources.
   - [x] Make VSCode and Nix dev-shell launch paths use the same documented
     development profile.
+  - [x] Remove parent-side macOS local component generation from
+    `scripts/prepare_macos_dev_runtime_stack.zsh`; it now resolves only complete
+    manifests produced by the macOS runtime submodule.
+  - [x] Remove parent-side Linux development component generation from
+    `scripts/prepare_linux_dev_runtime_source.zsh`; it now validates and caches
+    only explicitly supplied complete Linux runtime source manifests.
   - [x] Remove Nix-provided Wine, winetricks, and vkd3d-proton from the Linux
     dev shell. Linux development runtime contents now come only from managed
     install archives or source manifests.
@@ -614,6 +625,7 @@ task changes scope.
   - Keep the E2E target separate from the default fast verification gate until
     its runtime cost and flake rate are known.
 - Publication and signing of the default Linux runtime stack manifest and
-  public key, once the Linux component archives are produced.
+  public key, once the Linux runtime packaging owner produces complete stack
+  artifacts outside the parent repository.
 - Removal of any remaining bootstrap Wine-only fallback only after each target
   platform has a complete default runtime stack manifest as its release input.

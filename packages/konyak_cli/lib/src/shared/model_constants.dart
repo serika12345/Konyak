@@ -21,8 +21,6 @@ const macosWineRuntimeSourceManifestUrl =
     'https://github.com/$macosWineRuntimeRepository/releases/download/'
     '$macosWineRuntimeDefaultReleaseTag/$macosWineRuntimeSourceManifestFileName';
 const macosWineVersionUrl = macosWineRuntimeReleaseUrl;
-const winetricksScriptUrl =
-    'https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks';
 const _rosettaRuntimePath = '/Library/Apple/usr/libexec/oah/libRosettaRuntime';
 const _rosettaInstallCommand = <String>[
   '/usr/sbin/softwareupdate',

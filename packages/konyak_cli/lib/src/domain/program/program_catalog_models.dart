@@ -213,17 +213,3 @@ class WinetricksVerbListFailed extends WinetricksVerbListResult {
 
   final String message;
 }
-
-sealed class WinetricksScriptInstallResult {
-  const WinetricksScriptInstallResult();
-}
-
-class WinetricksScriptInstallCompleted extends WinetricksScriptInstallResult {
-  const WinetricksScriptInstallCompleted();
-}
-
-class WinetricksScriptInstallFailed extends WinetricksScriptInstallResult {
-  const WinetricksScriptInstallFailed(this.message);
-
-  final String message;
-}

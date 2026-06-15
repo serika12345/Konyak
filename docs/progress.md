@@ -11,6 +11,61 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-15 10:47 JST
+- State: `completed`
+- Branch: `main`
+- Related work: runtime SSOT hardening; parent runtime fallback removal;
+  macOS runtime submodule completeness guards
+- Purpose: remove remaining parent-side runtime compensation paths so macOS
+  runtime contents are complete in `runtime/konyak-macos-runtime` and consumed
+  through source manifests instead of generated, downloaded, or overlaid by the
+  parent repository.
+- Completed:
+  - Removed the parent CLI winetricks script installer and the unpinned
+    `master/src/winetricks` runtime mutation path.
+  - Changed winetricks verb listing to require the runtime-provided macOS
+    `verbs.txt` or Linux managed `winetricks` executable.
+  - Split Linux runtime-settings environment generation from macOS-only Metal,
+    D3DMetal, and Rosetta variables.
+  - Removed parent-side local macOS component generation from
+    `scripts/prepare_macos_dev_runtime_stack.zsh`; it now resolves only complete
+    source manifests from the macOS runtime submodule release metadata or an
+    explicitly supplied complete manifest.
+  - Added `runtime/konyak-macos-runtime/scripts/check-wine-addon-versions.zsh`
+    and wired it into runtime Actions before binary component packaging.
+  - Renamed parent raw Wine/Vulkan just targets to diagnostic names and added
+    governance checks for the runtime SSOT rules.
+  - Removed parent-side Linux development component generation from
+    `scripts/prepare_linux_dev_runtime_source.zsh`; Linux development now
+    requires an explicitly supplied complete runtime source manifest.
+  - Removed macOS runtime source payload packages from the parent dev shell so
+    parent Nix packages do not act as managed runtime payload sources.
+  - Updated AGENTS, TODO, CLI distribution docs, VSCode docs, and the runtime
+    integrity inventory.
+- Remaining:
+  - None for this SSOT hardening pass.
+- Next: keep macOS runtime fixes in `runtime/konyak-macos-runtime`; for Linux,
+  add a runtime-owner packaging source before enabling a default development or
+  release stack instead of regenerating components in the parent repository.
+- Verification:
+  - `nix develop -c zsh -lc 'zsh -n scripts/prepare_linux_dev_runtime_source.zsh scripts/prepare_macos_dev_runtime_stack.zsh scripts/run_macos_vulkan_wine_smoke.zsh scripts/run_linux_vulkan_wine_smoke.zsh runtime/konyak-macos-runtime/scripts/check-wine-addon-versions.zsh'`:
+    passed.
+  - `nix develop -c zsh -lc '<temporary complete Linux source manifest>; ./scripts/prepare_linux_dev_runtime_source.zsh --print-manifest-path'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && ./scripts/check-wine-addon-versions.zsh'`:
+    passed.
+  - `nix develop -c zsh -lc './scripts/run_macos_runtime_cli_smoke.zsh'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart'`:
+    passed.
+  - `nix develop -c zsh -lc 'just cli-test'`: passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `nix develop -c zsh -lc 'git diff --check && git -C runtime/konyak-macos-runtime diff --check'`:
+    passed.
+
 - Timestamp: 2026-06-15 09:18 JST
 - State: `completed`
 - Branch: `main`

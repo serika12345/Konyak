@@ -174,7 +174,10 @@ void defineProgramExecutionContractTests() {
 
     expect(result.exitCode, 0);
     expect(result.stderr, isEmpty);
-    expect(runner.lastRequest?.executable, 'wine');
+    expect(
+      runner.lastRequest?.executable,
+      'Konyak/Runtimes/linux-wine/bin/wine',
+    );
     expect(runner.lastRequest?.arguments, const ['/downloads/setup.exe']);
     expect(
       runner.lastRequest?.environment.toMap()['WINEPREFIX'],
@@ -189,9 +192,9 @@ void defineProgramExecutionContractTests() {
         'bottleId': 'steam',
         'programPath': '/downloads/setup.exe',
         'runnerKind': 'wine',
-        'executable': 'wine',
+        'executable': 'Konyak/Runtimes/linux-wine/bin/wine',
         'workingDirectory': null,
-        'argv': ['wine', '/downloads/setup.exe'],
+        'argv': ['Konyak/Runtimes/linux-wine/bin/wine', '/downloads/setup.exe'],
         'logPath':
             '/home/user/.local/share/konyak/bottles/steam/logs/latest.log',
         'processExitCode': 0,
@@ -253,11 +256,68 @@ void defineProgramExecutionContractTests() {
       '-windowed',
     ]);
     expect(runner.lastRequest?.environment.toMap(), {
+      'PATH': 'Konyak/Runtimes/linux-wine/bin',
       'STEAM_COMPAT_DATA_PATH': '/compat',
       'LC_ALL': 'ja_JP.UTF-8',
       'WINEPREFIX': '/home/user/.local/share/konyak/bottles/steam',
       'WINEMSYNC': '1',
     });
+  });
+
+  test('run-program --json on Linux ignores macOS-only runtime settings', () {
+    final repository = MemoryBottleRepository(
+      dataHome: '/home/user/.local/share/konyak',
+      bottles: [
+        BottleRecord(
+          id: 'steam',
+          name: 'Steam',
+          path: '/home/user/.local/share/konyak/bottles/steam',
+          windowsVersion: 'win10',
+          runtimeSettings: const BottleRuntimeSettings(
+            dxrEnabled: true,
+            metalHud: true,
+            metalTrace: true,
+            avxEnabled: true,
+          ),
+        ),
+      ],
+    );
+    final runner = RecordingProgramRunner(
+      result: const ProgramRunCompleted(processExitCode: 0),
+    );
+
+    final result = runCli(
+      const [
+        'run-program',
+        'steam',
+        '--program',
+        '/downloads/Steam.exe',
+        '--json',
+      ],
+      bottleRepository: repository,
+      programRunPlanner: ProgramRunPlanner(
+        hostPlatform: KonyakHostPlatform.linux,
+      ),
+      programRunner: runner,
+    );
+
+    expect(result.exitCode, 0);
+    final environment = runner.lastRequest?.environment.toMap();
+    expect(
+      environment,
+      containsPair(
+        'WINEPREFIX',
+        '/home/user/.local/share/konyak/bottles/steam',
+      ),
+    );
+    expect(environment, containsPair('WINEMSYNC', '1'));
+    expect(environment, isNot(contains('MTL_HUD_ENABLED')));
+    expect(environment, isNot(contains('METAL_CAPTURE_ENABLED')));
+    expect(environment, isNot(contains('ROSETTA_ADVERTISE_AVX')));
+    expect(
+      environment,
+      isNot(containsPair('WINEDLLOVERRIDES', contains('nvapi64'))),
+    );
   });
 
   test('run-program --json uses the Konyak macOS Wine startup path on macOS', () {
@@ -1332,9 +1392,6 @@ void defineProgramExecutionContractTests() {
         environment: HostEnvironment({'HOME': '/Users/user'}),
       ),
       programRunner: runner,
-      winetricksScriptInstaller: RecordingWinetricksScriptInstaller(
-        result: const WinetricksScriptInstallCompleted(),
-      ),
     );
 
     expect(result.exitCode, 0);
@@ -1447,7 +1504,7 @@ ignored                  Should not be listed
     });
   });
 
-  test('list-winetricks-verbs --json falls back to winetricks list-all', () {
+  test('list-winetricks-verbs --json fails when runtime verbs are missing', () {
     final lister = RecordingWinetricksVerbLister(
       result: WinetricksVerbListCompleted(
         categories: parseWinetricksVerbs('''
@@ -1465,45 +1522,20 @@ win10                    Set Windows version to Windows 10
         runtimeRoot:
             '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
         lister: lister,
-        scriptInstaller: RecordingWinetricksScriptInstaller(
-          result: const WinetricksScriptInstallCompleted(),
-        ),
       ),
     );
 
-    expect(result.exitCode, 0);
-    expect(lister.executable, contains('/Runtimes/macos-wine/winetricks'));
+    expect(result.exitCode, 75);
+    expect(lister.executable, isNull);
 
     final payload = jsonDecode(result.stdout) as Map<String, Object?>;
-    expect(payload, {
-      'schemaVersion': 1,
-      'winetricks': {
-        'categories': [
-          {
-            'id': 'fonts',
-            'name': 'Fonts',
-            'verbs': [
-              {
-                'id': 'corefonts',
-                'name': 'corefonts',
-                'description': 'Microsoft Core Fonts',
-              },
-            ],
-          },
-          {
-            'id': 'settings',
-            'name': 'Settings',
-            'verbs': [
-              {
-                'id': 'win10',
-                'name': 'win10',
-                'description': 'Set Windows version to Windows 10',
-              },
-            ],
-          },
-        ],
-      },
-    });
+    expect(payload['schemaVersion'], 1);
+    final error = payload['error'] as Map<String, Object?>;
+    expect(error['code'], 'winetricksVerbsUnavailable');
+    expect(
+      error['message'],
+      contains('Managed Winetricks verb catalog is missing'),
+    );
   });
 
   test(
@@ -1534,6 +1566,16 @@ win10                    Set Windows version to Windows 10
 dotnetdesktop10         MS .NET Desktop Runtime 10.0 LTS
 ''');
 
+      final runtimeRoot = _joinTestPath(home.path, const [
+        '.local',
+        'share',
+        'konyak',
+        'Runtimes',
+        'linux-wine',
+      ]);
+      File(_joinTestPath(runtimeRoot, const ['winetricks']))
+        ..createSync(recursive: true)
+        ..writeAsStringSync('#!/bin/sh\n');
       final lister = RecordingWinetricksVerbLister(
         result: WinetricksVerbListCompleted(
           categories: parseWinetricksVerbs('''
@@ -1553,7 +1595,10 @@ corefonts                Microsoft Core Fonts
       );
 
       expect(result.exitCode, 0);
-      expect(lister.executable, 'winetricks');
+      expect(
+        lister.executable,
+        _joinTestPath(runtimeRoot, const ['winetricks']),
+      );
 
       final payload = jsonDecode(result.stdout) as Map<String, Object?>;
       expect(payload, {
@@ -1601,9 +1646,6 @@ corefonts                Microsoft Core Fonts
         environment: HostEnvironment({'HOME': '/Users/user'}),
       ),
       programRunner: runner,
-      winetricksScriptInstaller: RecordingWinetricksScriptInstaller(
-        result: const WinetricksScriptInstallCompleted(),
-      ),
     );
 
     expect(result.exitCode, 0);
@@ -1625,50 +1667,6 @@ corefonts                Microsoft Core Fonts
       '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/winetricks',
       'corefonts',
     ]);
-  });
-
-  test('run-winetricks --json reports script installation failures', () {
-    final repository = MemoryBottleRepository(
-      dataHome: '/Users/user/Library/Application Support/Konyak',
-      bottles: [
-        BottleRecord(
-          id: 'steam',
-          name: 'Steam',
-          path: '/Users/user/Library/Application Support/Konyak/Bottles/Steam',
-          windowsVersion: 'win10',
-        ),
-      ],
-    );
-    final runner = RecordingProgramRunner(
-      result: const ProgramRunCompleted(processExitCode: 0),
-    );
-
-    final result = runCli(
-      const ['run-winetricks', 'steam', '--verb', 'corefonts', '--json'],
-      bottleRepository: repository,
-      programRunPlanner: ProgramRunPlanner(
-        hostPlatform: KonyakHostPlatform.macos,
-        environment: HostEnvironment({'HOME': '/Users/user'}),
-      ),
-      programRunner: runner,
-      winetricksScriptInstaller: RecordingWinetricksScriptInstaller(
-        result: const WinetricksScriptInstallFailed(
-          'Failed to download Winetricks.',
-        ),
-      ),
-    );
-
-    expect(result.exitCode, 75);
-    expect(runner.lastRequest, isNull);
-
-    final payload = jsonDecode(result.stdout) as Map<String, Object?>;
-    expect(payload, {
-      'schemaVersion': 1,
-      'error': {
-        'code': 'winetricksUnavailable',
-        'message': 'Failed to download Winetricks.',
-      },
-    });
   });
 
   test('run-winetricks --json rejects unsafe verb names', () {
@@ -2193,7 +2191,10 @@ corefonts                Microsoft Core Fonts
         );
 
         expect(result.exitCode, 0);
-        expect(runner.lastRequest?.executable, 'wine');
+        expect(
+          runner.lastRequest?.executable,
+          'Konyak/Runtimes/linux-wine/bin/wine',
+        );
         expect(runner.lastRequest?.arguments, entry.value);
       }
     },
@@ -2278,9 +2279,9 @@ corefonts                Microsoft Core Fonts
         'bottleId': 'steam',
         'programPath': '/downloads/setup.exe',
         'runnerKind': 'wine',
-        'executable': 'wine',
+        'executable': 'Konyak/Runtimes/linux-wine/bin/wine',
         'workingDirectory': null,
-        'argv': ['wine', '/downloads/setup.exe'],
+        'argv': ['Konyak/Runtimes/linux-wine/bin/wine', '/downloads/setup.exe'],
         'logPath':
             '/home/user/.local/share/konyak/bottles/steam/logs/latest.log',
       },
@@ -2360,7 +2361,8 @@ corefonts                Microsoft Core Fonts
       expect(
         launcher,
         contains(
-          'Exec=env "WINEPREFIX=${_expectFound(repository.findBottle('steam')).path}" wine "$programPath"',
+          'Exec=env "WINEPREFIX=${_expectFound(repository.findBottle('steam')).path}" '
+          '${_joinTestPath(xdgDataHome, const ['konyak', 'Runtimes', 'linux-wine', 'bin', 'wine'])} "$programPath"',
         ),
       );
       expect(

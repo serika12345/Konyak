@@ -20,22 +20,10 @@ macOS runtime release from `runtime/macos-wine-release.json` and caches the
 release source manifest consumed by `install-macos-wine --json`. Set
 `KONYAK_DEV_MACOS_RUNTIME_RELEASE_TAG` to switch the development build to a
 different published runtime release, or set
-`KONYAK_DEV_MACOS_WINE_STACK_MANIFEST` to a complete manifest URL. Local
-component archive generation is available only through
-`KONYAK_DEV_MACOS_RUNTIME_SOURCE_MODE=local`. In that mode, the development
-runtime source helper mirrors the released component layout instead of pulling
-runtime libraries from the parent flake. The `dxvk-macos` component keeps the
-pinned Gcenx DXVK-macOS payload and supplements only `d3d10.dll` and
-`d3d10_1.dll` from upstream DXVK `v1.10.3` for both i386 and x86_64 Windows
-payloads. If local source mode is used, the GStreamer component must be given
-explicit plugin roots through `KONYAK_DEV_NIX_GSTREAMER_PLUGIN_PATHS` so it can
-mirror the release component's `lib/gstreamer-1.0` plugin directory and
-`libexec/gstreamer-1.0/gst-plugin-scanner`. The development winetricks
-component is a checksum-verified upstream winetricks script plus its real
-`list-all` verb catalog, not a stub. Override
-`KONYAK_DEV_WINETRICKS_PATH` to use a local executable or package root, or
-override `KONYAK_DEV_WINETRICKS_SCRIPT_URL` and
-`KONYAK_DEV_WINETRICKS_SCRIPT_SHA256` to change the pinned upstream source.
+`KONYAK_DEV_MACOS_WINE_STACK_MANIFEST` to a complete manifest URL or local file.
+The parent repository does not generate macOS runtime component archives. Wine,
+winetricks, Mono, Gecko, MoltenVK, FreeType, GStreamer, DXVK, DXMT, and vkd3d
+must come from the `runtime/konyak-macos-runtime` produced stack manifest.
 
 Linux development launches use `KONYAK_RUNTIME_PROFILE=development` and
 `KONYAK_LINUX_WINE_HOME`, but the Nix dev shell does not provide Wine,
@@ -47,8 +35,8 @@ The flake keeps those concerns separate. `releaseBuildPackages` and the
 platform build or packaging groups are for producing app artifacts. Verification
 and workflow tools only enter the dev shell. `linuxHostRuntimePackages` are
 Linux host helpers for local desktop/runtime testing, not Konyak-managed Wine
-runtime contents. `darwinDevelopmentRuntimeSourcePackages` are only source
-inputs for local macOS development runtime components.
+runtime contents. No parent dev-shell package group supplies managed runtime
+payloads.
 
 ## Packaged Builds
 
@@ -181,26 +169,13 @@ kept isolated from the base Wine payload under `lib/wine/*`; reinstalling or
 updating the managed macOS runtime preserves the `components/gptk-d3dmetal`
 component and migrates older overlay imports into that component layout.
 
-The development stack script follows that model without assuming Konyak can
-redistribute GPTK/D3DMetal in every environment. Set
-`KONYAK_DEV_GPTK_D3DMETAL_PATH` to a local directory that contains
-`D3DMetal.framework`, `libd3dshared.dylib`, the GPTK PE DLLs, including
-`nvapi64.dll` and canonical `nvngx.dll`, and the matching Unix libraries,
-including `nvapi64.so` and canonical `nvngx.so`, to add a `gptk-d3dmetal`
-component to the generated development source manifest. The script accepts the
-external files at the directory root, under `redist/lib/external`, under
-`lib/external`, under `Wine/lib/external`, under `Libraries/Wine/lib/external`,
-or under CrossOver.app's
-`Contents/SharedSupport/CrossOver/lib64/apple_gptk/external`, and resolves the
-matching `wine/x86_64-windows` DLL directory and `wine/x86_64-unix` Unix library
-directory from the same GPTK tree. Older `nvngx-on-metalfx` inputs are accepted
-as source names and normalized to `nvngx` in the generated component. If that
-variable is unset, the script omits GPTK/D3DMetal from the generated stack.
-
-When local macOS runtime source mode is used, vkd3d still comes from a runtime
-component archive. Provide `KONYAK_DEV_VKD3D_ARCHIVE_URL` or
-`KONYAK_DEV_VKD3D_ARCHIVE_CACHE` plus `KONYAK_DEV_VKD3D_ARCHIVE_SHA256`; do not
-source vkd3d from the parent flake.
+Development runtime preparation follows the same manifest-only boundary.
+`scripts/prepare_macos_dev_runtime_stack.zsh` resolves a complete source
+manifest produced by `runtime/konyak-macos-runtime` or an explicitly supplied
+complete manifest. `scripts/prepare_linux_dev_runtime_source.zsh` validates and
+caches an explicitly supplied complete Linux source manifest from
+`KONYAK_DEV_LINUX_WINE_STACK_SOURCE_MANIFEST`. Neither script creates component
+archives or overlays runtime files in the parent repository.
 
 Linux runtime construction now follows the same pattern through
 `install-linux-wine`. A managed Linux stack may layer `vkd3d-proton` component

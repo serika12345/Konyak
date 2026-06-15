@@ -56,10 +56,10 @@ cli-analyze:
 cli-test:
   if [ -d packages/konyak_cli ]; then cd packages/konyak_cli && dart test; fi
 
-linux-vulkan-wine-smoke:
+diagnose-linux-vulkan-wine:
   zsh scripts/run_linux_vulkan_wine_smoke.zsh
 
-macos-vulkan-wine-smoke:
+diagnose-macos-vulkan-wine:
   zsh scripts/run_macos_vulkan_wine_smoke.zsh
 
 macos-vulkan-probe-bottle:

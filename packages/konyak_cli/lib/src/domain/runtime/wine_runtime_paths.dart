@@ -32,23 +32,25 @@ String _linuxWineRuntimeRoot(HostEnvironment environment) {
     return override;
   }
 
-  return _joinPath(_resolveDataHome(environment), const [
-    'Runtimes',
-    'linux-wine',
-  ]);
+  final dataHomeOverride = environment.nonEmptyValue('KONYAK_DATA_HOME');
+  final xdgDataHome = environment.nonEmptyValue('XDG_DATA_HOME');
+  final home = environment.nonEmptyValue('HOME');
+  final dataHome =
+      dataHomeOverride ??
+      (xdgDataHome == null ? null : _joinPath(xdgDataHome, const ['konyak'])) ??
+      (home == null
+          ? 'Konyak'
+          : _joinPath(home, const ['.local', 'share', 'konyak']));
+
+  return _joinPath(dataHome, const ['Runtimes', 'linux-wine']);
 }
 
 String _macosWineBinFolder(HostEnvironment environment) {
   return _joinPath(_macosWineRuntimeRoot(environment), const ['bin']);
 }
 
-Option<String> _linuxManagedRuntimeBinFolder(HostEnvironment environment) {
-  final override = environment.nonEmptyValue('KONYAK_LINUX_WINE_HOME');
-  if (override == null) {
-    return const Option.none();
-  }
-
-  return Option.of(_joinPath(override, const ['bin']));
+String _linuxManagedRuntimeBinFolder(HostEnvironment environment) {
+  return _joinPath(_linuxWineRuntimeRoot(environment), const ['bin']);
 }
 
 String _macosWineExecutable(HostEnvironment environment) {
@@ -56,30 +58,25 @@ String _macosWineExecutable(HostEnvironment environment) {
 }
 
 String _linuxWineExecutable(HostEnvironment environment) {
-  return _linuxManagedRuntimeBinFolder(
-    environment,
-  ).match(() => 'wine', (runtimeBin) => _joinPath(runtimeBin, const ['wine']));
+  return _joinPath(_linuxManagedRuntimeBinFolder(environment), const ['wine']);
 }
 
 String _linuxWinebootExecutable(HostEnvironment environment) {
-  return _linuxManagedRuntimeBinFolder(environment).match(
-    () => 'wineboot',
-    (runtimeBin) => _joinPath(runtimeBin, const ['wineboot']),
-  );
+  return _joinPath(_linuxManagedRuntimeBinFolder(environment), const [
+    'wineboot',
+  ]);
 }
 
 String _linuxWineserverExecutable(HostEnvironment environment) {
-  return _linuxManagedRuntimeBinFolder(environment).match(
-    () => 'wineserver',
-    (runtimeBin) => _joinPath(runtimeBin, const ['wineserver']),
-  );
+  return _joinPath(_linuxManagedRuntimeBinFolder(environment), const [
+    'wineserver',
+  ]);
 }
 
 String _linuxWinedbgExecutable(HostEnvironment environment) {
-  return _linuxManagedRuntimeBinFolder(environment).match(
-    () => 'winedbg',
-    (runtimeBin) => _joinPath(runtimeBin, const ['winedbg']),
-  );
+  return _joinPath(_linuxManagedRuntimeBinFolder(environment), const [
+    'winedbg',
+  ]);
 }
 
 String _macosWineserverExecutable(HostEnvironment environment) {
@@ -91,12 +88,7 @@ String _macosWinetricksExecutable(HostEnvironment environment) {
 }
 
 String _linuxWinetricksExecutable(HostEnvironment environment) {
-  final override = environment.nonEmptyValue('KONYAK_LINUX_WINE_HOME');
-  if (override != null) {
-    return _joinPath(override, const ['winetricks']);
-  }
-
-  return 'winetricks';
+  return _joinPath(_linuxWineRuntimeRoot(environment), const ['winetricks']);
 }
 
 ProgramRunEnvironment _linuxRuntimeEnvironment(HostEnvironment environment) {
@@ -104,17 +96,10 @@ ProgramRunEnvironment _linuxRuntimeEnvironment(HostEnvironment environment) {
   final wineLibraryPath = environment.nonEmptyValue(
     'KONYAK_LINUX_WINE_LIBRARY_PATH',
   );
-  if (runtimeBin.isNone() && wineLibraryPath == null) {
-    return const ProgramRunEnvironment.empty();
-  }
 
-  final runtimeEnvironment = <String, String>{};
-  runtimeBin.match(() {}, (path) {
-    runtimeEnvironment['PATH'] = _prependPath(
-      path,
-      Option.fromNullable(environment['PATH']),
-    );
-  });
+  final runtimeEnvironment = <String, String>{
+    'PATH': _prependPath(runtimeBin, Option.fromNullable(environment['PATH'])),
+  };
   if (wineLibraryPath != null) {
     runtimeEnvironment['LD_LIBRARY_PATH'] = _prependPath(
       wineLibraryPath,

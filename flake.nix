@@ -142,11 +142,6 @@
             swiftlint
           ];
 
-          darwinDevelopmentRuntimeSourcePackages = with pkgs; [
-            gst_all_1.gstreamer
-            pkgsCross.mingwW64.stdenv.cc
-          ];
-
           releaseBuildPackages =
             dartFlutterPackages
             ++ (with pkgs; [
@@ -164,9 +159,7 @@
             ++ lib.optionals pkgs.stdenv.isLinux (
               linuxFlutterBuildPackages ++ linuxReleasePackagingPackages ++ linuxHostRuntimePackages
             )
-            ++ lib.optionals pkgs.stdenv.isDarwin (
-              darwinFlutterBuildPackages ++ darwinVerificationPackages ++ darwinDevelopmentRuntimeSourcePackages
-            );
+            ++ lib.optionals pkgs.stdenv.isDarwin (darwinFlutterBuildPackages ++ darwinVerificationPackages);
 
           darwinXcodeEnvironment = ''
             if [ -x /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild ]; then
@@ -261,7 +254,6 @@
                     export KONYAK_DEV_MACOS_WINE_STACK_MANIFEST="https://github.com/''${KONYAK_DEV_MACOS_RUNTIME_RELEASE_REPO}/releases/download/''${KONYAK_DEV_MACOS_RUNTIME_RELEASE_TAG}/$macos_runtime_source_manifest_file_name"
                   fi
                 fi
-                export KONYAK_DEV_NIX_GSTREAMER_PATH="${pkgs.gst_all_1.gstreamer.out}"
                 export KONYAK_MACOS_DEV_RUNTIME_PREPARE_SCRIPT="$PWD/scripts/prepare_macos_dev_runtime_stack.zsh"
               ''}
               if [ -t 1 ]; then

@@ -24,22 +24,16 @@ The Linux Nix dev shell and VSCode launch profile both set
 `.dart_tool/konyak/dev-runtime/linux-wine`. The Linux VSCode launch profile runs
 `scripts/prepare_linux_dev_runtime_source.zsh` before launch and passes
 `KONYAK_DEV_LINUX_WINE_STACK_MANIFEST` to Flutter and the CLI. That script does
-not use Nix store packages as runtime payloads. It downloads pinned upstream
-development sources, normalizes winetricks, wine-mono, and vkd3d-proton into
-Konyak component archives, and writes a source manifest under
-`.dart_tool/konyak/dev-runtime-source/linux-wine-stack`. The first Settings or
-startup install action still goes through Konyak's normal `install-linux-wine`
-contract and installs into `.dart_tool/konyak/dev-runtime/linux-wine`.
+not create Linux runtime components in the parent repository. Set
+`KONYAK_DEV_LINUX_WINE_STACK_SOURCE_MANIFEST` to a complete source manifest
+produced by the Linux runtime packaging owner; the script validates and caches
+that manifest under `.dart_tool/konyak/dev-runtime-source/linux-wine-stack`.
+The first Settings install action still goes through Konyak's normal
+`install-linux-wine` contract and installs into
+`.dart_tool/konyak/dev-runtime/linux-wine`.
 The dev shell also exports `KONYAK_LINUX_WINE_LIBRARY_PATH` so the managed
 Linux Wine can find NixOS host libraries such as FreeType, Vulkan, EGL, and
 GnuTLS without making those libraries part of the Konyak runtime payload.
-
-The default Linux development sources can be overridden with
-`KONYAK_DEV_LINUX_WINE_ARCHIVE_URL`, `KONYAK_DEV_LINUX_WINETRICKS_ARCHIVE_URL`,
-`KONYAK_DEV_LINUX_WINE_MONO_ARCHIVE_URL`, and
-`KONYAK_DEV_LINUX_VKD3D_PROTON_ARCHIVE_URL`; each source must also provide the
-matching `_SHA256` variable. Local archive paths may use the same names with
-`_ARCHIVE` instead of `_URL`.
 
 Local runtime stack fixtures must use the development-only
 `KONYAK_DEV_LINUX_WINE_STACK_MANIFEST` environment variable. Keep release
@@ -57,8 +51,6 @@ cache before launch. To switch the development build to another published
 runtime release, set `KONYAK_DEV_MACOS_RUNTIME_RELEASE_TAG` before launching
 VSCode or the Nix terminal task; use `latest` for the latest release. A complete
 manifest URL can be forced with `KONYAK_DEV_MACOS_WINE_STACK_MANIFEST`.
-Set `KONYAK_DEV_MACOS_RUNTIME_SOURCE_MODE=local` only when intentionally
-building a local component manifest from explicit archive URL/SHA256 overrides.
 These runtime values are passed both as process environment and as
 `--dart-define` values so the Flutter app can forward them explicitly to the
 CLI child process.
@@ -87,9 +79,11 @@ as writable files. The first run can take a little time because the copied
 artifacts are hundreds of megabytes. The directory is ignored by git.
 
 The same task also runs `scripts/prepare_macos_dev_runtime_stack.zsh`. It does
-not install the runtime eagerly; it prepares the development source manifest so
-the Konyak Settings runtime action can install or repair
-`.dart_tool/konyak/dev-runtime/macos-wine` through the normal CLI contract.
+not install the runtime eagerly or build component archives in the parent
+repository; it prepares a complete source manifest produced by
+`runtime/konyak-macos-runtime` so the Konyak Settings runtime action can install
+or repair `.dart_tool/konyak/dev-runtime/macos-wine` through the normal CLI
+contract.
 
 The launch configuration forces macOS Flutter builds to use the real Xcode
 toolchain:

@@ -4,7 +4,7 @@
     {
       "label": "Konyak: Prepare Linux Runtime Source",
       "type": "shell",
-      "command": "nix develop -c zsh -lc 'KONYAK_DEV_LINUX_WINE_STACK_MANIFEST=\"$PWD/.dart_tool/konyak/dev-runtime-source/linux-wine-stack/konyak-linux-wine-runtime-stack-source.json\" ./scripts/prepare_linux_dev_runtime_source.zsh --print-manifest-path >/dev/null'",
+      "command": "nix develop -c zsh -lc 'KONYAK_DEV_LINUX_WINE_STACK_MANIFEST_CACHE=\"$PWD/.dart_tool/konyak/dev-runtime-source/linux-wine-stack/konyak-linux-wine-runtime-stack-source.json\" ./scripts/prepare_linux_dev_runtime_source.zsh --print-manifest-path >/dev/null'",
       "problemMatcher": [],
       "presentation": {
         "panel": "dedicated",

@@ -126,17 +126,7 @@ CliResult _runWinetricksJsonResult(
           message: 'Winetricks verb is not supported.',
           extra: <String, Object?>{'verb': request.verb},
         ),
-        (request) {
-          final winetricksReady = _ensureWinetricksScriptForRun(
-            request: request,
-            scriptInstaller: context.winetricksScriptInstaller,
-          );
-          if (winetricksReady != null) {
-            return winetricksReady;
-          }
-
-          return _programRunResultJson(request, runner);
-        },
+        (request) => _programRunResultJson(request, runner),
       );
     },
   );
@@ -171,17 +161,7 @@ CliResult _runBottleCommandJsonResult(
           message: 'Bottle command is not supported.',
           extra: <String, Object?>{'command': request.command},
         ),
-        (request) {
-          final winetricksReady = _ensureWinetricksScriptForRun(
-            request: request,
-            scriptInstaller: context.winetricksScriptInstaller,
-          );
-          if (winetricksReady != null) {
-            return winetricksReady;
-          }
-
-          return _programRunResultJson(request, runner);
-        },
+        (request) => _programRunResultJson(request, runner),
       );
     },
   );

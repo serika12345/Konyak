@@ -25,6 +25,26 @@ instead of proving the behavior Konyak actually needs.
     route against the rebuilt local runtime stack.
   - Runtime submodule checks passed for addon payload checks, Wine32-on-64,
     GUI launch, DXVK, DXMT, vkd3d, GStreamer, and backend device smokes.
+- Follow-up repair pass: 2026-06-15
+  - Removed parent-side winetricks script download/list-all fallback from the CLI
+    execution path. Missing macOS `verbs.txt` or Linux managed `winetricks` now
+    reports runtime incompleteness instead of mutating the runtime from the
+    parent repository.
+  - Removed parent-side local macOS component generation from
+    `scripts/prepare_macos_dev_runtime_stack.zsh`; the helper now resolves only
+    complete manifests produced by `runtime/konyak-macos-runtime`.
+  - Removed parent-side Linux development component generation from
+    `scripts/prepare_linux_dev_runtime_source.zsh`; Linux development now
+    requires an explicit complete runtime source manifest instead of
+    repackaging winetricks, Mono, DXVK, or vkd3d-proton in the parent
+    repository.
+  - Added runtime-submodule addon version verification that extracts Wine's
+    embedded Mono/Gecko expectations from the CrossOver source archive and
+    compares them with packaged addon component constants.
+  - Renamed parent raw Wine/Vulkan just targets as low-level diagnostics and
+    added governance checks so they cannot be mistaken for app behavior gates.
+  - Split Linux runtime-settings environment generation from macOS-only
+    D3DMetal/Metal/Rosetta variables.
 
 ## Inventory
 
@@ -177,7 +197,8 @@ instead of proving the behavior Konyak actually needs.
   - App behavior gates must call the CLI path or a maintained script that wraps
     that path.
   - Completed by keeping `scripts/run_macos_runtime_cli_smoke.zsh` as the app
-    behavior gate and AGENTS as the execution-path SSOT.
+    behavior gate, renaming parent raw Wine just targets to `diagnose-*`, and
+    making AGENTS plus governance checks enforce the execution-path SSOT.
 
 ### P1: Documentation currently records the wrong conclusion
 

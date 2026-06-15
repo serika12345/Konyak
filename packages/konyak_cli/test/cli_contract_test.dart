@@ -403,21 +403,6 @@ final class RecordingWinetricksVerbLister implements WinetricksVerbLister {
   }
 }
 
-final class RecordingWinetricksScriptInstaller
-    implements WinetricksScriptInstaller {
-  RecordingWinetricksScriptInstaller({required this.result});
-
-  final WinetricksScriptInstallResult result;
-  String? executable;
-
-  @override
-  WinetricksScriptInstallResult installIfMissing({required String executable}) {
-    this.executable = executable;
-
-    return result;
-  }
-}
-
 final class RecordingMacosWineInstaller implements MacosWineInstaller {
   RecordingMacosWineInstaller({required this.result});
 

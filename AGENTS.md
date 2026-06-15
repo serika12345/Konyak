@@ -25,10 +25,10 @@
   component archives, release manifests, loader behavior, or bundled runtime
   dependencies, update the submodule-side build/release tooling together with
   the parent repository consumer contracts.
-- Keep the runtime submodule artifacts and source manifests as the source of
-  truth for macOS runtime dependencies. Do not add parent-repository Nix flake
-  or dev-shell dependencies just to supply runtime libraries; consume the
-  submodule-produced runtime stack instead.
+- Keep runtime submodule artifacts and source manifests as the source of truth
+  for runtime dependencies. Do not add parent-repository Nix flake or dev-shell
+  dependencies just to supply runtime libraries; consume submodule-produced or
+  explicitly supplied complete runtime stacks instead.
 - Konyak-owned bottle metadata is the source of truth. External plist
   metadata is not accepted as live input; any future import path must be
   explicit import tooling rather than shared live metadata.
@@ -112,6 +112,15 @@ Use TDD as the default development loop:
   the packaged Wine source. Parent runtime completeness checks must require the
   exact Mono and Gecko MSI payload paths instead of accepting marker files or
   addon directories.
+- Runtime contents must be complete when produced by their runtime owner. The
+  parent repository must not generate, download, mutate, or overlay runtime
+  components such as Wine, winetricks, Mono, Gecko, MoltenVK, FreeType,
+  GStreamer, DXVK, DXMT, vkd3d, or vkd3d-proton to compensate for a missing
+  runtime artifact. Parent code may only consume a runtime-owner-produced
+  release/source manifest or an explicitly supplied complete manifest, then
+  install it through the public CLI contract. If a platform does not yet have a
+  complete runtime stack artifact, leave that work explicit and deferred rather
+  than recreating the runtime recipe in the parent repository.
 
 ## 5. Roadmap and Progress Discipline
 

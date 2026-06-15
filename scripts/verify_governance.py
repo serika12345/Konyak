@@ -427,6 +427,73 @@ def require_external_payload_parser_boundaries() -> None:
         require_contains(relative_path, "part of '../../konyak_cli.dart';")
 
 
+def require_runtime_ssot_rules() -> None:
+    for unexpected in [
+        "WinetricksScriptInstaller",
+        "DartIoWinetricksScriptInstaller",
+        "WinetricksScriptInstallResult",
+        "winetricksScriptUrl",
+        "raw.githubusercontent.com/Winetricks/winetricks/master",
+    ]:
+        require_not_contains("packages/konyak_cli/lib/konyak_cli.dart", unexpected)
+        require_not_contains_under("packages/konyak_cli/lib/src", "*.dart", unexpected)
+
+    for unexpected in [
+        "prepare_winetricks_component",
+        "KONYAK_DEV_WINETRICKS_SCRIPT_URL",
+        "KONYAK_DEV_DXVK_ARCHIVE_URL",
+        "KONYAK_DEV_MACOS_RUNTIME_SOURCE_MODE=local",
+        "Components/winetricks",
+    ]:
+        require_not_contains("scripts/prepare_macos_dev_runtime_stack.zsh", unexpected)
+
+    for unexpected in [
+        "prepare_winetricks_component",
+        "prepare_wine_mono_component",
+        "prepare_dxvk_component",
+        "prepare_vkd3d_proton_component",
+        "DEFAULT_WINETRICKS_SCRIPT_URL",
+        "DEFAULT_WINE_MONO_ARCHIVE_URL",
+        "DEFAULT_DXVK_ARCHIVE_URL",
+        "DEFAULT_VKD3D_PROTON_ARCHIVE_URL",
+        "KONYAK_DEV_LINUX_WINETRICKS_SCRIPT_URL",
+        "KONYAK_DEV_LINUX_DXVK_UPSTREAM_ARCHIVE_URL",
+        "KONYAK_DEV_LINUX_VKD3D_PROTON_UPSTREAM_ARCHIVE_URL",
+        "raw.githubusercontent.com/Winetricks/winetricks",
+    ]:
+        require_not_contains("scripts/prepare_linux_dev_runtime_source.zsh", unexpected)
+
+    for unexpected in [
+        "darwinDevelopmentRuntimeSourcePackages",
+        "KONYAK_DEV_NIX_GSTREAMER_PATH",
+    ]:
+        require_not_contains("flake.nix", unexpected)
+
+    for unexpected in [
+        "macos-vulkan-wine-smoke:",
+        "linux-vulkan-wine-smoke:",
+    ]:
+        require_not_contains("justfile", unexpected)
+    for expected in [
+        "diagnose-macos-vulkan-wine:",
+        "diagnose-linux-vulkan-wine:",
+    ]:
+        require_contains("justfile", expected)
+
+    require_not_contains(
+        "packages/konyak_cli/lib/src/io/wine_run_requests.dart",
+        ".macosEnvironment()",
+    )
+    require_contains(
+        "packages/konyak_cli/lib/src/io/wine_run_requests.dart",
+        ".linuxEnvironment()",
+    )
+    require_contains(
+        "runtime/konyak-macos-runtime/.github/workflows/build-runtime.yml",
+        "./scripts/check-wine-addon-versions.zsh",
+    )
+
+
 def main() -> None:
     require_exact(".envrc", "use flake\n")
 
@@ -458,6 +525,7 @@ def main() -> None:
     require_contains("scripts/cve_audit_baseline.json", '"osv"')
 
     require_result_boundary_rules()
+    require_runtime_ssot_rules()
 
     for expected in [
         "flutter",
@@ -484,7 +552,6 @@ def main() -> None:
         "linuxHostRuntimePackages",
         "darwinFlutterBuildPackages",
         "darwinVerificationPackages",
-        "darwinDevelopmentRuntimeSourcePackages",
         "releaseBuildPackages",
         "devShellPackages",
     ]:
@@ -737,26 +804,27 @@ def main() -> None:
         require_contains("scripts/flutter_macos_agent_watch.py", expected)
 
     for expected in [
-        "KONYAK_DEV_NIX_GSTREAMER_PATH",
         "prepare_macos_dev_runtime_stack.zsh",
         "KONYAK_DEV_LINUX_WINE_STACK_MANIFEST",
         "KONYAK_LINUX_WINE_LIBRARY_PATH",
     ]:
         require_contains("flake.nix", expected)
     for expected in [
-        "KONYAK_DEV_LINUX_WINE_ARCHIVE",
-        "KONYAK_DEV_LINUX_WINETRICKS_ARCHIVE",
-        "KONYAK_DEV_LINUX_WINE_MONO_ARCHIVE",
-        "KONYAK_DEV_LINUX_VKD3D_PROTON_ARCHIVE",
-        "ARCHIVE_SHA256",
+        "KONYAK_DEV_LINUX_WINE_STACK_SOURCE_MANIFEST",
+        "KONYAK_DEV_LINUX_WINE_STACK_MANIFEST_CACHE",
+        "Linux development runtime components are not generated in the parent repository.",
         "wine-mono",
         "vkd3d-proton",
     ]:
         require_contains("scripts/prepare_linux_dev_runtime_source.zsh", expected)
     require_not_contains("scripts/prepare_linux_dev_runtime_source.zsh", "winetricks list-all")
     require_not_contains("scripts/prepare_linux_dev_runtime_source.zsh", "/nix/store")
-    require_contains("scripts/prepare_macos_dev_runtime_stack.zsh", "WINETRICKS_SCRIPT_SHA256")
-    require_contains("scripts/prepare_macos_dev_runtime_stack.zsh", "winetricks list-all")
+    require_contains(
+        "scripts/prepare_macos_dev_runtime_stack.zsh",
+        "macOS runtime inputs must be complete source manifests",
+    )
+    require_not_contains("scripts/prepare_macos_dev_runtime_stack.zsh", "WINETRICKS_SCRIPT_SHA256")
+    require_not_contains("scripts/prepare_macos_dev_runtime_stack.zsh", "winetricks list-all")
     require_not_contains(
         "scripts/prepare_macos_dev_runtime_stack.zsh",
         "KONYAK_DEV_NIX_WINETRICKS_PATH",

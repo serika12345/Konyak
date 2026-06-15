@@ -7,7 +7,6 @@ class _CliCommandContext {
     required this.bottleProgramRepository,
     required this.programMetadataExtractor,
     required this.winetricksVerbRepository,
-    required this.winetricksScriptInstaller,
     required this.runtimeCatalog,
     required this.programRunPlanner,
     required this.programRunner,
@@ -31,7 +30,6 @@ class _CliCommandContext {
   final BottleProgramRepository bottleProgramRepository;
   final ProgramMetadataExtractor programMetadataExtractor;
   final WinetricksVerbRepository winetricksVerbRepository;
-  final WinetricksScriptInstaller winetricksScriptInstaller;
   final RuntimeCatalog runtimeCatalog;
   final ProgramRunPlanner programRunPlanner;
   final ProgramRunner? programRunner;
@@ -60,8 +58,6 @@ CliResult runCli(
   ProgramMetadataExtractor programMetadataExtractor =
       const DartIoProgramMetadataExtractor(),
   WinetricksVerbRepository? winetricksVerbRepository,
-  WinetricksScriptInstaller winetricksScriptInstaller =
-      const DartIoWinetricksScriptInstaller(),
   RuntimeCatalog? runtimeCatalog,
   ProgramRunPlanner? programRunPlanner,
   ProgramRunner? programRunner,
@@ -91,7 +87,6 @@ CliResult runCli(
         winetricksVerbRepository:
             winetricksVerbRepository ??
             DartIoWinetricksVerbRepository.current(),
-        winetricksScriptInstaller: winetricksScriptInstaller,
         runtimeCatalog: runtimeCatalog ?? StaticRuntimeCatalog(const []),
         programRunPlanner: programRunPlanner ?? ProgramRunPlanner.current(),
         programRunner: programRunner,
@@ -135,8 +130,6 @@ Future<CliResult> runCliStreaming(
   ProgramMetadataExtractor programMetadataExtractor =
       const DartIoProgramMetadataExtractor(),
   WinetricksVerbRepository? winetricksVerbRepository,
-  WinetricksScriptInstaller winetricksScriptInstaller =
-      const DartIoWinetricksScriptInstaller(),
   RuntimeCatalog? runtimeCatalog,
   ProgramRunPlanner? programRunPlanner,
   ProgramRunner? programRunner,
@@ -215,7 +208,6 @@ Future<CliResult> runCliStreaming(
     bottleProgramRepository: bottleProgramRepository,
     programMetadataExtractor: programMetadataExtractor,
     winetricksVerbRepository: winetricksVerbRepository,
-    winetricksScriptInstaller: winetricksScriptInstaller,
     runtimeCatalog: runtimeCatalog,
     programRunPlanner: programRunPlanner,
     programRunner: programRunner,

@@ -144,7 +144,7 @@ List<String> _d3DMetalOverrideSourceNames(String dllName) {
 ProgramRunEnvironment _linuxWineEnvironment(BottleRecord bottle) {
   return _linuxWinePrefixEnvironment(
     bottle,
-  ).merge(bottle.runtimeSettings.macosEnvironment());
+  ).merge(bottle.runtimeSettings.linuxEnvironment());
 }
 
 ProgramRunEnvironment _linuxWinePrefixEnvironment(BottleRecord bottle) {

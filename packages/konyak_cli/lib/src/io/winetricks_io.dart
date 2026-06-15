@@ -5,15 +5,12 @@ class DartIoWinetricksVerbRepository implements WinetricksVerbRepository {
     required this.runtimeRoot,
     this.hostPlatform = KonyakHostPlatform.macos,
     this.lister = const DartIoWinetricksVerbLister(),
-    this.scriptInstaller = const DartIoWinetricksScriptInstaller(),
   });
 
   factory DartIoWinetricksVerbRepository.current({
     Map<String, String>? environment,
     KonyakHostPlatform? hostPlatform,
     WinetricksVerbLister lister = const DartIoWinetricksVerbLister(),
-    WinetricksScriptInstaller scriptInstaller =
-        const DartIoWinetricksScriptInstaller(),
   }) {
     final resolvedEnvironment = environment ?? Platform.environment;
     final resolvedHostPlatform = hostPlatform ?? _currentHostPlatform();
@@ -25,24 +22,25 @@ class DartIoWinetricksVerbRepository implements WinetricksVerbRepository {
       },
       hostPlatform: resolvedHostPlatform,
       lister: lister,
-      scriptInstaller: scriptInstaller,
     );
   }
 
   final String runtimeRoot;
   final KonyakHostPlatform hostPlatform;
   final WinetricksVerbLister lister;
-  final WinetricksScriptInstaller scriptInstaller;
 
   @override
   WinetricksVerbListResult listVerbs() {
     if (hostPlatform == KonyakHostPlatform.linux) {
       final managedExecutable = _joinPath(runtimeRoot, const ['winetricks']);
-      return lister.listVerbs(
-        executable: File(managedExecutable).existsSync()
-            ? managedExecutable
-            : 'winetricks',
-      );
+      if (!File(managedExecutable).existsSync()) {
+        return WinetricksVerbListFailed(
+          'Managed Winetricks executable is missing from runtime: '
+          '$managedExecutable',
+        );
+      }
+
+      return lister.listVerbs(executable: managedExecutable);
     }
 
     final verbsFile = File(_joinPath(runtimeRoot, const ['verbs.txt']));
@@ -56,86 +54,10 @@ class DartIoWinetricksVerbRepository implements WinetricksVerbRepository {
       }
     }
 
-    final executable = _joinPath(runtimeRoot, const ['winetricks']);
-    final installResult = scriptInstaller.installIfMissing(
-      executable: executable,
+    return WinetricksVerbListFailed(
+      'Managed Winetricks verb catalog is missing from runtime: '
+      '${verbsFile.path}',
     );
-    switch (installResult) {
-      case WinetricksScriptInstallCompleted():
-        return lister.listVerbs(executable: executable);
-      case WinetricksScriptInstallFailed(:final message):
-        return WinetricksVerbListFailed(message);
-    }
-  }
-}
-
-class DartIoWinetricksScriptInstaller implements WinetricksScriptInstaller {
-  const DartIoWinetricksScriptInstaller();
-
-  @override
-  WinetricksScriptInstallResult installIfMissing({required String executable}) {
-    final target = File(executable);
-    if (target.existsSync()) {
-      return const WinetricksScriptInstallCompleted();
-    }
-
-    final temporaryPath = '$executable.download';
-    final temporaryFile = File(temporaryPath);
-
-    try {
-      target.parent.createSync(recursive: true);
-      final downloadResult = Process.runSync('curl', <String>[
-        '--fail',
-        '--location',
-        '--silent',
-        '--show-error',
-        '--output',
-        temporaryPath,
-        winetricksScriptUrl,
-      ], runInShell: false);
-
-      if (downloadResult.exitCode != 0) {
-        _deleteFileIfPresent(temporaryFile);
-        return WinetricksScriptInstallFailed(
-          _commandFailureMessage('download Winetricks', downloadResult),
-        );
-      }
-
-      temporaryFile.renameSync(executable);
-
-      final chmodResult = Process.runSync('chmod', <String>[
-        '755',
-        executable,
-      ], runInShell: false);
-      if (chmodResult.exitCode != 0) {
-        return WinetricksScriptInstallFailed(
-          _commandFailureMessage('mark Winetricks executable', chmodResult),
-        );
-      }
-
-      return const WinetricksScriptInstallCompleted();
-    } on ProcessException catch (error) {
-      _deleteFileIfPresent(temporaryFile);
-      return WinetricksScriptInstallFailed(
-        _programRunnerFailureMessage(
-          executable: error.executable,
-          message: error.message,
-        ),
-      );
-    } on FileSystemException catch (error) {
-      _deleteFileIfPresent(temporaryFile);
-      return WinetricksScriptInstallFailed(error.message);
-    }
-  }
-}
-
-void _deleteFileIfPresent(File file) {
-  try {
-    if (file.existsSync()) {
-      file.deleteSync();
-    }
-  } on FileSystemException {
-    // Best-effort cleanup only; the original failure is more useful.
   }
 }
 

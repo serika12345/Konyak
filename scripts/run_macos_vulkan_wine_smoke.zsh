@@ -3,6 +3,9 @@ set -euo pipefail
 
 repo_root="$(cd "$(dirname "$0")/.." && pwd)"
 
+echo "Running low-level macOS Wine/Vulkan diagnostic; this does not prove Konyak app or CLI execution behavior." >&2
+echo "Use scripts/run_macos_runtime_cli_smoke.zsh for application-owned macOS runtime verification." >&2
+
 if [[ "$(uname -s)" != "Darwin" ]]; then
   echo "Skipping macOS Vulkan Wine smoke test on $(uname -s)."
   exit 0

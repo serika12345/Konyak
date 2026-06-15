@@ -76,7 +76,3 @@ abstract interface class WinetricksVerbRepository {
 abstract interface class WinetricksVerbLister {
   WinetricksVerbListResult listVerbs({required String executable});
 }
-
-abstract interface class WinetricksScriptInstaller {
-  WinetricksScriptInstallResult installIfMissing({required String executable});
-}

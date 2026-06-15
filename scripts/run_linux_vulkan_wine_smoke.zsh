@@ -3,6 +3,8 @@ set -euo pipefail
 
 repo_root="$(cd "$(dirname "$0")/.." && pwd)"
 
+echo "Running low-level Linux Wine/Vulkan diagnostic; this does not prove Konyak app or CLI execution behavior." >&2
+
 if [[ "$(uname -s)" != "Linux" ]]; then
   echo "Skipping Linux Vulkan Wine smoke test on $(uname -s)."
   exit 0
@@ -18,7 +20,7 @@ if [[ -z "$wine_executable" ]]; then
 fi
 if [[ ! -x "$wine_executable" ]]; then
   echo "Wine executable is missing or not executable: $wine_executable" >&2
-  echo "Install the Konyak Linux runtime first, for example: just linux-vulkan-wine-smoke after installing from Settings or install-linux-wine." >&2
+  echo "Install the Konyak Linux runtime first, then run just diagnose-linux-vulkan-wine." >&2
   exit 2
 fi
 
