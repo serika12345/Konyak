@@ -11,6 +11,49 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-15 14:04 JST
+- State: `completed`
+- Branch: `main`
+- Related work: macOS development runtime manifest cache refresh; runtime
+  reinstall checksum mismatch
+- Purpose: fix development runtime reinstall failures caused by stale cached
+  source manifests after a verified runtime Release republishes assets under
+  the same release tag.
+- Completed:
+  - Changed `scripts/prepare_macos_dev_runtime_stack.zsh` so URL source
+    manifests are fetched and validated every time instead of trusting a
+    `.source-url` marker when the URL matches.
+  - Added macOS source manifest contract validation to the prepare script so
+    malformed or incomplete manifests fail before runtime reinstall begins.
+  - Applied the same no-stale-URL-cache rule to
+    `scripts/prepare_linux_dev_runtime_source.zsh`.
+  - Refreshed the local development macOS source manifest from the current
+    `crossover-26.1.0-konyak.0` Release; the cached Wine component checksum now
+    matches the published stack archive checksum
+    `565a8167029956aca5f3ff310cb5b0dd5235d60576a44ad7ae5bb8a69511423d`.
+  - Reinstalled the macOS development runtime through the public CLI
+    `install-macos-wine --reinstall --source-manifest ... --json` route.
+- Remaining:
+  - None for this stale development manifest cache fix.
+- Next: commit this parent-repository script fix if accepted; future runtime
+  Release republish operations should not require deleting local
+  `.dart_tool/konyak/dev-runtime-source` files.
+- Verification:
+  - `nix develop -c zsh -lc 'zsh -n scripts/prepare_macos_dev_runtime_stack.zsh scripts/prepare_linux_dev_runtime_source.zsh'`:
+    passed.
+  - `nix develop -c zsh -lc './scripts/prepare_macos_dev_runtime_stack.zsh --print-manifest-path; jq wine component sha256'`:
+    passed and refreshed the local cache to the current published checksum.
+  - `nix develop -c zsh -lc '<download current runtime Release source manifest; jq wine component sha256>'`:
+    passed and matched the refreshed local cache.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && KONYAK_RUNTIME_PROFILE=development KONYAK_MACOS_WINE_HOME=... KONYAK_DEV_MACOS_WINE_STACK_MANIFEST=... dart run bin/konyak.dart install-macos-wine --reinstall --source-manifest ... --progress-json --json'`:
+    passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `nix develop -c zsh -lc 'git diff --check && git -C runtime/konyak-macos-runtime diff --check'`:
+    passed.
+
 - Timestamp: 2026-06-15 12:42 JST
 - State: `completed`
 - Branch: `main`

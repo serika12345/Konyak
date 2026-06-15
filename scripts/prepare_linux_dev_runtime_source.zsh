@@ -100,12 +100,6 @@ cache_url_manifest() {
   local temp_target="${target}.tmp.$$"
 
   mkdir -p "${target:h}"
-  if [[ "${force}" == false && -f "${target}" && -f "${source_marker}" ]] &&
-    [[ "$(cat "${source_marker}")" == "${source_url}" ]]; then
-    validate_manifest "${target}"
-    return 0
-  fi
-
   rm -f "${temp_target}"
   curl --fail --location --output "${temp_target}" "${source_url}"
   validate_manifest "${temp_target}"

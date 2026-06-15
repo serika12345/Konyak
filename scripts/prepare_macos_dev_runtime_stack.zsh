@@ -61,6 +61,38 @@ is_url() {
   esac
 }
 
+validate_manifest() {
+  local manifest_path="$1"
+  jq -e '
+    .schemaVersion == 1 and
+    .runtimeId == "konyak-macos-wine" and
+    .stackId == "macos-konyak-runtime-stack" and
+    (.components | type) == "array" and
+    ([.components[] | select(type == "object") | .id] | contains([
+      "wine",
+      "dxvk-macos",
+      "moltenvk",
+      "gstreamer",
+      "freetype",
+      "wine-mono",
+      "wine-gecko",
+      "winetricks",
+      "vkd3d",
+      "dxmt"
+    ])) and
+    all(.components[]; (
+      type == "object" and
+      (.id | type == "string" and length > 0) and
+      (.version | type == "string" and length > 0) and
+      (.archiveUrl | type == "string" and length > 0) and
+      (.sha256 | type == "string" and length > 0)
+    ))
+  ' "${manifest_path}" >/dev/null || {
+    print -u2 "macOS runtime source manifest is invalid: ${manifest_path}"
+    exit 65
+  }
+}
+
 cache_url_manifest() {
   local source_url="$1"
   local target="$2"
@@ -68,13 +100,9 @@ cache_url_manifest() {
   local temp_target="${target}.tmp.$$"
 
   mkdir -p "${target:h}"
-  if [[ "${force}" == false && -f "${target}" && -f "${source_marker}" ]] &&
-    [[ "$(cat "${source_marker}")" == "${source_url}" ]]; then
-    return 0
-  fi
-
   rm -f "${temp_target}"
   curl --fail --location --output "${temp_target}" "${source_url}"
+  validate_manifest "${temp_target}"
   mv -f "${temp_target}" "${target}"
   print -r -- "${source_url}" >"${source_marker}"
 }
@@ -98,6 +126,7 @@ else
     print -u2 "macOS runtime source manifest does not exist: ${manifest_source}"
     exit 66
   fi
+  validate_manifest "${manifest_source}"
   manifest_path="${manifest_source}"
 fi
 
