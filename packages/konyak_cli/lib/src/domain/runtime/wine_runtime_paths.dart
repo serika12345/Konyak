@@ -54,7 +54,7 @@ String _linuxManagedRuntimeBinFolder(HostEnvironment environment) {
 }
 
 String _macosWineExecutable(HostEnvironment environment) {
-  return _joinPath(_macosWineBinFolder(environment), const ['wine64']);
+  return _joinPath(_macosWineBinFolder(environment), const ['wineloader']);
 }
 
 String _linuxWineExecutable(HostEnvironment environment) {

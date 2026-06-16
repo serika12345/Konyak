@@ -39,8 +39,8 @@ task changes scope.
   - Linux: use Linux Wine/Proton.
   - Tests must cover platform selection without relying on the host platform.
 - [x] Implement the first macOS Wine startup planner.
-  - Use Konyak-managed macOS Wine `wine64` instead of plain `wine`.
-  - Launch programs as `wine64 start /unix <program>`.
+  - Use Konyak-managed macOS Wine `wineloader` instead of plain `wine`.
+  - Launch programs as `wineloader start /unix <program>`.
 
 ## Next Tasks
 
@@ -63,9 +63,10 @@ task changes scope.
     assets when manifest metadata is missing.
   - [x] Split raw Wine runtime diagnostics from app-owned CLI smoke coverage,
     and ensure app behavior gates use the public CLI execution path.
-  - [x] Keep backend smoke coverage as a component diagnostic that mirrors
-    Konyak `set-runtime-settings` backend DLL placement, while preventing it
-    from hiding Mono/Gecko prefix initialization failures.
+  - [x] Keep backend smoke coverage as a component diagnostic that launches
+    probes from the selected runtime backend directory instead of copying
+    backend DLLs into the prefix, while preventing it from hiding Mono/Gecko
+    prefix initialization failures.
 - [x] Align macOS backend selection with the CrossOver-derived runtime stack.
   - [x] Treat Konyak macOS Wine as the default CrossOver-derived runtime, not
     as a GPTK Wine replacement target.
@@ -92,7 +93,7 @@ task changes scope.
     `runtime/macos-wine-release.json` as the single source of truth for the
     default repository, release tag, and manifest file name.
   - [x] Install using the Konyak runtime layout:
-    `Runtimes/macos-wine/bin/wine64`.
+    `Runtimes/macos-wine/bin/wineloader`.
   - [x] Keep download and extraction behind the CLI/backend runtime service.
   - [x] Extract `.tar.xz` archives through the runtime service.
   - [x] Add archive verification behind the CLI/backend runtime service.
@@ -135,8 +136,8 @@ task changes scope.
     archive while keeping component archives as internal build, verification,
     and rerun units.
   - [x] Verify the assembled macOS runtime stack through the normal
-    `wine64 start /unix <program>` GUI `.exe` launch path, without relying on
-    smoke-only fallback dylib search paths.
+    `wineloader start /unix <program>` GUI `.exe` launch path, without relying
+    on smoke-only fallback dylib search paths.
   - [x] Keep macOS enhanced sync mode environment generation explicit:
     `msync` sets `WINEMSYNC=1`, and `esync` sets `WINEESYNC=1`.
 - [x] Use Konyak-owned macOS bottle metadata.
@@ -286,9 +287,9 @@ task changes scope.
   - [x] Align the macOS launch environment with the CrossOver wrapper where it
     matters for Wine32-on-64 by always setting a base `WINEDLLPATH` containing
     `i386-windows`, `x86_64-windows`, and `lib/wine`, even when no graphics
-    override is selected. `WINELOADER`, `WINEWRAPPER`, and `WINESERVER` remain
-    runtime-wrapper responsibilities because Konyak launches the runtime-owned
-    `bin/wine` or `bin/wine64` entry point.
+    override is selected. Konyak launches the runtime-owned
+    `bin/wineloader` entry point and sets `WINELOADER` and `WINESERVER`
+    explicitly.
   - [x] Keep D3DMetal/GPTK x86_64-only unless a 32-bit-capable payload is
     explicitly produced. Do not claim 32-bit D3DMetal support from the parent
     repository.

@@ -18,7 +18,7 @@ if [[ -z "$wine_executable" ]]; then
     echo "KONYAK_MACOS_WINE_HOME is not set. Run inside the macOS Nix dev shell." >&2
     exit 2
   fi
-  wine_executable="$runtime_root/bin/wine64"
+  wine_executable="$runtime_root/bin/wineloader"
 fi
 if [[ ! -x "$wine_executable" ]]; then
   echo "Wine executable is missing or not executable: $wine_executable" >&2
@@ -40,6 +40,9 @@ typeset -a env_args
 env_args=(
   "WINEPREFIX=$wine_prefix"
   "WINEDEBUG=${WINEDEBUG:--all}"
+  "WINELOADER=$wine_executable"
+  "WINESERVER=$runtime_root/bin/wineserver"
+  "WINEDLLPATH=$runtime_root/lib/wine/x86_64-windows:$runtime_root/lib/wine/i386-windows:$runtime_root/lib/wine${WINEDLLPATH:+:$WINEDLLPATH}"
   "DYLD_LIBRARY_PATH=$runtime_root/lib${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}"
 )
 

@@ -764,7 +764,6 @@ List<String> _macosWineGeckoExpectedPaths(String runtimeRoot) {
 }
 
 const _macosWine32On64InstalledPaths = <List<String>>[
-  <String>['bin', 'wine'],
   <String>['lib', 'wine', 'i386-windows', 'ntdll.dll'],
   <String>['lib', 'wine', 'x86_64-windows', 'wow64.dll'],
   <String>['lib', 'wine', 'x86_64-windows', 'wow64cpu.dll'],
@@ -840,6 +839,25 @@ String _macosManagedWineDllPathWithOverrides(
   ].join(':');
 }
 
+String _macosManagedWinePathWithOverrides(
+  String runtimeRoot,
+  List<List<String>> overridePaths,
+) {
+  final unixPaths = <String>[
+    for (final overridePath in overridePaths)
+      _joinTestPath(runtimeRoot, overridePath),
+  ];
+  return unixPaths.map(_macosWineWindowsPath).join(';');
+}
+
+String _macosWineWindowsPath(String unixPath) {
+  final windowsPath = unixPath.replaceAll('/', '\\');
+  if (unixPath.startsWith('/')) {
+    return 'Z:$windowsPath';
+  }
+  return windowsPath;
+}
+
 String _createComponentRuntimeArchive(String tempPath) {
   final sourceRoot = Directory(_joinTestPath(tempPath, const ['source']));
   final librariesRoot = Directory(
@@ -848,7 +866,7 @@ String _createComponentRuntimeArchive(String tempPath) {
   final wineRoot = Directory(_joinTestPath(librariesRoot.path, const ['Wine']));
 
   for (final relativePath in <List<String>>[
-    <String>['Wine', 'bin', 'wine64'],
+    <String>['Wine', 'bin', 'wineloader'],
     <String>['Wine', 'bin', 'wineserver'],
     for (final relativePath in _macosWine32On64InstalledPaths)
       <String>['Wine', ...relativePath],
@@ -921,6 +939,14 @@ String _createKonyakComponentRuntimeArchive(String tempPath) {
   );
 
   for (final relativePath in <List<String>>[
+    <String>[
+      'Wine Devel.app',
+      'Contents',
+      'Resources',
+      'wine',
+      'bin',
+      'wineloader',
+    ],
     for (final relativePath in _macosWine32On64InstalledPaths)
       <String>[
         'Wine Devel.app',
@@ -1171,6 +1197,7 @@ String _createMacosAppBundleWineArchive(String tempPath) {
   );
 
   for (final relativePath in <List<String>>[
+    <String>['bin', 'wineloader'],
     <String>['bin', 'wineserver'],
     ..._macosWine32On64InstalledPaths,
     <String>['lib', 'libwine.1.dylib'],
@@ -1199,7 +1226,7 @@ String _createMacosAppBundleWineArchive(String tempPath) {
 
 void _createInstalledMacosRuntime(String runtimeHome) {
   for (final relativePath in <List<String>>[
-    <String>['bin', 'wine64'],
+    <String>['bin', 'wineloader'],
     <String>['bin', 'wineserver'],
     ..._macosWine32On64InstalledPaths,
     <String>['lib', 'libwine.1.dylib'],
@@ -1257,16 +1284,18 @@ Directory _createGptkWineRoot(
   bool includeD3DMetal = false,
 }) {
   final wineRoot = Directory(_joinTestPath(tempPath, const ['gptk-wine']));
-  final wine64 = File(_joinTestPath(wineRoot.path, const ['bin', 'wine64']));
+  final wineloader = File(
+    _joinTestPath(wineRoot.path, const ['bin', 'wineloader']),
+  );
   final wineserver = File(
     _joinTestPath(wineRoot.path, const ['bin', 'wineserver']),
   );
-  wine64.parent.createSync(recursive: true);
+  wineloader.parent.createSync(recursive: true);
   if (validBinaries) {
-    _createMachOFile(wine64.path);
+    _createMachOFile(wineloader.path);
     _createMachOFile(wineserver.path);
   } else {
-    wine64.writeAsStringSync('fixture');
+    wineloader.writeAsStringSync('fixture');
     wineserver.writeAsStringSync('fixture');
   }
   File(_joinTestPath(wineRoot.path, const ['lib', 'libwine.1.dylib']))

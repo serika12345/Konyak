@@ -77,6 +77,9 @@ class DartIoMacosWineRuntimeValidator implements RuntimeValidator {
       executable: executablePath,
       arguments: const ['--version'],
       environment: ProgramRunEnvironment(<String, String>{
+        'WINELOADER': executablePath,
+        'WINESERVER': _joinPath(runtimeRoot, const ['bin', 'wineserver']),
+        'WINEDLLPATH': _macosWineWindowsDllPaths(runtimeRoot).join(':'),
         'DYLD_LIBRARY_PATH': _joinPath(runtimeRoot, const ['lib']),
       }),
       workingDirectory: _dirname(executablePath),
@@ -87,7 +90,7 @@ class DartIoMacosWineRuntimeValidator implements RuntimeValidator {
       isRequired: true,
       isPassed: loaderResult.exitCode == 0,
       message: loaderResult.exitCode == 0
-          ? 'wine64 --version completed.'
+          ? 'wineloader --version completed.'
           : _runtimeLoaderFailureMessage(loaderResult),
     );
     final completedChecks = <RuntimeValidationCheck>[...checks, loaderCheck];

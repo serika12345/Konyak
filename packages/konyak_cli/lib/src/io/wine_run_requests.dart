@@ -365,7 +365,7 @@ ProgramRunRequest _macosWinetricksCommandRequest({
     executable: _macosWinetricksExecutable(hostEnvironment),
     arguments: verb == null ? const <String>[] : <String>[verb],
     environment: _macosWineEnvironment(bottle: bottle, environment: environment)
-        .add('WINE', 'wine64')
+        .add('WINE', _macosWineExecutable(hostEnvironment))
         .add(
           'PATH',
           _prependPath(runtimeBin, Option.fromNullable(environment['PATH'])),

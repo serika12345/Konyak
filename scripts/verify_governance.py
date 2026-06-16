@@ -698,10 +698,10 @@ def main() -> None:
     require_contains("docs/todo.md", "Konyak-managed macOS Wine")
     require_contains("docs/todo.md", "Konyak-managed component stack")
     require_contains("docs/todo.md", "macOS runtime stack manifest")
-    require_contains("docs/todo.md", "wine64 start /unix")
+    require_contains("docs/todo.md", "wineloader start /unix")
     require_contains("docs/todo.md", "serika12345/konyak-macos-runtime")
     require_contains("runtime/macos-wine-release.json", "defaultReleaseTag")
-    require_contains("docs/todo.md", "Runtimes/macos-wine/bin/wine64")
+    require_contains("docs/todo.md", "Runtimes/macos-wine/bin/wineloader")
     require_contains("docs/todo.md", "Drop live external plist metadata")
     for expected in [
         "Execution Path SSOT",

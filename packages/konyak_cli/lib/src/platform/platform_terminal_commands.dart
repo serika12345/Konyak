@@ -67,20 +67,22 @@ String _macosWineTerminalShellCommand({
   required HostEnvironment environment,
 }) {
   final runtimeBin = _macosWineBinFolder(environment);
+  final executable = _macosWineExecutable(environment);
   final commands = <String>[
     'cd ${_shellQuote(bottle.path)}',
     'export PATH=${_shellQuote(runtimeBin)}:\$PATH',
-    'export WINE=${_shellQuote('wine64')}',
-    'alias wine=${_shellQuote('wine64')}',
-    'alias winecfg=${_shellQuote('wine64 winecfg')}',
-    'alias msiexec=${_shellQuote('wine64 msiexec')}',
-    'alias regedit=${_shellQuote('wine64 regedit')}',
-    'alias regsvr32=${_shellQuote('wine64 regsvr32')}',
-    'alias wineboot=${_shellQuote('wine64 wineboot')}',
-    'alias wineconsole=${_shellQuote('wine64 wineconsole')}',
-    'alias winedbg=${_shellQuote('wine64 winedbg')}',
-    'alias winefile=${_shellQuote('wine64 winefile')}',
-    'alias winepath=${_shellQuote('wine64 winepath')}',
+    'export WINE=${_shellQuote(executable)}',
+    'alias wine=${_shellQuote(executable)}',
+    'alias wine64=${_shellQuote(executable)}',
+    'alias winecfg=${_shellQuote('$executable winecfg')}',
+    'alias msiexec=${_shellQuote('$executable msiexec')}',
+    'alias regedit=${_shellQuote('$executable regedit')}',
+    'alias regsvr32=${_shellQuote('$executable regsvr32')}',
+    'alias wineboot=${_shellQuote('$executable wineboot')}',
+    'alias wineconsole=${_shellQuote('$executable wineconsole')}',
+    'alias winedbg=${_shellQuote('$executable winedbg')}',
+    'alias winefile=${_shellQuote('$executable winefile')}',
+    'alias winepath=${_shellQuote('$executable winepath')}',
   ];
 
   _macosWineEnvironment(

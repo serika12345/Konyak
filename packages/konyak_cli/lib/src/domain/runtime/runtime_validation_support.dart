@@ -56,7 +56,7 @@ String _runtimeLoaderFailureMessage(RuntimeExecutableProbeResult result) {
     return stdout;
   }
 
-  return 'wine64 --version exited with code ${result.exitCode}.';
+  return 'wineloader --version exited with code ${result.exitCode}.';
 }
 
 bool _isSha256Hex(String value) {

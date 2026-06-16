@@ -31,11 +31,6 @@ extension _MacosWineArchiveInstallation on DartIoMacosWineInstaller {
                 _RuntimeLayoutNormalization.macosWineBundle
             ? _normalizeMacosWineRuntimeLayout
             : null,
-        afterManifestWrite:
-            _macosKonyakRuntimePlatformSpec.layoutNormalization ==
-                _RuntimeLayoutNormalization.macosWineBundle
-            ? _ensureMacosWine64Alias
-            : null,
         progressSink: progressSink,
       ),
     );

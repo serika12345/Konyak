@@ -101,16 +101,19 @@ ProgramRunEnvironment _macosWineEnvironment({
   final hostEnvironment = environment;
   final runtimeRoot = _macosWineRuntimeRoot(hostEnvironment);
   final d3dMetalSelected = bottle.runtimeSettings.dxrEnabled;
-  final wineDllPathEntries = <String>[
-    if (d3dMetalSelected) ...[
-      _macosD3DMetalWindowsPath(runtimeRoot),
-    ] else if (bottle.runtimeSettings.dxmt) ...[
+  final selectedBackendWindowsPaths = <String>[
+    if (d3dMetalSelected)
+      _macosD3DMetalWindowsPath(runtimeRoot)
+    else if (bottle.runtimeSettings.dxmt) ...[
       _joinPath(runtimeRoot, const ['lib', 'dxmt', 'x86_64-windows']),
       _joinPath(runtimeRoot, const ['lib', 'dxmt', 'i386-windows']),
     ] else if (bottle.runtimeSettings.dxvk) ...[
       _joinPath(runtimeRoot, const ['lib', 'dxvk', 'x86_64-windows']),
       _joinPath(runtimeRoot, const ['lib', 'dxvk', 'i386-windows']),
     ],
+  ];
+  final wineDllPathEntries = <String>[
+    ...selectedBackendWindowsPaths,
     ..._macosWineWindowsDllPaths(runtimeRoot),
   ];
   final wineEnvironment = <String, String>{
@@ -122,6 +125,10 @@ ProgramRunEnvironment _macosWineEnvironment({
     'GST_REGISTRY': _macosGstreamerRegistryPath(bottle.path),
     'WINEDATADIR': _macosWineDataDir(runtimeRoot),
     'WINEDLLPATH': wineDllPathEntries.join(':'),
+    if (selectedBackendWindowsPaths.isNotEmpty)
+      'WINEPATH': _macosWineWindowsSearchPath(selectedBackendWindowsPaths),
+    'WINELOADER': _macosWineExecutable(hostEnvironment),
+    'WINESERVER': _macosWineserverExecutable(hostEnvironment),
     'DYLD_LIBRARY_PATH': _prependPaths(<String>[
       if (d3dMetalSelected) _macosD3DMetalExternalPath(runtimeRoot),
       if (d3dMetalSelected) _macosD3DMetalUnixPath(runtimeRoot),
@@ -143,6 +150,18 @@ ProgramRunEnvironment _macosWineEnvironment({
   };
 
   return ProgramRunEnvironment(wineEnvironment);
+}
+
+String _macosWineWindowsSearchPath(List<String> unixPaths) {
+  return unixPaths.map(_macosWineWindowsPath).join(';');
+}
+
+String _macosWineWindowsPath(String unixPath) {
+  final windowsPath = unixPath.replaceAll('/', '\\');
+  if (unixPath.startsWith('/')) {
+    return 'Z:$windowsPath';
+  }
+  return windowsPath;
 }
 
 ProgramRunEnvironment _macosPrefixInitializationEnvironment({

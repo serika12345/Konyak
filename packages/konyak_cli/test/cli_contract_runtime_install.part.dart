@@ -57,7 +57,7 @@ void defineRuntimeInstallContractTests() {
             '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
           ),
           executablePath: Option.of(
-            '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wine64',
+            '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wineloader',
           ),
           archiveUrl: const Option.none(),
           versionUrl: Option.of(macosWineRuntimeReleaseUrl),
@@ -91,7 +91,7 @@ void defineRuntimeInstallContractTests() {
         'libraryPath':
             '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
         'executablePath':
-            '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wine64',
+            '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wineloader',
       },
     });
   });
@@ -101,7 +101,7 @@ void defineRuntimeInstallContractTests() {
       hostPlatform: KonyakHostPlatform.macos,
       environment: HostEnvironment(const {'HOME': '/Users/user'}),
       fileStatusProbe: StaticFileStatusProbe({
-        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wine64',
+        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wineloader',
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wineserver',
         ..._macosWine32On64ExistingPaths(
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
@@ -157,7 +157,7 @@ void defineRuntimeInstallContractTests() {
       payload['runtime'],
       containsPair(
         'executablePath',
-        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wine64',
+        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wineloader',
       ),
     );
   });
@@ -183,7 +183,7 @@ void defineRuntimeInstallContractTests() {
           'Runtimes',
           'macos-wine',
           'bin',
-          'wine64',
+          'wineloader',
         ]),
       );
       existingWine.parent.createSync(recursive: true);
@@ -265,7 +265,7 @@ void defineRuntimeInstallContractTests() {
           'KONYAK_RUNTIME_PROFILE': 'development',
         }),
         fileStatusProbe: const StaticFileStatusProbe({
-          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wine64',
+          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wineloader',
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wineserver',
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wine',
         }),
@@ -330,7 +330,7 @@ void defineRuntimeInstallContractTests() {
           'Runtimes',
           'macos-wine',
           'bin',
-          'wine64',
+          'wineloader',
         ]),
       ).existsSync(),
       isTrue,
@@ -364,7 +364,7 @@ void defineRuntimeInstallContractTests() {
           'Runtimes',
           'macos-wine',
           'bin',
-          'wine64',
+          'wineloader',
         ]),
       );
       existingWine.parent.createSync(recursive: true);
@@ -409,7 +409,7 @@ void defineRuntimeInstallContractTests() {
           'Runtimes',
           'macos-wine',
           'bin',
-          'wine64',
+          'wineloader',
         ]),
       );
       existingWine.parent.createSync(recursive: true);
@@ -460,7 +460,7 @@ void defineRuntimeInstallContractTests() {
       'macos-wine',
     ]);
     final existingWine = File(
-      _joinTestPath(runtimeRoot, const ['bin', 'wine64']),
+      _joinTestPath(runtimeRoot, const ['bin', 'wineloader']),
     );
     existingWine.parent.createSync(recursive: true);
     existingWine.writeAsStringSync('existing-runtime');
@@ -1360,7 +1360,7 @@ void defineRuntimeInstallContractTests() {
         'macos-wine',
       ]);
       for (final relativePath in const <List<String>>[
-        <String>['bin', 'wine64'],
+        <String>['bin', 'wineloader'],
         <String>['bin', 'wineserver'],
         <String>['bin', 'wine'],
         <String>['lib', 'libwine.1.dylib'],
@@ -1664,21 +1664,10 @@ void defineRuntimeInstallContractTests() {
             'Runtimes',
             'macos-wine',
             'bin',
-            'wine64',
+            'wineloader',
           ]),
         ).existsSync(),
         isTrue,
-      );
-      expect(
-        Link(
-          _joinTestPath(runtimeHome, const [
-            'Runtimes',
-            'macos-wine',
-            'bin',
-            'wine64',
-          ]),
-        ).targetSync(),
-        'wine',
       );
       expect(
         Directory(
@@ -1940,7 +1929,7 @@ void defineRuntimeInstallContractTests() {
     );
     expect(
       File(
-        _joinTestPath(runtimeRoot.path, const ['bin', 'wine64']),
+        _joinTestPath(runtimeRoot.path, const ['bin', 'wineloader']),
       ).readAsStringSync(),
       'fixture',
     );

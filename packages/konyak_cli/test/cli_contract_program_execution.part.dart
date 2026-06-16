@@ -355,7 +355,7 @@ void defineProgramExecutionContractTests() {
     expect(result.exitCode, 0);
     expect(
       runner.lastRequest?.executable,
-      '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wine64',
+      '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wineloader',
     );
     expect(
       runner.lastRequest?.workingDirectory.toNullable(),
@@ -419,6 +419,20 @@ void defineProgramExecutionContractTests() {
         ),
       ),
     );
+    expect(
+      runner.lastRequest?.environment.toMap(),
+      containsPair(
+        'WINELOADER',
+        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wineloader',
+      ),
+    );
+    expect(
+      runner.lastRequest?.environment.toMap(),
+      containsPair(
+        'WINESERVER',
+        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wineserver',
+      ),
+    );
 
     final payload = jsonDecode(result.stdout) as Map<String, Object?>;
     expect(payload, {
@@ -428,11 +442,11 @@ void defineProgramExecutionContractTests() {
         'programPath': '/downloads/setup.exe',
         'runnerKind': 'macosWine',
         'executable':
-            '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wine64',
+            '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wineloader',
         'workingDirectory':
             '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin',
         'argv': [
-          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wine64',
+          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wineloader',
           'start',
           '/unix',
           '/downloads/setup.exe',
@@ -561,6 +575,16 @@ void defineProgramExecutionContractTests() {
         ]),
       ),
     );
+    expect(
+      runner.lastRequest?.environment.toMap(),
+      containsPair(
+        'WINEPATH',
+        _macosManagedWinePathWithOverrides(runtimeRoot, const [
+          ['lib', 'dxvk', 'x86_64-windows'],
+          ['lib', 'dxvk', 'i386-windows'],
+        ]),
+      ),
+    );
   });
 
   test('run-program --json applies D3DMetal settings on macOS', () {
@@ -635,6 +659,21 @@ void defineProgramExecutionContractTests() {
       containsPair(
         'WINEDLLPATH',
         _macosManagedWineDllPathWithOverrides(runtimeRoot, const [
+          <String>[
+            'components',
+            'gptk-d3dmetal',
+            'lib',
+            'wine',
+            'x86_64-windows',
+          ],
+        ]),
+      ),
+    );
+    expect(
+      runner.lastRequest?.environment.toMap(),
+      containsPair(
+        'WINEPATH',
+        _macosManagedWinePathWithOverrides(runtimeRoot, const [
           <String>[
             'components',
             'gptk-d3dmetal',
@@ -751,6 +790,18 @@ void defineProgramExecutionContractTests() {
       expect(
         environment?['WINEDLLPATH'],
         _macosManagedWineDllPathWithOverrides(runtimeRoot, const [
+          <String>[
+            'components',
+            'gptk-d3dmetal',
+            'lib',
+            'wine',
+            'x86_64-windows',
+          ],
+        ]),
+      );
+      expect(
+        environment?['WINEPATH'],
+        _macosManagedWinePathWithOverrides(runtimeRoot, const [
           <String>[
             'components',
             'gptk-d3dmetal',
@@ -907,6 +958,19 @@ void defineProgramExecutionContractTests() {
       containsPair(
         'WINEDLLPATH',
         _macosManagedWineDllPathWithOverrides(
+          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
+          const [
+            ['lib', 'dxmt', 'x86_64-windows'],
+            ['lib', 'dxmt', 'i386-windows'],
+          ],
+        ),
+      ),
+    );
+    expect(
+      runner.lastRequest?.environment.toMap(),
+      containsPair(
+        'WINEPATH',
+        _macosManagedWinePathWithOverrides(
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
           const [
             ['lib', 'dxmt', 'x86_64-windows'],
@@ -1088,7 +1152,7 @@ void defineProgramExecutionContractTests() {
     expect(result.exitCode, 0);
     expect(
       runner.lastRequest?.executable,
-      '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wine64',
+      '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wineloader',
     );
     expect(runner.lastRequest?.arguments, const ['winecfg']);
     expect(runner.lastRequest?.programPath, 'winecfg');
@@ -1109,11 +1173,11 @@ void defineProgramExecutionContractTests() {
         'programPath': 'winecfg',
         'runnerKind': 'macosWine',
         'executable':
-            '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wine64',
+            '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wineloader',
         'workingDirectory':
             '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin',
         'argv': [
-          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wine64',
+          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wineloader',
           'winecfg',
         ],
         'logPath':
@@ -1137,7 +1201,7 @@ void defineProgramExecutionContractTests() {
 
     expect(
       request.executable,
-      '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wine64',
+      '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wineloader',
     );
     expect(request.arguments, const ['wineboot', '--init']);
     expect(request.programPath, 'wineboot');
@@ -1214,6 +1278,12 @@ void defineProgramExecutionContractTests() {
       ),
     );
     expect(runner.lastRequest?.arguments.last, contains('alias wine'));
+    expect(
+      runner.lastRequest?.arguments.last,
+      contains(
+        "export WINE='/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wineloader'",
+      ),
+    );
     expect(runner.lastRequest?.arguments.last, contains('set setupText to "'));
     expect(
       runner.lastRequest?.arguments.last,
@@ -1415,7 +1485,10 @@ void defineProgramExecutionContractTests() {
     );
     expect(
       runner.lastRequest?.environment.toMap(),
-      containsPair('WINE', 'wine64'),
+      containsPair(
+        'WINE',
+        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wineloader',
+      ),
     );
     expect(
       runner.lastRequest?.environment.toMap(),

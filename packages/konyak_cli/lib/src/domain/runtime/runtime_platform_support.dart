@@ -190,7 +190,6 @@ const _macosGptkD3DMetalComponentPaths = <List<String>>[
 ];
 
 const _macosWine32On64ComponentPaths = <List<String>>[
-  <String>['bin', 'wine'],
   <String>['lib', 'wine', 'i386-windows', 'ntdll.dll'],
   <String>['lib', 'wine', 'x86_64-windows', 'wow64.dll'],
   <String>['lib', 'wine', 'x86_64-windows', 'wow64cpu.dll'],
@@ -224,7 +223,7 @@ const _macosKonyakRuntimeComponentDefinitions =
         role: 'windows-runner',
         isRequired: true,
         relativePaths: <List<String>>[
-          <String>['bin', 'wine64'],
+          <String>['bin', 'wineloader'],
           <String>['bin', 'wineserver'],
         ],
       ),
@@ -399,7 +398,7 @@ const _macosKonyakRuntimePlatformSpec = _RuntimePlatformSpec(
   runnerKind: 'macosWine',
   stackId: 'macos-konyak-runtime-stack',
   stackName: 'Konyak macOS runtime stack',
-  requiredExecutableRelativePath: <String>['bin', 'wine64'],
+  requiredExecutableRelativePath: <String>['bin', 'wineloader'],
   defaultSourceManifestUrl: Option.of(macosWineRuntimeSourceManifestUrl),
   defaultArchiveFileName: macosWineArchiveFileName,
   developmentSourceManifestEnvironmentKey:

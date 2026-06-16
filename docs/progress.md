@@ -11,6 +11,102 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-16 09:39 JST
+- State: `completed`
+- Branch: `main`
+- Related work: publish shallow hosted macOS runtime stack; update
+  `crossover-26.1.0-konyak.0` runtime release assets; push runtime submodule
+  and parent repository changes
+- Purpose: publish the verified CrossOver-style `bin/wineloader` runtime
+  contract and update the public macOS runtime stack artifacts consumed by
+  Konyak.
+- Completed:
+  - Pushed runtime submodule commits
+    `f29a800 Use hosted wineloader runtime layout` and
+    `c58844a Handle draft runtime candidate cleanup` to
+    `serika12345/konyak-macos-runtime`.
+  - Generated a single-stack macOS runtime release payload from the locally
+    verified x86_64 stack archive and staged it as draft/prerelease candidate
+    `candidate-20260616092235-wineloader-rerun`.
+  - Promoted that candidate through GitHub Actions run `27585433156`, which
+    passed normalize, Wine32-on-64, GUI launch, DXVK D3D11, DXMT D3D11, vkd3d
+    D3D12, and publish jobs.
+  - Updated the final `crossover-26.1.0-konyak.0` release assets in
+    `serika12345/konyak-macos-runtime`.
+  - Confirmed the candidate release was deleted after successful promotion.
+- Remaining:
+  - None for publishing the shallow hosted macOS runtime stack artifacts.
+- Next: none; the parent repository commit records the pushed runtime
+  submodule pointer.
+- Verification:
+  - `nix develop -c zsh -lc 'nix shell nixpkgs#actionlint -c actionlint runtime/konyak-macos-runtime/.github/workflows/promote-runtime-candidate.yml'`:
+    passed after fixing candidate cleanup.
+  - `gh run watch 27585433156 --repo serika12345/konyak-macos-runtime --exit-status --interval 30`:
+    passed.
+  - `gh release view crossover-26.1.0-konyak.0 --repo serika12345/konyak-macos-runtime --json tagName,name,isDraft,isPrerelease,url,assets`:
+    passed and showed `konyak-macos-wine-runtime-stack.tar.zst` with digest
+    `sha256:8f84636cf920a28a8c0027a4c4ebd7ec79afebdbd944a684f98d445bdf78c020`.
+  - `gh release view candidate-20260616092235-wineloader-rerun --repo serika12345/konyak-macos-runtime --json tagName`:
+    failed as expected after successful candidate cleanup.
+
+- Timestamp: 2026-06-16 01:21 JST
+- State: `completed`
+- Branch: `main`
+- Related work: macOS CrossOver-style shallow hosted Wine runtime contract;
+  public CLI `wineloader` launch path; runtime smoke entrypoint alignment
+- Purpose: replace the incomplete app-bundle loader direction with a shallow
+  CrossOver-style hosted runtime layout where `runtime/bin` points at
+  `Konyak Wine Hosted Application`, Konyak launches the signed
+  `runtime/bin/wineloader`, and parent CLI/runtime smoke paths set
+  `WINELOADER`, `WINESERVER`, and base `WINEDLLPATH` explicitly.
+- Completed:
+  - Discarded the dirty parent and runtime-submodule workspace state before
+    starting this implementation, per the handoff request.
+  - Updated parent CLI runtime contracts to require and launch
+    `bin/wineloader` on macOS instead of relying on a `bin/wine64` alias.
+  - Added CLI contract coverage for macOS `WINELOADER`, `WINESERVER`,
+    selected-backend `WINEPATH`, and base `WINEDLLPATH` propagation through
+    program launch, winetricks, terminal, and runtime validation paths.
+  - Updated the runtime submodule Wine derivation to produce the shallow hosted
+    directory layout, point `bin` at that hosted directory, and sign the
+    `wineloader`, `wineserver`, and host Unix loader entrypoints.
+  - Updated runtime layout checks and raw runtime smoke diagnostics to use
+    `bin/wineloader` and stop treating copied backend DLLs as proof of loader
+    path correctness.
+  - Changed backend device smoke to launch each probe from the selected runtime
+    backend directory, using `WINEDLLPATH`, backend-only `WINEPATH`, and
+    `WINEDLLOVERRIDES` instead of copying backend DLLs into the Wine prefix.
+  - Verified the x86_64 macOS Wine runtime artifact and assembled runtime
+    stack locally through the maintained runtime scripts that CI already calls.
+- Remaining:
+  - None for the shallow hosted `wineloader` runtime contract update.
+- Next: publish these parent and runtime-submodule changes together so the
+  parent CLI contract and runtime-produced artifact contract stay in sync.
+- Verification:
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart'`:
+    passed after the CLI contract update.
+  - `nix develop -c zsh -lc 'just cli-test'`: passed.
+  - `nix develop -c zsh -lc 'zsh -n runtime/konyak-macos-runtime/scripts/check-wine32on64-runtime.zsh runtime/konyak-macos-runtime/scripts/smoke-wine32on64-launch.zsh runtime/konyak-macos-runtime/scripts/smoke-gui-launch.zsh runtime/konyak-macos-runtime/scripts/smoke-backend-device.zsh runtime/konyak-macos-runtime/scripts/assemble-runtime-stack.zsh scripts/run_macos_vulkan_wine_smoke.zsh'`:
+    passed.
+  - `nix develop -c zsh -lc 'nix eval ./runtime/konyak-macos-runtime#packages.x86_64-darwin.konyak-macos-wine-runtime.drvPath'`:
+    passed.
+  - `nix develop -c zsh -lc 'nixfmt --check runtime/konyak-macos-runtime/nix/wine-crossover.nix runtime/konyak-macos-runtime/flake.nix'`:
+    passed.
+  - `nix develop -c zsh -lc 'nix build ./runtime/konyak-macos-runtime#packages.x86_64-darwin.konyak-macos-wine-runtime --out-link result-wine-runtime-x86_64'`:
+    passed.
+  - `nix develop -c zsh -lc 'runtime/konyak-macos-runtime/scripts/check-wine32on64-runtime.zsh result-wine-runtime-x86_64'`:
+    passed.
+  - `nix develop -c zsh -lc '<assemble x86_64 runtime stack with existing component archives, then run check-wine32on64-runtime.zsh, check-dxmt-component.zsh, check-vkd3d-component.zsh, check-dxvk-component.zsh, check-gstreamer-component.zsh, and check-wine-addons-component.zsh>'`:
+    passed.
+  - `nix develop -c zsh -lc '<run smoke-wine32on64-launch.zsh, smoke-gui-launch.zsh, and smoke-backend-device.zsh for dxvk-d3d11, dxmt-d3d11, and vkd3d-d3d12 on the assembled x86_64 stack>'`:
+    passed.
+  - `nix develop -c zsh -lc 'git diff --check && git -C runtime/konyak-macos-runtime diff --check'`:
+    passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+
 - Timestamp: 2026-06-15 14:04 JST
 - State: `completed`
 - Branch: `main`

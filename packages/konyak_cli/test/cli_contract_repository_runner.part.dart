@@ -201,16 +201,17 @@ void defineRepositoryAndRunnerContractTests() {
       final fakeWine = File(_joinTestPath(fakeBin.path, const ['wine']))
         ..writeAsStringSync('#!/bin/sh\nexit 0\n')
         ..createSync(recursive: true);
-      final fakeWine64 = File(_joinTestPath(fakeBin.path, const ['wine64']))
-        ..writeAsStringSync('#!/bin/sh\nexit 0\n')
-        ..createSync(recursive: true);
+      final fakeWineloader =
+          File(_joinTestPath(fakeBin.path, const ['wineloader']))
+            ..writeAsStringSync('#!/bin/sh\nexit 0\n')
+            ..createSync(recursive: true);
       final fakeWineboot = File(_joinTestPath(fakeBin.path, const ['wineboot']))
         ..writeAsStringSync('#!/bin/sh\nexit 0\n')
         ..createSync(recursive: true);
       Process.runSync('chmod', [
         '755',
         fakeWine.path,
-        fakeWine64.path,
+        fakeWineloader.path,
         fakeWineboot.path,
       ]);
       final cliEnvironment = <String, String>{

@@ -165,7 +165,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
         hostPlatform: KonyakHostPlatform.macos,
         environment: HostEnvironment(const {'HOME': '/Users/user'}),
         fileStatusProbe: StaticFileStatusProbe({
-          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wine64',
+          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wineloader',
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wineserver',
           ..._macosWine32On64ExistingPaths(
             '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
@@ -224,7 +224,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
           'libraryPath':
               '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
           'executablePath':
-              '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wine64',
+              '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wineloader',
           'stack': {
             'schemaVersion': 1,
             'id': 'macos-konyak-runtime-stack',
@@ -239,7 +239,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
                 'isRequired': true,
                 'isInstalled': true,
                 'paths': [
-                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wine64',
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wineloader',
                   '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wineserver',
                 ],
                 'missingPaths': <Object?>[],
@@ -452,7 +452,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
         hostPlatform: KonyakHostPlatform.macos,
         environment: HostEnvironment(const {'HOME': '/Users/user'}),
         fileStatusProbe: const StaticFileStatusProbe({
-          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wine64',
+          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wineloader',
         }),
       ),
     );
@@ -3142,7 +3142,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
               name: 'Wine loader',
               isRequired: true,
               isPassed: true,
-              message: 'wine64 --version completed.',
+              message: 'wineloader --version completed.',
             ),
           ],
         ),
@@ -3171,7 +3171,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
             'name': 'Wine loader',
             'isRequired': true,
             'isPassed': true,
-            'message': 'wine64 --version completed.',
+            'message': 'wineloader --version completed.',
           },
         ],
       },
@@ -3232,13 +3232,13 @@ void defineRuntimeProcessAndUpdateContractTests() {
       hostPlatform: KonyakHostPlatform.macos,
       fileStatusProbe: const StaticFileStatusProbe({
         '/Library/Apple/usr/libexec/oah/libRosettaRuntime',
-        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wine64',
+        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wineloader',
       }),
       runtimeCatalog: MacosWineRuntimeCatalog(
         hostPlatform: KonyakHostPlatform.macos,
         environment: HostEnvironment(const {'HOME': '/Users/user'}),
         fileStatusProbe: const StaticFileStatusProbe({
-          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wine64',
+          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wineloader',
         }),
       ),
     );
@@ -3275,12 +3275,12 @@ void defineRuntimeProcessAndUpdateContractTests() {
             isBundled: false,
             isUpdateable: true,
             libraryPath: Option.of('/runtime'),
-            executablePath: Option.of('/runtime/bin/wine64'),
+            executablePath: Option.of('/runtime/bin/wineloader'),
           ),
         ]),
         fileStatusProbe: const StaticFileStatusProbe({
           '/runtime',
-          '/runtime/bin/wine64',
+          '/runtime/bin/wineloader',
         }),
         executableProbe: executableProbe,
       );
@@ -3323,7 +3323,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
           isBundled: false,
           isUpdateable: true,
           libraryPath: Option.of('/runtime'),
-          executablePath: Option.of('/runtime/bin/wine64'),
+          executablePath: Option.of('/runtime/bin/wineloader'),
           stack: Option.of(
             RuntimeStack(
               id: 'macos-konyak-runtime-stack',
@@ -3349,7 +3349,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
       ]),
       fileStatusProbe: const StaticFileStatusProbe({
         '/runtime',
-        '/runtime/bin/wine64',
+        '/runtime/bin/wineloader',
         '/runtime/lib',
       }),
       executableProbe: executableProbe,
@@ -3369,7 +3369,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
     expect(executableProbe.lastExecutable, isNull);
   });
 
-  test('macOS runtime validator runs wine64 with dylib search paths', () {
+  test('macOS runtime validator runs wineloader with dylib search paths', () {
     final executableProbe = RecordingRuntimeExecutableProbe(
       result: const RuntimeExecutableProbeResult(
         exitCode: 0,
@@ -3388,7 +3388,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
           isBundled: false,
           isUpdateable: true,
           libraryPath: Option.of('/runtime'),
-          executablePath: Option.of('/runtime/bin/wine64'),
+          executablePath: Option.of('/runtime/bin/wineloader'),
           stack: Option.of(
             RuntimeStack(
               id: 'macos-konyak-runtime-stack',
@@ -3400,7 +3400,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
                   name: 'Wine',
                   role: 'windows-runner',
                   isRequired: true,
-                  paths: const ['/runtime/bin/wine64'],
+                  paths: const ['/runtime/bin/wineloader'],
                   missingPaths: const [],
                 ),
               ],
@@ -3410,7 +3410,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
       ]),
       fileStatusProbe: const StaticFileStatusProbe({
         '/runtime',
-        '/runtime/bin/wine64',
+        '/runtime/bin/wineloader',
         '/runtime/bin/wineserver',
         '/runtime/lib',
       }),
@@ -3422,12 +3422,27 @@ void defineRuntimeProcessAndUpdateContractTests() {
     expect(result, isA<RuntimeValidationCompleted>());
     final validation = (result as RuntimeValidationCompleted).validation;
     expect(validation.isValid, isTrue);
-    expect(executableProbe.lastExecutable, '/runtime/bin/wine64');
+    expect(executableProbe.lastExecutable, '/runtime/bin/wineloader');
     expect(executableProbe.lastArguments, const ['--version']);
     expect(executableProbe.lastWorkingDirectory, '/runtime/bin');
     expect(
       executableProbe.lastEnvironment,
       containsPair('DYLD_LIBRARY_PATH', '/runtime/lib'),
+    );
+    expect(
+      executableProbe.lastEnvironment,
+      containsPair('WINELOADER', '/runtime/bin/wineloader'),
+    );
+    expect(
+      executableProbe.lastEnvironment,
+      containsPair('WINESERVER', '/runtime/bin/wineserver'),
+    );
+    expect(
+      executableProbe.lastEnvironment,
+      containsPair(
+        'WINEDLLPATH',
+        '/runtime/lib/wine/x86_64-windows:/runtime/lib/wine/i386-windows:/runtime/lib/wine',
+      ),
     );
   });
 }

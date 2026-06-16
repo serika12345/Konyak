@@ -131,9 +131,9 @@ instead of proving the behavior Konyak actually needs.
 - Original evidence:
   - `packages/konyak_cli/lib/src/platform/macos/macos_runtime_validator.dart`
     checks runtime root, executable, a loader library directory, and
-    `wine64 --version`.
+    `wineloader --version`.
 - Why it is deceptive:
-  - `wine64 --version` can pass while Wine32-on-64, Mono/Gecko, backend DLL
+  - `wineloader --version` can pass while Wine32-on-64, Mono/Gecko, backend DLL
     routing, or prefix initialization are broken.
 - Correct handling:
   - Include stack completeness in validation.
@@ -177,17 +177,18 @@ instead of proving the behavior Konyak actually needs.
     broken `WINEDLLPATH` or DLL override behavior.
 - Correct handling:
   - Backend smoke must be documented as a component-local diagnostic that
-    mirrors Konyak `set-runtime-settings` backend DLL placement.
+    launches probes from the selected runtime backend directory instead of
+    copying backend DLLs into the prefix.
   - It must not use `mscoree,mshtml=` or claim to prove Wine addon/prefix
     initialization behavior.
-  - Completed by removing addon probing suppression and documenting the backend
-    DLL placement role.
+  - Completed by removing addon probing suppression and removing backend DLL
+    prefix copies from the runtime smoke.
 
 ### P1: Raw Wine smoke scripts can be mistaken for app behavior proof
 
 - Original evidence:
   - `scripts/run_macos_vulkan_wine_smoke.zsh` creates its own `WINEPREFIX` and
-    invokes the runtime `wine64` directly.
+    invokes the runtime `wineloader` directly.
   - Runtime submodule smoke scripts also create their own prefixes.
 - Why it is deceptive:
   - These scripts can be useful for low-level runtime diagnostics, but they do
@@ -227,5 +228,5 @@ instead of proving the behavior Konyak actually needs.
    requirements for Konyak macOS runtime releases.
 5. Split smoke labels: CLI-path smokes prove app behavior; raw Wine smokes prove
    only low-level runtime properties.
-6. Document backend smokes as component diagnostics that mirror Konyak backend
-   DLL placement and do not suppress addon probing.
+6. Document backend smokes as component diagnostics that launch probes from the
+   selected runtime backend directory and do not suppress addon probing.

@@ -244,22 +244,6 @@ extension _MacosWineLayoutNormalization on DartIoMacosWineInstaller {
     entry.renameSync(targetPath);
   }
 
-  void _ensureMacosWine64Alias(Directory runtimeRoot) {
-    final binPath = _joinPath(runtimeRoot.path, const ['bin']);
-    final winePath = _joinPath(binPath, const ['wine']);
-    final wine64Path = _joinPath(binPath, const ['wine64']);
-
-    if (FileSystemEntity.typeSync(wine64Path) !=
-        FileSystemEntityType.notFound) {
-      return;
-    }
-    if (FileSystemEntity.typeSync(winePath) == FileSystemEntityType.notFound) {
-      return;
-    }
-
-    Link(wine64Path).createSync('wine');
-  }
-
   void _deleteFileSystemEntity(String path, FileSystemEntityType type) {
     switch (type) {
       case FileSystemEntityType.directory:

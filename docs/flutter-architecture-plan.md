@@ -89,10 +89,10 @@ the actionable backlog, use `docs/todo.md`.
   and treat `.lnk` files as runnable program inputs.
 - Show logs.
 
-macOS run support uses `wine64 start /unix` through a Konyak-managed macOS Wine
-runtime, with macOS Wine environment construction kept behind the CLI/backend
-platform service. Linux run support uses the Linux Wine/Proton path and remains
-Vulkan-oriented.
+macOS run support uses `wineloader start /unix` through a Konyak-managed macOS
+Wine runtime, with macOS Wine environment construction kept behind the
+CLI/backend platform service. Linux run support uses the Linux Wine/Proton path
+and remains Vulkan-oriented.
 
 macOS bottle creation, deletion, Windows-version updates, and runtime-setting
 updates write Konyak `metadata.json` records under the configured bottle
@@ -101,7 +101,7 @@ directory while the runtime backend continues to own process execution.
 The macOS target is a Konyak-managed runtime stack assembled from explicit,
 versioned components. The runtime may come from Konyak-built or third-party
 components as long as the resulting stack exposes the required operational
-capabilities: `wine64`, Wine32-on-64 where needed, DXVK-macOS, MoltenVK,
+capabilities: `wineloader`, Wine32-on-64 where needed, DXVK-macOS, MoltenVK,
 GStreamer support, wine-mono, wine-gecko, winetricks, Rosetta-aware x86
 execution, and the GPTK/D3DMetal files when the selected macOS runtime package
 provides them.
@@ -127,7 +127,7 @@ boundary.
   `check-runtime-update <runtime-id> --json`.
 - Validate macOS runtime loader prerequisites through
   `validate-runtime <runtime-id> --json`, including dylib search paths and a
-  `wine64 --version` loader probe.
+  `wineloader --version` loader probe.
 - Validate host setup prerequisites through `check-macos-setup --json`,
   including Rosetta availability and Konyak-managed runtime installation
   status.
