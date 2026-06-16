@@ -11,6 +11,92 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-16 21:00 JST
+- State: `completed`
+- Branch: `main`
+- Related work: refreshed macOS runtime release artifacts after activation
+  identity fix; DXMT sidecar smoke regression
+- Purpose: reflect the activation identity fix into release artifacts and keep
+  DXVK, DXMT, and vkd3d smoke coverage passing before promotion.
+- Completed:
+  - Updated the user-facing investigation Markdown outputs with the final
+    dynamic root cause: CrossOver's `WINEDLLPATH` temp loader rename, not the
+    drawing backends themselves.
+  - Rebuilt the x86_64 Wine runtime from submodule commit `95ded19` and
+    recreated `dist/konyak-macos-wine-runtime.tar.zst`.
+  - Reassembled `dist/konyak-macos-wine-runtime-stack.tar.zst` and regenerated
+    `dist/konyak-macos-wine-runtime-stack-source.json` and
+    `dist/konyak-macos-runtime.release.json`.
+  - While verifying the refreshed stack, found a separate DXMT artifact defect:
+    `winemetal.dll` loaded successfully but Wine searched for the Unix sidecar
+    at `lib/dxmt/x86_64-windows/winemetal.so`; the artifact only shipped
+    `lib/dxmt/x86_64-unix/winemetal.so`, causing `LoadLibraryA(d3d11.dll)` to
+    fail with Win32 error `1114`.
+  - Updated the DXMT derivation to mirror the rewritten `winemetal.so` closure
+    into `x86_64-windows`, and strengthened `check-dxmt-component.zsh` plus
+    `smoke-backend-device.zsh` to require and diagnose that sidecar path.
+  - Rebuilt the DXMT component with the local Metal toolchain, recreated
+    `dist/konyak-macos-dxmt.tar.zst`, reassembled the runtime stack, and
+    regenerated release metadata.
+  - Committed and pushed runtime submodule commit `c35feb5` and parent commit
+    `bd0c41e`.
+  - Staged `candidate-20260616-activation-identity`, promoted it through
+    GitHub Actions run `27607837566`, and deleted the candidate release.
+  - Confirmed the final public release `crossover-26.1.0-konyak.0` now ships
+    `konyak-macos-wine-runtime-stack.tar.zst` with
+    `sha256:086ab2438f9d9b53e9288e384c9bc04d6ca74ec32b27f81b8275723c064d6c9f`.
+  - Refreshed the local development runtime from the public release source
+    manifest, then imported GPTK/D3DMetal from
+    `/Users/masato/Documents/CrossOver.app`.
+  - Confirmed `list-runtimes --json` reports DXVK, DXMT, GPTK/D3DMetal, and
+    vkd3d backends all available in the development runtime.
+- Remaining:
+  - No blocker remains for this scope. GPTK/D3DMetal is connected as the
+    existing user-imported optional component, not redistributed in the public
+    runtime stack.
+- Next: if D3DMetal needs runtime execution coverage beyond availability, add
+  or run a dedicated local/manual GPTK D3DMetal smoke workflow with a suitable
+  probe executable.
+- Verification:
+  - `nix develop -c zsh -lc 'nix build ./runtime/konyak-macos-runtime#packages.x86_64-darwin.konyak-macos-wine-runtime --out-link result-wine-runtime-x86_64'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && KONYAK_WINE_RUNTIME_ROOT=/Users/masato/Documents/Konyak/result-wine-runtime-x86_64 KONYAK_METAL_TOOLCHAIN_BIN="$(dirname "$(/usr/bin/xcrun -sdk macosx -find metal)")" nix build --impure .#packages.x86_64-darwin.konyak-macos-dxmt --out-link result-dxmt'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && ./scripts/check-dxmt-component.zsh result-dxmt'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && ./scripts/check-wine32on64-runtime.zsh result-runtime-stack && ./scripts/check-dxmt-component.zsh result-runtime-stack && ./scripts/check-vkd3d-component.zsh result-runtime-stack && ./scripts/check-dxvk-component.zsh result-runtime-stack && ./scripts/check-gstreamer-component.zsh result-runtime-stack && ./scripts/check-wine-addons-component.zsh result-runtime-stack'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && ./scripts/stage-runtime-release-candidate.zsh --dry-run candidate-20260616-activation-identity dist'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && ./scripts/smoke-wine32on64-launch.zsh result-runtime-stack'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && ./scripts/smoke-gui-launch.zsh result-runtime-stack'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && ./scripts/smoke-backend-device.zsh result-runtime-stack dxvk-d3d11 && ./scripts/smoke-backend-device.zsh result-runtime-stack dxmt-d3d11 && ./scripts/smoke-backend-device.zsh result-runtime-stack vkd3d-d3d12'`:
+    passed.
+  - GitHub Actions run `27607837566`: passed normalize, Wine32-on-64 launch
+    smoke, GUI `/unix` smoke, DXVK D3D11 backend smoke, DXMT D3D11 backend
+    smoke, vkd3d D3D12 backend smoke, and release publishing.
+  - Final release assets:
+    `konyak-macos-runtime.release.json`
+    `sha256:455a03c9a787686d334239d01ddd5568118c4c5091a728371fe096f9a4500516`,
+    `konyak-macos-wine-runtime-stack-source.json`
+    `sha256:ac9d1671b1b50aed04568d8f2b2e12548c687cdf5babe1e550a87b386661b2a1`,
+    and `konyak-macos-wine-runtime-stack.tar.zst`
+    `sha256:086ab2438f9d9b53e9288e384c9bc04d6ca74ec32b27f81b8275723c064d6c9f`.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && KONYAK_RUNTIME_PROFILE=development KONYAK_MACOS_WINE_HOME="$runtime_path" KONYAK_DEV_MACOS_WINE_STACK_MANIFEST="$manifest_path" dart run bin/konyak.dart install-macos-wine --reinstall --source-manifest "$manifest_path" --json'`:
+    passed; final JSON reported `isInstalled: true`, stack `isComplete: true`,
+    and DXMT with no missing paths including `x86_64-windows/winemetal.so`.
+  - `nix develop -c zsh -lc 'runtime_path="$(./scripts/prepare_macos_dev_runtime_stack.zsh --print-runtime-path)" && runtime/konyak-macos-runtime/scripts/check-wine32on64-runtime.zsh "$runtime_path" && runtime/konyak-macos-runtime/scripts/check-dxmt-component.zsh "$runtime_path" && runtime/konyak-macos-runtime/scripts/check-vkd3d-component.zsh "$runtime_path" && runtime/konyak-macos-runtime/scripts/check-dxvk-component.zsh "$runtime_path" && runtime/konyak-macos-runtime/scripts/check-gstreamer-component.zsh "$runtime_path" && runtime/konyak-macos-runtime/scripts/check-wine-addons-component.zsh "$runtime_path"'`:
+    passed.
+  - `nix develop -c zsh -lc 'runtime_path="$(./scripts/prepare_macos_dev_runtime_stack.zsh --print-runtime-path)" && runtime/konyak-macos-runtime/scripts/smoke-wine32on64-launch.zsh "$runtime_path" && runtime/konyak-macos-runtime/scripts/smoke-gui-launch.zsh "$runtime_path" && runtime/konyak-macos-runtime/scripts/smoke-backend-device.zsh "$runtime_path" dxvk-d3d11 && runtime/konyak-macos-runtime/scripts/smoke-backend-device.zsh "$runtime_path" dxmt-d3d11 && runtime/konyak-macos-runtime/scripts/smoke-backend-device.zsh "$runtime_path" vkd3d-d3d12'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && KONYAK_RUNTIME_PROFILE=development KONYAK_MACOS_WINE_HOME="$runtime_path" dart run bin/konyak.dart install-gptk-wine --from /Users/masato/Documents/CrossOver.app --json'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && KONYAK_RUNTIME_PROFILE=development KONYAK_MACOS_WINE_HOME="$runtime_path" dart run bin/konyak.dart list-runtimes --json'`:
+    passed; DXVK, DXMT, GPTK/D3DMetal, and vkd3d backends were all available
+    with no missing paths.
+
 - Timestamp: 2026-06-16 14:46 JST
 - State: `completed`
 - Branch: `main`
