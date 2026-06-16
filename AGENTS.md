@@ -83,7 +83,77 @@ Use TDD as the default development loop:
 2. Implement the smallest change that makes it pass.
 3. Refactor only while the test stays green.
 
-### 4.1 Execution Path SSOT
+### 4.1 Defect Investigation Requires Dynamic Proof
+
+- Static analysis, source comparison, binary metadata inspection, and
+  disassembly are useful for forming hypotheses, but they are not sufficient to
+  declare a root cause for a defect. Confirm or reject each material hypothesis
+  with dynamic analysis against the failing behavior.
+- Reproduce runtime, packaging, launcher, Wine, GUI, focus, input, graphics, or
+  process-lifecycle defects through the public Konyak app/CLI execution path
+  whenever that behavior is reachable from Konyak. Record the exact command or
+  user action, timestamp, runtime path, bottle path, argv, environment, process
+  IDs, exit status, and log files used for the reproduction.
+- Use low-level direct runtime execution only to isolate the runtime contract
+  itself, and clearly label it as a diagnostic path rather than proof of
+  application behavior. Any new recurring low-level runtime execution path
+  must still follow the Execution Path SSOT rules below: add a maintained
+  script, and document why the app/CLI path cannot cover that case in
+  `docs/progress.md`.
+- For macOS Wine and GUI defects, dynamic analysis must include the relevant
+  concrete probes, as applicable:
+  - process tree inspection with `ps`, `pgrep`, `lsof`, `vmmap`, and loaded
+    image checks
+  - Wine tracing with targeted `WINEDEBUG` channels, without masking the bug
+    with unrelated debug overrides
+  - Konyak launcher logs and Wine stderr/stdout from the same run
+  - macOS window inspection with `CGWindowListCopyWindowInfo`
+  - activation/focus checks with `NSRunningApplication`, AppleScript/System
+    Events, or equivalent AppKit probes
+  - `sample`, `spindump`, or `lldb` attachment to confirm event-loop state,
+    loaded modules, selected entrypoints, and failing call paths
+  - `log stream`, `fs_usage`, or `dtruss` when the suspected failure involves
+    macOS services, filesystem access, IPC, dynamic loading, or process launch
+  - comparison against a known-good upstream Wine, CrossOver, or nixpkgs Wine
+    runtime with the same probes when the defect is compatibility-regression
+    related
+- Preserve the dynamic evidence in the handoff: commands, important output,
+  screenshots or window dumps when relevant, PIDs, stack samples, and a short
+  explanation of which hypothesis the evidence proves or disproves.
+- Do not replace dynamic confirmation with plausible reasoning from upstream
+  source, patches, Nix recipes, or binary metadata. If dynamic confirmation is
+  impossible in the current environment, document the blocker and treat the
+  finding as unconfirmed until a dynamic reproduction or counterexample is
+  captured.
+
+### 4.2 Sub-Agent Workstream Isolation
+
+- For substantial defect work, runtime work, packaging work, or release
+  artifact work, keep investigation, implementation, and artifact/result audit
+  in separate sub-agent workstreams so their contexts do not contaminate each
+  other.
+- The investigation agent owns reproduction, dynamic evidence, and root-cause
+  proof. It must not implement the fix it is validating. Temporary probes or
+  instrumentation used only to gather evidence must be clearly marked and
+  either discarded or handed off explicitly to the implementation agent.
+- The implementation agent owns the minimal code, recipe, manifest, or
+  artifact-generation changes needed to address the proven cause. It must use
+  the investigation evidence as input and avoid broad speculative rewrites.
+- The audit agent owns final verification of the produced code and artifacts.
+  It must not rely on the implementation agent's conclusion; it must inspect
+  the resulting files/artifacts and rerun the relevant static and dynamic
+  checks independently.
+- Assign each sub-agent a clear scope, write ownership, and expected output.
+  Keep implementation write sets disjoint when multiple agents edit files.
+- The main agent coordinates the work, integrates results, and resolves
+  conflicts, but should not silently merge investigation, implementation, and
+  audit reasoning into one undifferentiated narrative.
+- If the available tooling cannot create sub-agents, document that limitation
+  before proceeding and keep the three workstreams separated in explicit
+  written artifacts. Do not mark substantial runtime or defect work complete
+  without either a sub-agent audit or a documented user-approved exception.
+
+### 4.3 Execution Path SSOT
 
 - Application and CLI behavior verification must use the same public execution
   path that Konyak uses at runtime. Prefer Flutter-triggered CLI calls,

@@ -11,6 +11,35 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-16 10:17 JST
+- State: `completed`
+- Branch: `main`
+- Related work: repository agent policy for runtime defect investigation,
+  sub-agent workstream isolation, and artifact audit discipline
+- Purpose: make future defect investigations require dynamic proof instead of
+  static-analysis-only conclusions, and require separate investigation,
+  implementation, and audit workstreams for substantial runtime and defect
+  work.
+- Completed:
+  - Added AGENTS guidance that static analysis, binary metadata inspection,
+    disassembly, source comparison, and Nix recipe review are only hypothesis
+    inputs until confirmed by dynamic reproduction or counterexample.
+  - Documented concrete macOS Wine dynamic-analysis probes, including public
+    app/CLI reproduction, process inspection, targeted `WINEDEBUG`, Konyak
+    logs, `CGWindowListCopyWindowInfo`, `NSRunningApplication`, `sample`,
+    `spindump`, `lldb`, `log stream`, `fs_usage`, `dtruss`, and known-good
+    runtime comparison.
+  - Added AGENTS guidance to keep investigation, implementation, and
+    artifact/result audit in separate sub-agent workstreams for substantial
+    defect, runtime, packaging, and release artifact work.
+- Remaining:
+  - None for this repository policy update.
+- Next: apply the new workflow to the next runtime defect fix before declaring
+  the cause or produced artifact complete.
+- Verification:
+  - `nix develop -c zsh -lc 'just verify-governance && just verify-safety && just format-check && just lint'`:
+    passed.
+
 - Timestamp: 2026-06-16 09:39 JST
 - State: `completed`
 - Branch: `main`
