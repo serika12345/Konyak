@@ -197,6 +197,16 @@ const _macosWine32On64ComponentPaths = <List<String>>[
   <String>['lib', 'wine', 'x86_64-unix', 'ntdll.so'],
 ];
 
+const _macosWineEntryPointComponentPaths = <List<String>>[
+  <String>['bin', 'wine'],
+  <String>['bin', 'wineloader'],
+  <String>['bin', 'wineserver'],
+  <String>['Konyak Wine Hosted Application', 'wine'],
+  <String>['Konyak Wine Hosted Application', 'wineloader'],
+  <String>['Konyak Wine Hosted Application', 'wineserver'],
+  <String>['lib', 'wine', 'x86_64-unix', 'wine'],
+];
+
 const _macosWineMonoComponentPaths = <List<String>>[
   <String>['share', 'wine', 'mono', 'wine-mono-10.4.1-x86.msi'],
 ];
@@ -222,10 +232,7 @@ const _macosKonyakRuntimeComponentDefinitions =
         name: 'Wine',
         role: 'windows-runner',
         isRequired: true,
-        relativePaths: <List<String>>[
-          <String>['bin', 'wineloader'],
-          <String>['bin', 'wineserver'],
-        ],
+        relativePaths: _macosWineEntryPointComponentPaths,
       ),
       _RuntimeStackComponentDefinition(
         id: 'wine32on64',

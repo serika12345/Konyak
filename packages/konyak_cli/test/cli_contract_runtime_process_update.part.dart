@@ -165,8 +165,9 @@ void defineRuntimeProcessAndUpdateContractTests() {
         hostPlatform: KonyakHostPlatform.macos,
         environment: HostEnvironment(const {'HOME': '/Users/user'}),
         fileStatusProbe: StaticFileStatusProbe({
-          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wineloader',
-          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wineserver',
+          ..._macosWineEntryPointExistingPaths(
+            '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
+          ),
           ..._macosWine32On64ExistingPaths(
             '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
           ),
@@ -238,10 +239,9 @@ void defineRuntimeProcessAndUpdateContractTests() {
                 'role': 'windows-runner',
                 'isRequired': true,
                 'isInstalled': true,
-                'paths': [
-                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wineloader',
-                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wineserver',
-                ],
+                'paths': _macosWineEntryPointExpectedPaths(
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
+                ),
                 'missingPaths': <Object?>[],
               },
               {

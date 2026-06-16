@@ -771,6 +771,30 @@ const _macosWine32On64InstalledPaths = <List<String>>[
   <String>['lib', 'wine', 'x86_64-unix', 'ntdll.so'],
 ];
 
+const _macosWineEntryPointInstalledPaths = <List<String>>[
+  <String>['bin', 'wine'],
+  <String>['bin', 'wineloader'],
+  <String>['bin', 'wineserver'],
+  <String>['Konyak Wine Hosted Application', 'wine'],
+  <String>['Konyak Wine Hosted Application', 'wineloader'],
+  <String>['Konyak Wine Hosted Application', 'wineserver'],
+  <String>['lib', 'wine', 'x86_64-unix', 'wine'],
+];
+
+Set<String> _macosWineEntryPointExistingPaths(String runtimeRoot) {
+  return <String>{
+    for (final relativePath in _macosWineEntryPointInstalledPaths)
+      _joinTestPath(runtimeRoot, relativePath),
+  };
+}
+
+List<String> _macosWineEntryPointExpectedPaths(String runtimeRoot) {
+  return <String>[
+    for (final relativePath in _macosWineEntryPointInstalledPaths)
+      _joinTestPath(runtimeRoot, relativePath),
+  ];
+}
+
 const _macosVkd3dInstalledPaths = <List<String>>[
   <String>['lib', 'wine', 'x86_64-windows', 'libvkd3d-1.dll'],
   <String>['lib', 'wine', 'x86_64-windows', 'libvkd3d-shader-1.dll'],
@@ -866,8 +890,8 @@ String _createComponentRuntimeArchive(String tempPath) {
   final wineRoot = Directory(_joinTestPath(librariesRoot.path, const ['Wine']));
 
   for (final relativePath in <List<String>>[
-    <String>['Wine', 'bin', 'wineloader'],
-    <String>['Wine', 'bin', 'wineserver'],
+    for (final relativePath in _macosWineEntryPointInstalledPaths)
+      <String>['Wine', ...relativePath],
     for (final relativePath in _macosWine32On64InstalledPaths)
       <String>['Wine', ...relativePath],
     <String>['Wine', 'lib', 'dxvk', 'x86_64-windows', 'dxgi.dll'],
@@ -939,14 +963,14 @@ String _createKonyakComponentRuntimeArchive(String tempPath) {
   );
 
   for (final relativePath in <List<String>>[
-    <String>[
-      'Wine Devel.app',
-      'Contents',
-      'Resources',
-      'wine',
-      'bin',
-      'wineloader',
-    ],
+    for (final relativePath in _macosWineEntryPointInstalledPaths)
+      <String>[
+        'Wine Devel.app',
+        'Contents',
+        'Resources',
+        'wine',
+        ...relativePath,
+      ],
     for (final relativePath in _macosWine32On64InstalledPaths)
       <String>[
         'Wine Devel.app',
@@ -955,14 +979,6 @@ String _createKonyakComponentRuntimeArchive(String tempPath) {
         'wine',
         ...relativePath,
       ],
-    <String>[
-      'Wine Devel.app',
-      'Contents',
-      'Resources',
-      'wine',
-      'bin',
-      'wineserver',
-    ],
     <String>[
       'Wine Devel.app',
       'Contents',
@@ -1197,8 +1213,7 @@ String _createMacosAppBundleWineArchive(String tempPath) {
   );
 
   for (final relativePath in <List<String>>[
-    <String>['bin', 'wineloader'],
-    <String>['bin', 'wineserver'],
+    ..._macosWineEntryPointInstalledPaths,
     ..._macosWine32On64InstalledPaths,
     <String>['lib', 'libwine.1.dylib'],
     ..._macosWineMonoInstalledPaths,
@@ -1226,8 +1241,7 @@ String _createMacosAppBundleWineArchive(String tempPath) {
 
 void _createInstalledMacosRuntime(String runtimeHome) {
   for (final relativePath in <List<String>>[
-    <String>['bin', 'wineloader'],
-    <String>['bin', 'wineserver'],
+    ..._macosWineEntryPointInstalledPaths,
     ..._macosWine32On64InstalledPaths,
     <String>['lib', 'libwine.1.dylib'],
     ..._macosWineMonoInstalledPaths,

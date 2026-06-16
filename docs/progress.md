@@ -11,6 +11,75 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-16 14:46 JST
+- State: `completed`
+- Branch: `main`
+- Related work: macOS CrossOver Wine activation identity regression;
+  `WINEDLLPATH` temp loader rewrite; runtime artifact audit
+- Purpose: fix the Konyak-specific macOS Wine focus/input regression where
+  Windows GUI processes launched with `WINEDLLPATH` were registered by macOS as
+  temporary unbundled Windows-exe pseudo-apps instead of the Konyak Wine loader.
+- Completed:
+  - Dynamically reproduced the failure through the public Konyak CLI path with
+    `WINEDLLPATH` set, using Ardour setup as the GUI probe. `CGWindowList` and
+    `NSRunningApplication` showed the Wine window owned by
+    `$TMPDIR/winetemp-.../Ardour-9.5.0-w64-Setup.exe`, and activation did not
+    make that process frontmost.
+  - Compared direct CrossOver hosted-app execution and confirmed that simply
+    launching CrossOver's hosted `wineloader` from CLI is not the standalone
+    launch contract Konyak can rely on.
+  - Patched the runtime submodule CrossOver Wine derivation to disable only the
+    `WINEDLLPATH`-triggered temp loader hard-link rewrite in
+    `dlls/ntdll/unix/loader.c`, while preserving `WINEDLLPATH` for DXVK, DXMT,
+    D3DMetal, vkd3d, and Wine DLL resolution.
+  - Rewrote the embedded Wine loader identity to Konyak-owned bundle/name
+    strings, moved runtime entrypoint signing to `postFixup`, and signed the
+    hosted entrypoints plus Unix host loaders with hardened runtime
+    entitlements.
+  - Strengthened `check-wine32on64-runtime.zsh` to reject linker-signed
+    entrypoints, require Konyak signing identifiers, require Wine entitlements,
+    require the host loader's bound Info.plist identity, reject CrossOver
+    application identity strings, and reject the `winetemp` temp-loader strings
+    in host `ntdll.so`.
+  - Updated the parent macOS runtime completeness contract and CLI fixtures so
+    a Wine component must include the hosted entrypoints and Unix host loader,
+    not just `bin/wineloader` and `bin/wineserver`.
+  - Rebuilt and assembled the local x86_64 runtime stack. A follow-up dynamic
+    Konyak CLI run with `WINEDLLPATH` still set showed the Ardour setup process
+    registered as `wine`, with `bundleURL` and `executableURL` pointing at
+    `work/runtime-stack-test/lib/wine/x86_64-unix/wine`; `lsof` showed no
+    `winetemp` loader path.
+  - Ran an isolated audit sub-agent for the produced code and artifacts. The
+    audit found no blocking issues and confirmed that the patch is narrowly
+    targeted, preserves DLL resolution, and adds checks for the known
+    regression class.
+- Remaining:
+  - The automated GUI smoke still proves GUI launch under `WINEDLLPATH` with a
+    sentinel; it does not encode the full manual `CGWindowList` /
+    `NSRunningApplication` / `lsof` activation-identity proof.
+  - `check-macos-setup` still follows existing `RuntimeRecord.isInstalled`
+    semantics based on the primary executable, so it may report installed while
+    a detailed stack component is incomplete.
+- Next: publish the runtime submodule commit and parent submodule pointer after
+  this local fix is accepted.
+- Verification:
+  - `nix develop -c zsh -lc 'nixfmt --check runtime/konyak-macos-runtime/nix/wine-crossover.nix runtime/konyak-macos-runtime/flake.nix'`:
+    passed.
+  - `nix develop -c zsh -lc 'zsh -n runtime/konyak-macos-runtime/scripts/check-wine32on64-runtime.zsh runtime/konyak-macos-runtime/scripts/smoke-wine32on64-launch.zsh runtime/konyak-macos-runtime/scripts/smoke-gui-launch.zsh'`:
+    passed.
+  - `nix develop -c zsh -lc 'runtime/konyak-macos-runtime/scripts/check-wine32on64-runtime.zsh result-wine-runtime-x86_64'`:
+    passed.
+  - `nix develop -c zsh -lc 'runtime/konyak-macos-runtime/scripts/check-wine32on64-runtime.zsh work/runtime-stack-test'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart'`:
+    passed.
+  - `nix develop -c zsh -lc 'runtime/konyak-macos-runtime/scripts/smoke-wine32on64-launch.zsh work/runtime-stack-test'`:
+    passed.
+  - `nix develop -c zsh -lc 'runtime/konyak-macos-runtime/scripts/smoke-gui-launch.zsh work/runtime-stack-test'`:
+    passed.
+  - `nix develop -c zsh -lc 'git diff --check && git -C runtime/konyak-macos-runtime diff --check'`:
+    passed.
+
 - Timestamp: 2026-06-16 10:17 JST
 - State: `completed`
 - Branch: `main`
