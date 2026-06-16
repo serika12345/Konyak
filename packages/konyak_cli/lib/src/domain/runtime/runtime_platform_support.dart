@@ -343,8 +343,10 @@ const _macosKonyakRuntimeComponentDefinitions =
           <String>['lib', 'dxmt', 'x86_64-windows', 'd3d11.dll'],
           <String>['lib', 'dxmt', 'x86_64-windows', 'dxgi.dll'],
           <String>['lib', 'dxmt', 'x86_64-windows', 'winemetal.dll'],
+          <String>['lib', 'dxmt', 'x86_64-windows', 'winemetal.so'],
           <String>['lib', 'dxmt', 'x86_64-windows', 'nvapi64.dll'],
           <String>['lib', 'dxmt', 'x86_64-windows', 'nvngx.dll'],
+          <String>['lib', 'dxmt', 'x86_64-unix', 'winemetal.so'],
         ],
       ),
     ];
