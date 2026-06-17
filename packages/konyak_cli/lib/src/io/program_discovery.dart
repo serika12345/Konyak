@@ -103,19 +103,25 @@ class DartIoBottlePrefixInitializer implements BottlePrefixInitializer {
 
   @override
   BottlePrefixInitializationResult initialize(BottleRecord bottle) {
-    final request = programRunPlanner.planPrefixInitialization(bottle: bottle);
-    final result = programRunner.run(request);
+    for (final request in programRunPlanner.planPrefixBootstrap(
+      bottle: bottle,
+    )) {
+      final result = programRunner.run(request);
 
-    return switch (result) {
-      ProgramRunCompleted(:final processExitCode) when processExitCode == 0 =>
-        const BottlePrefixInitialized(),
-      ProgramRunCompleted(:final processExitCode) =>
-        BottlePrefixInitializationFailed(
-          'wineboot exited with code $processExitCode. See ${request.logPath}.',
-        ),
-      ProgramRunFailed(:final message) => BottlePrefixInitializationFailed(
-        message,
-      ),
-    };
+      switch (result) {
+        case ProgramRunCompleted(:final processExitCode)
+            when processExitCode == 0:
+          continue;
+        case ProgramRunCompleted(:final processExitCode):
+          return BottlePrefixInitializationFailed(
+            '${request.programPath} exited with code $processExitCode. '
+            'See ${request.logPath}.',
+          );
+        case ProgramRunFailed(:final message):
+          return BottlePrefixInitializationFailed(message);
+      }
+    }
+
+    return const BottlePrefixInitialized();
   }
 }

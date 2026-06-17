@@ -11,6 +11,51 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-17 19:06 JST
+- State: `completed`
+- Branch: `main`
+- Related work: macOS bottle prefix bootstrap; Wine Mono installer suppression
+- Purpose: prevent user bottle creation from showing or leaving Wine Mono
+  Installer by installing the bundled Wine Mono MSI silently before
+  `wineboot --init`.
+- Completed:
+  - Added a macOS prefix bootstrap plan that runs
+    `wineloader msiexec /i Z:\...\wine-mono-10.4.1-x86.msi /qn /norestart`
+    before the existing `wineloader wineboot --init` request.
+  - Kept the existing single `planPrefixInitialization` request contract while
+    switching `DartIoBottlePrefixInitializer` to execute the new bootstrap
+    request sequence.
+  - Added CLI contract coverage for the Mono install request, the retained
+    `wineboot` request, and sequential prefix initializer execution.
+  - Dynamically verified the command ordering through the public CLI
+    `create-bottle --json` path against
+    `.dart_tool/konyak/dev-runtime/macos-wine`; the generated prefix contained
+    `drive_c/windows/mono/mono-2.0/bin/libmono-2.0-x86.dll` and
+    `libmono-2.0-x86_64.dll`, and `CGWindowList` reported no Wine Mono
+    Installer windows.
+- Remaining:
+  - No known blocker for the Wine Mono installer popup path.
+- Next: none.
+- Verification:
+  - Low-level diagnostic:
+    `wineloader msiexec /i Z:\...\wine-mono-10.4.1-x86.msi /qn /norestart`
+    followed by `wineloader wineboot --init` on a fresh temporary prefix:
+    passed; both commands exited 0 and Mono files were installed.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart -n "macOS prefix bootstrap silently installs Wine Mono before wineboot|bottle prefix initializer runs bootstrap requests in order"'`:
+    passed.
+  - `nix develop -c zsh -lc 'dart format packages/konyak_cli/lib/src/domain/program/program_runner.dart packages/konyak_cli/lib/src/platform/macos/macos_program_run_requests.dart packages/konyak_cli/lib/src/io/program_discovery.dart packages/konyak_cli/test/cli_contract_program_execution.part.dart && cd packages/konyak_cli && dart test test/cli_contract_test.dart'`:
+    passed.
+  - Public CLI dynamic smoke:
+    `KONYAK_RUNTIME_PROFILE=development KONYAK_MACOS_WINE_HOME=/Users/masato/Documents/Konyak/.dart_tool/konyak/dev-runtime/macos-wine dart run packages/konyak_cli/bin/konyak.dart create-bottle --name "Mono Quiet Smoke" --json`:
+    passed; `wine-mono-install.log` and `prefix-init.log` showed the expected
+    argv, Mono DLLs existed in the prefix, and a Swift `CGWindowList` probe
+    returned `mono_installer_windows=0`.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `nix develop -c zsh -lc 'just cli-test'`: passed.
+
 - Timestamp: 2026-06-17 18:07 JST
 - State: `completed`
 - Branch: `main`

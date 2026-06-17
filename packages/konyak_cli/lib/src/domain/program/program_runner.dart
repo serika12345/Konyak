@@ -133,6 +133,18 @@ class ProgramRunPlanner {
     };
   }
 
+  List<ProgramRunRequest> planPrefixBootstrap({required BottleRecord bottle}) {
+    return List.unmodifiable(switch (hostPlatform) {
+      KonyakHostPlatform.linux => <ProgramRunRequest>[
+        _linuxWinebootRequest(bottle: bottle, environment: environment),
+      ],
+      KonyakHostPlatform.macos => <ProgramRunRequest>[
+        _macosWineMonoInstallRequest(bottle: bottle, environment: environment),
+        _macosWinebootRequest(bottle: bottle, environment: environment),
+      ],
+    });
+  }
+
   ProgramRunRequest planWineProcessTermination({required BottleRecord bottle}) {
     return switch (hostPlatform) {
       KonyakHostPlatform.linux => _linuxWineserverKillRequest(

@@ -51,6 +51,33 @@ ProgramRunRequest _macosWinebootRequest({
   );
 }
 
+ProgramRunRequest _macosWineMonoInstallRequest({
+  required BottleRecord bottle,
+  required HostEnvironment environment,
+}) {
+  final hostEnvironment = environment;
+  final runtimeRoot = _macosWineRuntimeRoot(hostEnvironment);
+  return ProgramRunRequest(
+    bottleId: bottle.id,
+    programPath: 'wine-mono',
+    runnerKind: 'macosWine',
+    executable: _macosWineExecutable(hostEnvironment),
+    arguments: <String>[
+      'msiexec',
+      '/i',
+      _macosWineWindowsPath(_macosWineMonoMsiPath(runtimeRoot)),
+      '/qn',
+      '/norestart',
+    ],
+    environment: _macosPrefixInitializationEnvironment(
+      bottle: bottle,
+      environment: environment,
+    ),
+    logPath: _joinPath(bottle.path, const ['logs', 'wine-mono-install.log']),
+    workingDirectory: Option.of(_macosWineBinFolder(hostEnvironment)),
+  );
+}
+
 ProgramRunRequest _macosWineserverKillRequest({
   required BottleRecord bottle,
   required HostEnvironment environment,
@@ -173,6 +200,10 @@ ProgramRunEnvironment _macosPrefixInitializationEnvironment({
 
 String _macosWineDataDir(String runtimeRoot) {
   return _joinPath(runtimeRoot, const ['share', 'wine']);
+}
+
+String _macosWineMonoMsiPath(String runtimeRoot) {
+  return _joinPath(runtimeRoot, _macosWineMonoComponentPaths.single);
 }
 
 String _macosD3DMetalExternalPath(String runtimeRoot) {

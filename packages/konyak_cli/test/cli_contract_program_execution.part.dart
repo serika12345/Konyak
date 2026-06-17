@@ -1234,6 +1234,133 @@ void defineProgramExecutionContractTests() {
     );
   });
 
+  test('macOS prefix bootstrap silently installs Wine Mono before wineboot', () {
+    final bottle = BottleRecord(
+      id: 'steam',
+      name: 'Steam',
+      path: '/Users/user/Library/Application Support/Konyak/Bottles/Steam',
+      windowsVersion: 'win10',
+    );
+    final requests = ProgramRunPlanner(
+      hostPlatform: KonyakHostPlatform.macos,
+      environment: HostEnvironment(const {'HOME': '/Users/user'}),
+    ).planPrefixBootstrap(bottle: bottle);
+
+    expect(requests, hasLength(2));
+
+    final monoInstall = requests.first;
+    expect(
+      monoInstall.executable,
+      '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wineloader',
+    );
+    expect(monoInstall.arguments, const [
+      'msiexec',
+      '/i',
+      r'Z:\Users\user\Library\Application Support\Konyak\Runtimes\macos-wine\share\wine\mono\wine-mono-10.4.1-x86.msi',
+      '/qn',
+      '/norestart',
+    ]);
+    expect(monoInstall.programPath, 'wine-mono');
+    expect(monoInstall.runnerKind, 'macosWine');
+    expect(
+      monoInstall.workingDirectory.toNullable(),
+      '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin',
+    );
+    expect(
+      monoInstall.environment.toMap(),
+      containsPair(
+        'WINEPREFIX',
+        '/Users/user/Library/Application Support/Konyak/Bottles/Steam',
+      ),
+    );
+    expect(
+      monoInstall.environment.toMap(),
+      containsPair(
+        'WINEDATADIR',
+        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/share/wine',
+      ),
+    );
+    expect(
+      monoInstall.environment.toMap(),
+      isNot(containsPair('WINEDLLOVERRIDES', 'mscoree,mshtml=')),
+    );
+    expect(
+      monoInstall.logPath,
+      '/Users/user/Library/Application Support/Konyak/Bottles/Steam/logs/wine-mono-install.log',
+    );
+
+    final wineboot = requests.last;
+    expect(wineboot.programPath, 'wineboot');
+    expect(wineboot.arguments, const ['wineboot', '--init']);
+    expect(
+      wineboot.logPath,
+      '/Users/user/Library/Application Support/Konyak/Bottles/Steam/logs/prefix-init.log',
+    );
+  });
+
+  test('bottle prefix initializer runs bootstrap requests in order', () {
+    final bottle = BottleRecord(
+      id: 'steam',
+      name: 'Steam',
+      path: '/Users/user/Library/Application Support/Konyak/Bottles/Steam',
+      windowsVersion: 'win10',
+    );
+    final runner = RecordingProgramRunner(
+      results: const [
+        ProgramRunCompleted(processExitCode: 0),
+        ProgramRunCompleted(processExitCode: 0),
+      ],
+    );
+    final initializer = DartIoBottlePrefixInitializer(
+      programRunPlanner: ProgramRunPlanner(
+        hostPlatform: KonyakHostPlatform.macos,
+        environment: HostEnvironment(const {'HOME': '/Users/user'}),
+      ),
+      programRunner: runner,
+    );
+
+    final result = initializer.initialize(bottle);
+
+    expect(result, isA<BottlePrefixInitialized>());
+    expect(runner.requests.map((request) => request.programPath), const [
+      'wine-mono',
+      'wineboot',
+    ]);
+  });
+
+  test('bottle prefix initializer stops when Wine Mono install fails', () {
+    final bottle = BottleRecord(
+      id: 'steam',
+      name: 'Steam',
+      path: '/Users/user/Library/Application Support/Konyak/Bottles/Steam',
+      windowsVersion: 'win10',
+    );
+    final runner = RecordingProgramRunner(
+      results: const [
+        ProgramRunCompleted(processExitCode: 42),
+        ProgramRunCompleted(processExitCode: 0),
+      ],
+    );
+    final initializer = DartIoBottlePrefixInitializer(
+      programRunPlanner: ProgramRunPlanner(
+        hostPlatform: KonyakHostPlatform.macos,
+        environment: HostEnvironment(const {'HOME': '/Users/user'}),
+      ),
+      programRunner: runner,
+    );
+
+    final result = initializer.initialize(bottle);
+
+    final failure = result as BottlePrefixInitializationFailed;
+    expect(
+      failure.message,
+      'wine-mono exited with code 42. '
+      'See /Users/user/Library/Application Support/Konyak/Bottles/Steam/logs/wine-mono-install.log.',
+    );
+    expect(runner.requests, hasLength(1));
+    expect(runner.requests.single.programPath, 'wine-mono');
+  });
+
   test('run-bottle-command --json opens a macOS bottle terminal', () {
     final repository = MemoryBottleRepository(
       dataHome: '/Users/user/Library/Application Support/Konyak',

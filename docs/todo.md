@@ -197,6 +197,9 @@ task changes scope.
 - [x] Add first Wine prefix and PE metadata support.
   - [x] Initialize bottle prefixes through `wineboot --init` after bottle
     creation.
+  - [x] Install the bundled macOS Wine Mono MSI silently before `wineboot --init`
+    so user bottle creation exercises the real addon payload without showing
+    Wine's addon installer UI.
   - [x] Extract PE architecture and version string metadata for listed
     programs.
   - [x] Extract PE group icon resources into Konyak's icon cache.
