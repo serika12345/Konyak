@@ -11,6 +11,73 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-17 17:25 JST
+- State: `completed`
+- Branch: `main`
+- Related work: hosted Wine launcher Info.plist binding; development runtime
+  refresh; GUI frontmost smoke correction
+- Purpose: fix the remaining macOS Wine activation regression in the runtime
+  actually consumed by Konyak, and replace the local `.dart_tool` development
+  runtime with the rebuilt stack.
+- Completed:
+  - Audited the previous runtime refresh and found that the real Konyak
+    entrypoints, `bin/wine` and `bin/wineloader`, are copied from
+    `tools/wine`, not only from `loader/wine`.
+  - Updated the CrossOver Wine derivation so `tools/wine/Makefile.in` embeds the
+    same Konyak-owned `loader/wine_info.plist` into those hosted launchers, keeps
+    CrossOver's `LSUIElement=1` startup policy, and preserves the existing
+    in-process `SetFrontProcessWithOptions` activation fallback.
+  - Moved gettext to native build inputs and set `dontAddExtraLibs = true` so
+    Darwin gettext/libiconv setup hooks do not leak `-lintl` into mingw PE DLL
+    links.
+  - Strengthened `check-wine32on64-runtime.zsh` to validate every host loader
+    and ntdll candidate, including `bin/wine` and `bin/wineloader`, for bound
+    Info.plist identity, `LSUIElement`, signing, entitlements, system-only
+    loader dependencies, and absence of the CrossOver temp-loader rename.
+  - Corrected `smoke-gui-launch.zsh` so the active-window poll does not stop
+    when `wine start /unix` exits; that command can return while the Windows GUI
+    child process is still alive.
+  - Rebuilt the Wine runtime and regenerated local runtime artifacts:
+    `konyak-macos-wine-runtime.tar.zst`
+    `sha256:4727cabd30d0eb6e31af697f5e3d4c58e29568a345403a82debf0afa030085b5`,
+    `konyak-macos-wine-runtime-stack.tar.zst`
+    `sha256:cf4146de728cf152cbdd144d5c1bf7c21b6aa0428d05d1b8b52538cf423df825`,
+    and `konyak-macos-wine-runtime-stack-source.json`
+    `sha256:79f27f7e1dd0c56baa667480739dbdbd02aaa6fc0bfb9558ac8d47c830beffe5`.
+  - Refreshed `.dart_tool/konyak/dev-runtime/macos-wine` from the rebuilt stack
+    with `rsync --checksum --delete`; plain `rsync -a` was insufficient because
+    reproducible mtimes and equal sizes allowed an old host loader to be skipped.
+  - Re-copied the development source manifest to
+    `.dart_tool/konyak/dev-runtime-source/macos-wine-stack/` and re-imported
+    GPTK/D3DMetal from `/Users/masato/Documents/CrossOver.app`.
+  - Committed runtime submodule commit `1f3f553` (`Bind hosted Wine launcher
+    activation identity`).
+- Remaining:
+  - No blocker remains for this local runtime refresh. Public release promotion
+    is still a separate release-management step.
+- Next: promote the refreshed runtime artifacts through the release pipeline when
+  this local fix is accepted.
+- Verification:
+  - `nix build .#packages.x86_64-darwin.konyak-macos-wine-runtime -L --show-trace --out-link result-wine-runtime-release-refresh`:
+    passed; output `/nix/store/kmjd05m3wjy0f1gnpljbamxm0p1b3vsh-konyak-macos-wine-runtime-crossover-26.1.0-konyak.0`.
+  - `scripts/check-wine32on64-runtime.zsh result-wine-runtime-release-refresh`:
+    passed.
+  - `scripts/check-wine32on64-runtime.zsh /Users/masato/Documents/Konyak/.dart_tool/konyak/dev-runtime/macos-wine`:
+    passed.
+  - `KONYAK_GUI_LAUNCH_SMOKE_TIMEOUT_SECONDS=90 KONYAK_GUI_LAUNCH_SMOKE_WINESERVER_WAIT_TIMEOUT_SECONDS=10 KONYAK_GUI_LAUNCH_PROBE_HOLD_MS=30000 scripts/smoke-gui-launch.zsh /Users/masato/Documents/Konyak/.dart_tool/konyak/dev-runtime/macos-wine .dart_tool/backend-probes-activation`:
+    passed; the smoke now requires the Wine GUI probe window to become
+    frontmost.
+  - `nix develop -c zsh -lc 'KONYAK_MACOS_WINE_HOME=/Users/masato/Documents/Konyak/.dart_tool/konyak/dev-runtime/macos-wine dart run packages/konyak_cli/bin/konyak.dart validate-runtime konyak-macos-wine --json'`:
+    passed; all required runtime checks were true.
+  - `nix develop -c zsh -lc 'KONYAK_RUNTIME_PROFILE=development KONYAK_MACOS_WINE_HOME=/Users/masato/Documents/Konyak/.dart_tool/konyak/dev-runtime/macos-wine dart run packages/konyak_cli/bin/konyak.dart list-runtimes --json'`:
+    passed; DXVK-macOS, DXMT, GPTK/D3DMetal, and vkd3d were all available with
+    no missing paths.
+  - `cmp -s runtime/konyak-macos-runtime/dist/konyak-macos-wine-runtime-stack-source.json .dart_tool/konyak/dev-runtime-source/macos-wine-stack/konyak-macos-wine-runtime-stack-source.json`:
+    passed.
+  - `nix eval .#packages.x86_64-darwin.konyak-macos-wine-runtime.name`,
+    `zsh -n scripts/check-wine32on64-runtime.zsh scripts/smoke-gui-launch.zsh`,
+    and `git diff --check` in the runtime submodule: passed.
+
 - Timestamp: 2026-06-16 21:00 JST
 - State: `completed`
 - Branch: `main`
