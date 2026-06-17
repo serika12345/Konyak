@@ -11,6 +11,42 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-17 18:07 JST
+- State: `completed`
+- Branch: `main`
+- Related work: remote macOS runtime release artifact promotion
+- Purpose: publish the locally verified hosted Wine launcher activation runtime
+  refresh to the final GitHub release assets.
+- Completed:
+  - Staged local `dist/` as draft/prerelease candidate
+    `candidate-20260617175149-hosted-launcher-identity`.
+  - Dispatched `Promote runtime candidate` run `27677358486` with
+    `delete_candidate=true`.
+  - GitHub Actions normalized the source manifest, ran Wine32-on-64, GUI
+    `start /unix`, DXVK D3D11, DXMT D3D11, and vkd3d D3D12 smoke gates, then
+    published the verified final release assets.
+  - Confirmed the candidate release was deleted after promotion.
+  - Confirmed final release `crossover-26.1.0-konyak.0` now ships
+    `konyak-macos-wine-runtime-stack.tar.zst`
+    `sha256:cf4146de728cf152cbdd144d5c1bf7c21b6aa0428d05d1b8b52538cf423df825`,
+    `konyak-macos-wine-runtime-stack-source.json`
+    `sha256:79f27f7e1dd0c56baa667480739dbdbd02aaa6fc0bfb9558ac8d47c830beffe5`,
+    and `konyak-macos-runtime.release.json`
+    `sha256:455a03c9a787686d334239d01ddd5568118c4c5091a728371fe096f9a4500516`.
+- Remaining:
+  - None for remote artifact promotion.
+- Next: none.
+- Verification:
+  - `scripts/stage-runtime-release-candidate.zsh --dry-run candidate-20260617175149-hosted-launcher-identity dist`:
+    passed.
+  - `gh run watch 27677358486 --repo serika12345/konyak-macos-runtime --exit-status --interval 30`:
+    passed.
+  - `gh release view crossover-26.1.0-konyak.0 --repo serika12345/konyak-macos-runtime --json tagName,name,isDraft,isPrerelease,url,assets`:
+    passed and showed the final release is non-draft/non-prerelease with the
+    expected updated asset digests.
+  - `gh release view candidate-20260617175149-hosted-launcher-identity --repo serika12345/konyak-macos-runtime`:
+    failed with `release not found`, confirming candidate cleanup.
+
 - Timestamp: 2026-06-17 17:25 JST
 - State: `completed`
 - Branch: `main`
