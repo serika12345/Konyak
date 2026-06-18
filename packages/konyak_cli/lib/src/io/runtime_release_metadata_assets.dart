@@ -28,21 +28,24 @@ Option<String> _runtimeReleaseArchiveUrl(Object? decoded) {
     return const Option.none();
   }
 
-  for (final extension in const <String>[
+  const archiveExtensions = <String>[
     '.tar.xz',
     '.tar.gz',
     '.zip',
     '.dmg',
     '.appimage',
-  ]) {
-    for (final url in urls) {
-      if (url.toLowerCase().contains(extension)) {
-        return Option.of(url);
-      }
+  ];
+  for (final url in urls) {
+    final fileName = _fileNameFromUrl(url).toNullable()?.toLowerCase();
+    if (fileName == null) {
+      continue;
+    }
+    if (archiveExtensions.any(fileName.endsWith)) {
+      return Option.of(url);
     }
   }
 
-  return Option.of(urls.first);
+  return const Option.none();
 }
 
 Option<String> _runtimeReleaseMetadataAssetUrl(Object? decoded) {

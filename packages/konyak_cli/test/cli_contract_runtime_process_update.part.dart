@@ -195,7 +195,9 @@ void defineRuntimeProcessAndUpdateContractTests() {
           ..._macosWineGeckoExistingPaths(
             '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
           ),
-          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/winetricks',
+          ..._macosWinetricksExistingPaths(
+            '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
+          ),
           ..._macosVkd3dExistingPaths(
             '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
           ),
@@ -339,9 +341,9 @@ void defineRuntimeProcessAndUpdateContractTests() {
                 'role': 'verb-installer',
                 'isRequired': true,
                 'isInstalled': true,
-                'paths': [
-                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/winetricks',
-                ],
+                'paths': _macosWinetricksExpectedPaths(
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
+                ),
                 'missingPaths': <Object?>[],
               },
               {
@@ -487,6 +489,56 @@ void defineRuntimeProcessAndUpdateContractTests() {
     expect(dxvk['isInstalled'], isFalse);
   });
 
+  test('list-runtimes --json requires the macOS Winetricks verb catalog', () {
+    const runtimeRoot =
+        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine';
+    final existingPaths = <String>{
+      ..._macosWineEntryPointExistingPaths(runtimeRoot),
+      ..._macosWine32On64ExistingPaths(runtimeRoot),
+      for (final relativePath in _macosDxvkInstalledPaths)
+        _joinTestPath(runtimeRoot, <String>[
+          'lib',
+          'dxvk',
+          ...relativePath.skip(1),
+        ]),
+      _joinTestPath(runtimeRoot, const ['lib', 'libMoltenVK.dylib']),
+      ..._macosGstreamerExistingPaths(runtimeRoot),
+      _joinTestPath(runtimeRoot, const ['lib', 'libfreetype.6.dylib']),
+      _joinTestPath(runtimeRoot, const ['lib', 'libfreetype.dylib']),
+      ..._macosWineMonoExistingPaths(runtimeRoot),
+      ..._macosWineGeckoExistingPaths(runtimeRoot),
+      _joinTestPath(runtimeRoot, const ['winetricks']),
+      ..._macosVkd3dExistingPaths(runtimeRoot),
+      for (final relativePath in _macosDxmtInstalledPaths)
+        _joinTestPath(runtimeRoot, relativePath),
+    };
+    final result = runCli(
+      const ['list-runtimes', '--json'],
+      runtimeCatalog: MacosWineRuntimeCatalog(
+        hostPlatform: KonyakHostPlatform.macos,
+        environment: HostEnvironment(const {'HOME': '/Users/user'}),
+        fileStatusProbe: StaticFileStatusProbe(existingPaths),
+      ),
+    );
+
+    expect(result.exitCode, 0);
+    final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+    final runtimes = payload['runtimes'] as List<Object?>;
+    final runtime = runtimes.single as Map<String, Object?>;
+    final stack = runtime['stack'] as Map<String, Object?>;
+    final components = stack['components'] as List<Object?>;
+    final winetricks = components.cast<Map<String, Object?>>().singleWhere(
+      (component) => component['id'] == 'winetricks',
+    );
+
+    expect(stack['isComplete'], isFalse);
+    expect(winetricks['isInstalled'], isFalse);
+    expect(
+      winetricks['missingPaths'],
+      contains(_joinTestPath(runtimeRoot, const ['verbs.txt'])),
+    );
+  });
+
   test(
     'list-runtimes --json does not treat GPTK fixture text as installed',
     () {
@@ -512,7 +564,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
         ..._macosGstreamerInstalledPaths,
         <String>['lib', 'libfreetype.6.dylib'],
         <String>['lib', 'libfreetype.dylib'],
-        <String>['winetricks'],
+        ..._macosWinetricksInstalledPaths,
       ]) {
         final file = File(_joinTestPath(runtimeHome, relativePath));
         file.parent.createSync(recursive: true);
@@ -2211,6 +2263,38 @@ void defineRuntimeProcessAndUpdateContractTests() {
       fetched.metadata.archiveSha256.toNullable(),
       'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
     );
+  });
+
+  test('release metadata fetcher does not fall back to non-archive assets', () {
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-release-metadata-non-archive-test-',
+    );
+    addTearDown(() {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    });
+    final metadataFile =
+        File(_joinTestPath(tempDirectory.path, const ['release.json']))
+          ..writeAsStringSync(
+            jsonEncode(<String, Object?>{
+              'tag_name': 'v1.1.0',
+              'assets': [
+                {
+                  'browser_download_url':
+                      'https://example.invalid/releases/Konyak.zip/notes.txt',
+                },
+                {'browser_download_url': 'https://example.invalid/README.txt'},
+              ],
+            }),
+          );
+    const fetcher = DartIoRuntimeReleaseMetadataFetcher();
+
+    final result = fetcher.fetch(metadataFile.uri.toString());
+
+    expect(result, isA<RuntimeReleaseMetadataFetched>());
+    final fetched = result as RuntimeReleaseMetadataFetched;
+    expect(fetched.metadata.archiveUrl.isNone(), isTrue);
   });
 
   test(

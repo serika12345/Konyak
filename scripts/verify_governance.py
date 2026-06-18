@@ -492,6 +492,20 @@ def require_runtime_ssot_rules() -> None:
         "runtime/konyak-macos-runtime/.github/workflows/build-runtime.yml",
         "./scripts/check-wine-addon-versions.zsh",
     )
+    for relative_path in [
+        "runtime/konyak-macos-runtime/.github/workflows/build-runtime.yml",
+        "runtime/konyak-macos-runtime/.github/workflows/promote-runtime-candidate.yml",
+        "runtime/konyak-macos-runtime/.github/workflows/smoke-runtime-artifacts.yml",
+    ]:
+        require_contains(relative_path, "./scripts/check-winetricks-component.zsh")
+    require_contains(
+        "scripts/run_macos_runtime_cli_smoke.zsh",
+        "list-winetricks-verbs",
+    )
+    require_contains(
+        "packages/konyak_cli/lib/src/domain/runtime/runtime_platform_support.dart",
+        "<String>['verbs.txt']",
+    )
 
 
 def main() -> None:

@@ -11,6 +11,314 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-18 22:41 JST
+- State: `completed`
+- Branch: `main`
+- Related work: macOS runtime Winetricks verb catalog completeness;
+  runtime GitHub Release update for `crossover-26.1.0-konyak.0`
+- Purpose: promote the locally verified runtime-owner artifacts to the
+  GitHub Release assets, using the runtime submodule candidate promotion flow
+  so final Release publication is gated by CI smoke verification.
+- Completed:
+  - Confirmed the runtime README requires local artifacts to be staged as a
+    candidate Release and then promoted by the `Promote runtime candidate`
+    workflow, rather than uploading directly to the final Release.
+  - Confirmed `scripts/stage-runtime-release-candidate.zsh --dry-run ... dist`
+    accepts the generated local `dist` assets for
+    `crossover-26.1.0-konyak.0`.
+  - Confirmed GitHub CLI is authenticated as `serika12345` with access to
+    `serika12345/konyak-macos-runtime`.
+  - Confirmed sub-agent tooling cannot be used here because its tool contract
+    only permits spawning agents when the user explicitly asks for sub-agent
+    delegation; this Release update is being kept in explicit investigation,
+    publication, and audit phases in this snapshot instead.
+  - Committed and pushed runtime submodule commit
+    `5b9dbe7cd135c07c247ba4f08fe094c1e15b5d23`
+    (`Package Winetricks verb catalog`) so remote Release workflows include
+    the Winetricks catalog check.
+  - Staged candidate Release
+    `candidate-20260618222002-winetricks-verbs` from the generated local
+    `dist` assets.
+  - Dispatched `Promote runtime candidate` on `main` with
+    `delete_candidate=true`; workflow run
+    `https://github.com/serika12345/konyak-macos-runtime/actions/runs/27762434147`
+    completed successfully.
+  - Confirmed the candidate Release was deleted after successful promotion.
+  - Confirmed final Release
+    `https://github.com/serika12345/konyak-macos-runtime/releases/tag/crossover-26.1.0-konyak.0`
+    is public and contains:
+    `konyak-macos-wine-runtime-stack.tar.zst`,
+    `konyak-macos-wine-runtime-stack-source.json`, and
+    `konyak-macos-runtime.release.json`.
+  - Downloaded the final Release assets back from GitHub, verified the stack
+    archive SHA-256 is
+    `28cfc24a3f16c4e7101491c578357d294371d8db1a13963dd033cd0431fe0b15`,
+    verified the final source manifest points all component `archiveUrl`
+    values at the final Release URL with that SHA, and confirmed the stack
+    archive contains executable `winetricks`, nonempty `verbs.txt`, and the
+    `win10` verb.
+  - Ran the maintained macOS runtime CLI smoke without any local manifest
+    override; it installed from the public Release source manifest, listed
+    Winetricks verbs, validated the runtime, created a smoke bottle, and ran
+    `run-winetricks ci-prefix-smoke --verb win10 --json`.
+- Remaining:
+  - No Release update work remains for the Winetricks catalog artifact.
+  - Parent repository changes remain uncommitted in the working tree; keep
+    them staged or reviewed separately from the runtime Release publication.
+- Next: prepare the parent repository change set for review/commit when ready.
+- Verification:
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && scripts/stage-runtime-release-candidate.zsh --dry-run candidate-$(date +%Y%m%d%H%M%S) dist'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && git commit -m "Package Winetricks verb catalog" && git push origin main'`:
+    passed and pushed commit `5b9dbe7`.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && scripts/stage-runtime-release-candidate.zsh candidate-20260618222002-winetricks-verbs dist'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && gh workflow run "Promote runtime candidate" --ref main --field candidate_tag=candidate-20260618222002-winetricks-verbs --field delete_candidate=true'`:
+    passed and created run `27762434147`.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && gh run view 27762434147 --json status,conclusion,jobs,url'`:
+    passed and reported `conclusion: success`; normalize, DXMT, Wine32-on-64,
+    vkd3d, DXVK, GPTK/D3DMetal, GUI start, and publish jobs all succeeded.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && gh release view candidate-20260618222002-winetricks-verbs'`:
+    failed as expected after promotion because `delete_candidate=true`
+    removed the staging Release.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && gh release view crossover-26.1.0-konyak.0 --json tagName,name,isDraft,isPrerelease,publishedAt,targetCommitish,assets,url'`:
+    passed and reported the final public Release assets.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && gh release download crossover-26.1.0-konyak.0 ... && shasum -a 256 konyak-macos-wine-runtime-stack.tar.zst && jq ... konyak-macos-wine-runtime-stack-source.json && tar -xaf konyak-macos-wine-runtime-stack.tar.zst ... && grep -E "^win10[[:space:]]+" stack-check/verbs.txt'`:
+    passed.
+  - `nix develop -c zsh -lc 'scripts/run_macos_runtime_cli_smoke.zsh'`:
+    passed using the public default Release source manifest.
+
+- Timestamp: 2026-06-18 22:09 JST
+- State: `completed`
+- Branch: `main`
+- Related work: macOS runtime Winetricks verb catalog completeness;
+  `docs/todo.md` Winetricks verb support
+- Purpose: update the runtime-owner local artifacts after fixing the macOS
+  Winetricks `verbs.txt` packaging contract, then prove the updated artifact
+  through the public Konyak CLI path instead of parent-side runtime mutation.
+- Completed:
+  - Completed the parent/runtime contract fixes and verification recorded in
+    the previous completed snapshot.
+  - Generated runtime-owner component archives under
+    `runtime/konyak-macos-runtime/dist`, including
+    `konyak-macos-winetricks.tar.zst` with a generated nonempty
+    `verbs.txt` catalog containing `win10`.
+  - Built and packaged the Wine runtime, DXMT, vkd3d, DXVK for macOS,
+    MoltenVK, GStreamer, FreeType, Wine Mono, Wine Gecko, and Winetricks
+    component archives from the runtime submodule.
+  - Assembled `dist/konyak-macos-wine-runtime-stack.tar.zst`; SHA-256 is
+    `28cfc24a3f16c4e7101491c578357d294371d8db1a13963dd033cd0431fe0b15`.
+  - Generated `dist/konyak-macos-wine-runtime-stack-source.json` and
+    `dist/konyak-macos-runtime.release.json` for the local artifact set.
+  - Inspected the assembled stack archive and confirmed it contains executable
+    `winetricks`, `verbs.txt`, the `win10` verb, and stack metadata listing
+    the `winetricks` component.
+  - Installed the updated stack into the development runtime through
+    `install-macos-wine --source-manifest ... --reinstall --json` using a
+    temporary local manifest whose archive URL points at the generated stack
+    archive.
+  - Confirmed `list-runtimes --json` reports `stackComplete: true`, the
+    `winetricks` component installed, and no missing Winetricks paths for
+    `.dart_tool/konyak/dev-runtime/macos-wine`.
+  - Confirmed `list-winetricks-verbs --json` returns five categories and the
+    `win10` verb through the installed development runtime.
+  - Ran `scripts/run_macos_runtime_cli_smoke.zsh` with the local source
+    manifest override; it installed the runtime, listed Winetricks verbs,
+    validated the runtime, created a smoke bottle, and ran
+    `run-winetricks ci-prefix-smoke --verb win10 --json`.
+- Remaining:
+  - No local implementation or artifact-generation work remains for this
+    update.
+  - The default public runtime release still points at the older
+    `crossover-26.1.0-konyak.0` artifact until the new local `dist` artifacts
+    are promoted or uploaded; a smoke without the local manifest override
+    still exercises that old artifact.
+  - Direct local install from the release-style source manifest with relative
+    `archiveUrl` is not supported by the parent CLI. The local verification
+    used an absolute temporary manifest; release promotion should keep
+    producing full asset URLs, or local-relative manifest support should be a
+    separate follow-up.
+- Next: promote or upload the generated runtime submodule `dist` artifacts
+  through the runtime release flow when this build should become the default
+  install/update source.
+- Verification:
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && ./scripts/package-binary-components.zsh dist <gstreamer-root> <freetype-root> <gstreamer-root> <plugins-base-root> <plugins-good-root> <plugins-bad-root>'`:
+    passed and produced the binary component archives.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && nix build .#packages.x86_64-darwin.konyak-macos-wine-runtime -L --show-trace --out-link result-wine-runtime && ./scripts/check-wine32on64-runtime.zsh result-wine-runtime'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && KONYAK_WINE_RUNTIME_ROOT=<runtime-root> KONYAK_METAL_TOOLCHAIN_BIN=<metal-bin> nix build --impure .#packages.x86_64-darwin.konyak-macos-dxmt -L --show-trace --out-link result-dxmt && ./scripts/check-dxmt-component.zsh result-dxmt'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && KONYAK_WINE_RUNTIME_ROOT=<runtime-root> nix build --impure .#packages.x86_64-darwin.konyak-macos-vkd3d -L --show-trace --out-link result-vkd3d && ./scripts/check-vkd3d-component.zsh result-vkd3d'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && ./scripts/assemble-runtime-stack.zsh dist "$PWD/.artifact-work/runtime-stack" dist/konyak-macos-wine-runtime-stack.tar.zst'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && ./scripts/check-wine32on64-runtime.zsh .artifact-work/runtime-stack && ./scripts/check-dxmt-component.zsh .artifact-work/runtime-stack && ./scripts/check-vkd3d-component.zsh .artifact-work/runtime-stack && ./scripts/check-dxvk-component.zsh .artifact-work/runtime-stack && ./scripts/check-gstreamer-component.zsh .artifact-work/runtime-stack && ./scripts/check-wine-addons-component.zsh .artifact-work/runtime-stack && ./scripts/check-winetricks-component.zsh .artifact-work/runtime-stack && ./scripts/check-runtime-archive-excludes-gptk.zsh dist/konyak-macos-wine-runtime-stack.tar.zst'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && KONYAK_SINGLE_STACK_ARCHIVE=1 ./scripts/make-source-manifest.zsh ...'`:
+    passed and generated local release/source metadata.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart run bin/konyak.dart install-macos-wine --source-manifest ../../runtime/konyak-macos-runtime/.artifact-work/local-install-source.json --reinstall --json'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart run bin/konyak.dart validate-runtime konyak-macos-wine --json'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart run bin/konyak.dart list-runtimes --json | jq ...'`:
+    passed and reported complete Winetricks paths.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart run bin/konyak.dart list-winetricks-verbs --json | jq ...'`:
+    passed and reported `win10`.
+  - `nix develop -c zsh -lc 'KONYAK_DEV_MACOS_WINE_STACK_MANIFEST="$PWD/runtime/konyak-macos-runtime/.artifact-work/local-install-source.json" scripts/run_macos_runtime_cli_smoke.zsh'`:
+    passed.
+  - `nix develop -c zsh -lc 'zsh -n runtime/konyak-macos-runtime/scripts/package-binary-components.zsh runtime/konyak-macos-runtime/scripts/check-winetricks-component.zsh scripts/run_macos_runtime_cli_smoke.zsh'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && nix flake check --no-build'`:
+    passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `nix develop -c zsh -lc 'just cli-test'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-format-check'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-analyze'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-test'`: passed.
+  - `nix develop -c zsh -lc 'just test'`: passed.
+  - `nix develop -c zsh -lc 'nix shell nixpkgs#actionlint -c actionlint runtime/konyak-macos-runtime/.github/workflows/build-runtime.yml runtime/konyak-macos-runtime/.github/workflows/promote-runtime-candidate.yml runtime/konyak-macos-runtime/.github/workflows/smoke-runtime-artifacts.yml'`:
+    passed.
+  - `nix develop -c zsh -lc 'git diff --check && git -C runtime/konyak-macos-runtime diff --check'`:
+    passed.
+
+- Timestamp: 2026-06-18 21:30 JST
+- State: `completed`
+- Branch: `main`
+- Related work: macOS runtime Winetricks verb catalog completeness;
+  `docs/todo.md` Winetricks verb support
+- Purpose: fix the runtime/parent contract gaps that let a macOS runtime be
+  reported as complete without the managed Winetricks `verbs.txt` catalog, and
+  tighten adjacent fallback paths that can hide malformed runtime or bottle
+  data.
+- Completed:
+  - Confirmed the defect and fallback history in the previous paused snapshot.
+  - Confirmed sub-agent tooling is not available for this turn because the
+    tool contract only permits spawning agents when the user explicitly asks
+    for sub-agent work; investigation, implementation, and audit will therefore
+    stay separated as explicit local workstreams.
+  - Added failing tests first for the macOS Winetricks `verbs.txt`
+    completeness contract, release metadata archive fallback narrowing, and
+    malformed Flutter pinned-program payload handling.
+  - Updated parent runtime completeness so macOS `winetricks` requires both
+    `winetricks` and `verbs.txt`.
+  - Updated macOS runtime submodule packaging so `package_winetricks()`
+    generates `verbs.txt` from the pinned Winetricks script and validates that
+    the catalog contains `win10`.
+  - Added runtime submodule `scripts/check-winetricks-component.zsh` and wired
+    it into build, promote, and artifact-smoke workflows.
+  - Extended `scripts/run_macos_runtime_cli_smoke.zsh` so the public CLI smoke
+    runs `list-winetricks-verbs --json` before `validate-runtime` and
+    `run-winetricks`.
+  - Tightened release metadata archive selection so non-archive assets are not
+    selected as a fallback.
+  - Tightened Flutter bottle parsing so malformed `pinnedPrograms` records
+    fail parsing instead of being silently treated as an empty list.
+  - Confirmed the current broken dev runtime now reports
+    `stackComplete: false`, `winetricks.isInstalled: false`, and
+    `verbs.txt` as a missing path through `list-runtimes --json`.
+  - Confirmed `validate-runtime konyak-macos-wine --json` now exits 75 and
+    reports the missing `verbs.txt` path instead of reporting the runtime as
+    valid.
+- Remaining:
+  - A newly packaged runtime artifact still needs to be built and released
+    through `runtime/konyak-macos-runtime`; the existing downloaded
+    `.dart_tool` runtime was intentionally not mutated from the parent
+    repository to avoid compensating for a runtime-owner artifact defect.
+- Next: build/promote a new macOS runtime stack artifact from the runtime
+  submodule when a runtime release is desired.
+- Verification:
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --name "requires the macOS Winetricks verb catalog|does not fall back to non-archive assets|reports the Konyak macOS Wine runtime"'`:
+    failed before implementation, then passed after implementation.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/cli/bottle_list_contract_test.dart'`:
+    failed before implementation, then passed after implementation.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --name "Winetricks|winetricks|release metadata fetcher|install-macos-wine"'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart run bin/konyak.dart list-runtimes --json | jq ".runtimes[] | select(.id == \"konyak-macos-wine\") | {isInstalled, stackComplete: .stack.isComplete, winetricks: (.stack.components[] | select(.id == \"winetricks\"))}"'`:
+    passed and reported the current dev runtime as incomplete with missing
+    `verbs.txt`.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart run bin/konyak.dart validate-runtime konyak-macos-wine --json'`:
+    exited 75 and reported the missing `verbs.txt` path as expected.
+  - `nix develop -c zsh -lc 'zsh -n runtime/konyak-macos-runtime/scripts/package-binary-components.zsh runtime/konyak-macos-runtime/scripts/check-winetricks-component.zsh scripts/run_macos_runtime_cli_smoke.zsh'`:
+    passed.
+  - `nix develop -c zsh -lc '<fixture check using scripts/check-winetricks-component.zsh>'`:
+    passed for a fixture with `winetricks` plus `verbs.txt` and failed for a
+    fixture missing `verbs.txt`.
+  - `nix develop -c zsh -lc 'actionlint runtime/konyak-macos-runtime/.github/workflows/build-runtime.yml runtime/konyak-macos-runtime/.github/workflows/promote-runtime-candidate.yml runtime/konyak-macos-runtime/.github/workflows/smoke-runtime-artifacts.yml'`:
+    passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-architecture'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `nix develop -c zsh -lc 'just cli-test'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-format-check'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-analyze'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-test'`: passed.
+  - `nix develop -c zsh -lc 'just test'`: passed.
+  - `nix develop -c zsh -lc 'git diff --check && git -C runtime/konyak-macos-runtime diff --check'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && nix flake check --no-build'`:
+    passed.
+
+- Timestamp: 2026-06-18 20:21 JST
+- State: `paused`
+- Branch: `main`
+- Related work: macOS runtime Winetricks verb catalog completeness;
+  `docs/todo.md` Winetricks verb support
+- Purpose: investigate why the dev/runtime contract lets a macOS runtime
+  contain the managed `winetricks` executable without the required `verbs.txt`
+  catalog, causing Flutter's Winetricks picker to fail through
+  `list-winetricks-verbs --json`.
+- Completed:
+  - Reproduced the screenshot failure through the public CLI route:
+    `cd packages/konyak_cli && dart run bin/konyak.dart list-winetricks-verbs --json`
+    returned exit 75 with `winetricksVerbsUnavailable`.
+  - Confirmed the failing runtime root is
+    `.dart_tool/konyak/dev-runtime/macos-wine`; it contains `winetricks` but no
+    `verbs.txt`.
+  - Confirmed the published
+    `crossover-26.1.0-konyak.0/konyak-macos-wine-runtime-stack.tar.zst`
+    artifact with SHA-256
+    `a3939cef05b38a7ba33923ac8301b88c55de982a043f926bcf6f35b3f5f76844`
+    contains `./winetricks` but no `verbs.txt`.
+  - Confirmed `list-runtimes --json` currently reports that runtime as
+    `stack.isComplete: true` and the `winetricks` component as having no
+    missing paths, because parent runtime completeness only requires
+    `winetricks`.
+  - Confirmed the runtime submodule `package_winetricks()` copies only the
+    pinned `winetricks` script into the component payload and does not generate
+    a `verbs.txt` catalog.
+- Remaining:
+  - No code changes were made for the fix yet.
+  - Add a failing contract/completeness test for the missing macOS
+    `verbs.txt` catalog.
+  - Update the runtime submodule winetricks component packaging so
+    `verbs.txt` is produced by the runtime owner and included in the component
+    archive.
+  - Update parent runtime completeness fixtures/contracts to require
+    `verbs.txt`.
+  - Run focused CLI/runtime script checks, then the required repository gates.
+- Next: wait for approval to implement; start by adding the failing test before
+  changing runtime packaging or parent completeness contracts.
+- Verification:
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart run bin/konyak.dart list-winetricks-verbs --json; printf "exit=%s\n" "$?"'`:
+    reproduced the failure; stdout contained
+    `Managed Winetricks verb catalog is missing from runtime:
+    /Users/masato/Documents/Konyak/.dart_tool/konyak/dev-runtime/macos-wine/verbs.txt`,
+    and the command exited 75.
+  - `nix develop -c zsh -lc 'find .dart_tool/konyak/dev-runtime/macos-wine -maxdepth 3 \( -name "verbs.txt" -o -name "winetricks" -o -name "*winetricks*" \) -print'`:
+    found only `.dart_tool/konyak/dev-runtime/macos-wine/winetricks`.
+  - `nix develop -c zsh -lc 'curl --fail --location --retry 3 --retry-delay 5 --output .dart_tool/winetricks-archive-inspect/konyak-macos-wine-runtime-stack.tar.zst https://github.com/serika12345/konyak-macos-runtime/releases/download/crossover-26.1.0-konyak.0/konyak-macos-wine-runtime-stack.tar.zst; shasum -a 256 .dart_tool/winetricks-archive-inspect/konyak-macos-wine-runtime-stack.tar.zst; tar -tf .dart_tool/winetricks-archive-inspect/konyak-macos-wine-runtime-stack.tar.zst | rg "(^|/)(winetricks|verbs\.txt)$" || true'`:
+    passed; the archive hash was
+    `a3939cef05b38a7ba33923ac8301b88c55de982a043f926bcf6f35b3f5f76844`, and
+    only `./winetricks` was listed.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart run bin/konyak.dart list-runtimes --json | jq ".runtimes[] | select(.id == \"konyak-macos-wine\") | {isInstalled, stack: {isComplete: .stack.isComplete, winetricks: (.stack.components[] | select(.id == \"winetricks\"))}}"'`:
+    passed; it reported `stack.isComplete: true`, `winetricks.isInstalled:
+    true`, and `missingPaths: []` despite the missing verb catalog.
+
 - Timestamp: 2026-06-18 19:17 JST
 - State: `completed`
 - Branch: `main`

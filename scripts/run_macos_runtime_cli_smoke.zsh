@@ -209,6 +209,15 @@ for backend_id in dxvk-macos dxmt vkd3d; do
   assert_runtime_backend_available "$backend_id" "$list_runtimes_json"
 done
 
+run_cli_capture list-winetricks-verbs "$command_timeout" list-winetricks-verbs --json
+list_winetricks_verbs_json="$captured_stdout_path"
+assert_jq "$list_winetricks_verbs_json" \
+  "list-winetricks-verbs did not return the managed runtime verb catalog." \
+  '
+    .schemaVersion == 1 and
+    any(.winetricks.categories[]?.verbs[]?; .name == "win10")
+  '
+
 run_cli_capture validate-runtime "$command_timeout" validate-runtime konyak-macos-wine --json
 validate_runtime_json="$captured_stdout_path"
 assert_jq "$validate_runtime_json" \

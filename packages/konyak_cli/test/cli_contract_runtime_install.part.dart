@@ -131,7 +131,9 @@ void defineRuntimeInstallContractTests() {
         ..._macosWineGeckoExistingPaths(
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
         ),
-        '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/winetricks',
+        ..._macosWinetricksExistingPaths(
+          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
+        ),
         ..._macosVkd3dExistingPaths(
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
         ),
@@ -688,9 +690,7 @@ void defineRuntimeInstallContractTests() {
     final winetricksArchive = _createKonyakRuntimeComponentArchive(
       tempDirectory.path,
       archiveName: 'winetricks',
-      relativePaths: const <List<String>>[
-        <String>['Components', 'winetricks', 'winetricks'],
-      ],
+      relativePaths: _macosWinetricksComponentPaths,
       versions: const <String, String>{'winetricks': 'winetricks-fixture'},
     );
     final vkd3dArchive = _createKonyakRuntimeComponentArchive(
@@ -940,9 +940,7 @@ void defineRuntimeInstallContractTests() {
     final winetricksArchive = _createKonyakRuntimeComponentArchive(
       tempDirectory.path,
       archiveName: 'source-winetricks',
-      relativePaths: const <List<String>>[
-        <String>['Components', 'winetricks', 'winetricks'],
-      ],
+      relativePaths: _macosWinetricksComponentPaths,
       versions: const <String, String>{},
     );
     final vkd3dArchive = _createKonyakRuntimeComponentArchive(
@@ -1288,9 +1286,7 @@ void defineRuntimeInstallContractTests() {
       final winetricksArchive = _createKonyakRuntimeComponentArchive(
         tempDirectory.path,
         archiveName: 'repair-winetricks',
-        relativePaths: const <List<String>>[
-          <String>['Components', 'winetricks', 'winetricks'],
-        ],
+        relativePaths: _macosWinetricksComponentPaths,
         versions: const <String, String>{},
       );
       final vkd3dArchive = _createKonyakRuntimeComponentArchive(
@@ -1418,6 +1414,10 @@ void defineRuntimeInstallContractTests() {
       expect(completed.runtime.stack.toNullable()?.isComplete, isTrue);
       expect(
         File(_joinTestPath(runtimeRoot, const ['winetricks'])).existsSync(),
+        isTrue,
+      );
+      expect(
+        File(_joinTestPath(runtimeRoot, const ['verbs.txt'])).existsSync(),
         isTrue,
       );
       expect(

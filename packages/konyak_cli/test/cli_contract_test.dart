@@ -731,6 +731,16 @@ final _macosWineGeckoComponentPaths = <List<String>>[
     <String>['Components', 'wine-gecko', ...relativePath],
 ];
 
+const _macosWinetricksInstalledPaths = <List<String>>[
+  <String>['winetricks'],
+  <String>['verbs.txt'],
+];
+
+final _macosWinetricksComponentPaths = <List<String>>[
+  for (final relativePath in _macosWinetricksInstalledPaths)
+    <String>['Components', 'winetricks', ...relativePath],
+];
+
 Set<String> _macosGstreamerExistingPaths(String runtimeRoot) {
   return <String>{
     for (final relativePath in _macosGstreamerInstalledPaths)
@@ -769,6 +779,20 @@ Set<String> _macosWineGeckoExistingPaths(String runtimeRoot) {
 List<String> _macosWineGeckoExpectedPaths(String runtimeRoot) {
   return <String>[
     for (final relativePath in _macosWineGeckoInstalledPaths)
+      _joinTestPath(runtimeRoot, relativePath),
+  ];
+}
+
+Set<String> _macosWinetricksExistingPaths(String runtimeRoot) {
+  return <String>{
+    for (final relativePath in _macosWinetricksInstalledPaths)
+      _joinTestPath(runtimeRoot, relativePath),
+  };
+}
+
+List<String> _macosWinetricksExpectedPaths(String runtimeRoot) {
+  return <String>[
+    for (final relativePath in _macosWinetricksInstalledPaths)
       _joinTestPath(runtimeRoot, relativePath),
   ];
 }
@@ -929,7 +953,8 @@ String _createComponentRuntimeArchive(String tempPath) {
       <String>['Wine', ...relativePath],
     for (final relativePath in _macosVkd3dInstalledPaths)
       <String>['Wine', ...relativePath],
-    <String>['winetricks'],
+    for (final relativePath in _macosWinetricksInstalledPaths)
+      <String>[...relativePath],
   ]) {
     final file = File(_joinTestPath(librariesRoot.path, relativePath));
     file.parent.createSync(recursive: true);
@@ -1004,7 +1029,7 @@ String _createKonyakComponentRuntimeArchive(String tempPath) {
     ..._macosFreetypeComponentPaths,
     ..._macosWineMonoComponentPaths,
     ..._macosWineGeckoComponentPaths,
-    <String>['Components', 'winetricks', 'winetricks'],
+    ..._macosWinetricksComponentPaths,
     ..._macosVkd3dComponentPaths,
     ..._gptkD3DMetalComponentArchivePaths,
   ]) {
@@ -1228,6 +1253,7 @@ String _createMacosAppBundleWineArchive(String tempPath) {
     <String>['lib', 'libwine.1.dylib'],
     ..._macosWineMonoInstalledPaths,
     ..._macosWineGeckoInstalledPaths,
+    ..._macosWinetricksInstalledPaths,
   ]) {
     final file = File(_joinTestPath(wineRoot.path, relativePath));
     file.parent.createSync(recursive: true);

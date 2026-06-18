@@ -317,6 +317,7 @@ const _macosKonyakRuntimeComponentDefinitions =
         isRequired: true,
         relativePaths: <List<String>>[
           <String>['winetricks'],
+          <String>['verbs.txt'],
         ],
       ),
       _RuntimeStackComponentDefinition(

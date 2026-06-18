@@ -53,4 +53,29 @@ void main() {
 
     expect(result, isA<BottleListParseFailure>());
   });
+
+  test('rejects malformed pinned program records', () {
+    final result = parseBottleListPayload('''
+      {
+        "schemaVersion": 1,
+        "bottles": [
+          {
+            "id": "bottle-1",
+            "name": "Steam",
+            "path": "/home/user/.local/share/konyak/bottles/steam",
+            "windowsVersion": "win10",
+            "pinnedPrograms": [
+              {
+                "name": "Steam",
+                "path": "/downloads/Steam.exe",
+                "removable": "yes"
+              }
+            ]
+          }
+        ]
+      }
+      ''');
+
+    expect(result, isA<BottleListParseFailure>());
+  });
 }

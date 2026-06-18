@@ -21,6 +21,10 @@ BottleSummary? parseBottleSummary(Object? value) {
   if (runtimeSettings == null) {
     return null;
   }
+  final pinnedPrograms = _parsePinnedPrograms(value['pinnedPrograms']);
+  if (pinnedPrograms == null) {
+    return null;
+  }
 
   return BottleSummary(
     id: id,
@@ -28,7 +32,7 @@ BottleSummary? parseBottleSummary(Object? value) {
     path: path,
     windowsVersion: windowsVersion,
     runtimeSettings: runtimeSettings,
-    pinnedPrograms: _parsePinnedPrograms(value['pinnedPrograms']),
+    pinnedPrograms: pinnedPrograms,
   );
 }
 
@@ -171,15 +175,18 @@ int? _runtimeSettingsInt(
   return value;
 }
 
-List<PinnedProgramSummary> _parsePinnedPrograms(Object? value) {
-  if (value is! List<dynamic>) {
+List<PinnedProgramSummary>? _parsePinnedPrograms(Object? value) {
+  if (value == null) {
     return const <PinnedProgramSummary>[];
+  }
+  if (value is! List<dynamic>) {
+    return null;
   }
 
   final programs = <PinnedProgramSummary>[];
   for (final item in value) {
     if (item is! Map<String, dynamic>) {
-      return const <PinnedProgramSummary>[];
+      return null;
     }
 
     final Object? name = item['name'];
@@ -187,10 +194,10 @@ List<PinnedProgramSummary> _parsePinnedPrograms(Object? value) {
     final Object? removable = item['removable'];
     final Object? iconPath = item['iconPath'];
     if (name is! String || path is! String || removable is! bool) {
-      return const <PinnedProgramSummary>[];
+      return null;
     }
     if (iconPath != null && iconPath is! String) {
-      return const <PinnedProgramSummary>[];
+      return null;
     }
 
     programs.add(
