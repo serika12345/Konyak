@@ -11,6 +11,60 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-18 19:17 JST
+- State: `completed`
+- Branch: `main`
+- Related work: macOS GPTK/D3DMetal local smoke;
+  `runtime/konyak-macos-runtime/TODO.dxmt-runtime.md` GPTK smoke;
+  `docs/todo.md` macOS runtime automated smoke coverage
+- Purpose: add a `nix run` entry point that reproduces the GPTK/D3DMetal
+  local smoke path without mutating the supplied runtime root or placing the
+  Gcenx payload in Konyak release artifacts.
+- Completed:
+  - Added runtime submodule script
+    `scripts/smoke-gptk-d3dmetal-local.zsh`.
+  - Added flake app/package `gptk-d3dmetal-local-smoke`, runnable as
+    `nix run .#gptk-d3dmetal-local-smoke -- <runtime-root-or-stack-archive>`.
+  - The local app accepts either an assembled runtime root or
+    `konyak-macos-wine-runtime-stack.tar.zst`, verifies stack archives exclude
+    GPTK payloads, copies/extracts the runtime into a work directory, downloads
+    the pinned Gcenx GPTK archive into that transient work directory, imports
+    it only into the copied runtime, and runs both `gptk-d3d11-device` and
+    `gptk-d3d12-device`.
+  - Updated runtime README usage notes and runtime TODO state.
+  - Created runtime submodule commit
+    `d427bd9f30fe7c2dd7dfb83f8e8cf9c58337a412`.
+- Remaining:
+  - The app still depends on the pinned external Gcenx release asset remaining
+    available and SHA-stable.
+  - `--allow-unsupported-host` exists only for reproducing hosted-runner GPU
+    behavior; normal local runs should leave it unset so D3DMetal device
+    creation is actually proven.
+- Next: no open action remains for this local smoke entry point.
+- Verification:
+  - `nix develop -c zsh -lc 'nix run .#gptk-d3dmetal-local-smoke -- --help'`:
+    failed before implementation because the flake did not expose the app.
+  - `nix develop -c zsh -lc 'nix run .#gptk-d3dmetal-local-smoke -- --help'`:
+    passed after implementation.
+  - `nix develop -c zsh -lc 'zsh -n scripts/smoke-gptk-d3dmetal-local.zsh && nixfmt --check flake.nix && nix eval .#apps.aarch64-darwin.gptk-d3dmetal-local-smoke.type'`:
+    passed.
+  - `nix develop -c zsh -lc 'zsh -n scripts/smoke-gptk-d3dmetal-local.zsh && nixfmt --check flake.nix && if nix run .#gptk-d3dmetal-local-smoke -- --work-root dist/gptk README.md; then exit 1; fi'`:
+    passed by rejecting a `dist/` work-root for transient GPTK payload files.
+  - `nix develop -c zsh -lc 'nix flake check -L --show-trace'`: passed in the
+    runtime submodule.
+  - `nix develop -c zsh -lc 'curl --fail --location --retry 3 --retry-delay 5 --output .dart_tool/local-smoke-input/konyak-macos-wine-runtime-stack.tar.zst https://github.com/serika12345/konyak-macos-runtime/releases/download/crossover-26.1.0-konyak.0/konyak-macos-wine-runtime-stack.tar.zst; shasum -a 256 .dart_tool/local-smoke-input/konyak-macos-wine-runtime-stack.tar.zst'`:
+    passed; SHA-256 was
+    `a3939cef05b38a7ba33923ac8301b88c55de982a043f926bcf6f35b3f5f76844`.
+  - `nix develop -c zsh -lc 'nix run .#gptk-d3dmetal-local-smoke -- --work-root .dart_tool/gptk-d3dmetal-local-smoke .dart_tool/local-smoke-input/konyak-macos-wine-runtime-stack.tar.zst'`:
+    passed; the app imported the CI-only Gcenx payload into the copied runtime
+    and both `Backend smoke OK: gptk-d3d11-device` and
+    `Backend smoke OK: gptk-d3d12-device` were observed.
+  - `nix develop -c zsh -lc 'git diff --check && just verify-governance'`:
+    passed in the parent repo.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+
 - Timestamp: 2026-06-18 18:38 JST
 - State: `completed`
 - Branch: `main`

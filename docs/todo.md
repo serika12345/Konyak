@@ -455,6 +455,8 @@ task changes scope.
       against a dev runtime with the user-imported GPTK payload.
     - [x] Republish the macOS runtime release assets from the runtime submodule
       Actions run after GPTK/D3DMetal CI smoke completed.
+    - [x] Add `nix run .#gptk-d3dmetal-local-smoke` for local smoke execution
+      against an assembled runtime root or published runtime stack archive.
 
 ## Deferred
 
