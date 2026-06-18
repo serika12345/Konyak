@@ -11,6 +11,201 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-18 18:38 JST
+- State: `completed`
+- Branch: `main`
+- Related work: macOS GPTK/D3DMetal CI smoke using Gcenx Game Porting Toolkit
+  release; `runtime/konyak-macos-runtime/TODO.dxmt-runtime.md` GPTK smoke;
+  `docs/todo.md` macOS runtime automated smoke coverage
+- Purpose: publish refreshed macOS runtime artifacts with Konyak's
+  GPTK/D3DMetal loader shim and add CI coverage for the GPTK/D3DMetal
+  D3D11/D3D12 path using a pinned external Gcenx release asset while keeping
+  Apple/Gcenx GPTK payloads out of Konyak runtime distribution artifacts.
+- Completed:
+  - Added runtime submodule CI helper
+    `scripts/prepare-gptk-d3dmetal-ci-smoke.zsh` to download the pinned
+    `Game-Porting-Toolkit-3.0-3` release asset, verify SHA-256
+    `d377683937340f914823dbb2e1252b329cbf834ff58907d0293db8cebf0e392e`,
+    locate `Game Porting Toolkit.app/Contents/Resources/wine/lib`, verify the
+    D3DMetal license resource exists, and import it only into an unpacked smoke
+    runtime.
+  - Added `scripts/check-runtime-archive-excludes-gptk.zsh` and wired it into
+    runtime stack assembly, candidate staging, candidate promotion, and
+    artifact smoke paths so Konyak archives reject `components/gptk-d3dmetal`,
+    legacy `lib/external/D3DMetal.framework` or `libd3dshared.dylib`, and common
+    GPTK overlay files under base `lib/wine/x86_64-*`.
+  - Added `smoke-gptk-d3dmetal` jobs to `build-runtime.yml` and
+    `promote-runtime-candidate.yml`; both jobs download only the assembled
+    Konyak runtime stack artifact, verify it excludes GPTK, import the pinned
+    Gcenx payload into the temporary smoke runtime under runner-local storage,
+    and run `gptk-d3d11-device` plus `gptk-d3d12-device`.
+  - Split manual `smoke-runtime-artifacts.yml` GPTK verification into a
+    separate rerunnable job rather than appending it to the existing combined
+    smoke job.
+  - Tightened candidate source-manifest validation so component IDs must match
+    the approved macOS runtime component set exactly, preventing hidden
+    `gptk-d3dmetal` manifest entries.
+  - Updated runtime docs and TODOs to record that GPTK/D3DMetal is a CI-only
+    transient external smoke input, not a shipped Konyak component. The docs now
+    call out that maintainers running the CI path are responsible for complying
+    with the Apple D3DMetal/GPTK license terms referenced by the Gcenx release.
+  - Pushed runtime submodule commit
+    `da5c97fae955c414de180fa42be570263bd1453c`, including CI fixes for hosted
+    runner GPTK unsupported-GPU detection inside the runtime Nix shell.
+  - GitHub Actions runtime run `27748147073` completed successfully and
+    republished `crossover-26.1.0-konyak.0`.
+  - The published release assets are:
+    `konyak-macos-runtime.release.json`
+    (`sha256:455a03c9a787686d334239d01ddd5568118c4c5091a728371fe096f9a4500516`),
+    `konyak-macos-wine-runtime-stack-source.json`
+    (`sha256:10b92bdcebe620fe3636cd1c4b84db5c292cb85111aec112e91aa6f765154698`),
+    and `konyak-macos-wine-runtime-stack.tar.zst`
+    (`sha256:a3939cef05b38a7ba33923ac8301b88c55de982a043f926bcf6f35b3f5f76844`).
+  - Confirmed the release asset list contains only Konyak runtime stack and
+    metadata assets. GPTK/D3DMetal files remain transient CI smoke inputs and
+    are not attached to the runtime release.
+- Remaining:
+  - Hosted GitHub macOS runners expose an Apple Paravirtual GPU that D3DMetal
+    rejects, so CI proves the loader/import path and expected hosted-runner
+    unsupported-GPU signature for GPTK D3D11/D3D12, not actual D3DMetal device
+    creation.
+  - CI still depends on the pinned external Gcenx release asset remaining
+    available and SHA-stable.
+- Next: no open action remains for this artifact publication and CI run. Actual
+  GPTK/D3DMetal device creation remains a local Apple Silicon smoke because the
+  hosted runner GPU is unsupported.
+- Verification:
+  - `nix develop -c zsh -lc 'curl -sL https://api.github.com/repos/Gcenx/game-porting-toolkit/releases/latest | jq "{tag_name, name, html_url, published_at, assets: [.assets[] | {name, size, browser_download_url, content_type}] }"'`:
+    passed; latest release was `Game-Porting-Toolkit-3.0-3` with asset
+    `game-porting-toolkit-3.0-3.tar.xz`.
+  - `nix develop -c zsh -lc 'archive=.dart_tool/gcenx-gptk-release-inspect/game-porting-toolkit-3.0-3.tar.xz; curl -fL --retry 3 --retry-delay 5 -o "$archive" https://github.com/Gcenx/game-porting-toolkit/releases/download/Game-Porting-Toolkit-3.0-3/game-porting-toolkit-3.0-3.tar.xz; shasum -a 256 "$archive"; tar -tf "$archive"'`:
+    passed; SHA-256 was
+    `d377683937340f914823dbb2e1252b329cbf834ff58907d0293db8cebf0e392e`, and
+    the archive contained `Game Porting Toolkit.app/Contents/Resources/wine/lib`.
+  - `nix develop -c zsh -lc './scripts/prepare-gptk-d3dmetal-ci-smoke.zsh <minimal-runtime-layout> <work-root>'`:
+    passed; the helper imported the Gcenx payload into
+    `components/gptk-d3dmetal` and preserved the D3DMetal symlinks.
+  - `nix develop -c zsh -lc './scripts/check-runtime-archive-excludes-gptk.zsh <clean-fixture.tar.zst>'`:
+    passed.
+  - `nix develop -c zsh -lc 'if ./scripts/check-runtime-archive-excludes-gptk.zsh <fixture-with-components/gptk-d3dmetal.tar.zst>; then exit 1; fi'`:
+    passed by rejecting the intentionally contaminated fixture.
+  - CI-equivalent local dynamic smoke against a temporary stack assembled from
+    rebuilt Wine output plus existing component archives:
+    `check-runtime-archive-excludes-gptk`, `check-wine32on64-runtime`,
+    `check-dxmt-component`, `check-vkd3d-component`, `check-dxvk-component`,
+    `check-gstreamer-component`, `check-wine-addons-component`, Gcenx GPTK
+    import, `smoke-backend-device.zsh gptk-d3d11-device`, and
+    `smoke-backend-device.zsh gptk-d3d12-device`: passed.
+  - `nix develop -c zsh -lc 'zsh -n scripts/prepare-gptk-d3dmetal-ci-smoke.zsh scripts/check-runtime-archive-excludes-gptk.zsh scripts/import-gptk-d3dmetal-redist.zsh scripts/stage-runtime-release-candidate.zsh scripts/smoke-backend-device.zsh scripts/check-wine32on64-runtime.zsh scripts/build-runtime.zsh scripts/assemble-runtime-stack.zsh'`:
+    passed.
+  - `nix develop -c zsh -lc 'nix shell nixpkgs#actionlint -c actionlint .github/workflows/build-runtime.yml .github/workflows/promote-runtime-candidate.yml .github/workflows/smoke-runtime-artifacts.yml'`:
+    passed.
+  - `nix develop -c zsh -lc './scripts/stage-runtime-release-candidate.zsh --dry-run candidate-gptk-ci-smoke-test dist'`:
+    passed.
+  - Independent audit sub-agent for the Gcenx CI wiring: initially found the
+    candidate promotion inline GPTK exclusion check weaker than the shared
+    checker and manifest validation accepting scalar extra entries; both were
+    fixed before completion.
+  - `nix develop -c zsh -lc 'zsh -n scripts/stage-runtime-release-candidate.zsh scripts/check-runtime-archive-excludes-gptk.zsh scripts/prepare-gptk-d3dmetal-ci-smoke.zsh && nix shell nixpkgs#actionlint -c actionlint .github/workflows/build-runtime.yml .github/workflows/promote-runtime-candidate.yml .github/workflows/smoke-runtime-artifacts.yml'`:
+    passed after the audit fixes.
+  - `nix develop -c zsh -lc 'if ./scripts/check-runtime-archive-excludes-gptk.zsh <fixture-with-lib/wine/x86_64-unix/nvngx.so.tar.zst>; then exit 1; fi'`:
+    passed by rejecting the intentionally contaminated root overlay fixture.
+  - `nix develop -c zsh -lc 'if ./scripts/stage-runtime-release-candidate.zsh --dry-run candidate-gptk-negative <manifest-with-extra-scalar-component>; then exit 1; fi'`:
+    passed by rejecting the invalid scalar component entry.
+  - `nix develop -c zsh -lc 'git diff --check'`: passed in the parent repo.
+  - `nix develop -c zsh -lc 'git diff --check && git diff --cached --check'`:
+    passed in the runtime submodule.
+  - `nix develop -c zsh -lc 'zsh -n scripts/smoke-backend-device.zsh scripts/prepare-gptk-d3dmetal-ci-smoke.zsh scripts/check-runtime-archive-excludes-gptk.zsh'`:
+    passed after making backend smoke log checks independent of external
+    `grep`.
+  - `nix develop -c zsh -lc 'nix shell nixpkgs#actionlint -c actionlint .github/workflows/build-runtime.yml .github/workflows/promote-runtime-candidate.yml .github/workflows/smoke-runtime-artifacts.yml'`:
+    passed after the final CI smoke-script fix.
+  - Runtime GitHub Actions run `27748147073`:
+    passed; validate, binary component packaging, Wine runtime build, vkd3d,
+    DXMT, runtime assembly, release metadata, GUI `/unix` smoke, vkd3d, DXVK,
+    DXMT, GPTK/D3DMetal, Wine32-on-64, and publish-release jobs all succeeded.
+  - GPTK/D3DMetal job `82096511842` log audit:
+    passed; the job prepared the CI-only
+    `Game-Porting-Toolkit-3.0-3` payload, then both `gptk-d3d11-device` and
+    `gptk-d3d12-device` reached the expected hosted-runner unsupported-GPU
+    signature.
+  - `nix develop -c zsh -lc 'gh release view crossover-26.1.0-konyak.0 --repo serika12345/konyak-macos-runtime --json tagName,name,isDraft,isPrerelease,url,assets'`:
+    passed; the release is published and contains only the runtime release
+    metadata, source manifest, and runtime stack archive listed above.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+
+- Timestamp: 2026-06-18 12:29 JST
+- State: `completed`
+- Branch: `main`
+- Related work: macOS GPTK/D3DMetal loader shim;
+  `runtime/konyak-macos-runtime/TODO.dxmt-runtime.md` GPTK local/manual smoke;
+  `docs/todo.md` macOS runtime automated smoke coverage
+- Purpose: make GPTK/D3DMetal D3D11 work without CrossOver's proprietary
+  `cxcompatdb.so` by shipping a Konyak-owned minimal loader shim that uses only
+  public CrossOver Wine `ntdll` exports.
+- Completed:
+  - Added `shims/cxcompatdb/cxcompatdb.c` in the runtime submodule. The shim is
+    loaded as `lib/wine/x86_64-unix/cxcompatdb.so`, derives the user-imported
+    GPTK Wine root from `CX_APPLEGPTK_LIBD3DSHARED_PATH`, applies the native
+    D3DMetal load order, sets `CX_ACTIVE_GRAPHICS_BACKEND=d3dmetal`, and keeps
+    the prepended path alive for process lifetime because Wine stores the
+    pointer directly.
+  - Integrated the shim into the x86_64 Darwin Wine runtime Nix build, linking
+    it to `@rpath/ntdll.so` and verifying the expected Mach-O dependency during
+    installation.
+  - Strengthened the Wine32-on-64 runtime layout check to require the shim,
+    x86_64 Mach-O identity, `@loader_path/` rpath, and `@rpath/ntdll.so`
+    dependency.
+  - Extended the backend smoke runner with local/manual
+    `gptk-d3d11-device` and `gptk-d3d12`/`gptk-d3d12-device` targets that use
+    the user-imported `components/gptk-d3dmetal` payload.
+  - Copied only the rebuilt shim into
+    `.dart_tool/konyak/dev-runtime/macos-wine` for dynamic verification so the
+    existing user-imported GPTK component was preserved.
+- Remaining:
+  - GPTK/D3DMetal smoke remains local/manual because the GPTK payload is
+    user-provided and not redistributed by this repository.
+  - Release archives were not regenerated or promoted in this scope.
+- Next: regenerate and promote macOS runtime release artifacts only when this
+  shim should be published to the hosted runtime channel.
+- Verification:
+  - `nix develop -c zsh -lc './scripts/check-wine32on64-runtime.zsh /Users/masato/Documents/Konyak/.dart_tool/konyak/dev-runtime/macos-wine'`:
+    failed before implementation because `lib/wine/x86_64-unix/cxcompatdb.so`
+    was missing, proving the new layout check.
+  - `nix develop -c zsh -lc './scripts/smoke-backend-device.zsh /Users/masato/Documents/Konyak/.dart_tool/konyak/dev-runtime/macos-wine gptk-d3d11-device .dart_tool/pre-shim-probes'`:
+    failed before implementation because the GPTK smoke required the missing
+    base-runtime shim.
+  - `nix develop -c zsh -lc 'zsh -n scripts/check-wine32on64-runtime.zsh scripts/smoke-backend-device.zsh scripts/build-runtime.zsh scripts/assemble-runtime-stack.zsh'`:
+    passed.
+  - `nix develop -c zsh -lc 'nix eval .#packages.x86_64-darwin.konyak-macos-wine-runtime.name'`:
+    passed.
+  - `nix develop -c zsh -lc 'git diff --check'`: passed.
+  - `nix develop -c zsh -lc 'git diff --cached --check'`: passed.
+  - `nix develop -c zsh -lc 'nix build .#packages.x86_64-darwin.konyak-macos-wine-runtime -L --show-trace --out-link result-cxcompatdb-shim'`:
+    passed.
+  - `nix develop -c zsh -lc '/usr/bin/file result-cxcompatdb-shim/lib/wine/x86_64-unix/cxcompatdb.so && otool -L result-cxcompatdb-shim/lib/wine/x86_64-unix/cxcompatdb.so && otool -l result-cxcompatdb-shim/lib/wine/x86_64-unix/cxcompatdb.so | awk "/LC_RPATH/ { getline; getline; print $2 }"'`:
+    passed; the shim is x86_64 Mach-O, depends on `@rpath/ntdll.so`, and has
+    `@loader_path/` in its rpath list.
+  - `nix develop -c zsh -lc './scripts/check-wine32on64-runtime.zsh result-cxcompatdb-shim'`:
+    passed.
+  - `nix develop -c zsh -lc 'install -m 755 result-cxcompatdb-shim/lib/wine/x86_64-unix/cxcompatdb.so /Users/masato/Documents/Konyak/.dart_tool/konyak/dev-runtime/macos-wine/lib/wine/x86_64-unix/cxcompatdb.so'`:
+    passed; this updated only the local dev runtime shim for smoke verification.
+  - `nix develop -c zsh -lc './scripts/smoke-backend-device.zsh /Users/masato/Documents/Konyak/.dart_tool/konyak/dev-runtime/macos-wine gptk-d3d11-device .dart_tool/gptk-cxcompat-probes'`:
+    passed with `Backend smoke OK: gptk-d3d11-device`.
+  - `nix develop -c zsh -lc './scripts/smoke-backend-device.zsh /Users/masato/Documents/Konyak/.dart_tool/konyak/dev-runtime/macos-wine gptk-d3d12 .dart_tool/gptk-cxcompat-probes'`:
+    passed with `Backend smoke OK: gptk-d3d12`.
+  - Independent audit sub-agent: passed; no blocking findings. The audit
+    confirmed the shim uses only public `ntdll` exports, does not copy or
+    implement proprietary CrossOver `cxcompatdb.so` behavior, and matches the
+    documented GPTK component layout.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+
 - Timestamp: 2026-06-17 19:06 JST
 - State: `completed`
 - Branch: `main`

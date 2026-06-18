@@ -444,8 +444,17 @@ task changes scope.
   - [ ] Add parent CLI-bound DXVK/DXMT/vkd3d backend probe execution smoke once
     the probe runner path can stay headless and non-flaky on GitHub-hosted
     arm64 macOS.
-  - [ ] Keep GPTK/D3DMetal smoke as local/manual workflow coverage unless a
-    redistributable payload becomes available.
+  - [x] Add GPTK/D3DMetal smoke as CI-only external-payload workflow coverage.
+    The runtime submodule downloads the pinned Gcenx Game Porting Toolkit
+    release asset into runner-local temporary storage, verifies its SHA-256,
+    imports it only into the unpacked smoke runtime, and rejects runtime release
+    archives that contain GPTK/D3DMetal payload paths.
+    - [x] Add the runtime-owned GPTK/D3DMetal loader shim that uses CrossOver
+      Wine's public `ntdll` exports instead of proprietary `cxcompatdb.so`.
+    - [x] Locally verify GPTK D3D11 and GPTK D3D12 backend device smokes
+      against a dev runtime with the user-imported GPTK payload.
+    - [x] Republish the macOS runtime release assets from the runtime submodule
+      Actions run after GPTK/D3DMetal CI smoke completed.
 
 ## Deferred
 
