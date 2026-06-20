@@ -27,6 +27,11 @@
 		33CC10F32044A3C60003C045 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 33CC10F22044A3C60003C045 /* Assets.xcassets */; };
 		33CC10F62044A3C60003C045 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 33CC10F42044A3C60003C045 /* MainMenu.xib */; };
 		33CC11132044BFA00003C045 /* MainFlutterWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33CC11122044BFA00003C045 /* MainFlutterWindow.swift */; };
+		4B4B52060000000000000001 /* ThumbnailProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B4B52040000000000000001 /* ThumbnailProvider.swift */; };
+		4B4B52070000000000000001 /* ExecutableThumbnail.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 4B4B52020000000000000001 /* ExecutableThumbnail.appex */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		4B4B52090000000000000001 /* QuickLookThumbnailing.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4B4B52080000000000000001 /* QuickLookThumbnailing.framework */; };
+		4B4B52150000000000000001 /* PortableExecutableIconExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B4B52160000000000000001 /* PortableExecutableIconExtractor.swift */; };
+		4B4B52170000000000000001 /* PeResourceReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B4B52180000000000000001 /* PeResourceReader.swift */; };
 		68E14E7927B6EDA9C217AB4C /* Pods_RunnerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 317F59ECEB7B58B764ECF887 /* Pods_RunnerTests.framework */; };
 		8149BD2EBCDB63CA8D36F8E2 /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9E5CA128A023C1D4F7A40F46 /* Pods_Runner.framework */; };
 /* End PBXBuildFile section */
@@ -46,6 +51,13 @@
 			remoteGlobalIDString = 33CC111A2044C6BA0003C045;
 			remoteInfo = FLX;
 		};
+		4B4B520F0000000000000001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 33CC10E52044A3C60003C045 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 4B4B52010000000000000001;
+			remoteInfo = ExecutableThumbnail;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -57,6 +69,17 @@
 			files = (
 			);
 			name = "Bundle Framework";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4B4B520D0000000000000001 /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				4B4B52070000000000000001 /* ExecutableThumbnail.appex in Embed App Extensions */,
+			);
+			name = "Embed App Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -79,6 +102,13 @@
 		33E51913231747F40026EE4D /* DebugProfile.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = DebugProfile.entitlements; sourceTree = "<group>"; };
 		33E51914231749380026EE4D /* Release.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.entitlements; path = Release.entitlements; sourceTree = "<group>"; };
 		33E5194F232828860026EE4D /* AppInfo.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = AppInfo.xcconfig; sourceTree = "<group>"; };
+		4B4B52020000000000000001 /* ExecutableThumbnail.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ExecutableThumbnail.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		4B4B52030000000000000001 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		4B4B52040000000000000001 /* ThumbnailProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThumbnailProvider.swift; sourceTree = "<group>"; };
+		4B4B52080000000000000001 /* QuickLookThumbnailing.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuickLookThumbnailing.framework; path = System/Library/Frameworks/QuickLookThumbnailing.framework; sourceTree = SDKROOT; };
+		4B4B52140000000000000001 /* ExecutableThumbnail.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ExecutableThumbnail.entitlements; sourceTree = "<group>"; };
+		4B4B52160000000000000001 /* PortableExecutableIconExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortableExecutableIconExtractor.swift; sourceTree = "<group>"; };
+		4B4B52180000000000000001 /* PeResourceReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeResourceReader.swift; sourceTree = "<group>"; };
 		581D749A60BFDDC26A31DD4C /* Pods-RunnerTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.release.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.release.xcconfig"; sourceTree = "<group>"; };
 		7AFA3C8E1D35360C0083082E /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
 		8EB74EABC5F06279D58D15E7 /* Pods-RunnerTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.debug.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.debug.xcconfig"; sourceTree = "<group>"; };
@@ -104,6 +134,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				8149BD2EBCDB63CA8D36F8E2 /* Pods_Runner.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4B4B520B0000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4B4B52090000000000000001 /* QuickLookThumbnailing.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -133,6 +171,7 @@
 			isa = PBXGroup;
 			children = (
 				33FAB671232836740065AC1E /* Runner */,
+				4B4B52050000000000000001 /* ExecutableThumbnail */,
 				33CEB47122A05771004F2AC0 /* Flutter */,
 				331C80D6294CF71000263BE5 /* RunnerTests */,
 				33CC10EE2044A3C60003C045 /* Products */,
@@ -145,6 +184,7 @@
 			isa = PBXGroup;
 			children = (
 				33CC10ED2044A3C60003C045 /* Konyak.app */,
+				4B4B52020000000000000001 /* ExecutableThumbnail.appex */,
 				331C80D5294CF71000263BE5 /* RunnerTests.xctest */,
 			);
 			name = Products;
@@ -185,11 +225,24 @@
 			path = Runner;
 			sourceTree = "<group>";
 		};
+		4B4B52050000000000000001 /* ExecutableThumbnail */ = {
+			isa = PBXGroup;
+			children = (
+				4B4B52030000000000000001 /* Info.plist */,
+				4B4B52040000000000000001 /* ThumbnailProvider.swift */,
+				4B4B52160000000000000001 /* PortableExecutableIconExtractor.swift */,
+				4B4B52180000000000000001 /* PeResourceReader.swift */,
+				4B4B52140000000000000001 /* ExecutableThumbnail.entitlements */,
+			);
+			path = ExecutableThumbnail;
+			sourceTree = "<group>";
+		};
 		D73912EC22F37F3D000D13A0 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
 				9E5CA128A023C1D4F7A40F46 /* Pods_Runner.framework */,
 				317F59ECEB7B58B764ECF887 /* Pods_RunnerTests.framework */,
+				4B4B52080000000000000001 /* QuickLookThumbnailing.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -238,6 +291,7 @@
 				33CC10E92044A3C60003C045 /* Sources */,
 				33CC10EA2044A3C60003C045 /* Frameworks */,
 				33CC10EB2044A3C60003C045 /* Resources */,
+				4B4B520D0000000000000001 /* Embed App Extensions */,
 				33CC110E2044A8840003C045 /* Bundle Framework */,
 				3399D490228B24CF009A79C7 /* ShellScript */,
 				CA13AE2B6379684BB16FC667 /* [CP] Embed Pods Frameworks */,
@@ -245,12 +299,30 @@
 			buildRules = (
 			);
 			dependencies = (
+				4B4B520E0000000000000001 /* PBXTargetDependency */,
 				33CC11202044C79F0003C045 /* PBXTargetDependency */,
 			);
 			name = Runner;
 			productName = Runner;
 			productReference = 33CC10ED2044A3C60003C045 /* Konyak.app */;
 			productType = "com.apple.product-type.application";
+		};
+		4B4B52010000000000000001 /* ExecutableThumbnail */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4B4B52130000000000000001 /* Build configuration list for PBXNativeTarget "ExecutableThumbnail" */;
+			buildPhases = (
+				4B4B520A0000000000000001 /* Sources */,
+				4B4B520B0000000000000001 /* Frameworks */,
+				4B4B520C0000000000000001 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ExecutableThumbnail;
+			productName = ExecutableThumbnail;
+			productReference = 4B4B52020000000000000001 /* ExecutableThumbnail.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -281,6 +353,10 @@
 						CreatedOnToolsVersion = 9.2;
 						ProvisioningStyle = Manual;
 					};
+					4B4B52010000000000000001 = {
+						CreatedOnToolsVersion = 15.1;
+						ProvisioningStyle = Automatic;
+					};
 				};
 			};
 			buildConfigurationList = 33CC10E82044A3C60003C045 /* Build configuration list for PBXProject "Runner" */;
@@ -297,6 +373,7 @@
 			projectRoot = "";
 			targets = (
 				33CC10EC2044A3C60003C045 /* Runner */,
+				4B4B52010000000000000001 /* ExecutableThumbnail */,
 				331C80D4294CF70F00263BE5 /* RunnerTests */,
 				33CC111A2044C6BA0003C045 /* Flutter Assemble */,
 			);
@@ -317,6 +394,13 @@
 			files = (
 				33CC10F32044A3C60003C045 /* Assets.xcassets in Resources */,
 				33CC10F62044A3C60003C045 /* MainMenu.xib in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4B4B520C0000000000000001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -443,6 +527,16 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		4B4B520A0000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4B4B52060000000000000001 /* ThumbnailProvider.swift in Sources */,
+				4B4B52150000000000000001 /* PortableExecutableIconExtractor.swift in Sources */,
+				4B4B52170000000000000001 /* PeResourceReader.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -455,6 +549,11 @@
 			isa = PBXTargetDependency;
 			target = 33CC111A2044C6BA0003C045 /* Flutter Assemble */;
 			targetProxy = 33CC111F2044C79F0003C045 /* PBXContainerItemProxy */;
+		};
+		4B4B520E0000000000000001 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 4B4B52010000000000000001 /* ExecutableThumbnail */;
+			targetProxy = 4B4B520F0000000000000001 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -752,6 +851,85 @@
 			};
 			name = Release;
 		};
+		4B4B52100000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = ExecutableThumbnail/ExecutableThumbnail.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				FRAMEWORK_SEARCH_PATHS = "";
+				INFOPLIST_FILE = ExecutableThumbnail/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
+				OTHER_LDFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = app.konyak.Konyak.ExecutableThumbnail;
+				PRODUCT_NAME = ExecutableThumbnail;
+				SKIP_INSTALL = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		4B4B52110000000000000001 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = ExecutableThumbnail/ExecutableThumbnail.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				FRAMEWORK_SEARCH_PATHS = "";
+				INFOPLIST_FILE = ExecutableThumbnail/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
+				OTHER_LDFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = app.konyak.Konyak.ExecutableThumbnail;
+				PRODUCT_NAME = ExecutableThumbnail;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		4B4B52120000000000000001 /* Profile */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = ExecutableThumbnail/ExecutableThumbnail.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				FRAMEWORK_SEARCH_PATHS = "";
+				INFOPLIST_FILE = ExecutableThumbnail/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
+				OTHER_LDFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = app.konyak.Konyak.ExecutableThumbnail;
+				PRODUCT_NAME = ExecutableThumbnail;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Profile;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -791,6 +969,16 @@
 				33CC111C2044C6BA0003C045 /* Debug */,
 				33CC111D2044C6BA0003C045 /* Release */,
 				338D0CEB231458BD00FA5F75 /* Profile */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		4B4B52130000000000000001 /* Build configuration list for PBXNativeTarget "ExecutableThumbnail" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4B4B52100000000000000001 /* Debug */,
+				4B4B52110000000000000001 /* Release */,
+				4B4B52120000000000000001 /* Profile */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

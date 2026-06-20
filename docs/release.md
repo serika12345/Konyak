@@ -25,6 +25,7 @@ nix develop -c zsh -lc 'just macos-release'
 
 Outputs are written under `.dart_tool/konyak/release/macos`:
 
+- `Konyak.app`
 - `Konyak-<version>-macos-<arch>.zip`
 - `Konyak-<version>-macos-<arch>.zip.sha256`
 - `Konyak-<version>-macos-<arch>.release.json`
@@ -32,7 +33,55 @@ Outputs are written under `.dart_tool/konyak/release/macos`:
 - `release-notes.md`
 
 The `.app` bundle includes `Konyak-MIT.txt`, `THIRD_PARTY_NOTICES.md`, and
-other bundled dependency notices under `Contents/Resources/Licenses`.
+other bundled dependency notices under `Contents/Resources/Licenses`. macOS
+builds also bundle the Zstandard `zstd` helper and `libzstd` so the packaged
+CLI can extract managed runtime stack `.tar.zst` archives without depending on
+developer shell tools or a user-installed `zstd`.
+
+The local `Konyak.app` copy is replaced on every release build and is the app
+used by the packaged runtime extraction smoke. The zip artifact is packaged
+from that same refreshed app copy.
+
+## Local macOS Packaged Debug App
+
+Finder, LaunchServices, Quick Look, bundled helper tools, and packaged CLI
+behavior must be checked against a finalized `.app` bundle rather than
+`flutter run` or a loose build product. The development packaged app path is:
+
+```sh
+nix develop -c zsh -lc 'just macos-debug-app'
+```
+
+This writes a runnable debug app to:
+
+- `.dart_tool/konyak/app/macos/debug/Konyak.app`
+
+The debug and release paths both call `scripts/finalize_macos_app.zsh`, so
+`Contents/Resources/konyak-cli`, `zstd`, `libzstd`, notices, licenses, and
+ad-hoc signatures are prepared through the same finalization step.
+
+The local Finder and runtime smokes are:
+
+```sh
+nix develop -c zsh -lc 'just smoke-macos-runtime-install'
+nix develop -c zsh -lc 'just smoke-macos-finder'
+nix develop -c zsh -lc 'just smoke-macos-finder-putty'
+```
+
+`smoke-macos-runtime-install` clears the inherited environment down to
+`PATH=/usr/bin:/bin` before invoking the packaged CLI, which prevents the Nix
+dev shell from hiding missing bundled helper tools. `smoke-macos-finder`
+registers the packaged debug app with LaunchServices, verifies `.exe` content
+type/default-handler resolution, opens a fixture through Finder's public
+`open` path, and checks for a visible Konyak window. If
+`KONYAK_MACOS_FINDER_SMOKE_EXE` or an explicit fixture path is provided, it
+also runs `qlmanage` against that executable for local Quick Look thumbnail
+coverage. `smoke-macos-finder-putty` downloads the PuTTY 0.84 standalone
+64-bit Windows `putty.exe` fixture into `.dart_tool/konyak/fixtures/windows`,
+verifies its pinned SHA-256 checksum, and runs the same Finder smoke with that
+real PE executable. The release workflow runs that PuTTY-backed smoke against
+the refreshed release `Konyak.app`, so CI and local verification use the same
+finalized app layout instead of a manually placed `.app`.
 
 ## Local Linux Build
 
@@ -86,9 +135,10 @@ The Flutter app is built with:
 At runtime, the Flutter client resolves `__KONYAK_BUNDLE_RESOURCES__` to
 `Konyak.app/Contents/Resources`, so packaged builds invoke the bundled CLI
 directly instead of the development Dart script. The client also passes
-`KONYAK_APP_EXECUTABLE` and `KONYAK_APP_PID` to the CLI so verified macOS app
-updates can terminate the running app, replace the current `.app` bundle, and
-relaunch it.
+`KONYAK_BUNDLE_RESOURCES`, prepends that directory to `PATH`, and passes
+`KONYAK_APP_EXECUTABLE` and `KONYAK_APP_PID` to the CLI so runtime extraction
+helpers are available and verified macOS app updates can terminate the running
+app, replace the current `.app` bundle, and relaunch it.
 
 ## GitHub Release Workflow
 

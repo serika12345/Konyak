@@ -232,6 +232,10 @@ void defineMacosStartupAndRuntimeWidgetTests() {
     await tester.pumpAndSettle();
 
     expect(find.byTooltip('View latest log'), findsOneWidget);
+    expect(runner.argumentsLog, const [
+      ['list-bottles', '--json'],
+      ['run-program', 'steam', '--program', '/downloads/setup.exe', '--json'],
+    ]);
   });
 
   testWidgets('macOS startup drains pending native executable files', (
@@ -312,6 +316,10 @@ void defineMacosStartupAndRuntimeWidgetTests() {
     await tester.pumpAndSettle();
 
     expect(find.byTooltip('View latest log'), findsOneWidget);
+    expect(runner.argumentsLog, const [
+      ['list-bottles', '--json'],
+      ['run-program', 'steam', '--program', '/downloads/setup.exe', '--json'],
+    ]);
   });
 
   testWidgets('launch executable argument can create a bottle before running', (

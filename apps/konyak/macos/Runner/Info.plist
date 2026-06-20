@@ -21,6 +21,10 @@
 			<string>Viewer</string>
 			<key>LSHandlerRank</key>
 			<string>Owner</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>com.microsoft.windows-executable</string>
+			</array>
 		</dict>
 	</array>
 	<key>CFBundleIdentifier</key>

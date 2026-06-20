@@ -74,5 +74,20 @@ swift-lint:
 macos-release:
   ./scripts/build_macos_release.zsh
 
+macos-debug-app:
+  ./scripts/build_macos_debug_app.zsh
+
+fetch-windows-fixture-putty:
+  ./scripts/fetch_windows_fixture_putty.zsh
+
+smoke-macos-runtime-install:
+  ./scripts/smoke_macos_release_runtime_extraction.zsh
+
+smoke-macos-finder:
+  ./scripts/smoke_macos_finder_integration.zsh
+
+smoke-macos-finder-putty:
+  fixture="$(./scripts/fetch_windows_fixture_putty.zsh)"; app_bundle="${KONYAK_MACOS_FINDER_SMOKE_APP:-.dart_tool/konyak/app/macos/debug/Konyak.app}"; ./scripts/smoke_macos_finder_integration.zsh "$app_bundle" "$fixture"
+
 linux-release:
   ./scripts/build_linux_release.zsh

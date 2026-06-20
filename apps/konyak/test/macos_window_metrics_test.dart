@@ -98,6 +98,11 @@ void main() {
     expect(infoPlist, contains('<string>exe</string>'));
     expect(infoPlist, contains('<key>CFBundleTypeRole</key>'));
     expect(infoPlist, contains('<string>Viewer</string>'));
+    expect(infoPlist, contains('<key>LSItemContentTypes</key>'));
+    expect(
+      infoPlist,
+      contains('<string>com.microsoft.windows-executable</string>'),
+    );
     expect(
       appDelegate,
       contains('application(_ sender: NSApplication, openFiles'),
@@ -111,6 +116,181 @@ void main() {
     expect(appDelegate, contains('visibleExternalWindowIds'));
     expect(appDelegate, contains('setMethodCallHandler'));
     expect(appDelegate, contains('url.pathExtension.lowercased() == "exe"'));
+    expect(appDelegate, isNot(contains('LaunchServices.OpenWith')));
+    expect(
+      appDelegate,
+      isNot(contains('clearStaleExecutableOpenWithOverride')),
+    );
+    expect(appDelegate, isNot(contains('getxattr')));
+    expect(appDelegate, isNot(contains('removexattr')));
+  });
+
+  test('macOS app bundles a Quick Look thumbnail extension for EXE files', () {
+    final project = File(
+      'macos/Runner.xcodeproj/project.pbxproj',
+    ).readAsStringSync();
+    final extensionInfoPlist = File(
+      'macos/ExecutableThumbnail/Info.plist',
+    ).readAsStringSync();
+    final provider = File(
+      'macos/ExecutableThumbnail/ThumbnailProvider.swift',
+    ).readAsStringSync();
+    final extractor = File(
+      'macos/ExecutableThumbnail/PortableExecutableIconExtractor.swift',
+    ).readAsStringSync();
+    final resourceReader = File(
+      'macos/ExecutableThumbnail/PeResourceReader.swift',
+    ).readAsStringSync();
+
+    expect(project, contains('ExecutableThumbnail.appex'));
+    expect(
+      project,
+      contains('productType = "com.apple.product-type.app-extension";'),
+    );
+    expect(project, contains('Embed App Extensions'));
+    expect(project, contains('dstSubfolderSpec = 13;'));
+    expect(
+      project,
+      contains('ExecutableThumbnail.appex in Embed App Extensions'),
+    );
+    expect(project, contains('QuickLookThumbnailing.framework'));
+    expect(project, contains('PortableExecutableIconExtractor.swift'));
+    expect(project, contains('PeResourceReader.swift'));
+    expect(project, contains('target = 4B4B52010000000000000001'));
+
+    expect(
+      extensionInfoPlist,
+      contains('<string>com.apple.quicklook.thumbnail</string>'),
+    );
+    expect(extensionInfoPlist, contains('<key>QLSupportedContentTypes</key>'));
+    expect(
+      extensionInfoPlist,
+      contains('<key>QLThumbnailMinimumDimension</key>'),
+    );
+    expect(
+      extensionInfoPlist,
+      contains('<string>com.microsoft.windows-executable</string>'),
+    );
+    expect(
+      extensionInfoPlist,
+      contains('<string>\$(PRODUCT_MODULE_NAME).ThumbnailProvider</string>'),
+    );
+
+    expect(provider, contains('final class ThumbnailProvider'));
+    expect(provider, contains('QLThumbnailProvider'));
+    expect(provider, contains('QLThumbnailReply(contextSize:'));
+    expect(provider, contains('PortableExecutableIconExtractor'));
+    expect(provider, isNot(contains('Process')));
+    expect(provider, isNot(contains('konyak-cli')));
+
+    expect(extractor, contains('enum PortableExecutableIconExtractor'));
+    expect(extractor, contains('rtIcon'));
+    expect(extractor, contains('rtGroupIcon'));
+    expect(extractor, contains('PortableExecutableImage.parse'));
+    expect(extractor, contains('Int(exactly:'));
+    expect(extractor, isNot(contains('UInt32(Int.max)')));
+
+    expect(resourceReader, contains('enum PeResourceReader'));
+    expect(resourceReader, contains('resourceLeaf'));
+    expect(resourceReader, contains('Int(exactly:'));
+    expect(resourceReader, isNot(contains('UInt32(Int.max)')));
+  });
+
+  test('macOS release bundles zstd extraction support for runtime stacks', () {
+    final releaseScript = File(
+      '../../scripts/build_macos_release.zsh',
+    ).readAsStringSync();
+    final finalizerScript = File(
+      '../../scripts/finalize_macos_app.zsh',
+    ).readAsStringSync();
+    final debugBuildScript = File(
+      '../../scripts/build_macos_debug_app.zsh',
+    ).readAsStringSync();
+    final smokeScript = File(
+      '../../scripts/smoke_macos_release_runtime_extraction.zsh',
+    ).readAsStringSync();
+    final finderSmokeScript = File(
+      '../../scripts/smoke_macos_finder_integration.zsh',
+    ).readAsStringSync();
+    final puttyFixtureScript = File(
+      '../../scripts/fetch_windows_fixture_putty.zsh',
+    ).readAsStringSync();
+    final publishWorkflow = File(
+      '../../.github/workflows/publish.yml',
+    ).readAsStringSync();
+    final justfile = File('../../justfile').readAsStringSync();
+    final releaseDocs = File('../../docs/release.md').readAsStringSync();
+    final thirdPartyNotices = File(
+      '../../THIRD_PARTY_NOTICES.md',
+    ).readAsStringSync();
+
+    expect(releaseScript, contains('finalize_macos_app.zsh'));
+    expect(releaseScript, contains('release_app_bundle='));
+    expect(releaseScript, contains('rm -rf "\$release_app_bundle"'));
+    expect(
+      releaseScript,
+      contains('ditto "\$app_bundle" "\$release_app_bundle"'),
+    );
+    expect(
+      releaseScript,
+      contains('--keepParent "\$release_app_bundle" "\$zip_path"'),
+    );
+    expect(finalizerScript, contains('--app <path> --cli <path>'));
+    expect(finalizerScript, contains('resources_dir='));
+    expect(finalizerScript, contains('\$resources_dir/konyak-cli'));
+    expect(finalizerScript, contains('\$resources_dir/zstd'));
+    expect(finalizerScript, contains('libzstd.1.dylib'));
+    expect(finalizerScript, contains('install_name_tool'));
+    expect(finalizerScript, contains('@executable_path/libzstd.1.dylib'));
+    expect(finalizerScript, contains('Zstandard-BSD-3-Clause.txt'));
+    expect(finalizerScript, contains('codesign --verify'));
+    expect(debugBuildScript, contains('flutter build macos'));
+    expect(debugBuildScript, contains('--debug'));
+    expect(debugBuildScript, contains('finalize_macos_app.zsh'));
+    expect(debugBuildScript, contains('.dart_tool/konyak/app/macos/debug'));
+    expect(smokeScript, contains('release_root='));
+    expect(smokeScript, contains('\$release_root/Konyak.app'));
+    expect(smokeScript, contains('install-macos-wine --reinstall --archive'));
+    expect(smokeScript, contains('PATH=/usr/bin:/bin'));
+    expect(finderSmokeScript, contains('lsregister'));
+    expect(finderSmokeScript, contains('mdls'));
+    expect(finderSmokeScript, contains('CGWindowListCopyWindowInfo'));
+    expect(finderSmokeScript, contains('qlmanage'));
+    expect(finderSmokeScript, contains('com.microsoft.windows-executable'));
+    expect(finderSmokeScript, isNot(contains('xattr')));
+    expect(finderSmokeScript, contains('KONYAK_MACOS_FINDER_SMOKE_APP'));
+    expect(
+      finderSmokeScript,
+      contains('KONYAK_MACOS_FINDER_SMOKE_KEEP_APP_RUNNING'),
+    );
+    expect(puttyFixtureScript, contains('putty_version=0.84'));
+    expect(
+      puttyFixtureScript,
+      contains('https://the.earth.li/~sgtatham/putty/0.84/w64/putty.exe'),
+    );
+    expect(
+      puttyFixtureScript,
+      contains(
+        '7056ca2f6a9f3c525845b116c7bf564ced3284a4083ea80d7e9ef51a16f612c4',
+      ),
+    );
+    expect(puttyFixtureScript, contains('shasum -a 256'));
+    expect(puttyFixtureScript, contains('.dart_tool/konyak/fixtures/windows'));
+    expect(justfile, contains('macos-debug-app:'));
+    expect(justfile, contains('fetch-windows-fixture-putty:'));
+    expect(justfile, contains('smoke-macos-finder:'));
+    expect(justfile, contains('smoke-macos-finder-putty:'));
+    expect(justfile, contains('smoke-macos-runtime-install:'));
+    expect(publishWorkflow, contains('smoke_macos_release_runtime_extraction'));
+    expect(publishWorkflow, contains('fetch_windows_fixture_putty'));
+    expect(publishWorkflow, contains('smoke_macos_finder_integration'));
+    expect(releaseDocs, contains('Konyak.app'));
+    expect(releaseDocs, contains('macos-debug-app'));
+    expect(releaseDocs, contains('smoke-macos-finder'));
+    expect(releaseDocs, contains('smoke-macos-finder-putty'));
+    expect(releaseDocs, contains('PuTTY 0.84'));
+    expect(releaseDocs, contains('zstd'));
+    expect(thirdPartyNotices, contains('Zstandard: BSD-3-Clause'));
   });
 
   test('macOS app exposes visible external window ids to Flutter', () {

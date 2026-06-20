@@ -441,6 +441,14 @@ task changes scope.
     manifest, validates required backend component availability through the CLI
     runtime catalog, and includes a headless `create-bottle`
     prefix-initialization smoke that catches Wine Mono/Gecko installer prompts.
+  - [x] Add packaged macOS app smoke coverage that finalizes debug and release
+    bundles through the same helper/tool layout, verifies runtime archive
+    extraction without the Nix dev shell `PATH`, and locally checks
+    LaunchServices/Finder `.exe` launch behavior against the packaged debug
+    app.
+  - [x] Add a checksum-pinned PuTTY Windows executable fixture for local and
+    CI Finder/LaunchServices/Quick Look packaged app smoke coverage without
+    vendoring sample `.exe` binaries into the repository.
   - [ ] Add parent CLI-bound DXVK/DXMT/vkd3d backend probe execution smoke once
     the probe runner path can stay headless and non-flaky on GitHub-hosted
     arm64 macOS.

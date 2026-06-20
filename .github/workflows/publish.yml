@@ -85,6 +85,12 @@ jobs:
       - name: Build unnotarized macOS release artifact
         run: nix run .#macos-release
 
+      - name: Smoke packaged macOS runtime extraction
+        run: nix develop -c zsh -lc './scripts/smoke_macos_release_runtime_extraction.zsh'
+
+      - name: Smoke packaged macOS Finder integration
+        run: nix develop -c zsh -lc 'fixture="$(./scripts/fetch_windows_fixture_putty.zsh)" && ./scripts/smoke_macos_finder_integration.zsh .dart_tool/konyak/release/macos/Konyak.app "$fixture"'
+
       - uses: actions/upload-artifact@v4
         with:
           name: konyak-macos-release

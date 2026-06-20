@@ -602,6 +602,11 @@ def main() -> None:
         "cli-test",
         "swift-lint",
         "macos-release",
+        "macos-debug-app",
+        "fetch-windows-fixture-putty",
+        "smoke-macos-finder",
+        "smoke-macos-finder-putty",
+        "smoke-macos-runtime-install",
     ]:
         require_contains("justfile", expected)
 
@@ -635,14 +640,31 @@ def main() -> None:
     require_contains("THIRD_PARTY_NOTICES.md", "vkd3d-proton: LGPL-2.1")
     require_contains("THIRD_PARTY_NOTICES.md", "MoltenVK: Apache-2.0")
     require_contains("THIRD_PARTY_NOTICES.md", "GStreamer: LGPL")
-    require_contains("scripts/build_macos_release.zsh", "Konyak-MIT.txt")
-    require_contains("scripts/build_macos_release.zsh", "THIRD_PARTY_NOTICES.md")
+    require_contains("scripts/build_macos_release.zsh", "finalize_macos_app.zsh")
+    require_contains("scripts/finalize_macos_app.zsh", "Konyak-MIT.txt")
+    require_contains("scripts/finalize_macos_app.zsh", "THIRD_PARTY_NOTICES.md")
+    require_contains("scripts/fetch_windows_fixture_putty.zsh", "putty_version=0.84")
+    require_contains(
+        "scripts/fetch_windows_fixture_putty.zsh",
+        "https://the.earth.li/~sgtatham/putty/0.84/w64/putty.exe",
+    )
+    require_contains(
+        "scripts/fetch_windows_fixture_putty.zsh",
+        "7056ca2f6a9f3c525845b116c7bf564ced3284a4083ea80d7e9ef51a16f612c4",
+    )
+    require_contains(".github/workflows/publish.yml", "fetch_windows_fixture_putty")
+    require_contains(".github/workflows/publish.yml", "smoke_macos_finder_integration")
     require_contains("scripts/build_linux_release.zsh", "Konyak-MIT.txt")
     require_contains("scripts/build_linux_release.zsh", "THIRD_PARTY_NOTICES.md")
+    require_not_contains("scripts/finalize_macos_app.zsh", "SOURCE-OFFER.txt")
     require_not_contains("scripts/build_macos_release.zsh", "SOURCE-OFFER.txt")
     require_not_contains("scripts/build_linux_release.zsh", "SOURCE-OFFER.txt")
+    require_not_contains("scripts/finalize_macos_app.zsh", "Konyak-GPL-3.0.txt")
     require_not_contains("scripts/build_macos_release.zsh", "Konyak-GPL-3.0.txt")
     require_not_contains("scripts/build_linux_release.zsh", "Konyak-GPL-3.0.txt")
+    require_not_contains(
+        "scripts/finalize_macos_app.zsh", "Konyak is distributed under GPL-3.0"
+    )
     require_not_contains("scripts/build_macos_release.zsh", "Konyak is distributed under GPL-3.0")
     require_not_contains("scripts/build_linux_release.zsh", "Konyak is distributed under GPL-3.0")
     require_contains(".swiftlint.yml", "SPDX-License-Identifier: MIT")
