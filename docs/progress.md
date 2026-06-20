@@ -11,6 +11,648 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-20 22:16 JST
+- State: `completed`
+- Branch: `main`
+- Related work: discard stale LaunchServices OpenWith cleanup
+- Purpose: remove the app-side migration cleanup for stale
+  `com.apple.LaunchServices.OpenWith` attributes while keeping the actual
+  Finder `.exe` open event path intact.
+- Completed:
+  - Re-reviewed `AppDelegate.swift`, the macOS packaging static test, and the
+    Finder smoke script.
+  - Confirmed the cleanup is separate from the required AppKit
+    `openFiles`/`open urls` entrypoints that receive Finder-launched `.exe`
+    paths.
+  - Changed static coverage so the macOS app delegate must keep
+    `openFiles`/`open urls` forwarding but must not contain
+    `LaunchServices.OpenWith`, `getxattr`, or `removexattr` cleanup logic.
+  - Removed the app-side `com.apple.LaunchServices.OpenWith` xattr reader and
+    remover from `AppDelegate.swift`.
+  - Removed the Finder smoke script's `xattr` command dependency and
+    post-smoke OpenWith assertion.
+  - Rebuilt the packaged debug app and confirmed both synthetic and
+    PuTTY-backed Finder smoke paths still launch Konyak through the public
+    `open` route after the cleanup removal.
+- Remaining:
+  - None for removing the OpenWith cleanup. Files with stale per-file
+    LaunchServices overrides are no longer auto-repaired by Konyak; the
+    packaged app/Finder smoke path is now the owned regression point.
+- Next: keep Finder launch verification on the packaged app smoke path and do
+  not reintroduce app-side xattr mutation unless a new migration requirement is
+  explicitly accepted.
+- Verification:
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/macos_window_metrics_test.dart --plain-name "macOS app registers and forwards Windows executable files"'`:
+    failed before implementation because OpenWith cleanup was still present;
+    passed after removal.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/macos_window_metrics_test.dart --plain-name "macOS release bundles zstd extraction support for runtime stacks"'`:
+    passed.
+  - `nix develop -c zsh -lc 'zsh -n scripts/smoke_macos_finder_integration.zsh'`:
+    passed.
+  - `nix develop -c zsh -lc 'just swift-lint'`: passed.
+  - `nix develop -c zsh -lc 'just macos-debug-app'`: passed and rebuilt the
+    packaged debug app without the OpenWith cleanup.
+  - `nix develop -c zsh -lc 'just smoke-macos-finder-putty'`: passed.
+  - `nix develop -c zsh -lc 'just smoke-macos-finder'`: passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: failed once because Dart
+    formatting was needed in `test/macos_window_metrics_test.dart`; passed
+    after formatting.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-test'`: passed.
+  - `nix develop -c zsh -lc 'git diff --check'`: passed.
+
+- Timestamp: 2026-06-20 21:59 JST
+- State: `completed`
+- Branch: `main`
+- Related work: pinned Windows executable fixture for packaged macOS Finder
+  smoke coverage
+- Purpose: remove the remaining manual `.app`/fixture placement assumption by
+  making local and CI Finder smokes use a checksum-pinned OSS Windows
+  executable fixture against the same finalized packaged app layout.
+- Completed:
+  - Reviewed the existing packaged debug/release finalizer, Finder smoke,
+    release workflow, static macOS packaging test, and release documentation.
+  - Confirmed sub-agent tooling exists but cannot be used for this task
+    because the active tool contract only permits spawning when the user
+    explicitly asks for sub-agents; investigation, implementation, and audit
+    will be kept as separate written workstream notes in this snapshot instead.
+  - Checked the official PuTTY release/checksum pages and selected the
+    standalone 64-bit Windows `putty.exe` fixture without vendoring the binary
+    into the repository.
+  - Added failing static coverage requiring a checksum-pinned PuTTY fixture
+    fetcher, Finder smoke app override/cleanup support, local Just target,
+    release workflow wiring, and release documentation.
+  - Added `scripts/fetch_windows_fixture_putty.zsh`, which downloads PuTTY
+    0.84 standalone 64-bit `putty.exe` into
+    `.dart_tool/konyak/fixtures/windows`, verifies the official SHA-256
+    checksum, and prints the cached path for smoke scripts.
+  - Updated `scripts/smoke_macos_finder_integration.zsh` so callers can select
+    the packaged app through `KONYAK_MACOS_FINDER_SMOKE_APP`, relative app
+    paths are normalized before macOS tooling reads them, and smoke-launched
+    Konyak processes are killed on every exit path unless explicitly retained.
+  - Added Just targets `fetch-windows-fixture-putty` and
+    `smoke-macos-finder-putty`.
+  - Updated the macOS release workflow to run the PuTTY-backed Finder smoke
+    against `.dart_tool/konyak/release/macos/Konyak.app` after
+    `nix run .#macos-release`.
+  - Updated `docs/release.md`, `docs/todo.md`, and governance checks to record
+    the pinned real-PE fixture and CI/local packaged app smoke path.
+  - Downloaded and checksum-verified the fixture locally, then proved both the
+    packaged debug app and refreshed release app can be launched through the
+    Finder public `open` path with that fixture.
+- Remaining:
+  - None for the local pinned fixture and packaged app smoke path. The first
+    GitHub-hosted macOS workflow run should still be watched for runner-specific
+    WindowServer or LaunchServices differences now that the step is enabled.
+- Next: inspect the first macOS release workflow run and keep the Finder smoke
+  as the CI-owned regression point instead of relying on manual `.app`
+  placement checks.
+- Verification:
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/macos_window_metrics_test.dart --plain-name "macOS release bundles zstd extraction support for runtime stacks"'`:
+    failed before implementation because
+    `scripts/fetch_windows_fixture_putty.zsh` did not exist; passed after
+    implementation.
+  - `nix develop -c zsh -lc 'zsh -n scripts/fetch_windows_fixture_putty.zsh scripts/smoke_macos_finder_integration.zsh scripts/finalize_macos_app.zsh scripts/build_macos_debug_app.zsh scripts/build_macos_release.zsh scripts/smoke_macos_release_runtime_extraction.zsh'`:
+    passed.
+  - `nix develop -c zsh -lc './scripts/fetch_windows_fixture_putty.zsh'`:
+    passed and cached the PuTTY fixture under
+    `.dart_tool/konyak/fixtures/windows`.
+  - `nix develop -c zsh -lc 'just smoke-macos-finder-putty'`: passed against
+    the packaged debug app.
+  - `nix develop -c zsh -lc 'fixture="$(./scripts/fetch_windows_fixture_putty.zsh)" && ./scripts/smoke_macos_finder_integration.zsh .dart_tool/konyak/release/macos/Konyak.app "$fixture"'`:
+    passed against the packaged release app, both before and after the release
+    rebuild.
+  - `nix run .#macos-release`: passed and refreshed the release app/zip
+    artifacts.
+  - `nix develop -c zsh -lc 'just smoke-macos-runtime-install'`: passed.
+  - `nix develop -c zsh -lc 'just smoke-macos-finder'`: passed.
+  - `nix develop -c zsh -lc 'pgrep -fl ".dart_tool/konyak/.*/Konyak.app/Contents/MacOS/Konyak|apps/konyak/build/macos/.*/Konyak.app/Contents/MacOS/Konyak" || true'`:
+    returned no Konyak process after smoke runs.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-test'`: passed.
+  - `nix develop -c zsh -lc 'just cli-test'`: passed.
+  - `nix develop -c zsh -lc 'just swift-lint'`: passed.
+  - `nix develop -c zsh -lc 'git diff --check'`: passed.
+
+- Timestamp: 2026-06-20 20:06 JST
+- State: `completed`
+- Branch: `main`
+- Related work: packaged macOS debug/release parity and Finder/runtime smoke
+  coverage
+- Purpose: reduce development/release drift by finalizing debug and release
+  macOS app bundles through the same packaging path, then make Finder,
+  LaunchServices, Quick Look, and packaged runtime extraction checks target the
+  local runnable packaged app artifacts rather than loose build products.
+- Completed:
+  - Reviewed the current release script, runtime extraction smoke, Justfile,
+    and recent stale `.dart_tool` app-copy failure notes.
+  - Confirmed sub-agent tooling exists but cannot be used for this task
+    because the active tool contract only permits spawning when the user
+    explicitly asks for sub-agents.
+  - Added failing static coverage requiring a shared macOS app finalizer,
+    packaged debug app builder, Finder smoke script, runtime smoke Just target,
+    Finder smoke Just target, and release docs for those paths.
+  - Added `scripts/finalize_macos_app.zsh`, shared by debug and release
+    packaging, to install `Contents/Resources/konyak-cli`, bundled `zstd`,
+    `libzstd.1.dylib`, notices, licenses, and ad-hoc signatures.
+  - Updated `scripts/build_macos_release.zsh` to delegate app bundle
+    finalization to the shared finalizer before refreshing
+    `.dart_tool/konyak/release/macos/Konyak.app` and packaging the zip.
+  - Added `scripts/build_macos_debug_app.zsh`, which builds a packaged debug
+    app at `.dart_tool/konyak/app/macos/debug/Konyak.app` through the same
+    finalizer path as release.
+  - Added `scripts/smoke_macos_finder_integration.zsh`, a local smoke that
+    registers the packaged debug app with LaunchServices, validates `.exe`
+    content type/default app resolution, opens the fixture through
+    `/usr/bin/open`, checks for a visible Konyak window with
+    `CGWindowListCopyWindowInfo`, and optionally runs `qlmanage` for a
+    provided PE fixture.
+  - Added Just targets: `macos-debug-app`,
+    `smoke-macos-runtime-install`, and `smoke-macos-finder`.
+  - Updated `docs/release.md`, `docs/todo.md`, and governance checks to reflect
+    the shared finalizer and packaged app smoke coverage.
+  - Built the packaged debug app and release app, then verified runtime
+    extraction against both packaged app layouts with the inherited environment
+    reduced to `PATH=/usr/bin:/bin`.
+  - Ran the Finder integration smoke against the packaged debug app and
+    confirmed it did not leave a Konyak process behind.
+- Remaining:
+  - Quick Look thumbnail rendering is supported by the Finder smoke when a real
+    PE fixture is supplied, but the default smoke only uses a synthetic `.exe`
+    file for LaunchServices/Finder launch coverage because no stable PE icon
+    fixture lives in the parent repository yet.
+- Next: use `nix develop -c zsh -lc 'just macos-debug-app'` followed by
+  `just smoke-macos-finder` for local Finder/LaunchServices verification, and
+  keep `nix run .#macos-release` plus `just smoke-macos-runtime-install` for
+  release runtime extraction checks.
+- Verification:
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/macos_window_metrics_test.dart --plain-name "macOS release bundles zstd extraction support for runtime stacks"'`:
+    failed before implementation because `scripts/finalize_macos_app.zsh` did
+    not exist; passed after implementation.
+  - `nix develop -c zsh -lc 'zsh -n scripts/finalize_macos_app.zsh scripts/build_macos_debug_app.zsh scripts/build_macos_release.zsh scripts/smoke_macos_finder_integration.zsh scripts/smoke_macos_release_runtime_extraction.zsh'`:
+    passed.
+  - `nix develop -c zsh -lc 'just macos-debug-app'`: passed and produced
+    `.dart_tool/konyak/app/macos/debug/Konyak.app` with code signature
+    verification.
+  - `nix develop -c zsh -lc './scripts/smoke_macos_release_runtime_extraction.zsh .dart_tool/konyak/app/macos/debug/Konyak.app'`:
+    passed.
+  - `nix develop -c zsh -lc './scripts/smoke_macos_release_runtime_extraction.zsh'`:
+    passed against the packaged release app.
+  - `nix develop -c zsh -lc 'just smoke-macos-finder'`: passed.
+  - `nix run .#macos-release`: passed with the shared finalizer path and
+    produced the refreshed local release app plus zip/checksum/metadata
+    artifacts.
+  - `nix develop -c zsh -lc 'just smoke-macos-runtime-install'`: passed after
+    the release rebuild.
+  - `nix develop -c zsh -lc 'just flutter-format-check'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-analyze'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-test'`: passed.
+  - `nix develop -c zsh -lc 'just swift-lint'`: passed.
+  - `nix develop -c zsh -lc 'just cli-test'`: passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: failed before updating
+    governance ownership from `build_macos_release.zsh` to
+    `finalize_macos_app.zsh`; passed after the governance update.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+
+- Timestamp: 2026-06-20 15:52 JST
+- State: `completed`
+- Branch: `main`
+- Related work: stale local macOS release app copy missing bundled `zstd`
+- Purpose: fix the still-failing runtime install from
+  `.dart_tool/konyak/release/macos/Konyak.app`, which remained an older app
+  copy without `Contents/Resources/zstd` even after `nix run .#macos-release`
+  refreshed the build product and zip artifact.
+- Completed:
+  - Confirmed the currently running Konyak process is
+    `/Users/masato/Documents/Konyak/.dart_tool/konyak/release/macos/Konyak.app/Contents/MacOS/Konyak`.
+  - Confirmed that app copy has `Contents/Resources/konyak-cli` but does not
+    have `Contents/Resources/zstd` or `Contents/Resources/libzstd.1.dylib`.
+  - Confirmed the fresh build product at
+    `apps/konyak/build/macos/Build/Products/Release/Konyak.app` does include
+    the bundled Zstandard helper and library.
+  - Reproduced the failure directly with
+    `nix develop -c zsh -lc './scripts/smoke_macos_release_runtime_extraction.zsh .dart_tool/konyak/release/macos/Konyak.app'`,
+    which failed because the packaged zstd helper was missing.
+  - Added static coverage requiring the macOS release script to replace
+    `.dart_tool/konyak/release/macos/Konyak.app`, package the zip from that
+    refreshed copy, and make the runtime extraction smoke default to that
+    release app copy.
+  - Updated `scripts/build_macos_release.zsh` to remove any stale
+    `$release_root/Konyak.app`, copy the freshly signed build product there,
+    verify its code signature, and package the zip from that refreshed local
+    app.
+  - Updated `scripts/smoke_macos_release_runtime_extraction.zsh` so its
+    default target is `.dart_tool/konyak/release/macos/Konyak.app`.
+  - Updated `docs/release.md` to list the local runnable `Konyak.app` output
+    and document that it is refreshed on every release build.
+  - Re-ran `nix run .#macos-release`; it refreshed
+    `.dart_tool/konyak/release/macos/Konyak.app`, and that app now includes
+    `Contents/Resources/zstd` and `Contents/Resources/libzstd.1.dylib`.
+  - Re-ran the packaged runtime extraction smoke with no explicit app path, so
+    it verified the local release app copy that had previously failed.
+- Remaining:
+  - None for the stale local release app copy. The already-running app process
+    should be quit and relaunched so it uses the refreshed bundle and loaded
+    Flutter code.
+- Next: relaunch `.dart_tool/konyak/release/macos/Konyak.app` before retrying
+  runtime install/reinstall from the UI.
+- Verification:
+  - `nix develop -c zsh -lc './scripts/smoke_macos_release_runtime_extraction.zsh .dart_tool/konyak/release/macos/Konyak.app'`:
+    failed before implementation because `Contents/Resources/zstd` was
+    missing.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/macos_window_metrics_test.dart --plain-name "macOS release bundles zstd extraction support for runtime stacks"'`:
+    failed before implementation, passed after implementation.
+  - `nix develop -c zsh -lc 'zsh -n scripts/build_macos_release.zsh scripts/smoke_macos_release_runtime_extraction.zsh'`:
+    passed.
+  - `nix run .#macos-release`: passed and refreshed the local release app
+    copy, then produced the macOS zip/checksum/metadata artifacts.
+  - `nix develop -c zsh -lc './scripts/smoke_macos_release_runtime_extraction.zsh'`:
+    passed against `.dart_tool/konyak/release/macos/Konyak.app`.
+  - `nix develop -c zsh -lc 'just flutter-format-check'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-analyze'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-test'`: passed.
+  - `nix develop -c zsh -lc 'just swift-lint'`: passed.
+  - `nix develop -c zsh -lc 'just cli-test'`: passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `nix develop -c zsh -lc 'git diff --check'`: passed.
+
+- Timestamp: 2026-06-20 15:42 JST
+- State: `completed`
+- Branch: `main`
+- Related work: packaged macOS app runtime stack extraction failure
+- Purpose: fix built `Konyak.app` runtime install/reinstall failures where
+  `/usr/bin/tar` cannot extract managed runtime `.tar.zst` archives because no
+  `zstd` helper is available in the packaged app environment.
+- Completed:
+  - Confirmed the reported failure maps to the CLI runtime archive extraction
+    path, which invokes `tar -xf` through `Process.runSync`.
+  - Added failing regression coverage for the Flutter packaged CLI launch
+    environment to expose `KONYAK_BUNDLE_RESOURCES` and prepend the bundle
+    resources directory to `PATH`.
+  - Added failing static release coverage requiring the macOS app artifact to
+    bundle Zstandard extraction support and run a maintained runtime
+    extraction smoke in CI.
+  - Updated the Flutter packaged CLI launcher to resolve
+    `Konyak.app/Contents/Resources`, pass it as `KONYAK_BUNDLE_RESOURCES`, and
+    put it at the front of `PATH`.
+  - Updated CLI runtime archive extraction so packaged `konyak-cli` processes
+    also search `KONYAK_BUNDLE_RESOURCES` and the CLI executable directory for
+    helper tools when spawning `tar`.
+  - Updated the macOS release build to bundle `zstd` and
+    `libzstd.1.dylib`, rewrite the helper's dylib reference to
+    `@executable_path/libzstd.1.dylib`, sign both files, and include the
+    Zstandard license notice.
+  - Added `scripts/smoke_macos_release_runtime_extraction.zsh` and wired the
+    publish workflow to run it after `nix run .#macos-release`.
+  - Rebuilt the local macOS release app and proved packaged runtime extraction
+    through the public `konyak-cli install-macos-wine --reinstall --archive
+    ... --json` contract with `PATH=/usr/bin:/bin`, so the smoke cannot use a
+    developer-shell `zstd`.
+- Remaining:
+  - None for the packaged `.tar.zst` extraction failure. The dynamic smoke
+    uses a complete local runtime fixture to isolate the extraction contract;
+    the published runtime install should follow the same post-download
+    extraction path.
+- Next: use the rebuilt local release artifact at
+  `.dart_tool/konyak/release/macos/Konyak-1.0.0-macos-arm64.zip`, or the
+  rebuilt app at
+  `apps/konyak/build/macos/Build/Products/Release/Konyak.app`.
+- Verification:
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/cli/konyak_cli_client_test.dart --plain-name "default CLI client exposes packaged bundle resources on PATH"'`:
+    failed before implementation, passed after implementation.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/macos_window_metrics_test.dart --plain-name "macOS release bundles zstd extraction support for runtime stacks"'`:
+    failed before implementation, passed after implementation.
+  - `nix run .#macos-release`: passed after the final source changes and
+    produced the local Release `Konyak.app` plus macOS zip/checksum/metadata
+    artifacts.
+  - Packaged app inspection confirmed `Contents/Resources/konyak-cli`,
+    `Contents/Resources/zstd`,
+    `Contents/Resources/libzstd.1.dylib`, and
+    `Contents/Resources/Licenses/Zstandard-BSD-3-Clause.txt` exist; `otool`
+    confirmed `zstd` loads `@executable_path/libzstd.1.dylib`; `codesign
+    --verify --strict` passed for the helper, dylib, and app bundle.
+  - `nix develop -c zsh -lc './scripts/smoke_macos_release_runtime_extraction.zsh'`:
+    passed after proving packaged `.tar.zst` extraction from the built app.
+  - `nix develop -c zsh -lc 'zsh -n scripts/build_macos_release.zsh scripts/smoke_macos_release_runtime_extraction.zsh'`:
+    passed.
+  - `nix develop -c zsh -lc 'just cli-test'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-format-check'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-analyze'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-test'`: passed.
+  - `nix develop -c zsh -lc 'just swift-lint'`: passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `nix develop -c zsh -lc 'git diff --check'`: passed.
+
+- Timestamp: 2026-06-20 13:56 JST
+- State: `superseded`
+- Branch: `main`
+- Related work: macOS `.exe` double-click/Open With stale LaunchServices
+  override
+- Purpose: fix Finder double-click and normal context-menu Open when a file has
+  a stale `com.apple.LaunchServices.OpenWith` xattr pointing at an older
+  Konyak.app path, while `Open With -> Other` works by explicitly choosing the
+  current app bundle.
+- Superseded by: 2026-06-20 22:16 JST decision to discard app-side OpenWith
+  cleanup and keep Finder behavior fixed through the packaged app execution
+  path and smoke coverage instead of mutating per-file LaunchServices xattrs.
+- Completed:
+  - Confirmed the current file
+    `/Users/masato/Downloads/Ardour-9.5.0-w64-Setup.exe` has
+    `com.apple.LaunchServices.OpenWith` set to bundle id `app.konyak.Konyak`
+    and path `/Applications/Konyak.app`.
+  - Confirmed a copy without that xattr resolves through LaunchServices to the
+    currently registered debug Konyak app instead of `/Applications/Konyak.app`.
+  - Confirmed deleting only `com.apple.LaunchServices.OpenWith` from a copy
+    leaves icon xattrs untouched and changes the file default application URL
+    away from the stale path.
+  - Confirmed sub-agent spawning is available as a tool but still not allowed
+    for this task because the current tool contract only permits spawning when
+    the user explicitly asks for sub-agents.
+  - Added failing static regression coverage for stale OpenWith cleanup in the
+    macOS app delegate.
+  - Implemented a scoped `AppDelegate` cleanup that removes only
+    `com.apple.LaunchServices.OpenWith`, and only when the xattr references
+    the current bundle identifier but a different Konyak.app path.
+  - Confirmed the implementation leaves Finder icon metadata xattrs, including
+    `com.apple.FinderInfo` and `com.apple.ResourceFork`, untouched.
+  - Reproduced the fixed flow on a copied executable with the stale xattr:
+    `open -a` against the current debug Konyak app removed the stale OpenWith
+    xattr, LaunchServices then resolved the file to the debug app, and a
+    normal `/usr/bin/open "$exe"` launched the debug app and left a visible
+    Konyak window.
+- Remaining:
+  - None for the app-side fix. A file whose stale OpenWith xattr still points
+    at an older app cannot be repaired by the newly built app until the current
+    app is explicitly launched with that file once, because LaunchServices
+    sends the initial double-click to the stale app path before current Konyak
+    can run.
+- Next: for affected local files, open once with the newly built/current
+  Konyak through `Open With -> Other`, or remove only
+  `com.apple.LaunchServices.OpenWith`; subsequent double-clicks should use the
+  current LaunchServices default while Quick Look thumbnails continue to own
+  icon rendering.
+- Verification:
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/macos_window_metrics_test.dart --plain-name "macOS app registers and forwards Windows executable files"'`:
+    failed before implementation because the stale OpenWith cleanup was absent;
+    passed after implementation.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter build macos --debug'`:
+    passed.
+  - `nix develop -c zsh -lc '... /usr/bin/open -a "$app" "$exe" ...'`:
+    passed on a copied executable preserving the stale OpenWith xattr; after
+    launch, `com.apple.LaunchServices.OpenWith` was absent while
+    `com.apple.FinderInfo` and `com.apple.ResourceFork` remained.
+  - `nix develop -c zsh -lc '... /usr/bin/open "$exe" ...'`: passed on the
+    same copied executable after cleanup; LaunchServices opened the current
+    debug Konyak app and `CGWindowListCopyWindowInfo` found its window.
+  - `nix develop -c zsh -lc 'just swift-lint'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-format-check'`: passed after
+    applying formatter changes to the touched Dart test.
+  - `nix develop -c zsh -lc 'just flutter-analyze'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-test'`: passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `nix develop -c zsh -lc 'git diff --check'`: passed.
+
+- Timestamp: 2026-06-20 11:43 JST
+- State: `completed`
+- Branch: `main`
+- Related work: macOS `.exe` Quick Look thumbnail extension
+- Purpose: use a bundled Quick Look Thumbnail Extension so Finder can show
+  PE-derived `.exe` thumbnails independently of Konyak's file association,
+  matching image-file-style separation between opener and thumbnail provider.
+- Completed:
+  - Reviewed the existing `.exe` LaunchServices document type registration,
+    macOS Runner project, and current CLI-driven Finder custom icon fallback.
+  - Confirmed Apple documents Quick Look thumbnail extensions as the supported
+    app-extension path for rich thumbnails of custom file types.
+  - Confirmed sub-agent spawning is not available for this task because the
+    current tool contract permits sub-agents only when the user explicitly
+    asks for delegation; investigation, implementation, and audit are being
+    kept as explicit local workstreams.
+  - Added failing Flutter static coverage for the macOS Quick Look thumbnail
+    extension target, Info.plist contract, PE icon extractor wiring, and the
+    absence of a custom-icon CLI refresh path in the macOS open-file flow.
+  - Added the `ExecutableThumbnail.appex` target, embedded it in
+    `Konyak.app/Contents/PlugIns`, and declared
+    `QLSupportedContentTypes = com.microsoft.windows-executable`.
+  - Added a sandboxed Swift `QLThumbnailProvider` that reads the executable's
+    PE resource directory directly, reconstructs an ICO payload from
+    RT_GROUP_ICON/RT_ICON resources, and draws it into the Quick Look thumbnail
+    reply without launching Konyak CLI or any external process.
+  - Added `LSItemContentTypes = com.microsoft.windows-executable` to the
+    Runner document type entry so the app's LaunchServices declaration is
+    explicit about the UTI it handles.
+  - Built the extension target and full Flutter macOS app; registered the
+    built app/appex with LaunchServices/PluginKit and generated a 256x256 PNG
+    thumbnail for `/Users/masato/Downloads/Ardour-9.5.0-w64-Setup.exe` via
+    `qlmanage -t -x -s 256 -c com.microsoft.windows-executable`.
+  - Superseded the earlier per-file custom Finder icon approach; the current
+    app path no longer relies on `refresh-macos-executable-icon` or Finder
+    custom icon xattrs to preserve `.exe` icons.
+- Remaining: none for the Quick Look implementation.
+- Next: if CI gains a reliable macOS user-session Quick Look environment, add
+  a maintained smoke that registers the built app/appex and verifies
+  `qlmanage` thumbnail output for a fixture PE. Current GitHub Actions were
+  not updated because the dynamic proof depends on LaunchServices/PluginKit
+  user-session registration and Quick Look daemon cache reload behavior.
+- Verification:
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/macos_window_metrics_test.dart --plain-name "macOS app bundles a Quick Look thumbnail extension for EXE files"'`:
+    failed before implementation because `macos/ExecutableThumbnail/Info.plist`
+    did not exist; passed after implementation.
+  - `nix develop -c zsh -lc 'cd apps/konyak && xcodebuild -project macos/Runner.xcodeproj -target ExecutableThumbnail -configuration Debug build'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter build macos --debug'`:
+    passed and embedded `ExecutableThumbnail.appex` in the debug app bundle.
+  - `nix develop -c zsh -lc '... qlmanage -t -x -s 256 -o "$out" -c com.microsoft.windows-executable "$exe" ...'`:
+    passed after `qlmanage -r` and `qlmanage -r cache`, producing a 256x256
+    alpha PNG thumbnail from the Ardour installer.
+  - `nix develop -c zsh -lc 'just flutter-format-check'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-analyze'`: passed.
+  - `nix develop -c zsh -lc 'just swift-lint'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-test'`: passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `nix develop -c zsh -lc 'git diff --check'`: passed.
+
+- Timestamp: 2026-06-20 10:51 JST
+- State: `superseded`
+- Branch: `main`
+- Related work: macOS `.exe` file association icon preservation
+- Purpose: confirm Konyak can remain the Finder opener for `.exe` files while
+  preserving each executable's Windows PE icon as the Finder-visible file icon.
+- Completed:
+  - Superseded by the 2026-06-20 11:43 JST Quick Look Thumbnail Extension
+    implementation. The custom-icon CLI refresh path described below is no
+    longer the current product direction.
+  - Rechecked the app bundle document type registration: `.exe` remains
+    associated with Konyak without declaring a per-type document icon in
+    `Info.plist`.
+  - Confirmed the pending implementation adds the
+    `refresh-macos-executable-icon --program <path> --json` CLI contract.
+  - Confirmed the Flutter macOS open-executable path refreshes the Finder
+    custom file icon before showing the run dialog, while keeping icon refresh
+    best-effort so launch flow is not blocked by icon failures.
+  - Re-ran dynamic verification through the public CLI path against
+    `/Users/masato/Downloads/Ardour-9.5.0-w64-Setup.exe`; the command returned
+    `status: updated` and the file retained Finder custom icon metadata
+    (`kMDItemFSFinderFlags = 1024`, `com.apple.FinderInfo`, and
+    `com.apple.ResourceFork`).
+- Remaining: none; this approach was replaced by Quick Look thumbnails.
+- Next: use the Quick Look Thumbnail Extension path recorded in the latest
+  snapshot.
+- Verification:
+  - `nix develop -c zsh -lc 'just cli-test'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-format-check'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-analyze'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-test'`: passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart run bin/konyak.dart refresh-macos-executable-icon --program /Users/masato/Downloads/Ardour-9.5.0-w64-Setup.exe --json'`:
+    passed and returned `status: updated`.
+  - `nix develop -c zsh -lc 'git diff --check'`: passed.
+
+- Timestamp: 2026-06-20 10:22 JST
+- State: `completed`
+- Branch: `main`
+- Related work: macOS release build failure in `release_unpack_macos`
+- Purpose: make `nix run .#macos-release` use a writable Flutter macOS
+  framework copy so Flutter's in-place `lipo` thinning can complete when the
+  Flutter SDK comes from the read-only Nix store.
+- Completed:
+  - Reproduced the user-reported failure with `nix run .#macos-release`:
+    Flutter failed in `release_unpack_macos` because `lipo` could not create
+    `FlutterMacOS.lipo` inside `FlutterMacOS.framework/Versions/A`.
+  - Confirmed the generated Release `FlutterMacOS.framework` and
+    `Versions/A` directory are `dr-xr-xr-x`, and a direct `touch` inside
+    `Versions/A` fails with `Permission denied`.
+  - Confirmed Flutter's unpack target copies the framework with
+    `rsync --chmod=Du=rwx,Dgo=rx,Fu=rw,Fgo=r` before running `lipo`.
+  - Confirmed the current macOS release/dev environment resolves `rsync` to
+    `/usr/bin/rsync` (`openrsync: protocol version 29`), and that copying the
+    Nix-store Flutter framework with that command leaves the destination
+    read-only.
+  - Confirmed `pkgs.rsync` is available in nixpkgs but only Linux release
+    packaging currently includes it.
+  - Added `pkgs.rsync` to the Darwin Flutter build package set so both
+    `nix run .#macos-release` and the dev shell resolve GNU rsync before
+    `/usr/bin/rsync`.
+  - Made `scripts/build_macos_release.zsh` require `rsync`.
+  - Made the macOS release script remove any stale read-only Release
+    `FlutterMacOS.framework` before invoking `flutter build macos`.
+  - Re-ran `nix run .#macos-release`; it completed and produced the macOS zip,
+    checksum, release metadata, and release notes.
+- Remaining: none for this build failure.
+- Next: use `.dart_tool/konyak/release/macos/Konyak-1.0.0-macos-arm64.zip`
+  for the local macOS release artifact.
+- Verification:
+  - `nix run .#macos-release`: failed before implementation with the reported
+    `FlutterMacOS.lipo (Permission denied)` error.
+  - `nix develop -c zsh -lc 'nixfmt flake.nix'`: passed.
+  - `nix develop -c zsh -lc 'zsh -n scripts/build_macos_release.zsh'`: passed.
+  - `direnv allow`: passed after `flake.nix` changed.
+  - `nix run .#macos-release`: passed after implementation and produced
+    `.dart_tool/konyak/release/macos/Konyak-1.0.0-macos-arm64.zip`.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `nix develop -c zsh -lc 'git diff --check'`: passed.
+
+- Timestamp: 2026-06-20 00:13 JST
+- State: `superseded`
+- Branch: `main`
+- Related work: macOS `.exe` file association icon preservation;
+  `/Users/masato/Downloads/Ardour-9.5.0-w64-Setup.exe`
+- Purpose: preserve the executable's PE icon in macOS Finder/Quick Look after
+  Konyak is associated as the `.exe` opener, instead of leaving the file shown
+  with a Konyak-badged generic executable icon.
+- Completed:
+  - Superseded by the 2026-06-20 11:43 JST Quick Look Thumbnail Extension
+    implementation. The custom-icon CLI refresh path described below is
+    historical and no longer the active solution.
+  - Stashed the previous macOS pinned launcher runtime environment change as
+    `stash@{0}: wip macOS pinned launcher runtime env`.
+  - Confirmed the app bundle declares `.exe` as a macOS document type without a
+    per-type icon, so LaunchServices uses Konyak as the opener and macOS shows
+    a Konyak-badged document icon.
+  - Confirmed the reported Ardour installer has UTI
+    `com.microsoft.windows-executable`, no custom Finder icon flag, and Konyak
+    is available as the opener.
+  - Confirmed existing CLI PE metadata extraction already writes the Windows
+    icon to bottle icon cache as `.ico`, and AppKit `NSImage` can read that
+    `.ico` payload.
+  - Confirmed sub-agent tooling cannot be used for this defect because the
+    available tool contract only permits spawning sub-agents when the user
+    explicitly asks for delegation; investigation, implementation, and audit
+    are being kept as explicit local workstreams instead.
+  - Added CLI contract coverage for
+    `refresh-macos-executable-icon --program <path> --json`, including the
+    macOS update path and non-macOS skip path.
+  - Added the macOS executable icon updater that extracts the PE icon and uses
+    AppKit through `/usr/bin/osascript` to set a Finder custom file icon.
+  - Added Flutter CLI client support and call it before showing the macOS
+    external executable dialog, while keeping the icon update best-effort so
+    run flow is not blocked by icon failures.
+  - Verified dynamically on the reported Ardour installer through the public
+    CLI path: the command returned `status: updated`; Finder flags changed
+    from `0` to `1024`; `com.apple.FinderInfo` and `com.apple.ResourceFork`
+    xattrs appeared.
+  - Did not update GitHub Actions for the AppKit/Finder custom icon write
+    itself: the maintained CLI and Flutter tests cover the new contract, but
+    the dynamic custom-icon proof depends on a macOS user-session filesystem
+    metadata path that the current workflows do not mirror.
+- Remaining: none for the user-visible fix.
+- Next: optionally refresh other already-associated `.exe` files by opening
+  them with Konyak, or by running the new CLI command for specific paths.
+- Follow-up TODO: superseded by the Quick Look extension follow-up in the
+  latest snapshot; no CI smoke remains for `refresh-macos-executable-icon`.
+- Verification:
+  - `nix develop -c zsh -lc 'git stash push -m "wip macOS pinned launcher runtime env" -- ...'`:
+    passed and created `stash@{0}`.
+  - `nix develop -c zsh -lc 'plutil -p apps/konyak/macos/Runner/Info.plist'`:
+    passed and showed the `.exe` `CFBundleDocumentTypes` entry.
+  - `nix develop -c zsh -lc 'mdls ... /Users/masato/Downloads/Ardour-9.5.0-w64-Setup.exe; xattr -l ...'`:
+    passed and showed UTI `com.microsoft.windows-executable`,
+    `kMDItemFSFinderFlags = 0`, and no custom icon resource.
+  - `nix develop -c zsh -lc '/usr/bin/swift - <<EOF ... NSImage(contentsOfFile: cached.ico) ... EOF'`:
+    passed and loaded the extracted `.ico` with 5 representations.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "refresh-macos-executable-icon --json sets a macOS custom file icon"'`:
+    failed before implementation because the command/updater contract did not
+    exist.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart run bin/konyak.dart refresh-macos-executable-icon --program /Users/masato/Downloads/Ardour-9.5.0-w64-Setup.exe --json'`:
+    passed and returned `status: updated`.
+  - `nix develop -c zsh -lc 'mdls -raw -name kMDItemFSFinderFlags ...; xattr -l ...'`:
+    passed after the CLI run and showed `kMDItemFSFinderFlags = 1024` plus
+    `com.apple.FinderInfo` and `com.apple.ResourceFork`.
+  - `nix develop -c zsh -lc 'just cli-test'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-format-check'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-analyze'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-test'`: passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `nix develop -c zsh -lc 'git diff --check'`: passed.
+
 - Timestamp: 2026-06-18 22:41 JST
 - State: `completed`
 - Branch: `main`
