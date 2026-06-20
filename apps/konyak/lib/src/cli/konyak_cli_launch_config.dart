@@ -56,16 +56,25 @@ _KonyakCliLaunchConfig _konyakCliLaunchConfig({
   required String resolvedExecutable,
   required _KonyakCliLaunchDefines defines,
 }) {
-  final runtimeEnvironment = _runtimeEnvironmentOverrides(
-    environment,
-    defines: defines,
+  final configuredCliExecutable = _firstNonEmpty(
+    defines.cliExecutable,
+    environment['KONYAK_CLI_EXECUTABLE'],
   );
-
-  final cliExecutable = _resolvePackagedCliExecutable(
-    _firstNonEmpty(defines.cliExecutable, environment['KONYAK_CLI_EXECUTABLE']),
+  final bundleResources = _resolveBundleResources(
+    configuredCliExecutable,
     environment,
     defines: defines,
     resolvedExecutable: resolvedExecutable,
+  );
+  final runtimeEnvironment = _runtimeEnvironmentOverrides(
+    environment,
+    defines: defines,
+    bundleResources: bundleResources,
+  );
+
+  final cliExecutable = _resolvePackagedCliExecutable(
+    configuredCliExecutable,
+    bundleResources: bundleResources,
   );
   if (cliExecutable != null) {
     return _KonyakCliLaunchConfig(
@@ -94,13 +103,31 @@ _KonyakCliLaunchConfig _konyakCliLaunchConfig({
 }
 
 String? _resolvePackagedCliExecutable(
+  String? executable, {
+  required String? bundleResources,
+}) {
+  if (executable == null || !executable.contains(_bundleResourcesToken)) {
+    return executable;
+  }
+
+  if (bundleResources == null) {
+    return executable;
+  }
+
+  return executable.replaceAll(_bundleResourcesToken, bundleResources);
+}
+
+String? _resolveBundleResources(
   String? executable,
   Map<String, String> environment, {
   required _KonyakCliLaunchDefines defines,
   required String resolvedExecutable,
 }) {
   if (executable == null || !executable.contains(_bundleResourcesToken)) {
-    return executable;
+    return _firstNonEmpty(
+      defines.bundleResources,
+      environment['KONYAK_BUNDLE_RESOURCES'],
+    );
   }
 
   final bundleResources = _firstNonEmpty(
@@ -115,10 +142,10 @@ String? _resolvePackagedCliExecutable(
     ),
   );
   if (bundleResources == null) {
-    return executable;
+    return null;
   }
 
-  return executable.replaceAll(_bundleResourcesToken, bundleResources);
+  return bundleResources;
 }
 
 String? _bundleResourcesPathFromAppExecutable(String? executable) {
@@ -191,6 +218,7 @@ String _resolveCliScriptPath(
 Map<String, String> _runtimeEnvironmentOverrides(
   Map<String, String> environment, {
   required _KonyakCliLaunchDefines defines,
+  required String? bundleResources,
 }) {
   final runtimeProfile = _firstNonEmpty(
     defines.runtimeProfile,
@@ -271,8 +299,21 @@ Map<String, String> _runtimeEnvironmentOverrides(
   addIfPresent('KONYAK_DEV_MACOS_WINE_STACK_MANIFEST', macosStackManifest);
   addIfPresent('KONYAK_DEV_LINUX_WINE_STACK_MANIFEST', linuxStackManifest);
   addIfPresent('KONYAK_MACOS_DEV_RUNTIME_PREPARE_SCRIPT', macosPrepareScript);
+  addIfPresent('KONYAK_BUNDLE_RESOURCES', bundleResources);
+  if (bundleResources != null && bundleResources.trim().isNotEmpty) {
+    overrides['PATH'] = _prependPathEntry(bundleResources, environment['PATH']);
+  }
 
   return Map.unmodifiable(overrides);
+}
+
+String _prependPathEntry(String path, String? existingPath) {
+  final trimmedPath = path.trim();
+  if (existingPath == null || existingPath.trim().isEmpty) {
+    return trimmedPath;
+  }
+
+  return '$trimmedPath:$existingPath';
 }
 
 String? _resolveCliScriptWorkingDirectory(String cliScriptPath) {

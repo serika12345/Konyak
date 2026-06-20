@@ -2,6 +2,10 @@
 
 Konyak application artifacts are distributed under the MIT License.
 
+Bundled application helper tools:
+
+- Zstandard: BSD-3-Clause, https://facebook.github.io/zstd/
+
 Wine/Proton runtime binaries are not bundled in Konyak application artifacts.
 Konyak downloads and installs managed runtime components after launch into the
 user's Konyak runtime directory. Those runtime components remain separate works

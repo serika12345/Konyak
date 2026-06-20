@@ -114,14 +114,19 @@ String? _installRuntimeArchives({
         message: 'Extracting ${_basename(currentArchivePath)}...',
         fraction: startFraction,
       );
-      final extraction = Process.runSync('tar', [
-        '-xf',
-        currentArchivePath,
-        '-C',
-        stagingRoot.path,
-        '--strip-components',
-        '1',
-      ], runInShell: false);
+      final extraction = Process.runSync(
+        'tar',
+        [
+          '-xf',
+          currentArchivePath,
+          '-C',
+          stagingRoot.path,
+          '--strip-components',
+          '1',
+        ],
+        runInShell: false,
+        environment: _archiveExtractionEnvironment(),
+      );
       if (extraction.exitCode != 0) {
         return _commandFailureMessage('extract $runtimeLabel', extraction);
       }
@@ -205,6 +210,42 @@ String? _installRuntimeArchives({
   }
 
   return null;
+}
+
+Map<String, String> _archiveExtractionEnvironment() {
+  final toolSearchPaths = <String>[
+    if (Platform.environment['KONYAK_BUNDLE_RESOURCES'] case final resources?)
+      if (resources.trim().isNotEmpty) resources.trim(),
+    if (_isPackagedKonyakCliExecutable(Platform.resolvedExecutable))
+      File(Platform.resolvedExecutable).parent.path,
+  ];
+  if (toolSearchPaths.isEmpty) {
+    return const <String, String>{};
+  }
+
+  return <String, String>{
+    'PATH': _prependArchiveToolPaths(
+      toolSearchPaths,
+      Platform.environment['PATH'],
+    ),
+  };
+}
+
+bool _isPackagedKonyakCliExecutable(String executable) {
+  return _basename(executable) == 'konyak-cli';
+}
+
+String _prependArchiveToolPaths(Iterable<String> paths, String? existingPath) {
+  final filteredPaths = paths
+      .map((path) => path.trim())
+      .where((path) => path.isNotEmpty)
+      .toList(growable: false);
+  final trimmedExistingPath = existingPath?.trim();
+  return <String>[
+    ...filteredPaths,
+    if (trimmedExistingPath != null && trimmedExistingPath.isNotEmpty)
+      trimmedExistingPath,
+  ].join(':');
 }
 
 String _runtimeInstallLockPath(Directory runtimeRoot) {

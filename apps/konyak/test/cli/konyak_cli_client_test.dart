@@ -437,6 +437,40 @@ void main() {
   });
 
   test(
+    'default CLI client exposes packaged bundle resources on PATH',
+    () async {
+      final runner = _FakeProcessRunner(
+        result: const ProcessRunResult(
+          exitCode: 0,
+          stdout: '{"schemaVersion":1,"bottles":[]}',
+          stderr: '',
+        ),
+      );
+
+      final client = createDefaultKonyakCliClient(
+        environment: const {
+          'PATH': '/usr/bin:/bin',
+          'KONYAK_APP_EXECUTABLE':
+              '/Applications/Konyak.app/Contents/MacOS/Konyak',
+        },
+        cliExecutableDefine: '__KONYAK_BUNDLE_RESOURCES__/konyak-cli',
+        processRunner: runner,
+      );
+
+      await client.listBottles();
+
+      expect(
+        runner.environment['KONYAK_BUNDLE_RESOURCES'],
+        '/Applications/Konyak.app/Contents/Resources',
+      );
+      expect(
+        runner.environment['PATH'],
+        '/Applications/Konyak.app/Contents/Resources:/usr/bin:/bin',
+      );
+    },
+  );
+
+  test(
     'default CLI client resolves packaged executable from bundle resources env',
     () {
       final runner = _FakeProcessRunner(

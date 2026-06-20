@@ -133,8 +133,11 @@
             + ":/run/opengl-driver/lib:/run/opengl-driver-32/lib";
 
           darwinFlutterBuildPackages = with pkgs; [
+            cctools
             cocoapods
             libiconv
+            rsync
+            zstd
           ];
 
           darwinVerificationPackages = with pkgs; [
