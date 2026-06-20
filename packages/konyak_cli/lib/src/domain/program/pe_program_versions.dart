@@ -1,8 +1,28 @@
 part of '../../../konyak_cli.dart';
 
-Map<String, String> _peVersionStrings(_PortableExecutableImage image) {
+_PeVersionStrings _peVersionStrings(_PortableExecutableImage image) {
   final resources = _peResourceLeaves(image, 16);
-  final values = <String, String>{};
+  String? fileDescription;
+  String? productName;
+  String? companyName;
+  String? fileVersion;
+  String? productVersion;
+
+  void putIfAbsent(String key, String value) {
+    switch (key) {
+      case 'FileDescription':
+        fileDescription ??= value;
+      case 'ProductName':
+        productName ??= value;
+      case 'CompanyName':
+        companyName ??= value;
+      case 'FileVersion':
+        fileVersion ??= value;
+      case 'ProductVersion':
+        productVersion ??= value;
+    }
+  }
+
   for (final resource in resources) {
     final strings = _utf16LeTokens(resource.data);
     for (final key in const <String>[
@@ -15,11 +35,33 @@ Map<String, String> _peVersionStrings(_PortableExecutableImage image) {
       _valueAfterToken(
         strings,
         key,
-      ).match(() {}, (value) => values.putIfAbsent(key, () => value));
+      ).match(() {}, (value) => putIfAbsent(key, value));
     }
   }
 
-  return Map.unmodifiable(values);
+  return _PeVersionStrings(
+    fileDescription: Option.fromNullable(fileDescription),
+    productName: Option.fromNullable(productName),
+    companyName: Option.fromNullable(companyName),
+    fileVersion: Option.fromNullable(fileVersion),
+    productVersion: Option.fromNullable(productVersion),
+  );
+}
+
+final class _PeVersionStrings {
+  const _PeVersionStrings({
+    required this.fileDescription,
+    required this.productName,
+    required this.companyName,
+    required this.fileVersion,
+    required this.productVersion,
+  });
+
+  final Option<String> fileDescription;
+  final Option<String> productName;
+  final Option<String> companyName;
+  final Option<String> fileVersion;
+  final Option<String> productVersion;
 }
 
 Option<String> _valueAfterToken(List<String> values, String key) {

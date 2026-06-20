@@ -284,15 +284,23 @@ class BottleRuntimeSettings {
   }
 
   ProgramRunEnvironment macosEnvironment() {
-    final environment = <String, String>{};
+    var environment = const ProgramRunEnvironment.empty();
 
     if (dxrEnabled) {
-      environment['WINEDLLOVERRIDES'] = 'dxgi,d3d11,d3d12,nvapi64,nvngx=n,b';
+      environment = environment.add(
+        'WINEDLLOVERRIDES',
+        'dxgi,d3d11,d3d12,nvapi64,nvngx=n,b',
+      );
     } else if (dxmt) {
-      environment['WINEDLLOVERRIDES'] = 'dxgi,d3d10core,d3d11,winemetal=n,b';
+      environment = environment.add(
+        'WINEDLLOVERRIDES',
+        'dxgi,d3d10core,d3d11,winemetal=n,b',
+      );
     } else if (dxvk) {
-      environment['WINEDLLOVERRIDES'] =
-          'dxgi,d3d9,d3d10,d3d10_1,d3d10core,d3d11=n,b';
+      environment = environment.add(
+        'WINEDLLOVERRIDES',
+        'dxgi,d3d9,d3d10,d3d10_1,d3d10core,d3d11=n,b',
+      );
       final hud = switch (dxvkHud) {
         'full' => 'full',
         'partial' => 'devinfo,fps,frametimes',
@@ -300,37 +308,37 @@ class BottleRuntimeSettings {
         _ => null,
       };
       if (hud != null) {
-        environment['DXVK_HUD'] = hud;
+        environment = environment.add('DXVK_HUD', hud);
       }
     }
 
     if (dxvk && dxvkAsync) {
-      environment['DXVK_ASYNC'] = '1';
+      environment = environment.add('DXVK_ASYNC', '1');
     }
 
-    environment.addAll(_wineSyncEnvironment());
+    environment = environment.merge(_wineSyncEnvironment());
 
     if (metalHud) {
-      environment['MTL_HUD_ENABLED'] = '1';
+      environment = environment.add('MTL_HUD_ENABLED', '1');
     }
 
     if (metalTrace) {
-      environment['METAL_CAPTURE_ENABLED'] = '1';
+      environment = environment.add('METAL_CAPTURE_ENABLED', '1');
     }
 
     if (avxEnabled) {
-      environment['ROSETTA_ADVERTISE_AVX'] = '1';
+      environment = environment.add('ROSETTA_ADVERTISE_AVX', '1');
     }
 
     if (dxrEnabled) {
-      environment['D3DM_SUPPORT_DXR'] = '1';
+      environment = environment.add('D3DM_SUPPORT_DXR', '1');
     }
 
-    return ProgramRunEnvironment(environment);
+    return environment;
   }
 
   ProgramRunEnvironment linuxEnvironment() {
-    final environment = <String, String>{};
+    var environment = const ProgramRunEnvironment.empty();
 
     if (dxvk) {
       final hud = switch (dxvkHud) {
@@ -340,25 +348,25 @@ class BottleRuntimeSettings {
         _ => null,
       };
       if (hud != null) {
-        environment['DXVK_HUD'] = hud;
+        environment = environment.add('DXVK_HUD', hud);
       }
     }
 
     if (dxvk && dxvkAsync) {
-      environment['DXVK_ASYNC'] = '1';
+      environment = environment.add('DXVK_ASYNC', '1');
     }
 
-    environment.addAll(_wineSyncEnvironment());
+    environment = environment.merge(_wineSyncEnvironment());
 
-    return ProgramRunEnvironment(environment);
+    return environment;
   }
 
-  Map<String, String> _wineSyncEnvironment() {
+  ProgramRunEnvironment _wineSyncEnvironment() {
     return switch (enhancedSync) {
-      'esync' => const <String, String>{'WINEESYNC': '1'},
-      'msync' => const <String, String>{'WINEMSYNC': '1'},
-      'none' => const <String, String>{},
-      _ => const <String, String>{},
+      'esync' => ProgramRunEnvironment(const {'WINEESYNC': '1'}),
+      'msync' => ProgramRunEnvironment(const {'WINEMSYNC': '1'}),
+      'none' => const ProgramRunEnvironment.empty(),
+      _ => const ProgramRunEnvironment.empty(),
     };
   }
 

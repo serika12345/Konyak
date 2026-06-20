@@ -427,6 +427,52 @@ def require_external_payload_parser_boundaries() -> None:
         require_contains(relative_path, "part of '../../konyak_cli.dart';")
 
 
+def require_typed_domain_string_maps() -> None:
+    domain_root = ROOT / "packages/konyak_cli/lib/src/domain"
+    if not domain_root.exists():
+        return
+
+    allowed_raw_string_map_paths = {
+        "packages/konyak_cli/lib/src/domain/program/program_run_environment.dart",
+        "packages/konyak_cli/lib/src/domain/runtime/host_environment.dart",
+        "packages/konyak_cli/lib/src/domain/runtime/runtime_component_versions.dart",
+    }
+    for path in sorted(domain_root.rglob("*.dart")):
+        relative_path = str(path.relative_to(ROOT))
+        if relative_path in allowed_raw_string_map_paths:
+            continue
+
+        text = path.read_text(encoding="utf-8")
+        for unexpected in [
+            "Map<String, String>",
+            "Map<String,String>",
+        ]:
+            if unexpected in text:
+                raise AssertionError(
+                    f"{relative_path} must use a typed value object instead of {unexpected}"
+                )
+
+    for relative_path, expected in [
+        (
+            "packages/konyak_cli/lib/src/domain/program/program_run_environment.dart",
+            "final class ProgramEnvironmentOverrides",
+        ),
+        (
+            "packages/konyak_cli/lib/src/domain/program/program_run_environment.dart",
+            "final class ProgramRunEnvironment",
+        ),
+        (
+            "packages/konyak_cli/lib/src/domain/runtime/host_environment.dart",
+            "final class HostEnvironment",
+        ),
+        (
+            "packages/konyak_cli/lib/src/domain/runtime/runtime_component_versions.dart",
+            "final class RuntimeComponentVersions",
+        ),
+    ]:
+        require_contains(relative_path, expected)
+
+
 def require_runtime_ssot_rules() -> None:
     for unexpected in [
         "WinetricksScriptInstaller",
@@ -539,6 +585,7 @@ def main() -> None:
     require_contains("scripts/cve_audit_baseline.json", '"osv"')
 
     require_result_boundary_rules()
+    require_typed_domain_string_maps()
     require_runtime_ssot_rules()
 
     for expected in [

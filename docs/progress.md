@@ -11,6 +11,41 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-20 23:32 JST
+- State: `completed`
+- Branch: `main`
+- Related work: typed CLI/domain string map governance
+- Purpose: consume the light CI/governance TODO by preventing raw
+  `Map<String, String>` from re-entering CLI/domain code outside approved
+  value-object implementations.
+- Completed:
+  - Added a governance check that rejects raw `Map<String, String>` type usage
+    under `packages/konyak_cli/lib/src/domain` except for
+    `ProgramEnvironmentOverrides`, `ProgramRunEnvironment`, `HostEnvironment`,
+    and `RuntimeComponentVersions` implementation files.
+  - Confirmed the new governance check failed before implementation on
+    `bottle_runtime_settings_models.dart`.
+  - Replaced the remaining domain-side raw environment map construction with
+    `ProgramRunEnvironment` composition.
+  - Replaced PE version-string map return values with a private typed record.
+  - Changed the runtime install preserve callback to pass
+    `RuntimeComponentVersions` instead of a mutable raw map through the domain
+    request contract.
+- Remaining:
+  - None for this light CI/governance cleanup.
+- Next: continue with the heavier CI TODOs, starting with macOS runtime backend
+  probe smoke only after its headless runner path is non-flaky on GitHub-hosted
+  arm64 macOS.
+- Verification:
+  - `nix develop -c zsh -lc 'just verify-governance'`: failed before
+    implementation because `bottle_runtime_settings_models.dart` still exposed
+    a raw `Map<String, String>` type; passed after the typed-map changes.
+  - `nix develop -c zsh -lc 'just cli-test'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `nix develop -c zsh -lc 'just verify'`: passed.
+
 - Timestamp: 2026-06-20 23:09 JST
 - State: `completed`
 - Branch: `main`

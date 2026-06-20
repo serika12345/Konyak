@@ -40,10 +40,10 @@ String? _installRuntimeArchives({
   required String expectedExecutablePath,
   required bool preserveExistingRuntimeFiles,
   required List<List<String>> preserveExistingRuntimeSkipRelativePaths,
-  required void Function({
+  required RuntimeComponentVersions Function({
     required Directory existingRuntimeRoot,
     required Directory stagingRuntimeRoot,
-    required Map<String, String> componentVersions,
+    required RuntimeComponentVersions componentVersions,
   })?
   preserveExistingRuntimeComponents,
   void Function(Directory runtimeRoot)? normalizeStagingRoot,
@@ -163,11 +163,19 @@ String? _installRuntimeArchives({
       );
     }
     if (runtimeRoot.existsSync()) {
-      preserveExistingRuntimeComponents?.call(
-        existingRuntimeRoot: runtimeRoot,
-        stagingRuntimeRoot: stagingRoot,
-        componentVersions: resolvedComponentVersions,
-      );
+      final preservedComponentVersions = preserveExistingRuntimeComponents
+          ?.call(
+            existingRuntimeRoot: runtimeRoot,
+            stagingRuntimeRoot: stagingRoot,
+            componentVersions: RuntimeComponentVersions(
+              resolvedComponentVersions,
+            ),
+          );
+      if (preservedComponentVersions != null) {
+        resolvedComponentVersions
+          ..clear()
+          ..addAll(preservedComponentVersions.toMap());
+      }
     }
     _writeRuntimeStackManifest(
       runtimeRoot: stagingRoot,

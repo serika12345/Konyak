@@ -252,14 +252,14 @@ String _incompleteMacosWineStackSummary(RuntimeStack? stack) {
   return details.join('; ');
 }
 
-void _preserveImportedGptkD3DMetalComponent({
+RuntimeComponentVersions _preserveImportedGptkD3DMetalComponent({
   required Directory existingRuntimeRoot,
   required Directory stagingRuntimeRoot,
-  required Map<String, String> componentVersions,
+  required RuntimeComponentVersions componentVersions,
 }) {
   final source = _existingGptkD3DMetalSource(existingRuntimeRoot);
   if (source == null || _validateGptkD3DMetalSource(source) != null) {
-    return;
+    return componentVersions;
   }
 
   _installGptkD3DMetalComponentPayload(
@@ -267,12 +267,14 @@ void _preserveImportedGptkD3DMetalComponent({
     runtimeRoot: stagingRuntimeRoot,
   );
 
-  componentVersions[_gptkD3DMetalComponentId] =
-      _runtimeStackComponentVersionFromRoot(
-        existingRuntimeRoot,
-        _gptkD3DMetalComponentId,
-      ) ??
-      'user-provided';
+  return componentVersions.add(
+    _gptkD3DMetalComponentId,
+    _runtimeStackComponentVersionFromRoot(
+          existingRuntimeRoot,
+          _gptkD3DMetalComponentId,
+        ) ??
+        'user-provided',
+  );
 }
 
 _GptkD3DMetalSource? _existingGptkD3DMetalSource(Directory runtimeRoot) {

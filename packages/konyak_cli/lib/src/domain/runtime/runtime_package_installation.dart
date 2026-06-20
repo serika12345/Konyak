@@ -49,10 +49,10 @@ class RuntimePackageInstallRequest {
   final String expectedExecutablePath;
   final bool preserveExistingRuntimeFiles;
   final List<List<String>> preserveExistingRuntimeSkipRelativePaths;
-  final void Function({
+  final RuntimeComponentVersions Function({
     required Directory existingRuntimeRoot,
     required Directory stagingRuntimeRoot,
-    required Map<String, String> componentVersions,
+    required RuntimeComponentVersions componentVersions,
   })?
   preserveExistingRuntimeComponents;
   final void Function(Directory runtimeRoot)? normalizeStagingRoot;
