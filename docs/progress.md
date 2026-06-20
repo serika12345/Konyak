@@ -11,6 +11,52 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-20 23:09 JST
+- State: `completed`
+- Branch: `main`
+- Related work: split packaged app, Finder smoke, and release CI fixes
+- Purpose: finish the requested split commits, refresh local release artifacts,
+  and prove the resulting macOS and Linux release paths in CI.
+- Completed:
+  - Split the work into natural commits covering packaged macOS runtime
+    extraction, packaged Finder smoke coverage, progress recording, Linux
+    release diagnostics, Linux GTK transitive link fixes, bubblewrap-free
+    AppImage packaging, and Linux AppStream metadata cleanup.
+  - Refreshed local macOS artifacts with `nix run .#macos-release`, producing
+    the local release `Konyak.app`, zip, checksum, release metadata, and release
+    notes under `.dart_tool/konyak/release/macos`.
+  - Rebuilt the packaged debug app with `just macos-debug-app` and verified the
+    packaged runtime extraction, synthetic Finder smoke, and PuTTY-backed Finder
+    smoke locally.
+  - Fixed the Linux release job issues surfaced by CI: hidden GTK/Pango/GIO
+    transitive linker dependencies, AppImage bubblewrap uid-map failure on
+    GitHub runners, and AppStream metadata validation warnings.
+  - Pushed the commits through `c3248aa`.
+  - Confirmed GitHub Actions `Konyak Release` run `27873459646` passed: Linux
+    AppImage build and artifact upload succeeded, and the macOS app job passed
+    release build, packaged runtime extraction smoke, PuTTY-backed Finder smoke,
+    and artifact upload.
+  - Confirmed GitHub Actions `Konyak Verify` run `27873454871` and `Konyak
+    Pages` run `27873454880` passed for the same pushed code. The latest macOS
+    runtime CLI smoke triggered by code changes, run `27873295529`, also passed;
+    the final AppStream metadata-only push did not trigger that workflow.
+- Remaining:
+  - None for this requested split, artifact refresh, and CI completion work.
+    Failed intermediate release runs are retained in Actions history and record
+    the sequence of diagnosed CI failures.
+- Next: use the passing release run artifacts from `27873459646` or rebuild
+  locally with `nix run .#macos-release` / `nix run .#linux-release` on the
+  appropriate host.
+- Verification:
+  - `nix develop -c zsh -lc 'just verify'`: passed after the Linux link fix,
+    after the AppImage packaging fix, and after the AppStream metadata fix.
+  - `nix develop -c zsh -lc 'git diff --check'`: passed for the final code
+    changes before commit.
+  - GitHub Actions `Konyak Release` run `27873459646`: passed.
+  - GitHub Actions `Konyak Verify` run `27873454871`: passed.
+  - GitHub Actions `Konyak Pages` run `27873454880`: passed.
+  - GitHub Actions `macOS Runtime CLI Smoke` run `27873295529`: passed.
+
 - Timestamp: 2026-06-20 23:01 JST
 - State: `in_progress`
 - Branch: `main`
