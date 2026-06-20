@@ -50,6 +50,30 @@ void main() {
     expect(desktopEntry, contains('text/x-msdos-batch;'));
   });
 
+  test('Linux AppStream metadata avoids release packaging warnings', () {
+    final appdata = File(
+      'linux/runner/resources/app.konyak.Konyak.appdata.xml',
+    ).readAsStringSync();
+
+    expect(
+      appdata,
+      contains(
+        '<summary>Manage Wine-based bottles for Windows apps and games</summary>',
+      ),
+    );
+    expect(appdata, contains('<developer id="app.konyak">'));
+    expect(
+      appdata,
+      contains(
+        '<url type="homepage">https://github.com/serika12345/Konyak</url>',
+      ),
+    );
+    expect(
+      appdata,
+      isNot(contains('https://github.com/masatokinugawa/Konyak')),
+    );
+  });
+
   test('Linux release build links GTK transitive dependencies explicitly', () {
     final cmake = File('linux/CMakeLists.txt').readAsStringSync();
     final runnerCmake = File('linux/runner/CMakeLists.txt').readAsStringSync();

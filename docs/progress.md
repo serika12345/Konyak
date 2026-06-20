@@ -11,6 +11,37 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-20 23:01 JST
+- State: `in_progress`
+- Branch: `main`
+- Related work: fix Linux AppStream metadata for AppImage packaging
+- Purpose: finish Linux AppImage packaging after switching appimagetool away
+  from bubblewrap by addressing metadata validation failures.
+- Completed:
+  - Reran `Konyak Release` at `953f419`; Linux AppImage reached
+    `appimagetool`, proving Flutter Linux build and bubblewrap-free
+    appimagetool execution both progressed.
+  - Confirmed the remaining failure came from AppStream validation:
+    `summary-has-dot-suffix`, unreachable homepage URL
+    `https://github.com/masatokinugawa/Konyak`, and missing developer info.
+  - Added a failing static regression test for the Linux AppStream metadata
+    contract.
+  - Updated Linux appdata metadata to remove the summary dot suffix, add
+    developer metadata, and point the homepage at the actual
+    `https://github.com/serika12345/Konyak` repository.
+- Remaining:
+  - Run local gates, push the AppStream metadata fix, rerun release CI, and
+    confirm Linux AppImage artifact upload succeeds.
+- Next: verify and push the AppStream metadata fix, then rerun
+  `Konyak Release`.
+- Verification:
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/linux_window_chrome_test.dart --plain-name "Linux AppStream metadata avoids release packaging warnings"'`:
+    failed before implementation because the metadata still had the dot suffix,
+    old URL, and no developer entry.
+  - GitHub Actions `Konyak Release` run `27873299748`, Linux AppImage job
+    `82488580073`: passed Flutter Linux build and reached appimagetool, then
+    failed AppStream validation before this fix.
+
 - Timestamp: 2026-06-20 22:55 JST
 - State: `in_progress`
 - Branch: `main`
