@@ -70,4 +70,15 @@ void main() {
     expect(flake, contains('fontconfig'));
     expect(flake, contains('util-linux'));
   });
+
+  test('Linux release runs appimagetool without bubblewrap wrappers', () {
+    final script = File(
+      '../../scripts/build_linux_release.zsh',
+    ).readAsStringSync();
+    final flake = File('../../flake.nix').readAsStringSync();
+
+    expect(script, contains('APPIMAGE_EXTRACT_AND_RUN=1'));
+    expect(script, isNot(contains(r'appimage-run "$tool_path"')));
+    expect(flake, isNot(contains('appimage-run')));
+  });
 }

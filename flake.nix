@@ -81,7 +81,6 @@
           ];
 
           linuxReleasePackagingPackages = with pkgs; [
-            appimage-run
             curl
             gnused
             openssl

@@ -15,7 +15,7 @@ if [[ -z "${IN_NIX_SHELL:-}" && -z "${KONYAK_NIX_RELEASE_APP:-}" ]]; then
   exit 69
 fi
 
-for command in dart flutter jq curl rsync sha256sum appimage-run openssl base64; do
+for command in dart flutter jq curl rsync sha256sum openssl base64; do
   if ! command -v "$command" >/dev/null 2>&1; then
     echo "Missing required command: $command" >&2
     exit 69
@@ -213,7 +213,8 @@ rm -f \
 echo "Building AppImage..."
 env -u SOURCE_DATE_EPOCH \
   ARCH="$appimage_arch" \
-  appimage-run "$tool_path" "$appdir_root" "$appimage_path"
+  APPIMAGE_EXTRACT_AND_RUN=1 \
+  "$tool_path" "$appdir_root" "$appimage_path"
 
 checksum="$(sha256sum "$appimage_path" | awk '{ print $1 }')"
 printf "%s  %s\n" "$checksum" "$(basename "$appimage_path")" >"$checksum_path"

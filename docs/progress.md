@@ -11,6 +11,35 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-20 22:55 JST
+- State: `in_progress`
+- Branch: `main`
+- Related work: fix Linux AppImage packaging on GitHub-hosted runners
+- Purpose: finish the release workflow after the Linux Flutter build fix by
+  removing the AppImage packaging dependency on bubblewrap user namespaces.
+- Completed:
+  - Reran the failed Linux release job from `27873061451`; it passed Flutter
+    Linux compilation and produced `build/linux/x64/release/bundle/konyak`.
+  - Confirmed the remaining Linux failure was AppImage packaging:
+    `appimage-run` invoked bubblewrap and failed with
+    `bwrap: setting up uid map: Permission denied` on the GitHub Ubuntu runner.
+  - Added a failing static regression test requiring the Linux release script to
+    run `appimagetool` with `APPIMAGE_EXTRACT_AND_RUN=1` and not depend on
+    `appimage-run`.
+  - Updated the Linux release script to execute the downloaded `appimagetool`
+    AppImage directly with `APPIMAGE_EXTRACT_AND_RUN=1`, avoiding the bubblewrap
+    wrapper path, and removed `appimage-run` from Linux release Nix inputs.
+- Remaining:
+  - Run the local gates, push the AppImage packaging fix, rerun release CI, and
+    confirm the Linux AppImage job now reaches artifact upload.
+- Next: verify and push the AppImage packaging fix, then rerun `Konyak Release`.
+- Verification:
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/linux_window_chrome_test.dart --plain-name "Linux release runs appimagetool without bubblewrap wrappers"'`:
+    failed before implementation because the script still used `appimage-run`.
+  - GitHub Actions `Konyak Release` run `27873061451`, rerun Linux AppImage job
+    `82488215136`: passed Flutter Linux build, then failed at AppImage
+    packaging with the bubblewrap uid-map error before this fix.
+
 - Timestamp: 2026-06-20 22:45 JST
 - State: `in_progress`
 - Branch: `main`
