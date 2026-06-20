@@ -11,6 +11,43 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-20 22:36 JST
+- State: `in_progress`
+- Branch: `main`
+- Related work: split packaged macOS release/Finder smoke changes and complete
+  publish CI
+- Purpose: keep the already verified macOS release/Finder/runtime smoke changes
+  in natural commits, push them, and bring GitHub Actions publish coverage to a
+  clean run.
+- Completed:
+  - Split and pushed the local changes into commits for packaged macOS runtime
+    extraction support, packaged Finder smoke coverage, and progress
+    documentation.
+  - Manually dispatched the `Konyak Release` workflow after the push.
+  - Confirmed pushed CI status:
+    `Konyak Verify`, `Konyak Pages`, and `macOS Runtime CLI Smoke` all passed.
+  - Confirmed the manually dispatched release workflow's macOS job passed its
+    release build, packaged runtime extraction smoke, and PuTTY-backed Finder
+    integration smoke.
+  - Confirmed the release workflow is currently blocked only by the Linux
+    AppImage job, where `flutter build linux` reports a hidden
+    `clang++: error: linker command failed` failure.
+  - Added failure-only Linux release diagnostics so CI prints CMake `link.txt`,
+    CMake logs, and a verbose Flutter rebuild if the Linux linker failure
+    persists.
+- Remaining:
+  - Push the Linux release diagnostic commit, rerun the release workflow, inspect
+    the detailed Linux linker failure if it persists, and fix the Linux release
+    build before final reporting.
+- Next: rerun GitHub Actions `Konyak Release` and use the Linux job diagnostics
+  to complete the CI pass.
+- Verification:
+  - GitHub Actions `Konyak Verify` run `27872555547`: passed.
+  - GitHub Actions `Konyak Pages` run `27872555545`: passed.
+  - GitHub Actions `macOS Runtime CLI Smoke` run `27872555556`: passed.
+  - GitHub Actions `Konyak Release` run `27872560742`: macOS app job passed;
+    Linux AppImage job failed before this diagnostic update.
+
 - Timestamp: 2026-06-20 22:16 JST
 - State: `completed`
 - Branch: `main`

@@ -64,6 +64,27 @@ tool_cache_dir="$release_root/tools"
 tool_path="${KONYAK_APPIMAGETOOL_PATH:-$tool_cache_dir/appimagetool-${appimage_arch}.AppImage}"
 tool_url="${KONYAK_APPIMAGETOOL_URL:-https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-${appimage_arch}.AppImage}"
 
+print_flutter_linux_build_diagnostics() {
+  local build_root="$repo_root/apps/konyak/build/linux"
+  if [[ ! -d "$build_root" ]]; then
+    echo "No Flutter Linux build directory was produced at $build_root" >&2
+    return
+  fi
+
+  echo "::group::Flutter Linux CMake diagnostics" >&2
+  find "$build_root" -type f \( \
+    -name link.txt \
+    -o -name CMakeError.log \
+    -o -name CMakeOutput.log \
+  \) -print \
+    | sort \
+    | while IFS= read -r diagnostic_file; do
+        echo "----- $diagnostic_file -----" >&2
+        sed -n '1,240p' "$diagnostic_file" >&2 || true
+      done
+  echo "::endgroup::" >&2
+}
+
 rm -rf "$stage_root" "$appdir_root"
 mkdir -p "$stage_root/bin" "$release_root" "$tool_cache_dir"
 
@@ -103,13 +124,22 @@ echo "Building Konyak CLI executable..."
 )
 
 echo "Building Flutter Linux app..."
+flutter_linux_build_args=(
+  --release
+  --build-name "$build_name"
+  --build-number "$build_number"
+  --dart-define=KONYAK_CLI_EXECUTABLE=__KONYAK_BUNDLE_RESOURCES__/konyak-cli
+)
 (
   cd apps/konyak
-  flutter build linux \
-    --release \
-    --build-name "$build_name" \
-    --build-number "$build_number" \
-    --dart-define=KONYAK_CLI_EXECUTABLE=__KONYAK_BUNDLE_RESOURCES__/konyak-cli
+  if ! flutter build linux "${flutter_linux_build_args[@]}"; then
+    print_flutter_linux_build_diagnostics
+    echo "Flutter Linux build failed; rerunning with verbose output..." >&2
+    if ! flutter --verbose build linux "${flutter_linux_build_args[@]}"; then
+      print_flutter_linux_build_diagnostics
+      exit 1
+    fi
+  fi
 )
 
 if [[ ! -d "$flutter_bundle" ]]; then
