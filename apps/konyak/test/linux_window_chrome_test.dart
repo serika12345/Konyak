@@ -49,4 +49,25 @@ void main() {
     expect(desktopEntry, contains('application/x-msdos-program;'));
     expect(desktopEntry, contains('text/x-msdos-batch;'));
   });
+
+  test('Linux release build links GTK transitive dependencies explicitly', () {
+    final cmake = File('linux/CMakeLists.txt').readAsStringSync();
+    final runnerCmake = File('linux/runner/CMakeLists.txt').readAsStringSync();
+    final flake = File('../../flake.nix').readAsStringSync();
+
+    expect(
+      cmake,
+      contains(
+        'pkg_check_modules(FONTCONFIG REQUIRED IMPORTED_TARGET fontconfig)',
+      ),
+    );
+    expect(
+      cmake,
+      contains('pkg_check_modules(LIBMOUNT REQUIRED IMPORTED_TARGET mount)'),
+    );
+    expect(runnerCmake, contains('PkgConfig::FONTCONFIG'));
+    expect(runnerCmake, contains('PkgConfig::LIBMOUNT'));
+    expect(flake, contains('fontconfig'));
+    expect(flake, contains('util-linux'));
+  });
 }

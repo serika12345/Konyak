@@ -64,12 +64,14 @@
           linuxFlutterBuildPackages = with pkgs; [
             clang
             cmake
+            fontconfig
             glib
             gtk3
             libepoxy
             libxkbcommon
             ninja
             pkg-config
+            util-linux
             wayland
             libx11
             libxcursor

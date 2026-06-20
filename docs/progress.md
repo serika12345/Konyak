@@ -11,6 +11,37 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-20 22:45 JST
+- State: `in_progress`
+- Branch: `main`
+- Related work: fix Linux AppImage release link failure after packaged macOS
+  smoke split
+- Purpose: complete the manually dispatched publish CI run by fixing the Linux
+  release build failure exposed after the macOS packaged app jobs were added.
+- Completed:
+  - Used the failure-only diagnostics from release run `27872835781` to capture
+    the actual Linux linker errors instead of relying on Flutter's hidden
+    `clang++` summary.
+  - Confirmed the failed link command omitted `libmount` and `fontconfig` while
+    `libgio-2.0.so` required `mnt_monitor_veil_kernel@MOUNT_2_40` and
+    `libpangocairo-1.0.so` required `FcConfigSetDefaultSubstitute`.
+  - Added a failing static regression test covering the Linux CMake and flake
+    dependency contract.
+  - Updated Linux CMake to import and link `fontconfig` and `mount`
+    explicitly, and added the corresponding Nix build inputs for Linux Flutter
+    release builds.
+- Remaining:
+  - Run the local gates for the Linux link fix, push the fix, rerun the release
+    workflow, and confirm the Linux AppImage and macOS packaged app jobs both
+    pass.
+- Next: verify and push the Linux link fix, then rerun `Konyak Release`.
+- Verification:
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/linux_window_chrome_test.dart --plain-name "Linux release build links GTK transitive dependencies explicitly"'`:
+    failed before implementation and passed after implementation.
+  - GitHub Actions `Konyak Release` run `27872835781`, Linux AppImage job
+    `82487411820`: failed before this fix with the captured missing
+    `libmount`/`fontconfig` link dependencies.
+
 - Timestamp: 2026-06-20 22:36 JST
 - State: `in_progress`
 - Branch: `main`
