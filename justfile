@@ -3,7 +3,7 @@ set shell := ["zsh", "-lc"]
 default:
   just --list
 
-verify: verify-governance verify-architecture format-check lint verify-safety test
+verify: verify-governance verify-architecture format-check lint verify-safety test flutter-linux-loader-check
 
 flutter-pub-get:
   if [ -d apps/konyak ]; then cd apps/konyak && flutter pub get; fi
@@ -46,6 +46,9 @@ flutter-analyze:
 
 flutter-test:
   if [ -d apps/konyak ]; then cd apps/konyak && flutter test; fi
+
+flutter-linux-loader-check:
+  if [ "$(uname -s)" = "Linux" ] && [ -d apps/konyak ]; then cd apps/konyak && flutter build linux --debug && ldd build/linux/x64/debug/bundle/konyak | tee /tmp/konyak-linux-loader-check-ldd.txt && ! rg "not found" /tmp/konyak-linux-loader-check-ldd.txt; fi
 
 cli-format-check:
   if [ -d packages/konyak_cli ]; then cd packages/konyak_cli && dart format --set-exit-if-changed .; fi

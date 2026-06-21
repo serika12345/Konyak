@@ -89,6 +89,7 @@ void main() {
     final cmake = File('linux/CMakeLists.txt').readAsStringSync();
     final runnerCmake = File('linux/runner/CMakeLists.txt').readAsStringSync();
     final flake = File('../../flake.nix').readAsStringSync();
+    final justfile = File('../../justfile').readAsStringSync();
 
     expect(
       cmake,
@@ -102,8 +103,10 @@ void main() {
     );
     expect(runnerCmake, contains('PkgConfig::FONTCONFIG'));
     expect(runnerCmake, contains('PkgConfig::LIBMOUNT'));
+    expect(cmake, contains(r'${LIBMOUNT_LIBRARY_DIRS}'));
     expect(flake, contains('fontconfig'));
     expect(flake, contains('util-linux'));
+    expect(justfile, contains('flutter-linux-loader-check'));
   });
 
   test('Linux release runs appimagetool without bubblewrap wrappers', () {

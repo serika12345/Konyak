@@ -11,6 +11,65 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-21 21:12 JST
+- State: `completed`
+- Branch: `main`
+- Related work: Linux Flutter debug loader libmount rpath
+- Purpose: fix Linux debug launches failing at startup because the built
+  Flutter bundle cannot resolve `libmount.so.1`.
+- Completed:
+  - Read the latest progress/TODO state and traced the existing Linux CMake
+    dependency contract.
+  - Reproduced the startup failure through the built Flutter bundle:
+    `./build/linux/x64/debug/bundle/konyak` exited 127 with
+    `libmount.so.1: cannot open shared object file`.
+  - Confirmed `libmount` was intentionally linked for the previous Linux
+    release link failure, so the fix should preserve the link and add the
+    runtime search path.
+  - Added failing regression coverage requiring the libmount pkg-config
+    library directory in the Linux CMake rpath contract.
+  - Appended `${LIBMOUNT_LIBRARY_DIRS}` to the Linux bundle install rpath
+    before creating the runner target.
+  - Added a `flutter-linux-loader-check` target to build the Linux debug bundle
+    and fail on unresolved `ldd` entries; `just verify` now runs it, so the
+    GitHub Verify workflow covers this path.
+  - Initialized the `runtime/konyak-macos-runtime` submodule locally so
+    governance verification could read its required workflow files.
+- Remaining:
+  - None for this loader fix.
+- Next: none.
+- Verification:
+  - `nix develop -c zsh -lc 'cd apps/konyak && ./build/linux/x64/debug/bundle/konyak'`:
+    failed before implementation with missing `libmount.so.1`.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/linux_window_chrome_test.dart --plain-name "Linux release build links GTK transitive dependencies explicitly"'`:
+    failed before implementation because the CMake contract did not include
+    `${LIBMOUNT_LIBRARY_DIRS}`, then failed again until the CI loader target
+    was added, then passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter build linux --debug'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && readelf -d build/linux/x64/debug/bundle/konyak | rg "RUNPATH|libmount"'`:
+    confirmed the rebuilt bundle keeps `libmount.so.1` and includes the
+    util-linux lib directory in `RUNPATH`.
+  - `nix develop -c zsh -lc 'cd apps/konyak && ldd build/linux/x64/debug/bundle/konyak | rg "libmount|not found" || true'`:
+    confirmed `libmount.so.1` resolves from the Nix store and no `not found`
+    entries were reported.
+  - `nix develop -c zsh -lc 'cd apps/konyak && timeout 5s ./build/linux/x64/debug/bundle/konyak'`:
+    no longer failed with the `libmount.so.1` loader error; it reached normal
+    GTK startup and was stopped by timeout.
+  - `nix develop -c zsh -lc 'just flutter-format-check'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-analyze'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-test'`: passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: failed before
+    submodule initialization because
+    `runtime/konyak-macos-runtime/.github/workflows/build-runtime.yml` was not
+    present locally, then passed after `git submodule update --init
+    runtime/konyak-macos-runtime`.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-linux-loader-check'`: passed.
+  - `nix develop -c zsh -lc 'just verify'`: passed.
+
 - Timestamp: 2026-06-21 20:22 JST
 - State: `completed`
 - Branch: `main`

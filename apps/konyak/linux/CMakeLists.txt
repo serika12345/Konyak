@@ -56,6 +56,8 @@ pkg_check_modules(GTK REQUIRED IMPORTED_TARGET gtk+-3.0)
 pkg_check_modules(FONTCONFIG REQUIRED IMPORTED_TARGET fontconfig)
 pkg_check_modules(LIBMOUNT REQUIRED IMPORTED_TARGET mount)
 
+list(APPEND CMAKE_INSTALL_RPATH ${LIBMOUNT_LIBRARY_DIRS})
+
 # Application build; see runner/CMakeLists.txt.
 add_subdirectory("runner")
 
