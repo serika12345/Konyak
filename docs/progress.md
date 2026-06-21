@@ -11,6 +11,182 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-21 14:27 JST
+- State: `completed`
+- Branch: `main`
+- Related work: GPTK/D3DMetal import progress wording
+- Purpose: replace the misleading `Adding GPTK Wine` progress label with
+  wording that describes importing the D3DMetal backend, not replacing or
+  adding a Wine runtime.
+- Completed:
+  - Read the current progress/TODO state and traced the label to
+    `AppSettingsRuntimeSection._gptkInstallPanel`.
+  - Confirmed the confirmation dialog and CLI behavior describe importing a
+    D3DMetal backend while preserving the Wine executable.
+  - Updated the in-progress button label to `Importing D3DMetal`.
+  - Updated widget coverage so the GPTK/D3DMetal import flow holds the install
+    future open and verifies the in-progress label while rejecting the old
+    `Adding GPTK Wine` text.
+- Remaining:
+  - None for this wording cleanup.
+- Next: continue with the next unfinished TODO item.
+- Verification:
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "macOS settings dialog imports GPTK/D3DMetal"'`:
+    failed before implementation because the in-progress button still showed
+    the old wording, then passed after changing the label.
+  - `nix develop -c zsh -lc 'dart format apps/konyak/lib/src/app/dialogs/app_settings_runtime_section.dart apps/konyak/test/widget_settings.part.dart'`:
+    passed.
+  - `nix develop -c zsh -lc 'just flutter-test'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-format-check'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-analyze'`: passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `git diff --check`: passed.
+
+- Timestamp: 2026-06-21 13:53 JST
+- State: `completed`
+- Branch: `main`
+- Related work: macOS runtime partial status and repair gating
+- Purpose: fix Repair so it is only offered for missing components that should
+  be repaired by Konyak's runtime installer, while missing user-provided
+  GPTK/D3DMetal is shown as `Partial` instead of `Incomplete`.
+- Completed:
+  - Read the current progress/TODO state and traced the Repair button to
+    `RuntimeSectionState.shouldOfferInstall`.
+  - Confirmed the previous GPTK/D3DMetal required-component change made Repair
+    try to repair a user-provided component that the runtime installer cannot
+    supply.
+  - Added failing CLI and Flutter tests proving missing GPTK/D3DMetal remains
+    the last macOS component, is optional, shows the stack as `Partial`, and
+    does not expose Repair.
+  - Restored GPTK/D3DMetal to `isRequired: false` while keeping it last in the
+    macOS component and backend lists.
+  - Added Flutter stack status labeling for `Complete`, `Partial`, and
+    `Incomplete`, with Repair still gated only by missing required stack
+    components or a not-installed runtime.
+  - Kept missing component path details hidden in the settings component rows.
+  - Removed GPTK/D3DMetal from the normal Konyak-managed macOS runtime test
+    archives and complete-runtime fixtures, leaving GPTK/D3DMetal only in
+    explicit user-provided import/preserve fixtures.
+  - Confirmed the public `list-runtimes --json` CLI route reports the local
+    missing GPTK/D3DMetal runtime as complete for required components, with
+    GPTK/D3DMetal last, optional, and missing.
+- Remaining:
+  - None for Repair gating and partial GPTK/D3DMetal status.
+- Next: continue with the next unfinished TODO item.
+- Verification:
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "list-runtimes --json reports missing GPTK/D3DMetal as optional last"'`:
+    failed before implementation because `stack.isComplete` was still `false`,
+    then passed after GPTK/D3DMetal became optional again.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/app/app_settings_runtime_view_model_test.dart --plain-name "labels optional missing runtime components as partial without repair"'`:
+    failed before implementation because `runtimeStackStatusLabel` did not
+    exist, then passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "macOS settings dialog keeps missing GPTK last and partial"'`:
+    failed before implementation because the settings dialog did not show
+    `Partial`, then passed.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "install-macos-wine builds a stack from component archives"'`:
+    failed after removing GPTK/D3DMetal from the normal component-stack
+    fixture because one stale GPTK path assertion remained, then passed after
+    updating the assertion.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart run bin/konyak.dart list-runtimes --json | jq -r '\''.runtimes[] | select(.id=="konyak-macos-wine") | {stackComplete: .stack.isComplete, lastComponent: (.stack.components[-1] | {id, isRequired, isInstalled})}'\'''`:
+    passed and reported `stackComplete: true`, last component
+    `gptk-d3dmetal`, `isRequired: false`, and `isInstalled: false`.
+  - `nix develop -c zsh -lc 'dart format apps/konyak/lib/src/app/dialogs/app_settings_runtime_section.dart apps/konyak/lib/src/app/dialogs/app_settings_runtime_view_model.dart apps/konyak/test/app/app_settings_runtime_view_model_test.dart apps/konyak/test/widget_settings.part.dart apps/konyak/test/widget_test.dart apps/konyak/test/cli/runtime_list_contract_test.dart packages/konyak_cli/lib/src/domain/runtime/runtime_platform_support.dart packages/konyak_cli/test/cli_contract_runtime_install.part.dart packages/konyak_cli/test/cli_contract_runtime_process_update.part.dart packages/konyak_cli/test/cli_contract_test.dart'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart'`:
+    passed.
+  - `nix develop -c zsh -lc 'just cli-test'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-test'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-format-check'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-analyze'`: passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `git diff --check`: passed.
+
+- Timestamp: 2026-06-21 13:48 JST
+- State: `completed`
+- Branch: `main`
+- Related work: GPTK/D3DMetal runtime completeness and ordering cleanup
+- Purpose: make missing GPTK/D3DMetal keep the macOS runtime stack
+  `Incomplete`, and keep the GPTK/D3DMetal component last in runtime component
+  listings.
+- Completed:
+  - Read the current progress/TODO state and traced macOS runtime completeness
+    from Flutter settings display to the CLI runtime stack contract.
+  - Confirmed GPTK/D3DMetal is currently `isRequired: false`, so
+    `RuntimeStack.isComplete` can be true while GPTK/D3DMetal is missing.
+  - Added CLI contract coverage for a macOS runtime with every non-GPTK
+    component present but GPTK/D3DMetal missing.
+  - Made GPTK/D3DMetal a required macOS runtime stack component and moved it to
+    the end of the macOS component and backend definitions.
+  - Added Flutter widget coverage that a missing GPTK/D3DMetal runtime remains
+    `Incomplete` and lists GPTK/D3DMetal after DXMT.
+  - Updated runtime parsing and installer fixtures so complete macOS runtime
+    fixtures include valid GPTK/D3DMetal payload files.
+  - Confirmed the public CLI `list-runtimes --json` route now reports the local
+    missing GPTK/D3DMetal runtime as incomplete with GPTK/D3DMetal last.
+- Remaining:
+  - None for this cleanup.
+- Next: continue with the next unfinished TODO item.
+- Verification:
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "list-runtimes --json requires GPTK/D3DMetal last on macOS"'`:
+    failed before implementation because `stack.isComplete` was still `true`,
+    then passed after GPTK/D3DMetal became required and last.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "macOS settings dialog keeps missing GPTK last and incomplete"'`:
+    passed.
+  - `nix develop -c zsh -lc 'dart format packages/konyak_cli/lib/src/domain/runtime/runtime_platform_support.dart packages/konyak_cli/test/cli_contract_runtime_process_update.part.dart packages/konyak_cli/test/cli_contract_test.dart apps/konyak/test/widget_test.dart apps/konyak/test/widget_settings.part.dart apps/konyak/test/cli/runtime_list_contract_test.dart'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart'`:
+    failed once after implementation because complete runtime fixtures lacked
+    GPTK/D3DMetal payloads, then passed after fixture updates.
+  - `nix develop -c zsh -lc 'just flutter-test'`: passed.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart run bin/konyak.dart list-runtimes --json | jq -r '\''.runtimes[] | select(.id=="konyak-macos-wine") | {isInstalled, stackComplete: .stack.isComplete, lastComponent: (.stack.components[-1] | {id, isRequired, isInstalled}), gptk: (.stack.components[] | select(.id=="gptk-d3dmetal") | {id, isRequired, isInstalled})}'\'''`:
+    passed and reported `stackComplete: false`, last component
+    `gptk-d3dmetal`, `isRequired: true`, and `isInstalled: false`.
+  - `nix develop -c zsh -lc 'just cli-test'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-format-check'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-analyze'`: passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: failed once because two CLI
+    test files needed formatting, then passed after formatting.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `git diff --check`: passed.
+
+- Timestamp: 2026-06-21 13:31 JST
+- State: `completed`
+- Branch: `main`
+- Related work: runtime settings component path display cleanup
+- Purpose: remove raw missing runtime component paths from the app settings UI
+  while keeping component installed/missing status visible.
+- Completed:
+  - Read the current roadmap/progress state and the Flutter runtime settings
+    component rendering path.
+  - Updated settings widget coverage so missing runtime component status remains
+    visible while the raw missing path is absent from the UI.
+  - Removed `missingPaths` detail rendering from runtime component rows.
+- Remaining:
+  - None for this UI cleanup.
+- Next: continue with the next unfinished TODO item.
+- Verification:
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "Linux settings dialog shows runtime stack component statuses"'`:
+    failed before implementation because the missing runtime path was still
+    rendered, then passed after the display cleanup.
+  - `nix develop -c zsh -lc 'dart format apps/konyak/lib/src/app/dialogs/app_settings_runtime_section.dart apps/konyak/test/widget_settings.part.dart'`:
+    passed.
+  - `nix develop -c zsh -lc 'just flutter-format-check'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-analyze'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-test'`: passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `git diff --check`: passed.
+
 - Timestamp: 2026-06-21 13:10 JST
 - State: `completed`
 - Branch: `main`
