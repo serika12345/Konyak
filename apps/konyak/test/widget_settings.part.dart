@@ -586,48 +586,55 @@ void defineSettingsWidgetTests() {
   testWidgets('macOS settings dialog imports GPTK/D3DMetal', (
     WidgetTester tester,
   ) async {
-    final runner = _QueuedProcessRunner([
-      const ProcessRunResult(
-        exitCode: 0,
-        stdout: '{"schemaVersion":1,"bottles":[]}',
-        stderr: '',
+    final installCompleter = Completer<ProcessRunResult>();
+    final runner = _FutureQueuedProcessRunner([
+      Future.value(
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '{"schemaVersion":1,"bottles":[]}',
+          stderr: '',
+        ),
       ),
-      const ProcessRunResult(
-        exitCode: 0,
-        stdout: '''
-          {
-            "schemaVersion": 1,
-            "appSettings": {
-              "terminateWineProcessesOnClose": false,
-              "defaultBottlePath": "/Users/user/Library/Application Support/Konyak/Bottles",
-              "appearanceMode": "dark",
-              "automaticallyCheckForKonyakUpdates": false,
-              "automaticallyCheckForWineUpdates": false
+      Future.value(
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+            {
+              "schemaVersion": 1,
+              "appSettings": {
+                "terminateWineProcessesOnClose": false,
+                "defaultBottlePath": "/Users/user/Library/Application Support/Konyak/Bottles",
+                "appearanceMode": "dark",
+                "automaticallyCheckForKonyakUpdates": false,
+                "automaticallyCheckForWineUpdates": false
+              }
             }
-          }
-        ''',
-        stderr: '',
+          ''',
+          stderr: '',
+        ),
       ),
-      ProcessRunResult(
-        exitCode: 0,
-        stdout: _macosRuntimeListPayload(gptkAvailable: true),
-        stderr: '',
+      Future.value(
+        ProcessRunResult(
+          exitCode: 0,
+          stdout: _macosRuntimeListPayload(gptkAvailable: true),
+          stderr: '',
+        ),
       ),
-      const ProcessRunResult(
-        exitCode: 0,
-        stdout:
-            '{"schemaVersion":1,"openedUrl":{"url":"https://developer.apple.com/games/game-porting-toolkit/"}}',
-        stderr: '',
+      Future.value(
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout:
+              '{"schemaVersion":1,"openedUrl":{"url":"https://developer.apple.com/games/game-porting-toolkit/"}}',
+          stderr: '',
+        ),
       ),
-      const ProcessRunResult(
-        exitCode: 0,
-        stdout: '{"schemaVersion":1,"gptkWineInstall":{"componentId":"wine"}}',
-        stderr: '',
-      ),
-      ProcessRunResult(
-        exitCode: 0,
-        stdout: _macosRuntimeListPayload(gptkAvailable: true),
-        stderr: '',
+      installCompleter.future,
+      Future.value(
+        ProcessRunResult(
+          exitCode: 0,
+          stdout: _macosRuntimeListPayload(gptkAvailable: true),
+          stderr: '',
+        ),
       ),
     ]);
 
@@ -677,6 +684,18 @@ void defineSettingsWidgetTests() {
 
     await tester.tap(
       find.byKey(const ValueKey('app-settings-confirm-gptk-wine-button')),
+    );
+    await tester.pump();
+
+    expect(find.text('Importing D3DMetal'), findsOneWidget);
+    expect(find.text('Adding GPTK Wine'), findsNothing);
+
+    installCompleter.complete(
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '{"schemaVersion":1,"gptkWineInstall":{"componentId":"wine"}}',
+        stderr: '',
+      ),
     );
     await tester.pumpAndSettle();
 

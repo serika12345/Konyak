@@ -157,7 +157,9 @@ class AppSettingsRuntimeSection extends StatelessWidget {
                       )
                     : const Icon(Icons.folder_copy),
                 label: Text(
-                  isInstallingGptkWine ? 'Adding GPTK Wine' : 'Select GPTK DMG',
+                  isInstallingGptkWine
+                      ? 'Importing D3DMetal'
+                      : 'Select GPTK DMG',
                 ),
               ),
             ],
