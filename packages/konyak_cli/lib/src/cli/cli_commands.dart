@@ -305,7 +305,7 @@ Usage:
   konyak launch-pinned-program --manifest <path> --json
   konyak run-program <id> --program <path> --json
   konyak run-winetricks <id> --verb <verb> --json
-  konyak run-bottle-command <id> --command <winecfg|regedit|control|uninstaller|taskmgr|cmd|explorer|dxdiag|winver|terminal|winetricks> --json
+  konyak run-bottle-command <id> --command <winecfg|regedit|control|uninstaller|simulate-reboot|taskmgr|cmd|explorer|dxdiag|winver|terminal|winetricks> --json
   konyak open-bottle-location <id> --location <root|c-drive> --json
   konyak open-program-location <id> --program <path> --json
   konyak list-runtimes --json

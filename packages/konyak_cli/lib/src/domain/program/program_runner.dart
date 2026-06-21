@@ -107,6 +107,19 @@ class ProgramRunPlanner {
       });
     }
 
+    if (supportedCommand == 'simulate-reboot') {
+      return Option.of(switch (hostPlatform) {
+        KonyakHostPlatform.linux => _linuxWinebootRestartRequest(
+          bottle: bottle,
+          environment: environment,
+        ),
+        KonyakHostPlatform.macos => _macosWinebootRestartRequest(
+          bottle: bottle,
+          environment: environment,
+        ),
+      });
+    }
+
     if (supportedCommand == 'winetricks') {
       return Option.of(switch (hostPlatform) {
         KonyakHostPlatform.linux => _linuxWinetricksCommandRequest(

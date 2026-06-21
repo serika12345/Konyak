@@ -67,6 +67,11 @@ const _bottleToolItems = <_BottleToolItem>[
     action: BottleToolAction.command('uninstaller'),
   ),
   _BottleToolItem(
+    label: 'Simulate Reboot',
+    icon: Icons.restart_alt,
+    action: BottleToolAction.command('simulate-reboot'),
+  ),
+  _BottleToolItem(
     label: 'Task Manager',
     icon: Icons.monitor_heart_outlined,
     action: BottleToolAction.command('taskmgr'),

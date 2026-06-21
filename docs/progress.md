@@ -11,6 +11,45 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-21 16:38 JST
+- State: `completed`
+- Branch: `main`
+- Related work: Bottle Tools Simulate Reboot command
+- Purpose: add a Tools launcher that simulates a Windows reboot inside the
+  selected bottle by running Wine's `wineboot --restart` path.
+- Completed:
+  - Read the latest progress/TODO state.
+  - Confirmed Konyak already has prefix initialization `wineboot --init`
+    planners but no Tools or `run-bottle-command` route for simulated reboot.
+  - Added failing CLI contract coverage for macOS and Linux simulated reboot
+    run plans before implementation.
+  - Added failing Flutter widget coverage for the Tools `Simulate Reboot`
+    launcher before implementation.
+  - Added the `simulate-reboot` bottle command and routed it to Wine
+    `wineboot --restart` through the platform-specific run planner.
+  - Added the `Simulate Reboot` Tools item for the selected bottle.
+- Remaining:
+  - None for this implementation pass.
+- Next: use the Tools item against a real bottle if manual runtime smoke is
+  needed before release.
+- Verification:
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "run-bottle-command --json simulates a Windows reboot on macOS"'`:
+    failed before implementation with unsupported command exit 65, then passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "Bottle Tools groups bottle utility launchers"'`:
+    failed before implementation because `Simulate Reboot` was not present,
+    then passed.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "run-bottle-command --json simulates a Windows reboot on Linux"'`:
+    passed after implementation.
+  - `nix develop -c zsh -lc 'just cli-test'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-test'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-format-check'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-analyze'`: passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `nix develop -c zsh -lc 'git diff --check'`: passed.
+
 - Timestamp: 2026-06-21 16:15 JST
 - State: `completed`
 - Branch: `main`

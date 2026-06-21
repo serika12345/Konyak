@@ -70,6 +70,7 @@ Option<String> _supportedBottleCommand(String command) {
     'regedit' ||
     'control' ||
     'uninstaller' ||
+    'simulate-reboot' ||
     'taskmgr' ||
     'cmd' ||
     'explorer' ||

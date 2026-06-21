@@ -51,6 +51,26 @@ ProgramRunRequest _macosWinebootRequest({
   );
 }
 
+ProgramRunRequest _macosWinebootRestartRequest({
+  required BottleRecord bottle,
+  required HostEnvironment environment,
+}) {
+  final hostEnvironment = environment;
+  return ProgramRunRequest(
+    bottleId: bottle.id,
+    programPath: 'wineboot',
+    runnerKind: 'macosWine',
+    executable: _macosWineExecutable(hostEnvironment),
+    arguments: const <String>['wineboot', '--restart'],
+    environment: _macosWineEnvironment(
+      bottle: bottle,
+      environment: environment,
+    ),
+    logPath: _joinPath(bottle.path, const ['logs', 'latest.log']),
+    workingDirectory: Option.of(_macosWineBinFolder(hostEnvironment)),
+  );
+}
+
 ProgramRunRequest _macosWineMonoInstallRequest({
   required BottleRecord bottle,
   required HostEnvironment environment,

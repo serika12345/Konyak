@@ -1692,6 +1692,111 @@ void defineProgramExecutionContractTests() {
     }
   });
 
+  test('run-bottle-command --json simulates a Windows reboot on macOS', () {
+    final repository = MemoryBottleRepository(
+      dataHome: '/Users/user/Library/Application Support/Konyak',
+      bottles: [
+        BottleRecord(
+          id: 'steam',
+          name: 'Steam',
+          path: '/Users/user/Library/Application Support/Konyak/Bottles/Steam',
+          windowsVersion: 'win10',
+        ),
+      ],
+    );
+    final runner = RecordingProgramRunner(
+      result: const ProgramRunCompleted(processExitCode: 0),
+    );
+
+    final result = runCli(
+      const [
+        'run-bottle-command',
+        'steam',
+        '--command',
+        'simulate-reboot',
+        '--json',
+      ],
+      bottleRepository: repository,
+      programRunPlanner: ProgramRunPlanner(
+        hostPlatform: KonyakHostPlatform.macos,
+        environment: HostEnvironment({'HOME': '/Users/user'}),
+      ),
+      programRunner: runner,
+    );
+
+    expect(result.exitCode, 0);
+    expect(runner.lastRequest?.programPath, 'wineboot');
+    expect(runner.lastRequest?.runnerKind, 'macosWine');
+    expect(runner.lastRequest?.arguments, const ['wineboot', '--restart']);
+    expect(
+      runner.lastRequest?.environment.toMap(),
+      containsPair(
+        'WINEPREFIX',
+        '/Users/user/Library/Application Support/Konyak/Bottles/Steam',
+      ),
+    );
+
+    final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+    expect(payload['schemaVersion'], 1);
+    final run = payload['run'] as Map<String, Object?>;
+    expect(run['programPath'], 'wineboot');
+    expect(run['runnerKind'], 'macosWine');
+    expect(run['argv'], [
+      '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wineloader',
+      'wineboot',
+      '--restart',
+    ]);
+    expect(run['processExitCode'], 0);
+  });
+
+  test('run-bottle-command --json simulates a Windows reboot on Linux', () {
+    final repository = MemoryBottleRepository(
+      dataHome: '/home/user/.local/share/konyak',
+      bottles: [
+        BottleRecord(
+          id: 'steam',
+          name: 'Steam',
+          path: '/home/user/.local/share/konyak/bottles/steam',
+          windowsVersion: 'win10',
+        ),
+      ],
+    );
+    final runner = RecordingProgramRunner(
+      result: const ProgramRunCompleted(processExitCode: 0),
+    );
+
+    final result = runCli(
+      const [
+        'run-bottle-command',
+        'steam',
+        '--command',
+        'simulate-reboot',
+        '--json',
+      ],
+      bottleRepository: repository,
+      programRunPlanner: ProgramRunPlanner(
+        hostPlatform: KonyakHostPlatform.linux,
+        environment: HostEnvironment({
+          'HOME': '/home/user',
+          'KONYAK_LINUX_WINE_HOME': '/runtime/linux-wine',
+        }),
+      ),
+      programRunner: runner,
+    );
+
+    expect(result.exitCode, 0);
+    expect(runner.lastRequest?.programPath, 'wineboot');
+    expect(runner.lastRequest?.runnerKind, 'wineboot');
+    expect(runner.lastRequest?.arguments, const ['--restart']);
+    expect(
+      runner.lastRequest?.environment.toMap(),
+      containsPair(
+        'WINEPREFIX',
+        '/home/user/.local/share/konyak/bottles/steam',
+      ),
+    );
+  });
+
   test('run-bottle-command --json opens the DirectX diagnostic report', () {
     final repository = MemoryBottleRepository(
       dataHome: '/Users/user/Library/Application Support/Konyak',

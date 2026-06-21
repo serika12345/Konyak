@@ -401,6 +401,25 @@ void defineShellAndSidebarWidgetTests() {
             "schemaVersion": 1,
             "run": {
               "bottleId": "steam",
+              "programPath": "wineboot",
+              "runnerKind": "macosWine",
+              "executable": "/runtime/bin/wineloader",
+              "workingDirectory": "/runtime/bin",
+              "argv": ["/runtime/bin/wineloader", "wineboot", "--restart"],
+              "logPath": "/Users/user/Library/Application Support/Konyak/Bottles/Steam/logs/latest.log",
+              "processExitCode": 0
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "run": {
+              "bottleId": "steam",
               "programPath": "cmd",
               "runnerKind": "macosTerminal",
               "executable": "/usr/bin/osascript",
@@ -451,6 +470,7 @@ void defineShellAndSidebarWidgetTests() {
     expect(find.text('Terminal'), findsOneWidget);
     expect(find.text('Command Prompt'), findsOneWidget);
     expect(find.text('Uninstall Programs'), findsOneWidget);
+    expect(find.text('Simulate Reboot'), findsOneWidget);
     expect(find.text('DirectX Diagnostic Report'), findsOneWidget);
     expect(find.text('Open C: Drive'), findsOneWidget);
     expect(find.text('Open Bottle Folder'), findsOneWidget);
@@ -472,12 +492,29 @@ void defineShellAndSidebarWidgetTests() {
 
     await tester.tap(find.widgetWithText(TextButton, 'Tools'));
     await tester.pumpAndSettle();
+    await tester.tap(find.text('Simulate Reboot'));
+    await tester.pumpAndSettle();
+
+    expect(runner.argumentsLog[2], const [
+      'run-bottle-command',
+      'steam',
+      '--command',
+      'simulate-reboot',
+      '--json',
+    ]);
+    ScaffoldMessenger.of(
+      tester.element(find.byType(Scaffold)),
+    ).hideCurrentSnackBar();
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.widgetWithText(TextButton, 'Tools'));
+    await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Open Bottle Folder'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Open Bottle Folder'));
     await tester.pumpAndSettle();
 
-    expect(runner.argumentsLog[2], const [
+    expect(runner.argumentsLog[3], const [
       'open-bottle-location',
       'steam',
       '--location',

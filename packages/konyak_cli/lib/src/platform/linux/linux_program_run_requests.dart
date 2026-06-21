@@ -117,6 +117,27 @@ ProgramRunRequest _linuxWinebootRequest({
   );
 }
 
+ProgramRunRequest _linuxWinebootRestartRequest({
+  required BottleRecord bottle,
+  required HostEnvironment environment,
+}) {
+  final hostEnvironment = environment;
+  return ProgramRunRequest(
+    bottleId: bottle.id,
+    programPath: 'wineboot',
+    runnerKind: 'wineboot',
+    executable: _linuxWinebootExecutable(hostEnvironment),
+    arguments: const <String>['--restart'],
+    environment: _linuxRuntimeEnvironment(hostEnvironment).merge(
+      _linuxWineEnvironmentWithRuntime(
+        bottle: bottle,
+        environment: environment,
+      ),
+    ),
+    logPath: _joinPath(bottle.path, const ['logs', 'latest.log']),
+  );
+}
+
 ProgramRunRequest _linuxWineserverKillRequest({
   required BottleRecord bottle,
   required HostEnvironment environment,
