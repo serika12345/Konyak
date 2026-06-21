@@ -11,7 +11,7 @@ handoff notes.
 
 ### Latest Update
 
-- Timestamp: 2026-06-21 01:26 JST
+- Timestamp: 2026-06-21 11:27 JST
 - State: `completed`
 - Branch: `main`
 - Related work: macOS runtime automated smoke coverage; CrossOver-derived
@@ -43,13 +43,14 @@ handoff notes.
     Windows probe fixtures without treating it as a runtime component.
   - Marked the macOS runtime automated smoke coverage and Phase 3
     launch/smoke normalization TODOs complete.
+  - Committed and pushed runtime submodule commit
+    `5bfa6adf4da415662fe0acdeb654cb9ed0fbaa9d` and parent commit
+    `4257277251911612b71ef9643f2b562d080834f3`.
+  - Confirmed parent GitHub Actions and runtime submodule GitHub Actions
+    completed successfully after the push.
 - Remaining:
-  - None for the local implementation and smoke proof. Remote Actions will only
-    consume this after the runtime submodule probe changes are committed and
-    the parent submodule pointer is updated.
-- Next: commit the runtime submodule probe changes and the parent pointer when
-  this change is ready to publish, then push the parent branch and confirm
-  GitHub Actions `macOS Runtime CLI Smoke` passes remotely.
+  - None for this CI smoke completion work.
+- Next: no open action remains for this item.
 - Verification:
   - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/macos_window_metrics_test.dart --plain-name "macOS runtime CLI smoke runs backend probes through the CLI"'`:
     failed before implementation because the parent CLI smoke did not build or
@@ -76,6 +77,18 @@ handoff notes.
   - `nix develop -c zsh -lc 'just verify'`: passed.
   - `git diff --check`: passed.
   - `git -C runtime/konyak-macos-runtime diff --check`: passed.
+  - Parent remote GitHub Actions for
+    `4257277251911612b71ef9643f2b562d080834f3`: `Konyak Pages`
+    run `27890217321`, `Konyak Verify` run `27890217320`, and
+    `macOS Runtime CLI Smoke` run `27890217314` all passed.
+  - Runtime submodule remote GitHub Actions for
+    `5bfa6adf4da415662fe0acdeb654cb9ed0fbaa9d`: `Build runtime`
+    run `27890202909` passed, including Wine runtime build, binary component
+    packaging, vkd3d and DXMT component builds, runtime stack assembly, GUI
+    start smoke, GPTK/D3DMetal smoke, DXVK smoke, vkd3d smoke, DXMT smoke,
+    Wine32-on-64 smoke, release metadata generation, and publish release.
+    The run reported non-failing annotations for Node.js 20 deprecation and
+    FlakeHub authentication on cache setup.
 
 - Timestamp: 2026-06-20 23:32 JST
 - State: `completed`
