@@ -7,10 +7,12 @@ class RunProgramDialog extends StatefulWidget {
     super.key,
     required this.bottleName,
     required this.programFilePicker,
+    required this.initialDirectory,
   });
 
   final String bottleName;
   final ProgramFilePicker programFilePicker;
+  final String initialDirectory;
 
   @override
   State<RunProgramDialog> createState() => _RunProgramDialogState();
@@ -35,7 +37,9 @@ class _RunProgramDialogState extends State<RunProgramDialog> {
   }
 
   Future<void> _chooseProgramFile() async {
-    final selectedPath = await widget.programFilePicker.pickProgramPath();
+    final selectedPath = await widget.programFilePicker.pickProgramPath(
+      initialDirectory: widget.initialDirectory,
+    );
     if (!mounted || selectedPath == null || selectedPath.trim().isEmpty) {
       return;
     }

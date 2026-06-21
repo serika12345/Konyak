@@ -460,12 +460,16 @@ final class _FakeIconFileLoader implements IconFileLoader {
 }
 
 final class _FakeProgramFilePicker implements ProgramFilePicker {
-  const _FakeProgramFilePicker({required this.path});
+  const _FakeProgramFilePicker({required this.path, this.initialDirectories});
 
   final String? path;
+  final List<String?>? initialDirectories;
 
   @override
-  Future<String?> pickProgramPath() async => path;
+  Future<String?> pickProgramPath({String? initialDirectory}) async {
+    initialDirectories?.add(initialDirectory);
+    return path;
+  }
 }
 
 final class _FakeDirectoryPicker implements DirectoryPicker {

@@ -755,6 +755,7 @@ void defineProgramWidgetTests() {
   testWidgets('run program dialog can choose a program file', (
     WidgetTester tester,
   ) async {
+    final pickerInitialDirectories = <String?>[];
     final runner = _QueuedProcessRunner([
       const ProcessRunResult(
         exitCode: 0,
@@ -797,8 +798,9 @@ void defineProgramWidgetTests() {
     await tester.pumpWidget(
       _testKonyakApp(
         cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
-        programFilePicker: const _FakeProgramFilePicker(
+        programFilePicker: _FakeProgramFilePicker(
           path: '/downloads/setup.exe',
+          initialDirectories: pickerInitialDirectories,
         ),
       ),
     );
@@ -811,6 +813,9 @@ void defineProgramWidgetTests() {
     await tester.tap(find.widgetWithText(FilledButton, 'Run'));
     await tester.pumpAndSettle();
 
+    expect(pickerInitialDirectories, const [
+      '/home/user/.local/share/konyak/bottles/steam/drive_c',
+    ]);
     expect(find.byTooltip('View latest log'), findsOneWidget);
   });
 

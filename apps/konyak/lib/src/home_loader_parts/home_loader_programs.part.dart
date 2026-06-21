@@ -10,6 +10,7 @@ extension _KonyakHomeLoaderPrograms on _KonyakHomeLoaderState {
       builder: (context) => RunProgramDialog(
         bottleName: bottle.name,
         programFilePicker: widget.programFilePicker,
+        initialDirectory: _bottleDriveCPath(bottle.path),
       ),
     );
 
@@ -348,4 +349,12 @@ extension _KonyakHomeLoaderPrograms on _KonyakHomeLoaderState {
         _showSnackBar(message);
     }
   }
+}
+
+String _bottleDriveCPath(String bottlePath) {
+  if (bottlePath.endsWith('/')) {
+    return '${bottlePath}drive_c';
+  }
+
+  return '$bottlePath/drive_c';
 }

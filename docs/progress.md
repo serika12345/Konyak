@@ -11,6 +11,41 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-21 20:22 JST
+- State: `completed`
+- Branch: `main`
+- Related work: Run program file chooser initial directory
+- Purpose: make the Run dialog's file chooser open in the selected bottle's
+  Konyak C drive by default.
+- Completed:
+  - Read the latest progress/TODO state and traced Run dialog file selection
+    through `KonyakHomeLoader`, `RunProgramDialog`, and `ProgramFilePicker`.
+  - Added widget coverage proving the Run file chooser receives the selected
+    bottle's `drive_c` path as its initial directory.
+  - Extended `ProgramFilePicker` with an optional initial directory and passed
+    it through to `file_selector.openFile`.
+  - Changed the Run dialog launch path to pass `bottle.path/drive_c` when
+    opening the file chooser.
+- Remaining:
+  - None for this UI behavior change.
+- Next: none.
+- Verification:
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "run program dialog can choose a program file"'`:
+    failed before implementation because the picker received `null`, then
+    passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "run program"'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "pin program"'`:
+    passed.
+  - `nix develop -c zsh -lc 'just flutter-format-check'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-analyze'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-test'`: passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `nix develop -c zsh -lc 'git diff --check'`: passed.
+
 - Timestamp: 2026-06-21 20:09 JST
 - State: `completed`
 - Branch: `main`
