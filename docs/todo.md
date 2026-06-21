@@ -45,6 +45,19 @@ task changes scope.
 
 ## Next Tasks
 
+- [ ] Add a macOS DLSS powered by MetalFX bottle setting.
+  - Design: `docs/dlss-metalfx-design.md`.
+  - [ ] Prove the exact D3DMetal/DXMT enablement signal dynamically through
+    Konyak's public `run-program --json` path before implementation is marked
+    complete.
+  - [ ] Add `dlssMetalFx` to CLI bottle runtime settings, storage, JSON
+    contracts, and Flutter models with a legacy default of `false`.
+  - [ ] Gate the macOS UI control to D3DMetal/DXMT with the required `nvapi64`
+    and `nvngx` capability; do not expose it on Linux.
+  - [ ] Apply the proven run-plan environment only for D3DMetal/DXMT and
+    preserve the setting for other backends.
+  - [ ] Add focused CLI, Flutter parser, widget, and dynamic smoke coverage;
+    document any CI limitation for proprietary DLSS test software.
 - [x] Remove runtime verification masking and prove prefix/addon integrity.
   - [x] Remove `mscoree,mshtml=` from application-owned macOS prefix
     initialization and update CLI contract tests so prefix creation exercises

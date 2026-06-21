@@ -11,6 +11,34 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-21 16:15 JST
+- State: `completed`
+- Branch: `main`
+- Related work: DLSS powered by MetalFX design
+- Purpose: define the TODO and design for a Konyak macOS bottle toggle that
+  mirrors CrossOver's DLSS powered by MetalFX behavior without starting
+  implementation.
+- Completed:
+  - Read the latest progress/TODO state.
+  - Confirmed existing Konyak GPTK/D3DMetal and DXMT runtime handling already
+    validates or packages `nvapi64` and `nvngx` shim files.
+  - Confirmed CrossOver documents DLSS as MetalFX-backed and limited to
+    D3DMetal/DXMT with in-game DLSS enabled.
+  - Added `docs/dlss-metalfx-design.md` covering product behavior, data
+    contracts, run-planning constraints, dynamic proof requirements, tests, and
+    CI limits.
+  - Added the implementation backlog item to `docs/todo.md`.
+- Remaining:
+  - None for this design/TODO pass.
+- Next: start implementation only after choosing a DLSS-capable dynamic proof
+  path and confirming the exact D3DMetal/DXMT enablement signal.
+- Verification:
+  - `nix develop -c zsh -lc 'git diff --check'`: passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+
 - Timestamp: 2026-06-21 15:22 JST
 - State: `completed`
 - Branch: `main`
