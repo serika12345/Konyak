@@ -1,6 +1,271 @@
 part of 'widget_test.dart';
 
 void defineProgramWidgetTests() {
+  testWidgets('run program auto-pins newly installed programs when enabled', (
+    WidgetTester tester,
+  ) async {
+    const installedShortcutPath =
+        '/bottles/steam/drive_c/ProgramData/Microsoft/Windows/Start Menu/Programs/Steam.lnk';
+    final runner = _QueuedProcessRunner([
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottles": [
+              {
+                "id": "steam",
+                "name": "Steam",
+                "path": "/bottles/steam",
+                "windowsVersion": "win10"
+              }
+            ]
+          }
+        ''',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "appSettings": {
+              "terminateWineProcessesOnClose": true,
+              "defaultBottlePath": "/bottles",
+              "automaticallyCheckForKonyakUpdates": false,
+              "automaticallyCheckForWineUpdates": false,
+              "automaticallyPinNewInstalledPrograms": true
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+      ProcessRunResult(
+        exitCode: 0,
+        stdout: _macosRuntimeListPayload(),
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottlePrograms": {
+              "bottleId": "steam",
+              "programs": []
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "run": {
+              "bottleId": "steam",
+              "programPath": "/downloads/setup.exe",
+              "runnerKind": "wine",
+              "executable": "wine",
+              "workingDirectory": null,
+              "argv": ["wine", "/downloads/setup.exe"],
+              "logPath": "/bottles/steam/logs/latest.log",
+              "processExitCode": 0
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout:
+            '''
+          {
+            "schemaVersion": 1,
+            "bottlePrograms": {
+              "bottleId": "steam",
+              "programs": [
+                {
+                  "id": "steam-shortcut",
+                  "name": "Steam",
+                  "path": "$installedShortcutPath",
+                  "source": "globalStartMenu"
+                }
+              ]
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout:
+            '''
+          {
+            "schemaVersion": 1,
+            "bottle": {
+              "id": "steam",
+              "name": "Steam",
+              "path": "/bottles/steam",
+              "windowsVersion": "win10",
+              "pinnedPrograms": [
+                {
+                  "name": "Steam",
+                  "path": "$installedShortcutPath",
+                  "removable": true
+                }
+              ]
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+    ]);
+
+    await tester.pumpWidget(
+      _testKonyakApp(
+        cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Settings'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(TextButton, 'Close'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.widgetWithText(TextButton, 'Run'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Program path'),
+      '/downloads/setup.exe',
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Run'));
+    await tester.pumpAndSettle();
+
+    expect(runner.argumentsLog, const [
+      ['list-bottles', '--json'],
+      ['get-app-settings', '--json'],
+      ['list-runtimes', '--json'],
+      ['list-bottle-programs', 'steam', '--json'],
+      ['run-program', 'steam', '--program', '/downloads/setup.exe', '--json'],
+      ['list-bottle-programs', 'steam', '--json'],
+      [
+        'pin-program',
+        'steam',
+        '--name',
+        'Steam',
+        '--program',
+        installedShortcutPath,
+        '--json',
+      ],
+    ]);
+    expect(find.text('Pinned Steam'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('pinned-program-tile-$installedShortcutPath')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets(
+    'run program does not auto-pin installed programs when disabled',
+    (WidgetTester tester) async {
+      final runner = _QueuedProcessRunner([
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottles": [
+              {
+                "id": "steam",
+                "name": "Steam",
+                "path": "/bottles/steam",
+                "windowsVersion": "win10"
+              }
+            ]
+          }
+        ''',
+          stderr: '',
+        ),
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+          {
+            "schemaVersion": 1,
+            "appSettings": {
+              "terminateWineProcessesOnClose": true,
+              "defaultBottlePath": "/bottles",
+              "automaticallyCheckForKonyakUpdates": false,
+              "automaticallyCheckForWineUpdates": false,
+              "automaticallyPinNewInstalledPrograms": false
+            }
+          }
+        ''',
+          stderr: '',
+        ),
+        ProcessRunResult(
+          exitCode: 0,
+          stdout: _macosRuntimeListPayload(),
+          stderr: '',
+        ),
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+          {
+            "schemaVersion": 1,
+            "run": {
+              "bottleId": "steam",
+              "programPath": "/downloads/setup.exe",
+              "runnerKind": "wine",
+              "executable": "wine",
+              "workingDirectory": null,
+              "argv": ["wine", "/downloads/setup.exe"],
+              "logPath": "/bottles/steam/logs/latest.log",
+              "processExitCode": 0
+            }
+          }
+        ''',
+          stderr: '',
+        ),
+      ]);
+
+      await tester.pumpWidget(
+        _testKonyakApp(
+          cliClient: KonyakCliClient(
+            executable: 'konyak',
+            processRunner: runner,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byTooltip('Settings'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(TextButton, 'Close'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.widgetWithText(TextButton, 'Run'));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Program path'),
+        '/downloads/setup.exe',
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Run'));
+      await tester.pumpAndSettle();
+
+      expect(runner.argumentsLog, const [
+        ['list-bottles', '--json'],
+        ['get-app-settings', '--json'],
+        ['list-runtimes', '--json'],
+        ['run-program', 'steam', '--program', '/downloads/setup.exe', '--json'],
+      ]);
+    },
+  );
+
   testWidgets('run program dialog invokes the CLI client for a bottle', (
     WidgetTester tester,
   ) async {

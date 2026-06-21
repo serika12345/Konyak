@@ -17,6 +17,7 @@ class AppSettingsRecord {
     this.appearanceMode = AppAppearanceMode.dark,
     this.automaticallyCheckForKonyakUpdates = false,
     this.automaticallyCheckForWineUpdates = true,
+    this.automaticallyPinNewInstalledPrograms = true,
   });
 
   final bool terminateWineProcessesOnClose;
@@ -24,6 +25,7 @@ class AppSettingsRecord {
   final AppAppearanceMode appearanceMode;
   final bool automaticallyCheckForKonyakUpdates;
   final bool automaticallyCheckForWineUpdates;
+  final bool automaticallyPinNewInstalledPrograms;
 
   AppSettingsRecord withTerminateWineProcessesOnClose(
     bool terminateWineProcessesOnClose,
@@ -34,6 +36,8 @@ class AppSettingsRecord {
       appearanceMode: appearanceMode,
       automaticallyCheckForKonyakUpdates: automaticallyCheckForKonyakUpdates,
       automaticallyCheckForWineUpdates: automaticallyCheckForWineUpdates,
+      automaticallyPinNewInstalledPrograms:
+          automaticallyPinNewInstalledPrograms,
     );
   }
 
@@ -44,6 +48,8 @@ class AppSettingsRecord {
       appearanceMode: appearanceMode,
       automaticallyCheckForKonyakUpdates: automaticallyCheckForKonyakUpdates,
       automaticallyCheckForWineUpdates: automaticallyCheckForWineUpdates,
+      automaticallyPinNewInstalledPrograms:
+          automaticallyPinNewInstalledPrograms,
     );
   }
 
@@ -54,6 +60,8 @@ class AppSettingsRecord {
       appearanceMode: appearanceMode,
       automaticallyCheckForKonyakUpdates: automaticallyCheckForKonyakUpdates,
       automaticallyCheckForWineUpdates: automaticallyCheckForWineUpdates,
+      automaticallyPinNewInstalledPrograms:
+          automaticallyPinNewInstalledPrograms,
     );
   }
 
@@ -66,6 +74,8 @@ class AppSettingsRecord {
       appearanceMode: appearanceMode,
       automaticallyCheckForKonyakUpdates: automaticallyCheckForKonyakUpdates,
       automaticallyCheckForWineUpdates: automaticallyCheckForWineUpdates,
+      automaticallyPinNewInstalledPrograms:
+          automaticallyPinNewInstalledPrograms,
     );
   }
 
@@ -78,6 +88,22 @@ class AppSettingsRecord {
       appearanceMode: appearanceMode,
       automaticallyCheckForKonyakUpdates: automaticallyCheckForKonyakUpdates,
       automaticallyCheckForWineUpdates: automaticallyCheckForWineUpdates,
+      automaticallyPinNewInstalledPrograms:
+          automaticallyPinNewInstalledPrograms,
+    );
+  }
+
+  AppSettingsRecord withAutomaticallyPinNewInstalledPrograms(
+    bool automaticallyPinNewInstalledPrograms,
+  ) {
+    return AppSettingsRecord(
+      terminateWineProcessesOnClose: terminateWineProcessesOnClose,
+      defaultBottlePath: defaultBottlePath,
+      appearanceMode: appearanceMode,
+      automaticallyCheckForKonyakUpdates: automaticallyCheckForKonyakUpdates,
+      automaticallyCheckForWineUpdates: automaticallyCheckForWineUpdates,
+      automaticallyPinNewInstalledPrograms:
+          automaticallyPinNewInstalledPrograms,
     );
   }
 
@@ -88,6 +114,8 @@ class AppSettingsRecord {
       'appearanceMode': appearanceMode.jsonValue,
       'automaticallyCheckForKonyakUpdates': automaticallyCheckForKonyakUpdates,
       'automaticallyCheckForWineUpdates': automaticallyCheckForWineUpdates,
+      'automaticallyPinNewInstalledPrograms':
+          automaticallyPinNewInstalledPrograms,
     };
   }
 
@@ -100,7 +128,9 @@ class AppSettingsRecord {
         other.automaticallyCheckForKonyakUpdates ==
             automaticallyCheckForKonyakUpdates &&
         other.automaticallyCheckForWineUpdates ==
-            automaticallyCheckForWineUpdates;
+            automaticallyCheckForWineUpdates &&
+        other.automaticallyPinNewInstalledPrograms ==
+            automaticallyPinNewInstalledPrograms;
   }
 
   @override
@@ -110,5 +140,6 @@ class AppSettingsRecord {
     appearanceMode,
     automaticallyCheckForKonyakUpdates,
     automaticallyCheckForWineUpdates,
+    automaticallyPinNewInstalledPrograms,
   );
 }

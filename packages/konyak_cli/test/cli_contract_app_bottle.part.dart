@@ -54,6 +54,7 @@ void defineAppAndBottleContractTests() {
           appearanceMode: AppAppearanceMode.light,
           automaticallyCheckForKonyakUpdates: true,
           automaticallyCheckForWineUpdates: false,
+          automaticallyPinNewInstalledPrograms: false,
         ),
       ),
     );
@@ -70,6 +71,7 @@ void defineAppAndBottleContractTests() {
         'appearanceMode': 'light',
         'automaticallyCheckForKonyakUpdates': true,
         'automaticallyCheckForWineUpdates': false,
+        'automaticallyPinNewInstalledPrograms': false,
       },
     });
   });
@@ -82,7 +84,7 @@ void defineAppAndBottleContractTests() {
     final result = runCli(const [
       'set-app-settings',
       '--settings-json',
-      '{"terminateWineProcessesOnClose":false,"defaultBottlePath":"/Volumes/Games/Bottles","appearanceMode":"light","automaticallyCheckForKonyakUpdates":true,"automaticallyCheckForWineUpdates":false}',
+      '{"terminateWineProcessesOnClose":false,"defaultBottlePath":"/Volumes/Games/Bottles","appearanceMode":"light","automaticallyCheckForKonyakUpdates":true,"automaticallyCheckForWineUpdates":false,"automaticallyPinNewInstalledPrograms":false}',
       '--json',
     ], appSettingsRepository: repository);
 
@@ -96,6 +98,7 @@ void defineAppAndBottleContractTests() {
         appearanceMode: AppAppearanceMode.light,
         automaticallyCheckForKonyakUpdates: true,
         automaticallyCheckForWineUpdates: false,
+        automaticallyPinNewInstalledPrograms: false,
       ),
     );
 
@@ -106,10 +109,11 @@ void defineAppAndBottleContractTests() {
       'appearanceMode': 'light',
       'automaticallyCheckForKonyakUpdates': true,
       'automaticallyCheckForWineUpdates': false,
+      'automaticallyPinNewInstalledPrograms': false,
     });
   });
 
-  test('set-app-settings --json persists system appearance mode', () {
+  test('set-app-settings --json defaults automatic pinning for old payloads', () {
     final repository = MemoryAppSettingsRepository(
       const AppSettingsRecord(defaultBottlePath: '/Users/user/Bottles'),
     );
@@ -128,6 +132,7 @@ void defineAppAndBottleContractTests() {
       const AppSettingsRecord(
         defaultBottlePath: '/Volumes/Games/Bottles',
         appearanceMode: AppAppearanceMode.system,
+        automaticallyPinNewInstalledPrograms: true,
       ),
     );
 
@@ -138,6 +143,7 @@ void defineAppAndBottleContractTests() {
       'appearanceMode': 'system',
       'automaticallyCheckForKonyakUpdates': false,
       'automaticallyCheckForWineUpdates': true,
+      'automaticallyPinNewInstalledPrograms': true,
     });
   });
 

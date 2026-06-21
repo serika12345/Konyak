@@ -246,6 +246,26 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
             ),
             const SizedBox(height: 26),
             AppSettingsSection(
+              title: 'Programs',
+              children: [
+                AppSettingsSwitchRow(
+                  switchKey: const ValueKey(
+                    'app-settings-auto-pin-new-programs-switch',
+                  ),
+                  label: 'Automatically pin newly installed programs',
+                  value: _settings.automaticallyPinNewInstalledPrograms,
+                  onChanged: _isSaving
+                      ? null
+                      : (value) => _save(
+                          _settings.withAutomaticallyPinNewInstalledPrograms(
+                            value,
+                          ),
+                        ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 26),
+            AppSettingsSection(
               title: 'Updates',
               children: [
                 AppSettingsSwitchRow(

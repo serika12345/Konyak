@@ -15,6 +15,7 @@ class AppSettingsSummary {
     this.appearanceMode = AppAppearanceMode.dark,
     this.automaticallyCheckForKonyakUpdates = false,
     this.automaticallyCheckForWineUpdates = true,
+    this.automaticallyPinNewInstalledPrograms = true,
   });
 
   final bool terminateWineProcessesOnClose;
@@ -22,6 +23,7 @@ class AppSettingsSummary {
   final AppAppearanceMode appearanceMode;
   final bool automaticallyCheckForKonyakUpdates;
   final bool automaticallyCheckForWineUpdates;
+  final bool automaticallyPinNewInstalledPrograms;
 
   AppSettingsSummary withTerminateWineProcessesOnClose(
     bool terminateWineProcessesOnClose,
@@ -32,6 +34,8 @@ class AppSettingsSummary {
       appearanceMode: appearanceMode,
       automaticallyCheckForKonyakUpdates: automaticallyCheckForKonyakUpdates,
       automaticallyCheckForWineUpdates: automaticallyCheckForWineUpdates,
+      automaticallyPinNewInstalledPrograms:
+          automaticallyPinNewInstalledPrograms,
     );
   }
 
@@ -42,6 +46,8 @@ class AppSettingsSummary {
       appearanceMode: appearanceMode,
       automaticallyCheckForKonyakUpdates: automaticallyCheckForKonyakUpdates,
       automaticallyCheckForWineUpdates: automaticallyCheckForWineUpdates,
+      automaticallyPinNewInstalledPrograms:
+          automaticallyPinNewInstalledPrograms,
     );
   }
 
@@ -52,6 +58,8 @@ class AppSettingsSummary {
       appearanceMode: appearanceMode,
       automaticallyCheckForKonyakUpdates: automaticallyCheckForKonyakUpdates,
       automaticallyCheckForWineUpdates: automaticallyCheckForWineUpdates,
+      automaticallyPinNewInstalledPrograms:
+          automaticallyPinNewInstalledPrograms,
     );
   }
 
@@ -64,6 +72,8 @@ class AppSettingsSummary {
       appearanceMode: appearanceMode,
       automaticallyCheckForKonyakUpdates: automaticallyCheckForKonyakUpdates,
       automaticallyCheckForWineUpdates: automaticallyCheckForWineUpdates,
+      automaticallyPinNewInstalledPrograms:
+          automaticallyPinNewInstalledPrograms,
     );
   }
 
@@ -76,6 +86,22 @@ class AppSettingsSummary {
       appearanceMode: appearanceMode,
       automaticallyCheckForKonyakUpdates: automaticallyCheckForKonyakUpdates,
       automaticallyCheckForWineUpdates: automaticallyCheckForWineUpdates,
+      automaticallyPinNewInstalledPrograms:
+          automaticallyPinNewInstalledPrograms,
+    );
+  }
+
+  AppSettingsSummary withAutomaticallyPinNewInstalledPrograms(
+    bool automaticallyPinNewInstalledPrograms,
+  ) {
+    return AppSettingsSummary(
+      terminateWineProcessesOnClose: terminateWineProcessesOnClose,
+      defaultBottlePath: defaultBottlePath,
+      appearanceMode: appearanceMode,
+      automaticallyCheckForKonyakUpdates: automaticallyCheckForKonyakUpdates,
+      automaticallyCheckForWineUpdates: automaticallyCheckForWineUpdates,
+      automaticallyPinNewInstalledPrograms:
+          automaticallyPinNewInstalledPrograms,
     );
   }
 
@@ -86,6 +112,8 @@ class AppSettingsSummary {
       'appearanceMode': appearanceMode.jsonValue,
       'automaticallyCheckForKonyakUpdates': automaticallyCheckForKonyakUpdates,
       'automaticallyCheckForWineUpdates': automaticallyCheckForWineUpdates,
+      'automaticallyPinNewInstalledPrograms':
+          automaticallyPinNewInstalledPrograms,
     };
   }
 }

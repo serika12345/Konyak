@@ -150,6 +150,8 @@ Option<AppSettingsRecord> _appSettingsRecordFromJson(
       settings['automaticallyCheckForKonyakUpdates'];
   final automaticallyCheckForWineUpdates =
       settings['automaticallyCheckForWineUpdates'];
+  final automaticallyPinNewInstalledPrograms =
+      settings['automaticallyPinNewInstalledPrograms'];
 
   if (terminateWineProcessesOnClose != null &&
       terminateWineProcessesOnClose is! bool) {
@@ -174,6 +176,10 @@ Option<AppSettingsRecord> _appSettingsRecordFromJson(
       automaticallyCheckForWineUpdates is! bool) {
     return const Option.none();
   }
+  if (automaticallyPinNewInstalledPrograms != null &&
+      automaticallyPinNewInstalledPrograms is! bool) {
+    return const Option.none();
+  }
 
   return Option.of(
     AppSettingsRecord(
@@ -190,6 +196,10 @@ Option<AppSettingsRecord> _appSettingsRecordFromJson(
           : false,
       automaticallyCheckForWineUpdates: automaticallyCheckForWineUpdates is bool
           ? automaticallyCheckForWineUpdates
+          : true,
+      automaticallyPinNewInstalledPrograms:
+          automaticallyPinNewInstalledPrograms is bool
+          ? automaticallyPinNewInstalledPrograms
           : true,
     ),
   );

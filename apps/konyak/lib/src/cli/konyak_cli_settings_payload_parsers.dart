@@ -117,13 +117,17 @@ AppSettingsSummary? _parseAppSettingsSummary(Object? value) {
       value['automaticallyCheckForKonyakUpdates'];
   final automaticallyCheckForWineUpdates =
       value['automaticallyCheckForWineUpdates'];
+  final automaticallyPinNewInstalledPrograms =
+      value['automaticallyPinNewInstalledPrograms'];
 
   if (terminateWineProcessesOnClose is! bool ||
       defaultBottlePath is! String ||
       defaultBottlePath.trim().isEmpty ||
       appearanceMode == null ||
       automaticallyCheckForKonyakUpdates is! bool ||
-      automaticallyCheckForWineUpdates is! bool) {
+      automaticallyCheckForWineUpdates is! bool ||
+      (automaticallyPinNewInstalledPrograms != null &&
+          automaticallyPinNewInstalledPrograms is! bool)) {
     return null;
   }
 
@@ -133,6 +137,10 @@ AppSettingsSummary? _parseAppSettingsSummary(Object? value) {
     appearanceMode: appearanceMode,
     automaticallyCheckForKonyakUpdates: automaticallyCheckForKonyakUpdates,
     automaticallyCheckForWineUpdates: automaticallyCheckForWineUpdates,
+    automaticallyPinNewInstalledPrograms:
+        automaticallyPinNewInstalledPrograms is bool
+        ? automaticallyPinNewInstalledPrograms
+        : true,
   );
 }
 

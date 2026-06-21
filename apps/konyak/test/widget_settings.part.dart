@@ -19,7 +19,8 @@ void defineSettingsWidgetTests() {
               "terminateWineProcessesOnClose": true,
               "defaultBottlePath": "/Users/user/Library/Application Support/Konyak/Bottles",
               "automaticallyCheckForKonyakUpdates": false,
-              "automaticallyCheckForWineUpdates": true
+              "automaticallyCheckForWineUpdates": true,
+              "automaticallyPinNewInstalledPrograms": true
             }
           }
         ''',
@@ -39,7 +40,8 @@ void defineSettingsWidgetTests() {
               "terminateWineProcessesOnClose": true,
               "defaultBottlePath": "/Volumes/Games/Bottles",
               "automaticallyCheckForKonyakUpdates": false,
-              "automaticallyCheckForWineUpdates": true
+              "automaticallyCheckForWineUpdates": true,
+              "automaticallyPinNewInstalledPrograms": true
             }
           }
         ''',
@@ -54,7 +56,24 @@ void defineSettingsWidgetTests() {
               "terminateWineProcessesOnClose": true,
               "defaultBottlePath": "/Volumes/Games/Bottles",
               "automaticallyCheckForKonyakUpdates": true,
-              "automaticallyCheckForWineUpdates": true
+              "automaticallyCheckForWineUpdates": true,
+              "automaticallyPinNewInstalledPrograms": true
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "appSettings": {
+              "terminateWineProcessesOnClose": true,
+              "defaultBottlePath": "/Volumes/Games/Bottles",
+              "automaticallyCheckForKonyakUpdates": true,
+              "automaticallyCheckForWineUpdates": true,
+              "automaticallyPinNewInstalledPrograms": false
             }
           }
         ''',
@@ -77,6 +96,7 @@ void defineSettingsWidgetTests() {
 
     expect(find.text('Konyak Settings'), findsOneWidget);
     expect(find.text('General'), findsOneWidget);
+    expect(find.text('Programs'), findsOneWidget);
     expect(find.text('Updates'), findsOneWidget);
     expect(
       find.text('/Users/user/Library/Application Support/Konyak/Bottles'),
@@ -92,6 +112,11 @@ void defineSettingsWidgetTests() {
     );
     await tester.pumpAndSettle();
 
+    await tester.tap(
+      find.byKey(const ValueKey('app-settings-auto-pin-new-programs-switch')),
+    );
+    await tester.pumpAndSettle();
+
     expect(runner.argumentsLog, const [
       ['list-bottles', '--json'],
       ['get-app-settings', '--json'],
@@ -99,13 +124,19 @@ void defineSettingsWidgetTests() {
       [
         'set-app-settings',
         '--settings-json',
-        '{"terminateWineProcessesOnClose":true,"defaultBottlePath":"/Volumes/Games/Bottles","appearanceMode":"dark","automaticallyCheckForKonyakUpdates":false,"automaticallyCheckForWineUpdates":true}',
+        '{"terminateWineProcessesOnClose":true,"defaultBottlePath":"/Volumes/Games/Bottles","appearanceMode":"dark","automaticallyCheckForKonyakUpdates":false,"automaticallyCheckForWineUpdates":true,"automaticallyPinNewInstalledPrograms":true}',
         '--json',
       ],
       [
         'set-app-settings',
         '--settings-json',
-        '{"terminateWineProcessesOnClose":true,"defaultBottlePath":"/Volumes/Games/Bottles","appearanceMode":"dark","automaticallyCheckForKonyakUpdates":true,"automaticallyCheckForWineUpdates":true}',
+        '{"terminateWineProcessesOnClose":true,"defaultBottlePath":"/Volumes/Games/Bottles","appearanceMode":"dark","automaticallyCheckForKonyakUpdates":true,"automaticallyCheckForWineUpdates":true,"automaticallyPinNewInstalledPrograms":true}',
+        '--json',
+      ],
+      [
+        'set-app-settings',
+        '--settings-json',
+        '{"terminateWineProcessesOnClose":true,"defaultBottlePath":"/Volumes/Games/Bottles","appearanceMode":"dark","automaticallyCheckForKonyakUpdates":true,"automaticallyCheckForWineUpdates":true,"automaticallyPinNewInstalledPrograms":false}',
         '--json',
       ],
     ]);

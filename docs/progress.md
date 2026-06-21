@@ -11,6 +11,63 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-21 15:22 JST
+- State: `completed`
+- Branch: `main`
+- Related work: automatic pinning for newly installed programs
+- Purpose: automatically pin newly discovered Installed Programs after a
+  completed installer/program run, with an app setting that can disable the
+  behavior.
+- Completed:
+  - Read the latest progress/TODO state.
+  - Traced Installed Programs listing, manual pinning, program-run completion,
+    and app settings persistence through the Flutter UI and CLI JSON contracts.
+  - Added `automaticallyPinNewInstalledPrograms` to the CLI and Flutter app
+    settings contracts, with missing legacy JSON defaulting to enabled.
+  - Added a Programs switch in Konyak Settings to persist the behavior.
+  - Added post-run Installed Programs diffing in the Flutter home loader and
+    automatic pinning through the existing `pin-program` CLI contract.
+  - Added CLI, Flutter client, settings widget, and program-run widget
+    coverage for enabled, disabled, and legacy-setting behavior.
+  - Updated `docs/todo.md` to include the completed app setting.
+- Remaining:
+  - None for this automatic pinning change.
+- Next: continue with the next unfinished TODO item.
+- Verification:
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "get-app-settings --json returns persisted application settings"'`:
+    failed before implementation because the new app setting field did not
+    exist, then passed after implementation.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "set-app-settings --json defaults automatic pinning for old payloads"'`:
+    passed after implementation.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/cli/konyak_cli_client_test.dart --plain-name "loads app settings through the JSON CLI contract"'`:
+    failed before implementation because the new Flutter setting field did not
+    exist, then passed after implementation.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "run program auto-pins newly installed programs when enabled"'`:
+    failed before implementation because no `list-bottle-programs` diff or
+    `pin-program` call ran after completion, then passed after implementation.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "run program does not auto-pin installed programs when disabled"'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "settings dialog loads and persists Konyak app settings"'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/cli/konyak_cli_client_test.dart --plain-name "sets app settings through the JSON CLI contract"'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "set-app-settings --json persists application settings"'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/cli/konyak_cli_client_test.dart'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart'`:
+    passed.
+  - `nix develop -c zsh -lc 'dart format packages/konyak_cli/lib/src/domain/app/app_settings_models.dart packages/konyak_cli/lib/src/io/app_settings_repositories.dart packages/konyak_cli/test/cli_contract_app_bottle.part.dart apps/konyak/lib/src/settings/app_settings_summary.dart apps/konyak/lib/src/cli/konyak_cli_settings_payload_parsers.dart apps/konyak/lib/src/app/dialogs/app_settings_dialog.dart apps/konyak/lib/src/home_loader_parts/home_loader_programs.part.dart apps/konyak/test/cli/konyak_cli_client_test.dart apps/konyak/test/widget_settings.part.dart apps/konyak/test/widget_programs.part.dart'`:
+    passed.
+  - `nix develop -c zsh -lc 'just cli-test && just flutter-format-check && just flutter-analyze && just flutter-test'`:
+    passed.
+  - `nix develop -c zsh -lc 'just verify-governance && just verify-safety && just format-check && just lint && git diff --check'`:
+    passed.
+  - `nix develop -c zsh -lc 'just flutter-format-check && just flutter-analyze && just flutter-test && just verify-governance && just verify-safety && just format-check && just lint && git diff --check'`:
+    passed after the final completed-run condition cleanup.
+
 - Timestamp: 2026-06-21 14:57 JST
 - State: `completed`
 - Branch: `main`

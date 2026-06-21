@@ -18,8 +18,9 @@ task changes scope.
 - The Flutter app and Dart CLI are the source of truth for application
   behavior.
 - Konyak app settings are implemented for the first app-level settings:
-  close-time Wine process termination, default bottle path selection, update
-  checks, and update installation triggers.
+  close-time Wine process termination, default bottle path selection, automatic
+  pinning for newly installed programs, update checks, and update installation
+  triggers.
 
 ## Completed Foundation
 
@@ -212,6 +213,8 @@ task changes scope.
 - [x] Add Konyak app settings.
   - [x] Load and persist app settings through versioned CLI JSON.
   - [x] Terminate Wine processes on app close when the setting is enabled.
+  - [x] Automatically pin newly discovered Installed Programs after a
+    completed installer run when the setting is enabled.
   - [x] Check for Konyak and Konyak Wine updates on startup when enabled.
   - [x] Install available Konyak Wine runtime updates automatically.
   - [x] Download and apply available Konyak app update artifacts automatically.

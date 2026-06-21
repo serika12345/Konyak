@@ -31,6 +31,7 @@ extension _KonyakHomeLoaderPrograms on _KonyakHomeLoaderState {
           includeWineProcessWindows: true,
         ) ??
         const <String>{};
+    final baselineProgramPaths = await _installedProgramPathsForAutoPin(bottle);
 
     if (!mounted) {
       _finishProgramLaunch(launchId);
@@ -61,6 +62,88 @@ extension _KonyakHomeLoaderPrograms on _KonyakHomeLoaderState {
     }
 
     _handleProgramRunResult(result);
+    await _autoPinNewInstalledPrograms(
+      bottle: bottle,
+      result: result,
+      baselineProgramPaths: baselineProgramPaths,
+    );
+  }
+
+  Future<Set<String>?> _installedProgramPathsForAutoPin(
+    BottleSummary bottle,
+  ) async {
+    if (!_shouldAutomaticallyPinNewInstalledPrograms()) {
+      return null;
+    }
+
+    final result = await widget.cliClient.listBottlePrograms(bottle.id);
+    if (!mounted) {
+      return null;
+    }
+
+    return switch (result) {
+      LoadedBottlePrograms(:final programs) => _knownProgramPaths(
+        bottle: bottle,
+        programs: programs,
+      ),
+      BottleProgramListLoadFailure() => null,
+    };
+  }
+
+  bool _shouldAutomaticallyPinNewInstalledPrograms() {
+    return _appSettings?.automaticallyPinNewInstalledPrograms ?? false;
+  }
+
+  Set<String> _knownProgramPaths({
+    required BottleSummary bottle,
+    required List<BottleProgramSummary> programs,
+  }) {
+    return <String>{
+      for (final program in programs) program.path,
+      for (final program in bottle.pinnedPrograms) program.path,
+    };
+  }
+
+  Future<void> _autoPinNewInstalledPrograms({
+    required BottleSummary bottle,
+    required ProgramRunLoadResult result,
+    required Set<String>? baselineProgramPaths,
+  }) async {
+    if (baselineProgramPaths == null ||
+        !_shouldAutomaticallyPinNewInstalledPrograms()) {
+      return;
+    }
+
+    if (result is! CompletedProgramRun) {
+      return;
+    }
+
+    final programsResult = await widget.cliClient.listBottlePrograms(bottle.id);
+
+    if (!mounted) {
+      return;
+    }
+
+    switch (programsResult) {
+      case LoadedBottlePrograms(:final programs):
+        final knownPaths = Set<String>.of(baselineProgramPaths);
+        for (final program in programs) {
+          if (!knownPaths.add(program.path)) {
+            continue;
+          }
+
+          await _pinProgramPath(
+            bottle: bottle,
+            name: programDisplayName(program),
+            programPath: program.path,
+          );
+          if (!mounted) {
+            return;
+          }
+        }
+      case BottleProgramListLoadFailure(:final message):
+        _showSnackBar(message);
+    }
   }
 
   int _beginProgramLaunch() {
