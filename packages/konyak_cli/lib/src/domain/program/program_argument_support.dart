@@ -31,6 +31,17 @@ List<String> _programSettingsArguments(ProgramSettingsRecord settings) {
   return arguments.split(RegExp(r'\s+'));
 }
 
+List<String> _wineArgumentsForBottleCommand(String command) {
+  return switch (command) {
+    'dxdiag' => const <String>[
+      'cmd',
+      '/c',
+      'dxdiag /t C:\\konyak-dxdiag.txt && start "" notepad C:\\konyak-dxdiag.txt',
+    ],
+    _ => <String>[command],
+  };
+}
+
 ProgramRunEnvironment _programSettingsEnvironment(
   ProgramSettingsRecord settings,
 ) {
@@ -58,6 +69,12 @@ Option<String> _supportedBottleCommand(String command) {
     'winecfg' ||
     'regedit' ||
     'control' ||
+    'uninstaller' ||
+    'taskmgr' ||
+    'cmd' ||
+    'explorer' ||
+    'dxdiag' ||
+    'winver' ||
     'terminal' ||
     'winetricks' => Option.of(normalized),
     _ => const Option.none(),

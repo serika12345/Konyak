@@ -115,6 +115,7 @@ extension KonyakCliProgramCommands on KonyakCliClient {
   Future<ProgramRunLoadResult> runBottleCommand({
     required String bottleId,
     required String command,
+    void Function(int processId)? onStarted,
   }) {
     return _programRunResultFromCommand(
       arguments: [
@@ -126,6 +127,7 @@ extension KonyakCliProgramCommands on KonyakCliClient {
       ],
       failureMessage: (result) =>
           _commandFailureMessage('run-bottle-command', result),
+      onStarted: onStarted,
     );
   }
 

@@ -171,6 +171,7 @@ class KonyakBottleDetail extends StatelessWidget {
             BottleConfigurationBottomBar(
               bottle: activeBottle,
               onRunBottleCommand: onRunBottleCommand,
+              onOpenBottleLocation: onOpenBottleLocation,
             )
           else
             KonyakBottomBar(

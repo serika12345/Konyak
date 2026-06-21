@@ -41,7 +41,7 @@ ProgramRunRequest _linuxWineCommandRequest({
     programPath: command,
     runnerKind: 'wine',
     executable: _linuxWineExecutable(hostEnvironment),
-    arguments: <String>[command],
+    arguments: _wineArgumentsForBottleCommand(command),
     environment: _linuxRuntimeEnvironment(hostEnvironment).merge(
       _linuxWineEnvironmentWithRuntime(
         bottle: bottle,

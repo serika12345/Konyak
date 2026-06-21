@@ -11,6 +11,235 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-21 12:30 JST
+- State: `completed`
+- Branch: `main`
+- Related work: Bottle Tools GUI launch progress follow-up defect
+- Purpose: make Bottle Tools GUI utility launches use the existing program
+  launch progress overlay and window-detection completion path instead of
+  waiting silently while `run-bottle-command` is pending.
+- Completed:
+  - Confirmed normal `Run` uses `_beginProgramLaunch()` plus
+    `_finishProgramLaunchWhenMatchingWindowAppears()`, while
+    `_runBottleCommand()` directly awaits `cliClient.runBottleCommand()` and
+    never marks a launch active.
+  - Confirmed `KonyakCliClient.runBottleCommand()` does not expose the
+    `onStarted` callback already used by `runProgram`, so Tools launches cannot
+    currently close progress when a Wine window appears.
+  - Added widget coverage that selecting `Open Wine Configuration` from Bottle
+    Tools shows the existing `program-launch-progress` overlay while
+    `run-bottle-command` is pending.
+  - Added CLI client coverage that `runBottleCommand` forwards the started
+    process id through `onStarted`.
+  - Changed `KonyakCliClient.runBottleCommand()` to accept and forward
+    `onStarted`.
+  - Routed `_runBottleCommand()` through the existing program launch tracking
+    path: it starts a launch id, captures the baseline external windows,
+    starts the window watcher when the process id is available, and clears the
+    overlay when a matching window appears or the command completes.
+- Remaining:
+  - None for this follow-up defect.
+- Next: continue with the next unfinished TODO item.
+- Verification:
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "Bottle Tools shows progress while launching a GUI utility"'`:
+    failed before implementation because no widget with key
+    `program-launch-progress` was shown, then passed after launch tracking was
+    added.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/cli/konyak_cli_client_test.dart --plain-name "runs a bottle utility through the JSON run-bottle-command CLI contract"'`:
+    failed before implementation because `runBottleCommand` had no `onStarted`
+    parameter, then passed after the client change.
+  - `nix develop -c zsh -lc 'dart format apps/konyak/lib/src/cli/konyak_cli_program_commands.dart apps/konyak/lib/src/home_loader_parts/home_loader_programs.part.dart apps/konyak/test/widget_shell_sidebar.part.dart apps/konyak/test/cli/konyak_cli_client_test.dart'`:
+    passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-format-check'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-analyze'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-test'`: passed.
+
+- Timestamp: 2026-06-21 12:17 JST
+- State: `completed`
+- Branch: `main`
+- Related work: Bottle Tools DirectX Diagnostic launcher follow-up defect
+- Purpose: fix the `DirectX Diagnostic Tool` Bottle Tools action so it
+  produces a visible, useful result instead of launching Wine's built-in
+  `dxdiag` directly, which exits successfully without presenting a window.
+- Completed:
+  - Confirmed the user-provided Konyak Wine Run Log is for `dxdiag`, not
+    `cmd`: it shows `Runner Kind: macosWine`, `Arguments: ["dxdiag"]`,
+    `Process Exit Code: 0`, empty stdout, and MoltenVK/GStreamer diagnostics
+    on stderr.
+  - Reproduced the public CLI route with
+    `nix develop -c zsh -lc 'cd packages/konyak_cli && dart run bin/konyak.dart run-bottle-command bottle --command dxdiag --json'`,
+    which returned `runnerKind: macosWine`, `argv: [..., "dxdiag"]`, and
+    `processExitCode: 0`.
+  - Sampled the same run with `pgrep` and `CGWindowListCopyWindowInfo`; during
+    execution `dxdiag.exe` and `explorer.exe /desktop` appeared as Wine
+    processes, but no Wine/DirectX window appeared in CGWindowList.
+  - Confirmed `explorer` itself can present a Wine `Desktop` window through the
+    same public CLI route, so the failure is specific to launching Wine's
+    built-in `dxdiag` as a GUI utility rather than a global window-observation
+    failure.
+  - Stopped the diagnostic `explorer` run with
+    `nix develop -c zsh -lc 'cd packages/konyak_cli && dart run bin/konyak.dart terminate-wine-processes --bottle bottle --json'`.
+  - Added CLI contract coverage that `dxdiag` runs through
+    `cmd /c "dxdiag /t C:\konyak-dxdiag.txt && start "" notepad
+    C:\konyak-dxdiag.txt"` instead of direct `dxdiag` execution.
+  - Implemented explicit bottle-command argument mapping for `dxdiag` on both
+    macOS and Linux Wine request builders.
+  - Renamed the Bottle Tools label from `DirectX Diagnostic Tool` to
+    `DirectX Diagnostic Report` to match the visible behavior.
+  - Confirmed the fixed public CLI route starts `notepad.exe
+    C:\konyak-dxdiag.txt`, exposes a CGWindowList window named
+    `konyak-dxdiag.txt - Notepad`, and writes the report under the bottle's
+    `drive_c`.
+- Remaining:
+  - None for this follow-up defect.
+- Next: continue with the next unfinished TODO item.
+- Verification:
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "run-bottle-command --json opens the DirectX diagnostic report"'`:
+    failed before implementation because `dxdiag` planned as `["dxdiag"]`,
+    then passed after the fixed argument mapping.
+  - `nix develop -c zsh -lc 'dart format apps/konyak/test/widget_shell_sidebar.part.dart apps/konyak/lib/src/app/dialogs/bottle_tools_dialog.dart packages/konyak_cli/test/cli_contract_program_execution.part.dart packages/konyak_cli/lib/src/domain/program/program_argument_support.dart packages/konyak_cli/lib/src/io/wine_run_requests.dart packages/konyak_cli/lib/src/platform/linux/linux_program_run_requests.dart'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --name "run-bottle-command"'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "Bottle Tools groups bottle utility launchers"'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart run bin/konyak.dart run-bottle-command bottle --command dxdiag --json'`:
+    passed and returned argv `["wineloader", "cmd", "/c", "dxdiag /t
+    C:\\konyak-dxdiag.txt && start \"\" notepad
+    C:\\konyak-dxdiag.txt"]`.
+  - `pgrep` and `CGWindowListCopyWindowInfo` during the fixed public CLI run:
+    showed `notepad.exe C:\konyak-dxdiag.txt` and a visible Wine window
+    `konyak-dxdiag.txt - Notepad`.
+  - `nix develop -c zsh -lc 'ls -l "$HOME/Library/Application Support/Konyak/Bottles/bottle/drive_c/konyak-dxdiag.txt"'`:
+    passed; the report file existed.
+  - `nix develop -c zsh -lc 'sed -n "1,40p" "$HOME/Library/Application Support/Konyak/Bottles/bottle/drive_c/konyak-dxdiag.txt"'`:
+    passed and showed a `System Information` DirectX diagnostic report.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart run bin/konyak.dart terminate-wine-processes --bottle bottle --json'`:
+    passed after the public CLI verification.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just cli-test'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-format-check'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-analyze'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-test'`: passed.
+
+- Timestamp: 2026-06-21 12:01 JST
+- State: `completed`
+- Branch: `main`
+- Related work: Bottle Tools launcher surface follow-up defect
+- Purpose: fix the new `Command Prompt` Bottle Tools action so it opens an
+  interactive host Terminal-backed Wine command prompt instead of running
+  `cmd` directly under `macosWine` where the prompt is captured in Konyak's
+  stdout and no visible window appears.
+- Completed:
+  - Confirmed the user-provided Konyak Wine Run Log shows `Runner Kind:
+    macosWine`, `Arguments: ["cmd"]`, `Process Exit Code: 0`, and stdout
+    containing a Windows command prompt, proving direct Wine execution succeeds
+    but does not present an interactive window.
+  - Reproduced the same public CLI route locally with
+    `nix develop -c zsh -lc 'cd packages/konyak_cli && dart run bin/konyak.dart run-bottle-command bottle --command cmd --json'`,
+    which returned `runnerKind: macosWine`, `argv: [..., "cmd"]`, and
+    `processExitCode: 0`.
+  - Added CLI contract coverage requiring `cmd` to plan through
+    `macosTerminal` and `/usr/bin/osascript` with the bottle `WINEPREFIX`,
+    `wineloader`, and `cmd` present in the generated Terminal script.
+  - Routed the `cmd` bottle command through the existing host terminal request
+    builders on macOS and Linux while preserving direct `macosWine` execution
+    for the other allowlisted Wine utilities.
+  - Extended the terminal setup command builders so they can run an initial
+    Wine command after exporting the managed runtime environment.
+  - Updated the Bottle Tools widget mock to expect the `Command Prompt` action
+    to return `runnerKind: macosTerminal`.
+  - Confirmed the fixed public CLI route now returns `runnerKind:
+    macosTerminal`, `programPath: cmd`, `executable: /usr/bin/osascript`, and
+    a generated setup script ending in the managed `wineloader` invocation for
+    `cmd`.
+- Remaining:
+  - None for this follow-up defect.
+- Next: continue with the next unfinished TODO item.
+- Verification:
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "run-bottle-command --json opens Command Prompt in a macOS terminal"'`:
+    failed before implementation because `cmd` still planned as `macosWine`,
+    then passed after the terminal routing change.
+  - `nix develop -c zsh -lc 'dart format packages/konyak_cli/lib/src/domain/program/program_runner.dart packages/konyak_cli/lib/src/io/wine_run_requests.dart packages/konyak_cli/lib/src/platform/platform_terminal_commands.dart packages/konyak_cli/test/cli_contract_program_execution.part.dart apps/konyak/test/widget_shell_sidebar.part.dart'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --name "run-bottle-command"'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "Bottle Tools groups bottle utility launchers"'`:
+    failed once because a snackbar covered the `Tools` button during the
+    second dialog open, then passed after hiding the snackbar in the test.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart run bin/konyak.dart run-bottle-command bottle --command cmd --json'`:
+    passed and returned `runnerKind: macosTerminal`,
+    `executable: /usr/bin/osascript`, and a Terminal setup script that runs
+    `wineloader cmd`.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just cli-test'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-format-check'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-analyze'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-test'`: passed.
+
+- Timestamp: 2026-06-21 11:43 JST
+- State: `completed`
+- Branch: `main`
+- Related work: `docs/todo.md` Bottle Tools launcher surface
+- Purpose: implement a bottle-scoped Tools surface that keeps Winetricks in its
+  current entry point, moves Wine utility/location launchers into one shared
+  dialog, and expands `run-bottle-command` through explicit allowlist command
+  ids.
+- Completed:
+  - Reviewed the existing `run-bottle-command` planner, current bottom bar
+    utility buttons, Bottle Configuration utility buttons, and widget/CLI
+    tests that cover the old direct button placement.
+  - Added CLI contract coverage proving `uninstaller`, `taskmgr`, `cmd`,
+    `explorer`, `dxdiag`, and `winver` are allowlisted Wine utility commands,
+    while unsafe arbitrary command strings still fail.
+  - Extended `run-bottle-command` through the existing explicit allowlist
+    instead of accepting arbitrary shell strings.
+  - Added a bottle-scoped Tools dialog that contains Wine Configuration,
+    Registry Editor, Control Panel, Uninstall Programs, Task Manager, Command
+    Prompt, File Explorer, DirectX Diagnostic Tool, Windows Version, Terminal,
+    Open C: Drive, and Open Bottle Folder actions.
+  - Moved the overview and Bottle Configuration bottom bars to a shared
+    `Tools` entry point while keeping Winetricks as its existing separate
+    bottom-bar action.
+  - Updated widget coverage for the new Tools surface and old direct button
+    placement.
+  - Marked the Bottle Tools TODO complete.
+- Remaining:
+  - None for the Bottle Tools item.
+- Next: continue with the next unfinished TODO item.
+- Verification:
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "run-bottle-command --json launches allowlisted Wine utilities"'`:
+    failed before implementation on `uninstaller` with exit code 65, then
+    passed after the allowlist expansion.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "Bottle Tools groups bottle utility launchers"'`:
+    failed before implementation because no `Tools` bottom-bar button existed,
+    then passed after the Tools dialog implementation.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --name "run-bottle-command"'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart'`:
+    passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just cli-test'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-format-check'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-analyze'`: failed once on import
+    directive ordering in `bottom_bars.dart`, then passed after sorting the
+    imports.
+  - `nix develop -c zsh -lc 'just flutter-test'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: failed once on the same Flutter
+    import ordering issue, then passed after sorting the imports.
+
 - Timestamp: 2026-06-21 11:27 JST
 - State: `completed`
 - Branch: `main`

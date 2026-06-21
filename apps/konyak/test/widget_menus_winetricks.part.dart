@@ -94,7 +94,7 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
     expect(find.text('File'), findsOneWidget);
     expect(find.text('Konyak'), findsOneWidget);
     expect(find.text('Bottle'), findsNothing);
-    expect(find.text('Tools'), findsNothing);
+    expect(find.widgetWithText(TextButton, 'Tools'), findsOneWidget);
     final konyakMenuLeft = tester.getTopLeft(find.text('Konyak')).dx;
     final fileMenuLeft = tester.getTopLeft(find.text('File')).dx;
     expect(konyakMenuLeft, lessThan(fileMenuLeft));
@@ -395,7 +395,11 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.widgetWithText(TextButton, 'Open C: Drive'));
+    await tester.tap(find.widgetWithText(TextButton, 'Tools'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Open C: Drive'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Open C: Drive'));
     await tester.pumpAndSettle();
 
     expect(find.text('Opened C drive'), findsOneWidget);
@@ -450,7 +454,11 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.widgetWithText(TextButton, 'Terminal'));
+    await tester.tap(find.widgetWithText(TextButton, 'Tools'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Terminal'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Terminal'));
     await tester.pumpAndSettle();
 
     expect(find.text('macosTerminal exited with code 0'), findsOneWidget);

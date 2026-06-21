@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../bottles/bottle_summary.dart';
 import '../app_constants.dart';
+import '../dialogs/bottle_tools_dialog.dart';
 import '../widgets/konyak_bottom_button.dart';
 
 class ProgramConfigurationBottomBar extends StatelessWidget {
@@ -58,10 +59,13 @@ class BottleConfigurationBottomBar extends StatelessWidget {
     super.key,
     required this.bottle,
     required this.onRunBottleCommand,
+    required this.onOpenBottleLocation,
   });
 
   final BottleSummary? bottle;
   final void Function(BottleSummary bottle, String command)? onRunBottleCommand;
+  final void Function(BottleSummary bottle, String location)?
+  onOpenBottleLocation;
 
   @override
   Widget build(BuildContext context) {
@@ -78,25 +82,10 @@ class BottleConfigurationBottomBar extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          KonyakBottomButton(
-            label: 'Open Control Panel',
-            onPressed: activeBottle == null || onRunBottleCommand == null
-                ? null
-                : () => onRunBottleCommand!(activeBottle, 'control'),
-          ),
-          const SizedBox(width: 6),
-          KonyakBottomButton(
-            label: 'Open Registry Editor',
-            onPressed: activeBottle == null || onRunBottleCommand == null
-                ? null
-                : () => onRunBottleCommand!(activeBottle, 'regedit'),
-          ),
-          const SizedBox(width: 6),
-          KonyakBottomButton(
-            label: 'Open Wine Configuration',
-            onPressed: activeBottle == null || onRunBottleCommand == null
-                ? null
-                : () => onRunBottleCommand!(activeBottle, 'winecfg'),
+          _BottleToolsButton(
+            bottle: activeBottle,
+            onRunBottleCommand: onRunBottleCommand,
+            onOpenBottleLocation: onOpenBottleLocation,
           ),
         ],
       ),
@@ -136,18 +125,10 @@ class KonyakBottomBar extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          KonyakBottomButton(
-            label: 'Open C: Drive',
-            onPressed: activeBottle == null || onOpenBottleLocation == null
-                ? null
-                : () => onOpenBottleLocation!(activeBottle, 'c-drive'),
-          ),
-          const SizedBox(width: 6),
-          KonyakBottomButton(
-            label: 'Terminal',
-            onPressed: activeBottle == null || onRunBottleCommand == null
-                ? null
-                : () => onRunBottleCommand!(activeBottle, 'terminal'),
+          _BottleToolsButton(
+            bottle: activeBottle,
+            onRunBottleCommand: onRunBottleCommand,
+            onOpenBottleLocation: onOpenBottleLocation,
           ),
           const SizedBox(width: 6),
           KonyakBottomButton(
@@ -166,5 +147,52 @@ class KonyakBottomBar extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+class _BottleToolsButton extends StatelessWidget {
+  const _BottleToolsButton({
+    required this.bottle,
+    required this.onRunBottleCommand,
+    required this.onOpenBottleLocation,
+  });
+
+  final BottleSummary? bottle;
+  final void Function(BottleSummary bottle, String command)? onRunBottleCommand;
+  final void Function(BottleSummary bottle, String location)?
+  onOpenBottleLocation;
+
+  @override
+  Widget build(BuildContext context) {
+    final activeBottle = bottle;
+    final hasActions =
+        onRunBottleCommand != null || onOpenBottleLocation != null;
+
+    return KonyakBottomButton(
+      label: 'Tools',
+      onPressed: activeBottle == null || !hasActions
+          ? null
+          : () => _showBottleTools(context, activeBottle),
+    );
+  }
+
+  Future<void> _showBottleTools(
+    BuildContext context,
+    BottleSummary bottle,
+  ) async {
+    final action = await showDialog<BottleToolAction>(
+      context: context,
+      builder: (context) => BottleToolsDialog(bottleName: bottle.name),
+    );
+    if (!context.mounted || action == null) {
+      return;
+    }
+
+    switch (action.kind) {
+      case BottleToolActionKind.command:
+        onRunBottleCommand?.call(bottle, action.id);
+      case BottleToolActionKind.location:
+        onOpenBottleLocation?.call(bottle, action.id);
+    }
   }
 }

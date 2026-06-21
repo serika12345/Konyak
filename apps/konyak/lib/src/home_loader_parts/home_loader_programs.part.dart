@@ -165,10 +165,37 @@ extension _KonyakHomeLoaderPrograms on _KonyakHomeLoaderState {
     required BottleSummary bottle,
     required String command,
   }) async {
-    final result = await widget.cliClient.runBottleCommand(
-      bottleId: bottle.id,
-      command: command,
-    );
+    final launchId = _beginProgramLaunch();
+    final baselineWindowIds =
+        await _visibleExternalWindowIds(
+          descendantOfProcessIds: const <int>{},
+          includeWineProcessWindows: true,
+        ) ??
+        const <String>{};
+
+    if (!mounted) {
+      _finishProgramLaunch(launchId);
+      return;
+    }
+
+    late final ProgramRunLoadResult result;
+    try {
+      result = await widget.cliClient.runBottleCommand(
+        bottleId: bottle.id,
+        command: command,
+        onStarted: (processId) {
+          unawaited(
+            _finishProgramLaunchWhenMatchingWindowAppears(
+              launchId: launchId,
+              rootProcessId: processId,
+              baselineWindowIds: baselineWindowIds,
+            ),
+          );
+        },
+      );
+    } finally {
+      _finishProgramLaunch(launchId);
+    }
 
     if (!mounted) {
       return;

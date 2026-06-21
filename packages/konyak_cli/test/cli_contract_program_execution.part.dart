@@ -1647,6 +1647,143 @@ void defineProgramExecutionContractTests() {
     expect(run['processExitCode'], 0);
   });
 
+  test('run-bottle-command --json launches allowlisted Wine utilities', () {
+    const commandIds = <String>['uninstaller', 'taskmgr', 'explorer', 'winver'];
+
+    for (final commandId in commandIds) {
+      final repository = MemoryBottleRepository(
+        dataHome: '/Users/user/Library/Application Support/Konyak',
+        bottles: [
+          BottleRecord(
+            id: 'steam',
+            name: 'Steam',
+            path:
+                '/Users/user/Library/Application Support/Konyak/Bottles/Steam',
+            windowsVersion: 'win10',
+          ),
+        ],
+      );
+      final runner = RecordingProgramRunner(
+        result: const ProgramRunCompleted(processExitCode: 0),
+      );
+
+      final result = runCli(
+        ['run-bottle-command', 'steam', '--command', commandId, '--json'],
+        bottleRepository: repository,
+        programRunPlanner: ProgramRunPlanner(
+          hostPlatform: KonyakHostPlatform.macos,
+          environment: HostEnvironment({'HOME': '/Users/user'}),
+        ),
+        programRunner: runner,
+      );
+
+      expect(result.exitCode, 0, reason: commandId);
+      expect(runner.lastRequest?.runnerKind, 'macosWine', reason: commandId);
+      expect(runner.lastRequest?.programPath, commandId, reason: commandId);
+      expect(runner.lastRequest?.arguments, [commandId], reason: commandId);
+    }
+  });
+
+  test('run-bottle-command --json opens the DirectX diagnostic report', () {
+    final repository = MemoryBottleRepository(
+      dataHome: '/Users/user/Library/Application Support/Konyak',
+      bottles: [
+        BottleRecord(
+          id: 'steam',
+          name: 'Steam',
+          path: '/Users/user/Library/Application Support/Konyak/Bottles/Steam',
+          windowsVersion: 'win10',
+        ),
+      ],
+    );
+    final runner = RecordingProgramRunner(
+      result: const ProgramRunCompleted(processExitCode: 0),
+    );
+
+    final result = runCli(
+      const ['run-bottle-command', 'steam', '--command', 'dxdiag', '--json'],
+      bottleRepository: repository,
+      programRunPlanner: ProgramRunPlanner(
+        hostPlatform: KonyakHostPlatform.macos,
+        environment: HostEnvironment({'HOME': '/Users/user'}),
+      ),
+      programRunner: runner,
+    );
+
+    expect(result.exitCode, 0);
+    expect(runner.lastRequest?.runnerKind, 'macosWine');
+    expect(runner.lastRequest?.programPath, 'dxdiag');
+    expect(runner.lastRequest?.arguments, const [
+      'cmd',
+      '/c',
+      'dxdiag /t C:\\konyak-dxdiag.txt && start "" notepad C:\\konyak-dxdiag.txt',
+    ]);
+
+    final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+    final run = payload['run'] as Map<String, Object?>;
+    expect(payload['schemaVersion'], 1);
+    expect(run['bottleId'], 'steam');
+    expect(run['programPath'], 'dxdiag');
+    expect(run['runnerKind'], 'macosWine');
+    expect(run['processExitCode'], 0);
+  });
+
+  test(
+    'run-bottle-command --json opens Command Prompt in a macOS terminal',
+    () {
+      final repository = MemoryBottleRepository(
+        dataHome: '/Users/user/Library/Application Support/Konyak',
+        bottles: [
+          BottleRecord(
+            id: 'steam',
+            name: 'Steam',
+            path:
+                '/Users/user/Library/Application Support/Konyak/Bottles/Steam',
+            windowsVersion: 'win10',
+          ),
+        ],
+      );
+      final runner = RecordingProgramRunner(
+        result: const ProgramRunCompleted(processExitCode: 0),
+      );
+
+      final result = runCli(
+        const ['run-bottle-command', 'steam', '--command', 'cmd', '--json'],
+        bottleRepository: repository,
+        programRunPlanner: ProgramRunPlanner(
+          hostPlatform: KonyakHostPlatform.macos,
+          environment: HostEnvironment({'HOME': '/Users/user'}),
+        ),
+        programRunner: runner,
+      );
+
+      expect(result.exitCode, 0);
+      expect(runner.lastRequest?.runnerKind, 'macosTerminal');
+      expect(runner.lastRequest?.programPath, 'cmd');
+      expect(runner.lastRequest?.executable, '/usr/bin/osascript');
+      expect(runner.lastRequest?.arguments.first, '-e');
+      expect(runner.lastRequest?.arguments.last, contains('Terminal'));
+      expect(runner.lastRequest?.arguments.last, contains('WINEPREFIX'));
+      expect(
+        runner.lastRequest?.arguments.last,
+        contains(
+          '/Users/user/Library/Application Support/Konyak/Bottles/Steam',
+        ),
+      );
+      expect(runner.lastRequest?.arguments.last, contains('wineloader'));
+      expect(runner.lastRequest?.arguments.last, contains('cmd'));
+
+      final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+      final run = payload['run'] as Map<String, Object?>;
+      expect(payload['schemaVersion'], 1);
+      expect(run['bottleId'], 'steam');
+      expect(run['programPath'], 'cmd');
+      expect(run['runnerKind'], 'macosTerminal');
+      expect(run['executable'], '/usr/bin/osascript');
+      expect(run['processExitCode'], 0);
+    },
+  );
+
   test('list-winetricks-verbs --json returns parsed runtime verbs', () async {
     final runtimeRoot = await Directory.systemTemp.createTemp(
       'konyak-winetricks-verbs-test-',
@@ -1935,7 +2072,13 @@ corefonts                Microsoft Core Fonts
     );
 
     final result = runCli(
-      const ['run-bottle-command', 'steam', '--command', 'cmd', '--json'],
+      const [
+        'run-bottle-command',
+        'steam',
+        '--command',
+        'powershell -nop',
+        '--json',
+      ],
       bottleRepository: repository,
       programRunPlanner: ProgramRunPlanner(
         hostPlatform: KonyakHostPlatform.macos,
@@ -1953,7 +2096,7 @@ corefonts                Microsoft Core Fonts
       'error': {
         'code': 'unsupportedBottleCommand',
         'message': 'Bottle command is not supported.',
-        'command': 'cmd',
+        'command': 'powershell -nop',
       },
     });
   });

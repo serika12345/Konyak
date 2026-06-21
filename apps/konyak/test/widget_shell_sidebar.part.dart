@@ -154,14 +154,14 @@ void defineShellAndSidebarWidgetTests() {
     expect(_fontWeightForText(tester, 'No Bottles'), _regularTextWeight);
     expect(_fontWeightForText(tester, 'No bottles yet'), _regularTextWeight);
 
-    final openDriveButton = tester.widget<TextButton>(
-      find.widgetWithText(TextButton, 'Open C: Drive'),
+    final toolsButton = tester.widget<TextButton>(
+      find.widgetWithText(TextButton, 'Tools'),
     );
-    final openDriveStyle = openDriveButton.style?.textStyle?.resolve({
+    final toolsStyle = toolsButton.style?.textStyle?.resolve({
       WidgetState.disabled,
     });
 
-    expect(openDriveStyle?.fontWeight, _regularTextWeight);
+    expect(toolsStyle?.fontWeight, _regularTextWeight);
   });
 
   testWidgets(
@@ -365,11 +365,205 @@ void defineShellAndSidebarWidgetTests() {
       tester.getTopRight(find.widgetWithText(TextButton, 'Run')).dx,
       lessThanOrEqualTo(tester.view.physicalSize.width),
     );
-    for (final label in ['Open C: Drive', 'Terminal', 'Winetricks', 'Run']) {
+    for (final label in ['Tools', 'Winetricks', 'Run']) {
       expect(
         tester.widget<Text>(find.text(label)).overflow,
         isNot(TextOverflow.ellipsis),
       );
     }
+  });
+
+  testWidgets('Bottle Tools groups bottle utility launchers', (
+    WidgetTester tester,
+  ) async {
+    final runner = _QueuedProcessRunner([
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottles": [
+              {
+                "id": "steam",
+                "name": "Steam",
+                "path": "/Users/user/Library/Application Support/Konyak/Bottles/Steam",
+                "windowsVersion": "win10"
+              }
+            ]
+          }
+        ''',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "run": {
+              "bottleId": "steam",
+              "programPath": "cmd",
+              "runnerKind": "macosTerminal",
+              "executable": "/usr/bin/osascript",
+              "workingDirectory": null,
+              "argv": ["/usr/bin/osascript", "-e", "tell application \\"Terminal\\""],
+              "logPath": "/Users/user/Library/Application Support/Konyak/Bottles/Steam/logs/latest.log",
+              "processExitCode": 0
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "openedLocation": {
+              "bottleId": "steam",
+              "location": "root",
+              "path": "/Users/user/Library/Application Support/Konyak/Bottles/Steam"
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+    ]);
+
+    await tester.pumpWidget(
+      _testKonyakApp(
+        cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.widgetWithText(TextButton, 'Tools'), findsOneWidget);
+    expect(find.widgetWithText(TextButton, 'Open C: Drive'), findsNothing);
+    expect(find.widgetWithText(TextButton, 'Terminal'), findsNothing);
+    expect(find.widgetWithText(TextButton, 'Winetricks'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(TextButton, 'Tools'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Tools for Steam'), findsOneWidget);
+    expect(find.text('Open Wine Configuration'), findsOneWidget);
+    expect(find.text('Registry Editor'), findsOneWidget);
+    expect(find.text('Control Panel'), findsOneWidget);
+    expect(find.text('Terminal'), findsOneWidget);
+    expect(find.text('Command Prompt'), findsOneWidget);
+    expect(find.text('Uninstall Programs'), findsOneWidget);
+    expect(find.text('DirectX Diagnostic Report'), findsOneWidget);
+    expect(find.text('Open C: Drive'), findsOneWidget);
+    expect(find.text('Open Bottle Folder'), findsOneWidget);
+
+    await tester.tap(find.text('Command Prompt'));
+    await tester.pumpAndSettle();
+
+    expect(runner.argumentsLog[1], const [
+      'run-bottle-command',
+      'steam',
+      '--command',
+      'cmd',
+      '--json',
+    ]);
+    ScaffoldMessenger.of(
+      tester.element(find.byType(Scaffold)),
+    ).hideCurrentSnackBar();
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.widgetWithText(TextButton, 'Tools'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Open Bottle Folder'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Open Bottle Folder'));
+    await tester.pumpAndSettle();
+
+    expect(runner.argumentsLog[2], const [
+      'open-bottle-location',
+      'steam',
+      '--location',
+      'root',
+      '--json',
+    ]);
+    expect(find.text('Opened bottle folder'), findsOneWidget);
+  });
+
+  testWidgets('Bottle Tools shows progress while launching a GUI utility', (
+    WidgetTester tester,
+  ) async {
+    final runCompleter = Completer<ProcessRunResult>();
+    final runner = _FutureQueuedProcessRunner([
+      Future.value(
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottles": [
+              {
+                "id": "steam",
+                "name": "Steam",
+                "path": "/Users/user/Library/Application Support/Konyak/Bottles/Steam",
+                "windowsVersion": "win10"
+              }
+            ]
+          }
+        ''',
+          stderr: '',
+        ),
+      ),
+      runCompleter.future,
+    ]);
+
+    await tester.pumpWidget(
+      _testKonyakApp(
+        cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.widgetWithText(TextButton, 'Tools'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Open Wine Configuration'));
+    await tester.pump(const Duration(milliseconds: 250));
+
+    expect(runner.argumentsLog[1], const [
+      'run-bottle-command',
+      'steam',
+      '--command',
+      'winecfg',
+      '--json',
+    ]);
+    expect(
+      find.byKey(const ValueKey('program-launch-progress')),
+      findsOneWidget,
+    );
+    expect(find.text('Launching program...'), findsOneWidget);
+
+    runCompleter.complete(
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "run": {
+              "bottleId": "steam",
+              "programPath": "winecfg",
+              "runnerKind": "macosWine",
+              "executable": "/runtime/bin/wine64",
+              "workingDirectory": "/runtime/bin",
+              "argv": ["/runtime/bin/wine64", "winecfg"],
+              "logPath": "/Users/user/Library/Application Support/Konyak/Bottles/Steam/logs/latest.log",
+              "processExitCode": 0
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+    );
+    await tester.pump();
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('program-launch-progress')), findsNothing);
+    expect(find.byTooltip('View latest log'), findsOneWidget);
   });
 }

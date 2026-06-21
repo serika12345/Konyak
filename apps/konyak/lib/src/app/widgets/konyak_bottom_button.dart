@@ -43,6 +43,7 @@ double _bottomButtonWidth(String label) {
     'Open Wine Configuration' => 174,
     'Show in Finder' => 112,
     'Terminal' => 76,
+    'Tools' => 64,
     'Winetricks' => 88,
     'Run' => 46,
     'Save' => 54,

@@ -2082,6 +2082,7 @@ void main() {
     'runs a bottle utility through the JSON run-bottle-command CLI contract',
     () async {
       final runner = _FakeProcessRunner(
+        startedProcessId: 4242,
         result: const ProcessRunResult(
           exitCode: 0,
           stdout: '''
@@ -2106,10 +2107,14 @@ void main() {
         executable: 'konyak',
         processRunner: runner,
       );
+      int? startedProcessId;
 
       final result = await client.runBottleCommand(
         bottleId: 'steam',
         command: 'winecfg',
+        onStarted: (processId) {
+          startedProcessId = processId;
+        },
       );
 
       expect(runner.arguments, const [
@@ -2126,6 +2131,7 @@ void main() {
       expect(completed.run.programPath, 'winecfg');
       expect(completed.run.runnerKind, 'macosWine');
       expect(completed.run.argv, const ['/runtime/bin/wine64', 'winecfg']);
+      expect(startedProcessId, 4242);
     },
   );
 

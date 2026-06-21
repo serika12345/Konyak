@@ -92,6 +92,21 @@ class ProgramRunPlanner {
       });
     }
 
+    if (supportedCommand == 'cmd') {
+      return Option.of(switch (hostPlatform) {
+        KonyakHostPlatform.linux => _linuxTerminalCommandRequest(
+          bottle: bottle,
+          environment: environment,
+          initialWineCommand: supportedCommand,
+        ),
+        KonyakHostPlatform.macos => _macosTerminalCommandRequest(
+          bottle: bottle,
+          environment: environment,
+          initialWineCommand: supportedCommand,
+        ),
+      });
+    }
+
     if (supportedCommand == 'winetricks') {
       return Option.of(switch (hostPlatform) {
         KonyakHostPlatform.linux => _linuxWinetricksCommandRequest(

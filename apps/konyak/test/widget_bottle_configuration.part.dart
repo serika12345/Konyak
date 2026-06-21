@@ -196,7 +196,7 @@ void defineBottleConfigurationWidgetTests() {
       expect(find.text('DPI Scaling'), findsOneWidget);
       expect(find.text('144 DPI'), findsOneWidget);
       expect(find.text('Retina Mode'), findsOneWidget);
-      expect(find.text('Open Wine Configuration'), findsOneWidget);
+      expect(find.widgetWithText(TextButton, 'Tools'), findsOneWidget);
       expect(find.widgetWithText(TextButton, 'Open C: Drive'), findsNothing);
 
       final dxvkToggleSize = tester.getSize(
@@ -252,6 +252,8 @@ void defineBottleConfigurationWidgetTests() {
       expect(settings, containsPair('retinaMode', false));
       expect(settings, containsPair('dpiScaling', 144));
 
+      await tester.tap(find.widgetWithText(TextButton, 'Tools'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Open Wine Configuration'));
       await tester.pumpAndSettle();
 

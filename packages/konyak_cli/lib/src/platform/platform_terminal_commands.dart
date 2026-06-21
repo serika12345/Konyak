@@ -34,6 +34,7 @@ String _linuxTerminalLauncherCommand(HostEnvironment environment) {
 String _linuxWineTerminalShellCommandWithEnvironment({
   required BottleRecord bottle,
   required HostEnvironment environment,
+  String? initialWineCommand,
 }) {
   final hostEnvironment = environment;
   final executable = _linuxWineExecutable(hostEnvironment);
@@ -52,6 +53,11 @@ String _linuxWineTerminalShellCommandWithEnvironment({
     'alias wine64=${_shellQuote(executable)}',
     'alias winecfg=${_shellQuote('$executable winecfg')}',
     'alias msiexec=${_shellQuote('$executable msiexec')}',
+    if (initialWineCommand != null)
+      _wineTerminalInitialCommand(
+        executable: executable,
+        command: initialWineCommand,
+      ),
   ];
 
   return <String>[
@@ -65,6 +71,7 @@ String _linuxWineTerminalShellCommandWithEnvironment({
 String _macosWineTerminalShellCommand({
   required BottleRecord bottle,
   required HostEnvironment environment,
+  String? initialWineCommand,
 }) {
   final runtimeBin = _macosWineBinFolder(environment);
   final executable = _macosWineExecutable(environment);
@@ -92,7 +99,23 @@ String _macosWineTerminalShellCommand({
     commands.add('export $key=${_shellQuote(value)}');
   });
 
+  if (initialWineCommand != null) {
+    commands.add(
+      _wineTerminalInitialCommand(
+        executable: executable,
+        command: initialWineCommand,
+      ),
+    );
+  }
+
   return commands.join('; ');
+}
+
+String _wineTerminalInitialCommand({
+  required String executable,
+  required String command,
+}) {
+  return '${_shellQuote(executable)} ${_shellQuote(command)}';
 }
 
 String _macosTerminalSetupScriptPath(BottleRecord bottle) {

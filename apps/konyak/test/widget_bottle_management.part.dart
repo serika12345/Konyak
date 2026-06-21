@@ -449,7 +449,7 @@ void defineBottleManagementWidgetTests() {
     expect(find.text('Pin Program'), findsOneWidget);
     expect(find.text('Installed Programs'), findsOneWidget);
     expect(find.text('Bottle Configuration'), findsOneWidget);
-    expect(find.widgetWithText(TextButton, 'Open C: Drive'), findsOneWidget);
+    expect(find.widgetWithText(TextButton, 'Tools'), findsOneWidget);
     expect(find.widgetWithText(TextButton, 'Run'), findsOneWidget);
   });
 

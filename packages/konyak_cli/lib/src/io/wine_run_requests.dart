@@ -225,7 +225,7 @@ ProgramRunRequest _macosWineCommandRequest({
     programPath: command,
     runnerKind: 'macosWine',
     executable: _macosWineExecutable(hostEnvironment),
-    arguments: <String>[command],
+    arguments: _wineArgumentsForBottleCommand(command),
     environment: _macosWineEnvironment(
       bottle: bottle,
       environment: environment,
@@ -280,10 +280,11 @@ ProgramRunRequest _macosRegistryQueryRequest({
 ProgramRunRequest _linuxTerminalCommandRequest({
   required BottleRecord bottle,
   required HostEnvironment environment,
+  String? initialWineCommand,
 }) {
   return ProgramRunRequest(
     bottleId: bottle.id,
-    programPath: 'terminal',
+    programPath: initialWineCommand ?? 'terminal',
     runnerKind: 'terminal',
     executable: 'sh',
     arguments: <String>[
@@ -292,6 +293,7 @@ ProgramRunRequest _linuxTerminalCommandRequest({
       _linuxWineTerminalShellCommandWithEnvironment(
         bottle: bottle,
         environment: environment,
+        initialWineCommand: initialWineCommand,
       ),
     ],
     environment: const ProgramRunEnvironment.empty(),
@@ -303,16 +305,18 @@ ProgramRunRequest _linuxTerminalCommandRequest({
 ProgramRunRequest _macosTerminalCommandRequest({
   required BottleRecord bottle,
   required HostEnvironment environment,
+  String? initialWineCommand,
 }) {
   final shellCommand = _macosWineTerminalShellCommand(
     bottle: bottle,
     environment: environment,
+    initialWineCommand: initialWineCommand,
   );
   final setupScriptPath = _macosTerminalSetupScriptPath(bottle);
 
   return ProgramRunRequest(
     bottleId: bottle.id,
-    programPath: 'terminal',
+    programPath: initialWineCommand ?? 'terminal',
     runnerKind: 'macosTerminal',
     executable: '/usr/bin/osascript',
     arguments: <String>[
