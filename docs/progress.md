@@ -11,6 +11,57 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-21 14:57 JST
+- State: `completed`
+- Branch: `main`
+- Related work: macOS cmd Terminal MoltenVK log suppression
+- Purpose: stop MoltenVK info dumps from appearing inside Terminal-backed
+  bottle commands such as Command Prompt when Vulkan initializes.
+- Completed:
+  - Read the latest progress/TODO state and inspected the user-provided
+    Terminal capture.
+  - Confirmed the long output is `[mvk-info]` MoltenVK capability logging,
+    not a Konyak SnackBar or Flutter notification.
+  - Confirmed the generated
+    `logs/konyak-terminal-setup.zsh` for the affected bottle does not export
+    `MVK_CONFIG_LOG_LEVEL`.
+  - Added failing CLI contract expectations that macOS Wine execution and
+    Terminal-backed bottle commands include `MVK_CONFIG_LOG_LEVEL=0`.
+  - Added `MVK_CONFIG_LOG_LEVEL=0` to Konyak's macOS Wine environment so
+    normal app-owned Wine runs and Terminal setup scripts suppress MoltenVK
+    info logs.
+  - Confirmed the public CLI route regenerated the affected bottle's
+    `konyak-terminal-setup.zsh` with `export MVK_CONFIG_LOG_LEVEL='0'`.
+- Remaining:
+  - None for this log suppression cleanup.
+- Next: continue with the next unfinished TODO item.
+- Verification:
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "run-program --json uses the Konyak macOS Wine startup path on macOS"'`:
+    failed before implementation because the macOS Wine environment did not
+    contain `MVK_CONFIG_LOG_LEVEL`, then passed after the environment change.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "run-bottle-command --json opens a macOS bottle terminal"'`:
+    failed before implementation because the Terminal setup script did not
+    contain `MVK_CONFIG_LOG_LEVEL`, then passed after the environment change.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "run-bottle-command --json opens Command Prompt in a macOS terminal"'`:
+    failed before implementation because the Command Prompt setup script did
+    not contain `MVK_CONFIG_LOG_LEVEL`, then passed after the environment
+    change.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart run bin/konyak.dart run-bottle-command bottle --command cmd --json'`:
+    passed through the public CLI route and returned `runnerKind:
+    macosTerminal`, `processExitCode: 0`, with `export
+    MVK_CONFIG_LOG_LEVEL='0'` in the generated AppleScript setup text.
+  - `nix develop -c zsh -lc 'nl -ba "/Users/masato/Library/Application Support/Konyak/Bottles/bottle/logs/konyak-terminal-setup.zsh" | sed -n "1,3p"'`:
+    confirmed the generated setup script contains `export
+    MVK_CONFIG_LOG_LEVEL='0'`.
+  - `nix develop -c zsh -lc 'dart format packages/konyak_cli/lib/src/platform/macos/macos_program_run_requests.dart packages/konyak_cli/test/cli_contract_program_execution.part.dart'`:
+    passed.
+  - `nix develop -c zsh -lc 'just cli-test'`: passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `git diff --check`: passed.
+
 - Timestamp: 2026-06-21 14:50 JST
 - State: `completed`
 - Branch: `main`

@@ -384,6 +384,10 @@ void defineProgramExecutionContractTests() {
     );
     expect(
       runner.lastRequest?.environment.toMap(),
+      containsPair('MVK_CONFIG_LOG_LEVEL', '0'),
+    );
+    expect(
+      runner.lastRequest?.environment.toMap(),
       containsPair(
         'GST_PLUGIN_SYSTEM_PATH',
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/gstreamer-1.0',
@@ -1427,6 +1431,10 @@ void defineProgramExecutionContractTests() {
         "GST_REGISTRY='/Users/user/Library/Application Support/Konyak/Bottles/Steam/gstreamer-1.0-registry.x86_64.bin'",
       ),
     );
+    expect(
+      runner.lastRequest?.arguments.last,
+      contains("MVK_CONFIG_LOG_LEVEL='0'"),
+    );
     expect(runner.lastRequest?.arguments.last, contains('do script "source '));
     final terminalCommand = _singleAppleScriptDoScriptCommand(
       runner.lastRequest!.arguments.last,
@@ -1772,6 +1780,10 @@ void defineProgramExecutionContractTests() {
       );
       expect(runner.lastRequest?.arguments.last, contains('wineloader'));
       expect(runner.lastRequest?.arguments.last, contains('cmd'));
+      expect(
+        runner.lastRequest?.arguments.last,
+        contains("MVK_CONFIG_LOG_LEVEL='0'"),
+      );
 
       final payload = jsonDecode(result.stdout) as Map<String, Object?>;
       final run = payload['run'] as Map<String, Object?>;

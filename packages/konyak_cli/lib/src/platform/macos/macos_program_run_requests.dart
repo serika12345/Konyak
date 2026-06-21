@@ -151,6 +151,7 @@ ProgramRunEnvironment _macosWineEnvironment({
     'WINEPREFIX': bottle.path,
     'WINEDEBUG': 'fixme-all',
     'GST_DEBUG': '1',
+    'MVK_CONFIG_LOG_LEVEL': '0',
     'GST_PLUGIN_SYSTEM_PATH': _macosGstreamerPluginPath(runtimeRoot),
     'GST_PLUGIN_SCANNER': _macosGstreamerPluginScanner(runtimeRoot),
     'GST_REGISTRY': _macosGstreamerRegistryPath(bottle.path),
