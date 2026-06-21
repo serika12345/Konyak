@@ -257,6 +257,61 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
     expect(find.text('Konyak Settings'), findsOneWidget);
   });
 
+  testWidgets('Linux app menu command reinstalls the managed runtime', (
+    WidgetTester tester,
+  ) async {
+    final runner = _QueuedProcessRunner([
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '{"schemaVersion":1,"bottles":[]}',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "runtime": {
+              "id": "konyak-linux-wine",
+              "name": "Konyak Linux Wine",
+              "platform": "linux",
+              "architecture": "x86_64",
+              "runnerKind": "wine",
+              "isBundled": false,
+              "isUpdateable": true,
+              "isInstalled": true
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+    ]);
+
+    await tester.pumpWidget(
+      _testKonyakApp(
+        platform: KonyakPlatform.linux,
+        cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(
+      find.descendant(
+        of: find.byKey(const ValueKey('linux-menu-bar')),
+        matching: find.text('Konyak'),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Reinstall Linux Runtime').last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Reinstalled Konyak Linux Wine'), findsOneWidget);
+    expect(runner.argumentsLog, const [
+      ['list-bottles', '--json'],
+      ['install-linux-wine', '--reinstall', '--progress-json', '--json'],
+    ]);
+  });
+
   testWidgets('Linux File menu imports a bottle archive', (
     WidgetTester tester,
   ) async {

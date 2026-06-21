@@ -13,10 +13,12 @@ extension KonyakCliRuntimeCommands on KonyakCliClient {
   }
 
   Future<RuntimeInstallLoadResult> installLinuxWine({
+    bool reinstall = false,
     void Function(RuntimeInstallProgress progress)? onProgress,
   }) {
     return _runtimeInstallResultFromCommand(
       command: 'install-linux-wine',
+      arguments: reinstall ? const <String>['--reinstall'] : const <String>[],
       onProgress: onProgress,
     );
   }

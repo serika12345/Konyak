@@ -315,7 +315,7 @@ Usage:
   konyak check-runtime-update <id> --json
   konyak install-runtime-update <id> --json
   konyak validate-runtime <id> --json
-  konyak install-linux-wine [--archive <path> | --archive-url <url>] [--archive-sha256 <sha256>] [--component-archive <path> ...] [--source-manifest <path-or-url>] --json
+  konyak install-linux-wine [--reinstall] [--archive <path> | --archive-url <url>] [--archive-sha256 <sha256>] [--component-archive <path> ...] [--source-manifest <path-or-url>] --json
   konyak install-macos-wine [--reinstall] [--source-manifest <path-or-url> | --archive <path> [--archive-sha256 <sha256>] [--component-archive <path> ...] | --archive-url <url> [--component-archive <path> ...]] --json
 ''',
   );

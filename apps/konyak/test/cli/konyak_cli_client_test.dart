@@ -979,6 +979,46 @@ void main() {
     },
   );
 
+  test(
+    'reinstalls Konyak Linux Wine by passing reinstall to the CLI',
+    () async {
+      final runner = _FakeProcessRunner(
+        result: const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+          {
+            "schemaVersion": 1,
+            "runtime": {
+              "id": "konyak-linux-wine",
+              "name": "Konyak Linux Wine",
+              "platform": "linux",
+              "architecture": "x86_64",
+              "runnerKind": "wine",
+              "isBundled": false,
+              "isUpdateable": true,
+              "isInstalled": true
+            }
+          }
+        ''',
+          stderr: '',
+        ),
+      );
+      final client = KonyakCliClient(
+        executable: 'konyak',
+        processRunner: runner,
+      );
+
+      final result = await client.installLinuxWine(reinstall: true);
+
+      expect(runner.arguments, const [
+        'install-linux-wine',
+        '--reinstall',
+        '--json',
+      ]);
+      expect(result, isA<InstalledRuntime>());
+    },
+  );
+
   test('checks Konyak updates through the JSON CLI contract', () async {
     final runner = _FakeProcessRunner(
       result: const ProcessRunResult(

@@ -196,7 +196,7 @@ extension _KonyakHomeLoaderRuntimes on _KonyakHomeLoaderState {
   }
 
   Future<RuntimeInstallLoadResult> _installSettingsRuntime({
-    bool reinstallMacos = false,
+    bool reinstall = false,
   }) async {
     final managedRuntime = managedRuntimePlatform(widget.platform);
     if (managedRuntime == null) {
@@ -217,10 +217,11 @@ extension _KonyakHomeLoaderRuntimes on _KonyakHomeLoaderState {
     try {
       result = widget.platform.isMacOS
           ? await widget.cliClient.installMacosWine(
-              reinstall: reinstallMacos,
+              reinstall: reinstall,
               onProgress: _setRuntimeProgress,
             )
           : await widget.cliClient.installLinuxWine(
+              reinstall: reinstall,
               onProgress: _setRuntimeProgress,
             );
     } finally {
@@ -254,7 +255,15 @@ extension _KonyakHomeLoaderRuntimes on _KonyakHomeLoaderState {
       return;
     }
 
-    final result = await _installSettingsRuntime(reinstallMacos: true);
+    await _reinstallManagedRuntimeFromMenu();
+  }
+
+  Future<void> _reinstallManagedRuntimeFromMenu() async {
+    if (!widget.platform.isMacOS && !widget.platform.isLinux) {
+      return;
+    }
+
+    final result = await _installSettingsRuntime(reinstall: true);
     if (!mounted) {
       return;
     }

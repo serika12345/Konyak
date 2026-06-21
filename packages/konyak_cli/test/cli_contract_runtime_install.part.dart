@@ -2333,6 +2333,36 @@ void defineRuntimeInstallContractTests() {
     );
   });
 
+  test('install-linux-wine --reinstall forces a full install', () {
+    final installer = RecordingLinuxWineInstaller(
+      result: LinuxWineInstallCompleted(
+        runtime: RuntimeRecord(
+          id: 'konyak-linux-wine',
+          name: 'Konyak Linux Wine',
+          platform: 'linux',
+          architecture: 'x86_64',
+          runnerKind: 'wine',
+          isBundled: false,
+          isUpdateable: true,
+          isInstalled: Option.of(true),
+        ),
+      ),
+    );
+
+    final result = runCli(const [
+      'install-linux-wine',
+      '--reinstall',
+      '--json',
+    ], linuxWineInstaller: installer);
+
+    expect(result.exitCode, 0);
+    expect(
+      installer.lastRequest?.operation,
+      RuntimeInstallOperation.fullInstall,
+    );
+    expect(installer.lastRequest?.force, isTrue);
+  });
+
   test('install-linux-wine --progress-json emits progress events', () {
     final progressOutput = StringBuffer();
     final installer = RecordingLinuxWineInstaller(

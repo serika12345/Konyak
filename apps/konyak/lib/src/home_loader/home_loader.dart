@@ -163,6 +163,7 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
           onShowAbout: _showAbout,
           onCreateBottle: _createBottle,
           onImportBottleArchive: _importBottleArchive,
+          onReinstallRuntime: _reinstallManagedRuntimeFromMenu,
           onExportBottleArchive: _exportBottleArchive,
           onViewLatestLog: _latestRunLogPath == null ? null : _showLatestLog,
           pendingRuntimeSettingsControls: _pendingRuntimeSettingsControls,

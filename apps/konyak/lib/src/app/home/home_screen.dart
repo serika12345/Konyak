@@ -25,6 +25,7 @@ class KonyakHome extends StatefulWidget {
     this.onShowAbout,
     this.onCreateBottle,
     this.onImportBottleArchive,
+    this.onReinstallRuntime,
     this.onExportBottleArchive,
     this.onViewLatestLog,
     this.onRuntimeSettingsChanged,
@@ -62,6 +63,7 @@ class KonyakHome extends StatefulWidget {
   final VoidCallback? onShowAbout;
   final VoidCallback? onCreateBottle;
   final VoidCallback? onImportBottleArchive;
+  final VoidCallback? onReinstallRuntime;
   final ValueChanged<BottleSummary>? onExportBottleArchive;
   final VoidCallback? onViewLatestLog;
   final RuntimeSettingsChanged? onRuntimeSettingsChanged;
@@ -168,6 +170,7 @@ class _KonyakHomeState extends State<KonyakHome> {
               onShowAbout: widget.onShowAbout,
               onShowSettings: widget.onShowSettings,
               onImportBottleArchive: widget.onImportBottleArchive,
+              onReinstallRuntime: widget.onReinstallRuntime,
             ),
           Expanded(
             child: Row(

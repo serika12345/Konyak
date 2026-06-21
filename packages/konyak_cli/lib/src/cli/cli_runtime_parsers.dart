@@ -90,6 +90,7 @@ LinuxWineInstallRequest? _parseJsonLinuxWineInstallRequest(
   final options = _parseRuntimeInstallCliOptions(
     arguments,
     command: 'install-linux-wine',
+    allowReinstall: true,
   );
   if (options == null) {
     return null;
@@ -110,6 +111,7 @@ LinuxWineInstallRequest? _parseJsonLinuxWineInstallRequest(
     archiveUrl: options.archiveUrl,
     archiveSha256: options.archiveSha256,
     sourceManifest: options.sourceManifest,
+    force: options.reinstall,
     emitProgress: options.emitProgress,
   );
 }

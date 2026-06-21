@@ -11,6 +11,50 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-21 23:03 JST
+- State: `completed`
+- Branch: `main`
+- Related work: Linux menu runtime reinstall parity
+- Purpose: align the Linux screen-top Konyak menu with the macOS app menu by
+  exposing managed runtime reinstall and making the Linux runtime reinstall
+  path use the same explicit CLI contract.
+- Completed:
+  - Read the current progress/TODO state.
+  - Compared the macOS native menu item and method-channel runtime reinstall
+    path with the Linux Flutter menu bar.
+  - Added failing Flutter client coverage for
+    `install-linux-wine --reinstall`.
+  - Added failing CLI contract coverage proving `install-linux-wine
+    --reinstall` forces a full install.
+  - Added failing Linux widget coverage for the `Reinstall Linux Runtime`
+    menu item invoking the managed runtime reinstall path.
+  - Added `--reinstall` support to the Linux runtime install CLI parser and
+    Flutter CLI client.
+  - Routed the Linux Konyak menu item through the shared runtime reinstall
+    loader path, preserving the existing macOS native menu behavior.
+- Remaining:
+  - None.
+- Next: none.
+- Verification:
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "Linux app menu command reinstalls the managed runtime"'`:
+    failed before implementation because the Linux menu item was missing, then
+    passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/cli/konyak_cli_client_test.dart --plain-name "reinstalls Konyak Linux Wine by passing reinstall to the CLI"'`:
+    failed before implementation because `installLinuxWine` had no
+    `reinstall` parameter, then passed.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "install-linux-wine --reinstall forces a full install"'`:
+    failed before implementation with exit code `64`, then passed.
+  - `nix develop -c zsh -lc 'just flutter-format-check'`: passed.
+  - `nix develop -c zsh -lc 'just cli-format-check'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-analyze'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-test'`: passed.
+  - `nix develop -c zsh -lc 'just cli-test'`: passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `git diff --check`: passed.
+
 - Timestamp: 2026-06-21 22:30 JST
 - State: `completed`
 - Branch: `main`
