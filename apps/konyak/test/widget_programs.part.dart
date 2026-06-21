@@ -670,6 +670,92 @@ void defineProgramWidgetTests() {
     },
   );
 
+  testWidgets(
+    'Linux run program hides launch progress for a new Wine process window',
+    (WidgetTester tester) async {
+      final windowProbe = _MutableProgramWindowProbe();
+      final runCompleter = Completer<ProcessRunResult>();
+      final runner = _FutureQueuedProcessRunner([
+        Future.value(
+          const ProcessRunResult(
+            exitCode: 0,
+            stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottles": [
+              {
+                "id": "steam",
+                "name": "Steam",
+                "path": "/home/user/.local/share/konyak/bottles/steam",
+                "windowsVersion": "win10"
+              }
+            ]
+          }
+        ''',
+            stderr: '',
+          ),
+        ),
+        runCompleter.future,
+      ], startedProcessId: 4242);
+
+      await tester.pumpWidget(
+        _testKonyakApp(
+          platform: KonyakPlatform.linux,
+          cliClient: KonyakCliClient(
+            executable: 'konyak',
+            processRunner: runner,
+          ),
+          programWindowProbe: windowProbe,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.widgetWithText(TextButton, 'Run'));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Program path'),
+        '/downloads/setup.exe',
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Run'));
+      await tester.pump(const Duration(milliseconds: 250));
+
+      expect(find.text('Launching program...'), findsOneWidget);
+
+      windowProbe.visibleWineWindowIds.add('linux-wine-window-1');
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(runCompleter.isCompleted, isFalse);
+      expect(find.text('Launching program...'), findsNothing);
+
+      runCompleter.complete(
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+          {
+            "schemaVersion": 1,
+            "run": {
+              "bottleId": "steam",
+              "programPath": "/downloads/setup.exe",
+              "runnerKind": "wine",
+              "executable": "wine",
+              "workingDirectory": null,
+              "argv": ["wine", "/downloads/setup.exe"],
+              "logPath": "/home/user/.local/share/konyak/bottles/steam/logs/latest.log",
+              "processExitCode": 0
+            }
+          }
+        ''',
+          stderr: '',
+        ),
+      );
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      expect(find.byTooltip('View latest log'), findsOneWidget);
+    },
+  );
+
   testWidgets('run program ignores preexisting Wine process windows', (
     WidgetTester tester,
   ) async {

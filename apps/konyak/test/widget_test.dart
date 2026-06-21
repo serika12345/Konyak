@@ -421,7 +421,7 @@ final class _MutableProgramWindowProbe implements ProgramWindowProbe {
     Set<int> descendantOfProcessIds = const <int>{},
     bool includeWineProcessWindows = false,
   }) async {
-    if (!platform.isMacOS ||
+    if ((!platform.isMacOS && !platform.isLinux) ||
         (descendantOfProcessIds.isEmpty && !includeWineProcessWindows)) {
       return null;
     }

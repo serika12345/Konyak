@@ -16,6 +16,7 @@ void main() {
 
     expect(source, contains('"konyak/linux_window"'));
     expect(source, contains('"setWindowDragRegion"'));
+    expect(source, contains('"visibleExternalWindowIds"'));
     expect(source, contains('"minimizeWindow"'));
     expect(source, contains('"toggleMaximizeWindow"'));
     expect(source, contains('"closeWindow"'));
@@ -24,6 +25,34 @@ void main() {
     expect(source, contains('gtk_window_unmaximize'));
     expect(source, contains('gtk_window_close'));
   });
+
+  test(
+    'Linux runner probes visible Wine windows through X11 when available',
+    () {
+      final source = File('linux/runner/my_application.cc').readAsStringSync();
+      final cmake = File('linux/CMakeLists.txt').readAsStringSync();
+      final runnerCmake = File(
+        'linux/runner/CMakeLists.txt',
+      ).readAsStringSync();
+
+      expect(source, contains('GDK_WINDOWING_X11'));
+      expect(source, contains('GDK_IS_X11_DISPLAY'));
+      expect(source, contains('XOpenDisplay'));
+      expect(source, contains('XCloseDisplay'));
+      expect(source, contains('DISPLAY'));
+      expect(source, contains('_NET_CLIENT_LIST'));
+      expect(source, contains('_NET_WM_PID'));
+      expect(source, contains('XGetWindowProperty'));
+      expect(source, contains('/proc/'));
+      expect(source, contains('includeWineProcessWindows'));
+      expect(source, contains('descendantOfProcessIds'));
+      expect(
+        cmake,
+        contains('pkg_check_modules(X11 REQUIRED IMPORTED_TARGET x11)'),
+      );
+      expect(runnerCmake, contains('PkgConfig::X11'));
+    },
+  );
 
   test(
     'Linux runner starts window drags from a transparent native overlay',

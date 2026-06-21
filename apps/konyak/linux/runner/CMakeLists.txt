@@ -24,5 +24,6 @@ target_link_libraries(${BINARY_NAME} PRIVATE flutter)
 target_link_libraries(${BINARY_NAME} PRIVATE PkgConfig::GTK)
 target_link_libraries(${BINARY_NAME} PRIVATE PkgConfig::FONTCONFIG)
 target_link_libraries(${BINARY_NAME} PRIVATE PkgConfig::LIBMOUNT)
+target_link_libraries(${BINARY_NAME} PRIVATE PkgConfig::X11)
 
 target_include_directories(${BINARY_NAME} PRIVATE "${CMAKE_SOURCE_DIR}")

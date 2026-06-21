@@ -11,6 +11,106 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-21 23:37 JST
+- State: `completed`
+- Branch: `main`
+- Related work: Linux GUI launch feedback / XWayland Wine detection
+- Purpose: detect XWayland Wine/Proton windows even when Konyak itself is
+  running on the GTK Wayland backend in a GNOME Wayland session.
+- Completed:
+  - Confirmed the current session is Wayland with an XWayland `DISPLAY`.
+  - Added failing Linux runner coverage requiring direct `XOpenDisplay` /
+    `XCloseDisplay` probing of the XWayland display.
+  - Changed the Linux native window probe to reuse GTK's X11 display when
+    Konyak is running on X11, or open `$DISPLAY` directly when Konyak is
+    running on GTK Wayland.
+  - Preserved the fallback for sessions without an XWayland display: Flutter
+    keeps the launch overlay until the CLI returns.
+- Remaining:
+  - No code work remains. A manual smoke with a real Wine/Proton GUI program
+    on XWayland would still be useful to prove the end-to-end app path against
+    an actual Wine-owned window.
+- Next: none.
+- Verification:
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/linux_window_chrome_test.dart --plain-name "Linux runner probes visible Wine windows through X11 when available"'`:
+    failed before implementation, then passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/linux_window_chrome_test.dart'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter build linux --debug'`:
+    passed.
+  - `nix develop -c zsh -lc 'just flutter-linux-loader-check'`: passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && timeout 5s ./build/linux/x64/debug/bundle/konyak'`:
+    reached normal GTK startup and VM service startup under the current
+    Wayland session, then exited by timeout (`124`).
+  - `nix develop -c zsh -lc 'just flutter-format-check'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-analyze'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-test'`: passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `git diff --check`: passed.
+
+- Timestamp: 2026-06-21 23:19 JST
+- State: `completed`
+- Branch: `main`
+- Related work: Linux GUI launch feedback
+- Purpose: hide Flutter's launch progress overlay on Linux as soon as a newly
+  visible Wine/Proton window appears, matching the macOS feedback behavior
+  while keeping a documented Wayland fallback.
+- Completed:
+  - Read the current progress/TODO state and the existing macOS launch
+    feedback path.
+  - Added failing widget coverage proving Linux program launches hide
+    `Launching program...` when a new Wine process window appears before
+    `run-program --json` returns.
+  - Added failing `NativeProgramWindowProbe` coverage proving Linux uses the
+    `konyak/linux_window` method channel.
+  - Added failing Linux runner coverage for an X11/XWayland-aware
+    `visibleExternalWindowIds` native method.
+  - Extended `NativeProgramWindowProbe` to call the Linux window channel for
+    Linux targets.
+  - Added X11 linkage to the Linux runner build.
+  - Implemented Linux native visible-window probing with `_NET_CLIENT_LIST`,
+    `_NET_WM_PID`, `/proc/<pid>/stat`, and `/proc/<pid>/exe`.
+  - Matched windows when their owner process is descended from the launched
+    CLI process or when the owner executable is Wine/Proton/CrossOver-like.
+  - Kept native Wayland as the fallback path: GTK cannot inspect other Wayland
+    clients, so the method returns an empty list and Flutter keeps the launch
+    overlay until the CLI returns.
+  - Marked the Linux launch feedback TODO complete.
+- Remaining:
+  - No code work remains. A manual smoke with a real GUI Wine/Proton program
+    on X11/XWayland would still be useful because automated local tests cannot
+    create a real external Wine window.
+- Next: none.
+- Verification:
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "Linux run program hides launch progress for a new Wine process window"'`:
+    failed before implementation, then passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/app/program_window_probe_test.dart'`:
+    failed before implementation, then passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/linux_window_chrome_test.dart --plain-name "Linux runner probes visible Wine windows through X11 when available"'`:
+    failed before implementation, then passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "run program hides launch progress"'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/linux_window_chrome_test.dart'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter build linux --debug'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && timeout 5s ./build/linux/x64/debug/bundle/konyak'`:
+    reached normal GTK startup and VM service startup, then exited by timeout
+    (`124`).
+  - `nix develop -c zsh -lc 'just flutter-format-check'`: failed once after
+    formatting `test/linux_window_chrome_test.dart`, then passed on rerun.
+  - `nix develop -c zsh -lc 'just flutter-analyze'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-linux-loader-check'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-test'`: passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `git diff --check`: passed.
+
 - Timestamp: 2026-06-21 23:03 JST
 - State: `completed`
 - Branch: `main`

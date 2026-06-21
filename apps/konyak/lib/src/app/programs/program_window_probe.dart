@@ -14,6 +14,9 @@ final class NativeProgramWindowProbe implements ProgramWindowProbe {
   const NativeProgramWindowProbe();
 
   static const MethodChannel _macosMenuChannel = MethodChannel('konyak/menu');
+  static const MethodChannel _linuxWindowChannel = MethodChannel(
+    'konyak/linux_window',
+  );
 
   @override
   Future<Set<String>?> visibleExternalWindowIds(
@@ -21,7 +24,7 @@ final class NativeProgramWindowProbe implements ProgramWindowProbe {
     Set<int> descendantOfProcessIds = const <int>{},
     bool includeWineProcessWindows = false,
   }) async {
-    if (!platform.isMacOS) {
+    if (!platform.isMacOS && !platform.isLinux) {
       return null;
     }
 
@@ -32,8 +35,10 @@ final class NativeProgramWindowProbe implements ProgramWindowProbe {
       return null;
     }
 
+    final channel = platform.isMacOS ? _macosMenuChannel : _linuxWindowChannel;
+
     try {
-      final windowIds = await _macosMenuChannel.invokeListMethod<String>(
+      final windowIds = await channel.invokeListMethod<String>(
         'visibleExternalWindowIds',
         <String, Object>{
           'descendantOfProcessIds': rootProcessIds.toList(growable: false)

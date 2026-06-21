@@ -55,6 +55,7 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(GTK REQUIRED IMPORTED_TARGET gtk+-3.0)
 pkg_check_modules(FONTCONFIG REQUIRED IMPORTED_TARGET fontconfig)
 pkg_check_modules(LIBMOUNT REQUIRED IMPORTED_TARGET mount)
+pkg_check_modules(X11 REQUIRED IMPORTED_TARGET x11)
 
 list(APPEND CMAKE_INSTALL_RPATH ${LIBMOUNT_LIBRARY_DIRS})
 

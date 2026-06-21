@@ -1,6 +1,18 @@
 #include "my_application.h"
 
+#include <X11/Xatom.h>
+#include <X11/Xlib.h>
 #include <flutter_linux/flutter_linux.h>
+#include <gdk/gdkx.h>
+#include <unistd.h>
+
+#include <algorithm>
+#include <cctype>
+#include <fstream>
+#include <set>
+#include <sstream>
+#include <string>
+#include <vector>
 
 #include "flutter/generated_plugin_registrant.h"
 
@@ -49,6 +61,282 @@ static gboolean fl_value_lookup_double(FlValue* map, const gchar* key,
   }
 
   return FALSE;
+}
+
+static gboolean fl_value_lookup_bool(FlValue* map, const gchar* key) {
+  if (map == nullptr || fl_value_get_type(map) != FL_VALUE_TYPE_MAP) {
+    return FALSE;
+  }
+
+  FlValue* value = fl_value_lookup_string(map, key);
+  if (value == nullptr || fl_value_get_type(value) != FL_VALUE_TYPE_BOOL) {
+    return FALSE;
+  }
+
+  return fl_value_get_bool(value);
+}
+
+static std::set<pid_t> root_process_ids_from_args(FlValue* args) {
+  std::set<pid_t> process_ids;
+  if (args == nullptr || fl_value_get_type(args) != FL_VALUE_TYPE_MAP) {
+    return process_ids;
+  }
+
+  FlValue* value = fl_value_lookup_string(args, "descendantOfProcessIds");
+  if (value == nullptr || fl_value_get_type(value) != FL_VALUE_TYPE_LIST) {
+    return process_ids;
+  }
+
+  const size_t length = fl_value_get_length(value);
+  for (size_t index = 0; index < length; index++) {
+    FlValue* item = fl_value_get_list_value(value, index);
+    if (item == nullptr || fl_value_get_type(item) != FL_VALUE_TYPE_INT) {
+      continue;
+    }
+
+    const gint64 process_id = fl_value_get_int(item);
+    if (process_id > 0) {
+      process_ids.insert(static_cast<pid_t>(process_id));
+    }
+  }
+
+  return process_ids;
+}
+
+static std::string lowercased(std::string value) {
+  std::transform(value.begin(), value.end(), value.begin(),
+                 [](unsigned char item) { return std::tolower(item); });
+  return value;
+}
+
+static std::string process_executable_path(pid_t process_id) {
+  gchar link_path[64];
+  g_snprintf(link_path, sizeof(link_path), "/proc/%d/exe", process_id);
+
+  gchar path[4096];
+  const ssize_t length = readlink(link_path, path, sizeof(path) - 1);
+  if (length <= 0) {
+    return "";
+  }
+
+  path[length] = '\0';
+  return std::string(path);
+}
+
+static bool is_wine_process_path(const std::string& path) {
+  const std::string normalized_path = lowercased(path);
+  return normalized_path.find("/wine") != std::string::npos ||
+         normalized_path.find("wine64") != std::string::npos ||
+         normalized_path.find("wine-preloader") != std::string::npos ||
+         normalized_path.find("wine64-preloader") != std::string::npos ||
+         normalized_path.find("proton") != std::string::npos ||
+         normalized_path.find("crossover") != std::string::npos;
+}
+
+static pid_t parent_process_id(pid_t process_id) {
+  gchar stat_path[64];
+  g_snprintf(stat_path, sizeof(stat_path), "/proc/%d/stat", process_id);
+
+  std::ifstream stat_file(stat_path);
+  std::string stat;
+  std::getline(stat_file, stat);
+  if (stat.empty()) {
+    return 0;
+  }
+
+  const size_t comm_end = stat.rfind(')');
+  if (comm_end == std::string::npos || comm_end + 2 >= stat.size()) {
+    return 0;
+  }
+
+  std::istringstream fields(stat.substr(comm_end + 2));
+  char state = '\0';
+  pid_t parent_id = 0;
+  fields >> state >> parent_id;
+  return parent_id > 0 ? parent_id : 0;
+}
+
+static bool is_descendant_process(pid_t process_id,
+                                  const std::set<pid_t>& root_process_ids) {
+  if (root_process_ids.empty()) {
+    return false;
+  }
+
+  std::set<pid_t> visited_process_ids;
+  pid_t current_process_id = process_id;
+  while (current_process_id > 0 &&
+         visited_process_ids.find(current_process_id) ==
+             visited_process_ids.end()) {
+    if (root_process_ids.find(current_process_id) !=
+        root_process_ids.end()) {
+      return true;
+    }
+
+    visited_process_ids.insert(current_process_id);
+    current_process_id = parent_process_id(current_process_id);
+  }
+
+  return false;
+}
+
+#ifdef GDK_WINDOWING_X11
+struct X11DisplayConnection {
+  Display* display;
+  bool should_close;
+};
+
+static X11DisplayConnection open_x11_window_list_display() {
+  GdkDisplay* gdk_display = gdk_display_get_default();
+  if (gdk_display != nullptr && GDK_IS_X11_DISPLAY(gdk_display)) {
+    return {gdk_x11_display_get_xdisplay(gdk_display), false};
+  }
+
+  const gchar* display_name = g_getenv("DISPLAY");
+  if (display_name == nullptr || display_name[0] == '\0') {
+    return {nullptr, false};
+  }
+
+  return {XOpenDisplay(display_name), true};
+}
+
+static Window app_x11_window(MyApplication* self, Display* display) {
+  GdkDisplay* gdk_display = gdk_display_get_default();
+  if (gdk_display == nullptr || !GDK_IS_X11_DISPLAY(gdk_display) ||
+      display != gdk_x11_display_get_xdisplay(gdk_display)) {
+    return None;
+  }
+
+  GdkWindow* app_gdk_window = gtk_widget_get_window(GTK_WIDGET(self->window));
+  return app_gdk_window == nullptr ? None
+                                   : gdk_x11_window_get_xid(app_gdk_window);
+}
+
+static std::vector<Window> x11_client_windows(Display* display) {
+  std::vector<Window> windows;
+  const Window root_window = DefaultRootWindow(display);
+  const Atom client_list_atom =
+      XInternAtom(display, "_NET_CLIENT_LIST", True);
+  if (client_list_atom == None) {
+    return windows;
+  }
+
+  Atom actual_type = None;
+  int actual_format = 0;
+  unsigned long item_count = 0;
+  unsigned long bytes_after = 0;
+  unsigned char* data = nullptr;
+  const int status = XGetWindowProperty(
+      display, root_window, client_list_atom, 0, 1024, False, XA_WINDOW,
+      &actual_type, &actual_format, &item_count, &bytes_after, &data);
+
+  if (status != Success || actual_type == None || data == nullptr) {
+    if (data != nullptr) {
+      XFree(data);
+    }
+    return windows;
+  }
+
+  if (actual_format == 32) {
+    Window* window_items = reinterpret_cast<Window*>(data);
+    windows.assign(window_items, window_items + item_count);
+  }
+
+  XFree(data);
+  return windows;
+}
+
+static pid_t x11_window_process_id(Display* display, Window window) {
+  const Atom pid_atom = XInternAtom(display, "_NET_WM_PID", True);
+  if (pid_atom == None) {
+    return 0;
+  }
+
+  Atom actual_type = None;
+  int actual_format = 0;
+  unsigned long item_count = 0;
+  unsigned long bytes_after = 0;
+  unsigned char* data = nullptr;
+  const int status =
+      XGetWindowProperty(display, window, pid_atom, 0, 1, False, XA_CARDINAL,
+                         &actual_type, &actual_format, &item_count,
+                         &bytes_after, &data);
+
+  if (status != Success || actual_type == None || actual_format != 32 ||
+      item_count == 0 || data == nullptr) {
+    if (data != nullptr) {
+      XFree(data);
+    }
+    return 0;
+  }
+
+  const unsigned long process_id = *reinterpret_cast<unsigned long*>(data);
+  XFree(data);
+  return process_id > 0 ? static_cast<pid_t>(process_id) : 0;
+}
+
+static bool x11_window_is_visible_application_window(Display* display,
+                                                     Window window) {
+  XWindowAttributes attributes;
+  if (XGetWindowAttributes(display, window, &attributes) == 0) {
+    return false;
+  }
+
+  return attributes.map_state == IsViewable && !attributes.override_redirect &&
+         attributes.width >= 80 && attributes.height >= 60;
+}
+#endif
+
+static FlValue* visible_external_window_ids(MyApplication* self,
+                                            FlValue* args) {
+  g_autoptr(FlValue) result = fl_value_new_list();
+
+  const std::set<pid_t> root_process_ids = root_process_ids_from_args(args);
+  const gboolean include_wine_process_windows =
+      fl_value_lookup_bool(args, "includeWineProcessWindows");
+  if (root_process_ids.empty() && !include_wine_process_windows) {
+    return fl_value_ref(result);
+  }
+
+#ifdef GDK_WINDOWING_X11
+  const X11DisplayConnection connection = open_x11_window_list_display();
+  if (connection.display == nullptr) {
+    // Native Wayland does not expose other clients' windows to GTK. If there
+    // is no XWayland DISPLAY either, Flutter waits for the CLI result.
+    return fl_value_ref(result);
+  }
+
+  Display* display = connection.display;
+  const Window app_window = app_x11_window(self, display);
+
+  for (const Window window : x11_client_windows(display)) {
+    if (window == None || window == app_window ||
+        !x11_window_is_visible_application_window(display, window)) {
+      continue;
+    }
+
+    const pid_t process_id = x11_window_process_id(display, window);
+    if (process_id <= 0) {
+      continue;
+    }
+
+    const bool matches_process =
+        is_descendant_process(process_id, root_process_ids) ||
+        (include_wine_process_windows &&
+         is_wine_process_path(process_executable_path(process_id)));
+    if (!matches_process) {
+      continue;
+    }
+
+    g_autofree gchar* window_id = g_strdup_printf("%lu", window);
+    fl_value_append_take(result, fl_value_new_string(window_id));
+  }
+
+  if (connection.should_close) {
+    XCloseDisplay(display);
+  }
+#endif
+
+  return fl_value_ref(result);
 }
 
 static gboolean update_drag_region(MyApplication* self, FlValue* args) {
@@ -135,6 +423,13 @@ static void linux_window_method_call_cb(FlMethodChannel* channel,
       return;
     }
     fl_method_call_respond_success(method_call, nullptr, nullptr);
+    return;
+  }
+
+  if (g_strcmp0(method, "visibleExternalWindowIds") == 0) {
+    g_autoptr(FlValue) window_ids =
+        visible_external_window_ids(self, fl_method_call_get_args(method_call));
+    fl_method_call_respond_success(method_call, window_ids, nullptr);
     return;
   }
 
