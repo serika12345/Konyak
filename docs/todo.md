@@ -354,7 +354,7 @@ task changes scope.
     covered by DXVK/DXMT components.
   - [x] Include `nvapi64` and `nvngx` in the D3DMetal `WINEDLLOVERRIDES` and
     bottle DLL override repair path.
-- [ ] Restore normal Wine compatibility in the CrossOver-derived macOS
+- [x] Restore normal Wine compatibility in the CrossOver-derived macOS
   runtime.
   - Reference:
     `runtime/konyak-macos-runtime/docs/crossover-runtime-compatibility.md`
@@ -406,19 +406,21 @@ task changes scope.
       verified Wine, DXVK-macOS, DXMT, vkd3d, MoltenVK, GStreamer, FreeType,
       wine-mono, wine-gecko, and winetricks payloads into one public runtime
       archive.
-  - [ ] Phase 3: normalize launch and smoke behavior around the repaired
+  - [x] Phase 3: normalize launch and smoke behavior around the repaired
     runtime.
-    - Compare Konyak's normal `.exe` path with CrossOver's observed wrapper
-      behavior and decide whether plain executable launch should continue to
-      use `start /unix` or a more direct run path.
-    - Add regression and smoke coverage for a regular GUI `.exe`, not only
-      backend probe executables or prefix initialization.
-    - Make CI smoke launch with the same dylib search environment used by the
-      app; remove `DYLD_FALLBACK_LIBRARY_PATH` or other smoke-only search paths
-      that can hide packaging mistakes.
-    - Keep runtime Actions rerun units narrow: dependency packaging, Wine
+    - [x] Keep Konyak's normal `.exe` route on `wineloader start /unix`; the
+      parent CLI smoke now exercises backend probes through that same
+      `run-program` route instead of proving behavior through raw Wine
+      execution.
+    - [x] Add regression and smoke coverage for a regular GUI `.exe`, not only
+      backend probe executables or prefix initialization, through the packaged
+      PuTTY Finder/LaunchServices smoke.
+    - [x] Make CI smoke launch with the same dylib and Windows DLL search
+      environment used by the app; no `DYLD_FALLBACK_LIBRARY_PATH` or
+      smoke-only search path is accepted in the parent CLI smoke.
+    - [x] Keep runtime Actions rerun units narrow: dependency packaging, Wine
       build, component assembly, launch smoke, backend smoke, and publish work
-      must remain independently rerunnable where practical.
+      remain independently rerunnable where practical.
     - [x] Review `WINEMSYNC` and `WINEESYNC` handling so Konyak does not enable
       incompatible sync modes together blindly; document the default and keep
       bottle settings explicit.
@@ -426,7 +428,7 @@ task changes scope.
       requires the submodule-produced winetricks executable and verb catalog.
     - [x] Rename parent raw Wine/Vulkan smoke targets as low-level diagnostics
       so app behavior proof stays on the CLI smoke route.
-- [ ] Strengthen macOS runtime automated smoke coverage.
+- [x] Strengthen macOS runtime automated smoke coverage.
   - [x] Keep layout/hash comparisons out of the required gate; test runtime
     behavior through Wine execution instead.
   - [x] Add runtime submodule Windows probe executables for headless D3D11 and
@@ -449,7 +451,7 @@ task changes scope.
   - [x] Add a checksum-pinned PuTTY Windows executable fixture for local and
     CI Finder/LaunchServices/Quick Look packaged app smoke coverage without
     vendoring sample `.exe` binaries into the repository.
-  - [ ] Add parent CLI-bound DXVK/DXMT/vkd3d backend probe execution smoke once
+  - [x] Add parent CLI-bound DXVK/DXMT/vkd3d backend probe execution smoke once
     the probe runner path can stay headless and non-flaky on GitHub-hosted
     arm64 macOS.
   - [x] Add GPTK/D3DMetal smoke as CI-only external-payload workflow coverage.

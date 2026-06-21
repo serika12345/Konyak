@@ -146,6 +146,10 @@
             swiftlint
           ];
 
+          darwinHostRuntimePackages = with pkgs; [
+            pkgsCross.mingwW64.stdenv.cc
+          ];
+
           releaseBuildPackages =
             dartFlutterPackages
             ++ (with pkgs; [
@@ -163,7 +167,9 @@
             ++ lib.optionals pkgs.stdenv.isLinux (
               linuxFlutterBuildPackages ++ linuxReleasePackagingPackages ++ linuxHostRuntimePackages
             )
-            ++ lib.optionals pkgs.stdenv.isDarwin (darwinFlutterBuildPackages ++ darwinVerificationPackages);
+            ++ lib.optionals pkgs.stdenv.isDarwin (
+              darwinFlutterBuildPackages ++ darwinHostRuntimePackages ++ darwinVerificationPackages
+            );
 
           darwinXcodeEnvironment = ''
             if [ -x /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild ]; then

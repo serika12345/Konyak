@@ -11,6 +11,9 @@ runtime_root="${KONYAK_MACOS_WINE_HOME:-$work_root/runtime/macos-wine}"
 command_timeout="${KONYAK_MACOS_RUNTIME_CLI_SMOKE_COMMAND_TIMEOUT:-240s}"
 install_timeout="${KONYAK_MACOS_RUNTIME_CLI_SMOKE_INSTALL_TIMEOUT:-1200s}"
 install_runtime="${KONYAK_MACOS_RUNTIME_CLI_SMOKE_INSTALL:-true}"
+backend_probe_dir="${KONYAK_MACOS_RUNTIME_CLI_SMOKE_BACKEND_PROBE_DIR:-$work_root/backend-probes}"
+backend_probe_builder="$repo_root/runtime/konyak-macos-runtime/scripts/build-backend-probes.zsh"
+backend_probe_wait_seconds="${KONYAK_MACOS_RUNTIME_CLI_SMOKE_BACKEND_PROBE_WAIT_SECONDS:-120}"
 
 if [[ "$(uname -s)" != "Darwin" ]]; then
   echo "macOS runtime CLI smoke is supported on macOS only." >&2
@@ -28,14 +31,18 @@ rm -rf "$data_home" "$config_home" "$logs_dir"
 mkdir -p "$data_home" "$config_home" "$logs_dir" "$runtime_root:h"
 
 stop_wineserver() {
-  local prefix_path="$data_home/bottles/ci-prefix-smoke"
+  local prefix_path
 
-  if [[ -x "$runtime_root/bin/wineserver" && -d "$prefix_path" ]]; then
+  if [[ ! -x "$runtime_root/bin/wineserver" ]]; then
+    return
+  fi
+
+  for prefix_path in "$data_home"/bottles/*(N); do
     env \
       WINEPREFIX="$prefix_path" \
       DYLD_LIBRARY_PATH="$runtime_root/lib" \
       "$runtime_root/bin/wineserver" -k >/dev/null 2>&1 || true
-  fi
+  done
 }
 
 trap stop_wineserver EXIT
@@ -147,10 +154,174 @@ assert_runtime_backend_available() {
   fi
 }
 
+build_backend_probe_executables() {
+  local probe_path
+
+  if [[ ! -x "$backend_probe_builder" ]]; then
+    echo "Missing backend probe builder: $backend_probe_builder" >&2
+    exit 69
+  fi
+
+  "$backend_probe_builder" "$backend_probe_dir" >/dev/null
+
+  for probe_path in \
+    "$backend_probe_dir/d3d11_device_probe.exe" \
+    "$backend_probe_dir/d3d12_device_probe.exe"
+  do
+    if [[ ! -f "$probe_path" ]]; then
+      echo "Backend probe builder did not produce $probe_path" >&2
+      exit 1
+    fi
+  done
+}
+
+runtime_settings_json_for_backend() {
+  local backend_id="$1"
+  local dxvk=false
+  local dxmt=false
+
+  case "$backend_id" in
+    dxvk-macos)
+      dxvk=true
+      ;;
+    dxmt)
+      dxmt=true
+      ;;
+    vkd3d)
+      ;;
+    *)
+      echo "Unknown backend probe id: $backend_id" >&2
+      exit 1
+      ;;
+  esac
+
+  cat <<JSON
+{
+  "enhancedSync": "msync",
+  "metalHud": false,
+  "metalTrace": false,
+  "avxEnabled": false,
+  "dxrEnabled": false,
+  "dxvk": $dxvk,
+  "dxmt": $dxmt,
+  "dxvkAsync": false,
+  "dxvkHud": "off",
+  "vkd3dProton": false,
+  "buildVersion": 0,
+  "retinaMode": false,
+  "dpiScaling": 96
+}
+JSON
+}
+
+wait_for_probe_sentinel() {
+  local sentinel_path="$1"
+  local marker="$2"
+  local waited_seconds=0
+
+  while (( waited_seconds < backend_probe_wait_seconds )); do
+    if [[ -f "$sentinel_path" ]] && grep -q "$marker" "$sentinel_path"; then
+      return
+    fi
+
+    sleep 1
+    waited_seconds=$((waited_seconds + 1))
+  done
+
+  echo "Backend probe sentinel was not written within ${backend_probe_wait_seconds}s: $sentinel_path" >&2
+  echo "Expected marker: $marker" >&2
+  if [[ -f "$sentinel_path" ]]; then
+    echo "----- $sentinel_path -----" >&2
+    sed -n '1,80p' "$sentinel_path" >&2
+  fi
+  exit 1
+}
+
+run_backend_probe_smoke() {
+  local backend_id="$1"
+  local bottle_name="$2"
+  local bottle_id="$3"
+  local probe_path="$4"
+  local success_marker="$5"
+  local sentinel_file_name="$6"
+  local settings_json
+  local settings_assertion
+  local sentinel_path="$data_home/bottles/$bottle_id/drive_c/$sentinel_file_name"
+
+  case "$backend_id" in
+    dxvk-macos)
+      settings_assertion='.bottle.runtimeSettings.dxvk == true and .bottle.runtimeSettings.dxmt == false and .bottle.runtimeSettings.dxrEnabled == false'
+      ;;
+    dxmt)
+      settings_assertion='.bottle.runtimeSettings.dxvk == false and .bottle.runtimeSettings.dxmt == true and .bottle.runtimeSettings.dxrEnabled == false'
+      ;;
+    vkd3d)
+      settings_assertion='.bottle.runtimeSettings.dxvk == false and .bottle.runtimeSettings.dxmt == false and .bottle.runtimeSettings.dxrEnabled == false'
+      ;;
+    *)
+      echo "Unknown backend probe id: $backend_id" >&2
+      exit 1
+      ;;
+  esac
+
+  run_cli_capture "create-$bottle_id" "$command_timeout" \
+    create-bottle \
+    --name "$bottle_name" \
+    --json
+  local create_json="$captured_stdout_path"
+  assert_jq "$create_json" \
+    "create-bottle did not report the expected backend probe bottle: $bottle_id" \
+    --arg dataHome "$data_home" \
+    --arg bottleId "$bottle_id" \
+    '
+      .schemaVersion == 1 and
+      .bottle.id == $bottleId and
+      .bottle.path == ($dataHome + "/bottles/" + $bottleId)
+    '
+
+  settings_json="$(runtime_settings_json_for_backend "$backend_id")"
+  run_cli_capture "set-runtime-settings-$bottle_id" "$command_timeout" \
+    set-runtime-settings \
+    "$bottle_id" \
+    --settings-json "$settings_json" \
+    --json
+  local settings_json_path="$captured_stdout_path"
+  assert_jq "$settings_json_path" \
+    "set-runtime-settings did not select the expected backend for $bottle_id." \
+    --arg bottleId "$bottle_id" \
+    "
+      .schemaVersion == 1 and
+      .bottle.id == \$bottleId and
+      ($settings_assertion)
+    "
+
+  run_cli_capture "run-$bottle_id" "$command_timeout" \
+    run-program \
+    "$bottle_id" \
+    --program "$probe_path" \
+    --json
+  local run_json="$captured_stdout_path"
+  assert_jq "$run_json" \
+    "run-program did not complete the $backend_id backend probe through macOS Wine." \
+    --arg bottleId "$bottle_id" \
+    --arg programPath "$probe_path" \
+    '
+      .schemaVersion == 1 and
+      .run.bottleId == $bottleId and
+      .run.runnerKind == "macosWine" and
+      .run.programPath == $programPath and
+      .run.processExitCode == 0
+    '
+
+  wait_for_probe_sentinel "$sentinel_path" "$success_marker"
+}
+
 manifest_path="${KONYAK_DEV_MACOS_WINE_STACK_MANIFEST:-${KONYAK_MACOS_WINE_STACK_MANIFEST:-}}"
 if [[ -z "$manifest_path" ]]; then
   manifest_path="$("$repo_root/scripts/prepare_macos_dev_runtime_stack.zsh" --force --print-manifest-path)"
 fi
+
+build_backend_probe_executables
 
 if [[ "$install_runtime" == "true" ]]; then
   run_cli_capture install-macos-wine "$install_timeout" \
@@ -250,5 +421,29 @@ assert_jq "$run_winetricks_json" \
     .run.programPath == "win10" and
     .run.processExitCode == 0
   '
+
+run_backend_probe_smoke \
+  dxvk-macos \
+  "DXVK macOS Probe" \
+  dxvk-macos-probe \
+  "$backend_probe_dir/d3d11_device_probe.exe" \
+  KONYAK_D3D11_DEVICE_PROBE_OK \
+  konyak-d3d11-device-probe-ok.txt
+
+run_backend_probe_smoke \
+  dxmt \
+  "DXMT Probe" \
+  dxmt-probe \
+  "$backend_probe_dir/d3d11_device_probe.exe" \
+  KONYAK_D3D11_DEVICE_PROBE_OK \
+  konyak-d3d11-device-probe-ok.txt
+
+run_backend_probe_smoke \
+  vkd3d \
+  "vkd3d Probe" \
+  vkd3d-probe \
+  "$backend_probe_dir/d3d12_device_probe.exe" \
+  KONYAK_D3D12_DEVICE_PROBE_OK \
+  konyak-d3d12-device-probe-ok.txt
 
 echo "macOS runtime CLI smoke passed."

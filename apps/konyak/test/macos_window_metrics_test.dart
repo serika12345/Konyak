@@ -293,6 +293,39 @@ void main() {
     expect(thirdPartyNotices, contains('Zstandard: BSD-3-Clause'));
   });
 
+  test('macOS runtime CLI smoke runs backend probes through the CLI', () {
+    final runtimeSmokeScript = File(
+      '../../scripts/run_macos_runtime_cli_smoke.zsh',
+    ).readAsStringSync();
+    final runtimeSmokeWorkflow = File(
+      '../../.github/workflows/macos-runtime-cli-smoke.yml',
+    ).readAsStringSync();
+
+    expect(
+      runtimeSmokeScript,
+      contains('runtime/konyak-macos-runtime/scripts/build-backend-probes.zsh'),
+    );
+    expect(runtimeSmokeScript, contains('run_backend_probe_smoke'));
+    expect(runtimeSmokeScript, contains('wait_for_probe_sentinel'));
+    expect(runtimeSmokeScript, contains('set-runtime-settings'));
+    expect(runtimeSmokeScript, contains('run-program'));
+    expect(runtimeSmokeScript, contains('dxvk-macos-probe'));
+    expect(runtimeSmokeScript, contains('dxmt-probe'));
+    expect(runtimeSmokeScript, contains('vkd3d-probe'));
+    expect(runtimeSmokeScript, contains('KONYAK_D3D11_DEVICE_PROBE_OK'));
+    expect(runtimeSmokeScript, contains('KONYAK_D3D12_DEVICE_PROBE_OK'));
+    expect(runtimeSmokeScript, isNot(contains('DYLD_FALLBACK_LIBRARY_PATH')));
+
+    expect(
+      runtimeSmokeWorkflow,
+      contains('runtime/konyak-macos-runtime/probes/windows/**'),
+    );
+    expect(
+      runtimeSmokeWorkflow,
+      contains('runtime/konyak-macos-runtime/scripts/build-backend-probes.zsh'),
+    );
+  });
+
   test('macOS app exposes visible external window ids to Flutter', () {
     final appDelegate = File(
       'macos/Runner/AppDelegate.swift',

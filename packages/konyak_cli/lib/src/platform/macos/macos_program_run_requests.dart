@@ -143,6 +143,10 @@ ProgramRunEnvironment _macosWineEnvironment({
     ...selectedBackendWindowsPaths,
     ..._macosWineWindowsDllPaths(runtimeRoot),
   ];
+  final wineSearchPathEntries = <String>[
+    ...selectedBackendWindowsPaths,
+    ..._macosWineWindowsSearchPaths(runtimeRoot),
+  ];
   final wineEnvironment = <String, String>{
     'WINEPREFIX': bottle.path,
     'WINEDEBUG': 'fixme-all',
@@ -152,8 +156,7 @@ ProgramRunEnvironment _macosWineEnvironment({
     'GST_REGISTRY': _macosGstreamerRegistryPath(bottle.path),
     'WINEDATADIR': _macosWineDataDir(runtimeRoot),
     'WINEDLLPATH': wineDllPathEntries.join(':'),
-    if (selectedBackendWindowsPaths.isNotEmpty)
-      'WINEPATH': _macosWineWindowsSearchPath(selectedBackendWindowsPaths),
+    'WINEPATH': _macosWineWindowsSearchPath(wineSearchPathEntries),
     'WINELOADER': _macosWineExecutable(hostEnvironment),
     'WINESERVER': _macosWineserverExecutable(hostEnvironment),
     'DYLD_LIBRARY_PATH': _prependPaths(<String>[
@@ -242,6 +245,13 @@ List<String> _macosWineWindowsDllPaths(String runtimeRoot) {
     _joinPath(runtimeRoot, const ['lib', 'wine', 'x86_64-windows']),
     _joinPath(runtimeRoot, const ['lib', 'wine', 'i386-windows']),
     _joinPath(runtimeRoot, const ['lib', 'wine']),
+  ];
+}
+
+List<String> _macosWineWindowsSearchPaths(String runtimeRoot) {
+  return <String>[
+    _joinPath(runtimeRoot, const ['lib', 'wine', 'x86_64-windows']),
+    _joinPath(runtimeRoot, const ['lib', 'wine', 'i386-windows']),
   ];
 }
 

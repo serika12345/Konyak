@@ -897,6 +897,14 @@ String _macosManagedWineDllPathWithOverrides(
   ].join(':');
 }
 
+String _macosManagedWinePath(String runtimeRoot) {
+  final unixPaths = <String>[
+    _joinTestPath(runtimeRoot, const ['lib', 'wine', 'x86_64-windows']),
+    _joinTestPath(runtimeRoot, const ['lib', 'wine', 'i386-windows']),
+  ];
+  return unixPaths.map(_macosWineWindowsPath).join(';');
+}
+
 String _macosManagedWinePathWithOverrides(
   String runtimeRoot,
   List<List<String>> overridePaths,
@@ -904,6 +912,8 @@ String _macosManagedWinePathWithOverrides(
   final unixPaths = <String>[
     for (final overridePath in overridePaths)
       _joinTestPath(runtimeRoot, overridePath),
+    _joinTestPath(runtimeRoot, const ['lib', 'wine', 'x86_64-windows']),
+    _joinTestPath(runtimeRoot, const ['lib', 'wine', 'i386-windows']),
   ];
   return unixPaths.map(_macosWineWindowsPath).join(';');
 }

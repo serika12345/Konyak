@@ -11,6 +11,72 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-21 01:26 JST
+- State: `completed`
+- Branch: `main`
+- Related work: macOS runtime automated smoke coverage; CrossOver-derived
+  macOS runtime Phase 3 launch/smoke normalization
+- Purpose: finish the remaining CI-side runtime smoke work by making the parent
+  repository prove DXVK, DXMT, and vkd3d backend execution through Konyak's
+  public CLI `run-program` path instead of relying only on runtime-submodule
+  low-level diagnostics.
+- Completed:
+  - Added parent CLI smoke coverage that builds the runtime-submodule Windows
+    backend probes, installs the published macOS runtime stack, creates
+    backend-specific bottles, applies runtime settings, runs probes through
+    `dart run bin/konyak.dart run-program ... --json`, and waits for
+    bottle-local success sentinels.
+  - Extended the runtime-submodule D3D11 and D3D12 probes so `start /unix`
+    launches can prove child-process success via `C:\konyak-...-probe-ok.txt`
+    sentinel files, since stdout from the detached child is not owned by the
+    parent `run-program` process.
+  - Confirmed the first parent app-route vkd3d smoke attempt failed because
+    `LoadLibraryA(d3d12.dll)` could not find Wine's D3D12 DLLs when the probe
+    lived outside the runtime DLL directory.
+  - Fixed the macOS `run-program` environment so `WINEPATH` always includes the
+    managed Wine `lib/wine/x86_64-windows` and `lib/wine/i386-windows` search
+    directories, while backend-specific DXVK/DXMT/GPTK paths still prepend
+    those core paths.
+  - Updated `.github/workflows/macos-runtime-cli-smoke.yml` to checkout
+    submodules recursively and trigger on backend probe source/builder changes.
+  - Added the MinGW compiler to the parent Darwin dev shell so CI can build the
+    Windows probe fixtures without treating it as a runtime component.
+  - Marked the macOS runtime automated smoke coverage and Phase 3
+    launch/smoke normalization TODOs complete.
+- Remaining:
+  - None for the local implementation and smoke proof. Remote Actions will only
+    consume this after the runtime submodule probe changes are committed and
+    the parent submodule pointer is updated.
+- Next: commit the runtime submodule probe changes and the parent pointer when
+  this change is ready to publish, then push the parent branch and confirm
+  GitHub Actions `macOS Runtime CLI Smoke` passes remotely.
+- Verification:
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/macos_window_metrics_test.dart --plain-name "macOS runtime CLI smoke runs backend probes through the CLI"'`:
+    failed before implementation because the parent CLI smoke did not build or
+    run backend probes; passed after the smoke/workflow updates.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "run-program --json uses the Konyak macOS Wine startup path on macOS"'`:
+    failed before the macOS `WINEPATH` fix because the normal app route omitted
+    Wine's core Windows DLL search paths.
+  - `nix develop -c zsh -lc 'runtime/konyak-macos-runtime/scripts/build-backend-probes.zsh .dart_tool/konyak/backend-probes-test >/tmp/konyak-backend-probes-test.out && /usr/bin/file .dart_tool/konyak/backend-probes-test/d3d11_device_probe.exe .dart_tool/konyak/backend-probes-test/d3d12_device_probe.exe'`:
+    passed.
+  - `nix develop -c zsh -lc 'runtime/konyak-macos-runtime/scripts/smoke-backend-device.zsh .dart_tool/konyak/dev-runtime/macos-wine vkd3d-d3d12 .dart_tool/konyak/macos-runtime-cli-smoke/backend-probes'`:
+    passed as a diagnostic, proving the runtime vkd3d contract itself worked
+    before fixing the parent app route.
+  - `nix develop -c zsh -lc './scripts/run_macos_runtime_cli_smoke.zsh'`:
+    failed once at DXVK before sentinel files existed, failed once at vkd3d
+    before the app-route `WINEPATH` fix, then passed after the probe sentinel
+    and `WINEPATH` changes.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart'`:
+    passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `nix develop -c zsh -lc 'just cli-test'`: passed.
+  - `nix develop -c zsh -lc 'just verify'`: passed.
+  - `git diff --check`: passed.
+  - `git -C runtime/konyak-macos-runtime diff --check`: passed.
+
 - Timestamp: 2026-06-20 23:32 JST
 - State: `completed`
 - Branch: `main`

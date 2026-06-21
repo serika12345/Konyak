@@ -422,6 +422,15 @@ void defineProgramExecutionContractTests() {
     expect(
       runner.lastRequest?.environment.toMap(),
       containsPair(
+        'WINEPATH',
+        _macosManagedWinePath(
+          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
+        ),
+      ),
+    );
+    expect(
+      runner.lastRequest?.environment.toMap(),
+      containsPair(
         'WINELOADER',
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wineloader',
       ),
