@@ -4,7 +4,7 @@ import 'package:konyak/src/cli/konyak_cli_client.dart';
 import 'package:konyak/src/runs/program_run_summary.dart';
 
 void main() {
-  test('omits feedback for successful Wine runner completions', () {
+  test('omits feedback for all successful runner completions', () {
     expect(
       programRunFeedback(CompletedProgramRun(_run(runnerKind: 'wine'))),
       isNull,
@@ -23,21 +23,38 @@ void main() {
       ),
       isNull,
     );
+    expect(
+      programRunFeedback(CompletedProgramRun(_run(runnerKind: 'terminal'))),
+      isNull,
+    );
+    expect(
+      programRunFeedback(
+        CompletedProgramRun(_run(runnerKind: 'macosTerminal')),
+      ),
+      isNull,
+    );
+    expect(
+      programRunFeedback(
+        CompletedProgramRun(_run(runnerKind: 'linuxTerminal')),
+      ),
+      isNull,
+    );
   });
 
-  test('keeps feedback for abnormal Wine exits', () {
+  test('keeps feedback for abnormal exits', () {
     expect(
       programRunFeedback(
         CompletedProgramRun(_run(runnerKind: 'wine', processExitCode: 1)),
       ),
       'wine exited with code 1',
     );
-  });
-
-  test('keeps feedback for successful non-Wine completions', () {
     expect(
-      programRunFeedback(CompletedProgramRun(_run(runnerKind: 'terminal'))),
-      'terminal exited with code 0',
+      programRunFeedback(
+        CompletedProgramRun(
+          _run(runnerKind: 'macosTerminal', processExitCode: 1),
+        ),
+      ),
+      'macosTerminal exited with code 1',
     );
   });
 

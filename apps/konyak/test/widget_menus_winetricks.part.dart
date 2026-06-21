@@ -461,7 +461,7 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
     await tester.tap(find.text('Terminal'));
     await tester.pumpAndSettle();
 
-    expect(find.text('macosTerminal exited with code 0'), findsOneWidget);
+    expect(find.text('macosTerminal exited with code 0'), findsNothing);
   });
 
   testWidgets('bottom bar launches a selected winetricks verb for a bottle', (

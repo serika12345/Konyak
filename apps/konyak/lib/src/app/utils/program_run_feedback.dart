@@ -3,7 +3,7 @@ import '../../runs/program_run_summary.dart';
 
 String? programRunFeedback(ProgramRunLoadResult result) {
   return switch (result) {
-    CompletedProgramRun(:final run) when _isQuietSuccessfulWineRun(run) => null,
+    CompletedProgramRun(:final run) when _isSuccessfulRun(run) => null,
     CompletedProgramRun(:final run) =>
       '${run.runnerKind} exited with code ${run.processExitCode}',
     FailedProgramRun(:final message, :final runnerKind, :final executable) =>
@@ -18,14 +18,8 @@ String? programRunFeedback(ProgramRunLoadResult result) {
   };
 }
 
-bool _isQuietSuccessfulWineRun(ProgramRunSummary run) {
-  return run.processExitCode == 0 && _isWineRunnerKind(run.runnerKind);
-}
-
-bool _isWineRunnerKind(String runnerKind) {
-  final normalizedRunnerKind = runnerKind.toLowerCase();
-  return normalizedRunnerKind.contains('wine') ||
-      normalizedRunnerKind.contains('winetricks');
+bool _isSuccessfulRun(ProgramRunSummary run) {
+  return run.processExitCode == 0;
 }
 
 bool shouldRefreshBottleAfterCommand(String command) {

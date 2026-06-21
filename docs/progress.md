@@ -11,6 +11,46 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-21 14:50 JST
+- State: `completed`
+- Branch: `main`
+- Related work: normal program-run completion feedback cleanup
+- Purpose: stop showing bottom SnackBars for all normal program-run
+  completions, including Terminal-backed bottle tools.
+- Completed:
+  - Confirmed the current bug is in Flutter feedback classification:
+    `processExitCode == 0` is quiet only for Wine/Winetricks runner kinds.
+  - Added failing Flutter coverage that successful Terminal runner completions
+    should also be quiet.
+  - Changed `programRunFeedback` so every `CompletedProgramRun` with
+    `processExitCode == 0` returns no feedback regardless of runner kind.
+  - Updated widget coverage so Terminal-backed bottle tools no longer show
+    `macosTerminal exited with code 0`.
+- Remaining:
+  - None for this feedback cleanup.
+- Next: continue with the next unfinished TODO item.
+- Verification:
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/app/program_run_feedback_test.dart --plain-name "omits feedback for all successful runner completions"'`:
+    failed before implementation because Terminal success still returned
+    `terminal exited with code 0`, then passed after the feedback change.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "bottom bar opens a bottle terminal"'`:
+    failed before implementation because the `macosTerminal exited with code 0`
+    SnackBar was still shown, then passed after the feedback change.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/app/program_run_feedback_test.dart'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "bottom bar launches a selected winetricks verb for a bottle"'`:
+    passed.
+  - `nix develop -c zsh -lc 'dart format apps/konyak/lib/src/app/utils/program_run_feedback.dart apps/konyak/test/app/program_run_feedback_test.dart apps/konyak/test/widget_menus_winetricks.part.dart'`:
+    passed.
+  - `nix develop -c zsh -lc 'just flutter-format-check'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-analyze'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-test'`: passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `git diff --check`: passed.
+
 - Timestamp: 2026-06-21 14:27 JST
 - State: `completed`
 - Branch: `main`
