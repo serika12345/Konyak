@@ -167,7 +167,7 @@ String _macosRuntimeListPayload({
           'id': 'macos-konyak-runtime-stack',
           'name': 'Konyak macOS runtime stack',
           'compatibilityTarget': 'macos-konyak-runtime-stack',
-          'isComplete': dxvkAvailable,
+          'isComplete': dxvkAvailable && dxmtAvailable,
           'components': <Object?>[
             _runtimeStackComponentPayload(
               id: 'wine',

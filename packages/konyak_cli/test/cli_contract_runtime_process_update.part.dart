@@ -358,19 +358,6 @@ void defineRuntimeProcessAndUpdateContractTests() {
                 'missingPaths': <Object?>[],
               },
               {
-                'id': 'gptk-d3dmetal',
-                'name': 'GPTK/D3DMetal',
-                'role': 'd3d12-metal-translation',
-                'isRequired': false,
-                'isInstalled': false,
-                'paths': _gptkD3DMetalExpectedPaths(
-                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
-                ),
-                'missingPaths': _gptkD3DMetalExpectedPaths(
-                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
-                ),
-              },
-              {
                 'id': 'dxmt',
                 'name': 'DXMT',
                 'role': 'd3d10-d3d11-metal-translation',
@@ -396,6 +383,19 @@ void defineRuntimeProcessAndUpdateContractTests() {
                   '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxmt/x86_64-windows/nvngx.dll',
                   '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxmt/x86_64-unix/winemetal.so',
                 ],
+              },
+              {
+                'id': 'gptk-d3dmetal',
+                'name': 'GPTK/D3DMetal',
+                'role': 'd3d12-metal-translation',
+                'isRequired': false,
+                'isInstalled': false,
+                'paths': _gptkD3DMetalExpectedPaths(
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
+                ),
+                'missingPaths': _gptkD3DMetalExpectedPaths(
+                  '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
+                ),
               },
             ],
             'backends': [
@@ -427,6 +427,15 @@ void defineRuntimeProcessAndUpdateContractTests() {
                 ],
               },
               {
+                'id': 'vkd3d',
+                'name': 'vkd3d',
+                'role': 'd3d12-vulkan-metal-translation',
+                'isAvailable': true,
+                'componentIds': ['vkd3d', 'moltenvk'],
+                'missingComponentIds': <Object?>[],
+                'missingPaths': <Object?>[],
+              },
+              {
                 'id': 'gptk-d3dmetal',
                 'name': 'GPTK/D3DMetal',
                 'role': 'd3d12-metal-translation',
@@ -436,15 +445,6 @@ void defineRuntimeProcessAndUpdateContractTests() {
                 'missingPaths': _gptkD3DMetalExpectedPaths(
                   '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
                 ),
-              },
-              {
-                'id': 'vkd3d',
-                'name': 'vkd3d',
-                'role': 'd3d12-vulkan-metal-translation',
-                'isAvailable': true,
-                'componentIds': ['vkd3d', 'moltenvk'],
-                'missingComponentIds': <Object?>[],
-                'missingPaths': <Object?>[],
               },
             ],
           },
@@ -538,6 +538,51 @@ void defineRuntimeProcessAndUpdateContractTests() {
       contains(_joinTestPath(runtimeRoot, const ['verbs.txt'])),
     );
   });
+
+  test(
+    'list-runtimes --json reports missing GPTK/D3DMetal as optional last',
+    () {
+      const runtimeRoot =
+          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine';
+      final existingPaths = <String>{
+        ..._macosWineEntryPointExistingPaths(runtimeRoot),
+        ..._macosWine32On64ExistingPaths(runtimeRoot),
+        ..._macosDxvkExistingPaths(runtimeRoot),
+        _joinTestPath(runtimeRoot, const ['lib', 'libMoltenVK.dylib']),
+        ..._macosGstreamerExistingPaths(runtimeRoot),
+        _joinTestPath(runtimeRoot, const ['lib', 'libfreetype.6.dylib']),
+        _joinTestPath(runtimeRoot, const ['lib', 'libfreetype.dylib']),
+        ..._macosWineMonoExistingPaths(runtimeRoot),
+        ..._macosWineGeckoExistingPaths(runtimeRoot),
+        ..._macosWinetricksExistingPaths(runtimeRoot),
+        ..._macosVkd3dExistingPaths(runtimeRoot),
+        for (final relativePath in _macosDxmtInstalledPaths)
+          _joinTestPath(runtimeRoot, relativePath),
+      };
+      final result = runCli(
+        const ['list-runtimes', '--json'],
+        runtimeCatalog: MacosWineRuntimeCatalog(
+          hostPlatform: KonyakHostPlatform.macos,
+          environment: HostEnvironment(const {'HOME': '/Users/user'}),
+          fileStatusProbe: StaticFileStatusProbe(existingPaths),
+        ),
+      );
+
+      expect(result.exitCode, 0);
+      final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+      final runtime =
+          (payload['runtimes'] as List<Object?>).single as Map<String, Object?>;
+      final stack = runtime['stack'] as Map<String, Object?>;
+      final components = (stack['components'] as List<Object?>)
+          .cast<Map<String, Object?>>();
+      final gptk = components.last;
+
+      expect(stack['isComplete'], isTrue);
+      expect(gptk['id'], 'gptk-d3dmetal');
+      expect(gptk['isRequired'], isFalse);
+      expect(gptk['isInstalled'], isFalse);
+    },
+  );
 
   test(
     'list-runtimes --json does not treat GPTK fixture text as installed',

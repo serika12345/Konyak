@@ -57,6 +57,44 @@ void main() {
     expect(selection.installButtonLabel, 'Repair');
   });
 
+  test(
+    'labels optional missing runtime components as partial without repair',
+    () {
+      final stack = RuntimeStackSummary(
+        id: 'stack',
+        name: 'Stack',
+        compatibilityTarget: 'stack',
+        isComplete: true,
+        components: [
+          _component(isInstalled: true, version: '1.0'),
+          RuntimeStackComponentSummary(
+            id: 'gptk-d3dmetal',
+            name: 'GPTK/D3DMetal',
+            role: 'd3d12-metal-translation',
+            isRequired: false,
+            isInstalled: false,
+            paths: const <String>['/runtime/components/gptk-d3dmetal'],
+            missingPaths: const <String>['/runtime/components/gptk-d3dmetal'],
+          ),
+        ],
+      );
+      final selection = resolveRuntimeSectionState(
+        runtimes: [
+          _runtime(
+            id: 'macos',
+            platform: 'macos',
+            isInstalled: true,
+            stack: stack,
+          ),
+        ],
+        platform: 'macos',
+      );
+
+      expect(runtimeStackStatusLabel(stack), 'Partial');
+      expect(selection.shouldOfferInstall, isFalse);
+    },
+  );
+
   test('formats component status with optional version', () {
     expect(
       componentStatusLabel(_component(isInstalled: true, version: 'wine-10.0')),

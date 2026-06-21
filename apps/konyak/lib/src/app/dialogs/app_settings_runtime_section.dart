@@ -80,7 +80,7 @@ class AppSettingsRuntimeSection extends StatelessWidget {
         ),
         AppSettingsDetailRow(
           label: stack.name,
-          value: stack.isComplete ? 'Complete' : 'Incomplete',
+          value: runtimeStackStatusLabel(stack),
           detail: 'Compatibility: ${stack.compatibilityTarget}',
           trailing: runtimeState.shouldOfferInstall && onInstallRuntime != null
               ? _installButton(runtimeState.installButtonLabel)

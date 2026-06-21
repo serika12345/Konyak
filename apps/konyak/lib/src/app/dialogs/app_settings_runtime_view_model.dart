@@ -84,3 +84,14 @@ String componentStatusLabel(RuntimeStackComponentSummary component) {
 
   return '$status | ${component.version}';
 }
+
+String runtimeStackStatusLabel(RuntimeStackSummary stack) {
+  if (!stack.isComplete) {
+    return 'Incomplete';
+  }
+
+  final hasMissingOptionalComponent = stack.components.any(
+    (component) => !component.isRequired && !component.isInstalled,
+  );
+  return hasMissingOptionalComponent ? 'Partial' : 'Complete';
+}

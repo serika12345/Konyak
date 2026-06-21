@@ -613,6 +613,22 @@ const _macosDxvkInstalledPaths = <List<String>>[
   <String>['DXVK', 'x32', 'd3d11.dll'],
 ];
 
+Set<String> _macosDxvkExistingPaths(String runtimeRoot) {
+  final architectureFolders = <String, String>{
+    'x64': 'x86_64-windows',
+    'x32': 'i386-windows',
+  };
+  return <String>{
+    for (final relativePath in _macosDxvkInstalledPaths)
+      _joinTestPath(runtimeRoot, <String>[
+        'lib',
+        'dxvk',
+        architectureFolders[relativePath[1]]!,
+        relativePath.last,
+      ]),
+  };
+}
+
 const _macosDxmtComponentPaths = <List<String>>[
   <String>[
     'Components',
@@ -1041,20 +1057,10 @@ String _createKonyakComponentRuntimeArchive(String tempPath) {
     ..._macosWineGeckoComponentPaths,
     ..._macosWinetricksComponentPaths,
     ..._macosVkd3dComponentPaths,
-    ..._gptkD3DMetalComponentArchivePaths,
   ]) {
     final file = File(_joinTestPath(runtimeRoot.path, relativePath));
     file.parent.createSync(recursive: true);
-    if (_isGptkD3DMetalUnixSymlinkPath(relativePath)) {
-      Link(file.path).createSync('../../external/libd3dshared.dylib');
-    } else if (_gptkD3DMetalWindowsFileNames.contains(relativePath.last)) {
-      _createPEFile(file.path);
-    } else if (relativePath.contains('GPTK-D3DMetal') ||
-        _gptkD3DMetalUnixFileNames.contains(relativePath.last)) {
-      _createMachOFile(file.path);
-    } else {
-      file.writeAsStringSync('fixture');
-    }
+    file.writeAsStringSync('fixture');
   }
   File(
     _joinTestPath(runtimeRoot.path, const ['.konyak-runtime-stack.json']),
@@ -1072,7 +1078,6 @@ String _createKonyakComponentRuntimeArchive(String tempPath) {
         'wine-gecko': 'wine-gecko-fixture',
         'winetricks': 'winetricks-fixture',
         'vkd3d': 'vkd3d-fixture',
-        'gptk-d3dmetal': 'gptk-d3dmetal-fixture',
       },
     }),
   );
@@ -1294,6 +1299,25 @@ void _createInstalledMacosRuntime(String runtimeHome) {
     ..._macosWineGeckoInstalledPaths,
   ]) {
     final file = File(_joinTestPath(runtimeHome, relativePath));
+    file.parent.createSync(recursive: true);
+    file.writeAsStringSync('fixture');
+  }
+}
+
+void _createCompleteMacosRuntime(String runtimeHome) {
+  _createInstalledMacosRuntime(runtimeHome);
+  for (final path in <String>{
+    ..._macosDxvkExistingPaths(runtimeHome),
+    _joinTestPath(runtimeHome, const ['lib', 'libMoltenVK.dylib']),
+    ..._macosGstreamerExistingPaths(runtimeHome),
+    _joinTestPath(runtimeHome, const ['lib', 'libfreetype.6.dylib']),
+    _joinTestPath(runtimeHome, const ['lib', 'libfreetype.dylib']),
+    ..._macosWinetricksExistingPaths(runtimeHome),
+    ..._macosVkd3dExistingPaths(runtimeHome),
+    for (final relativePath in _macosDxmtInstalledPaths)
+      _joinTestPath(runtimeHome, relativePath),
+  }) {
+    final file = File(path);
     file.parent.createSync(recursive: true);
     file.writeAsStringSync('fixture');
   }

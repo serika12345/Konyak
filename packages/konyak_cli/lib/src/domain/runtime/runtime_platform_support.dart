@@ -328,13 +328,6 @@ const _macosKonyakRuntimeComponentDefinitions =
         relativePaths: _macosVkd3dComponentPaths,
       ),
       _RuntimeStackComponentDefinition(
-        id: 'gptk-d3dmetal',
-        name: 'GPTK/D3DMetal',
-        role: 'd3d12-metal-translation',
-        isRequired: false,
-        relativePaths: _macosGptkD3DMetalComponentPaths,
-      ),
-      _RuntimeStackComponentDefinition(
         id: 'dxmt',
         name: 'DXMT',
         role: 'd3d10-d3d11-metal-translation',
@@ -349,6 +342,13 @@ const _macosKonyakRuntimeComponentDefinitions =
           <String>['lib', 'dxmt', 'x86_64-windows', 'nvngx.dll'],
           <String>['lib', 'dxmt', 'x86_64-unix', 'winemetal.so'],
         ],
+      ),
+      _RuntimeStackComponentDefinition(
+        id: 'gptk-d3dmetal',
+        name: 'GPTK/D3DMetal',
+        role: 'd3d12-metal-translation',
+        isRequired: false,
+        relativePaths: _macosGptkD3DMetalComponentPaths,
       ),
     ];
 
@@ -366,16 +366,16 @@ const _macosKonyakRuntimeBackendDefinitions = <_RuntimeBackendDefinition>[
     componentIds: <String>['dxmt'],
   ),
   _RuntimeBackendDefinition(
-    id: 'gptk-d3dmetal',
-    name: 'GPTK/D3DMetal',
-    role: 'd3d12-metal-translation',
-    componentIds: <String>['gptk-d3dmetal'],
-  ),
-  _RuntimeBackendDefinition(
     id: 'vkd3d',
     name: 'vkd3d',
     role: 'd3d12-vulkan-metal-translation',
     componentIds: <String>['vkd3d', 'moltenvk'],
+  ),
+  _RuntimeBackendDefinition(
+    id: 'gptk-d3dmetal',
+    name: 'GPTK/D3DMetal',
+    role: 'd3d12-metal-translation',
+    componentIds: <String>['gptk-d3dmetal'],
   ),
 ];
 

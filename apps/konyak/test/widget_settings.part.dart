@@ -699,6 +699,63 @@ void defineSettingsWidgetTests() {
     ]);
   });
 
+  testWidgets('macOS settings dialog keeps missing GPTK last and partial', (
+    WidgetTester tester,
+  ) async {
+    final runner = _QueuedProcessRunner([
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '{"schemaVersion":1,"bottles":[]}',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "appSettings": {
+              "terminateWineProcessesOnClose": false,
+              "defaultBottlePath": "/Users/user/Library/Application Support/Konyak/Bottles",
+              "appearanceMode": "dark",
+              "automaticallyCheckForKonyakUpdates": false,
+              "automaticallyCheckForWineUpdates": false
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+      ProcessRunResult(
+        exitCode: 0,
+        stdout: _macosRuntimeListPayload(gptkAvailable: false),
+        stderr: '',
+      ),
+    ]);
+
+    await tester.pumpWidget(
+      _testKonyakApp(
+        platform: KonyakPlatform.macos,
+        cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Settings'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Partial'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('app-settings-install-runtime-button')),
+      findsNothing,
+    );
+    expect(find.text('DXMT'), findsOneWidget);
+    expect(find.text('GPTK/D3DMetal'), findsOneWidget);
+    expect(find.text('Missing'), findsOneWidget);
+    expect(
+      tester.getTopLeft(find.text('GPTK/D3DMetal')).dy,
+      greaterThan(tester.getTopLeft(find.text('DXMT')).dy),
+    );
+  });
+
   testWidgets(
     'macOS settings dialog distinguishes installed incomplete runtime',
     (WidgetTester tester) async {
