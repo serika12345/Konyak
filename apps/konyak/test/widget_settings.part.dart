@@ -111,7 +111,7 @@ void defineSettingsWidgetTests() {
     ]);
   });
 
-  testWidgets('Linux settings dialog shows runtime stack components', (
+  testWidgets('Linux settings dialog shows runtime stack component statuses', (
     WidgetTester tester,
   ) async {
     final runner = _QueuedProcessRunner([
@@ -222,7 +222,7 @@ void defineSettingsWidgetTests() {
     expect(find.text('Missing | v2.14'), findsOneWidget);
     expect(
       find.text('/runtime/lib64/wine/x86_64-windows/d3d12.dll'),
-      findsOneWidget,
+      findsNothing,
     );
   });
 

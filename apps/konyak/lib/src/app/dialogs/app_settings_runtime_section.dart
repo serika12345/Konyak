@@ -90,9 +90,6 @@ class AppSettingsRuntimeSection extends StatelessWidget {
           AppSettingsDetailRow(
             label: component.name,
             value: componentStatusLabel(component),
-            detail: component.missingPaths.isEmpty
-                ? null
-                : component.missingPaths.join('\n'),
           ),
         if (platform == 'macos') _gptkInstallPanel(stack),
       ],
