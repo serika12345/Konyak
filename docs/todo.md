@@ -165,10 +165,10 @@ task changes scope.
   - [x] Expose Windows version choices in Flutter:
     XP, 7, 8, 8.1, 10, and 11.
   - [x] Persist Konyak runtime settings from Flutter Bottle
-    Configuration: Enhanced Sync, AVX advertising, DXVK, DXVK HUD, Metal HUD,
-    Metal Trace, and DXR.
+    Configuration: Enhanced Sync, AVX advertising, Graphics Backend, DXVK HUD,
+    Metal HUD, Metal Trace, and D3DMetal/DXR.
   - [x] Move Bottle Configuration into a separate Flutter detail screen with
-    Wine, DXVK, and Metal sections plus Control Panel, Registry Editor, and
+    Wine and Graphics sections plus Control Panel, Registry Editor, and
     Wine Configuration actions.
   - [x] Add registry-backed Bottle Configuration fields for Windows Version,
     High Resolution Mode backed by `RetinaMode`, and Windows DPI backed by

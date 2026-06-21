@@ -11,6 +11,44 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-21 19:51 JST
+- State: `completed`
+- Branch: `main`
+- Related work: Bottle Configuration graphics backend dropdown
+- Purpose: make DXVK, DXMT, and GPTK/D3DMetal visibly mutually exclusive by
+  selecting the graphics backend from one dropdown and showing only the
+  options relevant to the selected backend.
+- Completed:
+  - Read the latest progress/TODO state and existing Bottle Configuration UI,
+    runtime settings models, availability resolver, and widget tests.
+  - Added widget coverage proving macOS Graphics Backend selection switches
+    between DXMT, GPTK/D3DMetal, and DXVK-macOS while preserving the existing
+    `dxvk`, `dxmt`, and `dxrEnabled` JSON fields.
+  - Replaced the separate DXVK/Vulkan/Metal UI sections with one Graphics
+    section that maps dropdown choices to the existing runtime settings.
+  - Kept Linux `vkd3d-proton` independent because it is not mutually exclusive
+    with DXVK.
+  - Updated `docs/todo.md` and `docs/flutter-architecture-plan.md` to describe
+    the Graphics Backend dropdown instead of separate DXVK/Metal sections.
+- Remaining:
+  - None for this UI change.
+- Next: test against real macOS and Linux bottles if manual backend smoke is
+  desired before release.
+- Verification:
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "macOS bottle configuration selects graphics backend from one dropdown"'`:
+    failed before implementation because `Graphics` was not shown, then
+    passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "bottle configuration"'`:
+    passed after updating the old switch-focused widget expectations.
+  - `nix develop -c zsh -lc 'just flutter-format-check'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-analyze'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-test'`: passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `nix develop -c zsh -lc 'git diff --check'`: passed.
+
 - Timestamp: 2026-06-21 17:26 JST
 - State: `completed`
 - Branch: `main`

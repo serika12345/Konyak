@@ -32,6 +32,8 @@ class BottleSummary {
   }
 }
 
+enum BottleGraphicsBackend { wineDefault, dxvk, dxmt, d3dMetal }
+
 class BottleRuntimeSettingsSummary {
   const BottleRuntimeSettingsSummary({
     this.enhancedSync = 'msync',
@@ -62,6 +64,86 @@ class BottleRuntimeSettingsSummary {
   final int buildVersion;
   final bool retinaMode;
   final int dpiScaling;
+
+  BottleGraphicsBackend get graphicsBackend {
+    if (dxrEnabled) {
+      return BottleGraphicsBackend.d3dMetal;
+    }
+    if (dxmt) {
+      return BottleGraphicsBackend.dxmt;
+    }
+    if (dxvk) {
+      return BottleGraphicsBackend.dxvk;
+    }
+    return BottleGraphicsBackend.wineDefault;
+  }
+
+  BottleRuntimeSettingsSummary withGraphicsBackend(
+    BottleGraphicsBackend graphicsBackend,
+  ) {
+    return switch (graphicsBackend) {
+      BottleGraphicsBackend.wineDefault => BottleRuntimeSettingsSummary(
+        enhancedSync: enhancedSync,
+        metalHud: metalHud,
+        metalTrace: metalTrace,
+        avxEnabled: avxEnabled,
+        dxrEnabled: false,
+        dxvk: false,
+        dxmt: false,
+        dxvkAsync: dxvkAsync,
+        dxvkHud: dxvkHud,
+        vkd3dProton: vkd3dProton,
+        buildVersion: buildVersion,
+        retinaMode: retinaMode,
+        dpiScaling: dpiScaling,
+      ),
+      BottleGraphicsBackend.dxvk => BottleRuntimeSettingsSummary(
+        enhancedSync: enhancedSync,
+        metalHud: metalHud,
+        metalTrace: metalTrace,
+        avxEnabled: avxEnabled,
+        dxrEnabled: false,
+        dxvk: true,
+        dxmt: false,
+        dxvkAsync: dxvkAsync,
+        dxvkHud: dxvkHud,
+        vkd3dProton: vkd3dProton,
+        buildVersion: buildVersion,
+        retinaMode: retinaMode,
+        dpiScaling: dpiScaling,
+      ),
+      BottleGraphicsBackend.dxmt => BottleRuntimeSettingsSummary(
+        enhancedSync: enhancedSync,
+        metalHud: metalHud,
+        metalTrace: metalTrace,
+        avxEnabled: avxEnabled,
+        dxrEnabled: false,
+        dxvk: false,
+        dxmt: true,
+        dxvkAsync: dxvkAsync,
+        dxvkHud: dxvkHud,
+        vkd3dProton: vkd3dProton,
+        buildVersion: buildVersion,
+        retinaMode: retinaMode,
+        dpiScaling: dpiScaling,
+      ),
+      BottleGraphicsBackend.d3dMetal => BottleRuntimeSettingsSummary(
+        enhancedSync: enhancedSync,
+        metalHud: metalHud,
+        metalTrace: metalTrace,
+        avxEnabled: avxEnabled,
+        dxrEnabled: true,
+        dxvk: false,
+        dxmt: false,
+        dxvkAsync: dxvkAsync,
+        dxvkHud: dxvkHud,
+        vkd3dProton: vkd3dProton,
+        buildVersion: buildVersion,
+        retinaMode: retinaMode,
+        dpiScaling: dpiScaling,
+      ),
+    };
+  }
 
   BottleRuntimeSettingsSummary withEnhancedSync(String enhancedSync) {
     return BottleRuntimeSettingsSummary(

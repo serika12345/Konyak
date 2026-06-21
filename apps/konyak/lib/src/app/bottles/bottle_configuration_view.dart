@@ -29,6 +29,7 @@ class BottleConfigurationView extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = bottle.runtimeSettings;
     final showMacosRuntimeSettings = platform.isMacOS;
+    final showLinuxRuntimeSettings = platform.isLinux;
     final canChangeSettings = onRuntimeSettingsChanged != null;
     final hasPendingRuntimeSettings = pendingRuntimeSettingsControlKey != null;
     final availability = resolveBottleRuntimeControlAvailability(
@@ -61,32 +62,14 @@ class BottleConfigurationView extends StatelessWidget {
             onChanged: _updateRuntimeSettings,
           ),
           const SizedBox(height: 14),
-          BottleDxvkSettingsSection(
+          BottleGraphicsSettingsSection(
             settings: settings,
             availability: availability,
             pendingRuntimeSettingsControlKey: pendingRuntimeSettingsControlKey,
+            showMacosRuntimeSettings: showMacosRuntimeSettings,
+            showLinuxRuntimeSettings: showLinuxRuntimeSettings,
             onChanged: _updateRuntimeSettings,
           ),
-          if (platform.isLinux) ...[
-            const SizedBox(height: 14),
-            BottleVulkanSettingsSection(
-              settings: settings,
-              availability: availability,
-              pendingRuntimeSettingsControlKey:
-                  pendingRuntimeSettingsControlKey,
-              onChanged: _updateRuntimeSettings,
-            ),
-          ],
-          if (showMacosRuntimeSettings) ...[
-            const SizedBox(height: 14),
-            BottleMetalSettingsSection(
-              settings: settings,
-              availability: availability,
-              pendingRuntimeSettingsControlKey:
-                  pendingRuntimeSettingsControlKey,
-              onChanged: _updateRuntimeSettings,
-            ),
-          ],
         ],
       ),
     );

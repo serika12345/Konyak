@@ -188,8 +188,10 @@ void defineBottleConfigurationWidgetTests() {
 
       expect(find.byTooltip('Back to bottle'), findsOneWidget);
       expect(find.text('Wine'), findsOneWidget);
-      expect(find.text('DXVK'), findsWidgets);
-      expect(find.text('Metal'), findsOneWidget);
+      expect(find.text('Graphics'), findsOneWidget);
+      expect(find.text('Graphics Backend'), findsOneWidget);
+      expect(find.text('Default'), findsOneWidget);
+      expect(find.text('Metal'), findsNothing);
       expect(find.text('Enhanced Sync'), findsOneWidget);
       expect(find.text('Windows Version'), findsOneWidget);
       expect(find.text('Build Version'), findsNothing);
@@ -201,11 +203,11 @@ void defineBottleConfigurationWidgetTests() {
       expect(find.widgetWithText(TextButton, 'Tools'), findsOneWidget);
       expect(find.widgetWithText(TextButton, 'Open C: Drive'), findsNothing);
 
-      final dxvkToggleSize = tester.getSize(
-        find.byKey(const ValueKey('config-dxvk-switch')),
+      final graphicsBackendSize = tester.getSize(
+        find.byKey(const ValueKey('config-graphics-backend')),
       );
-      expect(dxvkToggleSize.width, lessThanOrEqualTo(38));
-      expect(dxvkToggleSize.height, lessThanOrEqualTo(22));
+      expect(graphicsBackendSize.width, lessThanOrEqualTo(210));
+      expect(graphicsBackendSize.height, greaterThanOrEqualTo(24));
 
       expect(
         find.byKey(const ValueKey('config-build-version-field')),
@@ -217,8 +219,7 @@ void defineBottleConfigurationWidgetTests() {
       await tester.tap(find.text('Windows 11 23H2 (22631)').last);
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byKey(const ValueKey('config-dxvk-switch')));
-      await tester.pumpAndSettle();
+      await _selectGraphicsBackend(tester, 'DXVK-macOS');
 
       expect(runner.argumentsLog.length, 5);
       expect(runner.argumentsLog[0], const ['list-bottles', '--json']);
@@ -282,11 +283,236 @@ void defineBottleConfigurationWidgetTests() {
     },
   );
 
-  testWidgets('bottle configuration toggles show pending state until saved', (
+  testWidgets(
+    'macOS bottle configuration selects graphics backend from one dropdown',
+    (WidgetTester tester) async {
+      final runner = _QueuedProcessRunner([
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottles": [
+              {
+                "id": "steam",
+                "name": "Steam",
+                "path": "/Users/user/Library/Application Support/Konyak/Bottles/Steam",
+                "windowsVersion": "win10",
+                "runtimeSettings": {
+                  "enhancedSync": "msync",
+                  "metalHud": false,
+                  "metalTrace": false,
+                  "avxEnabled": false,
+                  "dxrEnabled": false,
+                  "dxvk": false,
+                  "dxmt": false,
+                  "dxvkAsync": true,
+                  "dxvkHud": "off",
+                  "buildVersion": 19045,
+                  "retinaMode": false,
+                  "dpiScaling": 144
+                }
+              }
+            ]
+          }
+        ''',
+          stderr: '',
+        ),
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottle": {
+              "id": "steam",
+              "name": "Steam",
+              "path": "/Users/user/Library/Application Support/Konyak/Bottles/Steam",
+              "windowsVersion": "win10",
+              "runtimeSettings": {
+                "enhancedSync": "msync",
+                "metalHud": false,
+                "metalTrace": false,
+                "avxEnabled": false,
+                "dxrEnabled": false,
+                "dxvk": false,
+                "dxmt": false,
+                "dxvkAsync": true,
+                "dxvkHud": "off",
+                "buildVersion": 19045,
+                "retinaMode": false,
+                "dpiScaling": 144
+              }
+            }
+          }
+        ''',
+          stderr: '',
+        ),
+        ProcessRunResult(
+          exitCode: 0,
+          stdout: _macosRuntimeListPayload(),
+          stderr: '',
+        ),
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottle": {
+              "id": "steam",
+              "name": "Steam",
+              "path": "/Users/user/Library/Application Support/Konyak/Bottles/Steam",
+              "windowsVersion": "win10",
+              "runtimeSettings": {
+                "enhancedSync": "msync",
+                "metalHud": false,
+                "metalTrace": false,
+                "avxEnabled": false,
+                "dxrEnabled": false,
+                "dxvk": false,
+                "dxmt": true,
+                "dxvkAsync": true,
+                "dxvkHud": "off",
+                "buildVersion": 19045,
+                "retinaMode": false,
+                "dpiScaling": 144
+              }
+            }
+          }
+        ''',
+          stderr: '',
+        ),
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottle": {
+              "id": "steam",
+              "name": "Steam",
+              "path": "/Users/user/Library/Application Support/Konyak/Bottles/Steam",
+              "windowsVersion": "win10",
+              "runtimeSettings": {
+                "enhancedSync": "msync",
+                "metalHud": false,
+                "metalTrace": false,
+                "avxEnabled": false,
+                "dxrEnabled": true,
+                "dxvk": false,
+                "dxmt": false,
+                "dxvkAsync": true,
+                "dxvkHud": "off",
+                "buildVersion": 19045,
+                "retinaMode": false,
+                "dpiScaling": 144
+              }
+            }
+          }
+        ''',
+          stderr: '',
+        ),
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottle": {
+              "id": "steam",
+              "name": "Steam",
+              "path": "/Users/user/Library/Application Support/Konyak/Bottles/Steam",
+              "windowsVersion": "win10",
+              "runtimeSettings": {
+                "enhancedSync": "msync",
+                "metalHud": false,
+                "metalTrace": false,
+                "avxEnabled": false,
+                "dxrEnabled": false,
+                "dxvk": true,
+                "dxmt": false,
+                "dxvkAsync": true,
+                "dxvkHud": "off",
+                "buildVersion": 19045,
+                "retinaMode": false,
+                "dpiScaling": 144
+              }
+            }
+          }
+        ''',
+          stderr: '',
+        ),
+      ]);
+
+      await tester.pumpWidget(
+        _testKonyakApp(
+          cliClient: KonyakCliClient(
+            executable: 'konyak',
+            processRunner: runner,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Bottle Configuration'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Graphics'), findsOneWidget);
+      expect(find.text('Graphics Backend'), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('config-graphics-backend')),
+        findsOneWidget,
+      );
+      expect(find.text('DXVK Async'), findsNothing);
+      expect(find.text('DXVK HUD'), findsNothing);
+      expect(find.text('Metal HUD'), findsNothing);
+      expect(find.text('Metal Trace'), findsNothing);
+
+      await tester.tap(find.byKey(const ValueKey('config-graphics-backend')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('DXMT').last);
+      await tester.pumpAndSettle();
+
+      final dxmtSettings =
+          jsonDecode(runner.argumentsLog[3][3]) as Map<String, Object?>;
+      expect(dxmtSettings, containsPair('dxvk', false));
+      expect(dxmtSettings, containsPair('dxmt', true));
+      expect(dxmtSettings, containsPair('dxrEnabled', false));
+      expect(find.text('Metal HUD'), findsOneWidget);
+      expect(find.text('Metal Trace'), findsOneWidget);
+      expect(find.text('DXVK Async'), findsNothing);
+
+      await tester.tap(find.byKey(const ValueKey('config-graphics-backend')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('GPTK/D3DMetal').last);
+      await tester.pumpAndSettle();
+
+      final d3dMetalSettings =
+          jsonDecode(runner.argumentsLog[4][3]) as Map<String, Object?>;
+      expect(d3dMetalSettings, containsPair('dxvk', false));
+      expect(d3dMetalSettings, containsPair('dxmt', false));
+      expect(d3dMetalSettings, containsPair('dxrEnabled', true));
+      expect(find.text('Metal HUD'), findsOneWidget);
+      expect(find.text('Metal Trace'), findsOneWidget);
+      expect(find.text('DXVK Async'), findsNothing);
+
+      await tester.tap(find.byKey(const ValueKey('config-graphics-backend')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('DXVK-macOS').last);
+      await tester.pumpAndSettle();
+
+      final dxvkSettings =
+          jsonDecode(runner.argumentsLog[5][3]) as Map<String, Object?>;
+      expect(dxvkSettings, containsPair('dxvk', true));
+      expect(dxvkSettings, containsPair('dxmt', false));
+      expect(dxvkSettings, containsPair('dxrEnabled', false));
+      expect(find.text('DXVK Async'), findsOneWidget);
+      expect(find.text('DXVK HUD'), findsOneWidget);
+      expect(find.text('Metal HUD'), findsNothing);
+      expect(find.text('Metal Trace'), findsNothing);
+    },
+  );
+
+  testWidgets('bottle configuration backend shows pending state until saved', (
     WidgetTester tester,
   ) async {
-    final semantics = tester.ensureSemantics();
-
     final runtimeUpdateCompleter = Completer<ProcessRunResult>();
     final runner = _FutureQueuedProcessRunner([
       Future.value(
@@ -371,29 +597,14 @@ void defineBottleConfigurationWidgetTests() {
     await tester.tap(find.text('Bottle Configuration'));
     await tester.pumpAndSettle();
 
-    expect(
-      tester
-          .getSemantics(find.byKey(const ValueKey('config-dxvk-switch')))
-          .flagsCollection
-          .isToggled,
-      Tristate.isFalse,
-    );
-
-    await tester.tap(find.byKey(const ValueKey('config-dxvk-switch')));
+    expect(find.text('Default'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('config-graphics-backend')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('DXVK-macOS').last);
     await tester.pump();
 
-    expect(find.byKey(const ValueKey('config-dxvk-switch')), findsOneWidget);
-    expect(
-      tester
-          .getSemantics(find.byKey(const ValueKey('config-dxvk-switch')))
-          .flagsCollection
-          .isToggled,
-      Tristate.isTrue,
-    );
-    expect(
-      find.byKey(const ValueKey('config-dxvk-switch-loading')),
-      findsOneWidget,
-    );
+    expect(_graphicsBackendDropdown(tester).value, 'dxvk');
+    expect(find.text('DXVK Async'), findsOneWidget);
 
     expect(find.byTooltip('Back to bottle'), findsNothing);
     expect(find.text('Bottle Configuration'), findsOneWidget);
@@ -429,18 +640,8 @@ void defineBottleConfigurationWidgetTests() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(
-      find.byKey(const ValueKey('config-dxvk-switch-loading')),
-      findsNothing,
-    );
-    expect(
-      tester
-          .getSemantics(find.byKey(const ValueKey('config-dxvk-switch')))
-          .flagsCollection
-          .isToggled,
-      Tristate.isTrue,
-    );
-    semantics.dispose();
+    expect(_graphicsBackendDropdown(tester).value, 'dxvk');
+    expect(find.text('DXVK Async'), findsOneWidget);
   });
 
   testWidgets(
@@ -605,11 +806,9 @@ void defineBottleConfigurationWidgetTests() {
     },
   );
 
-  testWidgets('bottle configuration restores toggle state when saving fails', (
+  testWidgets('bottle configuration restores backend state when saving fails', (
     WidgetTester tester,
   ) async {
-    final semantics = tester.ensureSemantics();
-
     final runtimeUpdateCompleter = Completer<ProcessRunResult>();
     final runner = _FutureQueuedProcessRunner([
       Future.value(
@@ -694,20 +893,14 @@ void defineBottleConfigurationWidgetTests() {
     await tester.tap(find.text('Bottle Configuration'));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const ValueKey('config-dxvk-switch')));
+    expect(find.text('Default'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('config-graphics-backend')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('DXVK-macOS').last);
     await tester.pump();
 
-    expect(
-      tester
-          .getSemantics(find.byKey(const ValueKey('config-dxvk-switch')))
-          .flagsCollection
-          .isToggled,
-      Tristate.isTrue,
-    );
-    expect(
-      find.byKey(const ValueKey('config-dxvk-switch-loading')),
-      findsOneWidget,
-    );
+    expect(_graphicsBackendDropdown(tester).value, 'dxvk');
+    expect(find.text('DXVK Async'), findsOneWidget);
 
     runtimeUpdateCompleter.complete(
       const ProcessRunResult(
@@ -726,19 +919,9 @@ void defineBottleConfigurationWidgetTests() {
     );
     await tester.pumpAndSettle();
 
-    expect(
-      find.byKey(const ValueKey('config-dxvk-switch-loading')),
-      findsNothing,
-    );
-    expect(
-      tester
-          .getSemantics(find.byKey(const ValueKey('config-dxvk-switch')))
-          .flagsCollection
-          .isToggled,
-      Tristate.isFalse,
-    );
+    expect(_graphicsBackendDropdown(tester).value, 'wineDefault');
+    expect(find.text('DXVK Async'), findsNothing);
     expect(find.text('Runtime settings update failed.'), findsOneWidget);
-    semantics.dispose();
   });
 
   testWidgets('bottle configuration waits for capabilities before toggles', (
@@ -858,7 +1041,7 @@ void defineBottleConfigurationWidgetTests() {
       find.byKey(const ValueKey('bottle-configuration-runtime-loading')),
       findsOneWidget,
     );
-    expect(find.byKey(const ValueKey('config-dxvk-switch')), findsNothing);
+    expect(find.byKey(const ValueKey('config-graphics-backend')), findsNothing);
 
     runtimeListCompleter.complete(
       ProcessRunResult(
@@ -874,11 +1057,12 @@ void defineBottleConfigurationWidgetTests() {
       find.byKey(const ValueKey('bottle-configuration-runtime-loading')),
       findsNothing,
     );
-    expect(find.byKey(const ValueKey('config-dxvk-switch')), findsOneWidget);
-    expect(find.byKey(const ValueKey('config-dxmt-switch')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('config-graphics-backend')),
+      findsOneWidget,
+    );
 
-    await tester.tap(find.byKey(const ValueKey('config-dxvk-switch')));
-    await tester.pumpAndSettle();
+    await _selectGraphicsBackend(tester, 'DXVK-macOS');
 
     expect(runner.argumentsLog[3].take(3).toList(growable: false), const [
       'set-runtime-settings',
@@ -894,7 +1078,6 @@ void defineBottleConfigurationWidgetTests() {
   testWidgets('Linux bottle configuration enables DXVK when runtime has DXVK', (
     WidgetTester tester,
   ) async {
-    final semantics = tester.ensureSemantics();
     final runner = _QueuedProcessRunner([
       const ProcessRunResult(
         exitCode: 0,
@@ -1000,22 +1183,14 @@ void defineBottleConfigurationWidgetTests() {
     await tester.tap(find.text('Bottle Configuration'));
     await tester.pumpAndSettle();
 
-    expect(
-      tester
-          .getSemantics(find.byKey(const ValueKey('config-dxvk-switch')))
-          .flagsCollection
-          .isEnabled,
-      Tristate.isTrue,
-    );
+    expect(_graphicsBackendDropdown(tester).onChanged, isNotNull);
 
-    await tester.tap(find.byKey(const ValueKey('config-dxvk-switch')));
-    await tester.pumpAndSettle();
+    await _selectGraphicsBackend(tester, 'DXVK');
 
     final settings =
         jsonDecode(runner.argumentsLog[3][3]) as Map<String, Object?>;
     expect(settings, containsPair('dxvk', true));
     expect(runner.argumentsLog[3].last, '--json');
-    semantics.dispose();
   });
 
   testWidgets(
@@ -1318,7 +1493,6 @@ void defineBottleConfigurationWidgetTests() {
   testWidgets(
     'bottle configuration disables runtime toggles when capabilities are missing',
     (WidgetTester tester) async {
-      final semantics = tester.ensureSemantics();
       final runner = _QueuedProcessRunner([
         const ProcessRunResult(
           exitCode: 0,
@@ -1380,7 +1554,11 @@ void defineBottleConfigurationWidgetTests() {
         ),
         ProcessRunResult(
           exitCode: 0,
-          stdout: _macosRuntimeListPayload(dxvkAvailable: false),
+          stdout: _macosRuntimeListPayload(
+            dxvkAvailable: false,
+            dxmtAvailable: false,
+            gptkAvailable: false,
+          ),
           stderr: '',
         ),
       ]);
@@ -1398,18 +1576,26 @@ void defineBottleConfigurationWidgetTests() {
       await tester.tap(find.text('Bottle Configuration'));
       await tester.pumpAndSettle();
 
-      expect(
-        tester
-            .getSemantics(find.byKey(const ValueKey('config-dxvk-switch')))
-            .flagsCollection
-            .isEnabled,
-        Tristate.isFalse,
-      );
-
-      await tester.tap(find.byKey(const ValueKey('config-dxvk-switch')));
-      await tester.pumpAndSettle();
-
-      semantics.dispose();
+      expect(_graphicsBackendDropdown(tester).onChanged, isNull);
     },
+  );
+}
+
+Future<void> _selectGraphicsBackend(
+  WidgetTester tester,
+  String backendLabel,
+) async {
+  await tester.tap(find.byKey(const ValueKey('config-graphics-backend')));
+  await tester.pumpAndSettle();
+  await tester.tap(find.text(backendLabel).last);
+  await tester.pumpAndSettle();
+}
+
+DropdownButton<String> _graphicsBackendDropdown(WidgetTester tester) {
+  return tester.widget<DropdownButton<String>>(
+    find.descendant(
+      of: find.byKey(const ValueKey('config-graphics-backend')),
+      matching: find.byType(DropdownButton<String>),
+    ),
   );
 }
