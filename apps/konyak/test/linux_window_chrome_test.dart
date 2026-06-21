@@ -31,6 +31,17 @@ void main() {
     },
   );
 
+  test('Linux runner starts at the macOS content dimensions', () {
+    final source = File('linux/runner/my_application.cc').readAsStringSync();
+
+    expect(
+      source,
+      matches(
+        RegExp(r'gtk_window_set_default_size\(\s*window,\s*800\s*,\s*500\s*\)'),
+      ),
+    );
+  });
+
   test('Linux desktop entry accepts Windows executable files', () {
     final desktopEntry = File(
       'linux/runner/resources/app.konyak.Konyak.desktop.in',
