@@ -79,8 +79,9 @@ the actionable backlog, use `docs/todo.md`.
 - Run EXE, MSI, and BAT files.
 - Change Windows version.
 - Change Konyak runtime settings from a separate Bottle Configuration screen:
-  registry-backed Windows Version, Retina Mode, Enhanced Sync, DPI Scaling,
-  AVX advertising, DXVK, DXVK HUD, Metal HUD, Metal Trace, and DXR.
+  registry-backed Windows Version, High Resolution Mode backed by
+  `RetinaMode`, Enhanced Sync, Windows DPI backed by `LogPixels`, AVX
+  advertising, DXVK, DXVK HUD, Metal HUD, Metal Trace, and DXR.
 - Run bottle utility commands such as Wine configuration, Registry Editor, and
   Control Panel through the same logged CLI execution boundary.
 - Open bottle locations such as the root folder and `drive_c` through an

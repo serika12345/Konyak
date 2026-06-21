@@ -51,20 +51,37 @@ class BottleWineSettingsSection extends StatelessWidget {
           BottleConfigurationSwitchRow(
             switchKey: const ValueKey('config-retina-mode-switch'),
             loadingKey: const ValueKey('config-retina-mode-switch-loading'),
-            label: 'Retina Mode',
+            label: 'High Resolution Mode',
             value: settings.retinaMode,
             isLoading:
                 pendingRuntimeSettingsControlKey ==
-                runtimeSettingsControlRetinaMode,
+                runtimeSettingsControlHighResolutionMode,
             onChanged: !availability.canUseWineRuntime
                 ? null
                 : (value) {
                     onChanged(
-                      settings.withRetinaMode(value),
-                      runtimeSettingsControlRetinaMode,
+                      settings.withHighResolutionMode(value),
+                      runtimeSettingsControlHighResolutionMode,
                     );
                   },
           ),
+        BottleConfigurationRow(
+          label: 'Windows DPI',
+          trailing: ConfigurationDropdown(
+            key: const ValueKey('config-dpi-scaling'),
+            value: settings.dpiScaling.toString(),
+            labels: dpiScalingLabels,
+            width: 110,
+            onChanged: !availability.canUseWineRuntime
+                ? null
+                : (value) {
+                    onChanged(
+                      settings.withDpiScaling(int.parse(value)),
+                      runtimeSettingsControlWindowsDpi,
+                    );
+                  },
+          ),
+        ),
         BottleConfigurationRow(
           label: 'Enhanced Sync',
           trailing: ConfigurationDropdown(
@@ -77,23 +94,6 @@ class BottleWineSettingsSection extends StatelessWidget {
                     onChanged(
                       settings.withEnhancedSync(value),
                       runtimeSettingsControlEnhancedSync,
-                    );
-                  },
-          ),
-        ),
-        BottleConfigurationRow(
-          label: 'DPI Scaling',
-          trailing: ConfigurationDropdown(
-            key: const ValueKey('config-dpi-scaling'),
-            value: settings.dpiScaling.toString(),
-            labels: dpiScalingLabels,
-            width: 110,
-            onChanged: !availability.canUseWineRuntime
-                ? null
-                : (value) {
-                    onChanged(
-                      settings.withDpiScaling(int.parse(value)),
-                      runtimeSettingsControlDpiScaling,
                     );
                   },
           ),

@@ -171,7 +171,8 @@ task changes scope.
     Wine, DXVK, and Metal sections plus Control Panel, Registry Editor, and
     Wine Configuration actions.
   - [x] Add registry-backed Bottle Configuration fields for Windows Version,
-    Retina Mode, and DPI Scaling.
+    High Resolution Mode backed by `RetinaMode`, and Windows DPI backed by
+    `LogPixels`.
 - [x] Add macOS setup checks.
   - [x] Detect whether Konyak-managed macOS Wine is installed.
   - [x] Detect Rosetta when required by the selected runtime.

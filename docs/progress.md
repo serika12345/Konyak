@@ -11,6 +11,132 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-21 17:26 JST
+- State: `completed`
+- Branch: `main`
+- Related work: High Resolution Mode internal naming
+- Purpose: remove stale Retina-mode operation names from internal helpers while
+  keeping the existing registry-backed `retinaMode` JSON/storage field
+  compatible.
+- Completed:
+  - Read the latest progress state and searched the remaining stale internal
+    names.
+  - Renamed CLI/domain adjustment helpers from Retina Mode wording to High
+    Resolution Mode / Windows DPI wording.
+  - Renamed Flutter UI model and pending-control helpers to High Resolution
+    Mode / Windows DPI wording while preserving the `retinaMode` and
+    `dpiScaling` JSON values.
+  - Kept `withRetinaMode` only on the CLI registry parser path where it maps
+    the literal Wine `RetinaMode` registry value.
+- Remaining:
+  - None for this naming cleanup.
+- Next: test against a real macOS bottle if manual CrossOver parity smoke is
+  desired before release.
+- Verification:
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "set-runtime-settings --json applies registry-backed settings"'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "set-runtime-settings --json restores DPI when disabling High Resolution Mode"'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "bottle configuration enables High Resolution Mode with 192 DPI"'`:
+    passed.
+  - `nix develop -c zsh -lc 'dart format packages/konyak_cli/lib/src/domain/bottle/bottle_runtime_settings_models.dart packages/konyak_cli/lib/src/domain/program/program_registry_plans.dart packages/konyak_cli/lib/src/cli/cli_bottle_mutation_handlers.dart apps/konyak/lib/src/app/bottles/bottle_runtime_settings_controls.dart apps/konyak/lib/src/app/bottles/bottle_runtime_settings_sections.dart apps/konyak/lib/src/bottles/bottle_summary.dart packages/konyak_cli/test/cli_contract_app_bottle.part.dart'`:
+    passed.
+  - `nix develop -c zsh -lc 'just cli-test'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-format-check'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-analyze'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-test'`: passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+
+- Timestamp: 2026-06-21 17:15 JST
+- State: `completed`
+- Branch: `main`
+- Related work: High Resolution Mode UI alignment
+- Purpose: make the bottle configuration UI describe the CrossOver-style
+  RetinaMode/DPI coupling as High Resolution Mode, with DPI shown as current
+  Windows DPI rather than a separate-looking mode.
+- Completed:
+  - Read the latest progress/TODO state.
+  - Confirmed the implementation already keeps CLI/registry contracts as
+    `retinaMode` and `LogPixels`, while the UI still says `Retina Mode` and
+    `DPI Scaling`.
+  - Updated focused widget expectations before changing UI labels.
+  - Renamed visible macOS controls to `High Resolution Mode` and `Windows DPI`,
+    keeping internal `retinaMode` JSON and widget keys unchanged.
+  - Moved the Windows DPI row next to High Resolution Mode in the Wine section
+    so the coupled settings read as one group.
+  - Updated `docs/todo.md` and `docs/flutter-architecture-plan.md` to record
+    the user-facing names and registry backing.
+- Remaining:
+  - None for this UI alignment pass.
+- Next: test against a real macOS bottle if manual CrossOver parity smoke is
+  desired before release.
+- Verification:
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "bottle configuration opens a settings screen and runs utilities"'`:
+    failed before implementation because `Windows DPI` was not shown, then
+    passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "bottle configuration enables High Resolution Mode with 192 DPI"'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "Linux hides macOS runtime controls"'`:
+    passed.
+  - `nix develop -c zsh -lc 'dart format apps/konyak/lib/src/app/bottles/bottle_runtime_settings_sections.dart apps/konyak/test/widget_bottle_configuration.part.dart apps/konyak/test/widget_menus_winetricks.part.dart'`:
+    passed.
+  - `nix develop -c zsh -lc 'just flutter-format-check'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-analyze'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-test'`: passed.
+  - `nix develop -c zsh -lc 'just cli-test'`: passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+
+- Timestamp: 2026-06-21 17:03 JST
+- State: `completed`
+- Branch: `main`
+- Related work: Retina Mode DPI coupling
+- Purpose: align Konyak's macOS Retina Mode behavior with CrossOver High
+  Resolution Mode by coupling RetinaMode registry changes with DPI scaling.
+- Completed:
+  - Read the latest progress/TODO state.
+  - Traced registry-backed runtime settings planning/parsing, CLI persistence,
+    and Flutter optimistic runtime settings updates.
+  - Added failing CLI coverage for enabling Retina Mode with LogPixels 192 and
+    disabling it back to LogPixels 96.
+  - Added failing Flutter widget coverage that the Retina Mode toggle updates
+    visible DPI and the outgoing settings JSON to 192 DPI.
+  - Implemented macOS-only runtime settings normalization so Retina Mode
+    false-to-true doubles current DPI with a 480 cap, and true-to-false halves
+    current DPI with a 96 floor and 24-DPI step alignment.
+  - Kept inspect-bottle registry parsing independent for RetinaMode and
+    LogPixels.
+- Remaining:
+  - None for this implementation pass.
+- Next: test against a real macOS bottle if manual CrossOver parity smoke is
+  desired before release.
+- Verification:
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "set-runtime-settings --json applies registry-backed settings"'`:
+    failed before implementation with LogPixels 144, then passed.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "set-runtime-settings --json restores DPI when disabling Retina Mode"'`:
+    failed before implementation because LogPixels was not written, then
+    passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "bottle configuration enables Retina Mode with 192 DPI"'`:
+    failed before implementation because 192 DPI was not shown, then passed.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "inspect-bottle --json reads registry-backed bottle settings"'`:
+    passed.
+  - `nix develop -c zsh -lc 'dart format packages/konyak_cli/lib/src/domain/bottle/bottle_runtime_settings_models.dart packages/konyak_cli/lib/src/domain/program/program_registry_plans.dart packages/konyak_cli/lib/src/cli/cli_bottle_mutation_handlers.dart packages/konyak_cli/test/cli_contract_app_bottle.part.dart apps/konyak/lib/src/bottles/bottle_summary.dart apps/konyak/test/widget_bottle_configuration.part.dart'`:
+    passed.
+  - `nix develop -c zsh -lc 'just cli-test'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-format-check'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-analyze'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-test'`: passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `nix develop -c zsh -lc 'git diff --check'`: passed.
+
 - Timestamp: 2026-06-21 16:38 JST
 - State: `completed`
 - Branch: `main`

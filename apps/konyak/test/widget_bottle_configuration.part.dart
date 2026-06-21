@@ -193,9 +193,11 @@ void defineBottleConfigurationWidgetTests() {
       expect(find.text('Enhanced Sync'), findsOneWidget);
       expect(find.text('Windows Version'), findsOneWidget);
       expect(find.text('Build Version'), findsNothing);
-      expect(find.text('DPI Scaling'), findsOneWidget);
+      expect(find.text('Windows DPI'), findsOneWidget);
       expect(find.text('144 DPI'), findsOneWidget);
-      expect(find.text('Retina Mode'), findsOneWidget);
+      expect(find.text('High Resolution Mode'), findsOneWidget);
+      expect(find.text('DPI Scaling'), findsNothing);
+      expect(find.text('Retina Mode'), findsNothing);
       expect(find.widgetWithText(TextButton, 'Tools'), findsOneWidget);
       expect(find.widgetWithText(TextButton, 'Open C: Drive'), findsNothing);
 
@@ -440,6 +442,168 @@ void defineBottleConfigurationWidgetTests() {
     );
     semantics.dispose();
   });
+
+  testWidgets(
+    'bottle configuration enables High Resolution Mode with 192 DPI',
+    (WidgetTester tester) async {
+      final semantics = tester.ensureSemantics();
+
+      final runtimeUpdateCompleter = Completer<ProcessRunResult>();
+      final runner = _FutureQueuedProcessRunner([
+        Future.value(
+          const ProcessRunResult(
+            exitCode: 0,
+            stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottles": [
+              {
+                "id": "steam",
+                "name": "Steam",
+                "path": "/Users/user/Library/Application Support/Konyak/Bottles/Steam",
+                "windowsVersion": "win10",
+                "runtimeSettings": {
+                  "enhancedSync": "msync",
+                  "metalHud": false,
+                  "metalTrace": false,
+                  "avxEnabled": false,
+                  "dxrEnabled": false,
+                  "dxvk": false,
+                  "dxvkAsync": true,
+                  "dxvkHud": "off",
+                  "buildVersion": 19045,
+                  "retinaMode": false,
+                  "dpiScaling": 96
+                }
+              }
+            ]
+          }
+        ''',
+            stderr: '',
+          ),
+        ),
+        Future.value(
+          const ProcessRunResult(
+            exitCode: 0,
+            stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottle": {
+              "id": "steam",
+              "name": "Steam",
+              "path": "/Users/user/Library/Application Support/Konyak/Bottles/Steam",
+              "windowsVersion": "win10",
+              "runtimeSettings": {
+                "enhancedSync": "msync",
+                "metalHud": false,
+                "metalTrace": false,
+                "avxEnabled": false,
+                "dxrEnabled": false,
+                "dxvk": false,
+                "dxvkAsync": true,
+                "dxvkHud": "off",
+                "buildVersion": 19045,
+                "retinaMode": false,
+                "dpiScaling": 96
+              }
+            }
+          }
+        ''',
+            stderr: '',
+          ),
+        ),
+        Future.value(
+          ProcessRunResult(
+            exitCode: 0,
+            stdout: _macosRuntimeListPayload(),
+            stderr: '',
+          ),
+        ),
+        runtimeUpdateCompleter.future,
+      ]);
+
+      await tester.pumpWidget(
+        _testKonyakApp(
+          cliClient: KonyakCliClient(
+            executable: 'konyak',
+            processRunner: runner,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Bottle Configuration'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('96 DPI'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('config-retina-mode-switch')));
+      await tester.pump();
+
+      expect(find.text('192 DPI'), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('config-retina-mode-switch-loading')),
+        findsOneWidget,
+      );
+      expect(
+        tester
+            .getSemantics(
+              find.byKey(const ValueKey('config-retina-mode-switch')),
+            )
+            .flagsCollection
+            .isToggled,
+        Tristate.isTrue,
+      );
+
+      expect(runner.argumentsLog[3].take(3).toList(growable: false), const [
+        'set-runtime-settings',
+        'steam',
+        '--settings-json',
+      ]);
+      final settings =
+          jsonDecode(runner.argumentsLog[3][3]) as Map<String, Object?>;
+      expect(settings, containsPair('retinaMode', true));
+      expect(settings, containsPair('dpiScaling', 192));
+
+      runtimeUpdateCompleter.complete(
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottle": {
+              "id": "steam",
+              "name": "Steam",
+              "path": "/Users/user/Library/Application Support/Konyak/Bottles/Steam",
+              "windowsVersion": "win10",
+              "runtimeSettings": {
+                "enhancedSync": "msync",
+                "metalHud": false,
+                "metalTrace": false,
+                "avxEnabled": false,
+                "dxrEnabled": false,
+                "dxvk": false,
+                "dxvkAsync": true,
+                "dxvkHud": "off",
+                "buildVersion": 19045,
+                "retinaMode": true,
+                "dpiScaling": 192
+              }
+            }
+          }
+        ''',
+          stderr: '',
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const ValueKey('config-retina-mode-switch-loading')),
+        findsNothing,
+      );
+      expect(find.text('192 DPI'), findsOneWidget);
+      semantics.dispose();
+    },
+  );
 
   testWidgets('bottle configuration restores toggle state when saving fails', (
     WidgetTester tester,

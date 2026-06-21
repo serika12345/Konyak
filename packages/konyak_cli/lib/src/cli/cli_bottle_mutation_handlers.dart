@@ -175,9 +175,14 @@ CliResult? _handleBottleConfigurationCommand(
       result: repository.findBottle(runtimeSettingsUpdateRequest.bottleId),
       bottleId: runtimeSettingsUpdateRequest.bottleId,
       onFound: (bottle) {
+        final runtimeSettings = _effectiveRuntimeSettingsForUpdate(
+          currentRuntimeSettings: bottle.runtimeSettings,
+          runtimeSettings: runtimeSettingsUpdateRequest.runtimeSettings,
+          hostPlatform: context.programRunPlanner.hostPlatform,
+        );
         final registryUpdateFailure = _applyRuntimeSettingsRegistryUpdates(
           bottle: bottle,
-          runtimeSettings: runtimeSettingsUpdateRequest.runtimeSettings,
+          runtimeSettings: runtimeSettings,
           programRunPlanner: context.programRunPlanner,
           programRunner: context.programRunner,
         );
@@ -187,7 +192,7 @@ CliResult? _handleBottleConfigurationCommand(
 
         final dllSyncFailure = _syncRuntimeSettingsDllOverrides(
           bottle: bottle,
-          runtimeSettings: runtimeSettingsUpdateRequest.runtimeSettings,
+          runtimeSettings: runtimeSettings,
           programRunPlanner: context.programRunPlanner,
         );
         if (dllSyncFailure != null) {
@@ -195,13 +200,32 @@ CliResult? _handleBottleConfigurationCommand(
         }
 
         return _bottleUpdateJsonResult(
-          repository.setRuntimeSettings(runtimeSettingsUpdateRequest),
+          repository.setRuntimeSettings(
+            RuntimeSettingsUpdateRequest(
+              bottleId: runtimeSettingsUpdateRequest.bottleId,
+              runtimeSettings: runtimeSettings,
+            ),
+          ),
         );
       },
     );
   }
 
   return null;
+}
+
+BottleRuntimeSettings _effectiveRuntimeSettingsForUpdate({
+  required BottleRuntimeSettings currentRuntimeSettings,
+  required BottleRuntimeSettings runtimeSettings,
+  required KonyakHostPlatform hostPlatform,
+}) {
+  return switch (hostPlatform) {
+    KonyakHostPlatform.macos =>
+      runtimeSettings.withHighResolutionModeWindowsDpiAdjustment(
+        currentRuntimeSettings,
+      ),
+    KonyakHostPlatform.linux => runtimeSettings,
+  };
 }
 
 CliResult _bottleUpdateJsonResult(BottleUpdateResult result) {

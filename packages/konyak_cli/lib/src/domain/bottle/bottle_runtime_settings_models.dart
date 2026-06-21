@@ -247,6 +247,21 @@ class BottleRuntimeSettings {
     );
   }
 
+  BottleRuntimeSettings withHighResolutionModeWindowsDpiAdjustment(
+    BottleRuntimeSettings currentRuntimeSettings,
+  ) {
+    if (retinaMode == currentRuntimeSettings.retinaMode) {
+      return this;
+    }
+
+    return withDpiScaling(
+      _windowsDpiForHighResolutionModeChange(
+        currentWindowsDpi: currentRuntimeSettings.dpiScaling,
+        highResolutionMode: retinaMode,
+      ),
+    );
+  }
+
   BottleRuntimeSettings withDpiScaling(int dpiScaling) {
     return BottleRuntimeSettings(
       enhancedSync: enhancedSync,
@@ -406,4 +421,27 @@ class BottleRuntimeSettings {
       dpiScaling,
     );
   }
+}
+
+const _minimumWindowsDpi = 96;
+const _maximumWindowsDpi = 480;
+const _windowsDpiStep = 24;
+
+int _windowsDpiForHighResolutionModeChange({
+  required int currentWindowsDpi,
+  required bool highResolutionMode,
+}) {
+  if (highResolutionMode) {
+    final doubled = currentWindowsDpi * 2;
+    return doubled > _maximumWindowsDpi ? _maximumWindowsDpi : doubled;
+  }
+
+  final halved = currentWindowsDpi ~/ 2;
+  final minimumApplied = halved < _minimumWindowsDpi
+      ? _minimumWindowsDpi
+      : halved;
+  final steppedOffset =
+      ((minimumApplied - _minimumWindowsDpi) ~/ _windowsDpiStep) *
+      _windowsDpiStep;
+  return _minimumWindowsDpi + steppedOffset;
 }

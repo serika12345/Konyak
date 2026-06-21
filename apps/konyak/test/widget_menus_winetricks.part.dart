@@ -341,7 +341,7 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
     expect(find.text('Metal'), findsNothing);
     expect(find.text('Metal HUD'), findsNothing);
     expect(find.text('Metal Trace'), findsNothing);
-    expect(find.text('Retina Mode'), findsNothing);
+    expect(find.text('High Resolution Mode'), findsNothing);
     expect(find.text('Advertise AVX Support'), findsNothing);
     expect(find.text('DXR'), findsNothing);
     expect(find.byTooltip('Install macOS Wine'), findsNothing);

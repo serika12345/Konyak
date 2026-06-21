@@ -19,10 +19,16 @@ List<_RegistryValueUpdate> _runtimeSettingsRegistryUpdates({
   required bool includeMacDriverSettings,
 }) {
   final updates = <_RegistryValueUpdate>[];
+  final effectiveRuntimeSettings = includeMacDriverSettings
+      ? runtimeSettings.withHighResolutionModeWindowsDpiAdjustment(
+          currentRuntimeSettings,
+        )
+      : runtimeSettings;
 
-  if (runtimeSettings.buildVersion != currentRuntimeSettings.buildVersion) {
+  if (effectiveRuntimeSettings.buildVersion !=
+      currentRuntimeSettings.buildVersion) {
     final windowsVersion = _windowsVersionForBuildVersion(
-      runtimeSettings.buildVersion,
+      effectiveRuntimeSettings.buildVersion,
     );
     windowsVersion.match(() {}, (version) {
       updates.addAll(_windowsVersionRegistryUpdates(version));
@@ -34,7 +40,7 @@ List<_RegistryValueUpdate> _runtimeSettingsRegistryUpdates({
           key: r'HKLM\Software\Microsoft\Windows NT\CurrentVersion',
           name: 'CurrentBuild',
           type: 'REG_SZ',
-          data: runtimeSettings.buildVersion.toString(),
+          data: effectiveRuntimeSettings.buildVersion.toString(),
         ),
       )
       ..add(
@@ -42,30 +48,32 @@ List<_RegistryValueUpdate> _runtimeSettingsRegistryUpdates({
           key: r'HKLM\Software\Microsoft\Windows NT\CurrentVersion',
           name: 'CurrentBuildNumber',
           type: 'REG_SZ',
-          data: runtimeSettings.buildVersion.toString(),
+          data: effectiveRuntimeSettings.buildVersion.toString(),
         ),
       );
   }
 
   if (includeMacDriverSettings &&
-      runtimeSettings.retinaMode != currentRuntimeSettings.retinaMode) {
+      effectiveRuntimeSettings.retinaMode !=
+          currentRuntimeSettings.retinaMode) {
     updates.add(
       _RegistryValueUpdate(
         key: r'HKCU\Software\Wine\Mac Driver',
         name: 'RetinaMode',
         type: 'REG_SZ',
-        data: runtimeSettings.retinaMode ? 'y' : 'n',
+        data: effectiveRuntimeSettings.retinaMode ? 'y' : 'n',
       ),
     );
   }
 
-  if (runtimeSettings.dpiScaling != currentRuntimeSettings.dpiScaling) {
+  if (effectiveRuntimeSettings.dpiScaling !=
+      currentRuntimeSettings.dpiScaling) {
     updates.add(
       _RegistryValueUpdate(
         key: r'HKCU\Control Panel\Desktop',
         name: 'LogPixels',
         type: 'REG_DWORD',
-        data: runtimeSettings.dpiScaling.toString(),
+        data: effectiveRuntimeSettings.dpiScaling.toString(),
       ),
     );
   }

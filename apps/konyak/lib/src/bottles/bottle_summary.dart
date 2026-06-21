@@ -261,7 +261,14 @@ class BottleRuntimeSettingsSummary {
     );
   }
 
-  BottleRuntimeSettingsSummary withRetinaMode(bool retinaMode) {
+  BottleRuntimeSettingsSummary withHighResolutionMode(bool highResolutionMode) {
+    final dpiScaling = highResolutionMode == retinaMode
+        ? this.dpiScaling
+        : _windowsDpiForHighResolutionModeChange(
+            currentWindowsDpi: this.dpiScaling,
+            highResolutionMode: highResolutionMode,
+          );
+
     return BottleRuntimeSettingsSummary(
       enhancedSync: enhancedSync,
       metalHud: metalHud,
@@ -274,7 +281,7 @@ class BottleRuntimeSettingsSummary {
       dxvkHud: dxvkHud,
       vkd3dProton: vkd3dProton,
       buildVersion: buildVersion,
-      retinaMode: retinaMode,
+      retinaMode: highResolutionMode,
       dpiScaling: dpiScaling,
     );
   }
@@ -314,6 +321,29 @@ class BottleRuntimeSettingsSummary {
       'dpiScaling': dpiScaling,
     };
   }
+}
+
+const _minimumWindowsDpi = 96;
+const _maximumWindowsDpi = 480;
+const _windowsDpiStep = 24;
+
+int _windowsDpiForHighResolutionModeChange({
+  required int currentWindowsDpi,
+  required bool highResolutionMode,
+}) {
+  if (highResolutionMode) {
+    final doubled = currentWindowsDpi * 2;
+    return doubled > _maximumWindowsDpi ? _maximumWindowsDpi : doubled;
+  }
+
+  final halved = currentWindowsDpi ~/ 2;
+  final minimumApplied = halved < _minimumWindowsDpi
+      ? _minimumWindowsDpi
+      : halved;
+  final steppedOffset =
+      ((minimumApplied - _minimumWindowsDpi) ~/ _windowsDpiStep) *
+      _windowsDpiStep;
+  return _minimumWindowsDpi + steppedOffset;
 }
 
 class PinnedProgramSummary {

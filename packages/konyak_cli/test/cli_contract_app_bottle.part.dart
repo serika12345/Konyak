@@ -1592,7 +1592,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
         '-t',
         'REG_DWORD',
         '-d',
-        '144',
+        '192',
         '-f',
       ],
     ]);
@@ -1607,10 +1607,85 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       const BottleRuntimeSettings(
         buildVersion: 22631,
         retinaMode: true,
-        dpiScaling: 144,
+        dpiScaling: 192,
       ),
     );
   });
+
+  test(
+    'set-runtime-settings --json restores DPI when disabling High Resolution Mode',
+    () {
+      final repository = MemoryBottleRepository(
+        dataHome: '/home/user/.local/share/konyak',
+        bottles: [
+          BottleRecord(
+            id: 'steam',
+            name: 'Steam',
+            path:
+                '/Users/user/Library/Application Support/Konyak/Bottles/Steam',
+            windowsVersion: 'win10',
+            runtimeSettings: const BottleRuntimeSettings(
+              retinaMode: true,
+              dpiScaling: 192,
+            ),
+          ),
+        ],
+      );
+      final runner = RecordingProgramRunner(
+        result: const ProgramRunCompleted(processExitCode: 0),
+      );
+
+      final result = runCli(
+        [
+          'set-runtime-settings',
+          'steam',
+          '--settings-json',
+          jsonEncode({'retinaMode': false, 'dpiScaling': 192}),
+          '--json',
+        ],
+        bottleRepository: repository,
+        programRunPlanner: ProgramRunPlanner(
+          hostPlatform: KonyakHostPlatform.macos,
+          environment: HostEnvironment(const {
+            'KONYAK_MACOS_WINE_ROOT': '/runtime',
+          }),
+        ),
+        programRunner: runner,
+      );
+
+      expect(result.exitCode, 0);
+      expect(runner.requests.map((request) => request.arguments), [
+        [
+          'reg',
+          'add',
+          r'HKCU\Software\Wine\Mac Driver',
+          '-v',
+          'RetinaMode',
+          '-t',
+          'REG_SZ',
+          '-d',
+          'n',
+          '-f',
+        ],
+        [
+          'reg',
+          'add',
+          r'HKCU\Control Panel\Desktop',
+          '-v',
+          'LogPixels',
+          '-t',
+          'REG_DWORD',
+          '-d',
+          '96',
+          '-f',
+        ],
+      ]);
+      expect(
+        _expectFound(repository.findBottle('steam')).runtimeSettings,
+        const BottleRuntimeSettings(retinaMode: false, dpiScaling: 96),
+      );
+    },
+  );
 
   test('set-runtime-settings --json maps build version to winecfg version', () {
     final repository = MemoryBottleRepository(
