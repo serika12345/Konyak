@@ -54,6 +54,7 @@ KonyakApp _testKonyakApp({
   IconFileLoader? iconFileLoader,
   ProgramWindowProbe? programWindowProbe,
   List<String> initialExecutablePaths = const <String>[],
+  String? executableOpenAutoRunBottleId,
   bool enableBackgroundServices = false,
 }) {
   return KonyakApp(
@@ -67,6 +68,7 @@ KonyakApp _testKonyakApp({
     iconFileLoader: iconFileLoader,
     programWindowProbe: programWindowProbe ?? const _NoopProgramWindowProbe(),
     initialExecutablePaths: initialExecutablePaths,
+    executableOpenAutoRunBottleId: executableOpenAutoRunBottleId,
     enableBackgroundServices: enableBackgroundServices,
   );
 }

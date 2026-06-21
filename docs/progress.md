@@ -11,6 +11,60 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-21 13:10 JST
+- State: `completed`
+- Branch: `main`
+- Related work: macOS packaged app execution-path CI hardening
+- Purpose: close the remaining CI gap where Finder/LaunchServices smoke proved
+  app launch and visible-window behavior, but did not prove that a Finder-opened
+  `.exe` reached Flutter's bundled CLI `run-program` execution path with the
+  packaged app resource environment.
+- Completed:
+  - Added widget coverage for a smoke-only executable-open auto-run path that
+    skips the bottle chooser and sends the pending executable to
+    `run-program <bottle-id> --program <path> --json`.
+  - Added a smoke-only app hook driven by
+    `KONYAK_ENABLE_SMOKE_HOOKS=1` plus
+    `KONYAK_SMOKE_OPEN_EXECUTABLE_AUTO_RUN_BOTTLE_ID`.
+  - Added `scripts/smoke_macos_packaged_app_cli_bridge.zsh`, which copies a
+    finalized `Konyak.app`, replaces only `Contents/Resources/konyak-cli` with
+    a CLI spy, opens an `.exe` through `/usr/bin/open`, and verifies the spy saw
+    `run-program` plus `KONYAK_BUNDLE_RESOURCES` at the front of `PATH`.
+  - Wired the smoke into `just smoke-macos-app-cli-bridge` and the macOS release
+    workflow after the packaged Finder smoke.
+  - Updated release documentation, TODO tracking, and governance checks so the
+    new packaged app CLI bridge smoke remains part of CI coverage.
+- Remaining:
+  - None for this CI hardening step.
+- Next: continue with the next unfinished TODO item.
+- Verification:
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "macOS startup can auto-run pending executable files for smoke"'`:
+    failed before implementation because `KonyakApp` did not expose the
+    smoke-only auto-run parameter, then passed after the hook was added.
+  - `nix develop -c zsh -lc 'dart format apps/konyak/lib/main.dart apps/konyak/lib/src/app/konyak_app.dart apps/konyak/lib/src/home_loader/home_loader.dart apps/konyak/lib/src/home_loader_parts/home_loader_executables.part.dart apps/konyak/test/widget_test.dart apps/konyak/test/widget_macos_startup.part.dart apps/konyak/test/macos_window_metrics_test.dart'`:
+    passed.
+  - `nix develop -c zsh -lc 'zsh -n scripts/smoke_macos_packaged_app_cli_bridge.zsh'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/macos_window_metrics_test.dart'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/main_entrypoint_test.dart'`:
+    passed after moving the smoke hook back into inline entrypoint wiring so
+    `main.dart` stayed within the thin-entrypoint line budget.
+  - `nix run .#macos-release`: passed and refreshed the local release
+    `Konyak.app` and zip artifacts.
+  - `nix develop -c zsh -lc './scripts/smoke_macos_packaged_app_cli_bridge.zsh .dart_tool/konyak/release/macos/Konyak.app'`:
+    passed against the refreshed release app.
+  - `nix develop -c zsh -lc 'just smoke-macos-app-cli-bridge'`: passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-test'`: failed once because the first
+    smoke hook version made `main.dart` exceed the thin-entrypoint line budget,
+    then passed after the hook was inlined.
+  - `nix develop -c zsh -lc 'just verify'`: passed.
+  - `git diff --check`: passed.
+
 - Timestamp: 2026-06-21 12:30 JST
 - State: `completed`
 - Branch: `main`

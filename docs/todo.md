@@ -451,6 +451,10 @@ task changes scope.
   - [x] Add a checksum-pinned PuTTY Windows executable fixture for local and
     CI Finder/LaunchServices/Quick Look packaged app smoke coverage without
     vendoring sample `.exe` binaries into the repository.
+  - [x] Add packaged app CLI bridge smoke coverage that opens an `.exe` through
+    the public macOS `open` path, auto-runs it into a smoke bottle, and
+    verifies the Flutter app invokes the bundled CLI `run-program` path with
+    `KONYAK_BUNDLE_RESOURCES` on `PATH`.
   - [x] Add parent CLI-bound DXVK/DXMT/vkd3d backend probe execution smoke once
     the probe runner path can stay headless and non-flaky on GitHub-hosted
     arm64 macOS.

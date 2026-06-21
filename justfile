@@ -86,6 +86,9 @@ smoke-macos-runtime-install:
 smoke-macos-finder:
   ./scripts/smoke_macos_finder_integration.zsh
 
+smoke-macos-app-cli-bridge:
+  ./scripts/smoke_macos_packaged_app_cli_bridge.zsh
+
 smoke-macos-finder-putty:
   fixture="$(./scripts/fetch_windows_fixture_putty.zsh)"; app_bundle="${KONYAK_MACOS_FINDER_SMOKE_APP:-.dart_tool/konyak/app/macos/debug/Konyak.app}"; ./scripts/smoke_macos_finder_integration.zsh "$app_bundle" "$fixture"
 

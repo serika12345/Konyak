@@ -65,6 +65,7 @@ The local Finder and runtime smokes are:
 ```sh
 nix develop -c zsh -lc 'just smoke-macos-runtime-install'
 nix develop -c zsh -lc 'just smoke-macos-finder'
+nix develop -c zsh -lc 'just smoke-macos-app-cli-bridge'
 nix develop -c zsh -lc 'just smoke-macos-finder-putty'
 ```
 
@@ -82,6 +83,14 @@ verifies its pinned SHA-256 checksum, and runs the same Finder smoke with that
 real PE executable. The release workflow runs that PuTTY-backed smoke against
 the refreshed release `Konyak.app`, so CI and local verification use the same
 finalized app layout instead of a manually placed `.app`.
+`smoke-macos-app-cli-bridge` copies a finalized app bundle, replaces only the
+bundled `Contents/Resources/konyak-cli` with a CLI spy, opens an `.exe` through
+the same public `open` path, and verifies that Flutter invokes `run-program`
+with `KONYAK_BUNDLE_RESOURCES` and a `PATH` beginning at
+`Konyak.app/Contents/Resources`. That smoke keeps the Finder-to-Flutter-to-CLI
+execution path covered without requiring a real Wine runtime in the release
+workflow. The auto-run hook is only enabled when the smoke passes
+`KONYAK_ENABLE_SMOKE_HOOKS=1`.
 
 ## Local Linux Build
 

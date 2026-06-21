@@ -30,6 +30,7 @@ class KonyakApp extends StatefulWidget {
     IconFileLoader? iconFileLoader,
     ProgramWindowProbe? programWindowProbe,
     this.initialExecutablePaths = const <String>[],
+    this.executableOpenAutoRunBottleId,
     this.enableBackgroundServices = false,
   }) : platform = platform ?? currentKonyakPlatform(),
        cliClient = cliClient ?? createDefaultKonyakCliClient(),
@@ -55,6 +56,7 @@ class KonyakApp extends StatefulWidget {
   final IconFileLoader iconFileLoader;
   final ProgramWindowProbe programWindowProbe;
   final List<String> initialExecutablePaths;
+  final String? executableOpenAutoRunBottleId;
   final bool enableBackgroundServices;
 
   @override
@@ -88,6 +90,7 @@ class _KonyakAppState extends State<KonyakApp> {
           bottleArchivePicker: widget.bottleArchivePicker,
           programWindowProbe: widget.programWindowProbe,
           initialExecutablePaths: widget.initialExecutablePaths,
+          executableOpenAutoRunBottleId: widget.executableOpenAutoRunBottleId,
           enableBackgroundServices: widget.enableBackgroundServices,
           onAppSettingsLoaded: _handleAppSettingsLoaded,
           onAppearanceModeChanged: _setAppearanceMode,

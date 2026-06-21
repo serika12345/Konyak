@@ -67,6 +67,12 @@ extension _KonyakHomeLoaderExecutables on _KonyakHomeLoaderState {
   }
 
   Future<void> _showOpenExecutable(String programPath) async {
+    final autoRunBottle = _executableOpenAutoRunBottle();
+    if (autoRunBottle != null) {
+      await _runProgramPath(bottle: autoRunBottle, programPath: programPath);
+      return;
+    }
+
     final decision = await showDialog<OpenExecutableDecision>(
       context: context,
       builder: (context) =>
@@ -87,5 +93,20 @@ extension _KonyakHomeLoaderExecutables on _KonyakHomeLoaderState {
         }
         await _runProgramPath(bottle: bottle, programPath: programPath);
     }
+  }
+
+  BottleSummary? _executableOpenAutoRunBottle() {
+    final bottleId = widget.executableOpenAutoRunBottleId?.trim();
+    if (bottleId == null || bottleId.isEmpty) {
+      return null;
+    }
+
+    for (final bottle in _bottles) {
+      if (bottle.id == bottleId) {
+        return bottle;
+      }
+    }
+
+    return null;
   }
 }

@@ -55,6 +55,7 @@ class KonyakHomeLoader extends StatefulWidget {
     required this.bottleArchivePicker,
     required this.programWindowProbe,
     this.initialExecutablePaths = const <String>[],
+    this.executableOpenAutoRunBottleId,
     required this.enableBackgroundServices,
     required this.onAppSettingsLoaded,
     required this.onAppearanceModeChanged,
@@ -69,6 +70,7 @@ class KonyakHomeLoader extends StatefulWidget {
   final BottleArchivePicker bottleArchivePicker;
   final ProgramWindowProbe programWindowProbe;
   final List<String> initialExecutablePaths;
+  final String? executableOpenAutoRunBottleId;
   final bool enableBackgroundServices;
   final ValueChanged<AppSettingsSummary> onAppSettingsLoaded;
   final ValueChanged<AppAppearanceMode> onAppearanceModeChanged;

@@ -212,6 +212,9 @@ void main() {
     final finderSmokeScript = File(
       '../../scripts/smoke_macos_finder_integration.zsh',
     ).readAsStringSync();
+    final cliBridgeSmokeScript = File(
+      '../../scripts/smoke_macos_packaged_app_cli_bridge.zsh',
+    ).readAsStringSync();
     final puttyFixtureScript = File(
       '../../scripts/fetch_windows_fixture_putty.zsh',
     ).readAsStringSync();
@@ -263,6 +266,16 @@ void main() {
       finderSmokeScript,
       contains('KONYAK_MACOS_FINDER_SMOKE_KEEP_APP_RUNNING'),
     );
+    expect(cliBridgeSmokeScript, contains('/usr/bin/open'));
+    expect(cliBridgeSmokeScript, contains('KONYAK_BUNDLE_RESOURCES'));
+    expect(cliBridgeSmokeScript, contains('KONYAK_ENABLE_SMOKE_HOOKS=1'));
+    expect(
+      cliBridgeSmokeScript,
+      contains('KONYAK_SMOKE_OPEN_EXECUTABLE_AUTO_RUN_BOTTLE_ID'),
+    );
+    expect(cliBridgeSmokeScript, contains('Contents/Resources/konyak-cli'));
+    expect(cliBridgeSmokeScript, contains('run-program'));
+    expect(cliBridgeSmokeScript, isNot(contains('wineloader" "cmd"')));
     expect(puttyFixtureScript, contains('putty_version=0.84'));
     expect(
       puttyFixtureScript,
@@ -279,16 +292,20 @@ void main() {
     expect(justfile, contains('macos-debug-app:'));
     expect(justfile, contains('fetch-windows-fixture-putty:'));
     expect(justfile, contains('smoke-macos-finder:'));
+    expect(justfile, contains('smoke-macos-app-cli-bridge:'));
     expect(justfile, contains('smoke-macos-finder-putty:'));
     expect(justfile, contains('smoke-macos-runtime-install:'));
     expect(publishWorkflow, contains('smoke_macos_release_runtime_extraction'));
     expect(publishWorkflow, contains('fetch_windows_fixture_putty'));
     expect(publishWorkflow, contains('smoke_macos_finder_integration'));
+    expect(publishWorkflow, contains('smoke_macos_packaged_app_cli_bridge'));
     expect(releaseDocs, contains('Konyak.app'));
     expect(releaseDocs, contains('macos-debug-app'));
     expect(releaseDocs, contains('smoke-macos-finder'));
+    expect(releaseDocs, contains('smoke-macos-app-cli-bridge'));
     expect(releaseDocs, contains('smoke-macos-finder-putty'));
     expect(releaseDocs, contains('PuTTY 0.84'));
+    expect(releaseDocs, contains('Finder-to-Flutter-to-CLI'));
     expect(releaseDocs, contains('zstd'));
     expect(thirdPartyNotices, contains('Zstandard: BSD-3-Clause'));
   });

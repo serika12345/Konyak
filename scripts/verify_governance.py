@@ -652,6 +652,7 @@ def main() -> None:
         "macos-debug-app",
         "fetch-windows-fixture-putty",
         "smoke-macos-finder",
+        "smoke-macos-app-cli-bridge",
         "smoke-macos-finder-putty",
         "smoke-macos-runtime-install",
     ]:
@@ -701,6 +702,20 @@ def main() -> None:
     )
     require_contains(".github/workflows/publish.yml", "fetch_windows_fixture_putty")
     require_contains(".github/workflows/publish.yml", "smoke_macos_finder_integration")
+    require_contains(".github/workflows/publish.yml", "smoke_macos_packaged_app_cli_bridge")
+    require_contains(
+        "scripts/smoke_macos_packaged_app_cli_bridge.zsh",
+        "KONYAK_SMOKE_OPEN_EXECUTABLE_AUTO_RUN_BOTTLE_ID",
+    )
+    require_contains(
+        "scripts/smoke_macos_packaged_app_cli_bridge.zsh",
+        "KONYAK_ENABLE_SMOKE_HOOKS=1",
+    )
+    require_contains(
+        "scripts/smoke_macos_packaged_app_cli_bridge.zsh",
+        "KONYAK_BUNDLE_RESOURCES",
+    )
+    require_contains("scripts/smoke_macos_packaged_app_cli_bridge.zsh", "run-program")
     require_contains("scripts/build_linux_release.zsh", "Konyak-MIT.txt")
     require_contains("scripts/build_linux_release.zsh", "THIRD_PARTY_NOTICES.md")
     require_not_contains("scripts/finalize_macos_app.zsh", "SOURCE-OFFER.txt")

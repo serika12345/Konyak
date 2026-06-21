@@ -322,6 +322,65 @@ void defineMacosStartupAndRuntimeWidgetTests() {
     ]);
   });
 
+  testWidgets('macOS startup can auto-run pending executable files for smoke', (
+    WidgetTester tester,
+  ) async {
+    final runner = _QueuedProcessRunner([
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottles": [
+              {
+                "id": "steam",
+                "name": "Steam",
+                "path": "/Users/user/Library/Application Support/Konyak/Bottles/steam",
+                "windowsVersion": "win10"
+              }
+            ]
+          }
+        ''',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "run": {
+              "bottleId": "steam",
+              "programPath": "/downloads/setup.exe",
+              "runnerKind": "macosWine",
+              "executable": "/runtime/bin/wineloader",
+              "workingDirectory": "/runtime/bin",
+              "argv": ["/runtime/bin/wineloader", "start", "/unix", "/downloads/setup.exe"],
+              "logPath": "/Users/user/Library/Application Support/Konyak/Bottles/steam/logs/latest.log",
+              "processExitCode": 0
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+    ]);
+
+    await tester.pumpWidget(
+      _testKonyakApp(
+        cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
+        initialExecutablePaths: const ['/downloads/setup.exe'],
+        executableOpenAutoRunBottleId: 'steam',
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Open executable'), findsNothing);
+    expect(find.byTooltip('View latest log'), findsOneWidget);
+    expect(runner.argumentsLog, const [
+      ['list-bottles', '--json'],
+      ['run-program', 'steam', '--program', '/downloads/setup.exe', '--json'],
+    ]);
+  });
+
   testWidgets('launch executable argument can create a bottle before running', (
     WidgetTester tester,
   ) async {
