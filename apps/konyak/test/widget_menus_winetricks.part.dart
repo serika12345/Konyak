@@ -111,6 +111,105 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
     expect(find.byTooltip('Install macOS Wine'), findsNothing);
   });
 
+  testWidgets(
+    'Linux menu bar hosts window controls and draggable empty space',
+    (WidgetTester tester) async {
+      final methodCalls = <MethodCall>[];
+      const channel = MethodChannel('konyak/linux_window');
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (call) async {
+            methodCalls.add(call);
+            return null;
+          });
+      addTearDown(() {
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(channel, null);
+      });
+
+      await tester.pumpWidget(
+        _testKonyakApp(
+          platform: KonyakPlatform.linux,
+          cliClient: KonyakCliClient(
+            executable: 'konyak',
+            processRunner: _QueuedProcessRunner([
+              const ProcessRunResult(
+                exitCode: 0,
+                stdout: '{"schemaVersion":1,"bottles":[]}',
+                stderr: '',
+              ),
+            ]),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final menuBar = find.byKey(const ValueKey('linux-menu-bar'));
+      final dragRegion = find.byKey(const ValueKey('linux-menu-drag-region'));
+      final minimizeButton = find.byTooltip('Minimize window');
+      final maximizeButton = find.byTooltip('Maximize or restore window');
+      final closeButton = find.byTooltip('Close window');
+      final minimizeButtonFrame = find.byKey(
+        const ValueKey('linux-window-minimize-button'),
+      );
+      final maximizeButtonFrame = find.byKey(
+        const ValueKey('linux-window-maximize-button'),
+      );
+      final closeButtonFrame = find.byKey(
+        const ValueKey('linux-window-close-button'),
+      );
+
+      expect(menuBar, findsOneWidget);
+      expect(dragRegion, findsOneWidget);
+      expect(minimizeButton, findsOneWidget);
+      expect(maximizeButton, findsOneWidget);
+      expect(closeButton, findsOneWidget);
+      expect(minimizeButtonFrame, findsOneWidget);
+      expect(maximizeButtonFrame, findsOneWidget);
+      expect(closeButtonFrame, findsOneWidget);
+
+      final menuTop = tester.getTopLeft(menuBar).dy;
+      expect(tester.getTopLeft(dragRegion).dy, menuTop);
+      expect(tester.getTopLeft(minimizeButtonFrame).dy, menuTop);
+      expect(tester.getTopLeft(maximizeButtonFrame).dy, menuTop);
+      expect(tester.getTopLeft(closeButtonFrame).dy, menuTop);
+      expect(
+        tester.getTopLeft(dragRegion).dx,
+        greaterThan(tester.getTopRight(find.text('File')).dx),
+      );
+      expect(
+        tester.getTopRight(closeButtonFrame).dx,
+        tester.getTopRight(menuBar).dx,
+      );
+      final regionRegistrations = methodCalls
+          .where((call) => call.method == 'setWindowDragRegion')
+          .toList();
+      expect(regionRegistrations, isNotEmpty);
+      final registeredRegion =
+          regionRegistrations.last.arguments as Map<Object?, Object?>;
+      expect(registeredRegion['left'], tester.getTopLeft(dragRegion).dx);
+      expect(registeredRegion['top'], tester.getTopLeft(dragRegion).dy);
+      expect(registeredRegion['right'], tester.getBottomRight(dragRegion).dx);
+      expect(registeredRegion['bottom'], tester.getBottomRight(dragRegion).dy);
+
+      methodCalls.clear();
+      final firstDrag = await tester.startGesture(tester.getCenter(dragRegion));
+      await firstDrag.up();
+      final secondDrag = await tester.startGesture(
+        tester.getCenter(dragRegion),
+      );
+      await secondDrag.up();
+      await tester.tap(minimizeButton);
+      await tester.tap(maximizeButton);
+      await tester.tap(closeButton);
+
+      expect(methodCalls.map((call) => call.method), [
+        'minimizeWindow',
+        'toggleMaximizeWindow',
+        'closeWindow',
+      ]);
+    },
+  );
+
   testWidgets('Linux screen menu exposes the app settings command', (
     WidgetTester tester,
   ) async {

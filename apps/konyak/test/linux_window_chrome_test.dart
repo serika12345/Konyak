@@ -3,31 +3,49 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('Linux GTK header bar hides the title text', () {
+  test('Linux runner disables native window decorations', () {
     final source = File('linux/runner/my_application.cc').readAsStringSync();
 
-    expect(source, contains('gtk_header_bar_set_title(header_bar, "")'));
+    expect(source, contains('gtk_window_set_decorated(window, FALSE)'));
+    expect(source, isNot(contains('GtkHeaderBar')));
+    expect(source, isNot(contains('gtk_window_set_titlebar')));
   });
 
-  test('Linux GTK header bar shows minimize, maximize, and close controls', () {
+  test('Linux runner handles in-app window control commands', () {
     final source = File('linux/runner/my_application.cc').readAsStringSync();
 
-    expect(
-      source,
-      matches(
-        RegExp(
-          r'gtk_header_bar_set_decoration_layout\(\s*header_bar,\s*":minimize,maximize,close"\s*\)',
-        ),
-      ),
-    );
+    expect(source, contains('"konyak/linux_window"'));
+    expect(source, contains('"setWindowDragRegion"'));
+    expect(source, contains('"minimizeWindow"'));
+    expect(source, contains('"toggleMaximizeWindow"'));
+    expect(source, contains('"closeWindow"'));
+    expect(source, contains('gtk_window_iconify'));
+    expect(source, contains('gtk_window_maximize'));
+    expect(source, contains('gtk_window_unmaximize'));
+    expect(source, contains('gtk_window_close'));
   });
 
   test(
-    'Linux fallback window title is hidden when not using a GTK header bar',
+    'Linux runner starts window drags from a transparent native overlay',
     () {
       final source = File('linux/runner/my_application.cc').readAsStringSync();
 
-      expect(source, contains('gtk_window_set_title(window, "")'));
+      expect(source, contains('GtkOverlay'));
+      expect(source, contains('gtk_overlay_add_overlay'));
+      expect(source, contains('GtkEventBox'));
+      expect(source, contains('gtk_event_box_set_visible_window'));
+      expect(source, contains('GDK_BUTTON_PRESS_MASK'));
+      expect(source, contains('"button-press-event"'));
+      expect(source, contains('GdkEventButton* event'));
+      expect(source, contains('gtk_window_begin_move_drag'));
+      expect(source, contains('gtk_widget_set_margin_start'));
+      expect(source, contains('gtk_widget_set_margin_top'));
+      expect(source, contains('gtk_widget_set_size_request'));
+      expect(source, contains('event->x_root'));
+      expect(source, contains('event->y_root'));
+      expect(source, contains('event->time'));
+      expect(source, isNot(contains('"startWindowDrag"')));
+      expect(source, isNot(contains('gtk_get_current_event_time()')));
     },
   );
 

@@ -11,6 +11,67 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-21 22:30 JST
+- State: `completed`
+- Branch: `main`
+- Related work: Linux in-app window chrome
+- Purpose: remove the Linux native white title/header bar by moving window
+  controls into Konyak's dark Linux menu bar and making the empty menu-bar
+  area draggable without paying a per-drag Flutter-to-native round trip.
+- Completed:
+  - Read the current progress/TODO state.
+  - Traced Linux native window creation through
+    `apps/konyak/linux/runner/my_application.cc`.
+  - Traced the Flutter Linux menu bar through `KonyakHomeMenuBar` and
+    `KonyakMenuBar`.
+  - Added failing static coverage for undecorated Linux windows and native
+    window-control channel handlers.
+  - Added failing widget coverage proving the Linux menu bar hosts the window
+    control buttons at the right edge, keeps a separate empty drag region, and
+    calls the Linux window-control channel.
+  - Changed the Linux GTK runner to disable native decorations with
+    `gtk_window_set_decorated(window, FALSE)`.
+  - Added the `konyak/linux_window` native method channel for drag-region
+    registration and minimize, maximize/restore, and close commands.
+  - Added a small Flutter Linux window-control client and moved minimize,
+    maximize/restore, close, and drag handling into the existing dark Linux
+    menu-bar row.
+  - Superseded the initial `startWindowDrag` MethodChannel path and the later
+    direct `FlView` button-press attempt; neither remains in the final code.
+  - Implemented the final drag path as a transparent GTK `GtkEventBox` overlay
+    whose bounds are updated from Flutter's empty menu-bar drag region.
+  - Kept the drag-start hot path native: the event box receives
+    `GdkEventButton` and calls `gtk_window_begin_move_drag` with
+    `event->x_root`, `event->y_root`, and `event->time`.
+  - Rebuilt and smoke-launched the Linux debug bundle. The app reached normal
+    GTK startup and stayed alive until the smoke timeout.
+- Remaining:
+  - Interactive confirmation is still needed on the user's desktop because the
+    exact Wayland drag gesture cannot be automated by the maintained local
+    checks.
+- Next: manually retest dragging the empty menu-bar area; if it works, commit
+  the Linux chrome change.
+- Verification:
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/linux_window_chrome_test.dart --plain-name "Linux runner starts window drags from a transparent native overlay"'`:
+    failed before implementation, then passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "Linux menu bar hosts window controls and draggable empty space"'`:
+    failed before implementation, then passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/linux_window_chrome_test.dart'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter build linux --debug'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && timeout 5s ./build/linux/x64/debug/bundle/konyak'`:
+    reached GTK startup and exited by timeout (`124`) without startup failure.
+  - `nix develop -c zsh -lc 'just flutter-format-check'`: failed once because
+    it formatted `test/linux_window_chrome_test.dart`, then passed after the
+    formatting change.
+  - `nix develop -c zsh -lc 'just flutter-analyze'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-test'`: passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+
 - Timestamp: 2026-06-21 21:12 JST
 - State: `completed`
 - Branch: `main`

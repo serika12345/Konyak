@@ -1,15 +1,15 @@
 #include "my_application.h"
 
 #include <flutter_linux/flutter_linux.h>
-#ifdef GDK_WINDOWING_X11
-#include <gdk/gdkx.h>
-#endif
 
 #include "flutter/generated_plugin_registrant.h"
 
 struct _MyApplication {
   GtkApplication parent_instance;
   char** dart_entrypoint_arguments;
+  GtkWindow* window;
+  FlMethodChannel* window_channel;
+  GtkWidget* drag_region_event_box;
 };
 
 G_DEFINE_TYPE(MyApplication, my_application, GTK_TYPE_APPLICATION)
@@ -31,41 +31,166 @@ static void set_window_icon(GtkWindow* window) {
   gtk_window_set_icon_from_file(window, icon_path, nullptr);
 }
 
+static gboolean fl_value_lookup_double(FlValue* map, const gchar* key,
+                                       gdouble* result) {
+  FlValue* value = fl_value_lookup_string(map, key);
+  if (value == nullptr) {
+    return FALSE;
+  }
+
+  FlValueType value_type = fl_value_get_type(value);
+  if (value_type == FL_VALUE_TYPE_FLOAT) {
+    *result = fl_value_get_float(value);
+    return TRUE;
+  }
+  if (value_type == FL_VALUE_TYPE_INT) {
+    *result = static_cast<gdouble>(fl_value_get_int(value));
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+static gboolean update_drag_region(MyApplication* self, FlValue* args) {
+  if (args == nullptr || fl_value_get_type(args) != FL_VALUE_TYPE_MAP) {
+    return FALSE;
+  }
+
+  gdouble left = 0;
+  gdouble top = 0;
+  gdouble right = 0;
+  gdouble bottom = 0;
+  if (!fl_value_lookup_double(args, "left", &left) ||
+      !fl_value_lookup_double(args, "top", &top) ||
+      !fl_value_lookup_double(args, "right", &right) ||
+      !fl_value_lookup_double(args, "bottom", &bottom) || right <= left ||
+      bottom <= top) {
+    return FALSE;
+  }
+
+  if (self->drag_region_event_box == nullptr) {
+    return FALSE;
+  }
+
+  gtk_widget_set_margin_start(self->drag_region_event_box,
+                              static_cast<gint>(left));
+  gtk_widget_set_margin_top(self->drag_region_event_box, static_cast<gint>(top));
+  gtk_widget_set_size_request(self->drag_region_event_box,
+                              static_cast<gint>(right - left),
+                              static_cast<gint>(bottom - top));
+  gtk_widget_show(self->drag_region_event_box);
+  return TRUE;
+}
+
+static gboolean drag_region_button_press_cb(GtkWidget* event_box,
+                                            GdkEventButton* event,
+                                            gpointer user_data) {
+  MyApplication* self = MY_APPLICATION(user_data);
+  GtkWindow* window = self->window;
+  if (window == nullptr || event->type != GDK_BUTTON_PRESS ||
+      event->button != 1) {
+    return FALSE;
+  }
+
+  gtk_window_begin_move_drag(window, event->button,
+                             static_cast<gint>(event->x_root),
+                             static_cast<gint>(event->y_root), event->time);
+  return TRUE;
+}
+
+static GtkWidget* create_drag_region_event_box(MyApplication* self) {
+  GtkWidget* event_box = gtk_event_box_new();
+  GtkEventBox* drag_region_event_box = GTK_EVENT_BOX(event_box);
+  gtk_event_box_set_visible_window(drag_region_event_box, FALSE);
+  gtk_event_box_set_above_child(drag_region_event_box, TRUE);
+  gtk_widget_set_halign(event_box, GTK_ALIGN_START);
+  gtk_widget_set_valign(event_box, GTK_ALIGN_START);
+  gtk_widget_set_no_show_all(event_box, TRUE);
+  gtk_widget_add_events(event_box, GDK_BUTTON_PRESS_MASK);
+  g_signal_connect(event_box, "button-press-event",
+                   G_CALLBACK(drag_region_button_press_cb), self);
+  return event_box;
+}
+
+static void linux_window_method_call_cb(FlMethodChannel* channel,
+                                        FlMethodCall* method_call,
+                                        gpointer user_data) {
+  MyApplication* self = MY_APPLICATION(user_data);
+  const gchar* method = fl_method_call_get_name(method_call);
+  GtkWindow* window = self->window;
+
+  if (window == nullptr) {
+    fl_method_call_respond_error(method_call, "window-unavailable",
+                                 "The Konyak window is not available.", nullptr,
+                                 nullptr);
+    return;
+  }
+
+  if (g_strcmp0(method, "setWindowDragRegion") == 0) {
+    if (!update_drag_region(self, fl_method_call_get_args(method_call))) {
+      fl_method_call_respond_error(
+          method_call, "invalid-arguments",
+          "Window drag region must include left, top, right, and bottom.",
+          nullptr, nullptr);
+      return;
+    }
+    fl_method_call_respond_success(method_call, nullptr, nullptr);
+    return;
+  }
+
+  if (g_strcmp0(method, "clearWindowDragRegion") == 0) {
+    if (self->drag_region_event_box != nullptr) {
+      gtk_widget_hide(self->drag_region_event_box);
+    }
+    fl_method_call_respond_success(method_call, nullptr, nullptr);
+    return;
+  }
+
+  if (g_strcmp0(method, "minimizeWindow") == 0) {
+    gtk_window_iconify(window);
+    fl_method_call_respond_success(method_call, nullptr, nullptr);
+    return;
+  }
+
+  if (g_strcmp0(method, "toggleMaximizeWindow") == 0) {
+    if (gtk_window_is_maximized(window)) {
+      gtk_window_unmaximize(window);
+    } else {
+      gtk_window_maximize(window);
+    }
+    fl_method_call_respond_success(method_call, nullptr, nullptr);
+    return;
+  }
+
+  if (g_strcmp0(method, "closeWindow") == 0) {
+    fl_method_call_respond_success(method_call, nullptr, nullptr);
+    gtk_window_close(window);
+    return;
+  }
+
+  fl_method_call_respond_not_implemented(method_call, nullptr);
+}
+
+static void create_linux_window_channel(MyApplication* self, FlView* view) {
+  FlEngine* engine = fl_view_get_engine(view);
+  FlBinaryMessenger* messenger = fl_engine_get_binary_messenger(engine);
+  g_autoptr(FlStandardMethodCodec) codec = fl_standard_method_codec_new();
+
+  self->window_channel = fl_method_channel_new(
+      messenger, "konyak/linux_window", FL_METHOD_CODEC(codec));
+  fl_method_channel_set_method_call_handler(
+      self->window_channel, linux_window_method_call_cb, self, nullptr);
+}
+
 // Implements GApplication::activate.
 static void my_application_activate(GApplication* application) {
   MyApplication* self = MY_APPLICATION(application);
   GtkWindow* window =
       GTK_WINDOW(gtk_application_window_new(GTK_APPLICATION(application)));
+  self->window = window;
   set_window_icon(window);
-
-  // Use a header bar when running in GNOME as this is the common style used
-  // by applications and is the setup most users will be using (e.g. Ubuntu
-  // desktop).
-  // If running on X and not using GNOME then just use a traditional title bar
-  // in case the window manager does more exotic layout, e.g. tiling.
-  // If running on Wayland assume the header bar will work (may need changing
-  // if future cases occur).
-  gboolean use_header_bar = TRUE;
-#ifdef GDK_WINDOWING_X11
-  GdkScreen* screen = gtk_window_get_screen(window);
-  if (GDK_IS_X11_SCREEN(screen)) {
-    const gchar* wm_name = gdk_x11_screen_get_window_manager_name(screen);
-    if (g_strcmp0(wm_name, "GNOME Shell") != 0) {
-      use_header_bar = FALSE;
-    }
-  }
-#endif
-  if (use_header_bar) {
-    GtkHeaderBar* header_bar = GTK_HEADER_BAR(gtk_header_bar_new());
-    gtk_widget_show(GTK_WIDGET(header_bar));
-    gtk_header_bar_set_title(header_bar, "");
-    gtk_header_bar_set_show_close_button(header_bar, TRUE);
-    gtk_header_bar_set_decoration_layout(
-        header_bar, ":minimize,maximize,close");
-    gtk_window_set_titlebar(window, GTK_WIDGET(header_bar));
-  } else {
-    gtk_window_set_title(window, "");
-  }
+  gtk_window_set_title(window, "");
+  gtk_window_set_decorated(window, FALSE);
 
   gtk_window_set_default_size(window, 800, 500);
 
@@ -79,14 +204,23 @@ static void my_application_activate(GApplication* application) {
   // for transparent.
   gdk_rgba_parse(&background_color, "#000000");
   fl_view_set_background_color(view, &background_color);
+
+  GtkOverlay* overlay = GTK_OVERLAY(gtk_overlay_new());
+  gtk_widget_show(GTK_WIDGET(overlay));
+  gtk_container_add(GTK_CONTAINER(window), GTK_WIDGET(overlay));
+  gtk_container_add(GTK_CONTAINER(overlay), GTK_WIDGET(view));
   gtk_widget_show(GTK_WIDGET(view));
-  gtk_container_add(GTK_CONTAINER(window), GTK_WIDGET(view));
+
+  self->drag_region_event_box = create_drag_region_event_box(self);
+  gtk_overlay_add_overlay(overlay, self->drag_region_event_box);
 
   // Show the window when Flutter renders.
   // Requires the view to be realized so we can start rendering.
   g_signal_connect_swapped(view, "first-frame", G_CALLBACK(first_frame_cb),
                            self);
   gtk_widget_realize(GTK_WIDGET(view));
+
+  create_linux_window_channel(self, view);
 
   fl_register_plugins(FL_PLUGIN_REGISTRY(view));
 
@@ -135,6 +269,7 @@ static void my_application_shutdown(GApplication* application) {
 // Implements GObject::dispose.
 static void my_application_dispose(GObject* object) {
   MyApplication* self = MY_APPLICATION(object);
+  g_clear_object(&self->window_channel);
   g_clear_pointer(&self->dart_entrypoint_arguments, g_strfreev);
   G_OBJECT_CLASS(my_application_parent_class)->dispose(object);
 }
