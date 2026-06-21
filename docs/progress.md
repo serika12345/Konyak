@@ -11,6 +11,45 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-21 20:09 JST
+- State: `completed`
+- Branch: `main`
+- Related work: Bottle Configuration sidebar context menu navigation
+- Purpose: keep sidebar context-menu interaction independent from normal bottle
+  selection so Bottle Configuration does not close when right-clicking any
+  bottle.
+- Completed:
+  - Read the latest progress/TODO state and traced sidebar right-click handling
+    through `SidebarBottleItem` and `KonyakHome`.
+  - Added failing widget tests proving that right-clicking the selected sidebar
+    bottle and another sidebar bottle while Bottle Configuration is open must
+    keep the configuration detail visible.
+  - Changed sidebar right-click handling so it never invokes normal bottle
+    selection.
+  - Removed the context-menu action handler's selection side effect; actions
+    still target the right-clicked bottle directly.
+- Remaining:
+  - None for this UI bug fix.
+- Next: none.
+- Verification:
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "right-clicking the selected bottle keeps Bottle Configuration open"'`:
+    failed before implementation because the detail view returned to overview,
+    then passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "right-clicking another bottle keeps the current Bottle Configuration open"'`:
+    failed before implementation because the detail view returned to overview,
+    then passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "bottle context menu"'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "bottle configuration"'`:
+    passed.
+  - `nix develop -c zsh -lc 'just flutter-format-check'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-analyze'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-test'`: passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+
 - Timestamp: 2026-06-21 19:51 JST
 - State: `completed`
 - Branch: `main`

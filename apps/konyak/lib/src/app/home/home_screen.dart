@@ -318,10 +318,6 @@ class _KonyakHomeState extends State<KonyakHome> {
     BottleSummary bottle,
     BottleContextMenuAction action,
   ) {
-    setState(() {
-      _selectedBottleId = bottle.id;
-    });
-
     switch (action) {
       case BottleContextMenuAction.remove:
         widget.onDeleteBottle?.call(bottle);

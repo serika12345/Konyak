@@ -510,6 +510,252 @@ void defineBottleConfigurationWidgetTests() {
     },
   );
 
+  testWidgets(
+    'right-clicking the selected bottle keeps Bottle Configuration open',
+    (WidgetTester tester) async {
+      final runner = _QueuedProcessRunner([
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottles": [
+              {
+                "id": "steam",
+                "name": "Steam",
+                "path": "/Users/user/Library/Application Support/Konyak/Bottles/Steam",
+                "windowsVersion": "win10",
+                "runtimeSettings": {
+                  "enhancedSync": "msync",
+                  "metalHud": false,
+                  "metalTrace": false,
+                  "avxEnabled": false,
+                  "dxrEnabled": false,
+                  "dxvk": false,
+                  "dxmt": false,
+                  "dxvkAsync": true,
+                  "dxvkHud": "off",
+                  "buildVersion": 19045,
+                  "retinaMode": false,
+                  "dpiScaling": 144
+                }
+              }
+            ]
+          }
+        ''',
+          stderr: '',
+        ),
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottle": {
+              "id": "steam",
+              "name": "Steam",
+              "path": "/Users/user/Library/Application Support/Konyak/Bottles/Steam",
+              "windowsVersion": "win10",
+              "runtimeSettings": {
+                "enhancedSync": "msync",
+                "metalHud": false,
+                "metalTrace": false,
+                "avxEnabled": false,
+                "dxrEnabled": false,
+                "dxvk": false,
+                "dxmt": false,
+                "dxvkAsync": true,
+                "dxvkHud": "off",
+                "buildVersion": 19045,
+                "retinaMode": false,
+                "dpiScaling": 144
+              }
+            }
+          }
+        ''',
+          stderr: '',
+        ),
+        ProcessRunResult(
+          exitCode: 0,
+          stdout: _macosRuntimeListPayload(),
+          stderr: '',
+        ),
+      ]);
+
+      await tester.pumpWidget(
+        _testKonyakApp(
+          cliClient: KonyakCliClient(
+            executable: 'konyak',
+            processRunner: runner,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Bottle Configuration'));
+      await tester.pumpAndSettle();
+
+      expect(find.byTooltip('Back to bottle'), findsOneWidget);
+      expect(find.text('Graphics Backend'), findsOneWidget);
+
+      await tester.tapAt(
+        tester.getCenter(find.byKey(const ValueKey('sidebar-bottle-steam'))),
+        buttons: kSecondaryMouseButton,
+      );
+      await tester.pump();
+
+      expect(find.text('Rename...'), findsOneWidget);
+      expect(find.byTooltip('Back to bottle'), findsOneWidget);
+      expect(find.text('Graphics Backend'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'right-clicking another bottle keeps the current Bottle Configuration open',
+    (WidgetTester tester) async {
+      final runner = _QueuedProcessRunner([
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottles": [
+              {
+                "id": "steam",
+                "name": "Steam",
+                "path": "/Users/user/Library/Application Support/Konyak/Bottles/Steam",
+                "windowsVersion": "win10",
+                "runtimeSettings": {
+                  "enhancedSync": "msync",
+                  "metalHud": false,
+                  "metalTrace": false,
+                  "avxEnabled": false,
+                  "dxrEnabled": false,
+                  "dxvk": false,
+                  "dxmt": false,
+                  "dxvkAsync": true,
+                  "dxvkHud": "off",
+                  "buildVersion": 19045,
+                  "retinaMode": false,
+                  "dpiScaling": 144
+                }
+              },
+              {
+                "id": "battle",
+                "name": "Battle.net",
+                "path": "/Users/user/Library/Application Support/Konyak/Bottles/Battle.net",
+                "windowsVersion": "win10",
+                "runtimeSettings": {
+                  "enhancedSync": "msync",
+                  "metalHud": false,
+                  "metalTrace": false,
+                  "avxEnabled": false,
+                  "dxrEnabled": false,
+                  "dxvk": false,
+                  "dxmt": false,
+                  "dxvkAsync": true,
+                  "dxvkHud": "off",
+                  "buildVersion": 19045,
+                  "retinaMode": false,
+                  "dpiScaling": 144
+                }
+              }
+            ]
+          }
+        ''',
+          stderr: '',
+        ),
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottle": {
+              "id": "steam",
+              "name": "Steam",
+              "path": "/Users/user/Library/Application Support/Konyak/Bottles/Steam",
+              "windowsVersion": "win10",
+              "runtimeSettings": {
+                "enhancedSync": "msync",
+                "metalHud": false,
+                "metalTrace": false,
+                "avxEnabled": false,
+                "dxrEnabled": false,
+                "dxvk": false,
+                "dxmt": false,
+                "dxvkAsync": true,
+                "dxvkHud": "off",
+                "buildVersion": 19045,
+                "retinaMode": false,
+                "dpiScaling": 144
+              }
+            }
+          }
+        ''',
+          stderr: '',
+        ),
+        ProcessRunResult(
+          exitCode: 0,
+          stdout: _macosRuntimeListPayload(),
+          stderr: '',
+        ),
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+          {
+            "schemaVersion": 1,
+            "openedLocation": {
+              "bottleId": "battle",
+              "location": "root",
+              "path": "/Users/user/Library/Application Support/Konyak/Bottles/Battle.net"
+            }
+          }
+        ''',
+          stderr: '',
+        ),
+      ]);
+
+      await tester.pumpWidget(
+        _testKonyakApp(
+          cliClient: KonyakCliClient(
+            executable: 'konyak',
+            processRunner: runner,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Bottle Configuration'));
+      await tester.pumpAndSettle();
+
+      expect(find.byTooltip('Back to bottle'), findsOneWidget);
+      expect(find.text('Graphics Backend'), findsOneWidget);
+
+      await tester.tapAt(
+        tester.getCenter(find.byKey(const ValueKey('sidebar-bottle-battle'))),
+        buttons: kSecondaryMouseButton,
+      );
+      await tester.pump();
+
+      expect(find.text('Rename...'), findsOneWidget);
+      expect(find.byTooltip('Back to bottle'), findsOneWidget);
+      expect(find.text('Graphics Backend'), findsOneWidget);
+
+      await tester.tap(find.text('Show in Finder'));
+      await tester.pumpAndSettle();
+
+      expect(runner.argumentsLog[3], const [
+        'open-bottle-location',
+        'battle',
+        '--location',
+        'root',
+        '--json',
+      ]);
+      expect(find.text('Opened bottle folder'), findsOneWidget);
+      expect(find.byTooltip('Back to bottle'), findsOneWidget);
+      expect(find.text('Graphics Backend'), findsOneWidget);
+    },
+  );
+
   testWidgets('bottle configuration backend shows pending state until saved', (
     WidgetTester tester,
   ) async {

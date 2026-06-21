@@ -24,7 +24,6 @@ class SidebarBottleItem extends StatelessWidget {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onSecondaryTapDown: (details) {
-        onTap?.call();
         _showBottleContextMenu(context, details.globalPosition);
       },
       child: Material(
