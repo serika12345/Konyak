@@ -8,6 +8,12 @@ abstract interface class ProgramWindowProbe {
     Set<int> descendantOfProcessIds = const <int>{},
     bool includeWineProcessWindows = false,
   });
+
+  Future<Set<int>?> runningWineProcessIds(
+    KonyakPlatform platform, {
+    Set<int> descendantOfProcessIds = const <int>{},
+    bool includeWineProcesses = false,
+  });
 }
 
 final class NativeProgramWindowProbe implements ProgramWindowProbe {
@@ -53,6 +59,45 @@ final class NativeProgramWindowProbe implements ProgramWindowProbe {
       return <String>{
         for (final windowId in windowIds)
           if (windowId.trim().isNotEmpty) windowId.trim(),
+      };
+    } on MissingPluginException {
+      return null;
+    } on PlatformException {
+      return null;
+    }
+  }
+
+  @override
+  Future<Set<int>?> runningWineProcessIds(
+    KonyakPlatform platform, {
+    Set<int> descendantOfProcessIds = const <int>{},
+    bool includeWineProcesses = false,
+  }) async {
+    if (!platform.isLinux) {
+      return null;
+    }
+
+    final rootProcessIds = descendantOfProcessIds
+        .where((processId) => processId > 0)
+        .toSet();
+    if (rootProcessIds.isEmpty && !includeWineProcesses) {
+      return null;
+    }
+
+    try {
+      final processIds = await _linuxWindowChannel
+          .invokeListMethod<int>('runningWineProcessIds', <String, Object>{
+            'descendantOfProcessIds': rootProcessIds.toList(growable: false)
+              ..sort(),
+            'includeWineProcesses': includeWineProcesses,
+          });
+      if (processIds == null) {
+        return null;
+      }
+
+      return <int>{
+        for (final processId in processIds)
+          if (processId > 0) processId,
       };
     } on MissingPluginException {
       return null;

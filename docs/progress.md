@@ -11,6 +11,54 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-21 23:57 JST
+- State: `completed`
+- Branch: `main`
+- Related work: Linux GUI launch feedback / Wayland process fallback
+- Purpose: reduce launch-feedback stalls for native Wayland Wine/Proton
+  launches by falling back from window visibility to process observation.
+- Completed:
+  - Added failing Flutter widget coverage proving Linux launch progress hides
+    when no new window is visible but a new Wine process survives multiple
+    polls while `run-program --json` is still pending.
+  - Added coverage proving preexisting Wine processes do not close launch
+    progress.
+  - Added Linux method-channel coverage for `runningWineProcessIds`.
+  - Extended the Linux native runner to scan `/proc`, filter Wine/Proton/
+    CrossOver-like executables, and return matching process IDs.
+  - Updated the launch watcher to prefer window detection, then use new Wine
+    process IDs as a fallback after they remain visible for two polls.
+  - Updated the run-feedback TODO wording to include the process-based Wayland
+    fallback.
+- Remaining:
+  - No code work remains. A real Wine/Proton GUI smoke on native Wayland would
+    still be useful to confirm the process fallback timing against a live app.
+- Next: none.
+- Verification:
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/app/program_window_probe_test.dart'`:
+    failed before implementation, then passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "Linux run program hides launch progress after a new Wine process survives"'`:
+    failed before implementation, then passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "Linux run program"'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/linux_window_chrome_test.dart'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter build linux --debug'`:
+    passed.
+  - `nix develop -c zsh -lc 'just flutter-format-check'`: failed once after
+    formatting two Dart files, then passed on rerun.
+  - `nix develop -c zsh -lc 'just flutter-analyze'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-test'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-linux-loader-check'`: passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && timeout 5s ./build/linux/x64/debug/bundle/konyak'`:
+    reached normal GTK startup and VM service startup under the current
+    Wayland session, then exited by timeout (`124`).
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `git diff --check`: passed.
+
 - Timestamp: 2026-06-21 23:37 JST
 - State: `completed`
 - Branch: `main`

@@ -2,6 +2,7 @@ part of '../home_loader/home_loader.dart';
 
 const _programLaunchWindowPollInterval = Duration(milliseconds: 250);
 const _programLaunchWindowWatchTimeout = Duration(minutes: 5);
+const _programLaunchProcessStablePolls = 2;
 
 extension _KonyakHomeLoaderPrograms on _KonyakHomeLoaderState {
   Future<void> _runProgram(BottleSummary bottle) async {
@@ -32,6 +33,12 @@ extension _KonyakHomeLoaderPrograms on _KonyakHomeLoaderState {
           includeWineProcessWindows: true,
         ) ??
         const <String>{};
+    final baselineWineProcessIds =
+        await _runningWineProcessIds(
+          descendantOfProcessIds: const <int>{},
+          includeWineProcesses: true,
+        ) ??
+        const <int>{};
     final baselineProgramPaths = await _installedProgramPathsForAutoPin(bottle);
 
     if (!mounted) {
@@ -50,6 +57,7 @@ extension _KonyakHomeLoaderPrograms on _KonyakHomeLoaderState {
               launchId: launchId,
               rootProcessId: processId,
               baselineWindowIds: baselineWindowIds,
+              baselineWineProcessIds: baselineWineProcessIds,
             ),
           );
         },
@@ -176,12 +184,14 @@ extension _KonyakHomeLoaderPrograms on _KonyakHomeLoaderState {
     required int launchId,
     required int rootProcessId,
     required Set<String> baselineWindowIds,
+    required Set<int> baselineWineProcessIds,
   }) async {
     if (rootProcessId <= 0) {
       return;
     }
 
     final startedAt = DateTime.now();
+    final newWineProcessPollCounts = <int, int>{};
 
     while (mounted && _activeProgramLaunchIds.contains(launchId)) {
       if (DateTime.now().difference(startedAt) >=
@@ -198,16 +208,42 @@ extension _KonyakHomeLoaderPrograms on _KonyakHomeLoaderState {
         descendantOfProcessIds: <int>{rootProcessId},
         includeWineProcessWindows: true,
       );
-      if (currentWindowIds == null) {
+      final currentWineProcessIds = await _runningWineProcessIds(
+        descendantOfProcessIds: <int>{rootProcessId},
+        includeWineProcesses: true,
+      );
+
+      if (currentWindowIds == null && currentWineProcessIds == null) {
         return;
       }
 
-      final hasNewMatchingWindow = currentWindowIds.any(
-        (windowId) => !baselineWindowIds.contains(windowId),
-      );
-      if (hasNewMatchingWindow) {
+      if (currentWindowIds != null &&
+          currentWindowIds.any(
+            (windowId) => !baselineWindowIds.contains(windowId),
+          )) {
         _finishProgramLaunch(launchId);
         return;
+      }
+
+      if (currentWineProcessIds == null) {
+        continue;
+      }
+
+      final newWineProcessIds = currentWineProcessIds
+          .where((processId) => !baselineWineProcessIds.contains(processId))
+          .toSet();
+      newWineProcessPollCounts.removeWhere(
+        (processId, _) => !newWineProcessIds.contains(processId),
+      );
+
+      for (final processId in newWineProcessIds) {
+        final pollCount = (newWineProcessPollCounts[processId] ?? 0) + 1;
+        if (pollCount >= _programLaunchProcessStablePolls) {
+          _finishProgramLaunch(launchId);
+          return;
+        }
+
+        newWineProcessPollCounts[processId] = pollCount;
       }
     }
   }
@@ -220,6 +256,17 @@ extension _KonyakHomeLoaderPrograms on _KonyakHomeLoaderState {
       widget.platform,
       descendantOfProcessIds: descendantOfProcessIds,
       includeWineProcessWindows: includeWineProcessWindows,
+    );
+  }
+
+  Future<Set<int>?> _runningWineProcessIds({
+    required Set<int> descendantOfProcessIds,
+    required bool includeWineProcesses,
+  }) async {
+    return widget.programWindowProbe.runningWineProcessIds(
+      widget.platform,
+      descendantOfProcessIds: descendantOfProcessIds,
+      includeWineProcesses: includeWineProcesses,
     );
   }
 
@@ -256,6 +303,12 @@ extension _KonyakHomeLoaderPrograms on _KonyakHomeLoaderState {
           includeWineProcessWindows: true,
         ) ??
         const <String>{};
+    final baselineWineProcessIds =
+        await _runningWineProcessIds(
+          descendantOfProcessIds: const <int>{},
+          includeWineProcesses: true,
+        ) ??
+        const <int>{};
 
     if (!mounted) {
       _finishProgramLaunch(launchId);
@@ -273,6 +326,7 @@ extension _KonyakHomeLoaderPrograms on _KonyakHomeLoaderState {
               launchId: launchId,
               rootProcessId: processId,
               baselineWindowIds: baselineWindowIds,
+              baselineWineProcessIds: baselineWineProcessIds,
             ),
           );
         },

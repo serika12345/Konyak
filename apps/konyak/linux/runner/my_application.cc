@@ -2,6 +2,7 @@
 
 #include <X11/Xatom.h>
 #include <X11/Xlib.h>
+#include <dirent.h>
 #include <flutter_linux/flutter_linux.h>
 #include <gdk/gdkx.h>
 #include <unistd.h>
@@ -177,6 +178,62 @@ static bool is_descendant_process(pid_t process_id,
   }
 
   return false;
+}
+
+static pid_t process_id_from_proc_entry_name(const char* name) {
+  if (name == nullptr || name[0] == '\0') {
+    return 0;
+  }
+
+  pid_t process_id = 0;
+  for (const char* cursor = name; *cursor != '\0'; cursor++) {
+    if (!std::isdigit(static_cast<unsigned char>(*cursor))) {
+      return 0;
+    }
+
+    process_id = static_cast<pid_t>((process_id * 10) + (*cursor - '0'));
+  }
+
+  return process_id > 0 ? process_id : 0;
+}
+
+static FlValue* running_matching_wine_process_ids(FlValue* args) {
+  g_autoptr(FlValue) result = fl_value_new_list();
+
+  const std::set<pid_t> root_process_ids = root_process_ids_from_args(args);
+  const gboolean include_wine_processes =
+      fl_value_lookup_bool(args, "includeWineProcesses");
+  if (root_process_ids.empty() && !include_wine_processes) {
+    return fl_value_ref(result);
+  }
+
+  DIR* proc_dir = opendir("/proc");
+  if (proc_dir == nullptr) {
+    return fl_value_ref(result);
+  }
+
+  dirent* entry = nullptr;
+  while ((entry = readdir(proc_dir)) != nullptr) {
+    const pid_t process_id = process_id_from_proc_entry_name(entry->d_name);
+    if (process_id <= 0) {
+      continue;
+    }
+
+    const std::string executable_path = process_executable_path(process_id);
+    if (!is_wine_process_path(executable_path)) {
+      continue;
+    }
+
+    if (!include_wine_processes &&
+        !is_descendant_process(process_id, root_process_ids)) {
+      continue;
+    }
+
+    fl_value_append_take(result, fl_value_new_int(process_id));
+  }
+
+  closedir(proc_dir);
+  return fl_value_ref(result);
 }
 
 #ifdef GDK_WINDOWING_X11
@@ -430,6 +487,13 @@ static void linux_window_method_call_cb(FlMethodChannel* channel,
     g_autoptr(FlValue) window_ids =
         visible_external_window_ids(self, fl_method_call_get_args(method_call));
     fl_method_call_respond_success(method_call, window_ids, nullptr);
+    return;
+  }
+
+  if (g_strcmp0(method, "runningWineProcessIds") == 0) {
+    g_autoptr(FlValue) process_ids =
+        running_matching_wine_process_ids(fl_method_call_get_args(method_call));
+    fl_method_call_respond_success(method_call, process_ids, nullptr);
     return;
   }
 

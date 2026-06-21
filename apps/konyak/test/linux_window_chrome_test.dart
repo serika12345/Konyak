@@ -17,6 +17,7 @@ void main() {
     expect(source, contains('"konyak/linux_window"'));
     expect(source, contains('"setWindowDragRegion"'));
     expect(source, contains('"visibleExternalWindowIds"'));
+    expect(source, contains('"runningWineProcessIds"'));
     expect(source, contains('"minimizeWindow"'));
     expect(source, contains('"toggleMaximizeWindow"'));
     expect(source, contains('"closeWindow"'));
@@ -44,7 +45,11 @@ void main() {
       expect(source, contains('_NET_WM_PID'));
       expect(source, contains('XGetWindowProperty'));
       expect(source, contains('/proc/'));
+      expect(source, contains('opendir("/proc")'));
+      expect(source, contains('readdir'));
+      expect(source, contains('running_matching_wine_process_ids'));
       expect(source, contains('includeWineProcessWindows'));
+      expect(source, contains('includeWineProcesses'));
       expect(source, contains('descendantOfProcessIds'));
       expect(
         cmake,

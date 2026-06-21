@@ -409,11 +409,21 @@ final class _NoopProgramWindowProbe implements ProgramWindowProbe {
   }) async {
     return null;
   }
+
+  @override
+  Future<Set<int>?> runningWineProcessIds(
+    KonyakPlatform platform, {
+    Set<int> descendantOfProcessIds = const <int>{},
+    bool includeWineProcesses = false,
+  }) async {
+    return null;
+  }
 }
 
 final class _MutableProgramWindowProbe implements ProgramWindowProbe {
   final Map<String, int> visibleWindowRootProcessIds = <String, int>{};
   final Set<String> visibleWineWindowIds = <String>{};
+  final Set<int> runningWineProcessIdSet = <int>{};
 
   @override
   Future<Set<String>?> visibleExternalWindowIds(
@@ -431,6 +441,20 @@ final class _MutableProgramWindowProbe implements ProgramWindowProbe {
         if (descendantOfProcessIds.contains(window.value)) window.key,
       if (includeWineProcessWindows) ...visibleWineWindowIds,
     };
+  }
+
+  @override
+  Future<Set<int>?> runningWineProcessIds(
+    KonyakPlatform platform, {
+    Set<int> descendantOfProcessIds = const <int>{},
+    bool includeWineProcesses = false,
+  }) async {
+    if (!platform.isLinux ||
+        (descendantOfProcessIds.isEmpty && !includeWineProcesses)) {
+      return null;
+    }
+
+    return Set<int>.of(runningWineProcessIdSet);
   }
 }
 
