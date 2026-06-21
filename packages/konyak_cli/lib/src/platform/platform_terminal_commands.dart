@@ -49,6 +49,8 @@ String _linuxWineTerminalShellCommandWithEnvironment({
     'export PATH=${_shellQuote(runtimeBin)}:\$PATH',
     if (wineLibraryPath != null)
       'export LD_LIBRARY_PATH=${_shellQuote(wineLibraryPath)}:\${LD_LIBRARY_PATH:-}',
+    for (final entry in _linuxWineLogSuppressionEnvironment().toMap().entries)
+      'export ${entry.key}=${_shellQuote(entry.value)}',
     'alias wine=${_shellQuote(executable)}',
     'alias wine64=${_shellQuote(executable)}',
     'alias winecfg=${_shellQuote('$executable winecfg')}',

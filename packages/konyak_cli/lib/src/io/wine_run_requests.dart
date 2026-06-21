@@ -142,13 +142,21 @@ List<String> _d3DMetalOverrideSourceNames(String dllName) {
 }
 
 ProgramRunEnvironment _linuxWineEnvironment(BottleRecord bottle) {
-  return _linuxWinePrefixEnvironment(
-    bottle,
-  ).merge(bottle.runtimeSettings.linuxEnvironment());
+  return _linuxWinePrefixEnvironment(bottle)
+      .merge(bottle.runtimeSettings.linuxEnvironment())
+      .merge(_linuxWineLogSuppressionEnvironment());
 }
 
 ProgramRunEnvironment _linuxWinePrefixEnvironment(BottleRecord bottle) {
   return ProgramRunEnvironment(<String, String>{'WINEPREFIX': bottle.path});
+}
+
+ProgramRunEnvironment _linuxWineLogSuppressionEnvironment() {
+  return ProgramRunEnvironment(const <String, String>{
+    'EGL_LOG_LEVEL': 'fatal',
+    'MESA_LOG_LEVEL': 'fatal',
+    'MESA_DEBUG': 'silent',
+  });
 }
 
 ProgramRunEnvironment _linuxWineEnvironmentWithRuntime({

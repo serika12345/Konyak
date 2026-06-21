@@ -261,6 +261,9 @@ void defineProgramExecutionContractTests() {
       'LC_ALL': 'ja_JP.UTF-8',
       'WINEPREFIX': '/home/user/.local/share/konyak/bottles/steam',
       'WINEMSYNC': '1',
+      'EGL_LOG_LEVEL': 'fatal',
+      'MESA_LOG_LEVEL': 'fatal',
+      'MESA_DEBUG': 'silent',
     });
   });
 
@@ -1517,6 +1520,18 @@ void defineProgramExecutionContractTests() {
     );
     expect(
       runner.lastRequest?.arguments.last,
+      contains("export EGL_LOG_LEVEL='fatal'"),
+    );
+    expect(
+      runner.lastRequest?.arguments.last,
+      contains("export MESA_LOG_LEVEL='fatal'"),
+    );
+    expect(
+      runner.lastRequest?.arguments.last,
+      contains("export MESA_DEBUG='silent'"),
+    );
+    expect(
+      runner.lastRequest?.arguments.last,
       contains('exec bash --noprofile --rcfile'),
     );
     expect(runner.lastRequest?.arguments.last, isNot(contains('exec bash -l')));
@@ -1530,6 +1545,68 @@ void defineProgramExecutionContractTests() {
     expect(run['executable'], 'sh');
     expect(run['processExitCode'], 0);
   });
+
+  test(
+    'run-bottle-command --json opens Command Prompt in a Linux terminal',
+    () {
+      final repository = MemoryBottleRepository(
+        dataHome: '/home/user/.local/share/konyak',
+        bottles: [
+          BottleRecord(
+            id: 'steam',
+            name: 'Steam',
+            path: '/home/user/.local/share/konyak/bottles/steam',
+            windowsVersion: 'win10',
+          ),
+        ],
+      );
+      final runner = RecordingProgramRunner(
+        result: const ProgramRunCompleted(processExitCode: 0),
+      );
+
+      final result = runCli(
+        const ['run-bottle-command', 'steam', '--command', 'cmd', '--json'],
+        bottleRepository: repository,
+        programRunPlanner: ProgramRunPlanner(
+          hostPlatform: KonyakHostPlatform.linux,
+          environment: HostEnvironment({
+            'HOME': '/home/user',
+            'KONYAK_LINUX_WINE_HOME': '/runtime',
+            'KONYAK_LINUX_WINE_LIBRARY_PATH': '/runtime-host-libs',
+          }),
+        ),
+        programRunner: runner,
+      );
+
+      expect(result.exitCode, 0);
+      expect(runner.lastRequest?.runnerKind, 'terminal');
+      expect(runner.lastRequest?.programPath, 'cmd');
+      expect(runner.lastRequest?.executable, 'sh');
+      expect(runner.lastRequest?.arguments.last, contains('/runtime/bin/wine'));
+      expect(runner.lastRequest?.arguments.last, contains("'cmd'"));
+      expect(
+        runner.lastRequest?.arguments.last,
+        contains("export EGL_LOG_LEVEL='fatal'"),
+      );
+      expect(
+        runner.lastRequest?.arguments.last,
+        contains("export MESA_LOG_LEVEL='fatal'"),
+      );
+      expect(
+        runner.lastRequest?.arguments.last,
+        contains("export MESA_DEBUG='silent'"),
+      );
+
+      final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+      final run = payload['run'] as Map<String, Object?>;
+      expect(payload['schemaVersion'], 1);
+      expect(run['bottleId'], 'steam');
+      expect(run['programPath'], 'cmd');
+      expect(run['runnerKind'], 'terminal');
+      expect(run['executable'], 'sh');
+      expect(run['processExitCode'], 0);
+    },
+  );
 
   test('Linux planner uses a configured Konyak-managed runtime', () {
     final bottle = BottleRecord(
@@ -1573,6 +1650,18 @@ void defineProgramExecutionContractTests() {
         'WINEPREFIX',
         '/home/user/.local/share/konyak/bottles/steam',
       ),
+    );
+    expect(
+      plannedRequest?.environment.toMap(),
+      containsPair('EGL_LOG_LEVEL', 'fatal'),
+    );
+    expect(
+      plannedRequest?.environment.toMap(),
+      containsPair('MESA_LOG_LEVEL', 'fatal'),
+    );
+    expect(
+      plannedRequest?.environment.toMap(),
+      containsPair('MESA_DEBUG', 'silent'),
     );
   });
 

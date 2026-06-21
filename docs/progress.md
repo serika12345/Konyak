@@ -11,6 +11,100 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-22 00:29 JST
+- State: `completed`
+- Branch: `main`
+- Related work: Linux Mesa pci-id log suppression follow-up
+- Purpose: suppress the remaining bare Mesa `pci id for fd ... driver (null)`
+  diagnostics that still appeared after adding EGL-specific log suppression.
+- Completed:
+  - Confirmed the remaining `pci id for fd ...` lines are still Mesa-family
+    diagnostics and are separate from Wine's `wineboot:process_run_key` output.
+  - Added failing CLI contract expectations requiring Linux Wine requests and
+    Linux Terminal-backed `cmd` launches to export `MESA_LOG_LEVEL=fatal`.
+  - Added `MESA_LOG_LEVEL=fatal` to the shared Linux Wine log-suppression
+    environment so normal app-owned Wine runs and generated terminal rcfiles
+    receive the same setting.
+  - Confirmed the public CLI `run-bottle-command dxvk-hud-probe --command cmd
+    --json` path generates terminal argv with `export MESA_LOG_LEVEL='fatal'`.
+- Remaining:
+  - The `wineboot:process_run_key` line is Wine's own `wineboot` error-channel
+    output, not Mesa/EGL output. It remains intentionally unsuppressed so Wine
+    errors are not hidden by this graphics-log cleanup.
+- Next: none.
+- Verification:
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "run-bottle-command --json opens Command Prompt in a Linux terminal"'`:
+    failed before implementation on missing `MESA_LOG_LEVEL`, then passed.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "Linux planner uses a configured Konyak-managed runtime"'`:
+    failed before implementation on missing `MESA_LOG_LEVEL`, then passed.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "run-program --json applies persisted program settings"'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && TERMINAL=/bin/echo dart run bin/konyak.dart run-bottle-command dxvk-hud-probe --command cmd --json'`:
+    returned JSON through the public CLI path and confirmed the generated
+    terminal argv includes `export MESA_LOG_LEVEL='fatal'`.
+  - `nix develop -c zsh -lc 'just cli-test'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+
+- Timestamp: 2026-06-22 00:18 JST
+- State: `completed`
+- Branch: `main`
+- Related work: Linux terminal Mesa/EGL log suppression
+- Purpose: stop Mesa `libEGL warning` diagnostics from appearing in
+  Terminal-backed Linux Wine commands, matching the earlier macOS MoltenVK log
+  suppression approach.
+- Completed:
+  - Read the current progress/TODO state and compared Linux terminal setup
+    generation with the macOS Terminal suppression path.
+  - Identified that macOS suppresses graphics-runtime noise through Wine
+    environment variables while Linux did not set Mesa/EGL log suppression.
+  - Added failing CLI contract coverage for normal Linux Wine runs and Linux
+    Terminal-backed bottle commands requiring `EGL_LOG_LEVEL=fatal` and
+    `MESA_DEBUG=silent`.
+  - Added Linux Command Prompt terminal coverage because the reported output
+    came from `run-bottle-command --command cmd`.
+  - Added the suppression environment to Linux app-owned Wine runs and Linux
+    terminal rcfile generation.
+  - Confirmed the real `dxvk-hud-probe` bottle exists through the public CLI
+    route and confirmed the generated `cmd` terminal argv contains both
+    suppression exports with terminal launching neutralized by `TERMINAL`.
+- Remaining:
+  - No code work remains for Mesa/EGL warning suppression. The separate
+    `wineboot:process_run_key` line is Wine's own `err` channel and is not
+    controlled by Mesa/EGL log levels.
+- Next: none.
+- Verification:
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "run-bottle-command --json opens a Linux bottle terminal"'`:
+    failed before implementation, then passed.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "Linux planner uses a configured Konyak-managed runtime"'`:
+    failed before implementation, then passed.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "run-bottle-command --json opens Command Prompt in a Linux terminal"'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart run bin/konyak.dart list-bottles --json'`:
+    passed and confirmed `dxvk-hud-probe` exists.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && TERMINAL=/bin/echo dart run bin/konyak.dart run-bottle-command dxvk-hud-probe --command cmd --json'`:
+    returned JSON through the public CLI path and confirmed the generated
+    terminal argv includes `export EGL_LOG_LEVEL='fatal'` and
+    `export MESA_DEBUG='silent'`.
+  - First `nix develop -c zsh -lc 'just cli-test'`: failed because the
+    persisted Linux program-settings test asserted the exact pre-suppression
+    environment map; the test expectation was updated to include the new Mesa
+    log suppression variables.
+  - First `nix develop -c zsh -lc 'just format-check'`: failed because Dart
+    format adjusted `lib/src/io/wine_run_requests.dart` and
+    `test/cli_contract_program_execution.part.dart`; the command passed on the
+    final rerun.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "run-program --json applies persisted program settings"'`:
+    passed.
+  - `nix develop -c zsh -lc 'just cli-test'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `git diff --check`: passed.
+
 - Timestamp: 2026-06-21 23:57 JST
 - State: `completed`
 - Branch: `main`
