@@ -11,6 +11,51 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-22 20:38 JST
+- State: `completed`
+- Branch: `main`
+- Related work: Linux runtime CLI smoke parity
+- Purpose: add a maintained Linux public-CLI runtime smoke path that consumes a
+  complete runtime-owner-produced source manifest, matching the macOS runtime
+  CLI smoke boundary without building Linux runtime payloads in the parent
+  repository.
+- Completed:
+  - Committed the Linux runtime manifest release path work as
+    `d2cc7c4 Align Linux runtime manifest release path`.
+  - Read the macOS runtime CLI smoke and existing Linux runtime CLI contracts.
+  - Added `scripts/run_linux_runtime_cli_smoke.zsh` as the maintained Linux
+    runtime CLI smoke entry point.
+  - Added `.github/workflows/linux-runtime-cli-smoke.yml`, gated so it runs
+    when a complete Linux runtime source manifest is supplied by workflow input
+    or repository variable.
+  - Added a `linux-runtime-cli-smoke` just target.
+  - Extended runtime validation so `validate-runtime konyak-linux-wine --json`
+    probes Linux Wine with Linux runtime environment instead of using the macOS
+    loader assumptions.
+  - Added CLI contract coverage for Linux runtime validation.
+  - Updated AGENTS, governance, CLI distribution docs, and TODO state for the
+    maintained Linux runtime smoke path.
+- Remaining:
+  - The full install path still needs a real complete Linux runtime stack
+    source manifest. The local smoke script was dynamically checked with a fake
+    installed runtime root and `KONYAK_LINUX_RUNTIME_CLI_SMOKE_INSTALL=false`.
+- Next: supply or publish the complete Linux runtime stack source manifest and
+  run `scripts/run_linux_runtime_cli_smoke.zsh` with install enabled.
+- Verification:
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "Linux runtime validator checks the Wine loader with Linux env"'`:
+    failed before implementation because the validator did not accept Linux
+    environment input, then passed.
+  - `nix develop -c zsh -lc 'KONYAK_LINUX_RUNTIME_CLI_SMOKE_INSTALL=false KONYAK_LINUX_RUNTIME_CLI_SMOKE_WINETRICKS=false KONYAK_LINUX_WINE_HOME=<fake runtime> KONYAK_DEV_LINUX_WINE_STACK_MANIFEST=<fake manifest> ./scripts/run_linux_runtime_cli_smoke.zsh'`:
+    first failed because the fake runtime omitted `bin/wineboot`, then passed
+    after the fake runtime was completed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just cli-test'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'zsh -n scripts/run_linux_runtime_cli_smoke.zsh && git diff --check'`:
+    passed.
+
 - Timestamp: 2026-06-22 19:55 JST
 - State: `completed`
 - Branch: `main`

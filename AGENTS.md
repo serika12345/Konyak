@@ -163,6 +163,10 @@ Use TDD as the default development loop:
   `run-winetricks <bottle-id> --verb <verb> --json`, which must produce and run
   a `macosWinetricks` program request. The maintained local CLI smoke entry
   point is `scripts/run_macos_runtime_cli_smoke.zsh`.
+- For Linux runtime installation verification, the maintained local CLI smoke
+  entry point is `scripts/run_linux_runtime_cli_smoke.zsh`, which consumes a
+  complete runtime-owner-produced source manifest and exercises the public CLI
+  path instead of invoking Wine directly.
 - Do not manually invoke packaged Wine executables such as `wine`, `wine64`,
   `wineserver`, or `wineboot`, and do not manually invoke packaged
   `winetricks`, to prove application behavior.

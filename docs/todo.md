@@ -681,6 +681,9 @@ task changes scope.
     variables from `AppRun`.
   - [x] Add Linux release metadata and AppRun environment smoke checks to the
     release workflow.
+  - [x] Add a maintained Linux runtime CLI smoke that consumes a complete
+    source manifest and verifies install/list/validate/bottle creation through
+    the public CLI path.
   - [ ] Publish a complete signed default Linux runtime stack source manifest
     and public key from the Linux runtime packaging owner.
 - Removal of any remaining bootstrap Wine-only fallback only after each target

@@ -65,6 +65,9 @@ diagnose-linux-vulkan-wine:
 diagnose-macos-vulkan-wine:
   zsh scripts/run_macos_vulkan_wine_smoke.zsh
 
+linux-runtime-cli-smoke:
+  zsh scripts/run_linux_runtime_cli_smoke.zsh
+
 macos-vulkan-probe-bottle:
   zsh scripts/prepare_macos_vulkan_probe_bottle.zsh
 

@@ -3,11 +3,13 @@ part of '../../../konyak_cli.dart';
 class DartIoMacosWineRuntimeValidator implements RuntimeValidator {
   const DartIoMacosWineRuntimeValidator({
     required this.runtimeCatalog,
+    this.environment = const HostEnvironment.empty(),
     this.fileStatusProbe = const DartIoFileStatusProbe(),
     this.executableProbe = const DartIoRuntimeExecutableProbe(),
   });
 
   final RuntimeCatalog runtimeCatalog;
+  final HostEnvironment environment;
   final FileStatusProbe fileStatusProbe;
   final RuntimeExecutableProbe executableProbe;
 
@@ -38,6 +40,14 @@ class DartIoMacosWineRuntimeValidator implements RuntimeValidator {
             ),
           ],
         ),
+      );
+    }
+
+    if (runtime.id == linuxWineRuntimeId) {
+      return _validateLinuxRuntime(
+        runtime: runtime,
+        runtimeRoot: runtimeRoot,
+        executablePath: executablePath,
       );
     }
 
@@ -91,6 +101,65 @@ class DartIoMacosWineRuntimeValidator implements RuntimeValidator {
       isPassed: loaderResult.exitCode == 0,
       message: loaderResult.exitCode == 0
           ? 'wineloader --version completed.'
+          : _runtimeLoaderFailureMessage(loaderResult),
+    );
+    final completedChecks = <RuntimeValidationCheck>[...checks, loaderCheck];
+
+    return RuntimeValidationCompleted(
+      RuntimeValidationRecord(
+        runtimeId: runtime.id,
+        isValid: completedChecks.every(
+          (check) => !check.isRequired || check.isPassed,
+        ),
+        checks: completedChecks,
+      ),
+    );
+  }
+
+  RuntimeValidationResult _validateLinuxRuntime({
+    required RuntimeRecord runtime,
+    required String runtimeRoot,
+    required String executablePath,
+  }) {
+    final checks = <RuntimeValidationCheck>[
+      _runtimePathCheck(
+        id: 'runtime-root',
+        name: 'Runtime root',
+        path: runtimeRoot,
+        fileStatusProbe: fileStatusProbe,
+      ),
+      _runtimePathCheck(
+        id: 'wine-executable',
+        name: 'Wine executable',
+        path: executablePath,
+        fileStatusProbe: fileStatusProbe,
+      ),
+      _runtimeStackCompletenessCheck(runtime.stack),
+    ];
+
+    if (!checks.every((check) => !check.isRequired || check.isPassed)) {
+      return RuntimeValidationCompleted(
+        RuntimeValidationRecord(
+          runtimeId: runtime.id,
+          isValid: false,
+          checks: checks,
+        ),
+      );
+    }
+
+    final loaderResult = executableProbe.run(
+      executable: executablePath,
+      arguments: const ['--version'],
+      environment: _linuxRuntimeEnvironment(environment),
+      workingDirectory: _dirname(executablePath),
+    );
+    final loaderCheck = RuntimeValidationCheck(
+      id: 'wine-loader',
+      name: 'Wine loader',
+      isRequired: true,
+      isPassed: loaderResult.exitCode == 0,
+      message: loaderResult.exitCode == 0
+          ? 'wine --version completed.'
           : _runtimeLoaderFailureMessage(loaderResult),
     );
     final completedChecks = <RuntimeValidationCheck>[...checks, loaderCheck];

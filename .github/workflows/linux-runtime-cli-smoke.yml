@@ -1,0 +1,47 @@
+name: Linux Runtime CLI Smoke
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/linux-runtime-cli-smoke.yml
+      - flake.lock
+      - flake.nix
+      - packages/konyak_cli/**
+      - runtime/linux-wine-release.json
+      - scripts/prepare_linux_dev_runtime_source.zsh
+      - scripts/resolve_linux_runtime_source_manifest.zsh
+      - scripts/run_linux_runtime_cli_smoke.zsh
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/linux-runtime-cli-smoke.yml
+      - flake.lock
+      - flake.nix
+      - packages/konyak_cli/**
+      - runtime/linux-wine-release.json
+      - scripts/prepare_linux_dev_runtime_source.zsh
+      - scripts/resolve_linux_runtime_source_manifest.zsh
+      - scripts/run_linux_runtime_cli_smoke.zsh
+  workflow_dispatch:
+    inputs:
+      source_manifest:
+        description: Complete Linux runtime stack source manifest URL
+        required: false
+        type: string
+
+jobs:
+  published-runtime-cli-smoke:
+    name: Published runtime CLI smoke
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    if: ${{ (github.event_name == 'workflow_dispatch' && inputs.source_manifest != '') || vars.KONYAK_DEV_LINUX_WINE_STACK_SOURCE_MANIFEST != '' }}
+    env:
+      KONYAK_DEV_LINUX_WINE_STACK_SOURCE_MANIFEST: ${{ (github.event_name == 'workflow_dispatch' && inputs.source_manifest) || vars.KONYAK_DEV_LINUX_WINE_STACK_SOURCE_MANIFEST }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: cachix/install-nix-action@v31
+
+      - name: Run published runtime CLI smoke
+        run: nix develop -c zsh -lc './scripts/run_linux_runtime_cli_smoke.zsh'

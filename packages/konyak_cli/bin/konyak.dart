@@ -42,6 +42,7 @@ Future<void> main(List<String> arguments) async {
     appUpdateInstaller: DartIoAppUpdateInstaller.fromEnvironment(environment),
     runtimeValidator: DartIoMacosWineRuntimeValidator(
       runtimeCatalog: runtimeCatalog,
+      environment: HostEnvironment(environment),
     ),
     macosSetupChecker: DartIoMacosSetupChecker.current(runtimeCatalog),
     runtimeInstallProgressSink: JsonRuntimeInstallProgressSink(stdout),

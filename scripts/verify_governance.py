@@ -817,6 +817,7 @@ def main() -> None:
         "run-winetricks <bottle-id> --verb <verb> --json",
         "macosWinetricks",
         "scripts/run_macos_runtime_cli_smoke.zsh",
+        "scripts/run_linux_runtime_cli_smoke.zsh",
     ]:
         require_contains("AGENTS.md", expected)
     require_contains(
@@ -945,6 +946,13 @@ def main() -> None:
         ".github/workflows/publish.yml",
         "smoke_linux_appimage_apprun_env.zsh",
     )
+    for expected in [
+        "Linux Runtime CLI Smoke",
+        "scripts/run_linux_runtime_cli_smoke.zsh",
+        "KONYAK_DEV_LINUX_WINE_STACK_SOURCE_MANIFEST",
+    ]:
+        require_contains(".github/workflows/linux-runtime-cli-smoke.yml", expected)
+    require_contains("justfile", "linux-runtime-cli-smoke:")
     require_not_contains("scripts/prepare_linux_dev_runtime_source.zsh", "winetricks list-all")
     require_not_contains("scripts/prepare_linux_dev_runtime_source.zsh", "/nix/store")
     require_contains(

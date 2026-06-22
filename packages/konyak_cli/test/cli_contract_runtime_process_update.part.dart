@@ -3504,6 +3504,66 @@ void defineRuntimeProcessAndUpdateContractTests() {
     expect(executableProbe.lastExecutable, isNull);
   });
 
+  test('Linux runtime validator checks the Wine loader with Linux env', () {
+    final executableProbe = RecordingRuntimeExecutableProbe(
+      result: const RuntimeExecutableProbeResult(
+        exitCode: 0,
+        stdout: 'wine-11.9',
+        stderr: '',
+      ),
+    );
+    final environment = HostEnvironment(const {
+      'HOME': '/home/user',
+      'PATH': '/usr/bin:/bin',
+      'KONYAK_LINUX_WINE_HOME': '/runtime/linux-wine',
+      'KONYAK_LINUX_WINE_LIBRARY_PATH': '/host-libs',
+    });
+    final validator = DartIoMacosWineRuntimeValidator(
+      runtimeCatalog: KonyakRuntimeCatalog(
+        hostPlatform: KonyakHostPlatform.linux,
+        environment: environment,
+        fileStatusProbe: const StaticFileStatusProbe({
+          '/runtime/linux-wine/bin/wine',
+          '/runtime/linux-wine/bin/winedbg',
+          '/runtime/linux-wine/bin/wineserver',
+          '/runtime/linux-wine/winetricks',
+          '/runtime/linux-wine/share/wine/mono',
+          '/runtime/linux-wine/dxvk/x64/dxgi.dll',
+          '/runtime/linux-wine/dxvk/x64/d3d9.dll',
+          '/runtime/linux-wine/dxvk/x64/d3d10core.dll',
+          '/runtime/linux-wine/dxvk/x64/d3d11.dll',
+          '/runtime/linux-wine/dxvk/x86/dxgi.dll',
+          '/runtime/linux-wine/dxvk/x86/d3d9.dll',
+          '/runtime/linux-wine/dxvk/x86/d3d10core.dll',
+          '/runtime/linux-wine/dxvk/x86/d3d11.dll',
+          '/runtime/linux-wine/vkd3d-proton/x64/d3d12.dll',
+          '/runtime/linux-wine/vkd3d-proton/x64/d3d12core.dll',
+          '/runtime/linux-wine/vkd3d-proton/x86/d3d12.dll',
+          '/runtime/linux-wine/vkd3d-proton/x86/d3d12core.dll',
+        }),
+      ),
+      environment: environment,
+      fileStatusProbe: const StaticFileStatusProbe({
+        '/runtime/linux-wine',
+        '/runtime/linux-wine/bin/wine',
+      }),
+      executableProbe: executableProbe,
+    );
+
+    final result = validator.validate('konyak-linux-wine');
+
+    expect(result, isA<RuntimeValidationCompleted>());
+    final validation = (result as RuntimeValidationCompleted).validation;
+    expect(validation.isValid, isTrue);
+    expect(executableProbe.lastExecutable, '/runtime/linux-wine/bin/wine');
+    expect(executableProbe.lastArguments, ['--version']);
+    expect(executableProbe.lastWorkingDirectory, '/runtime/linux-wine/bin');
+    expect(executableProbe.lastEnvironment, {
+      'PATH': '/runtime/linux-wine/bin:/usr/bin:/bin',
+      'LD_LIBRARY_PATH': '/host-libs',
+    });
+  });
+
   test('macOS runtime validator runs wineloader with dylib search paths', () {
     final executableProbe = RecordingRuntimeExecutableProbe(
       result: const RuntimeExecutableProbeResult(

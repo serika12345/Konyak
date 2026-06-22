@@ -207,5 +207,13 @@ The release secret handoff for signed default Konyak runtime stack manifests is
 documented in `docs/release.md`. Linux default full-stack manifest publication
 and signing remain deferred until the Linux component archives exist.
 
+The maintained Linux runtime CLI smoke entry point is
+`scripts/run_linux_runtime_cli_smoke.zsh`. It consumes a complete source
+manifest, installs through `install-linux-wine --reinstall --source-manifest
+... --progress-json --json`, then verifies `list-runtimes`, `validate-runtime`,
+prefix creation, and the managed Winetricks route through public CLI commands.
+It does not build or mutate Linux runtime component payloads in the parent
+repository.
+
 Do not replace this boundary with FFI or in-process linking unless the license
 and platform implications are reviewed first.
