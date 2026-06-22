@@ -24,10 +24,12 @@ The Linux Nix dev shell and VSCode launch profile both set
 `.dart_tool/konyak/dev-runtime/linux-wine`. The Linux VSCode launch profile runs
 `scripts/prepare_linux_dev_runtime_source.zsh` before launch and passes
 `KONYAK_DEV_LINUX_WINE_STACK_MANIFEST` to Flutter and the CLI. That script does
-not create Linux runtime components in the parent repository. Set
-`KONYAK_DEV_LINUX_WINE_STACK_SOURCE_MANIFEST` to a complete source manifest
-produced by the Linux runtime packaging owner; the script validates and caches
-that manifest under `.dart_tool/konyak/dev-runtime-source/linux-wine-stack`.
+not create Linux runtime components in the parent repository. It resolves the
+default complete source manifest from `runtime/linux-wine-release.json`; set
+`KONYAK_DEV_LINUX_WINE_STACK_SOURCE_MANIFEST` to point at a different complete
+source manifest produced by the Linux runtime packaging owner. The script
+validates and caches that manifest under
+`.dart_tool/konyak/dev-runtime-source/linux-wine-stack`.
 The first Settings install action still goes through Konyak's normal
 `install-linux-wine` contract and installs into
 `.dart_tool/konyak/dev-runtime/linux-wine`.

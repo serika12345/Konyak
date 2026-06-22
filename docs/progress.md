@@ -11,6 +11,65 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-22 19:55 JST
+- State: `completed`
+- Branch: `main`
+- Related work: Linux runtime source-manifest SSOT and release smoke parity
+- Purpose: align Linux development builds, AppImage release builds, runtime
+  installation, and CI around one complete Linux runtime stack source manifest
+  contract while keeping parent-repository runtime payload generation out of
+  scope.
+- Completed:
+  - Stashed the previous Linux executable thumbnailer WIP as
+    `stash@{0}: On main: linux-exe-thumbnailer-wip`.
+  - Investigated the AppImage runtime install path and confirmed the Settings
+    action reaches `install-linux-wine --json`, which fails when neither a
+    Linux source manifest nor archive URL is configured.
+  - Split the next work into source-manifest resolver, AppImage bundling/AppRun
+    export, publish workflow artifact coverage, CI smoke planning, and audit
+    workstreams.
+  - Added `runtime/linux-wine-release.json` as the parent-repository Linux
+    runtime release locator.
+  - Added a shared Linux source-manifest resolver used by both development
+    runtime preparation and AppImage release builds.
+  - Changed Linux AppImage release builds to resolve, validate, publish, and
+    bundle the Linux runtime stack source manifest before packaging.
+  - Changed AppRun to export `KONYAK_LINUX_WINE_STACK_MANIFEST`,
+    `KONYAK_LINUX_WINE_STACK_SIGNATURE_URL`,
+    `KONYAK_RUNTIME_STACK_PUBLIC_KEY_PATH`, and
+    `KONYAK_LINUX_WINE_STACK_PUBLIC_KEY_PATH` when the corresponding bundled
+    resources exist.
+  - Added Linux release metadata and AppRun environment smoke scripts, and
+    wired both into the Linux release workflow.
+  - Updated governance checks, release/runtime docs, VSCode Linux notes, and
+    TODO state for the new Linux manifest contract.
+- Remaining:
+  - A real complete signed Linux runtime stack source manifest still needs to
+    be published by the Linux runtime packaging owner. Until that exists, local
+    release builds should pass `KONYAK_RUNTIME_STACK_SOURCE_MANIFEST` to an
+    explicit complete manifest or the default release locator will fail early.
+- Next: publish or supply the complete Linux runtime stack source manifest, then
+  run the same release build without the fake manifest/tool overrides.
+- Verification:
+  - `nix develop -c zsh -lc 'zsh -n scripts/resolve_linux_runtime_source_manifest.zsh scripts/prepare_linux_dev_runtime_source.zsh scripts/build_linux_release.zsh scripts/smoke_linux_appimage_apprun_env.zsh'`:
+    passed.
+  - `nix develop -c zsh -lc 'KONYAK_RUNTIME_STACK_SOURCE_MANIFEST=<fake complete manifest> KONYAK_APPIMAGETOOL_PATH=<fake appimagetool> ./scripts/build_linux_release.zsh'`:
+    passed and generated Linux release metadata/AppDir/AppRun with the resolved
+    source manifest bundled.
+  - `nix develop -c zsh -lc './scripts/smoke_linux_release_metadata.zsh && ./scripts/smoke_linux_appimage_apprun_env.zsh'`:
+    passed.
+  - `nix develop -c zsh -lc 'KONYAK_DEV_LINUX_WINE_STACK_SOURCE_MANIFEST=<fake complete manifest> KONYAK_DEV_LINUX_WINE_STACK_MANIFEST_CACHE=<temp cache> ./scripts/prepare_linux_dev_runtime_source.zsh --print-manifest-path'`:
+    passed and cached the manifest.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - First `nix develop -c zsh -lc 'just verify-governance'`: failed because
+    governance still expected the Linux development manifest env and
+    no-parent-generation message in `scripts/prepare_linux_dev_runtime_source.zsh`;
+    the script comments were updated to keep that contract visible.
+  - Final `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `nix develop -c zsh -lc 'git diff --check'`: passed.
+
 - Timestamp: 2026-06-22 00:29 JST
 - State: `completed`
 - Branch: `main`

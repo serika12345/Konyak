@@ -799,6 +799,13 @@ def main() -> None:
     require_contains("docs/todo.md", "wineloader start /unix")
     require_contains("docs/todo.md", "serika12345/konyak-macos-runtime")
     require_contains("runtime/macos-wine-release.json", "defaultReleaseTag")
+    for expected in [
+        "defaultReleaseTag",
+        "sourceManifestFileName",
+        "sourceManifestSignatureFileName",
+        "publicKeyFileName",
+    ]:
+        require_contains("runtime/linux-wine-release.json", expected)
     require_contains("docs/todo.md", "Runtimes/macos-wine/bin/wineloader")
     require_contains("docs/todo.md", "Drop live external plist metadata")
     for expected in [
@@ -915,6 +922,29 @@ def main() -> None:
         "vkd3d-proton",
     ]:
         require_contains("scripts/prepare_linux_dev_runtime_source.zsh", expected)
+    for expected in [
+        "runtime/linux-wine-release.json",
+        "KONYAK_RUNTIME_STACK_SOURCE_MANIFEST",
+        "KONYAK_DEV_LINUX_WINE_STACK_SOURCE_MANIFEST",
+        "wine-mono",
+        "vkd3d-proton",
+    ]:
+        require_contains("scripts/resolve_linux_runtime_source_manifest.zsh", expected)
+    for expected in [
+        "KONYAK_LINUX_WINE_STACK_MANIFEST",
+        "KONYAK_LINUX_WINE_STACK_SIGNATURE_URL",
+        "KONYAK_RUNTIME_STACK_PUBLIC_KEY_PATH",
+        "KONYAK_LINUX_WINE_STACK_PUBLIC_KEY_PATH",
+    ]:
+        require_contains("scripts/build_linux_release.zsh", expected)
+    require_contains(
+        ".github/workflows/publish.yml",
+        "konyak-linux-wine-runtime-stack-source.json.sig",
+    )
+    require_contains(
+        ".github/workflows/publish.yml",
+        "smoke_linux_appimage_apprun_env.zsh",
+    )
     require_not_contains("scripts/prepare_linux_dev_runtime_source.zsh", "winetricks list-all")
     require_not_contains("scripts/prepare_linux_dev_runtime_source.zsh", "/nix/store")
     require_contains(

@@ -111,10 +111,12 @@ Outputs are written under `.dart_tool/konyak/release/linux`:
 - `Konyak-<version>-linux-<arch>.release.json`
 - `SHA256SUMS`
 - `release-notes.md`
-- `konyak-linux-wine-runtime-stack-source.json` when
-  `KONYAK_RUNTIME_STACK_SOURCE_MANIFEST` is provided
-- `konyak-runtime-stack-public-key.pem` when
-  `KONYAK_RUNTIME_STACK_PUBLIC_KEY` is provided alongside the manifest
+- `konyak-linux-wine-runtime-stack-source.json`
+- `konyak-linux-wine-runtime-stack-source.json.sig` when the selected runtime
+  release publishes a signature or `KONYAK_RUNTIME_STACK_SIGNING_KEY_BASE64`
+  is provided
+- `konyak-runtime-stack-public-key.pem` when the selected runtime release
+  publishes one or `KONYAK_RUNTIME_STACK_PUBLIC_KEY` is provided
 
 The AppImage includes `Konyak-MIT.txt`, `THIRD_PARTY_NOTICES.md`, and other
 bundled dependency notices under `usr/share/konyak/Licenses`.
@@ -226,18 +228,21 @@ overwriting base `lib/wine/*` files.
 
 Reserved runtime-stack release inputs:
 
-- `KONYAK_RUNTIME_STACK_SOURCE_MANIFEST`: path or generated artifact name for
-  the default source manifest. Linux AppImage release builds validate this as a
-  `konyak-linux-wine` / `linux-wine-runtime-stack` source manifest and publish
-  it as `konyak-linux-wine-runtime-stack-source.json`.
+- `runtime/linux-wine-release.json`: default Linux runtime release locator for
+  the complete source manifest produced by the Linux runtime packaging owner.
+  Linux AppImage release builds resolve this locator when no explicit manifest
+  override is supplied.
+- `KONYAK_RUNTIME_STACK_SOURCE_MANIFEST`: path or URL override for the default
+  source manifest. Linux AppImage release builds validate this as a
+  `konyak-linux-wine` / `linux-wine-runtime-stack` source manifest, bundle it
+  into the AppImage, and publish it as
+  `konyak-linux-wine-runtime-stack-source.json`.
 - `KONYAK_RUNTIME_STACK_SIGNING_KEY_BASE64`: private signing key material for
-  release automation. When this is set alongside
-  `KONYAK_RUNTIME_STACK_SOURCE_MANIFEST`, Linux AppImage release builds emit a
-  detached `konyak-linux-wine-runtime-stack-source.json.sig` signature and
-  reference it from `.release.json`.
+  release automation. When this is set, Linux AppImage release builds emit a
+  detached `konyak-linux-wine-runtime-stack-source.json.sig` signature,
+  bundle it into the AppImage, and reference it from `.release.json`.
 - `KONYAK_RUNTIME_STACK_PUBLIC_KEY`: public key text to publish with the
   manifest and embed into future verifier code. Linux AppImage release builds
-  emit this value as `konyak-runtime-stack-public-key.pem` when a source
-  manifest is also provided, bundle it into `usr/share/konyak`, and export
-  `KONYAK_RUNTIME_STACK_PUBLIC_KEY_PATH` from `AppRun` for runtime verifier
-  use.
+  emit this value as `konyak-runtime-stack-public-key.pem`, bundle it into
+  `usr/share/konyak`, and export `KONYAK_RUNTIME_STACK_PUBLIC_KEY_PATH` from
+  `AppRun` for runtime verifier use.

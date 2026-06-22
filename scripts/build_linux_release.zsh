@@ -54,12 +54,12 @@ checksum_path="$appimage_path.sha256"
 checksums_path="$release_root/SHA256SUMS"
 metadata_path="$release_root/${artifact_basename}.release.json"
 notes_path="$release_root/release-notes.md"
-runtime_stack_manifest_input="${KONYAK_RUNTIME_STACK_SOURCE_MANIFEST:-}"
 runtime_stack_manifest_path="$release_root/konyak-linux-wine-runtime-stack-source.json"
 runtime_stack_signature_path="$release_root/konyak-linux-wine-runtime-stack-source.json.sig"
 runtime_stack_signing_key_base64="${KONYAK_RUNTIME_STACK_SIGNING_KEY_BASE64:-}"
 runtime_stack_public_key_text="${KONYAK_RUNTIME_STACK_PUBLIC_KEY:-}"
 runtime_stack_public_key_path="$release_root/konyak-runtime-stack-public-key.pem"
+linux_runtime_source_resolver="$repo_root/scripts/resolve_linux_runtime_source_manifest.zsh"
 tool_cache_dir="$release_root/tools"
 tool_path="${KONYAK_APPIMAGETOOL_PATH:-$tool_cache_dir/appimagetool-${appimage_arch}.AppImage}"
 tool_url="${KONYAK_APPIMAGETOOL_URL:-https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-${appimage_arch}.AppImage}"
@@ -87,34 +87,70 @@ print_flutter_linux_build_diagnostics() {
 
 rm -rf "$stage_root" "$appdir_root"
 mkdir -p "$stage_root/bin" "$release_root" "$tool_cache_dir"
+rm -f \
+  "$appimage_path" \
+  "$checksum_path" \
+  "$checksums_path" \
+  "$metadata_path" \
+  "$notes_path" \
+  "$runtime_stack_manifest_path" \
+  "$runtime_stack_signature_path" \
+  "$runtime_stack_public_key_path"
 
-runtime_stack_manifest_source=""
-if [[ -n "$runtime_stack_manifest_input" ]]; then
-  if [[ -f "$runtime_stack_manifest_input" ]]; then
-    runtime_stack_manifest_source="$runtime_stack_manifest_input"
-  elif [[ -f "$repo_root/$runtime_stack_manifest_input" ]]; then
-    runtime_stack_manifest_source="$repo_root/$runtime_stack_manifest_input"
-  elif [[ -f "$release_root/$runtime_stack_manifest_input" ]]; then
-    runtime_stack_manifest_source="$release_root/$runtime_stack_manifest_input"
-  else
-    echo "Runtime stack source manifest was not found: $runtime_stack_manifest_input" >&2
-    exit 69
-  fi
-fi
-
-if [[ -n "$runtime_stack_public_key_text" && -z "$runtime_stack_manifest_source" ]]; then
-  echo "KONYAK_RUNTIME_STACK_PUBLIC_KEY requires KONYAK_RUNTIME_STACK_SOURCE_MANIFEST." >&2
+if [[ ! -x "$linux_runtime_source_resolver" ]]; then
+  echo "Linux runtime source manifest resolver is not executable: $linux_runtime_source_resolver" >&2
   exit 69
 fi
 
-if [[ -n "$runtime_stack_signing_key_base64" && -z "$runtime_stack_manifest_source" ]]; then
-  echo "KONYAK_RUNTIME_STACK_SIGNING_KEY_BASE64 requires KONYAK_RUNTIME_STACK_SOURCE_MANIFEST." >&2
+runtime_stack_manifest_source="$(
+  "$linux_runtime_source_resolver" \
+    --profile release \
+    --manifest-cache "$runtime_stack_manifest_path" \
+    --signature-cache "$runtime_stack_signature_path" \
+    --public-key-cache "$runtime_stack_public_key_path" \
+    --print-manifest-path
+)"
+runtime_stack_resolved_signature="$(
+  "$linux_runtime_source_resolver" \
+    --profile release \
+    --print-signature-path || true
+)"
+runtime_stack_resolved_public_key="$(
+  "$linux_runtime_source_resolver" \
+    --profile release \
+    --print-public-key-path || true
+)"
+
+if [[ -n "$runtime_stack_public_key_text" ]]; then
+  printf '%s\n' "$runtime_stack_public_key_text" >"$runtime_stack_public_key_path"
+elif [[ -n "$runtime_stack_resolved_public_key" && -f "$runtime_stack_resolved_public_key" && ! -f "$runtime_stack_public_key_path" ]]; then
+  cp "$runtime_stack_resolved_public_key" "$runtime_stack_public_key_path"
+fi
+
+if [[ -n "$runtime_stack_resolved_signature" && -f "$runtime_stack_resolved_signature" && ! -f "$runtime_stack_signature_path" ]]; then
+  cp "$runtime_stack_resolved_signature" "$runtime_stack_signature_path"
+fi
+
+if [[ -n "$runtime_stack_public_key_text" && ! -f "$runtime_stack_manifest_source" ]]; then
+  echo "KONYAK_RUNTIME_STACK_PUBLIC_KEY requires a resolved Linux runtime source manifest." >&2
+  exit 69
+fi
+
+if [[ -n "$runtime_stack_signing_key_base64" && ! -f "$runtime_stack_manifest_source" ]]; then
+  echo "KONYAK_RUNTIME_STACK_SIGNING_KEY_BASE64 requires a resolved Linux runtime source manifest." >&2
   exit 69
 fi
 
 if [[ -n "$runtime_stack_signing_key_base64" && -z "$runtime_stack_public_key_text" ]]; then
   echo "KONYAK_RUNTIME_STACK_SIGNING_KEY_BASE64 requires KONYAK_RUNTIME_STACK_PUBLIC_KEY." >&2
   exit 69
+fi
+
+if [[ -n "$runtime_stack_signing_key_base64" ]]; then
+  signing_key_path="$release_root/runtime-stack-signing-key.pem"
+  base64 -d <<<"$runtime_stack_signing_key_base64" >"$signing_key_path"
+  openssl dgst -sha256 -sign "$signing_key_path" -out "$runtime_stack_signature_path" "$runtime_stack_manifest_path"
+  rm -f "$signing_key_path"
 fi
 
 echo "Building Konyak CLI executable..."
@@ -156,8 +192,12 @@ chmod 755 "$bundle_resources_dir/konyak-cli"
 cp LICENSE "$bundle_resources_dir/Licenses/Konyak-MIT.txt"
 cp THIRD_PARTY_NOTICES.md "$bundle_resources_dir/Licenses/THIRD_PARTY_NOTICES.md"
 cp apps/konyak/assets/fonts/inter/OFL.txt "$bundle_resources_dir/Licenses/Inter-OFL.txt"
-if [[ -n "$runtime_stack_public_key_text" ]]; then
-  printf '%s\n' "$runtime_stack_public_key_text" >"$bundle_resources_dir/konyak-runtime-stack-public-key.pem"
+cp "$runtime_stack_manifest_path" "$bundle_resources_dir/konyak-linux-wine-runtime-stack-source.json"
+if [[ -f "$runtime_stack_signature_path" ]]; then
+  cp "$runtime_stack_signature_path" "$bundle_resources_dir/konyak-linux-wine-runtime-stack-source.json.sig"
+fi
+if [[ -f "$runtime_stack_public_key_path" ]]; then
+  cp "$runtime_stack_public_key_path" "$bundle_resources_dir/konyak-runtime-stack-public-key.pem"
 fi
 cat >"$bundle_resources_dir/NOTICES.txt" <<EOF
 Konyak is distributed under the MIT License.
@@ -176,8 +216,15 @@ appdir="$(cd "$(dirname "$0")" && pwd -P)"
 export KONYAK_BUNDLE_RESOURCES="$appdir/usr/share/konyak"
 export KONYAK_APP_EXECUTABLE="$appdir/usr/konyak"
 export KONYAK_APP_PID="$$"
+if [[ -f "$KONYAK_BUNDLE_RESOURCES/konyak-linux-wine-runtime-stack-source.json" ]]; then
+  export KONYAK_LINUX_WINE_STACK_MANIFEST="$KONYAK_BUNDLE_RESOURCES/konyak-linux-wine-runtime-stack-source.json"
+fi
+if [[ -f "$KONYAK_BUNDLE_RESOURCES/konyak-linux-wine-runtime-stack-source.json.sig" ]]; then
+  export KONYAK_LINUX_WINE_STACK_SIGNATURE_URL="$KONYAK_BUNDLE_RESOURCES/konyak-linux-wine-runtime-stack-source.json.sig"
+fi
 if [[ -f "$KONYAK_BUNDLE_RESOURCES/konyak-runtime-stack-public-key.pem" ]]; then
   export KONYAK_RUNTIME_STACK_PUBLIC_KEY_PATH="$KONYAK_BUNDLE_RESOURCES/konyak-runtime-stack-public-key.pem"
+  export KONYAK_LINUX_WINE_STACK_PUBLIC_KEY_PATH="$KONYAK_BUNDLE_RESOURCES/konyak-runtime-stack-public-key.pem"
 fi
 if [[ -n "${APPIMAGE:-}" ]]; then
   export KONYAK_APPIMAGE_PATH="$APPIMAGE"
@@ -201,15 +248,6 @@ if [[ ! -x "$tool_path" ]]; then
   chmod 755 "$tool_path"
 fi
 
-rm -f \
-  "$appimage_path" \
-  "$checksum_path" \
-  "$checksums_path" \
-  "$metadata_path" \
-  "$notes_path" \
-  "$runtime_stack_manifest_path" \
-  "$runtime_stack_signature_path" \
-  "$runtime_stack_public_key_path"
 echo "Building AppImage..."
 env -u SOURCE_DATE_EPOCH \
   ARCH="$appimage_arch" \
@@ -223,28 +261,12 @@ cp "$checksum_path" "$checksums_path"
 runtime_stack_metadata_manifest=""
 runtime_stack_metadata_signature=""
 runtime_stack_metadata_public_key=""
-if [[ -n "$runtime_stack_manifest_source" ]]; then
-  cp "$runtime_stack_manifest_source" "$runtime_stack_manifest_path"
-  jq -e '
-    .schemaVersion == 1 and
-    .runtimeId == "konyak-linux-wine" and
-    .stackId == "linux-wine-runtime-stack" and
-    (.components | type) == "array" and
-    (.components | length) > 0
-  ' "$runtime_stack_manifest_path" >/dev/null
-
-  runtime_stack_metadata_manifest="$(basename "$runtime_stack_manifest_path")"
-  if [[ -n "$runtime_stack_signing_key_base64" ]]; then
-    signing_key_path="$release_root/runtime-stack-signing-key.pem"
-    base64 -d <<<"$runtime_stack_signing_key_base64" >"$signing_key_path"
-    openssl dgst -sha256 -sign "$signing_key_path" -out "$runtime_stack_signature_path" "$runtime_stack_manifest_path"
-    rm -f "$signing_key_path"
-    runtime_stack_metadata_signature="$(basename "$runtime_stack_signature_path")"
-  fi
-  if [[ -n "$runtime_stack_public_key_text" ]]; then
-    printf '%s\n' "$runtime_stack_public_key_text" >"$runtime_stack_public_key_path"
-    runtime_stack_metadata_public_key="$(basename "$runtime_stack_public_key_path")"
-  fi
+runtime_stack_metadata_manifest="$(basename "$runtime_stack_manifest_path")"
+if [[ -f "$runtime_stack_signature_path" ]]; then
+  runtime_stack_metadata_signature="$(basename "$runtime_stack_signature_path")"
+fi
+if [[ -f "$runtime_stack_public_key_path" ]]; then
+  runtime_stack_metadata_public_key="$(basename "$runtime_stack_public_key_path")"
 fi
 
 jq -n \
@@ -285,15 +307,13 @@ jq -n \
   printf "\`\`\`text\n"
   cat "$checksums_path"
   printf "\`\`\`\n"
-  if [[ -n "$runtime_stack_manifest_source" ]]; then
-    printf "\n## Linux Runtime Stack\n\n"
-    printf -- "- Source manifest: \`%s\`\n" "$(basename "$runtime_stack_manifest_path")"
-    if [[ -n "$runtime_stack_signing_key_base64" ]]; then
-      printf -- "- Signature: \`%s\`\n" "$(basename "$runtime_stack_signature_path")"
-    fi
-    if [[ -n "$runtime_stack_public_key_text" ]]; then
-      printf -- "- Public key: \`%s\`\n" "$(basename "$runtime_stack_public_key_path")"
-    fi
+  printf "\n## Linux Runtime Stack\n\n"
+  printf -- "- Source manifest: \`%s\`\n" "$(basename "$runtime_stack_manifest_path")"
+  if [[ -f "$runtime_stack_signature_path" ]]; then
+    printf -- "- Signature: \`%s\`\n" "$(basename "$runtime_stack_signature_path")"
+  fi
+  if [[ -f "$runtime_stack_public_key_path" ]]; then
+    printf -- "- Public key: \`%s\`\n" "$(basename "$runtime_stack_public_key_path")"
   fi
 } >"$notes_path"
 
@@ -302,9 +322,10 @@ echo "  $appimage_path"
 echo "  $checksum_path"
 echo "  $metadata_path"
 echo "  $notes_path"
-if [[ -n "$runtime_stack_manifest_source" ]]; then
-  echo "  $runtime_stack_manifest_path"
+echo "  $runtime_stack_manifest_path"
+if [[ -f "$runtime_stack_signature_path" ]]; then
+  echo "  $runtime_stack_signature_path"
 fi
-if [[ -n "$runtime_stack_public_key_text" ]]; then
+if [[ -f "$runtime_stack_public_key_path" ]]; then
   echo "  $runtime_stack_public_key_path"
 fi

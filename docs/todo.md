@@ -673,5 +673,15 @@ task changes scope.
 - Publication and signing of the default Linux runtime stack manifest and
   public key, once the Linux runtime packaging owner produces complete stack
   artifacts outside the parent repository.
+  - [x] Add the parent-repository Linux runtime release locator and shared
+    source-manifest resolver so development preparation and AppImage release
+    builds consume the same complete manifest contract.
+  - [x] Bundle the resolved Linux source manifest into AppImage release builds
+    and export the existing CLI manifest/signature/public-key environment
+    variables from `AppRun`.
+  - [x] Add Linux release metadata and AppRun environment smoke checks to the
+    release workflow.
+  - [ ] Publish a complete signed default Linux runtime stack source manifest
+    and public key from the Linux runtime packaging owner.
 - Removal of any remaining bootstrap Wine-only fallback only after each target
   platform has a complete default runtime stack manifest as its release input.

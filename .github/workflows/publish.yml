@@ -24,6 +24,12 @@ jobs:
       - name: Build Linux release artifact
         run: nix run .#linux-release
 
+      - name: Smoke Linux release metadata
+        run: nix develop -c zsh -lc './scripts/smoke_linux_release_metadata.zsh'
+
+      - name: Smoke Linux AppImage AppRun runtime environment
+        run: nix develop -c zsh -lc './scripts/smoke_linux_appimage_apprun_env.zsh'
+
       - uses: actions/upload-artifact@v4
         with:
           name: konyak-linux-release
@@ -34,6 +40,7 @@ jobs:
             .dart_tool/konyak/release/linux/SHA256SUMS
             .dart_tool/konyak/release/linux/release-notes.md
             .dart_tool/konyak/release/linux/konyak-linux-wine-runtime-stack-source.json
+            .dart_tool/konyak/release/linux/konyak-linux-wine-runtime-stack-source.json.sig
             .dart_tool/konyak/release/linux/konyak-runtime-stack-public-key.pem
           if-no-files-found: ignore
 
@@ -54,6 +61,7 @@ jobs:
           )
           optional_assets=(
             "$release_dir"/konyak-linux-wine-runtime-stack-source.json
+            "$release_dir"/konyak-linux-wine-runtime-stack-source.json.sig
             "$release_dir"/konyak-runtime-stack-public-key.pem
           )
           for optional_asset in "${optional_assets[@]}"; do

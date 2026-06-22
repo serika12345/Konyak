@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "repository": "serika12345/konyak-linux-runtime",
+  "defaultReleaseTag": "linux-wine-runtime-stack-0.1.0",
+  "sourceManifestFileName": "konyak-linux-wine-runtime-stack-source.json",
+  "sourceManifestSignatureFileName": "konyak-linux-wine-runtime-stack-source.json.sig",
+  "publicKeyFileName": "konyak-runtime-stack-public-key.pem"
+}

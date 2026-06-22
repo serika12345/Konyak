@@ -172,28 +172,36 @@ component and migrates older overlay imports into that component layout.
 Development runtime preparation follows the same manifest-only boundary.
 `scripts/prepare_macos_dev_runtime_stack.zsh` resolves a complete source
 manifest produced by `runtime/konyak-macos-runtime` or an explicitly supplied
-complete manifest. `scripts/prepare_linux_dev_runtime_source.zsh` validates and
-caches an explicitly supplied complete Linux source manifest from
-`KONYAK_DEV_LINUX_WINE_STACK_SOURCE_MANIFEST`. Neither script creates component
-archives or overlays runtime files in the parent repository.
+complete manifest. `scripts/prepare_linux_dev_runtime_source.zsh` resolves the
+default complete Linux source manifest from `runtime/linux-wine-release.json`
+or an explicitly supplied complete source manifest from
+`KONYAK_DEV_LINUX_WINE_STACK_SOURCE_MANIFEST`, then validates and caches it.
+Neither script creates component archives or overlays runtime files in the
+parent repository.
 
 Linux runtime construction now follows the same pattern through
 `install-linux-wine`. A managed Linux stack may layer `vkd3d-proton` component
 archives onto the base Wine runtime, or resolve a Linux runtime stack source
 manifest that lists those archives and checksums.
 
-Linux AppImage release builds can now publish that default source manifest and
-the corresponding public key alongside the AppImage itself. When
-`KONYAK_RUNTIME_STACK_SOURCE_MANIFEST` points at a valid Linux source manifest,
-`scripts/build_linux_release.zsh` copies it into the release directory as
-`konyak-linux-wine-runtime-stack-source.json`. If
-`KONYAK_RUNTIME_STACK_SIGNING_KEY_BASE64` is also set, the build emits a
-detached signature as `konyak-linux-wine-runtime-stack-source.json.sig`. If
-`KONYAK_RUNTIME_STACK_PUBLIC_KEY` is also set, the build emits
-`konyak-runtime-stack-public-key.pem` and references both files from the
-generated `.release.json` metadata. AppImage builds also bundle that public key
-under `usr/share/konyak` and export `KONYAK_RUNTIME_STACK_PUBLIC_KEY_PATH` from
-`AppRun` so the CLI can verify signed manifest updates at runtime.
+Linux AppImage release builds now resolve the same default source manifest from
+`runtime/linux-wine-release.json`, unless `KONYAK_RUNTIME_STACK_SOURCE_MANIFEST`
+points at a specific valid Linux source manifest. `scripts/build_linux_release.zsh`
+copies the resolved manifest into the release directory as
+`konyak-linux-wine-runtime-stack-source.json`, bundles it under
+`usr/share/konyak`, and exports `KONYAK_LINUX_WINE_STACK_MANIFEST` from
+`AppRun` so the Settings runtime install action reaches the same source.
+
+If the selected runtime release publishes
+`konyak-linux-wine-runtime-stack-source.json.sig`, or
+`KONYAK_RUNTIME_STACK_SIGNING_KEY_BASE64` is set, the build emits and bundles a
+detached signature as `konyak-linux-wine-runtime-stack-source.json.sig` and
+exports `KONYAK_LINUX_WINE_STACK_SIGNATURE_URL` from `AppRun`. If the selected
+runtime release publishes `konyak-runtime-stack-public-key.pem`, or
+`KONYAK_RUNTIME_STACK_PUBLIC_KEY` is set, the build emits and bundles
+`konyak-runtime-stack-public-key.pem`, then exports
+`KONYAK_RUNTIME_STACK_PUBLIC_KEY_PATH` and
+`KONYAK_LINUX_WINE_STACK_PUBLIC_KEY_PATH` for runtime verifier use.
 
 The release secret handoff for signed default Konyak runtime stack manifests is
 documented in `docs/release.md`. Linux default full-stack manifest publication
