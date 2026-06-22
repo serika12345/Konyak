@@ -155,6 +155,15 @@ assert_runtime_backend_available() {
 }
 
 manifest_path="${KONYAK_DEV_LINUX_WINE_STACK_MANIFEST:-${KONYAK_LINUX_WINE_STACK_MANIFEST:-}}"
+default_dev_manifest="$repo_root/.dart_tool/konyak/dev-runtime-source/linux-wine-stack/konyak-linux-wine-runtime-stack-source.json"
+if [[ -n "$manifest_path" && "$manifest_path" != http://* && "$manifest_path" != https://* && ! -f "$manifest_path" ]]; then
+  if [[ "$manifest_path" == "$default_dev_manifest" ]]; then
+    manifest_path=""
+  else
+    echo "Configured Linux runtime source manifest does not exist: $manifest_path" >&2
+    exit 66
+  fi
+fi
 if [[ -z "$manifest_path" ]]; then
   manifest_path="$("$repo_root/scripts/prepare_linux_dev_runtime_source.zsh" \
     --force \

@@ -41,6 +41,10 @@ handoff notes.
   - Updated the Linux runtime CLI smoke workflow so normal PR/push runs use the
     default remote locator when no override input or repository variable is
     supplied.
+  - Fixed the Linux runtime CLI smoke script so an unmaterialized default
+    development manifest path from the Nix dev shell falls back to resolving
+    the default remote source manifest. This matches GitHub Actions' clean
+    workspace behavior while still failing explicit missing manifest paths.
 - Remaining:
   - The initial Linux runtime submodule is deliberately minimal. It stages and
     republishes a proven manifest/component set, but does not yet build all
@@ -65,6 +69,15 @@ handoff notes.
   - `nix develop -c zsh -lc 'just verify-safety'`: passed.
   - `nix develop -c zsh -lc 'just format-check'`: passed.
   - `nix develop -c zsh -lc 'just lint'`: passed.
+  - First GitHub Actions run
+    `https://github.com/serika12345/Konyak/actions/runs/27958353880` reached
+    the new Linux Runtime CLI Smoke job and failed because the dev-shell
+    default `KONYAK_DEV_LINUX_WINE_STACK_MANIFEST` path was not materialized in
+    the clean CI workspace.
+  - `nix develop -c zsh -lc 'rm -rf .dart_tool/konyak/dev-runtime-source/linux-wine-stack .dart_tool/konyak/linux-runtime-cli-smoke-ci-proof; KONYAK_DEV_LINUX_WINE_STACK_MANIFEST="$PWD/.dart_tool/konyak/dev-runtime-source/linux-wine-stack/konyak-linux-wine-runtime-stack-source.json" KONYAK_LINUX_RUNTIME_CLI_SMOKE_WORK_ROOT="$PWD/.dart_tool/konyak/linux-runtime-cli-smoke-ci-proof" ./scripts/run_linux_runtime_cli_smoke.zsh'`:
+    passed after the smoke script fallback fix.
+  - `nix develop -c zsh -lc 'zsh -n scripts/run_linux_runtime_cli_smoke.zsh && git diff --check'`:
+    passed.
 
 - Timestamp: 2026-06-22 20:46 JST
 - State: `completed`
