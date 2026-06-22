@@ -11,6 +11,46 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-22 20:46 JST
+- State: `completed`
+- Branch: `main`
+- Related work: Linux runtime CLI smoke real-run proof
+- Purpose: prove the Linux runtime installation and release packaging paths
+  with a real complete source manifest instead of fake packaging fixtures.
+- Completed:
+  - Located the local complete Linux source manifest at
+    `.dart_tool/konyak/dev-runtime-source/linux-wine-stack/konyak-linux-wine-runtime-stack-source.json`.
+  - Confirmed the manifest includes `wine`, `winetricks`, `wine-mono`, `dxvk`,
+    and `vkd3d-proton`; local component archive checksums match the manifest.
+  - Ran `scripts/run_linux_runtime_cli_smoke.zsh` with install enabled through
+    the public CLI path. The smoke installed the runtime, verified
+    `list-runtimes`, `validate-runtime`, prefix creation, Winetricks verb
+    listing, and `run-winetricks ci-prefix-smoke --verb win10 --json`.
+  - Built the Linux AppImage through `nix run .#linux-release` using the same
+    manifest as `KONYAK_RUNTIME_STACK_SOURCE_MANIFEST`.
+  - Confirmed the produced release metadata references
+    `konyak-linux-wine-runtime-stack-source.json`, and the Linux release
+    metadata/AppRun environment smokes pass.
+- Remaining:
+  - The repository default release locator in `runtime/linux-wine-release.json`
+    still points at a GitHub release asset that has not been published yet, so
+    default release builds without an explicit manifest still require the
+    Linux runtime packaging owner to publish the default manifest/signature/key.
+- Next: publish the complete Linux runtime source manifest and optional
+  signature/public key to the default Linux runtime release, then rerun the
+  same commands without `KONYAK_RUNTIME_STACK_SOURCE_MANIFEST`.
+- Verification:
+  - `nix develop -c zsh -lc 'sha256sum .dart_tool/konyak/dev-runtime-source/linux-wine-stack/components/*.tar.xz'`:
+    passed for the local `winetricks`, `wine-mono`, `dxvk`, and
+    `vkd3d-proton` component archives referenced by the manifest.
+  - `nix develop -c zsh -lc 'KONYAK_DEV_LINUX_WINE_STACK_SOURCE_MANIFEST="$PWD/.dart_tool/konyak/dev-runtime-source/linux-wine-stack/konyak-linux-wine-runtime-stack-source.json" KONYAK_LINUX_RUNTIME_CLI_SMOKE_WORK_ROOT="$PWD/.dart_tool/konyak/linux-runtime-cli-smoke-real" ./scripts/run_linux_runtime_cli_smoke.zsh'`:
+    passed.
+  - `nix develop -c zsh -lc 'KONYAK_RUNTIME_STACK_SOURCE_MANIFEST="$PWD/.dart_tool/konyak/dev-runtime-source/linux-wine-stack/konyak-linux-wine-runtime-stack-source.json" nix run .#linux-release'`:
+    passed and produced
+    `.dart_tool/konyak/release/linux/Konyak-1.0.0-linux-x86_64.AppImage`.
+  - `nix develop -c zsh -lc './scripts/smoke_linux_release_metadata.zsh && ./scripts/smoke_linux_appimage_apprun_env.zsh'`:
+    passed.
+
 - Timestamp: 2026-06-22 20:38 JST
 - State: `completed`
 - Branch: `main`
