@@ -579,6 +579,11 @@ task changes scope.
   - [x] Split Flake packages by release build, verification/workflow, host
     runtime support, and development runtime source roles; remove unused
     convenience/archive tools from the dev shell.
+  - [x] Add the minimal `runtime/konyak-linux-runtime` submodule and publish
+    the default Linux runtime source manifest, signature, public key, and
+    component archives under `linux-wine-runtime-stack-0.1.0` so development,
+    CI, AppImage packaging, and runtime installation can use the same remote
+    source-manifest contract.
 - Required tests for the rework.
   - [x] Linux install repairs an incomplete runtime when required components are
     missing even if `bin/wine` exists.

@@ -806,6 +806,8 @@ def main() -> None:
         "publicKeyFileName",
     ]:
         require_contains("runtime/linux-wine-release.json", expected)
+    require_contains(".gitmodules", "runtime/konyak-linux-runtime")
+    require_contains(".gitmodules", "serika12345/konyak-linux-runtime")
     require_contains("docs/todo.md", "Runtimes/macos-wine/bin/wineloader")
     require_contains("docs/todo.md", "Drop live external plist metadata")
     for expected in [
@@ -952,6 +954,10 @@ def main() -> None:
         "KONYAK_DEV_LINUX_WINE_STACK_SOURCE_MANIFEST",
     ]:
         require_contains(".github/workflows/linux-runtime-cli-smoke.yml", expected)
+    require_not_contains(
+        ".github/workflows/linux-runtime-cli-smoke.yml",
+        "vars.KONYAK_DEV_LINUX_WINE_STACK_SOURCE_MANIFEST != ''",
+    )
     require_contains("justfile", "linux-runtime-cli-smoke:")
     require_not_contains("scripts/prepare_linux_dev_runtime_source.zsh", "winetricks list-all")
     require_not_contains("scripts/prepare_linux_dev_runtime_source.zsh", "/nix/store")

@@ -11,6 +11,61 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-22 23:01 JST
+- State: `completed`
+- Branch: `main`
+- Related work: Linux runtime submodule and remote install
+- Purpose: create the minimal Linux runtime submodule, publish the default
+  remote runtime manifest/assets, and prove Konyak can install from the default
+  remote locator without an explicit local manifest override.
+- Completed:
+  - Created `serika12345/konyak-linux-runtime` and added it as
+    `runtime/konyak-linux-runtime`.
+  - Added minimal submodule release tooling that stages a complete Linux
+    runtime source manifest, rewrites local component archive paths to GitHub
+    Release asset URLs, validates checksums, and signs the staged manifest.
+  - Pushed submodule commit `7e6dd4f Add initial Linux runtime release
+    tooling`.
+  - Published
+    `https://github.com/serika12345/konyak-linux-runtime/releases/tag/linux-wine-runtime-stack-0.1.0`
+    with the default manifest, signature, public key, and `winetricks`,
+    `wine-mono`, `dxvk`, and `vkd3d-proton` component archives.
+  - Confirmed the parent default resolver downloads the remote manifest when
+    local development manifest overrides are unset.
+  - Confirmed `scripts/run_linux_runtime_cli_smoke.zsh` installs and validates
+    the runtime from the default remote locator when local development manifest
+    overrides are unset.
+  - Confirmed `nix run .#linux-release` downloads the default remote manifest,
+    signature, and public key, then bundles them into the AppImage release
+    output.
+  - Updated the Linux runtime CLI smoke workflow so normal PR/push runs use the
+    default remote locator when no override input or repository variable is
+    supplied.
+- Remaining:
+  - The initial Linux runtime submodule is deliberately minimal. It stages and
+    republishes a proven manifest/component set, but does not yet build all
+    Linux components from pinned source recipes in submodule CI.
+  - The Wine archive remains referenced from the upstream Kron4ek release
+    rather than mirrored into the Konyak Linux runtime release.
+- Next: add submodule-side Linux component build/check workflows before the
+  next runtime version bump.
+- Verification:
+  - `nix develop -c zsh -lc 'cd runtime/konyak-linux-runtime && zsh -n scripts/stage-release.zsh && openssl dgst -sha256 -verify releases/linux-wine-runtime-stack-0.1.0/konyak-runtime-stack-public-key.pem -signature releases/linux-wine-runtime-stack-0.1.0/konyak-linux-wine-runtime-stack-source.json.sig releases/linux-wine-runtime-stack-0.1.0/konyak-linux-wine-runtime-stack-source.json && git diff --cached --check'`:
+    passed before the submodule commit.
+  - `nix develop -c zsh -lc 'unset KONYAK_DEV_LINUX_WINE_STACK_MANIFEST KONYAK_DEV_LINUX_WINE_STACK_SOURCE_MANIFEST KONYAK_LINUX_WINE_STACK_MANIFEST KONYAK_RUNTIME_STACK_SOURCE_MANIFEST; rm -rf .dart_tool/konyak/remote-linux-runtime-proof; KONYAK_DEV_LINUX_WINE_STACK_MANIFEST_CACHE="$PWD/.dart_tool/konyak/remote-linux-runtime-proof/konyak-linux-wine-runtime-stack-source.json" ./scripts/prepare_linux_dev_runtime_source.zsh --force --print-manifest-path && jq -r ".components[].archiveUrl" .dart_tool/konyak/remote-linux-runtime-proof/konyak-linux-wine-runtime-stack-source.json'`:
+    passed and showed the default GitHub Release component URLs.
+  - `nix develop -c zsh -lc 'unset KONYAK_DEV_LINUX_WINE_STACK_MANIFEST KONYAK_DEV_LINUX_WINE_STACK_SOURCE_MANIFEST KONYAK_LINUX_WINE_STACK_MANIFEST KONYAK_RUNTIME_STACK_SOURCE_MANIFEST KONYAK_LINUX_WINE_HOME; KONYAK_LINUX_RUNTIME_CLI_SMOKE_WORK_ROOT="$PWD/.dart_tool/konyak/linux-runtime-cli-smoke-remote" ./scripts/run_linux_runtime_cli_smoke.zsh'`:
+    passed.
+  - `nix develop -c zsh -lc 'unset KONYAK_DEV_LINUX_WINE_STACK_MANIFEST KONYAK_DEV_LINUX_WINE_STACK_SOURCE_MANIFEST KONYAK_LINUX_WINE_STACK_MANIFEST KONYAK_RUNTIME_STACK_SOURCE_MANIFEST KONYAK_RUNTIME_STACK_SOURCE_SIGNATURE KONYAK_RUNTIME_STACK_PUBLIC_KEY_PATH KONYAK_LINUX_WINE_HOME; nix run .#linux-release'`:
+    passed and produced
+    `.dart_tool/konyak/release/linux/Konyak-1.0.0-linux-x86_64.AppImage`.
+  - `nix develop -c zsh -lc './scripts/smoke_linux_release_metadata.zsh && ./scripts/smoke_linux_appimage_apprun_env.zsh && openssl dgst -sha256 -verify .dart_tool/konyak/release/linux/konyak-runtime-stack-public-key.pem -signature .dart_tool/konyak/release/linux/konyak-linux-wine-runtime-stack-source.json.sig .dart_tool/konyak/release/linux/konyak-linux-wine-runtime-stack-source.json'`:
+    passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+
 - Timestamp: 2026-06-22 20:46 JST
 - State: `completed`
 - Branch: `main`

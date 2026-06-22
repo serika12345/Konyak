@@ -7,6 +7,7 @@ on:
       - flake.lock
       - flake.nix
       - packages/konyak_cli/**
+      - runtime/konyak-linux-runtime
       - runtime/linux-wine-release.json
       - scripts/prepare_linux_dev_runtime_source.zsh
       - scripts/resolve_linux_runtime_source_manifest.zsh
@@ -19,6 +20,7 @@ on:
       - flake.lock
       - flake.nix
       - packages/konyak_cli/**
+      - runtime/konyak-linux-runtime
       - runtime/linux-wine-release.json
       - scripts/prepare_linux_dev_runtime_source.zsh
       - scripts/resolve_linux_runtime_source_manifest.zsh
@@ -35,7 +37,6 @@ jobs:
     name: Published runtime CLI smoke
     runs-on: ubuntu-24.04
     timeout-minutes: 45
-    if: ${{ (github.event_name == 'workflow_dispatch' && inputs.source_manifest != '') || vars.KONYAK_DEV_LINUX_WINE_STACK_SOURCE_MANIFEST != '' }}
     env:
       KONYAK_DEV_LINUX_WINE_STACK_SOURCE_MANIFEST: ${{ (github.event_name == 'workflow_dispatch' && inputs.source_manifest) || vars.KONYAK_DEV_LINUX_WINE_STACK_SOURCE_MANIFEST }}
     steps:
