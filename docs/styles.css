@@ -258,72 +258,58 @@ h1 {
 
 .section-heading p:not(.eyebrow),
 .download-band p,
-.feature-tile p,
+.screenshot-showcase p,
 .platform-columns p,
 .workflow-steps p {
   color: var(--muted);
   line-height: 1.55;
 }
 
-.feature-grid {
+.screenshot-showcase {
+  background: #fff;
+}
+
+.screenshot-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px;
-  background: var(--soft);
 }
 
-.feature-grid .section-heading {
-  grid-column: 1 / -1;
-}
-
-.feature-tile {
-  min-height: 310px;
-  padding: 34px;
-  border: 1px solid rgba(255, 255, 255, 0.72);
+.screenshot-card {
+  min-width: 0;
+  margin: 0;
+  padding: 10px;
+  border: 1px solid var(--line);
   border-radius: var(--radius);
-  background: var(--panel);
+  background: #f7f7f9;
   box-shadow: 0 18px 60px rgba(30, 38, 54, 0.08);
 }
 
-.feature-tile.large {
-  min-height: 430px;
-  grid-row: span 2;
-  background:
-    linear-gradient(150deg, rgba(255, 134, 26, 0.18), rgba(255, 255, 255, 0.86)),
-    #fff;
+.screenshot-card-wide {
+  grid-column: 1 / -1;
 }
 
-.feature-tile h3,
+.screenshot-card img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 6px;
+  background: #242424;
+}
+
+.screenshot-card figcaption {
+  padding: 12px 4px 2px;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 650;
+}
+
 .platform-columns h3,
 .workflow-steps h3 {
   margin-bottom: 10px;
   font-size: 28px;
   line-height: 1.08;
   letter-spacing: 0;
-}
-
-.feature-tile p {
-  max-width: 560px;
-}
-
-.mini-list {
-  display: grid;
-  gap: 14px;
-  margin-top: 58px;
-}
-
-.mini-list span {
-  height: 48px;
-  border-radius: var(--radius);
-  background: rgba(16, 17, 20, 0.08);
-}
-
-.mini-list span:nth-child(2) {
-  width: 86%;
-}
-
-.mini-list span:nth-child(3) {
-  width: 62%;
 }
 
 .platform-section {
@@ -456,7 +442,7 @@ h1 {
     font-size: 19px;
   }
 
-  .feature-grid,
+  .screenshot-grid,
   .platform-columns,
   .workflow-steps,
   .download-band {
@@ -464,9 +450,6 @@ h1 {
     grid-template-columns: 1fr;
   }
 
-  .feature-tile.large {
-    min-height: 360px;
-  }
 }
 
 @media (max-width: 560px) {
@@ -517,7 +500,6 @@ h1 {
     margin-top: 24px;
   }
 
-  .feature-tile,
   .platform-columns article,
   .workflow-steps li {
     padding: 24px;
