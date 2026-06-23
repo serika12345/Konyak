@@ -69,6 +69,9 @@ cat >"\$sentinel" <<JSON
   "bundleResources": "\$(json_escape "\${KONYAK_BUNDLE_RESOURCES:-}")",
   "appExecutable": "\$(json_escape "\${KONYAK_APP_EXECUTABLE:-}")",
   "appImagePath": "\$(json_escape "\${KONYAK_APPIMAGE_PATH:-}")",
+  "appIconPath": "\$(json_escape "\${KONYAK_APP_ICON_PATH:-}")",
+  "argumentCount": "\$#",
+  "firstArgument": "\$(json_escape "\${1:-}")",
   "linuxManifest": "\$(json_escape "\${KONYAK_LINUX_WINE_STACK_MANIFEST:-}")",
   "linuxSignature": "\$(json_escape "\${KONYAK_LINUX_WINE_STACK_SIGNATURE_URL:-}")",
   "runtimePublicKeyPath": "\$(json_escape "\${KONYAK_RUNTIME_STACK_PUBLIC_KEY_PATH:-}")",
@@ -78,7 +81,9 @@ JSON
 EOF
 chmod 755 "$work_appdir/usr/konyak"
 
-APPIMAGE="$work_root/Konyak-smoke.AppImage" "$work_appdir/AppRun" >/dev/null
+fixture_argument="$work_root/fixture setup.exe"
+APPIMAGE="$work_root/Konyak-smoke.AppImage" \
+  "$work_appdir/AppRun" "$fixture_argument" >/dev/null
 
 if [[ ! -f "$sentinel" ]]; then
   echo "AppRun smoke did not execute the app spy." >&2
@@ -89,9 +94,14 @@ jq -e \
   --arg resources_dir "$resources_dir" \
   --arg app_executable "$work_appdir/usr/konyak" \
   --arg appimage_path "$work_root/Konyak-smoke.AppImage" \
+  --arg app_icon_path "$work_appdir/app.konyak.Konyak.png" \
+  --arg fixture_argument "$fixture_argument" \
   '.bundleResources == $resources_dir
     and .appExecutable == $app_executable
     and .appImagePath == $appimage_path
+    and .appIconPath == $app_icon_path
+    and .argumentCount == "1"
+    and .firstArgument == $fixture_argument
     and .linuxManifest == ($resources_dir + "/konyak-linux-wine-runtime-stack-source.json")
     and (
       .linuxSignature == ""

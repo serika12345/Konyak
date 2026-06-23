@@ -1,6 +1,7 @@
 part of '../../konyak_cli.dart';
 
 const _linuxKonyakDesktopEntryId = 'app.konyak.Konyak.desktop';
+const _linuxKonyakIconFileName = 'app.konyak.Konyak.png';
 const _linuxExecutableMimeTypes = <String>[
   'application/x-ms-dos-executable',
   'application/x-msdownload',
@@ -20,10 +21,12 @@ final class _LinuxFileAssociationsInstalled
     extends _LinuxFileAssociationInstallResult {
   const _LinuxFileAssociationsInstalled({
     required this.desktopEntryPath,
+    required this.iconPath,
     required this.mimeAppsPath,
   });
 
   final String desktopEntryPath;
+  final String? iconPath;
   final String mimeAppsPath;
 }
 
@@ -58,15 +61,25 @@ _LinuxFileAssociationInstallResult _installLinuxFileAssociations({
       _linuxApplicationsHome(hostEnvironment),
       [_linuxKonyakDesktopEntryId],
     );
+    final iconSourcePath = _linuxFileAssociationIconSource(hostEnvironment);
+    final iconPath = iconSourcePath == null
+        ? null
+        : _linuxKonyakIconPath(hostEnvironment);
     final mimeAppsPath = _linuxMimeAppsPath(hostEnvironment);
     _writeLinuxFileAssociationFiles(
       desktopEntryPath: desktopEntryPath,
       desktopEntry: _linuxKonyakDesktopEntry(appExecutable: appExecutable),
+      iconSourcePath: iconSourcePath,
+      iconTargetPath: iconPath,
+      iconThemePath: iconPath == null
+          ? null
+          : _linuxKonyakHicolorIconThemePath(hostEnvironment),
       mimeAppsPath: mimeAppsPath,
     );
 
     return _LinuxFileAssociationsInstalled(
       desktopEntryPath: desktopEntryPath,
+      iconPath: iconPath,
       mimeAppsPath: mimeAppsPath,
     );
   } on FileSystemException catch (error) {
@@ -88,6 +101,62 @@ String? _linuxFileAssociationAppExecutable(HostEnvironment environment) {
   }
 
   return null;
+}
+
+String? _linuxFileAssociationIconSource(HostEnvironment environment) {
+  final explicitIconPath = environment.nonEmptyValue('KONYAK_APP_ICON_PATH');
+  if (explicitIconPath != null) {
+    if (!File(explicitIconPath).existsSync()) {
+      throw BottleRepositoryException(
+        'Konyak application icon was not found: $explicitIconPath',
+      );
+    }
+    return explicitIconPath;
+  }
+
+  final appExecutable = environment.nonEmptyValue('KONYAK_APP_EXECUTABLE');
+  if (appExecutable == null) {
+    return null;
+  }
+
+  final executableDirectory = _dirname(appExecutable);
+  final candidates = <String>[
+    _joinPath(executableDirectory, const ['data', 'app_icon_256.png']),
+    _joinPath(executableDirectory, const [
+      'share',
+      'icons',
+      'hicolor',
+      '256x256',
+      'apps',
+      _linuxKonyakIconFileName,
+    ]),
+    _joinPath(_dirname(executableDirectory), const [_linuxKonyakIconFileName]),
+  ];
+
+  for (final candidate in candidates) {
+    if (File(candidate).existsSync()) {
+      return candidate;
+    }
+  }
+
+  return null;
+}
+
+String _linuxKonyakIconPath(HostEnvironment environment) {
+  return _joinPath(_linuxKonyakIconAppsPath(environment), const [
+    _linuxKonyakIconFileName,
+  ]);
+}
+
+String _linuxKonyakIconAppsPath(HostEnvironment environment) {
+  return _joinPath(_linuxKonyakHicolorIconThemePath(environment), const [
+    '256x256',
+    'apps',
+  ]);
+}
+
+String _linuxKonyakHicolorIconThemePath(HostEnvironment environment) {
+  return _joinPath(_linuxDataHome(environment), const ['icons', 'hicolor']);
 }
 
 String _linuxKonyakDesktopEntry({required String appExecutable}) {

@@ -51,6 +51,7 @@ env "${default_runtime_env[@]}" "$repo_root/scripts/build_linux_release.zsh"
 echo "==> Checking Linux release metadata and AppRun runtime environment"
 "$repo_root/scripts/smoke_linux_release_metadata.zsh"
 "$repo_root/scripts/smoke_linux_appimage_apprun_env.zsh"
+"$repo_root/scripts/smoke_linux_desktop_integration.zsh"
 
 echo "==> Verifying bundled Linux runtime source manifest signature"
 for required_file in "$manifest_path" "$signature_path" "$public_key_path"; do

@@ -15,10 +15,25 @@ void defineRepositoryAndRunnerContractTests() {
     final xdgConfigHome = _joinTestPath(tempDirectory.path, const [
       'xdg-config',
     ]);
-    final appExecutable = _joinTestPath(tempDirectory.path, const [
+    final appImage = _joinTestPath(tempDirectory.path, const [
       'Konyak.AppImage',
     ]);
-    File(appExecutable).writeAsStringSync('appimage');
+    final appExecutable = _joinTestPath(tempDirectory.path, const [
+      'extracted-appimage',
+      'usr',
+      'konyak',
+    ]);
+    final appIcon = _joinTestPath(tempDirectory.path, const [
+      'extracted-appimage',
+      'app.konyak.Konyak.png',
+    ]);
+    File(appImage).writeAsStringSync('appimage');
+    File(appExecutable)
+      ..createSync(recursive: true)
+      ..writeAsStringSync('runner');
+    File(appIcon)
+      ..createSync(recursive: true)
+      ..writeAsBytesSync(const [137, 80, 78, 71, 13, 10, 26, 10]);
 
     final result = runCli(
       const ['install-linux-file-associations', '--json'],
@@ -28,7 +43,9 @@ void defineRepositoryAndRunnerContractTests() {
           'HOME': tempDirectory.path,
           'XDG_DATA_HOME': xdgDataHome,
           'XDG_CONFIG_HOME': xdgConfigHome,
+          'KONYAK_APPIMAGE_PATH': appImage,
           'KONYAK_APP_EXECUTABLE': appExecutable,
+          'KONYAK_APP_ICON_PATH': appIcon,
         }),
       ),
     );
@@ -42,7 +59,8 @@ void defineRepositoryAndRunnerContractTests() {
     ]);
     final desktopEntry = File(desktopPath).readAsStringSync();
     expect(desktopEntry, contains('Name=Konyak'));
-    expect(desktopEntry, contains('Exec="$appExecutable" %f'));
+    expect(desktopEntry, contains('Exec="$appImage" %f'));
+    expect(desktopEntry, contains('Icon=app.konyak.Konyak'));
     expect(desktopEntry, contains('MimeType=application/x-ms-dos-executable;'));
     expect(desktopEntry, contains('application/x-msdownload;'));
     expect(
@@ -86,12 +104,21 @@ void defineRepositoryAndRunnerContractTests() {
       contains('application/x-msdos-program=app.konyak.Konyak.desktop'),
     );
     expect(mimeApps, contains('text/x-msdos-batch=app.konyak.Konyak.desktop'));
+    final iconPath = _joinTestPath(xdgDataHome, const [
+      'icons',
+      'hicolor',
+      '256x256',
+      'apps',
+      'app.konyak.Konyak.png',
+    ]);
+    expect(File(iconPath).readAsBytesSync(), File(appIcon).readAsBytesSync());
 
     final payload = jsonDecode(result.stdout) as Map<String, Object?>;
     expect(payload, {
       'schemaVersion': 1,
       'linuxFileAssociations': {
         'desktopEntryPath': desktopPath,
+        'iconPath': iconPath,
         'mimeAppsPath': mimeAppsPath,
         'mimeTypes': [
           'application/x-ms-dos-executable',

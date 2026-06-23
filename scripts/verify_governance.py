@@ -948,6 +948,10 @@ def main() -> None:
         ".github/workflows/publish.yml",
         "smoke_linux_appimage_apprun_env.zsh",
     )
+    require_contains(
+        ".github/workflows/publish.yml",
+        "smoke_linux_desktop_integration.zsh",
+    )
     for expected in [
         "Linux Runtime CLI Smoke",
         "scripts/run_linux_runtime_cli_smoke.zsh",
@@ -960,6 +964,7 @@ def main() -> None:
         "vars.KONYAK_DEV_LINUX_WINE_STACK_SOURCE_MANIFEST != ''",
     )
     require_contains("justfile", "linux-runtime-cli-smoke:")
+    require_contains("justfile", "linux-desktop-integration-smoke:")
     require_contains("justfile", "linux-release-check:")
     for expected in [
         "Konyak: Build Linux AppImage",
@@ -971,6 +976,7 @@ def main() -> None:
     for expected in [
         "KONYAK_LINUX_RELEASE_CHECK_SKIP_RUNTIME_INSTALL",
         "smoke_linux_release_metadata.zsh",
+        "smoke_linux_desktop_integration.zsh",
         "run_linux_runtime_cli_smoke.zsh",
     ]:
         require_contains("scripts/run_linux_release_check.zsh", expected)

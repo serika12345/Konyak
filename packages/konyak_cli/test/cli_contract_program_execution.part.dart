@@ -2920,7 +2920,7 @@ corefonts                Microsoft Core Fonts
         launcher,
         contains(
           'Exec=env "WINEPREFIX=${_expectFound(repository.findBottle('steam')).path}" '
-          '${_joinTestPath(xdgDataHome, const ['konyak', 'Runtimes', 'linux-wine', 'bin', 'wine'])} "$programPath"',
+          '"${_joinTestPath(xdgDataHome, const ['konyak', 'Runtimes', 'linux-wine', 'bin', 'wine'])}" "$programPath"',
         ),
       );
       expect(

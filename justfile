@@ -3,7 +3,7 @@ set shell := ["zsh", "-lc"]
 default:
   just --list
 
-verify: verify-governance verify-architecture format-check lint verify-safety test flutter-linux-loader-check
+verify: verify-governance verify-architecture format-check lint verify-safety test flutter-linux-loader-check linux-desktop-integration-smoke
 
 flutter-pub-get:
   if [ -d apps/konyak ]; then cd apps/konyak && flutter pub get; fi
@@ -67,6 +67,9 @@ diagnose-macos-vulkan-wine:
 
 linux-runtime-cli-smoke:
   zsh scripts/run_linux_runtime_cli_smoke.zsh
+
+linux-desktop-integration-smoke:
+  if [ "$(uname -s)" = "Linux" ]; then zsh scripts/smoke_linux_desktop_integration.zsh; fi
 
 linux-release-check:
   zsh scripts/run_linux_release_check.zsh

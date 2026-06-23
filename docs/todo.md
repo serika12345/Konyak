@@ -509,6 +509,8 @@ task changes scope.
   - [x] Move macOS pinned launcher helpers out of `konyak_cli.dart`.
   - [x] Move Linux desktop launcher and file-association helpers out of
     `konyak_cli.dart`.
+  - [x] Re-sync Linux AppImage desktop entry, launcher icon, and Windows
+    executable MIME associations through the same startup CLI command.
   - [x] Move bottle archive and filesystem replacement helpers out of
     `konyak_cli.dart`.
   - [x] Move low-level JSON, path, and binary helpers out of `konyak_cli.dart`.

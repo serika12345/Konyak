@@ -168,6 +168,11 @@ Map<String, String> _konyakCliChildEnvironment() {
     environment['KONYAK_APPIMAGE_PATH'] = inheritedAppImagePath.trim();
   }
 
+  final inheritedAppIconPath = Platform.environment['KONYAK_APP_ICON_PATH'];
+  if (inheritedAppIconPath != null && inheritedAppIconPath.trim().isNotEmpty) {
+    environment['KONYAK_APP_ICON_PATH'] = inheritedAppIconPath.trim();
+  }
+
   final inheritedAppBundlePath = Platform.environment['KONYAK_APP_BUNDLE_PATH'];
   if (inheritedAppBundlePath != null &&
       inheritedAppBundlePath.trim().isNotEmpty) {

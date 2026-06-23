@@ -226,7 +226,7 @@ String _linuxDesktopEntryExec({
 }) {
   final arguments = request.arguments.map(_desktopEntryQuote).join(' ');
   final buffer = StringBuffer(
-    'env "WINEPREFIX=${bottle.path}" ${request.executable}',
+    'env "WINEPREFIX=${bottle.path}" ${_desktopEntryQuote(request.executable)}',
   );
   if (arguments.isNotEmpty) {
     buffer.write(' ');

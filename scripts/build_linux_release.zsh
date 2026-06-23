@@ -216,6 +216,11 @@ appdir="$(cd "$(dirname "$0")" && pwd -P)"
 export KONYAK_BUNDLE_RESOURCES="$appdir/usr/share/konyak"
 export KONYAK_APP_EXECUTABLE="$appdir/usr/konyak"
 export KONYAK_APP_PID="$$"
+if [[ -f "$appdir/app.konyak.Konyak.png" ]]; then
+  export KONYAK_APP_ICON_PATH="$appdir/app.konyak.Konyak.png"
+elif [[ -f "$appdir/usr/data/app_icon_256.png" ]]; then
+  export KONYAK_APP_ICON_PATH="$appdir/usr/data/app_icon_256.png"
+fi
 if [[ -f "$KONYAK_BUNDLE_RESOURCES/konyak-linux-wine-runtime-stack-source.json" ]]; then
   export KONYAK_LINUX_WINE_STACK_MANIFEST="$KONYAK_BUNDLE_RESOURCES/konyak-linux-wine-runtime-stack-source.json"
 fi
@@ -235,7 +240,7 @@ chmod 755 "$appdir_root/AppRun"
 
 cp "$usr_root/share/applications/${app_id}.desktop" "$appdir_desktop"
 sed -i \
-  -e 's/^Exec=.*/Exec=AppRun/' \
+  -e 's/^Exec=.*/Exec=AppRun %f/' \
   -e "s/^Icon=.*/Icon=${app_id}/" \
   "$appdir_desktop"
 

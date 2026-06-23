@@ -120,8 +120,9 @@ Tasks: Run Task -> Konyak: Build Linux AppImage + Runtime Install Smoke
 ```
 
 CI keeps this coverage split into rerunnable pieces: the release workflow
-builds the Linux AppImage and runs the release metadata/AppRun smokes, while
-the Linux Runtime CLI Smoke workflow verifies the remote runtime install path.
+builds the Linux AppImage and runs the release metadata/AppRun and Linux
+desktop integration smokes, while the Linux Runtime CLI Smoke workflow verifies
+the remote runtime install path.
 
 Outputs are written under `.dart_tool/konyak/release/linux`:
 
@@ -149,12 +150,25 @@ The Flutter app is built with:
 At AppImage runtime, `AppRun` exports:
 
 - `KONYAK_BUNDLE_RESOURCES=$APPDIR/usr/share/konyak`
+- `KONYAK_APP_EXECUTABLE=$APPDIR/usr/konyak`
 - `KONYAK_APPIMAGE_PATH=$APPIMAGE`
+- `KONYAK_APP_ICON_PATH=$APPDIR/app.konyak.Konyak.png` when the AppDir icon is
+  present
 - `KONYAK_APP_PID=<running Flutter process pid>`
 
 This lets packaged builds invoke the bundled CLI directly from the AppImage and
 lets Linux app updates hand off to a background replacement script that
 terminates the running app, swaps in the verified AppImage, and relaunches it.
+
+On Linux startup, the Flutter app runs `install-linux-file-associations --json`
+through the bundled CLI. That command rewrites the user-level desktop entry at
+`$XDG_DATA_HOME/applications/app.konyak.Konyak.desktop` (or
+`~/.local/share/applications/app.konyak.Konyak.desktop`), copies the Konyak icon
+to the user hicolor icon theme, updates `.exe` and related Windows executable
+MIME defaults in `$XDG_CONFIG_HOME/mimeapps.list` (or `~/.config/mimeapps.list`),
+and refreshes desktop/icon caches when the host provides the standard tools. If
+the user moves the AppImage, launching Konyak once from the new location
+re-synchronizes the desktop entry `Exec=` path.
 
 The Flutter app is built with:
 

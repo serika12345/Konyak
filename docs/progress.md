@@ -11,6 +11,65 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-23 13:04 JST
+- State: `completed`
+- Branch: `main`
+- Related work: Linux AppImage desktop integration
+- Purpose: make Konyak own the Linux AppImage desktop integration path so
+  users only need to launch the AppImage, after which Konyak re-syncs the
+  launcher entry, application icon, and Windows executable MIME defaults.
+- Completed:
+  - Extended the Linux startup CLI integration command to copy the Konyak icon
+    into the user hicolor icon theme, update the user-level desktop entry, and
+    refresh desktop/icon caches when the host tools are available.
+  - Preserved AppImage relocation behavior by preferring
+    `KONYAK_APPIMAGE_PATH` for the registered desktop entry `Exec=` path, and
+    added a maintained isolated XDG smoke that registers one AppImage path,
+    re-registers a moved path, and asserts the desktop entry updates.
+  - Added `KONYAK_APP_ICON_PATH` propagation from AppRun through Flutter to the
+    CLI, and changed the AppDir desktop entry to `Exec=AppRun %f` so file
+    arguments are preserved when desktop environments consume the embedded
+    entry.
+  - Quoted Linux-generated external program launcher executables so runtime
+    paths with spaces do not break generated `.desktop` launchers.
+  - Wired `scripts/smoke_linux_desktop_integration.zsh` into `just verify`,
+    `just linux-release-check`, and the Linux release workflow.
+  - Updated release/TODO documentation and governance checks for the new
+    Linux desktop integration smoke coverage.
+- Remaining:
+  - Nautilus still will not reliably show the AppImage file itself with the
+    embedded icon unless a desktop integration/thumbnailer tool is present;
+    this change covers launcher registration, Konyak app icon resolution, and
+    `.exe` default handling after Konyak is launched.
+- Next: place the AppImage at the desired user location, launch it once, then
+  `.exe` opening and the app launcher should use that path until the AppImage
+  is moved and launched again.
+- Verification:
+  - Sub-agent audit checked the Linux AppImage desktop integration path and
+    identified the embedded desktop `Exec=AppRun` argument gap and launcher
+    quoting risk.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "install-linux-file-associations --json writes XDG MIME associations"'`:
+    failed before implementation because no icon was copied, then passed after
+    the integration changes.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "run-program --json on Linux writes a desktop launcher for external executables"'`:
+    failed before implementation because the generated Wine executable path was
+    unquoted, then passed after quoting it.
+  - `nix develop -c zsh -lc './scripts/smoke_linux_desktop_integration.zsh'`:
+    passed and verified desktop entry, icon, `mimeapps.list`, `xdg-mime`, and
+    relocation re-sync behavior in an isolated XDG home.
+  - `nix develop -c zsh -lc 'just linux-release-check'`: passed. It rebuilt
+    the AppImage, verified release metadata, AppRun environment and argument
+    forwarding, desktop integration, bundled runtime manifest signature, and
+    Linux runtime install through the public CLI smoke.
+  - `nix develop -c zsh -lc 'just cli-test'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-format-check && just flutter-analyze && just flutter-test'`:
+    passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed after replacing a
+    collection-if JSON payload field with a helper.
+
 - Timestamp: 2026-06-23 00:38 JST
 - State: `completed`
 - Branch: `main`
