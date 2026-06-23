@@ -11,6 +11,37 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-23 20:35 JST
+- State: `completed`
+- Branch: `main`
+- Related work: Linux About dialog layout fix
+- Purpose: fix the Linux About dialog so `MIT License` is shown in the normal
+  body flow after the remaining runtime-license note.
+- Completed:
+  - Replaced the default `showAboutDialog` layout with a Konyak-owned
+    `AlertDialog` body that keeps the icon/title header, runtime-license note,
+    and `MIT License` in a stable vertical order.
+  - Removed stale `Linux preview` and product-description expectations from
+    the About dialog widget test after the dialog copy was trimmed.
+  - Kept the `View licenses` action by dispatching to Flutter's license page.
+  - Added widget coverage asserting the license line appears after the
+    runtime-license note.
+- Remaining:
+  - None.
+- Next: visually confirm the About dialog in the running Linux app if desired.
+- Verification:
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "Linux screen menu exposes the about dialog"'`:
+    failed before implementation because `MIT License` was positioned above
+    the runtime-license note, then passed after the custom dialog layout.
+  - `nix develop -c zsh -lc 'just flutter-format-check'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-analyze'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-test'`: passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'git diff --check'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+
 - Timestamp: 2026-06-23 18:18 JST
 - State: `completed`
 - Branch: `main`

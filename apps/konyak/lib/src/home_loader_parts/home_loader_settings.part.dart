@@ -67,23 +67,65 @@ extension _KonyakHomeLoaderSettings on _KonyakHomeLoaderState {
   }
 
   Future<void> _showAbout() async {
-    showAboutDialog(
+    await showDialog<void>(
       context: context,
-      applicationName: 'Konyak',
-      applicationVersion: 'Linux preview',
-      applicationLegalese: 'MIT License',
-      applicationIcon: Image.asset(
-        'assets/icons/konyak.png',
-        width: 48,
-        height: 48,
-      ),
-      children: const [
-        Text('Flutter desktop UI for Konyak.'),
-        SizedBox(height: 10),
-        Text(
-          'Wine/Proton runtime binaries are downloaded after launch and remain under their own licenses.',
-        ),
-      ],
+      builder: (dialogContext) {
+        final textTheme = Theme.of(context).textTheme;
+
+        return AlertDialog(
+          contentPadding: const EdgeInsets.fromLTRB(32, 28, 32, 20),
+          content: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 760),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Image.asset(
+                      'assets/icons/konyak.png',
+                      width: 48,
+                      height: 48,
+                    ),
+                    const SizedBox(width: 24),
+                    Expanded(
+                      child: Text('Konyak', style: textTheme.headlineMedium),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 32),
+                const Text(
+                  'Wine/Proton runtime binaries are downloaded after launch and remain under their own licenses.',
+                ),
+                const SizedBox(height: 24),
+                const Text('MIT License'),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                showLicensePage(
+                  context: context,
+                  applicationName: 'Konyak',
+                  applicationLegalese: 'MIT License',
+                  applicationIcon: Image.asset(
+                    'assets/icons/konyak.png',
+                    width: 48,
+                    height: 48,
+                  ),
+                );
+              },
+              child: const Text('View licenses'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
     );
   }
 

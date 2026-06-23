@@ -392,15 +392,27 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
     await tester.tap(find.text('About Konyak').last);
     await tester.pumpAndSettle();
 
-    expect(find.text('Linux preview'), findsOneWidget);
     expect(find.text('Konyak'), findsWidgets);
-    expect(find.text('Flutter desktop UI for Konyak.'), findsOneWidget);
+    expect(find.text('Linux preview'), findsNothing);
+    expect(find.text('Flutter desktop UI for Konyak.'), findsNothing);
     expect(find.text('MIT License'), findsOneWidget);
     expect(
       find.text(
         'Wine/Proton runtime binaries are downloaded after launch and remain under their own licenses.',
       ),
       findsOneWidget,
+    );
+    expect(
+      tester.getTopLeft(find.text('MIT License')).dy,
+      greaterThan(
+        tester
+            .getTopLeft(
+              find.text(
+                'Wine/Proton runtime binaries are downloaded after launch and remain under their own licenses.',
+              ),
+            )
+            .dy,
+      ),
     );
     expect(
       find.byWidgetPredicate((widget) {
