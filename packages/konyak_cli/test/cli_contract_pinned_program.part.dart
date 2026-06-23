@@ -299,6 +299,420 @@ void definePinnedProgramContractTests() {
     );
   });
 
+  test('pin-program --json on Linux writes an app launcher entry', () {
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-linux-pinned-launcher-test-',
+    );
+    addTearDown(() {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    });
+    final xdgDataHome = _joinTestPath(tempDirectory.path, const ['xdg-data']);
+    final iconPath = _joinTestPath(tempDirectory.path, const [
+      'steam-icon.png',
+    ]);
+    File(iconPath).writeAsBytesSync(const <int>[137, 80, 78, 71]);
+    final repository = MemoryBottleRepository(
+      dataHome: _joinTestPath(tempDirectory.path, const ['data']),
+      programMetadataExtractor: FixedProgramMetadataExtractor(
+        programPath: '/downloads/Steam.exe',
+        metadata: ProgramMetadataRecord(iconPath: Option.of(iconPath)),
+      ),
+    );
+    runCli(const [
+      'create-bottle',
+      '--name',
+      'Steam',
+      '--json',
+    ], bottleRepository: repository);
+
+    final result = runCli(
+      const [
+        'pin-program',
+        'steam',
+        '--name',
+        'Steam',
+        '--program',
+        '/downloads/Steam.exe',
+        '--json',
+      ],
+      bottleRepository: repository,
+      programRunPlanner: ProgramRunPlanner(
+        hostPlatform: KonyakHostPlatform.linux,
+        environment: HostEnvironment({
+          'HOME': tempDirectory.path,
+          'XDG_DATA_HOME': xdgDataHome,
+          'KONYAK_PINNED_PROGRAM_LAUNCHER_EXECUTABLE': '/env/flutter/bin/dart',
+          'KONYAK_PINNED_PROGRAM_LAUNCHER_ARGUMENTS_JSON':
+              '["run","bin/konyak.dart"]',
+          'KONYAK_PINNED_PROGRAM_LAUNCHER_WORKING_DIRECTORY':
+              '/repo/packages/konyak_cli',
+        }),
+      ),
+    );
+
+    expect(result.exitCode, 0);
+
+    final launcherEntry = _singleGeneratedLinuxPinnedLauncher(xdgDataHome);
+    expect(launcherEntry.path, contains('/applications/'));
+    expect(launcherEntry.path, endsWith('.desktop'));
+    final desktopEntry = launcherEntry.readAsStringSync();
+    expect(desktopEntry, contains('Type=Application'));
+    expect(desktopEntry, contains('Name=Steam'));
+    expect(desktopEntry, isNot(contains('NoDisplay=true')));
+    expect(desktopEntry, contains('Icon=$iconPath'));
+    expect(desktopEntry, contains('StartupWMClass=steam.exe'));
+    expect(desktopEntry, contains('Categories=Utility;'));
+
+    final manifest = _singleGeneratedLinuxPinnedManifest(xdgDataHome);
+    final manifestPayload =
+        jsonDecode(manifest.readAsStringSync()) as Map<String, Object?>;
+    expect(manifestPayload['schemaVersion'], 1);
+    expect(manifestPayload['createdBy'], 'app.konyak.Konyak');
+    expect(manifestPayload['bottleId'], 'steam');
+    expect(manifestPayload['programName'], 'Steam');
+    expect(manifestPayload['programPath'], '/downloads/Steam.exe');
+    expect(manifestPayload['launcherId'], isA<String>());
+
+    final launcherScript = _singleGeneratedLinuxPinnedScript(
+      xdgDataHome,
+    ).readAsStringSync();
+    expect(launcherScript, contains("cd '/repo/packages/konyak_cli'"));
+    expect(
+      launcherScript,
+      contains(
+        "exec '/env/flutter/bin/dart' 'run' 'bin/konyak.dart' launch-pinned-program",
+      ),
+    );
+    expect(launcherScript, contains(r'--manifest "$manifest" --json'));
+  });
+
+  test('pin-program --json on Linux writes a bundled CLI launcher', () {
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-linux-pinned-bundled-launcher-test-',
+    );
+    addTearDown(() {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    });
+    final xdgDataHome = _joinTestPath(tempDirectory.path, const ['xdg-data']);
+    final bundleResources = _joinTestPath(tempDirectory.path, const [
+      'AppDir',
+      'usr',
+      'share',
+      'konyak',
+    ]);
+    final cliExecutable = _joinTestPath(bundleResources, const ['konyak-cli']);
+    File(cliExecutable)
+      ..createSync(recursive: true)
+      ..writeAsStringSync('cli');
+    final repository = MemoryBottleRepository(
+      dataHome: _joinTestPath(tempDirectory.path, const ['data']),
+    );
+    runCli(const [
+      'create-bottle',
+      '--name',
+      'Steam',
+      '--json',
+    ], bottleRepository: repository);
+
+    final result = runCli(
+      const [
+        'pin-program',
+        'steam',
+        '--name',
+        'Steam',
+        '--program',
+        '/downloads/Steam.exe',
+        '--json',
+      ],
+      bottleRepository: repository,
+      programRunPlanner: ProgramRunPlanner(
+        hostPlatform: KonyakHostPlatform.linux,
+        environment: HostEnvironment({
+          'HOME': tempDirectory.path,
+          'XDG_DATA_HOME': xdgDataHome,
+          'KONYAK_BUNDLE_RESOURCES': bundleResources,
+        }),
+      ),
+    );
+
+    expect(result.exitCode, 0);
+    final launcherScript = _singleGeneratedLinuxPinnedScript(
+      xdgDataHome,
+    ).readAsStringSync();
+    expect(
+      launcherScript,
+      contains("exec '$cliExecutable' launch-pinned-program"),
+    );
+  });
+
+  test(
+    'pin-program --json on Linux prefers stable AppImage launcher dispatch',
+    () {
+      final tempDirectory = Directory.systemTemp.createTempSync(
+        'konyak-linux-pinned-appimage-launcher-test-',
+      );
+      addTearDown(() {
+        if (tempDirectory.existsSync()) {
+          tempDirectory.deleteSync(recursive: true);
+        }
+      });
+      final xdgDataHome = _joinTestPath(tempDirectory.path, const ['xdg-data']);
+      final appImage = _joinTestPath(tempDirectory.path, const [
+        'Konyak.AppImage',
+      ]);
+      File(appImage).writeAsStringSync('appimage');
+      final repository = MemoryBottleRepository(
+        dataHome: _joinTestPath(tempDirectory.path, const ['data']),
+      );
+      runCli(const [
+        'create-bottle',
+        '--name',
+        'Steam',
+        '--json',
+      ], bottleRepository: repository);
+
+      final result = runCli(
+        const [
+          'pin-program',
+          'steam',
+          '--name',
+          'Steam',
+          '--program',
+          '/downloads/Steam.exe',
+          '--json',
+        ],
+        bottleRepository: repository,
+        programRunPlanner: ProgramRunPlanner(
+          hostPlatform: KonyakHostPlatform.linux,
+          environment: HostEnvironment({
+            'HOME': tempDirectory.path,
+            'XDG_DATA_HOME': xdgDataHome,
+            'KONYAK_APPIMAGE_PATH': appImage,
+            'KONYAK_PINNED_PROGRAM_LAUNCHER_EXECUTABLE':
+                '/tmp/.mount_Konyak/usr/share/konyak/konyak-cli',
+            'KONYAK_PINNED_PROGRAM_LAUNCHER_ARGUMENTS_JSON': '[]',
+          }),
+        ),
+      );
+
+      expect(result.exitCode, 0);
+      final launcherScript = _singleGeneratedLinuxPinnedScript(
+        xdgDataHome,
+      ).readAsStringSync();
+      expect(
+        launcherScript,
+        contains("exec '$appImage' '--konyak-cli' launch-pinned-program"),
+      );
+      expect(launcherScript, isNot(contains('/tmp/.mount_Konyak')));
+    },
+  );
+
+  test('list-bottles --json on Linux refreshes app launchers', () {
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-linux-pinned-list-refresh-test-',
+    );
+    addTearDown(() {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    });
+    final xdgDataHome = _joinTestPath(tempDirectory.path, const ['xdg-data']);
+    final repository = MemoryBottleRepository(
+      dataHome: _joinTestPath(tempDirectory.path, const ['data']),
+      bottles: [
+        BottleRecord(
+          id: 'steam',
+          name: 'Steam',
+          path: _joinTestPath(tempDirectory.path, const ['data', 'steam']),
+          windowsVersion: 'win10',
+          pinnedPrograms: [
+            PinnedProgramRecord(name: 'Steam', path: '/downloads/Steam.exe'),
+          ],
+        ),
+      ],
+    );
+    final staleDesktopEntry = File(
+      _joinTestPath(xdgDataHome, const [
+        'applications',
+        'app.konyak.Konyak.pinned.stale.desktop',
+      ]),
+    );
+    staleDesktopEntry
+      ..createSync(recursive: true)
+      ..writeAsStringSync('[Desktop Entry]\nName=Stale\n');
+    final staleManifest = File(
+      _joinTestPath(xdgDataHome, const [
+        'konyak',
+        'launchers',
+        'linux-pinned',
+        'stale',
+        'konyak-launcher.json',
+      ]),
+    );
+    staleManifest
+      ..createSync(recursive: true)
+      ..writeAsStringSync(
+        jsonEncode({
+          'schemaVersion': 1,
+          'createdBy': 'app.konyak.Konyak',
+          'launcherId': 'stale',
+          'bottleId': 'stale',
+          'programPath': '/stale.exe',
+          'programName': 'Stale',
+        }),
+      );
+
+    final result = runCli(
+      const ['list-bottles', '--json'],
+      bottleRepository: repository,
+      programRunPlanner: ProgramRunPlanner(
+        hostPlatform: KonyakHostPlatform.linux,
+        environment: HostEnvironment({
+          'HOME': tempDirectory.path,
+          'XDG_DATA_HOME': xdgDataHome,
+          'KONYAK_PINNED_PROGRAM_LAUNCHER_EXECUTABLE': '/env/bin/dart',
+          'KONYAK_PINNED_PROGRAM_LAUNCHER_ARGUMENTS_JSON':
+              '["run","bin/konyak.dart"]',
+          'KONYAK_PINNED_PROGRAM_LAUNCHER_WORKING_DIRECTORY':
+              '/repo/packages/konyak_cli',
+        }),
+      ),
+    );
+
+    expect(result.exitCode, 0);
+    expect(_generatedLinuxPinnedLaunchers(xdgDataHome), hasLength(1));
+    expect(_generatedLinuxPinnedManifests(xdgDataHome), hasLength(1));
+    expect(staleDesktopEntry.existsSync(), isFalse);
+    expect(staleManifest.parent.existsSync(), isFalse);
+  });
+
+  test('rename-pinned-program --json on Linux updates the app launcher', () {
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-linux-pinned-rename-launcher-test-',
+    );
+    addTearDown(() {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    });
+    final xdgDataHome = _joinTestPath(tempDirectory.path, const ['xdg-data']);
+    final repository = MemoryBottleRepository(
+      dataHome: _joinTestPath(tempDirectory.path, const ['data']),
+      bottles: [
+        BottleRecord(
+          id: 'steam',
+          name: 'Steam',
+          path: _joinTestPath(tempDirectory.path, const ['data', 'steam']),
+          windowsVersion: 'win10',
+          pinnedPrograms: [
+            PinnedProgramRecord(name: 'Steam', path: '/downloads/Steam.exe'),
+          ],
+        ),
+      ],
+    );
+    final planner = ProgramRunPlanner(
+      hostPlatform: KonyakHostPlatform.linux,
+      environment: HostEnvironment({
+        'HOME': tempDirectory.path,
+        'XDG_DATA_HOME': xdgDataHome,
+        'KONYAK_PINNED_PROGRAM_LAUNCHER_EXECUTABLE': '/env/bin/dart',
+        'KONYAK_PINNED_PROGRAM_LAUNCHER_ARGUMENTS_JSON':
+            '["run","bin/konyak.dart"]',
+        'KONYAK_PINNED_PROGRAM_LAUNCHER_WORKING_DIRECTORY':
+            '/repo/packages/konyak_cli',
+      }),
+    );
+    runCli(
+      const ['list-bottles', '--json'],
+      bottleRepository: repository,
+      programRunPlanner: planner,
+    );
+
+    final result = runCli(
+      const [
+        'rename-pinned-program',
+        'steam',
+        '--program',
+        '/downloads/Steam.exe',
+        '--name',
+        'Steam Client',
+        '--json',
+      ],
+      bottleRepository: repository,
+      programRunPlanner: planner,
+    );
+
+    expect(result.exitCode, 0);
+    final desktopEntry = _singleGeneratedLinuxPinnedLauncher(
+      xdgDataHome,
+    ).readAsStringSync();
+    expect(desktopEntry, contains('Name=Steam Client'));
+  });
+
+  test('unpin-program --json on Linux removes the app launcher', () {
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-linux-pinned-unpin-launcher-test-',
+    );
+    addTearDown(() {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    });
+    final xdgDataHome = _joinTestPath(tempDirectory.path, const ['xdg-data']);
+    final repository = MemoryBottleRepository(
+      dataHome: _joinTestPath(tempDirectory.path, const ['data']),
+      bottles: [
+        BottleRecord(
+          id: 'steam',
+          name: 'Steam',
+          path: _joinTestPath(tempDirectory.path, const ['data', 'steam']),
+          windowsVersion: 'win10',
+          pinnedPrograms: [
+            PinnedProgramRecord(name: 'Steam', path: '/downloads/Steam.exe'),
+          ],
+        ),
+      ],
+    );
+    final planner = ProgramRunPlanner(
+      hostPlatform: KonyakHostPlatform.linux,
+      environment: HostEnvironment({
+        'HOME': tempDirectory.path,
+        'XDG_DATA_HOME': xdgDataHome,
+        'KONYAK_PINNED_PROGRAM_LAUNCHER_EXECUTABLE': '/env/bin/dart',
+        'KONYAK_PINNED_PROGRAM_LAUNCHER_ARGUMENTS_JSON':
+            '["run","bin/konyak.dart"]',
+        'KONYAK_PINNED_PROGRAM_LAUNCHER_WORKING_DIRECTORY':
+            '/repo/packages/konyak_cli',
+      }),
+    );
+    runCli(
+      const ['list-bottles', '--json'],
+      bottleRepository: repository,
+      programRunPlanner: planner,
+    );
+    expect(_generatedLinuxPinnedLaunchers(xdgDataHome), hasLength(1));
+
+    final result = runCli(
+      const [
+        'unpin-program',
+        'steam',
+        '--program',
+        '/downloads/Steam.exe',
+        '--json',
+      ],
+      bottleRepository: repository,
+      programRunPlanner: planner,
+    );
+
+    expect(result.exitCode, 0);
+    expect(_generatedLinuxPinnedLaunchers(xdgDataHome), isEmpty);
+    expect(_generatedLinuxPinnedManifests(xdgDataHome), isEmpty);
+  });
+
   test('list-bottles --json on macOS refreshes app launchers', () {
     final tempDirectory = Directory.systemTemp.createTempSync(
       'konyak-macos-pinned-list-refresh-test-',

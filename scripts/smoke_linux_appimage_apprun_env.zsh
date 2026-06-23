@@ -116,4 +116,60 @@ jq -e \
     )' \
   "$sentinel" >/dev/null
 
+cli_sentinel="$work_root/apprun-cli.json"
+cli_sentinel_quoted="$(single_quote "$cli_sentinel")"
+cat >"$resources_dir/konyak-cli" <<EOF
+#!/usr/bin/env zsh
+set -euo pipefail
+
+sentinel=$cli_sentinel_quoted
+
+json_escape() {
+  local value="\$1"
+  value="\${value//\\\\/\\\\\\\\}"
+  value="\${value//\\\"/\\\\\\\"}"
+  printf "%s" "\$value"
+}
+
+cat >"\$sentinel" <<JSON
+{
+  "bundleResources": "\$(json_escape "\${KONYAK_BUNDLE_RESOURCES:-}")",
+  "appImagePath": "\$(json_escape "\${KONYAK_APPIMAGE_PATH:-}")",
+  "argumentCount": "\$#",
+  "firstArgument": "\$(json_escape "\${1:-}")",
+  "secondArgument": "\$(json_escape "\${2:-}")",
+  "thirdArgument": "\$(json_escape "\${3:-}")",
+  "fourthArgument": "\$(json_escape "\${4:-}")"
+}
+JSON
+EOF
+chmod 755 "$resources_dir/konyak-cli"
+
+manifest_fixture="$work_root/pinned-launcher.json"
+APPIMAGE="$work_root/Konyak-smoke.AppImage" \
+  "$work_appdir/AppRun" \
+  --konyak-cli \
+  launch-pinned-program \
+  --manifest \
+  "$manifest_fixture" \
+  --json >/dev/null
+
+if [[ ! -f "$cli_sentinel" ]]; then
+  echo "AppRun smoke did not execute the bundled CLI spy." >&2
+  exit 1
+fi
+
+jq -e \
+  --arg resources_dir "$resources_dir" \
+  --arg appimage_path "$work_root/Konyak-smoke.AppImage" \
+  --arg manifest_fixture "$manifest_fixture" \
+  '.bundleResources == $resources_dir
+    and .appImagePath == $appimage_path
+    and .argumentCount == "4"
+    and .firstArgument == "launch-pinned-program"
+    and .secondArgument == "--manifest"
+    and .thirdArgument == $manifest_fixture
+    and .fourthArgument == "--json"' \
+  "$cli_sentinel" >/dev/null
+
 echo "Linux AppImage AppRun environment smoke passed."

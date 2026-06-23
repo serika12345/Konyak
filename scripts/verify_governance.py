@@ -952,6 +952,10 @@ def main() -> None:
         ".github/workflows/publish.yml",
         "smoke_linux_desktop_integration.zsh",
     )
+    require_contains(
+        ".github/workflows/publish.yml",
+        "smoke_linux_pinned_launcher_integration.zsh",
+    )
     for expected in [
         "Linux Runtime CLI Smoke",
         "scripts/run_linux_runtime_cli_smoke.zsh",
@@ -965,6 +969,7 @@ def main() -> None:
     )
     require_contains("justfile", "linux-runtime-cli-smoke:")
     require_contains("justfile", "linux-desktop-integration-smoke:")
+    require_contains("justfile", "linux-pinned-launcher-smoke:")
     require_contains("justfile", "linux-release-check:")
     for expected in [
         "Konyak: Build Linux AppImage",
@@ -977,6 +982,7 @@ def main() -> None:
         "KONYAK_LINUX_RELEASE_CHECK_SKIP_RUNTIME_INSTALL",
         "smoke_linux_release_metadata.zsh",
         "smoke_linux_desktop_integration.zsh",
+        "smoke_linux_pinned_launcher_integration.zsh",
         "run_linux_runtime_cli_smoke.zsh",
     ]:
         require_contains("scripts/run_linux_release_check.zsh", expected)

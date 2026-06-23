@@ -30,7 +30,7 @@ CliResult? _handlePinnedProgramCommand(
       if (failure != null) {
         return failure;
       }
-      _synchronizeMacosPinnedProgramLaunchers(
+      _synchronizePinnedProgramLaunchers(
         hostPlatform: context.programRunPlanner.hostPlatform,
         environment: context.programRunPlanner.environment.toMap(),
         bottles: bottlesResult.getOrElse((_) => const <BottleRecord>[]),
@@ -69,7 +69,7 @@ CliResult? _handlePinnedProgramCommand(
       if (failure != null) {
         return failure;
       }
-      _synchronizeMacosPinnedProgramLaunchers(
+      _synchronizePinnedProgramLaunchers(
         hostPlatform: context.programRunPlanner.hostPlatform,
         environment: context.programRunPlanner.environment.toMap(),
         bottles: bottlesResult.getOrElse((_) => const <BottleRecord>[]),
@@ -96,7 +96,7 @@ CliResult? _handlePinnedProgramCommand(
       if (failure != null) {
         return failure;
       }
-      _synchronizeMacosPinnedProgramLaunchers(
+      _synchronizePinnedProgramLaunchers(
         hostPlatform: context.programRunPlanner.hostPlatform,
         environment: context.programRunPlanner.environment.toMap(),
         bottles: bottlesResult.getOrElse((_) => const <BottleRecord>[]),

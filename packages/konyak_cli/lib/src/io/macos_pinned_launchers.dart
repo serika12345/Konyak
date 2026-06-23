@@ -102,7 +102,7 @@ _MacosPinnedProgramLauncherCommand? _macosPinnedProgramLauncherCommand(
     'KONYAK_PINNED_PROGRAM_LAUNCHER_EXECUTABLE',
   );
   if (developmentExecutable != null) {
-    final developmentArguments = _macosPinnedProgramLauncherArguments(
+    final developmentArguments = _pinnedProgramLauncherArguments(
       environment['KONYAK_PINNED_PROGRAM_LAUNCHER_ARGUMENTS_JSON'],
     );
     if (developmentArguments == null) {
@@ -151,7 +151,7 @@ _MacosPinnedProgramLauncherCommand? _macosPinnedProgramLauncherCommand(
   );
 }
 
-List<String>? _macosPinnedProgramLauncherArguments(String? value) {
+List<String>? _pinnedProgramLauncherArguments(String? value) {
   if (value == null || value.trim().isEmpty) {
     return const <String>[];
   }

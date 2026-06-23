@@ -1569,6 +1569,69 @@ Directory _singleGeneratedMacosLauncher(String home) {
   return launchers.single;
 }
 
+List<File> _generatedLinuxPinnedLaunchers(String xdgDataHome) {
+  final applicationsDirectory = Directory(
+    _joinTestPath(xdgDataHome, const ['applications']),
+  );
+  if (!applicationsDirectory.existsSync()) {
+    return const <File>[];
+  }
+
+  final launchers = applicationsDirectory
+      .listSync(followLinks: false)
+      .whereType<File>()
+      .where(
+        (file) =>
+            file.path.split('/').last.startsWith('app.konyak.Konyak.pinned.') &&
+            file.path.endsWith('.desktop'),
+      )
+      .toList(growable: false);
+  launchers.sort((left, right) => left.path.compareTo(right.path));
+
+  return launchers;
+}
+
+File _singleGeneratedLinuxPinnedLauncher(String xdgDataHome) {
+  final launchers = _generatedLinuxPinnedLaunchers(xdgDataHome);
+  expect(launchers, hasLength(1));
+
+  return launchers.single;
+}
+
+List<File> _generatedLinuxPinnedManifests(String xdgDataHome) {
+  final launcherDirectory = Directory(
+    _joinTestPath(xdgDataHome, const ['konyak', 'launchers', 'linux-pinned']),
+  );
+  if (!launcherDirectory.existsSync()) {
+    return const <File>[];
+  }
+
+  final manifests = launcherDirectory
+      .listSync(followLinks: false)
+      .whereType<Directory>()
+      .map(
+        (directory) =>
+            File(_joinTestPath(directory.path, const ['konyak-launcher.json'])),
+      )
+      .where((file) => file.existsSync())
+      .toList(growable: false);
+  manifests.sort((left, right) => left.path.compareTo(right.path));
+
+  return manifests;
+}
+
+File _singleGeneratedLinuxPinnedManifest(String xdgDataHome) {
+  final manifests = _generatedLinuxPinnedManifests(xdgDataHome);
+  expect(manifests, hasLength(1));
+
+  return manifests.single;
+}
+
+File _singleGeneratedLinuxPinnedScript(String xdgDataHome) {
+  final manifest = _singleGeneratedLinuxPinnedManifest(xdgDataHome);
+  return File(_joinTestPath(manifest.parent.path, const ['launch']));
+}
+
 String _joinTestPath(String root, List<String> segments) {
   return <String>[root, ...segments].join('/');
 }

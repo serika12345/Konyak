@@ -234,6 +234,10 @@ fi
 if [[ -n "${APPIMAGE:-}" ]]; then
   export KONYAK_APPIMAGE_PATH="$APPIMAGE"
 fi
+if [[ "${1:-}" == "--konyak-cli" ]]; then
+  shift
+  exec "$KONYAK_BUNDLE_RESOURCES/konyak-cli" "$@"
+fi
 exec "$appdir/usr/konyak" "$@"
 EOF
 chmod 755 "$appdir_root/AppRun"

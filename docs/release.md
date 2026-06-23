@@ -170,6 +170,19 @@ and refreshes desktop/icon caches when the host provides the standard tools. If
 the user moves the AppImage, launching Konyak once from the new location
 re-synchronizes the desktop entry `Exec=` path.
 
+Pinned Windows programs are also synchronized through the public CLI path.
+When a program is pinned, renamed, unpinned, or when `list-bottles --json`
+refreshes the bottle catalog, Linux builds write visible launcher entries to
+`$XDG_DATA_HOME/applications/app.konyak.Konyak.pinned.<id>.desktop` and keep
+their manifests and wrapper scripts under
+`$XDG_DATA_HOME/konyak/launchers/linux-pinned/<id>/`. The generated launcher
+executes `launch-pinned-program --manifest <manifest> --json`, so bottle
+lookup, runtime selection, logging, and program settings stay owned by Konyak
+rather than by a desktop-entry-specific Wine command. AppImage launchers use
+the stable `KONYAK_APPIMAGE_PATH` entry point with `--konyak-cli`, and `AppRun`
+dispatches that mode to the bundled CLI, avoiding transient AppImage mount
+paths in generated launchers.
+
 The Flutter app is built with:
 
 ```text

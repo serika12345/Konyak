@@ -68,8 +68,13 @@ The AppImage `AppRun` launcher exports:
 - `KONYAK_APPIMAGE_PATH=$APPIMAGE`
 - `KONYAK_APP_PID=<current app pid>`
 
-This keeps packaged CLI resolution free of build-machine paths and gives the
-CLI enough context to stage verified in-place AppImage replacement on Linux.
+`AppRun` also accepts `--konyak-cli <command> ...` and dispatches that request
+to the bundled CLI. Generated Linux pinned-program launchers use this stable
+AppImage entry point instead of embedding the transient AppDir mount path, then
+call `launch-pinned-program --manifest <manifest> --json` through the same CLI
+contract as the Flutter app. This keeps packaged CLI resolution free of
+build-machine paths and gives the CLI enough context to stage verified
+in-place AppImage replacement on Linux.
 
 The CLI boundary remains:
 

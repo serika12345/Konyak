@@ -40,6 +40,7 @@ part 'src/io/macos_pinned_launcher_bundle_io.dart';
 part 'src/io/macos_pinned_launcher_icons.dart';
 part 'src/io/macos_pinned_launcher_manifest_io.dart';
 part 'src/io/macos_pinned_launcher_manifests.dart';
+part 'src/io/linux_pinned_launchers.dart';
 part 'src/platform/macos/macos_pinned_launcher_templates.dart';
 part 'src/platform/linux/linux_integration.dart';
 part 'src/domain/program/external_program_launch_records.dart';

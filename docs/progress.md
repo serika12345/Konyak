@@ -11,6 +11,67 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-23 18:18 JST
+- State: `completed`
+- Branch: `main`
+- Related work: Linux visible pinned program launchers
+- Purpose: make pinned Windows programs appear in the Linux desktop
+  environment launcher, matching the macOS pinned `.app` behavior while
+  preserving Konyak's public CLI execution path as the source of truth.
+- Completed:
+  - Added Linux pinned-program launcher synchronization for `pin-program`,
+    `unpin-program`, `rename-pinned-program`, and `list-bottles --json`.
+  - Generated visible user-level `.desktop` files under
+    `$XDG_DATA_HOME/applications/app.konyak.Konyak.pinned.<id>.desktop`, with
+    launcher manifests and wrapper scripts under
+    `$XDG_DATA_HOME/konyak/launchers/linux-pinned/<id>/`.
+  - Kept generated Linux pinned launchers on
+    `launch-pinned-program --manifest <manifest> --json` instead of direct
+    Wine execution.
+  - Added AppImage `AppRun --konyak-cli` dispatch and made Linux pinned
+    launchers prefer the stable `KONYAK_APPIMAGE_PATH` entry point over
+    transient bundled CLI mount paths.
+  - Added CLI contract coverage for Linux launcher creation, AppImage dispatch
+    preference, `list-bottles` refresh, rename updates, and unpin cleanup.
+  - Added a maintained Linux pinned launcher smoke and wired it into `just
+    verify`, the Linux release check, and the release workflow.
+- Remaining:
+  - None for Linux visible pinned program launcher generation and AppImage
+    dispatch.
+- Next: manually pin a real Windows program from the AppImage build on a target
+  desktop environment when validating end-user launcher indexing behavior.
+- Verification:
+  - Sub-agent read-only audit confirmed the macOS/Linux launcher code points
+    and identified the AppImage transient mount risk before finalizing the
+    AppImage dispatch design.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "pin-program --json on Linux writes an app launcher entry"'`:
+    failed before implementation because no visible Linux launcher was
+    generated, then passed.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "pin-program --json on Linux prefers stable AppImage launcher dispatch"'`:
+    failed before changing Linux command resolution because the generated
+    wrapper embedded a transient bundled CLI path, then passed after preferring
+    `KONYAK_APPIMAGE_PATH --konyak-cli`.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --name "Linux"'`:
+    passed.
+  - `nix develop -c zsh -lc './scripts/smoke_linux_pinned_launcher_integration.zsh'`:
+    passed.
+  - `nix develop -c zsh -lc './scripts/smoke_linux_appimage_apprun_env.zsh'`:
+    failed against the previously built AppDir because it predated the new
+    `AppRun --konyak-cli` dispatch; this was expected before rebuilding.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just cli-test'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'git diff --check'`: passed.
+  - `nix develop -c zsh -lc 'just linux-release-check'`: passed. It rebuilt
+    the Linux AppImage, reran release metadata, AppRun runtime/CLI dispatch,
+    desktop integration, pinned launcher integration, bundled manifest
+    signature, and runtime install smokes.
+  - `nix develop -c zsh -lc 'just verify'`: passed, including governance,
+    architecture, format, lint, safety, Flutter tests, CLI tests, Linux loader
+    check, desktop integration smoke, and pinned launcher smoke.
+
 - Timestamp: 2026-06-23 13:04 JST
 - State: `completed`
 - Branch: `main`
