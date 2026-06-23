@@ -70,6 +70,42 @@
       }
     },
     {
+      "label": "Konyak: Build Linux AppImage",
+      "type": "shell",
+      "command": "nix develop -c zsh -lc 'just linux-release'",
+      "problemMatcher": [],
+      "group": "build",
+      "presentation": {
+        "clear": true,
+        "panel": "dedicated",
+        "reveal": "always"
+      }
+    },
+    {
+      "label": "Konyak: Smoke Linux Runtime Install",
+      "type": "shell",
+      "command": "nix develop -c zsh -lc 'just linux-runtime-cli-smoke'",
+      "problemMatcher": [],
+      "group": "test",
+      "presentation": {
+        "clear": true,
+        "panel": "dedicated",
+        "reveal": "always"
+      }
+    },
+    {
+      "label": "Konyak: Build Linux AppImage + Runtime Install Smoke",
+      "type": "shell",
+      "command": "nix develop -c zsh -lc 'just linux-release-check'",
+      "problemMatcher": [],
+      "group": "build",
+      "presentation": {
+        "clear": true,
+        "panel": "dedicated",
+        "reveal": "always"
+      }
+    },
+    {
       "label": "Konyak: Verify",
       "type": "shell",
       "command": "nix develop -c zsh -lc 'just verify'",

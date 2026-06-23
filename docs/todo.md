@@ -584,6 +584,8 @@ task changes scope.
     component archives under `linux-wine-runtime-stack-0.1.0` so development,
     CI, AppImage packaging, and runtime installation can use the same remote
     source-manifest contract.
+  - [x] Add one-command Linux AppImage build and runtime install verification
+    via `just linux-release-check` and matching VSCode tasks.
 - Required tests for the rework.
   - [x] Linux install repairs an incomplete runtime when required components are
     missing even if `bin/wine` exists.

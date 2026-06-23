@@ -104,6 +104,25 @@ The same build remains available from the dev shell:
 nix develop -c zsh -lc 'just linux-release'
 ```
 
+For the full local Linux packaging check, including release metadata smoke,
+AppRun environment smoke, bundled runtime source-manifest signature
+verification, and remote runtime installation through the public CLI contract,
+run:
+
+```sh
+nix develop -c zsh -lc 'just linux-release-check'
+```
+
+The same full check is available in VSCode as:
+
+```text
+Tasks: Run Task -> Konyak: Build Linux AppImage + Runtime Install Smoke
+```
+
+CI keeps this coverage split into rerunnable pieces: the release workflow
+builds the Linux AppImage and runs the release metadata/AppRun smokes, while
+the Linux Runtime CLI Smoke workflow verifies the remote runtime install path.
+
 Outputs are written under `.dart_tool/konyak/release/linux`:
 
 - `Konyak-<version>-linux-<arch>.AppImage`

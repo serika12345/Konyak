@@ -42,6 +42,36 @@ Local runtime stack fixtures must use the development-only
 variables such as `KONYAK_LINUX_WINE_STACK_MANIFEST` for published runtime stack
 manifests.
 
+## Linux Release Tasks
+
+Use these VSCode tasks for the common Linux packaging paths:
+
+```text
+Tasks: Run Task -> Konyak: Build Linux AppImage
+Tasks: Run Task -> Konyak: Smoke Linux Runtime Install
+Tasks: Run Task -> Konyak: Build Linux AppImage + Runtime Install Smoke
+```
+
+`Konyak: Build Linux AppImage` runs `just linux-release` and writes the
+AppImage under `.dart_tool/konyak/release/linux`.
+
+`Konyak: Build Linux AppImage + Runtime Install Smoke` runs
+`just linux-release-check`. It builds the AppImage from the default Linux
+runtime release, checks the generated release metadata, checks the AppRun
+runtime environment exports, verifies the bundled runtime source manifest
+signature, and then runs the public CLI runtime install smoke. This is the
+shortest local check for "can build the Linux artifact and install the managed
+runtime from the remote release assets".
+
+The same full check can be run without VSCode:
+
+```sh
+nix develop -c zsh -lc 'just linux-release-check'
+```
+
+Set `KONYAK_LINUX_RELEASE_CHECK_SKIP_RUNTIME_INSTALL=true` when only the
+AppImage build and bundled runtime manifest checks are needed.
+
 The macOS VSCode launch profile uses the same development runtime profile. It
 sets `KONYAK_RUNTIME_PROFILE=development`, points `KONYAK_MACOS_WINE_HOME` at
 `.dart_tool/konyak/dev-runtime/macos-wine`, and points

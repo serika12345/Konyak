@@ -951,6 +951,7 @@ def main() -> None:
     for expected in [
         "Linux Runtime CLI Smoke",
         "scripts/run_linux_runtime_cli_smoke.zsh",
+        "scripts/run_linux_release_check.zsh",
         "KONYAK_DEV_LINUX_WINE_STACK_SOURCE_MANIFEST",
     ]:
         require_contains(".github/workflows/linux-runtime-cli-smoke.yml", expected)
@@ -959,6 +960,22 @@ def main() -> None:
         "vars.KONYAK_DEV_LINUX_WINE_STACK_SOURCE_MANIFEST != ''",
     )
     require_contains("justfile", "linux-runtime-cli-smoke:")
+    require_contains("justfile", "linux-release-check:")
+    for expected in [
+        "Konyak: Build Linux AppImage",
+        "Konyak: Smoke Linux Runtime Install",
+        "Konyak: Build Linux AppImage + Runtime Install Smoke",
+        "just linux-release-check",
+    ]:
+        require_contains(".vscode/tasks.json", expected)
+    for expected in [
+        "KONYAK_LINUX_RELEASE_CHECK_SKIP_RUNTIME_INSTALL",
+        "smoke_linux_release_metadata.zsh",
+        "run_linux_runtime_cli_smoke.zsh",
+    ]:
+        require_contains("scripts/run_linux_release_check.zsh", expected)
+    require_contains("docs/vscode-macos.md", "Konyak: Build Linux AppImage + Runtime Install Smoke")
+    require_contains("docs/release.md", "just linux-release-check")
     require_not_contains("scripts/prepare_linux_dev_runtime_source.zsh", "winetricks list-all")
     require_not_contains("scripts/prepare_linux_dev_runtime_source.zsh", "/nix/store")
     require_contains(

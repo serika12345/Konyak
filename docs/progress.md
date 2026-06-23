@@ -11,6 +11,45 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-23 00:38 JST
+- State: `completed`
+- Branch: `main`
+- Related work: Linux AppImage build convenience
+- Purpose: make local Linux release build and runtime install verification easy
+  from both VSCode tasks and one `just` target while preserving the default
+  remote runtime release contract.
+- Completed:
+  - Added `scripts/run_linux_release_check.zsh` as the high-level local Linux
+    check entry point for AppImage build, release metadata smoke, AppRun
+    runtime environment smoke, bundled runtime manifest signature verification,
+    and public CLI runtime install smoke.
+  - Added `just linux-release-check`.
+  - Added VSCode tasks for building the Linux AppImage, smoking Linux runtime
+    install, and running the combined AppImage build plus runtime install
+    smoke.
+  - Documented the VSCode and command-line Linux release check paths.
+  - Kept CI coverage split across the existing release workflow and Linux
+    Runtime CLI Smoke workflow, and made Linux runtime smoke trigger on changes
+    to the new local release-check wrapper.
+- Remaining:
+  - None for the local Linux build convenience entry points.
+- Next: use `Tasks: Run Task -> Konyak: Build Linux AppImage + Runtime Install
+  Smoke` or `nix develop -c zsh -lc 'just linux-release-check'` for the full
+  local Linux package/runtime check.
+- Verification:
+  - `nix develop -c zsh -lc 'jq empty .vscode/tasks.json && zsh -n scripts/run_linux_release_check.zsh && git diff --check'`:
+    passed.
+  - `nix develop -c zsh -lc 'just --list | sed -n "1,140p"'`: passed and
+    showed `linux-release-check`.
+  - `nix develop -c zsh -lc 'just linux-release-check'`: passed. It built the
+    Linux AppImage from the default runtime release, ran release metadata and
+    AppRun environment smokes, verified the bundled runtime source manifest
+    signature, and completed the public CLI Linux runtime install smoke.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+
 - Timestamp: 2026-06-22 23:01 JST
 - State: `completed`
 - Branch: `main`
