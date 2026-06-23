@@ -1319,6 +1319,7 @@ void defineProgramWidgetTests() {
 
     await tester.pumpWidget(
       _testKonyakApp(
+        platform: KonyakPlatform.linux,
         cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
       ),
     );
@@ -1353,6 +1354,8 @@ void defineProgramWidgetTests() {
       find.byKey(const ValueKey('pinned-program-context-show-in-finder')),
       findsOne,
     );
+    expect(find.text('Show in File Manager'), findsOneWidget);
+    expect(find.text('Show in Finder'), findsNothing);
 
     await tester.tap(find.byKey(const ValueKey('pinned-program-context-run')));
     await tester.pumpAndSettle();
@@ -1444,6 +1447,7 @@ void defineProgramWidgetTests() {
 
     await tester.pumpWidget(
       _testKonyakApp(
+        platform: KonyakPlatform.linux,
         cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
       ),
     );
@@ -1462,6 +1466,8 @@ void defineProgramWidgetTests() {
     await tester.pumpAndSettle();
 
     expect(find.text('Setup Configuration'), findsOneWidget);
+    expect(find.text('Show in File Manager'), findsOneWidget);
+    expect(find.text('Show in Finder'), findsNothing);
     expect(find.byKey(const ValueKey('program-config-locale')), findsOneWidget);
     expect(
       find.byKey(const ValueKey('program-config-arguments-field')),

@@ -73,11 +73,15 @@ KonyakApp _testKonyakApp({
   );
 }
 
-Widget _testSidebar({required bool reserveLeadingWindowControlsSpace}) {
+Widget _testSidebar({
+  required bool reserveLeadingWindowControlsSpace,
+  KonyakPlatform platform = KonyakPlatform.macos,
+}) {
   return MaterialApp(
     theme: konyakThemeData(konyakDarkColors),
     home: Scaffold(
       body: KonyakSidebar(
+        platform: platform,
         reserveLeadingWindowControlsSpace: reserveLeadingWindowControlsSpace,
         bottles: const <BottleSummary>[],
         selectedBottleId: null,

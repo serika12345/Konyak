@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../bottles/bottle_summary.dart';
 import '../app_constants.dart';
+import '../app_platform.dart';
 import 'sidebar_bottle_item.dart';
 import 'sidebar_metrics.dart';
 
@@ -11,6 +12,7 @@ export 'sidebar_slot.dart';
 class KonyakSidebar extends StatelessWidget {
   const KonyakSidebar({
     super.key,
+    required this.platform,
     required this.reserveLeadingWindowControlsSpace,
     required this.bottles,
     required this.selectedBottleId,
@@ -21,6 +23,7 @@ class KonyakSidebar extends StatelessWidget {
     required this.onBottleContextMenuAction,
   });
 
+  final KonyakPlatform platform;
   final bool reserveLeadingWindowControlsSpace;
   final List<BottleSummary> bottles;
   final String? selectedBottleId;
@@ -131,6 +134,7 @@ class KonyakSidebar extends StatelessWidget {
                         final isSelected = bottle.id == selectedBottleId;
 
                         return SidebarBottleItem(
+                          platform: platform,
                           bottle: bottle,
                           isSelected: isSelected,
                           onTap: onBottleSelected == null

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../bottles/bottle_summary.dart';
 import '../app_constants.dart';
+import '../app_platform.dart';
 import '../programs/pinned_programs_section.dart';
 import 'bottle_actions.dart';
 import 'bottle_empty_states.dart';
@@ -11,6 +12,7 @@ import 'bottle_empty_states.dart';
 class BottleOverview extends StatelessWidget {
   const BottleOverview({
     super.key,
+    required this.platform,
     required this.bottle,
     required this.isLoading,
     required this.errorMessage,
@@ -25,6 +27,7 @@ class BottleOverview extends StatelessWidget {
     required this.onShowBottlePrograms,
   });
 
+  final KonyakPlatform platform;
   final BottleSummary? bottle;
   final bool isLoading;
   final String? errorMessage;
@@ -76,6 +79,7 @@ class BottleOverview extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 PinnedProgramsSection(
+                  platform: platform,
                   bottle: activeBottle,
                   onPinProgram: onPinProgram ?? onRunProgram,
                   onRunProgramPath: onRunProgramPath,

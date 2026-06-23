@@ -5,12 +5,14 @@ import 'package:flutter/material.dart';
 
 import '../../bottles/bottle_summary.dart';
 import '../app_constants.dart';
+import '../app_platform.dart';
 import 'pinned_program_context_menu.dart';
 import 'pinned_program_icon.dart';
 
 class PinnedProgramTile extends StatefulWidget {
   const PinnedProgramTile({
     super.key,
+    required this.platform,
     required this.bottle,
     required this.program,
     required this.onRunProgramPath,
@@ -20,6 +22,7 @@ class PinnedProgramTile extends StatefulWidget {
     required this.onOpenPinnedProgramLocation,
   });
 
+  final KonyakPlatform platform;
   final BottleSummary bottle;
   final PinnedProgramSummary program;
   final void Function(BottleSummary bottle, String programPath)?
@@ -153,7 +156,7 @@ class _PinnedProgramTileState extends State<PinnedProgramTile>
         borderRadius: BorderRadius.circular(10),
       ),
       constraints: const BoxConstraints(minWidth: 220, maxWidth: 220),
-      items: pinnedProgramContextMenuItems(colors),
+      items: pinnedProgramContextMenuItems(colors, widget.platform),
     );
 
     if (!mounted || selectedAction == null) {

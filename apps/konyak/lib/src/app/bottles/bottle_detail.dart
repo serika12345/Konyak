@@ -146,6 +146,7 @@ class KonyakBottleDetail extends StatelessWidget {
                     onRuntimeSettingsChanged: onRuntimeSettingsChanged,
                   )
                 : BottleOverview(
+                    platform: platform,
                     bottle: activeBottle,
                     isLoading: isLoading,
                     errorMessage: errorMessage,
@@ -162,6 +163,7 @@ class KonyakBottleDetail extends StatelessWidget {
           ),
           if (isProgramConfiguration)
             ProgramConfigurationBottomBar(
+              platform: platform,
               bottle: activeBottle,
               program: activeProgram,
               onOpenPinnedProgramLocation: onOpenPinnedProgramLocation,

@@ -11,6 +11,39 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-23 21:01 JST
+- State: `completed`
+- Branch: `main`
+- Related work: Linux file-manager wording
+- Purpose: replace Linux-visible `Show in Finder` UI text with generic
+  file-manager wording while keeping macOS Finder wording intact.
+- Completed:
+  - Added platform-owned location UI wording so macOS shows
+    `Show in Finder` and Linux shows `Show in File Manager`.
+  - Routed the platform through bottle context menus, pinned-program context
+    menus, and pinned-program configuration bottom bars.
+  - Added widget coverage for Linux bottle menu, pinned-program menu, and
+    pinned-program configuration button wording.
+- Remaining:
+  - None.
+- Next: commit the Linux file-manager wording change if desired.
+- Verification:
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "Linux bottle context menu uses file manager wording"'`:
+    failed before implementation because Linux still displayed
+    `Show in Finder`, then passed after the platform label wiring.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "pinned program context menu runs and opens the program folder"'`:
+    passed after implementation.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "pinned program context menu opens and saves program config"'`:
+    passed after implementation.
+  - `nix develop -c zsh -lc 'just flutter-format-check'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-analyze'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-test'`: passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `nix develop -c zsh -lc 'git diff --check'`: passed.
+
 - Timestamp: 2026-06-23 20:35 JST
 - State: `completed`
 - Branch: `main`

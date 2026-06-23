@@ -46,6 +46,48 @@ void defineBottleManagementWidgetTests() {
     expect(find.text('Show in Finder'), findsOneWidget);
   });
 
+  testWidgets('Linux bottle context menu uses file manager wording', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      _testKonyakApp(
+        platform: KonyakPlatform.linux,
+        cliClient: KonyakCliClient(
+          executable: 'konyak',
+          processRunner: _QueuedProcessRunner([
+            const ProcessRunResult(
+              exitCode: 0,
+              stdout: '''
+                {
+                  "schemaVersion": 1,
+                  "bottles": [
+                    {
+                      "id": "steam",
+                      "name": "Steam",
+                      "path": "/home/user/.local/share/konyak/bottles/steam",
+                      "windowsVersion": "win10"
+                    }
+                  ]
+                }
+              ''',
+              stderr: '',
+            ),
+          ]),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tapAt(
+      tester.getCenter(find.byKey(const ValueKey('sidebar-bottle-steam'))),
+      buttons: kSecondaryMouseButton,
+    );
+    await tester.pump();
+
+    expect(find.text('Show in File Manager'), findsOneWidget);
+    expect(find.text('Show in Finder'), findsNothing);
+  });
+
   testWidgets('bottle context menu stops all Wine processes in the bottle', (
     WidgetTester tester,
   ) async {

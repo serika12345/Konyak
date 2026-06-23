@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 
 import '../app_constants.dart';
+import '../app_platform.dart';
 import '../home/sidebar.dart';
 
 enum PinnedProgramContextMenuAction { run, config, unpin, rename, showInFinder }
 
 List<PopupMenuEntry<PinnedProgramContextMenuAction>>
-pinnedProgramContextMenuItems(KonyakThemeColors colors) {
+pinnedProgramContextMenuItems(
+  KonyakThemeColors colors,
+  KonyakPlatform platform,
+) {
   return [
     const PopupMenuItem<PinnedProgramContextMenuAction>(
       value: PinnedProgramContextMenuAction.run,
@@ -59,13 +63,13 @@ pinnedProgramContextMenuItems(KonyakThemeColors colors) {
         label: 'Rename...',
       ),
     ),
-    const PopupMenuItem<PinnedProgramContextMenuAction>(
+    PopupMenuItem<PinnedProgramContextMenuAction>(
       value: PinnedProgramContextMenuAction.showInFinder,
       height: 36,
       child: BottleContextMenuItem(
-        key: ValueKey('pinned-program-context-show-in-finder'),
+        key: const ValueKey('pinned-program-context-show-in-finder'),
         icon: Icons.folder_outlined,
-        label: 'Show in Finder',
+        label: platform.showInFileManagerLabel,
       ),
     ),
   ];

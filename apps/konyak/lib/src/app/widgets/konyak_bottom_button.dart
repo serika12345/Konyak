@@ -42,6 +42,7 @@ double _bottomButtonWidth(String label) {
     'Open Registry Editor' => 150,
     'Open Wine Configuration' => 174,
     'Show in Finder' => 112,
+    'Show in File Manager' => 154,
     'Terminal' => 76,
     'Tools' => 64,
     'Winetricks' => 88,

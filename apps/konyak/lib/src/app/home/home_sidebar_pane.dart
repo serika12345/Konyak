@@ -42,6 +42,7 @@ class KonyakHomeSidebarPane extends StatelessWidget {
       showExpandedContent: showExpandedContent,
       onAnimationEnd: onAnimationEnd,
       expandedSidebar: KonyakSidebar(
+        platform: platform,
         reserveLeadingWindowControlsSpace: platform.isMacOS,
         bottles: bottles,
         selectedBottleId: selectedBottleId,

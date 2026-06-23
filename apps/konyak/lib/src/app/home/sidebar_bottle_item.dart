@@ -2,16 +2,19 @@ import 'package:flutter/material.dart';
 
 import '../../bottles/bottle_summary.dart';
 import '../app_constants.dart';
+import '../app_platform.dart';
 
 class SidebarBottleItem extends StatelessWidget {
   const SidebarBottleItem({
     super.key,
+    required this.platform,
     required this.bottle,
     required this.isSelected,
     required this.onTap,
     required this.onContextMenuAction,
   });
 
+  final KonyakPlatform platform;
   final BottleSummary bottle;
   final bool isSelected;
   final VoidCallback? onTap;
@@ -69,7 +72,7 @@ class SidebarBottleItem extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
       ),
       constraints: const BoxConstraints(minWidth: 220, maxWidth: 220),
-      items: _bottleContextMenuItems,
+      items: _bottleContextMenuItems(platform),
     );
 
     if (selectedAction == null) {
@@ -89,56 +92,63 @@ enum BottleContextMenuAction {
   showInFinder,
 }
 
-const List<PopupMenuEntry<BottleContextMenuAction>> _bottleContextMenuItems = [
-  PopupMenuItem<BottleContextMenuAction>(
-    value: BottleContextMenuAction.rename,
-    height: 34,
-    child: BottleContextMenuItem(icon: Icons.edit_outlined, label: 'Rename...'),
-  ),
-  PopupMenuItem<BottleContextMenuAction>(
-    value: BottleContextMenuAction.remove,
-    height: 34,
-    child: BottleContextMenuItem(
-      icon: Icons.delete_outline,
-      label: 'Remove...',
+List<PopupMenuEntry<BottleContextMenuAction>> _bottleContextMenuItems(
+  KonyakPlatform platform,
+) {
+  return [
+    const PopupMenuItem<BottleContextMenuAction>(
+      value: BottleContextMenuAction.rename,
+      height: 34,
+      child: BottleContextMenuItem(
+        icon: Icons.edit_outlined,
+        label: 'Rename...',
+      ),
     ),
-  ),
-  PopupMenuDivider(height: 8),
-  PopupMenuItem<BottleContextMenuAction>(
-    value: BottleContextMenuAction.move,
-    height: 34,
-    child: BottleContextMenuItem(
-      icon: Icons.drive_file_move_outline,
-      label: 'Move...',
+    const PopupMenuItem<BottleContextMenuAction>(
+      value: BottleContextMenuAction.remove,
+      height: 34,
+      child: BottleContextMenuItem(
+        icon: Icons.delete_outline,
+        label: 'Remove...',
+      ),
     ),
-  ),
-  PopupMenuItem<BottleContextMenuAction>(
-    value: BottleContextMenuAction.exportArchive,
-    height: 34,
-    child: BottleContextMenuItem(
-      icon: Icons.ios_share_outlined,
-      label: 'Export as Archive...',
+    const PopupMenuDivider(height: 8),
+    const PopupMenuItem<BottleContextMenuAction>(
+      value: BottleContextMenuAction.move,
+      height: 34,
+      child: BottleContextMenuItem(
+        icon: Icons.drive_file_move_outline,
+        label: 'Move...',
+      ),
     ),
-  ),
-  PopupMenuDivider(height: 8),
-  PopupMenuItem<BottleContextMenuAction>(
-    value: BottleContextMenuAction.terminateProcesses,
-    height: 34,
-    child: BottleContextMenuItem(
-      icon: Icons.stop_circle_outlined,
-      label: 'Stop All Processes',
+    const PopupMenuItem<BottleContextMenuAction>(
+      value: BottleContextMenuAction.exportArchive,
+      height: 34,
+      child: BottleContextMenuItem(
+        icon: Icons.ios_share_outlined,
+        label: 'Export as Archive...',
+      ),
     ),
-  ),
-  PopupMenuDivider(height: 8),
-  PopupMenuItem<BottleContextMenuAction>(
-    value: BottleContextMenuAction.showInFinder,
-    height: 34,
-    child: BottleContextMenuItem(
-      icon: Icons.folder_outlined,
-      label: 'Show in Finder',
+    const PopupMenuDivider(height: 8),
+    const PopupMenuItem<BottleContextMenuAction>(
+      value: BottleContextMenuAction.terminateProcesses,
+      height: 34,
+      child: BottleContextMenuItem(
+        icon: Icons.stop_circle_outlined,
+        label: 'Stop All Processes',
+      ),
     ),
-  ),
-];
+    const PopupMenuDivider(height: 8),
+    PopupMenuItem<BottleContextMenuAction>(
+      value: BottleContextMenuAction.showInFinder,
+      height: 34,
+      child: BottleContextMenuItem(
+        icon: Icons.folder_outlined,
+        label: platform.showInFileManagerLabel,
+      ),
+    ),
+  ];
+}
 
 class BottleContextMenuItem extends StatelessWidget {
   const BottleContextMenuItem({
@@ -173,13 +183,16 @@ class BottleContextMenuItem extends StatelessWidget {
   }
 }
 
-String bottleContextMenuActionLabel(BottleContextMenuAction action) {
+String bottleContextMenuActionLabel(
+  BottleContextMenuAction action,
+  KonyakPlatform platform,
+) {
   return switch (action) {
     BottleContextMenuAction.rename => 'Rename',
     BottleContextMenuAction.remove => 'Remove',
     BottleContextMenuAction.move => 'Move',
     BottleContextMenuAction.exportArchive => 'Export as Archive',
     BottleContextMenuAction.terminateProcesses => 'Stop All Processes',
-    BottleContextMenuAction.showInFinder => 'Show in Finder',
+    BottleContextMenuAction.showInFinder => platform.showInFileManagerLabel,
   };
 }

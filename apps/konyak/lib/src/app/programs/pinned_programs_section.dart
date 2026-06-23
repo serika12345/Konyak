@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import '../../bottles/bottle_summary.dart';
+import '../app_platform.dart';
 import 'pin_program_action.dart';
 import 'pinned_program_tile.dart';
 
 class PinnedProgramsSection extends StatelessWidget {
   const PinnedProgramsSection({
     super.key,
+    required this.platform,
     required this.bottle,
     required this.onPinProgram,
     required this.onRunProgramPath,
@@ -15,6 +17,7 @@ class PinnedProgramsSection extends StatelessWidget {
     required this.onOpenPinnedProgramLocation,
   });
 
+  final KonyakPlatform platform;
   final BottleSummary bottle;
   final ValueChanged<BottleSummary>? onPinProgram;
   final void Function(BottleSummary bottle, String programPath)?
@@ -36,6 +39,7 @@ class PinnedProgramsSection extends StatelessWidget {
       children: [
         for (final program in bottle.pinnedPrograms)
           PinnedProgramTile(
+            platform: platform,
             bottle: bottle,
             program: program,
             onRunProgramPath: onRunProgramPath,

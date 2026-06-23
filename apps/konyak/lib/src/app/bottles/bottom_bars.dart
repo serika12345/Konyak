@@ -2,18 +2,21 @@ import 'package:flutter/material.dart';
 
 import '../../bottles/bottle_summary.dart';
 import '../app_constants.dart';
+import '../app_platform.dart';
 import '../dialogs/bottle_tools_dialog.dart';
 import '../widgets/konyak_bottom_button.dart';
 
 class ProgramConfigurationBottomBar extends StatelessWidget {
   const ProgramConfigurationBottomBar({
     super.key,
+    required this.platform,
     required this.bottle,
     required this.program,
     required this.onOpenPinnedProgramLocation,
     required this.onRunProgramPath,
   });
 
+  final KonyakPlatform platform;
   final BottleSummary bottle;
   final PinnedProgramSummary program;
   final void Function(BottleSummary bottle, PinnedProgramSummary program)?
@@ -36,7 +39,7 @@ class ProgramConfigurationBottomBar extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           KonyakBottomButton(
-            label: 'Show in Finder',
+            label: platform.showInFileManagerLabel,
             onPressed: onOpenPinnedProgramLocation == null
                 ? null
                 : () => onOpenPinnedProgramLocation!(bottle, program),
