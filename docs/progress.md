@@ -11,6 +11,62 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-24 22:16 JST
+- State: `completed`
+- Branch: `main`
+- Related work: macOS app update bundle replacement smoke
+- Purpose: prove the macOS packaged app update handoff dynamically through the
+  public `install-app-update --json` CLI path by replacing a temporary
+  `Konyak.app` bundle with a checksum-verified update zip.
+- Completed:
+  - Committed the macOS startup app-update auto-install change as
+    `168588d Enable macOS app update auto-install`.
+  - Investigation workstream: inspected the existing release metadata parser,
+    app-update handoff helper, packaged macOS smoke scripts, release build
+    script, `justfile`, and release workflow wiring.
+  - Sub-agent limitation: available sub-agent tooling requires an explicit user
+    request for delegation, so this task keeps investigation, implementation,
+    and audit separated in this progress entry instead.
+  - Implementation workstream: add a maintained macOS app-update replacement
+    smoke script that builds a local update zip, serves fake release metadata
+    through `file://` URLs, invokes the bundled CLI with app handoff
+    environment, and verifies the target bundle content is replaced.
+  - Added `scripts/smoke_macos_app_update_handoff.zsh`; the smoke uses the
+    release app's bundled CLI, a temporary current `Konyak.app`, a temporary
+    updated `Konyak.app` zip, local fake release metadata, a checksum assertion,
+    and a disposable running app PID.
+  - Wired the smoke into `just` and the macOS release workflow so CI exercises
+    the same path after building release artifacts.
+  - Updated governance and release documentation for the new smoke target.
+  - Audit workstream: reran the smoke against a freshly built release app,
+    inspected the emitted `appUpdateInstall` JSON, confirmed the target bundle
+    marker changed to `updated`, confirmed the disposable app PID was
+    terminated, and confirmed no `.konyak-backup` or `.konyak-update` bundle
+    remained.
+- Remaining:
+  - None for the macOS app update bundle replacement smoke.
+- Next: add the equivalent Linux AppImage replacement smoke when continuing
+  cross-platform dynamic update verification.
+- Verification:
+  - `nix develop -c zsh -lc 'zsh -n scripts/smoke_macos_app_update_handoff.zsh'`:
+    passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed before and after
+    adding the smoke wiring.
+  - `nix develop -c zsh -lc 'git diff --check'`: passed before final progress
+    update.
+  - `nix develop -c zsh -lc 'just macos-release'`: passed; produced
+    `.dart_tool/konyak/release/macos/Konyak.app` and
+    `Konyak-1.0.0-macos-arm64.zip`.
+  - `nix develop -c zsh -lc 'just smoke-macos-app-update-handoff'`: passed.
+    Dynamic evidence:
+    `appUpdateInstall.status=installed`,
+    `installPath=.dart_tool/konyak/macos-app-update-handoff-smoke/current/Konyak.app`,
+    target marker `updated`, disposable app PID terminated, and no
+    `.konyak-backup` or `.konyak-update` bundle remained.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+
 - Timestamp: 2026-06-24 22:06 JST
 - State: `completed`
 - Branch: `main`

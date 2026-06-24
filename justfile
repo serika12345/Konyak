@@ -104,6 +104,9 @@ smoke-macos-finder:
 smoke-macos-app-cli-bridge:
   ./scripts/smoke_macos_packaged_app_cli_bridge.zsh
 
+smoke-macos-app-update-handoff:
+  ./scripts/smoke_macos_app_update_handoff.zsh
+
 smoke-macos-finder-putty:
   fixture="$(./scripts/fetch_windows_fixture_putty.zsh)"; app_bundle="${KONYAK_MACOS_FINDER_SMOKE_APP:-.dart_tool/konyak/app/macos/debug/Konyak.app}"; ./scripts/smoke_macos_finder_integration.zsh "$app_bundle" "$fixture"
 

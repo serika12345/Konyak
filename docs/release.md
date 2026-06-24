@@ -66,6 +66,7 @@ The local Finder and runtime smokes are:
 nix develop -c zsh -lc 'just smoke-macos-runtime-install'
 nix develop -c zsh -lc 'just smoke-macos-finder'
 nix develop -c zsh -lc 'just smoke-macos-app-cli-bridge'
+nix develop -c zsh -lc 'just smoke-macos-app-update-handoff'
 nix develop -c zsh -lc 'just smoke-macos-finder-putty'
 ```
 
@@ -91,6 +92,12 @@ with `KONYAK_BUNDLE_RESOURCES` and a `PATH` beginning at
 execution path covered without requiring a real Wine runtime in the release
 workflow. The auto-run hook is only enabled when the smoke passes
 `KONYAK_ENABLE_SMOKE_HOOKS=1`.
+`smoke-macos-app-update-handoff` invokes the release app's bundled CLI through
+`install-app-update --json` with local `file://` release metadata, a
+checksum-verified update zip, a temporary `Konyak.app` target, and a disposable
+running app PID. It waits for the handoff helper to terminate that PID, replace
+the target bundle, and remove staging/backup paths, proving the packaged macOS
+app replacement path without touching `/Applications`.
 
 ## Local Linux Build
 

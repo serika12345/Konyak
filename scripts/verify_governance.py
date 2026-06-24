@@ -653,6 +653,7 @@ def main() -> None:
         "fetch-windows-fixture-putty",
         "smoke-macos-finder",
         "smoke-macos-app-cli-bridge",
+        "smoke-macos-app-update-handoff",
         "smoke-macos-finder-putty",
         "smoke-macos-runtime-install",
     ]:

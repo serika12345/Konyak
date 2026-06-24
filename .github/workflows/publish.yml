@@ -108,6 +108,9 @@ jobs:
       - name: Smoke packaged macOS app CLI bridge
         run: nix develop -c zsh -lc './scripts/smoke_macos_packaged_app_cli_bridge.zsh .dart_tool/konyak/release/macos/Konyak.app'
 
+      - name: Smoke packaged macOS app update handoff
+        run: nix develop -c zsh -lc './scripts/smoke_macos_app_update_handoff.zsh .dart_tool/konyak/release/macos/Konyak.app'
+
       - uses: actions/upload-artifact@v4
         with:
           name: konyak-macos-release
