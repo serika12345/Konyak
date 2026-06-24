@@ -122,6 +122,22 @@ app_pid="$3"
 staging_path="$target_appimage.konyak-update"
 backup_path="$target_appimage.konyak-backup"
 
+notify_failure() {
+  if command -v notify-send >/dev/null 2>&1; then
+    notify-send "Konyak update failed" "Rolled back to the previous AppImage." >/dev/null 2>&1 || true
+  fi
+}
+
+relaunch_current_appimage() {
+  if [[ -x "$target_appimage" ]]; then
+    nohup "$target_appimage" >/dev/null 2>&1 &
+  fi
+}
+
+rm -f "$staging_path" "$backup_path"
+cp "$source_archive" "$staging_path"
+chmod 755 "$staging_path"
+
 kill -TERM "$app_pid" 2>/dev/null || true
 
 for _ in $(seq 1 60); do
@@ -135,12 +151,13 @@ if kill -0 "$app_pid" 2>/dev/null; then
   exit 75
 fi
 
-rm -f "$staging_path" "$backup_path"
-cp "$source_archive" "$staging_path"
-chmod 755 "$staging_path"
-
 if [[ -e "$target_appimage" ]]; then
-  mv "$target_appimage" "$backup_path"
+  if ! mv "$target_appimage" "$backup_path"; then
+    rm -f "$staging_path"
+    notify_failure
+    relaunch_current_appimage
+    exit 75
+  fi
 fi
 
 if mv "$staging_path" "$target_appimage"; then
@@ -150,6 +167,8 @@ else
   if [[ -e "$backup_path" ]]; then
     mv "$backup_path" "$target_appimage"
   fi
+  notify_failure
+  relaunch_current_appimage
   exit 75
 fi
 

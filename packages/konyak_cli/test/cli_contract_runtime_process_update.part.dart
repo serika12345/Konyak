@@ -2738,6 +2738,66 @@ void defineRuntimeProcessAndUpdateContractTests() {
     expect(_fileSha256(stagedArchive.path), _fileSha256(sourceArchive.path));
   });
 
+  test(
+    'app update installer rejects missing Linux AppImage before handoff',
+    () {
+      final tempDirectory = Directory.systemTemp.createTempSync(
+        'konyak-appimage-update-missing-target-test-',
+      );
+      addTearDown(() {
+        if (tempDirectory.existsSync()) {
+          tempDirectory.deleteSync(recursive: true);
+        }
+      });
+      final sourceArchive = File(
+        _joinTestPath(tempDirectory.path, const [
+          'Konyak-1.1.0-linux.AppImage',
+        ]),
+      )..writeAsStringSync('updated appimage');
+      final missingAppImagePath = _joinTestPath(tempDirectory.path, const [
+        'missing',
+        'Konyak-current.AppImage',
+      ]);
+      final detachedProcessStarter = RecordingDetachedProcessStarter(
+        result: const DetachedProcessStartCompleted(),
+      );
+      final pathOpener = RecordingPathOpener(result: const PathOpenCompleted());
+      final installer = DartIoAppUpdateInstaller(
+        environment: HostEnvironment({
+          'KONYAK_APP_UPDATE_CACHE_HOME': _joinTestPath(
+            tempDirectory.path,
+            const ['cache'],
+          ),
+          'KONYAK_APPIMAGE_PATH': missingAppImagePath,
+          'KONYAK_APP_PID': '4242',
+        }),
+        hostPlatform: KonyakHostPlatform.linux,
+        pathOpener: pathOpener,
+        detachedProcessStarter: detachedProcessStarter,
+      );
+
+      final result = installer.install(
+        AppUpdateRecord(
+          appId: 'konyak',
+          status: 'available',
+          currentVersion: Option.of('1.0.0'),
+          latestVersion: Option.of('1.1.0'),
+          archiveUrl: Option.of(sourceArchive.uri.toString()),
+          archiveSha256: Option.of(_fileSha256(sourceArchive.path)),
+        ),
+      );
+
+      expect(result, isA<AppUpdateInstallFailed>());
+      final failed = result as AppUpdateInstallFailed;
+      expect(
+        failed.message,
+        contains('Current Konyak AppImage does not exist'),
+      );
+      expect(detachedProcessStarter.lastExecutable, isNull);
+      expect(pathOpener.lastPath, isNull);
+    },
+  );
+
   test('app update installer stages macOS app bundle replacement handoff', () {
     final tempDirectory = Directory.systemTemp.createTempSync(
       'konyak-macos-app-update-test-',

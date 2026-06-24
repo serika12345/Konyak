@@ -74,6 +74,10 @@ extension _AppUpdateHandoffInstallers on DartIoAppUpdateInstaller {
     if (targetPath == null || appPid == null) {
       return null;
     }
+    final preflightFailure = _linuxAppImageUpdatePreflightFailure(targetPath);
+    if (preflightFailure != null) {
+      return AppUpdateInstallFailed(preflightFailure);
+    }
 
     final stagedArchivePath = _joinPath(updatesDirectory.path, [
       'Konyak-update-${DateTime.now().microsecondsSinceEpoch}.AppImage',
@@ -112,4 +116,37 @@ extension _AppUpdateHandoffInstallers on DartIoAppUpdateInstaller {
       ),
     };
   }
+}
+
+String? _linuxAppImageUpdatePreflightFailure(String targetPath) {
+  final target = File(targetPath);
+  if (!target.existsSync()) {
+    return 'Current Konyak AppImage does not exist: $targetPath';
+  }
+
+  final parent = target.parent;
+  if (!parent.existsSync()) {
+    return 'Current Konyak AppImage directory does not exist: ${parent.path}';
+  }
+
+  final probe = File(
+    _joinPath(parent.path, [
+      '.konyak-update-write-test-${DateTime.now().microsecondsSinceEpoch}',
+    ]),
+  );
+  try {
+    probe.createSync(exclusive: true);
+    probe.deleteSync();
+  } on FileSystemException {
+    if (probe.existsSync()) {
+      try {
+        probe.deleteSync();
+      } on FileSystemException {
+        // The original failure is more useful to the user.
+      }
+    }
+    return 'Current Konyak AppImage directory is not writable: ${parent.path}';
+  }
+
+  return null;
 }

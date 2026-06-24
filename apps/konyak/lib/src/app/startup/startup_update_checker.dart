@@ -1,6 +1,7 @@
 import '../../cli/konyak_cli_client.dart';
 import '../../runtimes/runtime_summary.dart';
 import '../../settings/app_settings_summary.dart';
+import '../../updates/update_check_summary.dart';
 import '../app_platform.dart';
 import '../runtime/runtime_platform.dart';
 import '../utils/update_labels.dart';
@@ -9,6 +10,7 @@ final class StartupUpdateCheckResult {
   StartupUpdateCheckResult({
     required List<String> availableUpdateLabels,
     required List<RuntimeSummary>? knownRuntimes,
+    this.konyakUpdate,
   }) : availableUpdateLabels = List.unmodifiable(availableUpdateLabels),
        knownRuntimes = knownRuntimes == null
            ? null
@@ -16,6 +18,7 @@ final class StartupUpdateCheckResult {
 
   final List<String> availableUpdateLabels;
   final List<RuntimeSummary>? knownRuntimes;
+  final UpdateCheckSummary? konyakUpdate;
 }
 
 final class StartupUpdateChecker {
@@ -34,12 +37,14 @@ final class StartupUpdateChecker {
     }
 
     final labels = <String>[];
+    UpdateCheckSummary? konyakUpdate;
     List<RuntimeSummary>? knownRuntimes;
 
     if (settings.automaticallyCheckForKonyakUpdates) {
       final result = await cliClient.checkKonyakUpdate();
       switch (result) {
         case LoadedUpdateCheck(:final update) when update.status == 'available':
+          konyakUpdate = update;
           labels.add(updateCheckLabel(update, 'Konyak'));
         case LoadedUpdateCheck() || UpdateCheckLoadFailure():
           break;
@@ -75,6 +80,7 @@ final class StartupUpdateChecker {
     return StartupUpdateCheckResult(
       availableUpdateLabels: List.unmodifiable(labels),
       knownRuntimes: knownRuntimes,
+      konyakUpdate: konyakUpdate,
     );
   }
 }

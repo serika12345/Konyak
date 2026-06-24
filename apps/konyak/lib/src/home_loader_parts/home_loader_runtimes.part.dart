@@ -19,21 +19,24 @@ extension _KonyakHomeLoaderRuntimes on _KonyakHomeLoaderState {
       case LoadedAppSettings(:final settings):
         _appSettings = settings;
         widget.onAppSettingsLoaded(settings);
-        await _checkConfiguredUpdates(settings);
+        final appUpdateInstallStarted = await _checkConfiguredUpdates(settings);
+        if (appUpdateInstallStarted) {
+          return;
+        }
         await _promptForMissingManagedRuntime();
       case AppSettingsLoadFailure():
         break;
     }
   }
 
-  Future<void> _checkConfiguredUpdates(AppSettingsSummary settings) async {
+  Future<bool> _checkConfiguredUpdates(AppSettingsSummary settings) async {
     final result = await StartupUpdateChecker(
       platform: widget.platform,
       cliClient: widget.cliClient,
     ).check(settings);
 
     if (!mounted) {
-      return;
+      return false;
     }
 
     final knownRuntimes = result.knownRuntimes;
@@ -41,13 +44,47 @@ extension _KonyakHomeLoaderRuntimes on _KonyakHomeLoaderState {
       _setKnownRuntimes(knownRuntimes);
     }
 
-    if (result.availableUpdateLabels.isEmpty) {
-      return;
+    final labels = result.availableUpdateLabels.toList();
+    final konyakUpdate = result.konyakUpdate;
+    if (widget.platform.isLinux && konyakUpdate != null) {
+      labels.remove(updateCheckLabel(konyakUpdate, 'Konyak'));
+      final installStarted = await _installAvailableKonyakUpdate();
+      if (!mounted) {
+        return installStarted;
+      }
+      if (installStarted) {
+        return true;
+      }
     }
 
-    _showSnackBar(
-      'Updates available: ${result.availableUpdateLabels.join(', ')}',
-    );
+    if (labels.isEmpty) {
+      return false;
+    }
+
+    _showSnackBar('Updates available: ${labels.join(', ')}');
+    return false;
+  }
+
+  Future<bool> _installAvailableKonyakUpdate() async {
+    final installResult = await widget.cliClient.installKonyakUpdate();
+
+    if (!mounted) {
+      return false;
+    }
+
+    switch (installResult) {
+      case InstalledUpdate(:final update) when update.status == 'installed':
+        _showSnackBar(
+          'Installing ${installedUpdateLabel(update, 'Konyak')} update. '
+          'Konyak will restart.',
+        );
+        return true;
+      case InstalledUpdate():
+        return false;
+      case UpdateInstallLoadFailure(:final message):
+        _showSnackBar('Konyak update install failed: $message');
+        return false;
+    }
   }
 
   void _setKnownRuntimes(List<RuntimeSummary> runtimes) {

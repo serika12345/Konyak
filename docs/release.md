@@ -159,6 +159,11 @@ At AppImage runtime, `AppRun` exports:
 This lets packaged builds invoke the bundled CLI directly from the AppImage and
 lets Linux app updates hand off to a background replacement script that
 terminates the running app, swaps in the verified AppImage, and relaunches it.
+When automatic Konyak update checks are enabled, Linux AppImage builds invoke
+that verified install path on startup after an available app update is found.
+The installer verifies that the current AppImage exists and that its directory
+is writable before the app is terminated; AppImages installed in read-only or
+Nix-managed locations should be updated by the package manager instead.
 
 On Linux startup, the Flutter app runs `install-linux-file-associations --json`
 through the bundled CLI. That command rewrites the user-level desktop entry at
@@ -225,9 +230,9 @@ updated `.app` bundle, terminates the running app, replaces the current bundle
 with rollback backup handling, and relaunches the updated app. If the current
 bundle lives in a location such as `/Applications` where the user cannot write
 directly, the handoff asks macOS for administrator authorization before
-performing the replacement. On Linux AppImage builds it stages the verified
-AppImage, replaces the running artifact in place after termination, and
-relaunches the updated app.
+performing the replacement. On Linux AppImage builds it verifies the current
+AppImage target before termination, stages the verified AppImage, replaces the
+running artifact in place after termination, and relaunches the updated app.
 
 ## Runtime Stack Releases
 

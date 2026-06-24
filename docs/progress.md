@@ -11,6 +11,58 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-24 21:04 JST
+- State: `completed`
+- Branch: `main`
+- Related work: Linux AppImage app update auto-install
+- Purpose: connect Linux AppImage startup update checks to the existing verified
+  `install-app-update --json` handoff path, while avoiding self-replacement in
+  unsuitable AppImage locations.
+- Completed:
+  - Added Linux startup behavior that invokes `install-app-update --json` after
+    an available Konyak app update is found and automatic Konyak update checks
+    are enabled.
+  - Kept the behavior Linux-specific; macOS startup update notification behavior
+    is unchanged in this change.
+  - Added AppImage handoff preflight so the CLI rejects missing or unwritable
+    current AppImage targets before starting the detached replacement process.
+  - Changed the Linux handoff script to copy and chmod the staged AppImage
+    before terminating the running app, and to best-effort notify/relaunch the
+    previous AppImage if post-termination replacement fails.
+  - Renamed the Linux settings switch label to `Automatically install Konyak
+    updates` while leaving macOS as `Automatically check for Konyak updates`.
+  - Updated release and CLI distribution documentation for the Linux AppImage
+    auto-install flow and the read-only/Nix-managed-location constraint.
+- Remaining:
+  - None for this change.
+- Next: commit the Linux AppImage app-update auto-install change if desired.
+- Verification:
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "Linux installs available Konyak AppImage updates on startup"'`:
+    failed before implementation, then passed.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "app update installer rejects missing Linux AppImage before handoff"'`:
+    failed before implementation, then passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "Linux warns when automatic Konyak update install fails"'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "enabled update checks only notify available updates on startup"'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "app update installer stages Linux AppImage replacement handoff"'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "Linux settings labels Konyak update switch as install"'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart'`:
+    passed.
+  - `nix develop -c zsh -lc 'just flutter-format-check'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-analyze'`: passed.
+  - `nix develop -c zsh -lc 'just cli-test'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-test'`: passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `nix develop -c zsh -lc 'git diff --check'`: passed.
+
 - Timestamp: 2026-06-24 19:59 JST
 - State: `completed`
 - Branch: `main`

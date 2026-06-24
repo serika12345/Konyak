@@ -542,6 +542,170 @@ void defineMacosStartupAndRuntimeWidgetTests() {
     },
   );
 
+  testWidgets('Linux installs available Konyak AppImage updates on startup', (
+    WidgetTester tester,
+  ) async {
+    final runner = _QueuedProcessRunner([
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '{"schemaVersion":1,"bottles":[]}',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout:
+            '{"schemaVersion":1,"linuxFileAssociations":{"status":"installed"}}',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "appSettings": {
+              "terminateWineProcessesOnClose": false,
+              "defaultBottlePath": "/home/user/.local/share/konyak/Bottles",
+              "automaticallyCheckForKonyakUpdates": true,
+              "automaticallyCheckForWineUpdates": false
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "appUpdate": {
+              "appId": "konyak",
+              "status": "available",
+              "currentVersion": "1.0.0",
+              "latestVersion": "1.1.0"
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "appUpdateInstall": {
+              "appId": "konyak",
+              "status": "installed",
+              "currentVersion": "1.0.0",
+              "installedVersion": "1.1.0",
+              "installPath": "/home/user/Applications/Konyak.AppImage"
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+    ]);
+
+    await tester.pumpWidget(
+      _testKonyakApp(
+        platform: KonyakPlatform.linux,
+        cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
+        enableBackgroundServices: true,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      runner.argumentsLog,
+      containsAllInOrder([
+        const ['install-linux-file-associations', '--json'],
+        const ['get-app-settings', '--json'],
+        const ['check-app-update', '--json'],
+        const ['install-app-update', '--json'],
+      ]),
+    );
+    expect(
+      find.text('Installing Konyak 1.1.0 update. Konyak will restart.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('Linux warns when automatic Konyak update install fails', (
+    WidgetTester tester,
+  ) async {
+    final runner = _QueuedProcessRunner([
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '{"schemaVersion":1,"bottles":[]}',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout:
+            '{"schemaVersion":1,"linuxFileAssociations":{"status":"installed"}}',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "appSettings": {
+              "terminateWineProcessesOnClose": false,
+              "defaultBottlePath": "/home/user/.local/share/konyak/Bottles",
+              "automaticallyCheckForKonyakUpdates": true,
+              "automaticallyCheckForWineUpdates": false
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "appUpdate": {
+              "appId": "konyak",
+              "status": "available",
+              "currentVersion": "1.0.0",
+              "latestVersion": "1.1.0"
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 75,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "error": {
+              "code": "appUpdateInstallFailed",
+              "message": "Current Konyak AppImage directory is not writable."
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+    ]);
+
+    await tester.pumpWidget(
+      _testKonyakApp(
+        platform: KonyakPlatform.linux,
+        cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
+        enableBackgroundServices: true,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text(
+        'Konyak update install failed: Current Konyak AppImage directory is not writable.',
+      ),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('macOS prompts to install a missing managed runtime on launch', (
     WidgetTester tester,
   ) async {

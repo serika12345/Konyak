@@ -231,7 +231,8 @@ task changes scope.
     completed installer run when the setting is enabled.
   - [x] Check for Konyak and Konyak Wine updates on startup when enabled.
   - [x] Install available Konyak Wine runtime updates automatically.
-  - [x] Download and apply available Konyak app update artifacts automatically.
+  - [x] Download and apply available Linux AppImage Konyak app update artifacts
+    automatically after startup update checks.
 - [x] Keep Linux Wine/Proton behavior separate.
   - [x] Hide macOS-only runtime controls, including Konyak macOS Wine
     installation, when the Flutter UI is running on Linux.

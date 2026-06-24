@@ -21,6 +21,7 @@ import '../app/startup/startup_update_checker.dart';
 import '../app/utils/bottle_lists.dart';
 import '../app/utils/program_labels.dart';
 import '../app/utils/program_run_feedback.dart';
+import '../app/utils/update_labels.dart';
 import '../app/widgets/blocking_progress_overlay.dart';
 import '../bottles/bottle_summary.dart';
 import '../cli/konyak_cli_client.dart';
