@@ -675,6 +675,23 @@ task changes scope.
     - [x] Split Program Configuration form environment editing from the
       surrounding program settings screen.
 - Linux ARM64 Windows execution research.
+- Linux executable thumbnails for sandboxed file managers.
+  - Do not make the AppImage or normal app startup mutate `/nix/store` or create
+    Nix GC roots on the user's behalf.
+  - Treat GNOME/Nautilus thumbnailer sandboxing as normal behavior, not as a
+    user configuration problem. The thumbnailer executable must be visible from
+    the file manager's sandbox when on-demand thumbnails are supported.
+  - Keep the existing Windows executable file association and launcher
+    registration separate from thumbnail generation.
+  - Design a NixOS integration path, such as a Nix package, Home Manager module,
+    or NixOS module, that installs a sandbox-visible Konyak thumbnail helper and
+    registers the Freedesktop `.thumbnailer` entry.
+  - Consider an app-owned pre-generation path that writes Freedesktop thumbnail
+    cache PNGs for executables Konyak has already inspected, while documenting
+    that this is not a substitute for arbitrary Nautilus on-demand thumbnails.
+  - Preserve the dynamic finding that home-directory AppImage/wrapper
+    thumbnailers are not visible to GNOME's `bwrap` thumbnailer sandbox on the
+    tested NixOS/Nautilus setup.
 - Add E2E tests.
   - Decide the target level before implementation: Flutter integration tests
     with a fake CLI, real CLI tests against temporary directories, or a small

@@ -11,6 +11,39 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-24 19:59 JST
+- State: `completed`
+- Branch: `main`
+- Related work: Linux executable file-manager thumbnails
+- Purpose: discard the uncommitted Linux executable thumbnailer implementation
+  that made AppImage startup add an AppDir to `/nix/store`, and keep the work as
+  an explicit design TODO instead.
+- Completed:
+  - Reverted the uncommitted CLI command, `image` dependency, `.thumbnailer`
+    writer changes, tests, smoke additions, and progress entry for the
+    attempted executable thumbnailer implementation.
+  - Kept the design learning: GNOME/Nautilus thumbnailers can run inside
+    `bwrap`, and home-directory AppImage/wrapper executables were not visible to
+    that sandbox on the tested NixOS setup.
+  - Added a TODO for Linux executable thumbnails that forbids app startup from
+    mutating `/nix/store`, keeps file association separate from thumbnails, and
+    points future NixOS support toward a Nix package, Home Manager module, or
+    NixOS module.
+- Remaining:
+  - Linux executable thumbnails are intentionally not implemented in the parent
+    app/CLI after this rollback.
+  - Future work must design a sandbox-visible thumbnail helper installation path
+    before reintroducing `.thumbnailer` generation for GNOME/Nautilus.
+- Next: design the NixOS thumbnail-helper packaging/integration contract before
+  any new Linux executable thumbnail implementation.
+- Verification:
+  - `nix develop -c zsh -lc 'git status --short'`: confirmed the rollback made
+    the worktree clean before the TODO/progress documentation edits.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+
 - Timestamp: 2026-06-23 21:01 JST
 - State: `completed`
 - Branch: `main`
