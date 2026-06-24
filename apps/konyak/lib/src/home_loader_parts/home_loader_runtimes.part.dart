@@ -46,7 +46,8 @@ extension _KonyakHomeLoaderRuntimes on _KonyakHomeLoaderState {
 
     final labels = result.availableUpdateLabels.toList();
     final konyakUpdate = result.konyakUpdate;
-    if (widget.platform.isLinux && konyakUpdate != null) {
+    if (_automaticallyInstallsKonyakAppUpdates(widget.platform) &&
+        konyakUpdate != null) {
       labels.remove(updateCheckLabel(konyakUpdate, 'Konyak'));
       final installStarted = await _installAvailableKonyakUpdate();
       if (!mounted) {
@@ -384,4 +385,8 @@ extension _KonyakHomeLoaderRuntimes on _KonyakHomeLoaderState {
     }
     _showSnackBar(_openUrlFailureMessage(result));
   }
+}
+
+bool _automaticallyInstallsKonyakAppUpdates(KonyakPlatform platform) {
+  return platform.isMacOS || platform.isLinux;
 }

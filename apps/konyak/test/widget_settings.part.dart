@@ -142,6 +142,51 @@ void defineSettingsWidgetTests() {
     ]);
   });
 
+  testWidgets('macOS settings labels Konyak update switch as install', (
+    WidgetTester tester,
+  ) async {
+    final runner = _QueuedProcessRunner([
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '{"schemaVersion":1,"bottles":[]}',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "appSettings": {
+              "terminateWineProcessesOnClose": true,
+              "defaultBottlePath": "/Users/user/Library/Application Support/Konyak/Bottles",
+              "automaticallyCheckForKonyakUpdates": false,
+              "automaticallyCheckForWineUpdates": true
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '{"schemaVersion":1,"runtimes":[]}',
+        stderr: '',
+      ),
+    ]);
+
+    await tester.pumpWidget(
+      _testKonyakApp(
+        cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Settings'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Automatically install Konyak updates'), findsOneWidget);
+    expect(find.text('Automatically check for Konyak updates'), findsNothing);
+  });
+
   testWidgets('Linux settings labels Konyak update switch as install', (
     WidgetTester tester,
   ) async {

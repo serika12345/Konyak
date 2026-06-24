@@ -447,8 +447,126 @@ void defineMacosStartupAndRuntimeWidgetTests() {
     expect(find.byTooltip('View latest log'), findsOneWidget);
   });
 
+  testWidgets('macOS installs available Konyak app updates on startup', (
+    WidgetTester tester,
+  ) async {
+    final runner = _QueuedProcessRunner([
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '{"schemaVersion":1,"bottles":[]}',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "appSettings": {
+              "terminateWineProcessesOnClose": false,
+              "defaultBottlePath": "/Users/user/Library/Application Support/Konyak/Bottles",
+              "automaticallyCheckForKonyakUpdates": true,
+              "automaticallyCheckForWineUpdates": true
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "appUpdate": {
+              "appId": "konyak",
+              "status": "available",
+              "currentVersion": "1.0.0",
+              "latestVersion": "1.1.0"
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "runtimes": [
+              {
+                "id": "konyak-macos-wine",
+                "name": "Konyak macOS Wine",
+                "platform": "macos",
+                "architecture": "x86_64",
+                "runnerKind": "macosWine",
+                "isBundled": false,
+                "isUpdateable": true,
+                "isInstalled": true
+              }
+            ]
+          }
+        ''',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "runtimeUpdate": {
+              "runtimeId": "konyak-macos-wine",
+              "status": "available",
+              "currentVersion": "wine-devel-11.9",
+              "latestVersion": "12.0"
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "appUpdateInstall": {
+              "appId": "konyak",
+              "status": "installed",
+              "currentVersion": "1.0.0",
+              "installedVersion": "1.1.0",
+              "installPath": "/Applications/Konyak.app"
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+    ]);
+
+    await tester.pumpWidget(
+      _testKonyakApp(
+        cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
+        enableBackgroundServices: true,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      runner.argumentsLog,
+      containsAllInOrder([
+        const ['get-app-settings', '--json'],
+        const ['check-app-update', '--json'],
+        const ['list-runtimes', '--json'],
+        const ['check-runtime-update', 'konyak-macos-wine', '--json'],
+        const ['install-app-update', '--json'],
+      ]),
+    );
+    expect(
+      find.text('Installing Konyak 1.1.0 update. Konyak will restart.'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('Updates available:'), findsNothing);
+  });
+
   testWidgets(
-    'enabled update checks only notify available updates on startup',
+    'macOS notifies available runtime updates when the app is current',
     (WidgetTester tester) async {
       final runner = _QueuedProcessRunner([
         const ProcessRunResult(
@@ -478,8 +596,8 @@ void defineMacosStartupAndRuntimeWidgetTests() {
             "schemaVersion": 1,
             "appUpdate": {
               "appId": "konyak",
-              "status": "available",
-              "currentVersion": "1.0.0",
+              "status": "current",
+              "currentVersion": "1.1.0",
               "latestVersion": "1.1.0"
             }
           }
@@ -536,11 +654,81 @@ void defineMacosStartupAndRuntimeWidgetTests() {
       await tester.pumpAndSettle();
 
       expect(
-        find.text('Updates available: Konyak 1.1.0, Konyak macOS Wine 12.0'),
+        find.text('Updates available: Konyak macOS Wine 12.0'),
         findsOneWidget,
       );
     },
   );
+
+  testWidgets('macOS warns when automatic Konyak update install fails', (
+    WidgetTester tester,
+  ) async {
+    final runner = _QueuedProcessRunner([
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '{"schemaVersion":1,"bottles":[]}',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "appSettings": {
+              "terminateWineProcessesOnClose": false,
+              "defaultBottlePath": "/Users/user/Library/Application Support/Konyak/Bottles",
+              "automaticallyCheckForKonyakUpdates": true,
+              "automaticallyCheckForWineUpdates": false
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "appUpdate": {
+              "appId": "konyak",
+              "status": "available",
+              "currentVersion": "1.0.0",
+              "latestVersion": "1.1.0"
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 75,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "error": {
+              "code": "appUpdateInstallFailed",
+              "message": "Current Konyak app bundle does not exist."
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+    ]);
+
+    await tester.pumpWidget(
+      _testKonyakApp(
+        cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
+        enableBackgroundServices: true,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text(
+        'Konyak update install failed: Current Konyak app bundle does not exist.',
+      ),
+      findsOneWidget,
+    );
+  });
 
   testWidgets('Linux installs available Konyak AppImage updates on startup', (
     WidgetTester tester,

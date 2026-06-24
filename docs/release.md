@@ -200,7 +200,9 @@ directly instead of the development Dart script. The client also passes
 `KONYAK_BUNDLE_RESOURCES`, prepends that directory to `PATH`, and passes
 `KONYAK_APP_EXECUTABLE` and `KONYAK_APP_PID` to the CLI so runtime extraction
 helpers are available and verified macOS app updates can terminate the running
-app, replace the current `.app` bundle, and relaunch it.
+app, replace the current `.app` bundle, and relaunch it. When automatic Konyak
+update checks are enabled, packaged macOS builds invoke that verified install
+path on startup after an available app update is found.
 
 ## GitHub Release Workflow
 

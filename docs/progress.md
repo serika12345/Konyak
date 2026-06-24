@@ -11,6 +11,59 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-24 22:06 JST
+- State: `completed`
+- Branch: `main`
+- Related work: macOS packaged app update auto-install
+- Purpose: connect macOS startup update checks to the existing verified
+  `install-app-update --json` app-bundle handoff path so packaged macOS builds
+  can automatically install available Konyak app updates like Linux AppImage
+  builds.
+- Completed:
+  - Read the current Linux AppImage startup auto-install implementation, macOS
+    update handoff tests, release documentation, and current TODO/progress
+    state.
+  - Added macOS startup widget coverage that proves available Konyak app
+    updates invoke `install-app-update --json` after the existing update checks
+    and show the restart handoff message.
+  - Kept runtime-only macOS update notifications covered when the Konyak app is
+    current.
+  - Added macOS install-failure snackbar coverage for automatic Konyak app
+    updates.
+  - Changed macOS startup behavior to use the existing app-update install path
+    for available Konyak app updates, matching Linux AppImage startup behavior.
+  - Renamed the macOS settings switch label to `Automatically install Konyak
+    updates`.
+  - Updated release and TODO documentation to describe packaged app update
+    auto-install on macOS and Linux.
+- Remaining:
+  - None for the macOS startup app-update auto-install change.
+- Next: add dynamic packaged app-update handoff smokes for macOS and Linux when
+  continuing the final auto-update verification work.
+- Verification:
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "macOS installs available Konyak app updates on startup"'`:
+    failed before implementation because `install-app-update --json` was not
+    invoked, then passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "macOS settings labels Konyak update switch as install"'`:
+    failed before implementation because macOS still displayed
+    `Automatically check for Konyak updates`, then passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "macOS notifies available runtime updates when the app is current"'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "Linux installs available Konyak AppImage updates on startup"'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "macOS warns when automatic Konyak update install fails"'`:
+    passed.
+  - `nix develop -c zsh -lc 'dart format apps/konyak/lib/src/home_loader_parts/home_loader_runtimes.part.dart apps/konyak/lib/src/app/dialogs/app_settings_dialog.dart apps/konyak/test/widget_macos_startup.part.dart apps/konyak/test/widget_settings.part.dart'`:
+    passed.
+  - `nix develop -c zsh -lc 'just flutter-format-check'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-analyze'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-test'`: passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `nix develop -c zsh -lc 'git diff --check'`: passed.
+
 - Timestamp: 2026-06-24 21:04 JST
 - State: `completed`
 - Branch: `main`
