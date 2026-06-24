@@ -45,19 +45,25 @@ task changes scope.
 
 ## Next Tasks
 
-- [ ] Add a macOS DLSS powered by MetalFX bottle setting.
+- [x] Add a macOS DLSS powered by MetalFX bottle setting.
   - Design: `docs/dlss-metalfx-design.md`.
-  - [ ] Prove the exact D3DMetal/DXMT enablement signal dynamically through
-    Konyak's public `run-program --json` path before implementation is marked
-    complete.
-  - [ ] Add `dlssMetalFx` to CLI bottle runtime settings, storage, JSON
+  - [x] Confirm the exact D3DMetal/DXMT launch signals from the supplied
+    CrossOver, DXMT, GPTK, and MacPorts references, and document those
+    references in the design and launch-environment code.
+  - [x] Add `dlssMetalFx` to CLI bottle runtime settings, storage, JSON
     contracts, and Flutter models with a legacy default of `false`.
-  - [ ] Gate the macOS UI control to D3DMetal/DXMT with the required `nvapi64`
+  - [x] Gate the macOS UI control to D3DMetal/DXMT with the required `nvapi64`
     and `nvngx` capability; do not expose it on Linux.
-  - [ ] Apply the proven run-plan environment only for D3DMetal/DXMT and
+  - [x] Apply the referenced run-plan environment only for D3DMetal/DXMT and
     preserve the setting for other backends.
-  - [ ] Add focused CLI, Flutter parser, widget, and dynamic smoke coverage;
-    document any CI limitation for proprietary DLSS test software.
+  - [x] Add focused CLI, Flutter parser, widget, and maintained smoke-contract
+    coverage; document the CI limitation for proprietary DLSS test software.
+- [ ] Capture end-to-end DLSS/MetalFX rendering proof with a redistributable or
+  user-provided DLSS-capable Windows program.
+  - Use Konyak's public `run-program --json` path, record backend environment,
+    selected runtime/component paths, process/log evidence, and Metal HUD or
+    equivalent evidence where practical.
+  - Do not add proprietary or nonredistributable game payloads to CI.
 - [x] Remove runtime verification masking and prove prefix/addon integrity.
   - [x] Remove `mscoree,mshtml=` from application-owned macOS prefix
     initialization and update CLI contract tests so prefix creation exercises

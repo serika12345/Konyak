@@ -9,6 +9,8 @@ class BottleRuntimeControlAvailability {
     required this.canUseVkd3dProton,
     required this.canUseMetal,
     required this.canUseDxr,
+    required this.canUseDxmtDlssMetalFx,
+    required this.canUseD3DMetalDlssMetalFx,
   });
 
   final bool canUseWineRuntime;
@@ -17,6 +19,8 @@ class BottleRuntimeControlAvailability {
   final bool canUseVkd3dProton;
   final bool canUseMetal;
   final bool canUseDxr;
+  final bool canUseDxmtDlssMetalFx;
+  final bool canUseD3DMetalDlssMetalFx;
 }
 
 BottleRuntimeControlAvailability resolveBottleRuntimeControlAvailability({
@@ -30,6 +34,14 @@ BottleRuntimeControlAvailability resolveBottleRuntimeControlAvailability({
       !hasPendingRuntimeSettings &&
       runtime?.isInstalled == true;
 
+  final canUseDxmt =
+      canUseRuntimeState &&
+      platform.isMacOS &&
+      _isRuntimeBackendAvailable(runtime, 'dxmt');
+  final canUseDxr =
+      canUseRuntimeState &&
+      _isRuntimeBackendAvailable(runtime, 'gptk-d3dmetal');
+
   return BottleRuntimeControlAvailability(
     canUseWineRuntime: canUseRuntimeState && _isStackComplete(runtime),
     canUseDxvk:
@@ -38,18 +50,17 @@ BottleRuntimeControlAvailability resolveBottleRuntimeControlAvailability({
           runtime,
           platform.isMacOS ? 'dxvk-macos' : 'dxvk',
         ),
-    canUseDxmt:
-        canUseRuntimeState &&
-        platform.isMacOS &&
-        _isRuntimeBackendAvailable(runtime, 'dxmt'),
+    canUseDxmt: canUseDxmt,
     canUseVkd3dProton:
         canUseRuntimeState &&
         _isRuntimeBackendAvailable(runtime, 'vkd3d-proton'),
     canUseMetal:
         canUseRuntimeState && _isRuntimeComponentAvailable(runtime, 'moltenvk'),
-    canUseDxr:
-        canUseRuntimeState &&
-        _isRuntimeBackendAvailable(runtime, 'gptk-d3dmetal'),
+    canUseDxr: canUseDxr,
+    canUseDxmtDlssMetalFx:
+        canUseDxmt && _runtimeHasRequiredShim(runtime, 'dxmt'),
+    canUseD3DMetalDlssMetalFx:
+        canUseDxr && _runtimeHasRequiredShim(runtime, 'gptk-d3dmetal'),
   );
 }
 
@@ -93,4 +104,30 @@ bool _isRuntimeBackendAvailable(RuntimeSummary? runtime, String backendId) {
   }
 
   return _isRuntimeComponentAvailable(runtime, backendId);
+}
+
+bool _runtimeHasRequiredShim(RuntimeSummary? runtime, String componentId) {
+  final stack = runtime?.stack;
+  if (runtime?.isInstalled != true || stack == null) {
+    return false;
+  }
+
+  final requiredNames = const <String>['nvapi64', 'nvngx'];
+  for (final component in stack.components) {
+    if (component.id != componentId) {
+      continue;
+    }
+
+    if (!component.isInstalled) {
+      return false;
+    }
+
+    return requiredNames.every(
+      (name) => !component.missingPaths.any(
+        (path) => path.toLowerCase().contains(name),
+      ),
+    );
+  }
+
+  return false;
 }

@@ -226,6 +226,7 @@ ProgramRunRequest _macosWineCommandRequest({
   required BottleRecord bottle,
   required String command,
   required HostEnvironment environment,
+  required int? macosMajorVersion,
 }) {
   final hostEnvironment = environment;
   return ProgramRunRequest(
@@ -237,6 +238,7 @@ ProgramRunRequest _macosWineCommandRequest({
     environment: _macosWineEnvironment(
       bottle: bottle,
       environment: environment,
+      macosMajorVersion: macosMajorVersion,
     ),
     logPath: _joinPath(bottle.path, const ['logs', 'latest.log']),
     workingDirectory: Option.of(_macosWineBinFolder(hostEnvironment)),
@@ -247,6 +249,7 @@ ProgramRunRequest _macosRegistryUpdateRequest({
   required BottleRecord bottle,
   required _RegistryValueUpdate update,
   required HostEnvironment environment,
+  required int? macosMajorVersion,
 }) {
   final hostEnvironment = environment;
   return ProgramRunRequest(
@@ -258,6 +261,7 @@ ProgramRunRequest _macosRegistryUpdateRequest({
     environment: _macosWineEnvironment(
       bottle: bottle,
       environment: environment,
+      macosMajorVersion: macosMajorVersion,
     ),
     logPath: _joinPath(bottle.path, const ['logs', 'latest.log']),
     workingDirectory: Option.of(_macosWineBinFolder(hostEnvironment)),
@@ -268,6 +272,7 @@ ProgramRunRequest _macosRegistryQueryRequest({
   required BottleRecord bottle,
   required _RegistryValueQuery query,
   required HostEnvironment environment,
+  required int? macosMajorVersion,
 }) {
   final hostEnvironment = environment;
   return ProgramRunRequest(
@@ -279,6 +284,7 @@ ProgramRunRequest _macosRegistryQueryRequest({
     environment: _macosWineEnvironment(
       bottle: bottle,
       environment: environment,
+      macosMajorVersion: macosMajorVersion,
     ),
     logPath: _joinPath(bottle.path, const ['logs', 'registry.log']),
     workingDirectory: Option.of(_macosWineBinFolder(hostEnvironment)),
@@ -313,11 +319,13 @@ ProgramRunRequest _linuxTerminalCommandRequest({
 ProgramRunRequest _macosTerminalCommandRequest({
   required BottleRecord bottle,
   required HostEnvironment environment,
+  required int? macosMajorVersion,
   String? initialWineCommand,
 }) {
   final shellCommand = _macosWineTerminalShellCommand(
     bottle: bottle,
     environment: environment,
+    macosMajorVersion: macosMajorVersion,
     initialWineCommand: initialWineCommand,
   );
   final setupScriptPath = _macosTerminalSetupScriptPath(bottle);
@@ -364,6 +372,7 @@ ProgramRunRequest _linuxWinetricksCommandRequest({
 ProgramRunRequest _macosWinetricksCommandRequest({
   required BottleRecord bottle,
   required HostEnvironment environment,
+  required int? macosMajorVersion,
   required String? verb,
 }) {
   final hostEnvironment = environment;
@@ -376,12 +385,20 @@ ProgramRunRequest _macosWinetricksCommandRequest({
     runnerKind: 'macosWinetricks',
     executable: _macosWinetricksExecutable(hostEnvironment),
     arguments: verb == null ? const <String>[] : <String>[verb],
-    environment: _macosWineEnvironment(bottle: bottle, environment: environment)
-        .add('WINE', _macosWineExecutable(hostEnvironment))
-        .add(
-          'PATH',
-          _prependPath(runtimeBin, Option.fromNullable(environment['PATH'])),
-        ),
+    environment:
+        _macosWineEnvironment(
+              bottle: bottle,
+              environment: environment,
+              macosMajorVersion: macosMajorVersion,
+            )
+            .add('WINE', _macosWineExecutable(hostEnvironment))
+            .add(
+              'PATH',
+              _prependPath(
+                runtimeBin,
+                Option.fromNullable(environment['PATH']),
+              ),
+            ),
     logPath: _joinPath(bottle.path, const ['logs', 'latest.log']),
     workingDirectory: Option.of(runtimeRoot),
   );

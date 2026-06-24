@@ -73,6 +73,7 @@ String _linuxWineTerminalShellCommandWithEnvironment({
 String _macosWineTerminalShellCommand({
   required BottleRecord bottle,
   required HostEnvironment environment,
+  required int? macosMajorVersion,
   String? initialWineCommand,
 }) {
   final runtimeBin = _macosWineBinFolder(environment);
@@ -97,6 +98,7 @@ String _macosWineTerminalShellCommand({
   _macosWineEnvironment(
     bottle: bottle,
     environment: environment,
+    macosMajorVersion: macosMajorVersion,
   ).toMap().forEach((key, value) {
     commands.add('export $key=${_shellQuote(value)}');
   });

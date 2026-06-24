@@ -931,6 +931,154 @@ void defineProgramExecutionContractTests() {
     }
   });
 
+  test('run-program --json enables D3DMetal DLSS MetalFX on macOS 16', () {
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-d3dmetal-dlss-metalfx-run-test-',
+    );
+    addTearDown(() {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    });
+
+    final runtimeRoot = _joinTestPath(tempDirectory.path, const ['runtime']);
+    final bottlePath = _joinTestPath(tempDirectory.path, const [
+      'bottles',
+      'steam',
+    ]);
+    for (final dllName in _gptkD3DMetalOverrideDllNames) {
+      final file = File(
+        _joinTestPath(runtimeRoot, [
+          'components',
+          'gptk-d3dmetal',
+          'lib',
+          'wine',
+          'x86_64-windows',
+          dllName,
+        ]),
+      );
+      file.parent.createSync(recursive: true);
+      file.writeAsStringSync('d3dmetal/$dllName');
+    }
+
+    final repository = MemoryBottleRepository(
+      dataHome: _joinTestPath(tempDirectory.path, const ['data']),
+      bottles: [
+        BottleRecord(
+          id: 'steam',
+          name: 'Steam',
+          path: bottlePath,
+          windowsVersion: 'win10',
+          runtimeSettings: const BottleRuntimeSettings(
+            dxrEnabled: true,
+            dlssMetalFx: true,
+          ),
+        ),
+      ],
+    );
+    final runner = RecordingProgramRunner(
+      result: const ProgramRunCompleted(processExitCode: 0),
+    );
+
+    final result = runCli(
+      const [
+        'run-program',
+        'steam',
+        '--program',
+        '/downloads/setup.exe',
+        '--json',
+      ],
+      bottleRepository: repository,
+      programRunPlanner: ProgramRunPlanner(
+        hostPlatform: KonyakHostPlatform.macos,
+        environment: HostEnvironment({'KONYAK_MACOS_WINE_HOME': runtimeRoot}),
+        macosMajorVersion: 16,
+      ),
+      programRunner: runner,
+    );
+
+    expect(result.exitCode, 0);
+    expect(result.stderr, isEmpty);
+    expect(
+      runner.lastRequest?.environment.toMap(),
+      containsPair('D3DM_ENABLE_METALFX', '1'),
+    );
+  });
+
+  test('run-program --json skips D3DMetal DLSS MetalFX before macOS 16', () {
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-d3dmetal-dlss-metalfx-macos15-run-test-',
+    );
+    addTearDown(() {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    });
+
+    final runtimeRoot = _joinTestPath(tempDirectory.path, const ['runtime']);
+    final bottlePath = _joinTestPath(tempDirectory.path, const [
+      'bottles',
+      'steam',
+    ]);
+    for (final dllName in _gptkD3DMetalOverrideDllNames) {
+      final file = File(
+        _joinTestPath(runtimeRoot, [
+          'components',
+          'gptk-d3dmetal',
+          'lib',
+          'wine',
+          'x86_64-windows',
+          dllName,
+        ]),
+      );
+      file.parent.createSync(recursive: true);
+      file.writeAsStringSync('d3dmetal/$dllName');
+    }
+
+    final repository = MemoryBottleRepository(
+      dataHome: _joinTestPath(tempDirectory.path, const ['data']),
+      bottles: [
+        BottleRecord(
+          id: 'steam',
+          name: 'Steam',
+          path: bottlePath,
+          windowsVersion: 'win10',
+          runtimeSettings: const BottleRuntimeSettings(
+            dxrEnabled: true,
+            dlssMetalFx: true,
+          ),
+        ),
+      ],
+    );
+    final runner = RecordingProgramRunner(
+      result: const ProgramRunCompleted(processExitCode: 0),
+    );
+
+    final result = runCli(
+      const [
+        'run-program',
+        'steam',
+        '--program',
+        '/downloads/setup.exe',
+        '--json',
+      ],
+      bottleRepository: repository,
+      programRunPlanner: ProgramRunPlanner(
+        hostPlatform: KonyakHostPlatform.macos,
+        environment: HostEnvironment({'KONYAK_MACOS_WINE_HOME': runtimeRoot}),
+        macosMajorVersion: 15,
+      ),
+      programRunner: runner,
+    );
+
+    expect(result.exitCode, 0);
+    expect(result.stderr, isEmpty);
+    expect(
+      runner.lastRequest?.environment.toMap(),
+      isNot(containsPair('D3DM_ENABLE_METALFX', '1')),
+    );
+  });
+
   test('run-program --json applies DXMT settings on macOS', () {
     final repository = MemoryBottleRepository(
       dataHome: '/Users/user/Library/Application Support/Konyak',
@@ -1003,6 +1151,53 @@ void defineProgramExecutionContractTests() {
             '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib',
       ),
     );
+    expect(
+      runner.lastRequest?.environment.toMap(),
+      isNot(containsPair('DXMT_ENABLE_NVEXT', '1')),
+    );
+  });
+
+  test('run-program --json enables DXMT NVEXT for DLSS MetalFX on macOS', () {
+    final repository = MemoryBottleRepository(
+      dataHome: '/Users/user/Library/Application Support/Konyak',
+      bottles: [
+        BottleRecord(
+          id: 'steam',
+          name: 'Steam',
+          path: '/Users/user/Library/Application Support/Konyak/Bottles/Steam',
+          windowsVersion: 'win10',
+          runtimeSettings: const BottleRuntimeSettings(
+            dxmt: true,
+            dlssMetalFx: true,
+          ),
+        ),
+      ],
+    );
+    final runner = RecordingProgramRunner(
+      result: const ProgramRunCompleted(processExitCode: 0),
+    );
+
+    final result = runCli(
+      const [
+        'run-program',
+        'steam',
+        '--program',
+        '/downloads/setup.exe',
+        '--json',
+      ],
+      bottleRepository: repository,
+      programRunPlanner: ProgramRunPlanner(
+        hostPlatform: KonyakHostPlatform.macos,
+        environment: HostEnvironment({'HOME': '/Users/user'}),
+      ),
+      programRunner: runner,
+    );
+
+    expect(result.exitCode, 0);
+    expect(
+      runner.lastRequest?.environment.toMap(),
+      containsPair('DXMT_ENABLE_NVEXT', '1'),
+    );
   });
 
   test('run-program --json applies DXVK settings on Linux', () {
@@ -1017,6 +1212,7 @@ void defineProgramExecutionContractTests() {
           runtimeSettings: BottleRuntimeSettings(
             enhancedSync: 'msync',
             dxvk: true,
+            dlssMetalFx: true,
             dxvkHud: 'fps',
           ),
         ),
@@ -1057,6 +1253,14 @@ void defineProgramExecutionContractTests() {
     expect(
       runner.lastRequest?.environment.toMap(),
       containsPair('DXVK_HUD', 'fps'),
+    );
+    expect(
+      runner.lastRequest?.environment.toMap(),
+      isNot(containsPair('DXMT_ENABLE_NVEXT', '1')),
+    );
+    expect(
+      runner.lastRequest?.environment.toMap(),
+      isNot(containsPair('D3DM_ENABLE_METALFX', '1')),
     );
     expect(
       runner.lastRequest?.environment.toMap(),

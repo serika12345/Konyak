@@ -26,6 +26,8 @@ void main() {
     expect(availability.canUseVkd3dProton, isFalse);
     expect(availability.canUseMetal, isFalse);
     expect(availability.canUseDxr, isFalse);
+    expect(availability.canUseDxmtDlssMetalFx, isFalse);
+    expect(availability.canUseD3DMetalDlssMetalFx, isFalse);
   });
 
   test('uses macOS runtime components for macOS controls', () {
@@ -49,7 +51,52 @@ void main() {
     expect(availability.canUseDxmt, isTrue);
     expect(availability.canUseMetal, isTrue);
     expect(availability.canUseDxr, isTrue);
+    expect(availability.canUseDxmtDlssMetalFx, isTrue);
+    expect(availability.canUseD3DMetalDlssMetalFx, isTrue);
     expect(availability.canUseVkd3dProton, isFalse);
+  });
+
+  test('requires NVIDIA shim paths for macOS DLSS MetalFX controls', () {
+    final availability = resolveBottleRuntimeControlAvailability(
+      platform: KonyakPlatform.macos,
+      runtime: _runtime(
+        isComplete: true,
+        components: const <String>['dxmt', 'gptk-d3dmetal'],
+        missingPaths: const <String, List<String>>{
+          'dxmt': <String>['/runtime/lib/dxmt/x86_64-windows/nvngx.dll'],
+          'gptk-d3dmetal': <String>[
+            '/runtime/components/gptk-d3dmetal/lib/wine/x86_64-unix/nvapi64.so',
+          ],
+        },
+        backends: [
+          RuntimeStackBackendSummary(
+            id: 'dxmt',
+            name: 'DXMT',
+            role: 'd3d10-d3d11-metal-translation',
+            isAvailable: true,
+            componentIds: const <String>['dxmt'],
+            missingComponentIds: const <String>[],
+            missingPaths: const <String>[],
+          ),
+          RuntimeStackBackendSummary(
+            id: 'gptk-d3dmetal',
+            name: 'GPTK/D3DMetal',
+            role: 'd3d12-metal-translation',
+            isAvailable: true,
+            componentIds: const <String>['gptk-d3dmetal'],
+            missingComponentIds: const <String>[],
+            missingPaths: const <String>[],
+          ),
+        ],
+      ),
+      canChangeSettings: true,
+      hasPendingRuntimeSettings: false,
+    );
+
+    expect(availability.canUseDxmt, isTrue);
+    expect(availability.canUseDxr, isTrue);
+    expect(availability.canUseDxmtDlssMetalFx, isFalse);
+    expect(availability.canUseD3DMetalDlssMetalFx, isFalse);
   });
 
   test('uses backend availability before component availability', () {
@@ -108,12 +155,15 @@ void main() {
     expect(availability.canUseVkd3dProton, isTrue);
     expect(availability.canUseMetal, isFalse);
     expect(availability.canUseDxr, isFalse);
+    expect(availability.canUseDxmtDlssMetalFx, isFalse);
+    expect(availability.canUseD3DMetalDlssMetalFx, isFalse);
   });
 }
 
 RuntimeSummary _runtime({
   required bool isComplete,
   required List<String> components,
+  Map<String, List<String>> missingPaths = const <String, List<String>>{},
   List<RuntimeStackBackendSummary> backends =
       const <RuntimeStackBackendSummary>[],
 }) {
@@ -139,9 +189,9 @@ RuntimeSummary _runtime({
               name: id,
               role: 'test',
               isRequired: true,
-              isInstalled: true,
+              isInstalled: (missingPaths[id] ?? const <String>[]).isEmpty,
               paths: const <String>['/runtime/component'],
-              missingPaths: const <String>[],
+              missingPaths: missingPaths[id] ?? const <String>[],
             ),
           )
           .toList(growable: false),

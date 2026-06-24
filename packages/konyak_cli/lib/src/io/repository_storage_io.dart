@@ -72,6 +72,7 @@ Option<BottleRuntimeSettings> _bottleRuntimeSettingsFromJson(Object? value) {
   final dxrEnabled = _runtimeSettingsBool(settings, 'dxrEnabled');
   final dxvk = _runtimeSettingsBool(settings, 'dxvk');
   final dxmt = _runtimeSettingsBool(settings, 'dxmt');
+  final dlssMetalFx = _runtimeSettingsBool(settings, 'dlssMetalFx');
   final dxvkAsync = _runtimeSettingsBool(
     settings,
     'dxvkAsync',
@@ -108,6 +109,7 @@ Option<BottleRuntimeSettings> _bottleRuntimeSettingsFromJson(Object? value) {
   final parsedDxrEnabled = dxrEnabled.toNullable();
   final parsedDxvk = dxvk.toNullable();
   final parsedDxmt = dxmt.toNullable();
+  final parsedDlssMetalFx = dlssMetalFx.toNullable();
   final parsedDxvkAsync = dxvkAsync.toNullable();
   final parsedDxvkHud = dxvkHud.toNullable();
   final parsedVkd3dProton = vkd3dProton.toNullable();
@@ -121,6 +123,7 @@ Option<BottleRuntimeSettings> _bottleRuntimeSettingsFromJson(Object? value) {
       parsedDxrEnabled == null ||
       parsedDxvk == null ||
       parsedDxmt == null ||
+      parsedDlssMetalFx == null ||
       parsedDxvkAsync == null ||
       parsedDxvkHud == null ||
       parsedVkd3dProton == null ||
@@ -139,6 +142,7 @@ Option<BottleRuntimeSettings> _bottleRuntimeSettingsFromJson(Object? value) {
       dxrEnabled: parsedDxrEnabled,
       dxvk: parsedDxrEnabled || parsedDxmt ? false : parsedDxvk,
       dxmt: parsedDxrEnabled ? false : parsedDxmt,
+      dlssMetalFx: parsedDlssMetalFx,
       dxvkAsync: parsedDxvkAsync,
       dxvkHud: parsedDxvkHud,
       vkd3dProton: parsedVkd3dProton,

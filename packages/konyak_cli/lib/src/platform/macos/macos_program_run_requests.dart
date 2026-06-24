@@ -4,6 +4,7 @@ ProgramRunRequest _macosWineRequest({
   required BottleRecord bottle,
   required String programPath,
   required HostEnvironment environment,
+  required int? macosMajorVersion,
   required ProgramSettingsRecord programSettings,
 }) {
   final hostEnvironment = environment;
@@ -22,6 +23,7 @@ ProgramRunRequest _macosWineRequest({
       ..._macosWineEnvironment(
         bottle: bottle,
         environment: environment,
+        macosMajorVersion: macosMajorVersion,
       ).toMap(),
       ..._programSettingsEnvironment(programSettings).toMap(),
       'WINEPREFIX': bottle.path,
@@ -34,6 +36,7 @@ ProgramRunRequest _macosWineRequest({
 ProgramRunRequest _macosWinebootRequest({
   required BottleRecord bottle,
   required HostEnvironment environment,
+  required int? macosMajorVersion,
 }) {
   final hostEnvironment = environment;
   return ProgramRunRequest(
@@ -45,6 +48,7 @@ ProgramRunRequest _macosWinebootRequest({
     environment: _macosPrefixInitializationEnvironment(
       bottle: bottle,
       environment: environment,
+      macosMajorVersion: macosMajorVersion,
     ),
     logPath: _joinPath(bottle.path, const ['logs', 'prefix-init.log']),
     workingDirectory: Option.of(_macosWineBinFolder(hostEnvironment)),
@@ -54,6 +58,7 @@ ProgramRunRequest _macosWinebootRequest({
 ProgramRunRequest _macosWinebootRestartRequest({
   required BottleRecord bottle,
   required HostEnvironment environment,
+  required int? macosMajorVersion,
 }) {
   final hostEnvironment = environment;
   return ProgramRunRequest(
@@ -65,6 +70,7 @@ ProgramRunRequest _macosWinebootRestartRequest({
     environment: _macosWineEnvironment(
       bottle: bottle,
       environment: environment,
+      macosMajorVersion: macosMajorVersion,
     ),
     logPath: _joinPath(bottle.path, const ['logs', 'latest.log']),
     workingDirectory: Option.of(_macosWineBinFolder(hostEnvironment)),
@@ -74,6 +80,7 @@ ProgramRunRequest _macosWinebootRestartRequest({
 ProgramRunRequest _macosWineMonoInstallRequest({
   required BottleRecord bottle,
   required HostEnvironment environment,
+  required int? macosMajorVersion,
 }) {
   final hostEnvironment = environment;
   final runtimeRoot = _macosWineRuntimeRoot(hostEnvironment);
@@ -92,6 +99,7 @@ ProgramRunRequest _macosWineMonoInstallRequest({
     environment: _macosPrefixInitializationEnvironment(
       bottle: bottle,
       environment: environment,
+      macosMajorVersion: macosMajorVersion,
     ),
     logPath: _joinPath(bottle.path, const ['logs', 'wine-mono-install.log']),
     workingDirectory: Option.of(_macosWineBinFolder(hostEnvironment)),
@@ -101,6 +109,7 @@ ProgramRunRequest _macosWineMonoInstallRequest({
 ProgramRunRequest _macosWineserverKillRequest({
   required BottleRecord bottle,
   required HostEnvironment environment,
+  required int? macosMajorVersion,
 }) {
   final hostEnvironment = environment;
   return ProgramRunRequest(
@@ -112,6 +121,7 @@ ProgramRunRequest _macosWineserverKillRequest({
     environment: _macosWineEnvironment(
       bottle: bottle,
       environment: environment,
+      macosMajorVersion: macosMajorVersion,
     ),
     logPath: _joinPath(bottle.path, const ['logs', 'wineserver-kill.log']),
     workingDirectory: Option.of(_macosWineBinFolder(hostEnvironment)),
@@ -121,6 +131,7 @@ ProgramRunRequest _macosWineserverKillRequest({
 ProgramRunRequest _macosWinedbgRequest({
   required BottleRecord bottle,
   required HostEnvironment environment,
+  required int? macosMajorVersion,
   required String command,
   required String logName,
   List<String> trailingArguments = const <String>[],
@@ -135,6 +146,7 @@ ProgramRunRequest _macosWinedbgRequest({
     environment: _macosWineEnvironment(
       bottle: bottle,
       environment: environment,
+      macosMajorVersion: macosMajorVersion,
     ),
     logPath: _joinPath(bottle.path, <String>['logs', logName]),
     workingDirectory: Option.of(_macosWineBinFolder(hostEnvironment)),
@@ -144,6 +156,7 @@ ProgramRunRequest _macosWinedbgRequest({
 ProgramRunEnvironment _macosWineEnvironment({
   required BottleRecord bottle,
   required HostEnvironment environment,
+  required int? macosMajorVersion,
 }) {
   final hostEnvironment = environment;
   final runtimeRoot = _macosWineRuntimeRoot(hostEnvironment);
@@ -197,7 +210,13 @@ ProgramRunEnvironment _macosWineEnvironment({
         'external',
         'libd3dshared.dylib',
       ]),
-    ...bottle.runtimeSettings.macosEnvironment().toMap(),
+    ...bottle.runtimeSettings
+        .macosEnvironment(
+          enableD3DMetalDlssMetalFx: _supportsD3DMetalDlssMetalFx(
+            macosMajorVersion,
+          ),
+        )
+        .toMap(),
   };
 
   return ProgramRunEnvironment(wineEnvironment);
@@ -218,8 +237,17 @@ String _macosWineWindowsPath(String unixPath) {
 ProgramRunEnvironment _macosPrefixInitializationEnvironment({
   required BottleRecord bottle,
   required HostEnvironment environment,
+  required int? macosMajorVersion,
 }) {
-  return _macosWineEnvironment(bottle: bottle, environment: environment);
+  return _macosWineEnvironment(
+    bottle: bottle,
+    environment: environment,
+    macosMajorVersion: macosMajorVersion,
+  );
+}
+
+bool _supportsD3DMetalDlssMetalFx(int? macosMajorVersion) {
+  return macosMajorVersion != null && macosMajorVersion >= 16;
 }
 
 String _macosWineDataDir(String runtimeRoot) {

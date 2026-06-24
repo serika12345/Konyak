@@ -24,17 +24,23 @@ class ProgramRunPlanner {
   ProgramRunPlanner({
     required this.hostPlatform,
     this.environment = const HostEnvironment.empty(),
+    this.macosMajorVersion,
   });
 
   factory ProgramRunPlanner.current() {
+    final hostPlatform = _currentHostPlatform();
     return ProgramRunPlanner(
-      hostPlatform: _currentHostPlatform(),
+      hostPlatform: hostPlatform,
       environment: HostEnvironment(Platform.environment),
+      macosMajorVersion: hostPlatform == KonyakHostPlatform.macos
+          ? _currentMacosMajorVersion()
+          : null,
     );
   }
 
   final KonyakHostPlatform hostPlatform;
   final HostEnvironment environment;
+  final int? macosMajorVersion;
 
   Option<ProgramRunRequest> plan({
     required BottleRecord bottle,
@@ -57,6 +63,7 @@ class ProgramRunPlanner {
         bottle: bottle,
         programPath: programPath,
         environment: environment,
+        macosMajorVersion: macosMajorVersion,
         programSettings: programSettings.getOrElse(ProgramSettingsRecord.new),
       ),
     });
@@ -88,6 +95,7 @@ class ProgramRunPlanner {
         KonyakHostPlatform.macos => _macosTerminalCommandRequest(
           bottle: bottle,
           environment: environment,
+          macosMajorVersion: macosMajorVersion,
         ),
       });
     }
@@ -102,6 +110,7 @@ class ProgramRunPlanner {
         KonyakHostPlatform.macos => _macosTerminalCommandRequest(
           bottle: bottle,
           environment: environment,
+          macosMajorVersion: macosMajorVersion,
           initialWineCommand: supportedCommand,
         ),
       });
@@ -116,6 +125,7 @@ class ProgramRunPlanner {
         KonyakHostPlatform.macos => _macosWinebootRestartRequest(
           bottle: bottle,
           environment: environment,
+          macosMajorVersion: macosMajorVersion,
         ),
       });
     }
@@ -129,6 +139,7 @@ class ProgramRunPlanner {
         KonyakHostPlatform.macos => _macosWinetricksCommandRequest(
           bottle: bottle,
           environment: environment,
+          macosMajorVersion: macosMajorVersion,
           verb: null,
         ),
       });
@@ -144,6 +155,7 @@ class ProgramRunPlanner {
         bottle: bottle,
         command: supportedCommand,
         environment: environment,
+        macosMajorVersion: macosMajorVersion,
       ),
     });
   }
@@ -157,6 +169,7 @@ class ProgramRunPlanner {
       KonyakHostPlatform.macos => _macosWinebootRequest(
         bottle: bottle,
         environment: environment,
+        macosMajorVersion: macosMajorVersion,
       ),
     };
   }
@@ -167,8 +180,16 @@ class ProgramRunPlanner {
         _linuxWinebootRequest(bottle: bottle, environment: environment),
       ],
       KonyakHostPlatform.macos => <ProgramRunRequest>[
-        _macosWineMonoInstallRequest(bottle: bottle, environment: environment),
-        _macosWinebootRequest(bottle: bottle, environment: environment),
+        _macosWineMonoInstallRequest(
+          bottle: bottle,
+          environment: environment,
+          macosMajorVersion: macosMajorVersion,
+        ),
+        _macosWinebootRequest(
+          bottle: bottle,
+          environment: environment,
+          macosMajorVersion: macosMajorVersion,
+        ),
       ],
     });
   }
@@ -182,6 +203,7 @@ class ProgramRunPlanner {
       KonyakHostPlatform.macos => _macosWineserverKillRequest(
         bottle: bottle,
         environment: environment,
+        macosMajorVersion: macosMajorVersion,
       ),
     };
   }
@@ -197,6 +219,7 @@ class ProgramRunPlanner {
       KonyakHostPlatform.macos => _macosWinedbgRequest(
         bottle: bottle,
         environment: environment,
+        macosMajorVersion: macosMajorVersion,
         command: 'info proc',
         logName: 'wine-processes.log',
       ),
@@ -219,6 +242,7 @@ class ProgramRunPlanner {
       KonyakHostPlatform.macos => _macosWinedbgRequest(
         bottle: bottle,
         environment: environment,
+        macosMajorVersion: macosMajorVersion,
         command: 'kill',
         logName: 'wine-process-kill.log',
         trailingArguments: <String>[attachProcessId],
@@ -243,6 +267,7 @@ class ProgramRunPlanner {
       KonyakHostPlatform.macos => _macosWinetricksCommandRequest(
         bottle: bottle,
         environment: environment,
+        macosMajorVersion: macosMajorVersion,
         verb: verb,
       ),
     });
@@ -266,6 +291,7 @@ class ProgramRunPlanner {
             bottle: bottle,
             update: update,
             environment: environment,
+            macosMajorVersion: macosMajorVersion,
           ),
         };
       }),
@@ -295,6 +321,7 @@ class ProgramRunPlanner {
             bottle: bottle,
             update: update,
             environment: environment,
+            macosMajorVersion: macosMajorVersion,
           ),
         };
       }),
@@ -320,9 +347,18 @@ class ProgramRunPlanner {
             bottle: bottle,
             query: query,
             environment: environment,
+            macosMajorVersion: macosMajorVersion,
           ),
         };
       }),
     );
   }
+}
+
+int? _currentMacosMajorVersion() {
+  final match = RegExp(r'\d+').firstMatch(Platform.operatingSystemVersion);
+  if (match == null) {
+    return null;
+  }
+  return int.tryParse(match.group(0)!);
 }

@@ -11,6 +11,60 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-24 23:25 JST
+- State: `completed`
+- Branch: `main`
+- Related work: macOS DLSS powered by MetalFX implementation
+- Purpose: implement the macOS bottle-level `DLSS / MetalFX` setting by
+  persisting `dlssMetalFx`, exposing it only for supported Metal backends, and
+  injecting the referenced DXMT/D3DMetal launch-environment signals through
+  Konyak's public run-plan path.
+- Completed:
+  - Investigation workstream: reviewed the existing DLSS/MetalFX design,
+    runtime settings models, repository storage parser, macOS run-plan
+    builders, Flutter bottle summary contract, Bottle Configuration controls,
+    runtime capability availability logic, and macOS CLI smoke script.
+  - Sub-agent limitation: available sub-agent tooling requires an explicit
+    user request for delegation, so this task keeps investigation,
+    implementation, and audit separated in this progress entry instead.
+  - Confirmed the supplied references map DXMT to `DXMT_ENABLE_NVEXT=1` and
+    D3DMetal/GPTK 3.0 to `D3DM_ENABLE_METALFX=1`, with the D3DMetal signal
+    gated to macOS 16 or newer for the CrossOver 26.1 behavior.
+  - Implementation workstream: added `dlssMetalFx` to CLI storage/domain/JSON
+    contracts, Flutter models/parsers, and Bottle Configuration update paths
+    with a legacy default of `false`.
+  - Added backend-specific launch planning: DXMT emits `DXMT_ENABLE_NVEXT=1`;
+    D3DMetal emits `D3DM_ENABLE_METALFX=1` only on macOS major version 16 or
+    newer; Linux/DXVK/non-Metal paths preserve the setting but do not inject
+    either variable.
+  - Added the macOS UI control for D3DMetal/DXMT only, gated by runtime
+    capability paths for the required `nvapi64` and `nvngx` shim payloads.
+  - Updated `scripts/run_macos_runtime_cli_smoke.zsh` fixtures so maintained
+    macOS CLI smoke coverage carries the new runtime settings contract.
+  - Updated `docs/dlss-metalfx-design.md` and `docs/todo.md` with the resolved
+    references, implemented scope, CI limitation, and deferred end-to-end
+    rendered MetalFX proof.
+- Remaining:
+  - None for the implemented setting, run-plan, UI, and CI-facing contract
+    coverage.
+  - End-to-end rendered DLSS/MetalFX evidence remains tracked as a separate
+    TODO because CI cannot bundle proprietary game payloads; capture it later
+    with a redistributable or user-provided DLSS-capable Windows program.
+- Next: continue with the next TODO-backed feature, or capture local
+  DLSS/MetalFX Metal HUD evidence when a suitable test program is available.
+- Verification:
+  - `nix develop -c zsh -lc 'just cli-test'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-format-check'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-analyze'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-test'`: passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `nix develop -c zsh -lc 'zsh -n scripts/run_macos_runtime_cli_smoke.zsh'`:
+    passed.
+  - `nix develop -c zsh -lc 'git diff --check'`: passed.
+
 - Timestamp: 2026-06-24 22:32 JST
 - State: `completed`
 - Branch: `main`

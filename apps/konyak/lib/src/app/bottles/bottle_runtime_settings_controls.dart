@@ -9,3 +9,4 @@ const runtimeSettingsControlDxvkHud = 'dxvkHud';
 const runtimeSettingsControlVkd3dProton = 'vkd3dProton';
 const runtimeSettingsControlMetalHud = 'metalHud';
 const runtimeSettingsControlMetalTrace = 'metalTrace';
+const runtimeSettingsControlDlssMetalFx = 'dlssMetalFx';

@@ -146,6 +146,11 @@ class BottleGraphicsSettingsSection extends StatelessWidget {
         showMacosRuntimeSettings &&
         (graphicsBackend == BottleGraphicsBackend.dxmt ||
             graphicsBackend == BottleGraphicsBackend.d3dMetal);
+    final canUseDlssMetalFx = switch (graphicsBackend) {
+      BottleGraphicsBackend.dxmt => availability.canUseDxmtDlssMetalFx,
+      BottleGraphicsBackend.d3dMetal => availability.canUseD3DMetalDlssMetalFx,
+      BottleGraphicsBackend.wineDefault || BottleGraphicsBackend.dxvk => false,
+    };
 
     return BottleConfigurationSection(
       title: 'Graphics',
@@ -260,6 +265,24 @@ class BottleGraphicsSettingsSection extends StatelessWidget {
                     onChanged(
                       settings.withMetalTrace(value),
                       runtimeSettingsControlMetalTrace,
+                    );
+                  },
+          ),
+        if (showMetalOptions)
+          BottleConfigurationSwitchRow(
+            switchKey: const ValueKey('config-dlss-metalfx-switch'),
+            loadingKey: const ValueKey('config-dlss-metalfx-switch-loading'),
+            label: 'DLSS / MetalFX',
+            value: settings.dlssMetalFx,
+            isLoading:
+                pendingRuntimeSettingsControlKey ==
+                runtimeSettingsControlDlssMetalFx,
+            onChanged: !canUseDlssMetalFx
+                ? null
+                : (value) {
+                    onChanged(
+                      settings.withDlssMetalFx(value),
+                      runtimeSettingsControlDlssMetalFx,
                     );
                   },
           ),

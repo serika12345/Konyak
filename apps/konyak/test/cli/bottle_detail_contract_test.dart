@@ -22,6 +22,40 @@ void main() {
     expect(parsed.bottle.windowsVersion, 'win10');
   });
 
+  test('defaults missing legacy DLSS MetalFX runtime setting to false', () {
+    final result = parseBottleDetailPayload('''
+      {
+        "schemaVersion": 1,
+        "bottle": {
+          "id": "steam",
+          "name": "Steam",
+          "path": "/home/user/.local/share/konyak/bottles/steam",
+          "windowsVersion": "win10",
+          "runtimeSettings": {
+            "enhancedSync": "msync",
+            "metalHud": true,
+            "metalTrace": false,
+            "avxEnabled": false,
+            "dxrEnabled": false,
+            "dxvk": false,
+            "dxmt": true,
+            "dxvkAsync": true,
+            "dxvkHud": "off",
+            "vkd3dProton": false,
+            "buildVersion": 19045,
+            "retinaMode": false,
+            "dpiScaling": 96
+          }
+        }
+      }
+      ''');
+
+    expect(result, isA<ParsedBottleDetail>());
+    final parsed = result as ParsedBottleDetail;
+    expect(parsed.bottle.runtimeSettings.dxmt, isTrue);
+    expect(parsed.bottle.runtimeSettings.dlssMetalFx, isFalse);
+  });
+
   test('parses a machine-readable bottle not-found error', () {
     final result = parseBottleDetailPayload('''
       {

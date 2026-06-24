@@ -204,6 +204,7 @@ runtime_settings_json_for_backend() {
   "dxrEnabled": false,
   "dxvk": $dxvk,
   "dxmt": $dxmt,
+  "dlssMetalFx": false,
   "dxvkAsync": false,
   "dxvkHud": "off",
   "vkd3dProton": false,

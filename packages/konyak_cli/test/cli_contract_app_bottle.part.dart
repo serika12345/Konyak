@@ -431,6 +431,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
         'dxrEnabled': false,
         'dxvk': false,
         'dxmt': false,
+        'dlssMetalFx': false,
         'dxvkAsync': true,
         'dxvkHud': 'off',
         'vkd3dProton': false,
@@ -724,6 +725,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       'dxrEnabled': true,
       'dxvk': true,
       'dxmt': false,
+      'dlssMetalFx': true,
       'dxvkAsync': false,
       'dxvkHud': 'fps',
       'vkd3dProton': true,
@@ -763,6 +765,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
         'dxrEnabled': true,
         'dxvk': false,
         'dxmt': false,
+        'dlssMetalFx': true,
         'dxvkAsync': false,
         'dxvkHud': 'fps',
         'vkd3dProton': true,
@@ -779,6 +782,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
         metalTrace: true,
         avxEnabled: true,
         dxrEnabled: true,
+        dlssMetalFx: true,
         dxvkAsync: false,
         dxvkHud: 'fps',
         vkd3dProton: true,
@@ -786,6 +790,47 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
         retinaMode: true,
         dpiScaling: 144,
       ),
+    );
+  });
+
+  test('set-runtime-settings --json defaults legacy DLSS MetalFX to false', () {
+    final repository = MemoryBottleRepository(
+      dataHome: '/home/user/.local/share/konyak',
+      bottles: [
+        BottleRecord(
+          id: 'steam',
+          name: 'Steam',
+          path: '/home/user/.local/share/konyak/bottles/steam',
+          windowsVersion: 'win10',
+        ),
+      ],
+    );
+
+    final result = runCli(
+      [
+        'set-runtime-settings',
+        'steam',
+        '--settings-json',
+        jsonEncode({'metalHud': true}),
+        '--json',
+      ],
+      bottleRepository: repository,
+      programRunPlanner: ProgramRunPlanner(
+        hostPlatform: KonyakHostPlatform.linux,
+      ),
+    );
+
+    expect(result.exitCode, 0);
+    expect(result.stderr, isEmpty);
+
+    final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+    final bottle = payload['bottle'] as Map<String, Object?>;
+    final runtimeSettings = bottle['runtimeSettings'] as Map<String, Object?>;
+    expect(runtimeSettings, containsPair('metalHud', true));
+    expect(runtimeSettings, containsPair('dlssMetalFx', false));
+    expect(
+      _expectFound(repository.findBottle('steam')).runtimeSettings.dlssMetalFx,
+      isFalse,
     );
   });
 

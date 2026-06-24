@@ -464,6 +464,7 @@ void defineBottleConfigurationWidgetTests() {
       expect(find.text('DXVK HUD'), findsNothing);
       expect(find.text('Metal HUD'), findsNothing);
       expect(find.text('Metal Trace'), findsNothing);
+      expect(find.text('DLSS / MetalFX'), findsNothing);
 
       await tester.tap(find.byKey(const ValueKey('config-graphics-backend')));
       await tester.pumpAndSettle();
@@ -477,6 +478,7 @@ void defineBottleConfigurationWidgetTests() {
       expect(dxmtSettings, containsPair('dxrEnabled', false));
       expect(find.text('Metal HUD'), findsOneWidget);
       expect(find.text('Metal Trace'), findsOneWidget);
+      expect(find.text('DLSS / MetalFX'), findsOneWidget);
       expect(find.text('DXVK Async'), findsNothing);
 
       await tester.tap(find.byKey(const ValueKey('config-graphics-backend')));
@@ -491,6 +493,7 @@ void defineBottleConfigurationWidgetTests() {
       expect(d3dMetalSettings, containsPair('dxrEnabled', true));
       expect(find.text('Metal HUD'), findsOneWidget);
       expect(find.text('Metal Trace'), findsOneWidget);
+      expect(find.text('DLSS / MetalFX'), findsOneWidget);
       expect(find.text('DXVK Async'), findsNothing);
 
       await tester.tap(find.byKey(const ValueKey('config-graphics-backend')));
@@ -507,8 +510,138 @@ void defineBottleConfigurationWidgetTests() {
       expect(find.text('DXVK HUD'), findsOneWidget);
       expect(find.text('Metal HUD'), findsNothing);
       expect(find.text('Metal Trace'), findsNothing);
+      expect(find.text('DLSS / MetalFX'), findsNothing);
     },
   );
+
+  testWidgets('macOS bottle configuration toggles DLSS MetalFX for DXMT', (
+    WidgetTester tester,
+  ) async {
+    final runner = _QueuedProcessRunner([
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottles": [
+              {
+                "id": "steam",
+                "name": "Steam",
+                "path": "/Users/user/Library/Application Support/Konyak/Bottles/Steam",
+                "windowsVersion": "win10",
+                "runtimeSettings": {
+                  "enhancedSync": "msync",
+                  "metalHud": false,
+                  "metalTrace": false,
+                  "avxEnabled": false,
+                  "dxrEnabled": false,
+                  "dxvk": false,
+                  "dxmt": true,
+                  "dlssMetalFx": false,
+                  "dxvkAsync": true,
+                  "dxvkHud": "off",
+                  "buildVersion": 19045,
+                  "retinaMode": false,
+                  "dpiScaling": 144
+                }
+              }
+            ]
+          }
+        ''',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottle": {
+              "id": "steam",
+              "name": "Steam",
+              "path": "/Users/user/Library/Application Support/Konyak/Bottles/Steam",
+              "windowsVersion": "win10",
+              "runtimeSettings": {
+                "enhancedSync": "msync",
+                "metalHud": false,
+                "metalTrace": false,
+                "avxEnabled": false,
+                "dxrEnabled": false,
+                "dxvk": false,
+                "dxmt": true,
+                "dlssMetalFx": false,
+                "dxvkAsync": true,
+                "dxvkHud": "off",
+                "buildVersion": 19045,
+                "retinaMode": false,
+                "dpiScaling": 144
+              }
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+      ProcessRunResult(
+        exitCode: 0,
+        stdout: _macosRuntimeListPayload(),
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottle": {
+              "id": "steam",
+              "name": "Steam",
+              "path": "/Users/user/Library/Application Support/Konyak/Bottles/Steam",
+              "windowsVersion": "win10",
+              "runtimeSettings": {
+                "enhancedSync": "msync",
+                "metalHud": false,
+                "metalTrace": false,
+                "avxEnabled": false,
+                "dxrEnabled": false,
+                "dxvk": false,
+                "dxmt": true,
+                "dlssMetalFx": true,
+                "dxvkAsync": true,
+                "dxvkHud": "off",
+                "buildVersion": 19045,
+                "retinaMode": false,
+                "dpiScaling": 144
+              }
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+    ]);
+
+    await tester.pumpWidget(
+      _testKonyakApp(
+        cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Bottle Configuration'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('DLSS / MetalFX'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('config-dlss-metalfx-switch')));
+    await tester.pumpAndSettle();
+
+    expect(runner.argumentsLog[3].take(3).toList(growable: false), const [
+      'set-runtime-settings',
+      'steam',
+      '--settings-json',
+    ]);
+    final settings =
+        jsonDecode(runner.argumentsLog[3][3]) as Map<String, Object?>;
+    expect(settings, containsPair('dxmt', true));
+    expect(settings, containsPair('dxrEnabled', false));
+    expect(settings, containsPair('dlssMetalFx', true));
+  });
 
   testWidgets(
     'right-clicking the selected bottle keeps Bottle Configuration open',

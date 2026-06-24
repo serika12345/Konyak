@@ -9,6 +9,7 @@ class BottleRuntimeSettings {
     this.dxrEnabled = false,
     this.dxvk = false,
     this.dxmt = false,
+    this.dlssMetalFx = false,
     this.dxvkAsync = true,
     this.dxvkHud = 'off',
     this.vkd3dProton = false,
@@ -24,6 +25,7 @@ class BottleRuntimeSettings {
   final bool dxrEnabled;
   final bool dxvk;
   final bool dxmt;
+  final bool dlssMetalFx;
   final bool dxvkAsync;
   final String dxvkHud;
   final bool vkd3dProton;
@@ -40,6 +42,7 @@ class BottleRuntimeSettings {
       dxrEnabled: dxrEnabled,
       dxvk: dxvk,
       dxmt: dxmt,
+      dlssMetalFx: dlssMetalFx,
       dxvkAsync: dxvkAsync,
       dxvkHud: dxvkHud,
       vkd3dProton: vkd3dProton,
@@ -58,6 +61,7 @@ class BottleRuntimeSettings {
       dxrEnabled: dxrEnabled,
       dxvk: dxvk,
       dxmt: dxmt,
+      dlssMetalFx: dlssMetalFx,
       dxvkAsync: dxvkAsync,
       dxvkHud: dxvkHud,
       vkd3dProton: vkd3dProton,
@@ -76,6 +80,7 @@ class BottleRuntimeSettings {
       dxrEnabled: dxrEnabled,
       dxvk: dxvk,
       dxmt: dxmt,
+      dlssMetalFx: dlssMetalFx,
       dxvkAsync: dxvkAsync,
       dxvkHud: dxvkHud,
       vkd3dProton: vkd3dProton,
@@ -94,6 +99,7 @@ class BottleRuntimeSettings {
       dxrEnabled: dxrEnabled,
       dxvk: dxvk,
       dxmt: dxmt,
+      dlssMetalFx: dlssMetalFx,
       dxvkAsync: dxvkAsync,
       dxvkHud: dxvkHud,
       vkd3dProton: vkd3dProton,
@@ -112,6 +118,7 @@ class BottleRuntimeSettings {
       dxrEnabled: dxrEnabled,
       dxvk: dxrEnabled ? false : dxvk,
       dxmt: dxrEnabled ? false : dxmt,
+      dlssMetalFx: dlssMetalFx,
       dxvkAsync: dxvkAsync,
       dxvkHud: dxvkHud,
       vkd3dProton: vkd3dProton,
@@ -130,6 +137,7 @@ class BottleRuntimeSettings {
       dxrEnabled: dxvk ? false : dxrEnabled,
       dxvk: dxvk,
       dxmt: dxvk ? false : dxmt,
+      dlssMetalFx: dlssMetalFx,
       dxvkAsync: dxvkAsync,
       dxvkHud: dxvkHud,
       vkd3dProton: vkd3dProton,
@@ -148,6 +156,26 @@ class BottleRuntimeSettings {
       dxrEnabled: dxmt ? false : dxrEnabled,
       dxvk: dxmt ? false : dxvk,
       dxmt: dxmt,
+      dlssMetalFx: dlssMetalFx,
+      dxvkAsync: dxvkAsync,
+      dxvkHud: dxvkHud,
+      vkd3dProton: vkd3dProton,
+      buildVersion: buildVersion,
+      retinaMode: retinaMode,
+      dpiScaling: dpiScaling,
+    );
+  }
+
+  BottleRuntimeSettings withDlssMetalFx(bool dlssMetalFx) {
+    return BottleRuntimeSettings(
+      enhancedSync: enhancedSync,
+      metalHud: metalHud,
+      metalTrace: metalTrace,
+      avxEnabled: avxEnabled,
+      dxrEnabled: dxrEnabled,
+      dxvk: dxvk,
+      dxmt: dxmt,
+      dlssMetalFx: dlssMetalFx,
       dxvkAsync: dxvkAsync,
       dxvkHud: dxvkHud,
       vkd3dProton: vkd3dProton,
@@ -166,6 +194,7 @@ class BottleRuntimeSettings {
       dxrEnabled: dxrEnabled,
       dxvk: dxvk,
       dxmt: dxmt,
+      dlssMetalFx: dlssMetalFx,
       dxvkAsync: dxvkAsync,
       dxvkHud: dxvkHud,
       vkd3dProton: vkd3dProton,
@@ -184,6 +213,7 @@ class BottleRuntimeSettings {
       dxrEnabled: dxrEnabled,
       dxvk: dxvk,
       dxmt: dxmt,
+      dlssMetalFx: dlssMetalFx,
       dxvkAsync: dxvkAsync,
       dxvkHud: dxvkHud,
       vkd3dProton: vkd3dProton,
@@ -202,6 +232,7 @@ class BottleRuntimeSettings {
       dxrEnabled: dxrEnabled,
       dxvk: dxvk,
       dxmt: dxmt,
+      dlssMetalFx: dlssMetalFx,
       dxvkAsync: dxvkAsync,
       dxvkHud: dxvkHud,
       vkd3dProton: vkd3dProton,
@@ -220,6 +251,7 @@ class BottleRuntimeSettings {
       dxrEnabled: dxrEnabled,
       dxvk: dxvk,
       dxmt: dxmt,
+      dlssMetalFx: dlssMetalFx,
       dxvkAsync: dxvkAsync,
       dxvkHud: dxvkHud,
       vkd3dProton: vkd3dProton,
@@ -238,6 +270,7 @@ class BottleRuntimeSettings {
       dxrEnabled: dxrEnabled,
       dxvk: dxvk,
       dxmt: dxmt,
+      dlssMetalFx: dlssMetalFx,
       dxvkAsync: dxvkAsync,
       dxvkHud: dxvkHud,
       vkd3dProton: vkd3dProton,
@@ -271,6 +304,7 @@ class BottleRuntimeSettings {
       dxrEnabled: dxrEnabled,
       dxvk: dxvk,
       dxmt: dxmt,
+      dlssMetalFx: dlssMetalFx,
       dxvkAsync: dxvkAsync,
       dxvkHud: dxvkHud,
       vkd3dProton: vkd3dProton,
@@ -289,6 +323,7 @@ class BottleRuntimeSettings {
       'dxrEnabled': dxrEnabled,
       'dxvk': dxvk,
       'dxmt': dxmt,
+      'dlssMetalFx': dlssMetalFx,
       'dxvkAsync': dxvkAsync,
       'dxvkHud': dxvkHud,
       'vkd3dProton': vkd3dProton,
@@ -298,7 +333,9 @@ class BottleRuntimeSettings {
     };
   }
 
-  ProgramRunEnvironment macosEnvironment() {
+  ProgramRunEnvironment macosEnvironment({
+    bool enableD3DMetalDlssMetalFx = false,
+  }) {
     var environment = const ProgramRunEnvironment.empty();
 
     if (dxrEnabled) {
@@ -349,6 +386,14 @@ class BottleRuntimeSettings {
       environment = environment.add('D3DM_SUPPORT_DXR', '1');
     }
 
+    if (dlssMetalFx && dxmt && !dxrEnabled) {
+      environment = environment.add(_dxmtEnableNvextEnvironmentKey, '1');
+    }
+
+    if (dlssMetalFx && dxrEnabled && enableD3DMetalDlssMetalFx) {
+      environment = environment.add(_d3dMetalEnableMetalFxEnvironmentKey, '1');
+    }
+
     return environment;
   }
 
@@ -395,6 +440,7 @@ class BottleRuntimeSettings {
         other.dxrEnabled == dxrEnabled &&
         other.dxvk == dxvk &&
         other.dxmt == dxmt &&
+        other.dlssMetalFx == dlssMetalFx &&
         other.dxvkAsync == dxvkAsync &&
         other.dxvkHud == dxvkHud &&
         other.vkd3dProton == vkd3dProton &&
@@ -413,6 +459,7 @@ class BottleRuntimeSettings {
       dxrEnabled,
       dxvk,
       dxmt,
+      dlssMetalFx,
       dxvkAsync,
       dxvkHud,
       vkd3dProton,
@@ -422,6 +469,16 @@ class BottleRuntimeSettings {
     );
   }
 }
+
+// DXMT NVEXT is implemented in dxgi.cpp and documented in DXMT's
+// Vendor Extensions wiki:
+// https://github.com/3Shain/dxmt/blob/main/src/dxgi/dxgi.cpp
+// https://github.com/3Shain/dxmt/wiki/Vendor-Extensions
+const _dxmtEnableNvextEnvironmentKey = 'DXMT_ENABLE_NVEXT';
+
+// CrossOver/GPTK D3DMetal DLSS powered by MetalFX references use this signal:
+// https://support.codeweavers.com/en_US/advanced-settings-in-crossover-mac-26
+const _d3dMetalEnableMetalFxEnvironmentKey = 'D3DM_ENABLE_METALFX';
 
 const _minimumWindowsDpi = 96;
 const _maximumWindowsDpi = 480;

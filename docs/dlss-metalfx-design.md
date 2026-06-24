@@ -5,11 +5,13 @@ mirrors CrossOver's DLSS powered by MetalFX behavior.
 
 ## Status
 
-- State: design only
+- State: implemented for settings, contracts, UI, and launch-environment
+  planning; rendered DLSS/MetalFX proof remains a user-provided/local runtime
+  verification item.
 - Runtime target: arm64 macOS running the Konyak-managed CrossOver-derived Wine
   runtime
 - UI target: Bottle Configuration, macOS-only Metal graphics controls
-- Implementation status: not started
+- Implementation status: CLI/Flutter contracts and CI-facing tests implemented
 
 ## External Behavior To Match
 
@@ -25,6 +27,21 @@ References:
 
 - CodeWeavers: <https://support.codeweavers.com/en_US/advanced-settings-in-crossover-mac-26>
 - Apple MetalFX: <https://developer.apple.com/documentation/metalfx>
+
+## Resolved Enablement Signals
+
+Konyak implements the DLSS/MetalFX bottle setting by adding backend-specific
+launch environment variables only when the selected backend can consume them.
+
+| Backend | Launch condition | Environment variable | References |
+|---|---|---|---|
+| DXMT | macOS bottle, DXMT selected, `dlssMetalFx == true` | `DXMT_ENABLE_NVEXT=1` | DXMT source `src/dxgi/dxgi.cpp`: <https://github.com/3Shain/dxmt/blob/main/src/dxgi/dxgi.cpp>; DXMT Wiki, Vendor Extensions: <https://github.com/3Shain/dxmt/wiki/Vendor-Extensions> |
+| D3DMetal | macOS bottle, D3DMetal selected, `dlssMetalFx == true`, detected macOS major version is 16 or newer | `D3DM_ENABLE_METALFX=1` | CodeWeavers CrossOver Mac 26 advanced settings: <https://support.codeweavers.com/en_US/advanced-settings-in-crossover-mac-26>; GPTK 3.0 guide: <https://mybyways.com/blog/updating-crossover-to-gameporting-toolkit-3-0>; GPTK/MetalFX notes: <https://github.com/lynkos/blog/blob/main/_posts/2025-03-19-play-windows-games.md>; MacPorts `d3dmetal` Portfile: <https://github.com/macports/macports-ports/blob/master/devel/d3dmetal/Portfile> |
+
+The D3DMetal gate intentionally follows the CrossOver 26.1/GPTK 3.0 behavior
+that only treats `D3DM_ENABLE_METALFX=1` as applicable on macOS 16 or newer.
+Konyak stores the same references near the launch-environment code so future
+runtime changes can be audited against the source of the signal.
 
 ## Existing Konyak Runtime Shape
 
@@ -99,28 +116,30 @@ The run planner must treat the setting as backend-specific launch state:
 - D3DMetal selected and `dlssMetalFx == true`:
   - keep D3DMetal paths and `CX_APPLEGPTK_LIBD3DSHARED_PATH`;
   - ensure `nvapi64` and `nvngx` are active through the D3DMetal component;
-  - apply the exact D3DMetal/MetalFX enablement signal proven by dynamic
-    investigation.
+  - apply `D3DM_ENABLE_METALFX=1` only when the detected macOS major version is
+    16 or newer.
 - DXMT selected and `dlssMetalFx == true`:
   - keep DXMT paths;
   - ensure `nvapi64` and `nvngx` are active through the DXMT component;
-  - apply the exact DXMT/MetalFX enablement signal proven by dynamic
-    investigation.
+  - apply `DXMT_ENABLE_NVEXT=1`.
 - DXVK, vkd3d-proton, or Wine selected:
   - ignore the setting in the launch environment;
   - preserve the persisted value so switching back to D3DMetal/DXMT restores
     the user's preference.
 
-Do not guess the final environment variable or registry key from community
-posts. Before implementation, prove the required signal through the
-CrossOver-derived runtime, imported GPTK/D3DMetal payload, or runtime submodule
-source.
+The implemented launch signals are sourced from the references above. Do not add
+new backend variables, registry keys, or payload mutation paths without updating
+this table and the nearby code references.
 
-## Dynamic Proof Required Before Marking Complete
+## Runtime Proof And CI Limits
 
-The feature is runtime behavior, so static source inspection is not enough.
-Before completion, capture dynamic evidence through Konyak's public execution
-path:
+The current implementation claims only Konyak setting persistence, UI exposure,
+and public run-plan environment injection. It does not claim that an arbitrary
+game will render through MetalFX, because that requires a DLSS-capable Windows
+program and the selected runtime payloads.
+
+When a redistributable or user-provided DLSS-capable test program is available,
+capture dynamic evidence through Konyak's public execution path:
 
 - command: `dart run bin/konyak.dart run-program <bottle> --program <path> --json`
 - bottle id and path
@@ -132,10 +151,11 @@ path:
 - loaded image evidence for `nvapi64`, `nvngx`, and the selected Metal backend
 - Metal HUD or equivalent evidence showing the MetalFX path when practical
 
-At least one DLSS-capable test program or maintained smoke path must demonstrate
-that enabling the setting changes the relevant runtime state compared with the
-setting disabled. If no redistributable DLSS-capable program can be used in CI,
-record the local-only proof and document the CI limitation in `docs/progress.md`.
+At least one DLSS-capable test program or maintained smoke path should
+demonstrate that enabling the setting changes the relevant runtime state
+compared with the setting disabled. If no redistributable DLSS-capable program
+can be used in CI, record the local-only proof and document the CI limitation in
+`docs/progress.md`.
 
 ## Testing Plan
 
