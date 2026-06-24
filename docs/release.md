@@ -112,9 +112,9 @@ nix develop -c zsh -lc 'just linux-release'
 ```
 
 For the full local Linux packaging check, including release metadata smoke,
-AppRun environment smoke, bundled runtime source-manifest signature
-verification, and remote runtime installation through the public CLI contract,
-run:
+AppRun environment smoke, AppImage update handoff smoke, bundled runtime
+source-manifest signature verification, and remote runtime installation through
+the public CLI contract, run:
 
 ```sh
 nix develop -c zsh -lc 'just linux-release-check'
@@ -127,9 +127,9 @@ Tasks: Run Task -> Konyak: Build Linux AppImage + Runtime Install Smoke
 ```
 
 CI keeps this coverage split into rerunnable pieces: the release workflow
-builds the Linux AppImage and runs the release metadata/AppRun and Linux
-desktop integration smokes, while the Linux Runtime CLI Smoke workflow verifies
-the remote runtime install path.
+builds the Linux AppImage and runs the release metadata, AppRun, AppImage update
+handoff, and Linux desktop integration smokes, while the Linux Runtime CLI Smoke
+workflow verifies the remote runtime install path.
 
 Outputs are written under `.dart_tool/konyak/release/linux`:
 
@@ -171,6 +171,12 @@ that verified install path on startup after an available app update is found.
 The installer verifies that the current AppImage exists and that its directory
 is writable before the app is terminated; AppImages installed in read-only or
 Nix-managed locations should be updated by the package manager instead.
+`smoke-linux-appimage-update-handoff` invokes the release AppDir's bundled CLI
+through `install-app-update --json` with local `file://` release metadata, a
+checksum-verified AppImage, a temporary current AppImage target, and a
+disposable running app PID. It waits for the handoff helper to terminate that
+PID, replace the target AppImage, relaunch the updated AppImage, and remove
+staging/backup paths.
 
 On Linux startup, the Flutter app runs `install-linux-file-associations --json`
 through the bundled CLI. That command rewrites the user-level desktop entry at

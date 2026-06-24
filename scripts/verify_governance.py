@@ -656,6 +656,7 @@ def main() -> None:
         "smoke-macos-app-update-handoff",
         "smoke-macos-finder-putty",
         "smoke-macos-runtime-install",
+        "smoke-linux-appimage-update-handoff",
     ]:
         require_contains("justfile", expected)
 
@@ -951,6 +952,10 @@ def main() -> None:
     )
     require_contains(
         ".github/workflows/publish.yml",
+        "smoke_linux_appimage_update_handoff.zsh",
+    )
+    require_contains(
+        ".github/workflows/publish.yml",
         "smoke_linux_desktop_integration.zsh",
     )
     require_contains(
@@ -971,6 +976,7 @@ def main() -> None:
     require_contains("justfile", "linux-runtime-cli-smoke:")
     require_contains("justfile", "linux-desktop-integration-smoke:")
     require_contains("justfile", "linux-pinned-launcher-smoke:")
+    require_contains("justfile", "smoke-linux-appimage-update-handoff:")
     require_contains("justfile", "linux-release-check:")
     for expected in [
         "Konyak: Build Linux AppImage",
@@ -982,6 +988,7 @@ def main() -> None:
     for expected in [
         "KONYAK_LINUX_RELEASE_CHECK_SKIP_RUNTIME_INSTALL",
         "smoke_linux_release_metadata.zsh",
+        "smoke_linux_appimage_update_handoff.zsh",
         "smoke_linux_desktop_integration.zsh",
         "smoke_linux_pinned_launcher_integration.zsh",
         "run_linux_runtime_cli_smoke.zsh",

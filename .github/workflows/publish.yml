@@ -30,6 +30,9 @@ jobs:
       - name: Smoke Linux AppImage AppRun runtime environment
         run: nix develop -c zsh -lc './scripts/smoke_linux_appimage_apprun_env.zsh'
 
+      - name: Smoke Linux AppImage update handoff
+        run: nix develop -c zsh -lc './scripts/smoke_linux_appimage_update_handoff.zsh'
+
       - name: Smoke Linux desktop integration
         run: nix develop -c zsh -lc './scripts/smoke_linux_desktop_integration.zsh'
 

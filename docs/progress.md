@@ -11,6 +11,58 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-24 22:32 JST
+- State: `completed`
+- Branch: `main`
+- Related work: Linux AppImage app update handoff smoke
+- Purpose: mirror the recent macOS packaged app-update handoff smoke on Linux
+  by proving the public `install-app-update --json` CLI path can replace a
+  temporary current AppImage with a checksum-verified update AppImage and
+  relaunch it.
+- Completed:
+  - Investigation workstream: inspected the recent macOS auto-install and
+    handoff smoke commits, the existing Linux startup auto-install tests, the
+    CLI AppImage handoff implementation, Linux AppRun release wiring,
+    `justfile`, release workflow, governance checks, and release docs.
+  - Sub-agent limitation: available sub-agent tooling requires an explicit
+    user request for delegation, so this task keeps investigation,
+    implementation, and audit separated in this progress entry instead.
+  - Confirmed the Linux startup app-update auto-install behavior already
+    exists; the missing parity with the latest macOS commit is dynamic packaged
+    AppImage handoff smoke coverage and CI wiring.
+  - Add and verify a maintained Linux AppImage update handoff smoke.
+  - Wire the smoke into `just`, local Linux release checks, release workflow,
+    governance checks, and release documentation.
+  - Implementation workstream: added
+    `scripts/smoke_linux_appimage_update_handoff.zsh`; the smoke uses the
+    release AppDir bundled CLI, local fake release metadata, a checksum-verified
+    update AppImage, a temporary current AppImage target, and a disposable
+    running app PID.
+  - Wired the smoke into `just`, `scripts/run_linux_release_check.zsh`, the
+    Linux release workflow, governance checks, and release documentation.
+  - Audit workstream: ran the smoke against an existing Linux release AppDir,
+    inspected the emitted `appUpdateInstall` JSON, confirmed the target
+    AppImage was replaced, confirmed the disposable app PID was terminated,
+    confirmed the updated AppImage relaunched by writing `updated`, and
+    confirmed no `.konyak-backup` or `.konyak-update` file remained.
+- Remaining:
+  - None for the Linux AppImage app update handoff smoke.
+- Next: continue with the next TODO-backed feature or release hardening item.
+- Verification:
+  - `nix develop -c zsh -lc 'zsh -n scripts/smoke_linux_appimage_update_handoff.zsh'`:
+    passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just smoke-linux-appimage-update-handoff'`:
+    passed. Dynamic evidence:
+    `appUpdateInstall.status=installed`,
+    `installPath=.dart_tool/konyak/linux-appimage-update-handoff-smoke/current/Konyak-current.AppImage`,
+    relaunch sentinel `updated`, disposable app PID terminated, and no
+    `.konyak-backup` or `.konyak-update` file remained.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `nix develop -c zsh -lc 'git diff --check'`: passed.
+
 - Timestamp: 2026-06-24 22:16 JST
 - State: `completed`
 - Branch: `main`

@@ -51,6 +51,7 @@ env "${default_runtime_env[@]}" "$repo_root/scripts/build_linux_release.zsh"
 echo "==> Checking Linux release metadata and AppRun runtime environment"
 "$repo_root/scripts/smoke_linux_release_metadata.zsh"
 "$repo_root/scripts/smoke_linux_appimage_apprun_env.zsh"
+"$repo_root/scripts/smoke_linux_appimage_update_handoff.zsh"
 "$repo_root/scripts/smoke_linux_desktop_integration.zsh"
 "$repo_root/scripts/smoke_linux_pinned_launcher_integration.zsh"
 

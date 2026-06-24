@@ -74,6 +74,9 @@ linux-desktop-integration-smoke:
 linux-pinned-launcher-smoke:
   if [ "$(uname -s)" = "Linux" ]; then zsh scripts/smoke_linux_pinned_launcher_integration.zsh; fi
 
+smoke-linux-appimage-update-handoff:
+  if [ "$(uname -s)" = "Linux" ]; then zsh scripts/smoke_linux_appimage_update_handoff.zsh; fi
+
 linux-release-check:
   zsh scripts/run_linux_release_check.zsh
 
