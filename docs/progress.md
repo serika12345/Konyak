@@ -44,20 +44,26 @@ handoff notes.
     build and upload artifacts only; a single publish job now downloads both
     platform artifacts, creates one combined `SHA256SUMS`, writes combined
     release notes, and publishes or undrafts the release.
+  - Audit workstream: fixed preflight workflow `28141056152` passed on
+    `main`, and tag workflow `28141203966` passed all Linux/macOS build and
+    smoke jobs but failed in the new publish job because `gh release view` ran
+    outside a git checkout without an explicit repository context.
+  - Implementation workstream: added `GH_REPO: ${{ github.repository }}` to
+    the publish step so GitHub CLI release commands target the current
+    repository without relying on checkout state.
   - Sub-agent limitation: available sub-agent tooling requires an explicit user
     request for delegation, so this release restart keeps investigation,
     implementation, and audit separated in this progress entry instead.
 - Remaining:
-  - Run the focused CLI tests, full repository gates, and workflow syntax
-    checks for the app-update and release workflow changes.
-  - Commit the platform-specific app-update selector and release publish
-    consolidation in a natural order, then push `main`.
-  - Rerun the release workflow manually on `main` as the fixed preflight.
-  - Move annotated tag `v1.0.0` to the fixed commit, push the tag update, and
-    monitor the tag-triggered release workflow.
+  - Run the focused workflow syntax checks and repository gates for the
+    publish-step repository-context fix.
+  - Commit and push the publish-step fix.
+  - Move annotated tag `v1.0.0` to the fixed commit again, push the tag update,
+    and monitor the tag-triggered release workflow.
   - Audit the final public v1.0.0 release assets, combined checksum metadata,
     and live macOS app-update response before reporting completion.
-- Next: run focused tests and repository gates for the pending fixes.
+- Next: run workflow syntax checks and repository gates for the publish-step
+  fix.
 - Verification:
   - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "app update checker selects the macOS archive from shared releases"'`:
     failed before implementation, then passed after the fix.
@@ -70,6 +76,11 @@ handoff notes.
     distribution.
   - `nix develop -c zsh -lc 'git diff --check'`: passed after the pending
     code changes and before the progress update.
+  - `nix develop -c zsh -lc 'gh run watch 28141056152 --repo serika12345/Konyak --exit-status --interval 30'`:
+    passed; Linux and macOS release build and smoke jobs were green on `main`.
+  - `nix develop -c zsh -lc 'gh run watch 28141203966 --repo serika12345/Konyak --exit-status --interval 30'`:
+    failed only in the publish job after Linux and macOS build/smoke passed;
+    publish logs showed `fatal: not a git repository`.
 
 - Timestamp: 2026-06-25 10:09 JST
 - State: `superseded`
