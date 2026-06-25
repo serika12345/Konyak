@@ -11,9 +11,11 @@ handoff notes.
 
 ### Latest Update
 
-- Timestamp: 2026-06-25 13:21 JST
-- State: `in_progress`
+- Timestamp: 2026-06-25 13:33 JST
+- State: `completed`
 - Branch: `main`
+- Latest commits: `0b3fe85 chore: prepare v1.0.1 release`; release tag
+  `v1.0.1`
 - Related work: v1.0.1 macOS/Linux release
 - Purpose: publish v1.0.1 with the latest committed documentation and UI
   feedback fixes.
@@ -45,17 +47,31 @@ handoff notes.
   - Audit workstream: local macOS runtime extraction, packaged CLI bridge, app
     update handoff, and PuTTY-backed Finder integration smokes passed against
     `.dart_tool/konyak/release/macos/Konyak.app`.
+  - Execution workstream: committed and pushed release-prep commit `0b3fe85`,
+    ran GitHub release workflow preflight `28146703537` on `main`, and both
+    Linux and macOS release/smoke jobs passed.
+  - Execution workstream: created and pushed annotated tag `v1.0.1` at
+    `0b3fe852d71622361041b418c111c888bd1453a6`.
+  - Execution workstream: tag-triggered GitHub Actions run `28146857436`
+    completed successfully, including Linux AppImage, macOS app, and publish
+    jobs.
+  - Audit workstream: verified the published release at
+    `https://github.com/serika12345/Konyak/releases/tag/v1.0.1` is non-draft
+    and non-prerelease, contains the expected macOS zip, Linux AppImage,
+    platform release metadata, combined `SHA256SUMS`, Linux runtime source
+    manifest, signature, and public key assets, and publishes combined release
+    notes for both platform checksums.
+  - Audit workstream: downloaded the final release assets into
+    `.dart_tool/konyak/release-audit/v1.0.1-final-28146857436`, verified the
+    combined and per-platform checksums, inspected platform release metadata,
+    and confirmed `check-app-update --json` now reports local version `1.0.1`
+    as `current` against GitHub latest `v1.0.1`.
   - Sub-agent limitation: available sub-agent tooling requires an explicit user
     delegation request, so release investigation, implementation, and audit are
     kept separated in this progress entry instead of spawned agents.
-- Remaining:
-  - Commit and push the v1.0.1 release-prep changes.
-  - Run the GitHub release workflow manually on `main` as preflight.
-  - Create and push the `v1.0.1` tag only after preflight passes.
-  - Monitor the tag-triggered publish workflow and audit the published release
-    artifacts.
-- Next: commit and push the local release-prep changes, then start the GitHub
-  release workflow preflight.
+- Remaining: none for the requested v1.0.1 macOS/Linux release.
+- Next: start a separate follow-up only if the GitHub Actions Node.js 20
+  deprecation annotations need proactive workflow maintenance.
 - Verification:
   - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "app update checker defaults to the packaged Konyak app version"'`:
     failed before the version bump and passed after it.
@@ -88,6 +104,25 @@ handoff notes.
   - `nix develop -c zsh -lc 'just cli-test'`: passed.
   - `nix develop -c zsh -lc 'just lint'`: passed.
   - `git diff --check`: passed.
+  - `nix develop -c zsh -lc 'gh workflow run publish.yml --repo serika12345/Konyak --ref main'`:
+    passed and created preflight run `28146703537`.
+  - `nix develop -c zsh -lc 'gh run watch 28146703537 --repo serika12345/Konyak --exit-status --interval 30'`:
+    passed; Linux and macOS release/smoke jobs succeeded.
+  - `git tag -a v1.0.1 -m 'Konyak v1.0.1' && git push origin v1.0.1`:
+    passed.
+  - `nix develop -c zsh -lc 'gh run watch 28146857436 --repo serika12345/Konyak --exit-status --interval 30'`:
+    passed; Linux, macOS, and publish jobs succeeded.
+  - `nix develop -c zsh -lc 'gh release view v1.0.1 --repo serika12345/Konyak --json isDraft,isPrerelease,tagName,targetCommitish,url,name,assets,body,publishedAt,isImmutable'`:
+    passed and confirmed the published release metadata and expected assets.
+  - `nix develop -c zsh -lc 'gh release download v1.0.1 --repo serika12345/Konyak --dir .dart_tool/konyak/release-audit/v1.0.1-final-28146857436'`:
+    passed and downloaded all final release assets.
+  - `nix develop -c zsh -lc 'cd .dart_tool/konyak/release-audit/v1.0.1-final-28146857436 && shasum -a 256 -c SHA256SUMS && shasum -a 256 -c Konyak-1.0.1-macos-arm64.zip.sha256 && shasum -a 256 -c Konyak-1.0.1-linux-x86_64.AppImage.sha256'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd .dart_tool/konyak/release-audit/v1.0.1-final-28146857436 && jq -S . Konyak-1.0.1-macos-arm64.release.json Konyak-1.0.1-linux-x86_64.release.json'`:
+    passed and confirmed both release metadata files use version `1.0.1`.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart run bin/konyak.dart check-app-update --json'`:
+    passed and returned `status: current`, `currentVersion: 1.0.1`, and
+    `latestVersion: v1.0.1`.
 
 - Timestamp: 2026-06-25 12:57 JST
 - State: `completed`
