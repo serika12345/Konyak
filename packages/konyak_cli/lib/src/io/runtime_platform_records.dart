@@ -53,10 +53,6 @@ RuntimeRecord _linuxWineRuntimeRecord({
   const platformSpec = _linuxWineRuntimePlatformSpec;
   final runtimeRoot = _linuxWineRuntimeRoot(environment);
   final executablePath = _joinPath(runtimeRoot, const ['bin', 'wine']);
-  final archiveUrl = _runtimeDefaultArchiveUrl(
-    platformSpec: platformSpec,
-    environment: environment,
-  );
   final versionUrl = environment.nonEmptyValue('KONYAK_LINUX_WINE_VERSION_URL');
   return RuntimeRecord.fromParts(
     definition: RuntimeDefinition(
@@ -66,11 +62,11 @@ RuntimeRecord _linuxWineRuntimeRecord({
       architecture: platformSpec.architecture,
       runnerKind: platformSpec.runnerKind,
       isBundled: false,
-      isUpdateable: archiveUrl.isSome() || versionUrl != null,
+      isUpdateable: versionUrl != null,
       distributionKind: Option.of(
         _runtimeDistributionKind(environment, 'managed'),
       ),
-      archiveUrl: archiveUrl,
+      archiveUrl: const Option.none(),
       versionUrl: Option.fromNullable(versionUrl),
     ),
     installedState: InstalledRuntimeState(

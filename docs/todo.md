@@ -79,7 +79,3 @@ verification output instead of checked-off backlog entries.
     the upstream Kron4ek release asset.
   - Keep the parent repository consuming only runtime-owner-produced complete
     source manifests and archives.
-- Removal of remaining archive/Wine-only compatibility fallback after parent
-  installer and updater code no longer needs legacy `--archive` or
-  `--archive-url` runtime paths. macOS and Linux default release inputs are now
-  source manifests.

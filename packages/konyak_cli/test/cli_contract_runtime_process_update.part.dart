@@ -694,8 +694,6 @@ void defineRuntimeProcessAndUpdateContractTests() {
         hostPlatform: KonyakHostPlatform.linux,
         environment: HostEnvironment(const {
           'HOME': '/home/user',
-          'KONYAK_LINUX_WINE_ARCHIVE_URL':
-              'https://example.invalid/linux-wine.tar.xz',
           'KONYAK_LINUX_WINE_VERSION_URL':
               'https://example.invalid/releases/latest',
           'KONYAK_LINUX_WINE_STACK_MANIFEST':
@@ -900,7 +898,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
         environment: HostEnvironment(const {
           'HOME': '/home/user',
           'KONYAK_RUNTIME_PROFILE': 'development',
-          'KONYAK_DEV_LINUX_WINE_STACK_MANIFEST':
+          'KONYAK_DEV_LINUX_WINE_STACK_SOURCE_MANIFEST':
               'file:///workspace/fixtures/linux-runtime-stack-source.json',
         }),
         fileStatusProbe: const StaticFileStatusProbe({
@@ -3040,62 +3038,66 @@ void defineRuntimeProcessAndUpdateContractTests() {
     expect(_fileSha256(stagedArchive.path), _fileSha256(sourceArchive.path));
   });
 
-  test('install-runtime-update --json installs available runtime updates', () {
-    final checker = RecordingRuntimeUpdateChecker(
-      result: RuntimeUpdateCheckCompleted(
-        RuntimeUpdateRecord(
-          runtimeId: 'konyak-macos-wine',
-          status: 'available',
-          currentVersion: Option.of('wine-devel-11.9'),
-          latestVersion: Option.of('12.0'),
-          archiveUrl: Option.of(
-            'https://example.invalid/wine-devel-12.0-osx64.tar.xz',
+  test(
+    'install-runtime-update --json installs available runtime source manifests',
+    () {
+      final checker = RecordingRuntimeUpdateChecker(
+        result: RuntimeUpdateCheckCompleted(
+          RuntimeUpdateRecord(
+            runtimeId: 'konyak-macos-wine',
+            status: 'available',
+            currentVersion: Option.of('wine-devel-11.9'),
+            latestVersion: Option.of('12.0'),
+            sourceManifestUrl: Option.of(
+              'https://example.invalid/runtime-stack-source.json',
+            ),
           ),
         ),
-      ),
-    );
-    final installer = RecordingMacosWineInstaller(
-      result: MacosWineInstallCompleted(
-        runtime: RuntimeRecord(
-          id: 'konyak-macos-wine',
-          name: 'Konyak macOS Wine',
-          platform: 'macos',
-          architecture: 'x86_64',
-          runnerKind: 'macosWine',
-          isBundled: false,
-          isUpdateable: true,
-          isInstalled: Option.of(true),
+      );
+      final installer = RecordingMacosWineInstaller(
+        result: MacosWineInstallCompleted(
+          runtime: RuntimeRecord(
+            id: 'konyak-macos-wine',
+            name: 'Konyak macOS Wine',
+            platform: 'macos',
+            architecture: 'x86_64',
+            runnerKind: 'macosWine',
+            isBundled: false,
+            isUpdateable: true,
+            isInstalled: Option.of(true),
+          ),
         ),
-      ),
-    );
+      );
 
-    final result = runCli(
-      const ['install-runtime-update', 'konyak-macos-wine', '--json'],
-      runtimeUpdateChecker: checker,
-      macosWineInstaller: installer,
-    );
+      final result = runCli(
+        const ['install-runtime-update', 'konyak-macos-wine', '--json'],
+        runtimeUpdateChecker: checker,
+        macosWineInstaller: installer,
+      );
 
-    expect(result.exitCode, 0);
-    expect(result.stderr, isEmpty);
-    expect(checker.lastRuntimeId, 'konyak-macos-wine');
-    expect(
-      installer.lastRequest?.archiveUrl.toNullable(),
-      'https://example.invalid/wine-devel-12.0-osx64.tar.xz',
-    );
-    expect(
-      installer.lastRequest?.operation,
-      RuntimeInstallOperation.updateInstall,
-    );
-    expect(
-      installer.lastRequest?.requestOperation,
-      isA<RuntimeUpdateInstallOperation>(),
-    );
-    expect(installer.lastRequest?.force, isTrue);
+      expect(result.exitCode, 0);
+      expect(result.stderr, isEmpty);
+      expect(checker.lastRuntimeId, 'konyak-macos-wine');
+      expect(
+        installer.lastRequest?.sourceManifest.toNullable(),
+        'https://example.invalid/runtime-stack-source.json',
+      );
+      expect(installer.lastRequest?.archiveUrl.isNone(), isTrue);
+      expect(
+        installer.lastRequest?.operation,
+        RuntimeInstallOperation.updateInstall,
+      );
+      expect(
+        installer.lastRequest?.requestOperation,
+        isA<RuntimeUpdateInstallOperation>(),
+      );
+      expect(installer.lastRequest?.force, isTrue);
 
-    final payload = jsonDecode(result.stdout) as Map<String, Object?>;
-    expect(payload['schemaVersion'], 1);
-    expect(payload['runtime'], containsPair('id', 'konyak-macos-wine'));
-  });
+      final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+      expect(payload['schemaVersion'], 1);
+      expect(payload['runtime'], containsPair('id', 'konyak-macos-wine'));
+    },
+  );
 
   test('install-runtime-update uses stack source manifests when available', () {
     final checker = RecordingRuntimeUpdateChecker(
@@ -3105,7 +3107,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
           status: 'available',
           currentVersion: Option.of('wine-devel-11.9'),
           latestVersion: Option.of('12.0'),
-          archiveUrl: Option.of(
+          sourceManifestUrl: Option.of(
             'https://example.invalid/runtime-stack-source.json',
           ),
         ),
@@ -3144,53 +3146,57 @@ void defineRuntimeProcessAndUpdateContractTests() {
     expect(installer.lastRequest?.force, isTrue);
   });
 
-  test('install-runtime-update installs available Linux runtime updates', () {
-    final checker = RecordingRuntimeUpdateChecker(
-      result: RuntimeUpdateCheckCompleted(
-        RuntimeUpdateRecord(
-          runtimeId: 'konyak-linux-wine',
-          status: 'available',
-          currentVersion: Option.of('wine-10.0'),
-          latestVersion: Option.of('wine-10.1'),
-          archiveUrl: Option.of(
-            'https://example.invalid/linux-wine-10.1.tar.xz',
+  test(
+    'install-runtime-update installs available Linux runtime source manifests',
+    () {
+      final checker = RecordingRuntimeUpdateChecker(
+        result: RuntimeUpdateCheckCompleted(
+          RuntimeUpdateRecord(
+            runtimeId: 'konyak-linux-wine',
+            status: 'available',
+            currentVersion: Option.of('wine-10.0'),
+            latestVersion: Option.of('wine-10.1'),
+            sourceManifestUrl: Option.of(
+              'https://example.invalid/linux-runtime-stack.json',
+            ),
           ),
         ),
-      ),
-    );
-    final installer = RecordingLinuxWineInstaller(
-      result: LinuxWineInstallCompleted(
-        runtime: RuntimeRecord(
-          id: 'konyak-linux-wine',
-          name: 'Konyak Linux Wine',
-          platform: 'linux',
-          architecture: 'x86_64',
-          runnerKind: 'wine',
-          isBundled: false,
-          isUpdateable: true,
-          isInstalled: Option.of(true),
+      );
+      final installer = RecordingLinuxWineInstaller(
+        result: LinuxWineInstallCompleted(
+          runtime: RuntimeRecord(
+            id: 'konyak-linux-wine',
+            name: 'Konyak Linux Wine',
+            platform: 'linux',
+            architecture: 'x86_64',
+            runnerKind: 'wine',
+            isBundled: false,
+            isUpdateable: true,
+            isInstalled: Option.of(true),
+          ),
         ),
-      ),
-    );
+      );
 
-    final result = runCli(
-      const ['install-runtime-update', 'konyak-linux-wine', '--json'],
-      runtimeUpdateChecker: checker,
-      linuxWineInstaller: installer,
-    );
+      final result = runCli(
+        const ['install-runtime-update', 'konyak-linux-wine', '--json'],
+        runtimeUpdateChecker: checker,
+        linuxWineInstaller: installer,
+      );
 
-    expect(result.exitCode, 0);
-    expect(checker.lastRuntimeId, 'konyak-linux-wine');
-    expect(
-      installer.lastRequest?.archiveUrl.toNullable(),
-      'https://example.invalid/linux-wine-10.1.tar.xz',
-    );
-    expect(
-      installer.lastRequest?.operation,
-      RuntimeInstallOperation.updateInstall,
-    );
-    expect(installer.lastRequest?.force, isTrue);
-  });
+      expect(result.exitCode, 0);
+      expect(checker.lastRuntimeId, 'konyak-linux-wine');
+      expect(
+        installer.lastRequest?.sourceManifest.toNullable(),
+        'https://example.invalid/linux-runtime-stack.json',
+      );
+      expect(installer.lastRequest?.archiveUrl.isNone(), isTrue);
+      expect(
+        installer.lastRequest?.operation,
+        RuntimeInstallOperation.updateInstall,
+      );
+      expect(installer.lastRequest?.force, isTrue);
+    },
+  );
 
   test(
     'install-runtime-update uses stack source manifests for Linux when available',
@@ -3318,7 +3324,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
   );
 
   test(
-    'runtime update checker ignores missing source manifests in release metadata',
+    'runtime update checker rejects Linux stack releases without source manifests',
     () {
       final checker = DartIoRuntimeUpdateChecker(
         runtimeCatalog: StaticRuntimeCatalog([
@@ -3363,13 +3369,10 @@ void defineRuntimeProcessAndUpdateContractTests() {
 
       final result = checker.check('konyak-linux-wine');
 
-      expect(result, isA<RuntimeUpdateCheckCompleted>());
-      final completed = result as RuntimeUpdateCheckCompleted;
-      expect(completed.update.status, 'available');
-      expect(completed.update.sourceManifestUrl.isNone(), isTrue);
+      expect(result, isA<RuntimeUpdateCheckFailed>());
       expect(
-        completed.update.archiveUrl.toNullable(),
-        'https://example.invalid/linux-wine-10.1.tar.xz',
+        (result as RuntimeUpdateCheckFailed).message,
+        contains('source manifest'),
       );
     },
   );

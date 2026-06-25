@@ -287,7 +287,7 @@ void main() {
       'KONYAK_LINUX_WINE_LIBRARY_PATH': '/nix/store/linux-wine-host-libs/lib',
       'KONYAK_DEV_MACOS_WINE_STACK_MANIFEST':
           '/repo/.dart_tool/konyak/dev-runtime-source/macos-wine-stack/konyak-macos-wine-runtime-stack-source.json',
-      'KONYAK_DEV_LINUX_WINE_STACK_MANIFEST':
+      'KONYAK_DEV_LINUX_WINE_STACK_SOURCE_MANIFEST':
           '/repo/.dart_tool/konyak/dev-runtime-source/linux-wine-stack/konyak-linux-wine-runtime-stack-source.json',
       'KONYAK_MACOS_DEV_RUNTIME_PREPARE_SCRIPT':
           '/repo/scripts/prepare_macos_dev_runtime_stack.zsh',

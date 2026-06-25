@@ -268,18 +268,16 @@ _RuntimeWineInstallPlan _macosWineInstallPlan({
           platformSpec: _macosKonyakRuntimePlatformSpec,
           environment: environment,
         ),
-    defaultArchiveUrl: _runtimeDefaultArchiveUrl(
-      platformSpec: _macosKonyakRuntimePlatformSpec,
-      environment: environment,
-    ),
     defaultArchiveFileName:
         _macosKonyakRuntimePlatformSpec.defaultArchiveFileName,
-    missingArchiveMessage: Option.of('macOS Wine archive is not configured.'),
+    missingArchiveMessage: Option.of(
+      'macOS Wine source manifest is not configured.',
+    ),
     incompleteRuntimeMessage: Option.of(
       'Konyak macOS Wine is installed, but the runtime stack is incomplete. '
       'Configure KONYAK_DEV_MACOS_WINE_STACK_MANIFEST or '
-      'KONYAK_MACOS_WINE_STACK_MANIFEST, or pass --source-manifest or '
-      '--component-archive to repair it.',
+      'KONYAK_MACOS_WINE_STACK_MANIFEST, or pass --source-manifest to '
+      'repair it.',
     ),
   );
 }

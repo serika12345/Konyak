@@ -224,6 +224,41 @@ String _macosRuntimeListPayload({
           'name': 'Konyak macOS runtime stack',
           'compatibilityTarget': 'macos-konyak-runtime-stack',
           'isComplete': dxvkAvailable && dxmtAvailable,
+          'backends': <Object?>[
+            _runtimeStackBackendPayload(
+              id: 'dxvk-macos',
+              name: 'DXVK-macOS',
+              role: 'd3d9-d3d11-metal-translation',
+              componentIds: const <String>['dxvk-macos', 'moltenvk'],
+              isAvailable: dxvkAvailable,
+              missingPaths: dxvkAvailable
+                  ? const <String>[]
+                  : ['/runtime/lib/dxvk/x86_64-windows/dxgi.dll'],
+            ),
+            _runtimeStackBackendPayload(
+              id: 'dxmt',
+              name: 'DXMT',
+              role: 'd3d10-d3d11-metal-translation',
+              componentIds: const <String>['dxmt'],
+              isAvailable: dxmtAvailable,
+              missingPaths: dxmtAvailable
+                  ? const <String>[]
+                  : ['/runtime/lib/dxmt/x86_64-windows/d3d11.dll'],
+            ),
+            _runtimeStackBackendPayload(
+              id: 'gptk-d3dmetal',
+              name: 'GPTK/D3DMetal',
+              role: 'd3d12-metal-translation',
+              componentIds: const <String>['gptk-d3dmetal'],
+              isAvailable: gptkAvailable,
+              missingPaths: gptkAvailable
+                  ? const <String>[]
+                  : [
+                      '/runtime/components/gptk-d3dmetal/lib/external/'
+                          'D3DMetal.framework',
+                    ],
+            ),
+          ],
           'components': <Object?>[
             _runtimeStackComponentPayload(
               id: 'wine',
@@ -310,6 +345,24 @@ String _linuxRuntimeListPayload({bool dxvkAvailable = true}) {
           'name': 'Linux Wine/Proton runtime stack',
           'compatibilityTarget': 'linux-wine-runtime-stack',
           'isComplete': dxvkAvailable,
+          'backends': <Object?>[
+            _runtimeStackBackendPayload(
+              id: 'dxvk',
+              name: 'DXVK',
+              role: 'd3d9-d3d11-vulkan-translation',
+              componentIds: const <String>['dxvk'],
+              isAvailable: dxvkAvailable,
+              missingPaths: dxvkAvailable
+                  ? const <String>[]
+                  : ['/runtime/dxvk/x64/dxgi.dll'],
+            ),
+            _runtimeStackBackendPayload(
+              id: 'vkd3d-proton',
+              name: 'vkd3d-proton',
+              role: 'd3d12-vulkan-translation',
+              componentIds: const <String>['vkd3d-proton'],
+            ),
+          ],
           'components': <Object?>[
             _runtimeStackComponentPayload(
               id: 'wine',
@@ -344,6 +397,26 @@ String _linuxRuntimeListPayload({bool dxvkAvailable = true}) {
       },
     ],
   });
+}
+
+Map<String, Object?> _runtimeStackBackendPayload({
+  required String id,
+  required String name,
+  required String role,
+  required List<String> componentIds,
+  bool isAvailable = true,
+  List<String> missingComponentIds = const <String>[],
+  List<String> missingPaths = const <String>[],
+}) {
+  return <String, Object?>{
+    'id': id,
+    'name': name,
+    'role': role,
+    'isAvailable': isAvailable,
+    'componentIds': componentIds,
+    'missingComponentIds': missingComponentIds,
+    'missingPaths': missingPaths,
+  };
 }
 
 Map<String, Object?> _runtimeStackComponentPayload({

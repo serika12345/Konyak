@@ -305,7 +305,10 @@ void main() {
     expect(debugBuildScript, contains('.dart_tool/konyak/app/macos/debug'));
     expect(smokeScript, contains('release_root='));
     expect(smokeScript, contains('\$release_root/Konyak.app'));
-    expect(smokeScript, contains('install-macos-wine --reinstall --archive'));
+    expect(
+      smokeScript,
+      contains('install-macos-wine --reinstall --source-manifest'),
+    );
     expect(smokeScript, contains('PATH=/usr/bin:/bin'));
     expect(finderSmokeScript, contains('lsregister'));
     expect(finderSmokeScript, contains('mdls'));

@@ -23,12 +23,11 @@ The Linux Nix dev shell and VSCode launch profile both set
 `KONYAK_RUNTIME_PROFILE=development` and point `KONYAK_LINUX_WINE_HOME` at
 `.dart_tool/konyak/dev-runtime/linux-wine`. The Linux VSCode launch profile runs
 `scripts/prepare_linux_dev_runtime_source.zsh` before launch and passes
-`KONYAK_DEV_LINUX_WINE_STACK_MANIFEST` to Flutter and the CLI. That script does
-not create Linux runtime components in the parent repository. It resolves the
-default complete source manifest from `runtime/linux-wine-release.json`; set
 `KONYAK_DEV_LINUX_WINE_STACK_SOURCE_MANIFEST` to point at a different complete
-source manifest produced by the Linux runtime packaging owner. The script
-validates and caches that manifest under
+source manifest produced by the Linux runtime packaging owner. That script does
+not create Linux runtime components in the parent repository. It resolves the
+default complete source manifest from `runtime/linux-wine-release.json`,
+validates it, and caches it under
 `.dart_tool/konyak/dev-runtime-source/linux-wine-stack`.
 The first Settings install action still goes through Konyak's normal
 `install-linux-wine` contract and installs into
@@ -38,9 +37,9 @@ Linux Wine can find NixOS host libraries such as FreeType, Vulkan, EGL, and
 GnuTLS without making those libraries part of the Konyak runtime payload.
 
 Local runtime stack fixtures must use the development-only
-`KONYAK_DEV_LINUX_WINE_STACK_MANIFEST` environment variable. Keep release
-variables such as `KONYAK_LINUX_WINE_STACK_MANIFEST` for published runtime stack
-manifests.
+`KONYAK_DEV_LINUX_WINE_STACK_SOURCE_MANIFEST` environment variable. Keep release
+variables such as `KONYAK_LINUX_WINE_STACK_MANIFEST` for published runtime
+stack manifests.
 
 ## Linux Release Tasks
 

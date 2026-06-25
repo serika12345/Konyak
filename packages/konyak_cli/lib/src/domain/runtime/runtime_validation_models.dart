@@ -48,7 +48,6 @@ class _RuntimePlatformSpec {
     required this.componentDefinitions,
     this.backendDefinitions = const <_RuntimeBackendDefinition>[],
     this.defaultSourceManifestUrl = const Option.none(),
-    this.archiveUrlEnvironmentKey = const Option.none(),
     this.layoutNormalization = _RuntimeLayoutNormalization.none,
   });
 
@@ -68,7 +67,6 @@ class _RuntimePlatformSpec {
   final List<_RuntimeStackComponentDefinition> componentDefinitions;
   final List<_RuntimeBackendDefinition> backendDefinitions;
   final Option<String> defaultSourceManifestUrl;
-  final Option<String> archiveUrlEnvironmentKey;
   final _RuntimeLayoutNormalization layoutNormalization;
 }
 

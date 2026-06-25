@@ -28,7 +28,7 @@ KonyakCliClient createDefaultKonyakCliClient({
     'KONYAK_DEV_MACOS_WINE_STACK_MANIFEST',
   ),
   String linuxWineStackManifestDefine = const String.fromEnvironment(
-    'KONYAK_DEV_LINUX_WINE_STACK_MANIFEST',
+    'KONYAK_DEV_LINUX_WINE_STACK_SOURCE_MANIFEST',
   ),
   String macosDevRuntimePrepareScriptDefine = const String.fromEnvironment(
     'KONYAK_MACOS_DEV_RUNTIME_PREPARE_SCRIPT',

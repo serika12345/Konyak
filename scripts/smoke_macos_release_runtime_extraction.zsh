@@ -28,6 +28,7 @@ runtime_home="$work_root/home"
 config_home="$work_root/config"
 data_home="$work_root/data"
 archive_path="$work_root/runtime-stack.tar.zst"
+manifest_path="$work_root/runtime-stack-source.json"
 install_json="$work_root/install.json"
 
 if [[ ! -x "$cli_executable" ]]; then
@@ -117,13 +118,30 @@ RUNTIME_PATHS
 printf '{"schemaVersion":1,"components":{}}\n' >"$runtime_source/.konyak-runtime-stack.json"
 tar -cf "$work_root/runtime-stack.tar" -C "$work_root/source" Runtime
 zstd -q -f -o "$archive_path" "$work_root/runtime-stack.tar"
+archive_sha256="$(shasum -a 256 "$archive_path" | awk '{ print $1 }')"
+jq -n \
+  --arg archive_url "$archive_path" \
+  --arg archive_sha256 "$archive_sha256" \
+  '{
+    schemaVersion: 1,
+    runtimeId: "konyak-macos-wine",
+    stackId: "macos-konyak-runtime-stack",
+    components: [
+      {
+        id: "wine",
+        version: "smoke",
+        archiveUrl: $archive_url,
+        sha256: $archive_sha256
+      }
+    ]
+  }' >"$manifest_path"
 
 env -i \
   PATH=/usr/bin:/bin \
   KONYAK_APPLICATION_SUPPORT="$runtime_home" \
   KONYAK_CONFIG_HOME="$config_home" \
   KONYAK_DATA_HOME="$data_home" \
-  "$cli_executable" install-macos-wine --reinstall --archive "$archive_path" --json \
+  "$cli_executable" install-macos-wine --reinstall --source-manifest "$manifest_path" --json \
   >"$install_json"
 
 jq -e \

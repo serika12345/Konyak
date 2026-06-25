@@ -66,7 +66,7 @@ run_cli_capture() {
       KONYAK_LINUX_WINE_HOME="$runtime_root" \
       KONYAK_DATA_HOME="$data_home" \
       KONYAK_CONFIG_HOME="$config_home" \
-      KONYAK_DEV_LINUX_WINE_STACK_MANIFEST="${manifest_path:-}" \
+      KONYAK_DEV_LINUX_WINE_STACK_SOURCE_MANIFEST="${manifest_path:-}" \
       timeout "$timeout_value" dart run bin/konyak.dart "$@"
   ) >"$captured_stdout_path" 2>"$captured_stderr_path"
   local exit_code=$?
@@ -154,7 +154,7 @@ assert_runtime_backend_available() {
   fi
 }
 
-manifest_path="${KONYAK_DEV_LINUX_WINE_STACK_MANIFEST:-${KONYAK_LINUX_WINE_STACK_MANIFEST:-}}"
+manifest_path="${KONYAK_DEV_LINUX_WINE_STACK_SOURCE_MANIFEST:-${KONYAK_LINUX_WINE_STACK_MANIFEST:-}}"
 default_dev_manifest="$repo_root/.dart_tool/konyak/dev-runtime-source/linux-wine-stack/konyak-linux-wine-runtime-stack-source.json"
 if [[ -n "$manifest_path" && "$manifest_path" != http://* && "$manifest_path" != https://* && ! -f "$manifest_path" ]]; then
   if [[ "$manifest_path" == "$default_dev_manifest" ]]; then

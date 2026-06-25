@@ -28,8 +28,8 @@ must come from the `runtime/konyak-macos-runtime` produced stack manifest.
 Linux development launches use `KONYAK_RUNTIME_PROFILE=development` and
 `KONYAK_LINUX_WINE_HOME`, but the Nix dev shell does not provide Wine,
 winetricks, or vkd3d-proton. Linux runtime contents must be installed through
-`install-linux-wine` from a configured archive or source manifest, matching the
-packaged runtime acquisition path.
+`install-linux-wine` from a configured source manifest, matching the packaged
+runtime acquisition path.
 
 The flake keeps those concerns separate. `releaseBuildPackages` and the
 platform build or packaging groups are for producing app artifacts. Verification
@@ -118,11 +118,12 @@ Deferred updater hardening requirements are:
 
 ## Runtime Stack Manifests
 
-macOS runtime stack construction starts at `install-macos-wine`. The command can
-accept a Wine archive plus one or more `--component-archive <path>` values, or a
-single `--source-manifest <path-or-url>` value. Component archives are staged
-into one Konyak-managed runtime directory and are expected to carry Konyak
-runtime component layout. They may include `.konyak-runtime-stack.json` version
+macOS runtime stack construction starts at `install-macos-wine`. The public
+command accepts a single `--source-manifest <path-or-url>` value or uses the
+configured source manifest for the active runtime profile. Component archives
+remain an internal source-manifest resolution detail: they are staged into one
+Konyak-managed runtime directory and are expected to carry Konyak runtime
+component layout. They may include `.konyak-runtime-stack.json` version
 metadata.
 
 The source manifest is versioned JSON:
@@ -177,9 +178,8 @@ bottle prefixes are kept outside the runtime root. CrossOver.app imports use
 `Contents/SharedSupport/CrossOver/lib64/apple_gptk`, require the NVIDIA shim
 files `nvapi64` and `nvngx`, and normalize older `nvngx-on-metalfx` source
 names to the canonical `nvngx` runtime layout. User-imported GPTK/D3DMetal is
-kept isolated from the base Wine payload under `lib/wine/*`; reinstalling or
-updating the managed macOS runtime preserves the `components/gptk-d3dmetal`
-component and migrates older overlay imports into that component layout.
+kept isolated under `components/gptk-d3dmetal`; reinstalling or updating the
+managed macOS runtime preserves only that canonical component layout.
 
 Development runtime preparation follows the same manifest-only boundary.
 `scripts/prepare_macos_dev_runtime_stack.zsh` resolves a complete source

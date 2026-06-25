@@ -263,7 +263,7 @@ Map<String, String> _runtimeEnvironmentOverrides(
   );
   final linuxStackManifest = _firstNonEmpty(
     defines.linuxWineStackManifest,
-    environment['KONYAK_DEV_LINUX_WINE_STACK_MANIFEST'],
+    environment['KONYAK_DEV_LINUX_WINE_STACK_SOURCE_MANIFEST'],
     isDevelopment && repoRoot != null
         ? _joinPath(repoRoot, const [
             '.dart_tool',
@@ -297,7 +297,10 @@ Map<String, String> _runtimeEnvironmentOverrides(
   addIfPresent('KONYAK_LINUX_WINE_HOME', linuxWineHome);
   addIfPresent('KONYAK_LINUX_WINE_LIBRARY_PATH', linuxWineLibraryPath);
   addIfPresent('KONYAK_DEV_MACOS_WINE_STACK_MANIFEST', macosStackManifest);
-  addIfPresent('KONYAK_DEV_LINUX_WINE_STACK_MANIFEST', linuxStackManifest);
+  addIfPresent(
+    'KONYAK_DEV_LINUX_WINE_STACK_SOURCE_MANIFEST',
+    linuxStackManifest,
+  );
   addIfPresent('KONYAK_MACOS_DEV_RUNTIME_PREPARE_SCRIPT', macosPrepareScript);
   addIfPresent('KONYAK_BUNDLE_RESOURCES', bundleResources);
   if (bundleResources != null && bundleResources.trim().isNotEmpty) {

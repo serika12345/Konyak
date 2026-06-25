@@ -163,7 +163,6 @@ CliResult _linuxWineInstallCliResult(LinuxWineInstallResult installResult) {
 MacosWineInstallRequest _macosWineInstallRequestForRuntimeUpdate(
   RuntimeUpdateRecord update,
 ) {
-  final archiveUrl = update.archiveUrl.toNullable();
   final sourceManifestUrl = update.sourceManifestUrl.toNullable();
   if (sourceManifestUrl != null && sourceManifestUrl.trim().isNotEmpty) {
     return MacosWineInstallRequest.updateInstall(
@@ -171,17 +170,13 @@ MacosWineInstallRequest _macosWineInstallRequestForRuntimeUpdate(
       sourceManifestSignature: update.sourceManifestSignatureUrl.toNullable(),
     );
   }
-  if (archiveUrl != null && _isRuntimeStackSourceManifestSource(archiveUrl)) {
-    return MacosWineInstallRequest.updateInstall(sourceManifest: archiveUrl);
-  }
 
-  return MacosWineInstallRequest.updateInstall(archiveUrl: archiveUrl);
+  return MacosWineInstallRequest.updateInstall();
 }
 
 LinuxWineInstallRequest _linuxWineInstallRequestForRuntimeUpdate(
   RuntimeUpdateRecord update,
 ) {
-  final archiveUrl = update.archiveUrl.toNullable();
   final sourceManifestUrl = update.sourceManifestUrl.toNullable();
   if (sourceManifestUrl != null && sourceManifestUrl.trim().isNotEmpty) {
     return LinuxWineInstallRequest.updateInstall(
@@ -189,14 +184,6 @@ LinuxWineInstallRequest _linuxWineInstallRequestForRuntimeUpdate(
       sourceManifestSignature: update.sourceManifestSignatureUrl.toNullable(),
     );
   }
-  if (archiveUrl != null && _isRuntimeStackSourceManifestSource(archiveUrl)) {
-    return LinuxWineInstallRequest.updateInstall(sourceManifest: archiveUrl);
-  }
 
-  return LinuxWineInstallRequest.updateInstall(archiveUrl: archiveUrl);
-}
-
-bool _isRuntimeStackSourceManifestSource(String source) {
-  final normalized = source.trim().toLowerCase();
-  return normalized.endsWith('.json') || normalized.contains('manifest');
+  return LinuxWineInstallRequest.updateInstall();
 }

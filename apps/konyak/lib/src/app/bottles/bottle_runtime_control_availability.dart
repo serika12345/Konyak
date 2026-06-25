@@ -103,7 +103,7 @@ bool _isRuntimeBackendAvailable(RuntimeSummary? runtime, String backendId) {
     }
   }
 
-  return _isRuntimeComponentAvailable(runtime, backendId);
+  return false;
 }
 
 bool _runtimeHasRequiredShim(RuntimeSummary? runtime, String componentId) {

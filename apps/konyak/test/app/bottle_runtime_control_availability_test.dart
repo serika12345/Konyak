@@ -15,6 +15,14 @@ void main() {
           'moltenvk',
           'gptk-d3dmetal',
         ],
+        backends: [
+          _backend('dxvk-macos', componentIds: const <String>['dxvk-macos']),
+          _backend('dxmt', componentIds: const <String>['dxmt']),
+          _backend(
+            'gptk-d3dmetal',
+            componentIds: const <String>['gptk-d3dmetal'],
+          ),
+        ],
       ),
       canChangeSettings: true,
       hasPendingRuntimeSettings: true,
@@ -40,6 +48,14 @@ void main() {
           'dxmt',
           'moltenvk',
           'gptk-d3dmetal',
+        ],
+        backends: [
+          _backend('dxvk-macos', componentIds: const <String>['dxvk-macos']),
+          _backend('dxmt', componentIds: const <String>['dxmt']),
+          _backend(
+            'gptk-d3dmetal',
+            componentIds: const <String>['gptk-d3dmetal'],
+          ),
         ],
       ),
       canChangeSettings: true,
@@ -124,7 +140,7 @@ void main() {
     expect(availability.canUseDxvk, isFalse);
   });
 
-  test('falls back to component availability for older runtime payloads', () {
+  test('requires backend availability for runtime-backed controls', () {
     final availability = resolveBottleRuntimeControlAvailability(
       platform: KonyakPlatform.macos,
       runtime: _runtime(
@@ -135,7 +151,7 @@ void main() {
       hasPendingRuntimeSettings: false,
     );
 
-    expect(availability.canUseDxvk, isTrue);
+    expect(availability.canUseDxvk, isFalse);
   });
 
   test('uses Linux runtime components for Vulkan controls', () {
@@ -144,6 +160,13 @@ void main() {
       runtime: _runtime(
         isComplete: true,
         components: const <String>['dxvk', 'vkd3d-proton'],
+        backends: [
+          _backend('dxvk', componentIds: const <String>['dxvk']),
+          _backend(
+            'vkd3d-proton',
+            componentIds: const <String>['vkd3d-proton'],
+          ),
+        ],
       ),
       canChangeSettings: true,
       hasPendingRuntimeSettings: false,
@@ -158,6 +181,21 @@ void main() {
     expect(availability.canUseDxmtDlssMetalFx, isFalse);
     expect(availability.canUseD3DMetalDlssMetalFx, isFalse);
   });
+}
+
+RuntimeStackBackendSummary _backend(
+  String id, {
+  required List<String> componentIds,
+}) {
+  return RuntimeStackBackendSummary(
+    id: id,
+    name: id,
+    role: 'test',
+    isAvailable: true,
+    componentIds: componentIds,
+    missingComponentIds: const <String>[],
+    missingPaths: const <String>[],
+  );
 }
 
 RuntimeSummary _runtime({

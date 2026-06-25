@@ -38,7 +38,7 @@ void defineRuntimeInstallContractTests() {
     expect(File('${runtimeRoot.path}.install.lock').existsSync(), isFalse);
   });
 
-  test('install-macos-wine --json installs from a configured archive source', () {
+  test('install-macos-wine --json installs from a configured manifest source', () {
     final installer = RecordingMacosWineInstaller(
       result: MacosWineInstallCompleted(
         runtime: RuntimeRecord(
@@ -1322,7 +1322,12 @@ void defineRuntimeInstallContractTests() {
         file.parent.createSync(recursive: true);
         file.writeAsStringSync('existing-gptk-wine');
       }
-      _createGptkD3DMetalSource(runtimeRoot, const ['lib', 'external']);
+      _createGptkD3DMetalSource(runtimeRoot, const [
+        'components',
+        'gptk-d3dmetal',
+        'lib',
+        'external',
+      ]);
       File(
         _joinTestPath(runtimeRoot, const ['.konyak-runtime-stack.json']),
       ).writeAsStringSync(
@@ -1419,7 +1424,12 @@ void defineRuntimeInstallContractTests() {
         'macos-wine',
       ]);
       _createInstalledMacosRuntime(runtimeRoot);
-      _createGptkD3DMetalSource(runtimeRoot, const ['lib', 'external']);
+      _createGptkD3DMetalSource(runtimeRoot, const [
+        'components',
+        'gptk-d3dmetal',
+        'lib',
+        'external',
+      ]);
       File(
         _joinTestPath(runtimeRoot, const ['.konyak-runtime-stack.json']),
       ).writeAsStringSync(
@@ -1633,71 +1643,7 @@ void defineRuntimeInstallContractTests() {
     },
   );
 
-  test('install-macos-wine --archive passes an explicit archive path', () {
-    final installer = RecordingMacosWineInstaller(
-      result: MacosWineInstallCompleted(
-        runtime: RuntimeRecord(
-          id: 'konyak-macos-wine',
-          name: 'Konyak macOS Wine',
-          platform: 'macos',
-          architecture: 'x86_64',
-          runnerKind: 'macosWine',
-          isBundled: false,
-          isUpdateable: true,
-        ),
-      ),
-    );
-
-    final result = runCli(const [
-      'install-macos-wine',
-      '--archive',
-      '/tmp/macos-wine.tar.xz',
-      '--json',
-    ], macosWineInstaller: installer);
-
-    expect(result.exitCode, 0);
-    expect(
-      installer.lastRequest?.archivePath.toNullable(),
-      '/tmp/macos-wine.tar.xz',
-    );
-  });
-
-  test('install-macos-wine --archive-sha256 passes an expected digest', () {
-    final installer = RecordingMacosWineInstaller(
-      result: MacosWineInstallCompleted(
-        runtime: RuntimeRecord(
-          id: 'konyak-macos-wine',
-          name: 'Konyak macOS Wine',
-          platform: 'macos',
-          architecture: 'x86_64',
-          runnerKind: 'macosWine',
-          isBundled: false,
-          isUpdateable: true,
-        ),
-      ),
-    );
-
-    final result = runCli(const [
-      'install-macos-wine',
-      '--archive',
-      '/tmp/macos-wine.tar.xz',
-      '--archive-sha256',
-      '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
-      '--json',
-    ], macosWineInstaller: installer);
-
-    expect(result.exitCode, 0);
-    expect(
-      installer.lastRequest?.archivePath.toNullable(),
-      '/tmp/macos-wine.tar.xz',
-    );
-    expect(
-      installer.lastRequest?.archiveSha256.toNullable(),
-      '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
-    );
-  });
-
-  test('install-macos-wine --component-archive passes component archives', () {
+  test('install-macos-wine rejects legacy archive install options', () {
     final installer = RecordingMacosWineInstaller(
       result: MacosWineInstallCompleted(
         runtime: RuntimeRecord(
@@ -1716,28 +1662,16 @@ void defineRuntimeInstallContractTests() {
     final result = runCli(const [
       'install-macos-wine',
       '--archive',
-      '/tmp/wine.tar.xz',
+      '/tmp/macos-wine.tar.xz',
       '--component-archive',
       '/tmp/dxvk.tar.xz',
-      '--component-archive',
-      '/tmp/moltenvk.tar.xz',
       '--json',
     ], macosWineInstaller: installer);
 
-    expect(result.exitCode, 0);
-    expect(installer.lastRequest?.archivePath.toNullable(), '/tmp/wine.tar.xz');
-    expect(installer.lastRequest?.componentArchivePaths, [
-      '/tmp/dxvk.tar.xz',
-      '/tmp/moltenvk.tar.xz',
-    ]);
-    expect(
-      installer.lastRequest?.operation,
-      RuntimeInstallOperation.componentInstall,
-    );
-    expect(
-      installer.lastRequest?.requestOperation,
-      isA<RuntimeComponentInstallOperation>(),
-    );
+    expect(result.exitCode, 64);
+    expect(result.stdout, isEmpty);
+    expect(result.stderr, contains('install-macos-wine'));
+    expect(installer.lastRequest, isNull);
   });
 
   test('install-gptk-wine rejects sources without an installed runtime', () {
@@ -2237,36 +2171,7 @@ void defineRuntimeInstallContractTests() {
     });
   });
 
-  test('install-linux-wine --archive passes an explicit archive path', () {
-    final installer = RecordingLinuxWineInstaller(
-      result: LinuxWineInstallCompleted(
-        runtime: RuntimeRecord(
-          id: 'konyak-linux-wine',
-          name: 'Konyak Linux Wine',
-          platform: 'linux',
-          architecture: 'x86_64',
-          runnerKind: 'wine',
-          isBundled: false,
-          isUpdateable: false,
-        ),
-      ),
-    );
-
-    final result = runCli(const [
-      'install-linux-wine',
-      '--archive',
-      '/tmp/linux-wine.tar.xz',
-      '--json',
-    ], linuxWineInstaller: installer);
-
-    expect(result.exitCode, 0);
-    expect(
-      installer.lastRequest?.archivePath.toNullable(),
-      '/tmp/linux-wine.tar.xz',
-    );
-  });
-
-  test('install-linux-wine --component-archive passes component archives', () {
+  test('install-linux-wine rejects legacy archive install options', () {
     final installer = RecordingLinuxWineInstaller(
       result: LinuxWineInstallCompleted(
         runtime: RuntimeRecord(
@@ -2290,18 +2195,10 @@ void defineRuntimeInstallContractTests() {
       '--json',
     ], linuxWineInstaller: installer);
 
-    expect(result.exitCode, 0);
-    expect(
-      installer.lastRequest?.archivePath.toNullable(),
-      '/tmp/linux-wine.tar.xz',
-    );
-    expect(installer.lastRequest?.componentArchivePaths, const [
-      '/tmp/vkd3d-proton.tar.xz',
-    ]);
-    expect(
-      installer.lastRequest?.operation,
-      RuntimeInstallOperation.componentInstall,
-    );
+    expect(result.exitCode, 64);
+    expect(result.stdout, isEmpty);
+    expect(result.stderr, contains('install-linux-wine'));
+    expect(installer.lastRequest, isNull);
   });
 
   test('install-linux-wine --source-manifest passes the source manifest', () {
@@ -2404,7 +2301,7 @@ void defineRuntimeInstallContractTests() {
   });
 
   test(
-    'runCliStreaming streams archive copy progress before final JSON',
+    'runCliStreaming streams source manifest archive copy progress before final JSON',
     () async {
       final tempDirectory = await Directory.systemTemp.createTemp(
         'konyak-runtime-progress-test-',
@@ -2417,13 +2314,33 @@ void defineRuntimeInstallContractTests() {
       final sourceArchive = File(
         _joinTestPath(tempDirectory.path, const ['linux-wine.tar.xz']),
       )..writeAsBytesSync(List<int>.filled(128 * 1024, 1));
+      final sourceManifest =
+          File(
+            _joinTestPath(tempDirectory.path, const [
+              'linux-runtime-stack.json',
+            ]),
+          )..writeAsStringSync(
+            jsonEncode(<String, Object?>{
+              'schemaVersion': 1,
+              'runtimeId': 'konyak-linux-wine',
+              'stackId': 'linux-wine-runtime-stack',
+              'components': [
+                <String, Object?>{
+                  'id': 'wine',
+                  'version': 'wine-progress-test',
+                  'archiveUrl': sourceArchive.uri.toString(),
+                  'sha256': _fileSha256(sourceArchive.path),
+                },
+              ],
+            }),
+          );
       final progressOutput = StringBuffer();
 
       final result = await runCliStreaming(
         [
           'install-linux-wine',
-          '--archive-url',
-          sourceArchive.uri.toString(),
+          '--source-manifest',
+          sourceManifest.path,
           '--progress-json',
           '--json',
         ],
@@ -2723,7 +2640,7 @@ void defineRuntimeInstallContractTests() {
           tempDirectory.path,
           const ['release-runtime-stack-source.json'],
         ),
-        'KONYAK_DEV_LINUX_WINE_STACK_MANIFEST': sourceManifestPath,
+        'KONYAK_DEV_LINUX_WINE_STACK_SOURCE_MANIFEST': sourceManifestPath,
       }),
       fileStatusProbe: const DartIoFileStatusProbe(),
     );

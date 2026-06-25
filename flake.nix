@@ -252,7 +252,7 @@
               ${lib.optionalString pkgs.stdenv.isLinux ''
                 export KONYAK_RUNTIME_PROFILE="development"
                 export KONYAK_LINUX_WINE_HOME="$PWD/.dart_tool/konyak/dev-runtime/linux-wine"
-                export KONYAK_DEV_LINUX_WINE_STACK_MANIFEST="$PWD/.dart_tool/konyak/dev-runtime-source/linux-wine-stack/konyak-linux-wine-runtime-stack-source.json"
+                export KONYAK_DEV_LINUX_WINE_STACK_SOURCE_MANIFEST="$PWD/.dart_tool/konyak/dev-runtime-source/linux-wine-stack/konyak-linux-wine-runtime-stack-source.json"
                 export KONYAK_LINUX_WINE_LIBRARY_PATH="${linuxWineHostLibraryPath}"
               ''}
               ${lib.optionalString pkgs.stdenv.isDarwin darwinXcodeEnvironment}

@@ -248,15 +248,6 @@ const _gptkD3DMetalComponentLibRelativePath = <String>[
   'lib',
 ];
 
-final _legacyGptkD3DMetalRuntimeRelativePaths = <List<String>>[
-  <String>['lib', 'external', 'D3DMetal.framework'],
-  <String>['lib', 'external', 'libd3dshared.dylib'],
-  for (final fileName in _requiredGptkD3DMetalWindowsFileNames)
-    <String>['lib', 'wine', 'x86_64-windows', fileName],
-  for (final fileName in _requiredGptkD3DMetalUnixFileNames)
-    <String>['lib', 'wine', 'x86_64-unix', fileName],
-];
-
 void _installGptkD3DMetalComponentPayload({
   required _GptkD3DMetalSource source,
   required Directory runtimeRoot,

@@ -81,7 +81,6 @@ _RuntimeWineInstallPlan _runtimeWineInstallPlan({
   required RuntimeRecord currentRuntime,
   required Option<String> configuredSourceManifest,
   required Option<String> configuredSourceManifestSignature,
-  required Option<String> defaultArchiveUrl,
   required String defaultArchiveFileName,
   required Option<String> missingArchiveMessage,
   required Option<String> incompleteRuntimeMessage,
@@ -160,26 +159,11 @@ _RuntimeWineInstallPlan _runtimeWineInstallPlan({
         componentArchivePaths: componentArchivePaths,
         preserveExistingRuntimeFiles: shouldPreserveExistingRuntimeFiles,
       ),
-    RuntimeConfiguredArchiveSource(
-      :final archiveChecksum,
-      :final componentArchivePaths,
-    ) =>
-      defaultArchiveUrl.match(
-        () => _RuntimeWineInstallMissingArchiveSource(
-          missingArchiveMessage.getOrElse(
-            () => 'Runtime archive is not configured.',
-          ),
-        ),
-        (archiveUrl) => _RuntimeWineInstallDownloadArchive(
-          archiveUrl: archiveUrl,
-          archiveFileName: _fileNameFromUrl(
-            archiveUrl,
-          ).match(() => defaultArchiveFileName, (value) => value),
-          archiveSha256: archiveChecksum,
-          componentArchivePaths: componentArchivePaths,
-          preserveExistingRuntimeFiles: shouldPreserveExistingRuntimeFiles,
-        ),
+    RuntimeConfiguredArchiveSource() => _RuntimeWineInstallMissingArchiveSource(
+      missingArchiveMessage.getOrElse(
+        () => 'Runtime source manifest is not configured.',
       ),
+    ),
   };
 }
 

@@ -22,8 +22,6 @@ extension _MacosWineArchiveInstallation on DartIoMacosWineInstaller {
             _macosKonyakRuntimePlatformSpec.requiredExecutableRelativePath,
         expectedExecutablePath: _macosWineExecutable(environment),
         preserveExistingRuntimeFiles: preserveExistingRuntimeFiles,
-        preserveExistingRuntimeSkipRelativePaths:
-            _legacyGptkD3DMetalRuntimeRelativePaths,
         preserveExistingRuntimeComponents:
             _preserveImportedGptkD3DMetalComponent,
         normalizeStagingRoot:
@@ -278,14 +276,9 @@ RuntimeComponentVersions _preserveImportedGptkD3DMetalComponent({
 }
 
 _GptkD3DMetalSource? _existingGptkD3DMetalSource(Directory runtimeRoot) {
-  final componentSource = _resolveGptkD3DMetalSource(
+  return _resolveGptkD3DMetalSource(
     _joinPath(runtimeRoot.path, _gptkD3DMetalComponentRelativePath),
   );
-  if (componentSource != null) {
-    return componentSource;
-  }
-
-  return _resolveGptkD3DMetalSource(runtimeRoot.path);
 }
 
 String? _runtimeStackComponentVersionFromRoot(

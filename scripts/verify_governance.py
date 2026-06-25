@@ -880,7 +880,7 @@ def main() -> None:
     require_contains("docs/vscode-macos.md", "prepare_macos_dev_runtime_stack.zsh")
     require_contains("docs/vscode-macos.md", "KONYAK_DEV_MACOS_WINE_STACK_MANIFEST")
     require_contains("docs/vscode-macos.md", "prepare_linux_dev_runtime_source.zsh")
-    require_contains("docs/vscode-macos.md", "KONYAK_DEV_LINUX_WINE_STACK_MANIFEST")
+    require_contains("docs/vscode-macos.md", "KONYAK_DEV_LINUX_WINE_STACK_SOURCE_MANIFEST")
     require_contains("docs/vscode-macos.md", "KONYAK_LINUX_WINE_LIBRARY_PATH")
     require_contains("docs/vscode-macos.md", "KONYAK_MACOS_WINE_HOME")
     require_not_contains("docs/vscode-macos.md", "Nix-provided Wine")
@@ -893,7 +893,6 @@ def main() -> None:
         "KONYAK_RUNTIME_PROFILE",
         "KONYAK_MACOS_WINE_HOME",
         "KONYAK_DEV_MACOS_WINE_STACK_MANIFEST",
-        "KONYAK_DEV_LINUX_WINE_STACK_MANIFEST",
         "--dart-define=KONYAK_RUNTIME_PROFILE",
         "--dart-define=KONYAK_MACOS_WINE_HOME",
         "--dart-define=KONYAK_DEV_MACOS_WINE_STACK_MANIFEST",
@@ -903,7 +902,15 @@ def main() -> None:
     require_contains(".vscode/tasks.json", "scripts/prepare_linux_dev_runtime_source.zsh")
     require_contains(".vscode/launch.json", "Konyak: Prepare Linux Runtime Source")
     require_contains(
-        ".vscode/launch.json", "--dart-define=KONYAK_DEV_LINUX_WINE_STACK_MANIFEST"
+        ".vscode/launch.json",
+        "--dart-define=KONYAK_DEV_LINUX_WINE_STACK_SOURCE_MANIFEST",
+    )
+    require_contains(
+        ".vscode/launch.json",
+        "KONYAK_DEV_LINUX_WINE_STACK_SOURCE_MANIFEST",
+    )
+    require_contains(
+        ".vscode/tasks.json", "KONYAK_DEV_LINUX_WINE_STACK_MANIFEST_CACHE"
     )
 
     for expected in [
@@ -915,7 +922,7 @@ def main() -> None:
 
     for expected in [
         "prepare_macos_dev_runtime_stack.zsh",
-        "KONYAK_DEV_LINUX_WINE_STACK_MANIFEST",
+        "KONYAK_DEV_LINUX_WINE_STACK_SOURCE_MANIFEST",
         "KONYAK_LINUX_WINE_LIBRARY_PATH",
     ]:
         require_contains("flake.nix", expected)

@@ -15,7 +15,7 @@
         "--dart-define=KONYAK_CLI_SCRIPT=${workspaceFolder}/packages/konyak_cli/bin/konyak.dart",
         "--dart-define=KONYAK_RUNTIME_PROFILE=development",
         "--dart-define=KONYAK_LINUX_WINE_HOME=${workspaceFolder}/.dart_tool/konyak/dev-runtime/linux-wine",
-        "--dart-define=KONYAK_DEV_LINUX_WINE_STACK_MANIFEST=${workspaceFolder}/.dart_tool/konyak/dev-runtime-source/linux-wine-stack/konyak-linux-wine-runtime-stack-source.json",
+        "--dart-define=KONYAK_DEV_LINUX_WINE_STACK_SOURCE_MANIFEST=${workspaceFolder}/.dart_tool/konyak/dev-runtime-source/linux-wine-stack/konyak-linux-wine-runtime-stack-source.json",
         "--dart-define=KONYAK_LINUX_WINE_LIBRARY_PATH=${env:KONYAK_LINUX_WINE_LIBRARY_PATH}"
       ],
       "preLaunchTask": "Konyak: Prepare Linux Runtime Source",
@@ -25,7 +25,7 @@
         "KONYAK_CLI_SCRIPT": "${workspaceFolder}/packages/konyak_cli/bin/konyak.dart",
         "KONYAK_RUNTIME_PROFILE": "development",
         "KONYAK_LINUX_WINE_HOME": "${workspaceFolder}/.dart_tool/konyak/dev-runtime/linux-wine",
-        "KONYAK_DEV_LINUX_WINE_STACK_MANIFEST": "${workspaceFolder}/.dart_tool/konyak/dev-runtime-source/linux-wine-stack/konyak-linux-wine-runtime-stack-source.json",
+        "KONYAK_DEV_LINUX_WINE_STACK_SOURCE_MANIFEST": "${workspaceFolder}/.dart_tool/konyak/dev-runtime-source/linux-wine-stack/konyak-linux-wine-runtime-stack-source.json",
         "KONYAK_LINUX_WINE_LIBRARY_PATH": "${env:KONYAK_LINUX_WINE_LIBRARY_PATH}"
       }
     },

@@ -7,11 +7,37 @@ instead of proving the behavior Konyak actually needs.
 ## Scope
 
 - Audit date: 2026-06-14
+- Latest cleanup update: 2026-06-25
 - Scope: macOS runtime, prefix initialization, release/update metadata,
   runtime validation, smoke scripts, and tests that currently define those
   contracts.
 - Out of scope: optional UI-only degraded metadata such as missing executable
   icons, unless it hides runtime or installer failures.
+
+## 2026-06-25 Cleanup Results
+
+The following compatibility paths from the follow-up inventory have been
+retired:
+
+- `install-macos-wine` and `install-linux-wine` no longer accept public
+  runtime `--archive`, `--archive-url`, `--archive-sha256`, or
+  `--component-archive` options. Runtime acquisition now enters through
+  `--source-manifest` or the configured source manifest for the active runtime
+  profile.
+- Runtime update installation no longer reinterprets archive URLs as stack
+  manifests or passes archive URLs into Wine runtime installers. Stack runtime
+  release metadata must provide a runtime stack source manifest.
+- Linux development runtime resolution uses
+  `KONYAK_DEV_LINUX_WINE_STACK_SOURCE_MANIFEST`; the old
+  `KONYAK_DEV_LINUX_WINE_STACK_MANIFEST` fallback is not accepted.
+- Flutter runtime-backed controls require backend availability records instead
+  of falling back to component ids that happened to match backend ids.
+- macOS GPTK/D3DMetal preservation only carries forward the canonical
+  `components/gptk-d3dmetal` component layout. Older root-level overlay layouts
+  are no longer migrated during managed runtime reinstall/update.
+- The macOS release runtime extraction smoke still verifies packaged zstd
+  archive extraction, but it does so through a source manifest and
+  `install-macos-wine --source-manifest`.
 
 ## Inventory
 

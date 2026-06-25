@@ -389,9 +389,8 @@ const _linuxWineRuntimePlatformSpec = _RuntimePlatformSpec(
   stackName: 'Linux Wine/Proton runtime stack',
   requiredExecutableRelativePath: <String>['bin', 'wine'],
   defaultArchiveFileName: 'linux-wine.tar.xz',
-  archiveUrlEnvironmentKey: Option.of('KONYAK_LINUX_WINE_ARCHIVE_URL'),
   developmentSourceManifestEnvironmentKey:
-      'KONYAK_DEV_LINUX_WINE_STACK_MANIFEST',
+      'KONYAK_DEV_LINUX_WINE_STACK_SOURCE_MANIFEST',
   releaseSourceManifestEnvironmentKey: 'KONYAK_LINUX_WINE_STACK_MANIFEST',
   developmentSourceSignatureEnvironmentKey:
       'KONYAK_DEV_LINUX_WINE_STACK_SIGNATURE_URL',
@@ -446,17 +445,5 @@ Option<String> _runtimeSourceManifestSignatureForPlatform({
     environment,
     developmentKey: platformSpec.developmentSourceSignatureEnvironmentKey,
     releaseKey: platformSpec.releaseSourceSignatureEnvironmentKey,
-  );
-}
-
-Option<String> _runtimeDefaultArchiveUrl({
-  required _RuntimePlatformSpec platformSpec,
-  required HostEnvironment environment,
-}) {
-  return platformSpec.archiveUrlEnvironmentKey.match(
-    () => const Option.none(),
-    (archiveUrlEnvironmentKey) => Option.fromNullable(
-      environment.nonEmptyValue(archiveUrlEnvironmentKey),
-    ),
   );
 }

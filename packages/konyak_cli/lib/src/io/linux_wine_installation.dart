@@ -256,13 +256,11 @@ _RuntimeWineInstallPlan _linuxWineInstallPlan({
           platformSpec: _linuxWineRuntimePlatformSpec,
           environment: environment,
         ),
-    defaultArchiveUrl: _runtimeDefaultArchiveUrl(
-      platformSpec: _linuxWineRuntimePlatformSpec,
-      environment: environment,
-    ),
     defaultArchiveFileName:
         _linuxWineRuntimePlatformSpec.defaultArchiveFileName,
-    missingArchiveMessage: Option.of('Linux Wine archive is not configured.'),
+    missingArchiveMessage: Option.of(
+      'Linux Wine source manifest is not configured.',
+    ),
     incompleteRuntimeMessage: const Option.none(),
   );
 }

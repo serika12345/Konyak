@@ -239,12 +239,6 @@ public_key_source=""
 
 if [[ "${profile}" == "development" ]]; then
   manifest_source="${KONYAK_DEV_LINUX_WINE_STACK_SOURCE_MANIFEST:-${KONYAK_DEV_LINUX_RUNTIME_STACK_SOURCE_MANIFEST:-}}"
-  legacy_manifest_source="${KONYAK_DEV_LINUX_WINE_STACK_MANIFEST:-}"
-  if [[ -z "${manifest_source}" && -n "${legacy_manifest_source}" ]]; then
-    if is_url "${legacy_manifest_source}" || [[ -f "${legacy_manifest_source}" ]]; then
-      manifest_source="${legacy_manifest_source}"
-    fi
-  fi
   signature_source="${KONYAK_DEV_LINUX_WINE_STACK_SIGNATURE_URL:-}"
 else
   manifest_source="${KONYAK_RUNTIME_STACK_SOURCE_MANIFEST:-}"

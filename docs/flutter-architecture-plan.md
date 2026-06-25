@@ -64,8 +64,7 @@ shape. For the actionable backlog, use `docs/todo.md`.
 - The UI may show runtime capability state, but platform-specific runtime
   behavior stays behind CLI/backend services.
 - Packaged app update handoff uses macOS DMG artifacts and Linux AppImage
-  artifacts through `install-app-update --json`. Legacy archive compatibility
-  remains only as an explicit fallback until it is removed from the backlog.
+  artifacts through `install-app-update --json`.
 
 ## Remaining Architecture Work
 
@@ -82,5 +81,3 @@ shape. For the actionable backlog, use `docs/todo.md`.
   and flake rate.
 - Harden Linux runtime packaging-owner build/check workflows before the next
   runtime version bump.
-- Remove legacy archive/Wine-only compatibility fallback after source-manifest
-  runtime acquisition is the only supported contract.

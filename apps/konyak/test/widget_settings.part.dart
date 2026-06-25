@@ -978,7 +978,7 @@ void defineSettingsWidgetTests() {
             "schemaVersion": 1,
             "error": {
               "code": "macosWineInstallFailed",
-              "message": "Konyak macOS Wine is installed, but the runtime stack is incomplete. Configure KONYAK_DEV_MACOS_WINE_STACK_MANIFEST or KONYAK_MACOS_WINE_STACK_MANIFEST, or pass --source-manifest or --component-archive to repair it."
+              "message": "Konyak macOS Wine is installed, but the runtime stack is incomplete. Configure KONYAK_DEV_MACOS_WINE_STACK_MANIFEST or KONYAK_MACOS_WINE_STACK_MANIFEST, or pass --source-manifest to repair it."
             }
           }
         ''',

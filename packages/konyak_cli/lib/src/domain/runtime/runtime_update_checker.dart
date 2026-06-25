@@ -82,5 +82,5 @@ RuntimeUpdateCheckResult _runtimeUpdateFromMetadata({
 }
 
 bool _requiresRuntimeStackSourceManifest(RuntimeRecord runtime) {
-  return runtime.id == macosWineRuntimeId && runtime.stack.isSome();
+  return runtime.stack.isSome();
 }
