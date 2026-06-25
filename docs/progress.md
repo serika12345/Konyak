@@ -11,6 +11,59 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-25 08:58 JST
+- State: `in_progress`
+- Branch: `main`
+- Related work: v1.0.0 macOS and Linux release
+- Purpose: verify the packaged Konyak app auto-update handoff on the release
+  build path, run the macOS and Linux release workflow gates, then publish the
+  simultaneous v1.0.0 GitHub release artifacts.
+- Completed:
+  - Investigation workstream: reviewed the current TODO/progress state,
+    release documentation, release build scripts, packaged app update handoff
+    smokes, publish workflow, app version metadata, local git state, and GitHub
+    workflow history.
+  - Confirmed `apps/konyak/pubspec.yaml` already declares `1.0.0+1`.
+  - Confirmed local `main` matches `origin/main` at
+    `4214c766664b645d6d4477a6993f14123b64d964` and no local `v1.0.0` tag
+    exists.
+  - Sub-agent limitation: available sub-agent tooling requires an explicit user
+    request for delegation, so this release keeps investigation, release
+    execution, and audit separated in this progress entry instead.
+  - Release execution workstream: built the local arm64 macOS v1.0.0 release
+    artifact and reran the packaged macOS app update handoff smoke against the
+    generated `Konyak.app`.
+  - Audit workstream: inspected the macOS `.release.json`, reran SHA-256
+    validation from the release directory, inspected the smoke
+    `install-app-update --json` output, and confirmed the temporary target app
+    was replaced without leftover staging or backup bundles.
+  - Passed the local repository gates and test suite required before pushing
+    the release-prep progress commit.
+- Remaining:
+  - Run the GitHub release workflow manually on `main` as the cross-platform
+    preflight so macOS and Linux update handoff smokes pass before publishing.
+  - Create and push the `v1.0.0` tag after preflight passes.
+  - Monitor the tag-triggered release workflow, then audit the published
+    release assets and checksum metadata.
+- Next: commit and push this release-prep progress update, then run the
+  GitHub release workflow manually on `main` for the macOS/Linux preflight.
+- Verification:
+  - `nix develop -c zsh -lc 'just macos-release'`: passed; produced
+    `.dart_tool/konyak/release/macos/Konyak.app` and
+    `Konyak-1.0.0-macos-arm64.zip`.
+  - `nix develop -c zsh -lc 'just smoke-macos-app-update-handoff'`: passed.
+    Dynamic evidence: `appUpdateInstall.status=installed`,
+    `currentVersion=1.0.0`, `installedVersion=v1.1.0`, target marker
+    `updated`, no `.konyak-backup` or `.konyak-update` bundle remained.
+  - `nix develop -c zsh -lc 'cd .dart_tool/konyak/release/macos && shasum -a 256 -c Konyak-1.0.0-macos-arm64.zip.sha256 && shasum -a 256 -c SHA256SUMS'`:
+    passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `nix develop -c zsh -lc 'just test'`: passed.
+  - `nix develop -c zsh -lc 'git diff --check'`: passed.
+
 - Timestamp: 2026-06-24 23:25 JST
 - State: `completed`
 - Branch: `main`
