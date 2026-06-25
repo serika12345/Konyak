@@ -270,6 +270,11 @@ work snapshot points to a more specific continuation.
 
 If visible behavior or navigation changes, add an integration or golden test
 before the implementation when practical.
+Before implementing any new UI element, add or update golden test coverage for
+it. Before reporting completion, run that golden test so screenshot capture is
+actually performed, and include the captured screenshot or golden artifact path
+plus the command result in the final report. Do not finish UI-element work
+without this screenshot-capture evidence.
 
 ### 6.3 CLI backend change
 
