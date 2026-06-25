@@ -1,3 +1,5 @@
+import '../l10n/konyak_localizations.dart';
+
 enum KonyakPlatform {
   linux,
   macos;
@@ -8,4 +10,13 @@ enum KonyakPlatform {
   String get showInFileManagerLabel {
     return isMacOS ? 'Show in Finder' : 'Show in File Manager';
   }
+}
+
+String localizedShowInFileManagerLabel(
+  KonyakLocalizations localizations,
+  KonyakPlatform platform,
+) {
+  return platform.isMacOS
+      ? localizations.showInFinder
+      : localizations.showInFileManager;
 }

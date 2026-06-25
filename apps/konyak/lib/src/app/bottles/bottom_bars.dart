@@ -41,14 +41,14 @@ class ProgramConfigurationBottomBar extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           KonyakBottomButton(
-            label: localizations.text(platform.showInFileManagerLabel),
+            label: localizedShowInFileManagerLabel(localizations, platform),
             onPressed: onOpenPinnedProgramLocation == null
                 ? null
                 : () => onOpenPinnedProgramLocation!(bottle, program),
           ),
           const SizedBox(width: 6),
           KonyakBottomButton(
-            label: localizations.text('Run...'),
+            label: localizations.runEllipsis,
             onPressed: onRunProgramPath == null
                 ? null
                 : () => onRunProgramPath!(bottle, program.path),
@@ -138,14 +138,14 @@ class KonyakBottomBar extends StatelessWidget {
           ),
           const SizedBox(width: 6),
           KonyakBottomButton(
-            label: localizations.text('Winetricks'),
+            label: localizations.winetricks,
             onPressed: activeBottle == null || onShowWinetricks == null
                 ? null
                 : () => onShowWinetricks!(activeBottle),
           ),
           const SizedBox(width: 6),
           KonyakBottomButton(
-            label: localizations.text('Run'),
+            label: localizations.run,
             onPressed: activeBottle == null || onRunProgram == null
                 ? null
                 : () => onRunProgram!(activeBottle),
@@ -175,7 +175,7 @@ class _BottleToolsButton extends StatelessWidget {
         onRunBottleCommand != null || onOpenBottleLocation != null;
 
     return KonyakBottomButton(
-      label: KonyakLocalizations.of(context).text('Tools'),
+      label: KonyakLocalizations.of(context).tools,
       onPressed: activeBottle == null || !hasActions
           ? null
           : () => _showBottleTools(context, activeBottle),

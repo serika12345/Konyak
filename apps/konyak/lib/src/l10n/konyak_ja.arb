@@ -1,0 +1,1105 @@
+{
+  "@@locale": "ja",
+  "add": "追加",
+  "@add": {
+    "description": "Konyak UI string: Add"
+  },
+  "advertiseAvxSupport": "AVX サポートを通知",
+  "@advertiseAvxSupport": {
+    "description": "Konyak UI string: Advertise AVX Support"
+  },
+  "aboutKonyak": "Konyak について",
+  "@aboutKonyak": {
+    "description": "Konyak UI string: About Konyak"
+  },
+  "appearance": "外観",
+  "@appearance": {
+    "description": "Konyak UI string: Appearance"
+  },
+  "arguments": "引数",
+  "@arguments": {
+    "description": "Konyak UI string: Arguments"
+  },
+  "auto": "自動",
+  "@auto": {
+    "description": "Konyak UI string: Auto"
+  },
+  "automaticallyCheckForKonyakUpdates": "Konyak のアップデートを自動確認",
+  "@automaticallyCheckForKonyakUpdates": {
+    "description": "Konyak UI string: Automatically check for Konyak updates"
+  },
+  "automaticallyCheckForKonyakWineUpdates": "Konyak Wine のアップデートを自動確認",
+  "@automaticallyCheckForKonyakWineUpdates": {
+    "description": "Konyak UI string: Automatically check for Konyak Wine updates"
+  },
+  "automaticallyPinNewlyInstalledPrograms": "新しくインストールされたプログラムを自動でピン留め",
+  "@automaticallyPinNewlyInstalledPrograms": {
+    "description": "Konyak UI string: Automatically pin newly installed programs"
+  },
+  "backToBottle": "ボトルに戻る",
+  "@backToBottle": {
+    "description": "Konyak UI string: Back to bottle"
+  },
+  "bottle": "ボトル",
+  "@bottle": {
+    "description": "Konyak UI string: Bottle"
+  },
+  "bottleConfiguration": "ボトル設定",
+  "@bottleConfiguration": {
+    "description": "Konyak UI string: Bottle Configuration"
+  },
+  "bottlePath": "ボトルパス",
+  "@bottlePath": {
+    "description": "Konyak UI string: Bottle path"
+  },
+  "bottles": "ボトル",
+  "@bottles": {
+    "description": "Konyak UI string: Bottles"
+  },
+  "browse": "参照",
+  "@browse": {
+    "description": "Konyak UI string: Browse"
+  },
+  "cancel": "キャンセル",
+  "@cancel": {
+    "description": "Konyak UI string: Cancel"
+  },
+  "checkForUpdatesMenuItem": "アップデートを確認...",
+  "@checkForUpdatesMenuItem": {
+    "description": "Main menu item label for checking Konyak updates."
+  },
+  "checkingForKonyakUpdatesEllipsis": "Konyak のアップデートを確認しています...",
+  "@checkingForKonyakUpdatesEllipsis": {
+    "description": "Konyak UI string: Checking for Konyak updates..."
+  },
+  "chooseEllipsis": "選択...",
+  "@chooseEllipsis": {
+    "description": "Konyak UI string: Choose..."
+  },
+  "chooseProgramFile": "プログラムファイルを選択",
+  "@chooseProgramFile": {
+    "description": "Konyak UI string: Choose program file"
+  },
+  "chineseSimplified": "中国語（簡体字）",
+  "@chineseSimplified": {
+    "description": "Konyak UI string: Chinese (Simplified)"
+  },
+  "chineseTraditional": "中国語（繁体字）",
+  "@chineseTraditional": {
+    "description": "Konyak UI string: Chinese (Traditional)"
+  },
+  "close": "閉じる",
+  "@close": {
+    "description": "Konyak UI string: Close"
+  },
+  "closeWindow": "ウィンドウを閉じる",
+  "@closeWindow": {
+    "description": "Konyak UI string: Close window"
+  },
+  "commandPrompt": "コマンドプロンプト",
+  "@commandPrompt": {
+    "description": "Konyak UI string: Command Prompt"
+  },
+  "compatibility": "互換性",
+  "@compatibility": {
+    "description": "Konyak UI string: Compatibility"
+  },
+  "complete": "完了",
+  "@complete": {
+    "description": "Konyak UI string: Complete"
+  },
+  "config": "設定",
+  "@config": {
+    "description": "Konyak UI string: Config"
+  },
+  "controlPanel": "コントロールパネル",
+  "@controlPanel": {
+    "description": "Konyak UI string: Control Panel"
+  },
+  "create": "作成",
+  "@create": {
+    "description": "Konyak UI string: Create"
+  },
+  "createBottle": "ボトルを作成",
+  "@createBottle": {
+    "description": "Konyak UI string: Create Bottle"
+  },
+  "createBottleAction": "ボトルを作成",
+  "@createBottleAction": {
+    "description": "Action label or tooltip for creating a bottle."
+  },
+  "creatingBottleEllipsis": "ボトルを作成しています...",
+  "@creatingBottleEllipsis": {
+    "description": "Konyak UI string: Creating bottle..."
+  },
+  "emptyExecutableBottleMessage": "この実行ファイルを起動する前にボトルを作成してください。",
+  "@emptyExecutableBottleMessage": {
+    "description": "Message shown in the open executable dialog when no bottles exist."
+  },
+  "emptyBottlesMessage": "Windows プログラムを管理するにはボトルを作成してください。",
+  "@emptyBottlesMessage": {
+    "description": "Message shown in the bottles list empty state."
+  },
+  "couldNotLoadBottles": "ボトルを読み込めませんでした",
+  "@couldNotLoadBottles": {
+    "description": "Konyak UI string: Could not load bottles"
+  },
+  "d3dmetalBackend": "D3DMetal バックエンド",
+  "@d3dmetalBackend": {
+    "description": "Konyak UI string: D3DMetal Backend"
+  },
+  "d3dmetalLicenseNotice": "D3DMetal は Apple Game Porting Toolkit に含まれます。Konyak は D3DMetal を同梱または再配布しません。Apple Developer から GPTK DMG をダウンロードして DMG を選択し、商用利用または再配布について Apple License.pdf を確認してください。",
+  "@d3dmetalLicenseNotice": {
+    "description": "Notice shown in runtime settings before importing Apple D3DMetal files."
+  },
+  "dark": "ダーク",
+  "@dark": {
+    "description": "Konyak UI string: Dark"
+  },
+  "defaultLabel": "デフォルト",
+  "@defaultLabel": {
+    "description": "Konyak UI string: Default"
+  },
+  "defaultBottlePath": "デフォルトのボトルパス:",
+  "@defaultBottlePath": {
+    "description": "Konyak UI string: Default bottle path:"
+  },
+  "delete": "削除",
+  "@delete": {
+    "description": "Konyak UI string: Delete"
+  },
+  "details": "詳細",
+  "@details": {
+    "description": "Konyak UI string: Details"
+  },
+  "directxDiagnosticReport": "DirectX 診断レポート",
+  "@directxDiagnosticReport": {
+    "description": "Konyak UI string: DirectX Diagnostic Report"
+  },
+  "distribution": "配布",
+  "@distribution": {
+    "description": "Konyak UI string: Distribution"
+  },
+  "download": "ダウンロード",
+  "@download": {
+    "description": "Konyak UI string: Download"
+  },
+  "dxvkHud": "DXVK HUD",
+  "@dxvkHud": {
+    "description": "Konyak UI string: DXVK HUD"
+  },
+  "enhancedSync": "Enhanced Sync",
+  "@enhancedSync": {
+    "description": "Konyak UI string: Enhanced Sync"
+  },
+  "english": "英語",
+  "@english": {
+    "description": "Konyak UI string: English"
+  },
+  "environment": "環境変数",
+  "@environment": {
+    "description": "Konyak UI string: Environment"
+  },
+  "exportAsArchiveEllipsis": "アーカイブとしてエクスポート...",
+  "@exportAsArchiveEllipsis": {
+    "description": "Konyak UI string: Export as Archive..."
+  },
+  "exportingBottleArchiveEllipsis": "ボトルアーカイブを書き出しています...",
+  "@exportingBottleArchiveEllipsis": {
+    "description": "Konyak UI string: Exporting bottle archive..."
+  },
+  "failed": "失敗",
+  "@failed": {
+    "description": "Konyak UI string: Failed"
+  },
+  "file": "ファイル",
+  "@file": {
+    "description": "Konyak UI string: File"
+  },
+  "fileExplorer": "ファイルエクスプローラー",
+  "@fileExplorer": {
+    "description": "Konyak UI string: File Explorer"
+  },
+  "french": "フランス語",
+  "@french": {
+    "description": "Konyak UI string: French"
+  },
+  "full": "フル",
+  "@full": {
+    "description": "Konyak UI string: Full"
+  },
+  "general": "一般",
+  "@general": {
+    "description": "Konyak UI string: General"
+  },
+  "german": "ドイツ語",
+  "@german": {
+    "description": "Konyak UI string: German"
+  },
+  "graphics": "グラフィック",
+  "@graphics": {
+    "description": "Konyak UI string: Graphics"
+  },
+  "graphicsBackend": "グラフィックバックエンド",
+  "@graphicsBackend": {
+    "description": "Konyak UI string: Graphics Backend"
+  },
+  "gptkD3dmetalSourceWasNotSelected": "GPTK/D3DMetal の入手元が選択されていません。",
+  "@gptkD3dmetalSourceWasNotSelected": {
+    "description": "Konyak UI string: GPTK/D3DMetal source was not selected."
+  },
+  "highResolutionMode": "高解像度モード",
+  "@highResolutionMode": {
+    "description": "Konyak UI string: High Resolution Mode"
+  },
+  "incomplete": "未完了",
+  "@incomplete": {
+    "description": "Konyak UI string: Incomplete"
+  },
+  "importBottle": "ボトルをインポート",
+  "@importBottle": {
+    "description": "Konyak UI string: Import Bottle"
+  },
+  "importD3dmetal": "D3DMetal をインポート",
+  "@importD3dmetal": {
+    "description": "Konyak UI string: Import D3DMetal"
+  },
+  "importD3dmetalBackend": "D3DMetal バックエンドをインポートしますか？",
+  "@importD3dmetalBackend": {
+    "description": "Konyak UI string: Import D3DMetal Backend?"
+  },
+  "importingD3dmetal": "D3DMetal をインポートしています",
+  "@importingD3dmetal": {
+    "description": "Konyak UI string: Importing D3DMetal"
+  },
+  "importingGptkD3dmetalEllipsis": "GPTK/D3DMetal をインポートしています...",
+  "@importingGptkD3dmetalEllipsis": {
+    "description": "Konyak UI string: Importing GPTK/D3DMetal..."
+  },
+  "importingBottleArchiveEllipsis": "ボトルアーカイブを読み込んでいます...",
+  "@importingBottleArchiveEllipsis": {
+    "description": "Konyak UI string: Importing bottle archive..."
+  },
+  "importD3dmetalBackendMessage": "GPTK アプリをインポートすると、Wine 実行ファイルを置き換えずに Apple D3DMetal ファイルを現在の macOS Wine ランタイムへ追加します。続行する前に実行中の Wine プロセスを停止してください。",
+  "@importD3dmetalBackendMessage": {
+    "description": "Confirmation dialog message before importing Apple D3DMetal files."
+  },
+  "install": "インストール",
+  "@install": {
+    "description": "Konyak UI string: Install"
+  },
+  "installed": "インストール済み",
+  "@installed": {
+    "description": "Konyak UI string: Installed"
+  },
+  "installedPrograms": "インストール済みプログラム",
+  "@installedPrograms": {
+    "description": "Konyak UI string: Installed Programs"
+  },
+  "installing": "インストール中",
+  "@installing": {
+    "description": "Konyak UI string: Installing"
+  },
+  "italian": "イタリア語",
+  "@italian": {
+    "description": "Konyak UI string: Italian"
+  },
+  "japanese": "日本語",
+  "@japanese": {
+    "description": "Konyak UI string: Japanese"
+  },
+  "kill": "終了",
+  "@kill": {
+    "description": "Konyak UI string: Kill"
+  },
+  "korean": "韓国語",
+  "@korean": {
+    "description": "Konyak UI string: Korean"
+  },
+  "konyakSettings": "Konyak 設定",
+  "@konyakSettings": {
+    "description": "Konyak UI string: Konyak Settings"
+  },
+  "konyakIsUpToDate": "Konyak は最新です。",
+  "@konyakIsUpToDate": {
+    "description": "Konyak UI string: Konyak is up to date."
+  },
+  "konyakUpdateStatusIsUnknown": "Konyak のアップデート状態は不明です。",
+  "@konyakUpdateStatusIsUnknown": {
+    "description": "Konyak UI string: Konyak update status is unknown."
+  },
+  "language": "言語",
+  "@language": {
+    "description": "Konyak UI string: Language"
+  },
+  "latestRunLog": "最新の実行ログ",
+  "@latestRunLog": {
+    "description": "Konyak UI string: Latest run log"
+  },
+  "launchingProgramEllipsis": "プログラムを起動しています...",
+  "@launchingProgramEllipsis": {
+    "description": "Konyak UI string: Launching program..."
+  },
+  "light": "ライト",
+  "@light": {
+    "description": "Konyak UI string: Light"
+  },
+  "linuxRuntime": "Linux ランタイム",
+  "@linuxRuntime": {
+    "description": "Konyak UI string: Linux Runtime"
+  },
+  "loading": "読み込み中",
+  "@loading": {
+    "description": "Konyak UI string: Loading"
+  },
+  "loadingWinetricksPackagesEllipsis": "winetricks パッケージを読み込んでいます...",
+  "@loadingWinetricksPackagesEllipsis": {
+    "description": "Konyak UI string: Loading winetricks packages..."
+  },
+  "locale": "ロケール",
+  "@locale": {
+    "description": "Konyak UI string: Locale"
+  },
+  "macosRuntime": "macOS ランタイム",
+  "@macosRuntime": {
+    "description": "Konyak UI string: macOS Runtime"
+  },
+  "managedRuntimeInstallationIsNotSupported": "管理対象ランタイムのインストールはサポートされていません。",
+  "@managedRuntimeInstallationIsNotSupported": {
+    "description": "Konyak UI string: Managed runtime installation is not supported."
+  },
+  "maximizeOrRestoreWindow": "最大化または復元",
+  "@maximizeOrRestoreWindow": {
+    "description": "Konyak UI string: Maximize or restore window"
+  },
+  "metalHud": "Metal HUD",
+  "@metalHud": {
+    "description": "Konyak UI string: Metal HUD"
+  },
+  "metalTrace": "Metal Trace",
+  "@metalTrace": {
+    "description": "Konyak UI string: Metal Trace"
+  },
+  "minimizeWindow": "ウィンドウを最小化",
+  "@minimizeWindow": {
+    "description": "Konyak UI string: Minimize window"
+  },
+  "missing": "不足",
+  "@missing": {
+    "description": "Konyak UI string: Missing"
+  },
+  "mitLicense": "MIT ライセンス",
+  "@mitLicense": {
+    "description": "Konyak UI string: MIT License"
+  },
+  "move": "移動",
+  "@move": {
+    "description": "Konyak UI string: Move"
+  },
+  "moveEllipsis": "移動...",
+  "@moveEllipsis": {
+    "description": "Konyak UI string: Move..."
+  },
+  "environmentNameHint": "名前",
+  "@environmentNameHint": {
+    "description": "Konyak UI string: NAME"
+  },
+  "name": "名前",
+  "@name": {
+    "description": "Konyak UI string: Name"
+  },
+  "noBottles": "ボトルがありません",
+  "@noBottles": {
+    "description": "Konyak UI string: No Bottles"
+  },
+  "noBottlesYet": "ボトルはまだありません",
+  "@noBottlesYet": {
+    "description": "Konyak UI string: No bottles yet"
+  },
+  "noInstalledProgramsFound": "インストール済みプログラムは見つかりませんでした。",
+  "@noInstalledProgramsFound": {
+    "description": "Konyak UI string: No installed programs found."
+  },
+  "noManagedRuntimeStackDetected": "管理対象ランタイムスタックは検出されませんでした。",
+  "@noManagedRuntimeStackDetected": {
+    "description": "Konyak UI string: No managed runtime stack detected."
+  },
+  "noMatchingWinetricksVerbs": "一致する winetricks verb はありません。",
+  "@noMatchingWinetricksVerbs": {
+    "description": "Konyak UI string: No matching winetricks verbs."
+  },
+  "noVerbsInThisCategory": "このカテゴリに verb はありません。",
+  "@noVerbsInThisCategory": {
+    "description": "Konyak UI string: No verbs in this category."
+  },
+  "noWineProcessesFound": "Wine プロセスは見つかりませんでした。",
+  "@noWineProcessesFound": {
+    "description": "Konyak UI string: No Wine processes found."
+  },
+  "noWinetricksVerbsFound": "winetricks verb は見つかりませんでした。",
+  "@noWinetricksVerbsFound": {
+    "description": "Konyak UI string: No winetricks verbs found."
+  },
+  "none": "なし",
+  "@none": {
+    "description": "Konyak UI string: None"
+  },
+  "notNow": "あとで",
+  "@notNow": {
+    "description": "Konyak UI string: Not Now"
+  },
+  "notInstalled": "未インストール",
+  "@notInstalled": {
+    "description": "Konyak UI string: Not installed"
+  },
+  "off": "オフ",
+  "@off": {
+    "description": "Konyak UI string: Off"
+  },
+  "openBottleFolder": "ボトルフォルダを開く",
+  "@openBottleFolder": {
+    "description": "Konyak UI string: Open Bottle Folder"
+  },
+  "openCDrive": "C: ドライブを開く",
+  "@openCDrive": {
+    "description": "Konyak UI string: Open C: Drive"
+  },
+  "openExecutable": "実行ファイルを開く",
+  "@openExecutable": {
+    "description": "Konyak UI string: Open executable"
+  },
+  "openGptkSource": "GPTK 入手元を開く",
+  "@openGptkSource": {
+    "description": "Konyak UI string: Open GPTK Source"
+  },
+  "openWineConfiguration": "Wine 設定を開く",
+  "@openWineConfiguration": {
+    "description": "Konyak UI string: Open Wine Configuration"
+  },
+  "partial": "一部",
+  "@partial": {
+    "description": "Konyak UI string: Partial"
+  },
+  "pin": "ピン留め",
+  "@pin": {
+    "description": "Konyak UI string: Pin"
+  },
+  "pinProgram": "プログラムをピン留め",
+  "@pinProgram": {
+    "description": "Konyak UI string: Pin Program"
+  },
+  "processManager": "プロセスマネージャー",
+  "@processManager": {
+    "description": "Konyak UI string: Process Manager"
+  },
+  "program": "プログラム",
+  "@program": {
+    "description": "Konyak UI string: Program"
+  },
+  "programPath": "プログラムパス",
+  "@programPath": {
+    "description": "Konyak UI string: Program path"
+  },
+  "programs": "プログラム",
+  "@programs": {
+    "description": "Konyak UI string: Programs"
+  },
+  "removeEllipsis": "削除...",
+  "@removeEllipsis": {
+    "description": "Konyak UI string: Remove..."
+  },
+  "repair": "修復",
+  "@repair": {
+    "description": "Konyak UI string: Repair"
+  },
+  "refresh": "更新",
+  "@refresh": {
+    "description": "Konyak UI string: Refresh"
+  },
+  "refreshBottles": "ボトルを更新",
+  "@refreshBottles": {
+    "description": "Konyak UI string: Refresh bottles"
+  },
+  "registryEditor": "レジストリエディター",
+  "@registryEditor": {
+    "description": "Konyak UI string: Registry Editor"
+  },
+  "reinstallLinuxRuntime": "Linux ランタイムを再インストール",
+  "@reinstallLinuxRuntime": {
+    "description": "Konyak UI string: Reinstall Linux Runtime"
+  },
+  "removeEnvironmentVariable": "環境変数を削除",
+  "@removeEnvironmentVariable": {
+    "description": "Konyak UI string: Remove environment variable"
+  },
+  "rename": "名前を変更",
+  "@rename": {
+    "description": "Konyak UI string: Rename"
+  },
+  "renameEllipsis": "名前を変更...",
+  "@renameEllipsis": {
+    "description": "Konyak UI string: Rename..."
+  },
+  "retry": "再試行",
+  "@retry": {
+    "description": "Konyak UI string: Retry"
+  },
+  "runtimeInstall": "ランタイムインストール",
+  "@runtimeInstall": {
+    "description": "Konyak UI string: Runtime install"
+  },
+  "russian": "ロシア語",
+  "@russian": {
+    "description": "Konyak UI string: Russian"
+  },
+  "run": "実行",
+  "@run": {
+    "description": "Konyak UI string: Run"
+  },
+  "runEllipsis": "実行...",
+  "@runEllipsis": {
+    "description": "Konyak UI string: Run..."
+  },
+  "save": "保存",
+  "@save": {
+    "description": "Konyak UI string: Save"
+  },
+  "search": "検索",
+  "@search": {
+    "description": "Konyak UI string: Search"
+  },
+  "searchWinetricksPackages": "winetricks パッケージを検索",
+  "@searchWinetricksPackages": {
+    "description": "Konyak UI string: Search winetricks packages"
+  },
+  "selectGptkDmg": "GPTK DMG を選択",
+  "@selectGptkDmg": {
+    "description": "Konyak UI string: Select GPTK DMG"
+  },
+  "settings": "設定",
+  "@settings": {
+    "description": "Konyak UI string: Settings"
+  },
+  "settingsEllipsis": "設定...",
+  "@settingsEllipsis": {
+    "description": "Konyak UI string: Settings..."
+  },
+  "settingsEllipsisMenu": "設定...",
+  "@settingsEllipsisMenu": {
+    "description": "Konyak UI string: Settings…"
+  },
+  "showDetail": "詳細を表示",
+  "@showDetail": {
+    "description": "Konyak UI string: Show detail"
+  },
+  "showInFileManager": "ファイルマネージャーで表示",
+  "@showInFileManager": {
+    "description": "Konyak UI string: Show in File Manager"
+  },
+  "showInFinder": "Finder に表示",
+  "@showInFinder": {
+    "description": "Konyak UI string: Show in Finder"
+  },
+  "simulateReboot": "再起動をシミュレート",
+  "@simulateReboot": {
+    "description": "Konyak UI string: Simulate Reboot"
+  },
+  "spanish": "スペイン語",
+  "@spanish": {
+    "description": "Konyak UI string: Spanish"
+  },
+  "status": "状態",
+  "@status": {
+    "description": "Konyak UI string: Status"
+  },
+  "stopAllProcesses": "すべてのプロセスを停止",
+  "@stopAllProcesses": {
+    "description": "Konyak UI string: Stop All Processes"
+  },
+  "system": "システム",
+  "@system": {
+    "description": "Konyak UI string: System"
+  },
+  "systemDefault": "システム設定",
+  "@systemDefault": {
+    "description": "Konyak UI string: System Default"
+  },
+  "taskManager": "タスクマネージャー",
+  "@taskManager": {
+    "description": "Konyak UI string: Task Manager"
+  },
+  "terminal": "ターミナル",
+  "@terminal": {
+    "description": "Konyak UI string: Terminal"
+  },
+  "terminateWineProcessesWhenKonyakCloses": "Konyak を閉じるときに Wine プロセスを終了",
+  "@terminateWineProcessesWhenKonyakCloses": {
+    "description": "Konyak UI string: Terminate Wine processes when Konyak closes"
+  },
+  "thai": "タイ語",
+  "@thai": {
+    "description": "Konyak UI string: Thai"
+  },
+  "thisRemovesTheBottleFolderAndMetadata": "ボトルフォルダとメタデータを削除します。",
+  "@thisRemovesTheBottleFolderAndMetadata": {
+    "description": "Konyak UI string: This removes the bottle folder and metadata."
+  },
+  "tools": "ツール",
+  "@tools": {
+    "description": "Konyak UI string: Tools"
+  },
+  "toggleSidebar": "サイドバーを切り替え",
+  "@toggleSidebar": {
+    "description": "Konyak UI string: Toggle sidebar"
+  },
+  "ukrainian": "ウクライナ語",
+  "@ukrainian": {
+    "description": "Konyak UI string: Ukrainian"
+  },
+  "unavailable": "利用不可",
+  "@unavailable": {
+    "description": "Konyak UI string: Unavailable"
+  },
+  "uninstallPrograms": "プログラムをアンインストール",
+  "@uninstallPrograms": {
+    "description": "Konyak UI string: Uninstall Programs"
+  },
+  "unpin": "ピン留め解除",
+  "@unpin": {
+    "description": "Konyak UI string: Unpin"
+  },
+  "updates": "アップデート",
+  "@updates": {
+    "description": "Konyak UI string: Updates"
+  },
+  "environmentValueHint": "値",
+  "@environmentValueHint": {
+    "description": "Konyak UI string: Value"
+  },
+  "viewLatestLog": "最新ログを表示",
+  "@viewLatestLog": {
+    "description": "Konyak UI string: View latest log"
+  },
+  "viewLicenses": "ライセンスを表示",
+  "@viewLicenses": {
+    "description": "Konyak UI string: View licenses"
+  },
+  "windowsDpi": "Windows DPI",
+  "@windowsDpi": {
+    "description": "Konyak UI string: Windows DPI"
+  },
+  "windowsVersion": "Windows バージョン",
+  "@windowsVersion": {
+    "description": "Konyak UI string: Windows Version"
+  },
+  "windowsVersionFieldLabel": "Windows バージョン",
+  "@windowsVersionFieldLabel": {
+    "description": "Form field label for selecting the default Windows version."
+  },
+  "wine": "Wine",
+  "@wine": {
+    "description": "Wine runtime settings section title."
+  },
+  "winetricks": "Winetricks",
+  "@winetricks": {
+    "description": "Winetricks bottom bar action label."
+  },
+  "runtimeLicensesNotice": "Wine/Proton ランタイムバイナリは起動後にダウンロードされ、それぞれのライセンスに従います。",
+  "@runtimeLicensesNotice": {
+    "description": "About dialog notice for runtime binary licensing."
+  },
+  "programConfigurationTitle": "{programName} の設定",
+  "@programConfigurationTitle": {
+    "description": "Konyak UI string: {programName} Configuration",
+    "placeholders": {
+      "programName": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteBottleTitle": "{bottleName} を削除しますか？",
+  "@deleteBottleTitle": {
+    "description": "Konyak UI string: Delete {bottleName}?",
+    "placeholders": {
+      "bottleName": {
+        "type": "String"
+      }
+    }
+  },
+  "renameBottleTitle": "{bottleName} の名前を変更",
+  "@renameBottleTitle": {
+    "description": "Konyak UI string: Rename {bottleName}",
+    "placeholders": {
+      "bottleName": {
+        "type": "String"
+      }
+    }
+  },
+  "renameProgramTitle": "{programName} の名前を変更",
+  "@renameProgramTitle": {
+    "description": "Konyak UI string: Rename {programName}",
+    "placeholders": {
+      "programName": {
+        "type": "String"
+      }
+    }
+  },
+  "moveBottleTitle": "{bottleName} を移動",
+  "@moveBottleTitle": {
+    "description": "Konyak UI string: Move {bottleName}",
+    "placeholders": {
+      "bottleName": {
+        "type": "String"
+      }
+    }
+  },
+  "installedProgramsIn": "{bottleName} のインストール済みプログラム",
+  "@installedProgramsIn": {
+    "description": "Konyak UI string: Installed programs in {bottleName}",
+    "placeholders": {
+      "bottleName": {
+        "type": "String"
+      }
+    }
+  },
+  "toolsForBottle": "{bottleName} のツール",
+  "@toolsForBottle": {
+    "description": "Konyak UI string: Tools for {bottleName}",
+    "placeholders": {
+      "bottleName": {
+        "type": "String"
+      }
+    }
+  },
+  "pinProgramIn": "{bottleName} にプログラムをピン留め",
+  "@pinProgramIn": {
+    "description": "Konyak UI string: Pin program in {bottleName}",
+    "placeholders": {
+      "bottleName": {
+        "type": "String"
+      }
+    }
+  },
+  "runProgramIn": "{bottleName} でプログラムを実行",
+  "@runProgramIn": {
+    "description": "Konyak UI string: Run program in {bottleName}",
+    "placeholders": {
+      "bottleName": {
+        "type": "String"
+      }
+    }
+  },
+  "winetricksIn": "{bottleName} の Winetricks",
+  "@winetricksIn": {
+    "description": "Konyak UI string: Winetricks in {bottleName}",
+    "placeholders": {
+      "bottleName": {
+        "type": "String"
+      }
+    }
+  },
+  "pinProgramTooltip": "{bottleName} にプログラムをピン留め",
+  "@pinProgramTooltip": {
+    "description": "Konyak UI string: Pin program in {bottleName}",
+    "placeholders": {
+      "bottleName": {
+        "type": "String"
+      }
+    }
+  },
+  "pinnedProgramTooltip": "{path}\nダブルクリックで実行",
+  "@pinnedProgramTooltip": {
+    "description": "Konyak UI string: {path}\nDouble-click to run",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadRuntimeTitle": "{runtimeName} をダウンロードしますか？",
+  "@downloadRuntimeTitle": {
+    "description": "Konyak UI string: Download {runtimeName}?",
+    "placeholders": {
+      "runtimeName": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadRuntimeMessage": "Konyak は {runtimeName} を Konyak のランタイムディレクトリにダウンロードします。ランタイムはアプリケーションとは別に管理され、独自のライセンスに従います。",
+  "@downloadRuntimeMessage": {
+    "description": "Konyak UI string: Konyak will download {runtimeName} into your Konyak runtime directory. The runtime is separate from the application and remains under its own license.",
+    "placeholders": {
+      "runtimeName": {
+        "type": "String"
+      }
+    }
+  },
+  "installKonyakUpdateTitle": "Konyak アップデートをインストールしますか？",
+  "@installKonyakUpdateTitle": {
+    "description": "Konyak UI string: Install Konyak update?"
+  },
+  "installKonyakVersionUpdateTitle": "Konyak {latestVersion} アップデートをインストールしますか？",
+  "@installKonyakVersionUpdateTitle": {
+    "description": "Konyak UI string: Install Konyak {latestVersion} update?",
+    "placeholders": {
+      "latestVersion": {
+        "type": "String"
+      }
+    }
+  },
+  "installKonyakUpdateMessage": "Konyak のアップデートがあります。今すぐインストールしますか？アップデート開始後に Konyak は再起動します。",
+  "@installKonyakUpdateMessage": {
+    "description": "Konyak UI string: A Konyak update is available. Install it now? Konyak will restart after the update starts."
+  },
+  "installKonyakVersionUpdateMessage": "Konyak {latestVersion} があります。今すぐインストールしますか？アップデート開始後に Konyak は再起動します。",
+  "@installKonyakVersionUpdateMessage": {
+    "description": "Konyak UI string: Konyak {latestVersion} is available. Install it now? Konyak will restart after the update starts.",
+    "placeholders": {
+      "latestVersion": {
+        "type": "String"
+      }
+    }
+  },
+  "installingKonyakUpdate": "{label} アップデートをインストールしています。Konyak は再起動します。",
+  "@installingKonyakUpdate": {
+    "description": "Konyak UI string: Installing {label} update. Konyak will restart.",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "updatesAvailable": "利用可能なアップデート: {labels}",
+  "@updatesAvailable": {
+    "description": "Konyak UI string: Updates available: {labels}",
+    "placeholders": {
+      "labels": {
+        "type": "String"
+      }
+    }
+  },
+  "konyakUpdateCheckFailed": "Konyak アップデート確認に失敗しました: {message}",
+  "@konyakUpdateCheckFailed": {
+    "description": "Konyak UI string: Konyak update check failed: {message}",
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "konyakUpdateInstallFailed": "Konyak アップデートのインストールに失敗しました: {message}",
+  "@konyakUpdateInstallFailed": {
+    "description": "Konyak UI string: Konyak update install failed: {message}",
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "installedRuntime": "{runtimeName} をインストールしました",
+  "@installedRuntime": {
+    "description": "Konyak UI string: Installed {runtimeName}",
+    "placeholders": {
+      "runtimeName": {
+        "type": "String"
+      }
+    }
+  },
+  "reinstalledRuntime": "{runtimeName} を再インストールしました",
+  "@reinstalledRuntime": {
+    "description": "Konyak UI string: Reinstalled {runtimeName}",
+    "placeholders": {
+      "runtimeName": {
+        "type": "String"
+      }
+    }
+  },
+  "runtimeInstallFailed": "ランタイムのインストールに失敗しました: {message}",
+  "@runtimeInstallFailed": {
+    "description": "Konyak UI string: Runtime install failed: {message}",
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "runtimeReinstallFailed": "ランタイムの再インストールに失敗しました: {message}",
+  "@runtimeReinstallFailed": {
+    "description": "Konyak UI string: Runtime reinstall failed: {message}",
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "deletedBottle": "{bottleName} を削除しました",
+  "@deletedBottle": {
+    "description": "Konyak UI string: Deleted {bottleName}",
+    "placeholders": {
+      "bottleName": {
+        "type": "String"
+      }
+    }
+  },
+  "renamedBottle": "{bottleName} に名前を変更しました",
+  "@renamedBottle": {
+    "description": "Konyak UI string: Renamed {bottleName}",
+    "placeholders": {
+      "bottleName": {
+        "type": "String"
+      }
+    }
+  },
+  "movedBottle": "{bottleName} を移動しました",
+  "@movedBottle": {
+    "description": "Konyak UI string: Moved {bottleName}",
+    "placeholders": {
+      "bottleName": {
+        "type": "String"
+      }
+    }
+  },
+  "exportedBottle": "{bottleName} をエクスポートしました",
+  "@exportedBottle": {
+    "description": "Konyak UI string: Exported {bottleName}",
+    "placeholders": {
+      "bottleName": {
+        "type": "String"
+      }
+    }
+  },
+  "importedBottle": "{bottleName} をインポートしました",
+  "@importedBottle": {
+    "description": "Konyak UI string: Imported {bottleName}",
+    "placeholders": {
+      "bottleName": {
+        "type": "String"
+      }
+    }
+  },
+  "pinnedProgram": "{programName} をピン留めしました",
+  "@pinnedProgram": {
+    "description": "Konyak UI string: Pinned {programName}",
+    "placeholders": {
+      "programName": {
+        "type": "String"
+      }
+    }
+  },
+  "unpinnedProgram": "{programName} のピン留めを解除しました",
+  "@unpinnedProgram": {
+    "description": "Konyak UI string: Unpinned {programName}",
+    "placeholders": {
+      "programName": {
+        "type": "String"
+      }
+    }
+  },
+  "renamedProgram": "{programName} に名前を変更しました",
+  "@renamedProgram": {
+    "description": "Konyak UI string: Renamed {programName}",
+    "placeholders": {
+      "programName": {
+        "type": "String"
+      }
+    }
+  },
+  "openedProgramLocation": "{programName} の場所を開きました",
+  "@openedProgramLocation": {
+    "description": "Konyak UI string: Opened {programName} location",
+    "placeholders": {
+      "programName": {
+        "type": "String"
+      }
+    }
+  },
+  "savedProgramConfiguration": "{programName} の設定を保存しました",
+  "@savedProgramConfiguration": {
+    "description": "Konyak UI string: Saved {programName} configuration",
+    "placeholders": {
+      "programName": {
+        "type": "String"
+      }
+    }
+  },
+  "openedBottleLocation": "{location} を開きました",
+  "@openedBottleLocation": {
+    "description": "Konyak UI string: Opened {location}",
+    "placeholders": {
+      "location": {
+        "type": "String"
+      }
+    }
+  },
+  "terminatedProcess": "{processName} を終了しました",
+  "@terminatedProcess": {
+    "description": "Konyak UI string: Terminated {processName}",
+    "placeholders": {
+      "processName": {
+        "type": "String"
+      }
+    }
+  },
+  "stoppedProcessesIn": "{bottleName} のプロセスを停止しました",
+  "@stoppedProcessesIn": {
+    "description": "Konyak UI string: Stopped processes in {bottleName}",
+    "placeholders": {
+      "bottleName": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadProgress": "{runtimeName} をダウンロードしています...",
+  "@downloadProgress": {
+    "description": "Konyak UI string: Downloading {runtimeName}...",
+    "placeholders": {
+      "runtimeName": {
+        "type": "String"
+      }
+    }
+  },
+  "installingVerb": "{verb} をインストールしています...",
+  "@installingVerb": {
+    "description": "Konyak UI string: Installing {verb}...",
+    "placeholders": {
+      "verb": {
+        "type": "String"
+      }
+    }
+  },
+  "commandFailedWithExitCode": "{command} が終了コード {exitCode} で失敗しました。",
+  "@commandFailedWithExitCode": {
+    "description": "Konyak UI string: {command} failed with exit code {exitCode}.",
+    "placeholders": {
+      "command": {
+        "type": "String"
+      },
+      "exitCode": {
+        "type": "int"
+      }
+    }
+  },
+  "commandFailedWithDiagnostic": "{command} が終了コード {exitCode} で失敗しました: {diagnostic}",
+  "@commandFailedWithDiagnostic": {
+    "description": "Konyak UI string: {command} failed with exit code {exitCode}: {diagnostic}",
+    "placeholders": {
+      "command": {
+        "type": "String"
+      },
+      "exitCode": {
+        "type": "int"
+      },
+      "diagnostic": {
+        "type": "String"
+      }
+    }
+  },
+  "cDrive": "C ドライブ",
+  "@cDrive": {
+    "description": "Konyak UI string: C drive"
+  },
+  "bottleFolder": "ボトルフォルダ",
+  "@bottleFolder": {
+    "description": "Konyak UI string: bottle folder"
+  }
+}

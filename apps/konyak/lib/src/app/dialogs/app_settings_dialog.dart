@@ -157,21 +157,17 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(localizations.text('Import D3DMetal Backend?')),
-        content: Text(
-          localizations.text(
-            'Importing a GPTK app adds Apple D3DMetal files to the current macOS Wine runtime without replacing the Wine executable. Running Wine processes should be stopped before continuing.',
-          ),
-        ),
+        title: Text(localizations.importD3dmetalBackend),
+        content: Text(localizations.importD3dmetalBackendMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: Text(localizations.text('Cancel')),
+            child: Text(localizations.cancel),
           ),
           FilledButton(
             key: const ValueKey('app-settings-confirm-gptk-wine-button'),
             onPressed: () => Navigator.of(context).pop(true),
-            child: Text(localizations.text('Import D3DMetal')),
+            child: Text(localizations.importD3dmetal),
           ),
         ],
       ),
@@ -211,7 +207,7 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
     return AlertDialog(
       key: const ValueKey('app-settings-dialog'),
       backgroundColor: colors.dialogBackground,
-      title: Center(child: Text(localizations.text('Konyak Settings'))),
+      title: Center(child: Text(localizations.konyakSettings)),
       scrollable: true,
       content: SizedBox(
         width: 640,
@@ -220,15 +216,13 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             AppSettingsSection(
-              title: localizations.text('General'),
+              title: localizations.general,
               children: [
                 AppSettingsSwitchRow(
                   switchKey: const ValueKey(
                     'app-settings-terminate-wine-switch',
                   ),
-                  label: localizations.text(
-                    'Terminate Wine processes when Konyak closes',
-                  ),
+                  label: localizations.terminateWineProcessesWhenKonyakCloses,
                   value: _settings.terminateWineProcessesOnClose,
                   onChanged: _isSaving
                       ? null
@@ -249,7 +243,7 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
                       : (mode) => _save(_settings.withLanguageMode(mode)),
                 ),
                 AppSettingsPathRow(
-                  label: localizations.text('Default bottle path:'),
+                  label: localizations.defaultBottlePath,
                   path: _settings.defaultBottlePath,
                   isSaving: _isSaving,
                   onBrowse: _browseBottlePath,
@@ -258,15 +252,13 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
             ),
             const SizedBox(height: 26),
             AppSettingsSection(
-              title: localizations.text('Programs'),
+              title: localizations.programs,
               children: [
                 AppSettingsSwitchRow(
                   switchKey: const ValueKey(
                     'app-settings-auto-pin-new-programs-switch',
                   ),
-                  label: localizations.text(
-                    'Automatically pin newly installed programs',
-                  ),
+                  label: localizations.automaticallyPinNewlyInstalledPrograms,
                   value: _settings.automaticallyPinNewInstalledPrograms,
                   onChanged: _isSaving
                       ? null
@@ -280,15 +272,13 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
             ),
             const SizedBox(height: 26),
             AppSettingsSection(
-              title: localizations.text('Updates'),
+              title: localizations.updates,
               children: [
                 AppSettingsSwitchRow(
                   switchKey: const ValueKey(
                     'app-settings-check-konyak-updates-switch',
                   ),
-                  label: localizations.text(
-                    'Automatically check for Konyak updates',
-                  ),
+                  label: localizations.automaticallyCheckForKonyakUpdates,
                   value: _settings.automaticallyCheckForKonyakUpdates,
                   onChanged: _isSaving
                       ? null
@@ -302,9 +292,7 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
                   switchKey: const ValueKey(
                     'app-settings-check-wine-updates-switch',
                   ),
-                  label: localizations.text(
-                    'Automatically check for Konyak Wine updates',
-                  ),
+                  label: localizations.automaticallyCheckForKonyakWineUpdates,
                   value: _settings.automaticallyCheckForWineUpdates,
                   onChanged: _isSaving
                       ? null
@@ -317,7 +305,10 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
             if (showsRuntimeSection(widget.platform)) ...[
               const SizedBox(height: 26),
               AppSettingsRuntimeSection(
-                title: runtimeSectionTitle(widget.platform),
+                title: localizedRuntimeSectionTitle(
+                  widget.platform,
+                  localizations,
+                ),
                 platform: runtimeSectionPlatform(widget.platform),
                 runtimes: _runtimes,
                 isLoading: _isLoadingRuntimes,
@@ -339,9 +330,18 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
       actions: [
         TextButton(
           onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
-          child: Text(localizations.text('Close')),
+          child: Text(localizations.close),
         ),
       ],
     );
   }
+}
+
+String localizedRuntimeSectionTitle(
+  KonyakPlatform platform,
+  KonyakLocalizations localizations,
+) {
+  return platform.isMacOS
+      ? localizations.macosRuntime
+      : localizations.linuxRuntime;
 }

@@ -103,7 +103,7 @@ List<PopupMenuEntry<BottleContextMenuAction>> _bottleContextMenuItems(
       height: 34,
       child: BottleContextMenuItem(
         icon: Icons.edit_outlined,
-        label: localizations.text('Rename...'),
+        label: localizations.renameEllipsis,
       ),
     ),
     PopupMenuItem<BottleContextMenuAction>(
@@ -111,7 +111,7 @@ List<PopupMenuEntry<BottleContextMenuAction>> _bottleContextMenuItems(
       height: 34,
       child: BottleContextMenuItem(
         icon: Icons.delete_outline,
-        label: localizations.text('Remove...'),
+        label: localizations.removeEllipsis,
       ),
     ),
     const PopupMenuDivider(height: 8),
@@ -120,7 +120,7 @@ List<PopupMenuEntry<BottleContextMenuAction>> _bottleContextMenuItems(
       height: 34,
       child: BottleContextMenuItem(
         icon: Icons.drive_file_move_outline,
-        label: localizations.text('Move...'),
+        label: localizations.moveEllipsis,
       ),
     ),
     PopupMenuItem<BottleContextMenuAction>(
@@ -128,7 +128,7 @@ List<PopupMenuEntry<BottleContextMenuAction>> _bottleContextMenuItems(
       height: 34,
       child: BottleContextMenuItem(
         icon: Icons.ios_share_outlined,
-        label: localizations.text('Export as Archive...'),
+        label: localizations.exportAsArchiveEllipsis,
       ),
     ),
     const PopupMenuDivider(height: 8),
@@ -137,7 +137,7 @@ List<PopupMenuEntry<BottleContextMenuAction>> _bottleContextMenuItems(
       height: 34,
       child: BottleContextMenuItem(
         icon: Icons.stop_circle_outlined,
-        label: localizations.text('Stop All Processes'),
+        label: localizations.stopAllProcesses,
       ),
     ),
     const PopupMenuDivider(height: 8),
@@ -146,7 +146,7 @@ List<PopupMenuEntry<BottleContextMenuAction>> _bottleContextMenuItems(
       height: 34,
       child: BottleContextMenuItem(
         icon: Icons.folder_outlined,
-        label: localizations.text(platform.showInFileManagerLabel),
+        label: localizedShowInFileManagerLabel(localizations, platform),
       ),
     ),
   ];

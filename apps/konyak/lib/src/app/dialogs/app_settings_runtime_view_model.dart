@@ -12,8 +12,12 @@ class RuntimeSectionState {
   final RuntimeSummary? runtime;
   final RuntimeStackSummary? stack;
   final bool shouldOfferInstall;
-  final String installButtonLabel;
+  final RuntimeInstallButtonLabel installButtonLabel;
 }
+
+enum RuntimeInstallButtonLabel { install, repair }
+
+enum RuntimeStackStatusLabel { complete, incomplete, partial }
 
 List<RuntimeSummary> upsertRuntime(
   List<RuntimeSummary> runtimes,
@@ -41,10 +45,6 @@ bool showsRuntimeSection(KonyakPlatform platform) {
   return platform.isMacOS || platform.isLinux;
 }
 
-String runtimeSectionTitle(KonyakPlatform platform) {
-  return platform.isMacOS ? 'macOS Runtime' : 'Linux Runtime';
-}
-
 String runtimeSectionPlatform(KonyakPlatform platform) {
   return platform.isMacOS ? 'macos' : 'linux';
 }
@@ -65,8 +65,8 @@ RuntimeSectionState resolveRuntimeSectionState({
       stack != null &&
       (runtime.isInstalled != true || !stack.isComplete);
   final installButtonLabel = runtime?.isInstalled == true
-      ? 'Repair'
-      : 'Install';
+      ? RuntimeInstallButtonLabel.repair
+      : RuntimeInstallButtonLabel.install;
 
   return RuntimeSectionState(
     runtime: runtime,
@@ -76,22 +76,15 @@ RuntimeSectionState resolveRuntimeSectionState({
   );
 }
 
-String componentStatusLabel(RuntimeStackComponentSummary component) {
-  final status = component.isInstalled ? 'Installed' : 'Missing';
-  if (component.version == null || component.version!.trim().isEmpty) {
-    return status;
-  }
-
-  return '$status | ${component.version}';
-}
-
-String runtimeStackStatusLabel(RuntimeStackSummary stack) {
+RuntimeStackStatusLabel runtimeStackStatusLabel(RuntimeStackSummary stack) {
   if (!stack.isComplete) {
-    return 'Incomplete';
+    return RuntimeStackStatusLabel.incomplete;
   }
 
   final hasMissingOptionalComponent = stack.components.any(
     (component) => !component.isRequired && !component.isInstalled,
   );
-  return hasMissingOptionalComponent ? 'Partial' : 'Complete';
+  return hasMissingOptionalComponent
+      ? RuntimeStackStatusLabel.partial
+      : RuntimeStackStatusLabel.complete;
 }

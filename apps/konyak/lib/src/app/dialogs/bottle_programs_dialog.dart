@@ -28,7 +28,7 @@ class BottleProgramsDialog extends StatelessWidget {
       content: SizedBox(
         width: 560,
         child: programs.isEmpty
-            ? Text(localizations.text('No installed programs found.'))
+            ? Text(localizations.noInstalledProgramsFound)
             : ListView.builder(
                 shrinkWrap: true,
                 itemCount: programs.length,
@@ -44,12 +44,12 @@ class BottleProgramsDialog extends StatelessWidget {
                         TextButton.icon(
                           onPressed: () => onPinProgram(program),
                           icon: const Icon(Icons.push_pin_outlined, size: 16),
-                          label: Text(localizations.text('Pin')),
+                          label: Text(localizations.pin),
                         ),
                         const SizedBox(width: 4),
                         TextButton(
                           onPressed: () => onRunProgram(program),
-                          child: Text(localizations.text('Run')),
+                          child: Text(localizations.run),
                         ),
                       ],
                     ),
@@ -61,7 +61,7 @@ class BottleProgramsDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: Text(localizations.text('Close')),
+          child: Text(localizations.close),
         ),
       ],
     );

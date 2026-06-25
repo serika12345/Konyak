@@ -20,7 +20,7 @@ pinnedProgramContextMenuItems(
       child: BottleContextMenuItem(
         key: const ValueKey('pinned-program-context-run'),
         icon: Icons.play_arrow_outlined,
-        label: localizations.text('Run...'),
+        label: localizations.runEllipsis,
       ),
     ),
     const PopupMenuDivider(height: 8),
@@ -28,7 +28,7 @@ pinnedProgramContextMenuItems(
       enabled: false,
       height: 28,
       child: Text(
-        localizations.text('Settings'),
+        localizations.settings,
         key: const ValueKey('pinned-program-context-settings-header'),
         style: TextStyle(
           color: colors.mutedText,
@@ -43,7 +43,7 @@ pinnedProgramContextMenuItems(
       child: BottleContextMenuItem(
         key: const ValueKey('pinned-program-context-config'),
         icon: Icons.settings_outlined,
-        label: localizations.text('Config'),
+        label: localizations.config,
       ),
     ),
     PopupMenuItem<PinnedProgramContextMenuAction>(
@@ -52,7 +52,7 @@ pinnedProgramContextMenuItems(
       child: BottleContextMenuItem(
         key: const ValueKey('pinned-program-context-unpin'),
         icon: Icons.push_pin_outlined,
-        label: localizations.text('Unpin'),
+        label: localizations.unpin,
       ),
     ),
     const PopupMenuDivider(height: 8),
@@ -62,7 +62,7 @@ pinnedProgramContextMenuItems(
       child: BottleContextMenuItem(
         key: const ValueKey('pinned-program-context-rename'),
         icon: Icons.edit_outlined,
-        label: localizations.text('Rename...'),
+        label: localizations.renameEllipsis,
       ),
     ),
     PopupMenuItem<PinnedProgramContextMenuAction>(
@@ -71,7 +71,7 @@ pinnedProgramContextMenuItems(
       child: BottleContextMenuItem(
         key: const ValueKey('pinned-program-context-show-in-finder'),
         icon: Icons.folder_outlined,
-        label: localizations.text(platform.showInFileManagerLabel),
+        label: localizedShowInFileManagerLabel(localizations, platform),
       ),
     ),
   ];

@@ -18,7 +18,7 @@ class BottleLoadFailureState extends StatelessWidget {
           const Icon(Icons.error_outline, size: 40),
           const SizedBox(height: 12),
           Text(
-            localizations.text('Could not load bottles'),
+            localizations.couldNotLoadBottles,
             style: const TextStyle(fontSize: 18),
           ),
           const SizedBox(height: 6),
@@ -43,15 +43,11 @@ class EmptyBottleState extends StatelessWidget {
           const Icon(Icons.inventory_2_outlined, size: 40),
           const SizedBox(height: 12),
           Text(
-            localizations.text('No bottles yet'),
+            localizations.noBottlesYet,
             style: const TextStyle(fontSize: 18),
           ),
           const SizedBox(height: 6),
-          Text(
-            localizations.text(
-              'Create a bottle to start managing Windows programs.',
-            ),
-          ),
+          Text(localizations.emptyBottlesMessage),
         ],
       ),
     );

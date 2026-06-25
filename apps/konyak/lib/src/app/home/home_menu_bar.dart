@@ -29,32 +29,32 @@ class KonyakHomeMenuBar extends StatelessWidget {
           label: 'Konyak',
           items: [
             KonyakMenuItemDefinition(
-              label: localizations.text('About Konyak'),
+              label: localizations.aboutKonyak,
               icon: Icons.info_outline,
               onPressed: onShowAbout,
             ),
             KonyakMenuItemDefinition(
-              label: localizations.text('Settings…'),
+              label: localizations.settingsEllipsisMenu,
               icon: Icons.settings_outlined,
               onPressed: onShowSettings,
             ),
             KonyakMenuItemDefinition(
-              label: localizations.text('Check for Updates…'),
+              label: localizations.checkForUpdatesMenuItem,
               icon: Icons.system_update_alt,
               onPressed: onCheckKonyakUpdates,
             ),
             KonyakMenuItemDefinition(
-              label: localizations.text('Reinstall Linux Runtime'),
+              label: localizations.reinstallLinuxRuntime,
               icon: Icons.restart_alt,
               onPressed: onReinstallRuntime,
             ),
           ],
         ),
         KonyakMenuDefinition(
-          label: localizations.text('File'),
+          label: localizations.file,
           items: [
             KonyakMenuItemDefinition(
-              label: localizations.text('Import Bottle'),
+              label: localizations.importBottle,
               icon: Icons.file_upload_outlined,
               onPressed: onImportBottleArchive,
             ),

@@ -1,4 +1,5 @@
 import '../../cli/konyak_cli_client.dart';
+import '../../l10n/konyak_localizations.dart';
 import '../../runs/program_run_summary.dart';
 
 String? programRunFeedback(ProgramRunLoadResult result) {
@@ -37,10 +38,13 @@ String programRunFailureFeedback({
   return '$message ($runnerKind: $executable)';
 }
 
-String locationLabel(String location) {
+String localizedLocationLabel(
+  String location,
+  KonyakLocalizations localizations,
+) {
   return switch (location) {
-    'c-drive' => 'C drive',
-    'root' => 'bottle folder',
+    'c-drive' => localizations.cDrive,
+    'root' => localizations.bottleFolder,
     _ => location,
   };
 }

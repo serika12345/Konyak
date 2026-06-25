@@ -44,7 +44,7 @@ class _CreateBottleDialogState extends State<CreateBottleDialog> {
     final localizations = KonyakLocalizations.of(context);
 
     return AlertDialog(
-      title: Text(localizations.text('Create bottle')),
+      title: Text(localizations.createBottleAction),
       content: SizedBox(
         width: 360,
         child: Column(
@@ -53,9 +53,7 @@ class _CreateBottleDialogState extends State<CreateBottleDialog> {
             TextField(
               controller: _nameController,
               autofocus: true,
-              decoration: InputDecoration(
-                labelText: localizations.text('Name'),
-              ),
+              decoration: InputDecoration(labelText: localizations.name),
               textInputAction: TextInputAction.done,
               onChanged: (_) => setState(() {}),
               onSubmitted: (_) => _submit(),
@@ -64,7 +62,7 @@ class _CreateBottleDialogState extends State<CreateBottleDialog> {
             DropdownButtonFormField<String>(
               initialValue: _windowsVersion,
               decoration: InputDecoration(
-                labelText: localizations.text('Windows version'),
+                labelText: localizations.windowsVersionFieldLabel,
               ),
               items: windowsVersionMenuItems(_windowsVersion),
               onChanged: (value) {
@@ -83,12 +81,12 @@ class _CreateBottleDialogState extends State<CreateBottleDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: Text(localizations.text('Cancel')),
+          child: Text(localizations.cancel),
         ),
         FilledButton.icon(
           onPressed: canSubmit ? _submit : null,
           icon: const Icon(Icons.add),
-          label: Text(localizations.text('Create')),
+          label: Text(localizations.create),
         ),
       ],
     );

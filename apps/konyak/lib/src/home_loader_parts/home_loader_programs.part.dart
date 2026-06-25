@@ -370,7 +370,7 @@ extension _KonyakHomeLoaderPrograms on _KonyakHomeLoaderState {
     final message = switch (result) {
       OpenedBottleLocation(:final location) =>
         localizations.openedBottleLocation(
-          localizations.locationLabel(location),
+          localizedLocationLabel(location, localizations),
         ),
       BottleLocationOpenFailure(:final message) => message,
     };

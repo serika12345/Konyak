@@ -43,11 +43,11 @@ class AppSettingsRuntimeSection extends StatelessWidget {
 
     if (isLoading && (runtime == null || stack == null)) {
       return AppSettingsSection(
-        title: localizations.text(title),
+        title: title,
         children: [
           AppSettingsDetailRow(
-            label: localizations.text('Status'),
-            value: localizations.text('Loading'),
+            label: localizations.status,
+            value: localizations.loading,
           ),
         ],
       );
@@ -55,47 +55,51 @@ class AppSettingsRuntimeSection extends StatelessWidget {
 
     if (runtime == null || stack == null) {
       return AppSettingsSection(
-        title: localizations.text(title),
+        title: title,
         children: [
           AppSettingsDetailRow(
-            label: localizations.text('Status'),
-            value: localizations.text('Unavailable'),
-            detail:
-                loadError ??
-                localizations.text('No managed runtime stack detected.'),
+            label: localizations.status,
+            value: localizations.unavailable,
+            detail: loadError ?? localizations.noManagedRuntimeStackDetected,
           ),
           if (onInstallRuntime != null)
-            _installButtonBlock(localizations.text('Install'), localizations),
+            _installButtonBlock(localizations.install, localizations),
         ],
       );
     }
 
     return AppSettingsSection(
-      title: localizations.text(title),
+      title: title,
       children: [
         if (loadError != null)
           AppSettingsDetailRow(
-            label: localizations.text('Runtime install'),
-            value: localizations.text('Failed'),
+            label: localizations.runtimeInstall,
+            value: localizations.failed,
             detail: loadError,
           ),
         AppSettingsDetailRow(
           label: runtime.name,
           value: runtime.isInstalled == true
-              ? localizations.text('Installed')
-              : localizations.text('Not installed'),
+              ? localizations.installed
+              : localizations.notInstalled,
           detail: runtime.distributionKind == null
               ? null
-              : '${localizations.text('Distribution')}: ${runtime.distributionKind}',
+              : '${localizations.distribution}: ${runtime.distributionKind}',
         ),
         AppSettingsDetailRow(
           label: stack.name,
-          value: localizations.text(runtimeStackStatusLabel(stack)),
+          value: localizedRuntimeStackStatusLabel(
+            runtimeStackStatusLabel(stack),
+            localizations,
+          ),
           detail:
-              '${localizations.text('Compatibility')}: ${stack.compatibilityTarget}',
+              '${localizations.compatibility}: ${stack.compatibilityTarget}',
           trailing: runtimeState.shouldOfferInstall && onInstallRuntime != null
               ? _installButton(
-                  localizations.text(runtimeState.installButtonLabel),
+                  localizedRuntimeInstallButtonLabel(
+                    runtimeState.installButtonLabel,
+                    localizations,
+                  ),
                   localizations,
                 )
               : null,
@@ -134,7 +138,7 @@ class AppSettingsRuntimeSection extends StatelessWidget {
               child: CircularProgressIndicator(strokeWidth: 2),
             )
           : const Icon(Icons.download),
-      label: Text(isInstalling ? localizations.text('Installing') : label),
+      label: Text(isInstalling ? localizations.installing : label),
     );
   }
 
@@ -147,11 +151,7 @@ class AppSettingsRuntimeSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            localizations.text(
-              'D3DMetal is included in Apple Game Porting Toolkit. Konyak does not bundle or redistribute it. Download the GPTK DMG from Apple Developer, select the DMG, and review Apple License.pdf for commercial use or redistribution.',
-            ),
-          ),
+          Text(localizations.d3dmetalLicenseNotice),
           const SizedBox(height: 12),
           Wrap(
             spacing: 10,
@@ -161,7 +161,7 @@ class AppSettingsRuntimeSection extends StatelessWidget {
                 key: const ValueKey('app-settings-open-gptk-page-button'),
                 onPressed: onOpenGptkPage,
                 icon: const Icon(Icons.open_in_browser),
-                label: Text(localizations.text('Open GPTK Source')),
+                label: Text(localizations.openGptkSource),
               ),
               FilledButton.icon(
                 key: const ValueKey('app-settings-install-gptk-wine-button'),
@@ -174,8 +174,8 @@ class AppSettingsRuntimeSection extends StatelessWidget {
                     : const Icon(Icons.folder_copy),
                 label: Text(
                   isInstallingGptkWine
-                      ? localizations.text('Importing D3DMetal')
-                      : localizations.text('Select GPTK DMG'),
+                      ? localizations.importingD3dmetal
+                      : localizations.selectGptkDmg,
                 ),
               ),
             ],
@@ -186,13 +186,34 @@ class AppSettingsRuntimeSection extends StatelessWidget {
   }
 }
 
+String localizedRuntimeInstallButtonLabel(
+  RuntimeInstallButtonLabel label,
+  KonyakLocalizations localizations,
+) {
+  return switch (label) {
+    RuntimeInstallButtonLabel.install => localizations.install,
+    RuntimeInstallButtonLabel.repair => localizations.repair,
+  };
+}
+
+String localizedRuntimeStackStatusLabel(
+  RuntimeStackStatusLabel label,
+  KonyakLocalizations localizations,
+) {
+  return switch (label) {
+    RuntimeStackStatusLabel.complete => localizations.complete,
+    RuntimeStackStatusLabel.incomplete => localizations.incomplete,
+    RuntimeStackStatusLabel.partial => localizations.partial,
+  };
+}
+
 String localizedComponentStatusLabel(
   RuntimeStackComponentSummary component,
   KonyakLocalizations localizations,
 ) {
   final status = component.isInstalled
-      ? localizations.text('Installed')
-      : localizations.text('Missing');
+      ? localizations.installed
+      : localizations.missing;
   if (component.version == null || component.version!.trim().isEmpty) {
     return status;
   }

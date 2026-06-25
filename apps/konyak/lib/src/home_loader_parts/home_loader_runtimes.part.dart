@@ -64,7 +64,9 @@ extension _KonyakHomeLoaderRuntimes on _KonyakHomeLoaderState {
       return false;
     }
 
-    _showSnackBar(KonyakLocalizations.of(context).updatesAvailable(labels));
+    _showSnackBar(
+      KonyakLocalizations.of(context).updatesAvailable(labels.join(', ')),
+    );
     return false;
   }
 
@@ -88,7 +90,7 @@ extension _KonyakHomeLoaderRuntimes on _KonyakHomeLoaderState {
       _isCheckingKonyakUpdate = true;
       _konyakUpdateCheckProgressMessage = KonyakLocalizations.of(
         context,
-      ).text('Checking for Konyak updates...');
+      ).checkingForKonyakUpdatesEllipsis;
     });
 
     try {
@@ -106,14 +108,10 @@ extension _KonyakHomeLoaderRuntimes on _KonyakHomeLoaderState {
         case LoadedUpdateCheck(:final update) when update.status == 'available':
           await _confirmAndInstallAvailableKonyakUpdate(update);
         case LoadedUpdateCheck(:final update) when update.status == 'current':
-          _showSnackBar(
-            KonyakLocalizations.of(context).text('Konyak is up to date.'),
-          );
+          _showSnackBar(KonyakLocalizations.of(context).konyakIsUpToDate);
         case LoadedUpdateCheck():
           _showSnackBar(
-            KonyakLocalizations.of(
-              context,
-            ).text('Konyak update status is unknown.'),
+            KonyakLocalizations.of(context).konyakUpdateStatusIsUnknown,
           );
         case UpdateCheckLoadFailure(:final message):
           _showWarningSnackBar(
@@ -133,8 +131,12 @@ extension _KonyakHomeLoaderRuntimes on _KonyakHomeLoaderState {
   Future<bool> _confirmKonyakUpdateInstall(UpdateCheckSummary update) async {
     final latestVersion = update.latestVersion;
     final localizations = KonyakLocalizations.of(context);
-    final title = localizations.installKonyakUpdateTitle(latestVersion);
-    final message = localizations.installKonyakUpdateMessage(latestVersion);
+    final title = latestVersion == null
+        ? localizations.installKonyakUpdateTitle
+        : localizations.installKonyakVersionUpdateTitle(latestVersion);
+    final message = latestVersion == null
+        ? localizations.installKonyakUpdateMessage
+        : localizations.installKonyakVersionUpdateMessage(latestVersion);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -143,11 +145,11 @@ extension _KonyakHomeLoaderRuntimes on _KonyakHomeLoaderState {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: Text(localizations.text('Not Now')),
+            child: Text(localizations.notNow),
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: Text(localizations.text('Install')),
+            child: Text(localizations.install),
           ),
         ],
       ),
@@ -317,11 +319,11 @@ extension _KonyakHomeLoaderRuntimes on _KonyakHomeLoaderState {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: Text(localizations.text('Cancel')),
+            child: Text(localizations.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: Text(localizations.text('Download')),
+            child: Text(localizations.download),
           ),
         ],
       ),
@@ -339,7 +341,7 @@ extension _KonyakHomeLoaderRuntimes on _KonyakHomeLoaderState {
         exitCode: 64,
         message: KonyakLocalizations.of(
           context,
-        ).text('Managed runtime installation is not supported.'),
+        ).managedRuntimeInstallationIsNotSupported,
         diagnostic: '',
       );
     }
@@ -424,15 +426,14 @@ extension _KonyakHomeLoaderRuntimes on _KonyakHomeLoaderState {
     if (sourcePath == null || sourcePath.trim().isEmpty) {
       return RuntimeInstallLoadFailure(
         exitCode: 64,
-        message: localizations.text('GPTK/D3DMetal source was not selected.'),
+        message: localizations.gptkD3dmetalSourceWasNotSelected,
         diagnostic: '',
       );
     }
 
     _updateState(() {
-      _runtimeInstallProgressMessage = localizations.text(
-        'Importing GPTK/D3DMetal...',
-      );
+      _runtimeInstallProgressMessage =
+          localizations.importingGptkD3dmetalEllipsis;
       _runtimeInstallProgressFraction = 0;
     });
 

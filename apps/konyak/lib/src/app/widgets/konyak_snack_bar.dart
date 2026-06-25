@@ -89,9 +89,7 @@ class _CompactSnackBarMessage extends StatelessWidget {
                   minimumSize: const Size(0, 32),
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
-                child: Text(
-                  KonyakLocalizations.of(context).text('Show detail'),
-                ),
+                child: Text(KonyakLocalizations.of(context).showDetail),
               ),
             ],
           ],
@@ -125,7 +123,7 @@ Future<void> _showSnackBarDetails(BuildContext context, String message) {
     context: context,
     builder: (context) {
       return AlertDialog(
-        title: Text(KonyakLocalizations.of(context).text('Details')),
+        title: Text(KonyakLocalizations.of(context).details),
         content: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 560),
           child: SingleChildScrollView(child: SelectableText(message)),
@@ -133,7 +131,7 @@ Future<void> _showSnackBarDetails(BuildContext context, String message) {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: Text(KonyakLocalizations.of(context).text('Close')),
+            child: Text(KonyakLocalizations.of(context).close),
           ),
         ],
       );

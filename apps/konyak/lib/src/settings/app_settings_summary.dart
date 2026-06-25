@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 enum AppAppearanceMode {
   dark('dark'),
   light('light'),
@@ -182,4 +184,12 @@ AppLanguageMode? appLanguageModeFromJson(Object? value) {
   }
 
   return null;
+}
+
+Locale? localeForAppLanguageMode(AppLanguageMode mode) {
+  return switch (mode) {
+    AppLanguageMode.system => null,
+    AppLanguageMode.english => const Locale('en'),
+    AppLanguageMode.japanese => const Locale('ja'),
+  };
 }

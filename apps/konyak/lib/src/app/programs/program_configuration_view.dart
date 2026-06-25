@@ -82,14 +82,14 @@ class _ProgramConfigurationViewState extends State<ProgramConfigurationView> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           BottleConfigurationSection(
-            title: localizations.text('Program'),
+            title: localizations.program,
             children: [
               BottleConfigurationRow(
-                label: localizations.text('Locale'),
+                label: localizations.locale,
                 trailing: ConfigurationDropdown(
                   key: const ValueKey('program-config-locale'),
                   value: _locale,
-                  labels: localizations.textMap(programLocaleLabels),
+                  labels: localizedProgramLocaleLabels(localizations),
                   onChanged: (locale) {
                     setState(() {
                       _locale = locale;
@@ -98,7 +98,7 @@ class _ProgramConfigurationViewState extends State<ProgramConfigurationView> {
                 ),
               ),
               BottleConfigurationRow(
-                label: localizations.text('Arguments'),
+                label: localizations.arguments,
                 trailing: ConfigurationTextField(
                   key: const ValueKey('program-config-arguments-field'),
                   controller: _argumentsController,
@@ -109,7 +109,7 @@ class _ProgramConfigurationViewState extends State<ProgramConfigurationView> {
           ),
           const SizedBox(height: 14),
           BottleConfigurationSection(
-            title: localizations.text('Environment'),
+            title: localizations.environment,
             children: [
               ProgramEnvironmentEditor(
                 controllers: _environmentControllers,
@@ -123,7 +123,7 @@ class _ProgramConfigurationViewState extends State<ProgramConfigurationView> {
             alignment: Alignment.centerRight,
             child: KonyakBottomButton(
               key: const ValueKey('program-config-save'),
-              label: localizations.text('Save'),
+              label: localizations.save,
               onPressed: widget.onProgramSettingsChanged == null
                   ? null
                   : _saveSettings,

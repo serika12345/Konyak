@@ -1,0 +1,6 @@
+arb-dir: lib/src/l10n
+template-arb-file: konyak_en.arb
+output-localization-file: konyak_localizations.dart
+output-class: KonyakLocalizations
+nullable-getter: false
+format: true

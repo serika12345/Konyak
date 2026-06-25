@@ -56,7 +56,7 @@ class KonyakSidebar extends StatelessWidget {
               child: Row(
                 children: [
                   IconButton(
-                    tooltip: localizations.text('Toggle sidebar'),
+                    tooltip: localizations.toggleSidebar,
                     onPressed: onToggleSidebar,
                     color: colors.sidebarIcon,
                     iconSize: 20,
@@ -74,7 +74,7 @@ class KonyakSidebar extends StatelessWidget {
                       onChanged: onSearchChanged,
                       style: TextStyle(color: colors.text, fontSize: 13),
                       decoration: InputDecoration(
-                        hintText: localizations.text('Search'),
+                        hintText: localizations.search,
                         hintStyle: TextStyle(
                           color: colors.mutedText,
                           fontSize: 13,
@@ -114,7 +114,7 @@ class KonyakSidebar extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(10, 16, 10, 7),
               child: Text(
-                localizations.text('Bottles'),
+                localizations.bottles,
                 style: TextStyle(color: colors.mutedText, fontSize: 13),
               ),
             ),
@@ -123,7 +123,7 @@ class KonyakSidebar extends StatelessWidget {
                   ? Padding(
                       padding: const EdgeInsets.all(10),
                       child: Text(
-                        localizations.text('No Bottles'),
+                        localizations.noBottles,
                         style: TextStyle(color: colors.mutedText, fontSize: 13),
                       ),
                     )

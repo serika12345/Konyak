@@ -39,7 +39,7 @@ class KonyakTopBar extends StatelessWidget {
             children: [
               if (onBack != null)
                 KonyakToolbarAction(
-                  tooltip: localizations.text('Back to bottle'),
+                  tooltip: localizations.backToBottle,
                   icon: Icons.chevron_left,
                   onPressed: onBack,
                 ),
@@ -52,27 +52,27 @@ class KonyakTopBar extends StatelessWidget {
                 ),
               ),
               KonyakToolbarAction(
-                tooltip: localizations.text('Create bottle'),
+                tooltip: localizations.createBottleAction,
                 icon: Icons.add,
                 onPressed: onCreateBottle,
               ),
               KonyakToolbarAction(
-                tooltip: localizations.text('Refresh bottles'),
+                tooltip: localizations.refreshBottles,
                 icon: Icons.sync,
                 onPressed: onRefresh,
               ),
               KonyakToolbarAction(
-                tooltip: localizations.text('Process Manager'),
+                tooltip: localizations.processManager,
                 icon: Icons.memory_outlined,
                 onPressed: onShowProcessManager,
               ),
               KonyakToolbarAction(
-                tooltip: localizations.text('Settings'),
+                tooltip: localizations.settings,
                 icon: Icons.settings_outlined,
                 onPressed: onShowSettings,
               ),
               KonyakToolbarAction(
-                tooltip: localizations.text('View latest log'),
+                tooltip: localizations.viewLatestLog,
                 icon: Icons.description_outlined,
                 onPressed: onViewLatestLog,
               ),

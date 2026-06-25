@@ -101,18 +101,18 @@ class _ProcessManagerDialogState extends State<ProcessManagerDialog> {
 
     return AlertDialog(
       key: const ValueKey('process-manager-dialog'),
-      title: Text(localizations.text('Process Manager')),
+      title: Text(localizations.processManager),
       content: SizedBox(width: 620, child: _content()),
       actions: [
         TextButton.icon(
           key: const ValueKey('process-manager-refresh'),
           onPressed: _isLoading ? null : _loadProcesses,
           icon: const Icon(Icons.refresh, size: 18),
-          label: Text(localizations.text('Refresh')),
+          label: Text(localizations.refresh),
         ),
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: Text(localizations.text('Close')),
+          child: Text(localizations.close),
         ),
       ],
     );
@@ -135,9 +135,7 @@ class _ProcessManagerDialogState extends State<ProcessManagerDialog> {
       return SizedBox(
         height: 180,
         child: Center(
-          child: Text(
-            KonyakLocalizations.of(context).text('No Wine processes found.'),
-          ),
+          child: Text(KonyakLocalizations.of(context).noWineProcessesFound),
         ),
       );
     }
@@ -178,7 +176,7 @@ class _ProcessManagerDialogState extends State<ProcessManagerDialog> {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.close, size: 16),
-              label: Text(KonyakLocalizations.of(context).text('Kill')),
+              label: Text(KonyakLocalizations.of(context).kill),
             ),
           );
         },

@@ -124,7 +124,7 @@ class AppSettingsAppearanceRow extends StatelessWidget {
             const SizedBox(width: 14),
             Expanded(
               child: Text(
-                KonyakLocalizations.of(context).text('Appearance'),
+                KonyakLocalizations.of(context).appearance,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(color: colors.text, fontSize: 14),
@@ -135,17 +135,17 @@ class AppSettingsAppearanceRow extends StatelessWidget {
                 ButtonSegment<AppAppearanceMode>(
                   value: AppAppearanceMode.dark,
                   icon: const Icon(Icons.dark_mode_outlined, size: 16),
-                  label: Text(KonyakLocalizations.of(context).text('Dark')),
+                  label: Text(KonyakLocalizations.of(context).dark),
                 ),
                 ButtonSegment<AppAppearanceMode>(
                   value: AppAppearanceMode.light,
                   icon: const Icon(Icons.light_mode_outlined, size: 16),
-                  label: Text(KonyakLocalizations.of(context).text('Light')),
+                  label: Text(KonyakLocalizations.of(context).light),
                 ),
                 ButtonSegment<AppAppearanceMode>(
                   value: AppAppearanceMode.system,
                   icon: const Icon(Icons.computer_outlined, size: 16),
-                  label: Text(KonyakLocalizations.of(context).text('System')),
+                  label: Text(KonyakLocalizations.of(context).system),
                 ),
               ],
               selected: {mode},
@@ -212,7 +212,7 @@ class AppSettingsLanguageRow extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              localizations.text('Language'),
+              localizations.language,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(color: colors.text, fontSize: 14),
@@ -226,19 +226,25 @@ class AppSettingsLanguageRow extends StatelessWidget {
                   ButtonSegment<AppLanguageMode>(
                     value: AppLanguageMode.system,
                     label: Text(
-                      localizations.languageModeLabel(AppLanguageMode.system),
+                      _languageModeLabel(localizations, AppLanguageMode.system),
                     ),
                   ),
                   ButtonSegment<AppLanguageMode>(
                     value: AppLanguageMode.english,
                     label: Text(
-                      localizations.languageModeLabel(AppLanguageMode.english),
+                      _languageModeLabel(
+                        localizations,
+                        AppLanguageMode.english,
+                      ),
                     ),
                   ),
                   ButtonSegment<AppLanguageMode>(
                     value: AppLanguageMode.japanese,
                     label: Text(
-                      localizations.languageModeLabel(AppLanguageMode.japanese),
+                      _languageModeLabel(
+                        localizations,
+                        AppLanguageMode.japanese,
+                      ),
                     ),
                   ),
                 ],
@@ -285,6 +291,17 @@ class AppSettingsLanguageRow extends StatelessWidget {
   }
 }
 
+String _languageModeLabel(
+  KonyakLocalizations localizations,
+  AppLanguageMode mode,
+) {
+  return switch (mode) {
+    AppLanguageMode.system => localizations.systemDefault,
+    AppLanguageMode.english => localizations.english,
+    AppLanguageMode.japanese => localizations.japanese,
+  };
+}
+
 class AppSettingsPathRow extends StatelessWidget {
   const AppSettingsPathRow({
     super.key,
@@ -326,7 +343,7 @@ class AppSettingsPathRow extends StatelessWidget {
           const SizedBox(width: 14),
           TextButton(
             onPressed: isSaving ? null : onBrowse,
-            child: Text(KonyakLocalizations.of(context).text('Browse')),
+            child: Text(KonyakLocalizations.of(context).browse),
           ),
         ],
       ),

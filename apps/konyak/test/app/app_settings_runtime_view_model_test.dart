@@ -6,11 +6,9 @@ import 'package:konyak/src/runtimes/runtime_summary.dart';
 void main() {
   test('resolves runtime section metadata by platform', () {
     expect(showsRuntimeSection(KonyakPlatform.macos), isTrue);
-    expect(runtimeSectionTitle(KonyakPlatform.macos), 'macOS Runtime');
     expect(runtimeSectionPlatform(KonyakPlatform.macos), 'macos');
 
     expect(showsRuntimeSection(KonyakPlatform.linux), isTrue);
-    expect(runtimeSectionTitle(KonyakPlatform.linux), 'Linux Runtime');
     expect(runtimeSectionPlatform(KonyakPlatform.linux), 'linux');
   });
 
@@ -37,7 +35,7 @@ void main() {
     expect(selection.runtime?.id, 'stacked');
     expect(selection.stack?.isComplete, isTrue);
     expect(selection.shouldOfferInstall, isFalse);
-    expect(selection.installButtonLabel, 'Repair');
+    expect(selection.installButtonLabel, RuntimeInstallButtonLabel.repair);
   });
 
   test('offers repair for incomplete installed runtimes', () {
@@ -54,7 +52,7 @@ void main() {
     );
 
     expect(selection.shouldOfferInstall, isTrue);
-    expect(selection.installButtonLabel, 'Repair');
+    expect(selection.installButtonLabel, RuntimeInstallButtonLabel.repair);
   });
 
   test(
@@ -90,21 +88,10 @@ void main() {
         platform: 'macos',
       );
 
-      expect(runtimeStackStatusLabel(stack), 'Partial');
+      expect(runtimeStackStatusLabel(stack), RuntimeStackStatusLabel.partial);
       expect(selection.shouldOfferInstall, isFalse);
     },
   );
-
-  test('formats component status with optional version', () {
-    expect(
-      componentStatusLabel(_component(isInstalled: true, version: 'wine-10.0')),
-      'Installed | wine-10.0',
-    );
-    expect(
-      componentStatusLabel(_component(isInstalled: false, version: null)),
-      'Missing',
-    );
-  });
 }
 
 RuntimeSummary _runtime({

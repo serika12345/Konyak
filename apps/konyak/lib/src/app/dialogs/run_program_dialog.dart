@@ -63,9 +63,9 @@ class _RunProgramDialogState extends State<RunProgramDialog> {
           controller: _programPathController,
           autofocus: true,
           decoration: InputDecoration(
-            labelText: localizations.text('Program path'),
+            labelText: localizations.programPath,
             suffixIcon: IconButton(
-              tooltip: localizations.text('Choose program file'),
+              tooltip: localizations.chooseProgramFile,
               onPressed: _chooseProgramFile,
               icon: const Icon(Icons.folder_open),
             ),
@@ -78,12 +78,12 @@ class _RunProgramDialogState extends State<RunProgramDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: Text(localizations.text('Cancel')),
+          child: Text(localizations.cancel),
         ),
         FilledButton.icon(
           onPressed: canSubmit ? _submit : null,
           icon: const Icon(Icons.play_arrow),
-          label: Text(localizations.text('Run')),
+          label: Text(localizations.run),
         ),
       ],
     );

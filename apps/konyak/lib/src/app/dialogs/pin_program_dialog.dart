@@ -80,9 +80,7 @@ class _PinProgramDialogState extends State<PinProgramDialog> {
               key: const ValueKey('pin-program-name-field'),
               controller: _nameController,
               autofocus: true,
-              decoration: InputDecoration(
-                labelText: localizations.text('Name'),
-              ),
+              decoration: InputDecoration(labelText: localizations.name),
               textInputAction: TextInputAction.next,
               onChanged: (_) => setState(() {}),
             ),
@@ -91,9 +89,9 @@ class _PinProgramDialogState extends State<PinProgramDialog> {
               key: const ValueKey('pin-program-path-field'),
               controller: _programPathController,
               decoration: InputDecoration(
-                labelText: localizations.text('Program path'),
+                labelText: localizations.programPath,
                 suffixIcon: IconButton(
-                  tooltip: localizations.text('Choose program file'),
+                  tooltip: localizations.chooseProgramFile,
                   onPressed: _chooseProgramFile,
                   icon: const Icon(Icons.folder_open),
                 ),
@@ -115,12 +113,12 @@ class _PinProgramDialogState extends State<PinProgramDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: Text(localizations.text('Cancel')),
+          child: Text(localizations.cancel),
         ),
         FilledButton.icon(
           onPressed: canSubmit ? _submit : null,
           icon: const Icon(Icons.push_pin_outlined),
-          label: Text(localizations.text('Pin')),
+          label: Text(localizations.pin),
         ),
       ],
     );

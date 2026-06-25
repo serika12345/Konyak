@@ -32,7 +32,7 @@ class BottleActionPanel extends StatelessWidget {
         children: [
           _BottleActionPanelRow(
             icon: Icons.list,
-            label: localizations.text('Installed Programs'),
+            label: localizations.installedPrograms,
             onTap: onShowBottlePrograms == null
                 ? null
                 : () => onShowBottlePrograms!(bottle),
@@ -45,7 +45,7 @@ class BottleActionPanel extends StatelessWidget {
           Divider(height: 1, color: colors.divider, indent: 14),
           _BottleActionPanelRow(
             icon: Icons.settings_outlined,
-            label: localizations.text('Bottle Configuration'),
+            label: localizations.bottleConfiguration,
             onTap: onShowBottleConfiguration == null
                 ? null
                 : () => onShowBottleConfiguration!(bottle),

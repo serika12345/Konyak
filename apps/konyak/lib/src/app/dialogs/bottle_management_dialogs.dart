@@ -14,18 +14,16 @@ class DeleteBottleDialog extends StatelessWidget {
 
     return AlertDialog(
       title: Text(localizations.deleteBottleTitle(bottleName)),
-      content: Text(
-        localizations.text('This removes the bottle folder and metadata.'),
-      ),
+      content: Text(localizations.thisRemovesTheBottleFolderAndMetadata),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(false),
-          child: Text(localizations.text('Cancel')),
+          child: Text(localizations.cancel),
         ),
         FilledButton.icon(
           onPressed: () => Navigator.of(context).pop(true),
           icon: const Icon(Icons.delete_outline),
-          label: Text(localizations.text('Delete')),
+          label: Text(localizations.delete),
         ),
       ],
     );
@@ -74,7 +72,7 @@ class _RenameBottleDialogState extends State<RenameBottleDialog> {
           key: const ValueKey('rename-bottle-name-field'),
           controller: _nameController,
           autofocus: true,
-          decoration: InputDecoration(labelText: localizations.text('Name')),
+          decoration: InputDecoration(labelText: localizations.name),
           textInputAction: TextInputAction.done,
           onChanged: (_) => setState(() {}),
           onSubmitted: (_) => _submit(),
@@ -83,12 +81,12 @@ class _RenameBottleDialogState extends State<RenameBottleDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: Text(localizations.text('Cancel')),
+          child: Text(localizations.cancel),
         ),
         FilledButton.icon(
           onPressed: canSubmit ? _submit : null,
           icon: const Icon(Icons.edit_outlined),
-          label: Text(localizations.text('Rename')),
+          label: Text(localizations.rename),
         ),
       ],
     );
@@ -138,7 +136,7 @@ class _RenamePinnedProgramDialogState extends State<RenamePinnedProgramDialog> {
           key: const ValueKey('rename-pinned-program-name-field'),
           controller: _nameController,
           autofocus: true,
-          decoration: InputDecoration(labelText: localizations.text('Name')),
+          decoration: InputDecoration(labelText: localizations.name),
           textInputAction: TextInputAction.done,
           onChanged: (_) => setState(() {}),
           onSubmitted: (_) => _submit(),
@@ -147,12 +145,12 @@ class _RenamePinnedProgramDialogState extends State<RenamePinnedProgramDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: Text(localizations.text('Cancel')),
+          child: Text(localizations.cancel),
         ),
         FilledButton.icon(
           onPressed: canSubmit ? _submit : null,
           icon: const Icon(Icons.edit_outlined),
-          label: Text(localizations.text('Rename')),
+          label: Text(localizations.rename),
         ),
       ],
     );
@@ -223,7 +221,7 @@ class _MoveBottleDialogState extends State<MoveBottleDialog> {
                 controller: _pathController,
                 autofocus: true,
                 decoration: InputDecoration(
-                  labelText: localizations.text('Bottle path'),
+                  labelText: localizations.bottlePath,
                 ),
                 textInputAction: TextInputAction.done,
                 onChanged: (_) => setState(() {}),
@@ -233,7 +231,7 @@ class _MoveBottleDialogState extends State<MoveBottleDialog> {
             const SizedBox(width: 8),
             TextButton(
               onPressed: _chooseDirectory,
-              child: Text(localizations.text('Choose...')),
+              child: Text(localizations.chooseEllipsis),
             ),
           ],
         ),
@@ -241,12 +239,12 @@ class _MoveBottleDialogState extends State<MoveBottleDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: Text(localizations.text('Cancel')),
+          child: Text(localizations.cancel),
         ),
         FilledButton.icon(
           onPressed: canSubmit ? _submit : null,
           icon: const Icon(Icons.drive_file_move_outline),
-          label: Text(localizations.text('Move')),
+          label: Text(localizations.move),
         ),
       ],
     );

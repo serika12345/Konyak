@@ -103,7 +103,7 @@ class KonyakMenuBar extends StatelessWidget {
           ),
           _LinuxWindowControlButton(
             key: const ValueKey('linux-window-minimize-button'),
-            tooltip: localizations.text('Minimize window'),
+            tooltip: localizations.minimizeWindow,
             icon: Icons.minimize,
             onPressed: () {
               unawaited(windowControls.minimizeWindow());
@@ -111,7 +111,7 @@ class KonyakMenuBar extends StatelessWidget {
           ),
           _LinuxWindowControlButton(
             key: const ValueKey('linux-window-maximize-button'),
-            tooltip: localizations.text('Maximize or restore window'),
+            tooltip: localizations.maximizeOrRestoreWindow,
             icon: Icons.crop_square,
             onPressed: () {
               unawaited(windowControls.toggleMaximizeWindow());
@@ -119,7 +119,7 @@ class KonyakMenuBar extends StatelessWidget {
           ),
           _LinuxWindowControlButton(
             key: const ValueKey('linux-window-close-button'),
-            tooltip: localizations.text('Close window'),
+            tooltip: localizations.closeWindow,
             icon: Icons.close,
             onPressed: () {
               unawaited(windowControls.closeWindow());

@@ -40,7 +40,7 @@ class PinProgramAction extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               Text(
-                localizations.text('Pin Program'),
+                localizations.pinProgram,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,

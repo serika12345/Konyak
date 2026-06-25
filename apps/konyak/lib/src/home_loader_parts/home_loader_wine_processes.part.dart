@@ -67,7 +67,7 @@ extension _KonyakHomeLoaderWineProcesses on _KonyakHomeLoaderState {
         await showDialog<void>(
           context: context,
           builder: (context) => AlertDialog(
-            title: Text(KonyakLocalizations.of(context).text('Latest run log')),
+            title: Text(KonyakLocalizations.of(context).latestRunLog),
             content: SizedBox(
               width: 640,
               child: SingleChildScrollView(child: SelectableText(content)),
@@ -75,7 +75,7 @@ extension _KonyakHomeLoaderWineProcesses on _KonyakHomeLoaderState {
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: Text(KonyakLocalizations.of(context).text('Close')),
+                child: Text(KonyakLocalizations.of(context).close),
               ),
             ],
           ),

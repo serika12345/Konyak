@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 
 import '../cli/konyak_cli_client.dart';
 import '../files/bottle_archive_picker.dart';
@@ -71,8 +70,6 @@ class _KonyakAppState extends State<KonyakApp> {
 
   @override
   Widget build(BuildContext context) {
-    const localizations = KonyakLocalizations(Locale('en'));
-
     return IconFileLoaderScope(
       loader: widget.iconFileLoader,
       child: MaterialApp(
@@ -85,14 +82,9 @@ class _KonyakAppState extends State<KonyakApp> {
           AppAppearanceMode.light => ThemeMode.light,
           AppAppearanceMode.system => ThemeMode.system,
         },
-        locale: localizations.localeForLanguageMode(_languageMode),
+        locale: localeForAppLanguageMode(_languageMode),
         supportedLocales: KonyakLocalizations.supportedLocales,
-        localizationsDelegates: const [
-          KonyakLocalizations.delegate,
-          GlobalMaterialLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-        ],
+        localizationsDelegates: KonyakLocalizations.localizationsDelegates,
         home: KonyakHomeLoader(
           platform: widget.platform,
           cliClient: widget.cliClient,

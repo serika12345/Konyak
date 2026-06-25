@@ -81,7 +81,7 @@ class ProgramEnvironmentRow extends StatelessWidget {
             child: ConfigurationTextField(
               key: ValueKey('program-config-env-key-$index'),
               controller: controllers.nameController,
-              hintText: localizations.text('NAME'),
+              hintText: localizations.environmentNameHint,
             ),
           ),
           const SizedBox(width: 8),
@@ -89,11 +89,11 @@ class ProgramEnvironmentRow extends StatelessWidget {
             child: ConfigurationTextField(
               key: ValueKey('program-config-env-value-$index'),
               controller: controllers.valueController,
-              hintText: localizations.text('Value'),
+              hintText: localizations.environmentValueHint,
             ),
           ),
           IconButton(
-            tooltip: localizations.text('Remove environment variable'),
+            tooltip: localizations.removeEnvironmentVariable,
             onPressed: onRemove,
             color: KonyakThemeColors.of(context).mutedText,
             iconSize: 18,
@@ -131,7 +131,7 @@ class AddEnvironmentRow extends StatelessWidget {
           ),
           icon: const Icon(Icons.add, size: 17),
           label: Text(
-            localizations.text('Add'),
+            localizations.add,
             style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
           ),
         ),

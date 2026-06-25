@@ -1,0 +1,1105 @@
+{
+  "@@locale": "en",
+  "add": "Add",
+  "@add": {
+    "description": "Konyak UI string: Add"
+  },
+  "advertiseAvxSupport": "Advertise AVX Support",
+  "@advertiseAvxSupport": {
+    "description": "Konyak UI string: Advertise AVX Support"
+  },
+  "aboutKonyak": "About Konyak",
+  "@aboutKonyak": {
+    "description": "Konyak UI string: About Konyak"
+  },
+  "appearance": "Appearance",
+  "@appearance": {
+    "description": "Konyak UI string: Appearance"
+  },
+  "arguments": "Arguments",
+  "@arguments": {
+    "description": "Konyak UI string: Arguments"
+  },
+  "auto": "Auto",
+  "@auto": {
+    "description": "Konyak UI string: Auto"
+  },
+  "automaticallyCheckForKonyakUpdates": "Automatically check for Konyak updates",
+  "@automaticallyCheckForKonyakUpdates": {
+    "description": "Konyak UI string: Automatically check for Konyak updates"
+  },
+  "automaticallyCheckForKonyakWineUpdates": "Automatically check for Konyak Wine updates",
+  "@automaticallyCheckForKonyakWineUpdates": {
+    "description": "Konyak UI string: Automatically check for Konyak Wine updates"
+  },
+  "automaticallyPinNewlyInstalledPrograms": "Automatically pin newly installed programs",
+  "@automaticallyPinNewlyInstalledPrograms": {
+    "description": "Konyak UI string: Automatically pin newly installed programs"
+  },
+  "backToBottle": "Back to bottle",
+  "@backToBottle": {
+    "description": "Konyak UI string: Back to bottle"
+  },
+  "bottle": "Bottle",
+  "@bottle": {
+    "description": "Konyak UI string: Bottle"
+  },
+  "bottleConfiguration": "Bottle Configuration",
+  "@bottleConfiguration": {
+    "description": "Konyak UI string: Bottle Configuration"
+  },
+  "bottlePath": "Bottle path",
+  "@bottlePath": {
+    "description": "Konyak UI string: Bottle path"
+  },
+  "bottles": "Bottles",
+  "@bottles": {
+    "description": "Konyak UI string: Bottles"
+  },
+  "browse": "Browse",
+  "@browse": {
+    "description": "Konyak UI string: Browse"
+  },
+  "cancel": "Cancel",
+  "@cancel": {
+    "description": "Konyak UI string: Cancel"
+  },
+  "checkForUpdatesMenuItem": "Check for Updates…",
+  "@checkForUpdatesMenuItem": {
+    "description": "Main menu item label for checking Konyak updates."
+  },
+  "checkingForKonyakUpdatesEllipsis": "Checking for Konyak updates...",
+  "@checkingForKonyakUpdatesEllipsis": {
+    "description": "Konyak UI string: Checking for Konyak updates..."
+  },
+  "chooseEllipsis": "Choose...",
+  "@chooseEllipsis": {
+    "description": "Konyak UI string: Choose..."
+  },
+  "chooseProgramFile": "Choose program file",
+  "@chooseProgramFile": {
+    "description": "Konyak UI string: Choose program file"
+  },
+  "chineseSimplified": "Chinese (Simplified)",
+  "@chineseSimplified": {
+    "description": "Konyak UI string: Chinese (Simplified)"
+  },
+  "chineseTraditional": "Chinese (Traditional)",
+  "@chineseTraditional": {
+    "description": "Konyak UI string: Chinese (Traditional)"
+  },
+  "close": "Close",
+  "@close": {
+    "description": "Konyak UI string: Close"
+  },
+  "closeWindow": "Close window",
+  "@closeWindow": {
+    "description": "Konyak UI string: Close window"
+  },
+  "commandPrompt": "Command Prompt",
+  "@commandPrompt": {
+    "description": "Konyak UI string: Command Prompt"
+  },
+  "compatibility": "Compatibility",
+  "@compatibility": {
+    "description": "Konyak UI string: Compatibility"
+  },
+  "complete": "Complete",
+  "@complete": {
+    "description": "Konyak UI string: Complete"
+  },
+  "config": "Config",
+  "@config": {
+    "description": "Konyak UI string: Config"
+  },
+  "controlPanel": "Control Panel",
+  "@controlPanel": {
+    "description": "Konyak UI string: Control Panel"
+  },
+  "create": "Create",
+  "@create": {
+    "description": "Konyak UI string: Create"
+  },
+  "createBottle": "Create Bottle",
+  "@createBottle": {
+    "description": "Konyak UI string: Create Bottle"
+  },
+  "createBottleAction": "Create bottle",
+  "@createBottleAction": {
+    "description": "Action label or tooltip for creating a bottle."
+  },
+  "creatingBottleEllipsis": "Creating bottle...",
+  "@creatingBottleEllipsis": {
+    "description": "Konyak UI string: Creating bottle..."
+  },
+  "emptyExecutableBottleMessage": "Create a bottle before running this executable.",
+  "@emptyExecutableBottleMessage": {
+    "description": "Message shown in the open executable dialog when no bottles exist."
+  },
+  "emptyBottlesMessage": "Create a bottle to start managing Windows programs.",
+  "@emptyBottlesMessage": {
+    "description": "Message shown in the bottles list empty state."
+  },
+  "couldNotLoadBottles": "Could not load bottles",
+  "@couldNotLoadBottles": {
+    "description": "Konyak UI string: Could not load bottles"
+  },
+  "d3dmetalBackend": "D3DMetal Backend",
+  "@d3dmetalBackend": {
+    "description": "Konyak UI string: D3DMetal Backend"
+  },
+  "d3dmetalLicenseNotice": "D3DMetal is included in Apple Game Porting Toolkit. Konyak does not bundle or redistribute it. Download the GPTK DMG from Apple Developer, select the DMG, and review Apple License.pdf for commercial use or redistribution.",
+  "@d3dmetalLicenseNotice": {
+    "description": "Notice shown in runtime settings before importing Apple D3DMetal files."
+  },
+  "dark": "Dark",
+  "@dark": {
+    "description": "Konyak UI string: Dark"
+  },
+  "defaultLabel": "Default",
+  "@defaultLabel": {
+    "description": "Konyak UI string: Default"
+  },
+  "defaultBottlePath": "Default bottle path:",
+  "@defaultBottlePath": {
+    "description": "Konyak UI string: Default bottle path:"
+  },
+  "delete": "Delete",
+  "@delete": {
+    "description": "Konyak UI string: Delete"
+  },
+  "details": "Details",
+  "@details": {
+    "description": "Konyak UI string: Details"
+  },
+  "directxDiagnosticReport": "DirectX Diagnostic Report",
+  "@directxDiagnosticReport": {
+    "description": "Konyak UI string: DirectX Diagnostic Report"
+  },
+  "distribution": "Distribution",
+  "@distribution": {
+    "description": "Konyak UI string: Distribution"
+  },
+  "download": "Download",
+  "@download": {
+    "description": "Konyak UI string: Download"
+  },
+  "dxvkHud": "DXVK HUD",
+  "@dxvkHud": {
+    "description": "Konyak UI string: DXVK HUD"
+  },
+  "enhancedSync": "Enhanced Sync",
+  "@enhancedSync": {
+    "description": "Konyak UI string: Enhanced Sync"
+  },
+  "english": "English",
+  "@english": {
+    "description": "Konyak UI string: English"
+  },
+  "environment": "Environment",
+  "@environment": {
+    "description": "Konyak UI string: Environment"
+  },
+  "exportAsArchiveEllipsis": "Export as Archive...",
+  "@exportAsArchiveEllipsis": {
+    "description": "Konyak UI string: Export as Archive..."
+  },
+  "exportingBottleArchiveEllipsis": "Exporting bottle archive...",
+  "@exportingBottleArchiveEllipsis": {
+    "description": "Konyak UI string: Exporting bottle archive..."
+  },
+  "failed": "Failed",
+  "@failed": {
+    "description": "Konyak UI string: Failed"
+  },
+  "file": "File",
+  "@file": {
+    "description": "Konyak UI string: File"
+  },
+  "fileExplorer": "File Explorer",
+  "@fileExplorer": {
+    "description": "Konyak UI string: File Explorer"
+  },
+  "french": "French",
+  "@french": {
+    "description": "Konyak UI string: French"
+  },
+  "full": "Full",
+  "@full": {
+    "description": "Konyak UI string: Full"
+  },
+  "general": "General",
+  "@general": {
+    "description": "Konyak UI string: General"
+  },
+  "german": "German",
+  "@german": {
+    "description": "Konyak UI string: German"
+  },
+  "graphics": "Graphics",
+  "@graphics": {
+    "description": "Konyak UI string: Graphics"
+  },
+  "graphicsBackend": "Graphics Backend",
+  "@graphicsBackend": {
+    "description": "Konyak UI string: Graphics Backend"
+  },
+  "gptkD3dmetalSourceWasNotSelected": "GPTK/D3DMetal source was not selected.",
+  "@gptkD3dmetalSourceWasNotSelected": {
+    "description": "Konyak UI string: GPTK/D3DMetal source was not selected."
+  },
+  "highResolutionMode": "High Resolution Mode",
+  "@highResolutionMode": {
+    "description": "Konyak UI string: High Resolution Mode"
+  },
+  "incomplete": "Incomplete",
+  "@incomplete": {
+    "description": "Konyak UI string: Incomplete"
+  },
+  "importBottle": "Import Bottle",
+  "@importBottle": {
+    "description": "Konyak UI string: Import Bottle"
+  },
+  "importD3dmetal": "Import D3DMetal",
+  "@importD3dmetal": {
+    "description": "Konyak UI string: Import D3DMetal"
+  },
+  "importD3dmetalBackend": "Import D3DMetal Backend?",
+  "@importD3dmetalBackend": {
+    "description": "Konyak UI string: Import D3DMetal Backend?"
+  },
+  "importingD3dmetal": "Importing D3DMetal",
+  "@importingD3dmetal": {
+    "description": "Konyak UI string: Importing D3DMetal"
+  },
+  "importingGptkD3dmetalEllipsis": "Importing GPTK/D3DMetal...",
+  "@importingGptkD3dmetalEllipsis": {
+    "description": "Konyak UI string: Importing GPTK/D3DMetal..."
+  },
+  "importingBottleArchiveEllipsis": "Importing bottle archive...",
+  "@importingBottleArchiveEllipsis": {
+    "description": "Konyak UI string: Importing bottle archive..."
+  },
+  "importD3dmetalBackendMessage": "Importing a GPTK app adds Apple D3DMetal files to the current macOS Wine runtime without replacing the Wine executable. Running Wine processes should be stopped before continuing.",
+  "@importD3dmetalBackendMessage": {
+    "description": "Confirmation dialog message before importing Apple D3DMetal files."
+  },
+  "install": "Install",
+  "@install": {
+    "description": "Konyak UI string: Install"
+  },
+  "installed": "Installed",
+  "@installed": {
+    "description": "Konyak UI string: Installed"
+  },
+  "installedPrograms": "Installed Programs",
+  "@installedPrograms": {
+    "description": "Konyak UI string: Installed Programs"
+  },
+  "installing": "Installing",
+  "@installing": {
+    "description": "Konyak UI string: Installing"
+  },
+  "italian": "Italian",
+  "@italian": {
+    "description": "Konyak UI string: Italian"
+  },
+  "japanese": "Japanese",
+  "@japanese": {
+    "description": "Konyak UI string: Japanese"
+  },
+  "kill": "Kill",
+  "@kill": {
+    "description": "Konyak UI string: Kill"
+  },
+  "korean": "Korean",
+  "@korean": {
+    "description": "Konyak UI string: Korean"
+  },
+  "konyakSettings": "Konyak Settings",
+  "@konyakSettings": {
+    "description": "Konyak UI string: Konyak Settings"
+  },
+  "konyakIsUpToDate": "Konyak is up to date.",
+  "@konyakIsUpToDate": {
+    "description": "Konyak UI string: Konyak is up to date."
+  },
+  "konyakUpdateStatusIsUnknown": "Konyak update status is unknown.",
+  "@konyakUpdateStatusIsUnknown": {
+    "description": "Konyak UI string: Konyak update status is unknown."
+  },
+  "language": "Language",
+  "@language": {
+    "description": "Konyak UI string: Language"
+  },
+  "latestRunLog": "Latest run log",
+  "@latestRunLog": {
+    "description": "Konyak UI string: Latest run log"
+  },
+  "launchingProgramEllipsis": "Launching program...",
+  "@launchingProgramEllipsis": {
+    "description": "Konyak UI string: Launching program..."
+  },
+  "light": "Light",
+  "@light": {
+    "description": "Konyak UI string: Light"
+  },
+  "linuxRuntime": "Linux Runtime",
+  "@linuxRuntime": {
+    "description": "Konyak UI string: Linux Runtime"
+  },
+  "loading": "Loading",
+  "@loading": {
+    "description": "Konyak UI string: Loading"
+  },
+  "loadingWinetricksPackagesEllipsis": "Loading winetricks packages...",
+  "@loadingWinetricksPackagesEllipsis": {
+    "description": "Konyak UI string: Loading winetricks packages..."
+  },
+  "locale": "Locale",
+  "@locale": {
+    "description": "Konyak UI string: Locale"
+  },
+  "macosRuntime": "macOS Runtime",
+  "@macosRuntime": {
+    "description": "Konyak UI string: macOS Runtime"
+  },
+  "managedRuntimeInstallationIsNotSupported": "Managed runtime installation is not supported.",
+  "@managedRuntimeInstallationIsNotSupported": {
+    "description": "Konyak UI string: Managed runtime installation is not supported."
+  },
+  "maximizeOrRestoreWindow": "Maximize or restore window",
+  "@maximizeOrRestoreWindow": {
+    "description": "Konyak UI string: Maximize or restore window"
+  },
+  "metalHud": "Metal HUD",
+  "@metalHud": {
+    "description": "Konyak UI string: Metal HUD"
+  },
+  "metalTrace": "Metal Trace",
+  "@metalTrace": {
+    "description": "Konyak UI string: Metal Trace"
+  },
+  "minimizeWindow": "Minimize window",
+  "@minimizeWindow": {
+    "description": "Konyak UI string: Minimize window"
+  },
+  "missing": "Missing",
+  "@missing": {
+    "description": "Konyak UI string: Missing"
+  },
+  "mitLicense": "MIT License",
+  "@mitLicense": {
+    "description": "Konyak UI string: MIT License"
+  },
+  "move": "Move",
+  "@move": {
+    "description": "Konyak UI string: Move"
+  },
+  "moveEllipsis": "Move...",
+  "@moveEllipsis": {
+    "description": "Konyak UI string: Move..."
+  },
+  "environmentNameHint": "NAME",
+  "@environmentNameHint": {
+    "description": "Konyak UI string: NAME"
+  },
+  "name": "Name",
+  "@name": {
+    "description": "Konyak UI string: Name"
+  },
+  "noBottles": "No Bottles",
+  "@noBottles": {
+    "description": "Konyak UI string: No Bottles"
+  },
+  "noBottlesYet": "No bottles yet",
+  "@noBottlesYet": {
+    "description": "Konyak UI string: No bottles yet"
+  },
+  "noInstalledProgramsFound": "No installed programs found.",
+  "@noInstalledProgramsFound": {
+    "description": "Konyak UI string: No installed programs found."
+  },
+  "noManagedRuntimeStackDetected": "No managed runtime stack detected.",
+  "@noManagedRuntimeStackDetected": {
+    "description": "Konyak UI string: No managed runtime stack detected."
+  },
+  "noMatchingWinetricksVerbs": "No matching winetricks verbs.",
+  "@noMatchingWinetricksVerbs": {
+    "description": "Konyak UI string: No matching winetricks verbs."
+  },
+  "noVerbsInThisCategory": "No verbs in this category.",
+  "@noVerbsInThisCategory": {
+    "description": "Konyak UI string: No verbs in this category."
+  },
+  "noWineProcessesFound": "No Wine processes found.",
+  "@noWineProcessesFound": {
+    "description": "Konyak UI string: No Wine processes found."
+  },
+  "noWinetricksVerbsFound": "No winetricks verbs found.",
+  "@noWinetricksVerbsFound": {
+    "description": "Konyak UI string: No winetricks verbs found."
+  },
+  "none": "None",
+  "@none": {
+    "description": "Konyak UI string: None"
+  },
+  "notNow": "Not Now",
+  "@notNow": {
+    "description": "Konyak UI string: Not Now"
+  },
+  "notInstalled": "Not installed",
+  "@notInstalled": {
+    "description": "Konyak UI string: Not installed"
+  },
+  "off": "Off",
+  "@off": {
+    "description": "Konyak UI string: Off"
+  },
+  "openBottleFolder": "Open Bottle Folder",
+  "@openBottleFolder": {
+    "description": "Konyak UI string: Open Bottle Folder"
+  },
+  "openCDrive": "Open C: Drive",
+  "@openCDrive": {
+    "description": "Konyak UI string: Open C: Drive"
+  },
+  "openExecutable": "Open executable",
+  "@openExecutable": {
+    "description": "Konyak UI string: Open executable"
+  },
+  "openGptkSource": "Open GPTK Source",
+  "@openGptkSource": {
+    "description": "Konyak UI string: Open GPTK Source"
+  },
+  "openWineConfiguration": "Open Wine Configuration",
+  "@openWineConfiguration": {
+    "description": "Konyak UI string: Open Wine Configuration"
+  },
+  "partial": "Partial",
+  "@partial": {
+    "description": "Konyak UI string: Partial"
+  },
+  "pin": "Pin",
+  "@pin": {
+    "description": "Konyak UI string: Pin"
+  },
+  "pinProgram": "Pin Program",
+  "@pinProgram": {
+    "description": "Konyak UI string: Pin Program"
+  },
+  "processManager": "Process Manager",
+  "@processManager": {
+    "description": "Konyak UI string: Process Manager"
+  },
+  "program": "Program",
+  "@program": {
+    "description": "Konyak UI string: Program"
+  },
+  "programPath": "Program path",
+  "@programPath": {
+    "description": "Konyak UI string: Program path"
+  },
+  "programs": "Programs",
+  "@programs": {
+    "description": "Konyak UI string: Programs"
+  },
+  "removeEllipsis": "Remove...",
+  "@removeEllipsis": {
+    "description": "Konyak UI string: Remove..."
+  },
+  "repair": "Repair",
+  "@repair": {
+    "description": "Konyak UI string: Repair"
+  },
+  "refresh": "Refresh",
+  "@refresh": {
+    "description": "Konyak UI string: Refresh"
+  },
+  "refreshBottles": "Refresh bottles",
+  "@refreshBottles": {
+    "description": "Konyak UI string: Refresh bottles"
+  },
+  "registryEditor": "Registry Editor",
+  "@registryEditor": {
+    "description": "Konyak UI string: Registry Editor"
+  },
+  "reinstallLinuxRuntime": "Reinstall Linux Runtime",
+  "@reinstallLinuxRuntime": {
+    "description": "Konyak UI string: Reinstall Linux Runtime"
+  },
+  "removeEnvironmentVariable": "Remove environment variable",
+  "@removeEnvironmentVariable": {
+    "description": "Konyak UI string: Remove environment variable"
+  },
+  "rename": "Rename",
+  "@rename": {
+    "description": "Konyak UI string: Rename"
+  },
+  "renameEllipsis": "Rename...",
+  "@renameEllipsis": {
+    "description": "Konyak UI string: Rename..."
+  },
+  "retry": "Retry",
+  "@retry": {
+    "description": "Konyak UI string: Retry"
+  },
+  "runtimeInstall": "Runtime install",
+  "@runtimeInstall": {
+    "description": "Konyak UI string: Runtime install"
+  },
+  "russian": "Russian",
+  "@russian": {
+    "description": "Konyak UI string: Russian"
+  },
+  "run": "Run",
+  "@run": {
+    "description": "Konyak UI string: Run"
+  },
+  "runEllipsis": "Run...",
+  "@runEllipsis": {
+    "description": "Konyak UI string: Run..."
+  },
+  "save": "Save",
+  "@save": {
+    "description": "Konyak UI string: Save"
+  },
+  "search": "Search",
+  "@search": {
+    "description": "Konyak UI string: Search"
+  },
+  "searchWinetricksPackages": "Search winetricks packages",
+  "@searchWinetricksPackages": {
+    "description": "Konyak UI string: Search winetricks packages"
+  },
+  "selectGptkDmg": "Select GPTK DMG",
+  "@selectGptkDmg": {
+    "description": "Konyak UI string: Select GPTK DMG"
+  },
+  "settings": "Settings",
+  "@settings": {
+    "description": "Konyak UI string: Settings"
+  },
+  "settingsEllipsis": "Settings...",
+  "@settingsEllipsis": {
+    "description": "Konyak UI string: Settings..."
+  },
+  "settingsEllipsisMenu": "Settings…",
+  "@settingsEllipsisMenu": {
+    "description": "Konyak UI string: Settings…"
+  },
+  "showDetail": "Show detail",
+  "@showDetail": {
+    "description": "Konyak UI string: Show detail"
+  },
+  "showInFileManager": "Show in File Manager",
+  "@showInFileManager": {
+    "description": "Konyak UI string: Show in File Manager"
+  },
+  "showInFinder": "Show in Finder",
+  "@showInFinder": {
+    "description": "Konyak UI string: Show in Finder"
+  },
+  "simulateReboot": "Simulate Reboot",
+  "@simulateReboot": {
+    "description": "Konyak UI string: Simulate Reboot"
+  },
+  "spanish": "Spanish",
+  "@spanish": {
+    "description": "Konyak UI string: Spanish"
+  },
+  "status": "Status",
+  "@status": {
+    "description": "Konyak UI string: Status"
+  },
+  "stopAllProcesses": "Stop All Processes",
+  "@stopAllProcesses": {
+    "description": "Konyak UI string: Stop All Processes"
+  },
+  "system": "System",
+  "@system": {
+    "description": "Konyak UI string: System"
+  },
+  "systemDefault": "System Default",
+  "@systemDefault": {
+    "description": "Konyak UI string: System Default"
+  },
+  "taskManager": "Task Manager",
+  "@taskManager": {
+    "description": "Konyak UI string: Task Manager"
+  },
+  "terminal": "Terminal",
+  "@terminal": {
+    "description": "Konyak UI string: Terminal"
+  },
+  "terminateWineProcessesWhenKonyakCloses": "Terminate Wine processes when Konyak closes",
+  "@terminateWineProcessesWhenKonyakCloses": {
+    "description": "Konyak UI string: Terminate Wine processes when Konyak closes"
+  },
+  "thai": "Thai",
+  "@thai": {
+    "description": "Konyak UI string: Thai"
+  },
+  "thisRemovesTheBottleFolderAndMetadata": "This removes the bottle folder and metadata.",
+  "@thisRemovesTheBottleFolderAndMetadata": {
+    "description": "Konyak UI string: This removes the bottle folder and metadata."
+  },
+  "tools": "Tools",
+  "@tools": {
+    "description": "Konyak UI string: Tools"
+  },
+  "toggleSidebar": "Toggle sidebar",
+  "@toggleSidebar": {
+    "description": "Konyak UI string: Toggle sidebar"
+  },
+  "ukrainian": "Ukrainian",
+  "@ukrainian": {
+    "description": "Konyak UI string: Ukrainian"
+  },
+  "unavailable": "Unavailable",
+  "@unavailable": {
+    "description": "Konyak UI string: Unavailable"
+  },
+  "uninstallPrograms": "Uninstall Programs",
+  "@uninstallPrograms": {
+    "description": "Konyak UI string: Uninstall Programs"
+  },
+  "unpin": "Unpin",
+  "@unpin": {
+    "description": "Konyak UI string: Unpin"
+  },
+  "updates": "Updates",
+  "@updates": {
+    "description": "Konyak UI string: Updates"
+  },
+  "environmentValueHint": "Value",
+  "@environmentValueHint": {
+    "description": "Konyak UI string: Value"
+  },
+  "viewLatestLog": "View latest log",
+  "@viewLatestLog": {
+    "description": "Konyak UI string: View latest log"
+  },
+  "viewLicenses": "View licenses",
+  "@viewLicenses": {
+    "description": "Konyak UI string: View licenses"
+  },
+  "windowsDpi": "Windows DPI",
+  "@windowsDpi": {
+    "description": "Konyak UI string: Windows DPI"
+  },
+  "windowsVersion": "Windows Version",
+  "@windowsVersion": {
+    "description": "Konyak UI string: Windows Version"
+  },
+  "windowsVersionFieldLabel": "Windows version",
+  "@windowsVersionFieldLabel": {
+    "description": "Form field label for selecting the default Windows version."
+  },
+  "wine": "Wine",
+  "@wine": {
+    "description": "Wine runtime settings section title."
+  },
+  "winetricks": "Winetricks",
+  "@winetricks": {
+    "description": "Winetricks bottom bar action label."
+  },
+  "runtimeLicensesNotice": "Wine/Proton runtime binaries are downloaded after launch and remain under their own licenses.",
+  "@runtimeLicensesNotice": {
+    "description": "About dialog notice for runtime binary licensing."
+  },
+  "programConfigurationTitle": "{programName} Configuration",
+  "@programConfigurationTitle": {
+    "description": "Konyak UI string: {programName} Configuration",
+    "placeholders": {
+      "programName": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteBottleTitle": "Delete {bottleName}?",
+  "@deleteBottleTitle": {
+    "description": "Konyak UI string: Delete {bottleName}?",
+    "placeholders": {
+      "bottleName": {
+        "type": "String"
+      }
+    }
+  },
+  "renameBottleTitle": "Rename {bottleName}",
+  "@renameBottleTitle": {
+    "description": "Konyak UI string: Rename {bottleName}",
+    "placeholders": {
+      "bottleName": {
+        "type": "String"
+      }
+    }
+  },
+  "renameProgramTitle": "Rename {programName}",
+  "@renameProgramTitle": {
+    "description": "Konyak UI string: Rename {programName}",
+    "placeholders": {
+      "programName": {
+        "type": "String"
+      }
+    }
+  },
+  "moveBottleTitle": "Move {bottleName}",
+  "@moveBottleTitle": {
+    "description": "Konyak UI string: Move {bottleName}",
+    "placeholders": {
+      "bottleName": {
+        "type": "String"
+      }
+    }
+  },
+  "installedProgramsIn": "Installed programs in {bottleName}",
+  "@installedProgramsIn": {
+    "description": "Konyak UI string: Installed programs in {bottleName}",
+    "placeholders": {
+      "bottleName": {
+        "type": "String"
+      }
+    }
+  },
+  "toolsForBottle": "Tools for {bottleName}",
+  "@toolsForBottle": {
+    "description": "Konyak UI string: Tools for {bottleName}",
+    "placeholders": {
+      "bottleName": {
+        "type": "String"
+      }
+    }
+  },
+  "pinProgramIn": "Pin program in {bottleName}",
+  "@pinProgramIn": {
+    "description": "Konyak UI string: Pin program in {bottleName}",
+    "placeholders": {
+      "bottleName": {
+        "type": "String"
+      }
+    }
+  },
+  "runProgramIn": "Run program in {bottleName}",
+  "@runProgramIn": {
+    "description": "Konyak UI string: Run program in {bottleName}",
+    "placeholders": {
+      "bottleName": {
+        "type": "String"
+      }
+    }
+  },
+  "winetricksIn": "Winetricks in {bottleName}",
+  "@winetricksIn": {
+    "description": "Konyak UI string: Winetricks in {bottleName}",
+    "placeholders": {
+      "bottleName": {
+        "type": "String"
+      }
+    }
+  },
+  "pinProgramTooltip": "Pin program in {bottleName}",
+  "@pinProgramTooltip": {
+    "description": "Konyak UI string: Pin program in {bottleName}",
+    "placeholders": {
+      "bottleName": {
+        "type": "String"
+      }
+    }
+  },
+  "pinnedProgramTooltip": "{path}\nDouble-click to run",
+  "@pinnedProgramTooltip": {
+    "description": "Konyak UI string: {path}\nDouble-click to run",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadRuntimeTitle": "Download {runtimeName}?",
+  "@downloadRuntimeTitle": {
+    "description": "Konyak UI string: Download {runtimeName}?",
+    "placeholders": {
+      "runtimeName": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadRuntimeMessage": "Konyak will download {runtimeName} into your Konyak runtime directory. The runtime is separate from the application and remains under its own license.",
+  "@downloadRuntimeMessage": {
+    "description": "Konyak UI string: Konyak will download {runtimeName} into your Konyak runtime directory. The runtime is separate from the application and remains under its own license.",
+    "placeholders": {
+      "runtimeName": {
+        "type": "String"
+      }
+    }
+  },
+  "installKonyakUpdateTitle": "Install Konyak update?",
+  "@installKonyakUpdateTitle": {
+    "description": "Konyak UI string: Install Konyak update?"
+  },
+  "installKonyakVersionUpdateTitle": "Install Konyak {latestVersion} update?",
+  "@installKonyakVersionUpdateTitle": {
+    "description": "Konyak UI string: Install Konyak {latestVersion} update?",
+    "placeholders": {
+      "latestVersion": {
+        "type": "String"
+      }
+    }
+  },
+  "installKonyakUpdateMessage": "A Konyak update is available. Install it now? Konyak will restart after the update starts.",
+  "@installKonyakUpdateMessage": {
+    "description": "Konyak UI string: A Konyak update is available. Install it now? Konyak will restart after the update starts."
+  },
+  "installKonyakVersionUpdateMessage": "Konyak {latestVersion} is available. Install it now? Konyak will restart after the update starts.",
+  "@installKonyakVersionUpdateMessage": {
+    "description": "Konyak UI string: Konyak {latestVersion} is available. Install it now? Konyak will restart after the update starts.",
+    "placeholders": {
+      "latestVersion": {
+        "type": "String"
+      }
+    }
+  },
+  "installingKonyakUpdate": "Installing {label} update. Konyak will restart.",
+  "@installingKonyakUpdate": {
+    "description": "Konyak UI string: Installing {label} update. Konyak will restart.",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "updatesAvailable": "Updates available: {labels}",
+  "@updatesAvailable": {
+    "description": "Konyak UI string: Updates available: {labels}",
+    "placeholders": {
+      "labels": {
+        "type": "String"
+      }
+    }
+  },
+  "konyakUpdateCheckFailed": "Konyak update check failed: {message}",
+  "@konyakUpdateCheckFailed": {
+    "description": "Konyak UI string: Konyak update check failed: {message}",
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "konyakUpdateInstallFailed": "Konyak update install failed: {message}",
+  "@konyakUpdateInstallFailed": {
+    "description": "Konyak UI string: Konyak update install failed: {message}",
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "installedRuntime": "Installed {runtimeName}",
+  "@installedRuntime": {
+    "description": "Konyak UI string: Installed {runtimeName}",
+    "placeholders": {
+      "runtimeName": {
+        "type": "String"
+      }
+    }
+  },
+  "reinstalledRuntime": "Reinstalled {runtimeName}",
+  "@reinstalledRuntime": {
+    "description": "Konyak UI string: Reinstalled {runtimeName}",
+    "placeholders": {
+      "runtimeName": {
+        "type": "String"
+      }
+    }
+  },
+  "runtimeInstallFailed": "Runtime install failed: {message}",
+  "@runtimeInstallFailed": {
+    "description": "Konyak UI string: Runtime install failed: {message}",
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "runtimeReinstallFailed": "Runtime reinstall failed: {message}",
+  "@runtimeReinstallFailed": {
+    "description": "Konyak UI string: Runtime reinstall failed: {message}",
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "deletedBottle": "Deleted {bottleName}",
+  "@deletedBottle": {
+    "description": "Konyak UI string: Deleted {bottleName}",
+    "placeholders": {
+      "bottleName": {
+        "type": "String"
+      }
+    }
+  },
+  "renamedBottle": "Renamed {bottleName}",
+  "@renamedBottle": {
+    "description": "Konyak UI string: Renamed {bottleName}",
+    "placeholders": {
+      "bottleName": {
+        "type": "String"
+      }
+    }
+  },
+  "movedBottle": "Moved {bottleName}",
+  "@movedBottle": {
+    "description": "Konyak UI string: Moved {bottleName}",
+    "placeholders": {
+      "bottleName": {
+        "type": "String"
+      }
+    }
+  },
+  "exportedBottle": "Exported {bottleName}",
+  "@exportedBottle": {
+    "description": "Konyak UI string: Exported {bottleName}",
+    "placeholders": {
+      "bottleName": {
+        "type": "String"
+      }
+    }
+  },
+  "importedBottle": "Imported {bottleName}",
+  "@importedBottle": {
+    "description": "Konyak UI string: Imported {bottleName}",
+    "placeholders": {
+      "bottleName": {
+        "type": "String"
+      }
+    }
+  },
+  "pinnedProgram": "Pinned {programName}",
+  "@pinnedProgram": {
+    "description": "Konyak UI string: Pinned {programName}",
+    "placeholders": {
+      "programName": {
+        "type": "String"
+      }
+    }
+  },
+  "unpinnedProgram": "Unpinned {programName}",
+  "@unpinnedProgram": {
+    "description": "Konyak UI string: Unpinned {programName}",
+    "placeholders": {
+      "programName": {
+        "type": "String"
+      }
+    }
+  },
+  "renamedProgram": "Renamed {programName}",
+  "@renamedProgram": {
+    "description": "Konyak UI string: Renamed {programName}",
+    "placeholders": {
+      "programName": {
+        "type": "String"
+      }
+    }
+  },
+  "openedProgramLocation": "Opened {programName} location",
+  "@openedProgramLocation": {
+    "description": "Konyak UI string: Opened {programName} location",
+    "placeholders": {
+      "programName": {
+        "type": "String"
+      }
+    }
+  },
+  "savedProgramConfiguration": "Saved {programName} configuration",
+  "@savedProgramConfiguration": {
+    "description": "Konyak UI string: Saved {programName} configuration",
+    "placeholders": {
+      "programName": {
+        "type": "String"
+      }
+    }
+  },
+  "openedBottleLocation": "Opened {location}",
+  "@openedBottleLocation": {
+    "description": "Konyak UI string: Opened {location}",
+    "placeholders": {
+      "location": {
+        "type": "String"
+      }
+    }
+  },
+  "terminatedProcess": "Terminated {processName}",
+  "@terminatedProcess": {
+    "description": "Konyak UI string: Terminated {processName}",
+    "placeholders": {
+      "processName": {
+        "type": "String"
+      }
+    }
+  },
+  "stoppedProcessesIn": "Stopped processes in {bottleName}",
+  "@stoppedProcessesIn": {
+    "description": "Konyak UI string: Stopped processes in {bottleName}",
+    "placeholders": {
+      "bottleName": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadProgress": "Downloading {runtimeName}...",
+  "@downloadProgress": {
+    "description": "Konyak UI string: Downloading {runtimeName}...",
+    "placeholders": {
+      "runtimeName": {
+        "type": "String"
+      }
+    }
+  },
+  "installingVerb": "Installing {verb}...",
+  "@installingVerb": {
+    "description": "Konyak UI string: Installing {verb}...",
+    "placeholders": {
+      "verb": {
+        "type": "String"
+      }
+    }
+  },
+  "commandFailedWithExitCode": "{command} failed with exit code {exitCode}.",
+  "@commandFailedWithExitCode": {
+    "description": "Konyak UI string: {command} failed with exit code {exitCode}.",
+    "placeholders": {
+      "command": {
+        "type": "String"
+      },
+      "exitCode": {
+        "type": "int"
+      }
+    }
+  },
+  "commandFailedWithDiagnostic": "{command} failed with exit code {exitCode}: {diagnostic}",
+  "@commandFailedWithDiagnostic": {
+    "description": "Konyak UI string: {command} failed with exit code {exitCode}: {diagnostic}",
+    "placeholders": {
+      "command": {
+        "type": "String"
+      },
+      "exitCode": {
+        "type": "int"
+      },
+      "diagnostic": {
+        "type": "String"
+      }
+    }
+  },
+  "cDrive": "C drive",
+  "@cDrive": {
+    "description": "Konyak UI string: C drive"
+  },
+  "bottleFolder": "bottle folder",
+  "@bottleFolder": {
+    "description": "Konyak UI string: bottle folder"
+  }
+}

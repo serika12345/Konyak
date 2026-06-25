@@ -1,286 +1,1439 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:intl/intl.dart' as intl;
 
-import '../settings/app_settings_summary.dart';
+import 'konyak_localizations_en.dart';
+import 'konyak_localizations_ja.dart';
 
-class KonyakLocalizations {
-  const KonyakLocalizations(this.locale);
+// ignore_for_file: type=lint
 
-  final Locale locale;
+/// Callers can lookup localized strings with an instance of KonyakLocalizations
+/// returned by `KonyakLocalizations.of(context)`.
+///
+/// Applications need to include `KonyakLocalizations.delegate()` in their app's
+/// `localizationDelegates` list, and the locales they support in the app's
+/// `supportedLocales` list. For example:
+///
+/// ```dart
+/// import 'l10n/konyak_localizations.dart';
+///
+/// return MaterialApp(
+///   localizationsDelegates: KonyakLocalizations.localizationsDelegates,
+///   supportedLocales: KonyakLocalizations.supportedLocales,
+///   home: MyApplicationHome(),
+/// );
+/// ```
+///
+/// ## Update pubspec.yaml
+///
+/// Please make sure to update your pubspec.yaml to include the following
+/// packages:
+///
+/// ```yaml
+/// dependencies:
+///   # Internationalization support.
+///   flutter_localizations:
+///     sdk: flutter
+///   intl: any # Use the pinned version from flutter_localizations
+///
+///   # Rest of dependencies
+/// ```
+///
+/// ## iOS Applications
+///
+/// iOS applications define key application metadata, including supported
+/// locales, in an Info.plist file that is built into the application bundle.
+/// To configure the locales supported by your app, you’ll need to edit this
+/// file.
+///
+/// First, open your project’s ios/Runner.xcworkspace Xcode workspace file.
+/// Then, in the Project Navigator, open the Info.plist file under the Runner
+/// project’s Runner folder.
+///
+/// Next, select the Information Property List item, select Add Item from the
+/// Editor menu, then select Localizations from the pop-up menu.
+///
+/// Select and expand the newly-created Localizations item then, for each
+/// locale your application supports, add a new item and select the locale
+/// you wish to add from the pop-up menu in the Value field. This list should
+/// be consistent with the languages listed in the KonyakLocalizations.supportedLocales
+/// property.
+abstract class KonyakLocalizations {
+  KonyakLocalizations(String locale)
+    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
-  static const supportedLocales = <Locale>[Locale('en'), Locale('ja')];
+  final String localeName;
+
+  static KonyakLocalizations of(BuildContext context) {
+    return Localizations.of<KonyakLocalizations>(context, KonyakLocalizations)!;
+  }
 
   static const LocalizationsDelegate<KonyakLocalizations> delegate =
       _KonyakLocalizationsDelegate();
 
-  static KonyakLocalizations of(BuildContext context) {
-    final localizations = Localizations.of<KonyakLocalizations>(
-      context,
-      KonyakLocalizations,
-    );
-    assert(localizations != null, 'KonyakLocalizations is not configured.');
-    return localizations!;
-  }
+  /// A list of this localizations delegate along with the default localizations
+  /// delegates.
+  ///
+  /// Returns a list of localizations delegates containing this delegate along with
+  /// GlobalMaterialLocalizations.delegate, GlobalCupertinoLocalizations.delegate,
+  /// and GlobalWidgetsLocalizations.delegate.
+  ///
+  /// Additional delegates can be added by appending to this list in
+  /// MaterialApp. This list does not have to be used at all if a custom list
+  /// of delegates is preferred or required.
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
+      <LocalizationsDelegate<dynamic>>[
+        delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ];
 
-  bool get _isJapanese => locale.languageCode == 'ja';
+  /// A list of this localizations delegate's supported locales.
+  static const List<Locale> supportedLocales = <Locale>[
+    Locale('en'),
+    Locale('ja'),
+  ];
 
-  String text(String source) {
-    if (!_isJapanese) {
-      return source;
-    }
+  /// Konyak UI string: Add
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get add;
 
-    return _jaText[source] ?? source;
-  }
+  /// Konyak UI string: Advertise AVX Support
+  ///
+  /// In en, this message translates to:
+  /// **'Advertise AVX Support'**
+  String get advertiseAvxSupport;
 
-  Map<String, String> textMap(Map<String, String> source) {
-    return <String, String>{
-      for (final entry in source.entries) entry.key: text(entry.value),
-    };
-  }
+  /// Konyak UI string: About Konyak
+  ///
+  /// In en, this message translates to:
+  /// **'About Konyak'**
+  String get aboutKonyak;
 
-  String languageModeLabel(AppLanguageMode mode) {
-    return switch (mode) {
-      AppLanguageMode.system => text('System Default'),
-      AppLanguageMode.english => text('English'),
-      AppLanguageMode.japanese => text('Japanese'),
-    };
-  }
+  /// Konyak UI string: Appearance
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance'**
+  String get appearance;
 
-  Locale? localeForLanguageMode(AppLanguageMode mode) {
-    return switch (mode) {
-      AppLanguageMode.system => null,
-      AppLanguageMode.english => const Locale('en'),
-      AppLanguageMode.japanese => const Locale('ja'),
-    };
-  }
+  /// Konyak UI string: Arguments
+  ///
+  /// In en, this message translates to:
+  /// **'Arguments'**
+  String get arguments;
 
-  String programConfigurationTitle(String programName) {
-    return _isJapanese ? '$programName の設定' : '$programName Configuration';
-  }
+  /// Konyak UI string: Auto
+  ///
+  /// In en, this message translates to:
+  /// **'Auto'**
+  String get auto;
 
-  String deleteBottleTitle(String bottleName) {
-    return _isJapanese ? '$bottleName を削除しますか？' : 'Delete $bottleName?';
-  }
+  /// Konyak UI string: Automatically check for Konyak updates
+  ///
+  /// In en, this message translates to:
+  /// **'Automatically check for Konyak updates'**
+  String get automaticallyCheckForKonyakUpdates;
 
-  String renameBottleTitle(String bottleName) {
-    return _isJapanese ? '$bottleName の名前を変更' : 'Rename $bottleName';
-  }
+  /// Konyak UI string: Automatically check for Konyak Wine updates
+  ///
+  /// In en, this message translates to:
+  /// **'Automatically check for Konyak Wine updates'**
+  String get automaticallyCheckForKonyakWineUpdates;
 
-  String renameProgramTitle(String programName) {
-    return _isJapanese ? '$programName の名前を変更' : 'Rename $programName';
-  }
+  /// Konyak UI string: Automatically pin newly installed programs
+  ///
+  /// In en, this message translates to:
+  /// **'Automatically pin newly installed programs'**
+  String get automaticallyPinNewlyInstalledPrograms;
 
-  String moveBottleTitle(String bottleName) {
-    return _isJapanese ? '$bottleName を移動' : 'Move $bottleName';
-  }
+  /// Konyak UI string: Back to bottle
+  ///
+  /// In en, this message translates to:
+  /// **'Back to bottle'**
+  String get backToBottle;
 
-  String installedProgramsIn(String bottleName) {
-    return _isJapanese
-        ? '$bottleName のインストール済みプログラム'
-        : 'Installed programs in $bottleName';
-  }
+  /// Konyak UI string: Bottle
+  ///
+  /// In en, this message translates to:
+  /// **'Bottle'**
+  String get bottle;
 
-  String toolsForBottle(String bottleName) {
-    return _isJapanese ? '$bottleName のツール' : 'Tools for $bottleName';
-  }
+  /// Konyak UI string: Bottle Configuration
+  ///
+  /// In en, this message translates to:
+  /// **'Bottle Configuration'**
+  String get bottleConfiguration;
 
-  String pinProgramIn(String bottleName) {
-    return _isJapanese
-        ? '$bottleName にプログラムをピン留め'
-        : 'Pin program in $bottleName';
-  }
+  /// Konyak UI string: Bottle path
+  ///
+  /// In en, this message translates to:
+  /// **'Bottle path'**
+  String get bottlePath;
 
-  String runProgramIn(String bottleName) {
-    return _isJapanese ? '$bottleName でプログラムを実行' : 'Run program in $bottleName';
-  }
+  /// Konyak UI string: Bottles
+  ///
+  /// In en, this message translates to:
+  /// **'Bottles'**
+  String get bottles;
 
-  String winetricksIn(String bottleName) {
-    return _isJapanese
-        ? '$bottleName の Winetricks'
-        : 'Winetricks in $bottleName';
-  }
+  /// Konyak UI string: Browse
+  ///
+  /// In en, this message translates to:
+  /// **'Browse'**
+  String get browse;
 
-  String pinProgramTooltip(String bottleName) {
-    return _isJapanese
-        ? '$bottleName にプログラムをピン留め'
-        : 'Pin program in $bottleName';
-  }
+  /// Konyak UI string: Cancel
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancel;
 
-  String pinnedProgramTooltip(String path) {
-    return _isJapanese ? '$path\nダブルクリックで実行' : '$path\nDouble-click to run';
-  }
+  /// Main menu item label for checking Konyak updates.
+  ///
+  /// In en, this message translates to:
+  /// **'Check for Updates…'**
+  String get checkForUpdatesMenuItem;
 
-  String downloadRuntimeTitle(String runtimeName) {
-    return _isJapanese ? '$runtimeName をダウンロードしますか？' : 'Download $runtimeName?';
-  }
+  /// Konyak UI string: Checking for Konyak updates...
+  ///
+  /// In en, this message translates to:
+  /// **'Checking for Konyak updates...'**
+  String get checkingForKonyakUpdatesEllipsis;
 
-  String downloadRuntimeMessage(String runtimeName) {
-    return _isJapanese
-        ? 'Konyak は $runtimeName を Konyak のランタイムディレクトリにダウンロードします。ランタイムはアプリケーションとは別に管理され、独自のライセンスに従います。'
-        : 'Konyak will download $runtimeName into your Konyak runtime directory. '
-              'The runtime is separate from the application and remains under its own license.';
-  }
+  /// Konyak UI string: Choose...
+  ///
+  /// In en, this message translates to:
+  /// **'Choose...'**
+  String get chooseEllipsis;
 
-  String installKonyakUpdateTitle(String? latestVersion) {
-    if (_isJapanese) {
-      return latestVersion == null
-          ? 'Konyak アップデートをインストールしますか？'
-          : 'Konyak $latestVersion アップデートをインストールしますか？';
-    }
+  /// Konyak UI string: Choose program file
+  ///
+  /// In en, this message translates to:
+  /// **'Choose program file'**
+  String get chooseProgramFile;
 
-    return latestVersion == null
-        ? 'Install Konyak update?'
-        : 'Install Konyak $latestVersion update?';
-  }
+  /// Konyak UI string: Chinese (Simplified)
+  ///
+  /// In en, this message translates to:
+  /// **'Chinese (Simplified)'**
+  String get chineseSimplified;
 
-  String installKonyakUpdateMessage(String? latestVersion) {
-    if (_isJapanese) {
-      return latestVersion == null
-          ? 'Konyak のアップデートがあります。今すぐインストールしますか？アップデート開始後に Konyak は再起動します。'
-          : 'Konyak $latestVersion があります。今すぐインストールしますか？アップデート開始後に Konyak は再起動します。';
-    }
+  /// Konyak UI string: Chinese (Traditional)
+  ///
+  /// In en, this message translates to:
+  /// **'Chinese (Traditional)'**
+  String get chineseTraditional;
 
-    return latestVersion == null
-        ? 'A Konyak update is available. Install it now? Konyak will restart after the update starts.'
-        : 'Konyak $latestVersion is available. Install it now? Konyak will restart after the update starts.';
-  }
+  /// Konyak UI string: Close
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get close;
 
-  String installingKonyakUpdate(String label) {
-    return _isJapanese
-        ? '$label アップデートをインストールしています。Konyak は再起動します。'
-        : 'Installing $label update. Konyak will restart.';
-  }
+  /// Konyak UI string: Close window
+  ///
+  /// In en, this message translates to:
+  /// **'Close window'**
+  String get closeWindow;
 
-  String updatesAvailable(Iterable<String> labels) {
-    final joined = labels.join(', ');
-    return _isJapanese ? '利用可能なアップデート: $joined' : 'Updates available: $joined';
-  }
+  /// Konyak UI string: Command Prompt
+  ///
+  /// In en, this message translates to:
+  /// **'Command Prompt'**
+  String get commandPrompt;
 
-  String konyakUpdateCheckFailed(String message) {
-    return _isJapanese
-        ? 'Konyak アップデート確認に失敗しました: $message'
-        : 'Konyak update check failed: $message';
-  }
+  /// Konyak UI string: Compatibility
+  ///
+  /// In en, this message translates to:
+  /// **'Compatibility'**
+  String get compatibility;
 
-  String konyakUpdateInstallFailed(String message) {
-    return _isJapanese
-        ? 'Konyak アップデートのインストールに失敗しました: $message'
-        : 'Konyak update install failed: $message';
-  }
+  /// Konyak UI string: Complete
+  ///
+  /// In en, this message translates to:
+  /// **'Complete'**
+  String get complete;
 
-  String installedRuntime(String runtimeName) {
-    return _isJapanese ? '$runtimeName をインストールしました' : 'Installed $runtimeName';
-  }
+  /// Konyak UI string: Config
+  ///
+  /// In en, this message translates to:
+  /// **'Config'**
+  String get config;
 
-  String reinstalledRuntime(String runtimeName) {
-    return _isJapanese
-        ? '$runtimeName を再インストールしました'
-        : 'Reinstalled $runtimeName';
-  }
+  /// Konyak UI string: Control Panel
+  ///
+  /// In en, this message translates to:
+  /// **'Control Panel'**
+  String get controlPanel;
 
-  String runtimeInstallFailed(String message) {
-    return _isJapanese
-        ? 'ランタイムのインストールに失敗しました: $message'
-        : 'Runtime install failed: $message';
-  }
+  /// Konyak UI string: Create
+  ///
+  /// In en, this message translates to:
+  /// **'Create'**
+  String get create;
 
-  String runtimeReinstallFailed(String message) {
-    return _isJapanese
-        ? 'ランタイムの再インストールに失敗しました: $message'
-        : 'Runtime reinstall failed: $message';
-  }
+  /// Konyak UI string: Create Bottle
+  ///
+  /// In en, this message translates to:
+  /// **'Create Bottle'**
+  String get createBottle;
 
-  String deletedBottle(String bottleName) {
-    return _isJapanese ? '$bottleName を削除しました' : 'Deleted $bottleName';
-  }
+  /// Action label or tooltip for creating a bottle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create bottle'**
+  String get createBottleAction;
 
-  String renamedBottle(String bottleName) {
-    return _isJapanese ? '$bottleName に名前を変更しました' : 'Renamed $bottleName';
-  }
+  /// Konyak UI string: Creating bottle...
+  ///
+  /// In en, this message translates to:
+  /// **'Creating bottle...'**
+  String get creatingBottleEllipsis;
 
-  String movedBottle(String bottleName) {
-    return _isJapanese ? '$bottleName を移動しました' : 'Moved $bottleName';
-  }
+  /// Message shown in the open executable dialog when no bottles exist.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a bottle before running this executable.'**
+  String get emptyExecutableBottleMessage;
 
-  String exportedBottle(String bottleName) {
-    return _isJapanese ? '$bottleName をエクスポートしました' : 'Exported $bottleName';
-  }
+  /// Message shown in the bottles list empty state.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a bottle to start managing Windows programs.'**
+  String get emptyBottlesMessage;
 
-  String importedBottle(String bottleName) {
-    return _isJapanese ? '$bottleName をインポートしました' : 'Imported $bottleName';
-  }
+  /// Konyak UI string: Could not load bottles
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load bottles'**
+  String get couldNotLoadBottles;
 
-  String pinnedProgram(String programName) {
-    return _isJapanese ? '$programName をピン留めしました' : 'Pinned $programName';
-  }
+  /// Konyak UI string: D3DMetal Backend
+  ///
+  /// In en, this message translates to:
+  /// **'D3DMetal Backend'**
+  String get d3dmetalBackend;
 
-  String unpinnedProgram(String programName) {
-    return _isJapanese ? '$programName のピン留めを解除しました' : 'Unpinned $programName';
-  }
+  /// Notice shown in runtime settings before importing Apple D3DMetal files.
+  ///
+  /// In en, this message translates to:
+  /// **'D3DMetal is included in Apple Game Porting Toolkit. Konyak does not bundle or redistribute it. Download the GPTK DMG from Apple Developer, select the DMG, and review Apple License.pdf for commercial use or redistribution.'**
+  String get d3dmetalLicenseNotice;
 
-  String renamedProgram(String programName) {
-    return _isJapanese ? '$programName に名前を変更しました' : 'Renamed $programName';
-  }
+  /// Konyak UI string: Dark
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get dark;
 
-  String openedProgramLocation(String programName) {
-    return _isJapanese
-        ? '$programName の場所を開きました'
-        : 'Opened $programName location';
-  }
+  /// Konyak UI string: Default
+  ///
+  /// In en, this message translates to:
+  /// **'Default'**
+  String get defaultLabel;
 
-  String savedProgramConfiguration(String programName) {
-    return _isJapanese
-        ? '$programName の設定を保存しました'
-        : 'Saved $programName configuration';
-  }
+  /// Konyak UI string: Default bottle path:
+  ///
+  /// In en, this message translates to:
+  /// **'Default bottle path:'**
+  String get defaultBottlePath;
 
-  String openedBottleLocation(String location) {
-    return _isJapanese ? '$location を開きました' : 'Opened $location';
-  }
+  /// Konyak UI string: Delete
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get delete;
 
-  String terminatedProcess(String processName) {
-    return _isJapanese ? '$processName を終了しました' : 'Terminated $processName';
-  }
+  /// Konyak UI string: Details
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get details;
 
-  String stoppedProcessesIn(String bottleName) {
-    return _isJapanese
-        ? '$bottleName のプロセスを停止しました'
-        : 'Stopped processes in $bottleName';
-  }
+  /// Konyak UI string: DirectX Diagnostic Report
+  ///
+  /// In en, this message translates to:
+  /// **'DirectX Diagnostic Report'**
+  String get directxDiagnosticReport;
 
-  String downloadProgress(String runtimeName) {
-    return _isJapanese
-        ? '$runtimeName をダウンロードしています...'
-        : 'Downloading $runtimeName...';
-  }
+  /// Konyak UI string: Distribution
+  ///
+  /// In en, this message translates to:
+  /// **'Distribution'**
+  String get distribution;
 
-  String installingVerb(String verb) {
-    return _isJapanese ? '$verb をインストールしています...' : 'Installing $verb...';
-  }
+  /// Konyak UI string: Download
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get download;
 
-  String locationLabel(String location) {
-    return switch (location) {
-      'c-drive' => _isJapanese ? 'C ドライブ' : 'C drive',
-      'root' => _isJapanese ? 'ボトルフォルダ' : 'bottle folder',
-      _ => location,
-    };
-  }
+  /// Konyak UI string: DXVK HUD
+  ///
+  /// In en, this message translates to:
+  /// **'DXVK HUD'**
+  String get dxvkHud;
 
-  String commandFailedWithExitCode(String command, int exitCode) {
-    return _isJapanese
-        ? '$command が終了コード $exitCode で失敗しました。'
-        : '$command failed with exit code $exitCode.';
-  }
+  /// Konyak UI string: Enhanced Sync
+  ///
+  /// In en, this message translates to:
+  /// **'Enhanced Sync'**
+  String get enhancedSync;
 
+  /// Konyak UI string: English
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get english;
+
+  /// Konyak UI string: Environment
+  ///
+  /// In en, this message translates to:
+  /// **'Environment'**
+  String get environment;
+
+  /// Konyak UI string: Export as Archive...
+  ///
+  /// In en, this message translates to:
+  /// **'Export as Archive...'**
+  String get exportAsArchiveEllipsis;
+
+  /// Konyak UI string: Exporting bottle archive...
+  ///
+  /// In en, this message translates to:
+  /// **'Exporting bottle archive...'**
+  String get exportingBottleArchiveEllipsis;
+
+  /// Konyak UI string: Failed
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get failed;
+
+  /// Konyak UI string: File
+  ///
+  /// In en, this message translates to:
+  /// **'File'**
+  String get file;
+
+  /// Konyak UI string: File Explorer
+  ///
+  /// In en, this message translates to:
+  /// **'File Explorer'**
+  String get fileExplorer;
+
+  /// Konyak UI string: French
+  ///
+  /// In en, this message translates to:
+  /// **'French'**
+  String get french;
+
+  /// Konyak UI string: Full
+  ///
+  /// In en, this message translates to:
+  /// **'Full'**
+  String get full;
+
+  /// Konyak UI string: General
+  ///
+  /// In en, this message translates to:
+  /// **'General'**
+  String get general;
+
+  /// Konyak UI string: German
+  ///
+  /// In en, this message translates to:
+  /// **'German'**
+  String get german;
+
+  /// Konyak UI string: Graphics
+  ///
+  /// In en, this message translates to:
+  /// **'Graphics'**
+  String get graphics;
+
+  /// Konyak UI string: Graphics Backend
+  ///
+  /// In en, this message translates to:
+  /// **'Graphics Backend'**
+  String get graphicsBackend;
+
+  /// Konyak UI string: GPTK/D3DMetal source was not selected.
+  ///
+  /// In en, this message translates to:
+  /// **'GPTK/D3DMetal source was not selected.'**
+  String get gptkD3dmetalSourceWasNotSelected;
+
+  /// Konyak UI string: High Resolution Mode
+  ///
+  /// In en, this message translates to:
+  /// **'High Resolution Mode'**
+  String get highResolutionMode;
+
+  /// Konyak UI string: Incomplete
+  ///
+  /// In en, this message translates to:
+  /// **'Incomplete'**
+  String get incomplete;
+
+  /// Konyak UI string: Import Bottle
+  ///
+  /// In en, this message translates to:
+  /// **'Import Bottle'**
+  String get importBottle;
+
+  /// Konyak UI string: Import D3DMetal
+  ///
+  /// In en, this message translates to:
+  /// **'Import D3DMetal'**
+  String get importD3dmetal;
+
+  /// Konyak UI string: Import D3DMetal Backend?
+  ///
+  /// In en, this message translates to:
+  /// **'Import D3DMetal Backend?'**
+  String get importD3dmetalBackend;
+
+  /// Konyak UI string: Importing D3DMetal
+  ///
+  /// In en, this message translates to:
+  /// **'Importing D3DMetal'**
+  String get importingD3dmetal;
+
+  /// Konyak UI string: Importing GPTK/D3DMetal...
+  ///
+  /// In en, this message translates to:
+  /// **'Importing GPTK/D3DMetal...'**
+  String get importingGptkD3dmetalEllipsis;
+
+  /// Konyak UI string: Importing bottle archive...
+  ///
+  /// In en, this message translates to:
+  /// **'Importing bottle archive...'**
+  String get importingBottleArchiveEllipsis;
+
+  /// Confirmation dialog message before importing Apple D3DMetal files.
+  ///
+  /// In en, this message translates to:
+  /// **'Importing a GPTK app adds Apple D3DMetal files to the current macOS Wine runtime without replacing the Wine executable. Running Wine processes should be stopped before continuing.'**
+  String get importD3dmetalBackendMessage;
+
+  /// Konyak UI string: Install
+  ///
+  /// In en, this message translates to:
+  /// **'Install'**
+  String get install;
+
+  /// Konyak UI string: Installed
+  ///
+  /// In en, this message translates to:
+  /// **'Installed'**
+  String get installed;
+
+  /// Konyak UI string: Installed Programs
+  ///
+  /// In en, this message translates to:
+  /// **'Installed Programs'**
+  String get installedPrograms;
+
+  /// Konyak UI string: Installing
+  ///
+  /// In en, this message translates to:
+  /// **'Installing'**
+  String get installing;
+
+  /// Konyak UI string: Italian
+  ///
+  /// In en, this message translates to:
+  /// **'Italian'**
+  String get italian;
+
+  /// Konyak UI string: Japanese
+  ///
+  /// In en, this message translates to:
+  /// **'Japanese'**
+  String get japanese;
+
+  /// Konyak UI string: Kill
+  ///
+  /// In en, this message translates to:
+  /// **'Kill'**
+  String get kill;
+
+  /// Konyak UI string: Korean
+  ///
+  /// In en, this message translates to:
+  /// **'Korean'**
+  String get korean;
+
+  /// Konyak UI string: Konyak Settings
+  ///
+  /// In en, this message translates to:
+  /// **'Konyak Settings'**
+  String get konyakSettings;
+
+  /// Konyak UI string: Konyak is up to date.
+  ///
+  /// In en, this message translates to:
+  /// **'Konyak is up to date.'**
+  String get konyakIsUpToDate;
+
+  /// Konyak UI string: Konyak update status is unknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Konyak update status is unknown.'**
+  String get konyakUpdateStatusIsUnknown;
+
+  /// Konyak UI string: Language
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get language;
+
+  /// Konyak UI string: Latest run log
+  ///
+  /// In en, this message translates to:
+  /// **'Latest run log'**
+  String get latestRunLog;
+
+  /// Konyak UI string: Launching program...
+  ///
+  /// In en, this message translates to:
+  /// **'Launching program...'**
+  String get launchingProgramEllipsis;
+
+  /// Konyak UI string: Light
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get light;
+
+  /// Konyak UI string: Linux Runtime
+  ///
+  /// In en, this message translates to:
+  /// **'Linux Runtime'**
+  String get linuxRuntime;
+
+  /// Konyak UI string: Loading
+  ///
+  /// In en, this message translates to:
+  /// **'Loading'**
+  String get loading;
+
+  /// Konyak UI string: Loading winetricks packages...
+  ///
+  /// In en, this message translates to:
+  /// **'Loading winetricks packages...'**
+  String get loadingWinetricksPackagesEllipsis;
+
+  /// Konyak UI string: Locale
+  ///
+  /// In en, this message translates to:
+  /// **'Locale'**
+  String get locale;
+
+  /// Konyak UI string: macOS Runtime
+  ///
+  /// In en, this message translates to:
+  /// **'macOS Runtime'**
+  String get macosRuntime;
+
+  /// Konyak UI string: Managed runtime installation is not supported.
+  ///
+  /// In en, this message translates to:
+  /// **'Managed runtime installation is not supported.'**
+  String get managedRuntimeInstallationIsNotSupported;
+
+  /// Konyak UI string: Maximize or restore window
+  ///
+  /// In en, this message translates to:
+  /// **'Maximize or restore window'**
+  String get maximizeOrRestoreWindow;
+
+  /// Konyak UI string: Metal HUD
+  ///
+  /// In en, this message translates to:
+  /// **'Metal HUD'**
+  String get metalHud;
+
+  /// Konyak UI string: Metal Trace
+  ///
+  /// In en, this message translates to:
+  /// **'Metal Trace'**
+  String get metalTrace;
+
+  /// Konyak UI string: Minimize window
+  ///
+  /// In en, this message translates to:
+  /// **'Minimize window'**
+  String get minimizeWindow;
+
+  /// Konyak UI string: Missing
+  ///
+  /// In en, this message translates to:
+  /// **'Missing'**
+  String get missing;
+
+  /// Konyak UI string: MIT License
+  ///
+  /// In en, this message translates to:
+  /// **'MIT License'**
+  String get mitLicense;
+
+  /// Konyak UI string: Move
+  ///
+  /// In en, this message translates to:
+  /// **'Move'**
+  String get move;
+
+  /// Konyak UI string: Move...
+  ///
+  /// In en, this message translates to:
+  /// **'Move...'**
+  String get moveEllipsis;
+
+  /// Konyak UI string: NAME
+  ///
+  /// In en, this message translates to:
+  /// **'NAME'**
+  String get environmentNameHint;
+
+  /// Konyak UI string: Name
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get name;
+
+  /// Konyak UI string: No Bottles
+  ///
+  /// In en, this message translates to:
+  /// **'No Bottles'**
+  String get noBottles;
+
+  /// Konyak UI string: No bottles yet
+  ///
+  /// In en, this message translates to:
+  /// **'No bottles yet'**
+  String get noBottlesYet;
+
+  /// Konyak UI string: No installed programs found.
+  ///
+  /// In en, this message translates to:
+  /// **'No installed programs found.'**
+  String get noInstalledProgramsFound;
+
+  /// Konyak UI string: No managed runtime stack detected.
+  ///
+  /// In en, this message translates to:
+  /// **'No managed runtime stack detected.'**
+  String get noManagedRuntimeStackDetected;
+
+  /// Konyak UI string: No matching winetricks verbs.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching winetricks verbs.'**
+  String get noMatchingWinetricksVerbs;
+
+  /// Konyak UI string: No verbs in this category.
+  ///
+  /// In en, this message translates to:
+  /// **'No verbs in this category.'**
+  String get noVerbsInThisCategory;
+
+  /// Konyak UI string: No Wine processes found.
+  ///
+  /// In en, this message translates to:
+  /// **'No Wine processes found.'**
+  String get noWineProcessesFound;
+
+  /// Konyak UI string: No winetricks verbs found.
+  ///
+  /// In en, this message translates to:
+  /// **'No winetricks verbs found.'**
+  String get noWinetricksVerbsFound;
+
+  /// Konyak UI string: None
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get none;
+
+  /// Konyak UI string: Not Now
+  ///
+  /// In en, this message translates to:
+  /// **'Not Now'**
+  String get notNow;
+
+  /// Konyak UI string: Not installed
+  ///
+  /// In en, this message translates to:
+  /// **'Not installed'**
+  String get notInstalled;
+
+  /// Konyak UI string: Off
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get off;
+
+  /// Konyak UI string: Open Bottle Folder
+  ///
+  /// In en, this message translates to:
+  /// **'Open Bottle Folder'**
+  String get openBottleFolder;
+
+  /// Konyak UI string: Open C: Drive
+  ///
+  /// In en, this message translates to:
+  /// **'Open C: Drive'**
+  String get openCDrive;
+
+  /// Konyak UI string: Open executable
+  ///
+  /// In en, this message translates to:
+  /// **'Open executable'**
+  String get openExecutable;
+
+  /// Konyak UI string: Open GPTK Source
+  ///
+  /// In en, this message translates to:
+  /// **'Open GPTK Source'**
+  String get openGptkSource;
+
+  /// Konyak UI string: Open Wine Configuration
+  ///
+  /// In en, this message translates to:
+  /// **'Open Wine Configuration'**
+  String get openWineConfiguration;
+
+  /// Konyak UI string: Partial
+  ///
+  /// In en, this message translates to:
+  /// **'Partial'**
+  String get partial;
+
+  /// Konyak UI string: Pin
+  ///
+  /// In en, this message translates to:
+  /// **'Pin'**
+  String get pin;
+
+  /// Konyak UI string: Pin Program
+  ///
+  /// In en, this message translates to:
+  /// **'Pin Program'**
+  String get pinProgram;
+
+  /// Konyak UI string: Process Manager
+  ///
+  /// In en, this message translates to:
+  /// **'Process Manager'**
+  String get processManager;
+
+  /// Konyak UI string: Program
+  ///
+  /// In en, this message translates to:
+  /// **'Program'**
+  String get program;
+
+  /// Konyak UI string: Program path
+  ///
+  /// In en, this message translates to:
+  /// **'Program path'**
+  String get programPath;
+
+  /// Konyak UI string: Programs
+  ///
+  /// In en, this message translates to:
+  /// **'Programs'**
+  String get programs;
+
+  /// Konyak UI string: Remove...
+  ///
+  /// In en, this message translates to:
+  /// **'Remove...'**
+  String get removeEllipsis;
+
+  /// Konyak UI string: Repair
+  ///
+  /// In en, this message translates to:
+  /// **'Repair'**
+  String get repair;
+
+  /// Konyak UI string: Refresh
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get refresh;
+
+  /// Konyak UI string: Refresh bottles
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh bottles'**
+  String get refreshBottles;
+
+  /// Konyak UI string: Registry Editor
+  ///
+  /// In en, this message translates to:
+  /// **'Registry Editor'**
+  String get registryEditor;
+
+  /// Konyak UI string: Reinstall Linux Runtime
+  ///
+  /// In en, this message translates to:
+  /// **'Reinstall Linux Runtime'**
+  String get reinstallLinuxRuntime;
+
+  /// Konyak UI string: Remove environment variable
+  ///
+  /// In en, this message translates to:
+  /// **'Remove environment variable'**
+  String get removeEnvironmentVariable;
+
+  /// Konyak UI string: Rename
+  ///
+  /// In en, this message translates to:
+  /// **'Rename'**
+  String get rename;
+
+  /// Konyak UI string: Rename...
+  ///
+  /// In en, this message translates to:
+  /// **'Rename...'**
+  String get renameEllipsis;
+
+  /// Konyak UI string: Retry
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get retry;
+
+  /// Konyak UI string: Runtime install
+  ///
+  /// In en, this message translates to:
+  /// **'Runtime install'**
+  String get runtimeInstall;
+
+  /// Konyak UI string: Russian
+  ///
+  /// In en, this message translates to:
+  /// **'Russian'**
+  String get russian;
+
+  /// Konyak UI string: Run
+  ///
+  /// In en, this message translates to:
+  /// **'Run'**
+  String get run;
+
+  /// Konyak UI string: Run...
+  ///
+  /// In en, this message translates to:
+  /// **'Run...'**
+  String get runEllipsis;
+
+  /// Konyak UI string: Save
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get save;
+
+  /// Konyak UI string: Search
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get search;
+
+  /// Konyak UI string: Search winetricks packages
+  ///
+  /// In en, this message translates to:
+  /// **'Search winetricks packages'**
+  String get searchWinetricksPackages;
+
+  /// Konyak UI string: Select GPTK DMG
+  ///
+  /// In en, this message translates to:
+  /// **'Select GPTK DMG'**
+  String get selectGptkDmg;
+
+  /// Konyak UI string: Settings
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settings;
+
+  /// Konyak UI string: Settings...
+  ///
+  /// In en, this message translates to:
+  /// **'Settings...'**
+  String get settingsEllipsis;
+
+  /// Konyak UI string: Settings…
+  ///
+  /// In en, this message translates to:
+  /// **'Settings…'**
+  String get settingsEllipsisMenu;
+
+  /// Konyak UI string: Show detail
+  ///
+  /// In en, this message translates to:
+  /// **'Show detail'**
+  String get showDetail;
+
+  /// Konyak UI string: Show in File Manager
+  ///
+  /// In en, this message translates to:
+  /// **'Show in File Manager'**
+  String get showInFileManager;
+
+  /// Konyak UI string: Show in Finder
+  ///
+  /// In en, this message translates to:
+  /// **'Show in Finder'**
+  String get showInFinder;
+
+  /// Konyak UI string: Simulate Reboot
+  ///
+  /// In en, this message translates to:
+  /// **'Simulate Reboot'**
+  String get simulateReboot;
+
+  /// Konyak UI string: Spanish
+  ///
+  /// In en, this message translates to:
+  /// **'Spanish'**
+  String get spanish;
+
+  /// Konyak UI string: Status
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get status;
+
+  /// Konyak UI string: Stop All Processes
+  ///
+  /// In en, this message translates to:
+  /// **'Stop All Processes'**
+  String get stopAllProcesses;
+
+  /// Konyak UI string: System
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get system;
+
+  /// Konyak UI string: System Default
+  ///
+  /// In en, this message translates to:
+  /// **'System Default'**
+  String get systemDefault;
+
+  /// Konyak UI string: Task Manager
+  ///
+  /// In en, this message translates to:
+  /// **'Task Manager'**
+  String get taskManager;
+
+  /// Konyak UI string: Terminal
+  ///
+  /// In en, this message translates to:
+  /// **'Terminal'**
+  String get terminal;
+
+  /// Konyak UI string: Terminate Wine processes when Konyak closes
+  ///
+  /// In en, this message translates to:
+  /// **'Terminate Wine processes when Konyak closes'**
+  String get terminateWineProcessesWhenKonyakCloses;
+
+  /// Konyak UI string: Thai
+  ///
+  /// In en, this message translates to:
+  /// **'Thai'**
+  String get thai;
+
+  /// Konyak UI string: This removes the bottle folder and metadata.
+  ///
+  /// In en, this message translates to:
+  /// **'This removes the bottle folder and metadata.'**
+  String get thisRemovesTheBottleFolderAndMetadata;
+
+  /// Konyak UI string: Tools
+  ///
+  /// In en, this message translates to:
+  /// **'Tools'**
+  String get tools;
+
+  /// Konyak UI string: Toggle sidebar
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle sidebar'**
+  String get toggleSidebar;
+
+  /// Konyak UI string: Ukrainian
+  ///
+  /// In en, this message translates to:
+  /// **'Ukrainian'**
+  String get ukrainian;
+
+  /// Konyak UI string: Unavailable
+  ///
+  /// In en, this message translates to:
+  /// **'Unavailable'**
+  String get unavailable;
+
+  /// Konyak UI string: Uninstall Programs
+  ///
+  /// In en, this message translates to:
+  /// **'Uninstall Programs'**
+  String get uninstallPrograms;
+
+  /// Konyak UI string: Unpin
+  ///
+  /// In en, this message translates to:
+  /// **'Unpin'**
+  String get unpin;
+
+  /// Konyak UI string: Updates
+  ///
+  /// In en, this message translates to:
+  /// **'Updates'**
+  String get updates;
+
+  /// Konyak UI string: Value
+  ///
+  /// In en, this message translates to:
+  /// **'Value'**
+  String get environmentValueHint;
+
+  /// Konyak UI string: View latest log
+  ///
+  /// In en, this message translates to:
+  /// **'View latest log'**
+  String get viewLatestLog;
+
+  /// Konyak UI string: View licenses
+  ///
+  /// In en, this message translates to:
+  /// **'View licenses'**
+  String get viewLicenses;
+
+  /// Konyak UI string: Windows DPI
+  ///
+  /// In en, this message translates to:
+  /// **'Windows DPI'**
+  String get windowsDpi;
+
+  /// Konyak UI string: Windows Version
+  ///
+  /// In en, this message translates to:
+  /// **'Windows Version'**
+  String get windowsVersion;
+
+  /// Form field label for selecting the default Windows version.
+  ///
+  /// In en, this message translates to:
+  /// **'Windows version'**
+  String get windowsVersionFieldLabel;
+
+  /// Wine runtime settings section title.
+  ///
+  /// In en, this message translates to:
+  /// **'Wine'**
+  String get wine;
+
+  /// Winetricks bottom bar action label.
+  ///
+  /// In en, this message translates to:
+  /// **'Winetricks'**
+  String get winetricks;
+
+  /// About dialog notice for runtime binary licensing.
+  ///
+  /// In en, this message translates to:
+  /// **'Wine/Proton runtime binaries are downloaded after launch and remain under their own licenses.'**
+  String get runtimeLicensesNotice;
+
+  /// Konyak UI string: {programName} Configuration
+  ///
+  /// In en, this message translates to:
+  /// **'{programName} Configuration'**
+  String programConfigurationTitle(String programName);
+
+  /// Konyak UI string: Delete {bottleName}?
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {bottleName}?'**
+  String deleteBottleTitle(String bottleName);
+
+  /// Konyak UI string: Rename {bottleName}
+  ///
+  /// In en, this message translates to:
+  /// **'Rename {bottleName}'**
+  String renameBottleTitle(String bottleName);
+
+  /// Konyak UI string: Rename {programName}
+  ///
+  /// In en, this message translates to:
+  /// **'Rename {programName}'**
+  String renameProgramTitle(String programName);
+
+  /// Konyak UI string: Move {bottleName}
+  ///
+  /// In en, this message translates to:
+  /// **'Move {bottleName}'**
+  String moveBottleTitle(String bottleName);
+
+  /// Konyak UI string: Installed programs in {bottleName}
+  ///
+  /// In en, this message translates to:
+  /// **'Installed programs in {bottleName}'**
+  String installedProgramsIn(String bottleName);
+
+  /// Konyak UI string: Tools for {bottleName}
+  ///
+  /// In en, this message translates to:
+  /// **'Tools for {bottleName}'**
+  String toolsForBottle(String bottleName);
+
+  /// Konyak UI string: Pin program in {bottleName}
+  ///
+  /// In en, this message translates to:
+  /// **'Pin program in {bottleName}'**
+  String pinProgramIn(String bottleName);
+
+  /// Konyak UI string: Run program in {bottleName}
+  ///
+  /// In en, this message translates to:
+  /// **'Run program in {bottleName}'**
+  String runProgramIn(String bottleName);
+
+  /// Konyak UI string: Winetricks in {bottleName}
+  ///
+  /// In en, this message translates to:
+  /// **'Winetricks in {bottleName}'**
+  String winetricksIn(String bottleName);
+
+  /// Konyak UI string: Pin program in {bottleName}
+  ///
+  /// In en, this message translates to:
+  /// **'Pin program in {bottleName}'**
+  String pinProgramTooltip(String bottleName);
+
+  /// Konyak UI string: {path}
+  /// Double-click to run
+  ///
+  /// In en, this message translates to:
+  /// **'{path}\nDouble-click to run'**
+  String pinnedProgramTooltip(String path);
+
+  /// Konyak UI string: Download {runtimeName}?
+  ///
+  /// In en, this message translates to:
+  /// **'Download {runtimeName}?'**
+  String downloadRuntimeTitle(String runtimeName);
+
+  /// Konyak UI string: Konyak will download {runtimeName} into your Konyak runtime directory. The runtime is separate from the application and remains under its own license.
+  ///
+  /// In en, this message translates to:
+  /// **'Konyak will download {runtimeName} into your Konyak runtime directory. The runtime is separate from the application and remains under its own license.'**
+  String downloadRuntimeMessage(String runtimeName);
+
+  /// Konyak UI string: Install Konyak update?
+  ///
+  /// In en, this message translates to:
+  /// **'Install Konyak update?'**
+  String get installKonyakUpdateTitle;
+
+  /// Konyak UI string: Install Konyak {latestVersion} update?
+  ///
+  /// In en, this message translates to:
+  /// **'Install Konyak {latestVersion} update?'**
+  String installKonyakVersionUpdateTitle(String latestVersion);
+
+  /// Konyak UI string: A Konyak update is available. Install it now? Konyak will restart after the update starts.
+  ///
+  /// In en, this message translates to:
+  /// **'A Konyak update is available. Install it now? Konyak will restart after the update starts.'**
+  String get installKonyakUpdateMessage;
+
+  /// Konyak UI string: Konyak {latestVersion} is available. Install it now? Konyak will restart after the update starts.
+  ///
+  /// In en, this message translates to:
+  /// **'Konyak {latestVersion} is available. Install it now? Konyak will restart after the update starts.'**
+  String installKonyakVersionUpdateMessage(String latestVersion);
+
+  /// Konyak UI string: Installing {label} update. Konyak will restart.
+  ///
+  /// In en, this message translates to:
+  /// **'Installing {label} update. Konyak will restart.'**
+  String installingKonyakUpdate(String label);
+
+  /// Konyak UI string: Updates available: {labels}
+  ///
+  /// In en, this message translates to:
+  /// **'Updates available: {labels}'**
+  String updatesAvailable(String labels);
+
+  /// Konyak UI string: Konyak update check failed: {message}
+  ///
+  /// In en, this message translates to:
+  /// **'Konyak update check failed: {message}'**
+  String konyakUpdateCheckFailed(String message);
+
+  /// Konyak UI string: Konyak update install failed: {message}
+  ///
+  /// In en, this message translates to:
+  /// **'Konyak update install failed: {message}'**
+  String konyakUpdateInstallFailed(String message);
+
+  /// Konyak UI string: Installed {runtimeName}
+  ///
+  /// In en, this message translates to:
+  /// **'Installed {runtimeName}'**
+  String installedRuntime(String runtimeName);
+
+  /// Konyak UI string: Reinstalled {runtimeName}
+  ///
+  /// In en, this message translates to:
+  /// **'Reinstalled {runtimeName}'**
+  String reinstalledRuntime(String runtimeName);
+
+  /// Konyak UI string: Runtime install failed: {message}
+  ///
+  /// In en, this message translates to:
+  /// **'Runtime install failed: {message}'**
+  String runtimeInstallFailed(String message);
+
+  /// Konyak UI string: Runtime reinstall failed: {message}
+  ///
+  /// In en, this message translates to:
+  /// **'Runtime reinstall failed: {message}'**
+  String runtimeReinstallFailed(String message);
+
+  /// Konyak UI string: Deleted {bottleName}
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted {bottleName}'**
+  String deletedBottle(String bottleName);
+
+  /// Konyak UI string: Renamed {bottleName}
+  ///
+  /// In en, this message translates to:
+  /// **'Renamed {bottleName}'**
+  String renamedBottle(String bottleName);
+
+  /// Konyak UI string: Moved {bottleName}
+  ///
+  /// In en, this message translates to:
+  /// **'Moved {bottleName}'**
+  String movedBottle(String bottleName);
+
+  /// Konyak UI string: Exported {bottleName}
+  ///
+  /// In en, this message translates to:
+  /// **'Exported {bottleName}'**
+  String exportedBottle(String bottleName);
+
+  /// Konyak UI string: Imported {bottleName}
+  ///
+  /// In en, this message translates to:
+  /// **'Imported {bottleName}'**
+  String importedBottle(String bottleName);
+
+  /// Konyak UI string: Pinned {programName}
+  ///
+  /// In en, this message translates to:
+  /// **'Pinned {programName}'**
+  String pinnedProgram(String programName);
+
+  /// Konyak UI string: Unpinned {programName}
+  ///
+  /// In en, this message translates to:
+  /// **'Unpinned {programName}'**
+  String unpinnedProgram(String programName);
+
+  /// Konyak UI string: Renamed {programName}
+  ///
+  /// In en, this message translates to:
+  /// **'Renamed {programName}'**
+  String renamedProgram(String programName);
+
+  /// Konyak UI string: Opened {programName} location
+  ///
+  /// In en, this message translates to:
+  /// **'Opened {programName} location'**
+  String openedProgramLocation(String programName);
+
+  /// Konyak UI string: Saved {programName} configuration
+  ///
+  /// In en, this message translates to:
+  /// **'Saved {programName} configuration'**
+  String savedProgramConfiguration(String programName);
+
+  /// Konyak UI string: Opened {location}
+  ///
+  /// In en, this message translates to:
+  /// **'Opened {location}'**
+  String openedBottleLocation(String location);
+
+  /// Konyak UI string: Terminated {processName}
+  ///
+  /// In en, this message translates to:
+  /// **'Terminated {processName}'**
+  String terminatedProcess(String processName);
+
+  /// Konyak UI string: Stopped processes in {bottleName}
+  ///
+  /// In en, this message translates to:
+  /// **'Stopped processes in {bottleName}'**
+  String stoppedProcessesIn(String bottleName);
+
+  /// Konyak UI string: Downloading {runtimeName}...
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading {runtimeName}...'**
+  String downloadProgress(String runtimeName);
+
+  /// Konyak UI string: Installing {verb}...
+  ///
+  /// In en, this message translates to:
+  /// **'Installing {verb}...'**
+  String installingVerb(String verb);
+
+  /// Konyak UI string: {command} failed with exit code {exitCode}.
+  ///
+  /// In en, this message translates to:
+  /// **'{command} failed with exit code {exitCode}.'**
+  String commandFailedWithExitCode(String command, int exitCode);
+
+  /// Konyak UI string: {command} failed with exit code {exitCode}: {diagnostic}
+  ///
+  /// In en, this message translates to:
+  /// **'{command} failed with exit code {exitCode}: {diagnostic}'**
   String commandFailedWithDiagnostic(
     String command,
     int exitCode,
     String diagnostic,
-  ) {
-    return _isJapanese
-        ? '$command が終了コード $exitCode で失敗しました: $diagnostic'
-        : '$command failed with exit code $exitCode: $diagnostic';
-  }
+  );
+
+  /// Konyak UI string: C drive
+  ///
+  /// In en, this message translates to:
+  /// **'C drive'**
+  String get cDrive;
+
+  /// Konyak UI string: bottle folder
+  ///
+  /// In en, this message translates to:
+  /// **'bottle folder'**
+  String get bottleFolder;
 }
 
 class _KonyakLocalizationsDelegate
@@ -288,206 +1441,33 @@ class _KonyakLocalizationsDelegate
   const _KonyakLocalizationsDelegate();
 
   @override
-  bool isSupported(Locale locale) {
-    return locale.languageCode == 'en' || locale.languageCode == 'ja';
-  }
-
-  @override
   Future<KonyakLocalizations> load(Locale locale) {
-    final languageCode = locale.languageCode == 'ja' ? 'ja' : 'en';
     return SynchronousFuture<KonyakLocalizations>(
-      KonyakLocalizations(Locale(languageCode)),
+      lookupKonyakLocalizations(locale),
     );
   }
 
   @override
-  bool shouldReload(_KonyakLocalizationsDelegate old) {
-    return false;
-  }
+  bool isSupported(Locale locale) =>
+      <String>['en', 'ja'].contains(locale.languageCode);
+
+  @override
+  bool shouldReload(_KonyakLocalizationsDelegate old) => false;
 }
 
-const _jaText = <String, String>{
-  'Add': '追加',
-  'Advertise AVX Support': 'AVX サポートを通知',
-  'About Konyak': 'Konyak について',
-  'Appearance': '外観',
-  'Arguments': '引数',
-  'Auto': '自動',
-  'Automatically check for Konyak updates': 'Konyak のアップデートを自動確認',
-  'Automatically check for Konyak Wine updates': 'Konyak Wine のアップデートを自動確認',
-  'Automatically pin newly installed programs': '新しくインストールされたプログラムを自動でピン留め',
-  'Back to bottle': 'ボトルに戻る',
-  'Bottle': 'ボトル',
-  'Bottle Configuration': 'ボトル設定',
-  'Bottle path': 'ボトルパス',
-  'Bottles': 'ボトル',
-  'Browse': '参照',
-  'Cancel': 'キャンセル',
-  'Check for Updates...': 'アップデートを確認...',
-  'Check for Updates…': 'アップデートを確認...',
-  'Checking for Konyak updates...': 'Konyak のアップデートを確認しています...',
-  'Choose...': '選択...',
-  'Choose program file': 'プログラムファイルを選択',
-  'Chinese (Simplified)': '中国語（簡体字）',
-  'Chinese (Traditional)': '中国語（繁体字）',
-  'Close': '閉じる',
-  'Close window': 'ウィンドウを閉じる',
-  'Command Prompt': 'コマンドプロンプト',
-  'Compatibility': '互換性',
-  'Complete': '完了',
-  'Config': '設定',
-  'Control Panel': 'コントロールパネル',
-  'Create': '作成',
-  'Create Bottle': 'ボトルを作成',
-  'Create bottle': 'ボトルを作成',
-  'Creating bottle...': 'ボトルを作成しています...',
-  'Create a bottle before running this executable.':
-      'この実行ファイルを起動する前にボトルを作成してください。',
-  'Create a bottle to start managing Windows programs.':
-      'Windows プログラムを管理するにはボトルを作成してください。',
-  'Could not load bottles': 'ボトルを読み込めませんでした',
-  'D3DMetal Backend': 'D3DMetal バックエンド',
-  'D3DMetal is included in Apple Game Porting Toolkit. Konyak does not bundle or redistribute it. Download the GPTK DMG from Apple Developer, select the DMG, and review Apple License.pdf for commercial use or redistribution.':
-      'D3DMetal は Apple Game Porting Toolkit に含まれます。Konyak は D3DMetal を同梱または再配布しません。Apple Developer から GPTK DMG をダウンロードして DMG を選択し、商用利用または再配布について Apple License.pdf を確認してください。',
-  'Dark': 'ダーク',
-  'Default': 'デフォルト',
-  'Default bottle path:': 'デフォルトのボトルパス:',
-  'Delete': '削除',
-  'Details': '詳細',
-  'DirectX Diagnostic Report': 'DirectX 診断レポート',
-  'Distribution': '配布',
-  'Download': 'ダウンロード',
-  'DXVK HUD': 'DXVK HUD',
-  'Enhanced Sync': 'Enhanced Sync',
-  'English': '英語',
-  'Environment': '環境変数',
-  'Export as Archive...': 'アーカイブとしてエクスポート...',
-  'Exporting bottle archive...': 'ボトルアーカイブを書き出しています...',
-  'Failed': '失敗',
-  'File': 'ファイル',
-  'File Explorer': 'ファイルエクスプローラー',
-  'French': 'フランス語',
-  'Full': 'フル',
-  'General': '一般',
-  'German': 'ドイツ語',
-  'Graphics': 'グラフィック',
-  'Graphics Backend': 'グラフィックバックエンド',
-  'GPTK/D3DMetal source was not selected.': 'GPTK/D3DMetal の入手元が選択されていません。',
-  'High Resolution Mode': '高解像度モード',
-  'Incomplete': '未完了',
-  'Import Bottle': 'ボトルをインポート',
-  'Import D3DMetal': 'D3DMetal をインポート',
-  'Import D3DMetal Backend?': 'D3DMetal バックエンドをインポートしますか？',
-  'Importing D3DMetal': 'D3DMetal をインポートしています',
-  'Importing GPTK/D3DMetal...': 'GPTK/D3DMetal をインポートしています...',
-  'Importing bottle archive...': 'ボトルアーカイブを読み込んでいます...',
-  'Importing a GPTK app adds Apple D3DMetal files to the current macOS Wine runtime without replacing the Wine executable. Running Wine processes should be stopped before continuing.':
-      'GPTK アプリをインポートすると、Wine 実行ファイルを置き換えずに Apple D3DMetal ファイルを現在の macOS Wine ランタイムへ追加します。続行する前に実行中の Wine プロセスを停止してください。',
-  'Install': 'インストール',
-  'Installed': 'インストール済み',
-  'Installed Programs': 'インストール済みプログラム',
-  'Installing': 'インストール中',
-  'Italian': 'イタリア語',
-  'Japanese': '日本語',
-  'Kill': '終了',
-  'Korean': '韓国語',
-  'Konyak Settings': 'Konyak 設定',
-  'Konyak is up to date.': 'Konyak は最新です。',
-  'Konyak update status is unknown.': 'Konyak のアップデート状態は不明です。',
-  'Language': '言語',
-  'Latest run log': '最新の実行ログ',
-  'Launching program...': 'プログラムを起動しています...',
-  'Light': 'ライト',
-  'Linux Runtime': 'Linux ランタイム',
-  'Loading': '読み込み中',
-  'Loading winetricks packages...': 'winetricks パッケージを読み込んでいます...',
-  'Locale': 'ロケール',
-  'macOS Runtime': 'macOS ランタイム',
-  'Managed runtime installation is not supported.':
-      '管理対象ランタイムのインストールはサポートされていません。',
-  'Maximize or restore window': '最大化または復元',
-  'Metal HUD': 'Metal HUD',
-  'Metal Trace': 'Metal Trace',
-  'Minimize window': 'ウィンドウを最小化',
-  'Missing': '不足',
-  'MIT License': 'MIT ライセンス',
-  'Move': '移動',
-  'Move...': '移動...',
-  'NAME': '名前',
-  'Name': '名前',
-  'No Bottles': 'ボトルがありません',
-  'No bottles yet': 'ボトルはまだありません',
-  'No installed programs found.': 'インストール済みプログラムは見つかりませんでした。',
-  'No managed runtime stack detected.': '管理対象ランタイムスタックは検出されませんでした。',
-  'No matching winetricks verbs.': '一致する winetricks verb はありません。',
-  'No verbs in this category.': 'このカテゴリに verb はありません。',
-  'No Wine processes found.': 'Wine プロセスは見つかりませんでした。',
-  'No winetricks verbs found.': 'winetricks verb は見つかりませんでした。',
-  'None': 'なし',
-  'Not Now': 'あとで',
-  'Not installed': '未インストール',
-  'Off': 'オフ',
-  'Open Bottle Folder': 'ボトルフォルダを開く',
-  'Open C: Drive': 'C: ドライブを開く',
-  'Open executable': '実行ファイルを開く',
-  'Open GPTK Source': 'GPTK 入手元を開く',
-  'Open Wine Configuration': 'Wine 設定を開く',
-  'Partial': '一部',
-  'Pin': 'ピン留め',
-  'Pin Program': 'プログラムをピン留め',
-  'Process Manager': 'プロセスマネージャー',
-  'Program': 'プログラム',
-  'Program path': 'プログラムパス',
-  'Programs': 'プログラム',
-  'Remove...': '削除...',
-  'Repair': '修復',
-  'Refresh': '更新',
-  'Refresh bottles': 'ボトルを更新',
-  'Registry Editor': 'レジストリエディター',
-  'Reinstall Linux Runtime': 'Linux ランタイムを再インストール',
-  'Remove environment variable': '環境変数を削除',
-  'Rename': '名前を変更',
-  'Rename...': '名前を変更...',
-  'Retry': '再試行',
-  'Runtime install': 'ランタイムインストール',
-  'Russian': 'ロシア語',
-  'Run': '実行',
-  'Run...': '実行...',
-  'Run…': '実行...',
-  'Save': '保存',
-  'Search': '検索',
-  'Search winetricks packages': 'winetricks パッケージを検索',
-  'Select GPTK DMG': 'GPTK DMG を選択',
-  'Settings': '設定',
-  'Settings...': '設定...',
-  'Settings…': '設定...',
-  'Show detail': '詳細を表示',
-  'Show in File Manager': 'ファイルマネージャーで表示',
-  'Show in Finder': 'Finder に表示',
-  'Simulate Reboot': '再起動をシミュレート',
-  'Spanish': 'スペイン語',
-  'Status': '状態',
-  'Stop All Processes': 'すべてのプロセスを停止',
-  'System': 'システム',
-  'System Default': 'システム設定',
-  'Task Manager': 'タスクマネージャー',
-  'Terminal': 'ターミナル',
-  'Terminate Wine processes when Konyak closes': 'Konyak を閉じるときに Wine プロセスを終了',
-  'Thai': 'タイ語',
-  'This removes the bottle folder and metadata.': 'ボトルフォルダとメタデータを削除します。',
-  'Tools': 'ツール',
-  'Toggle sidebar': 'サイドバーを切り替え',
-  'Ukrainian': 'ウクライナ語',
-  'Unavailable': '利用不可',
-  'Uninstall Programs': 'プログラムをアンインストール',
-  'Unpin': 'ピン留め解除',
-  'Updates': 'アップデート',
-  'Value': '値',
-  'View latest log': '最新ログを表示',
-  'View licenses': 'ライセンスを表示',
-  'Windows DPI': 'Windows DPI',
-  'Windows Version': 'Windows バージョン',
-  'Windows version': 'Windows バージョン',
-  'Wine/Proton runtime binaries are downloaded after launch and remain under their own licenses.':
-      'Wine/Proton ランタイムバイナリは起動後にダウンロードされ、それぞれのライセンスに従います。',
-};
+KonyakLocalizations lookupKonyakLocalizations(Locale locale) {
+  // Lookup logic when only language code is specified.
+  switch (locale.languageCode) {
+    case 'en':
+      return KonyakLocalizationsEn();
+    case 'ja':
+      return KonyakLocalizationsJa();
+  }
+
+  throw FlutterError(
+    'KonyakLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+    'an issue with the localizations generation tool. Please file an issue '
+    'on GitHub with a reproducible sample app and the gen-l10n configuration '
+    'that was used.',
+  );
+}

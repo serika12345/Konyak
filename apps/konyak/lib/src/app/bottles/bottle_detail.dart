@@ -117,7 +117,7 @@ class KonyakBottleDetail extends StatelessWidget {
             title: isProgramConfiguration
                 ? localizations.programConfigurationTitle(activeProgram.name)
                 : isConfiguration
-                ? localizations.text('Bottle Configuration')
+                ? localizations.bottleConfiguration
                 : activeBottle?.name ?? 'Konyak',
             onBack: isConfiguration || isProgramConfiguration
                 ? onBackToBottle

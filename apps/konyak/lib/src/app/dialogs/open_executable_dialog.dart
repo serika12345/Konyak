@@ -76,7 +76,7 @@ class _OpenExecutableDialogState extends State<OpenExecutableDialog> {
     final localizations = KonyakLocalizations.of(context);
 
     return AlertDialog(
-      title: Text(localizations.text('Open executable')),
+      title: Text(localizations.openExecutable),
       content: SizedBox(
         width: 440,
         child: Column(
@@ -86,17 +86,11 @@ class _OpenExecutableDialogState extends State<OpenExecutableDialog> {
             SelectableText(widget.programPath),
             const SizedBox(height: 16),
             if (widget.bottles.isEmpty)
-              Text(
-                localizations.text(
-                  'Create a bottle before running this executable.',
-                ),
-              )
+              Text(localizations.emptyExecutableBottleMessage)
             else
               DropdownButtonFormField<String>(
                 initialValue: _selectedBottleId,
-                decoration: InputDecoration(
-                  labelText: localizations.text('Bottle'),
-                ),
+                decoration: InputDecoration(labelText: localizations.bottle),
                 items: [
                   for (final bottle in widget.bottles)
                     DropdownMenuItem<String>(
@@ -116,19 +110,19 @@ class _OpenExecutableDialogState extends State<OpenExecutableDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: Text(localizations.text('Cancel')),
+          child: Text(localizations.cancel),
         ),
         TextButton.icon(
           onPressed: () {
             Navigator.of(context).pop(const CreateBottleForExecutable());
           },
           icon: const Icon(Icons.add),
-          label: Text(localizations.text('Create Bottle')),
+          label: Text(localizations.createBottle),
         ),
         FilledButton.icon(
           onPressed: selectedBottle == null ? null : _run,
           icon: const Icon(Icons.play_arrow),
-          label: Text(localizations.text('Run')),
+          label: Text(localizations.run),
         ),
       ],
     );

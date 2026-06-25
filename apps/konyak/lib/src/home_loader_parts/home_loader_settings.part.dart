@@ -96,13 +96,9 @@ extension _KonyakHomeLoaderSettings on _KonyakHomeLoaderState {
                   ],
                 ),
                 const SizedBox(height: 32),
-                Text(
-                  localizations.text(
-                    'Wine/Proton runtime binaries are downloaded after launch and remain under their own licenses.',
-                  ),
-                ),
+                Text(localizations.runtimeLicensesNotice),
                 const SizedBox(height: 24),
-                Text(localizations.text('MIT License')),
+                Text(localizations.mitLicense),
               ],
             ),
           ),
@@ -120,11 +116,11 @@ extension _KonyakHomeLoaderSettings on _KonyakHomeLoaderState {
                   ),
                 );
               },
-              child: Text(localizations.text('View licenses')),
+              child: Text(localizations.viewLicenses),
             ),
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
-              child: Text(localizations.text('Close')),
+              child: Text(localizations.close),
             ),
           ],
         );

@@ -238,7 +238,7 @@ extension _KonyakHomeLoaderBottles on _KonyakHomeLoaderState {
     _showWarningSnackBar(
       message,
       action: SnackBarAction(
-        label: KonyakLocalizations.of(context).text('Retry'),
+        label: KonyakLocalizations.of(context).retry,
         textColor: colorScheme.onErrorContainer,
         onPressed: () {
           final currentBottle =
@@ -317,7 +317,7 @@ extension _KonyakHomeLoaderBottles on _KonyakHomeLoaderState {
     _updateState(() {
       _archiveProgressMessage = KonyakLocalizations.of(
         context,
-      ).text('Exporting bottle archive...');
+      ).exportingBottleArchiveEllipsis;
     });
 
     late final BottleArchiveExportLoadResult result;
@@ -357,7 +357,7 @@ extension _KonyakHomeLoaderBottles on _KonyakHomeLoaderState {
     _updateState(() {
       _archiveProgressMessage = KonyakLocalizations.of(
         context,
-      ).text('Importing bottle archive...');
+      ).importingBottleArchiveEllipsis;
     });
 
     late final BottleArchiveImportLoadResult result;

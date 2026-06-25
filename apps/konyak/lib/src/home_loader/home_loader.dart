@@ -247,21 +247,19 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
         if (_isCreatingBottle)
           BlockingProgressOverlay(
             key: const ValueKey('create-bottle-progress'),
-            message: KonyakLocalizations.of(context).text('Creating bottle...'),
+            message: KonyakLocalizations.of(context).creatingBottleEllipsis,
           ),
         if (_activeProgramLaunchIds.isNotEmpty)
           BlockingProgressOverlay(
             key: const ValueKey('program-launch-progress'),
-            message: KonyakLocalizations.of(
-              context,
-            ).text('Launching program...'),
+            message: KonyakLocalizations.of(context).launchingProgramEllipsis,
           ),
         if (_isLoadingWinetricks)
           BlockingProgressOverlay(
             key: const ValueKey('winetricks-progress'),
             message: KonyakLocalizations.of(
               context,
-            ).text('Loading winetricks packages...'),
+            ).loadingWinetricksPackagesEllipsis,
           ),
         if (_winetricksInstallProgressMessage case final message?)
           BlockingProgressOverlay(

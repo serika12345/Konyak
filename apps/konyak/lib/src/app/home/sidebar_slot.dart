@@ -71,7 +71,7 @@ class CollapsedSidebarToggle extends StatelessWidget {
           child: Padding(
             padding: EdgeInsets.only(top: topPadding),
             child: IconButton(
-              tooltip: KonyakLocalizations.of(context).text('Toggle sidebar'),
+              tooltip: KonyakLocalizations.of(context).toggleSidebar,
               onPressed: onToggleSidebar,
               color: colors.sidebarIcon,
               iconSize: 20,

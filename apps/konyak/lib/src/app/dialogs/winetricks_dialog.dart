@@ -45,18 +45,14 @@ class _WinetricksDialogState extends State<WinetricksDialog> {
         width: 640,
         height: 420,
         child: widget.categories.isEmpty
-            ? Center(
-                child: Text(localizations.text('No winetricks verbs found.')),
-              )
+            ? Center(child: Text(localizations.noWinetricksVerbsFound))
             : Column(
                 children: [
                   TextField(
                     key: const ValueKey('winetricks-search-field'),
                     controller: _searchController,
                     decoration: InputDecoration(
-                      labelText: localizations.text(
-                        'Search winetricks packages',
-                      ),
+                      labelText: localizations.searchWinetricksPackages,
                       prefixIcon: const Icon(Icons.search),
                     ),
                     textInputAction: TextInputAction.search,
@@ -67,9 +63,7 @@ class _WinetricksDialogState extends State<WinetricksDialog> {
                     child: filteredCategories.isEmpty
                         ? Center(
                             child: Text(
-                              localizations.text(
-                                'No matching winetricks verbs.',
-                              ),
+                              localizations.noMatchingWinetricksVerbs,
                             ),
                           )
                         : DefaultTabController(
@@ -114,14 +108,14 @@ class _WinetricksDialogState extends State<WinetricksDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: Text(localizations.text('Cancel')),
+          child: Text(localizations.cancel),
         ),
         FilledButton.icon(
           onPressed: !canRun
               ? null
               : () => Navigator.of(context).pop(selectedVerbId),
           icon: const Icon(Icons.play_arrow),
-          label: Text(localizations.text('Run')),
+          label: Text(localizations.run),
         ),
       ],
     );
@@ -193,9 +187,7 @@ class _WinetricksVerbList extends StatelessWidget {
   Widget build(BuildContext context) {
     if (category.verbs.isEmpty) {
       return Center(
-        child: Text(
-          KonyakLocalizations.of(context).text('No verbs in this category.'),
-        ),
+        child: Text(KonyakLocalizations.of(context).noVerbsInThisCategory),
       );
     }
 

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/konyak_localizations.dart';
+
 const Map<String, String> enhancedSyncLabels = <String, String>{
   'none': 'None',
   'esync': 'ESync',
@@ -61,6 +63,66 @@ const Map<String, String> programLocaleLabels = <String, String>{
   'zh_CN.UTF-8': 'Chinese (Simplified)',
   'zh_TW.UTF-8': 'Chinese (Traditional)',
 };
+
+Map<String, String> localizedBuildVersionLabels(
+  KonyakLocalizations localizations,
+) {
+  return _localizedLabels(localizations, buildVersionLabels);
+}
+
+Map<String, String> localizedEnhancedSyncLabels(
+  KonyakLocalizations localizations,
+) {
+  return _localizedLabels(localizations, enhancedSyncLabels);
+}
+
+Map<String, String> localizedDxvkHudLabels(KonyakLocalizations localizations) {
+  return _localizedLabels(localizations, dxvkHudLabels);
+}
+
+Map<String, String> localizedProgramLocaleLabels(
+  KonyakLocalizations localizations,
+) {
+  return _localizedLabels(localizations, programLocaleLabels);
+}
+
+Map<String, String> _localizedLabels(
+  KonyakLocalizations localizations,
+  Map<String, String> labels,
+) {
+  return <String, String>{
+    for (final entry in labels.entries)
+      entry.key: _localizedConfigurationLabel(localizations, entry.value),
+  };
+}
+
+String _localizedConfigurationLabel(
+  KonyakLocalizations localizations,
+  String label,
+) {
+  return switch (label) {
+    'Auto' => localizations.auto,
+    'Chinese (Simplified)' => localizations.chineseSimplified,
+    'Chinese (Traditional)' => localizations.chineseTraditional,
+    'Default' => localizations.defaultLabel,
+    'English' => localizations.english,
+    'French' => localizations.french,
+    'Full' => localizations.full,
+    'German' => localizations.german,
+    'Italian' => localizations.italian,
+    'Japanese' => localizations.japanese,
+    'Korean' => localizations.korean,
+    'None' => localizations.none,
+    'Off' => localizations.off,
+    'Partial' => localizations.partial,
+    'Russian' => localizations.russian,
+    'Spanish' => localizations.spanish,
+    'Thai' => localizations.thai,
+    'Ukrainian' => localizations.ukrainian,
+    _ => label,
+  };
+}
+
 const Map<String, String> _windowsVersionLabels = <String, String>{
   'winxp64': 'Windows XP',
   'win7': 'Windows 7',
