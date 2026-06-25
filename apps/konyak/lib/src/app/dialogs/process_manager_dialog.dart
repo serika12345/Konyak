@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../bottles/bottle_summary.dart';
 import '../../cli/konyak_cli_client.dart';
+import '../../l10n/konyak_localizations.dart';
 import '../utils/program_labels.dart';
 import '../widgets/icon_file_image.dart';
 import '../widgets/konyak_snack_bar.dart';
@@ -84,7 +85,9 @@ class _ProcessManagerDialogState extends State<ProcessManagerDialog> {
     });
 
     final message = switch (result) {
-      TerminatedWineProcesses() => 'Terminated ${_processDisplayName(process)}',
+      TerminatedWineProcesses() => KonyakLocalizations.of(
+        context,
+      ).terminatedProcess(_processDisplayName(process)),
       WineProcessTerminationLoadFailure(:final message) => message,
     };
     ScaffoldMessenger.of(
@@ -94,20 +97,22 @@ class _ProcessManagerDialogState extends State<ProcessManagerDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = KonyakLocalizations.of(context);
+
     return AlertDialog(
       key: const ValueKey('process-manager-dialog'),
-      title: const Text('Process Manager'),
+      title: Text(localizations.text('Process Manager')),
       content: SizedBox(width: 620, child: _content()),
       actions: [
         TextButton.icon(
           key: const ValueKey('process-manager-refresh'),
           onPressed: _isLoading ? null : _loadProcesses,
           icon: const Icon(Icons.refresh, size: 18),
-          label: const Text('Refresh'),
+          label: Text(localizations.text('Refresh')),
         ),
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Close'),
+          child: Text(localizations.text('Close')),
         ),
       ],
     );
@@ -127,9 +132,13 @@ class _ProcessManagerDialogState extends State<ProcessManagerDialog> {
     }
 
     if (_processes.isEmpty) {
-      return const SizedBox(
+      return SizedBox(
         height: 180,
-        child: Center(child: Text('No Wine processes found.')),
+        child: Center(
+          child: Text(
+            KonyakLocalizations.of(context).text('No Wine processes found.'),
+          ),
+        ),
       );
     }
 
@@ -169,7 +178,7 @@ class _ProcessManagerDialogState extends State<ProcessManagerDialog> {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.close, size: 16),
-              label: const Text('Kill'),
+              label: Text(KonyakLocalizations.of(context).text('Kill')),
             ),
           );
         },

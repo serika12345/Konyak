@@ -71,6 +71,7 @@ extension _KonyakHomeLoaderSettings on _KonyakHomeLoaderState {
       context: context,
       builder: (dialogContext) {
         final textTheme = Theme.of(context).textTheme;
+        final localizations = KonyakLocalizations.of(context);
 
         return AlertDialog(
           contentPadding: const EdgeInsets.fromLTRB(32, 28, 32, 20),
@@ -95,11 +96,13 @@ extension _KonyakHomeLoaderSettings on _KonyakHomeLoaderState {
                   ],
                 ),
                 const SizedBox(height: 32),
-                const Text(
-                  'Wine/Proton runtime binaries are downloaded after launch and remain under their own licenses.',
+                Text(
+                  localizations.text(
+                    'Wine/Proton runtime binaries are downloaded after launch and remain under their own licenses.',
+                  ),
                 ),
                 const SizedBox(height: 24),
-                const Text('MIT License'),
+                Text(localizations.text('MIT License')),
               ],
             ),
           ),
@@ -117,11 +120,11 @@ extension _KonyakHomeLoaderSettings on _KonyakHomeLoaderState {
                   ),
                 );
               },
-              child: const Text('View licenses'),
+              child: Text(localizations.text('View licenses')),
             ),
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Close'),
+              child: Text(localizations.text('Close')),
             ),
           ],
         );
@@ -142,6 +145,7 @@ extension _KonyakHomeLoaderSettings on _KonyakHomeLoaderState {
       case LoadedAppSettings(:final settings):
         _appSettings = settings;
         widget.onAppearanceModeChanged(settings.appearanceMode);
+        widget.onLanguageModeChanged(settings.languageMode);
         return settings;
       case AppSettingsLoadFailure(:final message):
         _showSnackBar(message);

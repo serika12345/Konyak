@@ -13,23 +13,22 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-06-25 17:28 JST
+- Timestamp: 2026-06-25 18:37 JST
 - State: `completed`
 - Branch: `main`
-- Active work: removing inventoried implementation-debt compatibility paths.
-- Related TODO: removal of remaining archive/Wine-only compatibility fallback
-  after source-manifest runtime acquisition became the supported contract.
-- Purpose: retire tests and implementation paths that only preserve older
-  runtime acquisition, metadata, or layout debt instead of proving current
-  Konyak behavior.
-- Completed work: removed public runtime archive install options, removed
-  runtime update archive fallback, removed the Linux development manifest legacy
-  fallback, required backend records for runtime-backed Flutter controls,
-  limited GPTK/D3DMetal preservation to the canonical component layout, updated
-  macOS release extraction smoke to use a source manifest, and updated the
-  affected tests, VS Code/Nix wiring, governance checks, and documentation.
-- Remaining work: none for this cleanup.
+- Active work: implementing the first Konyak i18n pass with Japanese support.
+- Related TODO: none; user-requested Flutter/CLI settings feature.
+- Purpose: add a persisted language preference with System Default, English,
+  and Japanese choices, and localize the current Flutter UI to Japanese first.
+- Completed work: added the app/CLI language setting contract, wired Flutter
+  locale selection through `MaterialApp`, added Japanese localization strings,
+  localized the current app surfaces, added a bundled Noto Sans JP font for CJK
+  rendering, fixed golden font loading to avoid cross-test cached futures, and
+  added focused CLI, Flutter client, widget, and golden coverage.
+- Remaining work: none for this i18n pass.
 - Next action: choose the next open item from `docs/todo.md`.
 - Verification: passed `just verify-governance`, `just verify-safety`,
   `just format-check`, `just lint`, `just flutter-format-check`,
-  `just flutter-analyze`, `just flutter-test`, and `just cli-test`.
+  `just flutter-analyze`, `just flutter-test`, and `just cli-test`; regenerated
+  and visually checked
+  `apps/konyak/test/goldens/app_settings_dialog_language.png`.

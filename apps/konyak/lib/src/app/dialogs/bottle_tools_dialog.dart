@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/konyak_localizations.dart';
+
 final class BottleToolAction {
   const BottleToolAction._({required this.kind, required this.id});
 
@@ -22,8 +24,10 @@ class BottleToolsDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = KonyakLocalizations.of(context);
+
     return AlertDialog(
-      title: Text('Tools for $bottleName'),
+      title: Text(localizations.toolsForBottle(bottleName)),
       content: SizedBox(
         width: 420,
         child: SingleChildScrollView(
@@ -33,7 +37,7 @@ class BottleToolsDialog extends StatelessWidget {
               for (final item in _bottleToolItems)
                 ListTile(
                   leading: Icon(item.icon),
-                  title: Text(item.label),
+                  title: Text(localizations.text(item.label)),
                   dense: true,
                   onTap: () => Navigator.of(context).pop(item.action),
                 ),

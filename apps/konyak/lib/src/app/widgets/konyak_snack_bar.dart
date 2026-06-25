@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/konyak_localizations.dart';
+
 const _snackBarHorizontalMargin = 16.0;
 const _snackBarBottomMargin = 64.0;
 const _snackBarLeadingWidth = 36.0;
@@ -87,7 +89,9 @@ class _CompactSnackBarMessage extends StatelessWidget {
                   minimumSize: const Size(0, 32),
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
-                child: const Text('Show detail'),
+                child: Text(
+                  KonyakLocalizations.of(context).text('Show detail'),
+                ),
               ),
             ],
           ],
@@ -121,7 +125,7 @@ Future<void> _showSnackBarDetails(BuildContext context, String message) {
     context: context,
     builder: (context) {
       return AlertDialog(
-        title: const Text('Details'),
+        title: Text(KonyakLocalizations.of(context).text('Details')),
         content: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 560),
           child: SingleChildScrollView(child: SelectableText(message)),
@@ -129,7 +133,7 @@ Future<void> _showSnackBarDetails(BuildContext context, String message) {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Close'),
+            child: Text(KonyakLocalizations.of(context).text('Close')),
           ),
         ],
       );

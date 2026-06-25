@@ -220,7 +220,9 @@ extension _KonyakHomeLoaderBottles on _KonyakHomeLoaderState {
           _bottles = removeBottle(_bottles, bottle.id);
           _errorMessage = null;
         });
-        _showSnackBar('Deleted ${bottle.name}');
+        _showSnackBar(
+          KonyakLocalizations.of(context).deletedBottle(bottle.name),
+        );
       case MissingBottleDelete(:final message):
         _showSnackBar(message);
       case BottleDeleteLoadFailure(:final message):
@@ -236,7 +238,7 @@ extension _KonyakHomeLoaderBottles on _KonyakHomeLoaderState {
     _showWarningSnackBar(
       message,
       action: SnackBarAction(
-        label: 'Retry',
+        label: KonyakLocalizations.of(context).text('Retry'),
         textColor: colorScheme.onErrorContainer,
         onPressed: () {
           final currentBottle =
@@ -269,7 +271,8 @@ extension _KonyakHomeLoaderBottles on _KonyakHomeLoaderState {
     _handleBottleUpdateResult(
       result,
       oldBottleId: bottle.id,
-      successMessage: (bottle) => 'Renamed ${bottle.name}',
+      successMessage: (bottle) =>
+          KonyakLocalizations.of(context).renamedBottle(bottle.name),
     );
   }
 
@@ -298,7 +301,8 @@ extension _KonyakHomeLoaderBottles on _KonyakHomeLoaderState {
 
     _handleBottleUpdateResult(
       result,
-      successMessage: (bottle) => 'Moved ${bottle.name}',
+      successMessage: (bottle) =>
+          KonyakLocalizations.of(context).movedBottle(bottle.name),
     );
   }
 
@@ -311,7 +315,9 @@ extension _KonyakHomeLoaderBottles on _KonyakHomeLoaderState {
     }
 
     _updateState(() {
-      _archiveProgressMessage = 'Exporting bottle archive...';
+      _archiveProgressMessage = KonyakLocalizations.of(
+        context,
+      ).text('Exporting bottle archive...');
     });
 
     late final BottleArchiveExportLoadResult result;
@@ -334,7 +340,9 @@ extension _KonyakHomeLoaderBottles on _KonyakHomeLoaderState {
 
     switch (result) {
       case ExportedBottleArchive():
-        _showSnackBar('Exported ${bottle.name}');
+        _showSnackBar(
+          KonyakLocalizations.of(context).exportedBottle(bottle.name),
+        );
       case BottleArchiveExportLoadFailure(:final message):
         _showSnackBar(message);
     }
@@ -347,7 +355,9 @@ extension _KonyakHomeLoaderBottles on _KonyakHomeLoaderState {
     }
 
     _updateState(() {
-      _archiveProgressMessage = 'Importing bottle archive...';
+      _archiveProgressMessage = KonyakLocalizations.of(
+        context,
+      ).text('Importing bottle archive...');
     });
 
     late final BottleArchiveImportLoadResult result;
@@ -370,7 +380,9 @@ extension _KonyakHomeLoaderBottles on _KonyakHomeLoaderState {
     switch (result) {
       case ImportedBottleArchive(:final bottle):
         _storeBottle(bottle);
-        _showSnackBar('Imported ${bottle.name}');
+        _showSnackBar(
+          KonyakLocalizations.of(context).importedBottle(bottle.name),
+        );
       case BottleArchiveImportLoadFailure(:final message):
         _showSnackBar(message);
     }

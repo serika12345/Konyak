@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../bottles/bottle_summary.dart';
+import '../../l10n/konyak_localizations.dart';
 import '../app_constants.dart';
 
 class BottleActionPanel extends StatelessWidget {
@@ -18,6 +19,7 @@ class BottleActionPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = KonyakThemeColors.of(context);
+    final localizations = KonyakLocalizations.of(context);
 
     return Container(
       constraints: const BoxConstraints(minHeight: 75),
@@ -30,7 +32,7 @@ class BottleActionPanel extends StatelessWidget {
         children: [
           _BottleActionPanelRow(
             icon: Icons.list,
-            label: 'Installed Programs',
+            label: localizations.text('Installed Programs'),
             onTap: onShowBottlePrograms == null
                 ? null
                 : () => onShowBottlePrograms!(bottle),
@@ -43,7 +45,7 @@ class BottleActionPanel extends StatelessWidget {
           Divider(height: 1, color: colors.divider, indent: 14),
           _BottleActionPanelRow(
             icon: Icons.settings_outlined,
-            label: 'Bottle Configuration',
+            label: localizations.text('Bottle Configuration'),
             onTap: onShowBottleConfiguration == null
                 ? null
                 : () => onShowBottleConfiguration!(bottle),

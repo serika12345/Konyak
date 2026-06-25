@@ -25,7 +25,9 @@ extension _KonyakHomeLoaderWineProcesses on _KonyakHomeLoaderState {
     }
 
     final message = switch (result) {
-      TerminatedWineProcesses() => 'Stopped processes in ${bottle.name}',
+      TerminatedWineProcesses() => KonyakLocalizations.of(
+        context,
+      ).stoppedProcessesIn(bottle.name),
       WineProcessTerminationLoadFailure(:final message) => message,
     };
 
@@ -65,7 +67,7 @@ extension _KonyakHomeLoaderWineProcesses on _KonyakHomeLoaderState {
         await showDialog<void>(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('Latest run log'),
+            title: Text(KonyakLocalizations.of(context).text('Latest run log')),
             content: SizedBox(
               width: 640,
               child: SingleChildScrollView(child: SelectableText(content)),
@@ -73,7 +75,7 @@ extension _KonyakHomeLoaderWineProcesses on _KonyakHomeLoaderState {
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Close'),
+                child: Text(KonyakLocalizations.of(context).text('Close')),
               ),
             ],
           ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../bottles/bottle_summary.dart';
+import '../../l10n/konyak_localizations.dart';
 import '../../runtimes/runtime_summary.dart';
 import '../app_constants.dart';
 import '../app_platform.dart';
@@ -97,6 +98,7 @@ class KonyakBottleDetail extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = KonyakThemeColors.of(context);
+    final localizations = KonyakLocalizations.of(context);
     final activeBottle = bottle;
     final activeProgram = activeBottle == null ? null : selectedProgram;
 
@@ -113,9 +115,9 @@ class KonyakBottleDetail extends StatelessWidget {
         children: [
           KonyakTopBar(
             title: isProgramConfiguration
-                ? '${activeProgram.name} Configuration'
+                ? localizations.programConfigurationTitle(activeProgram.name)
                 : isConfiguration
-                ? 'Bottle Configuration'
+                ? localizations.text('Bottle Configuration')
                 : activeBottle?.name ?? 'Konyak',
             onBack: isConfiguration || isProgramConfiguration
                 ? onBackToBottle

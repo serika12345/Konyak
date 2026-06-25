@@ -34,7 +34,9 @@ extension _KonyakHomeLoaderWinetricks on _KonyakHomeLoaderState {
         }
 
         _updateState(() {
-          _winetricksInstallProgressMessage = 'Installing $verb...';
+          _winetricksInstallProgressMessage = KonyakLocalizations.of(
+            context,
+          ).installingVerb(verb);
         });
 
         late final ProgramRunLoadResult runResult;

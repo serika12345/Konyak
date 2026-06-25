@@ -52,6 +52,7 @@ void defineAppAndBottleContractTests() {
           terminateWineProcessesOnClose: false,
           defaultBottlePath: '/Volumes/Games/Bottles',
           appearanceMode: AppAppearanceMode.light,
+          languageMode: AppLanguageMode.japanese,
           automaticallyCheckForKonyakUpdates: true,
           automaticallyCheckForWineUpdates: false,
           automaticallyPinNewInstalledPrograms: false,
@@ -69,6 +70,7 @@ void defineAppAndBottleContractTests() {
         'terminateWineProcessesOnClose': false,
         'defaultBottlePath': '/Volumes/Games/Bottles',
         'appearanceMode': 'light',
+        'languageMode': 'ja',
         'automaticallyCheckForKonyakUpdates': true,
         'automaticallyCheckForWineUpdates': false,
         'automaticallyPinNewInstalledPrograms': false,
@@ -84,7 +86,7 @@ void defineAppAndBottleContractTests() {
     final result = runCli(const [
       'set-app-settings',
       '--settings-json',
-      '{"terminateWineProcessesOnClose":false,"defaultBottlePath":"/Volumes/Games/Bottles","appearanceMode":"light","automaticallyCheckForKonyakUpdates":true,"automaticallyCheckForWineUpdates":false,"automaticallyPinNewInstalledPrograms":false}',
+      '{"terminateWineProcessesOnClose":false,"defaultBottlePath":"/Volumes/Games/Bottles","appearanceMode":"light","languageMode":"ja","automaticallyCheckForKonyakUpdates":true,"automaticallyCheckForWineUpdates":false,"automaticallyPinNewInstalledPrograms":false}',
       '--json',
     ], appSettingsRepository: repository);
 
@@ -96,6 +98,7 @@ void defineAppAndBottleContractTests() {
         terminateWineProcessesOnClose: false,
         defaultBottlePath: '/Volumes/Games/Bottles',
         appearanceMode: AppAppearanceMode.light,
+        languageMode: AppLanguageMode.japanese,
         automaticallyCheckForKonyakUpdates: true,
         automaticallyCheckForWineUpdates: false,
         automaticallyPinNewInstalledPrograms: false,
@@ -107,6 +110,7 @@ void defineAppAndBottleContractTests() {
       'terminateWineProcessesOnClose': false,
       'defaultBottlePath': '/Volumes/Games/Bottles',
       'appearanceMode': 'light',
+      'languageMode': 'ja',
       'automaticallyCheckForKonyakUpdates': true,
       'automaticallyCheckForWineUpdates': false,
       'automaticallyPinNewInstalledPrograms': false,
@@ -141,6 +145,7 @@ void defineAppAndBottleContractTests() {
       'terminateWineProcessesOnClose': true,
       'defaultBottlePath': '/Volumes/Games/Bottles',
       'appearanceMode': 'system',
+      'languageMode': 'system',
       'automaticallyCheckForKonyakUpdates': false,
       'automaticallyCheckForWineUpdates': true,
       'automaticallyPinNewInstalledPrograms': true,

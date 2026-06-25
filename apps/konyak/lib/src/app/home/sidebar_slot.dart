@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/konyak_localizations.dart';
 import '../app_constants.dart';
 import 'sidebar_metrics.dart';
 
@@ -70,7 +71,7 @@ class CollapsedSidebarToggle extends StatelessWidget {
           child: Padding(
             padding: EdgeInsets.only(top: topPadding),
             child: IconButton(
-              tooltip: 'Toggle sidebar',
+              tooltip: KonyakLocalizations.of(context).text('Toggle sidebar'),
               onPressed: onToggleSidebar,
               color: colors.sidebarIcon,
               iconSize: 20,

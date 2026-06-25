@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/konyak_localizations.dart';
 import '../configuration_labels.dart';
 
 class CreateBottleInput {
@@ -40,9 +41,10 @@ class _CreateBottleDialogState extends State<CreateBottleDialog> {
   @override
   Widget build(BuildContext context) {
     final canSubmit = _nameController.text.trim().isNotEmpty;
+    final localizations = KonyakLocalizations.of(context);
 
     return AlertDialog(
-      title: const Text('Create bottle'),
+      title: Text(localizations.text('Create bottle')),
       content: SizedBox(
         width: 360,
         child: Column(
@@ -51,7 +53,9 @@ class _CreateBottleDialogState extends State<CreateBottleDialog> {
             TextField(
               controller: _nameController,
               autofocus: true,
-              decoration: const InputDecoration(labelText: 'Name'),
+              decoration: InputDecoration(
+                labelText: localizations.text('Name'),
+              ),
               textInputAction: TextInputAction.done,
               onChanged: (_) => setState(() {}),
               onSubmitted: (_) => _submit(),
@@ -59,7 +63,9 @@ class _CreateBottleDialogState extends State<CreateBottleDialog> {
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
               initialValue: _windowsVersion,
-              decoration: const InputDecoration(labelText: 'Windows version'),
+              decoration: InputDecoration(
+                labelText: localizations.text('Windows version'),
+              ),
               items: windowsVersionMenuItems(_windowsVersion),
               onChanged: (value) {
                 if (value == null) {
@@ -77,12 +83,12 @@ class _CreateBottleDialogState extends State<CreateBottleDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(localizations.text('Cancel')),
         ),
         FilledButton.icon(
           onPressed: canSubmit ? _submit : null,
           icon: const Icon(Icons.add),
-          label: const Text('Create'),
+          label: Text(localizations.text('Create')),
         ),
       ],
     );

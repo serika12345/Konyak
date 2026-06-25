@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/konyak_localizations.dart';
 import '../widgets/konyak_menu_bar.dart';
 
 class KonyakHomeMenuBar extends StatelessWidget {
@@ -20,38 +21,40 @@ class KonyakHomeMenuBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = KonyakLocalizations.of(context);
+
     return KonyakMenuBar(
       menus: [
         KonyakMenuDefinition(
           label: 'Konyak',
           items: [
             KonyakMenuItemDefinition(
-              label: 'About Konyak',
+              label: localizations.text('About Konyak'),
               icon: Icons.info_outline,
               onPressed: onShowAbout,
             ),
             KonyakMenuItemDefinition(
-              label: 'Settings…',
+              label: localizations.text('Settings…'),
               icon: Icons.settings_outlined,
               onPressed: onShowSettings,
             ),
             KonyakMenuItemDefinition(
-              label: 'Check for Updates…',
+              label: localizations.text('Check for Updates…'),
               icon: Icons.system_update_alt,
               onPressed: onCheckKonyakUpdates,
             ),
             KonyakMenuItemDefinition(
-              label: 'Reinstall Linux Runtime',
+              label: localizations.text('Reinstall Linux Runtime'),
               icon: Icons.restart_alt,
               onPressed: onReinstallRuntime,
             ),
           ],
         ),
         KonyakMenuDefinition(
-          label: 'File',
+          label: localizations.text('File'),
           items: [
             KonyakMenuItemDefinition(
-              label: 'Import Bottle',
+              label: localizations.text('Import Bottle'),
               icon: Icons.file_upload_outlined,
               onPressed: onImportBottleArchive,
             ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/konyak_localizations.dart';
 import '../../runtimes/runtime_summary.dart';
 import 'app_settings_rows.dart';
 import 'app_settings_runtime_view_model.dart';
@@ -32,6 +33,7 @@ class AppSettingsRuntimeSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = KonyakLocalizations.of(context);
     final runtimeState = resolveRuntimeSectionState(
       runtimes: runtimes,
       platform: platform,
@@ -41,72 +43,84 @@ class AppSettingsRuntimeSection extends StatelessWidget {
 
     if (isLoading && (runtime == null || stack == null)) {
       return AppSettingsSection(
-        title: title,
-        children: const [
-          AppSettingsDetailRow(label: 'Status', value: 'Loading'),
+        title: localizations.text(title),
+        children: [
+          AppSettingsDetailRow(
+            label: localizations.text('Status'),
+            value: localizations.text('Loading'),
+          ),
         ],
       );
     }
 
     if (runtime == null || stack == null) {
       return AppSettingsSection(
-        title: title,
+        title: localizations.text(title),
         children: [
           AppSettingsDetailRow(
-            label: 'Status',
-            value: 'Unavailable',
-            detail: loadError ?? 'No managed runtime stack detected.',
+            label: localizations.text('Status'),
+            value: localizations.text('Unavailable'),
+            detail:
+                loadError ??
+                localizations.text('No managed runtime stack detected.'),
           ),
-          if (onInstallRuntime != null) _installButtonBlock('Install'),
+          if (onInstallRuntime != null)
+            _installButtonBlock(localizations.text('Install'), localizations),
         ],
       );
     }
 
     return AppSettingsSection(
-      title: title,
+      title: localizations.text(title),
       children: [
         if (loadError != null)
           AppSettingsDetailRow(
-            label: 'Runtime install',
-            value: 'Failed',
+            label: localizations.text('Runtime install'),
+            value: localizations.text('Failed'),
             detail: loadError,
           ),
         AppSettingsDetailRow(
           label: runtime.name,
-          value: runtime.isInstalled == true ? 'Installed' : 'Not installed',
+          value: runtime.isInstalled == true
+              ? localizations.text('Installed')
+              : localizations.text('Not installed'),
           detail: runtime.distributionKind == null
               ? null
-              : 'Distribution: ${runtime.distributionKind}',
+              : '${localizations.text('Distribution')}: ${runtime.distributionKind}',
         ),
         AppSettingsDetailRow(
           label: stack.name,
-          value: runtimeStackStatusLabel(stack),
-          detail: 'Compatibility: ${stack.compatibilityTarget}',
+          value: localizations.text(runtimeStackStatusLabel(stack)),
+          detail:
+              '${localizations.text('Compatibility')}: ${stack.compatibilityTarget}',
           trailing: runtimeState.shouldOfferInstall && onInstallRuntime != null
-              ? _installButton(runtimeState.installButtonLabel)
+              ? _installButton(
+                  localizations.text(runtimeState.installButtonLabel),
+                  localizations,
+                )
               : null,
         ),
         for (final component in stack.components)
           AppSettingsDetailRow(
             label: component.name,
-            value: componentStatusLabel(component),
+            value: localizedComponentStatusLabel(component, localizations),
           ),
-        if (platform == 'macos') _gptkInstallPanel(stack),
+        if (platform == 'macos') _gptkInstallPanel(stack, localizations),
       ],
     );
   }
 
-  Widget _installButtonBlock(String label) {
+  Widget _installButtonBlock(String label, KonyakLocalizations localizations) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       child: Align(
         alignment: Alignment.centerLeft,
-        child: _installButton(label),
+        child: _installButton(label, localizations),
       ),
     );
   }
 
-  Widget _installButton(String label) {
+  Widget _installButton(String label, KonyakLocalizations localizations) {
     return FilledButton.icon(
       key: const ValueKey('app-settings-install-runtime-button'),
       onPressed: isInstalling ? null : onInstallRuntime,
@@ -120,21 +134,23 @@ class AppSettingsRuntimeSection extends StatelessWidget {
               child: CircularProgressIndicator(strokeWidth: 2),
             )
           : const Icon(Icons.download),
-      label: Text(isInstalling ? 'Installing' : label),
+      label: Text(isInstalling ? localizations.text('Installing') : label),
     );
   }
 
-  Widget _gptkInstallPanel(RuntimeStackSummary stack) {
+  Widget _gptkInstallPanel(
+    RuntimeStackSummary stack,
+    KonyakLocalizations localizations,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'D3DMetal is included in Apple Game Porting Toolkit. Konyak does '
-            'not bundle or redistribute it. Download the GPTK DMG from Apple '
-            'Developer, select the DMG, and review Apple License.pdf for '
-            'commercial use or redistribution.',
+          Text(
+            localizations.text(
+              'D3DMetal is included in Apple Game Porting Toolkit. Konyak does not bundle or redistribute it. Download the GPTK DMG from Apple Developer, select the DMG, and review Apple License.pdf for commercial use or redistribution.',
+            ),
           ),
           const SizedBox(height: 12),
           Wrap(
@@ -145,7 +161,7 @@ class AppSettingsRuntimeSection extends StatelessWidget {
                 key: const ValueKey('app-settings-open-gptk-page-button'),
                 onPressed: onOpenGptkPage,
                 icon: const Icon(Icons.open_in_browser),
-                label: const Text('Open GPTK Source'),
+                label: Text(localizations.text('Open GPTK Source')),
               ),
               FilledButton.icon(
                 key: const ValueKey('app-settings-install-gptk-wine-button'),
@@ -158,8 +174,8 @@ class AppSettingsRuntimeSection extends StatelessWidget {
                     : const Icon(Icons.folder_copy),
                 label: Text(
                   isInstallingGptkWine
-                      ? 'Importing D3DMetal'
-                      : 'Select GPTK DMG',
+                      ? localizations.text('Importing D3DMetal')
+                      : localizations.text('Select GPTK DMG'),
                 ),
               ),
             ],
@@ -168,4 +184,18 @@ class AppSettingsRuntimeSection extends StatelessWidget {
       ),
     );
   }
+}
+
+String localizedComponentStatusLabel(
+  RuntimeStackComponentSummary component,
+  KonyakLocalizations localizations,
+) {
+  final status = component.isInstalled
+      ? localizations.text('Installed')
+      : localizations.text('Missing');
+  if (component.version == null || component.version!.trim().isEmpty) {
+    return status;
+  }
+
+  return '$status | ${component.version}';
 }

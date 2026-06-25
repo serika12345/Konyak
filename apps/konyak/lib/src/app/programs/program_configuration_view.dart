@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../bottles/bottle_summary.dart';
+import '../../l10n/konyak_localizations.dart';
 import '../app_constants.dart';
 import '../configuration_labels.dart';
 import '../widgets/configuration_controls.dart';
@@ -69,6 +70,7 @@ class _ProgramConfigurationViewState extends State<ProgramConfigurationView> {
   @override
   Widget build(BuildContext context) {
     final colors = KonyakThemeColors.of(context);
+    final localizations = KonyakLocalizations.of(context);
 
     if (widget.isLoading && widget.settings == null) {
       return Center(child: CircularProgressIndicator(color: colors.accent));
@@ -80,14 +82,14 @@ class _ProgramConfigurationViewState extends State<ProgramConfigurationView> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           BottleConfigurationSection(
-            title: 'Program',
+            title: localizations.text('Program'),
             children: [
               BottleConfigurationRow(
-                label: 'Locale',
+                label: localizations.text('Locale'),
                 trailing: ConfigurationDropdown(
                   key: const ValueKey('program-config-locale'),
                   value: _locale,
-                  labels: programLocaleLabels,
+                  labels: localizations.textMap(programLocaleLabels),
                   onChanged: (locale) {
                     setState(() {
                       _locale = locale;
@@ -96,7 +98,7 @@ class _ProgramConfigurationViewState extends State<ProgramConfigurationView> {
                 ),
               ),
               BottleConfigurationRow(
-                label: 'Arguments',
+                label: localizations.text('Arguments'),
                 trailing: ConfigurationTextField(
                   key: const ValueKey('program-config-arguments-field'),
                   controller: _argumentsController,
@@ -107,7 +109,7 @@ class _ProgramConfigurationViewState extends State<ProgramConfigurationView> {
           ),
           const SizedBox(height: 14),
           BottleConfigurationSection(
-            title: 'Environment',
+            title: localizations.text('Environment'),
             children: [
               ProgramEnvironmentEditor(
                 controllers: _environmentControllers,
@@ -121,7 +123,7 @@ class _ProgramConfigurationViewState extends State<ProgramConfigurationView> {
             alignment: Alignment.centerRight,
             child: KonyakBottomButton(
               key: const ValueKey('program-config-save'),
-              label: 'Save',
+              label: localizations.text('Save'),
               onPressed: widget.onProgramSettingsChanged == null
                   ? null
                   : _saveSettings,

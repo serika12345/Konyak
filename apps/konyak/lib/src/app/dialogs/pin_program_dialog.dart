@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../files/program_file_picker.dart';
+import '../../l10n/konyak_localizations.dart';
 import '../utils/program_labels.dart';
 
 class PinProgramInput {
@@ -66,9 +67,10 @@ class _PinProgramDialogState extends State<PinProgramDialog> {
     final canSubmit =
         _nameController.text.trim().isNotEmpty &&
         _programPathController.text.trim().isNotEmpty;
+    final localizations = KonyakLocalizations.of(context);
 
     return AlertDialog(
-      title: Text('Pin program in ${widget.bottleName}'),
+      title: Text(localizations.pinProgramIn(widget.bottleName)),
       content: SizedBox(
         width: 460,
         child: Column(
@@ -78,7 +80,9 @@ class _PinProgramDialogState extends State<PinProgramDialog> {
               key: const ValueKey('pin-program-name-field'),
               controller: _nameController,
               autofocus: true,
-              decoration: const InputDecoration(labelText: 'Name'),
+              decoration: InputDecoration(
+                labelText: localizations.text('Name'),
+              ),
               textInputAction: TextInputAction.next,
               onChanged: (_) => setState(() {}),
             ),
@@ -87,9 +91,9 @@ class _PinProgramDialogState extends State<PinProgramDialog> {
               key: const ValueKey('pin-program-path-field'),
               controller: _programPathController,
               decoration: InputDecoration(
-                labelText: 'Program path',
+                labelText: localizations.text('Program path'),
                 suffixIcon: IconButton(
-                  tooltip: 'Choose program file',
+                  tooltip: localizations.text('Choose program file'),
                   onPressed: _chooseProgramFile,
                   icon: const Icon(Icons.folder_open),
                 ),
@@ -111,12 +115,12 @@ class _PinProgramDialogState extends State<PinProgramDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(localizations.text('Cancel')),
         ),
         FilledButton.icon(
           onPressed: canSubmit ? _submit : null,
           icon: const Icon(Icons.push_pin_outlined),
-          label: const Text('Pin'),
+          label: Text(localizations.text('Pin')),
         ),
       ],
     );

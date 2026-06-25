@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../bottles/bottle_summary.dart';
+import '../../l10n/konyak_localizations.dart';
 
 sealed class OpenExecutableDecision {
   const OpenExecutableDecision();
@@ -72,9 +73,10 @@ class _OpenExecutableDialogState extends State<OpenExecutableDialog> {
   @override
   Widget build(BuildContext context) {
     final selectedBottle = _selectedBottle;
+    final localizations = KonyakLocalizations.of(context);
 
     return AlertDialog(
-      title: const Text('Open executable'),
+      title: Text(localizations.text('Open executable')),
       content: SizedBox(
         width: 440,
         child: Column(
@@ -84,11 +86,17 @@ class _OpenExecutableDialogState extends State<OpenExecutableDialog> {
             SelectableText(widget.programPath),
             const SizedBox(height: 16),
             if (widget.bottles.isEmpty)
-              const Text('Create a bottle before running this executable.')
+              Text(
+                localizations.text(
+                  'Create a bottle before running this executable.',
+                ),
+              )
             else
               DropdownButtonFormField<String>(
                 initialValue: _selectedBottleId,
-                decoration: const InputDecoration(labelText: 'Bottle'),
+                decoration: InputDecoration(
+                  labelText: localizations.text('Bottle'),
+                ),
                 items: [
                   for (final bottle in widget.bottles)
                     DropdownMenuItem<String>(
@@ -108,19 +116,19 @@ class _OpenExecutableDialogState extends State<OpenExecutableDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(localizations.text('Cancel')),
         ),
         TextButton.icon(
           onPressed: () {
             Navigator.of(context).pop(const CreateBottleForExecutable());
           },
           icon: const Icon(Icons.add),
-          label: const Text('Create Bottle'),
+          label: Text(localizations.text('Create Bottle')),
         ),
         FilledButton.icon(
           onPressed: selectedBottle == null ? null : _run,
           icon: const Icon(Icons.play_arrow),
-          label: const Text('Run'),
+          label: Text(localizations.text('Run')),
         ),
       ],
     );

@@ -4,6 +4,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import '../../bottles/bottle_summary.dart';
+import '../../l10n/konyak_localizations.dart';
 import '../app_constants.dart';
 import '../app_platform.dart';
 import 'pinned_program_context_menu.dart';
@@ -142,6 +143,7 @@ class _PinnedProgramTileState extends State<PinnedProgramTile>
 
   Future<void> _showContextMenu(Offset globalPosition) async {
     final colors = KonyakThemeColors.of(context);
+    final localizations = KonyakLocalizations.of(context);
     final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
     final selectedAction = await showMenu<PinnedProgramContextMenuAction>(
       context: context,
@@ -156,7 +158,11 @@ class _PinnedProgramTileState extends State<PinnedProgramTile>
         borderRadius: BorderRadius.circular(10),
       ),
       constraints: const BoxConstraints(minWidth: 220, maxWidth: 220),
-      items: pinnedProgramContextMenuItems(colors, widget.platform),
+      items: pinnedProgramContextMenuItems(
+        colors,
+        widget.platform,
+        localizations,
+      ),
     );
 
     if (!mounted || selectedAction == null) {
@@ -181,10 +187,11 @@ class _PinnedProgramTileState extends State<PinnedProgramTile>
   @override
   Widget build(BuildContext context) {
     final colors = KonyakThemeColors.of(context);
+    final localizations = KonyakLocalizations.of(context);
     final isEnabled = widget.onRunProgramPath != null;
 
     return Tooltip(
-      message: '${widget.program.path}\nDouble-click to run',
+      message: localizations.pinnedProgramTooltip(widget.program.path),
       child: Listener(
         behavior: HitTestBehavior.opaque,
         onPointerDown: isEnabled ? _handlePointerDown : null,

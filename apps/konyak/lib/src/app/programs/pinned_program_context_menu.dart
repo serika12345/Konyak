@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/konyak_localizations.dart';
 import '../app_constants.dart';
 import '../app_platform.dart';
 import '../home/sidebar.dart';
@@ -10,15 +11,16 @@ List<PopupMenuEntry<PinnedProgramContextMenuAction>>
 pinnedProgramContextMenuItems(
   KonyakThemeColors colors,
   KonyakPlatform platform,
+  KonyakLocalizations localizations,
 ) {
   return [
-    const PopupMenuItem<PinnedProgramContextMenuAction>(
+    PopupMenuItem<PinnedProgramContextMenuAction>(
       value: PinnedProgramContextMenuAction.run,
       height: 36,
       child: BottleContextMenuItem(
-        key: ValueKey('pinned-program-context-run'),
+        key: const ValueKey('pinned-program-context-run'),
         icon: Icons.play_arrow_outlined,
-        label: 'Run...',
+        label: localizations.text('Run...'),
       ),
     ),
     const PopupMenuDivider(height: 8),
@@ -26,7 +28,7 @@ pinnedProgramContextMenuItems(
       enabled: false,
       height: 28,
       child: Text(
-        'Settings',
+        localizations.text('Settings'),
         key: const ValueKey('pinned-program-context-settings-header'),
         style: TextStyle(
           color: colors.mutedText,
@@ -35,32 +37,32 @@ pinnedProgramContextMenuItems(
         ),
       ),
     ),
-    const PopupMenuItem<PinnedProgramContextMenuAction>(
+    PopupMenuItem<PinnedProgramContextMenuAction>(
       value: PinnedProgramContextMenuAction.config,
       height: 36,
       child: BottleContextMenuItem(
-        key: ValueKey('pinned-program-context-config'),
+        key: const ValueKey('pinned-program-context-config'),
         icon: Icons.settings_outlined,
-        label: 'Config',
+        label: localizations.text('Config'),
       ),
     ),
-    const PopupMenuItem<PinnedProgramContextMenuAction>(
+    PopupMenuItem<PinnedProgramContextMenuAction>(
       value: PinnedProgramContextMenuAction.unpin,
       height: 36,
       child: BottleContextMenuItem(
-        key: ValueKey('pinned-program-context-unpin'),
+        key: const ValueKey('pinned-program-context-unpin'),
         icon: Icons.push_pin_outlined,
-        label: 'Unpin',
+        label: localizations.text('Unpin'),
       ),
     ),
     const PopupMenuDivider(height: 8),
-    const PopupMenuItem<PinnedProgramContextMenuAction>(
+    PopupMenuItem<PinnedProgramContextMenuAction>(
       value: PinnedProgramContextMenuAction.rename,
       height: 36,
       child: BottleContextMenuItem(
-        key: ValueKey('pinned-program-context-rename'),
+        key: const ValueKey('pinned-program-context-rename'),
         icon: Icons.edit_outlined,
-        label: 'Rename...',
+        label: localizations.text('Rename...'),
       ),
     ),
     PopupMenuItem<PinnedProgramContextMenuAction>(
@@ -69,7 +71,7 @@ pinnedProgramContextMenuItems(
       child: BottleContextMenuItem(
         key: const ValueKey('pinned-program-context-show-in-finder'),
         icon: Icons.folder_outlined,
-        label: platform.showInFileManagerLabel,
+        label: localizations.text(platform.showInFileManagerLabel),
       ),
     ),
   ];

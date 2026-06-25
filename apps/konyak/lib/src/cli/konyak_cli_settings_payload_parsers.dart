@@ -113,6 +113,7 @@ AppSettingsSummary? _parseAppSettingsSummary(Object? value) {
   final terminateWineProcessesOnClose = value['terminateWineProcessesOnClose'];
   final defaultBottlePath = value['defaultBottlePath'];
   final appearanceMode = appAppearanceModeFromJson(value['appearanceMode']);
+  final languageMode = appLanguageModeFromJson(value['languageMode']);
   final automaticallyCheckForKonyakUpdates =
       value['automaticallyCheckForKonyakUpdates'];
   final automaticallyCheckForWineUpdates =
@@ -124,6 +125,7 @@ AppSettingsSummary? _parseAppSettingsSummary(Object? value) {
       defaultBottlePath is! String ||
       defaultBottlePath.trim().isEmpty ||
       appearanceMode == null ||
+      languageMode == null ||
       automaticallyCheckForKonyakUpdates is! bool ||
       automaticallyCheckForWineUpdates is! bool ||
       (automaticallyPinNewInstalledPrograms != null &&
@@ -135,6 +137,7 @@ AppSettingsSummary? _parseAppSettingsSummary(Object? value) {
     terminateWineProcessesOnClose: terminateWineProcessesOnClose,
     defaultBottlePath: defaultBottlePath,
     appearanceMode: appearanceMode,
+    languageMode: languageMode,
     automaticallyCheckForKonyakUpdates: automaticallyCheckForKonyakUpdates,
     automaticallyCheckForWineUpdates: automaticallyCheckForWineUpdates,
     automaticallyPinNewInstalledPrograms:

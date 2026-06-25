@@ -64,7 +64,7 @@ extension _KonyakHomeLoaderRuntimes on _KonyakHomeLoaderState {
       return false;
     }
 
-    _showSnackBar('Updates available: ${labels.join(', ')}');
+    _showSnackBar(KonyakLocalizations.of(context).updatesAvailable(labels));
     return false;
   }
 
@@ -86,7 +86,9 @@ extension _KonyakHomeLoaderRuntimes on _KonyakHomeLoaderState {
 
     _updateState(() {
       _isCheckingKonyakUpdate = true;
-      _konyakUpdateCheckProgressMessage = 'Checking for Konyak updates...';
+      _konyakUpdateCheckProgressMessage = KonyakLocalizations.of(
+        context,
+      ).text('Checking for Konyak updates...');
     });
 
     try {
@@ -104,11 +106,19 @@ extension _KonyakHomeLoaderRuntimes on _KonyakHomeLoaderState {
         case LoadedUpdateCheck(:final update) when update.status == 'available':
           await _confirmAndInstallAvailableKonyakUpdate(update);
         case LoadedUpdateCheck(:final update) when update.status == 'current':
-          _showSnackBar('Konyak is up to date.');
+          _showSnackBar(
+            KonyakLocalizations.of(context).text('Konyak is up to date.'),
+          );
         case LoadedUpdateCheck():
-          _showSnackBar('Konyak update status is unknown.');
+          _showSnackBar(
+            KonyakLocalizations.of(
+              context,
+            ).text('Konyak update status is unknown.'),
+          );
         case UpdateCheckLoadFailure(:final message):
-          _showWarningSnackBar('Konyak update check failed: $message');
+          _showWarningSnackBar(
+            KonyakLocalizations.of(context).konyakUpdateCheckFailed(message),
+          );
       }
     } finally {
       if (mounted) {
@@ -122,12 +132,9 @@ extension _KonyakHomeLoaderRuntimes on _KonyakHomeLoaderState {
 
   Future<bool> _confirmKonyakUpdateInstall(UpdateCheckSummary update) async {
     final latestVersion = update.latestVersion;
-    final title = latestVersion == null
-        ? 'Install Konyak update?'
-        : 'Install Konyak $latestVersion update?';
-    final message = latestVersion == null
-        ? 'A Konyak update is available. Install it now? Konyak will restart after the update starts.'
-        : 'Konyak $latestVersion is available. Install it now? Konyak will restart after the update starts.';
+    final localizations = KonyakLocalizations.of(context);
+    final title = localizations.installKonyakUpdateTitle(latestVersion);
+    final message = localizations.installKonyakUpdateMessage(latestVersion);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -136,11 +143,11 @@ extension _KonyakHomeLoaderRuntimes on _KonyakHomeLoaderState {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Not Now'),
+            child: Text(localizations.text('Not Now')),
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Install'),
+            child: Text(localizations.text('Install')),
           ),
         ],
       ),
@@ -159,14 +166,17 @@ extension _KonyakHomeLoaderRuntimes on _KonyakHomeLoaderState {
     switch (installResult) {
       case InstalledUpdate(:final update) when update.status == 'installed':
         _showSnackBar(
-          'Installing ${installedUpdateLabel(update, 'Konyak')} update. '
-          'Konyak will restart.',
+          KonyakLocalizations.of(
+            context,
+          ).installingKonyakUpdate(installedUpdateLabel(update, 'Konyak')),
         );
         return true;
       case InstalledUpdate():
         return false;
       case UpdateInstallLoadFailure(:final message):
-        _showSnackBar('Konyak update install failed: $message');
+        _showSnackBar(
+          KonyakLocalizations.of(context).konyakUpdateInstallFailed(message),
+        );
         return false;
     }
   }
@@ -242,9 +252,13 @@ extension _KonyakHomeLoaderRuntimes on _KonyakHomeLoaderState {
           _knownRuntimes = upsertRuntimeSummary(_knownRuntimes, runtime);
           _hasLoadedKnownRuntimes = true;
         });
-        _showSnackBar('Installed ${runtime.name}');
+        _showSnackBar(
+          KonyakLocalizations.of(context).installedRuntime(runtime.name),
+        );
       case RuntimeInstallLoadFailure(:final message):
-        _showSnackBar('Runtime install failed: $message');
+        _showSnackBar(
+          KonyakLocalizations.of(context).runtimeInstallFailed(message),
+        );
     }
   }
 
@@ -275,7 +289,9 @@ extension _KonyakHomeLoaderRuntimes on _KonyakHomeLoaderState {
     }
 
     _updateState(() {
-      _runtimeInstallProgressMessage = 'Downloading $runtimeName...';
+      _runtimeInstallProgressMessage = KonyakLocalizations.of(
+        context,
+      ).downloadProgress(runtimeName);
       _runtimeInstallProgressFraction = 0;
     });
 
@@ -292,22 +308,20 @@ extension _KonyakHomeLoaderRuntimes on _KonyakHomeLoaderState {
   }
 
   Future<bool> _confirmRuntimeDownload(String runtimeName) async {
+    final localizations = KonyakLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Download $runtimeName?'),
-        content: Text(
-          'Konyak will download $runtimeName into your Konyak runtime directory. '
-          'The runtime is separate from the application and remains under its own license.',
-        ),
+        title: Text(localizations.downloadRuntimeTitle(runtimeName)),
+        content: Text(localizations.downloadRuntimeMessage(runtimeName)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: Text(localizations.text('Cancel')),
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Download'),
+            child: Text(localizations.text('Download')),
           ),
         ],
       ),
@@ -321,16 +335,19 @@ extension _KonyakHomeLoaderRuntimes on _KonyakHomeLoaderState {
   }) async {
     final managedRuntime = managedRuntimePlatform(widget.platform);
     if (managedRuntime == null) {
-      return const RuntimeInstallLoadFailure(
+      return RuntimeInstallLoadFailure(
         exitCode: 64,
-        message: 'Managed runtime installation is not supported.',
+        message: KonyakLocalizations.of(
+          context,
+        ).text('Managed runtime installation is not supported.'),
         diagnostic: '',
       );
     }
 
     _updateState(() {
-      _runtimeInstallProgressMessage =
-          'Downloading ${managedRuntime.displayName}...';
+      _runtimeInstallProgressMessage = KonyakLocalizations.of(
+        context,
+      ).downloadProgress(managedRuntime.displayName);
       _runtimeInstallProgressFraction = 0;
     });
 
@@ -391,24 +408,31 @@ extension _KonyakHomeLoaderRuntimes on _KonyakHomeLoaderState {
 
     switch (result) {
       case InstalledRuntime(:final runtime):
-        _showSnackBar('Reinstalled ${runtime.name}');
+        _showSnackBar(
+          KonyakLocalizations.of(context).reinstalledRuntime(runtime.name),
+        );
       case RuntimeInstallLoadFailure(:final message):
-        _showSnackBar('Runtime reinstall failed: $message');
+        _showSnackBar(
+          KonyakLocalizations.of(context).runtimeReinstallFailed(message),
+        );
     }
   }
 
   Future<RuntimeInstallLoadResult> _installGptkWine() async {
+    final localizations = KonyakLocalizations.of(context);
     final sourcePath = await widget.gptkWineSourcePicker.pickSourcePath();
     if (sourcePath == null || sourcePath.trim().isEmpty) {
-      return const RuntimeInstallLoadFailure(
+      return RuntimeInstallLoadFailure(
         exitCode: 64,
-        message: 'GPTK/D3DMetal source was not selected.',
+        message: localizations.text('GPTK/D3DMetal source was not selected.'),
         diagnostic: '',
       );
     }
 
     _updateState(() {
-      _runtimeInstallProgressMessage = 'Importing GPTK/D3DMetal...';
+      _runtimeInstallProgressMessage = localizations.text(
+        'Importing GPTK/D3DMetal...',
+      );
       _runtimeInstallProgressFraction = 0;
     });
 

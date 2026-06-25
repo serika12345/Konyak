@@ -146,6 +146,7 @@ Option<AppSettingsRecord> _appSettingsRecordFromJson(
       settings['terminateWineProcessesOnClose'];
   final defaultBottlePath = settings['defaultBottlePath'];
   final appearanceMode = _appAppearanceModeFromJson(settings['appearanceMode']);
+  final languageMode = _appLanguageModeFromJson(settings['languageMode']);
   final automaticallyCheckForKonyakUpdates =
       settings['automaticallyCheckForKonyakUpdates'];
   final automaticallyCheckForWineUpdates =
@@ -166,6 +167,13 @@ Option<AppSettingsRecord> _appSettingsRecordFromJson(
     (value) => value,
   );
   if (parsedAppearanceMode == null) {
+    return const Option.none();
+  }
+  final parsedLanguageMode = languageMode.match<AppLanguageMode?>(
+    () => null,
+    (value) => value,
+  );
+  if (parsedLanguageMode == null) {
     return const Option.none();
   }
   if (automaticallyCheckForKonyakUpdates != null &&
@@ -190,6 +198,7 @@ Option<AppSettingsRecord> _appSettingsRecordFromJson(
           ? defaultBottlePath
           : fallbackDefaultBottlePath,
       appearanceMode: parsedAppearanceMode,
+      languageMode: parsedLanguageMode,
       automaticallyCheckForKonyakUpdates:
           automaticallyCheckForKonyakUpdates is bool
           ? automaticallyCheckForKonyakUpdates
@@ -214,6 +223,23 @@ Option<AppAppearanceMode> _appAppearanceModeFromJson(Object? value) {
   }
 
   for (final mode in AppAppearanceMode.values) {
+    if (mode.jsonValue == value) {
+      return Option.of(mode);
+    }
+  }
+
+  return const Option.none();
+}
+
+Option<AppLanguageMode> _appLanguageModeFromJson(Object? value) {
+  if (value == null) {
+    return Option.of(AppLanguageMode.system);
+  }
+  if (value is! String) {
+    return const Option.none();
+  }
+
+  for (final mode in AppLanguageMode.values) {
     if (mode.jsonValue == value) {
       return Option.of(mode);
     }

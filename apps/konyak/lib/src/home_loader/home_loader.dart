@@ -31,6 +31,7 @@ import '../files/bottle_archive_picker.dart';
 import '../files/directory_picker.dart';
 import '../files/gptk_wine_source_picker.dart';
 import '../files/program_file_picker.dart';
+import '../l10n/konyak_localizations.dart';
 import '../logs/log_reader.dart';
 import '../runtimes/runtime_summary.dart';
 import '../settings/app_settings_summary.dart';
@@ -62,6 +63,7 @@ class KonyakHomeLoader extends StatefulWidget {
     required this.enableBackgroundServices,
     required this.onAppSettingsLoaded,
     required this.onAppearanceModeChanged,
+    required this.onLanguageModeChanged,
   });
 
   final KonyakPlatform platform;
@@ -77,6 +79,7 @@ class KonyakHomeLoader extends StatefulWidget {
   final bool enableBackgroundServices;
   final ValueChanged<AppSettingsSummary> onAppSettingsLoaded;
   final ValueChanged<AppAppearanceMode> onAppearanceModeChanged;
+  final ValueChanged<AppLanguageMode> onLanguageModeChanged;
 
   @override
   State<KonyakHomeLoader> createState() => _KonyakHomeLoaderState();
@@ -242,19 +245,23 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
           onTerminateBottleProcesses: _terminateBottleProcesses,
         ),
         if (_isCreatingBottle)
-          const BlockingProgressOverlay(
-            key: ValueKey('create-bottle-progress'),
-            message: 'Creating bottle...',
+          BlockingProgressOverlay(
+            key: const ValueKey('create-bottle-progress'),
+            message: KonyakLocalizations.of(context).text('Creating bottle...'),
           ),
         if (_activeProgramLaunchIds.isNotEmpty)
-          const BlockingProgressOverlay(
-            key: ValueKey('program-launch-progress'),
-            message: 'Launching program...',
+          BlockingProgressOverlay(
+            key: const ValueKey('program-launch-progress'),
+            message: KonyakLocalizations.of(
+              context,
+            ).text('Launching program...'),
           ),
         if (_isLoadingWinetricks)
-          const BlockingProgressOverlay(
-            key: ValueKey('winetricks-progress'),
-            message: 'Loading winetricks packages...',
+          BlockingProgressOverlay(
+            key: const ValueKey('winetricks-progress'),
+            message: KonyakLocalizations.of(
+              context,
+            ).text('Loading winetricks packages...'),
           ),
         if (_winetricksInstallProgressMessage case final message?)
           BlockingProgressOverlay(

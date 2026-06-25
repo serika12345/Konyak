@@ -36,7 +36,11 @@ extension _KonyakHomeLoaderPinnedPrograms on _KonyakHomeLoaderState {
       return;
     }
 
-    _handleBottleUpdateResult(result, successMessage: (_) => 'Pinned $name');
+    _handleBottleUpdateResult(
+      result,
+      successMessage: (_) =>
+          KonyakLocalizations.of(context).pinnedProgram(name),
+    );
   }
 
   Future<void> _unpinProgram({
@@ -54,7 +58,8 @@ extension _KonyakHomeLoaderPinnedPrograms on _KonyakHomeLoaderState {
 
     _handleBottleUpdateResult(
       result,
-      successMessage: (_) => 'Unpinned ${program.name}',
+      successMessage: (_) =>
+          KonyakLocalizations.of(context).unpinnedProgram(program.name),
     );
   }
 
@@ -82,7 +87,11 @@ extension _KonyakHomeLoaderPinnedPrograms on _KonyakHomeLoaderState {
       return;
     }
 
-    _handleBottleUpdateResult(result, successMessage: (_) => 'Renamed $name');
+    _handleBottleUpdateResult(
+      result,
+      successMessage: (_) =>
+          KonyakLocalizations.of(context).renamedProgram(name),
+    );
   }
 
   Future<void> _openPinnedProgramLocation({
@@ -99,7 +108,9 @@ extension _KonyakHomeLoaderPinnedPrograms on _KonyakHomeLoaderState {
     }
 
     final message = switch (result) {
-      OpenedProgramLocation() => 'Opened ${program.name} location',
+      OpenedProgramLocation() => KonyakLocalizations.of(
+        context,
+      ).openedProgramLocation(program.name),
       ProgramLocationOpenFailure(:final message) => message,
     };
 
@@ -170,7 +181,11 @@ extension _KonyakHomeLoaderPinnedPrograms on _KonyakHomeLoaderState {
               )] =
               settings;
         });
-        _showSnackBar('Saved ${program.name} configuration');
+        _showSnackBar(
+          KonyakLocalizations.of(
+            context,
+          ).savedProgramConfiguration(program.name),
+        );
       case MissingProgramSettingsBottle(:final message) ||
           ProgramSettingsLoadFailure(:final message):
         _showSnackBar(message);

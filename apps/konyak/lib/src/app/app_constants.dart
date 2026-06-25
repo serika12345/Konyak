@@ -115,6 +115,16 @@ ThemeData konyakThemeData(KonyakThemeColors colors) {
   return ThemeData(
     colorScheme: colorScheme,
     fontFamily: 'Inter',
+    fontFamilyFallback: const [
+      'Noto Sans JP',
+      'Hiragino Sans',
+      'Hiragino Sans GB',
+      'AppleGothic',
+      'Yu Gothic',
+      'Noto Sans CJK JP',
+      'Noto Sans JP',
+      'sans-serif',
+    ],
     scaffoldBackgroundColor: colors.windowBackground,
     snackBarTheme: SnackBarThemeData(
       backgroundColor: colors.overlayPanelBackground,

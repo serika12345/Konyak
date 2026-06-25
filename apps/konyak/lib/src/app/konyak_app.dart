@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 import '../cli/konyak_cli_client.dart';
 import '../files/bottle_archive_picker.dart';
@@ -7,6 +8,7 @@ import '../files/gptk_wine_source_picker.dart';
 import '../files/program_file_picker.dart';
 import '../icons/icon_file_loader.dart';
 import '../icons/icon_file_loader_io.dart';
+import '../l10n/konyak_localizations.dart';
 import '../logs/log_reader.dart';
 import '../logs/log_reader_io.dart';
 import '../settings/app_settings_summary.dart';
@@ -65,9 +67,12 @@ class KonyakApp extends StatefulWidget {
 
 class _KonyakAppState extends State<KonyakApp> {
   AppAppearanceMode _appearanceMode = AppAppearanceMode.dark;
+  AppLanguageMode _languageMode = AppLanguageMode.system;
 
   @override
   Widget build(BuildContext context) {
+    const localizations = KonyakLocalizations(Locale('en'));
+
     return IconFileLoaderScope(
       loader: widget.iconFileLoader,
       child: MaterialApp(
@@ -80,6 +85,14 @@ class _KonyakAppState extends State<KonyakApp> {
           AppAppearanceMode.light => ThemeMode.light,
           AppAppearanceMode.system => ThemeMode.system,
         },
+        locale: localizations.localeForLanguageMode(_languageMode),
+        supportedLocales: KonyakLocalizations.supportedLocales,
+        localizationsDelegates: const [
+          KonyakLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
         home: KonyakHomeLoader(
           platform: widget.platform,
           cliClient: widget.cliClient,
@@ -94,13 +107,14 @@ class _KonyakAppState extends State<KonyakApp> {
           enableBackgroundServices: widget.enableBackgroundServices,
           onAppSettingsLoaded: _handleAppSettingsLoaded,
           onAppearanceModeChanged: _setAppearanceMode,
+          onLanguageModeChanged: _setLanguageMode,
         ),
       ),
     );
   }
 
   void _handleAppSettingsLoaded(AppSettingsSummary settings) {
-    _setAppearanceMode(settings.appearanceMode);
+    _setSettingsAppearanceAndLanguage(settings);
   }
 
   void _setAppearanceMode(AppAppearanceMode appearanceMode) {
@@ -110,6 +124,28 @@ class _KonyakAppState extends State<KonyakApp> {
 
     setState(() {
       _appearanceMode = appearanceMode;
+    });
+  }
+
+  void _setLanguageMode(AppLanguageMode languageMode) {
+    if (_languageMode == languageMode) {
+      return;
+    }
+
+    setState(() {
+      _languageMode = languageMode;
+    });
+  }
+
+  void _setSettingsAppearanceAndLanguage(AppSettingsSummary settings) {
+    if (_appearanceMode == settings.appearanceMode &&
+        _languageMode == settings.languageMode) {
+      return;
+    }
+
+    setState(() {
+      _appearanceMode = settings.appearanceMode;
+      _languageMode = settings.languageMode;
     });
   }
 }

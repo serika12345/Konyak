@@ -1316,6 +1316,7 @@ void main() {
               "terminateWineProcessesOnClose": false,
               "defaultBottlePath": "/Volumes/Games/Bottles",
               "appearanceMode": "light",
+              "languageMode": "ja",
               "automaticallyCheckForKonyakUpdates": true,
               "automaticallyCheckForWineUpdates": false,
               "automaticallyPinNewInstalledPrograms": false
@@ -1335,6 +1336,7 @@ void main() {
     expect(loaded.settings.terminateWineProcessesOnClose, isFalse);
     expect(loaded.settings.defaultBottlePath, '/Volumes/Games/Bottles');
     expect(loaded.settings.appearanceMode, AppAppearanceMode.light);
+    expect(loaded.settings.languageMode, AppLanguageMode.japanese);
     expect(loaded.settings.automaticallyCheckForKonyakUpdates, isTrue);
     expect(loaded.settings.automaticallyCheckForWineUpdates, isFalse);
     expect(loaded.settings.automaticallyPinNewInstalledPrograms, isFalse);
@@ -1377,6 +1379,7 @@ void main() {
               "terminateWineProcessesOnClose": false,
               "defaultBottlePath": "/Volumes/Games/Bottles",
               "appearanceMode": "light",
+              "languageMode": "ja",
               "automaticallyCheckForKonyakUpdates": true,
               "automaticallyCheckForWineUpdates": false,
               "automaticallyPinNewInstalledPrograms": false
@@ -1393,6 +1396,7 @@ void main() {
         terminateWineProcessesOnClose: false,
         defaultBottlePath: '/Volumes/Games/Bottles',
         appearanceMode: AppAppearanceMode.light,
+        languageMode: AppLanguageMode.japanese,
         automaticallyCheckForKonyakUpdates: true,
         automaticallyCheckForWineUpdates: false,
         automaticallyPinNewInstalledPrograms: false,
@@ -1402,13 +1406,14 @@ void main() {
     expect(runner.arguments, const [
       'set-app-settings',
       '--settings-json',
-      '{"terminateWineProcessesOnClose":false,"defaultBottlePath":"/Volumes/Games/Bottles","appearanceMode":"light","automaticallyCheckForKonyakUpdates":true,"automaticallyCheckForWineUpdates":false,"automaticallyPinNewInstalledPrograms":false}',
+      '{"terminateWineProcessesOnClose":false,"defaultBottlePath":"/Volumes/Games/Bottles","appearanceMode":"light","languageMode":"ja","automaticallyCheckForKonyakUpdates":true,"automaticallyCheckForWineUpdates":false,"automaticallyPinNewInstalledPrograms":false}',
       '--json',
     ]);
     expect(result, isA<LoadedAppSettings>());
     final loaded = result as LoadedAppSettings;
     expect(loaded.settings.defaultBottlePath, '/Volumes/Games/Bottles');
     expect(loaded.settings.appearanceMode, AppAppearanceMode.light);
+    expect(loaded.settings.languageMode, AppLanguageMode.japanese);
   });
 
   test(
@@ -1442,6 +1447,7 @@ void main() {
       expect(loadedResult, isA<LoadedAppSettings>());
       final loadedSettings = loadedResult as LoadedAppSettings;
       expect(loadedSettings.settings.appearanceMode, AppAppearanceMode.system);
+      expect(loadedSettings.settings.languageMode, AppLanguageMode.system);
       expect(
         loadedSettings.settings.automaticallyPinNewInstalledPrograms,
         isTrue,
@@ -1457,7 +1463,7 @@ void main() {
       expect(runner.arguments, const [
         'set-app-settings',
         '--settings-json',
-        '{"terminateWineProcessesOnClose":true,"defaultBottlePath":"/Volumes/Games/Bottles","appearanceMode":"system","automaticallyCheckForKonyakUpdates":false,"automaticallyCheckForWineUpdates":true,"automaticallyPinNewInstalledPrograms":true}',
+        '{"terminateWineProcessesOnClose":true,"defaultBottlePath":"/Volumes/Games/Bottles","appearanceMode":"system","languageMode":"system","automaticallyCheckForKonyakUpdates":false,"automaticallyCheckForWineUpdates":true,"automaticallyPinNewInstalledPrograms":true}',
         '--json',
       ]);
     },

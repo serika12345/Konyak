@@ -20,7 +20,8 @@ void defineSettingsWidgetTests() {
               "defaultBottlePath": "/Users/user/Library/Application Support/Konyak/Bottles",
               "automaticallyCheckForKonyakUpdates": false,
               "automaticallyCheckForWineUpdates": true,
-              "automaticallyPinNewInstalledPrograms": true
+              "automaticallyPinNewInstalledPrograms": true,
+              "languageMode": "system"
             }
           }
         ''',
@@ -41,7 +42,8 @@ void defineSettingsWidgetTests() {
               "defaultBottlePath": "/Volumes/Games/Bottles",
               "automaticallyCheckForKonyakUpdates": false,
               "automaticallyCheckForWineUpdates": true,
-              "automaticallyPinNewInstalledPrograms": true
+              "automaticallyPinNewInstalledPrograms": true,
+              "languageMode": "system"
             }
           }
         ''',
@@ -57,7 +59,8 @@ void defineSettingsWidgetTests() {
               "defaultBottlePath": "/Volumes/Games/Bottles",
               "automaticallyCheckForKonyakUpdates": true,
               "automaticallyCheckForWineUpdates": true,
-              "automaticallyPinNewInstalledPrograms": true
+              "automaticallyPinNewInstalledPrograms": true,
+              "languageMode": "system"
             }
           }
         ''',
@@ -73,7 +76,25 @@ void defineSettingsWidgetTests() {
               "defaultBottlePath": "/Volumes/Games/Bottles",
               "automaticallyCheckForKonyakUpdates": true,
               "automaticallyCheckForWineUpdates": true,
-              "automaticallyPinNewInstalledPrograms": false
+              "automaticallyPinNewInstalledPrograms": false,
+              "languageMode": "system"
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "appSettings": {
+              "terminateWineProcessesOnClose": true,
+              "defaultBottlePath": "/Volumes/Games/Bottles",
+              "automaticallyCheckForKonyakUpdates": true,
+              "automaticallyCheckForWineUpdates": true,
+              "automaticallyPinNewInstalledPrograms": false,
+              "languageMode": "ja"
             }
           }
         ''',
@@ -98,6 +119,7 @@ void defineSettingsWidgetTests() {
     expect(find.text('General'), findsOneWidget);
     expect(find.text('Programs'), findsOneWidget);
     expect(find.text('Updates'), findsOneWidget);
+    expect(find.text('Language'), findsOneWidget);
     expect(
       find.text('/Users/user/Library/Application Support/Konyak/Bottles'),
       findsOneWidget,
@@ -107,15 +129,32 @@ void defineSettingsWidgetTests() {
     await tester.pumpAndSettle();
     expect(find.text('/Volumes/Games/Bottles'), findsOneWidget);
 
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('app-settings-check-konyak-updates-switch')),
+    );
+    await tester.pumpAndSettle();
     await tester.tap(
       find.byKey(const ValueKey('app-settings-check-konyak-updates-switch')),
     );
     await tester.pumpAndSettle();
 
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('app-settings-auto-pin-new-programs-switch')),
+    );
+    await tester.pumpAndSettle();
     await tester.tap(
       find.byKey(const ValueKey('app-settings-auto-pin-new-programs-switch')),
     );
     await tester.pumpAndSettle();
+
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('app-settings-language-selector')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Japanese'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Konyak 設定'), findsOneWidget);
 
     expect(runner.argumentsLog, const [
       ['list-bottles', '--json'],
@@ -124,22 +163,83 @@ void defineSettingsWidgetTests() {
       [
         'set-app-settings',
         '--settings-json',
-        '{"terminateWineProcessesOnClose":true,"defaultBottlePath":"/Volumes/Games/Bottles","appearanceMode":"dark","automaticallyCheckForKonyakUpdates":false,"automaticallyCheckForWineUpdates":true,"automaticallyPinNewInstalledPrograms":true}',
+        '{"terminateWineProcessesOnClose":true,"defaultBottlePath":"/Volumes/Games/Bottles","appearanceMode":"dark","languageMode":"system","automaticallyCheckForKonyakUpdates":false,"automaticallyCheckForWineUpdates":true,"automaticallyPinNewInstalledPrograms":true}',
         '--json',
       ],
       [
         'set-app-settings',
         '--settings-json',
-        '{"terminateWineProcessesOnClose":true,"defaultBottlePath":"/Volumes/Games/Bottles","appearanceMode":"dark","automaticallyCheckForKonyakUpdates":true,"automaticallyCheckForWineUpdates":true,"automaticallyPinNewInstalledPrograms":true}',
+        '{"terminateWineProcessesOnClose":true,"defaultBottlePath":"/Volumes/Games/Bottles","appearanceMode":"dark","languageMode":"system","automaticallyCheckForKonyakUpdates":true,"automaticallyCheckForWineUpdates":true,"automaticallyPinNewInstalledPrograms":true}',
         '--json',
       ],
       [
         'set-app-settings',
         '--settings-json',
-        '{"terminateWineProcessesOnClose":true,"defaultBottlePath":"/Volumes/Games/Bottles","appearanceMode":"dark","automaticallyCheckForKonyakUpdates":true,"automaticallyCheckForWineUpdates":true,"automaticallyPinNewInstalledPrograms":false}',
+        '{"terminateWineProcessesOnClose":true,"defaultBottlePath":"/Volumes/Games/Bottles","appearanceMode":"dark","languageMode":"system","automaticallyCheckForKonyakUpdates":true,"automaticallyCheckForWineUpdates":true,"automaticallyPinNewInstalledPrograms":false}',
+        '--json',
+      ],
+      [
+        'set-app-settings',
+        '--settings-json',
+        '{"terminateWineProcessesOnClose":true,"defaultBottlePath":"/Volumes/Games/Bottles","appearanceMode":"dark","languageMode":"ja","automaticallyCheckForKonyakUpdates":true,"automaticallyCheckForWineUpdates":true,"automaticallyPinNewInstalledPrograms":false}',
         '--json',
       ],
     ]);
+  });
+
+  testWidgets('settings dialog language selector matches golden', (
+    WidgetTester tester,
+  ) async {
+    await _loadKonyakTestFonts();
+    await tester.binding.setSurfaceSize(const Size(900, 720));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    final runner = _QueuedProcessRunner([
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '{"schemaVersion":1,"bottles":[]}',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "appSettings": {
+              "terminateWineProcessesOnClose": true,
+              "defaultBottlePath": "/Users/user/Library/Application Support/Konyak/Bottles",
+              "appearanceMode": "dark",
+              "languageMode": "ja",
+              "automaticallyCheckForKonyakUpdates": false,
+              "automaticallyCheckForWineUpdates": true,
+              "automaticallyPinNewInstalledPrograms": true
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '{"schemaVersion":1,"runtimes":[]}',
+        stderr: '',
+      ),
+    ]);
+
+    await tester.pumpWidget(
+      _testKonyakApp(
+        cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Settings'));
+    await tester.pumpAndSettle();
+
+    await _expectGoldenFileWithinTolerance(
+      find.byKey(const ValueKey('app-settings-dialog')),
+      'goldens/app_settings_dialog_language.png',
+      diffTolerance: 0.02,
+    );
   });
 
   testWidgets('macOS settings labels Konyak update switch as check', (

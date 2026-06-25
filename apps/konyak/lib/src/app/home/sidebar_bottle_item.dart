@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../bottles/bottle_summary.dart';
+import '../../l10n/konyak_localizations.dart';
 import '../app_constants.dart';
 import '../app_platform.dart';
 
@@ -72,7 +73,7 @@ class SidebarBottleItem extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
       ),
       constraints: const BoxConstraints(minWidth: 220, maxWidth: 220),
-      items: _bottleContextMenuItems(platform),
+      items: _bottleContextMenuItems(platform, KonyakLocalizations.of(context)),
     );
 
     if (selectedAction == null) {
@@ -94,48 +95,49 @@ enum BottleContextMenuAction {
 
 List<PopupMenuEntry<BottleContextMenuAction>> _bottleContextMenuItems(
   KonyakPlatform platform,
+  KonyakLocalizations localizations,
 ) {
   return [
-    const PopupMenuItem<BottleContextMenuAction>(
+    PopupMenuItem<BottleContextMenuAction>(
       value: BottleContextMenuAction.rename,
       height: 34,
       child: BottleContextMenuItem(
         icon: Icons.edit_outlined,
-        label: 'Rename...',
+        label: localizations.text('Rename...'),
       ),
     ),
-    const PopupMenuItem<BottleContextMenuAction>(
+    PopupMenuItem<BottleContextMenuAction>(
       value: BottleContextMenuAction.remove,
       height: 34,
       child: BottleContextMenuItem(
         icon: Icons.delete_outline,
-        label: 'Remove...',
+        label: localizations.text('Remove...'),
       ),
     ),
     const PopupMenuDivider(height: 8),
-    const PopupMenuItem<BottleContextMenuAction>(
+    PopupMenuItem<BottleContextMenuAction>(
       value: BottleContextMenuAction.move,
       height: 34,
       child: BottleContextMenuItem(
         icon: Icons.drive_file_move_outline,
-        label: 'Move...',
+        label: localizations.text('Move...'),
       ),
     ),
-    const PopupMenuItem<BottleContextMenuAction>(
+    PopupMenuItem<BottleContextMenuAction>(
       value: BottleContextMenuAction.exportArchive,
       height: 34,
       child: BottleContextMenuItem(
         icon: Icons.ios_share_outlined,
-        label: 'Export as Archive...',
+        label: localizations.text('Export as Archive...'),
       ),
     ),
     const PopupMenuDivider(height: 8),
-    const PopupMenuItem<BottleContextMenuAction>(
+    PopupMenuItem<BottleContextMenuAction>(
       value: BottleContextMenuAction.terminateProcesses,
       height: 34,
       child: BottleContextMenuItem(
         icon: Icons.stop_circle_outlined,
-        label: 'Stop All Processes',
+        label: localizations.text('Stop All Processes'),
       ),
     ),
     const PopupMenuDivider(height: 8),
@@ -144,7 +146,7 @@ List<PopupMenuEntry<BottleContextMenuAction>> _bottleContextMenuItems(
       height: 34,
       child: BottleContextMenuItem(
         icon: Icons.folder_outlined,
-        label: platform.showInFileManagerLabel,
+        label: localizations.text(platform.showInFileManagerLabel),
       ),
     ),
   ];

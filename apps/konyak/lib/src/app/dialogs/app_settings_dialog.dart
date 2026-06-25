@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../cli/konyak_cli_client.dart';
 import '../../files/directory_picker.dart';
+import '../../l10n/konyak_localizations.dart';
 import '../../runtimes/runtime_summary.dart';
 import '../../settings/app_settings_summary.dart';
 import '../app_constants.dart';
@@ -152,24 +153,25 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
       return;
     }
 
+    final localizations = KonyakLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Import D3DMetal Backend?'),
-        content: const Text(
-          'Importing a GPTK app adds Apple D3DMetal files to the current macOS '
-          'Wine runtime without replacing the Wine executable. Running Wine '
-          'processes should be stopped before continuing.',
+        title: Text(localizations.text('Import D3DMetal Backend?')),
+        content: Text(
+          localizations.text(
+            'Importing a GPTK app adds Apple D3DMetal files to the current macOS Wine runtime without replacing the Wine executable. Running Wine processes should be stopped before continuing.',
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: Text(localizations.text('Cancel')),
           ),
           FilledButton(
             key: const ValueKey('app-settings-confirm-gptk-wine-button'),
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Import D3DMetal'),
+            child: Text(localizations.text('Import D3DMetal')),
           ),
         ],
       ),
@@ -204,10 +206,12 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
   @override
   Widget build(BuildContext context) {
     final colors = KonyakThemeColors.of(context);
+    final localizations = KonyakLocalizations.of(context);
 
     return AlertDialog(
+      key: const ValueKey('app-settings-dialog'),
       backgroundColor: colors.dialogBackground,
-      title: const Center(child: Text('Konyak Settings')),
+      title: Center(child: Text(localizations.text('Konyak Settings'))),
       scrollable: true,
       content: SizedBox(
         width: 640,
@@ -216,13 +220,15 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             AppSettingsSection(
-              title: 'General',
+              title: localizations.text('General'),
               children: [
                 AppSettingsSwitchRow(
                   switchKey: const ValueKey(
                     'app-settings-terminate-wine-switch',
                   ),
-                  label: 'Terminate Wine processes when Konyak closes',
+                  label: localizations.text(
+                    'Terminate Wine processes when Konyak closes',
+                  ),
                   value: _settings.terminateWineProcessesOnClose,
                   onChanged: _isSaving
                       ? null
@@ -236,8 +242,14 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
                       ? null
                       : (mode) => _save(_settings.withAppearanceMode(mode)),
                 ),
+                AppSettingsLanguageRow(
+                  mode: _settings.languageMode,
+                  onChanged: _isSaving
+                      ? null
+                      : (mode) => _save(_settings.withLanguageMode(mode)),
+                ),
                 AppSettingsPathRow(
-                  label: 'Default bottle path:',
+                  label: localizations.text('Default bottle path:'),
                   path: _settings.defaultBottlePath,
                   isSaving: _isSaving,
                   onBrowse: _browseBottlePath,
@@ -246,13 +258,15 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
             ),
             const SizedBox(height: 26),
             AppSettingsSection(
-              title: 'Programs',
+              title: localizations.text('Programs'),
               children: [
                 AppSettingsSwitchRow(
                   switchKey: const ValueKey(
                     'app-settings-auto-pin-new-programs-switch',
                   ),
-                  label: 'Automatically pin newly installed programs',
+                  label: localizations.text(
+                    'Automatically pin newly installed programs',
+                  ),
                   value: _settings.automaticallyPinNewInstalledPrograms,
                   onChanged: _isSaving
                       ? null
@@ -266,13 +280,15 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
             ),
             const SizedBox(height: 26),
             AppSettingsSection(
-              title: 'Updates',
+              title: localizations.text('Updates'),
               children: [
                 AppSettingsSwitchRow(
                   switchKey: const ValueKey(
                     'app-settings-check-konyak-updates-switch',
                   ),
-                  label: 'Automatically check for Konyak updates',
+                  label: localizations.text(
+                    'Automatically check for Konyak updates',
+                  ),
                   value: _settings.automaticallyCheckForKonyakUpdates,
                   onChanged: _isSaving
                       ? null
@@ -286,7 +302,9 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
                   switchKey: const ValueKey(
                     'app-settings-check-wine-updates-switch',
                   ),
-                  label: 'Automatically check for Konyak Wine updates',
+                  label: localizations.text(
+                    'Automatically check for Konyak Wine updates',
+                  ),
                   value: _settings.automaticallyCheckForWineUpdates,
                   onChanged: _isSaving
                       ? null
@@ -321,7 +339,7 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
       actions: [
         TextButton(
           onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
-          child: const Text('Close'),
+          child: Text(localizations.text('Close')),
         ),
       ],
     );

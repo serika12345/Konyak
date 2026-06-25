@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../../l10n/konyak_localizations.dart';
 import '../app_constants.dart';
 import '../window/linux_window_controls.dart';
 
@@ -40,6 +41,7 @@ class KonyakMenuBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = KonyakThemeColors.of(context);
+    final localizations = KonyakLocalizations.of(context);
 
     return Container(
       key: const ValueKey('linux-menu-bar'),
@@ -101,7 +103,7 @@ class KonyakMenuBar extends StatelessWidget {
           ),
           _LinuxWindowControlButton(
             key: const ValueKey('linux-window-minimize-button'),
-            tooltip: 'Minimize window',
+            tooltip: localizations.text('Minimize window'),
             icon: Icons.minimize,
             onPressed: () {
               unawaited(windowControls.minimizeWindow());
@@ -109,7 +111,7 @@ class KonyakMenuBar extends StatelessWidget {
           ),
           _LinuxWindowControlButton(
             key: const ValueKey('linux-window-maximize-button'),
-            tooltip: 'Maximize or restore window',
+            tooltip: localizations.text('Maximize or restore window'),
             icon: Icons.crop_square,
             onPressed: () {
               unawaited(windowControls.toggleMaximizeWindow());
@@ -117,7 +119,7 @@ class KonyakMenuBar extends StatelessWidget {
           ),
           _LinuxWindowControlButton(
             key: const ValueKey('linux-window-close-button'),
-            tooltip: 'Close window',
+            tooltip: localizations.text('Close window'),
             icon: Icons.close,
             onPressed: () {
               unawaited(windowControls.closeWindow());

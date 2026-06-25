@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/konyak_localizations.dart';
 import '../app_constants.dart';
 import '../widgets/configuration_controls.dart';
 import 'program_configuration_settings.dart';
@@ -69,6 +70,8 @@ class ProgramEnvironmentRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = KonyakLocalizations.of(context);
+
     return SizedBox(
       height: 46,
       child: Row(
@@ -78,7 +81,7 @@ class ProgramEnvironmentRow extends StatelessWidget {
             child: ConfigurationTextField(
               key: ValueKey('program-config-env-key-$index'),
               controller: controllers.nameController,
-              hintText: 'NAME',
+              hintText: localizations.text('NAME'),
             ),
           ),
           const SizedBox(width: 8),
@@ -86,11 +89,11 @@ class ProgramEnvironmentRow extends StatelessWidget {
             child: ConfigurationTextField(
               key: ValueKey('program-config-env-value-$index'),
               controller: controllers.valueController,
-              hintText: 'Value',
+              hintText: localizations.text('Value'),
             ),
           ),
           IconButton(
-            tooltip: 'Remove environment variable',
+            tooltip: localizations.text('Remove environment variable'),
             onPressed: onRemove,
             color: KonyakThemeColors.of(context).mutedText,
             iconSize: 18,
@@ -112,6 +115,8 @@ class AddEnvironmentRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = KonyakLocalizations.of(context);
+
     return SizedBox(
       height: 42,
       child: Align(
@@ -125,9 +130,9 @@ class AddEnvironmentRow extends StatelessWidget {
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
           icon: const Icon(Icons.add, size: 17),
-          label: const Text(
-            'Add',
-            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+          label: Text(
+            localizations.text('Add'),
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
           ),
         ),
       ),

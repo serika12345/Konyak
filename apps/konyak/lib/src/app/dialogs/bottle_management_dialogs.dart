@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../files/directory_picker.dart';
+import '../../l10n/konyak_localizations.dart';
 
 class DeleteBottleDialog extends StatelessWidget {
   const DeleteBottleDialog({super.key, required this.bottleName});
@@ -9,18 +10,22 @@ class DeleteBottleDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = KonyakLocalizations.of(context);
+
     return AlertDialog(
-      title: Text('Delete $bottleName?'),
-      content: const Text('This removes the bottle folder and metadata.'),
+      title: Text(localizations.deleteBottleTitle(bottleName)),
+      content: Text(
+        localizations.text('This removes the bottle folder and metadata.'),
+      ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('Cancel'),
+          child: Text(localizations.text('Cancel')),
         ),
         FilledButton.icon(
           onPressed: () => Navigator.of(context).pop(true),
           icon: const Icon(Icons.delete_outline),
-          label: const Text('Delete'),
+          label: Text(localizations.text('Delete')),
         ),
       ],
     );
@@ -59,16 +64,17 @@ class _RenameBottleDialogState extends State<RenameBottleDialog> {
   @override
   Widget build(BuildContext context) {
     final canSubmit = _nameController.text.trim().isNotEmpty;
+    final localizations = KonyakLocalizations.of(context);
 
     return AlertDialog(
-      title: Text('Rename ${widget.bottleName}'),
+      title: Text(localizations.renameBottleTitle(widget.bottleName)),
       content: SizedBox(
         width: 360,
         child: TextField(
           key: const ValueKey('rename-bottle-name-field'),
           controller: _nameController,
           autofocus: true,
-          decoration: const InputDecoration(labelText: 'Name'),
+          decoration: InputDecoration(labelText: localizations.text('Name')),
           textInputAction: TextInputAction.done,
           onChanged: (_) => setState(() {}),
           onSubmitted: (_) => _submit(),
@@ -77,12 +83,12 @@ class _RenameBottleDialogState extends State<RenameBottleDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(localizations.text('Cancel')),
         ),
         FilledButton.icon(
           onPressed: canSubmit ? _submit : null,
           icon: const Icon(Icons.edit_outlined),
-          label: const Text('Rename'),
+          label: Text(localizations.text('Rename')),
         ),
       ],
     );
@@ -122,16 +128,17 @@ class _RenamePinnedProgramDialogState extends State<RenamePinnedProgramDialog> {
   @override
   Widget build(BuildContext context) {
     final canSubmit = _nameController.text.trim().isNotEmpty;
+    final localizations = KonyakLocalizations.of(context);
 
     return AlertDialog(
-      title: Text('Rename ${widget.programName}'),
+      title: Text(localizations.renameProgramTitle(widget.programName)),
       content: SizedBox(
         width: 360,
         child: TextField(
           key: const ValueKey('rename-pinned-program-name-field'),
           controller: _nameController,
           autofocus: true,
-          decoration: const InputDecoration(labelText: 'Name'),
+          decoration: InputDecoration(labelText: localizations.text('Name')),
           textInputAction: TextInputAction.done,
           onChanged: (_) => setState(() {}),
           onSubmitted: (_) => _submit(),
@@ -140,12 +147,12 @@ class _RenamePinnedProgramDialogState extends State<RenamePinnedProgramDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(localizations.text('Cancel')),
         ),
         FilledButton.icon(
           onPressed: canSubmit ? _submit : null,
           icon: const Icon(Icons.edit_outlined),
-          label: const Text('Rename'),
+          label: Text(localizations.text('Rename')),
         ),
       ],
     );
@@ -202,9 +209,10 @@ class _MoveBottleDialogState extends State<MoveBottleDialog> {
   @override
   Widget build(BuildContext context) {
     final canSubmit = _pathController.text.trim().isNotEmpty;
+    final localizations = KonyakLocalizations.of(context);
 
     return AlertDialog(
-      title: Text('Move ${widget.bottleName}'),
+      title: Text(localizations.moveBottleTitle(widget.bottleName)),
       content: SizedBox(
         width: 460,
         child: Row(
@@ -214,7 +222,9 @@ class _MoveBottleDialogState extends State<MoveBottleDialog> {
                 key: const ValueKey('move-bottle-path-field'),
                 controller: _pathController,
                 autofocus: true,
-                decoration: const InputDecoration(labelText: 'Bottle path'),
+                decoration: InputDecoration(
+                  labelText: localizations.text('Bottle path'),
+                ),
                 textInputAction: TextInputAction.done,
                 onChanged: (_) => setState(() {}),
                 onSubmitted: (_) => _submit(),
@@ -223,7 +233,7 @@ class _MoveBottleDialogState extends State<MoveBottleDialog> {
             const SizedBox(width: 8),
             TextButton(
               onPressed: _chooseDirectory,
-              child: const Text('Choose...'),
+              child: Text(localizations.text('Choose...')),
             ),
           ],
         ),
@@ -231,12 +241,12 @@ class _MoveBottleDialogState extends State<MoveBottleDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(localizations.text('Cancel')),
         ),
         FilledButton.icon(
           onPressed: canSubmit ? _submit : null,
           icon: const Icon(Icons.drive_file_move_outline),
-          label: const Text('Move'),
+          label: Text(localizations.text('Move')),
         ),
       ],
     );

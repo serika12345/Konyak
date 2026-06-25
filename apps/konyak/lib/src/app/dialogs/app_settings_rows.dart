@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/konyak_localizations.dart';
 import '../../settings/app_settings_summary.dart';
 import '../app_constants.dart';
 import '../widgets/konyak_toggle.dart';
@@ -123,28 +124,28 @@ class AppSettingsAppearanceRow extends StatelessWidget {
             const SizedBox(width: 14),
             Expanded(
               child: Text(
-                'Appearance',
+                KonyakLocalizations.of(context).text('Appearance'),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(color: colors.text, fontSize: 14),
               ),
             ),
             SegmentedButton<AppAppearanceMode>(
-              segments: const [
+              segments: [
                 ButtonSegment<AppAppearanceMode>(
                   value: AppAppearanceMode.dark,
-                  icon: Icon(Icons.dark_mode_outlined, size: 16),
-                  label: Text('Dark'),
+                  icon: const Icon(Icons.dark_mode_outlined, size: 16),
+                  label: Text(KonyakLocalizations.of(context).text('Dark')),
                 ),
                 ButtonSegment<AppAppearanceMode>(
                   value: AppAppearanceMode.light,
-                  icon: Icon(Icons.light_mode_outlined, size: 16),
-                  label: Text('Light'),
+                  icon: const Icon(Icons.light_mode_outlined, size: 16),
+                  label: Text(KonyakLocalizations.of(context).text('Light')),
                 ),
                 ButtonSegment<AppAppearanceMode>(
                   value: AppAppearanceMode.system,
-                  icon: Icon(Icons.computer_outlined, size: 16),
-                  label: Text('System'),
+                  icon: const Icon(Icons.computer_outlined, size: 16),
+                  label: Text(KonyakLocalizations.of(context).text('System')),
                 ),
               ],
               selected: {mode},
@@ -181,6 +182,102 @@ class AppSettingsAppearanceRow extends StatelessWidget {
                     },
             ),
             const SizedBox(width: 14),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class AppSettingsLanguageRow extends StatelessWidget {
+  const AppSettingsLanguageRow({
+    super.key,
+    required this.mode,
+    required this.onChanged,
+  });
+
+  final AppLanguageMode mode;
+  final ValueChanged<AppLanguageMode>? onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = KonyakThemeColors.of(context);
+    final localizations = KonyakLocalizations.of(context);
+
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 72),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              localizations.text('Language'),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(color: colors.text, fontSize: 14),
+            ),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: SegmentedButton<AppLanguageMode>(
+                key: const ValueKey('app-settings-language-selector'),
+                segments: [
+                  ButtonSegment<AppLanguageMode>(
+                    value: AppLanguageMode.system,
+                    label: Text(
+                      localizations.languageModeLabel(AppLanguageMode.system),
+                    ),
+                  ),
+                  ButtonSegment<AppLanguageMode>(
+                    value: AppLanguageMode.english,
+                    label: Text(
+                      localizations.languageModeLabel(AppLanguageMode.english),
+                    ),
+                  ),
+                  ButtonSegment<AppLanguageMode>(
+                    value: AppLanguageMode.japanese,
+                    label: Text(
+                      localizations.languageModeLabel(AppLanguageMode.japanese),
+                    ),
+                  ),
+                ],
+                selected: {mode},
+                showSelectedIcon: false,
+                style: ButtonStyle(
+                  visualDensity: const VisualDensity(
+                    horizontal: -2,
+                    vertical: -3,
+                  ),
+                  side: WidgetStatePropertyAll(
+                    BorderSide(color: colors.border),
+                  ),
+                  foregroundColor: WidgetStateProperty.resolveWith((states) {
+                    if (states.contains(WidgetState.selected)) {
+                      return colors.accentText;
+                    }
+                    return onChanged == null
+                        ? colors.buttonDisabledForeground
+                        : colors.text;
+                  }),
+                  backgroundColor: WidgetStateProperty.resolveWith((states) {
+                    if (states.contains(WidgetState.selected)) {
+                      return colors.accent;
+                    }
+                    return colors.inputBackground;
+                  }),
+                ),
+                onSelectionChanged: onChanged == null
+                    ? null
+                    : (selection) {
+                        final selectedMode = selection.first;
+                        if (selectedMode == mode) {
+                          return;
+                        }
+                        onChanged!(selectedMode);
+                      },
+              ),
+            ),
           ],
         ),
       ),
@@ -229,7 +326,7 @@ class AppSettingsPathRow extends StatelessWidget {
           const SizedBox(width: 14),
           TextButton(
             onPressed: isSaving ? null : onBrowse,
-            child: const Text('Browse'),
+            child: Text(KonyakLocalizations.of(context).text('Browse')),
           ),
         ],
       ),

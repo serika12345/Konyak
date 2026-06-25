@@ -10,11 +10,22 @@ enum AppAppearanceMode {
   final String jsonValue;
 }
 
+enum AppLanguageMode {
+  system('system'),
+  english('en'),
+  japanese('ja');
+
+  const AppLanguageMode(this.jsonValue);
+
+  final String jsonValue;
+}
+
 class AppSettingsRecord {
   const AppSettingsRecord({
     this.terminateWineProcessesOnClose = true,
     required this.defaultBottlePath,
     this.appearanceMode = AppAppearanceMode.dark,
+    this.languageMode = AppLanguageMode.system,
     this.automaticallyCheckForKonyakUpdates = false,
     this.automaticallyCheckForWineUpdates = true,
     this.automaticallyPinNewInstalledPrograms = true,
@@ -23,6 +34,7 @@ class AppSettingsRecord {
   final bool terminateWineProcessesOnClose;
   final String defaultBottlePath;
   final AppAppearanceMode appearanceMode;
+  final AppLanguageMode languageMode;
   final bool automaticallyCheckForKonyakUpdates;
   final bool automaticallyCheckForWineUpdates;
   final bool automaticallyPinNewInstalledPrograms;
@@ -34,6 +46,7 @@ class AppSettingsRecord {
       terminateWineProcessesOnClose: terminateWineProcessesOnClose,
       defaultBottlePath: defaultBottlePath,
       appearanceMode: appearanceMode,
+      languageMode: languageMode,
       automaticallyCheckForKonyakUpdates: automaticallyCheckForKonyakUpdates,
       automaticallyCheckForWineUpdates: automaticallyCheckForWineUpdates,
       automaticallyPinNewInstalledPrograms:
@@ -46,6 +59,7 @@ class AppSettingsRecord {
       terminateWineProcessesOnClose: terminateWineProcessesOnClose,
       defaultBottlePath: defaultBottlePath,
       appearanceMode: appearanceMode,
+      languageMode: languageMode,
       automaticallyCheckForKonyakUpdates: automaticallyCheckForKonyakUpdates,
       automaticallyCheckForWineUpdates: automaticallyCheckForWineUpdates,
       automaticallyPinNewInstalledPrograms:
@@ -58,6 +72,20 @@ class AppSettingsRecord {
       terminateWineProcessesOnClose: terminateWineProcessesOnClose,
       defaultBottlePath: defaultBottlePath,
       appearanceMode: appearanceMode,
+      languageMode: languageMode,
+      automaticallyCheckForKonyakUpdates: automaticallyCheckForKonyakUpdates,
+      automaticallyCheckForWineUpdates: automaticallyCheckForWineUpdates,
+      automaticallyPinNewInstalledPrograms:
+          automaticallyPinNewInstalledPrograms,
+    );
+  }
+
+  AppSettingsRecord withLanguageMode(AppLanguageMode languageMode) {
+    return AppSettingsRecord(
+      terminateWineProcessesOnClose: terminateWineProcessesOnClose,
+      defaultBottlePath: defaultBottlePath,
+      appearanceMode: appearanceMode,
+      languageMode: languageMode,
       automaticallyCheckForKonyakUpdates: automaticallyCheckForKonyakUpdates,
       automaticallyCheckForWineUpdates: automaticallyCheckForWineUpdates,
       automaticallyPinNewInstalledPrograms:
@@ -72,6 +100,7 @@ class AppSettingsRecord {
       terminateWineProcessesOnClose: terminateWineProcessesOnClose,
       defaultBottlePath: defaultBottlePath,
       appearanceMode: appearanceMode,
+      languageMode: languageMode,
       automaticallyCheckForKonyakUpdates: automaticallyCheckForKonyakUpdates,
       automaticallyCheckForWineUpdates: automaticallyCheckForWineUpdates,
       automaticallyPinNewInstalledPrograms:
@@ -86,6 +115,7 @@ class AppSettingsRecord {
       terminateWineProcessesOnClose: terminateWineProcessesOnClose,
       defaultBottlePath: defaultBottlePath,
       appearanceMode: appearanceMode,
+      languageMode: languageMode,
       automaticallyCheckForKonyakUpdates: automaticallyCheckForKonyakUpdates,
       automaticallyCheckForWineUpdates: automaticallyCheckForWineUpdates,
       automaticallyPinNewInstalledPrograms:
@@ -100,6 +130,7 @@ class AppSettingsRecord {
       terminateWineProcessesOnClose: terminateWineProcessesOnClose,
       defaultBottlePath: defaultBottlePath,
       appearanceMode: appearanceMode,
+      languageMode: languageMode,
       automaticallyCheckForKonyakUpdates: automaticallyCheckForKonyakUpdates,
       automaticallyCheckForWineUpdates: automaticallyCheckForWineUpdates,
       automaticallyPinNewInstalledPrograms:
@@ -112,6 +143,7 @@ class AppSettingsRecord {
       'terminateWineProcessesOnClose': terminateWineProcessesOnClose,
       'defaultBottlePath': defaultBottlePath,
       'appearanceMode': appearanceMode.jsonValue,
+      'languageMode': languageMode.jsonValue,
       'automaticallyCheckForKonyakUpdates': automaticallyCheckForKonyakUpdates,
       'automaticallyCheckForWineUpdates': automaticallyCheckForWineUpdates,
       'automaticallyPinNewInstalledPrograms':
@@ -125,6 +157,7 @@ class AppSettingsRecord {
         other.terminateWineProcessesOnClose == terminateWineProcessesOnClose &&
         other.defaultBottlePath == defaultBottlePath &&
         other.appearanceMode == appearanceMode &&
+        other.languageMode == languageMode &&
         other.automaticallyCheckForKonyakUpdates ==
             automaticallyCheckForKonyakUpdates &&
         other.automaticallyCheckForWineUpdates ==
@@ -138,6 +171,7 @@ class AppSettingsRecord {
     terminateWineProcessesOnClose,
     defaultBottlePath,
     appearanceMode,
+    languageMode,
     automaticallyCheckForKonyakUpdates,
     automaticallyCheckForWineUpdates,
     automaticallyPinNewInstalledPrograms,

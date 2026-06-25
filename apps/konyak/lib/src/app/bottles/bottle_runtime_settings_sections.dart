@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../bottles/bottle_summary.dart';
+import '../../l10n/konyak_localizations.dart';
 import '../configuration_labels.dart';
 import '../widgets/configuration_controls.dart';
 import 'bottle_runtime_control_availability.dart';
@@ -27,15 +28,17 @@ class BottleWineSettingsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = KonyakLocalizations.of(context);
+
     return BottleConfigurationSection(
-      title: 'Wine',
+      title: localizations.text('Wine'),
       children: [
         BottleConfigurationRow(
-          label: 'Windows Version',
+          label: localizations.text('Windows Version'),
           trailing: ConfigurationDropdown(
             key: const ValueKey('config-windows-version'),
             value: settings.buildVersion.toString(),
-            labels: buildVersionLabels,
+            labels: localizations.textMap(buildVersionLabels),
             width: 210,
             onChanged: !availability.canUseWineRuntime
                 ? null
@@ -51,7 +54,7 @@ class BottleWineSettingsSection extends StatelessWidget {
           BottleConfigurationSwitchRow(
             switchKey: const ValueKey('config-retina-mode-switch'),
             loadingKey: const ValueKey('config-retina-mode-switch-loading'),
-            label: 'High Resolution Mode',
+            label: localizations.text('High Resolution Mode'),
             value: settings.retinaMode,
             isLoading:
                 pendingRuntimeSettingsControlKey ==
@@ -66,7 +69,7 @@ class BottleWineSettingsSection extends StatelessWidget {
                   },
           ),
         BottleConfigurationRow(
-          label: 'Windows DPI',
+          label: localizations.text('Windows DPI'),
           trailing: ConfigurationDropdown(
             key: const ValueKey('config-dpi-scaling'),
             value: settings.dpiScaling.toString(),
@@ -83,11 +86,11 @@ class BottleWineSettingsSection extends StatelessWidget {
           ),
         ),
         BottleConfigurationRow(
-          label: 'Enhanced Sync',
+          label: localizations.text('Enhanced Sync'),
           trailing: ConfigurationDropdown(
             key: const ValueKey('config-enhanced-sync'),
             value: settings.enhancedSync,
-            labels: enhancedSyncLabels,
+            labels: localizations.textMap(enhancedSyncLabels),
             onChanged: !availability.canUseWineRuntime
                 ? null
                 : (value) {
@@ -101,7 +104,7 @@ class BottleWineSettingsSection extends StatelessWidget {
         if (showMacosRuntimeSettings)
           BottleConfigurationSwitchRow(
             loadingKey: const ValueKey('config-avx-switch-loading'),
-            label: 'Advertise AVX Support',
+            label: localizations.text('Advertise AVX Support'),
             value: settings.avxEnabled,
             isLoading:
                 pendingRuntimeSettingsControlKey ==
@@ -140,6 +143,7 @@ class BottleGraphicsSettingsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = KonyakLocalizations.of(context);
     final graphicsBackend = settings.graphicsBackend;
     final showDxvkOptions = graphicsBackend == BottleGraphicsBackend.dxvk;
     final showMetalOptions =
@@ -153,10 +157,10 @@ class BottleGraphicsSettingsSection extends StatelessWidget {
     };
 
     return BottleConfigurationSection(
-      title: 'Graphics',
+      title: localizations.text('Graphics'),
       children: [
         BottleConfigurationRow(
-          label: 'Graphics Backend',
+          label: localizations.text('Graphics Backend'),
           trailing: ConfigurationDropdown(
             key: const ValueKey('config-graphics-backend'),
             value: graphicsBackend.name,
@@ -164,6 +168,7 @@ class BottleGraphicsSettingsSection extends StatelessWidget {
               settings: settings,
               availability: availability,
               showMacosRuntimeSettings: showMacosRuntimeSettings,
+              localizations: localizations,
             ),
             onChanged:
                 !_canChangeGraphicsBackend(
@@ -205,7 +210,7 @@ class BottleGraphicsSettingsSection extends StatelessWidget {
             label: 'DXVK HUD',
             trailing: ConfigurationDropdown(
               value: settings.dxvkHud,
-              labels: dxvkHudLabels,
+              labels: localizations.textMap(dxvkHudLabels),
               onChanged: availability.canUseDxvk
                   ? (value) {
                       onChanged(
@@ -295,10 +300,11 @@ Map<String, String> _graphicsBackendLabels({
   required BottleRuntimeSettingsSummary settings,
   required BottleRuntimeControlAvailability availability,
   required bool showMacosRuntimeSettings,
+  required KonyakLocalizations localizations,
 }) {
   final current = settings.graphicsBackend;
   return <String, String>{
-    BottleGraphicsBackend.wineDefault.name: 'Default',
+    BottleGraphicsBackend.wineDefault.name: localizations.text('Default'),
     if (availability.canUseDxvk || current == BottleGraphicsBackend.dxvk)
       BottleGraphicsBackend.dxvk.name: showMacosRuntimeSettings
           ? 'DXVK-macOS'

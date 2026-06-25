@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../bottles/bottle_summary.dart';
+import '../../l10n/konyak_localizations.dart';
 import '../app_constants.dart';
 import '../app_platform.dart';
 import 'sidebar_bottle_item.dart';
@@ -37,6 +38,7 @@ class KonyakSidebar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = KonyakThemeColors.of(context);
+    final localizations = KonyakLocalizations.of(context);
     final topPadding = sidebarTopPadding(
       reserveLeadingWindowControlsSpace: reserveLeadingWindowControlsSpace,
     );
@@ -54,7 +56,7 @@ class KonyakSidebar extends StatelessWidget {
               child: Row(
                 children: [
                   IconButton(
-                    tooltip: 'Toggle sidebar',
+                    tooltip: localizations.text('Toggle sidebar'),
                     onPressed: onToggleSidebar,
                     color: colors.sidebarIcon,
                     iconSize: 20,
@@ -72,7 +74,7 @@ class KonyakSidebar extends StatelessWidget {
                       onChanged: onSearchChanged,
                       style: TextStyle(color: colors.text, fontSize: 13),
                       decoration: InputDecoration(
-                        hintText: 'Search',
+                        hintText: localizations.text('Search'),
                         hintStyle: TextStyle(
                           color: colors.mutedText,
                           fontSize: 13,
@@ -112,7 +114,7 @@ class KonyakSidebar extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(10, 16, 10, 7),
               child: Text(
-                'Bottles',
+                localizations.text('Bottles'),
                 style: TextStyle(color: colors.mutedText, fontSize: 13),
               ),
             ),
@@ -121,7 +123,7 @@ class KonyakSidebar extends StatelessWidget {
                   ? Padding(
                       padding: const EdgeInsets.all(10),
                       child: Text(
-                        'No Bottles',
+                        localizations.text('No Bottles'),
                         style: TextStyle(color: colors.mutedText, fontSize: 13),
                       ),
                     )

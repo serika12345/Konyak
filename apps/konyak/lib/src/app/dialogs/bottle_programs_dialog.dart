@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../cli/konyak_cli_client.dart';
+import '../../l10n/konyak_localizations.dart';
 import '../utils/program_labels.dart';
 import '../widgets/icon_file_image.dart';
 
@@ -20,12 +21,14 @@ class BottleProgramsDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = KonyakLocalizations.of(context);
+
     return AlertDialog(
-      title: Text('Installed programs in $bottleName'),
+      title: Text(localizations.installedProgramsIn(bottleName)),
       content: SizedBox(
         width: 560,
         child: programs.isEmpty
-            ? const Text('No installed programs found.')
+            ? Text(localizations.text('No installed programs found.'))
             : ListView.builder(
                 shrinkWrap: true,
                 itemCount: programs.length,
@@ -41,12 +44,12 @@ class BottleProgramsDialog extends StatelessWidget {
                         TextButton.icon(
                           onPressed: () => onPinProgram(program),
                           icon: const Icon(Icons.push_pin_outlined, size: 16),
-                          label: const Text('Pin'),
+                          label: Text(localizations.text('Pin')),
                         ),
                         const SizedBox(width: 4),
                         TextButton(
                           onPressed: () => onRunProgram(program),
-                          child: const Text('Run'),
+                          child: Text(localizations.text('Run')),
                         ),
                       ],
                     ),
@@ -58,7 +61,7 @@ class BottleProgramsDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Close'),
+          child: Text(localizations.text('Close')),
         ),
       ],
     );

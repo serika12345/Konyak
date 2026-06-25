@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../cli/konyak_cli_client.dart';
+import '../../l10n/konyak_localizations.dart';
 
 class WinetricksDialog extends StatefulWidget {
   const WinetricksDialog({
@@ -28,6 +29,7 @@ class _WinetricksDialogState extends State<WinetricksDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = KonyakLocalizations.of(context);
     final filteredCategories = _filteredWinetricksCategories(
       categories: widget.categories,
       query: _searchController.text,
@@ -38,20 +40,24 @@ class _WinetricksDialogState extends State<WinetricksDialog> {
         _winetricksCategoriesContainVerb(filteredCategories, selectedVerbId);
 
     return AlertDialog(
-      title: Text('Winetricks in ${widget.bottleName}'),
+      title: Text(localizations.winetricksIn(widget.bottleName)),
       content: SizedBox(
         width: 640,
         height: 420,
         child: widget.categories.isEmpty
-            ? const Center(child: Text('No winetricks verbs found.'))
+            ? Center(
+                child: Text(localizations.text('No winetricks verbs found.')),
+              )
             : Column(
                 children: [
                   TextField(
                     key: const ValueKey('winetricks-search-field'),
                     controller: _searchController,
-                    decoration: const InputDecoration(
-                      labelText: 'Search winetricks packages',
-                      prefixIcon: Icon(Icons.search),
+                    decoration: InputDecoration(
+                      labelText: localizations.text(
+                        'Search winetricks packages',
+                      ),
+                      prefixIcon: const Icon(Icons.search),
                     ),
                     textInputAction: TextInputAction.search,
                     onChanged: (_) => setState(() {}),
@@ -59,8 +65,12 @@ class _WinetricksDialogState extends State<WinetricksDialog> {
                   const SizedBox(height: 12),
                   Expanded(
                     child: filteredCategories.isEmpty
-                        ? const Center(
-                            child: Text('No matching winetricks verbs.'),
+                        ? Center(
+                            child: Text(
+                              localizations.text(
+                                'No matching winetricks verbs.',
+                              ),
+                            ),
                           )
                         : DefaultTabController(
                             key: ValueKey(
@@ -104,14 +114,14 @@ class _WinetricksDialogState extends State<WinetricksDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(localizations.text('Cancel')),
         ),
         FilledButton.icon(
           onPressed: !canRun
               ? null
               : () => Navigator.of(context).pop(selectedVerbId),
           icon: const Icon(Icons.play_arrow),
-          label: const Text('Run'),
+          label: Text(localizations.text('Run')),
         ),
       ],
     );
@@ -182,7 +192,11 @@ class _WinetricksVerbList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (category.verbs.isEmpty) {
-      return const Center(child: Text('No verbs in this category.'));
+      return Center(
+        child: Text(
+          KonyakLocalizations.of(context).text('No verbs in this category.'),
+        ),
+      );
     }
 
     return ListView.builder(

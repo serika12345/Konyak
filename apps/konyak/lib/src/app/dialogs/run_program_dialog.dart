@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../files/program_file_picker.dart';
+import '../../l10n/konyak_localizations.dart';
 
 class RunProgramDialog extends StatefulWidget {
   const RunProgramDialog({
@@ -52,18 +53,19 @@ class _RunProgramDialogState extends State<RunProgramDialog> {
   @override
   Widget build(BuildContext context) {
     final canSubmit = _programPathController.text.trim().isNotEmpty;
+    final localizations = KonyakLocalizations.of(context);
 
     return AlertDialog(
-      title: Text('Run program in ${widget.bottleName}'),
+      title: Text(localizations.runProgramIn(widget.bottleName)),
       content: SizedBox(
         width: 420,
         child: TextField(
           controller: _programPathController,
           autofocus: true,
           decoration: InputDecoration(
-            labelText: 'Program path',
+            labelText: localizations.text('Program path'),
             suffixIcon: IconButton(
-              tooltip: 'Choose program file',
+              tooltip: localizations.text('Choose program file'),
               onPressed: _chooseProgramFile,
               icon: const Icon(Icons.folder_open),
             ),
@@ -76,12 +78,12 @@ class _RunProgramDialogState extends State<RunProgramDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(localizations.text('Cancel')),
         ),
         FilledButton.icon(
           onPressed: canSubmit ? _submit : null,
           icon: const Icon(Icons.play_arrow),
-          label: const Text('Run'),
+          label: Text(localizations.text('Run')),
         ),
       ],
     );

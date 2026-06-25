@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../bottles/bottle_summary.dart';
+import '../../l10n/konyak_localizations.dart';
 import '../app_constants.dart';
 
 class PinProgramAction extends StatelessWidget {
@@ -16,9 +17,10 @@ class PinProgramAction extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = KonyakThemeColors.of(context);
+    final localizations = KonyakLocalizations.of(context);
 
     return Tooltip(
-      message: 'Pin program in ${bottle.name}',
+      message: localizations.pinProgramTooltip(bottle.name),
       child: InkWell(
         borderRadius: BorderRadius.circular(8),
         onTap: onPinProgram == null ? null : () => onPinProgram!(bottle),
@@ -38,7 +40,7 @@ class PinProgramAction extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               Text(
-                'Pin Program',
+                localizations.text('Pin Program'),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,

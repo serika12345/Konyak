@@ -366,9 +366,12 @@ extension _KonyakHomeLoaderPrograms on _KonyakHomeLoaderState {
       return;
     }
 
+    final localizations = KonyakLocalizations.of(context);
     final message = switch (result) {
       OpenedBottleLocation(:final location) =>
-        'Opened ${locationLabel(location)}',
+        localizations.openedBottleLocation(
+          localizations.locationLabel(location),
+        ),
       BottleLocationOpenFailure(:final message) => message,
     };
 
