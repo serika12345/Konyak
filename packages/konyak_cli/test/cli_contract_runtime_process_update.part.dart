@@ -2306,7 +2306,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
     final completed = result as AppUpdateCheckCompleted;
     expect(
       completed.update.archiveUrl.toNullable(),
-      'https://example.invalid/Konyak-1.1.0-macos-arm64.zip',
+      'https://example.invalid/Konyak-1.1.0-macos-arm64.dmg',
     );
     expect(
       completed.update.archiveSha256.toNullable(),
@@ -2353,15 +2353,15 @@ void defineRuntimeProcessAndUpdateContractTests() {
           jsonEncode(<String, Object?>{
             'tag_name': 'v1.1.0',
             'body':
-                'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa  Konyak-1.1.0-macos-arm64.zip',
+                'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa  Konyak-1.1.0-macos-arm64.dmg',
             'assets': [
               {
                 'browser_download_url':
-                    'https://example.invalid/Konyak-1.1.0-macos-arm64.zip.sha256',
+                    'https://example.invalid/Konyak-1.1.0-macos-arm64.dmg.sha256',
               },
               {
                 'browser_download_url':
-                    'https://example.invalid/Konyak-1.1.0-macos-arm64.zip',
+                    'https://example.invalid/Konyak-1.1.0-macos-arm64.dmg',
               },
             ],
           }),
@@ -2374,7 +2374,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
     final fetched = result as RuntimeReleaseMetadataFetched;
     expect(
       fetched.metadata.archiveUrl.toNullable(),
-      'https://example.invalid/Konyak-1.1.0-macos-arm64.zip',
+      'https://example.invalid/Konyak-1.1.0-macos-arm64.dmg',
     );
     expect(
       fetched.metadata.archiveSha256.toNullable(),
@@ -2436,7 +2436,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
                 'assets': [
                   {
                     'browser_download_url':
-                        'https://example.invalid/Konyak-1.1.0-macos-arm64.zip',
+                        'https://example.invalid/Konyak-1.1.0-macos-arm64.dmg',
                   },
                   {'browser_download_url': missingAsset.uri.toString()},
                 ],
@@ -2543,7 +2543,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
         RuntimeReleaseMetadata(
           version: 'v1.1.0',
           archiveUrl: Option.of(
-            'https://example.invalid/Konyak-1.1.0-macos.zip',
+            'https://example.invalid/Konyak-1.1.0-macos.dmg',
           ),
           archiveSha256: Option.of(
             'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
@@ -2625,7 +2625,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
       }
     });
     final sourceArchive = File(
-      _joinTestPath(tempDirectory.path, const ['Konyak-1.1.0-macos.zip']),
+      _joinTestPath(tempDirectory.path, const ['Konyak-1.1.0-macos.dmg']),
     )..writeAsStringSync('signed app update');
     final updateCache = _joinTestPath(tempDirectory.path, const ['cache']);
     final pathOpener = RecordingPathOpener(result: const PathOpenCompleted());
@@ -2671,7 +2671,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
       }
     });
     final sourceArchive = File(
-      _joinTestPath(tempDirectory.path, const ['Konyak-1.1.0-macos.zip']),
+      _joinTestPath(tempDirectory.path, const ['Konyak-1.1.0-macos.dmg']),
     )..writeAsStringSync('unsigned app update');
     final pathOpener = RecordingPathOpener(result: const PathOpenCompleted());
     final installer = DartIoAppUpdateInstaller(
@@ -2711,7 +2711,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
       }
     });
     final sourceArchive = File(
-      _joinTestPath(tempDirectory.path, const ['Konyak-1.1.0-macos.zip']),
+      _joinTestPath(tempDirectory.path, const ['Konyak-1.1.0-macos.dmg']),
     )..writeAsStringSync('tampered app update');
     final pathOpener = RecordingPathOpener(result: const PathOpenCompleted());
     final installer = DartIoAppUpdateInstaller(
@@ -2946,6 +2946,91 @@ void defineRuntimeProcessAndUpdateContractTests() {
         contains(r'mv "$target_bundle" "$backup_path"'),
         contains(r'if [[ -w "$target_parent" ]]'),
         contains(r'with administrator privileges'),
+        contains(r'nohup open "$target_bundle"'),
+      ),
+    );
+
+    final stagedArchive = File(detachedProcessStarter.lastArguments[1]);
+    expect(stagedArchive.existsSync(), isTrue);
+    expect(_fileSha256(stagedArchive.path), _fileSha256(sourceArchive.path));
+  });
+
+  test('app update installer stages macOS DMG replacement handoff', () {
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-macos-dmg-app-update-test-',
+    );
+    addTearDown(() {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    });
+    final sourceArchive = File(
+      _joinTestPath(tempDirectory.path, const ['Konyak-1.1.0-macos.dmg']),
+    )..writeAsStringSync('updated macOS app bundle dmg');
+    final currentBundle = Directory(
+      _joinTestPath(tempDirectory.path, const ['Konyak.app']),
+    )..createSync();
+    File(
+        _joinTestPath(currentBundle.path, const [
+          'Contents',
+          'MacOS',
+          'Konyak',
+        ]),
+      )
+      ..createSync(recursive: true)
+      ..writeAsStringSync('current app executable');
+    final detachedProcessStarter = RecordingDetachedProcessStarter(
+      result: const DetachedProcessStartCompleted(),
+    );
+    final pathOpener = RecordingPathOpener(result: const PathOpenCompleted());
+    final installer = DartIoAppUpdateInstaller(
+      environment: HostEnvironment({
+        'KONYAK_APP_UPDATE_CACHE_HOME': _joinTestPath(
+          tempDirectory.path,
+          const ['cache'],
+        ),
+        'KONYAK_APP_EXECUTABLE': _joinTestPath(currentBundle.path, const [
+          'Contents',
+          'MacOS',
+          'Konyak',
+        ]),
+        'KONYAK_APP_PID': '5150',
+      }),
+      hostPlatform: KonyakHostPlatform.macos,
+      pathOpener: pathOpener,
+      detachedProcessStarter: detachedProcessStarter,
+    );
+
+    final result = installer.install(
+      AppUpdateRecord(
+        appId: 'konyak',
+        status: 'available',
+        currentVersion: Option.of('1.0.0'),
+        latestVersion: Option.of('1.1.0'),
+        archiveUrl: Option.of(sourceArchive.uri.toString()),
+        archiveSha256: Option.of(_fileSha256(sourceArchive.path)),
+      ),
+    );
+
+    expect(result, isA<AppUpdateInstallCompleted>());
+    final completed = result as AppUpdateInstallCompleted;
+    expect(completed.install.installPath.toNullable(), currentBundle.path);
+    expect(pathOpener.lastPath, isNull);
+    expect(detachedProcessStarter.lastExecutable, 'bash');
+    expect(detachedProcessStarter.lastArguments, hasLength(4));
+    expect(detachedProcessStarter.lastArguments[1], endsWith('.dmg'));
+    expect(detachedProcessStarter.lastArguments[2], currentBundle.path);
+    expect(detachedProcessStarter.lastArguments[3], '5150');
+
+    final handoffScript = File(detachedProcessStarter.lastArguments[0]);
+    expect(handoffScript.existsSync(), isTrue);
+    expect(
+      handoffScript.readAsStringSync(),
+      allOf(
+        contains(r'hdiutil attach "$source_archive"'),
+        contains(r'hdiutil detach "$mount_dir"'),
+        contains(r'kill -TERM "$app_pid"'),
+        contains(r'mv "$target_bundle" "$backup_path"'),
         contains(r'nohup open "$target_bundle"'),
       ),
     );
@@ -3789,7 +3874,7 @@ File _writeMultiPlatformAppReleaseMetadata() {
       jsonEncode(<String, Object?>{
         'tag_name': 'v1.1.0',
         'body': '''
-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa  Konyak-1.1.0-macos-arm64.zip
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa  Konyak-1.1.0-macos-arm64.dmg
 bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb  Konyak-1.1.0-linux-x86_64.AppImage
 ''',
         'assets': [
@@ -3799,7 +3884,7 @@ bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb  Konyak-1.1.0-l
           },
           {
             'browser_download_url':
-                'https://example.invalid/Konyak-1.1.0-macos-arm64.zip',
+                'https://example.invalid/Konyak-1.1.0-macos-arm64.dmg',
           },
         ],
       }),

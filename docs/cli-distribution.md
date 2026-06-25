@@ -98,14 +98,16 @@ format.
 
 Runtime update installation can update Konyak-managed runtime directories in
 place. Konyak app update installation downloads the release artifact and
-verifies its SHA-256 checksum from release metadata before handoff. macOS zip
-builds and Linux AppImage builds then terminate the running app, replace the
-current artifact in place, and relaunch through a detached helper script. macOS
-handoff uses standard administrator authorization when the current `.app` bundle
-lives in a write-protected location such as `/Applications`. macOS artifacts
-remain intentionally ad-hoc signed and unnotarized. Linux AppImage startup
-prompts the user when automatic Konyak update checks are enabled and an app
-update is available, then invokes the verified app-update install path only
+verifies its SHA-256 checksum from release metadata before handoff. macOS DMG
+builds mount the verified disk image, copy out the updated `.app`, terminate
+the running app, replace the current bundle in place, and relaunch through a
+detached helper script. Linux AppImage builds terminate the running AppImage,
+replace it in place, and relaunch through the same detached-helper pattern.
+macOS handoff uses standard administrator authorization when the current `.app`
+bundle lives in a write-protected location such as `/Applications`. macOS
+artifacts remain intentionally ad-hoc signed and unnotarized. Linux AppImage
+startup prompts the user when automatic Konyak update checks are enabled and an
+app update is available, then invokes the verified app-update install path only
 after confirmation. The Linux handoff verifies that the current AppImage exists
 and that its directory is writable before terminating the app; read-only and
 Nix-managed locations should be updated outside the AppImage updater.

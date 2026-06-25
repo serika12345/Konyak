@@ -9,7 +9,7 @@ if [[ "$(uname -s)" != "Darwin" ]]; then
   exit 69
 fi
 
-for command in bash chmod curl ditto jq kill shasum sleep; do
+for command in bash chmod curl ditto hdiutil jq kill shasum sleep; do
   if ! command -v "$command" >/dev/null 2>&1; then
     echo "Missing required command: $command" >&2
     exit 69
@@ -22,7 +22,8 @@ cli_executable="$app_bundle/Contents/Resources/konyak-cli"
 work_root="${KONYAK_MACOS_APP_UPDATE_HANDOFF_SMOKE_WORK_ROOT:-$repo_root/.dart_tool/konyak/macos-app-update-handoff-smoke}"
 target_bundle="$work_root/current/Konyak.app"
 updated_bundle="$work_root/update/Konyak.app"
-archive_path="$work_root/release/Konyak-1.1.0-macos-smoke.zip"
+dmg_root="$work_root/dmg-root"
+archive_path="$work_root/release/Konyak-1.1.0-macos-smoke.dmg"
 release_json="$work_root/release/latest.json"
 install_json="$work_root/install.json"
 app_pid=""
@@ -73,13 +74,17 @@ rm -rf "$work_root"
 mkdir -p "$work_root/release"
 write_minimal_app_bundle "$target_bundle" "current"
 write_minimal_app_bundle "$updated_bundle" "updated"
+mkdir -p "$dmg_root"
+ditto "$updated_bundle" "$dmg_root/Konyak.app"
+ln -s /Applications "$dmg_root/Applications"
 target_bundle="${target_bundle:A}"
 updated_bundle="${updated_bundle:A}"
+dmg_root="${dmg_root:A}"
 archive_path="${archive_path:A}"
 release_json="${release_json:A}"
 install_json="${install_json:A}"
 
-ditto -c -k --keepParent "$updated_bundle" "$archive_path"
+hdiutil create -volname "Konyak" -srcfolder "$dmg_root" -ov -format UDZO "$archive_path" >/dev/null
 archive_sha256="$(shasum -a 256 "$archive_path" | awk '{ print $1 }')"
 archive_name="${archive_path:t}"
 archive_url="file://$archive_path"

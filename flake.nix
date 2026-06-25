@@ -141,6 +141,11 @@
             zstd
           ];
 
+          darwinReleasePackagingPackages = with pkgs; [
+            create-dmg
+            resvg
+          ];
+
           darwinVerificationPackages = with pkgs; [
             swiftformat
             swiftlint
@@ -168,7 +173,10 @@
               linuxFlutterBuildPackages ++ linuxReleasePackagingPackages ++ linuxHostRuntimePackages
             )
             ++ lib.optionals pkgs.stdenv.isDarwin (
-              darwinFlutterBuildPackages ++ darwinHostRuntimePackages ++ darwinVerificationPackages
+              darwinFlutterBuildPackages
+              ++ darwinReleasePackagingPackages
+              ++ darwinHostRuntimePackages
+              ++ darwinVerificationPackages
             );
 
           darwinXcodeEnvironment = ''
@@ -186,7 +194,8 @@
               let
                 macosReleaseApp = pkgs.writeShellApplication {
                   name = "konyak-macos-release";
-                  runtimeInputs = releaseBuildPackages ++ darwinFlutterBuildPackages;
+                  runtimeInputs =
+                    releaseBuildPackages ++ darwinFlutterBuildPackages ++ darwinReleasePackagingPackages;
                   text = ''
                     export KONYAK_NIX_RELEASE_APP=1
                     export KONYAK_REPO_ROOT="$PWD"

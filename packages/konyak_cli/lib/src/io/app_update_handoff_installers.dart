@@ -20,8 +20,10 @@ extension _AppUpdateHandoffInstallers on DartIoAppUpdateInstaller {
       );
     }
 
+    final archiveExtension = _macosAppUpdateArchiveExtension(archivePath);
     final stagedArchivePath = _joinPath(updatesDirectory.path, [
-      'Konyak-update-${DateTime.now().microsecondsSinceEpoch}.zip',
+      'Konyak-update-${DateTime.now().microsecondsSinceEpoch}'
+          '$archiveExtension',
     ]);
     final stagedArchive = File(stagedArchivePath);
     stagedArchive.parent.createSync(recursive: true);
@@ -116,6 +118,15 @@ extension _AppUpdateHandoffInstallers on DartIoAppUpdateInstaller {
       ),
     };
   }
+}
+
+String _macosAppUpdateArchiveExtension(String archivePath) {
+  final fileName = archivePath.split(Platform.pathSeparator).last.toLowerCase();
+  if (fileName.endsWith('.dmg')) {
+    return '.dmg';
+  }
+
+  return '.zip';
 }
 
 String? _linuxAppImageUpdatePreflightFailure(String targetPath) {

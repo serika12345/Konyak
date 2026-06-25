@@ -67,6 +67,9 @@ jobs:
       - name: Smoke packaged macOS runtime extraction
         run: nix develop -c zsh -lc './scripts/smoke_macos_release_runtime_extraction.zsh'
 
+      - name: Smoke packaged macOS DMG layout
+        run: nix develop -c zsh -lc './scripts/smoke_macos_dmg_layout.zsh'
+
       - name: Smoke packaged macOS Finder integration
         run: nix develop -c zsh -lc 'fixture="$(./scripts/fetch_windows_fixture_putty.zsh)" && ./scripts/smoke_macos_finder_integration.zsh .dart_tool/konyak/release/macos/Konyak.app "$fixture"'
 
@@ -80,8 +83,8 @@ jobs:
         with:
           name: konyak-macos-release
           path: |
-            .dart_tool/konyak/release/macos/Konyak-*.zip
-            .dart_tool/konyak/release/macos/Konyak-*.zip.sha256
+            .dart_tool/konyak/release/macos/Konyak-*.dmg
+            .dart_tool/konyak/release/macos/Konyak-*.dmg.sha256
             .dart_tool/konyak/release/macos/Konyak-*.release.json
             .dart_tool/konyak/release/macos/SHA256SUMS
             .dart_tool/konyak/release/macos/release-notes.md
@@ -124,8 +127,8 @@ jobs:
           linux_appimage_checksums=("$linux_dir"/Konyak-*.AppImage.sha256)
           linux_metadata=("$linux_dir"/Konyak-*.release.json)
           linux_checksums=("$linux_dir"/SHA256SUMS)
-          macos_zips=("$macos_dir"/Konyak-*.zip)
-          macos_zip_checksums=("$macos_dir"/Konyak-*.zip.sha256)
+          macos_dmgs=("$macos_dir"/Konyak-*.dmg)
+          macos_dmg_checksums=("$macos_dir"/Konyak-*.dmg.sha256)
           macos_metadata=("$macos_dir"/Konyak-*.release.json)
           macos_checksums=("$macos_dir"/SHA256SUMS)
 
@@ -133,8 +136,8 @@ jobs:
                 ${#linux_appimage_checksums[@]} -ne 1 ||
                 ${#linux_metadata[@]} -ne 1 ||
                 ${#linux_checksums[@]} -ne 1 ||
-                ${#macos_zips[@]} -ne 1 ||
-                ${#macos_zip_checksums[@]} -ne 1 ||
+                ${#macos_dmgs[@]} -ne 1 ||
+                ${#macos_dmg_checksums[@]} -ne 1 ||
                 ${#macos_metadata[@]} -ne 1 ||
                 ${#macos_checksums[@]} -ne 1 ]]; then
             echo "Expected exactly one release artifact, checksum, metadata file, and SHA256SUMS per platform." >&2
@@ -152,8 +155,8 @@ jobs:
           } >"$notes_path"
 
           assets=(
-            "${macos_zips[0]}"
-            "${macos_zip_checksums[0]}"
+            "${macos_dmgs[0]}"
+            "${macos_dmg_checksums[0]}"
             "${macos_metadata[0]}"
             "${linux_appimages[0]}"
             "${linux_appimage_checksums[0]}"

@@ -11,6 +11,290 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-25 15:23 JST
+- State: `completed`
+- Branch: `main`
+- Related work: macOS DMG release cleanup audit
+- Purpose: check the uncommitted macOS DMG release work for trial-stage debt,
+  stale zip wording, temporary DMG styling paths, and leftover generated or
+  mounted artifacts before commit/release.
+- Completed:
+  - Audited the release script, layout smoke, update handoff smoke, workflow,
+    docs, and app-update tests for old `style_macos_dmg`, PPM, read/write DMG,
+    `sandbox-safe`, stale zip artifact wording, and temporary generated paths.
+  - Removed a stale completed TODO entry that still described macOS app update
+    artifacts as zip files instead of DMGs.
+  - Updated generic app-update and release-metadata test fixtures to use DMG
+    names so zip remains only in the explicit legacy handoff compatibility
+    test or historical progress records.
+  - Confirmed the only untracked source file is the intended new
+    `scripts/smoke_macos_dmg_layout.zsh` smoke, and no Konyak DMG mount remains
+    attached.
+- Remaining: none for the cleanup audit; remote GitHub Actions publish has not
+  been run for this uncommitted change.
+- Next: commit and cut the next release when requested.
+- Verification:
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --name "app update|release metadata fetcher selects archives|release metadata fetcher rejects unreadable"'`:
+    passed.
+  - `nix develop -c zsh -lc 'just verify-governance && just verify-safety && just format-check && just lint && just cli-test && just smoke-macos-dmg-layout'`:
+    passed.
+  - `nix develop -c zsh -lc 'git diff --check && zsh -n scripts/build_macos_release.zsh scripts/smoke_macos_dmg_layout.zsh scripts/smoke_macos_app_update_handoff.zsh'`:
+    passed.
+  - `nix develop -c zsh -lc 'git ls-files --others --exclude-standard && hdiutil info | rg "/Volumes/Konyak|dmg\\." || true'`:
+    passed; only `scripts/smoke_macos_dmg_layout.zsh` is untracked, and no
+    Konyak DMG mount is attached.
+
+- Timestamp: 2026-06-25 15:15 JST
+- State: `completed`
+- Branch: `main`
+- Related work: macOS DMG vector arrow rendering
+- Purpose: render the DMG installer arrow from vector source so the visible
+  arrow is antialiased instead of jagged while keeping the final Finder
+  background as the PNG format required by `create-dmg`.
+- Completed:
+  - Read the current background generator, `create-dmg` release tooling, and
+    layout smoke before editing.
+  - Test workstream: updated `scripts/smoke_macos_dmg_layout.zsh` to require
+    at least one antialiased blended edge pixel around the arrow head.
+  - Test workstream: confirmed the updated layout smoke fails against the
+    current generated DMG because the arrow has no antialiased vector edge.
+  - Implementation workstream: added `resvg` to the Darwin release/dev shell
+    tooling and replaced the PPM background generator with SVG source rendered
+    to PNG before passing the background to `create-dmg`.
+  - Audit workstream: rebuilt the macOS DMG, reran the layout smoke with
+    antialiasing pixel checks, and refreshed the screenshot at
+    `.dart_tool/konyak/release/macos/dmg-layout.png`.
+- Remaining: none for the implementation; remote GitHub Actions publish has
+  not been run for this uncommitted change.
+- Next: commit and cut the next release when requested.
+- Verification:
+  - `nix develop -c zsh -lc './scripts/smoke_macos_dmg_layout.zsh .dart_tool/konyak/release/macos/Konyak-1.0.1-macos-arm64.dmg'`:
+    failed as expected before implementation because the arrow had no
+    antialiased vector edge.
+  - `nix develop -c zsh -lc 'nixfmt flake.nix && command -v resvg && zsh -n scripts/build_macos_release.zsh scripts/smoke_macos_dmg_layout.zsh'`:
+    passed.
+  - `nix develop -c zsh -lc 'just macos-release'`: passed.
+  - `nix develop -c zsh -lc './scripts/smoke_macos_dmg_layout.zsh .dart_tool/konyak/release/macos/Konyak-1.0.1-macos-arm64.dmg'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd .dart_tool/konyak/release/macos && shasum -a 256 -c Konyak-1.0.1-macos-arm64.dmg.sha256 && shasum -a 256 -c SHA256SUMS'`:
+    passed.
+  - `nix develop -c zsh -lc './scripts/smoke_macos_app_update_handoff.zsh .dart_tool/konyak/release/macos/Konyak.app'`:
+    passed.
+  - `nix develop -c zsh -lc './scripts/smoke_macos_release_runtime_extraction.zsh .dart_tool/konyak/release/macos/Konyak.app'`:
+    passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+
+- Timestamp: 2026-06-25 15:07 JST
+- State: `completed`
+- Branch: `main`
+- Related work: macOS DMG arrow simplification
+- Purpose: remove the DMG installer arrow shadow and draw the arrow as a
+  single flat color on the white background.
+- Completed:
+  - Read the current background generator and layout smoke before editing.
+  - Test workstream: updated `scripts/smoke_macos_dmg_layout.zsh` to require
+    the old shadow area to remain white and the arrow body/edge pixels to
+    match the same RGB value.
+  - Test workstream: confirmed the updated layout smoke fails against the
+    current generated DMG because the old shadow area is still gray.
+  - Implementation workstream: removed the shadow and secondary fill from the
+    generated arrow so the arrow is a single RGB color on the white background.
+  - Audit workstream: rebuilt the macOS DMG, reran the layout smoke with
+    single-color pixel checks, and refreshed the screenshot at
+    `.dart_tool/konyak/release/macos/dmg-layout.png`.
+- Remaining: none for the implementation; remote GitHub Actions publish has
+  not been run for this uncommitted change.
+- Next: commit and cut the next release when requested.
+- Verification:
+  - `nix develop -c zsh -lc './scripts/smoke_macos_dmg_layout.zsh .dart_tool/konyak/release/macos/Konyak-1.0.1-macos-arm64.dmg'`:
+    failed as expected before implementation because the old arrow shadow area
+    was gray.
+  - `nix develop -c zsh -lc 'zsh -n scripts/build_macos_release.zsh scripts/smoke_macos_dmg_layout.zsh'`:
+    passed.
+  - `nix develop -c zsh -lc 'just macos-release'`: passed.
+  - `nix develop -c zsh -lc './scripts/smoke_macos_dmg_layout.zsh .dart_tool/konyak/release/macos/Konyak-1.0.1-macos-arm64.dmg'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd .dart_tool/konyak/release/macos && shasum -a 256 -c Konyak-1.0.1-macos-arm64.dmg.sha256 && shasum -a 256 -c SHA256SUMS'`:
+    passed.
+  - `nix develop -c zsh -lc './scripts/smoke_macos_app_update_handoff.zsh .dart_tool/konyak/release/macos/Konyak.app'`:
+    passed.
+  - `nix develop -c zsh -lc './scripts/smoke_macos_release_runtime_extraction.zsh .dart_tool/konyak/release/macos/Konyak.app'`:
+    passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+
+- Timestamp: 2026-06-25 15:01 JST
+- State: `completed`
+- Branch: `main`
+- Related work: macOS DMG Finder layout refinement
+- Purpose: adjust the `create-dmg` installer background to use a white
+  background and shrink the arrow so it does not touch the Applications drop
+  link.
+- Completed:
+  - Read the current macOS release background generator and DMG layout smoke.
+  - Test workstream: added PNG pixel checks to `scripts/smoke_macos_dmg_layout.zsh`
+    for white background corners, a white right-side clearance point between
+    the arrow and Applications icon, and an orange arrow body.
+  - Test workstream: confirmed the updated layout smoke fails against the
+    current generated DMG because the top-left background is still dark.
+  - Implementation workstream: changed the generated DMG background to pure
+    white and shortened the arrow so its right-side clearance is white before
+    the Applications icon.
+  - Audit workstream: rebuilt the macOS DMG, reran the layout smoke with PNG
+    pixel checks, and refreshed the screenshot at
+    `.dart_tool/konyak/release/macos/dmg-layout.png`.
+- Remaining: none for the implementation; remote GitHub Actions publish has
+  not been run for this uncommitted change.
+- Next: commit and cut the next release when requested.
+- Verification:
+  - `nix develop -c zsh -lc './scripts/smoke_macos_dmg_layout.zsh .dart_tool/konyak/release/macos/Konyak-1.0.1-macos-arm64.dmg'`:
+    failed as expected before implementation because the top-left background
+    pixel was dark.
+  - `nix develop -c zsh -lc 'zsh -n scripts/build_macos_release.zsh scripts/smoke_macos_dmg_layout.zsh'`:
+    passed.
+  - `nix develop -c zsh -lc 'just macos-release'`: passed.
+  - `nix develop -c zsh -lc './scripts/smoke_macos_dmg_layout.zsh .dart_tool/konyak/release/macos/Konyak-1.0.1-macos-arm64.dmg'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd .dart_tool/konyak/release/macos && shasum -a 256 -c Konyak-1.0.1-macos-arm64.dmg.sha256 && shasum -a 256 -c SHA256SUMS'`:
+    passed.
+  - `nix develop -c zsh -lc './scripts/smoke_macos_app_update_handoff.zsh .dart_tool/konyak/release/macos/Konyak.app'`:
+    passed.
+  - `nix develop -c zsh -lc './scripts/smoke_macos_release_runtime_extraction.zsh .dart_tool/konyak/release/macos/Konyak.app'`:
+    passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `git diff --check`: passed.
+
+- Timestamp: 2026-06-25 14:53 JST
+- State: `completed`
+- Branch: `main`
+- Related work: macOS DMG Finder layout
+- Purpose: make the macOS DMG open with the conventional installer layout:
+  a background image, `Konyak.app`, an `Applications` folder shortcut, and a
+  visible arrow directing the user to drag the app into Applications.
+- Completed:
+  - Read the existing macOS release script, update-handoff smoke, release
+    workflow, and current docs before editing.
+  - Test workstream: added `scripts/smoke_macos_dmg_layout.zsh`, a just target,
+    and a publish workflow step to mount the generated DMG and verify the
+    background image, `Konyak.app`, `/Applications` symlink, and Finder
+    `.DS_Store` icon-view metadata.
+  - Test workstream: confirmed the new DMG layout smoke fails against the
+    current DMG because the Finder background image is missing.
+  - Implementation workstream: added `create-dmg` to the Darwin release/dev
+    shell tooling, generated a 640x420 background PNG with a right-pointing
+    arrow during release builds, and changed `scripts/build_macos_release.zsh`
+    to call `create-dmg --background --icon --app-drop-link` for the final
+    macOS artifact.
+  - Audit workstream: rebuilt the macOS release artifact; `create-dmg` ran its
+    Finder layout AppleScript, the generated DMG passed the layout smoke, and a
+    screenshot was captured at
+    `.dart_tool/konyak/release/macos/dmg-layout.png`.
+- Remaining: none for the implementation; remote GitHub Actions publish has
+  not been run for this uncommitted change.
+- Next: commit and cut the next release when requested.
+- Verification:
+  - `nix develop -c zsh -lc './scripts/smoke_macos_dmg_layout.zsh .dart_tool/konyak/release/macos/Konyak-1.0.1-macos-arm64.dmg'`:
+    failed as expected before implementation because
+    `.background/konyak-dmg-background.png` was missing.
+  - `nix develop -c zsh -lc 'command -v create-dmg && zsh -n scripts/build_macos_release.zsh scripts/smoke_macos_dmg_layout.zsh scripts/smoke_macos_app_update_handoff.zsh'`:
+    passed.
+  - `nix develop -c zsh -lc 'nixfmt --check flake.nix'`: passed after
+    formatting.
+  - `nix develop -c zsh -lc 'just macos-release'`: passed with `create-dmg`.
+  - `nix develop -c zsh -lc './scripts/smoke_macos_dmg_layout.zsh .dart_tool/konyak/release/macos/Konyak-1.0.1-macos-arm64.dmg'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd .dart_tool/konyak/release/macos && shasum -a 256 -c Konyak-1.0.1-macos-arm64.dmg.sha256 && shasum -a 256 -c SHA256SUMS'`:
+    passed.
+  - `nix develop -c zsh -lc './scripts/smoke_macos_app_update_handoff.zsh .dart_tool/konyak/release/macos/Konyak.app'`:
+    passed.
+  - `nix develop -c zsh -lc './scripts/smoke_macos_release_runtime_extraction.zsh .dart_tool/konyak/release/macos/Konyak.app'`:
+    passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `nix develop -c zsh -lc 'just cli-test'`: passed.
+
+- Timestamp: 2026-06-25 14:28 JST
+- State: `completed`
+- Branch: `main`
+- Related work: macOS DMG distribution and update handoff
+- Purpose: replace direct macOS `.app` zip distribution with a conventional
+  DMG that contains `Konyak.app` plus an `/Applications` shortcut, while
+  keeping app updates checksum-verified and runnable through
+  `install-app-update --json`.
+- Completed:
+  - Read the current progress/TODO state before editing.
+  - Investigation workstream: identified that `scripts/build_macos_release.zsh`
+    previously emitted `Konyak-<version>-macos-<arch>.zip`, release metadata
+    and GitHub workflow publishing expected `.zip`, and the macOS app-update
+    handoff smoke created a zip fixture.
+  - Investigation workstream: identified that the CLI update checker filters
+    macOS app update artifacts to `.zip`, and the handoff script extracts the
+    downloaded artifact with `ditto -x -k` before replacing the running bundle.
+  - Sub-agent limitation: available sub-agent tooling requires an explicit user
+    delegation request, so investigation, implementation, and audit are kept
+    separated in this progress entry instead of spawned agents.
+  - Test workstream: added failing CLI contract coverage for macOS DMG artifact
+    selection and DMG handoff staging before the implementation, then kept the
+    existing zip handoff test to prove explicit legacy archive compatibility.
+  - Implementation workstream: changed macOS app-update discovery to prefer
+    `.dmg` release assets, stages downloaded DMGs with a `.dmg` suffix, and
+    teaches the macOS handoff script to mount the DMG read-only, copy
+    `Konyak.app` from the mounted volume, detach the image, and replace the
+    target bundle through the existing helper flow.
+  - Implementation workstream: changed `scripts/build_macos_release.zsh` to
+    publish `Konyak-<version>-macos-<arch>.dmg`, include an `/Applications`
+    symlink in the image, emit `.dmg.sha256`, and mark macOS release metadata
+    with `format: "dmg"`.
+  - CI/docs workstream: updated the publish workflow to upload DMG assets,
+    changed the macOS app-update smoke to exercise a DMG fixture, and refreshed
+    release, CLI distribution, and architecture docs.
+  - Audit workstream: `just macos-release` produced
+    `.dart_tool/konyak/release/macos/Konyak-1.0.1-macos-arm64.dmg`; mounting
+    the DMG showed `Konyak.app` plus an `Applications -> /Applications`
+    symlink, and both the per-artifact checksum and `SHA256SUMS` passed.
+  - Audit workstream: `scripts/smoke_macos_app_update_handoff.zsh` installed
+    from a DMG fixture through the public `install-app-update --json` route,
+    and `scripts/smoke_macos_release_runtime_extraction.zsh` passed against the
+    generated release app.
+- Remaining: none for the implementation; remote GitHub Actions publish has
+  not been run for this uncommitted change.
+- Next: commit and cut the next release when requested.
+- Verification:
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "app update checker selects the macOS archive from shared releases" -r expanded'`:
+    failed before the implementation, then passed.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "app update installer stages macOS DMG replacement handoff" -r expanded'`:
+    failed before the implementation, then passed.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "app update installer stages macOS app bundle replacement handoff" -r expanded'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --name "app update checker|check-app-update|install-app-update|app update installer" -r expanded'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart format lib/src/domain/update/app_update_checker.dart lib/src/io/app_update_handoff_installers.dart lib/src/platform/platform_update_handoff.dart test/cli_contract_runtime_process_update.part.dart'`:
+    passed with no formatting changes after the final format.
+  - `nix develop -c zsh -lc 'zsh -n scripts/build_macos_release.zsh scripts/smoke_macos_app_update_handoff.zsh'`:
+    passed.
+  - `nix develop -c zsh -lc 'just macos-release'`: passed.
+  - `nix develop -c zsh -lc 'cd .dart_tool/konyak/release/macos && shasum -a 256 -c Konyak-1.0.1-macos-arm64.dmg.sha256 && shasum -a 256 -c SHA256SUMS && test ! -e Konyak-1.0.1-macos-arm64.zip && test ! -e Konyak-1.0.1-macos-arm64.zip.sha256'`:
+    passed.
+  - `nix develop -c zsh -lc './scripts/smoke_macos_app_update_handoff.zsh .dart_tool/konyak/release/macos/Konyak.app'`:
+    passed.
+  - `nix develop -c zsh -lc './scripts/smoke_macos_release_runtime_extraction.zsh .dart_tool/konyak/release/macos/Konyak.app'`:
+    passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `nix develop -c zsh -lc 'just cli-test'`: passed.
+
 - Timestamp: 2026-06-25 14:13 JST
 - State: `completed`
 - Branch: `main`

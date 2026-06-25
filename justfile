@@ -101,6 +101,9 @@ fetch-windows-fixture-putty:
 smoke-macos-runtime-install:
   ./scripts/smoke_macos_release_runtime_extraction.zsh
 
+smoke-macos-dmg-layout:
+  ./scripts/smoke_macos_dmg_layout.zsh
+
 smoke-macos-finder:
   ./scripts/smoke_macos_finder_integration.zsh
 

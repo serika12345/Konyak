@@ -12,10 +12,15 @@ target_parent="$(dirname "$target_bundle")"
 bundle_name="$(basename "$target_bundle")"
 work_dir="$(mktemp -d "${TMPDIR:-/tmp}/konyak-macos-update.XXXXXX")"
 extract_dir="$work_dir/extract"
+mount_dir="$work_dir/mount"
 helper_script="$work_dir/install-macos-app-update-helper.sh"
 backup_path="$target_bundle.konyak-backup"
+mounted_dmg=false
 
 cleanup() {
+  if [[ "$mounted_dmg" == true ]]; then
+    hdiutil detach "$mount_dir" >/dev/null 2>&1 || true
+  fi
   rm -rf "$work_dir"
 }
 trap cleanup EXIT
@@ -24,20 +29,39 @@ if [[ ! -d "$target_bundle" ]]; then
   exit 66
 fi
 
-mkdir -p "$extract_dir"
-ditto -x -k "$source_archive" "$extract_dir"
+find_updated_bundle() {
+  local search_root="$1"
+  if [[ -d "$search_root/$bundle_name" ]]; then
+    printf "%s\n" "$search_root/$bundle_name"
+    return 0
+  fi
 
-updated_bundle=""
-if [[ -d "$extract_dir/$bundle_name" ]]; then
-  updated_bundle="$extract_dir/$bundle_name"
-else
-  for candidate in "$extract_dir"/*.app "$extract_dir"/*/*.app; do
+  for candidate in "$search_root"/*.app "$search_root"/*/*.app; do
     if [[ -d "$candidate" ]]; then
-      updated_bundle="$candidate"
-      break
+      printf "%s\n" "$candidate"
+      return 0
     fi
   done
+
+  return 1
+}
+
+source_archive_lower="$(printf "%s" "$source_archive" | tr '[:upper:]' '[:lower:]')"
+if [[ "$source_archive_lower" == *.dmg ]]; then
+  mkdir -p "$mount_dir"
+  hdiutil attach "$source_archive" -mountpoint "$mount_dir" -nobrowse -readonly >/dev/null
+  mounted_dmg=true
+  if ! updated_bundle="$(find_updated_bundle "$mount_dir")"; then
+    exit 66
+  fi
+else
+  mkdir -p "$extract_dir"
+  ditto -x -k "$source_archive" "$extract_dir"
+  if ! updated_bundle="$(find_updated_bundle "$extract_dir")"; then
+    exit 66
+  fi
 fi
+
 if [[ -z "$updated_bundle" ]]; then
   exit 66
 fi

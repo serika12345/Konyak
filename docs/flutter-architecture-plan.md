@@ -154,12 +154,14 @@ default `linux-wine-runtime-stack-0.1.0` release, and AppImage builds bundle
 the resolved manifest, detached signature, and public key when they are
 published by the selected runtime release.
 
-Packaged app update handoff is implemented for macOS zip artifacts and Linux
-AppImage artifacts through `install-app-update --json`. Remaining runtime and
-update work is limited to explicit hardening: Linux runtime-owner build/check
-workflows before the next runtime version bump, rollback/recovery policy for
-updates, and eventual removal of legacy archive/Wine-only fallback paths once
-the source-manifest route is the only supported runtime acquisition contract.
+Packaged app update handoff is implemented for macOS DMG artifacts and Linux
+AppImage artifacts through `install-app-update --json`; the macOS handoff still
+accepts legacy zip artifacts so already-published update archives can be
+installed when explicitly supplied. Remaining runtime and update work is
+limited to explicit hardening: Linux runtime-owner build/check workflows before
+the next runtime version bump, rollback/recovery policy for updates, and
+eventual removal of legacy archive/Wine-only fallback paths once the
+source-manifest route is the only supported runtime acquisition contract.
 
 ## Phase 6: Platform Expansion
 

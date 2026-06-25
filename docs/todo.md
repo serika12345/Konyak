@@ -256,7 +256,7 @@ task changes scope.
   - [x] Download and apply release artifacts through `install-app-update --json`.
   - [x] Verify update artifact checksums before install.
   - [x] Fix the macOS packaged updater handoff format by producing ad-hoc
-    signed, unnotarized zip artifacts with SHA-256 release metadata.
+    signed, unnotarized DMG artifacts with SHA-256 release metadata.
 - [x] Package distribution builds.
   - [x] Build the CLI executable.
   - [x] Bundle it with the Flutter app.

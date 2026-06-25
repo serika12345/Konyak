@@ -114,7 +114,7 @@ bool Function(String url) _appUpdateArchiveUrlPredicate(
 
     return switch (hostPlatform) {
       KonyakHostPlatform.macos =>
-        fileName.contains('-macos-') && fileName.endsWith('.zip'),
+        fileName.contains('-macos-') && fileName.endsWith('.dmg'),
       KonyakHostPlatform.linux =>
         fileName.contains('-linux-') && fileName.endsWith('.appimage'),
     };

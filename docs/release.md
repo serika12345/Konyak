@@ -2,7 +2,7 @@
 
 Konyak release builds run through Nix. The macOS path builds the Dart CLI as a
 native executable, bundles it into `Konyak.app`, ad-hoc signs the bundle,
-packages an unnotarized zip artifact, and writes SHA-256 metadata for update
+packages an unnotarized DMG artifact, and writes SHA-256 metadata for update
 checks.
 
 Linux release builds compile the same CLI, bundle it into the Flutter Linux
@@ -26,8 +26,8 @@ nix develop -c zsh -lc 'just macos-release'
 Outputs are written under `.dart_tool/konyak/release/macos`:
 
 - `Konyak.app`
-- `Konyak-<version>-macos-<arch>.zip`
-- `Konyak-<version>-macos-<arch>.zip.sha256`
+- `Konyak-<version>-macos-<arch>.dmg`
+- `Konyak-<version>-macos-<arch>.dmg.sha256`
 - `Konyak-<version>-macos-<arch>.release.json`
 - `SHA256SUMS`
 - `release-notes.md`
@@ -39,8 +39,10 @@ CLI can extract managed runtime stack `.tar.zst` archives without depending on
 developer shell tools or a user-installed `zstd`.
 
 The local `Konyak.app` copy is replaced on every release build and is the app
-used by the packaged runtime extraction smoke. The zip artifact is packaged
-from that same refreshed app copy.
+used by the packaged runtime extraction smoke. The DMG artifact is packaged
+from that same refreshed app copy with `create-dmg`. It opens as a conventional
+drag-copy installer window with a background arrow, `Konyak.app`, and an
+`Applications` drop link.
 
 ## Local macOS Packaged Debug App
 
@@ -64,6 +66,7 @@ The local Finder and runtime smokes are:
 
 ```sh
 nix develop -c zsh -lc 'just smoke-macos-runtime-install'
+nix develop -c zsh -lc 'just smoke-macos-dmg-layout'
 nix develop -c zsh -lc 'just smoke-macos-finder'
 nix develop -c zsh -lc 'just smoke-macos-app-cli-bridge'
 nix develop -c zsh -lc 'just smoke-macos-app-update-handoff'
@@ -94,10 +97,14 @@ workflow. The auto-run hook is only enabled when the smoke passes
 `KONYAK_ENABLE_SMOKE_HOOKS=1`.
 `smoke-macos-app-update-handoff` invokes the release app's bundled CLI through
 `install-app-update --json` with local `file://` release metadata, a
-checksum-verified update zip, a temporary `Konyak.app` target, and a disposable
-running app PID. It waits for the handoff helper to terminate that PID, replace
-the target bundle, and remove staging/backup paths, proving the packaged macOS
-app replacement path without touching `/Applications`.
+checksum-verified update DMG, a temporary `Konyak.app` target, and a disposable
+running app PID. It waits for the handoff helper to mount the DMG, copy the
+updated app bundle out of it, terminate that PID, replace the target bundle,
+and remove staging/backup paths, proving the packaged macOS app replacement
+path without touching `/Applications`.
+`smoke-macos-dmg-layout` mounts the generated DMG read-only and verifies the
+`create-dmg` layout payload: the background image, Finder `.DS_Store` icon-view
+metadata, `Konyak.app`, and the `Applications -> /Applications` drop link.
 
 ## Local Linux Build
 
@@ -213,11 +220,12 @@ At runtime, the Flutter client resolves `__KONYAK_BUNDLE_RESOURCES__` to
 directly instead of the development Dart script. The client also passes
 `KONYAK_BUNDLE_RESOURCES`, prepends that directory to `PATH`, and passes
 `KONYAK_APP_EXECUTABLE` and `KONYAK_APP_PID` to the CLI so runtime extraction
-helpers are available and verified macOS app updates can terminate the running
-app, replace the current `.app` bundle, and relaunch it. When automatic Konyak
-update checks are enabled, packaged macOS builds prompt the user on startup
-after an available app update is found, then invoke that verified install path
-only after the user confirms installation.
+helpers are available and verified macOS app updates can mount a downloaded
+DMG, copy out the updated `.app` bundle, terminate the running app, replace the
+current `.app` bundle, and relaunch it. When automatic Konyak update checks are
+enabled, packaged macOS builds prompt the user on startup after an available app
+update is found, then invoke that verified install path only after the user
+confirms installation.
 
 ## GitHub Release Workflow
 
@@ -237,19 +245,21 @@ include a SHA-256 line that contains the artifact file name, matching the
 generated `SHA256SUMS` format:
 
 ```text
-<64 hex chars>  Konyak-<version>-macos-<arch>.zip
+<64 hex chars>  Konyak-<version>-macos-<arch>.dmg
 ```
 
 `install-app-update --json` refuses to use a downloaded update artifact unless
 the release metadata includes a valid SHA-256 checksum and the downloaded file
-matches it. On macOS packaged builds it stages the verified zip, extracts the
-updated `.app` bundle, terminates the running app, replaces the current bundle
-with rollback backup handling, and relaunches the updated app. If the current
-bundle lives in a location such as `/Applications` where the user cannot write
-directly, the handoff asks macOS for administrator authorization before
-performing the replacement. On Linux AppImage builds it verifies the current
-AppImage target before termination, stages the verified AppImage, replaces the
-running artifact in place after termination, and relaunches the updated app.
+matches it. On macOS packaged builds it stages the verified DMG, mounts it
+read-only, copies out the updated `.app` bundle, terminates the running app,
+replaces the current bundle with rollback backup handling, and relaunches the
+updated app. Existing zip-style macOS update artifacts remain supported by the
+handoff extractor for compatibility. If the current bundle lives in a location
+such as `/Applications` where the user cannot write directly, the handoff asks
+macOS for administrator authorization before performing the replacement. On
+Linux AppImage builds it verifies the current AppImage target before
+termination, stages the verified AppImage, replaces the running artifact in
+place after termination, and relaunches the updated app.
 
 ## Runtime Stack Releases
 
