@@ -9,7 +9,7 @@ if [[ "$(uname -s)" != "Linux" ]]; then
   exit 69
 fi
 
-for command in jq; do
+for command in cat chmod dart grep jq; do
   if ! command -v "$command" >/dev/null 2>&1; then
     echo "Missing required command: $command" >&2
     exit 69
@@ -21,6 +21,8 @@ xdg_data_home="$work_root/xdg-data"
 xdg_config_home="$work_root/xdg-config"
 home_dir="$work_root/home"
 fake_cli="$work_root/fake-konyak-cli"
+fake_runtime="$work_root/fake-linux-runtime"
+fake_runtime_bin="$fake_runtime/bin"
 sentinel="$work_root/launcher-call.json"
 program_path="$work_root/Smoke App.exe"
 
@@ -30,8 +32,16 @@ single_quote() {
 }
 
 rm -rf "$work_root"
-mkdir -p "$work_root" "$home_dir"
+mkdir -p "$work_root" "$home_dir" "$fake_runtime_bin"
 touch "$program_path"
+
+for runtime_command in wine wineboot wineserver winedbg; do
+  cat >"$fake_runtime_bin/$runtime_command" <<'EOF'
+#!/usr/bin/env sh
+exit 0
+EOF
+  chmod 755 "$fake_runtime_bin/$runtime_command"
+done
 
 sentinel_quoted="$(single_quote "$sentinel")"
 cat >"$fake_cli" <<EOF
@@ -63,19 +73,33 @@ cli_env=(
   HOME="$home_dir"
   XDG_DATA_HOME="$xdg_data_home"
   XDG_CONFIG_HOME="$xdg_config_home"
+  KONYAK_LINUX_WINE_HOME="$fake_runtime"
   KONYAK_PINNED_PROGRAM_LAUNCHER_EXECUTABLE="$fake_cli"
   KONYAK_PINNED_PROGRAM_LAUNCHER_ARGUMENTS_JSON="[]"
 )
 
-(
-  cd packages/konyak_cli
-  env "${cli_env[@]}" dart run bin/konyak.dart create-bottle --name Smoke --json >/dev/null
-  env "${cli_env[@]}" dart run bin/konyak.dart \
-    pin-program smoke \
-    --name "Smoke App" \
-    --program "$program_path" \
-    --json >/dev/null
-)
+run_cli_json() {
+  local output_path="$1"
+  shift
+
+  (
+    cd packages/konyak_cli
+    if ! env "${cli_env[@]}" dart run bin/konyak.dart "$@" >"$output_path"; then
+      cat "$output_path" >&2
+      return 1
+    fi
+  )
+}
+
+run_cli_json "$work_root/create-bottle.json" \
+  create-bottle \
+  --name Smoke \
+  --json
+run_cli_json "$work_root/pin-program.json" \
+  pin-program smoke \
+  --name "Smoke App" \
+  --program "$program_path" \
+  --json
 
 desktop_entries=("$xdg_data_home"/applications/app.konyak.Konyak.pinned.*.desktop(N))
 if (( ${#desktop_entries[@]} != 1 )); then
@@ -136,13 +160,10 @@ jq -e \
     and .fourthArgument == "--json"' \
   "$sentinel" >/dev/null
 
-(
-  cd packages/konyak_cli
-  env "${cli_env[@]}" dart run bin/konyak.dart \
-    unpin-program smoke \
-    --program "$program_path" \
-    --json >/dev/null
-)
+run_cli_json "$work_root/unpin-program.json" \
+  unpin-program smoke \
+  --program "$program_path" \
+  --json
 
 remaining_desktop_entries=("$xdg_data_home"/applications/app.konyak.Konyak.pinned.*.desktop(N))
 remaining_manifests=("$xdg_data_home"/konyak/launchers/linux-pinned/*/konyak-launcher.json(N))
