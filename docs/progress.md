@@ -11,9 +11,11 @@ handoff notes.
 
 ### Latest Update
 
-- Timestamp: 2026-06-25 14:03 JST
-- State: `in_progress`
+- Timestamp: 2026-06-25 14:13 JST
+- State: `completed`
 - Branch: `main`
+- Latest commit: `0a691cc Prompt before installing app updates`; release tag
+  `v1.0.1`
 - Related work: startup Konyak app update confirmation prompt before rerelease
 - Purpose: stop automatic Konyak app update installation from immediately
   restarting the app on startup, and show a confirmation prompt before
@@ -46,17 +48,24 @@ handoff notes.
     of immediate automatic installs.
   - Audit workstream: focused prompt, failure, settings-label, and golden
     tests pass; the full Flutter and repository-level gates listed below pass.
+  - Release workstream: committed and pushed `0a691cc`, ran release workflow
+    preflight `28148137094` on `main`, and both Linux and macOS release/smoke
+    jobs passed.
+  - Release workstream: force-updated the existing annotated `v1.0.1` tag to
+    `0a691cc0a2e37d40a9549deef4f1d55d2e83df0b`; tag-triggered release run
+    `28148314458` completed successfully and replaced the existing `v1.0.1`
+    release assets.
+  - Audit workstream: verified the republished release at
+    `https://github.com/serika12345/Konyak/releases/tag/v1.0.1` is non-draft
+    and non-prerelease, that `v1.0.1^{}` resolves to `0a691cc`, that release
+    assets were updated at the rerelease timestamp, and that downloaded
+    checksum and release metadata files are consistent.
   - Sub-agent limitation: available sub-agent tooling requires an explicit user
     delegation request, so investigation, implementation, and audit are kept
     separated in this progress entry instead of spawned agents.
-- Remaining:
-  - Commit and push the fix.
-  - Run the release workflow preflight on `main`.
-  - Move `v1.0.1` to the fix commit and let the tag workflow replace the
-    existing release assets.
-  - Audit the republished `v1.0.1` release.
-- Next: commit the verified fix and start the GitHub release workflow
-  preflight.
+- Remaining: none for the requested v1.0.1 rerelease.
+- Next: address the GitHub Actions Node.js 20 deprecation annotations in a
+  separate maintenance change when desired.
 - Verification:
   - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --name "prompts before installing Konyak"'`:
     failed before the implementation and passed after it.
@@ -76,6 +85,29 @@ handoff notes.
   - `nix develop -c zsh -lc 'just format-check'`: passed.
   - `nix develop -c zsh -lc 'just lint'`: passed.
   - `git diff --check`: passed.
+  - `git push origin main`: passed and pushed `0a691cc`.
+  - `nix develop -c zsh -lc 'gh workflow run publish.yml --repo serika12345/Konyak --ref main'`:
+    passed and created preflight run `28148137094`.
+  - `nix develop -c zsh -lc 'gh run watch 28148137094 --repo serika12345/Konyak --exit-status --interval 30'`:
+    passed; Linux and macOS release/smoke jobs succeeded.
+  - `git tag -f -a v1.0.1 -m 'Konyak v1.0.1' 0a691cc && git push --force origin v1.0.1`:
+    passed and moved the `v1.0.1` tag to the fix commit.
+  - `nix develop -c zsh -lc 'gh run watch 28148314458 --repo serika12345/Konyak --exit-status --interval 30'`:
+    passed; Linux, macOS, and publish jobs succeeded.
+  - `git rev-parse v1.0.1^{} && git ls-remote --tags origin v1.0.1 v1.0.1^{}`:
+    passed and confirmed the tag resolves to `0a691cc`.
+  - `nix develop -c zsh -lc 'gh release view v1.0.1 --repo serika12345/Konyak --json isDraft,isPrerelease,tagName,targetCommitish,url,name,assets,body,publishedAt,isImmutable'`:
+    passed and confirmed the republished assets.
+  - `nix develop -c zsh -lc 'gh release download v1.0.1 --repo serika12345/Konyak --dir .dart_tool/konyak/release-audit/v1.0.1-rerelease-28148314458'`:
+    passed and downloaded all release assets.
+  - `nix develop -c zsh -lc 'cd .dart_tool/konyak/release-audit/v1.0.1-rerelease-28148314458 && shasum -a 256 -c SHA256SUMS && shasum -a 256 -c Konyak-1.0.1-macos-arm64.zip.sha256 && shasum -a 256 -c Konyak-1.0.1-linux-x86_64.AppImage.sha256'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd .dart_tool/konyak/release-audit/v1.0.1-rerelease-28148314458 && jq -S . Konyak-1.0.1-macos-arm64.release.json Konyak-1.0.1-linux-x86_64.release.json'`:
+    passed and confirmed both release metadata files use version `1.0.1`.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart run bin/konyak.dart check-app-update --json'`:
+    passed and returned `status: current`, `currentVersion: 1.0.1`, and the
+    republished macOS archive checksum
+    `93068f9732ee95ac5f83b35079ff0a40b607a3cff09c531c7deece76066efd11`.
 
 - Timestamp: 2026-06-25 13:33 JST
 - State: `completed`
