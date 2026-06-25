@@ -13,8 +13,8 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-06-25 21:46 JST
-- State: `in_progress`
+- Timestamp: 2026-06-25 21:52 JST
+- State: `completed`
 - Branch: `main`
 - Active work: releasing Konyak v1.0.3.
 - Related TODO: none; user-requested release.
@@ -28,12 +28,11 @@ unfinished work.
   was pushed for the same commit. GitHub Actions then exposed two release
   blockers: Ubuntu Flutter golden drift for Japanese text goldens and Linux
   runtime CLI smoke falling back to the Nix dev-shell default local source
-  manifest path after `nix develop`.
-- Remaining work: commit and push the CI fixes, move `v1.0.3` to the fixed
-  release commit, and monitor every triggered GitHub Actions workflow until all
-  final `main` and `v1.0.3` runs are successful.
-- Next action: commit the CI fixes, push `main`, force-update the newly created
-  `v1.0.3` tag to the fixed commit, then watch GitHub Actions to completion.
+  manifest path after `nix develop`. Commit `2d6b400` (`Fix v1.0.3 CI
+  checks`) fixed those blockers and the `v1.0.3` tag was moved to that release
+  commit.
+- Remaining work: none for v1.0.3.
+- Next action: resume from `docs/todo.md` for the next product task.
 - Verification: focused `dart test test/cli_contract_test.dart --plain-name
   "app update checker defaults to the packaged Konyak app version"` failed as
   expected before the version constant was updated, then passed after the bump;
@@ -61,4 +60,7 @@ unfinished work.
   test/widget_test.dart --plain-name "Japanese pin program action keeps the
   requested line break"`; focused `flutter test test/widget_test.dart
   --plain-name "settings dialog language selector matches golden"`; `just
-  verify`; `git diff --check`.
+  verify`; `git diff --check`. Final GitHub Actions for commit `2d6b400`
+  succeeded: `Konyak Verify` on `main`, `Konyak Pages` on `main`, `Linux
+  Runtime CLI Smoke` on `main`, `Konyak Verify` on `v1.0.3`, and `Konyak
+  Release` on `v1.0.3`.
