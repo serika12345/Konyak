@@ -64,15 +64,15 @@
   "@cancel": {
     "description": "Konyak UI string: Cancel"
   },
-  "checkForUpdatesMenuItem": "アップデートを確認...",
+  "checkForUpdatesMenuItem": "アップデートを確認",
   "@checkForUpdatesMenuItem": {
     "description": "Main menu item label for checking Konyak updates."
   },
-  "checkingForKonyakUpdatesEllipsis": "Konyak のアップデートを確認しています...",
+  "checkingForKonyakUpdatesEllipsis": "Konyak のアップデートを確認しています",
   "@checkingForKonyakUpdatesEllipsis": {
     "description": "Konyak UI string: Checking for Konyak updates..."
   },
-  "chooseEllipsis": "選択...",
+  "chooseEllipsis": "選択",
   "@chooseEllipsis": {
     "description": "Konyak UI string: Choose..."
   },
@@ -128,7 +128,7 @@
   "@createBottleAction": {
     "description": "Action label or tooltip for creating a bottle."
   },
-  "creatingBottleEllipsis": "ボトルを作成しています...",
+  "creatingBottleEllipsis": "ボトルを作成しています",
   "@creatingBottleEllipsis": {
     "description": "Konyak UI string: Creating bottle..."
   },
@@ -200,11 +200,11 @@
   "@environment": {
     "description": "Konyak UI string: Environment"
   },
-  "exportAsArchiveEllipsis": "アーカイブとしてエクスポート...",
+  "exportAsArchiveEllipsis": "アーカイブとしてエクスポート",
   "@exportAsArchiveEllipsis": {
     "description": "Konyak UI string: Export as Archive..."
   },
-  "exportingBottleArchiveEllipsis": "ボトルアーカイブを書き出しています...",
+  "exportingBottleArchiveEllipsis": "ボトルアーカイブを書き出しています",
   "@exportingBottleArchiveEllipsis": {
     "description": "Konyak UI string: Exporting bottle archive..."
   },
@@ -272,11 +272,11 @@
   "@importingD3dmetal": {
     "description": "Konyak UI string: Importing D3DMetal"
   },
-  "importingGptkD3dmetalEllipsis": "GPTK/D3DMetal をインポートしています...",
+  "importingGptkD3dmetalEllipsis": "GPTK/D3DMetal をインポートしています",
   "@importingGptkD3dmetalEllipsis": {
     "description": "Konyak UI string: Importing GPTK/D3DMetal..."
   },
-  "importingBottleArchiveEllipsis": "ボトルアーカイブを読み込んでいます...",
+  "importingBottleArchiveEllipsis": "ボトルアーカイブを読み込んでいます",
   "@importingBottleArchiveEllipsis": {
     "description": "Konyak UI string: Importing bottle archive..."
   },
@@ -336,7 +336,7 @@
   "@latestRunLog": {
     "description": "Konyak UI string: Latest run log"
   },
-  "launchingProgramEllipsis": "プログラムを起動しています...",
+  "launchingProgramEllipsis": "プログラムを起動しています",
   "@launchingProgramEllipsis": {
     "description": "Konyak UI string: Launching program..."
   },
@@ -352,7 +352,7 @@
   "@loading": {
     "description": "Konyak UI string: Loading"
   },
-  "loadingWinetricksPackagesEllipsis": "winetricks パッケージを読み込んでいます...",
+  "loadingWinetricksPackagesEllipsis": "winetricks パッケージを読み込んでいます",
   "@loadingWinetricksPackagesEllipsis": {
     "description": "Konyak UI string: Loading winetricks packages..."
   },
@@ -396,7 +396,7 @@
   "@move": {
     "description": "Konyak UI string: Move"
   },
-  "moveEllipsis": "移動...",
+  "moveEllipsis": "移動",
   "@moveEllipsis": {
     "description": "Konyak UI string: Move..."
   },
@@ -484,7 +484,7 @@
   "@pin": {
     "description": "Konyak UI string: Pin"
   },
-  "pinProgram": "プログラムをピン留め",
+  "pinProgram": "プログラムを\nピン留め",
   "@pinProgram": {
     "description": "Konyak UI string: Pin Program"
   },
@@ -504,7 +504,7 @@
   "@programs": {
     "description": "Konyak UI string: Programs"
   },
-  "removeEllipsis": "削除...",
+  "removeEllipsis": "削除",
   "@removeEllipsis": {
     "description": "Konyak UI string: Remove..."
   },
@@ -536,7 +536,7 @@
   "@rename": {
     "description": "Konyak UI string: Rename"
   },
-  "renameEllipsis": "名前を変更...",
+  "renameEllipsis": "名前を変更",
   "@renameEllipsis": {
     "description": "Konyak UI string: Rename..."
   },
@@ -556,7 +556,7 @@
   "@run": {
     "description": "Konyak UI string: Run"
   },
-  "runEllipsis": "実行...",
+  "runEllipsis": "実行",
   "@runEllipsis": {
     "description": "Konyak UI string: Run..."
   },
@@ -580,11 +580,11 @@
   "@settings": {
     "description": "Konyak UI string: Settings"
   },
-  "settingsEllipsis": "設定...",
+  "settingsEllipsis": "設定",
   "@settingsEllipsis": {
     "description": "Konyak UI string: Settings..."
   },
-  "settingsEllipsisMenu": "設定...",
+  "settingsEllipsisMenu": "設定",
   "@settingsEllipsisMenu": {
     "description": "Konyak UI string: Settings…"
   },
@@ -1049,7 +1049,7 @@
       }
     }
   },
-  "downloadProgress": "{runtimeName} をダウンロードしています...",
+  "downloadProgress": "{runtimeName} をダウンロードしています",
   "@downloadProgress": {
     "description": "Konyak UI string: Downloading {runtimeName}...",
     "placeholders": {
@@ -1058,7 +1058,7 @@
       }
     }
   },
-  "installingVerb": "{verb} をインストールしています...",
+  "installingVerb": "{verb} をインストールしています",
   "@installingVerb": {
     "description": "Konyak UI string: Installing {verb}...",
     "placeholders": {

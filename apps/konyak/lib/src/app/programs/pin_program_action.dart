@@ -4,6 +4,8 @@ import '../../bottles/bottle_summary.dart';
 import '../../l10n/konyak_localizations.dart';
 import '../app_constants.dart';
 
+const _pinProgramActionWidth = 96.0;
+
 class PinProgramAction extends StatelessWidget {
   const PinProgramAction({
     super.key,
@@ -25,7 +27,7 @@ class PinProgramAction extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
         onTap: onPinProgram == null ? null : () => onPinProgram!(bottle),
         child: SizedBox(
-          width: 76,
+          width: _pinProgramActionWidth,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [

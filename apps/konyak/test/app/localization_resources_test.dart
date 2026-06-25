@@ -12,12 +12,20 @@ void main() {
     expect(japanese['@@locale'], 'ja');
     expect(english['konyakSettings'], 'Konyak Settings');
     expect(japanese['konyakSettings'], 'Konyak 設定');
+    expect(japanese['pinProgram'], 'プログラムを\nピン留め');
     expect(english['installingKonyakUpdate'], contains('{label}'));
     expect(japanese['installingKonyakUpdate'], contains('{label}'));
 
     final englishKeys = _messageKeys(english);
     final japaneseKeys = _messageKeys(japanese);
     expect(japaneseKeys, englishKeys);
+    expect(
+      _messageValues(
+        japanese,
+      ).where((value) => value.contains('...') || value.contains('…')),
+      isEmpty,
+      reason: 'Japanese UI strings should not use ellipses.',
+    );
     expect(
       englishKeys.where((key) => RegExp(r'\d$').hasMatch(key)),
       isEmpty,
@@ -39,4 +47,11 @@ Map<String, Object?> _readArb(String path) {
 
 Set<String> _messageKeys(Map<String, Object?> arb) {
   return arb.keys.where((key) => !key.startsWith('@')).toSet();
+}
+
+Iterable<String> _messageValues(Map<String, Object?> arb) {
+  return arb.entries
+      .where((entry) => !entry.key.startsWith('@'))
+      .map((entry) => entry.value)
+      .whereType<String>();
 }

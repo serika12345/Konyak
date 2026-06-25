@@ -5,6 +5,9 @@ import '../../l10n/konyak_localizations.dart';
 import '../app_constants.dart';
 import '../app_platform.dart';
 
+const _bottleContextMenuWidth = 300.0;
+const _bottleContextMenuItemWidth = 256.0;
+
 class SidebarBottleItem extends StatelessWidget {
   const SidebarBottleItem({
     super.key,
@@ -72,7 +75,10 @@ class SidebarBottleItem extends StatelessWidget {
         side: BorderSide(color: KonyakThemeColors.of(context).menuBorder),
         borderRadius: BorderRadius.circular(10),
       ),
-      constraints: const BoxConstraints(minWidth: 220, maxWidth: 220),
+      constraints: const BoxConstraints(
+        minWidth: _bottleContextMenuWidth,
+        maxWidth: _bottleContextMenuWidth,
+      ),
       items: _bottleContextMenuItems(platform, KonyakLocalizations.of(context)),
     );
 
@@ -167,7 +173,7 @@ class BottleContextMenuItem extends StatelessWidget {
     final colors = KonyakThemeColors.of(context);
 
     return SizedBox(
-      width: 176,
+      width: _bottleContextMenuItemWidth,
       child: Row(
         children: [
           Icon(icon, color: colors.text, size: 16),

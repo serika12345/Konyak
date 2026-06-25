@@ -1,6 +1,63 @@
 part of 'widget_test.dart';
 
 void defineBottleManagementWidgetTests() {
+  testWidgets('Japanese bottle context menu fits localized labels', (
+    WidgetTester tester,
+  ) async {
+    await _loadKonyakTestFonts();
+    await tester.binding.setSurfaceSize(const Size(560, 520));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    final goldenKey = GlobalKey();
+    await tester.pumpWidget(
+      RepaintBoundary(
+        key: goldenKey,
+        child: MaterialApp(
+          debugShowCheckedModeBanner: false,
+          locale: const Locale('ja'),
+          supportedLocales: KonyakLocalizations.supportedLocales,
+          localizationsDelegates: KonyakLocalizations.localizationsDelegates,
+          theme: konyakThemeData(konyakDarkColors),
+          home: Scaffold(
+            backgroundColor: konyakDarkColors.sidebarBackground,
+            body: Padding(
+              padding: const EdgeInsets.only(left: 80, top: 80),
+              child: SizedBox(
+                width: 220,
+                child: SidebarBottleItem(
+                  platform: KonyakPlatform.macos,
+                  bottle: BottleSummary(
+                    id: 'steam',
+                    name: 'Steam',
+                    path: '/bottles/steam',
+                    windowsVersion: 'win10',
+                  ),
+                  isSelected: true,
+                  onTap: null,
+                  onContextMenuAction: (_) {},
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tapAt(
+      tester.getCenter(find.byKey(const ValueKey('sidebar-bottle-steam'))),
+      buttons: kSecondaryMouseButton,
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('アーカイブとしてエクスポート'), findsOneWidget);
+    await _expectGoldenFileWithinTolerance(
+      find.byKey(goldenKey),
+      'goldens/bottle_context_menu_ja.png',
+      diffTolerance: 0.02,
+    );
+  });
+
   testWidgets('right-clicking a bottle row shows the Konyak context menu', (
     WidgetTester tester,
   ) async {

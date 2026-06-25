@@ -11,6 +11,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:konyak/main.dart';
 import 'package:konyak/src/app/app_constants.dart';
 import 'package:konyak/src/app/home/sidebar.dart';
+import 'package:konyak/src/app/programs/pin_program_action.dart';
 import 'package:konyak/src/app/programs/program_window_probe.dart';
 import 'package:konyak/src/bottles/bottle_summary.dart';
 import 'package:konyak/src/cli/konyak_cli_client.dart';

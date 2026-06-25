@@ -1,6 +1,49 @@
 part of 'widget_test.dart';
 
 void defineProgramWidgetTests() {
+  testWidgets('Japanese pin program action keeps the requested line break', (
+    WidgetTester tester,
+  ) async {
+    await _loadKonyakTestFonts();
+    await tester.binding.setSurfaceSize(const Size(180, 180));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    final goldenKey = GlobalKey();
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ja'),
+        supportedLocales: KonyakLocalizations.supportedLocales,
+        localizationsDelegates: KonyakLocalizations.localizationsDelegates,
+        theme: konyakThemeData(konyakDarkColors),
+        home: Scaffold(
+          backgroundColor: konyakDarkColors.windowBackground,
+          body: Center(
+            child: RepaintBoundary(
+              key: goldenKey,
+              child: PinProgramAction(
+                bottle: BottleSummary(
+                  id: 'steam',
+                  name: 'Steam',
+                  path: '/bottles/steam',
+                  windowsVersion: 'win10',
+                ),
+                onPinProgram: (_) {},
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('プログラムを\nピン留め'), findsOneWidget);
+    await _expectGoldenFileWithinTolerance(
+      find.byKey(goldenKey),
+      'goldens/pin_program_action_ja.png',
+      diffTolerance: 0.02,
+    );
+  });
+
   testWidgets('run program refreshes removed pinned programs after completion', (
     WidgetTester tester,
   ) async {

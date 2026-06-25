@@ -59,13 +59,13 @@ class KonyakLocalizationsJa extends KonyakLocalizations {
   String get cancel => 'キャンセル';
 
   @override
-  String get checkForUpdatesMenuItem => 'アップデートを確認...';
+  String get checkForUpdatesMenuItem => 'アップデートを確認';
 
   @override
-  String get checkingForKonyakUpdatesEllipsis => 'Konyak のアップデートを確認しています...';
+  String get checkingForKonyakUpdatesEllipsis => 'Konyak のアップデートを確認しています';
 
   @override
-  String get chooseEllipsis => '選択...';
+  String get chooseEllipsis => '選択';
 
   @override
   String get chooseProgramFile => 'プログラムファイルを選択';
@@ -107,7 +107,7 @@ class KonyakLocalizationsJa extends KonyakLocalizations {
   String get createBottleAction => 'ボトルを作成';
 
   @override
-  String get creatingBottleEllipsis => 'ボトルを作成しています...';
+  String get creatingBottleEllipsis => 'ボトルを作成しています';
 
   @override
   String get emptyExecutableBottleMessage => 'この実行ファイルを起動する前にボトルを作成してください。';
@@ -162,10 +162,10 @@ class KonyakLocalizationsJa extends KonyakLocalizations {
   String get environment => '環境変数';
 
   @override
-  String get exportAsArchiveEllipsis => 'アーカイブとしてエクスポート...';
+  String get exportAsArchiveEllipsis => 'アーカイブとしてエクスポート';
 
   @override
-  String get exportingBottleArchiveEllipsis => 'ボトルアーカイブを書き出しています...';
+  String get exportingBottleArchiveEllipsis => 'ボトルアーカイブを書き出しています';
 
   @override
   String get failed => '失敗';
@@ -217,10 +217,10 @@ class KonyakLocalizationsJa extends KonyakLocalizations {
   String get importingD3dmetal => 'D3DMetal をインポートしています';
 
   @override
-  String get importingGptkD3dmetalEllipsis => 'GPTK/D3DMetal をインポートしています...';
+  String get importingGptkD3dmetalEllipsis => 'GPTK/D3DMetal をインポートしています';
 
   @override
-  String get importingBottleArchiveEllipsis => 'ボトルアーカイブを読み込んでいます...';
+  String get importingBottleArchiveEllipsis => 'ボトルアーカイブを読み込んでいます';
 
   @override
   String get importD3dmetalBackendMessage =>
@@ -266,7 +266,7 @@ class KonyakLocalizationsJa extends KonyakLocalizations {
   String get latestRunLog => '最新の実行ログ';
 
   @override
-  String get launchingProgramEllipsis => 'プログラムを起動しています...';
+  String get launchingProgramEllipsis => 'プログラムを起動しています';
 
   @override
   String get light => 'ライト';
@@ -278,8 +278,7 @@ class KonyakLocalizationsJa extends KonyakLocalizations {
   String get loading => '読み込み中';
 
   @override
-  String get loadingWinetricksPackagesEllipsis =>
-      'winetricks パッケージを読み込んでいます...';
+  String get loadingWinetricksPackagesEllipsis => 'winetricks パッケージを読み込んでいます';
 
   @override
   String get locale => 'ロケール';
@@ -313,7 +312,7 @@ class KonyakLocalizationsJa extends KonyakLocalizations {
   String get move => '移動';
 
   @override
-  String get moveEllipsis => '移動...';
+  String get moveEllipsis => '移動';
 
   @override
   String get environmentNameHint => '名前';
@@ -379,7 +378,7 @@ class KonyakLocalizationsJa extends KonyakLocalizations {
   String get pin => 'ピン留め';
 
   @override
-  String get pinProgram => 'プログラムをピン留め';
+  String get pinProgram => 'プログラムを\nピン留め';
 
   @override
   String get processManager => 'プロセスマネージャー';
@@ -394,7 +393,7 @@ class KonyakLocalizationsJa extends KonyakLocalizations {
   String get programs => 'プログラム';
 
   @override
-  String get removeEllipsis => '削除...';
+  String get removeEllipsis => '削除';
 
   @override
   String get repair => '修復';
@@ -418,7 +417,7 @@ class KonyakLocalizationsJa extends KonyakLocalizations {
   String get rename => '名前を変更';
 
   @override
-  String get renameEllipsis => '名前を変更...';
+  String get renameEllipsis => '名前を変更';
 
   @override
   String get retry => '再試行';
@@ -433,7 +432,7 @@ class KonyakLocalizationsJa extends KonyakLocalizations {
   String get run => '実行';
 
   @override
-  String get runEllipsis => '実行...';
+  String get runEllipsis => '実行';
 
   @override
   String get save => '保存';
@@ -451,10 +450,10 @@ class KonyakLocalizationsJa extends KonyakLocalizations {
   String get settings => '設定';
 
   @override
-  String get settingsEllipsis => '設定...';
+  String get settingsEllipsis => '設定';
 
   @override
-  String get settingsEllipsisMenu => '設定...';
+  String get settingsEllipsisMenu => '設定';
 
   @override
   String get showDetail => '詳細を表示';
@@ -742,12 +741,12 @@ class KonyakLocalizationsJa extends KonyakLocalizations {
 
   @override
   String downloadProgress(String runtimeName) {
-    return '$runtimeName をダウンロードしています...';
+    return '$runtimeName をダウンロードしています';
   }
 
   @override
   String installingVerb(String verb) {
-    return '$verb をインストールしています...';
+    return '$verb をインストールしています';
   }
 
   @override
