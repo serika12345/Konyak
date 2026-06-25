@@ -13,8 +13,8 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-06-25 23:06 JST
-- State: `in_progress`
+- Timestamp: 2026-06-25 23:16 JST
+- State: `completed`
 - Branch: `main`
 - Active work: updating the v1.0.3 release after fixing the Linux AppImage
   startup failure.
@@ -37,11 +37,13 @@ unfinished work.
   `verify` job that runs `just verify`; `publish` now waits for `verify`,
   `linux`, and `macos` jobs before uploading GitHub Release assets. Updated
   release documentation to record that publishing is gated on release workflow
-  verification.
-- Remaining work: rerun local verification after the release workflow change,
-  commit and push to `main`, move the `v1.0.3` tag to the fixed commit, and wait
-  for the tag-triggered GitHub Actions release workflow to finish successfully.
-- Next action: run local governance and verification gates.
+  verification. Committed and pushed the fix as
+  `019fc197807920d898f337a8cf1806609a41637e`, moved `v1.0.3` to that commit,
+  and confirmed the tag-triggered release workflow published fresh assets.
+- Remaining work: none for this v1.0.3 AppImage fix and release-gating update.
+- Next action: monitor future release runs for the existing GitHub Actions
+  Node.js 20 deprecation annotation and update action versions if GitHub stops
+  forcing Node.js 24 compatibility.
 - Verification: focused
   `flutter test test/linux_window_chrome_test.dart --plain-name "Linux AppImage
   bundles runtime loader libraries"` failed before the implementation because
@@ -55,4 +57,13 @@ unfinished work.
   direct AppImage CLI execution with `--konyak-cli list-runtimes --json`
   reached the CLI and returned schema version 1 after filtering the NixOS
   `appimage-run` status line; `just verify-governance`; `just verify-safety`;
-  `just format-check`; `just lint`.
+  `just format-check`; `just lint`; `just verify`. GitHub Actions passed for
+  `main` at `019fc197807920d898f337a8cf1806609a41637e`: Konyak Verify
+  `28176241611` and Konyak Pages `28176241671`. GitHub Actions passed for
+  `v1.0.3` at the same commit: Konyak Verify `28176251549` and Konyak Release
+  `28176251512`. The release workflow included successful `Verify release
+  candidate` job `83453303059`, Linux AppImage job `83453303331`, macOS app job
+  `83453302989`, and publish job `83454491872`. GitHub Release `v1.0.3` now
+  contains `Konyak-1.0.3-linux-x86_64.AppImage` sized 38,454,464 bytes with
+  digest
+  `sha256:3494b59ad2e377417a51e239f14a7d1d97bd6860ea6b8e611e8e5101b9bf91c7`.
