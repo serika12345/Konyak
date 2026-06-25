@@ -137,6 +137,17 @@ void main() {
     expect(appDelegate, isNot(contains('removexattr')));
   });
 
+  test('macOS app waits for Flutter close cleanup before terminating', () {
+    final appDelegate = File(
+      'macos/Runner/AppDelegate.swift',
+    ).readAsStringSync();
+
+    expect(appDelegate, contains('applicationShouldTerminate'));
+    expect(appDelegate, contains('terminateWineProcessesBeforeQuit'));
+    expect(appDelegate, contains('.terminateLater'));
+    expect(appDelegate, contains('reply(toApplicationShouldTerminate: true)'));
+  });
+
   test('macOS app bundles a Quick Look thumbnail extension for EXE files', () {
     final project = File(
       'macos/Runner.xcodeproj/project.pbxproj',

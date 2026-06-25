@@ -1,7 +1,7 @@
 part of '../home_loader/home_loader.dart';
 
 extension _KonyakHomeLoaderWineProcesses on _KonyakHomeLoaderState {
-  void _terminateWineProcessesOnClose() {
+  Future<void> _terminateWineProcessesOnClose() async {
     if (!widget.enableBackgroundServices || _hasTerminatedWineProcesses) {
       return;
     }
@@ -12,7 +12,7 @@ extension _KonyakHomeLoaderWineProcesses on _KonyakHomeLoaderState {
     }
 
     _hasTerminatedWineProcesses = true;
-    unawaited(widget.cliClient.terminateWineProcesses());
+    await widget.cliClient.terminateWineProcesses();
   }
 
   Future<void> _terminateBottleProcesses(BottleSummary bottle) async {

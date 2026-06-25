@@ -193,7 +193,7 @@ Option<AppSettingsRecord> _appSettingsRecordFromJson(
     AppSettingsRecord(
       terminateWineProcessesOnClose: terminateWineProcessesOnClose is bool
           ? terminateWineProcessesOnClose
-          : true,
+          : false,
       defaultBottlePath: defaultBottlePath is String
           ? defaultBottlePath
           : fallbackDefaultBottlePath,

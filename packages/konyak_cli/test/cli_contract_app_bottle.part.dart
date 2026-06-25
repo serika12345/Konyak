@@ -78,6 +78,42 @@ void defineAppAndBottleContractTests() {
     });
   });
 
+  test('get-app-settings --json defaults Wine close termination off', () {
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-app-settings-default-test-',
+    );
+    addTearDown(() {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    });
+
+    final result = runCli(
+      const ['get-app-settings', '--json'],
+      appSettingsRepository: FileAppSettingsRepository(
+        configHome: _joinTestPath(tempDirectory.path, const ['config']),
+        fallbackDefaultBottlePath: '/Volumes/Games/Bottles',
+      ),
+    );
+
+    expect(result.exitCode, 0);
+    expect(result.stderr, isEmpty);
+
+    final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+    expect(payload, {
+      'schemaVersion': 1,
+      'appSettings': {
+        'terminateWineProcessesOnClose': false,
+        'defaultBottlePath': '/Volumes/Games/Bottles',
+        'appearanceMode': 'dark',
+        'languageMode': 'system',
+        'automaticallyCheckForKonyakUpdates': false,
+        'automaticallyCheckForWineUpdates': true,
+        'automaticallyPinNewInstalledPrograms': true,
+      },
+    });
+  });
+
   test('set-app-settings --json persists application settings', () {
     final repository = MemoryAppSettingsRepository(
       const AppSettingsRecord(defaultBottlePath: '/Users/user/Bottles'),
@@ -134,6 +170,7 @@ void defineAppAndBottleContractTests() {
     expect(
       _expectIo(repository.read()),
       const AppSettingsRecord(
+        terminateWineProcessesOnClose: true,
         defaultBottlePath: '/Volumes/Games/Bottles',
         appearanceMode: AppAppearanceMode.system,
         automaticallyPinNewInstalledPrograms: true,

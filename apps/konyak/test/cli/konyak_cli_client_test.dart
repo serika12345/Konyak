@@ -1463,7 +1463,7 @@ void main() {
       expect(runner.arguments, const [
         'set-app-settings',
         '--settings-json',
-        '{"terminateWineProcessesOnClose":true,"defaultBottlePath":"/Volumes/Games/Bottles","appearanceMode":"system","languageMode":"system","automaticallyCheckForKonyakUpdates":false,"automaticallyCheckForWineUpdates":true,"automaticallyPinNewInstalledPrograms":true}',
+        '{"terminateWineProcessesOnClose":false,"defaultBottlePath":"/Volumes/Games/Bottles","appearanceMode":"system","languageMode":"system","automaticallyCheckForKonyakUpdates":false,"automaticallyCheckForWineUpdates":true,"automaticallyPinNewInstalledPrograms":true}',
         '--json',
       ]);
     },

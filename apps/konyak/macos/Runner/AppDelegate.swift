@@ -7,6 +7,7 @@ class AppDelegate: FlutterAppDelegate {
   private var menuChannel: FlutterMethodChannel?
   private var pendingExecutableOpenPaths: [String] = []
   private var isFlutterReadyForExecutableOpenEvents = false
+  private var isWaitingForFlutterTermination = false
 
   func configureMenuChannel(binaryMessenger: FlutterBinaryMessenger) {
     let channel = FlutterMethodChannel(
@@ -70,6 +71,28 @@ class AppDelegate: FlutterAppDelegate {
 
   override func application(_ application: NSApplication, open urls: [URL]) {
     forwardExecutableOpenPaths(executableOpenPaths(urls))
+  }
+
+  override func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+    if isWaitingForFlutterTermination {
+      return .terminateNow
+    }
+
+    guard let menuChannel else {
+      return .terminateNow
+    }
+
+    isWaitingForFlutterTermination = true
+    menuChannel.invokeMethod(
+      "terminateWineProcessesBeforeQuit",
+      arguments: nil
+    ) { [weak self] _ in
+      DispatchQueue.main.async {
+        self?.isWaitingForFlutterTermination = false
+        sender.reply(toApplicationShouldTerminate: true)
+      }
+    }
+    return .terminateLater
   }
 
   override func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {

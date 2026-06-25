@@ -22,7 +22,7 @@ enum AppLanguageMode {
 
 class AppSettingsRecord {
   const AppSettingsRecord({
-    this.terminateWineProcessesOnClose = true,
+    this.terminateWineProcessesOnClose = false,
     required this.defaultBottlePath,
     this.appearanceMode = AppAppearanceMode.dark,
     this.languageMode = AppLanguageMode.system,

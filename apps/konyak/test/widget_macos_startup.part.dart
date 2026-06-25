@@ -1390,6 +1390,102 @@ void defineMacosStartupAndRuntimeWidgetTests() {
     ]);
   });
 
+  testWidgets(
+    'macOS terminate request waits for Wine process termination before replying',
+    (WidgetTester tester) async {
+      final terminationCompleter = Completer<ProcessRunResult>();
+      final runner = _FutureQueuedProcessRunner([
+        Future.value(
+          const ProcessRunResult(
+            exitCode: 0,
+            stdout: '{"schemaVersion":1,"bottles":[]}',
+            stderr: '',
+          ),
+        ),
+        Future.value(
+          const ProcessRunResult(
+            exitCode: 0,
+            stdout: '''
+              {
+                "schemaVersion": 1,
+                "appSettings": {
+                  "terminateWineProcessesOnClose": true,
+                  "defaultBottlePath": "/Users/user/Library/Application Support/Konyak/Bottles",
+                  "automaticallyCheckForKonyakUpdates": false,
+                  "automaticallyCheckForWineUpdates": false
+                }
+              }
+            ''',
+            stderr: '',
+          ),
+        ),
+        Future.value(
+          const ProcessRunResult(
+            exitCode: 0,
+            stdout: '{"schemaVersion":1,"runtimes":[]}',
+            stderr: '',
+          ),
+        ),
+        terminationCompleter.future,
+      ]);
+
+      await tester.pumpWidget(
+        _testKonyakApp(
+          cliClient: KonyakCliClient(
+            executable: 'konyak',
+            processRunner: runner,
+          ),
+          enableBackgroundServices: true,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final result = Completer<ByteData?>();
+      final platformMessage = tester.binding.defaultBinaryMessenger
+          .handlePlatformMessage(
+            'konyak/menu',
+            const StandardMethodCodec().encodeMethodCall(
+              const MethodCall('terminateWineProcessesBeforeQuit'),
+            ),
+            result.complete,
+          );
+      await tester.pump();
+
+      expect(runner.argumentsLog.last, const [
+        'terminate-wine-processes',
+        '--json',
+      ]);
+      expect(result.isCompleted, isFalse);
+
+      terminationCompleter.complete(
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+            {
+              "schemaVersion": 1,
+              "wineProcessTermination": {
+                "hasFailures": false,
+                "bottles": []
+              }
+            }
+          ''',
+          stderr: '',
+        ),
+      );
+      await platformMessage;
+      await result.future;
+      await tester.pumpAndSettle();
+
+      expect(result.isCompleted, isTrue);
+      expect(runner.argumentsLog, const [
+        ['list-bottles', '--json'],
+        ['get-app-settings', '--json'],
+        ['list-runtimes', '--json'],
+        ['terminate-wine-processes', '--json'],
+      ]);
+    },
+  );
+
   testWidgets('macOS runtime install is not exposed as a toolbar action', (
     WidgetTester tester,
   ) async {

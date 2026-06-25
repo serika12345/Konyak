@@ -21,6 +21,9 @@ extension _KonyakHomeLoaderExecutables on _KonyakHomeLoaderState {
         );
         unawaited(_drainPendingExecutableOpenPaths());
         return;
+      case 'terminateWineProcessesBeforeQuit':
+        await _terminateWineProcessesOnClose();
+        return;
       default:
         throw MissingPluginException(
           'Unsupported macOS menu method: ${call.method}',

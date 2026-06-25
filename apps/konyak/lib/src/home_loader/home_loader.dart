@@ -134,13 +134,13 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.detached) {
-      _terminateWineProcessesOnClose();
+      unawaited(_terminateWineProcessesOnClose());
     }
   }
 
   @override
   void dispose() {
-    _terminateWineProcessesOnClose();
+    unawaited(_terminateWineProcessesOnClose());
     _macosMenuChannel.setMethodCallHandler(null);
     if (widget.enableBackgroundServices) {
       WidgetsBinding.instance.removeObserver(this);
