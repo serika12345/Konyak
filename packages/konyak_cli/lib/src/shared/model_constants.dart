@@ -3,7 +3,7 @@ part of '../../konyak_cli.dart';
 const cliSchemaVersion = 1;
 const runtimeStackSchemaVersion = 1;
 const konyakAppId = 'konyak';
-const konyakAppVersion = '1.0.2';
+const konyakAppVersion = '1.0.3';
 const konyakMacosBundleIdentifier = 'app.konyak.Konyak';
 const konyakAppVersionUrl =
     'https://api.github.com/repos/serika12345/Konyak/releases/latest';

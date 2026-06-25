@@ -342,6 +342,11 @@ void main() {
     expect(releaseScript, contains('resvg'));
     expect(releaseScript, contains('--app-drop-link 470 210'));
     expect(releaseScript, contains('format: "dmg"'));
+    expect(releaseScript, contains('Konyak-*-macos-"\$host_arch".dmg(N)'));
+    expect(
+      releaseScript,
+      contains('Konyak-*-macos-"\$host_arch".release.json(N)'),
+    );
     expect(
       releaseScript,
       isNot(contains('--keepParent "\$release_app_bundle" "\$zip_path"')),

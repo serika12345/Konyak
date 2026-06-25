@@ -94,13 +94,13 @@ echo "Signing Konyak.app ad hoc; release artifacts are intentionally unnotarized
   --cli "$cli_executable"
 
 rm -f \
-  "$dmg_path" \
-  "$checksum_path" \
+  "$release_root"/Konyak-*-macos-"$host_arch".dmg(N) \
+  "$release_root"/Konyak-*-macos-"$host_arch".dmg.sha256(N) \
+  "$release_root"/Konyak-*-macos-"$host_arch".release.json(N) \
+  "$release_root"/Konyak-*-macos-"$host_arch".zip(N) \
+  "$release_root"/Konyak-*-macos-"$host_arch".zip.sha256(N) \
   "$checksums_path" \
-  "$metadata_path" \
-  "$notes_path" \
-  "$release_root/${artifact_basename}.zip" \
-  "$release_root/${artifact_basename}.zip.sha256"
+  "$notes_path"
 rm -rf "$release_app_bundle"
 ditto "$app_bundle" "$release_app_bundle"
 codesign --verify --deep --strict --verbose=2 "$release_app_bundle"

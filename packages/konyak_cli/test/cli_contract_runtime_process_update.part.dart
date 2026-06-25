@@ -2275,7 +2275,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
     final metadataFile =
         File(_joinTestPath(tempDirectory.path, const ['release.json']))
           ..writeAsStringSync(
-            jsonEncode(<String, Object?>{'tag_name': 'v1.0.2', 'assets': []}),
+            jsonEncode(<String, Object?>{'tag_name': 'v1.0.3', 'assets': []}),
           );
     final checker = DartIoAppUpdateChecker.fromEnvironment(
       HostEnvironment({'KONYAK_APP_VERSION_URL': metadataFile.uri.toString()}),
@@ -2286,7 +2286,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
     expect(result, isA<AppUpdateCheckCompleted>());
     final completed = result as AppUpdateCheckCompleted;
     expect(completed.update.status, 'current');
-    expect(completed.update.currentVersion.toNullable(), '1.0.2');
+    expect(completed.update.currentVersion.toNullable(), '1.0.3');
   });
 
   test('app update checker selects the macOS archive from shared releases', () {

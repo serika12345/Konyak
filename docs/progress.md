@@ -13,39 +13,32 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-06-25 20:38 JST
-- State: `completed`
+- Timestamp: 2026-06-25 21:28 JST
+- State: `in_progress`
 - Branch: `main`
-- Active work: making the macOS native menu bar follow Konyak's in-app
-  language setting.
-- Related TODO: none; user-reported native UI localization gap.
-- Purpose: make the macOS menu bar update from Flutter localization strings
-  when Konyak's language is set to Japanese, instead of relying only on
-  AppKit's launch-time bundle localization.
-- Completed work: added `ja.lproj/MainMenu.strings`, registered Japanese in the
-  Xcode project localization list, added ARB-backed macOS native menu labels,
-  added a Flutter bridge that sends the current localized menu titles to
-  macOS, and added Swift handling that updates AppKit menu titles by their
-  existing action selectors.
-- Remaining work: none for Konyak-owned native menu items. The AppKit-injected
-  alternate `Quit and Keep Windows` item remained OS-language-controlled in the
-  smoke environment.
-- Next action: commit the completed macOS native menu localization fix when
-  requested.
-- Verification: focused widget coverage failed before implementation because
-  no `setMenuLocalization` payload was sent, then passed after the bridge was
-  added; focused macOS static coverage failed before Swift handling existed,
-  then passed after implementation; `flutter gen-l10n`; `plutil -lint
-  apps/konyak/macos/Runner/ja.lproj/MainMenu.strings
-  apps/konyak/macos/Runner.xcodeproj/project.pbxproj`; `flutter build macos
-  --debug`; a runtime smoke launched
-  `apps/konyak/build/macos/Build/Products/Debug/Konyak.app` with a temporary
-  fake CLI returning `languageMode: "ja"` and System Events reported
-  `menuBar=AppleKonyakファイル`, app menu items including `Konyak について`,
-  `設定`, `アップデートを確認`, `macOS ランタイムを再インストール`, `Konyak を隠す`,
-  `ほかを隠す`, `すべて表示`, `Konyak を終了`, and File menu item
-  `ボトルをインポート`; System Events also listed AppKit's alternate
-  `Quit and Keep Windows` item in English; `just verify-governance`; `just
-  verify-safety`;
-  `just flutter-format-check`; `just swift-lint`; `just flutter-analyze`;
-  `just flutter-test`; `just format-check`; `just lint`.
+- Active work: releasing Konyak v1.0.3.
+- Related TODO: none; user-requested release.
+- Purpose: bump the packaged app version to 1.0.3, publish the release tag, and
+  keep GitHub Actions green before considering the release complete.
+- Completed work: bumped the Flutter package version to `1.0.3+4`, updated the
+  CLI packaged app version to `1.0.3`, updated focused app-update coverage, and
+  made the macOS release script remove stale versioned artifacts so local
+  release smokes stay repeatable after a version bump.
+- Remaining work: commit and push the release bump, create/push `v1.0.3`,
+  monitor every triggered GitHub Actions workflow, and fix or rerun failures
+  until all CI is successful.
+- Next action: rerun full verification after the release tooling change, then
+  commit and push the v1.0.3 release bump.
+- Verification: focused `dart test test/cli_contract_test.dart --plain-name
+  "app update checker defaults to the packaged Konyak app version"` failed as
+  expected before the version constant was updated, then passed after the bump;
+  focused `flutter test test/macos_window_metrics_test.dart --plain-name "macOS
+  release bundles zstd extraction support for runtime stacks"` failed before
+  the stale-artifact cleanup and passed after; `just verify-governance`; `just
+  verify-safety`; `just format-check`; `just lint`; `just cli-test`; `just
+  flutter-test`; `just macos-release`; final-release-app macOS smokes passed:
+  `smoke_macos_release_runtime_extraction.zsh`,
+  `smoke_macos_dmg_layout.zsh`, `smoke_macos_finder_integration.zsh` with the
+  PuTTY fixture, `smoke_macos_packaged_app_cli_bridge.zsh`, and
+  `smoke_macos_app_update_handoff.zsh`. Linux release verification is deferred
+  to GitHub Actions because the local host is macOS.
