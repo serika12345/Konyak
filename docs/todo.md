@@ -705,9 +705,9 @@ task changes scope.
     full-stack Flutter + real CLI smoke suite.
   - Keep the E2E target separate from the default fast verification gate until
     its runtime cost and flake rate are known.
-- Publication and signing of the default Linux runtime stack manifest and
-  public key, once the Linux runtime packaging owner produces complete stack
-  artifacts outside the parent repository.
+- [x] Publish and sign the default Linux runtime stack manifest and public key
+  once the Linux runtime packaging owner produces complete stack artifacts
+  outside the parent repository.
   - [x] Add the parent-repository Linux runtime release locator and shared
     source-manifest resolver so development preparation and AppImage release
     builds consume the same complete manifest contract.
@@ -719,7 +719,16 @@ task changes scope.
   - [x] Add a maintained Linux runtime CLI smoke that consumes a complete
     source manifest and verifies install/list/validate/bottle creation through
     the public CLI path.
-  - [ ] Publish a complete signed default Linux runtime stack source manifest
+  - [x] Publish a complete signed default Linux runtime stack source manifest
     and public key from the Linux runtime packaging owner.
-- Removal of any remaining bootstrap Wine-only fallback only after each target
-  platform has a complete default runtime stack manifest as its release input.
+- Linux runtime packaging-owner build/check hardening.
+  - Add submodule-side workflows that build and verify Linux runtime components
+    from pinned source recipes before the next runtime version bump.
+  - Mirror or explicitly verify the Wine archive when Konyak stops referencing
+    the upstream Kron4ek release asset.
+  - Keep the parent repository consuming only runtime-owner-produced complete
+    source manifests and archives.
+- Removal of remaining archive/Wine-only compatibility fallback after parent
+  installer and updater code no longer needs legacy `--archive` or
+  `--archive-url` runtime paths. macOS and Linux default release inputs are now
+  source manifests.

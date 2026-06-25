@@ -214,8 +214,12 @@ runtime release publishes `konyak-runtime-stack-public-key.pem`, or
 `KONYAK_LINUX_WINE_STACK_PUBLIC_KEY_PATH` for runtime verifier use.
 
 The release secret handoff for signed default Konyak runtime stack manifests is
-documented in `docs/release.md`. Linux default full-stack manifest publication
-and signing remain deferred until the Linux component archives exist.
+documented in `docs/release.md`. The default Linux runtime manifest, detached
+signature, public key, and current component archives are published by the
+Linux runtime owner under `linux-wine-runtime-stack-0.1.0`. Remaining Linux
+runtime-owner work is to add submodule-side component build/check workflows
+before the next runtime version bump; the initial Wine archive still references
+the upstream Kron4ek release rather than a Konyak-mirrored archive.
 
 The maintained Linux runtime CLI smoke entry point is
 `scripts/run_linux_runtime_cli_smoke.zsh`. It consumes a complete source

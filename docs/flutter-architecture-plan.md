@@ -38,10 +38,13 @@ the actionable backlog, use `docs/todo.md`.
 - Konyak bottle records are stored as versioned JSON metadata. Live external
   plist metadata is outside the supported data model.
 - macOS support uses Konyak-managed Wine behind the CLI boundary.
-- Runtime stack construction can layer component archives or consume a
-  checksum-validated source manifest.
-- App settings and runtime update checks can trigger automatic install/open
-  behavior through the CLI boundary.
+- Runtime stack construction can layer component archives or consume
+  checksum-validated source manifests on macOS and Linux.
+- Default macOS and Linux runtime releases are resolved through repository
+  release locators, and packaged Linux builds bundle the selected runtime
+  source manifest, signature, and public key when available.
+- App settings, runtime update checks, and packaged app update handoffs run
+  through the CLI boundary.
 
 ## Phase 1: Guardrails
 
@@ -137,18 +140,26 @@ boundary.
 - Install runtimes into platform-specific Konyak data directories.
 - Add update checks and rollback-safe installation.
 
-The initial runtime management implementation is in place for the bootstrap
-macOS Wine path, including startup-triggered update installation when enabled
-in app settings. Konyak app update checks and artifact download/open behavior
-are also in place through the CLI boundary. The macOS runtime installer can now
-construct a stack by layering separate component archives onto a Wine archive,
-or by resolving a checksum-validated source manifest that lists the component
-archive URLs and versions. Runtime updates use that source-manifest path when
-release metadata points at a manifest artifact. The Linux runtime installer now
-supports the same pattern for `vkd3d-proton`-aware managed stacks. The
-remaining runtime work is publishing the default Konyak stack manifest/public
-key, removing the bootstrap Wine-only fallback, and rounding out packaged app
-updater behavior across distribution formats.
+Runtime management is in place for managed macOS and Linux stack installs. The
+macOS runtime installer can construct a stack by layering separate component
+archives onto a Wine archive, or by resolving a checksum-validated source
+manifest that lists the component archive URLs and versions. The default macOS
+release uses the source-manifest path and points component records at the
+single assembled runtime stack archive.
+
+The Linux runtime installer supports the same source-manifest pattern for
+managed Wine/Proton stacks with `winetricks`, `wine-mono`, `dxvk`, and
+`vkd3d-proton` components. `runtime/linux-wine-release.json` points at the
+default `linux-wine-runtime-stack-0.1.0` release, and AppImage builds bundle
+the resolved manifest, detached signature, and public key when they are
+published by the selected runtime release.
+
+Packaged app update handoff is implemented for macOS zip artifacts and Linux
+AppImage artifacts through `install-app-update --json`. Remaining runtime and
+update work is limited to explicit hardening: Linux runtime-owner build/check
+workflows before the next runtime version bump, rollback/recovery policy for
+updates, and eventual removal of legacy archive/Wine-only fallback paths once
+the source-manifest route is the only supported runtime acquisition contract.
 
 ## Phase 6: Platform Expansion
 

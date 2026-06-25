@@ -11,6 +11,35 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-25 12:57 JST
+- State: `completed`
+- Branch: `main`
+- Related work: documentation state refresh for completed runtime/release work
+- Purpose: remove stale documentation that still described completed runtime
+  manifest publication, backend smoke, and packaged update handoff work as open.
+- Completed:
+  - Reviewed the current TODO/progress state, README status text, architecture
+    plan, CLI distribution notes, release notes, Linux runtime release locator,
+    release/smoke scripts, and runtime workflow coverage.
+  - Updated `README.md` so the main open areas match the current backlog
+    instead of completed backend selection, runtime probe, and Linux runtime
+    publication work.
+  - Updated `docs/flutter-architecture-plan.md`, `docs/cli-distribution.md`,
+    and `docs/release.md` to describe the current macOS assembled runtime
+    archive, Linux default runtime manifest/signature/key publication, and
+    macOS/Linux packaged app update handoff state.
+  - Updated `docs/todo.md` to mark the default Linux runtime manifest/public
+    key publication complete and keep the remaining Linux runtime-owner
+    build/check hardening and legacy runtime fallback removal work explicit.
+- Remaining: none.
+- Next: commit the documentation refresh when requested.
+- Verification:
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `git diff --check`: passed.
+
 - Timestamp: 2026-06-25 12:50 JST
 - State: `completed`
 - Branch: `main`

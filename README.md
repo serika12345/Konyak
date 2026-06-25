@@ -13,8 +13,8 @@ model.
 - x86_64 Linux is the second complete runtime target.
 - Flutter calls the backend through JSON CLI contracts.
 - Wine/Proton runtimes are managed by Konyak and installed per platform.
-- macOS runtime work targets a Konyak-managed Wine stack with separately
-  packaged components.
+- macOS uses a Konyak-managed Wine stack published as a single assembled
+  archive, with separately verified component build units.
 
 Implemented foundations include the Flutter shell, bottle CRUD, pinned and
 installed program workflows, Bottle Configuration, app settings, update checks,
@@ -23,11 +23,12 @@ launches through the CLI boundary.
 
 Remaining product work is tracked in `docs/todo.md`. The current active work,
 handoff notes, completed milestone summaries, and next continuation step are
-tracked in `docs/progress.md`. The main open areas are explicit backend
-selection for Wine/DXVK/DXMT/GPTK, backend-specific runtime probes, hosted
-runtime artifact publication for runtime changes, Linux runtime stack
-publication, and the native in-place updater framework that will eventually
-replace the current verified package handoff.
+tracked in `docs/progress.md`. The main open areas are end-to-end DLSS/MetalFX
+rendering proof, the remaining Flutter UI file split, Linux ARM64 Windows
+execution research, Linux executable thumbnail strategy for sandboxed file
+managers, E2E test target selection, Linux runtime submodule build/check
+hardening before the next runtime bump, and eventual removal of legacy
+archive/Wine-only runtime fallback paths.
 
 The x86_64 macOS Wine runtime includes a Konyak-owned GPTK/D3DMetal loader shim
 for user-imported GPTK payloads. The shim uses public CrossOver Wine loader
