@@ -11,6 +11,47 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-25 10:09 JST
+- State: `in_progress`
+- Branch: `main`
+- Related work: resumed v1.0.0 macOS and Linux release
+- Purpose: resume the paused simultaneous v1.0.0 release after the macOS
+  bottle deletion defect was fixed, local bottle data was recovered, and the
+  split fix commits reached `origin/main`.
+- Completed:
+  - Investigation workstream: reread the current TODO/progress state, release
+    workflow documentation, `.github/workflows/publish.yml`, local git state,
+    local tag state, and GitHub release state.
+  - Confirmed local `main` and `origin/main` both point at `3c52255`
+    (`Record bottle recovery after split commits`).
+  - Confirmed there is no local `v1.0.0` tag and `gh release view v1.0.0`
+    reports `release not found`.
+  - Sub-agent limitation: available sub-agent tooling requires an explicit user
+    request for delegation, so this release restart keeps investigation,
+    execution, and audit separated in this progress entry instead.
+  - Execution workstream: reran the local release-resume gates on current
+    `main` before starting the remote preflight.
+- Remaining:
+  - Commit and push this release-restart progress snapshot.
+  - Run the GitHub release workflow manually on `main` as the macOS/Linux
+    preflight.
+  - Create and push `v1.0.0` only after the preflight passes.
+  - Monitor the tag-triggered release workflow, then audit the published
+    release assets and checksum metadata.
+- Next: run local tests and repository gates before starting the remote
+  preflight.
+- Verification:
+  - `nix develop -c zsh -lc 'git log --oneline origin/main..main && git log --oneline main..origin/main'`:
+    passed with no diverging commits.
+  - `nix develop -c zsh -lc 'git tag -l "v1.0.0"; gh release view v1.0.0 ...'`:
+    confirmed the tag is absent locally and the GitHub release does not exist.
+  - `nix develop -c zsh -lc 'just test'`: passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `nix develop -c zsh -lc 'git diff --check'`: passed.
+
 - Timestamp: 2026-06-25 10:04 JST
 - State: `completed`
 - Branch: `main`
