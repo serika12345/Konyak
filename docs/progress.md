@@ -12,8 +12,9 @@ handoff notes.
 ### Latest Update
 
 - Timestamp: 2026-06-25 16:13 JST
-- State: `in_progress`
+- State: `completed`
 - Branch: `main`
+- Latest commit: `e171036 test: tolerate CI golden renderer drift`
 - Related work: verify workflow golden stability
 - Purpose: fix the failing `Konyak Verify` workflow after the v1.0.2 release
   by keeping the update confirmation prompt golden test meaningful while
@@ -28,8 +29,10 @@ handoff notes.
   - Implementation workstream: added a local tolerant golden comparator helper
     for widget tests and used it only for the Konyak update confirmation prompt
     golden, with a 2% diff threshold.
-- Remaining: push the fix and confirm GitHub verify turns green.
-- Next: commit, push, and watch the new verify run.
+  - Audit workstream: pushed `e171036` and confirmed GitHub Actions verify run
+    `28153487681` completed successfully.
+- Remaining: none for the verify failure.
+- Next: continue with the next requested feature or fix.
 - Verification:
   - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --name "macOS Konyak update confirmation prompt matches golden"'`:
     passed.
@@ -40,6 +43,8 @@ handoff notes.
     passed after formatting.
   - `nix develop -c zsh -lc 'just verify'`: passed locally; Linux-only
     loader and desktop smokes were skipped on macOS as defined by the justfile.
+  - `nix develop -c zsh -lc 'gh run watch 28153487681 --repo serika12345/Konyak --exit-status --interval 30'`:
+    passed; the GitHub `Konyak Verify` workflow completed successfully.
 
 - Timestamp: 2026-06-25 16:01 JST
 - State: `completed`
