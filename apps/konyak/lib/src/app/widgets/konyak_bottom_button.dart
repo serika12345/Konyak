@@ -11,6 +11,16 @@ class KonyakBottomButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = KonyakThemeColors.of(context);
+    final textStyle =
+        Theme.of(context).textTheme.labelLarge?.copyWith(
+          fontSize: 13,
+          fontWeight: FontWeight.normal,
+        ) ??
+        const TextStyle(
+          fontSize: 13,
+          fontFamily: 'Inter',
+          fontWeight: FontWeight.normal,
+        );
 
     return SizedBox(
       width: _bottomButtonWidth(label),
@@ -25,7 +35,7 @@ class KonyakBottomButton extends StatelessWidget {
           minimumSize: Size.zero,
           padding: const EdgeInsets.symmetric(horizontal: 7),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
-          textStyle: const TextStyle(fontSize: 13),
+          textStyle: textStyle,
           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           visualDensity: VisualDensity.compact,
         ),

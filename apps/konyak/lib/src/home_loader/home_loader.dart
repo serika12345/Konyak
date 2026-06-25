@@ -23,6 +23,7 @@ import '../app/utils/program_labels.dart';
 import '../app/utils/program_run_feedback.dart';
 import '../app/utils/update_labels.dart';
 import '../app/widgets/blocking_progress_overlay.dart';
+import '../app/widgets/konyak_snack_bar.dart';
 import '../bottles/bottle_summary.dart';
 import '../cli/konyak_cli_client.dart';
 import '../cli/runtime_install_contract.dart';
@@ -146,28 +147,20 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
   void _showSnackBar(String message) {
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    ).showSnackBar(konyakSnackBar(context: context, message: message));
   }
 
   void _showWarningSnackBar(String message, {SnackBarAction? action}) {
     final colorScheme = Theme.of(context).colorScheme;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
+      konyakSnackBar(
+        context: context,
+        message: message,
         backgroundColor: colorScheme.errorContainer,
-        content: Row(
-          children: [
-            Icon(
-              Icons.warning_amber_outlined,
-              color: colorScheme.onErrorContainer,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                message,
-                style: TextStyle(color: colorScheme.onErrorContainer),
-              ),
-            ),
-          ],
+        textColor: colorScheme.onErrorContainer,
+        leading: Icon(
+          Icons.warning_amber_outlined,
+          color: colorScheme.onErrorContainer,
         ),
         action: action,
       ),

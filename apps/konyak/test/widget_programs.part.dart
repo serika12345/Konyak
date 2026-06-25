@@ -1783,4 +1783,106 @@ void defineProgramWidgetTests() {
     );
     expect(find.byTooltip('View latest log'), findsOneWidget);
   });
+
+  testWidgets('long snackbar messages stay above bottom actions and show detail', (
+    WidgetTester tester,
+  ) async {
+    final longMessage = [
+      'Runner executable `wine` was not found.',
+      'The configured runtime path is missing from the development build.',
+      'Reinstall the managed runtime or update the development runtime path.',
+      'Checked path: /very/long/path/that/would/not/fit/in/the/snackbar/area/wine',
+    ].join(' ');
+    final feedbackMessage = '$longMessage (wine: wine)';
+    final runner = _QueuedProcessRunner([
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottles": [
+              {
+                "id": "steam",
+                "name": "Steam",
+                "path": "/home/user/.local/share/konyak/bottles/steam",
+                "windowsVersion": "win10"
+              }
+            ]
+          }
+        ''',
+        stderr: '',
+      ),
+      ProcessRunResult(
+        exitCode: 75,
+        stdout: jsonEncode({
+          'schemaVersion': 1,
+          'error': {
+            'code': 'programRunFailed',
+            'message': longMessage,
+            'bottleId': 'steam',
+            'programPath': '/downloads/setup.exe',
+            'runnerKind': 'wine',
+            'executable': 'wine',
+            'workingDirectory': null,
+            'argv': ['wine', '/downloads/setup.exe'],
+            'logPath':
+                '/home/user/.local/share/konyak/bottles/steam/logs/latest.log',
+          },
+        }),
+        stderr: '',
+      ),
+    ]);
+
+    await tester.pumpWidget(
+      _testKonyakApp(
+        cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.widgetWithText(TextButton, 'Run'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Program path'),
+      '/downloads/setup.exe',
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Run'));
+    await tester.pumpAndSettle();
+
+    final snackBarTextRect = tester.getRect(find.text(feedbackMessage));
+    final bottomBarRect = tester.getRect(
+      find.byKey(const ValueKey('bottom-bar')),
+    );
+    final toolsButton = tester.widget<TextButton>(
+      find.widgetWithText(TextButton, 'Tools'),
+    );
+    final toolsButtonTextStyle = toolsButton.style?.textStyle?.resolve(
+      <WidgetState>{},
+    );
+
+    expect(snackBarTextRect.bottom <= bottomBarRect.top, isTrue);
+    expect(toolsButtonTextStyle?.fontFamily, 'Inter');
+    expect(find.text('Show detail'), findsOneWidget);
+    expect(find.byIcon(Icons.close), findsOneWidget);
+
+    await tester.tap(find.text('Show detail'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Details'), findsOneWidget);
+    expect(
+      find.byWidgetPredicate(
+        (widget) => widget is SelectableText && widget.data == feedbackMessage,
+      ),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.widgetWithText(TextButton, 'Close'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.close));
+    await tester.pumpAndSettle();
+
+    expect(find.text(feedbackMessage), findsNothing);
+    expect(find.text('Show detail'), findsNothing);
+  });
 }

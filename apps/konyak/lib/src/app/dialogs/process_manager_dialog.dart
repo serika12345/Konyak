@@ -6,6 +6,7 @@ import '../../bottles/bottle_summary.dart';
 import '../../cli/konyak_cli_client.dart';
 import '../utils/program_labels.dart';
 import '../widgets/icon_file_image.dart';
+import '../widgets/konyak_snack_bar.dart';
 
 class ProcessManagerDialog extends StatefulWidget {
   const ProcessManagerDialog({
@@ -88,7 +89,7 @@ class _ProcessManagerDialogState extends State<ProcessManagerDialog> {
     };
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    ).showSnackBar(konyakSnackBar(context: context, message: message));
   }
 
   @override

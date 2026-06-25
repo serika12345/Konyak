@@ -11,6 +11,108 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-25 12:50 JST
+- State: `completed`
+- Branch: `main`
+- Related work: dismissible compact snackbar and bottom button screenshot repair
+- Purpose: let users force-close Konyak feedback snackbars and fix the direct
+  screenshot evidence path where bottom action button labels rendered as blocky
+  glyphs instead of readable text.
+- Completed:
+  - Investigation workstream: reviewed the shared snackbar helper, HomeLoader
+    and Process Manager callers, bottom bar button implementation, and the
+    direct golden screenshot harness used for snackbar evidence.
+  - Implementation workstream: enabled the shared Konyak snackbar close icon
+    while preserving existing action buttons such as retry.
+  - Implementation workstream: kept bottom action button text on the theme font
+    family with regular weight, preventing direct-rendered evidence from
+    falling back to block glyphs.
+  - Audit workstream: extended the long snackbar widget test to cover the
+    close icon, forced dismissal, detail dialog, bottom action bar clearance,
+    and bottom button font family.
+  - Audit workstream: regenerated direct-rendered evidence screenshots without
+    UI operations:
+    `/tmp/konyak-screenshots/konyak-snackbar-evidence.png` and
+    `/tmp/konyak-screenshots/konyak-snackbar-detail-evidence.png`.
+- Remaining: none.
+- Next: commit the compact/dismissible snackbar UI change when requested.
+- Verification:
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "long snackbar messages stay above bottom actions and show detail" -r expanded'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "delete bottle failure shows a retryable warning" -r expanded'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "process manager" -r expanded'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "run program failure shows the CLI diagnostic" -r expanded'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "keeps primary shell labels at regular text weight" -r expanded'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "active bottle layout fits within the Konyak minimum window" -r expanded'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test /tmp/konyak_snackbar_evidence_test.dart --update-goldens -r expanded'`:
+    passed.
+  - `nix develop -c zsh -lc 'just flutter-format-check'`: initially formatted
+    `konyak_bottom_button.dart` and failed as expected, then passed on rerun.
+  - `nix develop -c zsh -lc 'just flutter-analyze'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-test'`: initially failed because the
+    first bottom button font fix changed primary label weight and set
+    ellipsis; after preserving regular weight and existing overflow behavior,
+    passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `git diff --check`: passed.
+
+- Timestamp: 2026-06-25 12:18 JST
+- State: `completed`
+- Branch: `main`
+- Related work: compact bottom snackbar detail UI
+- Purpose: keep bottom snackbars from covering Konyak's bottom action bar and
+  make long messages inspectable through an explicit `Show detail` affordance
+  instead of relying on full inline text.
+- Completed:
+  - Investigation workstream: reviewed the HomeLoader snackbar helpers,
+    bottom bar layout, theme snackbar configuration, existing run-feedback
+    TODOs, and widget tests that previously had to hide snackbars before
+    reusing bottom actions.
+  - Implementation workstream: added a failing widget test for a long
+    `run-program` failure message, proving the current snackbar overlaps the
+    bottom bar.
+  - Implementation workstream: replaced HomeLoader's shared snackbar builders
+    with floating snackbars that leave a 64px bottom margin above the 52px
+    Konyak action bar.
+  - Implementation workstream: added a compact snackbar content widget that
+    measures whether the message fits one line, ellipsizes overflowing text,
+    and exposes a `Show detail` button that opens a selectable full-message
+    dialog.
+  - Implementation workstream: moved the compact snackbar into a shared app
+    widget and routed both HomeLoader notifications and Process Manager
+    termination feedback through it.
+  - Audit workstream: confirmed existing short failure feedback and retryable
+    delete warnings still render and function.
+- Remaining: none.
+- Next: commit the compact snackbar UI change when requested.
+- Verification:
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "long snackbar messages stay above bottom actions and show detail"'`:
+    failed before implementation because the snackbar bottom overlapped the
+    bottom action bar, then passed after implementation.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "run program"'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "delete bottle failure shows a retryable warning"'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "process manager"'`:
+    passed.
+  - `nix develop -c zsh -lc 'just flutter-format-check'`: initially formatted
+    snackbar files and failed as expected, then passed on rerun.
+  - `nix develop -c zsh -lc 'just flutter-analyze'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-test'`: passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `git diff --check`: passed.
+
 - Timestamp: 2026-06-25 12:08 JST
 - State: `completed`
 - Branch: `main`
