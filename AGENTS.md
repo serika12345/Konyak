@@ -83,6 +83,11 @@ Use TDD as the default development loop:
 2. Implement the smallest change that makes it pass.
 3. Refactor only while the test stays green.
 
+When internal implementation changes, do not add tests whose main purpose is to
+prove that the old implementation no longer exists. Those tests become
+maintenance debt. Instead, assert the expected behavior or stable contract
+directly.
+
 ### 4.1 Defect Investigation Requires Dynamic Proof
 
 - Static analysis, source comparison, binary metadata inspection, and
