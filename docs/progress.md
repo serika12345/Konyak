@@ -11,8 +11,68 @@ handoff notes.
 
 ### Latest Update
 
-- Timestamp: 2026-06-25 10:09 JST
+- Timestamp: 2026-06-25 10:32 JST
 - State: `in_progress`
+- Branch: `main`
+- Related work: v1.0.0 macOS/Linux release restart after app-update asset
+  selection blocker
+- Purpose: replace the draft v1.0.0 release with fixed artifacts after the
+  published-release audit proved that macOS app-update checks could select the
+  Linux AppImage from a shared macOS/Linux GitHub release.
+- Completed:
+  - Investigation workstream: completed the release-resume local gates, pushed
+    release progress commit `bcb4120`, ran manual release preflight
+    `28140129467` on `main`, pushed annotated tag `v1.0.0`, and monitored
+    tag-triggered release workflow `28140322288`; both workflows passed.
+  - Audit workstream: downloaded the published v1.0.0 assets, verified the
+    platform artifacts and individual checksum files, and found two release
+    automation issues: release notes only reflected the platform job that
+    created the release, and the shared `SHA256SUMS` asset was overwritten by
+    whichever platform job uploaded last.
+  - Audit workstream: after manually correcting release notes and the combined
+    `SHA256SUMS`, ran
+    `dart run bin/konyak.dart check-app-update --json` on macOS and proved the
+    blocker: the macOS update check returned
+    `Konyak-1.0.0-linux-x86_64.AppImage`.
+  - Execution workstream: moved the GitHub release back to draft before wider
+    distribution, while keeping the `v1.0.0` tag available for replacement.
+  - Implementation workstream: added app-update contract tests for shared
+    releases with Linux listed before macOS, then changed
+    `DartIoAppUpdateChecker` to filter release archive selection by host
+    platform.
+  - Implementation workstream: changed the release workflow so platform jobs
+    build and upload artifacts only; a single publish job now downloads both
+    platform artifacts, creates one combined `SHA256SUMS`, writes combined
+    release notes, and publishes or undrafts the release.
+  - Sub-agent limitation: available sub-agent tooling requires an explicit user
+    request for delegation, so this release restart keeps investigation,
+    implementation, and audit separated in this progress entry instead.
+- Remaining:
+  - Run the focused CLI tests, full repository gates, and workflow syntax
+    checks for the app-update and release workflow changes.
+  - Commit the platform-specific app-update selector and release publish
+    consolidation in a natural order, then push `main`.
+  - Rerun the release workflow manually on `main` as the fixed preflight.
+  - Move annotated tag `v1.0.0` to the fixed commit, push the tag update, and
+    monitor the tag-triggered release workflow.
+  - Audit the final public v1.0.0 release assets, combined checksum metadata,
+    and live macOS app-update response before reporting completion.
+- Next: run focused tests and repository gates for the pending fixes.
+- Verification:
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "app update checker selects the macOS archive from shared releases"'`:
+    failed before implementation, then passed after the fix.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "app update checker selects the Linux archive from shared releases"'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --name "app update checker|release metadata fetcher|install-app-update"'`:
+    passed.
+  - `nix develop -c zsh -lc 'gh release view v1.0.0 --repo serika12345/Konyak --json isDraft,isPrerelease,tagName,targetCommitish,url,name'`:
+    confirmed the release is currently draft and hidden from normal latest
+    distribution.
+  - `nix develop -c zsh -lc 'git diff --check'`: passed after the pending
+    code changes and before the progress update.
+
+- Timestamp: 2026-06-25 10:09 JST
+- State: `superseded`
 - Branch: `main`
 - Related work: resumed v1.0.0 macOS and Linux release
 - Purpose: resume the paused simultaneous v1.0.0 release after the macOS

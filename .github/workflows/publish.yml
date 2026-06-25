@@ -53,44 +53,6 @@ jobs:
             .dart_tool/konyak/release/linux/konyak-runtime-stack-public-key.pem
           if-no-files-found: ignore
 
-      - name: Publish GitHub release assets
-        if: startsWith(github.ref, 'refs/tags/')
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          shopt -s nullglob
-          tag="${GITHUB_REF_NAME}"
-          release_dir=".dart_tool/konyak/release/linux"
-          assets=(
-            "$release_dir"/Konyak-*.AppImage
-            "$release_dir"/Konyak-*.AppImage.sha256
-            "$release_dir"/Konyak-*.release.json
-            "$release_dir"/SHA256SUMS
-          )
-          optional_assets=(
-            "$release_dir"/konyak-linux-wine-runtime-stack-source.json
-            "$release_dir"/konyak-linux-wine-runtime-stack-source.json.sig
-            "$release_dir"/konyak-runtime-stack-public-key.pem
-          )
-          for optional_asset in "${optional_assets[@]}"; do
-            if [[ -f "$optional_asset" ]]; then
-              assets+=("$optional_asset")
-            fi
-          done
-          quoted_assets=()
-          for asset in "${assets[@]}"; do
-            printf -v quoted_asset '%q' "$asset"
-            quoted_assets+=("$quoted_asset")
-          done
-          assets_command="${quoted_assets[*]}"
-
-          if nix develop -c zsh -lc "gh release view '$tag' >/dev/null 2>&1"; then
-            nix develop -c zsh -lc "gh release upload '$tag' $assets_command --clobber"
-          else
-            nix develop -c zsh -lc "gh release create '$tag' $assets_command --title '$tag' --notes-file '$release_dir'/release-notes.md --verify-tag"
-          fi
-
   macos:
     name: macOS app
     runs-on: macos-15
@@ -124,17 +86,94 @@ jobs:
             .dart_tool/konyak/release/macos/SHA256SUMS
             .dart_tool/konyak/release/macos/release-notes.md
 
+  publish:
+    name: Publish GitHub release
+    runs-on: ubuntu-24.04
+    needs:
+      - linux
+      - macos
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: konyak-linux-release
+          path: .dart_tool/konyak/release-publish/linux
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: konyak-macos-release
+          path: .dart_tool/konyak/release-publish/macos
+
       - name: Publish GitHub release assets
-        if: startsWith(github.ref, 'refs/tags/')
         env:
           GH_TOKEN: ${{ github.token }}
+        shell: bash
         run: |
           set -euo pipefail
-          tag="${GITHUB_REF_NAME}"
-          release_dir=".dart_tool/konyak/release/macos"
+          shopt -s nullglob
 
-          if nix develop -c zsh -lc "gh release view '$tag' >/dev/null 2>&1"; then
-            nix develop -c zsh -lc "gh release upload '$tag' '$release_dir'/Konyak-*.zip '$release_dir'/Konyak-*.zip.sha256 '$release_dir'/Konyak-*.release.json '$release_dir'/SHA256SUMS --clobber"
+          tag="${GITHUB_REF_NAME}"
+          publish_dir=".dart_tool/konyak/release-publish"
+          linux_dir="$publish_dir/linux"
+          macos_dir="$publish_dir/macos"
+          combined_checksums="$publish_dir/SHA256SUMS"
+          notes_path="$publish_dir/release-notes.md"
+
+          linux_appimages=("$linux_dir"/Konyak-*.AppImage)
+          linux_appimage_checksums=("$linux_dir"/Konyak-*.AppImage.sha256)
+          linux_metadata=("$linux_dir"/Konyak-*.release.json)
+          linux_checksums=("$linux_dir"/SHA256SUMS)
+          macos_zips=("$macos_dir"/Konyak-*.zip)
+          macos_zip_checksums=("$macos_dir"/Konyak-*.zip.sha256)
+          macos_metadata=("$macos_dir"/Konyak-*.release.json)
+          macos_checksums=("$macos_dir"/SHA256SUMS)
+
+          if [[ ${#linux_appimages[@]} -ne 1 ||
+                ${#linux_appimage_checksums[@]} -ne 1 ||
+                ${#linux_metadata[@]} -ne 1 ||
+                ${#linux_checksums[@]} -ne 1 ||
+                ${#macos_zips[@]} -ne 1 ||
+                ${#macos_zip_checksums[@]} -ne 1 ||
+                ${#macos_metadata[@]} -ne 1 ||
+                ${#macos_checksums[@]} -ne 1 ]]; then
+            echo "Expected exactly one release artifact, checksum, metadata file, and SHA256SUMS per platform." >&2
+            find "$publish_dir" -maxdepth 2 -type f -print | sort >&2
+            exit 1
+          fi
+
+          cat "${macos_checksums[0]}" "${linux_checksums[0]}" >"$combined_checksums"
+          {
+            printf "# Konyak %s\n\n" "${tag#v}"
+            printf "## SHA-256\n\n"
+            printf '```text\n'
+            cat "$combined_checksums"
+            printf '```\n'
+          } >"$notes_path"
+
+          assets=(
+            "${macos_zips[0]}"
+            "${macos_zip_checksums[0]}"
+            "${macos_metadata[0]}"
+            "${linux_appimages[0]}"
+            "${linux_appimage_checksums[0]}"
+            "${linux_metadata[0]}"
+            "$combined_checksums"
+          )
+
+          optional_assets=(
+            "$linux_dir"/konyak-linux-wine-runtime-stack-source.json
+            "$linux_dir"/konyak-linux-wine-runtime-stack-source.json.sig
+            "$linux_dir"/konyak-runtime-stack-public-key.pem
+          )
+          for optional_asset in "${optional_assets[@]}"; do
+            if [[ -f "$optional_asset" ]]; then
+              assets+=("$optional_asset")
+            fi
+          done
+
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" "${assets[@]}" --clobber
+            gh release edit "$tag" --title "$tag" --notes-file "$notes_path" --draft=false --latest --verify-tag
           else
-            nix develop -c zsh -lc "gh release create '$tag' '$release_dir'/Konyak-*.zip '$release_dir'/Konyak-*.zip.sha256 '$release_dir'/Konyak-*.release.json '$release_dir'/SHA256SUMS --title '$tag' --notes-file '$release_dir'/release-notes.md --verify-tag"
+            gh release create "$tag" "${assets[@]}" --title "$tag" --notes-file "$notes_path" --verify-tag --latest
           fi
