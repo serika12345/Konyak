@@ -1,6 +1,107 @@
 part of 'widget_test.dart';
 
 void defineProgramWidgetTests() {
+  testWidgets('run program refreshes removed pinned programs after completion', (
+    WidgetTester tester,
+  ) async {
+    const pinnedShortcutPath =
+        '/bottles/steam/drive_c/ProgramData/Microsoft/Windows/Start Menu/Programs/Uninstall Steam.lnk';
+    final runner = _QueuedProcessRunner([
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout:
+            '''
+          {
+            "schemaVersion": 1,
+            "bottles": [
+              {
+                "id": "steam",
+                "name": "Steam",
+                "path": "/bottles/steam",
+                "windowsVersion": "win10",
+                "pinnedPrograms": [
+                  {
+                    "name": "Uninstall Steam",
+                    "path": "$pinnedShortcutPath",
+                    "removable": true
+                  }
+                ]
+              }
+            ]
+          }
+        ''',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout:
+            '''
+          {
+            "schemaVersion": 1,
+            "run": {
+              "bottleId": "steam",
+              "programPath": "$pinnedShortcutPath",
+              "runnerKind": "wine",
+              "executable": "wine",
+              "workingDirectory": null,
+              "argv": ["wine", "$pinnedShortcutPath"],
+              "logPath": "/bottles/steam/logs/latest.log",
+              "processExitCode": 0
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottle": {
+              "id": "steam",
+              "name": "Steam",
+              "path": "/bottles/steam",
+              "windowsVersion": "win10"
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+    ]);
+
+    await tester.pumpWidget(
+      _testKonyakApp(
+        cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const ValueKey('pinned-program-tile-$pinnedShortcutPath')),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.widgetWithText(TextButton, 'Run'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Program path'),
+      pinnedShortcutPath,
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Run'));
+    await tester.pumpAndSettle();
+
+    expect(runner.argumentsLog, const [
+      ['list-bottles', '--json'],
+      ['run-program', 'steam', '--program', pinnedShortcutPath, '--json'],
+      ['inspect-bottle', 'steam', '--json'],
+    ]);
+    expect(
+      find.byKey(const ValueKey('pinned-program-tile-$pinnedShortcutPath')),
+      findsNothing,
+    );
+  });
+
   testWidgets('run program auto-pins newly installed programs when enabled', (
     WidgetTester tester,
   ) async {
@@ -1296,6 +1397,28 @@ void defineProgramWidgetTests() {
               "argv": ["wine", "/downloads/setup.exe"],
               "logPath": "/bottles/steam/logs/latest.log",
               "processExitCode": 0
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottle": {
+              "id": "steam",
+              "name": "Steam",
+              "path": "/bottles/steam",
+              "windowsVersion": "win10",
+              "pinnedPrograms": [
+                {
+                  "name": "Setup",
+                  "path": "/downloads/setup.exe",
+                  "removable": false
+                }
+              ]
             }
           }
         ''',

@@ -51,7 +51,7 @@ class MemoryBottleRepository implements BottleRepository {
             .toList(growable: false)
             .map((bottle) {
               final updated = _bottleWithPinnedProgramIcons(
-                bottle,
+                _bottleWithoutMissingBottleLocalPinnedProgramFiles(bottle),
                 programMetadataExtractor: _programMetadataExtractor,
               );
               if (updated != bottle) {
@@ -73,7 +73,7 @@ class MemoryBottleRepository implements BottleRepository {
     }
 
     final updated = _bottleWithPinnedProgramIcons(
-      bottle,
+      _bottleWithoutMissingBottleLocalPinnedProgramFiles(bottle),
       programMetadataExtractor: _programMetadataExtractor,
     );
     if (updated != bottle) {

@@ -24,7 +24,7 @@ bool _isSuccessfulRun(ProgramRunSummary run) {
 
 bool shouldRefreshBottleAfterCommand(String command) {
   return switch (command.trim().toLowerCase()) {
-    'winecfg' || 'regedit' || 'control' => true,
+    'winecfg' || 'regedit' || 'control' || 'uninstaller' => true,
     _ => false,
   };
 }

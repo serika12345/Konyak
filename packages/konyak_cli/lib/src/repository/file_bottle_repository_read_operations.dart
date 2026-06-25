@@ -18,6 +18,7 @@ class _FileBottleRepositoryReadOperations {
       final bottles =
           _fileBottleRepositoryBottleDirectories(bottleDirectory)
               .map((entry) => _readBottleMetadata(entry.path))
+              .map(_repairedBottleWithoutMissingBottleLocalPinnedProgramFiles)
               .map(
                 (bottle) => _bottleWithPinnedProgramIcons(
                   bottle,
@@ -39,10 +40,32 @@ class _FileBottleRepositoryReadOperations {
     return _ioResult(
       () => Option.of(
         _bottleWithPinnedProgramIcons(
-          _readBottleMetadata(_fileBottlePath(bottleDirectory, id)),
+          _repairedBottleWithoutMissingBottleLocalPinnedProgramFiles(
+            _readBottleMetadata(_fileBottlePath(bottleDirectory, id)),
+          ),
           programMetadataExtractor: _programMetadataExtractor,
         ),
       ),
     );
   }
+}
+
+BottleRecord _repairedBottleWithoutMissingBottleLocalPinnedProgramFiles(
+  BottleRecord bottle,
+) {
+  final updated = _bottleWithoutMissingBottleLocalPinnedProgramFiles(bottle);
+  if (updated != bottle) {
+    _writeBottleMetadata(updated);
+  }
+  return updated;
+}
+
+BottleRecord _bottleWithoutMissingBottleLocalPinnedProgramFiles(
+  BottleRecord bottle,
+) {
+  return _bottleWithoutMissingBottleLocalPinnedPrograms(
+    bottle,
+    isPinnedProgramAvailable: (program) =>
+        _isPinnedProgramFileAvailable(bottle: bottle, program: program),
+  );
 }

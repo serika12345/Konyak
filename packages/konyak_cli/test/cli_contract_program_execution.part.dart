@@ -2722,20 +2722,37 @@ corefonts                Microsoft Core Fonts
   );
 
   test('open-program-location --json reveals the pinned program path', () {
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-open-pinned-program-location-test-',
+    );
+    addTearDown(() {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    });
+    final bottlePath = _joinTestPath(tempDirectory.path, const [
+      'Bottles',
+      'Steam',
+    ]);
+    final programPath = _joinTestPath(bottlePath, const [
+      'drive_c',
+      'Program Files',
+      'Steam',
+      'Steam.exe',
+    ]);
+    File(programPath)
+      ..createSync(recursive: true)
+      ..writeAsStringSync('steam');
     final repository = MemoryBottleRepository(
-      dataHome: '/Users/user/Library/Application Support/Konyak',
+      dataHome: tempDirectory.path,
       bottles: [
         BottleRecord(
           id: 'steam',
           name: 'Steam',
-          path: '/Users/user/Library/Application Support/Konyak/Bottles/Steam',
+          path: bottlePath,
           windowsVersion: 'win10',
           pinnedPrograms: [
-            PinnedProgramRecord(
-              name: 'Steam',
-              path:
-                  '/Users/user/Library/Application Support/Konyak/Bottles/Steam/drive_c/Program Files/Steam/Steam.exe',
-            ),
+            PinnedProgramRecord(name: 'Steam', path: programPath),
           ],
         ),
       ],
@@ -2743,33 +2760,22 @@ corefonts                Microsoft Core Fonts
     final pathOpener = RecordingPathOpener(result: const PathOpenCompleted());
 
     final result = runCli(
-      const [
-        'open-program-location',
-        'steam',
-        '--program',
-        '/Users/user/Library/Application Support/Konyak/Bottles/Steam/drive_c/Program Files/Steam/Steam.exe',
-        '--json',
-      ],
+      ['open-program-location', 'steam', '--program', programPath, '--json'],
       bottleRepository: repository,
       pathOpener: pathOpener,
     );
 
     expect(result.exitCode, 0);
     expect(pathOpener.lastPath, isNull);
-    expect(
-      pathOpener.lastRevealedPath,
-      '/Users/user/Library/Application Support/Konyak/Bottles/Steam/drive_c/Program Files/Steam/Steam.exe',
-    );
+    expect(pathOpener.lastRevealedPath, programPath);
 
     final payload = jsonDecode(result.stdout) as Map<String, Object?>;
     expect(payload, {
       'schemaVersion': 1,
       'openedProgramLocation': {
         'bottleId': 'steam',
-        'programPath':
-            '/Users/user/Library/Application Support/Konyak/Bottles/Steam/drive_c/Program Files/Steam/Steam.exe',
-        'path':
-            '/Users/user/Library/Application Support/Konyak/Bottles/Steam/drive_c/Program Files/Steam/Steam.exe',
+        'programPath': programPath,
+        'path': programPath,
       },
     });
   });

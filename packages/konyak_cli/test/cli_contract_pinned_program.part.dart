@@ -590,6 +590,235 @@ void definePinnedProgramContractTests() {
     expect(staleManifest.parent.existsSync(), isFalse);
   });
 
+  test('list-bottles --json prunes missing bottle-local pinned programs', () {
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-pinned-prune-list-test-',
+    );
+    addTearDown(() {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    });
+    final bottlePath = _joinTestPath(tempDirectory.path, const ['Steam']);
+    final shortcutPath = _joinTestPath(bottlePath, const [
+      'drive_c',
+      'ProgramData',
+      'Microsoft',
+      'Windows',
+      'Start Menu',
+      'Programs',
+      'Steam.lnk',
+    ]);
+    File(shortcutPath)
+      ..createSync(recursive: true)
+      ..writeAsStringSync('shortcut');
+    final externalPath = _joinTestPath(tempDirectory.path, const [
+      'Downloads',
+      'portable.exe',
+    ]);
+    final repository = MemoryBottleRepository(
+      dataHome: tempDirectory.path,
+      bottles: [
+        BottleRecord(
+          id: 'steam',
+          name: 'Steam',
+          path: bottlePath,
+          windowsVersion: 'win10',
+          pinnedPrograms: [
+            PinnedProgramRecord(name: 'Steam', path: shortcutPath),
+            PinnedProgramRecord(name: 'Portable', path: externalPath),
+          ],
+        ),
+      ],
+    );
+    File(shortcutPath).deleteSync();
+
+    final result = runCli(const [
+      'list-bottles',
+      '--json',
+    ], bottleRepository: repository);
+
+    expect(result.exitCode, 0);
+    final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+    final bottles = payload['bottles'] as List<Object?>;
+    final bottle = bottles.single as Map<String, Object?>;
+    final pinnedPrograms = bottle['pinnedPrograms'] as List<Object?>;
+    expect(pinnedPrograms, hasLength(1));
+    expect(pinnedPrograms.single, containsPair('path', externalPath));
+  });
+
+  test('list-bottle-programs --json omits stale bottle-local pins', () {
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-pinned-prune-program-list-test-',
+    );
+    addTearDown(() {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    });
+    final bottlePath = _joinTestPath(tempDirectory.path, const ['Steam']);
+    final shortcutPath = _joinTestPath(bottlePath, const [
+      'drive_c',
+      'ProgramData',
+      'Microsoft',
+      'Windows',
+      'Start Menu',
+      'Programs',
+      'Steam.lnk',
+    ]);
+    File(shortcutPath)
+      ..createSync(recursive: true)
+      ..writeAsStringSync('shortcut');
+    final repository = MemoryBottleRepository(
+      dataHome: tempDirectory.path,
+      bottles: [
+        BottleRecord(
+          id: 'steam',
+          name: 'Steam',
+          path: bottlePath,
+          windowsVersion: 'win10',
+          pinnedPrograms: [
+            PinnedProgramRecord(name: 'Steam', path: shortcutPath),
+          ],
+        ),
+      ],
+    );
+    File(shortcutPath).deleteSync();
+
+    final result = runCli(const [
+      'list-bottle-programs',
+      'steam',
+      '--json',
+    ], bottleRepository: repository);
+
+    expect(result.exitCode, 0);
+    final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+    final bottlePrograms = payload['bottlePrograms'] as Map<String, Object?>;
+    expect(bottlePrograms['programs'], isEmpty);
+  });
+
+  test('list-bottles --json prunes pinned shortcuts with missing targets', () {
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-pinned-prune-shortcut-target-test-',
+    );
+    addTearDown(() {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    });
+    final bottlePath = _joinTestPath(tempDirectory.path, const ['Steam']);
+    final programPath = _joinTestPath(bottlePath, const [
+      'drive_c',
+      'Program Files',
+      'Steam',
+      'Steam.exe',
+    ]);
+    File(programPath)
+      ..createSync(recursive: true)
+      ..writeAsBytesSync(_syntheticPortableExecutableBytes());
+    final shortcutPath = _joinTestPath(bottlePath, const [
+      'drive_c',
+      'ProgramData',
+      'Microsoft',
+      'Windows',
+      'Start Menu',
+      'Programs',
+      'Steam.lnk',
+    ]);
+    File(shortcutPath)
+      ..createSync(recursive: true)
+      ..writeAsBytesSync(
+        _syntheticShellLinkBytes(
+          localBasePath: r'C:\Program Files\Steam\Steam.exe',
+        ),
+      );
+    final repository = MemoryBottleRepository(
+      dataHome: tempDirectory.path,
+      bottles: [
+        BottleRecord(
+          id: 'steam',
+          name: 'Steam',
+          path: bottlePath,
+          windowsVersion: 'win10',
+          pinnedPrograms: [
+            PinnedProgramRecord(name: 'Steam', path: shortcutPath),
+          ],
+        ),
+      ],
+    );
+    File(programPath).deleteSync();
+
+    final result = runCli(const [
+      'list-bottles',
+      '--json',
+    ], bottleRepository: repository);
+
+    expect(result.exitCode, 0);
+    final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+    final bottles = payload['bottles'] as List<Object?>;
+    final bottle = bottles.single as Map<String, Object?>;
+    expect(bottle['pinnedPrograms'] ?? const <Object?>[], isEmpty);
+  });
+
+  test('list-bottles --json repairs stale bottle-local pinned metadata', () {
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-pinned-prune-file-repair-test-',
+    );
+    addTearDown(() {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    });
+    final repository = FileBottleRepository(dataHome: tempDirectory.path);
+    final createResult = repository.createBottle(
+      const BottleCreateRequest(name: 'Steam', windowsVersion: 'win10'),
+    );
+    expect(createResult, isA<BottleCreated>());
+    final bottle = (createResult as BottleCreated).bottle;
+    final shortcutPath = _joinTestPath(bottle.path, const [
+      'drive_c',
+      'ProgramData',
+      'Microsoft',
+      'Windows',
+      'Start Menu',
+      'Programs',
+      'Steam.lnk',
+    ]);
+    File(shortcutPath)
+      ..createSync(recursive: true)
+      ..writeAsStringSync('shortcut');
+    final pinResult = repository.pinProgram(
+      ProgramPinRequest(
+        bottleId: bottle.id,
+        name: 'Steam',
+        programPath: shortcutPath,
+      ),
+    );
+    expect(pinResult, isA<ProgramPinned>());
+    File(shortcutPath).deleteSync();
+
+    final result = runCli(const [
+      'list-bottles',
+      '--json',
+    ], bottleRepository: repository);
+
+    expect(result.exitCode, 0);
+    final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+    final bottles = payload['bottles'] as List<Object?>;
+    final listedBottle = bottles.single as Map<String, Object?>;
+    expect(listedBottle['pinnedPrograms'] ?? const <Object?>[], isEmpty);
+
+    final metadata =
+        jsonDecode(
+              File(
+                _joinTestPath(bottle.path, const ['metadata.json']),
+              ).readAsStringSync(),
+            )
+            as Map<String, Object?>;
+    final metadataBottle = metadata['bottle'] as Map<String, Object?>;
+    expect(metadataBottle['pinnedPrograms'] ?? const <Object?>[], isEmpty);
+  });
+
   test('rename-pinned-program --json on Linux updates the app launcher', () {
     final tempDirectory = Directory.systemTemp.createTempSync(
       'konyak-linux-pinned-rename-launcher-test-',

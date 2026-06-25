@@ -78,6 +78,7 @@ part 'src/platform/platform_update_handoff.dart';
 part 'src/platform/platform_terminal_commands.dart';
 part 'src/domain/program/program_shortcut_metadata.dart';
 part 'src/io/program_shortcut_metadata_io.dart';
+part 'src/io/pinned_program_availability_io.dart';
 part 'src/domain/process/wine_process_metadata.dart';
 part 'src/io/wine_process_metadata_io.dart';
 part 'src/domain/program/pe_program_metadata.dart';

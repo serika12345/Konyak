@@ -157,21 +157,26 @@ extension _KonyakHomeLoaderBottles on _KonyakHomeLoaderState {
   }
 
   Future<void> _loadBottleConfiguration(BottleSummary bottle) async {
+    await _reloadBottle(bottle);
+    await _loadRuntimeCapabilities();
+  }
+
+  Future<BottleSummary?> _reloadBottle(BottleSummary bottle) async {
     final result = await widget.cliClient.inspectBottle(bottle.id);
 
     if (!mounted) {
-      return;
+      return null;
     }
 
     switch (result) {
       case LoadedBottleDetail(:final bottle):
         _storeBottle(bottle);
+        return bottle;
       case MissingBottleDetail(:final message) ||
           BottleDetailLoadFailure(:final message):
         _showSnackBar(message);
+        return null;
     }
-
-    await _loadRuntimeCapabilities();
   }
 
   Future<void> _loadRuntimeCapabilities() async {

@@ -11,6 +11,123 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-25 12:08 JST
+- State: `completed`
+- Branch: `main`
+- Related work: automatic pinned program refresh after uninstall exits
+- Purpose: make the Flutter app refresh pinned program state automatically
+  after a Windows program run or Wine utility can mutate Start Menu shortcuts,
+  so uninstalling a program removes stale pinned UI without a manual refresh.
+- Completed:
+  - Investigation workstream: reviewed the existing auto-pin path in
+    `home_loader_programs.part.dart`, the Tools command path, and widget tests
+    covering install-time auto-pin and manual refresh.
+  - Investigation workstream: confirmed the remaining gap is UI reload timing:
+    the CLI now prunes stale bottle-local pins on read, but the app does not
+    always trigger a bottle reread after an uninstaller exits.
+  - Implementation workstream: added widget coverage showing stale pinned UI
+    remains after `run-program` and Tools > Uninstall Programs before the
+    refresh behavior is implemented.
+  - Implementation workstream: extracted `_reloadBottle` and call it after a
+    completed program run when the selected bottle currently has pinned
+    programs, letting the CLI prune stale bottle-local pins before auto-pin
+    discovery runs.
+  - Implementation workstream: included the `uninstaller` bottle command in
+    the existing command-completion refresh path, so Tools > Uninstall Programs
+    rereads the selected bottle and runtime capabilities after the tool exits.
+  - Audit workstream: verified that stale pinned program tiles disappear
+    without using the manual refresh action, while install-time auto-pin stays
+    setting-gated and does not get tied to stale-pin deletion.
+- Remaining: none.
+- Next: commit the stale pinned program CLI repair and Flutter auto-refresh
+  work, then resume release work only after explicit user direction.
+- Verification:
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "run program refreshes removed pinned programs after completion"'`:
+    failed before implementation because the app did not call
+    `inspect-bottle` after `run-program`, then passed after implementation.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "Uninstall Programs refreshes removed pinned programs"'`:
+    failed before implementation because the app did not refresh the selected
+    bottle after the `uninstaller` command, then passed after implementation.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "run program"'`:
+    passed after updating the broader focused run-program widget coverage.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --name "Bottle Tools|Uninstall Programs"'`:
+    passed after updating the focused Tools coverage.
+  - `nix develop -c zsh -lc 'just flutter-format-check'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-analyze'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-test'`: passed.
+  - `nix develop -c zsh -lc 'just cli-test'`: passed.
+  - `nix develop -c zsh -lc 'just test'`: passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `git diff --check`: passed.
+
+- Timestamp: 2026-06-25 11:37 JST
+- State: `completed`
+- Branch: `main`
+- Related work: stale pinned programs after Wine uninstall paths
+- Purpose: fix the defect where uninstalling a Windows program through Wine's
+  Uninstall Programs or another external prefix mutation can remove the Start
+  Menu shortcut or executable while Konyak continues to show the old pinned
+  program from bottle metadata.
+- Completed:
+  - Investigation workstream: reviewed the current TODO/progress state,
+    pinned program models, `list-bottles --json`, `list-bottle-programs
+    --json`, file and memory bottle repositories, program discovery, and
+    pinned launcher synchronization.
+  - Investigation workstream: reproduced the defect through the public CLI
+    read path with a temporary `KONYAK_DATA_HOME`: a bottle-local pinned
+    shortcut was returned by `list-bottles --json` before deletion and still
+    returned after deleting the `.lnk` file.
+  - Investigation workstream: identified the durable cause as stale Konyak
+    `pinnedPrograms` metadata being trusted as live input; `DartIoBottleProgramRepository.listPrograms`
+    also re-synthesizes every pinned program with `source: pinned` regardless
+    of whether a bottle-local path still exists.
+  - Implementation workstream: added failing CLI contract tests for pruning
+    missing bottle-local pinned programs from `list-bottles --json` and
+    omitting stale bottle-local pins from `list-bottle-programs --json`.
+  - Implementation workstream: added bottle-local stale pin filtering for the
+    `list-bottles --json` read path and `list-bottle-programs --json` program
+    discovery path. Missing bottle-external manual pins remain visible, while
+    missing bottle-local pinned files and pinned shortcuts whose resolved
+    targets are gone are omitted and repaired in file-backed bottle metadata.
+  - Implementation workstream: kept filesystem checks under `src/io` by moving
+    pinned program availability probing into `pinned_program_availability_io.dart`.
+  - Audit workstream: reran the public CLI reproduction after implementation;
+    deleting a pinned bottle-local `.lnk` changed both `list-bottles --json`
+    pinned count and `list-bottle-programs --json` program count from one to
+    zero, and changed the persisted `metadata.json` pinned count to zero.
+  - Sub-agent limitation: available sub-agent tooling requires an explicit user
+    request for delegation, so this defect keeps investigation,
+    implementation, and audit separated in this progress entry instead.
+- Remaining: none.
+- Next: continue with the next user-requested release or packaging action.
+- Verification:
+  - `nix develop -c zsh -lc 'KONYAK_DATA_HOME=<temp> dart run bin/konyak.dart list-bottles --json'`:
+    reproduced the defect; after deleting the pinned `.lnk`, the output still
+    contained one pinned program.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "list-bottles --json prunes missing bottle-local pinned programs"'`:
+    failed before implementation with two pinned programs instead of one.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "list-bottle-programs --json omits stale bottle-local pins"'`:
+    failed before implementation because the stale pin was returned with
+    `source: pinned`.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --name "list-bottles --json prunes missing bottle-local pinned programs|list-bottle-programs --json omits stale bottle-local pins|list-bottles --json prunes pinned shortcuts with missing targets|list-bottles --json repairs stale bottle-local pinned metadata|open-program-location --json reveals the pinned program path"'`:
+    passed after implementation.
+  - `nix develop -c zsh -lc 'KONYAK_DATA_HOME=<temp> dart run packages/konyak_cli/bin/konyak.dart list-bottles --json && KONYAK_DATA_HOME=<temp> dart run packages/konyak_cli/bin/konyak.dart list-bottle-programs steam --json'`:
+    passed after deleting the pinned `.lnk`; before deletion both commands
+    observed one program, after deletion both observed zero, and the persisted
+    `metadata.json` contained zero pinned programs.
+  - `nix develop -c zsh -lc 'just cli-test'`: passed.
+  - `nix develop -c zsh -lc 'just test'`: passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: initially failed when
+    file probing lived in a repository part, then passed after moving that I/O
+    into `src/io`.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `git diff --check`: passed.
+
 - Timestamp: 2026-06-25 10:54 JST
 - State: `completed`
 - Branch: `main`

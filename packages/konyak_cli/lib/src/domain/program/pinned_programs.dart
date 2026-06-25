@@ -75,6 +75,41 @@ BottleRecord _bottleWithPinnedProgramIcons(
   return bottle.withPinnedPrograms(pinnedPrograms);
 }
 
+BottleRecord _bottleWithoutMissingBottleLocalPinnedPrograms(
+  BottleRecord bottle, {
+  required bool Function(PinnedProgramRecord program) isPinnedProgramAvailable,
+}) {
+  final pinnedPrograms = bottle.pinnedPrograms
+      .where(
+        (program) =>
+            !_isBottleLocalPinnedProgramPath(bottle, program.path) ||
+            isPinnedProgramAvailable(program),
+      )
+      .toList(growable: false);
+
+  if (pinnedPrograms.length == bottle.pinnedPrograms.length) {
+    return bottle;
+  }
+
+  return bottle.withPinnedPrograms(pinnedPrograms);
+}
+
+bool _isLivePinnedProgram(
+  BottleRecord bottle,
+  PinnedProgramRecord program, {
+  required bool Function(PinnedProgramRecord program) isPinnedProgramAvailable,
+}) {
+  return !_isBottleLocalPinnedProgramPath(bottle, program.path) ||
+      isPinnedProgramAvailable(program);
+}
+
+bool _isBottleLocalPinnedProgramPath(BottleRecord bottle, String programPath) {
+  return _isPathWithinRoot(
+    path: _normalizeFilesystemPath(programPath),
+    root: _normalizeFilesystemPath(bottle.path),
+  );
+}
+
 BottleRecord _bottleWithoutPinnedProgram(
   BottleRecord bottle,
   String programPath,

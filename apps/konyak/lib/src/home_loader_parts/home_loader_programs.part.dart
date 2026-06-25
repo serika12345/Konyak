@@ -71,6 +71,12 @@ extension _KonyakHomeLoaderPrograms on _KonyakHomeLoaderState {
     }
 
     _handleProgramRunResult(result);
+    if (result is CompletedProgramRun && bottle.pinnedPrograms.isNotEmpty) {
+      await _reloadBottle(bottle);
+      if (!mounted) {
+        return;
+      }
+    }
     await _autoPinNewInstalledPrograms(
       bottle: bottle,
       result: result,

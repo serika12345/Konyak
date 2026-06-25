@@ -524,6 +524,107 @@ void defineShellAndSidebarWidgetTests() {
     expect(find.text('Opened bottle folder'), findsOneWidget);
   });
 
+  testWidgets('Uninstall Programs refreshes removed pinned programs', (
+    WidgetTester tester,
+  ) async {
+    const pinnedShortcutPath =
+        '/Users/user/Library/Application Support/Konyak/Bottles/Steam/drive_c/ProgramData/Microsoft/Windows/Start Menu/Programs/Uninstall Steam.lnk';
+    final runner = _QueuedProcessRunner([
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout:
+            '''
+          {
+            "schemaVersion": 1,
+            "bottles": [
+              {
+                "id": "steam",
+                "name": "Steam",
+                "path": "/Users/user/Library/Application Support/Konyak/Bottles/Steam",
+                "windowsVersion": "win10",
+                "pinnedPrograms": [
+                  {
+                    "name": "Uninstall Steam",
+                    "path": "$pinnedShortcutPath",
+                    "removable": true
+                  }
+                ]
+              }
+            ]
+          }
+        ''',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "run": {
+              "bottleId": "steam",
+              "programPath": "uninstaller",
+              "runnerKind": "macosWine",
+              "executable": "/runtime/bin/wine64",
+              "workingDirectory": "/runtime/bin",
+              "argv": ["/runtime/bin/wine64", "uninstaller"],
+              "logPath": "/Users/user/Library/Application Support/Konyak/Bottles/Steam/logs/latest.log",
+              "processExitCode": 0
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottle": {
+              "id": "steam",
+              "name": "Steam",
+              "path": "/Users/user/Library/Application Support/Konyak/Bottles/Steam",
+              "windowsVersion": "win10"
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+      ProcessRunResult(
+        exitCode: 0,
+        stdout: _macosRuntimeListPayload(),
+        stderr: '',
+      ),
+    ]);
+
+    await tester.pumpWidget(
+      _testKonyakApp(
+        cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const ValueKey('pinned-program-tile-$pinnedShortcutPath')),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.widgetWithText(TextButton, 'Tools'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Uninstall Programs'));
+    await tester.pumpAndSettle();
+
+    expect(runner.argumentsLog, const [
+      ['list-bottles', '--json'],
+      ['run-bottle-command', 'steam', '--command', 'uninstaller', '--json'],
+      ['inspect-bottle', 'steam', '--json'],
+      ['list-runtimes', '--json'],
+    ]);
+    expect(
+      find.byKey(const ValueKey('pinned-program-tile-$pinnedShortcutPath')),
+      findsNothing,
+    );
+  });
+
   testWidgets('Bottle Tools shows progress while launching a GUI utility', (
     WidgetTester tester,
   ) async {
