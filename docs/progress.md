@@ -11,6 +11,51 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-25 10:04 JST
+- State: `completed`
+- Branch: `main`
+- Related work: split bottle-fix commits and recover local bottle data
+- Purpose: commit the pending bottle delete backend fix, Flutter retry UI
+  hardening, Linux pinned launcher smoke fix candidate, and progress updates in
+  a natural order, then restore the user's current metadata-less bottle through
+  the public CLI path.
+- Completed:
+  - Committed `cf6e940` (`Fix bottle deletion orphan handling`) for the CLI
+    file-backed repository fix and CLI contract tests.
+  - Committed `a4ebdf5` (`Add retry warning for bottle delete failures`) for
+    the Flutter warning Snackbar, Retry action, and Flutter-side tests.
+  - Committed `ba5c53c` (`Harden Linux pinned launcher smoke`) for the Linux
+    pinned launcher smoke fix candidate.
+  - Committed `81c402d` (`Update progress after release pause and bottle
+    fixes`) for the accumulated release pause and bottle-fix progress notes.
+  - Confirmed the normal macOS data path had
+    `~/Library/Application Support/Konyak/Bottles/bottle` without
+    `metadata.json`, and `list-bottles --json` returned an empty list before
+    recovery.
+  - Recovered the current bottle through
+    `dart run bin/konyak.dart create-bottle --name bottle --json` without
+    `KONYAK_DATA_HOME`, preserving the existing bottle directory and writing
+    Konyak metadata.
+  - Confirmed `list-bottles --json` now returns the recovered `bottle` record
+    at `/Users/masato/Library/Application Support/Konyak/Bottles/bottle`, and
+    the restored directory contains `metadata.json`.
+- Remaining:
+  - The local branch is ahead of `origin/main`; no release tag or release
+    assets have been created.
+  - Full Linux pinned launcher smoke execution still needs Linux CI or a Linux
+    host; the macOS-local check remains syntax-only.
+- Next: push the split commits only when ready, then rerun the release
+  workflow preflight before any `v1.0.0` tag or publish step.
+- Verification:
+  - `nix develop -c zsh -lc 'zsh -n scripts/smoke_linux_pinned_launcher_integration.zsh'`:
+    passed before committing the Linux smoke fix candidate.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart run bin/konyak.dart list-bottles --json'`:
+    returned `{"schemaVersion":1,"bottles":[]}` before recovery.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart run bin/konyak.dart create-bottle --name bottle --json'`:
+    passed and returned the recovered `bottle` record.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart run bin/konyak.dart list-bottles --json'`:
+    passed and returned the recovered `bottle` record after recovery.
+
 - Timestamp: 2026-06-25 09:48 JST
 - State: `completed`
 - Branch: `main`
