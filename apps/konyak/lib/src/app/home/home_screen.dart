@@ -23,6 +23,7 @@ class KonyakHome extends StatefulWidget {
     this.onRefresh,
     this.onShowSettings,
     this.onShowAbout,
+    this.onCheckKonyakUpdates,
     this.onCreateBottle,
     this.onImportBottleArchive,
     this.onReinstallRuntime,
@@ -61,6 +62,7 @@ class KonyakHome extends StatefulWidget {
   final VoidCallback? onRefresh;
   final VoidCallback? onShowSettings;
   final VoidCallback? onShowAbout;
+  final VoidCallback? onCheckKonyakUpdates;
   final VoidCallback? onCreateBottle;
   final VoidCallback? onImportBottleArchive;
   final VoidCallback? onReinstallRuntime;
@@ -169,6 +171,7 @@ class _KonyakHomeState extends State<KonyakHome> {
             KonyakHomeMenuBar(
               onShowAbout: widget.onShowAbout,
               onShowSettings: widget.onShowSettings,
+              onCheckKonyakUpdates: widget.onCheckKonyakUpdates,
               onImportBottleArchive: widget.onImportBottleArchive,
               onReinstallRuntime: widget.onReinstallRuntime,
             ),

@@ -46,6 +46,10 @@ class AppDelegate: FlutterAppDelegate {
     menuChannel?.invokeMethod("reinstallMacosRuntime", arguments: nil)
   }
 
+  @IBAction func checkKonyakUpdates(_ _: Any?) {
+    menuChannel?.invokeMethod("checkKonyakUpdates", arguments: nil)
+  }
+
   @IBAction func importBottleArchive(_ _: Any?) {
     menuChannel?.invokeMethod("importBottleArchive", arguments: nil)
   }

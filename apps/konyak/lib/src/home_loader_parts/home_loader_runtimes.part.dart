@@ -79,6 +79,47 @@ extension _KonyakHomeLoaderRuntimes on _KonyakHomeLoaderState {
     return _installAvailableKonyakUpdate();
   }
 
+  Future<void> _checkKonyakUpdateFromMenu() async {
+    if (_isCheckingKonyakUpdate) {
+      return;
+    }
+
+    _updateState(() {
+      _isCheckingKonyakUpdate = true;
+      _konyakUpdateCheckProgressMessage = 'Checking for Konyak updates...';
+    });
+
+    try {
+      final result = await widget.cliClient.checkKonyakUpdate();
+
+      if (!mounted) {
+        return;
+      }
+
+      _updateState(() {
+        _konyakUpdateCheckProgressMessage = null;
+      });
+
+      switch (result) {
+        case LoadedUpdateCheck(:final update) when update.status == 'available':
+          await _confirmAndInstallAvailableKonyakUpdate(update);
+        case LoadedUpdateCheck(:final update) when update.status == 'current':
+          _showSnackBar('Konyak is up to date.');
+        case LoadedUpdateCheck():
+          _showSnackBar('Konyak update status is unknown.');
+        case UpdateCheckLoadFailure(:final message):
+          _showWarningSnackBar('Konyak update check failed: $message');
+      }
+    } finally {
+      if (mounted) {
+        _updateState(() {
+          _isCheckingKonyakUpdate = false;
+          _konyakUpdateCheckProgressMessage = null;
+        });
+      }
+    }
+  }
+
   Future<bool> _confirmKonyakUpdateInstall(UpdateCheckSummary update) async {
     final latestVersion = update.latestVersion;
     final title = latestVersion == null

@@ -38,6 +38,12 @@
                                     <action selector="openSettings:" target="Voe-Tx-rLC" id="Lhe-cA-vPD"/>
                                 </connections>
                             </menuItem>
+                            <menuItem title="Check for Updates…" id="upd-Ko-nyk">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="checkKonyakUpdates:" target="Voe-Tx-rLC" id="upd-Ko-act"/>
+                                </connections>
+                            </menuItem>
                             <menuItem title="Reinstall macOS Runtime" id="rnt-rI-mac">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>

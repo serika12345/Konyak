@@ -12,6 +12,9 @@ extension _KonyakHomeLoaderExecutables on _KonyakHomeLoaderState {
       case 'reinstallMacosRuntime':
         unawaited(_reinstallMacosRuntimeFromMenu());
         return;
+      case 'checkKonyakUpdates':
+        unawaited(_checkKonyakUpdateFromMenu());
+        return;
       case 'openExecutableFiles':
         _pendingExecutableOpenPaths.addAll(
           _validExecutableOpenPathsFromChannel(call.arguments),

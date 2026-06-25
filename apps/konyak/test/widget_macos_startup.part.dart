@@ -158,6 +158,92 @@ void defineMacosStartupAndRuntimeWidgetTests() {
     ]);
   });
 
+  testWidgets('macOS app menu command manually checks for Konyak updates', (
+    WidgetTester tester,
+  ) async {
+    final runner = _QueuedProcessRunner([
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '{"schemaVersion":1,"bottles":[]}',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "appUpdate": {
+              "appId": "konyak",
+              "status": "available",
+              "currentVersion": "1.0.0",
+              "latestVersion": "1.1.0"
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "appUpdateInstall": {
+              "appId": "konyak",
+              "status": "installed",
+              "currentVersion": "1.0.0",
+              "installedVersion": "1.1.0",
+              "installPath": "/Applications/Konyak.app"
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+    ]);
+
+    await tester.pumpWidget(
+      _testKonyakApp(
+        cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final result = Completer<ByteData?>();
+    await tester.binding.defaultBinaryMessenger.handlePlatformMessage(
+      'konyak/menu',
+      const StandardMethodCodec().encodeMethodCall(
+        const MethodCall('checkKonyakUpdates'),
+      ),
+      result.complete,
+    );
+    await result.future;
+    await tester.pumpAndSettle();
+
+    expect(find.text('Install Konyak 1.1.0 update?'), findsOneWidget);
+    expect(
+      runner.argumentsLog,
+      containsAllInOrder([
+        const ['list-bottles', '--json'],
+        const ['check-app-update', '--json'],
+      ]),
+    );
+    expect(
+      runner.argumentsLog,
+      isNot(anyElement(equals(const ['install-app-update', '--json']))),
+    );
+
+    await tester.tap(find.widgetWithText(FilledButton, 'Install'));
+    await tester.pumpAndSettle();
+
+    expect(
+      runner.argumentsLog,
+      anyElement(equals(const ['install-app-update', '--json'])),
+    );
+    expect(
+      find.text('Installing Konyak 1.1.0 update. Konyak will restart.'),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('macOS open executable event asks for a bottle before running', (
     WidgetTester tester,
   ) async {

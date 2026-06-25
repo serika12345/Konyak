@@ -11,6 +11,75 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-25 15:43 JST
+- State: `completed`
+- Branch: `main`
+- Related work: manual Konyak update check progress feedback
+- Purpose: show visible progress after the user chooses `Check for Updates…`,
+  then show the normal update confirmation prompt when an update is available
+  or a snackbar when Konyak is already current.
+- Completed:
+  - Read the current manual update check handler, blocking progress overlay,
+    and Linux/macOS menu widget tests.
+  - Test workstream: updated Linux manual Konyak update widget tests to hold
+    `check-app-update --json` pending, require `Checking for Konyak updates...`
+    while the check is in flight, and verify the progress overlay disappears
+    before the update confirmation prompt or current-status snackbar.
+  - Test workstream: confirmed those tests failed before implementation because
+    the manual check had no progress UI.
+  - Implementation workstream: added a manual Konyak update check progress
+    message in `KonyakHomeLoader` and clear it after the check result returns,
+    before the existing confirmation prompt/snackbar handling.
+- Remaining: none for the refinement.
+- Next: commit when requested.
+- Verification:
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --name "Linux app menu command manually checks|Linux manual Konyak update check reports"'`:
+    failed as expected before implementation because the progress overlay was
+    absent.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --name "Linux app menu command manually checks|Linux manual Konyak update check reports|macOS app menu command manually checks"'`:
+    passed.
+  - `nix develop -c zsh -lc 'just flutter-format-check && just flutter-analyze && just flutter-test && just swift-lint && just verify-governance && just verify-safety && just format-check && just lint'`:
+    passed.
+
+- Timestamp: 2026-06-25 15:36 JST
+- State: `completed`
+- Branch: `main`
+- Related work: manual Konyak update checks from app menus
+- Purpose: add a Konyak menu command that lets users manually check for
+  packaged Konyak app updates on both macOS and Linux, independent of the
+  automatic startup update setting.
+- Completed:
+  - Read the current startup update checker, update install prompt, macOS
+    menu MethodChannel, Linux Flutter menu bar, and existing widget/static
+    tests before editing.
+  - Test workstream: added static macOS menu forwarding coverage plus macOS
+    MethodChannel and Linux Flutter-menu widget tests for manual update checks.
+  - Test workstream: confirmed the new tests failed before implementation
+    because the menu item and MethodChannel method did not exist.
+  - Implementation workstream: added `Check for Updates…` to the macOS native
+    Konyak menu and Linux Flutter Konyak menu, then routed both to a shared
+    manual `check-app-update --json` handler.
+  - Reused the existing Konyak update confirmation/install prompt for
+    available updates and added current/unknown/failure feedback snackbars for
+    manual checks.
+  - Updated a stale macOS release static test to assert the current DMG
+    packaging contract instead of the old zip path.
+- Remaining: none for the implementation.
+- Next: commit when requested.
+- Verification:
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/macos_window_metrics_test.dart --name "manual update checks"'`:
+    failed as expected before implementation because the native menu item was
+    absent.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --name "manually checks for Konyak updates"'`:
+    failed as expected before implementation because the Linux menu item and
+    macOS MethodChannel handler were absent.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --name "manual.*Konyak update|manually checks for Konyak updates"'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/macos_window_metrics_test.dart --name "manual update checks|menu opens Settings|File menu exposes"'`:
+    passed.
+  - `nix develop -c zsh -lc 'just flutter-format-check && just flutter-analyze && just flutter-test && just swift-lint && just verify-governance && just verify-safety && just format-check && just lint'`:
+    passed.
+
 - Timestamp: 2026-06-25 15:23 JST
 - State: `completed`
 - Branch: `main`

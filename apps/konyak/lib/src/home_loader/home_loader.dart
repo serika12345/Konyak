@@ -94,7 +94,9 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
   String? _archiveProgressMessage;
   String? _runtimeInstallProgressMessage;
   double? _runtimeInstallProgressFraction;
+  String? _konyakUpdateCheckProgressMessage;
   bool _isShowingSettings = false;
+  bool _isCheckingKonyakUpdate = false;
   bool _hasTerminatedWineProcesses = false;
   AppSettingsSummary? _appSettings;
   String? _errorMessage;
@@ -181,6 +183,9 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
           onRefresh: _loadBottles,
           onShowSettings: _showSettings,
           onShowAbout: _showAbout,
+          onCheckKonyakUpdates: _isCheckingKonyakUpdate
+              ? null
+              : _checkKonyakUpdateFromMenu,
           onCreateBottle: _createBottle,
           onImportBottleArchive: _importBottleArchive,
           onReinstallRuntime: _reinstallManagedRuntimeFromMenu,
@@ -266,6 +271,11 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
             key: const ValueKey('runtime-install-progress'),
             message: message,
             progress: _runtimeInstallProgressFraction,
+          ),
+        if (_konyakUpdateCheckProgressMessage case final message?)
+          BlockingProgressOverlay(
+            key: const ValueKey('konyak-update-check-progress'),
+            message: message,
           ),
       ],
     );

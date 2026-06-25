@@ -7,12 +7,14 @@ class KonyakHomeMenuBar extends StatelessWidget {
     super.key,
     required this.onShowAbout,
     required this.onShowSettings,
+    required this.onCheckKonyakUpdates,
     required this.onImportBottleArchive,
     required this.onReinstallRuntime,
   });
 
   final VoidCallback? onShowAbout;
   final VoidCallback? onShowSettings;
+  final VoidCallback? onCheckKonyakUpdates;
   final VoidCallback? onImportBottleArchive;
   final VoidCallback? onReinstallRuntime;
 
@@ -32,6 +34,11 @@ class KonyakHomeMenuBar extends StatelessWidget {
               label: 'Settings…',
               icon: Icons.settings_outlined,
               onPressed: onShowSettings,
+            ),
+            KonyakMenuItemDefinition(
+              label: 'Check for Updates…',
+              icon: Icons.system_update_alt,
+              onPressed: onCheckKonyakUpdates,
             ),
             KonyakMenuItemDefinition(
               label: 'Reinstall Linux Runtime',

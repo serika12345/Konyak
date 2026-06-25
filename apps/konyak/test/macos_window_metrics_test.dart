@@ -71,6 +71,18 @@ void main() {
     expect(window, contains('configureMenuChannel'));
   });
 
+  test('macOS app menu exposes manual update checks', () {
+    final xib = File('macos/Runner/Base.lproj/MainMenu.xib').readAsStringSync();
+    final appDelegate = File(
+      'macos/Runner/AppDelegate.swift',
+    ).readAsStringSync();
+
+    expect(xib, contains('<menuItem title="Check for Updates…"'));
+    expect(xib, contains('selector="checkKonyakUpdates:" target="Voe-Tx-rLC"'));
+    expect(appDelegate, contains('@IBAction func checkKonyakUpdates'));
+    expect(appDelegate, contains('invokeMethod("checkKonyakUpdates"'));
+  });
+
   test('macOS File menu exposes the archive import command', () {
     final xib = File('macos/Runner/Base.lproj/MainMenu.xib').readAsStringSync();
     final appDelegate = File(
@@ -269,9 +281,14 @@ void main() {
       releaseScript,
       contains('ditto "\$app_bundle" "\$release_app_bundle"'),
     );
+    expect(releaseScript, contains('dmg_path='));
+    expect(releaseScript, contains('create-dmg'));
+    expect(releaseScript, contains('resvg'));
+    expect(releaseScript, contains('--app-drop-link 470 210'));
+    expect(releaseScript, contains('format: "dmg"'));
     expect(
       releaseScript,
-      contains('--keepParent "\$release_app_bundle" "\$zip_path"'),
+      isNot(contains('--keepParent "\$release_app_bundle" "\$zip_path"')),
     );
     expect(finalizerScript, contains('--app <path> --cli <path>'));
     expect(finalizerScript, contains('resources_dir='));
@@ -330,15 +347,19 @@ void main() {
     expect(justfile, contains('smoke-macos-app-cli-bridge:'));
     expect(justfile, contains('smoke-macos-finder-putty:'));
     expect(justfile, contains('smoke-macos-runtime-install:'));
+    expect(justfile, contains('smoke-macos-dmg-layout:'));
     expect(publishWorkflow, contains('smoke_macos_release_runtime_extraction'));
+    expect(publishWorkflow, contains('smoke_macos_dmg_layout'));
     expect(publishWorkflow, contains('fetch_windows_fixture_putty'));
     expect(publishWorkflow, contains('smoke_macos_finder_integration'));
     expect(publishWorkflow, contains('smoke_macos_packaged_app_cli_bridge'));
     expect(releaseDocs, contains('Konyak.app'));
     expect(releaseDocs, contains('macos-debug-app'));
     expect(releaseDocs, contains('smoke-macos-finder'));
+    expect(releaseDocs, contains('smoke-macos-dmg-layout'));
     expect(releaseDocs, contains('smoke-macos-app-cli-bridge'));
     expect(releaseDocs, contains('smoke-macos-finder-putty'));
+    expect(releaseDocs, contains('create-dmg'));
     expect(releaseDocs, contains('PuTTY 0.84'));
     expect(releaseDocs, contains('Finder-to-Flutter-to-CLI'));
     expect(releaseDocs, contains('zstd'));
@@ -427,6 +448,7 @@ void main() {
     for (final retainedTitle in [
       'About APP_NAME',
       'File',
+      'Check for Updates…',
       'Import Bottle',
       'Settings…',
       'Hide APP_NAME',
