@@ -2265,6 +2265,52 @@ void defineRuntimeProcessAndUpdateContractTests() {
     expect(completed.update.latestVersion.toNullable(), 'v1.0.0');
   });
 
+  test('app update checker selects the macOS archive from shared releases', () {
+    final metadataFile = _writeMultiPlatformAppReleaseMetadata();
+    final checker = DartIoAppUpdateChecker(
+      appId: 'konyak',
+      currentVersion: '1.0.0',
+      versionUrl: metadataFile.uri.toString(),
+      hostPlatform: KonyakHostPlatform.macos,
+    );
+
+    final result = checker.check();
+
+    expect(result, isA<AppUpdateCheckCompleted>());
+    final completed = result as AppUpdateCheckCompleted;
+    expect(
+      completed.update.archiveUrl.toNullable(),
+      'https://example.invalid/Konyak-1.1.0-macos-arm64.zip',
+    );
+    expect(
+      completed.update.archiveSha256.toNullable(),
+      'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+    );
+  });
+
+  test('app update checker selects the Linux archive from shared releases', () {
+    final metadataFile = _writeMultiPlatformAppReleaseMetadata();
+    final checker = DartIoAppUpdateChecker(
+      appId: 'konyak',
+      currentVersion: '1.0.0',
+      versionUrl: metadataFile.uri.toString(),
+      hostPlatform: KonyakHostPlatform.linux,
+    );
+
+    final result = checker.check();
+
+    expect(result, isA<AppUpdateCheckCompleted>());
+    final completed = result as AppUpdateCheckCompleted;
+    expect(
+      completed.update.archiveUrl.toNullable(),
+      'https://example.invalid/Konyak-1.1.0-linux-x86_64.AppImage',
+    );
+    expect(
+      completed.update.archiveSha256.toNullable(),
+      'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+    );
+  });
+
   test('release metadata fetcher selects archives over checksum assets', () {
     final tempDirectory = Directory.systemTemp.createTempSync(
       'konyak-release-metadata-test-',
@@ -3700,4 +3746,36 @@ void defineRuntimeProcessAndUpdateContractTests() {
       ),
     );
   });
+}
+
+File _writeMultiPlatformAppReleaseMetadata() {
+  final tempDirectory = Directory.systemTemp.createTempSync(
+    'konyak-app-release-metadata-test-',
+  );
+  addTearDown(() {
+    if (tempDirectory.existsSync()) {
+      tempDirectory.deleteSync(recursive: true);
+    }
+  });
+
+  return File(_joinTestPath(tempDirectory.path, const ['release.json']))
+    ..writeAsStringSync(
+      jsonEncode(<String, Object?>{
+        'tag_name': 'v1.1.0',
+        'body': '''
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa  Konyak-1.1.0-macos-arm64.zip
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb  Konyak-1.1.0-linux-x86_64.AppImage
+''',
+        'assets': [
+          {
+            'browser_download_url':
+                'https://example.invalid/Konyak-1.1.0-linux-x86_64.AppImage',
+          },
+          {
+            'browser_download_url':
+                'https://example.invalid/Konyak-1.1.0-macos-arm64.zip',
+          },
+        ],
+      }),
+    );
 }

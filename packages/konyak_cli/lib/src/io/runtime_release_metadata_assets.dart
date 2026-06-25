@@ -1,6 +1,9 @@
 part of '../../konyak_cli.dart';
 
-Option<String> _runtimeReleaseArchiveUrl(Object? decoded) {
+Option<String> _runtimeReleaseArchiveUrl(
+  Object? decoded, {
+  bool Function(String url)? archiveUrlPredicate,
+}) {
   if (decoded is! Map<String, dynamic>) {
     return const Option.none();
   }
@@ -17,10 +20,12 @@ Option<String> _runtimeReleaseArchiveUrl(Object? decoded) {
     }
 
     final url = asset['browser_download_url'];
-    if (url is String &&
-        url.trim().isNotEmpty &&
-        !_isReleaseMetadataAssetUrl(url)) {
-      urls.add(url);
+    final normalizedUrl = url is String ? url.trim() : null;
+    if (normalizedUrl != null &&
+        normalizedUrl.isNotEmpty &&
+        !_isReleaseMetadataAssetUrl(normalizedUrl) &&
+        (archiveUrlPredicate == null || archiveUrlPredicate(normalizedUrl))) {
+      urls.add(normalizedUrl);
     }
   }
 

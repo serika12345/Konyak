@@ -3,9 +3,13 @@ part of '../../konyak_cli.dart';
 Option<RuntimeReleaseMetadata> _runtimeReleaseMetadataFromDecoded({
   required Object? release,
   required Object? releaseMetadata,
+  bool Function(String url)? archiveUrlPredicate,
 }) {
   final version = _runtimeReleaseVersion(release);
-  final archiveUrl = _runtimeReleaseArchiveUrl(release);
+  final archiveUrl = _runtimeReleaseArchiveUrl(
+    release,
+    archiveUrlPredicate: archiveUrlPredicate,
+  );
   final releaseMetadataAssetUrl = _runtimeReleaseMetadataAssetUrl(release);
   return version.map(
     (value) => RuntimeReleaseMetadata(

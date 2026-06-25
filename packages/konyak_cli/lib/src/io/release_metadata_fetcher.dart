@@ -2,7 +2,9 @@ part of '../../konyak_cli.dart';
 
 class DartIoRuntimeReleaseMetadataFetcher
     implements RuntimeReleaseMetadataFetcher {
-  const DartIoRuntimeReleaseMetadataFetcher();
+  const DartIoRuntimeReleaseMetadataFetcher({this.archiveUrlPredicate});
+
+  final bool Function(String url)? archiveUrlPredicate;
 
   @override
   RuntimeReleaseMetadataFetchResult fetch(String versionUrl) {
@@ -34,6 +36,7 @@ class DartIoRuntimeReleaseMetadataFetcher
       final releaseMetadataRecord = _runtimeReleaseMetadataFromDecoded(
         release: decoded,
         releaseMetadata: releaseMetadata,
+        archiveUrlPredicate: archiveUrlPredicate,
       );
       return releaseMetadataRecord.match(
         () => const RuntimeReleaseMetadataFetchFailed(

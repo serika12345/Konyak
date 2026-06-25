@@ -1,13 +1,41 @@
 part of '../../../konyak_cli.dart';
 
 class DartIoAppUpdateChecker implements AppUpdateChecker {
-  const DartIoAppUpdateChecker({
+  factory DartIoAppUpdateChecker({
+    required String appId,
+    required String currentVersion,
+    required String versionUrl,
+    Option<String> archiveUrl = const Option.none(),
+    Option<String> archiveSha256 = const Option.none(),
+    KonyakHostPlatform? hostPlatform,
+    RuntimeReleaseMetadataFetcher? releaseMetadataFetcher,
+  }) {
+    final resolvedHostPlatform = hostPlatform ?? _currentHostPlatform();
+    return DartIoAppUpdateChecker._(
+      appId: appId,
+      currentVersion: currentVersion,
+      versionUrl: versionUrl,
+      archiveUrl: archiveUrl,
+      archiveSha256: archiveSha256,
+      hostPlatform: resolvedHostPlatform,
+      releaseMetadataFetcher:
+          releaseMetadataFetcher ??
+          DartIoRuntimeReleaseMetadataFetcher(
+            archiveUrlPredicate: _appUpdateArchiveUrlPredicate(
+              resolvedHostPlatform,
+            ),
+          ),
+    );
+  }
+
+  const DartIoAppUpdateChecker._({
     required this.appId,
     required this.currentVersion,
     required this.versionUrl,
-    this.archiveUrl = const Option.none(),
-    this.archiveSha256 = const Option.none(),
-    this.releaseMetadataFetcher = const DartIoRuntimeReleaseMetadataFetcher(),
+    required this.archiveUrl,
+    required this.archiveSha256,
+    required this.hostPlatform,
+    required this.releaseMetadataFetcher,
   });
 
   factory DartIoAppUpdateChecker.fromEnvironment(HostEnvironment environment) {
@@ -32,6 +60,7 @@ class DartIoAppUpdateChecker implements AppUpdateChecker {
   final String versionUrl;
   final Option<String> archiveUrl;
   final Option<String> archiveSha256;
+  final KonyakHostPlatform hostPlatform;
   final RuntimeReleaseMetadataFetcher releaseMetadataFetcher;
 
   @override
@@ -72,4 +101,22 @@ class DartIoAppUpdateChecker implements AppUpdateChecker {
       ),
     };
   }
+}
+
+bool Function(String url) _appUpdateArchiveUrlPredicate(
+  KonyakHostPlatform hostPlatform,
+) {
+  return (url) {
+    final fileName = _fileNameFromUrl(url).toNullable()?.toLowerCase();
+    if (fileName == null) {
+      return false;
+    }
+
+    return switch (hostPlatform) {
+      KonyakHostPlatform.macos =>
+        fileName.contains('-macos-') && fileName.endsWith('.zip'),
+      KonyakHostPlatform.linux =>
+        fileName.contains('-linux-') && fileName.endsWith('.appimage'),
+    };
+  };
 }
