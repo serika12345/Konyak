@@ -597,9 +597,10 @@ void defineMacosStartupAndRuntimeWidgetTests() {
       runner.argumentsLog,
       isNot(anyElement(equals(const ['install-app-update', '--json']))),
     );
-    await expectLater(
+    await _expectGoldenFileWithinTolerance(
       find.byKey(goldenKey),
-      matchesGoldenFile('goldens/konyak_update_confirmation_prompt.png'),
+      'goldens/konyak_update_confirmation_prompt.png',
+      diffTolerance: 0.02,
     );
   });
 

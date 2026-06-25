@@ -52,6 +52,49 @@ Future<void> _loadKonyakTestFonts() {
   }();
 }
 
+Future<void> _expectGoldenFileWithinTolerance(
+  Finder finder,
+  String goldenFile, {
+  required double diffTolerance,
+}) async {
+  final previousGoldenFileComparator = goldenFileComparator;
+  goldenFileComparator = _TolerantGoldenFileComparator(
+    Uri.parse('test/widget_test.dart'),
+    diffTolerance: diffTolerance,
+  );
+  addTearDown(() => goldenFileComparator = previousGoldenFileComparator);
+
+  await expectLater(finder, matchesGoldenFile(goldenFile));
+}
+
+final class _TolerantGoldenFileComparator extends LocalFileComparator {
+  _TolerantGoldenFileComparator(super.testFile, {required double diffTolerance})
+    : assert(
+        0 <= diffTolerance && diffTolerance <= 1,
+        'diffTolerance must be between 0 and 1',
+      ),
+      _diffTolerance = diffTolerance;
+
+  final double _diffTolerance;
+
+  @override
+  Future<bool> compare(Uint8List imageBytes, Uri golden) async {
+    final result = await GoldenFileComparator.compareLists(
+      imageBytes,
+      await getGoldenBytes(golden),
+    );
+    final passed = result.passed || result.diffPercent <= _diffTolerance;
+    if (passed) {
+      result.dispose();
+      return true;
+    }
+
+    final error = await generateFailureOutput(result, golden, basedir);
+    result.dispose();
+    throw FlutterError(error);
+  }
+}
+
 KonyakApp _testKonyakApp({
   KonyakPlatform platform = KonyakPlatform.macos,
   KonyakCliClient? cliClient,

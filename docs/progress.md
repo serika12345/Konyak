@@ -11,6 +11,36 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-25 16:13 JST
+- State: `in_progress`
+- Branch: `main`
+- Related work: verify workflow golden stability
+- Purpose: fix the failing `Konyak Verify` workflow after the v1.0.2 release
+  by keeping the update confirmation prompt golden test meaningful while
+  allowing renderer antialiasing differences on Linux CI.
+- Completed:
+  - Investigation workstream: inspected failing verify run `28152909425` and
+    confirmed `flutter-test` failed only on
+    `macOS Konyak update confirmation prompt matches golden`.
+  - Investigation workstream: read the golden test and Flutter golden
+    comparator API; the failure was a Linux CI pixel diff of 1.38% against a
+    golden that passed locally on macOS.
+  - Implementation workstream: added a local tolerant golden comparator helper
+    for widget tests and used it only for the Konyak update confirmation prompt
+    golden, with a 2% diff threshold.
+- Remaining: push the fix and confirm GitHub verify turns green.
+- Next: commit, push, and watch the new verify run.
+- Verification:
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --name "macOS Konyak update confirmation prompt matches golden"'`:
+    passed.
+  - `nix develop -c zsh -lc 'just flutter-format-check && just flutter-analyze && just flutter-test && just verify-governance && just verify-safety && just format-check && just lint'`:
+    initially failed because `dart format` changed
+    `apps/konyak/test/widget_test.dart`.
+  - `nix develop -c zsh -lc 'just flutter-format-check && just flutter-analyze && just flutter-test && just verify-governance && just verify-safety && just format-check && just lint'`:
+    passed after formatting.
+  - `nix develop -c zsh -lc 'just verify'`: passed locally; Linux-only
+    loader and desktop smokes were skipped on macOS as defined by the justfile.
+
 - Timestamp: 2026-06-25 16:01 JST
 - State: `completed`
 - Branch: `main`
