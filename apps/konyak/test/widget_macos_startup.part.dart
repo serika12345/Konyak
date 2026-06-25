@@ -447,7 +447,77 @@ void defineMacosStartupAndRuntimeWidgetTests() {
     expect(find.byTooltip('View latest log'), findsOneWidget);
   });
 
-  testWidgets('macOS installs available Konyak app updates on startup', (
+  testWidgets('macOS Konyak update confirmation prompt matches golden', (
+    WidgetTester tester,
+  ) async {
+    await _loadKonyakTestFonts();
+    await tester.binding.setSurfaceSize(const Size(960, 600));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final goldenKey = GlobalKey();
+    final runner = _QueuedProcessRunner([
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '{"schemaVersion":1,"bottles":[]}',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "appSettings": {
+              "terminateWineProcessesOnClose": false,
+              "defaultBottlePath": "/Users/user/Library/Application Support/Konyak/Bottles",
+              "automaticallyCheckForKonyakUpdates": true,
+              "automaticallyCheckForWineUpdates": false
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "appUpdate": {
+              "appId": "konyak",
+              "status": "available",
+              "currentVersion": "1.0.1",
+              "latestVersion": "1.0.2"
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+    ]);
+
+    await tester.pumpWidget(
+      RepaintBoundary(
+        key: goldenKey,
+        child: _testKonyakApp(
+          cliClient: KonyakCliClient(
+            executable: 'konyak',
+            processRunner: runner,
+          ),
+          enableBackgroundServices: true,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Install Konyak 1.0.2 update?'), findsOneWidget);
+    expect(
+      runner.argumentsLog,
+      isNot(anyElement(equals(const ['install-app-update', '--json']))),
+    );
+    await expectLater(
+      find.byKey(goldenKey),
+      matchesGoldenFile('goldens/konyak_update_confirmation_prompt.png'),
+    );
+  });
+
+  testWidgets('macOS prompts before installing Konyak app updates on startup', (
     WidgetTester tester,
   ) async {
     final runner = _QueuedProcessRunner([
@@ -548,6 +618,15 @@ void defineMacosStartupAndRuntimeWidgetTests() {
     );
     await tester.pumpAndSettle();
 
+    expect(find.text('Install Konyak 1.1.0 update?'), findsOneWidget);
+    expect(
+      find.text(
+        'Konyak 1.1.0 is available. Install it now? Konyak will restart after the update starts.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.widgetWithText(TextButton, 'Not Now'), findsOneWidget);
+    expect(find.widgetWithText(FilledButton, 'Install'), findsOneWidget);
     expect(
       runner.argumentsLog,
       containsAllInOrder([
@@ -555,8 +634,19 @@ void defineMacosStartupAndRuntimeWidgetTests() {
         const ['check-app-update', '--json'],
         const ['list-runtimes', '--json'],
         const ['check-runtime-update', 'konyak-macos-wine', '--json'],
-        const ['install-app-update', '--json'],
       ]),
+    );
+    expect(
+      runner.argumentsLog,
+      isNot(anyElement(equals(const ['install-app-update', '--json']))),
+    );
+
+    await tester.tap(find.widgetWithText(FilledButton, 'Install'));
+    await tester.pumpAndSettle();
+
+    expect(
+      runner.argumentsLog,
+      anyElement(equals(const ['install-app-update', '--json'])),
     );
     expect(
       find.text('Installing Konyak 1.1.0 update. Konyak will restart.'),
@@ -722,6 +812,11 @@ void defineMacosStartupAndRuntimeWidgetTests() {
     );
     await tester.pumpAndSettle();
 
+    expect(find.text('Install Konyak 1.1.0 update?'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(FilledButton, 'Install'));
+    await tester.pumpAndSettle();
+
     expect(
       find.text(
         'Konyak update install failed: Current Konyak app bundle does not exist.',
@@ -730,24 +825,24 @@ void defineMacosStartupAndRuntimeWidgetTests() {
     );
   });
 
-  testWidgets('Linux installs available Konyak AppImage updates on startup', (
-    WidgetTester tester,
-  ) async {
-    final runner = _QueuedProcessRunner([
-      const ProcessRunResult(
-        exitCode: 0,
-        stdout: '{"schemaVersion":1,"bottles":[]}',
-        stderr: '',
-      ),
-      const ProcessRunResult(
-        exitCode: 0,
-        stdout:
-            '{"schemaVersion":1,"linuxFileAssociations":{"status":"installed"}}',
-        stderr: '',
-      ),
-      const ProcessRunResult(
-        exitCode: 0,
-        stdout: '''
+  testWidgets(
+    'Linux prompts before installing Konyak AppImage updates on startup',
+    (WidgetTester tester) async {
+      final runner = _QueuedProcessRunner([
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '{"schemaVersion":1,"bottles":[]}',
+          stderr: '',
+        ),
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout:
+              '{"schemaVersion":1,"linuxFileAssociations":{"status":"installed"}}',
+          stderr: '',
+        ),
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
           {
             "schemaVersion": 1,
             "appSettings": {
@@ -758,11 +853,11 @@ void defineMacosStartupAndRuntimeWidgetTests() {
             }
           }
         ''',
-        stderr: '',
-      ),
-      const ProcessRunResult(
-        exitCode: 0,
-        stdout: '''
+          stderr: '',
+        ),
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
           {
             "schemaVersion": 1,
             "appUpdate": {
@@ -773,11 +868,11 @@ void defineMacosStartupAndRuntimeWidgetTests() {
             }
           }
         ''',
-        stderr: '',
-      ),
-      const ProcessRunResult(
-        exitCode: 0,
-        stdout: '''
+          stderr: '',
+        ),
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
           {
             "schemaVersion": 1,
             "appUpdateInstall": {
@@ -789,33 +884,51 @@ void defineMacosStartupAndRuntimeWidgetTests() {
             }
           }
         ''',
-        stderr: '',
-      ),
-    ]);
+          stderr: '',
+        ),
+      ]);
 
-    await tester.pumpWidget(
-      _testKonyakApp(
-        platform: KonyakPlatform.linux,
-        cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
-        enableBackgroundServices: true,
-      ),
-    );
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(
+        _testKonyakApp(
+          platform: KonyakPlatform.linux,
+          cliClient: KonyakCliClient(
+            executable: 'konyak',
+            processRunner: runner,
+          ),
+          enableBackgroundServices: true,
+        ),
+      );
+      await tester.pumpAndSettle();
 
-    expect(
-      runner.argumentsLog,
-      containsAllInOrder([
-        const ['install-linux-file-associations', '--json'],
-        const ['get-app-settings', '--json'],
-        const ['check-app-update', '--json'],
-        const ['install-app-update', '--json'],
-      ]),
-    );
-    expect(
-      find.text('Installing Konyak 1.1.0 update. Konyak will restart.'),
-      findsOneWidget,
-    );
-  });
+      expect(find.text('Install Konyak 1.1.0 update?'), findsOneWidget);
+      expect(find.widgetWithText(TextButton, 'Not Now'), findsOneWidget);
+      expect(find.widgetWithText(FilledButton, 'Install'), findsOneWidget);
+      expect(
+        runner.argumentsLog,
+        containsAllInOrder([
+          const ['install-linux-file-associations', '--json'],
+          const ['get-app-settings', '--json'],
+          const ['check-app-update', '--json'],
+        ]),
+      );
+      expect(
+        runner.argumentsLog,
+        isNot(anyElement(equals(const ['install-app-update', '--json']))),
+      );
+
+      await tester.tap(find.widgetWithText(FilledButton, 'Install'));
+      await tester.pumpAndSettle();
+
+      expect(
+        runner.argumentsLog,
+        anyElement(equals(const ['install-app-update', '--json'])),
+      );
+      expect(
+        find.text('Installing Konyak 1.1.0 update. Konyak will restart.'),
+        findsOneWidget,
+      );
+    },
+  );
 
   testWidgets('Linux warns when automatic Konyak update install fails', (
     WidgetTester tester,
@@ -884,6 +997,11 @@ void defineMacosStartupAndRuntimeWidgetTests() {
         enableBackgroundServices: true,
       ),
     );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Install Konyak 1.1.0 update?'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(FilledButton, 'Install'));
     await tester.pumpAndSettle();
 
     expect(

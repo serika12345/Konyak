@@ -42,6 +42,15 @@ void main() {
 final Matcher _regularTextWeight = anyOf(isNull, FontWeight.normal);
 const _expandedSidebarWidth = 190.0;
 const _collapsedSidebarWidth = 44.0;
+Future<void>? _testFontsLoaded;
+
+Future<void> _loadKonyakTestFonts() {
+  return _testFontsLoaded ??= () async {
+    final inter = FontLoader('Inter')
+      ..addFont(rootBundle.load('assets/fonts/inter/Inter-Variable.ttf'));
+    await inter.load();
+  }();
+}
 
 KonyakApp _testKonyakApp({
   KonyakPlatform platform = KonyakPlatform.macos,

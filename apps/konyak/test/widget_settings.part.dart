@@ -142,7 +142,7 @@ void defineSettingsWidgetTests() {
     ]);
   });
 
-  testWidgets('macOS settings labels Konyak update switch as install', (
+  testWidgets('macOS settings labels Konyak update switch as check', (
     WidgetTester tester,
   ) async {
     final runner = _QueuedProcessRunner([
@@ -183,11 +183,11 @@ void defineSettingsWidgetTests() {
     await tester.tap(find.byTooltip('Settings'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Automatically install Konyak updates'), findsOneWidget);
-    expect(find.text('Automatically check for Konyak updates'), findsNothing);
+    expect(find.text('Automatically check for Konyak updates'), findsOneWidget);
+    expect(find.text('Automatically install Konyak updates'), findsNothing);
   });
 
-  testWidgets('Linux settings labels Konyak update switch as install', (
+  testWidgets('Linux settings labels Konyak update switch as check', (
     WidgetTester tester,
   ) async {
     final runner = _QueuedProcessRunner([
@@ -229,8 +229,8 @@ void defineSettingsWidgetTests() {
     await tester.tap(find.byTooltip('Settings'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Automatically install Konyak updates'), findsOneWidget);
-    expect(find.text('Automatically check for Konyak updates'), findsNothing);
+    expect(find.text('Automatically check for Konyak updates'), findsOneWidget);
+    expect(find.text('Automatically install Konyak updates'), findsNothing);
   });
 
   testWidgets('Linux settings dialog shows runtime stack component statuses', (

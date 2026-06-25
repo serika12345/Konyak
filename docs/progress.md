@@ -11,6 +11,72 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-25 14:03 JST
+- State: `in_progress`
+- Branch: `main`
+- Related work: startup Konyak app update confirmation prompt before rerelease
+- Purpose: stop automatic Konyak app update installation from immediately
+  restarting the app on startup, and show a confirmation prompt before
+  `install-app-update` is invoked.
+- Completed:
+  - Read the current progress/TODO state before editing.
+  - Investigation workstream: identified the current startup path in
+    `home_loader_runtimes.part.dart`; when a Konyak app update is available on
+    macOS/Linux, `_checkConfiguredUpdates` immediately calls
+    `_installAvailableKonyakUpdate`, which invokes `install-app-update --json`
+    before any user confirmation.
+  - Investigation workstream: found existing widget coverage currently expects
+    startup to install available Konyak app updates and show
+    `Installing Konyak ... update. Konyak will restart.`
+  - Test workstream: updated the macOS/Linux startup widget tests so
+    `install-app-update --json` must not run until the user chooses Install,
+    and confirmed the focused prompt tests failed before the implementation.
+  - Test workstream: added a golden test for the macOS Konyak update
+    confirmation prompt, loaded the bundled Inter font for readable output,
+    and generated
+    `apps/konyak/test/goldens/konyak_update_confirmation_prompt.png` for
+    screenshot review before rerelease.
+  - Implementation workstream: changed startup update handling to show an
+    `AlertDialog` with Not Now and Install actions before calling
+    `install-app-update --json`; cancelling leaves the app running and does
+    not start the updater.
+  - Implementation workstream: restored the settings label to
+    `Automatically check for Konyak updates` and updated release/distribution
+    docs so startup updates are described as user-confirmed installs instead
+    of immediate automatic installs.
+  - Audit workstream: focused prompt, failure, settings-label, and golden
+    tests pass; the full Flutter and repository-level gates listed below pass.
+  - Sub-agent limitation: available sub-agent tooling requires an explicit user
+    delegation request, so investigation, implementation, and audit are kept
+    separated in this progress entry instead of spawned agents.
+- Remaining:
+  - Commit and push the fix.
+  - Run the release workflow preflight on `main`.
+  - Move `v1.0.1` to the fix commit and let the tag workflow replace the
+    existing release assets.
+  - Audit the republished `v1.0.1` release.
+- Next: commit the verified fix and start the GitHub release workflow
+  preflight.
+- Verification:
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --name "prompts before installing Konyak"'`:
+    failed before the implementation and passed after it.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --name "warns when automatic Konyak update install fails"'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "macOS Konyak update confirmation prompt matches golden" --update-goldens -r expanded'`:
+    passed and generated the golden screenshot.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "macOS Konyak update confirmation prompt matches golden" -r expanded'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --name "settings labels Konyak update switch as check" -r expanded'`:
+    passed.
+  - `nix develop -c zsh -lc 'just flutter-format-check'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-analyze'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-test'`: passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `git diff --check`: passed.
+
 - Timestamp: 2026-06-25 13:33 JST
 - State: `completed`
 - Branch: `main`

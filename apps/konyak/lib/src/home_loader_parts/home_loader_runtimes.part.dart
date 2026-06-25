@@ -46,10 +46,12 @@ extension _KonyakHomeLoaderRuntimes on _KonyakHomeLoaderState {
 
     final labels = result.availableUpdateLabels.toList();
     final konyakUpdate = result.konyakUpdate;
-    if (_automaticallyInstallsKonyakAppUpdates(widget.platform) &&
+    if (_supportsStartupKonyakAppUpdatePrompt(widget.platform) &&
         konyakUpdate != null) {
       labels.remove(updateCheckLabel(konyakUpdate, 'Konyak'));
-      final installStarted = await _installAvailableKonyakUpdate();
+      final installStarted = await _confirmAndInstallAvailableKonyakUpdate(
+        konyakUpdate,
+      );
       if (!mounted) {
         return installStarted;
       }
@@ -64,6 +66,46 @@ extension _KonyakHomeLoaderRuntimes on _KonyakHomeLoaderState {
 
     _showSnackBar('Updates available: ${labels.join(', ')}');
     return false;
+  }
+
+  Future<bool> _confirmAndInstallAvailableKonyakUpdate(
+    UpdateCheckSummary update,
+  ) async {
+    final confirmed = await _confirmKonyakUpdateInstall(update);
+    if (!mounted || !confirmed) {
+      return false;
+    }
+
+    return _installAvailableKonyakUpdate();
+  }
+
+  Future<bool> _confirmKonyakUpdateInstall(UpdateCheckSummary update) async {
+    final latestVersion = update.latestVersion;
+    final title = latestVersion == null
+        ? 'Install Konyak update?'
+        : 'Install Konyak $latestVersion update?';
+    final message = latestVersion == null
+        ? 'A Konyak update is available. Install it now? Konyak will restart after the update starts.'
+        : 'Konyak $latestVersion is available. Install it now? Konyak will restart after the update starts.';
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Not Now'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Install'),
+          ),
+        ],
+      ),
+    );
+
+    return confirmed ?? false;
   }
 
   Future<bool> _installAvailableKonyakUpdate() async {
@@ -387,6 +429,6 @@ extension _KonyakHomeLoaderRuntimes on _KonyakHomeLoaderState {
   }
 }
 
-bool _automaticallyInstallsKonyakAppUpdates(KonyakPlatform platform) {
+bool _supportsStartupKonyakAppUpdatePrompt(KonyakPlatform platform) {
   return platform.isMacOS || platform.isLinux;
 }

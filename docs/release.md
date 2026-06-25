@@ -166,8 +166,9 @@ At AppImage runtime, `AppRun` exports:
 This lets packaged builds invoke the bundled CLI directly from the AppImage and
 lets Linux app updates hand off to a background replacement script that
 terminates the running app, swaps in the verified AppImage, and relaunches it.
-When automatic Konyak update checks are enabled, Linux AppImage builds invoke
-that verified install path on startup after an available app update is found.
+When automatic Konyak update checks are enabled, Linux AppImage builds prompt
+the user on startup after an available app update is found, then invoke that
+verified install path only after the user confirms installation.
 The installer verifies that the current AppImage exists and that its directory
 is writable before the app is terminated; AppImages installed in read-only or
 Nix-managed locations should be updated by the package manager instead.
@@ -214,8 +215,9 @@ directly instead of the development Dart script. The client also passes
 `KONYAK_APP_EXECUTABLE` and `KONYAK_APP_PID` to the CLI so runtime extraction
 helpers are available and verified macOS app updates can terminate the running
 app, replace the current `.app` bundle, and relaunch it. When automatic Konyak
-update checks are enabled, packaged macOS builds invoke that verified install
-path on startup after an available app update is found.
+update checks are enabled, packaged macOS builds prompt the user on startup
+after an available app update is found, then invoke that verified install path
+only after the user confirms installation.
 
 ## GitHub Release Workflow
 

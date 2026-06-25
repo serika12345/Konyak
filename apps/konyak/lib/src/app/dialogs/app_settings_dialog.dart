@@ -272,7 +272,7 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
                   switchKey: const ValueKey(
                     'app-settings-check-konyak-updates-switch',
                   ),
-                  label: 'Automatically install Konyak updates',
+                  label: 'Automatically check for Konyak updates',
                   value: _settings.automaticallyCheckForKonyakUpdates,
                   onChanged: _isSaving
                       ? null

@@ -34,6 +34,7 @@ import '../files/program_file_picker.dart';
 import '../logs/log_reader.dart';
 import '../runtimes/runtime_summary.dart';
 import '../settings/app_settings_summary.dart';
+import '../updates/update_check_summary.dart';
 
 part '../home_loader_parts/home_loader_platform_helpers.part.dart';
 part '../home_loader_parts/home_loader_bottles.part.dart';
