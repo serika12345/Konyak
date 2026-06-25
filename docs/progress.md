@@ -11,13 +11,126 @@ handoff notes.
 
 ### Latest Update
 
-- Timestamp: 2026-06-25 08:58 JST
-- State: `in_progress`
+- Timestamp: 2026-06-25 09:48 JST
+- State: `completed`
+- Branch: `main`
+- Related work: bottle delete failure warning and retry UI
+- Purpose: strengthen the Flutter deletion failure path so a failed bottle
+  deletion is presented as a warning, exposes a retry action, and preserves the
+  CLI JSON failure message instead of only showing a generic exit-code message.
+- Completed:
+  - Reviewed the existing Flutter delete flow, Snackbar helper, CLI delete
+    result mapping, widget delete tests, and CLI client tests.
+  - Added CLI client coverage proving `delete-bottle --json` repository
+    failures surface the JSON `error.message` to Flutter instead of reducing
+    them to a generic exit-code message.
+  - Added widget coverage proving a failed delete keeps the bottle visible,
+    shows a warning Snackbar with a `Retry` action, and retries the same
+    `delete-bottle <id> --json` command without reopening the confirmation
+    dialog.
+  - Updated the Flutter CLI client delete failure path to reuse the shared
+    command failure parser so machine-readable delete errors reach the UI.
+  - Split the Flutter bottle deletion flow into confirmation and confirmed
+    execution paths, then routed delete failures through a warning Snackbar
+    with a retry action.
+- Remaining:
+  - Release remains paused until the macOS bottle defect fix, this UI
+    hardening, and the existing Linux pinned launcher smoke decision are
+    committed, pushed, and the cross-platform preflight is green.
+- Next: decide how to split or commit the pending bottle delete backend fix,
+  Flutter retry UI hardening, and Linux pinned launcher smoke fix candidate.
+- Verification:
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/cli/konyak_cli_client_test.dart --plain-name "returns delete-bottle JSON error messages"'`:
+    failed before implementation with the generic exit-code message, then
+    passed after the fix.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "delete bottle failure shows a retryable warning"'`:
+    failed before implementation because no warning icon/Retry UI existed, then
+    passed after the fix.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/cli/konyak_cli_client_test.dart --plain-name "delete"'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "delete bottle"'`:
+    passed.
+  - `nix develop -c zsh -lc 'just flutter-format-check'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-analyze'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-test'`: passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `nix develop -c zsh -lc 'git diff --check'`: passed.
+
+- Timestamp: 2026-06-25 09:25 JST
+- State: `completed`
+- Branch: `main`
+- Related work: macOS bottle delete orphan visibility defect
+- Purpose: identify and fix the defect where a failed bottle deletion could
+  leave a metadata-less bottle directory that disappeared from `list-bottles`
+  but still blocked `create-bottle` with `bottleAlreadyExists`.
+- Completed:
+  - Investigation workstream: reviewed the Flutter delete path, CLI
+    `delete-bottle`/`create-bottle`/`list-bottles` contracts, file-backed
+    bottle repository read/mutation logic, and storage path resolution.
+  - Reproduced the user-visible inconsistency through the public CLI path with
+    a temporary `KONYAK_DATA_HOME`: a `bottles/steam` directory without
+    `metadata.json` returned `{"bottles":[]}` from `list-bottles --json` but
+    returned `bottleAlreadyExists` from `create-bottle --name Steam --json`.
+  - Reproduced the deletion failure root cause through the public CLI path by
+    creating a bottle, making a child directory non-writable, then running
+    `delete-bottle steam --json`; the previous implementation removed
+    `metadata.json` before failing on the child directory, leaving the bottle
+    hidden from the list but still present on disk.
+  - Inspected the local user data read-only and found metadata-less remnants
+    at `~/Library/Application Support/Konyak/Bottles/bottle` and
+    `~/Library/Application Support/Konyak/bottles/bottle`. No open files or
+    immutable flags were visible at inspection time, so the confirmed durable
+    defect is the non-atomic recursive delete behavior rather than a currently
+    active lock.
+  - Implementation workstream: changed file-backed bottle deletion to delete
+    `metadata.json` last, so partial recursive deletion failures keep the
+    bottle visible and retryable instead of hiding it.
+  - Changed file-backed bottle creation to treat only an existing
+    `metadata.json` as a managed-bottle conflict, allowing an existing
+    metadata-less directory to be reclaimed without deleting leftover prefix
+    files.
+  - Added CLI contract coverage for reclaiming metadata-less bottle
+    directories and for preserving metadata when recursive deletion fails.
+- Remaining:
+  - Existing metadata-less remnants in the user's app data are not deleted by
+    this change. Creating a bottle with the same name now reclaims them; they
+    can also be removed manually after confirming they are no longer needed.
+  - Release remains paused until the remaining release preflight work is
+    rerun.
+- Next: decide whether to commit this fix together with the existing release
+  pause progress update and the Linux pinned launcher smoke fix candidate, or
+  split those changes.
+- Verification:
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "create-bottle --json reclaims a metadata-less bottle directory"'`:
+    failed before implementation with exit code 73, then passed after the fix.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "delete-bottle --json keeps metadata when recursive deletion fails"'`:
+    passed after the fix.
+  - Public CLI dynamic proof with fake macOS runtime and non-writable child
+    directory: `delete-bottle steam --json` still failed with exit code 74,
+    but `metadata.json` remained and `list-bottles --json` still listed the
+    bottle.
+  - Public CLI dynamic proof for existing orphan recovery: `list-bottles
+    --json` returned empty for a metadata-less `bottles/steam`, then
+    `create-bottle --name Steam --json` succeeded, preserved the leftover
+    `drive_c` file, and made the bottle visible.
+  - `nix develop -c zsh -lc 'just cli-test'`: passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `nix develop -c zsh -lc 'git diff --check'`: passed.
+
+- Timestamp: 2026-06-25 09:09 JST
+- State: `paused`
 - Branch: `main`
 - Related work: v1.0.0 macOS and Linux release
 - Purpose: verify the packaged Konyak app auto-update handoff on the release
   build path, run the macOS and Linux release workflow gates, then publish the
-  simultaneous v1.0.0 GitHub release artifacts.
+  simultaneous v1.0.0 GitHub release artifacts. This release is now paused
+  before tagging or publishing because a macOS defect was found.
 - Completed:
   - Investigation workstream: reviewed the current TODO/progress state,
     release documentation, release build scripts, packaged app update handoff
@@ -39,14 +152,32 @@ handoff notes.
     was replaced without leftover staging or backup bundles.
   - Passed the local repository gates and test suite required before pushing
     the release-prep progress commit.
+  - Pushed release-prep progress commit
+    `86db5946d12614e3d4b927fb8328068ca4dce988` to `origin/main`.
+  - Ran the tag-before-publish GitHub release workflow preflight on `main`:
+    https://github.com/serika12345/Konyak/actions/runs/28137593267.
+  - Preflight macOS job passed release build, packaged runtime extraction,
+    Finder integration, packaged app CLI bridge, and packaged app update
+    handoff.
+  - Preflight Linux job passed release build, release metadata smoke, AppRun
+    runtime environment smoke, AppImage update handoff smoke, and desktop
+    integration smoke before failing in pinned launcher integration.
+  - Drafted a local, uncommitted Linux pinned launcher smoke fix candidate in
+    `scripts/smoke_linux_pinned_launcher_integration.zsh`; it has only been
+    syntax-checked locally and has not been pushed.
 - Remaining:
-  - Run the GitHub release workflow manually on `main` as the cross-platform
-    preflight so macOS and Linux update handoff smokes pass before publishing.
-  - Create and push the `v1.0.0` tag after preflight passes.
+  - Investigate and fix the newly found macOS defect before any release tag or
+    publish step.
+  - Decide whether to keep, revise, or discard the local Linux pinned launcher
+    smoke fix candidate.
+  - Rerun the GitHub release workflow preflight on `main` after the macOS fix
+    and Linux smoke decision.
+  - Create and push the `v1.0.0` tag only after the preflight passes.
   - Monitor the tag-triggered release workflow, then audit the published
     release assets and checksum metadata.
-- Next: commit and push this release-prep progress update, then run the
-  GitHub release workflow manually on `main` for the macOS/Linux preflight.
+- Next: start dynamic investigation of the macOS defect; do not create or push
+  `v1.0.0` and do not publish GitHub Release assets until that defect is fixed
+  and the cross-platform preflight is green.
 - Verification:
   - `nix develop -c zsh -lc 'just macos-release'`: passed; produced
     `.dart_tool/konyak/release/macos/Konyak.app` and
@@ -63,6 +194,13 @@ handoff notes.
   - `nix develop -c zsh -lc 'just lint'`: passed.
   - `nix develop -c zsh -lc 'just test'`: passed.
   - `nix develop -c zsh -lc 'git diff --check'`: passed.
+  - `nix develop -c zsh -lc 'gh workflow run publish.yml --ref main'`:
+    started preflight run 28137593267.
+  - `nix develop -c zsh -lc 'gh run watch 28137593267 --exit-status --interval 30'`:
+    failed because the Linux pinned launcher integration smoke exited 75;
+    the macOS job passed.
+  - `nix develop -c zsh -lc 'zsh -n scripts/smoke_linux_pinned_launcher_integration.zsh'`:
+    passed for the local uncommitted Linux smoke fix candidate.
 
 - Timestamp: 2026-06-24 23:25 JST
 - State: `completed`
