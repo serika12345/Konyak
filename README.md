@@ -1,78 +1,43 @@
 # Konyak
 
-Konyak manages Wine/Proton bottles and runs Windows applications from a Flutter
-desktop UI backed by a tested Dart CLI.
+## Product
 
-Konyak owns its bottle metadata, runtime packaging, CI, and development
-workflow. External plist metadata is not part of the supported data
-model.
+Konyak manages Wine/Proton bottles and launches Windows applications from a
+Flutter UI backed by a Dart CLI.
 
-## Status
+Konyak targets arm64 macOS first and x86_64 Linux second.
+Konyak owns its bottle metadata, managed runtime installation, and update flows
+instead of relying on live external plist metadata. The Flutter app lives in
+`apps/konyak`, and the CLI backend lives in `packages/konyak_cli`.
 
-- arm64 macOS is the first complete runtime target.
-- x86_64 Linux is the second complete runtime target.
-- Flutter calls the backend through JSON CLI contracts.
-- Wine/Proton runtimes are managed by Konyak and installed per platform.
-- macOS uses a Konyak-managed Wine stack published as a single assembled
-  archive, with separately verified component build units.
+Konyak is distributed under the MIT License.
 
-Remaining product work is tracked in `docs/todo.md`. The current active work,
-handoff notes, and next continuation step are tracked in `docs/progress.md`.
-The main open areas are end-to-end DLSS/MetalFX rendering proof, the remaining
-Flutter UI file split, Linux ARM64 Windows execution research, Linux executable
-thumbnail strategy for sandboxed file managers, E2E test target selection,
-Linux runtime submodule build/check hardening before the next runtime bump, and
-eventual removal of legacy archive/Wine-only runtime fallback paths.
+Technical details are kept in developer documentation:
 
-The x86_64 macOS Wine runtime includes a Konyak-owned GPTK/D3DMetal loader shim
-for user-imported GPTK payloads. The shim uses public CrossOver Wine loader
-exports only; Konyak does not copy or implement CrossOver's proprietary
-compatibility database.
+- [AGENTS.md](AGENTS.md): repository engineering contract
+- [docs/flutter-architecture-plan.md](docs/flutter-architecture-plan.md):
+  architecture and system shape
+- [docs/todo.md](docs/todo.md): remaining roadmap work
+- [docs/progress.md](docs/progress.md): current handoff state
+- [docs/release.md](docs/release.md): release builds, artifacts, and smoke
+  checks
+- [docs/cli-distribution.md](docs/cli-distribution.md): Flutter-to-CLI
+  distribution contract
+- [runtime/konyak-macos-runtime/README.md](runtime/konyak-macos-runtime/README.md):
+  macOS runtime build and release contract
 
-## Repository Layout
+## Build
 
-- `apps/konyak`: Flutter desktop application.
-- `packages/konyak_cli`: CLI backend consumed by Flutter.
-- `docs`: architecture, runtime, and distribution notes.
-- `scripts`: repository verification and developer tooling helpers.
+Run builds through the Nix flake.
 
-## Development
-
-All project commands run inside the Nix flake dev shell:
+macOS release build:
 
 ```sh
-nix develop -c zsh -lc 'just verify'
+nix develop -c zsh -lc 'just macos-release'
 ```
 
-Useful narrower checks:
+Linux release build:
 
 ```sh
-nix develop -c zsh -lc 'just verify-governance'
-nix develop -c zsh -lc 'just format-check'
-nix develop -c zsh -lc 'just lint'
-nix develop -c zsh -lc 'just flutter-test'
-nix develop -c zsh -lc 'just cli-test'
+nix develop -c zsh -lc 'just linux-release'
 ```
-
-See `AGENTS.md` for the engineering contract used by both human contributors
-and coding agents.
-
-## Data Model
-
-Konyak bottles are stored as versioned JSON metadata managed by the CLI backend.
-Runtime and platform-specific behavior must stay behind that boundary so Linux
-and macOS behavior can evolve separately.
-
-Default bottle locations are platform-specific:
-
-- Linux: `~/.local/share/konyak/bottles` unless XDG or Konyak environment
-  overrides are set.
-- macOS: `~/Library/Application Support/Konyak/Bottles` unless Konyak
-  environment or app settings overrides are set.
-
-External plist metadata is not read or written.
-
-## License
-
-Konyak is distributed under the MIT License. See `LICENSE` for the full license
-text and `THIRD_PARTY_NOTICES.md` for runtime component notices.
