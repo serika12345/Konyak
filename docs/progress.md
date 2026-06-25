@@ -11,8 +11,8 @@ handoff notes.
 
 ### Latest Update
 
-- Timestamp: 2026-06-25 10:32 JST
-- State: `in_progress`
+- Timestamp: 2026-06-25 10:54 JST
+- State: `completed`
 - Branch: `main`
 - Related work: v1.0.0 macOS/Linux release restart after app-update asset
   selection blocker
@@ -51,19 +51,29 @@ handoff notes.
   - Implementation workstream: added `GH_REPO: ${{ github.repository }}` to
     the publish step so GitHub CLI release commands target the current
     repository without relying on checkout state.
+  - Execution workstream: committed and pushed `20f5d3a` (`Select app update
+    assets by platform`), `15dd0f2` (`Consolidate release asset publishing`),
+    and `a14f6f0` (`Fix release publish repository context`) to `main`.
+  - Execution workstream: moved annotated tag `v1.0.0` to `a14f6f0`, reran tag
+    workflow `28141432165`, and published the final v1.0.0 release at
+    `https://github.com/serika12345/Konyak/releases/tag/v1.0.0`.
+  - Audit workstream: verified the final release is not a draft, contains the
+    macOS zip, Linux AppImage, both per-platform release metadata files,
+    Linux runtime stack manifest/signature/public key assets, and one combined
+    `SHA256SUMS`.
+  - Audit workstream: verified the live macOS `check-app-update --json`
+    response now selects
+    `Konyak-1.0.0-macos-arm64.zip` with checksum
+    `f9487b061ccd511aa3ced57dec4be4a82a1f4d1348813a8765ed12a1c56c8cfe`.
   - Sub-agent limitation: available sub-agent tooling requires an explicit user
     request for delegation, so this release restart keeps investigation,
     implementation, and audit separated in this progress entry instead.
 - Remaining:
-  - Run the focused workflow syntax checks and repository gates for the
-    publish-step repository-context fix.
-  - Commit and push the publish-step fix.
-  - Move annotated tag `v1.0.0` to the fixed commit again, push the tag update,
-    and monitor the tag-triggered release workflow.
-  - Audit the final public v1.0.0 release assets, combined checksum metadata,
-    and live macOS app-update response before reporting completion.
-- Next: run workflow syntax checks and repository gates for the publish-step
-  fix.
+  - None for the requested v1.0.0 macOS/Linux release. GitHub Actions emitted
+    non-fatal Node.js 20 deprecation warnings for upstream Actions; track that
+    separately from this release.
+- Next: monitor user smoke feedback on v1.0.0 and start a new progress entry
+  for any follow-up release or Actions-maintenance work.
 - Verification:
   - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "app update checker selects the macOS archive from shared releases"'`:
     failed before implementation, then passed after the fix.
@@ -81,6 +91,35 @@ handoff notes.
   - `nix develop -c zsh -lc 'gh run watch 28141203966 --repo serika12345/Konyak --exit-status --interval 30'`:
     failed only in the publish job after Linux and macOS build/smoke passed;
     publish logs showed `fatal: not a git repository`.
+  - `nix develop -c zsh -lc 'cd /tmp && GH_REPO=serika12345/Konyak gh release view v1.0.0 --json isDraft,tagName,name'`:
+    passed, proving `GH_REPO` supplies repository context without a checkout.
+  - `nix develop -c zsh -lc 'ruby -e "require \"yaml\"; YAML.load_file(\".github/workflows/publish.yml\")"'`:
+    passed after the publish-step fix.
+  - `nix develop -c zsh -lc 'ruby -e "require \"yaml\"; data=YAML.load_file(\".github/workflows/publish.yml\"); puts data.fetch(\"jobs\").fetch(\"publish\").fetch(\"steps\").find { |s| s[\"name\"] == \"Publish GitHub release assets\" }.fetch(\"run\")" | bash -n'`:
+    passed after the publish-step fix.
+  - `nix develop -c zsh -lc 'just cli-test'`: passed.
+  - `nix develop -c zsh -lc 'just test'`: passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed before and
+    after the publish-step fix.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed before and after the
+    publish-step fix.
+  - `nix develop -c zsh -lc 'just format-check'`: passed before and after the
+    publish-step fix.
+  - `nix develop -c zsh -lc 'just lint'`: passed before and after the
+    publish-step fix.
+  - `nix develop -c zsh -lc 'git diff --check'`: passed before and after the
+    publish-step fix.
+  - `nix develop -c zsh -lc 'gh run watch 28141432165 --repo serika12345/Konyak --exit-status --interval 30'`:
+    passed; Linux, macOS, and the consolidated publish job were green.
+  - `nix develop -c zsh -lc 'gh release view v1.0.0 --repo serika12345/Konyak --json isDraft,isPrerelease,tagName,targetCommitish,url,name,assets,body,publishedAt,isImmutable'`:
+    passed and confirmed `isDraft: false`, `isPrerelease: false`, and combined
+    release notes for both platform artifacts.
+  - `nix develop -c zsh -lc 'gh release download v1.0.0 --repo serika12345/Konyak --dir .dart_tool/konyak/release-audit/v1.0.0-final-28141432165'`:
+    passed and downloaded all final release assets.
+  - `nix develop -c zsh -lc 'cd .dart_tool/konyak/release-audit/v1.0.0-final-28141432165 && shasum -a 256 -c SHA256SUMS && shasum -a 256 -c Konyak-1.0.0-macos-arm64.zip.sha256 && shasum -a 256 -c Konyak-1.0.0-linux-x86_64.AppImage.sha256'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart run bin/konyak.dart check-app-update --json'`:
+    passed and returned the macOS zip URL instead of the Linux AppImage.
 
 - Timestamp: 2026-06-25 10:09 JST
 - State: `superseded`
