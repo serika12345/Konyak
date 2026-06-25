@@ -11,9 +11,11 @@ handoff notes.
 
 ### Latest Update
 
-- Timestamp: 2026-06-25 16:05 JST
-- State: `in_progress`
+- Timestamp: 2026-06-25 16:01 JST
+- State: `completed`
 - Branch: `main`
+- Latest commits: `00f15e9 chore: prepare v1.0.2 release`; release tag
+  `v1.0.2`
 - Related work: v1.0.2 macOS/Linux release
 - Purpose: publish v1.0.2 with the committed DMG packaging and manual Konyak
   update check fixes.
@@ -31,10 +33,17 @@ handoff notes.
   - Audit workstream: built the local macOS v1.0.2 DMG, verified the DMG
     layout, update handoff, runtime extraction, checksums, release metadata,
     and generated app bundle version/build number.
-- Remaining:
-  - Commit the release prep, tag v1.0.2, wait for the release workflow, and
-    audit published macOS/Linux artifacts.
-- Next: commit the release prep and push the v1.0.2 tag.
+  - Release workstream: committed `00f15e9`, pushed `main`, and pushed the
+    annotated `v1.0.2` tag at `00f15e9`.
+  - Release workstream: GitHub Actions release run `28152533662` completed
+    successfully and published
+    `https://github.com/serika12345/Konyak/releases/tag/v1.0.2`.
+  - Audit workstream: downloaded the published v1.0.2 assets, verified both
+    artifact checksum files and the combined `SHA256SUMS`, inspected both
+    release metadata files, confirmed the tag target, and confirmed
+    `check-app-update --json` reports v1.0.2 as current.
+- Remaining: none for the requested v1.0.2 release.
+- Next: continue with the next requested feature or fix.
 - Verification:
   - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --name "app update checker defaults to the packaged Konyak app version"'`:
     failed as expected before implementation because the update checker still
@@ -56,6 +65,26 @@ handoff notes.
   - `nix develop -c zsh -lc 'jq -S . .dart_tool/konyak/release/macos/Konyak-1.0.2-macos-arm64.release.json'`:
     passed and confirmed metadata version `1.0.2`, format `dmg`, and arm64
     artifact checksum.
+  - `git tag -a v1.0.2 -m 'Konyak v1.0.2' && git push origin main v1.0.2`:
+    passed.
+  - `nix develop -c zsh -lc 'gh run watch 28152533662 --repo serika12345/Konyak --exit-status --interval 30'`:
+    passed; Linux AppImage, macOS app, and Publish GitHub release jobs all
+    completed successfully.
+  - `nix develop -c zsh -lc 'gh release view v1.0.2 --repo serika12345/Konyak --json isDraft,isPrerelease,tagName,targetCommitish,url,name,assets,body,publishedAt,isImmutable'`:
+    passed and reported a non-draft, non-prerelease release with 10 assets.
+  - `nix develop -c zsh -lc 'gh release download v1.0.2 --repo serika12345/Konyak --dir .dart_tool/konyak/release-audit/v1.0.2-28152533662'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd .dart_tool/konyak/release-audit/v1.0.2-28152533662 && shasum -a 256 -c SHA256SUMS && shasum -a 256 -c Konyak-1.0.2-macos-arm64.dmg.sha256 && shasum -a 256 -c Konyak-1.0.2-linux-x86_64.AppImage.sha256'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd .dart_tool/konyak/release-audit/v1.0.2-28152533662 && jq -S . Konyak-1.0.2-macos-arm64.release.json Konyak-1.0.2-linux-x86_64.release.json'`:
+    passed and confirmed both release metadata files use version `1.0.2`; the
+    macOS artifact is a DMG and the Linux artifact is an AppImage with runtime
+    stack metadata.
+  - `nix develop -c zsh -lc 'git rev-parse v1.0.2^{} && git ls-remote --tags origin v1.0.2 v1.0.2^{}'`:
+    passed and confirmed `v1.0.2^{}` resolves to `00f15e9`.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart run bin/konyak.dart check-app-update --json'`:
+    passed and returned `status: current`, `currentVersion: 1.0.2`, and
+    `latestVersion: v1.0.2`.
 
 - Timestamp: 2026-06-25 15:43 JST
 - State: `completed`
