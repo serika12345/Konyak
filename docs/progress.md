@@ -11,6 +11,52 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-25 16:05 JST
+- State: `in_progress`
+- Branch: `main`
+- Related work: v1.0.2 macOS/Linux release
+- Purpose: publish v1.0.2 with the committed DMG packaging and manual Konyak
+  update check fixes.
+- Completed:
+  - Investigation workstream: read the release guide, current progress/todo
+    state, release workflow, release scripts, and app version definitions.
+  - Investigation workstream: confirmed `main` matches `origin/main`, there is
+    no existing local `v1.0.2` tag, and no existing GitHub `v1.0.2` release.
+  - Test workstream: started by updating the packaged app version contract test
+    to expect v1.0.2.
+  - Test workstream: confirmed the focused contract test failed before the
+    implementation because the packaged app version still reported v1.0.1.
+  - Implementation workstream: bumped the Flutter package version to
+    `1.0.2+3` and the CLI/update-checker app version to `1.0.2`.
+  - Audit workstream: built the local macOS v1.0.2 DMG, verified the DMG
+    layout, update handoff, runtime extraction, checksums, release metadata,
+    and generated app bundle version/build number.
+- Remaining:
+  - Commit the release prep, tag v1.0.2, wait for the release workflow, and
+    audit published macOS/Linux artifacts.
+- Next: commit the release prep and push the v1.0.2 tag.
+- Verification:
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --name "app update checker defaults to the packaged Konyak app version"'`:
+    failed as expected before implementation because the update checker still
+    reported v1.0.1.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --name "app update checker defaults to the packaged Konyak app version"'`:
+    passed after the version bump.
+  - `nix develop -c zsh -lc 'just flutter-format-check && just flutter-analyze && just flutter-test && just cli-test && just swift-lint && just verify-governance && just verify-safety && just format-check && just lint'`:
+    initially failed because `dart format` changed
+    `packages/konyak_cli/test/cli_contract_runtime_process_update.part.dart`.
+  - `nix develop -c zsh -lc 'just flutter-format-check && just flutter-analyze && just flutter-test && just cli-test && just swift-lint && just verify-governance && just verify-safety && just format-check && just lint'`:
+    passed after formatting.
+  - `nix develop -c zsh -lc 'just macos-release && just smoke-macos-dmg-layout && ./scripts/smoke_macos_app_update_handoff.zsh .dart_tool/konyak/release/macos/Konyak.app && ./scripts/smoke_macos_release_runtime_extraction.zsh .dart_tool/konyak/release/macos/Konyak.app && cd .dart_tool/konyak/release/macos && shasum -a 256 -c Konyak-1.0.2-macos-arm64.dmg.sha256 && shasum -a 256 -c SHA256SUMS'`:
+    built the v1.0.2 DMG but the layout smoke failed because a stale local
+    v1.0.1 DMG remained in `.dart_tool/konyak/release/macos`.
+  - `nix develop -c zsh -lc 'rm -f .dart_tool/konyak/release/macos/Konyak-1.0.1-macos-arm64.dmg .dart_tool/konyak/release/macos/Konyak-1.0.1-macos-arm64.dmg.sha256 .dart_tool/konyak/release/macos/Konyak-1.0.1-macos-arm64.release.json && just smoke-macos-dmg-layout && ./scripts/smoke_macos_app_update_handoff.zsh .dart_tool/konyak/release/macos/Konyak.app && ./scripts/smoke_macos_release_runtime_extraction.zsh .dart_tool/konyak/release/macos/Konyak.app && cd .dart_tool/konyak/release/macos && shasum -a 256 -c Konyak-1.0.2-macos-arm64.dmg.sha256 && shasum -a 256 -c SHA256SUMS'`:
+    passed.
+  - `nix develop -c zsh -lc 'plutil -extract CFBundleShortVersionString raw .dart_tool/konyak/release/macos/Konyak.app/Contents/Info.plist && plutil -extract CFBundleVersion raw .dart_tool/konyak/release/macos/Konyak.app/Contents/Info.plist'`:
+    passed and reported `1.0.2` / `3`.
+  - `nix develop -c zsh -lc 'jq -S . .dart_tool/konyak/release/macos/Konyak-1.0.2-macos-arm64.release.json'`:
+    passed and confirmed metadata version `1.0.2`, format `dmg`, and arm64
+    artifact checksum.
+
 - Timestamp: 2026-06-25 15:43 JST
 - State: `completed`
 - Branch: `main`
