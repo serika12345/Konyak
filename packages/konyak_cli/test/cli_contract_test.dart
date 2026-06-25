@@ -1843,6 +1843,13 @@ void _writeTestBottleMetadata(BottleRecord bottle) {
     );
 }
 
+void _chmodPath(String path, String mode) {
+  if (Platform.isWindows || !Directory(path).existsSync()) {
+    return;
+  }
+  Process.runSync('chmod', [mode, path]);
+}
+
 void _writeU16(Uint8List bytes, int offset, int value) {
   bytes[offset] = value & 0xff;
   bytes[offset + 1] = value >> 8 & 0xff;

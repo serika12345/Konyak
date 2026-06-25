@@ -24,8 +24,7 @@ bool _fileBottleMetadataExists({
 }
 
 bool _fileBottlePathExists(String bottlePath) {
-  return _fileBottleDirectoryExists(bottlePath) ||
-      File(_fileBottleMetadataPath(bottlePath)).existsSync();
+  return File(_fileBottleMetadataPath(bottlePath)).existsSync();
 }
 
 bool _fileBottleDirectoryExists(String bottlePath) {
@@ -42,7 +41,21 @@ void _createFileBottleDirectories(String bottlePath) {
 void _deleteFileBottleDirectoryIfPresent(String bottlePath) {
   final directory = Directory(bottlePath);
   if (directory.existsSync()) {
-    directory.deleteSync(recursive: true);
+    final metadataPath = _normalizeFilesystemPath(
+      _fileBottleMetadataPath(bottlePath),
+    );
+    for (final entry in directory.listSync()) {
+      if (_normalizeFilesystemPath(entry.path) == metadataPath) {
+        continue;
+      }
+      entry.deleteSync(recursive: true);
+    }
+
+    final metadata = File(_fileBottleMetadataPath(bottlePath));
+    if (metadata.existsSync()) {
+      metadata.deleteSync();
+    }
+    directory.deleteSync();
   }
 }
 

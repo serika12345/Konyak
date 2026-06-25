@@ -589,6 +589,70 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
     });
   });
 
+  test('create-bottle --json reclaims a metadata-less bottle directory', () {
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-orphaned-bottle-create-test-',
+    );
+    addTearDown(() {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    });
+    final repository = FileBottleRepository(dataHome: tempDirectory.path);
+    final orphanedBottlePath = _joinTestPath(tempDirectory.path, const [
+      'bottles',
+      'steam',
+    ]);
+    final leftoverFile = File(
+      _joinTestPath(orphanedBottlePath, const ['drive_c', 'leftover.txt']),
+    )..createSync(recursive: true);
+    leftoverFile.writeAsStringSync('leftover');
+
+    final listBefore = runCli(const [
+      'list-bottles',
+      '--json',
+    ], bottleRepository: repository);
+    expect(jsonDecode(listBefore.stdout), {
+      'schemaVersion': 1,
+      'bottles': <Object?>[],
+    });
+
+    final result = runCli(const [
+      'create-bottle',
+      '--name',
+      'Steam',
+      '--json',
+    ], bottleRepository: repository);
+
+    expect(result.exitCode, 0);
+    expect(result.stderr, isEmpty);
+    expect(leftoverFile.readAsStringSync(), 'leftover');
+    expect(
+      File(
+        _joinTestPath(orphanedBottlePath, const ['metadata.json']),
+      ).existsSync(),
+      isTrue,
+    );
+
+    final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+    expect(payload, {
+      'schemaVersion': 1,
+      'bottle': {
+        'id': 'steam',
+        'name': 'Steam',
+        'path': orphanedBottlePath,
+        'windowsVersion': 'win10',
+      },
+    });
+
+    final listAfter = runCli(const [
+      'list-bottles',
+      '--json',
+    ], bottleRepository: repository);
+    final listPayload = jsonDecode(listAfter.stdout) as Map<String, Object?>;
+    expect(listPayload['bottles'], hasLength(1));
+  });
+
   test('create-bottle --json supports non-ASCII bottle names', () {
     final repository = MemoryBottleRepository(
       dataHome: '/home/user/.local/share/konyak',
@@ -1903,6 +1967,64 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
     final listPayload = jsonDecode(listResult.stdout) as Map<String, Object?>;
     expect(listPayload, {'schemaVersion': 1, 'bottles': <Object?>[]});
   });
+
+  test(
+    'delete-bottle --json keeps metadata when recursive deletion fails',
+    () {
+      final tempDirectory = Directory.systemTemp.createTempSync(
+        'konyak-bottle-delete-failure-test-',
+      );
+      addTearDown(() {
+        _chmodPath(
+          _joinTestPath(tempDirectory.path, const [
+            'bottles',
+            'steam',
+            'drive_c',
+            'locked',
+          ]),
+          '755',
+        );
+        if (tempDirectory.existsSync()) {
+          tempDirectory.deleteSync(recursive: true);
+        }
+      });
+      final repository = FileBottleRepository(dataHome: tempDirectory.path);
+      final createResult = repository.createBottle(
+        const BottleCreateRequest(name: 'Steam', windowsVersion: 'win10'),
+      );
+      final bottle = (createResult as BottleCreated).bottle;
+      final lockedDirectory = Directory(
+        _joinTestPath(bottle.path, const ['drive_c', 'locked']),
+      )..createSync(recursive: true);
+      File(
+        _joinTestPath(lockedDirectory.path, const ['file.txt']),
+      ).writeAsStringSync('locked');
+      _chmodPath(lockedDirectory.path, '555');
+
+      final result = runCli(const [
+        'delete-bottle',
+        'steam',
+        '--json',
+      ], bottleRepository: repository);
+
+      expect(result.exitCode, 74);
+      expect(result.stderr, isEmpty);
+      expect(
+        File(_joinTestPath(bottle.path, const ['metadata.json'])).existsSync(),
+        isTrue,
+      );
+
+      final listResult = runCli(const [
+        'list-bottles',
+        '--json',
+      ], bottleRepository: repository);
+      final listPayload = jsonDecode(listResult.stdout) as Map<String, Object?>;
+      expect(listPayload['bottles'], hasLength(1));
+    },
+    skip: Platform.isWindows
+        ? 'POSIX directory permissions are required for this regression.'
+        : false,
+  );
 
   test('delete-bottle --json returns not-found for missing bottles', () {
     final result = runCli(
