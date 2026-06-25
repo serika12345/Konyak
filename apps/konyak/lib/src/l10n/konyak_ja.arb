@@ -252,6 +252,14 @@
   "@highResolutionMode": {
     "description": "Konyak UI string: High Resolution Mode"
   },
+  "hideKonyak": "Konyak を隠す",
+  "@hideKonyak": {
+    "description": "macOS native menu item label for hiding Konyak."
+  },
+  "hideOthers": "ほかを隠す",
+  "@hideOthers": {
+    "description": "macOS native menu item label for hiding other applications."
+  },
   "incomplete": "未完了",
   "@incomplete": {
     "description": "Konyak UI string: Incomplete"
@@ -504,6 +512,10 @@
   "@programs": {
     "description": "Konyak UI string: Programs"
   },
+  "quitKonyak": "Konyak を終了",
+  "@quitKonyak": {
+    "description": "macOS native menu item label for quitting Konyak."
+  },
   "removeEllipsis": "削除",
   "@removeEllipsis": {
     "description": "Konyak UI string: Remove..."
@@ -527,6 +539,10 @@
   "reinstallLinuxRuntime": "Linux ランタイムを再インストール",
   "@reinstallLinuxRuntime": {
     "description": "Konyak UI string: Reinstall Linux Runtime"
+  },
+  "reinstallMacosRuntime": "macOS ランタイムを再インストール",
+  "@reinstallMacosRuntime": {
+    "description": "macOS native menu item label for reinstalling the managed macOS runtime."
   },
   "removeEnvironmentVariable": "環境変数を削除",
   "@removeEnvironmentVariable": {
@@ -587,6 +603,10 @@
   "settingsEllipsisMenu": "設定",
   "@settingsEllipsisMenu": {
     "description": "Konyak UI string: Settings…"
+  },
+  "showAll": "すべて表示",
+  "@showAll": {
+    "description": "macOS native menu item label for showing all hidden applications."
   },
   "showDetail": "詳細を表示",
   "@showDetail": {

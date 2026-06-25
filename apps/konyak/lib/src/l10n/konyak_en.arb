@@ -252,6 +252,14 @@
   "@highResolutionMode": {
     "description": "Konyak UI string: High Resolution Mode"
   },
+  "hideKonyak": "Hide Konyak",
+  "@hideKonyak": {
+    "description": "macOS native menu item label for hiding Konyak."
+  },
+  "hideOthers": "Hide Others",
+  "@hideOthers": {
+    "description": "macOS native menu item label for hiding other applications."
+  },
   "incomplete": "Incomplete",
   "@incomplete": {
     "description": "Konyak UI string: Incomplete"
@@ -504,6 +512,10 @@
   "@programs": {
     "description": "Konyak UI string: Programs"
   },
+  "quitKonyak": "Quit Konyak",
+  "@quitKonyak": {
+    "description": "macOS native menu item label for quitting Konyak."
+  },
   "removeEllipsis": "Remove...",
   "@removeEllipsis": {
     "description": "Konyak UI string: Remove..."
@@ -527,6 +539,10 @@
   "reinstallLinuxRuntime": "Reinstall Linux Runtime",
   "@reinstallLinuxRuntime": {
     "description": "Konyak UI string: Reinstall Linux Runtime"
+  },
+  "reinstallMacosRuntime": "Reinstall macOS Runtime",
+  "@reinstallMacosRuntime": {
+    "description": "macOS native menu item label for reinstalling the managed macOS runtime."
   },
   "removeEnvironmentVariable": "Remove environment variable",
   "@removeEnvironmentVariable": {
@@ -587,6 +603,10 @@
   "settingsEllipsisMenu": "Settings…",
   "@settingsEllipsisMenu": {
     "description": "Konyak UI string: Settings…"
+  },
+  "showAll": "Show All",
+  "@showAll": {
+    "description": "macOS native menu item label for showing all hidden applications."
   },
   "showDetail": "Show detail",
   "@showDetail": {

@@ -202,6 +202,12 @@ class KonyakLocalizationsJa extends KonyakLocalizations {
   String get highResolutionMode => '高解像度モード';
 
   @override
+  String get hideKonyak => 'Konyak を隠す';
+
+  @override
+  String get hideOthers => 'ほかを隠す';
+
+  @override
   String get incomplete => '未完了';
 
   @override
@@ -393,6 +399,9 @@ class KonyakLocalizationsJa extends KonyakLocalizations {
   String get programs => 'プログラム';
 
   @override
+  String get quitKonyak => 'Konyak を終了';
+
+  @override
   String get removeEllipsis => '削除';
 
   @override
@@ -409,6 +418,9 @@ class KonyakLocalizationsJa extends KonyakLocalizations {
 
   @override
   String get reinstallLinuxRuntime => 'Linux ランタイムを再インストール';
+
+  @override
+  String get reinstallMacosRuntime => 'macOS ランタイムを再インストール';
 
   @override
   String get removeEnvironmentVariable => '環境変数を削除';
@@ -454,6 +466,9 @@ class KonyakLocalizationsJa extends KonyakLocalizations {
 
   @override
   String get settingsEllipsisMenu => '設定';
+
+  @override
+  String get showAll => 'すべて表示';
 
   @override
   String get showDetail => '詳細を表示';

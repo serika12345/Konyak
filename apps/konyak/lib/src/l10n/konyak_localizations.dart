@@ -476,6 +476,18 @@ abstract class KonyakLocalizations {
   /// **'High Resolution Mode'**
   String get highResolutionMode;
 
+  /// macOS native menu item label for hiding Konyak.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide Konyak'**
+  String get hideKonyak;
+
+  /// macOS native menu item label for hiding other applications.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide Others'**
+  String get hideOthers;
+
   /// Konyak UI string: Incomplete
   ///
   /// In en, this message translates to:
@@ -854,6 +866,12 @@ abstract class KonyakLocalizations {
   /// **'Programs'**
   String get programs;
 
+  /// macOS native menu item label for quitting Konyak.
+  ///
+  /// In en, this message translates to:
+  /// **'Quit Konyak'**
+  String get quitKonyak;
+
   /// Konyak UI string: Remove...
   ///
   /// In en, this message translates to:
@@ -889,6 +907,12 @@ abstract class KonyakLocalizations {
   /// In en, this message translates to:
   /// **'Reinstall Linux Runtime'**
   String get reinstallLinuxRuntime;
+
+  /// macOS native menu item label for reinstalling the managed macOS runtime.
+  ///
+  /// In en, this message translates to:
+  /// **'Reinstall macOS Runtime'**
+  String get reinstallMacosRuntime;
 
   /// Konyak UI string: Remove environment variable
   ///
@@ -979,6 +1003,12 @@ abstract class KonyakLocalizations {
   /// In en, this message translates to:
   /// **'Settings…'**
   String get settingsEllipsisMenu;
+
+  /// macOS native menu item label for showing all hidden applications.
+  ///
+  /// In en, this message translates to:
+  /// **'Show All'**
+  String get showAll;
 
   /// Konyak UI string: Show detail
   ///

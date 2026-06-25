@@ -177,6 +177,7 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
   Widget build(BuildContext context) {
     return Stack(
       children: [
+        if (widget.platform.isMacOS) const _MacosNativeMenuLocalizer(),
         KonyakHome(
           platform: widget.platform,
           runtime: runtimeForPlatform(widget.platform, _knownRuntimes),

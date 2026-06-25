@@ -206,6 +206,12 @@ class KonyakLocalizationsEn extends KonyakLocalizations {
   String get highResolutionMode => 'High Resolution Mode';
 
   @override
+  String get hideKonyak => 'Hide Konyak';
+
+  @override
+  String get hideOthers => 'Hide Others';
+
+  @override
   String get incomplete => 'Incomplete';
 
   @override
@@ -399,6 +405,9 @@ class KonyakLocalizationsEn extends KonyakLocalizations {
   String get programs => 'Programs';
 
   @override
+  String get quitKonyak => 'Quit Konyak';
+
+  @override
   String get removeEllipsis => 'Remove...';
 
   @override
@@ -415,6 +424,9 @@ class KonyakLocalizationsEn extends KonyakLocalizations {
 
   @override
   String get reinstallLinuxRuntime => 'Reinstall Linux Runtime';
+
+  @override
+  String get reinstallMacosRuntime => 'Reinstall macOS Runtime';
 
   @override
   String get removeEnvironmentVariable => 'Remove environment variable';
@@ -460,6 +472,9 @@ class KonyakLocalizationsEn extends KonyakLocalizations {
 
   @override
   String get settingsEllipsisMenu => 'Settings…';
+
+  @override
+  String get showAll => 'Show All';
 
   @override
   String get showDetail => 'Show detail';

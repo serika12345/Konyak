@@ -13,30 +13,39 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-06-25 19:58 JST
+- Timestamp: 2026-06-25 20:38 JST
 - State: `completed`
 - Branch: `main`
-- Active work: fixing Konyak close behavior for Wine process termination.
-- Related TODO: none; user-reported process lifecycle defect.
-- Purpose: make the close-time Wine process termination setting reliable and
-  change its default to off.
-- Completed work: static inspection found that close-time termination was
-  launched with an unawaited Flutter CLI call; added failing coverage for the
-  default-off setting, macOS terminate-before-quit wait path, and native
-  terminate hook; changed Flutter and CLI setting defaults to off; added a
-  macOS `applicationShouldTerminate` bridge that waits for the Flutter
-  `terminateWineProcessesBeforeQuit` handler before allowing app termination.
-- Remaining work: none for this fix. Sub-agent isolation was not available for
-  this turn because delegation tools require an explicit user request;
-  investigation, implementation, and audit were kept separate in this handoff.
-- Next action: commit the fix if requested.
-- Verification: failing focused tests reproduced the old behavior for
-  `get-app-settings --json defaults Wine close termination off`, `macOS
-  terminate request waits for Wine process termination before replying`, and
-  `macOS app waits for Flutter close cleanup before terminating`; after the fix,
-  those focused tests passed, along with `enabled close behavior terminates Wine
-  processes on dispose` and `loads and sets system appearance through the app
-  settings contract`. Full verification passed with `just verify-governance`,
-  `just verify-safety`, `just flutter-format-check`, `just swift-lint`, `just
-  flutter-analyze`, `just flutter-test`, `just cli-test`, `just format-check`,
-  and `just lint`.
+- Active work: making the macOS native menu bar follow Konyak's in-app
+  language setting.
+- Related TODO: none; user-reported native UI localization gap.
+- Purpose: make the macOS menu bar update from Flutter localization strings
+  when Konyak's language is set to Japanese, instead of relying only on
+  AppKit's launch-time bundle localization.
+- Completed work: added `ja.lproj/MainMenu.strings`, registered Japanese in the
+  Xcode project localization list, added ARB-backed macOS native menu labels,
+  added a Flutter bridge that sends the current localized menu titles to
+  macOS, and added Swift handling that updates AppKit menu titles by their
+  existing action selectors.
+- Remaining work: none for Konyak-owned native menu items. The AppKit-injected
+  alternate `Quit and Keep Windows` item remained OS-language-controlled in the
+  smoke environment.
+- Next action: commit the completed macOS native menu localization fix when
+  requested.
+- Verification: focused widget coverage failed before implementation because
+  no `setMenuLocalization` payload was sent, then passed after the bridge was
+  added; focused macOS static coverage failed before Swift handling existed,
+  then passed after implementation; `flutter gen-l10n`; `plutil -lint
+  apps/konyak/macos/Runner/ja.lproj/MainMenu.strings
+  apps/konyak/macos/Runner.xcodeproj/project.pbxproj`; `flutter build macos
+  --debug`; a runtime smoke launched
+  `apps/konyak/build/macos/Build/Products/Debug/Konyak.app` with a temporary
+  fake CLI returning `languageMode: "ja"` and System Events reported
+  `menuBar=AppleKonyakファイル`, app menu items including `Konyak について`,
+  `設定`, `アップデートを確認`, `macOS ランタイムを再インストール`, `Konyak を隠す`,
+  `ほかを隠す`, `すべて表示`, `Konyak を終了`, and File menu item
+  `ボトルをインポート`; System Events also listed AppKit's alternate
+  `Quit and Keep Windows` item in English; `just verify-governance`; `just
+  verify-safety`;
+  `just flutter-format-check`; `just swift-lint`; `just flutter-analyze`;
+  `just flutter-test`; `just format-check`; `just lint`.

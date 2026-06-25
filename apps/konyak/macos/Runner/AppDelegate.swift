@@ -26,6 +26,19 @@ class AppDelegate: FlutterAppDelegate {
         let paths = pendingExecutableOpenPaths
         pendingExecutableOpenPaths.removeAll()
         result(paths)
+      case "setMenuLocalization":
+        guard let values = call.arguments as? [String: Any] else {
+          result(
+            FlutterError(
+              code: "invalid_menu_localization",
+              message: "Expected menu localization values.",
+              details: nil
+            )
+          )
+          return
+        }
+        applyMenuLocalization(values)
+        result(nil)
       case "visibleExternalWindowIds":
         result(
           visibleExternalWindowIds(
@@ -101,6 +114,118 @@ class AppDelegate: FlutterAppDelegate {
 
   override func applicationSupportsSecureRestorableState(_ app: NSApplication) -> Bool {
     return true
+  }
+
+  private func applyMenuLocalization(_ values: [String: Any]) {
+    guard let mainMenu = NSApp.mainMenu else {
+      return
+    }
+
+    if let appMenuTitle = title(from: values, key: "appMenu") {
+      mainMenu.items.first?.title = appMenuTitle
+      mainMenu.items.first?.submenu?.title = appMenuTitle
+    }
+    setMenuItemTitle(
+      in: mainMenu,
+      action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)),
+      title: title(from: values, key: "aboutKonyak")
+    )
+    setMenuItemTitle(
+      in: mainMenu,
+      action: #selector(openSettings(_:)),
+      title: title(from: values, key: "settings")
+    )
+    setMenuItemTitle(
+      in: mainMenu,
+      action: #selector(checkKonyakUpdates(_:)),
+      title: title(from: values, key: "checkForUpdates")
+    )
+    setMenuItemTitle(
+      in: mainMenu,
+      action: #selector(reinstallMacosRuntime(_:)),
+      title: title(from: values, key: "reinstallRuntime")
+    )
+    setMenuItemTitle(
+      in: mainMenu,
+      action: #selector(NSApplication.hide(_:)),
+      title: title(from: values, key: "hideKonyak")
+    )
+    setMenuItemTitle(
+      in: mainMenu,
+      action: #selector(NSApplication.hideOtherApplications(_:)),
+      title: title(from: values, key: "hideOthers")
+    )
+    setMenuItemTitle(
+      in: mainMenu,
+      action: #selector(NSApplication.unhideAllApplications(_:)),
+      title: title(from: values, key: "showAll")
+    )
+    setMenuItemTitle(
+      in: mainMenu,
+      action: #selector(NSApplication.terminate(_:)),
+      title: title(from: values, key: "quitKonyak")
+    )
+    if let fileTitle = title(from: values, key: "file") {
+      setSubmenuTitle(
+        in: mainMenu,
+        containing: #selector(importBottleArchive(_:)),
+        title: fileTitle
+      )
+    }
+    setMenuItemTitle(
+      in: mainMenu,
+      action: #selector(importBottleArchive(_:)),
+      title: title(from: values, key: "importBottle")
+    )
+  }
+
+  private func setMenuItemTitle(
+    in menu: NSMenu,
+    action: Selector,
+    title: String?
+  ) {
+    guard let title else {
+      return
+    }
+    menuItem(in: menu, action: action)?.title = title
+  }
+
+  private func setSubmenuTitle(
+    in menu: NSMenu,
+    containing action: Selector,
+    title: String
+  ) {
+    guard let submenu = menuItem(in: menu, action: action)?.menu else {
+      return
+    }
+
+    submenu.title = title
+    for item in menu.items where item.submenu === submenu {
+      item.title = title
+    }
+  }
+
+  private func menuItem(in menu: NSMenu, action: Selector) -> NSMenuItem? {
+    for item in menu.items {
+      if item.action == action {
+        return item
+      }
+      if let submenu = item.submenu,
+        let found = menuItem(in: submenu, action: action)
+      {
+        return found
+      }
+    }
+
+    return nil
+  }
+
+  private func title(from values: [String: Any], key: String) -> String? {
+    guard let value = values[key] as? String else {
+      return nil
+    }
+    let trimmedValue = value.trimmingCharacters(in: .whitespacesAndNewlines)
+    return trimmedValue.isEmpty ? nil : value
   }
 
   private func forwardExecutableOpenPaths(_ paths: [String]) {

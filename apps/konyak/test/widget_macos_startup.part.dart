@@ -324,6 +324,124 @@ void defineMacosStartupAndRuntimeWidgetTests() {
     ]);
   });
 
+  testWidgets(
+    'macOS native menu titles follow the loaded Japanese app language',
+    (WidgetTester tester) async {
+      final nativeMenuPayloads = <Map<String, Object?>>[];
+      const macosMenuChannel = MethodChannel('konyak/menu');
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        macosMenuChannel,
+        (call) async {
+          if (call.method == 'setMenuLocalization') {
+            nativeMenuPayloads.add(
+              Map<String, Object?>.from(
+                call.arguments as Map<Object?, Object?>,
+              ),
+            );
+          }
+          if (call.method == 'takePendingExecutableOpenPaths') {
+            return const <String>[];
+          }
+
+          return null;
+        },
+      );
+      addTearDown(() {
+        tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          macosMenuChannel,
+          null,
+        );
+      });
+
+      final runner = _QueuedProcessRunner([
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '{"schemaVersion":1,"bottles":[]}',
+          stderr: '',
+        ),
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+          {
+            "schemaVersion": 1,
+            "appSettings": {
+              "terminateWineProcessesOnClose": false,
+              "defaultBottlePath": "/Users/user/Library/Application Support/Konyak/Bottles",
+              "appearanceMode": "dark",
+              "languageMode": "ja",
+              "automaticallyCheckForKonyakUpdates": false,
+              "automaticallyCheckForWineUpdates": false
+            }
+          }
+        ''',
+          stderr: '',
+        ),
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+          {
+            "schemaVersion": 1,
+            "runtimes": [
+              {
+                "id": "konyak-macos-wine",
+                "name": "Konyak macOS Wine",
+                "platform": "macos",
+                "architecture": "x86_64",
+                "runnerKind": "macosWine",
+                "isBundled": false,
+                "isUpdateable": true,
+                "isInstalled": true
+              }
+            ]
+          }
+        ''',
+          stderr: '',
+        ),
+      ]);
+
+      await tester.pumpWidget(
+        _testKonyakApp(
+          cliClient: KonyakCliClient(
+            executable: 'konyak',
+            processRunner: runner,
+          ),
+          enableBackgroundServices: true,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(nativeMenuPayloads, isNotEmpty);
+      expect(nativeMenuPayloads.last, containsPair('appMenu', 'Konyak'));
+      expect(
+        nativeMenuPayloads.last,
+        containsPair('aboutKonyak', 'Konyak について'),
+      );
+      expect(nativeMenuPayloads.last, containsPair('settings', '設定'));
+      expect(
+        nativeMenuPayloads.last,
+        containsPair('checkForUpdates', 'アップデートを確認'),
+      );
+      expect(
+        nativeMenuPayloads.last,
+        containsPair('reinstallRuntime', 'macOS ランタイムを再インストール'),
+      );
+      expect(nativeMenuPayloads.last, containsPair('hideKonyak', 'Konyak を隠す'));
+      expect(nativeMenuPayloads.last, containsPair('hideOthers', 'ほかを隠す'));
+      expect(nativeMenuPayloads.last, containsPair('showAll', 'すべて表示'));
+      expect(nativeMenuPayloads.last, containsPair('quitKonyak', 'Konyak を終了'));
+      expect(nativeMenuPayloads.last, containsPair('file', 'ファイル'));
+      expect(
+        nativeMenuPayloads.last,
+        containsPair('importBottle', 'ボトルをインポート'),
+      );
+      expect(runner.argumentsLog, const [
+        ['list-bottles', '--json'],
+        ['get-app-settings', '--json'],
+        ['list-runtimes', '--json'],
+      ]);
+    },
+  );
+
   testWidgets('macOS startup drains pending native executable files', (
     WidgetTester tester,
   ) async {

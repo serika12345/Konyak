@@ -83,6 +83,51 @@ void main() {
     expect(appDelegate, contains('invokeMethod("checkKonyakUpdates"'));
   });
 
+  test('macOS native menu has Japanese localizations', () {
+    final project = File(
+      'macos/Runner.xcodeproj/project.pbxproj',
+    ).readAsStringSync();
+    final strings = File(
+      'macos/Runner/ja.lproj/MainMenu.strings',
+    ).readAsStringSync();
+
+    expect(project, contains('ja,'));
+    expect(project, contains('ja.lproj/MainMenu.strings'));
+    expect(project, contains('/* ja */'));
+
+    for (final localizedTitle in [
+      '"5kV-Vb-QxS.title" = "Konyak について";',
+      '"BOF-NM-1cW.title" = "設定";',
+      '"upd-Ko-nyk.title" = "アップデートを確認";',
+      '"rnt-rI-mac.title" = "macOS ランタイムを再インストール";',
+      '"Olw-nP-bQN.title" = "Konyak を隠す";',
+      '"Vdr-fp-XzO.title" = "ほかを隠す";',
+      '"Kd2-mp-pUS.title" = "すべて表示";',
+      '"4sb-4s-VLi.title" = "Konyak を終了";',
+      '"jJq-WE-ySy.title" = "ファイル";',
+      '"xmF-RB-jh8.title" = "ファイル";',
+      '"f0e-8R-7ve.title" = "ボトルをインポート";',
+    ]) {
+      expect(strings, contains(localizedTitle));
+    }
+  });
+
+  test('macOS app applies Flutter-provided native menu localizations', () {
+    final appDelegate = File(
+      'macos/Runner/AppDelegate.swift',
+    ).readAsStringSync();
+
+    expect(appDelegate, contains('case "setMenuLocalization":'));
+    expect(appDelegate, contains('applyMenuLocalization'));
+    expect(appDelegate, contains('title(from: values, key: "aboutKonyak")'));
+    expect(appDelegate, contains('#selector(openSettings'));
+    expect(appDelegate, contains('#selector(checkKonyakUpdates'));
+    expect(appDelegate, contains('#selector(reinstallMacosRuntime'));
+    expect(appDelegate, contains('#selector(importBottleArchive'));
+    expect(appDelegate, contains('#selector(NSApplication.hide'));
+    expect(appDelegate, contains('#selector(NSApplication.terminate'));
+  });
+
   test('macOS File menu exposes the archive import command', () {
     final xib = File('macos/Runner/Base.lproj/MainMenu.xib').readAsStringSync();
     final appDelegate = File(
