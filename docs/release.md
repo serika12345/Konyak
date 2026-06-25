@@ -134,9 +134,11 @@ Tasks: Run Task -> Konyak: Build Linux AppImage + Runtime Install Smoke
 ```
 
 CI keeps this coverage split into rerunnable pieces: the release workflow
-builds the Linux AppImage and runs the release metadata, AppRun, AppImage update
-handoff, and Linux desktop integration smokes, while the Linux Runtime CLI Smoke
-workflow verifies the remote runtime install path.
+first runs `just verify`, then builds the Linux AppImage and runs the release
+metadata, AppRun, AppImage update handoff, and Linux desktop integration smokes.
+GitHub Release asset publishing waits for the release workflow's verify,
+Linux, and macOS jobs to finish successfully. The Linux Runtime CLI Smoke
+workflow separately verifies the remote runtime install path.
 
 Outputs are written under `.dart_tool/konyak/release/linux`:
 

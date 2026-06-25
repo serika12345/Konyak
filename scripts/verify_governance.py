@@ -970,6 +970,12 @@ def main() -> None:
         "smoke_linux_pinned_launcher_integration.zsh",
     )
     for expected in [
+        "Verify release candidate",
+        "nix develop -c zsh -lc 'just verify'",
+        "- verify",
+    ]:
+        require_contains(".github/workflows/publish.yml", expected)
+    for expected in [
         "Linux Runtime CLI Smoke",
         "scripts/run_linux_runtime_cli_smoke.zsh",
         "scripts/run_linux_release_check.zsh",

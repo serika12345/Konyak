@@ -10,6 +10,19 @@ permissions:
   contents: write
 
 jobs:
+  verify:
+    name: Verify release candidate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: cachix/install-nix-action@v31
+
+      - name: Run repository checks before publishing
+        run: nix develop -c zsh -lc 'just verify'
+
   linux:
     name: Linux AppImage
     runs-on: ubuntu-24.04
@@ -93,6 +106,7 @@ jobs:
     name: Publish GitHub release
     runs-on: ubuntu-24.04
     needs:
+      - verify
       - linux
       - macos
     if: startsWith(github.ref, 'refs/tags/')

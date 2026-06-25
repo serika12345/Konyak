@@ -1,5 +1,6 @@
 #!/usr/bin/env zsh
 set -euo pipefail
+setopt typeset_silent
 
 repo_root="$(cd "$(dirname "$0")/.." && pwd -P)"
 cd "$repo_root"
@@ -15,7 +16,7 @@ if [[ -z "${IN_NIX_SHELL:-}" && -z "${KONYAK_NIX_RELEASE_APP:-}" ]]; then
   exit 69
 fi
 
-for command in dart flutter jq curl rsync sha256sum openssl base64; do
+for command in dart flutter jq curl rsync sha256sum openssl base64 ldd; do
   if ! command -v "$command" >/dev/null 2>&1; then
     echo "Missing required command: $command" >&2
     exit 69
@@ -85,9 +86,77 @@ print_flutter_linux_build_diagnostics() {
   echo "::endgroup::" >&2
 }
 
+linux_appimage_required_libraries=(
+  libfontconfig.so.1
+  libfreetype.so.6
+)
+
+linux_appimage_system_library_pattern='^(ld-linux|linux-vdso|libBrokenLocale|libanl|libc|libdl|libm|libmvec|libnsl|libpthread|libresolv|librt|libthread_db|libutil)\.so'
+
+is_linux_appimage_system_library() {
+  local library_name="$1"
+  [[ "$library_name" =~ "$linux_appimage_system_library_pattern" ]]
+}
+
+collect_linux_appimage_elf_libraries() {
+  local appdir_usr="$1"
+  shift
+  local library_dir="$appdir_usr/lib"
+  local -a queue
+  local -A visited
+
+  mkdir -p "$library_dir"
+  queue=("$@")
+
+  while (( ${#queue[@]} > 0 )); do
+    local elf_path="${queue[1]}"
+    queue[1]=()
+    if [[ -z "$elf_path" || -n "${visited[$elf_path]:-}" || ! -f "$elf_path" ]]; then
+      continue
+    fi
+    visited[$elf_path]=1
+
+    local -a dependency_paths
+    dependency_paths=("${(@f)$(
+      ldd "$elf_path" 2>/dev/null \
+        | awk '/=> \// { print $3 } /^\// { print $1 }'
+    )}")
+
+    local dependency_path
+    for dependency_path in "${dependency_paths[@]}"; do
+      if [[ -z "$dependency_path" || ! -f "$dependency_path" ]]; then
+        continue
+      fi
+
+      local library_name="${dependency_path:t}"
+      if is_linux_appimage_system_library "$library_name"; then
+        continue
+      fi
+
+      local bundled_library="$library_dir/$library_name"
+      if [[ ! -f "$bundled_library" ]]; then
+        cp -L "$dependency_path" "$bundled_library"
+        chmod 644 "$bundled_library"
+        queue+=("$bundled_library")
+      fi
+    done
+  done
+
+  local required_library
+  for required_library in "${linux_appimage_required_libraries[@]}"; do
+    if [[ ! -f "$library_dir/$required_library" ]]; then
+      echo "Linux AppImage missing required bundled library: $required_library" >&2
+      exit 70
+    fi
+  done
+}
+
 rm -rf "$stage_root" "$appdir_root"
 mkdir -p "$stage_root/bin" "$release_root" "$tool_cache_dir"
 rm -f \
+  "$release_root"/Konyak-*.AppImage(N) \
+  "$release_root"/Konyak-*.AppImage.sha256(N) \
+  "$release_root"/Konyak-*.release.json(N) \
   "$appimage_path" \
   "$checksum_path" \
   "$checksums_path" \
@@ -186,6 +255,11 @@ fi
 mkdir -p "$usr_root"
 rsync -a "$flutter_bundle"/ "$usr_root"/
 
+collect_linux_appimage_elf_libraries \
+  "$usr_root" \
+  "$usr_root/konyak" \
+  "$usr_root"/lib/*.so*(N)
+
 mkdir -p "$bundle_resources_dir/Licenses"
 cp "$cli_executable" "$bundle_resources_dir/konyak-cli"
 chmod 755 "$bundle_resources_dir/konyak-cli"
@@ -213,6 +287,7 @@ cat >"$appdir_root/AppRun" <<'EOF'
 set -euo pipefail
 
 appdir="$(cd "$(dirname "$0")" && pwd -P)"
+export LD_LIBRARY_PATH="$appdir/usr/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 export KONYAK_BUNDLE_RESOURCES="$appdir/usr/share/konyak"
 export KONYAK_APP_EXECUTABLE="$appdir/usr/konyak"
 export KONYAK_APP_PID="$$"

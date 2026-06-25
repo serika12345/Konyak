@@ -171,4 +171,22 @@ void main() {
     expect(script, isNot(contains(r'appimage-run "$tool_path"')));
     expect(flake, isNot(contains('appimage-run')));
   });
+
+  test('Linux AppImage bundles runtime loader libraries', () {
+    final buildScript = File(
+      '../../scripts/build_linux_release.zsh',
+    ).readAsStringSync();
+    final smokeScript = File(
+      '../../scripts/smoke_linux_appimage_apprun_env.zsh',
+    ).readAsStringSync();
+
+    expect(buildScript, contains('collect_linux_appimage_elf_libraries'));
+    expect(buildScript, contains('libfontconfig.so.1'));
+    expect(buildScript, contains('libfreetype.so.6'));
+    expect(buildScript, contains(r'"$release_root"/Konyak-*.AppImage(N)'));
+    expect(buildScript, contains(r'"$release_root"/Konyak-*.release.json(N)'));
+    expect(buildScript, contains(r'LD_LIBRARY_PATH="$appdir/usr/lib'));
+    expect(smokeScript, contains(r'ldd "$work_appdir/usr/konyak"'));
+    expect(smokeScript, contains('not found'));
+  });
 }

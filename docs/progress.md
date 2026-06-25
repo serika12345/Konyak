@@ -13,54 +13,46 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-06-25 21:52 JST
-- State: `completed`
+- Timestamp: 2026-06-25 23:06 JST
+- State: `in_progress`
 - Branch: `main`
-- Active work: releasing Konyak v1.0.3.
-- Related TODO: none; user-requested release.
-- Purpose: bump the packaged app version to 1.0.3, publish the release tag, and
-  keep GitHub Actions green before considering the release complete.
-- Completed work: bumped the Flutter package version to `1.0.3+4`, updated the
-  CLI packaged app version to `1.0.3`, updated focused app-update coverage, and
-  made the macOS release script remove stale versioned artifacts so local
-  release smokes stay repeatable after a version bump. Commit `edb3d60`
-  (`Prepare v1.0.3 release`) is pushed to `main`, and annotated tag `v1.0.3`
-  was pushed for the same commit. GitHub Actions then exposed two release
-  blockers: Ubuntu Flutter golden drift for Japanese text goldens and Linux
-  runtime CLI smoke falling back to the Nix dev-shell default local source
-  manifest path after `nix develop`. Commit `2d6b400` (`Fix v1.0.3 CI
-  checks`) fixed those blockers and the `v1.0.3` tag was moved to that release
-  commit.
-- Remaining work: none for v1.0.3.
-- Next action: resume from `docs/todo.md` for the next product task.
-- Verification: focused `dart test test/cli_contract_test.dart --plain-name
-  "app update checker defaults to the packaged Konyak app version"` failed as
-  expected before the version constant was updated, then passed after the bump;
-  focused `flutter test test/macos_window_metrics_test.dart --plain-name "macOS
-  release bundles zstd extraction support for runtime stacks"` failed before
-  the stale-artifact cleanup and passed after; `just verify-governance`; `just
-  verify-safety`; `just format-check`; `just lint`; `just cli-test`; `just
-  flutter-test`; `just macos-release`; final-release-app macOS smokes passed:
-  `smoke_macos_release_runtime_extraction.zsh`,
-  `smoke_macos_dmg_layout.zsh`, `smoke_macos_finder_integration.zsh` with the
-  PuTTY fixture, `smoke_macos_packaged_app_cli_bridge.zsh`, and
-  `smoke_macos_app_update_handoff.zsh`. Linux release verification is deferred
-  to GitHub Actions because the local host is macOS. After pushing
-  `edb3d60`, GitHub Actions showed `Konyak Verify` failing on Ubuntu with
-  `goldens/pin_program_action_ja.png` at 10.01% diff and
-  `goldens/app_settings_dialog_language.png` at 2.25% diff, and `Linux Runtime
-  CLI Smoke` failing because the dev-shell default
-  `.dart_tool/konyak/dev-runtime-source/linux-wine-stack/konyak-linux-wine-runtime-stack-source.json`
-  path was propagated to the resolver even when that default manifest did not
-  exist. CI fix verification performed: `just verify-governance` failed as
-  expected after adding the governance assertion, then passed after the Linux
-  smoke script fix; `zsh -n scripts/run_linux_runtime_cli_smoke.zsh
-  scripts/prepare_linux_dev_runtime_source.zsh
-  scripts/resolve_linux_runtime_source_manifest.zsh`; focused `flutter test
-  test/widget_test.dart --plain-name "Japanese pin program action keeps the
-  requested line break"`; focused `flutter test test/widget_test.dart
-  --plain-name "settings dialog language selector matches golden"`; `just
-  verify`; `git diff --check`. Final GitHub Actions for commit `2d6b400`
-  succeeded: `Konyak Verify` on `main`, `Konyak Pages` on `main`, `Linux
-  Runtime CLI Smoke` on `main`, `Konyak Verify` on `v1.0.3`, and `Konyak
-  Release` on `v1.0.3`.
+- Active work: updating the v1.0.3 release after fixing the Linux AppImage
+  startup failure.
+- Related TODO: Linux AppImage distribution reliability; user-reported defect;
+  v1.0.3 release update.
+- Purpose: ensure GitHub Release publishing is gated on the release workflow's
+  repository verification, include the Linux AppImage loader fix in v1.0.3, and
+  keep the release incomplete until GitHub Actions pass.
+- Completed work: reproduced the initial `permission denied` failure because
+  the downloaded AppImage was mode `644`; changed it to mode `755`; reproduced
+  the next startup failure through the AppImage execution path with
+  `libfontconfig.so.1` missing; confirmed `ldd` also reports
+  `libfontconfig.so.1` and `libfreetype.so.6` as unresolved from the extracted
+  AppImage. Added a focused Flutter test that fails until Linux AppImage builds
+  collect runtime loader libraries and the AppRun smoke checks unresolved
+  dependencies. Implemented AppDir ELF dependency collection in
+  `scripts/build_linux_release.zsh`, added `LD_LIBRARY_PATH` setup in AppRun,
+  and added an `ldd` unresolved-library check to
+  `scripts/smoke_linux_appimage_apprun_env.zsh`. Added a release workflow
+  `verify` job that runs `just verify`; `publish` now waits for `verify`,
+  `linux`, and `macos` jobs before uploading GitHub Release assets. Updated
+  release documentation to record that publishing is gated on release workflow
+  verification.
+- Remaining work: rerun local verification after the release workflow change,
+  commit and push to `main`, move the `v1.0.3` tag to the fixed commit, and wait
+  for the tag-triggered GitHub Actions release workflow to finish successfully.
+- Next action: run local governance and verification gates.
+- Verification: focused
+  `flutter test test/linux_window_chrome_test.dart --plain-name "Linux AppImage
+  bundles runtime loader libraries"` failed before the implementation because
+  the expected build/smoke coverage was absent, then passed after the change.
+  `zsh -n scripts/build_linux_release.zsh
+  scripts/smoke_linux_appimage_apprun_env.zsh`; `flutter test
+  test/linux_window_chrome_test.dart`; `just linux-release-check` passed and
+  produced
+  `.dart_tool/konyak/release/linux/Konyak-1.0.3-linux-x86_64.AppImage` at
+  38,544,576 bytes with bundled `libfontconfig.so.1` and `libfreetype.so.6`;
+  direct AppImage CLI execution with `--konyak-cli list-runtimes --json`
+  reached the CLI and returned schema version 1 after filtering the NixOS
+  `appimage-run` status line; `just verify-governance`; `just verify-safety`;
+  `just format-check`; `just lint`.

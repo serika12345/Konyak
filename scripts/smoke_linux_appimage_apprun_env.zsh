@@ -41,6 +41,7 @@ mkdir -p "$work_root"
 cp -R "$appdir" "$work_appdir"
 
 resources_dir="$work_appdir/usr/share/konyak"
+loader_report="$work_root/konyak-loader-ldd.txt"
 for required_file in \
   "$resources_dir/konyak-cli" \
   "$resources_dir/konyak-linux-wine-runtime-stack-source.json"; do
@@ -49,6 +50,14 @@ for required_file in \
     exit 1
   fi
 done
+
+LD_LIBRARY_PATH="$work_appdir/usr/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" \
+  ldd "$work_appdir/usr/konyak" >"$loader_report"
+if grep -F "not found" "$loader_report" >/dev/null; then
+  echo "Linux AppImage app loader has unresolved runtime libraries:" >&2
+  cat "$loader_report" >&2
+  exit 1
+fi
 
 sentinel_quoted="$(single_quote "$sentinel")"
 cat >"$work_appdir/usr/konyak" <<EOF
