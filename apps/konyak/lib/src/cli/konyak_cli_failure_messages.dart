@@ -53,7 +53,7 @@ String _deleteFailureMessage(ProcessRunResult result) {
     };
   }
 
-  return 'delete-bottle failed with exit code ${result.exitCode}.';
+  return _commandFailureMessage('delete-bottle', result);
 }
 
 String _programRunFailureMessage(ProcessRunResult result) {

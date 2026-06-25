@@ -1601,6 +1601,36 @@ void main() {
     },
   );
 
+  test('returns delete-bottle JSON error messages', () async {
+    final client = KonyakCliClient(
+      executable: 'konyak',
+      processRunner: _FakeProcessRunner(
+        result: const ProcessRunResult(
+          exitCode: 74,
+          stdout: '''
+            {
+              "schemaVersion": 1,
+              "error": {
+                "code": "bottleRepositoryError",
+                "message": "Unable to delete bottle files.",
+                "bottleId": "steam"
+              }
+            }
+          ''',
+          stderr: 'Permission denied',
+        ),
+      ),
+    );
+
+    final result = await client.deleteBottle('steam');
+
+    expect(result, isA<BottleDeleteLoadFailure>());
+    final failure = result as BottleDeleteLoadFailure;
+    expect(failure.exitCode, 74);
+    expect(failure.message, 'Unable to delete bottle files.');
+    expect(failure.diagnostic, 'Permission denied');
+  });
+
   test(
     'renames a bottle through the JSON rename-bottle CLI contract',
     () async {

@@ -953,4 +953,87 @@ void defineBottleManagementWidgetTests() {
     expect(find.text('Deleted Steam'), findsOneWidget);
     expect(find.text('No bottles yet'), findsOneWidget);
   });
+
+  testWidgets('delete bottle failure shows a retryable warning', (
+    WidgetTester tester,
+  ) async {
+    final runner = _QueuedProcessRunner([
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottles": [
+              {
+                "id": "steam",
+                "name": "Steam",
+                "path": "/home/user/.local/share/konyak/bottles/steam",
+                "windowsVersion": "win10"
+              }
+            ]
+          }
+        ''',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 74,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "error": {
+              "code": "bottleRepositoryError",
+              "message": "Unable to delete bottle files.",
+              "bottleId": "steam"
+            }
+          }
+        ''',
+        stderr: 'Permission denied',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "deletedBottle": {
+              "id": "steam",
+              "name": "Steam",
+              "path": "/home/user/.local/share/konyak/bottles/steam",
+              "windowsVersion": "win10"
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+    ]);
+
+    await tester.pumpWidget(
+      _testKonyakApp(
+        cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tapAt(
+      tester.getCenter(find.byKey(const ValueKey('sidebar-bottle-steam'))),
+      buttons: kSecondaryMouseButton,
+    );
+    await tester.pump();
+    await tester.tap(find.text('Remove...'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
+    await tester.pumpAndSettle();
+
+    expect(find.byIcon(Icons.warning_amber_outlined), findsOneWidget);
+    expect(find.text('Unable to delete bottle files.'), findsOneWidget);
+    expect(find.text('Retry'), findsOneWidget);
+    expect(find.byKey(const ValueKey('sidebar-bottle-steam')), findsOneWidget);
+
+    await tester.tap(find.text('Retry'));
+    await tester.pumpAndSettle();
+
+    expect(runner.argumentsLog[1], const ['delete-bottle', 'steam', '--json']);
+    expect(runner.argumentsLog[2], const ['delete-bottle', 'steam', '--json']);
+    expect(find.text('Deleted Steam'), findsOneWidget);
+    expect(find.text('No bottles yet'), findsOneWidget);
+  });
 }

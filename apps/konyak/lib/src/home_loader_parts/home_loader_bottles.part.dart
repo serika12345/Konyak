@@ -199,6 +199,10 @@ extension _KonyakHomeLoaderBottles on _KonyakHomeLoaderState {
       return;
     }
 
+    await _deleteBottleAfterConfirmation(bottle);
+  }
+
+  Future<void> _deleteBottleAfterConfirmation(BottleSummary bottle) async {
     final result = await widget.cliClient.deleteBottle(bottle.id);
 
     if (!mounted) {
@@ -212,10 +216,30 @@ extension _KonyakHomeLoaderBottles on _KonyakHomeLoaderState {
           _errorMessage = null;
         });
         _showSnackBar('Deleted ${bottle.name}');
-      case MissingBottleDelete(:final message) ||
-          BottleDeleteLoadFailure(:final message):
+      case MissingBottleDelete(:final message):
         _showSnackBar(message);
+      case BottleDeleteLoadFailure(:final message):
+        _showBottleDeleteFailureSnackBar(bottle: bottle, message: message);
     }
+  }
+
+  void _showBottleDeleteFailureSnackBar({
+    required BottleSummary bottle,
+    required String message,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    _showWarningSnackBar(
+      message,
+      action: SnackBarAction(
+        label: 'Retry',
+        textColor: colorScheme.onErrorContainer,
+        onPressed: () {
+          final currentBottle =
+              findSelectedBottle(_bottles, bottle.id) ?? bottle;
+          unawaited(_deleteBottleAfterConfirmation(currentBottle));
+        },
+      ),
+    );
   }
 
   Future<void> _renameBottle(BottleSummary bottle) async {

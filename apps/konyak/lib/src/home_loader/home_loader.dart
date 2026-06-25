@@ -149,6 +149,31 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
     ).showSnackBar(SnackBar(content: Text(message)));
   }
 
+  void _showWarningSnackBar(String message, {SnackBarAction? action}) {
+    final colorScheme = Theme.of(context).colorScheme;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: colorScheme.errorContainer,
+        content: Row(
+          children: [
+            Icon(
+              Icons.warning_amber_outlined,
+              color: colorScheme.onErrorContainer,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                message,
+                style: TextStyle(color: colorScheme.onErrorContainer),
+              ),
+            ),
+          ],
+        ),
+        action: action,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Stack(
