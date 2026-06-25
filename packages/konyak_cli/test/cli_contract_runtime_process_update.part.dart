@@ -2265,6 +2265,32 @@ void defineRuntimeProcessAndUpdateContractTests() {
     expect(completed.update.latestVersion.toNullable(), 'v1.0.0');
   });
 
+  test('app update checker defaults to the packaged Konyak app version', () {
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-app-version-test-',
+    );
+    addTearDown(() {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    });
+    final metadataFile =
+        File(_joinTestPath(tempDirectory.path, const ['release.json']))
+          ..writeAsStringSync(
+            jsonEncode(<String, Object?>{'tag_name': 'v1.0.1', 'assets': []}),
+          );
+    final checker = DartIoAppUpdateChecker.fromEnvironment(
+      HostEnvironment({'KONYAK_APP_VERSION_URL': metadataFile.uri.toString()}),
+    );
+
+    final result = checker.check();
+
+    expect(result, isA<AppUpdateCheckCompleted>());
+    final completed = result as AppUpdateCheckCompleted;
+    expect(completed.update.status, 'current');
+    expect(completed.update.currentVersion.toNullable(), '1.0.1');
+  });
+
   test('app update checker selects the macOS archive from shared releases', () {
     final metadataFile = _writeMultiPlatformAppReleaseMetadata();
     final checker = DartIoAppUpdateChecker(

@@ -157,6 +157,41 @@ void main() {
     expect(project, contains('PortableExecutableIconExtractor.swift'));
     expect(project, contains('PeResourceReader.swift'));
     expect(project, contains('target = 4B4B52010000000000000001'));
+    const extensionConfigurationIds = <String, String>{
+      'Debug': '4B4B52100000000000000001',
+      'Release': '4B4B52110000000000000001',
+      'Profile': '4B4B52120000000000000001',
+    };
+    for (final entry in extensionConfigurationIds.entries) {
+      final configurationStart = project.indexOf(
+        '${entry.value} /* ${entry.key} */ = {',
+      );
+      expect(
+        configurationStart,
+        greaterThanOrEqualTo(0),
+        reason: 'missing ${entry.key} extension configuration',
+      );
+      final buildSettingsStart = project.indexOf(
+        'buildSettings = {',
+        configurationStart,
+      );
+      final buildSettingsEnd = project.indexOf(
+        '\n\t\t\t};',
+        buildSettingsStart,
+      );
+      final buildSettings = project.substring(
+        buildSettingsStart,
+        buildSettingsEnd,
+      );
+      expect(
+        buildSettings,
+        contains('INFOPLIST_FILE = ExecutableThumbnail/Info.plist;'),
+      );
+      expect(
+        buildSettings,
+        contains('CURRENT_PROJECT_VERSION = "\$(FLUTTER_BUILD_NUMBER)";'),
+      );
+    }
 
     expect(
       extensionInfoPlist,

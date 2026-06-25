@@ -11,6 +11,84 @@ handoff notes.
 
 ### Latest Update
 
+- Timestamp: 2026-06-25 13:21 JST
+- State: `in_progress`
+- Branch: `main`
+- Related work: v1.0.1 macOS/Linux release
+- Purpose: publish v1.0.1 with the latest committed documentation and UI
+  feedback fixes.
+- Completed:
+  - Read the current progress/TODO state and release documentation.
+  - Confirmed local `main` matches `origin/main` at
+    `90ba758 docs: refresh runtime documentation state` before release work.
+  - Confirmed there is no local or remote `v1.0.1` tag and no existing GitHub
+    `v1.0.1` release.
+  - Identified release version sources:
+    `apps/konyak/pubspec.yaml` for package artifacts and
+    `packages/konyak_cli/lib/src/shared/model_constants.dart` for update
+    checks and CLI-generated metadata.
+  - Bumped the Flutter package version to `1.0.1+2` and the CLI/update-checker
+    app version to `1.0.1`.
+  - Added CLI coverage proving the packaged default app version reports
+    `current` against a `v1.0.1` release tag.
+  - Investigation workstream: local `just macos-release` initially completed
+    but warned that the Quick Look extension `CFBundleVersion` was still `1`
+    while the containing app build number was `2`.
+  - Implementation workstream: changed the Quick Look extension target to use
+    `$(FLUTTER_BUILD_NUMBER)` for Debug, Release, and Profile builds.
+  - Audit workstream: added macOS project coverage for the extension build
+    number contract; the focused test failed before the project change and
+    passed after it.
+  - Audit workstream: rebuilt the local macOS release artifact, confirmed the
+    app and extension both report `CFBundleShortVersionString` `1.0.1` and
+    `CFBundleVersion` `2`, and verified the generated macOS checksums.
+  - Audit workstream: local macOS runtime extraction, packaged CLI bridge, app
+    update handoff, and PuTTY-backed Finder integration smokes passed against
+    `.dart_tool/konyak/release/macos/Konyak.app`.
+  - Sub-agent limitation: available sub-agent tooling requires an explicit user
+    delegation request, so release investigation, implementation, and audit are
+    kept separated in this progress entry instead of spawned agents.
+- Remaining:
+  - Commit and push the v1.0.1 release-prep changes.
+  - Run the GitHub release workflow manually on `main` as preflight.
+  - Create and push the `v1.0.1` tag only after preflight passes.
+  - Monitor the tag-triggered publish workflow and audit the published release
+    artifacts.
+- Next: commit and push the local release-prep changes, then start the GitHub
+  release workflow preflight.
+- Verification:
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --plain-name "app update checker defaults to the packaged Konyak app version"'`:
+    failed before the version bump and passed after it.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_test.dart --name "app update checker|check-app-update|install-app-update"'`:
+    passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/macos_window_metrics_test.dart --plain-name "macOS app bundles a Quick Look thumbnail extension for EXE files"'`:
+    failed before the extension build-setting change and passed after it.
+  - `nix develop -c zsh -lc 'just macos-release'`: passed and generated
+    `Konyak-1.0.1-macos-arm64.zip`; the extension build-number mismatch
+    warning was gone after the project change.
+  - `nix develop -c zsh -lc 'plutil -p .dart_tool/konyak/release/macos/Konyak.app/Contents/Info.plist | rg "CFBundleShortVersionString|CFBundleVersion"'`:
+    passed and reported `1.0.1` / `2`.
+  - `nix develop -c zsh -lc 'plutil -p .dart_tool/konyak/release/macos/Konyak.app/Contents/PlugIns/ExecutableThumbnail.appex/Contents/Info.plist | rg "CFBundleShortVersionString|CFBundleVersion"'`:
+    passed and reported `1.0.1` / `2`.
+  - `nix develop -c zsh -lc 'cd .dart_tool/konyak/release/macos && shasum -a 256 -c Konyak-1.0.1-macos-arm64.zip.sha256 && shasum -a 256 -c SHA256SUMS'`:
+    passed.
+  - `nix develop -c zsh -lc 'just smoke-macos-runtime-install'`: passed.
+  - `nix develop -c zsh -lc './scripts/smoke_macos_packaged_app_cli_bridge.zsh .dart_tool/konyak/release/macos/Konyak.app'`:
+    passed.
+  - `nix develop -c zsh -lc './scripts/smoke_macos_app_update_handoff.zsh .dart_tool/konyak/release/macos/Konyak.app'`:
+    passed.
+  - `nix develop -c zsh -lc 'KONYAK_MACOS_FINDER_SMOKE_APP=.dart_tool/konyak/release/macos/Konyak.app just smoke-macos-finder-putty'`:
+    passed.
+  - `nix develop -c zsh -lc 'just verify-governance'`: passed.
+  - `nix develop -c zsh -lc 'just verify-safety'`: passed.
+  - `nix develop -c zsh -lc 'just format-check'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-format-check'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-analyze'`: passed.
+  - `nix develop -c zsh -lc 'just flutter-test'`: passed.
+  - `nix develop -c zsh -lc 'just cli-test'`: passed.
+  - `nix develop -c zsh -lc 'just lint'`: passed.
+  - `git diff --check`: passed.
+
 - Timestamp: 2026-06-25 12:57 JST
 - State: `completed`
 - Branch: `main`
