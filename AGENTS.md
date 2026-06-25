@@ -204,19 +204,22 @@ packaging work, or major repository-policy work, read the relevant entries in
 
 Use these files for different responsibilities:
 
-- `docs/todo.md` tracks implementation milestones, deferred work, and large
-  product goals.
-- `docs/progress.md` tracks completed milestones, current active work, why that
-  work is being done, verification already performed, remaining work, and the
-  next action needed to continue after context is lost.
+- `docs/todo.md` tracks remaining implementation milestones, deferred work,
+  and large product goals.
+- `docs/progress.md` tracks only current active work, why that work is being
+  done, verification already performed for the active handoff, remaining work,
+  and the next action needed to continue after context is lost.
 - Architecture documents such as `docs/flutter-architecture-plan.md` track
   stable design decisions and system shape.
 
 Project progress must be understandable from documentation alone. Do not rely
 on chat history or git history as the only record of what is currently being
 advanced or why.
+Fully completed work should be removed from roadmap and progress documents
+after verification; the durable record for completed work is the commit,
+release, test, or artifact that completed it.
 
-When starting, pausing, blocking, superseding, or completing TODO-backed
+When starting, pausing, blocking, superseding, or handing off TODO-backed
 implementation, refactoring, architecture work, runtime/submodule work, or
 major documentation/policy work, update the timestamped
 `Current Work Snapshot` in `docs/progress.md` in the same change. Include:
@@ -239,14 +242,13 @@ When a change completes, invalidates, or materially changes a roadmap item,
 update the appropriate document in the same change:
 
 - implementation progress belongs in `docs/todo.md`
-- current state, completed milestone summaries, and handoff notes belong in
-  `docs/progress.md`
+- current state and handoff notes belong in `docs/progress.md`
 - durable architecture decisions belong in the relevant design document
 
 Do not mark a TODO item complete until the implementation, tests or fixtures,
 and required verification have actually been completed. Do not leave a TODO
 item marked incomplete when the implementation and verification for that item
-are complete.
+are complete; remove that completed item from `docs/todo.md` instead.
 
 When the user asks to continue work without naming a specific task, use
 `docs/progress.md` first, then `docs/todo.md`, to identify the safest next

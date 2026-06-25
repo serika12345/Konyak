@@ -3,15 +3,13 @@
 This document defines the first Konyak design for a macOS bottle setting that
 mirrors CrossOver's DLSS powered by MetalFX behavior.
 
-## Status
+## Scope
 
-- State: implemented for settings, contracts, UI, and launch-environment
-  planning; rendered DLSS/MetalFX proof remains a user-provided/local runtime
-  verification item.
 - Runtime target: arm64 macOS running the Konyak-managed CrossOver-derived Wine
   runtime
 - UI target: Bottle Configuration, macOS-only Metal graphics controls
-- Implementation status: CLI/Flutter contracts and CI-facing tests implemented
+- Open verification: rendered DLSS/MetalFX proof remains a user-provided or
+  local runtime verification item.
 
 ## External Behavior To Match
 
@@ -66,7 +64,7 @@ MetalFX, or NVIDIA shim payloads.
 
 ## Product Contract
 
-Add a macOS-only bottle runtime setting:
+MacOS bottles support this runtime setting:
 
 - Domain name: `dlssMetalFx`
 - User-facing label: `DLSS / MetalFX`
@@ -127,16 +125,16 @@ The run planner must treat the setting as backend-specific launch state:
   - preserve the persisted value so switching back to D3DMetal/DXMT restores
     the user's preference.
 
-The implemented launch signals are sourced from the references above. Do not add
-new backend variables, registry keys, or payload mutation paths without updating
+The launch signals are sourced from the references above. Do not add new
+backend variables, registry keys, or payload mutation paths without updating
 this table and the nearby code references.
 
 ## Runtime Proof And CI Limits
 
-The current implementation claims only Konyak setting persistence, UI exposure,
-and public run-plan environment injection. It does not claim that an arbitrary
-game will render through MetalFX, because that requires a DLSS-capable Windows
-program and the selected runtime payloads.
+Konyak currently claims setting persistence, UI exposure, and public run-plan
+environment injection. It does not claim that an arbitrary game will render
+through MetalFX, because that requires a DLSS-capable Windows program and the
+selected runtime payloads.
 
 When a redistributable or user-provided DLSS-capable test program is available,
 capture dynamic evidence through Konyak's public execution path:
@@ -156,25 +154,6 @@ demonstrate that enabling the setting changes the relevant runtime state
 compared with the setting disabled. If no redistributable DLSS-capable program
 can be used in CI, record the local-only proof and document the CI limitation in
 `docs/progress.md`.
-
-## Testing Plan
-
-Add tests before implementation:
-
-- CLI contract:
-  - legacy runtime settings default `dlssMetalFx` to `false`;
-  - `set-runtime-settings --json` persists and emits `dlssMetalFx`;
-  - D3DMetal run plan applies the proven DLSS/MetalFX signal only when enabled;
-  - DXMT run plan applies the proven DLSS/MetalFX signal only when enabled;
-  - DXVK/Linux run plans ignore the setting.
-- Flutter contract:
-  - bottle JSON parsing requires/handles `dlssMetalFx` according to the CLI
-    compatibility decision;
-  - toggling the control sends `dlssMetalFx` through `set-runtime-settings`.
-- Widget:
-  - Metal section exposes the control on macOS when D3DMetal/DXMT is available;
-  - Linux and unsupported backend views do not expose it;
-  - pending-state behavior matches existing runtime toggles.
 
 ## CI And Runtime Workflow
 

@@ -1,14 +1,15 @@
 # Flutter Architecture Plan
 
-This document records the current architecture and implementation state. For
-the actionable backlog, use `docs/todo.md`.
+This document records stable architecture decisions and the current system
+shape. For the actionable backlog, use `docs/todo.md`.
 
 ## Decisions
 
 - Product name: Konyak.
 - Project identity: Konyak owns its runtime, bottle metadata, repository
   identity, and build system.
-- Repository layout: add the Flutter app as `apps/konyak`.
+- Repository layout: the Flutter app lives in `apps/konyak`, and the Dart CLI
+  backend lives in `packages/konyak_cli`.
 - UI strategy: Flutter desktop, with arm64 macOS first and x86_64 Linux second.
 - Backend strategy: Flutter calls a CLI backend. Keep the process boundary
   simple, testable, and JSON-based.
@@ -31,142 +32,55 @@ the actionable backlog, use `docs/todo.md`.
 
 ## Current State
 
-- The Flutter application lives in `apps/konyak`.
-- The Dart CLI backend lives in `packages/konyak_cli`.
 - Flutter consumes the CLI through versioned JSON stdout and does not parse
   human-readable output.
-- Konyak bottle records are stored as versioned JSON metadata. Live external
-  plist metadata is outside the supported data model.
-- macOS support uses Konyak-managed Wine behind the CLI boundary.
-- Runtime stack construction can layer component archives or consume
-  checksum-validated source manifests on macOS and Linux.
+- Konyak bottle records are stored as versioned JSON metadata.
+- Runtime stack construction can consume checksum-validated source manifests on
+  macOS and Linux.
 - Default macOS and Linux runtime releases are resolved through repository
-  release locators, and packaged Linux builds bundle the selected runtime
-  source manifest, signature, and public key when available.
-- App settings, runtime update checks, and packaged app update handoffs run
-  through the CLI boundary.
+  release locators.
+- Packaged Linux builds bundle the selected runtime source manifest, signature,
+  and public key when available.
+- App settings, runtime update checks, packaged app update handoffs, bottle
+  utilities, Start Menu shortcuts, PE metadata, icon extraction, and process
+  management all run through the CLI boundary.
+- macOS uses the Konyak-managed runtime stack and launches Windows programs
+  through the CLI-owned Wine plan. Linux uses the Linux Wine/Proton path and
+  remains Vulkan-oriented.
+- macOS runtime components may be layered from source manifests or supplied as
+  complete runtime-owner-produced stacks. GPTK/D3DMetal stays macOS-only and
+  behind the platform/runtime service boundary.
 
-## Phase 1: Guardrails
+## Runtime Management
 
-- Completed: add `AGENTS.md` as the repository contract.
-- Completed: add `flake.nix` and `.envrc`.
-- Completed: add `justfile` commands for verification.
-- Completed: add a governance verifier so rules are checked mechanically.
-- Completed: keep repository metadata, CI, and application code aligned with
-  the Flutter app and Dart CLI source of truth.
+- Runtime source manifests are the preferred acquisition contract, and the
+  runtime stack manifest remains the stable UI-facing runtime state concept.
+- Runtime validation must prove stack completeness, not only loader startup.
+- Runtime installers must keep download, checksum verification, extraction,
+  staging, validation, and root replacement behind explicit I/O boundaries.
+- macOS and Linux runtime differences belong in platform specifications:
+  runtime id, stack id, required paths, optional components, normalization
+  rules, and default source selection.
+- The UI may show runtime capability state, but platform-specific runtime
+  behavior stays behind CLI/backend services.
+- Packaged app update handoff uses macOS DMG artifacts and Linux AppImage
+  artifacts through `install-app-update --json`. Legacy archive compatibility
+  remains only as an explicit fallback until it is removed from the backlog.
 
-## Phase 2: Flutter Shell
+## Remaining Architecture Work
 
-- Completed: create `apps/konyak`.
-- Completed: enable Linux and macOS desktop targets.
-- Completed: add strict analysis options before adding feature code.
-- Completed: add widget and contract tests for user-visible behavior.
-- Completed: implement the Konyak bottle shell, settings, dialogs, pinned
-  programs, installed programs, and runtime actions.
-
-## Phase 3: CLI Contract
-
-- Completed: define a versioned JSON command contract.
-- Completed: add command tests before implementation.
-- Completed: implement read-only commands first:
-  - list bottles
-  - inspect bottle
-  - list known runtimes
-- Completed: keep human output separate from machine output.
-
-## Phase 4: MVP Behavior
-
-- Create bottle.
-- List bottles.
-- Delete bottle.
-- Run EXE, MSI, and BAT files.
-- Change Windows version.
-- Change Konyak runtime settings from a separate Bottle Configuration screen:
-  registry-backed Windows Version, High Resolution Mode backed by
-  `RetinaMode`, Enhanced Sync, Windows DPI backed by `LogPixels`, AVX
-  advertising, a Graphics Backend dropdown, DXVK HUD, Metal HUD, Metal Trace,
-  and D3DMetal/DXR.
-- Run bottle utility commands such as Wine configuration, Registry Editor, and
-  Control Panel through the same logged CLI execution boundary.
-- Open bottle locations such as the root folder and `drive_c` through an
-  explicit host path-opening boundary.
-- Discover Start Menu `.lnk` shortcuts through `list-bottle-programs --json`
-  and treat `.lnk` files as runnable program inputs.
-- Show logs.
-
-macOS run support uses `wineloader start /unix` through a Konyak-managed macOS
-Wine runtime, with macOS Wine environment construction kept behind the
-CLI/backend platform service. Linux run support uses the Linux Wine/Proton path
-and remains Vulkan-oriented.
-
-macOS bottle creation, deletion, Windows-version updates, and runtime-setting
-updates write Konyak `metadata.json` records under the configured bottle
-directory while the runtime backend continues to own process execution.
-
-The macOS target is a Konyak-managed runtime stack assembled from explicit,
-versioned components. The runtime may come from Konyak-built or third-party
-components as long as the resulting stack exposes the required operational
-capabilities: `wineloader`, Wine32-on-64 where needed, DXVK-macOS, MoltenVK,
-GStreamer support, wine-mono, wine-gecko, winetricks, Rosetta-aware x86
-execution, and the GPTK/D3DMetal files when the selected macOS runtime package
-provides them.
-Konyak treats GPTK/D3DMetal like Whisky treats D3DMetal: it is part of the
-macOS runtime package, not a separate in-app installation flow. The CLI still
-validates the expected files when present and the Flutter UI only enables DXR
-when the `gptk-d3dmetal` runtime component is installed. GPTK/D3DMetal must
-stay macOS-only and behind the platform/runtime service boundary.
-
-Winetricks, Start Menu shortcuts, PE metadata, and icon extraction now flow
-through the same CLI and Flutter boundaries as program launching. Linux
-managed runtime stacks can now layer `vkd3d-proton` through component archives
-or source manifests. The process manager UI now lists Wine processes with
-executable metadata and terminates individual processes through the same CLI
-boundary.
-
-## Phase 5: Runtime Management
-
-- Add runtime channel metadata.
-- Expose a versioned runtime stack manifest through the CLI so the UI can see
-  which macOS stack components are installed or missing.
-- Expose runtime update checks through
-  `check-runtime-update <runtime-id> --json`.
-- Validate macOS runtime loader prerequisites through
-  `validate-runtime <runtime-id> --json`, including dylib search paths and a
-  `wineloader --version` loader probe.
-- Validate host setup prerequisites through `check-macos-setup --json`,
-  including Rosetta availability and Konyak-managed runtime installation
-  status.
-- Download and verify Wine/Proton runtime archives.
-- Install runtimes into platform-specific Konyak data directories.
-- Add update checks and rollback-safe installation.
-
-Runtime management is in place for managed macOS and Linux stack installs. The
-macOS runtime installer can construct a stack by layering separate component
-archives onto a Wine archive, or by resolving a checksum-validated source
-manifest that lists the component archive URLs and versions. The default macOS
-release uses the source-manifest path and points component records at the
-single assembled runtime stack archive.
-
-The Linux runtime installer supports the same source-manifest pattern for
-managed Wine/Proton stacks with `winetricks`, `wine-mono`, `dxvk`, and
-`vkd3d-proton` components. `runtime/linux-wine-release.json` points at the
-default `linux-wine-runtime-stack-0.1.0` release, and AppImage builds bundle
-the resolved manifest, detached signature, and public key when they are
-published by the selected runtime release.
-
-Packaged app update handoff is implemented for macOS DMG artifacts and Linux
-AppImage artifacts through `install-app-update --json`; the macOS handoff still
-accepts legacy zip artifacts so already-published update archives can be
-installed when explicitly supplied. Remaining runtime and update work is
-limited to explicit hardening: Linux runtime-owner build/check workflows before
-the next runtime version bump, rollback/recovery policy for updates, and
-eventual removal of legacy archive/Wine-only fallback paths once the
-source-manifest route is the only supported runtime acquisition contract.
-
-## Phase 6: Platform Expansion
-
-- arm64 macOS is the first complete target.
-- x86_64 Linux is the second complete target and reuses the UI and CLI boundary
-  while keeping Linux-specific runtime behavior behind platform services.
-- Linux ARM64 remains a separate research track because x86 Windows execution
-  needs FEX, Box64, QEMU, or another translation strategy.
+- Capture end-to-end DLSS/MetalFX rendering proof through the public Konyak
+  execution path.
+- Split remaining large Flutter UI files after backend boundaries are small
+  enough that widgets can stay focused on rendering and event wiring.
+- Research Linux ARM64 Windows execution separately from the current x86_64
+  Linux target because x86 Windows execution needs FEX, Box64, QEMU, or another
+  translation strategy.
+- Design Linux executable thumbnail support for sandboxed file managers without
+  mutating `/nix/store` or creating Nix GC roots on app startup.
+- Choose an E2E test target that balances behavioral confidence, runtime cost,
+  and flake rate.
+- Harden Linux runtime packaging-owner build/check workflows before the next
+  runtime version bump.
+- Remove legacy archive/Wine-only compatibility fallback after source-manifest
+  runtime acquisition is the only supported contract.

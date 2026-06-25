@@ -13,39 +13,6 @@ instead of proving the behavior Konyak actually needs.
 - Out of scope: optional UI-only degraded metadata such as missing executable
   icons, unless it hides runtime or installer failures.
 
-## Repair Status
-
-- Repair pass: 2026-06-14
-- Status: completed for the root issues listed in the repair order.
-- Verification:
-  - CLI contract tests cover prefix initialization without `mscoree,mshtml=`,
-    exact macOS Mono/Gecko payload completeness, install completion, validation
-    stack checks, and macOS release source-manifest requirements.
-  - `scripts/run_macos_runtime_cli_smoke.zsh` passed through the public CLI
-    route against the rebuilt local runtime stack.
-  - Runtime submodule checks passed for addon payload checks, Wine32-on-64,
-    GUI launch, DXVK, DXMT, vkd3d, GStreamer, and backend device smokes.
-- Follow-up repair pass: 2026-06-15
-  - Removed parent-side winetricks script download/list-all fallback from the CLI
-    execution path. Missing macOS `verbs.txt` or Linux managed `winetricks` now
-    reports runtime incompleteness instead of mutating the runtime from the
-    parent repository.
-  - Removed parent-side local macOS component generation from
-    `scripts/prepare_macos_dev_runtime_stack.zsh`; the helper now resolves only
-    complete manifests produced by `runtime/konyak-macos-runtime`.
-  - Removed parent-side Linux development component generation from
-    `scripts/prepare_linux_dev_runtime_source.zsh`; Linux development now
-    requires an explicit complete runtime source manifest instead of
-    repackaging winetricks, Mono, DXVK, or vkd3d-proton in the parent
-    repository.
-  - Added runtime-submodule addon version verification that extracts Wine's
-    embedded Mono/Gecko expectations from the CrossOver source archive and
-    compares them with packaged addon component constants.
-  - Renamed parent raw Wine/Vulkan just targets as low-level diagnostics and
-    added governance checks so they cannot be mistaken for app behavior gates.
-  - Split Linux runtime-settings environment generation from macOS-only
-    D3DMetal/Metal/Rosetta variables.
-
 ## Inventory
 
 ### P0: Prefix initialization suppresses Wine addon probing
@@ -69,7 +36,6 @@ instead of proving the behavior Konyak actually needs.
   - Package the Wine-expected Mono and Gecko payloads and let Wine find them via
     `WINEDATADIR`.
   - Add failing tests first that reject `mscoree,mshtml=` in prefix init plans.
-  - Completed in the 2026-06-14 repair pass.
 
 ### P0: Wine Mono payload version is not tied to Wine's embedded expectation
 
@@ -89,8 +55,6 @@ instead of proving the behavior Konyak actually needs.
   - Package `wine-mono-${expected}-x86.msi` and the expected Gecko MSI payloads.
   - Add runtime-submodule checks that fail when packaged addon file names or
     hashes do not match Wine's embedded constants.
-  - Completed by packaging `wine-mono-10.4.1-x86.msi` and
-    `wine-gecko-2.47.4-{x86,x86_64}.msi` with checksum checks.
 
 ### P0: Runtime completeness accepts shallow addon markers
 
@@ -107,7 +71,6 @@ instead of proving the behavior Konyak actually needs.
     and checksums where the runtime owns the payload.
   - Add a required `wine-gecko` component.
   - Update fixtures to mirror real payload names, not marker placeholders.
-  - Completed in parent runtime contracts and CLI fixtures.
 
 ### P0: Runtime install success does not require stack completeness
 
@@ -124,7 +87,6 @@ instead of proving the behavior Konyak actually needs.
     complete after normalization.
   - Component-only or repair operations may be partial only when explicitly
     named as such in the operation and result.
-  - Completed for macOS archive/source-manifest installs.
 
 ### P1: `validate-runtime` only proves loader startup
 
@@ -140,7 +102,6 @@ instead of proving the behavior Konyak actually needs.
   - Add a separate application-owned prefix smoke that creates a fresh bottle
     without addon probing suppression.
   - Keep low-level loader checks, but label them as loader checks only.
-  - Completed with `runtime-stack` validation and CLI smoke coverage.
 
 ### P1: Release metadata falls back too silently
 
@@ -163,8 +124,6 @@ instead of proving the behavior Konyak actually needs.
     failed update check.
   - Select release assets by expected file name, not by first matching
     extension.
-  - Completed for advertised `.release.json` fetch failures and macOS runtime
-    update checks without source manifests.
 
 ### P1: Backend smoke copies override DLLs into the prefix
 
@@ -181,8 +140,6 @@ instead of proving the behavior Konyak actually needs.
     copying backend DLLs into the prefix.
   - It must not use `mscoree,mshtml=` or claim to prove Wine addon/prefix
     initialization behavior.
-  - Completed by removing addon probing suppression and removing backend DLL
-    prefix copies from the runtime smoke.
 
 ### P1: Raw Wine smoke scripts can be mistaken for app behavior proof
 
@@ -197,36 +154,3 @@ instead of proving the behavior Konyak actually needs.
   - Rename or document raw Wine smokes as low-level runtime diagnostics.
   - App behavior gates must call the CLI path or a maintained script that wraps
     that path.
-  - Completed by keeping `scripts/run_macos_runtime_cli_smoke.zsh` as the app
-    behavior gate, renaming parent raw Wine just targets to `diagnose-*`, and
-    making AGENTS plus governance checks enforce the execution-path SSOT.
-
-### P1: Documentation currently records the wrong conclusion
-
-- Original evidence:
-  - `docs/progress.md` records Mono/MSHTML suppression as a stabilization step.
-  - `docs/todo.md` still has Phase 3 runtime normalization open while older
-    progress text says the phase was completed.
-- Why it is deceptive:
-  - The docs make a masked smoke result look like a completed compatibility
-    milestone.
-- Correct handling:
-  - Supersede the masked-smoke notes with this inventory.
-  - Track the actual repair as open TODO work until addon payloads, validation,
-    and CLI-path smoke are fixed.
-  - Completed by marking the repair TODO done and adding this repair status.
-
-## Repair Order
-
-1. Remove prefix-init `mscoree,mshtml=` from the CLI contract and update tests
-   to reject it.
-2. Package Wine-expected Mono and Gecko payloads in the runtime submodule and
-   verify their file names and hashes against the built Wine expectation.
-3. Strengthen parent runtime completeness and install success checks so full
-   installs cannot complete with shallow marker payloads or incomplete stacks.
-4. Replace release/update fallback behavior with exact source-manifest asset
-   requirements for Konyak macOS runtime releases.
-5. Split smoke labels: CLI-path smokes prove app behavior; raw Wine smokes prove
-   only low-level runtime properties.
-6. Document backend smokes as component diagnostics that launch probes from the
-   selected runtime backend directory and do not suppress addon probing.
