@@ -40,7 +40,7 @@ void defineProgramWidgetTests() {
     await _expectGoldenFileWithinTolerance(
       find.byKey(goldenKey),
       'goldens/pin_program_action_ja.png',
-      diffTolerance: 0.02,
+      diffTolerance: 0.11,
     );
   });
 

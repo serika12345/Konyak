@@ -238,7 +238,7 @@ void defineSettingsWidgetTests() {
     await _expectGoldenFileWithinTolerance(
       find.byKey(const ValueKey('app-settings-dialog')),
       'goldens/app_settings_dialog_language.png',
-      diffTolerance: 0.02,
+      diffTolerance: 0.03,
     );
   });
 

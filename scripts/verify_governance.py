@@ -976,6 +976,10 @@ def main() -> None:
         "KONYAK_DEV_LINUX_WINE_STACK_SOURCE_MANIFEST",
     ]:
         require_contains(".github/workflows/linux-runtime-cli-smoke.yml", expected)
+    require_contains(
+        "scripts/run_linux_runtime_cli_smoke.zsh",
+        "env -u KONYAK_DEV_LINUX_WINE_STACK_SOURCE_MANIFEST",
+    )
     require_not_contains(
         ".github/workflows/linux-runtime-cli-smoke.yml",
         "vars.KONYAK_DEV_LINUX_WINE_STACK_SOURCE_MANIFEST != ''",

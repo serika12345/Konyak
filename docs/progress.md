@@ -13,7 +13,7 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-06-25 21:28 JST
+- Timestamp: 2026-06-25 21:46 JST
 - State: `in_progress`
 - Branch: `main`
 - Active work: releasing Konyak v1.0.3.
@@ -23,12 +23,17 @@ unfinished work.
 - Completed work: bumped the Flutter package version to `1.0.3+4`, updated the
   CLI packaged app version to `1.0.3`, updated focused app-update coverage, and
   made the macOS release script remove stale versioned artifacts so local
-  release smokes stay repeatable after a version bump.
-- Remaining work: commit and push the release bump, create/push `v1.0.3`,
-  monitor every triggered GitHub Actions workflow, and fix or rerun failures
-  until all CI is successful.
-- Next action: rerun full verification after the release tooling change, then
-  commit and push the v1.0.3 release bump.
+  release smokes stay repeatable after a version bump. Commit `edb3d60`
+  (`Prepare v1.0.3 release`) is pushed to `main`, and annotated tag `v1.0.3`
+  was pushed for the same commit. GitHub Actions then exposed two release
+  blockers: Ubuntu Flutter golden drift for Japanese text goldens and Linux
+  runtime CLI smoke falling back to the Nix dev-shell default local source
+  manifest path after `nix develop`.
+- Remaining work: commit and push the CI fixes, move `v1.0.3` to the fixed
+  release commit, and monitor every triggered GitHub Actions workflow until all
+  final `main` and `v1.0.3` runs are successful.
+- Next action: commit the CI fixes, push `main`, force-update the newly created
+  `v1.0.3` tag to the fixed commit, then watch GitHub Actions to completion.
 - Verification: focused `dart test test/cli_contract_test.dart --plain-name
   "app update checker defaults to the packaged Konyak app version"` failed as
   expected before the version constant was updated, then passed after the bump;
@@ -41,4 +46,19 @@ unfinished work.
   `smoke_macos_dmg_layout.zsh`, `smoke_macos_finder_integration.zsh` with the
   PuTTY fixture, `smoke_macos_packaged_app_cli_bridge.zsh`, and
   `smoke_macos_app_update_handoff.zsh`. Linux release verification is deferred
-  to GitHub Actions because the local host is macOS.
+  to GitHub Actions because the local host is macOS. After pushing
+  `edb3d60`, GitHub Actions showed `Konyak Verify` failing on Ubuntu with
+  `goldens/pin_program_action_ja.png` at 10.01% diff and
+  `goldens/app_settings_dialog_language.png` at 2.25% diff, and `Linux Runtime
+  CLI Smoke` failing because the dev-shell default
+  `.dart_tool/konyak/dev-runtime-source/linux-wine-stack/konyak-linux-wine-runtime-stack-source.json`
+  path was propagated to the resolver even when that default manifest did not
+  exist. CI fix verification performed: `just verify-governance` failed as
+  expected after adding the governance assertion, then passed after the Linux
+  smoke script fix; `zsh -n scripts/run_linux_runtime_cli_smoke.zsh
+  scripts/prepare_linux_dev_runtime_source.zsh
+  scripts/resolve_linux_runtime_source_manifest.zsh`; focused `flutter test
+  test/widget_test.dart --plain-name "Japanese pin program action keeps the
+  requested line break"`; focused `flutter test test/widget_test.dart
+  --plain-name "settings dialog language selector matches golden"`; `just
+  verify`; `git diff --check`.

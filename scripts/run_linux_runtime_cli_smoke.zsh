@@ -165,9 +165,11 @@ if [[ -n "$manifest_path" && "$manifest_path" != http://* && "$manifest_path" !=
   fi
 fi
 if [[ -z "$manifest_path" ]]; then
-  manifest_path="$("$repo_root/scripts/prepare_linux_dev_runtime_source.zsh" \
-    --force \
-    --print-manifest-path)"
+  manifest_path="$(env -u KONYAK_DEV_LINUX_WINE_STACK_SOURCE_MANIFEST \
+    -u KONYAK_DEV_LINUX_RUNTIME_STACK_SOURCE_MANIFEST \
+    "$repo_root/scripts/prepare_linux_dev_runtime_source.zsh" \
+      --force \
+      --print-manifest-path)"
 elif [[ "$manifest_path" == http://* || "$manifest_path" == https://* ]]; then
   manifest_path="$(
     KONYAK_DEV_LINUX_WINE_STACK_SOURCE_MANIFEST="$manifest_path" \
