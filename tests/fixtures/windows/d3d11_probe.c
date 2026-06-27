@@ -11,6 +11,9 @@
 static const wchar_t *kClassName = L"KonyakD3D11ProbeWindow";
 static const int kWindowWidth = 960;
 static const int kWindowHeight = 540;
+static const char kSuccessSentinelPath[] =
+    "C:\\konyak-d3d11-visible-sample-ok.txt";
+static const char kSuccessMarker[] = "KONYAK_D3D11_PROBE_OK\n";
 static wchar_t g_status_text[256] = L"Konyak D3D11 Probe";
 
 typedef HRESULT(WINAPI *D3D11CreateDeviceAndSwapChainProc)(
@@ -95,6 +98,44 @@ static void hold_window(DWORD duration) {
     }
     Sleep(16);
   }
+}
+
+static int write_success_sentinel(void) {
+  HANDLE file = CreateFileA(
+      kSuccessSentinelPath,
+      GENERIC_WRITE,
+      0,
+      NULL,
+      CREATE_ALWAYS,
+      FILE_ATTRIBUTE_NORMAL,
+      NULL);
+  if (file == INVALID_HANDLE_VALUE) {
+    fprintf(
+        stderr,
+        "CreateFileA(success sentinel) failed: %lu\n",
+        GetLastError());
+    return 1;
+  }
+
+  DWORD bytes_written = 0;
+  const DWORD marker_size = (DWORD)(sizeof(kSuccessMarker) - 1);
+  const BOOL write_ok = WriteFile(
+      file,
+      kSuccessMarker,
+      marker_size,
+      &bytes_written,
+      NULL);
+  const DWORD write_error = GetLastError();
+  CloseHandle(file);
+  if (!write_ok || bytes_written != marker_size) {
+    fprintf(
+        stderr,
+        "WriteFile(success sentinel) failed: %lu\n",
+        write_error);
+    return 1;
+  }
+
+  return 0;
 }
 
 static int show_failure(HWND window, const char *operation, HRESULT result) {
@@ -265,6 +306,7 @@ done:
       "KONYAK_D3D11_PROBE_OK featureLevel=0x%04x frames=%d\n",
       (unsigned int)created_level,
       frame);
+  const int sentinel_status = write_success_sentinel();
 
   ID3D11RenderTargetView_Release(render_target);
   ID3D11DeviceContext_Release(context);
@@ -272,5 +314,5 @@ done:
   IDXGISwapChain_Release(swap_chain);
   FreeLibrary(d3d11_module);
   DestroyWindow(window);
-  return 0;
+  return sentinel_status;
 }

@@ -62,12 +62,22 @@ void main() {
       contains('KONYAK_MACOS_RUNTIME_CLI_SMOKE_D3D12_SAMPLE_EXE'),
     );
     expect(macosRuntimeSmokeScript, contains('run_d3d12_sample_smoke'));
-    expect(macosRuntimeSmokeScript, contains('d3d12-msvc-sample'));
+    expect(macosRuntimeSmokeScript, contains('macos_d3dmetal_available'));
+    expect(macosRuntimeSmokeScript, contains('D3D12 visible sample backend:'));
+    expect(macosRuntimeSmokeScript, contains('d3dmetal)'));
+    expect(
+      macosRuntimeSmokeScript,
+      contains('.bottle.runtimeSettings.dxrEnabled == true'),
+    );
+    expect(macosRuntimeSmokeScript, contains('d3d12-msvc-visible-sample'));
     expect(
       macosRuntimeSmokeScript,
       contains('konyak-d3d12-minimal-sample-ok.txt'),
     );
-    expect(macosRuntimeSmokeScript, contains('wait_for_probe_sentinel'));
-    expect(macosRuntimeSmokeScript, contains('"arguments":"--frames 2"'));
+    expect(
+      macosRuntimeSmokeScript,
+      contains('wait_for_visible_sample_sentinel'),
+    );
+    expect(macosRuntimeSmokeScript, contains('"arguments":"--frames 120"'));
   });
 }

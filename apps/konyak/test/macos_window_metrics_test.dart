@@ -430,38 +430,48 @@ void main() {
     expect(thirdPartyNotices, contains('Zstandard: BSD-3-Clause'));
   });
 
-  test('macOS runtime CLI smoke runs backend probes through the CLI', () {
-    final runtimeSmokeScript = File(
-      '../../scripts/run_macos_runtime_cli_smoke.zsh',
-    ).readAsStringSync();
-    final runtimeSmokeWorkflow = File(
-      '../../.github/workflows/macos-runtime-cli-smoke.yml',
-    ).readAsStringSync();
+  test(
+    'macOS runtime CLI smoke runs visible graphics samples through the CLI',
+    () {
+      final runtimeSmokeScript = File(
+        '../../scripts/run_macos_runtime_cli_smoke.zsh',
+      ).readAsStringSync();
+      final runtimeSmokeWorkflow = File(
+        '../../.github/workflows/macos-runtime-cli-smoke.yml',
+      ).readAsStringSync();
 
-    expect(
-      runtimeSmokeScript,
-      contains('runtime/konyak-macos-runtime/scripts/build-backend-probes.zsh'),
-    );
-    expect(runtimeSmokeScript, contains('run_backend_probe_smoke'));
-    expect(runtimeSmokeScript, contains('wait_for_probe_sentinel'));
-    expect(runtimeSmokeScript, contains('set-runtime-settings'));
-    expect(runtimeSmokeScript, contains('run-program'));
-    expect(runtimeSmokeScript, contains('dxvk-macos-probe'));
-    expect(runtimeSmokeScript, contains('dxmt-probe'));
-    expect(runtimeSmokeScript, contains('vkd3d-probe'));
-    expect(runtimeSmokeScript, contains('KONYAK_D3D11_DEVICE_PROBE_OK'));
-    expect(runtimeSmokeScript, contains('KONYAK_D3D12_DEVICE_PROBE_OK'));
-    expect(runtimeSmokeScript, isNot(contains('DYLD_FALLBACK_LIBRARY_PATH')));
+      expect(runtimeSmokeScript, contains('scripts/build_d3d11_probe_exe.zsh'));
+      expect(runtimeSmokeScript, contains('run_visible_graphics_sample_smoke'));
+      expect(runtimeSmokeScript, contains('wait_for_visible_sample_sentinel'));
+      expect(runtimeSmokeScript, contains('set-runtime-settings'));
+      expect(runtimeSmokeScript, contains('run-program'));
+      expect(runtimeSmokeScript, contains('dxvk-macos-visible-sample'));
+      expect(runtimeSmokeScript, contains('dxmt-visible-sample'));
+      expect(runtimeSmokeScript, contains('d3d12-msvc-visible-sample'));
+      expect(runtimeSmokeScript, contains('KONYAK_D3D11_PROBE_OK'));
+      expect(runtimeSmokeScript, contains('KONYAK_D3D12_MINIMAL_SAMPLE_OK'));
+      expect(
+        runtimeSmokeScript,
+        isNot(
+          contains(
+            'runtime/konyak-macos-runtime/scripts/build-backend-probes.zsh',
+          ),
+        ),
+      );
+      expect(runtimeSmokeScript, isNot(contains('d3d11_device_probe.exe')));
+      expect(runtimeSmokeScript, isNot(contains('d3d12_device_probe.exe')));
+      expect(runtimeSmokeScript, isNot(contains('DYLD_FALLBACK_LIBRARY_PATH')));
 
-    expect(
-      runtimeSmokeWorkflow,
-      contains('runtime/konyak-macos-runtime/probes/windows/**'),
-    );
-    expect(
-      runtimeSmokeWorkflow,
-      contains('runtime/konyak-macos-runtime/scripts/build-backend-probes.zsh'),
-    );
-  });
+      expect(
+        runtimeSmokeWorkflow,
+        contains('tests/fixtures/windows/d3d11_probe.c'),
+      );
+      expect(
+        runtimeSmokeWorkflow,
+        contains('tests/fixtures/windows/d3d12_minimal_sample/**'),
+      );
+    },
+  );
 
   test('macOS app exposes visible external window ids to Flutter', () {
     final appDelegate = File(
