@@ -13,8 +13,8 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-06-27 20:15 JST
-- State: `in_progress`
+- Timestamp: 2026-06-27 20:37 JST
+- State: `completed`
 - Branch: `main`
 - Active work: investigate why `/Applications/Konyak.app` still prompts to
   install `v1.0.4` after the app update appears to have completed, and release
@@ -41,12 +41,19 @@ unfinished work.
   default, passed the `pubspec.yaml` build name into macOS/Linux release CLI
   compilation, extended release preparation to update and rollback the CLI
   version default with `pubspec.yaml`, and added governance coverage requiring
-  the Flutter app version and CLI app update version to match.
-- Remaining work: commit the fix, release `v1.0.5` with release notes so
-  installed `v1.0.4` apps can update to a fixed embedded CLI, monitor
-  `publish.yml`, confirm the public GitHub Release, and record completion.
-- Next action: commit the fix, then run the maintained release preparation path
-  for `v1.0.5`.
+  the Flutter app version and CLI app update version to match. Committed the fix
+  as `b2114c0` (`Fix packaged app update version`), released `v1.0.5` as
+  `65fe528` (`Release v1.0.5`), and confirmed the public GitHub Release at
+  `https://github.com/serika12345/Konyak/releases/tag/v1.0.5` with macOS DMG,
+  Linux AppImage, release metadata, checksums, and runtime stack manifest
+  assets. The tag-push release workflow initially hit a release-create race with
+  the explicit publish dispatch, then passed after rerunning the failed job
+  against the now-existing release.
+- Remaining work: none for the stale `v1.0.4` update prompt fix and `v1.0.5`
+  release.
+- Next action: installed `v1.0.4` apps should update once more to `v1.0.5`; the
+  embedded CLI in `v1.0.5` reports `currentVersion=1.0.5`, so the same-version
+  prompt should not reappear after that update completes.
 - Verification: dynamic failure evidence captured with packaged app probes:
   `plutil -p /Applications/Konyak.app/Contents/Info.plist`, `mdls
   /Applications/Konyak.app`, and
@@ -62,7 +69,18 @@ unfinished work.
   with `dart compile exe -D KONYAK_APP_VERSION=1.0.4 bin/konyak.dart` and
   running `check-app-update --json` against local `v1.0.4` release metadata,
   which returned `currentVersion=1.0.4` and `status=current`. Full repository
-  verification passed with `just verify`.
+  verification passed with `just verify`. Release execution passed with
+  `python3 scripts/prepare_release.py --version 1.0.5 --release-notes
+  .dart_tool/konyak/release-notes.md --gate "just release-candidate-gates"
+  --commit --tag --push --dispatch-publish`; the gate ran `just verify`, built
+  `.dart_tool/konyak/release/macos/Konyak-1.0.5-macos-arm64.dmg`, and passed
+  macOS packaged runtime extraction, DMG layout, PuTTY Finder integration,
+  packaged app CLI bridge, and app update handoff smokes. GitHub Actions run
+  `28287713870` completed successfully: `Verify release candidate`, `Linux
+  AppImage`, `macOS app`, and `Publish GitHub release` all succeeded. The
+  tag-push `Konyak Release` run `28287713615` succeeded after rerun, and main
+  push checks `Konyak Verify` (`28287712668`), `Linux Runtime CLI Smoke`
+  (`28287712657`), and `macOS Runtime CLI Smoke` (`28287712671`) succeeded.
 
 - Timestamp: 2026-06-27 19:53 JST
 - State: `completed`
