@@ -23,7 +23,9 @@ def run(command, cwd, *, check=True):
 
 def make_repo(root):
     app_dir = root / "apps" / "konyak"
+    cli_shared_dir = root / "packages" / "konyak_cli" / "lib" / "src" / "shared"
     app_dir.mkdir(parents=True)
+    cli_shared_dir.mkdir(parents=True)
     (root / ".gitignore").write_text(".dart_tool/\n", encoding="utf-8")
     (app_dir / "pubspec.yaml").write_text(
         "\n".join(
@@ -31,6 +33,20 @@ def make_repo(root):
                 "name: konyak",
                 "description: Test app",
                 "version: 1.0.3+4",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    (cli_shared_dir / "model_constants.dart").write_text(
+        "\n".join(
+            [
+                "part of '../../konyak_cli.dart';",
+                "",
+                "const konyakAppVersion = String.fromEnvironment(",
+                "  'KONYAK_APP_VERSION',",
+                "  defaultValue: '1.0.3',",
+                ");",
                 "",
             ]
         ),
@@ -75,6 +91,18 @@ class PrepareReleaseTest(unittest.TestCase):
                 "name: konyak\n"
                 "description: Test app\n"
                 "version: 1.1.0+5\n",
+            )
+            self.assertIn(
+                "defaultValue: '1.1.0',",
+                (
+                    repo
+                    / "packages"
+                    / "konyak_cli"
+                    / "lib"
+                    / "src"
+                    / "shared"
+                    / "model_constants.dart"
+                ).read_text(encoding="utf-8"),
             )
             self.assertEqual(run(["git", "status", "--short"], repo).stdout, "")
             self.assertEqual(
@@ -123,6 +151,10 @@ class PrepareReleaseTest(unittest.TestCase):
                 "docs/releases/v1.1.0.md",
                 run(["git", "show", "--name-only", "--pretty=", "HEAD"], repo).stdout,
             )
+            self.assertIn(
+                "packages/konyak_cli/lib/src/shared/model_constants.dart",
+                run(["git", "show", "--name-only", "--pretty=", "HEAD"], repo).stdout,
+            )
             self.assertEqual(run(["git", "status", "--short"], repo).stdout, "")
 
     def test_failed_gate_restores_pubspec_and_does_not_tag(self):
@@ -154,6 +186,18 @@ class PrepareReleaseTest(unittest.TestCase):
                 (repo / "apps" / "konyak" / "pubspec.yaml").read_text(
                     encoding="utf-8"
                 ),
+            )
+            self.assertIn(
+                "defaultValue: '1.0.3',",
+                (
+                    repo
+                    / "packages"
+                    / "konyak_cli"
+                    / "lib"
+                    / "src"
+                    / "shared"
+                    / "model_constants.dart"
+                ).read_text(encoding="utf-8"),
             )
             self.assertEqual(run(["git", "status", "--short"], repo).stdout, "")
             self.assertEqual(run(["git", "tag"], repo).stdout, "")
@@ -192,6 +236,18 @@ class PrepareReleaseTest(unittest.TestCase):
                 (repo / "apps" / "konyak" / "pubspec.yaml").read_text(
                     encoding="utf-8"
                 ),
+            )
+            self.assertIn(
+                "defaultValue: '1.0.3',",
+                (
+                    repo
+                    / "packages"
+                    / "konyak_cli"
+                    / "lib"
+                    / "src"
+                    / "shared"
+                    / "model_constants.dart"
+                ).read_text(encoding="utf-8"),
             )
             self.assertFalse((repo / "docs" / "releases" / "v1.0.4.md").exists())
             self.assertEqual(run(["git", "status", "--short"], repo).stdout, "")

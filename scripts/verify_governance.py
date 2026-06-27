@@ -1,5 +1,6 @@
 from pathlib import Path
 import plistlib
+import re
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -99,6 +100,37 @@ def require_plist_key(relative_path: str, key: str, expected: object) -> None:
     actual = plist.get(key)
     if actual != expected:
         raise AssertionError(f"{relative_path} must set {key} to {expected!r}, got {actual!r}")
+
+
+def require_app_version_sources_match() -> None:
+    pubspec = read_text("apps/konyak/pubspec.yaml")
+    model_constants = read_text("packages/konyak_cli/lib/src/shared/model_constants.dart")
+    pubspec_match = re.search(
+        r"(?m)^version:[ \t]*([0-9]+\.[0-9]+\.[0-9]+)(?:\+[0-9]+)?[ \t]*$",
+        pubspec,
+    )
+    if pubspec_match is None:
+        raise AssertionError("apps/konyak/pubspec.yaml must declare a semantic app version")
+
+    cli_match = re.search(
+        r"const konyakAppVersion = String\.fromEnvironment\(\s*"
+        r"'KONYAK_APP_VERSION',\s*defaultValue: '([0-9]+\.[0-9]+\.[0-9]+)',\s*\);",
+        model_constants,
+        flags=re.MULTILINE,
+    )
+    if cli_match is None:
+        raise AssertionError(
+            "packages/konyak_cli/lib/src/shared/model_constants.dart must declare "
+            "konyakAppVersion with a KONYAK_APP_VERSION compile-time default"
+        )
+
+    app_version = pubspec_match.group(1)
+    cli_version = cli_match.group(1)
+    if app_version != cli_version:
+        raise AssertionError(
+            "Flutter app version and CLI app update version must match: "
+            f"pubspec={app_version}, konyakAppVersion={cli_version}"
+        )
 
 
 def require_result_boundary_rules() -> None:
@@ -1203,6 +1235,9 @@ def main() -> None:
         )
 
     if (ROOT / "packages/konyak_cli").exists():
+        if (ROOT / "apps/konyak").exists():
+            require_app_version_sources_match()
+
         for expected in [
             "strict-casts: true",
             "strict-inference: true",

@@ -225,7 +225,10 @@ fi
 echo "Building Konyak CLI executable..."
 (
   cd packages/konyak_cli
-  dart compile exe bin/konyak.dart -o "$cli_executable"
+  dart compile exe \
+    -D KONYAK_APP_VERSION="$build_name" \
+    bin/konyak.dart \
+    -o "$cli_executable"
 )
 
 echo "Building Flutter Linux app..."

@@ -13,6 +13,57 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-27 20:15 JST
+- State: `in_progress`
+- Branch: `main`
+- Active work: investigate why `/Applications/Konyak.app` still prompts to
+  install `v1.0.4` after the app update appears to have completed, and release
+  the fix as a follow-up patch.
+- Related TODO: none; this is a release/update defect investigation.
+- Purpose: prove the actual installed app version and update-check behavior
+  through the packaged Konyak app/CLI path, then fix the smallest stable
+  contract that prevents stale update prompts after successful app updates.
+- Completed work: read current TODO/progress state and located the Flutter
+  startup update prompt, CLI `check-app-update --json`, app update checker, and
+  app update installer code paths. Sub-agent workstream isolation was
+  considered for this app-update defect, but the available multi-agent tool is
+  restricted to explicit user requests; investigation, implementation, and audit
+  notes are being kept in this progress entry and verification output instead.
+  Dynamically inspected `/Applications/Konyak.app`: Info.plist and Spotlight
+  report `CFBundleShortVersionString=1.0.4` / `CFBundleVersion=5`, but the
+  packaged `/Applications/Konyak.app/Contents/Resources/konyak-cli
+  check-app-update --json` reported `currentVersion=1.0.3`,
+  `latestVersion=v1.0.4`, and `status=available`. Root cause: the Flutter app
+  release version was updated from `pubspec.yaml`, but the CLI's
+  `konyakAppVersion` constant stayed at `1.0.3`, so the updated app's embedded
+  CLI still believed it was older than the latest release. Added failing tests
+  first, then made the CLI app version a `KONYAK_APP_VERSION` compile-time
+  default, passed the `pubspec.yaml` build name into macOS/Linux release CLI
+  compilation, extended release preparation to update and rollback the CLI
+  version default with `pubspec.yaml`, and added governance coverage requiring
+  the Flutter app version and CLI app update version to match.
+- Remaining work: commit the fix, release `v1.0.5` with release notes so
+  installed `v1.0.4` apps can update to a fixed embedded CLI, monitor
+  `publish.yml`, confirm the public GitHub Release, and record completion.
+- Next action: commit the fix, then run the maintained release preparation path
+  for `v1.0.5`.
+- Verification: dynamic failure evidence captured with packaged app probes:
+  `plutil -p /Applications/Konyak.app/Contents/Info.plist`, `mdls
+  /Applications/Konyak.app`, and
+  `/Applications/Konyak.app/Contents/Resources/konyak-cli check-app-update
+  --json`. TDD failures observed first with `just release-automation-test` and
+  `cd packages/konyak_cli && dart test test/cli_contract_test.dart --name "app
+  update checker defaults to the packaged Konyak app version"`. Focused tests
+  passed after the fix: `python3 -m py_compile scripts/prepare_release.py
+  scripts/prepare_release_test.py scripts/verify_governance.py`, `just
+  release-automation-test`, the focused CLI app update checker test, the
+  focused macOS release packaging contract test, and the focused Linux release
+  packaging contract test. Dynamic fixed-path proof passed by compiling the CLI
+  with `dart compile exe -D KONYAK_APP_VERSION=1.0.4 bin/konyak.dart` and
+  running `check-app-update --json` against local `v1.0.4` release metadata,
+  which returned `currentVersion=1.0.4` and `status=current`. Full repository
+  verification passed with `just verify`.
+
 - Timestamp: 2026-06-27 19:53 JST
 - State: `completed`
 - Branch: `main`

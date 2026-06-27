@@ -332,6 +332,7 @@ void main() {
 
     expect(releaseScript, contains('finalize_macos_app.zsh'));
     expect(releaseScript, contains('release_app_bundle='));
+    expect(releaseScript, contains('-D KONYAK_APP_VERSION="\$build_name"'));
     expect(releaseScript, contains('rm -rf "\$release_app_bundle"'));
     expect(
       releaseScript,
@@ -362,6 +363,7 @@ void main() {
     expect(finalizerScript, contains('codesign --verify'));
     expect(debugBuildScript, contains('flutter build macos'));
     expect(debugBuildScript, contains('--debug'));
+    expect(debugBuildScript, contains('-D KONYAK_APP_VERSION="\$build_name"'));
     expect(debugBuildScript, contains('finalize_macos_app.zsh'));
     expect(debugBuildScript, contains('.dart_tool/konyak/app/macos/debug'));
     expect(smokeScript, contains('release_root='));

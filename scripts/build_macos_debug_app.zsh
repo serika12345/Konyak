@@ -27,6 +27,8 @@ cli_executable="$stage_root/bin/konyak-cli"
 app_bundle="$repo_root/apps/konyak/build/macos/Build/Products/Debug/Konyak.app"
 debug_app_bundle="$debug_root/Konyak.app"
 flutter_framework="$repo_root/apps/konyak/build/macos/Build/Products/Debug/FlutterMacOS.framework"
+pubspec_version="$(awk '/^version:/ { print $2; exit }' apps/konyak/pubspec.yaml)"
+build_name="${pubspec_version%%+*}"
 
 rm -rf "$stage_root"
 mkdir -p "$stage_root/bin" "$debug_root"
@@ -39,7 +41,10 @@ fi
 echo "Building Konyak CLI executable for packaged debug app..."
 (
   cd packages/konyak_cli
-  dart compile exe bin/konyak.dart -o "$cli_executable"
+  dart compile exe \
+    -D KONYAK_APP_VERSION="$build_name" \
+    bin/konyak.dart \
+    -o "$cli_executable"
 )
 
 echo "Building Flutter macOS debug app..."

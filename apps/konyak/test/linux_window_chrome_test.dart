@@ -168,6 +168,7 @@ void main() {
     final flake = File('../../flake.nix').readAsStringSync();
 
     expect(script, contains('APPIMAGE_EXTRACT_AND_RUN=1'));
+    expect(script, contains('-D KONYAK_APP_VERSION="\$build_name"'));
     expect(script, isNot(contains(r'appimage-run "$tool_path"')));
     expect(flake, isNot(contains('appimage-run')));
   });

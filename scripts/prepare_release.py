@@ -14,6 +14,12 @@ SEMVER_PATTERN = re.compile(r"^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)
 PUBSPEC_VERSION_PATTERN = re.compile(
     r"(?m)^version:[ \t]*([0-9]+\.[0-9]+\.[0-9]+)(?:\+([0-9]+))?[ \t]*$"
 )
+CLI_APP_VERSION_PATTERN = re.compile(
+    r"const konyakAppVersion = (?:(?:String\.fromEnvironment\(\s*"
+    r"'KONYAK_APP_VERSION',\s*defaultValue: '([0-9]+\.[0-9]+\.[0-9]+)',\s*\))"
+    r"|(?:'([0-9]+\.[0-9]+\.[0-9]+)'));",
+    re.MULTILINE,
+)
 
 
 class ReleaseError(RuntimeError):
@@ -117,8 +123,36 @@ def write_pubspec_version(pubspec_path: Path, version: AppVersion) -> str:
     return original
 
 
+def write_cli_app_version(model_constants_path: Path, version: AppVersion) -> str:
+    try:
+        original = model_constants_path.read_text(encoding="utf-8")
+    except FileNotFoundError as error:
+        raise ReleaseError(f"Missing CLI model constants: {model_constants_path}") from error
+
+    updated, replacement_count = CLI_APP_VERSION_PATTERN.subn(
+        "\n".join(
+            [
+                "const konyakAppVersion = String.fromEnvironment(",
+                "  'KONYAK_APP_VERSION',",
+                f"  defaultValue: '{version.name}',",
+                ");",
+            ]
+        ),
+        original,
+        count=1,
+    )
+    if replacement_count != 1:
+        raise ReleaseError(f"Expected exactly one CLI app version in {model_constants_path}")
+    model_constants_path.write_text(updated, encoding="utf-8")
+    return original
+
+
 def restore_pubspec(pubspec_path: Path, original: str) -> None:
     pubspec_path.write_text(original, encoding="utf-8")
+
+
+def restore_cli_app_version(model_constants_path: Path, original: str) -> None:
+    model_constants_path.write_text(original, encoding="utf-8")
 
 
 def release_notes_target(repo_root: Path, tag: str) -> Path:
@@ -241,10 +275,14 @@ def require_default_gates_in_dev_shell(gates: list[str]) -> None:
 def commit_release(
     repo_root: Path,
     pubspec_path: Path,
+    model_constants_path: Path,
     release_notes_path: Path | None,
     tag: str,
 ) -> None:
-    paths = [str(pubspec_path.relative_to(repo_root))]
+    paths = [
+        str(pubspec_path.relative_to(repo_root)),
+        str(model_constants_path.relative_to(repo_root)),
+    ]
     if release_notes_path is not None:
         paths.append(str(release_notes_path.relative_to(repo_root)))
     run_command(["git", "add", *paths], cwd=repo_root)
@@ -332,6 +370,15 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
 def prepare_release(args: argparse.Namespace) -> None:
     repo_root = args.repo_root.resolve()
     pubspec_path = repo_root / "apps" / "konyak" / "pubspec.yaml"
+    model_constants_path = (
+        repo_root
+        / "packages"
+        / "konyak_cli"
+        / "lib"
+        / "src"
+        / "shared"
+        / "model_constants.dart"
+    )
     gates = args.gate or ["just verify"]
     current = read_current_version(pubspec_path)
     release = next_version(
@@ -354,6 +401,7 @@ def prepare_release(args: argparse.Namespace) -> None:
     require_missing_tag(repo_root, tag)
 
     original_pubspec = write_pubspec_version(pubspec_path, release)
+    original_model_constants = write_cli_app_version(model_constants_path, release)
     release_notes_path: Path | None = None
     release_notes_existed = False
     try:
@@ -367,12 +415,13 @@ def prepare_release(args: argparse.Namespace) -> None:
             run_gate(gate, cwd=repo_root)
     except Exception:
         restore_pubspec(pubspec_path, original_pubspec)
+        restore_cli_app_version(model_constants_path, original_model_constants)
         if release_notes_path is not None:
             remove_created_release_notes(release_notes_path, release_notes_existed)
         raise
 
     if args.commit:
-        commit_release(repo_root, pubspec_path, release_notes_path, tag)
+        commit_release(repo_root, pubspec_path, model_constants_path, release_notes_path, tag)
     if args.tag:
         create_tag(repo_root, tag)
     if args.push:
