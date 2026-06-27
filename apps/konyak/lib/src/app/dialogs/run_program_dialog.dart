@@ -5,9 +5,8 @@ import '../../cli/konyak_cli_client.dart';
 import '../../files/log_file_picker.dart';
 import '../../files/program_file_picker.dart';
 import '../../l10n/konyak_localizations.dart';
-import '../programs/program_configuration_settings.dart';
-import '../programs/program_environment_editor.dart';
 import '../programs/program_settings_controls.dart';
+import '../programs/program_settings_form_controller.dart';
 
 typedef GraphicsBackendHintsLoader =
     Future<GraphicsBackendHintsLoadResult> Function(String programPath);
@@ -43,15 +42,9 @@ class RunProgramDialog extends StatefulWidget {
 
 class _RunProgramDialogState extends State<RunProgramDialog> {
   final TextEditingController _programPathController = TextEditingController();
-  final TextEditingController _argumentsController = TextEditingController();
-  final TextEditingController _wineLoggingChannelsController =
-      TextEditingController();
-  final TextEditingController _logFilePathController = TextEditingController();
-  final List<ProgramEnvironmentControllers> _environmentControllers =
-      <ProgramEnvironmentControllers>[];
+  final ProgramSettingsFormController _settingsController =
+      ProgramSettingsFormController();
   bool _optionsExpanded = false;
-  String _locale = '';
-  bool _createLogFile = true;
   bool _isLoadingGraphicsBackendHints = false;
   ProgramGraphicsBackendHintsSummary? _graphicsBackendHints;
   String? _graphicsBackendHintError;
@@ -59,12 +52,7 @@ class _RunProgramDialogState extends State<RunProgramDialog> {
   @override
   void dispose() {
     _programPathController.dispose();
-    _argumentsController.dispose();
-    _wineLoggingChannelsController.dispose();
-    _logFilePathController.dispose();
-    for (final controllers in _environmentControllers) {
-      controllers.dispose();
-    }
+    _settingsController.dispose();
     super.dispose();
   }
 
@@ -207,12 +195,15 @@ class _RunProgramDialogState extends State<RunProgramDialog> {
               if (_optionsExpanded)
                 ProgramSettingsControls(
                   keyPrefix: 'run-program',
-                  locale: _locale,
-                  argumentsController: _argumentsController,
-                  environmentControllers: _environmentControllers,
-                  createLogFile: _createLogFile,
-                  wineLoggingChannelsController: _wineLoggingChannelsController,
-                  logFilePathController: _logFilePathController,
+                  locale: _settingsController.locale,
+                  argumentsController: _settingsController.argumentsController,
+                  environmentControllers:
+                      _settingsController.environmentControllers,
+                  createLogFile: _settingsController.createLogFile,
+                  wineLoggingChannelsController:
+                      _settingsController.wineLoggingChannelsController,
+                  logFilePathController:
+                      _settingsController.logFilePathController,
                   defaultLogPath: widget.defaultLogPath,
                   onLocaleChanged: _setLocale,
                   onCreateLogFileChanged: _setCreateLogFile,
@@ -239,31 +230,31 @@ class _RunProgramDialogState extends State<RunProgramDialog> {
   }
 
   void _addEnvironmentVariable() {
-    setState(() {
-      _environmentControllers.add(ProgramEnvironmentControllers());
-    });
+    setState(_settingsController.addEnvironmentVariable);
   }
 
   void _removeEnvironmentVariable(int index) {
     setState(() {
-      _environmentControllers.removeAt(index).dispose();
+      _settingsController.removeEnvironmentVariable(index);
     });
   }
 
   void _setCreateLogFile(bool createLogFile) {
     setState(() {
-      _createLogFile = createLogFile;
+      _settingsController.setCreateLogFile(createLogFile);
     });
   }
 
   void _setLocale(String locale) {
     setState(() {
-      _locale = locale;
+      _settingsController.setLocale(locale);
     });
   }
 
   Future<void> _chooseLogFile() async {
-    final currentPath = _effectiveLogPath();
+    final currentPath = _settingsController.effectiveLogPath(
+      defaultLogPath: widget.defaultLogPath,
+    );
     final selectedPath = await widget.logFilePicker.pickLogFilePath(
       initialDirectory: programPathDirectory(currentPath),
       suggestedName: programPathFileName(currentPath) ?? 'latest.log',
@@ -273,7 +264,7 @@ class _RunProgramDialogState extends State<RunProgramDialog> {
     }
 
     setState(() {
-      _logFilePathController.text = selectedPath;
+      _settingsController.logFilePathController.text = selectedPath;
     });
   }
 
@@ -288,35 +279,7 @@ class _RunProgramDialogState extends State<RunProgramDialog> {
   }
 
   ProgramSettingsSummary? _oneTimeSettings() {
-    final arguments = _argumentsController.text;
-    final environment = programEnvironmentFromEntries(
-      _environmentControllers.map((controller) => controller.toEntry()),
-    );
-    final logging = ProgramLoggingSettingsSummary(
-      createLogFile: _createLogFile,
-      additionalWineLoggingChannels: _wineLoggingChannelsController.text,
-      logFilePath: _logFilePathController.text,
-    );
-    if (_locale.trim().isEmpty &&
-        arguments.trim().isEmpty &&
-        environment.isEmpty &&
-        logging.isDefault) {
-      return null;
-    }
-
-    return ProgramSettingsSummary(
-      locale: _locale,
-      arguments: arguments,
-      environment: environment,
-      logging: logging,
-    );
-  }
-
-  String _effectiveLogPath() {
-    return effectiveProgramLogPath(
-      selectedLogPath: _logFilePathController.text,
-      defaultLogPath: widget.defaultLogPath,
-    );
+    return _settingsController.toOptionalSettings();
   }
 }
 

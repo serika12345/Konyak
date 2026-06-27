@@ -13,6 +13,38 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-27 22:52 JST
+- State: `completed`
+- Branch: `main`
+- Active work: extract shared program settings form state for Run Program and
+  pinned Program Configuration.
+- Related TODO: Deferred / Split Flutter large UI files after backend
+  boundaries are smaller.
+- Latest commit: `6da4ea3` (`Split home navigation state`).
+- Purpose: keep `RunProgramDialog` and `ProgramConfigurationView` focused on
+  rendering and event wiring by moving duplicated locale, arguments,
+  environment, and logging controller state into a shared form controller.
+- Completed work: committed the first home navigation split, read the current
+  TODO/progress state plus the existing Run Program, Program Configuration,
+  program settings, and environment editor code, added failing form-controller
+  tests, introduced `ProgramSettingsFormController`, and rewired both
+  `RunProgramDialog` and `ProgramConfigurationView` through the shared
+  controller for locale, arguments, environment rows, logging, optional
+  one-shot settings, and effective log path selection.
+- Remaining work: none for this form-controller split. The broader UI split
+  TODO remains: continue moving view models and action selection out of the
+  remaining large Flutter UI files.
+- Next action: continue the UI split with the next small extraction from the
+  home/detail/sidebar surface or with runtime settings view-model cleanup in
+  bottle configuration.
+- Verification: failing focused test observed first for missing
+  `ProgramSettingsFormController`. Focused tests passed for the new controller
+  unit tests and representative Run Program / pinned Program Configuration
+  widget flows. Full Flutter gates passed: `just flutter-format-check`,
+  `just flutter-analyze`, and `just flutter-test`. Repository gates passed:
+  `just verify-governance`, `just verify-safety`, `just format-check`, and
+  `just lint`.
+
 - Timestamp: 2026-06-27 22:43 JST
 - State: `completed`
 - Branch: `main`

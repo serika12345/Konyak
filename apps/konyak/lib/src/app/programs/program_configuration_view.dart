@@ -4,11 +4,10 @@ import '../../bottles/bottle_summary.dart';
 import '../../files/log_file_picker.dart';
 import '../../l10n/konyak_localizations.dart';
 import '../app_constants.dart';
-import '../configuration_labels.dart';
 import '../widgets/konyak_bottom_button.dart';
 import 'program_configuration_settings.dart';
-import 'program_environment_editor.dart';
 import 'program_settings_controls.dart';
+import 'program_settings_form_controller.dart';
 
 class ProgramConfigurationView extends StatefulWidget {
   const ProgramConfigurationView({
@@ -39,21 +38,14 @@ class ProgramConfigurationView extends StatefulWidget {
 }
 
 class _ProgramConfigurationViewState extends State<ProgramConfigurationView> {
-  late String _locale;
-  late bool _createLogFile;
-  late TextEditingController _argumentsController;
-  late TextEditingController _wineLoggingChannelsController;
-  late TextEditingController _logFilePathController;
-  late List<ProgramEnvironmentControllers> _environmentControllers;
+  late final ProgramSettingsFormController _settingsController;
 
   @override
   void initState() {
     super.initState();
-    _argumentsController = TextEditingController();
-    _wineLoggingChannelsController = TextEditingController();
-    _logFilePathController = TextEditingController();
-    _environmentControllers = <ProgramEnvironmentControllers>[];
-    _replaceSettings(widget.settings ?? ProgramSettingsSummary());
+    _settingsController = ProgramSettingsFormController.fromSettings(
+      widget.settings ?? ProgramSettingsSummary(),
+    );
   }
 
   @override
@@ -62,18 +54,15 @@ class _ProgramConfigurationViewState extends State<ProgramConfigurationView> {
 
     if (oldWidget.program.path != widget.program.path ||
         !sameProgramSettings(oldWidget.settings, widget.settings)) {
-      _replaceSettings(widget.settings ?? ProgramSettingsSummary());
+      _settingsController.replaceSettings(
+        widget.settings ?? ProgramSettingsSummary(),
+      );
     }
   }
 
   @override
   void dispose() {
-    _argumentsController.dispose();
-    _wineLoggingChannelsController.dispose();
-    _logFilePathController.dispose();
-    for (final controllers in _environmentControllers) {
-      controllers.dispose();
-    }
+    _settingsController.dispose();
     super.dispose();
   }
 
@@ -93,21 +82,22 @@ class _ProgramConfigurationViewState extends State<ProgramConfigurationView> {
         children: [
           ProgramSettingsControls(
             keyPrefix: 'program-config',
-            locale: _locale,
-            argumentsController: _argumentsController,
-            environmentControllers: _environmentControllers,
-            createLogFile: _createLogFile,
-            wineLoggingChannelsController: _wineLoggingChannelsController,
-            logFilePathController: _logFilePathController,
+            locale: _settingsController.locale,
+            argumentsController: _settingsController.argumentsController,
+            environmentControllers: _settingsController.environmentControllers,
+            createLogFile: _settingsController.createLogFile,
+            wineLoggingChannelsController:
+                _settingsController.wineLoggingChannelsController,
+            logFilePathController: _settingsController.logFilePathController,
             defaultLogPath: _defaultLogPath,
             onLocaleChanged: (locale) {
               setState(() {
-                _locale = locale;
+                _settingsController.setLocale(locale);
               });
             },
             onCreateLogFileChanged: (value) {
               setState(() {
-                _createLogFile = value;
+                _settingsController.setCreateLogFile(value);
               });
             },
             onChooseLogFile: _chooseLogFile,
@@ -130,37 +120,13 @@ class _ProgramConfigurationViewState extends State<ProgramConfigurationView> {
     );
   }
 
-  void _replaceSettings(ProgramSettingsSummary settings) {
-    _locale = programLocaleLabels.containsKey(settings.locale)
-        ? settings.locale
-        : '';
-    _createLogFile = settings.logging.createLogFile;
-    _argumentsController.text = settings.arguments;
-    _wineLoggingChannelsController.text =
-        settings.logging.additionalWineLoggingChannels;
-    _logFilePathController.text = settings.logging.logFilePath;
-    for (final controllers in _environmentControllers) {
-      controllers.dispose();
-    }
-    _environmentControllers = settings.environment.entries
-        .map(
-          (entry) => ProgramEnvironmentControllers(
-            name: entry.key,
-            value: entry.value,
-          ),
-        )
-        .toList(growable: true);
-  }
-
   void _addEnvironmentVariable() {
-    setState(() {
-      _environmentControllers.add(ProgramEnvironmentControllers());
-    });
+    setState(_settingsController.addEnvironmentVariable);
   }
 
   void _removeEnvironmentVariable(int index) {
     setState(() {
-      _environmentControllers.removeAt(index).dispose();
+      _settingsController.removeEnvironmentVariable(index);
     });
   }
 
@@ -168,23 +134,14 @@ class _ProgramConfigurationViewState extends State<ProgramConfigurationView> {
     widget.onProgramSettingsChanged?.call(
       widget.bottle,
       widget.program,
-      ProgramSettingsSummary(
-        locale: _locale,
-        arguments: _argumentsController.text,
-        environment: programEnvironmentFromEntries(
-          _environmentControllers.map((controller) => controller.toEntry()),
-        ),
-        logging: ProgramLoggingSettingsSummary(
-          createLogFile: _createLogFile,
-          additionalWineLoggingChannels: _wineLoggingChannelsController.text,
-          logFilePath: _logFilePathController.text,
-        ),
-      ),
+      _settingsController.toSettings(),
     );
   }
 
   Future<void> _chooseLogFile() async {
-    final currentPath = _effectiveLogPath();
+    final currentPath = _settingsController.effectiveLogPath(
+      defaultLogPath: _defaultLogPath,
+    );
     final selectedPath = await widget.logFilePicker.pickLogFilePath(
       initialDirectory: programPathDirectory(currentPath),
       suggestedName: programPathFileName(currentPath) ?? 'latest.log',
@@ -194,16 +151,9 @@ class _ProgramConfigurationViewState extends State<ProgramConfigurationView> {
     }
 
     setState(() {
-      _logFilePathController.text = selectedPath;
+      _settingsController.logFilePathController.text = selectedPath;
     });
   }
 
   String get _defaultLogPath => programDefaultLogPath(widget.bottle.path);
-
-  String _effectiveLogPath() {
-    return effectiveProgramLogPath(
-      selectedLogPath: _logFilePathController.text,
-      defaultLogPath: _defaultLogPath,
-    );
-  }
 }
