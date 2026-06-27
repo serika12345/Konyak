@@ -4,6 +4,15 @@ CliResult? _handleProgramRunCommand(
   List<String> arguments,
   _CliCommandContext context,
 ) {
+  final graphicsBackendHintsCliRequest =
+      _parseJsonGraphicsBackendHintsCliRequest(arguments);
+  if (graphicsBackendHintsCliRequest != null) {
+    return _graphicsBackendHintsJsonResult(
+      graphicsBackendHintsCliRequest,
+      context,
+    );
+  }
+
   final programRunCliRequest = _parseJsonProgramRunCliRequest(arguments);
   if (programRunCliRequest != null) {
     return _runProgramJsonResult(programRunCliRequest, context);
@@ -22,6 +31,38 @@ CliResult? _handleProgramRunCommand(
   }
 
   return null;
+}
+
+CliResult _graphicsBackendHintsJsonResult(
+  _GraphicsBackendHintsCliRequest request,
+  _CliCommandContext context,
+) {
+  final result = const DartIoProgramGraphicsBackendHintsInspector().inspect(
+    programPath: request.programPath,
+    hostPlatform: context.programRunPlanner.hostPlatform,
+  );
+
+  return switch (result) {
+    ProgramGraphicsBackendHintsInspected(:final hints) => _jsonSuccess(
+      <String, Object?>{'graphicsBackendHints': hints.toJson()},
+    ),
+    ProgramGraphicsBackendHintsMissingProgram(:final programPath) => _jsonError(
+      exitCode: 66,
+      code: 'programNotFound',
+      message: 'Program file was not found.',
+      extra: <String, Object?>{'programPath': programPath},
+    ),
+    ProgramGraphicsBackendHintsInspectionFailed(
+      :final programPath,
+      :final message,
+    ) =>
+      _jsonError(
+        exitCode: 74,
+        code: 'programInspectionFailed',
+        message: message,
+        extra: <String, Object?>{'programPath': programPath},
+      ),
+  };
 }
 
 CliResult _runProgramJsonResult(

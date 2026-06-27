@@ -12,6 +12,8 @@ extension _KonyakHomeLoaderPrograms on _KonyakHomeLoaderState {
         bottleName: bottle.name,
         programFilePicker: widget.programFilePicker,
         initialDirectory: _bottleDriveCPath(bottle.path),
+        graphicsBackendHintsLoader: (programPath) =>
+            widget.cliClient.suggestGraphicsBackend(programPath: programPath),
       ),
     );
 

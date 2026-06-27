@@ -202,6 +202,26 @@ class KonyakLocalizationsEn extends KonyakLocalizations {
   String get graphicsBackend => 'Graphics Backend';
 
   @override
+  String get detectGraphicsBackend => 'Detect graphics backend';
+
+  @override
+  String get graphicsBackendHint => 'Graphics backend hint';
+
+  @override
+  String get graphicsBackendHintUnavailable =>
+      'No graphics backend hint was found.';
+
+  @override
+  String recommendedGraphicsBackend(String backend) {
+    return 'Recommended: $backend';
+  }
+
+  @override
+  String detectedGraphicsSignals(String signals) {
+    return 'Detected: $signals';
+  }
+
+  @override
   String get gptkD3dmetalSourceWasNotSelected =>
       'GPTK/D3DMetal source was not selected.';
 

@@ -223,3 +223,63 @@ final class BottleProgramListLoadFailure extends BottleProgramListLoadResult {
   final String message;
   final String diagnostic;
 }
+
+sealed class GraphicsBackendHintsLoadResult {
+  const GraphicsBackendHintsLoadResult();
+}
+
+final class LoadedGraphicsBackendHints extends GraphicsBackendHintsLoadResult {
+  const LoadedGraphicsBackendHints(this.hints);
+
+  final ProgramGraphicsBackendHintsSummary hints;
+}
+
+final class GraphicsBackendHintsLoadFailure
+    extends GraphicsBackendHintsLoadResult {
+  const GraphicsBackendHintsLoadFailure({
+    required this.exitCode,
+    required this.message,
+    required this.diagnostic,
+  });
+
+  final int exitCode;
+  final String message;
+  final String diagnostic;
+}
+
+final class ProgramGraphicsBackendHintsSummary {
+  ProgramGraphicsBackendHintsSummary({
+    required this.programPath,
+    required this.hostPlatform,
+    required Iterable<ProgramGraphicsBackendSignalSummary> signals,
+    required Iterable<ProgramGraphicsBackendSuggestionSummary> suggestions,
+  }) : signals = List.unmodifiable(signals),
+       suggestions = List.unmodifiable(suggestions);
+
+  final String programPath;
+  final String hostPlatform;
+  final List<ProgramGraphicsBackendSignalSummary> signals;
+  final List<ProgramGraphicsBackendSuggestionSummary> suggestions;
+}
+
+final class ProgramGraphicsBackendSignalSummary {
+  const ProgramGraphicsBackendSignalSummary({
+    required this.kind,
+    required this.value,
+  });
+
+  final String kind;
+  final String value;
+}
+
+final class ProgramGraphicsBackendSuggestionSummary {
+  const ProgramGraphicsBackendSuggestionSummary({
+    required this.backend,
+    required this.confidence,
+    required this.reason,
+  });
+
+  final String backend;
+  final String confidence;
+  final String reason;
+}

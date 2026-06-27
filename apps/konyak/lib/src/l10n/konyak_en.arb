@@ -248,6 +248,36 @@
   "@graphicsBackend": {
     "description": "Konyak UI string: Graphics Backend"
   },
+  "detectGraphicsBackend": "Detect graphics backend",
+  "@detectGraphicsBackend": {
+    "description": "Button label for statically inspecting a program and suggesting a graphics backend."
+  },
+  "graphicsBackendHint": "Graphics backend hint",
+  "@graphicsBackendHint": {
+    "description": "Title for graphics backend static analysis results."
+  },
+  "graphicsBackendHintUnavailable": "No graphics backend hint was found.",
+  "@graphicsBackendHintUnavailable": {
+    "description": "Message shown when static analysis finds no graphics backend suggestion."
+  },
+  "recommendedGraphicsBackend": "Recommended: {backend}",
+  "@recommendedGraphicsBackend": {
+    "description": "Recommendation line for a graphics backend hint.",
+    "placeholders": {
+      "backend": {
+        "type": "String"
+      }
+    }
+  },
+  "detectedGraphicsSignals": "Detected: {signals}",
+  "@detectedGraphicsSignals": {
+    "description": "Line listing static analysis signals that informed the graphics backend hint.",
+    "placeholders": {
+      "signals": {
+        "type": "String"
+      }
+    }
+  },
   "gptkD3dmetalSourceWasNotSelected": "GPTK/D3DMetal source was not selected.",
   "@gptkD3dmetalSourceWasNotSelected": {
     "description": "Konyak UI string: GPTK/D3DMetal source was not selected."

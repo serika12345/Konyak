@@ -198,6 +198,25 @@ class KonyakLocalizationsJa extends KonyakLocalizations {
   String get graphicsBackend => 'グラフィックバックエンド';
 
   @override
+  String get detectGraphicsBackend => 'グラフィックバックエンドを検出';
+
+  @override
+  String get graphicsBackendHint => 'グラフィックバックエンドのヒント';
+
+  @override
+  String get graphicsBackendHintUnavailable => 'グラフィックバックエンドのヒントは見つかりませんでした。';
+
+  @override
+  String recommendedGraphicsBackend(String backend) {
+    return '推奨: $backend';
+  }
+
+  @override
+  String detectedGraphicsSignals(String signals) {
+    return '検出: $signals';
+  }
+
+  @override
   String get gptkD3dmetalSourceWasNotSelected =>
       'GPTK/D3DMetal の入手元が選択されていません。';
 

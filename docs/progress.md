@@ -13,6 +13,43 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-27 18:53 JST
+- State: `completed`
+- Branch: `main`
+- Active work: add static graphics backend selection hints for Windows
+  programs.
+- Related TODO: none; this is a focused UX/CLI contract improvement for
+  choosing existing graphics backends.
+- Purpose: inspect a selected Windows program without running it and surface
+  candidate graphics backend hints through the existing CLI-to-Flutter
+  boundary.
+- Completed work: read current TODO/progress state, Flutter architecture notes,
+  the run program dialog, CLI program command handling, PE metadata parsing,
+  runtime settings models, and bottle graphics settings controls; added
+  `suggest-graphics-backend --program <path> --json`; extended PE parsing with
+  import DLL names; added static graphics signal analysis for D3D9, D3D10/11,
+  D3D12, OpenGL, and Vulkan hints; added Flutter CLI parsing and a run dialog
+  hint button/result panel; added English/Japanese localization entries; added
+  CLI, client, widget, localization, and golden coverage.
+- Remaining work: none for the static hint path.
+- Next action: review the uncommitted diff and commit when ready.
+- Verification: focused tests passed:
+  `cd packages/konyak_cli && dart test test/cli_contract_test.dart --name
+  "suggest-graphics-backend"`, `cd apps/konyak && flutter test
+  test/cli/konyak_cli_client_test.dart --plain-name "loads graphics backend
+  hints through the JSON CLI contract"`, `cd apps/konyak && flutter test
+  test/widget_test.dart --plain-name "run program dialog displays graphics
+  backend hints"`, `cd apps/konyak && flutter test test/widget_test.dart
+  --plain-name "run program dialog requests graphics backend hints from the
+  CLI"`, and `cd apps/konyak && flutter test
+  test/app/localization_resources_test.dart`. Generated and rechecked golden
+  artifact:
+  `apps/konyak/test/goldens/run_program_dialog_graphics_hint.png`.
+  Required gates passed: `just verify-governance`, `just verify-safety`,
+  `just format-check`, `just lint`, `just flutter-format-check`, `just
+  flutter-analyze`, `just flutter-test`, and `just cli-test`. `git diff
+  --check` passed.
+
 - Timestamp: 2026-06-27 14:58 JST
 - State: `completed`
 - Branch: `codex/visible-graphics-smoke`

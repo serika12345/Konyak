@@ -51,6 +51,35 @@ _ProgramRunCliRequest? _parseJsonProgramRunCliRequest(List<String> arguments) {
   );
 }
 
+class _GraphicsBackendHintsCliRequest {
+  const _GraphicsBackendHintsCliRequest({required this.programPath});
+
+  final String programPath;
+}
+
+_GraphicsBackendHintsCliRequest? _parseJsonGraphicsBackendHintsCliRequest(
+  List<String> arguments,
+) {
+  final results = _parseJsonCliCommand(
+    arguments,
+    command: 'suggest-graphics-backend',
+    options: const <String>['program'],
+  );
+  if (results == null || _hasEmptyParsedCliOption(results, 'program')) {
+    return null;
+  }
+  if (!_hasRestCount(results, 0)) {
+    return null;
+  }
+
+  final programPath = _requiredCliOption(results, 'program');
+  if (programPath == null) {
+    return null;
+  }
+
+  return _GraphicsBackendHintsCliRequest(programPath: programPath);
+}
+
 class _WinetricksRunCliRequest {
   const _WinetricksRunCliRequest({required this.bottleId, required this.verb});
 

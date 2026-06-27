@@ -1,6 +1,97 @@
 part of 'cli_contract_test.dart';
 
 void defineProgramExecutionContractTests() {
+  test(
+    'suggest-graphics-backend --json recommends D3DMetal for D3D12 on macOS',
+    () async {
+      final tempDirectory = await Directory.systemTemp.createTemp(
+        'konyak-graphics-hints-test-',
+      );
+      addTearDown(() async {
+        if (await tempDirectory.exists()) {
+          await tempDirectory.delete(recursive: true);
+        }
+      });
+      final programPath = _joinTestPath(tempDirectory.path, const ['game.exe']);
+      File(programPath).writeAsBytesSync(
+        _syntheticPortableExecutableBytes(
+          importDllNames: const ['d3d12.dll', 'dxgi.dll'],
+        ),
+      );
+
+      final result = runCli(
+        ['suggest-graphics-backend', '--program', programPath, '--json'],
+        programRunPlanner: ProgramRunPlanner(
+          hostPlatform: KonyakHostPlatform.macos,
+        ),
+      );
+
+      expect(result.exitCode, 0);
+      expect(result.stderr, isEmpty);
+
+      final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+      expect(payload, {
+        'schemaVersion': 1,
+        'graphicsBackendHints': {
+          'programPath': programPath,
+          'hostPlatform': 'macos',
+          'signals': [
+            {'kind': 'peImport', 'value': 'd3d12.dll'},
+            {'kind': 'peImport', 'value': 'dxgi.dll'},
+          ],
+          'suggestions': [
+            {
+              'backend': 'd3dMetal',
+              'confidence': 'high',
+              'reason': 'D3D12 API usage was detected.',
+            },
+          ],
+        },
+      });
+    },
+  );
+
+  test(
+    'suggest-graphics-backend --json recommends vkd3d-proton for D3D12 on Linux',
+    () async {
+      final tempDirectory = await Directory.systemTemp.createTemp(
+        'konyak-graphics-hints-linux-test-',
+      );
+      addTearDown(() async {
+        if (await tempDirectory.exists()) {
+          await tempDirectory.delete(recursive: true);
+        }
+      });
+      final programPath = _joinTestPath(tempDirectory.path, const ['game.exe']);
+      File(programPath).writeAsBytesSync(
+        _syntheticPortableExecutableBytes(importDllNames: const ['d3d12.dll']),
+      );
+
+      final result = runCli(
+        ['suggest-graphics-backend', '--program', programPath, '--json'],
+        programRunPlanner: ProgramRunPlanner(
+          hostPlatform: KonyakHostPlatform.linux,
+        ),
+      );
+
+      expect(result.exitCode, 0);
+      expect(result.stderr, isEmpty);
+
+      final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+      expect(
+        (payload['graphicsBackendHints']
+            as Map<String, Object?>)['suggestions'],
+        [
+          {
+            'backend': 'vkd3dProton',
+            'confidence': 'high',
+            'reason': 'D3D12 API usage was detected.',
+          },
+        ],
+      );
+    },
+  );
+
   test('get-program-settings --json returns default program settings', () {
     final repository = MemoryBottleRepository(
       dataHome: '/home/user/.local/share/konyak',

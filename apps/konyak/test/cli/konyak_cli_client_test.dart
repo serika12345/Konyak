@@ -2412,6 +2412,58 @@ void main() {
     },
   );
 
+  test('loads graphics backend hints through the JSON CLI contract', () async {
+    final runner = _FakeProcessRunner(
+      result: const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "graphicsBackendHints": {
+              "programPath": "/downloads/game.exe",
+              "hostPlatform": "macos",
+              "signals": [
+                {"kind": "peImport", "value": "d3d12.dll"},
+                {"kind": "peImport", "value": "dxgi.dll"}
+              ],
+              "suggestions": [
+                {
+                  "backend": "d3dMetal",
+                  "confidence": "high",
+                  "reason": "D3D12 API usage was detected."
+                }
+              ]
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+    );
+    final client = KonyakCliClient(executable: 'konyak', processRunner: runner);
+
+    final result = await client.suggestGraphicsBackend(
+      programPath: '/downloads/game.exe',
+    );
+
+    expect(runner.arguments, const [
+      'suggest-graphics-backend',
+      '--program',
+      '/downloads/game.exe',
+      '--json',
+    ]);
+    expect(result, isA<LoadedGraphicsBackendHints>());
+
+    final loaded = result as LoadedGraphicsBackendHints;
+    expect(loaded.hints.programPath, '/downloads/game.exe');
+    expect(loaded.hints.hostPlatform, 'macos');
+    expect(loaded.hints.signals.map((signal) => signal.value), [
+      'd3d12.dll',
+      'dxgi.dll',
+    ]);
+    expect(loaded.hints.suggestions.single.backend, 'd3dMetal');
+    expect(loaded.hints.suggestions.single.confidence, 'high');
+  });
+
   test('loads winetricks verbs through the JSON CLI contract', () async {
     final runner = _FakeProcessRunner(
       result: const ProcessRunResult(

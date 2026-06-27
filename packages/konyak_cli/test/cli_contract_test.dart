@@ -1636,7 +1636,9 @@ String _joinTestPath(String root, List<String> segments) {
   return <String>[root, ...segments].join('/');
 }
 
-Uint8List _syntheticPortableExecutableBytes() {
+Uint8List _syntheticPortableExecutableBytes({
+  List<String> importDllNames = const <String>[],
+}) {
   final iconImage = Uint8List.fromList(const <int>[1, 2, 3, 4]);
   final groupIcon = _syntheticGroupIconBytes(
     iconId: 1,
@@ -1663,11 +1665,22 @@ Uint8List _syntheticPortableExecutableBytes() {
   const sectionHeaderOffset = peOffset + 4 + 20 + 0xf0;
   const resourceRva = 0x1000;
   const resourceRawOffset = 0x200;
+  const importRva = 0x3000;
+  const importRawOffset = 0x1000;
   const iconDataOffset = 0x100;
   final groupDataOffset = iconDataOffset + iconImage.length;
   final versionDataOffset = groupDataOffset + groupIcon.length;
   final resourceSize = versionDataOffset + versionInfo.length;
-  final bytes = Uint8List(resourceRawOffset + resourceSize + 0x100);
+  final importDirectory = _syntheticImportDirectoryBytes(
+    dllNames: importDllNames,
+    sectionRva: importRva,
+  );
+  final bytes = Uint8List(
+    max(
+      resourceRawOffset + resourceSize + 0x100,
+      importRawOffset + importDirectory.length + 0x100,
+    ),
+  );
 
   bytes[0] = 0x4d;
   bytes[1] = 0x5a;
@@ -1675,9 +1688,13 @@ Uint8List _syntheticPortableExecutableBytes() {
   bytes[peOffset] = 0x50;
   bytes[peOffset + 1] = 0x45;
   _writeU16(bytes, peOffset + 4, 0x8664);
-  _writeU16(bytes, peOffset + 6, 1);
+  _writeU16(bytes, peOffset + 6, importDllNames.isEmpty ? 1 : 2);
   _writeU16(bytes, peOffset + 20, 0xf0);
   _writeU16(bytes, peOffset + 24, 0x020b);
+  if (importDllNames.isNotEmpty) {
+    _writeU32(bytes, peOffset + 24 + 120, importRva);
+    _writeU32(bytes, peOffset + 24 + 124, importDirectory.length);
+  }
   _writeU32(bytes, peOffset + 24 + 128, resourceRva);
   _writeU32(bytes, peOffset + 24 + 132, resourceSize);
 
@@ -1686,6 +1703,19 @@ Uint8List _syntheticPortableExecutableBytes() {
   _writeU32(bytes, sectionHeaderOffset + 12, resourceRva);
   _writeU32(bytes, sectionHeaderOffset + 16, resourceSize);
   _writeU32(bytes, sectionHeaderOffset + 20, resourceRawOffset);
+  if (importDllNames.isNotEmpty) {
+    final importSectionHeaderOffset = sectionHeaderOffset + 40;
+    _writeAscii(bytes, importSectionHeaderOffset, '.idata');
+    _writeU32(bytes, importSectionHeaderOffset + 8, importDirectory.length);
+    _writeU32(bytes, importSectionHeaderOffset + 12, importRva);
+    _writeU32(bytes, importSectionHeaderOffset + 16, importDirectory.length);
+    _writeU32(bytes, importSectionHeaderOffset + 20, importRawOffset);
+    bytes.setRange(
+      importRawOffset,
+      importRawOffset + importDirectory.length,
+      importDirectory,
+    );
+  }
 
   _writeResourceDirectory(bytes, resourceRawOffset, [
     _ResourceDirectoryEntry(id: 3, directoryOffset: 0x028),
@@ -1745,6 +1775,30 @@ Uint8List _syntheticPortableExecutableBytes() {
     resourceRawOffset + versionDataOffset + versionInfo.length,
     versionInfo,
   );
+
+  return bytes;
+}
+
+Uint8List _syntheticImportDirectoryBytes({
+  required List<String> dllNames,
+  required int sectionRva,
+}) {
+  final descriptorBytes = (dllNames.length + 1) * 20;
+  final nameBytes = <List<int>>[
+    for (final dllName in dllNames) [...ascii.encode(dllName), 0],
+  ];
+  final size =
+      descriptorBytes +
+      nameBytes.fold<int>(0, (sum, bytes) => sum + bytes.length);
+  final bytes = Uint8List(size);
+  var nameOffset = descriptorBytes;
+
+  for (var index = 0; index < dllNames.length; index += 1) {
+    _writeU32(bytes, index * 20 + 12, sectionRva + nameOffset);
+    final name = nameBytes[index];
+    bytes.setRange(nameOffset, nameOffset + name.length, name);
+    nameOffset += name.length;
+  }
 
   return bytes;
 }

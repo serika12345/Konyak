@@ -98,6 +98,80 @@ void defineProgramWidgetTests() {
     );
   });
 
+  testWidgets('run program dialog displays graphics backend hints', (
+    WidgetTester tester,
+  ) async {
+    await _loadKonyakTestFonts();
+    await tester.binding.setSurfaceSize(const Size(640, 520));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    final goldenKey = GlobalKey();
+    await tester.pumpWidget(
+      MaterialApp(
+        supportedLocales: KonyakLocalizations.supportedLocales,
+        localizationsDelegates: KonyakLocalizations.localizationsDelegates,
+        theme: konyakThemeData(konyakDarkColors),
+        home: Scaffold(
+          backgroundColor: konyakDarkColors.windowBackground,
+          body: Center(
+            child: RepaintBoundary(
+              key: goldenKey,
+              child: RunProgramDialog(
+                bottleName: 'Steam',
+                programFilePicker: const _FakeProgramFilePicker(path: null),
+                initialDirectory: '/bottles/steam/drive_c',
+                graphicsBackendHintsLoader: (_) async =>
+                    LoadedGraphicsBackendHints(
+                      ProgramGraphicsBackendHintsSummary(
+                        programPath: '/downloads/game.exe',
+                        hostPlatform: 'macos',
+                        signals: const [
+                          ProgramGraphicsBackendSignalSummary(
+                            kind: 'peImport',
+                            value: 'd3d12.dll',
+                          ),
+                          ProgramGraphicsBackendSignalSummary(
+                            kind: 'peImport',
+                            value: 'dxgi.dll',
+                          ),
+                        ],
+                        suggestions: const [
+                          ProgramGraphicsBackendSuggestionSummary(
+                            backend: 'd3dMetal',
+                            confidence: 'high',
+                            reason: 'D3D12 API usage was detected.',
+                          ),
+                        ],
+                      ),
+                    ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Program path'),
+      '/downloads/game.exe',
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(const ValueKey('run-program-graphics-hint-button')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Graphics backend hint'), findsOneWidget);
+    expect(find.text('Recommended: GPTK/D3DMetal'), findsOneWidget);
+    expect(find.text('Detected: d3d12.dll, dxgi.dll'), findsOneWidget);
+    await _expectGoldenFileWithinTolerance(
+      find.byKey(goldenKey),
+      'goldens/run_program_dialog_graphics_hint.png',
+      diffTolerance: 0.11,
+    );
+  });
+
   testWidgets('run program refreshes removed pinned programs after completion', (
     WidgetTester tester,
   ) async {
@@ -538,6 +612,87 @@ void defineProgramWidgetTests() {
     expect(find.text('Latest run log'), findsOneWidget);
     expect(find.textContaining('exitCode: 0'), findsOneWidget);
   });
+
+  testWidgets(
+    'run program dialog requests graphics backend hints from the CLI',
+    (WidgetTester tester) async {
+      final runner = _QueuedProcessRunner([
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottles": [
+              {
+                "id": "steam",
+                "name": "Steam",
+                "path": "/home/user/.local/share/konyak/bottles/steam",
+                "windowsVersion": "win10"
+              }
+            ]
+          }
+        ''',
+          stderr: '',
+        ),
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+          {
+            "schemaVersion": 1,
+            "graphicsBackendHints": {
+              "programPath": "/downloads/game.exe",
+              "hostPlatform": "macos",
+              "signals": [
+                {"kind": "peImport", "value": "d3d12.dll"}
+              ],
+              "suggestions": [
+                {
+                  "backend": "d3dMetal",
+                  "confidence": "high",
+                  "reason": "D3D12 API usage was detected."
+                }
+              ]
+            }
+          }
+        ''',
+          stderr: '',
+        ),
+      ]);
+
+      await tester.pumpWidget(
+        _testKonyakApp(
+          cliClient: KonyakCliClient(
+            executable: 'konyak',
+            processRunner: runner,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.widgetWithText(TextButton, 'Run'));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Program path'),
+        '/downloads/game.exe',
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.byKey(const ValueKey('run-program-graphics-hint-button')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(runner.argumentsLog, const [
+        ['list-bottles', '--json'],
+        [
+          'suggest-graphics-backend',
+          '--program',
+          '/downloads/game.exe',
+          '--json',
+        ],
+      ]);
+      expect(find.text('Recommended: GPTK/D3DMetal'), findsOneWidget);
+    },
+  );
 
   testWidgets('run program dialog sends one-time arguments and environment', (
     WidgetTester tester,

@@ -302,6 +302,7 @@ Usage:
   konyak rename-pinned-program <id> --program <path> --name <name> --json
   konyak get-program-settings <id> --program <path> --json
   konyak set-program-settings <id> --program <path> --settings-json <json> --json
+  konyak suggest-graphics-backend --program <path> --json
   konyak launch-pinned-program --manifest <path> --json
   konyak run-program <id> --program <path> [--settings-json <json>] --json
   konyak run-winetricks <id> --verb <verb> --json

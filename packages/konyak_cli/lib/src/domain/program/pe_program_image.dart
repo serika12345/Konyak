@@ -5,6 +5,8 @@ final class _PortableExecutableImage {
     required this.bytes,
     required this.machine,
     required this.sections,
+    required this.importRva,
+    required this.importRootOffset,
     required this.resourceRva,
     required this.resourceRootOffset,
   });
@@ -12,6 +14,8 @@ final class _PortableExecutableImage {
   final Uint8List bytes;
   final int machine;
   final List<_PeSection> sections;
+  final int? importRva;
+  final int? importRootOffset;
   final int? resourceRva;
   final int? resourceRootOffset;
 
@@ -35,6 +39,41 @@ final class _PortableExecutableImage {
     }
 
     return null;
+  }
+
+  List<String> get importDllNames {
+    final rootOffset = importRootOffset;
+    if (rootOffset == null) {
+      return const <String>[];
+    }
+
+    final names = <String>[];
+    for (var offset = rootOffset; offset + 20 <= bytes.length; offset += 20) {
+      final originalFirstThunk = _readUint32(bytes, offset) ?? 0;
+      final timeDateStamp = _readUint32(bytes, offset + 4) ?? 0;
+      final forwarderChain = _readUint32(bytes, offset + 8) ?? 0;
+      final nameRva = _readUint32(bytes, offset + 12) ?? 0;
+      final firstThunk = _readUint32(bytes, offset + 16) ?? 0;
+      if (originalFirstThunk == 0 &&
+          timeDateStamp == 0 &&
+          forwarderChain == 0 &&
+          nameRva == 0 &&
+          firstThunk == 0) {
+        break;
+      }
+
+      final nameOffset = rawOffsetForRva(nameRva);
+      if (nameOffset == null) {
+        continue;
+      }
+
+      final name = _nullTerminatedAsciiString(bytes, nameOffset, bytes.length);
+      if (name != null && name.isNotEmpty) {
+        names.add(name);
+      }
+    }
+
+    return List.unmodifiable(names);
   }
 
   static _PortableExecutableImage? parse(Uint8List bytes) {
@@ -73,6 +112,8 @@ final class _PortableExecutableImage {
       return null;
     }
 
+    final importDirectoryOffset = dataDirectoryOffset + 8;
+    final importRva = _readUint32(bytes, importDirectoryOffset);
     final resourceDirectoryOffset = dataDirectoryOffset + 8 * 2;
     final resourceRva = _readUint32(bytes, resourceDirectoryOffset);
     final sectionHeaderOffset = optionalHeaderOffset + optionalHeaderSize;
@@ -107,6 +148,8 @@ final class _PortableExecutableImage {
       bytes: bytes,
       machine: machine,
       sections: List.unmodifiable(sections),
+      importRva: importRva,
+      importRootOffset: null,
       resourceRva: resourceRva,
       resourceRootOffset: null,
     );
@@ -115,6 +158,10 @@ final class _PortableExecutableImage {
       bytes: bytes,
       machine: machine,
       sections: List.unmodifiable(sections),
+      importRva: importRva,
+      importRootOffset: importRva == null || importRva == 0
+          ? null
+          : image.rawOffsetForRva(importRva),
       resourceRva: resourceRva,
       resourceRootOffset: resourceRva == null
           ? null

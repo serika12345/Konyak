@@ -155,6 +155,34 @@ extension KonyakCliProgramCommands on KonyakCliClient {
     );
   }
 
+  Future<GraphicsBackendHintsLoadResult> suggestGraphicsBackend({
+    required String programPath,
+  }) async {
+    final result = await _run([
+      'suggest-graphics-backend',
+      '--program',
+      programPath,
+      '--json',
+    ]);
+
+    final parsed = _parseGraphicsBackendHintsPayload(result.stdout);
+
+    return switch (parsed) {
+      LoadedGraphicsBackendHints() when result.exitCode == 0 => parsed,
+      GraphicsBackendHintsLoadFailure(:final message) =>
+        GraphicsBackendHintsLoadFailure(
+          exitCode: result.exitCode,
+          message: message,
+          diagnostic: result.stderr,
+        ),
+      LoadedGraphicsBackendHints() => GraphicsBackendHintsLoadFailure(
+        exitCode: result.exitCode,
+        message: _commandFailureMessage('suggest-graphics-backend', result),
+        diagnostic: result.stderr,
+      ),
+    };
+  }
+
   Future<BottleLocationOpenResult> openBottleLocation({
     required String bottleId,
     required String location,

@@ -470,6 +470,36 @@ abstract class KonyakLocalizations {
   /// **'Graphics Backend'**
   String get graphicsBackend;
 
+  /// Button label for statically inspecting a program and suggesting a graphics backend.
+  ///
+  /// In en, this message translates to:
+  /// **'Detect graphics backend'**
+  String get detectGraphicsBackend;
+
+  /// Title for graphics backend static analysis results.
+  ///
+  /// In en, this message translates to:
+  /// **'Graphics backend hint'**
+  String get graphicsBackendHint;
+
+  /// Message shown when static analysis finds no graphics backend suggestion.
+  ///
+  /// In en, this message translates to:
+  /// **'No graphics backend hint was found.'**
+  String get graphicsBackendHintUnavailable;
+
+  /// Recommendation line for a graphics backend hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended: {backend}'**
+  String recommendedGraphicsBackend(String backend);
+
+  /// Line listing static analysis signals that informed the graphics backend hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Detected: {signals}'**
+  String detectedGraphicsSignals(String signals);
+
   /// Konyak UI string: GPTK/D3DMetal source was not selected.
   ///
   /// In en, this message translates to:
