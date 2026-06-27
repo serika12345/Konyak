@@ -31,7 +31,7 @@ nix-lint:
   deadnix --fail flake.nix
   statix check flake.nix
 
-test: flutter-pub-get cli-pub-get flutter-test cli-test
+test: flutter-pub-get cli-pub-get flutter-test cli-test release-automation-test
 
 verify-safety: flutter-pub-get cli-pub-get
   python3 scripts/verify_no_invisible_chars.py
@@ -59,6 +59,15 @@ cli-analyze:
 cli-test:
   if [ -d packages/konyak_cli ]; then cd packages/konyak_cli && dart test; fi
 
+release-automation-test:
+  python3 scripts/prepare_release_test.py
+
+draft-release-notes VERSION:
+  ./scripts/draft_release_notes.zsh "{{VERSION}}"
+
+release-candidate-gates:
+  ./scripts/run_release_candidate_gates.zsh
+
 diagnose-linux-vulkan-wine:
   zsh scripts/run_linux_vulkan_wine_smoke.zsh
 
@@ -79,6 +88,9 @@ smoke-linux-appimage-update-handoff:
 
 linux-release-check:
   zsh scripts/run_linux_release_check.zsh
+
+prepare-release *ARGS:
+  python3 scripts/prepare_release.py {{ARGS}}
 
 macos-vulkan-probe-bottle:
   zsh scripts/prepare_macos_vulkan_probe_bottle.zsh

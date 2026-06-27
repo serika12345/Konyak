@@ -106,11 +106,52 @@
       }
     },
     {
+      "label": "Konyak: Draft Release Notes",
+      "type": "shell",
+      "command": "nix develop -c zsh -lc './scripts/draft_release_notes.zsh \"$@\"' draft-release-notes '${input:konyakReleaseVersion}'",
+      "problemMatcher": [],
+      "presentation": {
+        "clear": true,
+        "panel": "dedicated",
+        "reveal": "always"
+      }
+    },
+    {
+      "label": "Konyak: Release From Draft Notes",
+      "type": "shell",
+      "command": "nix develop -c zsh -lc 'version=\"$1\"; build_number=\"$2\"; notes=\"$3\"; if [[ -n \"$build_number\" ]]; then python3 scripts/prepare_release.py --version \"$version\" --build-number \"$build_number\" --release-notes \"$notes\" --gate \"just release-candidate-gates\" --commit --tag --push --dispatch-publish; else python3 scripts/prepare_release.py --version \"$version\" --release-notes \"$notes\" --gate \"just release-candidate-gates\" --commit --tag --push --dispatch-publish; fi' release '${input:konyakReleaseVersion}' '${input:konyakReleaseBuildNumber}' '${input:konyakReleaseNotesFile}'",
+      "problemMatcher": [],
+      "group": "build",
+      "presentation": {
+        "clear": true,
+        "panel": "dedicated",
+        "reveal": "always"
+      }
+    },
+    {
       "label": "Konyak: Verify",
       "type": "shell",
       "command": "nix develop -c zsh -lc 'just verify'",
       "problemMatcher": [],
       "group": "test"
+    }
+  ],
+  "inputs": [
+    {
+      "id": "konyakReleaseVersion",
+      "type": "promptString",
+      "description": "Konyak release version, without a leading v"
+    },
+    {
+      "id": "konyakReleaseBuildNumber",
+      "type": "promptString",
+      "description": "Optional Flutter build number; leave empty to increment"
+    },
+    {
+      "id": "konyakReleaseNotesFile",
+      "type": "promptString",
+      "description": "Markdown release notes draft file",
+      "default": ".dart_tool/konyak/release-notes.md"
     }
   ]
 }

@@ -71,6 +71,32 @@ nix develop -c zsh -lc 'just linux-release-check'
 Set `KONYAK_LINUX_RELEASE_CHECK_SKIP_RUNTIME_INSTALL=true` when only the
 AppImage build and bundled runtime manifest checks are needed.
 
+## VSCode Release Flow
+
+Use these tasks for the release flow that starts from VSCode:
+
+```text
+Tasks: Run Task -> Konyak: Draft Release Notes
+Tasks: Run Task -> Konyak: Release From Draft Notes
+```
+
+`Konyak: Draft Release Notes` prompts for the target app version, writes
+`.dart_tool/konyak/release-notes.md` if it does not already exist, and opens it
+with `code -r` when the `code` command is available. Edit that Markdown file in
+VSCode before continuing.
+
+`Konyak: Release From Draft Notes` prompts for the app version, optional Flutter
+build number, and release notes draft path. It then runs
+`scripts/prepare_release.py` with `--gate "just release-candidate-gates"`,
+`--commit`, `--tag`, `--push`, and `--dispatch-publish`. The gate runs
+`just verify` and the host-platform release build/smoke path before any commit
+or tag is created. If any gate fails, the task restores the pubspec, removes the
+copied `docs/releases/v<version>.md`, and stops before commit, tag, push, or
+publish dispatch. If all local gates pass, the release commit and annotated tag
+are pushed, and `publish.yml` is dispatched on that tag. The GitHub Release is
+only created or updated after the publish workflow's Linux and macOS build/smoke
+jobs pass.
+
 The macOS VSCode launch profile uses the same development runtime profile. It
 sets `KONYAK_RUNTIME_PROFILE=development`, points `KONYAK_MACOS_WINE_HOME` at
 `.dart_tool/konyak/dev-runtime/macos-wine`, and points

@@ -240,6 +240,67 @@ or notarization secrets. Published macOS artifacts are ad-hoc signed and
 unnotarized. Users should expect Gatekeeper quarantine handling for downloaded
 builds.
 
+## Release Preparation Automation
+
+Release preparation is automated by `scripts/prepare_release.py` and the
+`Prepare Konyak Release` GitHub Actions workflow. The app release version remains
+the `version:` value in `apps/konyak/pubspec.yaml`; the CLI package version is
+not used as the app release number.
+
+To prepare a release locally from a clean branch:
+
+```sh
+nix develop -c zsh -lc 'just prepare-release --bump patch --commit --tag'
+```
+
+Use `--version <major.minor.patch>` instead of `--bump patch` when the exact
+version should be chosen explicitly. The script increments the Flutter build
+number by default, or accepts `--build-number <number>`. To include release
+notes in the release commit and GitHub Release body, write a Markdown draft and
+pass it with `--release-notes <path>`. The draft is copied to
+`docs/releases/v<version>.md` before the release gates run.
+
+For a full local release-candidate gate on the current host platform, use:
+
+```sh
+nix develop -c zsh -lc 'just prepare-release --version 1.2.3 --release-notes .dart_tool/konyak/release-notes.md --gate "just release-candidate-gates" --commit --tag --push --dispatch-publish'
+```
+
+`just release-candidate-gates` runs `just verify` first. On macOS it then builds
+the macOS DMG and runs the packaged runtime extraction, DMG layout, PuTTY-backed
+Finder, packaged app CLI bridge, and app update handoff smokes. On Linux it runs
+`just linux-release-check`, which builds the AppImage and runs the Linux release
+checks plus runtime install smoke. If any gate or build fails, the script restores
+`apps/konyak/pubspec.yaml`, removes the copied `docs/releases/v<version>.md`, and
+does not commit, tag, push, or dispatch publishing.
+
+The release-preparation contract is:
+
+- fail unless the git worktree is clean before the version update
+- update `apps/konyak/pubspec.yaml`
+- copy `--release-notes` into `docs/releases/v<version>.md` when provided
+- run release gates, defaulting to `just verify`, before any commit or tag
+- restore the pubspec, remove copied release notes, and leave no tag when a
+  release gate fails
+- commit the version update as `Release v<version>` when `--commit` is used
+- create an annotated `v<version>` tag when `--tag` is used
+- push the release commit and tag when `--push` is used
+- dispatch `.github/workflows/publish.yml` on the created tag when
+  `--dispatch-publish` is used
+
+The GitHub `Prepare Konyak Release` workflow performs that same preparation from
+a selected branch. It accepts either an explicit version or a major/minor/patch
+bump, an optional build number, and an optional Markdown release-notes body. It
+runs the default release gate inside the Nix dev shell, pushes the resulting
+release commit and annotated tag, and then dispatches `publish.yml` on the tag
+ref. That explicit dispatch is intentional: tags created by the workflow token
+should not be the only mechanism that starts artifact publication. The existing
+`Konyak Release` workflow remains the source of truth for building, smoking,
+uploading, and publishing the macOS and Linux release artifacts. The publish job
+reads `docs/releases/v<version>.md` from the tag ref when present, then appends
+generated SHA-256 checksums to the GitHub Release body. If a publish workflow
+build or smoke fails, no GitHub Release is created or updated.
+
 ## Update Metadata
 
 `check-app-update --json` reads GitHub release metadata. The release body should

@@ -13,6 +13,113 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-27 19:42 JST
+- State: `in_progress`
+- Branch: `main`
+- Active work: release Konyak `v1.0.4` with checked-in release notes and the
+  maintained release gates.
+- Related TODO: none; this is a release execution task using the release
+  automation documented in `docs/release.md`.
+- Purpose: publish the next Konyak release after verifying the repository,
+  building release candidates, creating the release commit and annotated tag,
+  dispatching the publish workflow, and confirming the GitHub Release.
+- Completed work: read the current TODO/progress state, confirmed the latest
+  existing release tag is `v1.0.3`, confirmed GitHub CLI authentication, and
+  inspected the release automation and publish workflow paths that will be used
+  for `v1.0.4`. Sub-agent workstream isolation was considered for the release
+  artifact work, but the available multi-agent tool is restricted to explicit
+  user requests; investigation, execution, and audit notes are being kept in
+  this progress entry and verification output instead.
+- Remaining work: commit the already-verified release automation changes,
+  create `v1.0.4` release notes, run `just release-candidate-gates` through the
+  release preparation script, push the release commit and tag, dispatch and
+  monitor `publish.yml`, confirm the GitHub Release assets, and record the
+  completed release state.
+- Next action: commit the release automation prerequisite changes, then run the
+  `v1.0.4` release preparation command from a clean worktree.
+- Verification: release preflight checks performed so far:
+  `git status --short`, `git log --oneline --decorate -6`,
+  `git tag --list "v*" --sort=-v:refname`, `gh auth status`,
+  `git diff --stat`, and `git diff --check`.
+
+- Timestamp: 2026-06-27 19:35 JST
+- State: `completed`
+- Branch: `main`
+- Active work: add a VSCode-driven app release flow with version input,
+  editable release notes, local build gates, and publish dispatch.
+- Related TODO: none; this extends the release-preparation automation in
+  `docs/release.md`.
+- Purpose: let a release be driven from VSCode by drafting notes, selecting an
+  app version, running maintained gates/build checks, and only publishing after
+  the maintained release workflow succeeds.
+- Completed work: read current TODO/progress state, `.vscode/tasks.json`,
+  release documentation, `prepare_release.py`, release build scripts,
+  `publish.yml`, and governance checks. Sub-agent workstream isolation was
+  considered, but the available multi-agent tool is restricted to explicit user
+  requests; investigation, implementation, and audit notes are being kept in
+  this progress entry and verification output instead. Added release notes
+  handoff support to `scripts/prepare_release.py`, copying draft Markdown into
+  `docs/releases/v<version>.md`; added rollback coverage for invalid notes and
+  failed gates; added `scripts/draft_release_notes.zsh`,
+  `scripts/run_release_candidate_gates.zsh`, `just draft-release-notes`,
+  `just release-candidate-gates`, VSCode tasks for drafting notes and releasing
+  from draft notes, publish workflow release-note ingestion from the tag ref, an
+  optional `release_notes` input to the prepare workflow, release documentation,
+  VSCode documentation, and governance sentinels.
+- Remaining work: none for the VSCode-driven parent-repository release flow.
+- Next action: review the diff and commit. For the next release, run
+  `Konyak: Draft Release Notes`, edit `.dart_tool/konyak/release-notes.md`, then
+  run `Konyak: Release From Draft Notes` from a clean branch.
+- Verification: TDD failure observed first with `just release-automation-test`
+  before `--release-notes` existed. Focused and static checks passed:
+  `python3 -m py_compile scripts/prepare_release.py
+  scripts/prepare_release_test.py`, `just release-automation-test`, JSON parsing
+  for `.vscode/tasks.json`, Ruby YAML parsing for
+  `.github/workflows/prepare-release.yml` and `.github/workflows/publish.yml`,
+  `zsh -n scripts/draft_release_notes.zsh
+  scripts/run_release_candidate_gates.zsh`, `just verify-governance`,
+  `just --list`, and `git diff --check`. Smoke-tested
+  `scripts/draft_release_notes.zsh` with
+  `KONYAK_RELEASE_NOTES_DRAFT=.dart_tool/konyak/release-notes-smoke.md`. Dynamic
+  release gate verification passed with `just release-candidate-gates`: it ran
+  `just verify`, built `.dart_tool/konyak/release/macos/Konyak-1.0.3-macos-arm64.dmg`,
+  and passed macOS packaged runtime extraction, DMG layout, PuTTY Finder,
+  packaged app CLI bridge, and app update handoff smokes.
+
+- Timestamp: 2026-06-27 19:20 JST
+- State: `completed`
+- Branch: `main`
+- Active work: automate Konyak release version updates, release readiness
+  decision gates, tag creation, and publish workflow dispatch.
+- Related TODO: none; this tightens the existing release workflow documented in
+  `docs/release.md`.
+- Purpose: replace manual app-version edits and tag creation with a maintained
+  release-preparation path that runs release gates before publishing can start.
+- Completed work: read the current TODO/progress state, existing release
+  documentation, release build scripts, `just` verification targets, and
+  GitHub release workflow. Sub-agent workstream isolation was considered for
+  this release-process change, but the available multi-agent tool is restricted
+  to explicit user requests; investigation, implementation, and audit notes are
+  being kept in this progress entry and verification output instead. Added
+  `scripts/prepare_release.py`, a focused release automation test, a
+  `just prepare-release` entry point, the manual `Prepare Konyak Release`
+  workflow, release documentation, and governance sentinels for the workflow,
+  docs, and script. The preparation path updates `apps/konyak/pubspec.yaml`,
+  runs release gates before commit/tag, rolls the pubspec back when a gate
+  fails, commits `Release v<version>`, creates the annotated `v<version>` tag,
+  can push the commit/tag, and can dispatch `publish.yml` on the tag ref.
+- Remaining work: none for parent-repository release-preparation automation.
+- Next action: review the diff and commit; use the `Prepare Konyak Release`
+  workflow or `just prepare-release` from a clean branch for the next release.
+- Verification: TDD failure observed first with `just release-automation-test`
+  before `scripts/prepare_release.py` existed. Focused and static checks passed:
+  `python3 -m py_compile scripts/prepare_release.py
+  scripts/prepare_release_test.py`, `just release-automation-test`, Ruby YAML
+  parsing for `.github/workflows/prepare-release.yml` and
+  `.github/workflows/publish.yml`, and `git diff --check`. Required gates
+  passed: `just verify-governance`, `just verify-safety`, `just format-check`,
+  `just lint`, `just test`, and the integrated `just verify`.
+
 - Timestamp: 2026-06-27 18:53 JST
 - State: `completed`
 - Branch: `main`

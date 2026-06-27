@@ -1,0 +1,100 @@
+name: Prepare Konyak Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Explicit app version without a leading v; leave empty to use bump.
+        required: false
+        type: string
+      bump:
+        description: Version bump to apply when version is empty.
+        required: true
+        default: patch
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      build_number:
+        description: Explicit Flutter build number; leave empty to increment.
+        required: false
+        type: string
+      release_notes:
+        description: Optional Markdown release notes body.
+        required: false
+        type: string
+      dispatch_publish:
+        description: Dispatch the existing publish workflow on the created tag.
+        required: true
+        default: true
+        type: boolean
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  prepare:
+    name: Version, gate, tag, and dispatch
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+          ref: ${{ github.ref_name }}
+
+      - uses: cachix/install-nix-action@v31
+
+      - name: Ensure release preparation runs from a branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${GITHUB_REF_TYPE}" != "branch" ]]; then
+            echo "Prepare releases from a branch, not ${GITHUB_REF_TYPE}." >&2
+            exit 1
+          fi
+          git checkout "${GITHUB_REF_NAME}"
+
+      - name: Configure release commit author
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Prepare release commit and tag
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+          RELEASE_BUMP: ${{ inputs.bump }}
+          RELEASE_BUILD_NUMBER: ${{ inputs.build_number }}
+          RELEASE_NOTES: ${{ inputs.release_notes }}
+          DISPATCH_PUBLISH: ${{ inputs.dispatch_publish }}
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          args=(--commit --tag --push --push-branch "${GITHUB_REF_NAME}")
+
+          if [[ -n "${RELEASE_VERSION}" ]]; then
+            args+=(--version "${RELEASE_VERSION}")
+          else
+            args+=(--bump "${RELEASE_BUMP}")
+          fi
+
+          if [[ -n "${RELEASE_BUILD_NUMBER}" ]]; then
+            args+=(--build-number "${RELEASE_BUILD_NUMBER}")
+          fi
+
+          if [[ -n "${RELEASE_NOTES}" ]]; then
+            notes_path=".dart_tool/konyak/release-notes.md"
+            mkdir -p "$(dirname "${notes_path}")"
+            printf '%s\n' "${RELEASE_NOTES}" >"${notes_path}"
+            args+=(--release-notes "${notes_path}")
+          fi
+
+          if [[ "${DISPATCH_PUBLISH}" == "true" ]]; then
+            args+=(--dispatch-publish)
+          fi
+
+          nix develop -c zsh -lc 'python3 scripts/prepare_release.py "$@"' prepare-release "${args[@]}"

@@ -111,6 +111,10 @@ jobs:
       - macos
     if: startsWith(github.ref, 'refs/tags/')
     steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+
       - uses: actions/download-artifact@v4
         with:
           name: konyak-linux-release
@@ -136,6 +140,7 @@ jobs:
           macos_dir="$publish_dir/macos"
           combined_checksums="$publish_dir/SHA256SUMS"
           notes_path="$publish_dir/release-notes.md"
+          source_notes="docs/releases/${tag}.md"
 
           linux_appimages=("$linux_dir"/Konyak-*.AppImage)
           linux_appimage_checksums=("$linux_dir"/Konyak-*.AppImage.sha256)
@@ -162,6 +167,10 @@ jobs:
           cat "${macos_checksums[0]}" "${linux_checksums[0]}" >"$combined_checksums"
           {
             printf "# Konyak %s\n\n" "${tag#v}"
+            if [[ -f "$source_notes" ]]; then
+              cat "$source_notes"
+              printf "\n\n"
+            fi
             printf "## SHA-256\n\n"
             printf '```text\n'
             cat "$combined_checksums"

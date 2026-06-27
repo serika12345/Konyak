@@ -770,8 +770,50 @@ def main() -> None:
         "Konyak Release",
         "nix run .#macos-release",
         "SHA256SUMS",
+        "actions/checkout",
+        "docs/releases/${tag}.md",
+        "source_notes",
     ]:
         require_contains(".github/workflows/publish.yml", expected)
+    for expected in [
+        "Prepare Konyak Release",
+        "scripts/prepare_release.py",
+        "dispatch_publish",
+        "GH_TOKEN",
+        "release_notes",
+        "RELEASE_NOTES",
+        "--release-notes",
+        "contents: write",
+        "actions: write",
+    ]:
+        require_contains(".github/workflows/prepare-release.yml", expected)
+    for expected in [
+        "prepare-release *ARGS:",
+        "draft-release-notes VERSION:",
+        "release-candidate-gates:",
+        "scripts/prepare_release.py",
+        "scripts/draft_release_notes.zsh",
+        "scripts/run_release_candidate_gates.zsh",
+    ]:
+        require_contains("justfile", expected)
+    for expected in [
+        "gh",
+        "workflow",
+        "run",
+        "publish.yml",
+        "--ref",
+        "--release-notes",
+        "docs/releases",
+    ]:
+        require_contains("scripts/prepare_release.py", expected)
+    for expected in [
+        "just verify",
+        "just macos-release",
+        "smoke-macos-dmg-layout",
+        "smoke_macos_app_update_handoff",
+        "just linux-release-check",
+    ]:
+        require_contains("scripts/run_release_candidate_gates.zsh", expected)
     for unexpected in [
         "MACOS_CERTIFICATE_P12_BASE64",
         "APP_STORE_CONNECT_API_KEY_BASE64",
@@ -872,6 +914,11 @@ def main() -> None:
     require_contains("docs/release.md", "nix run .#macos-release")
     require_contains("docs/release.md", "unnotarized")
     require_contains("docs/release.md", "KONYAK_RUNTIME_STACK_SIGNING_KEY_BASE64")
+    require_contains("docs/release.md", "Prepare Konyak Release")
+    require_contains("docs/release.md", "just prepare-release")
+    require_contains("docs/release.md", "just release-candidate-gates")
+    require_contains("docs/release.md", "docs/releases/v<version>.md")
+    require_contains("docs/release.md", "restore the pubspec, remove copied release notes")
     require_contains("docs/vscode-macos.md", "Konyak Flutter (macOS)")
     require_contains("docs/vscode-macos.md", "Hot Reload")
     require_contains("docs/vscode-macos.md", "Agent Edit Watch")
@@ -999,7 +1046,16 @@ def main() -> None:
         "Konyak: Build Linux AppImage",
         "Konyak: Smoke Linux Runtime Install",
         "Konyak: Build Linux AppImage + Runtime Install Smoke",
+        "Konyak: Draft Release Notes",
+        "Konyak: Release From Draft Notes",
         "just linux-release-check",
+    ]:
+        require_contains(".vscode/tasks.json", expected)
+    for expected in [
+        "Konyak: Draft Release Notes",
+        "Konyak: Release From Draft Notes",
+        "--gate \\\"just release-candidate-gates\\\"",
+        "--dispatch-publish",
     ]:
         require_contains(".vscode/tasks.json", expected)
     for expected in [
@@ -1012,6 +1068,8 @@ def main() -> None:
     ]:
         require_contains("scripts/run_linux_release_check.zsh", expected)
     require_contains("docs/vscode-macos.md", "Konyak: Build Linux AppImage + Runtime Install Smoke")
+    require_contains("docs/vscode-macos.md", "Konyak: Draft Release Notes")
+    require_contains("docs/vscode-macos.md", "Konyak: Release From Draft Notes")
     require_contains("docs/release.md", "just linux-release-check")
     require_not_contains("scripts/prepare_linux_dev_runtime_source.zsh", "winetricks list-all")
     require_not_contains("scripts/prepare_linux_dev_runtime_source.zsh", "/nix/store")
