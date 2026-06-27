@@ -83,39 +83,14 @@ CliResult _runProgramJsonResult(
     result: repository.findBottle(request.bottleId),
     bottleId: request.bottleId,
     onFound: (bottle) {
-      final settingsResult = repository.readProgramSettings(
-        ProgramSettingsRequest(
-          bottleId: bottle.id,
-          programPath: request.programPath,
-        ),
-      );
-      final ProgramSettingsRecord programSettings;
-      switch (settingsResult) {
-        case ProgramSettingsRead(:final settings):
-          programSettings = settings;
-        case ProgramSettingsReadMissingBottle():
-          programSettings = ProgramSettingsRecord();
-        case ProgramSettingsReadFailed(:final message):
-          return _bottleRepositoryFailureJsonResult(message);
-      }
-      final effectiveProgramSettings = _programRunSettings(
-        storedSettings: programSettings,
-        oneTimeSettings: request.settings,
-      );
-
-      final programRunRequest = context.programRunPlanner.plan(
+      return _runProgramPathJsonResult(
+        bottleRepository: repository,
+        programRunPlanner: context.programRunPlanner,
+        programRunner: runner,
         bottle: bottle,
         programPath: request.programPath,
-        programSettings: Option.of(effectiveProgramSettings),
-      );
-      return programRunRequest.match(
-        () => _jsonError(
-          exitCode: 65,
-          code: 'unsupportedProgramType',
-          message: 'Program type is not supported.',
-          extra: <String, Object?>{'programPath': request.programPath},
-        ),
-        (request) {
+        oneTimeSettings: request.settings,
+        beforeRun: (programRunRequest) {
           final dllSyncFailure = _syncRuntimeSettingsDllOverrides(
             bottle: bottle,
             runtimeSettings: bottle.runtimeSettings,
@@ -125,19 +100,70 @@ CliResult _runProgramJsonResult(
             return dllSyncFailure;
           }
 
-          _recordExternalProgramRun(bottle: bottle, request: request);
+          _recordExternalProgramRun(bottle: bottle, request: programRunRequest);
           _synchronizeLinuxDesktopLauncherForProgramRun(
             hostPlatform: context.programRunPlanner.hostPlatform,
             environment: context.programRunPlanner.environment.toMap(),
             bottle: bottle,
-            request: request,
+            request: programRunRequest,
             programMetadataExtractor: context.programMetadataExtractor,
             diagnosticSink: context.linuxExternalProgramLauncherDiagnosticSink,
           );
 
-          return _programRunResultJson(request, runner);
+          return null;
         },
       );
+    },
+  );
+}
+
+typedef _ProgramRunPreparation = CliResult? Function(ProgramRunRequest request);
+
+CliResult _runProgramPathJsonResult({
+  required BottleRepository bottleRepository,
+  required ProgramRunPlanner programRunPlanner,
+  required ProgramRunner programRunner,
+  required BottleRecord bottle,
+  required String programPath,
+  Option<ProgramSettingsRecord> oneTimeSettings = const Option.none(),
+  _ProgramRunPreparation? beforeRun,
+}) {
+  final settingsResult = bottleRepository.readProgramSettings(
+    ProgramSettingsRequest(bottleId: bottle.id, programPath: programPath),
+  );
+  final ProgramSettingsRecord storedSettings;
+  switch (settingsResult) {
+    case ProgramSettingsRead(:final settings):
+      storedSettings = settings;
+    case ProgramSettingsReadMissingBottle():
+      storedSettings = ProgramSettingsRecord();
+    case ProgramSettingsReadFailed(:final message):
+      return _bottleRepositoryFailureJsonResult(message);
+  }
+
+  final effectiveProgramSettings = _programRunSettings(
+    storedSettings: storedSettings,
+    oneTimeSettings: oneTimeSettings,
+  );
+  final programRunRequest = programRunPlanner.plan(
+    bottle: bottle,
+    programPath: programPath,
+    programSettings: Option.of(effectiveProgramSettings),
+  );
+  return programRunRequest.match(
+    () => _jsonError(
+      exitCode: 65,
+      code: 'unsupportedProgramType',
+      message: 'Program type is not supported.',
+      extra: <String, Object?>{'programPath': programPath},
+    ),
+    (request) {
+      final preparationFailure = beforeRun?.call(request);
+      if (preparationFailure != null) {
+        return preparationFailure;
+      }
+
+      return _programRunResultJson(request, programRunner);
     },
   );
 }

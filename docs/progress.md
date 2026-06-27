@@ -13,6 +13,34 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-27 22:21 JST
+- State: `completed`
+- Branch: `main`
+- Active work: commonize one-shot Run Program configuration with pinned program
+  configuration.
+- Related TODO: none; this is a focused Flutter/CLI program configuration
+  refactor.
+- Purpose: make the pinned program configuration surface the source of truth for
+  program settings controls, add locale to one-shot Run Program options, and
+  reduce duplicate settings UI and run execution code paths.
+- Completed work: read the current TODO/progress state, added failing Flutter
+  coverage for Run Program locale configuration, extracted the pinned program
+  settings sections into shared Flutter controls, made Run Program use the same
+  program/locale/environment/logging controls, added locale to one-shot Run
+  Program settings, widened the Run Program dialog for the shared layout,
+  refreshed `apps/konyak/test/goldens/run_program_dialog_options.png`, and
+  commonized CLI program settings read/plan/run execution between
+  `run-program` and `launch-pinned-program`.
+- Remaining work: none for this change.
+- Next action: review the diff and commit.
+- Verification: failing test observed first for missing Run Program locale
+  control. Focused tests passed for the updated Run Program golden, one-shot
+  settings CLI arguments, pinned program configuration logging, and CLI
+  `run-program`/`launch-pinned-program` settings contracts. Full gates passed:
+  `just flutter-format-check`, `just flutter-analyze`, `just flutter-test`,
+  `just cli-test`, `just verify-governance`, `just verify-safety`,
+  `just format-check`, `just lint`, and final `just verify`.
+
 - Timestamp: 2026-06-27 21:52 JST
 - State: `completed`
 - Branch: `main`

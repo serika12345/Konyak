@@ -7,7 +7,7 @@ import '../../files/program_file_picker.dart';
 import '../../l10n/konyak_localizations.dart';
 import '../programs/program_configuration_settings.dart';
 import '../programs/program_environment_editor.dart';
-import '../programs/wine_logging_channel_menu.dart';
+import '../programs/program_settings_controls.dart';
 
 typedef GraphicsBackendHintsLoader =
     Future<GraphicsBackendHintsLoadResult> Function(String programPath);
@@ -50,6 +50,7 @@ class _RunProgramDialogState extends State<RunProgramDialog> {
   final List<ProgramEnvironmentControllers> _environmentControllers =
       <ProgramEnvironmentControllers>[];
   bool _optionsExpanded = false;
+  String _locale = '';
   bool _createLogFile = true;
   bool _isLoadingGraphicsBackendHints = false;
   ProgramGraphicsBackendHintsSummary? _graphicsBackendHints;
@@ -135,7 +136,7 @@ class _RunProgramDialogState extends State<RunProgramDialog> {
     return AlertDialog(
       title: Text(localizations.runProgramIn(widget.bottleName)),
       content: SizedBox(
-        width: 480,
+        width: 560,
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -204,13 +205,16 @@ class _RunProgramDialogState extends State<RunProgramDialog> {
                 ),
               ),
               if (_optionsExpanded)
-                _RunProgramOptions(
+                ProgramSettingsControls(
+                  keyPrefix: 'run-program',
+                  locale: _locale,
                   argumentsController: _argumentsController,
+                  environmentControllers: _environmentControllers,
                   createLogFile: _createLogFile,
                   wineLoggingChannelsController: _wineLoggingChannelsController,
                   logFilePathController: _logFilePathController,
                   defaultLogPath: widget.defaultLogPath,
-                  environmentControllers: _environmentControllers,
+                  onLocaleChanged: _setLocale,
                   onCreateLogFileChanged: _setCreateLogFile,
                   onChooseLogFile: _chooseLogFile,
                   onAddEnvironmentVariable: _addEnvironmentVariable,
@@ -252,11 +256,17 @@ class _RunProgramDialogState extends State<RunProgramDialog> {
     });
   }
 
+  void _setLocale(String locale) {
+    setState(() {
+      _locale = locale;
+    });
+  }
+
   Future<void> _chooseLogFile() async {
     final currentPath = _effectiveLogPath();
     final selectedPath = await widget.logFilePicker.pickLogFilePath(
-      initialDirectory: _pathDirectory(currentPath),
-      suggestedName: _pathFileName(currentPath) ?? 'latest.log',
+      initialDirectory: programPathDirectory(currentPath),
+      suggestedName: programPathFileName(currentPath) ?? 'latest.log',
     );
     if (!mounted || selectedPath == null || selectedPath.trim().isEmpty) {
       return;
@@ -287,11 +297,15 @@ class _RunProgramDialogState extends State<RunProgramDialog> {
       additionalWineLoggingChannels: _wineLoggingChannelsController.text,
       logFilePath: _logFilePathController.text,
     );
-    if (arguments.trim().isEmpty && environment.isEmpty && logging.isDefault) {
+    if (_locale.trim().isEmpty &&
+        arguments.trim().isEmpty &&
+        environment.isEmpty &&
+        logging.isDefault) {
       return null;
     }
 
     return ProgramSettingsSummary(
+      locale: _locale,
       arguments: arguments,
       environment: environment,
       logging: logging,
@@ -299,12 +313,10 @@ class _RunProgramDialogState extends State<RunProgramDialog> {
   }
 
   String _effectiveLogPath() {
-    final selectedPath = _logFilePathController.text.trim();
-    if (selectedPath.isNotEmpty) {
-      return selectedPath;
-    }
-
-    return widget.defaultLogPath.trim();
+    return effectiveProgramLogPath(
+      selectedLogPath: _logFilePathController.text,
+      defaultLogPath: widget.defaultLogPath,
+    );
   }
 }
 
@@ -396,145 +408,4 @@ String _graphicsBackendLabel({
     'vkd3dProton' => 'vkd3d-proton',
     _ => suggestion.backend,
   };
-}
-
-class _RunProgramOptions extends StatelessWidget {
-  const _RunProgramOptions({
-    required this.argumentsController,
-    required this.createLogFile,
-    required this.wineLoggingChannelsController,
-    required this.logFilePathController,
-    required this.defaultLogPath,
-    required this.environmentControllers,
-    required this.onCreateLogFileChanged,
-    required this.onChooseLogFile,
-    required this.onAddEnvironmentVariable,
-    required this.onRemoveEnvironmentVariable,
-  });
-
-  final TextEditingController argumentsController;
-  final bool createLogFile;
-  final TextEditingController wineLoggingChannelsController;
-  final TextEditingController logFilePathController;
-  final String defaultLogPath;
-  final List<ProgramEnvironmentControllers> environmentControllers;
-  final ValueChanged<bool> onCreateLogFileChanged;
-  final VoidCallback onChooseLogFile;
-  final VoidCallback onAddEnvironmentVariable;
-  final ValueChanged<int> onRemoveEnvironmentVariable;
-
-  @override
-  Widget build(BuildContext context) {
-    final localizations = KonyakLocalizations.of(context);
-    final textTheme = Theme.of(context).textTheme;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        TextField(
-          key: const ValueKey('run-program-arguments-field'),
-          controller: argumentsController,
-          decoration: InputDecoration(
-            labelText: localizations.arguments,
-            hintText: '-windowed',
-          ),
-        ),
-        const SizedBox(height: 12),
-        Padding(
-          padding: const EdgeInsets.only(left: 2, bottom: 4),
-          child: Text(localizations.environment, style: textTheme.labelLarge),
-        ),
-        DecoratedBox(
-          decoration: BoxDecoration(
-            border: Border.all(color: Theme.of(context).dividerColor),
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: ProgramEnvironmentEditor(
-            keyPrefix: 'run-program',
-            controllers: environmentControllers,
-            onAdd: onAddEnvironmentVariable,
-            onRemove: onRemoveEnvironmentVariable,
-          ),
-        ),
-        const SizedBox(height: 12),
-        CheckboxListTile(
-          key: const ValueKey('run-program-create-log-file'),
-          value: createLogFile,
-          onChanged: (value) {
-            if (value != null) {
-              onCreateLogFileChanged(value);
-            }
-          },
-          title: Text(localizations.createLogFile),
-          controlAffinity: ListTileControlAffinity.leading,
-          contentPadding: EdgeInsets.zero,
-          dense: true,
-        ),
-        TextField(
-          key: const ValueKey('run-program-wine-logging-channels-field'),
-          controller: wineLoggingChannelsController,
-          decoration: InputDecoration(
-            labelText: localizations.additionalWineLoggingChannels,
-            hintText: '+seh,+relay',
-            suffixIcon: WineLoggingChannelMenu(
-              key: const ValueKey('run-program-wine-logging-channel-menu'),
-              onSelected: (channels) {
-                appendWineLoggingChannels(
-                  wineLoggingChannelsController,
-                  channels,
-                );
-              },
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: TextField(
-                key: const ValueKey('run-program-log-file-path-field'),
-                controller: logFilePathController,
-                decoration: InputDecoration(
-                  labelText: localizations.logFile,
-                  hintText: defaultLogPath.trim().isEmpty
-                      ? 'latest.log'
-                      : defaultLogPath,
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            TextButton(
-              key: const ValueKey('run-program-change-log-file'),
-              onPressed: onChooseLogFile,
-              child: Text(localizations.change),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-String? _pathDirectory(String path) {
-  final normalized = path.trim();
-  if (normalized.isEmpty) {
-    return null;
-  }
-
-  final separator = normalized.lastIndexOf('/');
-  if (separator <= 0) {
-    return null;
-  }
-
-  return normalized.substring(0, separator);
-}
-
-String? _pathFileName(String path) {
-  final normalized = path.trim();
-  if (normalized.isEmpty) {
-    return null;
-  }
-
-  final separator = normalized.lastIndexOf('/');
-  return separator == -1 ? normalized : normalized.substring(separator + 1);
 }

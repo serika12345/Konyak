@@ -82,6 +82,8 @@ void defineProgramWidgetTests() {
     await tester.pumpAndSettle();
 
     expect(find.text('Arguments'), findsOneWidget);
+    expect(find.text('Locale'), findsOneWidget);
+    expect(find.byKey(const ValueKey('run-program-locale')), findsOneWidget);
     expect(find.text('Environment'), findsOneWidget);
     expect(
       find.byKey(const ValueKey('run-program-arguments-field')),
@@ -763,6 +765,10 @@ void defineProgramWidgetTests() {
     );
     await tester.tap(find.byKey(const ValueKey('run-program-options-toggle')));
     await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('run-program-locale')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Japanese').last);
+    await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const ValueKey('run-program-arguments-field')),
       '-windowed',
@@ -788,7 +794,7 @@ void defineProgramWidgetTests() {
         '--program',
         '/downloads/setup.exe',
         '--settings-json',
-        '{"locale":"","arguments":"-windowed","environment":{"WINEDEBUG":"+seh"}}',
+        '{"locale":"ja_JP.UTF-8","arguments":"-windowed","environment":{"WINEDEBUG":"+seh"}}',
         '--json',
       ],
     ]);

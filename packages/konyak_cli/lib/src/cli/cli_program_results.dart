@@ -61,48 +61,12 @@ CliResult _runPinnedProgramLauncherCli({
             );
           }
 
-          final settingsResult = bottleRepository.readProgramSettings(
-            ProgramSettingsRequest(
-              bottleId: bottle.id,
-              programPath: manifest.programPath,
-            ),
-          );
-          final ProgramSettingsRecord programSettings;
-          switch (settingsResult) {
-            case ProgramSettingsRead(:final settings):
-              programSettings = settings;
-            case ProgramSettingsReadMissingBottle():
-              programSettings = ProgramSettingsRecord();
-            case ProgramSettingsReadFailed(:final message):
-              return _bottleRepositoryFailureJsonResult(message);
-          }
-          final programRunRequest = programRunPlanner.plan(
+          return _runProgramPathJsonResult(
+            bottleRepository: bottleRepository,
+            programRunPlanner: programRunPlanner,
+            programRunner: programRunner,
             bottle: bottle,
             programPath: manifest.programPath,
-            programSettings: Option.of(programSettings),
-          );
-          return programRunRequest.match(
-            () => _jsonError(
-              exitCode: 65,
-              code: 'unsupportedProgramType',
-              message: 'Program type is not supported.',
-              extra: <String, Object?>{'programPath': manifest.programPath},
-            ),
-            (request) {
-              final runResult = programRunner.run(request);
-
-              return switch (runResult) {
-                ProgramRunCompleted(:final processExitCode) =>
-                  _programRunJsonResult(
-                    request: request,
-                    processExitCode: processExitCode,
-                  ),
-                ProgramRunFailed(:final message) => _programRunFailedJsonResult(
-                  request: request,
-                  message: message,
-                ),
-              };
-            },
           );
         },
       );
