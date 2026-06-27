@@ -13,8 +13,8 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-06-27 19:42 JST
-- State: `in_progress`
+- Timestamp: 2026-06-27 19:53 JST
+- State: `completed`
 - Branch: `main`
 - Active work: release Konyak `v1.0.4` with checked-in release notes and the
   maintained release gates.
@@ -24,23 +24,42 @@ unfinished work.
   building release candidates, creating the release commit and annotated tag,
   dispatching the publish workflow, and confirming the GitHub Release.
 - Completed work: read the current TODO/progress state, confirmed the latest
-  existing release tag is `v1.0.3`, confirmed GitHub CLI authentication, and
-  inspected the release automation and publish workflow paths that will be used
-  for `v1.0.4`. Sub-agent workstream isolation was considered for the release
+  existing release tag was `v1.0.3`, confirmed GitHub CLI authentication, and
+  inspected the release automation and publish workflow paths used for
+  `v1.0.4`. Sub-agent workstream isolation was considered for the release
   artifact work, but the available multi-agent tool is restricted to explicit
-  user requests; investigation, execution, and audit notes are being kept in
-  this progress entry and verification output instead.
-- Remaining work: commit the already-verified release automation changes,
-  create `v1.0.4` release notes, run `just release-candidate-gates` through the
-  release preparation script, push the release commit and tag, dispatch and
-  monitor `publish.yml`, confirm the GitHub Release assets, and record the
-  completed release state.
-- Next action: commit the release automation prerequisite changes, then run the
-  `v1.0.4` release preparation command from a clean worktree.
-- Verification: release preflight checks performed so far:
-  `git status --short`, `git log --oneline --decorate -6`,
-  `git tag --list "v*" --sort=-v:refname`, `gh auth status`,
-  `git diff --stat`, and `git diff --check`.
+  user requests; investigation, execution, and audit notes were kept in this
+  progress entry and verification output instead. Committed the release
+  automation prerequisite as `c28aa9b` (`Automate VSCode release flow`). Created
+  release notes, ran the maintained release preparation script, updated the app
+  version from `1.0.3+4` to `1.0.4+5`, committed `409f9cc` (`Release v1.0.4`),
+  created and pushed annotated tag `v1.0.4`, dispatched `publish.yml`, and
+  confirmed the public GitHub Release at
+  `https://github.com/serika12345/Konyak/releases/tag/v1.0.4`.
+- Remaining work: none for `v1.0.4`; only this progress-record commit remains
+  to push after the release tag.
+- Next action: continue with the next TODO-backed task when requested.
+- Verification: preflight and focused checks passed before the automation
+  prerequisite commit: `python3 -m py_compile scripts/prepare_release.py
+  scripts/prepare_release_test.py`, `just release-automation-test`, JSON parsing
+  for `.vscode/tasks.json`, Ruby YAML parsing for
+  `.github/workflows/prepare-release.yml` and `.github/workflows/publish.yml`,
+  `zsh -n scripts/draft_release_notes.zsh
+  scripts/run_release_candidate_gates.zsh`, `just verify-governance`, and
+  `git diff --cached --check`. Release execution passed with
+  `python3 scripts/prepare_release.py --version 1.0.4 --release-notes
+  .dart_tool/konyak/release-notes.md --gate "just release-candidate-gates"
+  --commit --tag --push --dispatch-publish`; the gate ran `just verify`, built
+  `.dart_tool/konyak/release/macos/Konyak-1.0.4-macos-arm64.dmg`, and passed
+  macOS packaged runtime extraction, DMG layout, PuTTY Finder integration,
+  packaged app CLI bridge, and app update handoff smokes. GitHub Actions run
+  `28286961564` completed successfully: `Verify release candidate`, `Linux
+  AppImage`, `macOS app`, and `Publish GitHub release` all succeeded. GitHub
+  Release verification confirmed tag `v1.0.4`, published/non-draft/non-prerelease
+  status, release-note body with SHA-256 checksums, and 10 release assets:
+  macOS DMG/checksum/metadata, Linux AppImage/checksum/metadata, combined
+  `SHA256SUMS`, Linux runtime stack source manifest, manifest signature, and
+  runtime stack public key.
 
 - Timestamp: 2026-06-27 19:35 JST
 - State: `completed`
