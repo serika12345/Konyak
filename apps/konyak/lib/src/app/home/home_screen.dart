@@ -4,11 +4,11 @@ import '../../bottles/bottle_summary.dart';
 import '../../runtimes/runtime_summary.dart';
 import '../app_constants.dart';
 import '../app_platform.dart';
-import '../bottles/bottle_detail.dart';
 import '../bottles/runtime_settings_change.dart';
 import '../utils/bottle_lists.dart';
 import 'home_detail_pane.dart';
 import 'home_menu_bar.dart';
+import 'home_navigation_state.dart';
 import 'home_sidebar_pane.dart';
 import 'sidebar.dart';
 
@@ -109,34 +109,18 @@ class KonyakHome extends StatefulWidget {
 
 class _KonyakHomeState extends State<KonyakHome> {
   final TextEditingController _searchController = TextEditingController();
-  String? _selectedBottleId;
   bool _isSidebarVisible = true;
   bool _showExpandedSidebarContent = true;
-  BottleDetailMode _detailMode = BottleDetailMode.overview;
-  String? _selectedProgramPath;
+  KonyakHomeNavigationState _navigationState =
+      const KonyakHomeNavigationState();
 
   @override
   void didUpdateWidget(covariant KonyakHome oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    if (findSelectedBottle(widget.bottles, _selectedBottleId) == null) {
-      _selectedBottleId = widget.bottles.isEmpty
-          ? null
-          : widget.bottles.first.id;
-      if (_selectedBottleId == null) {
-        _detailMode = BottleDetailMode.overview;
-        _selectedProgramPath = null;
-      }
-    }
-
-    final selectedBottle = findSelectedBottle(
-      widget.bottles,
-      _selectedBottleId,
-    );
-    if (_detailMode == BottleDetailMode.programConfiguration &&
-        findSelectedProgram(selectedBottle, _selectedProgramPath) == null) {
-      _detailMode = BottleDetailMode.overview;
-      _selectedProgramPath = null;
+    final nextNavigationState = _navigationState.reconcile(widget.bottles);
+    if (nextNavigationState != _navigationState) {
+      _navigationState = nextNavigationState;
     }
   }
 
@@ -154,12 +138,9 @@ class _KonyakHomeState extends State<KonyakHome> {
       searchQuery: _searchController.text,
     );
     final selectedBottle =
-        findSelectedBottle(filteredBottles, _selectedBottleId) ??
+        _navigationState.selectedBottleIn(filteredBottles) ??
         (filteredBottles.isEmpty ? null : filteredBottles.first);
-    final selectedProgram = findSelectedProgram(
-      selectedBottle,
-      _selectedProgramPath,
-    );
+    final selectedProgram = _navigationState.selectedProgramIn(selectedBottle);
     final selectedBottleHasPendingRuntimeSettings =
         selectedBottle != null &&
         widget.pendingRuntimeSettingsControls.containsKey(selectedBottle.id);
@@ -209,7 +190,7 @@ class _KonyakHomeState extends State<KonyakHome> {
                     onShowSettings: widget.onShowSettings,
                     onCreateBottle: widget.onCreateBottle,
                     onViewLatestLog: widget.onViewLatestLog,
-                    detailMode: _detailMode,
+                    detailMode: _navigationState.detailMode,
                     selectedProgram: selectedProgram,
                     programSettings: widget.programSettings,
                     loadingProgramSettings: widget.loadingProgramSettings,
@@ -271,13 +252,15 @@ class _KonyakHomeState extends State<KonyakHome> {
   }
 
   void _showBottleConfiguration(BottleSummary bottle) {
-    if (widget.pendingRuntimeSettingsControls.containsKey(bottle.id)) {
+    final nextNavigationState = _navigationState.showBottleConfiguration(
+      bottle,
+      lockedBottleIds: widget.pendingRuntimeSettingsControls.keys,
+    );
+    if (identical(nextNavigationState, _navigationState)) {
       return;
     }
     setState(() {
-      _selectedBottleId = bottle.id;
-      _detailMode = BottleDetailMode.configuration;
-      _selectedProgramPath = null;
+      _navigationState = nextNavigationState;
     });
     widget.onLoadBottleConfiguration?.call(bottle);
   }
@@ -286,37 +269,36 @@ class _KonyakHomeState extends State<KonyakHome> {
     BottleSummary bottle,
     PinnedProgramSummary program,
   ) {
-    if (widget.pendingRuntimeSettingsControls.containsKey(bottle.id)) {
+    final nextNavigationState = _navigationState.showPinnedProgramConfiguration(
+      bottle,
+      program,
+      lockedBottleIds: widget.pendingRuntimeSettingsControls.keys,
+    );
+    if (identical(nextNavigationState, _navigationState)) {
       return;
     }
     setState(() {
-      _selectedBottleId = bottle.id;
-      _selectedProgramPath = program.path;
-      _detailMode = BottleDetailMode.programConfiguration;
+      _navigationState = nextNavigationState;
     });
     widget.onLoadPinnedProgramSettings?.call(bottle, program);
   }
 
   void _showBottleOverview() {
-    final selectedBottle = findSelectedBottle(
-      widget.bottles,
-      _selectedBottleId,
+    final nextNavigationState = _navigationState.showBottleOverview(
+      bottles: widget.bottles,
+      lockedBottleIds: widget.pendingRuntimeSettingsControls.keys,
     );
-    if (selectedBottle != null &&
-        widget.pendingRuntimeSettingsControls.containsKey(selectedBottle.id)) {
+    if (identical(nextNavigationState, _navigationState)) {
       return;
     }
     setState(() {
-      _detailMode = BottleDetailMode.overview;
-      _selectedProgramPath = null;
+      _navigationState = nextNavigationState;
     });
   }
 
   void _selectBottle(BottleSummary bottle) {
     setState(() {
-      _selectedBottleId = bottle.id;
-      _detailMode = BottleDetailMode.overview;
-      _selectedProgramPath = null;
+      _navigationState = _navigationState.selectBottle(bottle);
     });
   }
 

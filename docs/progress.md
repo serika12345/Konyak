@@ -13,6 +13,37 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-27 22:43 JST
+- State: `completed`
+- Branch: `main`
+- Active work: split Flutter home UI navigation state out of `home_screen.dart`.
+- Related TODO: Deferred / Split Flutter large UI files after backend
+  boundaries are smaller.
+- Purpose: make `KonyakHome` focus on rendering and event wiring by moving
+  bottle/program selection and detail-mode transition rules into a small
+  testable navigation state helper.
+- Completed work: read the current TODO/progress state, reviewed the current
+  home, sidebar, bottle detail, bottle list utility, and bottle summary code,
+  added failing pure tests for home navigation state, introduced
+  `KonyakHomeNavigationState`, and rewired `KonyakHome` to use it for bottle
+  selection, bottle configuration navigation, pinned program configuration
+  navigation, pending-setting navigation locks, and state reconciliation when
+  bottles or pinned programs disappear.
+- Remaining work: none for this first home navigation split. The broader UI
+  split TODO remains: continue moving view models and action selection out of
+  the remaining large Flutter UI files.
+- Next action: continue the UI split with the next controller/state extraction,
+  likely shared program settings form state between `ProgramConfigurationView`
+  and `RunProgramDialog`.
+- Verification: failing focused test observed first for missing
+  `KonyakHomeNavigationState`. Focused tests passed for the new navigation
+  state unit tests and representative existing widget flows for sidebar
+  toggling, bottle configuration navigation, and pinned program configuration.
+  Full Flutter gates passed: `just flutter-format-check`,
+  `just flutter-analyze`, and `just flutter-test`. Repository gates passed:
+  `just verify-governance`, `just verify-safety`, `just format-check`, and
+  `just lint`.
+
 - Timestamp: 2026-06-27 22:21 JST
 - State: `completed`
 - Branch: `main`
