@@ -1,8 +1,9 @@
+import 'package:fpdart/fpdart.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'domain_value_objects.freezed.dart';
 
-sealed class DomainValueObject<T extends Object?> {
+sealed class DomainValueObject<T extends Object> {
   const DomainValueObject();
 
   T get value;
@@ -208,7 +209,7 @@ abstract class WindowsDpiScaling
       fieldName: 'dpiScaling',
       minimum: 96,
       maximum: 480,
-      step: 24,
+      step: Option.of(24),
     ),
   );
 
@@ -1502,7 +1503,7 @@ int _requiredBoundedValueObjectInt({
   required String fieldName,
   required int minimum,
   required int maximum,
-  int? step,
+  Option<int> step = const Option.none(),
 }) {
   if (value < minimum || value > maximum) {
     throw ArgumentError.value(
@@ -1512,14 +1513,15 @@ int _requiredBoundedValueObjectInt({
     );
   }
 
-  final requiredStep = step;
-  if (requiredStep != null && (value - minimum) % requiredStep != 0) {
-    throw ArgumentError.value(
-      value,
-      fieldName,
-      'must use step $requiredStep from $minimum',
-    );
-  }
+  step.match(() {}, (requiredStep) {
+    if ((value - minimum) % requiredStep != 0) {
+      throw ArgumentError.value(
+        value,
+        fieldName,
+        'must use step $requiredStep from $minimum',
+      );
+    }
+  });
 
   return value;
 }

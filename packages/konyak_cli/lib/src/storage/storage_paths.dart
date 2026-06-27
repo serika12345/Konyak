@@ -45,14 +45,17 @@ String _appSettingsJsonPath(String configHome) {
 BottleRecord _bottleFromCreateRequest(
   BottleCreateRequest request,
   String dataHome, {
-  String? bottleDirectory,
+  Option<String> bottleDirectory = const Option.none(),
 }) {
   final id = _bottleIdFromName(request.name.value);
   if (id.isEmpty) {
     throw const BottleRepositoryException('Bottle name cannot form an id.');
   }
 
-  final directory = bottleDirectory ?? _joinPath(dataHome, const ['bottles']);
+  final directory = bottleDirectory.match(
+    () => _joinPath(dataHome, const ['bottles']),
+    (value) => value,
+  );
   return BottleRecord(
     id: id,
     name: request.name.value,
@@ -73,14 +76,17 @@ BottleRecord _renamedFileBottle({
   required BottleRecord bottle,
   required String name,
   required String dataHome,
-  String? bottleDirectory,
+  Option<String> bottleDirectory = const Option.none(),
 }) {
   final id = _bottleIdFromName(name);
   if (id.isEmpty) {
     throw const BottleRepositoryException('Bottle name cannot form an id.');
   }
 
-  final directory = bottleDirectory ?? _joinPath(dataHome, const ['bottles']);
+  final directory = bottleDirectory.match(
+    () => _joinPath(dataHome, const ['bottles']),
+    (value) => value,
+  );
   return bottle.withIdentity(
     id: id,
     name: name,
@@ -91,119 +97,131 @@ BottleRecord _renamedFileBottle({
 final _bottleIdLetterOrNumber = RegExp(r'[\p{L}\p{N}]', unicode: true);
 
 String _bottleIdFromName(String name) {
-  final buffer = StringBuffer();
-  var lastWasSeparator = false;
+  final state = name.trim().toLowerCase().runes.fold(
+    (id: '', lastWasSeparator: false),
+    (state, rune) {
+      final character = String.fromCharCode(rune);
+      if (_bottleIdLetterOrNumber.hasMatch(character)) {
+        return (id: '${state.id}$character', lastWasSeparator: false);
+      }
 
-  for (final rune in name.trim().toLowerCase().runes) {
-    final character = String.fromCharCode(rune);
-    if (_bottleIdLetterOrNumber.hasMatch(character)) {
-      buffer.write(character);
-      lastWasSeparator = false;
-    } else if (buffer.isNotEmpty && !lastWasSeparator) {
-      buffer.write('-');
-      lastWasSeparator = true;
-    }
-  }
+      if (state.id.isNotEmpty && !state.lastWasSeparator) {
+        return (id: '${state.id}-', lastWasSeparator: true);
+      }
 
-  final id = buffer.toString();
+      return state;
+    },
+  );
+  final id = state.id;
   return id.endsWith('-') ? id.substring(0, id.length - 1) : id;
 }
 
 String _resolveDataHome(HostEnvironment environment) {
-  final override = environment.nonEmptyValue('KONYAK_DATA_HOME');
-  if (override != null) {
-    return override;
-  }
-
-  final xdgDataHome = environment.nonEmptyValue('XDG_DATA_HOME');
-  if (xdgDataHome != null) {
-    return _joinPath(xdgDataHome, const ['konyak']);
-  }
-
-  final home = environment.nonEmptyValue('HOME');
-  if (home != null) {
-    return _joinPath(home, const ['.local', 'share', 'konyak']);
-  }
-
-  throw const BottleRepositoryException(
-    'Unable to resolve Konyak data directory.',
-  );
+  return environment
+      .nonEmptyValue('KONYAK_DATA_HOME')
+      .match(
+        () => environment
+            .nonEmptyValue('XDG_DATA_HOME')
+            .match(
+              () => environment
+                  .nonEmptyValue('HOME')
+                  .match(
+                    () => throw const BottleRepositoryException(
+                      'Unable to resolve Konyak data directory.',
+                    ),
+                    (home) =>
+                        _joinPath(home, const ['.local', 'share', 'konyak']),
+                  ),
+              (xdgDataHome) => _joinPath(xdgDataHome, const ['konyak']),
+            ),
+        (override) => override,
+      );
 }
 
 String _resolveBottleDataHome(
   HostEnvironment environment, {
   required KonyakHostPlatform hostPlatform,
 }) {
-  final override = environment.nonEmptyValue('KONYAK_DATA_HOME');
-  if (override != null) {
-    return override;
-  }
-
-  return switch (hostPlatform) {
-    KonyakHostPlatform.macos => _konyakApplicationSupportFolder(environment),
-    KonyakHostPlatform.linux => _resolveDataHome(environment),
-  };
+  return environment
+      .nonEmptyValue('KONYAK_DATA_HOME')
+      .match(
+        () => switch (hostPlatform) {
+          KonyakHostPlatform.macos => _konyakApplicationSupportFolder(
+            environment,
+          ),
+          KonyakHostPlatform.linux => _resolveDataHome(environment),
+        },
+        (override) => override,
+      );
 }
 
 String _resolveConfigHome(
   HostEnvironment environment, {
   required KonyakHostPlatform hostPlatform,
 }) {
-  final override = environment.nonEmptyValue('KONYAK_CONFIG_HOME');
-  if (override != null) {
-    return override;
-  }
-
-  switch (hostPlatform) {
-    case KonyakHostPlatform.macos:
-      final home = environment.nonEmptyValue('HOME');
-      if (home != null) {
-        return _joinPath(home, const [
-          'Library',
-          'Application Support',
-          'Konyak',
-        ]);
-      }
-    case KonyakHostPlatform.linux:
-      final xdgConfigHome = environment.nonEmptyValue('XDG_CONFIG_HOME');
-      if (xdgConfigHome != null) {
-        return _joinPath(xdgConfigHome, const ['konyak']);
-      }
-
-      final home = environment.nonEmptyValue('HOME');
-      if (home != null) {
-        return _joinPath(home, const ['.config', 'konyak']);
-      }
-  }
-
-  throw const AppSettingsRepositoryException(
-    'Unable to resolve Konyak config directory.',
-  );
+  return environment
+      .nonEmptyValue('KONYAK_CONFIG_HOME')
+      .match(
+        () => switch (hostPlatform) {
+          KonyakHostPlatform.macos =>
+            environment
+                .nonEmptyValue('HOME')
+                .match(
+                  () => throw const AppSettingsRepositoryException(
+                    'Unable to resolve Konyak config directory.',
+                  ),
+                  (home) => _joinPath(home, const [
+                    'Library',
+                    'Application Support',
+                    'Konyak',
+                  ]),
+                ),
+          KonyakHostPlatform.linux =>
+            environment
+                .nonEmptyValue('XDG_CONFIG_HOME')
+                .match(
+                  () => environment
+                      .nonEmptyValue('HOME')
+                      .match(
+                        () => throw const AppSettingsRepositoryException(
+                          'Unable to resolve Konyak config directory.',
+                        ),
+                        (home) => _joinPath(home, const ['.config', 'konyak']),
+                      ),
+                  (xdgConfigHome) => _joinPath(xdgConfigHome, const ['konyak']),
+                ),
+        },
+        (override) => override,
+      );
 }
 
 String _defaultBottlePath(
   HostEnvironment environment, {
   required KonyakHostPlatform hostPlatform,
 }) {
-  final override = environment.nonEmptyValue('KONYAK_DEFAULT_BOTTLE_PATH');
-  if (override != null) {
-    return override;
-  }
-
-  final dataHome = environment.nonEmptyValue('KONYAK_DATA_HOME');
-  if (dataHome != null) {
-    return _joinPath(dataHome, const ['bottles']);
-  }
-
-  return switch (hostPlatform) {
-    KonyakHostPlatform.macos => _joinPath(
-      _resolveBottleDataHome(environment, hostPlatform: hostPlatform),
-      const ['Bottles'],
-    ),
-    KonyakHostPlatform.linux => _joinPath(_resolveDataHome(environment), const [
-      'bottles',
-    ]),
-  };
+  return environment
+      .nonEmptyValue('KONYAK_DEFAULT_BOTTLE_PATH')
+      .match(
+        () => environment
+            .nonEmptyValue('KONYAK_DATA_HOME')
+            .match(
+              () => switch (hostPlatform) {
+                KonyakHostPlatform.macos => _joinPath(
+                  _resolveBottleDataHome(
+                    environment,
+                    hostPlatform: hostPlatform,
+                  ),
+                  const ['Bottles'],
+                ),
+                KonyakHostPlatform.linux => _joinPath(
+                  _resolveDataHome(environment),
+                  const ['bottles'],
+                ),
+              },
+              (dataHome) => _joinPath(dataHome, const ['bottles']),
+            ),
+        (override) => override,
+      );
 }
 
 bool _hasBottleAtPath(

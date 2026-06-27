@@ -54,22 +54,37 @@ String _uniqueMacosLauncherDisplayName(
   required Set<String> usedBundleNames,
 }) {
   final baseName = _macosLauncherDisplayName(name);
-  var index = 1;
+  return _uniqueMacosLauncherDisplayNameAtIndex(
+    baseName,
+    index: 1,
+    usedDisplayNames: usedDisplayNames,
+    usedBundleNames: usedBundleNames,
+  );
+}
 
-  while (true) {
-    final displayName = index == 1 ? baseName : '$baseName ($index)';
-    final displayKey = displayName.toLowerCase();
-    final bundleName = _macosLauncherBundleName(displayName);
-    final bundleKey = bundleName.toLowerCase();
-    if (!usedDisplayNames.contains(displayKey) &&
-        !usedBundleNames.contains(bundleKey)) {
-      usedDisplayNames.add(displayKey);
-      usedBundleNames.add(bundleKey);
-      return displayName;
-    }
-
-    index += 1;
+String _uniqueMacosLauncherDisplayNameAtIndex(
+  String baseName, {
+  required int index,
+  required Set<String> usedDisplayNames,
+  required Set<String> usedBundleNames,
+}) {
+  final displayName = index == 1 ? baseName : '$baseName ($index)';
+  final displayKey = displayName.toLowerCase();
+  final bundleName = _macosLauncherBundleName(displayName);
+  final bundleKey = bundleName.toLowerCase();
+  if (!usedDisplayNames.contains(displayKey) &&
+      !usedBundleNames.contains(bundleKey)) {
+    usedDisplayNames.add(displayKey);
+    usedBundleNames.add(bundleKey);
+    return displayName;
   }
+
+  return _uniqueMacosLauncherDisplayNameAtIndex(
+    baseName,
+    index: index + 1,
+    usedDisplayNames: usedDisplayNames,
+    usedBundleNames: usedBundleNames,
+  );
 }
 
 String _macosLauncherBundleName(String displayName) {
@@ -87,10 +102,10 @@ String _macosLauncherBundleBaseName(String displayName) {
 String _macosPinnedProgramLauncherScript(
   _MacosPinnedProgramLauncherCommand command,
 ) {
-  final workingDirectory = command.workingDirectory;
-  final changeDirectory = workingDirectory == null
-      ? ''
-      : 'cd ${_posixShellSingleQuote(workingDirectory)}\n';
+  final changeDirectory = command.workingDirectory.match(
+    () => '',
+    (workingDirectory) => 'cd ${_posixShellSingleQuote(workingDirectory)}\n',
+  );
   final launcherCommand = <String>[
     _posixShellSingleQuote(command.executable),
     ...command.arguments.map(_posixShellSingleQuote),

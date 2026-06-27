@@ -29,8 +29,13 @@ final class RuntimeComponentVersions {
     );
   }
 
-  String? operator [](String componentId) {
-    return _versions[RuntimeComponentId(componentId)]?.value;
+  Option<String> operator [](String componentId) {
+    final key = RuntimeComponentId(componentId);
+    if (!_versions.containsKey(key)) {
+      return const Option.none();
+    }
+
+    return Option.of((_versions[key] as RuntimeVersion).value);
   }
 
   RuntimeComponentVersions._withVersions(this._versions);

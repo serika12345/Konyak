@@ -16,17 +16,14 @@ final class HostEnvironment {
   final IMap<ProgramEnvironmentVariableName, ProgramEnvironmentVariableValue>
   _variables;
 
-  String? operator [](String name) {
-    return _variables[ProgramEnvironmentVariableName(name)]?.value;
+  Option<String> operator [](String name) {
+    return _value(name).map((value) => value.value);
   }
 
-  String? nonEmptyValue(String name) {
-    final value = _variables[ProgramEnvironmentVariableName(name)]?.value;
-    if (value == null || value.trim().isEmpty) {
-      return null;
-    }
-
-    return value;
+  Option<String> nonEmptyValue(String name) {
+    return this[name].flatMap(
+      (value) => value.trim().isEmpty ? const Option.none() : Option.of(value),
+    );
   }
 
   Map<String, String> toMap() {
@@ -42,4 +39,13 @@ final class HostEnvironment {
 
   @override
   int get hashCode => _variables.hashCode;
+
+  Option<ProgramEnvironmentVariableValue> _value(String name) {
+    final key = ProgramEnvironmentVariableName(name);
+    if (!_variables.containsKey(key)) {
+      return const Option.none();
+    }
+
+    return Option.of(_variables[key] as ProgramEnvironmentVariableValue);
+  }
 }

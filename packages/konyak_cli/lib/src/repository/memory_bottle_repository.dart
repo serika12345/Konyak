@@ -67,20 +67,20 @@ class MemoryBottleRepository implements BottleRepository {
 
   @override
   IoResult<Option<BottleRecord>> findBottle(String id) {
-    final bottle = _bottles[id];
-    if (bottle == null) {
-      return const Right<String, Option<BottleRecord>>(Option.none());
-    }
+    return _mapValue(_bottles, id).match(
+      () => const Right<String, Option<BottleRecord>>(Option.none()),
+      (bottle) {
+        final updated = _bottleWithPinnedProgramIcons(
+          _bottleWithoutMissingBottleLocalPinnedProgramFiles(bottle),
+          programMetadataExtractor: _programMetadataExtractor,
+        );
+        if (updated != bottle) {
+          _bottles[id] = updated;
+        }
 
-    final updated = _bottleWithPinnedProgramIcons(
-      _bottleWithoutMissingBottleLocalPinnedProgramFiles(bottle),
-      programMetadataExtractor: _programMetadataExtractor,
+        return Right<String, Option<BottleRecord>>(Option.of(updated));
+      },
     );
-    if (updated != bottle) {
-      _bottles[id] = updated;
-    }
-
-    return Right<String, Option<BottleRecord>>(Option.of(updated));
   }
 
   @override
@@ -128,158 +128,158 @@ class MemoryBottleRepository implements BottleRepository {
 
   @override
   BottleDeleteResult deleteBottle(String id) {
-    final bottle = _bottles.remove(id);
-    if (bottle == null) {
-      return BottleDeleteMissing(id);
-    }
-
-    return BottleDeleted(bottle);
+    return _removeMapValue(
+      _bottles,
+      id,
+    ).match(() => BottleDeleteMissing(id), BottleDeleted.new);
   }
 
   @override
   BottleRenameResult renameBottle(BottleRenameRequest request) {
-    final bottle = _bottles[request.bottleId.value];
-    if (bottle == null) {
-      return BottleRenameMissing(request.bottleId.value);
-    }
+    return _mapValue(_bottles, request.bottleId.value).match(
+      () => BottleRenameMissing(request.bottleId.value),
+      (bottle) {
+        final renamed = _renamedMemoryBottle(
+          bottle: bottle,
+          name: request.name.value,
+          dataHome: dataHome,
+        );
+        final hasConflict = _mapValue(_bottles, renamed.id.value).match(
+          () => false,
+          (conflictingBottle) => conflictingBottle.id.value != bottle.id.value,
+        );
+        if (hasConflict) {
+          return BottleRenameConflict(renamed.id.value);
+        }
 
-    final renamed = _renamedMemoryBottle(
-      bottle: bottle,
-      name: request.name.value,
-      dataHome: dataHome,
+        _bottles.remove(bottle.id.value);
+        _bottles[renamed.id.value] = renamed;
+
+        return BottleRenamed(renamed);
+      },
     );
-    final conflictingBottle = _bottles[renamed.id.value];
-    if (conflictingBottle != null &&
-        conflictingBottle.id.value != bottle.id.value) {
-      return BottleRenameConflict(renamed.id.value);
-    }
-
-    _bottles.remove(bottle.id.value);
-    _bottles[renamed.id.value] = renamed;
-
-    return BottleRenamed(renamed);
   }
 
   @override
   BottleMoveResult moveBottle(BottleMoveRequest request) {
-    final bottle = _bottles[request.bottleId.value];
-    if (bottle == null) {
-      return BottleMoveMissing(request.bottleId.value);
-    }
+    return _mapValue(_bottles, request.bottleId.value).match(
+      () => BottleMoveMissing(request.bottleId.value),
+      (bottle) {
+        if (_hasBottleAtPath(
+          _bottles.values,
+          request.path.value,
+          exceptId: bottle.id.value,
+        )) {
+          return BottleMoveConflict(request.path.value);
+        }
 
-    if (_hasBottleAtPath(
-      _bottles.values,
-      request.path.value,
-      exceptId: bottle.id.value,
-    )) {
-      return BottleMoveConflict(request.path.value);
-    }
+        final moved = bottle.withPath(request.path.value);
+        _bottles[bottle.id.value] = moved;
 
-    final moved = bottle.withPath(request.path.value);
-    _bottles[bottle.id.value] = moved;
-
-    return BottleMoved(moved);
+        return BottleMoved(moved);
+      },
+    );
   }
 
   @override
   BottleUpdateResult setWindowsVersion(WindowsVersionUpdateRequest request) {
-    final bottle = _bottles[request.bottleId.value];
-    if (bottle == null) {
-      return BottleUpdateMissing(request.bottleId.value);
-    }
+    return _mapValue(_bottles, request.bottleId.value).match(
+      () => BottleUpdateMissing(request.bottleId.value),
+      (bottle) {
+        final updated = bottle.withWindowsVersion(request.windowsVersion.value);
+        _bottles[request.bottleId.value] = updated;
 
-    final updated = bottle.withWindowsVersion(request.windowsVersion.value);
-    _bottles[request.bottleId.value] = updated;
-
-    return BottleUpdated(updated);
+        return BottleUpdated(updated);
+      },
+    );
   }
 
   @override
   BottleUpdateResult setRuntimeSettings(RuntimeSettingsUpdateRequest request) {
-    final bottle = _bottles[request.bottleId.value];
-    if (bottle == null) {
-      return BottleUpdateMissing(request.bottleId.value);
-    }
+    return _mapValue(_bottles, request.bottleId.value).match(
+      () => BottleUpdateMissing(request.bottleId.value),
+      (bottle) {
+        final updated = bottle.withRuntimeSettings(request.runtimeSettings);
+        _bottles[request.bottleId.value] = updated;
 
-    final updated = bottle.withRuntimeSettings(request.runtimeSettings);
-    _bottles[request.bottleId.value] = updated;
-
-    return BottleUpdated(updated);
+        return BottleUpdated(updated);
+      },
+    );
   }
 
   @override
   ProgramPinResult pinProgram(ProgramPinRequest request) {
-    final bottle = _bottles[request.bottleId.value];
-    if (bottle == null) {
-      return ProgramPinMissing(request.bottleId.value);
-    }
+    return _mapValue(_bottles, request.bottleId.value).match(
+      () => ProgramPinMissing(request.bottleId.value),
+      (bottle) {
+        if (_hasPinnedProgram(bottle, request.programPath.value)) {
+          return ProgramPinConflict(request.programPath.value);
+        }
 
-    if (_hasPinnedProgram(bottle, request.programPath.value)) {
-      return ProgramPinConflict(request.programPath.value);
-    }
+        final updated = _bottleWithPinnedProgram(
+          bottle,
+          request,
+          programMetadataExtractor: _programMetadataExtractor,
+        );
+        _bottles[request.bottleId.value] = updated;
 
-    final updated = _bottleWithPinnedProgram(
-      bottle,
-      request,
-      programMetadataExtractor: _programMetadataExtractor,
+        return ProgramPinned(updated);
+      },
     );
-    _bottles[request.bottleId.value] = updated;
-
-    return ProgramPinned(updated);
   }
 
   @override
   ProgramUpdateResult unpinProgram(ProgramUnpinRequest request) {
-    final bottle = _bottles[request.bottleId.value];
-    if (bottle == null) {
-      return ProgramUpdateMissingBottle(request.bottleId.value);
-    }
+    return _mapValue(_bottles, request.bottleId.value).match(
+      () => ProgramUpdateMissingBottle(request.bottleId.value),
+      (bottle) {
+        if (!_hasPinnedProgram(bottle, request.programPath.value)) {
+          return ProgramUpdateMissingProgram(request.programPath.value);
+        }
 
-    if (!_hasPinnedProgram(bottle, request.programPath.value)) {
-      return ProgramUpdateMissingProgram(request.programPath.value);
-    }
+        final updated = _bottleWithoutPinnedProgram(
+          bottle,
+          request.programPath.value,
+        );
+        _bottles[request.bottleId.value] = updated;
 
-    final updated = _bottleWithoutPinnedProgram(
-      bottle,
-      request.programPath.value,
+        return ProgramUpdated(updated);
+      },
     );
-    _bottles[request.bottleId.value] = updated;
-
-    return ProgramUpdated(updated);
   }
 
   @override
   ProgramUpdateResult renamePinnedProgram(ProgramRenameRequest request) {
-    final bottle = _bottles[request.bottleId.value];
-    if (bottle == null) {
-      return ProgramUpdateMissingBottle(request.bottleId.value);
-    }
+    return _mapValue(_bottles, request.bottleId.value).match(
+      () => ProgramUpdateMissingBottle(request.bottleId.value),
+      (bottle) {
+        if (!_hasPinnedProgram(bottle, request.programPath.value)) {
+          return ProgramUpdateMissingProgram(request.programPath.value);
+        }
 
-    if (!_hasPinnedProgram(bottle, request.programPath.value)) {
-      return ProgramUpdateMissingProgram(request.programPath.value);
-    }
+        final updated = _bottleWithRenamedPinnedProgram(bottle, request);
+        _bottles[request.bottleId.value] = updated;
 
-    final updated = _bottleWithRenamedPinnedProgram(bottle, request);
-    _bottles[request.bottleId.value] = updated;
-
-    return ProgramUpdated(updated);
+        return ProgramUpdated(updated);
+      },
+    );
   }
 
   @override
   ProgramSettingsReadResult readProgramSettings(
     ProgramSettingsRequest request,
   ) {
-    final bottle = _bottles[request.bottleId.value];
-    if (bottle == null) {
-      return ProgramSettingsReadMissingBottle(request.bottleId.value);
-    }
-
-    return ProgramSettingsRead(
-      _programSettings[_programSettingsKey(
-            bottleId: request.bottleId.value,
+    return _mapValue(_bottles, request.bottleId.value).match(
+      () => ProgramSettingsReadMissingBottle(request.bottleId.value),
+      (bottle) => ProgramSettingsRead(
+        _mapValue(
+          _programSettings,
+          _programSettingsKey(
+            bottleId: bottle.id.value,
             programPath: request.programPath.value,
-          )] ??
-          ProgramSettingsRecord(),
+          ),
+        ).match(ProgramSettingsRecord.new, (settings) => settings),
+      ),
     );
   }
 
@@ -287,17 +287,33 @@ class MemoryBottleRepository implements BottleRepository {
   ProgramSettingsUpdateResult setProgramSettings(
     ProgramSettingsUpdateRequest request,
   ) {
-    final bottle = _bottles[request.bottleId.value];
-    if (bottle == null) {
-      return ProgramSettingsUpdateMissingBottle(request.bottleId.value);
-    }
+    return _mapValue(_bottles, request.bottleId.value).match(
+      () => ProgramSettingsUpdateMissingBottle(request.bottleId.value),
+      (bottle) {
+        _programSettings[_programSettingsKey(
+              bottleId: bottle.id.value,
+              programPath: request.programPath.value,
+            )] =
+            request.settings;
 
-    _programSettings[_programSettingsKey(
-          bottleId: request.bottleId.value,
-          programPath: request.programPath.value,
-        )] =
-        request.settings;
-
-    return ProgramSettingsUpdated(request.settings);
+        return ProgramSettingsUpdated(request.settings);
+      },
+    );
   }
+}
+
+Option<V> _mapValue<K, V>(Map<K, V> map, K key) {
+  if (!map.containsKey(key)) {
+    return const Option.none();
+  }
+
+  return Option.of(map[key] as V);
+}
+
+Option<V> _removeMapValue<K, V>(Map<K, V> map, K key) {
+  if (!map.containsKey(key)) {
+    return const Option.none();
+  }
+
+  return Option.of(map.remove(key) as V);
 }

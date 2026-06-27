@@ -207,11 +207,11 @@ ProgramRunEnvironment _macosWineEnvironment({
       if (bottle.runtimeSettings.dxmt && !d3dMetalSelected)
         _macosDxmtUnixPath(runtimeRoot),
       _joinPath(runtimeRoot, const ['lib']),
-    ], Option.fromNullable(environment['DYLD_LIBRARY_PATH'])),
+    ], environment['DYLD_LIBRARY_PATH']),
     if (d3dMetalSelected)
       'DYLD_FRAMEWORK_PATH': _prependPaths(<String>[
         _macosD3DMetalExternalPath(runtimeRoot),
-      ], Option.fromNullable(environment['DYLD_FRAMEWORK_PATH'])),
+      ], environment['DYLD_FRAMEWORK_PATH']),
     if (d3dMetalSelected)
       'CX_APPLEGPTK_LIBD3DSHARED_PATH': _joinPath(runtimeRoot, const [
         ..._gptkD3DMetalComponentLibRelativePath,

@@ -45,20 +45,21 @@ List<String> _wineArgumentsForBottleCommand(String command) {
 ProgramRunEnvironment _programSettingsEnvironment(
   ProgramSettingsRecord settings,
 ) {
-  final environment = <String, String>{...settings.environment.toMap()};
-  if (settings.locale.value.trim().isNotEmpty) {
-    environment['LC_ALL'] = settings.locale.value;
-  }
+  final baseEnvironment = ProgramRunEnvironment(settings.environment.toMap());
+  final localizedEnvironment = settings.locale.value.trim().isEmpty
+      ? baseEnvironment
+      : baseEnvironment.add('LC_ALL', settings.locale.value);
   final logging = _programSettingsLogging(settings);
   final loggingChannels = logging.additionalWineLoggingChannels.value.trim();
-  if (loggingChannels.isNotEmpty) {
-    environment['WINEDEBUG'] = _combinedWineDebugChannels(
-      existingChannels: environment['WINEDEBUG'],
-      additionalChannels: loggingChannels,
-    );
-  }
-
-  return ProgramRunEnvironment(environment);
+  return loggingChannels.isEmpty
+      ? localizedEnvironment
+      : localizedEnvironment.add(
+          'WINEDEBUG',
+          _combinedWineDebugChannels(
+            existingChannels: localizedEnvironment['WINEDEBUG'],
+            additionalChannels: loggingChannels,
+          ),
+        );
 }
 
 ProgramLoggingSettingsRecord _programSettingsLogging(
@@ -82,10 +83,10 @@ String _programSettingsLogPath({
 }
 
 String _combinedWineDebugChannels({
-  required String? existingChannels,
+  required Option<String> existingChannels,
   required String additionalChannels,
 }) {
-  final existing = existingChannels?.trim() ?? '';
+  final existing = existingChannels.match(() => '', (value) => value.trim());
   final additional = additionalChannels.trim();
   if (existing.isEmpty) {
     return additional;

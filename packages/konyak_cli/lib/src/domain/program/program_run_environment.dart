@@ -59,8 +59,15 @@ final class ProgramRunEnvironment {
   final IMap<ProgramEnvironmentVariableName, ProgramEnvironmentVariableValue>
   _variables;
 
-  String? operator [](String name) {
-    return _variables[ProgramEnvironmentVariableName(name)]?.value;
+  Option<String> operator [](String name) {
+    final key = ProgramEnvironmentVariableName(name);
+    if (!_variables.containsKey(key)) {
+      return const Option.none();
+    }
+
+    return Option.of(
+      (_variables[key] as ProgramEnvironmentVariableValue).value,
+    );
   }
 
   Map<String, String> toMap() {

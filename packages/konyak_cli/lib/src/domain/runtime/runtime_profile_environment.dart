@@ -6,10 +6,10 @@ Option<String> _runtimeProfileEnvironmentValue(
   required String releaseKey,
 }) {
   if (_isDevelopmentRuntimeProfile(environment)) {
-    return Option.fromNullable(environment.nonEmptyValue(developmentKey));
+    return environment.nonEmptyValue(developmentKey);
   }
 
-  return Option.fromNullable(environment.nonEmptyValue(releaseKey));
+  return environment.nonEmptyValue(releaseKey);
 }
 
 String _runtimeDistributionKind(
@@ -24,5 +24,7 @@ String _runtimeDistributionKind(
 }
 
 bool _isDevelopmentRuntimeProfile(HostEnvironment environment) {
-  return environment.nonEmptyValue('KONYAK_RUNTIME_PROFILE') == 'development';
+  return environment
+      .nonEmptyValue('KONYAK_RUNTIME_PROFILE')
+      .match(() => false, (profile) => profile == 'development');
 }

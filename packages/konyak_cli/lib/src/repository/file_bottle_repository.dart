@@ -3,12 +3,14 @@ part of '../../konyak_cli.dart';
 class FileBottleRepository implements BottleRepository {
   factory FileBottleRepository({
     required String dataHome,
-    String? bottleDirectory,
+    Option<String> bottleDirectory = const Option.none(),
     ProgramMetadataExtractor programMetadataExtractor =
         const DartIoProgramMetadataExtractor(),
   }) {
-    final resolvedBottleDirectory =
-        bottleDirectory ?? _joinPath(dataHome, const ['bottles']);
+    final resolvedBottleDirectory = bottleDirectory.match(
+      () => _joinPath(dataHome, const ['bottles']),
+      (value) => value,
+    );
     final readOperations = _FileBottleRepositoryReadOperations(
       bottleDirectory: resolvedBottleDirectory,
       programMetadataExtractor: programMetadataExtractor,
@@ -48,7 +50,7 @@ class FileBottleRepository implements BottleRepository {
 
   factory FileBottleRepository.fromEnvironment(
     HostEnvironment environment, {
-    String? bottleDirectory,
+    Option<String> bottleDirectory = const Option.none(),
   }) {
     return FileBottleRepository(
       dataHome: _resolveDataHome(environment),

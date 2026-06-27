@@ -1753,7 +1753,9 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
     expect(
       runner.requests.map((request) => request.environment['WINEPREFIX']),
       everyElement(
-        '/Users/user/Library/Application Support/Konyak/Bottles/Steam',
+        Option.of(
+          '/Users/user/Library/Application Support/Konyak/Bottles/Steam',
+        ),
       ),
     );
     expect(

@@ -1,16 +1,24 @@
 import '../../runtimes/runtime_summary.dart';
 import '../app_platform.dart';
 
-class RuntimeSectionState {
-  const RuntimeSectionState({
+sealed class RuntimeSectionState {
+  const RuntimeSectionState();
+}
+
+final class RuntimeSectionUnavailable extends RuntimeSectionState {
+  const RuntimeSectionUnavailable();
+}
+
+final class RuntimeSectionAvailable extends RuntimeSectionState {
+  const RuntimeSectionAvailable({
     required this.runtime,
     required this.stack,
     required this.shouldOfferInstall,
     required this.installButtonLabel,
   });
 
-  final RuntimeSummary? runtime;
-  final RuntimeStackSummary? stack;
+  final RuntimeSummary runtime;
+  final RuntimeStackSummary stack;
   final bool shouldOfferInstall;
   final RuntimeInstallButtonLabel installButtonLabel;
 }
@@ -47,29 +55,27 @@ RuntimeSectionState resolveRuntimeSectionState({
   required List<RuntimeSummary> runtimes,
   required String platform,
 }) {
-  final runtime = (() {
-    for (final candidate in runtimes.reversed) {
-      if (candidate.platform == platform && candidate.stack != null) {
-        return candidate;
-      }
-    }
-    return null;
-  })();
-  final stack = runtime?.stack;
-  final shouldOfferInstall =
-      runtime != null &&
-      stack != null &&
-      (runtime.isInstalled != true || !stack.isComplete);
-  final installButtonLabel = runtime?.isInstalled == true
-      ? RuntimeInstallButtonLabel.repair
-      : RuntimeInstallButtonLabel.install;
+  for (final candidate in runtimes.reversed) {
+    switch (candidate.stack) {
+      case final RuntimeStackSummary stack when candidate.platform == platform:
+        final shouldOfferInstall =
+            candidate.isInstalled != true || !stack.isComplete;
+        final installButtonLabel = candidate.isInstalled == true
+            ? RuntimeInstallButtonLabel.repair
+            : RuntimeInstallButtonLabel.install;
 
-  return RuntimeSectionState(
-    runtime: runtime,
-    stack: stack,
-    shouldOfferInstall: shouldOfferInstall,
-    installButtonLabel: installButtonLabel,
-  );
+        return RuntimeSectionAvailable(
+          runtime: candidate,
+          stack: stack,
+          shouldOfferInstall: shouldOfferInstall,
+          installButtonLabel: installButtonLabel,
+        );
+      case _:
+        break;
+    }
+  }
+
+  return const RuntimeSectionUnavailable();
 }
 
 RuntimeStackStatusLabel runtimeStackStatusLabel(RuntimeStackSummary stack) {

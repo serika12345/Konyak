@@ -121,6 +121,125 @@ def require_no_nullable_result_sentinel_patterns() -> None:
                     raise AssertionError(f"{relative_path}:{line}: {message}")
 
 
+def is_external_null_boundary(relative_path: str) -> bool:
+    boundary_prefixes = [
+        "packages/konyak_cli/bin/",
+        "packages/konyak_cli/lib/src/cli/",
+        "packages/konyak_cli/lib/src/io/",
+        "packages/konyak_cli/lib/src/platform/",
+        "apps/konyak/lib/src/cli/",
+        "apps/konyak/lib/src/home_loader/",
+        "apps/konyak/lib/src/home_loader_parts/",
+        "apps/konyak/lib/src/icons/",
+    ]
+    if any(relative_path.startswith(prefix) for prefix in boundary_prefixes):
+        return True
+    if (
+        relative_path.startswith("apps/konyak/lib/src/app/")
+        and relative_path
+        != "apps/konyak/lib/src/app/dialogs/app_settings_runtime_view_model.dart"
+    ):
+        return True
+    if relative_path.startswith(
+        (
+            "apps/konyak/lib/src/bottles/",
+            "apps/konyak/lib/src/files/",
+            "apps/konyak/lib/src/l10n/",
+            "apps/konyak/lib/src/runtimes/",
+            "apps/konyak/lib/src/runs/",
+            "apps/konyak/lib/src/settings/",
+            "apps/konyak/lib/src/updates/",
+        )
+    ):
+        return True
+
+    boundary_paths = {
+        "packages/konyak_cli/lib/konyak_cli.dart",
+        "packages/konyak_cli/lib/src/shared/common_helpers.dart",
+        # Pure parsers for bytes/text/decoded payloads received from external
+        # programs, Windows metadata, or persisted integration indexes.
+        "packages/konyak_cli/lib/src/domain/process/wine_process_metadata.dart",
+        "packages/konyak_cli/lib/src/domain/program/external_program_launch_records.dart",
+        "packages/konyak_cli/lib/src/domain/program/pe_program_icons.dart",
+        "packages/konyak_cli/lib/src/domain/program/pe_program_image.dart",
+        "packages/konyak_cli/lib/src/domain/program/pe_program_versions.dart",
+        "packages/konyak_cli/lib/src/domain/program/program_registry_parsers.dart",
+        "packages/konyak_cli/lib/src/domain/program/program_runner.dart",
+        "packages/konyak_cli/lib/src/domain/program/program_shortcut_metadata.dart",
+        "packages/konyak_cli/lib/src/domain/program/program_winetricks_support.dart",
+        # JSON contract rendering currently lives on these domain models.
+        "packages/konyak_cli/lib/src/domain/app/app_settings_models.dart",
+        "packages/konyak_cli/lib/src/domain/bottle/bottle_models.dart",
+        "packages/konyak_cli/lib/src/domain/bottle/bottle_mutation_models.dart",
+        "packages/konyak_cli/lib/src/domain/bottle/bottle_runtime_settings_models.dart",
+        "packages/konyak_cli/lib/src/domain/program/program_catalog_models.dart",
+        "packages/konyak_cli/lib/src/domain/program/program_graphics_backend_hints.dart",
+        "packages/konyak_cli/lib/src/domain/program/program_mutation_models.dart",
+        "packages/konyak_cli/lib/src/domain/program/program_run_models.dart",
+        "packages/konyak_cli/lib/src/domain/program/program_settings_models.dart",
+        "packages/konyak_cli/lib/src/domain/runtime/runtime_models.dart",
+        "packages/konyak_cli/lib/src/domain/runtime/runtime_package_installation.dart",
+        "packages/konyak_cli/lib/src/domain/runtime/runtime_validation_models.dart",
+        "packages/konyak_cli/lib/src/domain/update/app_update_checker.dart",
+        "packages/konyak_cli/lib/src/domain/update/update_records.dart",
+        # Flutter widget files use nullable framework parameters at the final UI
+        # adapter line. View-model files are intentionally not listed here.
+        "apps/konyak/lib/main.dart",
+        "apps/konyak/lib/src/app/dialogs/app_settings_runtime_section.dart",
+    }
+    return relative_path in boundary_paths
+
+
+def require_no_non_boundary_nullable_usage() -> None:
+    dart_roots = [
+        ROOT / "packages/konyak_cli/lib",
+        ROOT / "packages/konyak_cli/bin",
+        ROOT / "apps/konyak/lib",
+    ]
+    patterns = [
+        (
+            re.compile(r"\bnull\b"),
+            "`null` literals are allowed only at direct external boundaries",
+        ),
+        (
+            re.compile(
+                r"\b(?:String|int|bool|double|num|Object|File|Directory|"
+                r"[A-Z][A-Za-z0-9_]*(?:<[^>\n]+>)?)\?(?=[\s,;)=])"
+            ),
+            "nullable types are allowed only at direct external boundaries",
+        ),
+        (
+            re.compile(r"\)\?(?=[\s,;=])"),
+            "nullable function types are allowed only at direct external boundaries",
+        ),
+        (
+            re.compile(r"\b(?:toNullable|fromNullable)\("),
+            "nullable bridge helpers are allowed only at direct external boundaries",
+        ),
+    ]
+
+    for root in dart_roots:
+        if not root.exists():
+            continue
+        for path in sorted(root.rglob("*.dart")):
+            relative_path = path.relative_to(ROOT)
+            relative_text = str(relative_path)
+            if (
+                ".dart_tool" in relative_text
+                or "/build/" in relative_text
+                or path.name.endswith(".freezed.dart")
+                or is_external_null_boundary(relative_text)
+            ):
+                continue
+
+            text = path.read_text(encoding="utf-8")
+            for pattern, message in patterns:
+                match = pattern.search(text)
+                if match is not None:
+                    line = text.count("\n", 0, match.start()) + 1
+                    raise AssertionError(f"{relative_path}:{line}: {message}")
+
+
 def require_io_implementation_boundaries() -> None:
     if not (ROOT / "packages/konyak_cli/lib/src").exists():
         return
@@ -234,6 +353,7 @@ def require_result_boundary_rules() -> None:
     require_io_implementation_boundaries()
     require_external_payload_parser_boundaries()
     require_no_nullable_result_sentinel_patterns()
+    require_no_non_boundary_nullable_usage()
 
     for expected in [
         "typedef IoResult<T> = Either<String, T>",

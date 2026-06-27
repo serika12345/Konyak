@@ -9,9 +9,10 @@ BottleRepository defaultBottleRepositoryFromEnvironment(
   final hostEnvironment = HostEnvironment(environment);
   return _defaultFileBottleRepository(
     dataHome: _resolveBottleDataHome(hostEnvironment, hostPlatform: platform),
-    defaultBottlePath:
-        appSettings?.defaultBottlePath.value ??
-        _defaultBottlePath(hostEnvironment, hostPlatform: platform),
+    defaultBottlePath: Option.of(switch (appSettings) {
+      final AppSettingsRecord settings => settings.defaultBottlePath.value,
+      _ => _defaultBottlePath(hostEnvironment, hostPlatform: platform),
+    }),
   );
 }
 
@@ -28,12 +29,16 @@ AppSettingsRepository defaultAppSettingsRepositoryFromEnvironment(
 
 BottleRepository _defaultFileBottleRepository({
   required String dataHome,
-  String? defaultBottlePath,
+  Option<String> defaultBottlePath = const Option.none(),
 }) {
   final defaultBottleDirectory = _joinPath(dataHome, const ['bottles']);
-  if (defaultBottlePath == null ||
-      _normalizeFilesystemPath(defaultBottlePath) ==
-          _normalizeFilesystemPath(defaultBottleDirectory)) {
+  final usesDefaultBottleDirectory = defaultBottlePath.match(
+    () => true,
+    (path) =>
+        _normalizeFilesystemPath(path) ==
+        _normalizeFilesystemPath(defaultBottleDirectory),
+  );
+  if (usesDefaultBottleDirectory) {
     return FileBottleRepository(
       dataHome: dataHome,
       bottleDirectory: defaultBottlePath,

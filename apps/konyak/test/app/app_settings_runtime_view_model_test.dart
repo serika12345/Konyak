@@ -32,10 +32,20 @@ void main() {
       platform: 'linux',
     );
 
-    expect(selection.runtime?.id, 'stacked');
-    expect(selection.stack?.isComplete, isTrue);
-    expect(selection.shouldOfferInstall, isFalse);
-    expect(selection.installButtonLabel, RuntimeInstallButtonLabel.repair);
+    switch (selection) {
+      case RuntimeSectionAvailable(
+        :final runtime,
+        :final stack,
+        :final shouldOfferInstall,
+        :final installButtonLabel,
+      ):
+        expect(runtime.id, 'stacked');
+        expect(stack.isComplete, isTrue);
+        expect(shouldOfferInstall, isFalse);
+        expect(installButtonLabel, RuntimeInstallButtonLabel.repair);
+      case RuntimeSectionUnavailable():
+        fail('Expected a selected runtime stack.');
+    }
   });
 
   test('offers repair for incomplete installed runtimes', () {
@@ -51,8 +61,16 @@ void main() {
       platform: 'linux',
     );
 
-    expect(selection.shouldOfferInstall, isTrue);
-    expect(selection.installButtonLabel, RuntimeInstallButtonLabel.repair);
+    switch (selection) {
+      case RuntimeSectionAvailable(
+        :final shouldOfferInstall,
+        :final installButtonLabel,
+      ):
+        expect(shouldOfferInstall, isTrue);
+        expect(installButtonLabel, RuntimeInstallButtonLabel.repair);
+      case RuntimeSectionUnavailable():
+        fail('Expected an incomplete runtime stack.');
+    }
   });
 
   test(
@@ -89,7 +107,12 @@ void main() {
       );
 
       expect(runtimeStackStatusLabel(stack), RuntimeStackStatusLabel.partial);
-      expect(selection.shouldOfferInstall, isFalse);
+      switch (selection) {
+        case RuntimeSectionAvailable(:final shouldOfferInstall):
+          expect(shouldOfferInstall, isFalse);
+        case RuntimeSectionUnavailable():
+          fail('Expected a selected runtime stack.');
+      }
     },
   );
 }

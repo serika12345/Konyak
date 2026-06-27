@@ -1,48 +1,57 @@
 part of '../../../konyak_cli.dart';
 
 String _konyakApplicationSupportFolder(HostEnvironment environment) {
-  final override = environment.nonEmptyValue('KONYAK_APPLICATION_SUPPORT');
-  if (override != null) {
-    return override;
-  }
-
-  final home = environment.nonEmptyValue('HOME');
-  if (home != null) {
-    return _joinPath(home, const ['Library', 'Application Support', 'Konyak']);
-  }
-
-  return 'Konyak';
+  return environment
+      .nonEmptyValue('KONYAK_APPLICATION_SUPPORT')
+      .match(
+        () => environment
+            .nonEmptyValue('HOME')
+            .match(
+              () => 'Konyak',
+              (home) => _joinPath(home, const [
+                'Library',
+                'Application Support',
+                'Konyak',
+              ]),
+            ),
+        (override) => override,
+      );
 }
 
 String _macosWineRuntimeRoot(HostEnvironment environment) {
-  final override = environment.nonEmptyValue('KONYAK_MACOS_WINE_HOME');
-  if (override != null) {
-    return override;
-  }
-
-  return _joinPath(_konyakApplicationSupportFolder(environment), const [
-    'Runtimes',
-    'macos-wine',
-  ]);
+  return environment
+      .nonEmptyValue('KONYAK_MACOS_WINE_HOME')
+      .match(
+        () => _joinPath(_konyakApplicationSupportFolder(environment), const [
+          'Runtimes',
+          'macos-wine',
+        ]),
+        (override) => override,
+      );
 }
 
 String _linuxWineRuntimeRoot(HostEnvironment environment) {
-  final override = environment.nonEmptyValue('KONYAK_LINUX_WINE_HOME');
-  if (override != null) {
-    return override;
-  }
+  return environment.nonEmptyValue('KONYAK_LINUX_WINE_HOME').match(() {
+    final dataHome = environment
+        .nonEmptyValue('KONYAK_DATA_HOME')
+        .match(
+          () => environment
+              .nonEmptyValue('XDG_DATA_HOME')
+              .match(
+                () => environment
+                    .nonEmptyValue('HOME')
+                    .match(
+                      () => 'Konyak',
+                      (home) =>
+                          _joinPath(home, const ['.local', 'share', 'konyak']),
+                    ),
+                (xdgDataHome) => _joinPath(xdgDataHome, const ['konyak']),
+              ),
+          (dataHomeOverride) => dataHomeOverride,
+        );
 
-  final dataHomeOverride = environment.nonEmptyValue('KONYAK_DATA_HOME');
-  final xdgDataHome = environment.nonEmptyValue('XDG_DATA_HOME');
-  final home = environment.nonEmptyValue('HOME');
-  final dataHome =
-      dataHomeOverride ??
-      (xdgDataHome == null ? null : _joinPath(xdgDataHome, const ['konyak'])) ??
-      (home == null
-          ? 'Konyak'
-          : _joinPath(home, const ['.local', 'share', 'konyak']));
-
-  return _joinPath(dataHome, const ['Runtimes', 'linux-wine']);
+    return _joinPath(dataHome, const ['Runtimes', 'linux-wine']);
+  }, (override) => override);
 }
 
 String _macosWineBinFolder(HostEnvironment environment) {
@@ -97,15 +106,13 @@ ProgramRunEnvironment _linuxRuntimeEnvironment(HostEnvironment environment) {
     'KONYAK_LINUX_WINE_LIBRARY_PATH',
   );
 
-  final runtimeEnvironment = <String, String>{
-    'PATH': _prependPath(runtimeBin, Option.fromNullable(environment['PATH'])),
-  };
-  if (wineLibraryPath != null) {
-    runtimeEnvironment['LD_LIBRARY_PATH'] = _prependPath(
-      wineLibraryPath,
-      Option.fromNullable(environment['LD_LIBRARY_PATH']),
-    );
-  }
-
-  return ProgramRunEnvironment(runtimeEnvironment);
+  return ProgramRunEnvironment(<String, String>{
+    'PATH': _prependPath(runtimeBin, environment['PATH']),
+    ...wineLibraryPath.match(
+      () => const <String, String>{},
+      (path) => <String, String>{
+        'LD_LIBRARY_PATH': _prependPath(path, environment['LD_LIBRARY_PATH']),
+      },
+    ),
+  });
 }

@@ -10,17 +10,17 @@ String _linuxApplicationsHome(HostEnvironment environment) {
 }
 
 String _linuxDataHome(HostEnvironment environment) {
-  final xdgDataHome = environment.nonEmptyValue('XDG_DATA_HOME');
-  if (xdgDataHome != null) {
-    return xdgDataHome;
-  }
-
-  final home = environment.nonEmptyValue('HOME');
-  if (home != null) {
-    return _joinPath(home, const <String>['.local', 'share']);
-  }
-
-  throw const BottleRepositoryException(
-    'Unable to resolve Linux data directory.',
-  );
+  return environment
+      .nonEmptyValue('XDG_DATA_HOME')
+      .match(
+        () => environment
+            .nonEmptyValue('HOME')
+            .match(
+              () => throw const BottleRepositoryException(
+                'Unable to resolve Linux data directory.',
+              ),
+              (home) => _joinPath(home, const <String>['.local', 'share']),
+            ),
+        (xdgDataHome) => xdgDataHome,
+      );
 }

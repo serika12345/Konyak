@@ -1,7 +1,7 @@
 part of '../../konyak_cli.dart';
 
 Option<String> _linuxTerminalOverride(HostEnvironment environment) {
-  return Option.fromNullable(environment.nonEmptyValue('TERMINAL'));
+  return environment.nonEmptyValue('TERMINAL');
 }
 
 String _linuxTerminalLauncherCommand(HostEnvironment environment) {
@@ -47,8 +47,12 @@ String _linuxWineTerminalShellCommandWithEnvironment({
     'export WINEPREFIX=${_shellQuote(bottle.path.value)}',
     'export WINE=${_shellQuote(executable)}',
     'export PATH=${_shellQuote(runtimeBin)}:\$PATH',
-    if (wineLibraryPath != null)
-      'export LD_LIBRARY_PATH=${_shellQuote(wineLibraryPath)}:\${LD_LIBRARY_PATH:-}',
+    ...wineLibraryPath.match(
+      () => const <String>[],
+      (path) => <String>[
+        'export LD_LIBRARY_PATH=${_shellQuote(path)}:\${LD_LIBRARY_PATH:-}',
+      ],
+    ),
     for (final entry in _linuxWineLogSuppressionEnvironment().toMap().entries)
       'export ${entry.key}=${_shellQuote(entry.value)}',
     'alias wine=${_shellQuote(executable)}',

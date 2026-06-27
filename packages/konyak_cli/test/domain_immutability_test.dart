@@ -403,7 +403,7 @@ void main() {
     final environment = ProgramRunEnvironment(variables);
     variables['WINEPREFIX'] = '/changed';
 
-    expect(environment['WINEPREFIX'], '/bottles/steam');
+    expect(environment['WINEPREFIX'], Option.of('/bottles/steam'));
     expect(environment.toMap(), {'WINEPREFIX': '/bottles/steam'});
     expect(
       () => ProgramRunEnvironment(const <String, String>{' ': 'value'}),
@@ -444,14 +444,14 @@ void main() {
     final environment = HostEnvironment(variables);
     variables['HOME'] = '/changed';
 
-    expect(environment['HOME'], '/Users/user');
-    expect(environment.nonEmptyValue('HOME'), '/Users/user');
+    expect(environment['HOME'], Option.of('/Users/user'));
+    expect(environment.nonEmptyValue('HOME'), Option.of('/Users/user'));
     expect(environment.toMap(), {'HOME': '/Users/user'});
     expect(
       HostEnvironment(const <String, String>{
         'EMPTY': ' ',
       }).nonEmptyValue('EMPTY'),
-      isNull,
+      const Option<String>.none(),
     );
     expect(
       () => HostEnvironment(const <String, String>{' ': 'value'}),

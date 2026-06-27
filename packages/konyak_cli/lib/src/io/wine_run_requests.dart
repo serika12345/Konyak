@@ -398,13 +398,7 @@ ProgramRunRequest _macosWinetricksCommandRequest({
               macosMajorVersion: macosMajorVersion,
             )
             .add('WINE', _macosWineExecutable(hostEnvironment))
-            .add(
-              'PATH',
-              _prependPath(
-                runtimeBin,
-                Option.fromNullable(environment['PATH']),
-              ),
-            ),
+            .add('PATH', _prependPath(runtimeBin, environment['PATH'])),
     logPath: _joinPath(bottle.path.value, const ['logs', 'latest.log']),
     workingDirectory: Option.of(runtimeRoot),
   );

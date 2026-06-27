@@ -70,49 +70,42 @@ class DartIoAppUpdateInstaller implements AppUpdateInstaller {
         );
       }
 
-      if (hostPlatform == KonyakHostPlatform.macos) {
-        final macosResult = _installMacosAppBundleUpdate(
+      final handoffResult = switch (hostPlatform) {
+        KonyakHostPlatform.macos => _installMacosAppBundleUpdate(
           update: update,
           archivePath: archivePath,
           actualSha256: actualSha256,
           updatesDirectory: updatesDirectory,
-        );
-        if (macosResult != null) {
-          return macosResult;
-        }
-      }
-
-      if (hostPlatform == KonyakHostPlatform.linux) {
-        final linuxResult = _installLinuxAppImageUpdate(
-          update: update,
-          archivePath: archivePath,
-          actualSha256: actualSha256,
-          updatesDirectory: updatesDirectory,
-        );
-        if (linuxResult != null) {
-          return linuxResult;
-        }
-      }
-
-      final openResult = _pathOpener.openPath(archivePath);
-      return switch (openResult) {
-        PathOpenCompleted() => AppUpdateInstallCompleted(
-          AppUpdateInstallRecord(
-            appId: update.appId.value,
-            status: 'installed',
-            currentVersion: update.currentVersion.map(
-              (version) => version.value,
-            ),
-            installedVersion: update.latestVersion.map(
-              (version) => version.value,
-            ),
-            archiveUrl: Option.of(archiveUrl.value),
-            archiveSha256: Option.of(actualSha256),
-            installPath: Option.of(archivePath),
-          ),
         ),
-        PathOpenFailed(:final message) => AppUpdateInstallFailed(message),
+        KonyakHostPlatform.linux => _installLinuxAppImageUpdate(
+          update: update,
+          archivePath: archivePath,
+          actualSha256: actualSha256,
+          updatesDirectory: updatesDirectory,
+        ),
       };
+
+      return handoffResult.match(() {
+        final openResult = _pathOpener.openPath(archivePath);
+        return switch (openResult) {
+          PathOpenCompleted() => AppUpdateInstallCompleted(
+            AppUpdateInstallRecord(
+              appId: update.appId.value,
+              status: 'installed',
+              currentVersion: update.currentVersion.map(
+                (version) => version.value,
+              ),
+              installedVersion: update.latestVersion.map(
+                (version) => version.value,
+              ),
+              archiveUrl: Option.of(archiveUrl.value),
+              archiveSha256: Option.of(actualSha256),
+              installPath: Option.of(archivePath),
+            ),
+          ),
+          PathOpenFailed(:final message) => AppUpdateInstallFailed(message),
+        };
+      }, (result) => result);
     } on FileSystemException catch (error) {
       return AppUpdateInstallFailed(error.message);
     } on ProcessException catch (error) {

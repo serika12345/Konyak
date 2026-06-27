@@ -13,7 +13,7 @@ class _LinuxPinnedProgramLauncherCommand {
 
   final String executable;
   final List<String> arguments;
-  final String? workingDirectory;
+  final Option<String> workingDirectory;
 }
 
 void _synchronizePinnedProgramLaunchers({
@@ -43,120 +43,138 @@ void _synchronizeLinuxPinnedProgramLaunchers({
     return;
   }
 
-  final launcherCommand = _linuxPinnedProgramLauncherCommand(hostEnvironment);
-  if (launcherCommand == null) {
-    return;
-  }
-
-  try {
-    final desiredLauncherIds = <String>{};
-    var changed = false;
-    for (final bottle in bottles) {
-      for (final program in bottle.pinnedPrograms) {
-        final launcherId = _pinnedProgramLauncherId(
-          bottleId: bottle.id.value,
-          programPath: program.path.value,
-        );
-        desiredLauncherIds.add(launcherId);
-        changed =
-            _writeLinuxPinnedProgramLauncher(
-              environment: hostEnvironment,
-              launcherCommand: launcherCommand,
+  _linuxPinnedProgramLauncherCommand(hostEnvironment).match<void>(() {}, (
+    launcherCommand,
+  ) {
+    try {
+      final desiredLaunchers = <_PinnedProgramLauncherWrite>[
+        for (final bottle in bottles)
+          for (final program in bottle.pinnedPrograms)
+            _PinnedProgramLauncherWrite(
               displayName: _linuxPinnedProgramDisplayName(program.name.value),
-              iconPath: program.iconPath
-                  .map((value) => value.value)
-                  .toNullable(),
+              iconPath: program.iconPath.map((value) => value.value),
               manifest: _PinnedProgramLauncherManifest(
-                launcherId: launcherId,
+                launcherId: _pinnedProgramLauncherId(
+                  bottleId: bottle.id.value,
+                  programPath: program.path.value,
+                ),
                 bottleId: bottle.id.value,
                 programPath: program.path.value,
                 programName: program.name.value,
               ),
+            ),
+      ];
+      final desiredLauncherIds = <String>{
+        for (final launcher in desiredLaunchers)
+          launcher.manifest.launcherId.value,
+      };
+      final wroteAny = desiredLaunchers.fold(
+        false,
+        (changed, launcher) =>
+            _writeLinuxPinnedProgramLauncher(
+              environment: hostEnvironment,
+              launcherCommand: launcherCommand,
+              displayName: launcher.displayName,
+              iconPath: launcher.iconPath.toNullable(),
+              manifest: launcher.manifest,
             ) ||
-            changed;
+            changed,
+      );
+      final removedAny = _deleteStaleLinuxPinnedProgramLaunchers(
+        environment: hostEnvironment,
+        desiredLauncherIds: desiredLauncherIds,
+      );
+      final changed = wroteAny || removedAny;
+      if (!changed) {
+        return;
       }
-    }
-
-    changed =
-        _deleteStaleLinuxPinnedProgramLaunchers(
-          environment: hostEnvironment,
-          desiredLauncherIds: desiredLauncherIds,
-        ) ||
-        changed;
-    if (!changed) {
+      _refreshLinuxDesktopIntegrationCaches(
+        applicationsPath: _linuxApplicationsHome(hostEnvironment),
+        iconThemePath: null,
+      );
+    } on FileSystemException {
+      return;
+    } on ProcessException {
+      return;
+    } on BottleRepositoryException {
       return;
     }
-    _refreshLinuxDesktopIntegrationCaches(
-      applicationsPath: _linuxApplicationsHome(hostEnvironment),
-      iconThemePath: null,
-    );
-  } on FileSystemException {
-    return;
-  } on ProcessException {
-    return;
-  } on BottleRepositoryException {
-    return;
-  }
+  });
 }
 
-_LinuxPinnedProgramLauncherCommand? _linuxPinnedProgramLauncherCommand(
+final class _PinnedProgramLauncherWrite {
+  const _PinnedProgramLauncherWrite({
+    required this.displayName,
+    required this.iconPath,
+    required this.manifest,
+  });
+
+  final String displayName;
+  final Option<String> iconPath;
+  final _PinnedProgramLauncherManifest manifest;
+}
+
+Option<_LinuxPinnedProgramLauncherCommand> _linuxPinnedProgramLauncherCommand(
   HostEnvironment environment,
 ) {
-  final appImage = environment.nonEmptyValue('KONYAK_APPIMAGE_PATH');
-  if (appImage != null) {
-    return _LinuxPinnedProgramLauncherCommand(
-      executable: appImage,
-      arguments: const <String>['--konyak-cli'],
-      workingDirectory: null,
-    );
-  }
+  return environment
+      .nonEmptyValue('KONYAK_APPIMAGE_PATH')
+      .match(
+        () => environment
+            .nonEmptyValue('KONYAK_PINNED_PROGRAM_LAUNCHER_EXECUTABLE')
+            .match(
+              () => environment
+                  .nonEmptyValue('KONYAK_PINNED_PROGRAM_LAUNCHER_CLI')
+                  .match(
+                    () => environment
+                        .nonEmptyValue('KONYAK_BUNDLE_RESOURCES')
+                        .match(() => const Option.none(), (bundleResources) {
+                          final cliExecutable = _joinPath(
+                            bundleResources,
+                            const ['konyak-cli'],
+                          );
+                          if (!File(cliExecutable).existsSync()) {
+                            return const Option.none();
+                          }
 
-  final developmentExecutable = environment.nonEmptyValue(
-    'KONYAK_PINNED_PROGRAM_LAUNCHER_EXECUTABLE',
-  );
-  if (developmentExecutable != null) {
-    final developmentArguments = _pinnedProgramLauncherArguments(
-      environment['KONYAK_PINNED_PROGRAM_LAUNCHER_ARGUMENTS_JSON'],
-    );
-    if (developmentArguments == null) {
-      return null;
-    }
-
-    return _LinuxPinnedProgramLauncherCommand(
-      executable: developmentExecutable,
-      arguments: developmentArguments,
-      workingDirectory: environment.nonEmptyValue(
-        'KONYAK_PINNED_PROGRAM_LAUNCHER_WORKING_DIRECTORY',
-      ),
-    );
-  }
-
-  final override = environment.nonEmptyValue(
-    'KONYAK_PINNED_PROGRAM_LAUNCHER_CLI',
-  );
-  if (override != null) {
-    return _LinuxPinnedProgramLauncherCommand(
-      executable: override,
-      arguments: const <String>[],
-      workingDirectory: null,
-    );
-  }
-
-  final bundleResources = environment.nonEmptyValue('KONYAK_BUNDLE_RESOURCES');
-  if (bundleResources == null) {
-    return null;
-  }
-
-  final cliExecutable = _joinPath(bundleResources, const ['konyak-cli']);
-  if (!File(cliExecutable).existsSync()) {
-    return null;
-  }
-
-  return _LinuxPinnedProgramLauncherCommand(
-    executable: cliExecutable,
-    arguments: const <String>[],
-    workingDirectory: null,
-  );
+                          return Option.of(
+                            _LinuxPinnedProgramLauncherCommand(
+                              executable: cliExecutable,
+                              arguments: const <String>[],
+                              workingDirectory: const Option.none(),
+                            ),
+                          );
+                        }),
+                    (override) => Option.of(
+                      _LinuxPinnedProgramLauncherCommand(
+                        executable: override,
+                        arguments: const <String>[],
+                        workingDirectory: const Option.none(),
+                      ),
+                    ),
+                  ),
+              (developmentExecutable) =>
+                  _pinnedProgramLauncherArguments(
+                    environment['KONYAK_PINNED_PROGRAM_LAUNCHER_ARGUMENTS_JSON'],
+                  ).map(
+                    (developmentArguments) =>
+                        _LinuxPinnedProgramLauncherCommand(
+                          executable: developmentExecutable,
+                          arguments: developmentArguments,
+                          workingDirectory: environment.nonEmptyValue(
+                            'KONYAK_PINNED_PROGRAM_LAUNCHER_WORKING_DIRECTORY',
+                          ),
+                        ),
+                  ),
+            ),
+        (appImage) => Option.of(
+          _LinuxPinnedProgramLauncherCommand(
+            executable: appImage,
+            arguments: const <String>['--konyak-cli'],
+            workingDirectory: const Option.none(),
+          ),
+        ),
+      );
 }
 
 bool _writeLinuxPinnedProgramLauncher({
@@ -182,16 +200,14 @@ bool _writeLinuxPinnedProgramLauncher({
   );
 
   Directory(launcherDirectoryPath).createSync(recursive: true);
-  var changed = _writeTextFileIfChanged(
+  final manifestChanged = _writeTextFileIfChanged(
     manifestPath,
     jsonEncode(manifest.toJson()),
   );
-  changed =
-      _writeTextFileIfChanged(
-        executablePath,
-        _linuxPinnedProgramLauncherScript(launcherCommand),
-      ) ||
-      changed;
+  final executableChanged = _writeTextFileIfChanged(
+    executablePath,
+    _linuxPinnedProgramLauncherScript(launcherCommand),
+  );
   final executableChmodResult = Process.runSync('chmod', <String>[
     '755',
     executablePath,
@@ -203,68 +219,86 @@ bool _writeLinuxPinnedProgramLauncher({
     );
   }
 
-  return _writeTextFileIfChanged(
-        desktopEntryPath,
-        _linuxPinnedProgramDesktopEntry(
-          displayName: displayName,
-          executablePath: executablePath,
-          iconPath: iconPath,
-          programPath: manifest.programPath.value,
-        ),
-      ) ||
-      changed;
+  final desktopEntryChanged = _writeTextFileIfChanged(
+    desktopEntryPath,
+    _linuxPinnedProgramDesktopEntry(
+      displayName: displayName,
+      executablePath: executablePath,
+      iconPath: iconPath,
+      programPath: manifest.programPath.value,
+    ),
+  );
+
+  return manifestChanged || executableChanged || desktopEntryChanged;
 }
 
 bool _deleteStaleLinuxPinnedProgramLaunchers({
   required HostEnvironment environment,
   required Set<String> desiredLauncherIds,
 }) {
-  var changed = false;
-  final applicationsDirectory = Directory(_linuxApplicationsHome(environment));
-  if (applicationsDirectory.existsSync()) {
-    for (final entity in applicationsDirectory.listSync(followLinks: false)) {
-      if (entity is! File ||
-          !_isLinuxPinnedProgramDesktopEntryPath(entity.path)) {
-        continue;
-      }
-
-      final launcherId = _linuxPinnedProgramLauncherIdFromDesktopEntryPath(
-        entity.path,
+  final desktopEntriesDeleted = _deleteStaleLinuxPinnedProgramDesktopEntries(
+    environment: environment,
+    desiredLauncherIds: desiredLauncherIds,
+  );
+  final launcherDirectoriesDeleted =
+      _deleteStaleLinuxPinnedProgramLauncherDirectories(
+        environment: environment,
+        desiredLauncherIds: desiredLauncherIds,
       );
-      if (launcherId == null || desiredLauncherIds.contains(launcherId)) {
-        continue;
-      }
-      entity.deleteSync();
-      changed = true;
-    }
+
+  return desktopEntriesDeleted || launcherDirectoriesDeleted;
+}
+
+bool _deleteStaleLinuxPinnedProgramDesktopEntries({
+  required HostEnvironment environment,
+  required Set<String> desiredLauncherIds,
+}) {
+  final applicationsDirectory = Directory(_linuxApplicationsHome(environment));
+  if (!applicationsDirectory.existsSync()) {
+    return false;
   }
 
+  return applicationsDirectory
+      .listSync(followLinks: false)
+      .whereType<File>()
+      .where((entity) => _isLinuxPinnedProgramDesktopEntryPath(entity.path))
+      .where((entity) {
+        final launcherId = _linuxPinnedProgramLauncherIdFromDesktopEntryPath(
+          entity.path,
+        );
+        return launcherId != null && !desiredLauncherIds.contains(launcherId);
+      })
+      .map((entity) {
+        entity.deleteSync();
+        return true;
+      })
+      .fold(false, (deletedAny, deleted) => deletedAny || deleted);
+}
+
+bool _deleteStaleLinuxPinnedProgramLauncherDirectories({
+  required HostEnvironment environment,
+  required Set<String> desiredLauncherIds,
+}) {
   final launcherRoot = Directory(_linuxPinnedProgramLauncherRoot(environment));
   if (!launcherRoot.existsSync()) {
-    return changed;
+    return false;
   }
 
-  for (final entity in launcherRoot.listSync(followLinks: false)) {
-    if (entity is! Directory) {
-      continue;
-    }
-
-    final launcherId = _baseName(entity.path);
-    if (desiredLauncherIds.contains(launcherId)) {
-      continue;
-    }
-
-    final manifest = _readPinnedProgramLauncherManifest(
-      _joinPath(entity.path, const [_linuxPinnedLauncherManifestFileName]),
-    );
-    if (manifest.isNone()) {
-      continue;
-    }
-    entity.deleteSync(recursive: true);
-    changed = true;
-  }
-
-  return changed;
+  return launcherRoot
+      .listSync(followLinks: false)
+      .whereType<Directory>()
+      .where((entity) => !desiredLauncherIds.contains(_baseName(entity.path)))
+      .where((entity) {
+        final manifest = _readPinnedProgramLauncherManifest(
+          _joinPath(entity.path, const [_linuxPinnedLauncherManifestFileName]),
+        );
+        return manifest.match(() => false, (_) => true);
+      })
+      .map((entity) {
+        entity.deleteSync(recursive: true);
+        return true;
+      })
+      .fold(false, (deletedAny, deleted) => deletedAny || deleted);
 }
 
 String _linuxPinnedProgramLauncherRoot(HostEnvironment environment) {
@@ -342,10 +376,10 @@ String _linuxPinnedProgramDesktopEntry({
 String _linuxPinnedProgramLauncherScript(
   _LinuxPinnedProgramLauncherCommand command,
 ) {
-  final workingDirectory = command.workingDirectory;
-  final changeDirectory = workingDirectory == null
-      ? ''
-      : 'cd ${_posixShellSingleQuote(workingDirectory)}\n';
+  final changeDirectory = command.workingDirectory.match(
+    () => '',
+    (workingDirectory) => 'cd ${_posixShellSingleQuote(workingDirectory)}\n',
+  );
   final launcherCommand = <String>[
     _posixShellSingleQuote(command.executable),
     ...command.arguments.map(_posixShellSingleQuote),

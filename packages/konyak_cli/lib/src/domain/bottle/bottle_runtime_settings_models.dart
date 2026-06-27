@@ -339,91 +339,54 @@ class BottleRuntimeSettings {
   ProgramRunEnvironment macosEnvironment({
     bool enableD3DMetalDlssMetalFx = false,
   }) {
-    var environment = const ProgramRunEnvironment.empty();
+    final entries = <(String, String)>[
+      if (dxrEnabled)
+        ('WINEDLLOVERRIDES', 'dxgi,d3d11,d3d12,nvapi64,nvngx=n,b')
+      else if (dxmt)
+        ('WINEDLLOVERRIDES', 'dxgi,d3d10core,d3d11,winemetal=n,b')
+      else if (dxvk)
+        ('WINEDLLOVERRIDES', 'dxgi,d3d9,d3d10,d3d10_1,d3d10core,d3d11=n,b'),
+      if (dxvk) ..._dxvkHudEnvironmentEntries(),
+      if (dxvk && dxvkAsync) ('DXVK_ASYNC', '1'),
+      if (metalHud) ('MTL_HUD_ENABLED', '1'),
+      if (metalTrace) ('METAL_CAPTURE_ENABLED', '1'),
+      if (avxEnabled) ('ROSETTA_ADVERTISE_AVX', '1'),
+      if (dxrEnabled) ('D3DM_SUPPORT_DXR', '1'),
+      if (dlssMetalFx && dxmt && !dxrEnabled)
+        (_dxmtEnableNvextEnvironmentKey, '1'),
+      if (dlssMetalFx && dxrEnabled && enableD3DMetalDlssMetalFx)
+        (_d3dMetalEnableMetalFxEnvironmentKey, '1'),
+    ];
 
-    if (dxrEnabled) {
-      environment = environment.add(
-        'WINEDLLOVERRIDES',
-        'dxgi,d3d11,d3d12,nvapi64,nvngx=n,b',
-      );
-    } else if (dxmt) {
-      environment = environment.add(
-        'WINEDLLOVERRIDES',
-        'dxgi,d3d10core,d3d11,winemetal=n,b',
-      );
-    } else if (dxvk) {
-      environment = environment.add(
-        'WINEDLLOVERRIDES',
-        'dxgi,d3d9,d3d10,d3d10_1,d3d10core,d3d11=n,b',
-      );
-      final hud = switch (dxvkHud.value) {
-        'full' => Option.of('full'),
-        'partial' => Option.of('devinfo,fps,frametimes'),
-        'fps' => Option.of('fps'),
-        _ => const Option<String>.none(),
-      };
-      environment = hud.match(
-        () => environment,
-        (hud) => environment.add('DXVK_HUD', hud),
-      );
-    }
-
-    if (dxvk && dxvkAsync) {
-      environment = environment.add('DXVK_ASYNC', '1');
-    }
-
-    environment = environment.merge(_wineSyncEnvironment());
-
-    if (metalHud) {
-      environment = environment.add('MTL_HUD_ENABLED', '1');
-    }
-
-    if (metalTrace) {
-      environment = environment.add('METAL_CAPTURE_ENABLED', '1');
-    }
-
-    if (avxEnabled) {
-      environment = environment.add('ROSETTA_ADVERTISE_AVX', '1');
-    }
-
-    if (dxrEnabled) {
-      environment = environment.add('D3DM_SUPPORT_DXR', '1');
-    }
-
-    if (dlssMetalFx && dxmt && !dxrEnabled) {
-      environment = environment.add(_dxmtEnableNvextEnvironmentKey, '1');
-    }
-
-    if (dlssMetalFx && dxrEnabled && enableD3DMetalDlssMetalFx) {
-      environment = environment.add(_d3dMetalEnableMetalFxEnvironmentKey, '1');
-    }
-
-    return environment;
+    return entries
+        .fold(
+          const ProgramRunEnvironment.empty(),
+          (environment, entry) => environment.add(entry.$1, entry.$2),
+        )
+        .merge(_wineSyncEnvironment());
   }
 
   ProgramRunEnvironment linuxEnvironment() {
-    var environment = const ProgramRunEnvironment.empty();
+    final entries = <(String, String)>[
+      if (dxvk) ..._dxvkHudEnvironmentEntries(),
+      if (dxvk && dxvkAsync) ('DXVK_ASYNC', '1'),
+    ];
 
-    if (dxvk) {
-      final hud = switch (dxvkHud.value) {
-        'full' => Option.of('full'),
-        'partial' => Option.of('devinfo,fps,frametimes'),
-        'fps' => Option.of('fps'),
-        _ => const Option<String>.none(),
-      };
-      environment = hud.match(
-        () => environment,
-        (hud) => environment.add('DXVK_HUD', hud),
-      );
-    }
+    return entries
+        .fold(
+          const ProgramRunEnvironment.empty(),
+          (environment, entry) => environment.add(entry.$1, entry.$2),
+        )
+        .merge(_wineSyncEnvironment());
+  }
 
-    if (dxvk && dxvkAsync) {
-      environment = environment.add('DXVK_ASYNC', '1');
-    }
-
-    environment = environment.merge(_wineSyncEnvironment());
-
-    return environment;
+  List<(String, String)> _dxvkHudEnvironmentEntries() {
+    return switch (dxvkHud.value) {
+      'full' => const [('DXVK_HUD', 'full')],
+      'partial' => const [('DXVK_HUD', 'devinfo,fps,frametimes')],
+      'fps' => const [('DXVK_HUD', 'fps')],
+      _ => const [],
+    };
   }
 
   ProgramRunEnvironment _wineSyncEnvironment() {

@@ -38,11 +38,8 @@ class AppSettingsRuntimeSection extends StatelessWidget {
       runtimes: runtimes,
       platform: platform,
     );
-    final runtime = runtimeState.runtime;
-    final stack = runtimeState.stack;
-
-    if (isLoading && (runtime == null || stack == null)) {
-      return AppSettingsSection(
+    return switch (runtimeState) {
+      RuntimeSectionUnavailable() when isLoading => AppSettingsSection(
         title: title,
         children: [
           AppSettingsDetailRow(
@@ -50,11 +47,8 @@ class AppSettingsRuntimeSection extends StatelessWidget {
             value: localizations.loading,
           ),
         ],
-      );
-    }
-
-    if (runtime == null || stack == null) {
-      return AppSettingsSection(
+      ),
+      RuntimeSectionUnavailable() => AppSettingsSection(
         title: title,
         children: [
           AppSettingsDetailRow(
@@ -65,53 +59,60 @@ class AppSettingsRuntimeSection extends StatelessWidget {
           if (onInstallRuntime != null)
             _installButtonBlock(localizations.install, localizations),
         ],
-      );
-    }
-
-    return AppSettingsSection(
-      title: title,
-      children: [
-        if (loadError != null)
-          AppSettingsDetailRow(
-            label: localizations.runtimeInstall,
-            value: localizations.failed,
-            detail: loadError,
-          ),
-        AppSettingsDetailRow(
-          label: runtime.name,
-          value: runtime.isInstalled == true
-              ? localizations.installed
-              : localizations.notInstalled,
-          detail: runtime.distributionKind == null
-              ? null
-              : '${localizations.distribution}: ${runtime.distributionKind}',
+      ),
+      RuntimeSectionAvailable(
+        :final runtime,
+        :final stack,
+        :final shouldOfferInstall,
+        :final installButtonLabel,
+      ) =>
+        AppSettingsSection(
+          title: title,
+          children: [
+            if (loadError != null)
+              AppSettingsDetailRow(
+                label: localizations.runtimeInstall,
+                value: localizations.failed,
+                detail: loadError,
+              ),
+            AppSettingsDetailRow(
+              label: runtime.name,
+              value: runtime.isInstalled == true
+                  ? localizations.installed
+                  : localizations.notInstalled,
+              detail: runtime.distributionKind == null
+                  ? null
+                  : '${localizations.distribution}: '
+                        '${runtime.distributionKind}',
+            ),
+            AppSettingsDetailRow(
+              label: stack.name,
+              value: localizedRuntimeStackStatusLabel(
+                runtimeStackStatusLabel(stack),
+                localizations,
+              ),
+              detail:
+                  '${localizations.compatibility}: '
+                  '${stack.compatibilityTarget}',
+              trailing: shouldOfferInstall && onInstallRuntime != null
+                  ? _installButton(
+                      localizedRuntimeInstallButtonLabel(
+                        installButtonLabel,
+                        localizations,
+                      ),
+                      localizations,
+                    )
+                  : null,
+            ),
+            for (final component in stack.components)
+              AppSettingsDetailRow(
+                label: component.name,
+                value: localizedComponentStatusLabel(component, localizations),
+              ),
+            if (platform == 'macos') _gptkInstallPanel(stack, localizations),
+          ],
         ),
-        AppSettingsDetailRow(
-          label: stack.name,
-          value: localizedRuntimeStackStatusLabel(
-            runtimeStackStatusLabel(stack),
-            localizations,
-          ),
-          detail:
-              '${localizations.compatibility}: ${stack.compatibilityTarget}',
-          trailing: runtimeState.shouldOfferInstall && onInstallRuntime != null
-              ? _installButton(
-                  localizedRuntimeInstallButtonLabel(
-                    runtimeState.installButtonLabel,
-                    localizations,
-                  ),
-                  localizations,
-                )
-              : null,
-        ),
-        for (final component in stack.components)
-          AppSettingsDetailRow(
-            label: component.name,
-            value: localizedComponentStatusLabel(component, localizations),
-          ),
-        if (platform == 'macos') _gptkInstallPanel(stack, localizations),
-      ],
-    );
+    };
   }
 
   Widget _installButtonBlock(String label, KonyakLocalizations localizations) {
@@ -214,9 +215,8 @@ String localizedComponentStatusLabel(
   final status = component.isInstalled
       ? localizations.installed
       : localizations.missing;
-  if (component.version == null || component.version!.trim().isEmpty) {
-    return status;
-  }
-
-  return '$status | ${component.version}';
+  return switch (component.version) {
+    final String version when version.trim().isNotEmpty => '$status | $version',
+    _ => status,
+  };
 }

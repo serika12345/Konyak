@@ -40,18 +40,17 @@ class DartIoAppUpdateChecker implements AppUpdateChecker {
 
   factory DartIoAppUpdateChecker.fromEnvironment(HostEnvironment environment) {
     return DartIoAppUpdateChecker(
-      appId: environment.nonEmptyValue('KONYAK_APP_ID') ?? konyakAppId,
-      currentVersion:
-          environment.nonEmptyValue('KONYAK_APP_VERSION') ?? konyakAppVersion,
-      versionUrl:
-          environment.nonEmptyValue('KONYAK_APP_VERSION_URL') ??
-          konyakAppVersionUrl,
-      archiveUrl: Option.fromNullable(
-        environment.nonEmptyValue('KONYAK_APP_ARCHIVE_URL'),
-      ),
-      archiveSha256: Option.fromNullable(
-        environment.nonEmptyValue('KONYAK_APP_ARCHIVE_SHA256'),
-      ),
+      appId: environment
+          .nonEmptyValue('KONYAK_APP_ID')
+          .match(() => konyakAppId, (value) => value),
+      currentVersion: environment
+          .nonEmptyValue('KONYAK_APP_VERSION')
+          .match(() => konyakAppVersion, (value) => value),
+      versionUrl: environment
+          .nonEmptyValue('KONYAK_APP_VERSION_URL')
+          .match(() => konyakAppVersionUrl, (value) => value),
+      archiveUrl: environment.nonEmptyValue('KONYAK_APP_ARCHIVE_URL'),
+      archiveSha256: environment.nonEmptyValue('KONYAK_APP_ARCHIVE_SHA256'),
     );
   }
 
@@ -110,16 +109,16 @@ bool Function(String url) _appUpdateArchiveUrlPredicate(
   KonyakHostPlatform hostPlatform,
 ) {
   return (url) {
-    final fileName = _fileNameFromUrl(url).toNullable()?.toLowerCase();
-    if (fileName == null) {
-      return false;
-    }
-
-    return switch (hostPlatform) {
-      KonyakHostPlatform.macos =>
-        fileName.contains('-macos-') && fileName.endsWith('.dmg'),
-      KonyakHostPlatform.linux =>
-        fileName.contains('-linux-') && fileName.endsWith('.appimage'),
-    };
+    return _fileNameFromUrl(url).match(() => false, (fileName) {
+      final normalizedFileName = fileName.toLowerCase();
+      return switch (hostPlatform) {
+        KonyakHostPlatform.macos =>
+          normalizedFileName.contains('-macos-') &&
+              normalizedFileName.endsWith('.dmg'),
+        KonyakHostPlatform.linux =>
+          normalizedFileName.contains('-linux-') &&
+              normalizedFileName.endsWith('.appimage'),
+      };
+    });
   };
 }

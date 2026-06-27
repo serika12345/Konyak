@@ -96,22 +96,34 @@ _RuntimeWineInstallPlan _runtimeWineInstallPlan({
     configuredSourceManifestSignature: configuredSourceManifestSignature,
   );
   final hasExplicitInstallSource = requestSource.hasExplicitInstallSource;
+  final currentRuntimeInstalled = currentRuntime.isInstalled.match(
+    () => false,
+    (isInstalled) => isInstalled,
+  );
+  final currentRuntimeStackComplete = currentRuntime.stack.match(
+    () => false,
+    (stack) => stack.isComplete,
+  );
+  final currentRuntimeStackIncompleteOrMissing = currentRuntime.stack.match(
+    () => true,
+    (stack) => !stack.isComplete,
+  );
   final shouldPreserveExistingRuntimeFiles =
       !requestOperation.force &&
-      currentRuntime.isInstalled.toNullable() == true &&
-      currentRuntime.stack.toNullable()?.isComplete != true &&
+      currentRuntimeInstalled &&
+      currentRuntimeStackIncompleteOrMissing &&
       !hasExplicitInstallSource;
 
   if (!requestOperation.force &&
       !hasExplicitInstallSource &&
-      currentRuntime.isInstalled.toNullable() == true &&
-      currentRuntime.stack.toNullable()?.isComplete == true) {
+      currentRuntimeInstalled &&
+      currentRuntimeStackComplete) {
     return _RuntimeWineInstallAlreadyInstalled(currentRuntime);
   }
 
   if (!requestOperation.force &&
-      currentRuntime.isInstalled.toNullable() == true &&
-      currentRuntime.stack.toNullable()?.isComplete != true &&
+      currentRuntimeInstalled &&
+      currentRuntimeStackIncompleteOrMissing &&
       !hasExplicitInstallSource &&
       installSource is! RuntimeSourceManifestInstallSource) {
     final incompleteRuntimePlan = incompleteRuntimeMessage.map(

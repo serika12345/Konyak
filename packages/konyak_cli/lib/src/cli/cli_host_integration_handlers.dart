@@ -35,16 +35,16 @@ CliResult? _handleHostIntegrationCommand(
 
 Map<String, Object?> _linuxFileAssociationsPayload({
   required String desktopEntryPath,
-  required String? iconPath,
+  required Option<String> iconPath,
   required String mimeAppsPath,
 }) {
-  final payload = <String, Object?>{
+  return <String, Object?>{
     'desktopEntryPath': desktopEntryPath,
     'mimeAppsPath': mimeAppsPath,
     'mimeTypes': _linuxExecutableMimeTypes,
+    ...iconPath.match(
+      () => const <String, Object?>{},
+      (path) => <String, Object?>{'iconPath': path},
+    ),
   };
-  if (iconPath != null) {
-    payload['iconPath'] = iconPath;
-  }
-  return payload;
 }

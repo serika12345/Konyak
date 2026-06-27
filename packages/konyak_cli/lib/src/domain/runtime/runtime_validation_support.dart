@@ -22,20 +22,35 @@ RuntimeValidationCheck _runtimeAnyPathCheck({
   required List<String> paths,
   required FileStatusProbe fileStatusProbe,
 }) {
-  final existingPath = paths
-      .where((path) => fileStatusProbe.exists(path))
-      .cast<String?>()
-      .firstWhere((path) => path != null, orElse: () => null);
-
-  return RuntimeValidationCheck(
-    id: id,
-    name: name,
-    isRequired: true,
-    isPassed: existingPath != null,
-    message: existingPath != null
-        ? 'Found $existingPath.'
-        : 'Missing one of: ${paths.join(', ')}.',
+  return _firstExistingPath(paths, fileStatusProbe).match(
+    () => RuntimeValidationCheck(
+      id: id,
+      name: name,
+      isRequired: true,
+      isPassed: false,
+      message: 'Missing one of: ${paths.join(', ')}.',
+    ),
+    (existingPath) => RuntimeValidationCheck(
+      id: id,
+      name: name,
+      isRequired: true,
+      isPassed: true,
+      message: 'Found $existingPath.',
+    ),
   );
+}
+
+Option<String> _firstExistingPath(
+  Iterable<String> paths,
+  FileStatusProbe fileStatusProbe,
+) {
+  for (final path in paths) {
+    if (fileStatusProbe.exists(path)) {
+      return Option.of(path);
+    }
+  }
+
+  return const Option.none();
 }
 
 List<String> _macosWineLoaderLibraryPaths(String runtimeRoot) {
@@ -82,10 +97,8 @@ String _sha256HexDigest(File file) {
     inputFile.closeSync();
   }
 
-  final digest = outputSink.digest;
-  if (digest == null) {
-    throw const FormatException('SHA-256 digest was not produced.');
-  }
-
-  return digest.toString();
+  return switch (outputSink.digest) {
+    final Digest digest => digest.toString(),
+    _ => throw const FormatException('SHA-256 digest was not produced.'),
+  };
 }

@@ -62,12 +62,12 @@ RuntimeRecord _linuxWineRuntimeRecord({
       architecture: platformSpec.architecture,
       runnerKind: platformSpec.runnerKind,
       isBundled: false,
-      isUpdateable: versionUrl != null,
+      isUpdateable: versionUrl.isSome(),
       distributionKind: Option.of(
         _runtimeDistributionKind(environment, 'managed'),
       ),
       archiveUrl: const Option.none(),
-      versionUrl: Option.fromNullable(versionUrl),
+      versionUrl: versionUrl,
     ),
     installedState: InstalledRuntimeState(
       isInstalled: Option.of(fileStatusProbe.exists(executablePath)),

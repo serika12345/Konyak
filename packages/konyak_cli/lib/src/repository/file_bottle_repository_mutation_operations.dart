@@ -15,7 +15,7 @@ class _FileBottleRepositoryMutationOperations {
     final bottle = _bottleFromCreateRequest(
       request,
       dataHome,
-      bottleDirectory: bottleDirectory,
+      bottleDirectory: Option.of(bottleDirectory),
     );
     if (_fileBottlePathExists(bottle.path.value)) {
       return BottleCreateConflict(bottle.id.value);
@@ -56,7 +56,7 @@ class _FileBottleRepositoryMutationOperations {
             bottle: bottle,
             name: request.name.value,
             dataHome: dataHome,
-            bottleDirectory: bottleDirectory,
+            bottleDirectory: Option.of(bottleDirectory),
           );
           if (renamed.id.value != bottle.id.value &&
               _fileBottleDirectoryExists(renamed.path.value)) {

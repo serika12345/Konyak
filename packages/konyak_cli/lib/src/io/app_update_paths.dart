@@ -1,85 +1,83 @@
 part of '../../konyak_cli.dart';
 
 String _appUpdateCacheDirectory(HostEnvironment environment) {
-  final override = environment.nonEmptyValue('KONYAK_APP_UPDATE_CACHE_HOME');
-  if (override != null) {
-    return override;
-  }
-
-  final xdgCache = environment.nonEmptyValue('XDG_CACHE_HOME');
-  if (_currentHostPlatform() == KonyakHostPlatform.linux && xdgCache != null) {
-    return _joinPath(xdgCache, const ['konyak', 'updates']);
-  }
-
-  final home = environment.nonEmptyValue('HOME');
-  if (home != null) {
-    return switch (_currentHostPlatform()) {
-      KonyakHostPlatform.macos => _joinPath(home, const [
-        'Library',
-        'Caches',
-        'Konyak',
-        'Updates',
-      ]),
-      KonyakHostPlatform.linux => _joinPath(home, const [
-        '.cache',
-        'konyak',
-        'updates',
-      ]),
-    };
-  }
-
-  return _joinPath(Directory.systemTemp.path, const ['konyak', 'updates']);
+  return environment
+      .nonEmptyValue('KONYAK_APP_UPDATE_CACHE_HOME')
+      .match(
+        () => switch (_currentHostPlatform()) {
+          KonyakHostPlatform.linux =>
+            environment
+                .nonEmptyValue('XDG_CACHE_HOME')
+                .match(
+                  () => environment
+                      .nonEmptyValue('HOME')
+                      .match(
+                        () => _joinPath(Directory.systemTemp.path, const [
+                          'konyak',
+                          'updates',
+                        ]),
+                        (home) => _joinPath(home, const [
+                          '.cache',
+                          'konyak',
+                          'updates',
+                        ]),
+                      ),
+                  (xdgCache) =>
+                      _joinPath(xdgCache, const ['konyak', 'updates']),
+                ),
+          KonyakHostPlatform.macos =>
+            environment
+                .nonEmptyValue('HOME')
+                .match(
+                  () => _joinPath(Directory.systemTemp.path, const [
+                    'konyak',
+                    'updates',
+                  ]),
+                  (home) => _joinPath(home, const [
+                    'Library',
+                    'Caches',
+                    'Konyak',
+                    'Updates',
+                  ]),
+                ),
+        },
+        (override) => override,
+      );
 }
 
-String? _linuxAppImageTargetPath(HostEnvironment environment) {
-  final override = environment.nonEmptyValue('KONYAK_APPIMAGE_PATH');
-  if (override != null) {
-    return override;
-  }
-
-  final appImage = environment.nonEmptyValue('APPIMAGE');
-  if (appImage != null) {
-    return appImage;
-  }
-
-  return null;
+Option<String> _linuxAppImageTargetPath(HostEnvironment environment) {
+  return environment
+      .nonEmptyValue('KONYAK_APPIMAGE_PATH')
+      .match(() => environment.nonEmptyValue('APPIMAGE'), Option.of);
 }
 
-String? _macosAppBundlePath(HostEnvironment environment) {
-  final override = environment.nonEmptyValue('KONYAK_APP_BUNDLE_PATH');
-  if (override != null) {
-    return override;
-  }
-
-  final executable = environment.nonEmptyValue('KONYAK_APP_EXECUTABLE');
-  if (executable == null) {
-    return null;
-  }
-
-  return _macosAppBundlePathFromExecutable(executable);
+Option<String> _macosAppBundlePath(HostEnvironment environment) {
+  return environment
+      .nonEmptyValue('KONYAK_APP_BUNDLE_PATH')
+      .match(
+        () => environment
+            .nonEmptyValue('KONYAK_APP_EXECUTABLE')
+            .flatMap(_macosAppBundlePathFromExecutable),
+        Option.of,
+      );
 }
 
-String? _macosAppBundlePathFromExecutable(String executable) {
+Option<String> _macosAppBundlePathFromExecutable(String executable) {
   final normalized = executable.replaceAll('\\', '/');
   const marker = '.app/Contents/MacOS/';
   final markerIndex = normalized.indexOf(marker);
   if (markerIndex < 0) {
-    return null;
+    return const Option.none();
   }
 
-  return normalized.substring(0, markerIndex + '.app'.length);
+  return Option.of(normalized.substring(0, markerIndex + '.app'.length));
 }
 
-int? _konyakAppPid(HostEnvironment environment) {
-  final raw = environment.nonEmptyValue('KONYAK_APP_PID');
-  if (raw == null) {
-    return null;
-  }
-
-  final pid = int.tryParse(raw);
-  if (pid == null || pid <= 0) {
-    return null;
-  }
-
-  return pid;
+Option<int> _konyakAppPid(HostEnvironment environment) {
+  return environment.nonEmptyValue('KONYAK_APP_PID').flatMap((raw) {
+    return switch (int.tryParse(raw)) {
+      final int pid when pid > 0 => Option.of(pid),
+      _ => const Option.none(),
+    };
+  });
 }

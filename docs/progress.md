@@ -13,6 +13,36 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-28 02:58 JST
+- State: `completed`
+- Branch: `main`
+- Active work: prohibit nullable and `null` control/data flow outside direct
+  external I/O and payload boundary code.
+- Related TODO: none; this is a focused code-quality hardening requested after
+  the nullable sentinel cleanup.
+- Latest commit: `49ebf43` (`Remove nullable sentinel result flow`).
+- Purpose: keep absence and fallible branches represented by `Option`, sealed
+  states, or boundary parser results instead of nullable values in internal
+  Dart code, while preserving public CLI/Flutter contracts.
+- Completed work: added governance coverage that fails on `null`, nullable
+  types, and `toNullable`/`fromNullable` outside declared external boundaries;
+  converted runtime settings view-model state to a sealed available/unavailable
+  model; moved HostEnvironment, ProgramRunEnvironment, runtime component
+  lookup, runtime install planning, runtime update checks, runtime validation
+  helpers, memory repository lookups, storage path defaults, app update handoff
+  selection, launcher environment selection, and selected path/environment
+  helpers to `Option`/`match` without local reassignment.
+  Removed remaining write-status and parser-counter reassignment from the Linux
+  and macOS launcher/file-association helpers touched by this slice.
+- Remaining work: none for this slice. External payload parsers, CLI/JSON,
+  filesystem/process/platform adapters, Flutter framework adapters, and current
+  JSON contract renderers remain the allowed nullable boundary.
+- Next action: continue with the product/runtime backlog in `docs/todo.md`.
+- Verification: `cd packages/konyak_cli && dart analyze --fatal-infos`,
+  `just flutter-analyze`, `just verify-governance`, `just format-check`,
+  `just cli-test`, `just flutter-test`, `just verify-safety`,
+  `just flutter-format-check`, `just lint`, and `git diff --check` passed.
+
 - Timestamp: 2026-06-28 02:14 JST
 - State: `completed`
 - Branch: `main`

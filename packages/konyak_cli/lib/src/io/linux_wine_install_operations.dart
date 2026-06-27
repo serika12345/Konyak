@@ -173,12 +173,22 @@ extension _DartIoLinuxWineInstallerOperations on DartIoLinuxWineInstaller {
     return _readAndVerifyRuntimeStackSourceText(
       source: source,
       signatureSource: signatureSource,
-      publicKeyPath:
-          environment.nonEmptyValue('KONYAK_RUNTIME_STACK_PUBLIC_KEY_PATH') ??
-          environment.nonEmptyValue('KONYAK_LINUX_WINE_STACK_PUBLIC_KEY_PATH'),
-      publicKeyText:
-          environment.nonEmptyValue('KONYAK_RUNTIME_STACK_PUBLIC_KEY') ??
-          environment.nonEmptyValue('KONYAK_LINUX_WINE_STACK_PUBLIC_KEY'),
+      publicKeyPath: environment
+          .nonEmptyValue('KONYAK_RUNTIME_STACK_PUBLIC_KEY_PATH')
+          .match(
+            () => environment
+                .nonEmptyValue('KONYAK_LINUX_WINE_STACK_PUBLIC_KEY_PATH')
+                .toNullable(),
+            (value) => value,
+          ),
+      publicKeyText: environment
+          .nonEmptyValue('KONYAK_RUNTIME_STACK_PUBLIC_KEY')
+          .match(
+            () => environment
+                .nonEmptyValue('KONYAK_LINUX_WINE_STACK_PUBLIC_KEY')
+                .toNullable(),
+            (value) => value,
+          ),
     );
   }
 }
