@@ -11,8 +11,10 @@ on:
       - runtime/konyak-macos-runtime/probes/windows/**
       - runtime/konyak-macos-runtime/scripts/build-backend-probes.zsh
       - runtime/macos-wine-release.json
+      - scripts/build_d3d12_minimal_sample_windows.ps1
       - scripts/prepare_macos_dev_runtime_stack.zsh
       - scripts/run_macos_runtime_cli_smoke.zsh
+      - tests/fixtures/windows/d3d12_minimal_sample/**
   push:
     branches:
       - main
@@ -25,13 +27,33 @@ on:
       - runtime/konyak-macos-runtime/probes/windows/**
       - runtime/konyak-macos-runtime/scripts/build-backend-probes.zsh
       - runtime/macos-wine-release.json
+      - scripts/build_d3d12_minimal_sample_windows.ps1
       - scripts/prepare_macos_dev_runtime_stack.zsh
       - scripts/run_macos_runtime_cli_smoke.zsh
+      - tests/fixtures/windows/d3d12_minimal_sample/**
   workflow_dispatch:
 
 jobs:
+  build-d3d12-fixture:
+    name: Build D3D12 fixture
+    runs-on: windows-2022
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build D3D12 fixture
+        shell: pwsh
+        run: ./scripts/build_d3d12_minimal_sample_windows.ps1
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: konyak-d3d12-minimal-sample-windows-x64
+          path: .dart_tool/konyak/windows-d3d12-fixture/konyak_d3d12_minimal.exe
+          if-no-files-found: error
+
   published-runtime-cli-smoke:
     name: Published runtime CLI smoke
+    needs: build-d3d12-fixture
     runs-on: macos-15
     timeout-minutes: 45
     steps:
@@ -41,6 +63,11 @@ jobs:
 
       - uses: cachix/install-nix-action@v31
 
+      - uses: actions/download-artifact@v4
+        with:
+          name: konyak-d3d12-minimal-sample-windows-x64
+          path: .dart_tool/konyak/windows-d3d12-fixture
+
       - name: Install Rosetta when needed
         run: |
           if [[ "$(uname -m)" == "arm64" ]]; then
@@ -48,4 +75,6 @@ jobs:
           fi
 
       - name: Run published runtime CLI smoke
+        env:
+          KONYAK_MACOS_RUNTIME_CLI_SMOKE_D3D12_SAMPLE_EXE: ${{ github.workspace }}/.dart_tool/konyak/windows-d3d12-fixture/konyak_d3d12_minimal.exe
         run: nix develop -c zsh -lc './scripts/run_macos_runtime_cli_smoke.zsh'

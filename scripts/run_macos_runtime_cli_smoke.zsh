@@ -14,6 +14,7 @@ install_runtime="${KONYAK_MACOS_RUNTIME_CLI_SMOKE_INSTALL:-true}"
 backend_probe_dir="${KONYAK_MACOS_RUNTIME_CLI_SMOKE_BACKEND_PROBE_DIR:-$work_root/backend-probes}"
 backend_probe_builder="$repo_root/runtime/konyak-macos-runtime/scripts/build-backend-probes.zsh"
 backend_probe_wait_seconds="${KONYAK_MACOS_RUNTIME_CLI_SMOKE_BACKEND_PROBE_WAIT_SECONDS:-120}"
+d3d12_sample_exe="${KONYAK_MACOS_RUNTIME_CLI_SMOKE_D3D12_SAMPLE_EXE:-}"
 
 if [[ "$(uname -s)" != "Darwin" ]]; then
   echo "macOS runtime CLI smoke is supported on macOS only." >&2
@@ -317,6 +318,79 @@ run_backend_probe_smoke() {
   wait_for_probe_sentinel "$sentinel_path" "$success_marker"
 }
 
+run_d3d12_sample_smoke() {
+  local sample_path="$1"
+  local bottle_id="d3d12-msvc-sample"
+  local bottle_name="D3D12 MSVC Sample"
+  local settings_json
+  local run_json
+  local sentinel_path="$data_home/bottles/$bottle_id/drive_c/konyak-d3d12-minimal-sample-ok.txt"
+
+  if [[ -z "$sample_path" ]]; then
+    return
+  fi
+  if [[ ! -f "$sample_path" ]]; then
+    echo "Configured D3D12 sample executable does not exist: $sample_path" >&2
+    exit 66
+  fi
+
+  run_cli_capture "create-$bottle_id" "$command_timeout" \
+    create-bottle \
+    --name "$bottle_name" \
+    --json
+  local create_json="$captured_stdout_path"
+  assert_jq "$create_json" \
+    "create-bottle did not report the expected D3D12 sample bottle: $bottle_id" \
+    --arg dataHome "$data_home" \
+    --arg bottleId "$bottle_id" \
+    '
+      .schemaVersion == 1 and
+      .bottle.id == $bottleId and
+      .bottle.path == ($dataHome + "/bottles/" + $bottleId)
+    '
+
+  settings_json="$(runtime_settings_json_for_backend vkd3d)"
+  run_cli_capture "set-runtime-settings-$bottle_id" "$command_timeout" \
+    set-runtime-settings \
+    "$bottle_id" \
+    --settings-json "$settings_json" \
+    --json
+  local settings_json_path="$captured_stdout_path"
+  assert_jq "$settings_json_path" \
+    "set-runtime-settings did not select the expected vkd3d settings for $bottle_id." \
+    --arg bottleId "$bottle_id" \
+    '
+      .schemaVersion == 1 and
+      .bottle.id == $bottleId and
+      .bottle.runtimeSettings.dxvk == false and
+      .bottle.runtimeSettings.dxmt == false and
+      .bottle.runtimeSettings.dxrEnabled == false
+    '
+
+  run_cli_capture "run-$bottle_id" "$command_timeout" \
+    run-program \
+    "$bottle_id" \
+    --program "$sample_path" \
+    --settings-json '{"arguments":"--frames 2","environment":{}}' \
+    --json
+  run_json="$captured_stdout_path"
+  assert_jq "$run_json" \
+    "run-program did not complete the D3D12 MSVC sample through macOS Wine." \
+    --arg bottleId "$bottle_id" \
+    --arg programPath "$sample_path" \
+    '
+      .schemaVersion == 1 and
+      .run.bottleId == $bottleId and
+      .run.runnerKind == "macosWine" and
+      .run.programPath == $programPath and
+      .run.processExitCode == 0
+    '
+
+  wait_for_probe_sentinel \
+    "$sentinel_path" \
+    KONYAK_D3D12_MINIMAL_SAMPLE_OK
+}
+
 manifest_path="${KONYAK_DEV_MACOS_WINE_STACK_MANIFEST:-${KONYAK_MACOS_WINE_STACK_MANIFEST:-}}"
 if [[ -z "$manifest_path" ]]; then
   manifest_path="$("$repo_root/scripts/prepare_macos_dev_runtime_stack.zsh" --force --print-manifest-path)"
@@ -446,5 +520,7 @@ run_backend_probe_smoke \
   "$backend_probe_dir/d3d12_device_probe.exe" \
   KONYAK_D3D12_DEVICE_PROBE_OK \
   konyak-d3d12-device-probe-ok.txt
+
+run_d3d12_sample_smoke "$d3d12_sample_exe"
 
 echo "macOS runtime CLI smoke passed."

@@ -1,0 +1,32 @@
+name: Windows D3D12 Fixture Build
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/windows-d3d12-fixture-build.yml
+      - scripts/build_d3d12_minimal_sample_windows.ps1
+      - tests/fixtures/windows/d3d12_minimal_sample/**
+  push:
+    paths:
+      - .github/workflows/windows-d3d12-fixture-build.yml
+      - scripts/build_d3d12_minimal_sample_windows.ps1
+      - tests/fixtures/windows/d3d12_minimal_sample/**
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: MSVC CMake D3D12 fixture
+    runs-on: windows-2022
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build D3D12 fixture
+        shell: pwsh
+        run: ./scripts/build_d3d12_minimal_sample_windows.ps1
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: konyak-d3d12-minimal-sample-windows-x64
+          path: .dart_tool/konyak/windows-d3d12-fixture/konyak_d3d12_minimal.exe
+          if-no-files-found: error
