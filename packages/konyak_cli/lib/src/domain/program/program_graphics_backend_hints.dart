@@ -221,22 +221,13 @@ bool _containsAsciiCaseInsensitive(Uint8List bytes, String value) {
     return false;
   }
 
-  for (var index = 0; index <= bytes.length - needle.length; index += 1) {
-    var matches = true;
-    for (var offset = 0; offset < needle.length; offset += 1) {
+  return Iterable<int>.generate(bytes.length - needle.length + 1).any(
+    (index) => Iterable<int>.generate(needle.length).every((offset) {
       final byte = bytes[index + offset];
       final normalizedByte = byte >= 0x41 && byte <= 0x5a ? byte + 0x20 : byte;
-      if (normalizedByte != needle[offset]) {
-        matches = false;
-        break;
-      }
-    }
-    if (matches) {
-      return true;
-    }
-  }
-
-  return false;
+      return normalizedByte == needle[offset];
+    }),
+  );
 }
 
 String _hostPlatformJsonValue(KonyakHostPlatform hostPlatform) {

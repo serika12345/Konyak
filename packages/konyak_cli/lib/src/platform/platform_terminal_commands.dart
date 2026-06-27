@@ -34,7 +34,7 @@ String _linuxTerminalLauncherCommand(HostEnvironment environment) {
 String _linuxWineTerminalShellCommandWithEnvironment({
   required BottleRecord bottle,
   required HostEnvironment environment,
-  String? initialWineCommand,
+  Option<String> initialWineCommand = const Option.none(),
 }) {
   final hostEnvironment = environment;
   final executable = _linuxWineExecutable(hostEnvironment);
@@ -59,11 +59,12 @@ String _linuxWineTerminalShellCommandWithEnvironment({
     'alias wine64=${_shellQuote(executable)}',
     'alias winecfg=${_shellQuote('$executable winecfg')}',
     'alias msiexec=${_shellQuote('$executable msiexec')}',
-    if (initialWineCommand != null)
-      _wineTerminalInitialCommand(
-        executable: executable,
-        command: initialWineCommand,
-      ),
+    ...initialWineCommand.match(
+      () => const <String>[],
+      (command) => <String>[
+        _wineTerminalInitialCommand(executable: executable, command: command),
+      ],
+    ),
   ];
 
   return <String>[
@@ -77,12 +78,12 @@ String _linuxWineTerminalShellCommandWithEnvironment({
 String _macosWineTerminalShellCommand({
   required BottleRecord bottle,
   required HostEnvironment environment,
-  required int? macosMajorVersion,
-  String? initialWineCommand,
+  required Option<int> macosMajorVersion,
+  Option<String> initialWineCommand = const Option.none(),
 }) {
   final runtimeBin = _macosWineBinFolder(environment);
   final executable = _macosWineExecutable(environment);
-  final commands = <String>[
+  return <String>[
     'cd ${_shellQuote(bottle.path.value)}',
     'export PATH=${_shellQuote(runtimeBin)}:\$PATH',
     'export WINE=${_shellQuote(executable)}',
@@ -97,26 +98,20 @@ String _macosWineTerminalShellCommand({
     'alias winedbg=${_shellQuote('$executable winedbg')}',
     'alias winefile=${_shellQuote('$executable winefile')}',
     'alias winepath=${_shellQuote('$executable winepath')}',
-  ];
-
-  _macosWineEnvironment(
-    bottle: bottle,
-    environment: environment,
-    macosMajorVersion: macosMajorVersion,
-  ).toMap().forEach((key, value) {
-    commands.add('export $key=${_shellQuote(value)}');
-  });
-
-  if (initialWineCommand != null) {
-    commands.add(
-      _wineTerminalInitialCommand(
-        executable: executable,
-        command: initialWineCommand,
-      ),
-    );
-  }
-
-  return commands.join('; ');
+    ..._macosWineEnvironment(
+      bottle: bottle,
+      environment: environment,
+      macosMajorVersion: macosMajorVersion,
+    ).toMap().entries.map((entry) {
+      return 'export ${entry.key}=${_shellQuote(entry.value)}';
+    }),
+    ...initialWineCommand.match(
+      () => const <String>[],
+      (command) => <String>[
+        _wineTerminalInitialCommand(executable: executable, command: command),
+      ],
+    ),
+  ].join('; ');
 }
 
 String _wineTerminalInitialCommand({

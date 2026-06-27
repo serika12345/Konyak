@@ -6,11 +6,44 @@ String? _extractPeIcon({
   required String programPath,
   required FileStat fileStat,
 }) {
-  final icoBytes = _peIconBytes(image);
-  if (icoBytes == null) {
-    return null;
-  }
+  return _peIconBytes(image).match(
+    _missingPeIconPath,
+    (icoBytes) => _writePeIcon(
+      bottle: bottle,
+      programPath: programPath,
+      fileStat: fileStat,
+      icoBytes: icoBytes,
+    ),
+  );
+}
 
+Future<String?> _extractPeIconAsync({
+  required _PortableExecutableImage image,
+  required BottleRecord bottle,
+  required String programPath,
+  required FileStat fileStat,
+}) async {
+  return _peIconBytes(image).match(
+    () async => _missingPeIconPath(),
+    (icoBytes) => _writePeIconAsync(
+      bottle: bottle,
+      programPath: programPath,
+      fileStat: fileStat,
+      icoBytes: icoBytes,
+    ),
+  );
+}
+
+String? _missingPeIconPath() {
+  return null;
+}
+
+String? _writePeIcon({
+  required BottleRecord bottle,
+  required String programPath,
+  required FileStat fileStat,
+  required Uint8List icoBytes,
+}) {
   final iconPath = _peIconCachePath(
     bottle: bottle,
     programPath: programPath,
@@ -27,17 +60,12 @@ String? _extractPeIcon({
   }
 }
 
-Future<String?> _extractPeIconAsync({
-  required _PortableExecutableImage image,
+Future<String?> _writePeIconAsync({
   required BottleRecord bottle,
   required String programPath,
   required FileStat fileStat,
+  required Uint8List icoBytes,
 }) async {
-  final icoBytes = _peIconBytes(image);
-  if (icoBytes == null) {
-    return null;
-  }
-
   final iconPath = _peIconCachePath(
     bottle: bottle,
     programPath: programPath,

@@ -68,54 +68,91 @@ Option<String> _shortcutTargetProgramPathFromBytes({
 
 Option<String> _shellLinkLocalBasePath(Uint8List bytes) {
   const shellLinkHeaderSize = 0x4c;
-  final headerSize = _readUint32(bytes, 0);
-  final linkFlags = _readUint32(bytes, 0x14);
-  if (headerSize != shellLinkHeaderSize || linkFlags == null) {
-    return const Option.none();
-  }
+  return _readUint32Option(bytes, 0).flatMap(
+    (headerSize) => headerSize == shellLinkHeaderSize
+        ? _readUint32Option(bytes, 0x14).flatMap(
+            (linkFlags) =>
+                _shellLinkLinkInfoOffset(
+                  bytes: bytes,
+                  linkFlags: linkFlags,
+                ).flatMap(
+                  (offset) => _shellLinkLocalBasePathAtLinkInfoOffset(
+                    bytes: bytes,
+                    offset: offset,
+                  ),
+                ),
+          )
+        : const Option.none(),
+  );
+}
 
-  var offset = shellLinkHeaderSize;
-  if (linkFlags & 0x00000001 != 0) {
-    final idListSize = _readUint16(bytes, offset);
-    if (idListSize == null) {
-      return const Option.none();
-    }
-    offset += 2 + idListSize;
-  }
-
+Option<int> _shellLinkLinkInfoOffset({
+  required Uint8List bytes,
+  required int linkFlags,
+}) {
+  const shellLinkHeaderSize = 0x4c;
   if (linkFlags & 0x00000002 == 0) {
     return const Option.none();
   }
 
-  final linkInfoSize = _readUint32(bytes, offset);
-  final linkInfoHeaderSize = _readUint32(bytes, offset + 4);
-  final localBasePathOffset = _readUint32(bytes, offset + 16);
-  if (linkInfoSize == null ||
-      linkInfoHeaderSize == null ||
-      localBasePathOffset == null ||
-      linkInfoSize <= 0 ||
-      offset + linkInfoSize > bytes.length) {
+  if (linkFlags & 0x00000001 == 0) {
+    return Option.of(shellLinkHeaderSize);
+  }
+
+  return _readUint16Option(
+    bytes,
+    shellLinkHeaderSize,
+  ).map((idListSize) => shellLinkHeaderSize + 2 + idListSize);
+}
+
+Option<String> _shellLinkLocalBasePathAtLinkInfoOffset({
+  required Uint8List bytes,
+  required int offset,
+}) {
+  return _readUint32Option(bytes, offset).flatMap(
+    (linkInfoSize) => _readUint32Option(bytes, offset + 4).flatMap(
+      (linkInfoHeaderSize) => _readUint32Option(bytes, offset + 16).flatMap(
+        (localBasePathOffset) => _shellLinkLocalBasePathFromLinkInfo(
+          bytes: bytes,
+          offset: offset,
+          linkInfoSize: linkInfoSize,
+          linkInfoHeaderSize: linkInfoHeaderSize,
+          localBasePathOffset: localBasePathOffset,
+        ),
+      ),
+    ),
+  );
+}
+
+Option<String> _shellLinkLocalBasePathFromLinkInfo({
+  required Uint8List bytes,
+  required int offset,
+  required int linkInfoSize,
+  required int linkInfoHeaderSize,
+  required int localBasePathOffset,
+}) {
+  if (linkInfoSize <= 0 || offset + linkInfoSize > bytes.length) {
     return const Option.none();
   }
 
-  if (linkInfoHeaderSize >= 0x24) {
-    final localBasePathUnicodeOffset = _readUint32(bytes, offset + 28);
-    if (localBasePathUnicodeOffset != null && localBasePathUnicodeOffset > 0) {
-      return Option.fromNullable(
-        _nullTerminatedUtf16LeString(
-          bytes,
-          offset + localBasePathUnicodeOffset,
-          offset + linkInfoSize,
-        ),
-      );
-    }
-  }
+  final unicodePath = linkInfoHeaderSize >= 0x24
+      ? _readUint32Option(bytes, offset + 28).flatMap(
+          (localBasePathUnicodeOffset) => localBasePathUnicodeOffset > 0
+              ? _nullTerminatedUtf16LeStringOption(
+                  bytes,
+                  offset + localBasePathUnicodeOffset,
+                  offset + linkInfoSize,
+                )
+              : const Option<String>.none(),
+        )
+      : const Option<String>.none();
 
-  return Option.fromNullable(
-    _nullTerminatedAsciiString(
+  return unicodePath.match(
+    () => _nullTerminatedAsciiStringOption(
       bytes,
       offset + localBasePathOffset,
       offset + linkInfoSize,
     ),
+    Option<String>.of,
   );
 }

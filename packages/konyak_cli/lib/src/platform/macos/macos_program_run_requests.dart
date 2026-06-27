@@ -4,7 +4,7 @@ ProgramRunRequest _macosWineRequest({
   required BottleRecord bottle,
   required String programPath,
   required HostEnvironment environment,
-  required int? macosMajorVersion,
+  required Option<int> macosMajorVersion,
   required ProgramSettingsRecord programSettings,
 }) {
   final hostEnvironment = environment;
@@ -38,7 +38,7 @@ ProgramRunRequest _macosWineRequest({
 ProgramRunRequest _macosWinebootRequest({
   required BottleRecord bottle,
   required HostEnvironment environment,
-  required int? macosMajorVersion,
+  required Option<int> macosMajorVersion,
 }) {
   final hostEnvironment = environment;
   return ProgramRunRequest(
@@ -60,7 +60,7 @@ ProgramRunRequest _macosWinebootRequest({
 ProgramRunRequest _macosWinebootRestartRequest({
   required BottleRecord bottle,
   required HostEnvironment environment,
-  required int? macosMajorVersion,
+  required Option<int> macosMajorVersion,
 }) {
   final hostEnvironment = environment;
   return ProgramRunRequest(
@@ -82,7 +82,7 @@ ProgramRunRequest _macosWinebootRestartRequest({
 ProgramRunRequest _macosWineMonoInstallRequest({
   required BottleRecord bottle,
   required HostEnvironment environment,
-  required int? macosMajorVersion,
+  required Option<int> macosMajorVersion,
 }) {
   final hostEnvironment = environment;
   final runtimeRoot = _macosWineRuntimeRoot(hostEnvironment);
@@ -114,7 +114,7 @@ ProgramRunRequest _macosWineMonoInstallRequest({
 ProgramRunRequest _macosWineserverKillRequest({
   required BottleRecord bottle,
   required HostEnvironment environment,
-  required int? macosMajorVersion,
+  required Option<int> macosMajorVersion,
 }) {
   final hostEnvironment = environment;
   return ProgramRunRequest(
@@ -139,7 +139,7 @@ ProgramRunRequest _macosWineserverKillRequest({
 ProgramRunRequest _macosWinedbgRequest({
   required BottleRecord bottle,
   required HostEnvironment environment,
-  required int? macosMajorVersion,
+  required Option<int> macosMajorVersion,
   required String command,
   required String logName,
   List<String> trailingArguments = const <String>[],
@@ -164,7 +164,7 @@ ProgramRunRequest _macosWinedbgRequest({
 ProgramRunEnvironment _macosWineEnvironment({
   required BottleRecord bottle,
   required HostEnvironment environment,
-  required int? macosMajorVersion,
+  required Option<int> macosMajorVersion,
 }) {
   final hostEnvironment = environment;
   final runtimeRoot = _macosWineRuntimeRoot(hostEnvironment);
@@ -245,7 +245,7 @@ String _macosWineWindowsPath(String unixPath) {
 ProgramRunEnvironment _macosPrefixInitializationEnvironment({
   required BottleRecord bottle,
   required HostEnvironment environment,
-  required int? macosMajorVersion,
+  required Option<int> macosMajorVersion,
 }) {
   return _macosWineEnvironment(
     bottle: bottle,
@@ -254,8 +254,8 @@ ProgramRunEnvironment _macosPrefixInitializationEnvironment({
   );
 }
 
-bool _supportsD3DMetalDlssMetalFx(int? macosMajorVersion) {
-  return macosMajorVersion != null && macosMajorVersion >= 16;
+bool _supportsD3DMetalDlssMetalFx(Option<int> macosMajorVersion) {
+  return macosMajorVersion.match(() => false, (version) => version >= 16);
 }
 
 String _macosWineDataDir(String runtimeRoot) {

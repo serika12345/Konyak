@@ -13,6 +13,60 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-28 06:43 JST
+- State: `completed`
+- Branch: `main`
+- Active work: remove remaining domain/control-flow nullable usage after the
+  nullable-boundary correction.
+- Related TODO: none; this is a focused correction to the previous nullability
+  hardening.
+- Latest commit: `7af4274` (`Restrict nullable usage to external boundaries`).
+- Purpose: remove the remaining `null`/nullable escape hatches from PE parsing,
+  registry parsing, process/winetricks/shortcut parsing, and program run
+  planning so absence is represented by `Option` instead of nullable control
+  values.
+- Completed work: converted PE image/icon/version parsing, shortcut parsing,
+  registry parsing, winetricks parsing, Wine process metadata parsing, and
+  program run planning to `Option`-based absence handling without `null`,
+  nullable fields, or nullable temporary control values; propagated
+  `Option<int>` and `Option<String>` through macOS/terminal/winetricks request
+  builders; moved nullable byte/string lifting behind shared helper functions;
+  removed the corrected domain files from the nullable-boundary governance
+  allowlist so regressions fail the gate.
+- Remaining work: none for this correction slice. CLI parser/UI adapter
+  nullable checks remain only at external input/framework boundaries.
+- Next action: continue with the product/runtime backlog in `docs/todo.md`.
+- Verification: `cd packages/konyak_cli && dart analyze --fatal-infos`,
+  targeted `rg` searches for `null`/nullable/`??` in the corrected domain
+  parser and planner files, `just verify-governance`, `just format-check`,
+  `just verify-safety`, `just cli-test`, `just lint`, and `git diff --check`
+  passed.
+
+- Timestamp: 2026-06-28 05:54 JST
+- State: `completed`
+- Branch: `main`
+- Active work: prohibit reassignment in CLI domain logic.
+- Related TODO: none; this is a focused code-quality hardening requested after
+  the nullable boundary cleanup.
+- Latest commit: `7af4274` (`Restrict nullable usage to external boundaries`).
+- Purpose: keep domain transformations immutable and pattern-oriented by
+  removing local reassignment, mutation counters, and mutable parser state from
+  `packages/konyak_cli/lib/src/domain/**`; allow exceptions only when a proven
+  performance problem requires one.
+- Completed work: removed the remaining domain reassignment hotspots in process
+  metadata normalization, PE parsing helpers, pinned program repair,
+  winetricks verb parsing, graphics hint byte matching, shortcut parsing, and
+  runtime archive planning; added `scripts/verify_domain_reassignment.dart` and
+  wired it into governance so `packages/konyak_cli/lib/src/domain/**` fails on
+  assignment expressions, `var`, and `++`/`--`.
+- Remaining work: none for this slice. Future performance-motivated exceptions
+  must be explicit and narrowly justified before adding domain reassignment.
+- Next action: continue with the product/runtime backlog in `docs/todo.md`.
+- Verification: `cd packages/konyak_cli && dart analyze --fatal-infos`,
+  `just verify-governance`, `just format-check`, `just verify-safety`,
+  `just cli-test`, `just lint`, dedicated
+  `scripts/verify_domain_reassignment.dart`, and `git diff --check` passed.
+
 - Timestamp: 2026-06-28 02:58 JST
 - State: `completed`
 - Branch: `main`

@@ -42,11 +42,10 @@ BottleRecord _bottleWithPinnedProgramIcons(
   BottleRecord bottle, {
   required ProgramMetadataExtractor programMetadataExtractor,
 }) {
-  var changed = false;
-  final pinnedPrograms = bottle.pinnedPrograms
+  final updatedPinnedPrograms = bottle.pinnedPrograms
       .map((program) {
         if (program.iconPath.isSome()) {
-          return program;
+          return (program: program, changed: false);
         }
 
         final metadata = programMetadataExtractor.extract(
@@ -62,19 +61,21 @@ BottleRecord _bottleWithPinnedProgramIcons(
               programMetadata.iconPath.map((value) => value.value),
         );
         if (iconPath.isNone()) {
-          return program;
+          return (program: program, changed: false);
         }
 
-        changed = true;
-        return program.withIconPath(iconPath);
+        return (program: program.withIconPath(iconPath), changed: true);
       })
       .toList(growable: false);
+  final changed = updatedPinnedPrograms.any((program) => program.changed);
 
   if (!changed) {
     return bottle;
   }
 
-  return bottle.withPinnedPrograms(pinnedPrograms);
+  return bottle.withPinnedPrograms(
+    updatedPinnedPrograms.map((program) => program.program),
+  );
 }
 
 BottleRecord _bottleWithoutMissingBottleLocalPinnedPrograms(

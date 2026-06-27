@@ -24,7 +24,7 @@ class ProgramRunPlanner {
   ProgramRunPlanner({
     required this.hostPlatform,
     this.environment = const HostEnvironment.empty(),
-    this.macosMajorVersion,
+    this.macosMajorVersion = const Option.none(),
   });
 
   factory ProgramRunPlanner.current() {
@@ -34,13 +34,13 @@ class ProgramRunPlanner {
       environment: HostEnvironment(Platform.environment),
       macosMajorVersion: hostPlatform == KonyakHostPlatform.macos
           ? _currentMacosMajorVersion()
-          : null,
+          : const Option.none(),
     );
   }
 
   final KonyakHostPlatform hostPlatform;
   final HostEnvironment environment;
-  final int? macosMajorVersion;
+  final Option<int> macosMajorVersion;
 
   Option<ProgramRunRequest> plan({
     required BottleRecord bottle,
@@ -105,13 +105,13 @@ class ProgramRunPlanner {
         KonyakHostPlatform.linux => _linuxTerminalCommandRequest(
           bottle: bottle,
           environment: environment,
-          initialWineCommand: supportedCommand,
+          initialWineCommand: Option.of(supportedCommand),
         ),
         KonyakHostPlatform.macos => _macosTerminalCommandRequest(
           bottle: bottle,
           environment: environment,
           macosMajorVersion: macosMajorVersion,
-          initialWineCommand: supportedCommand,
+          initialWineCommand: Option.of(supportedCommand),
         ),
       });
     }
@@ -140,7 +140,7 @@ class ProgramRunPlanner {
           bottle: bottle,
           environment: environment,
           macosMajorVersion: macosMajorVersion,
-          verb: null,
+          verb: const Option.none(),
         ),
       });
     }
@@ -262,13 +262,13 @@ class ProgramRunPlanner {
       KonyakHostPlatform.linux => _linuxWinetricksCommandRequest(
         bottle: bottle,
         environment: environment,
-        verb: verb,
+        verb: Option.of(verb),
       ),
       KonyakHostPlatform.macos => _macosWinetricksCommandRequest(
         bottle: bottle,
         environment: environment,
         macosMajorVersion: macosMajorVersion,
-        verb: verb,
+        verb: Option.of(verb),
       ),
     });
   }
@@ -355,10 +355,14 @@ class ProgramRunPlanner {
   }
 }
 
-int? _currentMacosMajorVersion() {
-  final match = RegExp(r'\d+').firstMatch(Platform.operatingSystemVersion);
-  if (match == null) {
-    return null;
-  }
-  return int.tryParse(match.group(0)!);
+Option<int> _currentMacosMajorVersion() {
+  return _nullableOption(
+        RegExp(r'\d+').firstMatch(Platform.operatingSystemVersion),
+      )
+      .flatMap((match) {
+        return _nullableOption(match.group(0));
+      })
+      .flatMap((version) {
+        return _nullableOption(int.tryParse(version));
+      });
 }

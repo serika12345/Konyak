@@ -14,7 +14,7 @@ cli-pub-get:
 cli-codegen: cli-pub-get
   if [ -d packages/konyak_cli ]; then cd packages/konyak_cli && dart run build_runner build; fi
 
-verify-governance:
+verify-governance: cli-pub-get
   python3 scripts/verify_governance.py
 
 verify-architecture:

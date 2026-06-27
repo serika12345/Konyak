@@ -13,12 +13,11 @@ class DartIoProgramGraphicsBackendHintsInspector {
         return ProgramGraphicsBackendHintsMissingProgram(programPath);
       }
 
-      final image = _PortableExecutableImage.parse(file.readAsBytesSync());
       return ProgramGraphicsBackendHintsInspected(
         _programGraphicsBackendHintsFromPortableExecutable(
           programPath: programPath,
           hostPlatform: hostPlatform,
-          image: Option.fromNullable(image),
+          image: _PortableExecutableImage.parse(file.readAsBytesSync()),
         ),
       );
     } on FileSystemException catch (error) {

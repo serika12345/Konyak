@@ -92,16 +92,20 @@ int? _readUint32(Uint8List bytes, int offset) {
       bytes[offset + 3] << 24;
 }
 
-void _writeUint16(Uint8List bytes, int offset, int value) {
-  bytes[offset] = value & 0xff;
-  bytes[offset + 1] = value >> 8 & 0xff;
+Option<T> _nullableOption<T extends Object>(T? value) {
+  if (value == null) {
+    return const Option.none();
+  }
+
+  return Option.of(value);
 }
 
-void _writeUint32(Uint8List bytes, int offset, int value) {
-  bytes[offset] = value & 0xff;
-  bytes[offset + 1] = value >> 8 & 0xff;
-  bytes[offset + 2] = value >> 16 & 0xff;
-  bytes[offset + 3] = value >> 24 & 0xff;
+Option<int> _readUint16Option(Uint8List bytes, int offset) {
+  return _nullableOption(_readUint16(bytes, offset));
+}
+
+Option<int> _readUint32Option(Uint8List bytes, int offset) {
+  return _nullableOption(_readUint32(bytes, offset));
 }
 
 String? _nullTerminatedAsciiString(
@@ -143,6 +147,26 @@ String? _nullTerminatedUtf16LeString(
   }
 
   return codeUnits.isEmpty ? null : String.fromCharCodes(codeUnits);
+}
+
+Option<String> _nullTerminatedAsciiStringOption(
+  Uint8List bytes,
+  int offset,
+  int maximumOffset,
+) {
+  return _nullableOption(
+    _nullTerminatedAsciiString(bytes, offset, maximumOffset),
+  );
+}
+
+Option<String> _nullTerminatedUtf16LeStringOption(
+  Uint8List bytes,
+  int offset,
+  int maximumOffset,
+) {
+  return _nullableOption(
+    _nullTerminatedUtf16LeString(bytes, offset, maximumOffset),
+  );
 }
 
 int? _nullByteOffset(Uint8List bytes, int offset, int maximumOffset) {

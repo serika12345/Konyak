@@ -1,6 +1,7 @@
 from pathlib import Path
 import plistlib
 import re
+import subprocess
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -156,17 +157,8 @@ def is_external_null_boundary(relative_path: str) -> bool:
     boundary_paths = {
         "packages/konyak_cli/lib/konyak_cli.dart",
         "packages/konyak_cli/lib/src/shared/common_helpers.dart",
-        # Pure parsers for bytes/text/decoded payloads received from external
-        # programs, Windows metadata, or persisted integration indexes.
-        "packages/konyak_cli/lib/src/domain/process/wine_process_metadata.dart",
+        # Pure decoded-payload handling for persisted integration indexes.
         "packages/konyak_cli/lib/src/domain/program/external_program_launch_records.dart",
-        "packages/konyak_cli/lib/src/domain/program/pe_program_icons.dart",
-        "packages/konyak_cli/lib/src/domain/program/pe_program_image.dart",
-        "packages/konyak_cli/lib/src/domain/program/pe_program_versions.dart",
-        "packages/konyak_cli/lib/src/domain/program/program_registry_parsers.dart",
-        "packages/konyak_cli/lib/src/domain/program/program_runner.dart",
-        "packages/konyak_cli/lib/src/domain/program/program_shortcut_metadata.dart",
-        "packages/konyak_cli/lib/src/domain/program/program_winetricks_support.dart",
         # JSON contract rendering currently lives on these domain models.
         "packages/konyak_cli/lib/src/domain/app/app_settings_models.dart",
         "packages/konyak_cli/lib/src/domain/bottle/bottle_models.dart",
@@ -238,6 +230,33 @@ def require_no_non_boundary_nullable_usage() -> None:
                 if match is not None:
                     line = text.count("\n", 0, match.start()) + 1
                     raise AssertionError(f"{relative_path}:{line}: {message}")
+
+
+def require_no_domain_reassignment() -> None:
+    package_config = ROOT / "packages/konyak_cli/.dart_tool/package_config.json"
+    if not package_config.exists():
+        raise AssertionError(
+            "packages/konyak_cli dependencies must be resolved before "
+            "verify-governance; run `just cli-pub-get`."
+        )
+
+    result = subprocess.run(
+        [
+            "dart",
+            f"--packages={package_config}",
+            "scripts/verify_domain_reassignment.dart",
+            str(ROOT),
+        ],
+        cwd=ROOT,
+        check=False,
+        text=True,
+        capture_output=True,
+    )
+    if result.returncode != 0:
+        output = "\n".join(
+            value for value in [result.stdout.strip(), result.stderr.strip()] if value
+        )
+        raise AssertionError(output)
 
 
 def require_io_implementation_boundaries() -> None:
@@ -354,6 +373,7 @@ def require_result_boundary_rules() -> None:
     require_external_payload_parser_boundaries()
     require_no_nullable_result_sentinel_patterns()
     require_no_non_boundary_nullable_usage()
+    require_no_domain_reassignment()
 
     for expected in [
         "typedef IoResult<T> = Either<String, T>",

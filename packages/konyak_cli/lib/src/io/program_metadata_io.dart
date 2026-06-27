@@ -14,33 +14,32 @@ class DartIoProgramMetadataExtractor implements ProgramMetadataExtractor {
         return const Option.none();
       }
 
-      final image = _PortableExecutableImage.parse(file.readAsBytesSync());
-      if (image == null) {
-        return const Option.none();
-      }
+      return _PortableExecutableImage.parse(file.readAsBytesSync()).flatMap((
+        image,
+      ) {
+        final versionStrings = _peVersionStrings(image);
+        final iconPath = _extractPeIcon(
+          image: image,
+          bottle: bottle,
+          programPath: programPath,
+          fileStat: file.statSync(),
+        );
+        final metadata = ProgramMetadataRecord(
+          architecture: image.architecture,
+          fileDescription: versionStrings.fileDescription.map(
+            (value) => value.value,
+          ),
+          productName: versionStrings.productName.map((value) => value.value),
+          companyName: versionStrings.companyName.map((value) => value.value),
+          fileVersion: versionStrings.fileVersion.map((value) => value.value),
+          productVersion: versionStrings.productVersion.map(
+            (value) => value.value,
+          ),
+          iconPath: Option.fromNullable(iconPath),
+        );
 
-      final versionStrings = _peVersionStrings(image);
-      final iconPath = _extractPeIcon(
-        image: image,
-        bottle: bottle,
-        programPath: programPath,
-        fileStat: file.statSync(),
-      );
-      final metadata = ProgramMetadataRecord(
-        architecture: image.architecture,
-        fileDescription: versionStrings.fileDescription.map(
-          (value) => value.value,
-        ),
-        productName: versionStrings.productName.map((value) => value.value),
-        companyName: versionStrings.companyName.map((value) => value.value),
-        fileVersion: versionStrings.fileVersion.map((value) => value.value),
-        productVersion: versionStrings.productVersion.map(
-          (value) => value.value,
-        ),
-        iconPath: Option.fromNullable(iconPath),
-      );
-
-      return metadata.isEmpty ? const Option.none() : Option.of(metadata);
+        return metadata.isEmpty ? const Option.none() : Option.of(metadata);
+      });
     } on FileSystemException {
       return const Option.none();
     } on FormatException {
@@ -66,33 +65,32 @@ class DartIoAsyncProgramMetadataExtractor
         return const Option.none();
       }
 
-      final image = _PortableExecutableImage.parse(await file.readAsBytes());
-      if (image == null) {
-        return const Option.none();
-      }
+      return await _PortableExecutableImage.parse(
+        await file.readAsBytes(),
+      ).match(() async => const Option.none(), (image) async {
+        final versionStrings = _peVersionStrings(image);
+        final iconPath = await _extractPeIconAsync(
+          image: image,
+          bottle: bottle,
+          programPath: programPath,
+          fileStat: await file.stat(),
+        );
+        final metadata = ProgramMetadataRecord(
+          architecture: image.architecture,
+          fileDescription: versionStrings.fileDescription.map(
+            (value) => value.value,
+          ),
+          productName: versionStrings.productName.map((value) => value.value),
+          companyName: versionStrings.companyName.map((value) => value.value),
+          fileVersion: versionStrings.fileVersion.map((value) => value.value),
+          productVersion: versionStrings.productVersion.map(
+            (value) => value.value,
+          ),
+          iconPath: Option.fromNullable(iconPath),
+        );
 
-      final versionStrings = _peVersionStrings(image);
-      final iconPath = await _extractPeIconAsync(
-        image: image,
-        bottle: bottle,
-        programPath: programPath,
-        fileStat: await file.stat(),
-      );
-      final metadata = ProgramMetadataRecord(
-        architecture: image.architecture,
-        fileDescription: versionStrings.fileDescription.map(
-          (value) => value.value,
-        ),
-        productName: versionStrings.productName.map((value) => value.value),
-        companyName: versionStrings.companyName.map((value) => value.value),
-        fileVersion: versionStrings.fileVersion.map((value) => value.value),
-        productVersion: versionStrings.productVersion.map(
-          (value) => value.value,
-        ),
-        iconPath: Option.fromNullable(iconPath),
-      );
-
-      return metadata.isEmpty ? const Option.none() : Option.of(metadata);
+        return metadata.isEmpty ? const Option.none() : Option.of(metadata);
+      });
     } on FileSystemException {
       return const Option.none();
     } on FormatException {

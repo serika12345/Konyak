@@ -5,27 +5,24 @@ BottleRecord _bottleWithRegistryValue({
   required List<String> arguments,
   required String stdout,
 }) {
-  final name = _registryValueNameFromArguments(arguments);
-  if (name == null) {
-    return bottle;
-  }
-
-  final data = _registryQueryValue(stdout, name);
-  if (data == null) {
-    return bottle;
-  }
-
-  if (name == 'Version') {
-    return _bottleWithWindowsVersion(bottle, data);
-  }
-
-  return bottle.withRuntimeSettings(
-    _runtimeSettingsWithRegistryValue(
-      runtimeSettings: bottle.runtimeSettings,
-      arguments: arguments,
-      stdout: stdout,
-    ),
-  );
+  return _registryValueNameFromArguments(arguments)
+      .flatMap((name) {
+        return _registryQueryValue(stdout, name).map((data) {
+          return (name: name, data: data);
+        });
+      })
+      .match(
+        () => bottle,
+        (value) => value.name == 'Version'
+            ? _bottleWithWindowsVersion(bottle, value.data)
+            : bottle.withRuntimeSettings(
+                _runtimeSettingsWithRegistryValue(
+                  runtimeSettings: bottle.runtimeSettings,
+                  arguments: arguments,
+                  stdout: stdout,
+                ),
+              ),
+      );
 }
 
 BottleRuntimeSettings _runtimeSettingsWithRegistryValue({
@@ -33,22 +30,30 @@ BottleRuntimeSettings _runtimeSettingsWithRegistryValue({
   required List<String> arguments,
   required String stdout,
 }) {
-  final name = _registryValueNameFromArguments(arguments);
-  if (name == null) {
-    return runtimeSettings;
-  }
-
-  final data = _registryQueryValue(stdout, name);
-  if (data == null) {
-    return runtimeSettings;
-  }
-
-  return switch (name) {
-    'CurrentBuild' => _runtimeSettingsWithBuildVersion(runtimeSettings, data),
-    'RetinaMode' => _runtimeSettingsWithRetinaMode(runtimeSettings, data),
-    'LogPixels' => _runtimeSettingsWithDpiScaling(runtimeSettings, data),
-    _ => runtimeSettings,
-  };
+  return _registryValueNameFromArguments(arguments)
+      .flatMap((name) {
+        return _registryQueryValue(stdout, name).map((data) {
+          return (name: name, data: data);
+        });
+      })
+      .match(
+        () => runtimeSettings,
+        (value) => switch (value.name) {
+          'CurrentBuild' => _runtimeSettingsWithBuildVersion(
+            runtimeSettings,
+            value.data,
+          ),
+          'RetinaMode' => _runtimeSettingsWithRetinaMode(
+            runtimeSettings,
+            value.data,
+          ),
+          'LogPixels' => _runtimeSettingsWithDpiScaling(
+            runtimeSettings,
+            value.data,
+          ),
+          _ => runtimeSettings,
+        },
+      );
 }
 
 BottleRecord _bottleWithWindowsVersion(BottleRecord bottle, String data) {
@@ -74,12 +79,12 @@ BottleRuntimeSettings _runtimeSettingsWithBuildVersion(
   BottleRuntimeSettings runtimeSettings,
   String data,
 ) {
-  final buildVersion = int.tryParse(data.trim());
-  if (buildVersion == null || buildVersion < 0 || buildVersion > 999999) {
-    return runtimeSettings;
-  }
-
-  return runtimeSettings.withBuildVersion(buildVersion);
+  return _nullableOption(int.tryParse(data.trim())).match(
+    () => runtimeSettings,
+    (buildVersion) => buildVersion < 0 || buildVersion > 999999
+        ? runtimeSettings
+        : runtimeSettings.withBuildVersion(buildVersion),
+  );
 }
 
 BottleRuntimeSettings _runtimeSettingsWithRetinaMode(
@@ -97,47 +102,48 @@ BottleRuntimeSettings _runtimeSettingsWithDpiScaling(
   BottleRuntimeSettings runtimeSettings,
   String data,
 ) {
-  final dpiScaling = _registryDwordValue(data);
-  if (dpiScaling == null ||
-      dpiScaling < 96 ||
-      dpiScaling > 480 ||
-      (dpiScaling - 96) % 24 != 0) {
-    return runtimeSettings;
-  }
-
-  return runtimeSettings.withDpiScaling(dpiScaling);
+  return _registryDwordValue(data).match(
+    () => runtimeSettings,
+    (dpiScaling) =>
+        dpiScaling < 96 || dpiScaling > 480 || (dpiScaling - 96) % 24 != 0
+        ? runtimeSettings
+        : runtimeSettings.withDpiScaling(dpiScaling),
+  );
 }
 
-String? _registryValueNameFromArguments(List<String> arguments) {
+Option<String> _registryValueNameFromArguments(List<String> arguments) {
   final valueIndex = arguments.indexOf('/v');
   if (valueIndex == -1 || valueIndex + 1 >= arguments.length) {
-    return null;
+    return const Option.none();
   }
 
-  return arguments[valueIndex + 1];
+  return Option.of(arguments[valueIndex + 1]);
 }
 
-String? _registryQueryValue(String output, String name) {
-  for (final line in const LineSplitter().convert(output)) {
-    final columns = line.trim().split(RegExp(r'\s+'));
-    if (columns.length >= 3 && columns.first == name) {
-      return columns.sublist(2).join(' ');
-    }
-  }
-
-  return null;
+Option<String> _registryQueryValue(String output, String name) {
+  return const LineSplitter()
+      .convert(output)
+      .fold<Option<String>>(
+        const Option.none(),
+        (current, line) => current.match(() {
+          final columns = line.trim().split(RegExp(r'\s+'));
+          return columns.length >= 3 && columns.first == name
+              ? Option.of(columns.sublist(2).join(' '))
+              : const Option.none();
+        }, (_) => current),
+      );
 }
 
-int? _registryDwordValue(String data) {
+Option<int> _registryDwordValue(String data) {
   final parts = data.trim().split(RegExp(r'\s+'));
   if (parts.isEmpty || parts.first.isEmpty) {
-    return null;
+    return const Option.none();
   }
 
   final token = parts.first;
   if (token.startsWith('0x') || token.startsWith('0X')) {
-    return int.tryParse(token.substring(2), radix: 16);
+    return _nullableOption(int.tryParse(token.substring(2), radix: 16));
   }
 
-  return int.tryParse(token);
+  return _nullableOption(int.tryParse(token));
 }

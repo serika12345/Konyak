@@ -93,27 +93,30 @@ void _syncMacosD3DMetalDllOverrides({
   )..createSync(recursive: true);
 
   for (final dllName in _d3dMetalOverrideDllNames) {
-    final sourcePath = _d3DMetalOverrideSourcePath(
+    _d3DMetalOverrideSourcePath(
       runtimeRoot: runtimeRoot,
       dllName: dllName,
+    ).match(
+      () {
+        throw FileSystemException(
+          'D3DMetal override DLL was not found.',
+          _joinPath(runtimeRoot, <String>[
+            ..._gptkD3DMetalComponentLibRelativePath,
+            'wine',
+            'x86_64-windows',
+            dllName,
+          ]),
+        );
+      },
+      (sourcePath) {
+        final sourceFile = File(sourcePath);
+        sourceFile.copySync(_joinPath(destinationDirectory.path, [dllName]));
+      },
     );
-    if (sourcePath == null) {
-      throw FileSystemException(
-        'D3DMetal override DLL was not found.',
-        _joinPath(runtimeRoot, <String>[
-          ..._gptkD3DMetalComponentLibRelativePath,
-          'wine',
-          'x86_64-windows',
-          dllName,
-        ]),
-      );
-    }
-    final sourceFile = File(sourcePath);
-    sourceFile.copySync(_joinPath(destinationDirectory.path, [dllName]));
   }
 }
 
-String? _d3DMetalOverrideSourcePath({
+Option<String> _d3DMetalOverrideSourcePath({
   required String runtimeRoot,
   required String dllName,
 }) {
@@ -131,11 +134,11 @@ String? _d3DMetalOverrideSourcePath({
         sourceName,
       ]);
       if (File(sourcePath).existsSync()) {
-        return sourcePath;
+        return Option.of(sourcePath);
       }
     }
   }
-  return null;
+  return const Option.none();
 }
 
 List<String> _d3DMetalOverrideSourceNames(String dllName) {
@@ -232,7 +235,7 @@ ProgramRunRequest _macosWineCommandRequest({
   required BottleRecord bottle,
   required String command,
   required HostEnvironment environment,
-  required int? macosMajorVersion,
+  required Option<int> macosMajorVersion,
 }) {
   final hostEnvironment = environment;
   return ProgramRunRequest(
@@ -255,7 +258,7 @@ ProgramRunRequest _macosRegistryUpdateRequest({
   required BottleRecord bottle,
   required _RegistryValueUpdate update,
   required HostEnvironment environment,
-  required int? macosMajorVersion,
+  required Option<int> macosMajorVersion,
 }) {
   final hostEnvironment = environment;
   return ProgramRunRequest(
@@ -278,7 +281,7 @@ ProgramRunRequest _macosRegistryQueryRequest({
   required BottleRecord bottle,
   required _RegistryValueQuery query,
   required HostEnvironment environment,
-  required int? macosMajorVersion,
+  required Option<int> macosMajorVersion,
 }) {
   final hostEnvironment = environment;
   return ProgramRunRequest(
@@ -300,11 +303,11 @@ ProgramRunRequest _macosRegistryQueryRequest({
 ProgramRunRequest _linuxTerminalCommandRequest({
   required BottleRecord bottle,
   required HostEnvironment environment,
-  String? initialWineCommand,
+  Option<String> initialWineCommand = const Option.none(),
 }) {
   return ProgramRunRequest(
     bottleId: bottle.id.value,
-    programPath: initialWineCommand ?? 'terminal',
+    programPath: initialWineCommand.getOrElse(() => 'terminal'),
     runnerKind: 'terminal',
     executable: 'sh',
     arguments: <String>[
@@ -325,8 +328,8 @@ ProgramRunRequest _linuxTerminalCommandRequest({
 ProgramRunRequest _macosTerminalCommandRequest({
   required BottleRecord bottle,
   required HostEnvironment environment,
-  required int? macosMajorVersion,
-  String? initialWineCommand,
+  required Option<int> macosMajorVersion,
+  Option<String> initialWineCommand = const Option.none(),
 }) {
   final shellCommand = _macosWineTerminalShellCommand(
     bottle: bottle,
@@ -338,7 +341,7 @@ ProgramRunRequest _macosTerminalCommandRequest({
 
   return ProgramRunRequest(
     bottleId: bottle.id.value,
-    programPath: initialWineCommand ?? 'terminal',
+    programPath: initialWineCommand.getOrElse(() => 'terminal'),
     runnerKind: 'macosTerminal',
     executable: '/usr/bin/osascript',
     arguments: <String>[
@@ -356,15 +359,15 @@ ProgramRunRequest _macosTerminalCommandRequest({
 ProgramRunRequest _linuxWinetricksCommandRequest({
   required BottleRecord bottle,
   required HostEnvironment environment,
-  String? verb,
+  Option<String> verb = const Option.none(),
 }) {
   final hostEnvironment = environment;
   return ProgramRunRequest(
     bottleId: bottle.id.value,
-    programPath: verb ?? 'winetricks',
+    programPath: verb.getOrElse(() => 'winetricks'),
     runnerKind: 'winetricks',
     executable: _linuxWinetricksExecutable(hostEnvironment),
-    arguments: verb == null ? const <String>[] : <String>[verb],
+    arguments: verb.match(() => const <String>[], (value) => <String>[value]),
     environment: _linuxRuntimeEnvironment(hostEnvironment).merge(
       _linuxWineEnvironmentWithRuntime(
         bottle: bottle,
@@ -378,8 +381,8 @@ ProgramRunRequest _linuxWinetricksCommandRequest({
 ProgramRunRequest _macosWinetricksCommandRequest({
   required BottleRecord bottle,
   required HostEnvironment environment,
-  required int? macosMajorVersion,
-  required String? verb,
+  required Option<int> macosMajorVersion,
+  required Option<String> verb,
 }) {
   final hostEnvironment = environment;
   final runtimeRoot = _macosWineRuntimeRoot(hostEnvironment);
@@ -387,10 +390,10 @@ ProgramRunRequest _macosWinetricksCommandRequest({
 
   return ProgramRunRequest(
     bottleId: bottle.id.value,
-    programPath: verb ?? 'winetricks',
+    programPath: verb.getOrElse(() => 'winetricks'),
     runnerKind: 'macosWinetricks',
     executable: _macosWinetricksExecutable(hostEnvironment),
-    arguments: verb == null ? const <String>[] : <String>[verb],
+    arguments: verb.match(() => const <String>[], (value) => <String>[value]),
     environment:
         _macosWineEnvironment(
               bottle: bottle,

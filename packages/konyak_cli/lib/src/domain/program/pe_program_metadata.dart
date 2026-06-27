@@ -9,12 +9,24 @@ String _uniqueProgramId({
     return fallbackBaseId;
   }
 
-  var suffix = 2;
-  while (existing.any(
-    (program) => program.id.value == '$fallbackBaseId-$suffix',
-  )) {
-    suffix += 1;
-  }
+  return _uniqueProgramIdWithSuffix(
+    baseId: fallbackBaseId,
+    existing: existing,
+    suffix: 2,
+  );
+}
 
-  return '$fallbackBaseId-$suffix';
+String _uniqueProgramIdWithSuffix({
+  required String baseId,
+  required List<BottleProgramRecord> existing,
+  required int suffix,
+}) {
+  final candidate = '$baseId-$suffix';
+  return existing.any((program) => program.id.value == candidate)
+      ? _uniqueProgramIdWithSuffix(
+          baseId: baseId,
+          existing: existing,
+          suffix: suffix + 1,
+        )
+      : candidate;
 }

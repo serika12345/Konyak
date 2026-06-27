@@ -1159,7 +1159,7 @@ void defineProgramExecutionContractTests() {
       programRunPlanner: ProgramRunPlanner(
         hostPlatform: KonyakHostPlatform.macos,
         environment: HostEnvironment({'KONYAK_MACOS_WINE_HOME': runtimeRoot}),
-        macosMajorVersion: 16,
+        macosMajorVersion: Option.of(16),
       ),
       programRunner: runner,
     );
@@ -1233,7 +1233,7 @@ void defineProgramExecutionContractTests() {
       programRunPlanner: ProgramRunPlanner(
         hostPlatform: KonyakHostPlatform.macos,
         environment: HostEnvironment({'KONYAK_MACOS_WINE_HOME': runtimeRoot}),
-        macosMajorVersion: 15,
+        macosMajorVersion: Option.of(15),
       ),
       programRunner: runner,
     );

@@ -4,28 +4,27 @@ List<_PeResourceLeaf> _peResourceLeaves(
   _PortableExecutableImage image,
   int typeId,
 ) {
-  final resourceRootOffset = image.resourceRootOffset;
-  if (resourceRootOffset == null) {
-    return const <_PeResourceLeaf>[];
-  }
-
-  final rootEntries = _peResourceDirectoryEntries(
-    image.bytes,
+  return image.resourceRootOffset.match(() => const <_PeResourceLeaf>[], (
     resourceRootOffset,
-  );
-  for (final entry in rootEntries) {
-    if (entry.id != typeId || !entry.isDirectory) {
-      continue;
+  ) {
+    final rootEntries = _peResourceDirectoryEntries(
+      image.bytes,
+      resourceRootOffset,
+    );
+    for (final entry in rootEntries) {
+      if (entry.id != typeId || !entry.isDirectory) {
+        continue;
+      }
+
+      return _peResourceLeavesFromDirectory(
+        image: image,
+        directoryOffset: resourceRootOffset + entry.targetOffset,
+        ids: const <int>[],
+      );
     }
 
-    return _peResourceLeavesFromDirectory(
-      image: image,
-      directoryOffset: resourceRootOffset + entry.targetOffset,
-      ids: const <int>[],
-    );
-  }
-
-  return const <_PeResourceLeaf>[];
+    return const <_PeResourceLeaf>[];
+  });
 }
 
 List<_PeResourceLeaf> _peResourceLeavesFromDirectory({
@@ -33,48 +32,52 @@ List<_PeResourceLeaf> _peResourceLeavesFromDirectory({
   required int directoryOffset,
   required List<int> ids,
 }) {
-  final resourceRootOffset = image.resourceRootOffset;
-  if (resourceRootOffset == null) {
-    return const <_PeResourceLeaf>[];
-  }
+  return image.resourceRootOffset.match(() => const <_PeResourceLeaf>[], (
+    resourceRootOffset,
+  ) {
+    final leaves = <_PeResourceLeaf>[];
+    for (final entry in _peResourceDirectoryEntries(
+      image.bytes,
+      directoryOffset,
+    )) {
+      final nextIds = entry.id == null ? ids : <int>[...ids, entry.id!];
+      if (entry.isDirectory) {
+        leaves.addAll(
+          _peResourceLeavesFromDirectory(
+            image: image,
+            directoryOffset: resourceRootOffset + entry.targetOffset,
+            ids: nextIds,
+          ),
+        );
+        continue;
+      }
 
-  final leaves = <_PeResourceLeaf>[];
-  for (final entry in _peResourceDirectoryEntries(
-    image.bytes,
-    directoryOffset,
-  )) {
-    final nextIds = entry.id == null ? ids : <int>[...ids, entry.id!];
-    if (entry.isDirectory) {
-      leaves.addAll(
-        _peResourceLeavesFromDirectory(
-          image: image,
-          directoryOffset: resourceRootOffset + entry.targetOffset,
-          ids: nextIds,
-        ),
-      );
-      continue;
+      final dataEntryOffset = resourceRootOffset + entry.targetOffset;
+      final dataRva = _readUint32(image.bytes, dataEntryOffset);
+      final size = _readUint32(image.bytes, dataEntryOffset + 4);
+      if (dataRva == null || size == null) {
+        continue;
+      }
+      image.rawOffsetForRva(dataRva).match(() {}, (dataOffset) {
+        if (dataOffset + size > image.bytes.length) {
+          return;
+        }
+
+        leaves.add(
+          _PeResourceLeaf(
+            ids: nextIds,
+            data: Uint8List.sublistView(
+              image.bytes,
+              dataOffset,
+              dataOffset + size,
+            ),
+          ),
+        );
+      });
     }
 
-    final dataEntryOffset = resourceRootOffset + entry.targetOffset;
-    final dataRva = _readUint32(image.bytes, dataEntryOffset);
-    final size = _readUint32(image.bytes, dataEntryOffset + 4);
-    if (dataRva == null || size == null) {
-      continue;
-    }
-    final dataOffset = image.rawOffsetForRva(dataRva);
-    if (dataOffset == null || dataOffset + size > image.bytes.length) {
-      continue;
-    }
-
-    leaves.add(
-      _PeResourceLeaf(
-        ids: nextIds,
-        data: Uint8List.sublistView(image.bytes, dataOffset, dataOffset + size),
-      ),
-    );
-  }
-
-  return List.unmodifiable(leaves);
+    return List.unmodifiable(leaves);
+  });
 }
 
 List<_PeResourceDirectoryEntry> _peResourceDirectoryEntries(

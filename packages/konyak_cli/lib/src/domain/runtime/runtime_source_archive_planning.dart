@@ -120,9 +120,9 @@ _RuntimeStackSourceArchivePlanResult _runtimeStackSourceArchivePlan({
         wineComponent: wineComponent,
         sourceComponents: manifest.components,
         components: <_RuntimeStackSourceArchiveComponentPlan>[
-          for (var index = 0; index < componentCount; index += 1)
+          for (final (index, component) in archiveComponents.indexed)
             _runtimeStackSourceArchiveComponentPlan(
-              component: archiveComponents[index],
+              component: component,
               componentIndex: index,
               componentCount: componentCount,
               tempDirectoryPath: tempDirectoryPath,
