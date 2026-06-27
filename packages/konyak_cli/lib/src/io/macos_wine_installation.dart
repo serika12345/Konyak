@@ -70,9 +70,10 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
         :final preserveExistingRuntimeFiles,
       ):
         return _installMacosWineStackFromSourceManifest(
-          sourceManifest,
+          sourceManifest.value,
           sourceManifestSignature: sourceManifestSignature.asOption
-              .toNullable(),
+              .toNullable()
+              ?.value,
           preserveExistingRuntimeFiles: preserveExistingRuntimeFiles,
           progressSink: progress,
         );
@@ -83,9 +84,13 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
         :final preserveExistingRuntimeFiles,
       ):
         return _installMacosWineArchive(
-          archivePath: archivePath,
-          archiveSha256: archiveSha256.asOption,
-          componentArchivePaths: componentArchivePaths,
+          archivePath: archivePath.value,
+          archiveSha256: archiveSha256.asOption.map(
+            (checksum) => checksum.value,
+          ),
+          componentArchivePaths: componentArchivePaths.map(
+            (path) => path.value,
+          ),
           preserveExistingRuntimeFiles: preserveExistingRuntimeFiles,
           progressSink: progress,
         );
@@ -107,7 +112,7 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
 
         try {
           final downloadFailure = _downloadRuntimeStackSourceArchive(
-            source: archiveUrl,
+            source: archiveUrl.value,
             targetPath: downloadedArchivePath,
             progressSink: progress,
             stage: 'downloading',
@@ -121,8 +126,12 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
 
           return _installMacosWineArchive(
             archivePath: downloadedArchivePath,
-            archiveSha256: archiveSha256.asOption,
-            componentArchivePaths: componentArchivePaths,
+            archiveSha256: archiveSha256.asOption.map(
+              (checksum) => checksum.value,
+            ),
+            componentArchivePaths: componentArchivePaths.map(
+              (path) => path.value,
+            ),
             preserveExistingRuntimeFiles: preserveExistingRuntimeFiles,
             progressSink: progress,
           );
@@ -179,9 +188,10 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
         :final preserveExistingRuntimeFiles,
       ):
         return _installMacosWineStackFromSourceManifestStreaming(
-          sourceManifest,
+          sourceManifest.value,
           sourceManifestSignature: sourceManifestSignature.asOption
-              .toNullable(),
+              .toNullable()
+              ?.value,
           preserveExistingRuntimeFiles: preserveExistingRuntimeFiles,
           progressSink: progress,
         );
@@ -192,9 +202,13 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
         :final preserveExistingRuntimeFiles,
       ):
         return _installMacosWineArchive(
-          archivePath: archivePath,
-          archiveSha256: archiveSha256.asOption,
-          componentArchivePaths: componentArchivePaths,
+          archivePath: archivePath.value,
+          archiveSha256: archiveSha256.asOption.map(
+            (checksum) => checksum.value,
+          ),
+          componentArchivePaths: componentArchivePaths.map(
+            (path) => path.value,
+          ),
           preserveExistingRuntimeFiles: preserveExistingRuntimeFiles,
           progressSink: progress,
         );
@@ -217,7 +231,7 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
         try {
           final downloadFailure =
               await _downloadRuntimeStackSourceArchiveStreaming(
-                source: archiveUrl,
+                source: archiveUrl.value,
                 targetPath: downloadedArchivePath,
                 progressSink: progress,
                 stage: 'downloading',
@@ -231,8 +245,12 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
 
           return _installMacosWineArchive(
             archivePath: downloadedArchivePath,
-            archiveSha256: archiveSha256.asOption,
-            componentArchivePaths: componentArchivePaths,
+            archiveSha256: archiveSha256.asOption.map(
+              (checksum) => checksum.value,
+            ),
+            componentArchivePaths: componentArchivePaths.map(
+              (path) => path.value,
+            ),
             preserveExistingRuntimeFiles: preserveExistingRuntimeFiles,
             progressSink: progress,
           );

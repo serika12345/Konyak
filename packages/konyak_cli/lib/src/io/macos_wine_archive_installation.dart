@@ -113,9 +113,11 @@ extension _MacosWineArchiveInstallation on DartIoMacosWineInstaller {
           _macosWineSourceManifestInstallResult(
             sourceManifest: sourceManifest,
             result: _installMacosWineArchive(
-              archivePath: bundle.wineArchivePath,
+              archivePath: bundle.wineArchivePath.value,
               archiveSha256: const Option.none(),
-              componentArchivePaths: bundle.componentArchivePaths,
+              componentArchivePaths: bundle.componentArchivePaths.map(
+                (path) => path.value,
+              ),
               componentVersions: bundle.componentVersions,
               preserveExistingRuntimeFiles: preserveExistingRuntimeFiles,
               progressSink: progressSink,
@@ -183,9 +185,11 @@ extension _MacosWineArchiveInstallation on DartIoMacosWineInstaller {
           _macosWineSourceManifestInstallResult(
             sourceManifest: sourceManifest,
             result: _installMacosWineArchive(
-              archivePath: bundle.wineArchivePath,
+              archivePath: bundle.wineArchivePath.value,
               archiveSha256: const Option.none(),
-              componentArchivePaths: bundle.componentArchivePaths,
+              componentArchivePaths: bundle.componentArchivePaths.map(
+                (path) => path.value,
+              ),
               componentVersions: bundle.componentVersions,
               preserveExistingRuntimeFiles: preserveExistingRuntimeFiles,
               progressSink: progressSink,

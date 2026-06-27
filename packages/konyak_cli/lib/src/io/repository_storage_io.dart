@@ -89,7 +89,7 @@ Option<ProgramLoggingSettingsRecord>? _programLoggingSettingsRecordFromJson(
 
 Option<BottleRuntimeSettings> _bottleRuntimeSettingsFromJson(Object? value) {
   if (value == null) {
-    return Option.of(const BottleRuntimeSettings());
+    return Option.of(BottleRuntimeSettings());
   }
 
   final settings = _objectMap(value);
@@ -269,7 +269,7 @@ BottleRecord _readBottleMetadata(String bottlePath) {
 }
 
 void _writeBottleMetadata(BottleRecord bottle) {
-  final metadata = File(_joinPath(bottle.path, const ['metadata.json']));
+  final metadata = File(_joinPath(bottle.path.value, const ['metadata.json']));
   metadata.writeAsStringSync(
     const JsonEncoder.withIndent('  ').convert(<String, Object?>{
       'schemaVersion': cliSchemaVersion,

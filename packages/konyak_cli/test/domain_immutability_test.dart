@@ -30,6 +30,12 @@ void main() {
     pinnedPrograms.clear();
 
     expect(bottle.pinnedPrograms, hasLength(1));
+    expect(bottle.id, BottleId('steam'));
+    expect(bottle.name, BottleName('Steam'));
+    expect(bottle.path, BottlePath('/bottles/steam'));
+    expect(bottle.windowsVersion, WindowsVersion('win10'));
+    expect(bottle.toJson(), containsPair('id', 'steam'));
+    expect(bottle.toJson(), containsPair('path', '/bottles/steam'));
     expect(
       bottle.pinnedPrograms.add(
         PinnedProgramRecord(name: 'Other', path: '/other.exe'),
@@ -96,11 +102,36 @@ void main() {
     final withIcon = withoutIcon.withIconPath(Option.of('/steam.icns'));
     final clearedIcon = withIcon.withIconPath(const Option.none());
 
+    expect(withoutIcon.name, ProgramName('Steam'));
+    expect(withoutIcon.path, ProgramPath('/steam.exe'));
     expect(withoutIcon.iconPath.isNone(), isTrue);
-    expect(withIcon.iconPath.toNullable(), '/steam.icns');
+    expect(withIcon.iconPath.toNullable(), ProgramIconPath('/steam.icns'));
     expect(clearedIcon.iconPath.isNone(), isTrue);
     expect(withIcon.toJson(), containsPair('iconPath', '/steam.icns'));
     expect(clearedIcon.toJson(), isNot(contains('iconPath')));
+  });
+
+  test('runtime settings expose semantic value object fields', () {
+    final settings = BottleRuntimeSettings(
+      enhancedSync: 'msync',
+      dxvkHud: 'off',
+      buildVersion: 22631,
+      dpiScaling: 144,
+    );
+
+    expect(settings.enhancedSync, EnhancedSyncMode('msync'));
+    expect(settings.dxvkHud, DxvkHudMode('off'));
+    expect(settings.buildVersion, WindowsBuildVersion(22631));
+    expect(settings.dpiScaling, WindowsDpiScaling(144));
+    expect(settings.toJson(), containsPair('enhancedSync', 'msync'));
+    expect(settings.toJson(), containsPair('dpiScaling', 144));
+  });
+
+  test('app settings expose default bottle path as a value object', () {
+    final settings = AppSettingsRecord(defaultBottlePath: '/bottles');
+
+    expect(settings.defaultBottlePath, DefaultBottlePath('/bottles'));
+    expect(settings.toJson(), containsPair('defaultBottlePath', '/bottles'));
   });
 
   test('program metadata records model absent fields with Option', () {
@@ -114,7 +145,12 @@ void main() {
     expect(emptyMetadata.isEmpty, isTrue);
     expect(emptyMetadata.iconPath.isNone(), isTrue);
     expect(metadata.isEmpty, isFalse);
-    expect(metadata.architecture.toNullable(), 'x86_64');
+    expect(metadata.architecture.toNullable(), ProgramArchitecture('x86_64'));
+    expect(
+      metadata.fileDescription.toNullable(),
+      ProgramFileDescription('Steam'),
+    );
+    expect(metadata.iconPath.toNullable(), ProgramIconPath('/steam.icns'));
     expect(metadata.toJson(), {
       'architecture': 'x86_64',
       'fileDescription': 'Steam',
@@ -147,7 +183,14 @@ void main() {
     );
 
     expect(program.metadata.isNone(), isTrue);
+    expect(program.id, ProgramId('steam'));
+    expect(program.name, ProgramName('Steam'));
+    expect(program.path, ProgramPath('/steam.exe'));
+    expect(program.source, ProgramSource('pinned'));
     expect(process.metadata.isNone(), isTrue);
+    expect(process.bottleId, BottleId('steam'));
+    expect(process.processId, WineProcessId('42'));
+    expect(process.executable, ProgramExecutable('steam.exe'));
     expect(process.hostPath.isNone(), isTrue);
     expect(program.toJson(), isNot(contains('metadata')));
     expect(process.toJson(), isNot(contains('metadata')));
@@ -157,6 +200,7 @@ void main() {
   test('runtime release metadata models absent fields with Option', () {
     final metadata = RuntimeReleaseMetadata(version: '1.0.0');
 
+    expect(metadata.version, ReleaseVersion('1.0.0'));
     expect(metadata.archiveUrl.isNone(), isTrue);
     expect(metadata.archiveSha256.isNone(), isTrue);
     expect(metadata.sourceManifestUrl.isNone(), isTrue);
@@ -186,8 +230,16 @@ void main() {
     );
 
     expect(update.currentVersion.isNone(), isTrue);
+    expect(update.runtimeId, RuntimeId('wine'));
+    expect(update.status, UpdateCheckStatus('unknown'));
     expect(update.archiveUrl.isNone(), isTrue);
     expect(update.toJson(), isNot(contains('archiveUrl')));
+    expect(available.currentVersion.toNullable(), RuntimeVersion('1.0.0'));
+    expect(available.latestVersion.toNullable(), RuntimeVersion('1.1.0'));
+    expect(
+      available.archiveUrl.toNullable(),
+      RuntimeArchiveUrl('https://example.invalid/wine.tar.xz'),
+    );
     expect(available.toJson(), containsPair('currentVersion', '1.0.0'));
     expect(
       available.toJson(),
@@ -217,6 +269,8 @@ void main() {
   test('app update records model absent fields with Option', () {
     final update = AppUpdateRecord(appId: 'konyak', status: 'unknown');
 
+    expect(update.appId, AppId('konyak'));
+    expect(update.status, UpdateCheckStatus('unknown'));
     expect(update.currentVersion.isNone(), isTrue);
     expect(update.latestVersion.isNone(), isTrue);
     expect(update.archiveUrl.isNone(), isTrue);
@@ -246,6 +300,8 @@ void main() {
   test('app update install records model absent fields with Option', () {
     final install = AppUpdateInstallRecord(appId: 'konyak', status: 'skipped');
 
+    expect(install.appId, AppId('konyak'));
+    expect(install.status, UpdateInstallStatus('skipped'));
     expect(install.currentVersion.isNone(), isTrue);
     expect(install.installedVersion.isNone(), isTrue);
     expect(install.archiveUrl.isNone(), isTrue);
@@ -296,7 +352,7 @@ void main() {
     final manifestSource = source as RuntimeSourceManifestInstallSource;
     expect(
       manifestSource.sourceManifest,
-      'https://example.invalid/source.json',
+      RuntimeSourceManifestUrl('https://example.invalid/source.json'),
     );
     expect(manifestSource.signature, isA<RuntimeSourceManifestSigned>());
   });
@@ -320,9 +376,20 @@ void main() {
     final environment = <String, String>{'LANG': 'ja_JP.UTF-8'};
     final settings = ProgramSettingsRecord(
       environment: ProgramEnvironmentOverrides(environment),
+      logging: Option.of(
+        ProgramLoggingSettingsRecord(
+          additionalWineLoggingChannels: ' +seh ',
+          logFilePath: ' /tmp/steam.log ',
+        ),
+      ),
     );
     environment['LANG'] = 'en_US.UTF-8';
 
+    expect(settings.locale, ProgramLocale(''));
+    expect(settings.arguments, ProgramArguments(''));
+    final logging = settings.logging.toNullable();
+    expect(logging?.additionalWineLoggingChannels, WineDebugChannels('+seh'));
+    expect(logging?.logFilePath, ProgramLogPath('/tmp/steam.log'));
     expect(settings.environment.toMap(), {'LANG': 'ja_JP.UTF-8'});
     expect(settings.environment.add('WINEDEBUG', '-all').toMap(), {
       'LANG': 'ja_JP.UTF-8',
@@ -346,6 +413,30 @@ void main() {
       () => ProgramRunEnvironment(const <String, String>{'A=B': 'value'}),
       throwsA(isA<ArgumentError>()),
     );
+  });
+
+  test('program run requests expose semantic value object fields', () {
+    final request = ProgramRunRequest(
+      bottleId: 'steam',
+      programPath: '/steam.exe',
+      runnerKind: 'wine',
+      executable: 'wine',
+      arguments: const <String>['/steam.exe'],
+      environment: const ProgramRunEnvironment.empty(),
+      logPath: '/bottles/steam/logs/latest.log',
+      workingDirectory: Option.of('/downloads'),
+    );
+
+    expect(request.bottleId, BottleId('steam'));
+    expect(request.programPath, ProgramPath('/steam.exe'));
+    expect(request.runnerKind, RunnerKind('wine'));
+    expect(request.executable, ProgramExecutable('wine'));
+    expect(request.logPath, ProgramLogPath('/bottles/steam/logs/latest.log'));
+    expect(
+      request.workingDirectory.toNullable(),
+      ProgramWorkingDirectoryPath('/downloads'),
+    );
+    expect(request.argv, ['wine', '/steam.exe']);
   });
 
   test('host environments expose immutable snapshots', () {
@@ -385,7 +476,10 @@ void main() {
 
     final runtime = catalog.listRuntimes().single;
 
-    expect(runtime.distributionKind.toNullable(), 'development');
+    expect(
+      runtime.distributionKind.toNullable(),
+      RuntimeDistributionKind('development'),
+    );
   });
 
   test('process termination records expose immutable argv snapshots', () {
@@ -399,6 +493,10 @@ void main() {
     );
     argv.add('--changed');
 
+    expect(record.bottleId, BottleId('steam'));
+    expect(record.status, WineProcessStatus('terminated'));
+    expect(record.runnerKind, RunnerKind('wine'));
+    expect(record.executable, ProgramExecutable('wine'));
     expect(record.argv, ['wine', '/steam.exe']);
     expect(() => record.argv.add('--other'), throwsUnsupportedError);
   });
@@ -423,21 +521,36 @@ void main() {
       componentVersions['dxvk'] = 'changed';
       requiredExecutableRelativePath.add('changed');
 
-      expect(request.componentArchivePaths, ['/dxvk.tar.gz']);
-      expect(request.componentVersions.toMap(), {'dxvk': '2.7'});
-      expect(request.requiredExecutableRelativePath, ['bin', 'wine']);
-      expect(request.componentArchivePaths.add('/vkd3d.tar.gz'), [
-        '/dxvk.tar.gz',
-        '/vkd3d.tar.gz',
+      expect(request.archivePath, RuntimeArchivePath('/wine.tar.gz'));
+      expect(request.componentArchivePaths, [
+        RuntimeArchivePath('/dxvk.tar.gz'),
       ]);
-      expect(request.componentArchivePaths, ['/dxvk.tar.gz']);
+      expect(request.componentVersions.toMap(), {'dxvk': '2.7'});
+      expect(
+        request.requiredExecutableRelativePath,
+        RuntimeRelativePath(['bin', 'wine']),
+      );
+      expect(
+        request.expectedExecutablePath,
+        RuntimeComponentPath('/tmp/konyak-runtime/bin/wine'),
+      );
+      expect(
+        request.componentArchivePaths.add(RuntimeArchivePath('/vkd3d.tar.gz')),
+        [
+          RuntimeArchivePath('/dxvk.tar.gz'),
+          RuntimeArchivePath('/vkd3d.tar.gz'),
+        ],
+      );
+      expect(request.componentArchivePaths, [
+        RuntimeArchivePath('/dxvk.tar.gz'),
+      ]);
       expect(request.componentVersions.add('vkd3d', '2.14').toMap(), {
         'dxvk': '2.7',
         'vkd3d': '2.14',
       });
       expect(request.componentVersions.toMap(), {'dxvk': '2.7'});
       expect(
-        request.requiredExecutableRelativePath.clear,
+        request.requiredExecutableRelativePath.components.clear,
         throwsUnsupportedError,
       );
     },
@@ -500,6 +613,10 @@ void main() {
       missingPaths: const <String>[],
     );
 
+    expect(component.id, RuntimeComponentId('wine'));
+    expect(component.name, RuntimeName('Wine'));
+    expect(component.role, RuntimeRole('runner'));
+    expect(component.paths, [RuntimeComponentPath('/runtime/bin/wine')]);
     expect(component.version.isNone(), isTrue);
     expect(component.toJson(), isNot(contains('version')));
   });
@@ -523,7 +640,7 @@ void main() {
     final manifest = RuntimeSourceManifest(
       runtimeId: 'wine',
       stackId: 'konyak',
-      components: const <RuntimeSourceComponent>[
+      components: <RuntimeSourceComponent>[
         RuntimeSourceComponent(
           id: 'wine',
           version: '1.0.0',
@@ -533,7 +650,12 @@ void main() {
       ],
     );
 
-    expect(manifest.componentById('wine').toNullable()?.id, 'wine');
+    expect(manifest.runtimeId, RuntimeId('wine'));
+    expect(manifest.stackId, RuntimeStackId('konyak'));
+    expect(
+      manifest.componentById('wine').toNullable()?.id,
+      RuntimeSourceComponentId('wine'),
+    );
     expect(manifest.componentById('dxvk').isNone(), isTrue);
   });
 
@@ -548,6 +670,11 @@ void main() {
       isUpdateable: true,
     );
 
+    expect(definition.id, RuntimeId('konyak-linux-wine'));
+    expect(definition.name, RuntimeName('Konyak Linux Wine'));
+    expect(definition.platform, RuntimePlatformName('linux'));
+    expect(definition.architecture, RuntimeArchitecture('x86_64'));
+    expect(definition.runnerKind, RunnerKind('wine'));
     expect(definition.distributionKind.isNone(), isTrue);
     expect(definition.archiveUrl.isNone(), isTrue);
     expect(definition.versionUrl.isNone(), isTrue);
@@ -601,6 +728,11 @@ void main() {
       isUpdateable: true,
     );
 
+    expect(runtime.id, RuntimeId('wine'));
+    expect(runtime.name, RuntimeName('Wine'));
+    expect(runtime.platform, RuntimePlatformName('linux'));
+    expect(runtime.architecture, RuntimeArchitecture('x86_64'));
+    expect(runtime.runnerKind, RunnerKind('wine'));
     expect(runtime.distributionKind.isNone(), isTrue);
     expect(runtime.isInstalled.isNone(), isTrue);
     expect(runtime.libraryPath.isNone(), isTrue);

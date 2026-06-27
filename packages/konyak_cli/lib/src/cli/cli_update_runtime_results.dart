@@ -22,14 +22,15 @@ CliResult _installAppUpdateJsonResult({
 
   final updateResult = checker.check();
   return switch (updateResult) {
-    AppUpdateCheckCompleted(:final update) when update.status != 'available' =>
+    AppUpdateCheckCompleted(:final update)
+        when update.status.value != 'available' =>
       _appUpdateInstallJsonResult(
         AppUpdateInstallRecord(
-          appId: update.appId,
-          status: update.status,
-          currentVersion: update.currentVersion,
-          installedVersion: update.currentVersion,
-          archiveUrl: update.archiveUrl,
+          appId: update.appId.value,
+          status: 'skipped',
+          currentVersion: update.currentVersion.map((value) => value.value),
+          installedVersion: update.currentVersion.map((value) => value.value),
+          archiveUrl: update.archiveUrl.map((value) => value.value),
         ),
       ),
     AppUpdateCheckCompleted(:final update) => switch (installer.install(
@@ -69,7 +70,7 @@ CliResult _installRuntimeUpdateJsonResult({
   final updateResult = checker.check(runtimeId);
   return switch (updateResult) {
     RuntimeUpdateCheckCompleted(:final update)
-        when update.status != 'available' =>
+        when update.status.value != 'available' =>
       _jsonError(
         exitCode: 65,
         code: 'runtimeUpdateNotAvailable',
@@ -124,7 +125,7 @@ CliResult _installRuntimeUpdateJsonResult({
       exitCode: 66,
       code: 'runtimeNotFound',
       message: 'Runtime not found.',
-      extra: <String, Object?>{'runtimeId': runtimeId},
+      extra: <String, Object?>{'runtimeId': runtimeId.value},
     ),
     RuntimeUpdateCheckFailed(:final message) => _jsonError(
       exitCode: 75,
@@ -164,10 +165,12 @@ MacosWineInstallRequest _macosWineInstallRequestForRuntimeUpdate(
   RuntimeUpdateRecord update,
 ) {
   final sourceManifestUrl = update.sourceManifestUrl.toNullable();
-  if (sourceManifestUrl != null && sourceManifestUrl.trim().isNotEmpty) {
+  if (sourceManifestUrl != null && sourceManifestUrl.value.trim().isNotEmpty) {
     return MacosWineInstallRequest.updateInstall(
-      sourceManifest: sourceManifestUrl,
-      sourceManifestSignature: update.sourceManifestSignatureUrl.toNullable(),
+      sourceManifest: sourceManifestUrl.value,
+      sourceManifestSignature: update.sourceManifestSignatureUrl
+          .map((value) => value.value)
+          .toNullable(),
     );
   }
 
@@ -178,10 +181,12 @@ LinuxWineInstallRequest _linuxWineInstallRequestForRuntimeUpdate(
   RuntimeUpdateRecord update,
 ) {
   final sourceManifestUrl = update.sourceManifestUrl.toNullable();
-  if (sourceManifestUrl != null && sourceManifestUrl.trim().isNotEmpty) {
+  if (sourceManifestUrl != null && sourceManifestUrl.value.trim().isNotEmpty) {
     return LinuxWineInstallRequest.updateInstall(
-      sourceManifest: sourceManifestUrl,
-      sourceManifestSignature: update.sourceManifestSignatureUrl.toNullable(),
+      sourceManifest: sourceManifestUrl.value,
+      sourceManifestSignature: update.sourceManifestSignatureUrl
+          .map((value) => value.value)
+          .toNullable(),
     );
   }
 

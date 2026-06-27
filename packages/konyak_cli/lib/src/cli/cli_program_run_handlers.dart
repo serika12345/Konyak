@@ -129,7 +129,7 @@ CliResult _runProgramPathJsonResult({
   _ProgramRunPreparation? beforeRun,
 }) {
   final settingsResult = bottleRepository.readProgramSettings(
-    ProgramSettingsRequest(bottleId: bottle.id, programPath: programPath),
+    ProgramSettingsRequest(bottleId: bottle.id.value, programPath: programPath),
   );
   final ProgramSettingsRecord storedSettings;
   switch (settingsResult) {
@@ -175,12 +175,12 @@ ProgramSettingsRecord _programRunSettings({
   return oneTimeSettings.match(
     () => storedSettings,
     (settings) => ProgramSettingsRecord(
-      locale: settings.locale.trim().isEmpty
-          ? storedSettings.locale
-          : settings.locale,
-      arguments: settings.arguments.trim().isEmpty
-          ? storedSettings.arguments
-          : settings.arguments,
+      locale: settings.locale.value.trim().isEmpty
+          ? storedSettings.locale.value
+          : settings.locale.value,
+      arguments: settings.arguments.value.trim().isEmpty
+          ? storedSettings.arguments.value
+          : settings.arguments.value,
       environment: ProgramEnvironmentOverrides(<String, String>{
         ...storedSettings.environment.toMap(),
         ...settings.environment.toMap(),

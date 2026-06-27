@@ -32,7 +32,7 @@ final class _RuntimeStackSourceArchivePlan {
 
   _RuntimeStackSourceArchiveBundle toBundle() {
     final wineArchivePath = _archivePathForComponent(wineComponent);
-    final componentArchivePaths = <String>[];
+    final componentArchivePaths = <RuntimeArchivePath>[];
     for (final component in components) {
       final archivePath = component.archivePath;
       if (archivePath != wineArchivePath &&
@@ -42,16 +42,18 @@ final class _RuntimeStackSourceArchivePlan {
     }
 
     return _RuntimeStackSourceArchiveBundle(
-      wineArchivePath: wineArchivePath,
-      componentArchivePaths: componentArchivePaths,
+      wineArchivePath: wineArchivePath.value,
+      componentArchivePaths: componentArchivePaths.map((value) => value.value),
       componentVersions: RuntimeComponentVersions(<String, String>{
         for (final component in sourceComponents)
-          component.id: component.version,
+          component.id.value: component.version.value,
       }),
     );
   }
 
-  String _archivePathForComponent(RuntimeSourceComponent sourceComponent) {
+  RuntimeArchivePath _archivePathForComponent(
+    RuntimeSourceComponent sourceComponent,
+  ) {
     for (final component in components) {
       if (_runtimeStackSourceArchiveMatches(
         component.component,
@@ -62,30 +64,32 @@ final class _RuntimeStackSourceArchivePlan {
     }
 
     throw StateError(
-      'Runtime stack source archive plan does not contain ${sourceComponent.id}.',
+      'Runtime stack source archive plan does not contain ${sourceComponent.id.value}.',
     );
   }
 }
 
 final class _RuntimeStackSourceArchiveComponentPlan {
-  const _RuntimeStackSourceArchiveComponentPlan({
+  _RuntimeStackSourceArchiveComponentPlan({
     required this.component,
-    required this.archivePath,
-    required this.startFraction,
-    required this.endFraction,
-  });
+    required String archivePath,
+    required num startFraction,
+    required num endFraction,
+  }) : archivePath = RuntimeArchivePath(archivePath),
+       startFraction = RuntimeInstallProgressFraction(startFraction),
+       endFraction = RuntimeInstallProgressFraction(endFraction);
 
   final RuntimeSourceComponent component;
-  final String archivePath;
-  final double startFraction;
-  final double endFraction;
+  final RuntimeArchivePath archivePath;
+  final RuntimeInstallProgressFraction startFraction;
+  final RuntimeInstallProgressFraction endFraction;
 
   String get downloadingMessage {
-    return 'Downloading ${component.id}...';
+    return 'Downloading ${component.id.value}...';
   }
 
   String get verifyingMessage {
-    return 'Verifying ${component.id}...';
+    return 'Verifying ${component.id.value}...';
   }
 }
 
@@ -94,8 +98,8 @@ _RuntimeStackSourceArchivePlanResult _runtimeStackSourceArchivePlan({
   required _RuntimePlatformSpec platformSpec,
   required String tempDirectoryPath,
 }) {
-  if (manifest.runtimeId != platformSpec.runtimeId ||
-      manifest.stackId != platformSpec.stackId) {
+  if (manifest.runtimeId.value != platformSpec.runtimeId ||
+      manifest.stackId.value != platformSpec.stackId) {
     return const _RuntimeStackSourceArchivePlanFailed(
       'Runtime stack source manifest targets an unsupported runtime.',
     );
@@ -154,7 +158,7 @@ bool _runtimeStackSourceArchiveMatches(
 }
 
 String _runtimeStackSourceArchiveKey(RuntimeSourceComponent component) {
-  return '${component.archiveUrl}\u0000${component.sha256.toLowerCase()}';
+  return '${component.archiveUrl.value}\u0000${component.sha256.value.toLowerCase()}';
 }
 
 _RuntimeStackSourceArchiveComponentPlan
@@ -165,8 +169,8 @@ _runtimeStackSourceArchiveComponentPlan({
   required String tempDirectoryPath,
 }) {
   final fileName = _fileNameFromUrl(
-    component.archiveUrl,
-  ).match(() => '${component.id}.tar.xz', (value) => value);
+    component.archiveUrl.value,
+  ).match(() => '${component.id.value}.tar.xz', (value) => value);
   return _RuntimeStackSourceArchiveComponentPlan(
     component: component,
     archivePath: _joinPath(tempDirectoryPath, ['$componentIndex-$fileName']),

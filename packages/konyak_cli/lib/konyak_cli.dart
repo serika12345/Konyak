@@ -9,6 +9,10 @@ import 'package:crypto/crypto.dart';
 import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:fpdart/fpdart.dart';
 
+import 'src/domain/shared/domain_value_objects.dart';
+
+export 'src/domain/shared/domain_value_objects.dart';
+
 part 'src/cli/cli_commands.dart';
 part 'src/cli/cli_app_handlers.dart';
 part 'src/cli/cli_host_integration_handlers.dart';
@@ -218,8 +222,8 @@ CliResult _createdBottleJsonResult({
           code: 'bottlePrefixInitializationFailed',
           message: message,
           extra: <String, Object?>{
-            'bottleId': bottle.id,
-            'bottlePath': bottle.path,
+            'bottleId': bottle.id.value,
+            'bottlePath': bottle.path.value,
           },
         );
     }
@@ -234,13 +238,13 @@ CliResult _programRunJsonResult({
 }) {
   return _jsonSuccess(<String, Object?>{
     'run': <String, Object?>{
-      'bottleId': request.bottleId,
-      'programPath': request.programPath,
-      'runnerKind': request.runnerKind,
-      'executable': request.executable,
-      'workingDirectory': request.workingDirectory.toNullable(),
+      'bottleId': request.bottleId.value,
+      'programPath': request.programPath.value,
+      'runnerKind': request.runnerKind.value,
+      'executable': request.executable.value,
+      'workingDirectory': request.workingDirectory.toNullable()?.value,
       'argv': request.argv,
-      'logPath': request.logPath,
+      'logPath': request.logPath.value,
       'logFileCreated': request.createLogFile,
       'processExitCode': processExitCode,
     },
@@ -256,13 +260,13 @@ CliResult _programRunFailedJsonResult({
     code: 'programRunFailed',
     message: message,
     extra: <String, Object?>{
-      'bottleId': request.bottleId,
-      'programPath': request.programPath,
-      'runnerKind': request.runnerKind,
-      'executable': request.executable,
-      'workingDirectory': request.workingDirectory.toNullable(),
+      'bottleId': request.bottleId.value,
+      'programPath': request.programPath.value,
+      'runnerKind': request.runnerKind.value,
+      'executable': request.executable.value,
+      'workingDirectory': request.workingDirectory.toNullable()?.value,
       'argv': request.argv,
-      'logPath': request.logPath,
+      'logPath': request.logPath.value,
       'logFileCreated': request.createLogFile,
     },
   );
@@ -311,9 +315,9 @@ String _programRunLogContent({
     'Konyak Wine Run Log',
     '',
     '[Process]',
-    'Runner Kind: ${request.runnerKind}',
-    'Executable: ${request.executable}',
-    'Working Directory: ${request.workingDirectory.getOrElse(() => '')}',
+    'Runner Kind: ${request.runnerKind.value}',
+    'Executable: ${request.executable.value}',
+    'Working Directory: ${request.workingDirectory.map((value) => value.value).getOrElse(() => '')}',
     'Arguments: ${jsonEncode(request.arguments)}',
     'argv: ${jsonEncode(request.argv)}',
     if (processExitCode != null) 'Process Exit Code: $processExitCode',

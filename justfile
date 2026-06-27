@@ -11,6 +11,9 @@ flutter-pub-get:
 cli-pub-get:
   if [ -d packages/konyak_cli ]; then cd packages/konyak_cli && dart pub get; fi
 
+cli-codegen: cli-pub-get
+  if [ -d packages/konyak_cli ]; then cd packages/konyak_cli && dart run build_runner build; fi
+
 verify-governance:
   python3 scripts/verify_governance.py
 
@@ -50,13 +53,13 @@ flutter-test:
 flutter-linux-loader-check:
   if [ "$(uname -s)" = "Linux" ] && [ -d apps/konyak ]; then cd apps/konyak && flutter build linux --debug && ldd build/linux/x64/debug/bundle/konyak | tee /tmp/konyak-linux-loader-check-ldd.txt && ! rg "not found" /tmp/konyak-linux-loader-check-ldd.txt; fi
 
-cli-format-check:
+cli-format-check: cli-codegen
   if [ -d packages/konyak_cli ]; then cd packages/konyak_cli && dart format --set-exit-if-changed .; fi
 
-cli-analyze:
+cli-analyze: cli-codegen
   if [ -d packages/konyak_cli ]; then cd packages/konyak_cli && dart analyze --fatal-infos; fi
 
-cli-test:
+cli-test: cli-codegen
   if [ -d packages/konyak_cli ]; then cd packages/konyak_cli && dart test; fi
 
 release-automation-test:

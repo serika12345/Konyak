@@ -20,7 +20,7 @@ CliResult? _handleBottleMutationCommand(
         exitCode: 73,
         code: 'bottleAlreadyExists',
         message: 'Bottle already exists.',
-        extra: <String, Object?>{'bottleId': bottleId},
+        extra: <String, Object?>{'bottleId': bottleId.value},
       ),
       BottleCreateFailed(:final message) => _bottleRepositoryFailureJsonResult(
         message,
@@ -67,7 +67,9 @@ CliResult? _handleBottleMutationCommand(
       BottleDeleted(:final bottle) => _jsonSuccess(<String, Object?>{
         'deletedBottle': bottle.toJson(),
       }),
-      BottleDeleteMissing(:final bottleId) => _bottleNotFoundError(bottleId),
+      BottleDeleteMissing(:final bottleId) => _bottleNotFoundError(
+        bottleId.value,
+      ),
       BottleDeleteFailed(:final message) => _bottleRepositoryFailureJsonResult(
         message,
       ),
@@ -83,12 +85,14 @@ CliResult? _handleBottleMutationCommand(
 
     return switch (repository.renameBottle(renameBottleRequest)) {
       BottleRenamed(:final bottle) => _bottleJsonResult(bottle),
-      BottleRenameMissing(:final bottleId) => _bottleNotFoundError(bottleId),
+      BottleRenameMissing(:final bottleId) => _bottleNotFoundError(
+        bottleId.value,
+      ),
       BottleRenameConflict(:final bottleId) => _jsonError(
         exitCode: 73,
         code: 'bottleAlreadyExists',
         message: 'Bottle already exists.',
-        extra: <String, Object?>{'bottleId': bottleId},
+        extra: <String, Object?>{'bottleId': bottleId.value},
       ),
       BottleRenameFailed(:final message) => _bottleRepositoryFailureJsonResult(
         message,
@@ -105,12 +109,14 @@ CliResult? _handleBottleMutationCommand(
 
     return switch (repository.moveBottle(moveBottleRequest)) {
       BottleMoved(:final bottle) => _bottleJsonResult(bottle),
-      BottleMoveMissing(:final bottleId) => _bottleNotFoundError(bottleId),
+      BottleMoveMissing(:final bottleId) => _bottleNotFoundError(
+        bottleId.value,
+      ),
       BottleMoveConflict(:final path) => _jsonError(
         exitCode: 73,
         code: 'bottleMoveDestinationExists',
         message: 'Bottle move destination exists.',
-        extra: <String, Object?>{'path': path},
+        extra: <String, Object?>{'path': path.value},
       ),
       BottleMoveFailed(:final message) => _bottleRepositoryFailureJsonResult(
         message,
@@ -142,12 +148,12 @@ CliResult? _handleBottleConfigurationCommand(
     }
 
     return _foundBottleJsonResult(
-      result: repository.findBottle(windowsVersionUpdateRequest.bottleId),
-      bottleId: windowsVersionUpdateRequest.bottleId,
+      result: repository.findBottle(windowsVersionUpdateRequest.bottleId.value),
+      bottleId: windowsVersionUpdateRequest.bottleId.value,
       onFound: (bottle) {
         final registryUpdateFailure = _applyWindowsVersionRegistryUpdates(
           bottle: bottle,
-          windowsVersion: windowsVersionUpdateRequest.windowsVersion,
+          windowsVersion: windowsVersionUpdateRequest.windowsVersion.value,
           programRunPlanner: context.programRunPlanner,
           programRunner: context.programRunner,
         );
@@ -172,8 +178,10 @@ CliResult? _handleBottleConfigurationCommand(
     }
 
     return _foundBottleJsonResult(
-      result: repository.findBottle(runtimeSettingsUpdateRequest.bottleId),
-      bottleId: runtimeSettingsUpdateRequest.bottleId,
+      result: repository.findBottle(
+        runtimeSettingsUpdateRequest.bottleId.value,
+      ),
+      bottleId: runtimeSettingsUpdateRequest.bottleId.value,
       onFound: (bottle) {
         final runtimeSettings = _effectiveRuntimeSettingsForUpdate(
           currentRuntimeSettings: bottle.runtimeSettings,
@@ -202,7 +210,7 @@ CliResult? _handleBottleConfigurationCommand(
         return _bottleUpdateJsonResult(
           repository.setRuntimeSettings(
             RuntimeSettingsUpdateRequest(
-              bottleId: runtimeSettingsUpdateRequest.bottleId,
+              bottleId: runtimeSettingsUpdateRequest.bottleId.value,
               runtimeSettings: runtimeSettings,
             ),
           ),
@@ -231,7 +239,9 @@ BottleRuntimeSettings _effectiveRuntimeSettingsForUpdate({
 CliResult _bottleUpdateJsonResult(BottleUpdateResult result) {
   return switch (result) {
     BottleUpdated(:final bottle) => _bottleJsonResult(bottle),
-    BottleUpdateMissing(:final bottleId) => _bottleNotFoundError(bottleId),
+    BottleUpdateMissing(:final bottleId) => _bottleNotFoundError(
+      bottleId.value,
+    ),
     BottleUpdateFailed(:final message) => _bottleRepositoryFailureJsonResult(
       message,
     ),

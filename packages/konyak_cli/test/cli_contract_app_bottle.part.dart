@@ -48,7 +48,7 @@ void defineAppAndBottleContractTests() {
     final result = runCli(
       const ['get-app-settings', '--json'],
       appSettingsRepository: MemoryAppSettingsRepository(
-        const AppSettingsRecord(
+        AppSettingsRecord(
           terminateWineProcessesOnClose: false,
           defaultBottlePath: '/Volumes/Games/Bottles',
           appearanceMode: AppAppearanceMode.light,
@@ -116,7 +116,7 @@ void defineAppAndBottleContractTests() {
 
   test('set-app-settings --json persists application settings', () {
     final repository = MemoryAppSettingsRepository(
-      const AppSettingsRecord(defaultBottlePath: '/Users/user/Bottles'),
+      AppSettingsRecord(defaultBottlePath: '/Users/user/Bottles'),
     );
 
     final result = runCli(const [
@@ -130,7 +130,7 @@ void defineAppAndBottleContractTests() {
     expect(result.stderr, isEmpty);
     expect(
       _expectIo(repository.read()),
-      const AppSettingsRecord(
+      AppSettingsRecord(
         terminateWineProcessesOnClose: false,
         defaultBottlePath: '/Volumes/Games/Bottles',
         appearanceMode: AppAppearanceMode.light,
@@ -155,7 +155,7 @@ void defineAppAndBottleContractTests() {
 
   test('set-app-settings --json defaults automatic pinning for old payloads', () {
     final repository = MemoryAppSettingsRepository(
-      const AppSettingsRecord(defaultBottlePath: '/Users/user/Bottles'),
+      AppSettingsRecord(defaultBottlePath: '/Users/user/Bottles'),
     );
 
     final result = runCli(const [
@@ -169,7 +169,7 @@ void defineAppAndBottleContractTests() {
     expect(result.stderr, isEmpty);
     expect(
       _expectIo(repository.read()),
-      const AppSettingsRecord(
+      AppSettingsRecord(
         terminateWineProcessesOnClose: true,
         defaultBottlePath: '/Volumes/Games/Bottles',
         appearanceMode: AppAppearanceMode.system,
@@ -208,13 +208,13 @@ void defineAppAndBottleContractTests() {
     );
 
     final result = repository.createBottle(
-      const BottleCreateRequest(name: 'Steam', windowsVersion: 'win10'),
+      BottleCreateRequest(name: 'Steam', windowsVersion: 'win10'),
     );
 
     expect(result, isA<BottleCreated>());
     final created = result as BottleCreated;
     expect(
-      created.bottle.path,
+      created.bottle.path.value,
       _joinTestPath(bottleDirectory, const ['steam']),
     );
   });
@@ -252,12 +252,12 @@ void defineAppAndBottleContractTests() {
     );
 
     final result = repository.createBottle(
-      const BottleCreateRequest(name: 'Steam', windowsVersion: 'win10'),
+      BottleCreateRequest(name: 'Steam', windowsVersion: 'win10'),
     );
 
     expect(result, isA<BottleCreated>());
     expect(
-      _expectIo(repository.listBottles()).map((bottle) => bottle.id),
+      _expectIo(repository.listBottles()).map((bottle) => bottle.id.value),
       const ['existing', 'steam'],
     );
   });
@@ -275,10 +275,10 @@ void defineAppAndBottleContractTests() {
       dataHome: _joinTestPath(tempDirectory.path, const ['data']),
     );
     final createResult = repository.createBottle(
-      const BottleCreateRequest(name: 'Steam', windowsVersion: 'win10'),
+      BottleCreateRequest(name: 'Steam', windowsVersion: 'win10'),
     );
     final bottle = (createResult as BottleCreated).bottle;
-    File(_joinTestPath(bottle.path, const ['drive_c', 'steam.txt']))
+    File(_joinTestPath(bottle.path.value, const ['drive_c', 'steam.txt']))
       ..createSync(recursive: true)
       ..writeAsStringSync('installed');
     final archivePath = _joinTestPath(tempDirectory.path, const [
@@ -373,7 +373,10 @@ void defineAppAndBottleContractTests() {
       ).readAsStringSync(),
       'installed',
     );
-    expect(_expectFound(repository.findBottle('steam')).path, importedPath);
+    expect(
+      _expectFound(repository.findBottle('steam')).path.value,
+      importedPath,
+    );
   });
 
   test('inspect-bottle --json returns a versioned bottle detail contract', () {
@@ -563,7 +566,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       ],
     ]);
     expect(
-      _expectFound(repository.findBottle('steam')).windowsVersion,
+      _expectFound(repository.findBottle('steam')).windowsVersion.value,
       'win11',
     );
   });
@@ -721,7 +724,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       },
     });
 
-    expect(_expectFound(repository.findBottle('日本語')).name, '日本語');
+    expect(_expectFound(repository.findBottle('日本語')).name.value, '日本語');
   });
 
   test('create-bottle --json initializes the Wine prefix when configured', () {
@@ -740,9 +743,9 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
 
     expect(result.exitCode, 0);
     expect(result.stderr, isEmpty);
-    expect(initializer.lastBottle?.id, 'steam');
+    expect(initializer.lastBottle?.id.value, 'steam');
     expect(
-      initializer.lastBottle?.path,
+      initializer.lastBottle?.path.value,
       '/home/user/.local/share/konyak/bottles/steam',
     );
 
@@ -882,7 +885,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
     });
     expect(
       _expectFound(repository.findBottle('steam')).runtimeSettings,
-      const BottleRuntimeSettings(
+      BottleRuntimeSettings(
         enhancedSync: 'esync',
         metalHud: true,
         metalTrace: true,
@@ -1209,7 +1212,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
           name: 'Steam',
           path: bottlePath,
           windowsVersion: 'win10',
-          runtimeSettings: const BottleRuntimeSettings(dxrEnabled: true),
+          runtimeSettings: BottleRuntimeSettings(dxrEnabled: true),
         ),
       ],
     );
@@ -1294,7 +1297,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
           name: 'Steam',
           path: bottlePath,
           windowsVersion: 'win10',
-          runtimeSettings: const BottleRuntimeSettings(dxvk: true),
+          runtimeSettings: BottleRuntimeSettings(dxvk: true),
         ),
       ],
     );
@@ -1394,7 +1397,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
             name: 'Steam',
             path: bottlePath,
             windowsVersion: 'win10',
-            runtimeSettings: const BottleRuntimeSettings(dxrEnabled: true),
+            runtimeSettings: BottleRuntimeSettings(dxrEnabled: true),
           ),
         ],
       );
@@ -1755,7 +1758,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
     );
     expect(
       _expectFound(repository.findBottle('steam')).runtimeSettings,
-      const BottleRuntimeSettings(
+      BottleRuntimeSettings(
         buildVersion: 22631,
         retinaMode: true,
         dpiScaling: 192,
@@ -1775,7 +1778,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
             path:
                 '/Users/user/Library/Application Support/Konyak/Bottles/Steam',
             windowsVersion: 'win10',
-            runtimeSettings: const BottleRuntimeSettings(
+            runtimeSettings: BottleRuntimeSettings(
               retinaMode: true,
               dpiScaling: 192,
             ),
@@ -1833,7 +1836,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       ]);
       expect(
         _expectFound(repository.findBottle('steam')).runtimeSettings,
-        const BottleRuntimeSettings(retinaMode: false, dpiScaling: 96),
+        BottleRuntimeSettings(retinaMode: false, dpiScaling: 96),
       );
     },
   );
@@ -1934,7 +1937,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       expect(payload['error'], containsPair('code', 'registryUpdateFailed'));
       expect(
         _expectFound(repository.findBottle('steam')).runtimeSettings,
-        const BottleRuntimeSettings(),
+        BottleRuntimeSettings(),
       );
     },
   );
@@ -2032,11 +2035,11 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       });
       final repository = FileBottleRepository(dataHome: tempDirectory.path);
       final createResult = repository.createBottle(
-        const BottleCreateRequest(name: 'Steam', windowsVersion: 'win10'),
+        BottleCreateRequest(name: 'Steam', windowsVersion: 'win10'),
       );
       final bottle = (createResult as BottleCreated).bottle;
       final lockedDirectory = Directory(
-        _joinTestPath(bottle.path, const ['drive_c', 'locked']),
+        _joinTestPath(bottle.path.value, const ['drive_c', 'locked']),
       )..createSync(recursive: true);
       File(
         _joinTestPath(lockedDirectory.path, const ['file.txt']),
@@ -2052,7 +2055,9 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       expect(result.exitCode, 74);
       expect(result.stderr, isEmpty);
       expect(
-        File(_joinTestPath(bottle.path, const ['metadata.json'])).existsSync(),
+        File(
+          _joinTestPath(bottle.path.value, const ['metadata.json']),
+        ).existsSync(),
         isTrue,
       );
 
@@ -2123,7 +2128,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
     });
     _expectMissing(repository.findBottle('steam'));
     expect(
-      _expectFound(repository.findBottle('steam-games')).name,
+      _expectFound(repository.findBottle('steam-games')).name.value,
       'Steam Games',
     );
   });
@@ -2200,7 +2205,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       },
     });
     expect(
-      _expectFound(repository.findBottle('steam')).path,
+      _expectFound(repository.findBottle('steam')).path.value,
       '/mnt/games/Steam',
     );
   });

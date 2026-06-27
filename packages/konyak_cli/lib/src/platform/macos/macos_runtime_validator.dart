@@ -23,12 +23,12 @@ class DartIoMacosWineRuntimeValidator implements RuntimeValidator {
   }
 
   RuntimeValidationResult _validateRuntime(RuntimeRecord runtime) {
-    final runtimeRoot = runtime.libraryPath.toNullable();
-    final executablePath = runtime.executablePath.toNullable();
+    final runtimeRoot = runtime.libraryPath.toNullable()?.value;
+    final executablePath = runtime.executablePath.toNullable()?.value;
     if (runtimeRoot == null || executablePath == null) {
       return RuntimeValidationCompleted(
         RuntimeValidationRecord(
-          runtimeId: runtime.id,
+          runtimeId: runtime.id.value,
           isValid: false,
           checks: const [
             RuntimeValidationCheck(
@@ -43,7 +43,7 @@ class DartIoMacosWineRuntimeValidator implements RuntimeValidator {
       );
     }
 
-    if (runtime.id == linuxWineRuntimeId) {
+    if (runtime.id.value == linuxWineRuntimeId) {
       return _validateLinuxRuntime(
         runtime: runtime,
         runtimeRoot: runtimeRoot,
@@ -76,7 +76,7 @@ class DartIoMacosWineRuntimeValidator implements RuntimeValidator {
     if (!checks.every((check) => !check.isRequired || check.isPassed)) {
       return RuntimeValidationCompleted(
         RuntimeValidationRecord(
-          runtimeId: runtime.id,
+          runtimeId: runtime.id.value,
           isValid: false,
           checks: checks,
         ),
@@ -107,7 +107,7 @@ class DartIoMacosWineRuntimeValidator implements RuntimeValidator {
 
     return RuntimeValidationCompleted(
       RuntimeValidationRecord(
-        runtimeId: runtime.id,
+        runtimeId: runtime.id.value,
         isValid: completedChecks.every(
           (check) => !check.isRequired || check.isPassed,
         ),
@@ -140,7 +140,7 @@ class DartIoMacosWineRuntimeValidator implements RuntimeValidator {
     if (!checks.every((check) => !check.isRequired || check.isPassed)) {
       return RuntimeValidationCompleted(
         RuntimeValidationRecord(
-          runtimeId: runtime.id,
+          runtimeId: runtime.id.value,
           isValid: false,
           checks: checks,
         ),
@@ -166,7 +166,7 @@ class DartIoMacosWineRuntimeValidator implements RuntimeValidator {
 
     return RuntimeValidationCompleted(
       RuntimeValidationRecord(
-        runtimeId: runtime.id,
+        runtimeId: runtime.id.value,
         isValid: completedChecks.every(
           (check) => !check.isRequired || check.isPassed,
         ),

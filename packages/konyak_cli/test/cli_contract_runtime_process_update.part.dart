@@ -104,11 +104,11 @@ void defineRuntimeProcessAndUpdateContractTests() {
     );
 
     expect(
-      runtime.archiveUrl.toNullable(),
+      runtime.archiveUrl.toNullable()?.value,
       'https://example.invalid/linux-wine.tar.xz',
     );
     expect(
-      runtime.versionUrl.toNullable(),
+      runtime.versionUrl.toNullable()?.value,
       'https://example.invalid/releases/latest',
     );
     expect(runtime.toJson(), {
@@ -1050,7 +1050,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
     expect(result.stderr, isEmpty);
     expect(runner.requests, hasLength(2));
     expect(
-      runner.requests[0].executable,
+      runner.requests[0].executable.value,
       'Konyak/Runtimes/linux-wine/bin/wineserver',
     );
     expect(runner.requests[0].arguments, const ['-k']);
@@ -1127,7 +1127,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
       expect(result.stderr, isEmpty);
       expect(runner.requests, hasLength(1));
       expect(
-        runner.requests.single.executable,
+        runner.requests.single.executable.value,
         'Konyak/Runtimes/linux-wine/bin/wineserver',
       );
       expect(runner.requests.single.arguments, const ['-k']);
@@ -1274,7 +1274,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
     expect(result.stderr, isEmpty);
     expect(runner.requests, hasLength(1));
     expect(
-      runner.requests.single.executable,
+      runner.requests.single.executable.value,
       'Konyak/Runtimes/linux-wine/bin/winedbg',
     );
     expect(runner.requests.single.arguments, const ['--command', 'info proc']);
@@ -1350,7 +1350,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
       );
 
       await runner.waitForRequestCount(3);
-      expect(runner.requests.map((request) => request.bottleId), [
+      expect(runner.requests.map((request) => request.bottleId.value), [
         'a',
         'b',
         'c',
@@ -1657,7 +1657,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
       );
 
       await runner.waitForRequestCount(1);
-      expect(runner.requests.single.bottleId, 'b');
+      expect(runner.requests.single.bottleId.value, 'b');
       runner.complete(
         'b',
         const ProgramRunCompleted(
@@ -2206,7 +2206,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
     expect(result.stderr, isEmpty);
     expect(runner.requests, hasLength(1));
     expect(
-      runner.requests.single.executable,
+      runner.requests.single.executable.value,
       'Konyak/Runtimes/linux-wine/bin/winedbg',
     );
     expect(runner.requests.single.arguments, const [
@@ -2258,9 +2258,9 @@ void defineRuntimeProcessAndUpdateContractTests() {
 
     expect(result, isA<AppUpdateCheckCompleted>());
     final completed = result as AppUpdateCheckCompleted;
-    expect(completed.update.status, 'current');
-    expect(completed.update.currentVersion.toNullable(), '1.0.0');
-    expect(completed.update.latestVersion.toNullable(), 'v1.0.0');
+    expect(completed.update.status.value, 'current');
+    expect(completed.update.currentVersion.toNullable()?.value, '1.0.0');
+    expect(completed.update.latestVersion.toNullable()?.value, 'v1.0.0');
   });
 
   test('app update checker defaults to the packaged Konyak app version', () {
@@ -2288,8 +2288,11 @@ void defineRuntimeProcessAndUpdateContractTests() {
 
     expect(result, isA<AppUpdateCheckCompleted>());
     final completed = result as AppUpdateCheckCompleted;
-    expect(completed.update.status, 'current');
-    expect(completed.update.currentVersion.toNullable(), konyakAppVersion);
+    expect(completed.update.status.value, 'current');
+    expect(
+      completed.update.currentVersion.toNullable()?.value,
+      konyakAppVersion,
+    );
   });
 
   test('app update checker selects the macOS archive from shared releases', () {
@@ -2306,11 +2309,11 @@ void defineRuntimeProcessAndUpdateContractTests() {
     expect(result, isA<AppUpdateCheckCompleted>());
     final completed = result as AppUpdateCheckCompleted;
     expect(
-      completed.update.archiveUrl.toNullable(),
+      completed.update.archiveUrl.toNullable()?.value,
       'https://example.invalid/Konyak-1.1.0-macos-arm64.dmg',
     );
     expect(
-      completed.update.archiveSha256.toNullable(),
+      completed.update.archiveSha256.toNullable()?.value,
       'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
     );
   });
@@ -2329,11 +2332,11 @@ void defineRuntimeProcessAndUpdateContractTests() {
     expect(result, isA<AppUpdateCheckCompleted>());
     final completed = result as AppUpdateCheckCompleted;
     expect(
-      completed.update.archiveUrl.toNullable(),
+      completed.update.archiveUrl.toNullable()?.value,
       'https://example.invalid/Konyak-1.1.0-linux-x86_64.AppImage',
     );
     expect(
-      completed.update.archiveSha256.toNullable(),
+      completed.update.archiveSha256.toNullable()?.value,
       'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
     );
   });
@@ -2374,11 +2377,11 @@ void defineRuntimeProcessAndUpdateContractTests() {
     expect(result, isA<RuntimeReleaseMetadataFetched>());
     final fetched = result as RuntimeReleaseMetadataFetched;
     expect(
-      fetched.metadata.archiveUrl.toNullable(),
+      fetched.metadata.archiveUrl.toNullable()?.value,
       'https://example.invalid/Konyak-1.1.0-macos-arm64.dmg',
     );
     expect(
-      fetched.metadata.archiveSha256.toNullable(),
+      fetched.metadata.archiveSha256.toNullable()?.value,
       'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
     );
   });
@@ -2526,11 +2529,11 @@ void defineRuntimeProcessAndUpdateContractTests() {
     expect(result, isA<RuntimeReleaseMetadataFetched>());
     final fetched = result as RuntimeReleaseMetadataFetched;
     expect(
-      fetched.metadata.sourceManifestUrl.toNullable(),
+      fetched.metadata.sourceManifestUrl.toNullable()?.value,
       'https://example.invalid/konyak-linux-wine-runtime-stack-source.json',
     );
     expect(
-      fetched.metadata.sourceManifestSignatureUrl.toNullable(),
+      fetched.metadata.sourceManifestSignatureUrl.toNullable()?.value,
       'https://example.invalid/konyak-linux-wine-runtime-stack-source.json.sig',
     );
   });
@@ -2558,7 +2561,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
     expect(result, isA<AppUpdateCheckCompleted>());
     final completed = result as AppUpdateCheckCompleted;
     expect(
-      completed.update.archiveSha256.toNullable(),
+      completed.update.archiveSha256.toNullable()?.value,
       'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
     );
   });
@@ -2600,7 +2603,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
     expect(result.exitCode, 0);
     expect(result.stderr, isEmpty);
     expect(checker.checkCount, 1);
-    expect(installer.lastUpdate?.latestVersion.toNullable(), '1.1.0');
+    expect(installer.lastUpdate?.latestVersion.toNullable()?.value, '1.1.0');
 
     final payload = jsonDecode(result.stdout) as Map<String, Object?>;
     expect(payload, {
@@ -2652,12 +2655,15 @@ void defineRuntimeProcessAndUpdateContractTests() {
     expect(result, isA<AppUpdateInstallCompleted>());
     final completed = result as AppUpdateInstallCompleted;
     expect(
-      completed.install.archiveSha256.toNullable(),
+      completed.install.archiveSha256.toNullable()?.value,
       _fileSha256(sourceArchive.path),
     );
-    expect(pathOpener.lastPath, completed.install.installPath.toNullable());
     expect(
-      File(completed.install.installPath.toNullable()!).existsSync(),
+      pathOpener.lastPath,
+      completed.install.installPath.toNullable()?.value,
+    );
+    expect(
+      File(completed.install.installPath.toNullable()!.value).existsSync(),
       isTrue,
     );
   });
@@ -2789,7 +2795,10 @@ void defineRuntimeProcessAndUpdateContractTests() {
 
     expect(result, isA<AppUpdateInstallCompleted>());
     final completed = result as AppUpdateInstallCompleted;
-    expect(completed.install.installPath.toNullable(), currentAppImage.path);
+    expect(
+      completed.install.installPath.toNullable()?.value,
+      currentAppImage.path,
+    );
     expect(detachedProcessStarter.lastExecutable, 'bash');
     expect(detachedProcessStarter.lastArguments, hasLength(4));
     expect(detachedProcessStarter.lastArguments[2], currentAppImage.path);
@@ -2930,7 +2939,10 @@ void defineRuntimeProcessAndUpdateContractTests() {
 
     expect(result, isA<AppUpdateInstallCompleted>());
     final completed = result as AppUpdateInstallCompleted;
-    expect(completed.install.installPath.toNullable(), currentBundle.path);
+    expect(
+      completed.install.installPath.toNullable()?.value,
+      currentBundle.path,
+    );
     expect(pathOpener.lastPath, isNull);
     expect(detachedProcessStarter.lastExecutable, 'bash');
     expect(detachedProcessStarter.lastArguments, hasLength(4));
@@ -3015,7 +3027,10 @@ void defineRuntimeProcessAndUpdateContractTests() {
 
     expect(result, isA<AppUpdateInstallCompleted>());
     final completed = result as AppUpdateInstallCompleted;
-    expect(completed.install.installPath.toNullable(), currentBundle.path);
+    expect(
+      completed.install.installPath.toNullable()?.value,
+      currentBundle.path,
+    );
     expect(pathOpener.lastPath, isNull);
     expect(detachedProcessStarter.lastExecutable, 'bash');
     expect(detachedProcessStarter.lastArguments, hasLength(4));
@@ -3313,13 +3328,13 @@ void defineRuntimeProcessAndUpdateContractTests() {
 
       expect(result, isA<RuntimeUpdateCheckCompleted>());
       final completed = result as RuntimeUpdateCheckCompleted;
-      expect(completed.update.status, 'available');
+      expect(completed.update.status.value, 'available');
       expect(
-        completed.update.sourceManifestUrl.toNullable(),
+        completed.update.sourceManifestUrl.toNullable()?.value,
         'https://example.invalid/linux-runtime-stack-source.json',
       );
       expect(
-        completed.update.sourceManifestSignatureUrl.toNullable(),
+        completed.update.sourceManifestSignatureUrl.toNullable()?.value,
         'https://example.invalid/linux-runtime-stack-source.json.sig',
       );
       expect(completed.update.archiveUrl.isNone(), isTrue);
@@ -3482,9 +3497,12 @@ void defineRuntimeProcessAndUpdateContractTests() {
 
       expect(result, isA<RuntimeUpdateCheckCompleted>());
       final completed = result as RuntimeUpdateCheckCompleted;
-      expect(completed.update.status, 'current');
-      expect(completed.update.currentVersion.toNullable(), 'wine-devel-11.9');
-      expect(completed.update.latestVersion.toNullable(), '11.9');
+      expect(completed.update.status.value, 'current');
+      expect(
+        completed.update.currentVersion.toNullable()?.value,
+        'wine-devel-11.9',
+      );
+      expect(completed.update.latestVersion.toNullable()?.value, '11.9');
     },
   );
 

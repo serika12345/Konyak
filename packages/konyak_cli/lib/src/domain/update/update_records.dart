@@ -10,40 +10,30 @@ class RuntimeUpdateRecord {
     Option<String> archiveUrl = const Option.none(),
     Option<String> sourceManifestUrl = const Option.none(),
     Option<String> sourceManifestSignatureUrl = const Option.none(),
-  }) : runtimeId = _requiredNonBlankDomainString(runtimeId, 'runtimeId'),
-       status = _requiredNonBlankDomainString(status, 'status'),
-       currentVersion = _requiredNonBlankUpdateOption(
-         currentVersion,
-         'currentVersion',
-       ),
-       latestVersion = _requiredNonBlankUpdateOption(
-         latestVersion,
-         'latestVersion',
-       ),
-       versionUrl = _requiredNonBlankUpdateOption(versionUrl, 'versionUrl'),
-       archiveUrl = _requiredNonBlankUpdateOption(archiveUrl, 'archiveUrl'),
-       sourceManifestUrl = _requiredNonBlankUpdateOption(
-         sourceManifestUrl,
-         'sourceManifestUrl',
-       ),
-       sourceManifestSignatureUrl = _requiredNonBlankUpdateOption(
-         sourceManifestSignatureUrl,
-         'sourceManifestSignatureUrl',
+  }) : runtimeId = RuntimeId(runtimeId),
+       status = UpdateCheckStatus(status),
+       currentVersion = currentVersion.map(RuntimeVersion.new),
+       latestVersion = latestVersion.map(RuntimeVersion.new),
+       versionUrl = versionUrl.map(RuntimeVersionUrl.new),
+       archiveUrl = archiveUrl.map(RuntimeArchiveUrl.new),
+       sourceManifestUrl = sourceManifestUrl.map(RuntimeSourceManifestUrl.new),
+       sourceManifestSignatureUrl = sourceManifestSignatureUrl.map(
+         RuntimeSourceManifestSignatureUrl.new,
        );
 
-  final String runtimeId;
-  final String status;
-  final Option<String> currentVersion;
-  final Option<String> latestVersion;
-  final Option<String> versionUrl;
-  final Option<String> archiveUrl;
-  final Option<String> sourceManifestUrl;
-  final Option<String> sourceManifestSignatureUrl;
+  final RuntimeId runtimeId;
+  final UpdateCheckStatus status;
+  final Option<RuntimeVersion> currentVersion;
+  final Option<RuntimeVersion> latestVersion;
+  final Option<RuntimeVersionUrl> versionUrl;
+  final Option<RuntimeArchiveUrl> archiveUrl;
+  final Option<RuntimeSourceManifestUrl> sourceManifestUrl;
+  final Option<RuntimeSourceManifestSignatureUrl> sourceManifestSignatureUrl;
 
   Map<String, Object?> toJson() {
     return <String, Object?>{
-      'runtimeId': runtimeId,
-      'status': status,
+      'runtimeId': runtimeId.value,
+      'status': status.value,
       ..._updateJsonField('currentVersion', currentVersion),
       ..._updateJsonField('latestVersion', latestVersion),
       ..._updateJsonField('versionUrl', versionUrl),
@@ -57,10 +47,13 @@ class RuntimeUpdateRecord {
   }
 }
 
-Map<String, Object?> _updateJsonField(String key, Option<String> value) {
+Map<String, Object?> _updateJsonField(
+  String key,
+  Option<StringDomainValueObject> value,
+) {
   return value.match(
     () => const <String, Object?>{},
-    (item) => <String, Object?>{key: item},
+    (item) => <String, Object?>{key: item.value},
   );
 }
 
@@ -81,9 +74,10 @@ class RuntimeUpdateCheckFailed extends RuntimeUpdateCheckResult {
 }
 
 class RuntimeUpdateRuntimeNotFound extends RuntimeUpdateCheckResult {
-  const RuntimeUpdateRuntimeNotFound(this.runtimeId);
+  RuntimeUpdateRuntimeNotFound(String runtimeId)
+    : runtimeId = RuntimeId(runtimeId);
 
-  final String runtimeId;
+  final RuntimeId runtimeId;
 }
 
 abstract interface class RuntimeUpdateChecker {
@@ -99,35 +93,26 @@ class AppUpdateRecord {
     Option<String> versionUrl = const Option.none(),
     Option<String> archiveUrl = const Option.none(),
     Option<String> archiveSha256 = const Option.none(),
-  }) : appId = _requiredNonBlankDomainString(appId, 'appId'),
-       status = _requiredNonBlankDomainString(status, 'status'),
-       currentVersion = _requiredNonBlankUpdateOption(
-         currentVersion,
-         'currentVersion',
-       ),
-       latestVersion = _requiredNonBlankUpdateOption(
-         latestVersion,
-         'latestVersion',
-       ),
-       versionUrl = _requiredNonBlankUpdateOption(versionUrl, 'versionUrl'),
-       archiveUrl = _requiredNonBlankUpdateOption(archiveUrl, 'archiveUrl'),
-       archiveSha256 = _requiredNonBlankUpdateOption(
-         archiveSha256,
-         'archiveSha256',
-       );
+  }) : appId = AppId(appId),
+       status = UpdateCheckStatus(status),
+       currentVersion = currentVersion.map(AppVersion.new),
+       latestVersion = latestVersion.map(ReleaseVersion.new),
+       versionUrl = versionUrl.map(RuntimeVersionUrl.new),
+       archiveUrl = archiveUrl.map(AppArchiveUrl.new),
+       archiveSha256 = archiveSha256.map(AppArchiveSha256.new);
 
-  final String appId;
-  final String status;
-  final Option<String> currentVersion;
-  final Option<String> latestVersion;
-  final Option<String> versionUrl;
-  final Option<String> archiveUrl;
-  final Option<String> archiveSha256;
+  final AppId appId;
+  final UpdateCheckStatus status;
+  final Option<AppVersion> currentVersion;
+  final Option<ReleaseVersion> latestVersion;
+  final Option<RuntimeVersionUrl> versionUrl;
+  final Option<AppArchiveUrl> archiveUrl;
+  final Option<AppArchiveSha256> archiveSha256;
 
   Map<String, Object?> toJson() {
     return <String, Object?>{
-      'appId': appId,
-      'status': status,
+      'appId': appId.value,
+      'status': status.value,
       ..._updateJsonField('currentVersion', currentVersion),
       ..._updateJsonField('latestVersion', latestVersion),
       ..._updateJsonField('versionUrl', versionUrl),
@@ -166,35 +151,26 @@ class AppUpdateInstallRecord {
     Option<String> archiveUrl = const Option.none(),
     Option<String> archiveSha256 = const Option.none(),
     Option<String> installPath = const Option.none(),
-  }) : appId = _requiredNonBlankDomainString(appId, 'appId'),
-       status = _requiredNonBlankDomainString(status, 'status'),
-       currentVersion = _requiredNonBlankUpdateOption(
-         currentVersion,
-         'currentVersion',
-       ),
-       installedVersion = _requiredNonBlankUpdateOption(
-         installedVersion,
-         'installedVersion',
-       ),
-       archiveUrl = _requiredNonBlankUpdateOption(archiveUrl, 'archiveUrl'),
-       archiveSha256 = _requiredNonBlankUpdateOption(
-         archiveSha256,
-         'archiveSha256',
-       ),
-       installPath = _requiredNonBlankUpdateOption(installPath, 'installPath');
+  }) : appId = AppId(appId),
+       status = UpdateInstallStatus(status),
+       currentVersion = currentVersion.map(AppVersion.new),
+       installedVersion = installedVersion.map(AppVersion.new),
+       archiveUrl = archiveUrl.map(AppArchiveUrl.new),
+       archiveSha256 = archiveSha256.map(AppArchiveSha256.new),
+       installPath = installPath.map(AppInstallPath.new);
 
-  final String appId;
-  final String status;
-  final Option<String> currentVersion;
-  final Option<String> installedVersion;
-  final Option<String> archiveUrl;
-  final Option<String> archiveSha256;
-  final Option<String> installPath;
+  final AppId appId;
+  final UpdateInstallStatus status;
+  final Option<AppVersion> currentVersion;
+  final Option<AppVersion> installedVersion;
+  final Option<AppArchiveUrl> archiveUrl;
+  final Option<AppArchiveSha256> archiveSha256;
+  final Option<AppInstallPath> installPath;
 
   Map<String, Object?> toJson() {
     return <String, Object?>{
-      'appId': appId,
-      'status': status,
+      'appId': appId.value,
+      'status': status.value,
       ..._updateJsonField('currentVersion', currentVersion),
       ..._updateJsonField('installedVersion', installedVersion),
       ..._updateJsonField('archiveUrl', archiveUrl),
@@ -231,33 +207,19 @@ class RuntimeReleaseMetadata {
     Option<String> archiveSha256 = const Option.none(),
     Option<String> sourceManifestUrl = const Option.none(),
     Option<String> sourceManifestSignatureUrl = const Option.none(),
-  }) : version = _requiredNonBlankDomainString(version, 'version'),
-       archiveUrl = _requiredNonBlankUpdateOption(archiveUrl, 'archiveUrl'),
-       archiveSha256 = _requiredNonBlankUpdateOption(
-         archiveSha256,
-         'archiveSha256',
-       ),
-       sourceManifestUrl = _requiredNonBlankUpdateOption(
-         sourceManifestUrl,
-         'sourceManifestUrl',
-       ),
-       sourceManifestSignatureUrl = _requiredNonBlankUpdateOption(
-         sourceManifestSignatureUrl,
-         'sourceManifestSignatureUrl',
+  }) : version = ReleaseVersion(version),
+       archiveUrl = archiveUrl.map(RuntimeArchiveUrl.new),
+       archiveSha256 = archiveSha256.map(RuntimeArchiveChecksumValue.new),
+       sourceManifestUrl = sourceManifestUrl.map(RuntimeSourceManifestUrl.new),
+       sourceManifestSignatureUrl = sourceManifestSignatureUrl.map(
+         RuntimeSourceManifestSignatureUrl.new,
        );
 
-  final String version;
-  final Option<String> archiveUrl;
-  final Option<String> archiveSha256;
-  final Option<String> sourceManifestUrl;
-  final Option<String> sourceManifestSignatureUrl;
-}
-
-Option<String> _requiredNonBlankUpdateOption(
-  Option<String> value,
-  String fieldName,
-) {
-  return value.map((item) => _requiredNonBlankDomainString(item, fieldName));
+  final ReleaseVersion version;
+  final Option<RuntimeArchiveUrl> archiveUrl;
+  final Option<RuntimeArchiveChecksumValue> archiveSha256;
+  final Option<RuntimeSourceManifestUrl> sourceManifestUrl;
+  final Option<RuntimeSourceManifestSignatureUrl> sourceManifestSignatureUrl;
 }
 
 sealed class RuntimeReleaseMetadataFetchResult {

@@ -23,7 +23,7 @@ List<String> _wineArgumentsForProgramPath(String programPath) {
 }
 
 List<String> _programSettingsArguments(ProgramSettingsRecord settings) {
-  final arguments = settings.arguments.trim();
+  final arguments = settings.arguments.value.trim();
   if (arguments.isEmpty) {
     return const <String>[];
   }
@@ -46,11 +46,11 @@ ProgramRunEnvironment _programSettingsEnvironment(
   ProgramSettingsRecord settings,
 ) {
   final environment = <String, String>{...settings.environment.toMap()};
-  if (settings.locale.trim().isNotEmpty) {
-    environment['LC_ALL'] = settings.locale;
+  if (settings.locale.value.trim().isNotEmpty) {
+    environment['LC_ALL'] = settings.locale.value;
   }
   final logging = _programSettingsLogging(settings);
-  final loggingChannels = logging.additionalWineLoggingChannels.trim();
+  final loggingChannels = logging.additionalWineLoggingChannels.value.trim();
   if (loggingChannels.isNotEmpty) {
     environment['WINEDEBUG'] = _combinedWineDebugChannels(
       existingChannels: environment['WINEDEBUG'],
@@ -71,12 +71,14 @@ String _programSettingsLogPath({
   required BottleRecord bottle,
   required ProgramSettingsRecord settings,
 }) {
-  final logFilePath = _programSettingsLogging(settings).logFilePath.trim();
+  final logFilePath = _programSettingsLogging(
+    settings,
+  ).logFilePath.value.trim();
   if (logFilePath.isNotEmpty) {
     return logFilePath;
   }
 
-  return _joinPath(bottle.path, const ['logs', 'latest.log']);
+  return _joinPath(bottle.path.value, const ['logs', 'latest.log']);
 }
 
 String _combinedWineDebugChannels({

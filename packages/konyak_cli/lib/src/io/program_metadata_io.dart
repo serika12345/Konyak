@@ -28,11 +28,15 @@ class DartIoProgramMetadataExtractor implements ProgramMetadataExtractor {
       );
       final metadata = ProgramMetadataRecord(
         architecture: Option.fromNullable(image.architecture),
-        fileDescription: versionStrings.fileDescription,
-        productName: versionStrings.productName,
-        companyName: versionStrings.companyName,
-        fileVersion: versionStrings.fileVersion,
-        productVersion: versionStrings.productVersion,
+        fileDescription: versionStrings.fileDescription.map(
+          (value) => value.value,
+        ),
+        productName: versionStrings.productName.map((value) => value.value),
+        companyName: versionStrings.companyName.map((value) => value.value),
+        fileVersion: versionStrings.fileVersion.map((value) => value.value),
+        productVersion: versionStrings.productVersion.map(
+          (value) => value.value,
+        ),
         iconPath: Option.fromNullable(iconPath),
       );
 
@@ -76,11 +80,15 @@ class DartIoAsyncProgramMetadataExtractor
       );
       final metadata = ProgramMetadataRecord(
         architecture: Option.fromNullable(image.architecture),
-        fileDescription: versionStrings.fileDescription,
-        productName: versionStrings.productName,
-        companyName: versionStrings.companyName,
-        fileVersion: versionStrings.fileVersion,
-        productVersion: versionStrings.productVersion,
+        fileDescription: versionStrings.fileDescription.map(
+          (value) => value.value,
+        ),
+        productName: versionStrings.productName.map((value) => value.value),
+        companyName: versionStrings.companyName.map((value) => value.value),
+        fileVersion: versionStrings.fileVersion.map((value) => value.value),
+        productVersion: versionStrings.productVersion.map(
+          (value) => value.value,
+        ),
         iconPath: Option.fromNullable(iconPath),
       );
 

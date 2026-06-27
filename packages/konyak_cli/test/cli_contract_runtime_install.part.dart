@@ -299,11 +299,17 @@ void defineRuntimeInstallContractTests() {
           ?.components
           .first
           .version
-          .toNullable(),
+          .toNullable()
+          ?.value,
       'wine-devel-11.9',
     );
     expect(
-      completed.runtime.stack.toNullable()?.components[2].version.toNullable(),
+      completed.runtime.stack
+          .toNullable()
+          ?.components[2]
+          .version
+          .toNullable()
+          ?.value,
       'dxvk-macos-fixture',
     );
     expect(
@@ -504,17 +510,18 @@ void defineRuntimeInstallContractTests() {
         completed.runtime.stack
             .toNullable()
             ?.components
-            .where((component) => component.id == 'dxvk-macos')
+            .where((component) => component.id.value == 'dxvk-macos')
             .single
             .version
-            .toNullable(),
+            .toNullable()
+            ?.value,
         'dxvk-macos-fixture',
       );
       expect(
         completed.runtime.stack
             .toNullable()
             ?.components
-            .where((component) => component.id == 'gptk-d3dmetal')
+            .where((component) => component.id.value == 'gptk-d3dmetal')
             .single
             .isInstalled,
         isFalse,
@@ -692,37 +699,40 @@ void defineRuntimeInstallContractTests() {
       completed.runtime.stack
           .toNullable()
           ?.components
-          .where((component) => component.id == 'dxvk-macos')
+          .where((component) => component.id.value == 'dxvk-macos')
           .single
           .version
-          .toNullable(),
+          .toNullable()
+          ?.value,
       'dxvk-macos-fixture',
     );
     expect(
       completed.runtime.stack
           .toNullable()
           ?.components
-          .where((component) => component.id == 'dxmt')
+          .where((component) => component.id.value == 'dxmt')
           .single
           .version
-          .toNullable(),
+          .toNullable()
+          ?.value,
       'dxmt-fixture',
     );
     expect(
       completed.runtime.stack
           .toNullable()
           ?.components
-          .where((component) => component.id == 'moltenvk')
+          .where((component) => component.id.value == 'moltenvk')
           .single
           .version
-          .toNullable(),
+          .toNullable()
+          ?.value,
       'moltenvk-fixture',
     );
     expect(
       completed.runtime.stack
           .toNullable()
           ?.components
-          .where((component) => component.id == 'gptk-d3dmetal')
+          .where((component) => component.id.value == 'gptk-d3dmetal')
           .single
           .isInstalled,
       isFalse,
@@ -731,20 +741,22 @@ void defineRuntimeInstallContractTests() {
       completed.runtime.stack
           .toNullable()
           ?.components
-          .where((component) => component.id == 'freetype')
+          .where((component) => component.id.value == 'freetype')
           .single
           .version
-          .toNullable(),
+          .toNullable()
+          ?.value,
       'freetype-fixture',
     );
     expect(
       completed.runtime.stack
           .toNullable()
           ?.components
-          .where((component) => component.id == 'vkd3d')
+          .where((component) => component.id.value == 'vkd3d')
           .single
           .version
-          .toNullable(),
+          .toNullable()
+          ?.value,
       'vkd3d-fixture',
     );
     for (final relativePath in _macosDxmtInstalledPaths) {
@@ -982,67 +994,73 @@ void defineRuntimeInstallContractTests() {
       completed.runtime.stack
           .toNullable()
           ?.components
-          .where((component) => component.id == 'wine')
+          .where((component) => component.id.value == 'wine')
           .single
           .version
-          .toNullable(),
+          .toNullable()
+          ?.value,
       'wine-devel-source',
     );
     expect(
       completed.runtime.stack
           .toNullable()
           ?.components
-          .where((component) => component.id == 'winetricks')
+          .where((component) => component.id.value == 'winetricks')
           .single
           .version
-          .toNullable(),
+          .toNullable()
+          ?.value,
       'winetricks-source',
     );
     expect(
       completed.runtime.stack
           .toNullable()
           ?.components
-          .where((component) => component.id == 'dxmt')
+          .where((component) => component.id.value == 'dxmt')
           .single
           .version
-          .toNullable(),
+          .toNullable()
+          ?.value,
       'dxmt-source',
     );
     expect(
       completed.runtime.stack
           .toNullable()
           ?.components
-          .where((component) => component.id == 'freetype')
+          .where((component) => component.id.value == 'freetype')
           .single
           .version
-          .toNullable(),
+          .toNullable()
+          ?.value,
       'freetype-source',
     );
     expect(
       completed.runtime.stack
           .toNullable()
           ?.components
-          .where((component) => component.id == 'vkd3d')
+          .where((component) => component.id.value == 'vkd3d')
           .single
           .version
-          .toNullable(),
+          .toNullable()
+          ?.value,
       'vkd3d-source',
     );
     expect(
       completed.runtime.stack
           .toNullable()
           ?.components
-          .where((component) => component.id == 'gptk-d3dmetal')
+          .where((component) => component.id.value == 'gptk-d3dmetal')
           .single
           .version
-          .toNullable(),
+          .toNullable()
+          ?.value,
       'gptk-d3dmetal-source',
     );
     expect(
       completed.runtime.stack
           .toNullable()
           ?.components
-          .where((component) => component.id == 'gptk-d3dmetal')
+          .where((component) => component.id.value == 'gptk-d3dmetal')
           .single
           .isInstalled,
       isTrue,
@@ -1142,7 +1160,7 @@ void defineRuntimeInstallContractTests() {
 
       expect(result, isA<MacosWineInstallCompleted>());
       final downloadingEvents = progressSink.events
-          .where((event) => event.stage == 'downloading')
+          .where((event) => event.stage.value == 'downloading')
           .toList();
       expect(downloadingEvents, hasLength(2));
       expect(downloadingEvents.map((event) => event.message).toSet(), {
@@ -1153,18 +1171,20 @@ void defineRuntimeInstallContractTests() {
       expect(stack?.isComplete, isTrue);
       expect(
         stack?.components
-            .where((component) => component.id == 'dxmt')
+            .where((component) => component.id.value == 'dxmt')
             .single
             .version
-            .toNullable(),
+            .toNullable()
+            ?.value,
         'dxmt-source',
       );
       expect(
         stack?.components
-            .where((component) => component.id == 'vkd3d')
+            .where((component) => component.id.value == 'vkd3d')
             .single
             .version
-            .toNullable(),
+            .toNullable()
+            ?.value,
         'vkd3d-source',
       );
     },
@@ -1380,23 +1400,26 @@ void defineRuntimeInstallContractTests() {
       final wineComponent = completed.runtime.stack
           .toNullable()
           ?.components
-          .where((component) => component.id == 'wine')
+          .where((component) => component.id.value == 'wine')
           .single;
       final gptkComponent = completed.runtime.stack
           .toNullable()
           ?.components
-          .where((component) => component.id == 'gptk-d3dmetal')
+          .where((component) => component.id.value == 'gptk-d3dmetal')
           .single;
-      expect(wineComponent?.version.toNullable(), 'user-provided-gptk-wine');
+      expect(
+        wineComponent?.version.toNullable()?.value,
+        'user-provided-gptk-wine',
+      );
       expect(gptkComponent?.isInstalled, isTrue);
-      expect(gptkComponent?.version.toNullable(), 'user-provided');
+      expect(gptkComponent?.version.toNullable()?.value, 'user-provided');
       final dxmtComponent = completed.runtime.stack
           .toNullable()
           ?.components
-          .where((component) => component.id == 'dxmt')
+          .where((component) => component.id.value == 'dxmt')
           .single;
       expect(dxmtComponent?.isInstalled, isTrue);
-      expect(dxmtComponent?.version.toNullable(), 'dxmt-source');
+      expect(dxmtComponent?.version.toNullable()?.value, 'dxmt-source');
     },
   );
 
@@ -1463,10 +1486,10 @@ void defineRuntimeInstallContractTests() {
       final gptkComponent = completed.runtime.stack
           .toNullable()
           ?.components
-          .where((component) => component.id == 'gptk-d3dmetal')
+          .where((component) => component.id.value == 'gptk-d3dmetal')
           .single;
       expect(gptkComponent?.isInstalled, isTrue);
-      expect(gptkComponent?.version.toNullable(), 'user-provided');
+      expect(gptkComponent?.version.toNullable()?.value, 'user-provided');
       for (final relativePath in _gptkD3DMetalInstalledPaths) {
         expect(
           FileSystemEntity.typeSync(
@@ -2406,7 +2429,7 @@ void defineRuntimeInstallContractTests() {
     final runtime = (result as LinuxWineInstallCompleted).runtime;
     expect(runtime.isInstalled.toNullable(), isTrue);
     expect(
-      runtime.executablePath.toNullable(),
+      runtime.executablePath.toNullable()?.value,
       _joinTestPath(tempDirectory.path, const [
         'xdg-data',
         'konyak',
@@ -2416,7 +2439,10 @@ void defineRuntimeInstallContractTests() {
         'wine',
       ]),
     );
-    expect(File(runtime.executablePath.toNullable()!).existsSync(), isTrue);
+    expect(
+      File(runtime.executablePath.toNullable()!.value).existsSync(),
+      isTrue,
+    );
     expect(
       File(
         _joinTestPath(tempDirectory.path, const [
@@ -2490,10 +2516,11 @@ void defineRuntimeInstallContractTests() {
       runtime.stack
           .toNullable()
           ?.components
-          .where((component) => component.id == 'vkd3d-proton')
+          .where((component) => component.id.value == 'vkd3d-proton')
           .single
           .version
-          .toNullable(),
+          .toNullable()
+          ?.value,
       'vkd3d-proton-fixture',
     );
     expect(
@@ -2571,10 +2598,11 @@ void defineRuntimeInstallContractTests() {
       runtime.stack
           .toNullable()
           ?.components
-          .where((component) => component.id == 'vkd3d-proton')
+          .where((component) => component.id.value == 'vkd3d-proton')
           .single
           .version
-          .toNullable(),
+          .toNullable()
+          ?.value,
       'vkd3d-linux-source',
     );
   });
@@ -2655,10 +2683,11 @@ void defineRuntimeInstallContractTests() {
       runtime.stack
           .toNullable()
           ?.components
-          .where((component) => component.id == 'vkd3d-proton')
+          .where((component) => component.id.value == 'vkd3d-proton')
           .single
           .version
-          .toNullable(),
+          .toNullable()
+          ?.value,
       'vkd3d-linux-repair',
     );
   });

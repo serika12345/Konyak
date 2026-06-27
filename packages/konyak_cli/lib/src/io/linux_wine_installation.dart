@@ -69,9 +69,10 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
         :final sourceManifestSignature,
       ):
         return _installLinuxWineStackFromSourceManifest(
-          sourceManifest,
+          sourceManifest.value,
           sourceManifestSignature: sourceManifestSignature.asOption
-              .toNullable(),
+              .toNullable()
+              ?.value,
           progressSink: progress,
         );
       case _RuntimeWineInstallFromArchive(
@@ -80,9 +81,13 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
         :final componentArchivePaths,
       ):
         return _installLinuxWineArchive(
-          archivePath: archivePath,
-          archiveSha256: archiveSha256.asOption,
-          componentArchivePaths: componentArchivePaths,
+          archivePath: archivePath.value,
+          archiveSha256: archiveSha256.asOption.map(
+            (checksum) => checksum.value,
+          ),
+          componentArchivePaths: componentArchivePaths.map(
+            (path) => path.value,
+          ),
           progressSink: progress,
         );
       case _RuntimeWineInstallMissingArchiveSource(:final message):
@@ -102,7 +107,7 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
 
         try {
           final downloadFailure = _downloadRuntimeStackSourceArchive(
-            source: archiveUrl,
+            source: archiveUrl.value,
             targetPath: downloadedArchivePath,
             progressSink: progress,
             stage: 'downloading',
@@ -116,8 +121,12 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
 
           return _installLinuxWineArchive(
             archivePath: downloadedArchivePath,
-            archiveSha256: archiveSha256.asOption,
-            componentArchivePaths: componentArchivePaths,
+            archiveSha256: archiveSha256.asOption.map(
+              (checksum) => checksum.value,
+            ),
+            componentArchivePaths: componentArchivePaths.map(
+              (path) => path.value,
+            ),
             progressSink: progress,
           );
         } on FileSystemException catch (error) {
@@ -172,9 +181,10 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
         :final sourceManifestSignature,
       ):
         return _installLinuxWineStackFromSourceManifestStreaming(
-          sourceManifest,
+          sourceManifest.value,
           sourceManifestSignature: sourceManifestSignature.asOption
-              .toNullable(),
+              .toNullable()
+              ?.value,
           progressSink: progress,
         );
       case _RuntimeWineInstallFromArchive(
@@ -183,9 +193,13 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
         :final componentArchivePaths,
       ):
         return _installLinuxWineArchive(
-          archivePath: archivePath,
-          archiveSha256: archiveSha256.asOption,
-          componentArchivePaths: componentArchivePaths,
+          archivePath: archivePath.value,
+          archiveSha256: archiveSha256.asOption.map(
+            (checksum) => checksum.value,
+          ),
+          componentArchivePaths: componentArchivePaths.map(
+            (path) => path.value,
+          ),
           progressSink: progress,
         );
       case _RuntimeWineInstallMissingArchiveSource(:final message):
@@ -206,7 +220,7 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
         try {
           final downloadFailure =
               await _downloadRuntimeStackSourceArchiveStreaming(
-                source: archiveUrl,
+                source: archiveUrl.value,
                 targetPath: downloadedArchivePath,
                 progressSink: progress,
                 stage: 'downloading',
@@ -220,8 +234,12 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
 
           return _installLinuxWineArchive(
             archivePath: downloadedArchivePath,
-            archiveSha256: archiveSha256.asOption,
-            componentArchivePaths: componentArchivePaths,
+            archiveSha256: archiveSha256.asOption.map(
+              (checksum) => checksum.value,
+            ),
+            componentArchivePaths: componentArchivePaths.map(
+              (path) => path.value,
+            ),
             progressSink: progress,
           );
         } on FileSystemException catch (error) {

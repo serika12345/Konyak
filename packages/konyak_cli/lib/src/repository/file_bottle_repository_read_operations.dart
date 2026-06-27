@@ -26,7 +26,7 @@ class _FileBottleRepositoryReadOperations {
                 ),
               )
               .toList(growable: false)
-            ..sort((left, right) => left.id.compareTo(right.id));
+            ..sort((left, right) => left.id.value.compareTo(right.id.value));
 
       return List.unmodifiable(bottles);
     });

@@ -2,33 +2,35 @@ part of '../../../konyak_cli.dart';
 
 class ProgramRunRequest {
   ProgramRunRequest({
-    required this.bottleId,
-    required this.programPath,
-    required this.runnerKind,
-    required this.executable,
+    required String bottleId,
+    required String programPath,
+    required String runnerKind,
+    required String executable,
     required List<String> arguments,
     required this.environment,
-    required this.logPath,
+    required String logPath,
     this.createLogFile = true,
     Option<String> workingDirectory = const Option.none(),
-  }) : arguments = List.unmodifiable(arguments),
-       workingDirectory = _optionalNonBlankDomainString(
-         workingDirectory,
-         'workingDirectory',
-       );
+  }) : bottleId = BottleId(bottleId),
+       programPath = ProgramPath(programPath),
+       runnerKind = RunnerKind(runnerKind),
+       executable = ProgramExecutable(executable),
+       arguments = List.unmodifiable(arguments),
+       logPath = ProgramLogPath(logPath),
+       workingDirectory = workingDirectory.map(ProgramWorkingDirectoryPath.new);
 
-  final String bottleId;
-  final String programPath;
-  final String runnerKind;
-  final String executable;
+  final BottleId bottleId;
+  final ProgramPath programPath;
+  final RunnerKind runnerKind;
+  final ProgramExecutable executable;
   final List<String> arguments;
   final ProgramRunEnvironment environment;
-  final String logPath;
+  final ProgramLogPath logPath;
   final bool createLogFile;
-  final Option<String> workingDirectory;
+  final Option<ProgramWorkingDirectoryPath> workingDirectory;
 
   List<String> get argv {
-    return List.unmodifiable(<String>[executable, ...arguments]);
+    return List.unmodifiable(<String>[executable.value, ...arguments]);
   }
 }
 
@@ -56,37 +58,41 @@ class ProgramRunFailed extends ProgramRunResult {
 
 class WineProcessTerminationRecord {
   WineProcessTerminationRecord({
-    required this.bottleId,
-    required this.status,
-    required this.runnerKind,
-    required this.executable,
+    required String bottleId,
+    required String status,
+    required String runnerKind,
+    required String executable,
     required List<String> argv,
     Option<String> processId = const Option.none(),
     this.processExitCode = const Option.none(),
     Option<String> message = const Option.none(),
-  }) : argv = List.unmodifiable(argv),
-       processId = _optionalNonBlankDomainString(processId, 'processId'),
+  }) : bottleId = BottleId(bottleId),
+       status = WineProcessStatus(status),
+       runnerKind = RunnerKind(runnerKind),
+       executable = ProgramExecutable(executable),
+       argv = List.unmodifiable(argv),
+       processId = processId.map(WineProcessId.new),
        message = _optionalNonBlankDomainString(message, 'message');
 
-  final String bottleId;
-  final String status;
-  final String runnerKind;
-  final String executable;
+  final BottleId bottleId;
+  final WineProcessStatus status;
+  final RunnerKind runnerKind;
+  final ProgramExecutable executable;
   final List<String> argv;
-  final Option<String> processId;
+  final Option<WineProcessId> processId;
   final Option<int> processExitCode;
   final Option<String> message;
 
   Map<String, Object?> toJson() {
     return <String, Object?>{
-      'bottleId': bottleId,
+      'bottleId': bottleId.value,
       ...processId.match(
         () => const <String, Object?>{},
-        (value) => <String, Object?>{'processId': value},
+        (value) => <String, Object?>{'processId': value.value},
       ),
-      'status': status,
-      'runnerKind': runnerKind,
-      'executable': executable,
+      'status': status.value,
+      'runnerKind': runnerKind.value,
+      'executable': executable.value,
       'argv': argv,
       ...processExitCode.match(
         () => const <String, Object?>{},

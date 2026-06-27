@@ -20,7 +20,9 @@ Option<String> _wineWindowsPathToHostPath({
       .toList(growable: false);
 
   return switch (drive) {
-    'c' => Option.of(_joinPath(bottle.path, <String>['drive_c', ...parts])),
+    'c' => Option.of(
+      _joinPath(bottle.path.value, <String>['drive_c', ...parts]),
+    ),
     'z' => Option.of('/${parts.join('/')}'),
     _ => const Option.none(),
   };
@@ -72,7 +74,7 @@ Option<String> _pinnedProgramPathForExecutable({
   for (final program in bottle.pinnedPrograms) {
     final metadataPath = _metadataProgramPath(
       bottle: bottle,
-      programPath: program.path,
+      programPath: program.path.value,
     );
     if (_executableNamesMatch(metadataPath, executable)) {
       return Option.of(metadataPath);
@@ -210,7 +212,7 @@ Option<BottleRecord> _findBottle(
   String bottleId,
 ) {
   for (final bottle in bottles) {
-    if (bottle.id == bottleId) {
+    if (bottle.id.value == bottleId) {
       return Option.of(bottle);
     }
   }

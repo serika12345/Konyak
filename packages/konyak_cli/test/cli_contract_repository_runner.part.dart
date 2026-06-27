@@ -396,24 +396,24 @@ void defineRepositoryAndRunnerContractTests() {
       }, hostPlatform: KonyakHostPlatform.macos);
 
       final result = repository.createBottle(
-        const BottleCreateRequest(name: 'Created', windowsVersion: 'win10'),
+        BottleCreateRequest(name: 'Created', windowsVersion: 'win10'),
       );
 
       expect(result, isA<BottleCreated>());
       final created = result as BottleCreated;
       expect(
-        created.bottle.path,
+        created.bottle.path.value,
         '${tempDirectory.path}/Library/Application Support/Konyak/Bottles/created',
       );
       expect(
         File(
-          _joinTestPath(created.bottle.path, const ['metadata.json']),
+          _joinTestPath(created.bottle.path.value, const ['metadata.json']),
         ).existsSync(),
         isTrue,
       );
       expect(
         Directory(
-          _joinTestPath(created.bottle.path, const ['drive_c']),
+          _joinTestPath(created.bottle.path.value, const ['drive_c']),
         ).existsSync(),
         isTrue,
       );
@@ -453,12 +453,12 @@ void defineRepositoryAndRunnerContractTests() {
       expect(_expectIo(repository.listBottles()), isEmpty);
 
       final createResult = repository.createBottle(
-        const BottleCreateRequest(name: 'Managed', windowsVersion: 'win10'),
+        BottleCreateRequest(name: 'Managed', windowsVersion: 'win10'),
       );
 
       expect(createResult, isA<BottleCreated>());
       expect(
-        _expectIo(repository.listBottles()).map((bottle) => bottle.id),
+        _expectIo(repository.listBottles()).map((bottle) => bottle.id.value),
         const ['managed'],
       );
     },
@@ -493,17 +493,23 @@ void defineRepositoryAndRunnerContractTests() {
       );
 
       expect(
-        _expectIo(repository.listBottles()).map((bottle) => bottle.id),
+        _expectIo(repository.listBottles()).map((bottle) => bottle.id.value),
         const ['imported', 'local'],
       );
-      expect(_expectFound(repository.findBottle('imported')).name, 'Imported');
+      expect(
+        _expectFound(repository.findBottle('imported')).name.value,
+        'Imported',
+      );
 
       final createResult = repository.createBottle(
-        const BottleCreateRequest(name: 'Created', windowsVersion: 'win10'),
+        BottleCreateRequest(name: 'Created', windowsVersion: 'win10'),
       );
 
       expect(createResult, isA<BottleCreated>());
-      expect(_expectFound(repository.findBottle('created')).name, 'Created');
+      expect(
+        _expectFound(repository.findBottle('created')).name.value,
+        'Created',
+      );
     },
   );
 
@@ -528,7 +534,7 @@ void defineRepositoryAndRunnerContractTests() {
     );
 
     expect(
-      _expectIo(repository.listBottles()).map((bottle) => bottle.id),
+      _expectIo(repository.listBottles()).map((bottle) => bottle.id.value),
       const ['imported'],
     );
 
@@ -537,12 +543,12 @@ void defineRepositoryAndRunnerContractTests() {
     expect(deleteResult, isA<BottleDeleteMissing>());
 
     final renameResult = repository.renameBottle(
-      const BottleRenameRequest(bottleId: 'imported', name: 'Renamed'),
+      BottleRenameRequest(bottleId: 'imported', name: 'Renamed'),
     );
     expect(renameResult, isA<BottleRenameMissing>());
 
     final moveResult = repository.moveBottle(
-      const BottleMoveRequest(
+      BottleMoveRequest(
         bottleId: 'imported',
         path: '/home/user/.local/share/konyak/bottles/moved',
       ),
@@ -550,7 +556,7 @@ void defineRepositoryAndRunnerContractTests() {
     expect(moveResult, isA<BottleMoveMissing>());
 
     final runtimeSettingsResult = repository.setRuntimeSettings(
-      const RuntimeSettingsUpdateRequest(
+      RuntimeSettingsUpdateRequest(
         bottleId: 'imported',
         runtimeSettings: BottleRuntimeSettings(metalHud: true),
       ),
@@ -558,7 +564,7 @@ void defineRepositoryAndRunnerContractTests() {
     expect(runtimeSettingsResult, isA<BottleUpdateMissing>());
 
     final pinResult = repository.pinProgram(
-      const ProgramPinRequest(
+      ProgramPinRequest(
         bottleId: 'imported',
         name: 'Setup',
         programPath: '/downloads/setup.exe',
@@ -569,19 +575,21 @@ void defineRepositoryAndRunnerContractTests() {
     final importedBottle = _expectFound(
       importedRepository.findBottle('imported'),
     );
-    expect(importedBottle.name, 'Imported');
+    expect(importedBottle.name.value, 'Imported');
     expect(
-      importedBottle.path,
+      importedBottle.path.value,
       '/home/user/.local/share/konyak/bottles/imported',
     );
-    expect(importedBottle.runtimeSettings, const BottleRuntimeSettings());
+    expect(importedBottle.runtimeSettings, BottleRuntimeSettings());
     expect(importedBottle.pinnedPrograms, isEmpty);
     expect(
-      _expectIo(importedRepository.listBottles()).map((bottle) => bottle.id),
+      _expectIo(
+        importedRepository.listBottles(),
+      ).map((bottle) => bottle.id.value),
       const ['imported'],
     );
     expect(
-      _expectIo(repository.listBottles()).map((bottle) => bottle.id),
+      _expectIo(repository.listBottles()).map((bottle) => bottle.id.value),
       const ['imported'],
     );
   });

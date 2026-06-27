@@ -12,11 +12,11 @@ class DartIoAppUpdateChecker implements AppUpdateChecker {
   }) {
     final resolvedHostPlatform = hostPlatform ?? _currentHostPlatform();
     return DartIoAppUpdateChecker._(
-      appId: appId,
-      currentVersion: currentVersion,
-      versionUrl: versionUrl,
-      archiveUrl: archiveUrl,
-      archiveSha256: archiveSha256,
+      appId: AppId(appId),
+      currentVersion: AppVersion(currentVersion),
+      versionUrl: RuntimeVersionUrl(versionUrl),
+      archiveUrl: archiveUrl.map(AppArchiveUrl.new),
+      archiveSha256: archiveSha256.map(AppArchiveSha256.new),
       hostPlatform: resolvedHostPlatform,
       releaseMetadataFetcher:
           releaseMetadataFetcher ??
@@ -55,44 +55,47 @@ class DartIoAppUpdateChecker implements AppUpdateChecker {
     );
   }
 
-  final String appId;
-  final String currentVersion;
-  final String versionUrl;
-  final Option<String> archiveUrl;
-  final Option<String> archiveSha256;
+  final AppId appId;
+  final AppVersion currentVersion;
+  final RuntimeVersionUrl versionUrl;
+  final Option<AppArchiveUrl> archiveUrl;
+  final Option<AppArchiveSha256> archiveSha256;
   final KonyakHostPlatform hostPlatform;
   final RuntimeReleaseMetadataFetcher releaseMetadataFetcher;
 
   @override
   AppUpdateCheckResult check() {
-    if (versionUrl.trim().isEmpty) {
+    if (versionUrl.value.trim().isEmpty) {
       return AppUpdateCheckCompleted(
         AppUpdateRecord(
-          appId: appId,
+          appId: appId.value,
           status: 'unknown',
-          currentVersion: Option.of(currentVersion),
-          archiveUrl: archiveUrl,
-          archiveSha256: archiveSha256,
+          currentVersion: Option.of(currentVersion.value),
+          archiveUrl: archiveUrl.map((value) => value.value),
+          archiveSha256: archiveSha256.map((value) => value.value),
         ),
       );
     }
 
-    final metadata = releaseMetadataFetcher.fetch(versionUrl);
+    final metadata = releaseMetadataFetcher.fetch(versionUrl.value);
     return switch (metadata) {
       RuntimeReleaseMetadataFetched(:final metadata) => AppUpdateCheckCompleted(
         AppUpdateRecord(
-          appId: appId,
+          appId: appId.value,
           status: _updateStatus(
-            currentVersion: Option.of(currentVersion),
-            latestVersion: metadata.version,
+            currentVersion: Option.of(currentVersion.value),
+            latestVersion: metadata.version.value,
           ),
-          currentVersion: Option.of(currentVersion),
-          latestVersion: Option.of(metadata.version),
-          versionUrl: Option.of(versionUrl),
-          archiveUrl: metadata.archiveUrl.match(() => archiveUrl, Option.of),
+          currentVersion: Option.of(currentVersion.value),
+          latestVersion: Option.of(metadata.version.value),
+          versionUrl: Option.of(versionUrl.value),
+          archiveUrl: metadata.archiveUrl.match(
+            () => archiveUrl.map((value) => value.value),
+            (value) => Option.of(value.value),
+          ),
           archiveSha256: metadata.archiveSha256.match(
-            () => archiveSha256,
-            Option.of,
+            () => archiveSha256.map((value) => value.value),
+            (value) => Option.of(value.value),
           ),
         ),
       ),

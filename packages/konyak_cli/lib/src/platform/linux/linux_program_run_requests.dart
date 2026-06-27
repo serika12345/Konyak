@@ -14,7 +14,7 @@ ProgramRunRequest _linuxWineRequest({
   final logging = _programSettingsLogging(programSettings);
 
   return ProgramRunRequest(
-    bottleId: bottle.id,
+    bottleId: bottle.id.value,
     programPath: programPath,
     runnerKind: 'wine',
     executable: _linuxWineExecutable(hostEnvironment),
@@ -39,7 +39,7 @@ ProgramRunRequest _linuxWineCommandRequest({
 }) {
   final hostEnvironment = environment;
   return ProgramRunRequest(
-    bottleId: bottle.id,
+    bottleId: bottle.id.value,
     programPath: command,
     runnerKind: 'wine',
     executable: _linuxWineExecutable(hostEnvironment),
@@ -50,7 +50,7 @@ ProgramRunRequest _linuxWineCommandRequest({
         environment: environment,
       ),
     ),
-    logPath: _joinPath(bottle.path, const ['logs', 'latest.log']),
+    logPath: _joinPath(bottle.path.value, const ['logs', 'latest.log']),
   );
 }
 
@@ -61,7 +61,7 @@ ProgramRunRequest _linuxRegistryUpdateRequest({
 }) {
   final hostEnvironment = environment;
   return ProgramRunRequest(
-    bottleId: bottle.id,
+    bottleId: bottle.id.value,
     programPath: 'reg',
     runnerKind: 'wineRegistry',
     executable: _linuxWineExecutable(hostEnvironment),
@@ -72,7 +72,7 @@ ProgramRunRequest _linuxRegistryUpdateRequest({
         environment: environment,
       ),
     ),
-    logPath: _joinPath(bottle.path, const ['logs', 'latest.log']),
+    logPath: _joinPath(bottle.path.value, const ['logs', 'latest.log']),
   );
 }
 
@@ -83,7 +83,7 @@ ProgramRunRequest _linuxRegistryQueryRequest({
 }) {
   final hostEnvironment = environment;
   return ProgramRunRequest(
-    bottleId: bottle.id,
+    bottleId: bottle.id.value,
     programPath: 'reg',
     runnerKind: 'wineRegistryQuery',
     executable: _linuxWineExecutable(hostEnvironment),
@@ -94,7 +94,7 @@ ProgramRunRequest _linuxRegistryQueryRequest({
         environment: environment,
       ),
     ),
-    logPath: _joinPath(bottle.path, const ['logs', 'registry.log']),
+    logPath: _joinPath(bottle.path.value, const ['logs', 'registry.log']),
   );
 }
 
@@ -104,7 +104,7 @@ ProgramRunRequest _linuxWinebootRequest({
 }) {
   final hostEnvironment = environment;
   return ProgramRunRequest(
-    bottleId: bottle.id,
+    bottleId: bottle.id.value,
     programPath: 'wineboot',
     runnerKind: 'wineboot',
     executable: _linuxWinebootExecutable(hostEnvironment),
@@ -115,7 +115,7 @@ ProgramRunRequest _linuxWinebootRequest({
         environment: environment,
       ),
     ),
-    logPath: _joinPath(bottle.path, const ['logs', 'prefix-init.log']),
+    logPath: _joinPath(bottle.path.value, const ['logs', 'prefix-init.log']),
   );
 }
 
@@ -125,7 +125,7 @@ ProgramRunRequest _linuxWinebootRestartRequest({
 }) {
   final hostEnvironment = environment;
   return ProgramRunRequest(
-    bottleId: bottle.id,
+    bottleId: bottle.id.value,
     programPath: 'wineboot',
     runnerKind: 'wineboot',
     executable: _linuxWinebootExecutable(hostEnvironment),
@@ -136,7 +136,7 @@ ProgramRunRequest _linuxWinebootRestartRequest({
         environment: environment,
       ),
     ),
-    logPath: _joinPath(bottle.path, const ['logs', 'latest.log']),
+    logPath: _joinPath(bottle.path.value, const ['logs', 'latest.log']),
   );
 }
 
@@ -146,7 +146,7 @@ ProgramRunRequest _linuxWineserverKillRequest({
 }) {
   final hostEnvironment = environment;
   return ProgramRunRequest(
-    bottleId: bottle.id,
+    bottleId: bottle.id.value,
     programPath: 'wineserver',
     runnerKind: 'wineserver',
     executable: _linuxWineserverExecutable(hostEnvironment),
@@ -154,7 +154,10 @@ ProgramRunRequest _linuxWineserverKillRequest({
     environment: _linuxRuntimeEnvironment(
       hostEnvironment,
     ).merge(_linuxWinePrefixEnvironment(bottle)),
-    logPath: _joinPath(bottle.path, const ['logs', 'wineserver-kill.log']),
+    logPath: _joinPath(bottle.path.value, const [
+      'logs',
+      'wineserver-kill.log',
+    ]),
   );
 }
 
@@ -167,7 +170,7 @@ ProgramRunRequest _linuxWinedbgRequest({
 }) {
   final hostEnvironment = environment;
   return ProgramRunRequest(
-    bottleId: bottle.id,
+    bottleId: bottle.id.value,
     programPath: 'winedbg',
     runnerKind: 'winedbg',
     executable: _linuxWinedbgExecutable(hostEnvironment),
@@ -175,6 +178,6 @@ ProgramRunRequest _linuxWinedbgRequest({
     environment: _linuxRuntimeEnvironment(
       hostEnvironment,
     ).merge(_linuxWinePrefixEnvironment(bottle)),
-    logPath: _joinPath(bottle.path, <String>['logs', logName]),
+    logPath: _joinPath(bottle.path.value, <String>['logs', logName]),
   );
 }

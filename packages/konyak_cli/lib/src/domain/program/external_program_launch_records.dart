@@ -70,10 +70,10 @@ Option<String> _externalProgramRunPath({
   required BottleRecord bottle,
   required ProgramRunRequest request,
 }) {
-  final normalizedProgramPath = request.programPath.trim();
+  final normalizedProgramPath = request.programPath.value.trim();
   if (normalizedProgramPath.isEmpty ||
       !normalizedProgramPath.startsWith('/') ||
-      _isPathWithinRoot(path: normalizedProgramPath, root: bottle.path)) {
+      _isPathWithinRoot(path: normalizedProgramPath, root: bottle.path.value)) {
     return const Option.none();
   }
 

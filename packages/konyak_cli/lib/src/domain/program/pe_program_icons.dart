@@ -41,7 +41,7 @@ String _peIconCachePath({
       )
       .toString()
       .substring(0, 24);
-  return _joinPath(bottle.path, ['cache', 'icons', '$cacheKey.ico']);
+  return _joinPath(bottle.path.value, ['cache', 'icons', '$cacheKey.ico']);
 }
 
 Uint8List? _icoFromGroupIconResource(

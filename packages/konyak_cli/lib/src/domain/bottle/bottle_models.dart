@@ -6,22 +6,20 @@ class BottleRecord {
     required String name,
     required String path,
     required String windowsVersion,
-    this.runtimeSettings = const BottleRuntimeSettings(),
+    BottleRuntimeSettings? runtimeSettings,
     Iterable<PinnedProgramRecord> pinnedPrograms =
         const <PinnedProgramRecord>[],
-  }) : id = _requiredNonBlankDomainString(id, 'id'),
-       name = _requiredNonBlankDomainString(name, 'name'),
-       path = _requiredNonBlankDomainString(path, 'path'),
-       windowsVersion = _requiredNonBlankDomainString(
-         windowsVersion,
-         'windowsVersion',
-       ),
+  }) : id = BottleId(id),
+       name = BottleName(name),
+       path = BottlePath(path),
+       windowsVersion = WindowsVersion(windowsVersion),
+       runtimeSettings = runtimeSettings ?? BottleRuntimeSettings(),
        pinnedPrograms = pinnedPrograms.toIList();
 
-  final String id;
-  final String name;
-  final String path;
-  final String windowsVersion;
+  final BottleId id;
+  final BottleName name;
+  final BottlePath path;
+  final WindowsVersion windowsVersion;
   final BottleRuntimeSettings runtimeSettings;
   final IList<PinnedProgramRecord> pinnedPrograms;
 
@@ -34,7 +32,7 @@ class BottleRecord {
       id: id,
       name: name,
       path: path,
-      windowsVersion: windowsVersion,
+      windowsVersion: windowsVersion.value,
       runtimeSettings: runtimeSettings,
       pinnedPrograms: pinnedPrograms,
     );
@@ -42,10 +40,10 @@ class BottleRecord {
 
   BottleRecord withPath(String path) {
     return BottleRecord(
-      id: id,
-      name: name,
+      id: id.value,
+      name: name.value,
       path: path,
-      windowsVersion: windowsVersion,
+      windowsVersion: windowsVersion.value,
       runtimeSettings: runtimeSettings,
       pinnedPrograms: pinnedPrograms,
     );
@@ -53,9 +51,9 @@ class BottleRecord {
 
   BottleRecord withWindowsVersion(String windowsVersion) {
     return BottleRecord(
-      id: id,
-      name: name,
-      path: path,
+      id: id.value,
+      name: name.value,
+      path: path.value,
       windowsVersion: windowsVersion,
       runtimeSettings: runtimeSettings,
       pinnedPrograms: pinnedPrograms,
@@ -64,10 +62,10 @@ class BottleRecord {
 
   BottleRecord withRuntimeSettings(BottleRuntimeSettings runtimeSettings) {
     return BottleRecord(
-      id: id,
-      name: name,
-      path: path,
-      windowsVersion: windowsVersion,
+      id: id.value,
+      name: name.value,
+      path: path.value,
+      windowsVersion: windowsVersion.value,
       runtimeSettings: runtimeSettings,
       pinnedPrograms: pinnedPrograms,
     );
@@ -77,10 +75,10 @@ class BottleRecord {
     Iterable<PinnedProgramRecord> pinnedPrograms,
   ) {
     return BottleRecord(
-      id: id,
-      name: name,
-      path: path,
-      windowsVersion: windowsVersion,
+      id: id.value,
+      name: name.value,
+      path: path.value,
+      windowsVersion: windowsVersion.value,
       runtimeSettings: runtimeSettings,
       pinnedPrograms: pinnedPrograms,
     );
@@ -88,11 +86,11 @@ class BottleRecord {
 
   Map<String, Object?> toJson() {
     return <String, Object?>{
-      'id': id,
-      'name': name,
-      'path': path,
-      'windowsVersion': windowsVersion,
-      if (runtimeSettings != const BottleRuntimeSettings())
+      'id': id.value,
+      'name': name.value,
+      'path': path.value,
+      'windowsVersion': windowsVersion.value,
+      if (runtimeSettings != BottleRuntimeSettings())
         'runtimeSettings': runtimeSettings.toJson(),
       if (pinnedPrograms.isNotEmpty)
         'pinnedPrograms': pinnedPrograms
@@ -131,30 +129,28 @@ class PinnedProgramRecord {
     required String path,
     this.removable = false,
     Option<String> iconPath = const Option.none(),
-  }) : name = _requiredNonBlankDomainString(name, 'name'),
-       path = _requiredNonBlankDomainString(path, 'path'),
-       iconPath = iconPath.map(
-         (value) => _requiredNonBlankDomainString(value, 'iconPath'),
-       );
+  }) : name = ProgramName(name),
+       path = ProgramPath(path),
+       iconPath = iconPath.map(ProgramIconPath.new);
 
-  final String name;
-  final String path;
+  final ProgramName name;
+  final ProgramPath path;
   final bool removable;
-  final Option<String> iconPath;
+  final Option<ProgramIconPath> iconPath;
 
   PinnedProgramRecord withName(String name) {
     return PinnedProgramRecord(
       name: name,
-      path: path,
+      path: path.value,
       removable: removable,
-      iconPath: iconPath,
+      iconPath: iconPath.map((value) => value.value),
     );
   }
 
   PinnedProgramRecord withIconPath(Option<String> iconPath) {
     return PinnedProgramRecord(
-      name: name,
-      path: path,
+      name: name.value,
+      path: path.value,
       removable: removable,
       iconPath: iconPath,
     );
@@ -162,12 +158,12 @@ class PinnedProgramRecord {
 
   Map<String, Object?> toJson() {
     return <String, Object?>{
-      'name': name,
-      'path': path,
+      'name': name.value,
+      'path': path.value,
       'removable': removable,
       ...iconPath.match(
         () => const <String, Object?>{},
-        (value) => <String, Object?>{'iconPath': value},
+        (value) => <String, Object?>{'iconPath': value.value},
       ),
     };
   }

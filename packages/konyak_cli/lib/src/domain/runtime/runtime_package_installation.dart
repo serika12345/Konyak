@@ -21,17 +21,13 @@ class RuntimePackageInstallRequest {
          runtimeLabel,
          'runtimeLabel',
        ),
-       archivePath = _requiredNonBlankDomainString(archivePath, 'archivePath'),
-       archiveSha256 = _optionalRuntimePackageInstallValue(
-         archiveSha256,
-         'archiveSha256',
-       ),
-       expectedExecutablePath = _requiredNonBlankDomainString(
-         expectedExecutablePath,
-         'expectedExecutablePath',
-       ),
-       componentArchivePaths = componentArchivePaths.toIList(),
-       requiredExecutableRelativePath = List.unmodifiable(
+       archivePath = RuntimeArchivePath(archivePath),
+       archiveSha256 = archiveSha256.map(RuntimeArchiveChecksumValue.new),
+       expectedExecutablePath = RuntimeComponentPath(expectedExecutablePath),
+       componentArchivePaths = componentArchivePaths
+           .map(RuntimeArchivePath.new)
+           .toIList(),
+       requiredExecutableRelativePath = RuntimeRelativePath(
          requiredExecutableRelativePath,
        ),
        preserveExistingRuntimeSkipRelativePaths =
@@ -40,13 +36,13 @@ class RuntimePackageInstallRequest {
                .toList(growable: false);
 
   final String runtimeLabel;
-  final String archivePath;
-  final Option<String> archiveSha256;
-  final IList<String> componentArchivePaths;
+  final RuntimeArchivePath archivePath;
+  final Option<RuntimeArchiveChecksumValue> archiveSha256;
+  final IList<RuntimeArchivePath> componentArchivePaths;
   final RuntimeComponentVersions componentVersions;
   final Directory runtimeRoot;
-  final List<String> requiredExecutableRelativePath;
-  final String expectedExecutablePath;
+  final RuntimeRelativePath requiredExecutableRelativePath;
+  final RuntimeComponentPath expectedExecutablePath;
   final bool preserveExistingRuntimeFiles;
   final List<List<String>> preserveExistingRuntimeSkipRelativePaths;
   final RuntimeComponentVersions Function({
@@ -85,13 +81,18 @@ class DartIoRuntimePackageInstaller implements RuntimePackageInstaller {
   RuntimePackageInstallResult install(RuntimePackageInstallRequest request) {
     final failure = _installRuntimeArchives(
       runtimeLabel: request.runtimeLabel,
-      archivePath: request.archivePath,
-      archiveSha256: request.archiveSha256.toNullable(),
-      componentArchivePaths: request.componentArchivePaths,
+      archivePath: request.archivePath.value,
+      archiveSha256: request.archiveSha256
+          .map((value) => value.value)
+          .toNullable(),
+      componentArchivePaths: request.componentArchivePaths
+          .map((value) => value.value)
+          .toIList(),
       componentVersions: request.componentVersions,
       runtimeRoot: request.runtimeRoot,
-      requiredExecutableRelativePath: request.requiredExecutableRelativePath,
-      expectedExecutablePath: request.expectedExecutablePath,
+      requiredExecutableRelativePath:
+          request.requiredExecutableRelativePath.value,
+      expectedExecutablePath: request.expectedExecutablePath.value,
       preserveExistingRuntimeFiles: request.preserveExistingRuntimeFiles,
       preserveExistingRuntimeSkipRelativePaths:
           request.preserveExistingRuntimeSkipRelativePaths,
@@ -108,29 +109,23 @@ class DartIoRuntimePackageInstaller implements RuntimePackageInstaller {
   }
 }
 
-Option<String> _optionalRuntimePackageInstallValue(
-  Option<String> value,
-  String fieldName,
-) {
-  return value.map((item) => _requiredNonBlankDomainString(item, fieldName));
-}
-
 class RuntimeInstallProgress {
-  const RuntimeInstallProgress({
-    required this.stage,
+  RuntimeInstallProgress({
+    required String stage,
     required this.message,
-    required this.fraction,
-  });
+    required num fraction,
+  }) : stage = RuntimeInstallProgressStage(stage),
+       fraction = RuntimeInstallProgressFraction(fraction);
 
-  final String stage;
+  final RuntimeInstallProgressStage stage;
   final String message;
-  final double fraction;
+  final RuntimeInstallProgressFraction fraction;
 
   Map<String, Object?> toJson() {
     return <String, Object?>{
-      'stage': stage,
+      'stage': stage.value,
       'message': message,
-      'fraction': fraction,
+      'fraction': fraction.value,
     };
   }
 }

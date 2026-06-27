@@ -50,11 +50,13 @@ extension _AppUpdateHandoffInstallers on DartIoAppUpdateInstaller {
     return switch (startResult) {
       DetachedProcessStartCompleted() => AppUpdateInstallCompleted(
         AppUpdateInstallRecord(
-          appId: update.appId,
+          appId: update.appId.value,
           status: 'installed',
-          currentVersion: update.currentVersion,
-          installedVersion: update.latestVersion,
-          archiveUrl: update.archiveUrl,
+          currentVersion: update.currentVersion.map((version) => version.value),
+          installedVersion: update.latestVersion.map(
+            (version) => version.value,
+          ),
+          archiveUrl: update.archiveUrl.map((url) => url.value),
           archiveSha256: Option.of(actualSha256),
           installPath: Option.of(targetBundlePath),
         ),
@@ -104,11 +106,13 @@ extension _AppUpdateHandoffInstallers on DartIoAppUpdateInstaller {
     return switch (startResult) {
       DetachedProcessStartCompleted() => AppUpdateInstallCompleted(
         AppUpdateInstallRecord(
-          appId: update.appId,
+          appId: update.appId.value,
           status: 'installed',
-          currentVersion: update.currentVersion,
-          installedVersion: update.latestVersion,
-          archiveUrl: update.archiveUrl,
+          currentVersion: update.currentVersion.map((version) => version.value),
+          installedVersion: update.latestVersion.map(
+            (version) => version.value,
+          ),
+          archiveUrl: update.archiveUrl.map((url) => url.value),
           archiveSha256: Option.of(actualSha256),
           installPath: Option.of(targetPath),
         ),

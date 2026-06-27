@@ -54,21 +54,23 @@ void _synchronizeLinuxPinnedProgramLaunchers({
     for (final bottle in bottles) {
       for (final program in bottle.pinnedPrograms) {
         final launcherId = _pinnedProgramLauncherId(
-          bottleId: bottle.id,
-          programPath: program.path,
+          bottleId: bottle.id.value,
+          programPath: program.path.value,
         );
         desiredLauncherIds.add(launcherId);
         changed =
             _writeLinuxPinnedProgramLauncher(
               environment: hostEnvironment,
               launcherCommand: launcherCommand,
-              displayName: _linuxPinnedProgramDisplayName(program.name),
-              iconPath: program.iconPath.toNullable(),
+              displayName: _linuxPinnedProgramDisplayName(program.name.value),
+              iconPath: program.iconPath
+                  .map((value) => value.value)
+                  .toNullable(),
               manifest: _PinnedProgramLauncherManifest(
                 launcherId: launcherId,
-                bottleId: bottle.id,
-                programPath: program.path,
-                programName: program.name,
+                bottleId: bottle.id.value,
+                programPath: program.path.value,
+                programName: program.name.value,
               ),
             ) ||
             changed;
@@ -166,7 +168,7 @@ bool _writeLinuxPinnedProgramLauncher({
 }) {
   final launcherDirectoryPath = _linuxPinnedProgramLauncherDirectoryPath(
     environment: environment,
-    launcherId: manifest.launcherId,
+    launcherId: manifest.launcherId.value,
   );
   final executablePath = _joinPath(launcherDirectoryPath, const [
     _linuxPinnedLauncherExecutableName,
@@ -176,7 +178,7 @@ bool _writeLinuxPinnedProgramLauncher({
   ]);
   final desktopEntryPath = _linuxPinnedProgramDesktopEntryPath(
     environment: environment,
-    launcherId: manifest.launcherId,
+    launcherId: manifest.launcherId.value,
   );
 
   Directory(launcherDirectoryPath).createSync(recursive: true);
@@ -207,7 +209,7 @@ bool _writeLinuxPinnedProgramLauncher({
           displayName: displayName,
           executablePath: executablePath,
           iconPath: iconPath,
-          programPath: manifest.programPath,
+          programPath: manifest.programPath.value,
         ),
       ) ||
       changed;

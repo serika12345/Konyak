@@ -232,7 +232,7 @@ final class ControlledAsyncProgramRunner implements AsyncProgramRunner {
   Future<ProgramRunResult> run(ProgramRunRequest request) {
     requests.add(request);
     final completer = Completer<ProgramRunResult>();
-    _pending[request.bottleId] = completer;
+    _pending[request.bottleId.value] = completer;
     return completer.future;
   }
 
@@ -326,7 +326,7 @@ void _expectMissing(IoResult<Option<BottleRecord>> result) {
   _expectIo(result).match(
     () {},
     (bottle) =>
-        throw TestFailure('Expected bottle to be missing: ${bottle.id}'),
+        throw TestFailure('Expected bottle to be missing: ${bottle.id.value}'),
   );
 }
 
@@ -416,7 +416,7 @@ final class RecordingMacosWineInstaller implements MacosWineInstaller {
   }) {
     lastRequest = request;
     progressSink?.emit(
-      const RuntimeInstallProgress(
+      RuntimeInstallProgress(
         stage: 'test',
         message: 'Installing test runtime...',
         fraction: 0.5,
@@ -440,7 +440,7 @@ final class RecordingLinuxWineInstaller implements LinuxWineInstaller {
   }) {
     lastRequest = request;
     progressSink?.emit(
-      const RuntimeInstallProgress(
+      RuntimeInstallProgress(
         stage: 'test',
         message: 'Installing test runtime...',
         fraction: 0.5,
@@ -1887,7 +1887,7 @@ void _writeAscii(Uint8List bytes, int offset, String value) {
 }
 
 void _writeTestBottleMetadata(BottleRecord bottle) {
-  File(_joinTestPath(bottle.path, const ['metadata.json']))
+  File(_joinTestPath(bottle.path.value, const ['metadata.json']))
     ..createSync(recursive: true)
     ..writeAsStringSync(
       jsonEncode(<String, Object?>{

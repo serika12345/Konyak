@@ -29,7 +29,7 @@ const _d3dMetalOverrideDllNames = <String>[
 void _removeMacosD3DTranslationDllOverrides({required BottleRecord bottle}) {
   for (final windowsDirectory in const <String>['system32', 'syswow64']) {
     for (final dllName in _macosD3DTranslationOverrideDllNames) {
-      final dllPath = _joinPath(bottle.path, <String>[
+      final dllPath = _joinPath(bottle.path.value, <String>[
         'drive_c',
         'windows',
         windowsDirectory,
@@ -56,7 +56,11 @@ void _syncMacosDxvkDllOverrides({
   ]) {
     final (runtimeArch, windowsDirectory) = arch;
     final destinationDirectory = Directory(
-      _joinPath(bottle.path, <String>['drive_c', 'windows', windowsDirectory]),
+      _joinPath(bottle.path.value, <String>[
+        'drive_c',
+        'windows',
+        windowsDirectory,
+      ]),
     )..createSync(recursive: true);
 
     for (final dllName in _dxvkOverrideDllNames) {
@@ -85,7 +89,7 @@ void _syncMacosD3DMetalDllOverrides({
   final hostEnvironment = HostEnvironment(environment);
   final runtimeRoot = _macosWineRuntimeRoot(hostEnvironment);
   final destinationDirectory = Directory(
-    _joinPath(bottle.path, const ['drive_c', 'windows', 'system32']),
+    _joinPath(bottle.path.value, const ['drive_c', 'windows', 'system32']),
   )..createSync(recursive: true);
 
   for (final dllName in _d3dMetalOverrideDllNames) {
@@ -148,7 +152,9 @@ ProgramRunEnvironment _linuxWineEnvironment(BottleRecord bottle) {
 }
 
 ProgramRunEnvironment _linuxWinePrefixEnvironment(BottleRecord bottle) {
-  return ProgramRunEnvironment(<String, String>{'WINEPREFIX': bottle.path});
+  return ProgramRunEnvironment(<String, String>{
+    'WINEPREFIX': bottle.path.value,
+  });
 }
 
 ProgramRunEnvironment _linuxWineLogSuppressionEnvironment() {
@@ -230,7 +236,7 @@ ProgramRunRequest _macosWineCommandRequest({
 }) {
   final hostEnvironment = environment;
   return ProgramRunRequest(
-    bottleId: bottle.id,
+    bottleId: bottle.id.value,
     programPath: command,
     runnerKind: 'macosWine',
     executable: _macosWineExecutable(hostEnvironment),
@@ -240,7 +246,7 @@ ProgramRunRequest _macosWineCommandRequest({
       environment: environment,
       macosMajorVersion: macosMajorVersion,
     ),
-    logPath: _joinPath(bottle.path, const ['logs', 'latest.log']),
+    logPath: _joinPath(bottle.path.value, const ['logs', 'latest.log']),
     workingDirectory: Option.of(_macosWineBinFolder(hostEnvironment)),
   );
 }
@@ -253,7 +259,7 @@ ProgramRunRequest _macosRegistryUpdateRequest({
 }) {
   final hostEnvironment = environment;
   return ProgramRunRequest(
-    bottleId: bottle.id,
+    bottleId: bottle.id.value,
     programPath: 'reg',
     runnerKind: 'macosWineRegistry',
     executable: _macosWineExecutable(hostEnvironment),
@@ -263,7 +269,7 @@ ProgramRunRequest _macosRegistryUpdateRequest({
       environment: environment,
       macosMajorVersion: macosMajorVersion,
     ),
-    logPath: _joinPath(bottle.path, const ['logs', 'latest.log']),
+    logPath: _joinPath(bottle.path.value, const ['logs', 'latest.log']),
     workingDirectory: Option.of(_macosWineBinFolder(hostEnvironment)),
   );
 }
@@ -276,7 +282,7 @@ ProgramRunRequest _macosRegistryQueryRequest({
 }) {
   final hostEnvironment = environment;
   return ProgramRunRequest(
-    bottleId: bottle.id,
+    bottleId: bottle.id.value,
     programPath: 'reg',
     runnerKind: 'macosWineRegistryQuery',
     executable: _macosWineExecutable(hostEnvironment),
@@ -286,7 +292,7 @@ ProgramRunRequest _macosRegistryQueryRequest({
       environment: environment,
       macosMajorVersion: macosMajorVersion,
     ),
-    logPath: _joinPath(bottle.path, const ['logs', 'registry.log']),
+    logPath: _joinPath(bottle.path.value, const ['logs', 'registry.log']),
     workingDirectory: Option.of(_macosWineBinFolder(hostEnvironment)),
   );
 }
@@ -297,7 +303,7 @@ ProgramRunRequest _linuxTerminalCommandRequest({
   String? initialWineCommand,
 }) {
   return ProgramRunRequest(
-    bottleId: bottle.id,
+    bottleId: bottle.id.value,
     programPath: initialWineCommand ?? 'terminal',
     runnerKind: 'terminal',
     executable: 'sh',
@@ -311,8 +317,8 @@ ProgramRunRequest _linuxTerminalCommandRequest({
       ),
     ],
     environment: const ProgramRunEnvironment.empty(),
-    logPath: _joinPath(bottle.path, const ['logs', 'latest.log']),
-    workingDirectory: Option.of(bottle.path),
+    logPath: _joinPath(bottle.path.value, const ['logs', 'latest.log']),
+    workingDirectory: Option.of(bottle.path.value),
   );
 }
 
@@ -331,7 +337,7 @@ ProgramRunRequest _macosTerminalCommandRequest({
   final setupScriptPath = _macosTerminalSetupScriptPath(bottle);
 
   return ProgramRunRequest(
-    bottleId: bottle.id,
+    bottleId: bottle.id.value,
     programPath: initialWineCommand ?? 'terminal',
     runnerKind: 'macosTerminal',
     executable: '/usr/bin/osascript',
@@ -343,7 +349,7 @@ ProgramRunRequest _macosTerminalCommandRequest({
       ),
     ],
     environment: const ProgramRunEnvironment.empty(),
-    logPath: _joinPath(bottle.path, const ['logs', 'latest.log']),
+    logPath: _joinPath(bottle.path.value, const ['logs', 'latest.log']),
   );
 }
 
@@ -354,7 +360,7 @@ ProgramRunRequest _linuxWinetricksCommandRequest({
 }) {
   final hostEnvironment = environment;
   return ProgramRunRequest(
-    bottleId: bottle.id,
+    bottleId: bottle.id.value,
     programPath: verb ?? 'winetricks',
     runnerKind: 'winetricks',
     executable: _linuxWinetricksExecutable(hostEnvironment),
@@ -365,7 +371,7 @@ ProgramRunRequest _linuxWinetricksCommandRequest({
         environment: environment,
       ),
     ),
-    logPath: _joinPath(bottle.path, const ['logs', 'latest.log']),
+    logPath: _joinPath(bottle.path.value, const ['logs', 'latest.log']),
   );
 }
 
@@ -380,7 +386,7 @@ ProgramRunRequest _macosWinetricksCommandRequest({
   final runtimeBin = _macosWineBinFolder(hostEnvironment);
 
   return ProgramRunRequest(
-    bottleId: bottle.id,
+    bottleId: bottle.id.value,
     programPath: verb ?? 'winetricks',
     runnerKind: 'macosWinetricks',
     executable: _macosWinetricksExecutable(hostEnvironment),
@@ -399,7 +405,7 @@ ProgramRunRequest _macosWinetricksCommandRequest({
                 Option.fromNullable(environment['PATH']),
               ),
             ),
-    logPath: _joinPath(bottle.path, const ['logs', 'latest.log']),
+    logPath: _joinPath(bottle.path.value, const ['logs', 'latest.log']),
     workingDirectory: Option.of(runtimeRoot),
   );
 }

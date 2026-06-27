@@ -2,21 +2,22 @@ part of '../../../konyak_cli.dart';
 
 final class ProgramGraphicsBackendHints {
   ProgramGraphicsBackendHints({
-    required this.programPath,
+    required String programPath,
     required this.hostPlatform,
     required Iterable<ProgramGraphicsBackendSignal> signals,
     required Iterable<ProgramGraphicsBackendSuggestion> suggestions,
-  }) : signals = List.unmodifiable(signals),
+  }) : programPath = ProgramPath(programPath),
+       signals = List.unmodifiable(signals),
        suggestions = List.unmodifiable(suggestions);
 
-  final String programPath;
+  final ProgramPath programPath;
   final KonyakHostPlatform hostPlatform;
   final List<ProgramGraphicsBackendSignal> signals;
   final List<ProgramGraphicsBackendSuggestion> suggestions;
 
   Map<String, Object?> toJson() {
     return <String, Object?>{
-      'programPath': programPath,
+      'programPath': programPath.value,
       'hostPlatform': _hostPlatformJsonValue(hostPlatform),
       'signals': signals.map((signal) => signal.toJson()).toList(),
       'suggestions': suggestions
@@ -27,31 +28,34 @@ final class ProgramGraphicsBackendHints {
 }
 
 final class ProgramGraphicsBackendSignal {
-  const ProgramGraphicsBackendSignal({required this.kind, required this.value});
+  ProgramGraphicsBackendSignal({required String kind, required String value})
+    : kind = GraphicsBackendSignalKind(kind),
+      value = GraphicsBackendSignalValue(value);
 
-  final String kind;
-  final String value;
+  final GraphicsBackendSignalKind kind;
+  final GraphicsBackendSignalValue value;
 
   Map<String, Object?> toJson() {
-    return <String, Object?>{'kind': kind, 'value': value};
+    return <String, Object?>{'kind': kind.value, 'value': value.value};
   }
 }
 
 final class ProgramGraphicsBackendSuggestion {
-  const ProgramGraphicsBackendSuggestion({
-    required this.backend,
-    required this.confidence,
+  ProgramGraphicsBackendSuggestion({
+    required String backend,
+    required String confidence,
     required this.reason,
-  });
+  }) : backend = GraphicsBackendKind(backend),
+       confidence = GraphicsBackendConfidence(confidence);
 
-  final String backend;
-  final String confidence;
+  final GraphicsBackendKind backend;
+  final GraphicsBackendConfidence confidence;
   final String reason;
 
   Map<String, Object?> toJson() {
     return <String, Object?>{
-      'backend': backend,
-      'confidence': confidence,
+      'backend': backend.value,
+      'confidence': confidence.value,
       'reason': reason,
     };
   }
@@ -70,19 +74,20 @@ final class ProgramGraphicsBackendHintsInspected
 
 final class ProgramGraphicsBackendHintsMissingProgram
     extends ProgramGraphicsBackendHintsInspectionResult {
-  const ProgramGraphicsBackendHintsMissingProgram(this.programPath);
+  ProgramGraphicsBackendHintsMissingProgram(String programPath)
+    : programPath = ProgramPath(programPath);
 
-  final String programPath;
+  final ProgramPath programPath;
 }
 
 final class ProgramGraphicsBackendHintsInspectionFailed
     extends ProgramGraphicsBackendHintsInspectionResult {
-  const ProgramGraphicsBackendHintsInspectionFailed({
-    required this.programPath,
+  ProgramGraphicsBackendHintsInspectionFailed({
+    required String programPath,
     required this.message,
-  });
+  }) : programPath = ProgramPath(programPath);
 
-  final String programPath;
+  final ProgramPath programPath;
   final String message;
 }
 
@@ -131,8 +136,8 @@ List<ProgramGraphicsBackendSignal> _graphicsBackendSignals(
   }
 
   for (final signal in _graphicsStringSignals) {
-    if (_containsAsciiCaseInsensitive(image.bytes, signal.value)) {
-      addSignal('string', signal.value);
+    if (_containsAsciiCaseInsensitive(image.bytes, signal.value.value)) {
+      addSignal('string', signal.value.value);
     }
   }
 
@@ -158,7 +163,7 @@ List<ProgramGraphicsBackendSuggestion> _graphicsBackendSuggestions({
 
   if (_hasAnyGraphicsSignal(signals, _d3d11Signals)) {
     return switch (hostPlatform) {
-      KonyakHostPlatform.macos => const <ProgramGraphicsBackendSuggestion>[
+      KonyakHostPlatform.macos => <ProgramGraphicsBackendSuggestion>[
         ProgramGraphicsBackendSuggestion(
           backend: 'dxmt',
           confidence: 'medium',
@@ -170,7 +175,7 @@ List<ProgramGraphicsBackendSuggestion> _graphicsBackendSuggestions({
           reason: 'D3D10/D3D11 API usage was detected.',
         ),
       ],
-      KonyakHostPlatform.linux => const <ProgramGraphicsBackendSuggestion>[
+      KonyakHostPlatform.linux => <ProgramGraphicsBackendSuggestion>[
         ProgramGraphicsBackendSuggestion(
           backend: 'dxvk',
           confidence: 'high',
@@ -181,7 +186,7 @@ List<ProgramGraphicsBackendSuggestion> _graphicsBackendSuggestions({
   }
 
   if (_hasAnyGraphicsSignal(signals, _d3d9Signals)) {
-    return const <ProgramGraphicsBackendSuggestion>[
+    return <ProgramGraphicsBackendSuggestion>[
       ProgramGraphicsBackendSuggestion(
         backend: 'dxvk',
         confidence: 'high',
@@ -191,7 +196,7 @@ List<ProgramGraphicsBackendSuggestion> _graphicsBackendSuggestions({
   }
 
   if (_hasAnyGraphicsSignal(signals, _nativeGraphicsSignals)) {
-    return const <ProgramGraphicsBackendSuggestion>[
+    return <ProgramGraphicsBackendSuggestion>[
       ProgramGraphicsBackendSuggestion(
         backend: 'wineDefault',
         confidence: 'medium',
@@ -207,7 +212,7 @@ bool _hasAnyGraphicsSignal(
   List<ProgramGraphicsBackendSignal> signals,
   Set<String> expectedValues,
 ) {
-  return signals.any((signal) => expectedValues.contains(signal.value));
+  return signals.any((signal) => expectedValues.contains(signal.value.value));
 }
 
 bool _containsAsciiCaseInsensitive(Uint8List bytes, String value) {
@@ -254,7 +259,7 @@ const _graphicsImportDllNames = <String>{
   'nvngx.dll',
 };
 
-const _graphicsStringSignals = <ProgramGraphicsBackendSignal>[
+final _graphicsStringSignals = <ProgramGraphicsBackendSignal>[
   ProgramGraphicsBackendSignal(kind: 'string', value: 'd3d12createdevice'),
   ProgramGraphicsBackendSignal(kind: 'string', value: 'd3d11createdevice'),
   ProgramGraphicsBackendSignal(kind: 'string', value: 'direct3dcreate9'),

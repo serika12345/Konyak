@@ -28,7 +28,7 @@ List<_RegistryValueUpdate> _runtimeSettingsRegistryUpdates({
   if (effectiveRuntimeSettings.buildVersion !=
       currentRuntimeSettings.buildVersion) {
     final windowsVersion = _windowsVersionForBuildVersion(
-      effectiveRuntimeSettings.buildVersion,
+      effectiveRuntimeSettings.buildVersion.value,
     );
     windowsVersion.match(() {}, (version) {
       updates.addAll(_windowsVersionRegistryUpdates(version));
@@ -40,7 +40,7 @@ List<_RegistryValueUpdate> _runtimeSettingsRegistryUpdates({
           key: r'HKLM\Software\Microsoft\Windows NT\CurrentVersion',
           name: 'CurrentBuild',
           type: 'REG_SZ',
-          data: effectiveRuntimeSettings.buildVersion.toString(),
+          data: effectiveRuntimeSettings.buildVersion.value.toString(),
         ),
       )
       ..add(
@@ -48,7 +48,7 @@ List<_RegistryValueUpdate> _runtimeSettingsRegistryUpdates({
           key: r'HKLM\Software\Microsoft\Windows NT\CurrentVersion',
           name: 'CurrentBuildNumber',
           type: 'REG_SZ',
-          data: effectiveRuntimeSettings.buildVersion.toString(),
+          data: effectiveRuntimeSettings.buildVersion.value.toString(),
         ),
       );
   }
@@ -73,7 +73,7 @@ List<_RegistryValueUpdate> _runtimeSettingsRegistryUpdates({
         key: r'HKCU\Control Panel\Desktop',
         name: 'LogPixels',
         type: 'REG_DWORD',
-        data: effectiveRuntimeSettings.dpiScaling.toString(),
+        data: effectiveRuntimeSettings.dpiScaling.value.toString(),
       ),
     );
   }

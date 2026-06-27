@@ -10,7 +10,7 @@ ProgramRunRequest _macosWineRequest({
   final hostEnvironment = environment;
   final logging = _programSettingsLogging(programSettings);
   return ProgramRunRequest(
-    bottleId: bottle.id,
+    bottleId: bottle.id.value,
     programPath: programPath,
     runnerKind: 'macosWine',
     executable: _macosWineExecutable(hostEnvironment),
@@ -27,7 +27,7 @@ ProgramRunRequest _macosWineRequest({
         macosMajorVersion: macosMajorVersion,
       ).toMap(),
       ..._programSettingsEnvironment(programSettings).toMap(),
-      'WINEPREFIX': bottle.path,
+      'WINEPREFIX': bottle.path.value,
     }),
     logPath: _programSettingsLogPath(bottle: bottle, settings: programSettings),
     createLogFile: logging.createLogFile,
@@ -42,7 +42,7 @@ ProgramRunRequest _macosWinebootRequest({
 }) {
   final hostEnvironment = environment;
   return ProgramRunRequest(
-    bottleId: bottle.id,
+    bottleId: bottle.id.value,
     programPath: 'wineboot',
     runnerKind: 'macosWine',
     executable: _macosWineExecutable(hostEnvironment),
@@ -52,7 +52,7 @@ ProgramRunRequest _macosWinebootRequest({
       environment: environment,
       macosMajorVersion: macosMajorVersion,
     ),
-    logPath: _joinPath(bottle.path, const ['logs', 'prefix-init.log']),
+    logPath: _joinPath(bottle.path.value, const ['logs', 'prefix-init.log']),
     workingDirectory: Option.of(_macosWineBinFolder(hostEnvironment)),
   );
 }
@@ -64,7 +64,7 @@ ProgramRunRequest _macosWinebootRestartRequest({
 }) {
   final hostEnvironment = environment;
   return ProgramRunRequest(
-    bottleId: bottle.id,
+    bottleId: bottle.id.value,
     programPath: 'wineboot',
     runnerKind: 'macosWine',
     executable: _macosWineExecutable(hostEnvironment),
@@ -74,7 +74,7 @@ ProgramRunRequest _macosWinebootRestartRequest({
       environment: environment,
       macosMajorVersion: macosMajorVersion,
     ),
-    logPath: _joinPath(bottle.path, const ['logs', 'latest.log']),
+    logPath: _joinPath(bottle.path.value, const ['logs', 'latest.log']),
     workingDirectory: Option.of(_macosWineBinFolder(hostEnvironment)),
   );
 }
@@ -87,7 +87,7 @@ ProgramRunRequest _macosWineMonoInstallRequest({
   final hostEnvironment = environment;
   final runtimeRoot = _macosWineRuntimeRoot(hostEnvironment);
   return ProgramRunRequest(
-    bottleId: bottle.id,
+    bottleId: bottle.id.value,
     programPath: 'wine-mono',
     runnerKind: 'macosWine',
     executable: _macosWineExecutable(hostEnvironment),
@@ -103,7 +103,10 @@ ProgramRunRequest _macosWineMonoInstallRequest({
       environment: environment,
       macosMajorVersion: macosMajorVersion,
     ),
-    logPath: _joinPath(bottle.path, const ['logs', 'wine-mono-install.log']),
+    logPath: _joinPath(bottle.path.value, const [
+      'logs',
+      'wine-mono-install.log',
+    ]),
     workingDirectory: Option.of(_macosWineBinFolder(hostEnvironment)),
   );
 }
@@ -115,7 +118,7 @@ ProgramRunRequest _macosWineserverKillRequest({
 }) {
   final hostEnvironment = environment;
   return ProgramRunRequest(
-    bottleId: bottle.id,
+    bottleId: bottle.id.value,
     programPath: 'wineserver',
     runnerKind: 'macosWineserver',
     executable: _macosWineserverExecutable(hostEnvironment),
@@ -125,7 +128,10 @@ ProgramRunRequest _macosWineserverKillRequest({
       environment: environment,
       macosMajorVersion: macosMajorVersion,
     ),
-    logPath: _joinPath(bottle.path, const ['logs', 'wineserver-kill.log']),
+    logPath: _joinPath(bottle.path.value, const [
+      'logs',
+      'wineserver-kill.log',
+    ]),
     workingDirectory: Option.of(_macosWineBinFolder(hostEnvironment)),
   );
 }
@@ -140,7 +146,7 @@ ProgramRunRequest _macosWinedbgRequest({
 }) {
   final hostEnvironment = environment;
   return ProgramRunRequest(
-    bottleId: bottle.id,
+    bottleId: bottle.id.value,
     programPath: 'winedbg',
     runnerKind: 'macosWinedbg',
     executable: _macosWineExecutable(hostEnvironment),
@@ -150,7 +156,7 @@ ProgramRunRequest _macosWinedbgRequest({
       environment: environment,
       macosMajorVersion: macosMajorVersion,
     ),
-    logPath: _joinPath(bottle.path, <String>['logs', logName]),
+    logPath: _joinPath(bottle.path.value, <String>['logs', logName]),
     workingDirectory: Option.of(_macosWineBinFolder(hostEnvironment)),
   );
 }
@@ -183,13 +189,13 @@ ProgramRunEnvironment _macosWineEnvironment({
     ..._macosWineWindowsSearchPaths(runtimeRoot),
   ];
   final wineEnvironment = <String, String>{
-    'WINEPREFIX': bottle.path,
+    'WINEPREFIX': bottle.path.value,
     'WINEDEBUG': 'fixme-all',
     'GST_DEBUG': '1',
     'MVK_CONFIG_LOG_LEVEL': '0',
     'GST_PLUGIN_SYSTEM_PATH': _macosGstreamerPluginPath(runtimeRoot),
     'GST_PLUGIN_SCANNER': _macosGstreamerPluginScanner(runtimeRoot),
-    'GST_REGISTRY': _macosGstreamerRegistryPath(bottle.path),
+    'GST_REGISTRY': _macosGstreamerRegistryPath(bottle.path.value),
     'WINEDATADIR': _macosWineDataDir(runtimeRoot),
     'WINEDLLPATH': wineDllPathEntries.join(':'),
     'WINEPATH': _macosWineWindowsSearchPath(wineSearchPathEntries),

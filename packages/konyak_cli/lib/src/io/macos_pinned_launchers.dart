@@ -39,11 +39,11 @@ void _synchronizeMacosPinnedProgramLaunchers({
     for (final bottle in bottles) {
       for (final program in bottle.pinnedPrograms) {
         final launcherId = _pinnedProgramLauncherId(
-          bottleId: bottle.id,
-          programPath: program.path,
+          bottleId: bottle.id.value,
+          programPath: program.path.value,
         );
         final displayName = _uniqueMacosLauncherDisplayName(
-          program.name,
+          program.name.value,
           usedDisplayNames: usedDisplayNames,
           usedBundleNames: usedBundleNames,
         );
@@ -56,12 +56,12 @@ void _synchronizeMacosPinnedProgramLaunchers({
           bundlePath: bundlePath,
           launcherCommand: launcherCommand,
           displayName: displayName,
-          iconPath: program.iconPath.toNullable(),
+          iconPath: program.iconPath.map((value) => value.value).toNullable(),
           manifest: _PinnedProgramLauncherManifest(
             launcherId: launcherId,
-            bottleId: bottle.id,
-            programPath: program.path,
-            programName: program.name,
+            bottleId: bottle.id.value,
+            programPath: program.path.value,
+            programName: program.name.value,
           ),
         );
       }

@@ -2,13 +2,16 @@ part of '../../../konyak_cli.dart';
 
 class _RuntimeStackSourceArchiveBundle {
   _RuntimeStackSourceArchiveBundle({
-    required this.wineArchivePath,
+    required String wineArchivePath,
     required Iterable<String> componentArchivePaths,
     required this.componentVersions,
-  }) : componentArchivePaths = componentArchivePaths.toIList();
+  }) : wineArchivePath = RuntimeArchivePath(wineArchivePath),
+       componentArchivePaths = componentArchivePaths
+           .map(RuntimeArchivePath.new)
+           .toIList();
 
-  final String wineArchivePath;
-  final IList<String> componentArchivePaths;
+  final RuntimeArchivePath wineArchivePath;
+  final IList<RuntimeArchivePath> componentArchivePaths;
   final RuntimeComponentVersions componentVersions;
 }
 

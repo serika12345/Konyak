@@ -6,12 +6,14 @@ CliResult? _handlePinnedProgramCommand(
 ) {
   final programPinRequest = _parseJsonProgramPinRequest(arguments);
   if (programPinRequest != null) {
-    if (!_isSupportedProgramPath(programPinRequest.programPath)) {
+    if (!_isSupportedProgramPath(programPinRequest.programPath.value)) {
       return _jsonError(
         exitCode: 65,
         code: 'unsupportedProgramType',
         message: 'Program type is not supported.',
-        extra: <String, Object?>{'programPath': programPinRequest.programPath},
+        extra: <String, Object?>{
+          'programPath': programPinRequest.programPath.value,
+        },
       );
     }
 
@@ -39,12 +41,14 @@ CliResult? _handlePinnedProgramCommand(
 
     return switch (pinResult) {
       ProgramPinned(:final bottle) => _bottleJsonResult(bottle),
-      ProgramPinMissing(:final bottleId) => _bottleNotFoundError(bottleId),
+      ProgramPinMissing(:final bottleId) => _bottleNotFoundError(
+        bottleId.value,
+      ),
       ProgramPinConflict(:final programPath) => _jsonError(
         exitCode: 73,
         code: 'programAlreadyPinned',
         message: 'Program is already pinned.',
-        extra: <String, Object?>{'programPath': programPath},
+        extra: <String, Object?>{'programPath': programPath.value},
       ),
       ProgramPinFailed(:final message) => _bottleRepositoryFailureJsonResult(
         message,

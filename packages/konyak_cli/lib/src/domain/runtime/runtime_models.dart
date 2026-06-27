@@ -2,33 +2,35 @@ part of '../../../konyak_cli.dart';
 
 class RuntimeDefinition {
   RuntimeDefinition({
-    required this.id,
-    required this.name,
-    required this.platform,
-    required this.architecture,
-    required this.runnerKind,
+    required String id,
+    required String name,
+    required String platform,
+    required String architecture,
+    required String runnerKind,
     required this.isBundled,
     required this.isUpdateable,
     Option<String> distributionKind = const Option.none(),
     Option<String> archiveUrl = const Option.none(),
     Option<String> versionUrl = const Option.none(),
-  }) : distributionKind = _optionalRuntimeModelValue(
-         distributionKind,
-         'distributionKind',
-       ),
-       archiveUrl = _optionalRuntimeModelValue(archiveUrl, 'archiveUrl'),
-       versionUrl = _optionalRuntimeModelValue(versionUrl, 'versionUrl');
+  }) : id = RuntimeId(id),
+       name = RuntimeName(name),
+       platform = RuntimePlatformName(platform),
+       architecture = RuntimeArchitecture(architecture),
+       runnerKind = RunnerKind(runnerKind),
+       distributionKind = distributionKind.map(RuntimeDistributionKind.new),
+       archiveUrl = archiveUrl.map(RuntimeArchiveUrl.new),
+       versionUrl = versionUrl.map(RuntimeVersionUrl.new);
 
-  final String id;
-  final String name;
-  final String platform;
-  final String architecture;
-  final String runnerKind;
+  final RuntimeId id;
+  final RuntimeName name;
+  final RuntimePlatformName platform;
+  final RuntimeArchitecture architecture;
+  final RunnerKind runnerKind;
   final bool isBundled;
   final bool isUpdateable;
-  final Option<String> distributionKind;
-  final Option<String> archiveUrl;
-  final Option<String> versionUrl;
+  final Option<RuntimeDistributionKind> distributionKind;
+  final Option<RuntimeArchiveUrl> archiveUrl;
+  final Option<RuntimeVersionUrl> versionUrl;
 }
 
 class InstalledRuntimeState {
@@ -37,15 +39,11 @@ class InstalledRuntimeState {
     Option<String> applicationSupportPath = const Option.none(),
     Option<String> libraryPath = const Option.none(),
     Option<String> executablePath = const Option.none(),
-  }) : applicationSupportPath = _optionalRuntimeModelValue(
-         applicationSupportPath,
-         'applicationSupportPath',
+  }) : applicationSupportPath = applicationSupportPath.map(
+         RuntimeComponentPath.new,
        ),
-       libraryPath = _optionalRuntimeModelValue(libraryPath, 'libraryPath'),
-       executablePath = _optionalRuntimeModelValue(
-         executablePath,
-         'executablePath',
-       );
+       libraryPath = libraryPath.map(RuntimeComponentPath.new),
+       executablePath = executablePath.map(RuntimeComponentPath.new);
 
   const InstalledRuntimeState.unknown()
     : isInstalled = const Option.none(),
@@ -54,9 +52,9 @@ class InstalledRuntimeState {
       executablePath = const Option.none();
 
   final Option<bool> isInstalled;
-  final Option<String> applicationSupportPath;
-  final Option<String> libraryPath;
-  final Option<String> executablePath;
+  final Option<RuntimeComponentPath> applicationSupportPath;
+  final Option<RuntimeComponentPath> libraryPath;
+  final Option<RuntimeComponentPath> executablePath;
 }
 
 class RuntimeCapabilities {
@@ -69,11 +67,11 @@ class RuntimeCapabilities {
 
 class RuntimeRecord {
   RuntimeRecord({
-    required this.id,
-    required this.name,
-    required this.platform,
-    required this.architecture,
-    required this.runnerKind,
+    required String id,
+    required String name,
+    required String platform,
+    required String architecture,
+    required String runnerKind,
     required this.isBundled,
     required this.isUpdateable,
     Option<String> distributionKind = const Option.none(),
@@ -84,21 +82,19 @@ class RuntimeRecord {
     Option<String> archiveUrl = const Option.none(),
     Option<String> versionUrl = const Option.none(),
     this.stack = const Option.none(),
-  }) : distributionKind = _optionalRuntimeModelValue(
-         distributionKind,
-         'distributionKind',
+  }) : id = RuntimeId(id),
+       name = RuntimeName(name),
+       platform = RuntimePlatformName(platform),
+       architecture = RuntimeArchitecture(architecture),
+       runnerKind = RunnerKind(runnerKind),
+       distributionKind = distributionKind.map(RuntimeDistributionKind.new),
+       applicationSupportPath = applicationSupportPath.map(
+         RuntimeComponentPath.new,
        ),
-       applicationSupportPath = _optionalRuntimeModelValue(
-         applicationSupportPath,
-         'applicationSupportPath',
-       ),
-       libraryPath = _optionalRuntimeModelValue(libraryPath, 'libraryPath'),
-       executablePath = _optionalRuntimeModelValue(
-         executablePath,
-         'executablePath',
-       ),
-       archiveUrl = _optionalRuntimeModelValue(archiveUrl, 'archiveUrl'),
-       versionUrl = _optionalRuntimeModelValue(versionUrl, 'versionUrl');
+       libraryPath = libraryPath.map(RuntimeComponentPath.new),
+       executablePath = executablePath.map(RuntimeComponentPath.new),
+       archiveUrl = archiveUrl.map(RuntimeArchiveUrl.new),
+       versionUrl = versionUrl.map(RuntimeVersionUrl.new);
 
   RuntimeRecord.fromParts({
     required RuntimeDefinition definition,
@@ -121,29 +117,29 @@ class RuntimeRecord {
        versionUrl = definition.versionUrl,
        stack = capabilities.stack;
 
-  final String id;
-  final String name;
-  final String platform;
-  final String architecture;
-  final String runnerKind;
+  final RuntimeId id;
+  final RuntimeName name;
+  final RuntimePlatformName platform;
+  final RuntimeArchitecture architecture;
+  final RunnerKind runnerKind;
   final bool isBundled;
   final bool isUpdateable;
-  final Option<String> distributionKind;
+  final Option<RuntimeDistributionKind> distributionKind;
   final Option<bool> isInstalled;
-  final Option<String> applicationSupportPath;
-  final Option<String> libraryPath;
-  final Option<String> executablePath;
-  final Option<String> archiveUrl;
-  final Option<String> versionUrl;
+  final Option<RuntimeComponentPath> applicationSupportPath;
+  final Option<RuntimeComponentPath> libraryPath;
+  final Option<RuntimeComponentPath> executablePath;
+  final Option<RuntimeArchiveUrl> archiveUrl;
+  final Option<RuntimeVersionUrl> versionUrl;
   final Option<RuntimeStack> stack;
 
   Map<String, Object?> toJson() {
     return <String, Object?>{
-      'id': id,
-      'name': name,
-      'platform': platform,
-      'architecture': architecture,
-      'runnerKind': runnerKind,
+      'id': id.value,
+      'name': name.value,
+      'platform': platform.value,
+      'architecture': architecture.value,
+      'runnerKind': runnerKind.value,
       'isBundled': isBundled,
       'isUpdateable': isUpdateable,
       ..._runtimeJsonStringField('distributionKind', distributionKind),
@@ -167,17 +163,20 @@ class RuntimeRecord {
 
 class RuntimeStack {
   RuntimeStack({
-    required this.id,
-    required this.name,
-    required this.compatibilityTarget,
+    required String id,
+    required String name,
+    required String compatibilityTarget,
     required Iterable<RuntimeStackComponent> components,
     Iterable<RuntimeStackBackend> backends = const <RuntimeStackBackend>[],
-  }) : components = List.unmodifiable(components),
+  }) : id = RuntimeStackId(id),
+       name = RuntimeStackName(name),
+       compatibilityTarget = RuntimeCompatibilityTarget(compatibilityTarget),
+       components = List.unmodifiable(components),
        backends = List.unmodifiable(backends);
 
-  final String id;
-  final String name;
-  final String compatibilityTarget;
+  final RuntimeStackId id;
+  final RuntimeStackName name;
+  final RuntimeCompatibilityTarget compatibilityTarget;
   final List<RuntimeStackComponent> components;
   final List<RuntimeStackBackend> backends;
 
@@ -190,9 +189,9 @@ class RuntimeStack {
   Map<String, Object?> toJson() {
     return <String, Object?>{
       'schemaVersion': runtimeStackSchemaVersion,
-      'id': id,
-      'name': name,
-      'compatibilityTarget': compatibilityTarget,
+      'id': id.value,
+      'name': name.value,
+      'compatibilityTarget': compatibilityTarget.value,
       'isComplete': isComplete,
       'components': components
           .map((component) => component.toJson())
@@ -207,22 +206,31 @@ class RuntimeStack {
 
 class RuntimeStackBackend {
   RuntimeStackBackend({
-    required this.id,
-    required this.name,
-    required this.role,
+    required String id,
+    required String name,
+    required String role,
     required Iterable<String> componentIds,
     required Iterable<String> missingComponentIds,
     required Iterable<String> missingPaths,
-  }) : componentIds = List.unmodifiable(componentIds),
-       missingComponentIds = List.unmodifiable(missingComponentIds),
-       missingPaths = List.unmodifiable(missingPaths);
+  }) : id = RuntimeBackendId(id),
+       name = RuntimeName(name),
+       role = RuntimeRole(role),
+       componentIds = List.unmodifiable(
+         componentIds.map(RuntimeComponentId.new),
+       ),
+       missingComponentIds = List.unmodifiable(
+         missingComponentIds.map(RuntimeComponentId.new),
+       ),
+       missingPaths = List.unmodifiable(
+         missingPaths.map(RuntimeMissingPath.new),
+       );
 
-  final String id;
-  final String name;
-  final String role;
-  final List<String> componentIds;
-  final List<String> missingComponentIds;
-  final List<String> missingPaths;
+  final RuntimeBackendId id;
+  final RuntimeName name;
+  final RuntimeRole role;
+  final List<RuntimeComponentId> componentIds;
+  final List<RuntimeComponentId> missingComponentIds;
+  final List<RuntimeMissingPath> missingPaths;
 
   bool get isAvailable {
     return missingComponentIds.isEmpty && missingPaths.isEmpty;
@@ -230,37 +238,44 @@ class RuntimeStackBackend {
 
   Map<String, Object?> toJson() {
     return <String, Object?>{
-      'id': id,
-      'name': name,
-      'role': role,
+      'id': id.value,
+      'name': name.value,
+      'role': role.value,
       'isAvailable': isAvailable,
-      'componentIds': componentIds,
-      'missingComponentIds': missingComponentIds,
-      'missingPaths': missingPaths,
+      'componentIds': componentIds.map((value) => value.value).toList(),
+      'missingComponentIds': missingComponentIds
+          .map((value) => value.value)
+          .toList(),
+      'missingPaths': missingPaths.map((value) => value.value).toList(),
     };
   }
 }
 
 class RuntimeStackComponent {
   RuntimeStackComponent({
-    required this.id,
-    required this.name,
-    required this.role,
+    required String id,
+    required String name,
+    required String role,
     required this.isRequired,
     required Iterable<String> paths,
     required Iterable<String> missingPaths,
     Option<String> version = const Option.none(),
-  }) : paths = List.unmodifiable(paths),
-       missingPaths = List.unmodifiable(missingPaths),
-       version = _optionalRuntimeModelValue(version, 'version');
+  }) : id = RuntimeComponentId(id),
+       name = RuntimeName(name),
+       role = RuntimeRole(role),
+       paths = List.unmodifiable(paths.map(RuntimeComponentPath.new)),
+       missingPaths = List.unmodifiable(
+         missingPaths.map(RuntimeMissingPath.new),
+       ),
+       version = version.map(RuntimeVersion.new);
 
-  final String id;
-  final String name;
-  final String role;
+  final RuntimeComponentId id;
+  final RuntimeName name;
+  final RuntimeRole role;
   final bool isRequired;
-  final List<String> paths;
-  final List<String> missingPaths;
-  final Option<String> version;
+  final List<RuntimeComponentPath> paths;
+  final List<RuntimeMissingPath> missingPaths;
+  final Option<RuntimeVersion> version;
 
   bool get isInstalled {
     return missingPaths.isEmpty;
@@ -268,46 +283,44 @@ class RuntimeStackComponent {
 
   Map<String, Object?> toJson() {
     return <String, Object?>{
-      'id': id,
-      'name': name,
-      'role': role,
+      'id': id.value,
+      'name': name.value,
+      'role': role.value,
       'isRequired': isRequired,
       'isInstalled': isInstalled,
-      'paths': paths,
-      'missingPaths': missingPaths,
+      'paths': paths.map((value) => value.value).toList(),
+      'missingPaths': missingPaths.map((value) => value.value).toList(),
       ..._runtimeJsonStringField('version', version),
     };
   }
 }
 
-Map<String, Object?> _runtimeJsonStringField(String key, Option<String> value) {
+Map<String, Object?> _runtimeJsonStringField(
+  String key,
+  Option<StringDomainValueObject> value,
+) {
   return value.match(
     () => const <String, Object?>{},
-    (item) => <String, Object?>{key: item},
+    (item) => <String, Object?>{key: item.value},
   );
-}
-
-Option<String> _optionalRuntimeModelValue(
-  Option<String> value,
-  String fieldName,
-) {
-  return value.map((item) => _requiredNonBlankDomainString(item, fieldName));
 }
 
 class RuntimeSourceManifest {
   RuntimeSourceManifest({
-    required this.runtimeId,
-    required this.stackId,
+    required String runtimeId,
+    required String stackId,
     required Iterable<RuntimeSourceComponent> components,
-  }) : components = List.unmodifiable(components);
+  }) : runtimeId = RuntimeId(runtimeId),
+       stackId = RuntimeStackId(stackId),
+       components = List.unmodifiable(components);
 
-  final String runtimeId;
-  final String stackId;
+  final RuntimeId runtimeId;
+  final RuntimeStackId stackId;
   final List<RuntimeSourceComponent> components;
 
   Option<RuntimeSourceComponent> componentById(String id) {
     for (final component in components) {
-      if (component.id == id) {
+      if (component.id.value == id) {
         return Option.of(component);
       }
     }
@@ -317,15 +330,18 @@ class RuntimeSourceManifest {
 }
 
 class RuntimeSourceComponent {
-  const RuntimeSourceComponent({
-    required this.id,
-    required this.version,
-    required this.archiveUrl,
-    required this.sha256,
-  });
+  RuntimeSourceComponent({
+    required String id,
+    required String version,
+    required String archiveUrl,
+    required String sha256,
+  }) : id = RuntimeSourceComponentId(id),
+       version = RuntimeSourceComponentVersion(version),
+       archiveUrl = RuntimeArchiveUrl(archiveUrl),
+       sha256 = RuntimeArchiveChecksumValue(sha256);
 
-  final String id;
-  final String version;
-  final String archiveUrl;
-  final String sha256;
+  final RuntimeSourceComponentId id;
+  final RuntimeSourceComponentVersion version;
+  final RuntimeArchiveUrl archiveUrl;
+  final RuntimeArchiveChecksumValue sha256;
 }

@@ -12,13 +12,13 @@ class _FileBottleRepositoryArchiveOperations {
   BottleArchiveExportResult exportBottleArchive(
     BottleArchiveExportRequest request,
   ) {
-    return _findBottle(request.bottleId).fold(
+    return _findBottle(request.bottleId.value).fold(
       BottleArchiveExportFailed.new,
       (bottle) => bottle.match(
-        () => BottleArchiveExportMissing(request.bottleId),
+        () => BottleArchiveExportMissing(request.bottleId.value),
         (bottle) => _exportBottleArchive(
           bottle: bottle,
-          archivePath: request.archivePath,
+          archivePath: request.archivePath.value,
         ),
       ),
     );
@@ -28,7 +28,7 @@ class _FileBottleRepositoryArchiveOperations {
     BottleArchiveImportRequest request,
   ) {
     return _importBottleArchive(
-      archivePath: request.archivePath,
+      archivePath: request.archivePath.value,
       bottleDirectory: bottleDirectory,
       hasBottle: (bottleId) => _findBottle(
         bottleId,

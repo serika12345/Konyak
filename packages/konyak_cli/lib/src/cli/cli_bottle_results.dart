@@ -6,7 +6,7 @@ CliResult _bottleArchiveExportJsonResult(BottleArchiveExportResult result) {
       'bottleArchive': archive.toJson(),
     }),
     BottleArchiveExportMissing(:final bottleId) => _bottleNotFoundError(
-      bottleId,
+      bottleId.value,
     ),
     BottleArchiveExportFailed(:final message) => _jsonError(
       exitCode: 75,
@@ -23,7 +23,7 @@ CliResult _bottleArchiveImportJsonResult(BottleArchiveImportResult result) {
       exitCode: 73,
       code: 'bottleAlreadyExists',
       message: 'Bottle already exists.',
-      extra: <String, Object?>{'bottleId': bottleId},
+      extra: <String, Object?>{'bottleId': bottleId.value},
     ),
     BottleArchiveImportFailed(:final message) => _jsonError(
       exitCode: 65,

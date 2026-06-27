@@ -32,7 +32,7 @@ final class _RuntimeWineInstallFromSourceManifest
     required this.preserveExistingRuntimeFiles,
   });
 
-  final String sourceManifest;
+  final RuntimeSourceManifestUrl sourceManifest;
   final RuntimeSourceManifestSignature sourceManifestSignature;
   final bool preserveExistingRuntimeFiles;
 }
@@ -41,13 +41,13 @@ final class _RuntimeWineInstallFromArchive extends _RuntimeWineInstallPlan {
   _RuntimeWineInstallFromArchive({
     required this.archivePath,
     required this.archiveSha256,
-    required Iterable<String> componentArchivePaths,
+    required Iterable<RuntimeArchivePath> componentArchivePaths,
     required this.preserveExistingRuntimeFiles,
   }) : componentArchivePaths = componentArchivePaths.toIList();
 
-  final String archivePath;
+  final RuntimeArchivePath archivePath;
   final RuntimeArchiveChecksum archiveSha256;
-  final IList<String> componentArchivePaths;
+  final IList<RuntimeArchivePath> componentArchivePaths;
   final bool preserveExistingRuntimeFiles;
 }
 
@@ -56,14 +56,14 @@ final class _RuntimeWineInstallDownloadArchive extends _RuntimeWineInstallPlan {
     required this.archiveUrl,
     required this.archiveFileName,
     required this.archiveSha256,
-    required Iterable<String> componentArchivePaths,
+    required Iterable<RuntimeArchivePath> componentArchivePaths,
     required this.preserveExistingRuntimeFiles,
   }) : componentArchivePaths = componentArchivePaths.toIList();
 
-  final String archiveUrl;
+  final RuntimeArchiveUrl archiveUrl;
   final String archiveFileName;
   final RuntimeArchiveChecksum archiveSha256;
-  final IList<String> componentArchivePaths;
+  final IList<RuntimeArchivePath> componentArchivePaths;
   final bool preserveExistingRuntimeFiles;
 }
 
@@ -153,7 +153,7 @@ _RuntimeWineInstallPlan _runtimeWineInstallPlan({
       _RuntimeWineInstallDownloadArchive(
         archiveUrl: archiveUrl,
         archiveFileName: _fileNameFromUrl(
-          archiveUrl,
+          archiveUrl.value,
         ).match(() => defaultArchiveFileName, (value) => value),
         archiveSha256: archiveChecksum,
         componentArchivePaths: componentArchivePaths,

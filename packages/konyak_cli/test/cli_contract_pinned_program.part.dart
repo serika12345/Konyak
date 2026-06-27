@@ -39,7 +39,9 @@ void definePinnedProgramContractTests() {
       },
     });
     expect(
-      _expectFound(repository.findBottle('steam')).pinnedPrograms.single.path,
+      _expectFound(
+        repository.findBottle('steam'),
+      ).pinnedPrograms.single.path.value,
       '/downloads/Steam.exe',
     );
   });
@@ -771,11 +773,11 @@ void definePinnedProgramContractTests() {
     });
     final repository = FileBottleRepository(dataHome: tempDirectory.path);
     final createResult = repository.createBottle(
-      const BottleCreateRequest(name: 'Steam', windowsVersion: 'win10'),
+      BottleCreateRequest(name: 'Steam', windowsVersion: 'win10'),
     );
     expect(createResult, isA<BottleCreated>());
     final bottle = (createResult as BottleCreated).bottle;
-    final shortcutPath = _joinTestPath(bottle.path, const [
+    final shortcutPath = _joinTestPath(bottle.path.value, const [
       'drive_c',
       'ProgramData',
       'Microsoft',
@@ -789,7 +791,7 @@ void definePinnedProgramContractTests() {
       ..writeAsStringSync('shortcut');
     final pinResult = repository.pinProgram(
       ProgramPinRequest(
-        bottleId: bottle.id,
+        bottleId: bottle.id.value,
         name: 'Steam',
         programPath: shortcutPath,
       ),
@@ -811,7 +813,7 @@ void definePinnedProgramContractTests() {
     final metadata =
         jsonDecode(
               File(
-                _joinTestPath(bottle.path, const ['metadata.json']),
+                _joinTestPath(bottle.path.value, const ['metadata.json']),
               ).readAsStringSync(),
             )
             as Map<String, Object?>;
@@ -1147,11 +1149,11 @@ void definePinnedProgramContractTests() {
     final payload = jsonDecode(result.stdout) as Map<String, Object?>;
     expect(payload['schemaVersion'], 1);
     expect(payload['run'], isA<Map<String, Object?>>());
-    expect(runner.lastRequest?.bottleId, 'steam');
-    expect(runner.lastRequest?.programPath, '/downloads/Steam.exe');
-    expect(runner.lastRequest?.runnerKind, 'macosWine');
+    expect(runner.lastRequest?.bottleId.value, 'steam');
+    expect(runner.lastRequest?.programPath.value, '/downloads/Steam.exe');
+    expect(runner.lastRequest?.runnerKind.value, 'macosWine');
     expect(runner.lastRequest?.createLogFile, isTrue);
-    expect(runner.lastRequest?.logPath, '/tmp/pinned-steam.cxlog');
+    expect(runner.lastRequest?.logPath.value, '/tmp/pinned-steam.cxlog');
     expect(
       runner.lastRequest?.environment.toMap(),
       containsPair('WINEDEBUG', '+relay'),
@@ -1507,7 +1509,9 @@ void definePinnedProgramContractTests() {
       },
     });
     expect(
-      _expectFound(repository.findBottle('steam')).pinnedPrograms.single.name,
+      _expectFound(
+        repository.findBottle('steam'),
+      ).pinnedPrograms.single.name.value,
       'Steam Client',
     );
   });

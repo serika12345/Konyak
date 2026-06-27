@@ -14,7 +14,7 @@ class StaticBottleCatalog implements BottleCatalog {
   @override
   IoResult<Option<BottleRecord>> findBottle(String id) {
     for (final bottle in _bottles) {
-      if (bottle.id == id) {
+      if (bottle.id.value == id) {
         return Right<String, Option<BottleRecord>>(Option.of(bottle));
       }
     }
@@ -32,7 +32,7 @@ class MemoryBottleRepository implements BottleRepository {
     ProgramMetadataExtractor programMetadataExtractor =
         const DartIoProgramMetadataExtractor(),
   }) : _bottles = <String, BottleRecord>{
-         for (final bottle in bottles) bottle.id: bottle,
+         for (final bottle in bottles) bottle.id.value: bottle,
        },
        _programSettings = Map<String, ProgramSettingsRecord>.of(
          programSettings,
@@ -55,12 +55,12 @@ class MemoryBottleRepository implements BottleRepository {
                 programMetadataExtractor: _programMetadataExtractor,
               );
               if (updated != bottle) {
-                _bottles[bottle.id] = updated;
+                _bottles[bottle.id.value] = updated;
               }
               return updated;
             })
             .toList(growable: false)
-          ..sort((left, right) => left.id.compareTo(right.id));
+          ..sort((left, right) => left.id.value.compareTo(right.id.value));
 
     return Right<String, List<BottleRecord>>(List.unmodifiable(bottles));
   }
@@ -87,11 +87,11 @@ class MemoryBottleRepository implements BottleRepository {
   BottleCreateResult createBottle(BottleCreateRequest request) {
     final bottle = _bottleFromCreateRequest(request, dataHome);
 
-    if (_bottles.containsKey(bottle.id)) {
-      return BottleCreateConflict(bottle.id);
+    if (_bottles.containsKey(bottle.id.value)) {
+      return BottleCreateConflict(bottle.id.value);
     }
 
-    _bottles[bottle.id] = bottle;
+    _bottles[bottle.id.value] = bottle;
 
     return BottleCreated(bottle);
   }
@@ -100,13 +100,13 @@ class MemoryBottleRepository implements BottleRepository {
   BottleArchiveExportResult exportBottleArchive(
     BottleArchiveExportRequest request,
   ) {
-    return findBottle(request.bottleId).fold(
+    return findBottle(request.bottleId.value).fold(
       BottleArchiveExportFailed.new,
       (bottle) => bottle.match(
-        () => BottleArchiveExportMissing(request.bottleId),
+        () => BottleArchiveExportMissing(request.bottleId.value),
         (bottle) => _exportBottleArchive(
           bottle: bottle,
-          archivePath: request.archivePath,
+          archivePath: request.archivePath.value,
         ),
       ),
     );
@@ -117,11 +117,11 @@ class MemoryBottleRepository implements BottleRepository {
     BottleArchiveImportRequest request,
   ) {
     return _importBottleArchive(
-      archivePath: request.archivePath,
+      archivePath: request.archivePath.value,
       bottleDirectory: _joinPath(dataHome, const ['bottles']),
       hasBottle: _bottles.containsKey,
       onImported: (bottle) {
-        _bottles[bottle.id] = bottle;
+        _bottles[bottle.id.value] = bottle;
       },
     );
   }
@@ -138,79 +138,84 @@ class MemoryBottleRepository implements BottleRepository {
 
   @override
   BottleRenameResult renameBottle(BottleRenameRequest request) {
-    final bottle = _bottles[request.bottleId];
+    final bottle = _bottles[request.bottleId.value];
     if (bottle == null) {
-      return BottleRenameMissing(request.bottleId);
+      return BottleRenameMissing(request.bottleId.value);
     }
 
     final renamed = _renamedMemoryBottle(
       bottle: bottle,
-      name: request.name,
+      name: request.name.value,
       dataHome: dataHome,
     );
-    final conflictingBottle = _bottles[renamed.id];
-    if (conflictingBottle != null && conflictingBottle.id != bottle.id) {
-      return BottleRenameConflict(renamed.id);
+    final conflictingBottle = _bottles[renamed.id.value];
+    if (conflictingBottle != null &&
+        conflictingBottle.id.value != bottle.id.value) {
+      return BottleRenameConflict(renamed.id.value);
     }
 
-    _bottles.remove(bottle.id);
-    _bottles[renamed.id] = renamed;
+    _bottles.remove(bottle.id.value);
+    _bottles[renamed.id.value] = renamed;
 
     return BottleRenamed(renamed);
   }
 
   @override
   BottleMoveResult moveBottle(BottleMoveRequest request) {
-    final bottle = _bottles[request.bottleId];
+    final bottle = _bottles[request.bottleId.value];
     if (bottle == null) {
-      return BottleMoveMissing(request.bottleId);
+      return BottleMoveMissing(request.bottleId.value);
     }
 
-    if (_hasBottleAtPath(_bottles.values, request.path, exceptId: bottle.id)) {
-      return BottleMoveConflict(request.path);
+    if (_hasBottleAtPath(
+      _bottles.values,
+      request.path.value,
+      exceptId: bottle.id.value,
+    )) {
+      return BottleMoveConflict(request.path.value);
     }
 
-    final moved = bottle.withPath(request.path);
-    _bottles[bottle.id] = moved;
+    final moved = bottle.withPath(request.path.value);
+    _bottles[bottle.id.value] = moved;
 
     return BottleMoved(moved);
   }
 
   @override
   BottleUpdateResult setWindowsVersion(WindowsVersionUpdateRequest request) {
-    final bottle = _bottles[request.bottleId];
+    final bottle = _bottles[request.bottleId.value];
     if (bottle == null) {
-      return BottleUpdateMissing(request.bottleId);
+      return BottleUpdateMissing(request.bottleId.value);
     }
 
-    final updated = bottle.withWindowsVersion(request.windowsVersion);
-    _bottles[request.bottleId] = updated;
+    final updated = bottle.withWindowsVersion(request.windowsVersion.value);
+    _bottles[request.bottleId.value] = updated;
 
     return BottleUpdated(updated);
   }
 
   @override
   BottleUpdateResult setRuntimeSettings(RuntimeSettingsUpdateRequest request) {
-    final bottle = _bottles[request.bottleId];
+    final bottle = _bottles[request.bottleId.value];
     if (bottle == null) {
-      return BottleUpdateMissing(request.bottleId);
+      return BottleUpdateMissing(request.bottleId.value);
     }
 
     final updated = bottle.withRuntimeSettings(request.runtimeSettings);
-    _bottles[request.bottleId] = updated;
+    _bottles[request.bottleId.value] = updated;
 
     return BottleUpdated(updated);
   }
 
   @override
   ProgramPinResult pinProgram(ProgramPinRequest request) {
-    final bottle = _bottles[request.bottleId];
+    final bottle = _bottles[request.bottleId.value];
     if (bottle == null) {
-      return ProgramPinMissing(request.bottleId);
+      return ProgramPinMissing(request.bottleId.value);
     }
 
-    if (_hasPinnedProgram(bottle, request.programPath)) {
-      return ProgramPinConflict(request.programPath);
+    if (_hasPinnedProgram(bottle, request.programPath.value)) {
+      return ProgramPinConflict(request.programPath.value);
     }
 
     final updated = _bottleWithPinnedProgram(
@@ -218,41 +223,44 @@ class MemoryBottleRepository implements BottleRepository {
       request,
       programMetadataExtractor: _programMetadataExtractor,
     );
-    _bottles[request.bottleId] = updated;
+    _bottles[request.bottleId.value] = updated;
 
     return ProgramPinned(updated);
   }
 
   @override
   ProgramUpdateResult unpinProgram(ProgramUnpinRequest request) {
-    final bottle = _bottles[request.bottleId];
+    final bottle = _bottles[request.bottleId.value];
     if (bottle == null) {
-      return ProgramUpdateMissingBottle(request.bottleId);
+      return ProgramUpdateMissingBottle(request.bottleId.value);
     }
 
-    if (!_hasPinnedProgram(bottle, request.programPath)) {
-      return ProgramUpdateMissingProgram(request.programPath);
+    if (!_hasPinnedProgram(bottle, request.programPath.value)) {
+      return ProgramUpdateMissingProgram(request.programPath.value);
     }
 
-    final updated = _bottleWithoutPinnedProgram(bottle, request.programPath);
-    _bottles[request.bottleId] = updated;
+    final updated = _bottleWithoutPinnedProgram(
+      bottle,
+      request.programPath.value,
+    );
+    _bottles[request.bottleId.value] = updated;
 
     return ProgramUpdated(updated);
   }
 
   @override
   ProgramUpdateResult renamePinnedProgram(ProgramRenameRequest request) {
-    final bottle = _bottles[request.bottleId];
+    final bottle = _bottles[request.bottleId.value];
     if (bottle == null) {
-      return ProgramUpdateMissingBottle(request.bottleId);
+      return ProgramUpdateMissingBottle(request.bottleId.value);
     }
 
-    if (!_hasPinnedProgram(bottle, request.programPath)) {
-      return ProgramUpdateMissingProgram(request.programPath);
+    if (!_hasPinnedProgram(bottle, request.programPath.value)) {
+      return ProgramUpdateMissingProgram(request.programPath.value);
     }
 
     final updated = _bottleWithRenamedPinnedProgram(bottle, request);
-    _bottles[request.bottleId] = updated;
+    _bottles[request.bottleId.value] = updated;
 
     return ProgramUpdated(updated);
   }
@@ -261,15 +269,15 @@ class MemoryBottleRepository implements BottleRepository {
   ProgramSettingsReadResult readProgramSettings(
     ProgramSettingsRequest request,
   ) {
-    final bottle = _bottles[request.bottleId];
+    final bottle = _bottles[request.bottleId.value];
     if (bottle == null) {
-      return ProgramSettingsReadMissingBottle(request.bottleId);
+      return ProgramSettingsReadMissingBottle(request.bottleId.value);
     }
 
     return ProgramSettingsRead(
       _programSettings[_programSettingsKey(
-            bottleId: request.bottleId,
-            programPath: request.programPath,
+            bottleId: request.bottleId.value,
+            programPath: request.programPath.value,
           )] ??
           ProgramSettingsRecord(),
     );
@@ -279,14 +287,14 @@ class MemoryBottleRepository implements BottleRepository {
   ProgramSettingsUpdateResult setProgramSettings(
     ProgramSettingsUpdateRequest request,
   ) {
-    final bottle = _bottles[request.bottleId];
+    final bottle = _bottles[request.bottleId.value];
     if (bottle == null) {
-      return ProgramSettingsUpdateMissingBottle(request.bottleId);
+      return ProgramSettingsUpdateMissingBottle(request.bottleId.value);
     }
 
     _programSettings[_programSettingsKey(
-          bottleId: request.bottleId,
-          programPath: request.programPath,
+          bottleId: request.bottleId.value,
+          programPath: request.programPath.value,
         )] =
         request.settings;
 

@@ -21,18 +21,18 @@ enum AppLanguageMode {
 }
 
 class AppSettingsRecord {
-  const AppSettingsRecord({
+  AppSettingsRecord({
     this.terminateWineProcessesOnClose = false,
-    required this.defaultBottlePath,
+    required String defaultBottlePath,
     this.appearanceMode = AppAppearanceMode.dark,
     this.languageMode = AppLanguageMode.system,
     this.automaticallyCheckForKonyakUpdates = false,
     this.automaticallyCheckForWineUpdates = true,
     this.automaticallyPinNewInstalledPrograms = true,
-  });
+  }) : defaultBottlePath = DefaultBottlePath(defaultBottlePath);
 
   final bool terminateWineProcessesOnClose;
-  final String defaultBottlePath;
+  final DefaultBottlePath defaultBottlePath;
   final AppAppearanceMode appearanceMode;
   final AppLanguageMode languageMode;
   final bool automaticallyCheckForKonyakUpdates;
@@ -44,7 +44,7 @@ class AppSettingsRecord {
   ) {
     return AppSettingsRecord(
       terminateWineProcessesOnClose: terminateWineProcessesOnClose,
-      defaultBottlePath: defaultBottlePath,
+      defaultBottlePath: defaultBottlePath.value,
       appearanceMode: appearanceMode,
       languageMode: languageMode,
       automaticallyCheckForKonyakUpdates: automaticallyCheckForKonyakUpdates,
@@ -70,7 +70,7 @@ class AppSettingsRecord {
   AppSettingsRecord withAppearanceMode(AppAppearanceMode appearanceMode) {
     return AppSettingsRecord(
       terminateWineProcessesOnClose: terminateWineProcessesOnClose,
-      defaultBottlePath: defaultBottlePath,
+      defaultBottlePath: defaultBottlePath.value,
       appearanceMode: appearanceMode,
       languageMode: languageMode,
       automaticallyCheckForKonyakUpdates: automaticallyCheckForKonyakUpdates,
@@ -83,7 +83,7 @@ class AppSettingsRecord {
   AppSettingsRecord withLanguageMode(AppLanguageMode languageMode) {
     return AppSettingsRecord(
       terminateWineProcessesOnClose: terminateWineProcessesOnClose,
-      defaultBottlePath: defaultBottlePath,
+      defaultBottlePath: defaultBottlePath.value,
       appearanceMode: appearanceMode,
       languageMode: languageMode,
       automaticallyCheckForKonyakUpdates: automaticallyCheckForKonyakUpdates,
@@ -98,7 +98,7 @@ class AppSettingsRecord {
   ) {
     return AppSettingsRecord(
       terminateWineProcessesOnClose: terminateWineProcessesOnClose,
-      defaultBottlePath: defaultBottlePath,
+      defaultBottlePath: defaultBottlePath.value,
       appearanceMode: appearanceMode,
       languageMode: languageMode,
       automaticallyCheckForKonyakUpdates: automaticallyCheckForKonyakUpdates,
@@ -113,7 +113,7 @@ class AppSettingsRecord {
   ) {
     return AppSettingsRecord(
       terminateWineProcessesOnClose: terminateWineProcessesOnClose,
-      defaultBottlePath: defaultBottlePath,
+      defaultBottlePath: defaultBottlePath.value,
       appearanceMode: appearanceMode,
       languageMode: languageMode,
       automaticallyCheckForKonyakUpdates: automaticallyCheckForKonyakUpdates,
@@ -128,7 +128,7 @@ class AppSettingsRecord {
   ) {
     return AppSettingsRecord(
       terminateWineProcessesOnClose: terminateWineProcessesOnClose,
-      defaultBottlePath: defaultBottlePath,
+      defaultBottlePath: defaultBottlePath.value,
       appearanceMode: appearanceMode,
       languageMode: languageMode,
       automaticallyCheckForKonyakUpdates: automaticallyCheckForKonyakUpdates,
@@ -141,7 +141,7 @@ class AppSettingsRecord {
   Map<String, Object?> toJson() {
     return <String, Object?>{
       'terminateWineProcessesOnClose': terminateWineProcessesOnClose,
-      'defaultBottlePath': defaultBottlePath,
+      'defaultBottlePath': defaultBottlePath.value,
       'appearanceMode': appearanceMode.jsonValue,
       'languageMode': languageMode.jsonValue,
       'automaticallyCheckForKonyakUpdates': automaticallyCheckForKonyakUpdates,

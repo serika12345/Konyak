@@ -5,12 +5,14 @@ String _uniqueProgramId({
   required List<BottleProgramRecord> existing,
 }) {
   final fallbackBaseId = baseId.isEmpty ? 'program' : baseId;
-  if (existing.every((program) => program.id != fallbackBaseId)) {
+  if (existing.every((program) => program.id.value != fallbackBaseId)) {
     return fallbackBaseId;
   }
 
   var suffix = 2;
-  while (existing.any((program) => program.id == '$fallbackBaseId-$suffix')) {
+  while (existing.any(
+    (program) => program.id.value == '$fallbackBaseId-$suffix',
+  )) {
     suffix += 1;
   }
 

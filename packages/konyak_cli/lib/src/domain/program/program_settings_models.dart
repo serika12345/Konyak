@@ -1,22 +1,23 @@
 part of '../../../konyak_cli.dart';
 
 class ProgramSettingsRecord {
-  const ProgramSettingsRecord({
-    this.locale = '',
-    this.arguments = '',
+  ProgramSettingsRecord({
+    String locale = '',
+    String arguments = '',
     this.environment = const ProgramEnvironmentOverrides.empty(),
     this.logging = const Option.none(),
-  });
+  }) : locale = ProgramLocale(locale),
+       arguments = ProgramArguments(arguments);
 
-  final String locale;
-  final String arguments;
+  final ProgramLocale locale;
+  final ProgramArguments arguments;
   final ProgramEnvironmentOverrides environment;
   final Option<ProgramLoggingSettingsRecord> logging;
 
   Map<String, Object?> toJson() {
     return <String, Object?>{
-      'locale': locale,
-      'arguments': arguments,
+      'locale': locale.value,
+      'arguments': arguments.value,
       'environment': environment.toMap(),
       ...logging.match(
         () => const <String, Object?>{},
@@ -45,18 +46,20 @@ class ProgramLoggingSettingsRecord {
     this.createLogFile = true,
     String additionalWineLoggingChannels = '',
     String logFilePath = '',
-  }) : additionalWineLoggingChannels = additionalWineLoggingChannels.trim(),
-       logFilePath = logFilePath.trim();
+  }) : additionalWineLoggingChannels = WineDebugChannels(
+         additionalWineLoggingChannels,
+       ),
+       logFilePath = ProgramLogPath(logFilePath);
 
   final bool createLogFile;
-  final String additionalWineLoggingChannels;
-  final String logFilePath;
+  final WineDebugChannels additionalWineLoggingChannels;
+  final ProgramLogPath logFilePath;
 
   Map<String, Object?> toJson() {
     return <String, Object?>{
       'createLogFile': createLogFile,
-      'additionalWineLoggingChannels': additionalWineLoggingChannels,
-      'logFilePath': logFilePath,
+      'additionalWineLoggingChannels': additionalWineLoggingChannels.value,
+      'logFilePath': logFilePath.value,
     };
   }
 

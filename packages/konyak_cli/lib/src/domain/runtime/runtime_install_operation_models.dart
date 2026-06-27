@@ -16,47 +16,53 @@ sealed class RuntimeInstallRequestOperation {
 
   RuntimeInstallSource get installSource;
 
-  Option<String> get archivePath => switch (installSource) {
+  Option<RuntimeArchivePath> get archivePath => switch (installSource) {
     RuntimeLocalArchiveSource(:final archivePath) => Option.of(archivePath),
     _ => const Option.none(),
   };
 
-  Option<String> get archiveUrl => switch (installSource) {
+  Option<RuntimeArchiveUrl> get archiveUrl => switch (installSource) {
     RuntimeRemoteArchiveSource(:final archiveUrl) => Option.of(archiveUrl),
     _ => const Option.none(),
   };
 
-  Option<String> get archiveSha256 => switch (installSource) {
-    RuntimeConfiguredArchiveSource(:final archiveChecksum) =>
-      archiveChecksum.asOption,
-    RuntimeLocalArchiveSource(:final archiveChecksum) =>
-      archiveChecksum.asOption,
-    RuntimeRemoteArchiveSource(:final archiveChecksum) =>
-      archiveChecksum.asOption,
-    RuntimeSourceManifestInstallSource() => const Option.none(),
-  };
+  Option<RuntimeArchiveChecksumValue> get archiveSha256 =>
+      switch (installSource) {
+        RuntimeConfiguredArchiveSource(:final archiveChecksum) =>
+          archiveChecksum.asOption,
+        RuntimeLocalArchiveSource(:final archiveChecksum) =>
+          archiveChecksum.asOption,
+        RuntimeRemoteArchiveSource(:final archiveChecksum) =>
+          archiveChecksum.asOption,
+        RuntimeSourceManifestInstallSource() => const Option.none(),
+      };
 
-  IList<String> get componentArchivePaths => switch (installSource) {
-    RuntimeConfiguredArchiveSource(:final componentArchivePaths) =>
-      componentArchivePaths,
-    RuntimeLocalArchiveSource(:final componentArchivePaths) =>
-      componentArchivePaths,
-    RuntimeRemoteArchiveSource(:final componentArchivePaths) =>
-      componentArchivePaths,
-    RuntimeSourceManifestInstallSource() => const IList<String>.empty(),
-  };
+  IList<RuntimeArchivePath> get componentArchivePaths =>
+      switch (installSource) {
+        RuntimeConfiguredArchiveSource(:final componentArchivePaths) =>
+          componentArchivePaths,
+        RuntimeLocalArchiveSource(:final componentArchivePaths) =>
+          componentArchivePaths,
+        RuntimeRemoteArchiveSource(:final componentArchivePaths) =>
+          componentArchivePaths,
+        RuntimeSourceManifestInstallSource() =>
+          const IList<RuntimeArchivePath>.empty(),
+      };
 
-  Option<String> get sourceManifest => switch (installSource) {
-    RuntimeSourceManifestInstallSource(:final sourceManifest) => Option.of(
-      sourceManifest,
-    ),
-    _ => const Option.none(),
-  };
+  Option<RuntimeSourceManifestUrl> get sourceManifest =>
+      switch (installSource) {
+        RuntimeSourceManifestInstallSource(:final sourceManifest) => Option.of(
+          sourceManifest,
+        ),
+        _ => const Option.none(),
+      };
 
-  Option<String> get sourceManifestSignature => switch (installSource) {
-    RuntimeSourceManifestInstallSource(:final signature) => signature.asOption,
-    _ => const Option.none(),
-  };
+  Option<RuntimeSourceManifestSignatureUrl> get sourceManifestSignature =>
+      switch (installSource) {
+        RuntimeSourceManifestInstallSource(:final signature) =>
+          signature.asOption,
+        _ => const Option.none(),
+      };
 }
 
 sealed class RuntimeArchiveChecksum {
@@ -67,7 +73,7 @@ sealed class RuntimeArchiveChecksum {
   factory RuntimeArchiveChecksum.sha256(String value) =
       RuntimeSha256ArchiveChecksum;
 
-  Option<String> get asOption => switch (this) {
+  Option<RuntimeArchiveChecksumValue> get asOption => switch (this) {
     RuntimeArchiveChecksumAbsent() => const Option.none(),
     RuntimeSha256ArchiveChecksum(:final value) => Option.of(value),
   };
@@ -79,9 +85,9 @@ final class RuntimeArchiveChecksumAbsent extends RuntimeArchiveChecksum {
 
 final class RuntimeSha256ArchiveChecksum extends RuntimeArchiveChecksum {
   RuntimeSha256ArchiveChecksum(String value)
-    : value = _requiredNonBlankDomainString(value, 'archiveSha256');
+    : value = RuntimeArchiveChecksumValue(value);
 
-  final String value;
+  final RuntimeArchiveChecksumValue value;
 }
 
 sealed class RuntimeSourceManifestSignature {
@@ -93,7 +99,7 @@ sealed class RuntimeSourceManifestSignature {
   factory RuntimeSourceManifestSignature.signed(String value) =
       RuntimeSourceManifestSigned;
 
-  Option<String> get asOption => switch (this) {
+  Option<RuntimeSourceManifestSignatureUrl> get asOption => switch (this) {
     RuntimeSourceManifestSignatureAbsent() => const Option.none(),
     RuntimeSourceManifestSigned(:final value) => Option.of(value),
   };
@@ -106,9 +112,9 @@ final class RuntimeSourceManifestSignatureAbsent
 
 final class RuntimeSourceManifestSigned extends RuntimeSourceManifestSignature {
   RuntimeSourceManifestSigned(String value)
-    : value = _requiredNonBlankDomainString(value, 'sourceManifestSignature');
+    : value = RuntimeSourceManifestSignatureUrl(value);
 
-  final String value;
+  final RuntimeSourceManifestSignatureUrl value;
 }
 
 sealed class RuntimeInstallSource {
@@ -127,15 +133,9 @@ sealed class RuntimeInstallSource {
     final checksum = _runtimeArchiveChecksum(archiveSha256);
     final signature = _runtimeSourceManifestSignature(sourceManifestSignature);
     final components = _runtimeComponentArchivePaths(componentArchivePaths);
-    final manifest = sourceManifest.map(
-      (value) => _requiredNonBlankDomainString(value, 'sourceManifest'),
-    );
-    final localArchive = archivePath.map(
-      (value) => _requiredNonBlankDomainString(value, 'archivePath'),
-    );
-    final remoteArchive = archiveUrl.map(
-      (value) => _requiredNonBlankDomainString(value, 'archiveUrl'),
-    );
+    final manifest = sourceManifest.map(RuntimeSourceManifestUrl.new);
+    final localArchive = archivePath.map(RuntimeArchivePath.new);
+    final remoteArchive = archiveUrl.map(RuntimeArchiveUrl.new);
 
     if (manifest.isSome()) {
       if (localArchive.isSome() ||
@@ -148,9 +148,9 @@ sealed class RuntimeInstallSource {
       }
 
       return RuntimeSourceManifestInstallSource(
-        sourceManifest: manifest.getOrElse(
-          () => throw StateError('Expected source manifest.'),
-        ),
+        sourceManifest: manifest
+            .getOrElse(() => throw StateError('Expected source manifest.'))
+            .value,
         signature: signature,
       );
     }
@@ -163,18 +163,18 @@ sealed class RuntimeInstallSource {
       () => remoteArchive.match(
         () => RuntimeConfiguredArchiveSource(
           archiveChecksum: checksum,
-          componentArchivePaths: components,
+          componentArchivePaths: components.map((value) => value.value),
         ),
         (value) => RuntimeRemoteArchiveSource(
-          archiveUrl: value,
+          archiveUrl: value.value,
           archiveChecksum: checksum,
-          componentArchivePaths: components,
+          componentArchivePaths: components.map((value) => value.value),
         ),
       ),
       (value) => RuntimeLocalArchiveSource(
-        archivePath: value,
+        archivePath: value.value,
         archiveChecksum: checksum,
-        componentArchivePaths: components,
+        componentArchivePaths: components.map((value) => value.value),
       ),
     );
   }
@@ -189,7 +189,7 @@ final class RuntimeConfiguredArchiveSource extends RuntimeInstallSource {
        );
 
   final RuntimeArchiveChecksum archiveChecksum;
-  final IList<String> componentArchivePaths;
+  final IList<RuntimeArchivePath> componentArchivePaths;
 
   @override
   bool get hasExplicitInstallSource => componentArchivePaths.isNotEmpty;
@@ -200,14 +200,14 @@ final class RuntimeLocalArchiveSource extends RuntimeInstallSource {
     required String archivePath,
     this.archiveChecksum = const RuntimeArchiveChecksum.absent(),
     Iterable<String> componentArchivePaths = const <String>[],
-  }) : archivePath = _requiredNonBlankDomainString(archivePath, 'archivePath'),
+  }) : archivePath = RuntimeArchivePath(archivePath),
        componentArchivePaths = _runtimeComponentArchivePaths(
          componentArchivePaths,
        );
 
-  final String archivePath;
+  final RuntimeArchivePath archivePath;
   final RuntimeArchiveChecksum archiveChecksum;
-  final IList<String> componentArchivePaths;
+  final IList<RuntimeArchivePath> componentArchivePaths;
 
   @override
   bool get hasExplicitInstallSource => true;
@@ -218,14 +218,14 @@ final class RuntimeRemoteArchiveSource extends RuntimeInstallSource {
     required String archiveUrl,
     this.archiveChecksum = const RuntimeArchiveChecksum.absent(),
     Iterable<String> componentArchivePaths = const <String>[],
-  }) : archiveUrl = _requiredNonBlankDomainString(archiveUrl, 'archiveUrl'),
+  }) : archiveUrl = RuntimeArchiveUrl(archiveUrl),
        componentArchivePaths = _runtimeComponentArchivePaths(
          componentArchivePaths,
        );
 
-  final String archiveUrl;
+  final RuntimeArchiveUrl archiveUrl;
   final RuntimeArchiveChecksum archiveChecksum;
-  final IList<String> componentArchivePaths;
+  final IList<RuntimeArchivePath> componentArchivePaths;
 
   @override
   bool get hasExplicitInstallSource => true;
@@ -235,12 +235,9 @@ final class RuntimeSourceManifestInstallSource extends RuntimeInstallSource {
   RuntimeSourceManifestInstallSource({
     required String sourceManifest,
     this.signature = const RuntimeSourceManifestSignature.absent(),
-  }) : sourceManifest = _requiredNonBlankDomainString(
-         sourceManifest,
-         'sourceManifest',
-       );
+  }) : sourceManifest = RuntimeSourceManifestUrl(sourceManifest);
 
-  final String sourceManifest;
+  final RuntimeSourceManifestUrl sourceManifest;
   final RuntimeSourceManifestSignature signature;
 
   @override
@@ -360,18 +357,20 @@ class _RuntimeWineInstallRequestAccessors {
 
   RuntimeInstallSource get installSource => requestOperation.installSource;
 
-  Option<String> get archivePath => requestOperation.archivePath;
+  Option<RuntimeArchivePath> get archivePath => requestOperation.archivePath;
 
-  Option<String> get archiveUrl => requestOperation.archiveUrl;
+  Option<RuntimeArchiveUrl> get archiveUrl => requestOperation.archiveUrl;
 
-  Option<String> get archiveSha256 => requestOperation.archiveSha256;
+  Option<RuntimeArchiveChecksumValue> get archiveSha256 =>
+      requestOperation.archiveSha256;
 
-  IList<String> get componentArchivePaths =>
+  IList<RuntimeArchivePath> get componentArchivePaths =>
       requestOperation.componentArchivePaths;
 
-  Option<String> get sourceManifest => requestOperation.sourceManifest;
+  Option<RuntimeSourceManifestUrl> get sourceManifest =>
+      requestOperation.sourceManifest;
 
-  Option<String> get sourceManifestSignature =>
+  Option<RuntimeSourceManifestSignatureUrl> get sourceManifestSignature =>
       requestOperation.sourceManifestSignature;
 
   bool get force => requestOperation.force;
@@ -393,10 +392,8 @@ RuntimeSourceManifestSignature _runtimeSourceManifestSignature(
   );
 }
 
-IList<String> _runtimeComponentArchivePaths(Iterable<String> paths) {
-  return paths
-      .map(
-        (path) => _requiredNonBlankDomainString(path, 'componentArchivePath'),
-      )
-      .toIList();
+IList<RuntimeArchivePath> _runtimeComponentArchivePaths(
+  Iterable<String> paths,
+) {
+  return paths.map(RuntimeArchivePath.new).toIList();
 }

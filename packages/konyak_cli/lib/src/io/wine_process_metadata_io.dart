@@ -4,7 +4,9 @@ Option<String> _latestRunProgramPathForExecutable({
   required BottleRecord bottle,
   required String executable,
 }) {
-  final logFile = File(_joinPath(bottle.path, const ['logs', 'latest.log']));
+  final logFile = File(
+    _joinPath(bottle.path.value, const ['logs', 'latest.log']),
+  );
   if (!logFile.existsSync()) {
     return const Option.none();
   }
@@ -120,7 +122,10 @@ class _AsyncWineProcessHostPathResolver {
 
   Future<Map<String, Object?>?> _readLaunchIndex() async {
     final launchIndexFile = File(
-      _joinPath(bottle.path, const ['cache', 'external-program-launches.json']),
+      _joinPath(bottle.path.value, const [
+        'cache',
+        'external-program-launches.json',
+      ]),
     );
     if (!await launchIndexFile.exists()) {
       return null;
@@ -152,7 +157,9 @@ class _AsyncWineProcessHostPathResolver {
   }
 
   Future<String?> _readLatestLog() async {
-    final logFile = File(_joinPath(bottle.path, const ['logs', 'latest.log']));
+    final logFile = File(
+      _joinPath(bottle.path.value, const ['logs', 'latest.log']),
+    );
     if (!await logFile.exists()) {
       return null;
     }
@@ -170,7 +177,10 @@ Option<String> _recordedExternalProgramPathForExecutable({
   required String executable,
 }) {
   final launchIndexFile = File(
-    _joinPath(bottle.path, const ['cache', 'external-program-launches.json']),
+    _joinPath(bottle.path.value, const [
+      'cache',
+      'external-program-launches.json',
+    ]),
   );
   if (!launchIndexFile.existsSync()) {
     return const Option.none();

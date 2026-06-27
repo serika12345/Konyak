@@ -24,7 +24,7 @@ class CompositeBottleRepository implements BottleRepository {
     for (final bottle in writableBottles.getOrElse(
       (_) => const <BottleRecord>[],
     )) {
-      records[bottle.id] = bottle;
+      records[bottle.id.value] = bottle;
     }
 
     for (final catalog in _catalogs) {
@@ -40,12 +40,12 @@ class CompositeBottleRepository implements BottleRepository {
       for (final bottle in catalogBottles.getOrElse(
         (_) => const <BottleRecord>[],
       )) {
-        records.putIfAbsent(bottle.id, () => bottle);
+        records.putIfAbsent(bottle.id.value, () => bottle);
       }
     }
 
     final bottles = records.values.toList(growable: false)
-      ..sort((left, right) => left.id.compareTo(right.id));
+      ..sort((left, right) => left.id.value.compareTo(right.id.value));
 
     return Right<String, List<BottleRecord>>(List.unmodifiable(bottles));
   }
@@ -92,13 +92,13 @@ class CompositeBottleRepository implements BottleRepository {
   BottleArchiveExportResult exportBottleArchive(
     BottleArchiveExportRequest request,
   ) {
-    return findBottle(request.bottleId).fold(
+    return findBottle(request.bottleId.value).fold(
       BottleArchiveExportFailed.new,
       (bottle) => bottle.match(
-        () => BottleArchiveExportMissing(request.bottleId),
+        () => BottleArchiveExportMissing(request.bottleId.value),
         (bottle) => _exportBottleArchive(
           bottle: bottle,
-          archivePath: request.archivePath,
+          archivePath: request.archivePath.value,
         ),
       ),
     );
@@ -171,7 +171,7 @@ class CompositeBottleRepository implements BottleRepository {
       }
     }
 
-    return ProgramSettingsReadMissingBottle(request.bottleId);
+    return ProgramSettingsReadMissingBottle(request.bottleId.value);
   }
 
   @override

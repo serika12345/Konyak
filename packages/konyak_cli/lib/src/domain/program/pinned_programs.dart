@@ -8,7 +8,7 @@ bool _hasPinnedProgram(BottleRecord bottle, String programPath) {
 }
 
 bool _isPinnedProgramPath(PinnedProgramRecord program, String normalizedPath) {
-  return _normalizeFilesystemPath(program.path) == normalizedPath;
+  return _normalizeFilesystemPath(program.path.value) == normalizedPath;
 }
 
 BottleRecord _bottleWithPinnedProgram(
@@ -20,18 +20,19 @@ BottleRecord _bottleWithPinnedProgram(
     bottle: bottle,
     programPath: _metadataProgramPath(
       bottle: bottle,
-      programPath: request.programPath,
+      programPath: request.programPath.value,
     ),
   );
 
   return bottle.withPinnedPrograms(<PinnedProgramRecord>[
     ...bottle.pinnedPrograms,
     PinnedProgramRecord(
-      name: request.name,
-      path: request.programPath,
+      name: request.name.value,
+      path: request.programPath.value,
       iconPath: metadata.match(
         () => const Option<String>.none(),
-        (programMetadata) => programMetadata.iconPath,
+        (programMetadata) =>
+            programMetadata.iconPath.map((value) => value.value),
       ),
     ),
   ]);
@@ -52,12 +53,13 @@ BottleRecord _bottleWithPinnedProgramIcons(
           bottle: bottle,
           programPath: _metadataProgramPath(
             bottle: bottle,
-            programPath: program.path,
+            programPath: program.path.value,
           ),
         );
         final iconPath = metadata.match(
           () => const Option<String>.none(),
-          (programMetadata) => programMetadata.iconPath,
+          (programMetadata) =>
+              programMetadata.iconPath.map((value) => value.value),
         );
         if (iconPath.isNone()) {
           return program;
@@ -82,7 +84,7 @@ BottleRecord _bottleWithoutMissingBottleLocalPinnedPrograms(
   final pinnedPrograms = bottle.pinnedPrograms
       .where(
         (program) =>
-            !_isBottleLocalPinnedProgramPath(bottle, program.path) ||
+            !_isBottleLocalPinnedProgramPath(bottle, program.path.value) ||
             isPinnedProgramAvailable(program),
       )
       .toList(growable: false);
@@ -99,14 +101,14 @@ bool _isLivePinnedProgram(
   PinnedProgramRecord program, {
   required bool Function(PinnedProgramRecord program) isPinnedProgramAvailable,
 }) {
-  return !_isBottleLocalPinnedProgramPath(bottle, program.path) ||
+  return !_isBottleLocalPinnedProgramPath(bottle, program.path.value) ||
       isPinnedProgramAvailable(program);
 }
 
 bool _isBottleLocalPinnedProgramPath(BottleRecord bottle, String programPath) {
   return _isPathWithinRoot(
     path: _normalizeFilesystemPath(programPath),
-    root: _normalizeFilesystemPath(bottle.path),
+    root: _normalizeFilesystemPath(bottle.path.value),
   );
 }
 
@@ -128,12 +130,14 @@ BottleRecord _bottleWithRenamedPinnedProgram(
   BottleRecord bottle,
   ProgramRenameRequest request,
 ) {
-  final normalizedProgramPath = _normalizeFilesystemPath(request.programPath);
+  final normalizedProgramPath = _normalizeFilesystemPath(
+    request.programPath.value,
+  );
   return bottle.withPinnedPrograms(
     bottle.pinnedPrograms
         .map(
           (program) => _isPinnedProgramPath(program, normalizedProgramPath)
-              ? program.withName(request.name)
+              ? program.withName(request.name.value)
               : program,
         )
         .toList(growable: false),

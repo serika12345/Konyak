@@ -43,8 +43,8 @@ String _linuxWineTerminalShellCommandWithEnvironment({
     'KONYAK_LINUX_WINE_LIBRARY_PATH',
   );
   final shellSetup = <String>[
-    'cd ${_shellQuote(bottle.path)}',
-    'export WINEPREFIX=${_shellQuote(bottle.path)}',
+    'cd ${_shellQuote(bottle.path.value)}',
+    'export WINEPREFIX=${_shellQuote(bottle.path.value)}',
     'export WINE=${_shellQuote(executable)}',
     'export PATH=${_shellQuote(runtimeBin)}:\$PATH',
     if (wineLibraryPath != null)
@@ -79,7 +79,7 @@ String _macosWineTerminalShellCommand({
   final runtimeBin = _macosWineBinFolder(environment);
   final executable = _macosWineExecutable(environment);
   final commands = <String>[
-    'cd ${_shellQuote(bottle.path)}',
+    'cd ${_shellQuote(bottle.path.value)}',
     'export PATH=${_shellQuote(runtimeBin)}:\$PATH',
     'export WINE=${_shellQuote(executable)}',
     'alias wine=${_shellQuote(executable)}',
@@ -123,7 +123,10 @@ String _wineTerminalInitialCommand({
 }
 
 String _macosTerminalSetupScriptPath(BottleRecord bottle) {
-  return _joinPath(bottle.path, const ['logs', 'konyak-terminal-setup.zsh']);
+  return _joinPath(bottle.path.value, const [
+    'logs',
+    'konyak-terminal-setup.zsh',
+  ]);
 }
 
 String _macosTerminalAppleScript({

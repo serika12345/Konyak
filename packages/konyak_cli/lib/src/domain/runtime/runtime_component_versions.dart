@@ -5,34 +5,35 @@ final class RuntimeComponentVersions {
     : _versions = versions
           .map(
             (componentId, version) => MapEntry(
-              _requiredNonBlankDomainString(componentId, 'componentId'),
-              _requiredNonBlankDomainString(version, 'version'),
+              RuntimeComponentId(componentId),
+              RuntimeVersion(version),
             ),
           )
           .lock;
 
   const RuntimeComponentVersions.empty() : _versions = const IMapConst({});
 
-  final IMap<String, String> _versions;
+  final IMap<RuntimeComponentId, RuntimeVersion> _versions;
 
   bool get isEmpty => _versions.isEmpty;
 
-  Map<String, String> toMap() => _versions.unlockView;
+  Map<String, String> toMap() {
+    return _versions.map((componentId, version) {
+      return MapEntry(componentId.value, version.value);
+    }).unlockView;
+  }
 
   RuntimeComponentVersions add(String componentId, String version) {
-    return RuntimeComponentVersions(
-      _versions
-          .add(
-            _requiredNonBlankDomainString(componentId, 'componentId'),
-            _requiredNonBlankDomainString(version, 'version'),
-          )
-          .unlockView,
+    return RuntimeComponentVersions._withVersions(
+      _versions.add(RuntimeComponentId(componentId), RuntimeVersion(version)),
     );
   }
 
   String? operator [](String componentId) {
-    return _versions[componentId];
+    return _versions[RuntimeComponentId(componentId)]?.value;
   }
+
+  RuntimeComponentVersions._withVersions(this._versions);
 
   @override
   bool operator ==(Object other) {

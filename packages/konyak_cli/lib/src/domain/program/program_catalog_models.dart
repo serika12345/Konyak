@@ -1,26 +1,29 @@
 part of '../../../konyak_cli.dart';
 
 class BottleProgramRecord {
-  const BottleProgramRecord({
-    required this.id,
-    required this.name,
-    required this.path,
-    required this.source,
+  BottleProgramRecord({
+    required String id,
+    required String name,
+    required String path,
+    required String source,
     this.metadata = const Option.none(),
-  });
+  }) : id = ProgramId(id),
+       name = ProgramName(name),
+       path = ProgramPath(path),
+       source = ProgramSource(source);
 
-  final String id;
-  final String name;
-  final String path;
-  final String source;
+  final ProgramId id;
+  final ProgramName name;
+  final ProgramPath path;
+  final ProgramSource source;
   final Option<ProgramMetadataRecord> metadata;
 
   Map<String, Object?> toJson() {
     return <String, Object?>{
-      'id': id,
-      'name': name,
-      'path': path,
-      'source': source,
+      'id': id.value,
+      'name': name.value,
+      'path': path.value,
+      'source': source.value,
       ...metadata.match(
         () => const <String, Object?>{},
         (programMetadata) => <String, Object?>{
@@ -40,39 +43,21 @@ class ProgramMetadataRecord {
     Option<String> fileVersion = const Option.none(),
     Option<String> productVersion = const Option.none(),
     Option<String> iconPath = const Option.none(),
-  }) : architecture = _requiredNonBlankMetadataOption(
-         architecture,
-         'architecture',
-       ),
-       fileDescription = _requiredNonBlankMetadataOption(
-         fileDescription,
-         'fileDescription',
-       ),
-       productName = _requiredNonBlankMetadataOption(
-         productName,
-         'productName',
-       ),
-       companyName = _requiredNonBlankMetadataOption(
-         companyName,
-         'companyName',
-       ),
-       fileVersion = _requiredNonBlankMetadataOption(
-         fileVersion,
-         'fileVersion',
-       ),
-       productVersion = _requiredNonBlankMetadataOption(
-         productVersion,
-         'productVersion',
-       ),
-       iconPath = _requiredNonBlankMetadataOption(iconPath, 'iconPath');
+  }) : architecture = architecture.map(ProgramArchitecture.new),
+       fileDescription = fileDescription.map(ProgramFileDescription.new),
+       productName = productName.map(ProgramProductName.new),
+       companyName = companyName.map(ProgramCompanyName.new),
+       fileVersion = fileVersion.map(ProgramFileVersion.new),
+       productVersion = productVersion.map(ProgramProductVersion.new),
+       iconPath = iconPath.map(ProgramIconPath.new);
 
-  final Option<String> architecture;
-  final Option<String> fileDescription;
-  final Option<String> productName;
-  final Option<String> companyName;
-  final Option<String> fileVersion;
-  final Option<String> productVersion;
-  final Option<String> iconPath;
+  final Option<ProgramArchitecture> architecture;
+  final Option<ProgramFileDescription> fileDescription;
+  final Option<ProgramProductName> productName;
+  final Option<ProgramCompanyName> companyName;
+  final Option<ProgramFileVersion> fileVersion;
+  final Option<ProgramProductVersion> productVersion;
+  final Option<ProgramIconPath> iconPath;
 
   bool get isEmpty {
     return architecture.isNone() &&
@@ -97,40 +82,39 @@ class ProgramMetadataRecord {
   }
 }
 
-Option<String> _requiredNonBlankMetadataOption(
-  Option<String> value,
-  String fieldName,
+Map<String, Object?> _metadataJsonField(
+  String key,
+  Option<StringDomainValueObject> value,
 ) {
-  return value.map((item) => _requiredNonBlankDomainString(item, fieldName));
-}
-
-Map<String, Object?> _metadataJsonField(String key, Option<String> value) {
   return value.match(
     () => const <String, Object?>{},
-    (item) => <String, Object?>{key: item},
+    (item) => <String, Object?>{key: item.value},
   );
 }
 
 class WineProcessRecord {
-  const WineProcessRecord({
-    required this.bottleId,
-    required this.processId,
-    required this.executable,
-    this.hostPath = const Option.none(),
+  WineProcessRecord({
+    required String bottleId,
+    required String processId,
+    required String executable,
+    Option<String> hostPath = const Option.none(),
     this.metadata = const Option.none(),
-  });
+  }) : bottleId = BottleId(bottleId),
+       processId = WineProcessId(processId),
+       executable = ProgramExecutable(executable),
+       hostPath = hostPath.map(ProgramPath.new);
 
-  final String bottleId;
-  final String processId;
-  final String executable;
-  final Option<String> hostPath;
+  final BottleId bottleId;
+  final WineProcessId processId;
+  final ProgramExecutable executable;
+  final Option<ProgramPath> hostPath;
   final Option<ProgramMetadataRecord> metadata;
 
   Map<String, Object?> toJson() {
     return <String, Object?>{
-      'bottleId': bottleId,
-      'processId': processId,
-      'executable': executable,
+      'bottleId': bottleId.value,
+      'processId': processId.value,
+      'executable': executable.value,
       ..._metadataJsonField('hostPath', hostPath),
       ...metadata.match(
         () => const <String, Object?>{},
@@ -157,19 +141,19 @@ abstract interface class AsyncProgramMetadataExtractor {
 }
 
 class WinetricksVerbRecord {
-  const WinetricksVerbRecord({
-    required this.id,
+  WinetricksVerbRecord({
+    required String id,
     required this.name,
     required this.description,
-  });
+  }) : id = WinetricksVerbId(id);
 
-  final String id;
+  final WinetricksVerbId id;
   final String name;
   final String description;
 
   Map<String, Object?> toJson() {
     return <String, Object?>{
-      'id': id,
+      'id': id.value,
       'name': name,
       'description': description,
     };
@@ -178,18 +162,19 @@ class WinetricksVerbRecord {
 
 class WinetricksCategoryRecord {
   WinetricksCategoryRecord({
-    required this.id,
+    required String id,
     required this.name,
     required List<WinetricksVerbRecord> verbs,
-  }) : verbs = List.unmodifiable(verbs);
+  }) : id = WinetricksCategoryId(id),
+       verbs = List.unmodifiable(verbs);
 
-  final String id;
+  final WinetricksCategoryId id;
   final String name;
   final List<WinetricksVerbRecord> verbs;
 
   Map<String, Object?> toJson() {
     return <String, Object?>{
-      'id': id,
+      'id': id.value,
       'name': name,
       'verbs': verbs.map((verb) => verb.toJson()).toList(growable: false),
     };

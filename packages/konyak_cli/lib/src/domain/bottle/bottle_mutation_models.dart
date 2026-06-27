@@ -1,39 +1,45 @@
 part of '../../../konyak_cli.dart';
 
 class BottleCreateRequest {
-  const BottleCreateRequest({required this.name, required this.windowsVersion});
+  BottleCreateRequest({required String name, required String windowsVersion})
+    : name = BottleName(name),
+      windowsVersion = WindowsVersion(windowsVersion);
 
-  final String name;
-  final String windowsVersion;
+  final BottleName name;
+  final WindowsVersion windowsVersion;
 }
 
 class BottleArchiveExportRequest {
-  const BottleArchiveExportRequest({
-    required this.bottleId,
-    required this.archivePath,
-  });
+  BottleArchiveExportRequest({
+    required String bottleId,
+    required String archivePath,
+  }) : bottleId = BottleId(bottleId),
+       archivePath = BottleArchivePath(archivePath);
 
-  final String bottleId;
-  final String archivePath;
+  final BottleId bottleId;
+  final BottleArchivePath archivePath;
 }
 
 class BottleArchiveImportRequest {
-  const BottleArchiveImportRequest({required this.archivePath});
+  BottleArchiveImportRequest({required String archivePath})
+    : archivePath = BottleArchivePath(archivePath);
 
-  final String archivePath;
+  final BottleArchivePath archivePath;
 }
 
 class BottleArchiveRecord {
-  const BottleArchiveRecord({
-    required this.bottleId,
-    required this.archivePath,
-  });
+  BottleArchiveRecord({required String bottleId, required String archivePath})
+    : bottleId = BottleId(bottleId),
+      archivePath = BottleArchivePath(archivePath);
 
-  final String bottleId;
-  final String archivePath;
+  final BottleId bottleId;
+  final BottleArchivePath archivePath;
 
   Map<String, Object?> toJson() {
-    return <String, Object?>{'bottleId': bottleId, 'archivePath': archivePath};
+    return <String, Object?>{
+      'bottleId': bottleId.value,
+      'archivePath': archivePath.value,
+    };
   }
 }
 
@@ -48,9 +54,9 @@ class BottleCreated extends BottleCreateResult {
 }
 
 class BottleCreateConflict extends BottleCreateResult {
-  const BottleCreateConflict(this.bottleId);
+  BottleCreateConflict(String bottleId) : bottleId = BottleId(bottleId);
 
-  final String bottleId;
+  final BottleId bottleId;
 }
 
 class BottleCreateFailed extends BottleCreateResult {
@@ -70,9 +76,9 @@ class BottleArchiveExported extends BottleArchiveExportResult {
 }
 
 class BottleArchiveExportMissing extends BottleArchiveExportResult {
-  const BottleArchiveExportMissing(this.bottleId);
+  BottleArchiveExportMissing(String bottleId) : bottleId = BottleId(bottleId);
 
-  final String bottleId;
+  final BottleId bottleId;
 }
 
 class BottleArchiveExportFailed extends BottleArchiveExportResult {
@@ -92,9 +98,9 @@ class BottleArchiveImported extends BottleArchiveImportResult {
 }
 
 class BottleArchiveImportConflict extends BottleArchiveImportResult {
-  const BottleArchiveImportConflict(this.bottleId);
+  BottleArchiveImportConflict(String bottleId) : bottleId = BottleId(bottleId);
 
-  final String bottleId;
+  final BottleId bottleId;
 }
 
 class BottleArchiveImportFailed extends BottleArchiveImportResult {
@@ -114,9 +120,9 @@ class BottleDeleted extends BottleDeleteResult {
 }
 
 class BottleDeleteMissing extends BottleDeleteResult {
-  const BottleDeleteMissing(this.bottleId);
+  BottleDeleteMissing(String bottleId) : bottleId = BottleId(bottleId);
 
-  final String bottleId;
+  final BottleId bottleId;
 }
 
 class BottleDeleteFailed extends BottleDeleteResult {
@@ -126,10 +132,12 @@ class BottleDeleteFailed extends BottleDeleteResult {
 }
 
 class BottleRenameRequest {
-  const BottleRenameRequest({required this.bottleId, required this.name});
+  BottleRenameRequest({required String bottleId, required String name})
+    : bottleId = BottleId(bottleId),
+      name = BottleName(name);
 
-  final String bottleId;
-  final String name;
+  final BottleId bottleId;
+  final BottleName name;
 }
 
 sealed class BottleRenameResult {
@@ -143,15 +151,15 @@ class BottleRenamed extends BottleRenameResult {
 }
 
 class BottleRenameMissing extends BottleRenameResult {
-  const BottleRenameMissing(this.bottleId);
+  BottleRenameMissing(String bottleId) : bottleId = BottleId(bottleId);
 
-  final String bottleId;
+  final BottleId bottleId;
 }
 
 class BottleRenameConflict extends BottleRenameResult {
-  const BottleRenameConflict(this.bottleId);
+  BottleRenameConflict(String bottleId) : bottleId = BottleId(bottleId);
 
-  final String bottleId;
+  final BottleId bottleId;
 }
 
 class BottleRenameFailed extends BottleRenameResult {
@@ -161,10 +169,12 @@ class BottleRenameFailed extends BottleRenameResult {
 }
 
 class BottleMoveRequest {
-  const BottleMoveRequest({required this.bottleId, required this.path});
+  BottleMoveRequest({required String bottleId, required String path})
+    : bottleId = BottleId(bottleId),
+      path = BottlePath(path);
 
-  final String bottleId;
-  final String path;
+  final BottleId bottleId;
+  final BottlePath path;
 }
 
 sealed class BottleMoveResult {
@@ -178,15 +188,15 @@ class BottleMoved extends BottleMoveResult {
 }
 
 class BottleMoveMissing extends BottleMoveResult {
-  const BottleMoveMissing(this.bottleId);
+  BottleMoveMissing(String bottleId) : bottleId = BottleId(bottleId);
 
-  final String bottleId;
+  final BottleId bottleId;
 }
 
 class BottleMoveConflict extends BottleMoveResult {
-  const BottleMoveConflict(this.path);
+  BottleMoveConflict(String path) : path = BottlePath(path);
 
-  final String path;
+  final BottlePath path;
 }
 
 class BottleMoveFailed extends BottleMoveResult {
@@ -196,22 +206,23 @@ class BottleMoveFailed extends BottleMoveResult {
 }
 
 class WindowsVersionUpdateRequest {
-  const WindowsVersionUpdateRequest({
-    required this.bottleId,
-    required this.windowsVersion,
-  });
+  WindowsVersionUpdateRequest({
+    required String bottleId,
+    required String windowsVersion,
+  }) : bottleId = BottleId(bottleId),
+       windowsVersion = WindowsVersion(windowsVersion);
 
-  final String bottleId;
-  final String windowsVersion;
+  final BottleId bottleId;
+  final WindowsVersion windowsVersion;
 }
 
 class RuntimeSettingsUpdateRequest {
-  const RuntimeSettingsUpdateRequest({
-    required this.bottleId,
+  RuntimeSettingsUpdateRequest({
+    required String bottleId,
     required this.runtimeSettings,
-  });
+  }) : bottleId = BottleId(bottleId);
 
-  final String bottleId;
+  final BottleId bottleId;
   final BottleRuntimeSettings runtimeSettings;
 }
 
@@ -226,9 +237,9 @@ class BottleUpdated extends BottleUpdateResult {
 }
 
 class BottleUpdateMissing extends BottleUpdateResult {
-  const BottleUpdateMissing(this.bottleId);
+  BottleUpdateMissing(String bottleId) : bottleId = BottleId(bottleId);
 
-  final String bottleId;
+  final BottleId bottleId;
 }
 
 class BottleUpdateFailed extends BottleUpdateResult {

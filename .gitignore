@@ -101,6 +101,7 @@ result-*
 .flutter-plugins
 .flutter-plugins-dependencies
 .packages
+*.freezed.dart
 apps/konyak/build/
 apps/konyak/.dart_tool/
 apps/konyak/flutter_*.log

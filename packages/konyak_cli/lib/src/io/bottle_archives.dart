@@ -4,7 +4,7 @@ BottleArchiveExportResult _exportBottleArchive({
   required BottleRecord bottle,
   required String archivePath,
 }) {
-  final normalizedBottlePath = _normalizeFilesystemPath(bottle.path);
+  final normalizedBottlePath = _normalizeFilesystemPath(bottle.path.value);
   final bottleDirectory = Directory(normalizedBottlePath);
   if (!bottleDirectory.existsSync()) {
     return BottleArchiveExportFailed('Bottle directory was not found.');
@@ -40,7 +40,7 @@ BottleArchiveExportResult _exportBottleArchive({
   }
 
   return BottleArchiveExported(
-    BottleArchiveRecord(bottleId: bottle.id, archivePath: archivePath),
+    BottleArchiveRecord(bottleId: bottle.id.value, archivePath: archivePath),
   );
 }
 
@@ -90,18 +90,18 @@ BottleArchiveImportResult _importBottleArchive({
     }
 
     final imported = _readBottleMetadata(extractedBottlePath);
-    if (!_isValidBottleArchiveId(imported.id)) {
+    if (!_isValidBottleArchiveId(imported.id.value)) {
       return const BottleArchiveImportFailed(
         'Bottle archive metadata contains an invalid bottle id.',
       );
     }
-    if (hasBottle(imported.id)) {
-      return BottleArchiveImportConflict(imported.id);
+    if (hasBottle(imported.id.value)) {
+      return BottleArchiveImportConflict(imported.id.value);
     }
 
-    final destinationPath = _joinPath(bottleDirectory, [imported.id]);
+    final destinationPath = _joinPath(bottleDirectory, [imported.id.value]);
     if (Directory(destinationPath).existsSync()) {
-      return BottleArchiveImportConflict(imported.id);
+      return BottleArchiveImportConflict(imported.id.value);
     }
 
     final relocated = imported.withPath(destinationPath);

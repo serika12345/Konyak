@@ -4,7 +4,7 @@ String _programSettingsJsonPath({
   required BottleRecord bottle,
   required String programPath,
 }) {
-  return _joinPath(bottle.path, [
+  return _joinPath(bottle.path.value, [
     'program-settings',
     _programSettingsFileName(programPath, extension: 'json'),
   ]);
@@ -47,7 +47,7 @@ BottleRecord _bottleFromCreateRequest(
   String dataHome, {
   String? bottleDirectory,
 }) {
-  final id = _bottleIdFromName(request.name);
+  final id = _bottleIdFromName(request.name.value);
   if (id.isEmpty) {
     throw const BottleRepositoryException('Bottle name cannot form an id.');
   }
@@ -55,9 +55,9 @@ BottleRecord _bottleFromCreateRequest(
   final directory = bottleDirectory ?? _joinPath(dataHome, const ['bottles']);
   return BottleRecord(
     id: id,
-    name: request.name,
+    name: request.name.value,
     path: _joinPath(directory, [id]),
-    windowsVersion: request.windowsVersion,
+    windowsVersion: request.windowsVersion.value,
   );
 }
 
@@ -214,7 +214,7 @@ bool _hasBottleAtPath(
   final normalizedPath = _normalizeFilesystemPath(path);
   return bottles.any(
     (bottle) =>
-        bottle.id != exceptId &&
-        _normalizeFilesystemPath(bottle.path) == normalizedPath,
+        bottle.id.value != exceptId &&
+        _normalizeFilesystemPath(bottle.path.value) == normalizedPath,
   );
 }

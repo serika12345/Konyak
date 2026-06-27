@@ -17,7 +17,10 @@ void _recordExternalProgramLaunch({
 }) {
   try {
     final launchIndexFile = File(
-      _joinPath(bottle.path, const ['cache', 'external-program-launches.json']),
+      _joinPath(bottle.path.value, const [
+        'cache',
+        'external-program-launches.json',
+      ]),
     );
 
     final existingEntries = <Map<String, Object?>>[];

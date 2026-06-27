@@ -4,24 +4,34 @@ final class ProgramEnvironmentOverrides {
   ProgramEnvironmentOverrides(Map<String, String> variables)
     : _variables = variables
           .map(
-            (name, value) =>
-                MapEntry(_requiredEnvironmentVariableName(name), value),
+            (name, value) => MapEntry(
+              ProgramEnvironmentVariableName(name),
+              ProgramEnvironmentVariableValue(value),
+            ),
           )
           .lock;
 
   const ProgramEnvironmentOverrides.empty() : _variables = const IMapConst({});
 
-  final IMap<String, String> _variables;
+  final IMap<ProgramEnvironmentVariableName, ProgramEnvironmentVariableValue>
+  _variables;
 
   Map<String, String> toMap() {
-    return _variables.unlockView;
+    return _variables
+        .map((name, value) => MapEntry(name.value, value.value))
+        .unlockView;
   }
 
   ProgramEnvironmentOverrides add(String name, String value) {
-    return ProgramEnvironmentOverrides(
-      _variables.add(_requiredEnvironmentVariableName(name), value).unlockView,
+    return ProgramEnvironmentOverrides._withVariables(
+      _variables.add(
+        ProgramEnvironmentVariableName(name),
+        ProgramEnvironmentVariableValue(value),
+      ),
     );
   }
+
+  ProgramEnvironmentOverrides._withVariables(this._variables);
 
   @override
   bool operator ==(Object other) {
@@ -37,34 +47,44 @@ final class ProgramRunEnvironment {
   ProgramRunEnvironment(Map<String, String> variables)
     : _variables = variables
           .map(
-            (name, value) =>
-                MapEntry(_requiredEnvironmentVariableName(name), value),
+            (name, value) => MapEntry(
+              ProgramEnvironmentVariableName(name),
+              ProgramEnvironmentVariableValue(value),
+            ),
           )
           .lock;
 
   const ProgramRunEnvironment.empty() : _variables = const IMapConst({});
 
-  final IMap<String, String> _variables;
+  final IMap<ProgramEnvironmentVariableName, ProgramEnvironmentVariableValue>
+  _variables;
 
   String? operator [](String name) {
-    return _variables[name];
+    return _variables[ProgramEnvironmentVariableName(name)]?.value;
   }
 
   Map<String, String> toMap() {
-    return _variables.unlockView;
+    return _variables
+        .map((name, value) => MapEntry(name.value, value.value))
+        .unlockView;
   }
 
   ProgramRunEnvironment merge(ProgramRunEnvironment other) {
-    return ProgramRunEnvironment(
-      _variables.addAll(other._variables).unlockView,
+    return ProgramRunEnvironment._withVariables(
+      _variables.addAll(other._variables),
     );
   }
 
   ProgramRunEnvironment add(String name, String value) {
-    return ProgramRunEnvironment(
-      _variables.add(_requiredEnvironmentVariableName(name), value).unlockView,
+    return ProgramRunEnvironment._withVariables(
+      _variables.add(
+        ProgramEnvironmentVariableName(name),
+        ProgramEnvironmentVariableValue(value),
+      ),
     );
   }
+
+  ProgramRunEnvironment._withVariables(this._variables);
 
   @override
   bool operator ==(Object other) {
@@ -73,16 +93,4 @@ final class ProgramRunEnvironment {
 
   @override
   int get hashCode => _variables.hashCode;
-}
-
-String _requiredEnvironmentVariableName(String value) {
-  final name = _requiredNonBlankDomainString(
-    value,
-    'environment variable name',
-  );
-  if (name.contains('=')) {
-    throw ArgumentError.value(value, 'environment variable name');
-  }
-
-  return name;
 }

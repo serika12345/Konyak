@@ -22,8 +22,8 @@ CliResult? _handleWineProcessCommand(
       bottleCatalog: activeBottleCatalog,
       programRunPlanner: context.programRunPlanner,
       programRunner: context.programRunner,
-      bottleId: wineProcessTerminationRequest.bottleId,
-      processId: wineProcessTerminationRequest.processId,
+      bottleId: wineProcessTerminationRequest.bottleId.value,
+      processId: wineProcessTerminationRequest.processId.value,
     );
   }
 
@@ -34,7 +34,9 @@ CliResult? _handleWineProcessCommand(
       bottleCatalog: activeBottleCatalog,
       programRunPlanner: context.programRunPlanner,
       programRunner: context.programRunner,
-      bottleId: wineProcessGroupTerminationRequest.bottleId,
+      bottleId: wineProcessGroupTerminationRequest.bottleId.map(
+        (value) => value.value,
+      ),
     );
   }
 

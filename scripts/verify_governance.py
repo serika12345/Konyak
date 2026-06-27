@@ -190,8 +190,14 @@ def require_result_boundary_rules() -> None:
         "IoResult<BottleRecord?> findBottle",
     )
     for expected in [
+        "final BottleId id;",
+        "final BottleName name;",
+        "final BottlePath path;",
+        "final WindowsVersion windowsVersion;",
         "final IList<PinnedProgramRecord> pinnedPrograms;",
-        "final Option<String> iconPath;",
+        "final ProgramName name;",
+        "final ProgramPath path;",
+        "final Option<ProgramIconPath> iconPath;",
         "Option<String> iconPath = const Option.none()",
         "iconPath.map(",
         "throw ArgumentError.value",
@@ -219,15 +225,15 @@ def require_result_boundary_rules() -> None:
     )
     for expected in [
         "final Option<ProgramMetadataRecord> metadata;",
-        "final Option<String> hostPath;",
+        "final Option<ProgramPath> hostPath;",
         "Option<ProgramMetadataRecord> extract({",
-        "final Option<String> architecture;",
-        "final Option<String> fileDescription;",
-        "final Option<String> productName;",
-        "final Option<String> companyName;",
-        "final Option<String> fileVersion;",
-        "final Option<String> productVersion;",
-        "final Option<String> iconPath;",
+        "final Option<ProgramArchitecture> architecture;",
+        "final Option<ProgramFileDescription> fileDescription;",
+        "final Option<ProgramProductName> productName;",
+        "final Option<ProgramCompanyName> companyName;",
+        "final Option<ProgramFileVersion> fileVersion;",
+        "final Option<ProgramProductVersion> productVersion;",
+        "final Option<ProgramIconPath> iconPath;",
     ]:
         require_contains("packages/konyak_cli/lib/src/domain/program/program_catalog_models.dart", expected)
     require_not_contains(
@@ -247,13 +253,17 @@ def require_result_boundary_rules() -> None:
         "final String? hostPath;",
     )
     for expected in [
-        "final Option<String> currentVersion;",
-        "final Option<String> latestVersion;",
-        "final Option<String> versionUrl;",
-        "final Option<String> archiveUrl;",
-        "final Option<String> archiveSha256;",
-        "final Option<String> sourceManifestUrl;",
-        "final Option<String> sourceManifestSignatureUrl;",
+        "final Option<RuntimeVersion> currentVersion;",
+        "final Option<RuntimeVersion> latestVersion;",
+        "final Option<RuntimeVersionUrl> versionUrl;",
+        "final Option<RuntimeArchiveUrl> archiveUrl;",
+        "final Option<RuntimeSourceManifestUrl> sourceManifestUrl;",
+        "final Option<RuntimeSourceManifestSignatureUrl> sourceManifestSignatureUrl;",
+        "final Option<AppVersion> currentVersion;",
+        "final Option<ReleaseVersion> latestVersion;",
+        "final Option<AppArchiveUrl> archiveUrl;",
+        "final Option<AppArchiveSha256> archiveSha256;",
+        "final Option<AppInstallPath> installPath;",
     ]:
         require_contains("packages/konyak_cli/lib/src/domain/update/update_records.dart", expected)
     for forbidden in [
@@ -304,7 +314,7 @@ def require_result_boundary_rules() -> None:
         )
     require_contains(
         "packages/konyak_cli/lib/src/domain/runtime/runtime_package_installation.dart",
-        "final Option<String> archiveSha256;",
+        "final Option<RuntimeArchiveChecksumValue> archiveSha256;",
     )
     require_not_contains(
         "packages/konyak_cli/lib/src/domain/runtime/runtime_package_installation.dart",
@@ -312,20 +322,20 @@ def require_result_boundary_rules() -> None:
     )
     require_contains(
         "packages/konyak_cli/lib/src/domain/runtime/runtime_models.dart",
-        "final Option<String> version;",
+        "final Option<RuntimeVersion> version;",
     )
     require_not_contains(
         "packages/konyak_cli/lib/src/domain/runtime/runtime_models.dart",
         "final String? version;",
     )
     for expected in [
-        "final Option<String> distributionKind;",
+        "final Option<RuntimeDistributionKind> distributionKind;",
         "final Option<bool> isInstalled;",
-        "final Option<String> archiveUrl;",
-        "final Option<String> versionUrl;",
-        "final Option<String> applicationSupportPath;",
-        "final Option<String> libraryPath;",
-        "final Option<String> executablePath;",
+        "final Option<RuntimeArchiveUrl> archiveUrl;",
+        "final Option<RuntimeVersionUrl> versionUrl;",
+        "final Option<RuntimeComponentPath> applicationSupportPath;",
+        "final Option<RuntimeComponentPath> libraryPath;",
+        "final Option<RuntimeComponentPath> executablePath;",
         "final Option<RuntimeStack> stack;",
     ]:
         require_contains("packages/konyak_cli/lib/src/domain/runtime/runtime_models.dart", expected)

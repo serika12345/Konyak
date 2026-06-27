@@ -25,20 +25,20 @@ class DartIoAppUpdateInstaller implements AppUpdateInstaller {
   @override
   AppUpdateInstallResult install(AppUpdateRecord update) {
     final archiveUrl = update.archiveUrl.toNullable();
-    if (archiveUrl == null || archiveUrl.trim().isEmpty) {
+    if (archiveUrl == null || archiveUrl.value.trim().isEmpty) {
       return const AppUpdateInstallFailed(
         'Konyak update metadata does not contain an archive URL.',
       );
     }
     final expectedSha256 = update.archiveSha256.toNullable();
-    if (expectedSha256 == null || !_isSha256Hex(expectedSha256)) {
+    if (expectedSha256 == null || !_isSha256Hex(expectedSha256.value)) {
       return const AppUpdateInstallFailed(
         'Konyak update metadata does not contain a valid archive checksum.',
       );
     }
 
     final fileName = _fileNameFromUrl(
-      archiveUrl,
+      archiveUrl.value,
     ).match(() => 'Konyak-update', (value) => value);
     final updatesDirectory = Directory(_appUpdateCacheDirectory(environment));
     final archivePath = _joinPath(updatesDirectory.path, [fileName]);
@@ -50,7 +50,7 @@ class DartIoAppUpdateInstaller implements AppUpdateInstaller {
         '--location',
         '--output',
         archivePath,
-        archiveUrl,
+        archiveUrl.value,
       ], runInShell: false);
       if (download.exitCode != 0) {
         return AppUpdateInstallFailed(
@@ -60,13 +60,13 @@ class DartIoAppUpdateInstaller implements AppUpdateInstaller {
 
       final archive = File(archivePath);
       final actualSha256 = _sha256HexDigest(archive);
-      if (actualSha256.toLowerCase() != expectedSha256.toLowerCase()) {
+      if (actualSha256.toLowerCase() != expectedSha256.value.toLowerCase()) {
         if (archive.existsSync()) {
           archive.deleteSync();
         }
         return AppUpdateInstallFailed(
           'Konyak update archive checksum mismatch: expected '
-          '$expectedSha256, got $actualSha256.',
+          '${expectedSha256.value}, got $actualSha256.',
         );
       }
 
@@ -98,11 +98,15 @@ class DartIoAppUpdateInstaller implements AppUpdateInstaller {
       return switch (openResult) {
         PathOpenCompleted() => AppUpdateInstallCompleted(
           AppUpdateInstallRecord(
-            appId: update.appId,
+            appId: update.appId.value,
             status: 'installed',
-            currentVersion: update.currentVersion,
-            installedVersion: update.latestVersion,
-            archiveUrl: Option.of(archiveUrl),
+            currentVersion: update.currentVersion.map(
+              (version) => version.value,
+            ),
+            installedVersion: update.latestVersion.map(
+              (version) => version.value,
+            ),
+            archiveUrl: Option.of(archiveUrl.value),
             archiveSha256: Option.of(actualSha256),
             installPath: Option.of(archivePath),
           ),

@@ -13,6 +13,137 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-28 01:10 JST
+- State: `completed`
+- Branch: `main`
+- Active work: replace semantic CLI domain primitives with domain value objects.
+- Related TODO: none; this completes the focused value-object replacement work.
+- Latest commit: `532615d` (`Extract program settings form controller`).
+- Purpose: move all domain values with meaning or invariants out of raw
+  primitives while preserving CLI JSON, persisted metadata, and platform/I/O
+  boundary contracts.
+- Completed work: changed the remaining bottle mutation, runtime settings,
+  program catalog/metadata, program settings, program run, runtime install,
+  runtime record, runtime update, app update, process, and environment value
+  fields to value objects; kept constructors validating external primitive
+  inputs; unwrapped `.value` only at JSON, repository, filesystem, process, and
+  platform boundaries; updated immutability and CLI contract tests; updated
+  governance checks to lock the new VO fields.
+- Remaining work: none for the semantic primitive domain replacement. Plain
+  labels/messages and I/O payload strings remain primitive by design.
+- Next action: continue product/runtime backlog from `docs/todo.md`.
+- Verification: focused failures and full `cli-test` failures were observed
+  during the replacement. After implementation, `just cli-test`,
+  `just verify-safety`, `just verify-governance`, `just format-check`,
+  `just lint`, and `git diff --check` passed.
+
+- Timestamp: 2026-06-27 23:55 JST
+- State: `completed`
+- Branch: `main`
+- Active work: narrow `sealed` usage in the new domain value objects to the
+  actual pattern-matching bases.
+- Related TODO: none; this refines the focused value-object preparation work.
+- Latest commit: `6da4ea3` (`Split home navigation state`).
+- Purpose: avoid marking single-case value objects as sealed when they are not
+  themselves unions; keep closed hierarchies only where switch-pattern entry
+  points are intentional.
+- Completed work: converted the individual freezed value object declarations
+  from `sealed class` to `abstract class`, leaving `DomainValueObject`,
+  `StringDomainValueObject`, `IntDomainValueObject`, and
+  `DoubleDomainValueObject` sealed as the closed bases used for pattern
+  matching.
+- Remaining work: none for sealed-scope cleanup. Existing primitive field
+  replacement remains deferred.
+- Next action: begin the first compatibility-preserving value-object
+  replacement slice after this modeling shape is accepted.
+- Verification: `just cli-codegen`, focused domain value object test, CLI
+  analyzer, `just cli-test`, `just verify-governance`, `just verify-safety`,
+  `just format-check`, and `just lint` passed.
+
+- Timestamp: 2026-06-27 23:49 JST
+- State: `completed`
+- Branch: `main`
+- Active work: keep freezed-generated Dart out of git while preserving fresh
+  checkout verification for the new domain value objects.
+- Related TODO: none; this corrects the code generation policy for the focused
+  value-object preparation work.
+- Latest commit: `6da4ea3` (`Split home navigation state`).
+- Purpose: avoid committing generated freezed output and make repository gates
+  responsible for producing generated files before CLI analyze/test/format
+  checks need them.
+- Completed work: ignored `*.freezed.dart`, removed the generated
+  `domain_value_objects.freezed.dart` from the commit set, and added a
+  `cli-codegen` just target that runs `dart run build_runner build` before
+  `cli-format-check`, `cli-analyze`, and `cli-test`.
+- Remaining work: none for generated-file policy. Existing primitive field
+  replacement remains deferred.
+- Next action: begin the first compatibility-preserving value-object
+  replacement slice after this tooling shape is accepted.
+- Verification: focused domain value object test, `just cli-test`,
+  `just verify-governance`, `just verify-safety`, `just format-check`, and
+  `just lint` passed with freezed output generated locally as an ignored file.
+
+- Timestamp: 2026-06-27 23:43 JST
+- State: `completed`
+- Branch: `main`
+- Active work: rebuild the new domain value objects around `freezed`, sealed
+  bases, and standalone Dart library boundaries instead of extending the
+  existing large `part` graph.
+- Related TODO: none; this is the corrected domain modeling preparation before
+  replacing existing primitive fields.
+- Latest commit: `6da4ea3` (`Split home navigation state`).
+- Purpose: keep semantic primitive values as immutable complete-constructor
+  value objects while reducing hand-written equality/hash/toString code and
+  making the types usable with Dart switch pattern matching.
+- Completed work: added `freezed_annotation`, `freezed`, and `build_runner` to
+  the CLI package; converted `domain_value_objects.dart` from a `part of`
+  source file into a standalone exported domain library; regenerated
+  `domain_value_objects.freezed.dart`; modeled value objects as `sealed class`
+  freezed types implementing sealed value-object bases; disabled generated
+  `copyWith`, `when`, and `map` APIs so invariants cannot be bypassed and Dart
+  switch patterns remain the intended matching surface.
+- Remaining work: existing records, parser results, JSON contracts, repository
+  storage, and Flutter summaries still use primitives. Replace them in small
+  slices without changing external CLI output or persisted metadata shape.
+- Next action: start replacement at the lowest-risk identity/path slice, likely
+  `BottleRecord` and `PinnedProgramRecord`, while keeping serialization stable.
+- Verification: failing focused test observed first for the missing sealed
+  value-object base. Focused test and analyzer passed after the freezed
+  conversion. Full CLI and repository gates passed: `just cli-test`,
+  `just verify-governance`, `just verify-safety`, `just format-check`, and
+  `just lint`.
+
+- Timestamp: 2026-06-27 23:21 JST
+- State: `completed`
+- Branch: `main`
+- Active work: define domain value objects for semantic primitive values before
+  replacing existing primitive fields.
+- Related TODO: none; this is a focused domain modeling preparation requested
+  before broader replacement work.
+- Latest commit: `6da4ea3` (`Split home navigation state`).
+- Purpose: make the implicit invariants and meanings behind non-label
+  primitive domain values explicit before changing existing model fields,
+  parser contracts, repository storage, or Flutter summaries.
+- Completed work: reviewed the current primitive-domain audit, added failing
+  focused tests first for missing value objects, introduced immutable complete
+  constructor value object types under the CLI domain for bottle/program IDs,
+  paths, Windows versions, runtime settings finite values, runtime/update
+  identities and statuses, graphics backend hint values, environment variable
+  names, and bounded numeric settings.
+- Remaining work: replace existing primitive fields and parser/result
+  contracts with these value objects in small compatibility-preserving slices.
+  No existing domain model, CLI JSON, repository storage, or Flutter summary
+  usage has been rewired yet.
+- Next action: start with the narrowest replacement slice, likely
+  `BottleRecord`/`PinnedProgramRecord` identity and path fields, while keeping
+  JSON output and persisted bottle metadata stable.
+- Verification: failing focused test observed first for undefined value object
+  classes with `cd packages/konyak_cli && dart test
+  test/domain_value_objects_test.dart`. After implementation, the focused test
+  passed. `dart format` ran on the new/changed Dart files. Full CLI and
+  repository gates passed: `just cli-test`, `just verify-governance`,
+  `just verify-safety`, `just format-check`, and `just lint`.
+
 - Timestamp: 2026-06-27 22:52 JST
 - State: `completed`
 - Branch: `main`

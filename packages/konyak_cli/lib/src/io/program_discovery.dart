@@ -12,7 +12,7 @@ class DartIoBottleProgramRepository implements BottleProgramRepository {
   List<BottleProgramRecord> listPrograms(BottleRecord bottle) {
     final programs = <BottleProgramRecord>[];
     for (final source in _bottleStartMenuSources(bottle)) {
-      final directory = Directory(source.path);
+      final directory = Directory(source.path.value);
       if (!directory.existsSync()) {
         continue;
       }
@@ -42,7 +42,7 @@ class DartIoBottleProgramRepository implements BottleProgramRepository {
             id: id,
             name: name,
             path: entity.path,
-            source: source.id,
+            source: source.id.value,
             metadata: metadata,
           ),
         );
@@ -59,33 +59,33 @@ class DartIoBottleProgramRepository implements BottleProgramRepository {
         continue;
       }
 
-      if (_hasDiscoveredProgramPath(programs, pinnedProgram.path)) {
+      if (_hasDiscoveredProgramPath(programs, pinnedProgram.path.value)) {
         continue;
       }
 
       final id = _uniqueProgramId(
-        baseId: _bottleIdFromName(pinnedProgram.name),
+        baseId: _bottleIdFromName(pinnedProgram.name.value),
         existing: programs,
       );
       final metadata = _metadataExtractor.extract(
         bottle: bottle,
         programPath: _metadataProgramPath(
           bottle: bottle,
-          programPath: pinnedProgram.path,
+          programPath: pinnedProgram.path.value,
         ),
       );
       programs.add(
         BottleProgramRecord(
           id: id,
-          name: pinnedProgram.name,
-          path: pinnedProgram.path,
+          name: pinnedProgram.name.value,
+          path: pinnedProgram.path.value,
           source: 'pinned',
           metadata: metadata,
         ),
       );
     }
 
-    programs.sort((left, right) => left.name.compareTo(right.name));
+    programs.sort((left, right) => left.name.value.compareTo(right.name.value));
     return List.unmodifiable(programs);
   }
 }
@@ -97,7 +97,7 @@ bool _hasDiscoveredProgramPath(
   final normalizedProgramPath = _normalizeFilesystemPath(programPath);
   return programs.any(
     (program) =>
-        _normalizeFilesystemPath(program.path) == normalizedProgramPath,
+        _normalizeFilesystemPath(program.path.value) == normalizedProgramPath,
   );
 }
 
@@ -123,8 +123,8 @@ class DartIoBottlePrefixInitializer implements BottlePrefixInitializer {
           continue;
         case ProgramRunCompleted(:final processExitCode):
           return BottlePrefixInitializationFailed(
-            '${request.programPath} exited with code $processExitCode. '
-            'See ${request.logPath}.',
+            '${request.programPath.value} exited with code $processExitCode. '
+            'See ${request.logPath.value}.',
           );
         case ProgramRunFailed(:final message):
           return BottlePrefixInitializationFailed(message);

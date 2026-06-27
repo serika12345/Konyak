@@ -51,7 +51,7 @@ CliResult? _handleBottleReadCommand(
       bottleId: bottleProgramsListId,
       onFound: (bottle) => _jsonSuccess(<String, Object?>{
         'bottlePrograms': <String, Object?>{
-          'bottleId': bottle.id,
+          'bottleId': bottle.id.value,
           'programs': context.bottleProgramRepository
               .listPrograms(bottle)
               .map((program) => program.toJson())

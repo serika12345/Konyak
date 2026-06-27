@@ -96,18 +96,23 @@ class LinuxWineInstallRequest {
 
   RuntimeInstallOperation get operation => _accessors.operation;
 
-  Option<String> get archivePath => _accessors.archivePath;
+  Option<String> get archivePath =>
+      _accessors.archivePath.map((path) => path.value);
 
-  Option<String> get archiveUrl => _accessors.archiveUrl;
+  Option<String> get archiveUrl =>
+      _accessors.archiveUrl.map((url) => url.value);
 
-  Option<String> get archiveSha256 => _accessors.archiveSha256;
+  Option<String> get archiveSha256 =>
+      _accessors.archiveSha256.map((checksum) => checksum.value);
 
-  IList<String> get componentArchivePaths => _accessors.componentArchivePaths;
+  IList<String> get componentArchivePaths =>
+      _accessors.componentArchivePaths.map((path) => path.value).toIList();
 
-  Option<String> get sourceManifest => _accessors.sourceManifest;
+  Option<String> get sourceManifest =>
+      _accessors.sourceManifest.map((sourceManifest) => sourceManifest.value);
 
   Option<String> get sourceManifestSignature =>
-      _accessors.sourceManifestSignature;
+      _accessors.sourceManifestSignature.map((signature) => signature.value);
 
   bool get force => _accessors.force;
 }

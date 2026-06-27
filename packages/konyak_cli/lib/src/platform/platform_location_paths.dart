@@ -6,8 +6,8 @@ Option<String> _bottleLocationPath({
 }) {
   final normalized = location.trim().toLowerCase();
   return switch (normalized) {
-    'root' => Option.of(bottle.path),
-    'c-drive' => Option.of(_joinPath(bottle.path, const ['drive_c'])),
+    'root' => Option.of(bottle.path.value),
+    'c-drive' => Option.of(_joinPath(bottle.path.value, const ['drive_c'])),
     _ => const Option.none(),
   };
 }

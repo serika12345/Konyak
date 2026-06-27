@@ -4,13 +4,13 @@ CliResult _programUpdateJsonResult(ProgramUpdateResult result) {
   return switch (result) {
     ProgramUpdated(:final bottle) => _bottleJsonResult(bottle),
     ProgramUpdateMissingBottle(:final bottleId) => _bottleNotFoundError(
-      bottleId,
+      bottleId.value,
     ),
     ProgramUpdateMissingProgram(:final programPath) => _jsonError(
       exitCode: 66,
       code: 'programNotPinned',
       message: 'Program is not pinned.',
-      extra: <String, Object?>{'programPath': programPath},
+      extra: <String, Object?>{'programPath': programPath.value},
     ),
     ProgramUpdateFailed(:final message) => _bottleRepositoryFailureJsonResult(
       message,
@@ -44,20 +44,22 @@ CliResult _runPinnedProgramLauncherCli({
       }
 
       return _foundBottleJsonResult(
-        result: bottleRepository.findBottle(manifest.bottleId),
-        bottleId: manifest.bottleId,
+        result: bottleRepository.findBottle(manifest.bottleId.value),
+        bottleId: manifest.bottleId.value,
         onFound: (bottle) {
           final expectedLauncherId = _pinnedProgramLauncherId(
-            bottleId: manifest.bottleId,
-            programPath: manifest.programPath,
+            bottleId: manifest.bottleId.value,
+            programPath: manifest.programPath.value,
           );
-          if (manifest.launcherId != expectedLauncherId ||
-              !_hasPinnedProgram(bottle, manifest.programPath)) {
+          if (manifest.launcherId.value != expectedLauncherId ||
+              !_hasPinnedProgram(bottle, manifest.programPath.value)) {
             return _jsonError(
               exitCode: 66,
               code: 'programNotPinned',
               message: 'Program is not pinned.',
-              extra: <String, Object?>{'programPath': manifest.programPath},
+              extra: <String, Object?>{
+                'programPath': manifest.programPath.value,
+              },
             );
           }
 
@@ -66,7 +68,7 @@ CliResult _runPinnedProgramLauncherCli({
             programRunPlanner: programRunPlanner,
             programRunner: programRunner,
             bottle: bottle,
-            programPath: manifest.programPath,
+            programPath: manifest.programPath.value,
           );
         },
       );
@@ -80,12 +82,12 @@ CliResult _programSettingsReadJsonResult({
 }) {
   return switch (result) {
     ProgramSettingsRead(:final settings) => _programSettingsJsonResult(
-      bottleId: request.bottleId,
-      programPath: request.programPath,
+      bottleId: request.bottleId.value,
+      programPath: request.programPath.value,
       settings: settings,
     ),
     ProgramSettingsReadMissingBottle(:final bottleId) => _bottleNotFoundError(
-      bottleId,
+      bottleId.value,
     ),
     ProgramSettingsReadFailed(:final message) =>
       _bottleRepositoryFailureJsonResult(message),
@@ -98,12 +100,12 @@ CliResult _programSettingsUpdateJsonResult({
 }) {
   return switch (result) {
     ProgramSettingsUpdated(:final settings) => _programSettingsJsonResult(
-      bottleId: request.bottleId,
-      programPath: request.programPath,
+      bottleId: request.bottleId.value,
+      programPath: request.programPath.value,
       settings: settings,
     ),
     ProgramSettingsUpdateMissingBottle(:final bottleId) => _bottleNotFoundError(
-      bottleId,
+      bottleId.value,
     ),
     ProgramSettingsUpdateFailed(:final message) =>
       _bottleRepositoryFailureJsonResult(message),

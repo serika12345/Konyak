@@ -43,7 +43,7 @@ AppSettingsRecord? _parseJsonAppSettingsUpdateRequest(List<String> arguments) {
   );
   return settings.match(
     () => null,
-    (value) => value.defaultBottlePath.trim().isEmpty ? null : value,
+    (value) => value.defaultBottlePath.value.trim().isEmpty ? null : value,
   );
 }
 
@@ -90,7 +90,7 @@ _parseJsonWineProcessGroupTerminationRequest(List<String> arguments) {
   if (bottleId == null) {
     return results.wasParsed('bottle')
         ? null
-        : const WineProcessGroupTerminationRequest();
+        : WineProcessGroupTerminationRequest();
   }
 
   return WineProcessGroupTerminationRequest(bottleId: Option.of(bottleId));

@@ -29,13 +29,13 @@ _resolveRuntimeStackSourceArchiveBundleFromPlan({
 }) {
   for (final componentPlan in plan.components) {
     final downloadFailure = _downloadRuntimeStackSourceArchive(
-      source: componentPlan.component.archiveUrl,
-      targetPath: componentPlan.archivePath,
+      source: componentPlan.component.archiveUrl.value,
+      targetPath: componentPlan.archivePath.value,
       progressSink: progressSink,
       stage: 'downloading',
       message: componentPlan.downloadingMessage,
-      startFraction: componentPlan.startFraction,
-      endFraction: componentPlan.endFraction,
+      startFraction: componentPlan.startFraction.value,
+      endFraction: componentPlan.endFraction.value,
     );
     if (downloadFailure != null) {
       return _RuntimeStackSourceArchiveBundleFailed(downloadFailure);
@@ -45,14 +45,16 @@ _resolveRuntimeStackSourceArchiveBundleFromPlan({
       progressSink,
       stage: 'verifying',
       message: componentPlan.verifyingMessage,
-      fraction: componentPlan.endFraction,
+      fraction: componentPlan.endFraction.value,
     );
-    final actualSha256 = _sha256HexDigest(File(componentPlan.archivePath));
+    final actualSha256 = _sha256HexDigest(
+      File(componentPlan.archivePath.value),
+    );
     if (actualSha256.toLowerCase() !=
-        componentPlan.component.sha256.toLowerCase()) {
+        componentPlan.component.sha256.value.toLowerCase()) {
       return _RuntimeStackSourceArchiveBundleFailed(
-        'Runtime stack component `${componentPlan.component.id}` checksum '
-        'mismatch: expected ${componentPlan.component.sha256}, '
+        'Runtime stack component `${componentPlan.component.id.value}` checksum '
+        'mismatch: expected ${componentPlan.component.sha256.value}, '
         'got $actualSha256.',
       );
     }
@@ -91,13 +93,13 @@ _resolveRuntimeStackSourceArchiveBundleFromPlanStreaming({
 }) async {
   for (final componentPlan in plan.components) {
     final downloadFailure = await _downloadRuntimeStackSourceArchiveStreaming(
-      source: componentPlan.component.archiveUrl,
-      targetPath: componentPlan.archivePath,
+      source: componentPlan.component.archiveUrl.value,
+      targetPath: componentPlan.archivePath.value,
       progressSink: progressSink,
       stage: 'downloading',
       message: componentPlan.downloadingMessage,
-      startFraction: componentPlan.startFraction,
-      endFraction: componentPlan.endFraction,
+      startFraction: componentPlan.startFraction.value,
+      endFraction: componentPlan.endFraction.value,
     );
     if (downloadFailure != null) {
       return _RuntimeStackSourceArchiveBundleFailed(downloadFailure);
@@ -107,14 +109,16 @@ _resolveRuntimeStackSourceArchiveBundleFromPlanStreaming({
       progressSink,
       stage: 'verifying',
       message: componentPlan.verifyingMessage,
-      fraction: componentPlan.endFraction,
+      fraction: componentPlan.endFraction.value,
     );
-    final actualSha256 = _sha256HexDigest(File(componentPlan.archivePath));
+    final actualSha256 = _sha256HexDigest(
+      File(componentPlan.archivePath.value),
+    );
     if (actualSha256.toLowerCase() !=
-        componentPlan.component.sha256.toLowerCase()) {
+        componentPlan.component.sha256.value.toLowerCase()) {
       return _RuntimeStackSourceArchiveBundleFailed(
-        'Runtime stack component `${componentPlan.component.id}` checksum '
-        'mismatch: expected ${componentPlan.component.sha256}, '
+        'Runtime stack component `${componentPlan.component.id.value}` checksum '
+        'mismatch: expected ${componentPlan.component.sha256.value}, '
         'got $actualSha256.',
       );
     }

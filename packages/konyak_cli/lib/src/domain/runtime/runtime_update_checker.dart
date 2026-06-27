@@ -20,25 +20,25 @@ class DartIoRuntimeUpdateChecker implements RuntimeUpdateChecker {
 
   RuntimeUpdateCheckResult _checkRuntime(RuntimeRecord runtime) {
     final versionUrl = runtime.versionUrl.toNullable();
-    if (versionUrl == null || versionUrl.trim().isEmpty) {
+    if (versionUrl == null || versionUrl.value.trim().isEmpty) {
       final currentVersion = _runtimeWineVersion(runtime);
       return RuntimeUpdateCheckCompleted(
         RuntimeUpdateRecord(
-          runtimeId: runtime.id,
+          runtimeId: runtime.id.value,
           status: 'unknown',
-          currentVersion: currentVersion,
-          archiveUrl: runtime.archiveUrl,
+          currentVersion: currentVersion.map((version) => version.value),
+          archiveUrl: runtime.archiveUrl.map((url) => url.value),
         ),
       );
     }
 
     final currentVersion = _runtimeWineVersion(runtime);
-    final metadata = releaseMetadataFetcher.fetch(versionUrl);
+    final metadata = releaseMetadataFetcher.fetch(versionUrl.value);
     return switch (metadata) {
       RuntimeReleaseMetadataFetched(:final metadata) =>
         _runtimeUpdateFromMetadata(
           runtime: runtime,
-          versionUrl: versionUrl,
+          versionUrl: versionUrl.value,
           currentVersion: currentVersion,
           metadata: metadata,
         ),
@@ -51,7 +51,7 @@ class DartIoRuntimeUpdateChecker implements RuntimeUpdateChecker {
 RuntimeUpdateCheckResult _runtimeUpdateFromMetadata({
   required RuntimeRecord runtime,
   required String versionUrl,
-  required Option<String> currentVersion,
+  required Option<RuntimeVersion> currentVersion,
   required RuntimeReleaseMetadata metadata,
 }) {
   if (_requiresRuntimeStackSourceManifest(runtime) &&
@@ -64,19 +64,22 @@ RuntimeUpdateCheckResult _runtimeUpdateFromMetadata({
 
   return RuntimeUpdateCheckCompleted(
     RuntimeUpdateRecord(
-      runtimeId: runtime.id,
+      runtimeId: runtime.id.value,
       status: _updateStatus(
-        currentVersion: currentVersion,
-        latestVersion: metadata.version,
+        currentVersion: currentVersion.map((version) => version.value),
+        latestVersion: metadata.version.value,
       ),
-      currentVersion: currentVersion,
-      latestVersion: Option.of(metadata.version),
+      currentVersion: currentVersion.map((version) => version.value),
+      latestVersion: Option.of(metadata.version.value),
       versionUrl: Option.of(versionUrl),
       archiveUrl: Option.fromNullable(
-        metadata.archiveUrl.toNullable() ?? runtime.archiveUrl.toNullable(),
+        metadata.archiveUrl.toNullable()?.value ??
+            runtime.archiveUrl.toNullable()?.value,
       ),
-      sourceManifestUrl: metadata.sourceManifestUrl,
-      sourceManifestSignatureUrl: metadata.sourceManifestSignatureUrl,
+      sourceManifestUrl: metadata.sourceManifestUrl.map((url) => url.value),
+      sourceManifestSignatureUrl: metadata.sourceManifestSignatureUrl.map(
+        (url) => url.value,
+      ),
     ),
   );
 }

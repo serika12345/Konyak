@@ -5,7 +5,7 @@ Option<RuntimeRecord> _runtimeById(
   String runtimeId,
 ) {
   for (final runtime in runtimes) {
-    if (runtime.id == runtimeId) {
+    if (runtime.id.value == runtimeId) {
       return Option.of(runtime);
     }
   }
@@ -13,10 +13,10 @@ Option<RuntimeRecord> _runtimeById(
   return const Option.none();
 }
 
-Option<String> _runtimeWineVersion(RuntimeRecord runtime) {
+Option<RuntimeVersion> _runtimeWineVersion(RuntimeRecord runtime) {
   return runtime.stack.flatMap((stack) {
     for (final component in stack.components) {
-      if (component.id == 'wine') {
+      if (component.id.value == 'wine') {
         return component.version;
       }
     }

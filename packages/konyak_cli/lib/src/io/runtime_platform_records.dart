@@ -124,7 +124,7 @@ RuntimeStackBackend _runtimeStackBackend({
   required List<RuntimeStackComponent> components,
 }) {
   final componentsById = <String, RuntimeStackComponent>{
-    for (final component in components) component.id: component,
+    for (final component in components) component.id.value: component,
   };
   final missingComponentIds = <String>[];
   final missingPaths = <String>[];
@@ -138,7 +138,7 @@ RuntimeStackBackend _runtimeStackBackend({
 
     if (!component.isInstalled) {
       missingComponentIds.add(componentId);
-      missingPaths.addAll(component.missingPaths);
+      missingPaths.addAll(component.missingPaths.map((path) => path.value));
     }
   }
 

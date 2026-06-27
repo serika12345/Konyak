@@ -221,14 +221,17 @@ void defineProgramExecutionContractTests() {
     });
 
     final settings = repository.readProgramSettings(
-      const ProgramSettingsRequest(
+      ProgramSettingsRequest(
         bottleId: 'steam',
         programPath: '/downloads/Steam.exe',
       ),
     );
     expect(settings, isA<ProgramSettingsRead>());
-    expect((settings as ProgramSettingsRead).settings.locale, 'ja_JP.UTF-8');
-    expect(settings.settings.arguments, '-silent -windowed');
+    expect(
+      (settings as ProgramSettingsRead).settings.locale.value,
+      'ja_JP.UTF-8',
+    );
+    expect(settings.settings.arguments.value, '-silent -windowed');
     expect(settings.settings.environment.toMap(), {
       'STEAM_COMPAT_DATA_PATH': '/compat',
     });
@@ -289,7 +292,7 @@ void defineProgramExecutionContractTests() {
     });
 
     final settings = repository.readProgramSettings(
-      const ProgramSettingsRequest(
+      ProgramSettingsRequest(
         bottleId: 'steam',
         programPath: '/downloads/Steam.exe',
       ),
@@ -298,8 +301,8 @@ void defineProgramExecutionContractTests() {
     final logging = (settings as ProgramSettingsRead).settings.logging
         .toNullable();
     expect(logging?.createLogFile, isTrue);
-    expect(logging?.additionalWineLoggingChannels, '+relay,+file');
-    expect(logging?.logFilePath, '/tmp/steam.cxlog');
+    expect(logging?.additionalWineLoggingChannels.value, '+relay,+file');
+    expect(logging?.logFilePath.value, '/tmp/steam.cxlog');
   });
 
   test('run-program --json runs an EXE through the program runner', () {
@@ -334,7 +337,7 @@ void defineProgramExecutionContractTests() {
     expect(result.exitCode, 0);
     expect(result.stderr, isEmpty);
     expect(
-      runner.lastRequest?.executable,
+      runner.lastRequest?.executable.value,
       'Konyak/Runtimes/linux-wine/bin/wine',
     );
     expect(runner.lastRequest?.arguments, const ['/downloads/setup.exe']);
@@ -342,7 +345,10 @@ void defineProgramExecutionContractTests() {
       runner.lastRequest?.environment.toMap()['WINEPREFIX'],
       contains('/steam'),
     );
-    expect(runner.lastRequest?.logPath, contains('/steam/logs/latest.log'));
+    expect(
+      runner.lastRequest?.logPath.value,
+      contains('/steam/logs/latest.log'),
+    );
 
     final payload = jsonDecode(result.stdout) as Map<String, Object?>;
     expect(payload, {
@@ -436,7 +442,7 @@ void defineProgramExecutionContractTests() {
           name: 'Steam',
           path: '/home/user/.local/share/konyak/bottles/steam',
           windowsVersion: 'win10',
-          runtimeSettings: const BottleRuntimeSettings(
+          runtimeSettings: BottleRuntimeSettings(
             dxrEnabled: true,
             metalHud: true,
             metalTrace: true,
@@ -517,11 +523,11 @@ void defineProgramExecutionContractTests() {
 
     expect(result.exitCode, 0);
     expect(
-      runner.lastRequest?.executable,
+      runner.lastRequest?.executable.value,
       '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wineloader',
     );
     expect(
-      runner.lastRequest?.workingDirectory.toNullable(),
+      runner.lastRequest?.workingDirectory.toNullable()?.value,
       '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin',
     );
     expect(runner.lastRequest?.arguments, const [
@@ -529,7 +535,7 @@ void defineProgramExecutionContractTests() {
       '/unix',
       '/downloads/setup.exe',
     ]);
-    expect(runner.lastRequest?.runnerKind, 'macosWine');
+    expect(runner.lastRequest?.runnerKind.value, 'macosWine');
     expect(
       runner.lastRequest?.environment.toMap(),
       containsPair(
@@ -802,7 +808,7 @@ void defineProgramExecutionContractTests() {
           name: 'Steam',
           path: bottlePath,
           windowsVersion: 'win10',
-          runtimeSettings: const BottleRuntimeSettings(dxrEnabled: true),
+          runtimeSettings: BottleRuntimeSettings(dxrEnabled: true),
         ),
       ],
     );
@@ -931,7 +937,7 @@ void defineProgramExecutionContractTests() {
             name: 'Steam',
             path: bottlePath,
             windowsVersion: 'win10',
-            runtimeSettings: const BottleRuntimeSettings(
+            runtimeSettings: BottleRuntimeSettings(
               dxrEnabled: true,
               dxmt: true,
             ),
@@ -1051,7 +1057,7 @@ void defineProgramExecutionContractTests() {
           name: 'Steam',
           path: bottlePath,
           windowsVersion: 'win10',
-          runtimeSettings: const BottleRuntimeSettings(dxrEnabled: true),
+          runtimeSettings: BottleRuntimeSettings(dxrEnabled: true),
         ),
       ],
     );
@@ -1130,7 +1136,7 @@ void defineProgramExecutionContractTests() {
           name: 'Steam',
           path: bottlePath,
           windowsVersion: 'win10',
-          runtimeSettings: const BottleRuntimeSettings(
+          runtimeSettings: BottleRuntimeSettings(
             dxrEnabled: true,
             dlssMetalFx: true,
           ),
@@ -1204,7 +1210,7 @@ void defineProgramExecutionContractTests() {
           name: 'Steam',
           path: bottlePath,
           windowsVersion: 'win10',
-          runtimeSettings: const BottleRuntimeSettings(
+          runtimeSettings: BottleRuntimeSettings(
             dxrEnabled: true,
             dlssMetalFx: true,
           ),
@@ -1249,7 +1255,7 @@ void defineProgramExecutionContractTests() {
           name: 'Steam',
           path: '/Users/user/Library/Application Support/Konyak/Bottles/Steam',
           windowsVersion: 'win10',
-          runtimeSettings: const BottleRuntimeSettings(dxmt: true),
+          runtimeSettings: BottleRuntimeSettings(dxmt: true),
         ),
       ],
     );
@@ -1327,10 +1333,7 @@ void defineProgramExecutionContractTests() {
           name: 'Steam',
           path: '/Users/user/Library/Application Support/Konyak/Bottles/Steam',
           windowsVersion: 'win10',
-          runtimeSettings: const BottleRuntimeSettings(
-            dxmt: true,
-            dlssMetalFx: true,
-          ),
+          runtimeSettings: BottleRuntimeSettings(dxmt: true, dlssMetalFx: true),
         ),
       ],
     );
@@ -1532,12 +1535,12 @@ void defineProgramExecutionContractTests() {
 
     expect(result.exitCode, 0);
     expect(
-      runner.lastRequest?.executable,
+      runner.lastRequest?.executable.value,
       '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wineloader',
     );
     expect(runner.lastRequest?.arguments, const ['winecfg']);
-    expect(runner.lastRequest?.programPath, 'winecfg');
-    expect(runner.lastRequest?.runnerKind, 'macosWine');
+    expect(runner.lastRequest?.programPath.value, 'winecfg');
+    expect(runner.lastRequest?.runnerKind.value, 'macosWine');
     expect(
       runner.lastRequest?.environment.toMap(),
       containsPair(
@@ -1582,14 +1585,14 @@ void defineProgramExecutionContractTests() {
     ).planPrefixInitialization(bottle: bottle);
 
     expect(
-      request.executable,
+      request.executable.value,
       '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wineloader',
     );
     expect(request.arguments, const ['wineboot', '--init']);
-    expect(request.programPath, 'wineboot');
-    expect(request.runnerKind, 'macosWine');
+    expect(request.programPath.value, 'wineboot');
+    expect(request.runnerKind.value, 'macosWine');
     expect(
-      request.workingDirectory.toNullable(),
+      request.workingDirectory.toNullable()?.value,
       '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin',
     );
     expect(
@@ -1611,7 +1614,7 @@ void defineProgramExecutionContractTests() {
       isNot(containsPair('WINEDLLOVERRIDES', 'mscoree,mshtml=')),
     );
     expect(
-      request.logPath,
+      request.logPath.value,
       '/Users/user/Library/Application Support/Konyak/Bottles/Steam/logs/prefix-init.log',
     );
   });
@@ -1632,7 +1635,7 @@ void defineProgramExecutionContractTests() {
 
     final monoInstall = requests.first;
     expect(
-      monoInstall.executable,
+      monoInstall.executable.value,
       '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wineloader',
     );
     expect(monoInstall.arguments, const [
@@ -1642,10 +1645,10 @@ void defineProgramExecutionContractTests() {
       '/qn',
       '/norestart',
     ]);
-    expect(monoInstall.programPath, 'wine-mono');
-    expect(monoInstall.runnerKind, 'macosWine');
+    expect(monoInstall.programPath.value, 'wine-mono');
+    expect(monoInstall.runnerKind.value, 'macosWine');
     expect(
-      monoInstall.workingDirectory.toNullable(),
+      monoInstall.workingDirectory.toNullable()?.value,
       '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin',
     );
     expect(
@@ -1667,15 +1670,15 @@ void defineProgramExecutionContractTests() {
       isNot(containsPair('WINEDLLOVERRIDES', 'mscoree,mshtml=')),
     );
     expect(
-      monoInstall.logPath,
+      monoInstall.logPath.value,
       '/Users/user/Library/Application Support/Konyak/Bottles/Steam/logs/wine-mono-install.log',
     );
 
     final wineboot = requests.last;
-    expect(wineboot.programPath, 'wineboot');
+    expect(wineboot.programPath.value, 'wineboot');
     expect(wineboot.arguments, const ['wineboot', '--init']);
     expect(
-      wineboot.logPath,
+      wineboot.logPath.value,
       '/Users/user/Library/Application Support/Konyak/Bottles/Steam/logs/prefix-init.log',
     );
   });
@@ -1704,7 +1707,7 @@ void defineProgramExecutionContractTests() {
     final result = initializer.initialize(bottle);
 
     expect(result, isA<BottlePrefixInitialized>());
-    expect(runner.requests.map((request) => request.programPath), const [
+    expect(runner.requests.map((request) => request.programPath.value), const [
       'wine-mono',
       'wineboot',
     ]);
@@ -1740,7 +1743,7 @@ void defineProgramExecutionContractTests() {
       'See /Users/user/Library/Application Support/Konyak/Bottles/Steam/logs/wine-mono-install.log.',
     );
     expect(runner.requests, hasLength(1));
-    expect(runner.requests.single.programPath, 'wine-mono');
+    expect(runner.requests.single.programPath.value, 'wine-mono');
   });
 
   test('run-bottle-command --json opens a macOS bottle terminal', () {
@@ -1770,9 +1773,9 @@ void defineProgramExecutionContractTests() {
     );
 
     expect(result.exitCode, 0);
-    expect(runner.lastRequest?.runnerKind, 'macosTerminal');
-    expect(runner.lastRequest?.programPath, 'terminal');
-    expect(runner.lastRequest?.executable, '/usr/bin/osascript');
+    expect(runner.lastRequest?.runnerKind.value, 'macosTerminal');
+    expect(runner.lastRequest?.programPath.value, 'terminal');
+    expect(runner.lastRequest?.executable.value, '/usr/bin/osascript');
     expect(runner.lastRequest?.arguments.first, '-e');
     expect(runner.lastRequest?.arguments.last, contains('Terminal'));
     expect(runner.lastRequest?.arguments.last, contains('WINEPREFIX'));
@@ -1852,9 +1855,9 @@ void defineProgramExecutionContractTests() {
     );
 
     expect(result.exitCode, 0);
-    expect(runner.lastRequest?.runnerKind, 'terminal');
-    expect(runner.lastRequest?.programPath, 'terminal');
-    expect(runner.lastRequest?.executable, 'sh');
+    expect(runner.lastRequest?.runnerKind.value, 'terminal');
+    expect(runner.lastRequest?.programPath.value, 'terminal');
+    expect(runner.lastRequest?.executable.value, 'sh');
     expect(runner.lastRequest?.arguments, hasLength(3));
     expect(runner.lastRequest?.arguments.first, '-lc');
     expect(runner.lastRequest?.arguments[1], contains('x-terminal-emulator'));
@@ -1945,9 +1948,9 @@ void defineProgramExecutionContractTests() {
       );
 
       expect(result.exitCode, 0);
-      expect(runner.lastRequest?.runnerKind, 'terminal');
-      expect(runner.lastRequest?.programPath, 'cmd');
-      expect(runner.lastRequest?.executable, 'sh');
+      expect(runner.lastRequest?.runnerKind.value, 'terminal');
+      expect(runner.lastRequest?.programPath.value, 'cmd');
+      expect(runner.lastRequest?.executable.value, 'sh');
       expect(runner.lastRequest?.arguments.last, contains('/runtime/bin/wine'));
       expect(runner.lastRequest?.arguments.last, contains("'cmd'"));
       expect(
@@ -1996,7 +1999,7 @@ void defineProgramExecutionContractTests() {
     expect(request.isSome(), isTrue);
     final plannedRequest = request.toNullable();
     expect(
-      plannedRequest?.executable,
+      plannedRequest?.executable.value,
       '/opt/konyak/runtime/linux-wine/bin/wine',
     );
     expect(
@@ -2064,15 +2067,15 @@ void defineProgramExecutionContractTests() {
     );
 
     expect(result.exitCode, 0);
-    expect(runner.lastRequest?.runnerKind, 'macosWinetricks');
-    expect(runner.lastRequest?.programPath, 'winetricks');
+    expect(runner.lastRequest?.runnerKind.value, 'macosWinetricks');
+    expect(runner.lastRequest?.programPath.value, 'winetricks');
     expect(
-      runner.lastRequest?.executable,
+      runner.lastRequest?.executable.value,
       '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/winetricks',
     );
     expect(runner.lastRequest?.arguments, isEmpty);
     expect(
-      runner.lastRequest?.workingDirectory.toNullable(),
+      runner.lastRequest?.workingDirectory.toNullable()?.value,
       '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
     );
     expect(
@@ -2141,8 +2144,16 @@ void defineProgramExecutionContractTests() {
       );
 
       expect(result.exitCode, 0, reason: commandId);
-      expect(runner.lastRequest?.runnerKind, 'macosWine', reason: commandId);
-      expect(runner.lastRequest?.programPath, commandId, reason: commandId);
+      expect(
+        runner.lastRequest?.runnerKind.value,
+        'macosWine',
+        reason: commandId,
+      );
+      expect(
+        runner.lastRequest?.programPath.value,
+        commandId,
+        reason: commandId,
+      );
       expect(runner.lastRequest?.arguments, [commandId], reason: commandId);
     }
   });
@@ -2180,8 +2191,8 @@ void defineProgramExecutionContractTests() {
     );
 
     expect(result.exitCode, 0);
-    expect(runner.lastRequest?.programPath, 'wineboot');
-    expect(runner.lastRequest?.runnerKind, 'macosWine');
+    expect(runner.lastRequest?.programPath.value, 'wineboot');
+    expect(runner.lastRequest?.runnerKind.value, 'macosWine');
     expect(runner.lastRequest?.arguments, const ['wineboot', '--restart']);
     expect(
       runner.lastRequest?.environment.toMap(),
@@ -2240,8 +2251,8 @@ void defineProgramExecutionContractTests() {
     );
 
     expect(result.exitCode, 0);
-    expect(runner.lastRequest?.programPath, 'wineboot');
-    expect(runner.lastRequest?.runnerKind, 'wineboot');
+    expect(runner.lastRequest?.programPath.value, 'wineboot');
+    expect(runner.lastRequest?.runnerKind.value, 'wineboot');
     expect(runner.lastRequest?.arguments, const ['--restart']);
     expect(
       runner.lastRequest?.environment.toMap(),
@@ -2279,8 +2290,8 @@ void defineProgramExecutionContractTests() {
     );
 
     expect(result.exitCode, 0);
-    expect(runner.lastRequest?.runnerKind, 'macosWine');
-    expect(runner.lastRequest?.programPath, 'dxdiag');
+    expect(runner.lastRequest?.runnerKind.value, 'macosWine');
+    expect(runner.lastRequest?.programPath.value, 'dxdiag');
     expect(runner.lastRequest?.arguments, const [
       'cmd',
       '/c',
@@ -2326,9 +2337,9 @@ void defineProgramExecutionContractTests() {
       );
 
       expect(result.exitCode, 0);
-      expect(runner.lastRequest?.runnerKind, 'macosTerminal');
-      expect(runner.lastRequest?.programPath, 'cmd');
-      expect(runner.lastRequest?.executable, '/usr/bin/osascript');
+      expect(runner.lastRequest?.runnerKind.value, 'macosTerminal');
+      expect(runner.lastRequest?.programPath.value, 'cmd');
+      expect(runner.lastRequest?.executable.value, '/usr/bin/osascript');
       expect(runner.lastRequest?.arguments.first, '-e');
       expect(runner.lastRequest?.arguments.last, contains('Terminal'));
       expect(runner.lastRequest?.arguments.last, contains('WINEPREFIX'));
@@ -2567,11 +2578,11 @@ corefonts                Microsoft Core Fonts
     );
 
     expect(result.exitCode, 0);
-    expect(runner.lastRequest?.runnerKind, 'macosWinetricks');
-    expect(runner.lastRequest?.programPath, 'corefonts');
+    expect(runner.lastRequest?.runnerKind.value, 'macosWinetricks');
+    expect(runner.lastRequest?.programPath.value, 'corefonts');
     expect(runner.lastRequest?.arguments, const ['corefonts']);
     expect(
-      runner.lastRequest?.executable,
+      runner.lastRequest?.executable.value,
       '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/winetricks',
     );
 
@@ -3122,7 +3133,7 @@ corefonts                Microsoft Core Fonts
 
         expect(result.exitCode, 0);
         expect(
-          runner.lastRequest?.executable,
+          runner.lastRequest?.executable.value,
           'Konyak/Runtimes/linux-wine/bin/wine',
         );
         expect(runner.lastRequest?.arguments, entry.value);
@@ -3237,7 +3248,7 @@ corefonts                Microsoft Core Fonts
 
     expect(result.exitCode, 0);
     expect(runner.lastRequest?.createLogFile, isTrue);
-    expect(runner.lastRequest?.logPath, '/tmp/steam.cxlog');
+    expect(runner.lastRequest?.logPath.value, '/tmp/steam.cxlog');
     expect(
       runner.lastRequest?.environment.toMap(),
       containsPair('WINEDEBUG', '+seh,+relay'),
@@ -3408,14 +3419,14 @@ corefonts                Microsoft Core Fonts
       expect(
         launcher,
         contains(
-          'Exec=env "WINEPREFIX=${_expectFound(repository.findBottle('steam')).path}" '
+          'Exec=env "WINEPREFIX=${_expectFound(repository.findBottle('steam')).path.value}" '
           '"${_joinTestPath(xdgDataHome, const ['konyak', 'Runtimes', 'linux-wine', 'bin', 'wine'])}" "$programPath"',
         ),
       );
       expect(
         launcher,
         contains(
-          'Icon=${_expectFound(repository.findBottle('steam')).path}/cache/icons/',
+          'Icon=${_expectFound(repository.findBottle('steam')).path.value}/cache/icons/',
         ),
       );
     },

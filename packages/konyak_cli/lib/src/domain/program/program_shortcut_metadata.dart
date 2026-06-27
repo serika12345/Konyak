@@ -4,7 +4,7 @@ List<_BottleProgramSource> _bottleStartMenuSources(BottleRecord bottle) {
   return <_BottleProgramSource>[
     _BottleProgramSource(
       id: 'globalStartMenu',
-      path: _joinPath(bottle.path, const [
+      path: _joinPath(bottle.path.value, const [
         'drive_c',
         'ProgramData',
         'Microsoft',
@@ -14,7 +14,7 @@ List<_BottleProgramSource> _bottleStartMenuSources(BottleRecord bottle) {
     ),
     _BottleProgramSource(
       id: 'userStartMenu',
-      path: _joinPath(bottle.path, const [
+      path: _joinPath(bottle.path.value, const [
         'drive_c',
         'users',
         'crossover',
@@ -29,10 +29,12 @@ List<_BottleProgramSource> _bottleStartMenuSources(BottleRecord bottle) {
 }
 
 class _BottleProgramSource {
-  const _BottleProgramSource({required this.id, required this.path});
+  _BottleProgramSource({required String id, required String path})
+    : id = ProgramSource(id),
+      path = ProgramPath(path);
 
-  final String id;
-  final String path;
+  final ProgramSource id;
+  final ProgramPath path;
 }
 
 bool _isShortcutPath(String path) {

@@ -1,15 +1,17 @@
 part of '../../../konyak_cli.dart';
 
 class ProgramPinRequest {
-  const ProgramPinRequest({
-    required this.bottleId,
-    required this.name,
-    required this.programPath,
-  });
+  ProgramPinRequest({
+    required String bottleId,
+    required String name,
+    required String programPath,
+  }) : bottleId = BottleId(bottleId),
+       name = ProgramName(name),
+       programPath = ProgramPath(programPath);
 
-  final String bottleId;
-  final String name;
-  final String programPath;
+  final BottleId bottleId;
+  final ProgramName name;
+  final ProgramPath programPath;
 }
 
 sealed class ProgramPinResult {
@@ -23,15 +25,16 @@ class ProgramPinned extends ProgramPinResult {
 }
 
 class ProgramPinMissing extends ProgramPinResult {
-  const ProgramPinMissing(this.bottleId);
+  ProgramPinMissing(String bottleId) : bottleId = BottleId(bottleId);
 
-  final String bottleId;
+  final BottleId bottleId;
 }
 
 class ProgramPinConflict extends ProgramPinResult {
-  const ProgramPinConflict(this.programPath);
+  ProgramPinConflict(String programPath)
+    : programPath = ProgramPath(programPath);
 
-  final String programPath;
+  final ProgramPath programPath;
 }
 
 class ProgramPinFailed extends ProgramPinResult {
@@ -41,68 +44,73 @@ class ProgramPinFailed extends ProgramPinResult {
 }
 
 class ProgramUnpinRequest {
-  const ProgramUnpinRequest({
-    required this.bottleId,
-    required this.programPath,
-  });
+  ProgramUnpinRequest({required String bottleId, required String programPath})
+    : bottleId = BottleId(bottleId),
+      programPath = ProgramPath(programPath);
 
-  final String bottleId;
-  final String programPath;
+  final BottleId bottleId;
+  final ProgramPath programPath;
 }
 
 class ProgramRenameRequest {
-  const ProgramRenameRequest({
-    required this.bottleId,
-    required this.programPath,
-    required this.name,
-  });
+  ProgramRenameRequest({
+    required String bottleId,
+    required String programPath,
+    required String name,
+  }) : bottleId = BottleId(bottleId),
+       programPath = ProgramPath(programPath),
+       name = ProgramName(name);
 
-  final String bottleId;
-  final String programPath;
-  final String name;
+  final BottleId bottleId;
+  final ProgramPath programPath;
+  final ProgramName name;
 }
 
 class _PinnedProgramLauncherManifest {
-  const _PinnedProgramLauncherManifest({
-    required this.launcherId,
-    required this.bottleId,
-    required this.programPath,
-    required this.programName,
-  });
+  _PinnedProgramLauncherManifest({
+    required String launcherId,
+    required String bottleId,
+    required String programPath,
+    required String programName,
+  }) : launcherId = ProgramLauncherId(launcherId),
+       bottleId = BottleId(bottleId),
+       programPath = ProgramPath(programPath),
+       programName = ProgramName(programName);
 
-  final String launcherId;
-  final String bottleId;
-  final String programPath;
-  final String programName;
+  final ProgramLauncherId launcherId;
+  final BottleId bottleId;
+  final ProgramPath programPath;
+  final ProgramName programName;
 
   Map<String, Object?> toJson() {
     return <String, Object?>{
       'schemaVersion': cliSchemaVersion,
       'createdBy': konyakMacosBundleIdentifier,
-      'launcherId': launcherId,
-      'bottleId': bottleId,
-      'programPath': programPath,
-      'programName': programName,
+      'launcherId': launcherId.value,
+      'bottleId': bottleId.value,
+      'programPath': programPath.value,
+      'programName': programName.value,
     };
   }
 }
 
 class WineProcessTerminationRequest {
-  const WineProcessTerminationRequest({
-    required this.bottleId,
-    required this.processId,
-  });
+  WineProcessTerminationRequest({
+    required String bottleId,
+    required String processId,
+  }) : bottleId = BottleId(bottleId),
+       processId = WineProcessId(processId);
 
-  final String bottleId;
-  final String processId;
+  final BottleId bottleId;
+  final WineProcessId processId;
 }
 
 class WineProcessGroupTerminationRequest {
-  const WineProcessGroupTerminationRequest({
-    this.bottleId = const Option.none(),
-  });
+  WineProcessGroupTerminationRequest({
+    Option<String> bottleId = const Option.none(),
+  }) : bottleId = bottleId.map(BottleId.new);
 
-  final Option<String> bottleId;
+  final Option<BottleId> bottleId;
 }
 
 sealed class ProgramUpdateResult {
@@ -116,15 +124,16 @@ class ProgramUpdated extends ProgramUpdateResult {
 }
 
 class ProgramUpdateMissingBottle extends ProgramUpdateResult {
-  const ProgramUpdateMissingBottle(this.bottleId);
+  ProgramUpdateMissingBottle(String bottleId) : bottleId = BottleId(bottleId);
 
-  final String bottleId;
+  final BottleId bottleId;
 }
 
 class ProgramUpdateMissingProgram extends ProgramUpdateResult {
-  const ProgramUpdateMissingProgram(this.programPath);
+  ProgramUpdateMissingProgram(String programPath)
+    : programPath = ProgramPath(programPath);
 
-  final String programPath;
+  final ProgramPath programPath;
 }
 
 class ProgramUpdateFailed extends ProgramUpdateResult {
@@ -134,24 +143,26 @@ class ProgramUpdateFailed extends ProgramUpdateResult {
 }
 
 class ProgramSettingsRequest {
-  const ProgramSettingsRequest({
-    required this.bottleId,
-    required this.programPath,
-  });
+  ProgramSettingsRequest({
+    required String bottleId,
+    required String programPath,
+  }) : bottleId = BottleId(bottleId),
+       programPath = ProgramPath(programPath);
 
-  final String bottleId;
-  final String programPath;
+  final BottleId bottleId;
+  final ProgramPath programPath;
 }
 
 class ProgramSettingsUpdateRequest {
-  const ProgramSettingsUpdateRequest({
-    required this.bottleId,
-    required this.programPath,
+  ProgramSettingsUpdateRequest({
+    required String bottleId,
+    required String programPath,
     required this.settings,
-  });
+  }) : bottleId = BottleId(bottleId),
+       programPath = ProgramPath(programPath);
 
-  final String bottleId;
-  final String programPath;
+  final BottleId bottleId;
+  final ProgramPath programPath;
   final ProgramSettingsRecord settings;
 }
 
@@ -166,9 +177,10 @@ class ProgramSettingsRead extends ProgramSettingsReadResult {
 }
 
 class ProgramSettingsReadMissingBottle extends ProgramSettingsReadResult {
-  const ProgramSettingsReadMissingBottle(this.bottleId);
+  ProgramSettingsReadMissingBottle(String bottleId)
+    : bottleId = BottleId(bottleId);
 
-  final String bottleId;
+  final BottleId bottleId;
 }
 
 class ProgramSettingsReadFailed extends ProgramSettingsReadResult {
@@ -188,9 +200,10 @@ class ProgramSettingsUpdated extends ProgramSettingsUpdateResult {
 }
 
 class ProgramSettingsUpdateMissingBottle extends ProgramSettingsUpdateResult {
-  const ProgramSettingsUpdateMissingBottle(this.bottleId);
+  ProgramSettingsUpdateMissingBottle(String bottleId)
+    : bottleId = BottleId(bottleId);
 
-  final String bottleId;
+  final BottleId bottleId;
 }
 
 class ProgramSettingsUpdateFailed extends ProgramSettingsUpdateResult {

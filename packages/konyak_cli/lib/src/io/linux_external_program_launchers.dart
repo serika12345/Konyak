@@ -25,7 +25,7 @@ void _synchronizeLinuxDesktopLauncherForProgramRun({
   LinuxExternalProgramLauncherDiagnosticSink? diagnosticSink,
 }) {
   if (hostPlatform != KonyakHostPlatform.linux ||
-      request.runnerKind != 'wine') {
+      request.runnerKind.value != 'wine') {
     return;
   }
   final hostEnvironment = HostEnvironment(environment);
@@ -39,7 +39,7 @@ void _synchronizeLinuxDesktopLauncherForProgramRun({
       _recordExternalProgramLaunch(bottle: bottle, programPath: programPath);
       final launcherPath = _linuxExternalProgramLauncherPath(
         environment: hostEnvironment,
-        bottleId: bottle.id,
+        bottleId: bottle.id.value,
         programPath: programPath,
       );
       final metadata = programMetadataExtractor.extract(
@@ -58,7 +58,7 @@ void _synchronizeLinuxDesktopLauncherForProgramRun({
         ),
         iconPath: metadata.match(
           () => null,
-          (programMetadata) => programMetadata.iconPath.toNullable(),
+          (programMetadata) => programMetadata.iconPath.toNullable()?.value,
         ),
       );
       _writeLinuxExternalProgramDesktopLauncher(
@@ -68,7 +68,7 @@ void _synchronizeLinuxDesktopLauncherForProgramRun({
     } on FileSystemException catch (error) {
       diagnosticSink?.emit(
         LinuxExternalProgramLauncherSyncFailure.fileSystem(
-          bottleId: bottle.id,
+          bottleId: bottle.id.value,
           programPath: programPath,
           message: error.message,
         ),
@@ -77,7 +77,7 @@ void _synchronizeLinuxDesktopLauncherForProgramRun({
     } on BottleRepositoryException catch (error) {
       diagnosticSink?.emit(
         LinuxExternalProgramLauncherSyncFailure.bottleRepository(
-          bottleId: bottle.id,
+          bottleId: bottle.id.value,
           programPath: programPath,
           message: error.message,
         ),
@@ -86,7 +86,7 @@ void _synchronizeLinuxDesktopLauncherForProgramRun({
     } on StateError catch (error) {
       diagnosticSink?.emit(
         LinuxExternalProgramLauncherSyncFailure.invalidState(
-          bottleId: bottle.id,
+          bottleId: bottle.id.value,
           programPath: programPath,
           message: error.message,
         ),
@@ -180,8 +180,8 @@ String _linuxExternalProgramLauncherName({
   });
 }
 
-String? _presentMetadataValue(Option<String> value) {
-  return value.match(() => null, (item) => item.trim());
+String? _presentMetadataValue(Option<StringDomainValueObject> value) {
+  return value.match(() => null, (item) => item.value.trim());
 }
 
 String _linuxExternalProgramLauncherPath({
@@ -209,8 +209,8 @@ String _linuxExternalProgramDesktopEntry({
     'Exec=${_linuxDesktopEntryExec(request: request, bottle: bottle)}',
     'NoDisplay=true',
     'StartupNotify=true',
-    'StartupWMClass=${_normalizedExecutableName(request.programPath)}',
-    'Path=${_parentDirectory(request.programPath).match(() => bottle.path, (value) => value)}',
+    'StartupWMClass=${_normalizedExecutableName(request.programPath.value)}',
+    'Path=${_parentDirectory(request.programPath.value).match(() => bottle.path.value, (value) => value)}',
   ];
 
   if (iconPath != null && iconPath.trim().isNotEmpty) {
@@ -226,7 +226,7 @@ String _linuxDesktopEntryExec({
 }) {
   final arguments = request.arguments.map(_desktopEntryQuote).join(' ');
   final buffer = StringBuffer(
-    'env "WINEPREFIX=${bottle.path}" ${_desktopEntryQuote(request.executable)}',
+    'env "WINEPREFIX=${bottle.path.value}" ${_desktopEntryQuote(request.executable.value)}',
   );
   if (arguments.isNotEmpty) {
     buffer.write(' ');

@@ -7,15 +7,15 @@ class DartIoProgramRunner implements ProgramRunner {
   ProgramRunResult run(ProgramRunRequest request) {
     try {
       final result = Process.runSync(
-        request.executable,
+        request.executable.value,
         request.arguments,
         environment: request.environment.toMap(),
-        workingDirectory: request.workingDirectory.toNullable(),
+        workingDirectory: request.workingDirectory.toNullable()?.value,
         runInShell: false,
       );
 
       if (request.createLogFile) {
-        final logFile = File(request.logPath);
+        final logFile = File(request.logPath.value);
         logFile.parent.createSync(recursive: true);
         logFile.writeAsStringSync(_programRunLog(request, result));
       }
@@ -27,11 +27,11 @@ class DartIoProgramRunner implements ProgramRunner {
       );
     } on ProcessException catch (error) {
       final message = _programRunnerFailureMessage(
-        executable: request.executable,
+        executable: request.executable.value,
         message: error.message,
       );
       if (request.createLogFile) {
-        final logFile = File(request.logPath);
+        final logFile = File(request.logPath.value);
         logFile.parent.createSync(recursive: true);
         logFile.writeAsStringSync(
           _programRunStartupFailureLog(request, message),
@@ -55,15 +55,15 @@ class DartIoAsyncProgramRunner implements AsyncProgramRunner {
     final Process process;
     try {
       process = await Process.start(
-        request.executable,
+        request.executable.value,
         request.arguments,
         environment: request.environment.toMap(),
-        workingDirectory: request.workingDirectory.toNullable(),
+        workingDirectory: request.workingDirectory.toNullable()?.value,
         runInShell: false,
       );
     } on ProcessException catch (error) {
       final message = _programRunnerFailureMessage(
-        executable: request.executable,
+        executable: request.executable.value,
         message: error.message,
       );
       await _writeProgramRunStartupFailureLog(request, message);
@@ -95,7 +95,7 @@ class DartIoAsyncProgramRunner implements AsyncProgramRunner {
         stderrBuffer.toString(),
       );
       if (request.createLogFile) {
-        final logFile = File(request.logPath);
+        final logFile = File(request.logPath.value);
         await logFile.parent.create(recursive: true);
         await logFile.writeAsString(_programRunLog(request, result));
       }
@@ -113,7 +113,7 @@ class DartIoAsyncProgramRunner implements AsyncProgramRunner {
       await stdoutFuture;
       await stderrFuture;
       final message = _programRunnerTimeoutMessage(
-        executable: request.executable,
+        executable: request.executable.value,
         timeout: timeout,
       );
       await _writeProgramRunStartupFailureLog(request, message);
@@ -193,7 +193,7 @@ Future<void> _writeProgramRunStartupFailureLog(
     return;
   }
 
-  final logFile = File(request.logPath);
+  final logFile = File(request.logPath.value);
   await logFile.parent.create(recursive: true);
   await logFile.writeAsString(_programRunStartupFailureLog(request, message));
 }

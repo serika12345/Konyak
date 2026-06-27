@@ -4,16 +4,16 @@ bool _isPinnedProgramFileAvailable({
   required BottleRecord bottle,
   required PinnedProgramRecord program,
 }) {
-  if (!File(program.path).existsSync()) {
+  if (!File(program.path.value).existsSync()) {
     return false;
   }
 
-  if (!_isShortcutPath(program.path)) {
+  if (!_isShortcutPath(program.path.value)) {
     return true;
   }
 
   return _shortcutTargetProgramPath(
     bottle: bottle,
-    shortcutPath: program.path,
+    shortcutPath: program.path.value,
   ).match(() => true, (targetPath) => File(targetPath).existsSync());
 }

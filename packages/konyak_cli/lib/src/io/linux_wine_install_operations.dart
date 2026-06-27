@@ -90,9 +90,11 @@ extension _DartIoLinuxWineInstallerOperations on DartIoLinuxWineInstaller {
           LinuxWineInstallFailed(message),
         _RuntimeStackSourceArchiveBundleResolved(:final bundle) =>
           _installLinuxWineArchive(
-            archivePath: bundle.wineArchivePath,
+            archivePath: bundle.wineArchivePath.value,
             archiveSha256: const Option.none(),
-            componentArchivePaths: bundle.componentArchivePaths,
+            componentArchivePaths: bundle.componentArchivePaths.map(
+              (path) => path.value,
+            ),
             componentVersions: bundle.componentVersions,
             progressSink: progressSink,
           ),
@@ -146,9 +148,11 @@ extension _DartIoLinuxWineInstallerOperations on DartIoLinuxWineInstaller {
           LinuxWineInstallFailed(message),
         _RuntimeStackSourceArchiveBundleResolved(:final bundle) =>
           _installLinuxWineArchive(
-            archivePath: bundle.wineArchivePath,
+            archivePath: bundle.wineArchivePath.value,
             archiveSha256: const Option.none(),
-            componentArchivePaths: bundle.componentArchivePaths,
+            componentArchivePaths: bundle.componentArchivePaths.map(
+              (path) => path.value,
+            ),
             componentVersions: bundle.componentVersions,
             progressSink: progressSink,
           ),

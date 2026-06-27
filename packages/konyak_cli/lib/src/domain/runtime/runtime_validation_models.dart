@@ -74,18 +74,19 @@ enum _RuntimeLayoutNormalization { none, macosWineBundle }
 
 class RuntimeValidationRecord {
   RuntimeValidationRecord({
-    required this.runtimeId,
+    required String runtimeId,
     required this.isValid,
     required Iterable<RuntimeValidationCheck> checks,
-  }) : checks = List.unmodifiable(checks);
+  }) : runtimeId = RuntimeId(runtimeId),
+       checks = List.unmodifiable(checks);
 
-  final String runtimeId;
+  final RuntimeId runtimeId;
   final bool isValid;
   final List<RuntimeValidationCheck> checks;
 
   Map<String, Object?> toJson() {
     return <String, Object?>{
-      'runtimeId': runtimeId,
+      'runtimeId': runtimeId.value,
       'isValid': isValid,
       'checks': checks.map((check) => check.toJson()).toList(growable: false),
     };
@@ -135,9 +136,10 @@ class RuntimeValidationFailed extends RuntimeValidationResult {
 }
 
 class RuntimeValidationRuntimeNotFound extends RuntimeValidationResult {
-  const RuntimeValidationRuntimeNotFound(this.runtimeId);
+  RuntimeValidationRuntimeNotFound(String runtimeId)
+    : runtimeId = RuntimeId(runtimeId);
 
-  final String runtimeId;
+  final RuntimeId runtimeId;
 }
 
 abstract interface class RuntimeValidator {

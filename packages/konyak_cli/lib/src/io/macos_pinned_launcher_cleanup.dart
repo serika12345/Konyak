@@ -22,13 +22,12 @@ void _deleteStaleMacosPinnedProgramLaunchers({
         _macosPinnedLauncherManifestFileName,
       ]),
     );
-    final shouldKeep = manifest.match(
-      () => true,
-      (value) =>
-          desiredLauncherIds.contains(value.launcherId) &&
-          desiredLauncherPaths[value.launcherId] ==
-              _normalizeFilesystemPath(entity.path),
-    );
+    final shouldKeep = manifest.match(() => true, (value) {
+      final launcherId = value.launcherId.value;
+      return desiredLauncherIds.contains(launcherId) &&
+          desiredLauncherPaths[launcherId] ==
+              _normalizeFilesystemPath(entity.path);
+    });
     if (shouldKeep) {
       continue;
     }

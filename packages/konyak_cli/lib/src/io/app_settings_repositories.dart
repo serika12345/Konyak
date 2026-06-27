@@ -10,7 +10,7 @@ BottleRepository defaultBottleRepositoryFromEnvironment(
   return _defaultFileBottleRepository(
     dataHome: _resolveBottleDataHome(hostEnvironment, hostPlatform: platform),
     defaultBottlePath:
-        appSettings?.defaultBottlePath ??
+        appSettings?.defaultBottlePath.value ??
         _defaultBottlePath(hostEnvironment, hostPlatform: platform),
   );
 }

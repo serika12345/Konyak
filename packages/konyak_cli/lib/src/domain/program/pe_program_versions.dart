@@ -40,11 +40,15 @@ _PeVersionStrings _peVersionStrings(_PortableExecutableImage image) {
   }
 
   return _PeVersionStrings(
-    fileDescription: Option.fromNullable(fileDescription),
-    productName: Option.fromNullable(productName),
-    companyName: Option.fromNullable(companyName),
-    fileVersion: Option.fromNullable(fileVersion),
-    productVersion: Option.fromNullable(productVersion),
+    fileDescription: Option.fromNullable(
+      fileDescription,
+    ).map(ProgramFileDescription.new),
+    productName: Option.fromNullable(productName).map(ProgramProductName.new),
+    companyName: Option.fromNullable(companyName).map(ProgramCompanyName.new),
+    fileVersion: Option.fromNullable(fileVersion).map(ProgramFileVersion.new),
+    productVersion: Option.fromNullable(
+      productVersion,
+    ).map(ProgramProductVersion.new),
   );
 }
 
@@ -57,11 +61,11 @@ final class _PeVersionStrings {
     required this.productVersion,
   });
 
-  final Option<String> fileDescription;
-  final Option<String> productName;
-  final Option<String> companyName;
-  final Option<String> fileVersion;
-  final Option<String> productVersion;
+  final Option<ProgramFileDescription> fileDescription;
+  final Option<ProgramProductName> productName;
+  final Option<ProgramCompanyName> companyName;
+  final Option<ProgramFileVersion> fileVersion;
+  final Option<ProgramProductVersion> productVersion;
 }
 
 Option<String> _valueAfterToken(List<String> values, String key) {
