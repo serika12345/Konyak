@@ -6,7 +6,7 @@ const _programLaunchProcessStablePolls = 2;
 
 extension _KonyakHomeLoaderPrograms on _KonyakHomeLoaderState {
   Future<void> _runProgram(BottleSummary bottle) async {
-    final programPath = await showDialog<String>(
+    final result = await showDialog<RunProgramDialogResult>(
       context: context,
       builder: (context) => RunProgramDialog(
         bottleName: bottle.name,
@@ -15,16 +15,21 @@ extension _KonyakHomeLoaderPrograms on _KonyakHomeLoaderState {
       ),
     );
 
-    if (programPath == null) {
+    if (result == null) {
       return;
     }
 
-    await _runProgramPath(bottle: bottle, programPath: programPath);
+    await _runProgramPath(
+      bottle: bottle,
+      programPath: result.programPath,
+      settings: result.settings,
+    );
   }
 
   Future<void> _runProgramPath({
     required BottleSummary bottle,
     required String programPath,
+    ProgramSettingsSummary? settings,
   }) async {
     final launchId = _beginProgramLaunch();
     final baselineWindowIds =
@@ -51,6 +56,7 @@ extension _KonyakHomeLoaderPrograms on _KonyakHomeLoaderState {
       result = await widget.cliClient.runProgram(
         bottleId: bottle.id,
         programPath: programPath,
+        settings: settings,
         onStarted: (processId) {
           unawaited(
             _finishProgramLaunchWhenMatchingWindowAppears(

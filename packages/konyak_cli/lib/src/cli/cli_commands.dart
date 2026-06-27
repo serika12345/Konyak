@@ -303,7 +303,7 @@ Usage:
   konyak get-program-settings <id> --program <path> --json
   konyak set-program-settings <id> --program <path> --settings-json <json> --json
   konyak launch-pinned-program --manifest <path> --json
-  konyak run-program <id> --program <path> --json
+  konyak run-program <id> --program <path> [--settings-json <json>] --json
   konyak run-winetricks <id> --verb <verb> --json
   konyak run-bottle-command <id> --command <winecfg|regedit|control|uninstaller|simulate-reboot|taskmgr|cmd|explorer|dxdiag|winver|terminal|winetricks> --json
   konyak open-bottle-location <id> --location <root|c-drive> --json

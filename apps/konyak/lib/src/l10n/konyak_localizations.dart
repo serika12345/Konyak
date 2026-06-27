@@ -356,6 +356,12 @@ abstract class KonyakLocalizations {
   /// **'Details'**
   String get details;
 
+  /// Konyak UI string: Options
+  ///
+  /// In en, this message translates to:
+  /// **'Options'**
+  String get options;
+
   /// Konyak UI string: DirectX Diagnostic Report
   ///
   /// In en, this message translates to:

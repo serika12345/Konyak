@@ -1869,6 +1869,50 @@ void main() {
     expect(completed.run.processExitCode, 0);
   });
 
+  test('passes one-time program settings to run-program', () async {
+    final runner = _FakeProcessRunner(
+      result: const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "run": {
+              "bottleId": "steam",
+              "programPath": "/downloads/setup.exe",
+              "runnerKind": "wine",
+              "executable": "wine",
+              "workingDirectory": null,
+              "argv": ["wine", "/downloads/setup.exe", "-windowed"],
+              "logPath": "/home/user/.local/share/konyak/bottles/steam/logs/latest.log",
+              "processExitCode": 0
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+    );
+    final client = KonyakCliClient(executable: 'konyak', processRunner: runner);
+
+    await client.runProgram(
+      bottleId: 'steam',
+      programPath: '/downloads/setup.exe',
+      settings: ProgramSettingsSummary(
+        arguments: '-windowed',
+        environment: {'WINEDEBUG': '+seh'},
+      ),
+    );
+
+    expect(runner.arguments, const [
+      'run-program',
+      'steam',
+      '--program',
+      '/downloads/setup.exe',
+      '--settings-json',
+      '{"locale":"","arguments":"-windowed","environment":{"WINEDEBUG":"+seh"}}',
+      '--json',
+    ]);
+  });
+
   test('run-program reports the started CLI process id', () async {
     final runner = _FakeProcessRunner(
       startedProcessId: 31415,

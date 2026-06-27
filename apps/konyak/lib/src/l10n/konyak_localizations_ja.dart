@@ -141,6 +141,9 @@ class KonyakLocalizationsJa extends KonyakLocalizations {
   String get details => '詳細';
 
   @override
+  String get options => 'オプション';
+
+  @override
   String get directxDiagnosticReport => 'DirectX 診断レポート';
 
   @override

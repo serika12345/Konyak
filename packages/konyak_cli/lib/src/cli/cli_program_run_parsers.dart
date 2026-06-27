@@ -4,17 +4,19 @@ class _ProgramRunCliRequest {
   const _ProgramRunCliRequest({
     required this.bottleId,
     required this.programPath,
+    this.settings = const Option.none(),
   });
 
   final String bottleId;
   final String programPath;
+  final Option<ProgramSettingsRecord> settings;
 }
 
 _ProgramRunCliRequest? _parseJsonProgramRunCliRequest(List<String> arguments) {
   final results = _parseJsonCliCommand(
     arguments,
     command: 'run-program',
-    options: const <String>['program'],
+    options: const <String>['program', 'settings-json'],
   );
   if (results == null || !_hasRestCount(results, 1)) {
     return null;
@@ -26,7 +28,27 @@ _ProgramRunCliRequest? _parseJsonProgramRunCliRequest(List<String> arguments) {
     return null;
   }
 
-  return _ProgramRunCliRequest(bottleId: bottleId, programPath: programPath);
+  final settingsJson = _optionalCliOption(results, 'settings-json');
+  Option<ProgramSettingsRecord> settings = const Option.none();
+  if (settingsJson != null) {
+    final Object? decoded;
+    try {
+      decoded = jsonDecode(settingsJson);
+    } on FormatException {
+      return null;
+    }
+
+    settings = _programSettingsRecordFromJson(decoded);
+    if (settings.isNone()) {
+      return null;
+    }
+  }
+
+  return _ProgramRunCliRequest(
+    bottleId: bottleId,
+    programPath: programPath,
+    settings: settings,
+  );
 }
 
 class _WinetricksRunCliRequest {

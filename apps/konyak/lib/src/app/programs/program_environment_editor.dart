@@ -32,11 +32,13 @@ class ProgramEnvironmentEditor extends StatelessWidget {
     required this.controllers,
     required this.onAdd,
     required this.onRemove,
+    this.keyPrefix = 'program-config',
   });
 
   final List<ProgramEnvironmentControllers> controllers;
   final VoidCallback onAdd;
   final ValueChanged<int> onRemove;
+  final String keyPrefix;
 
   @override
   Widget build(BuildContext context) {
@@ -45,12 +47,13 @@ class ProgramEnvironmentEditor extends StatelessWidget {
         for (final (index, controller) in controllers.indexed)
           ProgramEnvironmentRow(
             index: index,
+            keyPrefix: keyPrefix,
             controllers: controller,
             onRemove: () {
               onRemove(index);
             },
           ),
-        AddEnvironmentRow(onPressed: onAdd),
+        AddEnvironmentRow(keyPrefix: keyPrefix, onPressed: onAdd),
       ],
     );
   }
@@ -60,11 +63,13 @@ class ProgramEnvironmentRow extends StatelessWidget {
   const ProgramEnvironmentRow({
     super.key,
     required this.index,
+    required this.keyPrefix,
     required this.controllers,
     required this.onRemove,
   });
 
   final int index;
+  final String keyPrefix;
   final ProgramEnvironmentControllers controllers;
   final VoidCallback onRemove;
 
@@ -79,7 +84,7 @@ class ProgramEnvironmentRow extends StatelessWidget {
           const SizedBox(width: 14),
           Expanded(
             child: ConfigurationTextField(
-              key: ValueKey('program-config-env-key-$index'),
+              key: ValueKey('$keyPrefix-env-key-$index'),
               controller: controllers.nameController,
               hintText: localizations.environmentNameHint,
             ),
@@ -87,7 +92,7 @@ class ProgramEnvironmentRow extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
             child: ConfigurationTextField(
-              key: ValueKey('program-config-env-value-$index'),
+              key: ValueKey('$keyPrefix-env-value-$index'),
               controller: controllers.valueController,
               hintText: localizations.environmentValueHint,
             ),
@@ -109,8 +114,13 @@ class ProgramEnvironmentRow extends StatelessWidget {
 }
 
 class AddEnvironmentRow extends StatelessWidget {
-  const AddEnvironmentRow({super.key, required this.onPressed});
+  const AddEnvironmentRow({
+    super.key,
+    required this.keyPrefix,
+    required this.onPressed,
+  });
 
+  final String keyPrefix;
   final VoidCallback onPressed;
 
   @override
@@ -122,7 +132,7 @@ class AddEnvironmentRow extends StatelessWidget {
       child: Align(
         alignment: Alignment.centerLeft,
         child: TextButton.icon(
-          key: const ValueKey('program-config-add-environment'),
+          key: ValueKey('$keyPrefix-add-environment'),
           onPressed: onPressed,
           style: TextButton.styleFrom(
             foregroundColor: KonyakThemeColors.of(context).text,

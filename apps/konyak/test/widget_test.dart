@@ -10,6 +10,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:konyak/main.dart';
 import 'package:konyak/src/app/app_constants.dart';
+import 'package:konyak/src/app/dialogs/run_program_dialog.dart';
 import 'package:konyak/src/app/home/sidebar.dart';
 import 'package:konyak/src/app/programs/pin_program_action.dart';
 import 'package:konyak/src/app/programs/program_window_probe.dart';

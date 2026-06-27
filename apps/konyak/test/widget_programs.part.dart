@@ -44,6 +44,60 @@ void defineProgramWidgetTests() {
     );
   });
 
+  testWidgets('run program dialog shows expandable launch options', (
+    WidgetTester tester,
+  ) async {
+    await _loadKonyakTestFonts();
+    await tester.binding.setSurfaceSize(const Size(640, 520));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    final goldenKey = GlobalKey();
+    await tester.pumpWidget(
+      MaterialApp(
+        supportedLocales: KonyakLocalizations.supportedLocales,
+        localizationsDelegates: KonyakLocalizations.localizationsDelegates,
+        theme: konyakThemeData(konyakDarkColors),
+        home: Scaffold(
+          backgroundColor: konyakDarkColors.windowBackground,
+          body: Center(
+            child: RepaintBoundary(
+              key: goldenKey,
+              child: const RunProgramDialog(
+                bottleName: 'Steam',
+                programFilePicker: _FakeProgramFilePicker(path: null),
+                initialDirectory: '/bottles/steam/drive_c',
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Options'), findsOneWidget);
+    expect(find.text('Details'), findsNothing);
+    expect(find.text('Arguments'), findsNothing);
+
+    await tester.tap(find.byKey(const ValueKey('run-program-options-toggle')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Arguments'), findsOneWidget);
+    expect(find.text('Environment'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('run-program-arguments-field')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('run-program-add-environment')),
+      findsOneWidget,
+    );
+    await _expectGoldenFileWithinTolerance(
+      find.byKey(goldenKey),
+      'goldens/run_program_dialog_options.png',
+      diffTolerance: 0.11,
+    );
+  });
+
   testWidgets('run program refreshes removed pinned programs after completion', (
     WidgetTester tester,
   ) async {
@@ -483,6 +537,94 @@ void defineProgramWidgetTests() {
 
     expect(find.text('Latest run log'), findsOneWidget);
     expect(find.textContaining('exitCode: 0'), findsOneWidget);
+  });
+
+  testWidgets('run program dialog sends one-time arguments and environment', (
+    WidgetTester tester,
+  ) async {
+    final runner = _QueuedProcessRunner([
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottles": [
+              {
+                "id": "steam",
+                "name": "Steam",
+                "path": "/home/user/.local/share/konyak/bottles/steam",
+                "windowsVersion": "win10"
+              }
+            ]
+          }
+        ''',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "run": {
+              "bottleId": "steam",
+              "programPath": "/downloads/setup.exe",
+              "runnerKind": "wine",
+              "executable": "wine",
+              "workingDirectory": null,
+              "argv": ["wine", "/downloads/setup.exe", "-windowed"],
+              "logPath": "/home/user/.local/share/konyak/bottles/steam/logs/latest.log",
+              "processExitCode": 0
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+    ]);
+
+    await tester.pumpWidget(
+      _testKonyakApp(
+        cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.widgetWithText(TextButton, 'Run'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Program path'),
+      '/downloads/setup.exe',
+    );
+    await tester.tap(find.byKey(const ValueKey('run-program-options-toggle')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const ValueKey('run-program-arguments-field')),
+      '-windowed',
+    );
+    await tester.tap(find.byKey(const ValueKey('run-program-add-environment')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const ValueKey('run-program-env-key-0')),
+      'WINEDEBUG',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('run-program-env-value-0')),
+      '+seh',
+    );
+    await tester.tap(find.widgetWithText(FilledButton, 'Run'));
+    await tester.pumpAndSettle();
+
+    expect(runner.argumentsLog, const [
+      ['list-bottles', '--json'],
+      [
+        'run-program',
+        'steam',
+        '--program',
+        '/downloads/setup.exe',
+        '--settings-json',
+        '{"locale":"","arguments":"-windowed","environment":{"WINEDEBUG":"+seh"}}',
+        '--json',
+      ],
+    ]);
   });
 
   testWidgets('run program shows launch progress while the CLI is pending', (

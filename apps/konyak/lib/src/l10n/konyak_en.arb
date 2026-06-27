@@ -172,6 +172,10 @@
   "@details": {
     "description": "Konyak UI string: Details"
   },
+  "options": "Options",
+  "@options": {
+    "description": "Konyak UI string: Options"
+  },
   "directxDiagnosticReport": "DirectX Diagnostic Report",
   "@directxDiagnosticReport": {
     "description": "Konyak UI string: DirectX Diagnostic Report"

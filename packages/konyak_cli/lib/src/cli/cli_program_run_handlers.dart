@@ -57,11 +57,15 @@ CliResult _runProgramJsonResult(
         case ProgramSettingsReadFailed(:final message):
           return _bottleRepositoryFailureJsonResult(message);
       }
+      final effectiveProgramSettings = _programRunSettings(
+        storedSettings: programSettings,
+        oneTimeSettings: request.settings,
+      );
 
       final programRunRequest = context.programRunPlanner.plan(
         bottle: bottle,
         programPath: request.programPath,
-        programSettings: Option.of(programSettings),
+        programSettings: Option.of(effectiveProgramSettings),
       );
       return programRunRequest.match(
         () => _jsonError(
@@ -94,6 +98,27 @@ CliResult _runProgramJsonResult(
         },
       );
     },
+  );
+}
+
+ProgramSettingsRecord _programRunSettings({
+  required ProgramSettingsRecord storedSettings,
+  required Option<ProgramSettingsRecord> oneTimeSettings,
+}) {
+  return oneTimeSettings.match(
+    () => storedSettings,
+    (settings) => ProgramSettingsRecord(
+      locale: settings.locale.trim().isEmpty
+          ? storedSettings.locale
+          : settings.locale,
+      arguments: settings.arguments.trim().isEmpty
+          ? storedSettings.arguments
+          : settings.arguments,
+      environment: ProgramEnvironmentOverrides(<String, String>{
+        ...storedSettings.environment.toMap(),
+        ...settings.environment.toMap(),
+      }),
+    ),
   );
 }
 

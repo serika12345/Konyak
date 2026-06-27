@@ -4,10 +4,23 @@ extension KonyakCliProgramCommands on KonyakCliClient {
   Future<ProgramRunLoadResult> runProgram({
     required String bottleId,
     required String programPath,
+    ProgramSettingsSummary? settings,
     void Function(int processId)? onStarted,
   }) {
+    final runArguments = <String>[
+      'run-program',
+      bottleId,
+      '--program',
+      programPath,
+      if (settings != null) ...[
+        '--settings-json',
+        jsonEncode(settings.toJson()),
+      ],
+      '--json',
+    ];
+
     return _programRunResultFromCommand(
-      arguments: ['run-program', bottleId, '--program', programPath, '--json'],
+      arguments: runArguments,
       failureMessage: _programRunFailureMessage,
       onStarted: onStarted,
     );

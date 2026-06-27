@@ -2968,6 +2968,65 @@ corefonts                Microsoft Core Fonts
     },
   );
 
+  test('run-program --json applies one-time program settings', () {
+    final repository = MemoryBottleRepository(
+      dataHome: '/home/user/.local/share/konyak',
+    );
+    final runner = RecordingProgramRunner(
+      result: const ProgramRunCompleted(processExitCode: 0),
+    );
+    runCli(const [
+      'create-bottle',
+      '--name',
+      'Steam',
+      '--json',
+    ], bottleRepository: repository);
+    runCli(const [
+      'set-program-settings',
+      'steam',
+      '--program',
+      '/downloads/setup.exe',
+      '--settings-json',
+      '{"locale":"ja_JP.UTF-8","arguments":"-silent","environment":{"STEAM_COMPAT_DATA_PATH":"/compat"}}',
+      '--json',
+    ], bottleRepository: repository);
+
+    final result = runCli(
+      const [
+        'run-program',
+        'steam',
+        '--program',
+        '/downloads/setup.exe',
+        '--settings-json',
+        '{"arguments":"-windowed","environment":{"WINEDEBUG":"+seh"}}',
+        '--json',
+      ],
+      bottleRepository: repository,
+      programRunPlanner: ProgramRunPlanner(
+        hostPlatform: KonyakHostPlatform.linux,
+      ),
+      programRunner: runner,
+    );
+
+    expect(result.exitCode, 0);
+    expect(runner.lastRequest?.arguments, const [
+      '/downloads/setup.exe',
+      '-windowed',
+    ]);
+    expect(
+      runner.lastRequest?.environment.toMap(),
+      containsPair('STEAM_COMPAT_DATA_PATH', '/compat'),
+    );
+    expect(
+      runner.lastRequest?.environment.toMap(),
+      containsPair('WINEDEBUG', '+seh'),
+    );
+    expect(
+      runner.lastRequest?.environment.toMap(),
+      containsPair('LC_ALL', 'ja_JP.UTF-8'),
+    );
+  });
+
   test('run-program --json rejects unsupported program extensions', () {
     final repository = MemoryBottleRepository(
       dataHome: '/home/user/.local/share/konyak',
