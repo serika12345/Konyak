@@ -52,24 +52,21 @@ BottleRuntimeSettings _runtimeSettingsWithRegistryValue({
 }
 
 BottleRecord _bottleWithWindowsVersion(BottleRecord bottle, String data) {
-  final windowsVersion = _registryWindowsVersion(data);
-  if (windowsVersion == null) {
-    return bottle;
-  }
-
-  return bottle.withWindowsVersion(windowsVersion);
+  return _registryWindowsVersion(
+    data,
+  ).match(() => bottle, bottle.withWindowsVersion);
 }
 
-String? _registryWindowsVersion(String data) {
+Option<String> _registryWindowsVersion(String data) {
   return switch (data.trim().toLowerCase()) {
-    'winxp' => 'winxp64',
+    'winxp' => Option.of('winxp64'),
     'winxp64' ||
     'win7' ||
     'win8' ||
     'win81' ||
     'win10' ||
-    'win11' => data.trim().toLowerCase(),
-    _ => null,
+    'win11' => Option.of(data.trim().toLowerCase()),
+    _ => const Option.none(),
   };
 }
 

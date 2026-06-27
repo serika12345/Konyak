@@ -56,10 +56,10 @@ void _synchronizeLinuxDesktopLauncherForProgramRun({
           programPath: programPath,
           metadata: metadata,
         ),
-        iconPath: metadata.match(
-          () => null,
-          (programMetadata) => programMetadata.iconPath.toNullable()?.value,
-        ),
+        iconPath: metadata
+            .flatMap((programMetadata) => programMetadata.iconPath)
+            .map((iconPath) => iconPath.value)
+            .toNullable(),
       );
       _writeLinuxExternalProgramDesktopLauncher(
         launcherPath: launcherPath,
@@ -164,24 +164,14 @@ String _linuxExternalProgramLauncherName({
   required Option<ProgramMetadataRecord> metadata,
 }) {
   return metadata.match(() => _baseName(programPath), (programMetadata) {
-    final productName = _presentMetadataValue(programMetadata.productName);
-    if (productName != null) {
-      return productName;
-    }
-
-    final fileDescription = _presentMetadataValue(
-      programMetadata.fileDescription,
-    );
-    if (fileDescription != null) {
-      return fileDescription;
-    }
-
-    return _baseName(programPath);
+    return _presentMetadataValue(programMetadata.productName)
+        .alt(() => _presentMetadataValue(programMetadata.fileDescription))
+        .getOrElse(() => _baseName(programPath));
   });
 }
 
-String? _presentMetadataValue(Option<StringDomainValueObject> value) {
-  return value.match(() => null, (item) => item.value.trim());
+Option<String> _presentMetadataValue(Option<StringDomainValueObject> value) {
+  return value.map((item) => item.value.trim());
 }
 
 String _linuxExternalProgramLauncherPath({

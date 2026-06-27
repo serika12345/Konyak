@@ -88,19 +88,11 @@ ProgramRunParseResult parseProgramRunPayload(String payload) {
     );
   }
 
-  final notFound = _parseBottleNotFound(decoded['error']);
-  if (notFound != null) {
-    return notFound;
-  }
-
-  final unsupported = _parseUnsupportedProgramType(decoded['error']);
-  if (unsupported != null) {
-    return unsupported;
-  }
-
-  final executionFailure = _parseExecutionFailure(decoded['error']);
-  if (executionFailure != null) {
-    return executionFailure;
+  switch (_parseProgramRunError(decoded['error'])) {
+    case _ParsedProgramRunError(:final result):
+      return result;
+    case _NoProgramRunError():
+      break;
   }
 
   final run = _parseProgramRunSummary(decoded['run']);
@@ -111,6 +103,32 @@ ProgramRunParseResult parseProgramRunPayload(String payload) {
   }
 
   return ParsedProgramRun(run);
+}
+
+sealed class _ProgramRunErrorParseResult {
+  const _ProgramRunErrorParseResult();
+}
+
+final class _ParsedProgramRunError extends _ProgramRunErrorParseResult {
+  const _ParsedProgramRunError(this.result);
+
+  final ProgramRunParseResult result;
+}
+
+final class _NoProgramRunError extends _ProgramRunErrorParseResult {
+  const _NoProgramRunError();
+}
+
+_ProgramRunErrorParseResult _parseProgramRunError(Object? value) {
+  final parsedErrors = <ProgramRunParseResult>[
+    ?_parseBottleNotFound(value),
+    ?_parseUnsupportedProgramType(value),
+    ?_parseExecutionFailure(value),
+  ];
+
+  return parsedErrors.isEmpty
+      ? const _NoProgramRunError()
+      : _ParsedProgramRunError(parsedErrors.first);
 }
 
 ProgramRunBottleNotFound? _parseBottleNotFound(Object? value) {

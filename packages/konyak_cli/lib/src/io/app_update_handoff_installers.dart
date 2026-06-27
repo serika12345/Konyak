@@ -78,9 +78,11 @@ extension _AppUpdateHandoffInstallers on DartIoAppUpdateInstaller {
     if (targetPath == null || appPid == null) {
       return null;
     }
-    final preflightFailure = _linuxAppImageUpdatePreflightFailure(targetPath);
-    if (preflightFailure != null) {
-      return AppUpdateInstallFailed(preflightFailure);
+    switch (_linuxAppImageUpdatePreflight(targetPath)) {
+      case Left<String, Unit>(:final value):
+        return AppUpdateInstallFailed(value);
+      case Right<String, Unit>():
+        break;
     }
 
     final stagedArchivePath = _joinPath(updatesDirectory.path, [
@@ -133,15 +135,19 @@ String _macosAppUpdateArchiveExtension(String archivePath) {
   return '.zip';
 }
 
-String? _linuxAppImageUpdatePreflightFailure(String targetPath) {
+Either<String, Unit> _linuxAppImageUpdatePreflight(String targetPath) {
   final target = File(targetPath);
   if (!target.existsSync()) {
-    return 'Current Konyak AppImage does not exist: $targetPath';
+    return Left<String, Unit>(
+      'Current Konyak AppImage does not exist: $targetPath',
+    );
   }
 
   final parent = target.parent;
   if (!parent.existsSync()) {
-    return 'Current Konyak AppImage directory does not exist: ${parent.path}';
+    return Left<String, Unit>(
+      'Current Konyak AppImage directory does not exist: ${parent.path}',
+    );
   }
 
   final probe = File(
@@ -160,8 +166,10 @@ String? _linuxAppImageUpdatePreflightFailure(String targetPath) {
         // The original failure is more useful to the user.
       }
     }
-    return 'Current Konyak AppImage directory is not writable: ${parent.path}';
+    return Left<String, Unit>(
+      'Current Konyak AppImage directory is not writable: ${parent.path}',
+    );
   }
 
-  return null;
+  return const Right<String, Unit>(unit);
 }

@@ -93,24 +93,23 @@ extension _KonyakHomeLoaderPrograms on _KonyakHomeLoaderState {
     );
   }
 
-  Future<Set<String>?> _installedProgramPathsForAutoPin(
+  Future<_AutoPinBaselineProgramPaths> _installedProgramPathsForAutoPin(
     BottleSummary bottle,
   ) async {
     if (!_shouldAutomaticallyPinNewInstalledPrograms()) {
-      return null;
+      return const _AutoPinBaselineUnavailable();
     }
 
     final result = await widget.cliClient.listBottlePrograms(bottle.id);
     if (!mounted) {
-      return null;
+      return const _AutoPinBaselineUnavailable();
     }
 
     return switch (result) {
-      LoadedBottlePrograms(:final programs) => _knownProgramPaths(
-        bottle: bottle,
-        programs: programs,
+      LoadedBottlePrograms(:final programs) => _AutoPinBaselineLoaded(
+        _knownProgramPaths(bottle: bottle, programs: programs),
       ),
-      BottleProgramListLoadFailure() => null,
+      BottleProgramListLoadFailure() => const _AutoPinBaselineUnavailable(),
     };
   }
 
@@ -131,15 +130,22 @@ extension _KonyakHomeLoaderPrograms on _KonyakHomeLoaderState {
   Future<void> _autoPinNewInstalledPrograms({
     required BottleSummary bottle,
     required ProgramRunLoadResult result,
-    required Set<String>? baselineProgramPaths,
+    required _AutoPinBaselineProgramPaths baselineProgramPaths,
   }) async {
-    if (baselineProgramPaths == null ||
-        !_shouldAutomaticallyPinNewInstalledPrograms()) {
+    if (!_shouldAutomaticallyPinNewInstalledPrograms()) {
       return;
     }
 
     if (result is! CompletedProgramRun) {
       return;
+    }
+
+    final Set<String> baselinePaths;
+    switch (baselineProgramPaths) {
+      case _AutoPinBaselineUnavailable():
+        return;
+      case _AutoPinBaselineLoaded(:final paths):
+        baselinePaths = paths;
     }
 
     final programsResult = await widget.cliClient.listBottlePrograms(bottle.id);
@@ -150,7 +156,7 @@ extension _KonyakHomeLoaderPrograms on _KonyakHomeLoaderState {
 
     switch (programsResult) {
       case LoadedBottlePrograms(:final programs):
-        final knownPaths = Set<String>.of(baselineProgramPaths);
+        final knownPaths = Set<String>.of(baselinePaths);
         for (final program in programs) {
           if (!knownPaths.add(program.path)) {
             continue;
@@ -426,6 +432,20 @@ extension _KonyakHomeLoaderPrograms on _KonyakHomeLoaderState {
         _showSnackBar(message);
     }
   }
+}
+
+sealed class _AutoPinBaselineProgramPaths {
+  const _AutoPinBaselineProgramPaths();
+}
+
+final class _AutoPinBaselineUnavailable extends _AutoPinBaselineProgramPaths {
+  const _AutoPinBaselineUnavailable();
+}
+
+final class _AutoPinBaselineLoaded extends _AutoPinBaselineProgramPaths {
+  _AutoPinBaselineLoaded(Set<String> paths) : paths = Set.unmodifiable(paths);
+
+  final Set<String> paths;
 }
 
 String _bottleDriveCPath(String bottlePath) {

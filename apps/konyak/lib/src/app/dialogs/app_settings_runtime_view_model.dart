@@ -23,20 +23,14 @@ List<RuntimeSummary> upsertRuntime(
   List<RuntimeSummary> runtimes,
   RuntimeSummary runtime,
 ) {
-  final updated = <RuntimeSummary>[];
-  var replaced = false;
-  for (final existingRuntime in runtimes) {
-    if (existingRuntime.id == runtime.id) {
-      updated.add(runtime);
-      replaced = true;
-    } else {
-      updated.add(existingRuntime);
-    }
-  }
-
-  if (!replaced) {
-    updated.add(runtime);
-  }
+  final replaced = runtimes.any(
+    (existingRuntime) => existingRuntime.id == runtime.id,
+  );
+  final updated = <RuntimeSummary>[
+    for (final existingRuntime in runtimes)
+      existingRuntime.id == runtime.id ? runtime : existingRuntime,
+    if (!replaced) runtime,
+  ];
 
   return List.unmodifiable(updated);
 }
@@ -53,12 +47,14 @@ RuntimeSectionState resolveRuntimeSectionState({
   required List<RuntimeSummary> runtimes,
   required String platform,
 }) {
-  final runtime = runtimes
-      .where((runtime) => runtime.platform == platform)
-      .fold<RuntimeSummary?>(
-        null,
-        (selected, runtime) => runtime.stack != null ? runtime : selected,
-      );
+  final runtime = (() {
+    for (final candidate in runtimes.reversed) {
+      if (candidate.platform == platform && candidate.stack != null) {
+        return candidate;
+      }
+    }
+    return null;
+  })();
   final stack = runtime?.stack;
   final shouldOfferInstall =
       runtime != null &&

@@ -114,14 +114,15 @@ ProgramSettingsUpdateRequest? _parseJsonProgramSettingsUpdateRequest(
     return null;
   }
 
-  return _programSettingsRecordFromJson(decoded).match(
-    () => null,
-    (settings) => ProgramSettingsUpdateRequest(
-      bottleId: bottleId,
-      programPath: programPath,
-      settings: settings,
-    ),
-  );
+  return _programSettingsRecordFromJson(decoded)
+      .map(
+        (settings) => ProgramSettingsUpdateRequest(
+          bottleId: bottleId,
+          programPath: programPath,
+          settings: settings,
+        ),
+      )
+      .toNullable();
 }
 
 class _PinnedProgramLaunchCliRequest {

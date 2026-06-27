@@ -11,177 +11,134 @@ class _FileBottleRepositoryProgramOperations {
   final IoResult<Option<BottleRecord>> Function(String id) _findBottle;
 
   ProgramPinResult pinProgram(ProgramPinRequest request) {
-    final bottleResult = _findBottle(request.bottleId.value);
-    final readFailure = bottleResult.fold<ProgramPinResult?>(
+    return _findBottle(request.bottleId.value).fold<ProgramPinResult>(
       ProgramPinFailed.new,
-      (_) => null,
-    );
-    if (readFailure != null) {
-      return readFailure;
-    }
-    return bottleResult.getOrElse((_) => const Option.none()).match(
-      () => ProgramPinMissing(request.bottleId.value),
-      (bottle) {
-        if (_hasPinnedProgram(bottle, request.programPath.value)) {
-          return ProgramPinConflict(request.programPath.value);
-        }
+      (bottle) => bottle.match(
+        () => ProgramPinMissing(request.bottleId.value),
+        (bottle) {
+          if (_hasPinnedProgram(bottle, request.programPath.value)) {
+            return ProgramPinConflict(request.programPath.value);
+          }
 
-        final updated = _bottleWithPinnedProgram(
-          bottle,
-          request,
-          programMetadataExtractor: _programMetadataExtractor,
-        );
+          final updated = _bottleWithPinnedProgram(
+            bottle,
+            request,
+            programMetadataExtractor: _programMetadataExtractor,
+          );
 
-        final writeResult = _ioResult(() {
-          _writeBottleMetadata(updated);
-        });
-        final failure = writeResult.fold<ProgramPinResult?>(
-          ProgramPinFailed.new,
-          (_) => null,
-        );
-        if (failure != null) {
-          return failure;
-        }
-
-        return ProgramPinned(updated);
-      },
+          final writeResult = _ioResult(() {
+            _writeBottleMetadata(updated);
+          });
+          return writeResult.fold<ProgramPinResult>(
+            ProgramPinFailed.new,
+            (_) => ProgramPinned(updated),
+          );
+        },
+      ),
     );
   }
 
   ProgramUpdateResult unpinProgram(ProgramUnpinRequest request) {
-    final bottleResult = _findBottle(request.bottleId.value);
-    final readFailure = bottleResult.fold<ProgramUpdateResult?>(
+    return _findBottle(request.bottleId.value).fold<ProgramUpdateResult>(
       ProgramUpdateFailed.new,
-      (_) => null,
-    );
-    if (readFailure != null) {
-      return readFailure;
-    }
-    return bottleResult.getOrElse((_) => const Option.none()).match(
-      () => ProgramUpdateMissingBottle(request.bottleId.value),
-      (bottle) {
-        if (!_hasPinnedProgram(bottle, request.programPath.value)) {
-          return ProgramUpdateMissingProgram(request.programPath.value);
-        }
+      (bottle) => bottle.match(
+        () => ProgramUpdateMissingBottle(request.bottleId.value),
+        (bottle) {
+          if (!_hasPinnedProgram(bottle, request.programPath.value)) {
+            return ProgramUpdateMissingProgram(request.programPath.value);
+          }
 
-        final updated = _bottleWithoutPinnedProgram(
-          bottle,
-          request.programPath.value,
-        );
+          final updated = _bottleWithoutPinnedProgram(
+            bottle,
+            request.programPath.value,
+          );
 
-        final writeResult = _ioResult(() {
-          _writeBottleMetadata(updated);
-        });
-        final failure = writeResult.fold<ProgramUpdateResult?>(
-          ProgramUpdateFailed.new,
-          (_) => null,
-        );
-        if (failure != null) {
-          return failure;
-        }
-
-        return ProgramUpdated(updated);
-      },
+          final writeResult = _ioResult(() {
+            _writeBottleMetadata(updated);
+          });
+          return writeResult.fold<ProgramUpdateResult>(
+            ProgramUpdateFailed.new,
+            (_) => ProgramUpdated(updated),
+          );
+        },
+      ),
     );
   }
 
   ProgramUpdateResult renamePinnedProgram(ProgramRenameRequest request) {
-    final bottleResult = _findBottle(request.bottleId.value);
-    final readFailure = bottleResult.fold<ProgramUpdateResult?>(
+    return _findBottle(request.bottleId.value).fold<ProgramUpdateResult>(
       ProgramUpdateFailed.new,
-      (_) => null,
-    );
-    if (readFailure != null) {
-      return readFailure;
-    }
-    return bottleResult.getOrElse((_) => const Option.none()).match(
-      () => ProgramUpdateMissingBottle(request.bottleId.value),
-      (bottle) {
-        if (!_hasPinnedProgram(bottle, request.programPath.value)) {
-          return ProgramUpdateMissingProgram(request.programPath.value);
-        }
+      (bottle) => bottle.match(
+        () => ProgramUpdateMissingBottle(request.bottleId.value),
+        (bottle) {
+          if (!_hasPinnedProgram(bottle, request.programPath.value)) {
+            return ProgramUpdateMissingProgram(request.programPath.value);
+          }
 
-        final updated = _bottleWithRenamedPinnedProgram(bottle, request);
+          final updated = _bottleWithRenamedPinnedProgram(bottle, request);
 
-        final writeResult = _ioResult(() {
-          _writeBottleMetadata(updated);
-        });
-        final failure = writeResult.fold<ProgramUpdateResult?>(
-          ProgramUpdateFailed.new,
-          (_) => null,
-        );
-        if (failure != null) {
-          return failure;
-        }
-
-        return ProgramUpdated(updated);
-      },
+          final writeResult = _ioResult(() {
+            _writeBottleMetadata(updated);
+          });
+          return writeResult.fold<ProgramUpdateResult>(
+            ProgramUpdateFailed.new,
+            (_) => ProgramUpdated(updated),
+          );
+        },
+      ),
     );
   }
 
   ProgramSettingsReadResult readProgramSettings(
     ProgramSettingsRequest request,
   ) {
-    final bottleResult = _findBottle(request.bottleId.value);
-    final readFailure = bottleResult.fold<ProgramSettingsReadResult?>(
+    return _findBottle(request.bottleId.value).fold<ProgramSettingsReadResult>(
       ProgramSettingsReadFailed.new,
-      (_) => null,
-    );
-    if (readFailure != null) {
-      return readFailure;
-    }
-    return bottleResult.getOrElse((_) => const Option.none()).match(
-      () => ProgramSettingsReadMissingBottle(request.bottleId.value),
-      (bottle) {
-        final readResult = _ioResult(
-          () => _readProgramSettingsJson(
-            _programSettingsJsonPath(
-              bottle: bottle,
-              programPath: request.programPath.value,
+      (bottle) => bottle.match(
+        () => ProgramSettingsReadMissingBottle(request.bottleId.value),
+        (bottle) {
+          final readResult = _ioResult(
+            () => _readProgramSettingsJson(
+              _programSettingsJsonPath(
+                bottle: bottle,
+                programPath: request.programPath.value,
+              ),
             ),
-          ),
-        );
-        return readResult.fold<ProgramSettingsReadResult>(
-          ProgramSettingsReadFailed.new,
-          ProgramSettingsRead.new,
-        );
-      },
+          );
+          return readResult.fold<ProgramSettingsReadResult>(
+            ProgramSettingsReadFailed.new,
+            ProgramSettingsRead.new,
+          );
+        },
+      ),
     );
   }
 
   ProgramSettingsUpdateResult setProgramSettings(
     ProgramSettingsUpdateRequest request,
   ) {
-    final bottleResult = _findBottle(request.bottleId.value);
-    final readFailure = bottleResult.fold<ProgramSettingsUpdateResult?>(
+    return _findBottle(
+      request.bottleId.value,
+    ).fold<ProgramSettingsUpdateResult>(
       ProgramSettingsUpdateFailed.new,
-      (_) => null,
-    );
-    if (readFailure != null) {
-      return readFailure;
-    }
-    return bottleResult.getOrElse((_) => const Option.none()).match(
-      () => ProgramSettingsUpdateMissingBottle(request.bottleId.value),
-      (bottle) {
-        final writeResult = _ioResult(() {
-          _writeProgramSettingsJson(
-            path: _programSettingsJsonPath(
-              bottle: bottle,
-              programPath: request.programPath.value,
-            ),
-            settings: request.settings,
+      (bottle) => bottle.match(
+        () => ProgramSettingsUpdateMissingBottle(request.bottleId.value),
+        (bottle) {
+          final writeResult = _ioResult(() {
+            _writeProgramSettingsJson(
+              path: _programSettingsJsonPath(
+                bottle: bottle,
+                programPath: request.programPath.value,
+              ),
+              settings: request.settings,
+            );
+          });
+          return writeResult.fold<ProgramSettingsUpdateResult>(
+            ProgramSettingsUpdateFailed.new,
+            (_) => ProgramSettingsUpdated(request.settings),
           );
-        });
-        final failure = writeResult.fold<ProgramSettingsUpdateResult?>(
-          ProgramSettingsUpdateFailed.new,
-          (_) => null,
-        );
-        if (failure != null) {
-          return failure;
-        }
-
-        return ProgramSettingsUpdated(request.settings);
-      },
+        },
+      ),
     );
   }
 }

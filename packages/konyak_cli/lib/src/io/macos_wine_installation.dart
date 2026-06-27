@@ -111,7 +111,7 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
         ]);
 
         try {
-          final downloadFailure = _downloadRuntimeStackSourceArchive(
+          return _downloadRuntimeStackSourceArchive(
             source: archiveUrl.value,
             targetPath: downloadedArchivePath,
             progressSink: progress,
@@ -119,21 +119,19 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
             message: 'Downloading Konyak macOS Wine...',
             startFraction: 0.05,
             endFraction: 0.65,
-          );
-          if (downloadFailure != null) {
-            return MacosWineInstallFailed(downloadFailure);
-          }
-
-          return _installMacosWineArchive(
-            archivePath: downloadedArchivePath,
-            archiveSha256: archiveSha256.asOption.map(
-              (checksum) => checksum.value,
+          ).match(
+            MacosWineInstallFailed.new,
+            (_) => _installMacosWineArchive(
+              archivePath: downloadedArchivePath,
+              archiveSha256: archiveSha256.asOption.map(
+                (checksum) => checksum.value,
+              ),
+              componentArchivePaths: componentArchivePaths.map(
+                (path) => path.value,
+              ),
+              preserveExistingRuntimeFiles: preserveExistingRuntimeFiles,
+              progressSink: progress,
             ),
-            componentArchivePaths: componentArchivePaths.map(
-              (path) => path.value,
-            ),
-            preserveExistingRuntimeFiles: preserveExistingRuntimeFiles,
-            progressSink: progress,
           );
         } on FileSystemException catch (error) {
           return MacosWineInstallFailed(error.message);
@@ -229,30 +227,27 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
         ]);
 
         try {
-          final downloadFailure =
-              await _downloadRuntimeStackSourceArchiveStreaming(
-                source: archiveUrl.value,
-                targetPath: downloadedArchivePath,
-                progressSink: progress,
-                stage: 'downloading',
-                message: 'Downloading Konyak macOS Wine...',
-                startFraction: 0.05,
-                endFraction: 0.65,
-              );
-          if (downloadFailure != null) {
-            return MacosWineInstallFailed(downloadFailure);
-          }
-
-          return _installMacosWineArchive(
-            archivePath: downloadedArchivePath,
-            archiveSha256: archiveSha256.asOption.map(
-              (checksum) => checksum.value,
-            ),
-            componentArchivePaths: componentArchivePaths.map(
-              (path) => path.value,
-            ),
-            preserveExistingRuntimeFiles: preserveExistingRuntimeFiles,
+          return (await _downloadRuntimeStackSourceArchiveStreaming(
+            source: archiveUrl.value,
+            targetPath: downloadedArchivePath,
             progressSink: progress,
+            stage: 'downloading',
+            message: 'Downloading Konyak macOS Wine...',
+            startFraction: 0.05,
+            endFraction: 0.65,
+          )).match(
+            MacosWineInstallFailed.new,
+            (_) => _installMacosWineArchive(
+              archivePath: downloadedArchivePath,
+              archiveSha256: archiveSha256.asOption.map(
+                (checksum) => checksum.value,
+              ),
+              componentArchivePaths: componentArchivePaths.map(
+                (path) => path.value,
+              ),
+              preserveExistingRuntimeFiles: preserveExistingRuntimeFiles,
+              progressSink: progress,
+            ),
           );
         } on FileSystemException catch (error) {
           return MacosWineInstallFailed(error.message);

@@ -100,11 +100,11 @@ class DartIoGptkWineInstaller implements GptkWineInstaller {
       }
 
       final bundledD3DMetal = sourceResolution.source;
-      final d3dMetalValidationFailure = _validateGptkD3DMetalSource(
-        bundledD3DMetal,
-      );
-      if (d3dMetalValidationFailure != null) {
-        return GptkWineInstallFailed(d3dMetalValidationFailure);
+      switch (_validateGptkD3DMetalSource(bundledD3DMetal)) {
+        case Left<String, Unit>(:final value):
+          return GptkWineInstallFailed(value);
+        case Right<String, Unit>():
+          break;
       }
       installedD3DMetal = bundledD3DMetal;
 

@@ -28,13 +28,12 @@ Option<RuntimeSourceManifest> _runtimeStackSourceManifestFromPayload(
 
   final parsedComponents = <RuntimeSourceComponent>[];
   for (final component in components) {
-    final parsedComponent = _runtimeStackSourceComponent(
-      component,
-    ).match(() => null, (value) => value);
-    if (parsedComponent == null) {
-      return const Option.none();
+    switch (_runtimeStackSourceComponent(component)) {
+      case None():
+        return const Option.none();
+      case Some<RuntimeSourceComponent>(:final value):
+        parsedComponents.add(value);
     }
-    parsedComponents.add(parsedComponent);
   }
 
   if (parsedComponents.isEmpty) {

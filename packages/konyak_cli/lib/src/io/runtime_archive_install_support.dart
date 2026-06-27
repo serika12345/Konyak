@@ -29,7 +29,7 @@ Map<String, String> _runtimeStackComponentVersions(Object? decoded) {
   return Map.unmodifiable(versions);
 }
 
-String? _installRuntimeArchives({
+Either<String, Unit> _installRuntimeArchives({
   required String runtimeLabel,
   required String archivePath,
   required String? archiveSha256,
@@ -61,15 +61,19 @@ String? _installRuntimeArchives({
     try {
       final archive = File(archivePath);
       if (!archive.existsSync()) {
-        return '$runtimeLabel archive `$archivePath` was not found.';
+        return Left<String, Unit>(
+          '$runtimeLabel archive `$archivePath` was not found.',
+        );
       }
       final actualSha256 = _sha256HexDigest(archive);
       if (actualSha256.toLowerCase() != expectedSha256.toLowerCase()) {
-        return '$runtimeLabel archive checksum mismatch: expected '
-            '$expectedSha256, got $actualSha256.';
+        return Left<String, Unit>(
+          '$runtimeLabel archive checksum mismatch: expected '
+          '$expectedSha256, got $actualSha256.',
+        );
       }
     } on FileSystemException catch (error) {
-      return error.message;
+      return Left<String, Unit>(error.message);
     }
   }
 
@@ -92,7 +96,9 @@ String? _installRuntimeArchives({
       lockFile.createSync(exclusive: true);
       lockCreated = true;
     } on FileSystemException {
-      return '$runtimeLabel installation is already running.';
+      return Left<String, Unit>(
+        '$runtimeLabel installation is already running.',
+      );
     }
     if (stagingRoot.existsSync()) {
       stagingRoot.deleteSync(recursive: true);
@@ -103,7 +109,9 @@ String? _installRuntimeArchives({
       final currentArchivePath = archivePaths[index];
       final archive = File(currentArchivePath);
       if (!archive.existsSync()) {
-        return '$runtimeLabel archive `$currentArchivePath` was not found.';
+        return Left<String, Unit>(
+          '$runtimeLabel archive `$currentArchivePath` was not found.',
+        );
       }
 
       final startFraction = 0.65 + (index / archivePaths.length) * 0.25;
@@ -128,7 +136,9 @@ String? _installRuntimeArchives({
         environment: _archiveExtractionEnvironment(),
       );
       if (extraction.exitCode != 0) {
-        return _commandFailureMessage('extract $runtimeLabel', extraction);
+        return Left<String, Unit>(
+          _commandFailureMessage('extract $runtimeLabel', extraction),
+        );
       }
 
       _mergeRuntimeStackManifest(
@@ -187,7 +197,9 @@ String? _installRuntimeArchives({
       _joinPath(stagingRoot.path, requiredExecutableRelativePath),
     );
     if (!stagedExecutable.existsSync()) {
-      return '$runtimeLabel archive did not install `$expectedExecutablePath`.';
+      return Left<String, Unit>(
+        '$runtimeLabel archive did not install `$expectedExecutablePath`.',
+      );
     }
 
     _replaceRuntimeRootInPlace(
@@ -202,9 +214,9 @@ String? _installRuntimeArchives({
       fraction: 0.98,
     );
   } on ProcessException catch (error) {
-    return error.message;
+    return Left<String, Unit>(error.message);
   } on FileSystemException catch (error) {
-    return error.message;
+    return Left<String, Unit>(error.message);
   } finally {
     if (stagingRoot.existsSync()) {
       stagingRoot.deleteSync(recursive: true);
@@ -217,7 +229,7 @@ String? _installRuntimeArchives({
     }
   }
 
-  return null;
+  return const Right<String, Unit>(unit);
 }
 
 Map<String, String> _archiveExtractionEnvironment() {

@@ -91,13 +91,15 @@ CliResult _runProgramJsonResult(
         programPath: request.programPath,
         oneTimeSettings: request.settings,
         beforeRun: (programRunRequest) {
-          final dllSyncFailure = _syncRuntimeSettingsDllOverrides(
+          switch (_syncRuntimeSettingsDllOverrides(
             bottle: bottle,
             runtimeSettings: bottle.runtimeSettings,
             programRunPlanner: context.programRunPlanner,
-          );
-          if (dllSyncFailure != null) {
-            return dllSyncFailure;
+          )) {
+            case _CliSideEffectFailed(:final result):
+              return _CliSideEffectFailed(result);
+            case _CliSideEffectSucceeded():
+              break;
           }
 
           _recordExternalProgramRun(bottle: bottle, request: programRunRequest);
@@ -110,14 +112,15 @@ CliResult _runProgramJsonResult(
             diagnosticSink: context.linuxExternalProgramLauncherDiagnosticSink,
           );
 
-          return null;
+          return const _CliSideEffectSucceeded();
         },
       );
     },
   );
 }
 
-typedef _ProgramRunPreparation = CliResult? Function(ProgramRunRequest request);
+typedef _ProgramRunPreparation =
+    _CliSideEffectResult Function(ProgramRunRequest request);
 
 CliResult _runProgramPathJsonResult({
   required BottleRepository bottleRepository,
@@ -158,12 +161,16 @@ CliResult _runProgramPathJsonResult({
       extra: <String, Object?>{'programPath': programPath},
     ),
     (request) {
-      final preparationFailure = beforeRun?.call(request);
-      if (preparationFailure != null) {
-        return preparationFailure;
-      }
-
-      return _programRunResultJson(request, programRunner);
+      final preparationResult = beforeRun == null
+          ? const _CliSideEffectSucceeded()
+          : beforeRun(request);
+      return switch (preparationResult) {
+        _CliSideEffectFailed(:final result) => result,
+        _CliSideEffectSucceeded() => _programRunResultJson(
+          request,
+          programRunner,
+        ),
+      };
     },
   );
 }

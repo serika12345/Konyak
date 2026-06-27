@@ -106,7 +106,7 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
         ]);
 
         try {
-          final downloadFailure = _downloadRuntimeStackSourceArchive(
+          return _downloadRuntimeStackSourceArchive(
             source: archiveUrl.value,
             targetPath: downloadedArchivePath,
             progressSink: progress,
@@ -114,20 +114,18 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
             message: 'Downloading Konyak Linux Wine...',
             startFraction: 0.05,
             endFraction: 0.65,
-          );
-          if (downloadFailure != null) {
-            return LinuxWineInstallFailed(downloadFailure);
-          }
-
-          return _installLinuxWineArchive(
-            archivePath: downloadedArchivePath,
-            archiveSha256: archiveSha256.asOption.map(
-              (checksum) => checksum.value,
+          ).match(
+            LinuxWineInstallFailed.new,
+            (_) => _installLinuxWineArchive(
+              archivePath: downloadedArchivePath,
+              archiveSha256: archiveSha256.asOption.map(
+                (checksum) => checksum.value,
+              ),
+              componentArchivePaths: componentArchivePaths.map(
+                (path) => path.value,
+              ),
+              progressSink: progress,
             ),
-            componentArchivePaths: componentArchivePaths.map(
-              (path) => path.value,
-            ),
-            progressSink: progress,
           );
         } on FileSystemException catch (error) {
           return LinuxWineInstallFailed(error.message);
@@ -218,29 +216,26 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
         ]);
 
         try {
-          final downloadFailure =
-              await _downloadRuntimeStackSourceArchiveStreaming(
-                source: archiveUrl.value,
-                targetPath: downloadedArchivePath,
-                progressSink: progress,
-                stage: 'downloading',
-                message: 'Downloading Konyak Linux Wine...',
-                startFraction: 0.05,
-                endFraction: 0.65,
-              );
-          if (downloadFailure != null) {
-            return LinuxWineInstallFailed(downloadFailure);
-          }
-
-          return _installLinuxWineArchive(
-            archivePath: downloadedArchivePath,
-            archiveSha256: archiveSha256.asOption.map(
-              (checksum) => checksum.value,
-            ),
-            componentArchivePaths: componentArchivePaths.map(
-              (path) => path.value,
-            ),
+          return (await _downloadRuntimeStackSourceArchiveStreaming(
+            source: archiveUrl.value,
+            targetPath: downloadedArchivePath,
             progressSink: progress,
+            stage: 'downloading',
+            message: 'Downloading Konyak Linux Wine...',
+            startFraction: 0.05,
+            endFraction: 0.65,
+          )).match(
+            LinuxWineInstallFailed.new,
+            (_) => _installLinuxWineArchive(
+              archivePath: downloadedArchivePath,
+              archiveSha256: archiveSha256.asOption.map(
+                (checksum) => checksum.value,
+              ),
+              componentArchivePaths: componentArchivePaths.map(
+                (path) => path.value,
+              ),
+              progressSink: progress,
+            ),
           );
         } on FileSystemException catch (error) {
           return LinuxWineInstallFailed(error.message);

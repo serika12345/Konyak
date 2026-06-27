@@ -357,14 +357,15 @@ class BottleRuntimeSettings {
         'dxgi,d3d9,d3d10,d3d10_1,d3d10core,d3d11=n,b',
       );
       final hud = switch (dxvkHud.value) {
-        'full' => 'full',
-        'partial' => 'devinfo,fps,frametimes',
-        'fps' => 'fps',
-        _ => null,
+        'full' => Option.of('full'),
+        'partial' => Option.of('devinfo,fps,frametimes'),
+        'fps' => Option.of('fps'),
+        _ => const Option<String>.none(),
       };
-      if (hud != null) {
-        environment = environment.add('DXVK_HUD', hud);
-      }
+      environment = hud.match(
+        () => environment,
+        (hud) => environment.add('DXVK_HUD', hud),
+      );
     }
 
     if (dxvk && dxvkAsync) {
@@ -405,14 +406,15 @@ class BottleRuntimeSettings {
 
     if (dxvk) {
       final hud = switch (dxvkHud.value) {
-        'full' => 'full',
-        'partial' => 'devinfo,fps,frametimes',
-        'fps' => 'fps',
-        _ => null,
+        'full' => Option.of('full'),
+        'partial' => Option.of('devinfo,fps,frametimes'),
+        'fps' => Option.of('fps'),
+        _ => const Option<String>.none(),
       };
-      if (hud != null) {
-        environment = environment.add('DXVK_HUD', hud);
-      }
+      environment = hud.match(
+        () => environment,
+        (hud) => environment.add('DXVK_HUD', hud),
+      );
     }
 
     if (dxvk && dxvkAsync) {

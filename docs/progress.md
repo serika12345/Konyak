@@ -13,6 +13,37 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-28 02:14 JST
+- State: `completed`
+- Branch: `main`
+- Active work: remove nullable sentinel control flow from CLI Dart
+  Result/Option handling.
+- Related TODO: none; this is a focused code-quality refactor requested after
+  the domain value-object replacement.
+- Latest commit: `52fd55f` (`Replace domain primitives with value objects`).
+- Purpose: keep failure, absence, and success branches explicit in
+  `Result`/`Either`/`Option`/sealed result code instead of using `null` as an
+  intermediate success sentinel.
+- Completed work: removed `fold<T?>` nullable intermediates and
+  `getOrElse((_) => Option.none())` failure collapsing from repository and CLI
+  code; converted private success-null/failure-string helpers for runtime
+  downloads, runtime archive installation, AppImage preflight, GPTK/D3DMetal
+  validation, registry updates, DLL sync, async process listing, and Flutter
+  auto-pin baseline flow to `Either` or private sealed result branches; replaced
+  Option/sealed branches that returned `null` with `match`, `switch`, callback,
+  or boundary `toNullable()` forms; added governance checks for the sentinel
+  patterns; removed the remaining runtime settings view-model reassignment by
+  using final values and an IIFE.
+- Remaining work: none for the nullable sentinel cleanup. Existing nullable
+  parser and UI boundary APIs remain where they are the public/local nullable
+  contract rather than Result/Option failure control flow.
+- Next action: review and commit the cleanup.
+- Verification: `cd packages/konyak_cli && dart analyze --fatal-infos`,
+  `just flutter-analyze`, `just cli-test`, `just flutter-test`,
+  `just verify-governance`, `just verify-safety`, `just flutter-format-check`,
+  `just format-check`, `just lint`, `git diff --check`, and targeted `rg`
+  searches for the removed sentinel and reassignment patterns passed.
+
 - Timestamp: 2026-06-28 01:10 JST
 - State: `completed`
 - Branch: `main`

@@ -27,7 +27,7 @@ class DartIoProgramMetadataExtractor implements ProgramMetadataExtractor {
         fileStat: file.statSync(),
       );
       final metadata = ProgramMetadataRecord(
-        architecture: Option.fromNullable(image.architecture),
+        architecture: image.architecture,
         fileDescription: versionStrings.fileDescription.map(
           (value) => value.value,
         ),
@@ -79,7 +79,7 @@ class DartIoAsyncProgramMetadataExtractor
         fileStat: await file.stat(),
       );
       final metadata = ProgramMetadataRecord(
-        architecture: Option.fromNullable(image.architecture),
+        architecture: image.architecture,
         fileDescription: versionStrings.fileDescription.map(
           (value) => value.value,
         ),

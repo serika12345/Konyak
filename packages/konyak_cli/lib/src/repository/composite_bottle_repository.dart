@@ -12,75 +12,57 @@ class CompositeBottleRepository implements BottleRepository {
   @override
   IoResult<List<BottleRecord>> listBottles() {
     final records = <String, BottleRecord>{};
-    final writableBottles = writableRepository.listBottles();
-    final writableFailure = writableBottles.fold<IoResult<List<BottleRecord>>?>(
+    return writableRepository.listBottles().match<IoResult<List<BottleRecord>>>(
       Left<String, List<BottleRecord>>.new,
-      (_) => null,
+      (writableBottles) {
+        for (final bottle in writableBottles) {
+          records[bottle.id.value] = bottle;
+        }
+
+        for (final catalog in _catalogs) {
+          switch (catalog.listBottles()) {
+            case Left<String, List<BottleRecord>>(:final value):
+              return Left<String, List<BottleRecord>>(value);
+            case Right<String, List<BottleRecord>>(:final value):
+              for (final bottle in value) {
+                records.putIfAbsent(bottle.id.value, () => bottle);
+              }
+          }
+        }
+
+        final bottles = records.values.toList(growable: false)
+          ..sort((left, right) => left.id.value.compareTo(right.id.value));
+
+        return Right<String, List<BottleRecord>>(List.unmodifiable(bottles));
+      },
     );
-    if (writableFailure != null) {
-      return writableFailure;
-    }
-
-    for (final bottle in writableBottles.getOrElse(
-      (_) => const <BottleRecord>[],
-    )) {
-      records[bottle.id.value] = bottle;
-    }
-
-    for (final catalog in _catalogs) {
-      final catalogBottles = catalog.listBottles();
-      final catalogFailure = catalogBottles.fold<IoResult<List<BottleRecord>>?>(
-        Left<String, List<BottleRecord>>.new,
-        (_) => null,
-      );
-      if (catalogFailure != null) {
-        return catalogFailure;
-      }
-
-      for (final bottle in catalogBottles.getOrElse(
-        (_) => const <BottleRecord>[],
-      )) {
-        records.putIfAbsent(bottle.id.value, () => bottle);
-      }
-    }
-
-    final bottles = records.values.toList(growable: false)
-      ..sort((left, right) => left.id.value.compareTo(right.id.value));
-
-    return Right<String, List<BottleRecord>>(List.unmodifiable(bottles));
   }
 
   @override
   IoResult<Option<BottleRecord>> findBottle(String id) {
-    final localBottle = writableRepository.findBottle(id);
-    final localFailure = localBottle.fold<IoResult<Option<BottleRecord>>?>(
-      Left<String, Option<BottleRecord>>.new,
-      (_) => null,
-    );
-    if (localFailure != null) {
-      return localFailure;
-    }
-    final localRecord = localBottle.getOrElse((_) => const Option.none());
-    if (localRecord.isSome()) {
-      return Right<String, Option<BottleRecord>>(localRecord);
-    }
+    return writableRepository
+        .findBottle(id)
+        .match<IoResult<Option<BottleRecord>>>(
+          Left<String, Option<BottleRecord>>.new,
+          (localRecord) {
+            if (localRecord.isSome()) {
+              return Right<String, Option<BottleRecord>>(localRecord);
+            }
 
-    for (final catalog in _catalogs) {
-      final bottle = catalog.findBottle(id);
-      final failure = bottle.fold<IoResult<Option<BottleRecord>>?>(
-        Left<String, Option<BottleRecord>>.new,
-        (_) => null,
-      );
-      if (failure != null) {
-        return failure;
-      }
-      final record = bottle.getOrElse((_) => const Option.none());
-      if (record.isSome()) {
-        return Right<String, Option<BottleRecord>>(record);
-      }
-    }
+            for (final catalog in _catalogs) {
+              switch (catalog.findBottle(id)) {
+                case Left<String, Option<BottleRecord>>(:final value):
+                  return Left<String, Option<BottleRecord>>(value);
+                case Right<String, Option<BottleRecord>>(:final value):
+                  if (value.isSome()) {
+                    return Right<String, Option<BottleRecord>>(value);
+                  }
+              }
+            }
 
-    return const Right<String, Option<BottleRecord>>(Option.none());
+            return const Right<String, Option<BottleRecord>>(Option.none());
+          },
+        );
   }
 
   @override

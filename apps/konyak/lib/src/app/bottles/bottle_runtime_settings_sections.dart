@@ -177,13 +177,12 @@ class BottleGraphicsSettingsSection extends StatelessWidget {
                 )
                 ? null
                 : (value) {
-                    final nextBackend = _graphicsBackendFromValue(value);
-                    if (nextBackend == null) {
-                      return;
-                    }
-                    onChanged(
-                      settings.withGraphicsBackend(nextBackend),
-                      runtimeSettingsControlGraphicsBackend,
+                    _withGraphicsBackendFromValue(
+                      value,
+                      (nextBackend) => onChanged(
+                        settings.withGraphicsBackend(nextBackend),
+                        runtimeSettingsControlGraphicsBackend,
+                      ),
                     );
                   },
           ),
@@ -327,12 +326,24 @@ bool _canChangeGraphicsBackend({
           (availability.canUseDxmt || availability.canUseDxr));
 }
 
-BottleGraphicsBackend? _graphicsBackendFromValue(String value) {
-  return switch (value) {
-    'wineDefault' => BottleGraphicsBackend.wineDefault,
-    'dxvk' => BottleGraphicsBackend.dxvk,
-    'dxmt' => BottleGraphicsBackend.dxmt,
-    'd3dMetal' => BottleGraphicsBackend.d3dMetal,
-    _ => null,
-  };
+void _withGraphicsBackendFromValue(
+  String value,
+  void Function(BottleGraphicsBackend backend) onParsed,
+) {
+  switch (value) {
+    case 'wineDefault':
+      onParsed(BottleGraphicsBackend.wineDefault);
+      return;
+    case 'dxvk':
+      onParsed(BottleGraphicsBackend.dxvk);
+      return;
+    case 'dxmt':
+      onParsed(BottleGraphicsBackend.dxmt);
+      return;
+    case 'd3dMetal':
+      onParsed(BottleGraphicsBackend.d3dMetal);
+      return;
+    default:
+      return;
+  }
 }

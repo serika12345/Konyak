@@ -1,6 +1,8 @@
 part of '../../konyak_cli.dart';
 
-String? _downloadRuntimeStackSourceArchive({
+typedef _RuntimeStackSourceArchiveDownloadResult = Either<String, Unit>;
+
+_RuntimeStackSourceArchiveDownloadResult _downloadRuntimeStackSourceArchive({
   required String source,
   required String targetPath,
   required RuntimeInstallProgressSink? progressSink,
@@ -25,7 +27,7 @@ String? _downloadRuntimeStackSourceArchive({
       message: message,
       fraction: endFraction,
     );
-    return null;
+    return const Right<String, Unit>(unit);
   }
 
   _emitRuntimeInstallProgress(
@@ -42,7 +44,9 @@ String? _downloadRuntimeStackSourceArchive({
     source,
   ], runInShell: false);
   if (result.exitCode != 0) {
-    return _commandFailureMessage('download runtime stack component', result);
+    return Left<String, Unit>(
+      _commandFailureMessage('download runtime stack component', result),
+    );
   }
   _emitRuntimeInstallProgress(
     progressSink,
@@ -50,10 +54,11 @@ String? _downloadRuntimeStackSourceArchive({
     message: message,
     fraction: endFraction,
   );
-  return null;
+  return const Right<String, Unit>(unit);
 }
 
-Future<String?> _downloadRuntimeStackSourceArchiveStreaming({
+Future<_RuntimeStackSourceArchiveDownloadResult>
+_downloadRuntimeStackSourceArchiveStreaming({
   required String source,
   required String targetPath,
   required RuntimeInstallProgressSink? progressSink,
@@ -86,7 +91,8 @@ Future<String?> _downloadRuntimeStackSourceArchiveStreaming({
   );
 }
 
-Future<String?> _copyRuntimeStackSourceArchiveStreaming({
+Future<_RuntimeStackSourceArchiveDownloadResult>
+_copyRuntimeStackSourceArchiveStreaming({
   required String sourcePath,
   required String targetPath,
   required RuntimeInstallProgressSink? progressSink,
@@ -132,13 +138,14 @@ Future<String?> _copyRuntimeStackSourceArchiveStreaming({
       message: message,
       fraction: endFraction,
     );
-    return null;
+    return const Right<String, Unit>(unit);
   } on FileSystemException catch (error) {
-    return error.message;
+    return Left<String, Unit>(error.message);
   }
 }
 
-Future<String?> _downloadRuntimeStackSourceUriStreaming({
+Future<_RuntimeStackSourceArchiveDownloadResult>
+_downloadRuntimeStackSourceUriStreaming({
   required String source,
   required String targetPath,
   required RuntimeInstallProgressSink? progressSink,
@@ -149,7 +156,9 @@ Future<String?> _downloadRuntimeStackSourceUriStreaming({
 }) async {
   final uri = Uri.tryParse(source);
   if (uri == null || !uri.hasScheme) {
-    return 'Runtime stack component URL is invalid: $source';
+    return Left<String, Unit>(
+      'Runtime stack component URL is invalid: $source',
+    );
   }
 
   final client = HttpClient();
@@ -168,8 +177,10 @@ Future<String?> _downloadRuntimeStackSourceUriStreaming({
     );
     final response = await request.close();
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      return 'download runtime stack component failed with HTTP status '
-          '${response.statusCode}.';
+      return Left<String, Unit>(
+        'download runtime stack component failed with HTTP status '
+        '${response.statusCode}.',
+      );
     }
 
     final totalBytes = response.contentLength;
@@ -200,11 +211,11 @@ Future<String?> _downloadRuntimeStackSourceUriStreaming({
       message: message,
       fraction: endFraction,
     );
-    return null;
+    return const Right<String, Unit>(unit);
   } on HttpException catch (error) {
-    return error.message;
+    return Left<String, Unit>(error.message);
   } on IOException catch (error) {
-    return error.toString();
+    return Left<String, Unit>(error.toString());
   } finally {
     client.close(force: true);
   }

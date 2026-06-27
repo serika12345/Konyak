@@ -195,11 +195,12 @@ RuntimeSettingsUpdateRequest? _parseJsonRuntimeSettingsUpdateRequest(
     return null;
   }
 
-  return _bottleRuntimeSettingsFromJson(decoded).match(
-    () => null,
-    (runtimeSettings) => RuntimeSettingsUpdateRequest(
-      bottleId: bottleId,
-      runtimeSettings: runtimeSettings,
-    ),
-  );
+  return _bottleRuntimeSettingsFromJson(decoded)
+      .map(
+        (runtimeSettings) => RuntimeSettingsUpdateRequest(
+          bottleId: bottleId,
+          runtimeSettings: runtimeSettings,
+        ),
+      )
+      .toNullable();
 }

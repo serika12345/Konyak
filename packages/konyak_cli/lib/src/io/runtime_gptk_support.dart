@@ -212,30 +212,42 @@ File? _findDmgFile(Directory root, {required int maxDepth}) {
   return null;
 }
 
-String? _validateGptkD3DMetalSource(_GptkD3DMetalSource source) {
+Either<String, Unit> _validateGptkD3DMetalSource(_GptkD3DMetalSource source) {
   final frameworkBinary = _d3dMetalFrameworkBinary(source.framework.path);
   if (frameworkBinary == null || !File(frameworkBinary).existsSync()) {
-    return 'D3DMetal.framework does not contain a D3DMetal binary.';
+    return const Left<String, Unit>(
+      'D3DMetal.framework does not contain a D3DMetal binary.',
+    );
   }
   if (!_looksLikeMachO(File(frameworkBinary))) {
-    return 'D3DMetal.framework is not a Mach-O framework binary. Konyak '
-        'rejects fixture text files and incomplete GPTK copies.';
+    return const Left<String, Unit>(
+      'D3DMetal.framework is not a Mach-O framework binary. Konyak '
+      'rejects fixture text files and incomplete GPTK copies.',
+    );
   }
   if (!_looksLikeMachO(source.dylib)) {
-    return 'libd3dshared.dylib is not a Mach-O binary. Konyak rejects fixture '
-        'text files and incomplete GPTK copies.';
+    return const Left<String, Unit>(
+      'libd3dshared.dylib is not a Mach-O binary. Konyak rejects fixture '
+      'text files and incomplete GPTK copies.',
+    );
   }
   if (!_looksLikePE(source.d3d12Dll)) {
-    return 'd3d12.dll is not a Windows PE binary. Select an official or '
-        'compatible Game Porting Toolkit distribution.';
+    return const Left<String, Unit>(
+      'd3d12.dll is not a Windows PE binary. Select an official or '
+      'compatible Game Porting Toolkit distribution.',
+    );
   }
   if (!_looksLikePE(source.d3d11Dll)) {
-    return 'd3d11.dll is not a Windows PE binary. Select an official or '
-        'compatible Game Porting Toolkit distribution.';
+    return const Left<String, Unit>(
+      'd3d11.dll is not a Windows PE binary. Select an official or '
+      'compatible Game Porting Toolkit distribution.',
+    );
   }
   if (!_looksLikePE(source.dxgiDll)) {
-    return 'dxgi.dll is not a Windows PE binary. Select an official or '
-        'compatible Game Porting Toolkit distribution.';
+    return const Left<String, Unit>(
+      'dxgi.dll is not a Windows PE binary. Select an official or '
+      'compatible Game Porting Toolkit distribution.',
+    );
   }
   for (final dllName in _requiredGptkD3DMetalWindowsFileNames) {
     final path = _gptkD3DMetalWindowsPayloadPath(
@@ -243,11 +255,13 @@ String? _validateGptkD3DMetalSource(_GptkD3DMetalSource source) {
       dllName,
     );
     if (path == null) {
-      return 'GPTK/D3DMetal payload is missing $dllName.';
+      return Left<String, Unit>('GPTK/D3DMetal payload is missing $dllName.');
     }
     if (!_looksLikePE(File(path))) {
-      return '$dllName is not a Windows PE binary. Select an official or '
-          'compatible Game Porting Toolkit distribution.';
+      return Left<String, Unit>(
+        '$dllName is not a Windows PE binary. Select an official or '
+        'compatible Game Porting Toolkit distribution.',
+      );
     }
   }
   for (final libraryName in _requiredGptkD3DMetalUnixFileNames) {
@@ -256,21 +270,29 @@ String? _validateGptkD3DMetalSource(_GptkD3DMetalSource source) {
       libraryName,
     );
     if (path == null) {
-      return 'GPTK/D3DMetal payload is missing $libraryName.';
+      return Left<String, Unit>(
+        'GPTK/D3DMetal payload is missing $libraryName.',
+      );
     }
     final type = FileSystemEntity.typeSync(path, followLinks: false);
     if (type == FileSystemEntityType.link) {
       if (Link(path).targetSync() != '../../external/libd3dshared.dylib') {
-        return '$libraryName must be a symlink to '
-            '../../external/libd3dshared.dylib.';
+        return Left<String, Unit>(
+          '$libraryName must be a symlink to '
+          '../../external/libd3dshared.dylib.',
+        );
       }
     } else if (type == FileSystemEntityType.file) {
       if (!_looksLikeMachO(File(path))) {
-        return '$libraryName is not a Mach-O binary. Select an official or '
-            'compatible Game Porting Toolkit distribution.';
+        return Left<String, Unit>(
+          '$libraryName is not a Mach-O binary. Select an official or '
+          'compatible Game Porting Toolkit distribution.',
+        );
       }
     } else {
-      return 'GPTK/D3DMetal payload path is unsupported: $libraryName.';
+      return Left<String, Unit>(
+        'GPTK/D3DMetal payload path is unsupported: $libraryName.',
+      );
     }
   }
   for (final libraryName in const <String>['d3d11.so', 'd3d12.so', 'dxgi.so']) {
@@ -282,11 +304,13 @@ String? _validateGptkD3DMetalSource(_GptkD3DMetalSource source) {
         FileSystemEntity.typeSync(path, followLinks: false) !=
             FileSystemEntityType.link ||
         Link(path).targetSync() != '../../external/libd3dshared.dylib') {
-      return '$libraryName must be a symlink to '
-          '../../external/libd3dshared.dylib.';
+      return Left<String, Unit>(
+        '$libraryName must be a symlink to '
+        '../../external/libd3dshared.dylib.',
+      );
     }
   }
-  return null;
+  return const Right<String, Unit>(unit);
 }
 
 _GptkD3DMetalSource? _resolveGptkD3DMetalSource(String sourcePath) {

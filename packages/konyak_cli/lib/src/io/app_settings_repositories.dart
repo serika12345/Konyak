@@ -162,20 +162,6 @@ Option<AppSettingsRecord> _appSettingsRecordFromJson(
       (defaultBottlePath is! String || defaultBottlePath.trim().isEmpty)) {
     return const Option.none();
   }
-  final parsedAppearanceMode = appearanceMode.match<AppAppearanceMode?>(
-    () => null,
-    (value) => value,
-  );
-  if (parsedAppearanceMode == null) {
-    return const Option.none();
-  }
-  final parsedLanguageMode = languageMode.match<AppLanguageMode?>(
-    () => null,
-    (value) => value,
-  );
-  if (parsedLanguageMode == null) {
-    return const Option.none();
-  }
   if (automaticallyCheckForKonyakUpdates != null &&
       automaticallyCheckForKonyakUpdates is! bool) {
     return const Option.none();
@@ -189,27 +175,34 @@ Option<AppSettingsRecord> _appSettingsRecordFromJson(
     return const Option.none();
   }
 
-  return Option.of(
-    AppSettingsRecord(
-      terminateWineProcessesOnClose: terminateWineProcessesOnClose is bool
-          ? terminateWineProcessesOnClose
-          : false,
-      defaultBottlePath: defaultBottlePath is String
-          ? defaultBottlePath
-          : fallbackDefaultBottlePath,
-      appearanceMode: parsedAppearanceMode,
-      languageMode: parsedLanguageMode,
-      automaticallyCheckForKonyakUpdates:
-          automaticallyCheckForKonyakUpdates is bool
-          ? automaticallyCheckForKonyakUpdates
-          : false,
-      automaticallyCheckForWineUpdates: automaticallyCheckForWineUpdates is bool
-          ? automaticallyCheckForWineUpdates
-          : true,
-      automaticallyPinNewInstalledPrograms:
-          automaticallyPinNewInstalledPrograms is bool
-          ? automaticallyPinNewInstalledPrograms
-          : true,
+  return appearanceMode.match(
+    () => const Option.none(),
+    (parsedAppearanceMode) => languageMode.match(
+      () => const Option.none(),
+      (parsedLanguageMode) => Option.of(
+        AppSettingsRecord(
+          terminateWineProcessesOnClose: terminateWineProcessesOnClose is bool
+              ? terminateWineProcessesOnClose
+              : false,
+          defaultBottlePath: defaultBottlePath is String
+              ? defaultBottlePath
+              : fallbackDefaultBottlePath,
+          appearanceMode: parsedAppearanceMode,
+          languageMode: parsedLanguageMode,
+          automaticallyCheckForKonyakUpdates:
+              automaticallyCheckForKonyakUpdates is bool
+              ? automaticallyCheckForKonyakUpdates
+              : false,
+          automaticallyCheckForWineUpdates:
+              automaticallyCheckForWineUpdates is bool
+              ? automaticallyCheckForWineUpdates
+              : true,
+          automaticallyPinNewInstalledPrograms:
+              automaticallyPinNewInstalledPrograms is bool
+              ? automaticallyPinNewInstalledPrograms
+              : true,
+        ),
+      ),
     ),
   );
 }

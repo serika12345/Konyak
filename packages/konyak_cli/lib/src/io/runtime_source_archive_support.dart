@@ -28,7 +28,7 @@ _resolveRuntimeStackSourceArchiveBundleFromPlan({
   required RuntimeInstallProgressSink? progressSink,
 }) {
   for (final componentPlan in plan.components) {
-    final downloadFailure = _downloadRuntimeStackSourceArchive(
+    switch (_downloadRuntimeStackSourceArchive(
       source: componentPlan.component.archiveUrl.value,
       targetPath: componentPlan.archivePath.value,
       progressSink: progressSink,
@@ -36,9 +36,11 @@ _resolveRuntimeStackSourceArchiveBundleFromPlan({
       message: componentPlan.downloadingMessage,
       startFraction: componentPlan.startFraction.value,
       endFraction: componentPlan.endFraction.value,
-    );
-    if (downloadFailure != null) {
-      return _RuntimeStackSourceArchiveBundleFailed(downloadFailure);
+    )) {
+      case Left<String, Unit>(:final value):
+        return _RuntimeStackSourceArchiveBundleFailed(value);
+      case Right<String, Unit>():
+        break;
     }
 
     _emitRuntimeInstallProgress(
@@ -92,7 +94,7 @@ _resolveRuntimeStackSourceArchiveBundleFromPlanStreaming({
   required RuntimeInstallProgressSink? progressSink,
 }) async {
   for (final componentPlan in plan.components) {
-    final downloadFailure = await _downloadRuntimeStackSourceArchiveStreaming(
+    switch (await _downloadRuntimeStackSourceArchiveStreaming(
       source: componentPlan.component.archiveUrl.value,
       targetPath: componentPlan.archivePath.value,
       progressSink: progressSink,
@@ -100,9 +102,11 @@ _resolveRuntimeStackSourceArchiveBundleFromPlanStreaming({
       message: componentPlan.downloadingMessage,
       startFraction: componentPlan.startFraction.value,
       endFraction: componentPlan.endFraction.value,
-    );
-    if (downloadFailure != null) {
-      return _RuntimeStackSourceArchiveBundleFailed(downloadFailure);
+    )) {
+      case Left<String, Unit>(:final value):
+        return _RuntimeStackSourceArchiveBundleFailed(value);
+      case Right<String, Unit>():
+        break;
     }
 
     _emitRuntimeInstallProgress(

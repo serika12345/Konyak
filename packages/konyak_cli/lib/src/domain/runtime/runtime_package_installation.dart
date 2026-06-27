@@ -79,7 +79,7 @@ class DartIoRuntimePackageInstaller implements RuntimePackageInstaller {
 
   @override
   RuntimePackageInstallResult install(RuntimePackageInstallRequest request) {
-    final failure = _installRuntimeArchives(
+    return _installRuntimeArchives(
       runtimeLabel: request.runtimeLabel,
       archivePath: request.archivePath.value,
       archiveSha256: request.archiveSha256
@@ -101,11 +101,10 @@ class DartIoRuntimePackageInstaller implements RuntimePackageInstaller {
       normalizeStagingRoot: request.normalizeStagingRoot,
       afterManifestWrite: request.afterManifestWrite,
       progressSink: request.progressSink,
+    ).match<RuntimePackageInstallResult>(
+      RuntimePackageInstallFailed.new,
+      (_) => const RuntimePackageInstallCompleted(),
     );
-
-    return failure == null
-        ? const RuntimePackageInstallCompleted()
-        : RuntimePackageInstallFailed(failure);
   }
 }
 

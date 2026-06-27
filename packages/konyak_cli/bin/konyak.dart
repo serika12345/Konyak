@@ -10,17 +10,17 @@ Future<void> main(List<String> arguments) async {
   final appSettingsRepository = defaultAppSettingsRepositoryFromEnvironment(
     environment,
   );
-  final appSettings = appSettingsRepository.read().fold<AppSettingsRecord?>(
-    (_) => null,
-    (settings) => settings,
+  final bottleRepository = appSettingsRepository.read().match(
+    (_) => defaultBottleRepositoryFromEnvironment(environment),
+    (appSettings) => defaultBottleRepositoryFromEnvironment(
+      environment,
+      appSettings: appSettings,
+    ),
   );
   const programRunner = DartIoProgramRunner();
   final result = await runCliStreaming(
     arguments,
-    bottleRepository: defaultBottleRepositoryFromEnvironment(
-      environment,
-      appSettings: appSettings,
-    ),
+    bottleRepository: bottleRepository,
     appSettingsRepository: appSettingsRepository,
     runtimeCatalog: runtimeCatalog,
     programRunPlanner: programRunPlanner,

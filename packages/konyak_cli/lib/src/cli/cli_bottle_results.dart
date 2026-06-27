@@ -56,7 +56,21 @@ CliResult _foundBottleJsonResult({
   );
 }
 
-CliResult? _applyRuntimeSettingsRegistryUpdates({
+sealed class _CliSideEffectResult {
+  const _CliSideEffectResult();
+}
+
+final class _CliSideEffectSucceeded extends _CliSideEffectResult {
+  const _CliSideEffectSucceeded();
+}
+
+final class _CliSideEffectFailed extends _CliSideEffectResult {
+  const _CliSideEffectFailed(this.result);
+
+  final CliResult result;
+}
+
+_CliSideEffectResult _applyRuntimeSettingsRegistryUpdates({
   required BottleRecord bottle,
   required BottleRuntimeSettings runtimeSettings,
   required ProgramRunPlanner programRunPlanner,
@@ -72,13 +86,13 @@ CliResult? _applyRuntimeSettingsRegistryUpdates({
   );
 }
 
-CliResult? _syncRuntimeSettingsDllOverrides({
+_CliSideEffectResult _syncRuntimeSettingsDllOverrides({
   required BottleRecord bottle,
   required BottleRuntimeSettings runtimeSettings,
   required ProgramRunPlanner programRunPlanner,
 }) {
   if (programRunPlanner.hostPlatform != KonyakHostPlatform.macos) {
-    return null;
+    return const _CliSideEffectSucceeded();
   }
 
   final syncResult = _ioResult(() {
@@ -95,25 +109,22 @@ CliResult? _syncRuntimeSettingsDllOverrides({
       );
     }
   });
-  final failureMessage = syncResult.fold<String?>(
-    (message) => message,
-    (_) => null,
+  return syncResult.fold<_CliSideEffectResult>(
+    (failureMessage) => _CliSideEffectFailed(
+      _jsonError(
+        exitCode: 74,
+        code: 'runtimeSettingsDllSyncFailed',
+        message: 'Failed to synchronize runtime DLL overrides.',
+        extra: <String, Object?>{
+          'details': <String, Object?>{'message': failureMessage},
+        },
+      ),
+    ),
+    (_) => const _CliSideEffectSucceeded(),
   );
-  if (failureMessage != null) {
-    return _jsonError(
-      exitCode: 74,
-      code: 'runtimeSettingsDllSyncFailed',
-      message: 'Failed to synchronize runtime DLL overrides.',
-      extra: <String, Object?>{
-        'details': <String, Object?>{'message': failureMessage},
-      },
-    );
-  }
-
-  return null;
 }
 
-CliResult? _applyWindowsVersionRegistryUpdates({
+_CliSideEffectResult _applyWindowsVersionRegistryUpdates({
   required BottleRecord bottle,
   required String windowsVersion,
   required ProgramRunPlanner programRunPlanner,
@@ -128,13 +139,13 @@ CliResult? _applyWindowsVersionRegistryUpdates({
   );
 }
 
-CliResult? _applyRegistryUpdateRequests({
+_CliSideEffectResult _applyRegistryUpdateRequests({
   required Iterable<ProgramRunRequest> requests,
   required ProgramRunner? programRunner,
 }) {
   final runner = programRunner;
   if (runner == null) {
-    return null;
+    return const _CliSideEffectSucceeded();
   }
 
   for (final request in requests) {
@@ -144,24 +155,28 @@ CliResult? _applyRegistryUpdateRequests({
           when processExitCode == 0:
         continue;
       case ProgramRunCompleted(:final processExitCode):
-        return _jsonError(
-          exitCode: 75,
-          code: 'registryUpdateFailed',
-          message:
-              'Registry update `${request.arguments.join(' ')}` exited with '
-              'code $processExitCode.',
-          extra: <String, Object?>{'processExitCode': processExitCode},
+        return _CliSideEffectFailed(
+          _jsonError(
+            exitCode: 75,
+            code: 'registryUpdateFailed',
+            message:
+                'Registry update `${request.arguments.join(' ')}` exited with '
+                'code $processExitCode.',
+            extra: <String, Object?>{'processExitCode': processExitCode},
+          ),
         );
       case ProgramRunFailed(:final message):
-        return _jsonError(
-          exitCode: 75,
-          code: 'registryUpdateFailed',
-          message: message,
+        return _CliSideEffectFailed(
+          _jsonError(
+            exitCode: 75,
+            code: 'registryUpdateFailed',
+            message: message,
+          ),
         );
     }
   }
 
-  return null;
+  return const _CliSideEffectSucceeded();
 }
 
 BottleRecord _bottleWithRegistrySettings({

@@ -60,6 +60,67 @@ def require_not_contains_under(
             raise AssertionError(f"{relative_path} must not contain: {unexpected}")
 
 
+def require_no_nullable_result_sentinel_patterns() -> None:
+    dart_roots = [
+        ROOT / "packages/konyak_cli/lib",
+        ROOT / "packages/konyak_cli/bin",
+        ROOT / "apps/konyak/lib",
+    ]
+    patterns = [
+        (
+            re.compile(r"fold<[^>\n]+\?>"),
+            "fold must not create nullable intermediate Result/Either values",
+        ),
+        (
+            re.compile(
+                r"getOrElse\(\s*\([^)]*\)\s*=>\s*(?:const\s+)?Option\.none\(\)\s*\)",
+                flags=re.MULTILINE,
+            ),
+            "Result/Either failure must not be collapsed into Option.none()",
+        ),
+        (
+            re.compile(r"\.match\(\s*\(\)\s*=>\s*null"),
+            "Option.match must not return null for the none branch",
+        ),
+        (
+            re.compile(r"\(\)\s*=>\s*null,"),
+            "callbacks in functional branching must not use null as a sentinel",
+        ),
+        (
+            re.compile(r"_\s*=>\s*null,"),
+            "wildcard branches must not use null as a sentinel",
+        ),
+        (
+            re.compile(r"if \([^\n)]*(?:failure|Failure)[^\n)]*!= null\)"),
+            "failure handling must use Result/Either/Option/sealed branches",
+        ),
+        (
+            re.compile(r"return\s+\w*[Ff]ailure\s*==\s*null"),
+            "success must not be represented by a null failure value",
+        ),
+    ]
+
+    for root in dart_roots:
+        if not root.exists():
+            continue
+        for path in sorted(root.rglob("*.dart")):
+            relative_path = path.relative_to(ROOT)
+            relative_text = str(relative_path)
+            if (
+                ".dart_tool" in relative_text
+                or "/build/" in relative_text
+                or path.name.endswith(".freezed.dart")
+            ):
+                continue
+
+            text = path.read_text(encoding="utf-8")
+            for pattern, message in patterns:
+                match = pattern.search(text)
+                if match is not None:
+                    line = text.count("\n", 0, match.start()) + 1
+                    raise AssertionError(f"{relative_path}:{line}: {message}")
+
+
 def require_io_implementation_boundaries() -> None:
     if not (ROOT / "packages/konyak_cli/lib/src").exists():
         return
@@ -172,6 +233,7 @@ def require_result_boundary_rules() -> None:
     require_no_files_under("packages/konyak_cli/lib/src", "*.dart")
     require_io_implementation_boundaries()
     require_external_payload_parser_boundaries()
+    require_no_nullable_result_sentinel_patterns()
 
     for expected in [
         "typedef IoResult<T> = Either<String, T>",

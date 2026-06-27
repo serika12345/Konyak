@@ -260,23 +260,27 @@ RuntimeComponentVersions _preserveImportedGptkD3DMetalComponent({
   required RuntimeComponentVersions componentVersions,
 }) {
   final source = _existingGptkD3DMetalSource(existingRuntimeRoot);
-  if (source == null || _validateGptkD3DMetalSource(source) != null) {
+  if (source == null) {
     return componentVersions;
   }
 
-  _installGptkD3DMetalComponentPayload(
-    source: source,
-    runtimeRoot: stagingRuntimeRoot,
-  );
+  return _validateGptkD3DMetalSource(source).match((_) => componentVersions, (
+    _,
+  ) {
+    _installGptkD3DMetalComponentPayload(
+      source: source,
+      runtimeRoot: stagingRuntimeRoot,
+    );
 
-  return componentVersions.add(
-    _gptkD3DMetalComponentId,
-    _runtimeStackComponentVersionFromRoot(
-          existingRuntimeRoot,
-          _gptkD3DMetalComponentId,
-        ) ??
-        'user-provided',
-  );
+    return componentVersions.add(
+      _gptkD3DMetalComponentId,
+      _runtimeStackComponentVersionFromRoot(
+            existingRuntimeRoot,
+            _gptkD3DMetalComponentId,
+          ) ??
+          'user-provided',
+    );
+  });
 }
 
 _GptkD3DMetalSource? _existingGptkD3DMetalSource(Directory runtimeRoot) {

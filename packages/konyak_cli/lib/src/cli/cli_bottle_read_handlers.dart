@@ -6,25 +6,21 @@ CliResult? _handleBottleReadCommand(
   required BottleCatalog activeBottleCatalog,
 }) {
   if (_isJsonBottleListCommand(arguments)) {
-    final bottlesResult = activeBottleCatalog.listBottles();
-    final failure = bottlesResult.fold<CliResult?>(
+    return activeBottleCatalog.listBottles().match<CliResult>(
       _bottleCatalogFailureJsonResult,
-      (_) => null,
+      (bottles) {
+        _synchronizePinnedProgramLaunchers(
+          hostPlatform: context.programRunPlanner.hostPlatform,
+          environment: context.programRunPlanner.environment.toMap(),
+          bottles: bottles,
+        );
+        return _jsonSuccess(<String, Object?>{
+          'bottles': bottles
+              .map((bottle) => bottle.toJson())
+              .toList(growable: false),
+        });
+      },
     );
-    if (failure != null) {
-      return failure;
-    }
-    final bottles = bottlesResult.getOrElse((_) => const <BottleRecord>[]);
-    _synchronizePinnedProgramLaunchers(
-      hostPlatform: context.programRunPlanner.hostPlatform,
-      environment: context.programRunPlanner.environment.toMap(),
-      bottles: bottles,
-    );
-    return _jsonSuccess(<String, Object?>{
-      'bottles': bottles
-          .map((bottle) => bottle.toJson())
-          .toList(growable: false),
-    });
   }
 
   final inspectedBottleId = _parseJsonBottleInspectCommand(arguments);

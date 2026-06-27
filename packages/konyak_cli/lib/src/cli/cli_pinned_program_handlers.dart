@@ -24,18 +24,16 @@ CliResult? _handlePinnedProgramCommand(
 
     final pinResult = repository.pinProgram(programPinRequest);
     if (pinResult is ProgramPinned) {
-      final bottlesResult = repository.listBottles();
-      final failure = bottlesResult.fold<CliResult?>(
+      return repository.listBottles().match<CliResult>(
         _bottleCatalogFailureJsonResult,
-        (_) => null,
-      );
-      if (failure != null) {
-        return failure;
-      }
-      _synchronizePinnedProgramLaunchers(
-        hostPlatform: context.programRunPlanner.hostPlatform,
-        environment: context.programRunPlanner.environment.toMap(),
-        bottles: bottlesResult.getOrElse((_) => const <BottleRecord>[]),
+        (bottles) {
+          _synchronizePinnedProgramLaunchers(
+            hostPlatform: context.programRunPlanner.hostPlatform,
+            environment: context.programRunPlanner.environment.toMap(),
+            bottles: bottles,
+          );
+          return _bottleJsonResult(pinResult.bottle);
+        },
       );
     }
 
@@ -65,18 +63,16 @@ CliResult? _handlePinnedProgramCommand(
 
     final updateResult = repository.unpinProgram(programUnpinRequest);
     if (updateResult is ProgramUpdated) {
-      final bottlesResult = repository.listBottles();
-      final failure = bottlesResult.fold<CliResult?>(
+      return repository.listBottles().match<CliResult>(
         _bottleCatalogFailureJsonResult,
-        (_) => null,
-      );
-      if (failure != null) {
-        return failure;
-      }
-      _synchronizePinnedProgramLaunchers(
-        hostPlatform: context.programRunPlanner.hostPlatform,
-        environment: context.programRunPlanner.environment.toMap(),
-        bottles: bottlesResult.getOrElse((_) => const <BottleRecord>[]),
+        (bottles) {
+          _synchronizePinnedProgramLaunchers(
+            hostPlatform: context.programRunPlanner.hostPlatform,
+            environment: context.programRunPlanner.environment.toMap(),
+            bottles: bottles,
+          );
+          return _programUpdateJsonResult(updateResult);
+        },
       );
     }
 
@@ -92,18 +88,16 @@ CliResult? _handlePinnedProgramCommand(
 
     final updateResult = repository.renamePinnedProgram(programRenameRequest);
     if (updateResult is ProgramUpdated) {
-      final bottlesResult = repository.listBottles();
-      final failure = bottlesResult.fold<CliResult?>(
+      return repository.listBottles().match<CliResult>(
         _bottleCatalogFailureJsonResult,
-        (_) => null,
-      );
-      if (failure != null) {
-        return failure;
-      }
-      _synchronizePinnedProgramLaunchers(
-        hostPlatform: context.programRunPlanner.hostPlatform,
-        environment: context.programRunPlanner.environment.toMap(),
-        bottles: bottlesResult.getOrElse((_) => const <BottleRecord>[]),
+        (bottles) {
+          _synchronizePinnedProgramLaunchers(
+            hostPlatform: context.programRunPlanner.hostPlatform,
+            environment: context.programRunPlanner.environment.toMap(),
+            bottles: bottles,
+          );
+          return _programUpdateJsonResult(updateResult);
+        },
       );
     }
 

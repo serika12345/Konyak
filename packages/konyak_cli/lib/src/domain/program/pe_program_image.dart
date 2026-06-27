@@ -19,13 +19,13 @@ final class _PortableExecutableImage {
   final int? resourceRva;
   final int? resourceRootOffset;
 
-  String? get architecture {
+  Option<String> get architecture {
     return switch (machine) {
-      0x014c => 'x86',
-      0x8664 => 'x86_64',
-      0xaa64 => 'arm64',
-      0x01c4 => 'arm',
-      _ => null,
+      0x014c => Option.of('x86'),
+      0x8664 => Option.of('x86_64'),
+      0xaa64 => Option.of('arm64'),
+      0x01c4 => Option.of('arm'),
+      _ => const Option.none(),
     };
   }
 
@@ -103,13 +103,14 @@ final class _PortableExecutableImage {
 
     final optionalHeaderOffset = peOffset + 24;
     final magic = _readUint16(bytes, optionalHeaderOffset);
-    final dataDirectoryOffset = switch (magic) {
-      0x010b => optionalHeaderOffset + 96,
-      0x020b => optionalHeaderOffset + 112,
-      _ => null,
-    };
-    if (dataDirectoryOffset == null) {
-      return null;
+    final int dataDirectoryOffset;
+    switch (magic) {
+      case 0x010b:
+        dataDirectoryOffset = optionalHeaderOffset + 96;
+      case 0x020b:
+        dataDirectoryOffset = optionalHeaderOffset + 112;
+      default:
+        return null;
     }
 
     final importDirectoryOffset = dataDirectoryOffset + 8;

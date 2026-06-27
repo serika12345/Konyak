@@ -41,10 +41,13 @@ AppSettingsRecord? _parseJsonAppSettingsUpdateRequest(List<String> arguments) {
     decoded,
     fallbackDefaultBottlePath: '',
   );
-  return settings.match(
-    () => null,
-    (value) => value.defaultBottlePath.value.trim().isEmpty ? null : value,
-  );
+  return settings
+      .flatMap(
+        (value) => value.defaultBottlePath.value.trim().isEmpty
+            ? const Option<AppSettingsRecord>.none()
+            : Option.of(value),
+      )
+      .toNullable();
 }
 
 bool _isJsonWineProcessListCommand(List<String> arguments) {

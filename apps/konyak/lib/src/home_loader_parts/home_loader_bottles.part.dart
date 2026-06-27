@@ -135,7 +135,7 @@ extension _KonyakHomeLoaderBottles on _KonyakHomeLoaderState {
       return;
     }
 
-    String? failureMessage;
+    final failureMessages = <String>[];
     _updateState(() {
       _pendingRuntimeSettingsControls.remove(bottle.id);
       switch (result) {
@@ -146,13 +146,12 @@ extension _KonyakHomeLoaderBottles on _KonyakHomeLoaderState {
             BottleUpdateLoadFailure(:final message):
           _bottles = upsertBottle(_bottles, previousBottle);
           _errorMessage = null;
-          failureMessage = message;
+          failureMessages.add(message);
       }
     });
 
-    final resolvedFailureMessage = failureMessage;
-    if (resolvedFailureMessage != null) {
-      _showSnackBar(resolvedFailureMessage);
+    for (final message in failureMessages) {
+      _showSnackBar(message);
     }
   }
 

@@ -151,19 +151,19 @@ CliResult? _handleBottleConfigurationCommand(
       result: repository.findBottle(windowsVersionUpdateRequest.bottleId.value),
       bottleId: windowsVersionUpdateRequest.bottleId.value,
       onFound: (bottle) {
-        final registryUpdateFailure = _applyWindowsVersionRegistryUpdates(
+        switch (_applyWindowsVersionRegistryUpdates(
           bottle: bottle,
           windowsVersion: windowsVersionUpdateRequest.windowsVersion.value,
           programRunPlanner: context.programRunPlanner,
           programRunner: context.programRunner,
-        );
-        if (registryUpdateFailure != null) {
-          return registryUpdateFailure;
+        )) {
+          case _CliSideEffectFailed(:final result):
+            return result;
+          case _CliSideEffectSucceeded():
+            return _bottleUpdateJsonResult(
+              repository.setWindowsVersion(windowsVersionUpdateRequest),
+            );
         }
-
-        return _bottleUpdateJsonResult(
-          repository.setWindowsVersion(windowsVersionUpdateRequest),
-        );
       },
     );
   }
@@ -188,33 +188,35 @@ CliResult? _handleBottleConfigurationCommand(
           runtimeSettings: runtimeSettingsUpdateRequest.runtimeSettings,
           hostPlatform: context.programRunPlanner.hostPlatform,
         );
-        final registryUpdateFailure = _applyRuntimeSettingsRegistryUpdates(
+        switch (_applyRuntimeSettingsRegistryUpdates(
           bottle: bottle,
           runtimeSettings: runtimeSettings,
           programRunPlanner: context.programRunPlanner,
           programRunner: context.programRunner,
-        );
-        if (registryUpdateFailure != null) {
-          return registryUpdateFailure;
+        )) {
+          case _CliSideEffectFailed(:final result):
+            return result;
+          case _CliSideEffectSucceeded():
+            break;
         }
 
-        final dllSyncFailure = _syncRuntimeSettingsDllOverrides(
+        switch (_syncRuntimeSettingsDllOverrides(
           bottle: bottle,
           runtimeSettings: runtimeSettings,
           programRunPlanner: context.programRunPlanner,
-        );
-        if (dllSyncFailure != null) {
-          return dllSyncFailure;
+        )) {
+          case _CliSideEffectFailed(:final result):
+            return result;
+          case _CliSideEffectSucceeded():
+            return _bottleUpdateJsonResult(
+              repository.setRuntimeSettings(
+                RuntimeSettingsUpdateRequest(
+                  bottleId: runtimeSettingsUpdateRequest.bottleId.value,
+                  runtimeSettings: runtimeSettings,
+                ),
+              ),
+            );
         }
-
-        return _bottleUpdateJsonResult(
-          repository.setRuntimeSettings(
-            RuntimeSettingsUpdateRequest(
-              bottleId: runtimeSettingsUpdateRequest.bottleId.value,
-              runtimeSettings: runtimeSettings,
-            ),
-          ),
-        );
       },
     );
   }
