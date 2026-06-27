@@ -43,6 +43,7 @@ final class ProgramRunExecutionFailure extends ProgramRunParseResult {
     required this.executable,
     required List<String> argv,
     required this.logPath,
+    this.logFileCreated = true,
     this.workingDirectory,
   }) : argv = List.unmodifiable(argv);
 
@@ -54,6 +55,7 @@ final class ProgramRunExecutionFailure extends ProgramRunParseResult {
   final String? workingDirectory;
   final List<String> argv;
   final String logPath;
+  final bool logFileCreated;
 }
 
 final class ProgramRunParseFailure extends ProgramRunParseResult {
@@ -162,6 +164,7 @@ ProgramRunExecutionFailure? _parseExecutionFailure(Object? value) {
   final Object? workingDirectory = value['workingDirectory'];
   final argv = _parseStringList(value['argv']);
   final Object? logPath = value['logPath'];
+  final Object? logFileCreated = value['logFileCreated'];
 
   if (code != 'programRunFailed' ||
       message is! String ||
@@ -171,7 +174,8 @@ ProgramRunExecutionFailure? _parseExecutionFailure(Object? value) {
       executable is! String ||
       !_isOptionalString(workingDirectory) ||
       argv == null ||
-      logPath is! String) {
+      logPath is! String ||
+      !_isOptionalBool(logFileCreated)) {
     return null;
   }
 
@@ -184,6 +188,7 @@ ProgramRunExecutionFailure? _parseExecutionFailure(Object? value) {
     workingDirectory: workingDirectory as String?,
     argv: argv,
     logPath: logPath,
+    logFileCreated: logFileCreated is bool ? logFileCreated : true,
   );
 }
 
@@ -199,6 +204,7 @@ ProgramRunSummary? _parseProgramRunSummary(Object? value) {
   final Object? workingDirectory = value['workingDirectory'];
   final argv = _parseStringList(value['argv']);
   final Object? logPath = value['logPath'];
+  final Object? logFileCreated = value['logFileCreated'];
   final Object? processExitCode = value['processExitCode'];
 
   if (bottleId is! String ||
@@ -208,6 +214,7 @@ ProgramRunSummary? _parseProgramRunSummary(Object? value) {
       !_isOptionalString(workingDirectory) ||
       argv == null ||
       logPath is! String ||
+      !_isOptionalBool(logFileCreated) ||
       processExitCode is! int) {
     return null;
   }
@@ -220,6 +227,7 @@ ProgramRunSummary? _parseProgramRunSummary(Object? value) {
     workingDirectory: workingDirectory as String?,
     argv: argv,
     logPath: logPath,
+    logFileCreated: logFileCreated is bool ? logFileCreated : true,
     processExitCode: processExitCode,
   );
 }
@@ -239,4 +247,8 @@ List<String>? _parseStringList(Object? value) {
 
 bool _isOptionalString(Object? value) {
   return value == null || value is String;
+}
+
+bool _isOptionalBool(Object? value) {
+  return value == null || value is bool;
 }

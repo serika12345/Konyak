@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../bottles/bottle_summary.dart';
+import '../../files/log_file_picker.dart';
 import '../../l10n/konyak_localizations.dart';
 import '../app_constants.dart';
 import '../configuration_labels.dart';
@@ -8,6 +9,7 @@ import '../widgets/configuration_controls.dart';
 import '../widgets/konyak_bottom_button.dart';
 import 'program_configuration_settings.dart';
 import 'program_environment_editor.dart';
+import 'wine_logging_channel_menu.dart';
 
 class ProgramConfigurationView extends StatefulWidget {
   const ProgramConfigurationView({
@@ -17,12 +19,14 @@ class ProgramConfigurationView extends StatefulWidget {
     required this.settings,
     required this.isLoading,
     required this.onProgramSettingsChanged,
+    this.logFilePicker = const FileSelectorLogFilePicker(),
   });
 
   final BottleSummary bottle;
   final PinnedProgramSummary program;
   final ProgramSettingsSummary? settings;
   final bool isLoading;
+  final LogFilePicker logFilePicker;
   final void Function(
     BottleSummary bottle,
     PinnedProgramSummary program,
@@ -37,13 +41,18 @@ class ProgramConfigurationView extends StatefulWidget {
 
 class _ProgramConfigurationViewState extends State<ProgramConfigurationView> {
   late String _locale;
+  late bool _createLogFile;
   late TextEditingController _argumentsController;
+  late TextEditingController _wineLoggingChannelsController;
+  late TextEditingController _logFilePathController;
   late List<ProgramEnvironmentControllers> _environmentControllers;
 
   @override
   void initState() {
     super.initState();
     _argumentsController = TextEditingController();
+    _wineLoggingChannelsController = TextEditingController();
+    _logFilePathController = TextEditingController();
     _environmentControllers = <ProgramEnvironmentControllers>[];
     _replaceSettings(widget.settings ?? ProgramSettingsSummary());
   }
@@ -61,6 +70,8 @@ class _ProgramConfigurationViewState extends State<ProgramConfigurationView> {
   @override
   void dispose() {
     _argumentsController.dispose();
+    _wineLoggingChannelsController.dispose();
+    _logFilePathController.dispose();
     for (final controllers in _environmentControllers) {
       controllers.dispose();
     }
@@ -119,6 +130,51 @@ class _ProgramConfigurationViewState extends State<ProgramConfigurationView> {
             ],
           ),
           const SizedBox(height: 14),
+          BottleConfigurationSection(
+            title: localizations.logging,
+            children: [
+              BottleConfigurationSwitchRow(
+                switchKey: const ValueKey('program-config-create-log-file'),
+                label: localizations.createLogFile,
+                value: _createLogFile,
+                onChanged: (value) {
+                  setState(() {
+                    _createLogFile = value;
+                  });
+                },
+              ),
+              BottleConfigurationRow(
+                label: localizations.additionalWineLoggingChannels,
+                trailing: ConfigurationTextField(
+                  key: const ValueKey(
+                    'program-config-wine-logging-channels-field',
+                  ),
+                  controller: _wineLoggingChannelsController,
+                  hintText: '+seh,+relay',
+                  suffixIcon: WineLoggingChannelMenu(
+                    key: const ValueKey(
+                      'program-config-wine-logging-channel-menu',
+                    ),
+                    onSelected: (channels) {
+                      appendWineLoggingChannels(
+                        _wineLoggingChannelsController,
+                        channels,
+                      );
+                    },
+                  ),
+                ),
+              ),
+              BottleConfigurationRow(
+                label: localizations.logFile,
+                trailing: _ProgramLogFilePathControl(
+                  controller: _logFilePathController,
+                  defaultLogPath: _defaultLogPath,
+                  onChooseLogFile: _chooseLogFile,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
           Align(
             alignment: Alignment.centerRight,
             child: KonyakBottomButton(
@@ -138,7 +194,11 @@ class _ProgramConfigurationViewState extends State<ProgramConfigurationView> {
     _locale = programLocaleLabels.containsKey(settings.locale)
         ? settings.locale
         : '';
+    _createLogFile = settings.logging.createLogFile;
     _argumentsController.text = settings.arguments;
+    _wineLoggingChannelsController.text =
+        settings.logging.additionalWineLoggingChannels;
+    _logFilePathController.text = settings.logging.logFilePath;
     for (final controllers in _environmentControllers) {
       controllers.dispose();
     }
@@ -174,7 +234,133 @@ class _ProgramConfigurationViewState extends State<ProgramConfigurationView> {
         environment: programEnvironmentFromEntries(
           _environmentControllers.map((controller) => controller.toEntry()),
         ),
+        logging: ProgramLoggingSettingsSummary(
+          createLogFile: _createLogFile,
+          additionalWineLoggingChannels: _wineLoggingChannelsController.text,
+          logFilePath: _logFilePathController.text,
+        ),
       ),
     );
   }
+
+  Future<void> _chooseLogFile() async {
+    final currentPath = _effectiveLogPath();
+    final selectedPath = await widget.logFilePicker.pickLogFilePath(
+      initialDirectory: _pathDirectory(currentPath),
+      suggestedName: _pathFileName(currentPath) ?? 'latest.log',
+    );
+    if (!mounted || selectedPath == null || selectedPath.trim().isEmpty) {
+      return;
+    }
+
+    setState(() {
+      _logFilePathController.text = selectedPath;
+    });
+  }
+
+  String get _defaultLogPath => _programDefaultLogPath(widget.bottle.path);
+
+  String _effectiveLogPath() {
+    final selectedPath = _logFilePathController.text.trim();
+    if (selectedPath.isNotEmpty) {
+      return selectedPath;
+    }
+
+    return _defaultLogPath;
+  }
+}
+
+class _ProgramLogFilePathControl extends StatelessWidget {
+  const _ProgramLogFilePathControl({
+    required this.controller,
+    required this.defaultLogPath,
+    required this.onChooseLogFile,
+  });
+
+  final TextEditingController controller;
+  final String defaultLogPath;
+  final VoidCallback onChooseLogFile;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = KonyakThemeColors.of(context);
+    final localizations = KonyakLocalizations.of(context);
+
+    return SizedBox(
+      width: 330,
+      height: 30,
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              key: const ValueKey('program-config-log-file-path-field'),
+              controller: controller,
+              style: TextStyle(color: colors.text, fontSize: 13),
+              decoration: InputDecoration(
+                hintText: defaultLogPath,
+                hintStyle: TextStyle(color: colors.mutedText, fontSize: 13),
+                isDense: true,
+                filled: true,
+                fillColor: colors.inputBackground,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 9,
+                  vertical: 8,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(6),
+                  borderSide: BorderSide(color: colors.border),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(6),
+                  borderSide: BorderSide(color: colors.border),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(6),
+                  borderSide: BorderSide(color: colors.mutedText),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          TextButton(
+            key: const ValueKey('program-config-change-log-file'),
+            onPressed: onChooseLogFile,
+            child: Text(localizations.change),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+String _programDefaultLogPath(String bottlePath) {
+  if (bottlePath.endsWith('/')) {
+    return '${bottlePath}logs/latest.log';
+  }
+
+  return '$bottlePath/logs/latest.log';
+}
+
+String? _pathDirectory(String path) {
+  final normalized = path.trim();
+  if (normalized.isEmpty) {
+    return null;
+  }
+
+  final separator = normalized.lastIndexOf('/');
+  if (separator <= 0) {
+    return null;
+  }
+
+  return normalized.substring(0, separator);
+}
+
+String? _pathFileName(String path) {
+  final normalized = path.trim();
+  if (normalized.isEmpty) {
+    return null;
+  }
+
+  final separator = normalized.lastIndexOf('/');
+  return separator == -1 ? normalized : normalized.substring(separator + 1);
 }

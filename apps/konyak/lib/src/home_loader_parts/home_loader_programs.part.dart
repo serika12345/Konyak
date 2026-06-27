@@ -12,6 +12,7 @@ extension _KonyakHomeLoaderPrograms on _KonyakHomeLoaderState {
         bottleName: bottle.name,
         programFilePicker: widget.programFilePicker,
         initialDirectory: _bottleDriveCPath(bottle.path),
+        defaultLogPath: _bottleRunLogPath(bottle.path),
         graphicsBackendHintsLoader: (programPath) =>
             widget.cliClient.suggestGraphicsBackend(programPath: programPath),
       ),
@@ -286,13 +287,18 @@ extension _KonyakHomeLoaderPrograms on _KonyakHomeLoaderState {
 
   void _handleProgramRunResult(ProgramRunLoadResult result) {
     switch (result) {
-      case CompletedProgramRun(:final run):
+      case CompletedProgramRun(:final run) when run.logFileCreated:
         _updateState(() {
           _latestRunLogPath = run.logPath;
         });
-      case FailedProgramRun(:final logPath):
+      case FailedProgramRun(:final logPath, :final logFileCreated)
+          when logFileCreated:
         _updateState(() {
           _latestRunLogPath = logPath;
+        });
+      case CompletedProgramRun() || FailedProgramRun():
+        _updateState(() {
+          _latestRunLogPath = null;
         });
       case UnsupportedProgramRun() ||
           MissingProgramRunBottle() ||
@@ -428,4 +434,12 @@ String _bottleDriveCPath(String bottlePath) {
   }
 
   return '$bottlePath/drive_c';
+}
+
+String _bottleRunLogPath(String bottlePath) {
+  if (bottlePath.endsWith('/')) {
+    return '${bottlePath}logs/latest.log';
+  }
+
+  return '$bottlePath/logs/latest.log';
 }

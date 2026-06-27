@@ -35,9 +35,11 @@ Option<ProgramSettingsRecord> _programSettingsRecordFromJson(Object? value) {
   final locale = settings['locale'];
   final arguments = settings['arguments'];
   final environment = _stringMap(settings['environment']);
+  final logging = _programLoggingSettingsRecordFromJson(settings['logging']);
   if ((locale != null && locale is! String) ||
       (arguments != null && arguments is! String) ||
-      environment == null) {
+      environment == null ||
+      logging == null) {
     return const Option.none();
   }
 
@@ -46,6 +48,41 @@ Option<ProgramSettingsRecord> _programSettingsRecordFromJson(Object? value) {
       locale: locale is String ? locale : '',
       arguments: arguments is String ? arguments : '',
       environment: ProgramEnvironmentOverrides(environment),
+      logging: logging,
+    ),
+  );
+}
+
+Option<ProgramLoggingSettingsRecord>? _programLoggingSettingsRecordFromJson(
+  Object? value,
+) {
+  if (value == null) {
+    return const Option.none();
+  }
+
+  final settings = _objectMap(value);
+  if (settings == null) {
+    return null;
+  }
+
+  final createLogFile = settings['createLogFile'];
+  final additionalWineLoggingChannels =
+      settings['additionalWineLoggingChannels'];
+  final logFilePath = settings['logFilePath'];
+  if ((createLogFile != null && createLogFile is! bool) ||
+      (additionalWineLoggingChannels != null &&
+          additionalWineLoggingChannels is! String) ||
+      (logFilePath != null && logFilePath is! String)) {
+    return null;
+  }
+
+  return Option.of(
+    ProgramLoggingSettingsRecord(
+      createLogFile: createLogFile is bool ? createLogFile : true,
+      additionalWineLoggingChannels: additionalWineLoggingChannels is String
+          ? additionalWineLoggingChannels
+          : '',
+      logFilePath: logFilePath is String ? logFilePath : '',
     ),
   );
 }

@@ -159,6 +159,7 @@ ProgramSettingsRecord _programRunSettings({
         ...storedSettings.environment.toMap(),
         ...settings.environment.toMap(),
       }),
+      logging: settings.logging.match(() => storedSettings.logging, Option.of),
     ),
   );
 }

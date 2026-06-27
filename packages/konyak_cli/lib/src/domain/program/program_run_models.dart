@@ -9,6 +9,7 @@ class ProgramRunRequest {
     required List<String> arguments,
     required this.environment,
     required this.logPath,
+    this.createLogFile = true,
     Option<String> workingDirectory = const Option.none(),
   }) : arguments = List.unmodifiable(arguments),
        workingDirectory = _optionalNonBlankDomainString(
@@ -23,6 +24,7 @@ class ProgramRunRequest {
   final List<String> arguments;
   final ProgramRunEnvironment environment;
   final String logPath;
+  final bool createLogFile;
   final Option<String> workingDirectory;
 
   List<String> get argv {

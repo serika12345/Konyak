@@ -8,10 +8,12 @@ class ConfigurationTextField extends StatelessWidget {
     super.key,
     required this.controller,
     required this.hintText,
+    this.suffixIcon,
   });
 
   final TextEditingController controller;
   final String hintText;
+  final Widget? suffixIcon;
 
   @override
   Widget build(BuildContext context) {
@@ -29,6 +31,10 @@ class ConfigurationTextField extends StatelessWidget {
           isDense: true,
           filled: true,
           fillColor: colors.inputBackground,
+          suffixIcon: suffixIcon,
+          suffixIconConstraints: suffixIcon == null
+              ? null
+              : const BoxConstraints.tightFor(width: 30, height: 30),
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 9,
             vertical: 8,

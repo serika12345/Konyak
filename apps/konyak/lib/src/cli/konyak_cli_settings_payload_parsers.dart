@@ -155,7 +155,11 @@ ProgramSettingsSummary? _parseProgramSettingsSummary(Object? value) {
   final locale = value['locale'];
   final arguments = value['arguments'];
   final environment = _parseStringMap(value['environment']);
-  if (locale is! String || arguments is! String || environment == null) {
+  final logging = _parseProgramLoggingSettingsSummary(value['logging']);
+  if (locale is! String ||
+      arguments is! String ||
+      environment == null ||
+      logging == null) {
     return null;
   }
 
@@ -163,6 +167,36 @@ ProgramSettingsSummary? _parseProgramSettingsSummary(Object? value) {
     locale: locale,
     arguments: arguments,
     environment: environment,
+    logging: logging,
+  );
+}
+
+ProgramLoggingSettingsSummary? _parseProgramLoggingSettingsSummary(
+  Object? value,
+) {
+  if (value == null) {
+    return const ProgramLoggingSettingsSummary();
+  }
+  if (value is! Map<String, Object?>) {
+    return null;
+  }
+
+  final createLogFile = value['createLogFile'];
+  final additionalWineLoggingChannels = value['additionalWineLoggingChannels'];
+  final logFilePath = value['logFilePath'];
+  if ((createLogFile != null && createLogFile is! bool) ||
+      (additionalWineLoggingChannels != null &&
+          additionalWineLoggingChannels is! String) ||
+      (logFilePath != null && logFilePath is! String)) {
+    return null;
+  }
+
+  return ProgramLoggingSettingsSummary(
+    createLogFile: createLogFile is bool ? createLogFile : true,
+    additionalWineLoggingChannels: additionalWineLoggingChannels is String
+        ? additionalWineLoggingChannels
+        : '',
+    logFilePath: logFilePath is String ? logFilePath : '',
   );
 }
 

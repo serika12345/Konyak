@@ -13,6 +13,30 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-27 21:52 JST
+- State: `completed`
+- Branch: `main`
+- Active work: add CrossOver-style log file controls to one-shot Run Program
+  options and pinned program configuration.
+- Related TODO: none; this is a focused CLI/Flutter program execution
+  configuration improvement.
+- Purpose: expose Konyak's existing program-run log path as user-facing
+  configuration, add additional Wine logging channel presets, and keep
+  one-shot run and pinned launcher execution on the same stable
+  `ProgramSettingsRecord` contract.
+- Completed work: added failing CLI and Flutter tests, implemented persisted
+  and one-shot program logging settings, applied the settings to run requests,
+  `WINEDEBUG`, launcher log creation, and the latest-log UI, added shared
+  CrossOver-style Wine logging channel presets, added Run Program and pinned
+  Program Configuration controls with localization, updated golden coverage,
+  and inspected the generated screenshots.
+- Remaining work: none for this change.
+- Next action: review the diff and commit.
+- Verification: focused CLI contract tests passed, `just cli-test` passed, and
+  `just flutter-test` passed. Earlier required gates passed for governance,
+  safety, formatting, and lint after fixing one lint finding. Final
+  `just verify` passed after the implementation and progress update.
+
 - Timestamp: 2026-06-27 20:37 JST
 - State: `completed`
 - Branch: `main`

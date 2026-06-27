@@ -111,6 +111,7 @@ final class KonyakCliClient {
         :final workingDirectory,
         :final argv,
         :final logPath,
+        :final logFileCreated,
       )
           when result.exitCode == 75 =>
         FailedProgramRun(
@@ -122,6 +123,7 @@ final class KonyakCliClient {
           workingDirectory: workingDirectory,
           argv: argv,
           logPath: logPath,
+          logFileCreated: logFileCreated,
         ),
       ParsedProgramRun() ||
       ProgramRunUnsupportedProgramType() ||

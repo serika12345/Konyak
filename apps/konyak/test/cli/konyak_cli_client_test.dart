@@ -1913,6 +1913,53 @@ void main() {
     ]);
   });
 
+  test('passes one-time logging settings to run-program', () async {
+    final runner = _FakeProcessRunner(
+      result: const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "run": {
+              "bottleId": "steam",
+              "programPath": "/downloads/setup.exe",
+              "runnerKind": "wine",
+              "executable": "wine",
+              "workingDirectory": null,
+              "argv": ["wine", "/downloads/setup.exe"],
+              "logPath": "/tmp/setup.cxlog",
+              "logFileCreated": true,
+              "processExitCode": 0
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+    );
+    final client = KonyakCliClient(executable: 'konyak', processRunner: runner);
+
+    await client.runProgram(
+      bottleId: 'steam',
+      programPath: '/downloads/setup.exe',
+      settings: ProgramSettingsSummary(
+        logging: const ProgramLoggingSettingsSummary(
+          additionalWineLoggingChannels: '+relay',
+          logFilePath: '/tmp/setup.cxlog',
+        ),
+      ),
+    );
+
+    expect(runner.arguments, const [
+      'run-program',
+      'steam',
+      '--program',
+      '/downloads/setup.exe',
+      '--settings-json',
+      '{"locale":"","arguments":"","environment":{},"logging":{"createLogFile":true,"additionalWineLoggingChannels":"+relay","logFilePath":"/tmp/setup.cxlog"}}',
+      '--json',
+    ]);
+  });
+
   test('run-program reports the started CLI process id', () async {
     final runner = _FakeProcessRunner(
       startedProcessId: 31415,
@@ -2146,6 +2193,52 @@ void main() {
   );
 
   test(
+    'loads program logging settings through the JSON get-program-settings contract',
+    () async {
+      final runner = _FakeProcessRunner(
+        result: const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+          {
+            "schemaVersion": 1,
+            "programSettings": {
+              "bottleId": "steam",
+              "programPath": "/downloads/Steam.exe",
+              "settings": {
+                "locale": "",
+                "arguments": "",
+                "environment": {},
+                "logging": {
+                  "createLogFile": false,
+                  "additionalWineLoggingChannels": "+relay",
+                  "logFilePath": "/tmp/steam.cxlog"
+                }
+              }
+            }
+          }
+        ''',
+          stderr: '',
+        ),
+      );
+      final client = KonyakCliClient(
+        executable: 'konyak',
+        processRunner: runner,
+      );
+
+      final result = await client.getProgramSettings(
+        bottleId: 'steam',
+        programPath: '/downloads/Steam.exe',
+      );
+
+      expect(result, isA<LoadedProgramSettings>());
+      final loaded = result as LoadedProgramSettings;
+      expect(loaded.settings.logging.createLogFile, isFalse);
+      expect(loaded.settings.logging.additionalWineLoggingChannels, '+relay');
+      expect(loaded.settings.logging.logFilePath, '/tmp/steam.cxlog');
+    },
+  );
+
+  test(
     'sets program settings through the JSON set-program-settings contract',
     () async {
       final runner = _FakeProcessRunner(
@@ -2201,6 +2294,68 @@ void main() {
       expect(loaded.settings.environment.unlockView, {
         'STEAM_COMPAT_DATA_PATH': '/compat',
       });
+    },
+  );
+
+  test(
+    'sets program logging settings through the JSON set-program-settings contract',
+    () async {
+      final runner = _FakeProcessRunner(
+        result: const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+          {
+            "schemaVersion": 1,
+            "programSettings": {
+              "bottleId": "steam",
+              "programPath": "/downloads/Steam.exe",
+              "settings": {
+                "locale": "",
+                "arguments": "",
+                "environment": {},
+                "logging": {
+                  "createLogFile": false,
+                  "additionalWineLoggingChannels": "+relay",
+                  "logFilePath": "/tmp/steam.cxlog"
+                }
+              }
+            }
+          }
+        ''',
+          stderr: '',
+        ),
+      );
+      final client = KonyakCliClient(
+        executable: 'konyak',
+        processRunner: runner,
+      );
+
+      final result = await client.setProgramSettings(
+        bottleId: 'steam',
+        programPath: '/downloads/Steam.exe',
+        settings: ProgramSettingsSummary(
+          logging: const ProgramLoggingSettingsSummary(
+            createLogFile: false,
+            additionalWineLoggingChannels: '+relay',
+            logFilePath: '/tmp/steam.cxlog',
+          ),
+        ),
+      );
+
+      expect(runner.arguments, const [
+        'set-program-settings',
+        'steam',
+        '--program',
+        '/downloads/Steam.exe',
+        '--settings-json',
+        '{"locale":"","arguments":"","environment":{},"logging":{"createLogFile":false,"additionalWineLoggingChannels":"+relay","logFilePath":"/tmp/steam.cxlog"}}',
+        '--json',
+      ]);
+      expect(result, isA<LoadedProgramSettings>());
+      final loaded = result as LoadedProgramSettings;
+      expect(loaded.settings.logging.createLogFile, isFalse);
+      expect(loaded.settings.logging.additionalWineLoggingChannels, '+relay');
+      expect(loaded.settings.logging.logFilePath, '/tmp/steam.cxlog');
     },
   );
 

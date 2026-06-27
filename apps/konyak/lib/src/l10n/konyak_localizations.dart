@@ -128,6 +128,12 @@ abstract class KonyakLocalizations {
   /// **'Arguments'**
   String get arguments;
 
+  /// Konyak UI string: Additional Wine logging channels
+  ///
+  /// In en, this message translates to:
+  /// **'Additional Wine logging channels'**
+  String get additionalWineLoggingChannels;
+
   /// Konyak UI string: Auto
   ///
   /// In en, this message translates to:
@@ -217,6 +223,18 @@ abstract class KonyakLocalizations {
   /// In en, this message translates to:
   /// **'Choose program file'**
   String get chooseProgramFile;
+
+  /// Konyak UI string: Change
+  ///
+  /// In en, this message translates to:
+  /// **'Change'**
+  String get change;
+
+  /// Konyak UI string: Clear Logging Channels
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Logging Channels'**
+  String get clearLoggingChannels;
 
   /// Konyak UI string: Chinese (Simplified)
   ///
@@ -476,6 +494,12 @@ abstract class KonyakLocalizations {
   /// **'Detect graphics backend'**
   String get detectGraphicsBackend;
 
+  /// Konyak UI string: Create log file
+  ///
+  /// In en, this message translates to:
+  /// **'Create log file'**
+  String get createLogFile;
+
   /// Title for graphics backend static analysis results.
   ///
   /// In en, this message translates to:
@@ -649,6 +673,18 @@ abstract class KonyakLocalizations {
   /// In en, this message translates to:
   /// **'Latest run log'**
   String get latestRunLog;
+
+  /// Konyak UI string: Log file
+  ///
+  /// In en, this message translates to:
+  /// **'Log file'**
+  String get logFile;
+
+  /// Konyak UI string: Logging
+  ///
+  /// In en, this message translates to:
+  /// **'Logging'**
+  String get logging;
 
   /// Konyak UI string: Launching program...
   ///
@@ -1183,6 +1219,72 @@ abstract class KonyakLocalizations {
   /// In en, this message translates to:
   /// **'View latest log'**
   String get viewLatestLog;
+
+  /// Konyak UI string: Relay (very verbose)
+  ///
+  /// In en, this message translates to:
+  /// **'Relay (very verbose)'**
+  String get wineLogRelay;
+
+  /// Konyak UI string: File Access
+  ///
+  /// In en, this message translates to:
+  /// **'File Access'**
+  String get wineLogFileAccess;
+
+  /// Konyak UI string: Fonts
+  ///
+  /// In en, this message translates to:
+  /// **'Fonts'**
+  String get wineLogFonts;
+
+  /// Konyak UI string: Game Controllers
+  ///
+  /// In en, this message translates to:
+  /// **'Game Controllers'**
+  String get wineLogGameControllers;
+
+  /// Konyak UI string: Game Graphics
+  ///
+  /// In en, this message translates to:
+  /// **'Game Graphics'**
+  String get wineLogGameGraphics;
+
+  /// Konyak UI string: Keyboard Input
+  ///
+  /// In en, this message translates to:
+  /// **'Keyboard Input'**
+  String get wineLogKeyboardInput;
+
+  /// Konyak UI string: Mouse Input
+  ///
+  /// In en, this message translates to:
+  /// **'Mouse Input'**
+  String get wineLogMouseInput;
+
+  /// Konyak UI string: Network Connections
+  ///
+  /// In en, this message translates to:
+  /// **'Network Connections'**
+  String get wineLogNetworkConnections;
+
+  /// Konyak UI string: Printing
+  ///
+  /// In en, this message translates to:
+  /// **'Printing'**
+  String get wineLogPrinting;
+
+  /// Konyak UI string: Sound (verbose)
+  ///
+  /// In en, this message translates to:
+  /// **'Sound (verbose)'**
+  String get wineLogSound;
+
+  /// Konyak UI string: Window Behavior
+  ///
+  /// In en, this message translates to:
+  /// **'Window Behavior'**
+  String get wineLogWindowBehavior;
 
   /// Konyak UI string: View licenses
   ///

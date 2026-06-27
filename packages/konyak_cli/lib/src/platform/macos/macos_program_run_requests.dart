@@ -8,6 +8,7 @@ ProgramRunRequest _macosWineRequest({
   required ProgramSettingsRecord programSettings,
 }) {
   final hostEnvironment = environment;
+  final logging = _programSettingsLogging(programSettings);
   return ProgramRunRequest(
     bottleId: bottle.id,
     programPath: programPath,
@@ -28,7 +29,8 @@ ProgramRunRequest _macosWineRequest({
       ..._programSettingsEnvironment(programSettings).toMap(),
       'WINEPREFIX': bottle.path,
     }),
-    logPath: _joinPath(bottle.path, const ['logs', 'latest.log']),
+    logPath: _programSettingsLogPath(bottle: bottle, settings: programSettings),
+    createLogFile: logging.createLogFile,
     workingDirectory: Option.of(_macosWineBinFolder(hostEnvironment)),
   );
 }

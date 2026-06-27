@@ -32,5 +32,16 @@ bool sameProgramSettings(
 
   return left.locale == right.locale &&
       left.arguments == right.arguments &&
-      left.environment == right.environment;
+      left.environment == right.environment &&
+      sameProgramLoggingSettings(left.logging, right.logging);
+}
+
+bool sameProgramLoggingSettings(
+  ProgramLoggingSettingsSummary left,
+  ProgramLoggingSettingsSummary right,
+) {
+  return left.createLogFile == right.createLogFile &&
+      left.additionalWineLoggingChannels ==
+          right.additionalWineLoggingChannels &&
+      left.logFilePath == right.logFilePath;
 }

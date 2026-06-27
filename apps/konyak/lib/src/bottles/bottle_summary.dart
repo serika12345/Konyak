@@ -481,22 +481,51 @@ class PinnedProgramSummary {
   final String? iconPath;
 }
 
+class ProgramLoggingSettingsSummary {
+  const ProgramLoggingSettingsSummary({
+    this.createLogFile = true,
+    this.additionalWineLoggingChannels = '',
+    this.logFilePath = '',
+  });
+
+  final bool createLogFile;
+  final String additionalWineLoggingChannels;
+  final String logFilePath;
+
+  bool get isDefault {
+    return createLogFile &&
+        additionalWineLoggingChannels.trim().isEmpty &&
+        logFilePath.trim().isEmpty;
+  }
+
+  Map<String, Object?> toJson() {
+    return <String, Object?>{
+      'createLogFile': createLogFile,
+      'additionalWineLoggingChannels': additionalWineLoggingChannels.trim(),
+      'logFilePath': logFilePath.trim(),
+    };
+  }
+}
+
 class ProgramSettingsSummary {
   ProgramSettingsSummary({
     this.locale = '',
     this.arguments = '',
     Map<String, String> environment = const <String, String>{},
+    this.logging = const ProgramLoggingSettingsSummary(),
   }) : environment = environment.lock;
 
   final String locale;
   final String arguments;
   final IMap<String, String> environment;
+  final ProgramLoggingSettingsSummary logging;
 
   Map<String, Object?> toJson() {
     return <String, Object?>{
       'locale': locale,
       'arguments': arguments,
       'environment': environment.unlockView,
+      if (!logging.isDefault) 'logging': logging.toJson(),
     };
   }
 }

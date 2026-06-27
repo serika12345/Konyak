@@ -234,6 +234,74 @@ void defineProgramExecutionContractTests() {
     });
   });
 
+  test('set-program-settings --json persists program logging settings', () {
+    final repository = MemoryBottleRepository(
+      dataHome: '/home/user/.local/share/konyak',
+      bottles: [
+        BottleRecord(
+          id: 'steam',
+          name: 'Steam',
+          path: '/home/user/.local/share/konyak/bottles/steam',
+          windowsVersion: 'win10',
+          pinnedPrograms: [
+            PinnedProgramRecord(name: 'Steam', path: '/downloads/Steam.exe'),
+          ],
+        ),
+      ],
+    );
+
+    final result = runCli([
+      'set-program-settings',
+      'steam',
+      '--program',
+      '/downloads/Steam.exe',
+      '--settings-json',
+      jsonEncode({
+        'logging': {
+          'createLogFile': true,
+          'additionalWineLoggingChannels': '+relay,+file',
+          'logFilePath': '/tmp/steam.cxlog',
+        },
+      }),
+      '--json',
+    ], bottleRepository: repository);
+
+    expect(result.exitCode, 0);
+    expect(result.stderr, isEmpty);
+
+    final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+    expect(payload, {
+      'schemaVersion': 1,
+      'programSettings': {
+        'bottleId': 'steam',
+        'programPath': '/downloads/Steam.exe',
+        'settings': {
+          'locale': '',
+          'arguments': '',
+          'environment': <String, Object?>{},
+          'logging': {
+            'createLogFile': true,
+            'additionalWineLoggingChannels': '+relay,+file',
+            'logFilePath': '/tmp/steam.cxlog',
+          },
+        },
+      },
+    });
+
+    final settings = repository.readProgramSettings(
+      const ProgramSettingsRequest(
+        bottleId: 'steam',
+        programPath: '/downloads/Steam.exe',
+      ),
+    );
+    expect(settings, isA<ProgramSettingsRead>());
+    final logging = (settings as ProgramSettingsRead).settings.logging
+        .toNullable();
+    expect(logging?.createLogFile, isTrue);
+    expect(logging?.additionalWineLoggingChannels, '+relay,+file');
+    expect(logging?.logFilePath, '/tmp/steam.cxlog');
+  });
+
   test('run-program --json runs an EXE through the program runner', () {
     final repository = MemoryBottleRepository(
       dataHome: '/home/user/.local/share/konyak',
@@ -288,6 +356,7 @@ void defineProgramExecutionContractTests() {
         'argv': ['Konyak/Runtimes/linux-wine/bin/wine', '/downloads/setup.exe'],
         'logPath':
             '/home/user/.local/share/konyak/bottles/steam/logs/latest.log',
+        'logFileCreated': true,
         'processExitCode': 0,
       },
     });
@@ -560,6 +629,7 @@ void defineProgramExecutionContractTests() {
         ],
         'logPath':
             '/Users/user/Library/Application Support/Konyak/Bottles/Steam/logs/latest.log',
+        'logFileCreated': true,
         'processExitCode': 0,
       },
     });
@@ -1493,6 +1563,7 @@ void defineProgramExecutionContractTests() {
         ],
         'logPath':
             '/Users/user/Library/Application Support/Konyak/Bottles/Steam/logs/latest.log',
+        'logFileCreated': true,
         'processExitCode': 0,
       },
     });
@@ -3118,6 +3189,63 @@ corefonts                Microsoft Core Fonts
     );
   });
 
+  test('run-program --json applies one-time logging settings', () {
+    final repository = MemoryBottleRepository(
+      dataHome: '/home/user/.local/share/konyak',
+    );
+    final runner = RecordingProgramRunner(
+      result: const ProgramRunCompleted(processExitCode: 0),
+    );
+    runCli(const [
+      'create-bottle',
+      '--name',
+      'Steam',
+      '--json',
+    ], bottleRepository: repository);
+    runCli(const [
+      'set-program-settings',
+      'steam',
+      '--program',
+      '/downloads/setup.exe',
+      '--settings-json',
+      '{"environment":{"WINEDEBUG":"+seh"}}',
+      '--json',
+    ], bottleRepository: repository);
+
+    final result = runCli(
+      [
+        'run-program',
+        'steam',
+        '--program',
+        '/downloads/setup.exe',
+        '--settings-json',
+        jsonEncode({
+          'logging': {
+            'createLogFile': true,
+            'additionalWineLoggingChannels': '+relay',
+            'logFilePath': '/tmp/steam.cxlog',
+          },
+        }),
+        '--json',
+      ],
+      bottleRepository: repository,
+      programRunPlanner: ProgramRunPlanner(
+        hostPlatform: KonyakHostPlatform.linux,
+      ),
+      programRunner: runner,
+    );
+
+    expect(result.exitCode, 0);
+    expect(runner.lastRequest?.createLogFile, isTrue);
+    expect(runner.lastRequest?.logPath, '/tmp/steam.cxlog');
+    expect(
+      runner.lastRequest?.environment.toMap(),
+      containsPair('WINEDEBUG', '+seh,+relay'),
+    );
+    final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+    expect((payload['run'] as Map<String, Object?>)['logFileCreated'], isTrue);
+  });
+
   test('run-program --json rejects unsupported program extensions', () {
     final repository = MemoryBottleRepository(
       dataHome: '/home/user/.local/share/konyak',
@@ -3202,6 +3330,7 @@ corefonts                Microsoft Core Fonts
         'argv': ['Konyak/Runtimes/linux-wine/bin/wine', '/downloads/setup.exe'],
         'logPath':
             '/home/user/.local/share/konyak/bottles/steam/logs/latest.log',
+        'logFileCreated': true,
       },
     });
   });

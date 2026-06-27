@@ -48,7 +48,7 @@ void defineProgramWidgetTests() {
     WidgetTester tester,
   ) async {
     await _loadKonyakTestFonts();
-    await tester.binding.setSurfaceSize(const Size(640, 520));
+    await tester.binding.setSurfaceSize(const Size(640, 720));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
     final goldenKey = GlobalKey();
@@ -89,6 +89,18 @@ void defineProgramWidgetTests() {
     );
     expect(
       find.byKey(const ValueKey('run-program-add-environment')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('run-program-create-log-file')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('run-program-wine-logging-channels-field')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('run-program-log-file-path-field')),
       findsOneWidget,
     );
     await _expectGoldenFileWithinTolerance(
@@ -780,6 +792,161 @@ void defineProgramWidgetTests() {
         '--json',
       ],
     ]);
+  });
+
+  testWidgets('run program passes one-time logging options to the CLI', (
+    WidgetTester tester,
+  ) async {
+    final runner = _QueuedProcessRunner([
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottles": [
+              {
+                "id": "steam",
+                "name": "Steam",
+                "path": "/home/user/.local/share/konyak/bottles/steam",
+                "windowsVersion": "win10"
+              }
+            ]
+          }
+        ''',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "run": {
+              "bottleId": "steam",
+              "programPath": "/downloads/setup.exe",
+              "runnerKind": "wine",
+              "executable": "wine",
+              "workingDirectory": null,
+              "argv": ["wine", "/downloads/setup.exe"],
+              "logPath": "/tmp/setup.cxlog",
+              "logFileCreated": true,
+              "processExitCode": 0
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+    ]);
+
+    await tester.pumpWidget(
+      _testKonyakApp(
+        cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.widgetWithText(TextButton, 'Run'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Program path'),
+      '/downloads/setup.exe',
+    );
+    await tester.tap(find.byKey(const ValueKey('run-program-options-toggle')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const ValueKey('run-program-wine-logging-channels-field')),
+      '+relay',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('run-program-log-file-path-field')),
+      '/tmp/setup.cxlog',
+    );
+    await tester.tap(find.widgetWithText(FilledButton, 'Run'));
+    await tester.pumpAndSettle();
+
+    expect(runner.argumentsLog, const [
+      ['list-bottles', '--json'],
+      [
+        'run-program',
+        'steam',
+        '--program',
+        '/downloads/setup.exe',
+        '--settings-json',
+        '{"locale":"","arguments":"","environment":{},"logging":{"createLogFile":true,"additionalWineLoggingChannels":"+relay","logFilePath":"/tmp/setup.cxlog"}}',
+        '--json',
+      ],
+    ]);
+  });
+
+  testWidgets('program configuration view displays logging controls', (
+    WidgetTester tester,
+  ) async {
+    await _loadKonyakTestFonts();
+    await tester.binding.setSurfaceSize(const Size(820, 680));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    final goldenKey = GlobalKey();
+    await tester.pumpWidget(
+      MaterialApp(
+        supportedLocales: KonyakLocalizations.supportedLocales,
+        localizationsDelegates: KonyakLocalizations.localizationsDelegates,
+        theme: konyakThemeData(konyakDarkColors),
+        home: Scaffold(
+          backgroundColor: konyakDarkColors.windowBackground,
+          body: Center(
+            child: SizedBox(
+              width: 620,
+              height: 620,
+              child: RepaintBoundary(
+                key: goldenKey,
+                child: ProgramConfigurationView(
+                  bottle: BottleSummary(
+                    id: 'steam',
+                    name: 'Steam',
+                    path: '/bottles/steam',
+                    windowsVersion: 'win10',
+                  ),
+                  program: const PinnedProgramSummary(
+                    name: 'Setup',
+                    path: '/downloads/setup.exe',
+                    removable: false,
+                  ),
+                  settings: ProgramSettingsSummary(
+                    arguments: '-silent',
+                    environment: const {'STEAM_COMPAT_DATA_PATH': '/compat'},
+                    logging: const ProgramLoggingSettingsSummary(
+                      additionalWineLoggingChannels: '+seh',
+                      logFilePath: '/tmp/setup.cxlog',
+                    ),
+                  ),
+                  isLoading: false,
+                  onProgramSettingsChanged: (_, _, _) {},
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Logging'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('program-config-create-log-file')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('program-config-wine-logging-channels-field')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('program-config-log-file-path-field')),
+      findsOneWidget,
+    );
+    await _expectGoldenFileWithinTolerance(
+      find.byKey(goldenKey),
+      'goldens/program_configuration_logging.png',
+      diffTolerance: 0.11,
+    );
   });
 
   testWidgets('run program shows launch progress while the CLI is pending', (
@@ -1879,6 +2046,11 @@ void defineProgramWidgetTests() {
                 "arguments": "-silent",
                 "environment": {
                   "STEAM_COMPAT_DATA_PATH": "/compat"
+                },
+                "logging": {
+                  "createLogFile": true,
+                  "additionalWineLoggingChannels": "+seh",
+                  "logFilePath": "/tmp/setup.cxlog"
                 }
               }
             }
@@ -1899,6 +2071,11 @@ void defineProgramWidgetTests() {
                 "arguments": "-silent -windowed",
                 "environment": {
                   "STEAM_COMPAT_DATA_PATH": "/compat"
+                },
+                "logging": {
+                  "createLogFile": true,
+                  "additionalWineLoggingChannels": "+relay,+file",
+                  "logFilePath": "/tmp/setup-debug.cxlog"
                 }
               }
             }
@@ -1937,15 +2114,49 @@ void defineProgramWidgetTests() {
       findsOneWidget,
     );
     expect(find.text('STEAM_COMPAT_DATA_PATH'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('program-config-create-log-file')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('program-config-wine-logging-channels-field')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('program-config-log-file-path-field')),
+      findsOneWidget,
+    );
 
     await tester.enterText(
       find.byKey(const ValueKey('program-config-arguments-field')),
       '-silent -windowed',
     );
+    await tester.enterText(
+      find.byKey(const ValueKey('program-config-wine-logging-channels-field')),
+      '+relay,+file',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('program-config-log-file-path-field')),
+      '/tmp/setup-debug.cxlog',
+    );
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('program-config-save')),
+      160,
+      scrollable: find.byType(Scrollable).last,
+    );
     await tester.tap(find.byKey(const ValueKey('program-config-save')));
     await tester.pumpAndSettle();
 
     expect(find.text('Saved Setup configuration'), findsOneWidget);
+    expect(runner.argumentsLog.last, const [
+      'set-program-settings',
+      'steam',
+      '--program',
+      '/downloads/setup.exe',
+      '--settings-json',
+      '{"locale":"ja_JP.UTF-8","arguments":"-silent -windowed","environment":{"STEAM_COMPAT_DATA_PATH":"/compat"},"logging":{"createLogFile":true,"additionalWineLoggingChannels":"+relay,+file","logFilePath":"/tmp/setup-debug.cxlog"}}',
+      '--json',
+    ]);
   });
 
   testWidgets('pinned program context menu renames and unpins the program', (

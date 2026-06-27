@@ -20,6 +20,10 @@
   "@arguments": {
     "description": "Konyak UI string: Arguments"
   },
+  "additionalWineLoggingChannels": "追加の Wine ログチャンネル",
+  "@additionalWineLoggingChannels": {
+    "description": "Konyak UI string: Additional Wine logging channels"
+  },
   "auto": "自動",
   "@auto": {
     "description": "Konyak UI string: Auto"
@@ -79,6 +83,14 @@
   "chooseProgramFile": "プログラムファイルを選択",
   "@chooseProgramFile": {
     "description": "Konyak UI string: Choose program file"
+  },
+  "change": "変更",
+  "@change": {
+    "description": "Konyak UI string: Change"
+  },
+  "clearLoggingChannels": "ログチャンネルをクリア",
+  "@clearLoggingChannels": {
+    "description": "Konyak UI string: Clear Logging Channels"
   },
   "chineseSimplified": "中国語（簡体字）",
   "@chineseSimplified": {
@@ -252,6 +264,10 @@
   "@detectGraphicsBackend": {
     "description": "Button label for statically inspecting a program and suggesting a graphics backend."
   },
+  "createLogFile": "ログファイルを作成",
+  "@createLogFile": {
+    "description": "Konyak UI string: Create log file"
+  },
   "graphicsBackendHint": "グラフィックバックエンドのヒント",
   "@graphicsBackendHint": {
     "description": "Title for graphics backend static analysis results."
@@ -377,6 +393,14 @@
   "latestRunLog": "最新の実行ログ",
   "@latestRunLog": {
     "description": "Konyak UI string: Latest run log"
+  },
+  "logFile": "ログファイル",
+  "@logFile": {
+    "description": "Konyak UI string: Log file"
+  },
+  "logging": "ログ",
+  "@logging": {
+    "description": "Konyak UI string: Logging"
   },
   "launchingProgramEllipsis": "プログラムを起動しています",
   "@launchingProgramEllipsis": {
@@ -733,6 +757,50 @@
   "viewLatestLog": "最新ログを表示",
   "@viewLatestLog": {
     "description": "Konyak UI string: View latest log"
+  },
+  "wineLogRelay": "Relay（非常に詳細）",
+  "@wineLogRelay": {
+    "description": "Konyak UI string: Relay (very verbose)"
+  },
+  "wineLogFileAccess": "ファイルアクセス",
+  "@wineLogFileAccess": {
+    "description": "Konyak UI string: File Access"
+  },
+  "wineLogFonts": "フォント",
+  "@wineLogFonts": {
+    "description": "Konyak UI string: Fonts"
+  },
+  "wineLogGameControllers": "ゲームコントローラー",
+  "@wineLogGameControllers": {
+    "description": "Konyak UI string: Game Controllers"
+  },
+  "wineLogGameGraphics": "ゲームグラフィック",
+  "@wineLogGameGraphics": {
+    "description": "Konyak UI string: Game Graphics"
+  },
+  "wineLogKeyboardInput": "キーボード入力",
+  "@wineLogKeyboardInput": {
+    "description": "Konyak UI string: Keyboard Input"
+  },
+  "wineLogMouseInput": "マウス入力",
+  "@wineLogMouseInput": {
+    "description": "Konyak UI string: Mouse Input"
+  },
+  "wineLogNetworkConnections": "ネットワーク接続",
+  "@wineLogNetworkConnections": {
+    "description": "Konyak UI string: Network Connections"
+  },
+  "wineLogPrinting": "印刷",
+  "@wineLogPrinting": {
+    "description": "Konyak UI string: Printing"
+  },
+  "wineLogSound": "サウンド（詳細）",
+  "@wineLogSound": {
+    "description": "Konyak UI string: Sound (verbose)"
+  },
+  "wineLogWindowBehavior": "ウィンドウ動作",
+  "@wineLogWindowBehavior": {
+    "description": "Konyak UI string: Window Behavior"
   },
   "viewLicenses": "ライセンスを表示",
   "@viewLicenses": {

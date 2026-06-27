@@ -1108,6 +1108,25 @@ void definePinnedProgramContractTests() {
       bottleRepository: repository,
       programRunPlanner: planner,
     );
+    runCli(
+      [
+        'set-program-settings',
+        'steam',
+        '--program',
+        '/downloads/Steam.exe',
+        '--settings-json',
+        jsonEncode({
+          'logging': {
+            'createLogFile': true,
+            'additionalWineLoggingChannels': '+relay',
+            'logFilePath': '/tmp/pinned-steam.cxlog',
+          },
+        }),
+        '--json',
+      ],
+      bottleRepository: repository,
+      programRunPlanner: planner,
+    );
     final manifestPath = _joinTestPath(
       _singleGeneratedMacosLauncher(tempDirectory.path).path,
       const ['Contents', 'Resources', 'konyak-launcher.json'],
@@ -1131,6 +1150,12 @@ void definePinnedProgramContractTests() {
     expect(runner.lastRequest?.bottleId, 'steam');
     expect(runner.lastRequest?.programPath, '/downloads/Steam.exe');
     expect(runner.lastRequest?.runnerKind, 'macosWine');
+    expect(runner.lastRequest?.createLogFile, isTrue);
+    expect(runner.lastRequest?.logPath, '/tmp/pinned-steam.cxlog');
+    expect(
+      runner.lastRequest?.environment.toMap(),
+      containsPair('WINEDEBUG', '+relay'),
+    );
   });
 
   test('pin-program --json extracts an icon for pinned PE programs', () async {

@@ -24,6 +24,9 @@ class KonyakLocalizationsJa extends KonyakLocalizations {
   String get arguments => '引数';
 
   @override
+  String get additionalWineLoggingChannels => '追加の Wine ログチャンネル';
+
+  @override
   String get auto => '自動';
 
   @override
@@ -69,6 +72,12 @@ class KonyakLocalizationsJa extends KonyakLocalizations {
 
   @override
   String get chooseProgramFile => 'プログラムファイルを選択';
+
+  @override
+  String get change => '変更';
+
+  @override
+  String get clearLoggingChannels => 'ログチャンネルをクリア';
 
   @override
   String get chineseSimplified => '中国語（簡体字）';
@@ -201,6 +210,9 @@ class KonyakLocalizationsJa extends KonyakLocalizations {
   String get detectGraphicsBackend => 'グラフィックバックエンドを検出';
 
   @override
+  String get createLogFile => 'ログファイルを作成';
+
+  @override
   String get graphicsBackendHint => 'グラフィックバックエンドのヒント';
 
   @override
@@ -292,6 +304,12 @@ class KonyakLocalizationsJa extends KonyakLocalizations {
 
   @override
   String get latestRunLog => '最新の実行ログ';
+
+  @override
+  String get logFile => 'ログファイル';
+
+  @override
+  String get logging => 'ログ';
 
   @override
   String get launchingProgramEllipsis => 'プログラムを起動しています';
@@ -561,6 +579,39 @@ class KonyakLocalizationsJa extends KonyakLocalizations {
 
   @override
   String get viewLatestLog => '最新ログを表示';
+
+  @override
+  String get wineLogRelay => 'Relay（非常に詳細）';
+
+  @override
+  String get wineLogFileAccess => 'ファイルアクセス';
+
+  @override
+  String get wineLogFonts => 'フォント';
+
+  @override
+  String get wineLogGameControllers => 'ゲームコントローラー';
+
+  @override
+  String get wineLogGameGraphics => 'ゲームグラフィック';
+
+  @override
+  String get wineLogKeyboardInput => 'キーボード入力';
+
+  @override
+  String get wineLogMouseInput => 'マウス入力';
+
+  @override
+  String get wineLogNetworkConnections => 'ネットワーク接続';
+
+  @override
+  String get wineLogPrinting => '印刷';
+
+  @override
+  String get wineLogSound => 'サウンド（詳細）';
+
+  @override
+  String get wineLogWindowBehavior => 'ウィンドウ動作';
 
   @override
   String get viewLicenses => 'ライセンスを表示';

@@ -7,6 +7,7 @@ class ProgramRunSummary {
     required List<String> argv,
     required this.logPath,
     required this.processExitCode,
+    this.logFileCreated = true,
     this.workingDirectory,
   }) : argv = List.unmodifiable(argv);
 
@@ -17,5 +18,6 @@ class ProgramRunSummary {
   final String? workingDirectory;
   final List<String> argv;
   final String logPath;
+  final bool logFileCreated;
   final int processExitCode;
 }

@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 
 import '../../bottles/bottle_summary.dart';
 import '../../cli/konyak_cli_client.dart';
+import '../../files/log_file_picker.dart';
 import '../../files/program_file_picker.dart';
 import '../../l10n/konyak_localizations.dart';
 import '../programs/program_configuration_settings.dart';
 import '../programs/program_environment_editor.dart';
+import '../programs/wine_logging_channel_menu.dart';
 
 typedef GraphicsBackendHintsLoader =
     Future<GraphicsBackendHintsLoadResult> Function(String programPath);
@@ -23,12 +25,16 @@ class RunProgramDialog extends StatefulWidget {
     required this.bottleName,
     required this.programFilePicker,
     required this.initialDirectory,
+    this.defaultLogPath = '',
+    this.logFilePicker = const FileSelectorLogFilePicker(),
     this.graphicsBackendHintsLoader,
   });
 
   final String bottleName;
   final ProgramFilePicker programFilePicker;
   final String initialDirectory;
+  final String defaultLogPath;
+  final LogFilePicker logFilePicker;
   final GraphicsBackendHintsLoader? graphicsBackendHintsLoader;
 
   @override
@@ -38,9 +44,13 @@ class RunProgramDialog extends StatefulWidget {
 class _RunProgramDialogState extends State<RunProgramDialog> {
   final TextEditingController _programPathController = TextEditingController();
   final TextEditingController _argumentsController = TextEditingController();
+  final TextEditingController _wineLoggingChannelsController =
+      TextEditingController();
+  final TextEditingController _logFilePathController = TextEditingController();
   final List<ProgramEnvironmentControllers> _environmentControllers =
       <ProgramEnvironmentControllers>[];
   bool _optionsExpanded = false;
+  bool _createLogFile = true;
   bool _isLoadingGraphicsBackendHints = false;
   ProgramGraphicsBackendHintsSummary? _graphicsBackendHints;
   String? _graphicsBackendHintError;
@@ -49,6 +59,8 @@ class _RunProgramDialogState extends State<RunProgramDialog> {
   void dispose() {
     _programPathController.dispose();
     _argumentsController.dispose();
+    _wineLoggingChannelsController.dispose();
+    _logFilePathController.dispose();
     for (final controllers in _environmentControllers) {
       controllers.dispose();
     }
@@ -194,7 +206,13 @@ class _RunProgramDialogState extends State<RunProgramDialog> {
               if (_optionsExpanded)
                 _RunProgramOptions(
                   argumentsController: _argumentsController,
+                  createLogFile: _createLogFile,
+                  wineLoggingChannelsController: _wineLoggingChannelsController,
+                  logFilePathController: _logFilePathController,
+                  defaultLogPath: widget.defaultLogPath,
                   environmentControllers: _environmentControllers,
+                  onCreateLogFileChanged: _setCreateLogFile,
+                  onChooseLogFile: _chooseLogFile,
                   onAddEnvironmentVariable: _addEnvironmentVariable,
                   onRemoveEnvironmentVariable: _removeEnvironmentVariable,
                 ),
@@ -228,6 +246,27 @@ class _RunProgramDialogState extends State<RunProgramDialog> {
     });
   }
 
+  void _setCreateLogFile(bool createLogFile) {
+    setState(() {
+      _createLogFile = createLogFile;
+    });
+  }
+
+  Future<void> _chooseLogFile() async {
+    final currentPath = _effectiveLogPath();
+    final selectedPath = await widget.logFilePicker.pickLogFilePath(
+      initialDirectory: _pathDirectory(currentPath),
+      suggestedName: _pathFileName(currentPath) ?? 'latest.log',
+    );
+    if (!mounted || selectedPath == null || selectedPath.trim().isEmpty) {
+      return;
+    }
+
+    setState(() {
+      _logFilePathController.text = selectedPath;
+    });
+  }
+
   void _handleProgramPathChanged(String _) {
     setState(_clearGraphicsBackendHints);
   }
@@ -243,14 +282,29 @@ class _RunProgramDialogState extends State<RunProgramDialog> {
     final environment = programEnvironmentFromEntries(
       _environmentControllers.map((controller) => controller.toEntry()),
     );
-    if (arguments.trim().isEmpty && environment.isEmpty) {
+    final logging = ProgramLoggingSettingsSummary(
+      createLogFile: _createLogFile,
+      additionalWineLoggingChannels: _wineLoggingChannelsController.text,
+      logFilePath: _logFilePathController.text,
+    );
+    if (arguments.trim().isEmpty && environment.isEmpty && logging.isDefault) {
       return null;
     }
 
     return ProgramSettingsSummary(
       arguments: arguments,
       environment: environment,
+      logging: logging,
     );
+  }
+
+  String _effectiveLogPath() {
+    final selectedPath = _logFilePathController.text.trim();
+    if (selectedPath.isNotEmpty) {
+      return selectedPath;
+    }
+
+    return widget.defaultLogPath.trim();
   }
 }
 
@@ -347,13 +401,25 @@ String _graphicsBackendLabel({
 class _RunProgramOptions extends StatelessWidget {
   const _RunProgramOptions({
     required this.argumentsController,
+    required this.createLogFile,
+    required this.wineLoggingChannelsController,
+    required this.logFilePathController,
+    required this.defaultLogPath,
     required this.environmentControllers,
+    required this.onCreateLogFileChanged,
+    required this.onChooseLogFile,
     required this.onAddEnvironmentVariable,
     required this.onRemoveEnvironmentVariable,
   });
 
   final TextEditingController argumentsController;
+  final bool createLogFile;
+  final TextEditingController wineLoggingChannelsController;
+  final TextEditingController logFilePathController;
+  final String defaultLogPath;
   final List<ProgramEnvironmentControllers> environmentControllers;
+  final ValueChanged<bool> onCreateLogFileChanged;
+  final VoidCallback onChooseLogFile;
   final VoidCallback onAddEnvironmentVariable;
   final ValueChanged<int> onRemoveEnvironmentVariable;
 
@@ -390,7 +456,85 @@ class _RunProgramOptions extends StatelessWidget {
             onRemove: onRemoveEnvironmentVariable,
           ),
         ),
+        const SizedBox(height: 12),
+        CheckboxListTile(
+          key: const ValueKey('run-program-create-log-file'),
+          value: createLogFile,
+          onChanged: (value) {
+            if (value != null) {
+              onCreateLogFileChanged(value);
+            }
+          },
+          title: Text(localizations.createLogFile),
+          controlAffinity: ListTileControlAffinity.leading,
+          contentPadding: EdgeInsets.zero,
+          dense: true,
+        ),
+        TextField(
+          key: const ValueKey('run-program-wine-logging-channels-field'),
+          controller: wineLoggingChannelsController,
+          decoration: InputDecoration(
+            labelText: localizations.additionalWineLoggingChannels,
+            hintText: '+seh,+relay',
+            suffixIcon: WineLoggingChannelMenu(
+              key: const ValueKey('run-program-wine-logging-channel-menu'),
+              onSelected: (channels) {
+                appendWineLoggingChannels(
+                  wineLoggingChannelsController,
+                  channels,
+                );
+              },
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                key: const ValueKey('run-program-log-file-path-field'),
+                controller: logFilePathController,
+                decoration: InputDecoration(
+                  labelText: localizations.logFile,
+                  hintText: defaultLogPath.trim().isEmpty
+                      ? 'latest.log'
+                      : defaultLogPath,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            TextButton(
+              key: const ValueKey('run-program-change-log-file'),
+              onPressed: onChooseLogFile,
+              child: Text(localizations.change),
+            ),
+          ],
+        ),
       ],
     );
   }
+}
+
+String? _pathDirectory(String path) {
+  final normalized = path.trim();
+  if (normalized.isEmpty) {
+    return null;
+  }
+
+  final separator = normalized.lastIndexOf('/');
+  if (separator <= 0) {
+    return null;
+  }
+
+  return normalized.substring(0, separator);
+}
+
+String? _pathFileName(String path) {
+  final normalized = path.trim();
+  if (normalized.isEmpty) {
+    return null;
+  }
+
+  final separator = normalized.lastIndexOf('/');
+  return separator == -1 ? normalized : normalized.substring(separator + 1);
 }

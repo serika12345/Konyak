@@ -11,6 +11,7 @@ ProgramRunRequest _linuxWineRequest({
     ..._wineArgumentsForProgramPath(programPath),
     ..._programSettingsArguments(programSettings),
   ];
+  final logging = _programSettingsLogging(programSettings);
 
   return ProgramRunRequest(
     bottleId: bottle.id,
@@ -26,7 +27,8 @@ ProgramRunRequest _linuxWineRequest({
             environment: environment,
           ),
         ),
-    logPath: _joinPath(bottle.path, const ['logs', 'latest.log']),
+    logPath: _programSettingsLogPath(bottle: bottle, settings: programSettings),
+    createLogFile: logging.createLogFile,
   );
 }
 

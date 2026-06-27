@@ -241,6 +241,7 @@ CliResult _programRunJsonResult({
       'workingDirectory': request.workingDirectory.toNullable(),
       'argv': request.argv,
       'logPath': request.logPath,
+      'logFileCreated': request.createLogFile,
       'processExitCode': processExitCode,
     },
   });
@@ -262,6 +263,7 @@ CliResult _programRunFailedJsonResult({
       'workingDirectory': request.workingDirectory.toNullable(),
       'argv': request.argv,
       'logPath': request.logPath,
+      'logFileCreated': request.createLogFile,
     },
   );
 }

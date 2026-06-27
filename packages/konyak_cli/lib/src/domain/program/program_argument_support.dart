@@ -49,8 +49,50 @@ ProgramRunEnvironment _programSettingsEnvironment(
   if (settings.locale.trim().isNotEmpty) {
     environment['LC_ALL'] = settings.locale;
   }
+  final logging = _programSettingsLogging(settings);
+  final loggingChannels = logging.additionalWineLoggingChannels.trim();
+  if (loggingChannels.isNotEmpty) {
+    environment['WINEDEBUG'] = _combinedWineDebugChannels(
+      existingChannels: environment['WINEDEBUG'],
+      additionalChannels: loggingChannels,
+    );
+  }
 
   return ProgramRunEnvironment(environment);
+}
+
+ProgramLoggingSettingsRecord _programSettingsLogging(
+  ProgramSettingsRecord settings,
+) {
+  return settings.logging.getOrElse(ProgramLoggingSettingsRecord.new);
+}
+
+String _programSettingsLogPath({
+  required BottleRecord bottle,
+  required ProgramSettingsRecord settings,
+}) {
+  final logFilePath = _programSettingsLogging(settings).logFilePath.trim();
+  if (logFilePath.isNotEmpty) {
+    return logFilePath;
+  }
+
+  return _joinPath(bottle.path, const ['logs', 'latest.log']);
+}
+
+String _combinedWineDebugChannels({
+  required String? existingChannels,
+  required String additionalChannels,
+}) {
+  final existing = existingChannels?.trim() ?? '';
+  final additional = additionalChannels.trim();
+  if (existing.isEmpty) {
+    return additional;
+  }
+  if (additional.isEmpty) {
+    return existing;
+  }
+
+  return '$existing,$additional';
 }
 
 bool _isSupportedProgramPath(String programPath) {

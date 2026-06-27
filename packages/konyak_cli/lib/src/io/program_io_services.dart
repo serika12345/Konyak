@@ -14,9 +14,11 @@ class DartIoProgramRunner implements ProgramRunner {
         runInShell: false,
       );
 
-      final logFile = File(request.logPath);
-      logFile.parent.createSync(recursive: true);
-      logFile.writeAsStringSync(_programRunLog(request, result));
+      if (request.createLogFile) {
+        final logFile = File(request.logPath);
+        logFile.parent.createSync(recursive: true);
+        logFile.writeAsStringSync(_programRunLog(request, result));
+      }
 
       return ProgramRunCompleted(
         processExitCode: result.exitCode,
@@ -28,9 +30,13 @@ class DartIoProgramRunner implements ProgramRunner {
         executable: request.executable,
         message: error.message,
       );
-      final logFile = File(request.logPath);
-      logFile.parent.createSync(recursive: true);
-      logFile.writeAsStringSync(_programRunStartupFailureLog(request, message));
+      if (request.createLogFile) {
+        final logFile = File(request.logPath);
+        logFile.parent.createSync(recursive: true);
+        logFile.writeAsStringSync(
+          _programRunStartupFailureLog(request, message),
+        );
+      }
 
       return ProgramRunFailed(message: message);
     } on FileSystemException catch (error) {
@@ -88,9 +94,11 @@ class DartIoAsyncProgramRunner implements AsyncProgramRunner {
         stdoutBuffer.toString(),
         stderrBuffer.toString(),
       );
-      final logFile = File(request.logPath);
-      await logFile.parent.create(recursive: true);
-      await logFile.writeAsString(_programRunLog(request, result));
+      if (request.createLogFile) {
+        final logFile = File(request.logPath);
+        await logFile.parent.create(recursive: true);
+        await logFile.writeAsString(_programRunLog(request, result));
+      }
       return ProgramRunCompleted(
         processExitCode: processExitCode,
         stdout: stdoutBuffer.toString(),
@@ -181,6 +189,10 @@ Future<void> _writeProgramRunStartupFailureLog(
   ProgramRunRequest request,
   String message,
 ) async {
+  if (!request.createLogFile) {
+    return;
+  }
+
   final logFile = File(request.logPath);
   await logFile.parent.create(recursive: true);
   await logFile.writeAsString(_programRunStartupFailureLog(request, message));

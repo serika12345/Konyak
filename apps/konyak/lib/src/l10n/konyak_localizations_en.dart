@@ -24,6 +24,10 @@ class KonyakLocalizationsEn extends KonyakLocalizations {
   String get arguments => 'Arguments';
 
   @override
+  String get additionalWineLoggingChannels =>
+      'Additional Wine logging channels';
+
+  @override
   String get auto => 'Auto';
 
   @override
@@ -71,6 +75,12 @@ class KonyakLocalizationsEn extends KonyakLocalizations {
 
   @override
   String get chooseProgramFile => 'Choose program file';
+
+  @override
+  String get change => 'Change';
+
+  @override
+  String get clearLoggingChannels => 'Clear Logging Channels';
 
   @override
   String get chineseSimplified => 'Chinese (Simplified)';
@@ -205,6 +215,9 @@ class KonyakLocalizationsEn extends KonyakLocalizations {
   String get detectGraphicsBackend => 'Detect graphics backend';
 
   @override
+  String get createLogFile => 'Create log file';
+
+  @override
   String get graphicsBackendHint => 'Graphics backend hint';
 
   @override
@@ -297,6 +310,12 @@ class KonyakLocalizationsEn extends KonyakLocalizations {
 
   @override
   String get latestRunLog => 'Latest run log';
+
+  @override
+  String get logFile => 'Log file';
+
+  @override
+  String get logging => 'Logging';
 
   @override
   String get launchingProgramEllipsis => 'Launching program...';
@@ -569,6 +588,39 @@ class KonyakLocalizationsEn extends KonyakLocalizations {
 
   @override
   String get viewLatestLog => 'View latest log';
+
+  @override
+  String get wineLogRelay => 'Relay (very verbose)';
+
+  @override
+  String get wineLogFileAccess => 'File Access';
+
+  @override
+  String get wineLogFonts => 'Fonts';
+
+  @override
+  String get wineLogGameControllers => 'Game Controllers';
+
+  @override
+  String get wineLogGameGraphics => 'Game Graphics';
+
+  @override
+  String get wineLogKeyboardInput => 'Keyboard Input';
+
+  @override
+  String get wineLogMouseInput => 'Mouse Input';
+
+  @override
+  String get wineLogNetworkConnections => 'Network Connections';
+
+  @override
+  String get wineLogPrinting => 'Printing';
+
+  @override
+  String get wineLogSound => 'Sound (verbose)';
+
+  @override
+  String get wineLogWindowBehavior => 'Window Behavior';
 
   @override
   String get viewLicenses => 'View licenses';

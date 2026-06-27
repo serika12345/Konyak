@@ -20,6 +20,10 @@
   "@arguments": {
     "description": "Konyak UI string: Arguments"
   },
+  "additionalWineLoggingChannels": "Additional Wine logging channels",
+  "@additionalWineLoggingChannels": {
+    "description": "Konyak UI string: Additional Wine logging channels"
+  },
   "auto": "Auto",
   "@auto": {
     "description": "Konyak UI string: Auto"
@@ -79,6 +83,14 @@
   "chooseProgramFile": "Choose program file",
   "@chooseProgramFile": {
     "description": "Konyak UI string: Choose program file"
+  },
+  "change": "Change",
+  "@change": {
+    "description": "Konyak UI string: Change"
+  },
+  "clearLoggingChannels": "Clear Logging Channels",
+  "@clearLoggingChannels": {
+    "description": "Konyak UI string: Clear Logging Channels"
   },
   "chineseSimplified": "Chinese (Simplified)",
   "@chineseSimplified": {
@@ -252,6 +264,10 @@
   "@detectGraphicsBackend": {
     "description": "Button label for statically inspecting a program and suggesting a graphics backend."
   },
+  "createLogFile": "Create log file",
+  "@createLogFile": {
+    "description": "Konyak UI string: Create log file"
+  },
   "graphicsBackendHint": "Graphics backend hint",
   "@graphicsBackendHint": {
     "description": "Title for graphics backend static analysis results."
@@ -377,6 +393,14 @@
   "latestRunLog": "Latest run log",
   "@latestRunLog": {
     "description": "Konyak UI string: Latest run log"
+  },
+  "logFile": "Log file",
+  "@logFile": {
+    "description": "Konyak UI string: Log file"
+  },
+  "logging": "Logging",
+  "@logging": {
+    "description": "Konyak UI string: Logging"
   },
   "launchingProgramEllipsis": "Launching program...",
   "@launchingProgramEllipsis": {
@@ -733,6 +757,50 @@
   "viewLatestLog": "View latest log",
   "@viewLatestLog": {
     "description": "Konyak UI string: View latest log"
+  },
+  "wineLogRelay": "Relay (very verbose)",
+  "@wineLogRelay": {
+    "description": "Konyak UI string: Relay (very verbose)"
+  },
+  "wineLogFileAccess": "File Access",
+  "@wineLogFileAccess": {
+    "description": "Konyak UI string: File Access"
+  },
+  "wineLogFonts": "Fonts",
+  "@wineLogFonts": {
+    "description": "Konyak UI string: Fonts"
+  },
+  "wineLogGameControllers": "Game Controllers",
+  "@wineLogGameControllers": {
+    "description": "Konyak UI string: Game Controllers"
+  },
+  "wineLogGameGraphics": "Game Graphics",
+  "@wineLogGameGraphics": {
+    "description": "Konyak UI string: Game Graphics"
+  },
+  "wineLogKeyboardInput": "Keyboard Input",
+  "@wineLogKeyboardInput": {
+    "description": "Konyak UI string: Keyboard Input"
+  },
+  "wineLogMouseInput": "Mouse Input",
+  "@wineLogMouseInput": {
+    "description": "Konyak UI string: Mouse Input"
+  },
+  "wineLogNetworkConnections": "Network Connections",
+  "@wineLogNetworkConnections": {
+    "description": "Konyak UI string: Network Connections"
+  },
+  "wineLogPrinting": "Printing",
+  "@wineLogPrinting": {
+    "description": "Konyak UI string: Printing"
+  },
+  "wineLogSound": "Sound (verbose)",
+  "@wineLogSound": {
+    "description": "Konyak UI string: Sound (verbose)"
+  },
+  "wineLogWindowBehavior": "Window Behavior",
+  "@wineLogWindowBehavior": {
+    "description": "Konyak UI string: Window Behavior"
   },
   "viewLicenses": "View licenses",
   "@viewLicenses": {

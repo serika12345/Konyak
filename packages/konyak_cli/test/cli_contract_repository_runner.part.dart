@@ -172,6 +172,37 @@ void defineRepositoryAndRunnerContractTests() {
     expect(log, contains('Process Exit Code: 0'));
   });
 
+  test(
+    'program runner skips launch log when log file creation is disabled',
+    () {
+      final logDirectory = Directory.systemTemp.createTempSync(
+        'konyak-disabled-run-log-',
+      );
+      addTearDown(() async {
+        if (await logDirectory.exists()) {
+          await logDirectory.delete(recursive: true);
+        }
+      });
+
+      final logPath = _joinTestPath(logDirectory.path, const ['latest.log']);
+      final result = const DartIoProgramRunner().run(
+        ProgramRunRequest(
+          bottleId: 'steam',
+          programPath: '/downloads/setup.exe',
+          runnerKind: 'wine',
+          executable: Platform.resolvedExecutable,
+          arguments: const ['--version'],
+          environment: const ProgramRunEnvironment.empty(),
+          logPath: logPath,
+          createLogFile: false,
+        ),
+      );
+
+      expect(result, isA<ProgramRunCompleted>());
+      expect(File(logPath).existsSync(), isFalse);
+    },
+  );
+
   test('program runner reports a missing executable with the runner name', () {
     final logDirectory = Directory.systemTemp.createTempSync(
       'konyak-missing-runner-',

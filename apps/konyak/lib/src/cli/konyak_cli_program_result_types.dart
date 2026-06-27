@@ -39,6 +39,7 @@ final class FailedProgramRun extends ProgramRunLoadResult {
     required this.executable,
     required List<String> argv,
     required this.logPath,
+    this.logFileCreated = true,
     this.workingDirectory,
   }) : argv = List.unmodifiable(argv);
 
@@ -50,6 +51,7 @@ final class FailedProgramRun extends ProgramRunLoadResult {
   final String? workingDirectory;
   final List<String> argv;
   final String logPath;
+  final bool logFileCreated;
 }
 
 final class ProgramRunLoadFailure extends ProgramRunLoadResult {
