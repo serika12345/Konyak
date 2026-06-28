@@ -13,6 +13,37 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-28 22:35 JST
+- State: `completed`
+- Branch: `main`
+- Active work: move pinned launcher manifest JSON projection out of domain
+  models.
+- Related TODO: `docs/todo.md` deferred JSON `toJson` projection separation.
+- Latest commit: `860a0f4` (`Move bottle archive JSON projection`).
+- Purpose: continue separating domain models from I/O serialization by moving
+  `PinnedProgramLauncherManifest` projection into the launcher manifest I/O
+  boundary used by macOS and Linux pinned launcher writers.
+- Completed work: committed the bottle archive projection slice and inspected
+  pinned launcher manifest model, manifest parser, macOS/Linux writer call
+  sites, and focused pin-program CLI contract coverage; observed
+  `just verify-governance` fail before implementation because
+  `PinnedProgramLauncherManifest` still owned JSON projection; added
+  `pinnedProgramLauncherManifestJson` to the launcher manifest I/O helper,
+  updated macOS/Linux launcher writers, removed the domain `toJson` and
+  model-constant import, and added governance for the pinned launcher manifest
+  boundary.
+- Remaining work: domain `toJson` projections remain in bottle records, bottle
+  runtime settings, runtime/runtime validation/runtime package records, and the
+  I/O-only GPTK install record.
+- Next action: continue JSON projection separation with another narrow
+  CLI-covered record group, likely bottle records or runtime validation/package
+  records.
+- Verification: observed `just verify-governance` fail before implementation;
+  after implementation, `cd packages/konyak_cli && dart analyze
+  --fatal-infos`, focused pin-program CLI contract tests,
+  `just verify-governance`, `just cli-test`, `just verify-architecture`,
+  `just verify-safety`, `just format-check`, and `just lint` passed.
+
 - Timestamp: 2026-06-28 22:26 JST
 - State: `completed`
 - Branch: `main`

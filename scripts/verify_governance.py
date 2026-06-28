@@ -978,6 +978,65 @@ def require_bottle_archive_cli_json_projection() -> None:
         )
 
 
+def require_pinned_launcher_manifest_io_json_projection() -> None:
+    domain_path = (
+        "packages/konyak_cli/lib/src/domain/program/program_mutation_models.dart"
+    )
+    domain = read_text(domain_path)
+    record_match = re.search(
+        r"class PinnedProgramLauncherManifest \{(?P<body>.*?)\n\}",
+        domain,
+        flags=re.DOTALL,
+    )
+    if record_match is None:
+        raise AssertionError("PinnedProgramLauncherManifest must exist")
+    if "toJson(" in record_match.group("body"):
+        raise AssertionError(
+            "PinnedProgramLauncherManifest must not own JSON projection"
+        )
+    if "../../shared/model_constants.dart" in domain:
+        raise AssertionError(
+            "Pinned launcher manifest model constants must live at the I/O "
+            "serialization boundary"
+        )
+
+    manifest_path = (
+        "packages/konyak_cli/lib/src/io/macos_pinned_launcher_manifests.dart"
+    )
+    manifest_io = read_text(manifest_path)
+    expected_terms = [
+        "Map<String, Object?> pinnedProgramLauncherManifestJson(",
+        "'schemaVersion': cliSchemaVersion",
+        "'createdBy': konyakMacosBundleIdentifier",
+        "'launcherId': manifest.launcherId.value",
+        "'bottleId': manifest.bottleId.value",
+        "'programPath': manifest.programPath.value",
+        "'programName': manifest.programName.value",
+        "pinnedProgramLauncherManifestFromPayload(",
+    ]
+    for expected in expected_terms:
+        if expected not in manifest_io:
+            raise AssertionError(
+                "Pinned launcher manifest JSON projection must live at the "
+                f"I/O boundary: {expected}"
+            )
+
+    for caller_path in [
+        "packages/konyak_cli/lib/src/io/macos_pinned_launchers.dart",
+        "packages/konyak_cli/lib/src/io/linux_pinned_launchers.dart",
+    ]:
+        caller = read_text(caller_path)
+        if "manifest.toJson()" in caller:
+            raise AssertionError(
+                "Pinned launcher writers must not rely on domain-owned toJson"
+            )
+        if "pinnedProgramLauncherManifestJson(manifest)" not in caller:
+            raise AssertionError(
+                "Pinned launcher writers must use "
+                "pinnedProgramLauncherManifestJson"
+            )
+
+
 def count_constructor_field_parameters(
     relative_path: str,
     constructor_name: str,
@@ -1777,6 +1836,7 @@ def main() -> None:
     require_app_settings_serialization_boundary()
     require_update_record_cli_json_projection()
     require_bottle_archive_cli_json_projection()
+    require_pinned_launcher_manifest_io_json_projection()
 
     for expected in [
         "flutter",

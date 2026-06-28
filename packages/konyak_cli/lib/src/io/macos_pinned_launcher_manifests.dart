@@ -5,6 +5,19 @@ import 'package:fpdart/fpdart.dart';
 import '../domain/program/program_mutation_models.dart';
 import '../shared/model_constants.dart';
 
+Map<String, Object?> pinnedProgramLauncherManifestJson(
+  PinnedProgramLauncherManifest manifest,
+) {
+  return <String, Object?>{
+    'schemaVersion': cliSchemaVersion,
+    'createdBy': konyakMacosBundleIdentifier,
+    'launcherId': manifest.launcherId.value,
+    'bottleId': manifest.bottleId.value,
+    'programPath': manifest.programPath.value,
+    'programName': manifest.programName.value,
+  };
+}
+
 Option<PinnedProgramLauncherManifest> pinnedProgramLauncherManifestFromPayload(
   String payload,
 ) {

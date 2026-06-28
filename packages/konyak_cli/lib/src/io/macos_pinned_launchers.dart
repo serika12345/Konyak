@@ -13,6 +13,7 @@ import '../shared/common_helpers.dart';
 import 'app_update_paths.dart';
 import 'macos_pinned_launcher_bundle_io.dart';
 import 'macos_pinned_launcher_cleanup.dart';
+import 'macos_pinned_launcher_manifests.dart';
 
 const macosPinnedLauncherManifestFileName = 'konyak-launcher.json';
 const macosPinnedLauncherExecutableName = 'konyak-launcher';
@@ -229,7 +230,7 @@ MacosPinnedProgramLauncherBundlePlan macosPinnedProgramLauncherBundlePlan({
       displayName: displayName,
       iconFileName: iconFileName,
     ),
-    manifestJson: jsonEncode(manifest.toJson()),
+    manifestJson: jsonEncode(pinnedProgramLauncherManifestJson(manifest)),
     launcherScript: macosPinnedProgramLauncherScript(launcherCommand),
   );
 }

@@ -13,6 +13,7 @@ import '../repository/repository_exceptions.dart';
 import '../shared/common_helpers.dart';
 import 'linux_file_association_io.dart';
 import 'macos_pinned_launcher_manifest_io.dart';
+import 'macos_pinned_launcher_manifests.dart';
 import 'macos_pinned_launchers.dart';
 import 'wine_process_metadata.dart';
 
@@ -217,7 +218,7 @@ bool writeLinuxPinnedProgramLauncher({
   Directory(launcherDirectoryPath).createSync(recursive: true);
   final manifestChanged = writeTextFileIfChanged(
     manifestPath,
-    jsonEncode(manifest.toJson()),
+    jsonEncode(pinnedProgramLauncherManifestJson(manifest)),
   );
   final executableChanged = writeTextFileIfChanged(
     executablePath,

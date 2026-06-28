@@ -1,6 +1,5 @@
 import 'package:fpdart/fpdart.dart';
 
-import '../../shared/model_constants.dart';
 import '../bottle/bottle_models.dart';
 import '../shared/domain_value_objects.dart';
 import 'program_settings_models.dart';
@@ -86,17 +85,6 @@ class PinnedProgramLauncherManifest {
   final BottleId bottleId;
   final ProgramPath programPath;
   final ProgramName programName;
-
-  Map<String, Object?> toJson() {
-    return <String, Object?>{
-      'schemaVersion': cliSchemaVersion,
-      'createdBy': konyakMacosBundleIdentifier,
-      'launcherId': launcherId.value,
-      'bottleId': bottleId.value,
-      'programPath': programPath.value,
-      'programName': programName.value,
-    };
-  }
 }
 
 class WineProcessTerminationRequest {
