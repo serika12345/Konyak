@@ -1,16 +1,26 @@
-part of '../../konyak_cli.dart';
+import 'dart:math';
 
-String _programSettingsJsonPath({
+import 'package:fpdart/fpdart.dart';
+
+import '../domain/bottle/bottle_models.dart';
+import '../domain/bottle/bottle_mutation_models.dart';
+import '../domain/program/program_runner.dart';
+import '../domain/runtime/host_environment.dart';
+import '../domain/runtime/wine_runtime_paths.dart';
+import '../repository/repository_exceptions.dart';
+import '../shared/common_helpers.dart';
+
+String programSettingsJsonPath({
   required BottleRecord bottle,
   required String programPath,
 }) {
-  return _joinPath(bottle.path.value, [
+  return joinPath(bottle.path.value, [
     'program-settings',
-    _programSettingsFileName(programPath, extension: 'json'),
+    programSettingsFileName(programPath, extension: 'json'),
   ]);
 }
 
-String _programSettingsFileName(
+String programSettingsFileName(
   String programPath, {
   required String extension,
 }) {
@@ -31,77 +41,77 @@ String _programSettingsFileName(
   return '$safeName.$extension';
 }
 
-String _programSettingsKey({
+String programSettingsKey({
   required String bottleId,
   required String programPath,
 }) {
-  return '$bottleId:${_normalizeFilesystemPath(programPath)}';
+  return '$bottleId:${normalizeFilesystemPath(programPath)}';
 }
 
-String _appSettingsJsonPath(String configHome) {
-  return _joinPath(configHome, const ['settings.json']);
+String appSettingsJsonPath(String configHome) {
+  return joinPath(configHome, const ['settings.json']);
 }
 
-BottleRecord _bottleFromCreateRequest(
+BottleRecord bottleFromCreateRequest(
   BottleCreateRequest request,
   String dataHome, {
   Option<String> bottleDirectory = const Option.none(),
 }) {
-  final id = _bottleIdFromName(request.name.value);
+  final id = bottleIdFromName(request.name.value);
   if (id.isEmpty) {
     throw const BottleRepositoryException('Bottle name cannot form an id.');
   }
 
   final directory = bottleDirectory.match(
-    () => _joinPath(dataHome, const ['bottles']),
+    () => joinPath(dataHome, const ['bottles']),
     (value) => value,
   );
   return BottleRecord(
     id: id,
     name: request.name.value,
-    path: _joinPath(directory, [id]),
+    path: joinPath(directory, [id]),
     windowsVersion: request.windowsVersion.value,
   );
 }
 
-BottleRecord _renamedMemoryBottle({
+BottleRecord renamedMemoryBottle({
   required BottleRecord bottle,
   required String name,
   required String dataHome,
 }) {
-  return _renamedFileBottle(bottle: bottle, name: name, dataHome: dataHome);
+  return renamedFileBottle(bottle: bottle, name: name, dataHome: dataHome);
 }
 
-BottleRecord _renamedFileBottle({
+BottleRecord renamedFileBottle({
   required BottleRecord bottle,
   required String name,
   required String dataHome,
   Option<String> bottleDirectory = const Option.none(),
 }) {
-  final id = _bottleIdFromName(name);
+  final id = bottleIdFromName(name);
   if (id.isEmpty) {
     throw const BottleRepositoryException('Bottle name cannot form an id.');
   }
 
   final directory = bottleDirectory.match(
-    () => _joinPath(dataHome, const ['bottles']),
+    () => joinPath(dataHome, const ['bottles']),
     (value) => value,
   );
   return bottle.withIdentity(
     id: id,
     name: name,
-    path: _joinPath(directory, [id]),
+    path: joinPath(directory, [id]),
   );
 }
 
-final _bottleIdLetterOrNumber = RegExp(r'[\p{L}\p{N}]', unicode: true);
+final bottleIdLetterOrNumber = RegExp(r'[\p{L}\p{N}]', unicode: true);
 
-String _bottleIdFromName(String name) {
+String bottleIdFromName(String name) {
   final state = name.trim().toLowerCase().runes.fold(
     (id: '', lastWasSeparator: false),
     (state, rune) {
       final character = String.fromCharCode(rune);
-      if (_bottleIdLetterOrNumber.hasMatch(character)) {
+      if (bottleIdLetterOrNumber.hasMatch(character)) {
         return (id: '${state.id}$character', lastWasSeparator: false);
       }
 
@@ -116,7 +126,7 @@ String _bottleIdFromName(String name) {
   return id.endsWith('-') ? id.substring(0, id.length - 1) : id;
 }
 
-String _resolveDataHome(HostEnvironment environment) {
+String resolveDataHome(HostEnvironment environment) {
   return environment
       .nonEmptyValue('KONYAK_DATA_HOME')
       .match(
@@ -130,15 +140,15 @@ String _resolveDataHome(HostEnvironment environment) {
                       'Unable to resolve Konyak data directory.',
                     ),
                     (home) =>
-                        _joinPath(home, const ['.local', 'share', 'konyak']),
+                        joinPath(home, const ['.local', 'share', 'konyak']),
                   ),
-              (xdgDataHome) => _joinPath(xdgDataHome, const ['konyak']),
+              (xdgDataHome) => joinPath(xdgDataHome, const ['konyak']),
             ),
         (override) => override,
       );
 }
 
-String _resolveBottleDataHome(
+String resolveBottleDataHome(
   HostEnvironment environment, {
   required KonyakHostPlatform hostPlatform,
 }) {
@@ -149,13 +159,13 @@ String _resolveBottleDataHome(
           KonyakHostPlatform.macos => konyakApplicationSupportFolder(
             environment,
           ),
-          KonyakHostPlatform.linux => _resolveDataHome(environment),
+          KonyakHostPlatform.linux => resolveDataHome(environment),
         },
         (override) => override,
       );
 }
 
-String _resolveConfigHome(
+String resolveConfigHome(
   HostEnvironment environment, {
   required KonyakHostPlatform hostPlatform,
 }) {
@@ -170,7 +180,7 @@ String _resolveConfigHome(
                   () => throw const AppSettingsRepositoryException(
                     'Unable to resolve Konyak config directory.',
                   ),
-                  (home) => _joinPath(home, const [
+                  (home) => joinPath(home, const [
                     'Library',
                     'Application Support',
                     'Konyak',
@@ -186,16 +196,16 @@ String _resolveConfigHome(
                         () => throw const AppSettingsRepositoryException(
                           'Unable to resolve Konyak config directory.',
                         ),
-                        (home) => _joinPath(home, const ['.config', 'konyak']),
+                        (home) => joinPath(home, const ['.config', 'konyak']),
                       ),
-                  (xdgConfigHome) => _joinPath(xdgConfigHome, const ['konyak']),
+                  (xdgConfigHome) => joinPath(xdgConfigHome, const ['konyak']),
                 ),
         },
         (override) => override,
       );
 }
 
-String _defaultBottlePath(
+String defaultBottlePath(
   HostEnvironment environment, {
   required KonyakHostPlatform hostPlatform,
 }) {
@@ -206,33 +216,33 @@ String _defaultBottlePath(
             .nonEmptyValue('KONYAK_DATA_HOME')
             .match(
               () => switch (hostPlatform) {
-                KonyakHostPlatform.macos => _joinPath(
-                  _resolveBottleDataHome(
+                KonyakHostPlatform.macos => joinPath(
+                  resolveBottleDataHome(
                     environment,
                     hostPlatform: hostPlatform,
                   ),
                   const ['Bottles'],
                 ),
-                KonyakHostPlatform.linux => _joinPath(
-                  _resolveDataHome(environment),
+                KonyakHostPlatform.linux => joinPath(
+                  resolveDataHome(environment),
                   const ['bottles'],
                 ),
               },
-              (dataHome) => _joinPath(dataHome, const ['bottles']),
+              (dataHome) => joinPath(dataHome, const ['bottles']),
             ),
         (override) => override,
       );
 }
 
-bool _hasBottleAtPath(
+bool hasBottleAtPath(
   Iterable<BottleRecord> bottles,
   String path, {
   required String exceptId,
 }) {
-  final normalizedPath = _normalizeFilesystemPath(path);
+  final normalizedPath = normalizeFilesystemPath(path);
   return bottles.any(
     (bottle) =>
         bottle.id.value != exceptId &&
-        _normalizeFilesystemPath(bottle.path.value) == normalizedPath,
+        normalizeFilesystemPath(bottle.path.value) == normalizedPath,
   );
 }

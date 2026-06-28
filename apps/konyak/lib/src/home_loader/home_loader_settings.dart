@@ -1,12 +1,25 @@
-part of '../home_loader/home_loader.dart';
+import 'dart:async';
 
-extension _KonyakHomeLoaderSettings on _KonyakHomeLoaderState {
-  Future<void> _showSettings() async {
-    if (_isShowingSettings) {
+import 'package:flutter/material.dart';
+
+import '../app/dialogs/app_settings_dialog.dart';
+import '../app/runtime/runtime_platform.dart';
+import '../cli/konyak_cli_read_commands.dart';
+import '../cli/konyak_cli_runtime_result_types.dart';
+import '../cli/konyak_cli_settings_commands.dart';
+import '../cli/konyak_cli_settings_result_types.dart';
+import '../l10n/konyak_localizations.dart';
+import '../settings/app_settings_summary.dart';
+import 'home_loader.dart';
+import 'home_loader_runtimes.dart';
+
+extension KonyakHomeLoaderSettings on KonyakHomeLoaderState {
+  Future<void> showSettings() async {
+    if (isShowingSettings) {
       return;
     }
 
-    _isShowingSettings = true;
+    isShowingSettings = true;
     try {
       final result = await widget.cliClient.getAppSettings();
 
@@ -16,7 +29,7 @@ extension _KonyakHomeLoaderSettings on _KonyakHomeLoaderState {
 
       switch (result) {
         case LoadedAppSettings(:final settings):
-          _appSettings = settings;
+          appSettings = settings;
           widget.onAppSettingsLoaded(settings);
           final managedRuntime = managedRuntimePlatform(widget.platform);
           await showDialog<void>(
@@ -25,31 +38,31 @@ extension _KonyakHomeLoaderSettings on _KonyakHomeLoaderState {
               platform: widget.platform,
               initialSettings: settings,
               directoryPicker: widget.directoryPicker,
-              runtimes: runtimesForPlatform(widget.platform, _knownRuntimes),
+              runtimes: runtimesForPlatform(widget.platform, knownRuntimes),
               isLoadingRuntimes:
-                  managedRuntime != null && !_hasLoadedKnownRuntimes,
-              onLoadRuntimes: managedRuntime == null || _hasLoadedKnownRuntimes
+                  managedRuntime != null && !hasLoadedKnownRuntimes,
+              onLoadRuntimes: managedRuntime == null || hasLoadedKnownRuntimes
                   ? null
-                  : _loadSettingsRuntimes,
+                  : loadSettingsRuntimes,
               onInstallRuntime: managedRuntime != null
-                  ? _installSettingsRuntime
+                  ? installSettingsRuntime
                   : null,
               onInstallGptkWine: widget.platform.isMacOS
-                  ? _installGptkWine
+                  ? installGptkWine
                   : null,
-              onOpenGptkPage: widget.platform.isMacOS ? _openGptkPage : null,
-              onSettingsChanged: _setAppSettings,
+              onOpenGptkPage: widget.platform.isMacOS ? openGptkPage : null,
+              onSettingsChanged: setAppSettings,
             ),
           );
         case AppSettingsLoadFailure(:final message):
-          _showSnackBar(message);
+          showSnackBar(message);
       }
     } finally {
-      _isShowingSettings = false;
+      isShowingSettings = false;
     }
   }
 
-  Future<RuntimeListLoadResult> _loadSettingsRuntimes() async {
+  Future<RuntimeListLoadResult> loadSettingsRuntimes() async {
     final result = await widget.cliClient.listKnownRuntimes();
 
     if (!mounted) {
@@ -58,7 +71,7 @@ extension _KonyakHomeLoaderSettings on _KonyakHomeLoaderState {
 
     switch (result) {
       case LoadedRuntimeList(:final runtimes):
-        _setKnownRuntimes(runtimes);
+        setKnownRuntimes(runtimes);
       case RuntimeListLoadFailure():
         break;
     }
@@ -66,7 +79,7 @@ extension _KonyakHomeLoaderSettings on _KonyakHomeLoaderState {
     return result;
   }
 
-  Future<void> _showAbout() async {
+  Future<void> showAbout() async {
     await showDialog<void>(
       context: context,
       builder: (dialogContext) {
@@ -128,7 +141,7 @@ extension _KonyakHomeLoaderSettings on _KonyakHomeLoaderState {
     );
   }
 
-  Future<AppSettingsSummary?> _setAppSettings(
+  Future<AppSettingsSummary?> setAppSettings(
     AppSettingsSummary settings,
   ) async {
     final result = await widget.cliClient.setAppSettings(settings: settings);
@@ -139,12 +152,12 @@ extension _KonyakHomeLoaderSettings on _KonyakHomeLoaderState {
 
     switch (result) {
       case LoadedAppSettings(:final settings):
-        _appSettings = settings;
+        appSettings = settings;
         widget.onAppearanceModeChanged(settings.appearanceMode);
         widget.onLanguageModeChanged(settings.languageMode);
         return settings;
       case AppSettingsLoadFailure(:final message):
-        _showSnackBar(message);
+        showSnackBar(message);
         return null;
     }
   }

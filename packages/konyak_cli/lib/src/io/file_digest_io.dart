@@ -1,7 +1,12 @@
-part of '../../konyak_cli.dart';
+import 'dart:io';
+import 'dart:typed_data';
 
-String _sha256HexDigest(File file) {
-  final outputSink = _DigestSink();
+import 'package:crypto/crypto.dart';
+
+import 'platform_runtime_sources.dart';
+
+String sha256HexDigest(File file) {
+  final outputSink = DigestSink();
   final inputSink = sha256.startChunkedConversion(outputSink);
   final inputFile = file.openSync();
 

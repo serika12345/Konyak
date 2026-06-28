@@ -1,14 +1,25 @@
-part of '../../konyak_cli.dart';
+import 'package:fpdart/fpdart.dart';
 
-CliResult _bottleArchiveExportJsonResult(BottleArchiveExportResult result) {
+import '../domain/bottle/bottle_models.dart';
+import '../domain/bottle/bottle_mutation_models.dart';
+import '../domain/bottle/bottle_runtime_settings_models.dart';
+import '../domain/program/program_run_models.dart';
+import '../domain/program/program_runner.dart';
+import '../io/io_result.dart';
+import '../io/program_registry_parsers.dart';
+import '../io/wine_run_requests.dart';
+import 'cli_json_helpers.dart';
+import 'cli_result_model.dart';
+
+CliResult bottleArchiveExportJsonResult(BottleArchiveExportResult result) {
   return switch (result) {
-    BottleArchiveExported(:final archive) => _jsonSuccess(<String, Object?>{
+    BottleArchiveExported(:final archive) => jsonSuccess(<String, Object?>{
       'bottleArchive': archive.toJson(),
     }),
-    BottleArchiveExportMissing(:final bottleId) => _bottleNotFoundError(
+    BottleArchiveExportMissing(:final bottleId) => bottleNotFoundError(
       bottleId.value,
     ),
-    BottleArchiveExportFailed(:final message) => _jsonError(
+    BottleArchiveExportFailed(:final message) => jsonError(
       exitCode: 75,
       code: 'bottleArchiveExportFailed',
       message: message,
@@ -16,16 +27,16 @@ CliResult _bottleArchiveExportJsonResult(BottleArchiveExportResult result) {
   };
 }
 
-CliResult _bottleArchiveImportJsonResult(BottleArchiveImportResult result) {
+CliResult bottleArchiveImportJsonResult(BottleArchiveImportResult result) {
   return switch (result) {
-    BottleArchiveImported(:final bottle) => _bottleJsonResult(bottle),
-    BottleArchiveImportConflict(:final bottleId) => _jsonError(
+    BottleArchiveImported(:final bottle) => bottleJsonResult(bottle),
+    BottleArchiveImportConflict(:final bottleId) => jsonError(
       exitCode: 73,
       code: 'bottleAlreadyExists',
       message: 'Bottle already exists.',
       extra: <String, Object?>{'bottleId': bottleId.value},
     ),
-    BottleArchiveImportFailed(:final message) => _jsonError(
+    BottleArchiveImportFailed(:final message) => jsonError(
       exitCode: 65,
       code: 'invalidBottleArchive',
       message: message,
@@ -33,50 +44,50 @@ CliResult _bottleArchiveImportJsonResult(BottleArchiveImportResult result) {
   };
 }
 
-CliResult _bottleRepositoryFailureJsonResult(String message) {
-  return _jsonError(
+CliResult bottleRepositoryFailureJsonResult(String message) {
+  return jsonError(
     exitCode: 74,
     code: 'bottleRepositoryError',
     message: message,
   );
 }
 
-CliResult _bottleCatalogFailureJsonResult(String message) {
-  return _bottleRepositoryFailureJsonResult(message);
+CliResult bottleCatalogFailureJsonResult(String message) {
+  return bottleRepositoryFailureJsonResult(message);
 }
 
-CliResult _foundBottleJsonResult({
+CliResult foundBottleJsonResult({
   required IoResult<Option<BottleRecord>> result,
   required String bottleId,
   required CliResult Function(BottleRecord bottle) onFound,
 }) {
   return result.fold(
-    _bottleCatalogFailureJsonResult,
-    (bottle) => bottle.match(() => _bottleNotFoundError(bottleId), onFound),
+    bottleCatalogFailureJsonResult,
+    (bottle) => bottle.match(() => bottleNotFoundError(bottleId), onFound),
   );
 }
 
-sealed class _CliSideEffectResult {
-  const _CliSideEffectResult();
+sealed class CliSideEffectResult {
+  const CliSideEffectResult();
 }
 
-final class _CliSideEffectSucceeded extends _CliSideEffectResult {
-  const _CliSideEffectSucceeded();
+final class CliSideEffectSucceeded extends CliSideEffectResult {
+  const CliSideEffectSucceeded();
 }
 
-final class _CliSideEffectFailed extends _CliSideEffectResult {
-  const _CliSideEffectFailed(this.result);
+final class CliSideEffectFailed extends CliSideEffectResult {
+  const CliSideEffectFailed(this.result);
 
   final CliResult result;
 }
 
-_CliSideEffectResult _applyRuntimeSettingsRegistryUpdates({
+CliSideEffectResult applyRuntimeSettingsRegistryUpdates({
   required BottleRecord bottle,
   required BottleRuntimeSettings runtimeSettings,
   required ProgramRunPlanner programRunPlanner,
   required ProgramRunner? programRunner,
 }) {
-  return _applyRegistryUpdateRequests(
+  return applyRegistryUpdateRequests(
     requests: programRunPlanner.planRuntimeSettingsRegistryUpdates(
       bottle: bottle,
       currentRuntimeSettings: bottle.runtimeSettings,
@@ -86,32 +97,32 @@ _CliSideEffectResult _applyRuntimeSettingsRegistryUpdates({
   );
 }
 
-_CliSideEffectResult _syncRuntimeSettingsDllOverrides({
+CliSideEffectResult syncRuntimeSettingsDllOverrides({
   required BottleRecord bottle,
   required BottleRuntimeSettings runtimeSettings,
   required ProgramRunPlanner programRunPlanner,
 }) {
   if (programRunPlanner.hostPlatform != KonyakHostPlatform.macos) {
-    return const _CliSideEffectSucceeded();
+    return const CliSideEffectSucceeded();
   }
 
-  final syncResult = _ioResult(() {
-    _removeMacosD3DTranslationDllOverrides(bottle: bottle);
+  final syncResult = ioResult(() {
+    removeMacosD3DTranslationDllOverrides(bottle: bottle);
     if (runtimeSettings.dxrEnabled) {
-      _syncMacosD3DMetalDllOverrides(
+      syncMacosD3DMetalDllOverrides(
         bottle: bottle,
         environment: programRunPlanner.environment.toMap(),
       );
     } else if (runtimeSettings.dxvk) {
-      _syncMacosDxvkDllOverrides(
+      syncMacosDxvkDllOverrides(
         bottle: bottle,
         environment: programRunPlanner.environment.toMap(),
       );
     }
   });
-  return syncResult.fold<_CliSideEffectResult>(
-    (failureMessage) => _CliSideEffectFailed(
-      _jsonError(
+  return syncResult.fold<CliSideEffectResult>(
+    (failureMessage) => CliSideEffectFailed(
+      jsonError(
         exitCode: 74,
         code: 'runtimeSettingsDllSyncFailed',
         message: 'Failed to synchronize runtime DLL overrides.',
@@ -120,17 +131,17 @@ _CliSideEffectResult _syncRuntimeSettingsDllOverrides({
         },
       ),
     ),
-    (_) => const _CliSideEffectSucceeded(),
+    (_) => const CliSideEffectSucceeded(),
   );
 }
 
-_CliSideEffectResult _applyWindowsVersionRegistryUpdates({
+CliSideEffectResult applyWindowsVersionRegistryUpdates({
   required BottleRecord bottle,
   required String windowsVersion,
   required ProgramRunPlanner programRunPlanner,
   required ProgramRunner? programRunner,
 }) {
-  return _applyRegistryUpdateRequests(
+  return applyRegistryUpdateRequests(
     requests: programRunPlanner.planWindowsVersionRegistryUpdates(
       bottle: bottle,
       windowsVersion: windowsVersion,
@@ -139,13 +150,13 @@ _CliSideEffectResult _applyWindowsVersionRegistryUpdates({
   );
 }
 
-_CliSideEffectResult _applyRegistryUpdateRequests({
+CliSideEffectResult applyRegistryUpdateRequests({
   required Iterable<ProgramRunRequest> requests,
   required ProgramRunner? programRunner,
 }) {
   final runner = programRunner;
   if (runner == null) {
-    return const _CliSideEffectSucceeded();
+    return const CliSideEffectSucceeded();
   }
 
   for (final request in requests) {
@@ -155,8 +166,8 @@ _CliSideEffectResult _applyRegistryUpdateRequests({
           when processExitCode == 0:
         continue;
       case ProgramRunCompleted(:final processExitCode):
-        return _CliSideEffectFailed(
-          _jsonError(
+        return CliSideEffectFailed(
+          jsonError(
             exitCode: 75,
             code: 'registryUpdateFailed',
             message:
@@ -166,8 +177,8 @@ _CliSideEffectResult _applyRegistryUpdateRequests({
           ),
         );
       case ProgramRunFailed(:final message):
-        return _CliSideEffectFailed(
-          _jsonError(
+        return CliSideEffectFailed(
+          jsonError(
             exitCode: 75,
             code: 'registryUpdateFailed',
             message: message,
@@ -176,10 +187,10 @@ _CliSideEffectResult _applyRegistryUpdateRequests({
     }
   }
 
-  return const _CliSideEffectSucceeded();
+  return const CliSideEffectSucceeded();
 }
 
-BottleRecord _bottleWithRegistrySettings({
+BottleRecord bottleWithRegistrySettings({
   required BottleRecord bottle,
   required ProgramRunPlanner programRunPlanner,
   required ProgramRunner? programRunner,
@@ -197,7 +208,7 @@ BottleRecord _bottleWithRegistrySettings({
     switch (result) {
       case ProgramRunCompleted(:final processExitCode, :final stdout)
           when processExitCode == 0:
-        currentBottle = _bottleWithRegistryValue(
+        currentBottle = bottleWithRegistryValue(
           bottle: currentBottle,
           arguments: request.arguments,
           stdout: stdout,
@@ -212,6 +223,6 @@ BottleRecord _bottleWithRegistrySettings({
   return currentBottle;
 }
 
-CliResult _bottleJsonResult(BottleRecord bottle) {
-  return _jsonSuccess(<String, Object?>{'bottle': bottle.toJson()});
+CliResult bottleJsonResult(BottleRecord bottle) {
+  return jsonSuccess(<String, Object?>{'bottle': bottle.toJson()});
 }

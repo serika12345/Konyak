@@ -1,19 +1,32 @@
-part of '../../konyak_cli.dart';
+import 'package:fpdart/fpdart.dart';
+
+import '../domain/bottle/bottle_models.dart';
+import '../domain/bottle/bottle_mutation_models.dart';
+import '../domain/program/pinned_programs.dart';
+import '../domain/program/program_catalog_models.dart';
+import '../domain/program/program_mutation_models.dart';
+import '../domain/program/program_settings_models.dart';
+import '../io/bottle_archives.dart';
+import '../io/io_result.dart';
+import '../shared/common_helpers.dart';
+import '../storage/storage_paths.dart';
+import 'file_bottle_repository_read_operations.dart';
+import 'repository_interfaces.dart';
 
 class StaticBottleCatalog implements BottleCatalog {
   StaticBottleCatalog(Iterable<BottleRecord> bottles)
-    : _bottles = List.unmodifiable(bottles);
+    : bottles = List.unmodifiable(bottles);
 
-  final List<BottleRecord> _bottles;
+  final List<BottleRecord> bottles;
 
   @override
   IoResult<List<BottleRecord>> listBottles() {
-    return Right<String, List<BottleRecord>>(List.unmodifiable(_bottles));
+    return Right<String, List<BottleRecord>>(List.unmodifiable(bottles));
   }
 
   @override
   IoResult<Option<BottleRecord>> findBottle(String id) {
-    for (final bottle in _bottles) {
+    for (final bottle in bottles) {
       if (bottle.id.value == id) {
         return Right<String, Option<BottleRecord>>(Option.of(bottle));
       }
@@ -29,33 +42,31 @@ class MemoryBottleRepository implements BottleRepository {
     Iterable<BottleRecord> bottles = const <BottleRecord>[],
     Map<String, ProgramSettingsRecord> programSettings =
         const <String, ProgramSettingsRecord>{},
-    ProgramMetadataExtractor programMetadataExtractor =
-        const DartIoProgramMetadataExtractor(),
-  }) : _bottles = <String, BottleRecord>{
+    required this.programMetadataExtractor,
+  }) : bottlesById = <String, BottleRecord>{
          for (final bottle in bottles) bottle.id.value: bottle,
        },
-       _programSettings = Map<String, ProgramSettingsRecord>.of(
+       programSettingsByKey = Map<String, ProgramSettingsRecord>.of(
          programSettings,
-       ),
-       _programMetadataExtractor = programMetadataExtractor;
+       );
 
   final String dataHome;
-  final Map<String, BottleRecord> _bottles;
-  final Map<String, ProgramSettingsRecord> _programSettings;
-  final ProgramMetadataExtractor _programMetadataExtractor;
+  final Map<String, BottleRecord> bottlesById;
+  final Map<String, ProgramSettingsRecord> programSettingsByKey;
+  final ProgramMetadataExtractor programMetadataExtractor;
 
   @override
   IoResult<List<BottleRecord>> listBottles() {
     final bottles =
-        _bottles.values
+        bottlesById.values
             .toList(growable: false)
             .map((bottle) {
               final updated = bottleWithPinnedProgramIcons(
-                _bottleWithoutMissingBottleLocalPinnedProgramFiles(bottle),
-                programMetadataExtractor: _programMetadataExtractor,
+                bottleWithoutMissingBottleLocalPinnedProgramFiles(bottle),
+                programMetadataExtractor: programMetadataExtractor,
               );
               if (updated != bottle) {
-                _bottles[bottle.id.value] = updated;
+                bottlesById[bottle.id.value] = updated;
               }
               return updated;
             })
@@ -67,15 +78,15 @@ class MemoryBottleRepository implements BottleRepository {
 
   @override
   IoResult<Option<BottleRecord>> findBottle(String id) {
-    return _mapValue(_bottles, id).match(
+    return mapValue(bottlesById, id).match(
       () => const Right<String, Option<BottleRecord>>(Option.none()),
       (bottle) {
         final updated = bottleWithPinnedProgramIcons(
-          _bottleWithoutMissingBottleLocalPinnedProgramFiles(bottle),
-          programMetadataExtractor: _programMetadataExtractor,
+          bottleWithoutMissingBottleLocalPinnedProgramFiles(bottle),
+          programMetadataExtractor: programMetadataExtractor,
         );
         if (updated != bottle) {
-          _bottles[id] = updated;
+          bottlesById[id] = updated;
         }
 
         return Right<String, Option<BottleRecord>>(Option.of(updated));
@@ -85,13 +96,13 @@ class MemoryBottleRepository implements BottleRepository {
 
   @override
   BottleCreateResult createBottle(BottleCreateRequest request) {
-    final bottle = _bottleFromCreateRequest(request, dataHome);
+    final bottle = bottleFromCreateRequest(request, dataHome);
 
-    if (_bottles.containsKey(bottle.id.value)) {
+    if (bottlesById.containsKey(bottle.id.value)) {
       return BottleCreateConflict(bottle.id.value);
     }
 
-    _bottles[bottle.id.value] = bottle;
+    bottlesById[bottle.id.value] = bottle;
 
     return BottleCreated(bottle);
   }
@@ -104,7 +115,7 @@ class MemoryBottleRepository implements BottleRepository {
       BottleArchiveExportFailed.new,
       (bottle) => bottle.match(
         () => BottleArchiveExportMissing(request.bottleId.value),
-        (bottle) => _exportBottleArchive(
+        (bottle) => writeBottleArchive(
           bottle: bottle,
           archivePath: request.archivePath.value,
         ),
@@ -116,36 +127,36 @@ class MemoryBottleRepository implements BottleRepository {
   BottleArchiveImportResult importBottleArchive(
     BottleArchiveImportRequest request,
   ) {
-    return _importBottleArchive(
+    return readBottleArchive(
       archivePath: request.archivePath.value,
-      bottleDirectory: _joinPath(dataHome, const ['bottles']),
-      hasBottle: (bottleId) =>
-          Right<String, bool>(_bottles.containsKey(bottleId)),
-      onImported: (bottle) {
-        _bottles[bottle.id.value] = bottle;
+      bottleDirectory: joinPath(dataHome, const ['bottles']),
+      hasBottle: (String bottleId) =>
+          Right<String, bool>(bottlesById.containsKey(bottleId)),
+      onImported: (BottleRecord bottle) {
+        bottlesById[bottle.id.value] = bottle;
       },
     );
   }
 
   @override
   BottleDeleteResult deleteBottle(String id) {
-    return _removeMapValue(
-      _bottles,
+    return removeMapValue(
+      bottlesById,
       id,
     ).match(() => BottleDeleteMissing(id), BottleDeleted.new);
   }
 
   @override
   BottleRenameResult renameBottle(BottleRenameRequest request) {
-    return _mapValue(_bottles, request.bottleId.value).match(
+    return mapValue(bottlesById, request.bottleId.value).match(
       () => BottleRenameMissing(request.bottleId.value),
       (bottle) {
-        final renamed = _renamedMemoryBottle(
+        final renamed = renamedMemoryBottle(
           bottle: bottle,
           name: request.name.value,
           dataHome: dataHome,
         );
-        final hasConflict = _mapValue(_bottles, renamed.id.value).match(
+        final hasConflict = mapValue(bottlesById, renamed.id.value).match(
           () => false,
           (conflictingBottle) => conflictingBottle.id.value != bottle.id.value,
         );
@@ -153,8 +164,8 @@ class MemoryBottleRepository implements BottleRepository {
           return BottleRenameConflict(renamed.id.value);
         }
 
-        _bottles.remove(bottle.id.value);
-        _bottles[renamed.id.value] = renamed;
+        bottlesById.remove(bottle.id.value);
+        bottlesById[renamed.id.value] = renamed;
 
         return BottleRenamed(renamed);
       },
@@ -163,11 +174,11 @@ class MemoryBottleRepository implements BottleRepository {
 
   @override
   BottleMoveResult moveBottle(BottleMoveRequest request) {
-    return _mapValue(_bottles, request.bottleId.value).match(
+    return mapValue(bottlesById, request.bottleId.value).match(
       () => BottleMoveMissing(request.bottleId.value),
       (bottle) {
-        if (_hasBottleAtPath(
-          _bottles.values,
+        if (hasBottleAtPath(
+          bottlesById.values,
           request.path.value,
           exceptId: bottle.id.value,
         )) {
@@ -175,7 +186,7 @@ class MemoryBottleRepository implements BottleRepository {
         }
 
         final moved = bottle.withPath(request.path.value);
-        _bottles[bottle.id.value] = moved;
+        bottlesById[bottle.id.value] = moved;
 
         return BottleMoved(moved);
       },
@@ -184,11 +195,11 @@ class MemoryBottleRepository implements BottleRepository {
 
   @override
   BottleUpdateResult setWindowsVersion(WindowsVersionUpdateRequest request) {
-    return _mapValue(_bottles, request.bottleId.value).match(
+    return mapValue(bottlesById, request.bottleId.value).match(
       () => BottleUpdateMissing(request.bottleId.value),
       (bottle) {
         final updated = bottle.withWindowsVersion(request.windowsVersion.value);
-        _bottles[request.bottleId.value] = updated;
+        bottlesById[request.bottleId.value] = updated;
 
         return BottleUpdated(updated);
       },
@@ -197,11 +208,11 @@ class MemoryBottleRepository implements BottleRepository {
 
   @override
   BottleUpdateResult setRuntimeSettings(RuntimeSettingsUpdateRequest request) {
-    return _mapValue(_bottles, request.bottleId.value).match(
+    return mapValue(bottlesById, request.bottleId.value).match(
       () => BottleUpdateMissing(request.bottleId.value),
       (bottle) {
         final updated = bottle.withRuntimeSettings(request.runtimeSettings);
-        _bottles[request.bottleId.value] = updated;
+        bottlesById[request.bottleId.value] = updated;
 
         return BottleUpdated(updated);
       },
@@ -210,7 +221,7 @@ class MemoryBottleRepository implements BottleRepository {
 
   @override
   ProgramPinResult pinProgram(ProgramPinRequest request) {
-    return _mapValue(_bottles, request.bottleId.value).match(
+    return mapValue(bottlesById, request.bottleId.value).match(
       () => ProgramPinMissing(request.bottleId.value),
       (bottle) {
         if (hasPinnedProgram(bottle, request.programPath.value)) {
@@ -220,9 +231,9 @@ class MemoryBottleRepository implements BottleRepository {
         final updated = bottleWithPinnedProgram(
           bottle,
           request,
-          programMetadataExtractor: _programMetadataExtractor,
+          programMetadataExtractor: programMetadataExtractor,
         );
-        _bottles[request.bottleId.value] = updated;
+        bottlesById[request.bottleId.value] = updated;
 
         return ProgramPinned(updated);
       },
@@ -231,7 +242,7 @@ class MemoryBottleRepository implements BottleRepository {
 
   @override
   ProgramUpdateResult unpinProgram(ProgramUnpinRequest request) {
-    return _mapValue(_bottles, request.bottleId.value).match(
+    return mapValue(bottlesById, request.bottleId.value).match(
       () => ProgramUpdateMissingBottle(request.bottleId.value),
       (bottle) {
         if (!hasPinnedProgram(bottle, request.programPath.value)) {
@@ -242,7 +253,7 @@ class MemoryBottleRepository implements BottleRepository {
           bottle,
           request.programPath.value,
         );
-        _bottles[request.bottleId.value] = updated;
+        bottlesById[request.bottleId.value] = updated;
 
         return ProgramUpdated(updated);
       },
@@ -251,7 +262,7 @@ class MemoryBottleRepository implements BottleRepository {
 
   @override
   ProgramUpdateResult renamePinnedProgram(ProgramRenameRequest request) {
-    return _mapValue(_bottles, request.bottleId.value).match(
+    return mapValue(bottlesById, request.bottleId.value).match(
       () => ProgramUpdateMissingBottle(request.bottleId.value),
       (bottle) {
         if (!hasPinnedProgram(bottle, request.programPath.value)) {
@@ -259,7 +270,7 @@ class MemoryBottleRepository implements BottleRepository {
         }
 
         final updated = bottleWithRenamedPinnedProgram(bottle, request);
-        _bottles[request.bottleId.value] = updated;
+        bottlesById[request.bottleId.value] = updated;
 
         return ProgramUpdated(updated);
       },
@@ -270,12 +281,12 @@ class MemoryBottleRepository implements BottleRepository {
   ProgramSettingsReadResult readProgramSettings(
     ProgramSettingsRequest request,
   ) {
-    return _mapValue(_bottles, request.bottleId.value).match(
+    return mapValue(bottlesById, request.bottleId.value).match(
       () => ProgramSettingsReadMissingBottle(request.bottleId.value),
       (bottle) => ProgramSettingsRead(
-        _mapValue(
-          _programSettings,
-          _programSettingsKey(
+        mapValue(
+          programSettingsByKey,
+          programSettingsKey(
             bottleId: bottle.id.value,
             programPath: request.programPath.value,
           ),
@@ -288,10 +299,10 @@ class MemoryBottleRepository implements BottleRepository {
   ProgramSettingsUpdateResult setProgramSettings(
     ProgramSettingsUpdateRequest request,
   ) {
-    return _mapValue(_bottles, request.bottleId.value).match(
+    return mapValue(bottlesById, request.bottleId.value).match(
       () => ProgramSettingsUpdateMissingBottle(request.bottleId.value),
       (bottle) {
-        _programSettings[_programSettingsKey(
+        programSettingsByKey[programSettingsKey(
               bottleId: bottle.id.value,
               programPath: request.programPath.value,
             )] =
@@ -303,7 +314,7 @@ class MemoryBottleRepository implements BottleRepository {
   }
 }
 
-Option<V> _mapValue<K, V>(Map<K, V> map, K key) {
+Option<V> mapValue<K, V>(Map<K, V> map, K key) {
   if (!map.containsKey(key)) {
     return const Option.none();
   }
@@ -311,7 +322,7 @@ Option<V> _mapValue<K, V>(Map<K, V> map, K key) {
   return Option.of(map[key] as V);
 }
 
-Option<V> _removeMapValue<K, V>(Map<K, V> map, K key) {
+Option<V> removeMapValue<K, V>(Map<K, V> map, K key) {
   if (!map.containsKey(key)) {
     return const Option.none();
   }

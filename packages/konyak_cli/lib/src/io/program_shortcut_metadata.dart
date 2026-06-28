@@ -1,10 +1,18 @@
-part of '../../konyak_cli.dart';
+import 'dart:typed_data';
 
-List<_BottleProgramSource> _bottleStartMenuSources(BottleRecord bottle) {
-  return <_BottleProgramSource>[
-    _BottleProgramSource(
+import 'package:fpdart/fpdart.dart';
+
+import '../domain/bottle/bottle_models.dart';
+import '../domain/shared/domain_value_objects.dart';
+import '../shared/common_helpers.dart';
+import 'external_payload_helpers.dart';
+import 'wine_process_metadata.dart';
+
+List<BottleProgramSource> bottleStartMenuSources(BottleRecord bottle) {
+  return <BottleProgramSource>[
+    BottleProgramSource(
       id: 'globalStartMenu',
-      path: _joinPath(bottle.path.value, const [
+      path: joinPath(bottle.path.value, const [
         'drive_c',
         'ProgramData',
         'Microsoft',
@@ -12,9 +20,9 @@ List<_BottleProgramSource> _bottleStartMenuSources(BottleRecord bottle) {
         'Start Menu',
       ]),
     ),
-    _BottleProgramSource(
+    BottleProgramSource(
       id: 'userStartMenu',
-      path: _joinPath(bottle.path.value, const [
+      path: joinPath(bottle.path.value, const [
         'drive_c',
         'users',
         'crossover',
@@ -28,8 +36,8 @@ List<_BottleProgramSource> _bottleStartMenuSources(BottleRecord bottle) {
   ];
 }
 
-class _BottleProgramSource {
-  _BottleProgramSource({required String id, required String path})
+class BottleProgramSource {
+  BottleProgramSource({required String id, required String path})
     : id = ProgramSource(id),
       path = ProgramPath(path);
 
@@ -37,46 +45,45 @@ class _BottleProgramSource {
   final ProgramPath path;
 }
 
-bool _isShortcutPath(String path) {
-  return path.toLowerCase().endsWith('.lnk') &&
-      !_baseName(path).startsWith('.');
+bool isShortcutPath(String path) {
+  return path.toLowerCase().endsWith('.lnk') && !baseName(path).startsWith('.');
 }
 
-String _shortcutProgramName(String path) {
-  final baseName = _baseName(path);
-  final extensionStart = baseName.toLowerCase().lastIndexOf('.lnk');
+String shortcutProgramName(String path) {
+  final shortcutBaseName = baseName(path);
+  final extensionStart = shortcutBaseName.toLowerCase().lastIndexOf('.lnk');
   if (extensionStart <= 0) {
-    return baseName;
+    return shortcutBaseName;
   }
 
-  return baseName.substring(0, extensionStart);
+  return shortcutBaseName.substring(0, extensionStart);
 }
 
-Option<String> _shortcutTargetProgramPathFromBytes({
+Option<String> shortcutTargetProgramPathFromBytes({
   required BottleRecord bottle,
   required Uint8List bytes,
 }) {
   try {
-    return _shellLinkLocalBasePath(bytes).flatMap(
+    return shellLinkLocalBasePath(bytes).flatMap(
       (windowsPath) =>
-          _wineWindowsPathToHostPath(bottle: bottle, windowsPath: windowsPath),
+          wineWindowsPathToHostPath(bottle: bottle, windowsPath: windowsPath),
     );
   } on RangeError {
     return const Option.none();
   }
 }
 
-Option<String> _shellLinkLocalBasePath(Uint8List bytes) {
+Option<String> shellLinkLocalBasePath(Uint8List bytes) {
   const shellLinkHeaderSize = 0x4c;
-  return _readUint32Option(bytes, 0).flatMap(
+  return readUint32Option(bytes, 0).flatMap(
     (headerSize) => headerSize == shellLinkHeaderSize
-        ? _readUint32Option(bytes, 0x14).flatMap(
+        ? readUint32Option(bytes, 0x14).flatMap(
             (linkFlags) =>
-                _shellLinkLinkInfoOffset(
+                shellLinkLinkInfoOffset(
                   bytes: bytes,
                   linkFlags: linkFlags,
                 ).flatMap(
-                  (offset) => _shellLinkLocalBasePathAtLinkInfoOffset(
+                  (offset) => shellLinkLocalBasePathAtLinkInfoOffset(
                     bytes: bytes,
                     offset: offset,
                   ),
@@ -86,7 +93,7 @@ Option<String> _shellLinkLocalBasePath(Uint8List bytes) {
   );
 }
 
-Option<int> _shellLinkLinkInfoOffset({
+Option<int> shellLinkLinkInfoOffset({
   required Uint8List bytes,
   required int linkFlags,
 }) {
@@ -99,20 +106,20 @@ Option<int> _shellLinkLinkInfoOffset({
     return Option.of(shellLinkHeaderSize);
   }
 
-  return _readUint16Option(
+  return readUint16Option(
     bytes,
     shellLinkHeaderSize,
   ).map((idListSize) => shellLinkHeaderSize + 2 + idListSize);
 }
 
-Option<String> _shellLinkLocalBasePathAtLinkInfoOffset({
+Option<String> shellLinkLocalBasePathAtLinkInfoOffset({
   required Uint8List bytes,
   required int offset,
 }) {
-  return _readUint32Option(bytes, offset).flatMap(
-    (linkInfoSize) => _readUint32Option(bytes, offset + 4).flatMap(
-      (linkInfoHeaderSize) => _readUint32Option(bytes, offset + 16).flatMap(
-        (localBasePathOffset) => _shellLinkLocalBasePathFromLinkInfo(
+  return readUint32Option(bytes, offset).flatMap(
+    (linkInfoSize) => readUint32Option(bytes, offset + 4).flatMap(
+      (linkInfoHeaderSize) => readUint32Option(bytes, offset + 16).flatMap(
+        (localBasePathOffset) => shellLinkLocalBasePathFromLinkInfo(
           bytes: bytes,
           offset: offset,
           linkInfoSize: linkInfoSize,
@@ -124,7 +131,7 @@ Option<String> _shellLinkLocalBasePathAtLinkInfoOffset({
   );
 }
 
-Option<String> _shellLinkLocalBasePathFromLinkInfo({
+Option<String> shellLinkLocalBasePathFromLinkInfo({
   required Uint8List bytes,
   required int offset,
   required int linkInfoSize,
@@ -136,9 +143,9 @@ Option<String> _shellLinkLocalBasePathFromLinkInfo({
   }
 
   final unicodePath = linkInfoHeaderSize >= 0x24
-      ? _readUint32Option(bytes, offset + 28).flatMap(
+      ? readUint32Option(bytes, offset + 28).flatMap(
           (localBasePathUnicodeOffset) => localBasePathUnicodeOffset > 0
-              ? _nullTerminatedUtf16LeStringOption(
+              ? nullTerminatedUtf16LeStringOption(
                   bytes,
                   offset + localBasePathUnicodeOffset,
                   offset + linkInfoSize,
@@ -148,7 +155,7 @@ Option<String> _shellLinkLocalBasePathFromLinkInfo({
       : const Option<String>.none();
 
   return unicodePath.match(
-    () => _nullTerminatedAsciiStringOption(
+    () => nullTerminatedAsciiStringOption(
       bytes,
       offset + localBasePathOffset,
       offset + linkInfoSize,

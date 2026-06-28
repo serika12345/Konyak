@@ -1,6 +1,11 @@
-part of 'konyak_cli_client.dart';
+import 'dart:convert';
 
-ProgramSettingsLoadResult _parseProgramSettingsPayload(String payload) {
+import '../bottles/bottle_summary.dart';
+import '../settings/app_settings_summary.dart';
+import 'konyak_cli_program_result_types.dart';
+import 'konyak_cli_settings_result_types.dart';
+
+ProgramSettingsLoadResult parseProgramSettingsPayload(String payload) {
   final Object? decoded;
   try {
     decoded = jsonDecode(payload);
@@ -47,7 +52,7 @@ ProgramSettingsLoadResult _parseProgramSettingsPayload(String payload) {
 
   final bottleId = programSettings['bottleId'];
   final programPath = programSettings['programPath'];
-  final settings = _parseProgramSettingsSummary(programSettings['settings']);
+  final settings = parseProgramSettingsSummary(programSettings['settings']);
   if (bottleId is! String || programPath is! String || settings == null) {
     return const ProgramSettingsLoadFailure(
       exitCode: 0,
@@ -63,7 +68,7 @@ ProgramSettingsLoadResult _parseProgramSettingsPayload(String payload) {
   );
 }
 
-AppSettingsLoadResult _parseAppSettingsPayload(String payload) {
+AppSettingsLoadResult parseAppSettingsPayload(String payload) {
   final Object? decoded;
   try {
     decoded = jsonDecode(payload);
@@ -93,7 +98,7 @@ AppSettingsLoadResult _parseAppSettingsPayload(String payload) {
     );
   }
 
-  final settings = _parseAppSettingsSummary(decoded['appSettings']);
+  final settings = parseAppSettingsSummary(decoded['appSettings']);
   if (settings == null) {
     return const AppSettingsLoadFailure(
       exitCode: 0,
@@ -105,7 +110,7 @@ AppSettingsLoadResult _parseAppSettingsPayload(String payload) {
   return LoadedAppSettings(settings);
 }
 
-AppSettingsSummary? _parseAppSettingsSummary(Object? value) {
+AppSettingsSummary? parseAppSettingsSummary(Object? value) {
   if (value is! Map<String, Object?>) {
     return null;
   }
@@ -147,15 +152,15 @@ AppSettingsSummary? _parseAppSettingsSummary(Object? value) {
   );
 }
 
-ProgramSettingsSummary? _parseProgramSettingsSummary(Object? value) {
+ProgramSettingsSummary? parseProgramSettingsSummary(Object? value) {
   if (value is! Map<String, Object?>) {
     return null;
   }
 
   final locale = value['locale'];
   final arguments = value['arguments'];
-  final environment = _parseStringMap(value['environment']);
-  final logging = _parseProgramLoggingSettingsSummary(value['logging']);
+  final environment = parseStringMap(value['environment']);
+  final logging = parseProgramLoggingSettingsSummary(value['logging']);
   if (locale is! String ||
       arguments is! String ||
       environment == null ||
@@ -171,7 +176,7 @@ ProgramSettingsSummary? _parseProgramSettingsSummary(Object? value) {
   );
 }
 
-ProgramLoggingSettingsSummary? _parseProgramLoggingSettingsSummary(
+ProgramLoggingSettingsSummary? parseProgramLoggingSettingsSummary(
   Object? value,
 ) {
   if (value == null) {
@@ -200,7 +205,7 @@ ProgramLoggingSettingsSummary? _parseProgramLoggingSettingsSummary(
   );
 }
 
-Map<String, String>? _parseStringMap(Object? value) {
+Map<String, String>? parseStringMap(Object? value) {
   if (value is! Map<String, Object?>) {
     return null;
   }
@@ -216,6 +221,6 @@ Map<String, String>? _parseStringMap(Object? value) {
   return Map.unmodifiable(environment);
 }
 
-bool _isOptionalString(Object? value) {
+bool isOptionalString(Object? value) {
   return value == null || value is String;
 }

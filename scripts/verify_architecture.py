@@ -26,7 +26,10 @@ def read(relative_path: str) -> str:
 
 
 def dart_files() -> list[str]:
-    return [path for path in list_git_files() if path.endswith(".dart")]
+    return [
+        path for path in list_git_files()
+        if path.endswith(".dart") and (ROOT / path).exists()
+    ]
 
 
 def fail_if_contains(
@@ -61,7 +64,7 @@ def verify_cli_domain_boundaries(failures: list[str], files: list[str]) -> None:
 def verify_flutter_boundaries(failures: list[str], files: list[str]) -> None:
     allowed_dart_io_paths = {
         "apps/konyak/lib/src/app/app_platform_io.dart",
-        "apps/konyak/lib/src/cli/konyak_cli_client.dart",
+        "apps/konyak/lib/src/cli/konyak_cli_client_factory.dart",
         "apps/konyak/lib/src/cli/konyak_cli_process_runner.dart",
         "apps/konyak/lib/src/icons/icon_file_loader_io.dart",
         "apps/konyak/lib/src/logs/log_reader_io.dart",

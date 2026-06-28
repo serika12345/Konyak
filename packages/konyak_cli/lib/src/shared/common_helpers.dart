@@ -1,6 +1,6 @@
-part of '../../konyak_cli.dart';
+import 'package:fpdart/fpdart.dart';
 
-bool _isPathWithinRoot({required String path, required String root}) {
+bool isPathWithinRoot({required String path, required String root}) {
   final normalizedPath = path.replaceAll('\\', '/');
   final normalizedRoot = root
       .replaceAll('\\', '/')
@@ -9,7 +9,7 @@ bool _isPathWithinRoot({required String path, required String root}) {
       normalizedPath.startsWith('$normalizedRoot/');
 }
 
-Option<String> _parentDirectory(String path) {
+Option<String> parentDirectory(String path) {
   final normalized = path.replaceAll('\\', '/').replaceAll(RegExp(r'/+$'), '');
   final index = normalized.lastIndexOf('/');
   if (index <= 0) {
@@ -19,11 +19,11 @@ Option<String> _parentDirectory(String path) {
   return Option.of(normalized.substring(0, index));
 }
 
-String _normalizeFilesystemPath(String path) {
+String normalizeFilesystemPath(String path) {
   return path.trim().replaceAll(RegExp(r'/+$'), '');
 }
 
-String _baseName(String path) {
+String baseName(String path) {
   final normalized = path.replaceAll(RegExp(r'/+$'), '');
   final index = normalized.lastIndexOf('/');
   if (index == -1) {
@@ -33,7 +33,7 @@ String _baseName(String path) {
   return normalized.substring(index + 1);
 }
 
-String _joinPath(String root, Iterable<String> components) {
+String joinPath(String root, Iterable<String> components) {
   var path = root;
   for (final component in components) {
     final normalized = component.replaceAll(RegExp(r'^/+|/+$'), '');
@@ -43,7 +43,7 @@ String _joinPath(String root, Iterable<String> components) {
   return path;
 }
 
-Option<String> _fileNameFromUrl(String url) {
+Option<String> fileNameFromUrl(String url) {
   try {
     final segments = Uri.parse(url).pathSegments;
     if (segments.isEmpty) {

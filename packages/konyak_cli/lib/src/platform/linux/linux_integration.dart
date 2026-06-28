@@ -1,15 +1,17 @@
-part of '../../../konyak_cli.dart';
+import '../../domain/runtime/host_environment.dart';
+import '../../repository/repository_exceptions.dart';
+import '../../shared/common_helpers.dart';
 
-String _desktopEntryQuote(String value) {
+String desktopEntryQuote(String value) {
   final escaped = value.replaceAll(r'\', r'\\').replaceAll('"', r'\"');
   return '"$escaped"';
 }
 
-String _linuxApplicationsHome(HostEnvironment environment) {
-  return _joinPath(_linuxDataHome(environment), const <String>['applications']);
+String linuxApplicationsHome(HostEnvironment environment) {
+  return joinPath(linuxDataHome(environment), const <String>['applications']);
 }
 
-String _linuxDataHome(HostEnvironment environment) {
+String linuxDataHome(HostEnvironment environment) {
   return environment
       .nonEmptyValue('XDG_DATA_HOME')
       .match(
@@ -19,7 +21,7 @@ String _linuxDataHome(HostEnvironment environment) {
               () => throw const BottleRepositoryException(
                 'Unable to resolve Linux data directory.',
               ),
-              (home) => _joinPath(home, const <String>['.local', 'share']),
+              (home) => joinPath(home, const <String>['.local', 'share']),
             ),
         (xdgDataHome) => xdgDataHome,
       );

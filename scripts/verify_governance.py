@@ -4,6 +4,22 @@ import re
 
 
 ROOT = Path(__file__).resolve().parents[1]
+REMOVED_CLI_BACKEND = "packages/konyak_cli/lib/src/io/konyak_cli_backend.dart"
+
+PRODUCTION_DART_ROOTS = [
+    "packages/konyak_cli/lib",
+    "apps/konyak/lib",
+]
+
+PRODUCTION_LINE_LIMIT_BASELINE = {
+    "apps/konyak/lib/src/l10n/konyak_localizations.dart": "Flutter generated localization API",
+    "packages/konyak_cli/lib/src/domain/shared/domain_value_objects.dart": (
+        "Freezed value object declarations are intentionally centralized"
+    ),
+    "packages/konyak_cli/lib/src/domain/program/program_run_request_builders.dart": (
+        "Existing pure request-builder table; split in a dedicated domain slice"
+    ),
+}
 
 CUSTOM_LINT_RULES = [
     "konyak_no_domain_increment",
@@ -13,6 +29,7 @@ CUSTOM_LINT_RULES = [
     "konyak_no_domain_part_of_root",
     "konyak_no_domain_reassignment",
     "konyak_no_domain_var_declaration",
+    "konyak_no_handwritten_part",
     "konyak_no_null_literal_outside_boundary",
     "konyak_no_nullable_bridge_outside_boundary",
     "konyak_no_nullable_sentinel_flow",
@@ -46,6 +63,30 @@ def require_not_contains(relative_path: str, unexpected: str) -> None:
         raise AssertionError(f"{relative_path} must not contain: {unexpected}")
 
 
+def require_section_contains(relative_path: str, marker: str, expected: str) -> None:
+    section = read_section(relative_path, marker)
+    if expected not in section:
+        raise AssertionError(f"{relative_path} section {marker} must contain: {expected}")
+
+
+def require_section_not_contains(relative_path: str, marker: str, unexpected: str) -> None:
+    section = read_section(relative_path, marker)
+    if unexpected in section:
+        raise AssertionError(f"{relative_path} section {marker} must not contain: {unexpected}")
+
+
+def read_section(relative_path: str, marker: str) -> str:
+    text = read_text(relative_path)
+    start = text.find(marker)
+    if start == -1:
+        raise AssertionError(f"{relative_path} must contain section marker: {marker}")
+
+    next_marker = text.find("// ---- ", start + len(marker))
+    if next_marker == -1:
+        return text[start:]
+    return text[start:next_marker]
+
+
 def require_exact(relative_path: str, expected: str) -> None:
     text = read_text(relative_path)
     if text != expected:
@@ -61,6 +102,78 @@ def require_no_files_under(relative_directory: str, glob_pattern: str) -> None:
     for path in sorted((ROOT / relative_directory).glob(glob_pattern)):
         relative_path = path.relative_to(ROOT)
         raise AssertionError(f"{relative_path} must be placed in a concern-specific folder")
+
+
+def require_no_handwritten_parts() -> None:
+    allowed_part_suffixes = (".freezed.dart';", '.g.dart";', ".g.dart';")
+    for relative_directory in ["packages/konyak_cli/lib", "apps/konyak/lib"]:
+        for path in sorted((ROOT / relative_directory).rglob("*.dart")):
+            relative_path = str(path.relative_to(ROOT))
+            if relative_path.endswith(".freezed.dart") or relative_path.endswith(".g.dart"):
+                continue
+
+            for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+                stripped = line.strip()
+                if stripped.startswith("part of "):
+                    raise AssertionError(
+                        f"{relative_path}:{line_number} must not use hand-written part of"
+                    )
+                if stripped.startswith("part ") and not stripped.endswith(allowed_part_suffixes):
+                    raise AssertionError(
+                        f"{relative_path}:{line_number} must not use hand-written part"
+                    )
+
+
+def production_dart_files() -> list[Path]:
+    files: list[Path] = []
+    for relative_directory in PRODUCTION_DART_ROOTS:
+        root = ROOT / relative_directory
+        if not root.exists():
+            continue
+        files.extend(
+            path
+            for path in sorted(root.rglob("*.dart"))
+            if not str(path).endswith(".freezed.dart")
+            and not str(path).endswith(".g.dart")
+        )
+    return files
+
+
+def require_no_transitional_part_paste_markers() -> None:
+    marker_pattern = re.compile(r"^// ---- .+\.dart ----$")
+    for path in production_dart_files():
+        relative_path = str(path.relative_to(ROOT))
+        for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+            if marker_pattern.match(line):
+                raise AssertionError(
+                    f"{relative_path}:{line_number} must not paste old part files with section markers"
+                )
+
+
+def require_production_file_line_limits() -> None:
+    for path in production_dart_files():
+        relative_path = str(path.relative_to(ROOT))
+        line_count = len(path.read_text(encoding="utf-8").splitlines())
+        if line_count <= 1000:
+            continue
+        if relative_path not in PRODUCTION_LINE_LIMIT_BASELINE:
+            raise AssertionError(
+                f"{relative_path} has {line_count} lines; files over 1000 lines need an explicit governance baseline"
+            )
+
+
+def require_no_repository_dartio_defaults() -> None:
+    repository_root = ROOT / "packages/konyak_cli/lib/src/repository"
+    if not repository_root.exists():
+        return
+
+    for path in sorted(repository_root.rglob("*.dart")):
+        text = path.read_text(encoding="utf-8")
+        if "DartIoProgramMetadataExtractor()" in text or "DartIoBottleProgramRepository(" in text:
+            relative_path = path.relative_to(ROOT)
+            raise AssertionError(
+                f"{relative_path} must receive I/O implementations explicitly from composition roots"
+            )
 
 
 def require_not_contains_under(
@@ -205,11 +318,15 @@ def require_result_boundary_rules() -> None:
         "fast_immutable_collections:",
     )
     require_contains(
-        "packages/konyak_cli/lib/konyak_cli.dart",
+        "packages/konyak_cli/lib/src/domain/bottle/bottle_models.dart",
         "package:fast_immutable_collections/fast_immutable_collections.dart",
     )
-    require_contains("packages/konyak_cli/lib/konyak_cli.dart", "package:fpdart/fpdart.dart")
-    require_contains("packages/konyak_cli/lib/konyak_cli.dart", "part 'src/io/io_result.dart';")
+    require_contains("packages/konyak_cli/lib/src/io/io_result.dart", "package:fpdart/fpdart.dart")
+    require_missing(REMOVED_CLI_BACKEND)
+    require_no_handwritten_parts()
+    require_no_transitional_part_paste_markers()
+    require_production_file_line_limits()
+    require_no_repository_dartio_defaults()
     require_no_files_under("packages/konyak_cli/lib/src", "*.dart")
     require_io_implementation_boundaries()
     require_external_payload_parser_boundaries()
@@ -217,7 +334,7 @@ def require_result_boundary_rules() -> None:
 
     for expected in [
         "typedef IoResult<T> = Either<String, T>",
-        "Either<String, T> _ioResult<T>",
+        "Either<String, T> ioResult<T>",
         "Right<String, T>",
         "Left<String, T>",
     ]:
@@ -400,12 +517,12 @@ def require_result_boundary_rules() -> None:
     ]:
         require_not_contains("packages/konyak_cli/lib/src/domain/runtime/runtime_models.dart", forbidden)
 
-    result_wrapped_repository_operation_files = [
+    result_wrapped_repository_operation_paths = [
         "packages/konyak_cli/lib/src/repository/file_bottle_repository_mutation_operations.dart",
         "packages/konyak_cli/lib/src/repository/file_bottle_repository_program_operations.dart",
     ]
-    for relative_path in result_wrapped_repository_operation_files:
-        require_contains(relative_path, "_ioResult(")
+    for relative_path in result_wrapped_repository_operation_paths:
+        require_contains(relative_path, "ioResult(")
         require_not_contains(relative_path, "throw BottleRepositoryException")
         require_not_contains(relative_path, "} on FileSystemException")
         require_not_contains(relative_path, "} on FormatException")
@@ -428,24 +545,24 @@ def require_result_boundary_rules() -> None:
         require_contains("packages/konyak_cli/lib/src/domain/program/program_mutation_models.dart", expected)
 
     require_contains(
-        "packages/konyak_cli/lib/src/cli/cli_bottle_results.dart",
+        "packages/konyak_cli/lib/src/cli/cli_commands.dart",
         "code: 'bottleRepositoryError'",
     )
 
 
 def require_external_payload_parser_boundaries() -> None:
     external_payload_helper_markers = [
-        "_objectMap(",
-        "_stringMap(",
-        "_processOutputToString(",
-        "_readUint16(",
-        "_readUint32(",
-        "_nullableOption(",
-        "_readUint16Option(",
-        "_readUint32Option(",
-        "_nullTerminatedAsciiString",
-        "_nullTerminatedUtf16LeString",
-        "_nullByteOffset(",
+        "objectMap(",
+        "stringMap(",
+        "processOutputToString(",
+        "readUint16(",
+        "readUint32(",
+        "nullableOption(",
+        "readUint16Option(",
+        "readUint32Option(",
+        "nullTerminatedAsciiString",
+        "nullTerminatedUtf16LeString",
+        "nullByteOffset(",
     ]
 
     for unexpected in [
@@ -455,7 +572,7 @@ def require_external_payload_parser_boundaries() -> None:
         "Uint8List",
         "Map<String, dynamic>",
     ]:
-        require_not_contains("packages/konyak_cli/lib/src/shared/common_helpers.dart", unexpected)
+        require_not_contains("packages/konyak_cli/lib/src/shared/model_constants.dart", unexpected)
 
     for relative_directory in [
         "packages/konyak_cli/lib/src/domain",
@@ -479,33 +596,11 @@ def require_external_payload_parser_boundaries() -> None:
     ]:
         require_missing(relative_path)
 
-    for relative_path in [
-        "packages/konyak_cli/lib/src/io/external_payload_helpers.dart",
-        "packages/konyak_cli/lib/src/io/external_program_launch_records.dart",
-        "packages/konyak_cli/lib/src/io/pe_program_icons.dart",
-        "packages/konyak_cli/lib/src/io/pe_program_image.dart",
-        "packages/konyak_cli/lib/src/io/pe_program_metadata.dart",
-        "packages/konyak_cli/lib/src/io/pe_program_versions.dart",
-        "packages/konyak_cli/lib/src/io/program_registry_parsers.dart",
-        "packages/konyak_cli/lib/src/io/program_shortcut_metadata.dart",
-        "packages/konyak_cli/lib/src/io/program_winetricks_support.dart",
-        "packages/konyak_cli/lib/src/io/wine_process_metadata.dart",
-    ]:
-        require_contains(relative_path, "part of '../../konyak_cli.dart';")
-
-    for expected in [
-        "part 'src/io/external_payload_helpers.dart';",
-        "part 'src/io/external_program_launch_records.dart';",
-        "part 'src/io/program_shortcut_metadata.dart';",
-        "part 'src/io/wine_process_metadata.dart';",
-        "part 'src/io/pe_program_metadata.dart';",
-        "part 'src/io/pe_program_icons.dart';",
-        "part 'src/io/pe_program_image.dart';",
-        "part 'src/io/pe_program_versions.dart';",
-        "part 'src/io/program_registry_parsers.dart';",
-        "part 'src/io/program_winetricks_support.dart';",
-    ]:
-        require_contains("packages/konyak_cli/lib/konyak_cli.dart", expected)
+    for expected in external_payload_helper_markers:
+        require_contains(
+            "packages/konyak_cli/lib/src/io/external_payload_helpers.dart",
+            expected,
+        )
 
     cli_non_boundary_directories = [
         "packages/konyak_cli/lib/src/domain",
@@ -533,7 +628,7 @@ def require_external_payload_parser_boundaries() -> None:
         require_not_contains_under(relative_directory, "*.dart", "Object? value")
 
     flutter_external_payload_boundary_paths = {
-        "apps/konyak/lib/src/home_loader_parts/home_loader_platform_helpers.part.dart",
+        "apps/konyak/lib/src/home_loader/home_loader_platform_helpers.dart",
     }
     for path in sorted((ROOT / "apps/konyak/lib/src").rglob("*.dart")):
         relative_path = str(path.relative_to(ROOT))
@@ -579,16 +674,28 @@ def require_external_payload_parser_boundaries() -> None:
     ]:
         require_missing(relative_path)
 
-    for relative_path in [
-        "packages/konyak_cli/lib/src/io/app_settings_repositories.dart",
-        "packages/konyak_cli/lib/src/io/macos_pinned_launcher_manifests.dart",
-        "packages/konyak_cli/lib/src/io/repository_storage_io.dart",
-        "packages/konyak_cli/lib/src/io/runtime_release_metadata.dart",
-        "packages/konyak_cli/lib/src/io/runtime_release_metadata_assets.dart",
-        "packages/konyak_cli/lib/src/io/runtime_release_metadata_source_manifests.dart",
-        "packages/konyak_cli/lib/src/io/runtime_source_manifest_support.dart",
+    for expected in [
+        "class FileAppSettingsRepository",
+        "macosPinnedLauncherManifestFileName",
+        "String resolveDataHome(HostEnvironment environment)",
+        "ProgramSettingsRecord readProgramSettingsJson(String path)",
+        "RuntimeReleaseMetadata(",
+        "Option<String> runtimeReleaseSourceManifestUrl(",
+        "RuntimeSourceManifest(",
     ]:
-        require_contains(relative_path, "part of '../../konyak_cli.dart';")
+        require_any_contains(
+            [
+                "packages/konyak_cli/lib/src/io/app_settings_repositories.dart",
+                "packages/konyak_cli/lib/src/io/macos_pinned_launchers.dart",
+                "packages/konyak_cli/lib/src/storage/storage_paths.dart",
+                "packages/konyak_cli/lib/src/io/repository_storage_io.dart",
+                "packages/konyak_cli/lib/src/io/runtime_release_metadata.dart",
+                "packages/konyak_cli/lib/src/io/runtime_release_metadata_assets.dart",
+                "packages/konyak_cli/lib/src/io/runtime_release_metadata_source_manifests.dart",
+                "packages/konyak_cli/lib/src/io/runtime_source_manifest_support.dart",
+            ],
+            expected,
+        )
 
 
 def require_typed_domain_string_maps() -> None:
@@ -691,12 +798,12 @@ def require_runtime_ssot_rules() -> None:
         require_contains("justfile", expected)
 
     require_not_contains(
-        "packages/konyak_cli/lib/src/io/wine_run_requests.dart",
+        "packages/konyak_cli/lib/src/domain/bottle/bottle_runtime_settings_models.dart",
         ".macosEnvironment()",
     )
     require_contains(
-        "packages/konyak_cli/lib/src/io/wine_run_requests.dart",
-        ".linuxEnvironment()",
+        "packages/konyak_cli/lib/src/domain/bottle/bottle_runtime_settings_models.dart",
+        "linuxEnvironment()",
     )
     require_contains(
         "runtime/konyak-macos-runtime/.github/workflows/build-runtime.yml",

@@ -1,17 +1,24 @@
-part of '../../konyak_cli.dart';
+import 'package:fpdart/fpdart.dart';
 
-class _FileBottleRepositoryProgramOperations {
-  const _FileBottleRepositoryProgramOperations({
-    required ProgramMetadataExtractor programMetadataExtractor,
-    required IoResult<Option<BottleRecord>> Function(String id) findBottle,
-  }) : _programMetadataExtractor = programMetadataExtractor,
-       _findBottle = findBottle;
+import '../domain/bottle/bottle_models.dart';
+import '../domain/program/pinned_programs.dart';
+import '../domain/program/program_catalog_models.dart';
+import '../domain/program/program_mutation_models.dart';
+import '../io/io_result.dart';
+import '../io/repository_storage_io.dart';
+import '../storage/storage_paths.dart';
 
-  final ProgramMetadataExtractor _programMetadataExtractor;
-  final IoResult<Option<BottleRecord>> Function(String id) _findBottle;
+class FileBottleRepositoryProgramOperations {
+  const FileBottleRepositoryProgramOperations({
+    required this.programMetadataExtractor,
+    required this.findBottle,
+  });
+
+  final ProgramMetadataExtractor programMetadataExtractor;
+  final IoResult<Option<BottleRecord>> Function(String id) findBottle;
 
   ProgramPinResult pinProgram(ProgramPinRequest request) {
-    return _findBottle(request.bottleId.value).fold<ProgramPinResult>(
+    return findBottle(request.bottleId.value).fold<ProgramPinResult>(
       ProgramPinFailed.new,
       (bottle) => bottle.match(
         () => ProgramPinMissing(request.bottleId.value),
@@ -23,11 +30,11 @@ class _FileBottleRepositoryProgramOperations {
           final updated = bottleWithPinnedProgram(
             bottle,
             request,
-            programMetadataExtractor: _programMetadataExtractor,
+            programMetadataExtractor: programMetadataExtractor,
           );
 
-          final writeResult = _ioResult(() {
-            _writeBottleMetadata(updated);
+          final writeResult = ioResult(() {
+            writeBottleMetadata(updated);
           });
           return writeResult.fold<ProgramPinResult>(
             ProgramPinFailed.new,
@@ -39,7 +46,7 @@ class _FileBottleRepositoryProgramOperations {
   }
 
   ProgramUpdateResult unpinProgram(ProgramUnpinRequest request) {
-    return _findBottle(request.bottleId.value).fold<ProgramUpdateResult>(
+    return findBottle(request.bottleId.value).fold<ProgramUpdateResult>(
       ProgramUpdateFailed.new,
       (bottle) => bottle.match(
         () => ProgramUpdateMissingBottle(request.bottleId.value),
@@ -53,8 +60,8 @@ class _FileBottleRepositoryProgramOperations {
             request.programPath.value,
           );
 
-          final writeResult = _ioResult(() {
-            _writeBottleMetadata(updated);
+          final writeResult = ioResult(() {
+            writeBottleMetadata(updated);
           });
           return writeResult.fold<ProgramUpdateResult>(
             ProgramUpdateFailed.new,
@@ -66,7 +73,7 @@ class _FileBottleRepositoryProgramOperations {
   }
 
   ProgramUpdateResult renamePinnedProgram(ProgramRenameRequest request) {
-    return _findBottle(request.bottleId.value).fold<ProgramUpdateResult>(
+    return findBottle(request.bottleId.value).fold<ProgramUpdateResult>(
       ProgramUpdateFailed.new,
       (bottle) => bottle.match(
         () => ProgramUpdateMissingBottle(request.bottleId.value),
@@ -77,8 +84,8 @@ class _FileBottleRepositoryProgramOperations {
 
           final updated = bottleWithRenamedPinnedProgram(bottle, request);
 
-          final writeResult = _ioResult(() {
-            _writeBottleMetadata(updated);
+          final writeResult = ioResult(() {
+            writeBottleMetadata(updated);
           });
           return writeResult.fold<ProgramUpdateResult>(
             ProgramUpdateFailed.new,
@@ -92,14 +99,14 @@ class _FileBottleRepositoryProgramOperations {
   ProgramSettingsReadResult readProgramSettings(
     ProgramSettingsRequest request,
   ) {
-    return _findBottle(request.bottleId.value).fold<ProgramSettingsReadResult>(
+    return findBottle(request.bottleId.value).fold<ProgramSettingsReadResult>(
       ProgramSettingsReadFailed.new,
       (bottle) => bottle.match(
         () => ProgramSettingsReadMissingBottle(request.bottleId.value),
         (bottle) {
-          final readResult = _ioResult(
-            () => _readProgramSettingsJson(
-              _programSettingsJsonPath(
+          final readResult = ioResult(
+            () => readProgramSettingsJson(
+              programSettingsJsonPath(
                 bottle: bottle,
                 programPath: request.programPath.value,
               ),
@@ -117,16 +124,14 @@ class _FileBottleRepositoryProgramOperations {
   ProgramSettingsUpdateResult setProgramSettings(
     ProgramSettingsUpdateRequest request,
   ) {
-    return _findBottle(
-      request.bottleId.value,
-    ).fold<ProgramSettingsUpdateResult>(
+    return findBottle(request.bottleId.value).fold<ProgramSettingsUpdateResult>(
       ProgramSettingsUpdateFailed.new,
       (bottle) => bottle.match(
         () => ProgramSettingsUpdateMissingBottle(request.bottleId.value),
         (bottle) {
-          final writeResult = _ioResult(() {
-            _writeProgramSettingsJson(
-              path: _programSettingsJsonPath(
+          final writeResult = ioResult(() {
+            writeProgramSettingsJson(
+              path: programSettingsJsonPath(
                 bottle: bottle,
                 programPath: request.programPath.value,
               ),

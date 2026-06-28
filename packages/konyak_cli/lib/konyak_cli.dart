@@ -1,50 +1,27 @@
-import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
-import 'dart:math';
-import 'dart:typed_data';
-
-import 'package:args/args.dart' hide Option;
-import 'package:crypto/crypto.dart';
-import 'package:fast_immutable_collections/fast_immutable_collections.dart';
-import 'package:fpdart/fpdart.dart';
-
-import 'src/domain/app/app_settings_models.dart';
-import 'src/domain/bottle/bottle_models.dart';
-import 'src/domain/bottle/bottle_mutation_models.dart';
-import 'src/domain/bottle/bottle_runtime_settings_models.dart';
-import 'src/domain/program/pinned_programs.dart';
-import 'src/domain/program/program_argument_support.dart';
-import 'src/domain/program/program_catalog_models.dart';
-import 'src/domain/program/program_graphics_backend_hints.dart';
-import 'src/domain/program/program_mutation_models.dart';
-import 'src/domain/program/program_registry_models.dart';
-import 'src/domain/program/program_registry_plans.dart';
-import 'src/domain/program/program_run_environment.dart';
-import 'src/domain/program/program_run_models.dart';
-import 'src/domain/program/program_runner.dart';
-import 'src/domain/program/program_settings_models.dart';
-import 'src/domain/runtime/host_environment.dart';
-import 'src/domain/runtime/runtime_catalogs.dart';
-import 'src/domain/runtime/runtime_component_versions.dart';
-import 'src/domain/runtime/runtime_install_operation_models.dart';
-import 'src/domain/runtime/runtime_install_plans.dart';
-import 'src/domain/runtime/runtime_models.dart';
-import 'src/domain/runtime/runtime_package_installation.dart';
-import 'src/domain/runtime/runtime_platform_support.dart';
-import 'src/domain/runtime/runtime_profile_environment.dart';
-import 'src/domain/runtime/runtime_source_archive_planning.dart';
-import 'src/domain/runtime/runtime_source_bundle_models.dart';
-import 'src/domain/runtime/runtime_update_checker.dart';
-import 'src/domain/runtime/runtime_update_support.dart';
-import 'src/domain/runtime/runtime_validation_models.dart';
-import 'src/domain/runtime/runtime_validation_support.dart';
-import 'src/domain/runtime/wine_runtime_paths.dart';
-import 'src/domain/shared/domain_value_objects.dart';
-import 'src/domain/update/app_update_checker.dart';
-import 'src/domain/update/update_records.dart';
-import 'src/shared/model_constants.dart';
-
+export 'src/cli/cli_app_handlers.dart';
+export 'src/cli/cli_app_process_parsers.dart';
+export 'src/cli/cli_app_process_results.dart';
+export 'src/cli/cli_app_runtime_handlers.dart';
+export 'src/cli/cli_bottle_mutation_handlers.dart';
+export 'src/cli/cli_bottle_parsers.dart';
+export 'src/cli/cli_bottle_read_handlers.dart';
+export 'src/cli/cli_bottle_results.dart';
+export 'src/cli/cli_commands.dart';
+export 'src/cli/cli_host_integration_handlers.dart';
+export 'src/cli/cli_json_helpers.dart';
+export 'src/cli/cli_location_parsers.dart';
+export 'src/cli/cli_location_winetricks_handlers.dart';
+export 'src/cli/cli_parsers.dart';
+export 'src/cli/cli_pinned_program_handlers.dart';
+export 'src/cli/cli_program_mutation_parsers.dart';
+export 'src/cli/cli_program_results.dart';
+export 'src/cli/cli_program_run_handlers.dart';
+export 'src/cli/cli_program_run_parsers.dart';
+export 'src/cli/cli_result_model.dart';
+export 'src/cli/cli_results.dart';
+export 'src/cli/cli_runtime_parsers.dart';
+export 'src/cli/cli_update_runtime_results.dart';
+export 'src/cli/cli_wine_process_handlers.dart';
 export 'src/domain/app/app_settings_models.dart';
 export 'src/domain/bottle/bottle_models.dart';
 export 'src/domain/bottle/bottle_mutation_models.dart';
@@ -81,310 +58,98 @@ export 'src/domain/shared/domain_value_objects.dart';
 export 'src/domain/update/app_update_checker.dart';
 export 'src/domain/update/update_records.dart';
 export 'src/domain/update/updates.dart';
+export 'src/io/app_settings_repositories.dart';
+export 'src/io/app_update_checker_io.dart';
+export 'src/io/app_update_handoff_installers.dart';
+export 'src/io/app_update_installer.dart';
+export 'src/io/app_update_paths.dart';
+export 'src/io/bottle_archives.dart';
+export 'src/io/directory_copy_support.dart';
+export 'src/io/external_payload_helpers.dart';
+export 'src/io/external_program_launch_records.dart';
+export 'src/io/file_bottle_repository_io.dart';
+export 'src/io/file_digest_io.dart';
+export 'src/io/gptk_wine_installation.dart';
+export 'src/io/io_result.dart';
+export 'src/io/linux_external_program_launcher_io.dart';
+export 'src/io/linux_external_program_launchers.dart';
+export 'src/io/linux_file_association_io.dart';
+export 'src/io/linux_file_associations.dart';
+export 'src/io/linux_pinned_launchers.dart';
+export 'src/io/linux_wine_install_operations.dart';
+export 'src/io/linux_wine_installation.dart';
+export 'src/io/macos_pinned_launcher_bundle_io.dart';
+export 'src/io/macos_pinned_launcher_cleanup.dart';
+export 'src/io/macos_pinned_launcher_icons.dart';
+export 'src/io/macos_pinned_launcher_manifest_io.dart';
+export 'src/io/macos_pinned_launcher_manifests.dart';
+export 'src/io/macos_pinned_launchers.dart';
+export 'src/io/macos_wine_archive_installation.dart';
+export 'src/io/macos_wine_installation.dart';
+export 'src/io/macos_wine_layout_normalization.dart';
+export 'src/io/pe_program_icon_io.dart';
+export 'src/io/pe_program_icons.dart';
+export 'src/io/pe_program_image.dart';
+export 'src/io/pe_program_metadata.dart';
+export 'src/io/pe_program_resources.dart';
+export 'src/io/pe_program_versions.dart';
+export 'src/io/pinned_program_availability_io.dart';
+export 'src/io/platform_host_paths.dart';
+export 'src/io/platform_io.dart';
+export 'src/io/platform_runtime_sources.dart';
+export 'src/io/program_discovery.dart';
+export 'src/io/program_graphics_backend_hints_io.dart';
+export 'src/io/program_io_services.dart';
+export 'src/io/program_metadata_io.dart';
+export 'src/io/program_registry_parsers.dart';
+export 'src/io/program_run_planner_io.dart';
+export 'src/io/program_shortcut_metadata.dart';
+export 'src/io/program_shortcut_metadata_io.dart';
+export 'src/io/program_winetricks_support.dart';
+export 'src/io/release_metadata_fetcher.dart';
+export 'src/io/repository_storage_io.dart';
+export 'src/io/runtime_archive_install_support.dart';
+export 'src/io/runtime_catalog_factories_io.dart';
+export 'src/io/runtime_executable_probe.dart';
+export 'src/io/runtime_gptk_support.dart';
+export 'src/io/runtime_install_progress_io.dart';
+export 'src/io/runtime_package_installer_io.dart';
+export 'src/io/runtime_platform_records.dart';
+export 'src/io/runtime_probes.dart';
+export 'src/io/runtime_release_metadata.dart';
+export 'src/io/runtime_release_metadata_assets.dart';
+export 'src/io/runtime_release_metadata_source_manifests.dart';
+export 'src/io/runtime_source_archive_downloads.dart';
+export 'src/io/runtime_source_archive_support.dart';
+export 'src/io/runtime_source_manifest_support.dart';
+export 'src/io/runtime_stack_manifest_io.dart';
+export 'src/io/runtime_update_checker_io.dart';
+export 'src/io/wine_process_metadata.dart';
+export 'src/io/wine_process_metadata_io.dart';
+export 'src/io/wine_run_requests.dart';
+export 'src/io/winetricks_io.dart';
+export 'src/platform/linux/linux_integration.dart';
+export 'src/platform/linux/linux_program_run_requests.dart';
+export 'src/platform/linux/linux_wine_install_requests.dart';
+export 'src/platform/linux/linux_wine_install_results.dart';
+export 'src/platform/macos/macos_pinned_launcher_templates.dart';
+export 'src/platform/macos/macos_program_run_requests.dart';
+export 'src/platform/macos/macos_runtime_validator.dart';
+export 'src/platform/macos/macos_setup_checker.dart';
+export 'src/platform/macos/macos_wine_install_requests.dart';
+export 'src/platform/macos/macos_wine_install_results.dart';
+export 'src/platform/platform_location_paths.dart';
+export 'src/platform/platform_terminal_commands.dart';
+export 'src/platform/platform_update_handoff.dart';
+export 'src/repository/composite_bottle_repository.dart';
+export 'src/repository/file_bottle_repository.dart';
+export 'src/repository/file_bottle_repository_archive_operations.dart';
+export 'src/repository/file_bottle_repository_mutation_operations.dart';
+export 'src/repository/file_bottle_repository_program_operations.dart';
+export 'src/repository/file_bottle_repository_read_operations.dart';
+export 'src/repository/memory_bottle_repository.dart';
+export 'src/repository/repository_exceptions.dart';
+export 'src/repository/repository_interfaces.dart';
+export 'src/shared/common_helpers.dart';
 export 'src/shared/model_constants.dart';
-
-part 'src/cli/cli_commands.dart';
-part 'src/cli/cli_app_handlers.dart';
-part 'src/cli/cli_host_integration_handlers.dart';
-part 'src/cli/cli_app_runtime_handlers.dart';
-part 'src/cli/cli_wine_process_handlers.dart';
-part 'src/cli/cli_bottle_read_handlers.dart';
-part 'src/cli/cli_bottle_mutation_handlers.dart';
-part 'src/cli/cli_pinned_program_handlers.dart';
-part 'src/cli/cli_program_run_handlers.dart';
-part 'src/cli/cli_location_winetricks_handlers.dart';
-part 'src/cli/cli_parsers.dart';
-part 'src/cli/cli_app_process_parsers.dart';
-part 'src/cli/cli_bottle_parsers.dart';
-part 'src/cli/cli_program_mutation_parsers.dart';
-part 'src/cli/cli_program_run_parsers.dart';
-part 'src/cli/cli_location_parsers.dart';
-part 'src/cli/cli_runtime_parsers.dart';
-part 'src/cli/cli_results.dart';
-part 'src/cli/cli_program_results.dart';
-part 'src/cli/cli_bottle_results.dart';
-part 'src/cli/cli_app_process_results.dart';
-part 'src/cli/cli_update_runtime_results.dart';
-part 'src/shared/common_helpers.dart';
-part 'src/io/external_payload_helpers.dart';
-part 'src/storage/storage_paths.dart';
-part 'src/io/repository_storage_io.dart';
-part 'src/io/macos_pinned_launchers.dart';
-part 'src/io/macos_pinned_launcher_cleanup.dart';
-part 'src/io/macos_pinned_launcher_bundle_io.dart';
-part 'src/io/macos_pinned_launcher_icons.dart';
-part 'src/io/macos_pinned_launcher_manifest_io.dart';
-part 'src/io/macos_pinned_launcher_manifests.dart';
-part 'src/io/linux_pinned_launchers.dart';
-part 'src/platform/macos/macos_pinned_launcher_templates.dart';
-part 'src/platform/linux/linux_integration.dart';
-part 'src/io/external_program_launch_records.dart';
-part 'src/io/linux_external_program_launcher_io.dart';
-part 'src/io/linux_external_program_launchers.dart';
-part 'src/io/linux_file_association_io.dart';
-part 'src/io/linux_file_associations.dart';
-part 'src/io/bottle_archives.dart';
-part 'src/io/directory_copy_support.dart';
-part 'src/cli/cli_result_model.dart';
-part 'src/repository/repository_interfaces.dart';
-part 'src/repository/repository_exceptions.dart';
-part 'src/io/io_result.dart';
-part 'src/io/program_discovery.dart';
-part 'src/io/file_digest_io.dart';
-part 'src/io/program_metadata_io.dart';
-part 'src/io/program_run_planner_io.dart';
-part 'src/io/platform_io.dart';
-part 'src/io/platform_host_paths.dart';
-part 'src/platform/platform_location_paths.dart';
-part 'src/io/app_update_paths.dart';
-part 'src/io/platform_runtime_sources.dart';
-part 'src/platform/platform_update_handoff.dart';
-part 'src/platform/platform_terminal_commands.dart';
-part 'src/io/program_shortcut_metadata.dart';
-part 'src/io/program_shortcut_metadata_io.dart';
-part 'src/io/pinned_program_availability_io.dart';
-part 'src/io/wine_process_metadata.dart';
-part 'src/io/wine_process_metadata_io.dart';
-part 'src/io/pe_program_metadata.dart';
-part 'src/io/pe_program_icons.dart';
-part 'src/io/pe_program_icon_io.dart';
-part 'src/io/program_graphics_backend_hints_io.dart';
-part 'src/io/pe_program_image.dart';
-part 'src/io/pe_program_resources.dart';
-part 'src/io/pe_program_versions.dart';
-part 'src/io/program_registry_parsers.dart';
-part 'src/io/program_winetricks_support.dart';
-part 'src/io/winetricks_io.dart';
-part 'src/io/program_io_services.dart';
-part 'src/io/app_settings_repositories.dart';
-part 'src/repository/memory_bottle_repository.dart';
-part 'src/repository/composite_bottle_repository.dart';
-part 'src/io/file_bottle_repository_io.dart';
-part 'src/repository/file_bottle_repository_archive_operations.dart';
-part 'src/repository/file_bottle_repository_mutation_operations.dart';
-part 'src/repository/file_bottle_repository_program_operations.dart';
-part 'src/repository/file_bottle_repository_read_operations.dart';
-part 'src/repository/file_bottle_repository.dart';
-part 'src/platform/macos/macos_wine_install_requests.dart';
-part 'src/platform/linux/linux_wine_install_requests.dart';
-part 'src/platform/macos/macos_wine_install_results.dart';
-part 'src/platform/linux/linux_wine_install_results.dart';
-part 'src/io/runtime_install_progress_io.dart';
-part 'src/io/runtime_package_installer_io.dart';
-part 'src/io/gptk_wine_installation.dart';
-part 'src/io/macos_wine_installation.dart';
-part 'src/io/macos_wine_archive_installation.dart';
-part 'src/io/macos_wine_layout_normalization.dart';
-part 'src/io/linux_wine_installation.dart';
-part 'src/io/linux_wine_install_operations.dart';
-part 'src/io/runtime_platform_records.dart';
-part 'src/io/runtime_stack_manifest_io.dart';
-part 'src/io/runtime_source_manifest_support.dart';
-part 'src/io/runtime_source_archive_downloads.dart';
-part 'src/io/runtime_source_archive_support.dart';
-part 'src/io/runtime_archive_install_support.dart';
-part 'src/io/runtime_gptk_support.dart';
-part 'src/io/wine_run_requests.dart';
-part 'src/io/runtime_executable_probe.dart';
-part 'src/platform/macos/macos_runtime_validator.dart';
-part 'src/platform/macos/macos_setup_checker.dart';
-part 'src/platform/linux/linux_program_run_requests.dart';
-part 'src/platform/macos/macos_program_run_requests.dart';
-part 'src/io/release_metadata_fetcher.dart';
-part 'src/io/runtime_release_metadata.dart';
-part 'src/io/runtime_release_metadata_assets.dart';
-part 'src/io/runtime_release_metadata_source_manifests.dart';
-part 'src/io/runtime_update_checker_io.dart';
-part 'src/io/app_update_checker_io.dart';
-part 'src/io/app_update_installer.dart';
-part 'src/io/app_update_handoff_installers.dart';
-part 'src/io/runtime_probes.dart';
-part 'src/io/runtime_catalog_factories_io.dart';
-
-CliResult _jsonSuccess(Map<String, Object?> payload, {int exitCode = 0}) {
-  return CliResult(
-    exitCode: exitCode,
-    stdout: jsonEncode(<String, Object?>{
-      'schemaVersion': cliSchemaVersion,
-      ...payload,
-    }),
-    stderr: '',
-  );
-}
-
-CliResult _unavailableJsonError({
-  required String code,
-  required String subject,
-}) {
-  return _jsonError(
-    exitCode: 74,
-    code: code,
-    message: '$subject is not configured.',
-  );
-}
-
-CliResult _jsonError({
-  required int exitCode,
-  required String code,
-  required String message,
-  Map<String, Object?> extra = const <String, Object?>{},
-}) {
-  return CliResult(
-    exitCode: exitCode,
-    stdout: jsonEncode(<String, Object?>{
-      'schemaVersion': cliSchemaVersion,
-      'error': <String, Object?>{'code': code, 'message': message, ...extra},
-    }),
-    stderr: '',
-  );
-}
-
-CliResult _bottleNotFoundError(String bottleId) {
-  return _jsonError(
-    exitCode: 66,
-    code: 'bottleNotFound',
-    message: 'Bottle not found.',
-    extra: <String, Object?>{'bottleId': bottleId},
-  );
-}
-
-CliResult _createdBottleJsonResult({
-  required BottleRecord bottle,
-  required BottlePrefixInitializer? bottlePrefixInitializer,
-}) {
-  final initializer = bottlePrefixInitializer;
-  if (initializer != null) {
-    final initializationResult = initializer.initialize(bottle);
-    switch (initializationResult) {
-      case BottlePrefixInitialized():
-        break;
-      case BottlePrefixInitializationFailed(:final message):
-        return _jsonError(
-          exitCode: 75,
-          code: 'bottlePrefixInitializationFailed',
-          message: message,
-          extra: <String, Object?>{
-            'bottleId': bottle.id.value,
-            'bottlePath': bottle.path.value,
-          },
-        );
-    }
-  }
-
-  return _bottleJsonResult(bottle);
-}
-
-CliResult _programRunJsonResult({
-  required ProgramRunRequest request,
-  required int processExitCode,
-}) {
-  return _jsonSuccess(<String, Object?>{
-    'run': <String, Object?>{
-      'bottleId': request.bottleId.value,
-      'programPath': request.programPath.value,
-      'runnerKind': request.runnerKind.value,
-      'executable': request.executable.value,
-      'workingDirectory': request.workingDirectory.toNullable()?.value,
-      'argv': request.argv,
-      'logPath': request.logPath.value,
-      'logFileCreated': request.createLogFile,
-      'processExitCode': processExitCode,
-    },
-  });
-}
-
-CliResult _programRunFailedJsonResult({
-  required ProgramRunRequest request,
-  required String message,
-}) {
-  return _jsonError(
-    exitCode: 75,
-    code: 'programRunFailed',
-    message: message,
-    extra: <String, Object?>{
-      'bottleId': request.bottleId.value,
-      'programPath': request.programPath.value,
-      'runnerKind': request.runnerKind.value,
-      'executable': request.executable.value,
-      'workingDirectory': request.workingDirectory.toNullable()?.value,
-      'argv': request.argv,
-      'logPath': request.logPath.value,
-      'logFileCreated': request.createLogFile,
-    },
-  );
-}
-
-String _programRunLog(ProgramRunRequest request, ProcessResult result) {
-  final stdout = _processOutputToString(result.stdout);
-  final stderr = _processOutputToString(result.stderr);
-
-  return _programRunLogContent(
-    request: request,
-    processExitCode: result.exitCode,
-    stdout: stdout,
-    stderr: stderr,
-  );
-}
-
-String _programRunStartupFailureLog(
-  ProgramRunRequest request,
-  String startupError,
-) {
-  return _programRunLogContent(
-    request: request,
-    startupError: startupError,
-    stdout: '',
-    stderr: '',
-  );
-}
-
-String _programRunLogContent({
-  required ProgramRunRequest request,
-  required String stdout,
-  required String stderr,
-  int? processExitCode,
-  String? startupError,
-}) {
-  final environmentLines =
-      request.environment
-          .toMap()
-          .entries
-          .map((entry) => MapEntry(entry.key, '${entry.key}=${entry.value}'))
-          .toList(growable: false)
-        ..sort((left, right) => left.key.compareTo(right.key));
-
-  return <String>[
-    'Konyak Wine Run Log',
-    '',
-    '[Process]',
-    'Runner Kind: ${request.runnerKind.value}',
-    'Executable: ${request.executable.value}',
-    'Working Directory: ${request.workingDirectory.map((value) => value.value).getOrElse(() => '')}',
-    'Arguments: ${jsonEncode(request.arguments)}',
-    'argv: ${jsonEncode(request.argv)}',
-    if (processExitCode != null) 'Process Exit Code: $processExitCode',
-    if (processExitCode != null) 'exitCode: $processExitCode',
-    if (startupError != null) 'Startup Error: $startupError',
-    '',
-    '[Environment]',
-    ...environmentLines.map((entry) => entry.value),
-    '',
-    '[stdout]',
-    stdout,
-    '',
-    '[stderr]',
-    stderr,
-    '',
-  ].join('\n');
-}
-
-String _programRunnerFailureMessage({
-  required String executable,
-  required String message,
-}) {
-  if (message == 'No such file or directory') {
-    return 'Runner executable `$executable` was not found.';
-  }
-
-  return message;
-}
+export 'src/storage/storage_paths.dart';

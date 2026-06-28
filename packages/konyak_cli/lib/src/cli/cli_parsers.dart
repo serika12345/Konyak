@@ -1,11 +1,11 @@
-part of '../../konyak_cli.dart';
+import 'package:args/args.dart' hide Option;
 
-bool _isJsonFlagOnlyCommand(List<String> arguments, String command) {
-  final results = _parseJsonCliCommand(arguments, command: command);
+bool isJsonFlagOnlyCommand(List<String> arguments, String command) {
+  final results = parseJsonCliCommand(arguments, command: command);
   return results != null && results.rest.isEmpty;
 }
 
-ArgResults? _parseJsonCliCommand(
+ArgResults? parseJsonCliCommand(
   List<String> arguments, {
   required String command,
   Iterable<String> options = const <String>[],
@@ -44,7 +44,7 @@ ArgResults? _parseJsonCliCommand(
   return results;
 }
 
-String? _requiredCliOption(ArgResults results, String name) {
+String? requiredCliOption(ArgResults results, String name) {
   if (!results.wasParsed(name)) {
     return null;
   }
@@ -54,15 +54,15 @@ String? _requiredCliOption(ArgResults results, String name) {
   return normalized == null || normalized.isEmpty ? null : normalized;
 }
 
-String? _optionalCliOption(ArgResults results, String name) {
+String? optionalCliOption(ArgResults results, String name) {
   if (!results.wasParsed(name)) {
     return null;
   }
 
-  return _requiredCliOption(results, name);
+  return requiredCliOption(results, name);
 }
 
-String? _requiredCliRest(ArgResults results, {int index = 0}) {
+String? requiredCliRest(ArgResults results, {int index = 0}) {
   if (results.rest.length <= index) {
     return null;
   }
@@ -71,11 +71,11 @@ String? _requiredCliRest(ArgResults results, {int index = 0}) {
   return value.isEmpty ? null : value;
 }
 
-bool _hasRestCount(ArgResults results, int count) {
+bool hasRestCount(ArgResults results, int count) {
   return results.rest.length == count;
 }
 
-bool _hasEmptyParsedCliOption(ArgResults results, String name) {
+bool hasEmptyParsedCliOption(ArgResults results, String name) {
   if (!results.wasParsed(name)) {
     return false;
   }

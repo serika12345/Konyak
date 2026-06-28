@@ -1,9 +1,21 @@
-part of '../home_loader/home_loader.dart';
+import 'dart:async';
 
-extension _KonyakHomeLoaderWinetricks on _KonyakHomeLoaderState {
-  Future<void> _showWinetricks(BottleSummary bottle) async {
-    _updateState(() {
-      _isLoadingWinetricks = true;
+import 'package:flutter/material.dart';
+
+import '../app/dialogs/winetricks_dialog.dart';
+import '../bottles/bottle_summary.dart';
+import '../cli/konyak_cli_program_commands.dart';
+import '../cli/konyak_cli_program_result_types.dart';
+import '../cli/konyak_cli_read_commands.dart';
+import '../cli/konyak_cli_winetricks_result_types.dart';
+import '../l10n/konyak_localizations.dart';
+import 'home_loader.dart';
+import 'home_loader_programs.dart';
+
+extension KonyakHomeLoaderWinetricks on KonyakHomeLoaderState {
+  Future<void> showWinetricks(BottleSummary bottle) async {
+    updateState(() {
+      isLoadingWinetricks = true;
     });
 
     late final WinetricksVerbListLoadResult listResult;
@@ -11,8 +23,8 @@ extension _KonyakHomeLoaderWinetricks on _KonyakHomeLoaderState {
       listResult = await widget.cliClient.listWinetricksVerbs();
     } finally {
       if (mounted) {
-        _updateState(() {
-          _isLoadingWinetricks = false;
+        updateState(() {
+          isLoadingWinetricks = false;
         });
       }
     }
@@ -33,8 +45,8 @@ extension _KonyakHomeLoaderWinetricks on _KonyakHomeLoaderState {
           return;
         }
 
-        _updateState(() {
-          _winetricksInstallProgressMessage = KonyakLocalizations.of(
+        updateState(() {
+          winetricksInstallProgressMessage = KonyakLocalizations.of(
             context,
           ).installingVerb(verb);
         });
@@ -47,8 +59,8 @@ extension _KonyakHomeLoaderWinetricks on _KonyakHomeLoaderState {
           );
         } finally {
           if (mounted) {
-            _updateState(() {
-              _winetricksInstallProgressMessage = null;
+            updateState(() {
+              winetricksInstallProgressMessage = null;
             });
           }
         }
@@ -57,9 +69,9 @@ extension _KonyakHomeLoaderWinetricks on _KonyakHomeLoaderState {
           return;
         }
 
-        _handleProgramRunResult(runResult);
+        handleProgramRunResult(runResult);
       case WinetricksVerbListLoadFailure(:final message):
-        _showSnackBar(message);
+        showSnackBar(message);
     }
   }
 }

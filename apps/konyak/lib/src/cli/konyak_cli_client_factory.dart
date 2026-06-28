@@ -1,4 +1,8 @@
-part of 'konyak_cli_client.dart';
+import 'dart:io';
+
+import 'konyak_cli_client.dart' show KonyakCliClient;
+import 'konyak_cli_launch_config.dart';
+import 'konyak_cli_process_runner.dart';
 
 KonyakCliClient createDefaultKonyakCliClient({
   Map<String, String> environment = const <String, String>{},
@@ -43,10 +47,10 @@ KonyakCliClient createDefaultKonyakCliClient({
   final activeEnvironment = environment.isEmpty
       ? Platform.environment
       : environment;
-  final launchConfig = _konyakCliLaunchConfig(
+  final launchConfig = konyakCliLaunchConfig(
     environment: activeEnvironment,
     resolvedExecutable: Platform.resolvedExecutable,
-    defines: _KonyakCliLaunchDefines(
+    defines: KonyakCliLaunchDefines(
       dartExecutable: dartExecutableDefine,
       cliScript: cliScriptDefine,
       cliExecutable: cliExecutableDefine,

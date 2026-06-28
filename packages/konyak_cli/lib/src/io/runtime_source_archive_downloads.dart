@@ -1,8 +1,17 @@
-part of '../../konyak_cli.dart';
+import 'dart:async';
+import 'dart:io';
 
-typedef _RuntimeStackSourceArchiveDownloadResult = Either<String, Unit>;
+import 'package:fpdart/fpdart.dart';
 
-_RuntimeStackSourceArchiveDownloadResult _downloadRuntimeStackSourceArchive({
+import '../domain/runtime/runtime_package_installation.dart';
+import '../shared/model_constants.dart';
+import 'external_payload_helpers.dart';
+import 'platform_runtime_sources.dart';
+import 'runtime_install_progress_io.dart';
+
+typedef RuntimeStackSourceArchiveDownloadResult = Either<String, Unit>;
+
+RuntimeStackSourceArchiveDownloadResult downloadRuntimeStackSourceArchive({
   required String source,
   required String targetPath,
   required RuntimeInstallProgressSink? progressSink,
@@ -11,9 +20,9 @@ _RuntimeStackSourceArchiveDownloadResult _downloadRuntimeStackSourceArchive({
   required double startFraction,
   required double endFraction,
 }) {
-  final localPath = _localSourcePath(source);
+  final localPath = localSourcePath(source);
   if (localPath != null) {
-    _emitRuntimeInstallProgress(
+    emitRuntimeInstallProgress(
       progressSink,
       stage: stage,
       message: message,
@@ -21,7 +30,7 @@ _RuntimeStackSourceArchiveDownloadResult _downloadRuntimeStackSourceArchive({
     );
     File(targetPath).parent.createSync(recursive: true);
     File(localPath).copySync(targetPath);
-    _emitRuntimeInstallProgress(
+    emitRuntimeInstallProgress(
       progressSink,
       stage: stage,
       message: message,
@@ -30,7 +39,7 @@ _RuntimeStackSourceArchiveDownloadResult _downloadRuntimeStackSourceArchive({
     return const Right<String, Unit>(unit);
   }
 
-  _emitRuntimeInstallProgress(
+  emitRuntimeInstallProgress(
     progressSink,
     stage: stage,
     message: message,
@@ -45,10 +54,10 @@ _RuntimeStackSourceArchiveDownloadResult _downloadRuntimeStackSourceArchive({
   ], runInShell: false);
   if (result.exitCode != 0) {
     return Left<String, Unit>(
-      _commandFailureMessage('download runtime stack component', result),
+      commandFailureMessage('download runtime stack component', result),
     );
   }
-  _emitRuntimeInstallProgress(
+  emitRuntimeInstallProgress(
     progressSink,
     stage: stage,
     message: message,
@@ -57,8 +66,8 @@ _RuntimeStackSourceArchiveDownloadResult _downloadRuntimeStackSourceArchive({
   return const Right<String, Unit>(unit);
 }
 
-Future<_RuntimeStackSourceArchiveDownloadResult>
-_downloadRuntimeStackSourceArchiveStreaming({
+Future<RuntimeStackSourceArchiveDownloadResult>
+downloadRuntimeStackSourceArchiveStreaming({
   required String source,
   required String targetPath,
   required RuntimeInstallProgressSink? progressSink,
@@ -67,9 +76,9 @@ _downloadRuntimeStackSourceArchiveStreaming({
   required double startFraction,
   required double endFraction,
 }) {
-  final localPath = _localSourcePath(source);
+  final localPath = localSourcePath(source);
   if (localPath != null) {
-    return _copyRuntimeStackSourceArchiveStreaming(
+    return copyRuntimeStackSourceArchiveStreaming(
       sourcePath: localPath,
       targetPath: targetPath,
       progressSink: progressSink,
@@ -80,7 +89,7 @@ _downloadRuntimeStackSourceArchiveStreaming({
     );
   }
 
-  return _downloadRuntimeStackSourceUriStreaming(
+  return downloadRuntimeStackSourceUriStreaming(
     source: source,
     targetPath: targetPath,
     progressSink: progressSink,
@@ -91,8 +100,8 @@ _downloadRuntimeStackSourceArchiveStreaming({
   );
 }
 
-Future<_RuntimeStackSourceArchiveDownloadResult>
-_copyRuntimeStackSourceArchiveStreaming({
+Future<RuntimeStackSourceArchiveDownloadResult>
+copyRuntimeStackSourceArchiveStreaming({
   required String sourcePath,
   required String targetPath,
   required RuntimeInstallProgressSink? progressSink,
@@ -108,7 +117,7 @@ _copyRuntimeStackSourceArchiveStreaming({
     File(targetPath).parent.createSync(recursive: true);
     final sink = File(targetPath).openWrite();
 
-    _emitRuntimeInstallProgress(
+    emitRuntimeInstallProgress(
       progressSink,
       stage: stage,
       message: message,
@@ -118,7 +127,7 @@ _copyRuntimeStackSourceArchiveStreaming({
       await for (final chunk in source.openRead()) {
         copiedBytes += chunk.length;
         sink.add(chunk);
-        _emitRuntimeInstallByteProgress(
+        emitRuntimeInstallByteProgress(
           progressSink,
           stage: stage,
           message: message,
@@ -132,7 +141,7 @@ _copyRuntimeStackSourceArchiveStreaming({
       await sink.close();
     }
 
-    _emitRuntimeInstallProgress(
+    emitRuntimeInstallProgress(
       progressSink,
       stage: stage,
       message: message,
@@ -144,8 +153,8 @@ _copyRuntimeStackSourceArchiveStreaming({
   }
 }
 
-Future<_RuntimeStackSourceArchiveDownloadResult>
-_downloadRuntimeStackSourceUriStreaming({
+Future<RuntimeStackSourceArchiveDownloadResult>
+downloadRuntimeStackSourceUriStreaming({
   required String source,
   required String targetPath,
   required RuntimeInstallProgressSink? progressSink,
@@ -163,7 +172,7 @@ _downloadRuntimeStackSourceUriStreaming({
 
   final client = HttpClient();
   try {
-    _emitRuntimeInstallProgress(
+    emitRuntimeInstallProgress(
       progressSink,
       stage: stage,
       message: message,
@@ -191,7 +200,7 @@ _downloadRuntimeStackSourceUriStreaming({
       await for (final chunk in response) {
         receivedBytes += chunk.length;
         sink.add(chunk);
-        _emitRuntimeInstallByteProgress(
+        emitRuntimeInstallByteProgress(
           progressSink,
           stage: stage,
           message: message,
@@ -205,7 +214,7 @@ _downloadRuntimeStackSourceUriStreaming({
       await sink.close();
     }
 
-    _emitRuntimeInstallProgress(
+    emitRuntimeInstallProgress(
       progressSink,
       stage: stage,
       message: message,
@@ -221,7 +230,7 @@ _downloadRuntimeStackSourceUriStreaming({
   }
 }
 
-void _emitRuntimeInstallByteProgress(
+void emitRuntimeInstallByteProgress(
   RuntimeInstallProgressSink? progressSink, {
   required String stage,
   required String message,
@@ -235,7 +244,7 @@ void _emitRuntimeInstallByteProgress(
   }
 
   final byteFraction = copiedBytes / totalBytes;
-  _emitRuntimeInstallProgress(
+  emitRuntimeInstallProgress(
     progressSink,
     stage: stage,
     message: message,
@@ -243,7 +252,7 @@ void _emitRuntimeInstallByteProgress(
   );
 }
 
-void _emitRuntimeInstallProgress(
+void emitRuntimeInstallProgress(
   RuntimeInstallProgressSink? progressSink, {
   required String stage,
   required String message,

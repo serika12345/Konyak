@@ -1,11 +1,20 @@
-part of 'konyak_cli_client.dart';
+import 'dart:async';
+
+import 'konyak_cli_client.dart' show KonyakCliClient;
+import 'konyak_cli_failure_messages.dart';
+import 'konyak_cli_process_runner.dart';
+import 'konyak_cli_result_helpers.dart';
+import 'konyak_cli_runtime_result_types.dart';
+import 'konyak_cli_update_result_types.dart';
+import 'konyak_cli_wine_process_result_types.dart';
+import 'runtime_install_contract.dart';
 
 extension KonyakCliRuntimeCommands on KonyakCliClient {
   Future<RuntimeInstallLoadResult> installMacosWine({
     bool reinstall = false,
     void Function(RuntimeInstallProgress progress)? onProgress,
   }) {
-    return _runtimeInstallResultFromCommand(
+    return runtimeInstallResultFromCommand(
       command: 'install-macos-wine',
       arguments: reinstall ? const <String>['--reinstall'] : const <String>[],
       onProgress: onProgress,
@@ -16,7 +25,7 @@ extension KonyakCliRuntimeCommands on KonyakCliClient {
     bool reinstall = false,
     void Function(RuntimeInstallProgress progress)? onProgress,
   }) {
-    return _runtimeInstallResultFromCommand(
+    return runtimeInstallResultFromCommand(
       command: 'install-linux-wine',
       arguments: reinstall ? const <String>['--reinstall'] : const <String>[],
       onProgress: onProgress,
@@ -24,16 +33,16 @@ extension KonyakCliRuntimeCommands on KonyakCliClient {
   }
 
   Future<ProcessRunResult> installGptkWine({required String sourcePath}) {
-    return _run(['install-gptk-wine', '--from', sourcePath, '--json']);
+    return run(['install-gptk-wine', '--from', sourcePath, '--json']);
   }
 
   Future<ProcessRunResult> openUrl(String url) {
-    return _run(['open-url', url, '--json']);
+    return run(['open-url', url, '--json']);
   }
 
   Future<UpdateCheckLoadResult> checkKonyakUpdate() async {
-    final result = await _run(const ['check-app-update', '--json']);
-    return _updateCheckResultFromCommand(
+    final result = await run(const ['check-app-update', '--json']);
+    return updateCheckResultFromCommand(
       result: result,
       command: 'check-app-update',
       payloadKey: 'appUpdate',
@@ -42,8 +51,8 @@ extension KonyakCliRuntimeCommands on KonyakCliClient {
   }
 
   Future<UpdateCheckLoadResult> checkRuntimeUpdate(String runtimeId) async {
-    final result = await _run(['check-runtime-update', runtimeId, '--json']);
-    return _updateCheckResultFromCommand(
+    final result = await run(['check-runtime-update', runtimeId, '--json']);
+    return updateCheckResultFromCommand(
       result: result,
       command: 'check-runtime-update',
       payloadKey: 'runtimeUpdate',
@@ -54,19 +63,19 @@ extension KonyakCliRuntimeCommands on KonyakCliClient {
   Future<WineProcessTerminationLoadResult> terminateWineProcesses({
     String? bottleId,
   }) async {
-    final result = await _run([
+    final result = await run([
       'terminate-wine-processes',
       if (bottleId != null) ...['--bottle', bottleId],
       '--json',
     ]);
-    return _wineProcessTerminationResultFromCommand(result);
+    return wineProcessTerminationResultFromCommand(result);
   }
 
   Future<WineProcessTerminationLoadResult> terminateWineProcess({
     required String bottleId,
     required String processId,
   }) async {
-    final result = await _run([
+    final result = await run([
       'terminate-wine-process',
       '--bottle',
       bottleId,
@@ -74,21 +83,21 @@ extension KonyakCliRuntimeCommands on KonyakCliClient {
       processId,
       '--json',
     ]);
-    return _wineProcessTerminationResultFromCommand(
+    return wineProcessTerminationResultFromCommand(
       result,
       command: 'terminate-wine-process',
     );
   }
 
   Future<UpdateInstallLoadResult> installKonyakUpdate() async {
-    final result = await _run(const ['install-app-update', '--json']);
-    return _updateInstallResultFromCommand(result);
+    final result = await run(const ['install-app-update', '--json']);
+    return updateInstallResultFromCommand(result);
   }
 
   Future<RuntimeInstallLoadResult> installRuntimeUpdate(
     String runtimeId,
   ) async {
-    final result = await _run(['install-runtime-update', runtimeId, '--json']);
+    final result = await run(['install-runtime-update', runtimeId, '--json']);
     final parsed = parseRuntimeInstallPayload(result.stdout);
 
     return switch (parsed) {
@@ -102,7 +111,7 @@ extension KonyakCliRuntimeCommands on KonyakCliClient {
       ParsedRuntimeInstall() ||
       RuntimeInstallParseFailure() => RuntimeInstallLoadFailure(
         exitCode: result.exitCode,
-        message: _installRuntimeFailureMessage(result),
+        message: installRuntimeFailureMessage(result),
         diagnostic: result.stderr,
       ),
     };

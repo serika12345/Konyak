@@ -1,21 +1,31 @@
-part of '../../konyak_cli.dart';
+import '../domain/program/pinned_programs.dart';
+import '../domain/program/program_catalog_models.dart';
+import '../domain/program/program_run_models.dart';
+import '../platform/platform_location_paths.dart';
+import 'cli_bottle_mutation_handlers.dart';
+import 'cli_bottle_parsers.dart';
+import 'cli_bottle_results.dart';
+import 'cli_commands.dart';
+import 'cli_json_helpers.dart';
+import 'cli_location_parsers.dart';
+import 'cli_result_model.dart';
 
-CliResult? _handleLocationCommand(
+CliResult? handleLocationCommand(
   List<String> arguments,
-  _CliCommandContext context,
+  CliCommandContext context,
 ) {
-  final bottleLocationOpenCliRequest = _parseJsonBottleLocationOpenCliRequest(
+  final bottleLocationOpenCliRequest = parseJsonBottleLocationOpenCliRequest(
     arguments,
   );
   if (bottleLocationOpenCliRequest != null) {
-    return _openBottleLocationJsonResult(bottleLocationOpenCliRequest, context);
+    return openBottleLocationJsonResult(bottleLocationOpenCliRequest, context);
   }
 
-  final programLocationOpenCliRequest = _parseJsonProgramLocationOpenCliRequest(
+  final programLocationOpenCliRequest = parseJsonProgramLocationOpenCliRequest(
     arguments,
   );
   if (programLocationOpenCliRequest != null) {
-    return _openProgramLocationJsonResult(
+    return openProgramLocationJsonResult(
       programLocationOpenCliRequest,
       context,
     );
@@ -24,44 +34,44 @@ CliResult? _handleLocationCommand(
   return null;
 }
 
-CliResult _openBottleLocationJsonResult(
-  _BottleLocationOpenCliRequest request,
-  _CliCommandContext context,
+CliResult openBottleLocationJsonResult(
+  BottleLocationOpenCliRequest request,
+  CliCommandContext context,
 ) {
   final repository = context.bottleRepository;
   if (repository == null) {
-    return _bottleRepositoryUnavailableError();
+    return bottleRepositoryUnavailableError();
   }
 
   final opener = context.pathOpener;
   if (opener == null) {
-    return _pathOpenerUnavailableError();
+    return pathOpenerUnavailableError();
   }
 
-  return _foundBottleJsonResult(
+  return foundBottleJsonResult(
     result: repository.findBottle(request.bottleId),
     bottleId: request.bottleId,
     onFound: (bottle) {
-      final path = _bottleLocationPath(
+      final path = bottleLocationPath(
         bottle: bottle,
         location: request.location,
       );
       return path.match(
-        () => _jsonError(
+        () => jsonError(
           exitCode: 65,
           code: 'unsupportedBottleLocation',
           message: 'Bottle location is not supported.',
           extra: <String, Object?>{'location': request.location},
         ),
         (path) => switch (opener.openPath(path)) {
-          PathOpenCompleted() => _jsonSuccess(<String, Object?>{
+          PathOpenCompleted() => jsonSuccess(<String, Object?>{
             'openedLocation': <String, Object?>{
               'bottleId': bottle.id.value,
               'location': request.location,
               'path': path,
             },
           }),
-          PathOpenFailed(:final message) => _jsonError(
+          PathOpenFailed(:final message) => jsonError(
             exitCode: 75,
             code: 'bottleLocationOpenFailed',
             message: message,
@@ -77,26 +87,26 @@ CliResult _openBottleLocationJsonResult(
   );
 }
 
-CliResult _openProgramLocationJsonResult(
-  _ProgramLocationOpenCliRequest request,
-  _CliCommandContext context,
+CliResult openProgramLocationJsonResult(
+  ProgramLocationOpenCliRequest request,
+  CliCommandContext context,
 ) {
   final repository = context.bottleRepository;
   if (repository == null) {
-    return _bottleRepositoryUnavailableError();
+    return bottleRepositoryUnavailableError();
   }
 
   final opener = context.pathOpener;
   if (opener == null) {
-    return _pathOpenerUnavailableError();
+    return pathOpenerUnavailableError();
   }
 
-  return _foundBottleJsonResult(
+  return foundBottleJsonResult(
     result: repository.findBottle(request.bottleId),
     bottleId: request.bottleId,
     onFound: (bottle) {
       if (!hasPinnedProgram(bottle, request.programPath)) {
-        return _jsonError(
+        return jsonError(
           exitCode: 66,
           code: 'programNotPinned',
           message: 'Program is not pinned.',
@@ -106,14 +116,14 @@ CliResult _openProgramLocationJsonResult(
 
       final path = request.programPath;
       return switch (opener.revealPath(path)) {
-        PathOpenCompleted() => _jsonSuccess(<String, Object?>{
+        PathOpenCompleted() => jsonSuccess(<String, Object?>{
           'openedProgramLocation': <String, Object?>{
             'bottleId': bottle.id.value,
             'programPath': request.programPath,
             'path': path,
           },
         }),
-        PathOpenFailed(:final message) => _jsonError(
+        PathOpenFailed(:final message) => jsonError(
           exitCode: 75,
           code: 'programLocationOpenFailed',
           message: message,
@@ -128,29 +138,29 @@ CliResult _openProgramLocationJsonResult(
   );
 }
 
-CliResult _pathOpenerUnavailableError() {
-  return _unavailableJsonError(
+CliResult pathOpenerUnavailableError() {
+  return unavailableJsonError(
     code: 'pathOpenerUnavailable',
     subject: 'Path opener',
   );
 }
 
-CliResult? _handleWinetricksVerbCommand(
+CliResult? handleWinetricksVerbCommand(
   List<String> arguments,
-  _CliCommandContext context,
+  CliCommandContext context,
 ) {
-  if (!_isJsonWinetricksVerbListCommand(arguments)) {
+  if (!isJsonWinetricksVerbListCommand(arguments)) {
     return null;
   }
 
-  return _winetricksVerbListJsonResult(
+  return winetricksVerbListJsonResult(
     context.winetricksVerbRepository.listVerbs(),
   );
 }
 
-CliResult _winetricksVerbListJsonResult(WinetricksVerbListResult result) {
+CliResult winetricksVerbListJsonResult(WinetricksVerbListResult result) {
   return switch (result) {
-    WinetricksVerbListCompleted(:final categories) => _jsonSuccess(
+    WinetricksVerbListCompleted(:final categories) => jsonSuccess(
       <String, Object?>{
         'winetricks': <String, Object?>{
           'categories': categories
@@ -159,7 +169,7 @@ CliResult _winetricksVerbListJsonResult(WinetricksVerbListResult result) {
         },
       },
     ),
-    WinetricksVerbListFailed(:final message) => _jsonError(
+    WinetricksVerbListFailed(:final message) => jsonError(
       exitCode: 75,
       code: 'winetricksVerbsUnavailable',
       message: message,

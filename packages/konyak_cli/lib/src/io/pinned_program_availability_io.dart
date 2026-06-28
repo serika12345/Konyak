@@ -1,6 +1,10 @@
-part of '../../konyak_cli.dart';
+import 'dart:io';
 
-bool _isPinnedProgramFileAvailable({
+import '../domain/bottle/bottle_models.dart';
+import 'program_shortcut_metadata.dart';
+import 'program_shortcut_metadata_io.dart';
+
+bool isPinnedProgramFileAvailable({
   required BottleRecord bottle,
   required PinnedProgramRecord program,
 }) {
@@ -8,11 +12,11 @@ bool _isPinnedProgramFileAvailable({
     return false;
   }
 
-  if (!_isShortcutPath(program.path.value)) {
+  if (!isShortcutPath(program.path.value)) {
     return true;
   }
 
-  return _shortcutTargetProgramPath(
+  return shortcutTargetProgramPath(
     bottle: bottle,
     shortcutPath: program.path.value,
   ).match(() => true, (targetPath) => File(targetPath).existsSync());

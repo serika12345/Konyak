@@ -1,30 +1,47 @@
-part of '../../konyak_cli.dart';
+import 'dart:async';
+import 'dart:io';
+
+import 'package:fpdart/fpdart.dart';
+
+import '../domain/program/program_runner.dart';
+import '../domain/runtime/host_environment.dart';
+import '../domain/runtime/runtime_install_plans.dart';
+import '../domain/runtime/runtime_models.dart';
+import '../domain/runtime/runtime_platform_support.dart';
+import '../domain/runtime/runtime_validation_support.dart';
+import '../platform/linux/linux_wine_install_requests.dart';
+import '../platform/linux/linux_wine_install_results.dart';
+import '../shared/common_helpers.dart';
+import 'directory_copy_support.dart';
+import 'linux_wine_install_operations.dart';
+import 'platform_host_paths.dart';
+import 'runtime_install_progress_io.dart';
+import 'runtime_package_installer_io.dart';
+import 'runtime_platform_records.dart';
+import 'runtime_probes.dart';
+import 'runtime_source_archive_downloads.dart';
 
 class DartIoLinuxWineInstaller implements LinuxWineInstaller {
   DartIoLinuxWineInstaller({
     required this.hostPlatform,
     required this.environment,
-    FileStatusProbe fileStatusProbe = const DartIoFileStatusProbe(),
-    RuntimeStackVersionProbe runtimeStackVersionProbe =
-        const DartIoRuntimeStackVersionProbe(),
-    RuntimePackageInstaller runtimePackageInstaller =
-        const DartIoRuntimePackageInstaller(),
-  }) : _fileStatusProbe = fileStatusProbe,
-       _runtimeStackVersionProbe = runtimeStackVersionProbe,
-       _runtimePackageInstaller = runtimePackageInstaller;
+    this.fileStatusProbe = const DartIoFileStatusProbe(),
+    this.runtimeStackVersionProbe = const DartIoRuntimeStackVersionProbe(),
+    this.runtimePackageInstaller = const DartIoRuntimePackageInstaller(),
+  });
 
   factory DartIoLinuxWineInstaller.current() {
     return DartIoLinuxWineInstaller(
-      hostPlatform: _currentHostPlatform(),
+      hostPlatform: currentHostPlatform(),
       environment: HostEnvironment(Platform.environment),
     );
   }
 
   final KonyakHostPlatform hostPlatform;
   final HostEnvironment environment;
-  final FileStatusProbe _fileStatusProbe;
-  final RuntimeStackVersionProbe _runtimeStackVersionProbe;
-  final RuntimePackageInstaller _runtimePackageInstaller;
+  final FileStatusProbe fileStatusProbe;
+  final RuntimeStackVersionProbe runtimeStackVersionProbe;
+  final RuntimePackageInstaller runtimePackageInstaller;
 
   @override
   LinuxWineInstallResult install(
@@ -32,19 +49,19 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
     RuntimeInstallProgressSink? progressSink,
   }) {
     final progress = request.emitProgress ? progressSink : null;
-    _emitRuntimeInstallProgress(
+    emitRuntimeInstallProgress(
       progress,
       stage: 'preparing',
       message: 'Preparing Konyak Linux Wine install...',
       fraction: 0,
     );
 
-    final currentRuntime = _linuxWineRuntimeRecord(
+    final currentRuntime = linuxWineRuntimeRecord(
       environment: environment,
-      fileStatusProbe: _fileStatusProbe,
-      runtimeStackVersionProbe: _runtimeStackVersionProbe,
+      fileStatusProbe: fileStatusProbe,
+      runtimeStackVersionProbe: runtimeStackVersionProbe,
     );
-    final plan = _linuxWineInstallPlan(
+    final plan = linuxWineInstallPlan(
       hostPlatform: hostPlatform,
       environment: environment,
       request: request,
@@ -55,7 +72,7 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
       case RuntimeWineInstallUnsupported(:final message):
         return LinuxWineInstallFailed(message);
       case RuntimeWineInstallAlreadyInstalled(:final runtime):
-        _emitRuntimeInstallProgress(
+        emitRuntimeInstallProgress(
           progress,
           stage: 'complete',
           message: 'Konyak Linux Wine is already installed.',
@@ -68,7 +85,7 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
         :final sourceManifest,
         :final sourceManifestSignature,
       ):
-        return _installLinuxWineStackFromSourceManifest(
+        return installLinuxWineStackFromSourceManifest(
           sourceManifest.value,
           sourceManifestSignature: sourceManifestSignature.asOption
               .toNullable()
@@ -80,7 +97,7 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
         :final archiveSha256,
         :final componentArchivePaths,
       ):
-        return _installLinuxWineArchive(
+        return installLinuxWineArchive(
           archivePath: archivePath.value,
           archiveSha256: archiveSha256.asOption.map(
             (checksum) => checksum.value,
@@ -101,12 +118,12 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
         final tempDirectory = Directory.systemTemp.createTempSync(
           'konyak-linux-wine-',
         );
-        final downloadedArchivePath = _joinPath(tempDirectory.path, [
+        final downloadedArchivePath = joinPath(tempDirectory.path, [
           archiveFileName,
         ]);
 
         try {
-          return _downloadRuntimeStackSourceArchive(
+          return downloadRuntimeStackSourceArchive(
             source: archiveUrl.value,
             targetPath: downloadedArchivePath,
             progressSink: progress,
@@ -116,7 +133,7 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
             endFraction: 0.65,
           ).match(
             LinuxWineInstallFailed.new,
-            (_) => _installLinuxWineArchive(
+            (_) => installLinuxWineArchive(
               archivePath: downloadedArchivePath,
               archiveSha256: archiveSha256.asOption.map(
                 (checksum) => checksum.value,
@@ -132,7 +149,7 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
         } on ProcessException catch (error) {
           return LinuxWineInstallFailed(error.message);
         } finally {
-          _deleteDirectoryIfPresent(tempDirectory);
+          deleteDirectoryIfPresent(tempDirectory);
         }
     }
   }
@@ -142,19 +159,19 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
     RuntimeInstallProgressSink? progressSink,
   }) async {
     final progress = request.emitProgress ? progressSink : null;
-    _emitRuntimeInstallProgress(
+    emitRuntimeInstallProgress(
       progress,
       stage: 'preparing',
       message: 'Preparing Konyak Linux Wine install...',
       fraction: 0,
     );
 
-    final currentRuntime = _linuxWineRuntimeRecord(
+    final currentRuntime = linuxWineRuntimeRecord(
       environment: environment,
-      fileStatusProbe: _fileStatusProbe,
-      runtimeStackVersionProbe: _runtimeStackVersionProbe,
+      fileStatusProbe: fileStatusProbe,
+      runtimeStackVersionProbe: runtimeStackVersionProbe,
     );
-    final plan = _linuxWineInstallPlan(
+    final plan = linuxWineInstallPlan(
       hostPlatform: hostPlatform,
       environment: environment,
       request: request,
@@ -165,7 +182,7 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
       case RuntimeWineInstallUnsupported(:final message):
         return LinuxWineInstallFailed(message);
       case RuntimeWineInstallAlreadyInstalled(:final runtime):
-        _emitRuntimeInstallProgress(
+        emitRuntimeInstallProgress(
           progress,
           stage: 'complete',
           message: 'Konyak Linux Wine is already installed.',
@@ -178,7 +195,7 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
         :final sourceManifest,
         :final sourceManifestSignature,
       ):
-        return _installLinuxWineStackFromSourceManifestStreaming(
+        return installLinuxWineStackFromSourceManifestStreaming(
           sourceManifest.value,
           sourceManifestSignature: sourceManifestSignature.asOption
               .toNullable()
@@ -190,7 +207,7 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
         :final archiveSha256,
         :final componentArchivePaths,
       ):
-        return _installLinuxWineArchive(
+        return installLinuxWineArchive(
           archivePath: archivePath.value,
           archiveSha256: archiveSha256.asOption.map(
             (checksum) => checksum.value,
@@ -211,12 +228,12 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
         final tempDirectory = Directory.systemTemp.createTempSync(
           'konyak-linux-wine-',
         );
-        final downloadedArchivePath = _joinPath(tempDirectory.path, [
+        final downloadedArchivePath = joinPath(tempDirectory.path, [
           archiveFileName,
         ]);
 
         try {
-          return (await _downloadRuntimeStackSourceArchiveStreaming(
+          return (await downloadRuntimeStackSourceArchiveStreaming(
             source: archiveUrl.value,
             targetPath: downloadedArchivePath,
             progressSink: progress,
@@ -226,7 +243,7 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
             endFraction: 0.65,
           )).match(
             LinuxWineInstallFailed.new,
-            (_) => _installLinuxWineArchive(
+            (_) => installLinuxWineArchive(
               archivePath: downloadedArchivePath,
               archiveSha256: archiveSha256.asOption.map(
                 (checksum) => checksum.value,
@@ -242,13 +259,13 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
         } on ProcessException catch (error) {
           return LinuxWineInstallFailed(error.message);
         } finally {
-          _deleteDirectoryIfPresent(tempDirectory);
+          deleteDirectoryIfPresent(tempDirectory);
         }
     }
   }
 }
 
-RuntimeWineInstallPlan _linuxWineInstallPlan({
+RuntimeWineInstallPlan linuxWineInstallPlan({
   required KonyakHostPlatform hostPlatform,
   required HostEnvironment environment,
   required LinuxWineInstallRequest request,

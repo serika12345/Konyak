@@ -1,11 +1,21 @@
-part of 'konyak_cli_client.dart';
+import 'dart:async';
+import 'dart:convert';
+
+import '../bottles/bottle_summary.dart';
+import 'bottle_create_contract.dart';
+import 'bottle_detail_contract.dart';
+import 'konyak_cli_bottle_payload_parsers.dart';
+import 'konyak_cli_bottle_result_types.dart';
+import 'konyak_cli_client.dart' show KonyakCliClient;
+import 'konyak_cli_failure_messages.dart';
+import 'konyak_cli_result_helpers.dart';
 
 extension KonyakCliBottleCommands on KonyakCliClient {
   Future<BottleCreateLoadResult> createBottle({
     required String name,
     required String windowsVersion,
   }) async {
-    final result = await _run([
+    final result = await run([
       'create-bottle',
       '--name',
       name,
@@ -26,7 +36,7 @@ extension KonyakCliBottleCommands on KonyakCliClient {
       BottleCreateConflict() ||
       BottleCreateParseFailure() => BottleCreateLoadFailure(
         exitCode: result.exitCode,
-        message: _createFailureMessage(result),
+        message: createFailureMessage(result),
         diagnostic: result.stderr,
       ),
     };
@@ -36,7 +46,7 @@ extension KonyakCliBottleCommands on KonyakCliClient {
     required String bottleId,
     required String archivePath,
   }) async {
-    final result = await _run([
+    final result = await run([
       'export-bottle-archive',
       bottleId,
       '--archive',
@@ -44,13 +54,13 @@ extension KonyakCliBottleCommands on KonyakCliClient {
       '--json',
     ]);
 
-    final parsed = _parseBottleArchiveExportPayload(result.stdout);
+    final parsed = parseBottleArchiveExportPayload(result.stdout);
     return switch (parsed) {
       ExportedBottleArchive() when result.exitCode == 0 => parsed,
       ExportedBottleArchive() ||
       BottleArchiveExportLoadFailure() => BottleArchiveExportLoadFailure(
         exitCode: result.exitCode,
-        message: _operationFailureMessage(result, 'export-bottle-archive'),
+        message: operationFailureMessage(result, 'export-bottle-archive'),
         diagnostic: result.stderr,
       ),
     };
@@ -59,7 +69,7 @@ extension KonyakCliBottleCommands on KonyakCliClient {
   Future<BottleArchiveImportLoadResult> importBottleArchive({
     required String archivePath,
   }) async {
-    final result = await _run([
+    final result = await run([
       'import-bottle-archive',
       '--archive',
       archivePath,
@@ -74,7 +84,7 @@ extension KonyakCliBottleCommands on KonyakCliClient {
       BottleDetailNotFound() ||
       BottleDetailParseFailure() => BottleArchiveImportLoadFailure(
         exitCode: result.exitCode,
-        message: _operationFailureMessage(result, 'import-bottle-archive'),
+        message: operationFailureMessage(result, 'import-bottle-archive'),
         diagnostic: result.stderr,
       ),
     };
@@ -84,7 +94,7 @@ extension KonyakCliBottleCommands on KonyakCliClient {
     required String bottleId,
     required String windowsVersion,
   }) async {
-    final result = await _run([
+    final result = await run([
       'set-windows-version',
       bottleId,
       '--windows-version',
@@ -104,7 +114,7 @@ extension KonyakCliBottleCommands on KonyakCliClient {
       BottleDetailNotFound() ||
       BottleDetailParseFailure() => BottleUpdateLoadFailure(
         exitCode: result.exitCode,
-        message: _updateFailureMessage(result),
+        message: updateFailureMessage(result),
         diagnostic: result.stderr,
       ),
     };
@@ -114,7 +124,7 @@ extension KonyakCliBottleCommands on KonyakCliClient {
     required String bottleId,
     required BottleRuntimeSettingsSummary runtimeSettings,
   }) async {
-    final result = await _run([
+    final result = await run([
       'set-runtime-settings',
       bottleId,
       '--settings-json',
@@ -122,27 +132,27 @@ extension KonyakCliBottleCommands on KonyakCliClient {
       '--json',
     ]);
 
-    return _bottleUpdateResultFromCommand(
+    return bottleUpdateResultFromCommand(
       result: result,
       command: 'set-runtime-settings',
     );
   }
 
   Future<BottleDeleteLoadResult> deleteBottle(String bottleId) async {
-    final result = await _run(['delete-bottle', bottleId, '--json']);
-    final parsed = _parseBottleDeletePayload(result.stdout);
+    final result = await run(['delete-bottle', bottleId, '--json']);
+    final parsed = parseBottleDeletePayload(result.stdout);
 
     return switch (parsed) {
-      _ParsedBottleDelete(:final bottle) when result.exitCode == 0 =>
+      ParsedBottleDelete(:final bottle) when result.exitCode == 0 =>
         DeletedBottle(bottle),
-      _BottleDeleteNotFound(:final bottleId, :final message)
+      BottleDeleteNotFound(:final bottleId, :final message)
           when result.exitCode == 66 =>
         MissingBottleDelete(bottleId: bottleId, message: message),
-      _ParsedBottleDelete() ||
-      _BottleDeleteNotFound() ||
-      _BottleDeleteParseFailure() => BottleDeleteLoadFailure(
+      ParsedBottleDelete() ||
+      BottleDeleteNotFound() ||
+      BottleDeleteParseFailure() => BottleDeleteLoadFailure(
         exitCode: result.exitCode,
-        message: _deleteFailureMessage(result),
+        message: deleteFailureMessage(result),
         diagnostic: result.stderr,
       ),
     };
@@ -152,7 +162,7 @@ extension KonyakCliBottleCommands on KonyakCliClient {
     required String bottleId,
     required String name,
   }) async {
-    final result = await _run([
+    final result = await run([
       'rename-bottle',
       bottleId,
       '--name',
@@ -160,7 +170,7 @@ extension KonyakCliBottleCommands on KonyakCliClient {
       '--json',
     ]);
 
-    return _bottleUpdateResultFromCommand(
+    return bottleUpdateResultFromCommand(
       result: result,
       command: 'rename-bottle',
     );
@@ -170,7 +180,7 @@ extension KonyakCliBottleCommands on KonyakCliClient {
     required String bottleId,
     required String path,
   }) async {
-    final result = await _run([
+    final result = await run([
       'move-bottle',
       bottleId,
       '--path',
@@ -178,7 +188,7 @@ extension KonyakCliBottleCommands on KonyakCliClient {
       '--json',
     ]);
 
-    return _bottleUpdateResultFromCommand(
+    return bottleUpdateResultFromCommand(
       result: result,
       command: 'move-bottle',
     );

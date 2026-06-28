@@ -1,22 +1,27 @@
-part of '../../konyak_cli.dart';
+import 'package:fpdart/fpdart.dart';
 
-class _FileBottleRepositoryArchiveOperations {
-  const _FileBottleRepositoryArchiveOperations({
+import '../domain/bottle/bottle_models.dart';
+import '../domain/bottle/bottle_mutation_models.dart';
+import '../io/bottle_archives.dart';
+import '../io/io_result.dart';
+
+class FileBottleRepositoryArchiveOperations {
+  const FileBottleRepositoryArchiveOperations({
     required this.bottleDirectory,
-    required IoResult<Option<BottleRecord>> Function(String id) findBottle,
-  }) : _findBottle = findBottle;
+    required this.findBottle,
+  });
 
   final String bottleDirectory;
-  final IoResult<Option<BottleRecord>> Function(String id) _findBottle;
+  final IoResult<Option<BottleRecord>> Function(String id) findBottle;
 
   BottleArchiveExportResult exportBottleArchive(
     BottleArchiveExportRequest request,
   ) {
-    return _findBottle(request.bottleId.value).fold(
+    return findBottle(request.bottleId.value).fold(
       BottleArchiveExportFailed.new,
       (bottle) => bottle.match(
         () => BottleArchiveExportMissing(request.bottleId.value),
-        (bottle) => _exportBottleArchive(
+        (bottle) => writeBottleArchive(
           bottle: bottle,
           archivePath: request.archivePath.value,
         ),
@@ -27,10 +32,10 @@ class _FileBottleRepositoryArchiveOperations {
   BottleArchiveImportResult importBottleArchive(
     BottleArchiveImportRequest request,
   ) {
-    return _importBottleArchive(
+    return readBottleArchive(
       archivePath: request.archivePath.value,
       bottleDirectory: bottleDirectory,
-      hasBottle: (bottleId) => _findBottle(bottleId).fold(
+      hasBottle: (String bottleId) => findBottle(bottleId).fold(
         Left<String, bool>.new,
         (bottle) => Right<String, bool>(bottle.isSome()),
       ),

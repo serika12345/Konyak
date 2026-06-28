@@ -1,42 +1,37 @@
+import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 
-import '../bottles/bottle_summary.dart';
-import '../runs/program_run_summary.dart';
-import '../runtimes/runtime_summary.dart';
-import '../settings/app_settings_summary.dart';
-import '../updates/update_check_summary.dart';
-import 'bottle_create_contract.dart';
-import 'bottle_detail_contract.dart';
-import 'bottle_list_contract.dart';
-import 'bottle_record_contract.dart';
+import 'konyak_cli_failure_messages.dart';
+import 'konyak_cli_process_runner.dart';
+import 'konyak_cli_program_result_types.dart';
+import 'konyak_cli_result_helpers.dart';
+import 'konyak_cli_runtime_result_types.dart';
 import 'program_run_contract.dart';
 import 'runtime_install_contract.dart';
-import 'runtime_list_contract.dart';
 
-part 'konyak_cli_process_runner.dart';
-part 'konyak_cli_launch_config.dart';
-part 'konyak_cli_client_factory.dart';
-part 'konyak_cli_bottle_payload_parsers.dart';
-part 'konyak_cli_program_payload_parsers.dart';
-part 'konyak_cli_settings_payload_parsers.dart';
-part 'konyak_cli_update_payload_parsers.dart';
-part 'konyak_cli_wine_process_payload_parsers.dart';
-part 'konyak_cli_winetricks_payload_parsers.dart';
-part 'konyak_cli_bottle_result_types.dart';
-part 'konyak_cli_program_result_types.dart';
-part 'konyak_cli_runtime_result_types.dart';
-part 'konyak_cli_settings_result_types.dart';
-part 'konyak_cli_update_result_types.dart';
-part 'konyak_cli_wine_process_result_types.dart';
-part 'konyak_cli_winetricks_result_types.dart';
-part 'konyak_cli_failure_messages.dart';
-part 'konyak_cli_result_helpers.dart';
-part 'konyak_cli_read_commands.dart';
-part 'konyak_cli_runtime_commands.dart';
-part 'konyak_cli_settings_commands.dart';
-part 'konyak_cli_bottle_commands.dart';
-part 'konyak_cli_program_commands.dart';
+export 'konyak_cli_bottle_commands.dart';
+export 'konyak_cli_bottle_payload_parsers.dart';
+export 'konyak_cli_bottle_result_types.dart';
+export 'konyak_cli_client_factory.dart';
+export 'konyak_cli_failure_messages.dart';
+export 'konyak_cli_launch_config.dart';
+export 'konyak_cli_process_runner.dart';
+export 'konyak_cli_program_commands.dart';
+export 'konyak_cli_program_payload_parsers.dart';
+export 'konyak_cli_program_result_types.dart';
+export 'konyak_cli_read_commands.dart';
+export 'konyak_cli_result_helpers.dart';
+export 'konyak_cli_runtime_commands.dart';
+export 'konyak_cli_runtime_result_types.dart';
+export 'konyak_cli_settings_commands.dart';
+export 'konyak_cli_settings_payload_parsers.dart';
+export 'konyak_cli_settings_result_types.dart';
+export 'konyak_cli_update_payload_parsers.dart';
+export 'konyak_cli_update_result_types.dart';
+export 'konyak_cli_wine_process_payload_parsers.dart';
+export 'konyak_cli_wine_process_result_types.dart';
+export 'konyak_cli_winetricks_payload_parsers.dart';
+export 'konyak_cli_winetricks_result_types.dart';
 
 final class KonyakCliClient {
   KonyakCliClient({
@@ -54,17 +49,17 @@ final class KonyakCliClient {
   final String? workingDirectory;
   final ProcessRunner processRunner;
 
-  Future<RuntimeInstallLoadResult> _runtimeInstallResultFromCommand({
+  Future<RuntimeInstallLoadResult> runtimeInstallResultFromCommand({
     required String command,
     List<String> arguments = const <String>[],
     required void Function(RuntimeInstallProgress progress)? onProgress,
   }) async {
-    final result = await _runRuntimeInstall(
+    final result = await runRuntimeInstall(
       command: command,
       arguments: arguments,
       onProgress: onProgress,
     );
-    final parsed = _parseRuntimeInstallCommandPayload(result.stdout);
+    final parsed = parseRuntimeInstallCommandPayload(result.stdout);
 
     return switch (parsed) {
       ParsedRuntimeInstall(:final runtime) when result.exitCode == 0 =>
@@ -79,18 +74,18 @@ final class KonyakCliClient {
       RuntimeInstallCommandFailure() ||
       RuntimeInstallParseFailure() => RuntimeInstallLoadFailure(
         exitCode: result.exitCode,
-        message: _installRuntimeFailureMessage(result),
+        message: installRuntimeFailureMessage(result),
         diagnostic: result.stderr,
       ),
     };
   }
 
-  Future<ProgramRunLoadResult> _programRunResultFromCommand({
+  Future<ProgramRunLoadResult> programRunResultFromCommand({
     required List<String> arguments,
     required String Function(ProcessRunResult result) failureMessage,
     void Function(int processId)? onStarted,
   }) async {
-    final result = await _run(arguments, onStarted: onStarted);
+    final result = await run(arguments, onStarted: onStarted);
     final parsed = parseProgramRunPayload(result.stdout);
 
     return switch (parsed) {
@@ -137,7 +132,7 @@ final class KonyakCliClient {
     };
   }
 
-  Future<ProcessRunResult> _run(
+  Future<ProcessRunResult> run(
     List<String> arguments, {
     void Function(int processId)? onStarted,
   }) {
@@ -145,18 +140,18 @@ final class KonyakCliClient {
       executable,
       <String>[...baseArguments, ...arguments],
       workingDirectory: workingDirectory,
-      environment: <String, String>{...environment, ..._launcherEnvironment()},
+      environment: <String, String>{...environment, ...launcherEnvironment()},
       onStarted: onStarted,
     );
   }
 
-  Future<ProcessRunResult> _runRuntimeInstall({
+  Future<ProcessRunResult> runRuntimeInstall({
     required String command,
     List<String> arguments = const <String>[],
     required void Function(RuntimeInstallProgress progress)? onProgress,
   }) {
     if (onProgress == null) {
-      return _run(<String>[command, ...arguments, '--json']);
+      return run(<String>[command, ...arguments, '--json']);
     }
 
     return processRunner.run(
@@ -169,7 +164,7 @@ final class KonyakCliClient {
         '--json',
       ],
       workingDirectory: workingDirectory,
-      environment: <String, String>{...environment, ..._launcherEnvironment()},
+      environment: <String, String>{...environment, ...launcherEnvironment()},
       onStdoutLine: (line) {
         final progress = parseRuntimeInstallProgressPayload(line);
         if (progress != null) {
@@ -179,7 +174,7 @@ final class KonyakCliClient {
     );
   }
 
-  Map<String, String> _launcherEnvironment() {
+  Map<String, String> launcherEnvironment() {
     final environment = <String, String>{
       'KONYAK_PINNED_PROGRAM_LAUNCHER_EXECUTABLE': executable,
       'KONYAK_PINNED_PROGRAM_LAUNCHER_ARGUMENTS_JSON': jsonEncode(

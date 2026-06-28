@@ -1,4 +1,9 @@
-part of '../../konyak_cli.dart';
+import '../domain/runtime/runtime_catalogs.dart';
+import '../domain/runtime/runtime_models.dart';
+import '../domain/runtime/runtime_update_checker.dart';
+import '../domain/runtime/runtime_update_support.dart';
+import '../domain/update/update_records.dart';
+import 'release_metadata_fetcher.dart';
 
 class DartIoRuntimeUpdateChecker implements RuntimeUpdateChecker {
   const DartIoRuntimeUpdateChecker({
@@ -14,11 +19,11 @@ class DartIoRuntimeUpdateChecker implements RuntimeUpdateChecker {
     final runtime = runtimeById(runtimeCatalog.listRuntimes(), runtimeId);
     return runtime.match(
       () => RuntimeUpdateRuntimeNotFound(runtimeId),
-      _checkRuntime,
+      checkRuntime,
     );
   }
 
-  RuntimeUpdateCheckResult _checkRuntime(RuntimeRecord runtime) {
+  RuntimeUpdateCheckResult checkRuntime(RuntimeRecord runtime) {
     final currentVersion = runtimeWineVersion(runtime);
     return runtime.versionUrl.match(
       () => unknownRuntimeUpdateRecord(

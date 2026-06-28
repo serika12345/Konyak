@@ -1,16 +1,23 @@
-part of '../../konyak_cli.dart';
+import 'package:fpdart/fpdart.dart';
 
-Option<String> _linuxTerminalOverride(HostEnvironment environment) {
+import '../domain/bottle/bottle_models.dart';
+import '../domain/runtime/host_environment.dart';
+import '../domain/runtime/wine_runtime_paths.dart';
+import '../io/wine_run_requests.dart';
+import '../shared/common_helpers.dart';
+import 'macos/macos_program_run_requests.dart';
+
+Option<String> linuxTerminalOverride(HostEnvironment environment) {
   return environment.nonEmptyValue('TERMINAL');
 }
 
-String _linuxTerminalLauncherCommand(HostEnvironment environment) {
-  final override = _linuxTerminalOverride(environment);
+String linuxTerminalLauncherCommand(HostEnvironment environment) {
+  final override = linuxTerminalOverride(environment);
   final candidates = <String>[
     ...override.match(
       () => const <String>[],
       (terminal) => <String>[
-        'exec ${_shellQuote(terminal)} -e bash -lc "\$0" sh',
+        'exec ${shellQuote(terminal)} -e bash -lc "\$0" sh',
       ],
     ),
     'if command -v x-terminal-emulator >/dev/null 2>&1; then exec x-terminal-emulator -e bash -lc "\$0" sh; fi',
@@ -31,7 +38,7 @@ String _linuxTerminalLauncherCommand(HostEnvironment environment) {
   return candidates.join('\n');
 }
 
-String _linuxWineTerminalShellCommandWithEnvironment({
+String linuxWineTerminalShellCommandWithEnvironment({
   required BottleRecord bottle,
   required HostEnvironment environment,
   Option<String> initialWineCommand = const Option.none(),
@@ -43,26 +50,26 @@ String _linuxWineTerminalShellCommandWithEnvironment({
     'KONYAK_LINUX_WINE_LIBRARY_PATH',
   );
   final shellSetup = <String>[
-    'cd ${_shellQuote(bottle.path.value)}',
-    'export WINEPREFIX=${_shellQuote(bottle.path.value)}',
-    'export WINE=${_shellQuote(executable)}',
-    'export PATH=${_shellQuote(runtimeBin)}:\$PATH',
+    'cd ${shellQuote(bottle.path.value)}',
+    'export WINEPREFIX=${shellQuote(bottle.path.value)}',
+    'export WINE=${shellQuote(executable)}',
+    'export PATH=${shellQuote(runtimeBin)}:\$PATH',
     ...wineLibraryPath.match(
       () => const <String>[],
       (path) => <String>[
-        'export LD_LIBRARY_PATH=${_shellQuote(path)}:\${LD_LIBRARY_PATH:-}',
+        'export LD_LIBRARY_PATH=${shellQuote(path)}:\${LD_LIBRARY_PATH:-}',
       ],
     ),
-    for (final entry in _linuxWineLogSuppressionEnvironment().toMap().entries)
-      'export ${entry.key}=${_shellQuote(entry.value)}',
-    'alias wine=${_shellQuote(executable)}',
-    'alias wine64=${_shellQuote(executable)}',
-    'alias winecfg=${_shellQuote('$executable winecfg')}',
-    'alias msiexec=${_shellQuote('$executable msiexec')}',
+    for (final entry in linuxWineLogSuppressionEnvironment().toMap().entries)
+      'export ${entry.key}=${shellQuote(entry.value)}',
+    'alias wine=${shellQuote(executable)}',
+    'alias wine64=${shellQuote(executable)}',
+    'alias winecfg=${shellQuote('$executable winecfg')}',
+    'alias msiexec=${shellQuote('$executable msiexec')}',
     ...initialWineCommand.match(
       () => const <String>[],
       (command) => <String>[
-        _wineTerminalInitialCommand(executable: executable, command: command),
+        wineTerminalInitialCommand(executable: executable, command: command),
       ],
     ),
   ];
@@ -75,7 +82,7 @@ String _linuxWineTerminalShellCommandWithEnvironment({
   ].join('\n');
 }
 
-String _macosWineTerminalShellCommand({
+String macosWineTerminalShellCommand({
   required BottleRecord bottle,
   required HostEnvironment environment,
   required Option<int> macosMajorVersion,
@@ -84,60 +91,60 @@ String _macosWineTerminalShellCommand({
   final runtimeBin = macosWineBinFolder(environment);
   final executable = macosWineExecutable(environment);
   return <String>[
-    'cd ${_shellQuote(bottle.path.value)}',
-    'export PATH=${_shellQuote(runtimeBin)}:\$PATH',
-    'export WINE=${_shellQuote(executable)}',
-    'alias wine=${_shellQuote(executable)}',
-    'alias wine64=${_shellQuote(executable)}',
-    'alias winecfg=${_shellQuote('$executable winecfg')}',
-    'alias msiexec=${_shellQuote('$executable msiexec')}',
-    'alias regedit=${_shellQuote('$executable regedit')}',
-    'alias regsvr32=${_shellQuote('$executable regsvr32')}',
-    'alias wineboot=${_shellQuote('$executable wineboot')}',
-    'alias wineconsole=${_shellQuote('$executable wineconsole')}',
-    'alias winedbg=${_shellQuote('$executable winedbg')}',
-    'alias winefile=${_shellQuote('$executable winefile')}',
-    'alias winepath=${_shellQuote('$executable winepath')}',
-    ..._macosWineEnvironment(
+    'cd ${shellQuote(bottle.path.value)}',
+    'export PATH=${shellQuote(runtimeBin)}:\$PATH',
+    'export WINE=${shellQuote(executable)}',
+    'alias wine=${shellQuote(executable)}',
+    'alias wine64=${shellQuote(executable)}',
+    'alias winecfg=${shellQuote('$executable winecfg')}',
+    'alias msiexec=${shellQuote('$executable msiexec')}',
+    'alias regedit=${shellQuote('$executable regedit')}',
+    'alias regsvr32=${shellQuote('$executable regsvr32')}',
+    'alias wineboot=${shellQuote('$executable wineboot')}',
+    'alias wineconsole=${shellQuote('$executable wineconsole')}',
+    'alias winedbg=${shellQuote('$executable winedbg')}',
+    'alias winefile=${shellQuote('$executable winefile')}',
+    'alias winepath=${shellQuote('$executable winepath')}',
+    ...macosWineEnvironment(
       bottle: bottle,
       environment: environment,
       macosMajorVersion: macosMajorVersion,
     ).toMap().entries.map((entry) {
-      return 'export ${entry.key}=${_shellQuote(entry.value)}';
+      return 'export ${entry.key}=${shellQuote(entry.value)}';
     }),
     ...initialWineCommand.match(
       () => const <String>[],
       (command) => <String>[
-        _wineTerminalInitialCommand(executable: executable, command: command),
+        wineTerminalInitialCommand(executable: executable, command: command),
       ],
     ),
   ].join('; ');
 }
 
-String _wineTerminalInitialCommand({
+String wineTerminalInitialCommand({
   required String executable,
   required String command,
 }) {
-  return '${_shellQuote(executable)} ${_shellQuote(command)}';
+  return '${shellQuote(executable)} ${shellQuote(command)}';
 }
 
-String _macosTerminalSetupScriptPath(BottleRecord bottle) {
-  return _joinPath(bottle.path.value, const [
+String macosTerminalSetupScriptPath(BottleRecord bottle) {
+  return joinPath(bottle.path.value, const [
     'logs',
     'konyak-terminal-setup.zsh',
   ]);
 }
 
-String _macosTerminalAppleScript({
+String macosTerminalAppleScript({
   required String shellCommand,
   required String setupScriptPath,
 }) {
-  final setupDirectory = _dirname(setupScriptPath);
-  final escapedSetupDirectory = _appleScriptString(setupDirectory);
-  final escapedSetupFile = _appleScriptString(setupScriptPath);
-  final escapedSetupText = _appleScriptString(shellCommand);
-  final escapedTerminalCommand = _appleScriptString(
-    'source ${_shellQuote(setupScriptPath)}',
+  final setupDirectory = dirname(setupScriptPath);
+  final escapedSetupDirectory = appleScriptString(setupDirectory);
+  final escapedSetupFile = appleScriptString(setupScriptPath);
+  final escapedSetupText = appleScriptString(shellCommand);
+  final escapedTerminalCommand = appleScriptString(
+    'source ${shellQuote(setupScriptPath)}',
   );
 
   return '''
@@ -152,18 +159,18 @@ end tell
 ''';
 }
 
-String _appleScriptString(String value) {
+String appleScriptString(String value) {
   return value
       .replaceAll(r'\', r'\\')
       .replaceAll('"', r'\"')
       .replaceAll('\n', r'\n');
 }
 
-String _shellQuote(String value) {
+String shellQuote(String value) {
   return "'${value.replaceAll("'", "'\"'\"'")}'";
 }
 
-String _prependPath(String path, Option<String> existingPath) {
+String prependPath(String path, Option<String> existingPath) {
   return existingPath.match(() => path, (existingPath) {
     if (existingPath.trim().isEmpty) {
       return path;
@@ -173,11 +180,11 @@ String _prependPath(String path, Option<String> existingPath) {
   });
 }
 
-String _basename(String path) {
+String basename(String path) {
   return path.split('/').last;
 }
 
-String _dirname(String path) {
+String dirname(String path) {
   final index = path.lastIndexOf('/');
   if (index <= 0) {
     return '.';

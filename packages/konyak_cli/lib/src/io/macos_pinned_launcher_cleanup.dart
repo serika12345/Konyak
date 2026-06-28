@@ -1,6 +1,10 @@
-part of '../../konyak_cli.dart';
+import 'dart:io';
 
-void _deleteStaleMacosPinnedProgramLaunchers({
+import '../shared/common_helpers.dart';
+import 'macos_pinned_launcher_manifest_io.dart';
+import 'macos_pinned_launchers.dart';
+
+void deleteStaleMacosPinnedProgramLaunchers({
   required String launcherHome,
   required Set<String> desiredLauncherIds,
   required Map<String, String> desiredLauncherPaths,
@@ -15,18 +19,18 @@ void _deleteStaleMacosPinnedProgramLaunchers({
       continue;
     }
 
-    final manifest = _readPinnedProgramLauncherManifest(
-      _joinPath(entity.path, const [
+    final manifest = readPinnedProgramLauncherManifest(
+      joinPath(entity.path, const [
         'Contents',
         'Resources',
-        _macosPinnedLauncherManifestFileName,
+        macosPinnedLauncherManifestFileName,
       ]),
     );
     final shouldKeep = manifest.match(() => true, (value) {
       final launcherId = value.launcherId.value;
       return desiredLauncherIds.contains(launcherId) &&
           desiredLauncherPaths[launcherId] ==
-              _normalizeFilesystemPath(entity.path);
+              normalizeFilesystemPath(entity.path);
     });
     if (shouldKeep) {
       continue;
@@ -36,7 +40,7 @@ void _deleteStaleMacosPinnedProgramLaunchers({
   }
 }
 
-Set<String> _unmanagedMacosLauncherBundleNames(String launcherHome) {
+Set<String> unmanagedMacosLauncherBundleNames(String launcherHome) {
   final launcherDirectory = Directory(launcherHome);
   if (!launcherDirectory.existsSync()) {
     return <String>{};
@@ -48,15 +52,15 @@ Set<String> _unmanagedMacosLauncherBundleNames(String launcherHome) {
       continue;
     }
 
-    final manifest = _readPinnedProgramLauncherManifest(
-      _joinPath(entity.path, const [
+    final manifest = readPinnedProgramLauncherManifest(
+      joinPath(entity.path, const [
         'Contents',
         'Resources',
-        _macosPinnedLauncherManifestFileName,
+        macosPinnedLauncherManifestFileName,
       ]),
     );
     if (manifest.isNone()) {
-      bundleNames.add(_baseName(entity.path).toLowerCase());
+      bundleNames.add(baseName(entity.path).toLowerCase());
     }
   }
 

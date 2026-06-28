@@ -1,8 +1,18 @@
-part of '../../konyak_cli.dart';
+import 'dart:io';
 
-const _linuxKonyakDesktopEntryId = 'app.konyak.Konyak.desktop';
-const _linuxKonyakIconFileName = 'app.konyak.Konyak.png';
-const _linuxExecutableMimeTypes = <String>[
+import 'package:fpdart/fpdart.dart';
+
+import '../domain/program/program_runner.dart';
+import '../domain/runtime/host_environment.dart';
+import '../platform/linux/linux_integration.dart';
+import '../platform/platform_terminal_commands.dart';
+import '../repository/repository_exceptions.dart';
+import '../shared/common_helpers.dart';
+import 'linux_file_association_io.dart';
+
+const linuxKonyakDesktopEntryId = 'app.konyak.Konyak.desktop';
+const linuxKonyakIconFileName = 'app.konyak.Konyak.png';
+const linuxExecutableMimeTypes = <String>[
   'application/x-ms-dos-executable',
   'application/x-msdownload',
   'application/vnd.microsoft.portable-executable',
@@ -13,13 +23,13 @@ const _linuxExecutableMimeTypes = <String>[
   'text/x-msdos-batch',
 ];
 
-sealed class _LinuxFileAssociationInstallResult {
-  const _LinuxFileAssociationInstallResult();
+sealed class LinuxFileAssociationInstallResult {
+  const LinuxFileAssociationInstallResult();
 }
 
-final class _LinuxFileAssociationsInstalled
-    extends _LinuxFileAssociationInstallResult {
-  const _LinuxFileAssociationsInstalled({
+final class LinuxFileAssociationsInstalled
+    extends LinuxFileAssociationInstallResult {
+  const LinuxFileAssociationsInstalled({
     required this.desktopEntryPath,
     required this.iconPath,
     required this.mimeAppsPath,
@@ -30,14 +40,14 @@ final class _LinuxFileAssociationsInstalled
   final String mimeAppsPath;
 }
 
-final class _LinuxFileAssociationInstallFailed
-    extends _LinuxFileAssociationInstallResult {
-  const _LinuxFileAssociationInstallFailed(this.message);
+final class LinuxFileAssociationInstallFailed
+    extends LinuxFileAssociationInstallResult {
+  const LinuxFileAssociationInstallFailed(this.message);
 
   final String message;
 }
 
-_LinuxFileAssociationInstallResult _installLinuxFileAssociations({
+LinuxFileAssociationInstallResult installLinuxFileAssociations({
   required KonyakHostPlatform hostPlatform,
   required Map<String, String> environment,
 }) {
@@ -48,52 +58,52 @@ _LinuxFileAssociationInstallResult _installLinuxFileAssociations({
         (value) => value == '1',
       );
   if (hostPlatform != KonyakHostPlatform.linux && !forceLinuxFileAssociations) {
-    return const _LinuxFileAssociationInstallFailed(
+    return const LinuxFileAssociationInstallFailed(
       'Linux file associations are supported on Linux only.',
     );
   }
 
-  return _linuxFileAssociationAppExecutable(hostEnvironment).match(
-    () => const _LinuxFileAssociationInstallFailed(
+  return linuxFileAssociationAppExecutable(hostEnvironment).match(
+    () => const LinuxFileAssociationInstallFailed(
       'Unable to resolve the Konyak application executable.',
     ),
     (appExecutable) {
       try {
-        final desktopEntryPath = _joinPath(
-          _linuxApplicationsHome(hostEnvironment),
-          [_linuxKonyakDesktopEntryId],
+        final desktopEntryPath = joinPath(
+          linuxApplicationsHome(hostEnvironment),
+          [linuxKonyakDesktopEntryId],
         );
-        final iconSourcePath = _linuxFileAssociationIconSource(hostEnvironment);
+        final iconSourcePath = linuxFileAssociationIconSource(hostEnvironment);
         final iconPath = iconSourcePath.map(
-          (_) => _linuxKonyakIconPath(hostEnvironment),
+          (_) => linuxKonyakIconPath(hostEnvironment),
         );
-        final mimeAppsPath = _linuxMimeAppsPath(hostEnvironment);
-        _writeLinuxFileAssociationFiles(
+        final mimeAppsPath = linuxMimeAppsPath(hostEnvironment);
+        writeLinuxFileAssociationFiles(
           desktopEntryPath: desktopEntryPath,
-          desktopEntry: _linuxKonyakDesktopEntry(appExecutable: appExecutable),
+          desktopEntry: linuxKonyakDesktopEntry(appExecutable: appExecutable),
           iconSourcePath: iconSourcePath.toNullable(),
           iconTargetPath: iconPath.toNullable(),
           iconThemePath: iconPath
-              .map((_) => _linuxKonyakHicolorIconThemePath(hostEnvironment))
+              .map((_) => linuxKonyakHicolorIconThemePath(hostEnvironment))
               .toNullable(),
           mimeAppsPath: mimeAppsPath,
         );
 
-        return _LinuxFileAssociationsInstalled(
+        return LinuxFileAssociationsInstalled(
           desktopEntryPath: desktopEntryPath,
           iconPath: iconPath,
           mimeAppsPath: mimeAppsPath,
         );
       } on FileSystemException catch (error) {
-        return _LinuxFileAssociationInstallFailed(error.message);
+        return LinuxFileAssociationInstallFailed(error.message);
       } on BottleRepositoryException catch (error) {
-        return _LinuxFileAssociationInstallFailed(error.message);
+        return LinuxFileAssociationInstallFailed(error.message);
       }
     },
   );
 }
 
-Option<String> _linuxFileAssociationAppExecutable(HostEnvironment environment) {
+Option<String> linuxFileAssociationAppExecutable(HostEnvironment environment) {
   for (final key in const <String>[
     'KONYAK_APPIMAGE_PATH',
     'KONYAK_APP_EXECUTABLE',
@@ -107,25 +117,23 @@ Option<String> _linuxFileAssociationAppExecutable(HostEnvironment environment) {
   return const Option.none();
 }
 
-Option<String> _linuxFileAssociationIconSource(HostEnvironment environment) {
+Option<String> linuxFileAssociationIconSource(HostEnvironment environment) {
   return environment.nonEmptyValue('KONYAK_APP_ICON_PATH').match(
     () => environment.nonEmptyValue('KONYAK_APP_EXECUTABLE').flatMap((
       appExecutable,
     ) {
-      final executableDirectory = _dirname(appExecutable);
-      return _firstExistingFilePath(<String>[
-        _joinPath(executableDirectory, const ['data', 'app_icon_256.png']),
-        _joinPath(executableDirectory, const [
+      final executableDirectory = dirname(appExecutable);
+      return firstExistingFilePath(<String>[
+        joinPath(executableDirectory, const ['data', 'app_icon_256.png']),
+        joinPath(executableDirectory, const [
           'share',
           'icons',
           'hicolor',
           '256x256',
           'apps',
-          _linuxKonyakIconFileName,
+          linuxKonyakIconFileName,
         ]),
-        _joinPath(_dirname(executableDirectory), const [
-          _linuxKonyakIconFileName,
-        ]),
+        joinPath(dirname(executableDirectory), const [linuxKonyakIconFileName]),
       ]);
     }),
     (explicitIconPath) {
@@ -139,7 +147,7 @@ Option<String> _linuxFileAssociationIconSource(HostEnvironment environment) {
   );
 }
 
-Option<String> _firstExistingFilePath(Iterable<String> candidates) {
+Option<String> firstExistingFilePath(Iterable<String> candidates) {
   for (final candidate in candidates) {
     if (File(candidate).existsSync()) {
       return Option.of(candidate);
@@ -149,32 +157,32 @@ Option<String> _firstExistingFilePath(Iterable<String> candidates) {
   return const Option.none();
 }
 
-String _linuxKonyakIconPath(HostEnvironment environment) {
-  return _joinPath(_linuxKonyakIconAppsPath(environment), const [
-    _linuxKonyakIconFileName,
+String linuxKonyakIconPath(HostEnvironment environment) {
+  return joinPath(linuxKonyakIconAppsPath(environment), const [
+    linuxKonyakIconFileName,
   ]);
 }
 
-String _linuxKonyakIconAppsPath(HostEnvironment environment) {
-  return _joinPath(_linuxKonyakHicolorIconThemePath(environment), const [
+String linuxKonyakIconAppsPath(HostEnvironment environment) {
+  return joinPath(linuxKonyakHicolorIconThemePath(environment), const [
     '256x256',
     'apps',
   ]);
 }
 
-String _linuxKonyakHicolorIconThemePath(HostEnvironment environment) {
-  return _joinPath(_linuxDataHome(environment), const ['icons', 'hicolor']);
+String linuxKonyakHicolorIconThemePath(HostEnvironment environment) {
+  return joinPath(linuxDataHome(environment), const ['icons', 'hicolor']);
 }
 
-String _linuxKonyakDesktopEntry({required String appExecutable}) {
-  final mimeTypes = '${_linuxExecutableMimeTypes.join(';')};';
+String linuxKonyakDesktopEntry({required String appExecutable}) {
+  final mimeTypes = '${linuxExecutableMimeTypes.join(';')};';
   return <String>[
     '[Desktop Entry]',
     'Version=1.0',
     'Type=Application',
     'Name=Konyak',
     'Comment=Run Windows executables with Konyak.',
-    'Exec=${_desktopEntryQuote(appExecutable)} %f',
+    'Exec=${desktopEntryQuote(appExecutable)} %f',
     'Icon=app.konyak.Konyak',
     'StartupWMClass=app.konyak.Konyak',
     'Terminal=false',
@@ -185,7 +193,7 @@ String _linuxKonyakDesktopEntry({required String appExecutable}) {
   ].join('\n');
 }
 
-String _linuxMimeAppsPath(HostEnvironment environment) {
+String linuxMimeAppsPath(HostEnvironment environment) {
   return environment
       .nonEmptyValue('XDG_CONFIG_HOME')
       .match(
@@ -195,17 +203,17 @@ String _linuxMimeAppsPath(HostEnvironment environment) {
               () => throw const BottleRepositoryException(
                 'Unable to resolve Linux MIME applications file.',
               ),
-              (home) => _joinPath(home, const ['.config', 'mimeapps.list']),
+              (home) => joinPath(home, const ['.config', 'mimeapps.list']),
             ),
-        (xdgConfigHome) => _joinPath(xdgConfigHome, const ['mimeapps.list']),
+        (xdgConfigHome) => joinPath(xdgConfigHome, const ['mimeapps.list']),
       );
 }
 
-String _linuxMimeAppsWithKonyakDefaults({required String existing}) {
+String linuxMimeAppsWithKonyakDefaults({required String existing}) {
   final parsedState = existing
       .split('\n')
       .fold(
-        _LinuxMimeAppsDefaultsState.initial(),
+        LinuxMimeAppsDefaultsState.initial(),
         (state, line) => state.withLine(line),
       );
   final completedState = parsedState.inDefaultApplications
@@ -220,8 +228,8 @@ String _linuxMimeAppsWithKonyakDefaults({required String existing}) {
   return '${output.join('\n').replaceAll(RegExp(r'\n+$'), '')}\n';
 }
 
-final class _LinuxMimeAppsDefaultsState {
-  _LinuxMimeAppsDefaultsState({
+final class LinuxMimeAppsDefaultsState {
+  LinuxMimeAppsDefaultsState({
     required Iterable<String> output,
     required Iterable<String> pendingMimeTypes,
     required this.inDefaultApplications,
@@ -229,10 +237,10 @@ final class _LinuxMimeAppsDefaultsState {
   }) : output = List.unmodifiable(output),
        pendingMimeTypes = Set.unmodifiable(pendingMimeTypes);
 
-  factory _LinuxMimeAppsDefaultsState.initial() {
-    return _LinuxMimeAppsDefaultsState(
+  factory LinuxMimeAppsDefaultsState.initial() {
+    return LinuxMimeAppsDefaultsState(
       output: const <String>[],
-      pendingMimeTypes: _linuxExecutableMimeTypes,
+      pendingMimeTypes: linuxExecutableMimeTypes,
       inDefaultApplications: false,
       wroteDefaultApplications: false,
     );
@@ -243,7 +251,7 @@ final class _LinuxMimeAppsDefaultsState {
   final bool inDefaultApplications;
   final bool wroteDefaultApplications;
 
-  _LinuxMimeAppsDefaultsState withLine(String line) {
+  LinuxMimeAppsDefaultsState withLine(String line) {
     final trimmed = line.trim();
     if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
       return withSectionHeader(line, trimmed: trimmed);
@@ -254,7 +262,7 @@ final class _LinuxMimeAppsDefaultsState {
         : withNonDefaultApplicationLine(line);
   }
 
-  _LinuxMimeAppsDefaultsState withSectionHeader(
+  LinuxMimeAppsDefaultsState withSectionHeader(
     String line, {
     required String trimmed,
   }) {
@@ -270,7 +278,7 @@ final class _LinuxMimeAppsDefaultsState {
     );
   }
 
-  _LinuxMimeAppsDefaultsState withDefaultApplicationLine(String line) {
+  LinuxMimeAppsDefaultsState withDefaultApplicationLine(String line) {
     final separator = line.indexOf('=');
     if (separator <= 0) {
       return withNonDefaultApplicationLine(line);
@@ -279,19 +287,19 @@ final class _LinuxMimeAppsDefaultsState {
     final mimeType = line.substring(0, separator).trim();
     return pendingMimeTypes.contains(mimeType)
         ? copyWith(
-            output: [...output, '$mimeType=$_linuxKonyakDesktopEntryId'],
+            output: [...output, '$mimeType=$linuxKonyakDesktopEntryId'],
             pendingMimeTypes: pendingMimeTypes.difference(<String>{mimeType}),
           )
         : withNonDefaultApplicationLine(line);
   }
 
-  _LinuxMimeAppsDefaultsState withNonDefaultApplicationLine(String line) {
+  LinuxMimeAppsDefaultsState withNonDefaultApplicationLine(String line) {
     return line.isNotEmpty || output.isNotEmpty
         ? copyWith(output: [...output, line])
         : this;
   }
 
-  _LinuxMimeAppsDefaultsState withDefaultApplicationsSection() {
+  LinuxMimeAppsDefaultsState withDefaultApplicationsSection() {
     final outputWithSection = <String>[
       ...output,
       if (output.isNotEmpty && output.last.isNotEmpty) '',
@@ -300,25 +308,25 @@ final class _LinuxMimeAppsDefaultsState {
     return copyWith(output: outputWithSection).withAppendedMimeDefaults();
   }
 
-  _LinuxMimeAppsDefaultsState withAppendedMimeDefaults() {
+  LinuxMimeAppsDefaultsState withAppendedMimeDefaults() {
     return copyWith(
       output: [
         ...output,
-        for (final mimeType in _linuxExecutableMimeTypes)
+        for (final mimeType in linuxExecutableMimeTypes)
           if (pendingMimeTypes.contains(mimeType))
-            '$mimeType=$_linuxKonyakDesktopEntryId',
+            '$mimeType=$linuxKonyakDesktopEntryId',
       ],
       pendingMimeTypes: const <String>{},
     );
   }
 
-  _LinuxMimeAppsDefaultsState copyWith({
+  LinuxMimeAppsDefaultsState copyWith({
     Iterable<String>? output,
     Iterable<String>? pendingMimeTypes,
     bool? inDefaultApplications,
     bool? wroteDefaultApplications,
   }) {
-    return _LinuxMimeAppsDefaultsState(
+    return LinuxMimeAppsDefaultsState(
       output: output ?? this.output,
       pendingMimeTypes: pendingMimeTypes ?? this.pendingMimeTypes,
       inDefaultApplications:

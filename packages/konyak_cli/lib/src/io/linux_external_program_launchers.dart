@@ -1,21 +1,40 @@
-part of '../../konyak_cli.dart';
+import 'dart:convert';
+import 'dart:io';
 
-void _recordExternalProgramRun({
+import 'package:crypto/crypto.dart';
+import 'package:fpdart/fpdart.dart';
+
+import '../domain/bottle/bottle_models.dart';
+import '../domain/program/program_catalog_models.dart';
+import '../domain/program/program_run_models.dart';
+import '../domain/program/program_runner.dart';
+import '../domain/runtime/host_environment.dart';
+import '../domain/shared/domain_value_objects.dart';
+import '../platform/linux/linux_integration.dart';
+import '../repository/repository_exceptions.dart';
+import '../shared/common_helpers.dart';
+import 'external_program_launch_records.dart';
+import 'linux_external_program_launcher_io.dart';
+import 'program_metadata_io.dart';
+import 'program_shortcut_metadata_io.dart';
+import 'wine_process_metadata.dart';
+
+void recordExternalProgramRun({
   required BottleRecord bottle,
   required ProgramRunRequest request,
 }) {
-  final normalizedProgramPath = _externalProgramRunPath(
+  final normalizedProgramPath = externalProgramRunPath(
     bottle: bottle,
     request: request,
   );
   normalizedProgramPath.match(
     () {},
     (programPath) =>
-        _recordExternalProgramLaunch(bottle: bottle, programPath: programPath),
+        recordExternalProgramLaunch(bottle: bottle, programPath: programPath),
   );
 }
 
-void _synchronizeLinuxDesktopLauncherForProgramRun({
+void synchronizeLinuxDesktopLauncherForProgramRun({
   required KonyakHostPlatform hostPlatform,
   required Map<String, String> environment,
   required BottleRecord bottle,
@@ -30,29 +49,29 @@ void _synchronizeLinuxDesktopLauncherForProgramRun({
   }
   final hostEnvironment = HostEnvironment(environment);
 
-  final normalizedProgramPath = _externalProgramRunPath(
+  final normalizedProgramPath = externalProgramRunPath(
     bottle: bottle,
     request: request,
   );
   normalizedProgramPath.match(() {}, (programPath) {
     try {
-      _recordExternalProgramLaunch(bottle: bottle, programPath: programPath);
-      final launcherPath = _linuxExternalProgramLauncherPath(
+      recordExternalProgramLaunch(bottle: bottle, programPath: programPath);
+      final launcherPath = linuxExternalProgramLauncherPath(
         environment: hostEnvironment,
         bottleId: bottle.id.value,
         programPath: programPath,
       );
       final metadata = programMetadataExtractor.extract(
         bottle: bottle,
-        programPath: _metadataProgramPath(
+        programPath: metadataProgramPath(
           bottle: bottle,
           programPath: programPath,
         ),
       );
-      final launcherContents = _linuxExternalProgramDesktopEntry(
+      final launcherContents = linuxExternalProgramDesktopEntry(
         bottle: bottle,
         request: request,
-        launcherName: _linuxExternalProgramLauncherName(
+        launcherName: linuxExternalProgramLauncherName(
           programPath: programPath,
           metadata: metadata,
         ),
@@ -61,7 +80,7 @@ void _synchronizeLinuxDesktopLauncherForProgramRun({
             .map((iconPath) => iconPath.value)
             .toNullable(),
       );
-      _writeLinuxExternalProgramDesktopLauncher(
+      writeLinuxExternalProgramDesktopLauncher(
         launcherPath: launcherPath,
         launcherContents: launcherContents,
       );
@@ -159,34 +178,34 @@ final class LinuxExternalProgramLauncherSyncFailure {
   final String message;
 }
 
-String _linuxExternalProgramLauncherName({
+String linuxExternalProgramLauncherName({
   required String programPath,
   required Option<ProgramMetadataRecord> metadata,
 }) {
-  return metadata.match(() => _baseName(programPath), (programMetadata) {
-    return _presentMetadataValue(programMetadata.productName)
-        .alt(() => _presentMetadataValue(programMetadata.fileDescription))
-        .getOrElse(() => _baseName(programPath));
+  return metadata.match(() => baseName(programPath), (programMetadata) {
+    return presentMetadataValue(programMetadata.productName)
+        .alt(() => presentMetadataValue(programMetadata.fileDescription))
+        .getOrElse(() => baseName(programPath));
   });
 }
 
-Option<String> _presentMetadataValue(Option<StringDomainValueObject> value) {
+Option<String> presentMetadataValue(Option<StringDomainValueObject> value) {
   return value.map((item) => item.value.trim());
 }
 
-String _linuxExternalProgramLauncherPath({
+String linuxExternalProgramLauncherPath({
   required HostEnvironment environment,
   required String bottleId,
   required String programPath,
 }) {
   final digest = sha1.convert(utf8.encode('$bottleId:$programPath')).toString();
-  return _joinPath(_linuxApplicationsHome(environment), <String>[
+  return joinPath(linuxApplicationsHome(environment), <String>[
     'konyak',
     'konyak-$bottleId-${digest.substring(0, 12)}.desktop',
   ]);
 }
 
-String _linuxExternalProgramDesktopEntry({
+String linuxExternalProgramDesktopEntry({
   required BottleRecord bottle,
   required ProgramRunRequest request,
   required String launcherName,
@@ -196,11 +215,11 @@ String _linuxExternalProgramDesktopEntry({
     '[Desktop Entry]',
     'Type=Application',
     'Name=$launcherName',
-    'Exec=${_linuxDesktopEntryExec(request: request, bottle: bottle)}',
+    'Exec=${linuxDesktopEntryExec(request: request, bottle: bottle)}',
     'NoDisplay=true',
     'StartupNotify=true',
-    'StartupWMClass=${_normalizedExecutableName(request.programPath.value)}',
-    'Path=${_parentDirectory(request.programPath.value).match(() => bottle.path.value, (value) => value)}',
+    'StartupWMClass=${normalizedExecutableName(request.programPath.value)}',
+    'Path=${parentDirectory(request.programPath.value).match(() => bottle.path.value, (value) => value)}',
   ];
 
   if (iconPath != null && iconPath.trim().isNotEmpty) {
@@ -210,13 +229,13 @@ String _linuxExternalProgramDesktopEntry({
   return '${lines.join('\n')}\n';
 }
 
-String _linuxDesktopEntryExec({
+String linuxDesktopEntryExec({
   required ProgramRunRequest request,
   required BottleRecord bottle,
 }) {
-  final arguments = request.arguments.map(_desktopEntryQuote).join(' ');
+  final arguments = request.arguments.map(desktopEntryQuote).join(' ');
   final buffer = StringBuffer(
-    'env "WINEPREFIX=${bottle.path.value}" ${_desktopEntryQuote(request.executable.value)}',
+    'env "WINEPREFIX=${bottle.path.value}" ${desktopEntryQuote(request.executable.value)}',
   );
   if (arguments.isNotEmpty) {
     buffer.write(' ');

@@ -1,20 +1,26 @@
-part of '../../konyak_cli.dart';
+import '../io/linux_pinned_launchers.dart';
+import '../repository/repository_interfaces.dart';
+import 'cli_bottle_parsers.dart';
+import 'cli_bottle_results.dart';
+import 'cli_commands.dart';
+import 'cli_json_helpers.dart';
+import 'cli_result_model.dart';
 
-CliResult? _handleBottleReadCommand(
+CliResult? handleBottleReadCommand(
   List<String> arguments, {
-  required _CliCommandContext context,
+  required CliCommandContext context,
   required BottleCatalog activeBottleCatalog,
 }) {
-  if (_isJsonBottleListCommand(arguments)) {
+  if (isJsonBottleListCommand(arguments)) {
     return activeBottleCatalog.listBottles().match<CliResult>(
-      _bottleCatalogFailureJsonResult,
+      bottleCatalogFailureJsonResult,
       (bottles) {
-        _synchronizePinnedProgramLaunchers(
+        synchronizePinnedProgramLaunchers(
           hostPlatform: context.programRunPlanner.hostPlatform,
           environment: context.programRunPlanner.environment.toMap(),
           bottles: bottles,
         );
-        return _jsonSuccess(<String, Object?>{
+        return jsonSuccess(<String, Object?>{
           'bottles': bottles
               .map((bottle) => bottle.toJson())
               .toList(growable: false),
@@ -23,29 +29,29 @@ CliResult? _handleBottleReadCommand(
     );
   }
 
-  final inspectedBottleId = _parseJsonBottleInspectCommand(arguments);
+  final inspectedBottleId = parseJsonBottleInspectCommand(arguments);
   if (inspectedBottleId != null) {
     final bottleId = inspectedBottleId;
-    return _foundBottleJsonResult(
+    return foundBottleJsonResult(
       result: activeBottleCatalog.findBottle(bottleId),
       bottleId: bottleId,
       onFound: (bottle) {
-        final inspectedBottle = _bottleWithRegistrySettings(
+        final inspectedBottle = bottleWithRegistrySettings(
           bottle: bottle,
           programRunPlanner: context.programRunPlanner,
           programRunner: context.programRunner,
         );
-        return _bottleJsonResult(inspectedBottle);
+        return bottleJsonResult(inspectedBottle);
       },
     );
   }
 
-  final bottleProgramsListId = _parseJsonBottleProgramsListCommand(arguments);
+  final bottleProgramsListId = parseJsonBottleProgramsListCommand(arguments);
   if (bottleProgramsListId != null) {
-    return _foundBottleJsonResult(
+    return foundBottleJsonResult(
       result: activeBottleCatalog.findBottle(bottleProgramsListId),
       bottleId: bottleProgramsListId,
-      onFound: (bottle) => _jsonSuccess(<String, Object?>{
+      onFound: (bottle) => jsonSuccess(<String, Object?>{
         'bottlePrograms': <String, Object?>{
           'bottleId': bottle.id.value,
           'programs': context.bottleProgramRepository

@@ -1,7 +1,26 @@
-part of '../../konyak_cli.dart';
+import 'dart:async';
+import 'dart:io';
 
-extension _DartIoLinuxWineInstallerOperations on DartIoLinuxWineInstaller {
-  LinuxWineInstallResult _installLinuxWineArchive({
+import 'package:fpdart/fpdart.dart';
+
+import '../domain/runtime/runtime_component_versions.dart';
+import '../domain/runtime/runtime_package_installation.dart';
+import '../domain/runtime/runtime_platform_support.dart';
+import '../domain/runtime/runtime_source_bundle_models.dart';
+import '../domain/runtime/wine_runtime_paths.dart';
+import '../platform/linux/linux_wine_install_results.dart';
+import 'directory_copy_support.dart';
+import 'linux_wine_installation.dart';
+import 'platform_runtime_sources.dart';
+import 'runtime_install_progress_io.dart';
+import 'runtime_platform_records.dart';
+import 'runtime_probes.dart';
+import 'runtime_source_archive_downloads.dart';
+import 'runtime_source_archive_support.dart';
+import 'runtime_source_manifest_support.dart';
+
+extension DartIoLinuxWineInstallerOperations on DartIoLinuxWineInstaller {
+  LinuxWineInstallResult installLinuxWineArchive({
     required String archivePath,
     required Option<String> archiveSha256,
     Iterable<String> componentArchivePaths = const <String>[],
@@ -9,7 +28,7 @@ extension _DartIoLinuxWineInstallerOperations on DartIoLinuxWineInstaller {
         const RuntimeComponentVersions.empty(),
     RuntimeInstallProgressSink? progressSink,
   }) {
-    final installResult = _runtimePackageInstaller.install(
+    final installResult = runtimePackageInstaller.install(
       RuntimePackageInstallRequest(
         runtimeLabel: 'Linux Wine',
         archivePath: archivePath,
@@ -30,10 +49,10 @@ extension _DartIoLinuxWineInstallerOperations on DartIoLinuxWineInstaller {
         break;
     }
 
-    final runtime = _linuxWineRuntimeRecord(
+    final runtime = linuxWineRuntimeRecord(
       environment: environment,
       fileStatusProbe: const DartIoFileStatusProbe(),
-      runtimeStackVersionProbe: _runtimeStackVersionProbe,
+      runtimeStackVersionProbe: runtimeStackVersionProbe,
     );
     if (runtime.isInstalled.toNullable() != true) {
       return LinuxWineInstallFailed(
@@ -42,7 +61,7 @@ extension _DartIoLinuxWineInstallerOperations on DartIoLinuxWineInstaller {
       );
     }
 
-    _emitRuntimeInstallProgress(
+    emitRuntimeInstallProgress(
       progressSink,
       stage: 'complete',
       message: 'Installed Konyak Linux Wine.',
@@ -52,7 +71,7 @@ extension _DartIoLinuxWineInstallerOperations on DartIoLinuxWineInstaller {
     return LinuxWineInstallCompleted(runtime: runtime);
   }
 
-  LinuxWineInstallResult _installLinuxWineStackFromSourceManifest(
+  LinuxWineInstallResult installLinuxWineStackFromSourceManifest(
     String sourceManifest, {
     required String? sourceManifestSignature,
     required RuntimeInstallProgressSink? progressSink,
@@ -61,23 +80,23 @@ extension _DartIoLinuxWineInstallerOperations on DartIoLinuxWineInstaller {
       'konyak-linux-wine-stack-',
     );
     try {
-      _emitRuntimeInstallProgress(
+      emitRuntimeInstallProgress(
         progressSink,
         stage: 'readingManifest',
         message: 'Reading Konyak Linux Wine manifest...',
         fraction: 0.02,
       );
-      final manifestPayload = _readRuntimeStackSourceText(
+      final manifestPayload = readRuntimeStackSourceText(
         sourceManifest,
         signatureSource: sourceManifestSignature,
       );
-      final manifest = _runtimeStackSourceManifestFromPayload(manifestPayload);
+      final manifest = runtimeStackSourceManifestFromPayload(manifestPayload);
       if (manifest.isNone()) {
         return const LinuxWineInstallFailed(
           'Runtime stack source manifest is invalid.',
         );
       }
-      final bundleResult = _resolveRuntimeStackSourceArchiveBundle(
+      final bundleResult = resolveRuntimeStackSourceArchiveBundle(
         manifest: manifest.getOrElse(
           () => throw StateError('Expected runtime stack source manifest.'),
         ),
@@ -89,7 +108,7 @@ extension _DartIoLinuxWineInstallerOperations on DartIoLinuxWineInstaller {
         RuntimeStackSourceArchiveBundleFailed(:final message) =>
           LinuxWineInstallFailed(message),
         RuntimeStackSourceArchiveBundleResolved(:final bundle) =>
-          _installLinuxWineArchive(
+          installLinuxWineArchive(
             archivePath: bundle.wineArchivePath.value,
             archiveSha256: const Option.none(),
             componentArchivePaths: bundle.componentArchivePaths.map(
@@ -104,12 +123,12 @@ extension _DartIoLinuxWineInstallerOperations on DartIoLinuxWineInstaller {
     } on ProcessException catch (error) {
       return LinuxWineInstallFailed(error.message);
     } finally {
-      _deleteDirectoryIfPresent(tempDirectory);
+      deleteDirectoryIfPresent(tempDirectory);
     }
   }
 
   Future<LinuxWineInstallResult>
-  _installLinuxWineStackFromSourceManifestStreaming(
+  installLinuxWineStackFromSourceManifestStreaming(
     String sourceManifest, {
     required String? sourceManifestSignature,
     required RuntimeInstallProgressSink? progressSink,
@@ -118,24 +137,24 @@ extension _DartIoLinuxWineInstallerOperations on DartIoLinuxWineInstaller {
       'konyak-linux-wine-stack-',
     );
     try {
-      _emitRuntimeInstallProgress(
+      emitRuntimeInstallProgress(
         progressSink,
         stage: 'readingManifest',
         message: 'Reading Konyak Linux Wine manifest...',
         fraction: 0.02,
       );
-      final manifestPayload = _readRuntimeStackSourceText(
+      final manifestPayload = readRuntimeStackSourceText(
         sourceManifest,
         signatureSource: sourceManifestSignature,
       );
-      final manifest = _runtimeStackSourceManifestFromPayload(manifestPayload);
+      final manifest = runtimeStackSourceManifestFromPayload(manifestPayload);
       if (manifest.isNone()) {
         return const LinuxWineInstallFailed(
           'Runtime stack source manifest is invalid.',
         );
       }
       final bundleResult =
-          await _resolveRuntimeStackSourceArchiveBundleStreaming(
+          await resolveRuntimeStackSourceArchiveBundleStreaming(
             manifest: manifest.getOrElse(
               () => throw StateError('Expected runtime stack source manifest.'),
             ),
@@ -147,7 +166,7 @@ extension _DartIoLinuxWineInstallerOperations on DartIoLinuxWineInstaller {
         RuntimeStackSourceArchiveBundleFailed(:final message) =>
           LinuxWineInstallFailed(message),
         RuntimeStackSourceArchiveBundleResolved(:final bundle) =>
-          _installLinuxWineArchive(
+          installLinuxWineArchive(
             archivePath: bundle.wineArchivePath.value,
             archiveSha256: const Option.none(),
             componentArchivePaths: bundle.componentArchivePaths.map(
@@ -162,15 +181,15 @@ extension _DartIoLinuxWineInstallerOperations on DartIoLinuxWineInstaller {
     } on ProcessException catch (error) {
       return LinuxWineInstallFailed(error.message);
     } finally {
-      _deleteDirectoryIfPresent(tempDirectory);
+      deleteDirectoryIfPresent(tempDirectory);
     }
   }
 
-  String _readRuntimeStackSourceText(
+  String readRuntimeStackSourceText(
     String source, {
     required String? signatureSource,
   }) {
-    return _readAndVerifyRuntimeStackSourceText(
+    return readAndVerifyRuntimeStackSourceText(
       source: source,
       signatureSource: signatureSource,
       publicKeyPath: environment

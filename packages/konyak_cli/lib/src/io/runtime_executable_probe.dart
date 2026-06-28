@@ -1,4 +1,8 @@
-part of '../../konyak_cli.dart';
+import 'dart:io';
+
+import '../domain/program/program_run_environment.dart';
+import '../domain/runtime/runtime_validation_models.dart';
+import 'external_payload_helpers.dart';
 
 class DartIoRuntimeExecutableProbe implements RuntimeExecutableProbe {
   const DartIoRuntimeExecutableProbe();
@@ -21,8 +25,8 @@ class DartIoRuntimeExecutableProbe implements RuntimeExecutableProbe {
 
       return RuntimeExecutableProbeResult(
         exitCode: result.exitCode,
-        stdout: _processOutputToString(result.stdout),
-        stderr: _processOutputToString(result.stderr),
+        stdout: processOutputToString(result.stdout),
+        stderr: processOutputToString(result.stderr),
       );
     } on ProcessException catch (error) {
       return RuntimeExecutableProbeResult(

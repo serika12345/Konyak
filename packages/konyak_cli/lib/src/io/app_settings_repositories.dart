@@ -1,17 +1,34 @@
-part of '../../konyak_cli.dart';
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:fpdart/fpdart.dart';
+
+import '../domain/app/app_settings_models.dart';
+import '../domain/program/program_runner.dart';
+import '../domain/runtime/host_environment.dart';
+import '../repository/composite_bottle_repository.dart';
+import '../repository/file_bottle_repository.dart';
+import '../repository/repository_interfaces.dart';
+import '../shared/common_helpers.dart';
+import '../shared/model_constants.dart';
+import '../storage/storage_paths.dart';
+import 'external_payload_helpers.dart';
+import 'io_result.dart';
+import 'platform_host_paths.dart';
+import 'program_metadata_io.dart';
 
 BottleRepository defaultBottleRepositoryFromEnvironment(
   Map<String, String> environment, {
   KonyakHostPlatform? hostPlatform,
   AppSettingsRecord? appSettings,
 }) {
-  final platform = hostPlatform ?? _currentHostPlatform();
+  final platform = hostPlatform ?? currentHostPlatform();
   final hostEnvironment = HostEnvironment(environment);
-  return _defaultFileBottleRepository(
-    dataHome: _resolveBottleDataHome(hostEnvironment, hostPlatform: platform),
+  return defaultFileBottleRepository(
+    dataHome: resolveBottleDataHome(hostEnvironment, hostPlatform: platform),
     defaultBottlePath: Option.of(switch (appSettings) {
       final AppSettingsRecord settings => settings.defaultBottlePath.value,
-      _ => _defaultBottlePath(hostEnvironment, hostPlatform: platform),
+      _ => defaultBottlePath(hostEnvironment, hostPlatform: platform),
     }),
   );
 }
@@ -20,54 +37,61 @@ AppSettingsRepository defaultAppSettingsRepositoryFromEnvironment(
   Map<String, String> environment, {
   KonyakHostPlatform? hostPlatform,
 }) {
-  final platform = hostPlatform ?? _currentHostPlatform();
+  final platform = hostPlatform ?? currentHostPlatform();
   return FileAppSettingsRepository.fromEnvironment(
     environment,
     hostPlatform: platform,
   );
 }
 
-BottleRepository _defaultFileBottleRepository({
+BottleRepository defaultFileBottleRepository({
   required String dataHome,
   Option<String> defaultBottlePath = const Option.none(),
 }) {
-  final defaultBottleDirectory = _joinPath(dataHome, const ['bottles']);
+  final defaultBottleDirectory = joinPath(dataHome, const ['bottles']);
   final usesDefaultBottleDirectory = defaultBottlePath.match(
     () => true,
     (path) =>
-        _normalizeFilesystemPath(path) ==
-        _normalizeFilesystemPath(defaultBottleDirectory),
+        normalizeFilesystemPath(path) ==
+        normalizeFilesystemPath(defaultBottleDirectory),
   );
   if (usesDefaultBottleDirectory) {
     return FileBottleRepository(
       dataHome: dataHome,
       bottleDirectory: defaultBottlePath,
+      programMetadataExtractor: const DartIoProgramMetadataExtractor(),
     );
   }
 
   return CompositeBottleRepository(
-    catalogs: <BottleCatalog>[FileBottleRepository(dataHome: dataHome)],
+    catalogs: <BottleCatalog>[
+      FileBottleRepository(
+        dataHome: dataHome,
+        programMetadataExtractor: const DartIoProgramMetadataExtractor(),
+      ),
+    ],
     writableRepository: FileBottleRepository(
       dataHome: dataHome,
       bottleDirectory: defaultBottlePath,
+      programMetadataExtractor: const DartIoProgramMetadataExtractor(),
     ),
   );
 }
 
 class MemoryAppSettingsRepository implements AppSettingsRepository {
-  MemoryAppSettingsRepository(this._settings);
+  MemoryAppSettingsRepository(this.settings);
 
-  AppSettingsRecord _settings;
+  AppSettingsRecord settings;
 
   @override
   IoResult<AppSettingsRecord> read() {
-    return Right<String, AppSettingsRecord>(_settings);
+    return Right<String, AppSettingsRecord>(settings);
   }
 
   @override
   IoResult<AppSettingsRecord> write(AppSettingsRecord settings) {
-    _settings = settings;
-    return Right<String, AppSettingsRecord>(_settings);
+    this.settings = settings;
+    return Right<String, AppSettingsRecord>(settings);
   }
 }
 
@@ -81,11 +105,11 @@ class FileAppSettingsRepository implements AppSettingsRepository {
     Map<String, String> environment, {
     KonyakHostPlatform? hostPlatform,
   }) {
-    final platform = hostPlatform ?? _currentHostPlatform();
+    final platform = hostPlatform ?? currentHostPlatform();
     final hostEnvironment = HostEnvironment(environment);
     return FileAppSettingsRepository(
-      configHome: _resolveConfigHome(hostEnvironment, hostPlatform: platform),
-      fallbackDefaultBottlePath: _defaultBottlePath(
+      configHome: resolveConfigHome(hostEnvironment, hostPlatform: platform),
+      fallbackDefaultBottlePath: defaultBottlePath(
         hostEnvironment,
         hostPlatform: platform,
       ),
@@ -97,21 +121,21 @@ class FileAppSettingsRepository implements AppSettingsRepository {
 
   @override
   IoResult<AppSettingsRecord> read() {
-    final file = File(_appSettingsJsonPath(configHome));
+    final file = File(appSettingsJsonPath(configHome));
     if (!file.existsSync()) {
       return Right<String, AppSettingsRecord>(
         AppSettingsRecord(defaultBottlePath: fallbackDefaultBottlePath),
       );
     }
 
-    return _ioResult(() {
+    return ioResult(() {
       final decoded = jsonDecode(file.readAsStringSync());
       if (decoded is! Map<String, Object?> ||
           decoded['schemaVersion'] != cliSchemaVersion) {
         throw const FormatException('Unsupported app settings schema.');
       }
 
-      final settings = _appSettingsRecordFromJson(
+      final settings = appSettingsRecordFromJson(
         decoded['appSettings'],
         fallbackDefaultBottlePath: fallbackDefaultBottlePath,
       );
@@ -124,8 +148,8 @@ class FileAppSettingsRepository implements AppSettingsRepository {
 
   @override
   IoResult<AppSettingsRecord> write(AppSettingsRecord settings) {
-    return _ioResult(() {
-      final file = File(_appSettingsJsonPath(configHome));
+    return ioResult(() {
+      final file = File(appSettingsJsonPath(configHome));
       file.parent.createSync(recursive: true);
       file.writeAsStringSync(
         const JsonEncoder.withIndent('  ').convert(<String, Object?>{
@@ -138,11 +162,11 @@ class FileAppSettingsRepository implements AppSettingsRepository {
   }
 }
 
-Option<AppSettingsRecord> _appSettingsRecordFromJson(
+Option<AppSettingsRecord> appSettingsRecordFromJson(
   Object? value, {
   required String fallbackDefaultBottlePath,
 }) {
-  final settings = _objectMap(value);
+  final settings = objectMap(value);
   if (settings == null) {
     return const Option.none();
   }
@@ -150,8 +174,8 @@ Option<AppSettingsRecord> _appSettingsRecordFromJson(
   final terminateWineProcessesOnClose =
       settings['terminateWineProcessesOnClose'];
   final defaultBottlePath = settings['defaultBottlePath'];
-  final appearanceMode = _appAppearanceModeFromJson(settings['appearanceMode']);
-  final languageMode = _appLanguageModeFromJson(settings['languageMode']);
+  final appearanceMode = appAppearanceModeFromJson(settings['appearanceMode']);
+  final languageMode = appLanguageModeFromJson(settings['languageMode']);
   final automaticallyCheckForKonyakUpdates =
       settings['automaticallyCheckForKonyakUpdates'];
   final automaticallyCheckForWineUpdates =
@@ -212,7 +236,7 @@ Option<AppSettingsRecord> _appSettingsRecordFromJson(
   );
 }
 
-Option<AppAppearanceMode> _appAppearanceModeFromJson(Object? value) {
+Option<AppAppearanceMode> appAppearanceModeFromJson(Object? value) {
   if (value == null) {
     return Option.of(AppAppearanceMode.dark);
   }
@@ -229,7 +253,7 @@ Option<AppAppearanceMode> _appAppearanceModeFromJson(Object? value) {
   return const Option.none();
 }
 
-Option<AppLanguageMode> _appLanguageModeFromJson(Object? value) {
+Option<AppLanguageMode> appLanguageModeFromJson(Object? value) {
   if (value == null) {
     return Option.of(AppLanguageMode.system);
   }

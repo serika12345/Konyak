@@ -1,12 +1,16 @@
-part of '../../konyak_cli.dart';
+import '../repository/repository_interfaces.dart';
+import 'cli_app_process_parsers.dart';
+import 'cli_app_process_results.dart';
+import 'cli_commands.dart';
+import 'cli_result_model.dart';
 
-CliResult? _handleWineProcessCommand(
+CliResult? handleWineProcessCommand(
   List<String> arguments, {
-  required _CliCommandContext context,
+  required CliCommandContext context,
   required BottleCatalog activeBottleCatalog,
 }) {
-  if (_isJsonWineProcessListCommand(arguments)) {
-    return _listWineProcessesJsonResult(
+  if (isJsonWineProcessListCommand(arguments)) {
+    return listWineProcessesJsonResult(
       bottleCatalog: activeBottleCatalog,
       programRunPlanner: context.programRunPlanner,
       programRunner: context.programRunner,
@@ -14,11 +18,11 @@ CliResult? _handleWineProcessCommand(
     );
   }
 
-  final wineProcessTerminationRequest = _parseJsonWineProcessTerminationRequest(
+  final wineProcessTerminationRequest = parseJsonWineProcessTerminationRequest(
     arguments,
   );
   if (wineProcessTerminationRequest != null) {
-    return _terminateWineProcessJsonResult(
+    return terminateWineProcessJsonResult(
       bottleCatalog: activeBottleCatalog,
       programRunPlanner: context.programRunPlanner,
       programRunner: context.programRunner,
@@ -28,9 +32,9 @@ CliResult? _handleWineProcessCommand(
   }
 
   final wineProcessGroupTerminationRequest =
-      _parseJsonWineProcessGroupTerminationRequest(arguments);
+      parseJsonWineProcessGroupTerminationRequest(arguments);
   if (wineProcessGroupTerminationRequest != null) {
-    return _terminateWineProcessesJsonResult(
+    return terminateWineProcessesJsonResult(
       bottleCatalog: activeBottleCatalog,
       programRunPlanner: context.programRunPlanner,
       programRunner: context.programRunner,

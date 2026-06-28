@@ -1,10 +1,24 @@
-part of '../../konyak_cli.dart';
+import 'dart:convert';
+import 'dart:io';
 
-const _macosPinnedLauncherManifestFileName = 'konyak-launcher.json';
-const _macosPinnedLauncherExecutableName = 'konyak-launcher';
+import 'package:crypto/crypto.dart';
+import 'package:fpdart/fpdart.dart';
 
-class _MacosPinnedProgramLauncherCommand {
-  _MacosPinnedProgramLauncherCommand({
+import '../domain/bottle/bottle_models.dart';
+import '../domain/program/program_mutation_models.dart';
+import '../domain/program/program_runner.dart';
+import '../domain/runtime/host_environment.dart';
+import '../platform/macos/macos_pinned_launcher_templates.dart';
+import '../shared/common_helpers.dart';
+import 'app_update_paths.dart';
+import 'macos_pinned_launcher_bundle_io.dart';
+import 'macos_pinned_launcher_cleanup.dart';
+
+const macosPinnedLauncherManifestFileName = 'konyak-launcher.json';
+const macosPinnedLauncherExecutableName = 'konyak-launcher';
+
+class MacosPinnedProgramLauncherCommand {
+  MacosPinnedProgramLauncherCommand({
     required this.executable,
     required List<String> arguments,
     required this.workingDirectory,
@@ -15,7 +29,7 @@ class _MacosPinnedProgramLauncherCommand {
   final Option<String> workingDirectory;
 }
 
-void _synchronizeMacosPinnedProgramLaunchers({
+void synchronizeMacosPinnedProgramLaunchers({
   required KonyakHostPlatform hostPlatform,
   required Map<String, String> environment,
   required List<BottleRecord> bottles,
@@ -25,38 +39,36 @@ void _synchronizeMacosPinnedProgramLaunchers({
     return;
   }
 
-  _macosPinnedProgramLaunchersHome(hostEnvironment).match<void>(() {}, (
+  macosPinnedProgramLaunchersHome(hostEnvironment).match<void>(() {}, (
     launcherHome,
   ) {
-    _macosPinnedProgramLauncherCommand(hostEnvironment).match<void>(() {}, (
+    macosPinnedProgramLauncherCommand(hostEnvironment).match<void>(() {}, (
       launcherCommand,
     ) {
       try {
         final desiredLauncherIds = <String>{};
         final desiredLauncherPaths = <String, String>{};
         final usedDisplayNames = <String>{};
-        final usedBundleNames = _unmanagedMacosLauncherBundleNames(
-          launcherHome,
-        );
+        final usedBundleNames = unmanagedMacosLauncherBundleNames(launcherHome);
         for (final bottle in bottles) {
           for (final program in bottle.pinnedPrograms) {
-            final launcherId = _pinnedProgramLauncherId(
+            final launcherId = pinnedProgramLauncherId(
               bottleId: bottle.id.value,
               programPath: program.path.value,
             );
-            final displayName = _uniqueMacosLauncherDisplayName(
+            final displayName = uniqueMacosLauncherDisplayName(
               program.name.value,
               usedDisplayNames: usedDisplayNames,
               usedBundleNames: usedBundleNames,
             );
-            final bundlePath = _joinPath(launcherHome, [
-              _macosLauncherBundleName(displayName),
+            final bundlePath = joinPath(launcherHome, [
+              macosLauncherBundleName(displayName),
             ]);
             desiredLauncherIds.add(launcherId);
-            desiredLauncherPaths[launcherId] = _normalizeFilesystemPath(
+            desiredLauncherPaths[launcherId] = normalizeFilesystemPath(
               bundlePath,
             );
-            _writeMacosPinnedProgramLauncher(
+            writeMacosPinnedProgramLauncher(
               bundlePath: bundlePath,
               launcherCommand: launcherCommand,
               displayName: displayName,
@@ -73,7 +85,7 @@ void _synchronizeMacosPinnedProgramLaunchers({
           }
         }
 
-        _deleteStaleMacosPinnedProgramLaunchers(
+        deleteStaleMacosPinnedProgramLaunchers(
           launcherHome: launcherHome,
           desiredLauncherIds: desiredLauncherIds,
           desiredLauncherPaths: desiredLauncherPaths,
@@ -87,18 +99,18 @@ void _synchronizeMacosPinnedProgramLaunchers({
   });
 }
 
-Option<String> _macosPinnedProgramLaunchersHome(HostEnvironment environment) {
+Option<String> macosPinnedProgramLaunchersHome(HostEnvironment environment) {
   return environment
       .nonEmptyValue('KONYAK_MACOS_PINNED_LAUNCHERS_HOME')
       .match(
         () => environment
             .nonEmptyValue('HOME')
-            .map((home) => _joinPath(home, const ['Applications', 'Konyak'])),
+            .map((home) => joinPath(home, const ['Applications', 'Konyak'])),
         Option.of,
       );
 }
 
-Option<_MacosPinnedProgramLauncherCommand> _macosPinnedProgramLauncherCommand(
+Option<MacosPinnedProgramLauncherCommand> macosPinnedProgramLauncherCommand(
   HostEnvironment environment,
 ) {
   return environment
@@ -107,8 +119,8 @@ Option<_MacosPinnedProgramLauncherCommand> _macosPinnedProgramLauncherCommand(
         () => environment
             .nonEmptyValue('KONYAK_PINNED_PROGRAM_LAUNCHER_CLI')
             .match(
-              () => _macosAppBundlePath(environment).flatMap((bundlePath) {
-                final cliExecutable = _joinPath(bundlePath, const [
+              () => macosAppBundlePath(environment).flatMap((bundlePath) {
+                final cliExecutable = joinPath(bundlePath, const [
                   'Contents',
                   'Resources',
                   'konyak-cli',
@@ -118,7 +130,7 @@ Option<_MacosPinnedProgramLauncherCommand> _macosPinnedProgramLauncherCommand(
                 }
 
                 return Option.of(
-                  _MacosPinnedProgramLauncherCommand(
+                  MacosPinnedProgramLauncherCommand(
                     executable: cliExecutable,
                     arguments: const <String>[],
                     workingDirectory: const Option.none(),
@@ -126,7 +138,7 @@ Option<_MacosPinnedProgramLauncherCommand> _macosPinnedProgramLauncherCommand(
                 );
               }),
               (override) => Option.of(
-                _MacosPinnedProgramLauncherCommand(
+                MacosPinnedProgramLauncherCommand(
                   executable: override,
                   arguments: const <String>[],
                   workingDirectory: const Option.none(),
@@ -134,10 +146,10 @@ Option<_MacosPinnedProgramLauncherCommand> _macosPinnedProgramLauncherCommand(
               ),
             ),
         (developmentExecutable) =>
-            _pinnedProgramLauncherArguments(
+            pinnedProgramLauncherArguments(
               environment['KONYAK_PINNED_PROGRAM_LAUNCHER_ARGUMENTS_JSON'],
             ).map(
-              (developmentArguments) => _MacosPinnedProgramLauncherCommand(
+              (developmentArguments) => MacosPinnedProgramLauncherCommand(
                 executable: developmentExecutable,
                 arguments: developmentArguments,
                 workingDirectory: environment.nonEmptyValue(
@@ -148,13 +160,13 @@ Option<_MacosPinnedProgramLauncherCommand> _macosPinnedProgramLauncherCommand(
       );
 }
 
-Option<List<String>> _pinnedProgramLauncherArguments(Option<String> value) {
+Option<List<String>> pinnedProgramLauncherArguments(Option<String> value) {
   return value.match(() => Option<List<String>>.of(const <String>[]), (raw) {
     if (raw.trim().isEmpty) {
       return Option<List<String>>.of(const <String>[]);
     }
 
-    return _decodePinnedProgramLauncherArgumentsJson(raw).match(
+    return decodePinnedProgramLauncherArgumentsJson(raw).match(
       () => const Option.none(),
       (decoded) => switch (decoded) {
         final List<Object?> values => (() {
@@ -171,7 +183,7 @@ Option<List<String>> _pinnedProgramLauncherArguments(Option<String> value) {
   });
 }
 
-Option<Object?> _decodePinnedProgramLauncherArgumentsJson(String raw) {
+Option<Object?> decodePinnedProgramLauncherArgumentsJson(String raw) {
   try {
     return Option<Object?>.of(jsonDecode(raw));
   } on FormatException {
@@ -179,45 +191,45 @@ Option<Object?> _decodePinnedProgramLauncherArgumentsJson(String raw) {
   }
 }
 
-String _pinnedProgramLauncherId({
+String pinnedProgramLauncherId({
   required String bottleId,
   required String programPath,
 }) {
   return sha256
       .convert(
-        utf8.encode('$bottleId\u0000${_normalizeFilesystemPath(programPath)}'),
+        utf8.encode('$bottleId\u0000${normalizeFilesystemPath(programPath)}'),
       )
       .toString()
       .substring(0, 16);
 }
 
-_MacosPinnedProgramLauncherBundlePlan _macosPinnedProgramLauncherBundlePlan({
+MacosPinnedProgramLauncherBundlePlan macosPinnedProgramLauncherBundlePlan({
   required String bundlePath,
-  required _MacosPinnedProgramLauncherCommand launcherCommand,
+  required MacosPinnedProgramLauncherCommand launcherCommand,
   required String displayName,
   required String? iconFileName,
   required PinnedProgramLauncherManifest manifest,
 }) {
-  final contentsPath = _joinPath(bundlePath, const ['Contents']);
-  final macosPath = _joinPath(contentsPath, const ['MacOS']);
-  final resourcesPath = _joinPath(contentsPath, const ['Resources']);
-  final executablePath = _joinPath(macosPath, const [
-    _macosPinnedLauncherExecutableName,
+  final contentsPath = joinPath(bundlePath, const ['Contents']);
+  final macosPath = joinPath(contentsPath, const ['MacOS']);
+  final resourcesPath = joinPath(contentsPath, const ['Resources']);
+  final executablePath = joinPath(macosPath, const [
+    macosPinnedLauncherExecutableName,
   ]);
-  final manifestPath = _joinPath(resourcesPath, const [
-    _macosPinnedLauncherManifestFileName,
+  final manifestPath = joinPath(resourcesPath, const [
+    macosPinnedLauncherManifestFileName,
   ]);
 
-  return _MacosPinnedProgramLauncherBundlePlan(
-    infoPlistPath: _joinPath(contentsPath, const ['Info.plist']),
+  return MacosPinnedProgramLauncherBundlePlan(
+    infoPlistPath: joinPath(contentsPath, const ['Info.plist']),
     manifestPath: manifestPath,
     executablePath: executablePath,
-    infoPlist: _macosPinnedProgramInfoPlist(
+    infoPlist: macosPinnedProgramInfoPlist(
       manifest: manifest,
       displayName: displayName,
       iconFileName: iconFileName,
     ),
     manifestJson: jsonEncode(manifest.toJson()),
-    launcherScript: _macosPinnedProgramLauncherScript(launcherCommand),
+    launcherScript: macosPinnedProgramLauncherScript(launcherCommand),
   );
 }

@@ -1,21 +1,32 @@
-part of '../home_loader/home_loader.dart';
+import 'dart:async';
 
-extension _KonyakHomeLoaderWineProcesses on _KonyakHomeLoaderState {
-  Future<void> _terminateWineProcessesOnClose() async {
-    if (!widget.enableBackgroundServices || _hasTerminatedWineProcesses) {
+import 'package:flutter/material.dart';
+
+import '../app/dialogs/process_manager_dialog.dart';
+import '../bottles/bottle_summary.dart';
+import '../cli/konyak_cli_read_commands.dart';
+import '../cli/konyak_cli_runtime_commands.dart';
+import '../cli/konyak_cli_wine_process_result_types.dart';
+import '../l10n/konyak_localizations.dart';
+import '../logs/log_reader.dart';
+import 'home_loader.dart';
+
+extension KonyakHomeLoaderWineProcesses on KonyakHomeLoaderState {
+  Future<void> terminateWineProcessesOnClose() async {
+    if (!widget.enableBackgroundServices || hasTerminatedWineProcesses) {
       return;
     }
 
-    final settings = _appSettings;
+    final settings = appSettings;
     if (settings == null || !settings.terminateWineProcessesOnClose) {
       return;
     }
 
-    _hasTerminatedWineProcesses = true;
+    hasTerminatedWineProcesses = true;
     await widget.cliClient.terminateWineProcesses();
   }
 
-  Future<void> _terminateBottleProcesses(BottleSummary bottle) async {
+  Future<void> terminateBottleProcesses(BottleSummary bottle) async {
     final result = await widget.cliClient.terminateWineProcesses(
       bottleId: bottle.id,
     );
@@ -31,14 +42,14 @@ extension _KonyakHomeLoaderWineProcesses on _KonyakHomeLoaderState {
       WineProcessTerminationLoadFailure(:final message) => message,
     };
 
-    _showSnackBar(message);
+    showSnackBar(message);
   }
 
-  Future<void> _showProcessManager() async {
+  Future<void> showProcessManager() async {
     await showDialog<void>(
       context: context,
       builder: (context) => ProcessManagerDialog(
-        bottles: _bottles,
+        bottles: bottles,
         onLoadProcesses: widget.cliClient.listWineProcesses,
         onTerminateProcess: (process) {
           return widget.cliClient.terminateWineProcess(
@@ -50,8 +61,8 @@ extension _KonyakHomeLoaderWineProcesses on _KonyakHomeLoaderState {
     );
   }
 
-  Future<void> _showLatestLog() async {
-    final logPath = _latestRunLogPath;
+  Future<void> showLatestLog() async {
+    final logPath = latestRunLogPath;
     if (logPath == null) {
       return;
     }
@@ -81,7 +92,7 @@ extension _KonyakHomeLoaderWineProcesses on _KonyakHomeLoaderState {
           ),
         );
       case LogReadFailure(:final message):
-        _showSnackBar(message);
+        showSnackBar(message);
     }
   }
 }

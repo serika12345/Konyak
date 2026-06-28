@@ -21,6 +21,7 @@ custom_lint:
     - konyak_no_domain_part_of_root
     - konyak_no_domain_reassignment
     - konyak_no_domain_var_declaration
+    - konyak_no_handwritten_part
     - konyak_no_null_literal_outside_boundary
     - konyak_no_nullable_bridge_outside_boundary
     - konyak_no_nullable_sentinel_flow

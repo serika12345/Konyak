@@ -1,19 +1,27 @@
-part of '../../konyak_cli.dart';
+import 'dart:convert';
 
-Option<String> _wineWindowsPathToHostPath({
+import 'package:fpdart/fpdart.dart';
+
+import '../domain/bottle/bottle_models.dart';
+import '../shared/common_helpers.dart';
+import 'external_payload_helpers.dart';
+import 'program_shortcut_metadata_io.dart';
+import 'wine_process_metadata_io.dart';
+
+Option<String> wineWindowsPathToHostPath({
   required BottleRecord bottle,
   required String windowsPath,
 }) {
   final normalized = windowsPath.trim().replaceAll('\\', '/');
-  return _nullableOption(
+  return nullableOption(
     RegExp(r'^([A-Za-z]):/?(.*)$').firstMatch(normalized),
   ).match(
     () => normalized.startsWith('/')
         ? Option.of(normalized)
         : const Option.none(),
-    (driveMatch) => _nullableOption(driveMatch.group(1)).flatMap((rawDrive) {
+    (driveMatch) => nullableOption(driveMatch.group(1)).flatMap((rawDrive) {
       final drive = rawDrive.toLowerCase();
-      final path = _nullableOption(
+      final path = nullableOption(
         driveMatch.group(2),
       ).match(() => '', (value) => value);
       final parts = path
@@ -23,7 +31,7 @@ Option<String> _wineWindowsPathToHostPath({
 
       return switch (drive) {
         'c' => Option.of(
-          _joinPath(bottle.path.value, <String>['drive_c', ...parts]),
+          joinPath(bottle.path.value, <String>['drive_c', ...parts]),
         ),
         'z' => Option.of('/${parts.join('/')}'),
         _ => const Option.none(),
@@ -32,11 +40,11 @@ Option<String> _wineWindowsPathToHostPath({
   );
 }
 
-Option<String> _wineProcessHostPath({
+Option<String> wineProcessHostPath({
   required BottleRecord bottle,
   required String executable,
 }) {
-  final hostPath = _wineWindowsPathToHostPath(
+  final hostPath = wineWindowsPathToHostPath(
     bottle: bottle,
     windowsPath: executable,
   );
@@ -49,7 +57,7 @@ Option<String> _wineProcessHostPath({
     return Option.of(normalized);
   }
 
-  final pinnedProgramPath = _pinnedProgramPathForExecutable(
+  final pinnedProgramPath = pinnedProgramPathForExecutable(
     bottle: bottle,
     executable: executable,
   );
@@ -57,7 +65,7 @@ Option<String> _wineProcessHostPath({
     return pinnedProgramPath;
   }
 
-  final recordedExternalProgramPath = _recordedExternalProgramPathForExecutable(
+  final recordedExternalProgramPath = recordedExternalProgramPathForExecutable(
     bottle: bottle,
     executable: executable,
   );
@@ -65,22 +73,22 @@ Option<String> _wineProcessHostPath({
     return recordedExternalProgramPath;
   }
 
-  return _latestRunProgramPathForExecutable(
+  return latestRunProgramPathForExecutable(
     bottle: bottle,
     executable: executable,
   );
 }
 
-Option<String> _pinnedProgramPathForExecutable({
+Option<String> pinnedProgramPathForExecutable({
   required BottleRecord bottle,
   required String executable,
 }) {
   for (final program in bottle.pinnedPrograms) {
-    final metadataPath = _metadataProgramPath(
+    final metadataPath = metadataProgramPath(
       bottle: bottle,
       programPath: program.path.value,
     );
-    if (_executableNamesMatch(metadataPath, executable)) {
+    if (executableNamesMatch(metadataPath, executable)) {
       return Option.of(metadataPath);
     }
   }
@@ -88,11 +96,11 @@ Option<String> _pinnedProgramPathForExecutable({
   return const Option.none();
 }
 
-Option<String> _runArgumentHostPath({
+Option<String> runArgumentHostPath({
   required BottleRecord bottle,
   required String argument,
 }) {
-  final hostPath = _wineWindowsPathToHostPath(
+  final hostPath = wineWindowsPathToHostPath(
     bottle: bottle,
     windowsPath: argument,
   );
@@ -106,19 +114,19 @@ Option<String> _runArgumentHostPath({
       : const Option.none();
 }
 
-bool _executableNamesMatch(String candidatePath, String executable) {
-  final candidateName = _normalizedExecutableName(candidatePath);
-  final executableName = _normalizedExecutableName(executable);
+bool executableNamesMatch(String candidatePath, String executable) {
+  final candidateName = normalizedExecutableName(candidatePath);
+  final executableName = normalizedExecutableName(executable);
   return candidateName.isNotEmpty && candidateName == executableName;
 }
 
-bool _isWineInfrastructureProcess(_WinedbgProcess process) {
-  return _wineInfrastructureExecutableNames.contains(
-    _normalizedExecutableName(process.executable),
+bool isWineInfrastructureProcess(WinedbgProcess process) {
+  return wineInfrastructureExecutableNames.contains(
+    normalizedExecutableName(process.executable),
   );
 }
 
-const _wineInfrastructureExecutableNames = <String>{
+const wineInfrastructureExecutableNames = <String>{
   'conhost.exe',
   'explorer.exe',
   'plugplay.exe',
@@ -144,30 +152,30 @@ String winedbgAttachProcessId(String processId) {
   return normalized;
 }
 
-String _normalizedExecutableName(String executable) {
+String normalizedExecutableName(String executable) {
   final quotedMatches = RegExp(
     r'''['"]([^'"]+\.exe)['"]''',
     caseSensitive: false,
   ).allMatches(executable).toList(growable: false);
   if (quotedMatches.isNotEmpty) {
-    return _nullableOption(quotedMatches.last.group(1)).match(
-      () => _normalizedExecutableNameFromRaw(executable),
+    return nullableOption(quotedMatches.last.group(1)).match(
+      () => normalizedExecutableNameFromRaw(executable),
       (quotedPath) =>
-          _baseName(quotedPath.replaceAll('\\', '/')).trim().toLowerCase(),
+          baseName(quotedPath.replaceAll('\\', '/')).trim().toLowerCase(),
     );
   }
 
-  return _normalizedExecutableNameFromRaw(executable);
+  return normalizedExecutableNameFromRaw(executable);
 }
 
-String _normalizedExecutableNameFromRaw(String executable) {
+String normalizedExecutableNameFromRaw(String executable) {
   final slashNormalized = executable.trim().replaceAll('\\', '/');
-  final baseName = _baseName(slashNormalized).trim();
-  return baseName.toLowerCase();
+  final executableBaseName = baseName(slashNormalized).trim();
+  return executableBaseName.toLowerCase();
 }
 
-List<_WinedbgProcess> _parseWinedbgProcessList(String stdout) {
-  final processes = <_WinedbgProcess>[];
+List<WinedbgProcess> parseWinedbgProcessList(String stdout) {
+  final processes = <WinedbgProcess>[];
   for (final rawLine in const LineSplitter().convert(stdout)) {
     final line = rawLine.trim();
     if (line.isEmpty ||
@@ -176,31 +184,31 @@ List<_WinedbgProcess> _parseWinedbgProcessList(String stdout) {
       continue;
     }
 
-    _nullableOption(
+    nullableOption(
       RegExp(
         r'^(?:[=*>\s]+)?(0x[0-9a-fA-F]+|[0-9a-fA-F]{2,})\s+\S+\s+(.+)$',
       ).firstMatch(line),
-    ).flatMap(_winedbgProcessFromMatch).match(() {}, processes.add);
+    ).flatMap(winedbgProcessFromMatch).match(() {}, processes.add);
   }
 
   return List.unmodifiable(processes);
 }
 
-Option<_WinedbgProcess> _winedbgProcessFromMatch(RegExpMatch match) {
-  return _nullableOption(match.group(1)).flatMap(
-    (processId) => _nullableOption(match.group(2))
-        .map(_unquoteWinedbgExecutable)
+Option<WinedbgProcess> winedbgProcessFromMatch(RegExpMatch match) {
+  return nullableOption(match.group(1)).flatMap(
+    (processId) => nullableOption(match.group(2))
+        .map(unquoteWinedbgExecutable)
         .flatMap(
           (executable) => executable.isEmpty
               ? const Option.none()
               : Option.of(
-                  _WinedbgProcess(processId: processId, executable: executable),
+                  WinedbgProcess(processId: processId, executable: executable),
                 ),
         ),
   );
 }
 
-String _unquoteWinedbgExecutable(String value) {
+String unquoteWinedbgExecutable(String value) {
   final normalized = value.trim().replaceFirst(
     RegExp(r'''^(?:\\_|/_)\s+'''),
     '',
@@ -216,14 +224,14 @@ String _unquoteWinedbgExecutable(String value) {
   return normalized;
 }
 
-class _WinedbgProcess {
-  const _WinedbgProcess({required this.processId, required this.executable});
+class WinedbgProcess {
+  const WinedbgProcess({required this.processId, required this.executable});
 
   final String processId;
   final String executable;
 }
 
-Option<BottleRecord> _findBottle(
+Option<BottleRecord> findBottle(
   Iterable<BottleRecord> bottles,
   String bottleId,
 ) {

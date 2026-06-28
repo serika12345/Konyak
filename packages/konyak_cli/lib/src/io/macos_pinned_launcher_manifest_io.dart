@@ -1,10 +1,15 @@
-part of '../../konyak_cli.dart';
+import 'dart:io';
 
-Option<PinnedProgramLauncherManifest> _readPinnedProgramLauncherManifest(
+import 'package:fpdart/fpdart.dart';
+
+import '../domain/program/program_mutation_models.dart';
+import 'macos_pinned_launcher_manifests.dart';
+
+Option<PinnedProgramLauncherManifest> readPinnedProgramLauncherManifest(
   String manifestPath,
 ) {
   try {
-    return _pinnedProgramLauncherManifestFromPayload(
+    return pinnedProgramLauncherManifestFromPayload(
       File(manifestPath).readAsStringSync(),
     );
   } on FileSystemException {

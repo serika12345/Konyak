@@ -1,7 +1,33 @@
-part of '../../konyak_cli.dart';
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
 
-extension _MacosWineArchiveInstallation on DartIoMacosWineInstaller {
-  MacosWineInstallResult _installMacosWineArchive({
+import 'package:fpdart/fpdart.dart';
+
+import '../domain/runtime/runtime_component_versions.dart';
+import '../domain/runtime/runtime_models.dart';
+import '../domain/runtime/runtime_package_installation.dart';
+import '../domain/runtime/runtime_platform_support.dart';
+import '../domain/runtime/runtime_source_bundle_models.dart';
+import '../domain/runtime/wine_runtime_paths.dart';
+import '../platform/macos/macos_wine_install_results.dart';
+import '../shared/common_helpers.dart';
+import '../shared/model_constants.dart';
+import 'directory_copy_support.dart';
+import 'gptk_wine_installation.dart';
+import 'macos_wine_installation.dart';
+import 'platform_runtime_sources.dart';
+import 'runtime_archive_install_support.dart';
+import 'runtime_gptk_support.dart';
+import 'runtime_install_progress_io.dart';
+import 'runtime_platform_records.dart';
+import 'runtime_probes.dart';
+import 'runtime_source_archive_downloads.dart';
+import 'runtime_source_archive_support.dart';
+import 'runtime_source_manifest_support.dart';
+
+extension MacosWineArchiveInstallation on DartIoMacosWineInstaller {
+  MacosWineInstallResult installMacosWineArchive({
     required String archivePath,
     required Option<String> archiveSha256,
     Iterable<String> componentArchivePaths = const <String>[],
@@ -10,7 +36,7 @@ extension _MacosWineArchiveInstallation on DartIoMacosWineInstaller {
     bool preserveExistingRuntimeFiles = false,
     RuntimeInstallProgressSink? progressSink,
   }) {
-    final installResult = _runtimePackageInstaller.install(
+    final installResult = runtimePackageInstaller.install(
       RuntimePackageInstallRequest(
         runtimeLabel: 'macOS Wine',
         archivePath: archivePath,
@@ -32,10 +58,10 @@ extension _MacosWineArchiveInstallation on DartIoMacosWineInstaller {
         break;
     }
 
-    final runtime = _macosWineRuntimeRecord(
+    final runtime = macosWineRuntimeRecord(
       environment: environment,
       fileStatusProbe: const DartIoFileStatusProbe(),
-      runtimeStackVersionProbe: _runtimeStackVersionProbe,
+      runtimeStackVersionProbe: runtimeStackVersionProbe,
     );
 
     if (runtime.isInstalled.toNullable() != true) {
@@ -48,11 +74,11 @@ extension _MacosWineArchiveInstallation on DartIoMacosWineInstaller {
     if (stack == null || !stack.isComplete) {
       return MacosWineInstallFailed(
         'macOS Wine archive installed but runtime stack is incomplete: '
-        '${_incompleteMacosWineStackSummary(stack)}.',
+        '${incompleteMacosWineStackSummary(stack)}.',
       );
     }
 
-    _emitRuntimeInstallProgress(
+    emitRuntimeInstallProgress(
       progressSink,
       stage: 'complete',
       message: 'Installed Konyak macOS Wine.',
@@ -62,7 +88,7 @@ extension _MacosWineArchiveInstallation on DartIoMacosWineInstaller {
     return MacosWineInstallCompleted(runtime: runtime);
   }
 
-  MacosWineInstallResult _installMacosWineStackFromSourceManifest(
+  MacosWineInstallResult installMacosWineStackFromSourceManifest(
     String sourceManifest, {
     required String? sourceManifestSignature,
     required bool preserveExistingRuntimeFiles,
@@ -72,23 +98,23 @@ extension _MacosWineArchiveInstallation on DartIoMacosWineInstaller {
       'konyak-macos-wine-stack-',
     );
     try {
-      _emitRuntimeInstallProgress(
+      emitRuntimeInstallProgress(
         progressSink,
         stage: 'readingManifest',
         message: 'Reading Konyak macOS Wine manifest...',
         fraction: 0.02,
       );
-      final manifestPayload = _readRuntimeStackSourceText(
+      final manifestPayload = readRuntimeStackSourceText(
         sourceManifest,
         signatureSource: sourceManifestSignature,
       );
-      final manifest = _runtimeStackSourceManifestFromPayload(manifestPayload);
+      final manifest = runtimeStackSourceManifestFromPayload(manifestPayload);
       if (manifest.isNone()) {
         return const MacosWineInstallFailed(
           'Runtime stack source manifest is invalid.',
         );
       }
-      final bundleResult = _resolveRuntimeStackSourceArchiveBundle(
+      final bundleResult = resolveRuntimeStackSourceArchiveBundle(
         manifest: manifest.getOrElse(
           () => throw StateError('Expected runtime stack source manifest.'),
         ),
@@ -98,14 +124,14 @@ extension _MacosWineArchiveInstallation on DartIoMacosWineInstaller {
       );
       return switch (bundleResult) {
         RuntimeStackSourceArchiveBundleFailed(:final message) =>
-          _macosWineSourceManifestInstallResult(
+          macosWineSourceManifestInstallResult(
             sourceManifest: sourceManifest,
             result: MacosWineInstallFailed(message),
           ),
         RuntimeStackSourceArchiveBundleResolved(:final bundle) =>
-          _macosWineSourceManifestInstallResult(
+          macosWineSourceManifestInstallResult(
             sourceManifest: sourceManifest,
-            result: _installMacosWineArchive(
+            result: installMacosWineArchive(
               archivePath: bundle.wineArchivePath.value,
               archiveSha256: const Option.none(),
               componentArchivePaths: bundle.componentArchivePaths.map(
@@ -128,12 +154,12 @@ extension _MacosWineArchiveInstallation on DartIoMacosWineInstaller {
         '${error.message}',
       );
     } finally {
-      _deleteDirectoryIfPresent(tempDirectory);
+      deleteDirectoryIfPresent(tempDirectory);
     }
   }
 
   Future<MacosWineInstallResult>
-  _installMacosWineStackFromSourceManifestStreaming(
+  installMacosWineStackFromSourceManifestStreaming(
     String sourceManifest, {
     required String? sourceManifestSignature,
     required bool preserveExistingRuntimeFiles,
@@ -143,24 +169,24 @@ extension _MacosWineArchiveInstallation on DartIoMacosWineInstaller {
       'konyak-macos-wine-stack-',
     );
     try {
-      _emitRuntimeInstallProgress(
+      emitRuntimeInstallProgress(
         progressSink,
         stage: 'readingManifest',
         message: 'Reading Konyak macOS Wine manifest...',
         fraction: 0.02,
       );
-      final manifestPayload = _readRuntimeStackSourceText(
+      final manifestPayload = readRuntimeStackSourceText(
         sourceManifest,
         signatureSource: sourceManifestSignature,
       );
-      final manifest = _runtimeStackSourceManifestFromPayload(manifestPayload);
+      final manifest = runtimeStackSourceManifestFromPayload(manifestPayload);
       if (manifest.isNone()) {
         return const MacosWineInstallFailed(
           'Runtime stack source manifest is invalid.',
         );
       }
       final bundleResult =
-          await _resolveRuntimeStackSourceArchiveBundleStreaming(
+          await resolveRuntimeStackSourceArchiveBundleStreaming(
             manifest: manifest.getOrElse(
               () => throw StateError('Expected runtime stack source manifest.'),
             ),
@@ -170,14 +196,14 @@ extension _MacosWineArchiveInstallation on DartIoMacosWineInstaller {
           );
       return switch (bundleResult) {
         RuntimeStackSourceArchiveBundleFailed(:final message) =>
-          _macosWineSourceManifestInstallResult(
+          macosWineSourceManifestInstallResult(
             sourceManifest: sourceManifest,
             result: MacosWineInstallFailed(message),
           ),
         RuntimeStackSourceArchiveBundleResolved(:final bundle) =>
-          _macosWineSourceManifestInstallResult(
+          macosWineSourceManifestInstallResult(
             sourceManifest: sourceManifest,
-            result: _installMacosWineArchive(
+            result: installMacosWineArchive(
               archivePath: bundle.wineArchivePath.value,
               archiveSha256: const Option.none(),
               componentArchivePaths: bundle.componentArchivePaths.map(
@@ -200,15 +226,15 @@ extension _MacosWineArchiveInstallation on DartIoMacosWineInstaller {
         '${error.message}',
       );
     } finally {
-      _deleteDirectoryIfPresent(tempDirectory);
+      deleteDirectoryIfPresent(tempDirectory);
     }
   }
 
-  String _readRuntimeStackSourceText(
+  String readRuntimeStackSourceText(
     String source, {
     required String? signatureSource,
   }) {
-    return _readAndVerifyRuntimeStackSourceText(
+    return readAndVerifyRuntimeStackSourceText(
       source: source,
       signatureSource: signatureSource,
       publicKeyPath: environment
@@ -231,7 +257,7 @@ extension _MacosWineArchiveInstallation on DartIoMacosWineInstaller {
   }
 }
 
-String _incompleteMacosWineStackSummary(RuntimeStack? stack) {
+String incompleteMacosWineStackSummary(RuntimeStack? stack) {
   if (stack == null) {
     return 'runtime stack metadata is missing';
   }
@@ -257,54 +283,54 @@ String _incompleteMacosWineStackSummary(RuntimeStack? stack) {
   return details.join('; ');
 }
 
-RuntimeComponentVersions _preserveImportedGptkD3DMetalComponent({
+RuntimeComponentVersions preserveImportedGptkD3DMetalComponent({
   required Directory existingRuntimeRoot,
   required Directory stagingRuntimeRoot,
   required RuntimeComponentVersions componentVersions,
 }) {
-  final source = _existingGptkD3DMetalSource(existingRuntimeRoot);
+  final source = existingGptkD3DMetalSource(existingRuntimeRoot);
   if (source == null) {
     return componentVersions;
   }
 
-  return _validateGptkD3DMetalSource(source).match((_) => componentVersions, (
+  return validateGptkD3DMetalSource(source).match((_) => componentVersions, (
     _,
   ) {
-    _installGptkD3DMetalComponentPayload(
+    installGptkD3DMetalComponentPayload(
       source: source,
       runtimeRoot: stagingRuntimeRoot,
     );
 
     return componentVersions.add(
-      _gptkD3DMetalComponentId,
-      _runtimeStackComponentVersionFromRoot(
+      gptkD3DMetalComponentId,
+      runtimeStackComponentVersionFromRoot(
             existingRuntimeRoot,
-            _gptkD3DMetalComponentId,
+            gptkD3DMetalComponentId,
           ) ??
           'user-provided',
     );
   });
 }
 
-_GptkD3DMetalSource? _existingGptkD3DMetalSource(Directory runtimeRoot) {
-  return _resolveGptkD3DMetalSource(
-    _joinPath(runtimeRoot.path, _gptkD3DMetalComponentRelativePath),
+GptkD3DMetalSource? existingGptkD3DMetalSource(Directory runtimeRoot) {
+  return resolveGptkD3DMetalSource(
+    joinPath(runtimeRoot.path, gptkD3DMetalComponentRelativePath),
   );
 }
 
-String? _runtimeStackComponentVersionFromRoot(
+String? runtimeStackComponentVersionFromRoot(
   Directory runtimeRoot,
   String componentId,
 ) {
   final manifest = File(
-    _joinPath(runtimeRoot.path, const [runtimeStackManifestFileName]),
+    joinPath(runtimeRoot.path, const [runtimeStackManifestFileName]),
   );
   if (!manifest.existsSync()) {
     return null;
   }
 
   try {
-    return _runtimeStackComponentVersion(
+    return runtimeStackComponentVersion(
       jsonDecode(manifest.readAsStringSync()),
       componentId,
     );
@@ -315,7 +341,7 @@ String? _runtimeStackComponentVersionFromRoot(
   }
 }
 
-MacosWineInstallResult _macosWineSourceManifestInstallResult({
+MacosWineInstallResult macosWineSourceManifestInstallResult({
   required String sourceManifest,
   required MacosWineInstallResult result,
 }) {

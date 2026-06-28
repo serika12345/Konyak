@@ -1,12 +1,21 @@
-part of '../../konyak_cli.dart';
+import '../domain/runtime/runtime_models.dart';
+import '../domain/update/update_records.dart';
+import '../platform/linux/linux_wine_install_requests.dart';
+import '../platform/linux/linux_wine_install_results.dart';
+import '../platform/macos/macos_wine_install_requests.dart';
+import '../platform/macos/macos_wine_install_results.dart';
+import '../shared/model_constants.dart';
+import 'cli_app_process_results.dart';
+import 'cli_json_helpers.dart';
+import 'cli_result_model.dart';
 
-CliResult _installAppUpdateJsonResult({
+CliResult installAppUpdateJsonResult({
   required AppUpdateChecker? appUpdateChecker,
   required AppUpdateInstaller? appUpdateInstaller,
 }) {
   final checker = appUpdateChecker;
   if (checker == null) {
-    return _unavailableJsonError(
+    return unavailableJsonError(
       code: 'appUpdateCheckerUnavailable',
       subject: 'App update checker',
     );
@@ -14,7 +23,7 @@ CliResult _installAppUpdateJsonResult({
 
   final installer = appUpdateInstaller;
   if (installer == null) {
-    return _unavailableJsonError(
+    return unavailableJsonError(
       code: 'appUpdateInstallerUnavailable',
       subject: 'App update installer',
     );
@@ -24,7 +33,7 @@ CliResult _installAppUpdateJsonResult({
   return switch (updateResult) {
     AppUpdateCheckCompleted(:final update)
         when update.status.value != 'available' =>
-      _appUpdateInstallJsonResult(
+      appUpdateInstallJsonResult(
         AppUpdateInstallRecord(
           appId: update.appId.value,
           status: 'skipped',
@@ -36,16 +45,16 @@ CliResult _installAppUpdateJsonResult({
     AppUpdateCheckCompleted(:final update) => switch (installer.install(
       update,
     )) {
-      AppUpdateInstallCompleted(:final install) => _appUpdateInstallJsonResult(
+      AppUpdateInstallCompleted(:final install) => appUpdateInstallJsonResult(
         install,
       ),
-      AppUpdateInstallFailed(:final message) => _jsonError(
+      AppUpdateInstallFailed(:final message) => jsonError(
         exitCode: 75,
         code: 'appUpdateInstallFailed',
         message: message,
       ),
     },
-    AppUpdateCheckFailed(:final message) => _jsonError(
+    AppUpdateCheckFailed(:final message) => jsonError(
       exitCode: 75,
       code: 'appUpdateCheckFailed',
       message: message,
@@ -53,7 +62,7 @@ CliResult _installAppUpdateJsonResult({
   };
 }
 
-CliResult _installRuntimeUpdateJsonResult({
+CliResult installRuntimeUpdateJsonResult({
   required String runtimeId,
   required RuntimeUpdateChecker? runtimeUpdateChecker,
   required MacosWineInstaller? macosWineInstaller,
@@ -61,7 +70,7 @@ CliResult _installRuntimeUpdateJsonResult({
 }) {
   final checker = runtimeUpdateChecker;
   if (checker == null) {
-    return _unavailableJsonError(
+    return unavailableJsonError(
       code: 'runtimeUpdateCheckerUnavailable',
       subject: 'Runtime update checker',
     );
@@ -71,7 +80,7 @@ CliResult _installRuntimeUpdateJsonResult({
   return switch (updateResult) {
     RuntimeUpdateCheckCompleted(:final update)
         when update.status.value != 'available' =>
-      _jsonError(
+      jsonError(
         exitCode: 65,
         code: 'runtimeUpdateNotAvailable',
         message: 'Runtime update is not available.',
@@ -79,17 +88,17 @@ CliResult _installRuntimeUpdateJsonResult({
       ),
     RuntimeUpdateCheckCompleted(:final update) => switch (runtimeId) {
       macosWineRuntimeId => switch (macosWineInstaller) {
-        null => _unavailableJsonError(
+        null => unavailableJsonError(
           code: 'macosWineInstallerUnavailable',
           subject: 'macOS Wine installer',
         ),
         final installer => switch (installer.install(
-          _macosWineInstallRequestForRuntimeUpdate(update),
+          macosWineInstallRequestForRuntimeUpdate(update),
         )) {
-          MacosWineInstallCompleted(:final runtime) => _runtimeJsonResult(
+          MacosWineInstallCompleted(:final runtime) => runtimeJsonResult(
             runtime,
           ),
-          MacosWineInstallFailed(:final message) => _jsonError(
+          MacosWineInstallFailed(:final message) => jsonError(
             exitCode: 75,
             code: 'macosWineInstallFailed',
             message: message,
@@ -97,37 +106,37 @@ CliResult _installRuntimeUpdateJsonResult({
         },
       },
       linuxWineRuntimeId => switch (linuxWineInstaller) {
-        null => _unavailableJsonError(
+        null => unavailableJsonError(
           code: 'linuxWineInstallerUnavailable',
           subject: 'Linux Wine installer',
         ),
         final installer => switch (installer.install(
-          _linuxWineInstallRequestForRuntimeUpdate(update),
+          linuxWineInstallRequestForRuntimeUpdate(update),
         )) {
-          LinuxWineInstallCompleted(:final runtime) => _runtimeJsonResult(
+          LinuxWineInstallCompleted(:final runtime) => runtimeJsonResult(
             runtime,
           ),
-          LinuxWineInstallFailed(:final message) => _jsonError(
+          LinuxWineInstallFailed(:final message) => jsonError(
             exitCode: 75,
             code: 'linuxWineInstallFailed',
             message: message,
           ),
         },
       },
-      _ => _jsonError(
+      _ => jsonError(
         exitCode: 65,
         code: 'unsupportedRuntimeUpdateInstall',
         message: 'Runtime update installation is not supported.',
         extra: <String, Object?>{'runtimeId': runtimeId},
       ),
     },
-    RuntimeUpdateRuntimeNotFound(:final runtimeId) => _jsonError(
+    RuntimeUpdateRuntimeNotFound(:final runtimeId) => jsonError(
       exitCode: 66,
       code: 'runtimeNotFound',
       message: 'Runtime not found.',
       extra: <String, Object?>{'runtimeId': runtimeId.value},
     ),
-    RuntimeUpdateCheckFailed(:final message) => _jsonError(
+    RuntimeUpdateCheckFailed(:final message) => jsonError(
       exitCode: 75,
       code: 'runtimeUpdateCheckFailed',
       message: message,
@@ -135,14 +144,14 @@ CliResult _installRuntimeUpdateJsonResult({
   };
 }
 
-CliResult _runtimeJsonResult(RuntimeRecord runtime) {
-  return _jsonSuccess(<String, Object?>{'runtime': runtime.toJson()});
+CliResult runtimeJsonResult(RuntimeRecord runtime) {
+  return jsonSuccess(<String, Object?>{'runtime': runtime.toJson()});
 }
 
-CliResult _macosWineInstallCliResult(MacosWineInstallResult installResult) {
+CliResult macosWineInstallCliResult(MacosWineInstallResult installResult) {
   return switch (installResult) {
-    MacosWineInstallCompleted(:final runtime) => _runtimeJsonResult(runtime),
-    MacosWineInstallFailed(:final message) => _jsonError(
+    MacosWineInstallCompleted(:final runtime) => runtimeJsonResult(runtime),
+    MacosWineInstallFailed(:final message) => jsonError(
       exitCode: 75,
       code: 'macosWineInstallFailed',
       message: message,
@@ -150,10 +159,10 @@ CliResult _macosWineInstallCliResult(MacosWineInstallResult installResult) {
   };
 }
 
-CliResult _linuxWineInstallCliResult(LinuxWineInstallResult installResult) {
+CliResult linuxWineInstallCliResult(LinuxWineInstallResult installResult) {
   return switch (installResult) {
-    LinuxWineInstallCompleted(:final runtime) => _runtimeJsonResult(runtime),
-    LinuxWineInstallFailed(:final message) => _jsonError(
+    LinuxWineInstallCompleted(:final runtime) => runtimeJsonResult(runtime),
+    LinuxWineInstallFailed(:final message) => jsonError(
       exitCode: 75,
       code: 'linuxWineInstallFailed',
       message: message,
@@ -161,7 +170,7 @@ CliResult _linuxWineInstallCliResult(LinuxWineInstallResult installResult) {
   };
 }
 
-MacosWineInstallRequest _macosWineInstallRequestForRuntimeUpdate(
+MacosWineInstallRequest macosWineInstallRequestForRuntimeUpdate(
   RuntimeUpdateRecord update,
 ) {
   final sourceManifestUrl = update.sourceManifestUrl.toNullable();
@@ -177,7 +186,7 @@ MacosWineInstallRequest _macosWineInstallRequestForRuntimeUpdate(
   return MacosWineInstallRequest.updateInstall();
 }
 
-LinuxWineInstallRequest _linuxWineInstallRequestForRuntimeUpdate(
+LinuxWineInstallRequest linuxWineInstallRequestForRuntimeUpdate(
   RuntimeUpdateRecord update,
 ) {
   final sourceManifestUrl = update.sourceManifestUrl.toNullable();

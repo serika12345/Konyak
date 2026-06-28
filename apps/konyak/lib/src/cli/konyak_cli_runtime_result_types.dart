@@ -1,4 +1,4 @@
-part of 'konyak_cli_client.dart';
+import '../runtimes/runtime_summary.dart';
 
 sealed class RuntimeListLoadResult {
   const RuntimeListLoadResult();

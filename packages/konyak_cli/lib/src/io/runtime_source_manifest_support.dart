@@ -1,6 +1,12 @@
-part of '../../konyak_cli.dart';
+import 'dart:convert';
 
-Option<RuntimeSourceManifest> _runtimeStackSourceManifestFromPayload(
+import 'package:fpdart/fpdart.dart';
+
+import '../domain/runtime/runtime_models.dart';
+import '../domain/runtime/runtime_validation_support.dart';
+import '../shared/model_constants.dart';
+
+Option<RuntimeSourceManifest> runtimeStackSourceManifestFromPayload(
   String payload,
 ) {
   final Object? decoded;
@@ -28,7 +34,7 @@ Option<RuntimeSourceManifest> _runtimeStackSourceManifestFromPayload(
 
   final parsedComponents = <RuntimeSourceComponent>[];
   for (final component in components) {
-    switch (_runtimeStackSourceComponent(component)) {
+    switch (runtimeStackSourceComponent(component)) {
       case None():
         return const Option.none();
       case Some<RuntimeSourceComponent>(:final value):
@@ -49,7 +55,7 @@ Option<RuntimeSourceManifest> _runtimeStackSourceManifestFromPayload(
   );
 }
 
-Option<RuntimeSourceComponent> _runtimeStackSourceComponent(Object? value) {
+Option<RuntimeSourceComponent> runtimeStackSourceComponent(Object? value) {
   if (value is! Map<String, dynamic>) {
     return const Option.none();
   }

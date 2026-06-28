@@ -1,4 +1,6 @@
-part of '../../../konyak_cli.dart';
+import '../../domain/runtime/runtime_models.dart';
+import '../../io/runtime_install_progress_io.dart';
+import 'linux_wine_install_requests.dart';
 
 sealed class LinuxWineInstallResult {
   const LinuxWineInstallResult();

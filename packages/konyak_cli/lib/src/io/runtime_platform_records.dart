@@ -1,6 +1,19 @@
-part of '../../konyak_cli.dart';
+import 'dart:io';
 
-RuntimeRecord _macosWineRuntimeRecord({
+import 'package:fpdart/fpdart.dart';
+
+import '../domain/runtime/host_environment.dart';
+import '../domain/runtime/runtime_models.dart';
+import '../domain/runtime/runtime_platform_support.dart';
+import '../domain/runtime/runtime_profile_environment.dart';
+import '../domain/runtime/runtime_validation_models.dart';
+import '../domain/runtime/runtime_validation_support.dart';
+import '../domain/runtime/wine_runtime_paths.dart';
+import '../shared/common_helpers.dart';
+import '../shared/model_constants.dart';
+import 'runtime_gptk_support.dart';
+
+RuntimeRecord macosWineRuntimeRecord({
   required HostEnvironment environment,
   required FileStatusProbe fileStatusProbe,
   required RuntimeStackVersionProbe runtimeStackVersionProbe,
@@ -34,7 +47,7 @@ RuntimeRecord _macosWineRuntimeRecord({
     ),
     capabilities: RuntimeCapabilities(
       stack: Option.of(
-        _runtimeStackForPlatform(
+        runtimeStackForPlatform(
           platformSpec: platformSpec,
           runtimeRoot: libraryPath,
           fileStatusProbe: fileStatusProbe,
@@ -45,14 +58,14 @@ RuntimeRecord _macosWineRuntimeRecord({
   );
 }
 
-RuntimeRecord _linuxWineRuntimeRecord({
+RuntimeRecord linuxWineRuntimeRecord({
   required HostEnvironment environment,
   required FileStatusProbe fileStatusProbe,
   required RuntimeStackVersionProbe runtimeStackVersionProbe,
 }) {
   const platformSpec = linuxWineRuntimePlatformSpec;
   final runtimeRoot = linuxWineRuntimeRoot(environment);
-  final executablePath = _joinPath(runtimeRoot, const ['bin', 'wine']);
+  final executablePath = joinPath(runtimeRoot, const ['bin', 'wine']);
   final versionUrl = environment.nonEmptyValue('KONYAK_LINUX_WINE_VERSION_URL');
   return RuntimeRecord.fromParts(
     definition: RuntimeDefinition(
@@ -76,7 +89,7 @@ RuntimeRecord _linuxWineRuntimeRecord({
     ),
     capabilities: RuntimeCapabilities(
       stack: Option.of(
-        _runtimeStackForPlatform(
+        runtimeStackForPlatform(
           platformSpec: platformSpec,
           runtimeRoot: runtimeRoot,
           fileStatusProbe: fileStatusProbe,
@@ -87,7 +100,7 @@ RuntimeRecord _linuxWineRuntimeRecord({
   );
 }
 
-RuntimeStack _runtimeStackForPlatform({
+RuntimeStack runtimeStackForPlatform({
   required RuntimePlatformSpec platformSpec,
   required String runtimeRoot,
   required FileStatusProbe fileStatusProbe,
@@ -95,7 +108,7 @@ RuntimeStack _runtimeStackForPlatform({
 }) {
   final components = platformSpec.componentDefinitions
       .map(
-        (definition) => _runtimeStackComponent(
+        (definition) => runtimeStackComponent(
           runtimeRoot: runtimeRoot,
           fileStatusProbe: fileStatusProbe,
           runtimeStackVersionProbe: runtimeStackVersionProbe,
@@ -110,7 +123,7 @@ RuntimeStack _runtimeStackForPlatform({
     components: components,
     backends: platformSpec.backendDefinitions
         .map(
-          (definition) => _runtimeStackBackend(
+          (definition) => runtimeStackBackend(
             definition: definition,
             components: components,
           ),
@@ -119,7 +132,7 @@ RuntimeStack _runtimeStackForPlatform({
   );
 }
 
-RuntimeStackBackend _runtimeStackBackend({
+RuntimeStackBackend runtimeStackBackend({
   required RuntimeBackendDefinition definition,
   required List<RuntimeStackComponent> components,
 }) {
@@ -152,34 +165,34 @@ RuntimeStackBackend _runtimeStackBackend({
   );
 }
 
-RuntimeStackComponent _runtimeStackComponent({
+RuntimeStackComponent runtimeStackComponent({
   required String runtimeRoot,
   required FileStatusProbe fileStatusProbe,
   required RuntimeStackVersionProbe runtimeStackVersionProbe,
   required RuntimeStackComponentDefinition definition,
 }) {
   final paths = definition.relativePaths
-      .map((pathSegments) => _joinPath(runtimeRoot, pathSegments))
+      .map((pathSegments) => joinPath(runtimeRoot, pathSegments))
       .toList(growable: false);
   final missingPaths = paths
       .where((path) => !fileStatusProbe.exists(path))
       .toList();
   if (definition.id == 'gptk-d3dmetal') {
-    final frameworkBinary = _d3dMetalFrameworkBinary(paths.first);
-    if (frameworkBinary == null || !_looksLikeMachO(File(frameworkBinary))) {
-      _addMissingRuntimePath(missingPaths, paths.first);
+    final frameworkBinary = d3dMetalFrameworkBinary(paths.first);
+    if (frameworkBinary == null || !looksLikeMachO(File(frameworkBinary))) {
+      addMissingRuntimePath(missingPaths, paths.first);
     }
-    if (!_looksLikeMachO(File(paths[1]))) {
-      _addMissingRuntimePath(missingPaths, paths[1]);
+    if (!looksLikeMachO(File(paths[1]))) {
+      addMissingRuntimePath(missingPaths, paths[1]);
     }
     for (final path in const <String>[
       'components/gptk-d3dmetal/lib/wine/x86_64-unix/d3d11.so',
       'components/gptk-d3dmetal/lib/wine/x86_64-unix/d3d12.so',
       'components/gptk-d3dmetal/lib/wine/x86_64-unix/dxgi.so',
     ]) {
-      final fullPath = _joinPath(runtimeRoot, path.split('/'));
-      if (!_isGptkD3DMetalUnixLibraryLink(fullPath)) {
-        _addMissingRuntimePath(missingPaths, fullPath);
+      final fullPath = joinPath(runtimeRoot, path.split('/'));
+      if (!isGptkD3DMetalUnixLibraryLink(fullPath)) {
+        addMissingRuntimePath(missingPaths, fullPath);
       }
     }
   }
@@ -200,13 +213,13 @@ RuntimeStackComponent _runtimeStackComponent({
   );
 }
 
-void _addMissingRuntimePath(List<String> missingPaths, String path) {
+void addMissingRuntimePath(List<String> missingPaths, String path) {
   if (!missingPaths.contains(path)) {
     missingPaths.add(path);
   }
 }
 
-bool _isGptkD3DMetalUnixLibraryLink(String path) {
+bool isGptkD3DMetalUnixLibraryLink(String path) {
   try {
     return FileSystemEntity.typeSync(path, followLinks: false) ==
             FileSystemEntityType.link &&

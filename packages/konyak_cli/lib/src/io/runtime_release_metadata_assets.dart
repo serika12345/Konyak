@@ -1,6 +1,11 @@
-part of '../../konyak_cli.dart';
+import 'dart:convert';
 
-Option<String> _runtimeReleaseArchiveUrl(
+import 'package:fpdart/fpdart.dart';
+
+import '../domain/runtime/runtime_validation_support.dart';
+import '../shared/common_helpers.dart';
+
+Option<String> runtimeReleaseArchiveUrl(
   Object? decoded, {
   bool Function(String url)? archiveUrlPredicate,
 }) {
@@ -23,7 +28,7 @@ Option<String> _runtimeReleaseArchiveUrl(
     final normalizedUrl = url is String ? url.trim() : null;
     if (normalizedUrl != null &&
         normalizedUrl.isNotEmpty &&
-        !_isReleaseMetadataAssetUrl(normalizedUrl) &&
+        !isReleaseMetadataAssetUrl(normalizedUrl) &&
         (archiveUrlPredicate == null || archiveUrlPredicate(normalizedUrl))) {
       urls.add(normalizedUrl);
     }
@@ -41,7 +46,7 @@ Option<String> _runtimeReleaseArchiveUrl(
     '.appimage',
   ];
   for (final url in urls) {
-    final fileName = _fileNameFromUrl(url).toNullable()?.toLowerCase();
+    final fileName = fileNameFromUrl(url).toNullable()?.toLowerCase();
     if (fileName == null) {
       continue;
     }
@@ -53,7 +58,7 @@ Option<String> _runtimeReleaseArchiveUrl(
   return const Option.none();
 }
 
-Option<String> _runtimeReleaseMetadataAssetUrl(Object? decoded) {
+Option<String> runtimeReleaseMetadataAssetUrl(Object? decoded) {
   if (decoded is! Map<String, dynamic>) {
     return const Option.none();
   }
@@ -79,7 +84,7 @@ Option<String> _runtimeReleaseMetadataAssetUrl(Object? decoded) {
   return const Option.none();
 }
 
-Option<String> _runtimeReleaseAssetUrlByFileName(
+Option<String> runtimeReleaseAssetUrlByFileName(
   Object? decoded,
   String fileName,
 ) {
@@ -100,9 +105,7 @@ Option<String> _runtimeReleaseAssetUrlByFileName(
     final url = asset['browser_download_url'];
     if (url is String &&
         url.trim().isNotEmpty &&
-        _fileNameFromUrl(
-          url,
-        ).match(() => false, (value) => value == fileName)) {
+        fileNameFromUrl(url).match(() => false, (value) => value == fileName)) {
       return Option.of(url);
     }
   }
@@ -110,7 +113,7 @@ Option<String> _runtimeReleaseAssetUrlByFileName(
   return const Option.none();
 }
 
-bool _isReleaseMetadataAssetUrl(String url) {
+bool isReleaseMetadataAssetUrl(String url) {
   final normalized = url.trim().toLowerCase();
   return normalized.endsWith('.sha256') ||
       normalized.endsWith('.sha256sum') ||
@@ -120,7 +123,7 @@ bool _isReleaseMetadataAssetUrl(String url) {
       normalized.endsWith('.release.json');
 }
 
-Option<String> _runtimeReleaseArchiveSha256(
+Option<String> runtimeReleaseArchiveSha256(
   Object? decoded,
   Option<String> archiveUrl,
 ) {
@@ -140,7 +143,7 @@ Option<String> _runtimeReleaseArchiveSha256(
     return const Option.none();
   }
 
-  final archiveFileName = archiveUrl.flatMap(_fileNameFromUrl);
+  final archiveFileName = archiveUrl.flatMap(fileNameFromUrl);
   final digestPattern = RegExp(r'\b[0-9a-fA-F]{64}\b');
   for (final line in const LineSplitter().convert(body)) {
     if (archiveFileName.match(

@@ -1,6 +1,6 @@
-part of '../../konyak_cli.dart';
+import '../domain/program/program_catalog_models.dart';
 
-String _uniqueProgramId({
+String uniqueProgramId({
   required String baseId,
   required List<BottleProgramRecord> existing,
 }) {
@@ -9,21 +9,21 @@ String _uniqueProgramId({
     return fallbackBaseId;
   }
 
-  return _uniqueProgramIdWithSuffix(
+  return uniqueProgramIdWithSuffix(
     baseId: fallbackBaseId,
     existing: existing,
     suffix: 2,
   );
 }
 
-String _uniqueProgramIdWithSuffix({
+String uniqueProgramIdWithSuffix({
   required String baseId,
   required List<BottleProgramRecord> existing,
   required int suffix,
 }) {
   final candidate = '$baseId-$suffix';
   return existing.any((program) => program.id.value == candidate)
-      ? _uniqueProgramIdWithSuffix(
+      ? uniqueProgramIdWithSuffix(
           baseId: baseId,
           existing: existing,
           suffix: suffix + 1,

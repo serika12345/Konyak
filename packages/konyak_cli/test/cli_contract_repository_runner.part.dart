@@ -468,6 +468,7 @@ void defineRepositoryAndRunnerContractTests() {
     'composite bottle repository reads multiple catalogs and writes locally',
     () {
       final writableRepository = MemoryBottleRepository(
+        programMetadataExtractor: const NoopProgramMetadataExtractor(),
         dataHome: '/home/user/.local/share/konyak',
         bottles: [
           BottleRecord(
@@ -515,9 +516,11 @@ void defineRepositoryAndRunnerContractTests() {
 
   test('composite bottle repository does not mutate catalog repositories', () {
     final writableRepository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: '/home/user/.local/share/konyak',
     );
     final importedRepository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: '/home/user/.local/share/konyak',
       bottles: [
         BottleRecord(

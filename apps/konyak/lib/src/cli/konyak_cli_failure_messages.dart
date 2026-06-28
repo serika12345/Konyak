@@ -1,6 +1,14 @@
-part of 'konyak_cli_client.dart';
+import 'dart:convert';
 
-String _detailFailureMessage(ProcessRunResult result) {
+import 'bottle_create_contract.dart';
+import 'bottle_detail_contract.dart';
+import 'konyak_cli_bottle_payload_parsers.dart';
+import 'konyak_cli_process_runner.dart';
+import 'konyak_cli_result_helpers.dart';
+import 'program_run_contract.dart';
+import 'runtime_install_contract.dart';
+
+String detailFailureMessage(ProcessRunResult result) {
   if (result.exitCode == 0) {
     final parsed = parseBottleDetailPayload(result.stdout);
 
@@ -14,7 +22,7 @@ String _detailFailureMessage(ProcessRunResult result) {
   return 'inspect-bottle failed with exit code ${result.exitCode}.';
 }
 
-String _createFailureMessage(ProcessRunResult result) {
+String createFailureMessage(ProcessRunResult result) {
   if (result.exitCode == 0) {
     final parsed = parseBottleCreatePayload(result.stdout);
 
@@ -28,7 +36,7 @@ String _createFailureMessage(ProcessRunResult result) {
   return 'create-bottle failed with exit code ${result.exitCode}.';
 }
 
-String _updateFailureMessage(ProcessRunResult result) {
+String updateFailureMessage(ProcessRunResult result) {
   if (result.exitCode == 0) {
     final parsed = parseBottleDetailPayload(result.stdout);
 
@@ -42,21 +50,21 @@ String _updateFailureMessage(ProcessRunResult result) {
   return 'set-windows-version failed with exit code ${result.exitCode}.';
 }
 
-String _deleteFailureMessage(ProcessRunResult result) {
+String deleteFailureMessage(ProcessRunResult result) {
   if (result.exitCode == 0) {
-    final parsed = _parseBottleDeletePayload(result.stdout);
+    final parsed = parseBottleDeletePayload(result.stdout);
 
     return switch (parsed) {
-      _BottleDeleteParseFailure(:final message) => message,
-      _ParsedBottleDelete() || _BottleDeleteNotFound() =>
+      BottleDeleteParseFailure(:final message) => message,
+      ParsedBottleDelete() || BottleDeleteNotFound() =>
         'delete-bottle returned an inconsistent payload.',
     };
   }
 
-  return _commandFailureMessage('delete-bottle', result);
+  return commandFailureMessage('delete-bottle', result);
 }
 
-String _programRunFailureMessage(ProcessRunResult result) {
+String programRunFailureMessage(ProcessRunResult result) {
   if (result.exitCode == 0) {
     final parsed = parseProgramRunPayload(result.stdout);
 
@@ -73,9 +81,9 @@ String _programRunFailureMessage(ProcessRunResult result) {
   return 'run-program failed with exit code ${result.exitCode}.';
 }
 
-String _installRuntimeFailureMessage(ProcessRunResult result) {
+String installRuntimeFailureMessage(ProcessRunResult result) {
   if (result.exitCode == 0) {
-    final parsed = _parseRuntimeInstallCommandPayload(result.stdout);
+    final parsed = parseRuntimeInstallCommandPayload(result.stdout);
 
     return switch (parsed) {
       RuntimeInstallParseFailure(:final message) => message,
@@ -84,16 +92,16 @@ String _installRuntimeFailureMessage(ProcessRunResult result) {
     };
   }
 
-  final parsed = _parseRuntimeInstallCommandPayload(result.stdout);
+  final parsed = parseRuntimeInstallCommandPayload(result.stdout);
   if (parsed case RuntimeInstallCommandFailure(:final message)) {
     return message;
   }
 
-  return _commandFailureMessage('install-macos-wine', result);
+  return commandFailureMessage('install-macos-wine', result);
 }
 
-String _commandFailureMessage(String command, ProcessRunResult result) {
-  final message = _jsonErrorMessage(result.stdout);
+String commandFailureMessage(String command, ProcessRunResult result) {
+  final message = jsonErrorMessage(result.stdout);
   if (message != null) {
     return message;
   }
@@ -106,7 +114,7 @@ String _commandFailureMessage(String command, ProcessRunResult result) {
   return '$command failed with exit code ${result.exitCode}: $diagnostic';
 }
 
-String? _jsonErrorMessage(String payload) {
+String? jsonErrorMessage(String payload) {
   final Object? decoded;
   try {
     decoded = jsonDecode(payload);

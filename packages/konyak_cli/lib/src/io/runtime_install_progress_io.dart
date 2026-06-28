@@ -1,4 +1,7 @@
-part of '../../konyak_cli.dart';
+import 'dart:convert';
+
+import '../domain/runtime/runtime_package_installation.dart';
+import '../shared/model_constants.dart';
 
 abstract interface class RuntimeInstallProgressSink {
   void emit(RuntimeInstallProgress progress);

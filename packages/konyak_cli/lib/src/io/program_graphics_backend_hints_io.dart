@@ -1,4 +1,10 @@
-part of '../../konyak_cli.dart';
+import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
+
+import '../domain/program/program_graphics_backend_hints.dart';
+import '../domain/program/program_runner.dart';
+import 'pe_program_image.dart';
 
 class DartIoProgramGraphicsBackendHintsInspector {
   const DartIoProgramGraphicsBackendHintsInspector();
@@ -17,9 +23,9 @@ class DartIoProgramGraphicsBackendHintsInspector {
         programGraphicsBackendHintsFromSignals(
           programPath: programPath,
           hostPlatform: hostPlatform,
-          signals: _PortableExecutableImage.parse(file.readAsBytesSync()).match(
+          signals: PortableExecutableImage.parse(file.readAsBytesSync()).match(
             () => const <ProgramGraphicsBackendSignal>[],
-            _graphicsBackendSignalsFromPortableExecutable,
+            graphicsBackendSignalsFromPortableExecutable,
           ),
         ),
       );
@@ -42,8 +48,9 @@ class DartIoProgramGraphicsBackendHintsInspector {
   }
 }
 
-List<ProgramGraphicsBackendSignal>
-_graphicsBackendSignalsFromPortableExecutable(_PortableExecutableImage image) {
+List<ProgramGraphicsBackendSignal> graphicsBackendSignalsFromPortableExecutable(
+  PortableExecutableImage image,
+) {
   final signals = <ProgramGraphicsBackendSignal>[];
   final seen = <String>{};
 
@@ -60,13 +67,13 @@ _graphicsBackendSignalsFromPortableExecutable(_PortableExecutableImage image) {
 
   for (final dllName in image.importDllNames) {
     final normalized = dllName.toLowerCase();
-    if (_graphicsImportDllNames.contains(normalized)) {
+    if (graphicsImportDllNames.contains(normalized)) {
       addSignal('peImport', normalized);
     }
   }
 
-  for (final value in _graphicsStringSignalValues) {
-    if (_containsAsciiCaseInsensitive(image.bytes, value)) {
+  for (final value in graphicsStringSignalValues) {
+    if (containsAsciiCaseInsensitive(image.bytes, value)) {
       addSignal('string', value);
     }
   }
@@ -74,7 +81,7 @@ _graphicsBackendSignalsFromPortableExecutable(_PortableExecutableImage image) {
   return List.unmodifiable(signals);
 }
 
-bool _containsAsciiCaseInsensitive(Uint8List bytes, String value) {
+bool containsAsciiCaseInsensitive(Uint8List bytes, String value) {
   final needle = ascii.encode(value.toLowerCase());
   if (needle.isEmpty || bytes.length < needle.length) {
     return false;
@@ -89,7 +96,7 @@ bool _containsAsciiCaseInsensitive(Uint8List bytes, String value) {
   );
 }
 
-const _graphicsImportDllNames = <String>{
+const graphicsImportDllNames = <String>{
   'd3d9.dll',
   'd3d10.dll',
   'd3d10_1.dll',
@@ -102,7 +109,7 @@ const _graphicsImportDllNames = <String>{
   'nvngx.dll',
 };
 
-const _graphicsStringSignalValues = <String>{
+const graphicsStringSignalValues = <String>{
   'd3d12createdevice',
   'd3d11createdevice',
   'direct3dcreate9',

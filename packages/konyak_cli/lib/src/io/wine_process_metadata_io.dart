@@ -1,18 +1,27 @@
-part of '../../konyak_cli.dart';
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
 
-Option<String> _latestRunProgramPathForExecutable({
+import 'package:fpdart/fpdart.dart';
+
+import '../domain/bottle/bottle_models.dart';
+import '../shared/common_helpers.dart';
+import 'program_shortcut_metadata_io.dart';
+import 'wine_process_metadata.dart';
+
+Option<String> latestRunProgramPathForExecutable({
   required BottleRecord bottle,
   required String executable,
 }) {
   final logFile = File(
-    _joinPath(bottle.path.value, const ['logs', 'latest.log']),
+    joinPath(bottle.path.value, const ['logs', 'latest.log']),
   );
   if (!logFile.existsSync()) {
     return const Option.none();
   }
 
   try {
-    return _latestRunProgramPathFromLog(
+    return latestRunProgramPathFromLog(
       bottle: bottle,
       executable: executable,
       logContents: logFile.readAsStringSync(),
@@ -22,7 +31,7 @@ Option<String> _latestRunProgramPathForExecutable({
   }
 }
 
-Option<String> _latestRunProgramPathFromLog({
+Option<String> latestRunProgramPathFromLog({
   required BottleRecord bottle,
   required String executable,
   required String logContents,
@@ -42,12 +51,12 @@ Option<String> _latestRunProgramPathFromLog({
       }
 
       for (final argument in decoded.whereType<String>()) {
-        final hostPath = _runArgumentHostPath(
+        final hostPath = runArgumentHostPath(
           bottle: bottle,
           argument: argument,
         );
         final metadataPath = hostPath.flatMap(
-          (path) => _metadataProgramPathMatchingExecutable(
+          (path) => metadataProgramPathMatchingExecutable(
             bottle: bottle,
             programPath: path,
             executable: executable,
@@ -67,15 +76,15 @@ Option<String> _latestRunProgramPathFromLog({
   return const Option.none();
 }
 
-class _AsyncWineProcessHostPathResolver {
-  _AsyncWineProcessHostPathResolver({required this.bottle});
+class AsyncWineProcessHostPathResolver {
+  AsyncWineProcessHostPathResolver({required this.bottle});
 
   final BottleRecord bottle;
-  Future<String?>? _latestLogContents;
-  Future<Map<String, Object?>?>? _launchIndex;
+  Future<String?>? latestLogContents;
+  Future<Map<String, Object?>?>? launchIndex;
 
   Future<Option<String>> hostPath(String executable) async {
-    final hostPath = _wineWindowsPathToHostPath(
+    final hostPath = wineWindowsPathToHostPath(
       bottle: bottle,
       windowsPath: executable,
     );
@@ -88,7 +97,7 @@ class _AsyncWineProcessHostPathResolver {
       return Option.of(normalized);
     }
 
-    final pinnedProgramPath = _pinnedProgramPathForExecutable(
+    final pinnedProgramPath = pinnedProgramPathForExecutable(
       bottle: bottle,
       executable: executable,
     );
@@ -97,32 +106,32 @@ class _AsyncWineProcessHostPathResolver {
     }
 
     final recordedExternalProgramPath =
-        await _recordedExternalProgramPathForExecutableAsync(executable);
+        await recordedExternalProgramPathForExecutableAsync(executable);
     if (recordedExternalProgramPath.isSome()) {
       return recordedExternalProgramPath;
     }
 
-    return _latestRunProgramPathForExecutableFromCachedLog(executable);
+    return latestRunProgramPathForExecutableFromCachedLog(executable);
   }
 
-  Future<Option<String>> _recordedExternalProgramPathForExecutableAsync(
+  Future<Option<String>> recordedExternalProgramPathForExecutableAsync(
     String executable,
   ) async {
-    final decoded = await (_launchIndex ??= _readLaunchIndex());
+    final decoded = await (launchIndex ??= readLaunchIndex());
     if (decoded == null) {
       return const Option.none();
     }
 
-    return _recordedExternalProgramPathFromLaunchIndex(
+    return recordedExternalProgramPathFromLaunchIndex(
       bottle: bottle,
       executable: executable,
       decoded: decoded,
     );
   }
 
-  Future<Map<String, Object?>?> _readLaunchIndex() async {
+  Future<Map<String, Object?>?> readLaunchIndex() async {
     final launchIndexFile = File(
-      _joinPath(bottle.path.value, const [
+      joinPath(bottle.path.value, const [
         'cache',
         'external-program-launches.json',
       ]),
@@ -141,24 +150,24 @@ class _AsyncWineProcessHostPathResolver {
     }
   }
 
-  Future<Option<String>> _latestRunProgramPathForExecutableFromCachedLog(
+  Future<Option<String>> latestRunProgramPathForExecutableFromCachedLog(
     String executable,
   ) async {
-    final logContents = await (_latestLogContents ??= _readLatestLog());
+    final logContents = await (latestLogContents ??= readLatestLog());
     if (logContents == null) {
       return const Option.none();
     }
 
-    return _latestRunProgramPathFromLog(
+    return latestRunProgramPathFromLog(
       bottle: bottle,
       executable: executable,
       logContents: logContents,
     );
   }
 
-  Future<String?> _readLatestLog() async {
+  Future<String?> readLatestLog() async {
     final logFile = File(
-      _joinPath(bottle.path.value, const ['logs', 'latest.log']),
+      joinPath(bottle.path.value, const ['logs', 'latest.log']),
     );
     if (!await logFile.exists()) {
       return null;
@@ -172,12 +181,12 @@ class _AsyncWineProcessHostPathResolver {
   }
 }
 
-Option<String> _recordedExternalProgramPathForExecutable({
+Option<String> recordedExternalProgramPathForExecutable({
   required BottleRecord bottle,
   required String executable,
 }) {
   final launchIndexFile = File(
-    _joinPath(bottle.path.value, const [
+    joinPath(bottle.path.value, const [
       'cache',
       'external-program-launches.json',
     ]),
@@ -192,7 +201,7 @@ Option<String> _recordedExternalProgramPathForExecutable({
       return const Option.none();
     }
 
-    return _recordedExternalProgramPathFromLaunchIndex(
+    return recordedExternalProgramPathFromLaunchIndex(
       bottle: bottle,
       executable: executable,
       decoded: decoded,
@@ -204,7 +213,7 @@ Option<String> _recordedExternalProgramPathForExecutable({
   }
 }
 
-Option<String> _recordedExternalProgramPathFromLaunchIndex({
+Option<String> recordedExternalProgramPathFromLaunchIndex({
   required BottleRecord bottle,
   required String executable,
   required Map<String, Object?> decoded,
@@ -229,7 +238,7 @@ Option<String> _recordedExternalProgramPathFromLaunchIndex({
       continue;
     }
 
-    final metadataPath = _metadataProgramPathMatchingExecutable(
+    final metadataPath = metadataProgramPathMatchingExecutable(
       bottle: bottle,
       programPath: programPath,
       executable: executable,
@@ -244,16 +253,16 @@ Option<String> _recordedExternalProgramPathFromLaunchIndex({
   return const Option.none();
 }
 
-Option<String> _metadataProgramPathMatchingExecutable({
+Option<String> metadataProgramPathMatchingExecutable({
   required BottleRecord bottle,
   required String programPath,
   required String executable,
 }) {
-  final metadataPath = _metadataProgramPath(
+  final metadataPath = metadataProgramPath(
     bottle: bottle,
     programPath: programPath,
   );
-  return _executableNamesMatch(metadataPath, executable)
+  return executableNamesMatch(metadataPath, executable)
       ? Option.of(metadataPath)
       : const Option.none();
 }

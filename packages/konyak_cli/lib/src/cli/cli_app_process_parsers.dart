@@ -1,31 +1,38 @@
-part of '../../konyak_cli.dart';
+import 'dart:convert';
 
-bool _isJsonAppUpdateCheckCommand(List<String> arguments) {
-  return _isJsonFlagOnlyCommand(arguments, 'check-app-update');
+import 'package:fpdart/fpdart.dart';
+
+import '../domain/app/app_settings_models.dart';
+import '../domain/program/program_mutation_models.dart';
+import '../io/app_settings_repositories.dart';
+import 'cli_parsers.dart';
+
+bool isJsonAppUpdateCheckCommand(List<String> arguments) {
+  return isJsonFlagOnlyCommand(arguments, 'check-app-update');
 }
 
-bool _isJsonAppUpdateInstallCommand(List<String> arguments) {
-  return _isJsonFlagOnlyCommand(arguments, 'install-app-update');
+bool isJsonAppUpdateInstallCommand(List<String> arguments) {
+  return isJsonFlagOnlyCommand(arguments, 'install-app-update');
 }
 
-bool _isJsonAppSettingsGetCommand(List<String> arguments) {
-  return _isJsonFlagOnlyCommand(arguments, 'get-app-settings');
+bool isJsonAppSettingsGetCommand(List<String> arguments) {
+  return isJsonFlagOnlyCommand(arguments, 'get-app-settings');
 }
 
-bool _isJsonLinuxFileAssociationInstallCommand(List<String> arguments) {
-  return _isJsonFlagOnlyCommand(arguments, 'install-linux-file-associations');
+bool isJsonLinuxFileAssociationInstallCommand(List<String> arguments) {
+  return isJsonFlagOnlyCommand(arguments, 'install-linux-file-associations');
 }
 
-AppSettingsRecord? _parseJsonAppSettingsUpdateRequest(List<String> arguments) {
-  final results = _parseJsonCliCommand(
+AppSettingsRecord? parseJsonAppSettingsUpdateRequest(List<String> arguments) {
+  final results = parseJsonCliCommand(
     arguments,
     command: 'set-app-settings',
     options: const <String>['settings-json'],
   );
-  if (results == null || !_hasRestCount(results, 0)) {
+  if (results == null || !hasRestCount(results, 0)) {
     return null;
   }
-  final settingsJson = _requiredCliOption(results, 'settings-json');
+  final settingsJson = requiredCliOption(results, 'settings-json');
   if (settingsJson == null) {
     return null;
   }
@@ -37,7 +44,7 @@ AppSettingsRecord? _parseJsonAppSettingsUpdateRequest(List<String> arguments) {
     return null;
   }
 
-  final settings = _appSettingsRecordFromJson(
+  final settings = appSettingsRecordFromJson(
     decoded,
     fallbackDefaultBottlePath: '',
   );
@@ -50,24 +57,24 @@ AppSettingsRecord? _parseJsonAppSettingsUpdateRequest(List<String> arguments) {
       .toNullable();
 }
 
-bool _isJsonWineProcessListCommand(List<String> arguments) {
-  return _isJsonFlagOnlyCommand(arguments, 'list-wine-processes');
+bool isJsonWineProcessListCommand(List<String> arguments) {
+  return isJsonFlagOnlyCommand(arguments, 'list-wine-processes');
 }
 
-WineProcessTerminationRequest? _parseJsonWineProcessTerminationRequest(
+WineProcessTerminationRequest? parseJsonWineProcessTerminationRequest(
   List<String> arguments,
 ) {
-  final results = _parseJsonCliCommand(
+  final results = parseJsonCliCommand(
     arguments,
     command: 'terminate-wine-process',
     options: const <String>['bottle', 'process'],
   );
-  if (results == null || !_hasRestCount(results, 0)) {
+  if (results == null || !hasRestCount(results, 0)) {
     return null;
   }
 
-  final bottleId = _requiredCliOption(results, 'bottle');
-  final processId = _requiredCliOption(results, 'process');
+  final bottleId = requiredCliOption(results, 'bottle');
+  final processId = requiredCliOption(results, 'process');
   if (bottleId == null || processId == null) {
     return null;
   }
@@ -78,18 +85,19 @@ WineProcessTerminationRequest? _parseJsonWineProcessTerminationRequest(
   );
 }
 
-WineProcessGroupTerminationRequest?
-_parseJsonWineProcessGroupTerminationRequest(List<String> arguments) {
-  final results = _parseJsonCliCommand(
+WineProcessGroupTerminationRequest? parseJsonWineProcessGroupTerminationRequest(
+  List<String> arguments,
+) {
+  final results = parseJsonCliCommand(
     arguments,
     command: 'terminate-wine-processes',
     options: const <String>['bottle'],
   );
-  if (results == null || !_hasRestCount(results, 0)) {
+  if (results == null || !hasRestCount(results, 0)) {
     return null;
   }
 
-  final bottleId = _optionalCliOption(results, 'bottle');
+  final bottleId = optionalCliOption(results, 'bottle');
   if (bottleId == null) {
     return results.wasParsed('bottle')
         ? null

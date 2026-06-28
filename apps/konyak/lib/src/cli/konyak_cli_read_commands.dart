@@ -1,13 +1,28 @@
-part of 'konyak_cli_client.dart';
+import 'dart:async';
+
+import 'bottle_detail_contract.dart';
+import 'bottle_list_contract.dart';
+import 'konyak_cli_bottle_result_types.dart';
+import 'konyak_cli_client.dart' show KonyakCliClient;
+import 'konyak_cli_failure_messages.dart';
+import 'konyak_cli_process_runner.dart';
+import 'konyak_cli_program_payload_parsers.dart';
+import 'konyak_cli_program_result_types.dart';
+import 'konyak_cli_runtime_result_types.dart';
+import 'konyak_cli_wine_process_payload_parsers.dart';
+import 'konyak_cli_wine_process_result_types.dart';
+import 'konyak_cli_winetricks_payload_parsers.dart';
+import 'konyak_cli_winetricks_result_types.dart';
+import 'runtime_list_contract.dart';
 
 extension KonyakCliReadCommands on KonyakCliClient {
   Future<BottleListLoadResult> listBottles() async {
-    final result = await _run(const ['list-bottles', '--json']);
+    final result = await run(const ['list-bottles', '--json']);
 
     if (result.exitCode != 0) {
       return BottleListLoadFailure(
         exitCode: result.exitCode,
-        message: _commandFailureMessage('list-bottles', result),
+        message: commandFailureMessage('list-bottles', result),
         diagnostic: result.stderr,
       );
     }
@@ -25,7 +40,7 @@ extension KonyakCliReadCommands on KonyakCliClient {
   }
 
   Future<BottleDetailLoadResult> inspectBottle(String bottleId) async {
-    final result = await _run(['inspect-bottle', bottleId, '--json']);
+    final result = await run(['inspect-bottle', bottleId, '--json']);
 
     final parsed = parseBottleDetailPayload(result.stdout);
 
@@ -39,14 +54,14 @@ extension KonyakCliReadCommands on KonyakCliClient {
       BottleDetailNotFound() ||
       BottleDetailParseFailure() => BottleDetailLoadFailure(
         exitCode: result.exitCode,
-        message: _detailFailureMessage(result),
+        message: detailFailureMessage(result),
         diagnostic: result.stderr,
       ),
     };
   }
 
   Future<RuntimeListLoadResult> listKnownRuntimes() async {
-    final result = await _run(const ['list-runtimes', '--json']);
+    final result = await run(const ['list-runtimes', '--json']);
 
     if (result.exitCode != 0) {
       return RuntimeListLoadFailure(
@@ -69,14 +84,14 @@ extension KonyakCliReadCommands on KonyakCliClient {
   }
 
   Future<ProcessRunResult> installLinuxFileAssociations() {
-    return _run(const ['install-linux-file-associations', '--json']);
+    return run(const ['install-linux-file-associations', '--json']);
   }
 
   Future<BottleProgramListLoadResult> listBottlePrograms(
     String bottleId,
   ) async {
-    final result = await _run(['list-bottle-programs', bottleId, '--json']);
-    final parsed = _parseBottleProgramListPayload(result.stdout);
+    final result = await run(['list-bottle-programs', bottleId, '--json']);
+    final parsed = parseBottleProgramListPayload(result.stdout);
 
     return switch (parsed) {
       LoadedBottlePrograms() when result.exitCode == 0 => parsed,
@@ -88,15 +103,15 @@ extension KonyakCliReadCommands on KonyakCliClient {
         ),
       LoadedBottlePrograms() => BottleProgramListLoadFailure(
         exitCode: result.exitCode,
-        message: _commandFailureMessage('list-bottle-programs', result),
+        message: commandFailureMessage('list-bottle-programs', result),
         diagnostic: result.stderr,
       ),
     };
   }
 
   Future<WineProcessListLoadResult> listWineProcesses() async {
-    final result = await _run(const ['list-wine-processes', '--json']);
-    final parsed = _parseWineProcessListPayload(result.stdout);
+    final result = await run(const ['list-wine-processes', '--json']);
+    final parsed = parseWineProcessListPayload(result.stdout);
 
     return switch (parsed) {
       LoadedWineProcesses() when result.exitCode == 0 => parsed,
@@ -107,15 +122,15 @@ extension KonyakCliReadCommands on KonyakCliClient {
       ),
       LoadedWineProcesses() => WineProcessListLoadFailure(
         exitCode: result.exitCode,
-        message: _commandFailureMessage('list-wine-processes', result),
+        message: commandFailureMessage('list-wine-processes', result),
         diagnostic: result.stderr,
       ),
     };
   }
 
   Future<WinetricksVerbListLoadResult> listWinetricksVerbs() async {
-    final result = await _run(const ['list-winetricks-verbs', '--json']);
-    final parsed = _parseWinetricksVerbListPayload(result.stdout);
+    final result = await run(const ['list-winetricks-verbs', '--json']);
+    final parsed = parseWinetricksVerbListPayload(result.stdout);
 
     return switch (parsed) {
       LoadedWinetricksVerbs() when result.exitCode == 0 => parsed,
@@ -127,7 +142,7 @@ extension KonyakCliReadCommands on KonyakCliClient {
         ),
       LoadedWinetricksVerbs() => WinetricksVerbListLoadFailure(
         exitCode: result.exitCode,
-        message: _commandFailureMessage('list-winetricks-verbs', result),
+        message: commandFailureMessage('list-winetricks-verbs', result),
         diagnostic: result.stderr,
       ),
     };

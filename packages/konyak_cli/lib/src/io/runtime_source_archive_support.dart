@@ -1,6 +1,17 @@
-part of '../../konyak_cli.dart';
+import 'dart:async';
+import 'dart:io';
 
-RuntimeStackSourceArchiveBundleResult _resolveRuntimeStackSourceArchiveBundle({
+import 'package:fpdart/fpdart.dart';
+
+import '../domain/runtime/runtime_models.dart';
+import '../domain/runtime/runtime_source_archive_planning.dart';
+import '../domain/runtime/runtime_source_bundle_models.dart';
+import '../domain/runtime/runtime_validation_models.dart';
+import 'file_digest_io.dart';
+import 'runtime_install_progress_io.dart';
+import 'runtime_source_archive_downloads.dart';
+
+RuntimeStackSourceArchiveBundleResult resolveRuntimeStackSourceArchiveBundle({
   required RuntimeSourceManifest manifest,
   required RuntimePlatformSpec platformSpec,
   required Directory tempDirectory,
@@ -13,7 +24,7 @@ RuntimeStackSourceArchiveBundleResult _resolveRuntimeStackSourceArchiveBundle({
   );
   switch (planResult) {
     case RuntimeStackSourceArchivePlanResolved(:final plan):
-      return _resolveRuntimeStackSourceArchiveBundleFromPlan(
+      return resolveRuntimeStackSourceArchiveBundleFromPlan(
         plan: plan,
         progressSink: progressSink,
       );
@@ -23,12 +34,12 @@ RuntimeStackSourceArchiveBundleResult _resolveRuntimeStackSourceArchiveBundle({
 }
 
 RuntimeStackSourceArchiveBundleResult
-_resolveRuntimeStackSourceArchiveBundleFromPlan({
+resolveRuntimeStackSourceArchiveBundleFromPlan({
   required RuntimeStackSourceArchivePlan plan,
   required RuntimeInstallProgressSink? progressSink,
 }) {
   for (final componentPlan in plan.components) {
-    switch (_downloadRuntimeStackSourceArchive(
+    switch (downloadRuntimeStackSourceArchive(
       source: componentPlan.component.archiveUrl.value,
       targetPath: componentPlan.archivePath.value,
       progressSink: progressSink,
@@ -43,15 +54,13 @@ _resolveRuntimeStackSourceArchiveBundleFromPlan({
         break;
     }
 
-    _emitRuntimeInstallProgress(
+    emitRuntimeInstallProgress(
       progressSink,
       stage: 'verifying',
       message: componentPlan.verifyingMessage,
       fraction: componentPlan.endFraction.value,
     );
-    final actualSha256 = _sha256HexDigest(
-      File(componentPlan.archivePath.value),
-    );
+    final actualSha256 = sha256HexDigest(File(componentPlan.archivePath.value));
     if (actualSha256.toLowerCase() !=
         componentPlan.component.sha256.value.toLowerCase()) {
       return RuntimeStackSourceArchiveBundleFailed(
@@ -66,7 +75,7 @@ _resolveRuntimeStackSourceArchiveBundleFromPlan({
 }
 
 Future<RuntimeStackSourceArchiveBundleResult>
-_resolveRuntimeStackSourceArchiveBundleStreaming({
+resolveRuntimeStackSourceArchiveBundleStreaming({
   required RuntimeSourceManifest manifest,
   required RuntimePlatformSpec platformSpec,
   required Directory tempDirectory,
@@ -79,7 +88,7 @@ _resolveRuntimeStackSourceArchiveBundleStreaming({
   );
   switch (planResult) {
     case RuntimeStackSourceArchivePlanResolved(:final plan):
-      return _resolveRuntimeStackSourceArchiveBundleFromPlanStreaming(
+      return resolveRuntimeStackSourceArchiveBundleFromPlanStreaming(
         plan: plan,
         progressSink: progressSink,
       );
@@ -89,12 +98,12 @@ _resolveRuntimeStackSourceArchiveBundleStreaming({
 }
 
 Future<RuntimeStackSourceArchiveBundleResult>
-_resolveRuntimeStackSourceArchiveBundleFromPlanStreaming({
+resolveRuntimeStackSourceArchiveBundleFromPlanStreaming({
   required RuntimeStackSourceArchivePlan plan,
   required RuntimeInstallProgressSink? progressSink,
 }) async {
   for (final componentPlan in plan.components) {
-    switch (await _downloadRuntimeStackSourceArchiveStreaming(
+    switch (await downloadRuntimeStackSourceArchiveStreaming(
       source: componentPlan.component.archiveUrl.value,
       targetPath: componentPlan.archivePath.value,
       progressSink: progressSink,
@@ -109,15 +118,13 @@ _resolveRuntimeStackSourceArchiveBundleFromPlanStreaming({
         break;
     }
 
-    _emitRuntimeInstallProgress(
+    emitRuntimeInstallProgress(
       progressSink,
       stage: 'verifying',
       message: componentPlan.verifyingMessage,
       fraction: componentPlan.endFraction.value,
     );
-    final actualSha256 = _sha256HexDigest(
-      File(componentPlan.archivePath.value),
-    );
+    final actualSha256 = sha256HexDigest(File(componentPlan.archivePath.value));
     if (actualSha256.toLowerCase() !=
         componentPlan.component.sha256.value.toLowerCase()) {
       return RuntimeStackSourceArchiveBundleFailed(

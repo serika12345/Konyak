@@ -1,18 +1,33 @@
-part of '../home_loader/home_loader.dart';
+import 'dart:async';
 
-const _programLaunchWindowPollInterval = Duration(milliseconds: 250);
-const _programLaunchWindowWatchTimeout = Duration(minutes: 5);
-const _programLaunchProcessStablePolls = 2;
+import 'package:flutter/material.dart';
 
-extension _KonyakHomeLoaderPrograms on _KonyakHomeLoaderState {
-  Future<void> _runProgram(BottleSummary bottle) async {
+import '../app/dialogs/bottle_programs_dialog.dart';
+import '../app/dialogs/run_program_dialog.dart';
+import '../app/utils/program_labels.dart';
+import '../app/utils/program_run_feedback.dart';
+import '../bottles/bottle_summary.dart';
+import '../cli/konyak_cli_program_commands.dart';
+import '../cli/konyak_cli_program_result_types.dart';
+import '../cli/konyak_cli_read_commands.dart';
+import '../l10n/konyak_localizations.dart';
+import 'home_loader.dart';
+import 'home_loader_bottles.dart';
+import 'home_loader_pinned_programs.dart';
+
+const programLaunchWindowPollInterval = Duration(milliseconds: 250);
+const programLaunchWindowWatchTimeout = Duration(minutes: 5);
+const programLaunchProcessStablePolls = 2;
+
+extension KonyakHomeLoaderPrograms on KonyakHomeLoaderState {
+  Future<void> runProgram(BottleSummary bottle) async {
     final result = await showDialog<RunProgramDialogResult>(
       context: context,
       builder: (context) => RunProgramDialog(
         bottleName: bottle.name,
         programFilePicker: widget.programFilePicker,
-        initialDirectory: _bottleDriveCPath(bottle.path),
-        defaultLogPath: _bottleRunLogPath(bottle.path),
+        initialDirectory: bottleDriveCPath(bottle.path),
+        defaultLogPath: bottleRunLogPath(bottle.path),
         graphicsBackendHintsLoader: (programPath) =>
             widget.cliClient.suggestGraphicsBackend(programPath: programPath),
       ),
@@ -22,35 +37,35 @@ extension _KonyakHomeLoaderPrograms on _KonyakHomeLoaderState {
       return;
     }
 
-    await _runProgramPath(
+    await runProgramPath(
       bottle: bottle,
       programPath: result.programPath,
       settings: result.settings,
     );
   }
 
-  Future<void> _runProgramPath({
+  Future<void> runProgramPath({
     required BottleSummary bottle,
     required String programPath,
     ProgramSettingsSummary? settings,
   }) async {
-    final launchId = _beginProgramLaunch();
+    final launchId = beginProgramLaunch();
     final baselineWindowIds =
-        await _visibleExternalWindowIds(
+        await visibleExternalWindowIds(
           descendantOfProcessIds: const <int>{},
           includeWineProcessWindows: true,
         ) ??
         const <String>{};
     final baselineWineProcessIds =
-        await _runningWineProcessIds(
+        await runningWineProcessIds(
           descendantOfProcessIds: const <int>{},
           includeWineProcesses: true,
         ) ??
         const <int>{};
-    final baselineProgramPaths = await _installedProgramPathsForAutoPin(bottle);
+    final baselineProgramPaths = await installedProgramPathsForAutoPin(bottle);
 
     if (!mounted) {
-      _finishProgramLaunch(launchId);
+      finishProgramLaunch(launchId);
       return;
     }
 
@@ -62,7 +77,7 @@ extension _KonyakHomeLoaderPrograms on _KonyakHomeLoaderState {
         settings: settings,
         onStarted: (processId) {
           unawaited(
-            _finishProgramLaunchWhenMatchingWindowAppears(
+            finishProgramLaunchWhenMatchingWindowAppears(
               launchId: launchId,
               rootProcessId: processId,
               baselineWindowIds: baselineWindowIds,
@@ -72,52 +87,52 @@ extension _KonyakHomeLoaderPrograms on _KonyakHomeLoaderState {
         },
       );
     } finally {
-      _finishProgramLaunch(launchId);
+      finishProgramLaunch(launchId);
     }
 
     if (!mounted) {
       return;
     }
 
-    _handleProgramRunResult(result);
+    handleProgramRunResult(result);
     if (result is CompletedProgramRun && bottle.pinnedPrograms.isNotEmpty) {
-      await _reloadBottle(bottle);
+      await reloadBottle(bottle);
       if (!mounted) {
         return;
       }
     }
-    await _autoPinNewInstalledPrograms(
+    await autoPinNewInstalledPrograms(
       bottle: bottle,
       result: result,
       baselineProgramPaths: baselineProgramPaths,
     );
   }
 
-  Future<_AutoPinBaselineProgramPaths> _installedProgramPathsForAutoPin(
+  Future<AutoPinBaselineProgramPaths> installedProgramPathsForAutoPin(
     BottleSummary bottle,
   ) async {
-    if (!_shouldAutomaticallyPinNewInstalledPrograms()) {
-      return const _AutoPinBaselineUnavailable();
+    if (!shouldAutomaticallyPinNewInstalledPrograms()) {
+      return const AutoPinBaselineUnavailable();
     }
 
     final result = await widget.cliClient.listBottlePrograms(bottle.id);
     if (!mounted) {
-      return const _AutoPinBaselineUnavailable();
+      return const AutoPinBaselineUnavailable();
     }
 
     return switch (result) {
-      LoadedBottlePrograms(:final programs) => _AutoPinBaselineLoaded(
-        _knownProgramPaths(bottle: bottle, programs: programs),
+      LoadedBottlePrograms(:final programs) => AutoPinBaselineLoaded(
+        knownProgramPaths(bottle: bottle, programs: programs),
       ),
-      BottleProgramListLoadFailure() => const _AutoPinBaselineUnavailable(),
+      BottleProgramListLoadFailure() => const AutoPinBaselineUnavailable(),
     };
   }
 
-  bool _shouldAutomaticallyPinNewInstalledPrograms() {
-    return _appSettings?.automaticallyPinNewInstalledPrograms ?? false;
+  bool shouldAutomaticallyPinNewInstalledPrograms() {
+    return appSettings?.automaticallyPinNewInstalledPrograms ?? false;
   }
 
-  Set<String> _knownProgramPaths({
+  Set<String> knownProgramPaths({
     required BottleSummary bottle,
     required List<BottleProgramSummary> programs,
   }) {
@@ -127,12 +142,12 @@ extension _KonyakHomeLoaderPrograms on _KonyakHomeLoaderState {
     };
   }
 
-  Future<void> _autoPinNewInstalledPrograms({
+  Future<void> autoPinNewInstalledPrograms({
     required BottleSummary bottle,
     required ProgramRunLoadResult result,
-    required _AutoPinBaselineProgramPaths baselineProgramPaths,
+    required AutoPinBaselineProgramPaths baselineProgramPaths,
   }) async {
-    if (!_shouldAutomaticallyPinNewInstalledPrograms()) {
+    if (!shouldAutomaticallyPinNewInstalledPrograms()) {
       return;
     }
 
@@ -142,9 +157,9 @@ extension _KonyakHomeLoaderPrograms on _KonyakHomeLoaderState {
 
     final Set<String> baselinePaths;
     switch (baselineProgramPaths) {
-      case _AutoPinBaselineUnavailable():
+      case AutoPinBaselineUnavailable():
         return;
-      case _AutoPinBaselineLoaded(:final paths):
+      case AutoPinBaselineLoaded(:final paths):
         baselinePaths = paths;
     }
 
@@ -162,7 +177,7 @@ extension _KonyakHomeLoaderPrograms on _KonyakHomeLoaderState {
             continue;
           }
 
-          await _pinProgramPath(
+          await pinProgramPath(
             bottle: bottle,
             name: programDisplayName(program),
             programPath: program.path,
@@ -172,36 +187,36 @@ extension _KonyakHomeLoaderPrograms on _KonyakHomeLoaderState {
           }
         }
       case BottleProgramListLoadFailure(:final message):
-        _showSnackBar(message);
+        showSnackBar(message);
     }
   }
 
-  int _beginProgramLaunch() {
-    final launchId = _nextProgramLaunchId;
-    _nextProgramLaunchId += 1;
+  int beginProgramLaunch() {
+    final launchId = nextProgramLaunchId;
+    nextProgramLaunchId += 1;
 
     if (!mounted) {
       return launchId;
     }
 
-    _updateState(() {
-      _activeProgramLaunchIds.add(launchId);
+    updateState(() {
+      activeProgramLaunchIds.add(launchId);
     });
 
     return launchId;
   }
 
-  void _finishProgramLaunch(int launchId) {
-    if (!mounted || !_activeProgramLaunchIds.contains(launchId)) {
+  void finishProgramLaunch(int launchId) {
+    if (!mounted || !activeProgramLaunchIds.contains(launchId)) {
       return;
     }
 
-    _updateState(() {
-      _activeProgramLaunchIds.remove(launchId);
+    updateState(() {
+      activeProgramLaunchIds.remove(launchId);
     });
   }
 
-  Future<void> _finishProgramLaunchWhenMatchingWindowAppears({
+  Future<void> finishProgramLaunchWhenMatchingWindowAppears({
     required int launchId,
     required int rootProcessId,
     required Set<String> baselineWindowIds,
@@ -214,22 +229,22 @@ extension _KonyakHomeLoaderPrograms on _KonyakHomeLoaderState {
     final startedAt = DateTime.now();
     final newWineProcessPollCounts = <int, int>{};
 
-    while (mounted && _activeProgramLaunchIds.contains(launchId)) {
+    while (mounted && activeProgramLaunchIds.contains(launchId)) {
       if (DateTime.now().difference(startedAt) >=
-          _programLaunchWindowWatchTimeout) {
+          programLaunchWindowWatchTimeout) {
         return;
       }
 
-      await Future<void>.delayed(_programLaunchWindowPollInterval);
-      if (!mounted || !_activeProgramLaunchIds.contains(launchId)) {
+      await Future<void>.delayed(programLaunchWindowPollInterval);
+      if (!mounted || !activeProgramLaunchIds.contains(launchId)) {
         return;
       }
 
-      final currentWindowIds = await _visibleExternalWindowIds(
+      final currentWindowIds = await visibleExternalWindowIds(
         descendantOfProcessIds: <int>{rootProcessId},
         includeWineProcessWindows: true,
       );
-      final currentWineProcessIds = await _runningWineProcessIds(
+      final currentWineProcessIds = await runningWineProcessIds(
         descendantOfProcessIds: <int>{rootProcessId},
         includeWineProcesses: true,
       );
@@ -242,7 +257,7 @@ extension _KonyakHomeLoaderPrograms on _KonyakHomeLoaderState {
           currentWindowIds.any(
             (windowId) => !baselineWindowIds.contains(windowId),
           )) {
-        _finishProgramLaunch(launchId);
+        finishProgramLaunch(launchId);
         return;
       }
 
@@ -259,8 +274,8 @@ extension _KonyakHomeLoaderPrograms on _KonyakHomeLoaderState {
 
       for (final processId in newWineProcessIds) {
         final pollCount = (newWineProcessPollCounts[processId] ?? 0) + 1;
-        if (pollCount >= _programLaunchProcessStablePolls) {
-          _finishProgramLaunch(launchId);
+        if (pollCount >= programLaunchProcessStablePolls) {
+          finishProgramLaunch(launchId);
           return;
         }
 
@@ -269,7 +284,7 @@ extension _KonyakHomeLoaderPrograms on _KonyakHomeLoaderState {
     }
   }
 
-  Future<Set<String>?> _visibleExternalWindowIds({
+  Future<Set<String>?> visibleExternalWindowIds({
     required Set<int> descendantOfProcessIds,
     required bool includeWineProcessWindows,
   }) async {
@@ -280,7 +295,7 @@ extension _KonyakHomeLoaderPrograms on _KonyakHomeLoaderState {
     );
   }
 
-  Future<Set<int>?> _runningWineProcessIds({
+  Future<Set<int>?> runningWineProcessIds({
     required Set<int> descendantOfProcessIds,
     required bool includeWineProcesses,
   }) async {
@@ -291,20 +306,20 @@ extension _KonyakHomeLoaderPrograms on _KonyakHomeLoaderState {
     );
   }
 
-  void _handleProgramRunResult(ProgramRunLoadResult result) {
+  void handleProgramRunResult(ProgramRunLoadResult result) {
     switch (result) {
       case CompletedProgramRun(:final run) when run.logFileCreated:
-        _updateState(() {
-          _latestRunLogPath = run.logPath;
+        updateState(() {
+          latestRunLogPath = run.logPath;
         });
       case FailedProgramRun(:final logPath, :final logFileCreated)
           when logFileCreated:
-        _updateState(() {
-          _latestRunLogPath = logPath;
+        updateState(() {
+          latestRunLogPath = logPath;
         });
       case CompletedProgramRun() || FailedProgramRun():
-        _updateState(() {
-          _latestRunLogPath = null;
+        updateState(() {
+          latestRunLogPath = null;
         });
       case UnsupportedProgramRun() ||
           MissingProgramRunBottle() ||
@@ -314,30 +329,30 @@ extension _KonyakHomeLoaderPrograms on _KonyakHomeLoaderState {
 
     final feedbackMessage = programRunFeedback(result);
     if (feedbackMessage != null) {
-      _showSnackBar(feedbackMessage);
+      showSnackBar(feedbackMessage);
     }
   }
 
-  Future<void> _runBottleCommand({
+  Future<void> runBottleCommand({
     required BottleSummary bottle,
     required String command,
   }) async {
-    final launchId = _beginProgramLaunch();
+    final launchId = beginProgramLaunch();
     final baselineWindowIds =
-        await _visibleExternalWindowIds(
+        await visibleExternalWindowIds(
           descendantOfProcessIds: const <int>{},
           includeWineProcessWindows: true,
         ) ??
         const <String>{};
     final baselineWineProcessIds =
-        await _runningWineProcessIds(
+        await runningWineProcessIds(
           descendantOfProcessIds: const <int>{},
           includeWineProcesses: true,
         ) ??
         const <int>{};
 
     if (!mounted) {
-      _finishProgramLaunch(launchId);
+      finishProgramLaunch(launchId);
       return;
     }
 
@@ -348,7 +363,7 @@ extension _KonyakHomeLoaderPrograms on _KonyakHomeLoaderState {
         command: command,
         onStarted: (processId) {
           unawaited(
-            _finishProgramLaunchWhenMatchingWindowAppears(
+            finishProgramLaunchWhenMatchingWindowAppears(
               launchId: launchId,
               rootProcessId: processId,
               baselineWindowIds: baselineWindowIds,
@@ -358,22 +373,22 @@ extension _KonyakHomeLoaderPrograms on _KonyakHomeLoaderState {
         },
       );
     } finally {
-      _finishProgramLaunch(launchId);
+      finishProgramLaunch(launchId);
     }
 
     if (!mounted) {
       return;
     }
 
-    _handleProgramRunResult(result);
+    handleProgramRunResult(result);
 
     if (shouldRefreshBottleAfterCommand(command) &&
         result is CompletedProgramRun) {
-      await _loadBottleConfiguration(bottle);
+      await loadBottleConfiguration(bottle);
     }
   }
 
-  Future<void> _openBottleLocation({
+  Future<void> openBottleLocation({
     required BottleSummary bottle,
     required String location,
   }) async {
@@ -395,10 +410,10 @@ extension _KonyakHomeLoaderPrograms on _KonyakHomeLoaderState {
       BottleLocationOpenFailure(:final message) => message,
     };
 
-    _showSnackBar(message);
+    showSnackBar(message);
   }
 
-  Future<void> _showBottlePrograms(BottleSummary bottle) async {
+  Future<void> showBottlePrograms(BottleSummary bottle) async {
     final result = await widget.cliClient.listBottlePrograms(bottle.id);
 
     if (!mounted) {
@@ -415,7 +430,7 @@ extension _KonyakHomeLoaderPrograms on _KonyakHomeLoaderState {
             onPinProgram: (program) {
               Navigator.of(context).pop();
               unawaited(
-                _pinProgramPath(
+                pinProgramPath(
                   bottle: bottle,
                   name: programDisplayName(program),
                   programPath: program.path,
@@ -424,31 +439,31 @@ extension _KonyakHomeLoaderPrograms on _KonyakHomeLoaderState {
             },
             onRunProgram: (program) {
               Navigator.of(context).pop();
-              _runProgramPath(bottle: bottle, programPath: program.path);
+              runProgramPath(bottle: bottle, programPath: program.path);
             },
           ),
         );
       case BottleProgramListLoadFailure(:final message):
-        _showSnackBar(message);
+        showSnackBar(message);
     }
   }
 }
 
-sealed class _AutoPinBaselineProgramPaths {
-  const _AutoPinBaselineProgramPaths();
+sealed class AutoPinBaselineProgramPaths {
+  const AutoPinBaselineProgramPaths();
 }
 
-final class _AutoPinBaselineUnavailable extends _AutoPinBaselineProgramPaths {
-  const _AutoPinBaselineUnavailable();
+final class AutoPinBaselineUnavailable extends AutoPinBaselineProgramPaths {
+  const AutoPinBaselineUnavailable();
 }
 
-final class _AutoPinBaselineLoaded extends _AutoPinBaselineProgramPaths {
-  _AutoPinBaselineLoaded(Set<String> paths) : paths = Set.unmodifiable(paths);
+final class AutoPinBaselineLoaded extends AutoPinBaselineProgramPaths {
+  AutoPinBaselineLoaded(Set<String> paths) : paths = Set.unmodifiable(paths);
 
   final Set<String> paths;
 }
 
-String _bottleDriveCPath(String bottlePath) {
+String bottleDriveCPath(String bottlePath) {
   if (bottlePath.endsWith('/')) {
     return '${bottlePath}drive_c';
   }
@@ -456,7 +471,7 @@ String _bottleDriveCPath(String bottlePath) {
   return '$bottlePath/drive_c';
 }
 
-String _bottleRunLogPath(String bottlePath) {
+String bottleRunLogPath(String bottlePath) {
   if (bottlePath.endsWith('/')) {
     return '${bottlePath}logs/latest.log';
   }

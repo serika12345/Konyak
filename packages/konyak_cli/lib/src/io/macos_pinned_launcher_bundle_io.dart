@@ -1,7 +1,12 @@
-part of '../../konyak_cli.dart';
+import 'dart:io';
 
-class _MacosPinnedProgramLauncherBundlePlan {
-  const _MacosPinnedProgramLauncherBundlePlan({
+import '../domain/program/program_mutation_models.dart';
+import '../shared/common_helpers.dart';
+import 'macos_pinned_launcher_icons.dart';
+import 'macos_pinned_launchers.dart';
+
+class MacosPinnedProgramLauncherBundlePlan {
+  const MacosPinnedProgramLauncherBundlePlan({
     required this.infoPlistPath,
     required this.manifestPath,
     required this.executablePath,
@@ -18,24 +23,24 @@ class _MacosPinnedProgramLauncherBundlePlan {
   final String launcherScript;
 }
 
-void _writeMacosPinnedProgramLauncher({
+void writeMacosPinnedProgramLauncher({
   required String bundlePath,
-  required _MacosPinnedProgramLauncherCommand launcherCommand,
+  required MacosPinnedProgramLauncherCommand launcherCommand,
   required String displayName,
   required String? iconPath,
   required PinnedProgramLauncherManifest manifest,
 }) {
-  final contentsPath = _joinPath(bundlePath, const ['Contents']);
-  final macosPath = _joinPath(contentsPath, const ['MacOS']);
-  final resourcesPath = _joinPath(contentsPath, const ['Resources']);
+  final contentsPath = joinPath(bundlePath, const ['Contents']);
+  final macosPath = joinPath(contentsPath, const ['MacOS']);
+  final resourcesPath = joinPath(contentsPath, const ['Resources']);
 
   Directory(macosPath).createSync(recursive: true);
   Directory(resourcesPath).createSync(recursive: true);
-  final iconFileName = _writeMacosPinnedProgramLauncherIcon(
+  final iconFileName = writeMacosPinnedProgramLauncherIcon(
     resourcesPath: resourcesPath,
     iconPath: iconPath,
   );
-  final plan = _macosPinnedProgramLauncherBundlePlan(
+  final plan = macosPinnedProgramLauncherBundlePlan(
     bundlePath: bundlePath,
     launcherCommand: launcherCommand,
     displayName: displayName,

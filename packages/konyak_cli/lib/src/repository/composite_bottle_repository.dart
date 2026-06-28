@@ -1,12 +1,19 @@
-part of '../../konyak_cli.dart';
+import 'package:fpdart/fpdart.dart';
+
+import '../domain/bottle/bottle_models.dart';
+import '../domain/bottle/bottle_mutation_models.dart';
+import '../domain/program/program_mutation_models.dart';
+import '../io/bottle_archives.dart';
+import '../io/io_result.dart';
+import 'repository_interfaces.dart';
 
 class CompositeBottleRepository implements BottleRepository {
   CompositeBottleRepository({
     required Iterable<BottleCatalog> catalogs,
     required this.writableRepository,
-  }) : _catalogs = List.unmodifiable(catalogs);
+  }) : catalogs = List.unmodifiable(catalogs);
 
-  final List<BottleCatalog> _catalogs;
+  final List<BottleCatalog> catalogs;
   final BottleRepository writableRepository;
 
   @override
@@ -19,7 +26,7 @@ class CompositeBottleRepository implements BottleRepository {
           records[bottle.id.value] = bottle;
         }
 
-        for (final catalog in _catalogs) {
+        for (final catalog in catalogs) {
           switch (catalog.listBottles()) {
             case Left<String, List<BottleRecord>>(:final value):
               return Left<String, List<BottleRecord>>(value);
@@ -49,7 +56,7 @@ class CompositeBottleRepository implements BottleRepository {
               return Right<String, Option<BottleRecord>>(localRecord);
             }
 
-            for (final catalog in _catalogs) {
+            for (final catalog in catalogs) {
               switch (catalog.findBottle(id)) {
                 case Left<String, Option<BottleRecord>>(:final value):
                   return Left<String, Option<BottleRecord>>(value);
@@ -78,7 +85,7 @@ class CompositeBottleRepository implements BottleRepository {
       BottleArchiveExportFailed.new,
       (bottle) => bottle.match(
         () => BottleArchiveExportMissing(request.bottleId.value),
-        (bottle) => _exportBottleArchive(
+        (bottle) => writeBottleArchive(
           bottle: bottle,
           archivePath: request.archivePath.value,
         ),
@@ -142,7 +149,7 @@ class CompositeBottleRepository implements BottleRepository {
       return writableRead;
     }
 
-    for (final catalog in _catalogs) {
+    for (final catalog in catalogs) {
       if (catalog is! BottleRepository) {
         continue;
       }

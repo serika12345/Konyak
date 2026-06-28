@@ -1,22 +1,28 @@
-part of '../../konyak_cli.dart';
+import 'dart:convert';
 
-BottleRecord _bottleWithRegistryValue({
+import 'package:fpdart/fpdart.dart';
+
+import '../domain/bottle/bottle_models.dart';
+import '../domain/bottle/bottle_runtime_settings_models.dart';
+import 'external_payload_helpers.dart';
+
+BottleRecord bottleWithRegistryValue({
   required BottleRecord bottle,
   required List<String> arguments,
   required String stdout,
 }) {
-  return _registryValueNameFromArguments(arguments)
+  return registryValueNameFromArguments(arguments)
       .flatMap((name) {
-        return _registryQueryValue(stdout, name).map((data) {
+        return registryQueryValue(stdout, name).map((data) {
           return (name: name, data: data);
         });
       })
       .match(
         () => bottle,
         (value) => value.name == 'Version'
-            ? _bottleWithWindowsVersion(bottle, value.data)
+            ? bottleWithWindowsVersion(bottle, value.data)
             : bottle.withRuntimeSettings(
-                _runtimeSettingsWithRegistryValue(
+                runtimeSettingsWithRegistryValue(
                   runtimeSettings: bottle.runtimeSettings,
                   arguments: arguments,
                   stdout: stdout,
@@ -25,29 +31,29 @@ BottleRecord _bottleWithRegistryValue({
       );
 }
 
-BottleRuntimeSettings _runtimeSettingsWithRegistryValue({
+BottleRuntimeSettings runtimeSettingsWithRegistryValue({
   required BottleRuntimeSettings runtimeSettings,
   required List<String> arguments,
   required String stdout,
 }) {
-  return _registryValueNameFromArguments(arguments)
+  return registryValueNameFromArguments(arguments)
       .flatMap((name) {
-        return _registryQueryValue(stdout, name).map((data) {
+        return registryQueryValue(stdout, name).map((data) {
           return (name: name, data: data);
         });
       })
       .match(
         () => runtimeSettings,
         (value) => switch (value.name) {
-          'CurrentBuild' => _runtimeSettingsWithBuildVersion(
+          'CurrentBuild' => runtimeSettingsWithBuildVersion(
             runtimeSettings,
             value.data,
           ),
-          'RetinaMode' => _runtimeSettingsWithRetinaMode(
+          'RetinaMode' => runtimeSettingsWithRetinaMode(
             runtimeSettings,
             value.data,
           ),
-          'LogPixels' => _runtimeSettingsWithDpiScaling(
+          'LogPixels' => runtimeSettingsWithDpiScaling(
             runtimeSettings,
             value.data,
           ),
@@ -56,13 +62,13 @@ BottleRuntimeSettings _runtimeSettingsWithRegistryValue({
       );
 }
 
-BottleRecord _bottleWithWindowsVersion(BottleRecord bottle, String data) {
-  return _registryWindowsVersion(
+BottleRecord bottleWithWindowsVersion(BottleRecord bottle, String data) {
+  return registryWindowsVersion(
     data,
   ).match(() => bottle, bottle.withWindowsVersion);
 }
 
-Option<String> _registryWindowsVersion(String data) {
+Option<String> registryWindowsVersion(String data) {
   return switch (data.trim().toLowerCase()) {
     'winxp' => Option.of('winxp64'),
     'winxp64' ||
@@ -75,11 +81,11 @@ Option<String> _registryWindowsVersion(String data) {
   };
 }
 
-BottleRuntimeSettings _runtimeSettingsWithBuildVersion(
+BottleRuntimeSettings runtimeSettingsWithBuildVersion(
   BottleRuntimeSettings runtimeSettings,
   String data,
 ) {
-  return _nullableOption(int.tryParse(data.trim())).match(
+  return nullableOption(int.tryParse(data.trim())).match(
     () => runtimeSettings,
     (buildVersion) => buildVersion < 0 || buildVersion > 999999
         ? runtimeSettings
@@ -87,7 +93,7 @@ BottleRuntimeSettings _runtimeSettingsWithBuildVersion(
   );
 }
 
-BottleRuntimeSettings _runtimeSettingsWithRetinaMode(
+BottleRuntimeSettings runtimeSettingsWithRetinaMode(
   BottleRuntimeSettings runtimeSettings,
   String data,
 ) {
@@ -98,11 +104,11 @@ BottleRuntimeSettings _runtimeSettingsWithRetinaMode(
   };
 }
 
-BottleRuntimeSettings _runtimeSettingsWithDpiScaling(
+BottleRuntimeSettings runtimeSettingsWithDpiScaling(
   BottleRuntimeSettings runtimeSettings,
   String data,
 ) {
-  return _registryDwordValue(data).match(
+  return registryDwordValue(data).match(
     () => runtimeSettings,
     (dpiScaling) =>
         dpiScaling < 96 || dpiScaling > 480 || (dpiScaling - 96) % 24 != 0
@@ -111,7 +117,7 @@ BottleRuntimeSettings _runtimeSettingsWithDpiScaling(
   );
 }
 
-Option<String> _registryValueNameFromArguments(List<String> arguments) {
+Option<String> registryValueNameFromArguments(List<String> arguments) {
   final valueIndex = arguments.indexOf('/v');
   if (valueIndex == -1 || valueIndex + 1 >= arguments.length) {
     return const Option.none();
@@ -120,7 +126,7 @@ Option<String> _registryValueNameFromArguments(List<String> arguments) {
   return Option.of(arguments[valueIndex + 1]);
 }
 
-Option<String> _registryQueryValue(String output, String name) {
+Option<String> registryQueryValue(String output, String name) {
   return const LineSplitter()
       .convert(output)
       .fold<Option<String>>(
@@ -134,7 +140,7 @@ Option<String> _registryQueryValue(String output, String name) {
       );
 }
 
-Option<int> _registryDwordValue(String data) {
+Option<int> registryDwordValue(String data) {
   final parts = data.trim().split(RegExp(r'\s+'));
   if (parts.isEmpty || parts.first.isEmpty) {
     return const Option.none();
@@ -142,8 +148,8 @@ Option<int> _registryDwordValue(String data) {
 
   final token = parts.first;
   if (token.startsWith('0x') || token.startsWith('0X')) {
-    return _nullableOption(int.tryParse(token.substring(2), radix: 16));
+    return nullableOption(int.tryParse(token.substring(2), radix: 16));
   }
 
-  return _nullableOption(int.tryParse(token));
+  return nullableOption(int.tryParse(token));
 }

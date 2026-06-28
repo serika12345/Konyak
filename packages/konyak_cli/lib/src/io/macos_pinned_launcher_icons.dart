@@ -1,8 +1,10 @@
-part of '../../konyak_cli.dart';
+import 'dart:io';
 
-const _macosPinnedLauncherIconFileName = 'KonyakPinnedProgram.icns';
+import '../shared/common_helpers.dart';
 
-String? _writeMacosPinnedProgramLauncherIcon({
+const macosPinnedLauncherIconFileName = 'KonyakPinnedProgram.icns';
+
+String? writeMacosPinnedProgramLauncherIcon({
   required String resourcesPath,
   required String? iconPath,
 }) {
@@ -18,12 +20,12 @@ String? _writeMacosPinnedProgramLauncherIcon({
 
   if (sourcePath.toLowerCase().endsWith('.icns')) {
     source.copySync(
-      _joinPath(resourcesPath, const [_macosPinnedLauncherIconFileName]),
+      joinPath(resourcesPath, const [macosPinnedLauncherIconFileName]),
     );
-    return _macosPinnedLauncherIconFileName;
+    return macosPinnedLauncherIconFileName;
   }
 
-  final convertedIcon = _convertMacosLauncherIconToIcns(
+  final convertedIcon = convertMacosLauncherIconToIcns(
     sourcePath: sourcePath,
     resourcesPath: resourcesPath,
   );
@@ -31,24 +33,24 @@ String? _writeMacosPinnedProgramLauncherIcon({
     return convertedIcon;
   }
 
-  final fallbackFileName = _macosPinnedLauncherFallbackIconFileName(sourcePath);
-  source.copySync(_joinPath(resourcesPath, [fallbackFileName]));
+  final fallbackFileName = macosPinnedLauncherFallbackIconFileName(sourcePath);
+  source.copySync(joinPath(resourcesPath, [fallbackFileName]));
   return fallbackFileName;
 }
 
-String? _convertMacosLauncherIconToIcns({
+String? convertMacosLauncherIconToIcns({
   required String sourcePath,
   required String resourcesPath,
 }) {
   final workDirectory = Directory(
-    _joinPath(resourcesPath, const ['KonyakPinnedProgramIconWork']),
+    joinPath(resourcesPath, const ['KonyakPinnedProgramIconWork']),
   );
   final iconset = Directory(
-    _joinPath(workDirectory.path, const ['KonyakPinnedProgram.iconset']),
+    joinPath(workDirectory.path, const ['KonyakPinnedProgram.iconset']),
   );
-  final sourcePngPath = _joinPath(workDirectory.path, const ['source.png']);
-  final icnsPath = _joinPath(resourcesPath, const [
-    _macosPinnedLauncherIconFileName,
+  final sourcePngPath = joinPath(workDirectory.path, const ['source.png']);
+  final icnsPath = joinPath(resourcesPath, const [
+    macosPinnedLauncherIconFileName,
   ]);
 
   try {
@@ -70,8 +72,8 @@ String? _convertMacosLauncherIconToIcns({
     }
 
     for (final size in const <int>[16, 32, 128, 256, 512]) {
-      final resized = _joinPath(iconset.path, ['icon_${size}x$size.png']);
-      final resized2x = _joinPath(iconset.path, ['icon_${size}x$size@2x.png']);
+      final resized = joinPath(iconset.path, ['icon_${size}x$size.png']);
+      final resized2x = joinPath(iconset.path, ['icon_${size}x$size@2x.png']);
       final resizeResult = Process.runSync('sips', <String>[
         '-z',
         '$size',
@@ -104,7 +106,7 @@ String? _convertMacosLauncherIconToIcns({
       return null;
     }
 
-    return _macosPinnedLauncherIconFileName;
+    return macosPinnedLauncherIconFileName;
   } on FileSystemException {
     return null;
   } on ProcessException {
@@ -116,12 +118,12 @@ String? _convertMacosLauncherIconToIcns({
   }
 }
 
-String _macosPinnedLauncherFallbackIconFileName(String sourcePath) {
-  final baseName = _baseName(sourcePath);
-  final extensionStart = baseName.lastIndexOf('.');
+String macosPinnedLauncherFallbackIconFileName(String sourcePath) {
+  final sourceBaseName = baseName(sourcePath);
+  final extensionStart = sourceBaseName.lastIndexOf('.');
   final extension = extensionStart == -1
       ? ''
-      : baseName.substring(extensionStart).toLowerCase();
+      : sourceBaseName.substring(extensionStart).toLowerCase();
   if (extension.isEmpty || !RegExp(r'^\.[a-z0-9]+$').hasMatch(extension)) {
     return 'KonyakPinnedProgramIcon';
   }

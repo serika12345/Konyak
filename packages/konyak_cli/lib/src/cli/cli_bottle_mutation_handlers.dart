@@ -1,124 +1,129 @@
-part of '../../konyak_cli.dart';
+import '../domain/bottle/bottle_mutation_models.dart';
+import '../domain/bottle/bottle_runtime_settings_models.dart';
+import '../domain/program/program_runner.dart';
+import 'cli_bottle_parsers.dart';
+import 'cli_bottle_results.dart';
+import 'cli_commands.dart';
+import 'cli_json_helpers.dart';
+import 'cli_result_model.dart';
 
-CliResult? _handleBottleMutationCommand(
+CliResult? handleBottleMutationCommand(
   List<String> arguments,
-  _CliCommandContext context,
+  CliCommandContext context,
 ) {
-  final createBottleRequest = _parseJsonBottleCreateRequest(arguments);
+  final createBottleRequest = parseJsonBottleCreateRequest(arguments);
   if (createBottleRequest != null) {
     final repository = context.bottleRepository;
     if (repository == null) {
-      return _bottleRepositoryUnavailableError();
+      return bottleRepositoryUnavailableError();
     }
 
     return switch (repository.createBottle(createBottleRequest)) {
-      BottleCreated(:final bottle) => _createdBottleJsonResult(
+      BottleCreated(:final bottle) => createdBottleJsonResult(
         bottle: bottle,
         bottlePrefixInitializer: context.bottlePrefixInitializer,
       ),
-      BottleCreateConflict(:final bottleId) => _jsonError(
+      BottleCreateConflict(:final bottleId) => jsonError(
         exitCode: 73,
         code: 'bottleAlreadyExists',
         message: 'Bottle already exists.',
         extra: <String, Object?>{'bottleId': bottleId.value},
       ),
-      BottleCreateFailed(:final message) => _bottleRepositoryFailureJsonResult(
+      BottleCreateFailed(:final message) => bottleRepositoryFailureJsonResult(
         message,
       ),
     };
   }
 
-  final bottleArchiveExportRequest = _parseJsonBottleArchiveExportRequest(
+  final bottleArchiveExportRequest = parseJsonBottleArchiveExportRequest(
     arguments,
   );
   if (bottleArchiveExportRequest != null) {
     final repository = context.bottleRepository;
     if (repository == null) {
-      return _bottleRepositoryUnavailableError();
+      return bottleRepositoryUnavailableError();
     }
 
-    return _bottleArchiveExportJsonResult(
+    return bottleArchiveExportJsonResult(
       repository.exportBottleArchive(bottleArchiveExportRequest),
     );
   }
 
-  final bottleArchiveImportRequest = _parseJsonBottleArchiveImportRequest(
+  final bottleArchiveImportRequest = parseJsonBottleArchiveImportRequest(
     arguments,
   );
   if (bottleArchiveImportRequest != null) {
     final repository = context.bottleRepository;
     if (repository == null) {
-      return _bottleRepositoryUnavailableError();
+      return bottleRepositoryUnavailableError();
     }
 
-    return _bottleArchiveImportJsonResult(
+    return bottleArchiveImportJsonResult(
       repository.importBottleArchive(bottleArchiveImportRequest),
     );
   }
 
-  final deleteBottleId = _parseJsonBottleDeleteCommand(arguments);
+  final deleteBottleId = parseJsonBottleDeleteCommand(arguments);
   if (deleteBottleId != null) {
     final repository = context.bottleRepository;
     if (repository == null) {
-      return _bottleRepositoryUnavailableError();
+      return bottleRepositoryUnavailableError();
     }
 
     return switch (repository.deleteBottle(deleteBottleId)) {
-      BottleDeleted(:final bottle) => _jsonSuccess(<String, Object?>{
+      BottleDeleted(:final bottle) => jsonSuccess(<String, Object?>{
         'deletedBottle': bottle.toJson(),
       }),
-      BottleDeleteMissing(:final bottleId) => _bottleNotFoundError(
+      BottleDeleteMissing(:final bottleId) => bottleNotFoundError(
         bottleId.value,
       ),
-      BottleDeleteFailed(:final message) => _bottleRepositoryFailureJsonResult(
+      BottleDeleteFailed(:final message) => bottleRepositoryFailureJsonResult(
         message,
       ),
     };
   }
 
-  final renameBottleRequest = _parseJsonBottleRenameRequest(arguments);
+  final renameBottleRequest = parseJsonBottleRenameRequest(arguments);
   if (renameBottleRequest != null) {
     final repository = context.bottleRepository;
     if (repository == null) {
-      return _bottleRepositoryUnavailableError();
+      return bottleRepositoryUnavailableError();
     }
 
     return switch (repository.renameBottle(renameBottleRequest)) {
-      BottleRenamed(:final bottle) => _bottleJsonResult(bottle),
-      BottleRenameMissing(:final bottleId) => _bottleNotFoundError(
+      BottleRenamed(:final bottle) => bottleJsonResult(bottle),
+      BottleRenameMissing(:final bottleId) => bottleNotFoundError(
         bottleId.value,
       ),
-      BottleRenameConflict(:final bottleId) => _jsonError(
+      BottleRenameConflict(:final bottleId) => jsonError(
         exitCode: 73,
         code: 'bottleAlreadyExists',
         message: 'Bottle already exists.',
         extra: <String, Object?>{'bottleId': bottleId.value},
       ),
-      BottleRenameFailed(:final message) => _bottleRepositoryFailureJsonResult(
+      BottleRenameFailed(:final message) => bottleRepositoryFailureJsonResult(
         message,
       ),
     };
   }
 
-  final moveBottleRequest = _parseJsonBottleMoveRequest(arguments);
+  final moveBottleRequest = parseJsonBottleMoveRequest(arguments);
   if (moveBottleRequest != null) {
     final repository = context.bottleRepository;
     if (repository == null) {
-      return _bottleRepositoryUnavailableError();
+      return bottleRepositoryUnavailableError();
     }
 
     return switch (repository.moveBottle(moveBottleRequest)) {
-      BottleMoved(:final bottle) => _bottleJsonResult(bottle),
-      BottleMoveMissing(:final bottleId) => _bottleNotFoundError(
-        bottleId.value,
-      ),
-      BottleMoveConflict(:final path) => _jsonError(
+      BottleMoved(:final bottle) => bottleJsonResult(bottle),
+      BottleMoveMissing(:final bottleId) => bottleNotFoundError(bottleId.value),
+      BottleMoveConflict(:final path) => jsonError(
         exitCode: 73,
         code: 'bottleMoveDestinationExists',
         message: 'Bottle move destination exists.',
         extra: <String, Object?>{'path': path.value},
       ),
-      BottleMoveFailed(:final message) => _bottleRepositoryFailureJsonResult(
+      BottleMoveFailed(:final message) => bottleRepositoryFailureJsonResult(
         message,
       ),
     };
@@ -127,40 +132,40 @@ CliResult? _handleBottleMutationCommand(
   return null;
 }
 
-CliResult _bottleRepositoryUnavailableError() {
-  return _unavailableJsonError(
+CliResult bottleRepositoryUnavailableError() {
+  return unavailableJsonError(
     code: 'bottleRepositoryUnavailable',
     subject: 'Bottle repository',
   );
 }
 
-CliResult? _handleBottleConfigurationCommand(
+CliResult? handleBottleConfigurationCommand(
   List<String> arguments,
-  _CliCommandContext context,
+  CliCommandContext context,
 ) {
-  final windowsVersionUpdateRequest = _parseJsonWindowsVersionUpdateRequest(
+  final windowsVersionUpdateRequest = parseJsonWindowsVersionUpdateRequest(
     arguments,
   );
   if (windowsVersionUpdateRequest != null) {
     final repository = context.bottleRepository;
     if (repository == null) {
-      return _bottleRepositoryUnavailableError();
+      return bottleRepositoryUnavailableError();
     }
 
-    return _foundBottleJsonResult(
+    return foundBottleJsonResult(
       result: repository.findBottle(windowsVersionUpdateRequest.bottleId.value),
       bottleId: windowsVersionUpdateRequest.bottleId.value,
       onFound: (bottle) {
-        switch (_applyWindowsVersionRegistryUpdates(
+        switch (applyWindowsVersionRegistryUpdates(
           bottle: bottle,
           windowsVersion: windowsVersionUpdateRequest.windowsVersion.value,
           programRunPlanner: context.programRunPlanner,
           programRunner: context.programRunner,
         )) {
-          case _CliSideEffectFailed(:final result):
+          case CliSideEffectFailed(:final result):
             return result;
-          case _CliSideEffectSucceeded():
-            return _bottleUpdateJsonResult(
+          case CliSideEffectSucceeded():
+            return bottleUpdateJsonResult(
               repository.setWindowsVersion(windowsVersionUpdateRequest),
             );
         }
@@ -168,47 +173,47 @@ CliResult? _handleBottleConfigurationCommand(
     );
   }
 
-  final runtimeSettingsUpdateRequest = _parseJsonRuntimeSettingsUpdateRequest(
+  final runtimeSettingsUpdateRequest = parseJsonRuntimeSettingsUpdateRequest(
     arguments,
   );
   if (runtimeSettingsUpdateRequest != null) {
     final repository = context.bottleRepository;
     if (repository == null) {
-      return _bottleRepositoryUnavailableError();
+      return bottleRepositoryUnavailableError();
     }
 
-    return _foundBottleJsonResult(
+    return foundBottleJsonResult(
       result: repository.findBottle(
         runtimeSettingsUpdateRequest.bottleId.value,
       ),
       bottleId: runtimeSettingsUpdateRequest.bottleId.value,
       onFound: (bottle) {
-        final runtimeSettings = _effectiveRuntimeSettingsForUpdate(
+        final runtimeSettings = effectiveRuntimeSettingsForUpdate(
           currentRuntimeSettings: bottle.runtimeSettings,
           runtimeSettings: runtimeSettingsUpdateRequest.runtimeSettings,
           hostPlatform: context.programRunPlanner.hostPlatform,
         );
-        switch (_applyRuntimeSettingsRegistryUpdates(
+        switch (applyRuntimeSettingsRegistryUpdates(
           bottle: bottle,
           runtimeSettings: runtimeSettings,
           programRunPlanner: context.programRunPlanner,
           programRunner: context.programRunner,
         )) {
-          case _CliSideEffectFailed(:final result):
+          case CliSideEffectFailed(:final result):
             return result;
-          case _CliSideEffectSucceeded():
+          case CliSideEffectSucceeded():
             break;
         }
 
-        switch (_syncRuntimeSettingsDllOverrides(
+        switch (syncRuntimeSettingsDllOverrides(
           bottle: bottle,
           runtimeSettings: runtimeSettings,
           programRunPlanner: context.programRunPlanner,
         )) {
-          case _CliSideEffectFailed(:final result):
+          case CliSideEffectFailed(:final result):
             return result;
-          case _CliSideEffectSucceeded():
-            return _bottleUpdateJsonResult(
+          case CliSideEffectSucceeded():
+            return bottleUpdateJsonResult(
               repository.setRuntimeSettings(
                 RuntimeSettingsUpdateRequest(
                   bottleId: runtimeSettingsUpdateRequest.bottleId.value,
@@ -224,7 +229,7 @@ CliResult? _handleBottleConfigurationCommand(
   return null;
 }
 
-BottleRuntimeSettings _effectiveRuntimeSettingsForUpdate({
+BottleRuntimeSettings effectiveRuntimeSettingsForUpdate({
   required BottleRuntimeSettings currentRuntimeSettings,
   required BottleRuntimeSettings runtimeSettings,
   required KonyakHostPlatform hostPlatform,
@@ -238,13 +243,11 @@ BottleRuntimeSettings _effectiveRuntimeSettingsForUpdate({
   };
 }
 
-CliResult _bottleUpdateJsonResult(BottleUpdateResult result) {
+CliResult bottleUpdateJsonResult(BottleUpdateResult result) {
   return switch (result) {
-    BottleUpdated(:final bottle) => _bottleJsonResult(bottle),
-    BottleUpdateMissing(:final bottleId) => _bottleNotFoundError(
-      bottleId.value,
-    ),
-    BottleUpdateFailed(:final message) => _bottleRepositoryFailureJsonResult(
+    BottleUpdated(:final bottle) => bottleJsonResult(bottle),
+    BottleUpdateMissing(:final bottleId) => bottleNotFoundError(bottleId.value),
+    BottleUpdateFailed(:final message) => bottleRepositoryFailureJsonResult(
       message,
     ),
   };

@@ -1,17 +1,23 @@
-part of '../../konyak_cli.dart';
+import 'dart:io';
+
+import 'package:fpdart/fpdart.dart';
+
+import '../domain/program/program_runner.dart';
+import '../domain/runtime/host_environment.dart';
+import 'platform_host_paths.dart';
 
 ProgramRunPlanner currentProgramRunPlanner() {
-  final hostPlatform = _currentHostPlatform();
+  final hostPlatform = currentHostPlatform();
   return ProgramRunPlanner(
     hostPlatform: hostPlatform,
     environment: HostEnvironment(Platform.environment),
     macosMajorVersion: hostPlatform == KonyakHostPlatform.macos
-        ? _currentMacosMajorVersion()
+        ? currentMacosMajorVersion()
         : const Option.none(),
   );
 }
 
-Option<int> _currentMacosMajorVersion() {
+Option<int> currentMacosMajorVersion() {
   return macosMajorVersionFromOperatingSystemVersion(
     Platform.operatingSystemVersion,
   );

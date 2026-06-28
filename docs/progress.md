@@ -13,6 +13,38 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-28 16:31 JST
+- State: `completed`
+- Branch: `main`
+- Active work: replace the post-`part` transitional giant libraries with
+  standalone responsibility libraries.
+- Related TODO: `docs/todo.md` deferred Dart `part` root library boundary
+  cleanup.
+- Latest commit: `f8ad003` (`Retire domain part root boundary`).
+- Purpose: finish the architecture correction by replacing the temporary
+  pasted backend/client/home-loader files with explicit Dart import boundaries.
+- Completed work: split `src/io/konyak_cli_backend.dart` back into standalone
+  CLI, I/O, repository, platform, storage, and shared libraries; removed the
+  backend file; split the Flutter CLI client into process runner, launch
+  config, parsers, result types, and command extensions; split the home loader
+  into loader state and bottle/program/runtime/settings/winetricks/process
+  action libraries; kept generated Freezed/JSON `part` as the only production
+  `part` use; removed repository constructor defaults for
+  `DartIoProgramMetadataExtractor`; and strengthened governance against
+  pasted part markers, large transitional files, and repository-side concrete
+  I/O defaults.
+- Remaining work: no transitional backend/client/home-loader giant remains.
+  Existing baseline files over 1000 lines are limited to generated Flutter
+  localizations, centralized value-object declarations, and the pure program
+  run request-builder table.
+- Next action: continue with `docs/todo.md`, starting with domain impossible
+  state throws or domain JSON projection extraction.
+- Verification: `just format-check`,
+  `just verify-governance && just verify-architecture &&
+  just konyak-lints-test`, `just cli-analyze && just flutter-analyze`,
+  focused CLI pinned-program icon regression test, `just cli-test`, and
+  final `just verify` passed.
+
 - Timestamp: 2026-06-28 15:10 JST
 - State: `completed`
 - Branch: `main`

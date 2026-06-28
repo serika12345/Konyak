@@ -1,26 +1,31 @@
-part of '../../konyak_cli.dart';
+import 'package:args/args.dart' hide Option;
 
-bool _isJsonRuntimeListCommand(List<String> arguments) {
-  return _isJsonFlagOnlyCommand(arguments, 'list-runtimes');
+import '../io/gptk_wine_installation.dart';
+import '../platform/linux/linux_wine_install_requests.dart';
+import '../platform/macos/macos_wine_install_requests.dart';
+import 'cli_parsers.dart';
+
+bool isJsonRuntimeListCommand(List<String> arguments) {
+  return isJsonFlagOnlyCommand(arguments, 'list-runtimes');
 }
 
-bool _isJsonMacosSetupCheckCommand(List<String> arguments) {
-  return _isJsonFlagOnlyCommand(arguments, 'check-macos-setup');
+bool isJsonMacosSetupCheckCommand(List<String> arguments) {
+  return isJsonFlagOnlyCommand(arguments, 'check-macos-setup');
 }
 
-GptkWineInstallRequest? _parseJsonGptkWineInstallRequest(
+GptkWineInstallRequest? parseJsonGptkWineInstallRequest(
   List<String> arguments,
 ) {
-  final results = _parseJsonCliCommand(
+  final results = parseJsonCliCommand(
     arguments,
     command: 'install-gptk-wine',
     options: const <String>['from'],
   );
-  if (results == null || !_hasRestCount(results, 0)) {
+  if (results == null || !hasRestCount(results, 0)) {
     return null;
   }
 
-  final sourcePath = _requiredCliOption(results, 'from');
+  final sourcePath = requiredCliOption(results, 'from');
   if (sourcePath == null) {
     return null;
   }
@@ -28,13 +33,13 @@ GptkWineInstallRequest? _parseJsonGptkWineInstallRequest(
   return GptkWineInstallRequest(sourcePath: sourcePath);
 }
 
-String? _parseJsonOpenUrlCommand(List<String> arguments) {
-  final results = _parseJsonCliCommand(arguments, command: 'open-url');
-  if (results == null || !_hasRestCount(results, 1)) {
+String? parseJsonOpenUrlCommand(List<String> arguments) {
+  final results = parseJsonCliCommand(arguments, command: 'open-url');
+  if (results == null || !hasRestCount(results, 1)) {
     return null;
   }
 
-  final url = _requiredCliRest(results);
+  final url = requiredCliRest(results);
   if (url != null &&
       (url.startsWith('https://') || url.startsWith('http://'))) {
     return url;
@@ -43,19 +48,19 @@ String? _parseJsonOpenUrlCommand(List<String> arguments) {
   return null;
 }
 
-String? _parseJsonRuntimeIdCommand(List<String> arguments, String command) {
-  final results = _parseJsonCliCommand(arguments, command: command);
-  if (results == null || !_hasRestCount(results, 1)) {
+String? parseJsonRuntimeIdCommand(List<String> arguments, String command) {
+  final results = parseJsonCliCommand(arguments, command: command);
+  if (results == null || !hasRestCount(results, 1)) {
     return null;
   }
 
-  return _requiredCliRest(results);
+  return requiredCliRest(results);
 }
 
-MacosWineInstallRequest? _parseJsonMacosWineInstallRequest(
+MacosWineInstallRequest? parseJsonMacosWineInstallRequest(
   List<String> arguments,
 ) {
-  final options = _parseRuntimeInstallCliOptions(
+  final options = parseRuntimeInstallCliOptions(
     arguments,
     command: 'install-macos-wine',
     allowReinstall: true,
@@ -71,10 +76,10 @@ MacosWineInstallRequest? _parseJsonMacosWineInstallRequest(
   );
 }
 
-LinuxWineInstallRequest? _parseJsonLinuxWineInstallRequest(
+LinuxWineInstallRequest? parseJsonLinuxWineInstallRequest(
   List<String> arguments,
 ) {
-  final options = _parseRuntimeInstallCliOptions(
+  final options = parseRuntimeInstallCliOptions(
     arguments,
     command: 'install-linux-wine',
     allowReinstall: true,
@@ -90,8 +95,8 @@ LinuxWineInstallRequest? _parseJsonLinuxWineInstallRequest(
   );
 }
 
-class _RuntimeInstallCliOptions {
-  _RuntimeInstallCliOptions({
+class RuntimeInstallCliOptions {
+  RuntimeInstallCliOptions({
     this.sourceManifest,
     this.reinstall = false,
     this.emitProgress = false,
@@ -102,7 +107,7 @@ class _RuntimeInstallCliOptions {
   final bool emitProgress;
 }
 
-_RuntimeInstallCliOptions? _parseRuntimeInstallCliOptions(
+RuntimeInstallCliOptions? parseRuntimeInstallCliOptions(
   List<String> arguments, {
   required String command,
   bool allowReinstall = false,
@@ -131,25 +136,25 @@ _RuntimeInstallCliOptions? _parseRuntimeInstallCliOptions(
   }
 
   for (final name in const <String>['source-manifest']) {
-    if (_hasEmptyParsedCliOption(results, name)) {
+    if (hasEmptyParsedCliOption(results, name)) {
       return null;
     }
   }
 
-  final sourceManifest = _nonEmptyCliOption(results, 'source-manifest');
+  final sourceManifest = nonEmptyCliOption(results, 'source-manifest');
   final reinstall = results['reinstall'] == true;
   if (reinstall && !allowReinstall) {
     return null;
   }
 
-  return _RuntimeInstallCliOptions(
+  return RuntimeInstallCliOptions(
     sourceManifest: sourceManifest,
     reinstall: reinstall,
     emitProgress: results['progress-json'] == true,
   );
 }
 
-String? _nonEmptyCliOption(ArgResults results, String name) {
+String? nonEmptyCliOption(ArgResults results, String name) {
   final value = results[name] as String?;
   final normalized = value?.trim();
   if (normalized == null || normalized.isEmpty) {

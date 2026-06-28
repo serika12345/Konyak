@@ -1,13 +1,24 @@
-part of '../../konyak_cli.dart';
+import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
 
-Option<Uint8List> _peIconBytes(_PortableExecutableImage image) {
-  final groupResources = _peResourceLeaves(image, 14);
+import 'package:crypto/crypto.dart';
+import 'package:fpdart/fpdart.dart';
+
+import '../domain/bottle/bottle_models.dart';
+import '../shared/common_helpers.dart';
+import 'external_payload_helpers.dart';
+import 'pe_program_image.dart';
+import 'pe_program_resources.dart';
+
+Option<Uint8List> peIconBytes(PortableExecutableImage image) {
+  final groupResources = peResourceLeaves(image, 14);
   if (groupResources.isEmpty) {
     return const Option.none();
   }
 
   final iconResources = <int, Uint8List>{};
-  for (final resource in _peResourceLeaves(image, 3)) {
+  for (final resource in peResourceLeaves(image, 3)) {
     if (resource.ids.isEmpty) {
       continue;
     }
@@ -15,7 +26,7 @@ Option<Uint8List> _peIconBytes(_PortableExecutableImage image) {
   }
 
   for (final group in groupResources) {
-    final icon = _icoFromGroupIconResource(
+    final icon = icoFromGroupIconResource(
       group.data,
       iconResources: iconResources,
     );
@@ -27,7 +38,7 @@ Option<Uint8List> _peIconBytes(_PortableExecutableImage image) {
   return const Option.none();
 }
 
-String _peIconCachePath({
+String peIconCachePath({
   required BottleRecord bottle,
   required String programPath,
   required FileStat fileStat,
@@ -41,51 +52,51 @@ String _peIconCachePath({
       )
       .toString()
       .substring(0, 24);
-  return _joinPath(bottle.path.value, ['cache', 'icons', '$cacheKey.ico']);
+  return joinPath(bottle.path.value, ['cache', 'icons', '$cacheKey.ico']);
 }
 
-Option<Uint8List> _icoFromGroupIconResource(
+Option<Uint8List> icoFromGroupIconResource(
   Uint8List groupData, {
   required Map<int, Uint8List> iconResources,
 }) {
-  return _readUint16Option(groupData, 4).flatMap((count) {
+  return readUint16Option(groupData, 4).flatMap((count) {
     if (count <= 0 || groupData.length < 6 + count * 14) {
       return const Option.none();
     }
 
-    final entriesResult = _icoImageEntries(
+    final entriesResult = icoImageEntries(
       groupData: groupData,
       iconResources: iconResources,
       count: count,
       index: 0,
     );
     return switch (entriesResult) {
-      _IcoImageEntriesInvalid() => const Option.none(),
-      _IcoImageEntriesResolved(:final entries) =>
+      IcoImageEntriesInvalid() => const Option.none(),
+      IcoImageEntriesResolved(:final entries) =>
         entries.isEmpty
             ? const Option.none()
-            : Option.of(_icoBytesFromEntries(entries)),
+            : Option.of(icoBytesFromEntries(entries)),
     };
   });
 }
 
-Uint8List _icoBytesFromEntries(List<_IcoImageEntry> entries) {
+Uint8List icoBytesFromEntries(List<IcoImageEntry> entries) {
   final headerLength = 6 + entries.length * 16;
   final header = Uint8List.fromList(<int>[
     0,
     0,
-    ..._uint16LeBytes(1),
-    ..._uint16LeBytes(entries.length),
+    ...uint16LeBytes(1),
+    ...uint16LeBytes(entries.length),
     for (final (index, entry) in entries.indexed) ...<int>[
       entry.width,
       entry.height,
       entry.colorCount,
       0,
-      ..._uint16LeBytes(entry.planes),
-      ..._uint16LeBytes(entry.bitCount),
-      ..._uint32LeBytes(entry.data.length),
-      ..._uint32LeBytes(
-        _icoImageDataOffset(
+      ...uint16LeBytes(entry.planes),
+      ...uint16LeBytes(entry.bitCount),
+      ...uint32LeBytes(entry.data.length),
+      ...uint32LeBytes(
+        icoImageDataOffset(
           entries: entries,
           entryIndex: index,
           headerLength: headerLength,
@@ -102,67 +113,67 @@ Uint8List _icoBytesFromEntries(List<_IcoImageEntry> entries) {
   return output.takeBytes();
 }
 
-_IcoImageEntriesReadResult _icoImageEntries({
+IcoImageEntriesReadResult icoImageEntries({
   required Uint8List groupData,
   required Map<int, Uint8List> iconResources,
   required int count,
   required int index,
 }) {
   if (index >= count) {
-    return const _IcoImageEntriesResolved(<_IcoImageEntry>[]);
+    return const IcoImageEntriesResolved(<IcoImageEntry>[]);
   }
 
-  return switch (_icoImageEntryAtIndex(
+  return switch (icoImageEntryAtIndex(
     groupData: groupData,
     iconResources: iconResources,
     index: index,
   )) {
-    _IcoImageEntryInvalid() => const _IcoImageEntriesInvalid(),
-    _IcoImageEntryMissingIconResource() => _icoImageEntries(
+    IcoImageEntryInvalid() => const IcoImageEntriesInvalid(),
+    IcoImageEntryMissingIconResource() => icoImageEntries(
       groupData: groupData,
       iconResources: iconResources,
       count: count,
       index: index + 1,
     ),
-    _IcoImageEntryFound(:final entry) => (() {
-      final remaining = _icoImageEntries(
+    IcoImageEntryFound(:final entry) => (() {
+      final remaining = icoImageEntries(
         groupData: groupData,
         iconResources: iconResources,
         count: count,
         index: index + 1,
       );
       return switch (remaining) {
-        _IcoImageEntriesInvalid() => const _IcoImageEntriesInvalid(),
-        _IcoImageEntriesResolved(:final entries) => _IcoImageEntriesResolved(
-          <_IcoImageEntry>[entry, ...entries],
+        IcoImageEntriesInvalid() => const IcoImageEntriesInvalid(),
+        IcoImageEntriesResolved(:final entries) => IcoImageEntriesResolved(
+          <IcoImageEntry>[entry, ...entries],
         ),
       };
     })(),
   };
 }
 
-_IcoImageEntryReadResult _icoImageEntryAtIndex({
+IcoImageEntryReadResult icoImageEntryAtIndex({
   required Uint8List groupData,
   required Map<int, Uint8List> iconResources,
   required int index,
 }) {
   final offset = 6 + index * 14;
-  return _readUint32Option(groupData, offset + 8).match(
-    () => const _IcoImageEntryInvalid(),
-    (_) => _readUint16Option(groupData, offset + 12).match(
-      () => const _IcoImageEntryInvalid(),
-      (iconId) => _nullableOption(iconResources[iconId]).match(
-        () => const _IcoImageEntryMissingIconResource(),
-        (iconData) => _IcoImageEntryFound(
-          _IcoImageEntry(
+  return readUint32Option(groupData, offset + 8).match(
+    () => const IcoImageEntryInvalid(),
+    (_) => readUint16Option(groupData, offset + 12).match(
+      () => const IcoImageEntryInvalid(),
+      (iconId) => nullableOption(iconResources[iconId]).match(
+        () => const IcoImageEntryMissingIconResource(),
+        (iconData) => IcoImageEntryFound(
+          IcoImageEntry(
             width: groupData[offset],
             height: groupData[offset + 1],
             colorCount: groupData[offset + 2],
-            planes: _readUint16Option(
+            planes: readUint16Option(
               groupData,
               offset + 4,
             ).match(() => 0, (value) => value),
-            bitCount: _readUint16Option(
+            bitCount: readUint16Option(
               groupData,
               offset + 6,
             ).match(() => 0, (value) => value),
@@ -174,8 +185,8 @@ _IcoImageEntryReadResult _icoImageEntryAtIndex({
   );
 }
 
-int _icoImageDataOffset({
-  required List<_IcoImageEntry> entries,
+int icoImageDataOffset({
+  required List<IcoImageEntry> entries,
   required int entryIndex,
   required int headerLength,
 }) {
@@ -185,11 +196,11 @@ int _icoImageDataOffset({
           .fold(0, (offset, entry) => offset + entry.data.length);
 }
 
-List<int> _uint16LeBytes(int value) {
+List<int> uint16LeBytes(int value) {
   return <int>[value & 0xff, value >> 8 & 0xff];
 }
 
-List<int> _uint32LeBytes(int value) {
+List<int> uint32LeBytes(int value) {
   return <int>[
     value & 0xff,
     value >> 8 & 0xff,
@@ -198,40 +209,40 @@ List<int> _uint32LeBytes(int value) {
   ];
 }
 
-sealed class _IcoImageEntryReadResult {
-  const _IcoImageEntryReadResult();
+sealed class IcoImageEntryReadResult {
+  const IcoImageEntryReadResult();
 }
 
-sealed class _IcoImageEntriesReadResult {
-  const _IcoImageEntriesReadResult();
+sealed class IcoImageEntriesReadResult {
+  const IcoImageEntriesReadResult();
 }
 
-final class _IcoImageEntriesInvalid extends _IcoImageEntriesReadResult {
-  const _IcoImageEntriesInvalid();
+final class IcoImageEntriesInvalid extends IcoImageEntriesReadResult {
+  const IcoImageEntriesInvalid();
 }
 
-final class _IcoImageEntriesResolved extends _IcoImageEntriesReadResult {
-  const _IcoImageEntriesResolved(this.entries);
+final class IcoImageEntriesResolved extends IcoImageEntriesReadResult {
+  const IcoImageEntriesResolved(this.entries);
 
-  final List<_IcoImageEntry> entries;
+  final List<IcoImageEntry> entries;
 }
 
-final class _IcoImageEntryInvalid extends _IcoImageEntryReadResult {
-  const _IcoImageEntryInvalid();
+final class IcoImageEntryInvalid extends IcoImageEntryReadResult {
+  const IcoImageEntryInvalid();
 }
 
-final class _IcoImageEntryMissingIconResource extends _IcoImageEntryReadResult {
-  const _IcoImageEntryMissingIconResource();
+final class IcoImageEntryMissingIconResource extends IcoImageEntryReadResult {
+  const IcoImageEntryMissingIconResource();
 }
 
-final class _IcoImageEntryFound extends _IcoImageEntryReadResult {
-  const _IcoImageEntryFound(this.entry);
+final class IcoImageEntryFound extends IcoImageEntryReadResult {
+  const IcoImageEntryFound(this.entry);
 
-  final _IcoImageEntry entry;
+  final IcoImageEntry entry;
 }
 
-final class _IcoImageEntry {
-  const _IcoImageEntry({
+final class IcoImageEntry {
+  const IcoImageEntry({
     required this.width,
     required this.height,
     required this.colorCount,

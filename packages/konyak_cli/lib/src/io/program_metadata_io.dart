@@ -1,4 +1,14 @@
-part of '../../konyak_cli.dart';
+import 'dart:async';
+import 'dart:io';
+
+import 'package:fpdart/fpdart.dart';
+
+import '../domain/bottle/bottle_models.dart';
+import '../domain/program/program_catalog_models.dart';
+import 'pe_program_icon_io.dart';
+import 'pe_program_image.dart';
+import 'pe_program_versions.dart';
+import 'program_shortcut_metadata_io.dart';
 
 class DartIoProgramMetadataExtractor implements ProgramMetadataExtractor {
   const DartIoProgramMetadataExtractor();
@@ -9,23 +19,23 @@ class DartIoProgramMetadataExtractor implements ProgramMetadataExtractor {
     required String programPath,
   }) {
     try {
-      final metadataProgramPath = _metadataProgramPath(
+      final resolvedMetadataProgramPath = metadataProgramPath(
         bottle: bottle,
         programPath: programPath,
       );
-      final file = File(metadataProgramPath);
+      final file = File(resolvedMetadataProgramPath);
       if (!file.existsSync()) {
         return const Option.none();
       }
 
-      return _PortableExecutableImage.parse(file.readAsBytesSync()).flatMap((
+      return PortableExecutableImage.parse(file.readAsBytesSync()).flatMap((
         image,
       ) {
-        final versionStrings = _peVersionStrings(image);
-        final iconPath = _extractPeIcon(
+        final versionStrings = peVersionStrings(image);
+        final iconPath = extractPeIcon(
           image: image,
           bottle: bottle,
-          programPath: metadataProgramPath,
+          programPath: resolvedMetadataProgramPath,
           fileStat: file.statSync(),
         );
         final metadata = ProgramMetadataRecord(
@@ -64,23 +74,23 @@ class DartIoAsyncProgramMetadataExtractor
     required String programPath,
   }) async {
     try {
-      final metadataProgramPath = _metadataProgramPath(
+      final resolvedMetadataProgramPath = metadataProgramPath(
         bottle: bottle,
         programPath: programPath,
       );
-      final file = File(metadataProgramPath);
+      final file = File(resolvedMetadataProgramPath);
       if (!await file.exists()) {
         return const Option.none();
       }
 
-      return await _PortableExecutableImage.parse(
+      return await PortableExecutableImage.parse(
         await file.readAsBytes(),
       ).match(() async => const Option.none(), (image) async {
-        final versionStrings = _peVersionStrings(image);
-        final iconPath = await _extractPeIconAsync(
+        final versionStrings = peVersionStrings(image);
+        final iconPath = await extractPeIconAsync(
           image: image,
           bottle: bottle,
-          programPath: metadataProgramPath,
+          programPath: resolvedMetadataProgramPath,
           fileStat: await file.stat(),
         );
         final metadata = ProgramMetadataRecord(

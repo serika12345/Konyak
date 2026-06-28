@@ -1,4 +1,7 @@
-part of '../../../konyak_cli.dart';
+import 'package:fast_immutable_collections/fast_immutable_collections.dart';
+import 'package:fpdart/fpdart.dart';
+
+import '../../domain/runtime/runtime_install_operation_models.dart';
 
 class LinuxWineInstallRequest {
   LinuxWineInstallRequest.fullInstall({
@@ -86,33 +89,32 @@ class LinuxWineInstallRequest {
   LinuxWineInstallRequest._({
     required RuntimeInstallRequestOperation requestOperation,
     required this.emitProgress,
-  }) : _accessors = RuntimeWineInstallRequestAccessors(requestOperation);
+  }) : accessors = RuntimeWineInstallRequestAccessors(requestOperation);
 
-  final RuntimeWineInstallRequestAccessors _accessors;
+  final RuntimeWineInstallRequestAccessors accessors;
   final bool emitProgress;
 
   RuntimeInstallRequestOperation get requestOperation =>
-      _accessors.requestOperation;
+      accessors.requestOperation;
 
-  RuntimeInstallOperation get operation => _accessors.operation;
+  RuntimeInstallOperation get operation => accessors.operation;
 
   Option<String> get archivePath =>
-      _accessors.archivePath.map((path) => path.value);
+      accessors.archivePath.map((path) => path.value);
 
-  Option<String> get archiveUrl =>
-      _accessors.archiveUrl.map((url) => url.value);
+  Option<String> get archiveUrl => accessors.archiveUrl.map((url) => url.value);
 
   Option<String> get archiveSha256 =>
-      _accessors.archiveSha256.map((checksum) => checksum.value);
+      accessors.archiveSha256.map((checksum) => checksum.value);
 
   IList<String> get componentArchivePaths =>
-      _accessors.componentArchivePaths.map((path) => path.value).toIList();
+      accessors.componentArchivePaths.map((path) => path.value).toIList();
 
   Option<String> get sourceManifest =>
-      _accessors.sourceManifest.map((sourceManifest) => sourceManifest.value);
+      accessors.sourceManifest.map((sourceManifest) => sourceManifest.value);
 
   Option<String> get sourceManifestSignature =>
-      _accessors.sourceManifestSignature.map((signature) => signature.value);
+      accessors.sourceManifestSignature.map((signature) => signature.value);
 
-  bool get force => _accessors.force;
+  bool get force => accessors.force;
 }

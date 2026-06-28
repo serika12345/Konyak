@@ -1,11 +1,16 @@
-part of '../../konyak_cli.dart';
+import 'dart:io';
 
-Option<String> _shortcutTargetProgramPath({
+import 'package:fpdart/fpdart.dart';
+
+import '../domain/bottle/bottle_models.dart';
+import 'program_shortcut_metadata.dart';
+
+Option<String> shortcutTargetProgramPath({
   required BottleRecord bottle,
   required String shortcutPath,
 }) {
   try {
-    return _shortcutTargetProgramPathFromBytes(
+    return shortcutTargetProgramPathFromBytes(
       bottle: bottle,
       bytes: File(shortcutPath).readAsBytesSync(),
     );
@@ -14,15 +19,15 @@ Option<String> _shortcutTargetProgramPath({
   }
 }
 
-String _metadataProgramPath({
+String metadataProgramPath({
   required BottleRecord bottle,
   required String programPath,
 }) {
-  if (!_isShortcutPath(programPath)) {
+  if (!isShortcutPath(programPath)) {
     return programPath;
   }
 
-  return _shortcutTargetProgramPath(
+  return shortcutTargetProgramPath(
     bottle: bottle,
     shortcutPath: programPath,
   ).match(() => programPath, (targetPath) => targetPath);

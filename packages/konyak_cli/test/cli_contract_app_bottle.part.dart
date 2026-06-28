@@ -272,6 +272,7 @@ void defineAppAndBottleContractTests() {
       }
     });
     final repository = FileBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: _joinTestPath(tempDirectory.path, const ['data']),
     );
     final createResult = repository.createBottle(
@@ -345,6 +346,7 @@ void defineAppAndBottleContractTests() {
     ]);
     expect(archiveResult.exitCode, 0);
     final repository = FileBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: _joinTestPath(tempDirectory.path, const ['data']),
     );
 
@@ -417,7 +419,10 @@ void defineAppAndBottleContractTests() {
     File(_joinTestPath(dataHome, const ['bottles', 'steam', 'metadata.json']))
       ..createSync(recursive: true)
       ..writeAsStringSync('[]');
-    final repository = FileBottleRepository(dataHome: dataHome);
+    final repository = FileBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
+      dataHome: dataHome,
+    );
 
     final result = runCli([
       'import-bottle-archive',
@@ -577,6 +582,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
 
   test('set-windows-version --json applies registry-backed setting', () {
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: '/home/user/.local/share/konyak',
       bottles: [
         BottleRecord(
@@ -632,6 +638,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
 
   test('create-bottle --json creates a bottle in the repository', () {
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: '/home/user/.local/share/konyak',
     );
 
@@ -702,7 +709,10 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
         tempDirectory.deleteSync(recursive: true);
       }
     });
-    final repository = FileBottleRepository(dataHome: tempDirectory.path);
+    final repository = FileBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
+      dataHome: tempDirectory.path,
+    );
     final orphanedBottlePath = _joinTestPath(tempDirectory.path, const [
       'bottles',
       'steam',
@@ -759,6 +769,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
 
   test('create-bottle --json supports non-ASCII bottle names', () {
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: '/home/user/.local/share/konyak',
     );
 
@@ -788,6 +799,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
 
   test('create-bottle --json initializes the Wine prefix when configured', () {
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: '/home/user/.local/share/konyak',
     );
     final initializer = RecordingBottlePrefixInitializer(
@@ -819,6 +831,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
 
   test('create-bottle --json reports prefix initialization failures', () {
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: '/home/user/.local/share/konyak',
     );
     final initializer = RecordingBottlePrefixInitializer(
@@ -857,6 +870,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
         '--json',
       ],
       bottleRepository: MemoryBottleRepository(
+        programMetadataExtractor: const NoopProgramMetadataExtractor(),
         dataHome: '/home/user/.local/share/konyak',
       ),
     );
@@ -874,6 +888,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
 
   test('set-runtime-settings --json updates bottle runtime settings', () {
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: '/home/user/.local/share/konyak',
       bottles: [
         BottleRecord(
@@ -963,6 +978,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
 
   test('set-runtime-settings --json defaults legacy DLSS MetalFX to false', () {
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: '/home/user/.local/share/konyak',
       bottles: [
         BottleRecord(
@@ -1034,6 +1050,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       }
     }
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: _joinTestPath(tempDirectory.path, const ['data']),
       bottles: [
         BottleRecord(
@@ -1150,6 +1167,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       }
     }
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: _joinTestPath(tempDirectory.path, const ['data']),
       bottles: [
         BottleRecord(
@@ -1264,6 +1282,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
     staleDxgi.writeAsStringSync('stale dxgi.dll');
 
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: _joinTestPath(tempDirectory.path, const ['data']),
       bottles: [
         BottleRecord(
@@ -1349,6 +1368,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       }
     }
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: _joinTestPath(tempDirectory.path, const ['data']),
       bottles: [
         BottleRecord(
@@ -1449,6 +1469,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
         }
       }
       final repository = MemoryBottleRepository(
+        programMetadataExtractor: const NoopProgramMetadataExtractor(),
         dataHome: _joinTestPath(tempDirectory.path, const ['data']),
         bottles: [
           BottleRecord(
@@ -1551,6 +1572,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
         }
       }
       final repository = MemoryBottleRepository(
+        programMetadataExtractor: const NoopProgramMetadataExtractor(),
         dataHome: _joinTestPath(tempDirectory.path, const ['data']),
         bottles: [
           BottleRecord(
@@ -1610,6 +1632,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
     'set-runtime-settings --json makes DXVK and DXMT mutually exclusive',
     () {
       final repository = MemoryBottleRepository(
+        programMetadataExtractor: const NoopProgramMetadataExtractor(),
         dataHome: '/home/user/.local/share/konyak',
         bottles: [
           BottleRecord(
@@ -1674,6 +1697,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
         file.writeAsStringSync('d3dmetal/$dllName');
       }
       final repository = MemoryBottleRepository(
+        programMetadataExtractor: const NoopProgramMetadataExtractor(),
         dataHome: _joinTestPath(tempDirectory.path, const ['data']),
         bottles: [
           BottleRecord(
@@ -1710,6 +1734,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
 
   test('set-runtime-settings --json applies registry-backed settings', () {
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: '/home/user/.local/share/konyak',
       bottles: [
         BottleRecord(
@@ -1831,6 +1856,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
     'set-runtime-settings --json restores DPI when disabling High Resolution Mode',
     () {
       final repository = MemoryBottleRepository(
+        programMetadataExtractor: const NoopProgramMetadataExtractor(),
         dataHome: '/home/user/.local/share/konyak',
         bottles: [
           BottleRecord(
@@ -1904,6 +1930,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
 
   test('set-runtime-settings --json maps build version to winecfg version', () {
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: '/home/user/.local/share/konyak',
       bottles: [
         BottleRecord(
@@ -1960,6 +1987,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
     'set-runtime-settings --json does not persist failed registry writes',
     () {
       final repository = MemoryBottleRepository(
+        programMetadataExtractor: const NoopProgramMetadataExtractor(),
         dataHome: '/home/user/.local/share/konyak',
         bottles: [
           BottleRecord(
@@ -2005,6 +2033,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
 
   test('create-bottle --json returns a machine-readable conflict', () {
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: '/home/user/.local/share/konyak',
     );
     runCli(const [
@@ -2037,6 +2066,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
 
   test('delete-bottle --json deletes a bottle from the repository', () {
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: '/home/user/.local/share/konyak',
     );
     runCli(const [
@@ -2094,7 +2124,10 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
           tempDirectory.deleteSync(recursive: true);
         }
       });
-      final repository = FileBottleRepository(dataHome: tempDirectory.path);
+      final repository = FileBottleRepository(
+        programMetadataExtractor: const NoopProgramMetadataExtractor(),
+        dataHome: tempDirectory.path,
+      );
       final createResult = repository.createBottle(
         BottleCreateRequest(name: 'Steam', windowsVersion: 'win10'),
       );
@@ -2138,6 +2171,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
     final result = runCli(
       const ['delete-bottle', 'missing', '--json'],
       bottleRepository: MemoryBottleRepository(
+        programMetadataExtractor: const NoopProgramMetadataExtractor(),
         dataHome: '/home/user/.local/share/konyak',
       ),
     );
@@ -2157,6 +2191,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
 
   test('rename-bottle --json renames and rekeys a bottle', () {
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: '/home/user/.local/share/konyak',
     );
     runCli(const [
@@ -2196,6 +2231,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
 
   test('rename-bottle --json returns a machine-readable conflict', () {
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: '/home/user/.local/share/konyak',
     );
     runCli(const [
@@ -2235,6 +2271,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
 
   test('move-bottle --json updates the bottle path', () {
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: '/home/user/.local/share/konyak',
     );
     runCli(const [
@@ -2273,6 +2310,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
 
   test('set-windows-version --json updates a bottle in the repository', () {
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: '/home/user/.local/share/konyak',
     );
     runCli(const [
@@ -2315,6 +2353,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
         '--json',
       ],
       bottleRepository: MemoryBottleRepository(
+        programMetadataExtractor: const NoopProgramMetadataExtractor(),
         dataHome: '/home/user/.local/share/konyak',
       ),
     );

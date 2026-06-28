@@ -1,4 +1,20 @@
-part of '../../../konyak_cli.dart';
+import 'package:fpdart/fpdart.dart';
+
+import '../../domain/program/program_run_environment.dart';
+import '../../domain/runtime/host_environment.dart';
+import '../../domain/runtime/runtime_catalogs.dart';
+import '../../domain/runtime/runtime_models.dart';
+import '../../domain/runtime/runtime_update_support.dart';
+import '../../domain/runtime/runtime_validation_models.dart';
+import '../../domain/runtime/runtime_validation_support.dart';
+import '../../domain/runtime/wine_runtime_paths.dart';
+import '../../io/macos_wine_archive_installation.dart';
+import '../../io/runtime_executable_probe.dart';
+import '../../io/runtime_probes.dart';
+import '../../shared/common_helpers.dart';
+import '../../shared/model_constants.dart';
+import '../platform_terminal_commands.dart';
+import 'macos_program_run_requests.dart';
 
 class DartIoMacosWineRuntimeValidator implements RuntimeValidator {
   const DartIoMacosWineRuntimeValidator({
@@ -18,11 +34,11 @@ class DartIoMacosWineRuntimeValidator implements RuntimeValidator {
     final runtime = runtimeById(runtimeCatalog.listRuntimes(), runtimeId);
     return runtime.match(
       () => RuntimeValidationRuntimeNotFound(runtimeId),
-      _validateRuntime,
+      validateRuntime,
     );
   }
 
-  RuntimeValidationResult _validateRuntime(RuntimeRecord runtime) {
+  RuntimeValidationResult validateRuntime(RuntimeRecord runtime) {
     final runtimeRoot = runtime.libraryPath.toNullable()?.value;
     final executablePath = runtime.executablePath.toNullable()?.value;
     if (runtimeRoot == null || executablePath == null) {
@@ -44,7 +60,7 @@ class DartIoMacosWineRuntimeValidator implements RuntimeValidator {
     }
 
     if (runtime.id.value == linuxWineRuntimeId) {
-      return _validateLinuxRuntime(
+      return validateLinuxRuntime(
         runtime: runtime,
         runtimeRoot: runtimeRoot,
         executablePath: executablePath,
@@ -70,7 +86,7 @@ class DartIoMacosWineRuntimeValidator implements RuntimeValidator {
         paths: macosWineLoaderLibraryPaths(runtimeRoot),
         fileStatusProbe: fileStatusProbe,
       ),
-      _runtimeStackCompletenessCheck(runtime.stack),
+      runtimeStackCompletenessCheck(runtime.stack),
     ];
 
     if (!checks.every((check) => !check.isRequired || check.isPassed)) {
@@ -88,11 +104,11 @@ class DartIoMacosWineRuntimeValidator implements RuntimeValidator {
       arguments: const ['--version'],
       environment: ProgramRunEnvironment(<String, String>{
         'WINELOADER': executablePath,
-        'WINESERVER': _joinPath(runtimeRoot, const ['bin', 'wineserver']),
-        'WINEDLLPATH': _macosWineWindowsDllPaths(runtimeRoot).join(':'),
-        'DYLD_LIBRARY_PATH': _joinPath(runtimeRoot, const ['lib']),
+        'WINESERVER': joinPath(runtimeRoot, const ['bin', 'wineserver']),
+        'WINEDLLPATH': macosWineWindowsDllPaths(runtimeRoot).join(':'),
+        'DYLD_LIBRARY_PATH': joinPath(runtimeRoot, const ['lib']),
       }),
-      workingDirectory: _dirname(executablePath),
+      workingDirectory: dirname(executablePath),
     );
     final loaderCheck = RuntimeValidationCheck(
       id: 'wine-loader',
@@ -116,7 +132,7 @@ class DartIoMacosWineRuntimeValidator implements RuntimeValidator {
     );
   }
 
-  RuntimeValidationResult _validateLinuxRuntime({
+  RuntimeValidationResult validateLinuxRuntime({
     required RuntimeRecord runtime,
     required String runtimeRoot,
     required String executablePath,
@@ -134,7 +150,7 @@ class DartIoMacosWineRuntimeValidator implements RuntimeValidator {
         path: executablePath,
         fileStatusProbe: fileStatusProbe,
       ),
-      _runtimeStackCompletenessCheck(runtime.stack),
+      runtimeStackCompletenessCheck(runtime.stack),
     ];
 
     if (!checks.every((check) => !check.isRequired || check.isPassed)) {
@@ -151,7 +167,7 @@ class DartIoMacosWineRuntimeValidator implements RuntimeValidator {
       executable: executablePath,
       arguments: const ['--version'],
       environment: linuxRuntimeEnvironment(environment),
-      workingDirectory: _dirname(executablePath),
+      workingDirectory: dirname(executablePath),
     );
     final loaderCheck = RuntimeValidationCheck(
       id: 'wine-loader',
@@ -176,7 +192,7 @@ class DartIoMacosWineRuntimeValidator implements RuntimeValidator {
   }
 }
 
-RuntimeValidationCheck _runtimeStackCompletenessCheck(
+RuntimeValidationCheck runtimeStackCompletenessCheck(
   Option<RuntimeStack> stackOption,
 ) {
   final stack = stackOption.toNullable();
@@ -206,6 +222,6 @@ RuntimeValidationCheck _runtimeStackCompletenessCheck(
     isRequired: true,
     isPassed: false,
     message:
-        'Runtime stack is incomplete: ${_incompleteMacosWineStackSummary(stack)}.',
+        'Runtime stack is incomplete: ${incompleteMacosWineStackSummary(stack)}.',
   );
 }

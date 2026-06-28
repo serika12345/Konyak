@@ -1,5 +1,3 @@
-part of '../../konyak_cli.dart';
-
 class BottleRepositoryException implements Exception {
   const BottleRepositoryException(this.message);
 

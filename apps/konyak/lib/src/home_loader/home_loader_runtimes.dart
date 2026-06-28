@@ -1,7 +1,28 @@
-part of '../home_loader/home_loader.dart';
+import 'dart:async';
 
-extension _KonyakHomeLoaderRuntimes on _KonyakHomeLoaderState {
-  Future<void> _initializeBackgroundServices() async {
+import 'package:flutter/material.dart';
+
+import '../app/app_platform.dart';
+import '../app/runtime/runtime_platform.dart';
+import '../app/startup/startup_update_checker.dart';
+import '../app/utils/update_labels.dart';
+import '../cli/konyak_cli_process_runner.dart';
+import '../cli/konyak_cli_read_commands.dart';
+import '../cli/konyak_cli_runtime_commands.dart';
+import '../cli/konyak_cli_runtime_result_types.dart';
+import '../cli/konyak_cli_settings_commands.dart';
+import '../cli/konyak_cli_settings_result_types.dart';
+import '../cli/konyak_cli_update_result_types.dart';
+import '../cli/runtime_install_contract.dart';
+import '../l10n/konyak_localizations.dart';
+import '../runtimes/runtime_summary.dart';
+import '../settings/app_settings_summary.dart';
+import '../updates/update_check_summary.dart';
+import 'home_loader.dart';
+import 'home_loader_platform_helpers.dart';
+
+extension KonyakHomeLoaderRuntimes on KonyakHomeLoaderState {
+  Future<void> initializeBackgroundServices() async {
     if (widget.platform.isLinux) {
       await widget.cliClient.installLinuxFileAssociations();
       if (!mounted) {
@@ -17,19 +38,19 @@ extension _KonyakHomeLoaderRuntimes on _KonyakHomeLoaderState {
 
     switch (result) {
       case LoadedAppSettings(:final settings):
-        _appSettings = settings;
+        appSettings = settings;
         widget.onAppSettingsLoaded(settings);
-        final appUpdateInstallStarted = await _checkConfiguredUpdates(settings);
+        final appUpdateInstallStarted = await checkConfiguredUpdates(settings);
         if (appUpdateInstallStarted) {
           return;
         }
-        await _promptForMissingManagedRuntime();
+        await promptForMissingManagedRuntime();
       case AppSettingsLoadFailure():
         break;
     }
   }
 
-  Future<bool> _checkConfiguredUpdates(AppSettingsSummary settings) async {
+  Future<bool> checkConfiguredUpdates(AppSettingsSummary settings) async {
     final result = await StartupUpdateChecker(
       platform: widget.platform,
       cliClient: widget.cliClient,
@@ -41,15 +62,15 @@ extension _KonyakHomeLoaderRuntimes on _KonyakHomeLoaderState {
 
     final knownRuntimes = result.knownRuntimes;
     if (knownRuntimes != null) {
-      _setKnownRuntimes(knownRuntimes);
+      setKnownRuntimes(knownRuntimes);
     }
 
     final labels = result.availableUpdateLabels.toList();
     final konyakUpdate = result.konyakUpdate;
-    if (_supportsStartupKonyakAppUpdatePrompt(widget.platform) &&
+    if (supportsStartupKonyakAppUpdatePrompt(widget.platform) &&
         konyakUpdate != null) {
       labels.remove(updateCheckLabel(konyakUpdate, 'Konyak'));
-      final installStarted = await _confirmAndInstallAvailableKonyakUpdate(
+      final installStarted = await confirmAndInstallAvailableKonyakUpdate(
         konyakUpdate,
       );
       if (!mounted) {
@@ -64,31 +85,31 @@ extension _KonyakHomeLoaderRuntimes on _KonyakHomeLoaderState {
       return false;
     }
 
-    _showSnackBar(
+    showSnackBar(
       KonyakLocalizations.of(context).updatesAvailable(labels.join(', ')),
     );
     return false;
   }
 
-  Future<bool> _confirmAndInstallAvailableKonyakUpdate(
+  Future<bool> confirmAndInstallAvailableKonyakUpdate(
     UpdateCheckSummary update,
   ) async {
-    final confirmed = await _confirmKonyakUpdateInstall(update);
+    final confirmed = await confirmKonyakUpdateInstall(update);
     if (!mounted || !confirmed) {
       return false;
     }
 
-    return _installAvailableKonyakUpdate();
+    return installAvailableKonyakUpdate();
   }
 
-  Future<void> _checkKonyakUpdateFromMenu() async {
-    if (_isCheckingKonyakUpdate) {
+  Future<void> checkKonyakUpdateFromMenu() async {
+    if (isCheckingKonyakUpdate) {
       return;
     }
 
-    _updateState(() {
-      _isCheckingKonyakUpdate = true;
-      _konyakUpdateCheckProgressMessage = KonyakLocalizations.of(
+    updateState(() {
+      isCheckingKonyakUpdate = true;
+      konyakUpdateCheckProgressMessage = KonyakLocalizations.of(
         context,
       ).checkingForKonyakUpdatesEllipsis;
     });
@@ -100,35 +121,35 @@ extension _KonyakHomeLoaderRuntimes on _KonyakHomeLoaderState {
         return;
       }
 
-      _updateState(() {
-        _konyakUpdateCheckProgressMessage = null;
+      updateState(() {
+        konyakUpdateCheckProgressMessage = null;
       });
 
       switch (result) {
         case LoadedUpdateCheck(:final update) when update.status == 'available':
-          await _confirmAndInstallAvailableKonyakUpdate(update);
+          await confirmAndInstallAvailableKonyakUpdate(update);
         case LoadedUpdateCheck(:final update) when update.status == 'current':
-          _showSnackBar(KonyakLocalizations.of(context).konyakIsUpToDate);
+          showSnackBar(KonyakLocalizations.of(context).konyakIsUpToDate);
         case LoadedUpdateCheck():
-          _showSnackBar(
+          showSnackBar(
             KonyakLocalizations.of(context).konyakUpdateStatusIsUnknown,
           );
         case UpdateCheckLoadFailure(:final message):
-          _showWarningSnackBar(
+          showWarningSnackBar(
             KonyakLocalizations.of(context).konyakUpdateCheckFailed(message),
           );
       }
     } finally {
       if (mounted) {
-        _updateState(() {
-          _isCheckingKonyakUpdate = false;
-          _konyakUpdateCheckProgressMessage = null;
+        updateState(() {
+          isCheckingKonyakUpdate = false;
+          konyakUpdateCheckProgressMessage = null;
         });
       }
     }
   }
 
-  Future<bool> _confirmKonyakUpdateInstall(UpdateCheckSummary update) async {
+  Future<bool> confirmKonyakUpdateInstall(UpdateCheckSummary update) async {
     final latestVersion = update.latestVersion;
     final localizations = KonyakLocalizations.of(context);
     final title = latestVersion == null
@@ -158,7 +179,7 @@ extension _KonyakHomeLoaderRuntimes on _KonyakHomeLoaderState {
     return confirmed ?? false;
   }
 
-  Future<bool> _installAvailableKonyakUpdate() async {
+  Future<bool> installAvailableKonyakUpdate() async {
     final installResult = await widget.cliClient.installKonyakUpdate();
 
     if (!mounted) {
@@ -167,7 +188,7 @@ extension _KonyakHomeLoaderRuntimes on _KonyakHomeLoaderState {
 
     switch (installResult) {
       case InstalledUpdate(:final update) when update.status == 'installed':
-        _showSnackBar(
+        showSnackBar(
           KonyakLocalizations.of(
             context,
           ).installingKonyakUpdate(installedUpdateLabel(update, 'Konyak')),
@@ -176,25 +197,25 @@ extension _KonyakHomeLoaderRuntimes on _KonyakHomeLoaderState {
       case InstalledUpdate():
         return false;
       case UpdateInstallLoadFailure(:final message):
-        _showSnackBar(
+        showSnackBar(
           KonyakLocalizations.of(context).konyakUpdateInstallFailed(message),
         );
         return false;
     }
   }
 
-  void _setKnownRuntimes(List<RuntimeSummary> runtimes) {
+  void setKnownRuntimes(List<RuntimeSummary> runtimes) {
     if (!mounted) {
       return;
     }
 
-    _updateState(() {
-      _knownRuntimes = List.unmodifiable(runtimes);
-      _hasLoadedKnownRuntimes = true;
+    updateState(() {
+      knownRuntimes = List.unmodifiable(runtimes);
+      hasLoadedKnownRuntimes = true;
     });
   }
 
-  Future<List<RuntimeSummary>?> _loadKnownRuntimes() async {
+  Future<List<RuntimeSummary>?> loadKnownRuntimes() async {
     final runtimeResult = await widget.cliClient.listKnownRuntimes();
 
     if (!mounted) {
@@ -203,17 +224,17 @@ extension _KonyakHomeLoaderRuntimes on _KonyakHomeLoaderState {
 
     switch (runtimeResult) {
       case LoadedRuntimeList(:final runtimes):
-        _setKnownRuntimes(runtimes);
+        setKnownRuntimes(runtimes);
         return runtimes;
       case RuntimeListLoadFailure():
-        _setKnownRuntimes(const <RuntimeSummary>[]);
+        setKnownRuntimes(const <RuntimeSummary>[]);
         return null;
     }
   }
 
-  Future<RuntimeSummary?> _ensureRuntimeForPlatformLoaded() async {
-    if (!_hasLoadedKnownRuntimes) {
-      final runtimes = await _loadKnownRuntimes();
+  Future<RuntimeSummary?> ensureRuntimeForPlatformLoaded() async {
+    if (!hasLoadedKnownRuntimes) {
+      final runtimes = await loadKnownRuntimes();
       if (!mounted) {
         return null;
       }
@@ -225,23 +246,23 @@ extension _KonyakHomeLoaderRuntimes on _KonyakHomeLoaderState {
       return runtimeForPlatform(widget.platform, runtimes);
     }
 
-    return runtimeForPlatform(widget.platform, _knownRuntimes);
+    return runtimeForPlatform(widget.platform, knownRuntimes);
   }
 
-  Future<void> _promptForMissingManagedRuntime() async {
+  Future<void> promptForMissingManagedRuntime() async {
     final managedRuntime = managedRuntimePlatform(widget.platform);
     if (managedRuntime == null) {
       return;
     }
 
-    final runtime = await _ensureRuntimeForPlatformLoaded();
+    final runtime = await ensureRuntimeForPlatformLoaded();
     if (!mounted || runtime?.isInstalled == true) {
       return;
     }
 
-    final installResult = await _confirmAndInstallManagedRuntime(
+    final installResult = await confirmAndInstallManagedRuntime(
       runtimeName: runtime?.name ?? managedRuntime.displayName,
-      installRuntime: _installManagedRuntimeForPlatform,
+      installRuntime: installManagedRuntimeForPlatform,
     );
 
     if (!mounted || installResult == null) {
@@ -250,66 +271,66 @@ extension _KonyakHomeLoaderRuntimes on _KonyakHomeLoaderState {
 
     switch (installResult) {
       case InstalledRuntime(:final runtime):
-        _updateState(() {
-          _knownRuntimes = upsertRuntimeSummary(_knownRuntimes, runtime);
-          _hasLoadedKnownRuntimes = true;
+        updateState(() {
+          knownRuntimes = upsertRuntimeSummary(knownRuntimes, runtime);
+          hasLoadedKnownRuntimes = true;
         });
-        _showSnackBar(
+        showSnackBar(
           KonyakLocalizations.of(context).installedRuntime(runtime.name),
         );
       case RuntimeInstallLoadFailure(:final message):
-        _showSnackBar(
+        showSnackBar(
           KonyakLocalizations.of(context).runtimeInstallFailed(message),
         );
     }
   }
 
-  Future<RuntimeInstallLoadResult> _installManagedRuntimeForPlatform() {
+  Future<RuntimeInstallLoadResult> installManagedRuntimeForPlatform() {
     return widget.platform.isMacOS
-        ? widget.cliClient.installMacosWine(onProgress: _setRuntimeProgress)
-        : widget.cliClient.installLinuxWine(onProgress: _setRuntimeProgress);
+        ? widget.cliClient.installMacosWine(onProgress: setRuntimeProgress)
+        : widget.cliClient.installLinuxWine(onProgress: setRuntimeProgress);
   }
 
-  void _setRuntimeProgress(RuntimeInstallProgress progress) {
+  void setRuntimeProgress(RuntimeInstallProgress progress) {
     if (!mounted) {
       return;
     }
 
-    _updateState(() {
-      _runtimeInstallProgressMessage = progress.message;
-      _runtimeInstallProgressFraction = progress.fraction;
+    updateState(() {
+      runtimeInstallProgressMessage = progress.message;
+      runtimeInstallProgressFraction = progress.fraction;
     });
   }
 
-  Future<RuntimeInstallLoadResult?> _confirmAndInstallManagedRuntime({
+  Future<RuntimeInstallLoadResult?> confirmAndInstallManagedRuntime({
     required String runtimeName,
     required Future<RuntimeInstallLoadResult> Function() installRuntime,
   }) async {
-    final confirmed = await _confirmRuntimeDownload(runtimeName);
+    final confirmed = await confirmRuntimeDownload(runtimeName);
     if (!mounted || !confirmed) {
       return null;
     }
 
-    _updateState(() {
-      _runtimeInstallProgressMessage = KonyakLocalizations.of(
+    updateState(() {
+      runtimeInstallProgressMessage = KonyakLocalizations.of(
         context,
       ).downloadProgress(runtimeName);
-      _runtimeInstallProgressFraction = 0;
+      runtimeInstallProgressFraction = 0;
     });
 
     try {
       return await installRuntime();
     } finally {
       if (mounted) {
-        _updateState(() {
-          _runtimeInstallProgressMessage = null;
-          _runtimeInstallProgressFraction = null;
+        updateState(() {
+          runtimeInstallProgressMessage = null;
+          runtimeInstallProgressFraction = null;
         });
       }
     }
   }
 
-  Future<bool> _confirmRuntimeDownload(String runtimeName) async {
+  Future<bool> confirmRuntimeDownload(String runtimeName) async {
     final localizations = KonyakLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
@@ -332,7 +353,7 @@ extension _KonyakHomeLoaderRuntimes on _KonyakHomeLoaderState {
     return confirmed ?? false;
   }
 
-  Future<RuntimeInstallLoadResult> _installSettingsRuntime({
+  Future<RuntimeInstallLoadResult> installSettingsRuntime({
     bool reinstall = false,
   }) async {
     final managedRuntime = managedRuntimePlatform(widget.platform);
@@ -346,11 +367,11 @@ extension _KonyakHomeLoaderRuntimes on _KonyakHomeLoaderState {
       );
     }
 
-    _updateState(() {
-      _runtimeInstallProgressMessage = KonyakLocalizations.of(
+    updateState(() {
+      runtimeInstallProgressMessage = KonyakLocalizations.of(
         context,
       ).downloadProgress(managedRuntime.displayName);
-      _runtimeInstallProgressFraction = 0;
+      runtimeInstallProgressFraction = 0;
     });
 
     final RuntimeInstallLoadResult result;
@@ -358,17 +379,17 @@ extension _KonyakHomeLoaderRuntimes on _KonyakHomeLoaderState {
       result = widget.platform.isMacOS
           ? await widget.cliClient.installMacosWine(
               reinstall: reinstall,
-              onProgress: _setRuntimeProgress,
+              onProgress: setRuntimeProgress,
             )
           : await widget.cliClient.installLinuxWine(
               reinstall: reinstall,
-              onProgress: _setRuntimeProgress,
+              onProgress: setRuntimeProgress,
             );
     } finally {
       if (mounted) {
-        _updateState(() {
-          _runtimeInstallProgressMessage = null;
-          _runtimeInstallProgressFraction = null;
+        updateState(() {
+          runtimeInstallProgressMessage = null;
+          runtimeInstallProgressFraction = null;
         });
       }
     }
@@ -379,9 +400,9 @@ extension _KonyakHomeLoaderRuntimes on _KonyakHomeLoaderState {
 
     switch (result) {
       case InstalledRuntime(:final runtime):
-        _updateState(() {
-          _knownRuntimes = upsertRuntimeSummary(_knownRuntimes, runtime);
-          _hasLoadedKnownRuntimes = true;
+        updateState(() {
+          knownRuntimes = upsertRuntimeSummary(knownRuntimes, runtime);
+          hasLoadedKnownRuntimes = true;
         });
       case RuntimeInstallLoadFailure():
         break;
@@ -390,37 +411,37 @@ extension _KonyakHomeLoaderRuntimes on _KonyakHomeLoaderState {
     return result;
   }
 
-  Future<void> _reinstallMacosRuntimeFromMenu() async {
+  Future<void> reinstallMacosRuntimeFromMenu() async {
     if (!widget.platform.isMacOS) {
       return;
     }
 
-    await _reinstallManagedRuntimeFromMenu();
+    await reinstallManagedRuntimeFromMenu();
   }
 
-  Future<void> _reinstallManagedRuntimeFromMenu() async {
+  Future<void> reinstallManagedRuntimeFromMenu() async {
     if (!widget.platform.isMacOS && !widget.platform.isLinux) {
       return;
     }
 
-    final result = await _installSettingsRuntime(reinstall: true);
+    final result = await installSettingsRuntime(reinstall: true);
     if (!mounted) {
       return;
     }
 
     switch (result) {
       case InstalledRuntime(:final runtime):
-        _showSnackBar(
+        showSnackBar(
           KonyakLocalizations.of(context).reinstalledRuntime(runtime.name),
         );
       case RuntimeInstallLoadFailure(:final message):
-        _showSnackBar(
+        showSnackBar(
           KonyakLocalizations.of(context).runtimeReinstallFailed(message),
         );
     }
   }
 
-  Future<RuntimeInstallLoadResult> _installGptkWine() async {
+  Future<RuntimeInstallLoadResult> installGptkWine() async {
     final localizations = KonyakLocalizations.of(context);
     final sourcePath = await widget.gptkWineSourcePicker.pickSourcePath();
     if (sourcePath == null || sourcePath.trim().isEmpty) {
@@ -431,10 +452,10 @@ extension _KonyakHomeLoaderRuntimes on _KonyakHomeLoaderState {
       );
     }
 
-    _updateState(() {
-      _runtimeInstallProgressMessage =
+    updateState(() {
+      runtimeInstallProgressMessage =
           localizations.importingGptkD3dmetalEllipsis;
-      _runtimeInstallProgressFraction = 0;
+      runtimeInstallProgressFraction = 0;
     });
 
     final ProcessRunResult installResult;
@@ -444,9 +465,9 @@ extension _KonyakHomeLoaderRuntimes on _KonyakHomeLoaderState {
       );
     } finally {
       if (mounted) {
-        _updateState(() {
-          _runtimeInstallProgressMessage = null;
-          _runtimeInstallProgressFraction = null;
+        updateState(() {
+          runtimeInstallProgressMessage = null;
+          runtimeInstallProgressFraction = null;
         });
       }
     }
@@ -454,7 +475,7 @@ extension _KonyakHomeLoaderRuntimes on _KonyakHomeLoaderState {
     if (installResult.exitCode != 0) {
       return RuntimeInstallLoadFailure(
         exitCode: installResult.exitCode,
-        message: _installGptkFailureMessage(
+        message: installGptkFailureMessage(
           installResult,
           command: 'install-gptk-wine',
         ),
@@ -466,9 +487,9 @@ extension _KonyakHomeLoaderRuntimes on _KonyakHomeLoaderState {
     switch (runtimesResult) {
       case LoadedRuntimeList(:final runtimes):
         if (mounted) {
-          _updateState(() {
-            _knownRuntimes = runtimes;
-            _hasLoadedKnownRuntimes = true;
+          updateState(() {
+            knownRuntimes = runtimes;
+            hasLoadedKnownRuntimes = true;
           });
         }
         return installedRuntimeForPlatform(runtimes, widget.platform);
@@ -485,16 +506,16 @@ extension _KonyakHomeLoaderRuntimes on _KonyakHomeLoaderState {
     }
   }
 
-  Future<void> _openGptkPage() async {
+  Future<void> openGptkPage() async {
     const url = 'https://developer.apple.com/games/game-porting-toolkit/';
     final result = await widget.cliClient.openUrl(url);
     if (!mounted || result.exitCode == 0) {
       return;
     }
-    _showSnackBar(_openUrlFailureMessage(result));
+    showSnackBar(openUrlFailureMessage(result));
   }
 }
 
-bool _supportsStartupKonyakAppUpdatePrompt(KonyakPlatform platform) {
+bool supportsStartupKonyakAppUpdatePrompt(KonyakPlatform platform) {
   return platform.isMacOS || platform.isLinux;
 }

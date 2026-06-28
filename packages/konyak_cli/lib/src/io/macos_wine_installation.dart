@@ -1,30 +1,50 @@
-part of '../../konyak_cli.dart';
+import 'dart:async';
+import 'dart:io';
+
+import 'package:fpdart/fpdart.dart';
+
+import '../domain/program/program_runner.dart';
+import '../domain/runtime/host_environment.dart';
+import '../domain/runtime/runtime_install_plans.dart';
+import '../domain/runtime/runtime_models.dart';
+import '../domain/runtime/runtime_platform_support.dart';
+import '../domain/runtime/runtime_validation_models.dart';
+import '../domain/runtime/runtime_validation_support.dart';
+import '../platform/macos/macos_wine_install_requests.dart';
+import '../platform/macos/macos_wine_install_results.dart';
+import '../shared/common_helpers.dart';
+import 'directory_copy_support.dart';
+import 'macos_wine_archive_installation.dart';
+import 'macos_wine_layout_normalization.dart';
+import 'platform_host_paths.dart';
+import 'runtime_install_progress_io.dart';
+import 'runtime_package_installer_io.dart';
+import 'runtime_platform_records.dart';
+import 'runtime_probes.dart';
+import 'runtime_source_archive_downloads.dart';
 
 class DartIoMacosWineInstaller implements MacosWineInstaller {
   DartIoMacosWineInstaller({
     required this.hostPlatform,
     required this.environment,
-    FileStatusProbe fileStatusProbe = const DartIoFileStatusProbe(),
-    RuntimeStackVersionProbe runtimeStackVersionProbe =
-        const DartIoRuntimeStackVersionProbe(),
+    this.fileStatusProbe = const DartIoFileStatusProbe(),
+    this.runtimeStackVersionProbe = const DartIoRuntimeStackVersionProbe(),
     RuntimePackageInstaller? runtimePackageInstaller,
-  }) : _fileStatusProbe = fileStatusProbe,
-       _runtimeStackVersionProbe = runtimeStackVersionProbe,
-       _runtimePackageInstaller =
-           runtimePackageInstaller ?? _macosRuntimePackageInstaller();
+  }) : runtimePackageInstaller =
+           runtimePackageInstaller ?? macosRuntimePackageInstaller();
 
   factory DartIoMacosWineInstaller.current() {
     return DartIoMacosWineInstaller(
-      hostPlatform: _currentHostPlatform(),
+      hostPlatform: currentHostPlatform(),
       environment: HostEnvironment(Platform.environment),
     );
   }
 
   final KonyakHostPlatform hostPlatform;
   final HostEnvironment environment;
-  final FileStatusProbe _fileStatusProbe;
-  final RuntimeStackVersionProbe _runtimeStackVersionProbe;
-  final RuntimePackageInstaller _runtimePackageInstaller;
+  final FileStatusProbe fileStatusProbe;
+  final RuntimeStackVersionProbe runtimeStackVersionProbe;
+  final RuntimePackageInstaller runtimePackageInstaller;
 
   @override
   MacosWineInstallResult install(
@@ -32,19 +52,19 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
     RuntimeInstallProgressSink? progressSink,
   }) {
     final progress = request.emitProgress ? progressSink : null;
-    _emitRuntimeInstallProgress(
+    emitRuntimeInstallProgress(
       progress,
       stage: 'preparing',
       message: 'Preparing Konyak macOS Wine install...',
       fraction: 0,
     );
 
-    final currentRuntime = _macosWineRuntimeRecord(
+    final currentRuntime = macosWineRuntimeRecord(
       environment: environment,
-      fileStatusProbe: _fileStatusProbe,
-      runtimeStackVersionProbe: _runtimeStackVersionProbe,
+      fileStatusProbe: fileStatusProbe,
+      runtimeStackVersionProbe: runtimeStackVersionProbe,
     );
-    final plan = _macosWineInstallPlan(
+    final plan = macosWineInstallPlan(
       hostPlatform: hostPlatform,
       environment: environment,
       request: request,
@@ -55,7 +75,7 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
       case RuntimeWineInstallUnsupported(:final message):
         return MacosWineInstallFailed(message);
       case RuntimeWineInstallAlreadyInstalled(:final runtime):
-        _emitRuntimeInstallProgress(
+        emitRuntimeInstallProgress(
           progress,
           stage: 'complete',
           message: 'Konyak macOS Wine is already installed.',
@@ -69,7 +89,7 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
         :final sourceManifestSignature,
         :final preserveExistingRuntimeFiles,
       ):
-        return _installMacosWineStackFromSourceManifest(
+        return installMacosWineStackFromSourceManifest(
           sourceManifest.value,
           sourceManifestSignature: sourceManifestSignature.asOption
               .toNullable()
@@ -83,7 +103,7 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
         :final componentArchivePaths,
         :final preserveExistingRuntimeFiles,
       ):
-        return _installMacosWineArchive(
+        return installMacosWineArchive(
           archivePath: archivePath.value,
           archiveSha256: archiveSha256.asOption.map(
             (checksum) => checksum.value,
@@ -106,12 +126,12 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
         final tempDirectory = Directory.systemTemp.createTempSync(
           'konyak-macos-wine-',
         );
-        final downloadedArchivePath = _joinPath(tempDirectory.path, [
+        final downloadedArchivePath = joinPath(tempDirectory.path, [
           archiveFileName,
         ]);
 
         try {
-          return _downloadRuntimeStackSourceArchive(
+          return downloadRuntimeStackSourceArchive(
             source: archiveUrl.value,
             targetPath: downloadedArchivePath,
             progressSink: progress,
@@ -121,7 +141,7 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
             endFraction: 0.65,
           ).match(
             MacosWineInstallFailed.new,
-            (_) => _installMacosWineArchive(
+            (_) => installMacosWineArchive(
               archivePath: downloadedArchivePath,
               archiveSha256: archiveSha256.asOption.map(
                 (checksum) => checksum.value,
@@ -138,7 +158,7 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
         } on ProcessException catch (error) {
           return MacosWineInstallFailed(error.message);
         } finally {
-          _deleteDirectoryIfPresent(tempDirectory);
+          deleteDirectoryIfPresent(tempDirectory);
         }
     }
   }
@@ -148,19 +168,19 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
     RuntimeInstallProgressSink? progressSink,
   }) async {
     final progress = request.emitProgress ? progressSink : null;
-    _emitRuntimeInstallProgress(
+    emitRuntimeInstallProgress(
       progress,
       stage: 'preparing',
       message: 'Preparing Konyak macOS Wine install...',
       fraction: 0,
     );
 
-    final currentRuntime = _macosWineRuntimeRecord(
+    final currentRuntime = macosWineRuntimeRecord(
       environment: environment,
-      fileStatusProbe: _fileStatusProbe,
-      runtimeStackVersionProbe: _runtimeStackVersionProbe,
+      fileStatusProbe: fileStatusProbe,
+      runtimeStackVersionProbe: runtimeStackVersionProbe,
     );
-    final plan = _macosWineInstallPlan(
+    final plan = macosWineInstallPlan(
       hostPlatform: hostPlatform,
       environment: environment,
       request: request,
@@ -171,7 +191,7 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
       case RuntimeWineInstallUnsupported(:final message):
         return MacosWineInstallFailed(message);
       case RuntimeWineInstallAlreadyInstalled(:final runtime):
-        _emitRuntimeInstallProgress(
+        emitRuntimeInstallProgress(
           progress,
           stage: 'complete',
           message: 'Konyak macOS Wine is already installed.',
@@ -185,7 +205,7 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
         :final sourceManifestSignature,
         :final preserveExistingRuntimeFiles,
       ):
-        return _installMacosWineStackFromSourceManifestStreaming(
+        return installMacosWineStackFromSourceManifestStreaming(
           sourceManifest.value,
           sourceManifestSignature: sourceManifestSignature.asOption
               .toNullable()
@@ -199,7 +219,7 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
         :final componentArchivePaths,
         :final preserveExistingRuntimeFiles,
       ):
-        return _installMacosWineArchive(
+        return installMacosWineArchive(
           archivePath: archivePath.value,
           archiveSha256: archiveSha256.asOption.map(
             (checksum) => checksum.value,
@@ -222,12 +242,12 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
         final tempDirectory = Directory.systemTemp.createTempSync(
           'konyak-macos-wine-',
         );
-        final downloadedArchivePath = _joinPath(tempDirectory.path, [
+        final downloadedArchivePath = joinPath(tempDirectory.path, [
           archiveFileName,
         ]);
 
         try {
-          return (await _downloadRuntimeStackSourceArchiveStreaming(
+          return (await downloadRuntimeStackSourceArchiveStreaming(
             source: archiveUrl.value,
             targetPath: downloadedArchivePath,
             progressSink: progress,
@@ -237,7 +257,7 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
             endFraction: 0.65,
           )).match(
             MacosWineInstallFailed.new,
-            (_) => _installMacosWineArchive(
+            (_) => installMacosWineArchive(
               archivePath: downloadedArchivePath,
               archiveSha256: archiveSha256.asOption.map(
                 (checksum) => checksum.value,
@@ -254,24 +274,24 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
         } on ProcessException catch (error) {
           return MacosWineInstallFailed(error.message);
         } finally {
-          _deleteDirectoryIfPresent(tempDirectory);
+          deleteDirectoryIfPresent(tempDirectory);
         }
     }
   }
 }
 
-RuntimePackageInstaller _macosRuntimePackageInstaller() {
+RuntimePackageInstaller macosRuntimePackageInstaller() {
   return DartIoRuntimePackageInstaller(
-    preserveExistingRuntimeComponents: _preserveImportedGptkD3DMetalComponent,
+    preserveExistingRuntimeComponents: preserveImportedGptkD3DMetalComponent,
     normalizeStagingRoot:
         macosKonyakRuntimePlatformSpec.layoutNormalization ==
             RuntimeLayoutNormalization.macosWineBundle
-        ? _normalizeMacosWineRuntimeLayout
+        ? normalizeMacosWineRuntimeLayout
         : null,
   );
 }
 
-RuntimeWineInstallPlan _macosWineInstallPlan({
+RuntimeWineInstallPlan macosWineInstallPlan({
   required KonyakHostPlatform hostPlatform,
   required HostEnvironment environment,
   required MacosWineInstallRequest request,

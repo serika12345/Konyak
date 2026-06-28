@@ -1,4 +1,4 @@
-part of 'konyak_cli_client.dart';
+import '../bottles/bottle_summary.dart';
 
 sealed class BottleListLoadResult {
   const BottleListLoadResult();

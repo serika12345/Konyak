@@ -1,6 +1,11 @@
-part of '../../konyak_cli.dart';
+import 'dart:convert';
 
-Option<PinnedProgramLauncherManifest> _pinnedProgramLauncherManifestFromPayload(
+import 'package:fpdart/fpdart.dart';
+
+import '../domain/program/program_mutation_models.dart';
+import '../shared/model_constants.dart';
+
+Option<PinnedProgramLauncherManifest> pinnedProgramLauncherManifestFromPayload(
   String payload,
 ) {
   final decoded = jsonDecode(payload);

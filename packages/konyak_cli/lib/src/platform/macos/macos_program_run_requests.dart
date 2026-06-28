@@ -1,4 +1,15 @@
-part of '../../../konyak_cli.dart';
+import 'package:fpdart/fpdart.dart';
+
+import '../../domain/bottle/bottle_models.dart';
+import '../../domain/program/program_argument_support.dart';
+import '../../domain/program/program_run_environment.dart';
+import '../../domain/program/program_run_models.dart';
+import '../../domain/program/program_settings_models.dart';
+import '../../domain/runtime/host_environment.dart';
+import '../../domain/runtime/runtime_platform_support.dart';
+import '../../domain/runtime/wine_runtime_paths.dart';
+import '../../io/gptk_wine_installation.dart';
+import '../../shared/common_helpers.dart';
 
 ProgramRunRequest macosWineRequest({
   required BottleRecord bottle,
@@ -21,7 +32,7 @@ ProgramRunRequest macosWineRequest({
       ...programSettingsArguments(programSettings),
     ],
     environment: ProgramRunEnvironment(<String, String>{
-      ..._macosWineEnvironment(
+      ...macosWineEnvironment(
         bottle: bottle,
         environment: environment,
         macosMajorVersion: macosMajorVersion,
@@ -47,12 +58,12 @@ ProgramRunRequest macosWinebootRequest({
     runnerKind: 'macosWine',
     executable: macosWineExecutable(hostEnvironment),
     arguments: const <String>['wineboot', '--init'],
-    environment: _macosPrefixInitializationEnvironment(
+    environment: macosPrefixInitializationEnvironment(
       bottle: bottle,
       environment: environment,
       macosMajorVersion: macosMajorVersion,
     ),
-    logPath: _joinPath(bottle.path.value, const ['logs', 'prefix-init.log']),
+    logPath: joinPath(bottle.path.value, const ['logs', 'prefix-init.log']),
     workingDirectory: Option.of(macosWineBinFolder(hostEnvironment)),
   );
 }
@@ -69,12 +80,12 @@ ProgramRunRequest macosWinebootRestartRequest({
     runnerKind: 'macosWine',
     executable: macosWineExecutable(hostEnvironment),
     arguments: const <String>['wineboot', '--restart'],
-    environment: _macosWineEnvironment(
+    environment: macosWineEnvironment(
       bottle: bottle,
       environment: environment,
       macosMajorVersion: macosMajorVersion,
     ),
-    logPath: _joinPath(bottle.path.value, const ['logs', 'latest.log']),
+    logPath: joinPath(bottle.path.value, const ['logs', 'latest.log']),
     workingDirectory: Option.of(macosWineBinFolder(hostEnvironment)),
   );
 }
@@ -94,16 +105,16 @@ ProgramRunRequest macosWineMonoInstallRequest({
     arguments: <String>[
       'msiexec',
       '/i',
-      _macosWineWindowsPath(_macosWineMonoMsiPath(runtimeRoot)),
+      macosWineWindowsPath(macosWineMonoMsiPath(runtimeRoot)),
       '/qn',
       '/norestart',
     ],
-    environment: _macosPrefixInitializationEnvironment(
+    environment: macosPrefixInitializationEnvironment(
       bottle: bottle,
       environment: environment,
       macosMajorVersion: macosMajorVersion,
     ),
-    logPath: _joinPath(bottle.path.value, const [
+    logPath: joinPath(bottle.path.value, const [
       'logs',
       'wine-mono-install.log',
     ]),
@@ -123,15 +134,12 @@ ProgramRunRequest macosWineserverKillRequest({
     runnerKind: 'macosWineserver',
     executable: macosWineserverExecutable(hostEnvironment),
     arguments: const <String>['-k'],
-    environment: _macosWineEnvironment(
+    environment: macosWineEnvironment(
       bottle: bottle,
       environment: environment,
       macosMajorVersion: macosMajorVersion,
     ),
-    logPath: _joinPath(bottle.path.value, const [
-      'logs',
-      'wineserver-kill.log',
-    ]),
+    logPath: joinPath(bottle.path.value, const ['logs', 'wineserver-kill.log']),
     workingDirectory: Option.of(macosWineBinFolder(hostEnvironment)),
   );
 }
@@ -151,17 +159,17 @@ ProgramRunRequest macosWinedbgRequest({
     runnerKind: 'macosWinedbg',
     executable: macosWineExecutable(hostEnvironment),
     arguments: <String>['winedbg', '--command', command, ...trailingArguments],
-    environment: _macosWineEnvironment(
+    environment: macosWineEnvironment(
       bottle: bottle,
       environment: environment,
       macosMajorVersion: macosMajorVersion,
     ),
-    logPath: _joinPath(bottle.path.value, <String>['logs', logName]),
+    logPath: joinPath(bottle.path.value, <String>['logs', logName]),
     workingDirectory: Option.of(macosWineBinFolder(hostEnvironment)),
   );
 }
 
-ProgramRunEnvironment _macosWineEnvironment({
+ProgramRunEnvironment macosWineEnvironment({
   required BottleRecord bottle,
   required HostEnvironment environment,
   required Option<int> macosMajorVersion,
@@ -171,56 +179,56 @@ ProgramRunEnvironment _macosWineEnvironment({
   final d3dMetalSelected = bottle.runtimeSettings.dxrEnabled;
   final selectedBackendWindowsPaths = <String>[
     if (d3dMetalSelected)
-      _macosD3DMetalWindowsPath(runtimeRoot)
+      macosD3DMetalWindowsPath(runtimeRoot)
     else if (bottle.runtimeSettings.dxmt) ...[
-      _joinPath(runtimeRoot, const ['lib', 'dxmt', 'x86_64-windows']),
-      _joinPath(runtimeRoot, const ['lib', 'dxmt', 'i386-windows']),
+      joinPath(runtimeRoot, const ['lib', 'dxmt', 'x86_64-windows']),
+      joinPath(runtimeRoot, const ['lib', 'dxmt', 'i386-windows']),
     ] else if (bottle.runtimeSettings.dxvk) ...[
-      _joinPath(runtimeRoot, const ['lib', 'dxvk', 'x86_64-windows']),
-      _joinPath(runtimeRoot, const ['lib', 'dxvk', 'i386-windows']),
+      joinPath(runtimeRoot, const ['lib', 'dxvk', 'x86_64-windows']),
+      joinPath(runtimeRoot, const ['lib', 'dxvk', 'i386-windows']),
     ],
   ];
   final wineDllPathEntries = <String>[
     ...selectedBackendWindowsPaths,
-    ..._macosWineWindowsDllPaths(runtimeRoot),
+    ...macosWineWindowsDllPaths(runtimeRoot),
   ];
   final wineSearchPathEntries = <String>[
     ...selectedBackendWindowsPaths,
-    ..._macosWineWindowsSearchPaths(runtimeRoot),
+    ...macosWineWindowsSearchPaths(runtimeRoot),
   ];
   final wineEnvironment = <String, String>{
     'WINEPREFIX': bottle.path.value,
     'WINEDEBUG': 'fixme-all',
     'GST_DEBUG': '1',
     'MVK_CONFIG_LOG_LEVEL': '0',
-    'GST_PLUGIN_SYSTEM_PATH': _macosGstreamerPluginPath(runtimeRoot),
-    'GST_PLUGIN_SCANNER': _macosGstreamerPluginScanner(runtimeRoot),
-    'GST_REGISTRY': _macosGstreamerRegistryPath(bottle.path.value),
-    'WINEDATADIR': _macosWineDataDir(runtimeRoot),
+    'GST_PLUGIN_SYSTEM_PATH': macosGstreamerPluginPath(runtimeRoot),
+    'GST_PLUGIN_SCANNER': macosGstreamerPluginScanner(runtimeRoot),
+    'GST_REGISTRY': macosGstreamerRegistryPath(bottle.path.value),
+    'WINEDATADIR': macosWineDataDir(runtimeRoot),
     'WINEDLLPATH': wineDllPathEntries.join(':'),
-    'WINEPATH': _macosWineWindowsSearchPath(wineSearchPathEntries),
+    'WINEPATH': macosWineWindowsSearchPath(wineSearchPathEntries),
     'WINELOADER': macosWineExecutable(hostEnvironment),
     'WINESERVER': macosWineserverExecutable(hostEnvironment),
-    'DYLD_LIBRARY_PATH': _prependPaths(<String>[
-      if (d3dMetalSelected) _macosD3DMetalExternalPath(runtimeRoot),
-      if (d3dMetalSelected) _macosD3DMetalUnixPath(runtimeRoot),
+    'DYLD_LIBRARY_PATH': prependPaths(<String>[
+      if (d3dMetalSelected) macosD3DMetalExternalPath(runtimeRoot),
+      if (d3dMetalSelected) macosD3DMetalUnixPath(runtimeRoot),
       if (bottle.runtimeSettings.dxmt && !d3dMetalSelected)
-        _macosDxmtUnixPath(runtimeRoot),
-      _joinPath(runtimeRoot, const ['lib']),
+        macosDxmtUnixPath(runtimeRoot),
+      joinPath(runtimeRoot, const ['lib']),
     ], environment['DYLD_LIBRARY_PATH']),
     if (d3dMetalSelected)
-      'DYLD_FRAMEWORK_PATH': _prependPaths(<String>[
-        _macosD3DMetalExternalPath(runtimeRoot),
+      'DYLD_FRAMEWORK_PATH': prependPaths(<String>[
+        macosD3DMetalExternalPath(runtimeRoot),
       ], environment['DYLD_FRAMEWORK_PATH']),
     if (d3dMetalSelected)
-      'CX_APPLEGPTK_LIBD3DSHARED_PATH': _joinPath(runtimeRoot, const [
-        ..._gptkD3DMetalComponentLibRelativePath,
+      'CX_APPLEGPTK_LIBD3DSHARED_PATH': joinPath(runtimeRoot, const [
+        ...gptkD3DMetalComponentLibRelativePath,
         'external',
         'libd3dshared.dylib',
       ]),
     ...bottle.runtimeSettings
         .macosEnvironment(
-          enableD3DMetalDlssMetalFx: _supportsD3DMetalDlssMetalFx(
+          enableD3DMetalDlssMetalFx: supportsD3DMetalDlssMetalFx(
             macosMajorVersion,
           ),
         )
@@ -230,11 +238,11 @@ ProgramRunEnvironment _macosWineEnvironment({
   return ProgramRunEnvironment(wineEnvironment);
 }
 
-String _macosWineWindowsSearchPath(List<String> unixPaths) {
-  return unixPaths.map(_macosWineWindowsPath).join(';');
+String macosWineWindowsSearchPath(List<String> unixPaths) {
+  return unixPaths.map(macosWineWindowsPath).join(';');
 }
 
-String _macosWineWindowsPath(String unixPath) {
+String macosWineWindowsPath(String unixPath) {
   final windowsPath = unixPath.replaceAll('/', '\\');
   if (unixPath.startsWith('/')) {
     return 'Z:$windowsPath';
@@ -242,89 +250,89 @@ String _macosWineWindowsPath(String unixPath) {
   return windowsPath;
 }
 
-ProgramRunEnvironment _macosPrefixInitializationEnvironment({
+ProgramRunEnvironment macosPrefixInitializationEnvironment({
   required BottleRecord bottle,
   required HostEnvironment environment,
   required Option<int> macosMajorVersion,
 }) {
-  return _macosWineEnvironment(
+  return macosWineEnvironment(
     bottle: bottle,
     environment: environment,
     macosMajorVersion: macosMajorVersion,
   );
 }
 
-bool _supportsD3DMetalDlssMetalFx(Option<int> macosMajorVersion) {
+bool supportsD3DMetalDlssMetalFx(Option<int> macosMajorVersion) {
   return macosMajorVersion.match(() => false, (version) => version >= 16);
 }
 
-String _macosWineDataDir(String runtimeRoot) {
-  return _joinPath(runtimeRoot, const ['share', 'wine']);
+String macosWineDataDir(String runtimeRoot) {
+  return joinPath(runtimeRoot, const ['share', 'wine']);
 }
 
-String _macosWineMonoMsiPath(String runtimeRoot) {
-  return _joinPath(runtimeRoot, macosWineMonoComponentPaths.single);
+String macosWineMonoMsiPath(String runtimeRoot) {
+  return joinPath(runtimeRoot, macosWineMonoComponentPaths.single);
 }
 
-String _macosD3DMetalExternalPath(String runtimeRoot) {
-  return _joinPath(runtimeRoot, const [
-    ..._gptkD3DMetalComponentLibRelativePath,
+String macosD3DMetalExternalPath(String runtimeRoot) {
+  return joinPath(runtimeRoot, const [
+    ...gptkD3DMetalComponentLibRelativePath,
     'external',
   ]);
 }
 
-String _macosGstreamerPluginPath(String runtimeRoot) {
-  return _joinPath(runtimeRoot, const ['lib', 'gstreamer-1.0']);
+String macosGstreamerPluginPath(String runtimeRoot) {
+  return joinPath(runtimeRoot, const ['lib', 'gstreamer-1.0']);
 }
 
-String _macosGstreamerPluginScanner(String runtimeRoot) {
-  return _joinPath(runtimeRoot, const [
+String macosGstreamerPluginScanner(String runtimeRoot) {
+  return joinPath(runtimeRoot, const [
     'libexec',
     'gstreamer-1.0',
     'gst-plugin-scanner',
   ]);
 }
 
-String _macosGstreamerRegistryPath(String bottlePath) {
-  return _joinPath(bottlePath, const ['gstreamer-1.0-registry.x86_64.bin']);
+String macosGstreamerRegistryPath(String bottlePath) {
+  return joinPath(bottlePath, const ['gstreamer-1.0-registry.x86_64.bin']);
 }
 
-String _macosD3DMetalWindowsPath(String runtimeRoot) {
-  return _joinPath(runtimeRoot, const [
-    ..._gptkD3DMetalComponentLibRelativePath,
+String macosD3DMetalWindowsPath(String runtimeRoot) {
+  return joinPath(runtimeRoot, const [
+    ...gptkD3DMetalComponentLibRelativePath,
     'wine',
     'x86_64-windows',
   ]);
 }
 
-List<String> _macosWineWindowsDllPaths(String runtimeRoot) {
+List<String> macosWineWindowsDllPaths(String runtimeRoot) {
   return <String>[
-    _joinPath(runtimeRoot, const ['lib', 'wine', 'x86_64-windows']),
-    _joinPath(runtimeRoot, const ['lib', 'wine', 'i386-windows']),
-    _joinPath(runtimeRoot, const ['lib', 'wine']),
+    joinPath(runtimeRoot, const ['lib', 'wine', 'x86_64-windows']),
+    joinPath(runtimeRoot, const ['lib', 'wine', 'i386-windows']),
+    joinPath(runtimeRoot, const ['lib', 'wine']),
   ];
 }
 
-List<String> _macosWineWindowsSearchPaths(String runtimeRoot) {
+List<String> macosWineWindowsSearchPaths(String runtimeRoot) {
   return <String>[
-    _joinPath(runtimeRoot, const ['lib', 'wine', 'x86_64-windows']),
-    _joinPath(runtimeRoot, const ['lib', 'wine', 'i386-windows']),
+    joinPath(runtimeRoot, const ['lib', 'wine', 'x86_64-windows']),
+    joinPath(runtimeRoot, const ['lib', 'wine', 'i386-windows']),
   ];
 }
 
-String _macosD3DMetalUnixPath(String runtimeRoot) {
-  return _joinPath(runtimeRoot, const [
-    ..._gptkD3DMetalComponentLibRelativePath,
+String macosD3DMetalUnixPath(String runtimeRoot) {
+  return joinPath(runtimeRoot, const [
+    ...gptkD3DMetalComponentLibRelativePath,
     'wine',
     'x86_64-unix',
   ]);
 }
 
-String _macosDxmtUnixPath(String runtimeRoot) {
-  return _joinPath(runtimeRoot, const ['lib', 'dxmt', 'x86_64-unix']);
+String macosDxmtUnixPath(String runtimeRoot) {
+  return joinPath(runtimeRoot, const ['lib', 'dxmt', 'x86_64-unix']);
 }
 
-String _prependPaths(Iterable<String> paths, Option<String> existingPath) {
+String prependPaths(Iterable<String> paths, Option<String> existingPath) {
   final prefix = paths.where((path) => path.trim().isNotEmpty).join(':');
   return existingPath.match(() => prefix, (existingPath) {
     if (existingPath.trim().isEmpty) {

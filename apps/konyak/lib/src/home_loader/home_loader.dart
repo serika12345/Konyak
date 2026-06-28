@@ -1,32 +1,15 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../app/app_platform.dart';
-import '../app/dialogs/app_settings_dialog.dart';
-import '../app/dialogs/bottle_management_dialogs.dart';
-import '../app/dialogs/bottle_programs_dialog.dart';
-import '../app/dialogs/create_bottle_dialog.dart';
-import '../app/dialogs/open_executable_dialog.dart';
-import '../app/dialogs/pin_program_dialog.dart';
-import '../app/dialogs/process_manager_dialog.dart';
-import '../app/dialogs/run_program_dialog.dart';
-import '../app/dialogs/winetricks_dialog.dart';
 import '../app/home/home_screen.dart';
 import '../app/programs/program_window_probe.dart';
 import '../app/runtime/runtime_platform.dart';
-import '../app/startup/startup_update_checker.dart';
-import '../app/utils/bottle_lists.dart';
-import '../app/utils/program_labels.dart';
-import '../app/utils/program_run_feedback.dart';
-import '../app/utils/update_labels.dart';
 import '../app/widgets/blocking_progress_overlay.dart';
 import '../app/widgets/konyak_snack_bar.dart';
 import '../bottles/bottle_summary.dart';
 import '../cli/konyak_cli_client.dart';
-import '../cli/runtime_install_contract.dart';
 import '../files/bottle_archive_picker.dart';
 import '../files/directory_picker.dart';
 import '../files/gptk_wine_source_picker.dart';
@@ -35,17 +18,15 @@ import '../l10n/konyak_localizations.dart';
 import '../logs/log_reader.dart';
 import '../runtimes/runtime_summary.dart';
 import '../settings/app_settings_summary.dart';
-import '../updates/update_check_summary.dart';
-
-part '../home_loader_parts/home_loader_platform_helpers.part.dart';
-part '../home_loader_parts/home_loader_bottles.part.dart';
-part '../home_loader_parts/home_loader_executables.part.dart';
-part '../home_loader_parts/home_loader_pinned_programs.part.dart';
-part '../home_loader_parts/home_loader_programs.part.dart';
-part '../home_loader_parts/home_loader_wine_processes.part.dart';
-part '../home_loader_parts/home_loader_winetricks.part.dart';
-part '../home_loader_parts/home_loader_runtimes.part.dart';
-part '../home_loader_parts/home_loader_settings.part.dart';
+import 'home_loader_bottles.dart';
+import 'home_loader_executables.dart';
+import 'home_loader_pinned_programs.dart';
+import 'home_loader_platform_helpers.dart';
+import 'home_loader_programs.dart';
+import 'home_loader_runtimes.dart';
+import 'home_loader_settings.dart';
+import 'home_loader_wine_processes.dart';
+import 'home_loader_winetricks.dart';
 
 class KonyakHomeLoader extends StatefulWidget {
   const KonyakHomeLoader({
@@ -82,37 +63,36 @@ class KonyakHomeLoader extends StatefulWidget {
   final ValueChanged<AppLanguageMode> onLanguageModeChanged;
 
   @override
-  State<KonyakHomeLoader> createState() => _KonyakHomeLoaderState();
+  State<KonyakHomeLoader> createState() => KonyakHomeLoaderState();
 }
 
-class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
+class KonyakHomeLoaderState extends State<KonyakHomeLoader>
     with WidgetsBindingObserver {
-  List<BottleSummary> _bottles = const <BottleSummary>[];
-  bool _isLoading = true;
-  bool _isCreatingBottle = false;
-  final Set<int> _activeProgramLaunchIds = <int>{};
-  int _nextProgramLaunchId = 0;
-  bool _isLoadingWinetricks = false;
-  String? _winetricksInstallProgressMessage;
-  String? _archiveProgressMessage;
-  String? _runtimeInstallProgressMessage;
-  double? _runtimeInstallProgressFraction;
-  String? _konyakUpdateCheckProgressMessage;
-  bool _isShowingSettings = false;
-  bool _isCheckingKonyakUpdate = false;
-  bool _hasTerminatedWineProcesses = false;
-  AppSettingsSummary? _appSettings;
-  String? _errorMessage;
-  String? _latestRunLogPath;
-  List<RuntimeSummary> _knownRuntimes = const <RuntimeSummary>[];
-  bool _hasLoadedKnownRuntimes = false;
-  final List<String> _pendingExecutableOpenPaths = <String>[];
-  bool _isHandlingExecutableOpen = false;
-  final Map<String, ProgramSettingsSummary> _programSettings =
+  List<BottleSummary> bottles = const <BottleSummary>[];
+  bool isLoading = true;
+  bool isCreatingBottle = false;
+  final Set<int> activeProgramLaunchIds = <int>{};
+  int nextProgramLaunchId = 0;
+  bool isLoadingWinetricks = false;
+  String? winetricksInstallProgressMessage;
+  String? archiveProgressMessage;
+  String? runtimeInstallProgressMessage;
+  double? runtimeInstallProgressFraction;
+  String? konyakUpdateCheckProgressMessage;
+  bool isShowingSettings = false;
+  bool isCheckingKonyakUpdate = false;
+  bool hasTerminatedWineProcesses = false;
+  AppSettingsSummary? appSettings;
+  String? errorMessage;
+  String? latestRunLogPath;
+  List<RuntimeSummary> knownRuntimes = const <RuntimeSummary>[];
+  bool hasLoadedKnownRuntimes = false;
+  final List<String> pendingExecutableOpenPaths = <String>[];
+  bool isHandlingExecutableOpen = false;
+  final Map<String, ProgramSettingsSummary> programSettings =
       <String, ProgramSettingsSummary>{};
-  final Set<String> _loadingProgramSettings = <String>{};
-  final Map<String, String> _pendingRuntimeSettingsControls =
-      <String, String>{};
+  final Set<String> loadingProgramSettings = <String>{};
+  final Map<String, String> pendingRuntimeSettingsControls = <String, String>{};
 
   @override
   void initState() {
@@ -120,43 +100,43 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
     if (widget.enableBackgroundServices) {
       WidgetsBinding.instance.addObserver(this);
     }
-    _pendingExecutableOpenPaths.addAll(
-      _validExecutableOpenPaths(widget.initialExecutablePaths),
+    pendingExecutableOpenPaths.addAll(
+      validExecutableOpenPaths(widget.initialExecutablePaths),
     );
-    _macosMenuChannel.setMethodCallHandler(_handleMacosMenuMethodCall);
-    unawaited(_loadPendingExecutableOpenPathsFromPlatform());
-    _loadBottles();
+    macosMenuChannel.setMethodCallHandler(handleMacosMenuMethodCall);
+    unawaited(loadPendingExecutableOpenPathsFromPlatform());
+    loadBottles();
     if (widget.enableBackgroundServices) {
-      unawaited(_initializeBackgroundServices());
+      unawaited(initializeBackgroundServices());
     }
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.detached) {
-      unawaited(_terminateWineProcessesOnClose());
+      unawaited(terminateWineProcessesOnClose());
     }
   }
 
   @override
   void dispose() {
-    unawaited(_terminateWineProcessesOnClose());
-    _macosMenuChannel.setMethodCallHandler(null);
+    unawaited(terminateWineProcessesOnClose());
+    macosMenuChannel.setMethodCallHandler(null);
     if (widget.enableBackgroundServices) {
       WidgetsBinding.instance.removeObserver(this);
     }
     super.dispose();
   }
 
-  void _updateState(VoidCallback callback) => setState(callback);
+  void updateState(VoidCallback callback) => setState(callback);
 
-  void _showSnackBar(String message) {
+  void showSnackBar(String message) {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(konyakSnackBar(context: context, message: message));
   }
 
-  void _showWarningSnackBar(String message, {SnackBarAction? action}) {
+  void showWarningSnackBar(String message, {SnackBarAction? action}) {
     final colorScheme = Theme.of(context).colorScheme;
     ScaffoldMessenger.of(context).showSnackBar(
       konyakSnackBar(
@@ -177,108 +157,108 @@ class _KonyakHomeLoaderState extends State<KonyakHomeLoader>
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        if (widget.platform.isMacOS) const _MacosNativeMenuLocalizer(),
+        if (widget.platform.isMacOS) const MacosNativeMenuLocalizer(),
         KonyakHome(
           platform: widget.platform,
-          runtime: runtimeForPlatform(widget.platform, _knownRuntimes),
-          bottles: _bottles,
-          isLoading: _isLoading,
-          errorMessage: _errorMessage,
-          onRefresh: _loadBottles,
-          onShowSettings: _showSettings,
-          onShowAbout: _showAbout,
-          onCheckKonyakUpdates: _isCheckingKonyakUpdate
+          runtime: runtimeForPlatform(widget.platform, knownRuntimes),
+          bottles: bottles,
+          isLoading: isLoading,
+          errorMessage: errorMessage,
+          onRefresh: loadBottles,
+          onShowSettings: showSettings,
+          onShowAbout: showAbout,
+          onCheckKonyakUpdates: isCheckingKonyakUpdate
               ? null
-              : _checkKonyakUpdateFromMenu,
-          onCreateBottle: _createBottle,
-          onImportBottleArchive: _importBottleArchive,
-          onReinstallRuntime: _reinstallManagedRuntimeFromMenu,
-          onExportBottleArchive: _exportBottleArchive,
-          onViewLatestLog: _latestRunLogPath == null ? null : _showLatestLog,
-          pendingRuntimeSettingsControls: _pendingRuntimeSettingsControls,
+              : checkKonyakUpdateFromMenu,
+          onCreateBottle: createBottle,
+          onImportBottleArchive: importBottleArchive,
+          onReinstallRuntime: reinstallManagedRuntimeFromMenu,
+          onExportBottleArchive: exportBottleArchive,
+          onViewLatestLog: latestRunLogPath == null ? null : showLatestLog,
+          pendingRuntimeSettingsControls: pendingRuntimeSettingsControls,
           onRuntimeSettingsChanged: (bottle, runtimeSettings, controlKey) {
-            _setRuntimeSettings(
+            setRuntimeSettings(
               bottle: bottle,
               runtimeSettings: runtimeSettings,
               controlKey: controlKey,
             );
           },
-          onLoadBottleConfiguration: _loadBottleConfiguration,
-          onDeleteBottle: _deleteBottle,
-          onRenameBottle: _renameBottle,
-          onMoveBottle: _moveBottle,
-          onRunProgram: _runProgram,
+          onLoadBottleConfiguration: loadBottleConfiguration,
+          onDeleteBottle: deleteBottle,
+          onRenameBottle: renameBottle,
+          onMoveBottle: moveBottle,
+          onRunProgram: runProgram,
           onRunProgramPath: (bottle, programPath) {
-            _runProgramPath(bottle: bottle, programPath: programPath);
+            runProgramPath(bottle: bottle, programPath: programPath);
           },
-          onPinProgram: _pinProgram,
-          programSettings: _programSettings,
-          loadingProgramSettings: _loadingProgramSettings,
-          isRuntimeCapabilitiesLoading: !_hasLoadedKnownRuntimes,
+          onPinProgram: pinProgram,
+          programSettings: programSettings,
+          loadingProgramSettings: loadingProgramSettings,
+          isRuntimeCapabilitiesLoading: !hasLoadedKnownRuntimes,
           onLoadPinnedProgramSettings: (bottle, program) {
-            _loadPinnedProgramSettings(bottle: bottle, program: program);
+            loadPinnedProgramSettings(bottle: bottle, program: program);
           },
           onProgramSettingsChanged: (bottle, program, settings) {
-            _setPinnedProgramSettings(
+            setPinnedProgramSettings(
               bottle: bottle,
               program: program,
               settings: settings,
             );
           },
           onUnpinProgram: (bottle, program) {
-            _unpinProgram(bottle: bottle, program: program);
+            unpinProgram(bottle: bottle, program: program);
           },
           onRenamePinnedProgram: (bottle, program) {
-            _renamePinnedProgram(bottle: bottle, program: program);
+            renamePinnedProgram(bottle: bottle, program: program);
           },
           onOpenPinnedProgramLocation: (bottle, program) {
-            _openPinnedProgramLocation(bottle: bottle, program: program);
+            openPinnedProgramLocation(bottle: bottle, program: program);
           },
           onRunBottleCommand: (bottle, command) {
-            _runBottleCommand(bottle: bottle, command: command);
+            runBottleCommand(bottle: bottle, command: command);
           },
-          onShowWinetricks: _showWinetricks,
+          onShowWinetricks: showWinetricks,
           onOpenBottleLocation: (bottle, location) {
-            _openBottleLocation(bottle: bottle, location: location);
+            openBottleLocation(bottle: bottle, location: location);
           },
-          onShowBottlePrograms: _showBottlePrograms,
-          onShowProcessManager: _showProcessManager,
-          onTerminateBottleProcesses: _terminateBottleProcesses,
+          onShowBottlePrograms: showBottlePrograms,
+          onShowProcessManager: showProcessManager,
+          onTerminateBottleProcesses: terminateBottleProcesses,
         ),
-        if (_isCreatingBottle)
+        if (isCreatingBottle)
           BlockingProgressOverlay(
             key: const ValueKey('create-bottle-progress'),
             message: KonyakLocalizations.of(context).creatingBottleEllipsis,
           ),
-        if (_activeProgramLaunchIds.isNotEmpty)
+        if (activeProgramLaunchIds.isNotEmpty)
           BlockingProgressOverlay(
             key: const ValueKey('program-launch-progress'),
             message: KonyakLocalizations.of(context).launchingProgramEllipsis,
           ),
-        if (_isLoadingWinetricks)
+        if (isLoadingWinetricks)
           BlockingProgressOverlay(
             key: const ValueKey('winetricks-progress'),
             message: KonyakLocalizations.of(
               context,
             ).loadingWinetricksPackagesEllipsis,
           ),
-        if (_winetricksInstallProgressMessage case final message?)
+        if (winetricksInstallProgressMessage case final message?)
           BlockingProgressOverlay(
             key: const ValueKey('winetricks-progress'),
             message: message,
           ),
-        if (_archiveProgressMessage case final message?)
+        if (archiveProgressMessage case final message?)
           BlockingProgressOverlay(
             key: const ValueKey('bottle-archive-progress'),
             message: message,
           ),
-        if (_runtimeInstallProgressMessage case final message?)
+        if (runtimeInstallProgressMessage case final message?)
           BlockingProgressOverlay(
             key: const ValueKey('runtime-install-progress'),
             message: message,
-            progress: _runtimeInstallProgressFraction,
+            progress: runtimeInstallProgressFraction,
           ),
-        if (_konyakUpdateCheckProgressMessage case final message?)
+        if (konyakUpdateCheckProgressMessage case final message?)
           BlockingProgressOverlay(
             key: const ValueKey('konyak-update-check-progress'),
             message: message,

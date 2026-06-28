@@ -1,27 +1,35 @@
-part of '../../konyak_cli.dart';
+import 'dart:io';
+
+import '../domain/program/program_runner.dart';
+import '../domain/runtime/host_environment.dart';
+import '../domain/runtime/runtime_catalogs.dart';
+import '../domain/runtime/runtime_models.dart';
+import '../domain/runtime/runtime_validation_support.dart';
+import 'platform_host_paths.dart';
+import 'runtime_platform_records.dart';
+import 'runtime_probes.dart';
 
 class MacosWineRuntimeCatalog implements RuntimeCatalog {
   MacosWineRuntimeCatalog({
     required this.hostPlatform,
     required this.environment,
-    required FileStatusProbe fileStatusProbe,
-    required RuntimeStackVersionProbe runtimeStackVersionProbe,
-  }) : _fileStatusProbe = fileStatusProbe,
-       _runtimeStackVersionProbe = runtimeStackVersionProbe;
+    required this.fileStatusProbe,
+    required this.runtimeStackVersionProbe,
+  });
 
   final KonyakHostPlatform hostPlatform;
   final HostEnvironment environment;
-  final FileStatusProbe _fileStatusProbe;
-  final RuntimeStackVersionProbe _runtimeStackVersionProbe;
+  final FileStatusProbe fileStatusProbe;
+  final RuntimeStackVersionProbe runtimeStackVersionProbe;
 
   @override
   List<RuntimeRecord> listRuntimes() {
     return switch (hostPlatform) {
       KonyakHostPlatform.macos => <RuntimeRecord>[
-        _macosWineRuntimeRecord(
+        macosWineRuntimeRecord(
           environment: environment,
-          fileStatusProbe: _fileStatusProbe,
-          runtimeStackVersionProbe: _runtimeStackVersionProbe,
+          fileStatusProbe: fileStatusProbe,
+          runtimeStackVersionProbe: runtimeStackVersionProbe,
         ),
       ],
       KonyakHostPlatform.linux => const <RuntimeRecord>[],
@@ -33,31 +41,30 @@ class KonyakRuntimeCatalog implements RuntimeCatalog {
   KonyakRuntimeCatalog({
     required this.hostPlatform,
     required this.environment,
-    required FileStatusProbe fileStatusProbe,
-    required RuntimeStackVersionProbe runtimeStackVersionProbe,
-  }) : _fileStatusProbe = fileStatusProbe,
-       _runtimeStackVersionProbe = runtimeStackVersionProbe;
+    required this.fileStatusProbe,
+    required this.runtimeStackVersionProbe,
+  });
 
   final KonyakHostPlatform hostPlatform;
   final HostEnvironment environment;
-  final FileStatusProbe _fileStatusProbe;
-  final RuntimeStackVersionProbe _runtimeStackVersionProbe;
+  final FileStatusProbe fileStatusProbe;
+  final RuntimeStackVersionProbe runtimeStackVersionProbe;
 
   @override
   List<RuntimeRecord> listRuntimes() {
     return switch (hostPlatform) {
       KonyakHostPlatform.macos => <RuntimeRecord>[
-        _macosWineRuntimeRecord(
+        macosWineRuntimeRecord(
           environment: environment,
-          fileStatusProbe: _fileStatusProbe,
-          runtimeStackVersionProbe: _runtimeStackVersionProbe,
+          fileStatusProbe: fileStatusProbe,
+          runtimeStackVersionProbe: runtimeStackVersionProbe,
         ),
       ],
       KonyakHostPlatform.linux => <RuntimeRecord>[
-        _linuxWineRuntimeRecord(
+        linuxWineRuntimeRecord(
           environment: environment,
-          fileStatusProbe: _fileStatusProbe,
-          runtimeStackVersionProbe: _runtimeStackVersionProbe,
+          fileStatusProbe: fileStatusProbe,
+          runtimeStackVersionProbe: runtimeStackVersionProbe,
         ),
       ],
     };
@@ -66,7 +73,7 @@ class KonyakRuntimeCatalog implements RuntimeCatalog {
 
 MacosWineRuntimeCatalog currentMacosWineRuntimeCatalog() {
   return MacosWineRuntimeCatalog(
-    hostPlatform: _currentHostPlatform(),
+    hostPlatform: currentHostPlatform(),
     environment: HostEnvironment(Platform.environment),
     fileStatusProbe: const DartIoFileStatusProbe(),
     runtimeStackVersionProbe: const DartIoRuntimeStackVersionProbe(),
@@ -75,7 +82,7 @@ MacosWineRuntimeCatalog currentMacosWineRuntimeCatalog() {
 
 KonyakRuntimeCatalog currentKonyakRuntimeCatalog() {
   return KonyakRuntimeCatalog(
-    hostPlatform: _currentHostPlatform(),
+    hostPlatform: currentHostPlatform(),
     environment: HostEnvironment(Platform.environment),
     fileStatusProbe: const DartIoFileStatusProbe(),
     runtimeStackVersionProbe: const DartIoRuntimeStackVersionProbe(),

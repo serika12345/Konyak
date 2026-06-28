@@ -1,31 +1,37 @@
-part of '../../konyak_cli.dart';
+import 'package:fpdart/fpdart.dart';
 
-CliResult? _handleHostIntegrationCommand(
+import '../io/linux_file_associations.dart';
+import 'cli_app_process_parsers.dart';
+import 'cli_commands.dart';
+import 'cli_json_helpers.dart';
+import 'cli_result_model.dart';
+
+CliResult? handleHostIntegrationCommand(
   List<String> arguments,
-  _CliCommandContext context,
+  CliCommandContext context,
 ) {
-  if (!_isJsonLinuxFileAssociationInstallCommand(arguments)) {
+  if (!isJsonLinuxFileAssociationInstallCommand(arguments)) {
     return null;
   }
 
-  final result = _installLinuxFileAssociations(
+  final result = installLinuxFileAssociations(
     hostPlatform: context.programRunPlanner.hostPlatform,
     environment: context.programRunPlanner.environment.toMap(),
   );
   return switch (result) {
-    _LinuxFileAssociationsInstalled(
+    LinuxFileAssociationsInstalled(
       :final desktopEntryPath,
       :final iconPath,
       :final mimeAppsPath,
     ) =>
-      _jsonSuccess(<String, Object?>{
-        'linuxFileAssociations': _linuxFileAssociationsPayload(
+      jsonSuccess(<String, Object?>{
+        'linuxFileAssociations': linuxFileAssociationsPayload(
           desktopEntryPath: desktopEntryPath,
           iconPath: iconPath,
           mimeAppsPath: mimeAppsPath,
         ),
       }),
-    _LinuxFileAssociationInstallFailed(:final message) => _jsonError(
+    LinuxFileAssociationInstallFailed(:final message) => jsonError(
       exitCode: 75,
       code: 'linuxFileAssociationInstallFailed',
       message: message,
@@ -33,7 +39,7 @@ CliResult? _handleHostIntegrationCommand(
   };
 }
 
-Map<String, Object?> _linuxFileAssociationsPayload({
+Map<String, Object?> linuxFileAssociationsPayload({
   required String desktopEntryPath,
   required Option<String> iconPath,
   required String mimeAppsPath,
@@ -41,7 +47,7 @@ Map<String, Object?> _linuxFileAssociationsPayload({
   return <String, Object?>{
     'desktopEntryPath': desktopEntryPath,
     'mimeAppsPath': mimeAppsPath,
-    'mimeTypes': _linuxExecutableMimeTypes,
+    'mimeTypes': linuxExecutableMimeTypes,
     ...iconPath.match(
       () => const <String, Object?>{},
       (path) => <String, Object?>{'iconPath': path},

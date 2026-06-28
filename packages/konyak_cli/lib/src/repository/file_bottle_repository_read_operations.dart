@@ -1,28 +1,36 @@
-part of '../../konyak_cli.dart';
+import 'package:fpdart/fpdart.dart';
 
-class _FileBottleRepositoryReadOperations {
-  const _FileBottleRepositoryReadOperations({
+import '../domain/bottle/bottle_models.dart';
+import '../domain/program/pinned_programs.dart';
+import '../domain/program/program_catalog_models.dart';
+import '../io/file_bottle_repository_io.dart';
+import '../io/io_result.dart';
+import '../io/pinned_program_availability_io.dart';
+import '../io/repository_storage_io.dart';
+
+class FileBottleRepositoryReadOperations {
+  const FileBottleRepositoryReadOperations({
     required this.bottleDirectory,
-    required ProgramMetadataExtractor programMetadataExtractor,
-  }) : _programMetadataExtractor = programMetadataExtractor;
+    required this.programMetadataExtractor,
+  });
 
   final String bottleDirectory;
-  final ProgramMetadataExtractor _programMetadataExtractor;
+  final ProgramMetadataExtractor programMetadataExtractor;
 
   IoResult<List<BottleRecord>> listBottles() {
-    if (!_fileBottleRepositoryDirectoryExists(bottleDirectory)) {
+    if (!fileBottleRepositoryDirectoryExists(bottleDirectory)) {
       return const Right<String, List<BottleRecord>>(<BottleRecord>[]);
     }
 
-    return _ioResult(() {
+    return ioResult(() {
       final bottles =
-          _fileBottleRepositoryBottleDirectories(bottleDirectory)
-              .map((entry) => _readBottleMetadata(entry.path))
-              .map(_repairedBottleWithoutMissingBottleLocalPinnedProgramFiles)
+          fileBottleRepositoryBottleDirectories(bottleDirectory)
+              .map((entry) => readBottleMetadata(entry.path))
+              .map(repairedBottleWithoutMissingBottleLocalPinnedProgramFiles)
               .map(
                 (bottle) => bottleWithPinnedProgramIcons(
                   bottle,
-                  programMetadataExtractor: _programMetadataExtractor,
+                  programMetadataExtractor: programMetadataExtractor,
                 ),
               )
               .toList(growable: false)
@@ -33,39 +41,39 @@ class _FileBottleRepositoryReadOperations {
   }
 
   IoResult<Option<BottleRecord>> findBottle(String id) {
-    if (!_fileBottleMetadataExists(bottleDirectory: bottleDirectory, id: id)) {
+    if (!fileBottleMetadataExists(bottleDirectory: bottleDirectory, id: id)) {
       return const Right<String, Option<BottleRecord>>(Option.none());
     }
 
-    return _ioResult(
+    return ioResult(
       () => Option.of(
         bottleWithPinnedProgramIcons(
-          _repairedBottleWithoutMissingBottleLocalPinnedProgramFiles(
-            _readBottleMetadata(_fileBottlePath(bottleDirectory, id)),
+          repairedBottleWithoutMissingBottleLocalPinnedProgramFiles(
+            readBottleMetadata(fileBottlePath(bottleDirectory, id)),
           ),
-          programMetadataExtractor: _programMetadataExtractor,
+          programMetadataExtractor: programMetadataExtractor,
         ),
       ),
     );
   }
 }
 
-BottleRecord _repairedBottleWithoutMissingBottleLocalPinnedProgramFiles(
+BottleRecord repairedBottleWithoutMissingBottleLocalPinnedProgramFiles(
   BottleRecord bottle,
 ) {
-  final updated = _bottleWithoutMissingBottleLocalPinnedProgramFiles(bottle);
+  final updated = bottleWithoutMissingBottleLocalPinnedProgramFiles(bottle);
   if (updated != bottle) {
-    _writeBottleMetadata(updated);
+    writeBottleMetadata(updated);
   }
   return updated;
 }
 
-BottleRecord _bottleWithoutMissingBottleLocalPinnedProgramFiles(
+BottleRecord bottleWithoutMissingBottleLocalPinnedProgramFiles(
   BottleRecord bottle,
 ) {
   return bottleWithoutMissingBottleLocalPinnedPrograms(
     bottle,
     isPinnedProgramAvailable: (program) =>
-        _isPinnedProgramFileAvailable(bottle: bottle, program: program),
+        isPinnedProgramFileAvailable(bottle: bottle, program: program),
   );
 }

@@ -1,5 +1,3 @@
-part of 'konyak_cli_client.dart';
-
 final class WinetricksVerbSummary {
   const WinetricksVerbSummary({
     required this.id,

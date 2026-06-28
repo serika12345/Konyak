@@ -23,6 +23,7 @@ class KonyakLintPlugin extends PluginBase {
     KonyakNoNullableBridgeOutsideBoundary(),
     KonyakNoNullableSentinelFlow(),
     KonyakNoResultFailureToOptionNone(),
+    KonyakNoHandwrittenPart(),
     KonyakNoDomainIo(),
     KonyakNoDomainPartOfRoot(),
     KonyakNoDomainReassignment(),
@@ -169,6 +170,33 @@ class KonyakNoDomainIo extends _KonyakAstRule {
   @override
   RecursiveAstVisitor<void> visitor(ErrorReporter reporter) =>
       _DomainIoVisitor(reporter, _code);
+}
+
+class KonyakNoHandwrittenPart extends DartLintRule {
+  const KonyakNoHandwrittenPart() : super(code: _code);
+
+  static const _code = LintCode(
+    name: 'konyak_no_handwritten_part',
+    problemMessage:
+        'Hand-written Dart files must be standalone libraries. Use part only for generated Freezed/JSON code.',
+    errorSeverity: ErrorSeverity.ERROR,
+  );
+
+  @override
+  void run(
+    CustomLintResolver resolver,
+    ErrorReporter reporter,
+    CustomLintContext context,
+  ) {
+    final normalizedPath = _normalizePath(resolver.path);
+    if (!_isKonyakSourcePath(normalizedPath)) {
+      return;
+    }
+
+    context.registry.addCompilationUnit((node) {
+      node.accept(_HandwrittenPartVisitor(reporter, _code));
+    });
+  }
 }
 
 class KonyakNoDomainPartOfRoot extends DartLintRule {
@@ -743,6 +771,34 @@ class _DomainIoVisitor extends RecursiveAstVisitor<void> {
       _ioTypeNames.contains(name) || _isDartIoBoundaryName(name);
 
   bool _isDartIoBoundaryName(String name) => name.startsWith('DartIo');
+}
+
+class _HandwrittenPartVisitor extends RecursiveAstVisitor<void> {
+  const _HandwrittenPartVisitor(this.reporter, this.code);
+
+  final ErrorReporter reporter;
+  final LintCode code;
+
+  @override
+  void visitPartDirective(PartDirective node) {
+    if (!_isGeneratedPartUri(node.uri.stringValue)) {
+      reporter.atNode(node, code);
+    }
+    super.visitPartDirective(node);
+  }
+
+  @override
+  void visitPartOfDirective(PartOfDirective node) {
+    reporter.atNode(node, code);
+    super.visitPartOfDirective(node);
+  }
+
+  bool _isGeneratedPartUri(String? uri) {
+    if (uri == null) {
+      return false;
+    }
+    return uri.endsWith('.freezed.dart') || uri.endsWith('.g.dart');
+  }
 }
 
 class _DomainPartOfRootVisitor extends RecursiveAstVisitor<void> {

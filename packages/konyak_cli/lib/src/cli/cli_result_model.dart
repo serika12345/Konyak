@@ -1,5 +1,3 @@
-part of '../../konyak_cli.dart';
-
 class CliResult {
   const CliResult({
     required this.exitCode,

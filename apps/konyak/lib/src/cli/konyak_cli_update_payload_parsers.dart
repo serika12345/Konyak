@@ -1,6 +1,10 @@
-part of 'konyak_cli_client.dart';
+import 'dart:convert';
 
-UpdateCheckLoadResult _parseUpdateCheckPayload({
+import '../updates/update_check_summary.dart';
+import 'konyak_cli_settings_payload_parsers.dart';
+import 'konyak_cli_update_result_types.dart';
+
+UpdateCheckLoadResult parseUpdateCheckPayload({
   required String payload,
   required String payloadKey,
   required String idKey,
@@ -43,7 +47,7 @@ UpdateCheckLoadResult _parseUpdateCheckPayload({
     );
   }
 
-  final parsedUpdate = _parseUpdateCheckSummary(update, idKey: idKey);
+  final parsedUpdate = parseUpdateCheckSummary(update, idKey: idKey);
   if (parsedUpdate == null) {
     return const UpdateCheckLoadFailure(
       exitCode: 0,
@@ -55,7 +59,7 @@ UpdateCheckLoadResult _parseUpdateCheckPayload({
   return LoadedUpdateCheck(parsedUpdate);
 }
 
-UpdateInstallLoadResult _parseUpdateInstallPayload(String payload) {
+UpdateInstallLoadResult parseUpdateInstallPayload(String payload) {
   final Object? decoded;
   try {
     decoded = jsonDecode(payload);
@@ -94,7 +98,7 @@ UpdateInstallLoadResult _parseUpdateInstallPayload(String payload) {
     );
   }
 
-  final parsedInstall = _parseUpdateInstallSummary(install);
+  final parsedInstall = parseUpdateInstallSummary(install);
   if (parsedInstall == null) {
     return const UpdateInstallLoadFailure(
       exitCode: 0,
@@ -106,7 +110,7 @@ UpdateInstallLoadResult _parseUpdateInstallPayload(String payload) {
   return InstalledUpdate(parsedInstall);
 }
 
-UpdateCheckSummary? _parseUpdateCheckSummary(
+UpdateCheckSummary? parseUpdateCheckSummary(
   Map<String, Object?> value, {
   required String idKey,
 }) {
@@ -121,10 +125,10 @@ UpdateCheckSummary? _parseUpdateCheckSummary(
     return null;
   }
 
-  if (!_isOptionalString(currentVersion) ||
-      !_isOptionalString(latestVersion) ||
-      !_isOptionalString(versionUrl) ||
-      !_isOptionalString(archiveUrl)) {
+  if (!isOptionalString(currentVersion) ||
+      !isOptionalString(latestVersion) ||
+      !isOptionalString(versionUrl) ||
+      !isOptionalString(archiveUrl)) {
     return null;
   }
 
@@ -138,7 +142,7 @@ UpdateCheckSummary? _parseUpdateCheckSummary(
   );
 }
 
-UpdateInstallSummary? _parseUpdateInstallSummary(Map<String, Object?> value) {
+UpdateInstallSummary? parseUpdateInstallSummary(Map<String, Object?> value) {
   final id = value['appId'];
   final status = value['status'];
   final currentVersion = value['currentVersion'];
@@ -150,10 +154,10 @@ UpdateInstallSummary? _parseUpdateInstallSummary(Map<String, Object?> value) {
     return null;
   }
 
-  if (!_isOptionalString(currentVersion) ||
-      !_isOptionalString(installedVersion) ||
-      !_isOptionalString(archiveUrl) ||
-      !_isOptionalString(installPath)) {
+  if (!isOptionalString(currentVersion) ||
+      !isOptionalString(installedVersion) ||
+      !isOptionalString(archiveUrl) ||
+      !isOptionalString(installPath)) {
     return null;
   }
 

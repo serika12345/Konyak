@@ -1,17 +1,27 @@
-part of '../../konyak_cli.dart';
+import 'dart:io';
+
+import '../domain/bottle/bottle_models.dart';
+import '../domain/program/pinned_programs.dart';
+import '../domain/program/program_catalog_models.dart';
+import '../domain/program/program_run_models.dart';
+import '../domain/program/program_runner.dart';
+import '../repository/repository_interfaces.dart';
+import '../shared/common_helpers.dart';
+import '../storage/storage_paths.dart';
+import 'pe_program_metadata.dart';
+import 'pinned_program_availability_io.dart';
+import 'program_shortcut_metadata.dart';
+import 'program_shortcut_metadata_io.dart';
 
 class DartIoBottleProgramRepository implements BottleProgramRepository {
-  const DartIoBottleProgramRepository({
-    ProgramMetadataExtractor metadataExtractor =
-        const DartIoProgramMetadataExtractor(),
-  }) : _metadataExtractor = metadataExtractor;
+  const DartIoBottleProgramRepository({required this.metadataExtractor});
 
-  final ProgramMetadataExtractor _metadataExtractor;
+  final ProgramMetadataExtractor metadataExtractor;
 
   @override
   List<BottleProgramRecord> listPrograms(BottleRecord bottle) {
     final programs = <BottleProgramRecord>[];
-    for (final source in _bottleStartMenuSources(bottle)) {
+    for (final source in bottleStartMenuSources(bottle)) {
       final directory = Directory(source.path.value);
       if (!directory.existsSync()) {
         continue;
@@ -21,18 +31,18 @@ class DartIoBottleProgramRepository implements BottleProgramRepository {
         recursive: true,
         followLinks: false,
       )) {
-        if (entity is! File || !_isShortcutPath(entity.path)) {
+        if (entity is! File || !isShortcutPath(entity.path)) {
           continue;
         }
 
-        final name = _shortcutProgramName(entity.path);
-        final id = _uniqueProgramId(
-          baseId: _bottleIdFromName(name),
+        final name = shortcutProgramName(entity.path);
+        final id = uniqueProgramId(
+          baseId: bottleIdFromName(name),
           existing: programs,
         );
-        final metadata = _metadataExtractor.extract(
+        final metadata = metadataExtractor.extract(
           bottle: bottle,
-          programPath: _metadataProgramPath(
+          programPath: metadataProgramPath(
             bottle: bottle,
             programPath: entity.path,
           ),
@@ -54,22 +64,22 @@ class DartIoBottleProgramRepository implements BottleProgramRepository {
         bottle,
         pinnedProgram,
         isPinnedProgramAvailable: (program) =>
-            _isPinnedProgramFileAvailable(bottle: bottle, program: program),
+            isPinnedProgramFileAvailable(bottle: bottle, program: program),
       )) {
         continue;
       }
 
-      if (_hasDiscoveredProgramPath(programs, pinnedProgram.path.value)) {
+      if (hasDiscoveredProgramPath(programs, pinnedProgram.path.value)) {
         continue;
       }
 
-      final id = _uniqueProgramId(
-        baseId: _bottleIdFromName(pinnedProgram.name.value),
+      final id = uniqueProgramId(
+        baseId: bottleIdFromName(pinnedProgram.name.value),
         existing: programs,
       );
-      final metadata = _metadataExtractor.extract(
+      final metadata = metadataExtractor.extract(
         bottle: bottle,
-        programPath: _metadataProgramPath(
+        programPath: metadataProgramPath(
           bottle: bottle,
           programPath: pinnedProgram.path.value,
         ),
@@ -90,14 +100,14 @@ class DartIoBottleProgramRepository implements BottleProgramRepository {
   }
 }
 
-bool _hasDiscoveredProgramPath(
+bool hasDiscoveredProgramPath(
   List<BottleProgramRecord> programs,
   String programPath,
 ) {
-  final normalizedProgramPath = _normalizeFilesystemPath(programPath);
+  final normalizedProgramPath = normalizeFilesystemPath(programPath);
   return programs.any(
     (program) =>
-        _normalizeFilesystemPath(program.path.value) == normalizedProgramPath,
+        normalizeFilesystemPath(program.path.value) == normalizedProgramPath,
   );
 }
 

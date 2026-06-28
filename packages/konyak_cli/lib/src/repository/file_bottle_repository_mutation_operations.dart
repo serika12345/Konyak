@@ -1,29 +1,37 @@
-part of '../../konyak_cli.dart';
+import 'package:fpdart/fpdart.dart';
 
-class _FileBottleRepositoryMutationOperations {
-  const _FileBottleRepositoryMutationOperations({
+import '../domain/bottle/bottle_models.dart';
+import '../domain/bottle/bottle_mutation_models.dart';
+import '../io/file_bottle_repository_io.dart';
+import '../io/io_result.dart';
+import '../io/repository_storage_io.dart';
+import '../shared/common_helpers.dart';
+import '../storage/storage_paths.dart';
+
+class FileBottleRepositoryMutationOperations {
+  const FileBottleRepositoryMutationOperations({
     required this.dataHome,
     required this.bottleDirectory,
-    required IoResult<Option<BottleRecord>> Function(String id) findBottle,
-  }) : _findBottle = findBottle;
+    required this.findBottle,
+  });
 
   final String dataHome;
   final String bottleDirectory;
-  final IoResult<Option<BottleRecord>> Function(String id) _findBottle;
+  final IoResult<Option<BottleRecord>> Function(String id) findBottle;
 
   BottleCreateResult createBottle(BottleCreateRequest request) {
-    final bottle = _bottleFromCreateRequest(
+    final bottle = bottleFromCreateRequest(
       request,
       dataHome,
       bottleDirectory: Option.of(bottleDirectory),
     );
-    if (_fileBottlePathExists(bottle.path.value)) {
+    if (fileBottlePathExists(bottle.path.value)) {
       return BottleCreateConflict(bottle.id.value);
     }
 
-    final writeResult = _ioResult(() {
-      _createFileBottleDirectories(bottle.path.value);
-      _writeBottleMetadata(bottle);
+    final writeResult = ioResult(() {
+      createFileBottleDirectories(bottle.path.value);
+      writeBottleMetadata(bottle);
     });
     return writeResult.fold<BottleCreateResult>(
       BottleCreateFailed.new,
@@ -32,11 +40,11 @@ class _FileBottleRepositoryMutationOperations {
   }
 
   BottleDeleteResult deleteBottle(String id) {
-    return _findBottle(id).fold<BottleDeleteResult>(
+    return findBottle(id).fold<BottleDeleteResult>(
       BottleDeleteFailed.new,
       (bottle) => bottle.match(() => BottleDeleteMissing(id), (bottle) {
-        final deleteResult = _ioResult(() {
-          _deleteFileBottleDirectoryIfPresent(bottle.path.value);
+        final deleteResult = ioResult(() {
+          deleteFileBottleDirectoryIfPresent(bottle.path.value);
         });
         return deleteResult.fold<BottleDeleteResult>(
           BottleDeleteFailed.new,
@@ -47,28 +55,28 @@ class _FileBottleRepositoryMutationOperations {
   }
 
   BottleRenameResult renameBottle(BottleRenameRequest request) {
-    return _findBottle(request.bottleId.value).fold<BottleRenameResult>(
+    return findBottle(request.bottleId.value).fold<BottleRenameResult>(
       BottleRenameFailed.new,
       (bottle) => bottle.match(
         () => BottleRenameMissing(request.bottleId.value),
         (bottle) {
-          final renamed = _renamedFileBottle(
+          final renamed = renamedFileBottle(
             bottle: bottle,
             name: request.name.value,
             dataHome: dataHome,
             bottleDirectory: Option.of(bottleDirectory),
           );
           if (renamed.id.value != bottle.id.value &&
-              _fileBottleDirectoryExists(renamed.path.value)) {
+              fileBottleDirectoryExists(renamed.path.value)) {
             return BottleRenameConflict(renamed.id.value);
           }
 
-          final writeResult = _ioResult(() {
-            _moveFileBottleDirectoryIfChanged(
+          final writeResult = ioResult(() {
+            moveFileBottleDirectoryIfChanged(
               from: bottle.path.value,
               to: renamed.path.value,
             );
-            _writeBottleMetadata(renamed);
+            writeBottleMetadata(renamed);
           });
           return writeResult.fold<BottleRenameResult>(
             BottleRenameFailed.new,
@@ -80,26 +88,26 @@ class _FileBottleRepositoryMutationOperations {
   }
 
   BottleMoveResult moveBottle(BottleMoveRequest request) {
-    return _findBottle(request.bottleId.value).fold<BottleMoveResult>(
+    return findBottle(request.bottleId.value).fold<BottleMoveResult>(
       BottleMoveFailed.new,
       (bottle) => bottle.match(
         () => BottleMoveMissing(request.bottleId.value),
         (bottle) {
           final destinationPath = request.path.value;
-          if (_normalizeFilesystemPath(destinationPath) !=
-                  _normalizeFilesystemPath(bottle.path.value) &&
-              _fileBottleDirectoryExists(destinationPath)) {
+          if (normalizeFilesystemPath(destinationPath) !=
+                  normalizeFilesystemPath(bottle.path.value) &&
+              fileBottleDirectoryExists(destinationPath)) {
             return BottleMoveConflict(destinationPath);
           }
 
           final moved = bottle.withPath(destinationPath);
 
-          final writeResult = _ioResult(() {
-            _moveFileBottleDirectoryIfChanged(
+          final writeResult = ioResult(() {
+            moveFileBottleDirectoryIfChanged(
               from: bottle.path.value,
               to: destinationPath,
             );
-            _writeBottleMetadata(moved);
+            writeBottleMetadata(moved);
           });
           return writeResult.fold<BottleMoveResult>(
             BottleMoveFailed.new,
@@ -111,7 +119,7 @@ class _FileBottleRepositoryMutationOperations {
   }
 
   BottleUpdateResult setWindowsVersion(WindowsVersionUpdateRequest request) {
-    return _findBottle(request.bottleId.value).fold<BottleUpdateResult>(
+    return findBottle(request.bottleId.value).fold<BottleUpdateResult>(
       BottleUpdateFailed.new,
       (bottle) => bottle.match(
         () => BottleUpdateMissing(request.bottleId.value),
@@ -120,8 +128,8 @@ class _FileBottleRepositoryMutationOperations {
             request.windowsVersion.value,
           );
 
-          final writeResult = _ioResult(() {
-            _writeBottleMetadata(updated);
+          final writeResult = ioResult(() {
+            writeBottleMetadata(updated);
           });
           return writeResult.fold<BottleUpdateResult>(
             BottleUpdateFailed.new,
@@ -133,15 +141,15 @@ class _FileBottleRepositoryMutationOperations {
   }
 
   BottleUpdateResult setRuntimeSettings(RuntimeSettingsUpdateRequest request) {
-    return _findBottle(request.bottleId.value).fold<BottleUpdateResult>(
+    return findBottle(request.bottleId.value).fold<BottleUpdateResult>(
       BottleUpdateFailed.new,
       (bottle) => bottle.match(
         () => BottleUpdateMissing(request.bottleId.value),
         (bottle) {
           final updated = bottle.withRuntimeSettings(request.runtimeSettings);
 
-          final writeResult = _ioResult(() {
-            _writeBottleMetadata(updated);
+          final writeResult = ioResult(() {
+            writeBottleMetadata(updated);
           });
           return writeResult.fold<BottleUpdateResult>(
             BottleUpdateFailed.new,

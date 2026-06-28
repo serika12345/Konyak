@@ -1,10 +1,26 @@
-part of '../home_loader/home_loader.dart';
+import 'dart:async';
 
-extension _KonyakHomeLoaderBottles on _KonyakHomeLoaderState {
-  Future<void> _loadBottles() async {
-    _updateState(() {
-      _isLoading = true;
-      _errorMessage = null;
+import 'package:flutter/material.dart';
+
+import '../app/dialogs/bottle_management_dialogs.dart';
+import '../app/dialogs/create_bottle_dialog.dart';
+import '../app/utils/bottle_lists.dart';
+import '../bottles/bottle_summary.dart';
+import '../cli/konyak_cli_bottle_commands.dart';
+import '../cli/konyak_cli_bottle_result_types.dart';
+import '../cli/konyak_cli_read_commands.dart';
+import '../cli/konyak_cli_runtime_result_types.dart';
+import '../l10n/konyak_localizations.dart';
+import '../runtimes/runtime_summary.dart';
+import 'home_loader.dart';
+import 'home_loader_executables.dart';
+import 'home_loader_runtimes.dart';
+
+extension KonyakHomeLoaderBottles on KonyakHomeLoaderState {
+  Future<void> loadBottles() async {
+    updateState(() {
+      isLoading = true;
+      errorMessage = null;
     });
 
     final result = await widget.cliClient.listBottles();
@@ -13,26 +29,26 @@ extension _KonyakHomeLoaderBottles on _KonyakHomeLoaderState {
       return;
     }
 
-    _updateState(() {
-      _isLoading = false;
+    updateState(() {
+      isLoading = false;
 
       switch (result) {
         case LoadedBottleList(:final bottles):
-          _bottles = bottles;
-          _errorMessage = null;
+          this.bottles = bottles;
+          errorMessage = null;
         case BottleListLoadFailure(:final message):
-          _errorMessage = message;
+          errorMessage = message;
       }
     });
 
-    unawaited(_drainPendingExecutableOpenPaths());
+    unawaited(drainPendingExecutableOpenPaths());
   }
 
-  Future<void> _createBottle() async {
-    await _createBottleFromDialog();
+  Future<void> createBottle() async {
+    await createBottleFromDialog();
   }
 
-  Future<BottleSummary?> _createBottleFromDialog() async {
+  Future<BottleSummary?> createBottleFromDialog() async {
     final input = await showDialog<CreateBottleInput>(
       context: context,
       builder: (context) => const CreateBottleDialog(),
@@ -42,12 +58,12 @@ extension _KonyakHomeLoaderBottles on _KonyakHomeLoaderState {
       return null;
     }
 
-    return _createBottleFromInput(input);
+    return createBottleFromInput(input);
   }
 
-  Future<BottleSummary?> _createBottleFromInput(CreateBottleInput input) async {
-    _updateState(() {
-      _isCreatingBottle = true;
+  Future<BottleSummary?> createBottleFromInput(CreateBottleInput input) async {
+    updateState(() {
+      isCreatingBottle = true;
     });
 
     late final BottleCreateLoadResult result;
@@ -58,8 +74,8 @@ extension _KonyakHomeLoaderBottles on _KonyakHomeLoaderState {
       );
     } finally {
       if (mounted) {
-        _updateState(() {
-          _isCreatingBottle = false;
+        updateState(() {
+          isCreatingBottle = false;
         });
       }
     }
@@ -70,59 +86,59 @@ extension _KonyakHomeLoaderBottles on _KonyakHomeLoaderState {
 
     switch (result) {
       case CreatedBottle(:final bottle):
-        _storeBottle(bottle);
+        storeBottle(bottle);
         return bottle;
       case ExistingBottle(:final message) ||
           BottleCreateLoadFailure(:final message):
-        _showSnackBar(message);
+        showSnackBar(message);
         return null;
     }
   }
 
-  void _storeBottle(BottleSummary bottle, {String? oldBottleId}) {
-    _updateState(() {
-      _bottles = oldBottleId == null
-          ? upsertBottle(_bottles, bottle)
-          : replaceBottle(_bottles, oldBottleId: oldBottleId, bottle: bottle);
-      _errorMessage = null;
+  void storeBottle(BottleSummary bottle, {String? oldBottleId}) {
+    updateState(() {
+      bottles = oldBottleId == null
+          ? upsertBottle(bottles, bottle)
+          : replaceBottle(bottles, oldBottleId: oldBottleId, bottle: bottle);
+      errorMessage = null;
     });
   }
 
-  void _handleBottleUpdateResult(
+  void handleBottleUpdateResult(
     BottleUpdateLoadResult result, {
     String? oldBottleId,
     String Function(BottleSummary bottle)? successMessage,
   }) {
     switch (result) {
       case UpdatedBottle(:final bottle):
-        _storeBottle(bottle, oldBottleId: oldBottleId);
+        storeBottle(bottle, oldBottleId: oldBottleId);
         final message = successMessage?.call(bottle);
         if (message != null) {
-          _showSnackBar(message);
+          showSnackBar(message);
         }
       case MissingBottleUpdate(:final message) ||
           BottleUpdateLoadFailure(:final message):
-        _showSnackBar(message);
+        showSnackBar(message);
     }
   }
 
-  Future<void> _setRuntimeSettings({
+  Future<void> setRuntimeSettings({
     required BottleSummary bottle,
     required BottleRuntimeSettingsSummary runtimeSettings,
     required String controlKey,
   }) async {
-    if (_pendingRuntimeSettingsControls.containsKey(bottle.id)) {
+    if (pendingRuntimeSettingsControls.containsKey(bottle.id)) {
       return;
     }
 
-    final previousBottle = findSelectedBottle(_bottles, bottle.id) ?? bottle;
-    _updateState(() {
-      _pendingRuntimeSettingsControls[bottle.id] = controlKey;
-      _bottles = upsertBottle(
-        _bottles,
+    final previousBottle = findSelectedBottle(bottles, bottle.id) ?? bottle;
+    updateState(() {
+      pendingRuntimeSettingsControls[bottle.id] = controlKey;
+      bottles = upsertBottle(
+        bottles,
         previousBottle.withRuntimeSettings(runtimeSettings),
       );
-      _errorMessage = null;
+      errorMessage = null;
     });
 
     final BottleUpdateLoadResult result;
@@ -136,31 +152,31 @@ extension _KonyakHomeLoaderBottles on _KonyakHomeLoaderState {
     }
 
     final failureMessages = <String>[];
-    _updateState(() {
-      _pendingRuntimeSettingsControls.remove(bottle.id);
+    updateState(() {
+      pendingRuntimeSettingsControls.remove(bottle.id);
       switch (result) {
         case UpdatedBottle(:final bottle):
-          _bottles = upsertBottle(_bottles, bottle);
-          _errorMessage = null;
+          bottles = upsertBottle(bottles, bottle);
+          errorMessage = null;
         case MissingBottleUpdate(:final message) ||
             BottleUpdateLoadFailure(:final message):
-          _bottles = upsertBottle(_bottles, previousBottle);
-          _errorMessage = null;
+          bottles = upsertBottle(bottles, previousBottle);
+          errorMessage = null;
           failureMessages.add(message);
       }
     });
 
     for (final message in failureMessages) {
-      _showSnackBar(message);
+      showSnackBar(message);
     }
   }
 
-  Future<void> _loadBottleConfiguration(BottleSummary bottle) async {
-    await _reloadBottle(bottle);
-    await _loadRuntimeCapabilities();
+  Future<void> loadBottleConfiguration(BottleSummary bottle) async {
+    await reloadBottle(bottle);
+    await loadRuntimeCapabilities();
   }
 
-  Future<BottleSummary?> _reloadBottle(BottleSummary bottle) async {
+  Future<BottleSummary?> reloadBottle(BottleSummary bottle) async {
     final result = await widget.cliClient.inspectBottle(bottle.id);
 
     if (!mounted) {
@@ -169,16 +185,16 @@ extension _KonyakHomeLoaderBottles on _KonyakHomeLoaderState {
 
     switch (result) {
       case LoadedBottleDetail(:final bottle):
-        _storeBottle(bottle);
+        storeBottle(bottle);
         return bottle;
       case MissingBottleDetail(:final message) ||
           BottleDetailLoadFailure(:final message):
-        _showSnackBar(message);
+        showSnackBar(message);
         return null;
     }
   }
 
-  Future<void> _loadRuntimeCapabilities() async {
+  Future<void> loadRuntimeCapabilities() async {
     final result = await widget.cliClient.listKnownRuntimes();
 
     if (!mounted) {
@@ -187,13 +203,13 @@ extension _KonyakHomeLoaderBottles on _KonyakHomeLoaderState {
 
     switch (result) {
       case LoadedRuntimeList(:final runtimes):
-        _setKnownRuntimes(runtimes);
+        setKnownRuntimes(runtimes);
       case RuntimeListLoadFailure():
-        _setKnownRuntimes(const <RuntimeSummary>[]);
+        setKnownRuntimes(const <RuntimeSummary>[]);
     }
   }
 
-  Future<void> _deleteBottle(BottleSummary bottle) async {
+  Future<void> deleteBottle(BottleSummary bottle) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => DeleteBottleDialog(bottleName: bottle.name),
@@ -203,10 +219,10 @@ extension _KonyakHomeLoaderBottles on _KonyakHomeLoaderState {
       return;
     }
 
-    await _deleteBottleAfterConfirmation(bottle);
+    await deleteBottleAfterConfirmation(bottle);
   }
 
-  Future<void> _deleteBottleAfterConfirmation(BottleSummary bottle) async {
+  Future<void> deleteBottleAfterConfirmation(BottleSummary bottle) async {
     final result = await widget.cliClient.deleteBottle(bottle.id);
 
     if (!mounted) {
@@ -215,40 +231,40 @@ extension _KonyakHomeLoaderBottles on _KonyakHomeLoaderState {
 
     switch (result) {
       case DeletedBottle(:final bottle):
-        _updateState(() {
-          _bottles = removeBottle(_bottles, bottle.id);
-          _errorMessage = null;
+        updateState(() {
+          bottles = removeBottle(bottles, bottle.id);
+          errorMessage = null;
         });
-        _showSnackBar(
+        showSnackBar(
           KonyakLocalizations.of(context).deletedBottle(bottle.name),
         );
       case MissingBottleDelete(:final message):
-        _showSnackBar(message);
+        showSnackBar(message);
       case BottleDeleteLoadFailure(:final message):
-        _showBottleDeleteFailureSnackBar(bottle: bottle, message: message);
+        showBottleDeleteFailureSnackBar(bottle: bottle, message: message);
     }
   }
 
-  void _showBottleDeleteFailureSnackBar({
+  void showBottleDeleteFailureSnackBar({
     required BottleSummary bottle,
     required String message,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
-    _showWarningSnackBar(
+    showWarningSnackBar(
       message,
       action: SnackBarAction(
         label: KonyakLocalizations.of(context).retry,
         textColor: colorScheme.onErrorContainer,
         onPressed: () {
           final currentBottle =
-              findSelectedBottle(_bottles, bottle.id) ?? bottle;
-          unawaited(_deleteBottleAfterConfirmation(currentBottle));
+              findSelectedBottle(bottles, bottle.id) ?? bottle;
+          unawaited(deleteBottleAfterConfirmation(currentBottle));
         },
       ),
     );
   }
 
-  Future<void> _renameBottle(BottleSummary bottle) async {
+  Future<void> renameBottle(BottleSummary bottle) async {
     final name = await showDialog<String>(
       context: context,
       builder: (context) => RenameBottleDialog(bottleName: bottle.name),
@@ -267,7 +283,7 @@ extension _KonyakHomeLoaderBottles on _KonyakHomeLoaderState {
       return;
     }
 
-    _handleBottleUpdateResult(
+    handleBottleUpdateResult(
       result,
       oldBottleId: bottle.id,
       successMessage: (bottle) =>
@@ -275,7 +291,7 @@ extension _KonyakHomeLoaderBottles on _KonyakHomeLoaderState {
     );
   }
 
-  Future<void> _moveBottle(BottleSummary bottle) async {
+  Future<void> moveBottle(BottleSummary bottle) async {
     final path = await showDialog<String>(
       context: context,
       builder: (context) => MoveBottleDialog(
@@ -298,14 +314,14 @@ extension _KonyakHomeLoaderBottles on _KonyakHomeLoaderState {
       return;
     }
 
-    _handleBottleUpdateResult(
+    handleBottleUpdateResult(
       result,
       successMessage: (bottle) =>
           KonyakLocalizations.of(context).movedBottle(bottle.name),
     );
   }
 
-  Future<void> _exportBottleArchive(BottleSummary bottle) async {
+  Future<void> exportBottleArchive(BottleSummary bottle) async {
     final archivePath = await widget.bottleArchivePicker.pickArchiveExportPath(
       suggestedName: '${bottle.id}.konyak-bottle.tar',
     );
@@ -313,8 +329,8 @@ extension _KonyakHomeLoaderBottles on _KonyakHomeLoaderState {
       return;
     }
 
-    _updateState(() {
-      _archiveProgressMessage = KonyakLocalizations.of(
+    updateState(() {
+      archiveProgressMessage = KonyakLocalizations.of(
         context,
       ).exportingBottleArchiveEllipsis;
     });
@@ -327,8 +343,8 @@ extension _KonyakHomeLoaderBottles on _KonyakHomeLoaderState {
       );
     } finally {
       if (mounted) {
-        _updateState(() {
-          _archiveProgressMessage = null;
+        updateState(() {
+          archiveProgressMessage = null;
         });
       }
     }
@@ -339,22 +355,22 @@ extension _KonyakHomeLoaderBottles on _KonyakHomeLoaderState {
 
     switch (result) {
       case ExportedBottleArchive():
-        _showSnackBar(
+        showSnackBar(
           KonyakLocalizations.of(context).exportedBottle(bottle.name),
         );
       case BottleArchiveExportLoadFailure(:final message):
-        _showSnackBar(message);
+        showSnackBar(message);
     }
   }
 
-  Future<void> _importBottleArchive() async {
+  Future<void> importBottleArchive() async {
     final archivePath = await widget.bottleArchivePicker.pickArchiveToImport();
     if (archivePath == null) {
       return;
     }
 
-    _updateState(() {
-      _archiveProgressMessage = KonyakLocalizations.of(
+    updateState(() {
+      archiveProgressMessage = KonyakLocalizations.of(
         context,
       ).importingBottleArchiveEllipsis;
     });
@@ -366,8 +382,8 @@ extension _KonyakHomeLoaderBottles on _KonyakHomeLoaderState {
       );
     } finally {
       if (mounted) {
-        _updateState(() {
-          _archiveProgressMessage = null;
+        updateState(() {
+          archiveProgressMessage = null;
         });
       }
     }
@@ -378,12 +394,12 @@ extension _KonyakHomeLoaderBottles on _KonyakHomeLoaderState {
 
     switch (result) {
       case ImportedBottleArchive(:final bottle):
-        _storeBottle(bottle);
-        _showSnackBar(
+        storeBottle(bottle);
+        showSnackBar(
           KonyakLocalizations.of(context).importedBottle(bottle.name),
         );
       case BottleArchiveImportLoadFailure(:final message):
-        _showSnackBar(message);
+        showSnackBar(message);
     }
   }
 }

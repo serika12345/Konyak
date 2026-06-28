@@ -1,23 +1,28 @@
-part of '../../konyak_cli.dart';
+import 'dart:convert';
+import 'dart:io';
 
-void _writeLinuxExternalProgramDesktopLauncher({
+import '../domain/bottle/bottle_models.dart';
+import '../shared/common_helpers.dart';
+import 'external_program_launch_records.dart';
+
+void writeLinuxExternalProgramDesktopLauncher({
   required String launcherPath,
   required String launcherContents,
 }) {
   final launcherDirectory = File(launcherPath).parent
     ..createSync(recursive: true);
-  File(_joinPath(launcherDirectory.path, [_baseName(launcherPath)]))
+  File(joinPath(launcherDirectory.path, [baseName(launcherPath)]))
     ..createSync(recursive: true)
     ..writeAsStringSync(launcherContents);
 }
 
-void _recordExternalProgramLaunch({
+void recordExternalProgramLaunch({
   required BottleRecord bottle,
   required String programPath,
 }) {
   try {
     final launchIndexFile = File(
-      _joinPath(bottle.path.value, const [
+      joinPath(bottle.path.value, const [
         'cache',
         'external-program-launches.json',
       ]),
@@ -26,7 +31,7 @@ void _recordExternalProgramLaunch({
     final existingEntries = <Map<String, Object?>>[];
     if (launchIndexFile.existsSync()) {
       final decoded = jsonDecode(launchIndexFile.readAsStringSync());
-      final parsedEntries = _externalProgramLaunchEntriesFromDecoded(
+      final parsedEntries = externalProgramLaunchEntriesFromDecoded(
         decoded,
         programPath: programPath,
       );
@@ -39,7 +44,7 @@ void _recordExternalProgramLaunch({
     launchIndexFile.parent.createSync(recursive: true);
     launchIndexFile.writeAsStringSync(
       jsonEncode(
-        _externalProgramLaunchIndexPayload(
+        externalProgramLaunchIndexPayload(
           existingEntries: existingEntries,
           programPath: programPath,
         ),

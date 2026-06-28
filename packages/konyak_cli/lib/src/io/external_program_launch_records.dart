@@ -1,6 +1,11 @@
-part of '../../konyak_cli.dart';
+import 'package:fpdart/fpdart.dart';
 
-Map<String, Object?> _externalProgramLaunchIndexPayload({
+import '../domain/bottle/bottle_models.dart';
+import '../domain/program/program_run_models.dart';
+import '../shared/common_helpers.dart';
+import 'wine_process_metadata.dart';
+
+Map<String, Object?> externalProgramLaunchIndexPayload({
   required Iterable<Map<String, Object?>> existingEntries,
   required String programPath,
 }) {
@@ -8,12 +13,12 @@ Map<String, Object?> _externalProgramLaunchIndexPayload({
     'schemaVersion': 1,
     'launches': <Map<String, Object?>>[
       ...existingEntries.take(31),
-      _externalProgramLaunchEntry(programPath),
+      externalProgramLaunchEntry(programPath),
     ],
   };
 }
 
-Option<List<Map<String, Object?>>> _externalProgramLaunchEntriesFromDecoded(
+Option<List<Map<String, Object?>>> externalProgramLaunchEntriesFromDecoded(
   Object? decoded, {
   required String programPath,
 }) {
@@ -30,7 +35,7 @@ Option<List<Map<String, Object?>>> _externalProgramLaunchEntriesFromDecoded(
     return Option.of(const <Map<String, Object?>>[]);
   }
 
-  final entry = _externalProgramLaunchEntry(programPath);
+  final entry = externalProgramLaunchEntry(programPath);
   final entries = <Map<String, Object?>>[];
   for (final launch in launches) {
     if (launch is! Map<String, Object?>) {
@@ -43,9 +48,9 @@ Option<List<Map<String, Object?>>> _externalProgramLaunchEntriesFromDecoded(
       continue;
     }
 
-    if (_normalizeFilesystemPath(existingProgramPath) ==
-            _normalizeFilesystemPath(programPath) &&
-        _normalizedExecutableName(existingExecutableName) ==
+    if (normalizeFilesystemPath(existingProgramPath) ==
+            normalizeFilesystemPath(programPath) &&
+        normalizedExecutableName(existingExecutableName) ==
             entry['executableName']) {
       continue;
     }
@@ -59,21 +64,21 @@ Option<List<Map<String, Object?>>> _externalProgramLaunchEntriesFromDecoded(
   return Option.of(List.unmodifiable(entries));
 }
 
-Map<String, Object?> _externalProgramLaunchEntry(String programPath) {
+Map<String, Object?> externalProgramLaunchEntry(String programPath) {
   return <String, Object?>{
     'programPath': programPath,
-    'executableName': _normalizedExecutableName(programPath),
+    'executableName': normalizedExecutableName(programPath),
   };
 }
 
-Option<String> _externalProgramRunPath({
+Option<String> externalProgramRunPath({
   required BottleRecord bottle,
   required ProgramRunRequest request,
 }) {
   final normalizedProgramPath = request.programPath.value.trim();
   if (normalizedProgramPath.isEmpty ||
       !normalizedProgramPath.startsWith('/') ||
-      _isPathWithinRoot(path: normalizedProgramPath, root: bottle.path.value)) {
+      isPathWithinRoot(path: normalizedProgramPath, root: bottle.path.value)) {
     return const Option.none();
   }
 

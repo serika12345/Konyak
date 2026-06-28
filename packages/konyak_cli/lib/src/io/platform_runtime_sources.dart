@@ -1,10 +1,15 @@
-part of '../../konyak_cli.dart';
+import 'dart:io';
 
-String _runtimeSiblingPathForInstall(Directory runtimeRoot, String suffix) {
+import 'package:crypto/crypto.dart';
+
+import '../shared/common_helpers.dart';
+import 'external_payload_helpers.dart';
+
+String runtimeSiblingPathForInstall(Directory runtimeRoot, String suffix) {
   return '${runtimeRoot.path}.$suffix-${DateTime.now().microsecondsSinceEpoch}';
 }
 
-void _replaceRuntimeRootInPlace({
+void replaceRuntimeRootInPlace({
   required Directory runtimeRoot,
   required Directory stagingRoot,
   required Directory backupRoot,
@@ -35,7 +40,7 @@ void _replaceRuntimeRootInPlace({
   }
 }
 
-String? _localSourcePath(String source) {
+String? localSourcePath(String source) {
   final uri = Uri.tryParse(source);
   if (uri != null && uri.scheme == 'file') {
     return uri.toFilePath();
@@ -48,13 +53,13 @@ String? _localSourcePath(String source) {
   return null;
 }
 
-String _readAndVerifyRuntimeStackSourceText({
+String readAndVerifyRuntimeStackSourceText({
   required String source,
   required String? signatureSource,
   required String? publicKeyPath,
   required String? publicKeyText,
 }) {
-  final payload = _readTextSource(
+  final payload = readTextSource(
     source,
     action: 'download runtime stack source manifest',
   );
@@ -84,11 +89,11 @@ String _readAndVerifyRuntimeStackSourceText({
     'konyak-runtime-stack-verify-',
   );
   try {
-    final payloadPath = _joinPath(tempDirectory.path, const ['manifest.json']);
+    final payloadPath = joinPath(tempDirectory.path, const ['manifest.json']);
     File(payloadPath).writeAsStringSync(payload);
 
-    final signaturePath = _joinPath(tempDirectory.path, const ['manifest.sig']);
-    _writeSourceBytes(
+    final signaturePath = joinPath(tempDirectory.path, const ['manifest.sig']);
+    writeSourceBytes(
       source: effectiveSignatureSource,
       targetPath: signaturePath,
       action: 'download runtime stack source signature',
@@ -96,7 +101,7 @@ String _readAndVerifyRuntimeStackSourceText({
 
     final resolvedPublicKeyPath = hasPublicKeyPath
         ? normalizedPublicKeyPath
-        : _joinPath(tempDirectory.path, const ['runtime-stack-public-key.pem']);
+        : joinPath(tempDirectory.path, const ['runtime-stack-public-key.pem']);
     if (!hasPublicKeyPath) {
       File(
         resolvedPublicKeyPath,
@@ -117,7 +122,7 @@ String _readAndVerifyRuntimeStackSourceText({
         'openssl',
         const <String>[],
         'Runtime stack source manifest signature verification failed: '
-            '${_commandFailureMessage("verify runtime stack source manifest signature", result)}',
+            '${commandFailureMessage("verify runtime stack source manifest signature", result)}',
         result.exitCode,
       );
     }
@@ -130,8 +135,8 @@ String _readAndVerifyRuntimeStackSourceText({
   }
 }
 
-String _readTextSource(String source, {required String action}) {
-  final localPath = _localSourcePath(source);
+String readTextSource(String source, {required String action}) {
+  final localPath = localSourcePath(source);
   if (localPath != null) {
     return File(localPath).readAsStringSync();
   }
@@ -146,20 +151,20 @@ String _readTextSource(String source, {required String action}) {
     throw ProcessException(
       'curl',
       const <String>[],
-      '${_commandFailureMessage(action, result)} Source: $source',
+      '${commandFailureMessage(action, result)} Source: $source',
       result.exitCode,
     );
   }
 
-  return _processOutputToString(result.stdout);
+  return processOutputToString(result.stdout);
 }
 
-void _writeSourceBytes({
+void writeSourceBytes({
   required String source,
   required String targetPath,
   required String action,
 }) {
-  final localPath = _localSourcePath(source);
+  final localPath = localSourcePath(source);
   if (localPath != null) {
     File(targetPath).parent.createSync(recursive: true);
     File(localPath).copySync(targetPath);
@@ -178,13 +183,13 @@ void _writeSourceBytes({
     throw ProcessException(
       'curl',
       const <String>[],
-      '${_commandFailureMessage(action, result)} Source: $source',
+      '${commandFailureMessage(action, result)} Source: $source',
       result.exitCode,
     );
   }
 }
 
-final class _DigestSink implements Sink<Digest> {
+final class DigestSink implements Sink<Digest> {
   Digest? digest;
 
   @override

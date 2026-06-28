@@ -1,4 +1,13 @@
-part of '../../konyak_cli.dart';
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+
+import '../cli/cli_json_helpers.dart';
+import '../domain/program/program_run_models.dart';
+import '../domain/program/program_runner.dart';
+import '../platform/platform_location_paths.dart';
+import 'external_payload_helpers.dart';
+import 'platform_host_paths.dart';
 
 class DartIoProgramRunner implements ProgramRunner {
   const DartIoProgramRunner();
@@ -17,16 +26,16 @@ class DartIoProgramRunner implements ProgramRunner {
       if (request.createLogFile) {
         final logFile = File(request.logPath.value);
         logFile.parent.createSync(recursive: true);
-        logFile.writeAsStringSync(_programRunLog(request, result));
+        logFile.writeAsStringSync(programRunLog(request, result));
       }
 
       return ProgramRunCompleted(
         processExitCode: result.exitCode,
-        stdout: _processOutputToString(result.stdout),
-        stderr: _processOutputToString(result.stderr),
+        stdout: processOutputToString(result.stdout),
+        stderr: processOutputToString(result.stderr),
       );
     } on ProcessException catch (error) {
-      final message = _programRunnerFailureMessage(
+      final message = programRunnerFailureMessage(
         executable: request.executable.value,
         message: error.message,
       );
@@ -34,7 +43,7 @@ class DartIoProgramRunner implements ProgramRunner {
         final logFile = File(request.logPath.value);
         logFile.parent.createSync(recursive: true);
         logFile.writeAsStringSync(
-          _programRunStartupFailureLog(request, message),
+          programRunStartupFailureLog(request, message),
         );
       }
 
@@ -62,11 +71,11 @@ class DartIoAsyncProgramRunner implements AsyncProgramRunner {
         runInShell: false,
       );
     } on ProcessException catch (error) {
-      final message = _programRunnerFailureMessage(
+      final message = programRunnerFailureMessage(
         executable: request.executable.value,
         message: error.message,
       );
-      await _writeProgramRunStartupFailureLog(request, message);
+      await writeProgramRunStartupFailureLog(request, message);
 
       return ProgramRunFailed(message: message);
     }
@@ -82,7 +91,7 @@ class DartIoAsyncProgramRunner implements AsyncProgramRunner {
     final exitCodeFuture = process.exitCode;
 
     try {
-      final processExitCode = await _awaitAsyncProcessExit(
+      final processExitCode = await awaitAsyncProcessExit(
         exitCodeFuture: exitCodeFuture,
       );
       await stdoutFuture;
@@ -97,7 +106,7 @@ class DartIoAsyncProgramRunner implements AsyncProgramRunner {
       if (request.createLogFile) {
         final logFile = File(request.logPath.value);
         await logFile.parent.create(recursive: true);
-        await logFile.writeAsString(_programRunLog(request, result));
+        await logFile.writeAsString(programRunLog(request, result));
       }
       return ProgramRunCompleted(
         processExitCode: processExitCode,
@@ -106,24 +115,24 @@ class DartIoAsyncProgramRunner implements AsyncProgramRunner {
       );
     } on TimeoutException {
       process.kill(ProcessSignal.sigterm);
-      await _finishTimedOutAsyncProcess(
+      await finishTimedOutAsyncProcess(
         process: process,
         exitCodeFuture: exitCodeFuture,
       );
       await stdoutFuture;
       await stderrFuture;
-      final message = _programRunnerTimeoutMessage(
+      final message = programRunnerTimeoutMessage(
         executable: request.executable.value,
         timeout: timeout,
       );
-      await _writeProgramRunStartupFailureLog(request, message);
+      await writeProgramRunStartupFailureLog(request, message);
       return ProgramRunFailed(message: message);
     } on FileSystemException catch (error) {
       return ProgramRunFailed(message: error.message);
     }
   }
 
-  Future<int> _awaitAsyncProcessExit({required Future<int> exitCodeFuture}) {
+  Future<int> awaitAsyncProcessExit({required Future<int> exitCodeFuture}) {
     final timeout = this.timeout;
     if (timeout == null) {
       return exitCodeFuture;
@@ -132,7 +141,7 @@ class DartIoAsyncProgramRunner implements AsyncProgramRunner {
     return exitCodeFuture.timeout(timeout);
   }
 
-  Future<void> _finishTimedOutAsyncProcess({
+  Future<void> finishTimedOutAsyncProcess({
     required Process process,
     required Future<int> exitCodeFuture,
   }) async {
@@ -149,11 +158,11 @@ class DartIoAsyncProgramRunner implements AsyncProgramRunner {
 class DartIoHostProcessSnapshotReader implements HostProcessSnapshotReader {
   const DartIoHostProcessSnapshotReader();
 
-  static const _timeout = Duration(milliseconds: 750);
+  static const timeout = Duration(milliseconds: 750);
 
   @override
   Future<String> read() async {
-    final snapshot = await _readPsSnapshot(const <String>[
+    final snapshot = await readPsSnapshot(const <String>[
       'eww',
       '-axo',
       'command=',
@@ -162,21 +171,21 @@ class DartIoHostProcessSnapshotReader implements HostProcessSnapshotReader {
       return snapshot;
     }
 
-    return await _readPsSnapshot(const <String>['-axo', 'command=']) ?? '';
+    return await readPsSnapshot(const <String>['-axo', 'command=']) ?? '';
   }
 
-  Future<String?> _readPsSnapshot(List<String> arguments) async {
+  Future<String?> readPsSnapshot(List<String> arguments) async {
     try {
       final result = await Process.run(
         'ps',
         arguments,
         runInShell: false,
-      ).timeout(_timeout);
+      ).timeout(timeout);
       if (result.exitCode != 0) {
         return null;
       }
 
-      return _processOutputToString(result.stdout);
+      return processOutputToString(result.stdout);
     } on ProcessException {
       return null;
     } on TimeoutException {
@@ -185,7 +194,7 @@ class DartIoHostProcessSnapshotReader implements HostProcessSnapshotReader {
   }
 }
 
-Future<void> _writeProgramRunStartupFailureLog(
+Future<void> writeProgramRunStartupFailureLog(
   ProgramRunRequest request,
   String message,
 ) async {
@@ -195,10 +204,10 @@ Future<void> _writeProgramRunStartupFailureLog(
 
   final logFile = File(request.logPath.value);
   await logFile.parent.create(recursive: true);
-  await logFile.writeAsString(_programRunStartupFailureLog(request, message));
+  await logFile.writeAsString(programRunStartupFailureLog(request, message));
 }
 
-String _programRunnerTimeoutMessage({
+String programRunnerTimeoutMessage({
   required String executable,
   required Duration? timeout,
 }) {
@@ -211,28 +220,28 @@ class DartIoPathOpener implements PathOpener {
 
   @override
   PathOpenResult openPath(String path) {
-    return _runPathOpenCommand(<String>[path]);
+    return runPathOpenCommand(<String>[path]);
   }
 
   @override
   PathOpenResult revealPath(String path) {
-    return switch (_currentHostPlatform()) {
-      KonyakHostPlatform.macos => _runPathOpenCommand(<String>['-R', path]),
-      KonyakHostPlatform.linux => _runPathOpenCommand(<String>[
-        _programLocationPath(path),
+    return switch (currentHostPlatform()) {
+      KonyakHostPlatform.macos => runPathOpenCommand(<String>['-R', path]),
+      KonyakHostPlatform.linux => runPathOpenCommand(<String>[
+        programLocationPath(path),
       ]),
     };
   }
 
-  PathOpenResult _runPathOpenCommand(List<String> arguments) {
+  PathOpenResult runPathOpenCommand(List<String> arguments) {
     try {
       final result = Process.runSync(
-        _pathOpenExecutable(),
+        pathOpenExecutable(),
         arguments,
         runInShell: false,
       );
       if (result.exitCode != 0) {
-        return PathOpenFailed(_processOutputToString(result.stderr));
+        return PathOpenFailed(processOutputToString(result.stderr));
       }
 
       return const PathOpenCompleted();
@@ -259,9 +268,7 @@ class DartIoDetachedProcessStarter implements DetachedProcessStarter {
         ...arguments,
       ], runInShell: false);
       if (result.exitCode != 0) {
-        return DetachedProcessStartFailed(
-          _processOutputToString(result.stderr),
-        );
+        return DetachedProcessStartFailed(processOutputToString(result.stderr));
       }
 
       return const DetachedProcessStartCompleted();

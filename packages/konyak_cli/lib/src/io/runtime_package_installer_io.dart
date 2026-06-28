@@ -1,4 +1,11 @@
-part of '../../konyak_cli.dart';
+import 'dart:io';
+
+import 'package:fast_immutable_collections/fast_immutable_collections.dart';
+
+import '../domain/runtime/runtime_component_versions.dart';
+import '../domain/runtime/runtime_package_installation.dart';
+import 'runtime_archive_install_support.dart';
+import 'runtime_install_progress_io.dart';
 
 abstract interface class RuntimePackageInstaller {
   RuntimePackageInstallResult install(
@@ -28,7 +35,7 @@ class DartIoRuntimePackageInstaller implements RuntimePackageInstaller {
     RuntimePackageInstallRequest request, {
     RuntimeInstallProgressSink? progressSink,
   }) {
-    return _installRuntimeArchives(
+    return installRuntimeArchives(
       runtimeLabel: request.runtimeLabel,
       archivePath: request.archivePath.value,
       archiveSha256: request.archiveSha256

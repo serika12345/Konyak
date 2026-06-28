@@ -1,4 +1,4 @@
-part of 'konyak_cli_client.dart';
+import '../updates/update_check_summary.dart';
 
 sealed class UpdateCheckLoadResult {
   const UpdateCheckLoadResult();

@@ -1,4 +1,4 @@
-part of 'konyak_cli_client.dart';
+import 'konyak_cli_program_result_types.dart';
 
 sealed class WineProcessTerminationLoadResult {
   const WineProcessTerminationLoadResult();

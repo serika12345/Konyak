@@ -1,6 +1,8 @@
-part of '../../konyak_cli.dart';
+import 'dart:io';
 
-void _writeLinuxFileAssociationFiles({
+import 'linux_file_associations.dart';
+
+void writeLinuxFileAssociationFiles({
   required String desktopEntryPath,
   required String desktopEntry,
   required String? iconSourcePath,
@@ -21,34 +23,34 @@ void _writeLinuxFileAssociationFiles({
   final mimeApps = File(mimeAppsPath);
   mimeApps.parent.createSync(recursive: true);
   mimeApps.writeAsStringSync(
-    _linuxMimeAppsWithKonyakDefaults(
+    linuxMimeAppsWithKonyakDefaults(
       existing: mimeApps.existsSync() ? mimeApps.readAsStringSync() : '',
     ),
   );
 
-  _refreshLinuxDesktopIntegrationCaches(
+  refreshLinuxDesktopIntegrationCaches(
     applicationsPath: desktopEntryFile.parent.path,
     iconThemePath: iconThemePath,
   );
 }
 
-void _refreshLinuxDesktopIntegrationCaches({
+void refreshLinuxDesktopIntegrationCaches({
   required String applicationsPath,
   required String? iconThemePath,
 }) {
-  _runBestEffortLinuxDesktopCacheCommand('update-desktop-database', [
+  runBestEffortLinuxDesktopCacheCommand('update-desktop-database', [
     applicationsPath,
   ]);
 
   if (iconThemePath != null) {
-    _runBestEffortLinuxDesktopCacheCommand('gtk-update-icon-cache', [
+    runBestEffortLinuxDesktopCacheCommand('gtk-update-icon-cache', [
       '-q',
       iconThemePath,
     ]);
   }
 }
 
-void _runBestEffortLinuxDesktopCacheCommand(
+void runBestEffortLinuxDesktopCacheCommand(
   String executable,
   List<String> arguments,
 ) {

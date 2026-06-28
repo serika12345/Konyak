@@ -1,6 +1,8 @@
-part of '../../konyak_cli.dart';
+import 'dart:io';
 
-void _moveDirectory({required String from, required String to}) {
+import '../shared/common_helpers.dart';
+
+void moveDirectory({required String from, required String to}) {
   final source = Directory(from);
   if (!source.existsSync()) {
     throw FileSystemException('Bottle directory was not found.', from);
@@ -12,12 +14,12 @@ void _moveDirectory({required String from, required String to}) {
   try {
     source.renameSync(destination.path);
   } on FileSystemException {
-    _copyDirectory(source: source, destination: destination);
+    copyDirectory(source: source, destination: destination);
     source.deleteSync(recursive: true);
   }
 }
 
-void _copyDirectory({
+void copyDirectory({
   required Directory source,
   required Directory destination,
 }) {
@@ -30,9 +32,9 @@ void _copyDirectory({
 
   destination.createSync(recursive: true);
   for (final entity in source.listSync(followLinks: false)) {
-    final targetPath = _joinPath(destination.path, [_baseName(entity.path)]);
+    final targetPath = joinPath(destination.path, [baseName(entity.path)]);
     if (entity is Directory) {
-      _copyDirectory(source: entity, destination: Directory(targetPath));
+      copyDirectory(source: entity, destination: Directory(targetPath));
     } else if (entity is File) {
       entity.copySync(targetPath);
     } else if (entity is Link) {
@@ -41,13 +43,13 @@ void _copyDirectory({
   }
 }
 
-void _copyDirectoryContentsReplacing({
+void copyDirectoryContentsReplacing({
   required Directory source,
   required Directory destination,
   List<List<String>> skipRelativePaths = const <List<String>>[],
 }) {
   destination.createSync(recursive: true);
-  _copyDirectoryEntriesReplacing(
+  copyDirectoryEntriesReplacing(
     source: source,
     destination: destination,
     relativePath: const <String>[],
@@ -55,28 +57,28 @@ void _copyDirectoryContentsReplacing({
   );
 }
 
-void _copyDirectoryEntriesReplacing({
+void copyDirectoryEntriesReplacing({
   required Directory source,
   required Directory destination,
   required List<String> relativePath,
   required List<List<String>> skipRelativePaths,
 }) {
   for (final entity in source.listSync(followLinks: false)) {
-    final name = _baseName(entity.path);
+    final name = baseName(entity.path);
     final entityRelativePath = <String>[...relativePath, name];
-    if (_isSkippedRelativePath(entityRelativePath, skipRelativePaths)) {
+    if (isSkippedRelativePath(entityRelativePath, skipRelativePaths)) {
       continue;
     }
-    final targetPath = _joinPath(destination.path, [name]);
+    final targetPath = joinPath(destination.path, [name]);
     if (entity is Directory) {
       final targetType = FileSystemEntity.typeSync(targetPath);
       if (targetType != FileSystemEntityType.notFound &&
           targetType != FileSystemEntityType.directory) {
-        _deleteFileSystemEntitySync(targetPath, targetType);
+        deleteFileSystemEntitySync(targetPath, targetType);
       }
       final targetDirectory = Directory(targetPath)
         ..createSync(recursive: true);
-      _copyDirectoryEntriesReplacing(
+      copyDirectoryEntriesReplacing(
         source: entity,
         destination: targetDirectory,
         relativePath: entityRelativePath,
@@ -91,14 +93,14 @@ void _copyDirectoryEntriesReplacing({
     } else if (entity is Link) {
       final targetType = FileSystemEntity.typeSync(targetPath);
       if (targetType != FileSystemEntityType.notFound) {
-        _deleteFileSystemEntitySync(targetPath, targetType);
+        deleteFileSystemEntitySync(targetPath, targetType);
       }
       Link(targetPath).createSync(entity.targetSync());
     }
   }
 }
 
-void _deleteFileSystemEntitySync(String path, FileSystemEntityType type) {
+void deleteFileSystemEntitySync(String path, FileSystemEntityType type) {
   if (type == FileSystemEntityType.directory) {
     Directory(path).deleteSync(recursive: true);
   } else if (type == FileSystemEntityType.link) {
@@ -108,13 +110,13 @@ void _deleteFileSystemEntitySync(String path, FileSystemEntityType type) {
   }
 }
 
-void _deleteDirectoryIfPresent(Directory directory) {
+void deleteDirectoryIfPresent(Directory directory) {
   if (directory.existsSync()) {
     directory.deleteSync(recursive: true);
   }
 }
 
-bool _isSkippedRelativePath(
+bool isSkippedRelativePath(
   List<String> relativePath,
   List<List<String>> skipRelativePaths,
 ) {

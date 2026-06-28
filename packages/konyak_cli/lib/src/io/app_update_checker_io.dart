@@ -1,4 +1,14 @@
-part of '../../konyak_cli.dart';
+import 'package:fpdart/fpdart.dart';
+
+import '../domain/program/program_runner.dart';
+import '../domain/runtime/host_environment.dart';
+import '../domain/runtime/runtime_update_support.dart';
+import '../domain/shared/domain_value_objects.dart';
+import '../domain/update/app_update_checker.dart';
+import '../domain/update/update_records.dart';
+import '../shared/model_constants.dart';
+import 'platform_host_paths.dart';
+import 'release_metadata_fetcher.dart';
 
 class DartIoAppUpdateChecker implements AppUpdateChecker {
   factory DartIoAppUpdateChecker({
@@ -10,7 +20,7 @@ class DartIoAppUpdateChecker implements AppUpdateChecker {
     KonyakHostPlatform? hostPlatform,
     RuntimeReleaseMetadataFetcher? releaseMetadataFetcher,
   }) {
-    final resolvedHostPlatform = hostPlatform ?? _currentHostPlatform();
+    final resolvedHostPlatform = hostPlatform ?? currentHostPlatform();
     return DartIoAppUpdateChecker._(
       appId: AppId(appId),
       currentVersion: AppVersion(currentVersion),

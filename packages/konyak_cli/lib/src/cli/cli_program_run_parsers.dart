@@ -1,7 +1,13 @@
-part of '../../konyak_cli.dart';
+import 'dart:convert';
 
-class _ProgramRunCliRequest {
-  const _ProgramRunCliRequest({
+import 'package:fpdart/fpdart.dart';
+
+import '../domain/program/program_settings_models.dart';
+import '../io/repository_storage_io.dart';
+import 'cli_parsers.dart';
+
+class ProgramRunCliRequest {
+  const ProgramRunCliRequest({
     required this.bottleId,
     required this.programPath,
     this.settings = const Option.none(),
@@ -12,23 +18,23 @@ class _ProgramRunCliRequest {
   final Option<ProgramSettingsRecord> settings;
 }
 
-_ProgramRunCliRequest? _parseJsonProgramRunCliRequest(List<String> arguments) {
-  final results = _parseJsonCliCommand(
+ProgramRunCliRequest? parseJsonProgramRunCliRequest(List<String> arguments) {
+  final results = parseJsonCliCommand(
     arguments,
     command: 'run-program',
     options: const <String>['program', 'settings-json'],
   );
-  if (results == null || !_hasRestCount(results, 1)) {
+  if (results == null || !hasRestCount(results, 1)) {
     return null;
   }
 
-  final bottleId = _requiredCliRest(results);
-  final programPath = _requiredCliOption(results, 'program');
+  final bottleId = requiredCliRest(results);
+  final programPath = requiredCliOption(results, 'program');
   if (bottleId == null || programPath == null) {
     return null;
   }
 
-  final settingsJson = _optionalCliOption(results, 'settings-json');
+  final settingsJson = optionalCliOption(results, 'settings-json');
   Option<ProgramSettingsRecord> settings = const Option.none();
   if (settingsJson != null) {
     final Object? decoded;
@@ -38,78 +44,78 @@ _ProgramRunCliRequest? _parseJsonProgramRunCliRequest(List<String> arguments) {
       return null;
     }
 
-    settings = _programSettingsRecordFromJson(decoded);
+    settings = programSettingsRecordFromJson(decoded);
     if (settings.isNone()) {
       return null;
     }
   }
 
-  return _ProgramRunCliRequest(
+  return ProgramRunCliRequest(
     bottleId: bottleId,
     programPath: programPath,
     settings: settings,
   );
 }
 
-class _GraphicsBackendHintsCliRequest {
-  const _GraphicsBackendHintsCliRequest({required this.programPath});
+class GraphicsBackendHintsCliRequest {
+  const GraphicsBackendHintsCliRequest({required this.programPath});
 
   final String programPath;
 }
 
-_GraphicsBackendHintsCliRequest? _parseJsonGraphicsBackendHintsCliRequest(
+GraphicsBackendHintsCliRequest? parseJsonGraphicsBackendHintsCliRequest(
   List<String> arguments,
 ) {
-  final results = _parseJsonCliCommand(
+  final results = parseJsonCliCommand(
     arguments,
     command: 'suggest-graphics-backend',
     options: const <String>['program'],
   );
-  if (results == null || _hasEmptyParsedCliOption(results, 'program')) {
+  if (results == null || hasEmptyParsedCliOption(results, 'program')) {
     return null;
   }
-  if (!_hasRestCount(results, 0)) {
+  if (!hasRestCount(results, 0)) {
     return null;
   }
 
-  final programPath = _requiredCliOption(results, 'program');
+  final programPath = requiredCliOption(results, 'program');
   if (programPath == null) {
     return null;
   }
 
-  return _GraphicsBackendHintsCliRequest(programPath: programPath);
+  return GraphicsBackendHintsCliRequest(programPath: programPath);
 }
 
-class _WinetricksRunCliRequest {
-  const _WinetricksRunCliRequest({required this.bottleId, required this.verb});
+class WinetricksRunCliRequest {
+  const WinetricksRunCliRequest({required this.bottleId, required this.verb});
 
   final String bottleId;
   final String verb;
 }
 
-_WinetricksRunCliRequest? _parseJsonWinetricksRunCliRequest(
+WinetricksRunCliRequest? parseJsonWinetricksRunCliRequest(
   List<String> arguments,
 ) {
-  final results = _parseJsonCliCommand(
+  final results = parseJsonCliCommand(
     arguments,
     command: 'run-winetricks',
     options: const <String>['verb'],
   );
-  if (results == null || !_hasRestCount(results, 1)) {
+  if (results == null || !hasRestCount(results, 1)) {
     return null;
   }
 
-  final bottleId = _requiredCliRest(results);
-  final verb = _requiredCliOption(results, 'verb');
+  final bottleId = requiredCliRest(results);
+  final verb = requiredCliOption(results, 'verb');
   if (bottleId == null || verb == null) {
     return null;
   }
 
-  return _WinetricksRunCliRequest(bottleId: bottleId, verb: verb);
+  return WinetricksRunCliRequest(bottleId: bottleId, verb: verb);
 }
 
-class _BottleCommandRunCliRequest {
-  const _BottleCommandRunCliRequest({
+class BottleCommandRunCliRequest {
+  const BottleCommandRunCliRequest({
     required this.bottleId,
     required this.command,
   });
@@ -118,23 +124,23 @@ class _BottleCommandRunCliRequest {
   final String command;
 }
 
-_BottleCommandRunCliRequest? _parseJsonBottleCommandRunCliRequest(
+BottleCommandRunCliRequest? parseJsonBottleCommandRunCliRequest(
   List<String> arguments,
 ) {
-  final results = _parseJsonCliCommand(
+  final results = parseJsonCliCommand(
     arguments,
     command: 'run-bottle-command',
     options: const <String>['command'],
   );
-  if (results == null || !_hasRestCount(results, 1)) {
+  if (results == null || !hasRestCount(results, 1)) {
     return null;
   }
 
-  final bottleId = _requiredCliRest(results);
-  final command = _requiredCliOption(results, 'command');
+  final bottleId = requiredCliRest(results);
+  final command = requiredCliOption(results, 'command');
   if (bottleId == null || command == null) {
     return null;
   }
 
-  return _BottleCommandRunCliRequest(bottleId: bottleId, command: command);
+  return BottleCommandRunCliRequest(bottleId: bottleId, command: command);
 }

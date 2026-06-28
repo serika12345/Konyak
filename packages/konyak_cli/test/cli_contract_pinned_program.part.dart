@@ -3,6 +3,7 @@ part of 'cli_contract_test.dart';
 void definePinnedProgramContractTests() {
   test('pin-program --json adds a pinned program to the bottle record', () {
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const DartIoProgramMetadataExtractor(),
       dataHome: '/home/user/.local/share/konyak',
     );
     runCli(const [
@@ -175,6 +176,7 @@ void definePinnedProgramContractTests() {
     });
     final appBundle = _createTestMacosAppBundle(tempDirectory.path);
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: _joinTestPath(tempDirectory.path, const ['data']),
     );
     runCli(const [
@@ -251,6 +253,7 @@ void definePinnedProgramContractTests() {
       }
     });
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: _joinTestPath(tempDirectory.path, const ['data']),
     );
     runCli(const [
@@ -411,6 +414,7 @@ void definePinnedProgramContractTests() {
       ..createSync(recursive: true)
       ..writeAsStringSync('cli');
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: _joinTestPath(tempDirectory.path, const ['data']),
     );
     runCli(const [
@@ -468,6 +472,7 @@ void definePinnedProgramContractTests() {
       ]);
       File(appImage).writeAsStringSync('appimage');
       final repository = MemoryBottleRepository(
+        programMetadataExtractor: const DartIoProgramMetadataExtractor(),
         dataHome: _joinTestPath(tempDirectory.path, const ['data']),
       );
       runCli(const [
@@ -524,6 +529,7 @@ void definePinnedProgramContractTests() {
     });
     final xdgDataHome = _joinTestPath(tempDirectory.path, const ['xdg-data']);
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: _joinTestPath(tempDirectory.path, const ['data']),
       bottles: [
         BottleRecord(
@@ -619,6 +625,7 @@ void definePinnedProgramContractTests() {
       'portable.exe',
     ]);
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const DartIoProgramMetadataExtractor(),
       dataHome: tempDirectory.path,
       bottles: [
         BottleRecord(
@@ -672,6 +679,7 @@ void definePinnedProgramContractTests() {
       ..createSync(recursive: true)
       ..writeAsStringSync('shortcut');
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const DartIoProgramMetadataExtractor(),
       dataHome: tempDirectory.path,
       bottles: [
         BottleRecord(
@@ -735,6 +743,7 @@ void definePinnedProgramContractTests() {
         ),
       );
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: tempDirectory.path,
       bottles: [
         BottleRecord(
@@ -771,7 +780,10 @@ void definePinnedProgramContractTests() {
         tempDirectory.deleteSync(recursive: true);
       }
     });
-    final repository = FileBottleRepository(dataHome: tempDirectory.path);
+    final repository = FileBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
+      dataHome: tempDirectory.path,
+    );
     final createResult = repository.createBottle(
       BottleCreateRequest(name: 'Steam', windowsVersion: 'win10'),
     );
@@ -832,6 +844,7 @@ void definePinnedProgramContractTests() {
     });
     final xdgDataHome = _joinTestPath(tempDirectory.path, const ['xdg-data']);
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: _joinTestPath(tempDirectory.path, const ['data']),
       bottles: [
         BottleRecord(
@@ -895,6 +908,7 @@ void definePinnedProgramContractTests() {
     });
     final xdgDataHome = _joinTestPath(tempDirectory.path, const ['xdg-data']);
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: _joinTestPath(tempDirectory.path, const ['data']),
       bottles: [
         BottleRecord(
@@ -954,6 +968,7 @@ void definePinnedProgramContractTests() {
       }
     });
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: _joinTestPath(tempDirectory.path, const ['data']),
     );
     runCli(const [
@@ -1016,6 +1031,7 @@ void definePinnedProgramContractTests() {
     });
     final appBundle = _createTestMacosAppBundle(tempDirectory.path);
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: _joinTestPath(tempDirectory.path, const ['data']),
     );
     runCli(const [
@@ -1078,6 +1094,7 @@ void definePinnedProgramContractTests() {
     });
     final appBundle = _createTestMacosAppBundle(tempDirectory.path);
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: _joinTestPath(tempDirectory.path, const ['data']),
     );
     runCli(const [
@@ -1180,6 +1197,7 @@ void definePinnedProgramContractTests() {
       ..createSync(recursive: true)
       ..writeAsBytesSync(_syntheticPortableExecutableBytes());
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const DartIoProgramMetadataExtractor(),
       dataHome: tempDirectory.path,
       bottles: [
         BottleRecord(
@@ -1253,6 +1271,7 @@ void definePinnedProgramContractTests() {
           ),
         );
       final repository = MemoryBottleRepository(
+        programMetadataExtractor: const DartIoProgramMetadataExtractor(),
         dataHome: tempDirectory.path,
         bottles: [
           BottleRecord(
@@ -1313,6 +1332,7 @@ void definePinnedProgramContractTests() {
         ..createSync(recursive: true)
         ..writeAsBytesSync(_syntheticPortableExecutableBytes());
       final repository = MemoryBottleRepository(
+        programMetadataExtractor: const DartIoProgramMetadataExtractor(),
         dataHome: tempDirectory.path,
         bottles: [
           BottleRecord(
@@ -1382,6 +1402,7 @@ void definePinnedProgramContractTests() {
         ),
       );
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const DartIoProgramMetadataExtractor(),
       dataHome: tempDirectory.path,
       bottles: [
         BottleRecord(
@@ -1420,6 +1441,7 @@ void definePinnedProgramContractTests() {
     'unpin-program --json removes a pinned program from the bottle record',
     () {
       final repository = MemoryBottleRepository(
+        programMetadataExtractor: const NoopProgramMetadataExtractor(),
         dataHome: '/home/user/.local/share/konyak',
         bottles: [
           BottleRecord(
@@ -1464,6 +1486,7 @@ void definePinnedProgramContractTests() {
 
   test('rename-pinned-program --json renames a pinned program', () {
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: '/home/user/.local/share/konyak',
       bottles: [
         BottleRecord(

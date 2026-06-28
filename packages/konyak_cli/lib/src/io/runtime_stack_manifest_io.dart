@@ -1,19 +1,24 @@
-part of '../../konyak_cli.dart';
+import 'dart:convert';
+import 'dart:io';
 
-void _mergeRuntimeStackManifest({
+import '../shared/common_helpers.dart';
+import '../shared/model_constants.dart';
+import 'runtime_archive_install_support.dart';
+
+void mergeRuntimeStackManifest({
   required Directory runtimeRoot,
   required Map<String, String> componentVersions,
   bool overwriteExisting = false,
 }) {
   final manifest = File(
-    _joinPath(runtimeRoot.path, const [runtimeStackManifestFileName]),
+    joinPath(runtimeRoot.path, const [runtimeStackManifestFileName]),
   );
   if (!manifest.existsSync()) {
     return;
   }
 
   try {
-    final archivedVersions = _runtimeStackComponentVersions(
+    final archivedVersions = runtimeStackComponentVersions(
       jsonDecode(manifest.readAsStringSync()),
     );
     for (final entry in archivedVersions.entries) {
@@ -30,7 +35,7 @@ void _mergeRuntimeStackManifest({
   }
 }
 
-void _writeRuntimeStackManifest({
+void writeRuntimeStackManifest({
   required Directory runtimeRoot,
   required Map<String, String> componentVersions,
 }) {
@@ -39,7 +44,7 @@ void _writeRuntimeStackManifest({
   }
 
   final manifest = File(
-    _joinPath(runtimeRoot.path, const [runtimeStackManifestFileName]),
+    joinPath(runtimeRoot.path, const [runtimeStackManifestFileName]),
   );
   manifest.writeAsStringSync(
     jsonEncode(<String, Object?>{
@@ -49,18 +54,18 @@ void _writeRuntimeStackManifest({
   );
 }
 
-void _upsertRuntimeStackComponentVersion({
+void upsertRuntimeStackComponentVersion({
   required Directory runtimeRoot,
   required String componentId,
   required String version,
 }) {
   final componentVersions = <String, String>{};
-  _mergeRuntimeStackManifest(
+  mergeRuntimeStackManifest(
     runtimeRoot: runtimeRoot,
     componentVersions: componentVersions,
   );
   componentVersions[componentId] = version;
-  _writeRuntimeStackManifest(
+  writeRuntimeStackManifest(
     runtimeRoot: runtimeRoot,
     componentVersions: componentVersions,
   );

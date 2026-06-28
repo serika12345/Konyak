@@ -1,4 +1,10 @@
-part of '../../konyak_cli.dart';
+import 'dart:convert';
+import 'dart:io';
+
+import '../domain/update/update_records.dart';
+import 'external_payload_helpers.dart';
+import 'runtime_release_metadata.dart';
+import 'runtime_release_metadata_assets.dart';
 
 class DartIoRuntimeReleaseMetadataFetcher
     implements RuntimeReleaseMetadataFetcher {
@@ -17,23 +23,23 @@ class DartIoRuntimeReleaseMetadataFetcher
       ], runInShell: false);
       if (result.exitCode != 0) {
         return RuntimeReleaseMetadataFetchFailed(
-          _commandFailureMessage('check runtime update', result),
+          commandFailureMessage('check runtime update', result),
         );
       }
 
-      final decoded = jsonDecode(_processOutputToString(result.stdout));
-      final releaseMetadataAssetUrl = _runtimeReleaseMetadataAssetUrl(decoded);
+      final decoded = jsonDecode(processOutputToString(result.stdout));
+      final releaseMetadataAssetUrl = runtimeReleaseMetadataAssetUrl(decoded);
       final releaseMetadataAsset = releaseMetadataAssetUrl.toNullable();
       final releaseMetadata = releaseMetadataAsset == null
           ? null
-          : _fetchRuntimeReleaseMetadataAsset(releaseMetadataAsset);
+          : fetchRuntimeReleaseMetadataAsset(releaseMetadataAsset);
       if (releaseMetadataAsset != null && releaseMetadata == null) {
         return RuntimeReleaseMetadataFetchFailed(
           'Runtime release metadata asset could not be fetched or parsed: '
           '$releaseMetadataAsset',
         );
       }
-      final releaseMetadataRecord = _runtimeReleaseMetadataFromDecoded(
+      final releaseMetadataRecord = runtimeReleaseMetadataFromDecoded(
         release: decoded,
         releaseMetadata: releaseMetadata,
         archiveUrlPredicate: archiveUrlPredicate,
@@ -53,7 +59,7 @@ class DartIoRuntimeReleaseMetadataFetcher
     }
   }
 
-  Map<String, dynamic>? _fetchRuntimeReleaseMetadataAsset(String assetUrl) {
+  Map<String, dynamic>? fetchRuntimeReleaseMetadataAsset(String assetUrl) {
     try {
       final result = Process.runSync('curl', [
         '--fail',
@@ -65,8 +71,8 @@ class DartIoRuntimeReleaseMetadataFetcher
         return null;
       }
 
-      return _runtimeReleaseMetadataAssetFromPayload(
-        _processOutputToString(result.stdout),
+      return runtimeReleaseMetadataAssetFromPayload(
+        processOutputToString(result.stdout),
       ).toNullable();
     } on FormatException {
       return null;

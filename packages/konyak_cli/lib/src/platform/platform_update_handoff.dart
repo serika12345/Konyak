@@ -1,6 +1,4 @@
-part of '../../konyak_cli.dart';
-
-String _macosAppBundleUpdateHandoffScript() {
+String macosAppBundleUpdateHandoffScript() {
   return r'''
 #!/usr/bin/env bash
 set -euo pipefail
@@ -135,7 +133,7 @@ nohup open "$target_bundle" >/dev/null 2>&1 &
 ''';
 }
 
-String _linuxAppImageUpdateHandoffScript() {
+String linuxAppImageUpdateHandoffScript() {
   return r'''
 #!/usr/bin/env bash
 set -euo pipefail

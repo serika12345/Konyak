@@ -1,41 +1,58 @@
-part of '../../konyak_cli.dart';
+import 'package:fpdart/fpdart.dart';
 
-CliResult? _handleProgramRunCommand(
+import '../domain/bottle/bottle_models.dart';
+import '../domain/program/program_graphics_backend_hints.dart';
+import '../domain/program/program_mutation_models.dart';
+import '../domain/program/program_run_environment.dart';
+import '../domain/program/program_run_models.dart';
+import '../domain/program/program_runner.dart';
+import '../domain/program/program_settings_models.dart';
+import '../io/linux_external_program_launchers.dart';
+import '../io/program_graphics_backend_hints_io.dart';
+import '../repository/repository_interfaces.dart';
+import 'cli_bottle_mutation_handlers.dart';
+import 'cli_bottle_results.dart';
+import 'cli_commands.dart';
+import 'cli_json_helpers.dart';
+import 'cli_program_run_parsers.dart';
+import 'cli_result_model.dart';
+
+CliResult? handleProgramRunCommand(
   List<String> arguments,
-  _CliCommandContext context,
+  CliCommandContext context,
 ) {
   final graphicsBackendHintsCliRequest =
-      _parseJsonGraphicsBackendHintsCliRequest(arguments);
+      parseJsonGraphicsBackendHintsCliRequest(arguments);
   if (graphicsBackendHintsCliRequest != null) {
-    return _graphicsBackendHintsJsonResult(
+    return graphicsBackendHintsJsonResult(
       graphicsBackendHintsCliRequest,
       context,
     );
   }
 
-  final programRunCliRequest = _parseJsonProgramRunCliRequest(arguments);
+  final programRunCliRequest = parseJsonProgramRunCliRequest(arguments);
   if (programRunCliRequest != null) {
-    return _runProgramJsonResult(programRunCliRequest, context);
+    return runProgramJsonResult(programRunCliRequest, context);
   }
 
-  final winetricksRunCliRequest = _parseJsonWinetricksRunCliRequest(arguments);
+  final winetricksRunCliRequest = parseJsonWinetricksRunCliRequest(arguments);
   if (winetricksRunCliRequest != null) {
-    return _runWinetricksJsonResult(winetricksRunCliRequest, context);
+    return runWinetricksJsonResult(winetricksRunCliRequest, context);
   }
 
-  final bottleCommandRunCliRequest = _parseJsonBottleCommandRunCliRequest(
+  final bottleCommandRunCliRequest = parseJsonBottleCommandRunCliRequest(
     arguments,
   );
   if (bottleCommandRunCliRequest != null) {
-    return _runBottleCommandJsonResult(bottleCommandRunCliRequest, context);
+    return runBottleCommandJsonResult(bottleCommandRunCliRequest, context);
   }
 
   return null;
 }
 
-CliResult _graphicsBackendHintsJsonResult(
-  _GraphicsBackendHintsCliRequest request,
-  _CliCommandContext context,
+CliResult graphicsBackendHintsJsonResult(
+  GraphicsBackendHintsCliRequest request,
+  CliCommandContext context,
 ) {
   final result = const DartIoProgramGraphicsBackendHintsInspector().inspect(
     programPath: request.programPath,
@@ -43,10 +60,10 @@ CliResult _graphicsBackendHintsJsonResult(
   );
 
   return switch (result) {
-    ProgramGraphicsBackendHintsInspected(:final hints) => _jsonSuccess(
+    ProgramGraphicsBackendHintsInspected(:final hints) => jsonSuccess(
       <String, Object?>{'graphicsBackendHints': hints.toJson()},
     ),
-    ProgramGraphicsBackendHintsMissingProgram(:final programPath) => _jsonError(
+    ProgramGraphicsBackendHintsMissingProgram(:final programPath) => jsonError(
       exitCode: 66,
       code: 'programNotFound',
       message: 'Program file was not found.',
@@ -56,7 +73,7 @@ CliResult _graphicsBackendHintsJsonResult(
       :final programPath,
       :final message,
     ) =>
-      _jsonError(
+      jsonError(
         exitCode: 74,
         code: 'programInspectionFailed',
         message: message,
@@ -65,25 +82,25 @@ CliResult _graphicsBackendHintsJsonResult(
   };
 }
 
-CliResult _runProgramJsonResult(
-  _ProgramRunCliRequest request,
-  _CliCommandContext context,
+CliResult runProgramJsonResult(
+  ProgramRunCliRequest request,
+  CliCommandContext context,
 ) {
   final repository = context.bottleRepository;
   if (repository == null) {
-    return _bottleRepositoryUnavailableError();
+    return bottleRepositoryUnavailableError();
   }
 
   final runner = context.programRunner;
   if (runner == null) {
-    return _programRunnerUnavailableError();
+    return programRunnerUnavailableError();
   }
 
-  return _foundBottleJsonResult(
+  return foundBottleJsonResult(
     result: repository.findBottle(request.bottleId),
     bottleId: request.bottleId,
     onFound: (bottle) {
-      return _runProgramPathJsonResult(
+      return runProgramPathJsonResult(
         bottleRepository: repository,
         programRunPlanner: context.programRunPlanner,
         programRunner: runner,
@@ -91,19 +108,19 @@ CliResult _runProgramJsonResult(
         programPath: request.programPath,
         oneTimeSettings: request.settings,
         beforeRun: (programRunRequest) {
-          switch (_syncRuntimeSettingsDllOverrides(
+          switch (syncRuntimeSettingsDllOverrides(
             bottle: bottle,
             runtimeSettings: bottle.runtimeSettings,
             programRunPlanner: context.programRunPlanner,
           )) {
-            case _CliSideEffectFailed(:final result):
-              return _CliSideEffectFailed(result);
-            case _CliSideEffectSucceeded():
+            case CliSideEffectFailed(:final result):
+              return CliSideEffectFailed(result);
+            case CliSideEffectSucceeded():
               break;
           }
 
-          _recordExternalProgramRun(bottle: bottle, request: programRunRequest);
-          _synchronizeLinuxDesktopLauncherForProgramRun(
+          recordExternalProgramRun(bottle: bottle, request: programRunRequest);
+          synchronizeLinuxDesktopLauncherForProgramRun(
             hostPlatform: context.programRunPlanner.hostPlatform,
             environment: context.programRunPlanner.environment.toMap(),
             bottle: bottle,
@@ -112,24 +129,24 @@ CliResult _runProgramJsonResult(
             diagnosticSink: context.linuxExternalProgramLauncherDiagnosticSink,
           );
 
-          return const _CliSideEffectSucceeded();
+          return const CliSideEffectSucceeded();
         },
       );
     },
   );
 }
 
-typedef _ProgramRunPreparation =
-    _CliSideEffectResult Function(ProgramRunRequest request);
+typedef ProgramRunPreparation =
+    CliSideEffectResult Function(ProgramRunRequest request);
 
-CliResult _runProgramPathJsonResult({
+CliResult runProgramPathJsonResult({
   required BottleRepository bottleRepository,
   required ProgramRunPlanner programRunPlanner,
   required ProgramRunner programRunner,
   required BottleRecord bottle,
   required String programPath,
   Option<ProgramSettingsRecord> oneTimeSettings = const Option.none(),
-  _ProgramRunPreparation? beforeRun,
+  ProgramRunPreparation? beforeRun,
 }) {
   final settingsResult = bottleRepository.readProgramSettings(
     ProgramSettingsRequest(bottleId: bottle.id.value, programPath: programPath),
@@ -141,10 +158,10 @@ CliResult _runProgramPathJsonResult({
     case ProgramSettingsReadMissingBottle():
       storedSettings = ProgramSettingsRecord();
     case ProgramSettingsReadFailed(:final message):
-      return _bottleRepositoryFailureJsonResult(message);
+      return bottleRepositoryFailureJsonResult(message);
   }
 
-  final effectiveProgramSettings = _programRunSettings(
+  final effectiveProgramSettings = programRunSettings(
     storedSettings: storedSettings,
     oneTimeSettings: oneTimeSettings,
   );
@@ -154,7 +171,7 @@ CliResult _runProgramPathJsonResult({
     programSettings: Option.of(effectiveProgramSettings),
   );
   return programRunRequest.match(
-    () => _jsonError(
+    () => jsonError(
       exitCode: 65,
       code: 'unsupportedProgramType',
       message: 'Program type is not supported.',
@@ -162,11 +179,11 @@ CliResult _runProgramPathJsonResult({
     ),
     (request) {
       final preparationResult = beforeRun == null
-          ? const _CliSideEffectSucceeded()
+          ? const CliSideEffectSucceeded()
           : beforeRun(request);
       return switch (preparationResult) {
-        _CliSideEffectFailed(:final result) => result,
-        _CliSideEffectSucceeded() => _programRunResultJson(
+        CliSideEffectFailed(:final result) => result,
+        CliSideEffectSucceeded() => programRunResultJson(
           request,
           programRunner,
         ),
@@ -175,7 +192,7 @@ CliResult _runProgramPathJsonResult({
   );
 }
 
-ProgramSettingsRecord _programRunSettings({
+ProgramSettingsRecord programRunSettings({
   required ProgramSettingsRecord storedSettings,
   required Option<ProgramSettingsRecord> oneTimeSettings,
 }) {
@@ -197,21 +214,21 @@ ProgramSettingsRecord _programRunSettings({
   );
 }
 
-CliResult _runWinetricksJsonResult(
-  _WinetricksRunCliRequest request,
-  _CliCommandContext context,
+CliResult runWinetricksJsonResult(
+  WinetricksRunCliRequest request,
+  CliCommandContext context,
 ) {
   final repository = context.bottleRepository;
   if (repository == null) {
-    return _bottleRepositoryUnavailableError();
+    return bottleRepositoryUnavailableError();
   }
 
   final runner = context.programRunner;
   if (runner == null) {
-    return _programRunnerUnavailableError();
+    return programRunnerUnavailableError();
   }
 
-  return _foundBottleJsonResult(
+  return foundBottleJsonResult(
     result: repository.findBottle(request.bottleId),
     bottleId: request.bottleId,
     onFound: (bottle) {
@@ -220,33 +237,33 @@ CliResult _runWinetricksJsonResult(
         verb: request.verb,
       );
       return programRunRequest.match(
-        () => _jsonError(
+        () => jsonError(
           exitCode: 65,
           code: 'unsupportedWinetricksVerb',
           message: 'Winetricks verb is not supported.',
           extra: <String, Object?>{'verb': request.verb},
         ),
-        (request) => _programRunResultJson(request, runner),
+        (request) => programRunResultJson(request, runner),
       );
     },
   );
 }
 
-CliResult _runBottleCommandJsonResult(
-  _BottleCommandRunCliRequest request,
-  _CliCommandContext context,
+CliResult runBottleCommandJsonResult(
+  BottleCommandRunCliRequest request,
+  CliCommandContext context,
 ) {
   final repository = context.bottleRepository;
   if (repository == null) {
-    return _bottleRepositoryUnavailableError();
+    return bottleRepositoryUnavailableError();
   }
 
   final runner = context.programRunner;
   if (runner == null) {
-    return _programRunnerUnavailableError();
+    return programRunnerUnavailableError();
   }
 
-  return _foundBottleJsonResult(
+  return foundBottleJsonResult(
     result: repository.findBottle(request.bottleId),
     bottleId: request.bottleId,
     onFound: (bottle) {
@@ -255,36 +272,36 @@ CliResult _runBottleCommandJsonResult(
         command: request.command,
       );
       return programRunRequest.match(
-        () => _jsonError(
+        () => jsonError(
           exitCode: 65,
           code: 'unsupportedBottleCommand',
           message: 'Bottle command is not supported.',
           extra: <String, Object?>{'command': request.command},
         ),
-        (request) => _programRunResultJson(request, runner),
+        (request) => programRunResultJson(request, runner),
       );
     },
   );
 }
 
-CliResult _programRunResultJson(
+CliResult programRunResultJson(
   ProgramRunRequest request,
   ProgramRunner runner,
 ) {
   return switch (runner.run(request)) {
-    ProgramRunCompleted(:final processExitCode) => _programRunJsonResult(
+    ProgramRunCompleted(:final processExitCode) => programRunJsonResult(
       request: request,
       processExitCode: processExitCode,
     ),
-    ProgramRunFailed(:final message) => _programRunFailedJsonResult(
+    ProgramRunFailed(:final message) => programRunFailedJsonResult(
       request: request,
       message: message,
     ),
   };
 }
 
-CliResult _programRunnerUnavailableError() {
-  return _unavailableJsonError(
+CliResult programRunnerUnavailableError() {
+  return unavailableJsonError(
     code: 'programRunnerUnavailable',
     subject: 'Program runner',
   );

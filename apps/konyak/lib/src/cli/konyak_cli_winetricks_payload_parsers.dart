@@ -1,6 +1,8 @@
-part of 'konyak_cli_client.dart';
+import 'dart:convert';
 
-WinetricksVerbListLoadResult _parseWinetricksVerbListPayload(String payload) {
+import 'konyak_cli_winetricks_result_types.dart';
+
+WinetricksVerbListLoadResult parseWinetricksVerbListPayload(String payload) {
   final Object? decoded;
   try {
     decoded = jsonDecode(payload);
@@ -50,7 +52,7 @@ WinetricksVerbListLoadResult _parseWinetricksVerbListPayload(String payload) {
 
   final parsedCategories = <WinetricksCategorySummary>[];
   for (final category in categories) {
-    final parsedCategory = _parseWinetricksCategorySummary(category);
+    final parsedCategory = parseWinetricksCategorySummary(category);
     if (parsedCategory == null) {
       return const WinetricksVerbListLoadFailure(
         exitCode: 0,
@@ -65,7 +67,7 @@ WinetricksVerbListLoadResult _parseWinetricksVerbListPayload(String payload) {
   return LoadedWinetricksVerbs(categories: parsedCategories);
 }
 
-WinetricksCategorySummary? _parseWinetricksCategorySummary(Object? value) {
+WinetricksCategorySummary? parseWinetricksCategorySummary(Object? value) {
   if (value is! Map<String, Object?>) {
     return null;
   }
@@ -79,7 +81,7 @@ WinetricksCategorySummary? _parseWinetricksCategorySummary(Object? value) {
 
   final parsedVerbs = <WinetricksVerbSummary>[];
   for (final verb in verbs) {
-    final parsedVerb = _parseWinetricksVerbSummary(verb);
+    final parsedVerb = parseWinetricksVerbSummary(verb);
     if (parsedVerb == null) {
       return null;
     }
@@ -90,7 +92,7 @@ WinetricksCategorySummary? _parseWinetricksCategorySummary(Object? value) {
   return WinetricksCategorySummary(id: id, name: name, verbs: parsedVerbs);
 }
 
-WinetricksVerbSummary? _parseWinetricksVerbSummary(Object? value) {
+WinetricksVerbSummary? parseWinetricksVerbSummary(Object? value) {
   if (value is! Map<String, Object?>) {
     return null;
   }

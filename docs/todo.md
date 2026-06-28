@@ -38,22 +38,12 @@ verification output instead of checked-off backlog entries.
 
 ## Deferred
 
-- Continue dismantling the remaining non-domain Dart `part` root library
-  boundary in `packages/konyak_cli`.
-  - The hand-written `src/domain/**` baseline has been retired; next slices
-    should target CLI/I/O/platform/repository files without recreating a large
-    shared `part` library.
-  - Collapse the temporary duplicated pure program-run request builder logic
-    into a clearer import boundary before broadening request-planning work.
-  - Audit and remove domain `throw StateError` / `getOrElse(() => throw ...)`
-    paths where they are masking an "impossible" state instead of returning a
-    typed result or sealed branch.
-  - Move repository constructors away from concrete `DartIo*` defaults such as
-    `DartIoProgramMetadataExtractor`; I/O defaults should be composed at the
-    I/O/CLI boundary.
-  - Move JSON `toJson` projection out of domain models into CLI/serialization
-    boundary libraries where compatibility permits.
-- Split Flutter large UI files after backend boundaries are smaller.
+- Audit and remove domain `throw StateError` / `getOrElse(() => throw ...)`
+  paths where they are masking an "impossible" state instead of returning a
+  typed result or sealed branch.
+- Move JSON `toJson` projection out of domain models into CLI/serialization
+  boundary libraries where compatibility permits.
+- Split remaining Flutter large UI files after backend boundaries are smaller.
   - Keep widgets responsible for rendering and event wiring only.
   - Move bottle/program/runtime view models and action selection out of
     `home_screen.dart`, `sidebar.dart`, `program_configuration_view.dart`, and

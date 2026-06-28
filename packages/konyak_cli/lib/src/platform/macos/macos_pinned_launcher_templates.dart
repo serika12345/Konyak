@@ -1,6 +1,8 @@
-part of '../../../konyak_cli.dart';
+import '../../domain/program/program_mutation_models.dart';
+import '../../io/macos_pinned_launchers.dart';
+import '../../shared/model_constants.dart';
 
-String _macosPinnedProgramInfoPlist({
+String macosPinnedProgramInfoPlist({
   required PinnedProgramLauncherManifest manifest,
   required String displayName,
   required String? iconFileName,
@@ -11,7 +13,7 @@ String _macosPinnedProgramInfoPlist({
       ? ''
       : '''
   <key>CFBundleIconFile</key>
-  <string>${_xmlEscape(iconFileName)}</string>
+  <string>${xmlEscape(iconFileName)}</string>
 ''';
 
   return '''
@@ -22,16 +24,16 @@ String _macosPinnedProgramInfoPlist({
   <key>CFBundleDevelopmentRegion</key>
   <string>en</string>
   <key>CFBundleDisplayName</key>
-  <string>${_xmlEscape(displayName)}</string>
+  <string>${xmlEscape(displayName)}</string>
   <key>CFBundleExecutable</key>
-  <string>$_macosPinnedLauncherExecutableName</string>
+  <string>$macosPinnedLauncherExecutableName</string>
 $iconPlistEntry
   <key>CFBundleIdentifier</key>
-  <string>${_xmlEscape(bundleIdentifier)}</string>
+  <string>${xmlEscape(bundleIdentifier)}</string>
   <key>CFBundleInfoDictionaryVersion</key>
   <string>6.0</string>
   <key>CFBundleName</key>
-  <string>${_xmlEscape(displayName)}</string>
+  <string>${xmlEscape(displayName)}</string>
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleShortVersionString</key>
@@ -43,18 +45,18 @@ $iconPlistEntry
 ''';
 }
 
-String _macosLauncherDisplayName(String name) {
+String macosLauncherDisplayName(String name) {
   final normalized = name.trim();
   return normalized.isEmpty ? 'Konyak Program' : normalized;
 }
 
-String _uniqueMacosLauncherDisplayName(
+String uniqueMacosLauncherDisplayName(
   String name, {
   required Set<String> usedDisplayNames,
   required Set<String> usedBundleNames,
 }) {
-  final baseName = _macosLauncherDisplayName(name);
-  return _uniqueMacosLauncherDisplayNameAtIndex(
+  final baseName = macosLauncherDisplayName(name);
+  return uniqueMacosLauncherDisplayNameAtIndex(
     baseName,
     index: 1,
     usedDisplayNames: usedDisplayNames,
@@ -62,7 +64,7 @@ String _uniqueMacosLauncherDisplayName(
   );
 }
 
-String _uniqueMacosLauncherDisplayNameAtIndex(
+String uniqueMacosLauncherDisplayNameAtIndex(
   String baseName, {
   required int index,
   required Set<String> usedDisplayNames,
@@ -70,7 +72,7 @@ String _uniqueMacosLauncherDisplayNameAtIndex(
 }) {
   final displayName = index == 1 ? baseName : '$baseName ($index)';
   final displayKey = displayName.toLowerCase();
-  final bundleName = _macosLauncherBundleName(displayName);
+  final bundleName = macosLauncherBundleName(displayName);
   final bundleKey = bundleName.toLowerCase();
   if (!usedDisplayNames.contains(displayKey) &&
       !usedBundleNames.contains(bundleKey)) {
@@ -79,7 +81,7 @@ String _uniqueMacosLauncherDisplayNameAtIndex(
     return displayName;
   }
 
-  return _uniqueMacosLauncherDisplayNameAtIndex(
+  return uniqueMacosLauncherDisplayNameAtIndex(
     baseName,
     index: index + 1,
     usedDisplayNames: usedDisplayNames,
@@ -87,11 +89,11 @@ String _uniqueMacosLauncherDisplayNameAtIndex(
   );
 }
 
-String _macosLauncherBundleName(String displayName) {
-  return '${_macosLauncherBundleBaseName(displayName)}.app';
+String macosLauncherBundleName(String displayName) {
+  return '${macosLauncherBundleBaseName(displayName)}.app';
 }
 
-String _macosLauncherBundleBaseName(String displayName) {
+String macosLauncherBundleBaseName(String displayName) {
   final safeName = displayName
       .replaceAll(RegExp(r'[/\\:]'), '-')
       .replaceAll(RegExp(r'[\u0000-\u001f]'), '')
@@ -99,16 +101,16 @@ String _macosLauncherBundleBaseName(String displayName) {
   return safeName.isEmpty ? 'Konyak Program' : safeName;
 }
 
-String _macosPinnedProgramLauncherScript(
-  _MacosPinnedProgramLauncherCommand command,
+String macosPinnedProgramLauncherScript(
+  MacosPinnedProgramLauncherCommand command,
 ) {
   final changeDirectory = command.workingDirectory.match(
     () => '',
-    (workingDirectory) => 'cd ${_posixShellSingleQuote(workingDirectory)}\n',
+    (workingDirectory) => 'cd ${posixShellSingleQuote(workingDirectory)}\n',
   );
   final launcherCommand = <String>[
-    _posixShellSingleQuote(command.executable),
-    ...command.arguments.map(_posixShellSingleQuote),
+    posixShellSingleQuote(command.executable),
+    ...command.arguments.map(posixShellSingleQuote),
     'launch-pinned-program',
     '--manifest',
     r'"$manifest"',
@@ -119,12 +121,12 @@ String _macosPinnedProgramLauncherScript(
 #!/bin/sh
 set -eu
 manifest_dir=\$(CDPATH= cd -- "\$(dirname -- "\$0")/../Resources" && pwd -P)
-manifest="\$manifest_dir/$_macosPinnedLauncherManifestFileName"
+manifest="\$manifest_dir/$macosPinnedLauncherManifestFileName"
 ${changeDirectory}exec $launcherCommand
 ''';
 }
 
-String _xmlEscape(String value) {
+String xmlEscape(String value) {
   return value
       .replaceAll('&', '&amp;')
       .replaceAll('<', '&lt;')
@@ -133,6 +135,6 @@ String _xmlEscape(String value) {
       .replaceAll("'", '&apos;');
 }
 
-String _posixShellSingleQuote(String value) {
+String posixShellSingleQuote(String value) {
   return "'${value.replaceAll("'", "'\\''")}'";
 }

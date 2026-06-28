@@ -1,17 +1,30 @@
-part of '../../konyak_cli.dart';
+import 'package:fpdart/fpdart.dart';
+
+import '../domain/bottle/bottle_models.dart';
+import '../domain/bottle/bottle_mutation_models.dart';
+import '../domain/program/program_catalog_models.dart';
+import '../domain/program/program_mutation_models.dart';
+import '../domain/runtime/host_environment.dart';
+import '../io/io_result.dart';
+import '../shared/common_helpers.dart';
+import '../storage/storage_paths.dart';
+import 'file_bottle_repository_archive_operations.dart';
+import 'file_bottle_repository_mutation_operations.dart';
+import 'file_bottle_repository_program_operations.dart';
+import 'file_bottle_repository_read_operations.dart';
+import 'repository_interfaces.dart';
 
 class FileBottleRepository implements BottleRepository {
   factory FileBottleRepository({
     required String dataHome,
     Option<String> bottleDirectory = const Option.none(),
-    ProgramMetadataExtractor programMetadataExtractor =
-        const DartIoProgramMetadataExtractor(),
+    required ProgramMetadataExtractor programMetadataExtractor,
   }) {
     final resolvedBottleDirectory = bottleDirectory.match(
-      () => _joinPath(dataHome, const ['bottles']),
+      () => joinPath(dataHome, const ['bottles']),
       (value) => value,
     );
-    final readOperations = _FileBottleRepositoryReadOperations(
+    final readOperations = FileBottleRepositoryReadOperations(
       bottleDirectory: resolvedBottleDirectory,
       programMetadataExtractor: programMetadataExtractor,
     );
@@ -20,16 +33,16 @@ class FileBottleRepository implements BottleRepository {
       dataHome: dataHome,
       bottleDirectory: resolvedBottleDirectory,
       readOperations: readOperations,
-      mutationOperations: _FileBottleRepositoryMutationOperations(
+      mutationOperations: FileBottleRepositoryMutationOperations(
         dataHome: dataHome,
         bottleDirectory: resolvedBottleDirectory,
         findBottle: readOperations.findBottle,
       ),
-      archiveOperations: _FileBottleRepositoryArchiveOperations(
+      archiveOperations: FileBottleRepositoryArchiveOperations(
         bottleDirectory: resolvedBottleDirectory,
         findBottle: readOperations.findBottle,
       ),
-      programOperations: _FileBottleRepositoryProgramOperations(
+      programOperations: FileBottleRepositoryProgramOperations(
         programMetadataExtractor: programMetadataExtractor,
         findBottle: readOperations.findBottle,
       ),
@@ -39,110 +52,109 @@ class FileBottleRepository implements BottleRepository {
   const FileBottleRepository._({
     required this.dataHome,
     required this.bottleDirectory,
-    required _FileBottleRepositoryReadOperations readOperations,
-    required _FileBottleRepositoryMutationOperations mutationOperations,
-    required _FileBottleRepositoryArchiveOperations archiveOperations,
-    required _FileBottleRepositoryProgramOperations programOperations,
-  }) : _readOperations = readOperations,
-       _mutationOperations = mutationOperations,
-       _archiveOperations = archiveOperations,
-       _programOperations = programOperations;
+    required this.readOperations,
+    required this.mutationOperations,
+    required this.archiveOperations,
+    required this.programOperations,
+  });
 
   factory FileBottleRepository.fromEnvironment(
     HostEnvironment environment, {
     Option<String> bottleDirectory = const Option.none(),
+    required ProgramMetadataExtractor programMetadataExtractor,
   }) {
     return FileBottleRepository(
-      dataHome: _resolveDataHome(environment),
+      dataHome: resolveDataHome(environment),
       bottleDirectory: bottleDirectory,
+      programMetadataExtractor: programMetadataExtractor,
     );
   }
 
   final String dataHome;
   final String bottleDirectory;
-  final _FileBottleRepositoryReadOperations _readOperations;
-  final _FileBottleRepositoryMutationOperations _mutationOperations;
-  final _FileBottleRepositoryArchiveOperations _archiveOperations;
-  final _FileBottleRepositoryProgramOperations _programOperations;
+  final FileBottleRepositoryReadOperations readOperations;
+  final FileBottleRepositoryMutationOperations mutationOperations;
+  final FileBottleRepositoryArchiveOperations archiveOperations;
+  final FileBottleRepositoryProgramOperations programOperations;
 
   @override
-  IoResult<List<BottleRecord>> listBottles() => _readOperations.listBottles();
+  IoResult<List<BottleRecord>> listBottles() => readOperations.listBottles();
 
   @override
   IoResult<Option<BottleRecord>> findBottle(String id) {
-    return _readOperations.findBottle(id);
+    return readOperations.findBottle(id);
   }
 
   @override
   BottleCreateResult createBottle(BottleCreateRequest request) {
-    return _mutationOperations.createBottle(request);
+    return mutationOperations.createBottle(request);
   }
 
   @override
   BottleDeleteResult deleteBottle(String id) {
-    return _mutationOperations.deleteBottle(id);
+    return mutationOperations.deleteBottle(id);
   }
 
   @override
   BottleRenameResult renameBottle(BottleRenameRequest request) {
-    return _mutationOperations.renameBottle(request);
+    return mutationOperations.renameBottle(request);
   }
 
   @override
   BottleMoveResult moveBottle(BottleMoveRequest request) {
-    return _mutationOperations.moveBottle(request);
+    return mutationOperations.moveBottle(request);
   }
 
   @override
   BottleUpdateResult setWindowsVersion(WindowsVersionUpdateRequest request) {
-    return _mutationOperations.setWindowsVersion(request);
+    return mutationOperations.setWindowsVersion(request);
   }
 
   @override
   BottleUpdateResult setRuntimeSettings(RuntimeSettingsUpdateRequest request) {
-    return _mutationOperations.setRuntimeSettings(request);
+    return mutationOperations.setRuntimeSettings(request);
   }
 
   @override
   BottleArchiveExportResult exportBottleArchive(
     BottleArchiveExportRequest request,
   ) {
-    return _archiveOperations.exportBottleArchive(request);
+    return archiveOperations.exportBottleArchive(request);
   }
 
   @override
   BottleArchiveImportResult importBottleArchive(
     BottleArchiveImportRequest request,
   ) {
-    return _archiveOperations.importBottleArchive(request);
+    return archiveOperations.importBottleArchive(request);
   }
 
   @override
   ProgramPinResult pinProgram(ProgramPinRequest request) {
-    return _programOperations.pinProgram(request);
+    return programOperations.pinProgram(request);
   }
 
   @override
   ProgramUpdateResult unpinProgram(ProgramUnpinRequest request) {
-    return _programOperations.unpinProgram(request);
+    return programOperations.unpinProgram(request);
   }
 
   @override
   ProgramUpdateResult renamePinnedProgram(ProgramRenameRequest request) {
-    return _programOperations.renamePinnedProgram(request);
+    return programOperations.renamePinnedProgram(request);
   }
 
   @override
   ProgramSettingsReadResult readProgramSettings(
     ProgramSettingsRequest request,
   ) {
-    return _programOperations.readProgramSettings(request);
+    return programOperations.readProgramSettings(request);
   }
 
   @override
   ProgramSettingsUpdateResult setProgramSettings(
     ProgramSettingsUpdateRequest request,
   ) {
-    return _programOperations.setProgramSettings(request);
+    return programOperations.setProgramSettings(request);
   }
 }

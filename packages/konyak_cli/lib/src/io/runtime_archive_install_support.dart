@@ -1,11 +1,25 @@
-part of '../../konyak_cli.dart';
+import 'dart:io';
 
-String? _runtimeStackComponentVersion(Object? decoded, String componentId) {
-  final components = _runtimeStackComponentVersions(decoded);
+import 'package:fpdart/fpdart.dart';
+
+import '../domain/runtime/runtime_component_versions.dart';
+import '../platform/platform_terminal_commands.dart';
+import '../shared/common_helpers.dart';
+import '../shared/model_constants.dart';
+import 'directory_copy_support.dart';
+import 'external_payload_helpers.dart';
+import 'file_digest_io.dart';
+import 'platform_runtime_sources.dart';
+import 'runtime_install_progress_io.dart';
+import 'runtime_source_archive_downloads.dart';
+import 'runtime_stack_manifest_io.dart';
+
+String? runtimeStackComponentVersion(Object? decoded, String componentId) {
+  final components = runtimeStackComponentVersions(decoded);
   return components[componentId];
 }
 
-Map<String, String> _runtimeStackComponentVersions(Object? decoded) {
+Map<String, String> runtimeStackComponentVersions(Object? decoded) {
   if (decoded is! Map<String, dynamic>) {
     return const <String, String>{};
   }
@@ -29,7 +43,7 @@ Map<String, String> _runtimeStackComponentVersions(Object? decoded) {
   return Map.unmodifiable(versions);
 }
 
-Either<String, Unit> _installRuntimeArchives({
+Either<String, Unit> installRuntimeArchives({
   required String runtimeLabel,
   required String archivePath,
   required String? archiveSha256,
@@ -52,7 +66,7 @@ Either<String, Unit> _installRuntimeArchives({
 }) {
   final expectedSha256 = archiveSha256;
   if (expectedSha256 != null) {
-    _emitRuntimeInstallProgress(
+    emitRuntimeInstallProgress(
       progressSink,
       stage: 'verifying',
       message: 'Verifying $runtimeLabel archive...',
@@ -65,7 +79,7 @@ Either<String, Unit> _installRuntimeArchives({
           '$runtimeLabel archive `$archivePath` was not found.',
         );
       }
-      final actualSha256 = _sha256HexDigest(archive);
+      final actualSha256 = sha256HexDigest(archive);
       if (actualSha256.toLowerCase() != expectedSha256.toLowerCase()) {
         return Left<String, Unit>(
           '$runtimeLabel archive checksum mismatch: expected '
@@ -78,12 +92,12 @@ Either<String, Unit> _installRuntimeArchives({
   }
 
   final stagingRoot = Directory(
-    _runtimeSiblingPathForInstall(runtimeRoot, 'install'),
+    runtimeSiblingPathForInstall(runtimeRoot, 'install'),
   );
   final backupRoot = Directory(
-    _runtimeSiblingPathForInstall(runtimeRoot, 'previous'),
+    runtimeSiblingPathForInstall(runtimeRoot, 'previous'),
   );
-  final lockFile = File(_runtimeInstallLockPath(runtimeRoot));
+  final lockFile = File(runtimeInstallLockPath(runtimeRoot));
   final resolvedComponentVersions = <String, String>{
     ...componentVersions.toMap(),
   };
@@ -116,10 +130,10 @@ Either<String, Unit> _installRuntimeArchives({
 
       final startFraction = 0.65 + (index / archivePaths.length) * 0.25;
       final endFraction = 0.65 + ((index + 1) / archivePaths.length) * 0.25;
-      _emitRuntimeInstallProgress(
+      emitRuntimeInstallProgress(
         progressSink,
         stage: 'extracting',
-        message: 'Extracting ${_basename(currentArchivePath)}...',
+        message: 'Extracting ${basename(currentArchivePath)}...',
         fraction: startFraction,
       );
       final extraction = Process.runSync(
@@ -133,27 +147,27 @@ Either<String, Unit> _installRuntimeArchives({
           '1',
         ],
         runInShell: false,
-        environment: _archiveExtractionEnvironment(),
+        environment: archiveExtractionEnvironment(),
       );
       if (extraction.exitCode != 0) {
         return Left<String, Unit>(
-          _commandFailureMessage('extract $runtimeLabel', extraction),
+          commandFailureMessage('extract $runtimeLabel', extraction),
         );
       }
 
-      _mergeRuntimeStackManifest(
+      mergeRuntimeStackManifest(
         runtimeRoot: stagingRoot,
         componentVersions: resolvedComponentVersions,
       );
-      _emitRuntimeInstallProgress(
+      emitRuntimeInstallProgress(
         progressSink,
         stage: 'extracting',
-        message: 'Extracted ${_basename(currentArchivePath)}.',
+        message: 'Extracted ${basename(currentArchivePath)}.',
         fraction: endFraction,
       );
     }
 
-    _emitRuntimeInstallProgress(
+    emitRuntimeInstallProgress(
       progressSink,
       stage: 'finalizing',
       message: 'Finalizing $runtimeLabel install...',
@@ -161,12 +175,12 @@ Either<String, Unit> _installRuntimeArchives({
     );
     normalizeStagingRoot?.call(stagingRoot);
     if (preserveExistingRuntimeFiles && runtimeRoot.existsSync()) {
-      _copyDirectoryContentsReplacing(
+      copyDirectoryContentsReplacing(
         source: runtimeRoot,
         destination: stagingRoot,
         skipRelativePaths: preserveExistingRuntimeSkipRelativePaths,
       );
-      _mergeRuntimeStackManifest(
+      mergeRuntimeStackManifest(
         runtimeRoot: runtimeRoot,
         componentVersions: resolvedComponentVersions,
         overwriteExisting: true,
@@ -187,14 +201,14 @@ Either<String, Unit> _installRuntimeArchives({
           ..addAll(preservedComponentVersions.toMap());
       }
     }
-    _writeRuntimeStackManifest(
+    writeRuntimeStackManifest(
       runtimeRoot: stagingRoot,
       componentVersions: resolvedComponentVersions,
     );
     afterManifestWrite?.call(stagingRoot);
 
     final stagedExecutable = File(
-      _joinPath(stagingRoot.path, requiredExecutableRelativePath),
+      joinPath(stagingRoot.path, requiredExecutableRelativePath),
     );
     if (!stagedExecutable.existsSync()) {
       return Left<String, Unit>(
@@ -202,12 +216,12 @@ Either<String, Unit> _installRuntimeArchives({
       );
     }
 
-    _replaceRuntimeRootInPlace(
+    replaceRuntimeRootInPlace(
       runtimeRoot: runtimeRoot,
       stagingRoot: stagingRoot,
       backupRoot: backupRoot,
     );
-    _emitRuntimeInstallProgress(
+    emitRuntimeInstallProgress(
       progressSink,
       stage: 'finalizing',
       message: 'Installed $runtimeLabel files.',
@@ -232,11 +246,11 @@ Either<String, Unit> _installRuntimeArchives({
   return const Right<String, Unit>(unit);
 }
 
-Map<String, String> _archiveExtractionEnvironment() {
+Map<String, String> archiveExtractionEnvironment() {
   final toolSearchPaths = <String>[
     if (Platform.environment['KONYAK_BUNDLE_RESOURCES'] case final resources?)
       if (resources.trim().isNotEmpty) resources.trim(),
-    if (_isPackagedKonyakCliExecutable(Platform.resolvedExecutable))
+    if (isPackagedKonyakCliExecutable(Platform.resolvedExecutable))
       File(Platform.resolvedExecutable).parent.path,
   ];
   if (toolSearchPaths.isEmpty) {
@@ -244,18 +258,18 @@ Map<String, String> _archiveExtractionEnvironment() {
   }
 
   return <String, String>{
-    'PATH': _prependArchiveToolPaths(
+    'PATH': prependArchiveToolPaths(
       toolSearchPaths,
       Platform.environment['PATH'],
     ),
   };
 }
 
-bool _isPackagedKonyakCliExecutable(String executable) {
-  return _basename(executable) == 'konyak-cli';
+bool isPackagedKonyakCliExecutable(String executable) {
+  return basename(executable) == 'konyak-cli';
 }
 
-String _prependArchiveToolPaths(Iterable<String> paths, String? existingPath) {
+String prependArchiveToolPaths(Iterable<String> paths, String? existingPath) {
   final filteredPaths = paths
       .map((path) => path.trim())
       .where((path) => path.isNotEmpty)
@@ -268,6 +282,6 @@ String _prependArchiveToolPaths(Iterable<String> paths, String? existingPath) {
   ].join(':');
 }
 
-String _runtimeInstallLockPath(Directory runtimeRoot) {
+String runtimeInstallLockPath(Directory runtimeRoot) {
   return '${runtimeRoot.path}.install.lock';
 }

@@ -1,15 +1,27 @@
-part of '../../konyak_cli.dart';
+import 'dart:io';
+
+import 'package:fpdart/fpdart.dart';
+
+import '../domain/program/program_run_models.dart';
+import '../domain/program/program_runner.dart';
+import '../domain/runtime/host_environment.dart';
+import '../domain/runtime/runtime_validation_support.dart';
+import '../domain/update/update_records.dart';
+import '../shared/common_helpers.dart';
+import 'app_update_handoff_installers.dart';
+import 'app_update_paths.dart';
+import 'external_payload_helpers.dart';
+import 'file_digest_io.dart';
+import 'platform_host_paths.dart';
+import 'program_io_services.dart';
 
 class DartIoAppUpdateInstaller implements AppUpdateInstaller {
   DartIoAppUpdateInstaller({
     required this.environment,
     KonyakHostPlatform? hostPlatform,
-    PathOpener pathOpener = const DartIoPathOpener(),
-    DetachedProcessStarter detachedProcessStarter =
-        const DartIoDetachedProcessStarter(),
-  }) : hostPlatform = hostPlatform ?? _currentHostPlatform(),
-       _pathOpener = pathOpener,
-       _detachedProcessStarter = detachedProcessStarter;
+    this.pathOpener = const DartIoPathOpener(),
+    this.detachedProcessStarter = const DartIoDetachedProcessStarter(),
+  }) : hostPlatform = hostPlatform ?? currentHostPlatform();
 
   factory DartIoAppUpdateInstaller.fromEnvironment(
     Map<String, String> environment,
@@ -19,8 +31,8 @@ class DartIoAppUpdateInstaller implements AppUpdateInstaller {
 
   final HostEnvironment environment;
   final KonyakHostPlatform hostPlatform;
-  final PathOpener _pathOpener;
-  final DetachedProcessStarter _detachedProcessStarter;
+  final PathOpener pathOpener;
+  final DetachedProcessStarter detachedProcessStarter;
 
   @override
   AppUpdateInstallResult install(AppUpdateRecord update) {
@@ -37,11 +49,11 @@ class DartIoAppUpdateInstaller implements AppUpdateInstaller {
       );
     }
 
-    final fileName = _fileNameFromUrl(
+    final fileName = fileNameFromUrl(
       archiveUrl.value,
     ).match(() => 'Konyak-update', (value) => value);
-    final updatesDirectory = Directory(_appUpdateCacheDirectory(environment));
-    final archivePath = _joinPath(updatesDirectory.path, [fileName]);
+    final updatesDirectory = Directory(appUpdateCacheDirectory(environment));
+    final archivePath = joinPath(updatesDirectory.path, [fileName]);
 
     try {
       updatesDirectory.createSync(recursive: true);
@@ -54,12 +66,12 @@ class DartIoAppUpdateInstaller implements AppUpdateInstaller {
       ], runInShell: false);
       if (download.exitCode != 0) {
         return AppUpdateInstallFailed(
-          _commandFailureMessage('download Konyak update', download),
+          commandFailureMessage('download Konyak update', download),
         );
       }
 
       final archive = File(archivePath);
-      final actualSha256 = _sha256HexDigest(archive);
+      final actualSha256 = sha256HexDigest(archive);
       if (actualSha256.toLowerCase() != expectedSha256.value.toLowerCase()) {
         if (archive.existsSync()) {
           archive.deleteSync();
@@ -71,13 +83,13 @@ class DartIoAppUpdateInstaller implements AppUpdateInstaller {
       }
 
       final handoffResult = switch (hostPlatform) {
-        KonyakHostPlatform.macos => _installMacosAppBundleUpdate(
+        KonyakHostPlatform.macos => installMacosAppBundleUpdate(
           update: update,
           archivePath: archivePath,
           actualSha256: actualSha256,
           updatesDirectory: updatesDirectory,
         ),
-        KonyakHostPlatform.linux => _installLinuxAppImageUpdate(
+        KonyakHostPlatform.linux => installLinuxAppImageUpdate(
           update: update,
           archivePath: archivePath,
           actualSha256: actualSha256,
@@ -86,7 +98,7 @@ class DartIoAppUpdateInstaller implements AppUpdateInstaller {
       };
 
       return handoffResult.match(() {
-        final openResult = _pathOpener.openPath(archivePath);
+        final openResult = pathOpener.openPath(archivePath);
         return switch (openResult) {
           PathOpenCompleted() => AppUpdateInstallCompleted(
             AppUpdateInstallRecord(

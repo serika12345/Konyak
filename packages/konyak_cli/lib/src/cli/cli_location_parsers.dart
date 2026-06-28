@@ -1,7 +1,7 @@
-part of '../../konyak_cli.dart';
+import 'cli_parsers.dart';
 
-class _BottleLocationOpenCliRequest {
-  const _BottleLocationOpenCliRequest({
+class BottleLocationOpenCliRequest {
+  const BottleLocationOpenCliRequest({
     required this.bottleId,
     required this.location,
   });
@@ -10,29 +10,29 @@ class _BottleLocationOpenCliRequest {
   final String location;
 }
 
-_BottleLocationOpenCliRequest? _parseJsonBottleLocationOpenCliRequest(
+BottleLocationOpenCliRequest? parseJsonBottleLocationOpenCliRequest(
   List<String> arguments,
 ) {
-  final results = _parseJsonCliCommand(
+  final results = parseJsonCliCommand(
     arguments,
     command: 'open-bottle-location',
     options: const <String>['location'],
   );
-  if (results == null || !_hasRestCount(results, 1)) {
+  if (results == null || !hasRestCount(results, 1)) {
     return null;
   }
 
-  final bottleId = _requiredCliRest(results);
-  final location = _requiredCliOption(results, 'location');
+  final bottleId = requiredCliRest(results);
+  final location = requiredCliOption(results, 'location');
   if (bottleId == null || location == null) {
     return null;
   }
 
-  return _BottleLocationOpenCliRequest(bottleId: bottleId, location: location);
+  return BottleLocationOpenCliRequest(bottleId: bottleId, location: location);
 }
 
-class _ProgramLocationOpenCliRequest {
-  const _ProgramLocationOpenCliRequest({
+class ProgramLocationOpenCliRequest {
+  const ProgramLocationOpenCliRequest({
     required this.bottleId,
     required this.programPath,
   });
@@ -41,25 +41,25 @@ class _ProgramLocationOpenCliRequest {
   final String programPath;
 }
 
-_ProgramLocationOpenCliRequest? _parseJsonProgramLocationOpenCliRequest(
+ProgramLocationOpenCliRequest? parseJsonProgramLocationOpenCliRequest(
   List<String> arguments,
 ) {
-  final results = _parseJsonCliCommand(
+  final results = parseJsonCliCommand(
     arguments,
     command: 'open-program-location',
     options: const <String>['program'],
   );
-  if (results == null || !_hasRestCount(results, 1)) {
+  if (results == null || !hasRestCount(results, 1)) {
     return null;
   }
 
-  final bottleId = _requiredCliRest(results);
-  final programPath = _requiredCliOption(results, 'program');
+  final bottleId = requiredCliRest(results);
+  final programPath = requiredCliOption(results, 'program');
   if (bottleId == null || programPath == null) {
     return null;
   }
 
-  return _ProgramLocationOpenCliRequest(
+  return ProgramLocationOpenCliRequest(
     bottleId: bottleId,
     programPath: programPath,
   );

@@ -1,22 +1,29 @@
-part of '../home_loader/home_loader.dart';
+import 'dart:async';
+import 'dart:convert';
 
-const _macosMenuChannel = MethodChannel('konyak/menu');
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
-class _MacosNativeMenuLocalizer extends StatefulWidget {
-  const _MacosNativeMenuLocalizer();
+import '../cli/konyak_cli_process_runner.dart';
+import '../l10n/konyak_localizations.dart';
+
+const macosMenuChannel = MethodChannel('konyak/menu');
+
+class MacosNativeMenuLocalizer extends StatefulWidget {
+  const MacosNativeMenuLocalizer({super.key});
 
   @override
-  State<_MacosNativeMenuLocalizer> createState() =>
-      _MacosNativeMenuLocalizerState();
+  State<MacosNativeMenuLocalizer> createState() =>
+      MacosNativeMenuLocalizerState();
 }
 
-class _MacosNativeMenuLocalizerState extends State<_MacosNativeMenuLocalizer> {
-  Map<String, String>? _lastPayload;
+class MacosNativeMenuLocalizerState extends State<MacosNativeMenuLocalizer> {
+  Map<String, String>? lastPayload;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _synchronizeNativeMenu();
+    synchronizeNativeMenu();
   }
 
   @override
@@ -24,20 +31,20 @@ class _MacosNativeMenuLocalizerState extends State<_MacosNativeMenuLocalizer> {
     return const SizedBox.shrink();
   }
 
-  void _synchronizeNativeMenu() {
-    final payload = _macosNativeMenuLocalizationPayload(
+  void synchronizeNativeMenu() {
+    final payload = macosNativeMenuLocalizationPayload(
       KonyakLocalizations.of(context),
     );
-    if (_sameStringMap(_lastPayload, payload)) {
+    if (sameStringMap(lastPayload, payload)) {
       return;
     }
 
-    _lastPayload = Map<String, String>.unmodifiable(payload);
-    unawaited(_sendMacosNativeMenuLocalization(payload));
+    lastPayload = Map<String, String>.unmodifiable(payload);
+    unawaited(sendMacosNativeMenuLocalization(payload));
   }
 }
 
-Map<String, String> _macosNativeMenuLocalizationPayload(
+Map<String, String> macosNativeMenuLocalizationPayload(
   KonyakLocalizations localizations,
 ) {
   return <String, String>{
@@ -55,17 +62,17 @@ Map<String, String> _macosNativeMenuLocalizationPayload(
   };
 }
 
-Future<void> _sendMacosNativeMenuLocalization(
+Future<void> sendMacosNativeMenuLocalization(
   Map<String, String> payload,
 ) async {
   try {
-    await _macosMenuChannel.invokeMethod<void>('setMenuLocalization', payload);
+    await macosMenuChannel.invokeMethod<void>('setMenuLocalization', payload);
   } on MissingPluginException {
     return;
   }
 }
 
-bool _sameStringMap(Map<String, String>? left, Map<String, String> right) {
+bool sameStringMap(Map<String, String>? left, Map<String, String> right) {
   if (left == null || left.length != right.length) {
     return false;
   }
@@ -79,19 +86,19 @@ bool _sameStringMap(Map<String, String>? left, Map<String, String> right) {
   return true;
 }
 
-List<String> _validExecutableOpenPathsFromChannel(Object? arguments) {
+List<String> validExecutableOpenPathsFromChannel(Object? arguments) {
   if (arguments is! List<Object?>) {
     return const <String>[];
   }
 
-  return _validExecutableOpenPaths(arguments.whereType<String>());
+  return validExecutableOpenPaths(arguments.whereType<String>());
 }
 
-List<String> _validExecutableOpenPaths(Iterable<String> paths) {
+List<String> validExecutableOpenPaths(Iterable<String> paths) {
   final validPaths = <String>[];
   for (final path in paths) {
     final trimmedPath = path.trim();
-    if (_isWindowsExecutablePath(trimmedPath)) {
+    if (isWindowsExecutablePath(trimmedPath)) {
       validPaths.add(trimmedPath);
     }
   }
@@ -99,15 +106,15 @@ List<String> _validExecutableOpenPaths(Iterable<String> paths) {
   return validPaths;
 }
 
-bool _isWindowsExecutablePath(String path) {
+bool isWindowsExecutablePath(String path) {
   return path.isNotEmpty && path.toLowerCase().endsWith('.exe');
 }
 
-String _installGptkFailureMessage(
+String installGptkFailureMessage(
   ProcessRunResult result, {
   required String command,
 }) {
-  final message = _jsonErrorMessage(result.stdout);
+  final message = jsonErrorMessage(result.stdout);
   if (message != null) {
     return message;
   }
@@ -118,8 +125,8 @@ String _installGptkFailureMessage(
   return '$command failed with exit code ${result.exitCode}: $diagnostic';
 }
 
-String _openUrlFailureMessage(ProcessRunResult result) {
-  final message = _jsonErrorMessage(result.stdout);
+String openUrlFailureMessage(ProcessRunResult result) {
+  final message = jsonErrorMessage(result.stdout);
   if (message != null) {
     return message;
   }
@@ -130,7 +137,7 @@ String _openUrlFailureMessage(ProcessRunResult result) {
   return 'open-url failed with exit code ${result.exitCode}: $diagnostic';
 }
 
-String? _jsonErrorMessage(String payload) {
+String? jsonErrorMessage(String payload) {
   try {
     final decoded = jsonDecode(payload);
     if (decoded is! Map<String, dynamic>) {

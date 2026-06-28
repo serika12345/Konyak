@@ -1027,6 +1027,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
 
   test('terminate-wine-processes --json terminates each bottle prefix', () {
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: '/data',
       bottles: [
         BottleRecord(
@@ -1104,6 +1105,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
     'terminate-wine-processes --bottle --json terminates one bottle prefix',
     () {
       final repository = MemoryBottleRepository(
+        programMetadataExtractor: const NoopProgramMetadataExtractor(),
         dataHome: '/data',
         bottles: [
           BottleRecord(
@@ -1170,6 +1172,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
     'terminate-wine-processes --bottle --json treats no running processes as success',
     () {
       final repository = MemoryBottleRepository(
+        programMetadataExtractor: const NoopProgramMetadataExtractor(),
         dataHome: '/data',
         bottles: [
           BottleRecord(
@@ -1237,6 +1240,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
       ..createSync(recursive: true)
       ..writeAsStringSync('Arguments: ${jsonEncode(<String>[programPath])}\n');
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: '/data',
       bottles: [
         BottleRecord(
@@ -1321,6 +1325,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
     'runCliStreaming list-wine-processes starts bottle probes concurrently and preserves order',
     () async {
       final repository = MemoryBottleRepository(
+        programMetadataExtractor: const NoopProgramMetadataExtractor(),
         dataHome: '/data',
         bottles: [
           BottleRecord(
@@ -1442,6 +1447,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
           'Arguments: ${jsonEncode(<String>[programPath])}\n',
         );
       final repository = MemoryBottleRepository(
+        programMetadataExtractor: const NoopProgramMetadataExtractor(),
         dataHome: '/data',
         bottles: [
           BottleRecord(
@@ -1552,6 +1558,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
           'Arguments: ${jsonEncode(<String>['start', '/unix', shortcutPath])}\n',
         );
       final repository = MemoryBottleRepository(
+        programMetadataExtractor: const NoopProgramMetadataExtractor(),
         dataHome: '/data',
         bottles: [
           BottleRecord(
@@ -1630,6 +1637,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
     'runCliStreaming list-wine-processes skips bottles missing from the host process snapshot',
     () async {
       final repository = MemoryBottleRepository(
+        programMetadataExtractor: const NoopProgramMetadataExtractor(),
         dataHome: '/data',
         bottles: [
           BottleRecord(
@@ -1699,6 +1707,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
     'runCliStreaming list-wine-processes returns empty without probing when no bottle is active',
     () async {
       final repository = MemoryBottleRepository(
+        programMetadataExtractor: const NoopProgramMetadataExtractor(),
         dataHome: '/data',
         bottles: [
           BottleRecord(
@@ -1736,6 +1745,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
     'runCliStreaming list-wine-processes does not match bottle path prefixes',
     () async {
       final repository = MemoryBottleRepository(
+        programMetadataExtractor: const NoopProgramMetadataExtractor(),
         dataHome: '/data',
         bottles: [
           BottleRecord(
@@ -1805,6 +1815,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
         }),
       );
       final repository = MemoryBottleRepository(
+        programMetadataExtractor: const NoopProgramMetadataExtractor(),
         dataHome: '/data',
         bottles: [
           BottleRecord(
@@ -1887,6 +1898,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
         'Ardour-9.5.0-w64-Setup.exe',
       ]);
       final repository = MemoryBottleRepository(
+        programMetadataExtractor: const NoopProgramMetadataExtractor(),
         dataHome: '/data',
         bottles: [
           BottleRecord(
@@ -2007,6 +2019,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
           ),
         );
       final repository = MemoryBottleRepository(
+        programMetadataExtractor: const NoopProgramMetadataExtractor(),
         dataHome: '/data',
         bottles: [
           BottleRecord(
@@ -2105,6 +2118,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
         'Ardour-9.5.0-w64-Setup.exe',
       ]);
       final repository = MemoryBottleRepository(
+        programMetadataExtractor: const NoopProgramMetadataExtractor(),
         dataHome: '/data',
         bottles: [
           BottleRecord(
@@ -2182,6 +2196,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
 
   test('terminate-wine-process --json kills one Wine process', () {
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: '/data',
       bottles: [
         BottleRecord(

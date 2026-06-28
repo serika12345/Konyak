@@ -1,7 +1,44 @@
-part of '../../konyak_cli.dart';
+import 'dart:async';
 
-class _CliCommandContext {
-  const _CliCommandContext({
+import '../domain/program/program_catalog_models.dart';
+import '../domain/program/program_runner.dart';
+import '../domain/runtime/runtime_catalogs.dart';
+import '../domain/runtime/runtime_validation_models.dart';
+import '../domain/update/update_records.dart';
+import '../io/gptk_wine_installation.dart';
+import '../io/linux_external_program_launchers.dart';
+import '../io/linux_wine_installation.dart';
+import '../io/macos_wine_installation.dart';
+import '../io/program_discovery.dart';
+import '../io/program_io_services.dart';
+import '../io/program_metadata_io.dart';
+import '../io/program_run_planner_io.dart';
+import '../io/runtime_install_progress_io.dart';
+import '../io/winetricks_io.dart';
+import '../platform/linux/linux_wine_install_results.dart';
+import '../platform/macos/macos_setup_checker.dart';
+import '../platform/macos/macos_wine_install_results.dart';
+import '../repository/memory_bottle_repository.dart';
+import '../repository/repository_exceptions.dart';
+import '../repository/repository_interfaces.dart';
+import 'cli_app_handlers.dart';
+import 'cli_app_process_parsers.dart';
+import 'cli_app_process_results.dart';
+import 'cli_app_runtime_handlers.dart';
+import 'cli_bottle_mutation_handlers.dart';
+import 'cli_bottle_read_handlers.dart';
+import 'cli_host_integration_handlers.dart';
+import 'cli_json_helpers.dart';
+import 'cli_location_winetricks_handlers.dart';
+import 'cli_pinned_program_handlers.dart';
+import 'cli_program_run_handlers.dart';
+import 'cli_result_model.dart';
+import 'cli_runtime_parsers.dart';
+import 'cli_update_runtime_results.dart';
+import 'cli_wine_process_handlers.dart';
+
+class CliCommandContext {
+  const CliCommandContext({
     required this.bottleCatalog,
     required this.bottleRepository,
     required this.bottleProgramRepository,
@@ -54,7 +91,9 @@ CliResult runCli(
   BottleCatalog? bottleCatalog,
   BottleRepository? bottleRepository,
   BottleProgramRepository bottleProgramRepository =
-      const DartIoBottleProgramRepository(),
+      const DartIoBottleProgramRepository(
+        metadataExtractor: DartIoProgramMetadataExtractor(),
+      ),
   ProgramMetadataExtractor programMetadataExtractor =
       const DartIoProgramMetadataExtractor(),
   WinetricksVerbRepository? winetricksVerbRepository,
@@ -77,9 +116,9 @@ CliResult runCli(
   linuxExternalProgramLauncherDiagnosticSink,
 }) {
   try {
-    return _runCli(
+    return runCliWithContext(
       arguments,
-      _CliCommandContext(
+      CliCommandContext(
         bottleCatalog: bottleCatalog ?? StaticBottleCatalog(const []),
         bottleRepository: bottleRepository,
         bottleProgramRepository: bottleProgramRepository,
@@ -107,13 +146,13 @@ CliResult runCli(
       ),
     );
   } on BottleRepositoryException catch (error) {
-    return _jsonError(
+    return jsonError(
       exitCode: 74,
       code: 'bottleRepositoryError',
       message: error.message,
     );
   } on AppSettingsRepositoryException catch (error) {
-    return _jsonError(
+    return jsonError(
       exitCode: 74,
       code: 'appSettingsRepositoryError',
       message: error.message,
@@ -126,7 +165,9 @@ Future<CliResult> runCliStreaming(
   BottleCatalog? bottleCatalog,
   BottleRepository? bottleRepository,
   BottleProgramRepository bottleProgramRepository =
-      const DartIoBottleProgramRepository(),
+      const DartIoBottleProgramRepository(
+        metadataExtractor: DartIoProgramMetadataExtractor(),
+      ),
   ProgramMetadataExtractor programMetadataExtractor =
       const DartIoProgramMetadataExtractor(),
   WinetricksVerbRepository? winetricksVerbRepository,
@@ -155,31 +196,31 @@ Future<CliResult> runCliStreaming(
   HostProcessSnapshotReader hostProcessSnapshotReader =
       const DartIoHostProcessSnapshotReader(),
 }) async {
-  final macosWineInstallRequest = _parseJsonMacosWineInstallRequest(arguments);
+  final macosWineInstallRequest = parseJsonMacosWineInstallRequest(arguments);
   if (macosWineInstallRequest?.emitProgress == true &&
       macosWineInstaller is DartIoMacosWineInstaller) {
     final installResult = await macosWineInstaller.installStreaming(
       macosWineInstallRequest!,
       progressSink: runtimeInstallProgressSink,
     );
-    return _macosWineInstallCliResult(installResult);
+    return macosWineInstallCliResult(installResult);
   }
 
-  final linuxWineInstallRequest = _parseJsonLinuxWineInstallRequest(arguments);
+  final linuxWineInstallRequest = parseJsonLinuxWineInstallRequest(arguments);
   if (linuxWineInstallRequest?.emitProgress == true &&
       linuxWineInstaller is DartIoLinuxWineInstaller) {
     final installResult = await linuxWineInstaller.installStreaming(
       linuxWineInstallRequest!,
       progressSink: runtimeInstallProgressSink,
     );
-    return _linuxWineInstallCliResult(installResult);
+    return linuxWineInstallCliResult(installResult);
   }
 
-  if (_isJsonWineProcessListCommand(arguments)) {
+  if (isJsonWineProcessListCommand(arguments)) {
     try {
       final activeBottleCatalog =
           bottleRepository ?? bottleCatalog ?? StaticBottleCatalog(const []);
-      return await _listWineProcessesJsonResultAsync(
+      return await listWineProcessesJsonResultAsync(
         bottleCatalog: activeBottleCatalog,
         programRunPlanner: programRunPlanner ?? currentProgramRunPlanner(),
         programRunner: asyncProgramRunner,
@@ -187,13 +228,13 @@ Future<CliResult> runCliStreaming(
         hostProcessSnapshotReader: hostProcessSnapshotReader,
       );
     } on BottleRepositoryException catch (error) {
-      return _jsonError(
+      return jsonError(
         exitCode: 74,
         code: 'bottleRepositoryError',
         message: error.message,
       );
     } on AppSettingsRepositoryException catch (error) {
-      return _jsonError(
+      return jsonError(
         exitCode: 74,
         code: 'appSettingsRepositoryError',
         message: error.message,
@@ -228,9 +269,9 @@ Future<CliResult> runCliStreaming(
   );
 }
 
-typedef _CliCommandHandler = CliResult? Function();
+typedef CliCommandHandler = CliResult? Function();
 
-CliResult? _firstCliResult(Iterable<_CliCommandHandler> handlers) {
+CliResult? firstCliResult(Iterable<CliCommandHandler> handlers) {
   for (final handler in handlers) {
     final result = handler();
     if (result != null) {
@@ -241,32 +282,32 @@ CliResult? _firstCliResult(Iterable<_CliCommandHandler> handlers) {
   return null;
 }
 
-CliResult _runCli(List<String> arguments, _CliCommandContext context) {
+CliResult runCliWithContext(List<String> arguments, CliCommandContext context) {
   final bottleCatalog = context.bottleCatalog;
   final bottleRepository = context.bottleRepository;
   final activeBottleCatalog = bottleRepository ?? bottleCatalog;
 
-  final commandResult = _firstCliResult(<_CliCommandHandler>[
-    () => _handleAppCommand(arguments, context),
-    () => _handleHostIntegrationCommand(arguments, context),
-    () => _handleWineProcessCommand(
+  final commandResult = firstCliResult(<CliCommandHandler>[
+    () => handleAppCommand(arguments, context),
+    () => handleHostIntegrationCommand(arguments, context),
+    () => handleWineProcessCommand(
       arguments,
       context: context,
       activeBottleCatalog: activeBottleCatalog,
     ),
-    () => _handleBottleReadCommand(
+    () => handleBottleReadCommand(
       arguments,
       context: context,
       activeBottleCatalog: activeBottleCatalog,
     ),
-    () => _handleWinetricksVerbCommand(arguments, context),
-    () => _handleBottleMutationCommand(arguments, context),
-    () => _handleBottleConfigurationCommand(arguments, context),
-    () => _handlePinnedProgramCommand(arguments, context),
-    () => _handleProgramSettingsCommand(arguments, context),
-    () => _handleProgramRunCommand(arguments, context),
-    () => _handleLocationCommand(arguments, context),
-    () => _handleRuntimeCommand(arguments, context),
+    () => handleWinetricksVerbCommand(arguments, context),
+    () => handleBottleMutationCommand(arguments, context),
+    () => handleBottleConfigurationCommand(arguments, context),
+    () => handlePinnedProgramCommand(arguments, context),
+    () => handleProgramSettingsCommand(arguments, context),
+    () => handleProgramRunCommand(arguments, context),
+    () => handleLocationCommand(arguments, context),
+    () => handleRuntimeCommand(arguments, context),
   ]);
   if (commandResult != null) {
     return commandResult;

@@ -1,8 +1,10 @@
-part of '../../konyak_cli.dart';
+import 'dart:io';
+
+import 'package:fpdart/fpdart.dart';
 
 typedef IoResult<T> = Either<String, T>;
 
-Either<String, T> _ioResult<T>(T Function() operation) {
+Either<String, T> ioResult<T>(T Function() operation) {
   try {
     return Right<String, T>(operation());
   } on FileSystemException catch (error) {

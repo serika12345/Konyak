@@ -1,4 +1,8 @@
-part of 'konyak_cli_client.dart';
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+
+import 'konyak_cli_result_helpers.dart';
 
 abstract interface class ProcessRunner {
   Future<ProcessRunResult> run(
@@ -36,12 +40,12 @@ final class DartIoProcessRunner implements ProcessRunner {
     void Function(String line)? onStdoutLine,
   }) async {
     final childEnvironment = <String, String>{
-      ..._konyakCliChildEnvironment(),
+      ...konyakCliChildEnvironment(),
       ...environment,
     };
 
     if (onStdoutLine != null || onStarted != null) {
-      return _runStarted(
+      return runStarted(
         executable,
         arguments,
         workingDirectory: workingDirectory,
@@ -70,12 +74,12 @@ final class DartIoProcessRunner implements ProcessRunner {
 
     return ProcessRunResult(
       exitCode: result.exitCode,
-      stdout: _processOutputToString(result.stdout),
-      stderr: _processOutputToString(result.stderr),
+      stdout: processOutputToString(result.stdout),
+      stderr: processOutputToString(result.stderr),
     );
   }
 
-  Future<ProcessRunResult> _runStarted(
+  Future<ProcessRunResult> runStarted(
     String executable,
     List<String> arguments, {
     required String? workingDirectory,
@@ -145,7 +149,7 @@ final class DartIoProcessRunner implements ProcessRunner {
   }
 }
 
-Map<String, String> _konyakCliChildEnvironment() {
+Map<String, String> konyakCliChildEnvironment() {
   final environment = <String, String>{};
   final inheritedAppExecutable = Platform.environment['KONYAK_APP_EXECUTABLE'];
   if (inheritedAppExecutable != null &&

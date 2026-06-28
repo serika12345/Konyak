@@ -208,6 +208,18 @@ final class FixedProgramMetadataExtractor implements ProgramMetadataExtractor {
   }
 }
 
+final class NoopProgramMetadataExtractor implements ProgramMetadataExtractor {
+  const NoopProgramMetadataExtractor();
+
+  @override
+  Option<ProgramMetadataRecord> extract({
+    required BottleRecord bottle,
+    required String programPath,
+  }) {
+    return const Option.none();
+  }
+}
+
 final class ThrowingProgramMetadataExtractor
     implements ProgramMetadataExtractor {
   const ThrowingProgramMetadataExtractor(this.error);
@@ -350,6 +362,7 @@ final class FailingBottleRepository extends MemoryBottleRepository {
     required super.dataHome,
     required this.message,
     super.bottles,
+    super.programMetadataExtractor = const NoopProgramMetadataExtractor(),
   });
 
   final String message;

@@ -1,6 +1,22 @@
-part of '../../konyak_cli.dart';
+import 'dart:io';
 
-const _dxvkOverrideDllNames = <String>[
+import 'package:fpdart/fpdart.dart';
+
+import '../domain/bottle/bottle_models.dart';
+import '../domain/program/program_argument_support.dart';
+import '../domain/program/program_registry_models.dart';
+import '../domain/program/program_registry_plans.dart';
+import '../domain/program/program_run_environment.dart';
+import '../domain/program/program_run_models.dart';
+import '../domain/runtime/host_environment.dart';
+import '../domain/runtime/wine_runtime_paths.dart';
+import '../platform/macos/macos_program_run_requests.dart';
+import '../platform/platform_terminal_commands.dart';
+import '../shared/common_helpers.dart';
+import 'directory_copy_support.dart';
+import 'gptk_wine_installation.dart';
+
+const dxvkOverrideDllNames = <String>[
   'dxgi.dll',
   'd3d9.dll',
   'd3d10.dll',
@@ -9,8 +25,8 @@ const _dxvkOverrideDllNames = <String>[
   'd3d11.dll',
 ];
 
-const _macosD3DTranslationOverrideDllNames = <String>[
-  ..._dxvkOverrideDllNames,
+const macosD3DTranslationOverrideDllNames = <String>[
+  ...dxvkOverrideDllNames,
   'd3d12.dll',
   'nvapi64.dll',
   'nvngx.dll',
@@ -18,7 +34,7 @@ const _macosD3DTranslationOverrideDllNames = <String>[
   'winemetal.dll',
 ];
 
-const _d3dMetalOverrideDllNames = <String>[
+const d3dMetalOverrideDllNames = <String>[
   'dxgi.dll',
   'd3d11.dll',
   'd3d12.dll',
@@ -26,10 +42,10 @@ const _d3dMetalOverrideDllNames = <String>[
   'nvngx.dll',
 ];
 
-void _removeMacosD3DTranslationDllOverrides({required BottleRecord bottle}) {
+void removeMacosD3DTranslationDllOverrides({required BottleRecord bottle}) {
   for (final windowsDirectory in const <String>['system32', 'syswow64']) {
-    for (final dllName in _macosD3DTranslationOverrideDllNames) {
-      final dllPath = _joinPath(bottle.path.value, <String>[
+    for (final dllName in macosD3DTranslationOverrideDllNames) {
+      final dllPath = joinPath(bottle.path.value, <String>[
         'drive_c',
         'windows',
         windowsDirectory,
@@ -39,12 +55,12 @@ void _removeMacosD3DTranslationDllOverrides({required BottleRecord bottle}) {
       if (type == FileSystemEntityType.notFound) {
         continue;
       }
-      _deleteFileSystemEntitySync(dllPath, type);
+      deleteFileSystemEntitySync(dllPath, type);
     }
   }
 }
 
-void _syncMacosDxvkDllOverrides({
+void syncMacosDxvkDllOverrides({
   required BottleRecord bottle,
   required Map<String, String> environment,
 }) {
@@ -56,15 +72,15 @@ void _syncMacosDxvkDllOverrides({
   ]) {
     final (runtimeArch, windowsDirectory) = arch;
     final destinationDirectory = Directory(
-      _joinPath(bottle.path.value, <String>[
+      joinPath(bottle.path.value, <String>[
         'drive_c',
         'windows',
         windowsDirectory,
       ]),
     )..createSync(recursive: true);
 
-    for (final dllName in _dxvkOverrideDllNames) {
-      final sourcePath = _joinPath(runtimeRoot, <String>[
+    for (final dllName in dxvkOverrideDllNames) {
+      final sourcePath = joinPath(runtimeRoot, <String>[
         'lib',
         'dxvk',
         runtimeArch,
@@ -77,31 +93,31 @@ void _syncMacosDxvkDllOverrides({
           sourcePath,
         );
       }
-      sourceFile.copySync(_joinPath(destinationDirectory.path, [dllName]));
+      sourceFile.copySync(joinPath(destinationDirectory.path, [dllName]));
     }
   }
 }
 
-void _syncMacosD3DMetalDllOverrides({
+void syncMacosD3DMetalDllOverrides({
   required BottleRecord bottle,
   required Map<String, String> environment,
 }) {
   final hostEnvironment = HostEnvironment(environment);
   final runtimeRoot = macosWineRuntimeRoot(hostEnvironment);
   final destinationDirectory = Directory(
-    _joinPath(bottle.path.value, const ['drive_c', 'windows', 'system32']),
+    joinPath(bottle.path.value, const ['drive_c', 'windows', 'system32']),
   )..createSync(recursive: true);
 
-  for (final dllName in _d3dMetalOverrideDllNames) {
-    _d3DMetalOverrideSourcePath(
+  for (final dllName in d3dMetalOverrideDllNames) {
+    d3DMetalOverrideSourcePath(
       runtimeRoot: runtimeRoot,
       dllName: dllName,
     ).match(
       () {
         throw FileSystemException(
           'D3DMetal override DLL was not found.',
-          _joinPath(runtimeRoot, <String>[
-            ..._gptkD3DMetalComponentLibRelativePath,
+          joinPath(runtimeRoot, <String>[
+            ...gptkD3DMetalComponentLibRelativePath,
             'wine',
             'x86_64-windows',
             dllName,
@@ -110,26 +126,26 @@ void _syncMacosD3DMetalDllOverrides({
       },
       (sourcePath) {
         final sourceFile = File(sourcePath);
-        sourceFile.copySync(_joinPath(destinationDirectory.path, [dllName]));
+        sourceFile.copySync(joinPath(destinationDirectory.path, [dllName]));
       },
     );
   }
 }
 
-Option<String> _d3DMetalOverrideSourcePath({
+Option<String> d3DMetalOverrideSourcePath({
   required String runtimeRoot,
   required String dllName,
 }) {
-  for (final sourceName in _d3DMetalOverrideSourceNames(dllName)) {
+  for (final sourceName in d3DMetalOverrideSourceNames(dllName)) {
     for (final sourceRoot in <List<String>>[
       <String>[
-        ..._gptkD3DMetalComponentLibRelativePath,
+        ...gptkD3DMetalComponentLibRelativePath,
         'wine',
         'x86_64-windows',
       ],
       const <String>['lib', 'wine', 'x86_64-windows'],
     ]) {
-      final sourcePath = _joinPath(runtimeRoot, <String>[
+      final sourcePath = joinPath(runtimeRoot, <String>[
         ...sourceRoot,
         sourceName,
       ]);
@@ -141,26 +157,26 @@ Option<String> _d3DMetalOverrideSourcePath({
   return const Option.none();
 }
 
-List<String> _d3DMetalOverrideSourceNames(String dllName) {
+List<String> d3DMetalOverrideSourceNames(String dllName) {
   return switch (dllName) {
     'nvngx.dll' => const <String>['nvngx.dll', 'nvngx-on-metalfx.dll'],
     _ => <String>[dllName],
   };
 }
 
-ProgramRunEnvironment _linuxWineEnvironment(BottleRecord bottle) {
-  return _linuxWinePrefixEnvironment(bottle)
+ProgramRunEnvironment linuxWineEnvironment(BottleRecord bottle) {
+  return linuxWinePrefixEnvironment(bottle)
       .merge(bottle.runtimeSettings.linuxEnvironment())
-      .merge(_linuxWineLogSuppressionEnvironment());
+      .merge(linuxWineLogSuppressionEnvironment());
 }
 
-ProgramRunEnvironment _linuxWinePrefixEnvironment(BottleRecord bottle) {
+ProgramRunEnvironment linuxWinePrefixEnvironment(BottleRecord bottle) {
   return ProgramRunEnvironment(<String, String>{
     'WINEPREFIX': bottle.path.value,
   });
 }
 
-ProgramRunEnvironment _linuxWineLogSuppressionEnvironment() {
+ProgramRunEnvironment linuxWineLogSuppressionEnvironment() {
   return ProgramRunEnvironment(const <String, String>{
     'EGL_LOG_LEVEL': 'fatal',
     'MESA_LOG_LEVEL': 'fatal',
@@ -168,25 +184,25 @@ ProgramRunEnvironment _linuxWineLogSuppressionEnvironment() {
   });
 }
 
-ProgramRunEnvironment _linuxWineEnvironmentWithRuntime({
+ProgramRunEnvironment linuxWineEnvironmentWithRuntime({
   required BottleRecord bottle,
   required HostEnvironment environment,
 }) {
-  final wineEnvironment = _linuxWineEnvironment(bottle);
+  final wineEnvironment = linuxWineEnvironment(bottle);
   final hostEnvironment = environment;
   final dllPathEntries = <String>[];
   if (bottle.runtimeSettings.dxvk) {
     final runtimeRoot = linuxWineRuntimeRoot(hostEnvironment);
     dllPathEntries.addAll([
-      _joinPath(runtimeRoot, const ['dxvk', 'x64']),
-      _joinPath(runtimeRoot, const ['dxvk', 'x86']),
+      joinPath(runtimeRoot, const ['dxvk', 'x64']),
+      joinPath(runtimeRoot, const ['dxvk', 'x86']),
     ]);
   }
   if (bottle.runtimeSettings.vkd3dProton) {
     final runtimeRoot = linuxWineRuntimeRoot(hostEnvironment);
     dllPathEntries.addAll([
-      _joinPath(runtimeRoot, const ['vkd3d-proton', 'x64']),
-      _joinPath(runtimeRoot, const ['vkd3d-proton', 'x86']),
+      joinPath(runtimeRoot, const ['vkd3d-proton', 'x64']),
+      joinPath(runtimeRoot, const ['vkd3d-proton', 'x86']),
     ]);
   }
   if (dllPathEntries.isNotEmpty) {
@@ -194,19 +210,19 @@ ProgramRunEnvironment _linuxWineEnvironmentWithRuntime({
       'WINEDLLPATH',
       dllPathEntries.join(':'),
     );
-    return _linuxWineEnvironmentWithDllOverrides(
+    return linuxWineEnvironmentWithDllOverrides(
       wineEnvironment: wineEnvironmentWithDllPath,
       bottle: bottle,
     );
   }
 
-  return _linuxWineEnvironmentWithDllOverrides(
+  return linuxWineEnvironmentWithDllOverrides(
     wineEnvironment: wineEnvironment,
     bottle: bottle,
   );
 }
 
-ProgramRunEnvironment _linuxWineEnvironmentWithDllOverrides({
+ProgramRunEnvironment linuxWineEnvironmentWithDllOverrides({
   required ProgramRunEnvironment wineEnvironment,
   required BottleRecord bottle,
 }) {
@@ -244,12 +260,12 @@ ProgramRunRequest macosWineCommandRequest({
     runnerKind: 'macosWine',
     executable: macosWineExecutable(hostEnvironment),
     arguments: wineArgumentsForBottleCommand(command),
-    environment: _macosWineEnvironment(
+    environment: macosWineEnvironment(
       bottle: bottle,
       environment: environment,
       macosMajorVersion: macosMajorVersion,
     ),
-    logPath: _joinPath(bottle.path.value, const ['logs', 'latest.log']),
+    logPath: joinPath(bottle.path.value, const ['logs', 'latest.log']),
     workingDirectory: Option.of(macosWineBinFolder(hostEnvironment)),
   );
 }
@@ -267,12 +283,12 @@ ProgramRunRequest macosRegistryUpdateRequest({
     runnerKind: 'macosWineRegistry',
     executable: macosWineExecutable(hostEnvironment),
     arguments: registryUpdateArguments(update),
-    environment: _macosWineEnvironment(
+    environment: macosWineEnvironment(
       bottle: bottle,
       environment: environment,
       macosMajorVersion: macosMajorVersion,
     ),
-    logPath: _joinPath(bottle.path.value, const ['logs', 'latest.log']),
+    logPath: joinPath(bottle.path.value, const ['logs', 'latest.log']),
     workingDirectory: Option.of(macosWineBinFolder(hostEnvironment)),
   );
 }
@@ -290,12 +306,12 @@ ProgramRunRequest macosRegistryQueryRequest({
     runnerKind: 'macosWineRegistryQuery',
     executable: macosWineExecutable(hostEnvironment),
     arguments: registryQueryArguments(query),
-    environment: _macosWineEnvironment(
+    environment: macosWineEnvironment(
       bottle: bottle,
       environment: environment,
       macosMajorVersion: macosMajorVersion,
     ),
-    logPath: _joinPath(bottle.path.value, const ['logs', 'registry.log']),
+    logPath: joinPath(bottle.path.value, const ['logs', 'registry.log']),
     workingDirectory: Option.of(macosWineBinFolder(hostEnvironment)),
   );
 }
@@ -312,15 +328,15 @@ ProgramRunRequest linuxTerminalCommandRequest({
     executable: 'sh',
     arguments: <String>[
       '-lc',
-      _linuxTerminalLauncherCommand(environment),
-      _linuxWineTerminalShellCommandWithEnvironment(
+      linuxTerminalLauncherCommand(environment),
+      linuxWineTerminalShellCommandWithEnvironment(
         bottle: bottle,
         environment: environment,
         initialWineCommand: initialWineCommand,
       ),
     ],
     environment: const ProgramRunEnvironment.empty(),
-    logPath: _joinPath(bottle.path.value, const ['logs', 'latest.log']),
+    logPath: joinPath(bottle.path.value, const ['logs', 'latest.log']),
     workingDirectory: Option.of(bottle.path.value),
   );
 }
@@ -331,13 +347,13 @@ ProgramRunRequest macosTerminalCommandRequest({
   required Option<int> macosMajorVersion,
   Option<String> initialWineCommand = const Option.none(),
 }) {
-  final shellCommand = _macosWineTerminalShellCommand(
+  final shellCommand = macosWineTerminalShellCommand(
     bottle: bottle,
     environment: environment,
     macosMajorVersion: macosMajorVersion,
     initialWineCommand: initialWineCommand,
   );
-  final setupScriptPath = _macosTerminalSetupScriptPath(bottle);
+  final setupScriptPath = macosTerminalSetupScriptPath(bottle);
 
   return ProgramRunRequest(
     bottleId: bottle.id.value,
@@ -346,13 +362,13 @@ ProgramRunRequest macosTerminalCommandRequest({
     executable: '/usr/bin/osascript',
     arguments: <String>[
       '-e',
-      _macosTerminalAppleScript(
+      macosTerminalAppleScript(
         shellCommand: shellCommand,
         setupScriptPath: setupScriptPath,
       ),
     ],
     environment: const ProgramRunEnvironment.empty(),
-    logPath: _joinPath(bottle.path.value, const ['logs', 'latest.log']),
+    logPath: joinPath(bottle.path.value, const ['logs', 'latest.log']),
   );
 }
 
@@ -369,12 +385,9 @@ ProgramRunRequest linuxWinetricksCommandRequest({
     executable: linuxWinetricksExecutable(hostEnvironment),
     arguments: verb.match(() => const <String>[], (value) => <String>[value]),
     environment: linuxRuntimeEnvironment(hostEnvironment).merge(
-      _linuxWineEnvironmentWithRuntime(
-        bottle: bottle,
-        environment: environment,
-      ),
+      linuxWineEnvironmentWithRuntime(bottle: bottle, environment: environment),
     ),
-    logPath: _joinPath(bottle.path.value, const ['logs', 'latest.log']),
+    logPath: joinPath(bottle.path.value, const ['logs', 'latest.log']),
   );
 }
 
@@ -395,14 +408,14 @@ ProgramRunRequest macosWinetricksCommandRequest({
     executable: macosWinetricksExecutable(hostEnvironment),
     arguments: verb.match(() => const <String>[], (value) => <String>[value]),
     environment:
-        _macosWineEnvironment(
+        macosWineEnvironment(
               bottle: bottle,
               environment: environment,
               macosMajorVersion: macosMajorVersion,
             )
             .add('WINE', macosWineExecutable(hostEnvironment))
-            .add('PATH', _prependPath(runtimeBin, environment['PATH'])),
-    logPath: _joinPath(bottle.path.value, const ['logs', 'latest.log']),
+            .add('PATH', prependPath(runtimeBin, environment['PATH'])),
+    logPath: joinPath(bottle.path.value, const ['logs', 'latest.log']),
     workingDirectory: Option.of(runtimeRoot),
   );
 }

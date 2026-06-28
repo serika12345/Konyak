@@ -1,6 +1,9 @@
-part of 'konyak_cli_client.dart';
+import 'dart:convert';
 
-BottleProgramListLoadResult _parseBottleProgramListPayload(String payload) {
+import 'konyak_cli_program_result_types.dart';
+import 'konyak_cli_wine_process_payload_parsers.dart';
+
+BottleProgramListLoadResult parseBottleProgramListPayload(String payload) {
   final Object? decoded;
   try {
     decoded = jsonDecode(payload);
@@ -74,7 +77,7 @@ BottleProgramListLoadResult _parseBottleProgramListPayload(String payload) {
       );
     }
 
-    final metadata = _parseProgramMetadata(program['metadata']);
+    final metadata = parseProgramMetadata(program['metadata']);
 
     parsedPrograms.add(
       BottleProgramSummary(
@@ -93,7 +96,7 @@ BottleProgramListLoadResult _parseBottleProgramListPayload(String payload) {
   );
 }
 
-GraphicsBackendHintsLoadResult _parseGraphicsBackendHintsPayload(
+GraphicsBackendHintsLoadResult parseGraphicsBackendHintsPayload(
   String payload,
 ) {
   final Object? decoded;
@@ -151,7 +154,7 @@ GraphicsBackendHintsLoadResult _parseGraphicsBackendHintsPayload(
 
   final parsedSignals = <ProgramGraphicsBackendSignalSummary>[];
   for (final signal in signals) {
-    final parsedSignal = _parseGraphicsBackendSignal(signal);
+    final parsedSignal = parseGraphicsBackendSignal(signal);
     if (parsedSignal == null) {
       return const GraphicsBackendHintsLoadFailure(
         exitCode: 0,
@@ -164,7 +167,7 @@ GraphicsBackendHintsLoadResult _parseGraphicsBackendHintsPayload(
 
   final parsedSuggestions = <ProgramGraphicsBackendSuggestionSummary>[];
   for (final suggestion in suggestions) {
-    final parsedSuggestion = _parseGraphicsBackendSuggestion(suggestion);
+    final parsedSuggestion = parseGraphicsBackendSuggestion(suggestion);
     if (parsedSuggestion == null) {
       return const GraphicsBackendHintsLoadFailure(
         exitCode: 0,
@@ -185,7 +188,7 @@ GraphicsBackendHintsLoadResult _parseGraphicsBackendHintsPayload(
   );
 }
 
-ProgramGraphicsBackendSignalSummary? _parseGraphicsBackendSignal(
+ProgramGraphicsBackendSignalSummary? parseGraphicsBackendSignal(
   Object? signal,
 ) {
   if (signal is! Map<String, Object?>) {
@@ -201,7 +204,7 @@ ProgramGraphicsBackendSignalSummary? _parseGraphicsBackendSignal(
   return ProgramGraphicsBackendSignalSummary(kind: kind, value: value);
 }
 
-ProgramGraphicsBackendSuggestionSummary? _parseGraphicsBackendSuggestion(
+ProgramGraphicsBackendSuggestionSummary? parseGraphicsBackendSuggestion(
   Object? suggestion,
 ) {
   if (suggestion is! Map<String, Object?>) {

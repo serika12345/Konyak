@@ -1,57 +1,60 @@
-part of '../../konyak_cli.dart';
+import 'dart:io';
 
-bool _fileBottleRepositoryDirectoryExists(String bottleDirectory) {
+import '../shared/common_helpers.dart';
+import 'directory_copy_support.dart';
+
+bool fileBottleRepositoryDirectoryExists(String bottleDirectory) {
   return Directory(bottleDirectory).existsSync();
 }
 
-List<Directory> _fileBottleRepositoryBottleDirectories(String bottleDirectory) {
+List<Directory> fileBottleRepositoryBottleDirectories(String bottleDirectory) {
   return Directory(bottleDirectory)
       .listSync()
       .whereType<Directory>()
       .where((entry) {
-        return File(_fileBottleMetadataPath(entry.path)).existsSync();
+        return File(fileBottleMetadataPath(entry.path)).existsSync();
       })
       .toList(growable: false);
 }
 
-bool _fileBottleMetadataExists({
+bool fileBottleMetadataExists({
   required String bottleDirectory,
   required String id,
 }) {
   return File(
-    _fileBottleMetadataPath(_fileBottlePath(bottleDirectory, id)),
+    fileBottleMetadataPath(fileBottlePath(bottleDirectory, id)),
   ).existsSync();
 }
 
-bool _fileBottlePathExists(String bottlePath) {
-  return File(_fileBottleMetadataPath(bottlePath)).existsSync();
+bool fileBottlePathExists(String bottlePath) {
+  return File(fileBottleMetadataPath(bottlePath)).existsSync();
 }
 
-bool _fileBottleDirectoryExists(String bottlePath) {
+bool fileBottleDirectoryExists(String bottlePath) {
   return Directory(bottlePath).existsSync();
 }
 
-void _createFileBottleDirectories(String bottlePath) {
+void createFileBottleDirectories(String bottlePath) {
   Directory(bottlePath).createSync(recursive: true);
   Directory(
-    _joinPath(bottlePath, const ['drive_c']),
+    joinPath(bottlePath, const ['drive_c']),
   ).createSync(recursive: true);
 }
 
-void _deleteFileBottleDirectoryIfPresent(String bottlePath) {
+void deleteFileBottleDirectoryIfPresent(String bottlePath) {
   final directory = Directory(bottlePath);
   if (directory.existsSync()) {
-    final metadataPath = _normalizeFilesystemPath(
-      _fileBottleMetadataPath(bottlePath),
+    final metadataPath = normalizeFilesystemPath(
+      fileBottleMetadataPath(bottlePath),
     );
     for (final entry in directory.listSync()) {
-      if (_normalizeFilesystemPath(entry.path) == metadataPath) {
+      if (normalizeFilesystemPath(entry.path) == metadataPath) {
         continue;
       }
       entry.deleteSync(recursive: true);
     }
 
-    final metadata = File(_fileBottleMetadataPath(bottlePath));
+    final metadata = File(fileBottleMetadataPath(bottlePath));
     if (metadata.existsSync()) {
       metadata.deleteSync();
     }
@@ -59,21 +62,21 @@ void _deleteFileBottleDirectoryIfPresent(String bottlePath) {
   }
 }
 
-void _moveFileBottleDirectoryIfChanged({
+void moveFileBottleDirectoryIfChanged({
   required String from,
   required String to,
 }) {
-  if (_normalizeFilesystemPath(from) == _normalizeFilesystemPath(to)) {
+  if (normalizeFilesystemPath(from) == normalizeFilesystemPath(to)) {
     return;
   }
 
-  _moveDirectory(from: from, to: to);
+  moveDirectory(from: from, to: to);
 }
 
-String _fileBottlePath(String bottleDirectory, String id) {
-  return _joinPath(bottleDirectory, [id]);
+String fileBottlePath(String bottleDirectory, String id) {
+  return joinPath(bottleDirectory, [id]);
 }
 
-String _fileBottleMetadataPath(String bottlePath) {
-  return _joinPath(bottlePath, const ['metadata.json']);
+String fileBottleMetadataPath(String bottlePath) {
+  return joinPath(bottlePath, const ['metadata.json']);
 }

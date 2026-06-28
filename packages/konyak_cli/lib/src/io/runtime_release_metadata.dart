@@ -1,27 +1,33 @@
-part of '../../konyak_cli.dart';
+import 'dart:convert';
 
-Option<RuntimeReleaseMetadata> _runtimeReleaseMetadataFromDecoded({
+import 'package:fpdart/fpdart.dart';
+
+import '../domain/update/update_records.dart';
+import 'runtime_release_metadata_assets.dart';
+import 'runtime_release_metadata_source_manifests.dart';
+
+Option<RuntimeReleaseMetadata> runtimeReleaseMetadataFromDecoded({
   required Object? release,
   required Object? releaseMetadata,
   bool Function(String url)? archiveUrlPredicate,
 }) {
-  final version = _runtimeReleaseVersion(release);
-  final archiveUrl = _runtimeReleaseArchiveUrl(
+  final version = runtimeReleaseVersion(release);
+  final archiveUrl = runtimeReleaseArchiveUrl(
     release,
     archiveUrlPredicate: archiveUrlPredicate,
   );
-  final releaseMetadataAssetUrl = _runtimeReleaseMetadataAssetUrl(release);
+  final releaseMetadataAssetUrl = runtimeReleaseMetadataAssetUrl(release);
   return version.map(
     (value) => RuntimeReleaseMetadata(
       version: value,
       archiveUrl: archiveUrl,
-      archiveSha256: _runtimeReleaseArchiveSha256(release, archiveUrl),
-      sourceManifestUrl: _runtimeReleaseSourceManifestUrl(
+      archiveSha256: runtimeReleaseArchiveSha256(release, archiveUrl),
+      sourceManifestUrl: runtimeReleaseSourceManifestUrl(
         release: release,
         releaseMetadataAssetUrl: releaseMetadataAssetUrl,
         releaseMetadata: releaseMetadata,
       ),
-      sourceManifestSignatureUrl: _runtimeReleaseSourceManifestSignatureUrl(
+      sourceManifestSignatureUrl: runtimeReleaseSourceManifestSignatureUrl(
         release: release,
         releaseMetadataAssetUrl: releaseMetadataAssetUrl,
         releaseMetadata: releaseMetadata,
@@ -30,7 +36,7 @@ Option<RuntimeReleaseMetadata> _runtimeReleaseMetadataFromDecoded({
   );
 }
 
-Option<Map<String, dynamic>> _runtimeReleaseMetadataAssetFromPayload(
+Option<Map<String, dynamic>> runtimeReleaseMetadataAssetFromPayload(
   String payload,
 ) {
   final decoded = jsonDecode(payload);
@@ -41,7 +47,7 @@ Option<Map<String, dynamic>> _runtimeReleaseMetadataAssetFromPayload(
   return const Option.none();
 }
 
-Option<String> _runtimeReleaseVersion(Object? decoded) {
+Option<String> runtimeReleaseVersion(Object? decoded) {
   if (decoded is! Map<String, dynamic>) {
     return const Option.none();
   }

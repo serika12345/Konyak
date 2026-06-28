@@ -1,6 +1,9 @@
-part of 'konyak_cli_client.dart';
+import 'dart:convert';
 
-WineProcessListLoadResult _parseWineProcessListPayload(String payload) {
+import 'konyak_cli_program_result_types.dart';
+import 'konyak_cli_wine_process_result_types.dart';
+
+WineProcessListLoadResult parseWineProcessListPayload(String payload) {
   final Object? decoded;
   try {
     decoded = jsonDecode(payload);
@@ -79,7 +82,7 @@ WineProcessListLoadResult _parseWineProcessListPayload(String payload) {
         processId: processId,
         executable: executable,
         hostPath: hostPath is String ? hostPath : null,
-        metadata: _parseProgramMetadata(process['metadata']),
+        metadata: parseProgramMetadata(process['metadata']),
       ),
     );
   }
@@ -87,7 +90,7 @@ WineProcessListLoadResult _parseWineProcessListPayload(String payload) {
   return LoadedWineProcesses(processes: parsedProcesses);
 }
 
-ProgramMetadataSummary? _parseProgramMetadata(Object? value) {
+ProgramMetadataSummary? parseProgramMetadata(Object? value) {
   if (value == null) {
     return null;
   }

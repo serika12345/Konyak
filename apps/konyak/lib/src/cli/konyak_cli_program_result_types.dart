@@ -1,4 +1,5 @@
-part of 'konyak_cli_client.dart';
+import '../bottles/bottle_summary.dart';
+import '../runs/program_run_summary.dart';
 
 sealed class ProgramRunLoadResult {
   const ProgramRunLoadResult();

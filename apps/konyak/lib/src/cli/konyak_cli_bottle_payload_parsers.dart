@@ -1,10 +1,15 @@
-part of 'konyak_cli_client.dart';
+import 'dart:convert';
 
-sealed class _BottleDeleteParseResult {
-  const _BottleDeleteParseResult();
+import '../bottles/bottle_summary.dart';
+import 'bottle_record_contract.dart';
+import 'konyak_cli_bottle_result_types.dart';
+import 'konyak_cli_program_result_types.dart';
+
+sealed class BottleDeleteParseResult {
+  const BottleDeleteParseResult();
 }
 
-BottleArchiveExportLoadResult _parseBottleArchiveExportPayload(String payload) {
+BottleArchiveExportLoadResult parseBottleArchiveExportPayload(String payload) {
   final Object? decoded;
   try {
     decoded = jsonDecode(payload);
@@ -46,63 +51,63 @@ BottleArchiveExportLoadResult _parseBottleArchiveExportPayload(String payload) {
   return ExportedBottleArchive(bottleId: bottleId, archivePath: archivePath);
 }
 
-final class _ParsedBottleDelete extends _BottleDeleteParseResult {
-  const _ParsedBottleDelete(this.bottle);
+final class ParsedBottleDelete extends BottleDeleteParseResult {
+  const ParsedBottleDelete(this.bottle);
 
   final BottleSummary bottle;
 }
 
-final class _BottleDeleteNotFound extends _BottleDeleteParseResult {
-  const _BottleDeleteNotFound({required this.bottleId, required this.message});
+final class BottleDeleteNotFound extends BottleDeleteParseResult {
+  const BottleDeleteNotFound({required this.bottleId, required this.message});
 
   final String bottleId;
   final String message;
 }
 
-final class _BottleDeleteParseFailure extends _BottleDeleteParseResult {
-  const _BottleDeleteParseFailure(this.message);
+final class BottleDeleteParseFailure extends BottleDeleteParseResult {
+  const BottleDeleteParseFailure(this.message);
 
   final String message;
 }
 
-_BottleDeleteParseResult _parseBottleDeletePayload(String payload) {
+BottleDeleteParseResult parseBottleDeletePayload(String payload) {
   final Object? decoded;
   try {
     decoded = jsonDecode(payload);
   } on FormatException {
-    return const _BottleDeleteParseFailure(
+    return const BottleDeleteParseFailure(
       'Bottle delete payload is not valid JSON.',
     );
   }
 
   if (decoded is! Map<String, dynamic>) {
-    return const _BottleDeleteParseFailure(
+    return const BottleDeleteParseFailure(
       'Bottle delete payload must be an object.',
     );
   }
 
   if (decoded['schemaVersion'] != 1) {
-    return const _BottleDeleteParseFailure(
+    return const BottleDeleteParseFailure(
       'Unsupported bottle delete schema version.',
     );
   }
 
-  final notFound = _parseBottleDeleteNotFound(decoded['error']);
+  final notFound = parseBottleDeleteNotFound(decoded['error']);
   if (notFound != null) {
     return notFound;
   }
 
   final bottle = parseBottleSummary(decoded['deletedBottle']);
   if (bottle == null) {
-    return const _BottleDeleteParseFailure(
+    return const BottleDeleteParseFailure(
       'Bottle delete payload contains an invalid bottle record.',
     );
   }
 
-  return _ParsedBottleDelete(bottle);
+  return ParsedBottleDelete(bottle);
 }
 
-_BottleDeleteNotFound? _parseBottleDeleteNotFound(Object? value) {
+BottleDeleteNotFound? parseBottleDeleteNotFound(Object? value) {
   if (value is! Map<String, dynamic>) {
     return null;
   }
@@ -115,10 +120,10 @@ _BottleDeleteNotFound? _parseBottleDeleteNotFound(Object? value) {
     return null;
   }
 
-  return _BottleDeleteNotFound(bottleId: bottleId, message: message);
+  return BottleDeleteNotFound(bottleId: bottleId, message: message);
 }
 
-BottleLocationOpenResult _parseBottleLocationOpenPayload(String payload) {
+BottleLocationOpenResult parseBottleLocationOpenPayload(String payload) {
   final Object? decoded;
   try {
     decoded = jsonDecode(payload);
@@ -175,7 +180,7 @@ BottleLocationOpenResult _parseBottleLocationOpenPayload(String payload) {
   );
 }
 
-ProgramLocationOpenResult _parseProgramLocationOpenPayload(String payload) {
+ProgramLocationOpenResult parseProgramLocationOpenPayload(String payload) {
   final Object? decoded;
   try {
     decoded = jsonDecode(payload);

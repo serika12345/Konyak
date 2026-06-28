@@ -1,65 +1,68 @@
-part of '../../konyak_cli.dart';
+import 'package:fpdart/fpdart.dart';
+
+import '../domain/program/program_catalog_models.dart';
+import 'external_payload_helpers.dart';
 
 List<WinetricksCategoryRecord> parseWinetricksVerbs(String content) {
   final state = content
       .split('\n')
       .fold(
-        _WinetricksVerbParseState.empty(),
+        WinetricksVerbParseState.empty(),
         (state, line) => state.withLine(line),
       );
   return state.flushCurrentCategory().categories;
 }
 
-final class _WinetricksVerbParseState {
-  _WinetricksVerbParseState({
+final class WinetricksVerbParseState {
+  WinetricksVerbParseState({
     required Iterable<WinetricksCategoryRecord> categories,
     required this.currentCategory,
   }) : categories = List.unmodifiable(categories);
 
-  factory _WinetricksVerbParseState.empty() {
-    return _WinetricksVerbParseState(
+  factory WinetricksVerbParseState.empty() {
+    return WinetricksVerbParseState(
       categories: <WinetricksCategoryRecord>[],
       currentCategory: const Option.none(),
     );
   }
 
   final List<WinetricksCategoryRecord> categories;
-  final Option<_PendingWinetricksCategory> currentCategory;
+  final Option<PendingWinetricksCategory> currentCategory;
 
-  _WinetricksVerbParseState withLine(String line) {
+  WinetricksVerbParseState withLine(String line) {
     final trimmed = line.trim();
     if (trimmed.isEmpty) {
       return this;
     }
 
-    return _winetricksCategoryId(
+    return winetricksCategoryId(
       trimmed,
     ).match(() => withVerbLine(trimmed), startCategory);
   }
 
-  _WinetricksVerbParseState startCategory(String id) {
-    return _winetricksCategoryName(id).match(
+  WinetricksVerbParseState startCategory(String id) {
+    return winetricksCategoryName(id).match(
       () => flushCurrentCategory().withoutCurrentCategory(),
       (name) => flushCurrentCategory().withCurrentCategory(
-        _PendingWinetricksCategory(id: id, name: name, verbs: const []),
+        PendingWinetricksCategory(id: id, name: name, verbs: const []),
       ),
     );
   }
 
-  _WinetricksVerbParseState withVerbLine(String line) {
+  WinetricksVerbParseState withVerbLine(String line) {
     return currentCategory.match(
       () => this,
-      (category) => _parseWinetricksVerbLine(line).match(
+      (category) => parseWinetricksVerbLine(line).match(
         () => this,
         (verb) => withCurrentCategory(category.withVerb(verb)),
       ),
     );
   }
 
-  _WinetricksVerbParseState flushCurrentCategory() {
+  WinetricksVerbParseState flushCurrentCategory() {
     return currentCategory.match(
       () => this,
-      (category) => _WinetricksVerbParseState(
+      (category) => WinetricksVerbParseState(
         categories: category.verbs.isEmpty
             ? categories
             : <WinetricksCategoryRecord>[...categories, category.toRecord()],
@@ -68,25 +71,25 @@ final class _WinetricksVerbParseState {
     );
   }
 
-  _WinetricksVerbParseState withoutCurrentCategory() {
-    return _WinetricksVerbParseState(
+  WinetricksVerbParseState withoutCurrentCategory() {
+    return WinetricksVerbParseState(
       categories: categories,
       currentCategory: const Option.none(),
     );
   }
 
-  _WinetricksVerbParseState withCurrentCategory(
-    _PendingWinetricksCategory category,
+  WinetricksVerbParseState withCurrentCategory(
+    PendingWinetricksCategory category,
   ) {
-    return _WinetricksVerbParseState(
+    return WinetricksVerbParseState(
       categories: categories,
       currentCategory: Option.of(category),
     );
   }
 }
 
-final class _PendingWinetricksCategory {
-  _PendingWinetricksCategory({
+final class PendingWinetricksCategory {
+  PendingWinetricksCategory({
     required this.id,
     required this.name,
     required Iterable<WinetricksVerbRecord> verbs,
@@ -96,8 +99,8 @@ final class _PendingWinetricksCategory {
   final String name;
   final List<WinetricksVerbRecord> verbs;
 
-  _PendingWinetricksCategory withVerb(WinetricksVerbRecord verb) {
-    return _PendingWinetricksCategory(
+  PendingWinetricksCategory withVerb(WinetricksVerbRecord verb) {
+    return PendingWinetricksCategory(
       id: id,
       name: name,
       verbs: <WinetricksVerbRecord>[...verbs, verb],
@@ -109,7 +112,7 @@ final class _PendingWinetricksCategory {
   }
 }
 
-Option<String> _winetricksCategoryId(String line) {
+Option<String> winetricksCategoryId(String line) {
   if (!line.startsWith('=====') || !line.endsWith('=====')) {
     return const Option.none();
   }
@@ -118,7 +121,7 @@ Option<String> _winetricksCategoryId(String line) {
   return id.isEmpty ? const Option.none() : Option.of(id);
 }
 
-Option<String> _winetricksCategoryName(String id) {
+Option<String> winetricksCategoryName(String id) {
   return switch (id) {
     'apps' => Option.of('Apps'),
     'benchmarks' => Option.of('Benchmarks'),
@@ -130,9 +133,9 @@ Option<String> _winetricksCategoryName(String id) {
   };
 }
 
-Option<WinetricksVerbRecord> _parseWinetricksVerbLine(String line) {
-  return _nullableOption(RegExp(r'^(\S+)\s*(.*)$').firstMatch(line)).flatMap(
-    (match) => _nullableOption(match.group(1)).flatMap((rawName) {
+Option<WinetricksVerbRecord> parseWinetricksVerbLine(String line) {
+  return nullableOption(RegExp(r'^(\S+)\s*(.*)$').firstMatch(line)).flatMap(
+    (match) => nullableOption(match.group(1)).flatMap((rawName) {
       final name = rawName.trim();
       if (!isSupportedWinetricksVerb(name)) {
         return const Option.none();
@@ -142,7 +145,7 @@ Option<WinetricksVerbRecord> _parseWinetricksVerbLine(String line) {
         WinetricksVerbRecord(
           id: name,
           name: name,
-          description: _nullableOption(
+          description: nullableOption(
             match.group(2),
           ).match(() => '', (value) => value.trim()),
         ),

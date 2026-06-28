@@ -1,11 +1,27 @@
-part of '../../konyak_cli.dart';
+import '../domain/program/program_run_models.dart';
+import '../domain/program/program_runner.dart';
+import '../domain/runtime/runtime_validation_models.dart';
+import '../domain/update/update_records.dart';
+import '../io/gptk_wine_installation.dart';
+import '../io/runtime_install_progress_io.dart';
+import '../platform/linux/linux_wine_install_requests.dart';
+import '../platform/linux/linux_wine_install_results.dart';
+import '../platform/macos/macos_setup_checker.dart';
+import '../platform/macos/macos_wine_install_requests.dart';
+import '../platform/macos/macos_wine_install_results.dart';
+import 'cli_commands.dart';
+import 'cli_json_helpers.dart';
+import 'cli_location_winetricks_handlers.dart';
+import 'cli_result_model.dart';
+import 'cli_runtime_parsers.dart';
+import 'cli_update_runtime_results.dart';
 
-CliResult? _handleRuntimeCommand(
+CliResult? handleRuntimeCommand(
   List<String> arguments,
-  _CliCommandContext context,
+  CliCommandContext context,
 ) {
-  if (_isJsonRuntimeListCommand(arguments)) {
-    return _jsonSuccess(<String, Object?>{
+  if (isJsonRuntimeListCommand(arguments)) {
+    return jsonSuccess(<String, Object?>{
       'runtimes': context.runtimeCatalog
           .listRuntimes()
           .map((runtime) => runtime.toJson())
@@ -13,20 +29,20 @@ CliResult? _handleRuntimeCommand(
     });
   }
 
-  if (_isJsonMacosSetupCheckCommand(arguments)) {
+  if (isJsonMacosSetupCheckCommand(arguments)) {
     final checker = context.macosSetupChecker;
     if (checker == null) {
-      return _unavailableJsonError(
+      return unavailableJsonError(
         code: 'macosSetupCheckerUnavailable',
         subject: 'macOS setup checker',
       );
     }
 
     return switch (checker.check()) {
-      MacosSetupCheckCompleted(:final status) => _jsonSuccess(<String, Object?>{
+      MacosSetupCheckCompleted(:final status) => jsonSuccess(<String, Object?>{
         'macosSetup': status.toJson(),
       }),
-      MacosSetupCheckFailed(:final message) => _jsonError(
+      MacosSetupCheckFailed(:final message) => jsonError(
         exitCode: 75,
         code: 'macosSetupCheckFailed',
         message: message,
@@ -34,21 +50,21 @@ CliResult? _handleRuntimeCommand(
     };
   }
 
-  final gptkWineInstallRequest = _parseJsonGptkWineInstallRequest(arguments);
+  final gptkWineInstallRequest = parseJsonGptkWineInstallRequest(arguments);
   if (gptkWineInstallRequest != null) {
     final installer = context.gptkWineInstaller;
     if (installer == null) {
-      return _unavailableJsonError(
+      return unavailableJsonError(
         code: 'gptkWineInstallerUnavailable',
         subject: 'GPTK/D3DMetal importer',
       );
     }
 
     return switch (installer.install(gptkWineInstallRequest)) {
-      GptkWineInstallCompleted(:final record) => _jsonSuccess(<String, Object?>{
+      GptkWineInstallCompleted(:final record) => jsonSuccess(<String, Object?>{
         'gptkWineInstall': record.toJson(),
       }),
-      GptkWineInstallFailed(:final message) => _jsonError(
+      GptkWineInstallFailed(:final message) => jsonError(
         exitCode: 75,
         code: 'gptkWineInstallFailed',
         message: message,
@@ -56,28 +72,28 @@ CliResult? _handleRuntimeCommand(
     };
   }
 
-  final openUrl = _parseJsonOpenUrlCommand(arguments);
+  final openUrl = parseJsonOpenUrlCommand(arguments);
   if (openUrl != null) {
-    return _openUrlJsonResult(openUrl, context.pathOpener);
+    return openUrlJsonResult(openUrl, context.pathOpener);
   }
 
-  final runtimeUpdateId = _parseJsonRuntimeIdCommand(
+  final runtimeUpdateId = parseJsonRuntimeIdCommand(
     arguments,
     'check-runtime-update',
   );
   if (runtimeUpdateId != null) {
-    return _runtimeUpdateCheckJsonResult(
+    return runtimeUpdateCheckJsonResult(
       runtimeId: runtimeUpdateId,
       runtimeUpdateChecker: context.runtimeUpdateChecker,
     );
   }
 
-  final runtimeUpdateInstallId = _parseJsonRuntimeIdCommand(
+  final runtimeUpdateInstallId = parseJsonRuntimeIdCommand(
     arguments,
     'install-runtime-update',
   );
   if (runtimeUpdateInstallId != null) {
-    return _installRuntimeUpdateJsonResult(
+    return installRuntimeUpdateJsonResult(
       runtimeId: runtimeUpdateInstallId,
       runtimeUpdateChecker: context.runtimeUpdateChecker,
       macosWineInstaller: context.macosWineInstaller,
@@ -85,29 +101,29 @@ CliResult? _handleRuntimeCommand(
     );
   }
 
-  final runtimeValidationId = _parseJsonRuntimeIdCommand(
+  final runtimeValidationId = parseJsonRuntimeIdCommand(
     arguments,
     'validate-runtime',
   );
   if (runtimeValidationId != null) {
-    return _runtimeValidationJsonResult(
+    return runtimeValidationJsonResult(
       runtimeId: runtimeValidationId,
       runtimeValidator: context.runtimeValidator,
     );
   }
 
-  final macosWineInstallRequest = _parseJsonMacosWineInstallRequest(arguments);
+  final macosWineInstallRequest = parseJsonMacosWineInstallRequest(arguments);
   if (macosWineInstallRequest != null) {
-    return _macosWineInstallJsonResult(
+    return macosWineInstallJsonResult(
       request: macosWineInstallRequest,
       installer: context.macosWineInstaller,
       progressSink: context.runtimeInstallProgressSink,
     );
   }
 
-  final linuxWineInstallRequest = _parseJsonLinuxWineInstallRequest(arguments);
+  final linuxWineInstallRequest = parseJsonLinuxWineInstallRequest(arguments);
   if (linuxWineInstallRequest != null) {
-    return _linuxWineInstallJsonResult(
+    return linuxWineInstallJsonResult(
       request: linuxWineInstallRequest,
       installer: context.linuxWineInstaller,
       progressSink: context.runtimeInstallProgressSink,
@@ -117,16 +133,16 @@ CliResult? _handleRuntimeCommand(
   return null;
 }
 
-CliResult _openUrlJsonResult(String openUrl, PathOpener? pathOpener) {
+CliResult openUrlJsonResult(String openUrl, PathOpener? pathOpener) {
   if (pathOpener == null) {
-    return _pathOpenerUnavailableError();
+    return pathOpenerUnavailableError();
   }
   final openResult = pathOpener.openPath(openUrl);
   return switch (openResult) {
-    PathOpenCompleted() => _jsonSuccess(<String, Object?>{
+    PathOpenCompleted() => jsonSuccess(<String, Object?>{
       'openedUrl': <String, Object?>{'url': openUrl},
     }),
-    PathOpenFailed(:final message) => _jsonError(
+    PathOpenFailed(:final message) => jsonError(
       exitCode: 75,
       code: 'urlOpenFailed',
       message: message,
@@ -135,28 +151,28 @@ CliResult _openUrlJsonResult(String openUrl, PathOpener? pathOpener) {
   };
 }
 
-CliResult _runtimeUpdateCheckJsonResult({
+CliResult runtimeUpdateCheckJsonResult({
   required String runtimeId,
   required RuntimeUpdateChecker? runtimeUpdateChecker,
 }) {
   if (runtimeUpdateChecker == null) {
-    return _unavailableJsonError(
+    return unavailableJsonError(
       code: 'runtimeUpdateCheckerUnavailable',
       subject: 'Runtime update checker',
     );
   }
 
   return switch (runtimeUpdateChecker.check(runtimeId)) {
-    RuntimeUpdateCheckCompleted(:final update) => _jsonSuccess(
-      <String, Object?>{'runtimeUpdate': update.toJson()},
-    ),
-    RuntimeUpdateRuntimeNotFound(:final runtimeId) => _jsonError(
+    RuntimeUpdateCheckCompleted(:final update) => jsonSuccess(<String, Object?>{
+      'runtimeUpdate': update.toJson(),
+    }),
+    RuntimeUpdateRuntimeNotFound(:final runtimeId) => jsonError(
       exitCode: 66,
       code: 'runtimeNotFound',
       message: 'Runtime not found.',
       extra: <String, Object?>{'runtimeId': runtimeId},
     ),
-    RuntimeUpdateCheckFailed(:final message) => _jsonError(
+    RuntimeUpdateCheckFailed(:final message) => jsonError(
       exitCode: 75,
       code: 'runtimeUpdateCheckFailed',
       message: message,
@@ -164,29 +180,29 @@ CliResult _runtimeUpdateCheckJsonResult({
   };
 }
 
-CliResult _runtimeValidationJsonResult({
+CliResult runtimeValidationJsonResult({
   required String runtimeId,
   required RuntimeValidator? runtimeValidator,
 }) {
   if (runtimeValidator == null) {
-    return _unavailableJsonError(
+    return unavailableJsonError(
       code: 'runtimeValidatorUnavailable',
       subject: 'Runtime validator',
     );
   }
 
   return switch (runtimeValidator.validate(runtimeId)) {
-    RuntimeValidationCompleted(:final validation) => _jsonSuccess(
+    RuntimeValidationCompleted(:final validation) => jsonSuccess(
       <String, Object?>{'runtimeValidation': validation.toJson()},
       exitCode: validation.isValid ? 0 : 75,
     ),
-    RuntimeValidationRuntimeNotFound(:final runtimeId) => _jsonError(
+    RuntimeValidationRuntimeNotFound(:final runtimeId) => jsonError(
       exitCode: 66,
       code: 'runtimeNotFound',
       message: 'Runtime not found.',
       extra: <String, Object?>{'runtimeId': runtimeId},
     ),
-    RuntimeValidationFailed(:final message) => _jsonError(
+    RuntimeValidationFailed(:final message) => jsonError(
       exitCode: 75,
       code: 'runtimeValidationFailed',
       message: message,
@@ -194,19 +210,19 @@ CliResult _runtimeValidationJsonResult({
   };
 }
 
-CliResult _macosWineInstallJsonResult({
+CliResult macosWineInstallJsonResult({
   required MacosWineInstallRequest request,
   required MacosWineInstaller? installer,
   required RuntimeInstallProgressSink? progressSink,
 }) {
   if (installer == null) {
-    return _unavailableJsonError(
+    return unavailableJsonError(
       code: 'macosWineInstallerUnavailable',
       subject: 'macOS Wine installer',
     );
   }
 
-  return _macosWineInstallCliResult(
+  return macosWineInstallCliResult(
     installer.install(
       request,
       progressSink: request.emitProgress ? progressSink : null,
@@ -214,19 +230,19 @@ CliResult _macosWineInstallJsonResult({
   );
 }
 
-CliResult _linuxWineInstallJsonResult({
+CliResult linuxWineInstallJsonResult({
   required LinuxWineInstallRequest request,
   required LinuxWineInstaller? installer,
   required RuntimeInstallProgressSink? progressSink,
 }) {
   if (installer == null) {
-    return _unavailableJsonError(
+    return unavailableJsonError(
       code: 'linuxWineInstallerUnavailable',
       subject: 'Linux Wine installer',
     );
   }
 
-  return _linuxWineInstallCliResult(
+  return linuxWineInstallCliResult(
     installer.install(
       request,
       progressSink: request.emitProgress ? progressSink : null,

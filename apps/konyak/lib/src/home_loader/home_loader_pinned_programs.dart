@@ -1,7 +1,19 @@
-part of '../home_loader/home_loader.dart';
+import 'dart:async';
 
-extension _KonyakHomeLoaderPinnedPrograms on _KonyakHomeLoaderState {
-  Future<void> _pinProgram(BottleSummary bottle) async {
+import 'package:flutter/material.dart';
+
+import '../app/dialogs/bottle_management_dialogs.dart';
+import '../app/dialogs/pin_program_dialog.dart';
+import '../app/utils/bottle_lists.dart';
+import '../bottles/bottle_summary.dart';
+import '../cli/konyak_cli_program_commands.dart';
+import '../cli/konyak_cli_program_result_types.dart';
+import '../l10n/konyak_localizations.dart';
+import 'home_loader.dart';
+import 'home_loader_bottles.dart';
+
+extension KonyakHomeLoaderPinnedPrograms on KonyakHomeLoaderState {
+  Future<void> pinProgram(BottleSummary bottle) async {
     final input = await showDialog<PinProgramInput>(
       context: context,
       builder: (context) => PinProgramDialog(
@@ -14,14 +26,14 @@ extension _KonyakHomeLoaderPinnedPrograms on _KonyakHomeLoaderState {
       return;
     }
 
-    await _pinProgramPath(
+    await pinProgramPath(
       bottle: bottle,
       name: input.name,
       programPath: input.programPath,
     );
   }
 
-  Future<void> _pinProgramPath({
+  Future<void> pinProgramPath({
     required BottleSummary bottle,
     required String name,
     required String programPath,
@@ -36,14 +48,14 @@ extension _KonyakHomeLoaderPinnedPrograms on _KonyakHomeLoaderState {
       return;
     }
 
-    _handleBottleUpdateResult(
+    handleBottleUpdateResult(
       result,
       successMessage: (_) =>
           KonyakLocalizations.of(context).pinnedProgram(name),
     );
   }
 
-  Future<void> _unpinProgram({
+  Future<void> unpinProgram({
     required BottleSummary bottle,
     required PinnedProgramSummary program,
   }) async {
@@ -56,14 +68,14 @@ extension _KonyakHomeLoaderPinnedPrograms on _KonyakHomeLoaderState {
       return;
     }
 
-    _handleBottleUpdateResult(
+    handleBottleUpdateResult(
       result,
       successMessage: (_) =>
           KonyakLocalizations.of(context).unpinnedProgram(program.name),
     );
   }
 
-  Future<void> _renamePinnedProgram({
+  Future<void> renamePinnedProgram({
     required BottleSummary bottle,
     required PinnedProgramSummary program,
   }) async {
@@ -87,14 +99,14 @@ extension _KonyakHomeLoaderPinnedPrograms on _KonyakHomeLoaderState {
       return;
     }
 
-    _handleBottleUpdateResult(
+    handleBottleUpdateResult(
       result,
       successMessage: (_) =>
           KonyakLocalizations.of(context).renamedProgram(name),
     );
   }
 
-  Future<void> _openPinnedProgramLocation({
+  Future<void> openPinnedProgramLocation({
     required BottleSummary bottle,
     required PinnedProgramSummary program,
   }) async {
@@ -114,10 +126,10 @@ extension _KonyakHomeLoaderPinnedPrograms on _KonyakHomeLoaderState {
       ProgramLocationOpenFailure(:final message) => message,
     };
 
-    _showSnackBar(message);
+    showSnackBar(message);
   }
 
-  Future<void> _loadPinnedProgramSettings({
+  Future<void> loadPinnedProgramSettings({
     required BottleSummary bottle,
     required PinnedProgramSummary program,
   }) async {
@@ -125,8 +137,8 @@ extension _KonyakHomeLoaderPinnedPrograms on _KonyakHomeLoaderState {
       bottleId: bottle.id,
       programPath: program.path,
     );
-    _updateState(() {
-      _loadingProgramSettings.add(key);
+    updateState(() {
+      loadingProgramSettings.add(key);
     });
 
     final result = await widget.cliClient.getProgramSettings(
@@ -138,13 +150,13 @@ extension _KonyakHomeLoaderPinnedPrograms on _KonyakHomeLoaderState {
       return;
     }
 
-    _updateState(() {
-      _loadingProgramSettings.remove(key);
+    updateState(() {
+      loadingProgramSettings.remove(key);
       switch (result) {
         case LoadedProgramSettings(:final settings):
-          _programSettings[key] = settings;
+          programSettings[key] = settings;
         case MissingProgramSettingsBottle() || ProgramSettingsLoadFailure():
-          _programSettings.remove(key);
+          programSettings.remove(key);
       }
     });
 
@@ -153,11 +165,11 @@ extension _KonyakHomeLoaderPinnedPrograms on _KonyakHomeLoaderState {
         break;
       case MissingProgramSettingsBottle(:final message) ||
           ProgramSettingsLoadFailure(:final message):
-        _showSnackBar(message);
+        showSnackBar(message);
     }
   }
 
-  Future<void> _setPinnedProgramSettings({
+  Future<void> setPinnedProgramSettings({
     required BottleSummary bottle,
     required PinnedProgramSummary program,
     required ProgramSettingsSummary settings,
@@ -174,21 +186,21 @@ extension _KonyakHomeLoaderPinnedPrograms on _KonyakHomeLoaderState {
 
     switch (result) {
       case LoadedProgramSettings(:final settings):
-        _updateState(() {
-          _programSettings[programSettingsKey(
+        updateState(() {
+          programSettings[programSettingsKey(
                 bottleId: bottle.id,
                 programPath: program.path,
               )] =
               settings;
         });
-        _showSnackBar(
+        showSnackBar(
           KonyakLocalizations.of(
             context,
           ).savedProgramConfiguration(program.name),
         );
       case MissingProgramSettingsBottle(:final message) ||
           ProgramSettingsLoadFailure(:final message):
-        _showSnackBar(message);
+        showSnackBar(message);
     }
   }
 }

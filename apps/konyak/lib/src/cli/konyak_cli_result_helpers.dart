@@ -1,6 +1,18 @@
-part of 'konyak_cli_client.dart';
+import 'dart:convert';
 
-BottleUpdateLoadResult _bottleUpdateResultFromCommand({
+import 'bottle_detail_contract.dart';
+import 'konyak_cli_bottle_result_types.dart';
+import 'konyak_cli_failure_messages.dart';
+import 'konyak_cli_process_runner.dart';
+import 'konyak_cli_program_result_types.dart';
+import 'konyak_cli_settings_payload_parsers.dart';
+import 'konyak_cli_settings_result_types.dart';
+import 'konyak_cli_update_payload_parsers.dart';
+import 'konyak_cli_update_result_types.dart';
+import 'konyak_cli_wine_process_result_types.dart';
+import 'runtime_install_contract.dart';
+
+BottleUpdateLoadResult bottleUpdateResultFromCommand({
   required ProcessRunResult result,
   required String command,
 }) {
@@ -16,17 +28,17 @@ BottleUpdateLoadResult _bottleUpdateResultFromCommand({
     BottleDetailNotFound() ||
     BottleDetailParseFailure() => BottleUpdateLoadFailure(
       exitCode: result.exitCode,
-      message: _operationFailureMessage(result, command),
+      message: operationFailureMessage(result, command),
       diagnostic: result.stderr,
     ),
   };
 }
 
-ProgramSettingsLoadResult _programSettingsResultFromCommand({
+ProgramSettingsLoadResult programSettingsResultFromCommand({
   required ProcessRunResult result,
   required String command,
 }) {
-  final parsed = _parseProgramSettingsPayload(result.stdout);
+  final parsed = parseProgramSettingsPayload(result.stdout);
 
   return switch (parsed) {
     LoadedProgramSettings() when result.exitCode == 0 => parsed,
@@ -35,35 +47,35 @@ ProgramSettingsLoadResult _programSettingsResultFromCommand({
     MissingProgramSettingsBottle() ||
     ProgramSettingsLoadFailure() => ProgramSettingsLoadFailure(
       exitCode: result.exitCode,
-      message: _operationFailureMessage(result, command),
+      message: operationFailureMessage(result, command),
       diagnostic: result.stderr,
     ),
   };
 }
 
-AppSettingsLoadResult _appSettingsResultFromCommand({
+AppSettingsLoadResult appSettingsResultFromCommand({
   required ProcessRunResult result,
   required String command,
 }) {
-  final parsed = _parseAppSettingsPayload(result.stdout);
+  final parsed = parseAppSettingsPayload(result.stdout);
 
   return switch (parsed) {
     LoadedAppSettings() when result.exitCode == 0 => parsed,
     LoadedAppSettings() || AppSettingsLoadFailure() => AppSettingsLoadFailure(
       exitCode: result.exitCode,
-      message: _operationFailureMessage(result, command),
+      message: operationFailureMessage(result, command),
       diagnostic: result.stderr,
     ),
   };
 }
 
-UpdateCheckLoadResult _updateCheckResultFromCommand({
+UpdateCheckLoadResult updateCheckResultFromCommand({
   required ProcessRunResult result,
   required String command,
   required String payloadKey,
   required String idKey,
 }) {
-  final parsed = _parseUpdateCheckPayload(
+  final parsed = parseUpdateCheckPayload(
     payload: result.stdout,
     payloadKey: payloadKey,
     idKey: idKey,
@@ -73,44 +85,44 @@ UpdateCheckLoadResult _updateCheckResultFromCommand({
     LoadedUpdateCheck() when result.exitCode == 0 => parsed,
     LoadedUpdateCheck() || UpdateCheckLoadFailure() => UpdateCheckLoadFailure(
       exitCode: result.exitCode,
-      message: _operationFailureMessage(result, command),
+      message: operationFailureMessage(result, command),
       diagnostic: result.stderr,
     ),
   };
 }
 
-UpdateInstallLoadResult _updateInstallResultFromCommand(
+UpdateInstallLoadResult updateInstallResultFromCommand(
   ProcessRunResult result,
 ) {
-  final parsed = _parseUpdateInstallPayload(result.stdout);
+  final parsed = parseUpdateInstallPayload(result.stdout);
 
   return switch (parsed) {
     InstalledUpdate() when result.exitCode == 0 => parsed,
     InstalledUpdate() || UpdateInstallLoadFailure() => UpdateInstallLoadFailure(
       exitCode: result.exitCode,
-      message: _operationFailureMessage(result, 'install-app-update'),
+      message: operationFailureMessage(result, 'install-app-update'),
       diagnostic: result.stderr,
     ),
   };
 }
 
-WineProcessTerminationLoadResult _wineProcessTerminationResultFromCommand(
+WineProcessTerminationLoadResult wineProcessTerminationResultFromCommand(
   ProcessRunResult result, {
   String command = 'terminate-wine-processes',
 }) {
   if (result.exitCode == 0 &&
-      _isSuccessfulWineProcessTerminationPayload(result.stdout)) {
+      isSuccessfulWineProcessTerminationPayload(result.stdout)) {
     return const TerminatedWineProcesses();
   }
 
   return WineProcessTerminationLoadFailure(
     exitCode: result.exitCode,
-    message: _operationFailureMessage(result, command),
+    message: operationFailureMessage(result, command),
     diagnostic: result.stderr,
   );
 }
 
-bool _isSuccessfulWineProcessTerminationPayload(String payload) {
+bool isSuccessfulWineProcessTerminationPayload(String payload) {
   final Object? decoded;
   try {
     decoded = jsonDecode(payload);
@@ -132,16 +144,16 @@ bool _isSuccessfulWineProcessTerminationPayload(String payload) {
           termination['processes'] is List<Object?>);
 }
 
-String _operationFailureMessage(ProcessRunResult result, String command) {
-  final message = _jsonErrorMessage(result.stdout);
+String operationFailureMessage(ProcessRunResult result, String command) {
+  final message = jsonErrorMessage(result.stdout);
   if (message != null) {
     return message;
   }
 
-  return _commandFailureMessage(command, result);
+  return commandFailureMessage(command, result);
 }
 
-RuntimeInstallParseResult _parseRuntimeInstallCommandPayload(String stdout) {
+RuntimeInstallParseResult parseRuntimeInstallCommandPayload(String stdout) {
   final parsed = parseRuntimeInstallPayload(stdout);
   if (parsed is! RuntimeInstallParseFailure) {
     return parsed;
@@ -162,7 +174,7 @@ RuntimeInstallParseResult _parseRuntimeInstallCommandPayload(String stdout) {
   return parsed;
 }
 
-String _processOutputToString(Object? output) {
+String processOutputToString(Object? output) {
   if (output == null) {
     return '';
   }
@@ -174,7 +186,7 @@ String _processOutputToString(Object? output) {
   return output.toString();
 }
 
-String? _firstNonEmpty(String? first, String? second, [String? third]) {
+String? firstNonEmpty(String? first, String? second, [String? third]) {
   for (final value in <String?>[first, second, third]) {
     if (value != null && value.trim().isNotEmpty) {
       return value;
@@ -184,7 +196,7 @@ String? _firstNonEmpty(String? first, String? second, [String? third]) {
   return null;
 }
 
-String _joinPath(String root, Iterable<String> components) {
+String joinPath(String root, Iterable<String> components) {
   var path = root;
   for (final component in components) {
     final normalized = component.replaceAll(RegExp(r'^/+|/+$'), '');

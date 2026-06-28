@@ -1,4 +1,12 @@
-part of '../../../konyak_cli.dart';
+import 'package:fpdart/fpdart.dart';
+
+import '../../domain/program/program_runner.dart';
+import '../../domain/runtime/runtime_catalogs.dart';
+import '../../domain/runtime/runtime_update_support.dart';
+import '../../domain/runtime/runtime_validation_support.dart';
+import '../../io/platform_host_paths.dart';
+import '../../io/runtime_probes.dart';
+import '../../shared/model_constants.dart';
 
 class MacosSetupStatus {
   const MacosSetupStatus({
@@ -86,7 +94,7 @@ class DartIoMacosSetupChecker implements MacosSetupChecker {
 
   factory DartIoMacosSetupChecker.current(RuntimeCatalog runtimeCatalog) {
     return DartIoMacosSetupChecker(
-      hostPlatform: _currentHostPlatform(),
+      hostPlatform: currentHostPlatform(),
       runtimeCatalog: runtimeCatalog,
     );
   }

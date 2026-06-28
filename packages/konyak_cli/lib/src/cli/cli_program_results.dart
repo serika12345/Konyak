@@ -1,34 +1,46 @@
-part of '../../konyak_cli.dart';
+import '../domain/program/pinned_programs.dart';
+import '../domain/program/program_mutation_models.dart';
+import '../domain/program/program_runner.dart';
+import '../domain/program/program_settings_models.dart';
+import '../io/macos_pinned_launcher_manifest_io.dart';
+import '../io/macos_pinned_launchers.dart';
+import '../repository/repository_interfaces.dart';
+import 'cli_bottle_mutation_handlers.dart';
+import 'cli_bottle_results.dart';
+import 'cli_json_helpers.dart';
+import 'cli_program_mutation_parsers.dart';
+import 'cli_program_run_handlers.dart';
+import 'cli_result_model.dart';
 
-CliResult _programUpdateJsonResult(ProgramUpdateResult result) {
+CliResult programUpdateJsonResult(ProgramUpdateResult result) {
   return switch (result) {
-    ProgramUpdated(:final bottle) => _bottleJsonResult(bottle),
-    ProgramUpdateMissingBottle(:final bottleId) => _bottleNotFoundError(
+    ProgramUpdated(:final bottle) => bottleJsonResult(bottle),
+    ProgramUpdateMissingBottle(:final bottleId) => bottleNotFoundError(
       bottleId.value,
     ),
-    ProgramUpdateMissingProgram(:final programPath) => _jsonError(
+    ProgramUpdateMissingProgram(:final programPath) => jsonError(
       exitCode: 66,
       code: 'programNotPinned',
       message: 'Program is not pinned.',
       extra: <String, Object?>{'programPath': programPath.value},
     ),
-    ProgramUpdateFailed(:final message) => _bottleRepositoryFailureJsonResult(
+    ProgramUpdateFailed(:final message) => bottleRepositoryFailureJsonResult(
       message,
     ),
   };
 }
 
-CliResult _runPinnedProgramLauncherCli({
-  required _PinnedProgramLaunchCliRequest request,
+CliResult runPinnedProgramLauncherCli({
+  required PinnedProgramLaunchCliRequest request,
   required BottleRepository? bottleRepository,
   required ProgramRunPlanner programRunPlanner,
   required ProgramRunner? programRunner,
 }) {
-  final launcherManifest = _readPinnedProgramLauncherManifest(
+  final launcherManifest = readPinnedProgramLauncherManifest(
     request.manifestPath,
   );
   return launcherManifest.match(
-    () => _jsonError(
+    () => jsonError(
       exitCode: 65,
       code: 'invalidPinnedProgramLauncher',
       message: 'Pinned program launcher manifest is invalid.',
@@ -36,24 +48,24 @@ CliResult _runPinnedProgramLauncherCli({
     ),
     (manifest) {
       if (bottleRepository == null) {
-        return _bottleRepositoryUnavailableError();
+        return bottleRepositoryUnavailableError();
       }
 
       if (programRunner == null) {
-        return _programRunnerUnavailableError();
+        return programRunnerUnavailableError();
       }
 
-      return _foundBottleJsonResult(
+      return foundBottleJsonResult(
         result: bottleRepository.findBottle(manifest.bottleId.value),
         bottleId: manifest.bottleId.value,
         onFound: (bottle) {
-          final expectedLauncherId = _pinnedProgramLauncherId(
+          final expectedLauncherId = pinnedProgramLauncherId(
             bottleId: manifest.bottleId.value,
             programPath: manifest.programPath.value,
           );
           if (manifest.launcherId.value != expectedLauncherId ||
               !hasPinnedProgram(bottle, manifest.programPath.value)) {
-            return _jsonError(
+            return jsonError(
               exitCode: 66,
               code: 'programNotPinned',
               message: 'Program is not pinned.',
@@ -63,7 +75,7 @@ CliResult _runPinnedProgramLauncherCli({
             );
           }
 
-          return _runProgramPathJsonResult(
+          return runProgramPathJsonResult(
             bottleRepository: bottleRepository,
             programRunPlanner: programRunPlanner,
             programRunner: programRunner,
@@ -76,48 +88,48 @@ CliResult _runPinnedProgramLauncherCli({
   );
 }
 
-CliResult _programSettingsReadJsonResult({
+CliResult programSettingsReadJsonResult({
   required ProgramSettingsRequest request,
   required ProgramSettingsReadResult result,
 }) {
   return switch (result) {
-    ProgramSettingsRead(:final settings) => _programSettingsJsonResult(
+    ProgramSettingsRead(:final settings) => programSettingsJsonResult(
       bottleId: request.bottleId.value,
       programPath: request.programPath.value,
       settings: settings,
     ),
-    ProgramSettingsReadMissingBottle(:final bottleId) => _bottleNotFoundError(
+    ProgramSettingsReadMissingBottle(:final bottleId) => bottleNotFoundError(
       bottleId.value,
     ),
     ProgramSettingsReadFailed(:final message) =>
-      _bottleRepositoryFailureJsonResult(message),
+      bottleRepositoryFailureJsonResult(message),
   };
 }
 
-CliResult _programSettingsUpdateJsonResult({
+CliResult programSettingsUpdateJsonResult({
   required ProgramSettingsUpdateRequest request,
   required ProgramSettingsUpdateResult result,
 }) {
   return switch (result) {
-    ProgramSettingsUpdated(:final settings) => _programSettingsJsonResult(
+    ProgramSettingsUpdated(:final settings) => programSettingsJsonResult(
       bottleId: request.bottleId.value,
       programPath: request.programPath.value,
       settings: settings,
     ),
-    ProgramSettingsUpdateMissingBottle(:final bottleId) => _bottleNotFoundError(
+    ProgramSettingsUpdateMissingBottle(:final bottleId) => bottleNotFoundError(
       bottleId.value,
     ),
     ProgramSettingsUpdateFailed(:final message) =>
-      _bottleRepositoryFailureJsonResult(message),
+      bottleRepositoryFailureJsonResult(message),
   };
 }
 
-CliResult _programSettingsJsonResult({
+CliResult programSettingsJsonResult({
   required String bottleId,
   required String programPath,
   required ProgramSettingsRecord settings,
 }) {
-  return _jsonSuccess(<String, Object?>{
+  return jsonSuccess(<String, Object?>{
     'programSettings': <String, Object?>{
       'bottleId': bottleId,
       'programPath': programPath,

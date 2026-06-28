@@ -94,6 +94,7 @@ void defineProgramExecutionContractTests() {
 
   test('get-program-settings --json returns default program settings', () {
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: '/home/user/.local/share/konyak',
       bottles: [
         BottleRecord(
@@ -175,6 +176,7 @@ void defineProgramExecutionContractTests() {
 
   test('set-program-settings --json persists program settings', () {
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: '/home/user/.local/share/konyak',
       bottles: [
         BottleRecord(
@@ -239,6 +241,7 @@ void defineProgramExecutionContractTests() {
 
   test('set-program-settings --json persists program logging settings', () {
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: '/home/user/.local/share/konyak',
       bottles: [
         BottleRecord(
@@ -307,6 +310,7 @@ void defineProgramExecutionContractTests() {
 
   test('run-program --json runs an EXE through the program runner', () {
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: '/home/user/.local/share/konyak',
     );
     final runner = RecordingProgramRunner(
@@ -370,6 +374,7 @@ void defineProgramExecutionContractTests() {
 
   test('run-program --json applies persisted program settings', () {
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: '/home/user/.local/share/konyak',
       bottles: [
         BottleRecord(
@@ -435,6 +440,7 @@ void defineProgramExecutionContractTests() {
 
   test('run-program --json on Linux ignores macOS-only runtime settings', () {
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: '/home/user/.local/share/konyak',
       bottles: [
         BottleRecord(
@@ -491,6 +497,7 @@ void defineProgramExecutionContractTests() {
 
   test('run-program --json uses the Konyak macOS Wine startup path on macOS', () {
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: '/Users/user/Library/Application Support/Konyak',
       bottles: [
         BottleRecord(
@@ -674,6 +681,7 @@ void defineProgramExecutionContractTests() {
     }
 
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: _joinTestPath(tempDirectory.path, const ['data']),
       bottles: [
         BottleRecord(
@@ -801,6 +809,7 @@ void defineProgramExecutionContractTests() {
     }
 
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: _joinTestPath(tempDirectory.path, const ['data']),
       bottles: [
         BottleRecord(
@@ -930,6 +939,7 @@ void defineProgramExecutionContractTests() {
       }
 
       final repository = MemoryBottleRepository(
+        programMetadataExtractor: const NoopProgramMetadataExtractor(),
         dataHome: _joinTestPath(tempDirectory.path, const ['data']),
         bottles: [
           BottleRecord(
@@ -1050,6 +1060,7 @@ void defineProgramExecutionContractTests() {
     }
 
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: _joinTestPath(tempDirectory.path, const ['data']),
       bottles: [
         BottleRecord(
@@ -1129,6 +1140,7 @@ void defineProgramExecutionContractTests() {
     }
 
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: _joinTestPath(tempDirectory.path, const ['data']),
       bottles: [
         BottleRecord(
@@ -1203,6 +1215,7 @@ void defineProgramExecutionContractTests() {
     }
 
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: _joinTestPath(tempDirectory.path, const ['data']),
       bottles: [
         BottleRecord(
@@ -1248,6 +1261,7 @@ void defineProgramExecutionContractTests() {
 
   test('run-program --json applies DXMT settings on macOS', () {
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: '/Users/user/Library/Application Support/Konyak',
       bottles: [
         BottleRecord(
@@ -1326,6 +1340,7 @@ void defineProgramExecutionContractTests() {
 
   test('run-program --json enables DXMT NVEXT for DLSS MetalFX on macOS', () {
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: '/Users/user/Library/Application Support/Konyak',
       bottles: [
         BottleRecord(
@@ -1366,6 +1381,7 @@ void defineProgramExecutionContractTests() {
 
   test('run-program --json applies DXVK settings on Linux', () {
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: '/home/user/.local/share/konyak',
       bottles: [
         BottleRecord(
@@ -1448,6 +1464,7 @@ void defineProgramExecutionContractTests() {
 
   test('run-program --json applies vkd3d-proton settings on Linux', () {
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: '/home/user/.local/share/konyak',
       bottles: [
         BottleRecord(
@@ -1509,6 +1526,7 @@ void defineProgramExecutionContractTests() {
 
   test('run-bottle-command --json launches winecfg through macOS Wine', () {
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: '/Users/user/Library/Application Support/Konyak',
       bottles: [
         BottleRecord(
@@ -1748,6 +1766,7 @@ void defineProgramExecutionContractTests() {
 
   test('run-bottle-command --json opens a macOS bottle terminal', () {
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: '/Users/user/Library/Application Support/Konyak',
       bottles: [
         BottleRecord(
@@ -1826,6 +1845,7 @@ void defineProgramExecutionContractTests() {
 
   test('run-bottle-command --json opens a Linux bottle terminal', () {
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: '/home/user/.local/share/konyak',
       bottles: [
         BottleRecord(
@@ -1919,6 +1939,7 @@ void defineProgramExecutionContractTests() {
     'run-bottle-command --json opens Command Prompt in a Linux terminal',
     () {
       final repository = MemoryBottleRepository(
+        programMetadataExtractor: const NoopProgramMetadataExtractor(),
         dataHome: '/home/user/.local/share/konyak',
         bottles: [
           BottleRecord(
@@ -2036,6 +2057,7 @@ void defineProgramExecutionContractTests() {
 
   test('run-bottle-command --json launches winetricks with bottle env', () {
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: '/Users/user/Library/Application Support/Konyak',
       bottles: [
         BottleRecord(
@@ -2118,6 +2140,7 @@ void defineProgramExecutionContractTests() {
 
     for (final commandId in commandIds) {
       final repository = MemoryBottleRepository(
+        programMetadataExtractor: const NoopProgramMetadataExtractor(),
         dataHome: '/Users/user/Library/Application Support/Konyak',
         bottles: [
           BottleRecord(
@@ -2160,6 +2183,7 @@ void defineProgramExecutionContractTests() {
 
   test('run-bottle-command --json simulates a Windows reboot on macOS', () {
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: '/Users/user/Library/Application Support/Konyak',
       bottles: [
         BottleRecord(
@@ -2217,6 +2241,7 @@ void defineProgramExecutionContractTests() {
 
   test('run-bottle-command --json simulates a Windows reboot on Linux', () {
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: '/home/user/.local/share/konyak',
       bottles: [
         BottleRecord(
@@ -2265,6 +2290,7 @@ void defineProgramExecutionContractTests() {
 
   test('run-bottle-command --json opens the DirectX diagnostic report', () {
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: '/Users/user/Library/Application Support/Konyak',
       bottles: [
         BottleRecord(
@@ -2311,6 +2337,7 @@ void defineProgramExecutionContractTests() {
     'run-bottle-command --json opens Command Prompt in a macOS terminal',
     () {
       final repository = MemoryBottleRepository(
+        programMetadataExtractor: const NoopProgramMetadataExtractor(),
         dataHome: '/Users/user/Library/Application Support/Konyak',
         bottles: [
           BottleRecord(
@@ -2553,6 +2580,7 @@ corefonts                Microsoft Core Fonts
 
   test('run-winetricks --json launches a selected verb', () {
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: '/Users/user/Library/Application Support/Konyak',
       bottles: [
         BottleRecord(
@@ -2600,6 +2628,7 @@ corefonts                Microsoft Core Fonts
 
   test('run-winetricks --json rejects unsafe verb names', () {
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: '/Users/user/Library/Application Support/Konyak',
       bottles: [
         BottleRecord(
@@ -2640,6 +2669,7 @@ corefonts                Microsoft Core Fonts
 
   test('run-bottle-command --json rejects unsupported commands', () {
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: '/Users/user/Library/Application Support/Konyak',
       bottles: [
         BottleRecord(
@@ -2686,6 +2716,7 @@ corefonts                Microsoft Core Fonts
 
   test('open-bottle-location --json opens the Konyak C drive path', () {
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: '/Users/user/Library/Application Support/Konyak',
       bottles: [
         BottleRecord(
@@ -2730,6 +2761,7 @@ corefonts                Microsoft Core Fonts
 
   test('open-bottle-location --json rejects unsupported locations', () {
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: '/Users/user/Library/Application Support/Konyak',
       bottles: [
         BottleRecord(
@@ -2789,6 +2821,7 @@ corefonts                Microsoft Core Fonts
       ..writeAsStringSync('ignored');
 
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: tempDirectory.path,
       bottles: [
         BottleRecord(
@@ -2803,7 +2836,9 @@ corefonts                Microsoft Core Fonts
     final result = runCli(
       const ['list-bottle-programs', 'steam', '--json'],
       bottleRepository: repository,
-      bottleProgramRepository: const DartIoBottleProgramRepository(),
+      bottleProgramRepository: const DartIoBottleProgramRepository(
+        metadataExtractor: DartIoProgramMetadataExtractor(),
+      ),
     );
 
     expect(result.exitCode, 0);
@@ -2853,6 +2888,7 @@ corefonts                Microsoft Core Fonts
         ..writeAsStringSync('shortcut');
 
       final repository = MemoryBottleRepository(
+        programMetadataExtractor: const NoopProgramMetadataExtractor(),
         dataHome: tempDirectory.path,
         bottles: [
           BottleRecord(
@@ -2870,7 +2906,9 @@ corefonts                Microsoft Core Fonts
       final result = runCli(
         const ['list-bottle-programs', 'steam', '--json'],
         bottleRepository: repository,
-        bottleProgramRepository: const DartIoBottleProgramRepository(),
+        bottleProgramRepository: const DartIoBottleProgramRepository(
+          metadataExtractor: DartIoProgramMetadataExtractor(),
+        ),
       );
 
       expect(result.exitCode, 0);
@@ -2917,6 +2955,7 @@ corefonts                Microsoft Core Fonts
       ..createSync(recursive: true)
       ..writeAsStringSync('steam');
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: tempDirectory.path,
       bottles: [
         BottleRecord(
@@ -2992,6 +3031,7 @@ corefonts                Microsoft Core Fonts
         );
 
       final repository = MemoryBottleRepository(
+        programMetadataExtractor: const NoopProgramMetadataExtractor(),
         dataHome: tempDirectory.path,
         bottles: [
           BottleRecord(
@@ -3006,7 +3046,9 @@ corefonts                Microsoft Core Fonts
       final result = runCli(
         const ['list-bottle-programs', 'steam', '--json'],
         bottleRepository: repository,
-        bottleProgramRepository: const DartIoBottleProgramRepository(),
+        bottleProgramRepository: const DartIoBottleProgramRepository(
+          metadataExtractor: DartIoProgramMetadataExtractor(),
+        ),
       );
 
       expect(result.exitCode, 0);
@@ -3050,6 +3092,7 @@ corefonts                Microsoft Core Fonts
         ..writeAsBytesSync(_syntheticPortableExecutableBytes());
 
       final repository = MemoryBottleRepository(
+        programMetadataExtractor: const NoopProgramMetadataExtractor(),
         dataHome: tempDirectory.path,
         bottles: [
           BottleRecord(
@@ -3067,7 +3110,9 @@ corefonts                Microsoft Core Fonts
       final result = runCli(
         const ['list-bottle-programs', 'steam', '--json'],
         bottleRepository: repository,
-        bottleProgramRepository: const DartIoBottleProgramRepository(),
+        bottleProgramRepository: const DartIoBottleProgramRepository(
+          metadataExtractor: DartIoProgramMetadataExtractor(),
+        ),
       );
 
       expect(result.exitCode, 0);
@@ -3110,6 +3155,7 @@ corefonts                Microsoft Core Fonts
 
       for (final entry in cases.entries) {
         final repository = MemoryBottleRepository(
+          programMetadataExtractor: const NoopProgramMetadataExtractor(),
           dataHome: '/home/user/.local/share/konyak',
         );
         final runner = RecordingProgramRunner(
@@ -3143,6 +3189,7 @@ corefonts                Microsoft Core Fonts
 
   test('run-program --json applies one-time program settings', () {
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: '/home/user/.local/share/konyak',
     );
     final runner = RecordingProgramRunner(
@@ -3202,6 +3249,7 @@ corefonts                Microsoft Core Fonts
 
   test('run-program --json applies one-time logging settings', () {
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: '/home/user/.local/share/konyak',
     );
     final runner = RecordingProgramRunner(
@@ -3259,6 +3307,7 @@ corefonts                Microsoft Core Fonts
 
   test('run-program --json rejects unsupported program extensions', () {
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: '/home/user/.local/share/konyak',
     );
     runCli(const [
@@ -3298,6 +3347,7 @@ corefonts                Microsoft Core Fonts
 
   test('run-program --json returns a machine-readable runner failure', () {
     final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: '/home/user/.local/share/konyak',
     );
     runCli(const [
@@ -3358,7 +3408,10 @@ corefonts                Microsoft Core Fonts
         }
       });
 
-      final repository = MemoryBottleRepository(dataHome: tempDirectory.path);
+      final repository = MemoryBottleRepository(
+        programMetadataExtractor: const NoopProgramMetadataExtractor(),
+        dataHome: tempDirectory.path,
+      );
       runCli(const [
         'create-bottle',
         '--name',
@@ -3444,7 +3497,10 @@ corefonts                Microsoft Core Fonts
         }
       });
 
-      final repository = MemoryBottleRepository(dataHome: tempDirectory.path);
+      final repository = MemoryBottleRepository(
+        programMetadataExtractor: const NoopProgramMetadataExtractor(),
+        dataHome: tempDirectory.path,
+      );
       runCli(const [
         'create-bottle',
         '--name',

@@ -1,4 +1,14 @@
-part of 'konyak_cli_client.dart';
+import 'dart:async';
+import 'dart:convert';
+
+import '../bottles/bottle_summary.dart';
+import 'konyak_cli_bottle_payload_parsers.dart';
+import 'konyak_cli_bottle_result_types.dart';
+import 'konyak_cli_client.dart' show KonyakCliClient;
+import 'konyak_cli_failure_messages.dart';
+import 'konyak_cli_program_payload_parsers.dart';
+import 'konyak_cli_program_result_types.dart';
+import 'konyak_cli_result_helpers.dart';
 
 extension KonyakCliProgramCommands on KonyakCliClient {
   Future<ProgramRunLoadResult> runProgram({
@@ -19,9 +29,9 @@ extension KonyakCliProgramCommands on KonyakCliClient {
       '--json',
     ];
 
-    return _programRunResultFromCommand(
+    return programRunResultFromCommand(
       arguments: runArguments,
-      failureMessage: _programRunFailureMessage,
+      failureMessage: programRunFailureMessage,
       onStarted: onStarted,
     );
   }
@@ -31,7 +41,7 @@ extension KonyakCliProgramCommands on KonyakCliClient {
     required String name,
     required String programPath,
   }) async {
-    final result = await _run([
+    final result = await run([
       'pin-program',
       bottleId,
       '--name',
@@ -41,7 +51,7 @@ extension KonyakCliProgramCommands on KonyakCliClient {
       '--json',
     ]);
 
-    return _bottleUpdateResultFromCommand(
+    return bottleUpdateResultFromCommand(
       result: result,
       command: 'pin-program',
     );
@@ -51,7 +61,7 @@ extension KonyakCliProgramCommands on KonyakCliClient {
     required String bottleId,
     required String programPath,
   }) async {
-    final result = await _run([
+    final result = await run([
       'unpin-program',
       bottleId,
       '--program',
@@ -59,7 +69,7 @@ extension KonyakCliProgramCommands on KonyakCliClient {
       '--json',
     ]);
 
-    return _bottleUpdateResultFromCommand(
+    return bottleUpdateResultFromCommand(
       result: result,
       command: 'unpin-program',
     );
@@ -70,7 +80,7 @@ extension KonyakCliProgramCommands on KonyakCliClient {
     required String programPath,
     required String name,
   }) async {
-    final result = await _run([
+    final result = await run([
       'rename-pinned-program',
       bottleId,
       '--program',
@@ -80,7 +90,7 @@ extension KonyakCliProgramCommands on KonyakCliClient {
       '--json',
     ]);
 
-    return _bottleUpdateResultFromCommand(
+    return bottleUpdateResultFromCommand(
       result: result,
       command: 'rename-pinned-program',
     );
@@ -90,7 +100,7 @@ extension KonyakCliProgramCommands on KonyakCliClient {
     required String bottleId,
     required String programPath,
   }) async {
-    final result = await _run([
+    final result = await run([
       'get-program-settings',
       bottleId,
       '--program',
@@ -98,7 +108,7 @@ extension KonyakCliProgramCommands on KonyakCliClient {
       '--json',
     ]);
 
-    return _programSettingsResultFromCommand(
+    return programSettingsResultFromCommand(
       result: result,
       command: 'get-program-settings',
     );
@@ -109,7 +119,7 @@ extension KonyakCliProgramCommands on KonyakCliClient {
     required String programPath,
     required ProgramSettingsSummary settings,
   }) async {
-    final result = await _run([
+    final result = await run([
       'set-program-settings',
       bottleId,
       '--program',
@@ -119,7 +129,7 @@ extension KonyakCliProgramCommands on KonyakCliClient {
       '--json',
     ]);
 
-    return _programSettingsResultFromCommand(
+    return programSettingsResultFromCommand(
       result: result,
       command: 'set-program-settings',
     );
@@ -130,7 +140,7 @@ extension KonyakCliProgramCommands on KonyakCliClient {
     required String command,
     void Function(int processId)? onStarted,
   }) {
-    return _programRunResultFromCommand(
+    return programRunResultFromCommand(
       arguments: [
         'run-bottle-command',
         bottleId,
@@ -139,7 +149,7 @@ extension KonyakCliProgramCommands on KonyakCliClient {
         '--json',
       ],
       failureMessage: (result) =>
-          _commandFailureMessage('run-bottle-command', result),
+          commandFailureMessage('run-bottle-command', result),
       onStarted: onStarted,
     );
   }
@@ -148,24 +158,24 @@ extension KonyakCliProgramCommands on KonyakCliClient {
     required String bottleId,
     required String verb,
   }) {
-    return _programRunResultFromCommand(
+    return programRunResultFromCommand(
       arguments: ['run-winetricks', bottleId, '--verb', verb, '--json'],
       failureMessage: (result) =>
-          _operationFailureMessage(result, 'run-winetricks'),
+          operationFailureMessage(result, 'run-winetricks'),
     );
   }
 
   Future<GraphicsBackendHintsLoadResult> suggestGraphicsBackend({
     required String programPath,
   }) async {
-    final result = await _run([
+    final result = await run([
       'suggest-graphics-backend',
       '--program',
       programPath,
       '--json',
     ]);
 
-    final parsed = _parseGraphicsBackendHintsPayload(result.stdout);
+    final parsed = parseGraphicsBackendHintsPayload(result.stdout);
 
     return switch (parsed) {
       LoadedGraphicsBackendHints() when result.exitCode == 0 => parsed,
@@ -177,7 +187,7 @@ extension KonyakCliProgramCommands on KonyakCliClient {
         ),
       LoadedGraphicsBackendHints() => GraphicsBackendHintsLoadFailure(
         exitCode: result.exitCode,
-        message: _commandFailureMessage('suggest-graphics-backend', result),
+        message: commandFailureMessage('suggest-graphics-backend', result),
         diagnostic: result.stderr,
       ),
     };
@@ -187,7 +197,7 @@ extension KonyakCliProgramCommands on KonyakCliClient {
     required String bottleId,
     required String location,
   }) async {
-    final result = await _run([
+    final result = await run([
       'open-bottle-location',
       bottleId,
       '--location',
@@ -195,7 +205,7 @@ extension KonyakCliProgramCommands on KonyakCliClient {
       '--json',
     ]);
 
-    final parsed = _parseBottleLocationOpenPayload(result.stdout);
+    final parsed = parseBottleLocationOpenPayload(result.stdout);
 
     return switch (parsed) {
       OpenedBottleLocation() when result.exitCode == 0 => parsed,
@@ -206,7 +216,7 @@ extension KonyakCliProgramCommands on KonyakCliClient {
       ),
       OpenedBottleLocation() => BottleLocationOpenFailure(
         exitCode: result.exitCode,
-        message: _commandFailureMessage('open-bottle-location', result),
+        message: commandFailureMessage('open-bottle-location', result),
         diagnostic: result.stderr,
       ),
     };
@@ -216,7 +226,7 @@ extension KonyakCliProgramCommands on KonyakCliClient {
     required String bottleId,
     required String programPath,
   }) async {
-    final result = await _run([
+    final result = await run([
       'open-program-location',
       bottleId,
       '--program',
@@ -224,7 +234,7 @@ extension KonyakCliProgramCommands on KonyakCliClient {
       '--json',
     ]);
 
-    final parsed = _parseProgramLocationOpenPayload(result.stdout);
+    final parsed = parseProgramLocationOpenPayload(result.stdout);
 
     return switch (parsed) {
       OpenedProgramLocation() when result.exitCode == 0 => parsed,
@@ -235,7 +245,7 @@ extension KonyakCliProgramCommands on KonyakCliClient {
       ),
       OpenedProgramLocation() => ProgramLocationOpenFailure(
         exitCode: result.exitCode,
-        message: _commandFailureMessage('open-program-location', result),
+        message: commandFailureMessage('open-program-location', result),
         diagnostic: result.stderr,
       ),
     };

@@ -1,18 +1,22 @@
-part of '../../konyak_cli.dart';
+import 'dart:convert';
 
-ProgramPinRequest? _parseJsonProgramPinRequest(List<String> arguments) {
-  final results = _parseJsonCliCommand(
+import '../domain/program/program_mutation_models.dart';
+import '../io/repository_storage_io.dart';
+import 'cli_parsers.dart';
+
+ProgramPinRequest? parseJsonProgramPinRequest(List<String> arguments) {
+  final results = parseJsonCliCommand(
     arguments,
     command: 'pin-program',
     options: const <String>['name', 'program'],
   );
-  if (results == null || !_hasRestCount(results, 1)) {
+  if (results == null || !hasRestCount(results, 1)) {
     return null;
   }
 
-  final bottleId = _requiredCliRest(results);
-  final name = _requiredCliOption(results, 'name');
-  final programPath = _requiredCliOption(results, 'program');
+  final bottleId = requiredCliRest(results);
+  final name = requiredCliOption(results, 'name');
+  final programPath = requiredCliOption(results, 'program');
   if (bottleId == null || name == null || programPath == null) {
     return null;
   }
@@ -24,18 +28,18 @@ ProgramPinRequest? _parseJsonProgramPinRequest(List<String> arguments) {
   );
 }
 
-ProgramUnpinRequest? _parseJsonProgramUnpinRequest(List<String> arguments) {
-  final results = _parseJsonCliCommand(
+ProgramUnpinRequest? parseJsonProgramUnpinRequest(List<String> arguments) {
+  final results = parseJsonCliCommand(
     arguments,
     command: 'unpin-program',
     options: const <String>['program'],
   );
-  if (results == null || !_hasRestCount(results, 1)) {
+  if (results == null || !hasRestCount(results, 1)) {
     return null;
   }
 
-  final bottleId = _requiredCliRest(results);
-  final programPath = _requiredCliOption(results, 'program');
+  final bottleId = requiredCliRest(results);
+  final programPath = requiredCliOption(results, 'program');
   if (bottleId == null || programPath == null) {
     return null;
   }
@@ -43,19 +47,19 @@ ProgramUnpinRequest? _parseJsonProgramUnpinRequest(List<String> arguments) {
   return ProgramUnpinRequest(bottleId: bottleId, programPath: programPath);
 }
 
-ProgramRenameRequest? _parseJsonProgramRenameRequest(List<String> arguments) {
-  final results = _parseJsonCliCommand(
+ProgramRenameRequest? parseJsonProgramRenameRequest(List<String> arguments) {
+  final results = parseJsonCliCommand(
     arguments,
     command: 'rename-pinned-program',
     options: const <String>['program', 'name'],
   );
-  if (results == null || !_hasRestCount(results, 1)) {
+  if (results == null || !hasRestCount(results, 1)) {
     return null;
   }
 
-  final bottleId = _requiredCliRest(results);
-  final programPath = _requiredCliOption(results, 'program');
-  final name = _requiredCliOption(results, 'name');
+  final bottleId = requiredCliRest(results);
+  final programPath = requiredCliOption(results, 'program');
+  final name = requiredCliOption(results, 'name');
   if (bottleId == null || programPath == null || name == null) {
     return null;
   }
@@ -67,20 +71,20 @@ ProgramRenameRequest? _parseJsonProgramRenameRequest(List<String> arguments) {
   );
 }
 
-ProgramSettingsRequest? _parseJsonProgramSettingsRequest(
+ProgramSettingsRequest? parseJsonProgramSettingsRequest(
   List<String> arguments,
 ) {
-  final results = _parseJsonCliCommand(
+  final results = parseJsonCliCommand(
     arguments,
     command: 'get-program-settings',
     options: const <String>['program'],
   );
-  if (results == null || !_hasRestCount(results, 1)) {
+  if (results == null || !hasRestCount(results, 1)) {
     return null;
   }
 
-  final bottleId = _requiredCliRest(results);
-  final programPath = _requiredCliOption(results, 'program');
+  final bottleId = requiredCliRest(results);
+  final programPath = requiredCliOption(results, 'program');
   if (bottleId == null || programPath == null) {
     return null;
   }
@@ -88,21 +92,21 @@ ProgramSettingsRequest? _parseJsonProgramSettingsRequest(
   return ProgramSettingsRequest(bottleId: bottleId, programPath: programPath);
 }
 
-ProgramSettingsUpdateRequest? _parseJsonProgramSettingsUpdateRequest(
+ProgramSettingsUpdateRequest? parseJsonProgramSettingsUpdateRequest(
   List<String> arguments,
 ) {
-  final results = _parseJsonCliCommand(
+  final results = parseJsonCliCommand(
     arguments,
     command: 'set-program-settings',
     options: const <String>['program', 'settings-json'],
   );
-  if (results == null || !_hasRestCount(results, 1)) {
+  if (results == null || !hasRestCount(results, 1)) {
     return null;
   }
 
-  final bottleId = _requiredCliRest(results);
-  final programPath = _requiredCliOption(results, 'program');
-  final settingsJson = _requiredCliOption(results, 'settings-json');
+  final bottleId = requiredCliRest(results);
+  final programPath = requiredCliOption(results, 'program');
+  final settingsJson = requiredCliOption(results, 'settings-json');
   if (bottleId == null || programPath == null || settingsJson == null) {
     return null;
   }
@@ -114,7 +118,7 @@ ProgramSettingsUpdateRequest? _parseJsonProgramSettingsUpdateRequest(
     return null;
   }
 
-  return _programSettingsRecordFromJson(decoded)
+  return programSettingsRecordFromJson(decoded)
       .map(
         (settings) => ProgramSettingsUpdateRequest(
           bottleId: bottleId,
@@ -125,28 +129,28 @@ ProgramSettingsUpdateRequest? _parseJsonProgramSettingsUpdateRequest(
       .toNullable();
 }
 
-class _PinnedProgramLaunchCliRequest {
-  const _PinnedProgramLaunchCliRequest({required this.manifestPath});
+class PinnedProgramLaunchCliRequest {
+  const PinnedProgramLaunchCliRequest({required this.manifestPath});
 
   final String manifestPath;
 }
 
-_PinnedProgramLaunchCliRequest? _parseJsonPinnedProgramLaunchCliRequest(
+PinnedProgramLaunchCliRequest? parseJsonPinnedProgramLaunchCliRequest(
   List<String> arguments,
 ) {
-  final results = _parseJsonCliCommand(
+  final results = parseJsonCliCommand(
     arguments,
     command: 'launch-pinned-program',
     options: const <String>['manifest'],
   );
-  if (results == null || !_hasRestCount(results, 0)) {
+  if (results == null || !hasRestCount(results, 0)) {
     return null;
   }
 
-  final manifestPath = _requiredCliOption(results, 'manifest');
+  final manifestPath = requiredCliOption(results, 'manifest');
   if (manifestPath == null) {
     return null;
   }
 
-  return _PinnedProgramLaunchCliRequest(manifestPath: manifestPath);
+  return PinnedProgramLaunchCliRequest(manifestPath: manifestPath);
 }

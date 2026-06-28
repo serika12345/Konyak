@@ -1,7 +1,12 @@
-part of '../../konyak_cli.dart';
+import 'dart:math';
+import 'dart:typed_data';
 
-final class _PortableExecutableImage {
-  const _PortableExecutableImage({
+import 'package:fpdart/fpdart.dart';
+
+import 'external_payload_helpers.dart';
+
+final class PortableExecutableImage {
+  const PortableExecutableImage({
     required this.bytes,
     required this.machine,
     required this.sections,
@@ -13,7 +18,7 @@ final class _PortableExecutableImage {
 
   final Uint8List bytes;
   final int machine;
-  final List<_PeSection> sections;
+  final List<PeSection> sections;
   final Option<int> importRva;
   final Option<int> importRootOffset;
   final Option<int> resourceRva;
@@ -45,23 +50,23 @@ final class _PortableExecutableImage {
     return importRootOffset.match(
       () => const <String>[],
       (rootOffset) =>
-          _peImportDllNamesFromOffset(image: this, offset: rootOffset),
+          peImportDllNamesFromOffset(image: this, offset: rootOffset),
     );
   }
 
-  static Option<_PortableExecutableImage> parse(Uint8List bytes) {
+  static Option<PortableExecutableImage> parse(Uint8List bytes) {
     if (bytes.length < 0x40 || bytes[0] != 0x4d || bytes[1] != 0x5a) {
       return const Option.none();
     }
 
-    return _readUint32Option(bytes, 0x3c).flatMap(
+    return readUint32Option(bytes, 0x3c).flatMap(
       (peOffset) =>
-          _parsePortableExecutableAtOffset(bytes: bytes, peOffset: peOffset),
+          parsePortableExecutableAtOffset(bytes: bytes, peOffset: peOffset),
     );
   }
 }
 
-Option<_PortableExecutableImage> _parsePortableExecutableAtOffset({
+Option<PortableExecutableImage> parsePortableExecutableAtOffset({
   required Uint8List bytes,
   required int peOffset,
 }) {
@@ -73,10 +78,10 @@ Option<_PortableExecutableImage> _parsePortableExecutableAtOffset({
     return const Option.none();
   }
 
-  return _readUint16Option(bytes, peOffset + 4).flatMap(
-    (machine) => _readUint16Option(bytes, peOffset + 6).flatMap(
-      (sectionCount) => _readUint16Option(bytes, peOffset + 20).flatMap(
-        (optionalHeaderSize) => _parsePortableExecutableWithHeader(
+  return readUint16Option(bytes, peOffset + 4).flatMap(
+    (machine) => readUint16Option(bytes, peOffset + 6).flatMap(
+      (sectionCount) => readUint16Option(bytes, peOffset + 20).flatMap(
+        (optionalHeaderSize) => parsePortableExecutableWithHeader(
           bytes: bytes,
           peOffset: peOffset,
           machine: machine,
@@ -88,7 +93,7 @@ Option<_PortableExecutableImage> _parsePortableExecutableAtOffset({
   );
 }
 
-Option<_PortableExecutableImage> _parsePortableExecutableWithHeader({
+Option<PortableExecutableImage> parsePortableExecutableWithHeader({
   required Uint8List bytes,
   required int peOffset,
   required int machine,
@@ -100,24 +105,24 @@ Option<_PortableExecutableImage> _parsePortableExecutableWithHeader({
   }
 
   final optionalHeaderOffset = peOffset + 24;
-  return _readUint16Option(bytes, optionalHeaderOffset).flatMap(
+  return readUint16Option(bytes, optionalHeaderOffset).flatMap(
     (magic) =>
-        _peDataDirectoryOffset(
+        peDataDirectoryOffset(
           magic: magic,
           optionalHeaderOffset: optionalHeaderOffset,
         ).flatMap((dataDirectoryOffset) {
           final importDirectoryOffset = dataDirectoryOffset + 8;
-          final importRva = _readUint32Option(bytes, importDirectoryOffset);
+          final importRva = readUint32Option(bytes, importDirectoryOffset);
           final resourceDirectoryOffset = dataDirectoryOffset + 8 * 2;
-          final resourceRva = _readUint32Option(bytes, resourceDirectoryOffset);
+          final resourceRva = readUint32Option(bytes, resourceDirectoryOffset);
           final sectionHeaderOffset = optionalHeaderOffset + optionalHeaderSize;
-          return _peSections(
+          return peSections(
             bytes: bytes,
             sectionHeaderOffset: sectionHeaderOffset,
             sectionCount: sectionCount,
             index: 0,
           ).map(
-            (sections) => _portableExecutableImageWithResourceOffsets(
+            (sections) => portableExecutableImageWithResourceOffsets(
               bytes: bytes,
               machine: machine,
               sections: sections,
@@ -129,14 +134,14 @@ Option<_PortableExecutableImage> _parsePortableExecutableWithHeader({
   );
 }
 
-_PortableExecutableImage _portableExecutableImageWithResourceOffsets({
+PortableExecutableImage portableExecutableImageWithResourceOffsets({
   required Uint8List bytes,
   required int machine,
-  required List<_PeSection> sections,
+  required List<PeSection> sections,
   required Option<int> importRva,
   required Option<int> resourceRva,
 }) {
-  final image = _PortableExecutableImage(
+  final image = PortableExecutableImage(
     bytes: bytes,
     machine: machine,
     sections: List.unmodifiable(sections),
@@ -146,19 +151,19 @@ _PortableExecutableImage _portableExecutableImageWithResourceOffsets({
     resourceRootOffset: const Option.none(),
   );
 
-  return _PortableExecutableImage(
+  return PortableExecutableImage(
     bytes: bytes,
     machine: machine,
     sections: List.unmodifiable(sections),
     importRva: importRva,
-    importRootOffset: _peOptionalRvaRawOffset(image: image, rva: importRva),
+    importRootOffset: peOptionalRvaRawOffset(image: image, rva: importRva),
     resourceRva: resourceRva,
-    resourceRootOffset: _peOptionalRvaRawOffset(image: image, rva: resourceRva),
+    resourceRootOffset: peOptionalRvaRawOffset(image: image, rva: resourceRva),
   );
 }
 
-Option<int> _peOptionalRvaRawOffset({
-  required _PortableExecutableImage image,
+Option<int> peOptionalRvaRawOffset({
+  required PortableExecutableImage image,
   required Option<int> rva,
 }) {
   return rva.flatMap(
@@ -166,15 +171,15 @@ Option<int> _peOptionalRvaRawOffset({
   );
 }
 
-List<String> _peImportDllNamesFromOffset({
-  required _PortableExecutableImage image,
+List<String> peImportDllNamesFromOffset({
+  required PortableExecutableImage image,
   required int offset,
 }) {
   if (offset + 20 > image.bytes.length) {
     return const <String>[];
   }
 
-  return _peImportDescriptorAt(image: image, offset: offset).match(
+  return peImportDescriptorAt(image: image, offset: offset).match(
     () => const <String>[],
     (descriptor) {
       if (descriptor.originalFirstThunk == 0 &&
@@ -186,14 +191,14 @@ List<String> _peImportDllNamesFromOffset({
       }
 
       return <String>[
-        ..._peImportDllNameAtDescriptorOffset(
+        ...peImportDllNameAtDescriptorOffset(
           image: image,
           nameRva: descriptor.nameRva,
         ).match(
           () => const <String>[],
           (name) => name.isEmpty ? const <String>[] : <String>[name],
         ),
-        ..._peImportDllNamesFromOffset(image: image, offset: offset + 20),
+        ...peImportDllNamesFromOffset(image: image, offset: offset + 20),
       ];
     },
   );
@@ -208,17 +213,17 @@ Option<
     int timeDateStamp,
   })
 >
-_peImportDescriptorAt({
-  required _PortableExecutableImage image,
+peImportDescriptorAt({
+  required PortableExecutableImage image,
   required int offset,
 }) {
-  return _readUint32Option(image.bytes, offset).flatMap((originalFirstThunk) {
-    return _readUint32Option(image.bytes, offset + 4).flatMap((timeDateStamp) {
-      return _readUint32Option(image.bytes, offset + 8).flatMap((
+  return readUint32Option(image.bytes, offset).flatMap((originalFirstThunk) {
+    return readUint32Option(image.bytes, offset + 4).flatMap((timeDateStamp) {
+      return readUint32Option(image.bytes, offset + 8).flatMap((
         forwarderChain,
       ) {
-        return _readUint32Option(image.bytes, offset + 12).flatMap((nameRva) {
-          return _readUint32Option(image.bytes, offset + 16).map((firstThunk) {
+        return readUint32Option(image.bytes, offset + 12).flatMap((nameRva) {
+          return readUint32Option(image.bytes, offset + 16).map((firstThunk) {
             return (
               firstThunk: firstThunk,
               forwarderChain: forwarderChain,
@@ -233,14 +238,14 @@ _peImportDescriptorAt({
   });
 }
 
-Option<String> _peImportDllNameAtDescriptorOffset({
-  required _PortableExecutableImage image,
+Option<String> peImportDllNameAtDescriptorOffset({
+  required PortableExecutableImage image,
   required int nameRva,
 }) {
   return image
       .rawOffsetForRva(nameRva)
       .flatMap(
-        (nameOffset) => _nullTerminatedAsciiStringOption(
+        (nameOffset) => nullTerminatedAsciiStringOption(
           image.bytes,
           nameOffset,
           image.bytes.length,
@@ -248,7 +253,7 @@ Option<String> _peImportDllNameAtDescriptorOffset({
       );
 }
 
-Option<int> _peDataDirectoryOffset({
+Option<int> peDataDirectoryOffset({
   required int magic,
   required int optionalHeaderOffset,
 }) {
@@ -259,22 +264,22 @@ Option<int> _peDataDirectoryOffset({
   };
 }
 
-Option<List<_PeSection>> _peSections({
+Option<List<PeSection>> peSections({
   required Uint8List bytes,
   required int sectionHeaderOffset,
   required int sectionCount,
   required int index,
 }) {
   if (index >= sectionCount) {
-    return Option.of(const <_PeSection>[]);
+    return Option.of(const <PeSection>[]);
   }
 
-  final section = _peSectionAtIndex(
+  final section = peSectionAtIndex(
     bytes: bytes,
     sectionHeaderOffset: sectionHeaderOffset,
     index: index,
   );
-  final remaining = _peSections(
+  final remaining = peSections(
     bytes: bytes,
     sectionHeaderOffset: sectionHeaderOffset,
     sectionCount: sectionCount,
@@ -282,12 +287,12 @@ Option<List<_PeSection>> _peSections({
   );
   return section.flatMap(
     (value) => remaining.map(
-      (remainingSections) => <_PeSection>[value, ...remainingSections],
+      (remainingSections) => <PeSection>[value, ...remainingSections],
     ),
   );
 }
 
-Option<_PeSection> _peSectionAtIndex({
+Option<PeSection> peSectionAtIndex({
   required Uint8List bytes,
   required int sectionHeaderOffset,
   required int index,
@@ -297,11 +302,11 @@ Option<_PeSection> _peSectionAtIndex({
     return const Option.none();
   }
 
-  return _readUint32Option(bytes, offset + 8).flatMap(
-    (virtualSize) => _readUint32Option(bytes, offset + 12).flatMap(
-      (virtualAddress) => _readUint32Option(bytes, offset + 16).flatMap(
-        (rawSize) => _readUint32Option(bytes, offset + 20).map(
-          (rawOffset) => _PeSection(
+  return readUint32Option(bytes, offset + 8).flatMap(
+    (virtualSize) => readUint32Option(bytes, offset + 12).flatMap(
+      (virtualAddress) => readUint32Option(bytes, offset + 16).flatMap(
+        (rawSize) => readUint32Option(bytes, offset + 20).map(
+          (rawOffset) => PeSection(
             virtualSize: virtualSize,
             virtualAddress: virtualAddress,
             rawSize: rawSize,
@@ -313,8 +318,8 @@ Option<_PeSection> _peSectionAtIndex({
   );
 }
 
-final class _PeSection {
-  const _PeSection({
+final class PeSection {
+  const PeSection({
     required this.virtualSize,
     required this.virtualAddress,
     required this.rawSize,

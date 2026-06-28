@@ -1,6 +1,11 @@
-part of '../../konyak_cli.dart';
+import 'dart:convert';
+import 'dart:io';
+import 'dart:math';
+import 'dart:typed_data';
 
-Map<String, Object?>? _objectMap(Object? value) {
+import 'package:fpdart/fpdart.dart';
+
+Map<String, Object?>? objectMap(Object? value) {
   if (value is Map<String, dynamic>) {
     return value.cast<String, Object?>();
   }
@@ -12,9 +17,9 @@ Map<String, Object?>? _objectMap(Object? value) {
   return null;
 }
 
-String _commandFailureMessage(String action, ProcessResult result) {
-  final stderr = _processOutputToString(result.stderr).trim();
-  final stdout = _processOutputToString(result.stdout).trim();
+String commandFailureMessage(String action, ProcessResult result) {
+  final stderr = processOutputToString(result.stderr).trim();
+  final stdout = processOutputToString(result.stdout).trim();
   final details = stderr.isNotEmpty ? stderr : stdout;
 
   if (details.isEmpty) {
@@ -24,7 +29,7 @@ String _commandFailureMessage(String action, ProcessResult result) {
   return 'Failed to $action with exit code ${result.exitCode}: $details';
 }
 
-String _processOutputToString(Object? output) {
+String processOutputToString(Object? output) {
   if (output == null) {
     return '';
   }
@@ -40,7 +45,7 @@ String _processOutputToString(Object? output) {
   return output.toString();
 }
 
-int? _readUint16(Uint8List bytes, int offset) {
+int? readUint16(Uint8List bytes, int offset) {
   if (offset < 0 || offset + 2 > bytes.length) {
     return null;
   }
@@ -48,7 +53,7 @@ int? _readUint16(Uint8List bytes, int offset) {
   return bytes[offset] | bytes[offset + 1] << 8;
 }
 
-int? _readUint32(Uint8List bytes, int offset) {
+int? readUint32(Uint8List bytes, int offset) {
   if (offset < 0 || offset + 4 > bytes.length) {
     return null;
   }
@@ -59,7 +64,7 @@ int? _readUint32(Uint8List bytes, int offset) {
       bytes[offset + 3] << 24;
 }
 
-Option<T> _nullableOption<T extends Object>(T? value) {
+Option<T> nullableOption<T extends Object>(T? value) {
   if (value == null) {
     return const Option.none();
   }
@@ -67,15 +72,15 @@ Option<T> _nullableOption<T extends Object>(T? value) {
   return Option.of(value);
 }
 
-Option<int> _readUint16Option(Uint8List bytes, int offset) {
-  return _nullableOption(_readUint16(bytes, offset));
+Option<int> readUint16Option(Uint8List bytes, int offset) {
+  return nullableOption(readUint16(bytes, offset));
 }
 
-Option<int> _readUint32Option(Uint8List bytes, int offset) {
-  return _nullableOption(_readUint32(bytes, offset));
+Option<int> readUint32Option(Uint8List bytes, int offset) {
+  return nullableOption(readUint32(bytes, offset));
 }
 
-String? _nullTerminatedAsciiString(
+String? nullTerminatedAsciiString(
   Uint8List bytes,
   int offset,
   int maximumOffset,
@@ -84,7 +89,7 @@ String? _nullTerminatedAsciiString(
     return null;
   }
 
-  final endOffset = _nullByteOffset(bytes, offset, maximumOffset);
+  final endOffset = nullByteOffset(bytes, offset, maximumOffset);
   if (endOffset == null) {
     return null;
   }
@@ -95,7 +100,7 @@ String? _nullTerminatedAsciiString(
   );
 }
 
-String? _nullTerminatedUtf16LeString(
+String? nullTerminatedUtf16LeString(
   Uint8List bytes,
   int offset,
   int maximumOffset,
@@ -106,7 +111,7 @@ String? _nullTerminatedUtf16LeString(
 
   final codeUnits = <int>[];
   for (var cursor = offset; cursor + 1 < maximumOffset; cursor += 2) {
-    final codeUnit = _readUint16(bytes, cursor);
+    final codeUnit = readUint16(bytes, cursor);
     if (codeUnit == null || codeUnit == 0) {
       break;
     }
@@ -116,27 +121,27 @@ String? _nullTerminatedUtf16LeString(
   return codeUnits.isEmpty ? null : String.fromCharCodes(codeUnits);
 }
 
-Option<String> _nullTerminatedAsciiStringOption(
+Option<String> nullTerminatedAsciiStringOption(
   Uint8List bytes,
   int offset,
   int maximumOffset,
 ) {
-  return _nullableOption(
-    _nullTerminatedAsciiString(bytes, offset, maximumOffset),
+  return nullableOption(
+    nullTerminatedAsciiString(bytes, offset, maximumOffset),
   );
 }
 
-Option<String> _nullTerminatedUtf16LeStringOption(
+Option<String> nullTerminatedUtf16LeStringOption(
   Uint8List bytes,
   int offset,
   int maximumOffset,
 ) {
-  return _nullableOption(
-    _nullTerminatedUtf16LeString(bytes, offset, maximumOffset),
+  return nullableOption(
+    nullTerminatedUtf16LeString(bytes, offset, maximumOffset),
   );
 }
 
-int? _nullByteOffset(Uint8List bytes, int offset, int maximumOffset) {
+int? nullByteOffset(Uint8List bytes, int offset, int maximumOffset) {
   final boundedMaximum = min(maximumOffset, bytes.length);
   for (var cursor = offset; cursor < boundedMaximum; cursor += 1) {
     if (bytes[cursor] == 0) {
@@ -147,12 +152,12 @@ int? _nullByteOffset(Uint8List bytes, int offset, int maximumOffset) {
   return null;
 }
 
-Map<String, String>? _stringMap(Object? value) {
+Map<String, String>? stringMap(Object? value) {
   if (value == null) {
     return const <String, String>{};
   }
 
-  final map = _objectMap(value);
+  final map = objectMap(value);
   if (map == null) {
     return null;
   }

@@ -1,13 +1,24 @@
-part of '../../konyak_cli.dart';
+import 'dart:convert';
+import 'dart:io';
 
-ProgramSettingsRecord _readProgramSettingsJson(String path) {
+import 'package:fpdart/fpdart.dart';
+
+import '../domain/bottle/bottle_models.dart';
+import '../domain/bottle/bottle_runtime_settings_models.dart';
+import '../domain/program/program_run_environment.dart';
+import '../domain/program/program_settings_models.dart';
+import '../shared/common_helpers.dart';
+import '../shared/model_constants.dart';
+import 'external_payload_helpers.dart';
+
+ProgramSettingsRecord readProgramSettingsJson(String path) {
   final file = File(path);
   if (!file.existsSync()) {
     return ProgramSettingsRecord();
   }
 
   final decoded = jsonDecode(file.readAsStringSync());
-  return _programSettingsRecordFromJson(decoded).match(
+  return programSettingsRecordFromJson(decoded).match(
     () => throw const FormatException(
       'Program settings contain an invalid record.',
     ),
@@ -15,7 +26,7 @@ ProgramSettingsRecord _readProgramSettingsJson(String path) {
   );
 }
 
-void _writeProgramSettingsJson({
+void writeProgramSettingsJson({
   required String path,
   required ProgramSettingsRecord settings,
 }) {
@@ -26,16 +37,16 @@ void _writeProgramSettingsJson({
   );
 }
 
-Option<ProgramSettingsRecord> _programSettingsRecordFromJson(Object? value) {
-  final settings = _objectMap(value);
+Option<ProgramSettingsRecord> programSettingsRecordFromJson(Object? value) {
+  final settings = objectMap(value);
   if (settings == null) {
     return const Option.none();
   }
 
   final locale = settings['locale'];
   final arguments = settings['arguments'];
-  final environment = _stringMap(settings['environment']);
-  final logging = _programLoggingSettingsRecordFromJson(settings['logging']);
+  final environment = stringMap(settings['environment']);
+  final logging = programLoggingSettingsRecordFromJson(settings['logging']);
   if ((locale != null && locale is! String) ||
       (arguments != null && arguments is! String) ||
       environment == null ||
@@ -53,14 +64,14 @@ Option<ProgramSettingsRecord> _programSettingsRecordFromJson(Object? value) {
   );
 }
 
-Option<ProgramLoggingSettingsRecord>? _programLoggingSettingsRecordFromJson(
+Option<ProgramLoggingSettingsRecord>? programLoggingSettingsRecordFromJson(
   Object? value,
 ) {
   if (value == null) {
     return const Option.none();
   }
 
-  final settings = _objectMap(value);
+  final settings = objectMap(value);
   if (settings == null) {
     return null;
   }
@@ -87,50 +98,50 @@ Option<ProgramLoggingSettingsRecord>? _programLoggingSettingsRecordFromJson(
   );
 }
 
-Option<BottleRuntimeSettings> _bottleRuntimeSettingsFromJson(Object? value) {
+Option<BottleRuntimeSettings> bottleRuntimeSettingsFromJson(Object? value) {
   if (value == null) {
     return Option.of(BottleRuntimeSettings());
   }
 
-  final settings = _objectMap(value);
+  final settings = objectMap(value);
   if (settings == null) {
     return const Option.none();
   }
 
-  final enhancedSync = _runtimeSettingsString(
+  final enhancedSync = runtimeSettingsString(
     settings,
     'enhancedSync',
     allowedValues: const {'none', 'esync', 'msync'},
     defaultValue: 'msync',
   );
-  final metalHud = _runtimeSettingsBool(settings, 'metalHud');
-  final metalTrace = _runtimeSettingsBool(settings, 'metalTrace');
-  final avxEnabled = _runtimeSettingsBool(settings, 'avxEnabled');
-  final dxrEnabled = _runtimeSettingsBool(settings, 'dxrEnabled');
-  final dxvk = _runtimeSettingsBool(settings, 'dxvk');
-  final dxmt = _runtimeSettingsBool(settings, 'dxmt');
-  final dlssMetalFx = _runtimeSettingsBool(settings, 'dlssMetalFx');
-  final dxvkAsync = _runtimeSettingsBool(
+  final metalHud = runtimeSettingsBool(settings, 'metalHud');
+  final metalTrace = runtimeSettingsBool(settings, 'metalTrace');
+  final avxEnabled = runtimeSettingsBool(settings, 'avxEnabled');
+  final dxrEnabled = runtimeSettingsBool(settings, 'dxrEnabled');
+  final dxvk = runtimeSettingsBool(settings, 'dxvk');
+  final dxmt = runtimeSettingsBool(settings, 'dxmt');
+  final dlssMetalFx = runtimeSettingsBool(settings, 'dlssMetalFx');
+  final dxvkAsync = runtimeSettingsBool(
     settings,
     'dxvkAsync',
     defaultValue: true,
   );
-  final dxvkHud = _runtimeSettingsString(
+  final dxvkHud = runtimeSettingsString(
     settings,
     'dxvkHud',
     allowedValues: const {'full', 'partial', 'fps', 'off'},
     defaultValue: 'off',
   );
-  final vkd3dProton = _runtimeSettingsBool(settings, 'vkd3dProton');
-  final buildVersion = _runtimeSettingsInt(
+  final vkd3dProton = runtimeSettingsBool(settings, 'vkd3dProton');
+  final buildVersion = runtimeSettingsInt(
     settings,
     'buildVersion',
     defaultValue: 0,
     minimum: 0,
     maximum: 999999,
   );
-  final retinaMode = _runtimeSettingsBool(settings, 'retinaMode');
-  final dpiScaling = _runtimeSettingsInt(
+  final retinaMode = runtimeSettingsBool(settings, 'retinaMode');
+  final dpiScaling = runtimeSettingsInt(
     settings,
     'dpiScaling',
     defaultValue: 96,
@@ -190,7 +201,7 @@ Option<BottleRuntimeSettings> _bottleRuntimeSettingsFromJson(Object? value) {
   );
 }
 
-Option<String> _runtimeSettingsString(
+Option<String> runtimeSettingsString(
   Map<String, Object?> settings,
   String key, {
   required Set<String> allowedValues,
@@ -208,7 +219,7 @@ Option<String> _runtimeSettingsString(
   return allowedValues.contains(value) ? Option.of(value) : const Option.none();
 }
 
-Option<bool> _runtimeSettingsBool(
+Option<bool> runtimeSettingsBool(
   Map<String, Object?> settings,
   String key, {
   bool defaultValue = false,
@@ -221,7 +232,7 @@ Option<bool> _runtimeSettingsBool(
   return value is bool ? Option.of(value) : const Option.none();
 }
 
-Option<int> _runtimeSettingsInt(
+Option<int> runtimeSettingsInt(
   Map<String, Object?> settings,
   String key, {
   required int defaultValue,
@@ -248,8 +259,8 @@ Option<int> _runtimeSettingsInt(
   return Option.of(value);
 }
 
-BottleRecord _readBottleMetadata(String bottlePath) {
-  final metadata = File(_joinPath(bottlePath, const ['metadata.json']));
+BottleRecord readBottleMetadata(String bottlePath) {
+  final metadata = File(joinPath(bottlePath, const ['metadata.json']));
   final decoded = jsonDecode(metadata.readAsStringSync());
 
   if (decoded is! Map<String, dynamic>) {
@@ -260,7 +271,7 @@ BottleRecord _readBottleMetadata(String bottlePath) {
     throw const FormatException('Unsupported bottle metadata schema version.');
   }
 
-  return _bottleRecordFromJson(decoded['bottle']).match(
+  return bottleRecordFromJson(decoded['bottle']).match(
     () => throw const FormatException(
       'Bottle metadata contains an invalid record.',
     ),
@@ -268,8 +279,8 @@ BottleRecord _readBottleMetadata(String bottlePath) {
   );
 }
 
-void _writeBottleMetadata(BottleRecord bottle) {
-  final metadata = File(_joinPath(bottle.path.value, const ['metadata.json']));
+void writeBottleMetadata(BottleRecord bottle) {
+  final metadata = File(joinPath(bottle.path.value, const ['metadata.json']));
   metadata.writeAsStringSync(
     const JsonEncoder.withIndent('  ').convert(<String, Object?>{
       'schemaVersion': cliSchemaVersion,
@@ -278,7 +289,7 @@ void _writeBottleMetadata(BottleRecord bottle) {
   );
 }
 
-Option<BottleRecord> _bottleRecordFromJson(Object? value) {
+Option<BottleRecord> bottleRecordFromJson(Object? value) {
   if (value is! Map<String, dynamic>) {
     return const Option.none();
   }
@@ -295,10 +306,10 @@ Option<BottleRecord> _bottleRecordFromJson(Object? value) {
     return const Option.none();
   }
 
-  final runtimeSettings = _bottleRuntimeSettingsFromJson(
+  final runtimeSettings = bottleRuntimeSettingsFromJson(
     value['runtimeSettings'],
   );
-  final pinnedPrograms = _pinnedProgramRecordsFromJson(value['pinnedPrograms']);
+  final pinnedPrograms = pinnedProgramRecordsFromJson(value['pinnedPrograms']);
   final parsedRuntimeSettings = runtimeSettings.toNullable();
   final parsedPinnedPrograms = pinnedPrograms.toNullable();
   if (parsedRuntimeSettings == null || parsedPinnedPrograms == null) {
@@ -321,7 +332,7 @@ Option<BottleRecord> _bottleRecordFromJson(Object? value) {
   }
 }
 
-Option<List<PinnedProgramRecord>> _pinnedProgramRecordsFromJson(Object? value) {
+Option<List<PinnedProgramRecord>> pinnedProgramRecordsFromJson(Object? value) {
   if (value == null) {
     return Option.of(const <PinnedProgramRecord>[]);
   }

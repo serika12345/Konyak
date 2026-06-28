@@ -1,17 +1,26 @@
-part of '../../konyak_cli.dart';
+import 'dart:io';
 
-BottleArchiveExportResult _exportBottleArchive({
+import '../domain/bottle/bottle_models.dart';
+import '../domain/bottle/bottle_mutation_models.dart';
+import '../platform/platform_terminal_commands.dart';
+import '../shared/common_helpers.dart';
+import 'directory_copy_support.dart';
+import 'external_payload_helpers.dart';
+import 'io_result.dart';
+import 'repository_storage_io.dart';
+
+BottleArchiveExportResult writeBottleArchive({
   required BottleRecord bottle,
   required String archivePath,
 }) {
-  final normalizedBottlePath = _normalizeFilesystemPath(bottle.path.value);
+  final normalizedBottlePath = normalizeFilesystemPath(bottle.path.value);
   final bottleDirectory = Directory(normalizedBottlePath);
   if (!bottleDirectory.existsSync()) {
     return BottleArchiveExportFailed('Bottle directory was not found.');
   }
 
   try {
-    final normalizedArchivePath = _normalizeFilesystemPath(archivePath);
+    final normalizedArchivePath = normalizeFilesystemPath(archivePath);
     if (normalizedArchivePath == normalizedBottlePath ||
         normalizedArchivePath.startsWith('$normalizedBottlePath/')) {
       return BottleArchiveExportFailed(
@@ -25,12 +34,12 @@ BottleArchiveExportResult _exportBottleArchive({
       '-cf',
       archive.path,
       '-C',
-      _dirname(normalizedBottlePath),
-      _basename(normalizedBottlePath),
+      dirname(normalizedBottlePath),
+      basename(normalizedBottlePath),
     ], runInShell: false);
     if (result.exitCode != 0) {
       return BottleArchiveExportFailed(
-        _commandFailureMessage('export bottle archive', result),
+        commandFailureMessage('export bottle archive', result),
       );
     }
   } on FileSystemException catch (error) {
@@ -44,7 +53,7 @@ BottleArchiveExportResult _exportBottleArchive({
   );
 }
 
-BottleArchiveImportResult _importBottleArchive({
+BottleArchiveImportResult readBottleArchive({
   required String archivePath,
   required String bottleDirectory,
   required IoResult<bool> Function(String bottleId) hasBottle,
@@ -55,11 +64,11 @@ BottleArchiveImportResult _importBottleArchive({
     return BottleArchiveImportFailed('Bottle archive was not found.');
   }
 
-  final listing = _validatedBottleArchiveListing(archivePath);
+  final listing = validatedBottleArchiveListing(archivePath);
   switch (listing) {
-    case _InvalidBottleArchiveListing(:final message):
+    case InvalidBottleArchiveListing(:final message):
       return BottleArchiveImportFailed(message);
-    case _ValidBottleArchiveListing():
+    case ValidBottleArchiveListing():
       break;
   }
 
@@ -75,11 +84,11 @@ BottleArchiveImportResult _importBottleArchive({
     ], runInShell: false);
     if (extraction.exitCode != 0) {
       return BottleArchiveImportFailed(
-        _commandFailureMessage('import bottle archive', extraction),
+        commandFailureMessage('import bottle archive', extraction),
       );
     }
 
-    final extractedBottlePath = _joinPath(tempDirectory.path, [
+    final extractedBottlePath = joinPath(tempDirectory.path, [
       listing.topLevelDirectory,
     ]);
     final extractedBottleDirectory = Directory(extractedBottlePath);
@@ -89,8 +98,8 @@ BottleArchiveImportResult _importBottleArchive({
       );
     }
 
-    final imported = _readBottleMetadata(extractedBottlePath);
-    if (!_isValidBottleArchiveId(imported.id.value)) {
+    final imported = readBottleMetadata(extractedBottlePath);
+    if (!isValidBottleArchiveId(imported.id.value)) {
       return const BottleArchiveImportFailed(
         'Bottle archive metadata contains an invalid bottle id.',
       );
@@ -102,14 +111,14 @@ BottleArchiveImportResult _importBottleArchive({
         return BottleArchiveImportConflict(imported.id.value);
       }
 
-      final destinationPath = _joinPath(bottleDirectory, [imported.id.value]);
+      final destinationPath = joinPath(bottleDirectory, [imported.id.value]);
       if (Directory(destinationPath).existsSync()) {
         return BottleArchiveImportConflict(imported.id.value);
       }
 
       final relocated = imported.withPath(destinationPath);
-      _moveDirectory(from: extractedBottlePath, to: destinationPath);
-      _writeBottleMetadata(relocated);
+      moveDirectory(from: extractedBottlePath, to: destinationPath);
+      writeBottleMetadata(relocated);
       onImported?.call(relocated);
 
       return BottleArchiveImported(relocated);
@@ -127,47 +136,47 @@ BottleArchiveImportResult _importBottleArchive({
   }
 }
 
-sealed class _BottleArchiveListing {
-  const _BottleArchiveListing();
+sealed class BottleArchiveListing {
+  const BottleArchiveListing();
 }
 
-final class _ValidBottleArchiveListing extends _BottleArchiveListing {
-  const _ValidBottleArchiveListing({required this.topLevelDirectory});
+final class ValidBottleArchiveListing extends BottleArchiveListing {
+  const ValidBottleArchiveListing({required this.topLevelDirectory});
 
   final String topLevelDirectory;
 }
 
-final class _InvalidBottleArchiveListing extends _BottleArchiveListing {
-  const _InvalidBottleArchiveListing(this.message);
+final class InvalidBottleArchiveListing extends BottleArchiveListing {
+  const InvalidBottleArchiveListing(this.message);
 
   final String message;
 }
 
-_BottleArchiveListing _validatedBottleArchiveListing(String archivePath) {
+BottleArchiveListing validatedBottleArchiveListing(String archivePath) {
   final result = Process.runSync('tar', [
     '-tf',
     archivePath,
   ], runInShell: false);
   if (result.exitCode != 0) {
-    return _InvalidBottleArchiveListing(
-      _commandFailureMessage('inspect bottle archive', result),
+    return InvalidBottleArchiveListing(
+      commandFailureMessage('inspect bottle archive', result),
     );
   }
 
-  final entries = _processOutputToString(result.stdout)
+  final entries = processOutputToString(result.stdout)
       .split('\n')
       .map((entry) => entry.trim())
       .where((entry) => entry.isNotEmpty)
       .toList(growable: false);
   if (entries.isEmpty) {
-    return const _InvalidBottleArchiveListing('Bottle archive is empty.');
+    return const InvalidBottleArchiveListing('Bottle archive is empty.');
   }
 
   final topLevelDirectories = <String>{};
   var hasMetadata = false;
   for (final entry in entries) {
-    if (!_isSafeArchiveEntryPath(entry)) {
-      return const _InvalidBottleArchiveListing(
+    if (!isSafeArchiveEntryPath(entry)) {
+      return const InvalidBottleArchiveListing(
         'Bottle archive contains an unsafe path.',
       );
     }
@@ -183,22 +192,22 @@ _BottleArchiveListing _validatedBottleArchiveListing(String archivePath) {
   }
 
   if (topLevelDirectories.length != 1) {
-    return const _InvalidBottleArchiveListing(
+    return const InvalidBottleArchiveListing(
       'Bottle archive must contain exactly one bottle directory.',
     );
   }
   if (!hasMetadata) {
-    return const _InvalidBottleArchiveListing(
+    return const InvalidBottleArchiveListing(
       'Bottle archive does not contain bottle metadata.',
     );
   }
 
-  return _ValidBottleArchiveListing(
+  return ValidBottleArchiveListing(
     topLevelDirectory: topLevelDirectories.single,
   );
 }
 
-bool _isSafeArchiveEntryPath(String path) {
+bool isSafeArchiveEntryPath(String path) {
   if (path.startsWith('/') ||
       path.startsWith(r'\') ||
       path.contains('\u0000')) {
@@ -220,7 +229,7 @@ bool _isSafeArchiveEntryPath(String path) {
   return hasSegment;
 }
 
-bool _isValidBottleArchiveId(String id) {
+bool isValidBottleArchiveId(String id) {
   return id.isNotEmpty &&
       !id.contains('/') &&
       !id.contains(r'\') &&

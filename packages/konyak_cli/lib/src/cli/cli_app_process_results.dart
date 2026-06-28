@@ -1,25 +1,43 @@
-part of '../../konyak_cli.dart';
+import 'dart:async';
+import 'dart:math';
 
-CliResult _appSettingsJsonResult(AppSettingsRecord settings) {
-  return _jsonSuccess(<String, Object?>{'appSettings': settings.toJson()});
+import 'package:fpdart/fpdart.dart';
+
+import '../domain/app/app_settings_models.dart';
+import '../domain/bottle/bottle_models.dart';
+import '../domain/program/program_catalog_models.dart';
+import '../domain/program/program_run_models.dart';
+import '../domain/program/program_runner.dart';
+import '../domain/update/update_records.dart';
+import '../io/wine_process_metadata.dart';
+import '../io/wine_process_metadata_io.dart';
+import '../repository/repository_interfaces.dart';
+import '../shared/common_helpers.dart';
+import 'cli_bottle_results.dart';
+import 'cli_json_helpers.dart';
+import 'cli_program_run_handlers.dart';
+import 'cli_result_model.dart';
+
+CliResult appSettingsJsonResult(AppSettingsRecord settings) {
+  return jsonSuccess(<String, Object?>{'appSettings': settings.toJson()});
 }
 
-CliResult _appUpdateJsonResult(AppUpdateRecord update) {
-  return _jsonSuccess(<String, Object?>{'appUpdate': update.toJson()});
+CliResult appUpdateJsonResult(AppUpdateRecord update) {
+  return jsonSuccess(<String, Object?>{'appUpdate': update.toJson()});
 }
 
-CliResult _appUpdateInstallJsonResult(AppUpdateInstallRecord install) {
-  return _jsonSuccess(<String, Object?>{'appUpdateInstall': install.toJson()});
+CliResult appUpdateInstallJsonResult(AppUpdateInstallRecord install) {
+  return jsonSuccess(<String, Object?>{'appUpdateInstall': install.toJson()});
 }
 
-CliResult _wineProcessTerminationJsonResult(
+CliResult wineProcessTerminationJsonResult(
   List<WineProcessTerminationRecord> records, {
   String recordsKey = 'bottles',
 }) {
   final hasFailures = records.any(
     (record) => record.status.value != 'terminated',
   );
-  return _jsonSuccess(<String, Object?>{
+  return jsonSuccess(<String, Object?>{
     'wineProcessTermination': <String, Object?>{
       'hasFailures': hasFailures,
       recordsKey: records
@@ -29,8 +47,8 @@ CliResult _wineProcessTerminationJsonResult(
   }, exitCode: hasFailures ? 75 : 0);
 }
 
-CliResult _wineProcessListJsonResult(List<WineProcessRecord> records) {
-  return _jsonSuccess(<String, Object?>{
+CliResult wineProcessListJsonResult(List<WineProcessRecord> records) {
+  return jsonSuccess(<String, Object?>{
     'wineProcesses': <String, Object?>{
       'processes': records
           .map((record) => record.toJson())
@@ -39,7 +57,7 @@ CliResult _wineProcessListJsonResult(List<WineProcessRecord> records) {
   });
 }
 
-CliResult _terminateWineProcessesJsonResult({
+CliResult terminateWineProcessesJsonResult({
   required BottleCatalog bottleCatalog,
   required ProgramRunPlanner programRunPlanner,
   required ProgramRunner? programRunner,
@@ -47,24 +65,24 @@ CliResult _terminateWineProcessesJsonResult({
 }) {
   final runner = programRunner;
   if (runner == null) {
-    return _programRunnerUnavailableError();
+    return programRunnerUnavailableError();
   }
 
   return bottleCatalog.listBottles().match<CliResult>(
-    _bottleCatalogFailureJsonResult,
+    bottleCatalogFailureJsonResult,
     (bottles) {
       final records = <WineProcessTerminationRecord>[];
       final targetBottles = bottleId.match(
         () => bottles,
-        (id) => _findBottle(bottles, id).match(
+        (id) => findBottle(bottles, id).match(
           () => const <BottleRecord>[],
           (bottle) => <BottleRecord>[bottle],
         ),
       );
       if (bottleId.isSome() && targetBottles.isEmpty) {
         return bottleId.match(
-          () => _bottleNotFoundError(''),
-          _bottleNotFoundError,
+          () => bottleNotFoundError(''),
+          bottleNotFoundError,
         );
       }
 
@@ -78,7 +96,7 @@ CliResult _terminateWineProcessesJsonResult({
             records.add(
               WineProcessTerminationRecord(
                 bottleId: bottle.id.value,
-                status: _isSuccessfulWineServerTerminationExit(processExitCode)
+                status: isSuccessfulWineServerTerminationExit(processExitCode)
                     ? 'terminated'
                     : 'failed',
                 runnerKind: request.runnerKind.value,
@@ -101,16 +119,16 @@ CliResult _terminateWineProcessesJsonResult({
         }
       }
 
-      return _wineProcessTerminationJsonResult(records);
+      return wineProcessTerminationJsonResult(records);
     },
   );
 }
 
-bool _isSuccessfulWineServerTerminationExit(int processExitCode) {
+bool isSuccessfulWineServerTerminationExit(int processExitCode) {
   return processExitCode == 0 || processExitCode == 1;
 }
 
-CliResult _listWineProcessesJsonResult({
+CliResult listWineProcessesJsonResult({
   required BottleCatalog bottleCatalog,
   required ProgramRunPlanner programRunPlanner,
   required ProgramRunner? programRunner,
@@ -118,11 +136,11 @@ CliResult _listWineProcessesJsonResult({
 }) {
   final runner = programRunner;
   if (runner == null) {
-    return _programRunnerUnavailableError();
+    return programRunnerUnavailableError();
   }
 
   return bottleCatalog.listBottles().match<CliResult>(
-    _bottleCatalogFailureJsonResult,
+    bottleCatalogFailureJsonResult,
     (bottles) {
       final records = <WineProcessRecord>[];
       for (final bottle in bottles) {
@@ -132,12 +150,12 @@ CliResult _listWineProcessesJsonResult({
           case ProgramRunCompleted(:final processExitCode, :final stdout)
               when processExitCode == 0:
             records.addAll(
-              _parseWinedbgProcessList(stdout)
+              parseWinedbgProcessList(stdout)
                   .where((process) {
-                    return !_isWineInfrastructureProcess(process);
+                    return !isWineInfrastructureProcess(process);
                   })
                   .map((process) {
-                    final hostPath = _wineProcessHostPath(
+                    final hostPath = wineProcessHostPath(
                       bottle: bottle,
                       executable: process.executable,
                     );
@@ -158,7 +176,7 @@ CliResult _listWineProcessesJsonResult({
                   }),
             );
           case ProgramRunCompleted(:final processExitCode, :final stderr):
-            return _jsonError(
+            return jsonError(
               exitCode: 75,
               code: 'wineProcessListFailed',
               message:
@@ -167,7 +185,7 @@ CliResult _listWineProcessesJsonResult({
               extra: <String, Object?>{'diagnostic': stderr},
             );
           case ProgramRunFailed(:final message):
-            return _jsonError(
+            return jsonError(
               exitCode: 75,
               code: 'wineProcessListFailed',
               message: message,
@@ -175,14 +193,14 @@ CliResult _listWineProcessesJsonResult({
         }
       }
 
-      return _wineProcessListJsonResult(records);
+      return wineProcessListJsonResult(records);
     },
   );
 }
 
-const _wineProcessListConcurrency = 4;
+const wineProcessListConcurrency = 4;
 
-Future<CliResult> _listWineProcessesJsonResultAsync({
+Future<CliResult> listWineProcessesJsonResultAsync({
   required BottleCatalog bottleCatalog,
   required ProgramRunPlanner programRunPlanner,
   required AsyncProgramRunner programRunner,
@@ -190,23 +208,21 @@ Future<CliResult> _listWineProcessesJsonResultAsync({
   required HostProcessSnapshotReader hostProcessSnapshotReader,
 }) async {
   return bottleCatalog.listBottles().match<Future<CliResult>>(
-    (message) async => _bottleCatalogFailureJsonResult(message),
+    (message) async => bottleCatalogFailureJsonResult(message),
     (bottles) async {
-      final activeBottles = await _activeWineProcessBottles(
+      final activeBottles = await activeWineProcessBottles(
         bottles: bottles,
         hostProcessSnapshotReader: hostProcessSnapshotReader,
       );
-      final metadataCache = _AsyncProgramMetadataCache(
-        programMetadataExtractor,
-      );
+      final metadataCache = AsyncProgramMetadataCache(programMetadataExtractor);
       final bottleResults =
-          await _mapWithBoundedConcurrency<
+          await mapWithBoundedConcurrency<
             BottleRecord,
-            _AsyncBottleWineProcessListResult
+            AsyncBottleWineProcessListResult
           >(
             activeBottles,
-            _wineProcessListConcurrency,
-            (bottle) => _listBottleWineProcessesAsync(
+            wineProcessListConcurrency,
+            (bottle) => listBottleWineProcessesAsync(
               bottle: bottle,
               programRunPlanner: programRunPlanner,
               programRunner: programRunner,
@@ -217,19 +233,19 @@ Future<CliResult> _listWineProcessesJsonResultAsync({
       final records = <WineProcessRecord>[];
       for (final result in bottleResults) {
         switch (result) {
-          case _AsyncBottleWineProcessListFailure(:final failure):
+          case AsyncBottleWineProcessListFailure(:final failure):
             return failure;
-          case _AsyncBottleWineProcessListRecords(records: final bottleRecords):
+          case AsyncBottleWineProcessListRecords(records: final bottleRecords):
             records.addAll(bottleRecords);
         }
       }
 
-      return _wineProcessListJsonResult(records);
+      return wineProcessListJsonResult(records);
     },
   );
 }
 
-Future<List<BottleRecord>> _activeWineProcessBottles({
+Future<List<BottleRecord>> activeWineProcessBottles({
   required List<BottleRecord> bottles,
   required HostProcessSnapshotReader hostProcessSnapshotReader,
 }) async {
@@ -244,19 +260,17 @@ Future<List<BottleRecord>> _activeWineProcessBottles({
 
   return List.unmodifiable(
     bottles.where(
-      (bottle) => _hostProcessSnapshotContainsBottle(
-        snapshot: snapshot,
-        bottle: bottle,
-      ),
+      (bottle) =>
+          hostProcessSnapshotContainsBottle(snapshot: snapshot, bottle: bottle),
     ),
   );
 }
 
-bool _hostProcessSnapshotContainsBottle({
+bool hostProcessSnapshotContainsBottle({
   required String snapshot,
   required BottleRecord bottle,
 }) {
-  final bottlePath = _normalizeFilesystemPath(bottle.path.value);
+  final bottlePath = normalizeFilesystemPath(bottle.path.value);
   if (bottlePath.isEmpty) {
     return false;
   }
@@ -265,7 +279,7 @@ bool _hostProcessSnapshotContainsBottle({
   while (start != -1) {
     final end = start + bottlePath.length;
     if (end >= snapshot.length ||
-        _isHostProcessBottlePathBoundary(snapshot.codeUnitAt(end))) {
+        isHostProcessBottlePathBoundary(snapshot.codeUnitAt(end))) {
       return true;
     }
 
@@ -275,7 +289,7 @@ bool _hostProcessSnapshotContainsBottle({
   return false;
 }
 
-bool _isHostProcessBottlePathBoundary(int codeUnit) {
+bool isHostProcessBottlePathBoundary(int codeUnit) {
   return codeUnit == 0x09 ||
       codeUnit == 0x0a ||
       codeUnit == 0x0d ||
@@ -285,23 +299,23 @@ bool _isHostProcessBottlePathBoundary(int codeUnit) {
       codeUnit == 0x2f;
 }
 
-Future<_AsyncBottleWineProcessListResult> _listBottleWineProcessesAsync({
+Future<AsyncBottleWineProcessListResult> listBottleWineProcessesAsync({
   required BottleRecord bottle,
   required ProgramRunPlanner programRunPlanner,
   required AsyncProgramRunner programRunner,
-  required _AsyncProgramMetadataCache metadataCache,
+  required AsyncProgramMetadataCache metadataCache,
 }) async {
   final request = programRunPlanner.planWineProcessList(bottle: bottle);
   final result = await programRunner.run(request);
   switch (result) {
     case ProgramRunCompleted(:final processExitCode, :final stdout)
         when processExitCode == 0:
-      final resolver = _AsyncWineProcessHostPathResolver(bottle: bottle);
+      final resolver = AsyncWineProcessHostPathResolver(bottle: bottle);
       final records = await Future.wait(
-        _parseWinedbgProcessList(stdout)
-            .where((process) => !_isWineInfrastructureProcess(process))
+        parseWinedbgProcessList(stdout)
+            .where((process) => !isWineInfrastructureProcess(process))
             .map(
-              (process) => _wineProcessRecordAsync(
+              (process) => wineProcessRecordAsync(
                 bottle: bottle,
                 process: process,
                 hostPathResolver: resolver,
@@ -309,10 +323,10 @@ Future<_AsyncBottleWineProcessListResult> _listBottleWineProcessesAsync({
               ),
             ),
       );
-      return _AsyncBottleWineProcessListRecords(records);
+      return AsyncBottleWineProcessListRecords(records);
     case ProgramRunCompleted(:final processExitCode, :final stderr):
-      return _AsyncBottleWineProcessListFailure(
-        _jsonError(
+      return AsyncBottleWineProcessListFailure(
+        jsonError(
           exitCode: 75,
           code: 'wineProcessListFailed',
           message:
@@ -322,8 +336,8 @@ Future<_AsyncBottleWineProcessListResult> _listBottleWineProcessesAsync({
         ),
       );
     case ProgramRunFailed(:final message):
-      return _AsyncBottleWineProcessListFailure(
-        _jsonError(
+      return AsyncBottleWineProcessListFailure(
+        jsonError(
           exitCode: 75,
           code: 'wineProcessListFailed',
           message: message,
@@ -332,11 +346,11 @@ Future<_AsyncBottleWineProcessListResult> _listBottleWineProcessesAsync({
   }
 }
 
-Future<WineProcessRecord> _wineProcessRecordAsync({
+Future<WineProcessRecord> wineProcessRecordAsync({
   required BottleRecord bottle,
-  required _WinedbgProcess process,
-  required _AsyncWineProcessHostPathResolver hostPathResolver,
-  required _AsyncProgramMetadataCache metadataCache,
+  required WinedbgProcess process,
+  required AsyncWineProcessHostPathResolver hostPathResolver,
+  required AsyncProgramMetadataCache metadataCache,
 }) async {
   final hostPath = await hostPathResolver.hostPath(process.executable);
   final metadata = await hostPath.match(
@@ -352,30 +366,30 @@ Future<WineProcessRecord> _wineProcessRecordAsync({
   );
 }
 
-sealed class _AsyncBottleWineProcessListResult {
-  const _AsyncBottleWineProcessListResult();
+sealed class AsyncBottleWineProcessListResult {
+  const AsyncBottleWineProcessListResult();
 }
 
-final class _AsyncBottleWineProcessListRecords
-    extends _AsyncBottleWineProcessListResult {
-  _AsyncBottleWineProcessListRecords(List<WineProcessRecord> records)
+final class AsyncBottleWineProcessListRecords
+    extends AsyncBottleWineProcessListResult {
+  AsyncBottleWineProcessListRecords(List<WineProcessRecord> records)
     : records = List.unmodifiable(records);
 
   final List<WineProcessRecord> records;
 }
 
-final class _AsyncBottleWineProcessListFailure
-    extends _AsyncBottleWineProcessListResult {
-  const _AsyncBottleWineProcessListFailure(this.failure);
+final class AsyncBottleWineProcessListFailure
+    extends AsyncBottleWineProcessListResult {
+  const AsyncBottleWineProcessListFailure(this.failure);
 
   final CliResult failure;
 }
 
-final class _AsyncProgramMetadataCache {
-  _AsyncProgramMetadataCache(this._extractor);
+final class AsyncProgramMetadataCache {
+  AsyncProgramMetadataCache(this.extractor);
 
-  final AsyncProgramMetadataExtractor _extractor;
-  final Map<String, Future<Option<ProgramMetadataRecord>>> _cache =
+  final AsyncProgramMetadataExtractor extractor;
+  final Map<String, Future<Option<ProgramMetadataRecord>>> cache =
       <String, Future<Option<ProgramMetadataRecord>>>{};
 
   Future<Option<ProgramMetadataRecord>> extract({
@@ -383,15 +397,15 @@ final class _AsyncProgramMetadataCache {
     required String programPath,
   }) {
     final key =
-        '${bottle.id.value}\u0000${_normalizeFilesystemPath(programPath)}';
-    return _cache.putIfAbsent(
+        '${bottle.id.value}\u0000${normalizeFilesystemPath(programPath)}';
+    return cache.putIfAbsent(
       key,
-      () => _extractor.extract(bottle: bottle, programPath: programPath),
+      () => extractor.extract(bottle: bottle, programPath: programPath),
     );
   }
 }
 
-Future<List<T>> _mapWithBoundedConcurrency<S, T>(
+Future<List<T>> mapWithBoundedConcurrency<S, T>(
   List<S> items,
   int concurrency,
   Future<T> Function(S item) mapper,
@@ -421,7 +435,7 @@ Future<List<T>> _mapWithBoundedConcurrency<S, T>(
   return List<T>.unmodifiable(indexedResults.map((result) => result.$2));
 }
 
-CliResult _terminateWineProcessJsonResult({
+CliResult terminateWineProcessJsonResult({
   required BottleCatalog bottleCatalog,
   required ProgramRunPlanner programRunPlanner,
   required ProgramRunner? programRunner,
@@ -430,14 +444,14 @@ CliResult _terminateWineProcessJsonResult({
 }) {
   final runner = programRunner;
   if (runner == null) {
-    return _programRunnerUnavailableError();
+    return programRunnerUnavailableError();
   }
 
   return bottleCatalog.listBottles().match<CliResult>(
-    _bottleCatalogFailureJsonResult,
+    bottleCatalogFailureJsonResult,
     (bottles) {
-      final bottleOption = _findBottle(bottles, bottleId);
-      return bottleOption.match(() => _bottleNotFoundError(bottleId), (bottle) {
+      final bottleOption = findBottle(bottles, bottleId);
+      return bottleOption.match(() => bottleNotFoundError(bottleId), (bottle) {
         final request = programRunPlanner.planWineProcessKill(
           bottle: bottle,
           processId: processId,
@@ -465,7 +479,7 @@ CliResult _terminateWineProcessJsonResult({
           ),
         };
 
-        return _wineProcessTerminationJsonResult(<WineProcessTerminationRecord>[
+        return wineProcessTerminationJsonResult(<WineProcessTerminationRecord>[
           record,
         ], recordsKey: 'processes');
       });

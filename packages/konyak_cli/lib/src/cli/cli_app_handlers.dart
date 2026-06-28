@@ -1,21 +1,24 @@
-part of '../../konyak_cli.dart';
+import '../domain/update/update_records.dart';
+import 'cli_app_process_parsers.dart';
+import 'cli_app_process_results.dart';
+import 'cli_commands.dart';
+import 'cli_json_helpers.dart';
+import 'cli_result_model.dart';
+import 'cli_update_runtime_results.dart';
 
-CliResult? _handleAppCommand(
-  List<String> arguments,
-  _CliCommandContext context,
-) {
-  if (_isJsonAppUpdateCheckCommand(arguments)) {
+CliResult? handleAppCommand(List<String> arguments, CliCommandContext context) {
+  if (isJsonAppUpdateCheckCommand(arguments)) {
     final checker = context.appUpdateChecker;
     if (checker == null) {
-      return _unavailableJsonError(
+      return unavailableJsonError(
         code: 'appUpdateCheckerUnavailable',
         subject: 'App update checker',
       );
     }
 
     return switch (checker.check()) {
-      AppUpdateCheckCompleted(:final update) => _appUpdateJsonResult(update),
-      AppUpdateCheckFailed(:final message) => _jsonError(
+      AppUpdateCheckCompleted(:final update) => appUpdateJsonResult(update),
+      AppUpdateCheckFailed(:final message) => jsonError(
         exitCode: 75,
         code: 'appUpdateCheckFailed',
         message: message,
@@ -23,32 +26,32 @@ CliResult? _handleAppCommand(
     };
   }
 
-  if (_isJsonAppSettingsGetCommand(arguments)) {
+  if (isJsonAppSettingsGetCommand(arguments)) {
     final repository = context.appSettingsRepository;
     if (repository == null) {
-      return _appSettingsRepositoryUnavailableError();
+      return appSettingsRepositoryUnavailableError();
     }
 
     return repository.read().fold(
-      _appSettingsRepositoryFailureJsonResult,
-      _appSettingsJsonResult,
+      appSettingsRepositoryFailureJsonResult,
+      appSettingsJsonResult,
     );
   }
 
-  final appSettingsUpdate = _parseJsonAppSettingsUpdateRequest(arguments);
+  final appSettingsUpdate = parseJsonAppSettingsUpdateRequest(arguments);
   if (appSettingsUpdate != null) {
     final repository = context.appSettingsRepository;
     if (repository == null) {
-      return _appSettingsRepositoryUnavailableError();
+      return appSettingsRepositoryUnavailableError();
     }
 
     return repository
         .write(appSettingsUpdate)
-        .fold(_appSettingsRepositoryFailureJsonResult, _appSettingsJsonResult);
+        .fold(appSettingsRepositoryFailureJsonResult, appSettingsJsonResult);
   }
 
-  if (_isJsonAppUpdateInstallCommand(arguments)) {
-    return _installAppUpdateJsonResult(
+  if (isJsonAppUpdateInstallCommand(arguments)) {
+    return installAppUpdateJsonResult(
       appUpdateChecker: context.appUpdateChecker,
       appUpdateInstaller: context.appUpdateInstaller,
     );
@@ -57,16 +60,16 @@ CliResult? _handleAppCommand(
   return null;
 }
 
-CliResult _appSettingsRepositoryFailureJsonResult(String message) {
-  return _jsonError(
+CliResult appSettingsRepositoryFailureJsonResult(String message) {
+  return jsonError(
     exitCode: 74,
     code: 'appSettingsRepositoryError',
     message: message,
   );
 }
 
-CliResult _appSettingsRepositoryUnavailableError() {
-  return _unavailableJsonError(
+CliResult appSettingsRepositoryUnavailableError() {
+  return unavailableJsonError(
     code: 'appSettingsRepositoryUnavailable',
     subject: 'App settings repository',
   );

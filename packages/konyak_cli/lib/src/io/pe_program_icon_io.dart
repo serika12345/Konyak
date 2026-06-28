@@ -1,14 +1,20 @@
-part of '../../konyak_cli.dart';
+import 'dart:async';
+import 'dart:io';
+import 'dart:typed_data';
 
-String? _extractPeIcon({
-  required _PortableExecutableImage image,
+import '../domain/bottle/bottle_models.dart';
+import 'pe_program_icons.dart';
+import 'pe_program_image.dart';
+
+String? extractPeIcon({
+  required PortableExecutableImage image,
   required BottleRecord bottle,
   required String programPath,
   required FileStat fileStat,
 }) {
-  return _peIconBytes(image).match(
-    _missingPeIconPath,
-    (icoBytes) => _writePeIcon(
+  return peIconBytes(image).match(
+    missingPeIconPath,
+    (icoBytes) => writePeIcon(
       bottle: bottle,
       programPath: programPath,
       fileStat: fileStat,
@@ -17,15 +23,15 @@ String? _extractPeIcon({
   );
 }
 
-Future<String?> _extractPeIconAsync({
-  required _PortableExecutableImage image,
+Future<String?> extractPeIconAsync({
+  required PortableExecutableImage image,
   required BottleRecord bottle,
   required String programPath,
   required FileStat fileStat,
 }) async {
-  return _peIconBytes(image).match(
-    () async => _missingPeIconPath(),
-    (icoBytes) => _writePeIconAsync(
+  return peIconBytes(image).match(
+    () async => missingPeIconPath(),
+    (icoBytes) => writePeIconAsync(
       bottle: bottle,
       programPath: programPath,
       fileStat: fileStat,
@@ -34,17 +40,17 @@ Future<String?> _extractPeIconAsync({
   );
 }
 
-String? _missingPeIconPath() {
+String? missingPeIconPath() {
   return null;
 }
 
-String? _writePeIcon({
+String? writePeIcon({
   required BottleRecord bottle,
   required String programPath,
   required FileStat fileStat,
   required Uint8List icoBytes,
 }) {
-  final iconPath = _peIconCachePath(
+  final iconPath = peIconCachePath(
     bottle: bottle,
     programPath: programPath,
     fileStat: fileStat,
@@ -60,13 +66,13 @@ String? _writePeIcon({
   }
 }
 
-Future<String?> _writePeIconAsync({
+Future<String?> writePeIconAsync({
   required BottleRecord bottle,
   required String programPath,
   required FileStat fileStat,
   required Uint8List icoBytes,
 }) async {
-  final iconPath = _peIconCachePath(
+  final iconPath = peIconCachePath(
     bottle: bottle,
     programPath: programPath,
     fileStat: fileStat,

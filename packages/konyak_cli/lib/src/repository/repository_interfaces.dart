@@ -1,4 +1,11 @@
-part of '../../konyak_cli.dart';
+import 'package:fpdart/fpdart.dart';
+
+import '../domain/app/app_settings_models.dart';
+import '../domain/bottle/bottle_models.dart';
+import '../domain/bottle/bottle_mutation_models.dart';
+import '../domain/program/program_catalog_models.dart';
+import '../domain/program/program_mutation_models.dart';
+import '../io/io_result.dart';
 
 abstract interface class BottleCatalog {
   IoResult<List<BottleRecord>> listBottles();

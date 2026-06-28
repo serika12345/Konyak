@@ -1,6 +1,8 @@
-part of '../../konyak_cli.dart';
+import 'package:fpdart/fpdart.dart';
 
-Option<String> _runtimeReleaseSourceManifestUrl({
+import 'runtime_release_metadata_assets.dart';
+
+Option<String> runtimeReleaseSourceManifestUrl({
   required Object? release,
   required Option<String> releaseMetadataAssetUrl,
   required Object? releaseMetadata,
@@ -13,16 +15,16 @@ Option<String> _runtimeReleaseSourceManifestUrl({
     return const Option.none();
   }
 
-  return _runtimeReleaseSourceManifestFileName(releaseMetadata).flatMap(
-    (fileName) => _runtimeReleaseAssetUrlByFileName(release, fileName).alt(
+  return runtimeReleaseSourceManifestFileName(releaseMetadata).flatMap(
+    (fileName) => runtimeReleaseAssetUrlByFileName(release, fileName).alt(
       () => releaseMetadataAssetUrl.flatMap(
-        (metadataUrl) => _resolveReleaseMetadataAssetUrl(metadataUrl, fileName),
+        (metadataUrl) => resolveReleaseMetadataAssetUrl(metadataUrl, fileName),
       ),
     ),
   );
 }
 
-Option<String> _runtimeReleaseSourceManifestSignatureUrl({
+Option<String> runtimeReleaseSourceManifestSignatureUrl({
   required Object? release,
   required Option<String> releaseMetadataAssetUrl,
   required Object? releaseMetadata,
@@ -35,18 +37,16 @@ Option<String> _runtimeReleaseSourceManifestSignatureUrl({
     return const Option.none();
   }
 
-  return _runtimeReleaseSourceManifestSignatureFileName(
-    releaseMetadata,
-  ).flatMap(
-    (fileName) => _runtimeReleaseAssetUrlByFileName(release, fileName).alt(
+  return runtimeReleaseSourceManifestSignatureFileName(releaseMetadata).flatMap(
+    (fileName) => runtimeReleaseAssetUrlByFileName(release, fileName).alt(
       () => releaseMetadataAssetUrl.flatMap(
-        (metadataUrl) => _resolveReleaseMetadataAssetUrl(metadataUrl, fileName),
+        (metadataUrl) => resolveReleaseMetadataAssetUrl(metadataUrl, fileName),
       ),
     ),
   );
 }
 
-Option<String> _runtimeReleaseSourceManifestFileName(Object? decoded) {
+Option<String> runtimeReleaseSourceManifestFileName(Object? decoded) {
   if (decoded is! Map<String, dynamic>) {
     return const Option.none();
   }
@@ -64,7 +64,7 @@ Option<String> _runtimeReleaseSourceManifestFileName(Object? decoded) {
   return const Option.none();
 }
 
-Option<String> _runtimeReleaseSourceManifestSignatureFileName(Object? decoded) {
+Option<String> runtimeReleaseSourceManifestSignatureFileName(Object? decoded) {
   if (decoded is! Map<String, dynamic>) {
     return const Option.none();
   }
@@ -82,7 +82,7 @@ Option<String> _runtimeReleaseSourceManifestSignatureFileName(Object? decoded) {
   return const Option.none();
 }
 
-Option<String> _resolveReleaseMetadataAssetUrl(
+Option<String> resolveReleaseMetadataAssetUrl(
   String metadataUrl,
   String fileName,
 ) {
