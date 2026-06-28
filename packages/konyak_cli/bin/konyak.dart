@@ -1,50 +1,12 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:konyak_cli/konyak_cli.dart';
+import 'package:konyak_cli/src/cli/cli_default_runner.dart';
+import 'package:konyak_cli/src/io/runtime_install_progress_io.dart';
 
 Future<void> main(List<String> arguments) async {
-  final environment = Platform.environment;
-  final runtimeCatalog = currentKonyakRuntimeCatalog();
-  final programRunPlanner = currentProgramRunPlanner();
-  final appSettingsRepository = defaultAppSettingsRepositoryFromEnvironment(
-    environment,
-  );
-  final bottleRepository = appSettingsRepository.read().match(
-    (_) => defaultBottleRepositoryFromEnvironment(environment),
-    (appSettings) => defaultBottleRepositoryFromEnvironment(
-      environment,
-      appSettings: appSettings,
-    ),
-  );
-  const programRunner = DartIoProgramRunner();
-  final result = await runCliStreaming(
+  final result = await runCliStreamingWithDefaultIo(
     arguments,
-    bottleRepository: bottleRepository,
-    appSettingsRepository: appSettingsRepository,
-    runtimeCatalog: runtimeCatalog,
-    programRunPlanner: programRunPlanner,
-    programRunner: programRunner,
-    bottlePrefixInitializer: DartIoBottlePrefixInitializer(
-      programRunPlanner: programRunPlanner,
-      programRunner: programRunner,
-    ),
-    pathOpener: const DartIoPathOpener(),
-    macosWineInstaller: DartIoMacosWineInstaller.current(),
-    linuxWineInstaller: DartIoLinuxWineInstaller.current(),
-    gptkWineInstaller: DartIoGptkWineInstaller.current(),
-    runtimeUpdateChecker: DartIoRuntimeUpdateChecker(
-      runtimeCatalog: runtimeCatalog,
-    ),
-    appUpdateChecker: DartIoAppUpdateChecker.fromEnvironment(
-      HostEnvironment(environment),
-    ),
-    appUpdateInstaller: DartIoAppUpdateInstaller.fromEnvironment(environment),
-    runtimeValidator: DartIoMacosWineRuntimeValidator(
-      runtimeCatalog: runtimeCatalog,
-      environment: HostEnvironment(environment),
-    ),
-    macosSetupChecker: DartIoMacosSetupChecker.current(runtimeCatalog),
     runtimeInstallProgressSink: JsonRuntimeInstallProgressSink(stdout),
   );
 

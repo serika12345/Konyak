@@ -1,5 +1,8 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:konyak_cli/konyak_cli.dart';
+import 'package:konyak_cli/src/io/io_result.dart';
+import 'package:konyak_cli/src/io/runtime_catalog_factories_io.dart';
+import 'package:konyak_cli/src/repository/memory_bottle_repository.dart';
 import 'package:test/test.dart';
 
 T _expectIo<T>(IoResult<T> result) {

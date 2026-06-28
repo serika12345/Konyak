@@ -4,24 +4,28 @@ import 'dart:typed_data';
 
 import '../domain/program/program_graphics_backend_hints.dart';
 import '../domain/program/program_runner.dart';
+import '../domain/shared/domain_value_objects.dart';
 import 'pe_program_image.dart';
 
-class DartIoProgramGraphicsBackendHintsInspector {
+class DartIoProgramGraphicsBackendHintsInspector
+    implements ProgramGraphicsBackendHintsInspector {
   const DartIoProgramGraphicsBackendHintsInspector();
 
+  @override
   ProgramGraphicsBackendHintsInspectionResult inspect({
-    required String programPath,
+    required ProgramPath programPath,
     required KonyakHostPlatform hostPlatform,
   }) {
+    final path = programPath.value;
     try {
-      final file = File(programPath);
+      final file = File(path);
       if (!file.existsSync()) {
-        return ProgramGraphicsBackendHintsMissingProgram(programPath);
+        return ProgramGraphicsBackendHintsMissingProgram(path);
       }
 
       return ProgramGraphicsBackendHintsInspected(
         programGraphicsBackendHintsFromSignals(
-          programPath: programPath,
+          programPath: path,
           hostPlatform: hostPlatform,
           signals: PortableExecutableImage.parse(file.readAsBytesSync()).match(
             () => const <ProgramGraphicsBackendSignal>[],
@@ -31,17 +35,17 @@ class DartIoProgramGraphicsBackendHintsInspector {
       );
     } on FileSystemException catch (error) {
       return ProgramGraphicsBackendHintsInspectionFailed(
-        programPath: programPath,
+        programPath: path,
         message: error.message,
       );
     } on FormatException catch (error) {
       return ProgramGraphicsBackendHintsInspectionFailed(
-        programPath: programPath,
+        programPath: path,
         message: error.message,
       );
     } on RangeError {
       return ProgramGraphicsBackendHintsInspectionFailed(
-        programPath: programPath,
+        programPath: path,
         message: 'Program file could not be inspected.',
       );
     }

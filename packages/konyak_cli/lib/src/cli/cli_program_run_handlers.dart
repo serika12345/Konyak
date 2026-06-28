@@ -7,8 +7,8 @@ import '../domain/program/program_run_environment.dart';
 import '../domain/program/program_run_models.dart';
 import '../domain/program/program_runner.dart';
 import '../domain/program/program_settings_models.dart';
+import '../domain/shared/domain_value_objects.dart';
 import '../io/linux_external_program_launchers.dart';
-import '../io/program_graphics_backend_hints_io.dart';
 import '../repository/repository_interfaces.dart';
 import 'cli_bottle_mutation_handlers.dart';
 import 'cli_bottle_results.dart';
@@ -54,8 +54,8 @@ CliResult graphicsBackendHintsJsonResult(
   GraphicsBackendHintsCliRequest request,
   CliCommandContext context,
 ) {
-  final result = const DartIoProgramGraphicsBackendHintsInspector().inspect(
-    programPath: request.programPath,
+  final result = context.programGraphicsBackendHintsInspector.inspect(
+    programPath: ProgramPath(request.programPath),
     hostPlatform: context.programRunPlanner.hostPlatform,
   );
 

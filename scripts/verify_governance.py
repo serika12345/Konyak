@@ -21,6 +21,47 @@ PRODUCTION_LINE_LIMIT_BASELINE = {
     ),
 }
 
+KONYAK_CLI_PUBLIC_EXPORT_LINES = [
+    "export 'src/cli/cli_facade.dart' show runCli, runCliStreaming;",
+    "export 'src/cli/cli_result_model.dart' show CliResult;",
+    "export 'src/domain/app/app_settings_models.dart';",
+    "export 'src/domain/bottle/bottle_models.dart';",
+    "export 'src/domain/bottle/bottle_mutation_models.dart';",
+    "export 'src/domain/bottle/bottle_runtime_settings_models.dart';",
+    "export 'src/domain/program/pinned_programs.dart';",
+    "export 'src/domain/program/program_argument_support.dart';",
+    "export 'src/domain/program/program_catalog_models.dart';",
+    "export 'src/domain/program/program_graphics_backend_hints.dart';",
+    "export 'src/domain/program/program_mutation_models.dart';",
+    "export 'src/domain/program/program_registry_models.dart';",
+    "export 'src/domain/program/program_registry_plans.dart';",
+    "export 'src/domain/program/program_run_environment.dart';",
+    "export 'src/domain/program/program_run_models.dart';",
+    "export 'src/domain/program/program_runner.dart';",
+    "export 'src/domain/program/program_settings_models.dart';",
+    "export 'src/domain/runtime/host_environment.dart';",
+    "export 'src/domain/runtime/runtime_catalogs.dart';",
+    "export 'src/domain/runtime/runtime_component_versions.dart';",
+    "export 'src/domain/runtime/runtime_install_operation_models.dart';",
+    "export 'src/domain/runtime/runtime_install_plans.dart';",
+    "export 'src/domain/runtime/runtime_models.dart';",
+    "export 'src/domain/runtime/runtime_package_installation.dart';",
+    "export 'src/domain/runtime/runtime_platform_support.dart';",
+    "export 'src/domain/runtime/runtime_profile_environment.dart';",
+    "export 'src/domain/runtime/runtime_source_archive_planning.dart';",
+    "export 'src/domain/runtime/runtime_source_bundle_models.dart';",
+    "export 'src/domain/runtime/runtime_update_checker.dart';",
+    "export 'src/domain/runtime/runtime_update_support.dart';",
+    "export 'src/domain/runtime/runtime_validation.dart';",
+    "export 'src/domain/runtime/runtime_validation_models.dart';",
+    "export 'src/domain/runtime/runtime_validation_support.dart';",
+    "export 'src/domain/runtime/wine_runtime_paths.dart';",
+    "export 'src/domain/shared/domain_value_objects.dart';",
+    "export 'src/domain/update/app_update_checker.dart';",
+    "export 'src/domain/update/update_records.dart';",
+    "export 'src/domain/update/updates.dart';",
+]
+
 CUSTOM_LINT_RULES = [
     "konyak_no_domain_increment",
     "konyak_no_domain_io",
@@ -160,6 +201,34 @@ def require_production_file_line_limits() -> None:
             raise AssertionError(
                 f"{relative_path} has {line_count} lines; files over 1000 lines need an explicit governance baseline"
             )
+
+
+def require_konyak_cli_public_exports() -> None:
+    lines = read_text("packages/konyak_cli/lib/konyak_cli.dart").splitlines()
+    if lines != KONYAK_CLI_PUBLIC_EXPORT_LINES:
+        expected = "\n".join(KONYAK_CLI_PUBLIC_EXPORT_LINES)
+        raise AssertionError(
+            "packages/konyak_cli/lib/konyak_cli.dart must expose only the "
+            "approved CLI facade and domain contract exports:\n"
+            f"{expected}"
+        )
+
+
+def require_konyak_cli_public_facade_signature() -> None:
+    require_exact(
+        "packages/konyak_cli/lib/src/cli/cli_facade.dart",
+        """import 'cli_default_runner.dart';
+import 'cli_result_model.dart';
+
+CliResult runCli(List<String> arguments) {
+  return runCliWithDefaultIo(arguments);
+}
+
+Future<CliResult> runCliStreaming(List<String> arguments) {
+  return runCliStreamingWithDefaultIo(arguments);
+}
+""",
+    )
 
 
 def require_no_repository_dartio_defaults() -> None:
@@ -545,7 +614,7 @@ def require_result_boundary_rules() -> None:
         require_contains("packages/konyak_cli/lib/src/domain/program/program_mutation_models.dart", expected)
 
     require_contains(
-        "packages/konyak_cli/lib/src/cli/cli_commands.dart",
+        "packages/konyak_cli/lib/src/cli/cli_injected_runner.dart",
         "code: 'bottleRepositoryError'",
     )
 
@@ -1474,6 +1543,17 @@ def main() -> None:
         )
 
     if (ROOT / "packages/konyak_cli").exists():
+        require_konyak_cli_public_exports()
+        require_konyak_cli_public_facade_signature()
+        require_not_contains(
+            "packages/konyak_cli/lib/src/cli/cli_commands.dart",
+            "DartIo",
+        )
+        require_not_contains(
+            "packages/konyak_cli/lib/src/cli/cli_program_run_handlers.dart",
+            "DartIoProgramGraphicsBackendHintsInspector()",
+        )
+
         if (ROOT / "apps/konyak").exists():
             require_app_version_sources_match()
 

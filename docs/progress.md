@@ -13,6 +13,70 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-28 17:20 JST
+- State: `completed`
+- Branch: `main`
+- Active work: split the package-root CLI facade from the internal injectable
+  CLI runner.
+- Related TODO: `docs/todo.md` deferred
+  `program_run_request_builders.dart` split; domain impossible-state throws;
+  domain JSON projection extraction.
+- Latest commit: `f8ad003` (`Retire domain part root boundary`).
+- Purpose: make `package:konyak_cli/konyak_cli.dart` usable without exposing
+  repository/I/O/platform dependency types through `runCli` or
+  `runCliStreaming`, while keeping dependency injection available inside
+  `src/cli`.
+- Completed work: added `src/cli/cli_facade.dart` with simple
+  `List<String>`-only public `runCli` and `runCliStreaming`; moved the
+  dependency-heavy runner into `src/cli/cli_injected_runner.dart`; moved
+  default Dart I/O composition into `src/cli/cli_default_runner.dart`;
+  simplified `bin/konyak.dart` to call the default runner with a progress sink;
+  kept `cli_commands.dart` focused on `CliCommandContext` and command
+  dispatch; changed `ProgramGraphicsBackendHintsInspector.inspect` to accept
+  `ProgramPath`; added a public facade regression test; and strengthened
+  governance for exact root exports, exact facade signatures, and no `DartIo`
+  references in `cli_commands.dart`.
+- Remaining work: none for this slice. Existing deferred domain throw removal,
+  JSON projection extraction, and request-builder split remain.
+- Next action: continue with `docs/todo.md`, starting with domain
+  impossible-state throws or domain JSON projection extraction.
+- Verification: focused `cd packages/konyak_cli && dart analyze
+  --fatal-infos`, `cd packages/konyak_cli && dart test
+  test/public_facade_test.dart`, and `just verify-governance` passed; final
+  `just verify`, `just verify-governance && just verify-architecture`, and
+  `git diff --check HEAD` passed.
+
+- Timestamp: 2026-06-28 16:54 JST
+- State: `completed`
+- Branch: `main`
+- Active work: narrow the Konyak CLI package-root public exports and move the
+  graphics-backend hint inspector behind the CLI command context.
+- Related TODO: `docs/todo.md` deferred
+  `program_run_request_builders.dart` split; domain impossible-state throws;
+  domain JSON projection extraction.
+- Latest commit: `f8ad003` (`Retire domain part root boundary`).
+- Purpose: keep the post-handwritten-`part` design moving toward explicit
+  public contracts and internal composition roots without reintroducing giant
+  barrels or handler-side concrete I/O construction.
+- Completed work: reduced `packages/konyak_cli/lib/konyak_cli.dart` to CLI
+  facade and domain-contract exports; moved CLI binary and CLI tests to
+  explicit internal imports for repository/I/O/platform fixtures; added a
+  `ProgramGraphicsBackendHintsInspector` domain port; injected that port
+  through `CliCommandContext`; and added governance for the package-root export
+  allowlist.
+- Remaining work: none for this slice. `program_run_request_builders.dart`,
+  domain impossible-state throws, and domain JSON projection extraction remain
+  deferred design debt.
+- Next action: continue with `docs/todo.md`, starting with domain
+  impossible-state throws or domain JSON projection extraction before splitting
+  `program_run_request_builders.dart`.
+- Verification: focused regression
+  `cd packages/konyak_cli && dart test test/cli_contract_test.dart -n
+  "suggest-graphics-backend --json uses the injected inspector"`, CLI analyzer
+  `cd packages/konyak_cli && dart analyze --fatal-infos`, and
+  `just verify-governance` passed; final `just verify`,
+  `just verify-architecture`, and `git diff --check HEAD` passed.
+
 - Timestamp: 2026-06-28 16:31 JST
 - State: `completed`
 - Branch: `main`

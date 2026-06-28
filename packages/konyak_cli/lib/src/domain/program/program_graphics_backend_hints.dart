@@ -66,6 +66,13 @@ sealed class ProgramGraphicsBackendHintsInspectionResult {
   const ProgramGraphicsBackendHintsInspectionResult();
 }
 
+abstract interface class ProgramGraphicsBackendHintsInspector {
+  ProgramGraphicsBackendHintsInspectionResult inspect({
+    required ProgramPath programPath,
+    required KonyakHostPlatform hostPlatform,
+  });
+}
+
 final class ProgramGraphicsBackendHintsInspected
     extends ProgramGraphicsBackendHintsInspectionResult {
   const ProgramGraphicsBackendHintsInspected(this.hints);

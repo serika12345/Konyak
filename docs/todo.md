@@ -38,6 +38,12 @@ verification output instead of checked-off backlog entries.
 
 ## Deferred
 
+- Split `packages/konyak_cli/lib/src/domain/program/program_run_request_builders.dart`.
+  - This file remains in the production large-file governance baseline as the
+    existing pure request-builder table.
+  - Keep the split responsibility-based, such as macOS requests, Linux
+    requests, terminal command rendering, and shared environment assembly.
+  - Do not replace it with another pasted transitional giant file.
 - Audit and remove domain `throw StateError` / `getOrElse(() => throw ...)`
   paths where they are masking an "impossible" state instead of returning a
   typed result or sealed branch.

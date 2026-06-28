@@ -6,7 +6,38 @@ import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 import 'package:fpdart/fpdart.dart';
-import 'package:konyak_cli/konyak_cli.dart';
+import 'package:konyak_cli/konyak_cli.dart' hide runCli, runCliStreaming;
+import 'package:konyak_cli/src/cli/cli_injected_runner.dart';
+import 'package:konyak_cli/src/io/app_settings_repositories.dart';
+import 'package:konyak_cli/src/io/app_update_checker_io.dart';
+import 'package:konyak_cli/src/io/app_update_installer.dart';
+import 'package:konyak_cli/src/io/gptk_wine_installation.dart';
+import 'package:konyak_cli/src/io/io_result.dart';
+import 'package:konyak_cli/src/io/linux_external_program_launchers.dart';
+import 'package:konyak_cli/src/io/linux_wine_installation.dart';
+import 'package:konyak_cli/src/io/macos_wine_installation.dart';
+import 'package:konyak_cli/src/io/program_discovery.dart';
+import 'package:konyak_cli/src/io/program_io_services.dart';
+import 'package:konyak_cli/src/io/program_metadata_io.dart';
+import 'package:konyak_cli/src/io/program_winetricks_support.dart';
+import 'package:konyak_cli/src/io/release_metadata_fetcher.dart';
+import 'package:konyak_cli/src/io/runtime_catalog_factories_io.dart';
+import 'package:konyak_cli/src/io/runtime_install_progress_io.dart';
+import 'package:konyak_cli/src/io/runtime_package_installer_io.dart';
+import 'package:konyak_cli/src/io/runtime_probes.dart';
+import 'package:konyak_cli/src/io/runtime_update_checker_io.dart';
+import 'package:konyak_cli/src/io/winetricks_io.dart';
+import 'package:konyak_cli/src/platform/linux/linux_wine_install_requests.dart';
+import 'package:konyak_cli/src/platform/linux/linux_wine_install_results.dart';
+import 'package:konyak_cli/src/platform/macos/macos_runtime_validator.dart';
+import 'package:konyak_cli/src/platform/macos/macos_setup_checker.dart';
+import 'package:konyak_cli/src/platform/macos/macos_wine_install_requests.dart';
+import 'package:konyak_cli/src/platform/macos/macos_wine_install_results.dart';
+import 'package:konyak_cli/src/repository/composite_bottle_repository.dart';
+import 'package:konyak_cli/src/repository/file_bottle_repository.dart';
+import 'package:konyak_cli/src/repository/memory_bottle_repository.dart';
+import 'package:konyak_cli/src/repository/repository_interfaces.dart';
+import 'package:konyak_cli/src/shared/model_constants.dart';
 import 'package:test/test.dart';
 
 part 'cli_contract_app_bottle.part.dart';
@@ -217,6 +248,25 @@ final class NoopProgramMetadataExtractor implements ProgramMetadataExtractor {
     required String programPath,
   }) {
     return const Option.none();
+  }
+}
+
+final class RecordingProgramGraphicsBackendHintsInspector
+    implements ProgramGraphicsBackendHintsInspector {
+  RecordingProgramGraphicsBackendHintsInspector(this.result);
+
+  final ProgramGraphicsBackendHintsInspectionResult result;
+  final List<({ProgramPath programPath, KonyakHostPlatform hostPlatform})>
+  requests = <({ProgramPath programPath, KonyakHostPlatform hostPlatform})>[];
+
+  @override
+  ProgramGraphicsBackendHintsInspectionResult inspect({
+    required ProgramPath programPath,
+    required KonyakHostPlatform hostPlatform,
+  }) {
+    requests.add((programPath: programPath, hostPlatform: hostPlatform));
+
+    return result;
   }
 }
 

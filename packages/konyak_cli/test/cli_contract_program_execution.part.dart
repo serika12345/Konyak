@@ -1,6 +1,58 @@
 part of 'cli_contract_test.dart';
 
 void defineProgramExecutionContractTests() {
+  test('suggest-graphics-backend --json uses the injected inspector', () {
+    final inspector = RecordingProgramGraphicsBackendHintsInspector(
+      ProgramGraphicsBackendHintsInspected(
+        ProgramGraphicsBackendHints(
+          programPath: '/games/injected.exe',
+          hostPlatform: KonyakHostPlatform.macos,
+          signals: const [],
+          suggestions: [
+            ProgramGraphicsBackendSuggestion(
+              backend: 'dxvk',
+              confidence: 'low',
+              reason: 'Injected inspector result.',
+            ),
+          ],
+        ),
+      ),
+    );
+
+    final result = runCli(
+      const [
+        'suggest-graphics-backend',
+        '--program',
+        '/games/injected.exe',
+        '--json',
+      ],
+      programRunPlanner: ProgramRunPlanner(
+        hostPlatform: KonyakHostPlatform.macos,
+      ),
+      programGraphicsBackendHintsInspector: inspector,
+    );
+
+    expect(result.exitCode, 0);
+    expect(inspector.requests, [
+      (
+        programPath: ProgramPath('/games/injected.exe'),
+        hostPlatform: KonyakHostPlatform.macos,
+      ),
+    ]);
+
+    final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+    expect(
+      (payload['graphicsBackendHints'] as Map<String, Object?>)['suggestions'],
+      [
+        {
+          'backend': 'dxvk',
+          'confidence': 'low',
+          'reason': 'Injected inspector result.',
+        },
+      ],
+    );
+  });
+
   test(
     'suggest-graphics-backend --json recommends D3DMetal for D3D12 on macOS',
     () async {
