@@ -14,7 +14,7 @@ import 'cli_result_model.dart';
 CliResult bottleArchiveExportJsonResult(BottleArchiveExportResult result) {
   return switch (result) {
     BottleArchiveExported(:final archive) => jsonSuccess(<String, Object?>{
-      'bottleArchive': archive.toJson(),
+      'bottleArchive': bottleArchiveRecordJson(archive),
     }),
     BottleArchiveExportMissing(:final bottleId) => bottleNotFoundError(
       bottleId.value,
@@ -24,6 +24,13 @@ CliResult bottleArchiveExportJsonResult(BottleArchiveExportResult result) {
       code: 'bottleArchiveExportFailed',
       message: message,
     ),
+  };
+}
+
+Map<String, Object?> bottleArchiveRecordJson(BottleArchiveRecord archive) {
+  return <String, Object?>{
+    'bottleId': archive.bottleId.value,
+    'archivePath': archive.archivePath.value,
   };
 }
 

@@ -36,13 +36,6 @@ class BottleArchiveRecord {
 
   final BottleId bottleId;
   final BottleArchivePath archivePath;
-
-  Map<String, Object?> toJson() {
-    return <String, Object?>{
-      'bottleId': bottleId.value,
-      'archivePath': archivePath.value,
-    };
-  }
 }
 
 sealed class BottleCreateResult {

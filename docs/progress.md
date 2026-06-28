@@ -13,6 +13,33 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-28 22:26 JST
+- State: `completed`
+- Branch: `main`
+- Active work: move bottle archive JSON projection out of domain models.
+- Related TODO: `docs/todo.md` deferred JSON `toJson` projection separation.
+- Latest commit: `a95a20d` (`Move update record JSON projections`).
+- Purpose: continue separating domain models from CLI JSON serialization by
+  moving `BottleArchiveRecord` projection into the CLI result boundary used by
+  `export-bottle-archive --json`.
+- Completed work: committed the update record projection slice, inspected
+  bottle archive result output and focused export-bottle-archive CLI contract
+  coverage; observed `just verify-governance` fail before implementation
+  because `BottleArchiveRecord` still owned CLI JSON projection; moved the
+  projection into `cli_bottle_results.dart`, removed the domain `toJson`, and
+  added governance for the bottle archive boundary.
+- Remaining work: domain `toJson` projections remain in bottle records,
+  bottle runtime settings, runtime/runtime validation/runtime package records,
+  and pinned launcher manifests.
+- Next action: continue JSON projection separation with another narrow
+  CLI-covered record group, likely pinned launcher manifests or runtime
+  validation/package records.
+- Verification: observed `just verify-governance` fail before implementation;
+  after implementation, `cd packages/konyak_cli && dart analyze
+  --fatal-infos`, focused export-bottle-archive CLI contract tests,
+  `just verify-governance`, `just cli-test`, `just verify-architecture`,
+  `just verify-safety`, `just format-check`, and `just lint` passed.
+
 - Timestamp: 2026-06-28 22:21 JST
 - State: `completed`
 - Branch: `main`

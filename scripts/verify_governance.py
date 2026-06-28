@@ -940,6 +940,44 @@ def require_update_record_cli_json_projection() -> None:
         )
 
 
+def require_bottle_archive_cli_json_projection() -> None:
+    domain_path = (
+        "packages/konyak_cli/lib/src/domain/bottle/bottle_mutation_models.dart"
+    )
+    domain = read_text(domain_path)
+    record_match = re.search(
+        r"class BottleArchiveRecord \{(?P<body>.*?)\n\}",
+        domain,
+        flags=re.DOTALL,
+    )
+    if record_match is None:
+        raise AssertionError("BottleArchiveRecord must exist")
+    if "toJson(" in record_match.group("body"):
+        raise AssertionError(
+            "BottleArchiveRecord must not own CLI JSON projection"
+        )
+
+    cli_path = "packages/konyak_cli/lib/src/cli/cli_bottle_results.dart"
+    cli = read_text(cli_path)
+    expected_terms = [
+        "Map<String, Object?> bottleArchiveRecordJson(",
+        "'bottleId': archive.bottleId.value",
+        "'archivePath': archive.archivePath.value",
+        "'bottleArchive': bottleArchiveRecordJson(archive)",
+    ]
+    for expected in expected_terms:
+        if expected not in cli:
+            raise AssertionError(
+                "Bottle archive JSON projection must live at the CLI "
+                f"boundary: {expected}"
+            )
+
+    if "archive.toJson()" in cli:
+        raise AssertionError(
+            "Bottle archive JSON must not rely on domain-owned toJson"
+        )
+
+
 def count_constructor_field_parameters(
     relative_path: str,
     constructor_name: str,
@@ -1738,6 +1776,7 @@ def main() -> None:
     require_program_settings_cli_json_projection()
     require_app_settings_serialization_boundary()
     require_update_record_cli_json_projection()
+    require_bottle_archive_cli_json_projection()
 
     for expected in [
         "flutter",
