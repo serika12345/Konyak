@@ -16,9 +16,6 @@ PRODUCTION_LINE_LIMIT_BASELINE = {
     "packages/konyak_cli/lib/src/domain/shared/domain_value_objects.dart": (
         "Freezed value object declarations are intentionally centralized"
     ),
-    "packages/konyak_cli/lib/src/domain/program/program_run_request_builders.dart": (
-        "Existing pure request-builder table; split in a dedicated domain slice"
-    ),
 }
 
 KONYAK_CLI_PUBLIC_EXPORT_LINES = [
@@ -201,6 +198,25 @@ def require_production_file_line_limits() -> None:
             raise AssertionError(
                 f"{relative_path} has {line_count} lines; files over 1000 lines need an explicit governance baseline"
             )
+
+
+def require_program_run_request_builders_split() -> None:
+    require_exact(
+        "packages/konyak_cli/lib/src/domain/program/program_run_request_builders.dart",
+        """export 'program_run_command_support.dart';
+export 'program_run_linux_requests.dart';
+export 'program_run_macos_requests.dart' hide macosWineEnvironmentForRequests;
+export 'program_run_terminal_requests.dart';
+""",
+    )
+    for relative_path in [
+        "packages/konyak_cli/lib/src/domain/program/program_run_command_support.dart",
+        "packages/konyak_cli/lib/src/domain/program/program_run_linux_requests.dart",
+        "packages/konyak_cli/lib/src/domain/program/program_run_macos_requests.dart",
+        "packages/konyak_cli/lib/src/domain/program/program_run_terminal_requests.dart",
+    ]:
+        if not (ROOT / relative_path).exists():
+            raise AssertionError(f"{relative_path} must exist after splitting request builders")
 
 
 def count_constructor_field_parameters(
@@ -989,6 +1005,7 @@ def main() -> None:
     require_typed_domain_string_maps()
     require_runtime_ssot_rules()
     require_no_cli_state_errors()
+    require_program_run_request_builders_split()
 
     for expected in [
         "flutter",

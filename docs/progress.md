@@ -13,6 +13,37 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-28 20:08 JST
+- State: `completed`
+- Branch: `main`
+- Active work: split `program_run_request_builders.dart` into responsibility
+  libraries.
+- Related TODO: `docs/todo.md` deferred
+  `program_run_request_builders.dart` split.
+- Latest commit: `a2e413c` (`Remove CLI StateError fallbacks`).
+- Purpose: replace the remaining production large-file governance baseline for
+  the pure program-run request-builder table with explicit Linux, macOS,
+  terminal, and command-support domain libraries.
+- Completed work: read the current roadmap/progress state, confirmed the
+  1002-line request-builder file was only imported by `ProgramRunPlanner`;
+  moved Linux request builders and Linux runtime environment assembly into
+  `program_run_linux_requests.dart`; moved macOS request builders and macOS
+  runtime environment assembly into `program_run_macos_requests.dart`; moved
+  terminal command request rendering into `program_run_terminal_requests.dart`;
+  moved small command validators into `program_run_command_support.dart`; left
+  `program_run_request_builders.dart` as the stable export boundary; removed
+  the production large-file governance baseline and added governance for the
+  exact split export shape; removed the completed TODO item.
+- Remaining work: none for this slice.
+- Next action: continue with the next deferred backend cleanup, likely moving
+  JSON `toJson` projection out of domain models where compatibility permits.
+- Verification: observed `just verify-governance` fail before implementation
+  because `program_run_request_builders.dart` still exceeded the production
+  line limit after its baseline was removed; after implementation,
+  `cd packages/konyak_cli && dart analyze --fatal-infos`,
+  `just verify-governance`, `just verify-architecture`, `just cli-test`,
+  `just verify-safety`, `just format-check`, and `just lint` passed.
+
 - Timestamp: 2026-06-28 19:48 JST
 - State: `completed`
 - Branch: `main`
