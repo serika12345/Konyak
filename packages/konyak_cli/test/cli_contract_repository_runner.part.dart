@@ -145,16 +145,18 @@ void defineRepositoryAndRunnerContractTests() {
     final logPath = _joinTestPath(logDirectory.path, const ['latest.log']);
     final result = const DartIoProgramRunner().run(
       ProgramRunRequest(
-        bottleId: 'steam',
-        programPath: '/downloads/setup.exe',
-        runnerKind: 'macosWine',
-        executable: Platform.resolvedExecutable,
-        arguments: const ['--version'],
+        bottleId: BottleId('steam'),
+        programPath: ProgramPath('/downloads/setup.exe'),
+        runnerKind: RunnerKind('macosWine'),
+        executable: ProgramExecutable(Platform.resolvedExecutable),
+        arguments: ProgramRunArguments(const ['--version']),
         environment: ProgramRunEnvironment(const <String, String>{
           'WINEPREFIX': '/bottles/steam',
         }),
-        logPath: logPath,
-        workingDirectory: Option.of(logDirectory.path),
+        logPath: ProgramLogPath(logPath),
+        workingDirectory: Option.of(
+          ProgramWorkingDirectoryPath(logDirectory.path),
+        ),
       ),
     );
 
@@ -187,13 +189,13 @@ void defineRepositoryAndRunnerContractTests() {
       final logPath = _joinTestPath(logDirectory.path, const ['latest.log']);
       final result = const DartIoProgramRunner().run(
         ProgramRunRequest(
-          bottleId: 'steam',
-          programPath: '/downloads/setup.exe',
-          runnerKind: 'wine',
-          executable: Platform.resolvedExecutable,
-          arguments: const ['--version'],
+          bottleId: BottleId('steam'),
+          programPath: ProgramPath('/downloads/setup.exe'),
+          runnerKind: RunnerKind('wine'),
+          executable: ProgramExecutable(Platform.resolvedExecutable),
+          arguments: ProgramRunArguments(const ['--version']),
           environment: const ProgramRunEnvironment.empty(),
-          logPath: logPath,
+          logPath: ProgramLogPath(logPath),
           createLogFile: false,
         ),
       );
@@ -216,13 +218,13 @@ void defineRepositoryAndRunnerContractTests() {
 
     final result = const DartIoProgramRunner().run(
       ProgramRunRequest(
-        bottleId: 'steam',
-        programPath: '/downloads/setup.exe',
-        runnerKind: 'wine',
-        executable: '/definitely/missing/konyak-runner',
-        arguments: const ['/downloads/setup.exe'],
+        bottleId: BottleId('steam'),
+        programPath: ProgramPath('/downloads/setup.exe'),
+        runnerKind: RunnerKind('wine'),
+        executable: ProgramExecutable('/definitely/missing/konyak-runner'),
+        arguments: ProgramRunArguments(const ['/downloads/setup.exe']),
         environment: const ProgramRunEnvironment.empty(),
-        logPath: logPath,
+        logPath: ProgramLogPath(logPath),
       ),
     );
 

@@ -1662,7 +1662,7 @@ void defineProgramExecutionContractTests() {
       request.executable.value,
       '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wineloader',
     );
-    expect(request.arguments, const ['wineboot', '--init']);
+    expect(request.arguments.value, const ['wineboot', '--init']);
     expect(request.programPath.value, 'wineboot');
     expect(request.runnerKind.value, 'macosWine');
     expect(

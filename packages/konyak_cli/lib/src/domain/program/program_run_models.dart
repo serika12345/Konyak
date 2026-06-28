@@ -6,35 +6,29 @@ import 'program_run_environment.dart';
 
 class ProgramRunRequest {
   ProgramRunRequest({
-    required String bottleId,
-    required String programPath,
-    required String runnerKind,
-    required String executable,
-    required List<String> arguments,
+    required this.bottleId,
+    required this.programPath,
+    required this.runnerKind,
+    required this.executable,
+    required this.arguments,
     required this.environment,
-    required String logPath,
+    required this.logPath,
     this.createLogFile = true,
-    Option<String> workingDirectory = const Option.none(),
-  }) : bottleId = BottleId(bottleId),
-       programPath = ProgramPath(programPath),
-       runnerKind = RunnerKind(runnerKind),
-       executable = ProgramExecutable(executable),
-       arguments = List.unmodifiable(arguments),
-       logPath = ProgramLogPath(logPath),
-       workingDirectory = workingDirectory.map(ProgramWorkingDirectoryPath.new);
+    this.workingDirectory = const Option.none(),
+  });
 
   final BottleId bottleId;
   final ProgramPath programPath;
   final RunnerKind runnerKind;
   final ProgramExecutable executable;
-  final List<String> arguments;
+  final ProgramRunArguments arguments;
   final ProgramRunEnvironment environment;
   final ProgramLogPath logPath;
   final bool createLogFile;
   final Option<ProgramWorkingDirectoryPath> workingDirectory;
 
   List<String> get argv {
-    return List.unmodifiable(<String>[executable.value, ...arguments]);
+    return List.unmodifiable(<String>[executable.value, ...arguments.value]);
   }
 }
 

@@ -446,14 +446,14 @@ void main() {
 
   test('program run requests expose semantic value object fields', () {
     final request = ProgramRunRequest(
-      bottleId: 'steam',
-      programPath: '/steam.exe',
-      runnerKind: 'wine',
-      executable: 'wine',
-      arguments: const <String>['/steam.exe'],
+      bottleId: BottleId('steam'),
+      programPath: ProgramPath('/steam.exe'),
+      runnerKind: RunnerKind('wine'),
+      executable: ProgramExecutable('wine'),
+      arguments: ProgramRunArguments(const <String>['/steam.exe']),
       environment: const ProgramRunEnvironment.empty(),
-      logPath: '/bottles/steam/logs/latest.log',
-      workingDirectory: Option.of('/downloads'),
+      logPath: ProgramLogPath('/bottles/steam/logs/latest.log'),
+      workingDirectory: Option.of(ProgramWorkingDirectoryPath('/downloads')),
     );
 
     expect(request.bottleId, BottleId('steam'));

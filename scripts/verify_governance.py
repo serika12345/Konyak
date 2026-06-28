@@ -219,6 +219,54 @@ export 'program_run_terminal_requests.dart';
             raise AssertionError(f"{relative_path} must exist after splitting request builders")
 
 
+def require_typed_program_run_request_boundary() -> None:
+    relative_path = "packages/konyak_cli/lib/src/domain/program/program_run_models.dart"
+    request_models = read_text(relative_path)
+    expected_constructor_terms = [
+        "required this.bottleId",
+        "required this.programPath",
+        "required this.runnerKind",
+        "required this.executable",
+        "required this.arguments",
+        "required this.logPath",
+        "this.workingDirectory = const Option.none()",
+        "final BottleId bottleId",
+        "final ProgramPath programPath",
+        "final RunnerKind runnerKind",
+        "final ProgramExecutable executable",
+        "final ProgramRunArguments arguments",
+        "final ProgramLogPath logPath",
+        "final Option<ProgramWorkingDirectoryPath> workingDirectory",
+    ]
+    for expected in expected_constructor_terms:
+        if expected not in request_models:
+            raise AssertionError(
+                "ProgramRunRequest must expose a typed domain constructor term: "
+                f"{expected}"
+            )
+
+    start = request_models.find("class ProgramRunRequest {")
+    end = request_models.find("sealed class ProgramRunResult", start)
+    if start == -1 or end == -1:
+        raise AssertionError("ProgramRunRequest class section must be readable")
+    constructor_section = request_models[start:end]
+    forbidden_constructor_terms = [
+        "required String bottleId",
+        "required String programPath",
+        "required String runnerKind",
+        "required String executable",
+        "required List<String> arguments",
+        "required String logPath",
+        "Option<String> workingDirectory",
+    ]
+    for forbidden in forbidden_constructor_terms:
+        if forbidden in constructor_section:
+            raise AssertionError(
+                "ProgramRunRequest constructor must not expose primitive "
+                f"domain-facing values: {forbidden}"
+            )
+
+
 def count_constructor_field_parameters(
     relative_path: str,
     constructor_name: str,
@@ -1006,6 +1054,7 @@ def main() -> None:
     require_runtime_ssot_rules()
     require_no_cli_state_errors()
     require_program_run_request_builders_split()
+    require_typed_program_run_request_boundary()
 
     for expected in [
         "flutter",

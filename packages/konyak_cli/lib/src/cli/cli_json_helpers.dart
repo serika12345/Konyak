@@ -170,7 +170,7 @@ String programRunLogContent({
     'Runner Kind: ${request.runnerKind.value}',
     'Executable: ${request.executable.value}',
     'Working Directory: ${request.workingDirectory.map((value) => value.value).getOrElse(() => '')}',
-    'Arguments: ${jsonEncode(request.arguments)}',
+    'Arguments: ${jsonEncode(request.arguments.value)}',
     'argv: ${jsonEncode(request.argv)}',
     if (processExitCode != null) 'Process Exit Code: $processExitCode',
     if (processExitCode != null) 'exitCode: $processExitCode',

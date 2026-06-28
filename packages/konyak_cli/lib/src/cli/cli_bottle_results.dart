@@ -171,7 +171,7 @@ CliSideEffectResult applyRegistryUpdateRequests({
             exitCode: 75,
             code: 'registryUpdateFailed',
             message:
-                'Registry update `${request.arguments.join(' ')}` exited with '
+                'Registry update `${request.arguments.value.join(' ')}` exited with '
                 'code $processExitCode.',
             extra: <String, Object?>{'processExitCode': processExitCode},
           ),
@@ -210,7 +210,7 @@ BottleRecord bottleWithRegistrySettings({
           when processExitCode == 0:
         currentBottle = bottleWithRegistryValue(
           bottle: currentBottle,
-          arguments: request.arguments,
+          arguments: request.arguments.value,
           stdout: stdout,
         );
       case ProgramRunCompleted():

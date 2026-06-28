@@ -233,7 +233,7 @@ String linuxDesktopEntryExec({
   required ProgramRunRequest request,
   required BottleRecord bottle,
 }) {
-  final arguments = request.arguments.map(desktopEntryQuote).join(' ');
+  final arguments = request.arguments.value.map(desktopEntryQuote).join(' ');
   final buffer = StringBuffer(
     'env "WINEPREFIX=${bottle.path.value}" ${desktopEntryQuote(request.executable.value)}',
   );

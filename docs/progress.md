@@ -13,6 +13,41 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-28 20:53 JST
+- State: `completed`
+- Branch: `main`
+- Active work: tighten the domain-facing `ProgramRunRequest` boundary.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: `de08e9f` (`Track functional core boundary follow-ups`).
+- Purpose: replace the remaining primitive constructor surface for
+  program-run requests with typed domain value objects before moving JSON
+  projection out of domain models.
+- Completed work: read the current roadmap/progress state and inspected
+  `ProgramRunRequest`, `ProgramRunPlanner`, existing domain value objects,
+  and program-run request builder call sites; added red coverage for immutable
+  `ProgramRunArguments`; added governance that rejects primitive
+  `ProgramRunRequest` constructor fields; changed `ProgramRunRequest` to
+  require `BottleId`, `ProgramPath`, `RunnerKind`, `ProgramExecutable`,
+  `ProgramRunArguments`, `ProgramLogPath`, and typed working-directory values;
+  updated domain, platform, and I/O request builders plus direct tests to
+  construct typed requests; moved I/O, logging, and JSON call sites to read
+  `request.arguments.value`.
+- Remaining work: broader primitive tightening remains for planner entry
+  points such as program path, bottle command, winetricks verb, process id,
+  and registry version values.
+- Next action: continue the functional-core boundary work by typing
+  `ProgramRunPlanner` entry commands or by moving domain `toJson` projection
+  once the request API is stable.
+- Verification: observed `just verify-governance` fail before implementation
+  because `ProgramRunRequest` still exposed primitive constructor fields;
+  observed `cd packages/konyak_cli && dart test test/domain_value_objects_test.dart`
+  fail before implementation because `ProgramRunArguments` did not exist;
+  after implementation, `cd packages/konyak_cli && dart analyze --fatal-infos`,
+  focused domain value/immutability tests, `just verify-governance`, and
+  `just cli-test`, `just verify-architecture`, `just verify-safety`,
+  `just format-check`, and `just lint` passed.
+
 - Timestamp: 2026-06-28 20:08 JST
 - State: `completed`
 - Branch: `main`

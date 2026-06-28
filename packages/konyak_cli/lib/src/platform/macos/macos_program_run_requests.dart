@@ -8,6 +8,7 @@ import '../../domain/program/program_settings_models.dart';
 import '../../domain/runtime/host_environment.dart';
 import '../../domain/runtime/runtime_platform_support.dart';
 import '../../domain/runtime/wine_runtime_paths.dart';
+import '../../domain/shared/domain_value_objects.dart';
 import '../../io/gptk_wine_installation.dart';
 import '../../shared/common_helpers.dart';
 
@@ -21,16 +22,16 @@ ProgramRunRequest macosWineRequest({
   final hostEnvironment = environment;
   final logging = programSettingsLogging(programSettings);
   return ProgramRunRequest(
-    bottleId: bottle.id.value,
-    programPath: programPath,
-    runnerKind: 'macosWine',
-    executable: macosWineExecutable(hostEnvironment),
-    arguments: <String>[
+    bottleId: bottle.id,
+    programPath: ProgramPath(programPath),
+    runnerKind: RunnerKind('macosWine'),
+    executable: ProgramExecutable(macosWineExecutable(hostEnvironment)),
+    arguments: ProgramRunArguments(<String>[
       'start',
       '/unix',
       programPath,
       ...programSettingsArguments(programSettings),
-    ],
+    ]),
     environment: ProgramRunEnvironment(<String, String>{
       ...macosWineEnvironment(
         bottle: bottle,
@@ -40,9 +41,13 @@ ProgramRunRequest macosWineRequest({
       ...programSettingsEnvironment(programSettings).toMap(),
       'WINEPREFIX': bottle.path.value,
     }),
-    logPath: programSettingsLogPath(bottle: bottle, settings: programSettings),
+    logPath: ProgramLogPath(
+      programSettingsLogPath(bottle: bottle, settings: programSettings),
+    ),
     createLogFile: logging.createLogFile,
-    workingDirectory: Option.of(macosWineBinFolder(hostEnvironment)),
+    workingDirectory: Option.of(
+      ProgramWorkingDirectoryPath(macosWineBinFolder(hostEnvironment)),
+    ),
   );
 }
 
@@ -53,18 +58,22 @@ ProgramRunRequest macosWinebootRequest({
 }) {
   final hostEnvironment = environment;
   return ProgramRunRequest(
-    bottleId: bottle.id.value,
-    programPath: 'wineboot',
-    runnerKind: 'macosWine',
-    executable: macosWineExecutable(hostEnvironment),
-    arguments: const <String>['wineboot', '--init'],
+    bottleId: bottle.id,
+    programPath: ProgramPath('wineboot'),
+    runnerKind: RunnerKind('macosWine'),
+    executable: ProgramExecutable(macosWineExecutable(hostEnvironment)),
+    arguments: ProgramRunArguments(const <String>['wineboot', '--init']),
     environment: macosPrefixInitializationEnvironment(
       bottle: bottle,
       environment: environment,
       macosMajorVersion: macosMajorVersion,
     ),
-    logPath: joinPath(bottle.path.value, const ['logs', 'prefix-init.log']),
-    workingDirectory: Option.of(macosWineBinFolder(hostEnvironment)),
+    logPath: ProgramLogPath(
+      joinPath(bottle.path.value, const ['logs', 'prefix-init.log']),
+    ),
+    workingDirectory: Option.of(
+      ProgramWorkingDirectoryPath(macosWineBinFolder(hostEnvironment)),
+    ),
   );
 }
 
@@ -75,18 +84,22 @@ ProgramRunRequest macosWinebootRestartRequest({
 }) {
   final hostEnvironment = environment;
   return ProgramRunRequest(
-    bottleId: bottle.id.value,
-    programPath: 'wineboot',
-    runnerKind: 'macosWine',
-    executable: macosWineExecutable(hostEnvironment),
-    arguments: const <String>['wineboot', '--restart'],
+    bottleId: bottle.id,
+    programPath: ProgramPath('wineboot'),
+    runnerKind: RunnerKind('macosWine'),
+    executable: ProgramExecutable(macosWineExecutable(hostEnvironment)),
+    arguments: ProgramRunArguments(const <String>['wineboot', '--restart']),
     environment: macosWineEnvironment(
       bottle: bottle,
       environment: environment,
       macosMajorVersion: macosMajorVersion,
     ),
-    logPath: joinPath(bottle.path.value, const ['logs', 'latest.log']),
-    workingDirectory: Option.of(macosWineBinFolder(hostEnvironment)),
+    logPath: ProgramLogPath(
+      joinPath(bottle.path.value, const ['logs', 'latest.log']),
+    ),
+    workingDirectory: Option.of(
+      ProgramWorkingDirectoryPath(macosWineBinFolder(hostEnvironment)),
+    ),
   );
 }
 
@@ -98,27 +111,28 @@ ProgramRunRequest macosWineMonoInstallRequest({
   final hostEnvironment = environment;
   final runtimeRoot = macosWineRuntimeRoot(hostEnvironment);
   return ProgramRunRequest(
-    bottleId: bottle.id.value,
-    programPath: 'wine-mono',
-    runnerKind: 'macosWine',
-    executable: macosWineExecutable(hostEnvironment),
-    arguments: <String>[
+    bottleId: bottle.id,
+    programPath: ProgramPath('wine-mono'),
+    runnerKind: RunnerKind('macosWine'),
+    executable: ProgramExecutable(macosWineExecutable(hostEnvironment)),
+    arguments: ProgramRunArguments(<String>[
       'msiexec',
       '/i',
       macosWineWindowsPath(macosWineMonoMsiPath(runtimeRoot)),
       '/qn',
       '/norestart',
-    ],
+    ]),
     environment: macosPrefixInitializationEnvironment(
       bottle: bottle,
       environment: environment,
       macosMajorVersion: macosMajorVersion,
     ),
-    logPath: joinPath(bottle.path.value, const [
-      'logs',
-      'wine-mono-install.log',
-    ]),
-    workingDirectory: Option.of(macosWineBinFolder(hostEnvironment)),
+    logPath: ProgramLogPath(
+      joinPath(bottle.path.value, const ['logs', 'wine-mono-install.log']),
+    ),
+    workingDirectory: Option.of(
+      ProgramWorkingDirectoryPath(macosWineBinFolder(hostEnvironment)),
+    ),
   );
 }
 
@@ -129,18 +143,22 @@ ProgramRunRequest macosWineserverKillRequest({
 }) {
   final hostEnvironment = environment;
   return ProgramRunRequest(
-    bottleId: bottle.id.value,
-    programPath: 'wineserver',
-    runnerKind: 'macosWineserver',
-    executable: macosWineserverExecutable(hostEnvironment),
-    arguments: const <String>['-k'],
+    bottleId: bottle.id,
+    programPath: ProgramPath('wineserver'),
+    runnerKind: RunnerKind('macosWineserver'),
+    executable: ProgramExecutable(macosWineserverExecutable(hostEnvironment)),
+    arguments: ProgramRunArguments(const <String>['-k']),
     environment: macosWineEnvironment(
       bottle: bottle,
       environment: environment,
       macosMajorVersion: macosMajorVersion,
     ),
-    logPath: joinPath(bottle.path.value, const ['logs', 'wineserver-kill.log']),
-    workingDirectory: Option.of(macosWineBinFolder(hostEnvironment)),
+    logPath: ProgramLogPath(
+      joinPath(bottle.path.value, const ['logs', 'wineserver-kill.log']),
+    ),
+    workingDirectory: Option.of(
+      ProgramWorkingDirectoryPath(macosWineBinFolder(hostEnvironment)),
+    ),
   );
 }
 
@@ -154,18 +172,27 @@ ProgramRunRequest macosWinedbgRequest({
 }) {
   final hostEnvironment = environment;
   return ProgramRunRequest(
-    bottleId: bottle.id.value,
-    programPath: 'winedbg',
-    runnerKind: 'macosWinedbg',
-    executable: macosWineExecutable(hostEnvironment),
-    arguments: <String>['winedbg', '--command', command, ...trailingArguments],
+    bottleId: bottle.id,
+    programPath: ProgramPath('winedbg'),
+    runnerKind: RunnerKind('macosWinedbg'),
+    executable: ProgramExecutable(macosWineExecutable(hostEnvironment)),
+    arguments: ProgramRunArguments(<String>[
+      'winedbg',
+      '--command',
+      command,
+      ...trailingArguments,
+    ]),
     environment: macosWineEnvironment(
       bottle: bottle,
       environment: environment,
       macosMajorVersion: macosMajorVersion,
     ),
-    logPath: joinPath(bottle.path.value, <String>['logs', logName]),
-    workingDirectory: Option.of(macosWineBinFolder(hostEnvironment)),
+    logPath: ProgramLogPath(
+      joinPath(bottle.path.value, <String>['logs', logName]),
+    ),
+    workingDirectory: Option.of(
+      ProgramWorkingDirectoryPath(macosWineBinFolder(hostEnvironment)),
+    ),
   );
 }
 

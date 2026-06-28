@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:fpdart/fpdart.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
@@ -366,6 +368,34 @@ abstract class ProgramArguments
   factory ProgramArguments(String value) => ProgramArguments._validated(value);
 
   const factory ProgramArguments._validated(String value) = _ProgramArguments;
+}
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class ProgramRunArguments
+    with _$ProgramRunArguments, IterableMixin<String>
+    implements DomainValueObject<List<String>> {
+  const ProgramRunArguments._();
+
+  factory ProgramRunArguments(Iterable<String> arguments) =>
+      ProgramRunArguments._validated(
+        arguments: List<String>.unmodifiable(arguments),
+      );
+
+  const factory ProgramRunArguments._validated({
+    required List<String> arguments,
+  }) = _ProgramRunArguments;
+
+  @override
+  List<String> get value => arguments;
+
+  @override
+  Iterator<String> get iterator => value.iterator;
+
+  String operator [](int index) => value[index];
 }
 
 @Freezed(

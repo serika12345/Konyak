@@ -549,7 +549,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
         'dpiScaling': 144,
       },
     });
-    expect(runner.requests.map((request) => request.arguments), [
+    expect(runner.requests.map((request) => request.arguments.value), [
       ['reg', 'query', r'HKCU\Software\Wine', '/v', 'Version'],
       [
         'reg',
@@ -616,7 +616,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
     );
 
     expect(result.exitCode, 0);
-    expect(runner.requests.map((request) => request.arguments), [
+    expect(runner.requests.map((request) => request.arguments.value), [
       [
         'reg',
         'add',
@@ -1772,7 +1772,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
     );
 
     expect(result.exitCode, 0);
-    expect(runner.requests.map((request) => request.arguments), [
+    expect(runner.requests.map((request) => request.arguments.value), [
       [
         'reg',
         'add',
@@ -1895,7 +1895,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       );
 
       expect(result.exitCode, 0);
-      expect(runner.requests.map((request) => request.arguments), [
+      expect(runner.requests.map((request) => request.arguments.value), [
         [
           'reg',
           'add',
@@ -1965,7 +1965,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
 
     expect(result.exitCode, 0);
     expect(
-      runner.requests.map((request) => request.arguments).toList(),
+      runner.requests.map((request) => request.arguments.value).toList(),
       contains(
         equals([
           'reg',

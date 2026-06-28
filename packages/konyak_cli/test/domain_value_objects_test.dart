@@ -119,6 +119,16 @@ void main() {
     expect(WineDebugChannels('  +seh,+pid  ').value, '+seh,+pid');
   });
 
+  test('program run arguments expose immutable argv fragments', () {
+    final mutableArguments = <String>['/steam.exe'];
+    final arguments = ProgramRunArguments(mutableArguments);
+    mutableArguments.add('--changed');
+
+    expect(arguments.value, ['/steam.exe']);
+    expect(ProgramRunArguments(const <String>[]).value, isEmpty);
+    expect(() => arguments.value.add('--other'), throwsUnsupportedError);
+  });
+
   test('environment variable names reject shell assignment syntax', () {
     expect(ProgramEnvironmentVariableName('WINEDEBUG').value, 'WINEDEBUG');
     expect(

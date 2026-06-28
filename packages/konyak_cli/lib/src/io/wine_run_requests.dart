@@ -10,6 +10,7 @@ import '../domain/program/program_run_environment.dart';
 import '../domain/program/program_run_models.dart';
 import '../domain/runtime/host_environment.dart';
 import '../domain/runtime/wine_runtime_paths.dart';
+import '../domain/shared/domain_value_objects.dart';
 import '../platform/macos/macos_program_run_requests.dart';
 import '../platform/platform_terminal_commands.dart';
 import '../shared/common_helpers.dart';
@@ -255,18 +256,22 @@ ProgramRunRequest macosWineCommandRequest({
 }) {
   final hostEnvironment = environment;
   return ProgramRunRequest(
-    bottleId: bottle.id.value,
-    programPath: command,
-    runnerKind: 'macosWine',
-    executable: macosWineExecutable(hostEnvironment),
-    arguments: wineArgumentsForBottleCommand(command),
+    bottleId: bottle.id,
+    programPath: ProgramPath(command),
+    runnerKind: RunnerKind('macosWine'),
+    executable: ProgramExecutable(macosWineExecutable(hostEnvironment)),
+    arguments: ProgramRunArguments(wineArgumentsForBottleCommand(command)),
     environment: macosWineEnvironment(
       bottle: bottle,
       environment: environment,
       macosMajorVersion: macosMajorVersion,
     ),
-    logPath: joinPath(bottle.path.value, const ['logs', 'latest.log']),
-    workingDirectory: Option.of(macosWineBinFolder(hostEnvironment)),
+    logPath: ProgramLogPath(
+      joinPath(bottle.path.value, const ['logs', 'latest.log']),
+    ),
+    workingDirectory: Option.of(
+      ProgramWorkingDirectoryPath(macosWineBinFolder(hostEnvironment)),
+    ),
   );
 }
 
@@ -278,18 +283,22 @@ ProgramRunRequest macosRegistryUpdateRequest({
 }) {
   final hostEnvironment = environment;
   return ProgramRunRequest(
-    bottleId: bottle.id.value,
-    programPath: 'reg',
-    runnerKind: 'macosWineRegistry',
-    executable: macosWineExecutable(hostEnvironment),
-    arguments: registryUpdateArguments(update),
+    bottleId: bottle.id,
+    programPath: ProgramPath('reg'),
+    runnerKind: RunnerKind('macosWineRegistry'),
+    executable: ProgramExecutable(macosWineExecutable(hostEnvironment)),
+    arguments: ProgramRunArguments(registryUpdateArguments(update)),
     environment: macosWineEnvironment(
       bottle: bottle,
       environment: environment,
       macosMajorVersion: macosMajorVersion,
     ),
-    logPath: joinPath(bottle.path.value, const ['logs', 'latest.log']),
-    workingDirectory: Option.of(macosWineBinFolder(hostEnvironment)),
+    logPath: ProgramLogPath(
+      joinPath(bottle.path.value, const ['logs', 'latest.log']),
+    ),
+    workingDirectory: Option.of(
+      ProgramWorkingDirectoryPath(macosWineBinFolder(hostEnvironment)),
+    ),
   );
 }
 
@@ -301,18 +310,22 @@ ProgramRunRequest macosRegistryQueryRequest({
 }) {
   final hostEnvironment = environment;
   return ProgramRunRequest(
-    bottleId: bottle.id.value,
-    programPath: 'reg',
-    runnerKind: 'macosWineRegistryQuery',
-    executable: macosWineExecutable(hostEnvironment),
-    arguments: registryQueryArguments(query),
+    bottleId: bottle.id,
+    programPath: ProgramPath('reg'),
+    runnerKind: RunnerKind('macosWineRegistryQuery'),
+    executable: ProgramExecutable(macosWineExecutable(hostEnvironment)),
+    arguments: ProgramRunArguments(registryQueryArguments(query)),
     environment: macosWineEnvironment(
       bottle: bottle,
       environment: environment,
       macosMajorVersion: macosMajorVersion,
     ),
-    logPath: joinPath(bottle.path.value, const ['logs', 'registry.log']),
-    workingDirectory: Option.of(macosWineBinFolder(hostEnvironment)),
+    logPath: ProgramLogPath(
+      joinPath(bottle.path.value, const ['logs', 'registry.log']),
+    ),
+    workingDirectory: Option.of(
+      ProgramWorkingDirectoryPath(macosWineBinFolder(hostEnvironment)),
+    ),
   );
 }
 
@@ -322,11 +335,11 @@ ProgramRunRequest linuxTerminalCommandRequest({
   Option<String> initialWineCommand = const Option.none(),
 }) {
   return ProgramRunRequest(
-    bottleId: bottle.id.value,
-    programPath: initialWineCommand.getOrElse(() => 'terminal'),
-    runnerKind: 'terminal',
-    executable: 'sh',
-    arguments: <String>[
+    bottleId: bottle.id,
+    programPath: ProgramPath(initialWineCommand.getOrElse(() => 'terminal')),
+    runnerKind: RunnerKind('terminal'),
+    executable: ProgramExecutable('sh'),
+    arguments: ProgramRunArguments(<String>[
       '-lc',
       linuxTerminalLauncherCommand(environment),
       linuxWineTerminalShellCommandWithEnvironment(
@@ -334,10 +347,12 @@ ProgramRunRequest linuxTerminalCommandRequest({
         environment: environment,
         initialWineCommand: initialWineCommand,
       ),
-    ],
+    ]),
     environment: const ProgramRunEnvironment.empty(),
-    logPath: joinPath(bottle.path.value, const ['logs', 'latest.log']),
-    workingDirectory: Option.of(bottle.path.value),
+    logPath: ProgramLogPath(
+      joinPath(bottle.path.value, const ['logs', 'latest.log']),
+    ),
+    workingDirectory: Option.of(ProgramWorkingDirectoryPath(bottle.path.value)),
   );
 }
 
@@ -356,19 +371,21 @@ ProgramRunRequest macosTerminalCommandRequest({
   final setupScriptPath = macosTerminalSetupScriptPath(bottle);
 
   return ProgramRunRequest(
-    bottleId: bottle.id.value,
-    programPath: initialWineCommand.getOrElse(() => 'terminal'),
-    runnerKind: 'macosTerminal',
-    executable: '/usr/bin/osascript',
-    arguments: <String>[
+    bottleId: bottle.id,
+    programPath: ProgramPath(initialWineCommand.getOrElse(() => 'terminal')),
+    runnerKind: RunnerKind('macosTerminal'),
+    executable: ProgramExecutable('/usr/bin/osascript'),
+    arguments: ProgramRunArguments(<String>[
       '-e',
       macosTerminalAppleScript(
         shellCommand: shellCommand,
         setupScriptPath: setupScriptPath,
       ),
-    ],
+    ]),
     environment: const ProgramRunEnvironment.empty(),
-    logPath: joinPath(bottle.path.value, const ['logs', 'latest.log']),
+    logPath: ProgramLogPath(
+      joinPath(bottle.path.value, const ['logs', 'latest.log']),
+    ),
   );
 }
 
@@ -379,15 +396,19 @@ ProgramRunRequest linuxWinetricksCommandRequest({
 }) {
   final hostEnvironment = environment;
   return ProgramRunRequest(
-    bottleId: bottle.id.value,
-    programPath: verb.getOrElse(() => 'winetricks'),
-    runnerKind: 'winetricks',
-    executable: linuxWinetricksExecutable(hostEnvironment),
-    arguments: verb.match(() => const <String>[], (value) => <String>[value]),
+    bottleId: bottle.id,
+    programPath: ProgramPath(verb.getOrElse(() => 'winetricks')),
+    runnerKind: RunnerKind('winetricks'),
+    executable: ProgramExecutable(linuxWinetricksExecutable(hostEnvironment)),
+    arguments: ProgramRunArguments(
+      verb.match(() => const <String>[], (value) => <String>[value]),
+    ),
     environment: linuxRuntimeEnvironment(hostEnvironment).merge(
       linuxWineEnvironmentWithRuntime(bottle: bottle, environment: environment),
     ),
-    logPath: joinPath(bottle.path.value, const ['logs', 'latest.log']),
+    logPath: ProgramLogPath(
+      joinPath(bottle.path.value, const ['logs', 'latest.log']),
+    ),
   );
 }
 
@@ -402,11 +423,13 @@ ProgramRunRequest macosWinetricksCommandRequest({
   final runtimeBin = macosWineBinFolder(hostEnvironment);
 
   return ProgramRunRequest(
-    bottleId: bottle.id.value,
-    programPath: verb.getOrElse(() => 'winetricks'),
-    runnerKind: 'macosWinetricks',
-    executable: macosWinetricksExecutable(hostEnvironment),
-    arguments: verb.match(() => const <String>[], (value) => <String>[value]),
+    bottleId: bottle.id,
+    programPath: ProgramPath(verb.getOrElse(() => 'winetricks')),
+    runnerKind: RunnerKind('macosWinetricks'),
+    executable: ProgramExecutable(macosWinetricksExecutable(hostEnvironment)),
+    arguments: ProgramRunArguments(
+      verb.match(() => const <String>[], (value) => <String>[value]),
+    ),
     environment:
         macosWineEnvironment(
               bottle: bottle,
@@ -415,7 +438,9 @@ ProgramRunRequest macosWinetricksCommandRequest({
             )
             .add('WINE', macosWineExecutable(hostEnvironment))
             .add('PATH', prependPath(runtimeBin, environment['PATH'])),
-    logPath: joinPath(bottle.path.value, const ['logs', 'latest.log']),
-    workingDirectory: Option.of(runtimeRoot),
+    logPath: ProgramLogPath(
+      joinPath(bottle.path.value, const ['logs', 'latest.log']),
+    ),
+    workingDirectory: Option.of(ProgramWorkingDirectoryPath(runtimeRoot)),
   );
 }

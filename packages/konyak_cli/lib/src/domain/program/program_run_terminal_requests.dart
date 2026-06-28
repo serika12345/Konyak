@@ -4,6 +4,7 @@ import '../bottle/bottle_models.dart';
 import '../runtime/host_environment.dart';
 import '../runtime/wine_runtime_paths.dart';
 import '../shared/domain_helpers.dart';
+import '../shared/domain_value_objects.dart';
 import 'program_run_environment.dart';
 import 'program_run_macos_requests.dart';
 import 'program_run_models.dart';
@@ -14,11 +15,11 @@ ProgramRunRequest linuxTerminalCommandRequest({
   Option<String> initialWineCommand = const Option.none(),
 }) {
   return ProgramRunRequest(
-    bottleId: bottle.id.value,
-    programPath: initialWineCommand.getOrElse(() => 'terminal'),
-    runnerKind: 'terminal',
-    executable: 'sh',
-    arguments: <String>[
+    bottleId: bottle.id,
+    programPath: ProgramPath(initialWineCommand.getOrElse(() => 'terminal')),
+    runnerKind: RunnerKind('terminal'),
+    executable: ProgramExecutable('sh'),
+    arguments: ProgramRunArguments(<String>[
       '-lc',
       _linuxTerminalLauncherCommand(environment),
       _linuxWineTerminalShellCommandWithEnvironment(
@@ -26,10 +27,12 @@ ProgramRunRequest linuxTerminalCommandRequest({
         environment: environment,
         initialWineCommand: initialWineCommand,
       ),
-    ],
+    ]),
     environment: const ProgramRunEnvironment.empty(),
-    logPath: domainJoinPath(bottle.path.value, const ['logs', 'latest.log']),
-    workingDirectory: Option.of(bottle.path.value),
+    logPath: ProgramLogPath(
+      domainJoinPath(bottle.path.value, const ['logs', 'latest.log']),
+    ),
+    workingDirectory: Option.of(ProgramWorkingDirectoryPath(bottle.path.value)),
   );
 }
 
@@ -48,19 +51,21 @@ ProgramRunRequest macosTerminalCommandRequest({
   final setupScriptPath = _macosTerminalSetupScriptPath(bottle);
 
   return ProgramRunRequest(
-    bottleId: bottle.id.value,
-    programPath: initialWineCommand.getOrElse(() => 'terminal'),
-    runnerKind: 'macosTerminal',
-    executable: '/usr/bin/osascript',
-    arguments: <String>[
+    bottleId: bottle.id,
+    programPath: ProgramPath(initialWineCommand.getOrElse(() => 'terminal')),
+    runnerKind: RunnerKind('macosTerminal'),
+    executable: ProgramExecutable('/usr/bin/osascript'),
+    arguments: ProgramRunArguments(<String>[
       '-e',
       _macosTerminalAppleScript(
         shellCommand: shellCommand,
         setupScriptPath: setupScriptPath,
       ),
-    ],
+    ]),
     environment: const ProgramRunEnvironment.empty(),
-    logPath: domainJoinPath(bottle.path.value, const ['logs', 'latest.log']),
+    logPath: ProgramLogPath(
+      domainJoinPath(bottle.path.value, const ['logs', 'latest.log']),
+    ),
   );
 }
 

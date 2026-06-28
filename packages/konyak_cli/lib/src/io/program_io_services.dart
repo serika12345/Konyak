@@ -17,7 +17,7 @@ class DartIoProgramRunner implements ProgramRunner {
     try {
       final result = Process.runSync(
         request.executable.value,
-        request.arguments,
+        request.arguments.value,
         environment: request.environment.toMap(),
         workingDirectory: request.workingDirectory.toNullable()?.value,
         runInShell: false,
@@ -65,7 +65,7 @@ class DartIoAsyncProgramRunner implements AsyncProgramRunner {
     try {
       process = await Process.start(
         request.executable.value,
-        request.arguments,
+        request.arguments.value,
         environment: request.environment.toMap(),
         workingDirectory: request.workingDirectory.toNullable()?.value,
         runInShell: false,
