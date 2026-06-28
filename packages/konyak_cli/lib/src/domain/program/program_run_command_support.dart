@@ -4,8 +4,8 @@ bool isSupportedWinetricksVerb(WinetricksVerbId verb) {
   return RegExp(r'^[A-Za-z0-9_.+-]+$').hasMatch(verb.value);
 }
 
-String winedbgAttachProcessId(String processId) {
-  final normalized = processId.trim();
+String winedbgAttachProcessId(WineProcessId processId) {
+  final normalized = processId.value.trim();
   if (normalized.startsWith(RegExp('0x', caseSensitive: false))) {
     return normalized;
   }

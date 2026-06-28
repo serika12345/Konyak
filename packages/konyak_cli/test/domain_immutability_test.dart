@@ -439,6 +439,30 @@ void main() {
     );
   });
 
+  test('Wine process kill plans model process ids with WineProcessId', () {
+    expect(winedbgAttachProcessId(WineProcessId('000000d8')), '0x000000d8');
+    expect(winedbgAttachProcessId(WineProcessId('0x000000d8')), '0x000000d8');
+
+    final request =
+        ProgramRunPlanner(
+          hostPlatform: KonyakHostPlatform.linux,
+          environment: const HostEnvironment.empty(),
+        ).planWineProcessKill(
+          bottle: BottleRecord(
+            id: 'steam',
+            name: 'Steam',
+            path: '/home/user/.local/share/konyak/Bottles/Steam',
+            windowsVersion: 'win10',
+          ),
+          processId: WineProcessId('000000d8'),
+        );
+
+    expect(
+      request.arguments,
+      ProgramRunArguments(const <String>['--command', 'kill', '0x000000d8']),
+    );
+  });
+
   test('runtime install operations reject blank present sources', () {
     expect(
       () => RuntimeFullInstallOperation(archivePath: Option.of(' ')),

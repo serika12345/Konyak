@@ -27,7 +27,7 @@ CliResult? handleWineProcessCommand(
       programRunPlanner: context.programRunPlanner,
       programRunner: context.programRunner,
       bottleId: wineProcessTerminationRequest.bottleId.value,
-      processId: wineProcessTerminationRequest.processId.value,
+      processId: wineProcessTerminationRequest.processId,
     );
   }
 

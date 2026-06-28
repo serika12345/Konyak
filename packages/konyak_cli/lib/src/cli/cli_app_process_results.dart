@@ -8,6 +8,7 @@ import '../domain/bottle/bottle_models.dart';
 import '../domain/program/program_catalog_models.dart';
 import '../domain/program/program_run_models.dart';
 import '../domain/program/program_runner.dart';
+import '../domain/shared/domain_value_objects.dart';
 import '../domain/update/update_records.dart';
 import '../io/wine_process_metadata.dart';
 import '../io/wine_process_metadata_io.dart';
@@ -440,7 +441,7 @@ CliResult terminateWineProcessJsonResult({
   required ProgramRunPlanner programRunPlanner,
   required ProgramRunner? programRunner,
   required String bottleId,
-  required String processId,
+  required WineProcessId processId,
 }) {
   final runner = programRunner;
   if (runner == null) {
@@ -461,7 +462,7 @@ CliResult terminateWineProcessJsonResult({
           ProgramRunCompleted(:final processExitCode) =>
             WineProcessTerminationRecord(
               bottleId: bottle.id.value,
-              processId: Option.of(processId),
+              processId: Option.of(processId.value),
               status: processExitCode == 0 ? 'terminated' : 'failed',
               runnerKind: request.runnerKind.value,
               executable: request.executable.value,
@@ -470,7 +471,7 @@ CliResult terminateWineProcessJsonResult({
             ),
           ProgramRunFailed(:final message) => WineProcessTerminationRecord(
             bottleId: bottle.id.value,
-            processId: Option.of(processId),
+            processId: Option.of(processId.value),
             status: 'failed',
             runnerKind: request.runnerKind.value,
             executable: request.executable.value,

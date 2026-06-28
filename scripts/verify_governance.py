@@ -454,6 +454,82 @@ def require_typed_winetricks_verb_planner_boundary() -> None:
             )
 
 
+def require_typed_wine_process_planner_boundary() -> None:
+    planner_path = "packages/konyak_cli/lib/src/domain/program/program_runner.dart"
+    planner = read_text(planner_path)
+    expected_terms = [
+        "required WineProcessId processId",
+        "winedbgAttachProcessId(processId)",
+    ]
+    for expected in expected_terms:
+        if expected not in planner:
+            raise AssertionError(
+                "ProgramRunPlanner.planWineProcessKill must expose a typed "
+                f"Wine process-id boundary: {expected}"
+            )
+
+    forbidden_terms = [
+        "required String processId",
+        "winedbgAttachProcessId(processId.value)",
+    ]
+    for forbidden in forbidden_terms:
+        if forbidden in planner:
+            raise AssertionError(
+                "ProgramRunPlanner.planWineProcessKill must not expose "
+                f"primitive process-id values: {forbidden}"
+            )
+
+    command_support_path = (
+        "packages/konyak_cli/lib/src/domain/program/program_run_command_support.dart"
+    )
+    command_support = read_text(command_support_path)
+    expected_support_terms = [
+        "String winedbgAttachProcessId(WineProcessId processId)",
+        "final normalized = processId.value.trim();",
+    ]
+    for expected in expected_support_terms:
+        if expected not in command_support:
+            raise AssertionError(
+                "program command support must expose typed Wine process-id "
+                f"helpers: {expected}"
+            )
+
+    if "String winedbgAttachProcessId(String processId)" in command_support:
+        raise AssertionError(
+            "program command support must not expose primitive Wine process-id "
+            "helpers"
+        )
+
+    process_results_path = (
+        "packages/konyak_cli/lib/src/cli/cli_app_process_results.dart"
+    )
+    process_results = read_text(process_results_path)
+    expected_process_result_terms = [
+        "required WineProcessId processId",
+        "processId: processId,",
+        "processId: Option.of(processId.value)",
+    ]
+    for expected in expected_process_result_terms:
+        if expected not in process_results:
+            raise AssertionError(
+                "CLI process result orchestration must preserve typed Wine "
+                f"process ids until JSON projection: {expected}"
+            )
+
+    wine_process_handler_path = (
+        "packages/konyak_cli/lib/src/cli/cli_wine_process_handlers.dart"
+    )
+    wine_process_handler = read_text(wine_process_handler_path)
+    if (
+        "processId: wineProcessTerminationRequest.processId.value"
+        in wine_process_handler
+    ):
+        raise AssertionError(
+            "Wine process CLI handler must not unwrap process ids before "
+            "result orchestration"
+        )
+
+
 def count_constructor_field_parameters(
     relative_path: str,
     constructor_name: str,
@@ -1245,6 +1321,7 @@ def main() -> None:
     require_typed_program_run_planner_boundary()
     require_typed_bottle_command_planner_boundary()
     require_typed_winetricks_verb_planner_boundary()
+    require_typed_wine_process_planner_boundary()
 
     for expected in [
         "flutter",

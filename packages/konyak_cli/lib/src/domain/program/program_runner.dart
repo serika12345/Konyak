@@ -225,7 +225,7 @@ class ProgramRunPlanner {
 
   ProgramRunRequest planWineProcessKill({
     required BottleRecord bottle,
-    required String processId,
+    required WineProcessId processId,
   }) {
     final attachProcessId = winedbgAttachProcessId(processId);
     return switch (hostPlatform) {

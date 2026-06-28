@@ -13,6 +13,39 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-28 21:28 JST
+- State: `completed`
+- Branch: `main`
+- Active work: type the `ProgramRunPlanner.planWineProcessKill` process-id
+  boundary.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: `7919c4d` (`Type winetricks verb planner boundary`).
+- Purpose: continue planner-boundary tightening by keeping
+  `WineProcessId` intact from CLI parsing through winedbg process-kill plan
+  construction.
+- Completed work: committed the Winetricks verb boundary slice and inspected
+  wine-process CLI parsing/handling, `WineProcessTerminationRequest`,
+  `terminateWineProcessJsonResult`, `ProgramRunPlanner.planWineProcessKill`,
+  and `winedbgAttachProcessId`; added red focused coverage and governance for
+  the typed Wine process-id boundary; changed `planWineProcessKill` and
+  `winedbgAttachProcessId` to consume `WineProcessId`; preserved typed process
+  ids through CLI process termination orchestration until JSON projection.
+- Remaining work: broader primitive tightening remains for registry values and
+  JSON projection out of domain models.
+- Next action: continue the functional-core boundary work with registry value
+  objects, or move JSON `toJson` projection once planner entry paths are
+  stable.
+- Verification: observed `just verify-governance` fail before implementation
+  because `ProgramRunPlanner.planWineProcessKill` still exposed
+  `String processId`; observed `cd packages/konyak_cli && dart test
+  test/domain_immutability_test.dart` fail before implementation because the
+  planner and helper still accepted primitive process ids; after
+  implementation, `cd packages/konyak_cli && dart analyze --fatal-infos`,
+  focused domain immutability tests, `just verify-governance`,
+  `just cli-test`, `just verify-architecture`, `just verify-safety`,
+  `just format-check`, and `just lint` passed.
+
 - Timestamp: 2026-06-28 21:20 JST
 - State: `completed`
 - Branch: `main`
