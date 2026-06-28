@@ -377,6 +377,83 @@ def require_typed_bottle_command_planner_boundary() -> None:
             )
 
 
+def require_typed_winetricks_verb_planner_boundary() -> None:
+    planner_path = "packages/konyak_cli/lib/src/domain/program/program_runner.dart"
+    planner = read_text(planner_path)
+    expected_terms = [
+        "required WinetricksVerbId verb",
+        "isSupportedWinetricksVerb(verb)",
+        "verb: Option.of(verb)",
+    ]
+    for expected in expected_terms:
+        if expected not in planner:
+            raise AssertionError(
+                "ProgramRunPlanner.planWinetricksVerb must expose a typed "
+                f"Winetricks verb boundary: {expected}"
+            )
+
+    forbidden_terms = [
+        "required String verb",
+        "isSupportedWinetricksVerb(verb.value)",
+        "verb: Option.of(verb.value)",
+    ]
+    for forbidden in forbidden_terms:
+        if forbidden in planner:
+            raise AssertionError(
+                "ProgramRunPlanner.planWinetricksVerb must not expose "
+                f"primitive verb values: {forbidden}"
+            )
+
+    command_support_path = (
+        "packages/konyak_cli/lib/src/domain/program/program_run_command_support.dart"
+    )
+    command_support = read_text(command_support_path)
+    expected_support_terms = [
+        "bool isSupportedWinetricksVerb(WinetricksVerbId verb)",
+        "hasMatch(verb.value)",
+    ]
+    for expected in expected_support_terms:
+        if expected not in command_support:
+            raise AssertionError(
+                "program command support must expose typed Winetricks verb "
+                f"helpers: {expected}"
+            )
+
+    if "bool isSupportedWinetricksVerb(String verb)" in command_support:
+        raise AssertionError(
+            "program command support must not expose primitive Winetricks "
+            "verb helpers"
+        )
+
+    linux_requests_path = (
+        "packages/konyak_cli/lib/src/domain/program/program_run_linux_requests.dart"
+    )
+    macos_requests_path = (
+        "packages/konyak_cli/lib/src/domain/program/program_run_macos_requests.dart"
+    )
+    request_builders = {
+        linux_requests_path: read_text(linux_requests_path),
+        macos_requests_path: read_text(macos_requests_path),
+    }
+    for path, contents in request_builders.items():
+        expected_request_terms = [
+            "Option<WinetricksVerbId> verb",
+            "verb.match(() => 'winetricks', (value) => value.value)",
+            "verb.match(() => const <String>[], (value) => <String>[value.value])",
+        ]
+        for expected in expected_request_terms:
+            if expected not in contents:
+                raise AssertionError(
+                    f"{path} must expose typed Winetricks request builders: "
+                    f"{expected}"
+                )
+
+        if "Option<String> verb" in contents:
+            raise AssertionError(
+                f"{path} must not expose primitive Winetricks verb options"
+            )
+
+
 def count_constructor_field_parameters(
     relative_path: str,
     constructor_name: str,
@@ -1167,6 +1244,7 @@ def main() -> None:
     require_typed_program_run_request_boundary()
     require_typed_program_run_planner_boundary()
     require_typed_bottle_command_planner_boundary()
+    require_typed_winetricks_verb_planner_boundary()
 
     for expected in [
         "flutter",

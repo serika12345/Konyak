@@ -233,9 +233,10 @@ CliResult runWinetricksJsonResult(
     result: repository.findBottle(request.bottleId),
     bottleId: request.bottleId,
     onFound: (bottle) {
+      final winetricksVerb = WinetricksVerbId(request.verb);
       final programRunRequest = context.programRunPlanner.planWinetricksVerb(
         bottle: bottle,
-        verb: request.verb,
+        verb: winetricksVerb,
       );
       return programRunRequest.match(
         () => jsonError(

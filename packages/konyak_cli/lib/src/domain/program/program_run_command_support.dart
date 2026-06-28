@@ -1,5 +1,7 @@
-bool isSupportedWinetricksVerb(String verb) {
-  return RegExp(r'^[A-Za-z0-9_.+-]+$').hasMatch(verb);
+import '../shared/domain_value_objects.dart';
+
+bool isSupportedWinetricksVerb(WinetricksVerbId verb) {
+  return RegExp(r'^[A-Za-z0-9_.+-]+$').hasMatch(verb.value);
 }
 
 String winedbgAttachProcessId(String processId) {

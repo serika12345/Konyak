@@ -298,16 +298,18 @@ ProgramRunEnvironment _linuxWineEnvironmentWithDllOverrides({
 ProgramRunRequest linuxWinetricksCommandRequest({
   required BottleRecord bottle,
   required HostEnvironment environment,
-  Option<String> verb = const Option.none(),
+  Option<WinetricksVerbId> verb = const Option.none(),
 }) {
   final hostEnvironment = environment;
   return ProgramRunRequest(
     bottleId: bottle.id,
-    programPath: ProgramPath(verb.getOrElse(() => 'winetricks')),
+    programPath: ProgramPath(
+      verb.match(() => 'winetricks', (value) => value.value),
+    ),
     runnerKind: RunnerKind('winetricks'),
     executable: ProgramExecutable(linuxWinetricksExecutable(hostEnvironment)),
     arguments: ProgramRunArguments(
-      verb.match(() => const <String>[], (value) => <String>[value]),
+      verb.match(() => const <String>[], (value) => <String>[value.value]),
     ),
     environment: linuxRuntimeEnvironment(hostEnvironment).merge(
       _linuxWineEnvironmentWithRuntime(

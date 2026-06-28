@@ -1,5 +1,6 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:konyak_cli/konyak_cli.dart';
+import 'package:konyak_cli/src/domain/program/program_run_command_support.dart';
 import 'package:konyak_cli/src/io/io_result.dart';
 import 'package:konyak_cli/src/io/runtime_catalog_factories_io.dart';
 import 'package:konyak_cli/src/repository/memory_bottle_repository.dart';
@@ -405,6 +406,37 @@ void main() {
       '/c',
       'dxdiag /t C:\\konyak-dxdiag.txt && start "" notepad C:\\konyak-dxdiag.txt',
     ]);
+  });
+
+  test('winetricks verbs model supported verbs with WinetricksVerbId', () {
+    expect(isSupportedWinetricksVerb(WinetricksVerbId('corefonts')), isTrue);
+    expect(
+      isSupportedWinetricksVerb(WinetricksVerbId('corefonts;rm')),
+      isFalse,
+    );
+
+    final request =
+        ProgramRunPlanner(
+              hostPlatform: KonyakHostPlatform.macos,
+              environment: HostEnvironment({'HOME': '/Users/user'}),
+            )
+            .planWinetricksVerb(
+              bottle: BottleRecord(
+                id: 'steam',
+                name: 'Steam',
+                path:
+                    '/Users/user/Library/Application Support/Konyak/Bottles/Steam',
+                windowsVersion: 'win10',
+              ),
+              verb: WinetricksVerbId('corefonts'),
+            )
+            .toNullable();
+
+    expect(request?.programPath, ProgramPath('corefonts'));
+    expect(
+      request?.arguments,
+      ProgramRunArguments(const <String>['corefonts']),
+    );
   });
 
   test('runtime install operations reject blank present sources', () {

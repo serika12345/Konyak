@@ -249,7 +249,7 @@ class ProgramRunPlanner {
 
   Option<ProgramRunRequest> planWinetricksVerb({
     required BottleRecord bottle,
-    required String verb,
+    required WinetricksVerbId verb,
   }) {
     if (!isSupportedWinetricksVerb(verb)) {
       return const Option.none();

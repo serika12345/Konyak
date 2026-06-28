@@ -467,7 +467,7 @@ ProgramRunRequest macosWinetricksCommandRequest({
   required BottleRecord bottle,
   required HostEnvironment environment,
   required Option<int> macosMajorVersion,
-  required Option<String> verb,
+  required Option<WinetricksVerbId> verb,
 }) {
   final hostEnvironment = environment;
   final runtimeRoot = macosWineRuntimeRoot(hostEnvironment);
@@ -475,11 +475,13 @@ ProgramRunRequest macosWinetricksCommandRequest({
 
   return ProgramRunRequest(
     bottleId: bottle.id,
-    programPath: ProgramPath(verb.getOrElse(() => 'winetricks')),
+    programPath: ProgramPath(
+      verb.match(() => 'winetricks', (value) => value.value),
+    ),
     runnerKind: RunnerKind('macosWinetricks'),
     executable: ProgramExecutable(macosWinetricksExecutable(hostEnvironment)),
     arguments: ProgramRunArguments(
-      verb.match(() => const <String>[], (value) => <String>[value]),
+      verb.match(() => const <String>[], (value) => <String>[value.value]),
     ),
     environment:
         macosWineEnvironmentForRequests(
