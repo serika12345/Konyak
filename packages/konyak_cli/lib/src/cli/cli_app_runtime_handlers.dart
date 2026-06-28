@@ -14,6 +14,7 @@ import 'cli_json_helpers.dart';
 import 'cli_location_winetricks_handlers.dart';
 import 'cli_result_model.dart';
 import 'cli_runtime_parsers.dart';
+import 'cli_runtime_validation_json.dart';
 import 'cli_update_json.dart';
 import 'cli_update_runtime_results.dart';
 
@@ -194,7 +195,9 @@ CliResult runtimeValidationJsonResult({
 
   return switch (runtimeValidator.validate(runtimeId)) {
     RuntimeValidationCompleted(:final validation) => jsonSuccess(
-      <String, Object?>{'runtimeValidation': validation.toJson()},
+      <String, Object?>{
+        'runtimeValidation': runtimeValidationRecordJson(validation),
+      },
       exitCode: validation.isValid ? 0 : 75,
     ),
     RuntimeValidationRuntimeNotFound(:final runtimeId) => jsonError(

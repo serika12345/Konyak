@@ -13,6 +13,34 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-28 22:39 JST
+- State: `completed`
+- Branch: `main`
+- Active work: move runtime validation JSON projection out of domain models.
+- Related TODO: `docs/todo.md` deferred JSON `toJson` projection separation.
+- Latest commit: `a70a383` (`Move pinned launcher manifest JSON projection`).
+- Purpose: continue separating domain models from CLI serialization by moving
+  `RuntimeValidationRecord` and `RuntimeValidationCheck` projection into the
+  CLI boundary used by `validate-runtime --json`.
+- Completed work: committed the pinned launcher manifest projection slice and
+  inspected runtime validation models, the `validate-runtime --json` result
+  path, and focused CLI contract coverage; observed `just verify-governance`
+  fail before implementation because `RuntimeValidationRecord` still owned CLI
+  JSON projection; added `cli_runtime_validation_json.dart`, updated
+  `validate-runtime --json` output to use the helper, removed the matching
+  domain `toJson` methods, and added governance for the runtime validation
+  boundary.
+- Remaining work: domain `toJson` projections remain in bottle records, bottle
+  runtime settings, runtime/runtime package records, and the I/O-only GPTK
+  install record.
+- Next action: continue JSON projection separation with another narrow
+  CLI-covered record group, likely runtime install progress or bottle records.
+- Verification: observed `just verify-governance` fail before implementation;
+  after implementation, `cd packages/konyak_cli && dart analyze
+  --fatal-infos`, focused validate-runtime CLI contract test,
+  `just verify-governance`, `just cli-test`, `just verify-architecture`,
+  `just verify-safety`, `just format-check`, and `just lint` passed.
+
 - Timestamp: 2026-06-28 22:35 JST
 - State: `completed`
 - Branch: `main`

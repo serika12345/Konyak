@@ -86,14 +86,6 @@ class RuntimeValidationRecord {
   final RuntimeId runtimeId;
   final bool isValid;
   final List<RuntimeValidationCheck> checks;
-
-  Map<String, Object?> toJson() {
-    return <String, Object?>{
-      'runtimeId': runtimeId.value,
-      'isValid': isValid,
-      'checks': checks.map((check) => check.toJson()).toList(growable: false),
-    };
-  }
 }
 
 class RuntimeValidationCheck {
@@ -110,16 +102,6 @@ class RuntimeValidationCheck {
   final bool isRequired;
   final bool isPassed;
   final String message;
-
-  Map<String, Object?> toJson() {
-    return <String, Object?>{
-      'id': id,
-      'name': name,
-      'isRequired': isRequired,
-      'isPassed': isPassed,
-      'message': message,
-    };
-  }
 }
 
 sealed class RuntimeValidationResult {

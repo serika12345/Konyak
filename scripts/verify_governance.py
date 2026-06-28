@@ -940,6 +940,69 @@ def require_update_record_cli_json_projection() -> None:
         )
 
 
+def require_runtime_validation_cli_json_projection() -> None:
+    domain_path = (
+        "packages/konyak_cli/lib/src/domain/runtime/runtime_validation_models.dart"
+    )
+    domain = read_text(domain_path)
+
+    def class_section(class_name: str) -> str:
+        class_start = domain.find(f"class {class_name} ")
+        if class_start == -1:
+            raise AssertionError(f"{class_name} must exist")
+
+        next_class_match = re.search(
+            r"\n(?:abstract\s+interface\s+)?(?:final\s+)?class\s+\w+",
+            domain[class_start + 1 :],
+        )
+        if next_class_match is None:
+            return domain[class_start:]
+
+        class_end = class_start + 1 + next_class_match.start()
+        return domain[class_start:class_end]
+
+    for class_name in [
+        "RuntimeValidationRecord",
+        "RuntimeValidationCheck",
+    ]:
+        if "toJson(" in class_section(class_name):
+            raise AssertionError(
+                f"{class_name} must not own CLI JSON projection"
+            )
+
+    cli_json_path = (
+        "packages/konyak_cli/lib/src/cli/cli_runtime_validation_json.dart"
+    )
+    cli_json = read_text(cli_json_path)
+    expected_terms = [
+        "Map<String, Object?> runtimeValidationRecordJson(",
+        "Map<String, Object?> runtimeValidationCheckJson(",
+        "'runtimeId': validation.runtimeId.value",
+        "'isValid': validation.isValid",
+        "validation.checks",
+        ".map(runtimeValidationCheckJson)",
+        "'isRequired': check.isRequired",
+        "'isPassed': check.isPassed",
+    ]
+    for expected in expected_terms:
+        if expected not in cli_json:
+            raise AssertionError(
+                "Runtime validation JSON projection must live at the CLI "
+                f"boundary: {expected}"
+            )
+
+    handler_path = "packages/konyak_cli/lib/src/cli/cli_app_runtime_handlers.dart"
+    handler = read_text(handler_path)
+    if "validation.toJson()" in handler:
+        raise AssertionError(
+            "Runtime validation JSON must not rely on domain-owned toJson"
+        )
+    if "runtimeValidationRecordJson(validation)" not in handler:
+        raise AssertionError(
+            "Runtime validation JSON must use runtimeValidationRecordJson"
+        )
+
+
 def require_bottle_archive_cli_json_projection() -> None:
     domain_path = (
         "packages/konyak_cli/lib/src/domain/bottle/bottle_mutation_models.dart"
@@ -1835,6 +1898,7 @@ def main() -> None:
     require_program_settings_cli_json_projection()
     require_app_settings_serialization_boundary()
     require_update_record_cli_json_projection()
+    require_runtime_validation_cli_json_projection()
     require_bottle_archive_cli_json_projection()
     require_pinned_launcher_manifest_io_json_projection()
 
