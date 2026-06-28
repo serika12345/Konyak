@@ -203,6 +203,47 @@ def require_production_file_line_limits() -> None:
             )
 
 
+def count_constructor_field_parameters(
+    relative_path: str,
+    constructor_name: str,
+) -> int:
+    text = read_text(relative_path)
+    match = re.search(
+        rf"\b(?:const\s+)?{re.escape(constructor_name)}"
+        r"\s*\(\s*\{(?P<body>.*?)\n\s*\}\s*\);",
+        text,
+        flags=re.DOTALL,
+    )
+    if match is None:
+        raise AssertionError(
+            f"{relative_path} must define a named-parameter constructor for {constructor_name}"
+        )
+
+    return len(re.findall(r"\bthis\.", match.group("body")))
+
+
+def require_flutter_home_contract_boundaries() -> None:
+    for relative_path, class_name, limit in [
+        ("apps/konyak/lib/src/app/home/home_screen.dart", "KonyakHome", 6),
+        (
+            "apps/konyak/lib/src/app/home/home_detail_pane.dart",
+            "KonyakHomeDetailPane",
+            6,
+        ),
+        (
+            "apps/konyak/lib/src/app/bottles/bottle_detail.dart",
+            "KonyakBottleDetail",
+            6,
+        ),
+    ]:
+        count = count_constructor_field_parameters(relative_path, class_name)
+        if count > limit:
+            raise AssertionError(
+                f"{relative_path} {class_name} constructor has {count} direct props; "
+                f"use responsibility-scoped contract objects and keep it at or below {limit}"
+            )
+
+
 def require_konyak_cli_public_exports() -> None:
     lines = read_text("packages/konyak_cli/lib/konyak_cli.dart").splitlines()
     if lines != KONYAK_CLI_PUBLIC_EXPORT_LINES:
@@ -405,6 +446,7 @@ def require_result_boundary_rules() -> None:
     require_no_handwritten_parts()
     require_no_transitional_part_paste_markers()
     require_production_file_line_limits()
+    require_flutter_home_contract_boundaries()
     require_no_repository_dartio_defaults()
     require_no_files_under("packages/konyak_cli/lib/src", "*.dart")
     require_io_implementation_boundaries()

@@ -1,111 +1,46 @@
 import 'package:flutter/material.dart';
 
-import '../../bottles/bottle_summary.dart';
 import '../../l10n/konyak_localizations.dart';
-import '../../runtimes/runtime_summary.dart';
 import '../app_constants.dart';
-import '../app_platform.dart';
+import '../home/home_contracts.dart';
 import '../programs/program_configuration_view.dart';
 import '../widgets/konyak_top_bar.dart';
 import 'bottle_configuration_view.dart';
 import 'bottle_overview.dart';
 import 'bottom_bars.dart';
-import 'runtime_settings_change.dart';
 
-enum BottleDetailMode { overview, configuration, programConfiguration }
+export 'bottle_detail_mode.dart';
 
 class KonyakBottleDetail extends StatelessWidget {
   const KonyakBottleDetail({
     super.key,
-    required this.platform,
-    required this.runtime,
-    required this.bottle,
-    required this.isLoading,
-    required this.errorMessage,
-    required this.onRefresh,
-    required this.onShowSettings,
-    required this.onCreateBottle,
-    required this.onViewLatestLog,
-    required this.detailMode,
-    required this.selectedProgram,
-    required this.programSettings,
-    required this.isProgramSettingsLoading,
-    required this.isRuntimeCapabilitiesLoading,
-    required this.pendingRuntimeSettingsControlKey,
-    required this.onBackToBottle,
-    required this.onShowBottleConfiguration,
-    required this.onRuntimeSettingsChanged,
-    required this.onDeleteBottle,
-    required this.onRunProgram,
-    required this.onRunProgramPath,
-    required this.onPinProgram,
-    required this.onConfigurePinnedProgram,
-    required this.onProgramSettingsChanged,
-    required this.onUnpinProgram,
-    required this.onRenamePinnedProgram,
-    required this.onOpenPinnedProgramLocation,
-    required this.onRunBottleCommand,
-    required this.onShowWinetricks,
-    required this.onOpenBottleLocation,
-    required this.onShowBottlePrograms,
-    required this.onShowProcessManager,
+    required this.state,
+    required this.menuActions,
+    required this.bottleActions,
+    required this.programActions,
+    required this.winetricksActions,
+    required this.navigationActions,
   });
 
-  final KonyakPlatform platform;
-  final RuntimeSummary? runtime;
-  final BottleSummary? bottle;
-  final bool isLoading;
-  final String? errorMessage;
-  final VoidCallback? onRefresh;
-  final VoidCallback? onShowSettings;
-  final VoidCallback? onCreateBottle;
-  final VoidCallback? onViewLatestLog;
-  final BottleDetailMode detailMode;
-  final PinnedProgramSummary? selectedProgram;
-  final ProgramSettingsSummary? programSettings;
-  final bool isProgramSettingsLoading;
-  final bool isRuntimeCapabilitiesLoading;
-  final String? pendingRuntimeSettingsControlKey;
-  final VoidCallback? onBackToBottle;
-  final ValueChanged<BottleSummary>? onShowBottleConfiguration;
-  final RuntimeSettingsChanged? onRuntimeSettingsChanged;
-  final ValueChanged<BottleSummary>? onDeleteBottle;
-  final ValueChanged<BottleSummary>? onRunProgram;
-  final void Function(BottleSummary bottle, String programPath)?
-  onRunProgramPath;
-  final ValueChanged<BottleSummary>? onPinProgram;
-  final void Function(BottleSummary bottle, PinnedProgramSummary program)?
-  onConfigurePinnedProgram;
-  final void Function(
-    BottleSummary bottle,
-    PinnedProgramSummary program,
-    ProgramSettingsSummary settings,
-  )?
-  onProgramSettingsChanged;
-  final void Function(BottleSummary bottle, PinnedProgramSummary program)?
-  onUnpinProgram;
-  final void Function(BottleSummary bottle, PinnedProgramSummary program)?
-  onRenamePinnedProgram;
-  final void Function(BottleSummary bottle, PinnedProgramSummary program)?
-  onOpenPinnedProgramLocation;
-  final void Function(BottleSummary bottle, String command)? onRunBottleCommand;
-  final ValueChanged<BottleSummary>? onShowWinetricks;
-  final void Function(BottleSummary bottle, String location)?
-  onOpenBottleLocation;
-  final ValueChanged<BottleSummary>? onShowBottlePrograms;
-  final VoidCallback? onShowProcessManager;
+  final KonyakHomeDetailState state;
+  final KonyakHomeMenuActions menuActions;
+  final KonyakBottleActions bottleActions;
+  final KonyakProgramActions programActions;
+  final KonyakWinetricksActions winetricksActions;
+  final KonyakHomeNavigationActions navigationActions;
 
   @override
   Widget build(BuildContext context) {
     final colors = KonyakThemeColors.of(context);
     final localizations = KonyakLocalizations.of(context);
-    final activeBottle = bottle;
-    final activeProgram = activeBottle == null ? null : selectedProgram;
+    final activeBottle = state.bottle;
+    final activeProgram = activeBottle == null ? null : state.selectedProgram;
 
     final isConfiguration =
-        detailMode == BottleDetailMode.configuration && activeBottle != null;
+        state.detailMode == BottleDetailMode.configuration &&
+        activeBottle != null;
     final isProgramConfiguration =
-        detailMode == BottleDetailMode.programConfiguration &&
+        state.detailMode == BottleDetailMode.programConfiguration &&
         activeBottle != null &&
         activeProgram != null;
 
@@ -120,70 +55,79 @@ class KonyakBottleDetail extends StatelessWidget {
                 ? localizations.bottleConfiguration
                 : activeBottle?.name ?? 'Konyak',
             onBack: isConfiguration || isProgramConfiguration
-                ? onBackToBottle
+                ? state.isBottleNavigationLocked
+                      ? null
+                      : navigationActions.onBackToBottle
                 : null,
-            onRefresh: onRefresh,
-            onShowProcessManager: onShowProcessManager,
-            onShowSettings: onShowSettings,
-            onCreateBottle: onCreateBottle,
-            onViewLatestLog: onViewLatestLog,
+            onRefresh: menuActions.onRefresh,
+            onShowProcessManager: menuActions.onShowProcessManager,
+            onShowSettings: menuActions.onShowSettings,
+            onCreateBottle: menuActions.onCreateBottle,
+            onViewLatestLog: menuActions.onViewLatestLog,
           ),
           Expanded(
             child: isProgramConfiguration
                 ? ProgramConfigurationView(
                     bottle: activeBottle,
                     program: activeProgram,
-                    settings: programSettings,
-                    isLoading: isProgramSettingsLoading,
-                    onProgramSettingsChanged: onProgramSettingsChanged,
+                    settings: state.programSettings,
+                    isLoading: state.isProgramSettingsLoading,
+                    onProgramSettingsChanged:
+                        programActions.onProgramSettingsChanged,
                   )
                 : isConfiguration
                 ? BottleConfigurationView(
-                    platform: platform,
-                    runtime: runtime,
-                    isRuntimeCapabilitiesLoading: isRuntimeCapabilitiesLoading,
+                    platform: state.platform,
+                    runtime: state.runtime,
+                    isRuntimeCapabilitiesLoading:
+                        state.isRuntimeCapabilitiesLoading,
                     bottle: activeBottle,
                     pendingRuntimeSettingsControlKey:
-                        pendingRuntimeSettingsControlKey,
-                    onRuntimeSettingsChanged: onRuntimeSettingsChanged,
+                        state.pendingRuntimeSettingsControlKey,
+                    onRuntimeSettingsChanged:
+                        bottleActions.onRuntimeSettingsChanged,
                   )
                 : BottleOverview(
-                    platform: platform,
+                    platform: state.platform,
                     bottle: activeBottle,
-                    isLoading: isLoading,
-                    errorMessage: errorMessage,
-                    onRunProgram: onRunProgram,
-                    onRunProgramPath: onRunProgramPath,
-                    onPinProgram: onPinProgram,
-                    onConfigurePinnedProgram: onConfigurePinnedProgram,
-                    onUnpinProgram: onUnpinProgram,
-                    onRenamePinnedProgram: onRenamePinnedProgram,
-                    onOpenPinnedProgramLocation: onOpenPinnedProgramLocation,
-                    onShowBottleConfiguration: onShowBottleConfiguration,
-                    onShowBottlePrograms: onShowBottlePrograms,
+                    isLoading: state.isLoading,
+                    errorMessage: state.errorMessage,
+                    onRunProgram: programActions.onRunProgram,
+                    onRunProgramPath: programActions.onRunProgramPath,
+                    onPinProgram: programActions.onPinProgram,
+                    onConfigurePinnedProgram:
+                        navigationActions.onConfigurePinnedProgram,
+                    onUnpinProgram: programActions.onUnpinProgram,
+                    onRenamePinnedProgram: programActions.onRenamePinnedProgram,
+                    onOpenPinnedProgramLocation:
+                        programActions.onOpenPinnedProgramLocation,
+                    onShowBottleConfiguration:
+                        navigationActions.onShowBottleConfiguration,
+                    onShowBottlePrograms: bottleActions.onShowPrograms,
                   ),
           ),
           if (isProgramConfiguration)
             ProgramConfigurationBottomBar(
-              platform: platform,
+              platform: state.platform,
               bottle: activeBottle,
               program: activeProgram,
-              onOpenPinnedProgramLocation: onOpenPinnedProgramLocation,
-              onRunProgramPath: onRunProgramPath,
+              onOpenPinnedProgramLocation:
+                  programActions.onOpenPinnedProgramLocation,
+              onRunProgramPath: programActions.onRunProgramPath,
             )
           else if (isConfiguration)
             BottleConfigurationBottomBar(
               bottle: activeBottle,
-              onRunBottleCommand: onRunBottleCommand,
-              onOpenBottleLocation: onOpenBottleLocation,
+              onRunBottleCommand: winetricksActions.onRunBottleCommand,
+              onOpenBottleLocation: bottleActions.onOpenLocation,
             )
           else
             KonyakBottomBar(
               bottle: activeBottle,
-              onRunProgram: onRunProgram,
-              onRunBottleCommand: onRunBottleCommand,
-              onShowWinetricks: onShowWinetricks,
-              onOpenBottleLocation: onOpenBottleLocation,
+              onRunProgram: programActions.onRunProgram,
+              onRunBottleCommand: winetricksActions.onRunBottleCommand,
+              onShowWinetricks: winetricksActions.onShowWinetricks,
+              onOpenBottleLocation: bottleActions.onOpenLocation,
             ),
         ],
       ),

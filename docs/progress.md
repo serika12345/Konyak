@@ -13,6 +13,40 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-28 19:09 JST
+- State: `completed`
+- Branch: `main`
+- Active work: collapse Flutter home props into responsibility-scoped contract
+  objects before introducing any state-management library.
+- Related TODO: `docs/todo.md` deferred Flutter large UI split.
+- Latest commit: `513bcf1` (`Replace duplicate known runtime state`).
+- Purpose: make the `KonyakHome`, `KonyakHomeDetailPane`, and
+  `KonyakBottleDetail` boundaries express view state, menu actions, bottle
+  actions, program actions, and winetricks actions explicitly instead of
+  passing dozens of flat props through every layer.
+- Completed work: added immutable `KonyakHomeViewState` and
+  `KonyakHomeDetailState` contracts plus scoped action contracts for menu,
+  bottle, program, winetricks, and local navigation; moved `BottleDetailMode`
+  to a standalone boundary enum; updated `home_loader.dart` to compose the
+  contracts from existing state and callbacks without adding Riverpod,
+  Provider, or `InheritedWidget`; reduced the direct constructor props for the
+  three target widgets to contract objects; and added governance that fails if
+  those constructors grow past six direct props again.
+- Remaining work: App Settings dialog async state still uses separate loading,
+  error, and install flags; lower-level Flutter view-model/action-selection
+  cleanup remains for `sidebar.dart`, `program_configuration_view.dart`, and
+  `bottle_configuration_view.dart`.
+- Next action: continue with the App Settings dialog runtime async state or the
+  next small Flutter view-model extraction when requested.
+- Verification: observed `just verify-governance` fail before implementation
+  because `KonyakHome` still had 37 direct props; added
+  `test/app/home_contracts_test.dart` and observed it fail before the contract
+  file existed; after implementation, focused home contract/navigation tests,
+  representative widget flows, `flutter analyze --fatal-infos`, and
+  `just verify-governance` passed; final `just verify` and
+  `just verify-governance && just verify-architecture` passed; final
+  `git diff --check HEAD` passed.
+
 - Timestamp: 2026-06-28 18:49 JST
 - State: `completed`
 - Branch: `main`

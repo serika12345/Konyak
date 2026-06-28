@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../app/app_platform.dart';
+import '../app/home/home_contracts.dart';
 import '../app/home/home_screen.dart';
 import '../app/programs/program_window_probe.dart';
 import '../app/runtime/runtime_platform.dart';
@@ -158,71 +159,84 @@ class KonyakHomeLoaderState extends State<KonyakHomeLoader>
       children: [
         if (widget.platform.isMacOS) const MacosNativeMenuLocalizer(),
         KonyakHome(
-          platform: widget.platform,
-          runtime: runtimeForPlatform(widget.platform, knownRuntimes.runtimes),
-          bottles: bottles,
-          isLoading: isLoading,
-          errorMessage: errorMessage,
-          onRefresh: loadBottles,
-          onShowSettings: showSettings,
-          onShowAbout: showAbout,
-          onCheckKonyakUpdates: isCheckingKonyakUpdate
-              ? null
-              : checkKonyakUpdateFromMenu,
-          onCreateBottle: createBottle,
-          onImportBottleArchive: importBottleArchive,
-          onReinstallRuntime: reinstallManagedRuntimeFromMenu,
-          onExportBottleArchive: exportBottleArchive,
-          onViewLatestLog: latestRunLogPath == null ? null : showLatestLog,
-          pendingRuntimeSettingsControls: pendingRuntimeSettingsControls,
-          onRuntimeSettingsChanged: (bottle, runtimeSettings, controlKey) {
-            setRuntimeSettings(
-              bottle: bottle,
-              runtimeSettings: runtimeSettings,
-              controlKey: controlKey,
-            );
-          },
-          onLoadBottleConfiguration: loadBottleConfiguration,
-          onDeleteBottle: deleteBottle,
-          onRenameBottle: renameBottle,
-          onMoveBottle: moveBottle,
-          onRunProgram: runProgram,
-          onRunProgramPath: (bottle, programPath) {
-            runProgramPath(bottle: bottle, programPath: programPath);
-          },
-          onPinProgram: pinProgram,
-          programSettings: programSettings,
-          loadingProgramSettings: loadingProgramSettings,
-          isRuntimeCapabilitiesLoading: !knownRuntimes.isLoaded,
-          onLoadPinnedProgramSettings: (bottle, program) {
-            loadPinnedProgramSettings(bottle: bottle, program: program);
-          },
-          onProgramSettingsChanged: (bottle, program, settings) {
-            setPinnedProgramSettings(
-              bottle: bottle,
-              program: program,
-              settings: settings,
-            );
-          },
-          onUnpinProgram: (bottle, program) {
-            unpinProgram(bottle: bottle, program: program);
-          },
-          onRenamePinnedProgram: (bottle, program) {
-            renamePinnedProgram(bottle: bottle, program: program);
-          },
-          onOpenPinnedProgramLocation: (bottle, program) {
-            openPinnedProgramLocation(bottle: bottle, program: program);
-          },
-          onRunBottleCommand: (bottle, command) {
-            runBottleCommand(bottle: bottle, command: command);
-          },
-          onShowWinetricks: showWinetricks,
-          onOpenBottleLocation: (bottle, location) {
-            openBottleLocation(bottle: bottle, location: location);
-          },
-          onShowBottlePrograms: showBottlePrograms,
-          onShowProcessManager: showProcessManager,
-          onTerminateBottleProcesses: terminateBottleProcesses,
+          state: KonyakHomeViewState(
+            platform: widget.platform,
+            runtime: runtimeForPlatform(
+              widget.platform,
+              knownRuntimes.runtimes,
+            ),
+            bottles: bottles,
+            isLoading: isLoading,
+            errorMessage: errorMessage,
+            isRuntimeCapabilitiesLoading: !knownRuntimes.isLoaded,
+            programSettings: programSettings,
+            loadingProgramSettings: loadingProgramSettings,
+            pendingRuntimeSettingsControls: pendingRuntimeSettingsControls,
+          ),
+          menuActions: KonyakHomeMenuActions(
+            onRefresh: loadBottles,
+            onShowSettings: showSettings,
+            onShowAbout: showAbout,
+            onCheckKonyakUpdates: isCheckingKonyakUpdate
+                ? null
+                : checkKonyakUpdateFromMenu,
+            onCreateBottle: createBottle,
+            onImportBottleArchive: importBottleArchive,
+            onReinstallRuntime: reinstallManagedRuntimeFromMenu,
+            onViewLatestLog: latestRunLogPath == null ? null : showLatestLog,
+            onShowProcessManager: showProcessManager,
+          ),
+          bottleActions: KonyakBottleActions(
+            onLoadConfiguration: loadBottleConfiguration,
+            onDelete: deleteBottle,
+            onRename: renameBottle,
+            onMove: moveBottle,
+            onExportArchive: exportBottleArchive,
+            onRuntimeSettingsChanged: (bottle, runtimeSettings, controlKey) {
+              setRuntimeSettings(
+                bottle: bottle,
+                runtimeSettings: runtimeSettings,
+                controlKey: controlKey,
+              );
+            },
+            onOpenLocation: (bottle, location) {
+              openBottleLocation(bottle: bottle, location: location);
+            },
+            onShowPrograms: showBottlePrograms,
+            onTerminateProcesses: terminateBottleProcesses,
+          ),
+          programActions: KonyakProgramActions(
+            onRunProgram: runProgram,
+            onRunProgramPath: (bottle, programPath) {
+              runProgramPath(bottle: bottle, programPath: programPath);
+            },
+            onPinProgram: pinProgram,
+            onLoadPinnedProgramSettings: (bottle, program) {
+              loadPinnedProgramSettings(bottle: bottle, program: program);
+            },
+            onProgramSettingsChanged: (bottle, program, settings) {
+              setPinnedProgramSettings(
+                bottle: bottle,
+                program: program,
+                settings: settings,
+              );
+            },
+            onUnpinProgram: (bottle, program) {
+              unpinProgram(bottle: bottle, program: program);
+            },
+            onRenamePinnedProgram: (bottle, program) {
+              renamePinnedProgram(bottle: bottle, program: program);
+            },
+            onOpenPinnedProgramLocation: (bottle, program) {
+              openPinnedProgramLocation(bottle: bottle, program: program);
+            },
+          ),
+          winetricksActions: KonyakWinetricksActions(
+            onRunBottleCommand: (bottle, command) {
+              runBottleCommand(bottle: bottle, command: command);
+            },
+            onShowWinetricks: showWinetricks,
+          ),
         ),
         if (isCreatingBottle)
           BlockingProgressOverlay(

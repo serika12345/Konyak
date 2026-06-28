@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../bottles/bottle_summary.dart';
-import '../../runtimes/runtime_summary.dart';
 import '../app_constants.dart';
-import '../app_platform.dart';
-import '../bottles/runtime_settings_change.dart';
 import '../utils/bottle_lists.dart';
+import 'home_contracts.dart';
 import 'home_detail_pane.dart';
 import 'home_menu_bar.dart';
 import 'home_navigation_state.dart';
@@ -15,93 +13,18 @@ import 'sidebar.dart';
 class KonyakHome extends StatefulWidget {
   const KonyakHome({
     super.key,
-    required this.platform,
-    this.runtime,
-    this.bottles = const [],
-    this.isLoading = false,
-    this.errorMessage,
-    this.onRefresh,
-    this.onShowSettings,
-    this.onShowAbout,
-    this.onCheckKonyakUpdates,
-    this.onCreateBottle,
-    this.onImportBottleArchive,
-    this.onReinstallRuntime,
-    this.onExportBottleArchive,
-    this.onViewLatestLog,
-    this.onRuntimeSettingsChanged,
-    this.onLoadBottleConfiguration,
-    this.onDeleteBottle,
-    this.onRenameBottle,
-    this.onMoveBottle,
-    this.onRunProgram,
-    this.onRunProgramPath,
-    this.onPinProgram,
-    this.programSettings = const <String, ProgramSettingsSummary>{},
-    this.loadingProgramSettings = const <String>{},
-    this.isRuntimeCapabilitiesLoading = false,
-    this.pendingRuntimeSettingsControls = const <String, String>{},
-    this.onLoadPinnedProgramSettings,
-    this.onProgramSettingsChanged,
-    this.onUnpinProgram,
-    this.onRenamePinnedProgram,
-    this.onOpenPinnedProgramLocation,
-    this.onRunBottleCommand,
-    this.onShowWinetricks,
-    this.onOpenBottleLocation,
-    this.onShowBottlePrograms,
-    this.onShowProcessManager,
-    this.onTerminateBottleProcesses,
+    required this.state,
+    this.menuActions = const KonyakHomeMenuActions(),
+    this.bottleActions = const KonyakBottleActions(),
+    this.programActions = const KonyakProgramActions(),
+    this.winetricksActions = const KonyakWinetricksActions(),
   });
 
-  final KonyakPlatform platform;
-  final RuntimeSummary? runtime;
-  final List<BottleSummary> bottles;
-  final bool isLoading;
-  final String? errorMessage;
-  final VoidCallback? onRefresh;
-  final VoidCallback? onShowSettings;
-  final VoidCallback? onShowAbout;
-  final VoidCallback? onCheckKonyakUpdates;
-  final VoidCallback? onCreateBottle;
-  final VoidCallback? onImportBottleArchive;
-  final VoidCallback? onReinstallRuntime;
-  final ValueChanged<BottleSummary>? onExportBottleArchive;
-  final VoidCallback? onViewLatestLog;
-  final RuntimeSettingsChanged? onRuntimeSettingsChanged;
-  final ValueChanged<BottleSummary>? onLoadBottleConfiguration;
-  final ValueChanged<BottleSummary>? onDeleteBottle;
-  final ValueChanged<BottleSummary>? onRenameBottle;
-  final ValueChanged<BottleSummary>? onMoveBottle;
-  final ValueChanged<BottleSummary>? onRunProgram;
-  final void Function(BottleSummary bottle, String programPath)?
-  onRunProgramPath;
-  final ValueChanged<BottleSummary>? onPinProgram;
-  final Map<String, ProgramSettingsSummary> programSettings;
-  final Set<String> loadingProgramSettings;
-  final bool isRuntimeCapabilitiesLoading;
-  final Map<String, String> pendingRuntimeSettingsControls;
-  final void Function(BottleSummary bottle, PinnedProgramSummary program)?
-  onLoadPinnedProgramSettings;
-  final void Function(
-    BottleSummary bottle,
-    PinnedProgramSummary program,
-    ProgramSettingsSummary settings,
-  )?
-  onProgramSettingsChanged;
-  final void Function(BottleSummary bottle, PinnedProgramSummary program)?
-  onUnpinProgram;
-  final void Function(BottleSummary bottle, PinnedProgramSummary program)?
-  onRenamePinnedProgram;
-  final void Function(BottleSummary bottle, PinnedProgramSummary program)?
-  onOpenPinnedProgramLocation;
-  final void Function(BottleSummary bottle, String command)? onRunBottleCommand;
-  final ValueChanged<BottleSummary>? onShowWinetricks;
-  final void Function(BottleSummary bottle, String location)?
-  onOpenBottleLocation;
-  final ValueChanged<BottleSummary>? onShowBottlePrograms;
-  final VoidCallback? onShowProcessManager;
-  final ValueChanged<BottleSummary>? onTerminateBottleProcesses;
+  final KonyakHomeViewState state;
+  final KonyakHomeMenuActions menuActions;
+  final KonyakBottleActions bottleActions;
+  final KonyakProgramActions programActions;
+  final KonyakWinetricksActions winetricksActions;
 
   @override
   State<KonyakHome> createState() => _KonyakHomeState();
@@ -118,7 +41,9 @@ class _KonyakHomeState extends State<KonyakHome> {
   void didUpdateWidget(covariant KonyakHome oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    final nextNavigationState = _navigationState.reconcile(widget.bottles);
+    final nextNavigationState = _navigationState.reconcile(
+      widget.state.bottles,
+    );
     if (nextNavigationState != _navigationState) {
       _navigationState = nextNavigationState;
     }
@@ -133,8 +58,9 @@ class _KonyakHomeState extends State<KonyakHome> {
   @override
   Widget build(BuildContext context) {
     final colors = KonyakThemeColors.of(context);
+    final state = widget.state;
     final filteredBottles = filterBottles(
-      bottles: widget.bottles,
+      bottles: state.bottles,
       searchQuery: _searchController.text,
     );
     final selectedBottle =
@@ -143,24 +69,24 @@ class _KonyakHomeState extends State<KonyakHome> {
     final selectedProgram = _navigationState.selectedProgramIn(selectedBottle);
     final selectedBottleHasPendingRuntimeSettings =
         selectedBottle != null &&
-        widget.pendingRuntimeSettingsControls.containsKey(selectedBottle.id);
+        state.hasPendingRuntimeSettingsFor(selectedBottle);
 
     return Scaffold(
       body: Column(
         children: [
-          if (widget.platform.isLinux)
+          if (state.platform.isLinux)
             KonyakHomeMenuBar(
-              onShowAbout: widget.onShowAbout,
-              onShowSettings: widget.onShowSettings,
-              onCheckKonyakUpdates: widget.onCheckKonyakUpdates,
-              onImportBottleArchive: widget.onImportBottleArchive,
-              onReinstallRuntime: widget.onReinstallRuntime,
+              onShowAbout: widget.menuActions.onShowAbout,
+              onShowSettings: widget.menuActions.onShowSettings,
+              onCheckKonyakUpdates: widget.menuActions.onCheckKonyakUpdates,
+              onImportBottleArchive: widget.menuActions.onImportBottleArchive,
+              onReinstallRuntime: widget.menuActions.onReinstallRuntime,
             ),
           Expanded(
             child: Row(
               children: [
                 KonyakHomeSidebarPane(
-                  platform: widget.platform,
+                  platform: state.platform,
                   bottles: filteredBottles,
                   selectedBottleId: selectedBottle?.id,
                   searchController: _searchController,
@@ -181,45 +107,22 @@ class _KonyakHomeState extends State<KonyakHome> {
                 ),
                 Expanded(
                   child: KonyakHomeDetailPane(
-                    platform: widget.platform,
-                    runtime: widget.runtime,
-                    bottle: selectedBottle,
-                    isLoading: widget.isLoading,
-                    errorMessage: widget.errorMessage,
-                    onRefresh: widget.onRefresh,
-                    onShowSettings: widget.onShowSettings,
-                    onCreateBottle: widget.onCreateBottle,
-                    onViewLatestLog: widget.onViewLatestLog,
-                    detailMode: _navigationState.detailMode,
-                    selectedProgram: selectedProgram,
-                    programSettings: widget.programSettings,
-                    loadingProgramSettings: widget.loadingProgramSettings,
-                    isRuntimeCapabilitiesLoading:
-                        widget.isRuntimeCapabilitiesLoading,
-                    pendingRuntimeSettingsControlKey: selectedBottle == null
-                        ? null
-                        : widget.pendingRuntimeSettingsControls[selectedBottle
-                              .id],
-                    isBottleNavigationLocked:
-                        selectedBottleHasPendingRuntimeSettings,
-                    onBackToBottle: _showBottleOverview,
-                    onShowBottleConfiguration: _showBottleConfiguration,
-                    onRuntimeSettingsChanged: widget.onRuntimeSettingsChanged,
-                    onDeleteBottle: widget.onDeleteBottle,
-                    onRunProgram: widget.onRunProgram,
-                    onRunProgramPath: widget.onRunProgramPath,
-                    onPinProgram: widget.onPinProgram,
-                    onConfigurePinnedProgram: _showPinnedProgramConfiguration,
-                    onProgramSettingsChanged: widget.onProgramSettingsChanged,
-                    onUnpinProgram: widget.onUnpinProgram,
-                    onRenamePinnedProgram: widget.onRenamePinnedProgram,
-                    onOpenPinnedProgramLocation:
-                        widget.onOpenPinnedProgramLocation,
-                    onRunBottleCommand: widget.onRunBottleCommand,
-                    onShowWinetricks: widget.onShowWinetricks,
-                    onOpenBottleLocation: widget.onOpenBottleLocation,
-                    onShowBottlePrograms: widget.onShowBottlePrograms,
-                    onShowProcessManager: widget.onShowProcessManager,
+                    state: state.detailStateFor(
+                      bottle: selectedBottle,
+                      detailMode: _navigationState.detailMode,
+                      selectedProgram: selectedProgram,
+                      isBottleNavigationLocked:
+                          selectedBottleHasPendingRuntimeSettings,
+                    ),
+                    menuActions: widget.menuActions,
+                    bottleActions: widget.bottleActions,
+                    programActions: widget.programActions,
+                    winetricksActions: widget.winetricksActions,
+                    navigationActions: KonyakHomeNavigationActions(
+                      onBackToBottle: _showBottleOverview,
+                      onShowBottleConfiguration: _showBottleConfiguration,
+                      onConfigurePinnedProgram: _showPinnedProgramConfiguration,
+                    ),
                   ),
                 ),
               ],
@@ -254,7 +157,7 @@ class _KonyakHomeState extends State<KonyakHome> {
   void _showBottleConfiguration(BottleSummary bottle) {
     final nextNavigationState = _navigationState.showBottleConfiguration(
       bottle,
-      lockedBottleIds: widget.pendingRuntimeSettingsControls.keys,
+      lockedBottleIds: widget.state.lockedBottleIds,
     );
     if (identical(nextNavigationState, _navigationState)) {
       return;
@@ -262,7 +165,7 @@ class _KonyakHomeState extends State<KonyakHome> {
     setState(() {
       _navigationState = nextNavigationState;
     });
-    widget.onLoadBottleConfiguration?.call(bottle);
+    widget.bottleActions.onLoadConfiguration?.call(bottle);
   }
 
   void _showPinnedProgramConfiguration(
@@ -272,7 +175,7 @@ class _KonyakHomeState extends State<KonyakHome> {
     final nextNavigationState = _navigationState.showPinnedProgramConfiguration(
       bottle,
       program,
-      lockedBottleIds: widget.pendingRuntimeSettingsControls.keys,
+      lockedBottleIds: widget.state.lockedBottleIds,
     );
     if (identical(nextNavigationState, _navigationState)) {
       return;
@@ -280,13 +183,13 @@ class _KonyakHomeState extends State<KonyakHome> {
     setState(() {
       _navigationState = nextNavigationState;
     });
-    widget.onLoadPinnedProgramSettings?.call(bottle, program);
+    widget.programActions.onLoadPinnedProgramSettings?.call(bottle, program);
   }
 
   void _showBottleOverview() {
     final nextNavigationState = _navigationState.showBottleOverview(
-      bottles: widget.bottles,
-      lockedBottleIds: widget.pendingRuntimeSettingsControls.keys,
+      bottles: widget.state.bottles,
+      lockedBottleIds: widget.state.lockedBottleIds,
     );
     if (identical(nextNavigationState, _navigationState)) {
       return;
@@ -308,17 +211,17 @@ class _KonyakHomeState extends State<KonyakHome> {
   ) {
     switch (action) {
       case BottleContextMenuAction.remove:
-        widget.onDeleteBottle?.call(bottle);
+        widget.bottleActions.onDelete?.call(bottle);
       case BottleContextMenuAction.rename:
-        widget.onRenameBottle?.call(bottle);
+        widget.bottleActions.onRename?.call(bottle);
       case BottleContextMenuAction.move:
-        widget.onMoveBottle?.call(bottle);
+        widget.bottleActions.onMove?.call(bottle);
       case BottleContextMenuAction.showInFinder:
-        widget.onOpenBottleLocation?.call(bottle, 'root');
+        widget.bottleActions.onOpenLocation?.call(bottle, 'root');
       case BottleContextMenuAction.exportArchive:
-        widget.onExportBottleArchive?.call(bottle);
+        widget.bottleActions.onExportArchive?.call(bottle);
       case BottleContextMenuAction.terminateProcesses:
-        widget.onTerminateBottleProcesses?.call(bottle);
+        widget.bottleActions.onTerminateProcesses?.call(bottle);
     }
   }
 }

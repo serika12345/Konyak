@@ -51,6 +51,8 @@ verification output instead of checked-off backlog entries.
   boundary libraries where compatibility permits.
 - Split remaining Flutter large UI files after backend boundaries are smaller.
   - Keep widgets responsible for rendering and event wiring only.
+  - Keep the `KonyakHome` boundary grouped by responsibility-scoped state and
+    action contracts instead of flat props or a single giant props object.
   - Move bottle/program/runtime view models and action selection out of
     `home_screen.dart`, `sidebar.dart`, `program_configuration_view.dart`, and
     `bottle_configuration_view.dart`.
