@@ -20,21 +20,6 @@ class BottleProgramRecord {
   final ProgramPath path;
   final ProgramSource source;
   final Option<ProgramMetadataRecord> metadata;
-
-  Map<String, Object?> toJson() {
-    return <String, Object?>{
-      'id': id.value,
-      'name': name.value,
-      'path': path.value,
-      'source': source.value,
-      ...metadata.match(
-        () => const <String, Object?>{},
-        (programMetadata) => <String, Object?>{
-          'metadata': programMetadata.toJson(),
-        },
-      ),
-    };
-  }
 }
 
 class ProgramMetadataRecord {
@@ -71,28 +56,6 @@ class ProgramMetadataRecord {
         productVersion.isNone() &&
         iconPath.isNone();
   }
-
-  Map<String, Object?> toJson() {
-    return <String, Object?>{
-      ..._metadataJsonField('architecture', architecture),
-      ..._metadataJsonField('fileDescription', fileDescription),
-      ..._metadataJsonField('productName', productName),
-      ..._metadataJsonField('companyName', companyName),
-      ..._metadataJsonField('fileVersion', fileVersion),
-      ..._metadataJsonField('productVersion', productVersion),
-      ..._metadataJsonField('iconPath', iconPath),
-    };
-  }
-}
-
-Map<String, Object?> _metadataJsonField(
-  String key,
-  Option<StringDomainValueObject> value,
-) {
-  return value.match(
-    () => const <String, Object?>{},
-    (item) => <String, Object?>{key: item.value},
-  );
 }
 
 class WineProcessRecord {
@@ -112,21 +75,6 @@ class WineProcessRecord {
   final ProgramExecutable executable;
   final Option<ProgramPath> hostPath;
   final Option<ProgramMetadataRecord> metadata;
-
-  Map<String, Object?> toJson() {
-    return <String, Object?>{
-      'bottleId': bottleId.value,
-      'processId': processId.value,
-      'executable': executable.value,
-      ..._metadataJsonField('hostPath', hostPath),
-      ...metadata.match(
-        () => const <String, Object?>{},
-        (processMetadata) => <String, Object?>{
-          'metadata': processMetadata.toJson(),
-        },
-      ),
-    };
-  }
 }
 
 abstract interface class ProgramMetadataExtractor {

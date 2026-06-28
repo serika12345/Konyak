@@ -568,6 +568,84 @@ def require_wine_process_termination_cli_json_projection() -> None:
         )
 
 
+def require_program_catalog_cli_json_projection() -> None:
+    domain_path = (
+        "packages/konyak_cli/lib/src/domain/program/program_catalog_models.dart"
+    )
+    domain = read_text(domain_path)
+
+    def class_section(class_name: str) -> str:
+        class_start = domain.find(f"class {class_name} ")
+        if class_start == -1:
+            raise AssertionError(f"{class_name} must exist")
+
+        next_class_match = re.search(
+            r"\n(?:abstract\s+interface\s+)?class\s+\w+",
+            domain[class_start + 1 :],
+        )
+        if next_class_match is None:
+            return domain[class_start:]
+
+        class_end = class_start + 1 + next_class_match.start()
+        return domain[class_start:class_end]
+
+    for class_name in [
+        "BottleProgramRecord",
+        "ProgramMetadataRecord",
+        "WineProcessRecord",
+    ]:
+        if "toJson(" in class_section(class_name):
+            raise AssertionError(
+                f"{class_name} must not own CLI JSON projection"
+            )
+
+    if "Map<String, Object?> _metadataJsonField(" in domain:
+        raise AssertionError("Program metadata JSON helpers must live in CLI")
+
+    cli_catalog_path = (
+        "packages/konyak_cli/lib/src/cli/cli_program_catalog_json.dart"
+    )
+    cli_catalog = read_text(cli_catalog_path)
+    expected_terms = [
+        "Map<String, Object?> bottleProgramRecordJson(",
+        "Map<String, Object?> programMetadataRecordJson(",
+        "Map<String, Object?> wineProcessRecordJson(",
+        "record.metadata.match(",
+        "metadata.architecture",
+        "metadata.iconPath",
+    ]
+    for expected in expected_terms:
+        if expected not in cli_catalog:
+            raise AssertionError(
+                "Program catalog JSON projection must live at the CLI "
+                f"boundary: {expected}"
+            )
+
+    bottle_read_path = "packages/konyak_cli/lib/src/cli/cli_bottle_read_handlers.dart"
+    bottle_read = read_text(bottle_read_path)
+    if ".map((program) => program.toJson())" in bottle_read:
+        raise AssertionError(
+            "Bottle program list JSON must not rely on domain-owned toJson"
+        )
+    if ".map(bottleProgramRecordJson)" not in bottle_read:
+        raise AssertionError(
+            "Bottle program list JSON must use bottleProgramRecordJson"
+        )
+
+    process_results_path = (
+        "packages/konyak_cli/lib/src/cli/cli_app_process_results.dart"
+    )
+    process_results = read_text(process_results_path)
+    if ".map((processRecord) => processRecord.toJson())" in process_results:
+        raise AssertionError(
+            "Wine process list JSON must not rely on domain-owned toJson"
+        )
+    if ".map(wineProcessRecordJson)" not in process_results:
+        raise AssertionError(
+            "Wine process list JSON must use wineProcessRecordJson"
+        )
+
+
 def count_constructor_field_parameters(
     relative_path: str,
     constructor_name: str,
@@ -1361,6 +1439,7 @@ def main() -> None:
     require_typed_winetricks_verb_planner_boundary()
     require_typed_wine_process_planner_boundary()
     require_wine_process_termination_cli_json_projection()
+    require_program_catalog_cli_json_projection()
 
     for expected in [
         "flutter",

@@ -4,6 +4,7 @@ import 'cli_bottle_parsers.dart';
 import 'cli_bottle_results.dart';
 import 'cli_commands.dart';
 import 'cli_json_helpers.dart';
+import 'cli_program_catalog_json.dart';
 import 'cli_result_model.dart';
 
 CliResult? handleBottleReadCommand(
@@ -56,7 +57,7 @@ CliResult? handleBottleReadCommand(
           'bottleId': bottle.id.value,
           'programs': context.bottleProgramRepository
               .listPrograms(bottle)
-              .map((program) => program.toJson())
+              .map(bottleProgramRecordJson)
               .toList(growable: false),
         },
       }),

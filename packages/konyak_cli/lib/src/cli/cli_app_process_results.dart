@@ -16,6 +16,7 @@ import '../repository/repository_interfaces.dart';
 import '../shared/common_helpers.dart';
 import 'cli_bottle_results.dart';
 import 'cli_json_helpers.dart';
+import 'cli_program_catalog_json.dart';
 import 'cli_program_run_handlers.dart';
 import 'cli_result_model.dart';
 
@@ -75,9 +76,7 @@ Map<String, Object?> wineProcessTerminationRecordJson(
 CliResult wineProcessListJsonResult(List<WineProcessRecord> records) {
   return jsonSuccess(<String, Object?>{
     'wineProcesses': <String, Object?>{
-      'processes': records
-          .map((processRecord) => processRecord.toJson())
-          .toList(growable: false),
+      'processes': records.map(wineProcessRecordJson).toList(growable: false),
     },
   });
 }

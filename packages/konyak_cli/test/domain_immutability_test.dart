@@ -176,11 +176,6 @@ void main() {
       ProgramFileDescription('Steam'),
     );
     expect(metadata.iconPath.toNullable(), ProgramIconPath('/steam.icns'));
-    expect(metadata.toJson(), {
-      'architecture': 'x86_64',
-      'fileDescription': 'Steam',
-      'iconPath': '/steam.icns',
-    });
   });
 
   test('program metadata records reject blank present fields', () {
@@ -217,9 +212,6 @@ void main() {
     expect(process.processId, WineProcessId('42'));
     expect(process.executable, ProgramExecutable('steam.exe'));
     expect(process.hostPath.isNone(), isTrue);
-    expect(program.toJson(), isNot(contains('metadata')));
-    expect(process.toJson(), isNot(contains('metadata')));
-    expect(process.toJson(), isNot(contains('hostPath')));
   });
 
   test('runtime release metadata models absent fields with Option', () {

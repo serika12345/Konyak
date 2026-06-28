@@ -13,6 +13,36 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-28 21:47 JST
+- State: `completed`
+- Branch: `main`
+- Active work: move program catalog JSON projections out of domain models.
+- Related TODO: `docs/todo.md` deferred JSON `toJson` projection separation.
+- Latest commit: `201db96` (`Move wine process termination JSON projection`).
+- Purpose: continue separating domain models from CLI JSON serialization by
+  moving `ProgramMetadataRecord`, `BottleProgramRecord`, and
+  `WineProcessRecord` projections into CLI serialization helpers.
+- Completed work: committed the first process-termination projection slice,
+  observed `just verify-governance` fail before implementation because
+  `BottleProgramRecord` still owned CLI JSON projection, added
+  `cli_program_catalog_json.dart`, moved bottle-program and wine-process list
+  projections to CLI helpers, removed the matching domain `toJson` methods,
+  updated domain tests to assert domain state rather than JSON shape, and added
+  governance for the new boundary.
+- Remaining work: many domain `toJson` projections remain, especially bottle,
+  runtime/update, settings, validation, Winetricks catalog, and graphics
+  backend hint records.
+- Next action: continue JSON projection separation with another narrow
+  CLI-covered record group, likely Winetricks catalog or bottle record
+  projections.
+- Verification: observed `just verify-governance` fail before implementation;
+  after implementation, `cd packages/konyak_cli && dart analyze
+  --fatal-infos`, `cd packages/konyak_cli && dart test
+  test/domain_immutability_test.dart`, focused list-bottle-programs /
+  list-wine-processes CLI contract tests, `just verify-governance`,
+  `just cli-test`, `just verify-architecture`, `just verify-safety`,
+  `just format-check`, and `just lint` passed.
+
 - Timestamp: 2026-06-28 21:38 JST
 - State: `completed`
 - Branch: `main`
