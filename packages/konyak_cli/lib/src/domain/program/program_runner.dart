@@ -45,26 +45,24 @@ class ProgramRunPlanner {
     required String programPath,
     Option<ProgramSettingsRecord> programSettings = const Option.none(),
   }) {
-    final supportedProgramPath = isSupportedProgramPath(programPath);
-    if (!supportedProgramPath) {
-      return const Option.none();
-    }
-
-    return Option.of(switch (hostPlatform) {
-      KonyakHostPlatform.linux => linuxWineRequest(
-        bottle: bottle,
-        programPath: programPath,
-        environment: environment,
-        programSettings: programSettings.getOrElse(ProgramSettingsRecord.new),
-      ),
-      KonyakHostPlatform.macos => macosWineRequest(
-        bottle: bottle,
-        programPath: programPath,
-        environment: environment,
-        macosMajorVersion: macosMajorVersion,
-        programSettings: programSettings.getOrElse(ProgramSettingsRecord.new),
-      ),
-    });
+    return wineArgumentsForProgramPath(programPath).map(
+      (wineArguments) => switch (hostPlatform) {
+        KonyakHostPlatform.linux => linuxWineRequest(
+          bottle: bottle,
+          programPath: programPath,
+          wineArguments: wineArguments,
+          environment: environment,
+          programSettings: programSettings.getOrElse(ProgramSettingsRecord.new),
+        ),
+        KonyakHostPlatform.macos => macosWineRequest(
+          bottle: bottle,
+          programPath: programPath,
+          environment: environment,
+          macosMajorVersion: macosMajorVersion,
+          programSettings: programSettings.getOrElse(ProgramSettingsRecord.new),
+        ),
+      },
+    );
   }
 
   Option<ProgramRunRequest> planBottleCommand({

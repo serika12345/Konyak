@@ -5,26 +5,28 @@ import '../shared/domain_helpers.dart';
 import 'program_run_environment.dart';
 import 'program_settings_models.dart';
 
-List<String> wineArgumentsForProgramPath(String programPath) {
+Option<List<String>> wineArgumentsForProgramPath(String programPath) {
   final lowerCasePath = programPath.toLowerCase();
 
   if (lowerCasePath.endsWith('.exe')) {
-    return <String>[programPath];
+    return Option.of(List.unmodifiable(<String>[programPath]));
   }
 
   if (lowerCasePath.endsWith('.msi')) {
-    return <String>['msiexec', '/i', programPath];
+    return Option.of(List.unmodifiable(<String>['msiexec', '/i', programPath]));
   }
 
   if (lowerCasePath.endsWith('.bat') || lowerCasePath.endsWith('.cmd')) {
-    return <String>['cmd', '/c', programPath];
+    return Option.of(List.unmodifiable(<String>['cmd', '/c', programPath]));
   }
 
   if (lowerCasePath.endsWith('.lnk')) {
-    return <String>['start', '/unix', programPath];
+    return Option.of(
+      List.unmodifiable(<String>['start', '/unix', programPath]),
+    );
   }
 
-  throw StateError('Unsupported program path: $programPath');
+  return const Option.none();
 }
 
 List<String> programSettingsArguments(ProgramSettingsRecord settings) {
@@ -102,13 +104,7 @@ String _combinedWineDebugChannels({
 }
 
 bool isSupportedProgramPath(String programPath) {
-  final lowerCasePath = programPath.toLowerCase();
-
-  return lowerCasePath.endsWith('.exe') ||
-      lowerCasePath.endsWith('.msi') ||
-      lowerCasePath.endsWith('.bat') ||
-      lowerCasePath.endsWith('.cmd') ||
-      lowerCasePath.endsWith('.lnk');
+  return wineArgumentsForProgramPath(programPath).isSome();
 }
 
 Option<String> supportedBottleCommand(String command) {

@@ -381,6 +381,11 @@ void main() {
     expect(manifestSource.signature, isA<RuntimeSourceManifestSigned>());
   });
 
+  test('program path Wine arguments model unsupported paths with Option', () {
+    expect(wineArgumentsForProgramPath('/Games/setup.exe').isSome(), isTrue);
+    expect(wineArgumentsForProgramPath('/Games/readme.txt').isNone(), isTrue);
+  });
+
   test('runtime install operations reject blank present sources', () {
     expect(
       () => RuntimeFullInstallOperation(archivePath: Option.of(' ')),
@@ -686,6 +691,41 @@ void main() {
       RuntimeSourceComponentId('wine'),
     );
     expect(manifest.componentById('dxvk').isNone(), isTrue);
+  });
+
+  test('runtime source archive plans report missing source components', () {
+    final wineComponent = RuntimeSourceComponent(
+      id: 'wine',
+      version: '1.0.0',
+      archiveUrl: 'https://example.invalid/wine.tar.xz',
+      sha256: 'wine-digest',
+    );
+    final dxvkComponent = RuntimeSourceComponent(
+      id: 'dxvk',
+      version: '2.0.0',
+      archiveUrl: 'https://example.invalid/dxvk.tar.xz',
+      sha256: 'dxvk-digest',
+    );
+    final plan = RuntimeStackSourceArchivePlan(
+      wineComponent: wineComponent,
+      sourceComponents: <RuntimeSourceComponent>[wineComponent],
+      components: <RuntimeStackSourceArchiveComponentPlan>[
+        RuntimeStackSourceArchiveComponentPlan(
+          component: dxvkComponent,
+          archivePath: '/tmp/dxvk.tar.xz',
+          startFraction: 0.05,
+          endFraction: 0.6,
+        ),
+      ],
+    );
+
+    final bundleResult = plan.toBundle();
+
+    expect(bundleResult, isA<RuntimeStackSourceArchiveBundleFailed>());
+    expect(
+      (bundleResult as RuntimeStackSourceArchiveBundleFailed).message,
+      contains('wine'),
+    );
   });
 
   test('runtime definitions model absent source URLs with Option', () {

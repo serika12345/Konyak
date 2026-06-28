@@ -44,9 +44,6 @@ verification output instead of checked-off backlog entries.
   - Keep the split responsibility-based, such as macOS requests, Linux
     requests, terminal command rendering, and shared environment assembly.
   - Do not replace it with another pasted transitional giant file.
-- Audit and remove domain `throw StateError` / `getOrElse(() => throw ...)`
-  paths where they are masking an "impossible" state instead of returning a
-  typed result or sealed branch.
 - Move JSON `toJson` projection out of domain models into CLI/serialization
   boundary libraries where compatibility permits.
 - Split remaining Flutter large UI files after backend boundaries are smaller.

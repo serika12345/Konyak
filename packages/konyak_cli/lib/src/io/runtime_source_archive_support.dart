@@ -71,7 +71,7 @@ resolveRuntimeStackSourceArchiveBundleFromPlan({
     }
   }
 
-  return RuntimeStackSourceArchiveBundleResolved(plan.toBundle());
+  return plan.toBundle();
 }
 
 Future<RuntimeStackSourceArchiveBundleResult>
@@ -135,5 +135,5 @@ resolveRuntimeStackSourceArchiveBundleFromPlanStreaming({
     }
   }
 
-  return RuntimeStackSourceArchiveBundleResolved(plan.toBundle());
+  return plan.toBundle();
 }

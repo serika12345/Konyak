@@ -281,6 +281,20 @@ def require_no_repository_dartio_defaults() -> None:
             )
 
 
+def require_no_cli_state_errors() -> None:
+    cli_root = ROOT / "packages/konyak_cli/lib/src"
+    if not cli_root.exists():
+        return
+
+    for path in sorted(cli_root.rglob("*.dart")):
+        text = path.read_text(encoding="utf-8")
+        if "StateError(" in text or "throw StateError" in text:
+            relative_path = path.relative_to(ROOT)
+            raise AssertionError(
+                f"{relative_path} must model expected absence or failure with Option/Either/result variants"
+            )
+
+
 def require_cli_injected_runner_has_no_dartio_defaults() -> None:
     text = read_text("packages/konyak_cli/lib/src/cli/cli_injected_runner.dart")
     for unexpected in ["DartIo", "currentProgramRunPlanner", "../io/"]:
@@ -974,6 +988,7 @@ def main() -> None:
     require_result_boundary_rules()
     require_typed_domain_string_maps()
     require_runtime_ssot_rules()
+    require_no_cli_state_errors()
 
     for expected in [
         "flutter",

@@ -13,6 +13,38 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-28 19:48 JST
+- State: `completed`
+- Branch: `main`
+- Active work: audit and remove domain `StateError` paths that mask expected
+  absence or typed failure.
+- Related TODO: `docs/todo.md` deferred domain `throw StateError` /
+  `getOrElse(() => throw ...)` audit.
+- Latest commit: `45c60ee` (`Remove no-op home detail wrapper`).
+- Purpose: keep domain logic from encoding expected unsupported paths,
+  optional manifest data, and malformed archive plans as runtime exceptions.
+- Completed work: identified production `StateError` paths in program argument
+  selection, runtime install planning, runtime install-source construction,
+  runtime source archive bundle projection, and runtime stack source-manifest
+  I/O adapters; changed unsupported program paths to `Option.none`, archive
+  bundle projection to `RuntimeStackSourceArchiveBundleResult`, and source
+  manifest adapters to explicit invalid-manifest branches; added tests for the
+  typed branches and governance that rejects `StateError` in
+  `packages/konyak_cli/lib/src`; removed the completed TODO item.
+- Remaining work: none for this slice.
+- Next action: continue with the next deferred backend cleanup, likely
+  splitting `program_run_request_builders.dart`.
+- Verification: observed `cd packages/konyak_cli && dart test
+  test/domain_immutability_test.dart` fail before implementation because
+  `wineArgumentsForProgramPath` returned a `List<String>` and lacked
+  `Option` methods; observed `just verify-governance` fail before
+  implementation on the existing domain `StateError`; after implementation,
+  focused domain tests, `cd packages/konyak_cli && dart analyze --fatal-infos`,
+  `just verify-governance`, `just verify-architecture`, `just cli-test`,
+  `just verify-safety`, `just format-check`, and `just lint` passed; final
+  `rg "throw StateError|getOrElse\\(\\(\\) => throw|StateError\\("
+  packages/konyak_cli/lib/src -n` returned no matches.
+
 - Timestamp: 2026-06-28 19:25 JST
 - State: `completed`
 - Branch: `main`

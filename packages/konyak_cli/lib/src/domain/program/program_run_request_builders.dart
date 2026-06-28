@@ -21,12 +21,13 @@ const _gptkD3DMetalComponentLibRelativePath = <String>[
 ProgramRunRequest linuxWineRequest({
   required BottleRecord bottle,
   required String programPath,
+  required List<String> wineArguments,
   required HostEnvironment environment,
   required ProgramSettingsRecord programSettings,
 }) {
   final hostEnvironment = environment;
   final arguments = <String>[
-    ...wineArgumentsForProgramPath(programPath),
+    ...wineArguments,
     ...programSettingsArguments(programSettings),
   ];
   final logging = programSettingsLogging(programSettings);

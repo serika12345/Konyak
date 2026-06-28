@@ -90,34 +90,33 @@ extension DartIoLinuxWineInstallerOperations on DartIoLinuxWineInstaller {
         sourceManifest,
         signatureSource: sourceManifestSignature,
       );
-      final manifest = runtimeStackSourceManifestFromPayload(manifestPayload);
-      if (manifest.isNone()) {
-        return const LinuxWineInstallFailed(
+      return runtimeStackSourceManifestFromPayload(manifestPayload).match(
+        () => const LinuxWineInstallFailed(
           'Runtime stack source manifest is invalid.',
-        );
-      }
-      final bundleResult = resolveRuntimeStackSourceArchiveBundle(
-        manifest: manifest.getOrElse(
-          () => throw StateError('Expected runtime stack source manifest.'),
         ),
-        platformSpec: linuxWineRuntimePlatformSpec,
-        tempDirectory: tempDirectory,
-        progressSink: progressSink,
-      );
-      return switch (bundleResult) {
-        RuntimeStackSourceArchiveBundleFailed(:final message) =>
-          LinuxWineInstallFailed(message),
-        RuntimeStackSourceArchiveBundleResolved(:final bundle) =>
-          installLinuxWineArchive(
-            archivePath: bundle.wineArchivePath.value,
-            archiveSha256: const Option.none(),
-            componentArchivePaths: bundle.componentArchivePaths.map(
-              (path) => path.value,
-            ),
-            componentVersions: bundle.componentVersions,
+        (manifest) {
+          final bundleResult = resolveRuntimeStackSourceArchiveBundle(
+            manifest: manifest,
+            platformSpec: linuxWineRuntimePlatformSpec,
+            tempDirectory: tempDirectory,
             progressSink: progressSink,
-          ),
-      };
+          );
+          return switch (bundleResult) {
+            RuntimeStackSourceArchiveBundleFailed(:final message) =>
+              LinuxWineInstallFailed(message),
+            RuntimeStackSourceArchiveBundleResolved(:final bundle) =>
+              installLinuxWineArchive(
+                archivePath: bundle.wineArchivePath.value,
+                archiveSha256: const Option.none(),
+                componentArchivePaths: bundle.componentArchivePaths.map(
+                  (path) => path.value,
+                ),
+                componentVersions: bundle.componentVersions,
+                progressSink: progressSink,
+              ),
+          };
+        },
+      );
     } on FileSystemException catch (error) {
       return LinuxWineInstallFailed(error.message);
     } on ProcessException catch (error) {
@@ -147,35 +146,34 @@ extension DartIoLinuxWineInstallerOperations on DartIoLinuxWineInstaller {
         sourceManifest,
         signatureSource: sourceManifestSignature,
       );
-      final manifest = runtimeStackSourceManifestFromPayload(manifestPayload);
-      if (manifest.isNone()) {
-        return const LinuxWineInstallFailed(
+      return await runtimeStackSourceManifestFromPayload(manifestPayload).match(
+        () async => const LinuxWineInstallFailed(
           'Runtime stack source manifest is invalid.',
-        );
-      }
-      final bundleResult =
-          await resolveRuntimeStackSourceArchiveBundleStreaming(
-            manifest: manifest.getOrElse(
-              () => throw StateError('Expected runtime stack source manifest.'),
-            ),
-            platformSpec: linuxWineRuntimePlatformSpec,
-            tempDirectory: tempDirectory,
-            progressSink: progressSink,
-          );
-      return switch (bundleResult) {
-        RuntimeStackSourceArchiveBundleFailed(:final message) =>
-          LinuxWineInstallFailed(message),
-        RuntimeStackSourceArchiveBundleResolved(:final bundle) =>
-          installLinuxWineArchive(
-            archivePath: bundle.wineArchivePath.value,
-            archiveSha256: const Option.none(),
-            componentArchivePaths: bundle.componentArchivePaths.map(
-              (path) => path.value,
-            ),
-            componentVersions: bundle.componentVersions,
-            progressSink: progressSink,
-          ),
-      };
+        ),
+        (manifest) async {
+          final bundleResult =
+              await resolveRuntimeStackSourceArchiveBundleStreaming(
+                manifest: manifest,
+                platformSpec: linuxWineRuntimePlatformSpec,
+                tempDirectory: tempDirectory,
+                progressSink: progressSink,
+              );
+          return switch (bundleResult) {
+            RuntimeStackSourceArchiveBundleFailed(:final message) =>
+              LinuxWineInstallFailed(message),
+            RuntimeStackSourceArchiveBundleResolved(:final bundle) =>
+              installLinuxWineArchive(
+                archivePath: bundle.wineArchivePath.value,
+                archiveSha256: const Option.none(),
+                componentArchivePaths: bundle.componentArchivePaths.map(
+                  (path) => path.value,
+                ),
+                componentVersions: bundle.componentVersions,
+                progressSink: progressSink,
+              ),
+          };
+        },
+      );
     } on FileSystemException catch (error) {
       return LinuxWineInstallFailed(error.message);
     } on ProcessException catch (error) {

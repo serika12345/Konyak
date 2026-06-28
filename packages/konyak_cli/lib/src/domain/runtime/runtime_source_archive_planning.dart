@@ -1,3 +1,5 @@
+import 'package:fpdart/fpdart.dart';
+
 import '../shared/domain_helpers.dart';
 import '../shared/domain_value_objects.dart';
 import 'runtime_component_versions.dart';
@@ -35,28 +37,38 @@ final class RuntimeStackSourceArchivePlan {
   final List<RuntimeSourceComponent> sourceComponents;
   final List<RuntimeStackSourceArchiveComponentPlan> components;
 
-  RuntimeStackSourceArchiveBundle toBundle() {
-    final wineArchivePath = _archivePathForComponent(wineComponent);
-    final componentArchivePaths = <RuntimeArchivePath>[];
-    for (final component in components) {
-      final archivePath = component.archivePath;
-      if (archivePath != wineArchivePath &&
-          !componentArchivePaths.contains(archivePath)) {
-        componentArchivePaths.add(archivePath);
-      }
-    }
+  RuntimeStackSourceArchiveBundleResult toBundle() {
+    return _archivePathForComponent(wineComponent).match(
+      () => RuntimeStackSourceArchiveBundleFailed(
+        'Runtime stack source archive plan does not contain ${wineComponent.id.value}.',
+      ),
+      (wineArchivePath) {
+        final componentArchivePaths = <RuntimeArchivePath>[];
+        for (final component in components) {
+          final archivePath = component.archivePath;
+          if (archivePath != wineArchivePath &&
+              !componentArchivePaths.contains(archivePath)) {
+            componentArchivePaths.add(archivePath);
+          }
+        }
 
-    return RuntimeStackSourceArchiveBundle(
-      wineArchivePath: wineArchivePath.value,
-      componentArchivePaths: componentArchivePaths.map((value) => value.value),
-      componentVersions: RuntimeComponentVersions(<String, String>{
-        for (final component in sourceComponents)
-          component.id.value: component.version.value,
-      }),
+        return RuntimeStackSourceArchiveBundleResolved(
+          RuntimeStackSourceArchiveBundle(
+            wineArchivePath: wineArchivePath.value,
+            componentArchivePaths: componentArchivePaths.map(
+              (value) => value.value,
+            ),
+            componentVersions: RuntimeComponentVersions(<String, String>{
+              for (final component in sourceComponents)
+                component.id.value: component.version.value,
+            }),
+          ),
+        );
+      },
     );
   }
 
-  RuntimeArchivePath _archivePathForComponent(
+  Option<RuntimeArchivePath> _archivePathForComponent(
     RuntimeSourceComponent sourceComponent,
   ) {
     for (final component in components) {
@@ -64,13 +76,11 @@ final class RuntimeStackSourceArchivePlan {
         component.component,
         sourceComponent,
       )) {
-        return component.archivePath;
+        return Option.of(component.archivePath);
       }
     }
 
-    throw StateError(
-      'Runtime stack source archive plan does not contain ${sourceComponent.id.value}.',
-    );
+    return const Option.none();
   }
 }
 

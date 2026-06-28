@@ -131,16 +131,31 @@ RuntimeWineInstallPlan runtimeWineInstallPlan({
       currentRuntimeStackIncompleteOrMissing &&
       !hasExplicitInstallSource &&
       installSource is! RuntimeSourceManifestInstallSource) {
-    final incompleteRuntimePlan = incompleteRuntimeMessage.map(
+    return incompleteRuntimeMessage.match(
+      () => _runtimeWineInstallPlanForSource(
+        installSource: installSource,
+        shouldPreserveExistingRuntimeFiles: shouldPreserveExistingRuntimeFiles,
+        defaultArchiveFileName: defaultArchiveFileName,
+        missingArchiveMessage: missingArchiveMessage,
+      ),
       RuntimeWineInstallIncompleteWithoutSource.new,
     );
-    if (incompleteRuntimePlan.isSome()) {
-      return incompleteRuntimePlan.getOrElse(
-        () => throw StateError('Expected incomplete runtime install plan.'),
-      );
-    }
   }
 
+  return _runtimeWineInstallPlanForSource(
+    installSource: installSource,
+    shouldPreserveExistingRuntimeFiles: shouldPreserveExistingRuntimeFiles,
+    defaultArchiveFileName: defaultArchiveFileName,
+    missingArchiveMessage: missingArchiveMessage,
+  );
+}
+
+RuntimeWineInstallPlan _runtimeWineInstallPlanForSource({
+  required RuntimeInstallSource installSource,
+  required bool shouldPreserveExistingRuntimeFiles,
+  required String defaultArchiveFileName,
+  required Option<String> missingArchiveMessage,
+}) {
   return switch (installSource) {
     RuntimeSourceManifestInstallSource(
       :final sourceManifest,

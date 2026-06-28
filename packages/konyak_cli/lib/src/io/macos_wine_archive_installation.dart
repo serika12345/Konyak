@@ -108,41 +108,40 @@ extension MacosWineArchiveInstallation on DartIoMacosWineInstaller {
         sourceManifest,
         signatureSource: sourceManifestSignature,
       );
-      final manifest = runtimeStackSourceManifestFromPayload(manifestPayload);
-      if (manifest.isNone()) {
-        return const MacosWineInstallFailed(
+      return runtimeStackSourceManifestFromPayload(manifestPayload).match(
+        () => const MacosWineInstallFailed(
           'Runtime stack source manifest is invalid.',
-        );
-      }
-      final bundleResult = resolveRuntimeStackSourceArchiveBundle(
-        manifest: manifest.getOrElse(
-          () => throw StateError('Expected runtime stack source manifest.'),
         ),
-        platformSpec: macosKonyakRuntimePlatformSpec,
-        tempDirectory: tempDirectory,
-        progressSink: progressSink,
-      );
-      return switch (bundleResult) {
-        RuntimeStackSourceArchiveBundleFailed(:final message) =>
-          macosWineSourceManifestInstallResult(
-            sourceManifest: sourceManifest,
-            result: MacosWineInstallFailed(message),
-          ),
-        RuntimeStackSourceArchiveBundleResolved(:final bundle) =>
-          macosWineSourceManifestInstallResult(
-            sourceManifest: sourceManifest,
-            result: installMacosWineArchive(
-              archivePath: bundle.wineArchivePath.value,
-              archiveSha256: const Option.none(),
-              componentArchivePaths: bundle.componentArchivePaths.map(
-                (path) => path.value,
+        (manifest) {
+          final bundleResult = resolveRuntimeStackSourceArchiveBundle(
+            manifest: manifest,
+            platformSpec: macosKonyakRuntimePlatformSpec,
+            tempDirectory: tempDirectory,
+            progressSink: progressSink,
+          );
+          return switch (bundleResult) {
+            RuntimeStackSourceArchiveBundleFailed(:final message) =>
+              macosWineSourceManifestInstallResult(
+                sourceManifest: sourceManifest,
+                result: MacosWineInstallFailed(message),
               ),
-              componentVersions: bundle.componentVersions,
-              preserveExistingRuntimeFiles: preserveExistingRuntimeFiles,
-              progressSink: progressSink,
-            ),
-          ),
-      };
+            RuntimeStackSourceArchiveBundleResolved(:final bundle) =>
+              macosWineSourceManifestInstallResult(
+                sourceManifest: sourceManifest,
+                result: installMacosWineArchive(
+                  archivePath: bundle.wineArchivePath.value,
+                  archiveSha256: const Option.none(),
+                  componentArchivePaths: bundle.componentArchivePaths.map(
+                    (path) => path.value,
+                  ),
+                  componentVersions: bundle.componentVersions,
+                  preserveExistingRuntimeFiles: preserveExistingRuntimeFiles,
+                  progressSink: progressSink,
+                ),
+              ),
+          };
+        },
+      );
     } on FileSystemException catch (error) {
       return MacosWineInstallFailed(
         'Runtime stack source manifest $sourceManifest failed: '
@@ -179,42 +178,41 @@ extension MacosWineArchiveInstallation on DartIoMacosWineInstaller {
         sourceManifest,
         signatureSource: sourceManifestSignature,
       );
-      final manifest = runtimeStackSourceManifestFromPayload(manifestPayload);
-      if (manifest.isNone()) {
-        return const MacosWineInstallFailed(
+      return await runtimeStackSourceManifestFromPayload(manifestPayload).match(
+        () async => const MacosWineInstallFailed(
           'Runtime stack source manifest is invalid.',
-        );
-      }
-      final bundleResult =
-          await resolveRuntimeStackSourceArchiveBundleStreaming(
-            manifest: manifest.getOrElse(
-              () => throw StateError('Expected runtime stack source manifest.'),
-            ),
-            platformSpec: macosKonyakRuntimePlatformSpec,
-            tempDirectory: tempDirectory,
-            progressSink: progressSink,
-          );
-      return switch (bundleResult) {
-        RuntimeStackSourceArchiveBundleFailed(:final message) =>
-          macosWineSourceManifestInstallResult(
-            sourceManifest: sourceManifest,
-            result: MacosWineInstallFailed(message),
-          ),
-        RuntimeStackSourceArchiveBundleResolved(:final bundle) =>
-          macosWineSourceManifestInstallResult(
-            sourceManifest: sourceManifest,
-            result: installMacosWineArchive(
-              archivePath: bundle.wineArchivePath.value,
-              archiveSha256: const Option.none(),
-              componentArchivePaths: bundle.componentArchivePaths.map(
-                (path) => path.value,
+        ),
+        (manifest) async {
+          final bundleResult =
+              await resolveRuntimeStackSourceArchiveBundleStreaming(
+                manifest: manifest,
+                platformSpec: macosKonyakRuntimePlatformSpec,
+                tempDirectory: tempDirectory,
+                progressSink: progressSink,
+              );
+          return switch (bundleResult) {
+            RuntimeStackSourceArchiveBundleFailed(:final message) =>
+              macosWineSourceManifestInstallResult(
+                sourceManifest: sourceManifest,
+                result: MacosWineInstallFailed(message),
               ),
-              componentVersions: bundle.componentVersions,
-              preserveExistingRuntimeFiles: preserveExistingRuntimeFiles,
-              progressSink: progressSink,
-            ),
-          ),
-      };
+            RuntimeStackSourceArchiveBundleResolved(:final bundle) =>
+              macosWineSourceManifestInstallResult(
+                sourceManifest: sourceManifest,
+                result: installMacosWineArchive(
+                  archivePath: bundle.wineArchivePath.value,
+                  archiveSha256: const Option.none(),
+                  componentArchivePaths: bundle.componentArchivePaths.map(
+                    (path) => path.value,
+                  ),
+                  componentVersions: bundle.componentVersions,
+                  preserveExistingRuntimeFiles: preserveExistingRuntimeFiles,
+                  progressSink: progressSink,
+                ),
+              ),
+          };
+        },
+      );
     } on FileSystemException catch (error) {
       return MacosWineInstallFailed(
         'Runtime stack source manifest $sourceManifest failed: '

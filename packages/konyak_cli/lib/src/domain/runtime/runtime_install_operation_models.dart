@@ -137,50 +137,66 @@ sealed class RuntimeInstallSource {
     final signature = runtimeSourceManifestSignature(sourceManifestSignature);
     final components = _runtimeComponentArchivePaths(componentArchivePaths);
     final manifest = sourceManifest.map(RuntimeSourceManifestUrl.new);
-    final localArchive = archivePath.map(RuntimeArchivePath.new);
-    final remoteArchive = archiveUrl.map(RuntimeArchiveUrl.new);
 
-    if (manifest.isSome()) {
-      if (localArchive.isSome() ||
-          remoteArchive.isSome() ||
-          checksum is RuntimeSha256ArchiveChecksum ||
-          components.isNotEmpty) {
-        throw ArgumentError(
-          'sourceManifest cannot be combined with archive sources.',
-        );
-      }
-
-      return RuntimeSourceManifestInstallSource(
-        sourceManifest: manifest
-            .getOrElse(() => throw StateError('Expected source manifest.'))
-            .value,
-        signature: signature,
-      );
-    }
-
-    if (localArchive.isSome() && remoteArchive.isSome()) {
-      throw ArgumentError('archivePath and archiveUrl are mutually exclusive.');
-    }
-
-    return localArchive.match(
-      () => remoteArchive.match(
-        () => RuntimeConfiguredArchiveSource(
-          archiveChecksum: checksum,
-          componentArchivePaths: components.map((value) => value.value),
-        ),
-        (value) => RuntimeRemoteArchiveSource(
-          archiveUrl: value.value,
-          archiveChecksum: checksum,
-          componentArchivePaths: components.map((value) => value.value),
-        ),
+    return manifest.match(
+      () => _runtimeArchiveInstallSourceFromOptions(
+        archivePath: archivePath,
+        archiveUrl: archiveUrl,
+        checksum: checksum,
+        components: components,
       ),
-      (value) => RuntimeLocalArchiveSource(
-        archivePath: value.value,
+      (sourceManifest) {
+        final localArchive = archivePath.map(RuntimeArchivePath.new);
+        final remoteArchive = archiveUrl.map(RuntimeArchiveUrl.new);
+        if (localArchive.isSome() ||
+            remoteArchive.isSome() ||
+            checksum is RuntimeSha256ArchiveChecksum ||
+            components.isNotEmpty) {
+          throw ArgumentError(
+            'sourceManifest cannot be combined with archive sources.',
+          );
+        }
+
+        return RuntimeSourceManifestInstallSource(
+          sourceManifest: sourceManifest.value,
+          signature: signature,
+        );
+      },
+    );
+  }
+}
+
+RuntimeInstallSource _runtimeArchiveInstallSourceFromOptions({
+  required Option<String> archivePath,
+  required Option<String> archiveUrl,
+  required RuntimeArchiveChecksum checksum,
+  required IList<RuntimeArchivePath> components,
+}) {
+  final localArchive = archivePath.map(RuntimeArchivePath.new);
+  final remoteArchive = archiveUrl.map(RuntimeArchiveUrl.new);
+
+  if (localArchive.isSome() && remoteArchive.isSome()) {
+    throw ArgumentError('archivePath and archiveUrl are mutually exclusive.');
+  }
+
+  return localArchive.match(
+    () => remoteArchive.match(
+      () => RuntimeConfiguredArchiveSource(
         archiveChecksum: checksum,
         componentArchivePaths: components.map((value) => value.value),
       ),
-    );
-  }
+      (value) => RuntimeRemoteArchiveSource(
+        archiveUrl: value.value,
+        archiveChecksum: checksum,
+        componentArchivePaths: components.map((value) => value.value),
+      ),
+    ),
+    (value) => RuntimeLocalArchiveSource(
+      archivePath: value.value,
+      archiveChecksum: checksum,
+      componentArchivePaths: components.map((value) => value.value),
+    ),
+  );
 }
 
 final class RuntimeConfiguredArchiveSource extends RuntimeInstallSource {
