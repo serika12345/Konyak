@@ -7,7 +7,8 @@ import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:konyak_cli/konyak_cli.dart' hide runCli, runCliStreaming;
-import 'package:konyak_cli/src/cli/cli_injected_runner.dart';
+import 'package:konyak_cli/src/cli/cli_commands.dart';
+import 'package:konyak_cli/src/cli/cli_injected_runner.dart' as injected;
 import 'package:konyak_cli/src/io/app_settings_repositories.dart';
 import 'package:konyak_cli/src/io/app_update_checker_io.dart';
 import 'package:konyak_cli/src/io/app_update_installer.dart';
@@ -17,6 +18,7 @@ import 'package:konyak_cli/src/io/linux_external_program_launchers.dart';
 import 'package:konyak_cli/src/io/linux_wine_installation.dart';
 import 'package:konyak_cli/src/io/macos_wine_installation.dart';
 import 'package:konyak_cli/src/io/program_discovery.dart';
+import 'package:konyak_cli/src/io/program_graphics_backend_hints_io.dart';
 import 'package:konyak_cli/src/io/program_io_services.dart';
 import 'package:konyak_cli/src/io/program_metadata_io.dart';
 import 'package:konyak_cli/src/io/program_winetricks_support.dart';
@@ -145,6 +147,194 @@ final _gptkD3DMetalInstalledPaths = <List<String>>[
     ],
 ];
 
+CliResult runCli(
+  List<String> arguments, {
+  BottleCatalog? bottleCatalog,
+  BottleRepository? bottleRepository,
+  BottleProgramRepository bottleProgramRepository =
+      const EmptyBottleProgramRepository(),
+  ProgramMetadataExtractor programMetadataExtractor =
+      const NoopProgramMetadataExtractor(),
+  WinetricksVerbRepository winetricksVerbRepository =
+      const UnavailableWinetricksVerbRepository(),
+  RuntimeCatalog? runtimeCatalog,
+  ProgramRunPlanner? programRunPlanner,
+  ProgramGraphicsBackendHintsInspector programGraphicsBackendHintsInspector =
+      const UnavailableProgramGraphicsBackendHintsInspector(),
+  ProgramRunner? programRunner,
+  BottlePrefixInitializer? bottlePrefixInitializer,
+  PathOpener? pathOpener,
+  MacosWineInstaller? macosWineInstaller,
+  LinuxWineInstaller? linuxWineInstaller,
+  GptkWineInstaller? gptkWineInstaller,
+  RuntimeUpdateChecker? runtimeUpdateChecker,
+  AppUpdateChecker? appUpdateChecker,
+  AppUpdateInstaller? appUpdateInstaller,
+  RuntimeValidator? runtimeValidator,
+  MacosSetupChecker? macosSetupChecker,
+  AppSettingsRepository? appSettingsRepository,
+  RuntimeInstallProgressSink? runtimeInstallProgressSink,
+  LinuxExternalProgramLauncherDiagnosticSink?
+  linuxExternalProgramLauncherDiagnosticSink,
+}) {
+  return injected.runCli(
+    arguments,
+    context: _testCliCommandContext(
+      bottleCatalog: bottleCatalog,
+      bottleRepository: bottleRepository,
+      bottleProgramRepository: bottleProgramRepository,
+      programMetadataExtractor: programMetadataExtractor,
+      winetricksVerbRepository: winetricksVerbRepository,
+      runtimeCatalog: runtimeCatalog,
+      programRunPlanner: programRunPlanner,
+      programGraphicsBackendHintsInspector:
+          programGraphicsBackendHintsInspector,
+      programRunner: programRunner,
+      bottlePrefixInitializer: bottlePrefixInitializer,
+      pathOpener: pathOpener,
+      macosWineInstaller: macosWineInstaller,
+      linuxWineInstaller: linuxWineInstaller,
+      gptkWineInstaller: gptkWineInstaller,
+      runtimeUpdateChecker: runtimeUpdateChecker,
+      appUpdateChecker: appUpdateChecker,
+      appUpdateInstaller: appUpdateInstaller,
+      runtimeValidator: runtimeValidator,
+      macosSetupChecker: macosSetupChecker,
+      appSettingsRepository: appSettingsRepository,
+      runtimeInstallProgressSink: runtimeInstallProgressSink,
+      linuxExternalProgramLauncherDiagnosticSink:
+          linuxExternalProgramLauncherDiagnosticSink,
+    ),
+  );
+}
+
+Future<CliResult> runCliStreaming(
+  List<String> arguments, {
+  BottleCatalog? bottleCatalog,
+  BottleRepository? bottleRepository,
+  BottleProgramRepository bottleProgramRepository =
+      const EmptyBottleProgramRepository(),
+  ProgramMetadataExtractor programMetadataExtractor =
+      const NoopProgramMetadataExtractor(),
+  WinetricksVerbRepository winetricksVerbRepository =
+      const UnavailableWinetricksVerbRepository(),
+  RuntimeCatalog? runtimeCatalog,
+  ProgramRunPlanner? programRunPlanner,
+  ProgramGraphicsBackendHintsInspector programGraphicsBackendHintsInspector =
+      const UnavailableProgramGraphicsBackendHintsInspector(),
+  ProgramRunner? programRunner,
+  BottlePrefixInitializer? bottlePrefixInitializer,
+  PathOpener? pathOpener,
+  MacosWineInstaller? macosWineInstaller,
+  LinuxWineInstaller? linuxWineInstaller,
+  GptkWineInstaller? gptkWineInstaller,
+  RuntimeUpdateChecker? runtimeUpdateChecker,
+  AppUpdateChecker? appUpdateChecker,
+  AppUpdateInstaller? appUpdateInstaller,
+  RuntimeValidator? runtimeValidator,
+  MacosSetupChecker? macosSetupChecker,
+  AppSettingsRepository? appSettingsRepository,
+  RuntimeInstallProgressSink? runtimeInstallProgressSink,
+  LinuxExternalProgramLauncherDiagnosticSink?
+  linuxExternalProgramLauncherDiagnosticSink,
+  AsyncProgramRunner asyncProgramRunner = const UnavailableAsyncProgramRunner(),
+  AsyncProgramMetadataExtractor asyncProgramMetadataExtractor =
+      const NoopAsyncProgramMetadataExtractor(),
+  HostProcessSnapshotReader hostProcessSnapshotReader =
+      const EmptyHostProcessSnapshotReader(),
+}) {
+  return injected.runCliStreaming(
+    arguments,
+    context: _testCliCommandContext(
+      bottleCatalog: bottleCatalog,
+      bottleRepository: bottleRepository,
+      bottleProgramRepository: bottleProgramRepository,
+      programMetadataExtractor: programMetadataExtractor,
+      winetricksVerbRepository: winetricksVerbRepository,
+      runtimeCatalog: runtimeCatalog,
+      programRunPlanner: programRunPlanner,
+      programGraphicsBackendHintsInspector:
+          programGraphicsBackendHintsInspector,
+      programRunner: programRunner,
+      bottlePrefixInitializer: bottlePrefixInitializer,
+      pathOpener: pathOpener,
+      macosWineInstaller: macosWineInstaller,
+      linuxWineInstaller: linuxWineInstaller,
+      gptkWineInstaller: gptkWineInstaller,
+      runtimeUpdateChecker: runtimeUpdateChecker,
+      appUpdateChecker: appUpdateChecker,
+      appUpdateInstaller: appUpdateInstaller,
+      runtimeValidator: runtimeValidator,
+      macosSetupChecker: macosSetupChecker,
+      appSettingsRepository: appSettingsRepository,
+      runtimeInstallProgressSink: runtimeInstallProgressSink,
+      linuxExternalProgramLauncherDiagnosticSink:
+          linuxExternalProgramLauncherDiagnosticSink,
+    ),
+    asyncProgramRunner: asyncProgramRunner,
+    asyncProgramMetadataExtractor: asyncProgramMetadataExtractor,
+    hostProcessSnapshotReader: hostProcessSnapshotReader,
+  );
+}
+
+CliCommandContext _testCliCommandContext({
+  required BottleCatalog? bottleCatalog,
+  required BottleRepository? bottleRepository,
+  required BottleProgramRepository bottleProgramRepository,
+  required ProgramMetadataExtractor programMetadataExtractor,
+  required WinetricksVerbRepository winetricksVerbRepository,
+  required RuntimeCatalog? runtimeCatalog,
+  required ProgramRunPlanner? programRunPlanner,
+  required ProgramGraphicsBackendHintsInspector
+  programGraphicsBackendHintsInspector,
+  required ProgramRunner? programRunner,
+  required BottlePrefixInitializer? bottlePrefixInitializer,
+  required PathOpener? pathOpener,
+  required MacosWineInstaller? macosWineInstaller,
+  required LinuxWineInstaller? linuxWineInstaller,
+  required GptkWineInstaller? gptkWineInstaller,
+  required RuntimeUpdateChecker? runtimeUpdateChecker,
+  required AppUpdateChecker? appUpdateChecker,
+  required AppUpdateInstaller? appUpdateInstaller,
+  required RuntimeValidator? runtimeValidator,
+  required MacosSetupChecker? macosSetupChecker,
+  required AppSettingsRepository? appSettingsRepository,
+  required RuntimeInstallProgressSink? runtimeInstallProgressSink,
+  required LinuxExternalProgramLauncherDiagnosticSink?
+  linuxExternalProgramLauncherDiagnosticSink,
+}) {
+  return CliCommandContext(
+    bottleCatalog:
+        bottleCatalog ?? bottleRepository ?? StaticBottleCatalog(const []),
+    bottleRepository: bottleRepository,
+    bottleProgramRepository: bottleProgramRepository,
+    programMetadataExtractor: programMetadataExtractor,
+    winetricksVerbRepository: winetricksVerbRepository,
+    runtimeCatalog: runtimeCatalog ?? StaticRuntimeCatalog(const []),
+    programRunPlanner: programRunPlanner ?? _testProgramRunPlanner(),
+    programGraphicsBackendHintsInspector: programGraphicsBackendHintsInspector,
+    programRunner: programRunner,
+    bottlePrefixInitializer: bottlePrefixInitializer,
+    pathOpener: pathOpener,
+    macosWineInstaller: macosWineInstaller,
+    linuxWineInstaller: linuxWineInstaller,
+    gptkWineInstaller: gptkWineInstaller,
+    runtimeUpdateChecker: runtimeUpdateChecker,
+    appUpdateChecker: appUpdateChecker,
+    appUpdateInstaller: appUpdateInstaller,
+    runtimeValidator: runtimeValidator,
+    macosSetupChecker: macosSetupChecker,
+    appSettingsRepository: appSettingsRepository,
+    runtimeInstallProgressSink: runtimeInstallProgressSink,
+    linuxExternalProgramLauncherDiagnosticSink:
+        linuxExternalProgramLauncherDiagnosticSink,
+  );
+}
+
+ProgramRunPlanner _testProgramRunPlanner() {
+  return ProgramRunPlanner(hostPlatform: KonyakHostPlatform.macos);
+}
+
 void main() {
   test('macOS runtime release references match the repository SSOT', () {
     final referenceFile = _repoFile('runtime/macos-wine-release.json');
@@ -251,6 +441,56 @@ final class NoopProgramMetadataExtractor implements ProgramMetadataExtractor {
   }
 }
 
+final class NoopAsyncProgramMetadataExtractor
+    implements AsyncProgramMetadataExtractor {
+  const NoopAsyncProgramMetadataExtractor();
+
+  @override
+  Future<Option<ProgramMetadataRecord>> extract({
+    required BottleRecord bottle,
+    required String programPath,
+  }) async {
+    return const Option.none();
+  }
+}
+
+final class EmptyBottleProgramRepository implements BottleProgramRepository {
+  const EmptyBottleProgramRepository();
+
+  @override
+  List<BottleProgramRecord> listPrograms(BottleRecord bottle) {
+    return const <BottleProgramRecord>[];
+  }
+}
+
+final class UnavailableWinetricksVerbRepository
+    implements WinetricksVerbRepository {
+  const UnavailableWinetricksVerbRepository();
+
+  @override
+  WinetricksVerbListResult listVerbs() {
+    return const WinetricksVerbListFailed(
+      'Winetricks verb repository was not injected.',
+    );
+  }
+}
+
+final class UnavailableProgramGraphicsBackendHintsInspector
+    implements ProgramGraphicsBackendHintsInspector {
+  const UnavailableProgramGraphicsBackendHintsInspector();
+
+  @override
+  ProgramGraphicsBackendHintsInspectionResult inspect({
+    required ProgramPath programPath,
+    required KonyakHostPlatform hostPlatform,
+  }) {
+    return ProgramGraphicsBackendHintsInspectionFailed(
+      programPath: programPath.value,
+      message: 'Program graphics backend hints inspector was not injected.',
+    );
+  }
+}
+
 final class RecordingProgramGraphicsBackendHintsInspector
     implements ProgramGraphicsBackendHintsInspector {
   RecordingProgramGraphicsBackendHintsInspector(this.result);
@@ -313,6 +553,17 @@ final class ControlledAsyncProgramRunner implements AsyncProgramRunner {
   }
 }
 
+final class UnavailableAsyncProgramRunner implements AsyncProgramRunner {
+  const UnavailableAsyncProgramRunner();
+
+  @override
+  Future<ProgramRunResult> run(ProgramRunRequest request) async {
+    return const ProgramRunFailed(
+      message: 'Async program runner was not injected.',
+    );
+  }
+}
+
 final class FixedHostProcessSnapshotReader
     implements HostProcessSnapshotReader {
   const FixedHostProcessSnapshotReader(this.snapshot);
@@ -321,6 +572,14 @@ final class FixedHostProcessSnapshotReader
 
   @override
   Future<String> read() async => snapshot;
+}
+
+final class EmptyHostProcessSnapshotReader
+    implements HostProcessSnapshotReader {
+  const EmptyHostProcessSnapshotReader();
+
+  @override
+  Future<String> read() async => '';
 }
 
 final class CountingAsyncProgramMetadataExtractor

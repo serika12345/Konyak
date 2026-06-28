@@ -23,7 +23,7 @@ import 'runtime_platform_records.dart';
 import 'runtime_probes.dart';
 import 'runtime_source_archive_downloads.dart';
 
-class DartIoMacosWineInstaller implements MacosWineInstaller {
+class DartIoMacosWineInstaller implements MacosWineStreamingInstaller {
   DartIoMacosWineInstaller({
     required this.hostPlatform,
     required this.environment,
@@ -163,6 +163,7 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
     }
   }
 
+  @override
   Future<MacosWineInstallResult> installStreaming(
     MacosWineInstallRequest request, {
     RuntimeInstallProgressSink? progressSink,

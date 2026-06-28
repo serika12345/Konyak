@@ -245,6 +245,16 @@ def require_no_repository_dartio_defaults() -> None:
             )
 
 
+def require_cli_injected_runner_has_no_dartio_defaults() -> None:
+    text = read_text("packages/konyak_cli/lib/src/cli/cli_injected_runner.dart")
+    for unexpected in ["DartIo", "currentProgramRunPlanner", "../io/"]:
+        if unexpected in text:
+            raise AssertionError(
+                "packages/konyak_cli/lib/src/cli/cli_injected_runner.dart "
+                f"must not contain default I/O composition: {unexpected}"
+            )
+
+
 def require_not_contains_under(
     relative_directory: str,
     glob_pattern: str,
@@ -1549,6 +1559,7 @@ def main() -> None:
             "packages/konyak_cli/lib/src/cli/cli_commands.dart",
             "DartIo",
         )
+        require_cli_injected_runner_has_no_dartio_defaults()
         require_not_contains(
             "packages/konyak_cli/lib/src/cli/cli_program_run_handlers.dart",
             "DartIoProgramGraphicsBackendHintsInspector()",

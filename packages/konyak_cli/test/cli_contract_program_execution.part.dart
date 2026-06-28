@@ -76,6 +76,8 @@ void defineProgramExecutionContractTests() {
         programRunPlanner: ProgramRunPlanner(
           hostPlatform: KonyakHostPlatform.macos,
         ),
+        programGraphicsBackendHintsInspector:
+            const DartIoProgramGraphicsBackendHintsInspector(),
       );
 
       expect(result.exitCode, 0);
@@ -124,6 +126,8 @@ void defineProgramExecutionContractTests() {
         programRunPlanner: ProgramRunPlanner(
           hostPlatform: KonyakHostPlatform.linux,
         ),
+        programGraphicsBackendHintsInspector:
+            const DartIoProgramGraphicsBackendHintsInspector(),
       );
 
       expect(result.exitCode, 0);
@@ -3487,6 +3491,7 @@ corefonts                Microsoft Core Fonts
       final result = runCli(
         ['run-program', 'steam', '--program', programPath, '--json'],
         bottleRepository: repository,
+        programMetadataExtractor: const DartIoProgramMetadataExtractor(),
         programRunPlanner: ProgramRunPlanner(
           hostPlatform: KonyakHostPlatform.linux,
           environment: HostEnvironment({

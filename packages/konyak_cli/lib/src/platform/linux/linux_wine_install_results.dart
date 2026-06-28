@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import '../../domain/runtime/runtime_models.dart';
 import '../../io/runtime_install_progress_io.dart';
 import 'linux_wine_install_requests.dart';
@@ -20,6 +22,14 @@ class LinuxWineInstallFailed extends LinuxWineInstallResult {
 
 abstract interface class LinuxWineInstaller {
   LinuxWineInstallResult install(
+    LinuxWineInstallRequest request, {
+    RuntimeInstallProgressSink? progressSink,
+  });
+}
+
+abstract interface class LinuxWineStreamingInstaller
+    implements LinuxWineInstaller {
+  Future<LinuxWineInstallResult> installStreaming(
     LinuxWineInstallRequest request, {
     RuntimeInstallProgressSink? progressSink,
   });

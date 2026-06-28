@@ -21,7 +21,7 @@ import 'runtime_platform_records.dart';
 import 'runtime_probes.dart';
 import 'runtime_source_archive_downloads.dart';
 
-class DartIoLinuxWineInstaller implements LinuxWineInstaller {
+class DartIoLinuxWineInstaller implements LinuxWineStreamingInstaller {
   DartIoLinuxWineInstaller({
     required this.hostPlatform,
     required this.environment,
@@ -154,6 +154,7 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
     }
   }
 
+  @override
   Future<LinuxWineInstallResult> installStreaming(
     LinuxWineInstallRequest request, {
     RuntimeInstallProgressSink? progressSink,

@@ -13,6 +13,45 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-28 17:49 JST
+- State: `completed`
+- Branch: `main`
+- Active work: remove concrete Dart I/O defaults from the internal injectable
+  CLI runner.
+- Related TODO: `docs/todo.md` deferred
+  `program_run_request_builders.dart` split; domain impossible-state throws;
+  domain JSON projection extraction.
+- Latest commit: `f8ad003` (`Retire domain part root boundary`).
+- Purpose: keep `package:konyak_cli/konyak_cli.dart` thin while making
+  `src/cli/cli_injected_runner.dart` a real injection boundary and moving
+  default Dart I/O composition fully into `src/cli/cli_default_runner.dart`.
+- Completed work: read `AGENTS.md`, `docs/todo.md`, `docs/progress.md`,
+  status/diff, and the current CLI facade/default/injected runner shape; changed
+  `src/cli/cli_injected_runner.dart` to accept an explicit
+  `CliCommandContext` plus streaming dependencies instead of constructing
+  `DartIo*` defaults; moved default `DartIoBottleProgramRepository`,
+  `DartIoProgramMetadataExtractor`,
+  `DartIoProgramGraphicsBackendHintsInspector`,
+  `DartIoWinetricksVerbRepository.current()`, `currentProgramRunPlanner()`,
+  `DartIoAsyncProgramRunner`, `DartIoAsyncProgramMetadataExtractor`, and
+  `DartIoHostProcessSnapshotReader` composition into
+  `src/cli/cli_default_runner.dart`; added streaming installer interfaces so
+  the injected runner no longer type-checks concrete Dart I/O installers; moved
+  CLI contract tests to a test-local injection helper with explicit Dart I/O
+  injection where behavior needs it; and added governance that fails if
+  `cli_injected_runner.dart` regains `DartIo`, `currentProgramRunPlanner`, or
+  direct `../io/` composition.
+- Remaining work: none for this slice. Existing deferred domain throw removal,
+  JSON projection extraction, and request-builder split remain.
+- Next action: continue with `docs/todo.md`, starting with domain
+  impossible-state throws or domain JSON projection extraction.
+- Verification: governance-first failure was observed before implementation;
+  focused `cd packages/konyak_cli && dart analyze --fatal-infos` passed;
+  focused `cd packages/konyak_cli && dart test test/public_facade_test.dart
+  test/cli_contract_test.dart` passed; final `just verify`,
+  `just verify-governance && just verify-architecture`, and
+  `git diff --check HEAD` passed.
+
 - Timestamp: 2026-06-28 17:20 JST
 - State: `completed`
 - Branch: `main`
