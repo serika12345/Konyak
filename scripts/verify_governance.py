@@ -665,6 +665,77 @@ def require_program_catalog_cli_json_projection() -> None:
         )
 
 
+def require_graphics_backend_hints_cli_json_projection() -> None:
+    domain_path = (
+        "packages/konyak_cli/lib/src/domain/program/"
+        "program_graphics_backend_hints.dart"
+    )
+    domain = read_text(domain_path)
+
+    def class_section(class_name: str) -> str:
+        class_start = domain.find(f"class {class_name} ")
+        if class_start == -1:
+            raise AssertionError(f"{class_name} must exist")
+
+        next_class_match = re.search(
+            r"\n(?:abstract\s+interface\s+)?(?:final\s+)?class\s+\w+",
+            domain[class_start + 1 :],
+        )
+        if next_class_match is None:
+            return domain[class_start:]
+
+        class_end = class_start + 1 + next_class_match.start()
+        return domain[class_start:class_end]
+
+    for class_name in [
+        "ProgramGraphicsBackendHints",
+        "ProgramGraphicsBackendSignal",
+        "ProgramGraphicsBackendSuggestion",
+    ]:
+        if "toJson(" in class_section(class_name):
+            raise AssertionError(
+                f"{class_name} must not own CLI JSON projection"
+            )
+
+    if "_hostPlatformJsonValue(" in domain:
+        raise AssertionError("Graphics backend host platform JSON must live in CLI")
+
+    cli_json_path = (
+        "packages/konyak_cli/lib/src/cli/"
+        "cli_program_graphics_backend_hints_json.dart"
+    )
+    cli_json = read_text(cli_json_path)
+    expected_terms = [
+        "Map<String, Object?> programGraphicsBackendHintsJson(",
+        "Map<String, Object?> programGraphicsBackendSignalJson(",
+        "Map<String, Object?> programGraphicsBackendSuggestionJson(",
+        "hints.signals",
+        ".map(programGraphicsBackendSignalJson)",
+        "hints.suggestions",
+        ".map(programGraphicsBackendSuggestionJson)",
+        "KonyakHostPlatform.macos => 'macos'",
+        "KonyakHostPlatform.linux => 'linux'",
+    ]
+    for expected in expected_terms:
+        if expected not in cli_json:
+            raise AssertionError(
+                "Graphics backend hints JSON projection must live at the CLI "
+                f"boundary: {expected}"
+            )
+
+    handler_path = "packages/konyak_cli/lib/src/cli/cli_program_run_handlers.dart"
+    handler = read_text(handler_path)
+    if "hints.toJson()" in handler:
+        raise AssertionError(
+            "Graphics backend hints JSON must not rely on domain-owned toJson"
+        )
+    if "programGraphicsBackendHintsJson(hints)" not in handler:
+        raise AssertionError(
+            "Graphics backend hints JSON must use "
+            "programGraphicsBackendHintsJson"
+        )
+
+
 def count_constructor_field_parameters(
     relative_path: str,
     constructor_name: str,
@@ -1459,6 +1530,7 @@ def main() -> None:
     require_typed_wine_process_planner_boundary()
     require_wine_process_termination_cli_json_projection()
     require_program_catalog_cli_json_projection()
+    require_graphics_backend_hints_cli_json_projection()
 
     for expected in [
         "flutter",

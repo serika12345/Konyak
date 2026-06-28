@@ -13,6 +13,34 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-28 21:58 JST
+- State: `completed`
+- Branch: `main`
+- Active work: move graphics backend hint JSON projections out of domain
+  models.
+- Related TODO: `docs/todo.md` deferred JSON `toJson` projection separation.
+- Latest commit: `ca7d9a4` (`Move Winetricks catalog JSON projections`).
+- Purpose: continue separating domain models from CLI JSON serialization by
+  moving `ProgramGraphicsBackendHints`, signal, and suggestion projections into
+  the CLI boundary used by `suggest-graphics-backend --json`.
+- Completed work: committed the Winetricks catalog projection slice, inspected
+  graphics backend hint models, CLI handler output, and focused CLI contract
+  coverage; observed `just verify-governance` fail before implementation
+  because `ProgramGraphicsBackendHints` still owned CLI JSON projection; added
+  CLI-side hint/signal/suggestion serializers, moved
+  `suggest-graphics-backend --json` output to that helper, removed the matching
+  domain `toJson` methods and domain JSON host-platform helper, and added
+  governance for the graphics backend hint boundary.
+- Remaining work: many domain `toJson` projections remain, especially bottle,
+  runtime/update, settings, and validation records.
+- Next action: continue JSON projection separation with another narrow
+  CLI-covered record group, likely bottle records or program settings.
+- Verification: observed `just verify-governance` fail before implementation;
+  after implementation, `cd packages/konyak_cli && dart analyze
+  --fatal-infos`, focused suggest-graphics-backend CLI contract tests,
+  `just verify-governance`, `just cli-test`, `just verify-architecture`,
+  `just verify-safety`, `just format-check`, and `just lint` passed.
+
 - Timestamp: 2026-06-28 21:53 JST
 - State: `completed`
 - Branch: `main`

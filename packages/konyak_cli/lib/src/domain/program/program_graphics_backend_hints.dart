@@ -15,17 +15,6 @@ final class ProgramGraphicsBackendHints {
   final KonyakHostPlatform hostPlatform;
   final List<ProgramGraphicsBackendSignal> signals;
   final List<ProgramGraphicsBackendSuggestion> suggestions;
-
-  Map<String, Object?> toJson() {
-    return <String, Object?>{
-      'programPath': programPath.value,
-      'hostPlatform': _hostPlatformJsonValue(hostPlatform),
-      'signals': signals.map((signal) => signal.toJson()).toList(),
-      'suggestions': suggestions
-          .map((suggestion) => suggestion.toJson())
-          .toList(),
-    };
-  }
 }
 
 final class ProgramGraphicsBackendSignal {
@@ -35,10 +24,6 @@ final class ProgramGraphicsBackendSignal {
 
   final GraphicsBackendSignalKind kind;
   final GraphicsBackendSignalValue value;
-
-  Map<String, Object?> toJson() {
-    return <String, Object?>{'kind': kind.value, 'value': value.value};
-  }
 }
 
 final class ProgramGraphicsBackendSuggestion {
@@ -52,14 +37,6 @@ final class ProgramGraphicsBackendSuggestion {
   final GraphicsBackendKind backend;
   final GraphicsBackendConfidence confidence;
   final String reason;
-
-  Map<String, Object?> toJson() {
-    return <String, Object?>{
-      'backend': backend.value,
-      'confidence': confidence.value,
-      'reason': reason,
-    };
-  }
 }
 
 sealed class ProgramGraphicsBackendHintsInspectionResult {
@@ -185,13 +162,6 @@ bool _hasAnyGraphicsSignal(
   Set<String> expectedValues,
 ) {
   return signals.any((signal) => expectedValues.contains(signal.value.value));
-}
-
-String _hostPlatformJsonValue(KonyakHostPlatform hostPlatform) {
-  return switch (hostPlatform) {
-    KonyakHostPlatform.macos => 'macos',
-    KonyakHostPlatform.linux => 'linux',
-  };
 }
 
 const _d3d12Signals = <String>{'d3d12.dll', 'd3d12createdevice'};

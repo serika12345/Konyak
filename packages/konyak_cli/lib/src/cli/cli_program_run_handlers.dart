@@ -14,6 +14,7 @@ import 'cli_bottle_mutation_handlers.dart';
 import 'cli_bottle_results.dart';
 import 'cli_commands.dart';
 import 'cli_json_helpers.dart';
+import 'cli_program_graphics_backend_hints_json.dart';
 import 'cli_program_run_parsers.dart';
 import 'cli_result_model.dart';
 
@@ -61,7 +62,9 @@ CliResult graphicsBackendHintsJsonResult(
 
   return switch (result) {
     ProgramGraphicsBackendHintsInspected(:final hints) => jsonSuccess(
-      <String, Object?>{'graphicsBackendHints': hints.toJson()},
+      <String, Object?>{
+        'graphicsBackendHints': programGraphicsBackendHintsJson(hints),
+      },
     ),
     ProgramGraphicsBackendHintsMissingProgram(:final programPath) => jsonError(
       exitCode: 66,
