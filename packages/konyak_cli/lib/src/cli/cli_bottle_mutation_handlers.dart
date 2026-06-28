@@ -1,6 +1,7 @@
 import '../domain/bottle/bottle_mutation_models.dart';
 import '../domain/bottle/bottle_runtime_settings_models.dart';
 import '../domain/program/program_runner.dart';
+import '../io/bottle_metadata_json.dart';
 import 'cli_bottle_parsers.dart';
 import 'cli_bottle_results.dart';
 import 'cli_commands.dart';
@@ -72,7 +73,7 @@ CliResult? handleBottleMutationCommand(
 
     return switch (repository.deleteBottle(deleteBottleId)) {
       BottleDeleted(:final bottle) => jsonSuccess(<String, Object?>{
-        'deletedBottle': bottle.toJson(),
+        'deletedBottle': bottleRecordJson(bottle),
       }),
       BottleDeleteMissing(:final bottleId) => bottleNotFoundError(
         bottleId.value,

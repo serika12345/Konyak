@@ -59,8 +59,6 @@ void main() {
     expect(bottle.name, BottleName('Steam'));
     expect(bottle.path, BottlePath('/bottles/steam'));
     expect(bottle.windowsVersion, WindowsVersion('win10'));
-    expect(bottle.toJson(), containsPair('id', 'steam'));
-    expect(bottle.toJson(), containsPair('path', '/bottles/steam'));
     expect(
       bottle.pinnedPrograms.add(
         PinnedProgramRecord(name: 'Other', path: '/other.exe'),
@@ -132,8 +130,6 @@ void main() {
     expect(withoutIcon.iconPath.isNone(), isTrue);
     expect(withIcon.iconPath.toNullable(), ProgramIconPath('/steam.icns'));
     expect(clearedIcon.iconPath.isNone(), isTrue);
-    expect(withIcon.toJson(), containsPair('iconPath', '/steam.icns'));
-    expect(clearedIcon.toJson(), isNot(contains('iconPath')));
   });
 
   test('runtime settings expose semantic value object fields', () {
@@ -148,8 +144,6 @@ void main() {
     expect(settings.dxvkHud, DxvkHudMode('off'));
     expect(settings.buildVersion, WindowsBuildVersion(22631));
     expect(settings.dpiScaling, WindowsDpiScaling(144));
-    expect(settings.toJson(), containsPair('enhancedSync', 'msync'));
-    expect(settings.toJson(), containsPair('dpiScaling', 144));
   });
 
   test('app settings expose default bottle path as a value object', () {

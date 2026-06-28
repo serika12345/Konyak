@@ -88,21 +88,6 @@ class BottleRecord {
     );
   }
 
-  Map<String, Object?> toJson() {
-    return <String, Object?>{
-      'id': id.value,
-      'name': name.value,
-      'path': path.value,
-      'windowsVersion': windowsVersion.value,
-      if (runtimeSettings != BottleRuntimeSettings())
-        'runtimeSettings': runtimeSettings.toJson(),
-      if (pinnedPrograms.isNotEmpty)
-        'pinnedPrograms': pinnedPrograms
-            .map((program) => program.toJson())
-            .toList(),
-    };
-  }
-
   @override
   bool operator ==(Object other) {
     return other is BottleRecord &&
@@ -158,18 +143,6 @@ class PinnedProgramRecord {
       removable: removable,
       iconPath: iconPath,
     );
-  }
-
-  Map<String, Object?> toJson() {
-    return <String, Object?>{
-      'name': name.value,
-      'path': path.value,
-      'removable': removable,
-      ...iconPath.match(
-        () => const <String, Object?>{},
-        (value) => <String, Object?>{'iconPath': value.value},
-      ),
-    };
   }
 
   @override

@@ -1123,6 +1123,97 @@ def require_runtime_record_cli_json_projection() -> None:
         raise AssertionError("Runtime result JSON must use runtimeRecordJson")
 
 
+def require_bottle_metadata_io_json_projection() -> None:
+    bottle_path = "packages/konyak_cli/lib/src/domain/bottle/bottle_models.dart"
+    bottle_domain = read_text(bottle_path)
+
+    def bottle_class_section(class_name: str) -> str:
+        class_start = bottle_domain.find(f"class {class_name} ")
+        if class_start == -1:
+            raise AssertionError(f"{class_name} must exist")
+
+        next_class_match = re.search(
+            r"\n(?:abstract\s+interface\s+)?(?:final\s+)?class\s+\w+",
+            bottle_domain[class_start + 1 :],
+        )
+        if next_class_match is None:
+            return bottle_domain[class_start:]
+
+        class_end = class_start + 1 + next_class_match.start()
+        return bottle_domain[class_start:class_end]
+
+    for class_name in [
+        "BottleRecord",
+        "PinnedProgramRecord",
+    ]:
+        if "toJson(" in bottle_class_section(class_name):
+            raise AssertionError(f"{class_name} must not own JSON projection")
+
+    runtime_settings_path = (
+        "packages/konyak_cli/lib/src/domain/bottle/"
+        "bottle_runtime_settings_models.dart"
+    )
+    runtime_settings_domain = read_text(runtime_settings_path)
+    runtime_settings_start = runtime_settings_domain.find(
+        "class BottleRuntimeSettings "
+    )
+    if runtime_settings_start == -1:
+        raise AssertionError("BottleRuntimeSettings must exist")
+    if "toJson(" in runtime_settings_domain[runtime_settings_start:]:
+        raise AssertionError(
+            "BottleRuntimeSettings must not own JSON projection"
+        )
+
+    io_path = "packages/konyak_cli/lib/src/io/bottle_metadata_json.dart"
+    io = read_text(io_path)
+    expected_terms = [
+        "Map<String, Object?> bottleRecordJson(",
+        "Map<String, Object?> pinnedProgramRecordJson(",
+        "Map<String, Object?> bottleRuntimeSettingsJson(",
+        "'id': bottle.id.value",
+        "'runtimeSettings': bottleRuntimeSettingsJson(bottle.runtimeSettings)",
+        "bottle.pinnedPrograms",
+        ".map(pinnedProgramRecordJson)",
+        "'iconPath': value.value",
+        "'enhancedSync': settings.enhancedSync.value",
+        "'dpiScaling': settings.dpiScaling.value",
+    ]
+    for expected in expected_terms:
+        if expected not in io:
+            raise AssertionError(
+                "Bottle metadata JSON projection must live at the I/O "
+                f"boundary: {expected}"
+            )
+
+    for caller_path, expected in [
+        (
+            "packages/konyak_cli/lib/src/cli/cli_bottle_results.dart",
+            "bottleRecordJson(bottle)",
+        ),
+        (
+            "packages/konyak_cli/lib/src/cli/cli_bottle_read_handlers.dart",
+            ".map(bottleRecordJson)",
+        ),
+        (
+            "packages/konyak_cli/lib/src/cli/cli_bottle_mutation_handlers.dart",
+            "'deletedBottle': bottleRecordJson(bottle)",
+        ),
+        (
+            "packages/konyak_cli/lib/src/io/repository_storage_io.dart",
+            "'bottle': bottleRecordJson(bottle)",
+        ),
+    ]:
+        caller = read_text(caller_path)
+        if "bottle.toJson()" in caller:
+            raise AssertionError(
+                "Bottle JSON callers must not rely on domain-owned toJson"
+            )
+        if expected not in caller:
+            raise AssertionError(
+                f"Bottle JSON caller must use bottle metadata projection: {expected}"
+            )
+
+
 def require_bottle_archive_cli_json_projection() -> None:
     domain_path = (
         "packages/konyak_cli/lib/src/domain/bottle/bottle_mutation_models.dart"
@@ -2021,6 +2112,7 @@ def main() -> None:
     require_runtime_validation_cli_json_projection()
     require_runtime_install_progress_io_json_projection()
     require_runtime_record_cli_json_projection()
+    require_bottle_metadata_io_json_projection()
     require_bottle_archive_cli_json_projection()
     require_pinned_launcher_manifest_io_json_projection()
 

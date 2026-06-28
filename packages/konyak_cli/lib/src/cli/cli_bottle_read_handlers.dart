@@ -1,3 +1,4 @@
+import '../io/bottle_metadata_json.dart';
 import '../io/linux_pinned_launchers.dart';
 import '../repository/repository_interfaces.dart';
 import 'cli_bottle_parsers.dart';
@@ -22,9 +23,7 @@ CliResult? handleBottleReadCommand(
           bottles: bottles,
         );
         return jsonSuccess(<String, Object?>{
-          'bottles': bottles
-              .map((bottle) => bottle.toJson())
-              .toList(growable: false),
+          'bottles': bottles.map(bottleRecordJson).toList(growable: false),
         });
       },
     );

@@ -9,6 +9,7 @@ import '../domain/program/program_run_environment.dart';
 import '../domain/program/program_settings_models.dart';
 import '../shared/common_helpers.dart';
 import '../shared/model_constants.dart';
+import 'bottle_metadata_json.dart';
 import 'external_payload_helpers.dart';
 import 'program_settings_json.dart';
 
@@ -287,7 +288,7 @@ void writeBottleMetadata(BottleRecord bottle) {
   metadata.writeAsStringSync(
     const JsonEncoder.withIndent('  ').convert(<String, Object?>{
       'schemaVersion': cliSchemaVersion,
-      'bottle': bottle.toJson(),
+      'bottle': bottleRecordJson(bottle),
     }),
   );
 }

@@ -13,6 +13,7 @@ import 'package:konyak_cli/src/cli/cli_runtime_record_json.dart';
 import 'package:konyak_cli/src/io/app_settings_repositories.dart';
 import 'package:konyak_cli/src/io/app_update_checker_io.dart';
 import 'package:konyak_cli/src/io/app_update_installer.dart';
+import 'package:konyak_cli/src/io/bottle_metadata_json.dart';
 import 'package:konyak_cli/src/io/gptk_wine_installation.dart';
 import 'package:konyak_cli/src/io/io_result.dart';
 import 'package:konyak_cli/src/io/linux_external_program_launchers.dart';
@@ -2227,7 +2228,7 @@ void _writeTestBottleMetadata(BottleRecord bottle) {
     ..writeAsStringSync(
       jsonEncode(<String, Object?>{
         'schemaVersion': cliSchemaVersion,
-        'bottle': bottle.toJson(),
+        'bottle': bottleRecordJson(bottle),
       }),
     );
 }

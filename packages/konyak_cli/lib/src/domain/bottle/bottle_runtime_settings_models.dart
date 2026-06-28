@@ -318,25 +318,6 @@ class BottleRuntimeSettings {
     );
   }
 
-  Map<String, Object?> toJson() {
-    return <String, Object?>{
-      'enhancedSync': enhancedSync.value,
-      'metalHud': metalHud,
-      'metalTrace': metalTrace,
-      'avxEnabled': avxEnabled,
-      'dxrEnabled': dxrEnabled,
-      'dxvk': dxvk,
-      'dxmt': dxmt,
-      'dlssMetalFx': dlssMetalFx,
-      'dxvkAsync': dxvkAsync,
-      'dxvkHud': dxvkHud.value,
-      'vkd3dProton': vkd3dProton,
-      'buildVersion': buildVersion.value,
-      'retinaMode': retinaMode,
-      'dpiScaling': dpiScaling.value,
-    };
-  }
-
   ProgramRunEnvironment macosEnvironment({
     bool enableD3DMetalDlssMetalFx = false,
   }) {

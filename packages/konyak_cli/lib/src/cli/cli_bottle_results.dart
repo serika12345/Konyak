@@ -5,6 +5,7 @@ import '../domain/bottle/bottle_mutation_models.dart';
 import '../domain/bottle/bottle_runtime_settings_models.dart';
 import '../domain/program/program_run_models.dart';
 import '../domain/program/program_runner.dart';
+import '../io/bottle_metadata_json.dart';
 import '../io/io_result.dart';
 import '../io/program_registry_parsers.dart';
 import '../io/wine_run_requests.dart';
@@ -231,5 +232,5 @@ BottleRecord bottleWithRegistrySettings({
 }
 
 CliResult bottleJsonResult(BottleRecord bottle) {
-  return jsonSuccess(<String, Object?>{'bottle': bottle.toJson()});
+  return jsonSuccess(<String, Object?>{'bottle': bottleRecordJson(bottle)});
 }

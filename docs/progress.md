@@ -13,6 +13,35 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-28 22:53 JST
+- State: `completed`
+- Branch: `main`
+- Active work: move bottle record JSON projections out of domain models.
+- Related TODO: `docs/todo.md` deferred JSON `toJson` projection separation.
+- Latest commit: `70d30cc` (`Move runtime record JSON projections`).
+- Purpose: finish the remaining domain JSON projection separation by moving
+  `BottleRecord`, `PinnedProgramRecord`, and `BottleRuntimeSettings`
+  projections into the bottle metadata serialization boundary used by CLI
+  output and repository storage.
+- Completed work: committed the runtime record projection slice and inspected
+  bottle models, bottle runtime settings, CLI bottle result/list/delete output,
+  repository metadata writes, and test metadata helpers; observed
+  `just verify-governance` fail before implementation because `BottleRecord`
+  still owned JSON projection; added `io/bottle_metadata_json.dart`, updated
+  CLI bottle JSON output, repository metadata writes, and test metadata helper
+  to use it, removed bottle/domain runtime settings `toJson` methods, and
+  updated domain tests to assert domain state instead of JSON shape.
+- Remaining work: domain-side `toJson` projections are cleared. Remaining
+  `toJson` usage is limited to platform macOS setup DTO output and the I/O-only
+  GPTK install record.
+- Next action: decide whether to leave platform/I/O DTO local JSON projections
+  as acceptable boundary code or add narrow helpers for those too.
+- Verification: observed `just verify-governance` fail before implementation;
+  after implementation, `cd packages/konyak_cli && dart analyze
+  --fatal-infos`, focused bottle CLI/domain tests, `just verify-governance`,
+  `just cli-test`, `just verify-architecture`, `just verify-safety`,
+  `just format-check`, and `just lint` passed.
+
 - Timestamp: 2026-06-28 22:47 JST
 - State: `completed`
 - Branch: `main`
