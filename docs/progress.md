@@ -13,6 +13,39 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-28 21:12 JST
+- State: `completed`
+- Branch: `main`
+- Active work: type the `ProgramRunPlanner.planBottleCommand` command
+  boundary.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: `6fb4c5f` (`Type program run planner path`).
+- Purpose: continue planner-boundary tightening by replacing the raw
+  `String command` bottle-command entry point with the existing `BottleCommand`
+  domain value object.
+- Completed work: committed the program-path planner boundary slice; added red
+  governance and domain immutability coverage for typed bottle-command helper
+  boundaries; changed `ProgramRunPlanner.planBottleCommand`,
+  `_planSupportedBottleCommand`, `supportedBottleCommand`, and
+  `wineArgumentsForBottleCommand` to consume `BottleCommand`; converted the CLI
+  run-bottle-command handler at the boundary; kept legacy platform/I/O request
+  helpers compiling by converting raw command strings internally.
+- Remaining work: broader primitive tightening remains for winetricks verbs,
+  process ids, registry values, and JSON projection out of domain models.
+- Next action: continue the functional-core boundary work with
+  `WinetricksVerbId`, `WineProcessId`, registry value objects, or move JSON
+  `toJson` projection once planner entry paths are stable.
+- Verification: observed `just verify-governance` fail before implementation
+  because `ProgramRunPlanner.planBottleCommand` still exposed
+  `String command`; observed `cd packages/konyak_cli && dart test
+  test/domain_immutability_test.dart` fail before implementation because
+  bottle-command helpers still accepted `String`; after implementation,
+  `cd packages/konyak_cli && dart analyze --fatal-infos`, focused domain
+  immutability tests, `just verify-governance`, `just cli-test`,
+  `just verify-architecture`, `just verify-safety`, `just format-check`, and
+  `just lint` passed.
+
 - Timestamp: 2026-06-28 21:04 JST
 - State: `completed`
 - Branch: `main`

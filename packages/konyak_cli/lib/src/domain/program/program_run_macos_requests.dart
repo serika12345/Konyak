@@ -384,14 +384,14 @@ String _prependPaths(Iterable<String> paths, Option<String> existingPath) {
 
 ProgramRunRequest macosWineCommandRequest({
   required BottleRecord bottle,
-  required String command,
+  required BottleCommand command,
   required HostEnvironment environment,
   required Option<int> macosMajorVersion,
 }) {
   final hostEnvironment = environment;
   return ProgramRunRequest(
     bottleId: bottle.id,
-    programPath: ProgramPath(command),
+    programPath: ProgramPath(command.value),
     runnerKind: RunnerKind('macosWine'),
     executable: ProgramExecutable(macosWineExecutable(hostEnvironment)),
     arguments: ProgramRunArguments(wineArgumentsForBottleCommand(command)),

@@ -320,6 +320,63 @@ def require_typed_program_run_planner_boundary() -> None:
             )
 
 
+def require_typed_bottle_command_planner_boundary() -> None:
+    planner_path = "packages/konyak_cli/lib/src/domain/program/program_runner.dart"
+    planner = read_text(planner_path)
+    expected_terms = [
+        "required BottleCommand command",
+        "required BottleCommand supportedCommand",
+        "supportedBottleCommand(command)",
+        "supportedCommand.value == 'terminal'",
+    ]
+    for expected in expected_terms:
+        if expected not in planner:
+            raise AssertionError(
+                "ProgramRunPlanner.planBottleCommand must expose a typed "
+                f"bottle command boundary: {expected}"
+            )
+
+    forbidden_terms = [
+        "required String command",
+        "required String supportedCommand",
+        "Option.of(supportedCommand)",
+    ]
+    for forbidden in forbidden_terms:
+        if forbidden in planner:
+            raise AssertionError(
+                "ProgramRunPlanner.planBottleCommand must not expose primitive "
+                f"command values: {forbidden}"
+            )
+
+    argument_support_path = (
+        "packages/konyak_cli/lib/src/domain/program/program_argument_support.dart"
+    )
+    argument_support = read_text(argument_support_path)
+    expected_support_terms = [
+        "List<String> wineArgumentsForBottleCommand(BottleCommand command)",
+        "Option<BottleCommand> supportedBottleCommand(BottleCommand command)",
+        "final normalized = command.value.trim().toLowerCase();",
+        "Option.of(BottleCommand(normalized))",
+    ]
+    for expected in expected_support_terms:
+        if expected not in argument_support:
+            raise AssertionError(
+                "program argument support must expose typed bottle command "
+                f"helpers: {expected}"
+            )
+
+    forbidden_support_terms = [
+        "List<String> wineArgumentsForBottleCommand(String command)",
+        "Option<String> supportedBottleCommand(String command)",
+    ]
+    for forbidden in forbidden_support_terms:
+        if forbidden in argument_support:
+            raise AssertionError(
+                "program argument support must not expose primitive bottle "
+                f"command helpers: {forbidden}"
+            )
+
+
 def count_constructor_field_parameters(
     relative_path: str,
     constructor_name: str,
@@ -1109,6 +1166,7 @@ def main() -> None:
     require_program_run_request_builders_split()
     require_typed_program_run_request_boundary()
     require_typed_program_run_planner_boundary()
+    require_typed_bottle_command_planner_boundary()
 
     for expected in [
         "flutter",

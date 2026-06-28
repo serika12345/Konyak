@@ -268,9 +268,10 @@ CliResult runBottleCommandJsonResult(
     result: repository.findBottle(request.bottleId),
     bottleId: request.bottleId,
     onFound: (bottle) {
+      final bottleCommand = BottleCommand(request.command);
       final programRunRequest = context.programRunPlanner.planBottleCommand(
         bottle: bottle,
-        command: request.command,
+        command: bottleCommand,
       );
       return programRunRequest.match(
         () => jsonError(

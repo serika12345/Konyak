@@ -68,7 +68,7 @@ class ProgramRunPlanner {
 
   Option<ProgramRunRequest> planBottleCommand({
     required BottleRecord bottle,
-    required String command,
+    required BottleCommand command,
   }) {
     return supportedBottleCommand(command).match(
       () => const Option.none(),
@@ -81,9 +81,9 @@ class ProgramRunPlanner {
 
   Option<ProgramRunRequest> _planSupportedBottleCommand({
     required BottleRecord bottle,
-    required String supportedCommand,
+    required BottleCommand supportedCommand,
   }) {
-    if (supportedCommand == 'terminal') {
+    if (supportedCommand.value == 'terminal') {
       return Option.of(switch (hostPlatform) {
         KonyakHostPlatform.linux => linuxTerminalCommandRequest(
           bottle: bottle,
@@ -97,23 +97,23 @@ class ProgramRunPlanner {
       });
     }
 
-    if (supportedCommand == 'cmd') {
+    if (supportedCommand.value == 'cmd') {
       return Option.of(switch (hostPlatform) {
         KonyakHostPlatform.linux => linuxTerminalCommandRequest(
           bottle: bottle,
           environment: environment,
-          initialWineCommand: Option.of(supportedCommand),
+          initialWineCommand: Option.of(supportedCommand.value),
         ),
         KonyakHostPlatform.macos => macosTerminalCommandRequest(
           bottle: bottle,
           environment: environment,
           macosMajorVersion: macosMajorVersion,
-          initialWineCommand: Option.of(supportedCommand),
+          initialWineCommand: Option.of(supportedCommand.value),
         ),
       });
     }
 
-    if (supportedCommand == 'simulate-reboot') {
+    if (supportedCommand.value == 'simulate-reboot') {
       return Option.of(switch (hostPlatform) {
         KonyakHostPlatform.linux => linuxWinebootRestartRequest(
           bottle: bottle,
@@ -127,7 +127,7 @@ class ProgramRunPlanner {
       });
     }
 
-    if (supportedCommand == 'winetricks') {
+    if (supportedCommand.value == 'winetricks') {
       return Option.of(switch (hostPlatform) {
         KonyakHostPlatform.linux => linuxWinetricksCommandRequest(
           bottle: bottle,

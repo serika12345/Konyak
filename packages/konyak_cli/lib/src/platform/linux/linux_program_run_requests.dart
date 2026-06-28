@@ -51,12 +51,15 @@ ProgramRunRequest linuxWineCommandRequest({
   required HostEnvironment environment,
 }) {
   final hostEnvironment = environment;
+  final bottleCommand = BottleCommand(command);
   return ProgramRunRequest(
     bottleId: bottle.id,
-    programPath: ProgramPath(command),
+    programPath: ProgramPath(bottleCommand.value),
     runnerKind: RunnerKind('wine'),
     executable: ProgramExecutable(linuxWineExecutable(hostEnvironment)),
-    arguments: ProgramRunArguments(wineArgumentsForBottleCommand(command)),
+    arguments: ProgramRunArguments(
+      wineArgumentsForBottleCommand(bottleCommand),
+    ),
     environment: linuxRuntimeEnvironment(hostEnvironment).merge(
       linuxWineEnvironmentWithRuntime(bottle: bottle, environment: environment),
     ),

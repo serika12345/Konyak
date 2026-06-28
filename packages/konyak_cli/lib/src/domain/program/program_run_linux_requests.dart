@@ -49,13 +49,13 @@ ProgramRunRequest linuxWineRequest({
 
 ProgramRunRequest linuxWineCommandRequest({
   required BottleRecord bottle,
-  required String command,
+  required BottleCommand command,
   required HostEnvironment environment,
 }) {
   final hostEnvironment = environment;
   return ProgramRunRequest(
     bottleId: bottle.id,
-    programPath: ProgramPath(command),
+    programPath: ProgramPath(command.value),
     runnerKind: RunnerKind('wine'),
     executable: ProgramExecutable(linuxWineExecutable(hostEnvironment)),
     arguments: ProgramRunArguments(wineArgumentsForBottleCommand(command)),

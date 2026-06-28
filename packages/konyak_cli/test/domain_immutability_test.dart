@@ -392,6 +392,21 @@ void main() {
     );
   });
 
+  test('bottle commands model supported commands with BottleCommand', () {
+    expect(
+      supportedBottleCommand(BottleCommand(' WineCfg ')).toNullable(),
+      BottleCommand('winecfg'),
+    );
+    expect(supportedBottleCommand(BottleCommand('notepad')).isNone(), isTrue);
+    expect(wineArgumentsForBottleCommand(BottleCommand('dxdiag')), const <
+      String
+    >[
+      'cmd',
+      '/c',
+      'dxdiag /t C:\\konyak-dxdiag.txt && start "" notepad C:\\konyak-dxdiag.txt',
+    ]);
+  });
+
   test('runtime install operations reject blank present sources', () {
     expect(
       () => RuntimeFullInstallOperation(archivePath: Option.of(' ')),

@@ -255,12 +255,15 @@ ProgramRunRequest macosWineCommandRequest({
   required Option<int> macosMajorVersion,
 }) {
   final hostEnvironment = environment;
+  final bottleCommand = BottleCommand(command);
   return ProgramRunRequest(
     bottleId: bottle.id,
-    programPath: ProgramPath(command),
+    programPath: ProgramPath(bottleCommand.value),
     runnerKind: RunnerKind('macosWine'),
     executable: ProgramExecutable(macosWineExecutable(hostEnvironment)),
-    arguments: ProgramRunArguments(wineArgumentsForBottleCommand(command)),
+    arguments: ProgramRunArguments(
+      wineArgumentsForBottleCommand(bottleCommand),
+    ),
     environment: macosWineEnvironment(
       bottle: bottle,
       environment: environment,

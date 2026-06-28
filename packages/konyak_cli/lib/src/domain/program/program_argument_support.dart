@@ -46,14 +46,14 @@ List<String> programSettingsArguments(ProgramSettingsRecord settings) {
   return arguments.split(RegExp(r'\s+'));
 }
 
-List<String> wineArgumentsForBottleCommand(String command) {
-  return switch (command) {
+List<String> wineArgumentsForBottleCommand(BottleCommand command) {
+  return switch (command.value) {
     'dxdiag' => const <String>[
       'cmd',
       '/c',
       'dxdiag /t C:\\konyak-dxdiag.txt && start "" notepad C:\\konyak-dxdiag.txt',
     ],
-    _ => <String>[command],
+    _ => <String>[command.value],
   };
 }
 
@@ -115,8 +115,8 @@ bool isSupportedProgramPath(ProgramPath programPath) {
   return wineArgumentsForProgramPath(programPath).isSome();
 }
 
-Option<String> supportedBottleCommand(String command) {
-  final normalized = command.trim().toLowerCase();
+Option<BottleCommand> supportedBottleCommand(BottleCommand command) {
+  final normalized = command.value.trim().toLowerCase();
   return switch (normalized) {
     'winecfg' ||
     'regedit' ||
@@ -129,7 +129,7 @@ Option<String> supportedBottleCommand(String command) {
     'dxdiag' ||
     'winver' ||
     'terminal' ||
-    'winetricks' => Option.of(normalized),
+    'winetricks' => Option.of(BottleCommand(normalized)),
     _ => const Option.none(),
   };
 }
