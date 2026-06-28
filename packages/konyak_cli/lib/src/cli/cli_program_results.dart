@@ -4,6 +4,7 @@ import '../domain/program/program_runner.dart';
 import '../domain/program/program_settings_models.dart';
 import '../io/macos_pinned_launcher_manifest_io.dart';
 import '../io/macos_pinned_launchers.dart';
+import '../io/program_settings_json.dart';
 import '../repository/repository_interfaces.dart';
 import 'cli_bottle_mutation_handlers.dart';
 import 'cli_bottle_results.dart';
@@ -133,7 +134,7 @@ CliResult programSettingsJsonResult({
     'programSettings': <String, Object?>{
       'bottleId': bottleId,
       'programPath': programPath,
-      'settings': settings.toJson(),
+      'settings': programSettingsRecordJson(settings),
     },
   });
 }

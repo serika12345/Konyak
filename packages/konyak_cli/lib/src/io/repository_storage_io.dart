@@ -10,6 +10,7 @@ import '../domain/program/program_settings_models.dart';
 import '../shared/common_helpers.dart';
 import '../shared/model_constants.dart';
 import 'external_payload_helpers.dart';
+import 'program_settings_json.dart';
 
 ProgramSettingsRecord readProgramSettingsJson(String path) {
   final file = File(path);
@@ -33,7 +34,9 @@ void writeProgramSettingsJson({
   final file = File(path);
   file.parent.createSync(recursive: true);
   file.writeAsStringSync(
-    const JsonEncoder.withIndent('  ').convert(settings.toJson()),
+    const JsonEncoder.withIndent(
+      '  ',
+    ).convert(programSettingsRecordJson(settings)),
   );
 }
 

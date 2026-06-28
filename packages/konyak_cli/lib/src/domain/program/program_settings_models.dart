@@ -17,18 +17,6 @@ class ProgramSettingsRecord {
   final ProgramEnvironmentOverrides environment;
   final Option<ProgramLoggingSettingsRecord> logging;
 
-  Map<String, Object?> toJson() {
-    return <String, Object?>{
-      'locale': locale.value,
-      'arguments': arguments.value,
-      'environment': environment.toMap(),
-      ...logging.match(
-        () => const <String, Object?>{},
-        (value) => <String, Object?>{'logging': value.toJson()},
-      ),
-    };
-  }
-
   @override
   bool operator ==(Object other) {
     return other is ProgramSettingsRecord &&
@@ -57,14 +45,6 @@ class ProgramLoggingSettingsRecord {
   final bool createLogFile;
   final WineDebugChannels additionalWineLoggingChannels;
   final ProgramLogPath logFilePath;
-
-  Map<String, Object?> toJson() {
-    return <String, Object?>{
-      'createLogFile': createLogFile,
-      'additionalWineLoggingChannels': additionalWineLoggingChannels.value,
-      'logFilePath': logFilePath.value,
-    };
-  }
 
   @override
   bool operator ==(Object other) {

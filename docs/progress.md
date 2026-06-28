@@ -13,6 +13,35 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-28 22:05 JST
+- State: `completed`
+- Branch: `main`
+- Active work: move program settings JSON projections out of domain models.
+- Related TODO: `docs/todo.md` deferred JSON `toJson` projection separation.
+- Latest commit: `228f203` (`Move graphics backend hint JSON projections`).
+- Purpose: continue separating domain models from CLI JSON serialization by
+  moving `ProgramSettingsRecord` and `ProgramLoggingSettingsRecord`
+  projections into the serialization boundary used by get/set-program-settings
+  JSON results and program settings storage writes.
+- Completed work: committed the graphics backend hint projection slice,
+  inspected program settings models, CLI program settings result output,
+  storage write output, and focused CLI contract coverage; observed
+  `just verify-governance` fail before implementation because
+  `ProgramSettingsRecord` still owned JSON projection; added
+  `io/program_settings_json.dart`, moved CLI program settings results and
+  storage writes to that serializer, removed the matching domain `toJson`
+  methods, and added governance for both CLI and storage callers.
+- Remaining work: many domain `toJson` projections remain, especially bottle,
+  runtime/update, app settings, and validation records.
+- Next action: continue JSON projection separation with another narrow
+  CLI-covered record group, likely app settings/update records or bottle
+  records.
+- Verification: observed `just verify-governance` fail before implementation;
+  after implementation, `cd packages/konyak_cli && dart analyze
+  --fatal-infos`, focused program-settings CLI contract tests,
+  `just verify-governance`, `just cli-test`, `just verify-architecture`,
+  `just verify-safety`, `just format-check`, and `just lint` passed.
+
 - Timestamp: 2026-06-28 21:58 JST
 - State: `completed`
 - Branch: `main`

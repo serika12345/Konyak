@@ -736,6 +736,76 @@ def require_graphics_backend_hints_cli_json_projection() -> None:
         )
 
 
+def require_program_settings_cli_json_projection() -> None:
+    domain_path = (
+        "packages/konyak_cli/lib/src/domain/program/program_settings_models.dart"
+    )
+    domain = read_text(domain_path)
+
+    def class_section(class_name: str) -> str:
+        class_start = domain.find(f"class {class_name} ")
+        if class_start == -1:
+            raise AssertionError(f"{class_name} must exist")
+
+        next_class_match = re.search(
+            r"\n(?:abstract\s+interface\s+)?(?:final\s+)?class\s+\w+",
+            domain[class_start + 1 :],
+        )
+        if next_class_match is None:
+            return domain[class_start:]
+
+        class_end = class_start + 1 + next_class_match.start()
+        return domain[class_start:class_end]
+
+    for class_name in [
+        "ProgramSettingsRecord",
+        "ProgramLoggingSettingsRecord",
+    ]:
+        if "toJson(" in class_section(class_name):
+            raise AssertionError(
+                f"{class_name} must not own CLI JSON projection"
+            )
+
+    json_path = "packages/konyak_cli/lib/src/io/program_settings_json.dart"
+    json_projection = read_text(json_path)
+    expected_terms = [
+        "Map<String, Object?> programSettingsRecordJson(",
+        "Map<String, Object?> programLoggingSettingsRecordJson(",
+        "settings.logging.match(",
+        "settings.environment.toMap()",
+        "logging.additionalWineLoggingChannels.value",
+        "logging.logFilePath.value",
+    ]
+    for expected in expected_terms:
+        if expected not in json_projection:
+            raise AssertionError(
+                "Program settings JSON projection must live at the "
+                f"boundary: {expected}"
+            )
+
+    handler_path = "packages/konyak_cli/lib/src/cli/cli_program_results.dart"
+    handler = read_text(handler_path)
+    if "settings.toJson()" in handler:
+        raise AssertionError(
+            "Program settings JSON must not rely on domain-owned toJson"
+        )
+    if "programSettingsRecordJson(settings)" not in handler:
+        raise AssertionError(
+            "Program settings JSON must use programSettingsRecordJson"
+        )
+
+    storage_path = "packages/konyak_cli/lib/src/io/repository_storage_io.dart"
+    storage = read_text(storage_path)
+    if "settings.toJson()" in storage:
+        raise AssertionError(
+            "Program settings storage JSON must not rely on domain-owned toJson"
+        )
+    if "programSettingsRecordJson(settings)" not in storage:
+        raise AssertionError(
+            "Program settings storage JSON must use programSettingsRecordJson"
+        )
+
+
 def count_constructor_field_parameters(
     relative_path: str,
     constructor_name: str,
@@ -1531,6 +1601,7 @@ def main() -> None:
     require_wine_process_termination_cli_json_projection()
     require_program_catalog_cli_json_projection()
     require_graphics_backend_hints_cli_json_projection()
+    require_program_settings_cli_json_projection()
 
     for expected in [
         "flutter",
