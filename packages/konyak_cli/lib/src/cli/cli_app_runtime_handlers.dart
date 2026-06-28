@@ -14,6 +14,7 @@ import 'cli_json_helpers.dart';
 import 'cli_location_winetricks_handlers.dart';
 import 'cli_result_model.dart';
 import 'cli_runtime_parsers.dart';
+import 'cli_update_json.dart';
 import 'cli_update_runtime_results.dart';
 
 CliResult? handleRuntimeCommand(
@@ -164,7 +165,7 @@ CliResult runtimeUpdateCheckJsonResult({
 
   return switch (runtimeUpdateChecker.check(runtimeId)) {
     RuntimeUpdateCheckCompleted(:final update) => jsonSuccess(<String, Object?>{
-      'runtimeUpdate': update.toJson(),
+      'runtimeUpdate': runtimeUpdateRecordJson(update),
     }),
     RuntimeUpdateRuntimeNotFound(:final runtimeId) => jsonError(
       exitCode: 66,

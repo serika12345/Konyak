@@ -20,6 +20,7 @@ import 'cli_json_helpers.dart';
 import 'cli_program_catalog_json.dart';
 import 'cli_program_run_handlers.dart';
 import 'cli_result_model.dart';
+import 'cli_update_json.dart';
 
 CliResult appSettingsJsonResult(AppSettingsRecord settings) {
   return jsonSuccess(<String, Object?>{
@@ -28,11 +29,15 @@ CliResult appSettingsJsonResult(AppSettingsRecord settings) {
 }
 
 CliResult appUpdateJsonResult(AppUpdateRecord update) {
-  return jsonSuccess(<String, Object?>{'appUpdate': update.toJson()});
+  return jsonSuccess(<String, Object?>{
+    'appUpdate': appUpdateRecordJson(update),
+  });
 }
 
 CliResult appUpdateInstallJsonResult(AppUpdateInstallRecord install) {
-  return jsonSuccess(<String, Object?>{'appUpdateInstall': install.toJson()});
+  return jsonSuccess(<String, Object?>{
+    'appUpdateInstall': appUpdateInstallRecordJson(install),
+  });
 }
 
 CliResult wineProcessTerminationJsonResult(

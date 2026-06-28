@@ -864,6 +864,82 @@ def require_app_settings_serialization_boundary() -> None:
         )
 
 
+def require_update_record_cli_json_projection() -> None:
+    domain_path = "packages/konyak_cli/lib/src/domain/update/update_records.dart"
+    domain = read_text(domain_path)
+
+    def class_section(class_name: str) -> str:
+        class_start = domain.find(f"class {class_name} ")
+        if class_start == -1:
+            raise AssertionError(f"{class_name} must exist")
+
+        next_class_match = re.search(
+            r"\n(?:abstract\s+interface\s+)?(?:final\s+)?class\s+\w+",
+            domain[class_start + 1 :],
+        )
+        if next_class_match is None:
+            return domain[class_start:]
+
+        class_end = class_start + 1 + next_class_match.start()
+        return domain[class_start:class_end]
+
+    for class_name in [
+        "RuntimeUpdateRecord",
+        "AppUpdateRecord",
+        "AppUpdateInstallRecord",
+    ]:
+        if "toJson(" in class_section(class_name):
+            raise AssertionError(
+                f"{class_name} must not own CLI JSON projection"
+            )
+
+    if "Map<String, Object?> _updateJsonField(" in domain:
+        raise AssertionError("Update JSON helpers must live in CLI")
+
+    cli_json_path = "packages/konyak_cli/lib/src/cli/cli_update_json.dart"
+    cli_json = read_text(cli_json_path)
+    expected_terms = [
+        "Map<String, Object?> runtimeUpdateRecordJson(",
+        "Map<String, Object?> appUpdateRecordJson(",
+        "Map<String, Object?> appUpdateInstallRecordJson(",
+        "'sourceManifestSignatureUrl'",
+        "'archiveSha256'",
+        "'installPath'",
+    ]
+    for expected in expected_terms:
+        if expected not in cli_json:
+            raise AssertionError(
+                "Update record JSON projection must live at the CLI boundary: "
+                f"{expected}"
+            )
+
+    app_results_path = "packages/konyak_cli/lib/src/cli/cli_app_process_results.dart"
+    app_results = read_text(app_results_path)
+    if "update.toJson()" in app_results or "install.toJson()" in app_results:
+        raise AssertionError(
+            "App update JSON must not rely on domain-owned toJson"
+        )
+    if "appUpdateRecordJson(update)" not in app_results:
+        raise AssertionError("App update JSON must use appUpdateRecordJson")
+    if "appUpdateInstallRecordJson(install)" not in app_results:
+        raise AssertionError(
+            "App update install JSON must use appUpdateInstallRecordJson"
+        )
+
+    runtime_results_path = (
+        "packages/konyak_cli/lib/src/cli/cli_app_runtime_handlers.dart"
+    )
+    runtime_results = read_text(runtime_results_path)
+    if "update.toJson()" in runtime_results:
+        raise AssertionError(
+            "Runtime update JSON must not rely on domain-owned toJson"
+        )
+    if "runtimeUpdateRecordJson(update)" not in runtime_results:
+        raise AssertionError(
+            "Runtime update JSON must use runtimeUpdateRecordJson"
+        )
+
+
 def count_constructor_field_parameters(
     relative_path: str,
     constructor_name: str,
@@ -1661,6 +1737,7 @@ def main() -> None:
     require_graphics_backend_hints_cli_json_projection()
     require_program_settings_cli_json_projection()
     require_app_settings_serialization_boundary()
+    require_update_record_cli_json_projection()
 
     for expected in [
         "flutter",

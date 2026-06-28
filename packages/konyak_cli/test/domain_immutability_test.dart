@@ -249,17 +249,11 @@ void main() {
     expect(update.runtimeId, RuntimeId('wine'));
     expect(update.status, UpdateCheckStatus('unknown'));
     expect(update.archiveUrl.isNone(), isTrue);
-    expect(update.toJson(), isNot(contains('archiveUrl')));
     expect(available.currentVersion.toNullable(), RuntimeVersion('1.0.0'));
     expect(available.latestVersion.toNullable(), RuntimeVersion('1.1.0'));
     expect(
       available.archiveUrl.toNullable(),
       RuntimeArchiveUrl('https://example.invalid/wine.tar.xz'),
-    );
-    expect(available.toJson(), containsPair('currentVersion', '1.0.0'));
-    expect(
-      available.toJson(),
-      containsPair('archiveUrl', 'https://example.invalid/wine.tar.xz'),
     );
   });
 
@@ -291,7 +285,6 @@ void main() {
     expect(update.latestVersion.isNone(), isTrue);
     expect(update.archiveUrl.isNone(), isTrue);
     expect(update.archiveSha256.isNone(), isTrue);
-    expect(update.toJson(), isNot(contains('archiveUrl')));
   });
 
   test('app update records reject blank present fields', () {
@@ -323,7 +316,6 @@ void main() {
     expect(install.archiveUrl.isNone(), isTrue);
     expect(install.archiveSha256.isNone(), isTrue);
     expect(install.installPath.isNone(), isTrue);
-    expect(install.toJson(), isNot(contains('installPath')));
   });
 
   test('app update install records reject blank present fields', () {

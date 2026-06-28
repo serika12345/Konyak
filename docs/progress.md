@@ -13,6 +13,36 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-28 22:21 JST
+- State: `completed`
+- Branch: `main`
+- Active work: move update record JSON projections out of domain models.
+- Related TODO: `docs/todo.md` deferred JSON `toJson` projection separation.
+- Latest commit: `66bd7f4` (`Move app settings JSON projections`).
+- Purpose: continue separating domain models from CLI JSON serialization by
+  moving `RuntimeUpdateRecord`, `AppUpdateRecord`, and
+  `AppUpdateInstallRecord` projections into the CLI serialization boundary used
+  by update check/install JSON results.
+- Completed work: committed the app settings projection slice, inspected update
+  records, app update result output, runtime update result output, and focused
+  update CLI contract coverage; observed `just verify-governance` fail before
+  implementation because `RuntimeUpdateRecord` still owned CLI JSON
+  projection; added `cli_update_json.dart`, moved app/runtime update JSON
+  results to that helper, removed the matching domain `toJson` methods and
+  private domain JSON helper, updated domain tests to assert domain state
+  rather than JSON shape, and added governance for the update boundary.
+- Remaining work: domain `toJson` projections remain in bottle,
+  runtime/runtime validation/runtime package, and bottle/program mutation
+  records.
+- Next action: continue JSON projection separation with another narrow
+  CLI-covered record group, likely bottle mutation records or runtime
+  validation/package records.
+- Verification: observed `just verify-governance` fail before implementation;
+  after implementation, `cd packages/konyak_cli && dart analyze
+  --fatal-infos`, focused update CLI contract tests, `just verify-governance`,
+  `just cli-test`, `just verify-architecture`, `just verify-safety`,
+  `just format-check`, and `just lint` passed.
+
 - Timestamp: 2026-06-28 22:15 JST
 - State: `completed`
 - Branch: `main`

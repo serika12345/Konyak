@@ -31,32 +31,6 @@ class RuntimeUpdateRecord {
   final Option<RuntimeArchiveUrl> archiveUrl;
   final Option<RuntimeSourceManifestUrl> sourceManifestUrl;
   final Option<RuntimeSourceManifestSignatureUrl> sourceManifestSignatureUrl;
-
-  Map<String, Object?> toJson() {
-    return <String, Object?>{
-      'runtimeId': runtimeId.value,
-      'status': status.value,
-      ..._updateJsonField('currentVersion', currentVersion),
-      ..._updateJsonField('latestVersion', latestVersion),
-      ..._updateJsonField('versionUrl', versionUrl),
-      ..._updateJsonField('archiveUrl', archiveUrl),
-      ..._updateJsonField('sourceManifestUrl', sourceManifestUrl),
-      ..._updateJsonField(
-        'sourceManifestSignatureUrl',
-        sourceManifestSignatureUrl,
-      ),
-    };
-  }
-}
-
-Map<String, Object?> _updateJsonField(
-  String key,
-  Option<StringDomainValueObject> value,
-) {
-  return value.match(
-    () => const <String, Object?>{},
-    (item) => <String, Object?>{key: item.value},
-  );
 }
 
 sealed class RuntimeUpdateCheckResult {
@@ -110,18 +84,6 @@ class AppUpdateRecord {
   final Option<RuntimeVersionUrl> versionUrl;
   final Option<AppArchiveUrl> archiveUrl;
   final Option<AppArchiveSha256> archiveSha256;
-
-  Map<String, Object?> toJson() {
-    return <String, Object?>{
-      'appId': appId.value,
-      'status': status.value,
-      ..._updateJsonField('currentVersion', currentVersion),
-      ..._updateJsonField('latestVersion', latestVersion),
-      ..._updateJsonField('versionUrl', versionUrl),
-      ..._updateJsonField('archiveUrl', archiveUrl),
-      ..._updateJsonField('archiveSha256', archiveSha256),
-    };
-  }
 }
 
 sealed class AppUpdateCheckResult {
@@ -168,18 +130,6 @@ class AppUpdateInstallRecord {
   final Option<AppArchiveUrl> archiveUrl;
   final Option<AppArchiveSha256> archiveSha256;
   final Option<AppInstallPath> installPath;
-
-  Map<String, Object?> toJson() {
-    return <String, Object?>{
-      'appId': appId.value,
-      'status': status.value,
-      ..._updateJsonField('currentVersion', currentVersion),
-      ..._updateJsonField('installedVersion', installedVersion),
-      ..._updateJsonField('archiveUrl', archiveUrl),
-      ..._updateJsonField('archiveSha256', archiveSha256),
-      ..._updateJsonField('installPath', installPath),
-    };
-  }
 }
 
 sealed class AppUpdateInstallResult {
