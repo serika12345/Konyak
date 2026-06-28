@@ -8,6 +8,7 @@ import '../shared/model_constants.dart';
 import 'cli_app_process_results.dart';
 import 'cli_json_helpers.dart';
 import 'cli_result_model.dart';
+import 'cli_runtime_record_json.dart';
 
 CliResult installAppUpdateJsonResult({
   required AppUpdateChecker? appUpdateChecker,
@@ -145,7 +146,7 @@ CliResult installRuntimeUpdateJsonResult({
 }
 
 CliResult runtimeJsonResult(RuntimeRecord runtime) {
-  return jsonSuccess(<String, Object?>{'runtime': runtime.toJson()});
+  return jsonSuccess(<String, Object?>{'runtime': runtimeRecordJson(runtime)});
 }
 
 CliResult macosWineInstallCliResult(MacosWineInstallResult installResult) {

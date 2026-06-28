@@ -712,7 +712,7 @@ void main() {
     expect(component.role, RuntimeRole('runner'));
     expect(component.paths, [RuntimeComponentPath('/runtime/bin/wine')]);
     expect(component.version.isNone(), isTrue);
-    expect(component.toJson(), isNot(contains('version')));
+    expect(component.isInstalled, isTrue);
   });
 
   test('runtime stack components reject blank present versions', () {
@@ -869,7 +869,6 @@ void main() {
     expect(runtime.archiveUrl.isNone(), isTrue);
     expect(runtime.versionUrl.isNone(), isTrue);
     expect(runtime.stack.isNone(), isTrue);
-    expect(runtime.toJson(), isNot(contains('isInstalled')));
   });
 
   test('runtime records reject blank present state fields', () {

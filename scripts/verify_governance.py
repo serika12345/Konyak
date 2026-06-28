@@ -1042,6 +1042,87 @@ def require_runtime_install_progress_io_json_projection() -> None:
         )
 
 
+def require_runtime_record_cli_json_projection() -> None:
+    domain_path = "packages/konyak_cli/lib/src/domain/runtime/runtime_models.dart"
+    domain = read_text(domain_path)
+
+    def class_section(class_name: str) -> str:
+        class_start = domain.find(f"class {class_name} ")
+        if class_start == -1:
+            raise AssertionError(f"{class_name} must exist")
+
+        next_class_match = re.search(
+            r"\n(?:abstract\s+interface\s+)?(?:final\s+)?class\s+\w+",
+            domain[class_start + 1 :],
+        )
+        if next_class_match is None:
+            return domain[class_start:]
+
+        class_end = class_start + 1 + next_class_match.start()
+        return domain[class_start:class_end]
+
+    for class_name in [
+        "RuntimeRecord",
+        "RuntimeStack",
+        "RuntimeStackBackend",
+        "RuntimeStackComponent",
+    ]:
+        if "toJson(" in class_section(class_name):
+            raise AssertionError(
+                f"{class_name} must not own CLI JSON projection"
+            )
+
+    if "runtimeStackSchemaVersion" in domain:
+        raise AssertionError(
+            "Runtime stack schema constants must live at the CLI JSON boundary"
+        )
+    if "_runtimeJsonStringField(" in domain:
+        raise AssertionError("Runtime JSON helpers must live in CLI")
+
+    cli_json_path = "packages/konyak_cli/lib/src/cli/cli_runtime_record_json.dart"
+    cli_json = read_text(cli_json_path)
+    expected_terms = [
+        "Map<String, Object?> runtimeRecordJson(",
+        "Map<String, Object?> runtimeStackJson(",
+        "Map<String, Object?> runtimeStackBackendJson(",
+        "Map<String, Object?> runtimeStackComponentJson(",
+        "'id': runtime.id.value",
+        "'schemaVersion': runtimeStackSchemaVersion",
+        "runtime.stack.match(",
+        "stack.components",
+        ".map(runtimeStackComponentJson)",
+        "stack.backends",
+        ".map(runtimeStackBackendJson)",
+        "component.version",
+    ]
+    for expected in expected_terms:
+        if expected not in cli_json:
+            raise AssertionError(
+                "Runtime record JSON projection must live at the CLI boundary: "
+                f"{expected}"
+            )
+
+    handler_path = "packages/konyak_cli/lib/src/cli/cli_app_runtime_handlers.dart"
+    handler = read_text(handler_path)
+    if ".map((runtime) => runtime.toJson())" in handler:
+        raise AssertionError(
+            "Runtime list JSON must not rely on domain-owned toJson"
+        )
+    if ".map(runtimeRecordJson)" not in handler:
+        raise AssertionError("Runtime list JSON must use runtimeRecordJson")
+
+    runtime_results_path = (
+        "packages/konyak_cli/lib/src/cli/cli_update_runtime_results.dart"
+    )
+    runtime_results = read_text(runtime_results_path)
+    if "runtime.toJson()" in runtime_results:
+        raise AssertionError(
+            "Runtime result JSON must not rely on domain-owned toJson"
+        )
+    if "runtimeRecordJson(runtime)" not in runtime_results:
+        raise AssertionError("Runtime result JSON must use runtimeRecordJson")
+
+
 def require_bottle_archive_cli_json_projection() -> None:
     domain_path = (
         "packages/konyak_cli/lib/src/domain/bottle/bottle_mutation_models.dart"
@@ -1939,6 +2020,7 @@ def main() -> None:
     require_update_record_cli_json_projection()
     require_runtime_validation_cli_json_projection()
     require_runtime_install_progress_io_json_projection()
+    require_runtime_record_cli_json_projection()
     require_bottle_archive_cli_json_projection()
     require_pinned_launcher_manifest_io_json_projection()
 

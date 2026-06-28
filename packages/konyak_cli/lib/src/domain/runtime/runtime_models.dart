@@ -1,6 +1,5 @@
 import 'package:fpdart/fpdart.dart';
 
-import '../../shared/model_constants.dart';
 import '../shared/domain_value_objects.dart';
 
 class RuntimeDefinition {
@@ -135,33 +134,6 @@ class RuntimeRecord {
   final Option<RuntimeArchiveUrl> archiveUrl;
   final Option<RuntimeVersionUrl> versionUrl;
   final Option<RuntimeStack> stack;
-
-  Map<String, Object?> toJson() {
-    return <String, Object?>{
-      'id': id.value,
-      'name': name.value,
-      'platform': platform.value,
-      'architecture': architecture.value,
-      'runnerKind': runnerKind.value,
-      'isBundled': isBundled,
-      'isUpdateable': isUpdateable,
-      ..._runtimeJsonStringField('distributionKind', distributionKind),
-      ...isInstalled.match(
-        () => const <String, Object?>{},
-        (value) => <String, Object?>{'isInstalled': value},
-      ),
-      ..._runtimeJsonStringField(
-        'applicationSupportPath',
-        applicationSupportPath,
-      ),
-      ..._runtimeJsonStringField('libraryPath', libraryPath),
-      ..._runtimeJsonStringField('executablePath', executablePath),
-      ...stack.match(
-        () => const <String, Object?>{},
-        (value) => <String, Object?>{'stack': value.toJson()},
-      ),
-    };
-  }
 }
 
 class RuntimeStack {
@@ -187,23 +159,6 @@ class RuntimeStack {
     return components
         .where((component) => component.isRequired)
         .every((component) => component.isInstalled);
-  }
-
-  Map<String, Object?> toJson() {
-    return <String, Object?>{
-      'schemaVersion': runtimeStackSchemaVersion,
-      'id': id.value,
-      'name': name.value,
-      'compatibilityTarget': compatibilityTarget.value,
-      'isComplete': isComplete,
-      'components': components
-          .map((component) => component.toJson())
-          .toList(growable: false),
-      if (backends.isNotEmpty)
-        'backends': backends
-            .map((backend) => backend.toJson())
-            .toList(growable: false),
-    };
   }
 }
 
@@ -238,20 +193,6 @@ class RuntimeStackBackend {
   bool get isAvailable {
     return missingComponentIds.isEmpty && missingPaths.isEmpty;
   }
-
-  Map<String, Object?> toJson() {
-    return <String, Object?>{
-      'id': id.value,
-      'name': name.value,
-      'role': role.value,
-      'isAvailable': isAvailable,
-      'componentIds': componentIds.map((value) => value.value).toList(),
-      'missingComponentIds': missingComponentIds
-          .map((value) => value.value)
-          .toList(),
-      'missingPaths': missingPaths.map((value) => value.value).toList(),
-    };
-  }
 }
 
 class RuntimeStackComponent {
@@ -283,29 +224,6 @@ class RuntimeStackComponent {
   bool get isInstalled {
     return missingPaths.isEmpty;
   }
-
-  Map<String, Object?> toJson() {
-    return <String, Object?>{
-      'id': id.value,
-      'name': name.value,
-      'role': role.value,
-      'isRequired': isRequired,
-      'isInstalled': isInstalled,
-      'paths': paths.map((value) => value.value).toList(),
-      'missingPaths': missingPaths.map((value) => value.value).toList(),
-      ..._runtimeJsonStringField('version', version),
-    };
-  }
-}
-
-Map<String, Object?> _runtimeJsonStringField(
-  String key,
-  Option<StringDomainValueObject> value,
-) {
-  return value.match(
-    () => const <String, Object?>{},
-    (item) => <String, Object?>{key: item.value},
-  );
 }
 
 class RuntimeSourceManifest {

@@ -13,6 +13,35 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-28 22:47 JST
+- State: `completed`
+- Branch: `main`
+- Active work: move runtime record JSON projections out of domain models.
+- Related TODO: `docs/todo.md` deferred JSON `toJson` projection separation.
+- Latest commit: `e785821` (`Move runtime install progress JSON projection`).
+- Purpose: continue separating domain models from CLI serialization by moving
+  `RuntimeRecord`, `RuntimeStack`, `RuntimeStackBackend`, and
+  `RuntimeStackComponent` projections into the CLI boundary used by
+  `list-runtimes --json` and runtime install/update JSON results.
+- Completed work: committed the runtime install progress projection slice and
+  inspected runtime models, list/install/update runtime JSON call sites, and
+  focused runtime CLI contract coverage; observed `just verify-governance`
+  fail before implementation because `RuntimeRecord` still owned CLI JSON
+  projection; added `cli_runtime_record_json.dart`, updated `list-runtimes`,
+  runtime install, and runtime update JSON result call sites, removed runtime
+  record/stack/component/backend domain `toJson` methods and JSON-only helper,
+  and updated domain tests to assert domain state instead of JSON shape.
+- Remaining work: domain `toJson` projections remain in bottle records and
+  bottle runtime settings; the I/O-only GPTK install record and platform macOS
+  setup DTO still have local JSON projections.
+- Next action: continue JSON projection separation with the grouped bottle
+  record plus bottle runtime settings slice.
+- Verification: observed `just verify-governance` fail before implementation;
+  after implementation, `cd packages/konyak_cli && dart analyze
+  --fatal-infos`, focused runtime record CLI/domain tests,
+  `just verify-governance`, `just cli-test`, `just verify-architecture`,
+  `just verify-safety`, `just format-check`, and `just lint` passed.
+
 - Timestamp: 2026-06-28 22:42 JST
 - State: `completed`
 - Branch: `main`

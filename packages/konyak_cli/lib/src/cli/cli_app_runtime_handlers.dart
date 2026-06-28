@@ -14,6 +14,7 @@ import 'cli_json_helpers.dart';
 import 'cli_location_winetricks_handlers.dart';
 import 'cli_result_model.dart';
 import 'cli_runtime_parsers.dart';
+import 'cli_runtime_record_json.dart';
 import 'cli_runtime_validation_json.dart';
 import 'cli_update_json.dart';
 import 'cli_update_runtime_results.dart';
@@ -26,7 +27,7 @@ CliResult? handleRuntimeCommand(
     return jsonSuccess(<String, Object?>{
       'runtimes': context.runtimeCatalog
           .listRuntimes()
-          .map((runtime) => runtime.toJson())
+          .map(runtimeRecordJson)
           .toList(growable: false),
     });
   }

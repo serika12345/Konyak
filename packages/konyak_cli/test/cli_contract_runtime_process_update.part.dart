@@ -111,7 +111,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
       runtime.versionUrl.toNullable()?.value,
       'https://example.invalid/releases/latest',
     );
-    expect(runtime.toJson(), {
+    expect(runtimeRecordJson(runtime), {
       'id': 'konyak-linux-wine',
       'name': 'Konyak Linux Wine',
       'platform': 'linux',
