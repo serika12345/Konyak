@@ -20,7 +20,7 @@ class _FileBottleRepositoryReadOperations {
               .map((entry) => _readBottleMetadata(entry.path))
               .map(_repairedBottleWithoutMissingBottleLocalPinnedProgramFiles)
               .map(
-                (bottle) => _bottleWithPinnedProgramIcons(
+                (bottle) => bottleWithPinnedProgramIcons(
                   bottle,
                   programMetadataExtractor: _programMetadataExtractor,
                 ),
@@ -39,7 +39,7 @@ class _FileBottleRepositoryReadOperations {
 
     return _ioResult(
       () => Option.of(
-        _bottleWithPinnedProgramIcons(
+        bottleWithPinnedProgramIcons(
           _repairedBottleWithoutMissingBottleLocalPinnedProgramFiles(
             _readBottleMetadata(_fileBottlePath(bottleDirectory, id)),
           ),
@@ -63,7 +63,7 @@ BottleRecord _repairedBottleWithoutMissingBottleLocalPinnedProgramFiles(
 BottleRecord _bottleWithoutMissingBottleLocalPinnedProgramFiles(
   BottleRecord bottle,
 ) {
-  return _bottleWithoutMissingBottleLocalPinnedPrograms(
+  return bottleWithoutMissingBottleLocalPinnedPrograms(
     bottle,
     isPinnedProgramAvailable: (program) =>
         _isPinnedProgramFileAvailable(bottle: bottle, program: program),

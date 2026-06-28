@@ -1,1 +1,1 @@
-part of '../../../konyak_cli.dart';
+// Update domain library placeholder.

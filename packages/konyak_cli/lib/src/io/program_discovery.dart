@@ -50,7 +50,7 @@ class DartIoBottleProgramRepository implements BottleProgramRepository {
     }
 
     for (final pinnedProgram in bottle.pinnedPrograms) {
-      if (!_isLivePinnedProgram(
+      if (!isLivePinnedProgram(
         bottle,
         pinnedProgram,
         isPinnedProgramAvailable: (program) =>

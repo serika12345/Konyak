@@ -1,4 +1,9 @@
-part of '../../../konyak_cli.dart';
+import 'package:fpdart/fpdart.dart';
+
+import '../../shared/model_constants.dart';
+import '../bottle/bottle_models.dart';
+import '../shared/domain_value_objects.dart';
+import 'program_settings_models.dart';
 
 class ProgramPinRequest {
   ProgramPinRequest({
@@ -66,8 +71,8 @@ class ProgramRenameRequest {
   final ProgramName name;
 }
 
-class _PinnedProgramLauncherManifest {
-  _PinnedProgramLauncherManifest({
+class PinnedProgramLauncherManifest {
+  PinnedProgramLauncherManifest({
     required String launcherId,
     required String bottleId,
     required String programPath,

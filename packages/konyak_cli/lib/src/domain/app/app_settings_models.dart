@@ -1,4 +1,4 @@
-part of '../../../konyak_cli.dart';
+import '../shared/domain_value_objects.dart';
 
 enum AppAppearanceMode {
   dark('dark'),

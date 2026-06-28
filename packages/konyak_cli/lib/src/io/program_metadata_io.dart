@@ -9,7 +9,11 @@ class DartIoProgramMetadataExtractor implements ProgramMetadataExtractor {
     required String programPath,
   }) {
     try {
-      final file = File(programPath);
+      final metadataProgramPath = _metadataProgramPath(
+        bottle: bottle,
+        programPath: programPath,
+      );
+      final file = File(metadataProgramPath);
       if (!file.existsSync()) {
         return const Option.none();
       }
@@ -21,7 +25,7 @@ class DartIoProgramMetadataExtractor implements ProgramMetadataExtractor {
         final iconPath = _extractPeIcon(
           image: image,
           bottle: bottle,
-          programPath: programPath,
+          programPath: metadataProgramPath,
           fileStat: file.statSync(),
         );
         final metadata = ProgramMetadataRecord(
@@ -60,7 +64,11 @@ class DartIoAsyncProgramMetadataExtractor
     required String programPath,
   }) async {
     try {
-      final file = File(programPath);
+      final metadataProgramPath = _metadataProgramPath(
+        bottle: bottle,
+        programPath: programPath,
+      );
+      final file = File(metadataProgramPath);
       if (!await file.exists()) {
         return const Option.none();
       }
@@ -72,7 +80,7 @@ class DartIoAsyncProgramMetadataExtractor
         final iconPath = await _extractPeIconAsync(
           image: image,
           bottle: bottle,
-          programPath: programPath,
+          programPath: metadataProgramPath,
           fileStat: await file.stat(),
         );
         final metadata = ProgramMetadataRecord(

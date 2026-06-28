@@ -16,10 +16,10 @@ extension _DartIoLinuxWineInstallerOperations on DartIoLinuxWineInstaller {
         archiveSha256: archiveSha256,
         componentArchivePaths: componentArchivePaths,
         componentVersions: componentVersions,
-        runtimeRoot: _linuxWineRuntimeRoot(environment),
+        runtimeRoot: linuxWineRuntimeRoot(environment),
         requiredExecutableRelativePath:
-            _linuxWineRuntimePlatformSpec.requiredExecutableRelativePath,
-        expectedExecutablePath: _linuxWineExecutable(environment),
+            linuxWineRuntimePlatformSpec.requiredExecutableRelativePath,
+        expectedExecutablePath: linuxWineExecutable(environment),
       ),
       progressSink: progressSink,
     );
@@ -81,14 +81,14 @@ extension _DartIoLinuxWineInstallerOperations on DartIoLinuxWineInstaller {
         manifest: manifest.getOrElse(
           () => throw StateError('Expected runtime stack source manifest.'),
         ),
-        platformSpec: _linuxWineRuntimePlatformSpec,
+        platformSpec: linuxWineRuntimePlatformSpec,
         tempDirectory: tempDirectory,
         progressSink: progressSink,
       );
       return switch (bundleResult) {
-        _RuntimeStackSourceArchiveBundleFailed(:final message) =>
+        RuntimeStackSourceArchiveBundleFailed(:final message) =>
           LinuxWineInstallFailed(message),
-        _RuntimeStackSourceArchiveBundleResolved(:final bundle) =>
+        RuntimeStackSourceArchiveBundleResolved(:final bundle) =>
           _installLinuxWineArchive(
             archivePath: bundle.wineArchivePath.value,
             archiveSha256: const Option.none(),
@@ -139,14 +139,14 @@ extension _DartIoLinuxWineInstallerOperations on DartIoLinuxWineInstaller {
             manifest: manifest.getOrElse(
               () => throw StateError('Expected runtime stack source manifest.'),
             ),
-            platformSpec: _linuxWineRuntimePlatformSpec,
+            platformSpec: linuxWineRuntimePlatformSpec,
             tempDirectory: tempDirectory,
             progressSink: progressSink,
           );
       return switch (bundleResult) {
-        _RuntimeStackSourceArchiveBundleFailed(:final message) =>
+        RuntimeStackSourceArchiveBundleFailed(:final message) =>
           LinuxWineInstallFailed(message),
-        _RuntimeStackSourceArchiveBundleResolved(:final bundle) =>
+        RuntimeStackSourceArchiveBundleResolved(:final bundle) =>
           _installLinuxWineArchive(
             archivePath: bundle.wineArchivePath.value,
             archiveSha256: const Option.none(),

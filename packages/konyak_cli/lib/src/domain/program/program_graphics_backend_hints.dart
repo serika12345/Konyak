@@ -1,4 +1,5 @@
-part of '../../../konyak_cli.dart';
+import '../shared/domain_value_objects.dart';
+import 'program_runner.dart';
 
 final class ProgramGraphicsBackendHints {
   ProgramGraphicsBackendHints({
@@ -91,57 +92,21 @@ final class ProgramGraphicsBackendHintsInspectionFailed
   final String message;
 }
 
-ProgramGraphicsBackendHints _programGraphicsBackendHintsFromPortableExecutable({
+ProgramGraphicsBackendHints programGraphicsBackendHintsFromSignals({
   required String programPath,
   required KonyakHostPlatform hostPlatform,
-  required Option<_PortableExecutableImage> image,
+  required Iterable<ProgramGraphicsBackendSignal> signals,
 }) {
-  final signals = image.match(
-    () => const <ProgramGraphicsBackendSignal>[],
-    _graphicsBackendSignals,
-  );
+  final signalList = List<ProgramGraphicsBackendSignal>.unmodifiable(signals);
   return ProgramGraphicsBackendHints(
     programPath: programPath,
     hostPlatform: hostPlatform,
-    signals: signals,
+    signals: signalList,
     suggestions: _graphicsBackendSuggestions(
       hostPlatform: hostPlatform,
-      signals: signals,
+      signals: signalList,
     ),
   );
-}
-
-List<ProgramGraphicsBackendSignal> _graphicsBackendSignals(
-  _PortableExecutableImage image,
-) {
-  final signals = <ProgramGraphicsBackendSignal>[];
-  final seen = <String>{};
-
-  void addSignal(String kind, String value) {
-    final normalizedValue = value.toLowerCase();
-    final key = '$kind:$normalizedValue';
-    if (!seen.add(key)) {
-      return;
-    }
-    signals.add(
-      ProgramGraphicsBackendSignal(kind: kind, value: normalizedValue),
-    );
-  }
-
-  for (final dllName in image.importDllNames) {
-    final normalized = dllName.toLowerCase();
-    if (_graphicsImportDllNames.contains(normalized)) {
-      addSignal('peImport', normalized);
-    }
-  }
-
-  for (final signal in _graphicsStringSignals) {
-    if (_containsAsciiCaseInsensitive(image.bytes, signal.value.value)) {
-      addSignal('string', signal.value.value);
-    }
-  }
-
-  return List.unmodifiable(signals);
 }
 
 List<ProgramGraphicsBackendSuggestion> _graphicsBackendSuggestions({
@@ -215,49 +180,12 @@ bool _hasAnyGraphicsSignal(
   return signals.any((signal) => expectedValues.contains(signal.value.value));
 }
 
-bool _containsAsciiCaseInsensitive(Uint8List bytes, String value) {
-  final needle = ascii.encode(value.toLowerCase());
-  if (needle.isEmpty || bytes.length < needle.length) {
-    return false;
-  }
-
-  return Iterable<int>.generate(bytes.length - needle.length + 1).any(
-    (index) => Iterable<int>.generate(needle.length).every((offset) {
-      final byte = bytes[index + offset];
-      final normalizedByte = byte >= 0x41 && byte <= 0x5a ? byte + 0x20 : byte;
-      return normalizedByte == needle[offset];
-    }),
-  );
-}
-
 String _hostPlatformJsonValue(KonyakHostPlatform hostPlatform) {
   return switch (hostPlatform) {
     KonyakHostPlatform.macos => 'macos',
     KonyakHostPlatform.linux => 'linux',
   };
 }
-
-const _graphicsImportDllNames = <String>{
-  'd3d9.dll',
-  'd3d10.dll',
-  'd3d10_1.dll',
-  'd3d10core.dll',
-  'd3d11.dll',
-  'd3d12.dll',
-  'dxgi.dll',
-  'vulkan-1.dll',
-  'opengl32.dll',
-  'nvngx.dll',
-};
-
-final _graphicsStringSignals = <ProgramGraphicsBackendSignal>[
-  ProgramGraphicsBackendSignal(kind: 'string', value: 'd3d12createdevice'),
-  ProgramGraphicsBackendSignal(kind: 'string', value: 'd3d11createdevice'),
-  ProgramGraphicsBackendSignal(kind: 'string', value: 'direct3dcreate9'),
-  ProgramGraphicsBackendSignal(kind: 'string', value: 'vkcreateinstance'),
-  ProgramGraphicsBackendSignal(kind: 'string', value: 'wglcreatecontext'),
-  ProgramGraphicsBackendSignal(kind: 'string', value: 'nvngx'),
-];
 
 const _d3d12Signals = <String>{'d3d12.dll', 'd3d12createdevice'};
 

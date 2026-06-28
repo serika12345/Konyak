@@ -12,7 +12,7 @@ ProgramRunPlanner currentProgramRunPlanner() {
 }
 
 Option<int> _currentMacosMajorVersion() {
-  return _macosMajorVersionFromOperatingSystemVersion(
+  return macosMajorVersionFromOperatingSystemVersion(
     Platform.operatingSystemVersion,
   );
 }

@@ -37,8 +37,8 @@ String _linuxWineTerminalShellCommandWithEnvironment({
   Option<String> initialWineCommand = const Option.none(),
 }) {
   final hostEnvironment = environment;
-  final executable = _linuxWineExecutable(hostEnvironment);
-  final runtimeBin = _linuxManagedRuntimeBinFolder(hostEnvironment);
+  final executable = linuxWineExecutable(hostEnvironment);
+  final runtimeBin = linuxManagedRuntimeBinFolder(hostEnvironment);
   final wineLibraryPath = hostEnvironment.nonEmptyValue(
     'KONYAK_LINUX_WINE_LIBRARY_PATH',
   );
@@ -81,8 +81,8 @@ String _macosWineTerminalShellCommand({
   required Option<int> macosMajorVersion,
   Option<String> initialWineCommand = const Option.none(),
 }) {
-  final runtimeBin = _macosWineBinFolder(environment);
-  final executable = _macosWineExecutable(environment);
+  final runtimeBin = macosWineBinFolder(environment);
+  final executable = macosWineExecutable(environment);
   return <String>[
     'cd ${_shellQuote(bottle.path.value)}',
     'export PATH=${_shellQuote(runtimeBin)}:\$PATH',

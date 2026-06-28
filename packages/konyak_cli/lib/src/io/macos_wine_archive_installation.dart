@@ -17,10 +17,10 @@ extension _MacosWineArchiveInstallation on DartIoMacosWineInstaller {
         archiveSha256: archiveSha256,
         componentArchivePaths: componentArchivePaths,
         componentVersions: componentVersions,
-        runtimeRoot: _macosWineRuntimeRoot(environment),
+        runtimeRoot: macosWineRuntimeRoot(environment),
         requiredExecutableRelativePath:
-            _macosKonyakRuntimePlatformSpec.requiredExecutableRelativePath,
-        expectedExecutablePath: _macosWineExecutable(environment),
+            macosKonyakRuntimePlatformSpec.requiredExecutableRelativePath,
+        expectedExecutablePath: macosWineExecutable(environment),
         preserveExistingRuntimeFiles: preserveExistingRuntimeFiles,
       ),
       progressSink: progressSink,
@@ -92,17 +92,17 @@ extension _MacosWineArchiveInstallation on DartIoMacosWineInstaller {
         manifest: manifest.getOrElse(
           () => throw StateError('Expected runtime stack source manifest.'),
         ),
-        platformSpec: _macosKonyakRuntimePlatformSpec,
+        platformSpec: macosKonyakRuntimePlatformSpec,
         tempDirectory: tempDirectory,
         progressSink: progressSink,
       );
       return switch (bundleResult) {
-        _RuntimeStackSourceArchiveBundleFailed(:final message) =>
+        RuntimeStackSourceArchiveBundleFailed(:final message) =>
           _macosWineSourceManifestInstallResult(
             sourceManifest: sourceManifest,
             result: MacosWineInstallFailed(message),
           ),
-        _RuntimeStackSourceArchiveBundleResolved(:final bundle) =>
+        RuntimeStackSourceArchiveBundleResolved(:final bundle) =>
           _macosWineSourceManifestInstallResult(
             sourceManifest: sourceManifest,
             result: _installMacosWineArchive(
@@ -164,17 +164,17 @@ extension _MacosWineArchiveInstallation on DartIoMacosWineInstaller {
             manifest: manifest.getOrElse(
               () => throw StateError('Expected runtime stack source manifest.'),
             ),
-            platformSpec: _macosKonyakRuntimePlatformSpec,
+            platformSpec: macosKonyakRuntimePlatformSpec,
             tempDirectory: tempDirectory,
             progressSink: progressSink,
           );
       return switch (bundleResult) {
-        _RuntimeStackSourceArchiveBundleFailed(:final message) =>
+        RuntimeStackSourceArchiveBundleFailed(:final message) =>
           _macosWineSourceManifestInstallResult(
             sourceManifest: sourceManifest,
             result: MacosWineInstallFailed(message),
           ),
-        _RuntimeStackSourceArchiveBundleResolved(:final bundle) =>
+        RuntimeStackSourceArchiveBundleResolved(:final bundle) =>
           _macosWineSourceManifestInstallResult(
             sourceManifest: sourceManifest,
             result: _installMacosWineArchive(

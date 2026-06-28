@@ -1,30 +1,30 @@
 part of '../../konyak_cli.dart';
 
-_RuntimeStackSourceArchiveBundleResult _resolveRuntimeStackSourceArchiveBundle({
+RuntimeStackSourceArchiveBundleResult _resolveRuntimeStackSourceArchiveBundle({
   required RuntimeSourceManifest manifest,
-  required _RuntimePlatformSpec platformSpec,
+  required RuntimePlatformSpec platformSpec,
   required Directory tempDirectory,
   required RuntimeInstallProgressSink? progressSink,
 }) {
-  final planResult = _runtimeStackSourceArchivePlan(
+  final planResult = runtimeStackSourceArchivePlan(
     manifest: manifest,
     platformSpec: platformSpec,
     tempDirectoryPath: tempDirectory.path,
   );
   switch (planResult) {
-    case _RuntimeStackSourceArchivePlanResolved(:final plan):
+    case RuntimeStackSourceArchivePlanResolved(:final plan):
       return _resolveRuntimeStackSourceArchiveBundleFromPlan(
         plan: plan,
         progressSink: progressSink,
       );
-    case _RuntimeStackSourceArchivePlanFailed(:final message):
-      return _RuntimeStackSourceArchiveBundleFailed(message);
+    case RuntimeStackSourceArchivePlanFailed(:final message):
+      return RuntimeStackSourceArchiveBundleFailed(message);
   }
 }
 
-_RuntimeStackSourceArchiveBundleResult
+RuntimeStackSourceArchiveBundleResult
 _resolveRuntimeStackSourceArchiveBundleFromPlan({
-  required _RuntimeStackSourceArchivePlan plan,
+  required RuntimeStackSourceArchivePlan plan,
   required RuntimeInstallProgressSink? progressSink,
 }) {
   for (final componentPlan in plan.components) {
@@ -38,7 +38,7 @@ _resolveRuntimeStackSourceArchiveBundleFromPlan({
       endFraction: componentPlan.endFraction.value,
     )) {
       case Left<String, Unit>(:final value):
-        return _RuntimeStackSourceArchiveBundleFailed(value);
+        return RuntimeStackSourceArchiveBundleFailed(value);
       case Right<String, Unit>():
         break;
     }
@@ -54,7 +54,7 @@ _resolveRuntimeStackSourceArchiveBundleFromPlan({
     );
     if (actualSha256.toLowerCase() !=
         componentPlan.component.sha256.value.toLowerCase()) {
-      return _RuntimeStackSourceArchiveBundleFailed(
+      return RuntimeStackSourceArchiveBundleFailed(
         'Runtime stack component `${componentPlan.component.id.value}` checksum '
         'mismatch: expected ${componentPlan.component.sha256.value}, '
         'got $actualSha256.',
@@ -62,35 +62,35 @@ _resolveRuntimeStackSourceArchiveBundleFromPlan({
     }
   }
 
-  return _RuntimeStackSourceArchiveBundleResolved(plan.toBundle());
+  return RuntimeStackSourceArchiveBundleResolved(plan.toBundle());
 }
 
-Future<_RuntimeStackSourceArchiveBundleResult>
+Future<RuntimeStackSourceArchiveBundleResult>
 _resolveRuntimeStackSourceArchiveBundleStreaming({
   required RuntimeSourceManifest manifest,
-  required _RuntimePlatformSpec platformSpec,
+  required RuntimePlatformSpec platformSpec,
   required Directory tempDirectory,
   required RuntimeInstallProgressSink? progressSink,
 }) async {
-  final planResult = _runtimeStackSourceArchivePlan(
+  final planResult = runtimeStackSourceArchivePlan(
     manifest: manifest,
     platformSpec: platformSpec,
     tempDirectoryPath: tempDirectory.path,
   );
   switch (planResult) {
-    case _RuntimeStackSourceArchivePlanResolved(:final plan):
+    case RuntimeStackSourceArchivePlanResolved(:final plan):
       return _resolveRuntimeStackSourceArchiveBundleFromPlanStreaming(
         plan: plan,
         progressSink: progressSink,
       );
-    case _RuntimeStackSourceArchivePlanFailed(:final message):
-      return _RuntimeStackSourceArchiveBundleFailed(message);
+    case RuntimeStackSourceArchivePlanFailed(:final message):
+      return RuntimeStackSourceArchiveBundleFailed(message);
   }
 }
 
-Future<_RuntimeStackSourceArchiveBundleResult>
+Future<RuntimeStackSourceArchiveBundleResult>
 _resolveRuntimeStackSourceArchiveBundleFromPlanStreaming({
-  required _RuntimeStackSourceArchivePlan plan,
+  required RuntimeStackSourceArchivePlan plan,
   required RuntimeInstallProgressSink? progressSink,
 }) async {
   for (final componentPlan in plan.components) {
@@ -104,7 +104,7 @@ _resolveRuntimeStackSourceArchiveBundleFromPlanStreaming({
       endFraction: componentPlan.endFraction.value,
     )) {
       case Left<String, Unit>(:final value):
-        return _RuntimeStackSourceArchiveBundleFailed(value);
+        return RuntimeStackSourceArchiveBundleFailed(value);
       case Right<String, Unit>():
         break;
     }
@@ -120,7 +120,7 @@ _resolveRuntimeStackSourceArchiveBundleFromPlanStreaming({
     );
     if (actualSha256.toLowerCase() !=
         componentPlan.component.sha256.value.toLowerCase()) {
-      return _RuntimeStackSourceArchiveBundleFailed(
+      return RuntimeStackSourceArchiveBundleFailed(
         'Runtime stack component `${componentPlan.component.id.value}` checksum '
         'mismatch: expected ${componentPlan.component.sha256.value}, '
         'got $actualSha256.',
@@ -128,5 +128,5 @@ _resolveRuntimeStackSourceArchiveBundleFromPlanStreaming({
     }
   }
 
-  return _RuntimeStackSourceArchiveBundleResolved(plan.toBundle());
+  return RuntimeStackSourceArchiveBundleResolved(plan.toBundle());
 }

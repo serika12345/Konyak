@@ -86,9 +86,9 @@ class MacosWineInstallRequest {
   MacosWineInstallRequest._({
     required RuntimeInstallRequestOperation requestOperation,
     required this.emitProgress,
-  }) : _accessors = _RuntimeWineInstallRequestAccessors(requestOperation);
+  }) : _accessors = RuntimeWineInstallRequestAccessors(requestOperation);
 
-  final _RuntimeWineInstallRequestAccessors _accessors;
+  final RuntimeWineInstallRequestAccessors _accessors;
   final bool emitProgress;
 
   RuntimeInstallRequestOperation get requestOperation =>

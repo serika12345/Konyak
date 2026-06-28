@@ -97,7 +97,7 @@ class DartIoMacosSetupChecker implements MacosSetupChecker {
 
   @override
   MacosSetupCheckResult check() {
-    final runtime = _runtimeById(
+    final runtime = runtimeById(
       runtimeCatalog.listRuntimes(),
       macosWineRuntimeId,
     );
@@ -107,8 +107,8 @@ class DartIoMacosSetupChecker implements MacosSetupChecker {
         isSupported: hostPlatform == KonyakHostPlatform.macos,
         rosetta: RosettaSetupStatus(
           isRequired: hostPlatform == KonyakHostPlatform.macos,
-          isInstalled: fileStatusProbe.exists(_rosettaRuntimePath),
-          installCommand: _rosettaInstallCommand,
+          isInstalled: fileStatusProbe.exists(rosettaRuntimePath),
+          installCommand: rosettaInstallCommand,
         ),
         runtime: RuntimeSetupStatus(
           runtimeId: macosWineRuntimeId,

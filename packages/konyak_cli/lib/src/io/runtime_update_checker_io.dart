@@ -11,7 +11,7 @@ class DartIoRuntimeUpdateChecker implements RuntimeUpdateChecker {
 
   @override
   RuntimeUpdateCheckResult check(String runtimeId) {
-    final runtime = _runtimeById(runtimeCatalog.listRuntimes(), runtimeId);
+    final runtime = runtimeById(runtimeCatalog.listRuntimes(), runtimeId);
     return runtime.match(
       () => RuntimeUpdateRuntimeNotFound(runtimeId),
       _checkRuntime,
@@ -19,15 +19,15 @@ class DartIoRuntimeUpdateChecker implements RuntimeUpdateChecker {
   }
 
   RuntimeUpdateCheckResult _checkRuntime(RuntimeRecord runtime) {
-    final currentVersion = _runtimeWineVersion(runtime);
+    final currentVersion = runtimeWineVersion(runtime);
     return runtime.versionUrl.match(
-      () => _unknownRuntimeUpdateRecord(
+      () => unknownRuntimeUpdateRecord(
         runtime: runtime,
         currentVersion: currentVersion,
       ),
       (versionUrl) {
         if (versionUrl.value.trim().isEmpty) {
-          return _unknownRuntimeUpdateRecord(
+          return unknownRuntimeUpdateRecord(
             runtime: runtime,
             currentVersion: currentVersion,
           );
@@ -36,7 +36,7 @@ class DartIoRuntimeUpdateChecker implements RuntimeUpdateChecker {
         final metadata = releaseMetadataFetcher.fetch(versionUrl.value);
         return switch (metadata) {
           RuntimeReleaseMetadataFetched(:final metadata) =>
-            _runtimeUpdateFromMetadata(
+            runtimeUpdateFromMetadata(
               runtime: runtime,
               versionUrl: versionUrl.value,
               currentVersion: currentVersion,

@@ -67,8 +67,8 @@ class DartIoGptkWineInstaller implements GptkWineInstaller {
       return const GptkWineInstallFailed('GPTK Wine source path is empty.');
     }
 
-    final runtimeRoot = Directory(_macosWineRuntimeRoot(environment));
-    if (!File(_macosWineExecutable(environment)).existsSync()) {
+    final runtimeRoot = Directory(macosWineRuntimeRoot(environment));
+    if (!File(macosWineExecutable(environment)).existsSync()) {
       return const GptkWineInstallFailed(
         'Install Konyak macOS Wine before importing GPTK/D3DMetal.',
       );
@@ -154,7 +154,7 @@ class DartIoGptkWineInstaller implements GptkWineInstaller {
         componentId: _gptkD3DMetalComponentId,
         sourceDirectory: installedD3DMetal.payloadRoot.path,
         runtimeRoot: runtimeRoot.path,
-        installedExecutablePath: _macosWineExecutable(environment),
+        installedExecutablePath: macosWineExecutable(environment),
       ),
     );
   }

@@ -1,7 +1,8 @@
 part of '../../konyak_cli.dart';
 
-Option<_PinnedProgramLauncherManifest>
-_pinnedProgramLauncherManifestFromPayload(String payload) {
+Option<PinnedProgramLauncherManifest> _pinnedProgramLauncherManifestFromPayload(
+  String payload,
+) {
   final decoded = jsonDecode(payload);
   if (decoded is! Map<String, dynamic>) {
     return const Option.none();
@@ -27,7 +28,7 @@ _pinnedProgramLauncherManifestFromPayload(String payload) {
   }
 
   return Option.of(
-    _PinnedProgramLauncherManifest(
+    PinnedProgramLauncherManifest(
       launcherId: launcherId,
       bottleId: bottleId,
       programPath: programPath,

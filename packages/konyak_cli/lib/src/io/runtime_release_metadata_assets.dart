@@ -130,7 +130,7 @@ Option<String> _runtimeReleaseArchiveSha256(
 
   for (final key in const <String>['archiveSha256', 'archive_sha256']) {
     final value = decoded[key];
-    if (value is String && _isSha256Hex(value)) {
+    if (value is String && isSha256Hex(value)) {
       return Option.of(value);
     }
   }
@@ -151,7 +151,7 @@ Option<String> _runtimeReleaseArchiveSha256(
     }
 
     final digest = digestPattern.firstMatch(line)?.group(0);
-    if (digest != null && _isSha256Hex(digest)) {
+    if (digest != null && isSha256Hex(digest)) {
       return Option.of(digest);
     }
   }

@@ -10,6 +10,7 @@ CUSTOM_LINT_RULES = [
     "konyak_no_domain_io",
     "konyak_no_domain_nested_conditional",
     "konyak_no_domain_parameter_mutation",
+    "konyak_no_domain_part_of_root",
     "konyak_no_domain_reassignment",
     "konyak_no_domain_var_declaration",
     "konyak_no_null_literal_outside_boundary",
@@ -241,9 +242,16 @@ def require_result_boundary_rules() -> None:
         "final Option<ProgramIconPath> iconPath;",
         "Option<String> iconPath = const Option.none()",
         "iconPath.map(",
-        "throw ArgumentError.value",
     ]:
         require_contains("packages/konyak_cli/lib/src/domain/bottle/bottle_models.dart", expected)
+    require_contains(
+        "packages/konyak_cli/lib/src/domain/shared/domain_value_objects.dart",
+        "throw ArgumentError.value",
+    )
+    require_contains(
+        "packages/konyak_cli/lib/src/domain/shared/domain_helpers.dart",
+        "throw ArgumentError.value",
+    )
     require_not_contains(
         "packages/konyak_cli/lib/src/domain/bottle/bottle_models.dart",
         "final String? iconPath;",

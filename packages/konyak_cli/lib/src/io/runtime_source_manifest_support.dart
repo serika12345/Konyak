@@ -66,7 +66,7 @@ Option<RuntimeSourceComponent> _runtimeStackSourceComponent(Object? value) {
       archiveUrl is! String ||
       archiveUrl.trim().isEmpty ||
       sha256 is! String ||
-      !_isSha256Hex(sha256)) {
+      !isSha256Hex(sha256)) {
     return const Option.none();
   }
 

@@ -1,7 +1,7 @@
 part of '../../../konyak_cli.dart';
 
 String _macosPinnedProgramInfoPlist({
-  required _PinnedProgramLauncherManifest manifest,
+  required PinnedProgramLauncherManifest manifest,
   required String displayName,
   required String? iconFileName,
 }) {

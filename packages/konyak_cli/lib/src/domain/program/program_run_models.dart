@@ -1,4 +1,8 @@
-part of '../../../konyak_cli.dart';
+import 'package:fpdart/fpdart.dart';
+
+import '../shared/domain_helpers.dart';
+import '../shared/domain_value_objects.dart';
+import 'program_run_environment.dart';
 
 class ProgramRunRequest {
   ProgramRunRequest({
@@ -138,7 +142,7 @@ Option<String> _optionalNonBlankDomainString(
   Option<String> value,
   String fieldName,
 ) {
-  return value.map((item) => _requiredNonBlankDomainString(item, fieldName));
+  return value.map((item) => requiredNonBlankDomainString(item, fieldName));
 }
 
 abstract interface class DetachedProcessStarter {

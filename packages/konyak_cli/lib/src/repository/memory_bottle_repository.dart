@@ -50,7 +50,7 @@ class MemoryBottleRepository implements BottleRepository {
         _bottles.values
             .toList(growable: false)
             .map((bottle) {
-              final updated = _bottleWithPinnedProgramIcons(
+              final updated = bottleWithPinnedProgramIcons(
                 _bottleWithoutMissingBottleLocalPinnedProgramFiles(bottle),
                 programMetadataExtractor: _programMetadataExtractor,
               );
@@ -70,7 +70,7 @@ class MemoryBottleRepository implements BottleRepository {
     return _mapValue(_bottles, id).match(
       () => const Right<String, Option<BottleRecord>>(Option.none()),
       (bottle) {
-        final updated = _bottleWithPinnedProgramIcons(
+        final updated = bottleWithPinnedProgramIcons(
           _bottleWithoutMissingBottleLocalPinnedProgramFiles(bottle),
           programMetadataExtractor: _programMetadataExtractor,
         );
@@ -213,11 +213,11 @@ class MemoryBottleRepository implements BottleRepository {
     return _mapValue(_bottles, request.bottleId.value).match(
       () => ProgramPinMissing(request.bottleId.value),
       (bottle) {
-        if (_hasPinnedProgram(bottle, request.programPath.value)) {
+        if (hasPinnedProgram(bottle, request.programPath.value)) {
           return ProgramPinConflict(request.programPath.value);
         }
 
-        final updated = _bottleWithPinnedProgram(
+        final updated = bottleWithPinnedProgram(
           bottle,
           request,
           programMetadataExtractor: _programMetadataExtractor,
@@ -234,11 +234,11 @@ class MemoryBottleRepository implements BottleRepository {
     return _mapValue(_bottles, request.bottleId.value).match(
       () => ProgramUpdateMissingBottle(request.bottleId.value),
       (bottle) {
-        if (!_hasPinnedProgram(bottle, request.programPath.value)) {
+        if (!hasPinnedProgram(bottle, request.programPath.value)) {
           return ProgramUpdateMissingProgram(request.programPath.value);
         }
 
-        final updated = _bottleWithoutPinnedProgram(
+        final updated = bottleWithoutPinnedProgram(
           bottle,
           request.programPath.value,
         );
@@ -254,11 +254,11 @@ class MemoryBottleRepository implements BottleRepository {
     return _mapValue(_bottles, request.bottleId.value).match(
       () => ProgramUpdateMissingBottle(request.bottleId.value),
       (bottle) {
-        if (!_hasPinnedProgram(bottle, request.programPath.value)) {
+        if (!hasPinnedProgram(bottle, request.programPath.value)) {
           return ProgramUpdateMissingProgram(request.programPath.value);
         }
 
-        final updated = _bottleWithRenamedPinnedProgram(bottle, request);
+        final updated = bottleWithRenamedPinnedProgram(bottle, request);
         _bottles[request.bottleId.value] = updated;
 
         return ProgramUpdated(updated);

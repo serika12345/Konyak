@@ -1,29 +1,31 @@
-part of '../../../konyak_cli.dart';
+import 'package:fpdart/fpdart.dart';
 
-Option<String> _runtimeProfileEnvironmentValue(
+import 'host_environment.dart';
+
+Option<String> runtimeProfileEnvironmentValue(
   HostEnvironment environment, {
   required String developmentKey,
   required String releaseKey,
 }) {
-  if (_isDevelopmentRuntimeProfile(environment)) {
+  if (isDevelopmentRuntimeProfile(environment)) {
     return environment.nonEmptyValue(developmentKey);
   }
 
   return environment.nonEmptyValue(releaseKey);
 }
 
-String _runtimeDistributionKind(
+String runtimeDistributionKind(
   HostEnvironment environment,
   String defaultKind,
 ) {
-  if (_isDevelopmentRuntimeProfile(environment)) {
+  if (isDevelopmentRuntimeProfile(environment)) {
     return 'development';
   }
 
   return defaultKind;
 }
 
-bool _isDevelopmentRuntimeProfile(HostEnvironment environment) {
+bool isDevelopmentRuntimeProfile(HostEnvironment environment) {
   return environment
       .nonEmptyValue('KONYAK_RUNTIME_PROFILE')
       .match(() => false, (profile) => profile == 'development');

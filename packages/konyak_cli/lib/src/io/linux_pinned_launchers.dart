@@ -53,7 +53,7 @@ void _synchronizeLinuxPinnedProgramLaunchers({
             _PinnedProgramLauncherWrite(
               displayName: _linuxPinnedProgramDisplayName(program.name.value),
               iconPath: program.iconPath.map((value) => value.value),
-              manifest: _PinnedProgramLauncherManifest(
+              manifest: PinnedProgramLauncherManifest(
                 launcherId: _pinnedProgramLauncherId(
                   bottleId: bottle.id.value,
                   programPath: program.path.value,
@@ -111,7 +111,7 @@ final class _PinnedProgramLauncherWrite {
 
   final String displayName;
   final Option<String> iconPath;
-  final _PinnedProgramLauncherManifest manifest;
+  final PinnedProgramLauncherManifest manifest;
 }
 
 Option<_LinuxPinnedProgramLauncherCommand> _linuxPinnedProgramLauncherCommand(
@@ -182,7 +182,7 @@ bool _writeLinuxPinnedProgramLauncher({
   required _LinuxPinnedProgramLauncherCommand launcherCommand,
   required String displayName,
   required String? iconPath,
-  required _PinnedProgramLauncherManifest manifest,
+  required PinnedProgramLauncherManifest manifest,
 }) {
   final launcherDirectoryPath = _linuxPinnedProgramLauncherDirectoryPath(
     environment: environment,

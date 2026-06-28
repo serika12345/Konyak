@@ -1,16 +1,5 @@
 part of '../../konyak_cli.dart';
 
-abstract interface class FileStatusProbe {
-  bool exists(String path);
-}
-
-abstract interface class RuntimeStackVersionProbe {
-  String? versionFor({
-    required String runtimeRoot,
-    required String componentId,
-  });
-}
-
 class DartIoFileStatusProbe implements FileStatusProbe {
   const DartIoFileStatusProbe();
 
@@ -24,7 +13,7 @@ class DartIoRuntimeStackVersionProbe implements RuntimeStackVersionProbe {
   const DartIoRuntimeStackVersionProbe();
 
   @override
-  String? versionFor({
+  Option<String> versionFor({
     required String runtimeRoot,
     required String componentId,
   }) {
@@ -32,18 +21,20 @@ class DartIoRuntimeStackVersionProbe implements RuntimeStackVersionProbe {
       _joinPath(runtimeRoot, const [runtimeStackManifestFileName]),
     );
     if (!manifest.existsSync()) {
-      return null;
+      return const Option.none();
     }
 
     try {
-      return _runtimeStackComponentVersionFromManifestPayload(
-        manifest.readAsStringSync(),
-        componentId,
+      return Option.fromNullable(
+        _runtimeStackComponentVersionFromManifestPayload(
+          manifest.readAsStringSync(),
+          componentId,
+        ),
       );
     } on FileSystemException {
-      return null;
+      return const Option.none();
     } on FormatException {
-      return null;
+      return const Option.none();
     }
   }
 }

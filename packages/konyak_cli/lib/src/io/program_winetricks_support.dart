@@ -134,7 +134,7 @@ Option<WinetricksVerbRecord> _parseWinetricksVerbLine(String line) {
   return _nullableOption(RegExp(r'^(\S+)\s*(.*)$').firstMatch(line)).flatMap(
     (match) => _nullableOption(match.group(1)).flatMap((rawName) {
       final name = rawName.trim();
-      if (!_isSupportedWinetricksVerb(name)) {
+      if (!isSupportedWinetricksVerb(name)) {
         return const Option.none();
       }
 
@@ -151,6 +151,6 @@ Option<WinetricksVerbRecord> _parseWinetricksVerbLine(String line) {
   );
 }
 
-bool _isSupportedWinetricksVerb(String verb) {
+bool isSupportedWinetricksVerb(String verb) {
   return RegExp(r'^[A-Za-z0-9_.+-]+$').hasMatch(verb);
 }

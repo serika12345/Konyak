@@ -1,74 +1,78 @@
-part of '../../../konyak_cli.dart';
+import 'package:fpdart/fpdart.dart';
 
-const _linuxWineRuntimeComponentDefinitions =
-    <_RuntimeStackComponentDefinition>[
-      _RuntimeStackComponentDefinition(
-        id: 'wine',
-        name: 'Wine',
-        role: 'windows-runner',
-        isRequired: true,
-        relativePaths: <List<String>>[
-          <String>['bin', 'wine'],
-          <String>['bin', 'winedbg'],
-          <String>['bin', 'wineserver'],
-        ],
-      ),
-      _RuntimeStackComponentDefinition(
-        id: 'winetricks',
-        name: 'winetricks',
-        role: 'verb-installer',
-        isRequired: true,
-        relativePaths: <List<String>>[
-          <String>['winetricks'],
-        ],
-      ),
-      _RuntimeStackComponentDefinition(
-        id: 'wine-mono',
-        name: 'wine-mono',
-        role: 'dotnet-runtime',
-        isRequired: true,
-        relativePaths: <List<String>>[
-          <String>['share', 'wine', 'mono'],
-        ],
-      ),
-      _RuntimeStackComponentDefinition(
-        id: 'dxvk',
-        name: 'DXVK',
-        role: 'd3d9-d3d11-vulkan-translation',
-        isRequired: true,
-        relativePaths: <List<String>>[
-          <String>['dxvk', 'x64', 'dxgi.dll'],
-          <String>['dxvk', 'x64', 'd3d9.dll'],
-          <String>['dxvk', 'x64', 'd3d10core.dll'],
-          <String>['dxvk', 'x64', 'd3d11.dll'],
-          <String>['dxvk', 'x86', 'dxgi.dll'],
-          <String>['dxvk', 'x86', 'd3d9.dll'],
-          <String>['dxvk', 'x86', 'd3d10core.dll'],
-          <String>['dxvk', 'x86', 'd3d11.dll'],
-        ],
-      ),
-      _RuntimeStackComponentDefinition(
-        id: 'vkd3d-proton',
-        name: 'vkd3d-proton',
-        role: 'd3d12-vulkan-translation',
-        isRequired: true,
-        relativePaths: <List<String>>[
-          <String>['vkd3d-proton', 'x64', 'd3d12.dll'],
-          <String>['vkd3d-proton', 'x64', 'd3d12core.dll'],
-          <String>['vkd3d-proton', 'x86', 'd3d12.dll'],
-          <String>['vkd3d-proton', 'x86', 'd3d12core.dll'],
-        ],
-      ),
-    ];
+import '../../shared/model_constants.dart';
+import 'host_environment.dart';
+import 'runtime_profile_environment.dart';
+import 'runtime_validation_models.dart';
 
-const _linuxWineRuntimeBackendDefinitions = <_RuntimeBackendDefinition>[
-  _RuntimeBackendDefinition(
+const _linuxWineRuntimeComponentDefinitions = <RuntimeStackComponentDefinition>[
+  RuntimeStackComponentDefinition(
+    id: 'wine',
+    name: 'Wine',
+    role: 'windows-runner',
+    isRequired: true,
+    relativePaths: <List<String>>[
+      <String>['bin', 'wine'],
+      <String>['bin', 'winedbg'],
+      <String>['bin', 'wineserver'],
+    ],
+  ),
+  RuntimeStackComponentDefinition(
+    id: 'winetricks',
+    name: 'winetricks',
+    role: 'verb-installer',
+    isRequired: true,
+    relativePaths: <List<String>>[
+      <String>['winetricks'],
+    ],
+  ),
+  RuntimeStackComponentDefinition(
+    id: 'wine-mono',
+    name: 'wine-mono',
+    role: 'dotnet-runtime',
+    isRequired: true,
+    relativePaths: <List<String>>[
+      <String>['share', 'wine', 'mono'],
+    ],
+  ),
+  RuntimeStackComponentDefinition(
+    id: 'dxvk',
+    name: 'DXVK',
+    role: 'd3d9-d3d11-vulkan-translation',
+    isRequired: true,
+    relativePaths: <List<String>>[
+      <String>['dxvk', 'x64', 'dxgi.dll'],
+      <String>['dxvk', 'x64', 'd3d9.dll'],
+      <String>['dxvk', 'x64', 'd3d10core.dll'],
+      <String>['dxvk', 'x64', 'd3d11.dll'],
+      <String>['dxvk', 'x86', 'dxgi.dll'],
+      <String>['dxvk', 'x86', 'd3d9.dll'],
+      <String>['dxvk', 'x86', 'd3d10core.dll'],
+      <String>['dxvk', 'x86', 'd3d11.dll'],
+    ],
+  ),
+  RuntimeStackComponentDefinition(
+    id: 'vkd3d-proton',
+    name: 'vkd3d-proton',
+    role: 'd3d12-vulkan-translation',
+    isRequired: true,
+    relativePaths: <List<String>>[
+      <String>['vkd3d-proton', 'x64', 'd3d12.dll'],
+      <String>['vkd3d-proton', 'x64', 'd3d12core.dll'],
+      <String>['vkd3d-proton', 'x86', 'd3d12.dll'],
+      <String>['vkd3d-proton', 'x86', 'd3d12core.dll'],
+    ],
+  ),
+];
+
+const _linuxWineRuntimeBackendDefinitions = <RuntimeBackendDefinition>[
+  RuntimeBackendDefinition(
     id: 'dxvk',
     name: 'DXVK',
     role: 'd3d9-d3d11-vulkan-translation',
     componentIds: <String>['dxvk'],
   ),
-  _RuntimeBackendDefinition(
+  RuntimeBackendDefinition(
     id: 'vkd3d-proton',
     name: 'vkd3d-proton',
     role: 'd3d12-vulkan-translation',
@@ -207,7 +211,7 @@ const _macosWineEntryPointComponentPaths = <List<String>>[
   <String>['lib', 'wine', 'x86_64-unix', 'wine'],
 ];
 
-const _macosWineMonoComponentPaths = <List<String>>[
+const macosWineMonoComponentPaths = <List<String>>[
   <String>['share', 'wine', 'mono', 'wine-mono-10.4.1-x86.msi'],
 ];
 
@@ -226,22 +230,22 @@ const _macosVkd3dComponentPaths = <List<String>>[
 ];
 
 const _macosKonyakRuntimeComponentDefinitions =
-    <_RuntimeStackComponentDefinition>[
-      _RuntimeStackComponentDefinition(
+    <RuntimeStackComponentDefinition>[
+      RuntimeStackComponentDefinition(
         id: 'wine',
         name: 'Wine',
         role: 'windows-runner',
         isRequired: true,
         relativePaths: _macosWineEntryPointComponentPaths,
       ),
-      _RuntimeStackComponentDefinition(
+      RuntimeStackComponentDefinition(
         id: 'wine32on64',
         name: 'Wine32-on-64 support',
         role: '32-bit-windows-support',
         isRequired: true,
         relativePaths: _macosWine32On64ComponentPaths,
       ),
-      _RuntimeStackComponentDefinition(
+      RuntimeStackComponentDefinition(
         id: 'dxvk-macos',
         name: 'DXVK-macOS',
         role: 'd3d9-d3d11-translation',
@@ -261,7 +265,7 @@ const _macosKonyakRuntimeComponentDefinitions =
           <String>['lib', 'dxvk', 'i386-windows', 'd3d11.dll'],
         ],
       ),
-      _RuntimeStackComponentDefinition(
+      RuntimeStackComponentDefinition(
         id: 'moltenvk',
         name: 'MoltenVK',
         role: 'vulkan-metal-translation',
@@ -270,7 +274,7 @@ const _macosKonyakRuntimeComponentDefinitions =
           <String>['lib', 'libMoltenVK.dylib'],
         ],
       ),
-      _RuntimeStackComponentDefinition(
+      RuntimeStackComponentDefinition(
         id: 'gstreamer',
         name: 'GStreamer runtime',
         role: 'media-runtime',
@@ -286,7 +290,7 @@ const _macosKonyakRuntimeComponentDefinitions =
           <String>['libexec', 'gstreamer-1.0', 'gst-plugin-scanner'],
         ],
       ),
-      _RuntimeStackComponentDefinition(
+      RuntimeStackComponentDefinition(
         id: 'freetype',
         name: 'FreeType font runtime',
         role: 'font-rendering',
@@ -296,21 +300,21 @@ const _macosKonyakRuntimeComponentDefinitions =
           <String>['lib', 'libfreetype.dylib'],
         ],
       ),
-      _RuntimeStackComponentDefinition(
+      RuntimeStackComponentDefinition(
         id: 'wine-mono',
         name: 'wine-mono',
         role: 'dotnet-runtime',
         isRequired: true,
-        relativePaths: _macosWineMonoComponentPaths,
+        relativePaths: macosWineMonoComponentPaths,
       ),
-      _RuntimeStackComponentDefinition(
+      RuntimeStackComponentDefinition(
         id: 'wine-gecko',
         name: 'wine-gecko',
         role: 'html-runtime',
         isRequired: true,
         relativePaths: _macosWineGeckoComponentPaths,
       ),
-      _RuntimeStackComponentDefinition(
+      RuntimeStackComponentDefinition(
         id: 'winetricks',
         name: 'winetricks',
         role: 'verb-installer',
@@ -320,14 +324,14 @@ const _macosKonyakRuntimeComponentDefinitions =
           <String>['verbs.txt'],
         ],
       ),
-      _RuntimeStackComponentDefinition(
+      RuntimeStackComponentDefinition(
         id: 'vkd3d',
         name: 'vkd3d',
         role: 'd3d12-vulkan-runtime',
         isRequired: true,
         relativePaths: _macosVkd3dComponentPaths,
       ),
-      _RuntimeStackComponentDefinition(
+      RuntimeStackComponentDefinition(
         id: 'dxmt',
         name: 'DXMT',
         role: 'd3d10-d3d11-metal-translation',
@@ -343,7 +347,7 @@ const _macosKonyakRuntimeComponentDefinitions =
           <String>['lib', 'dxmt', 'x86_64-unix', 'winemetal.so'],
         ],
       ),
-      _RuntimeStackComponentDefinition(
+      RuntimeStackComponentDefinition(
         id: 'gptk-d3dmetal',
         name: 'GPTK/D3DMetal',
         role: 'd3d12-metal-translation',
@@ -352,26 +356,26 @@ const _macosKonyakRuntimeComponentDefinitions =
       ),
     ];
 
-const _macosKonyakRuntimeBackendDefinitions = <_RuntimeBackendDefinition>[
-  _RuntimeBackendDefinition(
+const _macosKonyakRuntimeBackendDefinitions = <RuntimeBackendDefinition>[
+  RuntimeBackendDefinition(
     id: 'dxvk-macos',
     name: 'DXVK-macOS',
     role: 'd3d9-d3d11-metal-translation',
     componentIds: <String>['dxvk-macos', 'moltenvk'],
   ),
-  _RuntimeBackendDefinition(
+  RuntimeBackendDefinition(
     id: 'dxmt',
     name: 'DXMT',
     role: 'd3d10-d3d11-metal-translation',
     componentIds: <String>['dxmt'],
   ),
-  _RuntimeBackendDefinition(
+  RuntimeBackendDefinition(
     id: 'vkd3d',
     name: 'vkd3d',
     role: 'd3d12-vulkan-metal-translation',
     componentIds: <String>['vkd3d', 'moltenvk'],
   ),
-  _RuntimeBackendDefinition(
+  RuntimeBackendDefinition(
     id: 'gptk-d3dmetal',
     name: 'GPTK/D3DMetal',
     role: 'd3d12-metal-translation',
@@ -379,7 +383,7 @@ const _macosKonyakRuntimeBackendDefinitions = <_RuntimeBackendDefinition>[
   ),
 ];
 
-const _linuxWineRuntimePlatformSpec = _RuntimePlatformSpec(
+const linuxWineRuntimePlatformSpec = RuntimePlatformSpec(
   runtimeId: linuxWineRuntimeId,
   runtimeName: 'Konyak Linux Wine',
   platform: 'linux',
@@ -399,7 +403,7 @@ const _linuxWineRuntimePlatformSpec = _RuntimePlatformSpec(
   backendDefinitions: _linuxWineRuntimeBackendDefinitions,
 );
 
-const _macosKonyakRuntimePlatformSpec = _RuntimePlatformSpec(
+const macosKonyakRuntimePlatformSpec = RuntimePlatformSpec(
   runtimeId: macosWineRuntimeId,
   runtimeName: 'Konyak macOS Wine',
   platform: 'macos',
@@ -416,32 +420,32 @@ const _macosKonyakRuntimePlatformSpec = _RuntimePlatformSpec(
   developmentSourceSignatureEnvironmentKey:
       'KONYAK_DEV_MACOS_WINE_STACK_SIGNATURE_URL',
   releaseSourceSignatureEnvironmentKey: 'KONYAK_MACOS_WINE_STACK_SIGNATURE_URL',
-  layoutNormalization: _RuntimeLayoutNormalization.macosWineBundle,
+  layoutNormalization: RuntimeLayoutNormalization.macosWineBundle,
   componentDefinitions: _macosKonyakRuntimeComponentDefinitions,
   backendDefinitions: _macosKonyakRuntimeBackendDefinitions,
 );
 
-Option<String> _runtimeSourceManifestForPlatform({
-  required _RuntimePlatformSpec platformSpec,
+Option<String> runtimeSourceManifestForPlatform({
+  required RuntimePlatformSpec platformSpec,
   required HostEnvironment environment,
 }) {
-  final configuredManifest = _runtimeProfileEnvironmentValue(
+  final configuredManifest = runtimeProfileEnvironmentValue(
     environment,
     developmentKey: platformSpec.developmentSourceManifestEnvironmentKey,
     releaseKey: platformSpec.releaseSourceManifestEnvironmentKey,
   );
-  if (_isDevelopmentRuntimeProfile(environment)) {
+  if (isDevelopmentRuntimeProfile(environment)) {
     return configuredManifest;
   }
 
   return configuredManifest.alt(() => platformSpec.defaultSourceManifestUrl);
 }
 
-Option<String> _runtimeSourceManifestSignatureForPlatform({
-  required _RuntimePlatformSpec platformSpec,
+Option<String> runtimeSourceManifestSignatureForPlatform({
+  required RuntimePlatformSpec platformSpec,
   required HostEnvironment environment,
 }) {
-  return _runtimeProfileEnvironmentValue(
+  return runtimeProfileEnvironmentValue(
     environment,
     developmentKey: platformSpec.developmentSourceSignatureEnvironmentKey,
     releaseKey: platformSpec.releaseSourceSignatureEnvironmentKey,

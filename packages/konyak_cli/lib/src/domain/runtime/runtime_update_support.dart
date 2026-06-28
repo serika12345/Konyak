@@ -1,6 +1,9 @@
-part of '../../../konyak_cli.dart';
+import 'package:fpdart/fpdart.dart';
 
-Option<RuntimeRecord> _runtimeById(
+import '../shared/domain_value_objects.dart';
+import 'runtime_models.dart';
+
+Option<RuntimeRecord> runtimeById(
   List<RuntimeRecord> runtimes,
   String runtimeId,
 ) {
@@ -13,7 +16,7 @@ Option<RuntimeRecord> _runtimeById(
   return const Option.none();
 }
 
-Option<RuntimeVersion> _runtimeWineVersion(RuntimeRecord runtime) {
+Option<RuntimeVersion> runtimeWineVersion(RuntimeRecord runtime) {
   return runtime.stack.flatMap((stack) {
     for (final component in stack.components) {
       if (component.id.value == 'wine') {
@@ -25,7 +28,7 @@ Option<RuntimeVersion> _runtimeWineVersion(RuntimeRecord runtime) {
   });
 }
 
-String _updateStatus({
+String updateStatus({
   required Option<String> currentVersion,
   required String latestVersion,
 }) {

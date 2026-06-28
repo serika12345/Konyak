@@ -13,6 +13,32 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-28 15:10 JST
+- State: `completed`
+- Branch: `main`
+- Active work: retire the Konyak CLI domain `part` root-library boundary.
+- Related TODO: `docs/todo.md` deferred Dart `part` root library boundary
+  cleanup.
+- Latest commit: `77f75bb` (`Strengthen custom lint domain boundaries`).
+- Purpose: replace the apparent Dart `part` boundary with real standalone
+  libraries for hand-written `packages/konyak_cli/lib/src/domain/**` code.
+- Completed work: strengthened `konyak_no_domain_part_of_root` so any
+  hand-written domain `part of` is rejected; removed the domain part baseline;
+  removed every `part 'src/domain/...';` from `konyak_cli.dart`; converted the
+  hand-written domain files to explicit imports; moved domain ports/helpers out
+  of I/O/shared root-private files; moved concrete runtime catalog classes back
+  to I/O composition; and moved PE graphics hint signal extraction to I/O so
+  domain receives typed signals instead of PE bytes.
+- Remaining work: none for the domain `part` baseline; non-domain CLI/I/O/
+  platform files still use the root part library and should be reduced in later
+  slices.
+- Next action: continue with the remaining design-boundary backlog in
+  `docs/todo.md`, starting with concrete `DartIo*` repository defaults or the
+  remaining non-domain root part library.
+- Verification: `just format-check && just cli-analyze &&
+  just verify-governance && just verify-architecture &&
+  just konyak-lints-test` and `just verify` passed.
+
 - Timestamp: 2026-06-28 13:58 JST
 - State: `completed`
 - Branch: `main`

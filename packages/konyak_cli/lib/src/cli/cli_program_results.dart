@@ -52,7 +52,7 @@ CliResult _runPinnedProgramLauncherCli({
             programPath: manifest.programPath.value,
           );
           if (manifest.launcherId.value != expectedLauncherId ||
-              !_hasPinnedProgram(bottle, manifest.programPath.value)) {
+              !hasPinnedProgram(bottle, manifest.programPath.value)) {
             return _jsonError(
               exitCode: 66,
               code: 'programNotPinned',

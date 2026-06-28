@@ -1,4 +1,5 @@
-part of '../../../konyak_cli.dart';
+import '../program/program_run_environment.dart';
+import '../shared/domain_value_objects.dart';
 
 class BottleRuntimeSettings {
   BottleRuntimeSettings({

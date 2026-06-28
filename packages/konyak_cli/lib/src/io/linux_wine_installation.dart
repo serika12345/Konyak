@@ -52,9 +52,9 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
     );
 
     switch (plan) {
-      case _RuntimeWineInstallUnsupported(:final message):
+      case RuntimeWineInstallUnsupported(:final message):
         return LinuxWineInstallFailed(message);
-      case _RuntimeWineInstallAlreadyInstalled(:final runtime):
+      case RuntimeWineInstallAlreadyInstalled(:final runtime):
         _emitRuntimeInstallProgress(
           progress,
           stage: 'complete',
@@ -62,9 +62,9 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
           fraction: 1,
         );
         return LinuxWineInstallCompleted(runtime: runtime);
-      case _RuntimeWineInstallIncompleteWithoutSource(:final message):
+      case RuntimeWineInstallIncompleteWithoutSource(:final message):
         return LinuxWineInstallFailed(message);
-      case _RuntimeWineInstallFromSourceManifest(
+      case RuntimeWineInstallFromSourceManifest(
         :final sourceManifest,
         :final sourceManifestSignature,
       ):
@@ -75,7 +75,7 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
               ?.value,
           progressSink: progress,
         );
-      case _RuntimeWineInstallFromArchive(
+      case RuntimeWineInstallFromArchive(
         :final archivePath,
         :final archiveSha256,
         :final componentArchivePaths,
@@ -90,9 +90,9 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
           ),
           progressSink: progress,
         );
-      case _RuntimeWineInstallMissingArchiveSource(:final message):
+      case RuntimeWineInstallMissingArchiveSource(:final message):
         return LinuxWineInstallFailed(message);
-      case _RuntimeWineInstallDownloadArchive(
+      case RuntimeWineInstallDownloadArchive(
         :final archiveUrl,
         :final archiveFileName,
         :final archiveSha256,
@@ -162,9 +162,9 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
     );
 
     switch (plan) {
-      case _RuntimeWineInstallUnsupported(:final message):
+      case RuntimeWineInstallUnsupported(:final message):
         return LinuxWineInstallFailed(message);
-      case _RuntimeWineInstallAlreadyInstalled(:final runtime):
+      case RuntimeWineInstallAlreadyInstalled(:final runtime):
         _emitRuntimeInstallProgress(
           progress,
           stage: 'complete',
@@ -172,9 +172,9 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
           fraction: 1,
         );
         return LinuxWineInstallCompleted(runtime: runtime);
-      case _RuntimeWineInstallIncompleteWithoutSource(:final message):
+      case RuntimeWineInstallIncompleteWithoutSource(:final message):
         return LinuxWineInstallFailed(message);
-      case _RuntimeWineInstallFromSourceManifest(
+      case RuntimeWineInstallFromSourceManifest(
         :final sourceManifest,
         :final sourceManifestSignature,
       ):
@@ -185,7 +185,7 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
               ?.value,
           progressSink: progress,
         );
-      case _RuntimeWineInstallFromArchive(
+      case RuntimeWineInstallFromArchive(
         :final archivePath,
         :final archiveSha256,
         :final componentArchivePaths,
@@ -200,9 +200,9 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
           ),
           progressSink: progress,
         );
-      case _RuntimeWineInstallMissingArchiveSource(:final message):
+      case RuntimeWineInstallMissingArchiveSource(:final message):
         return LinuxWineInstallFailed(message);
-      case _RuntimeWineInstallDownloadArchive(
+      case RuntimeWineInstallDownloadArchive(
         :final archiveUrl,
         :final archiveFileName,
         :final archiveSha256,
@@ -248,29 +248,28 @@ class DartIoLinuxWineInstaller implements LinuxWineInstaller {
   }
 }
 
-_RuntimeWineInstallPlan _linuxWineInstallPlan({
+RuntimeWineInstallPlan _linuxWineInstallPlan({
   required KonyakHostPlatform hostPlatform,
   required HostEnvironment environment,
   required LinuxWineInstallRequest request,
   required RuntimeRecord currentRuntime,
 }) {
-  return _runtimeWineInstallPlan(
+  return runtimeWineInstallPlan(
     hostPlatformSupported: hostPlatform == KonyakHostPlatform.linux,
     unsupportedPlatformMessage:
         'Linux Wine installation is supported on Linux only.',
     requestOperation: request.requestOperation,
     currentRuntime: currentRuntime,
-    configuredSourceManifest: _runtimeSourceManifestForPlatform(
-      platformSpec: _linuxWineRuntimePlatformSpec,
+    configuredSourceManifest: runtimeSourceManifestForPlatform(
+      platformSpec: linuxWineRuntimePlatformSpec,
       environment: environment,
     ),
     configuredSourceManifestSignature:
-        _runtimeSourceManifestSignatureForPlatform(
-          platformSpec: _linuxWineRuntimePlatformSpec,
+        runtimeSourceManifestSignatureForPlatform(
+          platformSpec: linuxWineRuntimePlatformSpec,
           environment: environment,
         ),
-    defaultArchiveFileName:
-        _linuxWineRuntimePlatformSpec.defaultArchiveFileName,
+    defaultArchiveFileName: linuxWineRuntimePlatformSpec.defaultArchiveFileName,
     missingArchiveMessage: Option.of(
       'Linux Wine source manifest is not configured.',
     ),

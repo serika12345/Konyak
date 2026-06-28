@@ -1,7 +1,10 @@
-part of '../../../konyak_cli.dart';
+import 'package:fpdart/fpdart.dart';
 
-class _RuntimeStackComponentDefinition {
-  const _RuntimeStackComponentDefinition({
+import '../program/program_run_environment.dart';
+import '../shared/domain_value_objects.dart';
+
+class RuntimeStackComponentDefinition {
+  const RuntimeStackComponentDefinition({
     required this.id,
     required this.name,
     required this.role,
@@ -16,8 +19,8 @@ class _RuntimeStackComponentDefinition {
   final List<List<String>> relativePaths;
 }
 
-class _RuntimeBackendDefinition {
-  const _RuntimeBackendDefinition({
+class RuntimeBackendDefinition {
+  const RuntimeBackendDefinition({
     required this.id,
     required this.name,
     required this.role,
@@ -30,8 +33,8 @@ class _RuntimeBackendDefinition {
   final List<String> componentIds;
 }
 
-class _RuntimePlatformSpec {
-  const _RuntimePlatformSpec({
+class RuntimePlatformSpec {
+  const RuntimePlatformSpec({
     required this.runtimeId,
     required this.runtimeName,
     required this.platform,
@@ -46,9 +49,9 @@ class _RuntimePlatformSpec {
     required this.developmentSourceSignatureEnvironmentKey,
     required this.releaseSourceSignatureEnvironmentKey,
     required this.componentDefinitions,
-    this.backendDefinitions = const <_RuntimeBackendDefinition>[],
+    this.backendDefinitions = const <RuntimeBackendDefinition>[],
     this.defaultSourceManifestUrl = const Option.none(),
-    this.layoutNormalization = _RuntimeLayoutNormalization.none,
+    this.layoutNormalization = RuntimeLayoutNormalization.none,
   });
 
   final String runtimeId;
@@ -64,13 +67,13 @@ class _RuntimePlatformSpec {
   final String releaseSourceManifestEnvironmentKey;
   final String developmentSourceSignatureEnvironmentKey;
   final String releaseSourceSignatureEnvironmentKey;
-  final List<_RuntimeStackComponentDefinition> componentDefinitions;
-  final List<_RuntimeBackendDefinition> backendDefinitions;
+  final List<RuntimeStackComponentDefinition> componentDefinitions;
+  final List<RuntimeBackendDefinition> backendDefinitions;
   final Option<String> defaultSourceManifestUrl;
-  final _RuntimeLayoutNormalization layoutNormalization;
+  final RuntimeLayoutNormalization layoutNormalization;
 }
 
-enum _RuntimeLayoutNormalization { none, macosWineBundle }
+enum RuntimeLayoutNormalization { none, macosWineBundle }
 
 class RuntimeValidationRecord {
   RuntimeValidationRecord({

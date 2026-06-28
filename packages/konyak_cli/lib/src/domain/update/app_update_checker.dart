@@ -1,10 +1,11 @@
-part of '../../../konyak_cli.dart';
+import '../program/program_runner.dart';
+import '../shared/domain_helpers.dart';
 
-bool Function(String url) _appUpdateArchiveUrlPredicate(
+bool Function(String url) appUpdateArchiveUrlPredicate(
   KonyakHostPlatform hostPlatform,
 ) {
   return (url) {
-    return _fileNameFromUrl(url).match(() => false, (fileName) {
+    return fileNameFromUrl(url).match(() => false, (fileName) {
       final normalizedFileName = fileName.toLowerCase();
       return switch (hostPlatform) {
         KonyakHostPlatform.macos =>

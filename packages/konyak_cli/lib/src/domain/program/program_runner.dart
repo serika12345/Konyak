@@ -1,4 +1,13 @@
-part of '../../../konyak_cli.dart';
+import 'package:fpdart/fpdart.dart';
+
+import '../bottle/bottle_models.dart';
+import '../bottle/bottle_runtime_settings_models.dart';
+import '../runtime/host_environment.dart';
+import 'program_argument_support.dart';
+import 'program_registry_plans.dart';
+import 'program_run_models.dart';
+import 'program_run_request_builders.dart';
+import 'program_settings_models.dart';
 
 abstract interface class ProgramRunner {
   ProgramRunResult run(ProgramRunRequest request);
@@ -36,19 +45,19 @@ class ProgramRunPlanner {
     required String programPath,
     Option<ProgramSettingsRecord> programSettings = const Option.none(),
   }) {
-    final supportedProgramPath = _isSupportedProgramPath(programPath);
+    final supportedProgramPath = isSupportedProgramPath(programPath);
     if (!supportedProgramPath) {
       return const Option.none();
     }
 
     return Option.of(switch (hostPlatform) {
-      KonyakHostPlatform.linux => _linuxWineRequest(
+      KonyakHostPlatform.linux => linuxWineRequest(
         bottle: bottle,
         programPath: programPath,
         environment: environment,
         programSettings: programSettings.getOrElse(ProgramSettingsRecord.new),
       ),
-      KonyakHostPlatform.macos => _macosWineRequest(
+      KonyakHostPlatform.macos => macosWineRequest(
         bottle: bottle,
         programPath: programPath,
         environment: environment,
@@ -62,7 +71,7 @@ class ProgramRunPlanner {
     required BottleRecord bottle,
     required String command,
   }) {
-    return _supportedBottleCommand(command).match(
+    return supportedBottleCommand(command).match(
       () => const Option.none(),
       (supportedCommand) => _planSupportedBottleCommand(
         bottle: bottle,
@@ -77,11 +86,11 @@ class ProgramRunPlanner {
   }) {
     if (supportedCommand == 'terminal') {
       return Option.of(switch (hostPlatform) {
-        KonyakHostPlatform.linux => _linuxTerminalCommandRequest(
+        KonyakHostPlatform.linux => linuxTerminalCommandRequest(
           bottle: bottle,
           environment: environment,
         ),
-        KonyakHostPlatform.macos => _macosTerminalCommandRequest(
+        KonyakHostPlatform.macos => macosTerminalCommandRequest(
           bottle: bottle,
           environment: environment,
           macosMajorVersion: macosMajorVersion,
@@ -91,12 +100,12 @@ class ProgramRunPlanner {
 
     if (supportedCommand == 'cmd') {
       return Option.of(switch (hostPlatform) {
-        KonyakHostPlatform.linux => _linuxTerminalCommandRequest(
+        KonyakHostPlatform.linux => linuxTerminalCommandRequest(
           bottle: bottle,
           environment: environment,
           initialWineCommand: Option.of(supportedCommand),
         ),
-        KonyakHostPlatform.macos => _macosTerminalCommandRequest(
+        KonyakHostPlatform.macos => macosTerminalCommandRequest(
           bottle: bottle,
           environment: environment,
           macosMajorVersion: macosMajorVersion,
@@ -107,11 +116,11 @@ class ProgramRunPlanner {
 
     if (supportedCommand == 'simulate-reboot') {
       return Option.of(switch (hostPlatform) {
-        KonyakHostPlatform.linux => _linuxWinebootRestartRequest(
+        KonyakHostPlatform.linux => linuxWinebootRestartRequest(
           bottle: bottle,
           environment: environment,
         ),
-        KonyakHostPlatform.macos => _macosWinebootRestartRequest(
+        KonyakHostPlatform.macos => macosWinebootRestartRequest(
           bottle: bottle,
           environment: environment,
           macosMajorVersion: macosMajorVersion,
@@ -121,11 +130,11 @@ class ProgramRunPlanner {
 
     if (supportedCommand == 'winetricks') {
       return Option.of(switch (hostPlatform) {
-        KonyakHostPlatform.linux => _linuxWinetricksCommandRequest(
+        KonyakHostPlatform.linux => linuxWinetricksCommandRequest(
           bottle: bottle,
           environment: environment,
         ),
-        KonyakHostPlatform.macos => _macosWinetricksCommandRequest(
+        KonyakHostPlatform.macos => macosWinetricksCommandRequest(
           bottle: bottle,
           environment: environment,
           macosMajorVersion: macosMajorVersion,
@@ -135,12 +144,12 @@ class ProgramRunPlanner {
     }
 
     return Option.of(switch (hostPlatform) {
-      KonyakHostPlatform.linux => _linuxWineCommandRequest(
+      KonyakHostPlatform.linux => linuxWineCommandRequest(
         bottle: bottle,
         command: supportedCommand,
         environment: environment,
       ),
-      KonyakHostPlatform.macos => _macosWineCommandRequest(
+      KonyakHostPlatform.macos => macosWineCommandRequest(
         bottle: bottle,
         command: supportedCommand,
         environment: environment,
@@ -151,11 +160,11 @@ class ProgramRunPlanner {
 
   ProgramRunRequest planPrefixInitialization({required BottleRecord bottle}) {
     return switch (hostPlatform) {
-      KonyakHostPlatform.linux => _linuxWinebootRequest(
+      KonyakHostPlatform.linux => linuxWinebootRequest(
         bottle: bottle,
         environment: environment,
       ),
-      KonyakHostPlatform.macos => _macosWinebootRequest(
+      KonyakHostPlatform.macos => macosWinebootRequest(
         bottle: bottle,
         environment: environment,
         macosMajorVersion: macosMajorVersion,
@@ -166,15 +175,15 @@ class ProgramRunPlanner {
   List<ProgramRunRequest> planPrefixBootstrap({required BottleRecord bottle}) {
     return List.unmodifiable(switch (hostPlatform) {
       KonyakHostPlatform.linux => <ProgramRunRequest>[
-        _linuxWinebootRequest(bottle: bottle, environment: environment),
+        linuxWinebootRequest(bottle: bottle, environment: environment),
       ],
       KonyakHostPlatform.macos => <ProgramRunRequest>[
-        _macosWineMonoInstallRequest(
+        macosWineMonoInstallRequest(
           bottle: bottle,
           environment: environment,
           macosMajorVersion: macosMajorVersion,
         ),
-        _macosWinebootRequest(
+        macosWinebootRequest(
           bottle: bottle,
           environment: environment,
           macosMajorVersion: macosMajorVersion,
@@ -185,11 +194,11 @@ class ProgramRunPlanner {
 
   ProgramRunRequest planWineProcessTermination({required BottleRecord bottle}) {
     return switch (hostPlatform) {
-      KonyakHostPlatform.linux => _linuxWineserverKillRequest(
+      KonyakHostPlatform.linux => linuxWineserverKillRequest(
         bottle: bottle,
         environment: environment,
       ),
-      KonyakHostPlatform.macos => _macosWineserverKillRequest(
+      KonyakHostPlatform.macos => macosWineserverKillRequest(
         bottle: bottle,
         environment: environment,
         macosMajorVersion: macosMajorVersion,
@@ -199,13 +208,13 @@ class ProgramRunPlanner {
 
   ProgramRunRequest planWineProcessList({required BottleRecord bottle}) {
     return switch (hostPlatform) {
-      KonyakHostPlatform.linux => _linuxWinedbgRequest(
+      KonyakHostPlatform.linux => linuxWinedbgRequest(
         bottle: bottle,
         environment: environment,
         command: 'info proc',
         logName: 'wine-processes.log',
       ),
-      KonyakHostPlatform.macos => _macosWinedbgRequest(
+      KonyakHostPlatform.macos => macosWinedbgRequest(
         bottle: bottle,
         environment: environment,
         macosMajorVersion: macosMajorVersion,
@@ -219,16 +228,16 @@ class ProgramRunPlanner {
     required BottleRecord bottle,
     required String processId,
   }) {
-    final attachProcessId = _winedbgAttachProcessId(processId);
+    final attachProcessId = winedbgAttachProcessId(processId);
     return switch (hostPlatform) {
-      KonyakHostPlatform.linux => _linuxWinedbgRequest(
+      KonyakHostPlatform.linux => linuxWinedbgRequest(
         bottle: bottle,
         environment: environment,
         command: 'kill',
         logName: 'wine-process-kill.log',
         trailingArguments: <String>[attachProcessId],
       ),
-      KonyakHostPlatform.macos => _macosWinedbgRequest(
+      KonyakHostPlatform.macos => macosWinedbgRequest(
         bottle: bottle,
         environment: environment,
         macosMajorVersion: macosMajorVersion,
@@ -243,17 +252,17 @@ class ProgramRunPlanner {
     required BottleRecord bottle,
     required String verb,
   }) {
-    if (!_isSupportedWinetricksVerb(verb)) {
+    if (!isSupportedWinetricksVerb(verb)) {
       return const Option.none();
     }
 
     return Option.of(switch (hostPlatform) {
-      KonyakHostPlatform.linux => _linuxWinetricksCommandRequest(
+      KonyakHostPlatform.linux => linuxWinetricksCommandRequest(
         bottle: bottle,
         environment: environment,
         verb: Option.of(verb),
       ),
-      KonyakHostPlatform.macos => _macosWinetricksCommandRequest(
+      KonyakHostPlatform.macos => macosWinetricksCommandRequest(
         bottle: bottle,
         environment: environment,
         macosMajorVersion: macosMajorVersion,
@@ -266,17 +275,17 @@ class ProgramRunPlanner {
     required BottleRecord bottle,
     required String windowsVersion,
   }) {
-    final updates = _windowsVersionRegistryUpdates(windowsVersion);
+    final updates = windowsVersionRegistryUpdates(windowsVersion);
 
     return List.unmodifiable(
       updates.map((update) {
         return switch (hostPlatform) {
-          KonyakHostPlatform.linux => _linuxRegistryUpdateRequest(
+          KonyakHostPlatform.linux => linuxRegistryUpdateRequest(
             bottle: bottle,
             update: update,
             environment: environment,
           ),
-          KonyakHostPlatform.macos => _macosRegistryUpdateRequest(
+          KonyakHostPlatform.macos => macosRegistryUpdateRequest(
             bottle: bottle,
             update: update,
             environment: environment,
@@ -292,7 +301,7 @@ class ProgramRunPlanner {
     required BottleRuntimeSettings currentRuntimeSettings,
     required BottleRuntimeSettings runtimeSettings,
   }) {
-    final updates = _runtimeSettingsRegistryUpdates(
+    final updates = runtimeSettingsRegistryUpdates(
       currentRuntimeSettings: currentRuntimeSettings,
       runtimeSettings: runtimeSettings,
       includeMacDriverSettings: hostPlatform == KonyakHostPlatform.macos,
@@ -301,12 +310,12 @@ class ProgramRunPlanner {
     return List.unmodifiable(
       updates.map((update) {
         return switch (hostPlatform) {
-          KonyakHostPlatform.linux => _linuxRegistryUpdateRequest(
+          KonyakHostPlatform.linux => linuxRegistryUpdateRequest(
             bottle: bottle,
             update: update,
             environment: environment,
           ),
-          KonyakHostPlatform.macos => _macosRegistryUpdateRequest(
+          KonyakHostPlatform.macos => macosRegistryUpdateRequest(
             bottle: bottle,
             update: update,
             environment: environment,
@@ -320,19 +329,19 @@ class ProgramRunPlanner {
   List<ProgramRunRequest> planBottleSettingsRegistryQueries({
     required BottleRecord bottle,
   }) {
-    final queries = _bottleSettingsRegistryQueries(
+    final queries = bottleSettingsRegistryQueries(
       includeMacDriverSettings: hostPlatform == KonyakHostPlatform.macos,
     );
 
     return List.unmodifiable(
       queries.map((query) {
         return switch (hostPlatform) {
-          KonyakHostPlatform.linux => _linuxRegistryQueryRequest(
+          KonyakHostPlatform.linux => linuxRegistryQueryRequest(
             bottle: bottle,
             query: query,
             environment: environment,
           ),
-          KonyakHostPlatform.macos => _macosRegistryQueryRequest(
+          KonyakHostPlatform.macos => macosRegistryQueryRequest(
             bottle: bottle,
             query: query,
             environment: environment,
@@ -344,7 +353,7 @@ class ProgramRunPlanner {
   }
 }
 
-Option<int> _macosMajorVersionFromOperatingSystemVersion(String value) {
+Option<int> macosMajorVersionFromOperatingSystemVersion(String value) {
   return _firstDigitToken(value).flatMap(_integerFromDigits);
 }
 

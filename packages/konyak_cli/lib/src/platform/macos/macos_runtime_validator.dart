@@ -15,7 +15,7 @@ class DartIoMacosWineRuntimeValidator implements RuntimeValidator {
 
   @override
   RuntimeValidationResult validate(String runtimeId) {
-    final runtime = _runtimeById(runtimeCatalog.listRuntimes(), runtimeId);
+    final runtime = runtimeById(runtimeCatalog.listRuntimes(), runtimeId);
     return runtime.match(
       () => RuntimeValidationRuntimeNotFound(runtimeId),
       _validateRuntime,
@@ -52,22 +52,22 @@ class DartIoMacosWineRuntimeValidator implements RuntimeValidator {
     }
 
     final checks = <RuntimeValidationCheck>[
-      _runtimePathCheck(
+      runtimePathCheck(
         id: 'runtime-root',
         name: 'Runtime root',
         path: runtimeRoot,
         fileStatusProbe: fileStatusProbe,
       ),
-      _runtimePathCheck(
+      runtimePathCheck(
         id: 'wine-executable',
         name: 'Wine executable',
         path: executablePath,
         fileStatusProbe: fileStatusProbe,
       ),
-      _runtimeAnyPathCheck(
+      runtimeAnyPathCheck(
         id: 'loader-dylibs',
         name: 'Wine loader libraries',
-        paths: _macosWineLoaderLibraryPaths(runtimeRoot),
+        paths: macosWineLoaderLibraryPaths(runtimeRoot),
         fileStatusProbe: fileStatusProbe,
       ),
       _runtimeStackCompletenessCheck(runtime.stack),
@@ -101,7 +101,7 @@ class DartIoMacosWineRuntimeValidator implements RuntimeValidator {
       isPassed: loaderResult.exitCode == 0,
       message: loaderResult.exitCode == 0
           ? 'wineloader --version completed.'
-          : _runtimeLoaderFailureMessage(loaderResult),
+          : runtimeLoaderFailureMessage(loaderResult),
     );
     final completedChecks = <RuntimeValidationCheck>[...checks, loaderCheck];
 
@@ -122,13 +122,13 @@ class DartIoMacosWineRuntimeValidator implements RuntimeValidator {
     required String executablePath,
   }) {
     final checks = <RuntimeValidationCheck>[
-      _runtimePathCheck(
+      runtimePathCheck(
         id: 'runtime-root',
         name: 'Runtime root',
         path: runtimeRoot,
         fileStatusProbe: fileStatusProbe,
       ),
-      _runtimePathCheck(
+      runtimePathCheck(
         id: 'wine-executable',
         name: 'Wine executable',
         path: executablePath,
@@ -150,7 +150,7 @@ class DartIoMacosWineRuntimeValidator implements RuntimeValidator {
     final loaderResult = executableProbe.run(
       executable: executablePath,
       arguments: const ['--version'],
-      environment: _linuxRuntimeEnvironment(environment),
+      environment: linuxRuntimeEnvironment(environment),
       workingDirectory: _dirname(executablePath),
     );
     final loaderCheck = RuntimeValidationCheck(
@@ -160,7 +160,7 @@ class DartIoMacosWineRuntimeValidator implements RuntimeValidator {
       isPassed: loaderResult.exitCode == 0,
       message: loaderResult.exitCode == 0
           ? 'wine --version completed.'
-          : _runtimeLoaderFailureMessage(loaderResult),
+          : runtimeLoaderFailureMessage(loaderResult),
     );
     final completedChecks = <RuntimeValidationCheck>[...checks, loaderCheck];
 

@@ -63,7 +63,7 @@ void _synchronizeMacosPinnedProgramLaunchers({
               iconPath: program.iconPath
                   .map((value) => value.value)
                   .toNullable(),
-              manifest: _PinnedProgramLauncherManifest(
+              manifest: PinnedProgramLauncherManifest(
                 launcherId: launcherId,
                 bottleId: bottle.id.value,
                 programPath: program.path.value,
@@ -196,7 +196,7 @@ _MacosPinnedProgramLauncherBundlePlan _macosPinnedProgramLauncherBundlePlan({
   required _MacosPinnedProgramLauncherCommand launcherCommand,
   required String displayName,
   required String? iconFileName,
-  required _PinnedProgramLauncherManifest manifest,
+  required PinnedProgramLauncherManifest manifest,
 }) {
   final contentsPath = _joinPath(bundlePath, const ['Contents']);
   final macosPath = _joinPath(contentsPath, const ['MacOS']);

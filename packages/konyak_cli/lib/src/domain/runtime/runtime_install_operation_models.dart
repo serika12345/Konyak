@@ -1,4 +1,7 @@
-part of '../../../konyak_cli.dart';
+import 'package:fast_immutable_collections/fast_immutable_collections.dart';
+import 'package:fpdart/fpdart.dart';
+
+import '../shared/domain_value_objects.dart';
 
 enum RuntimeInstallOperation {
   fullInstall,
@@ -131,7 +134,7 @@ sealed class RuntimeInstallSource {
     Option<String> sourceManifestSignature = const Option.none(),
   }) {
     final checksum = _runtimeArchiveChecksum(archiveSha256);
-    final signature = _runtimeSourceManifestSignature(sourceManifestSignature);
+    final signature = runtimeSourceManifestSignature(sourceManifestSignature);
     final components = _runtimeComponentArchivePaths(componentArchivePaths);
     final manifest = sourceManifest.map(RuntimeSourceManifestUrl.new);
     final localArchive = archivePath.map(RuntimeArchivePath.new);
@@ -348,8 +351,8 @@ final class RuntimeUpdateInstallOperation
   final bool force;
 }
 
-class _RuntimeWineInstallRequestAccessors {
-  const _RuntimeWineInstallRequestAccessors(this.requestOperation);
+class RuntimeWineInstallRequestAccessors {
+  const RuntimeWineInstallRequestAccessors(this.requestOperation);
 
   final RuntimeInstallRequestOperation requestOperation;
 
@@ -383,7 +386,7 @@ RuntimeArchiveChecksum _runtimeArchiveChecksum(Option<String> value) {
   );
 }
 
-RuntimeSourceManifestSignature _runtimeSourceManifestSignature(
+RuntimeSourceManifestSignature runtimeSourceManifestSignature(
   Option<String> value,
 ) {
   return value.match(

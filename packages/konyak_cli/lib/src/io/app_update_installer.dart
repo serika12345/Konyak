@@ -31,7 +31,7 @@ class DartIoAppUpdateInstaller implements AppUpdateInstaller {
       );
     }
     final expectedSha256 = update.archiveSha256.toNullable();
-    if (expectedSha256 == null || !_isSha256Hex(expectedSha256.value)) {
+    if (expectedSha256 == null || !isSha256Hex(expectedSha256.value)) {
       return const AppUpdateInstallFailed(
         'Konyak update metadata does not contain a valid archive checksum.',
       );

@@ -1,4 +1,7 @@
-part of '../../../konyak_cli.dart';
+import 'package:fast_immutable_collections/fast_immutable_collections.dart';
+import 'package:fpdart/fpdart.dart';
+
+import '../shared/domain_value_objects.dart';
 
 final class HostEnvironment {
   HostEnvironment(Map<String, String> variables)

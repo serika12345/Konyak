@@ -1,27 +1,29 @@
-part of '../../../konyak_cli.dart';
+import 'package:fpdart/fpdart.dart';
 
-bool _hasPinnedProgram(BottleRecord bottle, String programPath) {
-  final normalizedProgramPath = _normalizeFilesystemPath(programPath);
+import '../bottle/bottle_models.dart';
+import '../shared/domain_helpers.dart';
+import 'program_catalog_models.dart';
+import 'program_mutation_models.dart';
+
+bool hasPinnedProgram(BottleRecord bottle, String programPath) {
+  final normalizedProgramPath = normalizeFilesystemPath(programPath);
   return bottle.pinnedPrograms.any(
     (program) => _isPinnedProgramPath(program, normalizedProgramPath),
   );
 }
 
 bool _isPinnedProgramPath(PinnedProgramRecord program, String normalizedPath) {
-  return _normalizeFilesystemPath(program.path.value) == normalizedPath;
+  return normalizeFilesystemPath(program.path.value) == normalizedPath;
 }
 
-BottleRecord _bottleWithPinnedProgram(
+BottleRecord bottleWithPinnedProgram(
   BottleRecord bottle,
   ProgramPinRequest request, {
   required ProgramMetadataExtractor programMetadataExtractor,
 }) {
   final metadata = programMetadataExtractor.extract(
     bottle: bottle,
-    programPath: _metadataProgramPath(
-      bottle: bottle,
-      programPath: request.programPath.value,
-    ),
+    programPath: request.programPath.value,
   );
 
   return bottle.withPinnedPrograms(<PinnedProgramRecord>[
@@ -38,7 +40,7 @@ BottleRecord _bottleWithPinnedProgram(
   ]);
 }
 
-BottleRecord _bottleWithPinnedProgramIcons(
+BottleRecord bottleWithPinnedProgramIcons(
   BottleRecord bottle, {
   required ProgramMetadataExtractor programMetadataExtractor,
 }) {
@@ -50,10 +52,7 @@ BottleRecord _bottleWithPinnedProgramIcons(
 
         final metadata = programMetadataExtractor.extract(
           bottle: bottle,
-          programPath: _metadataProgramPath(
-            bottle: bottle,
-            programPath: program.path.value,
-          ),
+          programPath: program.path.value,
         );
         final iconPath = metadata.match(
           () => const Option<String>.none(),
@@ -78,7 +77,7 @@ BottleRecord _bottleWithPinnedProgramIcons(
   );
 }
 
-BottleRecord _bottleWithoutMissingBottleLocalPinnedPrograms(
+BottleRecord bottleWithoutMissingBottleLocalPinnedPrograms(
   BottleRecord bottle, {
   required bool Function(PinnedProgramRecord program) isPinnedProgramAvailable,
 }) {
@@ -97,7 +96,7 @@ BottleRecord _bottleWithoutMissingBottleLocalPinnedPrograms(
   return bottle.withPinnedPrograms(pinnedPrograms);
 }
 
-bool _isLivePinnedProgram(
+bool isLivePinnedProgram(
   BottleRecord bottle,
   PinnedProgramRecord program, {
   required bool Function(PinnedProgramRecord program) isPinnedProgramAvailable,
@@ -107,17 +106,17 @@ bool _isLivePinnedProgram(
 }
 
 bool _isBottleLocalPinnedProgramPath(BottleRecord bottle, String programPath) {
-  return _isPathWithinRoot(
-    path: _normalizeFilesystemPath(programPath),
-    root: _normalizeFilesystemPath(bottle.path.value),
+  return isPathWithinRoot(
+    path: normalizeFilesystemPath(programPath),
+    root: normalizeFilesystemPath(bottle.path.value),
   );
 }
 
-BottleRecord _bottleWithoutPinnedProgram(
+BottleRecord bottleWithoutPinnedProgram(
   BottleRecord bottle,
   String programPath,
 ) {
-  final normalizedProgramPath = _normalizeFilesystemPath(programPath);
+  final normalizedProgramPath = normalizeFilesystemPath(programPath);
   return bottle.withPinnedPrograms(
     bottle.pinnedPrograms
         .where(
@@ -127,11 +126,11 @@ BottleRecord _bottleWithoutPinnedProgram(
   );
 }
 
-BottleRecord _bottleWithRenamedPinnedProgram(
+BottleRecord bottleWithRenamedPinnedProgram(
   BottleRecord bottle,
   ProgramRenameRequest request,
 ) {
-  final normalizedProgramPath = _normalizeFilesystemPath(
+  final normalizedProgramPath = normalizeFilesystemPath(
     request.programPath.value,
   );
   return bottle.withPinnedPrograms(

@@ -1,10 +1,11 @@
-part of '../../../konyak_cli.dart';
+import 'package:fpdart/fpdart.dart';
 
-List<_RegistryValueUpdate> _windowsVersionRegistryUpdates(
-  String windowsVersion,
-) {
-  return <_RegistryValueUpdate>[
-    _RegistryValueUpdate(
+import '../bottle/bottle_runtime_settings_models.dart';
+import 'program_registry_models.dart';
+
+List<RegistryValueUpdate> windowsVersionRegistryUpdates(String windowsVersion) {
+  return <RegistryValueUpdate>[
+    RegistryValueUpdate(
       key: r'HKCU\Software\Wine',
       name: 'Version',
       type: 'REG_SZ',
@@ -13,12 +14,12 @@ List<_RegistryValueUpdate> _windowsVersionRegistryUpdates(
   ];
 }
 
-List<_RegistryValueUpdate> _runtimeSettingsRegistryUpdates({
+List<RegistryValueUpdate> runtimeSettingsRegistryUpdates({
   required BottleRuntimeSettings currentRuntimeSettings,
   required BottleRuntimeSettings runtimeSettings,
   required bool includeMacDriverSettings,
 }) {
-  final updates = <_RegistryValueUpdate>[];
+  final updates = <RegistryValueUpdate>[];
   final effectiveRuntimeSettings = includeMacDriverSettings
       ? runtimeSettings.withHighResolutionModeWindowsDpiAdjustment(
           currentRuntimeSettings,
@@ -31,12 +32,12 @@ List<_RegistryValueUpdate> _runtimeSettingsRegistryUpdates({
       effectiveRuntimeSettings.buildVersion.value,
     );
     windowsVersion.match(() {}, (version) {
-      updates.addAll(_windowsVersionRegistryUpdates(version));
+      updates.addAll(windowsVersionRegistryUpdates(version));
     });
 
     updates
       ..add(
-        _RegistryValueUpdate(
+        RegistryValueUpdate(
           key: r'HKLM\Software\Microsoft\Windows NT\CurrentVersion',
           name: 'CurrentBuild',
           type: 'REG_SZ',
@@ -44,7 +45,7 @@ List<_RegistryValueUpdate> _runtimeSettingsRegistryUpdates({
         ),
       )
       ..add(
-        _RegistryValueUpdate(
+        RegistryValueUpdate(
           key: r'HKLM\Software\Microsoft\Windows NT\CurrentVersion',
           name: 'CurrentBuildNumber',
           type: 'REG_SZ',
@@ -57,7 +58,7 @@ List<_RegistryValueUpdate> _runtimeSettingsRegistryUpdates({
       effectiveRuntimeSettings.retinaMode !=
           currentRuntimeSettings.retinaMode) {
     updates.add(
-      _RegistryValueUpdate(
+      RegistryValueUpdate(
         key: r'HKCU\Software\Wine\Mac Driver',
         name: 'RetinaMode',
         type: 'REG_SZ',
@@ -69,7 +70,7 @@ List<_RegistryValueUpdate> _runtimeSettingsRegistryUpdates({
   if (effectiveRuntimeSettings.dpiScaling !=
       currentRuntimeSettings.dpiScaling) {
     updates.add(
-      _RegistryValueUpdate(
+      RegistryValueUpdate(
         key: r'HKCU\Control Panel\Desktop',
         name: 'LogPixels',
         type: 'REG_DWORD',
@@ -104,28 +105,28 @@ Option<String> _windowsVersionForBuildVersion(int buildVersion) {
   return const Option.none();
 }
 
-List<_RegistryValueQuery> _bottleSettingsRegistryQueries({
+List<RegistryValueQuery> bottleSettingsRegistryQueries({
   required bool includeMacDriverSettings,
 }) {
-  return <_RegistryValueQuery>[
-    const _RegistryValueQuery(key: r'HKCU\Software\Wine', name: 'Version'),
-    const _RegistryValueQuery(
+  return <RegistryValueQuery>[
+    const RegistryValueQuery(key: r'HKCU\Software\Wine', name: 'Version'),
+    const RegistryValueQuery(
       key: r'HKLM\Software\Microsoft\Windows NT\CurrentVersion',
       name: 'CurrentBuild',
     ),
     if (includeMacDriverSettings)
-      const _RegistryValueQuery(
+      const RegistryValueQuery(
         key: r'HKCU\Software\Wine\Mac Driver',
         name: 'RetinaMode',
       ),
-    const _RegistryValueQuery(
+    const RegistryValueQuery(
       key: r'HKCU\Control Panel\Desktop',
       name: 'LogPixels',
     ),
   ];
 }
 
-List<String> _registryUpdateArguments(_RegistryValueUpdate update) {
+List<String> registryUpdateArguments(RegistryValueUpdate update) {
   return <String>[
     'reg',
     'add',
@@ -140,6 +141,6 @@ List<String> _registryUpdateArguments(_RegistryValueUpdate update) {
   ];
 }
 
-List<String> _registryQueryArguments(_RegistryValueQuery query) {
+List<String> registryQueryArguments(RegistryValueQuery query) {
   return <String>['reg', 'query', query.key, '/v', query.name];
 }

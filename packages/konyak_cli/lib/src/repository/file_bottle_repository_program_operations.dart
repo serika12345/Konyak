@@ -16,11 +16,11 @@ class _FileBottleRepositoryProgramOperations {
       (bottle) => bottle.match(
         () => ProgramPinMissing(request.bottleId.value),
         (bottle) {
-          if (_hasPinnedProgram(bottle, request.programPath.value)) {
+          if (hasPinnedProgram(bottle, request.programPath.value)) {
             return ProgramPinConflict(request.programPath.value);
           }
 
-          final updated = _bottleWithPinnedProgram(
+          final updated = bottleWithPinnedProgram(
             bottle,
             request,
             programMetadataExtractor: _programMetadataExtractor,
@@ -44,11 +44,11 @@ class _FileBottleRepositoryProgramOperations {
       (bottle) => bottle.match(
         () => ProgramUpdateMissingBottle(request.bottleId.value),
         (bottle) {
-          if (!_hasPinnedProgram(bottle, request.programPath.value)) {
+          if (!hasPinnedProgram(bottle, request.programPath.value)) {
             return ProgramUpdateMissingProgram(request.programPath.value);
           }
 
-          final updated = _bottleWithoutPinnedProgram(
+          final updated = bottleWithoutPinnedProgram(
             bottle,
             request.programPath.value,
           );
@@ -71,11 +71,11 @@ class _FileBottleRepositoryProgramOperations {
       (bottle) => bottle.match(
         () => ProgramUpdateMissingBottle(request.bottleId.value),
         (bottle) {
-          if (!_hasPinnedProgram(bottle, request.programPath.value)) {
+          if (!hasPinnedProgram(bottle, request.programPath.value)) {
             return ProgramUpdateMissingProgram(request.programPath.value);
           }
 
-          final updated = _bottleWithRenamedPinnedProgram(bottle, request);
+          final updated = bottleWithRenamedPinnedProgram(bottle, request);
 
           final writeResult = _ioResult(() {
             _writeBottleMetadata(updated);

@@ -1,36 +1,41 @@
-part of '../../../konyak_cli.dart';
+import '../shared/domain_helpers.dart';
+import '../shared/domain_value_objects.dart';
+import 'runtime_component_versions.dart';
+import 'runtime_models.dart';
+import 'runtime_source_bundle_models.dart';
+import 'runtime_validation_models.dart';
 
-sealed class _RuntimeStackSourceArchivePlanResult {
-  const _RuntimeStackSourceArchivePlanResult();
+sealed class RuntimeStackSourceArchivePlanResult {
+  const RuntimeStackSourceArchivePlanResult();
 }
 
-final class _RuntimeStackSourceArchivePlanResolved
-    extends _RuntimeStackSourceArchivePlanResult {
-  const _RuntimeStackSourceArchivePlanResolved(this.plan);
+final class RuntimeStackSourceArchivePlanResolved
+    extends RuntimeStackSourceArchivePlanResult {
+  const RuntimeStackSourceArchivePlanResolved(this.plan);
 
-  final _RuntimeStackSourceArchivePlan plan;
+  final RuntimeStackSourceArchivePlan plan;
 }
 
-final class _RuntimeStackSourceArchivePlanFailed
-    extends _RuntimeStackSourceArchivePlanResult {
-  const _RuntimeStackSourceArchivePlanFailed(this.message);
+final class RuntimeStackSourceArchivePlanFailed
+    extends RuntimeStackSourceArchivePlanResult {
+  const RuntimeStackSourceArchivePlanFailed(this.message);
 
   final String message;
 }
 
-final class _RuntimeStackSourceArchivePlan {
-  _RuntimeStackSourceArchivePlan({
+final class RuntimeStackSourceArchivePlan {
+  RuntimeStackSourceArchivePlan({
     required this.wineComponent,
     required Iterable<RuntimeSourceComponent> sourceComponents,
-    required Iterable<_RuntimeStackSourceArchiveComponentPlan> components,
+    required Iterable<RuntimeStackSourceArchiveComponentPlan> components,
   }) : sourceComponents = List.unmodifiable(sourceComponents),
        components = List.unmodifiable(components);
 
   final RuntimeSourceComponent wineComponent;
   final List<RuntimeSourceComponent> sourceComponents;
-  final List<_RuntimeStackSourceArchiveComponentPlan> components;
+  final List<RuntimeStackSourceArchiveComponentPlan> components;
 
-  _RuntimeStackSourceArchiveBundle toBundle() {
+  RuntimeStackSourceArchiveBundle toBundle() {
     final wineArchivePath = _archivePathForComponent(wineComponent);
     final componentArchivePaths = <RuntimeArchivePath>[];
     for (final component in components) {
@@ -41,7 +46,7 @@ final class _RuntimeStackSourceArchivePlan {
       }
     }
 
-    return _RuntimeStackSourceArchiveBundle(
+    return RuntimeStackSourceArchiveBundle(
       wineArchivePath: wineArchivePath.value,
       componentArchivePaths: componentArchivePaths.map((value) => value.value),
       componentVersions: RuntimeComponentVersions(<String, String>{
@@ -69,8 +74,8 @@ final class _RuntimeStackSourceArchivePlan {
   }
 }
 
-final class _RuntimeStackSourceArchiveComponentPlan {
-  _RuntimeStackSourceArchiveComponentPlan({
+final class RuntimeStackSourceArchiveComponentPlan {
+  RuntimeStackSourceArchiveComponentPlan({
     required this.component,
     required String archivePath,
     required num startFraction,
@@ -93,14 +98,14 @@ final class _RuntimeStackSourceArchiveComponentPlan {
   }
 }
 
-_RuntimeStackSourceArchivePlanResult _runtimeStackSourceArchivePlan({
+RuntimeStackSourceArchivePlanResult runtimeStackSourceArchivePlan({
   required RuntimeSourceManifest manifest,
-  required _RuntimePlatformSpec platformSpec,
+  required RuntimePlatformSpec platformSpec,
   required String tempDirectoryPath,
 }) {
   if (manifest.runtimeId.value != platformSpec.runtimeId ||
       manifest.stackId.value != platformSpec.stackId) {
-    return const _RuntimeStackSourceArchivePlanFailed(
+    return const RuntimeStackSourceArchivePlanFailed(
       'Runtime stack source manifest targets an unsupported runtime.',
     );
   }
@@ -112,14 +117,14 @@ _RuntimeStackSourceArchivePlanResult _runtimeStackSourceArchivePlan({
   );
   final componentCount = archiveComponents.length;
   return wineComponentResult.match(
-    () => const _RuntimeStackSourceArchivePlanFailed(
+    () => const RuntimeStackSourceArchivePlanFailed(
       'Runtime stack source manifest does not contain a Wine component.',
     ),
-    (wineComponent) => _RuntimeStackSourceArchivePlanResolved(
-      _RuntimeStackSourceArchivePlan(
+    (wineComponent) => RuntimeStackSourceArchivePlanResolved(
+      RuntimeStackSourceArchivePlan(
         wineComponent: wineComponent,
         sourceComponents: manifest.components,
-        components: <_RuntimeStackSourceArchiveComponentPlan>[
+        components: <RuntimeStackSourceArchiveComponentPlan>[
           for (final (index, component) in archiveComponents.indexed)
             _runtimeStackSourceArchiveComponentPlan(
               component: component,
@@ -161,19 +166,20 @@ String _runtimeStackSourceArchiveKey(RuntimeSourceComponent component) {
   return '${component.archiveUrl.value}\u0000${component.sha256.value.toLowerCase()}';
 }
 
-_RuntimeStackSourceArchiveComponentPlan
-_runtimeStackSourceArchiveComponentPlan({
+RuntimeStackSourceArchiveComponentPlan _runtimeStackSourceArchiveComponentPlan({
   required RuntimeSourceComponent component,
   required int componentIndex,
   required int componentCount,
   required String tempDirectoryPath,
 }) {
-  final fileName = _fileNameFromUrl(
+  final fileName = fileNameFromUrl(
     component.archiveUrl.value,
   ).match(() => '${component.id.value}.tar.xz', (value) => value);
-  return _RuntimeStackSourceArchiveComponentPlan(
+  return RuntimeStackSourceArchiveComponentPlan(
     component: component,
-    archivePath: _joinPath(tempDirectoryPath, ['$componentIndex-$fileName']),
+    archivePath: domainJoinPath(tempDirectoryPath, [
+      '$componentIndex-$fileName',
+    ]),
     startFraction: 0.05 + (componentIndex / componentCount) * 0.55,
     endFraction: 0.05 + ((componentIndex + 1) / componentCount) * 0.55,
   );

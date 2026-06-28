@@ -24,6 +24,7 @@ class KonyakLintPlugin extends PluginBase {
     KonyakNoNullableSentinelFlow(),
     KonyakNoResultFailureToOptionNone(),
     KonyakNoDomainIo(),
+    KonyakNoDomainPartOfRoot(),
     KonyakNoDomainReassignment(),
     KonyakNoDomainVarDeclaration(),
     KonyakNoDomainIncrement(),
@@ -168,6 +169,33 @@ class KonyakNoDomainIo extends _KonyakAstRule {
   @override
   RecursiveAstVisitor<void> visitor(ErrorReporter reporter) =>
       _DomainIoVisitor(reporter, _code);
+}
+
+class KonyakNoDomainPartOfRoot extends DartLintRule {
+  const KonyakNoDomainPartOfRoot() : super(code: _code);
+
+  static const _code = LintCode(
+    name: 'konyak_no_domain_part_of_root',
+    problemMessage:
+        'Domain files must be standalone libraries, not part of another library.',
+    errorSeverity: ErrorSeverity.ERROR,
+  );
+
+  @override
+  void run(
+    CustomLintResolver resolver,
+    ErrorReporter reporter,
+    CustomLintContext context,
+  ) {
+    final normalizedPath = _normalizePath(resolver.path);
+    if (!_isDomainSourcePath(normalizedPath)) {
+      return;
+    }
+
+    context.registry.addCompilationUnit((node) {
+      node.accept(_DomainPartOfRootVisitor(reporter, _code));
+    });
+  }
 }
 
 class KonyakNoDomainReassignment extends _KonyakAstRule {
@@ -715,6 +743,19 @@ class _DomainIoVisitor extends RecursiveAstVisitor<void> {
       _ioTypeNames.contains(name) || _isDartIoBoundaryName(name);
 
   bool _isDartIoBoundaryName(String name) => name.startsWith('DartIo');
+}
+
+class _DomainPartOfRootVisitor extends RecursiveAstVisitor<void> {
+  const _DomainPartOfRootVisitor(this.reporter, this.code);
+
+  final ErrorReporter reporter;
+  final LintCode code;
+
+  @override
+  void visitPartOfDirective(PartOfDirective node) {
+    reporter.atNode(node, code);
+    super.visitPartOfDirective(node);
+  }
 }
 
 class _AssignmentVisitor extends RecursiveAstVisitor<void> {

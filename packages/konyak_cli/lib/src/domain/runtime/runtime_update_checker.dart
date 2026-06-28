@@ -1,6 +1,11 @@
-part of '../../../konyak_cli.dart';
+import 'package:fpdart/fpdart.dart';
 
-RuntimeUpdateCheckCompleted _unknownRuntimeUpdateRecord({
+import '../shared/domain_value_objects.dart';
+import '../update/update_records.dart';
+import 'runtime_models.dart';
+import 'runtime_update_support.dart';
+
+RuntimeUpdateCheckCompleted unknownRuntimeUpdateRecord({
   required RuntimeRecord runtime,
   required Option<RuntimeVersion> currentVersion,
 }) {
@@ -14,7 +19,7 @@ RuntimeUpdateCheckCompleted _unknownRuntimeUpdateRecord({
   );
 }
 
-RuntimeUpdateCheckResult _runtimeUpdateFromMetadata({
+RuntimeUpdateCheckResult runtimeUpdateFromMetadata({
   required RuntimeRecord runtime,
   required String versionUrl,
   required Option<RuntimeVersion> currentVersion,
@@ -31,7 +36,7 @@ RuntimeUpdateCheckResult _runtimeUpdateFromMetadata({
   return RuntimeUpdateCheckCompleted(
     RuntimeUpdateRecord(
       runtimeId: runtime.id.value,
-      status: _updateStatus(
+      status: updateStatus(
         currentVersion: currentVersion.map((version) => version.value),
         latestVersion: metadata.version.value,
       ),

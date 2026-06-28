@@ -1,6 +1,11 @@
-part of '../../../konyak_cli.dart';
+import 'package:fpdart/fpdart.dart';
 
-List<String> _wineArgumentsForProgramPath(String programPath) {
+import '../bottle/bottle_models.dart';
+import '../shared/domain_helpers.dart';
+import 'program_run_environment.dart';
+import 'program_settings_models.dart';
+
+List<String> wineArgumentsForProgramPath(String programPath) {
   final lowerCasePath = programPath.toLowerCase();
 
   if (lowerCasePath.endsWith('.exe')) {
@@ -22,7 +27,7 @@ List<String> _wineArgumentsForProgramPath(String programPath) {
   throw StateError('Unsupported program path: $programPath');
 }
 
-List<String> _programSettingsArguments(ProgramSettingsRecord settings) {
+List<String> programSettingsArguments(ProgramSettingsRecord settings) {
   final arguments = settings.arguments.value.trim();
   if (arguments.isEmpty) {
     return const <String>[];
@@ -31,7 +36,7 @@ List<String> _programSettingsArguments(ProgramSettingsRecord settings) {
   return arguments.split(RegExp(r'\s+'));
 }
 
-List<String> _wineArgumentsForBottleCommand(String command) {
+List<String> wineArgumentsForBottleCommand(String command) {
   return switch (command) {
     'dxdiag' => const <String>[
       'cmd',
@@ -42,14 +47,14 @@ List<String> _wineArgumentsForBottleCommand(String command) {
   };
 }
 
-ProgramRunEnvironment _programSettingsEnvironment(
+ProgramRunEnvironment programSettingsEnvironment(
   ProgramSettingsRecord settings,
 ) {
   final baseEnvironment = ProgramRunEnvironment(settings.environment.toMap());
   final localizedEnvironment = settings.locale.value.trim().isEmpty
       ? baseEnvironment
       : baseEnvironment.add('LC_ALL', settings.locale.value);
-  final logging = _programSettingsLogging(settings);
+  final logging = programSettingsLogging(settings);
   final loggingChannels = logging.additionalWineLoggingChannels.value.trim();
   return loggingChannels.isEmpty
       ? localizedEnvironment
@@ -62,24 +67,22 @@ ProgramRunEnvironment _programSettingsEnvironment(
         );
 }
 
-ProgramLoggingSettingsRecord _programSettingsLogging(
+ProgramLoggingSettingsRecord programSettingsLogging(
   ProgramSettingsRecord settings,
 ) {
   return settings.logging.getOrElse(ProgramLoggingSettingsRecord.new);
 }
 
-String _programSettingsLogPath({
+String programSettingsLogPath({
   required BottleRecord bottle,
   required ProgramSettingsRecord settings,
 }) {
-  final logFilePath = _programSettingsLogging(
-    settings,
-  ).logFilePath.value.trim();
+  final logFilePath = programSettingsLogging(settings).logFilePath.value.trim();
   if (logFilePath.isNotEmpty) {
     return logFilePath;
   }
 
-  return _joinPath(bottle.path.value, const ['logs', 'latest.log']);
+  return domainJoinPath(bottle.path.value, const ['logs', 'latest.log']);
 }
 
 String _combinedWineDebugChannels({
@@ -98,7 +101,7 @@ String _combinedWineDebugChannels({
   return '$existing,$additional';
 }
 
-bool _isSupportedProgramPath(String programPath) {
+bool isSupportedProgramPath(String programPath) {
   final lowerCasePath = programPath.toLowerCase();
 
   return lowerCasePath.endsWith('.exe') ||
@@ -108,7 +111,7 @@ bool _isSupportedProgramPath(String programPath) {
       lowerCasePath.endsWith('.lnk');
 }
 
-Option<String> _supportedBottleCommand(String command) {
+Option<String> supportedBottleCommand(String command) {
   final normalized = command.trim().toLowerCase();
   return switch (normalized) {
     'winecfg' ||

@@ -6,7 +6,7 @@ CliResult? _handlePinnedProgramCommand(
 ) {
   final programPinRequest = _parseJsonProgramPinRequest(arguments);
   if (programPinRequest != null) {
-    if (!_isSupportedProgramPath(programPinRequest.programPath.value)) {
+    if (!isSupportedProgramPath(programPinRequest.programPath.value)) {
       return _jsonError(
         exitCode: 65,
         code: 'unsupportedProgramType',

@@ -1,6 +1,8 @@
-part of '../../../konyak_cli.dart';
+import '../program/program_run_environment.dart';
+import '../shared/domain_helpers.dart';
+import 'host_environment.dart';
 
-String _konyakApplicationSupportFolder(HostEnvironment environment) {
+String konyakApplicationSupportFolder(HostEnvironment environment) {
   return environment
       .nonEmptyValue('KONYAK_APPLICATION_SUPPORT')
       .match(
@@ -8,7 +10,7 @@ String _konyakApplicationSupportFolder(HostEnvironment environment) {
             .nonEmptyValue('HOME')
             .match(
               () => 'Konyak',
-              (home) => _joinPath(home, const [
+              (home) => domainJoinPath(home, const [
                 'Library',
                 'Application Support',
                 'Konyak',
@@ -18,19 +20,19 @@ String _konyakApplicationSupportFolder(HostEnvironment environment) {
       );
 }
 
-String _macosWineRuntimeRoot(HostEnvironment environment) {
+String macosWineRuntimeRoot(HostEnvironment environment) {
   return environment
       .nonEmptyValue('KONYAK_MACOS_WINE_HOME')
       .match(
-        () => _joinPath(_konyakApplicationSupportFolder(environment), const [
-          'Runtimes',
-          'macos-wine',
-        ]),
+        () => domainJoinPath(
+          konyakApplicationSupportFolder(environment),
+          const ['Runtimes', 'macos-wine'],
+        ),
         (override) => override,
       );
 }
 
-String _linuxWineRuntimeRoot(HostEnvironment environment) {
+String linuxWineRuntimeRoot(HostEnvironment environment) {
   return environment.nonEmptyValue('KONYAK_LINUX_WINE_HOME').match(() {
     final dataHome = environment
         .nonEmptyValue('KONYAK_DATA_HOME')
@@ -42,76 +44,85 @@ String _linuxWineRuntimeRoot(HostEnvironment environment) {
                     .nonEmptyValue('HOME')
                     .match(
                       () => 'Konyak',
-                      (home) =>
-                          _joinPath(home, const ['.local', 'share', 'konyak']),
+                      (home) => domainJoinPath(home, const [
+                        '.local',
+                        'share',
+                        'konyak',
+                      ]),
                     ),
-                (xdgDataHome) => _joinPath(xdgDataHome, const ['konyak']),
+                (xdgDataHome) => domainJoinPath(xdgDataHome, const ['konyak']),
               ),
           (dataHomeOverride) => dataHomeOverride,
         );
 
-    return _joinPath(dataHome, const ['Runtimes', 'linux-wine']);
+    return domainJoinPath(dataHome, const ['Runtimes', 'linux-wine']);
   }, (override) => override);
 }
 
-String _macosWineBinFolder(HostEnvironment environment) {
-  return _joinPath(_macosWineRuntimeRoot(environment), const ['bin']);
+String macosWineBinFolder(HostEnvironment environment) {
+  return domainJoinPath(macosWineRuntimeRoot(environment), const ['bin']);
 }
 
-String _linuxManagedRuntimeBinFolder(HostEnvironment environment) {
-  return _joinPath(_linuxWineRuntimeRoot(environment), const ['bin']);
+String linuxManagedRuntimeBinFolder(HostEnvironment environment) {
+  return domainJoinPath(linuxWineRuntimeRoot(environment), const ['bin']);
 }
 
-String _macosWineExecutable(HostEnvironment environment) {
-  return _joinPath(_macosWineBinFolder(environment), const ['wineloader']);
+String macosWineExecutable(HostEnvironment environment) {
+  return domainJoinPath(macosWineBinFolder(environment), const ['wineloader']);
 }
 
-String _linuxWineExecutable(HostEnvironment environment) {
-  return _joinPath(_linuxManagedRuntimeBinFolder(environment), const ['wine']);
+String linuxWineExecutable(HostEnvironment environment) {
+  return domainJoinPath(linuxManagedRuntimeBinFolder(environment), const [
+    'wine',
+  ]);
 }
 
-String _linuxWinebootExecutable(HostEnvironment environment) {
-  return _joinPath(_linuxManagedRuntimeBinFolder(environment), const [
+String linuxWinebootExecutable(HostEnvironment environment) {
+  return domainJoinPath(linuxManagedRuntimeBinFolder(environment), const [
     'wineboot',
   ]);
 }
 
-String _linuxWineserverExecutable(HostEnvironment environment) {
-  return _joinPath(_linuxManagedRuntimeBinFolder(environment), const [
+String linuxWineserverExecutable(HostEnvironment environment) {
+  return domainJoinPath(linuxManagedRuntimeBinFolder(environment), const [
     'wineserver',
   ]);
 }
 
-String _linuxWinedbgExecutable(HostEnvironment environment) {
-  return _joinPath(_linuxManagedRuntimeBinFolder(environment), const [
+String linuxWinedbgExecutable(HostEnvironment environment) {
+  return domainJoinPath(linuxManagedRuntimeBinFolder(environment), const [
     'winedbg',
   ]);
 }
 
-String _macosWineserverExecutable(HostEnvironment environment) {
-  return _joinPath(_macosWineBinFolder(environment), const ['wineserver']);
+String macosWineserverExecutable(HostEnvironment environment) {
+  return domainJoinPath(macosWineBinFolder(environment), const ['wineserver']);
 }
 
-String _macosWinetricksExecutable(HostEnvironment environment) {
-  return _joinPath(_macosWineRuntimeRoot(environment), const ['winetricks']);
+String macosWinetricksExecutable(HostEnvironment environment) {
+  return domainJoinPath(macosWineRuntimeRoot(environment), const [
+    'winetricks',
+  ]);
 }
 
-String _linuxWinetricksExecutable(HostEnvironment environment) {
-  return _joinPath(_linuxWineRuntimeRoot(environment), const ['winetricks']);
+String linuxWinetricksExecutable(HostEnvironment environment) {
+  return domainJoinPath(linuxWineRuntimeRoot(environment), const [
+    'winetricks',
+  ]);
 }
 
-ProgramRunEnvironment _linuxRuntimeEnvironment(HostEnvironment environment) {
-  final runtimeBin = _linuxManagedRuntimeBinFolder(environment);
+ProgramRunEnvironment linuxRuntimeEnvironment(HostEnvironment environment) {
+  final runtimeBin = linuxManagedRuntimeBinFolder(environment);
   final wineLibraryPath = environment.nonEmptyValue(
     'KONYAK_LINUX_WINE_LIBRARY_PATH',
   );
 
   return ProgramRunEnvironment(<String, String>{
-    'PATH': _prependPath(runtimeBin, environment['PATH']),
+    'PATH': prependPath(runtimeBin, environment['PATH']),
     ...wineLibraryPath.match(
       () => const <String, String>{},
       (path) => <String, String>{
-        'LD_LIBRARY_PATH': _prependPath(path, environment['LD_LIBRARY_PATH']),
+        'LD_LIBRARY_PATH': prependPath(path, environment['LD_LIBRARY_PATH']),
       },
     ),
   });

@@ -1,6 +1,6 @@
 part of '../../../konyak_cli.dart';
 
-ProgramRunRequest _linuxWineRequest({
+ProgramRunRequest linuxWineRequest({
   required BottleRecord bottle,
   required String programPath,
   required HostEnvironment environment,
@@ -8,31 +8,31 @@ ProgramRunRequest _linuxWineRequest({
 }) {
   final hostEnvironment = environment;
   final arguments = <String>[
-    ..._wineArgumentsForProgramPath(programPath),
-    ..._programSettingsArguments(programSettings),
+    ...wineArgumentsForProgramPath(programPath),
+    ...programSettingsArguments(programSettings),
   ];
-  final logging = _programSettingsLogging(programSettings);
+  final logging = programSettingsLogging(programSettings);
 
   return ProgramRunRequest(
     bottleId: bottle.id.value,
     programPath: programPath,
     runnerKind: 'wine',
-    executable: _linuxWineExecutable(hostEnvironment),
+    executable: linuxWineExecutable(hostEnvironment),
     arguments: arguments,
-    environment: _linuxRuntimeEnvironment(hostEnvironment)
-        .merge(_programSettingsEnvironment(programSettings))
+    environment: linuxRuntimeEnvironment(hostEnvironment)
+        .merge(programSettingsEnvironment(programSettings))
         .merge(
           _linuxWineEnvironmentWithRuntime(
             bottle: bottle,
             environment: environment,
           ),
         ),
-    logPath: _programSettingsLogPath(bottle: bottle, settings: programSettings),
+    logPath: programSettingsLogPath(bottle: bottle, settings: programSettings),
     createLogFile: logging.createLogFile,
   );
 }
 
-ProgramRunRequest _linuxWineCommandRequest({
+ProgramRunRequest linuxWineCommandRequest({
   required BottleRecord bottle,
   required String command,
   required HostEnvironment environment,
@@ -42,9 +42,9 @@ ProgramRunRequest _linuxWineCommandRequest({
     bottleId: bottle.id.value,
     programPath: command,
     runnerKind: 'wine',
-    executable: _linuxWineExecutable(hostEnvironment),
-    arguments: _wineArgumentsForBottleCommand(command),
-    environment: _linuxRuntimeEnvironment(hostEnvironment).merge(
+    executable: linuxWineExecutable(hostEnvironment),
+    arguments: wineArgumentsForBottleCommand(command),
+    environment: linuxRuntimeEnvironment(hostEnvironment).merge(
       _linuxWineEnvironmentWithRuntime(
         bottle: bottle,
         environment: environment,
@@ -54,9 +54,9 @@ ProgramRunRequest _linuxWineCommandRequest({
   );
 }
 
-ProgramRunRequest _linuxRegistryUpdateRequest({
+ProgramRunRequest linuxRegistryUpdateRequest({
   required BottleRecord bottle,
-  required _RegistryValueUpdate update,
+  required RegistryValueUpdate update,
   required HostEnvironment environment,
 }) {
   final hostEnvironment = environment;
@@ -64,9 +64,9 @@ ProgramRunRequest _linuxRegistryUpdateRequest({
     bottleId: bottle.id.value,
     programPath: 'reg',
     runnerKind: 'wineRegistry',
-    executable: _linuxWineExecutable(hostEnvironment),
-    arguments: _registryUpdateArguments(update),
-    environment: _linuxRuntimeEnvironment(hostEnvironment).merge(
+    executable: linuxWineExecutable(hostEnvironment),
+    arguments: registryUpdateArguments(update),
+    environment: linuxRuntimeEnvironment(hostEnvironment).merge(
       _linuxWineEnvironmentWithRuntime(
         bottle: bottle,
         environment: environment,
@@ -76,9 +76,9 @@ ProgramRunRequest _linuxRegistryUpdateRequest({
   );
 }
 
-ProgramRunRequest _linuxRegistryQueryRequest({
+ProgramRunRequest linuxRegistryQueryRequest({
   required BottleRecord bottle,
-  required _RegistryValueQuery query,
+  required RegistryValueQuery query,
   required HostEnvironment environment,
 }) {
   final hostEnvironment = environment;
@@ -86,9 +86,9 @@ ProgramRunRequest _linuxRegistryQueryRequest({
     bottleId: bottle.id.value,
     programPath: 'reg',
     runnerKind: 'wineRegistryQuery',
-    executable: _linuxWineExecutable(hostEnvironment),
-    arguments: _registryQueryArguments(query),
-    environment: _linuxRuntimeEnvironment(hostEnvironment).merge(
+    executable: linuxWineExecutable(hostEnvironment),
+    arguments: registryQueryArguments(query),
+    environment: linuxRuntimeEnvironment(hostEnvironment).merge(
       _linuxWineEnvironmentWithRuntime(
         bottle: bottle,
         environment: environment,
@@ -98,7 +98,7 @@ ProgramRunRequest _linuxRegistryQueryRequest({
   );
 }
 
-ProgramRunRequest _linuxWinebootRequest({
+ProgramRunRequest linuxWinebootRequest({
   required BottleRecord bottle,
   required HostEnvironment environment,
 }) {
@@ -107,9 +107,9 @@ ProgramRunRequest _linuxWinebootRequest({
     bottleId: bottle.id.value,
     programPath: 'wineboot',
     runnerKind: 'wineboot',
-    executable: _linuxWinebootExecutable(hostEnvironment),
+    executable: linuxWinebootExecutable(hostEnvironment),
     arguments: const <String>['--init'],
-    environment: _linuxRuntimeEnvironment(hostEnvironment).merge(
+    environment: linuxRuntimeEnvironment(hostEnvironment).merge(
       _linuxWineEnvironmentWithRuntime(
         bottle: bottle,
         environment: environment,
@@ -119,7 +119,7 @@ ProgramRunRequest _linuxWinebootRequest({
   );
 }
 
-ProgramRunRequest _linuxWinebootRestartRequest({
+ProgramRunRequest linuxWinebootRestartRequest({
   required BottleRecord bottle,
   required HostEnvironment environment,
 }) {
@@ -128,9 +128,9 @@ ProgramRunRequest _linuxWinebootRestartRequest({
     bottleId: bottle.id.value,
     programPath: 'wineboot',
     runnerKind: 'wineboot',
-    executable: _linuxWinebootExecutable(hostEnvironment),
+    executable: linuxWinebootExecutable(hostEnvironment),
     arguments: const <String>['--restart'],
-    environment: _linuxRuntimeEnvironment(hostEnvironment).merge(
+    environment: linuxRuntimeEnvironment(hostEnvironment).merge(
       _linuxWineEnvironmentWithRuntime(
         bottle: bottle,
         environment: environment,
@@ -140,7 +140,7 @@ ProgramRunRequest _linuxWinebootRestartRequest({
   );
 }
 
-ProgramRunRequest _linuxWineserverKillRequest({
+ProgramRunRequest linuxWineserverKillRequest({
   required BottleRecord bottle,
   required HostEnvironment environment,
 }) {
@@ -149,9 +149,9 @@ ProgramRunRequest _linuxWineserverKillRequest({
     bottleId: bottle.id.value,
     programPath: 'wineserver',
     runnerKind: 'wineserver',
-    executable: _linuxWineserverExecutable(hostEnvironment),
+    executable: linuxWineserverExecutable(hostEnvironment),
     arguments: const <String>['-k'],
-    environment: _linuxRuntimeEnvironment(
+    environment: linuxRuntimeEnvironment(
       hostEnvironment,
     ).merge(_linuxWinePrefixEnvironment(bottle)),
     logPath: _joinPath(bottle.path.value, const [
@@ -161,7 +161,7 @@ ProgramRunRequest _linuxWineserverKillRequest({
   );
 }
 
-ProgramRunRequest _linuxWinedbgRequest({
+ProgramRunRequest linuxWinedbgRequest({
   required BottleRecord bottle,
   required HostEnvironment environment,
   required String command,
@@ -173,9 +173,9 @@ ProgramRunRequest _linuxWinedbgRequest({
     bottleId: bottle.id.value,
     programPath: 'winedbg',
     runnerKind: 'winedbg',
-    executable: _linuxWinedbgExecutable(hostEnvironment),
+    executable: linuxWinedbgExecutable(hostEnvironment),
     arguments: <String>['--command', command, ...trailingArguments],
-    environment: _linuxRuntimeEnvironment(
+    environment: linuxRuntimeEnvironment(
       hostEnvironment,
     ).merge(_linuxWinePrefixEnvironment(bottle)),
     logPath: _joinPath(bottle.path.value, <String>['logs', logName]),

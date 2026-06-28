@@ -1,4 +1,8 @@
-part of '../../../konyak_cli.dart';
+import 'package:fast_immutable_collections/fast_immutable_collections.dart';
+import 'package:fpdart/fpdart.dart';
+
+import '../shared/domain_value_objects.dart';
+import 'bottle_runtime_settings_models.dart';
 
 class BottleRecord {
   BottleRecord({
@@ -179,11 +183,4 @@ class PinnedProgramRecord {
 
   @override
   int get hashCode => Object.hash(name, path, removable, iconPath);
-}
-
-String _requiredNonBlankDomainString(String value, String fieldName) {
-  if (value.trim().isEmpty) {
-    throw ArgumentError.value(value, fieldName, 'must not be blank');
-  }
-  return value;
 }

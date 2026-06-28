@@ -1,5 +1,3 @@
-part of '../../konyak_cli.dart';
-
 const cliSchemaVersion = 1;
 const runtimeStackSchemaVersion = 1;
 const konyakAppId = 'konyak';
@@ -24,8 +22,8 @@ const macosWineRuntimeSourceManifestUrl =
     'https://github.com/$macosWineRuntimeRepository/releases/download/'
     '$macosWineRuntimeDefaultReleaseTag/$macosWineRuntimeSourceManifestFileName';
 const macosWineVersionUrl = macosWineRuntimeReleaseUrl;
-const _rosettaRuntimePath = '/Library/Apple/usr/libexec/oah/libRosettaRuntime';
-const _rosettaInstallCommand = <String>[
+const rosettaRuntimePath = '/Library/Apple/usr/libexec/oah/libRosettaRuntime';
+const rosettaInstallCommand = <String>[
   '/usr/sbin/softwareupdate',
   '--install-rosetta',
   '--agree-to-license',

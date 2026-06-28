@@ -1,6 +1,20 @@
-part of '../../../konyak_cli.dart';
+import 'package:fpdart/fpdart.dart';
 
-RuntimeValidationCheck _runtimePathCheck({
+import '../shared/domain_helpers.dart';
+import 'runtime_validation_models.dart';
+
+abstract interface class FileStatusProbe {
+  bool exists(String path);
+}
+
+abstract interface class RuntimeStackVersionProbe {
+  Option<String> versionFor({
+    required String runtimeRoot,
+    required String componentId,
+  });
+}
+
+RuntimeValidationCheck runtimePathCheck({
   required String id,
   required String name,
   required String path,
@@ -16,7 +30,7 @@ RuntimeValidationCheck _runtimePathCheck({
   );
 }
 
-RuntimeValidationCheck _runtimeAnyPathCheck({
+RuntimeValidationCheck runtimeAnyPathCheck({
   required String id,
   required String name,
   required List<String> paths,
@@ -53,14 +67,14 @@ Option<String> _firstExistingPath(
   return const Option.none();
 }
 
-List<String> _macosWineLoaderLibraryPaths(String runtimeRoot) {
+List<String> macosWineLoaderLibraryPaths(String runtimeRoot) {
   return <String>[
-    _joinPath(runtimeRoot, const ['lib']),
-    _joinPath(runtimeRoot, const ['lib64']),
+    domainJoinPath(runtimeRoot, const ['lib']),
+    domainJoinPath(runtimeRoot, const ['lib64']),
   ];
 }
 
-String _runtimeLoaderFailureMessage(RuntimeExecutableProbeResult result) {
+String runtimeLoaderFailureMessage(RuntimeExecutableProbeResult result) {
   final stderr = result.stderr.trim();
   if (stderr.isNotEmpty) {
     return stderr;
@@ -74,6 +88,6 @@ String _runtimeLoaderFailureMessage(RuntimeExecutableProbeResult result) {
   return 'wineloader --version exited with code ${result.exitCode}.';
 }
 
-bool _isSha256Hex(String value) {
+bool isSha256Hex(String value) {
   return RegExp(r'^[0-9a-fA-F]{64}$').hasMatch(value);
 }

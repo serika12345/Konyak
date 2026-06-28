@@ -23,7 +23,7 @@ void _writeMacosPinnedProgramLauncher({
   required _MacosPinnedProgramLauncherCommand launcherCommand,
   required String displayName,
   required String? iconPath,
-  required _PinnedProgramLauncherManifest manifest,
+  required PinnedProgramLauncherManifest manifest,
 }) {
   final contentsPath = _joinPath(bundlePath, const ['Contents']);
   final macosPath = _joinPath(contentsPath, const ['MacOS']);

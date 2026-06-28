@@ -1,4 +1,9 @@
-part of '../../../konyak_cli.dart';
+import 'package:fast_immutable_collections/fast_immutable_collections.dart';
+import 'package:fpdart/fpdart.dart';
+
+import '../shared/domain_helpers.dart';
+import '../shared/domain_value_objects.dart';
+import 'runtime_component_versions.dart';
 
 class RuntimePackageInstallRequest {
   RuntimePackageInstallRequest({
@@ -13,7 +18,7 @@ class RuntimePackageInstallRequest {
     this.preserveExistingRuntimeFiles = false,
     List<List<String>> preserveExistingRuntimeSkipRelativePaths =
         const <List<String>>[],
-  }) : runtimeLabel = _requiredNonBlankDomainString(
+  }) : runtimeLabel = requiredNonBlankDomainString(
          runtimeLabel,
          'runtimeLabel',
        ),

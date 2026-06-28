@@ -1,6 +1,6 @@
 part of '../../konyak_cli.dart';
 
-Option<_PinnedProgramLauncherManifest> _readPinnedProgramLauncherManifest(
+Option<PinnedProgramLauncherManifest> _readPinnedProgramLauncherManifest(
   String manifestPath,
 ) {
   try {

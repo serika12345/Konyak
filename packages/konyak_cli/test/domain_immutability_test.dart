@@ -28,11 +28,11 @@ final class EmptyRuntimeStackVersionProbe implements RuntimeStackVersionProbe {
   const EmptyRuntimeStackVersionProbe();
 
   @override
-  String? versionFor({
+  Option<String> versionFor({
     required String runtimeRoot,
     required String componentId,
   }) {
-    return null;
+    return const Option.none();
   }
 }
 

@@ -21,7 +21,7 @@ class DartIoAppUpdateChecker implements AppUpdateChecker {
       releaseMetadataFetcher:
           releaseMetadataFetcher ??
           DartIoRuntimeReleaseMetadataFetcher(
-            archiveUrlPredicate: _appUpdateArchiveUrlPredicate(
+            archiveUrlPredicate: appUpdateArchiveUrlPredicate(
               resolvedHostPlatform,
             ),
           ),
@@ -81,7 +81,7 @@ class DartIoAppUpdateChecker implements AppUpdateChecker {
       RuntimeReleaseMetadataFetched(:final metadata) => AppUpdateCheckCompleted(
         AppUpdateRecord(
           appId: appId.value,
-          status: _updateStatus(
+          status: updateStatus(
             currentVersion: Option.of(currentVersion.value),
             latestVersion: metadata.version.value,
           ),

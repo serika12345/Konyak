@@ -95,7 +95,7 @@ CliResult _openProgramLocationJsonResult(
     result: repository.findBottle(request.bottleId),
     bottleId: request.bottleId,
     onFound: (bottle) {
-      if (!_hasPinnedProgram(bottle, request.programPath)) {
+      if (!hasPinnedProgram(bottle, request.programPath)) {
         return _jsonError(
           exitCode: 66,
           code: 'programNotPinned',

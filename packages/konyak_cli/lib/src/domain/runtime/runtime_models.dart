@@ -1,4 +1,7 @@
-part of '../../../konyak_cli.dart';
+import 'package:fpdart/fpdart.dart';
+
+import '../../shared/model_constants.dart';
+import '../shared/domain_value_objects.dart';
 
 class RuntimeDefinition {
   RuntimeDefinition({

@@ -5,10 +5,10 @@ RuntimeRecord _macosWineRuntimeRecord({
   required FileStatusProbe fileStatusProbe,
   required RuntimeStackVersionProbe runtimeStackVersionProbe,
 }) {
-  const platformSpec = _macosKonyakRuntimePlatformSpec;
-  final applicationSupportPath = _konyakApplicationSupportFolder(environment);
-  final libraryPath = _macosWineRuntimeRoot(environment);
-  final executablePath = _macosWineExecutable(environment);
+  const platformSpec = macosKonyakRuntimePlatformSpec;
+  final applicationSupportPath = konyakApplicationSupportFolder(environment);
+  final libraryPath = macosWineRuntimeRoot(environment);
+  final executablePath = macosWineExecutable(environment);
   final isInstalled = fileStatusProbe.exists(executablePath);
 
   return RuntimeRecord.fromParts(
@@ -21,7 +21,7 @@ RuntimeRecord _macosWineRuntimeRecord({
       isBundled: false,
       isUpdateable: true,
       distributionKind: Option.fromNullable(
-        _runtimeDistributionKind(environment, 'bootstrap'),
+        runtimeDistributionKind(environment, 'bootstrap'),
       ),
       archiveUrl: const Option.none(),
       versionUrl: Option.fromNullable(macosWineVersionUrl),
@@ -50,8 +50,8 @@ RuntimeRecord _linuxWineRuntimeRecord({
   required FileStatusProbe fileStatusProbe,
   required RuntimeStackVersionProbe runtimeStackVersionProbe,
 }) {
-  const platformSpec = _linuxWineRuntimePlatformSpec;
-  final runtimeRoot = _linuxWineRuntimeRoot(environment);
+  const platformSpec = linuxWineRuntimePlatformSpec;
+  final runtimeRoot = linuxWineRuntimeRoot(environment);
   final executablePath = _joinPath(runtimeRoot, const ['bin', 'wine']);
   final versionUrl = environment.nonEmptyValue('KONYAK_LINUX_WINE_VERSION_URL');
   return RuntimeRecord.fromParts(
@@ -64,7 +64,7 @@ RuntimeRecord _linuxWineRuntimeRecord({
       isBundled: false,
       isUpdateable: versionUrl.isSome(),
       distributionKind: Option.of(
-        _runtimeDistributionKind(environment, 'managed'),
+        runtimeDistributionKind(environment, 'managed'),
       ),
       archiveUrl: const Option.none(),
       versionUrl: versionUrl,
@@ -88,7 +88,7 @@ RuntimeRecord _linuxWineRuntimeRecord({
 }
 
 RuntimeStack _runtimeStackForPlatform({
-  required _RuntimePlatformSpec platformSpec,
+  required RuntimePlatformSpec platformSpec,
   required String runtimeRoot,
   required FileStatusProbe fileStatusProbe,
   required RuntimeStackVersionProbe runtimeStackVersionProbe,
@@ -120,7 +120,7 @@ RuntimeStack _runtimeStackForPlatform({
 }
 
 RuntimeStackBackend _runtimeStackBackend({
-  required _RuntimeBackendDefinition definition,
+  required RuntimeBackendDefinition definition,
   required List<RuntimeStackComponent> components,
 }) {
   final componentsById = <String, RuntimeStackComponent>{
@@ -156,7 +156,7 @@ RuntimeStackComponent _runtimeStackComponent({
   required String runtimeRoot,
   required FileStatusProbe fileStatusProbe,
   required RuntimeStackVersionProbe runtimeStackVersionProbe,
-  required _RuntimeStackComponentDefinition definition,
+  required RuntimeStackComponentDefinition definition,
 }) {
   final paths = definition.relativePaths
       .map((pathSegments) => _joinPath(runtimeRoot, pathSegments))
@@ -191,14 +191,12 @@ RuntimeStackComponent _runtimeStackComponent({
     isRequired: definition.isRequired,
     paths: paths,
     missingPaths: missingPaths,
-    version: Option.fromNullable(
-      missingPaths.isEmpty
-          ? runtimeStackVersionProbe.versionFor(
-              runtimeRoot: runtimeRoot,
-              componentId: definition.id,
-            )
-          : null,
-    ),
+    version: missingPaths.isEmpty
+        ? runtimeStackVersionProbe.versionFor(
+            runtimeRoot: runtimeRoot,
+            componentId: definition.id,
+          )
+        : const Option.none(),
   );
 }
 

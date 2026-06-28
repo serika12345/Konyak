@@ -1,7 +1,10 @@
-part of '../../../konyak_cli.dart';
+import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 
-class _RuntimeStackSourceArchiveBundle {
-  _RuntimeStackSourceArchiveBundle({
+import '../shared/domain_value_objects.dart';
+import 'runtime_component_versions.dart';
+
+class RuntimeStackSourceArchiveBundle {
+  RuntimeStackSourceArchiveBundle({
     required String wineArchivePath,
     required Iterable<String> componentArchivePaths,
     required this.componentVersions,
@@ -15,20 +18,20 @@ class _RuntimeStackSourceArchiveBundle {
   final RuntimeComponentVersions componentVersions;
 }
 
-sealed class _RuntimeStackSourceArchiveBundleResult {
-  const _RuntimeStackSourceArchiveBundleResult();
+sealed class RuntimeStackSourceArchiveBundleResult {
+  const RuntimeStackSourceArchiveBundleResult();
 }
 
-class _RuntimeStackSourceArchiveBundleResolved
-    extends _RuntimeStackSourceArchiveBundleResult {
-  const _RuntimeStackSourceArchiveBundleResolved(this.bundle);
+class RuntimeStackSourceArchiveBundleResolved
+    extends RuntimeStackSourceArchiveBundleResult {
+  const RuntimeStackSourceArchiveBundleResolved(this.bundle);
 
-  final _RuntimeStackSourceArchiveBundle bundle;
+  final RuntimeStackSourceArchiveBundle bundle;
 }
 
-class _RuntimeStackSourceArchiveBundleFailed
-    extends _RuntimeStackSourceArchiveBundleResult {
-  const _RuntimeStackSourceArchiveBundleFailed(this.message);
+class RuntimeStackSourceArchiveBundleFailed
+    extends RuntimeStackSourceArchiveBundleResult {
+  const RuntimeStackSourceArchiveBundleFailed(this.message);
 
   final String message;
 }

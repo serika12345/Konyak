@@ -33,6 +33,7 @@ void main() {
           'konyak_no_domain_increment',
           'konyak_no_domain_nested_conditional',
           'konyak_no_domain_parameter_mutation',
+          'konyak_no_domain_part_of_root',
           'konyak_no_null_literal_outside_boundary',
           'konyak_no_nullable_bridge_outside_boundary',
           'konyak_no_nullable_type_outside_boundary',

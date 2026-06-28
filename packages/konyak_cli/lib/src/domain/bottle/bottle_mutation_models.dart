@@ -1,4 +1,6 @@
-part of '../../../konyak_cli.dart';
+import '../shared/domain_value_objects.dart';
+import 'bottle_models.dart';
+import 'bottle_runtime_settings_models.dart';
 
 class BottleCreateRequest {
   BottleCreateRequest({required String name, required String windowsVersion})

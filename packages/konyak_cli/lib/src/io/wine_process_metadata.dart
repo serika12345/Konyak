@@ -132,7 +132,7 @@ const _wineInfrastructureExecutableNames = <String>{
   'winemenubuilder.exe',
 };
 
-String _winedbgAttachProcessId(String processId) {
+String winedbgAttachProcessId(String processId) {
   final normalized = processId.trim();
   if (normalized.startsWith(RegExp('0x', caseSensitive: false))) {
     return normalized;

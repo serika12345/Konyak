@@ -146,7 +146,7 @@ String _resolveBottleDataHome(
       .nonEmptyValue('KONYAK_DATA_HOME')
       .match(
         () => switch (hostPlatform) {
-          KonyakHostPlatform.macos => _konyakApplicationSupportFolder(
+          KonyakHostPlatform.macos => konyakApplicationSupportFolder(
             environment,
           ),
           KonyakHostPlatform.linux => _resolveDataHome(environment),

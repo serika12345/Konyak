@@ -52,9 +52,9 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
     );
 
     switch (plan) {
-      case _RuntimeWineInstallUnsupported(:final message):
+      case RuntimeWineInstallUnsupported(:final message):
         return MacosWineInstallFailed(message);
-      case _RuntimeWineInstallAlreadyInstalled(:final runtime):
+      case RuntimeWineInstallAlreadyInstalled(:final runtime):
         _emitRuntimeInstallProgress(
           progress,
           stage: 'complete',
@@ -62,9 +62,9 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
           fraction: 1,
         );
         return MacosWineInstallCompleted(runtime: runtime);
-      case _RuntimeWineInstallIncompleteWithoutSource(:final message):
+      case RuntimeWineInstallIncompleteWithoutSource(:final message):
         return MacosWineInstallFailed(message);
-      case _RuntimeWineInstallFromSourceManifest(
+      case RuntimeWineInstallFromSourceManifest(
         :final sourceManifest,
         :final sourceManifestSignature,
         :final preserveExistingRuntimeFiles,
@@ -77,7 +77,7 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
           preserveExistingRuntimeFiles: preserveExistingRuntimeFiles,
           progressSink: progress,
         );
-      case _RuntimeWineInstallFromArchive(
+      case RuntimeWineInstallFromArchive(
         :final archivePath,
         :final archiveSha256,
         :final componentArchivePaths,
@@ -94,9 +94,9 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
           preserveExistingRuntimeFiles: preserveExistingRuntimeFiles,
           progressSink: progress,
         );
-      case _RuntimeWineInstallMissingArchiveSource(:final message):
+      case RuntimeWineInstallMissingArchiveSource(:final message):
         return MacosWineInstallFailed(message);
-      case _RuntimeWineInstallDownloadArchive(
+      case RuntimeWineInstallDownloadArchive(
         :final archiveUrl,
         :final archiveFileName,
         :final archiveSha256,
@@ -168,9 +168,9 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
     );
 
     switch (plan) {
-      case _RuntimeWineInstallUnsupported(:final message):
+      case RuntimeWineInstallUnsupported(:final message):
         return MacosWineInstallFailed(message);
-      case _RuntimeWineInstallAlreadyInstalled(:final runtime):
+      case RuntimeWineInstallAlreadyInstalled(:final runtime):
         _emitRuntimeInstallProgress(
           progress,
           stage: 'complete',
@@ -178,9 +178,9 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
           fraction: 1,
         );
         return MacosWineInstallCompleted(runtime: runtime);
-      case _RuntimeWineInstallIncompleteWithoutSource(:final message):
+      case RuntimeWineInstallIncompleteWithoutSource(:final message):
         return MacosWineInstallFailed(message);
-      case _RuntimeWineInstallFromSourceManifest(
+      case RuntimeWineInstallFromSourceManifest(
         :final sourceManifest,
         :final sourceManifestSignature,
         :final preserveExistingRuntimeFiles,
@@ -193,7 +193,7 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
           preserveExistingRuntimeFiles: preserveExistingRuntimeFiles,
           progressSink: progress,
         );
-      case _RuntimeWineInstallFromArchive(
+      case RuntimeWineInstallFromArchive(
         :final archivePath,
         :final archiveSha256,
         :final componentArchivePaths,
@@ -210,9 +210,9 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
           preserveExistingRuntimeFiles: preserveExistingRuntimeFiles,
           progressSink: progress,
         );
-      case _RuntimeWineInstallMissingArchiveSource(:final message):
+      case RuntimeWineInstallMissingArchiveSource(:final message):
         return MacosWineInstallFailed(message);
-      case _RuntimeWineInstallDownloadArchive(
+      case RuntimeWineInstallDownloadArchive(
         :final archiveUrl,
         :final archiveFileName,
         :final archiveSha256,
@@ -264,36 +264,36 @@ RuntimePackageInstaller _macosRuntimePackageInstaller() {
   return DartIoRuntimePackageInstaller(
     preserveExistingRuntimeComponents: _preserveImportedGptkD3DMetalComponent,
     normalizeStagingRoot:
-        _macosKonyakRuntimePlatformSpec.layoutNormalization ==
-            _RuntimeLayoutNormalization.macosWineBundle
+        macosKonyakRuntimePlatformSpec.layoutNormalization ==
+            RuntimeLayoutNormalization.macosWineBundle
         ? _normalizeMacosWineRuntimeLayout
         : null,
   );
 }
 
-_RuntimeWineInstallPlan _macosWineInstallPlan({
+RuntimeWineInstallPlan _macosWineInstallPlan({
   required KonyakHostPlatform hostPlatform,
   required HostEnvironment environment,
   required MacosWineInstallRequest request,
   required RuntimeRecord currentRuntime,
 }) {
-  return _runtimeWineInstallPlan(
+  return runtimeWineInstallPlan(
     hostPlatformSupported: hostPlatform == KonyakHostPlatform.macos,
     unsupportedPlatformMessage:
         'macOS Wine installation is supported on macOS only.',
     requestOperation: request.requestOperation,
     currentRuntime: currentRuntime,
-    configuredSourceManifest: _runtimeSourceManifestForPlatform(
-      platformSpec: _macosKonyakRuntimePlatformSpec,
+    configuredSourceManifest: runtimeSourceManifestForPlatform(
+      platformSpec: macosKonyakRuntimePlatformSpec,
       environment: environment,
     ),
     configuredSourceManifestSignature:
-        _runtimeSourceManifestSignatureForPlatform(
-          platformSpec: _macosKonyakRuntimePlatformSpec,
+        runtimeSourceManifestSignatureForPlatform(
+          platformSpec: macosKonyakRuntimePlatformSpec,
           environment: environment,
         ),
     defaultArchiveFileName:
-        _macosKonyakRuntimePlatformSpec.defaultArchiveFileName,
+        macosKonyakRuntimePlatformSpec.defaultArchiveFileName,
     missingArchiveMessage: Option.of(
       'macOS Wine source manifest is not configured.',
     ),
