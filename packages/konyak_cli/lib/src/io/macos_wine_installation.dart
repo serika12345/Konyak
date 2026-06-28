@@ -7,11 +7,11 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
     FileStatusProbe fileStatusProbe = const DartIoFileStatusProbe(),
     RuntimeStackVersionProbe runtimeStackVersionProbe =
         const DartIoRuntimeStackVersionProbe(),
-    RuntimePackageInstaller runtimePackageInstaller =
-        const DartIoRuntimePackageInstaller(),
+    RuntimePackageInstaller? runtimePackageInstaller,
   }) : _fileStatusProbe = fileStatusProbe,
        _runtimeStackVersionProbe = runtimeStackVersionProbe,
-       _runtimePackageInstaller = runtimePackageInstaller;
+       _runtimePackageInstaller =
+           runtimePackageInstaller ?? _macosRuntimePackageInstaller();
 
   factory DartIoMacosWineInstaller.current() {
     return DartIoMacosWineInstaller(
@@ -258,6 +258,17 @@ class DartIoMacosWineInstaller implements MacosWineInstaller {
         }
     }
   }
+}
+
+RuntimePackageInstaller _macosRuntimePackageInstaller() {
+  return DartIoRuntimePackageInstaller(
+    preserveExistingRuntimeComponents: _preserveImportedGptkD3DMetalComponent,
+    normalizeStagingRoot:
+        _macosKonyakRuntimePlatformSpec.layoutNormalization ==
+            _RuntimeLayoutNormalization.macosWineBundle
+        ? _normalizeMacosWineRuntimeLayout
+        : null,
+  );
 }
 
 _RuntimeWineInstallPlan _macosWineInstallPlan({

@@ -20,18 +20,10 @@ class MacosWineRuntimeCatalog implements RuntimeCatalog {
   MacosWineRuntimeCatalog({
     required this.hostPlatform,
     required this.environment,
-    FileStatusProbe fileStatusProbe = const DartIoFileStatusProbe(),
-    RuntimeStackVersionProbe runtimeStackVersionProbe =
-        const DartIoRuntimeStackVersionProbe(),
+    required FileStatusProbe fileStatusProbe,
+    required RuntimeStackVersionProbe runtimeStackVersionProbe,
   }) : _fileStatusProbe = fileStatusProbe,
        _runtimeStackVersionProbe = runtimeStackVersionProbe;
-
-  factory MacosWineRuntimeCatalog.current() {
-    return MacosWineRuntimeCatalog(
-      hostPlatform: _currentHostPlatform(),
-      environment: HostEnvironment(Platform.environment),
-    );
-  }
 
   final KonyakHostPlatform hostPlatform;
   final HostEnvironment environment;
@@ -57,18 +49,10 @@ class KonyakRuntimeCatalog implements RuntimeCatalog {
   KonyakRuntimeCatalog({
     required this.hostPlatform,
     required this.environment,
-    FileStatusProbe fileStatusProbe = const DartIoFileStatusProbe(),
-    RuntimeStackVersionProbe runtimeStackVersionProbe =
-        const DartIoRuntimeStackVersionProbe(),
+    required FileStatusProbe fileStatusProbe,
+    required RuntimeStackVersionProbe runtimeStackVersionProbe,
   }) : _fileStatusProbe = fileStatusProbe,
        _runtimeStackVersionProbe = runtimeStackVersionProbe;
-
-  factory KonyakRuntimeCatalog.current() {
-    return KonyakRuntimeCatalog(
-      hostPlatform: _currentHostPlatform(),
-      environment: HostEnvironment(Platform.environment),
-    );
-  }
 
   final KonyakHostPlatform hostPlatform;
   final HostEnvironment environment;

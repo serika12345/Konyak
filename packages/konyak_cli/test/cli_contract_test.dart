@@ -583,6 +583,18 @@ final class StaticFileStatusProbe implements FileStatusProbe {
   }
 }
 
+final class EmptyRuntimeStackVersionProbe implements RuntimeStackVersionProbe {
+  const EmptyRuntimeStackVersionProbe();
+
+  @override
+  String? versionFor({
+    required String runtimeRoot,
+    required String componentId,
+  }) {
+    return null;
+  }
+}
+
 const _macosDxvkComponentPaths = <List<String>>[
   <String>['Components', 'DXVK-macOS', 'DXVK', 'x64', 'dxgi.dll'],
   <String>['Components', 'DXVK-macOS', 'DXVK', 'x64', 'd3d9.dll'],

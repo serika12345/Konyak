@@ -105,3 +105,5 @@ result-*
 apps/konyak/build/
 apps/konyak/.dart_tool/
 apps/konyak/flutter_*.log
+tools/konyak_lints/test/fixtures/**/custom_lint.log
+tools/konyak_lints/test/fixtures/**/pubspec.lock

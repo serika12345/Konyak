@@ -27,17 +27,6 @@ class ProgramRunPlanner {
     this.macosMajorVersion = const Option.none(),
   });
 
-  factory ProgramRunPlanner.current() {
-    final hostPlatform = _currentHostPlatform();
-    return ProgramRunPlanner(
-      hostPlatform: hostPlatform,
-      environment: HostEnvironment(Platform.environment),
-      macosMajorVersion: hostPlatform == KonyakHostPlatform.macos
-          ? _currentMacosMajorVersion()
-          : const Option.none(),
-    );
-  }
-
   final KonyakHostPlatform hostPlatform;
   final HostEnvironment environment;
   final Option<int> macosMajorVersion;
@@ -355,10 +344,8 @@ class ProgramRunPlanner {
   }
 }
 
-Option<int> _currentMacosMajorVersion() {
-  return _firstDigitToken(
-    Platform.operatingSystemVersion,
-  ).flatMap(_integerFromDigits);
+Option<int> _macosMajorVersionFromOperatingSystemVersion(String value) {
+  return _firstDigitToken(value).flatMap(_integerFromDigits);
 }
 
 Option<String> _firstDigitToken(String value) {

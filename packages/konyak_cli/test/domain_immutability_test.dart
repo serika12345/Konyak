@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:fpdart/fpdart.dart';
 import 'package:konyak_cli/konyak_cli.dart';
 import 'package:test/test.dart';
@@ -13,6 +11,29 @@ BottleRecord _expectFound(IoResult<Option<BottleRecord>> result) {
     () => throw TestFailure('Expected bottle to exist.'),
     (bottle) => bottle,
   );
+}
+
+final class StaticFileStatusProbe implements FileStatusProbe {
+  const StaticFileStatusProbe(this._existingPaths);
+
+  final Set<String> _existingPaths;
+
+  @override
+  bool exists(String path) {
+    return _existingPaths.contains(path);
+  }
+}
+
+final class EmptyRuntimeStackVersionProbe implements RuntimeStackVersionProbe {
+  const EmptyRuntimeStackVersionProbe();
+
+  @override
+  String? versionFor({
+    required String runtimeRoot,
+    required String componentId,
+  }) {
+    return null;
+  }
 }
 
 void main() {
@@ -471,6 +492,10 @@ void main() {
     final catalog = KonyakRuntimeCatalog(
       hostPlatform: KonyakHostPlatform.linux,
       environment: HostEnvironment(variables),
+      fileStatusProbe: const StaticFileStatusProbe({
+        '/home/user/.local/share/konyak/Runtimes/linux-wine/bin/wine',
+      }),
+      runtimeStackVersionProbe: const EmptyRuntimeStackVersionProbe(),
     );
     variables['KONYAK_RUNTIME_PROFILE'] = 'managed';
 
@@ -513,7 +538,7 @@ void main() {
         archiveSha256: const Option.none(),
         componentArchivePaths: componentArchivePaths,
         componentVersions: RuntimeComponentVersions(componentVersions),
-        runtimeRoot: Directory('/tmp/konyak-runtime'),
+        runtimeRoot: '/tmp/konyak-runtime',
         requiredExecutableRelativePath: requiredExecutableRelativePath,
         expectedExecutablePath: '/tmp/konyak-runtime/bin/wine',
       );
@@ -526,6 +551,7 @@ void main() {
         RuntimeArchivePath('/dxvk.tar.gz'),
       ]);
       expect(request.componentVersions.toMap(), {'dxvk': '2.7'});
+      expect(request.runtimeRoot, RuntimeRootPath('/tmp/konyak-runtime'));
       expect(
         request.requiredExecutableRelativePath,
         RuntimeRelativePath(['bin', 'wine']),
@@ -565,7 +591,7 @@ void main() {
         archiveSha256: const Option.none(),
         componentArchivePaths: const <String>[],
         componentVersions: const RuntimeComponentVersions.empty(),
-        runtimeRoot: Directory('/tmp/konyak-runtime'),
+        runtimeRoot: '/tmp/konyak-runtime',
         requiredExecutableRelativePath: const <String>['bin', 'wine'],
         expectedExecutablePath: '/tmp/konyak-runtime/bin/wine',
       );
@@ -582,7 +608,7 @@ void main() {
         archiveSha256: const Option.none(),
         componentArchivePaths: const <String>[],
         componentVersions: const RuntimeComponentVersions.empty(),
-        runtimeRoot: Directory('/tmp/konyak-runtime'),
+        runtimeRoot: '/tmp/konyak-runtime',
         requiredExecutableRelativePath: const <String>['bin', 'wine'],
         expectedExecutablePath: '/tmp/konyak-runtime/bin/wine',
       ),
@@ -595,7 +621,7 @@ void main() {
         archiveSha256: Option.of(' '),
         componentArchivePaths: const <String>[],
         componentVersions: const RuntimeComponentVersions.empty(),
-        runtimeRoot: Directory('/tmp/konyak-runtime'),
+        runtimeRoot: '/tmp/konyak-runtime',
         requiredExecutableRelativePath: const <String>['bin', 'wine'],
         expectedExecutablePath: '/tmp/konyak-runtime/bin/wine',
       ),

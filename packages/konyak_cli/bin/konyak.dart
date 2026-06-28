@@ -5,8 +5,8 @@ import 'package:konyak_cli/konyak_cli.dart';
 
 Future<void> main(List<String> arguments) async {
   final environment = Platform.environment;
-  final runtimeCatalog = KonyakRuntimeCatalog.current();
-  final programRunPlanner = ProgramRunPlanner.current();
+  final runtimeCatalog = currentKonyakRuntimeCatalog();
+  final programRunPlanner = currentProgramRunPlanner();
   final appSettingsRepository = defaultAppSettingsRepositoryFromEnvironment(
     environment,
   );

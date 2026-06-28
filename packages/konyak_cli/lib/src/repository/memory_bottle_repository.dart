@@ -119,7 +119,8 @@ class MemoryBottleRepository implements BottleRepository {
     return _importBottleArchive(
       archivePath: request.archivePath.value,
       bottleDirectory: _joinPath(dataHome, const ['bottles']),
-      hasBottle: _bottles.containsKey,
+      hasBottle: (bottleId) =>
+          Right<String, bool>(_bottles.containsKey(bottleId)),
       onImported: (bottle) {
         _bottles[bottle.id.value] = bottle;
       },

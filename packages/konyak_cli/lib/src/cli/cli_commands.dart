@@ -88,7 +88,7 @@ CliResult runCli(
             winetricksVerbRepository ??
             DartIoWinetricksVerbRepository.current(),
         runtimeCatalog: runtimeCatalog ?? StaticRuntimeCatalog(const []),
-        programRunPlanner: programRunPlanner ?? ProgramRunPlanner.current(),
+        programRunPlanner: programRunPlanner ?? currentProgramRunPlanner(),
         programRunner: programRunner,
         bottlePrefixInitializer: bottlePrefixInitializer,
         pathOpener: pathOpener,
@@ -181,7 +181,7 @@ Future<CliResult> runCliStreaming(
           bottleRepository ?? bottleCatalog ?? StaticBottleCatalog(const []);
       return await _listWineProcessesJsonResultAsync(
         bottleCatalog: activeBottleCatalog,
-        programRunPlanner: programRunPlanner ?? ProgramRunPlanner.current(),
+        programRunPlanner: programRunPlanner ?? currentProgramRunPlanner(),
         programRunner: asyncProgramRunner,
         programMetadataExtractor: asyncProgramMetadataExtractor,
         hostProcessSnapshotReader: hostProcessSnapshotReader,

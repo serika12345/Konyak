@@ -301,6 +301,9 @@ without this screenshot-capture evidence.
 ## 7. Non-Negotiable Coding Constraints
 
 - Prefer immutable data and pure functions for domain transformations.
+- Functional programming is the primary style for domain logic. Avoid
+  procedural control flow when an expression, Result/Either/Option branch, or
+  sealed-pattern switch can model the same decision.
 - Keep I/O at explicit boundaries: filesystem, process execution, network, and
   platform services must not leak into domain logic.
 - CLI I/O implementations must live under `packages/konyak_cli/lib/src/io`.
@@ -308,12 +311,29 @@ without this screenshot-capture evidence.
   Result/Either values or sealed result variants.
 - Expected absence in CLI/domain logic must use Option rather than nullable
   domain values.
+- Outside direct I/O and adapter boundaries, do not use nullable types or null
+  literals. Model absence with Option and model failure with Either, Result, or
+  sealed result variants.
 - Complete-constructor invariant violations may throw; ordinary I/O failure
   must not be represented by business-logic exceptions.
 - fpdart is limited to CLI/domain code. Flutter UI must consume explicit app or
   CLI result models instead of importing fpdart.
 - Model absence and failure explicitly. Do not hide failures behind default
   empty strings, empty lists, or broad catch-all branches.
+- Do not reassign values in domain logic. Use final values, expression
+  branching, switch expressions, or an immediately invoked function expression
+  when local branching is needed.
+- Do not mutate function arguments. Create new immutable values instead.
+- Do not use nested conditional expressions; use switch or an immediately
+  invoked function expression for non-trivial branching.
+- Do not use primitives for values that carry invariants or domain meaning.
+- Except at I/O boundaries, public function arguments and return values should
+  be domain value objects or explicit result variants rather than primitives.
+- Use sealed classes and switch-based pattern matching as the default shape for
+  domain branching.
+- Use Freezed for immutable value objects; do not hand-write value-object
+  equality, copy, or union boilerplate unless a concrete technical constraint
+  requires it.
 - Validate all external data before it enters domain state. This includes plist
   imports, JSON, CLI stdout, filesystem scans, Wine command output, and network
   responses.
@@ -327,6 +347,10 @@ without this screenshot-capture evidence.
 
 - Use `final` by default.
 - Prefer small pure functions and immutable value objects.
+- Prefer `forEach` over `for` in domain transformations unless a measured
+  performance issue or language limitation requires an explicit loop.
+- Keep data immutable by default, including collection values, except where an
+  I/O path has a concrete performance reason to do otherwise.
 - Keep widgets focused on rendering and orchestration.
 - Put domain logic outside widgets.
 - Keep process execution behind a platform service abstraction.

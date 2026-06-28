@@ -1,10 +1,23 @@
 from pathlib import Path
 import plistlib
 import re
-import subprocess
 
 
 ROOT = Path(__file__).resolve().parents[1]
+
+CUSTOM_LINT_RULES = [
+    "konyak_no_domain_increment",
+    "konyak_no_domain_io",
+    "konyak_no_domain_nested_conditional",
+    "konyak_no_domain_parameter_mutation",
+    "konyak_no_domain_reassignment",
+    "konyak_no_domain_var_declaration",
+    "konyak_no_null_literal_outside_boundary",
+    "konyak_no_nullable_bridge_outside_boundary",
+    "konyak_no_nullable_sentinel_flow",
+    "konyak_no_nullable_type_outside_boundary",
+    "konyak_no_result_failure_to_option_none",
+]
 
 
 def read_text(relative_path: str) -> str:
@@ -61,199 +74,29 @@ def require_not_contains_under(
             raise AssertionError(f"{relative_path} must not contain: {unexpected}")
 
 
-def require_no_nullable_result_sentinel_patterns() -> None:
-    dart_roots = [
-        ROOT / "packages/konyak_cli/lib",
-        ROOT / "packages/konyak_cli/bin",
-        ROOT / "apps/konyak/lib",
+def require_custom_lint_rules() -> None:
+    require_missing("scripts/verify_domain_reassignment.dart")
+    require_contains("tools/konyak_lints/pubspec.yaml", "custom_lint_builder:")
+    require_contains("tools/konyak_lints/lib/konyak_lints.dart", "createPlugin()")
+    require_contains("justfile", "flutter-custom-lint")
+    require_contains("justfile", "cli-custom-lint")
+    require_contains("justfile", "konyak-lints-analyze")
+    require_contains("justfile", "konyak-lints-format-check")
+    require_contains("justfile", "konyak-lints-test")
+
+    lint_consumers = [
+        ("apps/konyak/pubspec.yaml", "apps/konyak/analysis_options.yaml"),
+        ("packages/konyak_cli/pubspec.yaml", "packages/konyak_cli/analysis_options.yaml"),
     ]
-    patterns = [
-        (
-            re.compile(r"fold<[^>\n]+\?>"),
-            "fold must not create nullable intermediate Result/Either values",
-        ),
-        (
-            re.compile(
-                r"getOrElse\(\s*\([^)]*\)\s*=>\s*(?:const\s+)?Option\.none\(\)\s*\)",
-                flags=re.MULTILINE,
-            ),
-            "Result/Either failure must not be collapsed into Option.none()",
-        ),
-        (
-            re.compile(r"\.match\(\s*\(\)\s*=>\s*null"),
-            "Option.match must not return null for the none branch",
-        ),
-        (
-            re.compile(r"\(\)\s*=>\s*null,"),
-            "callbacks in functional branching must not use null as a sentinel",
-        ),
-        (
-            re.compile(r"_\s*=>\s*null,"),
-            "wildcard branches must not use null as a sentinel",
-        ),
-        (
-            re.compile(r"if \([^\n)]*(?:failure|Failure)[^\n)]*!= null\)"),
-            "failure handling must use Result/Either/Option/sealed branches",
-        ),
-        (
-            re.compile(r"return\s+\w*[Ff]ailure\s*==\s*null"),
-            "success must not be represented by a null failure value",
-        ),
-    ]
-
-    for root in dart_roots:
-        if not root.exists():
-            continue
-        for path in sorted(root.rglob("*.dart")):
-            relative_path = path.relative_to(ROOT)
-            relative_text = str(relative_path)
-            if (
-                ".dart_tool" in relative_text
-                or "/build/" in relative_text
-                or path.name.endswith(".freezed.dart")
-            ):
-                continue
-
-            text = path.read_text(encoding="utf-8")
-            for pattern, message in patterns:
-                match = pattern.search(text)
-                if match is not None:
-                    line = text.count("\n", 0, match.start()) + 1
-                    raise AssertionError(f"{relative_path}:{line}: {message}")
-
-
-def is_external_null_boundary(relative_path: str) -> bool:
-    boundary_prefixes = [
-        "packages/konyak_cli/bin/",
-        "packages/konyak_cli/lib/src/cli/",
-        "packages/konyak_cli/lib/src/io/",
-        "packages/konyak_cli/lib/src/platform/",
-        "apps/konyak/lib/src/cli/",
-        "apps/konyak/lib/src/home_loader/",
-        "apps/konyak/lib/src/home_loader_parts/",
-        "apps/konyak/lib/src/icons/",
-    ]
-    if any(relative_path.startswith(prefix) for prefix in boundary_prefixes):
-        return True
-    if (
-        relative_path.startswith("apps/konyak/lib/src/app/")
-        and relative_path
-        != "apps/konyak/lib/src/app/dialogs/app_settings_runtime_view_model.dart"
-    ):
-        return True
-    if relative_path.startswith(
-        (
-            "apps/konyak/lib/src/bottles/",
-            "apps/konyak/lib/src/files/",
-            "apps/konyak/lib/src/l10n/",
-            "apps/konyak/lib/src/runtimes/",
-            "apps/konyak/lib/src/runs/",
-            "apps/konyak/lib/src/settings/",
-            "apps/konyak/lib/src/updates/",
-        )
-    ):
-        return True
-
-    boundary_paths = {
-        "packages/konyak_cli/lib/konyak_cli.dart",
-        # JSON contract rendering currently lives on these domain models.
-        "packages/konyak_cli/lib/src/domain/app/app_settings_models.dart",
-        "packages/konyak_cli/lib/src/domain/bottle/bottle_models.dart",
-        "packages/konyak_cli/lib/src/domain/bottle/bottle_mutation_models.dart",
-        "packages/konyak_cli/lib/src/domain/bottle/bottle_runtime_settings_models.dart",
-        "packages/konyak_cli/lib/src/domain/program/program_catalog_models.dart",
-        "packages/konyak_cli/lib/src/domain/program/program_graphics_backend_hints.dart",
-        "packages/konyak_cli/lib/src/domain/program/program_mutation_models.dart",
-        "packages/konyak_cli/lib/src/domain/program/program_run_models.dart",
-        "packages/konyak_cli/lib/src/domain/program/program_settings_models.dart",
-        "packages/konyak_cli/lib/src/domain/runtime/runtime_models.dart",
-        "packages/konyak_cli/lib/src/domain/runtime/runtime_package_installation.dart",
-        "packages/konyak_cli/lib/src/domain/runtime/runtime_validation_models.dart",
-        "packages/konyak_cli/lib/src/domain/update/app_update_checker.dart",
-        "packages/konyak_cli/lib/src/domain/update/update_records.dart",
-        # Flutter widget files use nullable framework parameters at the final UI
-        # adapter line. View-model files are intentionally not listed here.
-        "apps/konyak/lib/main.dart",
-        "apps/konyak/lib/src/app/dialogs/app_settings_runtime_section.dart",
-    }
-    return relative_path in boundary_paths
-
-
-def require_no_non_boundary_nullable_usage() -> None:
-    dart_roots = [
-        ROOT / "packages/konyak_cli/lib",
-        ROOT / "packages/konyak_cli/bin",
-        ROOT / "apps/konyak/lib",
-    ]
-    patterns = [
-        (
-            re.compile(r"\bnull\b"),
-            "`null` literals are allowed only at direct external boundaries",
-        ),
-        (
-            re.compile(
-                r"\b(?:String|int|bool|double|num|Object|File|Directory|"
-                r"[A-Z][A-Za-z0-9_]*(?:<[^>\n]+>)?)\?(?=[\s,;)=])"
-            ),
-            "nullable types are allowed only at direct external boundaries",
-        ),
-        (
-            re.compile(r"\)\?(?=[\s,;=])"),
-            "nullable function types are allowed only at direct external boundaries",
-        ),
-        (
-            re.compile(r"\b(?:toNullable|fromNullable)\("),
-            "nullable bridge helpers are allowed only at direct external boundaries",
-        ),
-    ]
-
-    for root in dart_roots:
-        if not root.exists():
-            continue
-        for path in sorted(root.rglob("*.dart")):
-            relative_path = path.relative_to(ROOT)
-            relative_text = str(relative_path)
-            if (
-                ".dart_tool" in relative_text
-                or "/build/" in relative_text
-                or path.name.endswith(".freezed.dart")
-                or is_external_null_boundary(relative_text)
-            ):
-                continue
-
-            text = path.read_text(encoding="utf-8")
-            for pattern, message in patterns:
-                match = pattern.search(text)
-                if match is not None:
-                    line = text.count("\n", 0, match.start()) + 1
-                    raise AssertionError(f"{relative_path}:{line}: {message}")
-
-
-def require_no_domain_reassignment() -> None:
-    package_config = ROOT / "packages/konyak_cli/.dart_tool/package_config.json"
-    if not package_config.exists():
-        raise AssertionError(
-            "packages/konyak_cli dependencies must be resolved before "
-            "verify-governance; run `just cli-pub-get`."
-        )
-
-    result = subprocess.run(
-        [
-            "dart",
-            f"--packages={package_config}",
-            "scripts/verify_domain_reassignment.dart",
-            str(ROOT),
-        ],
-        cwd=ROOT,
-        check=False,
-        text=True,
-        capture_output=True,
-    )
-    if result.returncode != 0:
-        output = "\n".join(
-            value for value in [result.stdout.strip(), result.stderr.strip()] if value
-        )
-        raise AssertionError(output)
+    for pubspec_path, options_path in lint_consumers:
+        require_contains(pubspec_path, "custom_lint:")
+        require_contains(pubspec_path, "konyak_lints:")
+        require_contains(options_path, "plugins:")
+        require_contains(options_path, "- custom_lint")
+        require_contains(options_path, "custom_lint:")
+        for rule in CUSTOM_LINT_RULES:
+            require_contains(options_path, rule)
+            require_contains("tools/konyak_lints/lib/konyak_lints.dart", rule)
 
 
 def require_io_implementation_boundaries() -> None:
@@ -369,9 +212,7 @@ def require_result_boundary_rules() -> None:
     require_no_files_under("packages/konyak_cli/lib/src", "*.dart")
     require_io_implementation_boundaries()
     require_external_payload_parser_boundaries()
-    require_no_nullable_result_sentinel_patterns()
-    require_no_non_boundary_nullable_usage()
-    require_no_domain_reassignment()
+    require_custom_lint_rules()
 
     for expected in [
         "typedef IoResult<T> = Either<String, T>",

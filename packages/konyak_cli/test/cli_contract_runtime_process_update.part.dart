@@ -202,6 +202,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
             '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
           ),
         }),
+        runtimeStackVersionProbe: const EmptyRuntimeStackVersionProbe(),
       ),
     );
 
@@ -462,6 +463,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
         fileStatusProbe: const StaticFileStatusProbe({
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wineloader',
         }),
+        runtimeStackVersionProbe: const EmptyRuntimeStackVersionProbe(),
       ),
     );
 
@@ -518,6 +520,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
         hostPlatform: KonyakHostPlatform.macos,
         environment: HostEnvironment(const {'HOME': '/Users/user'}),
         fileStatusProbe: StaticFileStatusProbe(existingPaths),
+        runtimeStackVersionProbe: const EmptyRuntimeStackVersionProbe(),
       ),
     );
 
@@ -565,6 +568,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
           hostPlatform: KonyakHostPlatform.macos,
           environment: HostEnvironment(const {'HOME': '/Users/user'}),
           fileStatusProbe: StaticFileStatusProbe(existingPaths),
+          runtimeStackVersionProbe: const EmptyRuntimeStackVersionProbe(),
         ),
       );
 
@@ -652,6 +656,8 @@ void defineRuntimeProcessAndUpdateContractTests() {
         runtimeCatalog: MacosWineRuntimeCatalog(
           hostPlatform: KonyakHostPlatform.macos,
           environment: HostEnvironment({'KONYAK_MACOS_WINE_HOME': runtimeHome}),
+          fileStatusProbe: DartIoFileStatusProbe(),
+          runtimeStackVersionProbe: const DartIoRuntimeStackVersionProbe(),
         ),
       );
 
@@ -678,6 +684,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
         hostPlatform: KonyakHostPlatform.linux,
         environment: HostEnvironment(const {'HOME': '/home/user'}),
         fileStatusProbe: const StaticFileStatusProbe({}),
+        runtimeStackVersionProbe: const EmptyRuntimeStackVersionProbe(),
       ),
     );
 
@@ -718,6 +725,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
           '/home/user/.local/share/konyak/Runtimes/linux-wine/vkd3d-proton/x86/d3d12.dll',
           '/home/user/.local/share/konyak/Runtimes/linux-wine/vkd3d-proton/x86/d3d12core.dll',
         }),
+        runtimeStackVersionProbe: const EmptyRuntimeStackVersionProbe(),
       ),
     );
 
@@ -863,6 +871,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
           '/home/user/.local/share/konyak/Runtimes/linux-wine/vkd3d-proton/x86/d3d12.dll',
           '/home/user/.local/share/konyak/Runtimes/linux-wine/vkd3d-proton/x86/d3d12core.dll',
         }),
+        runtimeStackVersionProbe: const EmptyRuntimeStackVersionProbe(),
       ),
     );
 
@@ -916,6 +925,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
           '/home/user/.local/share/konyak/Runtimes/linux-wine/vkd3d-proton/x86/d3d12.dll',
           '/home/user/.local/share/konyak/Runtimes/linux-wine/vkd3d-proton/x86/d3d12core.dll',
         }),
+        runtimeStackVersionProbe: const EmptyRuntimeStackVersionProbe(),
       ),
     );
 
@@ -3616,6 +3626,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
         fileStatusProbe: const StaticFileStatusProbe({
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wineloader',
         }),
+        runtimeStackVersionProbe: const EmptyRuntimeStackVersionProbe(),
       ),
     );
 
@@ -3782,6 +3793,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
           '/runtime/linux-wine/vkd3d-proton/x86/d3d12.dll',
           '/runtime/linux-wine/vkd3d-proton/x86/d3d12core.dll',
         }),
+        runtimeStackVersionProbe: const EmptyRuntimeStackVersionProbe(),
       ),
       environment: environment,
       fileStatusProbe: const StaticFileStatusProbe({

@@ -17,20 +17,13 @@ extension _MacosWineArchiveInstallation on DartIoMacosWineInstaller {
         archiveSha256: archiveSha256,
         componentArchivePaths: componentArchivePaths,
         componentVersions: componentVersions,
-        runtimeRoot: Directory(_macosWineRuntimeRoot(environment)),
+        runtimeRoot: _macosWineRuntimeRoot(environment),
         requiredExecutableRelativePath:
             _macosKonyakRuntimePlatformSpec.requiredExecutableRelativePath,
         expectedExecutablePath: _macosWineExecutable(environment),
         preserveExistingRuntimeFiles: preserveExistingRuntimeFiles,
-        preserveExistingRuntimeComponents:
-            _preserveImportedGptkD3DMetalComponent,
-        normalizeStagingRoot:
-            _macosKonyakRuntimePlatformSpec.layoutNormalization ==
-                _RuntimeLayoutNormalization.macosWineBundle
-            ? _normalizeMacosWineRuntimeLayout
-            : null,
-        progressSink: progressSink,
       ),
+      progressSink: progressSink,
     );
     switch (installResult) {
       case RuntimePackageInstallFailed(:final message):

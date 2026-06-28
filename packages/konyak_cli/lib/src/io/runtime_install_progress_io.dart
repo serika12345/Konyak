@@ -1,0 +1,22 @@
+part of '../../konyak_cli.dart';
+
+abstract interface class RuntimeInstallProgressSink {
+  void emit(RuntimeInstallProgress progress);
+}
+
+final class JsonRuntimeInstallProgressSink
+    implements RuntimeInstallProgressSink {
+  const JsonRuntimeInstallProgressSink(this.output);
+
+  final StringSink output;
+
+  @override
+  void emit(RuntimeInstallProgress progress) {
+    output.writeln(
+      jsonEncode(<String, Object?>{
+        'schemaVersion': cliSchemaVersion,
+        'runtimeInstallProgress': progress.toJson(),
+      }),
+    );
+  }
+}

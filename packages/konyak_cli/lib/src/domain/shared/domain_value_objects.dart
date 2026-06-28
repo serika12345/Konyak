@@ -1051,6 +1051,23 @@ abstract class RuntimeComponentPath
   map: FreezedMapOptions.none,
   when: FreezedWhenOptions.none,
 )
+abstract class RuntimeRootPath
+    with _$RuntimeRootPath
+    implements StringDomainValueObject {
+  const RuntimeRootPath._();
+
+  factory RuntimeRootPath(String value) => RuntimeRootPath._validated(
+    _requiredValueObjectString(value, 'runtimeRootPath'),
+  );
+
+  const factory RuntimeRootPath._validated(String value) = _RuntimeRootPath;
+}
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
 abstract class RuntimeMissingPath
     with _$RuntimeMissingPath
     implements StringDomainValueObject {

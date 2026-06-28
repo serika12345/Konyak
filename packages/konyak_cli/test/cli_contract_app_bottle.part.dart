@@ -379,6 +379,65 @@ void defineAppAndBottleContractTests() {
     );
   });
 
+  test('import-bottle-archive --json reports repository lookup failures', () {
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-bottle-import-failure-test-',
+    );
+    addTearDown(() {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    });
+    final sourceBottlePath = _joinTestPath(tempDirectory.path, const [
+      'archive-source',
+      'steam',
+    ]);
+    final sourceBottle = BottleRecord(
+      id: 'steam',
+      name: 'Steam',
+      path: sourceBottlePath,
+      windowsVersion: 'win10',
+    );
+    Directory(
+      _joinTestPath(sourceBottlePath, const ['drive_c']),
+    ).createSync(recursive: true);
+    _writeTestBottleMetadata(sourceBottle);
+    final archivePath = _joinTestPath(tempDirectory.path, const [
+      'steam.konyak-bottle.tar',
+    ]);
+    final archiveResult = Process.runSync('tar', [
+      '-cf',
+      archivePath,
+      '-C',
+      _joinTestPath(tempDirectory.path, const ['archive-source']),
+      'steam',
+    ]);
+    expect(archiveResult.exitCode, 0);
+    final dataHome = _joinTestPath(tempDirectory.path, const ['data']);
+    File(_joinTestPath(dataHome, const ['bottles', 'steam', 'metadata.json']))
+      ..createSync(recursive: true)
+      ..writeAsStringSync('[]');
+    final repository = FileBottleRepository(dataHome: dataHome);
+
+    final result = runCli([
+      'import-bottle-archive',
+      '--archive',
+      archivePath,
+      '--json',
+    ], bottleRepository: repository);
+
+    expect(result.exitCode, 65);
+    expect(result.stderr, isEmpty);
+    final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+    expect(payload, {
+      'schemaVersion': 1,
+      'error': {
+        'code': 'invalidBottleArchive',
+        'message': 'Bottle metadata must be an object.',
+      },
+    });
+  });
+
   test('inspect-bottle --json returns a versioned bottle detail contract', () {
     final result = runCli(
       const ['inspect-bottle', 'steam', '--json'],

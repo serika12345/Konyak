@@ -13,6 +13,79 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-28 13:58 JST
+- State: `completed`
+- Branch: `main`
+- Active work: make the custom lint I/O/domain boundary hardening reflect real
+  architectural boundaries.
+- Related TODO: none; this is a correction to the active custom lint/governance
+  enforcement change.
+- Latest commit: `2612436` (`Move external payload parsers to IO`).
+- Purpose: prevent `part`-wide `dart:io` imports and request callbacks from
+  leaving platform/I/O behavior reachable from domain files while the new lint
+  rules appear green.
+- Completed work: added failing fixtures for `Platform.*`, `DartIo*` domain
+  implementation leaks, file/process I/O references, and domain
+  serialization-boundary use; extended `konyak_no_domain_io` to catch those
+  cases; moved current runtime catalog/planner construction to I/O factories;
+  moved runtime package installer hooks and progress sinks to `src/io`; and
+  moved `DartIoRuntimeUpdateChecker`/`DartIoAppUpdateChecker` out of domain.
+- Remaining work: none for this correction slice.
+- Next action: continue with the product/runtime backlog in `docs/todo.md`.
+- Verification: `just konyak-lints-analyze`, `just konyak-lints-test`,
+  `just verify-governance`, `just cli-custom-lint`,
+  `just format-check && just lint && just verify-safety && just test`, and
+  `just verify-architecture` passed.
+
+- Timestamp: 2026-06-28 13:21 JST
+- State: `completed`
+- Branch: `main`
+- Active work: strengthen custom lint and governance for domain I/O and
+  nullable sentinel flows.
+- Related TODO: none; this is a repository policy enforcement hardening.
+- Latest commit: `2612436` (`Move external payload parsers to IO`).
+- Purpose: make the analyzer/custom-lint path catch domain I/O leaks and the
+  nullable sentinel Result/Option patterns that regex/script checks can miss.
+- Completed work: added fixture-driven tests for the lint package; added
+  custom lint rules for domain I/O API references and nullable sentinel flow;
+  connected the new rules to CLI/Flutter analysis options and governance; and
+  moved the currently detected runtime package installer/digest I/O references
+  out of domain code.
+- Remaining work: none for this enforcement slice.
+- Next action: continue with the product/runtime backlog in `docs/todo.md`.
+- Verification: `just konyak-lints-analyze`, `just konyak-lints-test`, and
+  `just verify-governance && just cli-custom-lint` passed; the full
+  repository/tooling gate
+  `just verify-architecture && just format-check && just lint &&
+  just verify-safety && just test && git diff --check` passed.
+
+- Timestamp: 2026-06-28 12:11 JST
+- State: `completed`
+- Branch: `main`
+- Active work: move nullable/reassignment governance from external scripts to
+  `custom_lint`.
+- Related TODO: none; this is a coding-standard enforcement correction.
+- Latest commit: `2612436` (`Move external payload parsers to IO`).
+- Purpose: enforce the domain coding rules through Dart analyzer/custom lint
+  instead of separate AST or regex scripts, while keeping I/O and adapter
+  boundary exceptions explicit.
+- Completed work: added the internal `tools/konyak_lints` plugin with custom
+  lint rules for non-boundary `null`/nullable usage, nullable bridge helpers,
+  Result/Either failure collapse into `Option.none()`, domain reassignment,
+  `var`, increment/decrement, nested conditionals, and parameter mutation;
+  connected `custom_lint` to the CLI and Flutter packages;
+  made `just lint` run custom lint for both packages and analyzer for the lint
+  package itself; replaced the external domain reassignment/nullable regex
+  governance checks with custom lint configuration checks; removed
+  `scripts/verify_domain_reassignment.dart`; and documented the
+  functional/domain coding standards in `AGENTS.md`.
+- Remaining work: none for this enforcement slice.
+- Next action: continue with the product/runtime backlog in `docs/todo.md`.
+- Verification: `tools/konyak_lints` analyzer, CLI `custom_lint`, Flutter
+  `custom_lint`, `just cli-analyze`, `just flutter-analyze`,
+  `just verify-governance`, `just format-check`, `just lint`,
+  `just verify-safety`, `just test`, and `git diff --check` passed.
+
 - Timestamp: 2026-06-28 07:29 JST
 - State: `completed`
 - Branch: `main`

@@ -1,0 +1,10 @@
+name: konyak_cli
+publish_to: 'none'
+
+environment:
+  sdk: ^3.11.4
+
+dev_dependencies:
+  custom_lint: ^0.8.1
+  konyak_lints:
+    path: ../../../../..

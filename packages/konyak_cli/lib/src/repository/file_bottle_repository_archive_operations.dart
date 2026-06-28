@@ -30,9 +30,10 @@ class _FileBottleRepositoryArchiveOperations {
     return _importBottleArchive(
       archivePath: request.archivePath.value,
       bottleDirectory: bottleDirectory,
-      hasBottle: (bottleId) => _findBottle(
-        bottleId,
-      ).getOrElse((_) => const Option<BottleRecord>.none()).isSome(),
+      hasBottle: (bottleId) => _findBottle(bottleId).fold(
+        Left<String, bool>.new,
+        (bottle) => Right<String, bool>(bottle.isSome()),
+      ),
     );
   }
 }

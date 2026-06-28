@@ -11,6 +11,9 @@ flutter-pub-get:
 cli-pub-get:
   if [ -d packages/konyak_cli ]; then cd packages/konyak_cli && dart pub get; fi
 
+konyak-lints-pub-get:
+  if [ -d tools/konyak_lints ]; then cd tools/konyak_lints && dart pub get; fi
+
 cli-codegen: cli-pub-get
   if [ -d packages/konyak_cli ]; then cd packages/konyak_cli && dart run build_runner build; fi
 
@@ -20,21 +23,22 @@ verify-governance: cli-pub-get
 verify-architecture:
   python3 scripts/verify_architecture.py
 
-format: flutter-pub-get cli-pub-get
+format: flutter-pub-get cli-pub-get konyak-lints-pub-get
   nixfmt flake.nix
   if [ -d apps/konyak ]; then cd apps/konyak && dart format .; fi
   if [ -d packages/konyak_cli ]; then cd packages/konyak_cli && dart format .; fi
+  if [ -d tools/konyak_lints ]; then cd tools/konyak_lints && dart format .; fi
 
-format-check: flutter-pub-get cli-pub-get flutter-format-check cli-format-check
+format-check: flutter-pub-get cli-pub-get konyak-lints-pub-get flutter-format-check cli-format-check konyak-lints-format-check
   nixfmt --check flake.nix
 
-lint: flutter-pub-get cli-pub-get nix-lint flutter-analyze cli-analyze
+lint: flutter-pub-get cli-pub-get konyak-lints-pub-get nix-lint flutter-analyze cli-analyze konyak-lints-analyze
 
 nix-lint:
   deadnix --fail flake.nix
   statix check flake.nix
 
-test: flutter-pub-get cli-pub-get flutter-test cli-test release-automation-test
+test: flutter-pub-get cli-pub-get konyak-lints-pub-get flutter-test cli-test konyak-lints-test release-automation-test
 
 verify-safety: flutter-pub-get cli-pub-get
   python3 scripts/verify_no_invisible_chars.py
@@ -44,8 +48,11 @@ verify-safety: flutter-pub-get cli-pub-get
 flutter-format-check:
   if [ -d apps/konyak ]; then cd apps/konyak && dart format --set-exit-if-changed .; fi
 
-flutter-analyze:
+flutter-analyze: flutter-custom-lint
   if [ -d apps/konyak ]; then cd apps/konyak && flutter analyze --fatal-infos; fi
+
+flutter-custom-lint: flutter-pub-get
+  if [ -d apps/konyak ]; then cd apps/konyak && flutter pub run custom_lint; fi
 
 flutter-test:
   if [ -d apps/konyak ]; then cd apps/konyak && flutter test; fi
@@ -56,8 +63,20 @@ flutter-linux-loader-check:
 cli-format-check: cli-codegen
   if [ -d packages/konyak_cli ]; then cd packages/konyak_cli && dart format --set-exit-if-changed .; fi
 
-cli-analyze: cli-codegen
+konyak-lints-format-check: konyak-lints-pub-get
+  if [ -d tools/konyak_lints ]; then cd tools/konyak_lints && dart format --set-exit-if-changed .; fi
+
+cli-custom-lint: cli-pub-get
+  if [ -d packages/konyak_cli ]; then cd packages/konyak_cli && dart run custom_lint; fi
+
+cli-analyze: cli-codegen cli-custom-lint
   if [ -d packages/konyak_cli ]; then cd packages/konyak_cli && dart analyze --fatal-infos; fi
+
+konyak-lints-analyze: konyak-lints-pub-get
+  if [ -d tools/konyak_lints ]; then cd tools/konyak_lints && dart analyze --fatal-infos; fi
+
+konyak-lints-test: konyak-lints-pub-get
+  if [ -d tools/konyak_lints ]; then cd tools/konyak_lints && dart test; fi
 
 cli-test: cli-codegen
   if [ -d packages/konyak_cli ]; then cd packages/konyak_cli && dart test; fi

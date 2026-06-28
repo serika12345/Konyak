@@ -1,6 +1,8 @@
 include: package:lints/recommended.yaml
 
 analyzer:
+  plugins:
+    - custom_lint
   language:
     strict-casts: true
     strict-inference: true
@@ -9,6 +11,20 @@ analyzer:
     missing_required_param: error
     missing_return: error
     todo: warning
+
+custom_lint:
+  rules:
+    - konyak_no_domain_increment
+    - konyak_no_domain_io
+    - konyak_no_domain_nested_conditional
+    - konyak_no_domain_parameter_mutation
+    - konyak_no_domain_reassignment
+    - konyak_no_domain_var_declaration
+    - konyak_no_null_literal_outside_boundary
+    - konyak_no_nullable_bridge_outside_boundary
+    - konyak_no_nullable_sentinel_flow
+    - konyak_no_nullable_type_outside_boundary
+    - konyak_no_result_failure_to_option_none
 
 linter:
   rules:

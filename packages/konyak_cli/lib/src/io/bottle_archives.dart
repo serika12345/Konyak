@@ -47,7 +47,7 @@ BottleArchiveExportResult _exportBottleArchive({
 BottleArchiveImportResult _importBottleArchive({
   required String archivePath,
   required String bottleDirectory,
-  required bool Function(String bottleId) hasBottle,
+  required IoResult<bool> Function(String bottleId) hasBottle,
   void Function(BottleRecord bottle)? onImported,
 }) {
   final archive = File(archivePath);
@@ -95,21 +95,25 @@ BottleArchiveImportResult _importBottleArchive({
         'Bottle archive metadata contains an invalid bottle id.',
       );
     }
-    if (hasBottle(imported.id.value)) {
-      return BottleArchiveImportConflict(imported.id.value);
-    }
+    return hasBottle(imported.id.value).fold(BottleArchiveImportFailed.new, (
+      exists,
+    ) {
+      if (exists) {
+        return BottleArchiveImportConflict(imported.id.value);
+      }
 
-    final destinationPath = _joinPath(bottleDirectory, [imported.id.value]);
-    if (Directory(destinationPath).existsSync()) {
-      return BottleArchiveImportConflict(imported.id.value);
-    }
+      final destinationPath = _joinPath(bottleDirectory, [imported.id.value]);
+      if (Directory(destinationPath).existsSync()) {
+        return BottleArchiveImportConflict(imported.id.value);
+      }
 
-    final relocated = imported.withPath(destinationPath);
-    _moveDirectory(from: extractedBottlePath, to: destinationPath);
-    _writeBottleMetadata(relocated);
-    onImported?.call(relocated);
+      final relocated = imported.withPath(destinationPath);
+      _moveDirectory(from: extractedBottlePath, to: destinationPath);
+      _writeBottleMetadata(relocated);
+      onImported?.call(relocated);
 
-    return BottleArchiveImported(relocated);
+      return BottleArchiveImported(relocated);
+    });
   } on FileSystemException catch (error) {
     return BottleArchiveImportFailed(error.message);
   } on FormatException catch (error) {

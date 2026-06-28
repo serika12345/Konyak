@@ -42,19 +42,6 @@ def fail_if_contains(
 
 
 def verify_cli_domain_boundaries(failures: list[str], files: list[str]) -> None:
-    forbidden_io_patterns = (
-        "dart:io",
-        "File(",
-        "Directory(",
-        "Process.",
-        "Process.run",
-        "Process.start",
-        "HttpClient(",
-        "SocketException",
-        "FileSystemException",
-        "ProcessException",
-        "IOException",
-    )
     forbidden_control_patterns = ("catch (", "catch {", "rethrow")
 
     for relative_path in files:
@@ -62,13 +49,6 @@ def verify_cli_domain_boundaries(failures: list[str], files: list[str]) -> None:
             continue
 
         text = read(relative_path)
-        fail_if_contains(
-            failures,
-            relative_path,
-            text,
-            forbidden_io_patterns,
-            "domain code must not depend on I/O APIs",
-        )
         fail_if_contains(
             failures,
             relative_path,

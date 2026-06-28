@@ -16,12 +16,12 @@ extension _DartIoLinuxWineInstallerOperations on DartIoLinuxWineInstaller {
         archiveSha256: archiveSha256,
         componentArchivePaths: componentArchivePaths,
         componentVersions: componentVersions,
-        runtimeRoot: Directory(_linuxWineRuntimeRoot(environment)),
+        runtimeRoot: _linuxWineRuntimeRoot(environment),
         requiredExecutableRelativePath:
             _linuxWineRuntimePlatformSpec.requiredExecutableRelativePath,
         expectedExecutablePath: _linuxWineExecutable(environment),
-        progressSink: progressSink,
       ),
+      progressSink: progressSink,
     );
     switch (installResult) {
       case RuntimePackageInstallFailed(:final message):
