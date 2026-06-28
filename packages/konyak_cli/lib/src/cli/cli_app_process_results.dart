@@ -42,17 +42,41 @@ CliResult wineProcessTerminationJsonResult(
     'wineProcessTermination': <String, Object?>{
       'hasFailures': hasFailures,
       recordsKey: records
-          .map((record) => record.toJson())
+          .map(wineProcessTerminationRecordJson)
           .toList(growable: false),
     },
   }, exitCode: hasFailures ? 75 : 0);
+}
+
+Map<String, Object?> wineProcessTerminationRecordJson(
+  WineProcessTerminationRecord record,
+) {
+  return <String, Object?>{
+    'bottleId': record.bottleId.value,
+    ...record.processId.match(
+      () => const <String, Object?>{},
+      (value) => <String, Object?>{'processId': value.value},
+    ),
+    'status': record.status.value,
+    'runnerKind': record.runnerKind.value,
+    'executable': record.executable.value,
+    'argv': record.argv,
+    ...record.processExitCode.match(
+      () => const <String, Object?>{},
+      (value) => <String, Object?>{'processExitCode': value},
+    ),
+    ...record.message.match(
+      () => const <String, Object?>{},
+      (value) => <String, Object?>{'message': value},
+    ),
+  };
 }
 
 CliResult wineProcessListJsonResult(List<WineProcessRecord> records) {
   return jsonSuccess(<String, Object?>{
     'wineProcesses': <String, Object?>{
       'processes': records
-          .map((record) => record.toJson())
+          .map((processRecord) => processRecord.toJson())
           .toList(growable: false),
     },
   });

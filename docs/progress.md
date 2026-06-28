@@ -13,6 +13,35 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-28 21:38 JST
+- State: `completed`
+- Branch: `main`
+- Active work: move `WineProcessTerminationRecord` JSON projection out of
+  domain models.
+- Related TODO: `docs/todo.md` deferred JSON `toJson` projection separation.
+- Latest commit: `240ec3d` (`Type wine process planner boundary`).
+- Purpose: begin separating domain models from CLI JSON serialization by
+  moving a narrow, recently touched process-termination projection into the
+  CLI boundary.
+- Completed work: inspected current roadmap/progress state and audited domain
+  `toJson` usage; selected `WineProcessTerminationRecord` as the first safe
+  slice because CLI process termination tests already cover the external JSON
+  contract; added governance that rejects domain-owned termination JSON
+  projection and requires CLI-side projection; moved
+  `WineProcessTerminationRecord.toJson` into
+  `wineProcessTerminationRecordJson` at the CLI boundary.
+- Remaining work: many domain `toJson` projections remain, especially bottle,
+  program catalog, runtime/update, settings, and validation records.
+- Next action: continue JSON projection separation with another narrow
+  CLI-covered record group, likely `WineProcessRecord` / `ProgramRecord` or
+  bottle read/mutation projections.
+- Verification: observed `just verify-governance` fail before implementation
+  because `WineProcessTerminationRecord` still owned `toJson`; after
+  implementation, `cd packages/konyak_cli && dart analyze --fatal-infos`,
+  focused wine-process CLI contract tests, `just verify-governance`,
+  `just cli-test`, `just verify-architecture`, `just verify-safety`,
+  `just format-check`, `just lint`, and `git diff --check` passed.
+
 - Timestamp: 2026-06-28 21:28 JST
 - State: `completed`
 - Branch: `main`

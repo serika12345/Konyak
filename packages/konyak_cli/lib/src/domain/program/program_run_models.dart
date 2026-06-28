@@ -80,28 +80,6 @@ class WineProcessTerminationRecord {
   final Option<WineProcessId> processId;
   final Option<int> processExitCode;
   final Option<String> message;
-
-  Map<String, Object?> toJson() {
-    return <String, Object?>{
-      'bottleId': bottleId.value,
-      ...processId.match(
-        () => const <String, Object?>{},
-        (value) => <String, Object?>{'processId': value.value},
-      ),
-      'status': status.value,
-      'runnerKind': runnerKind.value,
-      'executable': executable.value,
-      'argv': argv,
-      ...processExitCode.match(
-        () => const <String, Object?>{},
-        (value) => <String, Object?>{'processExitCode': value},
-      ),
-      ...message.match(
-        () => const <String, Object?>{},
-        (value) => <String, Object?>{'message': value},
-      ),
-    };
-  }
 }
 
 sealed class PathOpenResult {

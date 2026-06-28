@@ -530,6 +530,44 @@ def require_typed_wine_process_planner_boundary() -> None:
         )
 
 
+def require_wine_process_termination_cli_json_projection() -> None:
+    domain_path = "packages/konyak_cli/lib/src/domain/program/program_run_models.dart"
+    domain = read_text(domain_path)
+    record_match = re.search(
+        r"class WineProcessTerminationRecord \{(?P<body>.*?)\n\}",
+        domain,
+        flags=re.DOTALL,
+    )
+    if record_match is None:
+        raise AssertionError("WineProcessTerminationRecord must exist")
+    if "toJson(" in record_match.group("body"):
+        raise AssertionError(
+            "WineProcessTerminationRecord must not own CLI JSON projection"
+        )
+
+    cli_path = "packages/konyak_cli/lib/src/cli/cli_app_process_results.dart"
+    cli = read_text(cli_path)
+    expected_terms = [
+        "Map<String, Object?> wineProcessTerminationRecordJson(",
+        "WineProcessTerminationRecord record,",
+        "record.processId.match(",
+        "record.processExitCode.match(",
+        "record.message.match(",
+        ".map(wineProcessTerminationRecordJson)",
+    ]
+    for expected in expected_terms:
+        if expected not in cli:
+            raise AssertionError(
+                "Wine process termination JSON projection must live at the "
+                f"CLI boundary: {expected}"
+            )
+
+    if "record.toJson()" in cli:
+        raise AssertionError(
+            "CLI process results must not rely on domain-owned toJson"
+        )
+
+
 def count_constructor_field_parameters(
     relative_path: str,
     constructor_name: str,
@@ -1322,6 +1360,7 @@ def main() -> None:
     require_typed_bottle_command_planner_boundary()
     require_typed_winetricks_verb_planner_boundary()
     require_typed_wine_process_planner_boundary()
+    require_wine_process_termination_cli_json_projection()
 
     for expected in [
         "flutter",
