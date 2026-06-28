@@ -20,6 +20,7 @@ import '../settings/app_settings_summary.dart';
 import '../updates/update_check_summary.dart';
 import 'home_loader.dart';
 import 'home_loader_platform_helpers.dart';
+import 'known_runtimes_state.dart';
 
 extension KonyakHomeLoaderRuntimes on KonyakHomeLoaderState {
   Future<void> initializeBackgroundServices() async {
@@ -210,8 +211,7 @@ extension KonyakHomeLoaderRuntimes on KonyakHomeLoaderState {
     }
 
     updateState(() {
-      knownRuntimes = List.unmodifiable(runtimes);
-      hasLoadedKnownRuntimes = true;
+      knownRuntimes = KnownRuntimesLoaded(runtimes);
     });
   }
 
@@ -233,7 +233,7 @@ extension KonyakHomeLoaderRuntimes on KonyakHomeLoaderState {
   }
 
   Future<RuntimeSummary?> ensureRuntimeForPlatformLoaded() async {
-    if (!hasLoadedKnownRuntimes) {
+    if (!knownRuntimes.isLoaded) {
       final runtimes = await loadKnownRuntimes();
       if (!mounted) {
         return null;
@@ -246,7 +246,7 @@ extension KonyakHomeLoaderRuntimes on KonyakHomeLoaderState {
       return runtimeForPlatform(widget.platform, runtimes);
     }
 
-    return runtimeForPlatform(widget.platform, knownRuntimes);
+    return runtimeForPlatform(widget.platform, knownRuntimes.runtimes);
   }
 
   Future<void> promptForMissingManagedRuntime() async {
@@ -272,8 +272,9 @@ extension KonyakHomeLoaderRuntimes on KonyakHomeLoaderState {
     switch (installResult) {
       case InstalledRuntime(:final runtime):
         updateState(() {
-          knownRuntimes = upsertRuntimeSummary(knownRuntimes, runtime);
-          hasLoadedKnownRuntimes = true;
+          knownRuntimes = KnownRuntimesLoaded(
+            upsertRuntimeSummary(knownRuntimes.runtimes, runtime),
+          );
         });
         showSnackBar(
           KonyakLocalizations.of(context).installedRuntime(runtime.name),
@@ -401,8 +402,9 @@ extension KonyakHomeLoaderRuntimes on KonyakHomeLoaderState {
     switch (result) {
       case InstalledRuntime(:final runtime):
         updateState(() {
-          knownRuntimes = upsertRuntimeSummary(knownRuntimes, runtime);
-          hasLoadedKnownRuntimes = true;
+          knownRuntimes = KnownRuntimesLoaded(
+            upsertRuntimeSummary(knownRuntimes.runtimes, runtime),
+          );
         });
       case RuntimeInstallLoadFailure():
         break;
@@ -487,10 +489,7 @@ extension KonyakHomeLoaderRuntimes on KonyakHomeLoaderState {
     switch (runtimesResult) {
       case LoadedRuntimeList(:final runtimes):
         if (mounted) {
-          updateState(() {
-            knownRuntimes = runtimes;
-            hasLoadedKnownRuntimes = true;
-          });
+          setKnownRuntimes(runtimes);
         }
         return installedRuntimeForPlatform(runtimes, widget.platform);
       case RuntimeListLoadFailure(

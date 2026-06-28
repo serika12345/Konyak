@@ -38,10 +38,13 @@ extension KonyakHomeLoaderSettings on KonyakHomeLoaderState {
               platform: widget.platform,
               initialSettings: settings,
               directoryPicker: widget.directoryPicker,
-              runtimes: runtimesForPlatform(widget.platform, knownRuntimes),
+              runtimes: runtimesForPlatform(
+                widget.platform,
+                knownRuntimes.runtimes,
+              ),
               isLoadingRuntimes:
-                  managedRuntime != null && !hasLoadedKnownRuntimes,
-              onLoadRuntimes: managedRuntime == null || hasLoadedKnownRuntimes
+                  managedRuntime != null && !knownRuntimes.isLoaded,
+              onLoadRuntimes: managedRuntime == null || knownRuntimes.isLoaded
                   ? null
                   : loadSettingsRuntimes,
               onInstallRuntime: managedRuntime != null

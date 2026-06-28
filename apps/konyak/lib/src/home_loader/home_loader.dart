@@ -16,7 +16,6 @@ import '../files/gptk_wine_source_picker.dart';
 import '../files/program_file_picker.dart';
 import '../l10n/konyak_localizations.dart';
 import '../logs/log_reader.dart';
-import '../runtimes/runtime_summary.dart';
 import '../settings/app_settings_summary.dart';
 import 'home_loader_bottles.dart';
 import 'home_loader_executables.dart';
@@ -27,6 +26,7 @@ import 'home_loader_runtimes.dart';
 import 'home_loader_settings.dart';
 import 'home_loader_wine_processes.dart';
 import 'home_loader_winetricks.dart';
+import 'known_runtimes_state.dart';
 
 class KonyakHomeLoader extends StatefulWidget {
   const KonyakHomeLoader({
@@ -85,8 +85,7 @@ class KonyakHomeLoaderState extends State<KonyakHomeLoader>
   AppSettingsSummary? appSettings;
   String? errorMessage;
   String? latestRunLogPath;
-  List<RuntimeSummary> knownRuntimes = const <RuntimeSummary>[];
-  bool hasLoadedKnownRuntimes = false;
+  KnownRuntimesState knownRuntimes = const KnownRuntimesPending();
   final List<String> pendingExecutableOpenPaths = <String>[];
   bool isHandlingExecutableOpen = false;
   final Map<String, ProgramSettingsSummary> programSettings =
@@ -160,7 +159,7 @@ class KonyakHomeLoaderState extends State<KonyakHomeLoader>
         if (widget.platform.isMacOS) const MacosNativeMenuLocalizer(),
         KonyakHome(
           platform: widget.platform,
-          runtime: runtimeForPlatform(widget.platform, knownRuntimes),
+          runtime: runtimeForPlatform(widget.platform, knownRuntimes.runtimes),
           bottles: bottles,
           isLoading: isLoading,
           errorMessage: errorMessage,
@@ -194,7 +193,7 @@ class KonyakHomeLoaderState extends State<KonyakHomeLoader>
           onPinProgram: pinProgram,
           programSettings: programSettings,
           loadingProgramSettings: loadingProgramSettings,
-          isRuntimeCapabilitiesLoading: !hasLoadedKnownRuntimes,
+          isRuntimeCapabilitiesLoading: !knownRuntimes.isLoaded,
           onLoadPinnedProgramSettings: (bottle, program) {
             loadPinnedProgramSettings(bottle: bottle, program: program);
           },

@@ -13,6 +13,34 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-28 18:49 JST
+- State: `completed`
+- Branch: `main`
+- Active work: replace duplicate known-runtime list/load flags in the Flutter
+  home loader.
+- Related TODO: none; this is a focused duplicate-state cleanup.
+- Latest commit: `a7aac13` (`Derive Flutter runtime stack status`).
+- Purpose: remove the separate `knownRuntimes` list plus
+  `hasLoadedKnownRuntimes` boolean so the home loader cannot represent
+  contradictory runtime capability state.
+- Completed work: added a sealed `KnownRuntimesState` with pending and loaded
+  variants; updated `KonyakHomeLoaderState`, runtime loading/install flows, and
+  settings-dialog composition to derive runtime lists and loading state from
+  that single state object; and added focused tests proving pending and loaded
+  empty runtime lists remain distinct while loaded lists are immutable
+  snapshots.
+- Remaining work: none for this slice. Broader app settings dialog async state
+  and other view-model cleanup remain separate follow-up candidates.
+- Next action: continue with the next small duplicate-state or view-model
+  cleanup when requested.
+- Verification: observed
+  `cd apps/konyak && flutter test
+  test/home_loader/known_runtimes_state_test.dart` fail before implementation;
+  after implementation, that test passed, plus focused widget/runtime CLI tests
+  for runtime capability loading, settings runtime install, startup managed
+  runtime prompts, and runtime CLI client contracts passed; final
+  `just verify` and `git diff --check HEAD` passed.
+
 - Timestamp: 2026-06-28 18:34 JST
 - State: `completed`
 - Branch: `main`
@@ -31,7 +59,8 @@ unfinished work.
   missing-path fields; and updated focused runtime view-model/control tests to
   construct state through the derived fields.
 - Remaining work: none for this slice. The separate `knownRuntimes` /
-  `hasLoadedKnownRuntimes` loader-state cleanup remains a candidate follow-up.
+  `hasLoadedKnownRuntimes` loader-state cleanup was completed by the
+  2026-06-28 18:49 snapshot above.
 - Next action: continue with the next small duplicate-state or state-shape
   cleanup when requested.
 - Verification: observed the new runtime-list contract tests fail before
