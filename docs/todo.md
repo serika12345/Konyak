@@ -38,6 +38,24 @@ verification output instead of checked-off backlog entries.
 
 ## Deferred
 
+- Tighten the functional-core / OOP-extension boundary now that the
+  post-`part` refactor is stable.
+  - Replace remaining semantic `String`, `List<String>`, and `Option<String>`
+    values in domain-facing planner/request APIs with domain value objects,
+    typed command objects, or result/plan variants where the value is not an
+    I/O, serialization, or UI boundary primitive.
+  - Keep `ProgramRunPlanner` externally pure, but split host platform,
+    runner-kind, and graphics-backend decisions into narrow policy/strategy
+    objects once those axes grow beyond the current Linux/macOS switch.
+  - Extract pure Flutter home-loader state transitions from
+    `KonyakHomeLoaderState` into immutable state/update helpers; keep the
+    `StatefulWidget` as the I/O and lifecycle shell.
+  - Remove hand-written `part` usage from CLI contract tests. Production code
+    already rejects hand-written `part`; tests should not normalize that shape
+    as the accepted large-file escape hatch.
+  - Add or tighten governance checks so new domain-facing primitive exposures,
+    planner file growth, and UI loader state growth require an explicit
+    reviewed baseline.
 - Move JSON `toJson` projection out of domain models into CLI/serialization
   boundary libraries where compatibility permits.
 - Split remaining Flutter large UI files after backend boundaries are smaller.
