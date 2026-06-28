@@ -2,27 +2,35 @@ import 'package:fpdart/fpdart.dart';
 
 import '../bottle/bottle_models.dart';
 import '../shared/domain_helpers.dart';
+import '../shared/domain_value_objects.dart';
 import 'program_run_environment.dart';
 import 'program_settings_models.dart';
 
-Option<List<String>> wineArgumentsForProgramPath(String programPath) {
-  final lowerCasePath = programPath.toLowerCase();
+Option<ProgramRunArguments> wineArgumentsForProgramPath(
+  ProgramPath programPath,
+) {
+  final rawProgramPath = programPath.value;
+  final lowerCasePath = rawProgramPath.toLowerCase();
 
   if (lowerCasePath.endsWith('.exe')) {
-    return Option.of(List.unmodifiable(<String>[programPath]));
+    return Option.of(ProgramRunArguments(<String>[programPath.value]));
   }
 
   if (lowerCasePath.endsWith('.msi')) {
-    return Option.of(List.unmodifiable(<String>['msiexec', '/i', programPath]));
+    return Option.of(
+      ProgramRunArguments(<String>['msiexec', '/i', rawProgramPath]),
+    );
   }
 
   if (lowerCasePath.endsWith('.bat') || lowerCasePath.endsWith('.cmd')) {
-    return Option.of(List.unmodifiable(<String>['cmd', '/c', programPath]));
+    return Option.of(
+      ProgramRunArguments(<String>['cmd', '/c', rawProgramPath]),
+    );
   }
 
   if (lowerCasePath.endsWith('.lnk')) {
     return Option.of(
-      List.unmodifiable(<String>['start', '/unix', programPath]),
+      ProgramRunArguments(<String>['start', '/unix', rawProgramPath]),
     );
   }
 
@@ -103,7 +111,7 @@ String _combinedWineDebugChannels({
   return '$existing,$additional';
 }
 
-bool isSupportedProgramPath(String programPath) {
+bool isSupportedProgramPath(ProgramPath programPath) {
   return wineArgumentsForProgramPath(programPath).isSome();
 }
 

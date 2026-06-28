@@ -267,6 +267,59 @@ def require_typed_program_run_request_boundary() -> None:
             )
 
 
+def require_typed_program_run_planner_boundary() -> None:
+    planner_path = "packages/konyak_cli/lib/src/domain/program/program_runner.dart"
+    planner = read_text(planner_path)
+    expected_terms = [
+        "required ProgramPath programPath",
+        "wineArgumentsForProgramPath(programPath)",
+    ]
+    for expected in expected_terms:
+        if expected not in planner:
+            raise AssertionError(
+                "ProgramRunPlanner.plan must expose a typed program path boundary: "
+                f"{expected}"
+            )
+
+    forbidden_terms = [
+        "required String programPath",
+        "wineArgumentsForProgramPath(programPath.value)",
+    ]
+    for forbidden in forbidden_terms:
+        if forbidden in planner:
+            raise AssertionError(
+                "ProgramRunPlanner.plan must not expose primitive program path "
+                f"values: {forbidden}"
+            )
+
+    argument_support_path = (
+        "packages/konyak_cli/lib/src/domain/program/program_argument_support.dart"
+    )
+    argument_support = read_text(argument_support_path)
+    expected_support_terms = [
+        "Option<ProgramRunArguments> wineArgumentsForProgramPath(",
+        "ProgramPath programPath,",
+        "ProgramRunArguments(<String>[programPath.value])",
+    ]
+    for expected in expected_support_terms:
+        if expected not in argument_support:
+            raise AssertionError(
+                "program argument support must expose typed Wine arguments: "
+                f"{expected}"
+            )
+
+    forbidden_support_terms = [
+        "Option<List<String>> wineArgumentsForProgramPath(String programPath)",
+        "bool isSupportedProgramPath(String programPath)",
+    ]
+    for forbidden in forbidden_support_terms:
+        if forbidden in argument_support:
+            raise AssertionError(
+                "program argument support must not expose primitive "
+                f"program-path APIs: {forbidden}"
+            )
+
+
 def count_constructor_field_parameters(
     relative_path: str,
     constructor_name: str,
@@ -1055,6 +1108,7 @@ def main() -> None:
     require_no_cli_state_errors()
     require_program_run_request_builders_split()
     require_typed_program_run_request_boundary()
+    require_typed_program_run_planner_boundary()
 
     for expected in [
         "flutter",

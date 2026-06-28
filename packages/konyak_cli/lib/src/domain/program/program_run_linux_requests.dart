@@ -14,21 +14,21 @@ import 'program_settings_models.dart';
 
 ProgramRunRequest linuxWineRequest({
   required BottleRecord bottle,
-  required String programPath,
-  required List<String> wineArguments,
+  required ProgramPath programPath,
+  required ProgramRunArguments wineArguments,
   required HostEnvironment environment,
   required ProgramSettingsRecord programSettings,
 }) {
   final hostEnvironment = environment;
   final arguments = <String>[
-    ...wineArguments,
+    ...wineArguments.value,
     ...programSettingsArguments(programSettings),
   ];
   final logging = programSettingsLogging(programSettings);
 
   return ProgramRunRequest(
     bottleId: bottle.id,
-    programPath: ProgramPath(programPath),
+    programPath: programPath,
     runnerKind: RunnerKind('wine'),
     executable: ProgramExecutable(linuxWineExecutable(hostEnvironment)),
     arguments: ProgramRunArguments(arguments),

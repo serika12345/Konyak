@@ -2062,16 +2062,20 @@ void defineProgramExecutionContractTests() {
       windowsVersion: 'win10',
     );
 
-    final request = ProgramRunPlanner(
-      hostPlatform: KonyakHostPlatform.linux,
-      environment: HostEnvironment(const {
-        'HOME': '/home/user',
-        'PATH': '/usr/bin:/bin',
-        'LD_LIBRARY_PATH': '/host/lib',
-        'KONYAK_LINUX_WINE_HOME': '/opt/konyak/runtime/linux-wine',
-        'KONYAK_LINUX_WINE_LIBRARY_PATH': '/opt/konyak/runtime-host-libs',
-      }),
-    ).plan(bottle: bottle, programPath: 'C:/Program Files/Steam/steam.exe');
+    final request =
+        ProgramRunPlanner(
+          hostPlatform: KonyakHostPlatform.linux,
+          environment: HostEnvironment(const {
+            'HOME': '/home/user',
+            'PATH': '/usr/bin:/bin',
+            'LD_LIBRARY_PATH': '/host/lib',
+            'KONYAK_LINUX_WINE_HOME': '/opt/konyak/runtime/linux-wine',
+            'KONYAK_LINUX_WINE_LIBRARY_PATH': '/opt/konyak/runtime-host-libs',
+          }),
+        ).plan(
+          bottle: bottle,
+          programPath: ProgramPath('C:/Program Files/Steam/steam.exe'),
+        );
 
     expect(request.isSome(), isTrue);
     final plannedRequest = request.toNullable();

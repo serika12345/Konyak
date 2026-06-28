@@ -15,7 +15,7 @@ CliResult? handlePinnedProgramCommand(
 ) {
   final programPinRequest = parseJsonProgramPinRequest(arguments);
   if (programPinRequest != null) {
-    if (!isSupportedProgramPath(programPinRequest.programPath.value)) {
+    if (!isSupportedProgramPath(programPinRequest.programPath)) {
       return jsonError(
         exitCode: 65,
         code: 'unsupportedProgramType',

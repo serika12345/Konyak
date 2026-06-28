@@ -165,9 +165,10 @@ CliResult runProgramPathJsonResult({
     storedSettings: storedSettings,
     oneTimeSettings: oneTimeSettings,
   );
+  final typedProgramPath = ProgramPath(programPath);
   final programRunRequest = programRunPlanner.plan(
     bottle: bottle,
-    programPath: programPath,
+    programPath: typedProgramPath,
     programSettings: Option.of(effectiveProgramSettings),
   );
   return programRunRequest.match(

@@ -13,6 +13,40 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-28 21:04 JST
+- State: `completed`
+- Branch: `main`
+- Active work: type the `ProgramRunPlanner.plan` program-path boundary.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: `08236c1` (`Type program run request boundary`).
+- Purpose: continue the request-boundary tightening by replacing the raw
+  `String programPath` planner entry point and raw Wine argv projection with
+  `ProgramPath` and `ProgramRunArguments` domain values.
+- Completed work: read the current roadmap/progress state and inspected
+  planner, program argument support, CLI run/pin handlers, and focused domain
+  tests; added red coverage for `wineArgumentsForProgramPath(ProgramPath)`
+  returning `ProgramRunArguments`; added governance that rejects primitive
+  `ProgramRunPlanner.plan` and program argument support signatures; changed
+  `ProgramRunPlanner.plan`, `wineArgumentsForProgramPath`, and
+  `isSupportedProgramPath` to consume `ProgramPath`; changed Wine argv
+  projection to return `ProgramRunArguments`; updated CLI run/pin handlers to
+  convert raw external strings at the CLI boundary.
+- Remaining work: broader primitive tightening remains for bottle commands,
+  winetricks verbs, process ids, registry version values, and other
+  non-planner domain-facing request APIs.
+- Next action: continue the functional-core boundary work with
+  `BottleCommand`, `WinetricksVerbId`, or `WineProcessId`, or move JSON
+  `toJson` projection once planner entry paths are stable.
+- Verification: observed `just verify-governance` fail before implementation
+  because `ProgramRunPlanner.plan` still exposed `String programPath`;
+  observed `cd packages/konyak_cli && dart test test/domain_immutability_test.dart`
+  fail before implementation because `wineArgumentsForProgramPath` still
+  accepted `String`; after implementation, `cd packages/konyak_cli && dart
+  analyze --fatal-infos`, focused domain immutability tests,
+  `just verify-governance`, `just cli-test`, `just verify-architecture`,
+  `just verify-safety`, `just format-check`, and `just lint` passed.
+
 - Timestamp: 2026-06-28 20:53 JST
 - State: `completed`
 - Branch: `main`

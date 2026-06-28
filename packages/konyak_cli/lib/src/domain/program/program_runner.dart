@@ -3,6 +3,7 @@ import 'package:fpdart/fpdart.dart';
 import '../bottle/bottle_models.dart';
 import '../bottle/bottle_runtime_settings_models.dart';
 import '../runtime/host_environment.dart';
+import '../shared/domain_value_objects.dart';
 import 'program_argument_support.dart';
 import 'program_registry_plans.dart';
 import 'program_run_models.dart';
@@ -42,7 +43,7 @@ class ProgramRunPlanner {
 
   Option<ProgramRunRequest> plan({
     required BottleRecord bottle,
-    required String programPath,
+    required ProgramPath programPath,
     Option<ProgramSettingsRecord> programSettings = const Option.none(),
   }) {
     return wineArgumentsForProgramPath(programPath).map(

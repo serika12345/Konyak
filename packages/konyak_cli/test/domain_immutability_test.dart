@@ -382,8 +382,14 @@ void main() {
   });
 
   test('program path Wine arguments model unsupported paths with Option', () {
-    expect(wineArgumentsForProgramPath('/Games/setup.exe').isSome(), isTrue);
-    expect(wineArgumentsForProgramPath('/Games/readme.txt').isNone(), isTrue);
+    expect(
+      wineArgumentsForProgramPath(ProgramPath('/Games/setup.exe')).toNullable(),
+      ProgramRunArguments(const <String>['/Games/setup.exe']),
+    );
+    expect(
+      wineArgumentsForProgramPath(ProgramPath('/Games/readme.txt')).isNone(),
+      isTrue,
+    );
   });
 
   test('runtime install operations reject blank present sources', () {
