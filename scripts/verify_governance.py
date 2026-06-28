@@ -806,6 +806,64 @@ def require_program_settings_cli_json_projection() -> None:
         )
 
 
+def require_app_settings_serialization_boundary() -> None:
+    domain_path = "packages/konyak_cli/lib/src/domain/app/app_settings_models.dart"
+    domain = read_text(domain_path)
+    record_start = domain.find("class AppSettingsRecord ")
+    if record_start == -1:
+        raise AssertionError("AppSettingsRecord must exist")
+    if "toJson(" in domain[record_start:]:
+        raise AssertionError(
+            "AppSettingsRecord must not own JSON projection"
+        )
+    if "jsonValue" in domain:
+        raise AssertionError(
+            "App settings enum JSON values must live at the serialization "
+            "boundary"
+        )
+
+    json_path = "packages/konyak_cli/lib/src/io/app_settings_json.dart"
+    json_projection = read_text(json_path)
+    expected_terms = [
+        "Map<String, Object?> appSettingsRecordJson(",
+        "String appAppearanceModeJsonValue(",
+        "String appLanguageModeJsonValue(",
+        "Option<AppAppearanceMode> appAppearanceModeFromJson(",
+        "Option<AppLanguageMode> appLanguageModeFromJson(",
+        "settings.defaultBottlePath.value",
+        "AppAppearanceMode.light => 'light'",
+        "AppLanguageMode.japanese => 'ja'",
+    ]
+    for expected in expected_terms:
+        if expected not in json_projection:
+            raise AssertionError(
+                "App settings JSON projection must live at the serialization "
+                f"boundary: {expected}"
+            )
+
+    cli_path = "packages/konyak_cli/lib/src/cli/cli_app_process_results.dart"
+    cli = read_text(cli_path)
+    if "settings.toJson()" in cli:
+        raise AssertionError(
+            "App settings CLI JSON must not rely on domain-owned toJson"
+        )
+    if "appSettingsRecordJson(settings)" not in cli:
+        raise AssertionError(
+            "App settings CLI JSON must use appSettingsRecordJson"
+        )
+
+    storage_path = "packages/konyak_cli/lib/src/io/app_settings_repositories.dart"
+    storage = read_text(storage_path)
+    if "settings.toJson()" in storage:
+        raise AssertionError(
+            "App settings storage JSON must not rely on domain-owned toJson"
+        )
+    if "appSettingsRecordJson(settings)" not in storage:
+        raise AssertionError(
+            "App settings storage JSON must use appSettingsRecordJson"
+        )
+
+
 def count_constructor_field_parameters(
     relative_path: str,
     constructor_name: str,
@@ -1602,6 +1660,7 @@ def main() -> None:
     require_program_catalog_cli_json_projection()
     require_graphics_backend_hints_cli_json_projection()
     require_program_settings_cli_json_projection()
+    require_app_settings_serialization_boundary()
 
     for expected in [
         "flutter",

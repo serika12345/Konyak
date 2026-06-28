@@ -12,7 +12,7 @@ import '../repository/repository_interfaces.dart';
 import '../shared/common_helpers.dart';
 import '../shared/model_constants.dart';
 import '../storage/storage_paths.dart';
-import 'external_payload_helpers.dart';
+import 'app_settings_json.dart';
 import 'io_result.dart';
 import 'platform_host_paths.dart';
 import 'program_metadata_io.dart';
@@ -154,118 +154,10 @@ class FileAppSettingsRepository implements AppSettingsRepository {
       file.writeAsStringSync(
         const JsonEncoder.withIndent('  ').convert(<String, Object?>{
           'schemaVersion': cliSchemaVersion,
-          'appSettings': settings.toJson(),
+          'appSettings': appSettingsRecordJson(settings),
         }),
       );
       return settings;
     });
   }
-}
-
-Option<AppSettingsRecord> appSettingsRecordFromJson(
-  Object? value, {
-  required String fallbackDefaultBottlePath,
-}) {
-  final settings = objectMap(value);
-  if (settings == null) {
-    return const Option.none();
-  }
-
-  final terminateWineProcessesOnClose =
-      settings['terminateWineProcessesOnClose'];
-  final defaultBottlePath = settings['defaultBottlePath'];
-  final appearanceMode = appAppearanceModeFromJson(settings['appearanceMode']);
-  final languageMode = appLanguageModeFromJson(settings['languageMode']);
-  final automaticallyCheckForKonyakUpdates =
-      settings['automaticallyCheckForKonyakUpdates'];
-  final automaticallyCheckForWineUpdates =
-      settings['automaticallyCheckForWineUpdates'];
-  final automaticallyPinNewInstalledPrograms =
-      settings['automaticallyPinNewInstalledPrograms'];
-
-  if (terminateWineProcessesOnClose != null &&
-      terminateWineProcessesOnClose is! bool) {
-    return const Option.none();
-  }
-  if (defaultBottlePath != null &&
-      (defaultBottlePath is! String || defaultBottlePath.trim().isEmpty)) {
-    return const Option.none();
-  }
-  if (automaticallyCheckForKonyakUpdates != null &&
-      automaticallyCheckForKonyakUpdates is! bool) {
-    return const Option.none();
-  }
-  if (automaticallyCheckForWineUpdates != null &&
-      automaticallyCheckForWineUpdates is! bool) {
-    return const Option.none();
-  }
-  if (automaticallyPinNewInstalledPrograms != null &&
-      automaticallyPinNewInstalledPrograms is! bool) {
-    return const Option.none();
-  }
-
-  return appearanceMode.match(
-    () => const Option.none(),
-    (parsedAppearanceMode) => languageMode.match(
-      () => const Option.none(),
-      (parsedLanguageMode) => Option.of(
-        AppSettingsRecord(
-          terminateWineProcessesOnClose: terminateWineProcessesOnClose is bool
-              ? terminateWineProcessesOnClose
-              : false,
-          defaultBottlePath: defaultBottlePath is String
-              ? defaultBottlePath
-              : fallbackDefaultBottlePath,
-          appearanceMode: parsedAppearanceMode,
-          languageMode: parsedLanguageMode,
-          automaticallyCheckForKonyakUpdates:
-              automaticallyCheckForKonyakUpdates is bool
-              ? automaticallyCheckForKonyakUpdates
-              : false,
-          automaticallyCheckForWineUpdates:
-              automaticallyCheckForWineUpdates is bool
-              ? automaticallyCheckForWineUpdates
-              : true,
-          automaticallyPinNewInstalledPrograms:
-              automaticallyPinNewInstalledPrograms is bool
-              ? automaticallyPinNewInstalledPrograms
-              : true,
-        ),
-      ),
-    ),
-  );
-}
-
-Option<AppAppearanceMode> appAppearanceModeFromJson(Object? value) {
-  if (value == null) {
-    return Option.of(AppAppearanceMode.dark);
-  }
-  if (value is! String) {
-    return const Option.none();
-  }
-
-  for (final mode in AppAppearanceMode.values) {
-    if (mode.jsonValue == value) {
-      return Option.of(mode);
-    }
-  }
-
-  return const Option.none();
-}
-
-Option<AppLanguageMode> appLanguageModeFromJson(Object? value) {
-  if (value == null) {
-    return Option.of(AppLanguageMode.system);
-  }
-  if (value is! String) {
-    return const Option.none();
-  }
-
-  for (final mode in AppLanguageMode.values) {
-    if (mode.jsonValue == value) {
-      return Option.of(mode);
-    }
-  }
-
-  return const Option.none();
 }

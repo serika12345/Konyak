@@ -10,6 +10,7 @@ import '../domain/program/program_run_models.dart';
 import '../domain/program/program_runner.dart';
 import '../domain/shared/domain_value_objects.dart';
 import '../domain/update/update_records.dart';
+import '../io/app_settings_json.dart';
 import '../io/wine_process_metadata.dart';
 import '../io/wine_process_metadata_io.dart';
 import '../repository/repository_interfaces.dart';
@@ -21,7 +22,9 @@ import 'cli_program_run_handlers.dart';
 import 'cli_result_model.dart';
 
 CliResult appSettingsJsonResult(AppSettingsRecord settings) {
-  return jsonSuccess(<String, Object?>{'appSettings': settings.toJson()});
+  return jsonSuccess(<String, Object?>{
+    'appSettings': appSettingsRecordJson(settings),
+  });
 }
 
 CliResult appUpdateJsonResult(AppUpdateRecord update) {

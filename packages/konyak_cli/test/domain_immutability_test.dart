@@ -156,7 +156,6 @@ void main() {
     final settings = AppSettingsRecord(defaultBottlePath: '/bottles');
 
     expect(settings.defaultBottlePath, DefaultBottlePath('/bottles'));
-    expect(settings.toJson(), containsPair('defaultBottlePath', '/bottles'));
   });
 
   test('program metadata records model absent fields with Option', () {

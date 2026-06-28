@@ -4,7 +4,7 @@ import 'package:fpdart/fpdart.dart';
 
 import '../domain/app/app_settings_models.dart';
 import '../domain/program/program_mutation_models.dart';
-import '../io/app_settings_repositories.dart';
+import '../io/app_settings_json.dart';
 import 'cli_parsers.dart';
 
 bool isJsonAppUpdateCheckCommand(List<String> arguments) {

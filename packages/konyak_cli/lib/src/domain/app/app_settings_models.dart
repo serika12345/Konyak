@@ -1,24 +1,8 @@
 import '../shared/domain_value_objects.dart';
 
-enum AppAppearanceMode {
-  dark('dark'),
-  light('light'),
-  system('system');
+enum AppAppearanceMode { dark, light, system }
 
-  const AppAppearanceMode(this.jsonValue);
-
-  final String jsonValue;
-}
-
-enum AppLanguageMode {
-  system('system'),
-  english('en'),
-  japanese('ja');
-
-  const AppLanguageMode(this.jsonValue);
-
-  final String jsonValue;
-}
+enum AppLanguageMode { system, english, japanese }
 
 class AppSettingsRecord {
   AppSettingsRecord({
@@ -136,19 +120,6 @@ class AppSettingsRecord {
       automaticallyPinNewInstalledPrograms:
           automaticallyPinNewInstalledPrograms,
     );
-  }
-
-  Map<String, Object?> toJson() {
-    return <String, Object?>{
-      'terminateWineProcessesOnClose': terminateWineProcessesOnClose,
-      'defaultBottlePath': defaultBottlePath.value,
-      'appearanceMode': appearanceMode.jsonValue,
-      'languageMode': languageMode.jsonValue,
-      'automaticallyCheckForKonyakUpdates': automaticallyCheckForKonyakUpdates,
-      'automaticallyCheckForWineUpdates': automaticallyCheckForWineUpdates,
-      'automaticallyPinNewInstalledPrograms':
-          automaticallyPinNewInstalledPrograms,
-    };
   }
 
   @override

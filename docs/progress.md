@@ -13,6 +13,36 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-28 22:15 JST
+- State: `completed`
+- Branch: `main`
+- Active work: move app settings JSON projections out of domain models.
+- Related TODO: `docs/todo.md` deferred JSON `toJson` projection separation.
+- Latest commit: `0df4e9b` (`Move program settings JSON projections`).
+- Purpose: continue separating domain models from serialization by moving
+  `AppSettingsRecord` and app settings enum JSON mapping into the storage/CLI
+  serialization boundary used by get/set-app-settings JSON results and app
+  settings storage writes.
+- Completed work: committed the program settings projection slice, inspected
+  app settings models, CLI app settings result output, storage read/write code,
+  and focused app settings CLI contract coverage; observed
+  `just verify-governance` fail before implementation because
+  `AppSettingsRecord` still owned JSON projection; added
+  `io/app_settings_json.dart`, moved app settings projection and external JSON
+  parsing to that helper, moved CLI and storage callers to the helper, removed
+  domain `toJson` and enum JSON values, updated the domain test to assert the
+  value object rather than JSON shape, and added governance for the boundary.
+- Remaining work: domain `toJson` projections remain in bottle,
+  runtime/update, runtime validation/package, and bottle/program mutation
+  records.
+- Next action: continue JSON projection separation with another narrow
+  CLI-covered record group, likely update records or bottle mutation records.
+- Verification: observed `just verify-governance` fail before implementation;
+  after implementation, `cd packages/konyak_cli && dart analyze
+  --fatal-infos`, focused app-settings CLI contract tests,
+  `just verify-governance`, `just cli-test`, `just verify-architecture`,
+  `just verify-safety`, `just format-check`, and `just lint` passed.
+
 - Timestamp: 2026-06-28 22:05 JST
 - State: `completed`
 - Branch: `main`
