@@ -13,6 +13,34 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-28 07:29 JST
+- State: `completed`
+- Branch: `main`
+- Active work: isolate external payload nullable helpers out of shared/domain
+  packaging.
+- Related TODO: none; this is a focused architecture correction after nullable
+  and reassignment hardening.
+- Latest commit: `4b1e91e` (`Remove nullable domain control flow`).
+- Purpose: keep `packages/konyak_cli/lib/src/shared` and domain files from
+  hosting I/O-only decoded payload, `Map<String, Object?>`, and nullable bridge
+  helpers; place external byte/text/JSON parsing behind `src/io` boundaries.
+- Completed work: used separate audit, implementation, and final audit
+  sub-agents; moved decoded payload, process-output, byte-reading, null-bridge,
+  PE/LNK/registry/winetricks/Wine process, and external launch record parsing
+  helpers into `src/io`; removed those helpers from `src/shared`; removed the
+  external payload parser files from `src/domain`; updated the `part`
+  declarations; replaced the remaining domain runner dependency on the I/O
+  null bridge with local non-null parsing; strengthened governance so shared
+  and non-I/O packages cannot regain those external payload helpers.
+- Remaining work: none for this slice. Domain JSON `toJson` contract renderers
+  remain as the existing explicit compatibility boundary.
+- Next action: continue with the product/runtime backlog in `docs/todo.md`.
+- Verification: audit sub-agent completed, implementation sub-agent completed,
+  final audit sub-agent completed with no major findings,
+  `cd packages/konyak_cli && dart analyze --fatal-infos`,
+  `just verify-governance`, `just format-check`, `just verify-safety`,
+  `just lint`, `just cli-test`, and `git diff --check` passed.
+
 - Timestamp: 2026-06-28 06:43 JST
 - State: `completed`
 - Branch: `main`

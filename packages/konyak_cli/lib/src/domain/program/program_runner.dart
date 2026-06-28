@@ -356,13 +356,47 @@ class ProgramRunPlanner {
 }
 
 Option<int> _currentMacosMajorVersion() {
-  return _nullableOption(
-        RegExp(r'\d+').firstMatch(Platform.operatingSystemVersion),
-      )
-      .flatMap((match) {
-        return _nullableOption(match.group(0));
-      })
-      .flatMap((version) {
-        return _nullableOption(int.tryParse(version));
-      });
+  return _firstDigitToken(
+    Platform.operatingSystemVersion,
+  ).flatMap(_integerFromDigits);
+}
+
+Option<String> _firstDigitToken(String value) {
+  return _firstDigitIndex(value: value, index: 0).flatMap((start) {
+    final token = value.substring(
+      start,
+      _firstNonDigitIndex(value: value, index: start),
+    );
+    return token.isEmpty ? const Option.none() : Option.of(token);
+  });
+}
+
+Option<int> _firstDigitIndex({required String value, required int index}) {
+  if (index >= value.length) {
+    return const Option.none();
+  }
+
+  return _isAsciiDigit(value.codeUnitAt(index))
+      ? Option.of(index)
+      : _firstDigitIndex(value: value, index: index + 1);
+}
+
+int _firstNonDigitIndex({required String value, required int index}) {
+  if (index >= value.length || !_isAsciiDigit(value.codeUnitAt(index))) {
+    return index;
+  }
+
+  return _firstNonDigitIndex(value: value, index: index + 1);
+}
+
+bool _isAsciiDigit(int codeUnit) {
+  return codeUnit >= 0x30 && codeUnit <= 0x39;
+}
+
+Option<int> _integerFromDigits(String value) {
+  try {
+    return Option.of(int.parse(value));
+  } on FormatException {
+    return const Option.none();
+  }
 }

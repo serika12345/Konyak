@@ -1,4 +1,4 @@
-part of '../../../konyak_cli.dart';
+part of '../../konyak_cli.dart';
 
 _PeVersionStrings _peVersionStrings(_PortableExecutableImage image) {
   final resources = _peResourceLeaves(image, 16);

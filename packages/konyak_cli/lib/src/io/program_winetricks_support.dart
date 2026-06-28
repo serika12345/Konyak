@@ -1,4 +1,4 @@
-part of '../../../konyak_cli.dart';
+part of '../../konyak_cli.dart';
 
 List<WinetricksCategoryRecord> parseWinetricksVerbs(String content) {
   final state = content

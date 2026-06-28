@@ -1,4 +1,4 @@
-part of '../../../konyak_cli.dart';
+part of '../../konyak_cli.dart';
 
 Option<Uint8List> _peIconBytes(_PortableExecutableImage image) {
   final groupResources = _peResourceLeaves(image, 14);

@@ -156,9 +156,6 @@ def is_external_null_boundary(relative_path: str) -> bool:
 
     boundary_paths = {
         "packages/konyak_cli/lib/konyak_cli.dart",
-        "packages/konyak_cli/lib/src/shared/common_helpers.dart",
-        # Pure decoded-payload handling for persisted integration indexes.
-        "packages/konyak_cli/lib/src/domain/program/external_program_launch_records.dart",
         # JSON contract rendering currently lives on these domain models.
         "packages/konyak_cli/lib/src/domain/app/app_settings_models.dart",
         "packages/konyak_cli/lib/src/domain/bottle/bottle_models.dart",
@@ -274,19 +271,20 @@ def require_io_implementation_boundaries() -> None:
         "IOException",
         "SocketException",
     ]
-    allowed_paths = {
-        "packages/konyak_cli/lib/src/shared/common_helpers.dart",
-    }
     for path in sorted((ROOT / "packages/konyak_cli/lib/src").rglob("*.dart")):
         relative_path = str(path.relative_to(ROOT))
         if relative_path.startswith("packages/konyak_cli/lib/src/io/"):
             continue
-        if relative_path in allowed_paths:
-            continue
 
         text = path.read_text(encoding="utf-8")
         for pattern in io_patterns:
-            if pattern in text:
+            if pattern == "File(":
+                match = re.search(r"(?<![A-Za-z0-9_])File\(", text)
+            elif pattern == "Directory(":
+                match = re.search(r"(?<![A-Za-z0-9_])Directory\(", text)
+            else:
+                match = re.search(re.escape(pattern), text)
+            if match is not None:
                 raise AssertionError(
                     f"{relative_path} must not contain I/O pattern outside src/io: {pattern}"
                 )
@@ -587,6 +585,79 @@ def require_result_boundary_rules() -> None:
 
 
 def require_external_payload_parser_boundaries() -> None:
+    external_payload_helper_markers = [
+        "_objectMap(",
+        "_stringMap(",
+        "_processOutputToString(",
+        "_readUint16(",
+        "_readUint32(",
+        "_nullableOption(",
+        "_readUint16Option(",
+        "_readUint32Option(",
+        "_nullTerminatedAsciiString",
+        "_nullTerminatedUtf16LeString",
+        "_nullByteOffset(",
+    ]
+
+    for unexpected in [
+        *external_payload_helper_markers,
+        "Object?",
+        "ProcessResult",
+        "Uint8List",
+        "Map<String, dynamic>",
+    ]:
+        require_not_contains("packages/konyak_cli/lib/src/shared/common_helpers.dart", unexpected)
+
+    for relative_directory in [
+        "packages/konyak_cli/lib/src/domain",
+        "packages/konyak_cli/lib/src/platform",
+        "packages/konyak_cli/lib/src/repository",
+        "packages/konyak_cli/lib/src/storage",
+    ]:
+        for unexpected in external_payload_helper_markers:
+            require_not_contains_under(relative_directory, "*.dart", unexpected)
+
+    for relative_path in [
+        "packages/konyak_cli/lib/src/domain/process/wine_process_metadata.dart",
+        "packages/konyak_cli/lib/src/domain/program/external_program_launch_records.dart",
+        "packages/konyak_cli/lib/src/domain/program/pe_program_icons.dart",
+        "packages/konyak_cli/lib/src/domain/program/pe_program_image.dart",
+        "packages/konyak_cli/lib/src/domain/program/pe_program_metadata.dart",
+        "packages/konyak_cli/lib/src/domain/program/pe_program_versions.dart",
+        "packages/konyak_cli/lib/src/domain/program/program_registry_parsers.dart",
+        "packages/konyak_cli/lib/src/domain/program/program_shortcut_metadata.dart",
+        "packages/konyak_cli/lib/src/domain/program/program_winetricks_support.dart",
+    ]:
+        require_missing(relative_path)
+
+    for relative_path in [
+        "packages/konyak_cli/lib/src/io/external_payload_helpers.dart",
+        "packages/konyak_cli/lib/src/io/external_program_launch_records.dart",
+        "packages/konyak_cli/lib/src/io/pe_program_icons.dart",
+        "packages/konyak_cli/lib/src/io/pe_program_image.dart",
+        "packages/konyak_cli/lib/src/io/pe_program_metadata.dart",
+        "packages/konyak_cli/lib/src/io/pe_program_versions.dart",
+        "packages/konyak_cli/lib/src/io/program_registry_parsers.dart",
+        "packages/konyak_cli/lib/src/io/program_shortcut_metadata.dart",
+        "packages/konyak_cli/lib/src/io/program_winetricks_support.dart",
+        "packages/konyak_cli/lib/src/io/wine_process_metadata.dart",
+    ]:
+        require_contains(relative_path, "part of '../../konyak_cli.dart';")
+
+    for expected in [
+        "part 'src/io/external_payload_helpers.dart';",
+        "part 'src/io/external_program_launch_records.dart';",
+        "part 'src/io/program_shortcut_metadata.dart';",
+        "part 'src/io/wine_process_metadata.dart';",
+        "part 'src/io/pe_program_metadata.dart';",
+        "part 'src/io/pe_program_icons.dart';",
+        "part 'src/io/pe_program_image.dart';",
+        "part 'src/io/pe_program_versions.dart';",
+        "part 'src/io/program_registry_parsers.dart';",
+        "part 'src/io/program_winetricks_support.dart';",
+    ]:
+        require_contains("packages/konyak_cli/lib/konyak_cli.dart", expected)
+
     cli_non_boundary_directories = [
         "packages/konyak_cli/lib/src/domain",
         "packages/konyak_cli/lib/src/platform",

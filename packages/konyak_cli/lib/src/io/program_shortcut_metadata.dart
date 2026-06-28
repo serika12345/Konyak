@@ -1,4 +1,4 @@
-part of '../../../konyak_cli.dart';
+part of '../../konyak_cli.dart';
 
 List<_BottleProgramSource> _bottleStartMenuSources(BottleRecord bottle) {
   return <_BottleProgramSource>[

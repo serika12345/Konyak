@@ -1,4 +1,4 @@
-part of '../../../konyak_cli.dart';
+part of '../../konyak_cli.dart';
 
 final class _PortableExecutableImage {
   const _PortableExecutableImage({

@@ -1,4 +1,4 @@
-part of '../../../konyak_cli.dart';
+part of '../../konyak_cli.dart';
 
 Map<String, Object?> _externalProgramLaunchIndexPayload({
   required Iterable<Map<String, Object?>> existingEntries,
