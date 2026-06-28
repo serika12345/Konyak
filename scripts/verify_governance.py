@@ -1003,6 +1003,45 @@ def require_runtime_validation_cli_json_projection() -> None:
         )
 
 
+def require_runtime_install_progress_io_json_projection() -> None:
+    domain_path = (
+        "packages/konyak_cli/lib/src/domain/runtime/runtime_package_installation.dart"
+    )
+    domain = read_text(domain_path)
+    record_match = re.search(
+        r"class RuntimeInstallProgress \{(?P<body>.*?)\n\}",
+        domain,
+        flags=re.DOTALL,
+    )
+    if record_match is None:
+        raise AssertionError("RuntimeInstallProgress must exist")
+    if "toJson(" in record_match.group("body"):
+        raise AssertionError(
+            "RuntimeInstallProgress must not own JSON projection"
+        )
+
+    io_path = "packages/konyak_cli/lib/src/io/runtime_install_progress_io.dart"
+    io = read_text(io_path)
+    expected_terms = [
+        "Map<String, Object?> runtimeInstallProgressJson(",
+        "'stage': progress.stage.value",
+        "'message': progress.message",
+        "'fraction': progress.fraction.value",
+        "'runtimeInstallProgress': runtimeInstallProgressJson(progress)",
+    ]
+    for expected in expected_terms:
+        if expected not in io:
+            raise AssertionError(
+                "Runtime install progress JSON projection must live at the "
+                f"I/O boundary: {expected}"
+            )
+
+    if "progress.toJson()" in io:
+        raise AssertionError(
+            "Runtime install progress sink must not rely on domain-owned toJson"
+        )
+
+
 def require_bottle_archive_cli_json_projection() -> None:
     domain_path = (
         "packages/konyak_cli/lib/src/domain/bottle/bottle_mutation_models.dart"
@@ -1899,6 +1938,7 @@ def main() -> None:
     require_app_settings_serialization_boundary()
     require_update_record_cli_json_projection()
     require_runtime_validation_cli_json_projection()
+    require_runtime_install_progress_io_json_projection()
     require_bottle_archive_cli_json_projection()
     require_pinned_launcher_manifest_io_json_projection()
 

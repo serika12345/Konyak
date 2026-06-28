@@ -3,6 +3,16 @@ import 'dart:convert';
 import '../domain/runtime/runtime_package_installation.dart';
 import '../shared/model_constants.dart';
 
+Map<String, Object?> runtimeInstallProgressJson(
+  RuntimeInstallProgress progress,
+) {
+  return <String, Object?>{
+    'stage': progress.stage.value,
+    'message': progress.message,
+    'fraction': progress.fraction.value,
+  };
+}
+
 abstract interface class RuntimeInstallProgressSink {
   void emit(RuntimeInstallProgress progress);
 }
@@ -18,7 +28,7 @@ final class JsonRuntimeInstallProgressSink
     output.writeln(
       jsonEncode(<String, Object?>{
         'schemaVersion': cliSchemaVersion,
-        'runtimeInstallProgress': progress.toJson(),
+        'runtimeInstallProgress': runtimeInstallProgressJson(progress),
       }),
     );
   }

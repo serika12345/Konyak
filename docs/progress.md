@@ -13,6 +13,34 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-28 22:42 JST
+- State: `completed`
+- Branch: `main`
+- Active work: move runtime install progress JSON projection out of domain
+  models.
+- Related TODO: `docs/todo.md` deferred JSON `toJson` projection separation.
+- Latest commit: `b632209` (`Move runtime validation JSON projection`).
+- Purpose: continue separating domain models from serialization by moving
+  `RuntimeInstallProgress` projection into the JSON progress I/O sink used by
+  runtime install `--progress-json` output.
+- Completed work: committed the runtime validation projection slice and
+  inspected `RuntimeInstallProgress`, `JsonRuntimeInstallProgressSink`, and
+  focused progress-json CLI contract coverage; observed
+  `just verify-governance` fail before implementation because
+  `RuntimeInstallProgress` still owned JSON projection; moved progress JSON
+  projection into `runtime_install_progress_io.dart`, updated
+  `JsonRuntimeInstallProgressSink`, removed the domain `toJson`, and added
+  governance for the progress I/O boundary.
+- Remaining work: domain `toJson` projections remain in bottle records, bottle
+  runtime settings, runtime records, and the I/O-only GPTK install record.
+- Next action: continue JSON projection separation with a larger grouped slice,
+  likely bottle records plus bottle runtime settings or runtime records.
+- Verification: observed `just verify-governance` fail before implementation;
+  after implementation, `cd packages/konyak_cli && dart analyze
+  --fatal-infos`, focused runtime install progress-json CLI contract tests,
+  `just verify-governance`, `just cli-test`, `just verify-architecture`,
+  `just verify-safety`, `just format-check`, and `just lint` passed.
+
 - Timestamp: 2026-06-28 22:39 JST
 - State: `completed`
 - Branch: `main`

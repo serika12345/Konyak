@@ -74,12 +74,4 @@ class RuntimeInstallProgress {
   final RuntimeInstallProgressStage stage;
   final String message;
   final RuntimeInstallProgressFraction fraction;
-
-  Map<String, Object?> toJson() {
-    return <String, Object?>{
-      'stage': stage.value,
-      'message': message,
-      'fraction': fraction.value,
-    };
-  }
 }
