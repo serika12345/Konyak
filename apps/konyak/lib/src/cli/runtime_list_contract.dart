@@ -165,21 +165,27 @@ RuntimeStackSummary? _parseOptionalRuntimeStack(Object? value) {
   if (parsedComponents.any((component) => component == null)) {
     return null;
   }
+  final runtimeComponents = parsedComponents
+      .whereType<RuntimeStackComponentSummary>()
+      .toList(growable: false);
+
   final parsedBackends = _parseOptionalRuntimeStackBackends(backends);
   if (parsedBackends == null) {
     return null;
   }
 
-  return RuntimeStackSummary(
+  final runtimeStack = RuntimeStackSummary(
     id: id,
     name: name,
     compatibilityTarget: compatibilityTarget,
-    isComplete: isComplete,
-    components: parsedComponents
-        .whereType<RuntimeStackComponentSummary>()
-        .toList(growable: false),
+    components: runtimeComponents,
     backends: parsedBackends,
   );
+  if (isComplete != runtimeStack.isComplete) {
+    return null;
+  }
+
+  return runtimeStack;
 }
 
 List<RuntimeStackBackendSummary>? _parseOptionalRuntimeStackBackends(
@@ -227,16 +233,19 @@ RuntimeStackBackendSummary? _parseRuntimeStackBackend(Object? value) {
       missingPaths == null) {
     return null;
   }
-
-  return RuntimeStackBackendSummary(
+  final runtimeStackBackend = RuntimeStackBackendSummary(
     id: id,
     name: name,
     role: role,
-    isAvailable: isAvailable,
     componentIds: componentIds,
     missingComponentIds: missingComponentIds,
     missingPaths: missingPaths,
   );
+  if (isAvailable != runtimeStackBackend.isAvailable) {
+    return null;
+  }
+
+  return runtimeStackBackend;
 }
 
 RuntimeStackComponentSummary? _parseRuntimeStackComponent(Object? value) {
@@ -263,17 +272,20 @@ RuntimeStackComponentSummary? _parseRuntimeStackComponent(Object? value) {
       !_isOptionalString(version)) {
     return null;
   }
-
-  return RuntimeStackComponentSummary(
+  final runtimeStackComponent = RuntimeStackComponentSummary(
     id: id,
     name: name,
     role: role,
     isRequired: isRequired,
-    isInstalled: isInstalled,
     paths: paths,
     missingPaths: missingPaths,
     version: version as String?,
   );
+  if (isInstalled != runtimeStackComponent.isInstalled) {
+    return null;
+  }
+
+  return runtimeStackComponent;
 }
 
 List<String>? _parseStringList(Object? value) {

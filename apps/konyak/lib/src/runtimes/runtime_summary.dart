@@ -35,7 +35,6 @@ class RuntimeStackSummary {
     required this.id,
     required this.name,
     required this.compatibilityTarget,
-    required this.isComplete,
     required List<RuntimeStackComponentSummary> components,
     List<RuntimeStackBackendSummary> backends =
         const <RuntimeStackBackendSummary>[],
@@ -45,9 +44,14 @@ class RuntimeStackSummary {
   final String id;
   final String name;
   final String compatibilityTarget;
-  final bool isComplete;
   final List<RuntimeStackComponentSummary> components;
   final List<RuntimeStackBackendSummary> backends;
+
+  bool get isComplete {
+    return components
+        .where((component) => component.isRequired)
+        .every((component) => component.isInstalled);
+  }
 }
 
 class RuntimeStackBackendSummary {
@@ -55,7 +59,6 @@ class RuntimeStackBackendSummary {
     required this.id,
     required this.name,
     required this.role,
-    required this.isAvailable,
     required List<String> componentIds,
     required List<String> missingComponentIds,
     required List<String> missingPaths,
@@ -66,10 +69,13 @@ class RuntimeStackBackendSummary {
   final String id;
   final String name;
   final String role;
-  final bool isAvailable;
   final List<String> componentIds;
   final List<String> missingComponentIds;
   final List<String> missingPaths;
+
+  bool get isAvailable {
+    return missingComponentIds.isEmpty && missingPaths.isEmpty;
+  }
 }
 
 class RuntimeStackComponentSummary {
@@ -78,7 +84,6 @@ class RuntimeStackComponentSummary {
     required this.name,
     required this.role,
     required this.isRequired,
-    required this.isInstalled,
     required List<String> paths,
     required List<String> missingPaths,
     this.version,
@@ -89,8 +94,11 @@ class RuntimeStackComponentSummary {
   final String name;
   final String role;
   final bool isRequired;
-  final bool isInstalled;
   final List<String> paths;
   final List<String> missingPaths;
   final String? version;
+
+  bool get isInstalled {
+    return missingPaths.isEmpty;
+  }
 }

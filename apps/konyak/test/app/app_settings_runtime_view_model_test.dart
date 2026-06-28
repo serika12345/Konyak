@@ -80,7 +80,6 @@ void main() {
         id: 'stack',
         name: 'Stack',
         compatibilityTarget: 'stack',
-        isComplete: true,
         components: [
           _component(isInstalled: true, version: '1.0'),
           RuntimeStackComponentSummary(
@@ -88,7 +87,6 @@ void main() {
             name: 'GPTK/D3DMetal',
             role: 'd3d12-metal-translation',
             isRequired: false,
-            isInstalled: false,
             paths: const <String>['/runtime/components/gptk-d3dmetal'],
             missingPaths: const <String>['/runtime/components/gptk-d3dmetal'],
           ),
@@ -141,7 +139,6 @@ RuntimeStackSummary _stack({required bool isComplete}) {
     id: 'stack',
     name: 'Stack',
     compatibilityTarget: 'stack',
-    isComplete: isComplete,
     components: [_component(isInstalled: isComplete, version: '1.0')],
   );
 }
@@ -155,7 +152,6 @@ RuntimeStackComponentSummary _component({
     name: 'Wine',
     role: 'windows-runner',
     isRequired: true,
-    isInstalled: isInstalled,
     paths: const <String>['/runtime/bin/wine'],
     missingPaths: isInstalled ? const <String>[] : const <String>['missing'],
     version: version,

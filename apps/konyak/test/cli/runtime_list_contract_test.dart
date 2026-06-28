@@ -145,6 +145,140 @@ void main() {
     );
   });
 
+  test('rejects runtime stack completion that contradicts components', () {
+    final result = parseRuntimeListPayload('''
+      {
+        "schemaVersion": 1,
+        "runtimes": [
+          {
+            "id": "konyak-macos-wine",
+            "name": "Konyak macOS Wine",
+            "platform": "macos",
+            "architecture": "x86_64",
+            "runnerKind": "macosWine",
+            "isBundled": false,
+            "isUpdateable": true,
+            "stack": {
+              "schemaVersion": 1,
+              "id": "macos-konyak-runtime-stack",
+              "name": "Konyak macOS runtime stack",
+              "compatibilityTarget": "macos-konyak-runtime-stack",
+              "isComplete": true,
+              "components": [
+                {
+                  "id": "wine",
+                  "name": "Wine",
+                  "role": "windows-runner",
+                  "isRequired": true,
+                  "isInstalled": false,
+                  "paths": ["/runtime/bin/wine64"],
+                  "missingPaths": ["/runtime/bin/wine64"]
+                }
+              ]
+            }
+          }
+        ]
+      }
+      ''');
+
+    expect(result, isA<RuntimeListParseFailure>());
+  });
+
+  test(
+    'rejects runtime component installation status that contradicts paths',
+    () {
+      final result = parseRuntimeListPayload('''
+      {
+        "schemaVersion": 1,
+        "runtimes": [
+          {
+            "id": "konyak-macos-wine",
+            "name": "Konyak macOS Wine",
+            "platform": "macos",
+            "architecture": "x86_64",
+            "runnerKind": "macosWine",
+            "isBundled": false,
+            "isUpdateable": true,
+            "stack": {
+              "schemaVersion": 1,
+              "id": "macos-konyak-runtime-stack",
+              "name": "Konyak macOS runtime stack",
+              "compatibilityTarget": "macos-konyak-runtime-stack",
+              "isComplete": true,
+              "components": [
+                {
+                  "id": "wine",
+                  "name": "Wine",
+                  "role": "windows-runner",
+                  "isRequired": true,
+                  "isInstalled": true,
+                  "paths": ["/runtime/bin/wine64"],
+                  "missingPaths": ["/runtime/bin/wine64"]
+                }
+              ]
+            }
+          }
+        ]
+      }
+      ''');
+
+      expect(result, isA<RuntimeListParseFailure>());
+    },
+  );
+
+  test(
+    'rejects runtime backend availability that contradicts missing entries',
+    () {
+      final result = parseRuntimeListPayload('''
+      {
+        "schemaVersion": 1,
+        "runtimes": [
+          {
+            "id": "konyak-macos-wine",
+            "name": "Konyak macOS Wine",
+            "platform": "macos",
+            "architecture": "x86_64",
+            "runnerKind": "macosWine",
+            "isBundled": false,
+            "isUpdateable": true,
+            "stack": {
+              "schemaVersion": 1,
+              "id": "macos-konyak-runtime-stack",
+              "name": "Konyak macOS runtime stack",
+              "compatibilityTarget": "macos-konyak-runtime-stack",
+              "isComplete": true,
+              "components": [
+                {
+                  "id": "wine",
+                  "name": "Wine",
+                  "role": "windows-runner",
+                  "isRequired": true,
+                  "isInstalled": true,
+                  "paths": ["/runtime/bin/wine64"],
+                  "missingPaths": []
+                }
+              ],
+              "backends": [
+                {
+                  "id": "dxvk-macos",
+                  "name": "DXVK-macOS",
+                  "role": "d3d9-d3d11-metal-translation",
+                  "isAvailable": true,
+                  "componentIds": ["dxvk-macos"],
+                  "missingComponentIds": ["dxvk-macos"],
+                  "missingPaths": []
+                }
+              ]
+            }
+          }
+        ]
+      }
+      ''');
+
+      expect(result, isA<RuntimeListParseFailure>());
+    },
+  );
+
   test('rejects unsupported schema versions', () {
     final result = parseRuntimeListPayload('{"schemaVersion":2,"runtimes":[]}');
 

@@ -13,6 +13,34 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-28 18:34 JST
+- State: `completed`
+- Branch: `main`
+- Active work: remove derived runtime stack status from Flutter summary state.
+- Related TODO: none; this is a focused follow-up after auditing duplicate
+  state.
+- Latest commit: `2ebb35a` (`Remove CLI injected runner I/O defaults`).
+- Purpose: keep Flutter runtime summaries from storing values that are already
+  computable from stack components and backend missing entries, while
+  preserving the existing CLI JSON contract.
+- Completed work: changed `RuntimeStackSummary.isComplete`,
+  `RuntimeStackBackendSummary.isAvailable`, and
+  `RuntimeStackComponentSummary.isInstalled` into getters derived from
+  component/backend details; kept the JSON parser accepting those fields as
+  contract data but rejecting payloads where they contradict the detailed
+  missing-path fields; and updated focused runtime view-model/control tests to
+  construct state through the derived fields.
+- Remaining work: none for this slice. The separate `knownRuntimes` /
+  `hasLoadedKnownRuntimes` loader-state cleanup remains a candidate follow-up.
+- Next action: continue with the next small duplicate-state or state-shape
+  cleanup when requested.
+- Verification: observed the new runtime-list contract tests fail before
+  implementation; after implementation, focused
+  `cd apps/konyak && flutter test test/cli/runtime_list_contract_test.dart
+  test/app/app_settings_runtime_view_model_test.dart
+  test/app/bottle_runtime_control_availability_test.dart` passed; final
+  `just verify` and `just flutter-test` passed.
+
 - Timestamp: 2026-06-28 17:49 JST
 - State: `completed`
 - Branch: `main`

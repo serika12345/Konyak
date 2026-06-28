@@ -8,7 +8,6 @@ void main() {
     final availability = resolveBottleRuntimeControlAvailability(
       platform: KonyakPlatform.macos,
       runtime: _runtime(
-        isComplete: true,
         components: const <String>[
           'dxvk-macos',
           'dxmt',
@@ -42,7 +41,6 @@ void main() {
     final availability = resolveBottleRuntimeControlAvailability(
       platform: KonyakPlatform.macos,
       runtime: _runtime(
-        isComplete: true,
         components: const <String>[
           'dxvk-macos',
           'dxmt',
@@ -76,7 +74,6 @@ void main() {
     final availability = resolveBottleRuntimeControlAvailability(
       platform: KonyakPlatform.macos,
       runtime: _runtime(
-        isComplete: true,
         components: const <String>['dxmt', 'gptk-d3dmetal'],
         missingPaths: const <String, List<String>>{
           'dxmt': <String>['/runtime/lib/dxmt/x86_64-windows/nvngx.dll'],
@@ -89,7 +86,6 @@ void main() {
             id: 'dxmt',
             name: 'DXMT',
             role: 'd3d10-d3d11-metal-translation',
-            isAvailable: true,
             componentIds: const <String>['dxmt'],
             missingComponentIds: const <String>[],
             missingPaths: const <String>[],
@@ -98,7 +94,6 @@ void main() {
             id: 'gptk-d3dmetal',
             name: 'GPTK/D3DMetal',
             role: 'd3d12-metal-translation',
-            isAvailable: true,
             componentIds: const <String>['gptk-d3dmetal'],
             missingComponentIds: const <String>[],
             missingPaths: const <String>[],
@@ -119,14 +114,12 @@ void main() {
     final availability = resolveBottleRuntimeControlAvailability(
       platform: KonyakPlatform.macos,
       runtime: _runtime(
-        isComplete: true,
         components: const <String>['dxvk-macos', 'moltenvk'],
         backends: [
           RuntimeStackBackendSummary(
             id: 'dxvk-macos',
             name: 'DXVK-macOS',
             role: 'd3d9-d3d11-metal-translation',
-            isAvailable: false,
             componentIds: const <String>['dxvk-macos', 'moltenvk'],
             missingComponentIds: const <String>['moltenvk'],
             missingPaths: const <String>['/runtime/lib/libMoltenVK.dylib'],
@@ -143,10 +136,7 @@ void main() {
   test('requires backend availability for runtime-backed controls', () {
     final availability = resolveBottleRuntimeControlAvailability(
       platform: KonyakPlatform.macos,
-      runtime: _runtime(
-        isComplete: true,
-        components: const <String>['dxvk-macos', 'moltenvk'],
-      ),
+      runtime: _runtime(components: const <String>['dxvk-macos', 'moltenvk']),
       canChangeSettings: true,
       hasPendingRuntimeSettings: false,
     );
@@ -158,7 +148,6 @@ void main() {
     final availability = resolveBottleRuntimeControlAvailability(
       platform: KonyakPlatform.linux,
       runtime: _runtime(
-        isComplete: true,
         components: const <String>['dxvk', 'vkd3d-proton'],
         backends: [
           _backend('dxvk', componentIds: const <String>['dxvk']),
@@ -191,7 +180,6 @@ RuntimeStackBackendSummary _backend(
     id: id,
     name: id,
     role: 'test',
-    isAvailable: true,
     componentIds: componentIds,
     missingComponentIds: const <String>[],
     missingPaths: const <String>[],
@@ -199,7 +187,6 @@ RuntimeStackBackendSummary _backend(
 }
 
 RuntimeSummary _runtime({
-  required bool isComplete,
   required List<String> components,
   Map<String, List<String>> missingPaths = const <String, List<String>>{},
   List<RuntimeStackBackendSummary> backends =
@@ -218,7 +205,6 @@ RuntimeSummary _runtime({
       id: 'stack',
       name: 'Stack',
       compatibilityTarget: 'stack',
-      isComplete: isComplete,
       backends: backends,
       components: components
           .map(
@@ -227,7 +213,6 @@ RuntimeSummary _runtime({
               name: id,
               role: 'test',
               isRequired: true,
-              isInstalled: (missingPaths[id] ?? const <String>[]).isEmpty,
               paths: const <String>['/runtime/component'],
               missingPaths: missingPaths[id] ?? const <String>[],
             ),
