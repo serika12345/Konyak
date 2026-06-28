@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../../bottles/bottle_summary.dart';
 import '../app_constants.dart';
+import '../bottles/bottle_detail.dart';
 import '../utils/bottle_lists.dart';
 import 'home_contracts.dart';
-import 'home_detail_pane.dart';
 import 'home_menu_bar.dart';
 import 'home_navigation_state.dart';
 import 'home_sidebar_pane.dart';
@@ -106,7 +106,7 @@ class _KonyakHomeState extends State<KonyakHome> {
                   color: colors.strongBorder,
                 ),
                 Expanded(
-                  child: KonyakHomeDetailPane(
+                  child: KonyakBottleDetail(
                     state: state.detailStateFor(
                       bottle: selectedBottle,
                       detailMode: _navigationState.detailMode,

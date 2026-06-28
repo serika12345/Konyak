@@ -226,11 +226,6 @@ def require_flutter_home_contract_boundaries() -> None:
     for relative_path, class_name, limit in [
         ("apps/konyak/lib/src/app/home/home_screen.dart", "KonyakHome", 6),
         (
-            "apps/konyak/lib/src/app/home/home_detail_pane.dart",
-            "KonyakHomeDetailPane",
-            6,
-        ),
-        (
             "apps/konyak/lib/src/app/bottles/bottle_detail.dart",
             "KonyakBottleDetail",
             6,

@@ -13,6 +13,33 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-28 19:25 JST
+- State: `completed`
+- Branch: `main`
+- Active work: audit Flutter UI for no-op wrapper widgets after the home
+  contract split.
+- Related TODO: `docs/todo.md` deferred Flutter large UI split.
+- Latest commit: `513bcf1` (`Replace duplicate known runtime state`).
+- Purpose: remove Flutter UI boundaries that only forward props without owning
+  rendering, state, layout, action selection, or a stable public contract.
+- Completed work: inspected the current home/detail/sidebar widgets and small
+  reusable UI files; kept semantic or styled components such as
+  `KonyakHomeSidebarPane`, `PinnedProgramsSection`, `KonyakBottomButton`,
+  `KonyakToolbarAction`, and `KonyakToggle`; removed the no-op
+  `KonyakHomeDetailPane` wrapper by having `KonyakHome` render
+  `KonyakBottleDetail` directly.
+- Remaining work: broader lower-level Flutter view-model/action-selection
+  cleanup remains for `sidebar.dart`, `program_configuration_view.dart`, and
+  `bottle_configuration_view.dart`.
+- Next action: continue with the next small Flutter view-model extraction when
+  requested.
+- Verification: `just flutter-format-check`, `just flutter-analyze`,
+  `just flutter-test`, `just verify-governance`, `just verify-safety`,
+  `just format-check`, and `just lint` passed; the first
+  `just verify-governance` run failed because the deleted wrapper was still in
+  the constructor-prop governance baseline, then passed after the baseline was
+  updated to keep the active `KonyakHome` and `KonyakBottleDetail` checks.
+
 - Timestamp: 2026-06-28 19:09 JST
 - State: `completed`
 - Branch: `main`
