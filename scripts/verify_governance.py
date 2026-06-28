@@ -593,6 +593,8 @@ def require_program_catalog_cli_json_projection() -> None:
         "BottleProgramRecord",
         "ProgramMetadataRecord",
         "WineProcessRecord",
+        "WinetricksVerbRecord",
+        "WinetricksCategoryRecord",
     ]:
         if "toJson(" in class_section(class_name):
             raise AssertionError(
@@ -610,9 +612,13 @@ def require_program_catalog_cli_json_projection() -> None:
         "Map<String, Object?> bottleProgramRecordJson(",
         "Map<String, Object?> programMetadataRecordJson(",
         "Map<String, Object?> wineProcessRecordJson(",
+        "Map<String, Object?> winetricksVerbRecordJson(",
+        "Map<String, Object?> winetricksCategoryRecordJson(",
         "record.metadata.match(",
         "metadata.architecture",
         "metadata.iconPath",
+        "category.verbs",
+        ".map(winetricksVerbRecordJson)",
     ]
     for expected in expected_terms:
         if expected not in cli_catalog:
@@ -643,6 +649,19 @@ def require_program_catalog_cli_json_projection() -> None:
     if ".map(wineProcessRecordJson)" not in process_results:
         raise AssertionError(
             "Wine process list JSON must use wineProcessRecordJson"
+        )
+
+    winetricks_path = (
+        "packages/konyak_cli/lib/src/cli/cli_location_winetricks_handlers.dart"
+    )
+    winetricks = read_text(winetricks_path)
+    if ".map((category) => category.toJson())" in winetricks:
+        raise AssertionError(
+            "Winetricks catalog JSON must not rely on domain-owned toJson"
+        )
+    if ".map(winetricksCategoryRecordJson)" not in winetricks:
+        raise AssertionError(
+            "Winetricks catalog JSON must use winetricksCategoryRecordJson"
         )
 
 

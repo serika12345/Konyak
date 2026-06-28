@@ -8,6 +8,7 @@ import 'cli_bottle_results.dart';
 import 'cli_commands.dart';
 import 'cli_json_helpers.dart';
 import 'cli_location_parsers.dart';
+import 'cli_program_catalog_json.dart';
 import 'cli_result_model.dart';
 
 CliResult? handleLocationCommand(
@@ -164,7 +165,7 @@ CliResult winetricksVerbListJsonResult(WinetricksVerbListResult result) {
       <String, Object?>{
         'winetricks': <String, Object?>{
           'categories': categories
-              .map((category) => category.toJson())
+              .map(winetricksCategoryRecordJson)
               .toList(growable: false),
         },
       },

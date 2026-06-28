@@ -13,6 +13,32 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-28 21:53 JST
+- State: `completed`
+- Branch: `main`
+- Active work: move Winetricks catalog JSON projections out of domain models.
+- Related TODO: `docs/todo.md` deferred JSON `toJson` projection separation.
+- Latest commit: `c76e971` (`Move program catalog JSON projections`).
+- Purpose: continue separating domain models from CLI JSON serialization by
+  moving `WinetricksVerbRecord` and `WinetricksCategoryRecord` projections into
+  the CLI serialization boundary used by `list-winetricks-verbs --json`.
+- Completed work: committed the program catalog projection slice, inspected
+  the remaining program catalog `toJson` methods, observed
+  `just verify-governance` fail before implementation because
+  `WinetricksVerbRecord` still owned CLI JSON projection, added CLI-side
+  Winetricks verb/category serializers, moved `list-winetricks-verbs --json`
+  output to those helpers, removed the matching domain `toJson` methods, and
+  tightened governance for the Winetricks catalog boundary.
+- Remaining work: many domain `toJson` projections remain, especially bottle,
+  runtime/update, settings, validation, and graphics backend hint records.
+- Next action: continue JSON projection separation with another narrow
+  CLI-covered record group, likely bottle records or graphics backend hints.
+- Verification: observed `just verify-governance` fail before implementation;
+  after implementation, `cd packages/konyak_cli && dart analyze
+  --fatal-infos`, focused list-winetricks-verbs CLI contract tests,
+  `just verify-governance`, `just cli-test`, `just verify-architecture`,
+  `just verify-safety`, `just format-check`, and `just lint` passed.
+
 - Timestamp: 2026-06-28 21:47 JST
 - State: `completed`
 - Branch: `main`

@@ -101,14 +101,6 @@ class WinetricksVerbRecord {
   final WinetricksVerbId id;
   final String name;
   final String description;
-
-  Map<String, Object?> toJson() {
-    return <String, Object?>{
-      'id': id.value,
-      'name': name,
-      'description': description,
-    };
-  }
 }
 
 class WinetricksCategoryRecord {
@@ -122,14 +114,6 @@ class WinetricksCategoryRecord {
   final WinetricksCategoryId id;
   final String name;
   final List<WinetricksVerbRecord> verbs;
-
-  Map<String, Object?> toJson() {
-    return <String, Object?>{
-      'id': id.value,
-      'name': name,
-      'verbs': verbs.map((verb) => verb.toJson()).toList(growable: false),
-    };
-  }
 }
 
 sealed class WinetricksVerbListResult {
