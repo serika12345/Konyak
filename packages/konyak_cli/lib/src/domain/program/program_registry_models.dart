@@ -1,20 +1,29 @@
-final class RegistryValueUpdate {
-  const RegistryValueUpdate({
-    required this.key,
-    required this.name,
-    required this.type,
-    required this.data,
-  });
+import 'package:freezed_annotation/freezed_annotation.dart';
 
-  final String key;
-  final String name;
-  final String type;
-  final String data;
+part 'program_registry_models.freezed.dart';
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class RegistryValueUpdate with _$RegistryValueUpdate {
+  const factory RegistryValueUpdate({
+    required String key,
+    required String name,
+    required String type,
+    required String data,
+  }) = _RegistryValueUpdate;
 }
 
-final class RegistryValueQuery {
-  const RegistryValueQuery({required this.key, required this.name});
-
-  final String key;
-  final String name;
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class RegistryValueQuery with _$RegistryValueQuery {
+  const factory RegistryValueQuery({
+    required String key,
+    required String name,
+  }) = _RegistryValueQuery;
 }

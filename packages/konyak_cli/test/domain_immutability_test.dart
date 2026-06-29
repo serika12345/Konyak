@@ -257,6 +257,27 @@ void main() {
     );
   });
 
+  test('registry value records compare by semantic values', () {
+    expect(
+      RegistryValueUpdate(
+        key: r'HKCU\Software\Wine',
+        name: 'Version',
+        type: 'REG_SZ',
+        data: 'win10',
+      ),
+      RegistryValueUpdate(
+        key: r'HKCU\Software\Wine',
+        name: 'Version',
+        type: 'REG_SZ',
+        data: 'win10',
+      ),
+    );
+    expect(
+      RegistryValueQuery(key: r'HKCU\Software\Wine', name: 'Version'),
+      RegistryValueQuery(key: r'HKCU\Software\Wine', name: 'Version'),
+    );
+  });
+
   test('winetricks catalog records expose immutable value snapshots', () {
     final verbs = <WinetricksVerbRecord>[
       WinetricksVerbRecord(

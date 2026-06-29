@@ -13,6 +13,40 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-29 13:28 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Freezed-backed registry value records.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: this commit (`Freezed registry value records`).
+- Purpose: continue the program-domain Freezed scan with the smallest
+  remaining hand-written program model file.
+- Completed work: committed the program update result Freezed slice; inspected
+  `program_registry_models.dart`, `program_registry_plans.dart`, and registry
+  request call sites; selected `RegistryValueUpdate` and
+  `RegistryValueQuery` because they are pure value records with named-field
+  construction and no branching; added focused value-semantics coverage and
+  observed it fail after avoiding `const` canonicalization; converted the
+  registry value records to Freezed.
+- Remaining work: continue the Freezed scan with the larger program run model
+  group, likely starting with `program_settings_models.dart` or the narrow
+  result unions in `program_run_models.dart`.
+- Next action: inspect `program_settings_models.dart` and
+  `program_run_models.dart` to choose the next smallest hand-written
+  value/result model slice.
+- Verification: observed `cd packages/konyak_cli && dart test
+  test/domain_immutability_test.dart --name "registry value records compare by
+  semantic values"` fail before implementation after removing `const`; after
+  implementation, `cd packages/konyak_cli && dart run build_runner build
+  --delete-conflicting-outputs && dart format
+  lib/src/domain/program/program_registry_models.dart
+  test/domain_immutability_test.dart && dart analyze --fatal-infos`, focused
+  registry value-semantics test, `cd packages/konyak_cli && dart test
+  test/domain_immutability_test.dart`, `just verify-governance`, `just
+  verify-architecture`, `just verify-safety`, `just format-check`, `just
+  lint`, and `just cli-test` passed.
+
 - Timestamp: 2026-06-29 13:24 JST
 - State: `completed`
 - Branch: `main`
