@@ -5,69 +5,111 @@ import '../shared/domain_value_objects.dart';
 
 part 'runtime_models.freezed.dart';
 
-class RuntimeDefinition {
-  RuntimeDefinition({
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class RuntimeDefinition with _$RuntimeDefinition {
+  const RuntimeDefinition._();
+
+  factory RuntimeDefinition({
     required String id,
     required String name,
     required String platform,
     required String architecture,
     required String runnerKind,
-    required this.isBundled,
-    required this.isUpdateable,
+    required bool isBundled,
+    required bool isUpdateable,
     Option<String> distributionKind = const Option.none(),
     Option<String> archiveUrl = const Option.none(),
     Option<String> versionUrl = const Option.none(),
-  }) : id = RuntimeId(id),
-       name = RuntimeName(name),
-       platform = RuntimePlatformName(platform),
-       architecture = RuntimeArchitecture(architecture),
-       runnerKind = RunnerKind(runnerKind),
-       distributionKind = distributionKind.map(RuntimeDistributionKind.new),
-       archiveUrl = archiveUrl.map(RuntimeArchiveUrl.new),
-       versionUrl = versionUrl.map(RuntimeVersionUrl.new);
+  }) {
+    return RuntimeDefinition._validated(
+      id: RuntimeId(id),
+      name: RuntimeName(name),
+      platform: RuntimePlatformName(platform),
+      architecture: RuntimeArchitecture(architecture),
+      runnerKind: RunnerKind(runnerKind),
+      isBundled: isBundled,
+      isUpdateable: isUpdateable,
+      distributionKind: distributionKind.map(RuntimeDistributionKind.new),
+      archiveUrl: archiveUrl.map(RuntimeArchiveUrl.new),
+      versionUrl: versionUrl.map(RuntimeVersionUrl.new),
+    );
+  }
 
-  final RuntimeId id;
-  final RuntimeName name;
-  final RuntimePlatformName platform;
-  final RuntimeArchitecture architecture;
-  final RunnerKind runnerKind;
-  final bool isBundled;
-  final bool isUpdateable;
-  final Option<RuntimeDistributionKind> distributionKind;
-  final Option<RuntimeArchiveUrl> archiveUrl;
-  final Option<RuntimeVersionUrl> versionUrl;
+  const factory RuntimeDefinition._validated({
+    required RuntimeId id,
+    required RuntimeName name,
+    required RuntimePlatformName platform,
+    required RuntimeArchitecture architecture,
+    required RunnerKind runnerKind,
+    required bool isBundled,
+    required bool isUpdateable,
+    required Option<RuntimeDistributionKind> distributionKind,
+    required Option<RuntimeArchiveUrl> archiveUrl,
+    required Option<RuntimeVersionUrl> versionUrl,
+  }) = _RuntimeDefinition;
 }
 
-class InstalledRuntimeState {
-  InstalledRuntimeState({
-    this.isInstalled = const Option.none(),
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class InstalledRuntimeState with _$InstalledRuntimeState {
+  const InstalledRuntimeState._();
+
+  factory InstalledRuntimeState({
+    Option<bool> isInstalled = const Option.none(),
     Option<String> applicationSupportPath = const Option.none(),
     Option<String> libraryPath = const Option.none(),
     Option<String> executablePath = const Option.none(),
-  }) : applicationSupportPath = applicationSupportPath.map(
-         RuntimeComponentPath.new,
-       ),
-       libraryPath = libraryPath.map(RuntimeComponentPath.new),
-       executablePath = executablePath.map(RuntimeComponentPath.new);
+  }) {
+    return InstalledRuntimeState._validated(
+      isInstalled: isInstalled,
+      applicationSupportPath: applicationSupportPath.map(
+        RuntimeComponentPath.new,
+      ),
+      libraryPath: libraryPath.map(RuntimeComponentPath.new),
+      executablePath: executablePath.map(RuntimeComponentPath.new),
+    );
+  }
 
-  const InstalledRuntimeState.unknown()
-    : isInstalled = const Option.none(),
-      applicationSupportPath = const Option.none(),
-      libraryPath = const Option.none(),
-      executablePath = const Option.none();
+  const factory InstalledRuntimeState.unknown({
+    @Default(Option<bool>.none()) Option<bool> isInstalled,
+    @Default(Option<RuntimeComponentPath>.none())
+    Option<RuntimeComponentPath> applicationSupportPath,
+    @Default(Option<RuntimeComponentPath>.none())
+    Option<RuntimeComponentPath> libraryPath,
+    @Default(Option<RuntimeComponentPath>.none())
+    Option<RuntimeComponentPath> executablePath,
+  }) = _UnknownInstalledRuntimeState;
 
-  final Option<bool> isInstalled;
-  final Option<RuntimeComponentPath> applicationSupportPath;
-  final Option<RuntimeComponentPath> libraryPath;
-  final Option<RuntimeComponentPath> executablePath;
+  const factory InstalledRuntimeState._validated({
+    required Option<bool> isInstalled,
+    required Option<RuntimeComponentPath> applicationSupportPath,
+    required Option<RuntimeComponentPath> libraryPath,
+    required Option<RuntimeComponentPath> executablePath,
+  }) = _InstalledRuntimeState;
 }
 
-class RuntimeCapabilities {
-  const RuntimeCapabilities({this.stack = const Option.none()});
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class RuntimeCapabilities with _$RuntimeCapabilities {
+  const RuntimeCapabilities._();
 
-  const RuntimeCapabilities.empty() : stack = const Option.none();
+  const factory RuntimeCapabilities({
+    @Default(Option<RuntimeStack>.none()) Option<RuntimeStack> stack,
+  }) = _RuntimeCapabilities;
 
-  final Option<RuntimeStack> stack;
+  const factory RuntimeCapabilities.empty({
+    @Default(Option<RuntimeStack>.none()) Option<RuntimeStack> stack,
+  }) = _EmptyRuntimeCapabilities;
 }
 
 class RuntimeRecord {

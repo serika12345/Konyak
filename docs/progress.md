@@ -13,32 +13,28 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-06-29 09:37 JST
+- Timestamp: 2026-06-29 09:46 JST
 - State: `completed`
 - Branch: `main`
-- Active work: Freezed-backed runtime stack domain records.
+- Active work: Freezed-backed runtime definition and capability records.
 - Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
   boundary tightening.
-- Latest commit: this commit (`Freezed runtime stack domain records`).
+- Latest commit: `dc86c76` (`Freezed runtime stack domain records`).
 - Purpose: continue replacing hand-written immutable domain model boilerplate
-  with Freezed-backed records, starting with the runtime stack aggregate classes
-  that have simple typed fields, immutable collection normalization, and
-  computed status getters.
-- Completed work: inspected `runtime_models.dart`, runtime stack call sites,
-  domain immutability coverage, and runtime governance baselines; converted
-  `RuntimeStack`, `RuntimeStackBackend`, and `RuntimeStackComponent` to
-  Freezed-backed records with `copyWith` disabled and existing public
-  constructors preserved; regenerated the local ignored
-  `runtime_models.freezed.dart`; updated governance so
-  `RuntimeStackComponent.version` typed state can be checked through either a
-  hand-written final field or a Freezed `_validated` typed constructor
-  parameter.
-- Remaining work: runtime stack Freezed conversion is complete. `RuntimeRecord`,
-  `RuntimeDefinition`, `InstalledRuntimeState`, `RuntimeCapabilities`, and
-  runtime source manifest models remain hand-written candidates.
-- Next action: commit this runtime stack Freezed slice if accepted, then
-  evaluate `RuntimeDefinition`/`InstalledRuntimeState`/`RuntimeCapabilities`
-  as the next narrow group.
+  with Freezed-backed records, continuing from runtime stack records into the
+  definition/state/capability records consumed by `RuntimeRecord.fromParts`.
+- Completed work: committed the runtime stack Freezed slice; inspected
+  `RuntimeDefinition`, `InstalledRuntimeState`, `RuntimeCapabilities`,
+  call sites, domain immutability coverage, and runtime governance baselines;
+  converted the three records to Freezed-backed models with `copyWith`
+  disabled and public constructor compatibility preserved; kept
+  `InstalledRuntimeState.unknown()` and `RuntimeCapabilities.empty()` as const
+  constructors through typed Freezed variants; regenerated the local ignored
+  `runtime_models.freezed.dart`.
+- Remaining work: commit this runtime definition/state/capability slice if
+  accepted. `RuntimeRecord` and runtime source manifest models remain
+  hand-written candidates.
+- Next action: commit this slice, then evaluate `RuntimeRecord` separately.
 - Verification: `cd packages/konyak_cli && dart analyze --fatal-infos`,
   `cd packages/konyak_cli && dart test test/domain_immutability_test.dart`,
   `just verify-governance`, `just verify-architecture`, `just verify-safety`,
