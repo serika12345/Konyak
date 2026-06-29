@@ -9,6 +9,21 @@ sealed class BottleCreateParseResult {
   const BottleCreateParseResult();
 }
 
+sealed class _BottleCreateConflictParseResult {
+  const _BottleCreateConflictParseResult();
+}
+
+final class _ParsedBottleCreateConflict
+    extends _BottleCreateConflictParseResult {
+  const _ParsedBottleCreateConflict(this.conflict);
+
+  final BottleCreateConflict conflict;
+}
+
+final class _NoBottleCreateConflict extends _BottleCreateConflictParseResult {
+  const _NoBottleCreateConflict();
+}
+
 final class ParsedBottleCreate extends BottleCreateParseResult {
   const ParsedBottleCreate(this.bottle);
 
@@ -52,24 +67,24 @@ BottleCreateParseResult parseBottleCreatePayload(String payload) {
     );
   }
 
-  final conflict = _parseBottleConflict(decoded['error']);
-  if (conflict != null) {
-    return conflict;
+  switch (_parseBottleConflict(decoded['error'])) {
+    case _ParsedBottleCreateConflict(:final conflict):
+      return conflict;
+    case _NoBottleCreateConflict():
+      break;
   }
 
-  final bottle = parseBottleSummary(decoded['bottle']);
-  if (bottle == null) {
-    return const BottleCreateParseFailure(
+  return switch (parseBottleSummary(decoded['bottle'])) {
+    ParsedBottleSummary(:final bottle) => ParsedBottleCreate(bottle),
+    InvalidBottleSummary() => const BottleCreateParseFailure(
       'Bottle create payload contains an invalid bottle record.',
-    );
-  }
-
-  return ParsedBottleCreate(bottle);
+    ),
+  };
 }
 
-BottleCreateConflict? _parseBottleConflict(Object? value) {
+_BottleCreateConflictParseResult _parseBottleConflict(Object? value) {
   if (value is! Map<String, dynamic>) {
-    return null;
+    return const _NoBottleCreateConflict();
   }
 
   final Object? code = value['code'];
@@ -79,8 +94,10 @@ BottleCreateConflict? _parseBottleConflict(Object? value) {
   if (code != 'bottleAlreadyExists' ||
       message is! String ||
       bottleId is! String) {
-    return null;
+    return const _NoBottleCreateConflict();
   }
 
-  return BottleCreateConflict(bottleId: bottleId, message: message);
+  return _ParsedBottleCreateConflict(
+    BottleCreateConflict(bottleId: bottleId, message: message),
+  );
 }

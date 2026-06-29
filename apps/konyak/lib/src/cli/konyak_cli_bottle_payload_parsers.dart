@@ -114,14 +114,12 @@ BottleDeleteParseResult parseBottleDeletePayload(String payload) {
       break;
   }
 
-  final bottle = parseBottleSummary(decoded['deletedBottle']);
-  if (bottle == null) {
-    return const BottleDeleteParseFailure(
+  return switch (parseBottleSummary(decoded['deletedBottle'])) {
+    ParsedBottleSummary(:final bottle) => ParsedBottleDelete(bottle),
+    InvalidBottleSummary() => const BottleDeleteParseFailure(
       'Bottle delete payload contains an invalid bottle record.',
-    );
-  }
-
-  return ParsedBottleDelete(bottle);
+    ),
+  };
 }
 
 _BottleDeleteNotFoundParseResult _parseBottleDeleteNotFound(Object? value) {

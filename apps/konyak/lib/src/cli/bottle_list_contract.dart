@@ -52,22 +52,17 @@ BottleListParseResult parseBottleListPayload(String payload) {
     );
   }
 
-  final bottles = _parseBottles(bottleValues);
-  if (bottles == null) {
-    return const BottleListParseFailure(
-      'Bottle list payload contains an invalid bottle record.',
-    );
+  final bottles = <BottleSummary>[];
+  for (final bottleValue in bottleValues) {
+    switch (parseBottleSummary(bottleValue)) {
+      case ParsedBottleSummary(:final bottle):
+        bottles.add(bottle);
+      case InvalidBottleSummary():
+        return const BottleListParseFailure(
+          'Bottle list payload contains an invalid bottle record.',
+        );
+    }
   }
 
   return ParsedBottleList(List.unmodifiable(bottles));
-}
-
-List<BottleSummary>? _parseBottles(List<dynamic> bottleValues) {
-  final bottles = bottleValues.map(parseBottleSummary).toList(growable: false);
-
-  if (bottles.any((bottle) => bottle == null)) {
-    return null;
-  }
-
-  return bottles.whereType<BottleSummary>().toList(growable: false);
 }

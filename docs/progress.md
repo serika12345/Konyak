@@ -13,6 +13,33 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-29 21:04 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Type bottle record parser results.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: `0b85986` (`Type runtime install progress parser`); this
+  completed slice is not committed yet.
+- Purpose: continue removing nullable success/failure sentinels from Flutter
+  CLI contract parsers before narrowing nullable custom-lint allowances.
+- Completed work: added focused bottle record parser contract coverage; changed
+  bottle summary, runtime settings, pinned-program, create conflict, detail
+  not-found, and delete/list/detail/create bottle record parsing to use explicit
+  sealed parse results instead of nullable success/failure sentinels.
+- Remaining work: continue nullable sentinel cleanup in the remaining Flutter
+  CLI contract parsers, especially Winetricks/update/settings/program-run and
+  launch-config helpers, before narrowing the nullable custom-lint allowance
+  from directory level to direct boundary files.
+- Next action: choose the next concentrated nullable parser boundary and repeat
+  the same sealed-result cleanup.
+- Verification: observed the focused bottle record parser test fail before
+  implementation because the new parse result types did not exist; after
+  implementation, focused bottle record/create/detail/list/delete contract tests
+  passed, and `just flutter-format-check`, `just flutter-analyze`, `just
+  flutter-test`, `just verify-governance`, `just verify-safety`, `just
+  format-check`, and `just lint` passed in the Nix dev shell.
+
 - Timestamp: 2026-06-29 20:34 JST
 - State: `completed`
 - Branch: `main`

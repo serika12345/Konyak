@@ -9,6 +9,21 @@ sealed class BottleDetailParseResult {
   const BottleDetailParseResult();
 }
 
+sealed class _BottleDetailNotFoundParseResult {
+  const _BottleDetailNotFoundParseResult();
+}
+
+final class _ParsedBottleDetailNotFound
+    extends _BottleDetailNotFoundParseResult {
+  const _ParsedBottleDetailNotFound(this.notFound);
+
+  final BottleDetailNotFound notFound;
+}
+
+final class _NoBottleDetailNotFound extends _BottleDetailNotFoundParseResult {
+  const _NoBottleDetailNotFound();
+}
+
 final class ParsedBottleDetail extends BottleDetailParseResult {
   const ParsedBottleDetail(this.bottle);
 
@@ -52,24 +67,24 @@ BottleDetailParseResult parseBottleDetailPayload(String payload) {
     );
   }
 
-  final notFound = _parseBottleNotFound(decoded['error']);
-  if (notFound != null) {
-    return notFound;
+  switch (_parseBottleNotFound(decoded['error'])) {
+    case _ParsedBottleDetailNotFound(:final notFound):
+      return notFound;
+    case _NoBottleDetailNotFound():
+      break;
   }
 
-  final bottle = parseBottleSummary(decoded['bottle']);
-  if (bottle == null) {
-    return const BottleDetailParseFailure(
+  return switch (parseBottleSummary(decoded['bottle'])) {
+    ParsedBottleSummary(:final bottle) => ParsedBottleDetail(bottle),
+    InvalidBottleSummary() => const BottleDetailParseFailure(
       'Bottle detail payload contains an invalid bottle record.',
-    );
-  }
-
-  return ParsedBottleDetail(bottle);
+    ),
+  };
 }
 
-BottleDetailNotFound? _parseBottleNotFound(Object? value) {
+_BottleDetailNotFoundParseResult _parseBottleNotFound(Object? value) {
   if (value is! Map<String, dynamic>) {
-    return null;
+    return const _NoBottleDetailNotFound();
   }
 
   final Object? code = value['code'];
@@ -77,8 +92,10 @@ BottleDetailNotFound? _parseBottleNotFound(Object? value) {
   final Object? bottleId = value['bottleId'];
 
   if (code != 'bottleNotFound' || message is! String || bottleId is! String) {
-    return null;
+    return const _NoBottleDetailNotFound();
   }
 
-  return BottleDetailNotFound(bottleId: bottleId, message: message);
+  return _ParsedBottleDetailNotFound(
+    BottleDetailNotFound(bottleId: bottleId, message: message),
+  );
 }
