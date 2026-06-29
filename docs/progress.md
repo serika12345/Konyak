@@ -13,6 +13,41 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-29 11:12 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Freezed-backed runtime install checksum and signature variants.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: `96d12ee` (`Freezed runtime install plans`).
+- Purpose: continue replacing hand-written immutable domain model boilerplate
+  in `runtime_install_operation_models.dart` with a narrow, low-risk slice
+  before touching the larger install source and operation constructors.
+- Completed work: inspected install operation models, existing immutability
+  coverage, and repo call sites for direct concrete checksum/signature
+  constructor usage; no repo call sites instantiate the concrete variants
+  directly outside the model definitions; converted `RuntimeArchiveChecksum`
+  and `RuntimeSourceManifestSignature` variants to Freezed-backed variants with
+  `copyWith` disabled while preserving public string-taking factories,
+  existing pattern names, `asOption`, and blank value validation through value
+  objects; regenerated the local ignored
+  `runtime_install_operation_models.freezed.dart`.
+- Remaining work: larger `RuntimeInstallSource` and
+  `RuntimeInstallRequestOperation` variants remain hand-written and need a
+  separate pass because their public constructors perform string/value-object
+  conversion and immutable collection snapshotting.
+- Next action: evaluate `RuntimeInstallSource` variants for a narrow Freezed
+  conversion slice, starting with configured/local/remote archive source
+  constructors and their component archive path snapshots.
+- Verification: `cd packages/konyak_cli && dart run build_runner build
+  --delete-conflicting-outputs && dart format
+  lib/src/domain/runtime/runtime_install_operation_models.dart && dart analyze
+  --fatal-infos`, `cd packages/konyak_cli && dart test
+  test/domain_immutability_test.dart --name "runtime install operations"`, `cd
+  packages/konyak_cli && dart test test/domain_immutability_test.dart`, `just
+  verify-governance`, `just verify-architecture`, `just verify-safety`, `just
+  format-check`, `just lint`, and `just cli-test` passed.
+
 - Timestamp: 2026-06-29 11:05 JST
 - State: `completed`
 - Branch: `main`

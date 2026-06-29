@@ -1,7 +1,10 @@
 import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:fpdart/fpdart.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../shared/domain_value_objects.dart';
+
+part 'runtime_install_operation_models.freezed.dart';
 
 enum RuntimeInstallOperation {
   fullInstall,
@@ -68,13 +71,23 @@ sealed class RuntimeInstallRequestOperation {
       };
 }
 
-sealed class RuntimeArchiveChecksum {
-  const RuntimeArchiveChecksum();
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class RuntimeArchiveChecksum with _$RuntimeArchiveChecksum {
+  const RuntimeArchiveChecksum._();
 
   const factory RuntimeArchiveChecksum.absent() = RuntimeArchiveChecksumAbsent;
 
-  factory RuntimeArchiveChecksum.sha256(String value) =
-      RuntimeSha256ArchiveChecksum;
+  factory RuntimeArchiveChecksum.sha256(String value) {
+    return RuntimeArchiveChecksum._sha256(RuntimeArchiveChecksumValue(value));
+  }
+
+  const factory RuntimeArchiveChecksum._sha256(
+    RuntimeArchiveChecksumValue value,
+  ) = RuntimeSha256ArchiveChecksum;
 
   Option<RuntimeArchiveChecksumValue> get asOption => switch (this) {
     RuntimeArchiveChecksumAbsent() => const Option.none(),
@@ -82,42 +95,32 @@ sealed class RuntimeArchiveChecksum {
   };
 }
 
-final class RuntimeArchiveChecksumAbsent extends RuntimeArchiveChecksum {
-  const RuntimeArchiveChecksumAbsent();
-}
-
-final class RuntimeSha256ArchiveChecksum extends RuntimeArchiveChecksum {
-  RuntimeSha256ArchiveChecksum(String value)
-    : value = RuntimeArchiveChecksumValue(value);
-
-  final RuntimeArchiveChecksumValue value;
-}
-
-sealed class RuntimeSourceManifestSignature {
-  const RuntimeSourceManifestSignature();
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class RuntimeSourceManifestSignature
+    with _$RuntimeSourceManifestSignature {
+  const RuntimeSourceManifestSignature._();
 
   const factory RuntimeSourceManifestSignature.absent() =
       RuntimeSourceManifestSignatureAbsent;
 
-  factory RuntimeSourceManifestSignature.signed(String value) =
-      RuntimeSourceManifestSigned;
+  factory RuntimeSourceManifestSignature.signed(String value) {
+    return RuntimeSourceManifestSignature._signed(
+      RuntimeSourceManifestSignatureUrl(value),
+    );
+  }
+
+  const factory RuntimeSourceManifestSignature._signed(
+    RuntimeSourceManifestSignatureUrl value,
+  ) = RuntimeSourceManifestSigned;
 
   Option<RuntimeSourceManifestSignatureUrl> get asOption => switch (this) {
     RuntimeSourceManifestSignatureAbsent() => const Option.none(),
     RuntimeSourceManifestSigned(:final value) => Option.of(value),
   };
-}
-
-final class RuntimeSourceManifestSignatureAbsent
-    extends RuntimeSourceManifestSignature {
-  const RuntimeSourceManifestSignatureAbsent();
-}
-
-final class RuntimeSourceManifestSigned extends RuntimeSourceManifestSignature {
-  RuntimeSourceManifestSigned(String value)
-    : value = RuntimeSourceManifestSignatureUrl(value);
-
-  final RuntimeSourceManifestSignatureUrl value;
 }
 
 sealed class RuntimeInstallSource {
