@@ -19,12 +19,12 @@ class FileBottleRepositoryProgramOperations {
 
   ProgramPinResult pinProgram(ProgramPinRequest request) {
     return findBottle(request.bottleId.value).fold<ProgramPinResult>(
-      ProgramPinFailed.new,
+      ProgramPinResult.failed,
       (bottle) => bottle.match(
-        () => ProgramPinMissing(request.bottleId.value),
+        () => ProgramPinResult.missing(request.bottleId.value),
         (bottle) {
           if (hasPinnedProgram(bottle, request.programPath.value)) {
-            return ProgramPinConflict(request.programPath.value);
+            return ProgramPinResult.conflict(request.programPath.value);
           }
 
           final updated = bottleWithPinnedProgram(
@@ -37,8 +37,8 @@ class FileBottleRepositoryProgramOperations {
             writeBottleMetadata(updated);
           });
           return writeResult.fold<ProgramPinResult>(
-            ProgramPinFailed.new,
-            (_) => ProgramPinned(updated),
+            ProgramPinResult.failed,
+            (_) => ProgramPinResult.pinned(updated),
           );
         },
       ),

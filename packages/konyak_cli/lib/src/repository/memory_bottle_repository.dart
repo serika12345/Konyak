@@ -222,10 +222,10 @@ class MemoryBottleRepository implements BottleRepository {
   @override
   ProgramPinResult pinProgram(ProgramPinRequest request) {
     return mapValue(bottlesById, request.bottleId.value).match(
-      () => ProgramPinMissing(request.bottleId.value),
+      () => ProgramPinResult.missing(request.bottleId.value),
       (bottle) {
         if (hasPinnedProgram(bottle, request.programPath.value)) {
-          return ProgramPinConflict(request.programPath.value);
+          return ProgramPinResult.conflict(request.programPath.value);
         }
 
         final updated = bottleWithPinnedProgram(
@@ -235,7 +235,7 @@ class MemoryBottleRepository implements BottleRepository {
         );
         bottlesById[request.bottleId.value] = updated;
 
-        return ProgramPinned(updated);
+        return ProgramPinResult.pinned(updated);
       },
     );
   }

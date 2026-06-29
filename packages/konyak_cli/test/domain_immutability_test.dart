@@ -936,6 +936,34 @@ void main() {
     );
   });
 
+  test('program pin results compare by semantic values', () {
+    BottleRecord bottle() {
+      return BottleRecord(
+        id: 'steam',
+        name: 'Steam',
+        path: '/bottles/steam',
+        windowsVersion: 'win10',
+      );
+    }
+
+    expect(
+      ProgramPinResult.pinned(bottle()),
+      ProgramPinResult.pinned(bottle()),
+    );
+    expect(
+      ProgramPinResult.missing('steam'),
+      ProgramPinResult.missing('steam'),
+    );
+    expect(
+      ProgramPinResult.conflict('/steam.exe'),
+      ProgramPinResult.conflict('/steam.exe'),
+    );
+    expect(
+      ProgramPinResult.failed('pin failed'),
+      ProgramPinResult.failed('pin failed'),
+    );
+  });
+
   test('Wine process kill plans model process ids with WineProcessId', () {
     expect(winedbgAttachProcessId(WineProcessId('000000d8')), '0x000000d8');
     expect(winedbgAttachProcessId(WineProcessId('0x000000d8')), '0x000000d8');

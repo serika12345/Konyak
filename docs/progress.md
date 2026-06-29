@@ -13,6 +13,44 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-29 13:18 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Freezed-backed program pin result union.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: this commit (`Freezed program pin results`).
+- Purpose: continue the program mutation Freezed pass by converting
+  `ProgramPinResult` before the broader program update result union.
+- Completed work: committed the settings result Freezed slice; inspected pin
+  result variants and call sites; selected `ProgramPinResult` because it has a
+  single success payload plus missing/conflict/failure variants with simple
+  value-object conversions; added focused value-semantics coverage and observed
+  it fail against the hand-written result variants; converted
+  `ProgramPinResult` to Freezed with base factories for missing bottle and
+  conflict path conversion; updated construction call sites and result-boundary
+  governance.
+- Remaining work: `ProgramUpdateResult` remains hand-written in
+  `program_mutation_models.dart`.
+- Next action: convert `ProgramUpdateResult`, preserving concrete switch
+  pattern names and using base factories for missing bottle, missing program,
+  and failed variants.
+- Verification: observed `cd packages/konyak_cli && dart test
+  test/domain_immutability_test.dart --name "program pin results compare by
+  semantic values"` fail before implementation; after implementation, `cd
+  packages/konyak_cli && dart run build_runner build
+  --delete-conflicting-outputs && dart format
+  lib/src/domain/program/program_mutation_models.dart
+  lib/src/repository/file_bottle_repository_program_operations.dart
+  lib/src/repository/memory_bottle_repository.dart
+  test/domain_immutability_test.dart && dart analyze --fatal-infos`, focused
+  program pin result value-semantics test, focused pin-program and
+  launch-pinned-program CLI contract tests, focused settings and mutation
+  request value-semantics tests, `cd packages/konyak_cli && dart test
+  test/domain_immutability_test.dart`, `just verify-governance`, `just
+  verify-architecture`, `just verify-safety`, `just format-check`, `just
+  cli-test`, and `just lint` passed.
+
 - Timestamp: 2026-06-29 13:13 JST
 - State: `completed`
 - Branch: `main`

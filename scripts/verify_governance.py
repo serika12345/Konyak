@@ -1874,7 +1874,7 @@ def require_result_boundary_rules() -> None:
         "packages/konyak_cli/lib/src/domain/program/program_mutation_models.dart"
     )
     for expected_options in [
-        ["class ProgramPinFailed"],
+        ["class ProgramPinFailed", "ProgramPinResult.failed"],
         ["class ProgramUpdateFailed"],
         ["class ProgramSettingsReadFailed", "ProgramSettingsReadResult.failed"],
         [

@@ -34,33 +34,31 @@ abstract class ProgramPinRequest with _$ProgramPinRequest {
   }) = _ProgramPinRequest;
 }
 
-sealed class ProgramPinResult {
-  const ProgramPinResult();
-}
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class ProgramPinResult with _$ProgramPinResult {
+  const ProgramPinResult._();
 
-class ProgramPinned extends ProgramPinResult {
-  const ProgramPinned(this.bottle);
+  const factory ProgramPinResult.pinned(BottleRecord bottle) = ProgramPinned;
 
-  final BottleRecord bottle;
-}
+  factory ProgramPinResult.missing(String bottleId) {
+    return ProgramPinResult._missing(bottleId: BottleId(bottleId));
+  }
 
-class ProgramPinMissing extends ProgramPinResult {
-  ProgramPinMissing(String bottleId) : bottleId = BottleId(bottleId);
+  const factory ProgramPinResult._missing({required BottleId bottleId}) =
+      ProgramPinMissing;
 
-  final BottleId bottleId;
-}
+  factory ProgramPinResult.conflict(String programPath) {
+    return ProgramPinResult._conflict(programPath: ProgramPath(programPath));
+  }
 
-class ProgramPinConflict extends ProgramPinResult {
-  ProgramPinConflict(String programPath)
-    : programPath = ProgramPath(programPath);
+  const factory ProgramPinResult._conflict({required ProgramPath programPath}) =
+      ProgramPinConflict;
 
-  final ProgramPath programPath;
-}
-
-class ProgramPinFailed extends ProgramPinResult {
-  const ProgramPinFailed(this.message);
-
-  final String message;
+  const factory ProgramPinResult.failed(String message) = ProgramPinFailed;
 }
 
 @Freezed(
