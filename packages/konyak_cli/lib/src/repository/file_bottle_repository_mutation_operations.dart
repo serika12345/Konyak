@@ -2,6 +2,7 @@ import 'package:fpdart/fpdart.dart';
 
 import '../domain/bottle/bottle_models.dart';
 import '../domain/bottle/bottle_mutation_models.dart';
+import '../domain/shared/domain_value_objects.dart';
 import '../io/file_bottle_repository_io.dart';
 import '../io/io_result.dart';
 import '../io/repository_storage_io.dart';
@@ -17,7 +18,7 @@ class FileBottleRepositoryMutationOperations {
 
   final String dataHome;
   final String bottleDirectory;
-  final IoResult<Option<BottleRecord>> Function(String id) findBottle;
+  final IoResult<Option<BottleRecord>> Function(BottleId id) findBottle;
 
   BottleCreateResult createBottle(BottleCreateRequest request) {
     final bottle = bottleFromCreateRequest(
@@ -39,10 +40,10 @@ class FileBottleRepositoryMutationOperations {
     );
   }
 
-  BottleDeleteResult deleteBottle(String id) {
+  BottleDeleteResult deleteBottle(BottleId id) {
     return findBottle(id).fold<BottleDeleteResult>(
       BottleDeleteFailed.new,
-      (bottle) => bottle.match(() => BottleDeleteMissing(id), (bottle) {
+      (bottle) => bottle.match(() => BottleDeleteMissing(id.value), (bottle) {
         final deleteResult = ioResult(() {
           deleteFileBottleDirectoryIfPresent(bottle.path.value);
         });
@@ -55,7 +56,7 @@ class FileBottleRepositoryMutationOperations {
   }
 
   BottleRenameResult renameBottle(BottleRenameRequest request) {
-    return findBottle(request.bottleId.value).fold<BottleRenameResult>(
+    return findBottle(request.bottleId).fold<BottleRenameResult>(
       BottleRenameFailed.new,
       (bottle) => bottle.match(
         () => BottleRenameMissing(request.bottleId.value),
@@ -88,7 +89,7 @@ class FileBottleRepositoryMutationOperations {
   }
 
   BottleMoveResult moveBottle(BottleMoveRequest request) {
-    return findBottle(request.bottleId.value).fold<BottleMoveResult>(
+    return findBottle(request.bottleId).fold<BottleMoveResult>(
       BottleMoveFailed.new,
       (bottle) => bottle.match(
         () => BottleMoveMissing(request.bottleId.value),
@@ -119,7 +120,7 @@ class FileBottleRepositoryMutationOperations {
   }
 
   BottleUpdateResult setWindowsVersion(WindowsVersionUpdateRequest request) {
-    return findBottle(request.bottleId.value).fold<BottleUpdateResult>(
+    return findBottle(request.bottleId).fold<BottleUpdateResult>(
       BottleUpdateFailed.new,
       (bottle) => bottle.match(
         () => BottleUpdateMissing(request.bottleId.value),
@@ -141,7 +142,7 @@ class FileBottleRepositoryMutationOperations {
   }
 
   BottleUpdateResult setRuntimeSettings(RuntimeSettingsUpdateRequest request) {
-    return findBottle(request.bottleId.value).fold<BottleUpdateResult>(
+    return findBottle(request.bottleId).fold<BottleUpdateResult>(
       BottleUpdateFailed.new,
       (bottle) => bottle.match(
         () => BottleUpdateMissing(request.bottleId.value),

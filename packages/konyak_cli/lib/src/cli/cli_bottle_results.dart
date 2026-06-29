@@ -5,6 +5,7 @@ import '../domain/bottle/bottle_mutation_models.dart';
 import '../domain/bottle/bottle_runtime_settings_models.dart';
 import '../domain/program/program_run_models.dart';
 import '../domain/program/program_runner.dart';
+import '../domain/shared/domain_value_objects.dart';
 import '../io/bottle_metadata_json.dart';
 import '../io/io_result.dart';
 import '../io/program_registry_parsers.dart';
@@ -66,12 +67,13 @@ CliResult bottleCatalogFailureJsonResult(String message) {
 
 CliResult foundBottleJsonResult({
   required IoResult<Option<BottleRecord>> result,
-  required String bottleId,
+  required BottleId bottleId,
   required CliResult Function(BottleRecord bottle) onFound,
 }) {
   return result.fold(
     bottleCatalogFailureJsonResult,
-    (bottle) => bottle.match(() => bottleNotFoundError(bottleId), onFound),
+    (bottle) =>
+        bottle.match(() => bottleNotFoundError(bottleId.value), onFound),
   );
 }
 

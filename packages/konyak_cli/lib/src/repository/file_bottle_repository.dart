@@ -5,6 +5,7 @@ import '../domain/bottle/bottle_mutation_models.dart';
 import '../domain/program/program_catalog_models.dart';
 import '../domain/program/program_mutation_models.dart';
 import '../domain/runtime/host_environment.dart';
+import '../domain/shared/domain_value_objects.dart';
 import '../io/io_result.dart';
 import '../shared/common_helpers.dart';
 import '../storage/storage_paths.dart';
@@ -81,7 +82,7 @@ class FileBottleRepository implements BottleRepository {
   IoResult<List<BottleRecord>> listBottles() => readOperations.listBottles();
 
   @override
-  IoResult<Option<BottleRecord>> findBottle(String id) {
+  IoResult<Option<BottleRecord>> findBottle(BottleId id) {
     return readOperations.findBottle(id);
   }
 
@@ -91,7 +92,7 @@ class FileBottleRepository implements BottleRepository {
   }
 
   @override
-  BottleDeleteResult deleteBottle(String id) {
+  BottleDeleteResult deleteBottle(BottleId id) {
     return mutationOperations.deleteBottle(id);
   }
 

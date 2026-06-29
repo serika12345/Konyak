@@ -3,6 +3,7 @@ import 'package:fpdart/fpdart.dart';
 import '../domain/bottle/bottle_models.dart';
 import '../domain/program/pinned_programs.dart';
 import '../domain/program/program_catalog_models.dart';
+import '../domain/shared/domain_value_objects.dart';
 import '../io/file_bottle_repository_io.dart';
 import '../io/io_result.dart';
 import '../io/pinned_program_availability_io.dart';
@@ -40,8 +41,11 @@ class FileBottleRepositoryReadOperations {
     });
   }
 
-  IoResult<Option<BottleRecord>> findBottle(String id) {
-    if (!fileBottleMetadataExists(bottleDirectory: bottleDirectory, id: id)) {
+  IoResult<Option<BottleRecord>> findBottle(BottleId id) {
+    if (!fileBottleMetadataExists(
+      bottleDirectory: bottleDirectory,
+      id: id.value,
+    )) {
       return const Right<String, Option<BottleRecord>>(Option.none());
     }
 
@@ -49,7 +53,7 @@ class FileBottleRepositoryReadOperations {
       () => Option.of(
         bottleWithPinnedProgramIcons(
           repairedBottleWithoutMissingBottleLocalPinnedProgramFiles(
-            readBottleMetadata(fileBottlePath(bottleDirectory, id)),
+            readBottleMetadata(fileBottlePath(bottleDirectory, id.value)),
           ),
           programMetadataExtractor: programMetadataExtractor,
         ),

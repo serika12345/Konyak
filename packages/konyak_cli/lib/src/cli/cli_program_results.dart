@@ -57,8 +57,8 @@ CliResult runPinnedProgramLauncherCli({
       }
 
       return foundBottleJsonResult(
-        result: bottleRepository.findBottle(manifest.bottleId.value),
-        bottleId: manifest.bottleId.value,
+        result: bottleRepository.findBottle(manifest.bottleId),
+        bottleId: manifest.bottleId,
         onFound: (bottle) {
           final expectedLauncherId = pinnedProgramLauncherId(
             bottleId: manifest.bottleId.value,

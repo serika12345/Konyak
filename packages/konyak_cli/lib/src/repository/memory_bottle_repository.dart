@@ -6,6 +6,7 @@ import '../domain/program/pinned_programs.dart';
 import '../domain/program/program_catalog_models.dart';
 import '../domain/program/program_mutation_models.dart';
 import '../domain/program/program_settings_models.dart';
+import '../domain/shared/domain_value_objects.dart';
 import '../io/bottle_archives.dart';
 import '../io/io_result.dart';
 import '../shared/common_helpers.dart';
@@ -25,9 +26,9 @@ class StaticBottleCatalog implements BottleCatalog {
   }
 
   @override
-  IoResult<Option<BottleRecord>> findBottle(String id) {
+  IoResult<Option<BottleRecord>> findBottle(BottleId id) {
     for (final bottle in bottles) {
-      if (bottle.id.value == id) {
+      if (bottle.id == id) {
         return Right<String, Option<BottleRecord>>(Option.of(bottle));
       }
     }
@@ -77,8 +78,8 @@ class MemoryBottleRepository implements BottleRepository {
   }
 
   @override
-  IoResult<Option<BottleRecord>> findBottle(String id) {
-    return mapValue(bottlesById, id).match(
+  IoResult<Option<BottleRecord>> findBottle(BottleId id) {
+    return mapValue(bottlesById, id.value).match(
       () => const Right<String, Option<BottleRecord>>(Option.none()),
       (bottle) {
         final updated = bottleWithPinnedProgramIcons(
@@ -86,7 +87,7 @@ class MemoryBottleRepository implements BottleRepository {
           programMetadataExtractor: programMetadataExtractor,
         );
         if (updated != bottle) {
-          bottlesById[id] = updated;
+          bottlesById[id.value] = updated;
         }
 
         return Right<String, Option<BottleRecord>>(Option.of(updated));
@@ -111,7 +112,7 @@ class MemoryBottleRepository implements BottleRepository {
   BottleArchiveExportResult exportBottleArchive(
     BottleArchiveExportRequest request,
   ) {
-    return findBottle(request.bottleId.value).fold(
+    return findBottle(request.bottleId).fold(
       BottleArchiveExportFailed.new,
       (bottle) => bottle.match(
         () => BottleArchiveExportMissing(request.bottleId.value),
@@ -139,11 +140,11 @@ class MemoryBottleRepository implements BottleRepository {
   }
 
   @override
-  BottleDeleteResult deleteBottle(String id) {
+  BottleDeleteResult deleteBottle(BottleId id) {
     return removeMapValue(
       bottlesById,
-      id,
-    ).match(() => BottleDeleteMissing(id), BottleDeleted.new);
+      id.value,
+    ).match(() => BottleDeleteMissing(id.value), BottleDeleted.new);
   }
 
   @override

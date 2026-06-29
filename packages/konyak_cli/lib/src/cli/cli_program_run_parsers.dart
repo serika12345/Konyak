@@ -3,8 +3,10 @@ import 'dart:convert';
 import 'package:fpdart/fpdart.dart';
 
 import '../domain/program/program_settings_models.dart';
+import '../domain/shared/domain_value_objects.dart';
 import '../io/repository_storage_io.dart';
 import 'cli_parsers.dart';
+import 'cli_value_object_parsers.dart';
 
 class ProgramRunCliRequest {
   const ProgramRunCliRequest({
@@ -13,7 +15,7 @@ class ProgramRunCliRequest {
     this.settings = const Option.none(),
   });
 
-  final String bottleId;
+  final BottleId bottleId;
   final String programPath;
   final Option<ProgramSettingsRecord> settings;
 }
@@ -28,7 +30,7 @@ ProgramRunCliRequest? parseJsonProgramRunCliRequest(List<String> arguments) {
     return null;
   }
 
-  final bottleId = requiredCliRest(results);
+  final bottleId = requiredCliBottleId(results);
   final programPath = requiredCliOption(results, 'program');
   if (bottleId == null || programPath == null) {
     return null;
@@ -89,7 +91,7 @@ GraphicsBackendHintsCliRequest? parseJsonGraphicsBackendHintsCliRequest(
 class WinetricksRunCliRequest {
   const WinetricksRunCliRequest({required this.bottleId, required this.verb});
 
-  final String bottleId;
+  final BottleId bottleId;
   final String verb;
 }
 
@@ -105,7 +107,7 @@ WinetricksRunCliRequest? parseJsonWinetricksRunCliRequest(
     return null;
   }
 
-  final bottleId = requiredCliRest(results);
+  final bottleId = requiredCliBottleId(results);
   final verb = requiredCliOption(results, 'verb');
   if (bottleId == null || verb == null) {
     return null;
@@ -120,7 +122,7 @@ class BottleCommandRunCliRequest {
     required this.command,
   });
 
-  final String bottleId;
+  final BottleId bottleId;
   final String command;
 }
 
@@ -136,7 +138,7 @@ BottleCommandRunCliRequest? parseJsonBottleCommandRunCliRequest(
     return null;
   }
 
-  final bottleId = requiredCliRest(results);
+  final bottleId = requiredCliBottleId(results);
   final command = requiredCliOption(results, 'command');
   if (bottleId == null || command == null) {
     return null;

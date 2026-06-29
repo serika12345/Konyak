@@ -4,6 +4,7 @@ import '../domain/bottle/bottle_models.dart';
 import '../domain/program/pinned_programs.dart';
 import '../domain/program/program_catalog_models.dart';
 import '../domain/program/program_mutation_models.dart';
+import '../domain/shared/domain_value_objects.dart';
 import '../io/io_result.dart';
 import '../io/repository_storage_io.dart';
 import '../storage/storage_paths.dart';
@@ -15,10 +16,10 @@ class FileBottleRepositoryProgramOperations {
   });
 
   final ProgramMetadataExtractor programMetadataExtractor;
-  final IoResult<Option<BottleRecord>> Function(String id) findBottle;
+  final IoResult<Option<BottleRecord>> Function(BottleId id) findBottle;
 
   ProgramPinResult pinProgram(ProgramPinRequest request) {
-    return findBottle(request.bottleId.value).fold<ProgramPinResult>(
+    return findBottle(request.bottleId).fold<ProgramPinResult>(
       ProgramPinResult.failed,
       (bottle) => bottle.match(
         () => ProgramPinResult.missing(request.bottleId.value),
@@ -46,7 +47,7 @@ class FileBottleRepositoryProgramOperations {
   }
 
   ProgramUpdateResult unpinProgram(ProgramUnpinRequest request) {
-    return findBottle(request.bottleId.value).fold<ProgramUpdateResult>(
+    return findBottle(request.bottleId).fold<ProgramUpdateResult>(
       ProgramUpdateResult.failed,
       (bottle) => bottle.match(
         () => ProgramUpdateResult.missingBottle(request.bottleId.value),
@@ -75,7 +76,7 @@ class FileBottleRepositoryProgramOperations {
   }
 
   ProgramUpdateResult renamePinnedProgram(ProgramRenameRequest request) {
-    return findBottle(request.bottleId.value).fold<ProgramUpdateResult>(
+    return findBottle(request.bottleId).fold<ProgramUpdateResult>(
       ProgramUpdateResult.failed,
       (bottle) => bottle.match(
         () => ProgramUpdateResult.missingBottle(request.bottleId.value),
@@ -103,7 +104,7 @@ class FileBottleRepositoryProgramOperations {
   ProgramSettingsReadResult readProgramSettings(
     ProgramSettingsRequest request,
   ) {
-    return findBottle(request.bottleId.value).fold<ProgramSettingsReadResult>(
+    return findBottle(request.bottleId).fold<ProgramSettingsReadResult>(
       ProgramSettingsReadResult.failed,
       (bottle) => bottle.match(
         () => ProgramSettingsReadResult.missingBottle(request.bottleId.value),
@@ -128,7 +129,7 @@ class FileBottleRepositoryProgramOperations {
   ProgramSettingsUpdateResult setProgramSettings(
     ProgramSettingsUpdateRequest request,
   ) {
-    return findBottle(request.bottleId.value).fold<ProgramSettingsUpdateResult>(
+    return findBottle(request.bottleId).fold<ProgramSettingsUpdateResult>(
       ProgramSettingsUpdateResult.failed,
       (bottle) => bottle.match(
         () => ProgramSettingsUpdateResult.missingBottle(request.bottleId.value),

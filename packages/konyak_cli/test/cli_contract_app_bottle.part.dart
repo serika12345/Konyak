@@ -376,7 +376,7 @@ void defineAppAndBottleContractTests() {
       'installed',
     );
     expect(
-      _expectFound(repository.findBottle('steam')).path.value,
+      _expectFound(repository.findBottle(BottleId('steam'))).path.value,
       importedPath,
     );
   });
@@ -631,7 +631,9 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       ],
     ]);
     expect(
-      _expectFound(repository.findBottle('steam')).windowsVersion.value,
+      _expectFound(
+        repository.findBottle(BottleId('steam')),
+      ).windowsVersion.value,
       'win11',
     );
   });
@@ -794,7 +796,10 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       },
     });
 
-    expect(_expectFound(repository.findBottle('日本語')).name.value, '日本語');
+    expect(
+      _expectFound(repository.findBottle(BottleId('日本語'))).name.value,
+      '日本語',
+    );
   });
 
   test('create-bottle --json initializes the Wine prefix when configured', () {
@@ -958,7 +963,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       },
     });
     expect(
-      _expectFound(repository.findBottle('steam')).runtimeSettings,
+      _expectFound(repository.findBottle(BottleId('steam'))).runtimeSettings,
       BottleRuntimeSettings(
         enhancedSync: 'esync',
         metalHud: true,
@@ -1013,7 +1018,9 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
     expect(runtimeSettings, containsPair('metalHud', true));
     expect(runtimeSettings, containsPair('dlssMetalFx', false));
     expect(
-      _expectFound(repository.findBottle('steam')).runtimeSettings.dlssMetalFx,
+      _expectFound(
+        repository.findBottle(BottleId('steam')),
+      ).runtimeSettings.dlssMetalFx,
       isFalse,
     );
   });
@@ -1500,7 +1507,9 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       expect(result.exitCode, 0);
       expect(result.stderr, isEmpty);
       expect(
-        _expectFound(repository.findBottle('steam')).runtimeSettings.dxrEnabled,
+        _expectFound(
+          repository.findBottle(BottleId('steam')),
+        ).runtimeSettings.dxrEnabled,
         isFalse,
       );
       for (final windowsDirectory in const ['system32', 'syswow64']) {
@@ -1661,7 +1670,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       );
 
       expect(result.exitCode, 0);
-      final updated = _expectFound(repository.findBottle('steam'));
+      final updated = _expectFound(repository.findBottle(BottleId('steam')));
       expect(updated.runtimeSettings.dxvk, isFalse);
       expect(updated.runtimeSettings.dxmt, isTrue);
     },
@@ -1725,7 +1734,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       );
 
       expect(result.exitCode, 0);
-      final updated = _expectFound(repository.findBottle('steam'));
+      final updated = _expectFound(repository.findBottle(BottleId('steam')));
       expect(updated.runtimeSettings.dxrEnabled, isTrue);
       expect(updated.runtimeSettings.dxvk, isFalse);
       expect(updated.runtimeSettings.dxmt, isFalse);
@@ -1843,7 +1852,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       ),
     );
     expect(
-      _expectFound(repository.findBottle('steam')).runtimeSettings,
+      _expectFound(repository.findBottle(BottleId('steam'))).runtimeSettings,
       BottleRuntimeSettings(
         buildVersion: 22631,
         retinaMode: true,
@@ -1922,7 +1931,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
         ],
       ]);
       expect(
-        _expectFound(repository.findBottle('steam')).runtimeSettings,
+        _expectFound(repository.findBottle(BottleId('steam'))).runtimeSettings,
         BottleRuntimeSettings(retinaMode: false, dpiScaling: 96),
       );
     },
@@ -2025,7 +2034,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       final payload = jsonDecode(result.stdout) as Map<String, Object?>;
       expect(payload['error'], containsPair('code', 'registryUpdateFailed'));
       expect(
-        _expectFound(repository.findBottle('steam')).runtimeSettings,
+        _expectFound(repository.findBottle(BottleId('steam'))).runtimeSettings,
         BottleRuntimeSettings(),
       );
     },
@@ -2222,9 +2231,9 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
         'windowsVersion': 'win10',
       },
     });
-    _expectMissing(repository.findBottle('steam'));
+    _expectMissing(repository.findBottle(BottleId('steam')));
     expect(
-      _expectFound(repository.findBottle('steam-games')).name.value,
+      _expectFound(repository.findBottle(BottleId('steam-games'))).name.value,
       'Steam Games',
     );
   });
@@ -2303,7 +2312,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       },
     });
     expect(
-      _expectFound(repository.findBottle('steam')).path.value,
+      _expectFound(repository.findBottle(BottleId('steam'))).path.value,
       '/mnt/games/Steam',
     );
   });

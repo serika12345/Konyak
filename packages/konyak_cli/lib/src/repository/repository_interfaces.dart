@@ -11,7 +11,7 @@ import '../io/io_result.dart';
 abstract interface class BottleCatalog {
   IoResult<List<BottleRecord>> listBottles();
 
-  IoResult<Option<BottleRecord>> findBottle(String id);
+  IoResult<Option<BottleRecord>> findBottle(BottleId id);
 }
 
 abstract interface class AppSettingsRepository {
@@ -31,7 +31,7 @@ abstract interface class BottleRepository implements BottleCatalog {
     BottleArchiveImportRequest request,
   );
 
-  BottleDeleteResult deleteBottle(String id);
+  BottleDeleteResult deleteBottle(BottleId id);
 
   BottleRenameResult renameBottle(BottleRenameRequest request);
 

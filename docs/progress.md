@@ -13,6 +13,34 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-29 16:53 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Tighten the functional-core boundary for bottle repository
+  identity requests.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: current commit (`Type bottle repository identity requests`).
+- Purpose: keep bottle catalog lookup and bottle deletion requests typed as
+  `BottleId` at repository-facing boundaries instead of passing raw CLI or test
+  strings through the repository interface.
+- Completed work: added a failing `BottleId` lookup fixture; introduced a CLI
+  bottle-id parser helper; changed `BottleCatalog.findBottle`,
+  `BottleRepository.deleteBottle`, file/memory/composite repository
+  implementations, CLI read/mutation/location/program-run call sites, and
+  direct test repository calls to preserve typed bottle IDs; and tightened
+  governance so these repository boundaries do not return to raw strings.
+- Remaining work: broader functional-core tightening remains in `docs/todo.md`,
+  including other primitive request/planner APIs.
+- Next action: continue with the next narrow primitive-boundary cleanup.
+- Verification: observed `cd packages/konyak_cli && dart test
+  test/domain_immutability_test.dart --name "static catalogs expose immutable
+  snapshots"` fail before implementation because `BottleCatalog.findBottle`
+  still accepted raw `String`; after implementation the same focused test and
+  `dart analyze --fatal-infos` passed; focused CLI/repository contract tests,
+  `just verify-governance`, `just cli-test`, `just verify-safety`,
+  `just format-check`, and `just lint` passed.
+
 - Timestamp: 2026-06-29 16:32 JST
 - State: `completed`
 - Branch: `main`

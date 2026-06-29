@@ -68,7 +68,7 @@ CliResult openBottleLocationJsonResult(
         (path) => switch (opener.openPath(PathOpenTarget(path))) {
           PathOpenCompleted() => jsonSuccess(<String, Object?>{
             'openedLocation': <String, Object?>{
-              'bottleId': bottle.id.value,
+              'bottleId': request.bottleId.value,
               'location': request.location,
               'path': path,
             },
@@ -78,7 +78,7 @@ CliResult openBottleLocationJsonResult(
             code: 'bottleLocationOpenFailed',
             message: message,
             extra: <String, Object?>{
-              'bottleId': bottle.id.value,
+              'bottleId': request.bottleId.value,
               'location': request.location,
               'path': path,
             },
@@ -120,7 +120,7 @@ CliResult openProgramLocationJsonResult(
       return switch (opener.revealPath(PathRevealTarget(path))) {
         PathOpenCompleted() => jsonSuccess(<String, Object?>{
           'openedProgramLocation': <String, Object?>{
-            'bottleId': bottle.id.value,
+            'bottleId': request.bottleId.value,
             'programPath': request.programPath,
             'path': path,
           },
@@ -130,7 +130,7 @@ CliResult openProgramLocationJsonResult(
           code: 'programLocationOpenFailed',
           message: message,
           extra: <String, Object?>{
-            'bottleId': bottle.id.value,
+            'bottleId': request.bottleId.value,
             'programPath': request.programPath,
             'path': path,
           },

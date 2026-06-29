@@ -1,23 +1,25 @@
 import 'dart:convert';
 
 import '../domain/bottle/bottle_mutation_models.dart';
+import '../domain/shared/domain_value_objects.dart';
 import '../io/repository_storage_io.dart';
 import 'cli_parsers.dart';
+import 'cli_value_object_parsers.dart';
 
 bool isJsonBottleListCommand(List<String> arguments) {
   return isJsonFlagOnlyCommand(arguments, 'list-bottles');
 }
 
-String? parseJsonBottleInspectCommand(List<String> arguments) {
+BottleId? parseJsonBottleInspectCommand(List<String> arguments) {
   final results = parseJsonCliCommand(arguments, command: 'inspect-bottle');
   if (results == null || !hasRestCount(results, 1)) {
     return null;
   }
 
-  return requiredCliRest(results);
+  return requiredCliBottleId(results);
 }
 
-String? parseJsonBottleProgramsListCommand(List<String> arguments) {
+BottleId? parseJsonBottleProgramsListCommand(List<String> arguments) {
   final results = parseJsonCliCommand(
     arguments,
     command: 'list-bottle-programs',
@@ -26,7 +28,7 @@ String? parseJsonBottleProgramsListCommand(List<String> arguments) {
     return null;
   }
 
-  return requiredCliRest(results);
+  return requiredCliBottleId(results);
 }
 
 bool isJsonWinetricksVerbListCommand(List<String> arguments) {
@@ -103,13 +105,13 @@ BottleArchiveImportRequest? parseJsonBottleArchiveImportRequest(
   return BottleArchiveImportRequest(archivePath: archivePath);
 }
 
-String? parseJsonBottleDeleteCommand(List<String> arguments) {
+BottleId? parseJsonBottleDeleteCommand(List<String> arguments) {
   final results = parseJsonCliCommand(arguments, command: 'delete-bottle');
   if (results == null || !hasRestCount(results, 1)) {
     return null;
   }
 
-  return requiredCliRest(results);
+  return requiredCliBottleId(results);
 }
 
 BottleRenameRequest? parseJsonBottleRenameRequest(List<String> arguments) {

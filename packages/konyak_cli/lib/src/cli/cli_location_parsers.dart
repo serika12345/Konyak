@@ -1,4 +1,6 @@
+import '../domain/shared/domain_value_objects.dart';
 import 'cli_parsers.dart';
+import 'cli_value_object_parsers.dart';
 
 class BottleLocationOpenCliRequest {
   const BottleLocationOpenCliRequest({
@@ -6,7 +8,7 @@ class BottleLocationOpenCliRequest {
     required this.location,
   });
 
-  final String bottleId;
+  final BottleId bottleId;
   final String location;
 }
 
@@ -22,7 +24,7 @@ BottleLocationOpenCliRequest? parseJsonBottleLocationOpenCliRequest(
     return null;
   }
 
-  final bottleId = requiredCliRest(results);
+  final bottleId = requiredCliBottleId(results);
   final location = requiredCliOption(results, 'location');
   if (bottleId == null || location == null) {
     return null;
@@ -37,7 +39,7 @@ class ProgramLocationOpenCliRequest {
     required this.programPath,
   });
 
-  final String bottleId;
+  final BottleId bottleId;
   final String programPath;
 }
 
@@ -53,7 +55,7 @@ ProgramLocationOpenCliRequest? parseJsonProgramLocationOpenCliRequest(
     return null;
   }
 
-  final bottleId = requiredCliRest(results);
+  final bottleId = requiredCliBottleId(results);
   final programPath = requiredCliOption(results, 'program');
   if (bottleId == null || programPath == null) {
     return null;

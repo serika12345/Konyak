@@ -41,7 +41,7 @@ void definePinnedProgramContractTests() {
     });
     expect(
       _expectFound(
-        repository.findBottle('steam'),
+        repository.findBottle(BottleId('steam')),
       ).pinnedPrograms.single.path.value,
       '/downloads/Steam.exe',
     );
@@ -1478,7 +1478,7 @@ void definePinnedProgramContractTests() {
         },
       });
       expect(
-        _expectFound(repository.findBottle('steam')).pinnedPrograms,
+        _expectFound(repository.findBottle(BottleId('steam'))).pinnedPrograms,
         isEmpty,
       );
     },
@@ -1533,7 +1533,7 @@ void definePinnedProgramContractTests() {
     });
     expect(
       _expectFound(
-        repository.findBottle('steam'),
+        repository.findBottle(BottleId('steam')),
       ).pinnedPrograms.single.name.value,
       'Steam Client',
     );

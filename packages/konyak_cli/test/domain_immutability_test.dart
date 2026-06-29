@@ -1950,7 +1950,10 @@ void main() {
     bottles.clear();
 
     expect(_expectIo(bottleCatalog.listBottles()), hasLength(1));
-    expect(_expectFound(bottleCatalog.findBottle('steam')), isNotNull);
+    expect(
+      _expectFound(bottleCatalog.findBottle(BottleId('steam'))),
+      isNotNull,
+    );
     expect(
       _expectIo(bottleCatalog.listBottles()).clear,
       throwsUnsupportedError,

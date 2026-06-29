@@ -500,7 +500,7 @@ void defineRepositoryAndRunnerContractTests() {
         const ['imported', 'local'],
       );
       expect(
-        _expectFound(repository.findBottle('imported')).name.value,
+        _expectFound(repository.findBottle(BottleId('imported'))).name.value,
         'Imported',
       );
 
@@ -510,7 +510,7 @@ void defineRepositoryAndRunnerContractTests() {
 
       expect(createResult, isA<BottleCreated>());
       expect(
-        _expectFound(repository.findBottle('created')).name.value,
+        _expectFound(repository.findBottle(BottleId('created'))).name.value,
         'Created',
       );
     },
@@ -543,7 +543,7 @@ void defineRepositoryAndRunnerContractTests() {
       const ['imported'],
     );
 
-    final deleteResult = repository.deleteBottle('imported');
+    final deleteResult = repository.deleteBottle(BottleId('imported'));
 
     expect(deleteResult, isA<BottleDeleteMissing>());
 
@@ -578,7 +578,7 @@ void defineRepositoryAndRunnerContractTests() {
     expect(pinResult, isA<ProgramPinMissing>());
 
     final importedBottle = _expectFound(
-      importedRepository.findBottle('imported'),
+      importedRepository.findBottle(BottleId('imported')),
     );
     expect(importedBottle.name.value, 'Imported');
     expect(

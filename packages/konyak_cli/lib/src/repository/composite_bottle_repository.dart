@@ -3,6 +3,7 @@ import 'package:fpdart/fpdart.dart';
 import '../domain/bottle/bottle_models.dart';
 import '../domain/bottle/bottle_mutation_models.dart';
 import '../domain/program/program_mutation_models.dart';
+import '../domain/shared/domain_value_objects.dart';
 import '../io/bottle_archives.dart';
 import '../io/io_result.dart';
 import 'repository_interfaces.dart';
@@ -46,7 +47,7 @@ class CompositeBottleRepository implements BottleRepository {
   }
 
   @override
-  IoResult<Option<BottleRecord>> findBottle(String id) {
+  IoResult<Option<BottleRecord>> findBottle(BottleId id) {
     return writableRepository
         .findBottle(id)
         .match<IoResult<Option<BottleRecord>>>(
@@ -81,7 +82,7 @@ class CompositeBottleRepository implements BottleRepository {
   BottleArchiveExportResult exportBottleArchive(
     BottleArchiveExportRequest request,
   ) {
-    return findBottle(request.bottleId.value).fold(
+    return findBottle(request.bottleId).fold(
       BottleArchiveExportFailed.new,
       (bottle) => bottle.match(
         () => BottleArchiveExportMissing(request.bottleId.value),
@@ -101,7 +102,7 @@ class CompositeBottleRepository implements BottleRepository {
   }
 
   @override
-  BottleDeleteResult deleteBottle(String id) {
+  BottleDeleteResult deleteBottle(BottleId id) {
     return writableRepository.deleteBottle(id);
   }
 

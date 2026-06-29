@@ -154,8 +154,8 @@ CliResult? handleBottleConfigurationCommand(
     }
 
     return foundBottleJsonResult(
-      result: repository.findBottle(windowsVersionUpdateRequest.bottleId.value),
-      bottleId: windowsVersionUpdateRequest.bottleId.value,
+      result: repository.findBottle(windowsVersionUpdateRequest.bottleId),
+      bottleId: windowsVersionUpdateRequest.bottleId,
       onFound: (bottle) {
         switch (applyWindowsVersionRegistryUpdates(
           bottle: bottle,
@@ -184,10 +184,8 @@ CliResult? handleBottleConfigurationCommand(
     }
 
     return foundBottleJsonResult(
-      result: repository.findBottle(
-        runtimeSettingsUpdateRequest.bottleId.value,
-      ),
-      bottleId: runtimeSettingsUpdateRequest.bottleId.value,
+      result: repository.findBottle(runtimeSettingsUpdateRequest.bottleId),
+      bottleId: runtimeSettingsUpdateRequest.bottleId,
       onFound: (bottle) {
         final runtimeSettings = effectiveRuntimeSettingsForUpdate(
           currentRuntimeSettings: bottle.runtimeSettings,

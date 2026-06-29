@@ -3533,14 +3533,14 @@ corefonts                Microsoft Core Fonts
       expect(
         launcher,
         contains(
-          'Exec=env "WINEPREFIX=${_expectFound(repository.findBottle('steam')).path.value}" '
+          'Exec=env "WINEPREFIX=${_expectFound(repository.findBottle(BottleId('steam'))).path.value}" '
           '"${_joinTestPath(xdgDataHome, const ['konyak', 'Runtimes', 'linux-wine', 'bin', 'wine'])}" "$programPath"',
         ),
       );
       expect(
         launcher,
         contains(
-          'Icon=${_expectFound(repository.findBottle('steam')).path.value}/cache/icons/',
+          'Icon=${_expectFound(repository.findBottle(BottleId('steam'))).path.value}/cache/icons/',
         ),
       );
     },

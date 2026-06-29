@@ -967,6 +967,109 @@ def require_typed_runtime_id_service_boundaries() -> None:
             )
 
 
+def require_typed_bottle_repository_id_boundary() -> None:
+    interface_path = "packages/konyak_cli/lib/src/repository/repository_interfaces.dart"
+    interface = read_text(interface_path)
+    expected_interface_terms = [
+        "IoResult<Option<BottleRecord>> findBottle(BottleId id);",
+        "BottleDeleteResult deleteBottle(BottleId id);",
+    ]
+    for expected in expected_interface_terms:
+        if expected not in interface:
+            raise AssertionError(
+                "Bottle repository boundaries must use BottleId: "
+                f"{expected}"
+            )
+
+    forbidden_interface_terms = [
+        "IoResult<Option<BottleRecord>> findBottle(String id);",
+        "BottleDeleteResult deleteBottle(String id);",
+        "IoResult<BottleRecord?> findBottle",
+    ]
+    for forbidden in forbidden_interface_terms:
+        if forbidden in interface:
+            raise AssertionError(
+                "Bottle repository boundaries must not expose primitive or "
+                f"nullable bottle lookups: {forbidden}"
+            )
+
+    expected_parser_terms = {
+        "packages/konyak_cli/lib/src/cli/cli_value_object_parsers.dart": [
+            "BottleId? requiredCliBottleId",
+            "return value == null ? null : BottleId(value);",
+        ],
+        "packages/konyak_cli/lib/src/cli/cli_bottle_parsers.dart": [
+            "BottleId? parseJsonBottleInspectCommand",
+            "BottleId? parseJsonBottleProgramsListCommand",
+            "BottleId? parseJsonBottleDeleteCommand",
+            "return requiredCliBottleId(results);",
+        ],
+        "packages/konyak_cli/lib/src/cli/cli_program_run_parsers.dart": [
+            "final BottleId bottleId;",
+            "final bottleId = requiredCliBottleId(results);",
+        ],
+        "packages/konyak_cli/lib/src/cli/cli_location_parsers.dart": [
+            "final BottleId bottleId;",
+            "final bottleId = requiredCliBottleId(results);",
+        ],
+    }
+    for path, expected_terms in expected_parser_terms.items():
+        source = read_text(path)
+        for expected in expected_terms:
+            if expected not in source:
+                raise AssertionError(
+                    "CLI bottle-id parsers must preserve BottleId before "
+                    f"repository calls: {expected}"
+                )
+
+    expected_repository_terms = {
+        "packages/konyak_cli/lib/src/repository/file_bottle_repository.dart": [
+            "IoResult<Option<BottleRecord>> findBottle(BottleId id)",
+            "BottleDeleteResult deleteBottle(BottleId id)",
+        ],
+        "packages/konyak_cli/lib/src/repository/memory_bottle_repository.dart": [
+            "IoResult<Option<BottleRecord>> findBottle(BottleId id)",
+            "BottleDeleteResult deleteBottle(BottleId id)",
+            "mapValue(bottlesById, id.value)",
+        ],
+        "packages/konyak_cli/lib/src/repository/composite_bottle_repository.dart": [
+            "IoResult<Option<BottleRecord>> findBottle(BottleId id)",
+            "BottleDeleteResult deleteBottle(BottleId id)",
+        ],
+        "packages/konyak_cli/lib/src/repository/file_bottle_repository_read_operations.dart": [
+            "IoResult<Option<BottleRecord>> findBottle(BottleId id)",
+            "id: id.value,",
+            "fileBottlePath(bottleDirectory, id.value)",
+        ],
+    }
+    for path, expected_terms in expected_repository_terms.items():
+        source = read_text(path)
+        for expected in expected_terms:
+            if expected not in source:
+                raise AssertionError(
+                    "Bottle repository implementations must preserve typed "
+                    f"bottle ids until storage lookup: {expected}"
+                )
+        for forbidden in ["findBottle(String", "deleteBottle(String"]:
+            if forbidden in source:
+                raise AssertionError(
+                    f"{path} must not expose primitive bottle repository "
+                    f"operations: {forbidden}"
+                )
+
+    operation_paths = [
+        "packages/konyak_cli/lib/src/repository/file_bottle_repository_mutation_operations.dart",
+        "packages/konyak_cli/lib/src/repository/file_bottle_repository_archive_operations.dart",
+        "packages/konyak_cli/lib/src/repository/file_bottle_repository_program_operations.dart",
+    ]
+    for path in operation_paths:
+        source = read_text(path)
+        if "Function(String id) findBottle" in source:
+            raise AssertionError(
+                f"{path} must not receive primitive bottle lookup callbacks"
+            )
+
+
 def require_wine_process_termination_cli_json_projection() -> None:
     domain_path = "packages/konyak_cli/lib/src/domain/program/program_run_models.dart"
     domain = read_text(domain_path)
@@ -2029,10 +2132,6 @@ def require_result_boundary_rules() -> None:
     ]:
         require_contains("packages/konyak_cli/lib/src/io/io_result.dart", expected)
 
-    require_contains(
-        "packages/konyak_cli/lib/src/repository/repository_interfaces.dart",
-        "IoResult<Option<BottleRecord>> findBottle(String id);",
-    )
     require_not_contains(
         "packages/konyak_cli/lib/src/repository/repository_interfaces.dart",
         "IoResult<BottleRecord?> findBottle",
@@ -2664,6 +2763,7 @@ def main() -> None:
     require_typed_runtime_executable_probe_boundary()
     require_typed_winetricks_verb_lister_boundary()
     require_typed_runtime_id_service_boundaries()
+    require_typed_bottle_repository_id_boundary()
     require_wine_process_termination_cli_json_projection()
     require_program_catalog_cli_json_projection()
     require_graphics_backend_hints_cli_json_projection()
