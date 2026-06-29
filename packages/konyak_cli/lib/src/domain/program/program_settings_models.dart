@@ -1,65 +1,68 @@
 import 'package:fpdart/fpdart.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../shared/domain_value_objects.dart';
 import 'program_run_environment.dart';
 
-class ProgramSettingsRecord {
-  ProgramSettingsRecord({
+part 'program_settings_models.freezed.dart';
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class ProgramSettingsRecord with _$ProgramSettingsRecord {
+  const ProgramSettingsRecord._();
+
+  factory ProgramSettingsRecord({
     String locale = '',
     String arguments = '',
-    this.environment = const ProgramEnvironmentOverrides.empty(),
-    this.logging = const Option.none(),
-  }) : locale = ProgramLocale(locale),
-       arguments = ProgramArguments(arguments);
-
-  final ProgramLocale locale;
-  final ProgramArguments arguments;
-  final ProgramEnvironmentOverrides environment;
-  final Option<ProgramLoggingSettingsRecord> logging;
-
-  @override
-  bool operator ==(Object other) {
-    return other is ProgramSettingsRecord &&
-        other.locale == locale &&
-        other.arguments == arguments &&
-        other.environment == environment &&
-        other.logging == logging;
-  }
-
-  @override
-  int get hashCode {
-    return Object.hash(locale, arguments, environment, logging);
-  }
-}
-
-class ProgramLoggingSettingsRecord {
-  ProgramLoggingSettingsRecord({
-    this.createLogFile = true,
-    String additionalWineLoggingChannels = '',
-    String logFilePath = '',
-  }) : additionalWineLoggingChannels = WineDebugChannels(
-         additionalWineLoggingChannels,
-       ),
-       logFilePath = ProgramLogPath(logFilePath);
-
-  final bool createLogFile;
-  final WineDebugChannels additionalWineLoggingChannels;
-  final ProgramLogPath logFilePath;
-
-  @override
-  bool operator ==(Object other) {
-    return other is ProgramLoggingSettingsRecord &&
-        other.createLogFile == createLogFile &&
-        other.additionalWineLoggingChannels == additionalWineLoggingChannels &&
-        other.logFilePath == logFilePath;
-  }
-
-  @override
-  int get hashCode {
-    return Object.hash(
-      createLogFile,
-      additionalWineLoggingChannels,
-      logFilePath,
+    ProgramEnvironmentOverrides environment =
+        const ProgramEnvironmentOverrides.empty(),
+    Option<ProgramLoggingSettingsRecord> logging = const Option.none(),
+  }) {
+    return ProgramSettingsRecord._validated(
+      locale: ProgramLocale(locale),
+      arguments: ProgramArguments(arguments),
+      environment: environment,
+      logging: logging,
     );
   }
+
+  const factory ProgramSettingsRecord._validated({
+    required ProgramLocale locale,
+    required ProgramArguments arguments,
+    required ProgramEnvironmentOverrides environment,
+    required Option<ProgramLoggingSettingsRecord> logging,
+  }) = _ProgramSettingsRecord;
+}
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class ProgramLoggingSettingsRecord
+    with _$ProgramLoggingSettingsRecord {
+  const ProgramLoggingSettingsRecord._();
+
+  factory ProgramLoggingSettingsRecord({
+    bool createLogFile = true,
+    String additionalWineLoggingChannels = '',
+    String logFilePath = '',
+  }) {
+    return ProgramLoggingSettingsRecord._validated(
+      createLogFile: createLogFile,
+      additionalWineLoggingChannels: WineDebugChannels(
+        additionalWineLoggingChannels,
+      ),
+      logFilePath: ProgramLogPath(logFilePath),
+    );
+  }
+
+  const factory ProgramLoggingSettingsRecord._validated({
+    required bool createLogFile,
+    required WineDebugChannels additionalWineLoggingChannels,
+    required ProgramLogPath logFilePath,
+  }) = _ProgramLoggingSettingsRecord;
 }

@@ -13,6 +13,42 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-29 13:42 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Freezed-backed program settings records.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: this commit (`Freezed program settings records`).
+- Purpose: continue the program-domain Freezed scan with the smallest
+  remaining hand-written program settings value records.
+- Completed work: inspected `program_settings_models.dart`,
+  `program_run_models.dart`, and current tests; selected
+  `ProgramSettingsRecord` and `ProgramLoggingSettingsRecord` because they are
+  pure value records with existing manual equality and no result branching;
+  added focused value-semantics coverage for settings/logging; converted both
+  records to Freezed while preserving public constructor defaults and
+  value-object coercion; updated governance class-section and typed
+  environment checks for Freezed class shapes.
+- Remaining work: continue the Freezed scan with the larger program run model
+  group, likely starting with narrow result unions in `program_run_models.dart`
+  before the broader `ProgramRunRequest`.
+- Next action: inspect `ProgramRunResult`, `PathOpenResult`, and
+  `DetachedProcessStartResult` call sites for the next low-risk result-union
+  slice.
+- Verification: `cd packages/konyak_cli && dart test
+  test/domain_immutability_test.dart --name "program settings records compare
+  by semantic values"` passed before implementation as behavior-preserving
+  coverage; after implementation, `cd packages/konyak_cli && dart run
+  build_runner build --delete-conflicting-outputs && dart format
+  lib/src/domain/program/program_settings_models.dart
+  test/domain_immutability_test.dart && dart analyze --fatal-infos`, focused
+  settings record/results/environment tests, focused program settings CLI
+  contract tests, `cd packages/konyak_cli && dart test
+  test/domain_immutability_test.dart`, `just verify-governance`, `just
+  verify-architecture`, `just verify-safety`, `just format-check`, `just
+  lint`, and `just cli-test` passed.
+
 - Timestamp: 2026-06-29 13:28 JST
 - State: `completed`
 - Branch: `main`

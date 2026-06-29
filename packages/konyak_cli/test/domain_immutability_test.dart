@@ -1057,6 +1057,35 @@ void main() {
     );
   });
 
+  test('program settings records compare by semantic values', () {
+    expect(
+      ProgramSettingsRecord(
+        locale: 'ja_JP',
+        arguments: '-novid',
+        environment: ProgramEnvironmentOverrides({'LANG': 'ja_JP.UTF-8'}),
+        logging: Option.of(
+          ProgramLoggingSettingsRecord(
+            createLogFile: false,
+            additionalWineLoggingChannels: ' +seh ',
+            logFilePath: ' /tmp/steam.log ',
+          ),
+        ),
+      ),
+      ProgramSettingsRecord(
+        locale: 'ja_JP',
+        arguments: '-novid',
+        environment: ProgramEnvironmentOverrides({'LANG': 'ja_JP.UTF-8'}),
+        logging: Option.of(
+          ProgramLoggingSettingsRecord(
+            createLogFile: false,
+            additionalWineLoggingChannels: '+seh',
+            logFilePath: '/tmp/steam.log',
+          ),
+        ),
+      ),
+    );
+  });
+
   test('program settings expose immutable environment snapshots', () {
     final environment = <String, String>{'LANG': 'ja_JP.UTF-8'};
     final settings = ProgramSettingsRecord(
