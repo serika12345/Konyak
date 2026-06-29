@@ -1706,17 +1706,17 @@ def require_result_boundary_rules() -> None:
         "final String? hostPath;",
     )
     for expected in [
-        "final Option<RuntimeVersion> currentVersion;",
-        "final Option<RuntimeVersion> latestVersion;",
-        "final Option<RuntimeVersionUrl> versionUrl;",
-        "final Option<RuntimeArchiveUrl> archiveUrl;",
-        "final Option<RuntimeSourceManifestUrl> sourceManifestUrl;",
-        "final Option<RuntimeSourceManifestSignatureUrl> sourceManifestSignatureUrl;",
-        "final Option<AppVersion> currentVersion;",
-        "final Option<ReleaseVersion> latestVersion;",
-        "final Option<AppArchiveUrl> archiveUrl;",
-        "final Option<AppArchiveSha256> archiveSha256;",
-        "final Option<AppInstallPath> installPath;",
+        "required Option<RuntimeVersion> currentVersion,",
+        "required Option<RuntimeVersion> latestVersion,",
+        "required Option<RuntimeVersionUrl> versionUrl,",
+        "required Option<RuntimeArchiveUrl> archiveUrl,",
+        "required Option<RuntimeSourceManifestUrl> sourceManifestUrl,",
+        "required Option<RuntimeSourceManifestSignatureUrl>",
+        "required Option<AppVersion> currentVersion,",
+        "required Option<ReleaseVersion> latestVersion,",
+        "required Option<AppArchiveUrl> archiveUrl,",
+        "required Option<AppArchiveSha256> archiveSha256,",
+        "required Option<AppInstallPath> installPath,",
     ]:
         require_contains("packages/konyak_cli/lib/src/domain/update/update_records.dart", expected)
     for forbidden in [

@@ -370,6 +370,63 @@ void main() {
     );
   });
 
+  test('update records compare by semantic values', () {
+    expect(
+      RuntimeUpdateRecord(
+        runtimeId: 'wine',
+        status: 'available',
+        currentVersion: Option.of('1.0.0'),
+        latestVersion: Option.of('1.1.0'),
+        sourceManifestUrl: Option.of('https://example.invalid/source.json'),
+      ),
+      RuntimeUpdateRecord(
+        runtimeId: 'wine',
+        status: 'available',
+        currentVersion: Option.of('1.0.0'),
+        latestVersion: Option.of('1.1.0'),
+        sourceManifestUrl: Option.of('https://example.invalid/source.json'),
+      ),
+    );
+    expect(
+      AppUpdateRecord(
+        appId: 'konyak',
+        status: 'available',
+        archiveSha256: Option.of('abc123'),
+      ),
+      AppUpdateRecord(
+        appId: 'konyak',
+        status: 'available',
+        archiveSha256: Option.of('abc123'),
+      ),
+    );
+    expect(
+      AppUpdateInstallRecord(
+        appId: 'konyak',
+        status: 'installed',
+        installPath: Option.of('/Applications/Konyak.app'),
+      ),
+      AppUpdateInstallRecord(
+        appId: 'konyak',
+        status: 'installed',
+        installPath: Option.of('/Applications/Konyak.app'),
+      ),
+    );
+    expect(
+      RuntimeReleaseMetadata(
+        version: '1.0.0',
+        sourceManifestSignatureUrl: Option.of(
+          'https://example.invalid/source.json.sig',
+        ),
+      ),
+      RuntimeReleaseMetadata(
+        version: '1.0.0',
+        sourceManifestSignatureUrl: Option.of(
+          'https://example.invalid/source.json.sig',
+        ),
+      ),
+    );
+  });
+
   test('runtime install operations group install source as a domain value', () {
     final operation = RuntimeInstallRequestOperation.fullInstall();
 

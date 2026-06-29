@@ -13,6 +13,48 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-29 12:21 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Freezed-backed update domain records.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: this commit (`Freezed update records`).
+- Purpose: continue the Freezed domain model pass with update records while
+  keeping higher-risk result variants and CLI contracts out of this slice.
+- Completed work: committed the graphics backend hint Freezed slice; inspected
+  `update_records.dart`, update CLI JSON projection, runtime/app update call
+  sites, and governance checks; selected the four update record classes
+  (`RuntimeUpdateRecord`, `AppUpdateRecord`, `AppUpdateInstallRecord`, and
+  `RuntimeReleaseMetadata`) as the next narrow conversion target; added focused
+  value-semantics coverage and observed it fail against the hand-written record
+  classes; converted the four update records to Freezed while preserving
+  primitive-to-value-object construction and `Option` mapping; left update
+  result variants hand-written for a separate slice; updated governance
+  baselines so update records can be Freezed-backed while still requiring
+  domain-facing absence to use `Option` and CLI JSON projection to stay outside
+  domain models.
+- Remaining work: update result variants remain hand-written; map wrappers with
+  const/equality constraints remain deferred; continue the Freezed scan with
+  update result variants or program catalog records depending on call-site
+  risk.
+- Next action: inspect `RuntimeUpdateCheckResult`, `AppUpdateCheckResult`,
+  `AppUpdateInstallResult`, and `RuntimeReleaseMetadataFetchResult` for a
+  result-variant Freezed slice, especially direct concrete constructor usage in
+  update checker and release metadata tests.
+- Verification: observed `cd packages/konyak_cli && dart test
+  test/domain_immutability_test.dart --name "update records compare by
+  semantic values"` fail before implementation; after implementation, `cd
+  packages/konyak_cli && dart run build_runner build
+  --delete-conflicting-outputs`, `cd packages/konyak_cli && dart format
+  lib/src/domain/update/update_records.dart test/domain_immutability_test.dart
+  && dart analyze --fatal-infos`, focused update record value-semantics test,
+  focused update record immutability tests, focused `update` CLI contract
+  tests, `cd packages/konyak_cli && dart test
+  test/domain_immutability_test.dart`, `just verify-governance`, `just
+  verify-architecture`, `just verify-safety`, `just format-check`, `just lint`,
+  and `just cli-test` passed.
+
 - Timestamp: 2026-06-29 12:14 JST
 - State: `completed`
 - Branch: `main`
