@@ -220,16 +220,19 @@ class DartIoPathOpener implements PathOpener {
   const DartIoPathOpener();
 
   @override
-  PathOpenResult openPath(String path) {
-    return runPathOpenCommand(<String>[path]);
+  PathOpenResult openPath(PathOpenTarget target) {
+    return runPathOpenCommand(<String>[target.value]);
   }
 
   @override
-  PathOpenResult revealPath(String path) {
+  PathOpenResult revealPath(PathRevealTarget target) {
     return switch (currentHostPlatform()) {
-      KonyakHostPlatform.macos => runPathOpenCommand(<String>['-R', path]),
+      KonyakHostPlatform.macos => runPathOpenCommand(<String>[
+        '-R',
+        target.value,
+      ]),
       KonyakHostPlatform.linux => runPathOpenCommand(<String>[
-        programLocationPath(path),
+        programLocationPath(target.value),
       ]),
     };
   }

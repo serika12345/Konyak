@@ -403,6 +403,40 @@ abstract class ProgramRunArguments
   map: FreezedMapOptions.none,
   when: FreezedWhenOptions.none,
 )
+abstract class PathOpenTarget
+    with _$PathOpenTarget
+    implements StringDomainValueObject {
+  const PathOpenTarget._();
+
+  factory PathOpenTarget(String value) => PathOpenTarget._validated(
+    _requiredValueObjectString(value, 'pathOpenTarget'),
+  );
+
+  const factory PathOpenTarget._validated(String value) = _PathOpenTarget;
+}
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class PathRevealTarget
+    with _$PathRevealTarget
+    implements StringDomainValueObject {
+  const PathRevealTarget._();
+
+  factory PathRevealTarget(String value) => PathRevealTarget._validated(
+    _requiredValueObjectString(value, 'pathRevealTarget'),
+  );
+
+  const factory PathRevealTarget._validated(String value) = _PathRevealTarget;
+}
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
 abstract class ProgramLocale
     with _$ProgramLocale
     implements StringDomainValueObject {

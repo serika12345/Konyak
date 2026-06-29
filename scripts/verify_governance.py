@@ -666,6 +666,62 @@ def require_typed_detached_process_starter_boundary() -> None:
             )
 
 
+def require_typed_path_opener_boundary() -> None:
+    domain_path = "packages/konyak_cli/lib/src/domain/program/program_runner.dart"
+    domain = read_text(domain_path)
+    expected_domain_terms = [
+        "abstract interface class PathOpener",
+        "PathOpenResult openPath(PathOpenTarget target)",
+        "PathOpenResult revealPath(PathRevealTarget target)",
+    ]
+    for expected in expected_domain_terms:
+        if expected not in domain:
+            raise AssertionError(
+                "PathOpener must expose typed open/reveal targets: "
+                f"{expected}"
+            )
+
+    path_opener_match = re.search(
+        r"abstract interface class PathOpener\b(?P<body>.*?)(?=\n\})",
+        domain,
+        re.S,
+    )
+    if path_opener_match is None:
+        raise AssertionError("PathOpener interface is missing")
+    path_opener_body = path_opener_match.group("body")
+    forbidden_domain_terms = [
+        "openPath(String",
+        "revealPath(String",
+    ]
+    for forbidden in forbidden_domain_terms:
+        if forbidden in path_opener_body:
+            raise AssertionError(
+                "PathOpener must not expose primitive open/reveal targets: "
+                f"{forbidden}"
+            )
+
+    expected_terms_by_path = {
+        "packages/konyak_cli/lib/src/io/app_update_installer.dart": [
+            "pathOpener.openPath(PathOpenTarget(archivePath))",
+        ],
+        "packages/konyak_cli/lib/src/cli/cli_app_runtime_handlers.dart": [
+            "pathOpener.openPath(PathOpenTarget(openUrl))",
+        ],
+        "packages/konyak_cli/lib/src/cli/cli_location_winetricks_handlers.dart": [
+            "opener.openPath(PathOpenTarget(path))",
+            "opener.revealPath(PathRevealTarget(path))",
+        ],
+    }
+    for path, expected_terms in expected_terms_by_path.items():
+        source = read_text(path)
+        for expected in expected_terms:
+            if expected not in source:
+                raise AssertionError(
+                    "Path opener call sites must build typed open/reveal "
+                    f"targets: {expected}"
+                )
+
+
 def require_wine_process_termination_cli_json_projection() -> None:
     domain_path = "packages/konyak_cli/lib/src/domain/program/program_run_models.dart"
     domain = read_text(domain_path)
@@ -2359,6 +2415,7 @@ def main() -> None:
     require_typed_winetricks_verb_planner_boundary()
     require_typed_wine_process_planner_boundary()
     require_typed_detached_process_starter_boundary()
+    require_typed_path_opener_boundary()
     require_wine_process_termination_cli_json_projection()
     require_program_catalog_cli_json_projection()
     require_graphics_backend_hints_cli_json_projection()

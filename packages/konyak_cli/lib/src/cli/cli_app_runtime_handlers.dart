@@ -1,6 +1,7 @@
 import '../domain/program/program_run_models.dart';
 import '../domain/program/program_runner.dart';
 import '../domain/runtime/runtime_validation_models.dart';
+import '../domain/shared/domain_value_objects.dart';
 import '../domain/update/update_records.dart';
 import '../io/gptk_wine_installation.dart';
 import '../io/runtime_install_progress_io.dart';
@@ -140,7 +141,7 @@ CliResult openUrlJsonResult(String openUrl, PathOpener? pathOpener) {
   if (pathOpener == null) {
     return pathOpenerUnavailableError();
   }
-  final openResult = pathOpener.openPath(openUrl);
+  final openResult = pathOpener.openPath(PathOpenTarget(openUrl));
   return switch (openResult) {
     PathOpenCompleted() => jsonSuccess(<String, Object?>{
       'openedUrl': <String, Object?>{'url': openUrl},

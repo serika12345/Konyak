@@ -13,6 +13,34 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-29 16:01 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Tighten the functional-core boundary for path opening.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: current commit (`Type path opener targets`).
+- Purpose: keep OS open/reveal requests typed at the domain-facing
+  `PathOpener` interface instead of accepting raw `String` targets.
+- Completed work: committed typed detached process startup requests; added a
+  failing typed path-opener contract; introduced `PathOpenTarget` and
+  `PathRevealTarget`; changed `PathOpener`, `DartIoPathOpener`, app update,
+  open URL, bottle-location, and program-location call sites to pass typed
+  targets; updated CLI recording fixtures; and tightened governance so raw
+  path-opener targets do not return at the domain interface or representative
+  call sites.
+- Remaining work: broader functional-core tightening remains in `docs/todo.md`,
+  including other primitive request/planner APIs.
+- Next action: continue with the next narrow primitive-boundary cleanup outside
+  the completed path-opener target path.
+- Verification: observed `cd packages/konyak_cli && dart test
+  test/domain_immutability_test.dart --name "path openers"` fail before
+  implementation because `PathOpenTarget` and `PathRevealTarget` did not
+  exist; after implementation, focused path-opener and CLI contract tests,
+  `dart analyze --fatal-infos`, `just verify-governance`, full
+  `test/domain_immutability_test.dart`, `just cli-test`, `just verify-safety`,
+  `just format-check`, and `just lint` passed.
+
 - Timestamp: 2026-06-29 15:41 JST
 - State: `completed`
 - Branch: `main`

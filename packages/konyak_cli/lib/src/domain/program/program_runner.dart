@@ -23,9 +23,9 @@ abstract interface class HostProcessSnapshotReader {
 }
 
 abstract interface class PathOpener {
-  PathOpenResult openPath(String path);
+  PathOpenResult openPath(PathOpenTarget target);
 
-  PathOpenResult revealPath(String path);
+  PathOpenResult revealPath(PathRevealTarget target);
 }
 
 enum KonyakHostPlatform { linux, macos }

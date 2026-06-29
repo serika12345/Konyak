@@ -6,6 +6,7 @@ import '../domain/program/program_run_models.dart';
 import '../domain/program/program_runner.dart';
 import '../domain/runtime/host_environment.dart';
 import '../domain/runtime/runtime_validation_support.dart';
+import '../domain/shared/domain_value_objects.dart';
 import '../domain/update/update_records.dart';
 import '../shared/common_helpers.dart';
 import 'app_update_handoff_installers.dart';
@@ -98,7 +99,7 @@ class DartIoAppUpdateInstaller implements AppUpdateInstaller {
       };
 
       return handoffResult.match(() {
-        final openResult = pathOpener.openPath(archivePath);
+        final openResult = pathOpener.openPath(PathOpenTarget(archivePath));
         return switch (openResult) {
           PathOpenCompleted() => AppUpdateInstallCompleted(
             AppUpdateInstallRecord(

@@ -1,6 +1,7 @@
 import '../domain/program/pinned_programs.dart';
 import '../domain/program/program_catalog_models.dart';
 import '../domain/program/program_run_models.dart';
+import '../domain/shared/domain_value_objects.dart';
 import '../platform/platform_location_paths.dart';
 import 'cli_bottle_mutation_handlers.dart';
 import 'cli_bottle_parsers.dart';
@@ -64,7 +65,7 @@ CliResult openBottleLocationJsonResult(
           message: 'Bottle location is not supported.',
           extra: <String, Object?>{'location': request.location},
         ),
-        (path) => switch (opener.openPath(path)) {
+        (path) => switch (opener.openPath(PathOpenTarget(path))) {
           PathOpenCompleted() => jsonSuccess(<String, Object?>{
             'openedLocation': <String, Object?>{
               'bottleId': bottle.id.value,
@@ -116,7 +117,7 @@ CliResult openProgramLocationJsonResult(
       }
 
       final path = request.programPath;
-      return switch (opener.revealPath(path)) {
+      return switch (opener.revealPath(PathRevealTarget(path))) {
         PathOpenCompleted() => jsonSuccess(<String, Object?>{
           'openedProgramLocation': <String, Object?>{
             'bottleId': bottle.id.value,

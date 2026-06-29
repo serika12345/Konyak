@@ -695,19 +695,23 @@ final class RecordingPathOpener implements PathOpener {
   RecordingPathOpener({required this.result});
 
   final PathOpenResult result;
-  String? lastPath;
-  String? lastRevealedPath;
+  PathOpenTarget? lastOpenTarget;
+  PathRevealTarget? lastRevealTarget;
+
+  String? get lastPath => lastOpenTarget?.value;
+
+  String? get lastRevealedPath => lastRevealTarget?.value;
 
   @override
-  PathOpenResult openPath(String path) {
-    lastPath = path;
+  PathOpenResult openPath(PathOpenTarget target) {
+    lastOpenTarget = target;
 
     return result;
   }
 
   @override
-  PathOpenResult revealPath(String path) {
-    lastRevealedPath = path;
+  PathOpenResult revealPath(PathRevealTarget target) {
+    lastRevealTarget = target;
 
     return result;
   }

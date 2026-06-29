@@ -59,6 +59,25 @@ final class RecordingDomainDetachedProcessStarter
   }
 }
 
+final class RecordingDomainPathOpener implements PathOpener {
+  PathOpenTarget? openedTarget;
+  PathRevealTarget? revealedTarget;
+
+  @override
+  PathOpenResult openPath(PathOpenTarget target) {
+    openedTarget = target;
+
+    return const PathOpenCompleted();
+  }
+
+  @override
+  PathOpenResult revealPath(PathRevealTarget target) {
+    revealedTarget = target;
+
+    return const PathOpenCompleted();
+  }
+}
+
 void main() {
   test('bottle records expose immutable pinned program snapshots', () {
     final pinnedPrograms = <PinnedProgramRecord>[
@@ -1486,6 +1505,20 @@ void main() {
       starter.arguments,
       ProgramRunArguments(const <String>['/Applications/Konyak.app']),
     );
+  });
+
+  test('path openers expose typed open and reveal targets', () {
+    final opener = RecordingDomainPathOpener();
+
+    final openResult = opener.openPath(PathOpenTarget('https://konyak.test'));
+    final revealResult = opener.revealPath(
+      PathRevealTarget('/Games/Steam.exe'),
+    );
+
+    expect(openResult, const PathOpenCompleted());
+    expect(revealResult, const PathOpenCompleted());
+    expect(opener.openedTarget, PathOpenTarget('https://konyak.test'));
+    expect(opener.revealedTarget, PathRevealTarget('/Games/Steam.exe'));
   });
 
   test('host environments expose immutable snapshots', () {
