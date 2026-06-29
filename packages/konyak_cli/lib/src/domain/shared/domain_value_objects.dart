@@ -502,6 +502,81 @@ abstract class WineDebugChannels
   map: FreezedMapOptions.none,
   when: FreezedWhenOptions.none,
 )
+abstract class ProgramRegistryKey
+    with _$ProgramRegistryKey
+    implements StringDomainValueObject {
+  const ProgramRegistryKey._();
+
+  factory ProgramRegistryKey(String value) => ProgramRegistryKey._validated(
+    _requiredValueObjectString(value, 'programRegistryKey'),
+  );
+
+  const factory ProgramRegistryKey._validated(String value) =
+      _ProgramRegistryKey;
+}
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class ProgramRegistryValueName
+    with _$ProgramRegistryValueName
+    implements StringDomainValueObject {
+  const ProgramRegistryValueName._();
+
+  factory ProgramRegistryValueName(String value) =>
+      ProgramRegistryValueName._validated(
+        _requiredValueObjectString(value, 'programRegistryValueName'),
+      );
+
+  const factory ProgramRegistryValueName._validated(String value) =
+      _ProgramRegistryValueName;
+}
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class ProgramRegistryValueType
+    with _$ProgramRegistryValueType
+    implements StringDomainValueObject {
+  const ProgramRegistryValueType._();
+
+  factory ProgramRegistryValueType(String value) =>
+      ProgramRegistryValueType._validated(
+        _requiredValueObjectString(value, 'programRegistryValueType'),
+      );
+
+  const factory ProgramRegistryValueType._validated(String value) =
+      _ProgramRegistryValueType;
+}
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class ProgramRegistryValueData
+    with _$ProgramRegistryValueData
+    implements StringDomainValueObject {
+  const ProgramRegistryValueData._();
+
+  factory ProgramRegistryValueData(String value) =>
+      ProgramRegistryValueData._validated(
+        _requiredValueObjectString(value, 'programRegistryValueData'),
+      );
+
+  const factory ProgramRegistryValueData._validated(String value) =
+      _ProgramRegistryValueData;
+}
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
 abstract class WinedbgCommand
     with _$WinedbgCommand
     implements StringDomainValueObject {
@@ -814,6 +889,41 @@ abstract class WinetricksVerbId
   map: FreezedMapOptions.none,
   when: FreezedWhenOptions.none,
 )
+abstract class WinetricksVerbName
+    with _$WinetricksVerbName
+    implements StringDomainValueObject {
+  const WinetricksVerbName._();
+
+  factory WinetricksVerbName(String value) => WinetricksVerbName._validated(
+    _requiredValueObjectString(value, 'winetricksVerbName'),
+  );
+
+  const factory WinetricksVerbName._validated(String value) =
+      _WinetricksVerbName;
+}
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class WinetricksVerbDescription
+    with _$WinetricksVerbDescription
+    implements StringDomainValueObject {
+  const WinetricksVerbDescription._();
+
+  factory WinetricksVerbDescription(String value) =>
+      WinetricksVerbDescription._validated(value.trim());
+
+  const factory WinetricksVerbDescription._validated(String value) =
+      _WinetricksVerbDescription;
+}
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
 abstract class WinetricksCategoryId
     with _$WinetricksCategoryId
     implements StringDomainValueObject {
@@ -825,6 +935,25 @@ abstract class WinetricksCategoryId
 
   const factory WinetricksCategoryId._validated(String value) =
       _WinetricksCategoryId;
+}
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class WinetricksCategoryName
+    with _$WinetricksCategoryName
+    implements StringDomainValueObject {
+  const WinetricksCategoryName._();
+
+  factory WinetricksCategoryName(String value) =>
+      WinetricksCategoryName._validated(
+        _requiredValueObjectString(value, 'winetricksCategoryName'),
+      );
+
+  const factory WinetricksCategoryName._validated(String value) =
+      _WinetricksCategoryName;
 }
 
 @Freezed(
