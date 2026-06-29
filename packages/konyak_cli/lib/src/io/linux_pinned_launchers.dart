@@ -7,6 +7,7 @@ import '../domain/bottle/bottle_models.dart';
 import '../domain/program/program_mutation_models.dart';
 import '../domain/program/program_runner.dart';
 import '../domain/runtime/host_environment.dart';
+import '../domain/shared/domain_value_objects.dart';
 import '../platform/linux/linux_integration.dart';
 import '../platform/macos/macos_pinned_launcher_templates.dart';
 import '../repository/repository_exceptions.dart';
@@ -71,13 +72,15 @@ void synchronizeLinuxPinnedProgramLaunchers({
               displayName: linuxPinnedProgramDisplayName(program.name.value),
               iconPath: program.iconPath.map((value) => value.value),
               manifest: PinnedProgramLauncherManifest(
-                launcherId: pinnedProgramLauncherId(
-                  bottleId: bottle.id.value,
-                  programPath: program.path.value,
+                launcherId: ProgramLauncherId(
+                  pinnedProgramLauncherId(
+                    bottleId: bottle.id.value,
+                    programPath: program.path.value,
+                  ),
                 ),
-                bottleId: bottle.id.value,
-                programPath: program.path.value,
-                programName: program.name.value,
+                bottleId: bottle.id,
+                programPath: program.path,
+                programName: program.name,
               ),
             ),
       ];

@@ -147,7 +147,7 @@ CliSideEffectResult syncRuntimeSettingsDllOverrides({
 
 CliSideEffectResult applyWindowsVersionRegistryUpdates({
   required BottleRecord bottle,
-  required String windowsVersion,
+  required WindowsVersion windowsVersion,
   required ProgramRunPlanner programRunPlanner,
   required ProgramRunner? programRunner,
 }) {

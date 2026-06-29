@@ -16,14 +16,14 @@ abstract class ProgramPinRequest with _$ProgramPinRequest {
   const ProgramPinRequest._();
 
   factory ProgramPinRequest({
-    required String bottleId,
-    required String name,
-    required String programPath,
+    required BottleId bottleId,
+    required ProgramName name,
+    required ProgramPath programPath,
   }) {
     return ProgramPinRequest._validated(
-      bottleId: BottleId(bottleId),
-      name: ProgramName(name),
-      programPath: ProgramPath(programPath),
+      bottleId: bottleId,
+      name: name,
+      programPath: programPath,
     );
   }
 
@@ -44,15 +44,15 @@ sealed class ProgramPinResult with _$ProgramPinResult {
 
   const factory ProgramPinResult.pinned(BottleRecord bottle) = ProgramPinned;
 
-  factory ProgramPinResult.missing(String bottleId) {
-    return ProgramPinResult._missing(bottleId: BottleId(bottleId));
+  factory ProgramPinResult.missing(BottleId bottleId) {
+    return ProgramPinResult._missing(bottleId: bottleId);
   }
 
   const factory ProgramPinResult._missing({required BottleId bottleId}) =
       ProgramPinMissing;
 
-  factory ProgramPinResult.conflict(String programPath) {
-    return ProgramPinResult._conflict(programPath: ProgramPath(programPath));
+  factory ProgramPinResult.conflict(ProgramPath programPath) {
+    return ProgramPinResult._conflict(programPath: programPath);
   }
 
   const factory ProgramPinResult._conflict({required ProgramPath programPath}) =
@@ -70,12 +70,12 @@ abstract class ProgramUnpinRequest with _$ProgramUnpinRequest {
   const ProgramUnpinRequest._();
 
   factory ProgramUnpinRequest({
-    required String bottleId,
-    required String programPath,
+    required BottleId bottleId,
+    required ProgramPath programPath,
   }) {
     return ProgramUnpinRequest._validated(
-      bottleId: BottleId(bottleId),
-      programPath: ProgramPath(programPath),
+      bottleId: bottleId,
+      programPath: programPath,
     );
   }
 
@@ -94,14 +94,14 @@ abstract class ProgramRenameRequest with _$ProgramRenameRequest {
   const ProgramRenameRequest._();
 
   factory ProgramRenameRequest({
-    required String bottleId,
-    required String programPath,
-    required String name,
+    required BottleId bottleId,
+    required ProgramPath programPath,
+    required ProgramName name,
   }) {
     return ProgramRenameRequest._validated(
-      bottleId: BottleId(bottleId),
-      programPath: ProgramPath(programPath),
-      name: ProgramName(name),
+      bottleId: bottleId,
+      programPath: programPath,
+      name: name,
     );
   }
 
@@ -122,16 +122,16 @@ abstract class PinnedProgramLauncherManifest
   const PinnedProgramLauncherManifest._();
 
   factory PinnedProgramLauncherManifest({
-    required String launcherId,
-    required String bottleId,
-    required String programPath,
-    required String programName,
+    required ProgramLauncherId launcherId,
+    required BottleId bottleId,
+    required ProgramPath programPath,
+    required ProgramName programName,
   }) {
     return PinnedProgramLauncherManifest._validated(
-      launcherId: ProgramLauncherId(launcherId),
-      bottleId: BottleId(bottleId),
-      programPath: ProgramPath(programPath),
-      programName: ProgramName(programName),
+      launcherId: launcherId,
+      bottleId: bottleId,
+      programPath: programPath,
+      programName: programName,
     );
   }
 
@@ -153,12 +153,12 @@ abstract class WineProcessTerminationRequest
   const WineProcessTerminationRequest._();
 
   factory WineProcessTerminationRequest({
-    required String bottleId,
-    required String processId,
+    required BottleId bottleId,
+    required WineProcessId processId,
   }) {
     return WineProcessTerminationRequest._validated(
-      bottleId: BottleId(bottleId),
-      processId: WineProcessId(processId),
+      bottleId: bottleId,
+      processId: processId,
     );
   }
 
@@ -178,11 +178,9 @@ abstract class WineProcessGroupTerminationRequest
   const WineProcessGroupTerminationRequest._();
 
   factory WineProcessGroupTerminationRequest({
-    Option<String> bottleId = const Option.none(),
+    Option<BottleId> bottleId = const Option.none(),
   }) {
-    return WineProcessGroupTerminationRequest._validated(
-      bottleId: bottleId.map(BottleId.new),
-    );
+    return WineProcessGroupTerminationRequest._validated(bottleId: bottleId);
   }
 
   const factory WineProcessGroupTerminationRequest._validated({
@@ -201,18 +199,16 @@ sealed class ProgramUpdateResult with _$ProgramUpdateResult {
   const factory ProgramUpdateResult.updated(BottleRecord bottle) =
       ProgramUpdated;
 
-  factory ProgramUpdateResult.missingBottle(String bottleId) {
-    return ProgramUpdateResult._missingBottle(bottleId: BottleId(bottleId));
+  factory ProgramUpdateResult.missingBottle(BottleId bottleId) {
+    return ProgramUpdateResult._missingBottle(bottleId: bottleId);
   }
 
   const factory ProgramUpdateResult._missingBottle({
     required BottleId bottleId,
   }) = ProgramUpdateMissingBottle;
 
-  factory ProgramUpdateResult.missingProgram(String programPath) {
-    return ProgramUpdateResult._missingProgram(
-      programPath: ProgramPath(programPath),
-    );
+  factory ProgramUpdateResult.missingProgram(ProgramPath programPath) {
+    return ProgramUpdateResult._missingProgram(programPath: programPath);
   }
 
   const factory ProgramUpdateResult._missingProgram({
@@ -232,12 +228,12 @@ abstract class ProgramSettingsRequest with _$ProgramSettingsRequest {
   const ProgramSettingsRequest._();
 
   factory ProgramSettingsRequest({
-    required String bottleId,
-    required String programPath,
+    required BottleId bottleId,
+    required ProgramPath programPath,
   }) {
     return ProgramSettingsRequest._validated(
-      bottleId: BottleId(bottleId),
-      programPath: ProgramPath(programPath),
+      bottleId: bottleId,
+      programPath: programPath,
     );
   }
 
@@ -257,13 +253,13 @@ abstract class ProgramSettingsUpdateRequest
   const ProgramSettingsUpdateRequest._();
 
   factory ProgramSettingsUpdateRequest({
-    required String bottleId,
-    required String programPath,
+    required BottleId bottleId,
+    required ProgramPath programPath,
     required ProgramSettingsRecord settings,
   }) {
     return ProgramSettingsUpdateRequest._validated(
-      bottleId: BottleId(bottleId),
-      programPath: ProgramPath(programPath),
+      bottleId: bottleId,
+      programPath: programPath,
       settings: settings,
     );
   }
@@ -286,10 +282,8 @@ sealed class ProgramSettingsReadResult with _$ProgramSettingsReadResult {
   const factory ProgramSettingsReadResult.read(ProgramSettingsRecord settings) =
       ProgramSettingsRead;
 
-  factory ProgramSettingsReadResult.missingBottle(String bottleId) {
-    return ProgramSettingsReadResult._missingBottle(
-      bottleId: BottleId(bottleId),
-    );
+  factory ProgramSettingsReadResult.missingBottle(BottleId bottleId) {
+    return ProgramSettingsReadResult._missingBottle(bottleId: bottleId);
   }
 
   const factory ProgramSettingsReadResult._missingBottle({
@@ -312,10 +306,8 @@ sealed class ProgramSettingsUpdateResult with _$ProgramSettingsUpdateResult {
     ProgramSettingsRecord settings,
   ) = ProgramSettingsUpdated;
 
-  factory ProgramSettingsUpdateResult.missingBottle(String bottleId) {
-    return ProgramSettingsUpdateResult._missingBottle(
-      bottleId: BottleId(bottleId),
-    );
+  factory ProgramSettingsUpdateResult.missingBottle(BottleId bottleId) {
+    return ProgramSettingsUpdateResult._missingBottle(bottleId: bottleId);
   }
 
   const factory ProgramSettingsUpdateResult._missingBottle({

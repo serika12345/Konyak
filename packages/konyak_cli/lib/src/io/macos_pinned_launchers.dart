@@ -8,6 +8,7 @@ import '../domain/bottle/bottle_models.dart';
 import '../domain/program/program_mutation_models.dart';
 import '../domain/program/program_runner.dart';
 import '../domain/runtime/host_environment.dart';
+import '../domain/shared/domain_value_objects.dart';
 import '../platform/macos/macos_pinned_launcher_templates.dart';
 import '../shared/common_helpers.dart';
 import 'app_update_paths.dart';
@@ -77,10 +78,10 @@ void synchronizeMacosPinnedProgramLaunchers({
                   .map((value) => value.value)
                   .toNullable(),
               manifest: PinnedProgramLauncherManifest(
-                launcherId: launcherId,
-                bottleId: bottle.id.value,
-                programPath: program.path.value,
-                programName: program.name.value,
+                launcherId: ProgramLauncherId(launcherId),
+                bottleId: bottle.id,
+                programPath: program.path,
+                programName: program.name,
               ),
             );
           }

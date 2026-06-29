@@ -100,7 +100,7 @@ class MemoryBottleRepository implements BottleRepository {
     final bottle = bottleFromCreateRequest(request, dataHome);
 
     if (bottlesById.containsKey(bottle.id.value)) {
-      return BottleCreateConflict(bottle.id.value);
+      return BottleCreateConflict(bottle.id);
     }
 
     bottlesById[bottle.id.value] = bottle;
@@ -115,7 +115,7 @@ class MemoryBottleRepository implements BottleRepository {
     return findBottle(request.bottleId).fold(
       BottleArchiveExportFailed.new,
       (bottle) => bottle.match(
-        () => BottleArchiveExportMissing(request.bottleId.value),
+        () => BottleArchiveExportMissing(request.bottleId),
         (bottle) => writeBottleArchive(
           bottle: bottle,
           archivePath: request.archivePath.value,
@@ -144,13 +144,13 @@ class MemoryBottleRepository implements BottleRepository {
     return removeMapValue(
       bottlesById,
       id.value,
-    ).match(() => BottleDeleteMissing(id.value), BottleDeleted.new);
+    ).match(() => BottleDeleteMissing(id), BottleDeleted.new);
   }
 
   @override
   BottleRenameResult renameBottle(BottleRenameRequest request) {
     return mapValue(bottlesById, request.bottleId.value).match(
-      () => BottleRenameMissing(request.bottleId.value),
+      () => BottleRenameMissing(request.bottleId),
       (bottle) {
         final renamed = renamedMemoryBottle(
           bottle: bottle,
@@ -162,7 +162,7 @@ class MemoryBottleRepository implements BottleRepository {
           (conflictingBottle) => conflictingBottle.id.value != bottle.id.value,
         );
         if (hasConflict) {
-          return BottleRenameConflict(renamed.id.value);
+          return BottleRenameConflict(renamed.id);
         }
 
         bottlesById.remove(bottle.id.value);
@@ -176,14 +176,14 @@ class MemoryBottleRepository implements BottleRepository {
   @override
   BottleMoveResult moveBottle(BottleMoveRequest request) {
     return mapValue(bottlesById, request.bottleId.value).match(
-      () => BottleMoveMissing(request.bottleId.value),
+      () => BottleMoveMissing(request.bottleId),
       (bottle) {
         if (hasBottleAtPath(
           bottlesById.values,
           request.path.value,
           exceptId: bottle.id.value,
         )) {
-          return BottleMoveConflict(request.path.value);
+          return BottleMoveConflict(request.path);
         }
 
         final moved = bottle.copyWith(path: request.path);
@@ -197,7 +197,7 @@ class MemoryBottleRepository implements BottleRepository {
   @override
   BottleUpdateResult setWindowsVersion(WindowsVersionUpdateRequest request) {
     return mapValue(bottlesById, request.bottleId.value).match(
-      () => BottleUpdateMissing(request.bottleId.value),
+      () => BottleUpdateMissing(request.bottleId),
       (bottle) {
         final updated = bottle.copyWith(windowsVersion: request.windowsVersion);
         bottlesById[request.bottleId.value] = updated;
@@ -212,7 +212,7 @@ class MemoryBottleRepository implements BottleRepository {
     return mapValue(
       bottlesById,
       request.bottleId.value,
-    ).match(() => BottleUpdateMissing(request.bottleId.value), (bottle) {
+    ).match(() => BottleUpdateMissing(request.bottleId), (bottle) {
       final updated = bottle.copyWith(runtimeSettings: request.runtimeSettings);
       bottlesById[request.bottleId.value] = updated;
 
@@ -223,10 +223,10 @@ class MemoryBottleRepository implements BottleRepository {
   @override
   ProgramPinResult pinProgram(ProgramPinRequest request) {
     return mapValue(bottlesById, request.bottleId.value).match(
-      () => ProgramPinResult.missing(request.bottleId.value),
+      () => ProgramPinResult.missing(request.bottleId),
       (bottle) {
-        if (hasPinnedProgram(bottle, request.programPath.value)) {
-          return ProgramPinResult.conflict(request.programPath.value);
+        if (hasPinnedProgram(bottle, request.programPath)) {
+          return ProgramPinResult.conflict(request.programPath);
         }
 
         final updated = bottleWithPinnedProgram(
@@ -244,16 +244,13 @@ class MemoryBottleRepository implements BottleRepository {
   @override
   ProgramUpdateResult unpinProgram(ProgramUnpinRequest request) {
     return mapValue(bottlesById, request.bottleId.value).match(
-      () => ProgramUpdateResult.missingBottle(request.bottleId.value),
+      () => ProgramUpdateResult.missingBottle(request.bottleId),
       (bottle) {
-        if (!hasPinnedProgram(bottle, request.programPath.value)) {
-          return ProgramUpdateResult.missingProgram(request.programPath.value);
+        if (!hasPinnedProgram(bottle, request.programPath)) {
+          return ProgramUpdateResult.missingProgram(request.programPath);
         }
 
-        final updated = bottleWithoutPinnedProgram(
-          bottle,
-          request.programPath.value,
-        );
+        final updated = bottleWithoutPinnedProgram(bottle, request.programPath);
         bottlesById[request.bottleId.value] = updated;
 
         return ProgramUpdateResult.updated(updated);
@@ -264,10 +261,10 @@ class MemoryBottleRepository implements BottleRepository {
   @override
   ProgramUpdateResult renamePinnedProgram(ProgramRenameRequest request) {
     return mapValue(bottlesById, request.bottleId.value).match(
-      () => ProgramUpdateResult.missingBottle(request.bottleId.value),
+      () => ProgramUpdateResult.missingBottle(request.bottleId),
       (bottle) {
-        if (!hasPinnedProgram(bottle, request.programPath.value)) {
-          return ProgramUpdateResult.missingProgram(request.programPath.value);
+        if (!hasPinnedProgram(bottle, request.programPath)) {
+          return ProgramUpdateResult.missingProgram(request.programPath);
         }
 
         final updated = bottleWithRenamedPinnedProgram(bottle, request);
@@ -283,7 +280,7 @@ class MemoryBottleRepository implements BottleRepository {
     ProgramSettingsRequest request,
   ) {
     return mapValue(bottlesById, request.bottleId.value).match(
-      () => ProgramSettingsReadResult.missingBottle(request.bottleId.value),
+      () => ProgramSettingsReadResult.missingBottle(request.bottleId),
       (bottle) => ProgramSettingsReadResult.read(
         mapValue(
           programSettingsByKey,
@@ -301,7 +298,7 @@ class MemoryBottleRepository implements BottleRepository {
     ProgramSettingsUpdateRequest request,
   ) {
     return mapValue(bottlesById, request.bottleId.value).match(
-      () => ProgramSettingsUpdateResult.missingBottle(request.bottleId.value),
+      () => ProgramSettingsUpdateResult.missingBottle(request.bottleId),
       (bottle) {
         programSettingsByKey[programSettingsKey(
               bottleId: bottle.id.value,

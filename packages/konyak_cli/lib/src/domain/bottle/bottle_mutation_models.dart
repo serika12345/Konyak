@@ -15,12 +15,12 @@ abstract class BottleCreateRequest with _$BottleCreateRequest {
   const BottleCreateRequest._();
 
   factory BottleCreateRequest({
-    required String name,
-    required String windowsVersion,
+    required BottleName name,
+    required WindowsVersion windowsVersion,
   }) {
     return BottleCreateRequest._validated(
-      name: BottleName(name),
-      windowsVersion: WindowsVersion(windowsVersion),
+      name: name,
+      windowsVersion: windowsVersion,
     );
   }
 
@@ -39,12 +39,12 @@ abstract class BottleArchiveExportRequest with _$BottleArchiveExportRequest {
   const BottleArchiveExportRequest._();
 
   factory BottleArchiveExportRequest({
-    required String bottleId,
-    required String archivePath,
+    required BottleId bottleId,
+    required BottleArchivePath archivePath,
   }) {
     return BottleArchiveExportRequest._validated(
-      bottleId: BottleId(bottleId),
-      archivePath: BottleArchivePath(archivePath),
+      bottleId: bottleId,
+      archivePath: archivePath,
     );
   }
 
@@ -62,10 +62,8 @@ abstract class BottleArchiveExportRequest with _$BottleArchiveExportRequest {
 abstract class BottleArchiveImportRequest with _$BottleArchiveImportRequest {
   const BottleArchiveImportRequest._();
 
-  factory BottleArchiveImportRequest({required String archivePath}) {
-    return BottleArchiveImportRequest._validated(
-      archivePath: BottleArchivePath(archivePath),
-    );
+  factory BottleArchiveImportRequest({required BottleArchivePath archivePath}) {
+    return BottleArchiveImportRequest._validated(archivePath: archivePath);
   }
 
   const factory BottleArchiveImportRequest._validated({
@@ -82,12 +80,12 @@ abstract class BottleArchiveRecord with _$BottleArchiveRecord {
   const BottleArchiveRecord._();
 
   factory BottleArchiveRecord({
-    required String bottleId,
-    required String archivePath,
+    required BottleId bottleId,
+    required BottleArchivePath archivePath,
   }) {
     return BottleArchiveRecord._validated(
-      bottleId: BottleId(bottleId),
-      archivePath: BottleArchivePath(archivePath),
+      bottleId: bottleId,
+      archivePath: archivePath,
     );
   }
 
@@ -121,8 +119,8 @@ abstract class BottleCreateConflict extends BottleCreateResult
     with _$BottleCreateConflict {
   const BottleCreateConflict._() : super();
 
-  factory BottleCreateConflict(String bottleId) {
-    return BottleCreateConflict._validated(BottleId(bottleId));
+  factory BottleCreateConflict(BottleId bottleId) {
+    return BottleCreateConflict._validated(bottleId);
   }
 
   const factory BottleCreateConflict._validated(BottleId bottleId) =
@@ -167,8 +165,8 @@ abstract class BottleArchiveExportMissing extends BottleArchiveExportResult
     with _$BottleArchiveExportMissing {
   const BottleArchiveExportMissing._() : super();
 
-  factory BottleArchiveExportMissing(String bottleId) {
-    return BottleArchiveExportMissing._validated(BottleId(bottleId));
+  factory BottleArchiveExportMissing(BottleId bottleId) {
+    return BottleArchiveExportMissing._validated(bottleId);
   }
 
   const factory BottleArchiveExportMissing._validated(BottleId bottleId) =
@@ -214,8 +212,8 @@ abstract class BottleArchiveImportConflict extends BottleArchiveImportResult
     with _$BottleArchiveImportConflict {
   const BottleArchiveImportConflict._() : super();
 
-  factory BottleArchiveImportConflict(String bottleId) {
-    return BottleArchiveImportConflict._validated(BottleId(bottleId));
+  factory BottleArchiveImportConflict(BottleId bottleId) {
+    return BottleArchiveImportConflict._validated(bottleId);
   }
 
   const factory BottleArchiveImportConflict._validated(BottleId bottleId) =
@@ -259,8 +257,8 @@ abstract class BottleDeleteMissing extends BottleDeleteResult
     with _$BottleDeleteMissing {
   const BottleDeleteMissing._() : super();
 
-  factory BottleDeleteMissing(String bottleId) {
-    return BottleDeleteMissing._validated(BottleId(bottleId));
+  factory BottleDeleteMissing(BottleId bottleId) {
+    return BottleDeleteMissing._validated(bottleId);
   }
 
   const factory BottleDeleteMissing._validated(BottleId bottleId) =
@@ -288,13 +286,10 @@ abstract class BottleRenameRequest with _$BottleRenameRequest {
   const BottleRenameRequest._();
 
   factory BottleRenameRequest({
-    required String bottleId,
-    required String name,
+    required BottleId bottleId,
+    required BottleName name,
   }) {
-    return BottleRenameRequest._validated(
-      bottleId: BottleId(bottleId),
-      name: BottleName(name),
-    );
+    return BottleRenameRequest._validated(bottleId: bottleId, name: name);
   }
 
   const factory BottleRenameRequest._validated({
@@ -327,8 +322,8 @@ abstract class BottleRenameMissing extends BottleRenameResult
     with _$BottleRenameMissing {
   const BottleRenameMissing._() : super();
 
-  factory BottleRenameMissing(String bottleId) {
-    return BottleRenameMissing._validated(BottleId(bottleId));
+  factory BottleRenameMissing(BottleId bottleId) {
+    return BottleRenameMissing._validated(bottleId);
   }
 
   const factory BottleRenameMissing._validated(BottleId bottleId) =
@@ -344,8 +339,8 @@ abstract class BottleRenameConflict extends BottleRenameResult
     with _$BottleRenameConflict {
   const BottleRenameConflict._() : super();
 
-  factory BottleRenameConflict(String bottleId) {
-    return BottleRenameConflict._validated(BottleId(bottleId));
+  factory BottleRenameConflict(BottleId bottleId) {
+    return BottleRenameConflict._validated(bottleId);
   }
 
   const factory BottleRenameConflict._validated(BottleId bottleId) =
@@ -372,11 +367,11 @@ abstract class BottleRenameFailed extends BottleRenameResult
 abstract class BottleMoveRequest with _$BottleMoveRequest {
   const BottleMoveRequest._();
 
-  factory BottleMoveRequest({required String bottleId, required String path}) {
-    return BottleMoveRequest._validated(
-      bottleId: BottleId(bottleId),
-      path: BottlePath(path),
-    );
+  factory BottleMoveRequest({
+    required BottleId bottleId,
+    required BottlePath path,
+  }) {
+    return BottleMoveRequest._validated(bottleId: bottleId, path: path);
   }
 
   const factory BottleMoveRequest._validated({
@@ -409,8 +404,8 @@ abstract class BottleMoveMissing extends BottleMoveResult
     with _$BottleMoveMissing {
   const BottleMoveMissing._() : super();
 
-  factory BottleMoveMissing(String bottleId) {
-    return BottleMoveMissing._validated(BottleId(bottleId));
+  factory BottleMoveMissing(BottleId bottleId) {
+    return BottleMoveMissing._validated(bottleId);
   }
 
   const factory BottleMoveMissing._validated(BottleId bottleId) =
@@ -426,8 +421,8 @@ abstract class BottleMoveConflict extends BottleMoveResult
     with _$BottleMoveConflict {
   const BottleMoveConflict._() : super();
 
-  factory BottleMoveConflict(String path) {
-    return BottleMoveConflict._validated(BottlePath(path));
+  factory BottleMoveConflict(BottlePath path) {
+    return BottleMoveConflict._validated(path);
   }
 
   const factory BottleMoveConflict._validated(BottlePath path) =
@@ -455,12 +450,12 @@ abstract class WindowsVersionUpdateRequest with _$WindowsVersionUpdateRequest {
   const WindowsVersionUpdateRequest._();
 
   factory WindowsVersionUpdateRequest({
-    required String bottleId,
-    required String windowsVersion,
+    required BottleId bottleId,
+    required WindowsVersion windowsVersion,
   }) {
     return WindowsVersionUpdateRequest._validated(
-      bottleId: BottleId(bottleId),
-      windowsVersion: WindowsVersion(windowsVersion),
+      bottleId: bottleId,
+      windowsVersion: windowsVersion,
     );
   }
 
@@ -480,11 +475,11 @@ abstract class RuntimeSettingsUpdateRequest
   const RuntimeSettingsUpdateRequest._();
 
   factory RuntimeSettingsUpdateRequest({
-    required String bottleId,
+    required BottleId bottleId,
     required BottleRuntimeSettings runtimeSettings,
   }) {
     return RuntimeSettingsUpdateRequest._validated(
-      bottleId: BottleId(bottleId),
+      bottleId: bottleId,
       runtimeSettings: runtimeSettings,
     );
   }
@@ -519,8 +514,8 @@ abstract class BottleUpdateMissing extends BottleUpdateResult
     with _$BottleUpdateMissing {
   const BottleUpdateMissing._() : super();
 
-  factory BottleUpdateMissing(String bottleId) {
-    return BottleUpdateMissing._validated(BottleId(bottleId));
+  factory BottleUpdateMissing(BottleId bottleId) {
+    return BottleUpdateMissing._validated(bottleId);
   }
 
   const factory BottleUpdateMissing._validated(BottleId bottleId) =

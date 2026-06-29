@@ -50,7 +50,10 @@ BottleArchiveExportResult writeBottleArchive({
   }
 
   return BottleArchiveExported(
-    BottleArchiveRecord(bottleId: bottle.id.value, archivePath: archivePath),
+    BottleArchiveRecord(
+      bottleId: bottle.id,
+      archivePath: BottleArchivePath(archivePath),
+    ),
   );
 }
 
@@ -109,12 +112,12 @@ BottleArchiveImportResult readBottleArchive({
       exists,
     ) {
       if (exists) {
-        return BottleArchiveImportConflict(imported.id.value);
+        return BottleArchiveImportConflict(imported.id);
       }
 
       final destinationPath = joinPath(bottleDirectory, [imported.id.value]);
       if (Directory(destinationPath).existsSync()) {
-        return BottleArchiveImportConflict(imported.id.value);
+        return BottleArchiveImportConflict(imported.id);
       }
 
       final relocated = imported.copyWith(path: BottlePath(destinationPath));

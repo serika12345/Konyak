@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import '../domain/program/program_mutation_models.dart';
+import '../domain/shared/domain_value_objects.dart';
 import '../io/repository_storage_io.dart';
 import 'cli_parsers.dart';
 
@@ -22,9 +23,9 @@ ProgramPinRequest? parseJsonProgramPinRequest(List<String> arguments) {
   }
 
   return ProgramPinRequest(
-    bottleId: bottleId,
-    name: name,
-    programPath: programPath,
+    bottleId: BottleId(bottleId),
+    name: ProgramName(name),
+    programPath: ProgramPath(programPath),
   );
 }
 
@@ -44,7 +45,10 @@ ProgramUnpinRequest? parseJsonProgramUnpinRequest(List<String> arguments) {
     return null;
   }
 
-  return ProgramUnpinRequest(bottleId: bottleId, programPath: programPath);
+  return ProgramUnpinRequest(
+    bottleId: BottleId(bottleId),
+    programPath: ProgramPath(programPath),
+  );
 }
 
 ProgramRenameRequest? parseJsonProgramRenameRequest(List<String> arguments) {
@@ -65,9 +69,9 @@ ProgramRenameRequest? parseJsonProgramRenameRequest(List<String> arguments) {
   }
 
   return ProgramRenameRequest(
-    bottleId: bottleId,
-    programPath: programPath,
-    name: name,
+    bottleId: BottleId(bottleId),
+    programPath: ProgramPath(programPath),
+    name: ProgramName(name),
   );
 }
 
@@ -89,7 +93,10 @@ ProgramSettingsRequest? parseJsonProgramSettingsRequest(
     return null;
   }
 
-  return ProgramSettingsRequest(bottleId: bottleId, programPath: programPath);
+  return ProgramSettingsRequest(
+    bottleId: BottleId(bottleId),
+    programPath: ProgramPath(programPath),
+  );
 }
 
 ProgramSettingsUpdateRequest? parseJsonProgramSettingsUpdateRequest(
@@ -121,8 +128,8 @@ ProgramSettingsUpdateRequest? parseJsonProgramSettingsUpdateRequest(
   return programSettingsRecordFromJson(decoded)
       .map(
         (settings) => ProgramSettingsUpdateRequest(
-          bottleId: bottleId,
-          programPath: programPath,
+          bottleId: BottleId(bottleId),
+          programPath: ProgramPath(programPath),
           settings: settings,
         ),
       )

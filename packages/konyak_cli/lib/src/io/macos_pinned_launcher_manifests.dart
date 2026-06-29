@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:fpdart/fpdart.dart';
 
 import '../domain/program/program_mutation_models.dart';
+import '../domain/shared/domain_value_objects.dart';
 import '../shared/model_constants.dart';
 
 Map<String, Object?> pinnedProgramLauncherManifestJson(
@@ -47,10 +48,10 @@ Option<PinnedProgramLauncherManifest> pinnedProgramLauncherManifestFromPayload(
 
   return Option.of(
     PinnedProgramLauncherManifest(
-      launcherId: launcherId,
-      bottleId: bottleId,
-      programPath: programPath,
-      programName: programName,
+      launcherId: ProgramLauncherId(launcherId),
+      bottleId: BottleId(bottleId),
+      programPath: ProgramPath(programPath),
+      programName: ProgramName(programName),
     ),
   );
 }

@@ -55,10 +55,16 @@ BottleCreateRequest? parseJsonBottleCreateRequest(List<String> arguments) {
     if (results.wasParsed('windows-version')) {
       return null;
     }
-    return BottleCreateRequest(name: name, windowsVersion: 'win10');
+    return BottleCreateRequest(
+      name: BottleName(name),
+      windowsVersion: WindowsVersion('win10'),
+    );
   }
 
-  return BottleCreateRequest(name: name, windowsVersion: windowsVersion);
+  return BottleCreateRequest(
+    name: BottleName(name),
+    windowsVersion: WindowsVersion(windowsVersion),
+  );
 }
 
 BottleArchiveExportRequest? parseJsonBottleArchiveExportRequest(
@@ -80,8 +86,8 @@ BottleArchiveExportRequest? parseJsonBottleArchiveExportRequest(
   }
 
   return BottleArchiveExportRequest(
-    bottleId: bottleId,
-    archivePath: archivePath,
+    bottleId: BottleId(bottleId),
+    archivePath: BottleArchivePath(archivePath),
   );
 }
 
@@ -102,7 +108,9 @@ BottleArchiveImportRequest? parseJsonBottleArchiveImportRequest(
     return null;
   }
 
-  return BottleArchiveImportRequest(archivePath: archivePath);
+  return BottleArchiveImportRequest(
+    archivePath: BottleArchivePath(archivePath),
+  );
 }
 
 BottleId? parseJsonBottleDeleteCommand(List<String> arguments) {
@@ -130,7 +138,10 @@ BottleRenameRequest? parseJsonBottleRenameRequest(List<String> arguments) {
     return null;
   }
 
-  return BottleRenameRequest(bottleId: bottleId, name: name);
+  return BottleRenameRequest(
+    bottleId: BottleId(bottleId),
+    name: BottleName(name),
+  );
 }
 
 BottleMoveRequest? parseJsonBottleMoveRequest(List<String> arguments) {
@@ -149,7 +160,10 @@ BottleMoveRequest? parseJsonBottleMoveRequest(List<String> arguments) {
     return null;
   }
 
-  return BottleMoveRequest(bottleId: bottleId, path: path);
+  return BottleMoveRequest(
+    bottleId: BottleId(bottleId),
+    path: BottlePath(path),
+  );
 }
 
 WindowsVersionUpdateRequest? parseJsonWindowsVersionUpdateRequest(
@@ -171,8 +185,8 @@ WindowsVersionUpdateRequest? parseJsonWindowsVersionUpdateRequest(
   }
 
   return WindowsVersionUpdateRequest(
-    bottleId: bottleId,
-    windowsVersion: windowsVersion,
+    bottleId: BottleId(bottleId),
+    windowsVersion: WindowsVersion(windowsVersion),
   );
 }
 
@@ -204,7 +218,7 @@ RuntimeSettingsUpdateRequest? parseJsonRuntimeSettingsUpdateRequest(
   return bottleRuntimeSettingsFromJson(decoded)
       .map(
         (runtimeSettings) => RuntimeSettingsUpdateRequest(
-          bottleId: bottleId,
+          bottleId: BottleId(bottleId),
           runtimeSettings: runtimeSettings,
         ),
       )

@@ -27,7 +27,7 @@ class FileBottleRepositoryMutationOperations {
       bottleDirectory: Option.of(bottleDirectory),
     );
     if (fileBottlePathExists(bottle.path.value)) {
-      return BottleCreateConflict(bottle.id.value);
+      return BottleCreateConflict(bottle.id);
     }
 
     final writeResult = ioResult(() {
@@ -43,7 +43,7 @@ class FileBottleRepositoryMutationOperations {
   BottleDeleteResult deleteBottle(BottleId id) {
     return findBottle(id).fold<BottleDeleteResult>(
       BottleDeleteFailed.new,
-      (bottle) => bottle.match(() => BottleDeleteMissing(id.value), (bottle) {
+      (bottle) => bottle.match(() => BottleDeleteMissing(id), (bottle) {
         final deleteResult = ioResult(() {
           deleteFileBottleDirectoryIfPresent(bottle.path.value);
         });
@@ -58,108 +58,99 @@ class FileBottleRepositoryMutationOperations {
   BottleRenameResult renameBottle(BottleRenameRequest request) {
     return findBottle(request.bottleId).fold<BottleRenameResult>(
       BottleRenameFailed.new,
-      (bottle) => bottle.match(
-        () => BottleRenameMissing(request.bottleId.value),
-        (bottle) {
-          final renamed = renamedFileBottle(
-            bottle: bottle,
-            name: request.name.value,
-            dataHome: dataHome,
-            bottleDirectory: Option.of(bottleDirectory),
-          );
-          if (renamed.id.value != bottle.id.value &&
-              fileBottleDirectoryExists(renamed.path.value)) {
-            return BottleRenameConflict(renamed.id.value);
-          }
-
-          final writeResult = ioResult(() {
-            moveFileBottleDirectoryIfChanged(
-              from: bottle.path.value,
-              to: renamed.path.value,
+      (bottle) =>
+          bottle.match(() => BottleRenameMissing(request.bottleId), (bottle) {
+            final renamed = renamedFileBottle(
+              bottle: bottle,
+              name: request.name.value,
+              dataHome: dataHome,
+              bottleDirectory: Option.of(bottleDirectory),
             );
-            writeBottleMetadata(renamed);
-          });
-          return writeResult.fold<BottleRenameResult>(
-            BottleRenameFailed.new,
-            (_) => BottleRenamed(renamed),
-          );
-        },
-      ),
+            if (renamed.id.value != bottle.id.value &&
+                fileBottleDirectoryExists(renamed.path.value)) {
+              return BottleRenameConflict(renamed.id);
+            }
+
+            final writeResult = ioResult(() {
+              moveFileBottleDirectoryIfChanged(
+                from: bottle.path.value,
+                to: renamed.path.value,
+              );
+              writeBottleMetadata(renamed);
+            });
+            return writeResult.fold<BottleRenameResult>(
+              BottleRenameFailed.new,
+              (_) => BottleRenamed(renamed),
+            );
+          }),
     );
   }
 
   BottleMoveResult moveBottle(BottleMoveRequest request) {
     return findBottle(request.bottleId).fold<BottleMoveResult>(
       BottleMoveFailed.new,
-      (bottle) => bottle.match(
-        () => BottleMoveMissing(request.bottleId.value),
-        (bottle) {
-          final destinationPath = request.path.value;
-          if (normalizeFilesystemPath(destinationPath) !=
-                  normalizeFilesystemPath(bottle.path.value) &&
-              fileBottleDirectoryExists(destinationPath)) {
-            return BottleMoveConflict(destinationPath);
-          }
+      (bottle) =>
+          bottle.match(() => BottleMoveMissing(request.bottleId), (bottle) {
+            final destinationPath = request.path.value;
+            if (normalizeFilesystemPath(destinationPath) !=
+                    normalizeFilesystemPath(bottle.path.value) &&
+                fileBottleDirectoryExists(destinationPath)) {
+              return BottleMoveConflict(BottlePath(destinationPath));
+            }
 
-          final moved = bottle.copyWith(path: request.path);
+            final moved = bottle.copyWith(path: request.path);
 
-          final writeResult = ioResult(() {
-            moveFileBottleDirectoryIfChanged(
-              from: bottle.path.value,
-              to: destinationPath,
+            final writeResult = ioResult(() {
+              moveFileBottleDirectoryIfChanged(
+                from: bottle.path.value,
+                to: destinationPath,
+              );
+              writeBottleMetadata(moved);
+            });
+            return writeResult.fold<BottleMoveResult>(
+              BottleMoveFailed.new,
+              (_) => BottleMoved(moved),
             );
-            writeBottleMetadata(moved);
-          });
-          return writeResult.fold<BottleMoveResult>(
-            BottleMoveFailed.new,
-            (_) => BottleMoved(moved),
-          );
-        },
-      ),
+          }),
     );
   }
 
   BottleUpdateResult setWindowsVersion(WindowsVersionUpdateRequest request) {
     return findBottle(request.bottleId).fold<BottleUpdateResult>(
       BottleUpdateFailed.new,
-      (bottle) => bottle.match(
-        () => BottleUpdateMissing(request.bottleId.value),
-        (bottle) {
-          final updated = bottle.copyWith(
-            windowsVersion: request.windowsVersion,
-          );
+      (bottle) => bottle.match(() => BottleUpdateMissing(request.bottleId), (
+        bottle,
+      ) {
+        final updated = bottle.copyWith(windowsVersion: request.windowsVersion);
 
-          final writeResult = ioResult(() {
-            writeBottleMetadata(updated);
-          });
-          return writeResult.fold<BottleUpdateResult>(
-            BottleUpdateFailed.new,
-            (_) => BottleUpdated(updated),
-          );
-        },
-      ),
+        final writeResult = ioResult(() {
+          writeBottleMetadata(updated);
+        });
+        return writeResult.fold<BottleUpdateResult>(
+          BottleUpdateFailed.new,
+          (_) => BottleUpdated(updated),
+        );
+      }),
     );
   }
 
   BottleUpdateResult setRuntimeSettings(RuntimeSettingsUpdateRequest request) {
     return findBottle(request.bottleId).fold<BottleUpdateResult>(
       BottleUpdateFailed.new,
-      (bottle) => bottle.match(
-        () => BottleUpdateMissing(request.bottleId.value),
-        (bottle) {
-          final updated = bottle.copyWith(
-            runtimeSettings: request.runtimeSettings,
-          );
+      (bottle) =>
+          bottle.match(() => BottleUpdateMissing(request.bottleId), (bottle) {
+            final updated = bottle.copyWith(
+              runtimeSettings: request.runtimeSettings,
+            );
 
-          final writeResult = ioResult(() {
-            writeBottleMetadata(updated);
-          });
-          return writeResult.fold<BottleUpdateResult>(
-            BottleUpdateFailed.new,
-            (_) => BottleUpdated(updated),
-          );
-        },
-      ),
+            final writeResult = ioResult(() {
+              writeBottleMetadata(updated);
+            });
+            return writeResult.fold<BottleUpdateResult>(
+              BottleUpdateFailed.new,
+              (_) => BottleUpdated(updated),
+            );
+          }),
     );
   }
 }

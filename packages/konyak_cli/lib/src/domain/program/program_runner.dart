@@ -267,7 +267,7 @@ class ProgramRunPlanner {
 
   List<ProgramRunRequest> planWindowsVersionRegistryUpdates({
     required BottleRecord bottle,
-    required String windowsVersion,
+    required WindowsVersion windowsVersion,
   }) {
     final updates = windowsVersionRegistryUpdates(windowsVersion);
 

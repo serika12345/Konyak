@@ -22,10 +22,10 @@ class FileBottleRepositoryProgramOperations {
     return findBottle(request.bottleId).fold<ProgramPinResult>(
       ProgramPinResult.failed,
       (bottle) => bottle.match(
-        () => ProgramPinResult.missing(request.bottleId.value),
+        () => ProgramPinResult.missing(request.bottleId),
         (bottle) {
-          if (hasPinnedProgram(bottle, request.programPath.value)) {
-            return ProgramPinResult.conflict(request.programPath.value);
+          if (hasPinnedProgram(bottle, request.programPath)) {
+            return ProgramPinResult.conflict(request.programPath);
           }
 
           final updated = bottleWithPinnedProgram(
@@ -50,17 +50,15 @@ class FileBottleRepositoryProgramOperations {
     return findBottle(request.bottleId).fold<ProgramUpdateResult>(
       ProgramUpdateResult.failed,
       (bottle) => bottle.match(
-        () => ProgramUpdateResult.missingBottle(request.bottleId.value),
+        () => ProgramUpdateResult.missingBottle(request.bottleId),
         (bottle) {
-          if (!hasPinnedProgram(bottle, request.programPath.value)) {
-            return ProgramUpdateResult.missingProgram(
-              request.programPath.value,
-            );
+          if (!hasPinnedProgram(bottle, request.programPath)) {
+            return ProgramUpdateResult.missingProgram(request.programPath);
           }
 
           final updated = bottleWithoutPinnedProgram(
             bottle,
-            request.programPath.value,
+            request.programPath,
           );
 
           final writeResult = ioResult(() {
@@ -79,12 +77,10 @@ class FileBottleRepositoryProgramOperations {
     return findBottle(request.bottleId).fold<ProgramUpdateResult>(
       ProgramUpdateResult.failed,
       (bottle) => bottle.match(
-        () => ProgramUpdateResult.missingBottle(request.bottleId.value),
+        () => ProgramUpdateResult.missingBottle(request.bottleId),
         (bottle) {
-          if (!hasPinnedProgram(bottle, request.programPath.value)) {
-            return ProgramUpdateResult.missingProgram(
-              request.programPath.value,
-            );
+          if (!hasPinnedProgram(bottle, request.programPath)) {
+            return ProgramUpdateResult.missingProgram(request.programPath);
           }
 
           final updated = bottleWithRenamedPinnedProgram(bottle, request);
@@ -107,7 +103,7 @@ class FileBottleRepositoryProgramOperations {
     return findBottle(request.bottleId).fold<ProgramSettingsReadResult>(
       ProgramSettingsReadResult.failed,
       (bottle) => bottle.match(
-        () => ProgramSettingsReadResult.missingBottle(request.bottleId.value),
+        () => ProgramSettingsReadResult.missingBottle(request.bottleId),
         (bottle) {
           final readResult = ioResult(
             () => readProgramSettingsJson(
@@ -132,7 +128,7 @@ class FileBottleRepositoryProgramOperations {
     return findBottle(request.bottleId).fold<ProgramSettingsUpdateResult>(
       ProgramSettingsUpdateResult.failed,
       (bottle) => bottle.match(
-        () => ProgramSettingsUpdateResult.missingBottle(request.bottleId.value),
+        () => ProgramSettingsUpdateResult.missingBottle(request.bottleId),
         (bottle) {
           final writeResult = ioResult(() {
             writeProgramSettingsJson(

@@ -21,7 +21,7 @@ class FileBottleRepositoryArchiveOperations {
     return findBottle(request.bottleId).fold(
       BottleArchiveExportFailed.new,
       (bottle) => bottle.match(
-        () => BottleArchiveExportMissing(request.bottleId.value),
+        () => BottleArchiveExportMissing(request.bottleId),
         (bottle) => writeBottleArchive(
           bottle: bottle,
           archivePath: request.archivePath.value,

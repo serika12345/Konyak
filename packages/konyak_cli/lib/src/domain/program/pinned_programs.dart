@@ -7,8 +7,8 @@ import '../shared/domain_value_objects.dart';
 import 'program_catalog_models.dart';
 import 'program_mutation_models.dart';
 
-bool hasPinnedProgram(BottleRecord bottle, String programPath) {
-  final normalizedProgramPath = normalizeFilesystemPath(programPath);
+bool hasPinnedProgram(BottleRecord bottle, ProgramPath programPath) {
+  final normalizedProgramPath = normalizeFilesystemPath(programPath.value);
   return bottle.pinnedPrograms.any(
     (program) => _isPinnedProgramPath(program, normalizedProgramPath),
   );
@@ -25,7 +25,7 @@ BottleRecord bottleWithPinnedProgram(
 }) {
   final metadata = programMetadataExtractor.extract(
     bottle: bottle,
-    programPath: request.programPath.value,
+    programPath: request.programPath,
   );
 
   return bottle.copyWith(
@@ -56,7 +56,7 @@ BottleRecord bottleWithPinnedProgramIcons(
 
         final metadata = programMetadataExtractor.extract(
           bottle: bottle,
-          programPath: program.path.value,
+          programPath: program.path,
         );
         final iconPath = metadata.match(
           () => const Option<ProgramIconPath>.none(),
@@ -89,7 +89,7 @@ BottleRecord bottleWithoutMissingBottleLocalPinnedPrograms(
   final pinnedPrograms = bottle.pinnedPrograms
       .where(
         (program) =>
-            !_isBottleLocalPinnedProgramPath(bottle, program.path.value) ||
+            !_isBottleLocalPinnedProgramPath(bottle, program.path) ||
             isPinnedProgramAvailable(program),
       )
       .toList(growable: false);
@@ -106,22 +106,25 @@ bool isLivePinnedProgram(
   PinnedProgramRecord program, {
   required bool Function(PinnedProgramRecord program) isPinnedProgramAvailable,
 }) {
-  return !_isBottleLocalPinnedProgramPath(bottle, program.path.value) ||
+  return !_isBottleLocalPinnedProgramPath(bottle, program.path) ||
       isPinnedProgramAvailable(program);
 }
 
-bool _isBottleLocalPinnedProgramPath(BottleRecord bottle, String programPath) {
+bool _isBottleLocalPinnedProgramPath(
+  BottleRecord bottle,
+  ProgramPath programPath,
+) {
   return isPathWithinRoot(
-    path: normalizeFilesystemPath(programPath),
+    path: normalizeFilesystemPath(programPath.value),
     root: normalizeFilesystemPath(bottle.path.value),
   );
 }
 
 BottleRecord bottleWithoutPinnedProgram(
   BottleRecord bottle,
-  String programPath,
+  ProgramPath programPath,
 ) {
-  final normalizedProgramPath = normalizeFilesystemPath(programPath);
+  final normalizedProgramPath = normalizeFilesystemPath(programPath.value);
   return bottle.copyWith(
     pinnedPrograms: bottle.pinnedPrograms
         .where(

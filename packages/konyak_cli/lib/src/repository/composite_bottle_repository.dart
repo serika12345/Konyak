@@ -85,7 +85,7 @@ class CompositeBottleRepository implements BottleRepository {
     return findBottle(request.bottleId).fold(
       BottleArchiveExportFailed.new,
       (bottle) => bottle.match(
-        () => BottleArchiveExportMissing(request.bottleId.value),
+        () => BottleArchiveExportMissing(request.bottleId),
         (bottle) => writeBottleArchive(
           bottle: bottle,
           archivePath: request.archivePath.value,
@@ -161,7 +161,7 @@ class CompositeBottleRepository implements BottleRepository {
       }
     }
 
-    return ProgramSettingsReadResult.missingBottle(request.bottleId.value);
+    return ProgramSettingsReadResult.missingBottle(request.bottleId);
   }
 
   @override
