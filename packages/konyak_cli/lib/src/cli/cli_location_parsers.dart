@@ -9,7 +9,7 @@ class BottleLocationOpenCliRequest {
   });
 
   final BottleId bottleId;
-  final String location;
+  final BottleLocation location;
 }
 
 BottleLocationOpenCliRequest? parseJsonBottleLocationOpenCliRequest(
@@ -25,12 +25,15 @@ BottleLocationOpenCliRequest? parseJsonBottleLocationOpenCliRequest(
   }
 
   final bottleId = requiredCliBottleId(results);
-  final location = requiredCliOption(results, 'location');
-  if (bottleId == null || location == null) {
+  final locationValue = requiredCliOption(results, 'location');
+  if (bottleId == null || locationValue == null) {
     return null;
   }
 
-  return BottleLocationOpenCliRequest(bottleId: bottleId, location: location);
+  return BottleLocationOpenCliRequest(
+    bottleId: bottleId,
+    location: BottleLocation(locationValue),
+  );
 }
 
 class ProgramLocationOpenCliRequest {

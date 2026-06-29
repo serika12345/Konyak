@@ -63,13 +63,13 @@ CliResult openBottleLocationJsonResult(
           exitCode: 65,
           code: 'unsupportedBottleLocation',
           message: 'Bottle location is not supported.',
-          extra: <String, Object?>{'location': request.location},
+          extra: <String, Object?>{'location': request.location.value},
         ),
         (path) => switch (opener.openPath(PathOpenTarget(path))) {
           PathOpenCompleted() => jsonSuccess(<String, Object?>{
             'openedLocation': <String, Object?>{
               'bottleId': request.bottleId.value,
-              'location': request.location,
+              'location': request.location.value,
               'path': path,
             },
           }),
@@ -79,7 +79,7 @@ CliResult openBottleLocationJsonResult(
             message: message,
             extra: <String, Object?>{
               'bottleId': request.bottleId.value,
-              'location': request.location,
+              'location': request.location.value,
               'path': path,
             },
           ),

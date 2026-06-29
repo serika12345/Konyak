@@ -5,6 +5,7 @@ import 'package:konyak_cli/src/domain/program/program_run_command_support.dart';
 import 'package:konyak_cli/src/domain/program/program_run_terminal_requests.dart';
 import 'package:konyak_cli/src/io/io_result.dart';
 import 'package:konyak_cli/src/io/runtime_catalog_factories_io.dart';
+import 'package:konyak_cli/src/platform/platform_location_paths.dart';
 import 'package:konyak_cli/src/repository/memory_bottle_repository.dart';
 import 'package:test/test.dart';
 
@@ -402,6 +403,24 @@ void main() {
     expect(dxvk.dxvk, isTrue);
     expect(dxvk.dxmt, isFalse);
     expect(dxvk.dxrEnabled, isFalse);
+  });
+
+  test('bottle location paths use semantic value objects', () {
+    final bottle = BottleRecord(
+      id: 'steam',
+      name: 'Steam',
+      path: '/bottles/steam',
+      windowsVersion: 'win10',
+    );
+
+    expect(
+      bottleLocationPath(bottle: bottle, location: BottleLocation('c-drive')),
+      Option.of('/bottles/steam/drive_c'),
+    );
+    expect(
+      bottleLocationPath(bottle: bottle, location: BottleLocation('logs')),
+      const Option<String>.none(),
+    );
   });
 
   test('app settings expose default bottle path as a value object', () {

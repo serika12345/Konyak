@@ -1099,6 +1099,58 @@ def require_typed_runtime_settings_setter_boundary() -> None:
             )
 
 
+def require_typed_bottle_location_boundary() -> None:
+    location_path = "packages/konyak_cli/lib/src/platform/platform_location_paths.dart"
+    location_source = read_text(location_path)
+    expected_location_terms = [
+        "required BottleLocation location",
+        "final normalized = location.value.trim().toLowerCase();",
+    ]
+    for expected in expected_location_terms:
+        if expected not in location_source:
+            raise AssertionError(
+                "Bottle location path helpers must preserve typed locations: "
+                f"{expected}"
+            )
+
+    if "required String location" in location_source:
+        raise AssertionError(
+            "Bottle location path helpers must not expose primitive locations"
+        )
+
+    parser_path = "packages/konyak_cli/lib/src/cli/cli_location_parsers.dart"
+    parser_source = read_text(parser_path)
+    expected_parser_terms = [
+        "final BottleLocation location;",
+        "location: BottleLocation(locationValue),",
+    ]
+    for expected in expected_parser_terms:
+        if expected not in parser_source:
+            raise AssertionError(
+                "Bottle location CLI parser must convert locations once at "
+                f"the boundary: {expected}"
+            )
+
+    if "final String location;" in parser_source:
+        raise AssertionError(
+            "Bottle location CLI request must not store primitive locations"
+        )
+
+    handler_path = (
+        "packages/konyak_cli/lib/src/cli/cli_location_winetricks_handlers.dart"
+    )
+    handler_source = read_text(handler_path)
+    for expected in [
+        "location: request.location,",
+        "'location': request.location.value",
+    ]:
+        if expected not in handler_source:
+            raise AssertionError(
+                "Bottle location handler must keep typed locations until JSON "
+                f"projection: {expected}"
+            )
+
+
 def require_wine_process_termination_cli_json_projection() -> None:
     domain_path = "packages/konyak_cli/lib/src/domain/program/program_run_models.dart"
     domain = read_text(domain_path)
@@ -2794,6 +2846,7 @@ def main() -> None:
     require_typed_runtime_id_service_boundaries()
     require_typed_bottle_repository_id_boundary()
     require_typed_runtime_settings_setter_boundary()
+    require_typed_bottle_location_boundary()
     require_wine_process_termination_cli_json_projection()
     require_program_catalog_cli_json_projection()
     require_graphics_backend_hints_cli_json_projection()

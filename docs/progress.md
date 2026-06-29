@@ -13,6 +13,32 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-29 17:33 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Tighten the functional-core boundary for bottle location
+  requests.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: current commit (`Type bottle location requests`).
+- Purpose: keep bottle location path requests typed as `BottleLocation` inside
+  CLI/domain-facing location helpers instead of passing raw `--location`
+  strings through the platform helper.
+- Completed work: added a failing typed bottle-location fixture; changed
+  `BottleLocationOpenCliRequest.location`, the CLI location parser,
+  `bottleLocationPath`, and the location handler to preserve `BottleLocation`
+  until JSON projection; and added governance coverage for the boundary.
+- Remaining work: broader functional-core tightening remains in `docs/todo.md`,
+  including other primitive request/planner APIs.
+- Next action: continue with the next narrow primitive-boundary cleanup.
+- Verification: observed `cd packages/konyak_cli && dart test
+  test/domain_immutability_test.dart --name "bottle location paths use semantic
+  value objects"` fail before implementation because `bottleLocationPath` still
+  accepted raw `String`; after implementation the same focused test and `dart
+  analyze --fatal-infos` passed; focused open-bottle-location CLI contract
+  tests, `just verify-governance`, `just cli-test`, `just verify-safety`,
+  `just format-check`, and `just lint` passed.
+
 - Timestamp: 2026-06-29 17:05 JST
 - State: `completed`
 - Branch: `main`

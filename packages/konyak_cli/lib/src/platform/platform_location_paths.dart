@@ -1,13 +1,14 @@
 import 'package:fpdart/fpdart.dart';
 
 import '../domain/bottle/bottle_models.dart';
+import '../domain/shared/domain_value_objects.dart';
 import '../shared/common_helpers.dart';
 
 Option<String> bottleLocationPath({
   required BottleRecord bottle,
-  required String location,
+  required BottleLocation location,
 }) {
-  final normalized = location.trim().toLowerCase();
+  final normalized = location.value.trim().toLowerCase();
   return switch (normalized) {
     'root' => Option.of(bottle.path.value),
     'c-drive' => Option.of(joinPath(bottle.path.value, const ['drive_c'])),
