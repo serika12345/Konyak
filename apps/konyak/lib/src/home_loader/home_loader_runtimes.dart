@@ -6,6 +6,7 @@ import '../app/app_platform.dart';
 import '../app/runtime/runtime_platform.dart';
 import '../app/startup/startup_update_checker.dart';
 import '../app/utils/update_labels.dart';
+import '../cli/konyak_cli_client.dart' show NotifyRuntimeInstallProgress;
 import '../cli/konyak_cli_process_runner.dart';
 import '../cli/konyak_cli_read_commands.dart';
 import '../cli/konyak_cli_runtime_commands.dart';
@@ -288,8 +289,16 @@ extension KonyakHomeLoaderRuntimes on KonyakHomeLoaderState {
 
   Future<RuntimeInstallLoadResult> installManagedRuntimeForPlatform() {
     return widget.platform.isMacOS
-        ? widget.cliClient.installMacosWine(onProgress: setRuntimeProgress)
-        : widget.cliClient.installLinuxWine(onProgress: setRuntimeProgress);
+        ? widget.cliClient.installMacosWine(
+            progressObservation: NotifyRuntimeInstallProgress(
+              setRuntimeProgress,
+            ),
+          )
+        : widget.cliClient.installLinuxWine(
+            progressObservation: NotifyRuntimeInstallProgress(
+              setRuntimeProgress,
+            ),
+          );
   }
 
   void setRuntimeProgress(RuntimeInstallProgress progress) {
@@ -380,11 +389,15 @@ extension KonyakHomeLoaderRuntimes on KonyakHomeLoaderState {
       result = widget.platform.isMacOS
           ? await widget.cliClient.installMacosWine(
               reinstall: reinstall,
-              onProgress: setRuntimeProgress,
+              progressObservation: NotifyRuntimeInstallProgress(
+                setRuntimeProgress,
+              ),
             )
           : await widget.cliClient.installLinuxWine(
               reinstall: reinstall,
-              onProgress: setRuntimeProgress,
+              progressObservation: NotifyRuntimeInstallProgress(
+                setRuntimeProgress,
+              ),
             );
     } finally {
       if (mounted) {

@@ -176,26 +176,12 @@ RuntimeInstallParseResult parseRuntimeInstallCommandPayload(String stdout) {
   return parsed;
 }
 
-String processOutputToString(Object? output) {
-  if (output == null) {
-    return '';
-  }
-
+String processOutputToString(Object output) {
   if (output is String) {
     return output;
   }
 
   return output.toString();
-}
-
-String? firstNonEmpty(String? first, String? second, [String? third]) {
-  for (final value in <String?>[first, second, third]) {
-    if (value != null && value.trim().isNotEmpty) {
-      return value;
-    }
-  }
-
-  return null;
 }
 
 String joinPath(String root, Iterable<String> components) {

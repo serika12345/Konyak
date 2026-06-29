@@ -13,6 +13,38 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-29 21:44 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Enforce JSON/user-input-only nullable policy in Flutter CLI
+  launch boundaries.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: current commit (`Restrict Flutter CLI nullable boundaries`).
+- Purpose: apply the clarified policy that nullable values are allowed only at
+  JSON and user-input boundaries, starting with launch configuration and process
+  execution state that currently uses nullable working-directory sentinels.
+- Completed work: replaced launch/process working-directory absence, process
+  run observation, runtime install progress observation, one-shot program
+  settings arguments, Wine-process termination scope, and launch non-empty
+  string selection with explicit variants; removed the shared nullable
+  `firstNonEmpty` helper; updated Flutter home-loader call sites and tests; and
+  narrowed the custom-lint nullable allowance from the whole
+  `apps/konyak/lib/src/cli` directory to direct JSON/result/process-input
+  boundary files.
+- Remaining work: continue applying the JSON/user-input-only nullable policy to
+  broader Flutter app boundaries such as home-loader and UI adapter files when
+  those areas are refactored.
+- Next action: review the remaining broad app nullable boundary prefixes
+  outside `apps/konyak/lib/src/cli` before tightening them file-by-file.
+- Verification: observed the focused CLI client tests fail before
+  implementation because the new process working-directory variants did not
+  exist; after implementation, `flutter test test/cli/konyak_cli_client_test.dart`,
+  `flutter pub run custom_lint`, `flutter analyze --fatal-infos`, `just
+  flutter-format-check`, `just flutter-analyze`, `just flutter-test`, `just
+  verify-governance`, `just verify-safety`, `just format-check`, and `just
+  lint` passed in the Nix dev shell.
+
 - Timestamp: 2026-06-29 21:34 JST
 - State: `completed`
 - Branch: `main`

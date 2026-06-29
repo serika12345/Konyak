@@ -28,7 +28,7 @@ extension KonyakHomeLoaderWineProcesses on KonyakHomeLoaderState {
 
   Future<void> terminateBottleProcesses(BottleSummary bottle) async {
     final result = await widget.cliClient.terminateWineProcesses(
-      bottleId: bottle.id,
+      scope: BottleWineProcesses(bottle.id),
     );
 
     if (!mounted) {

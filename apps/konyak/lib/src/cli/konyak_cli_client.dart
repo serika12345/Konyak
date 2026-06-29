@@ -33,12 +33,28 @@ export 'konyak_cli_wine_process_result_types.dart';
 export 'konyak_cli_winetricks_payload_parsers.dart';
 export 'konyak_cli_winetricks_result_types.dart';
 
+sealed class RuntimeInstallProgressObservation {
+  const RuntimeInstallProgressObservation();
+}
+
+final class IgnoreRuntimeInstallProgress
+    extends RuntimeInstallProgressObservation {
+  const IgnoreRuntimeInstallProgress();
+}
+
+final class NotifyRuntimeInstallProgress
+    extends RuntimeInstallProgressObservation {
+  const NotifyRuntimeInstallProgress(this.onProgress);
+
+  final void Function(RuntimeInstallProgress progress) onProgress;
+}
+
 final class KonyakCliClient {
   KonyakCliClient({
     required this.executable,
     List<String> baseArguments = const <String>[],
     Map<String, String> environment = const <String, String>{},
-    this.workingDirectory,
+    this.workingDirectory = const InheritedProcessWorkingDirectory(),
     required this.processRunner,
   }) : baseArguments = List.unmodifiable(baseArguments),
        environment = Map.unmodifiable(environment);
@@ -46,18 +62,19 @@ final class KonyakCliClient {
   final String executable;
   final List<String> baseArguments;
   final Map<String, String> environment;
-  final String? workingDirectory;
+  final ProcessWorkingDirectory workingDirectory;
   final ProcessRunner processRunner;
 
   Future<RuntimeInstallLoadResult> runtimeInstallResultFromCommand({
     required String command,
     List<String> arguments = const <String>[],
-    required void Function(RuntimeInstallProgress progress)? onProgress,
+    RuntimeInstallProgressObservation progressObservation =
+        const IgnoreRuntimeInstallProgress(),
   }) async {
     final result = await runRuntimeInstall(
       command: command,
       arguments: arguments,
-      onProgress: onProgress,
+      progressObservation: progressObservation,
     );
     final parsed = parseRuntimeInstallCommandPayload(result.stdout);
 
@@ -83,9 +100,18 @@ final class KonyakCliClient {
   Future<ProgramRunLoadResult> programRunResultFromCommand({
     required List<String> arguments,
     required String Function(ProcessRunResult result) failureMessage,
-    void Function(int processId)? onStarted,
+    ProcessStartObserver startObserver = const IgnoreProcessStart(),
   }) async {
-    final result = await run(arguments, onStarted: onStarted);
+    final result = await run(
+      arguments,
+      observation: switch (startObserver) {
+        IgnoreProcessStart() => const UnobservedProcessRun(),
+        NotifyProcessStart() => ObservedProcessRun(
+          startObserver: startObserver,
+          stdoutObserver: const IgnoreProcessStdout(),
+        ),
+      },
+    );
     final parsed = parseProgramRunPayload(result.stdout);
 
     return switch (parsed) {
@@ -134,46 +160,53 @@ final class KonyakCliClient {
 
   Future<ProcessRunResult> run(
     List<String> arguments, {
-    void Function(int processId)? onStarted,
+    ProcessRunObservation observation = const UnobservedProcessRun(),
   }) {
     return processRunner.run(
       executable,
       <String>[...baseArguments, ...arguments],
       workingDirectory: workingDirectory,
       environment: <String, String>{...environment, ...launcherEnvironment()},
-      onStarted: onStarted,
+      observation: observation,
     );
   }
 
   Future<ProcessRunResult> runRuntimeInstall({
     required String command,
     List<String> arguments = const <String>[],
-    required void Function(RuntimeInstallProgress progress)? onProgress,
+    RuntimeInstallProgressObservation progressObservation =
+        const IgnoreRuntimeInstallProgress(),
   }) {
-    if (onProgress == null) {
-      return run(<String>[command, ...arguments, '--json']);
-    }
-
-    return processRunner.run(
-      executable,
-      <String>[
-        ...baseArguments,
+    return switch (progressObservation) {
+      IgnoreRuntimeInstallProgress() => run(<String>[
         command,
         ...arguments,
-        '--progress-json',
         '--json',
-      ],
-      workingDirectory: workingDirectory,
-      environment: <String, String>{...environment, ...launcherEnvironment()},
-      onStdoutLine: (line) {
-        switch (parseRuntimeInstallProgressPayload(line)) {
-          case ParsedRuntimeInstallProgress(:final progress):
-            onProgress(progress);
-          case InvalidRuntimeInstallProgress():
-            break;
-        }
-      },
-    );
+      ]),
+      NotifyRuntimeInstallProgress(:final onProgress) => processRunner.run(
+        executable,
+        <String>[
+          ...baseArguments,
+          command,
+          ...arguments,
+          '--progress-json',
+          '--json',
+        ],
+        workingDirectory: workingDirectory,
+        environment: <String, String>{...environment, ...launcherEnvironment()},
+        observation: ObservedProcessRun(
+          startObserver: const IgnoreProcessStart(),
+          stdoutObserver: NotifyProcessStdoutLine((line) {
+            switch (parseRuntimeInstallProgressPayload(line)) {
+              case ParsedRuntimeInstallProgress(:final progress):
+                onProgress(progress);
+              case InvalidRuntimeInstallProgress():
+                break;
+            }
+          }),
+        ),
+      ),
+    };
   }
 
   Map<String, String> launcherEnvironment() {
@@ -183,10 +216,11 @@ final class KonyakCliClient {
         baseArguments,
       ),
     };
-    final launcherWorkingDirectory = workingDirectory;
-    if (launcherWorkingDirectory != null) {
-      environment['KONYAK_PINNED_PROGRAM_LAUNCHER_WORKING_DIRECTORY'] =
-          launcherWorkingDirectory;
+    switch (workingDirectory) {
+      case InheritedProcessWorkingDirectory():
+        break;
+      case ConfiguredProcessWorkingDirectory(:final path):
+        environment['KONYAK_PINNED_PROGRAM_LAUNCHER_WORKING_DIRECTORY'] = path;
     }
     return environment;
   }

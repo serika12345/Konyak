@@ -107,10 +107,10 @@ final class _NoopProcessRunner implements ProcessRunner {
   Future<ProcessRunResult> run(
     String executable,
     List<String> arguments, {
-    String? workingDirectory,
+    ProcessWorkingDirectory workingDirectory =
+        const InheritedProcessWorkingDirectory(),
     Map<String, String> environment = const <String, String>{},
-    void Function(int processId)? onStarted,
-    void Function(String line)? onStdoutLine,
+    ProcessRunObservation observation = const UnobservedProcessRun(),
   }) async {
     return const ProcessRunResult(exitCode: 0, stdout: '', stderr: '');
   }

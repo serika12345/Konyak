@@ -6,33 +6,51 @@ import 'konyak_cli_bottle_payload_parsers.dart';
 import 'konyak_cli_bottle_result_types.dart';
 import 'konyak_cli_client.dart' show KonyakCliClient;
 import 'konyak_cli_failure_messages.dart';
+import 'konyak_cli_process_runner.dart';
 import 'konyak_cli_program_payload_parsers.dart';
 import 'konyak_cli_program_result_types.dart';
 import 'konyak_cli_result_helpers.dart';
+
+sealed class ProgramRunSettingsArgument {
+  const ProgramRunSettingsArgument();
+}
+
+final class NoProgramRunSettings extends ProgramRunSettingsArgument {
+  const NoProgramRunSettings();
+}
+
+final class UseProgramRunSettings extends ProgramRunSettingsArgument {
+  const UseProgramRunSettings(this.settings);
+
+  final ProgramSettingsSummary settings;
+}
 
 extension KonyakCliProgramCommands on KonyakCliClient {
   Future<ProgramRunLoadResult> runProgram({
     required String bottleId,
     required String programPath,
-    ProgramSettingsSummary? settings,
-    void Function(int processId)? onStarted,
+    ProgramRunSettingsArgument settings = const NoProgramRunSettings(),
+    ProcessStartObserver startObserver = const IgnoreProcessStart(),
   }) {
     final runArguments = <String>[
       'run-program',
       bottleId,
       '--program',
       programPath,
-      if (settings != null) ...[
-        '--settings-json',
-        jsonEncode(settings.toJson()),
-      ],
+      ...switch (settings) {
+        NoProgramRunSettings() => const <String>[],
+        UseProgramRunSettings(:final settings) => [
+          '--settings-json',
+          jsonEncode(settings.toJson()),
+        ],
+      },
       '--json',
     ];
 
     return programRunResultFromCommand(
       arguments: runArguments,
       failureMessage: programRunFailureMessage,
-      onStarted: onStarted,
+      startObserver: startObserver,
     );
   }
 
@@ -138,7 +156,7 @@ extension KonyakCliProgramCommands on KonyakCliClient {
   Future<ProgramRunLoadResult> runBottleCommand({
     required String bottleId,
     required String command,
-    void Function(int processId)? onStarted,
+    ProcessStartObserver startObserver = const IgnoreProcessStart(),
   }) {
     return programRunResultFromCommand(
       arguments: [
@@ -150,7 +168,7 @@ extension KonyakCliProgramCommands on KonyakCliClient {
       ],
       failureMessage: (result) =>
           commandFailureMessage('run-bottle-command', result),
-      onStarted: onStarted,
+      startObserver: startObserver,
     );
   }
 

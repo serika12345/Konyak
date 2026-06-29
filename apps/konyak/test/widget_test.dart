@@ -471,10 +471,10 @@ final class _QueuedProcessRunner implements ProcessRunner {
   Future<ProcessRunResult> run(
     String executable,
     List<String> arguments, {
-    String? workingDirectory,
+    ProcessWorkingDirectory workingDirectory =
+        const InheritedProcessWorkingDirectory(),
     Map<String, String> environment = const <String, String>{},
-    void Function(int processId)? onStarted,
-    void Function(String line)? onStdoutLine,
+    ProcessRunObservation observation = const UnobservedProcessRun(),
   }) async {
     argumentsLog.add(List.unmodifiable(arguments));
 
@@ -504,16 +504,29 @@ final class _FutureQueuedProcessRunner implements ProcessRunner {
   Future<ProcessRunResult> run(
     String executable,
     List<String> arguments, {
-    String? workingDirectory,
+    ProcessWorkingDirectory workingDirectory =
+        const InheritedProcessWorkingDirectory(),
     Map<String, String> environment = const <String, String>{},
-    void Function(int processId)? onStarted,
-    void Function(String line)? onStdoutLine,
+    ProcessRunObservation observation = const UnobservedProcessRun(),
   }) {
     argumentsLog.add(List.unmodifiable(arguments));
-    _onStdoutLine = onStdoutLine;
-    final processId = startedProcessId;
-    if (processId != null) {
-      onStarted?.call(processId);
+    switch (observation) {
+      case UnobservedProcessRun():
+        _onStdoutLine = null;
+      case ObservedProcessRun(:final startObserver, :final stdoutObserver):
+        _onStdoutLine = switch (stdoutObserver) {
+          IgnoreProcessStdout() => null,
+          NotifyProcessStdoutLine(:final onLine) => onLine,
+        };
+        final processId = startedProcessId;
+        switch (startObserver) {
+          case IgnoreProcessStart():
+            break;
+          case NotifyProcessStart(:final onStarted):
+            if (processId != null) {
+              onStarted(processId);
+            }
+        }
     }
 
     if (_results.isEmpty) {

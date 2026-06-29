@@ -50,9 +50,6 @@ verification output instead of checked-off backlog entries.
   - Extract pure Flutter home-loader state transitions from
     `KonyakHomeLoaderState` into immutable state/update helpers; keep the
     `StatefulWidget` as the I/O and lifecycle shell.
-  - After Flutter CLI adapter parser refactors stabilize, narrow the
-    `apps/konyak/lib/src/cli` nullable custom-lint allowance from the whole
-    directory to direct JSON parser and process-launch boundary files.
   - Remove hand-written `part` usage from CLI contract tests. Production code
     already rejects hand-written `part`; tests should not normalize that shape
     as the accepted large-file escape hatch.

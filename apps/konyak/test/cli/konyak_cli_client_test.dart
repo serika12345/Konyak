@@ -59,7 +59,9 @@ void main() {
       final client = KonyakCliClient(
         executable: '/env/flutter/bin/dart',
         baseArguments: const ['run', 'bin/konyak.dart'],
-        workingDirectory: '/repo/packages/konyak_cli',
+        workingDirectory: const ConfiguredProcessWorkingDirectory(
+          '/repo/packages/konyak_cli',
+        ),
         processRunner: runner,
       );
 
@@ -138,14 +140,23 @@ void main() {
       final client = KonyakCliClient(
         executable: 'dart',
         baseArguments: const ['run', 'bin/konyak.dart'],
-        workingDirectory: '/repo/packages/konyak_cli',
+        workingDirectory: const ConfiguredProcessWorkingDirectory(
+          '/repo/packages/konyak_cli',
+        ),
         processRunner: runner,
       );
 
       await client.listBottles();
 
       expect(runner.executable, 'dart');
-      expect(runner.workingDirectory, '/repo/packages/konyak_cli');
+      expect(
+        runner.workingDirectory,
+        isA<ConfiguredProcessWorkingDirectory>().having(
+          (directory) => directory.path,
+          'path',
+          '/repo/packages/konyak_cli',
+        ),
+      );
       expect(runner.arguments, const [
         'run',
         'bin/konyak.dart',
@@ -245,7 +256,14 @@ void main() {
 
     expect(client.executable, '/repo/.dart_tool/konyak/flutter-sdk/bin/dart');
     expect(client.baseArguments, const ['run', 'bin/konyak.dart']);
-    expect(client.workingDirectory, '/repo/packages/konyak_cli');
+    expect(
+      client.workingDirectory,
+      isA<ConfiguredProcessWorkingDirectory>().having(
+        (directory) => directory.path,
+        'path',
+        '/repo/packages/konyak_cli',
+      ),
+    );
   });
 
   test('passes development runtime defines to CLI commands', () async {
@@ -386,7 +404,14 @@ void main() {
 
     expect(client.executable, '/define/dart');
     expect(client.baseArguments, const ['run', 'bin/konyak.dart']);
-    expect(client.workingDirectory, '/define');
+    expect(
+      client.workingDirectory,
+      isA<ConfiguredProcessWorkingDirectory>().having(
+        (directory) => directory.path,
+        'path',
+        '/define',
+      ),
+    );
   });
 
   test('default CLI client prefers bundled executable over Dart script', () {
@@ -518,7 +543,7 @@ void main() {
 
       expect(client.executable, '/custom/dart');
       expect(client.baseArguments, const ['/custom/konyak.dart']);
-      expect(client.workingDirectory, isNull);
+      expect(client.workingDirectory, isA<InheritedProcessWorkingDirectory>());
     },
   );
 
@@ -572,9 +597,12 @@ void main() {
     final result = await const DartIoProcessRunner().run(
       'sh',
       const ['-c', r'printf "%s" "$$"'],
-      onStarted: (processId) {
-        startedProcessId = processId;
-      },
+      observation: ObservedProcessRun(
+        startObserver: NotifyProcessStart((processId) {
+          startedProcessId = processId;
+        }),
+        stdoutObserver: const IgnoreProcessStdout(),
+      ),
     );
 
     expect(result.exitCode, 0);
@@ -898,7 +926,7 @@ void main() {
     final client = KonyakCliClient(executable: 'konyak', processRunner: runner);
 
     final result = await client.installMacosWine(
-      onProgress: progressEvents.add,
+      progressObservation: NotifyRuntimeInstallProgress(progressEvents.add),
     );
 
     expect(runner.arguments, const [
@@ -1140,7 +1168,9 @@ void main() {
         processRunner: runner,
       );
 
-      final result = await client.terminateWineProcesses(bottleId: 'steam');
+      final result = await client.terminateWineProcesses(
+        scope: const BottleWineProcesses('steam'),
+      );
 
       expect(runner.arguments, const [
         'terminate-wine-processes',
@@ -1896,9 +1926,11 @@ void main() {
     await client.runProgram(
       bottleId: 'steam',
       programPath: '/downloads/setup.exe',
-      settings: ProgramSettingsSummary(
-        arguments: '-windowed',
-        environment: {'WINEDEBUG': '+seh'},
+      settings: UseProgramRunSettings(
+        ProgramSettingsSummary(
+          arguments: '-windowed',
+          environment: {'WINEDEBUG': '+seh'},
+        ),
       ),
     );
 
@@ -1941,10 +1973,12 @@ void main() {
     await client.runProgram(
       bottleId: 'steam',
       programPath: '/downloads/setup.exe',
-      settings: ProgramSettingsSummary(
-        logging: const ProgramLoggingSettingsSummary(
-          additionalWineLoggingChannels: '+relay',
-          logFilePath: '/tmp/setup.cxlog',
+      settings: UseProgramRunSettings(
+        ProgramSettingsSummary(
+          logging: const ProgramLoggingSettingsSummary(
+            additionalWineLoggingChannels: '+relay',
+            logFilePath: '/tmp/setup.cxlog',
+          ),
         ),
       ),
     );
@@ -1989,7 +2023,7 @@ void main() {
     await client.runProgram(
       bottleId: 'steam',
       programPath: '/downloads/setup.exe',
-      onStarted: startedProcessIds.add,
+      startObserver: NotifyProcessStart(startedProcessIds.add),
     );
 
     expect(startedProcessIds, const [31415]);
@@ -2393,9 +2427,9 @@ void main() {
       final result = await client.runBottleCommand(
         bottleId: 'steam',
         command: 'winecfg',
-        onStarted: (processId) {
+        startObserver: NotifyProcessStart((processId) {
           startedProcessId = processId;
-        },
+        }),
       );
 
       expect(runner.arguments, const [
@@ -2830,7 +2864,8 @@ final class _FakeProcessRunner implements ProcessRunner {
   final List<String> stdoutLines;
   final int? startedProcessId;
   String? executable;
-  String? workingDirectory;
+  ProcessWorkingDirectory workingDirectory =
+      const InheritedProcessWorkingDirectory();
   List<String> arguments = const [];
   Map<String, String> environment = const <String, String>{};
 
@@ -2838,23 +2873,38 @@ final class _FakeProcessRunner implements ProcessRunner {
   Future<ProcessRunResult> run(
     String executable,
     List<String> arguments, {
-    String? workingDirectory,
+    ProcessWorkingDirectory workingDirectory =
+        const InheritedProcessWorkingDirectory(),
     Map<String, String> environment = const <String, String>{},
-    void Function(int processId)? onStarted,
-    void Function(String line)? onStdoutLine,
+    ProcessRunObservation observation = const UnobservedProcessRun(),
   }) async {
     this.executable = executable;
     this.arguments = List.unmodifiable(arguments);
     this.workingDirectory = workingDirectory;
     this.environment = Map.unmodifiable(environment);
 
-    final processId = startedProcessId;
-    if (processId != null) {
-      onStarted?.call(processId);
-    }
+    switch (observation) {
+      case UnobservedProcessRun():
+        break;
+      case ObservedProcessRun(:final startObserver, :final stdoutObserver):
+        final processId = startedProcessId;
+        switch (startObserver) {
+          case IgnoreProcessStart():
+            break;
+          case NotifyProcessStart(:final onStarted):
+            if (processId != null) {
+              onStarted(processId);
+            }
+        }
 
-    for (final line in stdoutLines) {
-      onStdoutLine?.call(line);
+        switch (stdoutObserver) {
+          case IgnoreProcessStdout():
+            break;
+          case NotifyProcessStdoutLine(:final onLine):
+            for (final line in stdoutLines) {
+              onLine(line);
+            }
+        }
     }
 
     return result;

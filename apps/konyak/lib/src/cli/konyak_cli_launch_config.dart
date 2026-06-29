@@ -1,3 +1,4 @@
+import 'konyak_cli_process_runner.dart';
 import 'konyak_cli_result_helpers.dart';
 
 const bundleResourcesToken = '__KONYAK_BUNDLE_RESOURCES__';
@@ -48,7 +49,41 @@ final class KonyakCliLaunchConfig {
   final String executable;
   final List<String> baseArguments;
   final Map<String, String> environment;
-  final String? workingDirectory;
+  final ProcessWorkingDirectory workingDirectory;
+}
+
+sealed class _NonEmptyStringSelection {
+  const _NonEmptyStringSelection();
+}
+
+final class _SelectedNonEmptyString extends _NonEmptyStringSelection {
+  const _SelectedNonEmptyString(this.value);
+
+  final String value;
+}
+
+final class _NoNonEmptyString extends _NonEmptyStringSelection {
+  const _NoNonEmptyString();
+}
+
+sealed class _CliScriptInvocation {
+  const _CliScriptInvocation();
+}
+
+final class _DirectCliScriptInvocation extends _CliScriptInvocation {
+  const _DirectCliScriptInvocation(this.scriptPath);
+
+  final String scriptPath;
+}
+
+final class _DartRunCliScriptInvocation extends _CliScriptInvocation {
+  const _DartRunCliScriptInvocation({
+    required this.workingDirectory,
+    required this.runTarget,
+  });
+
+  final String workingDirectory;
+  final String runTarget;
 }
 
 KonyakCliLaunchConfig konyakCliLaunchConfig({
@@ -56,239 +91,259 @@ KonyakCliLaunchConfig konyakCliLaunchConfig({
   required String resolvedExecutable,
   required KonyakCliLaunchDefines defines,
 }) {
-  final configuredCliExecutable = firstNonEmpty(
+  final configuredCliExecutable = _firstNonEmptyString([
     defines.cliExecutable,
-    environment['KONYAK_CLI_EXECUTABLE'],
-  );
-  final bundleResources = resolveBundleResources(
+    _environmentValue(environment, 'KONYAK_CLI_EXECUTABLE'),
+  ]);
+  final bundleResources = _resolveBundleResources(
     configuredCliExecutable,
     environment,
     defines: defines,
     resolvedExecutable: resolvedExecutable,
   );
-  final runtimeEnvironment = runtimeEnvironmentOverrides(
+  final runtimeEnvironment = _runtimeEnvironmentOverrides(
     environment,
     defines: defines,
     bundleResources: bundleResources,
   );
 
-  final cliExecutable = resolvePackagedCliExecutable(
+  final cliExecutable = _resolvePackagedCliExecutable(
     configuredCliExecutable,
     bundleResources: bundleResources,
   );
-  if (cliExecutable != null) {
-    return KonyakCliLaunchConfig(
-      executable: cliExecutable,
-      baseArguments: const <String>[],
-      environment: runtimeEnvironment,
-      workingDirectory: null,
-    );
+  switch (cliExecutable) {
+    case _SelectedNonEmptyString(:final value):
+      return KonyakCliLaunchConfig(
+        executable: value,
+        baseArguments: const <String>[],
+        environment: runtimeEnvironment,
+        workingDirectory: const InheritedProcessWorkingDirectory(),
+      );
+    case _NoNonEmptyString():
+      break;
   }
 
   final cliScriptPath = resolveCliScriptPath(environment, defines: defines);
-  final cliScriptWorkingDirectory = resolveCliScriptWorkingDirectory(
-    cliScriptPath,
-  );
-  final cliScriptRunTarget = resolveCliScriptRunTarget(cliScriptPath);
+  final cliScriptInvocation = _resolveCliScriptInvocation(cliScriptPath);
 
-  return KonyakCliLaunchConfig(
-    executable: resolveDartExecutable(environment, defines: defines),
-    baseArguments:
-        cliScriptWorkingDirectory == null || cliScriptRunTarget == null
-        ? <String>[cliScriptPath]
-        : <String>['run', cliScriptRunTarget],
-    environment: runtimeEnvironment,
-    workingDirectory: cliScriptWorkingDirectory,
-  );
+  return switch (cliScriptInvocation) {
+    _DirectCliScriptInvocation(:final scriptPath) => KonyakCliLaunchConfig(
+      executable: resolveDartExecutable(environment, defines: defines),
+      baseArguments: <String>[scriptPath],
+      environment: runtimeEnvironment,
+      workingDirectory: const InheritedProcessWorkingDirectory(),
+    ),
+    _DartRunCliScriptInvocation(:final workingDirectory, :final runTarget) =>
+      KonyakCliLaunchConfig(
+        executable: resolveDartExecutable(environment, defines: defines),
+        baseArguments: <String>['run', runTarget],
+        environment: runtimeEnvironment,
+        workingDirectory: ConfiguredProcessWorkingDirectory(workingDirectory),
+      ),
+  };
 }
 
-String? resolvePackagedCliExecutable(
-  String? executable, {
-  required String? bundleResources,
+_NonEmptyStringSelection _resolvePackagedCliExecutable(
+  _NonEmptyStringSelection executable, {
+  required _NonEmptyStringSelection bundleResources,
 }) {
-  if (executable == null || !executable.contains(bundleResourcesToken)) {
-    return executable;
-  }
-
-  if (bundleResources == null) {
-    return executable;
-  }
-
-  return executable.replaceAll(bundleResourcesToken, bundleResources);
+  return switch (executable) {
+    _NoNonEmptyString() => const _NoNonEmptyString(),
+    _SelectedNonEmptyString(:final value)
+        when !value.contains(bundleResourcesToken) =>
+      _SelectedNonEmptyString(value),
+    _SelectedNonEmptyString(:final value) => switch (bundleResources) {
+      _SelectedNonEmptyString(value: final resources) =>
+        _SelectedNonEmptyString(
+          value.replaceAll(bundleResourcesToken, resources),
+        ),
+      _NoNonEmptyString() => _SelectedNonEmptyString(value),
+    },
+  };
 }
 
-String? resolveBundleResources(
-  String? executable,
+_NonEmptyStringSelection _resolveBundleResources(
+  _NonEmptyStringSelection executable,
   Map<String, String> environment, {
   required KonyakCliLaunchDefines defines,
   required String resolvedExecutable,
 }) {
-  if (executable == null || !executable.contains(bundleResourcesToken)) {
-    return firstNonEmpty(
-      defines.bundleResources,
-      environment['KONYAK_BUNDLE_RESOURCES'],
-    );
-  }
-
-  final bundleResources = firstNonEmpty(
+  final configuredBundleResources = _firstNonEmptyString([
     defines.bundleResources,
-    environment['KONYAK_BUNDLE_RESOURCES'],
-    bundleResourcesPathFromAppExecutable(
-      firstNonEmpty(
-        defines.appExecutable,
-        environment['KONYAK_APP_EXECUTABLE'],
-        resolvedExecutable,
-      ),
-    ),
-  );
-  if (bundleResources == null) {
-    return null;
-  }
+    _environmentValue(environment, 'KONYAK_BUNDLE_RESOURCES'),
+  ]);
 
-  return bundleResources;
+  return switch (executable) {
+    _NoNonEmptyString() => configuredBundleResources,
+    _SelectedNonEmptyString(:final value)
+        when !value.contains(bundleResourcesToken) =>
+      configuredBundleResources,
+    _SelectedNonEmptyString() => _firstPresentNonEmptyString([
+      configuredBundleResources,
+      _bundleResourcesPathFromAppExecutable(
+        _firstNonEmptyString([
+          defines.appExecutable,
+          _environmentValue(environment, 'KONYAK_APP_EXECUTABLE'),
+          resolvedExecutable,
+        ]),
+      ),
+    ]),
+  };
 }
 
-String? bundleResourcesPathFromAppExecutable(String? executable) {
-  if (executable == null || executable.trim().isEmpty) {
-    return null;
-  }
+_NonEmptyStringSelection _bundleResourcesPathFromAppExecutable(
+  _NonEmptyStringSelection executable,
+) {
+  return switch (executable) {
+    _NoNonEmptyString() => const _NoNonEmptyString(),
+    _SelectedNonEmptyString(:final value) => () {
+      final normalized = value.replaceAll('\\', '/');
+      final marker = '.app/Contents/MacOS/';
+      final markerIndex = normalized.indexOf(marker);
+      if (markerIndex < 0) {
+        return const _NoNonEmptyString();
+      }
 
-  final normalized = executable.replaceAll('\\', '/');
-  final marker = '.app/Contents/MacOS/';
-  final markerIndex = normalized.indexOf(marker);
-  if (markerIndex < 0) {
-    return null;
-  }
-
-  final bundleRootEnd = markerIndex + '.app/Contents/'.length;
-  return '${normalized.substring(0, bundleRootEnd)}Resources';
+      final bundleRootEnd = markerIndex + '.app/Contents/'.length;
+      return _SelectedNonEmptyString(
+        '${normalized.substring(0, bundleRootEnd)}Resources',
+      );
+    }(),
+  };
 }
 
 String resolveDartExecutable(
   Map<String, String> environment, {
   required KonyakCliLaunchDefines defines,
 }) {
-  final override = firstNonEmpty(
+  switch (_firstNonEmptyString([
     defines.dartExecutable,
-    environment['KONYAK_DART_EXECUTABLE'],
-  );
-  if (override != null && override.trim().isNotEmpty) {
-    return override;
+    _environmentValue(environment, 'KONYAK_DART_EXECUTABLE'),
+  ])) {
+    case _SelectedNonEmptyString(:final value):
+      return value;
+    case _NoNonEmptyString():
+      break;
   }
 
-  final flutterRoot = firstNonEmpty(
+  return switch (_firstNonEmptyString([
     defines.flutterRoot,
-    environment['FLUTTER_ROOT'],
-  );
-  if (flutterRoot != null && flutterRoot.trim().isNotEmpty) {
-    return joinPath(flutterRoot, const ['bin', 'dart']);
-  }
-
-  return 'dart';
+    _environmentValue(environment, 'FLUTTER_ROOT'),
+  ])) {
+    _SelectedNonEmptyString(:final value) => joinPath(value, const [
+      'bin',
+      'dart',
+    ]),
+    _NoNonEmptyString() => 'dart',
+  };
 }
 
 String resolveCliScriptPath(
   Map<String, String> environment, {
   required KonyakCliLaunchDefines defines,
 }) {
-  final override = firstNonEmpty(
+  switch (_firstNonEmptyString([
     defines.cliScript,
-    environment['KONYAK_CLI_SCRIPT'],
-  );
-  if (override != null && override.trim().isNotEmpty) {
-    return override;
+    _environmentValue(environment, 'KONYAK_CLI_SCRIPT'),
+  ])) {
+    case _SelectedNonEmptyString(:final value):
+      return value;
+    case _NoNonEmptyString():
+      break;
   }
 
-  final repoRoot = firstNonEmpty(
+  return switch (_firstNonEmptyString([
     defines.repoRoot,
-    environment['KONYAK_REPO_ROOT'],
-  );
-  if (repoRoot != null && repoRoot.trim().isNotEmpty) {
-    return joinPath(repoRoot, const [
+    _environmentValue(environment, 'KONYAK_REPO_ROOT'),
+  ])) {
+    _SelectedNonEmptyString(:final value) => joinPath(value, const [
       'packages',
       'konyak_cli',
       'bin',
       'konyak.dart',
-    ]);
-  }
-
-  return '../../packages/konyak_cli/bin/konyak.dart';
+    ]),
+    _NoNonEmptyString() => '../../packages/konyak_cli/bin/konyak.dart',
+  };
 }
 
-Map<String, String> runtimeEnvironmentOverrides(
+Map<String, String> _runtimeEnvironmentOverrides(
   Map<String, String> environment, {
   required KonyakCliLaunchDefines defines,
-  required String? bundleResources,
+  required _NonEmptyStringSelection bundleResources,
 }) {
-  final runtimeProfile = firstNonEmpty(
+  final runtimeProfile = _firstNonEmptyString([
     defines.runtimeProfile,
-    environment['KONYAK_RUNTIME_PROFILE'],
-  );
-  final repoRoot = firstNonEmpty(
+    _environmentValue(environment, 'KONYAK_RUNTIME_PROFILE'),
+  ]);
+  final repoRoot = _firstNonEmptyString([
     defines.repoRoot,
-    environment['KONYAK_REPO_ROOT'],
-  );
-  final isDevelopment = runtimeProfile == 'development';
-  final macosWineHome = firstNonEmpty(
+    _environmentValue(environment, 'KONYAK_REPO_ROOT'),
+  ]);
+  final isDevelopment = switch (runtimeProfile) {
+    _SelectedNonEmptyString(value: 'development') => true,
+    _SelectedNonEmptyString() || _NoNonEmptyString() => false,
+  };
+  final macosWineHome = _firstNonEmptyString([
     defines.macosWineHome,
-    environment['KONYAK_MACOS_WINE_HOME'],
-    isDevelopment && repoRoot != null
-        ? joinPath(repoRoot, const [
-            '.dart_tool',
-            'konyak',
-            'dev-runtime',
-            'macos-wine',
-          ])
-        : null,
-  );
-  final linuxWineHome = firstNonEmpty(
+    _environmentValue(environment, 'KONYAK_MACOS_WINE_HOME'),
+    _developmentPathFromRepo(
+      repoRoot,
+      isDevelopment: isDevelopment,
+      components: const ['.dart_tool', 'konyak', 'dev-runtime', 'macos-wine'],
+    ),
+  ]);
+  final linuxWineHome = _firstNonEmptyString([
     defines.linuxWineHome,
-    environment['KONYAK_LINUX_WINE_HOME'],
-    isDevelopment && repoRoot != null
-        ? joinPath(repoRoot, const [
-            '.dart_tool',
-            'konyak',
-            'dev-runtime',
-            'linux-wine',
-          ])
-        : null,
-  );
-  final linuxWineLibraryPath = firstNonEmpty(
+    _environmentValue(environment, 'KONYAK_LINUX_WINE_HOME'),
+    _developmentPathFromRepo(
+      repoRoot,
+      isDevelopment: isDevelopment,
+      components: const ['.dart_tool', 'konyak', 'dev-runtime', 'linux-wine'],
+    ),
+  ]);
+  final linuxWineLibraryPath = _firstNonEmptyString([
     defines.linuxWineLibraryPath,
-    environment['KONYAK_LINUX_WINE_LIBRARY_PATH'],
-  );
-  final macosStackManifest = firstNonEmpty(
+    _environmentValue(environment, 'KONYAK_LINUX_WINE_LIBRARY_PATH'),
+  ]);
+  final macosStackManifest = _firstNonEmptyString([
     defines.macosWineStackManifest,
-    environment['KONYAK_DEV_MACOS_WINE_STACK_MANIFEST'],
-  );
-  final linuxStackManifest = firstNonEmpty(
+    _environmentValue(environment, 'KONYAK_DEV_MACOS_WINE_STACK_MANIFEST'),
+  ]);
+  final linuxStackManifest = _firstNonEmptyString([
     defines.linuxWineStackManifest,
-    environment['KONYAK_DEV_LINUX_WINE_STACK_SOURCE_MANIFEST'],
-    isDevelopment && repoRoot != null
-        ? joinPath(repoRoot, const [
-            '.dart_tool',
-            'konyak',
-            'dev-runtime-source',
-            'linux-wine-stack',
-            'konyak-linux-wine-runtime-stack-source.json',
-          ])
-        : null,
-  );
-  final macosPrepareScript = firstNonEmpty(
+    _environmentValue(
+      environment,
+      'KONYAK_DEV_LINUX_WINE_STACK_SOURCE_MANIFEST',
+    ),
+    _developmentPathFromRepo(
+      repoRoot,
+      isDevelopment: isDevelopment,
+      components: const [
+        '.dart_tool',
+        'konyak',
+        'dev-runtime-source',
+        'linux-wine-stack',
+        'konyak-linux-wine-runtime-stack-source.json',
+      ],
+    ),
+  ]);
+  final macosPrepareScript = _firstNonEmptyString([
     defines.macosDevRuntimePrepareScript,
-    environment['KONYAK_MACOS_DEV_RUNTIME_PREPARE_SCRIPT'],
-    isDevelopment && repoRoot != null
-        ? joinPath(repoRoot, const [
-            'scripts',
-            'prepare_macos_dev_runtime_stack.zsh',
-          ])
-        : null,
-  );
+    _environmentValue(environment, 'KONYAK_MACOS_DEV_RUNTIME_PREPARE_SCRIPT'),
+    _developmentPathFromRepo(
+      repoRoot,
+      isDevelopment: isDevelopment,
+      components: const ['scripts', 'prepare_macos_dev_runtime_stack.zsh'],
+    ),
+  ]);
 
   final overrides = <String, String>{};
-  void addIfPresent(String key, String? value) {
-    if (value != null && value.trim().isNotEmpty) {
-      overrides[key] = value.trim();
+  void addIfPresent(String key, _NonEmptyStringSelection value) {
+    switch (value) {
+      case _SelectedNonEmptyString(:final value):
+        overrides[key] = value.trim();
+      case _NoNonEmptyString():
+        break;
     }
   }
 
@@ -303,43 +358,90 @@ Map<String, String> runtimeEnvironmentOverrides(
   );
   addIfPresent('KONYAK_MACOS_DEV_RUNTIME_PREPARE_SCRIPT', macosPrepareScript);
   addIfPresent('KONYAK_BUNDLE_RESOURCES', bundleResources);
-  if (bundleResources != null && bundleResources.trim().isNotEmpty) {
-    overrides['PATH'] = prependPathEntry(bundleResources, environment['PATH']);
+  switch (bundleResources) {
+    case _SelectedNonEmptyString(:final value):
+      overrides['PATH'] = _prependPathEntry(
+        value,
+        _environmentValue(environment, 'PATH'),
+      );
+    case _NoNonEmptyString():
+      break;
   }
 
   return Map.unmodifiable(overrides);
 }
 
-String prependPathEntry(String path, String? existingPath) {
+String _environmentValue(Map<String, String> environment, String key) {
+  if (!environment.containsKey(key)) {
+    return '';
+  }
+
+  return environment[key]!;
+}
+
+_NonEmptyStringSelection _firstNonEmptyString(Iterable<String> values) {
+  for (final value in values) {
+    if (value.trim().isNotEmpty) {
+      return _SelectedNonEmptyString(value);
+    }
+  }
+
+  return const _NoNonEmptyString();
+}
+
+_NonEmptyStringSelection _firstPresentNonEmptyString(
+  Iterable<_NonEmptyStringSelection> values,
+) {
+  for (final value in values) {
+    switch (value) {
+      case _SelectedNonEmptyString():
+        return value;
+      case _NoNonEmptyString():
+        break;
+    }
+  }
+
+  return const _NoNonEmptyString();
+}
+
+String _developmentPathFromRepo(
+  _NonEmptyStringSelection repoRoot, {
+  required bool isDevelopment,
+  required List<String> components,
+}) {
+  if (!isDevelopment) {
+    return '';
+  }
+
+  return switch (repoRoot) {
+    _SelectedNonEmptyString(:final value) => joinPath(value, components),
+    _NoNonEmptyString() => '',
+  };
+}
+
+String _prependPathEntry(String path, String existingPath) {
   final trimmedPath = path.trim();
-  if (existingPath == null || existingPath.trim().isEmpty) {
+  if (existingPath.trim().isEmpty) {
     return trimmedPath;
   }
 
   return '$trimmedPath:$existingPath';
 }
 
-String? resolveCliScriptWorkingDirectory(String cliScriptPath) {
+_CliScriptInvocation _resolveCliScriptInvocation(String cliScriptPath) {
   final pathSegments = splitPathSegments(cliScriptPath);
   if (pathSegments.length < 2 ||
       pathSegments[pathSegments.length - 2] != 'bin') {
-    return null;
+    return _DirectCliScriptInvocation(cliScriptPath);
   }
 
-  return joinPath(
-    pathPrefixForSegmentCount(cliScriptPath, pathSegments.length - 2),
-    const <String>[],
+  return _DartRunCliScriptInvocation(
+    workingDirectory: joinPath(
+      pathPrefixForSegmentCount(cliScriptPath, pathSegments.length - 2),
+      const <String>[],
+    ),
+    runTarget: pathSegments.skip(pathSegments.length - 2).join('/'),
   );
-}
-
-String? resolveCliScriptRunTarget(String cliScriptPath) {
-  final pathSegments = splitPathSegments(cliScriptPath);
-  if (pathSegments.length < 2 ||
-      pathSegments[pathSegments.length - 2] != 'bin') {
-    return null;
-  }
-
-  return pathSegments.skip(pathSegments.length - 2).join('/');
 }
 
 List<String> splitPathSegments(String path) {

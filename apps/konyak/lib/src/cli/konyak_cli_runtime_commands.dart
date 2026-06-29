@@ -1,6 +1,10 @@
 import 'dart:async';
 
-import 'konyak_cli_client.dart' show KonyakCliClient;
+import 'konyak_cli_client.dart'
+    show
+        IgnoreRuntimeInstallProgress,
+        KonyakCliClient,
+        RuntimeInstallProgressObservation;
 import 'konyak_cli_failure_messages.dart';
 import 'konyak_cli_process_runner.dart';
 import 'konyak_cli_result_helpers.dart';
@@ -9,26 +13,42 @@ import 'konyak_cli_update_result_types.dart';
 import 'konyak_cli_wine_process_result_types.dart';
 import 'runtime_install_contract.dart';
 
+sealed class WineProcessTerminationScope {
+  const WineProcessTerminationScope();
+}
+
+final class AllWineProcesses extends WineProcessTerminationScope {
+  const AllWineProcesses();
+}
+
+final class BottleWineProcesses extends WineProcessTerminationScope {
+  const BottleWineProcesses(this.bottleId);
+
+  final String bottleId;
+}
+
 extension KonyakCliRuntimeCommands on KonyakCliClient {
   Future<RuntimeInstallLoadResult> installMacosWine({
     bool reinstall = false,
-    void Function(RuntimeInstallProgress progress)? onProgress,
+    RuntimeInstallProgressObservation progressObservation =
+        const IgnoreRuntimeInstallProgress(),
   }) {
     return runtimeInstallResultFromCommand(
       command: 'install-macos-wine',
       arguments: reinstall ? const <String>['--reinstall'] : const <String>[],
-      onProgress: onProgress,
+      progressObservation: progressObservation,
     );
   }
 
   Future<RuntimeInstallLoadResult> installLinuxWine({
     bool reinstall = false,
-    void Function(RuntimeInstallProgress progress)? onProgress,
+    RuntimeInstallProgressObservation progressObservation =
+        const IgnoreRuntimeInstallProgress(),
   }) {
     return runtimeInstallResultFromCommand(
       command: 'install-linux-wine',
       arguments: reinstall ? const <String>['--reinstall'] : const <String>[],
-      onProgress: onProgress,
+      progressObservation: progressObservation,
     );
   }
 
@@ -61,11 +81,14 @@ extension KonyakCliRuntimeCommands on KonyakCliClient {
   }
 
   Future<WineProcessTerminationLoadResult> terminateWineProcesses({
-    String? bottleId,
+    WineProcessTerminationScope scope = const AllWineProcesses(),
   }) async {
     final result = await run([
       'terminate-wine-processes',
-      if (bottleId != null) ...['--bottle', bottleId],
+      ...switch (scope) {
+        AllWineProcesses() => const <String>[],
+        BottleWineProcesses(:final bottleId) => ['--bottle', bottleId],
+      },
       '--json',
     ]);
     return wineProcessTerminationResultFromCommand(result);

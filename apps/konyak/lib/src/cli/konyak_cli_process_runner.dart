@@ -4,14 +4,74 @@ import 'dart:io';
 
 import 'konyak_cli_result_helpers.dart';
 
+sealed class ProcessWorkingDirectory {
+  const ProcessWorkingDirectory();
+}
+
+final class InheritedProcessWorkingDirectory extends ProcessWorkingDirectory {
+  const InheritedProcessWorkingDirectory();
+}
+
+final class ConfiguredProcessWorkingDirectory extends ProcessWorkingDirectory {
+  const ConfiguredProcessWorkingDirectory(this.path);
+
+  final String path;
+}
+
+sealed class ProcessStartObserver {
+  const ProcessStartObserver();
+}
+
+final class IgnoreProcessStart extends ProcessStartObserver {
+  const IgnoreProcessStart();
+}
+
+final class NotifyProcessStart extends ProcessStartObserver {
+  const NotifyProcessStart(this.onStarted);
+
+  final void Function(int processId) onStarted;
+}
+
+sealed class ProcessStdoutObserver {
+  const ProcessStdoutObserver();
+}
+
+final class IgnoreProcessStdout extends ProcessStdoutObserver {
+  const IgnoreProcessStdout();
+}
+
+final class NotifyProcessStdoutLine extends ProcessStdoutObserver {
+  const NotifyProcessStdoutLine(this.onLine);
+
+  final void Function(String line) onLine;
+}
+
+sealed class ProcessRunObservation {
+  const ProcessRunObservation();
+}
+
+final class UnobservedProcessRun extends ProcessRunObservation {
+  const UnobservedProcessRun();
+}
+
+final class ObservedProcessRun extends ProcessRunObservation {
+  const ObservedProcessRun({
+    required this.startObserver,
+    required this.stdoutObserver,
+  });
+
+  final ProcessStartObserver startObserver;
+  final ProcessStdoutObserver stdoutObserver;
+}
+
 abstract interface class ProcessRunner {
   Future<ProcessRunResult> run(
     String executable,
     List<String> arguments, {
-    String? workingDirectory,
+    ProcessWorkingDirectory workingDirectory =
+        const InheritedProcessWorkingDirectory(),
     Map<String, String> environment = const <String, String>{},
-    void Function(int processId)? onStarted,
-    void Function(String line)? onStdoutLine,
+    ProcessRunObservation observation = const UnobservedProcessRun(),
   });
 }
 
@@ -34,36 +94,46 @@ final class DartIoProcessRunner implements ProcessRunner {
   Future<ProcessRunResult> run(
     String executable,
     List<String> arguments, {
-    String? workingDirectory,
+    ProcessWorkingDirectory workingDirectory =
+        const InheritedProcessWorkingDirectory(),
     Map<String, String> environment = const <String, String>{},
-    void Function(int processId)? onStarted,
-    void Function(String line)? onStdoutLine,
+    ProcessRunObservation observation = const UnobservedProcessRun(),
   }) async {
     final childEnvironment = <String, String>{
       ...konyakCliChildEnvironment(),
       ...environment,
     };
 
-    if (onStdoutLine != null || onStarted != null) {
-      return runStarted(
-        executable,
-        arguments,
-        workingDirectory: workingDirectory,
-        environment: childEnvironment,
-        onStarted: onStarted,
-        onStdoutLine: onStdoutLine,
-      );
+    switch (observation) {
+      case ObservedProcessRun():
+        return runStarted(
+          executable,
+          arguments,
+          workingDirectory: workingDirectory,
+          environment: childEnvironment,
+          observation: observation,
+        );
+      case UnobservedProcessRun():
+        break;
     }
 
     final ProcessResult result;
     try {
-      result = await Process.run(
-        executable,
-        arguments,
-        environment: childEnvironment,
-        runInShell: false,
-        workingDirectory: workingDirectory,
-      );
+      result = await switch (workingDirectory) {
+        InheritedProcessWorkingDirectory() => Process.run(
+          executable,
+          arguments,
+          environment: childEnvironment,
+          runInShell: false,
+        ),
+        ConfiguredProcessWorkingDirectory(:final path) => Process.run(
+          executable,
+          arguments,
+          environment: childEnvironment,
+          runInShell: false,
+          workingDirectory: path,
+        ),
+      };
     } on ProcessException catch (error) {
       return ProcessRunResult(
         exitCode: 127,
@@ -74,28 +144,35 @@ final class DartIoProcessRunner implements ProcessRunner {
 
     return ProcessRunResult(
       exitCode: result.exitCode,
-      stdout: processOutputToString(result.stdout),
-      stderr: processOutputToString(result.stderr),
+      stdout: processOutputToString(result.stdout as Object),
+      stderr: processOutputToString(result.stderr as Object),
     );
   }
 
   Future<ProcessRunResult> runStarted(
     String executable,
     List<String> arguments, {
-    required String? workingDirectory,
+    required ProcessWorkingDirectory workingDirectory,
     required Map<String, String> environment,
-    required void Function(int processId)? onStarted,
-    required void Function(String line)? onStdoutLine,
+    required ObservedProcessRun observation,
   }) async {
     final Process process;
     try {
-      process = await Process.start(
-        executable,
-        arguments,
-        environment: environment,
-        runInShell: false,
-        workingDirectory: workingDirectory,
-      );
+      process = await switch (workingDirectory) {
+        InheritedProcessWorkingDirectory() => Process.start(
+          executable,
+          arguments,
+          environment: environment,
+          runInShell: false,
+        ),
+        ConfiguredProcessWorkingDirectory(:final path) => Process.start(
+          executable,
+          arguments,
+          environment: environment,
+          runInShell: false,
+          workingDirectory: path,
+        ),
+      };
     } on ProcessException catch (error) {
       return ProcessRunResult(
         exitCode: 127,
@@ -104,48 +181,54 @@ final class DartIoProcessRunner implements ProcessRunner {
       );
     }
 
-    onStarted?.call(process.pid);
+    switch (observation.startObserver) {
+      case IgnoreProcessStart():
+        break;
+      case NotifyProcessStart(:final onStarted):
+        onStarted(process.pid);
+    }
 
     final stderrBuffer = StringBuffer();
     final stderrFuture = process.stderr
         .transform(utf8.decoder)
         .forEach(stderrBuffer.write);
-    late final Future<void> stdoutFuture;
-    final stdoutCallback = onStdoutLine;
-    if (stdoutCallback == null) {
-      final stdoutBuffer = StringBuffer();
-      stdoutFuture = process.stdout
-          .transform(utf8.decoder)
-          .forEach(stdoutBuffer.write);
-      final exitCode = await process.exitCode;
-      await stdoutFuture;
-      await stderrFuture;
+    return switch (observation.stdoutObserver) {
+      IgnoreProcessStdout() => () async {
+        final stdoutBuffer = StringBuffer();
+        final stdoutFuture = process.stdout
+            .transform(utf8.decoder)
+            .forEach(stdoutBuffer.write);
+        final exitCode = await process.exitCode;
+        await stdoutFuture;
+        await stderrFuture;
 
-      return ProcessRunResult(
-        exitCode: exitCode,
-        stdout: stdoutBuffer.toString(),
-        stderr: stderrBuffer.toString(),
-      );
-    }
+        return ProcessRunResult(
+          exitCode: exitCode,
+          stdout: stdoutBuffer.toString(),
+          stderr: stderrBuffer.toString(),
+        );
+      }(),
+      NotifyProcessStdoutLine(:final onLine) => () async {
+        final stdoutLines = <String>[];
+        final stdoutFuture = process.stdout
+            .transform(utf8.decoder)
+            .transform(const LineSplitter())
+            .forEach((line) {
+              stdoutLines.add(line);
+              onLine(line);
+            });
 
-    final stdoutLines = <String>[];
-    stdoutFuture = process.stdout
-        .transform(utf8.decoder)
-        .transform(const LineSplitter())
-        .forEach((line) {
-          stdoutLines.add(line);
-          stdoutCallback(line);
-        });
+        final exitCode = await process.exitCode;
+        await stdoutFuture;
+        await stderrFuture;
 
-    final exitCode = await process.exitCode;
-    await stdoutFuture;
-    await stderrFuture;
-
-    return ProcessRunResult(
-      exitCode: exitCode,
-      stdout: stdoutLines.join('\n'),
-      stderr: stderrBuffer.toString(),
-    );
+        return ProcessRunResult(
+          exitCode: exitCode,
+          stdout: stdoutLines.join('\n'),
+          stderr: stderrBuffer.toString(),
+        );
+      }(),
+    };
   }
 }
 

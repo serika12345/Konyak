@@ -7,6 +7,7 @@ import '../app/dialogs/run_program_dialog.dart';
 import '../app/utils/program_labels.dart';
 import '../app/utils/program_run_feedback.dart';
 import '../bottles/bottle_summary.dart';
+import '../cli/konyak_cli_process_runner.dart' show NotifyProcessStart;
 import '../cli/konyak_cli_program_commands.dart';
 import '../cli/konyak_cli_program_result_types.dart';
 import '../cli/konyak_cli_read_commands.dart';
@@ -74,8 +75,11 @@ extension KonyakHomeLoaderPrograms on KonyakHomeLoaderState {
       result = await widget.cliClient.runProgram(
         bottleId: bottle.id,
         programPath: programPath,
-        settings: settings,
-        onStarted: (processId) {
+        settings: switch (settings) {
+          null => const NoProgramRunSettings(),
+          final settings => UseProgramRunSettings(settings),
+        },
+        startObserver: NotifyProcessStart((processId) {
           unawaited(
             finishProgramLaunchWhenMatchingWindowAppears(
               launchId: launchId,
@@ -84,7 +88,7 @@ extension KonyakHomeLoaderPrograms on KonyakHomeLoaderState {
               baselineWineProcessIds: baselineWineProcessIds,
             ),
           );
-        },
+        }),
       );
     } finally {
       finishProgramLaunch(launchId);
@@ -361,7 +365,7 @@ extension KonyakHomeLoaderPrograms on KonyakHomeLoaderState {
       result = await widget.cliClient.runBottleCommand(
         bottleId: bottle.id,
         command: command,
-        onStarted: (processId) {
+        startObserver: NotifyProcessStart((processId) {
           unawaited(
             finishProgramLaunchWhenMatchingWindowAppears(
               launchId: launchId,
@@ -370,7 +374,7 @@ extension KonyakHomeLoaderPrograms on KonyakHomeLoaderState {
               baselineWineProcessIds: baselineWineProcessIds,
             ),
           );
-        },
+        }),
       );
     } finally {
       finishProgramLaunch(launchId);
