@@ -16,8 +16,8 @@ Option<String> bottleLocationPath({
   };
 }
 
-String programLocationPath(String programPath) {
-  final normalized = normalizeFilesystemPath(programPath);
+String programLocationPath(ProgramPath programPath) {
+  final normalized = normalizeFilesystemPath(programPath.value);
   final separator = normalized.lastIndexOf('/');
   if (separator <= 0) {
     return normalized;

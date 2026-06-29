@@ -13,6 +13,33 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-29 17:47 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Tighten the functional-core boundary for program location
+  requests.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: current commit (`Type program location requests`).
+- Purpose: keep program location path requests typed as `ProgramPath` inside
+  CLI/domain-facing location helpers instead of passing raw `--program`
+  strings through the parser and platform helper.
+- Completed work: added a failing typed program-location path fixture; changed
+  `ProgramLocationOpenCliRequest.programPath`, the CLI location parser,
+  `programLocationPath`, the location handler, and the Dart I/O path opener to
+  preserve `ProgramPath` until boundary projection; and added governance
+  coverage for the typed boundary.
+- Remaining work: broader functional-core tightening remains in `docs/todo.md`,
+  including other primitive request/planner APIs.
+- Next action: continue with the next narrow primitive-boundary cleanup.
+- Verification: observed `cd packages/konyak_cli && dart test
+  test/domain_immutability_test.dart --name "program location paths use
+  semantic value objects"` fail before implementation because
+  `programLocationPath` still accepted raw `String`; after implementation the
+  same focused test and `dart analyze --fatal-infos` passed; focused
+  open-program-location CLI contract tests, `just verify-governance`, `just
+  cli-test`, `just verify-safety`, `just format-check`, and `just lint` passed.
+
 - Timestamp: 2026-06-29 17:33 JST
 - State: `completed`
 - Branch: `main`

@@ -1117,6 +1117,21 @@ def require_typed_bottle_location_boundary() -> None:
         raise AssertionError(
             "Bottle location path helpers must not expose primitive locations"
         )
+    expected_program_location_terms = [
+        "String programLocationPath(ProgramPath programPath)",
+        "final normalized = normalizeFilesystemPath(programPath.value);",
+    ]
+    for expected in expected_program_location_terms:
+        if expected not in location_source:
+            raise AssertionError(
+                "Program location path helpers must preserve typed program "
+                f"paths: {expected}"
+            )
+
+    if "String programLocationPath(String programPath)" in location_source:
+        raise AssertionError(
+            "Program location path helpers must not expose primitive program paths"
+        )
 
     parser_path = "packages/konyak_cli/lib/src/cli/cli_location_parsers.dart"
     parser_source = read_text(parser_path)
@@ -1135,6 +1150,21 @@ def require_typed_bottle_location_boundary() -> None:
         raise AssertionError(
             "Bottle location CLI request must not store primitive locations"
         )
+    expected_program_parser_terms = [
+        "final ProgramPath programPath;",
+        "programPath: ProgramPath(programPathValue),",
+    ]
+    for expected in expected_program_parser_terms:
+        if expected not in parser_source:
+            raise AssertionError(
+                "Program location CLI parser must convert program paths once "
+                f"at the boundary: {expected}"
+            )
+
+    if "final String programPath;" in parser_source:
+        raise AssertionError(
+            "Program location CLI request must not store primitive program paths"
+        )
 
     handler_path = (
         "packages/konyak_cli/lib/src/cli/cli_location_winetricks_handlers.dart"
@@ -1148,6 +1178,16 @@ def require_typed_bottle_location_boundary() -> None:
             raise AssertionError(
                 "Bottle location handler must keep typed locations until JSON "
                 f"projection: {expected}"
+            )
+    for expected in [
+        "hasPinnedProgram(bottle, request.programPath.value)",
+        "final path = request.programPath.value;",
+        "'programPath': request.programPath.value",
+    ]:
+        if expected not in handler_source:
+            raise AssertionError(
+                "Program location handler must keep typed program paths until "
+                f"boundary projection: {expected}"
             )
 
 

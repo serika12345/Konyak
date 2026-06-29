@@ -423,6 +423,14 @@ void main() {
     );
   });
 
+  test('program location paths use semantic value objects', () {
+    expect(
+      programLocationPath(ProgramPath('/games/Steam/steam.exe')),
+      '/games/Steam',
+    );
+    expect(programLocationPath(ProgramPath('steam.exe')), 'steam.exe');
+  });
+
   test('app settings expose default bottle path as a value object', () {
     final settings = AppSettingsRecord(defaultBottlePath: '/bottles');
 

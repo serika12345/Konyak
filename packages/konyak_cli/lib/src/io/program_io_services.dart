@@ -232,7 +232,7 @@ class DartIoPathOpener implements PathOpener {
         target.value,
       ]),
       KonyakHostPlatform.linux => runPathOpenCommand(<String>[
-        programLocationPath(target.value),
+        programLocationPath(ProgramPath(target.value)),
       ]),
     };
   }

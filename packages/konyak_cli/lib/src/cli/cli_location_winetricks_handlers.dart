@@ -107,21 +107,21 @@ CliResult openProgramLocationJsonResult(
     result: repository.findBottle(request.bottleId),
     bottleId: request.bottleId,
     onFound: (bottle) {
-      if (!hasPinnedProgram(bottle, request.programPath)) {
+      if (!hasPinnedProgram(bottle, request.programPath.value)) {
         return jsonError(
           exitCode: 66,
           code: 'programNotPinned',
           message: 'Program is not pinned.',
-          extra: <String, Object?>{'programPath': request.programPath},
+          extra: <String, Object?>{'programPath': request.programPath.value},
         );
       }
 
-      final path = request.programPath;
+      final path = request.programPath.value;
       return switch (opener.revealPath(PathRevealTarget(path))) {
         PathOpenCompleted() => jsonSuccess(<String, Object?>{
           'openedProgramLocation': <String, Object?>{
             'bottleId': request.bottleId.value,
-            'programPath': request.programPath,
+            'programPath': request.programPath.value,
             'path': path,
           },
         }),
@@ -131,7 +131,7 @@ CliResult openProgramLocationJsonResult(
           message: message,
           extra: <String, Object?>{
             'bottleId': request.bottleId.value,
-            'programPath': request.programPath,
+            'programPath': request.programPath.value,
             'path': path,
           },
         ),

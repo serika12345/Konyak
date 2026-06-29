@@ -43,7 +43,7 @@ class ProgramLocationOpenCliRequest {
   });
 
   final BottleId bottleId;
-  final String programPath;
+  final ProgramPath programPath;
 }
 
 ProgramLocationOpenCliRequest? parseJsonProgramLocationOpenCliRequest(
@@ -59,13 +59,13 @@ ProgramLocationOpenCliRequest? parseJsonProgramLocationOpenCliRequest(
   }
 
   final bottleId = requiredCliBottleId(results);
-  final programPath = requiredCliOption(results, 'program');
-  if (bottleId == null || programPath == null) {
+  final programPathValue = requiredCliOption(results, 'program');
+  if (bottleId == null || programPathValue == null) {
     return null;
   }
 
   return ProgramLocationOpenCliRequest(
     bottleId: bottleId,
-    programPath: programPath,
+    programPath: ProgramPath(programPathValue),
   );
 }
