@@ -13,6 +13,31 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-29 20:34 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Type runtime install progress parser results.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: `e0ad865` (`Type runtime list parser results`).
+- Purpose: continue removing nullable success/failure sentinels from Flutter
+  CLI contract parsers before narrowing nullable custom-lint allowances.
+- Completed work: updated runtime install progress contract tests to expect
+  sealed parse results; changed progress payload parsing and runtime install
+  error-message parsing to use explicit result variants; and updated the CLI
+  runtime install progress callback bridge to switch on the parsed result.
+- Remaining work: continue nullable sentinel cleanup in remaining Flutter CLI
+  contract parsers, especially `bottle_record_contract.dart`, before narrowing
+  the nullable custom-lint allowance from directory level to direct boundary
+  files.
+- Next action: continue with `bottle_record_contract.dart` parser helpers.
+- Verification: observed the focused runtime install progress parser test fail
+  before implementation because the new parse result types did not exist;
+  after implementation, focused runtime install contract and CLI progress tests
+  passed, and `just verify-governance`, `just verify-safety`, `just
+  format-check`, `just lint`, and `just flutter-test` passed in the Nix dev
+  shell.
+
 - Timestamp: 2026-06-29 20:23 JST
 - State: `completed`
 - Branch: `main`

@@ -51,7 +51,7 @@ void main() {
   });
 
   test('parses runtime install progress payloads', () {
-    final progress = parseRuntimeInstallProgressPayload('''
+    final result = parseRuntimeInstallProgressPayload('''
       {
         "schemaVersion": 1,
         "runtimeInstallProgress": {
@@ -62,8 +62,10 @@ void main() {
       }
       ''');
 
+    expect(result, isA<ParsedRuntimeInstallProgress>());
+    final progress = (result as ParsedRuntimeInstallProgress).progress;
     expect(progress, isNotNull);
-    expect(progress!.stage, 'downloading');
+    expect(progress.stage, 'downloading');
     expect(progress.message, 'Downloading Konyak macOS Wine...');
     expect(progress.fraction, 0.42);
   });
@@ -73,7 +75,7 @@ void main() {
       parseRuntimeInstallProgressPayload(
         '{"schemaVersion":1,"runtimeInstallProgress":{"stage":"x","message":"x","fraction":1.5}}',
       ),
-      isNull,
+      isA<InvalidRuntimeInstallProgress>(),
     );
   });
 }

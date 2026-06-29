@@ -39,6 +39,38 @@ final class RuntimeInstallProgress {
   final double fraction;
 }
 
+sealed class RuntimeInstallProgressParseResult {
+  const RuntimeInstallProgressParseResult();
+}
+
+final class ParsedRuntimeInstallProgress
+    extends RuntimeInstallProgressParseResult {
+  const ParsedRuntimeInstallProgress(this.progress);
+
+  final RuntimeInstallProgress progress;
+}
+
+final class InvalidRuntimeInstallProgress
+    extends RuntimeInstallProgressParseResult {
+  const InvalidRuntimeInstallProgress();
+}
+
+sealed class _RuntimeInstallErrorMessageParseResult {
+  const _RuntimeInstallErrorMessageParseResult();
+}
+
+final class _ParsedRuntimeInstallErrorMessage
+    extends _RuntimeInstallErrorMessageParseResult {
+  const _ParsedRuntimeInstallErrorMessage(this.message);
+
+  final String message;
+}
+
+final class _InvalidRuntimeInstallErrorMessage
+    extends _RuntimeInstallErrorMessageParseResult {
+  const _InvalidRuntimeInstallErrorMessage();
+}
+
 RuntimeInstallParseResult parseRuntimeInstallPayload(String payload) {
   final Object? decoded;
 
@@ -70,9 +102,11 @@ RuntimeInstallParseResult parseRuntimeInstallPayload(String payload) {
       break;
   }
 
-  final errorMessage = _parseErrorMessage(decoded['error']);
-  if (errorMessage != null) {
-    return RuntimeInstallCommandFailure(errorMessage);
+  switch (_parseErrorMessage(decoded['error'])) {
+    case _ParsedRuntimeInstallErrorMessage(:final message):
+      return RuntimeInstallCommandFailure(message);
+    case _InvalidRuntimeInstallErrorMessage():
+      break;
   }
 
   return const RuntimeInstallParseFailure(
@@ -80,27 +114,29 @@ RuntimeInstallParseResult parseRuntimeInstallPayload(String payload) {
   );
 }
 
-RuntimeInstallProgress? parseRuntimeInstallProgressPayload(String payload) {
+RuntimeInstallProgressParseResult parseRuntimeInstallProgressPayload(
+  String payload,
+) {
   final Object? decoded;
 
   try {
     decoded = jsonDecode(payload);
   } on FormatException {
-    return null;
+    return const InvalidRuntimeInstallProgress();
   }
 
   if (decoded is! Map<String, dynamic>) {
-    return null;
+    return const InvalidRuntimeInstallProgress();
   }
 
   final Object? schemaVersion = decoded['schemaVersion'];
   if (schemaVersion != runtimeInstallSchemaVersion) {
-    return null;
+    return const InvalidRuntimeInstallProgress();
   }
 
   final progress = decoded['runtimeInstallProgress'];
   if (progress is! Map<String, dynamic>) {
-    return null;
+    return const InvalidRuntimeInstallProgress();
   }
 
   final stage = progress['stage'];
@@ -113,25 +149,27 @@ RuntimeInstallProgress? parseRuntimeInstallProgressPayload(String payload) {
       fraction is! num ||
       fraction < 0 ||
       fraction > 1) {
-    return null;
+    return const InvalidRuntimeInstallProgress();
   }
 
-  return RuntimeInstallProgress(
-    stage: stage,
-    message: message,
-    fraction: fraction.toDouble(),
+  return ParsedRuntimeInstallProgress(
+    RuntimeInstallProgress(
+      stage: stage,
+      message: message,
+      fraction: fraction.toDouble(),
+    ),
   );
 }
 
-String? _parseErrorMessage(Object? value) {
+_RuntimeInstallErrorMessageParseResult _parseErrorMessage(Object? value) {
   if (value is! Map<String, dynamic>) {
-    return null;
+    return const _InvalidRuntimeInstallErrorMessage();
   }
 
   final Object? message = value['message'];
   if (message is! String || message.isEmpty) {
-    return null;
+    return const _InvalidRuntimeInstallErrorMessage();
   }
 
-  return message;
+  return _ParsedRuntimeInstallErrorMessage(message);
 }

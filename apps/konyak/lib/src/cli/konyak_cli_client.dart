@@ -166,9 +166,11 @@ final class KonyakCliClient {
       workingDirectory: workingDirectory,
       environment: <String, String>{...environment, ...launcherEnvironment()},
       onStdoutLine: (line) {
-        final progress = parseRuntimeInstallProgressPayload(line);
-        if (progress != null) {
-          onProgress(progress);
+        switch (parseRuntimeInstallProgressPayload(line)) {
+          case ParsedRuntimeInstallProgress(:final progress):
+            onProgress(progress);
+          case InvalidRuntimeInstallProgress():
+            break;
         }
       },
     );
