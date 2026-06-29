@@ -427,6 +427,27 @@ void main() {
     );
   });
 
+  test('runtime release metadata fetch results compare by value', () {
+    expect(
+      RuntimeReleaseMetadataFetched(
+        RuntimeReleaseMetadata(
+          version: '1.0.0',
+          sourceManifestUrl: Option.of('https://example.invalid/source.json'),
+        ),
+      ),
+      RuntimeReleaseMetadataFetched(
+        RuntimeReleaseMetadata(
+          version: '1.0.0',
+          sourceManifestUrl: Option.of('https://example.invalid/source.json'),
+        ),
+      ),
+    );
+    expect(
+      const RuntimeReleaseMetadataFetchFailed('metadata unavailable'),
+      const RuntimeReleaseMetadataFetchFailed('metadata unavailable'),
+    );
+  });
+
   test('runtime install operations group install source as a domain value', () {
     final operation = RuntimeInstallRequestOperation.fullInstall();
 

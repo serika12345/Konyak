@@ -231,21 +231,19 @@ abstract class RuntimeReleaseMetadata with _$RuntimeReleaseMetadata {
   }) = _RuntimeReleaseMetadata;
 }
 
-sealed class RuntimeReleaseMetadataFetchResult {
-  const RuntimeReleaseMetadataFetchResult();
-}
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class RuntimeReleaseMetadataFetchResult
+    with _$RuntimeReleaseMetadataFetchResult {
+  const factory RuntimeReleaseMetadataFetchResult.fetched(
+    RuntimeReleaseMetadata metadata,
+  ) = RuntimeReleaseMetadataFetched;
 
-class RuntimeReleaseMetadataFetched extends RuntimeReleaseMetadataFetchResult {
-  const RuntimeReleaseMetadataFetched(this.metadata);
-
-  final RuntimeReleaseMetadata metadata;
-}
-
-class RuntimeReleaseMetadataFetchFailed
-    extends RuntimeReleaseMetadataFetchResult {
-  const RuntimeReleaseMetadataFetchFailed(this.message);
-
-  final String message;
+  const factory RuntimeReleaseMetadataFetchResult.failed(String message) =
+      RuntimeReleaseMetadataFetchFailed;
 }
 
 abstract interface class RuntimeReleaseMetadataFetcher {

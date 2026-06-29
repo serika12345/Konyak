@@ -13,6 +13,44 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-29 12:30 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Freezed-backed runtime release metadata fetch result variants.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: this commit (`Freezed release metadata fetch results`).
+- Purpose: continue the update result variant Freezed pass with the smallest
+  low-risk result union before touching variants that perform String-to-value
+  object conversion.
+- Completed work: committed the update record Freezed slice; scanned direct
+  update result variant constructor usage across CLI, IO, domain, and tests;
+  selected `RuntimeReleaseMetadataFetchResult` because its variants only wrap
+  an already-validated metadata record or failure message and can preserve the
+  existing concrete constructor names; added focused result value-semantics
+  coverage and observed it fail against the hand-written result classes;
+  converted `RuntimeReleaseMetadataFetchResult` to Freezed while preserving
+  `RuntimeReleaseMetadataFetched` and `RuntimeReleaseMetadataFetchFailed`
+  concrete constructor usage.
+- Remaining work: `RuntimeUpdateCheckResult`, `AppUpdateCheckResult`, and
+  `AppUpdateInstallResult` remain hand-written. `RuntimeUpdateRuntimeNotFound`
+  still performs String-to-`RuntimeId` conversion, so that slice needs call-site
+  planning rather than a blind union conversion.
+- Next action: evaluate `AppUpdateCheckResult` and `AppUpdateInstallResult`
+  first, because their variants do not perform value-object conversion and can
+  likely preserve direct concrete constructors.
+- Verification: observed `cd packages/konyak_cli && dart test
+  test/domain_immutability_test.dart --name "runtime release metadata fetch
+  results compare by value"` fail before implementation; after implementation,
+  `cd packages/konyak_cli && dart run build_runner build
+  --delete-conflicting-outputs && dart format
+  lib/src/domain/update/update_records.dart test/domain_immutability_test.dart
+  && dart analyze --fatal-infos`, focused metadata fetch result
+  value-semantics test, focused release metadata/update CLI contract tests, `cd
+  packages/konyak_cli && dart test test/domain_immutability_test.dart`, `just
+  verify-governance`, `just verify-architecture`, `just verify-safety`, `just
+  format-check`, `just lint`, and `just cli-test` passed.
+
 - Timestamp: 2026-06-29 12:21 JST
 - State: `completed`
 - Branch: `main`
