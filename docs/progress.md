@@ -13,6 +13,45 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-29 11:17 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Freezed-backed runtime install source variants.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: this commit (`Freezed runtime install sources`).
+- Purpose: continue replacing hand-written install operation model boilerplate
+  by converting the runtime install source variants after the checksum and
+  signature variants were stabilized.
+- Completed work: committed the checksum/signature slice; inspected
+  `RuntimeInstallSource` direct constructor usage and confirmed repo call sites
+  are limited to model construction in `runtime_install_operation_models.dart`
+  plus switch patterns in install planning/accessors; added focused source
+  snapshot coverage and observed it fail before implementation; converted
+  `RuntimeInstallSource` to Freezed-backed variants with public base factories
+  for configured, local, remote, and source-manifest sources; preserved existing
+  switch pattern names, value-object conversion, `hasExplicitInstallSource`,
+  and immutable component archive path snapshots; updated governance to require
+  the new Freezed source factory baseline instead of hand-written `final class`
+  variants.
+- Remaining work: `RuntimeInstallRequestOperation` variants remain hand-written
+  and are the next install-operation model candidate.
+- Next action: evaluate `RuntimeInstallRequestOperation` variants for a narrow
+  Freezed conversion slice while preserving `operation`, `force`, and
+  `installSource` accessors.
+- Verification: observed `cd packages/konyak_cli && dart test
+  test/domain_immutability_test.dart --name "runtime install sources expose
+  immutable archive path snapshots"` fail before implementation; after
+  implementation, `cd packages/konyak_cli && dart run build_runner build
+  --delete-conflicting-outputs && dart format
+  lib/src/domain/runtime/runtime_install_operation_models.dart
+  lib/src/domain/runtime/runtime_install_plans.dart
+  test/domain_immutability_test.dart && dart analyze --fatal-infos`, focused
+  source snapshot test, `cd packages/konyak_cli && dart test
+  test/domain_immutability_test.dart`, `just verify-governance`, `just
+  verify-architecture`, `just verify-safety`, `just format-check`, `just
+  lint`, and `just cli-test` passed.
+
 - Timestamp: 2026-06-29 11:12 JST
 - State: `completed`
 - Branch: `main`

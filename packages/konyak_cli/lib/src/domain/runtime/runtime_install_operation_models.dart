@@ -123,10 +123,21 @@ sealed class RuntimeSourceManifestSignature
   };
 }
 
-sealed class RuntimeInstallSource {
-  const RuntimeInstallSource();
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class RuntimeInstallSource with _$RuntimeInstallSource {
+  const RuntimeInstallSource._();
 
-  bool get hasExplicitInstallSource;
+  bool get hasExplicitInstallSource => switch (this) {
+    RuntimeConfiguredArchiveSource(:final componentArchivePaths) =>
+      componentArchivePaths.isNotEmpty,
+    RuntimeLocalArchiveSource() => true,
+    RuntimeRemoteArchiveSource() => true,
+    RuntimeSourceManifestInstallSource() => true,
+  };
 
   static RuntimeInstallSource fromOptions({
     Option<String> archivePath = const Option.none(),
@@ -160,13 +171,89 @@ sealed class RuntimeInstallSource {
           );
         }
 
-        return RuntimeSourceManifestInstallSource(
-          sourceManifest: sourceManifest.value,
+        return RuntimeInstallSource._sourceManifest(
+          sourceManifest: sourceManifest,
           signature: signature,
         );
       },
     );
   }
+
+  factory RuntimeInstallSource.configuredArchive({
+    RuntimeArchiveChecksum archiveChecksum =
+        const RuntimeArchiveChecksum.absent(),
+    Iterable<String> componentArchivePaths = const <String>[],
+  }) {
+    return RuntimeInstallSource._configuredArchive(
+      archiveChecksum: archiveChecksum,
+      componentArchivePaths: _runtimeComponentArchivePaths(
+        componentArchivePaths,
+      ),
+    );
+  }
+
+  const factory RuntimeInstallSource._configuredArchive({
+    required RuntimeArchiveChecksum archiveChecksum,
+    required IList<RuntimeArchivePath> componentArchivePaths,
+  }) = RuntimeConfiguredArchiveSource;
+
+  factory RuntimeInstallSource.localArchive({
+    required String archivePath,
+    RuntimeArchiveChecksum archiveChecksum =
+        const RuntimeArchiveChecksum.absent(),
+    Iterable<String> componentArchivePaths = const <String>[],
+  }) {
+    return RuntimeInstallSource._localArchive(
+      archivePath: RuntimeArchivePath(archivePath),
+      archiveChecksum: archiveChecksum,
+      componentArchivePaths: _runtimeComponentArchivePaths(
+        componentArchivePaths,
+      ),
+    );
+  }
+
+  const factory RuntimeInstallSource._localArchive({
+    required RuntimeArchivePath archivePath,
+    required RuntimeArchiveChecksum archiveChecksum,
+    required IList<RuntimeArchivePath> componentArchivePaths,
+  }) = RuntimeLocalArchiveSource;
+
+  factory RuntimeInstallSource.remoteArchive({
+    required String archiveUrl,
+    RuntimeArchiveChecksum archiveChecksum =
+        const RuntimeArchiveChecksum.absent(),
+    Iterable<String> componentArchivePaths = const <String>[],
+  }) {
+    return RuntimeInstallSource._remoteArchive(
+      archiveUrl: RuntimeArchiveUrl(archiveUrl),
+      archiveChecksum: archiveChecksum,
+      componentArchivePaths: _runtimeComponentArchivePaths(
+        componentArchivePaths,
+      ),
+    );
+  }
+
+  const factory RuntimeInstallSource._remoteArchive({
+    required RuntimeArchiveUrl archiveUrl,
+    required RuntimeArchiveChecksum archiveChecksum,
+    required IList<RuntimeArchivePath> componentArchivePaths,
+  }) = RuntimeRemoteArchiveSource;
+
+  factory RuntimeInstallSource.sourceManifest({
+    required String sourceManifest,
+    RuntimeSourceManifestSignature signature =
+        const RuntimeSourceManifestSignature.absent(),
+  }) {
+    return RuntimeInstallSource._sourceManifest(
+      sourceManifest: RuntimeSourceManifestUrl(sourceManifest),
+      signature: signature,
+    );
+  }
+
+  const factory RuntimeInstallSource._sourceManifest({
+    required RuntimeSourceManifestUrl sourceManifest,
+    required RuntimeSourceManifestSignature signature,
+  }) = RuntimeSourceManifestInstallSource;
 }
 
 RuntimeInstallSource _runtimeArchiveInstallSourceFromOptions({
@@ -184,86 +271,22 @@ RuntimeInstallSource _runtimeArchiveInstallSourceFromOptions({
 
   return localArchive.match(
     () => remoteArchive.match(
-      () => RuntimeConfiguredArchiveSource(
+      () => RuntimeInstallSource._configuredArchive(
         archiveChecksum: checksum,
-        componentArchivePaths: components.map((value) => value.value),
+        componentArchivePaths: components,
       ),
-      (value) => RuntimeRemoteArchiveSource(
-        archiveUrl: value.value,
+      (value) => RuntimeInstallSource._remoteArchive(
+        archiveUrl: value,
         archiveChecksum: checksum,
-        componentArchivePaths: components.map((value) => value.value),
+        componentArchivePaths: components,
       ),
     ),
-    (value) => RuntimeLocalArchiveSource(
-      archivePath: value.value,
+    (value) => RuntimeInstallSource._localArchive(
+      archivePath: value,
       archiveChecksum: checksum,
-      componentArchivePaths: components.map((value) => value.value),
+      componentArchivePaths: components,
     ),
   );
-}
-
-final class RuntimeConfiguredArchiveSource extends RuntimeInstallSource {
-  RuntimeConfiguredArchiveSource({
-    this.archiveChecksum = const RuntimeArchiveChecksum.absent(),
-    Iterable<String> componentArchivePaths = const <String>[],
-  }) : componentArchivePaths = _runtimeComponentArchivePaths(
-         componentArchivePaths,
-       );
-
-  final RuntimeArchiveChecksum archiveChecksum;
-  final IList<RuntimeArchivePath> componentArchivePaths;
-
-  @override
-  bool get hasExplicitInstallSource => componentArchivePaths.isNotEmpty;
-}
-
-final class RuntimeLocalArchiveSource extends RuntimeInstallSource {
-  RuntimeLocalArchiveSource({
-    required String archivePath,
-    this.archiveChecksum = const RuntimeArchiveChecksum.absent(),
-    Iterable<String> componentArchivePaths = const <String>[],
-  }) : archivePath = RuntimeArchivePath(archivePath),
-       componentArchivePaths = _runtimeComponentArchivePaths(
-         componentArchivePaths,
-       );
-
-  final RuntimeArchivePath archivePath;
-  final RuntimeArchiveChecksum archiveChecksum;
-  final IList<RuntimeArchivePath> componentArchivePaths;
-
-  @override
-  bool get hasExplicitInstallSource => true;
-}
-
-final class RuntimeRemoteArchiveSource extends RuntimeInstallSource {
-  RuntimeRemoteArchiveSource({
-    required String archiveUrl,
-    this.archiveChecksum = const RuntimeArchiveChecksum.absent(),
-    Iterable<String> componentArchivePaths = const <String>[],
-  }) : archiveUrl = RuntimeArchiveUrl(archiveUrl),
-       componentArchivePaths = _runtimeComponentArchivePaths(
-         componentArchivePaths,
-       );
-
-  final RuntimeArchiveUrl archiveUrl;
-  final RuntimeArchiveChecksum archiveChecksum;
-  final IList<RuntimeArchivePath> componentArchivePaths;
-
-  @override
-  bool get hasExplicitInstallSource => true;
-}
-
-final class RuntimeSourceManifestInstallSource extends RuntimeInstallSource {
-  RuntimeSourceManifestInstallSource({
-    required String sourceManifest,
-    this.signature = const RuntimeSourceManifestSignature.absent(),
-  }) : sourceManifest = RuntimeSourceManifestUrl(sourceManifest);
-
-  final RuntimeSourceManifestUrl sourceManifest;
-  final RuntimeSourceManifestSignature signature;
-
-  @override
-  bool get hasExplicitInstallSource => true;
 }
 
 final class RuntimeFullInstallOperation extends RuntimeInstallRequestOperation {

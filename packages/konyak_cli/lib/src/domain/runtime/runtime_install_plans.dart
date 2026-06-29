@@ -213,7 +213,7 @@ RuntimeInstallSource _runtimeInstallSourceWithConfiguredManifest({
 
   return configuredSourceManifest.match(
     () => requestSource,
-    (sourceManifest) => RuntimeSourceManifestInstallSource(
+    (sourceManifest) => RuntimeInstallSource.sourceManifest(
       sourceManifest: sourceManifest,
       signature: runtimeSourceManifestSignature(
         configuredSourceManifestSignature,

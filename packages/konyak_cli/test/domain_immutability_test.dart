@@ -364,6 +364,47 @@ void main() {
     expect(manifestSource.signature, isA<RuntimeSourceManifestSigned>());
   });
 
+  test('runtime install sources expose immutable archive path snapshots', () {
+    final componentArchivePaths = <String>['/dxvk.tar.gz'];
+    final configuredSource = RuntimeInstallSource.configuredArchive(
+      componentArchivePaths: componentArchivePaths,
+    );
+    final localSource = RuntimeInstallSource.localArchive(
+      archivePath: '/wine.tar.gz',
+      componentArchivePaths: componentArchivePaths,
+    );
+    final remoteSource = RuntimeInstallSource.remoteArchive(
+      archiveUrl: 'https://example.invalid/wine.tar.gz',
+      componentArchivePaths: componentArchivePaths,
+    );
+    componentArchivePaths.add('/vkd3d.tar.gz');
+
+    expect(
+      switch (configuredSource) {
+        RuntimeConfiguredArchiveSource(:final componentArchivePaths) =>
+          componentArchivePaths,
+        _ => throw TestFailure('Expected configured archive source.'),
+      },
+      [RuntimeArchivePath('/dxvk.tar.gz')],
+    );
+    expect(
+      switch (localSource) {
+        RuntimeLocalArchiveSource(:final componentArchivePaths) =>
+          componentArchivePaths,
+        _ => throw TestFailure('Expected local archive source.'),
+      },
+      [RuntimeArchivePath('/dxvk.tar.gz')],
+    );
+    expect(
+      switch (remoteSource) {
+        RuntimeRemoteArchiveSource(:final componentArchivePaths) =>
+          componentArchivePaths,
+        _ => throw TestFailure('Expected remote archive source.'),
+      },
+      [RuntimeArchivePath('/dxvk.tar.gz')],
+    );
+  });
+
   test('runtime install plans expose immutable archive path snapshots', () {
     final componentArchivePaths = <RuntimeArchivePath>[
       RuntimeArchivePath('/dxvk.tar.gz'),

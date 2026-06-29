@@ -1727,11 +1727,15 @@ def require_result_boundary_rules() -> None:
         require_not_contains("packages/konyak_cli/lib/src/domain/update/update_records.dart", forbidden)
     for expected in [
         "RuntimeInstallSource get installSource;",
-        "sealed class RuntimeInstallSource",
-        "final class RuntimeConfiguredArchiveSource",
-        "final class RuntimeLocalArchiveSource",
-        "final class RuntimeRemoteArchiveSource",
-        "final class RuntimeSourceManifestInstallSource",
+        "sealed class RuntimeInstallSource with _$RuntimeInstallSource",
+        "factory RuntimeInstallSource.configuredArchive",
+        "factory RuntimeInstallSource.localArchive",
+        "factory RuntimeInstallSource.remoteArchive",
+        "factory RuntimeInstallSource.sourceManifest",
+        ") = RuntimeConfiguredArchiveSource;",
+        ") = RuntimeLocalArchiveSource;",
+        ") = RuntimeRemoteArchiveSource;",
+        ") = RuntimeSourceManifestInstallSource;",
         "final RuntimeInstallSource installSource;",
     ]:
         require_contains(
