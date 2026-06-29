@@ -364,6 +364,43 @@ void main() {
     expect(manifestSource.signature, isA<RuntimeSourceManifestSigned>());
   });
 
+  test('runtime install plans expose immutable archive path snapshots', () {
+    final componentArchivePaths = <RuntimeArchivePath>[
+      RuntimeArchivePath('/dxvk.tar.gz'),
+    ];
+    final localPlan = RuntimeWineInstallPlan.fromArchive(
+      archivePath: RuntimeArchivePath('/wine.tar.gz'),
+      archiveSha256: const RuntimeArchiveChecksum.absent(),
+      componentArchivePaths: componentArchivePaths,
+      preserveExistingRuntimeFiles: false,
+    );
+    final remotePlan = RuntimeWineInstallPlan.downloadArchive(
+      archiveUrl: RuntimeArchiveUrl('https://example.invalid/wine.tar.gz'),
+      archiveFileName: 'wine.tar.gz',
+      archiveSha256: const RuntimeArchiveChecksum.absent(),
+      componentArchivePaths: componentArchivePaths,
+      preserveExistingRuntimeFiles: false,
+    );
+    componentArchivePaths.add(RuntimeArchivePath('/vkd3d.tar.gz'));
+
+    expect(
+      switch (localPlan) {
+        RuntimeWineInstallFromArchive(:final componentArchivePaths) =>
+          componentArchivePaths,
+        _ => throw TestFailure('Expected local archive plan.'),
+      },
+      [RuntimeArchivePath('/dxvk.tar.gz')],
+    );
+    expect(
+      switch (remotePlan) {
+        RuntimeWineInstallDownloadArchive(:final componentArchivePaths) =>
+          componentArchivePaths,
+        _ => throw TestFailure('Expected remote archive plan.'),
+      },
+      [RuntimeArchivePath('/dxvk.tar.gz')],
+    );
+  });
+
   test('program path Wine arguments model unsupported paths with Option', () {
     expect(
       wineArgumentsForProgramPath(ProgramPath('/Games/setup.exe')).toNullable(),

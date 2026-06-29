@@ -13,6 +13,42 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-29 11:05 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Freezed-backed runtime install plan variants.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: this commit (`Freezed runtime install plans`).
+- Purpose: continue replacing hand-written immutable domain model boilerplate
+  with Freezed-backed records, focusing on runtime install plan variants after
+  evaluating the component-version wrapper.
+- Completed work: committed the runtime validation slice; evaluated
+  `RuntimeComponentVersions` and deferred it because preserving both
+  `const RuntimeComponentVersions.empty()` and current map-based equality would
+  either keep hand-written equality or expose the internal `IMap` as the public
+  generated field; added focused runtime install plan snapshot coverage;
+  converted `RuntimeWineInstallPlan` variants to Freezed-backed variants with
+  `copyWith` disabled, preserving existing switch patterns and `IList`
+  snapshots for archive component paths.
+- Remaining work: `RuntimeComponentVersions` remains intentionally hand-written
+  until its public constructor/empty/equality shape can be simplified; the next
+  larger candidate is `runtime_install_operation_models.dart`, which still owns
+  multiple hand-written install source and operation variants.
+- Next action: evaluate `runtime_install_operation_models.dart` for a narrow
+  Freezed conversion slice, starting with checksum/signature variants before
+  the source/operation constructors.
+- Verification: observed the new focused immutability test fail before
+  implementation; after implementation, `cd packages/konyak_cli && dart run
+  build_runner build --delete-conflicting-outputs && dart format
+  lib/src/domain/runtime/runtime_install_plans.dart
+  test/domain_immutability_test.dart && dart analyze --fatal-infos`, `cd
+  packages/konyak_cli && dart test test/domain_immutability_test.dart --name
+  "runtime install plans expose immutable archive path snapshots"`, `cd
+  packages/konyak_cli && dart test test/domain_immutability_test.dart`, `just
+  verify-governance`, `just verify-architecture`, `just verify-safety`, `just
+  format-check`, `just lint`, and `just cli-test` passed.
+
 - Timestamp: 2026-06-29 10:41 JST
 - State: `completed`
 - Branch: `main`
