@@ -13,6 +13,32 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-29 20:13 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Narrow Flutter CLI adapter nullable responsibility.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: current commit.
+- Purpose: split nullable JSON/process boundary handling from command/result
+  adapter code so `apps/konyak/lib/src/cli` no longer remains one broad
+  nullable allowance.
+- Completed work: replaced the bottle delete not-found parser helper and the
+  graphics backend signal/suggestion parser helpers with private sealed parse
+  results instead of nullable success/failure sentinels, while leaving external
+  JSON `Object?` handling inside payload parser files.
+- Remaining work: continue removing nullable sentinels from Flutter CLI
+  contract parsers, especially runtime and bottle record contracts, then narrow
+  the custom-lint nullable allowance from the whole `apps/konyak/lib/src/cli`
+  directory to direct parser/process boundary files once those adapters are
+  stable.
+- Next action: continue with `runtime_list_contract.dart` or
+  `bottle_record_contract.dart` parser helpers.
+- Verification: focused Flutter CLI client tests for delete-bottle missing
+  handling and graphics backend hints passed; `just verify-governance`, `just
+  verify-safety`, `just format-check`, `just lint`, and `just flutter-test`
+  passed in the Nix dev shell.
+
 - Timestamp: 2026-06-29 19:45 JST
 - State: `completed`
 - Branch: `main`

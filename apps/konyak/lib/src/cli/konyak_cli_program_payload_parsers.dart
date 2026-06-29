@@ -3,6 +3,38 @@ import 'dart:convert';
 import 'konyak_cli_program_result_types.dart';
 import 'konyak_cli_wine_process_payload_parsers.dart';
 
+sealed class _GraphicsBackendSignalParseResult {
+  const _GraphicsBackendSignalParseResult();
+}
+
+final class _ParsedGraphicsBackendSignal
+    extends _GraphicsBackendSignalParseResult {
+  const _ParsedGraphicsBackendSignal(this.signal);
+
+  final ProgramGraphicsBackendSignalSummary signal;
+}
+
+final class _InvalidGraphicsBackendSignal
+    extends _GraphicsBackendSignalParseResult {
+  const _InvalidGraphicsBackendSignal();
+}
+
+sealed class _GraphicsBackendSuggestionParseResult {
+  const _GraphicsBackendSuggestionParseResult();
+}
+
+final class _ParsedGraphicsBackendSuggestion
+    extends _GraphicsBackendSuggestionParseResult {
+  const _ParsedGraphicsBackendSuggestion(this.suggestion);
+
+  final ProgramGraphicsBackendSuggestionSummary suggestion;
+}
+
+final class _InvalidGraphicsBackendSuggestion
+    extends _GraphicsBackendSuggestionParseResult {
+  const _InvalidGraphicsBackendSuggestion();
+}
+
 BottleProgramListLoadResult parseBottleProgramListPayload(String payload) {
   final Object? decoded;
   try {
@@ -154,28 +186,30 @@ GraphicsBackendHintsLoadResult parseGraphicsBackendHintsPayload(
 
   final parsedSignals = <ProgramGraphicsBackendSignalSummary>[];
   for (final signal in signals) {
-    final parsedSignal = parseGraphicsBackendSignal(signal);
-    if (parsedSignal == null) {
-      return const GraphicsBackendHintsLoadFailure(
-        exitCode: 0,
-        message: 'Invalid graphics backend signal.',
-        diagnostic: '',
-      );
+    switch (_parseGraphicsBackendSignal(signal)) {
+      case _ParsedGraphicsBackendSignal(:final signal):
+        parsedSignals.add(signal);
+      case _InvalidGraphicsBackendSignal():
+        return const GraphicsBackendHintsLoadFailure(
+          exitCode: 0,
+          message: 'Invalid graphics backend signal.',
+          diagnostic: '',
+        );
     }
-    parsedSignals.add(parsedSignal);
   }
 
   final parsedSuggestions = <ProgramGraphicsBackendSuggestionSummary>[];
   for (final suggestion in suggestions) {
-    final parsedSuggestion = parseGraphicsBackendSuggestion(suggestion);
-    if (parsedSuggestion == null) {
-      return const GraphicsBackendHintsLoadFailure(
-        exitCode: 0,
-        message: 'Invalid graphics backend suggestion.',
-        diagnostic: '',
-      );
+    switch (_parseGraphicsBackendSuggestion(suggestion)) {
+      case _ParsedGraphicsBackendSuggestion(:final suggestion):
+        parsedSuggestions.add(suggestion);
+      case _InvalidGraphicsBackendSuggestion():
+        return const GraphicsBackendHintsLoadFailure(
+          exitCode: 0,
+          message: 'Invalid graphics backend suggestion.',
+          diagnostic: '',
+        );
     }
-    parsedSuggestions.add(parsedSuggestion);
   }
 
   return LoadedGraphicsBackendHints(
@@ -188,39 +222,41 @@ GraphicsBackendHintsLoadResult parseGraphicsBackendHintsPayload(
   );
 }
 
-ProgramGraphicsBackendSignalSummary? parseGraphicsBackendSignal(
-  Object? signal,
-) {
+_GraphicsBackendSignalParseResult _parseGraphicsBackendSignal(Object? signal) {
   if (signal is! Map<String, Object?>) {
-    return null;
+    return const _InvalidGraphicsBackendSignal();
   }
 
   final kind = signal['kind'];
   final value = signal['value'];
   if (kind is! String || value is! String) {
-    return null;
+    return const _InvalidGraphicsBackendSignal();
   }
 
-  return ProgramGraphicsBackendSignalSummary(kind: kind, value: value);
+  return _ParsedGraphicsBackendSignal(
+    ProgramGraphicsBackendSignalSummary(kind: kind, value: value),
+  );
 }
 
-ProgramGraphicsBackendSuggestionSummary? parseGraphicsBackendSuggestion(
+_GraphicsBackendSuggestionParseResult _parseGraphicsBackendSuggestion(
   Object? suggestion,
 ) {
   if (suggestion is! Map<String, Object?>) {
-    return null;
+    return const _InvalidGraphicsBackendSuggestion();
   }
 
   final backend = suggestion['backend'];
   final confidence = suggestion['confidence'];
   final reason = suggestion['reason'];
   if (backend is! String || confidence is! String || reason is! String) {
-    return null;
+    return const _InvalidGraphicsBackendSuggestion();
   }
 
-  return ProgramGraphicsBackendSuggestionSummary(
-    backend: backend,
-    confidence: confidence,
-    reason: reason,
+  return _ParsedGraphicsBackendSuggestion(
+    ProgramGraphicsBackendSuggestionSummary(
+      backend: backend,
+      confidence: confidence,
+      reason: reason,
+    ),
   );
 }

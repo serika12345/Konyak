@@ -9,6 +9,21 @@ sealed class BottleDeleteParseResult {
   const BottleDeleteParseResult();
 }
 
+sealed class _BottleDeleteNotFoundParseResult {
+  const _BottleDeleteNotFoundParseResult();
+}
+
+final class _ParsedBottleDeleteNotFound
+    extends _BottleDeleteNotFoundParseResult {
+  const _ParsedBottleDeleteNotFound(this.notFound);
+
+  final BottleDeleteNotFound notFound;
+}
+
+final class _NoBottleDeleteNotFound extends _BottleDeleteNotFoundParseResult {
+  const _NoBottleDeleteNotFound();
+}
+
 BottleArchiveExportLoadResult parseBottleArchiveExportPayload(String payload) {
   final Object? decoded;
   try {
@@ -92,9 +107,11 @@ BottleDeleteParseResult parseBottleDeletePayload(String payload) {
     );
   }
 
-  final notFound = parseBottleDeleteNotFound(decoded['error']);
-  if (notFound != null) {
-    return notFound;
+  switch (_parseBottleDeleteNotFound(decoded['error'])) {
+    case _ParsedBottleDeleteNotFound(:final notFound):
+      return notFound;
+    case _NoBottleDeleteNotFound():
+      break;
   }
 
   final bottle = parseBottleSummary(decoded['deletedBottle']);
@@ -107,9 +124,9 @@ BottleDeleteParseResult parseBottleDeletePayload(String payload) {
   return ParsedBottleDelete(bottle);
 }
 
-BottleDeleteNotFound? parseBottleDeleteNotFound(Object? value) {
+_BottleDeleteNotFoundParseResult _parseBottleDeleteNotFound(Object? value) {
   if (value is! Map<String, dynamic>) {
-    return null;
+    return const _NoBottleDeleteNotFound();
   }
 
   final Object? code = value['code'];
@@ -117,10 +134,12 @@ BottleDeleteNotFound? parseBottleDeleteNotFound(Object? value) {
   final Object? bottleId = value['bottleId'];
 
   if (code != 'bottleNotFound' || message is! String || bottleId is! String) {
-    return null;
+    return const _NoBottleDeleteNotFound();
   }
 
-  return BottleDeleteNotFound(bottleId: bottleId, message: message);
+  return _ParsedBottleDeleteNotFound(
+    BottleDeleteNotFound(bottleId: bottleId, message: message),
+  );
 }
 
 BottleLocationOpenResult parseBottleLocationOpenPayload(String payload) {
