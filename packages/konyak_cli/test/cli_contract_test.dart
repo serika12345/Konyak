@@ -687,7 +687,7 @@ final class FailingBottleRepository extends MemoryBottleRepository {
   ProgramSettingsReadResult readProgramSettings(
     ProgramSettingsRequest request,
   ) {
-    return ProgramSettingsReadFailed(message);
+    return ProgramSettingsReadResult.failed(message);
   }
 }
 

@@ -273,48 +273,53 @@ abstract class ProgramSettingsUpdateRequest
   }) = _ProgramSettingsUpdateRequest;
 }
 
-sealed class ProgramSettingsReadResult {
-  const ProgramSettingsReadResult();
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class ProgramSettingsReadResult with _$ProgramSettingsReadResult {
+  const ProgramSettingsReadResult._();
+
+  const factory ProgramSettingsReadResult.read(ProgramSettingsRecord settings) =
+      ProgramSettingsRead;
+
+  factory ProgramSettingsReadResult.missingBottle(String bottleId) {
+    return ProgramSettingsReadResult._missingBottle(
+      bottleId: BottleId(bottleId),
+    );
+  }
+
+  const factory ProgramSettingsReadResult._missingBottle({
+    required BottleId bottleId,
+  }) = ProgramSettingsReadMissingBottle;
+
+  const factory ProgramSettingsReadResult.failed(String message) =
+      ProgramSettingsReadFailed;
 }
 
-class ProgramSettingsRead extends ProgramSettingsReadResult {
-  const ProgramSettingsRead(this.settings);
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class ProgramSettingsUpdateResult with _$ProgramSettingsUpdateResult {
+  const ProgramSettingsUpdateResult._();
 
-  final ProgramSettingsRecord settings;
-}
+  const factory ProgramSettingsUpdateResult.updated(
+    ProgramSettingsRecord settings,
+  ) = ProgramSettingsUpdated;
 
-class ProgramSettingsReadMissingBottle extends ProgramSettingsReadResult {
-  ProgramSettingsReadMissingBottle(String bottleId)
-    : bottleId = BottleId(bottleId);
+  factory ProgramSettingsUpdateResult.missingBottle(String bottleId) {
+    return ProgramSettingsUpdateResult._missingBottle(
+      bottleId: BottleId(bottleId),
+    );
+  }
 
-  final BottleId bottleId;
-}
+  const factory ProgramSettingsUpdateResult._missingBottle({
+    required BottleId bottleId,
+  }) = ProgramSettingsUpdateMissingBottle;
 
-class ProgramSettingsReadFailed extends ProgramSettingsReadResult {
-  const ProgramSettingsReadFailed(this.message);
-
-  final String message;
-}
-
-sealed class ProgramSettingsUpdateResult {
-  const ProgramSettingsUpdateResult();
-}
-
-class ProgramSettingsUpdated extends ProgramSettingsUpdateResult {
-  const ProgramSettingsUpdated(this.settings);
-
-  final ProgramSettingsRecord settings;
-}
-
-class ProgramSettingsUpdateMissingBottle extends ProgramSettingsUpdateResult {
-  ProgramSettingsUpdateMissingBottle(String bottleId)
-    : bottleId = BottleId(bottleId);
-
-  final BottleId bottleId;
-}
-
-class ProgramSettingsUpdateFailed extends ProgramSettingsUpdateResult {
-  const ProgramSettingsUpdateFailed(this.message);
-
-  final String message;
+  const factory ProgramSettingsUpdateResult.failed(String message) =
+      ProgramSettingsUpdateFailed;
 }

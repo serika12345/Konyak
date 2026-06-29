@@ -100,9 +100,9 @@ class FileBottleRepositoryProgramOperations {
     ProgramSettingsRequest request,
   ) {
     return findBottle(request.bottleId.value).fold<ProgramSettingsReadResult>(
-      ProgramSettingsReadFailed.new,
+      ProgramSettingsReadResult.failed,
       (bottle) => bottle.match(
-        () => ProgramSettingsReadMissingBottle(request.bottleId.value),
+        () => ProgramSettingsReadResult.missingBottle(request.bottleId.value),
         (bottle) {
           final readResult = ioResult(
             () => readProgramSettingsJson(
@@ -113,8 +113,8 @@ class FileBottleRepositoryProgramOperations {
             ),
           );
           return readResult.fold<ProgramSettingsReadResult>(
-            ProgramSettingsReadFailed.new,
-            ProgramSettingsRead.new,
+            ProgramSettingsReadResult.failed,
+            ProgramSettingsReadResult.read,
           );
         },
       ),
@@ -125,9 +125,9 @@ class FileBottleRepositoryProgramOperations {
     ProgramSettingsUpdateRequest request,
   ) {
     return findBottle(request.bottleId.value).fold<ProgramSettingsUpdateResult>(
-      ProgramSettingsUpdateFailed.new,
+      ProgramSettingsUpdateResult.failed,
       (bottle) => bottle.match(
-        () => ProgramSettingsUpdateMissingBottle(request.bottleId.value),
+        () => ProgramSettingsUpdateResult.missingBottle(request.bottleId.value),
         (bottle) {
           final writeResult = ioResult(() {
             writeProgramSettingsJson(
@@ -139,8 +139,8 @@ class FileBottleRepositoryProgramOperations {
             );
           });
           return writeResult.fold<ProgramSettingsUpdateResult>(
-            ProgramSettingsUpdateFailed.new,
-            (_) => ProgramSettingsUpdated(request.settings),
+            ProgramSettingsUpdateResult.failed,
+            (_) => ProgramSettingsUpdateResult.updated(request.settings),
           );
         },
       ),

@@ -160,7 +160,7 @@ class CompositeBottleRepository implements BottleRepository {
       }
     }
 
-    return ProgramSettingsReadMissingBottle(request.bottleId.value);
+    return ProgramSettingsReadResult.missingBottle(request.bottleId.value);
   }
 
   @override

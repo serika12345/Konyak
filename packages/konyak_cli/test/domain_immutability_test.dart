@@ -900,6 +900,42 @@ void main() {
     );
   });
 
+  test('program settings results compare by semantic values', () {
+    final settings = ProgramSettingsRecord(
+      locale: 'ja_JP',
+      arguments: '-novid',
+    );
+
+    expect(
+      ProgramSettingsReadResult.read(settings),
+      ProgramSettingsReadResult.read(
+        ProgramSettingsRecord(locale: 'ja_JP', arguments: '-novid'),
+      ),
+    );
+    expect(
+      ProgramSettingsReadResult.missingBottle('steam'),
+      ProgramSettingsReadResult.missingBottle('steam'),
+    );
+    expect(
+      ProgramSettingsReadResult.failed('read failed'),
+      ProgramSettingsReadResult.failed('read failed'),
+    );
+    expect(
+      ProgramSettingsUpdateResult.updated(settings),
+      ProgramSettingsUpdateResult.updated(
+        ProgramSettingsRecord(locale: 'ja_JP', arguments: '-novid'),
+      ),
+    );
+    expect(
+      ProgramSettingsUpdateResult.missingBottle('steam'),
+      ProgramSettingsUpdateResult.missingBottle('steam'),
+    );
+    expect(
+      ProgramSettingsUpdateResult.failed('write failed'),
+      ProgramSettingsUpdateResult.failed('write failed'),
+    );
+  });
+
   test('Wine process kill plans model process ids with WineProcessId', () {
     expect(winedbgAttachProcessId(WineProcessId('000000d8')), '0x000000d8');
     expect(winedbgAttachProcessId(WineProcessId('0x000000d8')), '0x000000d8');

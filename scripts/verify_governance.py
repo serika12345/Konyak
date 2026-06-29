@@ -1870,13 +1870,24 @@ def require_result_boundary_rules() -> None:
     ]:
         require_contains("packages/konyak_cli/lib/src/domain/bottle/bottle_mutation_models.dart", expected)
 
-    for expected in [
-        "class ProgramPinFailed",
-        "class ProgramUpdateFailed",
-        "class ProgramSettingsReadFailed",
-        "class ProgramSettingsUpdateFailed",
+    program_mutation_text = read_text(
+        "packages/konyak_cli/lib/src/domain/program/program_mutation_models.dart"
+    )
+    for expected_options in [
+        ["class ProgramPinFailed"],
+        ["class ProgramUpdateFailed"],
+        ["class ProgramSettingsReadFailed", "ProgramSettingsReadResult.failed"],
+        [
+            "class ProgramSettingsUpdateFailed",
+            "ProgramSettingsUpdateResult.failed",
+        ],
     ]:
-        require_contains("packages/konyak_cli/lib/src/domain/program/program_mutation_models.dart", expected)
+        if not any(expected in program_mutation_text for expected in expected_options):
+            raise AssertionError(
+                "packages/konyak_cli/lib/src/domain/program/"
+                "program_mutation_models.dart must contain one of: "
+                f"{expected_options}"
+            )
 
     require_contains(
         "packages/konyak_cli/lib/src/cli/cli_injected_runner.dart",

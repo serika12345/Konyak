@@ -282,8 +282,8 @@ class MemoryBottleRepository implements BottleRepository {
     ProgramSettingsRequest request,
   ) {
     return mapValue(bottlesById, request.bottleId.value).match(
-      () => ProgramSettingsReadMissingBottle(request.bottleId.value),
-      (bottle) => ProgramSettingsRead(
+      () => ProgramSettingsReadResult.missingBottle(request.bottleId.value),
+      (bottle) => ProgramSettingsReadResult.read(
         mapValue(
           programSettingsByKey,
           programSettingsKey(
@@ -300,7 +300,7 @@ class MemoryBottleRepository implements BottleRepository {
     ProgramSettingsUpdateRequest request,
   ) {
     return mapValue(bottlesById, request.bottleId.value).match(
-      () => ProgramSettingsUpdateMissingBottle(request.bottleId.value),
+      () => ProgramSettingsUpdateResult.missingBottle(request.bottleId.value),
       (bottle) {
         programSettingsByKey[programSettingsKey(
               bottleId: bottle.id.value,
@@ -308,7 +308,7 @@ class MemoryBottleRepository implements BottleRepository {
             )] =
             request.settings;
 
-        return ProgramSettingsUpdated(request.settings);
+        return ProgramSettingsUpdateResult.updated(request.settings);
       },
     );
   }
