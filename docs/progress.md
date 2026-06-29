@@ -13,28 +13,27 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-06-29 09:52 JST
+- Timestamp: 2026-06-29 09:57 JST
 - State: `completed`
 - Branch: `main`
-- Active work: Freezed-backed runtime record.
+- Active work: Freezed-backed runtime source manifest records.
 - Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
   boundary tightening.
-- Latest commit: this commit (`Freezed runtime record domain model`).
+- Latest commit: `22eff84` (`Freezed runtime record domain model`).
 - Purpose: continue replacing hand-written immutable domain model boilerplate
-  with Freezed-backed records, now focusing on the aggregate runtime record
-  after definition/state/capability records were converted.
-- Completed work: committed the runtime definition/state/capability Freezed
-  slice; inspected `RuntimeRecord` constructors, call sites, CLI projection,
-  domain immutability coverage, and runtime governance checks; converted
-  `RuntimeRecord` to a Freezed-backed record with `copyWith` disabled while
-  preserving the public constructor and `fromParts`; regenerated the local
-  ignored `runtime_models.freezed.dart`; updated governance so typed runtime
-  record fields can be enforced through either hand-written final fields or
-  Freezed `_validated` constructor parameters.
-- Remaining work: runtime source manifest models remain hand-written
-  candidates.
-- Next action: evaluate runtime source manifest models as the next narrow
-  Freezed conversion candidate.
+  with Freezed-backed records, now focusing on source manifest records used by
+  runtime stack source archive planning.
+- Completed work: committed the runtime record Freezed slice; inspected
+  `RuntimeSourceManifest`, `RuntimeSourceComponent`, parser call sites,
+  archive planning, domain immutability coverage, and governance checks;
+  converted `RuntimeSourceManifest` and `RuntimeSourceComponent` to
+  Freezed-backed records with `copyWith` disabled while preserving public
+  constructors, immutable component snapshots, and `componentById`; regenerated
+  the local ignored `runtime_models.freezed.dart`.
+- Remaining work: commit this source manifest Freezed slice if accepted.
+  Runtime source archive plan records remain hand-written candidates.
+- Next action: commit this slice, then evaluate runtime source archive plan
+  records separately.
 - Verification: `cd packages/konyak_cli && dart run build_runner build && dart
   format lib/src/domain/runtime/runtime_models.dart && dart analyze
   --fatal-infos`, `cd packages/konyak_cli && dart test

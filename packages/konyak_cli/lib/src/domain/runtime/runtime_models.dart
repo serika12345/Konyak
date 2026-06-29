@@ -326,18 +326,31 @@ abstract class RuntimeStackComponent with _$RuntimeStackComponent {
   }
 }
 
-class RuntimeSourceManifest {
-  RuntimeSourceManifest({
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class RuntimeSourceManifest with _$RuntimeSourceManifest {
+  const RuntimeSourceManifest._();
+
+  factory RuntimeSourceManifest({
     required String runtimeId,
     required String stackId,
     required Iterable<RuntimeSourceComponent> components,
-  }) : runtimeId = RuntimeId(runtimeId),
-       stackId = RuntimeStackId(stackId),
-       components = List.unmodifiable(components);
+  }) {
+    return RuntimeSourceManifest._validated(
+      runtimeId: RuntimeId(runtimeId),
+      stackId: RuntimeStackId(stackId),
+      components: List.unmodifiable(components),
+    );
+  }
 
-  final RuntimeId runtimeId;
-  final RuntimeStackId stackId;
-  final List<RuntimeSourceComponent> components;
+  const factory RuntimeSourceManifest._validated({
+    required RuntimeId runtimeId,
+    required RuntimeStackId stackId,
+    required List<RuntimeSourceComponent> components,
+  }) = _RuntimeSourceManifest;
 
   Option<RuntimeSourceComponent> componentById(String id) {
     for (final component in components) {
@@ -350,19 +363,32 @@ class RuntimeSourceManifest {
   }
 }
 
-class RuntimeSourceComponent {
-  RuntimeSourceComponent({
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class RuntimeSourceComponent with _$RuntimeSourceComponent {
+  const RuntimeSourceComponent._();
+
+  factory RuntimeSourceComponent({
     required String id,
     required String version,
     required String archiveUrl,
     required String sha256,
-  }) : id = RuntimeSourceComponentId(id),
-       version = RuntimeSourceComponentVersion(version),
-       archiveUrl = RuntimeArchiveUrl(archiveUrl),
-       sha256 = RuntimeArchiveChecksumValue(sha256);
+  }) {
+    return RuntimeSourceComponent._validated(
+      id: RuntimeSourceComponentId(id),
+      version: RuntimeSourceComponentVersion(version),
+      archiveUrl: RuntimeArchiveUrl(archiveUrl),
+      sha256: RuntimeArchiveChecksumValue(sha256),
+    );
+  }
 
-  final RuntimeSourceComponentId id;
-  final RuntimeSourceComponentVersion version;
-  final RuntimeArchiveUrl archiveUrl;
-  final RuntimeArchiveChecksumValue sha256;
+  const factory RuntimeSourceComponent._validated({
+    required RuntimeSourceComponentId id,
+    required RuntimeSourceComponentVersion version,
+    required RuntimeArchiveUrl archiveUrl,
+    required RuntimeArchiveChecksumValue sha256,
+  }) = _RuntimeSourceComponent;
 }
