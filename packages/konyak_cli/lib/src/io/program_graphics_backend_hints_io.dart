@@ -20,12 +20,14 @@ class DartIoProgramGraphicsBackendHintsInspector
     try {
       final file = File(path);
       if (!file.existsSync()) {
-        return ProgramGraphicsBackendHintsInspectionResult.missingProgram(path);
+        return ProgramGraphicsBackendHintsInspectionResult.missingProgram(
+          programPath,
+        );
       }
 
       return ProgramGraphicsBackendHintsInspectionResult.inspected(
         programGraphicsBackendHintsFromSignals(
-          programPath: path,
+          programPath: programPath,
           hostPlatform: hostPlatform,
           signals: PortableExecutableImage.parse(file.readAsBytesSync()).match(
             () => const <ProgramGraphicsBackendSignal>[],
@@ -35,17 +37,17 @@ class DartIoProgramGraphicsBackendHintsInspector
       );
     } on FileSystemException catch (error) {
       return ProgramGraphicsBackendHintsInspectionResult.failed(
-        programPath: path,
+        programPath: programPath,
         message: error.message,
       );
     } on FormatException catch (error) {
       return ProgramGraphicsBackendHintsInspectionResult.failed(
-        programPath: path,
+        programPath: programPath,
         message: error.message,
       );
     } on RangeError {
       return ProgramGraphicsBackendHintsInspectionResult.failed(
-        programPath: path,
+        programPath: programPath,
         message: 'Program file could not be inspected.',
       );
     }
@@ -65,7 +67,10 @@ List<ProgramGraphicsBackendSignal> graphicsBackendSignalsFromPortableExecutable(
       return;
     }
     signals.add(
-      ProgramGraphicsBackendSignal(kind: kind, value: normalizedValue),
+      ProgramGraphicsBackendSignal(
+        kind: GraphicsBackendSignalKind(kind),
+        value: GraphicsBackendSignalValue(normalizedValue),
+      ),
     );
   }
 

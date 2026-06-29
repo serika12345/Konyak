@@ -5,6 +5,7 @@ import 'package:fpdart/fpdart.dart';
 
 import '../domain/bottle/bottle_models.dart';
 import '../domain/program/program_catalog_models.dart';
+import '../domain/shared/domain_value_objects.dart';
 import 'pe_program_icon_io.dart';
 import 'pe_program_image.dart';
 import 'pe_program_versions.dart';
@@ -16,14 +17,14 @@ class DartIoProgramMetadataExtractor implements ProgramMetadataExtractor {
   @override
   Option<ProgramMetadataRecord> extract({
     required BottleRecord bottle,
-    required String programPath,
+    required ProgramPath programPath,
   }) {
     try {
       final resolvedMetadataProgramPath = metadataProgramPath(
         bottle: bottle,
         programPath: programPath,
       );
-      final file = File(resolvedMetadataProgramPath);
+      final file = File(resolvedMetadataProgramPath.value);
       if (!file.existsSync()) {
         return const Option.none();
       }
@@ -35,21 +36,17 @@ class DartIoProgramMetadataExtractor implements ProgramMetadataExtractor {
         final iconPath = extractPeIcon(
           image: image,
           bottle: bottle,
-          programPath: resolvedMetadataProgramPath,
+          programPath: resolvedMetadataProgramPath.value,
           fileStat: file.statSync(),
         );
         final metadata = ProgramMetadataRecord(
-          architecture: image.architecture,
-          fileDescription: versionStrings.fileDescription.map(
-            (value) => value.value,
-          ),
-          productName: versionStrings.productName.map((value) => value.value),
-          companyName: versionStrings.companyName.map((value) => value.value),
-          fileVersion: versionStrings.fileVersion.map((value) => value.value),
-          productVersion: versionStrings.productVersion.map(
-            (value) => value.value,
-          ),
-          iconPath: Option.fromNullable(iconPath),
+          architecture: image.architecture.map(ProgramArchitecture.new),
+          fileDescription: versionStrings.fileDescription,
+          productName: versionStrings.productName,
+          companyName: versionStrings.companyName,
+          fileVersion: versionStrings.fileVersion,
+          productVersion: versionStrings.productVersion,
+          iconPath: Option.fromNullable(iconPath).map(ProgramIconPath.new),
         );
 
         return metadata.isEmpty ? const Option.none() : Option.of(metadata);
@@ -71,14 +68,14 @@ class DartIoAsyncProgramMetadataExtractor
   @override
   Future<Option<ProgramMetadataRecord>> extract({
     required BottleRecord bottle,
-    required String programPath,
+    required ProgramPath programPath,
   }) async {
     try {
       final resolvedMetadataProgramPath = metadataProgramPath(
         bottle: bottle,
         programPath: programPath,
       );
-      final file = File(resolvedMetadataProgramPath);
+      final file = File(resolvedMetadataProgramPath.value);
       if (!await file.exists()) {
         return const Option.none();
       }
@@ -90,21 +87,17 @@ class DartIoAsyncProgramMetadataExtractor
         final iconPath = await extractPeIconAsync(
           image: image,
           bottle: bottle,
-          programPath: resolvedMetadataProgramPath,
+          programPath: resolvedMetadataProgramPath.value,
           fileStat: await file.stat(),
         );
         final metadata = ProgramMetadataRecord(
-          architecture: image.architecture,
-          fileDescription: versionStrings.fileDescription.map(
-            (value) => value.value,
-          ),
-          productName: versionStrings.productName.map((value) => value.value),
-          companyName: versionStrings.companyName.map((value) => value.value),
-          fileVersion: versionStrings.fileVersion.map((value) => value.value),
-          productVersion: versionStrings.productVersion.map(
-            (value) => value.value,
-          ),
-          iconPath: Option.fromNullable(iconPath),
+          architecture: image.architecture.map(ProgramArchitecture.new),
+          fileDescription: versionStrings.fileDescription,
+          productName: versionStrings.productName,
+          companyName: versionStrings.companyName,
+          fileVersion: versionStrings.fileVersion,
+          productVersion: versionStrings.productVersion,
+          iconPath: Option.fromNullable(iconPath).map(ProgramIconPath.new),
         );
 
         return metadata.isEmpty ? const Option.none() : Option.of(metadata);

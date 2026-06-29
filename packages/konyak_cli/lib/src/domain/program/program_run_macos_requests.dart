@@ -37,7 +37,7 @@ ProgramRunRequest macosWineRequest({
       'start',
       '/unix',
       programPath.value,
-      ...programSettingsArguments(programSettings),
+      ...programSettingsArguments(programSettings).value,
     ]),
     environment: ProgramRunEnvironment(<String, String>{
       ...macosWineEnvironmentForRequests(
@@ -48,9 +48,7 @@ ProgramRunRequest macosWineRequest({
       ...programSettingsEnvironment(programSettings).toMap(),
       'WINEPREFIX': bottle.path.value,
     }),
-    logPath: ProgramLogPath(
-      programSettingsLogPath(bottle: bottle, settings: programSettings),
-    ),
+    logPath: programSettingsLogPath(bottle: bottle, settings: programSettings),
     createLogFile: logging.createLogFile,
     workingDirectory: Option.of(
       ProgramWorkingDirectoryPath(macosWineBinFolder(hostEnvironment)),
@@ -395,7 +393,7 @@ ProgramRunRequest macosWineCommandRequest({
     programPath: ProgramPath(command.value),
     runnerKind: RunnerKind('macosWine'),
     executable: ProgramExecutable(macosWineExecutable(hostEnvironment)),
-    arguments: ProgramRunArguments(wineArgumentsForBottleCommand(command)),
+    arguments: wineArgumentsForBottleCommand(command),
     environment: macosWineEnvironmentForRequests(
       bottle: bottle,
       environment: environment,
@@ -422,7 +420,7 @@ ProgramRunRequest macosRegistryUpdateRequest({
     programPath: ProgramPath('reg'),
     runnerKind: RunnerKind('macosWineRegistry'),
     executable: ProgramExecutable(macosWineExecutable(hostEnvironment)),
-    arguments: ProgramRunArguments(registryUpdateArguments(update)),
+    arguments: registryUpdateArguments(update),
     environment: macosWineEnvironmentForRequests(
       bottle: bottle,
       environment: environment,
@@ -449,7 +447,7 @@ ProgramRunRequest macosRegistryQueryRequest({
     programPath: ProgramPath('reg'),
     runnerKind: RunnerKind('macosWineRegistryQuery'),
     executable: ProgramExecutable(macosWineExecutable(hostEnvironment)),
-    arguments: ProgramRunArguments(registryQueryArguments(query)),
+    arguments: registryQueryArguments(query),
     environment: macosWineEnvironmentForRequests(
       bottle: bottle,
       environment: environment,
@@ -490,8 +488,18 @@ ProgramRunRequest macosWinetricksCommandRequest({
               environment: environment,
               macosMajorVersion: macosMajorVersion,
             )
-            .add('WINE', macosWineExecutable(hostEnvironment))
-            .add('PATH', _prependPath(runtimeBin, environment['PATH'])),
+            .add(
+              ProgramEnvironmentVariableName('WINE'),
+              ProgramEnvironmentVariableValue(
+                macosWineExecutable(hostEnvironment),
+              ),
+            )
+            .add(
+              ProgramEnvironmentVariableName('PATH'),
+              ProgramEnvironmentVariableValue(
+                _prependPath(runtimeBin, environment['PATH']),
+              ),
+            ),
     logPath: ProgramLogPath(
       domainJoinPath(bottle.path.value, const ['logs', 'latest.log']),
     ),

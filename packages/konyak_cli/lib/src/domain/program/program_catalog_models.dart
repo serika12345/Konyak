@@ -16,17 +16,17 @@ abstract class BottleProgramRecord with _$BottleProgramRecord {
   const BottleProgramRecord._();
 
   factory BottleProgramRecord({
-    required String id,
-    required String name,
-    required String path,
-    required String source,
+    required ProgramId id,
+    required ProgramName name,
+    required ProgramPath path,
+    required ProgramSource source,
     Option<ProgramMetadataRecord> metadata = const Option.none(),
   }) {
     return BottleProgramRecord._validated(
-      id: ProgramId(id),
-      name: ProgramName(name),
-      path: ProgramPath(path),
-      source: ProgramSource(source),
+      id: id,
+      name: name,
+      path: path,
+      source: source,
       metadata: metadata,
     );
   }
@@ -49,22 +49,22 @@ abstract class ProgramMetadataRecord with _$ProgramMetadataRecord {
   const ProgramMetadataRecord._();
 
   factory ProgramMetadataRecord({
-    Option<String> architecture = const Option.none(),
-    Option<String> fileDescription = const Option.none(),
-    Option<String> productName = const Option.none(),
-    Option<String> companyName = const Option.none(),
-    Option<String> fileVersion = const Option.none(),
-    Option<String> productVersion = const Option.none(),
-    Option<String> iconPath = const Option.none(),
+    Option<ProgramArchitecture> architecture = const Option.none(),
+    Option<ProgramFileDescription> fileDescription = const Option.none(),
+    Option<ProgramProductName> productName = const Option.none(),
+    Option<ProgramCompanyName> companyName = const Option.none(),
+    Option<ProgramFileVersion> fileVersion = const Option.none(),
+    Option<ProgramProductVersion> productVersion = const Option.none(),
+    Option<ProgramIconPath> iconPath = const Option.none(),
   }) {
     return ProgramMetadataRecord._validated(
-      architecture: architecture.map(ProgramArchitecture.new),
-      fileDescription: fileDescription.map(ProgramFileDescription.new),
-      productName: productName.map(ProgramProductName.new),
-      companyName: companyName.map(ProgramCompanyName.new),
-      fileVersion: fileVersion.map(ProgramFileVersion.new),
-      productVersion: productVersion.map(ProgramProductVersion.new),
-      iconPath: iconPath.map(ProgramIconPath.new),
+      architecture: architecture,
+      fileDescription: fileDescription,
+      productName: productName,
+      companyName: companyName,
+      fileVersion: fileVersion,
+      productVersion: productVersion,
+      iconPath: iconPath,
     );
   }
 
@@ -98,17 +98,17 @@ abstract class WineProcessRecord with _$WineProcessRecord {
   const WineProcessRecord._();
 
   factory WineProcessRecord({
-    required String bottleId,
-    required String processId,
-    required String executable,
-    Option<String> hostPath = const Option.none(),
+    required BottleId bottleId,
+    required WineProcessId processId,
+    required ProgramExecutable executable,
+    Option<ProgramPath> hostPath = const Option.none(),
     Option<ProgramMetadataRecord> metadata = const Option.none(),
   }) {
     return WineProcessRecord._validated(
-      bottleId: BottleId(bottleId),
-      processId: WineProcessId(processId),
-      executable: ProgramExecutable(executable),
-      hostPath: hostPath.map(ProgramPath.new),
+      bottleId: bottleId,
+      processId: processId,
+      executable: executable,
+      hostPath: hostPath,
       metadata: metadata,
     );
   }
@@ -125,14 +125,14 @@ abstract class WineProcessRecord with _$WineProcessRecord {
 abstract interface class ProgramMetadataExtractor {
   Option<ProgramMetadataRecord> extract({
     required BottleRecord bottle,
-    required String programPath,
+    required ProgramPath programPath,
   });
 }
 
 abstract interface class AsyncProgramMetadataExtractor {
   Future<Option<ProgramMetadataRecord>> extract({
     required BottleRecord bottle,
-    required String programPath,
+    required ProgramPath programPath,
   });
 }
 
@@ -145,12 +145,12 @@ abstract class WinetricksVerbRecord with _$WinetricksVerbRecord {
   const WinetricksVerbRecord._();
 
   factory WinetricksVerbRecord({
-    required String id,
-    required String name,
-    required String description,
+    required WinetricksVerbId id,
+    required WinetricksVerbName name,
+    required WinetricksVerbDescription description,
   }) {
     return WinetricksVerbRecord._validated(
-      id: WinetricksVerbId(id),
+      id: id,
       name: name,
       description: description,
     );
@@ -158,8 +158,8 @@ abstract class WinetricksVerbRecord with _$WinetricksVerbRecord {
 
   const factory WinetricksVerbRecord._validated({
     required WinetricksVerbId id,
-    required String name,
-    required String description,
+    required WinetricksVerbName name,
+    required WinetricksVerbDescription description,
   }) = _WinetricksVerbRecord;
 }
 
@@ -172,12 +172,12 @@ abstract class WinetricksCategoryRecord with _$WinetricksCategoryRecord {
   const WinetricksCategoryRecord._();
 
   factory WinetricksCategoryRecord({
-    required String id,
-    required String name,
+    required WinetricksCategoryId id,
+    required WinetricksCategoryName name,
     required List<WinetricksVerbRecord> verbs,
   }) {
     return WinetricksCategoryRecord._validated(
-      id: WinetricksCategoryId(id),
+      id: id,
       name: name,
       verbs: List.unmodifiable(verbs),
     );
@@ -185,7 +185,7 @@ abstract class WinetricksCategoryRecord with _$WinetricksCategoryRecord {
 
   const factory WinetricksCategoryRecord._validated({
     required WinetricksCategoryId id,
-    required String name,
+    required WinetricksCategoryName name,
     required List<WinetricksVerbRecord> verbs,
   }) = _WinetricksCategoryRecord;
 }

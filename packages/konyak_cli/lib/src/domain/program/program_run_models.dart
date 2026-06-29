@@ -99,22 +99,22 @@ abstract class WineProcessTerminationRecord
   const WineProcessTerminationRecord._();
 
   factory WineProcessTerminationRecord({
-    required String bottleId,
-    required String status,
-    required String runnerKind,
-    required String executable,
+    required BottleId bottleId,
+    required WineProcessStatus status,
+    required RunnerKind runnerKind,
+    required ProgramExecutable executable,
     required List<String> argv,
-    Option<String> processId = const Option.none(),
+    Option<WineProcessId> processId = const Option.none(),
     Option<int> processExitCode = const Option.none(),
     Option<String> message = const Option.none(),
   }) {
     return WineProcessTerminationRecord._validated(
-      bottleId: BottleId(bottleId),
-      status: WineProcessStatus(status),
-      runnerKind: RunnerKind(runnerKind),
-      executable: ProgramExecutable(executable),
+      bottleId: bottleId,
+      status: status,
+      runnerKind: runnerKind,
+      executable: executable,
       argv: List<String>.unmodifiable(argv),
-      processId: processId.map(WineProcessId.new),
+      processId: processId,
       processExitCode: processExitCode,
       message: _optionalNonBlankDomainString(message, 'message'),
     );

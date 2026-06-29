@@ -14,13 +14,13 @@ abstract class ProgramGraphicsBackendHints with _$ProgramGraphicsBackendHints {
   const ProgramGraphicsBackendHints._();
 
   factory ProgramGraphicsBackendHints({
-    required String programPath,
+    required ProgramPath programPath,
     required KonyakHostPlatform hostPlatform,
     required Iterable<ProgramGraphicsBackendSignal> signals,
     required Iterable<ProgramGraphicsBackendSuggestion> suggestions,
   }) {
     return ProgramGraphicsBackendHints._validated(
-      programPath: ProgramPath(programPath),
+      programPath: programPath,
       hostPlatform: hostPlatform,
       signals: List.unmodifiable(signals),
       suggestions: List.unmodifiable(suggestions),
@@ -45,13 +45,10 @@ abstract class ProgramGraphicsBackendSignal
   const ProgramGraphicsBackendSignal._();
 
   factory ProgramGraphicsBackendSignal({
-    required String kind,
-    required String value,
+    required GraphicsBackendSignalKind kind,
+    required GraphicsBackendSignalValue value,
   }) {
-    return ProgramGraphicsBackendSignal._validated(
-      kind: GraphicsBackendSignalKind(kind),
-      value: GraphicsBackendSignalValue(value),
-    );
+    return ProgramGraphicsBackendSignal._validated(kind: kind, value: value);
   }
 
   const factory ProgramGraphicsBackendSignal._validated({
@@ -70,13 +67,13 @@ abstract class ProgramGraphicsBackendSuggestion
   const ProgramGraphicsBackendSuggestion._();
 
   factory ProgramGraphicsBackendSuggestion({
-    required String backend,
-    required String confidence,
+    required GraphicsBackendKind backend,
+    required GraphicsBackendConfidence confidence,
     required String reason,
   }) {
     return ProgramGraphicsBackendSuggestion._validated(
-      backend: GraphicsBackendKind(backend),
-      confidence: GraphicsBackendConfidence(confidence),
+      backend: backend,
+      confidence: confidence,
       reason: reason,
     );
   }
@@ -102,10 +99,10 @@ sealed class ProgramGraphicsBackendHintsInspectionResult
   ) = ProgramGraphicsBackendHintsInspected;
 
   factory ProgramGraphicsBackendHintsInspectionResult.missingProgram(
-    String programPath,
+    ProgramPath programPath,
   ) {
     return ProgramGraphicsBackendHintsInspectionResult._missingProgram(
-      ProgramPath(programPath),
+      programPath,
     );
   }
 
@@ -114,11 +111,11 @@ sealed class ProgramGraphicsBackendHintsInspectionResult
   ) = ProgramGraphicsBackendHintsMissingProgram;
 
   factory ProgramGraphicsBackendHintsInspectionResult.failed({
-    required String programPath,
+    required ProgramPath programPath,
     required String message,
   }) {
     return ProgramGraphicsBackendHintsInspectionResult._failed(
-      programPath: ProgramPath(programPath),
+      programPath: programPath,
       message: message,
     );
   }
@@ -137,7 +134,7 @@ abstract interface class ProgramGraphicsBackendHintsInspector {
 }
 
 ProgramGraphicsBackendHints programGraphicsBackendHintsFromSignals({
-  required String programPath,
+  required ProgramPath programPath,
   required KonyakHostPlatform hostPlatform,
   required Iterable<ProgramGraphicsBackendSignal> signals,
 }) {
@@ -161,10 +158,10 @@ List<ProgramGraphicsBackendSuggestion> _graphicsBackendSuggestions({
     return <ProgramGraphicsBackendSuggestion>[
       ProgramGraphicsBackendSuggestion(
         backend: switch (hostPlatform) {
-          KonyakHostPlatform.macos => 'd3dMetal',
-          KonyakHostPlatform.linux => 'vkd3dProton',
+          KonyakHostPlatform.macos => GraphicsBackendKind('d3dMetal'),
+          KonyakHostPlatform.linux => GraphicsBackendKind('vkd3dProton'),
         },
-        confidence: 'high',
+        confidence: GraphicsBackendConfidence('high'),
         reason: 'D3D12 API usage was detected.',
       ),
     ];
@@ -174,20 +171,20 @@ List<ProgramGraphicsBackendSuggestion> _graphicsBackendSuggestions({
     return switch (hostPlatform) {
       KonyakHostPlatform.macos => <ProgramGraphicsBackendSuggestion>[
         ProgramGraphicsBackendSuggestion(
-          backend: 'dxmt',
-          confidence: 'medium',
+          backend: GraphicsBackendKind('dxmt'),
+          confidence: GraphicsBackendConfidence('medium'),
           reason: 'D3D10/D3D11 API usage was detected.',
         ),
         ProgramGraphicsBackendSuggestion(
-          backend: 'dxvk',
-          confidence: 'medium',
+          backend: GraphicsBackendKind('dxvk'),
+          confidence: GraphicsBackendConfidence('medium'),
           reason: 'D3D10/D3D11 API usage was detected.',
         ),
       ],
       KonyakHostPlatform.linux => <ProgramGraphicsBackendSuggestion>[
         ProgramGraphicsBackendSuggestion(
-          backend: 'dxvk',
-          confidence: 'high',
+          backend: GraphicsBackendKind('dxvk'),
+          confidence: GraphicsBackendConfidence('high'),
           reason: 'D3D10/D3D11 API usage was detected.',
         ),
       ],
@@ -197,8 +194,8 @@ List<ProgramGraphicsBackendSuggestion> _graphicsBackendSuggestions({
   if (_hasAnyGraphicsSignal(signals, _d3d9Signals)) {
     return <ProgramGraphicsBackendSuggestion>[
       ProgramGraphicsBackendSuggestion(
-        backend: 'dxvk',
-        confidence: 'high',
+        backend: GraphicsBackendKind('dxvk'),
+        confidence: GraphicsBackendConfidence('high'),
         reason: 'D3D9 API usage was detected.',
       ),
     ];
@@ -207,8 +204,8 @@ List<ProgramGraphicsBackendSuggestion> _graphicsBackendSuggestions({
   if (_hasAnyGraphicsSignal(signals, _nativeGraphicsSignals)) {
     return <ProgramGraphicsBackendSuggestion>[
       ProgramGraphicsBackendSuggestion(
-        backend: 'wineDefault',
-        confidence: 'medium',
+        backend: GraphicsBackendKind('wineDefault'),
+        confidence: GraphicsBackendConfidence('medium'),
         reason: 'Native OpenGL or Vulkan usage was detected.',
       ),
     ];

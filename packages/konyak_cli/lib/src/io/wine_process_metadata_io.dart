@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:fpdart/fpdart.dart';
 
 import '../domain/bottle/bottle_models.dart';
+import '../domain/shared/domain_value_objects.dart';
 import '../shared/common_helpers.dart';
 import 'program_shortcut_metadata_io.dart';
 import 'wine_process_metadata.dart';
@@ -58,7 +59,7 @@ Option<String> latestRunProgramPathFromLog({
         final metadataPath = hostPath.flatMap(
           (path) => metadataProgramPathMatchingExecutable(
             bottle: bottle,
-            programPath: path,
+            programPath: ProgramPath(path),
             executable: executable,
           ),
         );
@@ -240,7 +241,7 @@ Option<String> recordedExternalProgramPathFromLaunchIndex({
 
     final metadataPath = metadataProgramPathMatchingExecutable(
       bottle: bottle,
-      programPath: programPath,
+      programPath: ProgramPath(programPath),
       executable: executable,
     );
     if (metadataPath.isNone()) {
@@ -255,14 +256,14 @@ Option<String> recordedExternalProgramPathFromLaunchIndex({
 
 Option<String> metadataProgramPathMatchingExecutable({
   required BottleRecord bottle,
-  required String programPath,
+  required ProgramPath programPath,
   required String executable,
 }) {
   final metadataPath = metadataProgramPath(
     bottle: bottle,
     programPath: programPath,
   );
-  return executableNamesMatch(metadataPath, executable)
-      ? Option.of(metadataPath)
+  return executableNamesMatch(metadataPath.value, executable)
+      ? Option.of(metadataPath.value)
       : const Option.none();
 }

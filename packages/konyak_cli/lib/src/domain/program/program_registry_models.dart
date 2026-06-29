@@ -1,5 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../shared/domain_value_objects.dart';
+
 part 'program_registry_models.freezed.dart';
 
 @Freezed(
@@ -9,10 +11,10 @@ part 'program_registry_models.freezed.dart';
 )
 abstract class RegistryValueUpdate with _$RegistryValueUpdate {
   const factory RegistryValueUpdate({
-    required String key,
-    required String name,
-    required String type,
-    required String data,
+    required ProgramRegistryKey key,
+    required ProgramRegistryValueName name,
+    required ProgramRegistryValueType type,
+    required ProgramRegistryValueData data,
   }) = _RegistryValueUpdate;
 }
 
@@ -23,7 +25,7 @@ abstract class RegistryValueUpdate with _$RegistryValueUpdate {
 )
 abstract class RegistryValueQuery with _$RegistryValueQuery {
   const factory RegistryValueQuery({
-    required String key,
-    required String name,
+    required ProgramRegistryKey key,
+    required ProgramRegistryValueName name,
   }) = _RegistryValueQuery;
 }

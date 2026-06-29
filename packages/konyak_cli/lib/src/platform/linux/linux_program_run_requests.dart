@@ -12,21 +12,21 @@ import '../../shared/common_helpers.dart';
 
 ProgramRunRequest linuxWineRequest({
   required BottleRecord bottle,
-  required String programPath,
-  required List<String> wineArguments,
+  required ProgramPath programPath,
+  required ProgramRunArguments wineArguments,
   required HostEnvironment environment,
   required ProgramSettingsRecord programSettings,
 }) {
   final hostEnvironment = environment;
   final arguments = <String>[
-    ...wineArguments,
-    ...programSettingsArguments(programSettings),
+    ...wineArguments.value,
+    ...programSettingsArguments(programSettings).value,
   ];
   final logging = programSettingsLogging(programSettings);
 
   return ProgramRunRequest(
     bottleId: bottle.id,
-    programPath: ProgramPath(programPath),
+    programPath: programPath,
     runnerKind: RunnerKind('wine'),
     executable: ProgramExecutable(linuxWineExecutable(hostEnvironment)),
     arguments: ProgramRunArguments(arguments),
@@ -38,9 +38,7 @@ ProgramRunRequest linuxWineRequest({
             environment: environment,
           ),
         ),
-    logPath: ProgramLogPath(
-      programSettingsLogPath(bottle: bottle, settings: programSettings),
-    ),
+    logPath: programSettingsLogPath(bottle: bottle, settings: programSettings),
     createLogFile: logging.createLogFile,
   );
 }
@@ -57,9 +55,7 @@ ProgramRunRequest linuxWineCommandRequest({
     programPath: ProgramPath(bottleCommand.value),
     runnerKind: RunnerKind('wine'),
     executable: ProgramExecutable(linuxWineExecutable(hostEnvironment)),
-    arguments: ProgramRunArguments(
-      wineArgumentsForBottleCommand(bottleCommand),
-    ),
+    arguments: wineArgumentsForBottleCommand(bottleCommand),
     environment: linuxRuntimeEnvironment(hostEnvironment).merge(
       linuxWineEnvironmentWithRuntime(bottle: bottle, environment: environment),
     ),
@@ -80,7 +76,7 @@ ProgramRunRequest linuxRegistryUpdateRequest({
     programPath: ProgramPath('reg'),
     runnerKind: RunnerKind('wineRegistry'),
     executable: ProgramExecutable(linuxWineExecutable(hostEnvironment)),
-    arguments: ProgramRunArguments(registryUpdateArguments(update)),
+    arguments: registryUpdateArguments(update),
     environment: linuxRuntimeEnvironment(hostEnvironment).merge(
       linuxWineEnvironmentWithRuntime(bottle: bottle, environment: environment),
     ),
@@ -101,7 +97,7 @@ ProgramRunRequest linuxRegistryQueryRequest({
     programPath: ProgramPath('reg'),
     runnerKind: RunnerKind('wineRegistryQuery'),
     executable: ProgramExecutable(linuxWineExecutable(hostEnvironment)),
-    arguments: ProgramRunArguments(registryQueryArguments(query)),
+    arguments: registryQueryArguments(query),
     environment: linuxRuntimeEnvironment(hostEnvironment).merge(
       linuxWineEnvironmentWithRuntime(bottle: bottle, environment: environment),
     ),

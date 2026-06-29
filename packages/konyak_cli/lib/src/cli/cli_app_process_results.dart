@@ -127,12 +127,12 @@ CliResult terminateWineProcessesJsonResult({
           case ProgramRunCompleted(:final processExitCode):
             records.add(
               WineProcessTerminationRecord(
-                bottleId: bottle.id.value,
+                bottleId: bottle.id,
                 status: isSuccessfulWineServerTerminationExit(processExitCode)
-                    ? 'terminated'
-                    : 'failed',
-                runnerKind: request.runnerKind.value,
-                executable: request.executable.value,
+                    ? WineProcessStatus('terminated')
+                    : WineProcessStatus('failed'),
+                runnerKind: request.runnerKind,
+                executable: request.executable,
                 argv: request.argv,
                 processExitCode: Option.of(processExitCode),
               ),
@@ -140,10 +140,10 @@ CliResult terminateWineProcessesJsonResult({
           case ProgramRunFailed(:final message):
             records.add(
               WineProcessTerminationRecord(
-                bottleId: bottle.id.value,
-                status: 'failed',
-                runnerKind: request.runnerKind.value,
-                executable: request.executable.value,
+                bottleId: bottle.id,
+                status: WineProcessStatus('failed'),
+                runnerKind: request.runnerKind,
+                executable: request.executable,
                 argv: request.argv,
                 message: Option.of(message),
               ),
@@ -195,14 +195,14 @@ CliResult listWineProcessesJsonResult({
                       () => const Option<ProgramMetadataRecord>.none(),
                       (path) => programMetadataExtractor.extract(
                         bottle: bottle,
-                        programPath: path,
+                        programPath: ProgramPath(path),
                       ),
                     );
                     return WineProcessRecord(
-                      bottleId: bottle.id.value,
-                      processId: process.processId,
-                      executable: process.executable,
-                      hostPath: hostPath,
+                      bottleId: bottle.id,
+                      processId: WineProcessId(process.processId),
+                      executable: ProgramExecutable(process.executable),
+                      hostPath: hostPath.map(ProgramPath.new),
                       metadata: metadata,
                     );
                   }),
@@ -387,13 +387,14 @@ Future<WineProcessRecord> wineProcessRecordAsync({
   final hostPath = await hostPathResolver.hostPath(process.executable);
   final metadata = await hostPath.match(
     () async => const Option<ProgramMetadataRecord>.none(),
-    (path) => metadataCache.extract(bottle: bottle, programPath: path),
+    (path) =>
+        metadataCache.extract(bottle: bottle, programPath: ProgramPath(path)),
   );
   return WineProcessRecord(
-    bottleId: bottle.id.value,
-    processId: process.processId,
-    executable: process.executable,
-    hostPath: hostPath,
+    bottleId: bottle.id,
+    processId: WineProcessId(process.processId),
+    executable: ProgramExecutable(process.executable),
+    hostPath: hostPath.map(ProgramPath.new),
     metadata: metadata,
   );
 }
@@ -426,10 +427,10 @@ final class AsyncProgramMetadataCache {
 
   Future<Option<ProgramMetadataRecord>> extract({
     required BottleRecord bottle,
-    required String programPath,
+    required ProgramPath programPath,
   }) {
     final key =
-        '${bottle.id.value}\u0000${normalizeFilesystemPath(programPath)}';
+        '${bottle.id.value}\u0000${normalizeFilesystemPath(programPath.value)}';
     return cache.putIfAbsent(
       key,
       () => extractor.extract(bottle: bottle, programPath: programPath),
@@ -492,20 +493,22 @@ CliResult terminateWineProcessJsonResult({
         final record = switch (result) {
           ProgramRunCompleted(:final processExitCode) =>
             WineProcessTerminationRecord(
-              bottleId: bottle.id.value,
-              processId: Option.of(processId.value),
-              status: processExitCode == 0 ? 'terminated' : 'failed',
-              runnerKind: request.runnerKind.value,
-              executable: request.executable.value,
+              bottleId: bottle.id,
+              processId: Option.of(processId),
+              status: processExitCode == 0
+                  ? WineProcessStatus('terminated')
+                  : WineProcessStatus('failed'),
+              runnerKind: request.runnerKind,
+              executable: request.executable,
               argv: request.argv,
               processExitCode: Option.of(processExitCode),
             ),
           ProgramRunFailed(:final message) => WineProcessTerminationRecord(
-            bottleId: bottle.id.value,
-            processId: Option.of(processId.value),
-            status: 'failed',
-            runnerKind: request.runnerKind.value,
-            executable: request.executable.value,
+            bottleId: bottle.id,
+            processId: Option.of(processId),
+            status: WineProcessStatus('failed'),
+            runnerKind: request.runnerKind,
+            executable: request.executable,
             argv: request.argv,
             message: Option.of(message),
           ),

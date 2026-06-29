@@ -14,7 +14,7 @@ import '../../shared/common_helpers.dart';
 
 ProgramRunRequest macosWineRequest({
   required BottleRecord bottle,
-  required String programPath,
+  required ProgramPath programPath,
   required HostEnvironment environment,
   required Option<int> macosMajorVersion,
   required ProgramSettingsRecord programSettings,
@@ -23,14 +23,14 @@ ProgramRunRequest macosWineRequest({
   final logging = programSettingsLogging(programSettings);
   return ProgramRunRequest(
     bottleId: bottle.id,
-    programPath: ProgramPath(programPath),
+    programPath: programPath,
     runnerKind: RunnerKind('macosWine'),
     executable: ProgramExecutable(macosWineExecutable(hostEnvironment)),
     arguments: ProgramRunArguments(<String>[
       'start',
       '/unix',
-      programPath,
-      ...programSettingsArguments(programSettings),
+      programPath.value,
+      ...programSettingsArguments(programSettings).value,
     ]),
     environment: ProgramRunEnvironment(<String, String>{
       ...macosWineEnvironment(
@@ -41,9 +41,7 @@ ProgramRunRequest macosWineRequest({
       ...programSettingsEnvironment(programSettings).toMap(),
       'WINEPREFIX': bottle.path.value,
     }),
-    logPath: ProgramLogPath(
-      programSettingsLogPath(bottle: bottle, settings: programSettings),
-    ),
+    logPath: programSettingsLogPath(bottle: bottle, settings: programSettings),
     createLogFile: logging.createLogFile,
     workingDirectory: Option.of(
       ProgramWorkingDirectoryPath(macosWineBinFolder(hostEnvironment)),

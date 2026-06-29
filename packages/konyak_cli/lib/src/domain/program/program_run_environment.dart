@@ -27,12 +27,12 @@ final class ProgramEnvironmentOverrides {
         .unlockView;
   }
 
-  ProgramEnvironmentOverrides add(String name, String value) {
+  ProgramEnvironmentOverrides add(
+    ProgramEnvironmentVariableName name,
+    ProgramEnvironmentVariableValue value,
+  ) {
     return ProgramEnvironmentOverrides._withVariables(
-      _variables.add(
-        ProgramEnvironmentVariableName(name),
-        ProgramEnvironmentVariableValue(value),
-      ),
+      _variables.add(name, value),
     );
   }
 
@@ -89,13 +89,11 @@ final class ProgramRunEnvironment {
     );
   }
 
-  ProgramRunEnvironment add(String name, String value) {
-    return ProgramRunEnvironment._withVariables(
-      _variables.add(
-        ProgramEnvironmentVariableName(name),
-        ProgramEnvironmentVariableValue(value),
-      ),
-    );
+  ProgramRunEnvironment add(
+    ProgramEnvironmentVariableName name,
+    ProgramEnvironmentVariableValue value,
+  ) {
+    return ProgramRunEnvironment._withVariables(_variables.add(name, value));
   }
 
   ProgramRunEnvironment._withVariables(this._variables);

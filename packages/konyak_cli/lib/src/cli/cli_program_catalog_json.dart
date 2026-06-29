@@ -48,8 +48,8 @@ Map<String, Object?> programMetadataRecordJson(ProgramMetadataRecord metadata) {
 Map<String, Object?> winetricksVerbRecordJson(WinetricksVerbRecord verb) {
   return <String, Object?>{
     'id': verb.id.value,
-    'name': verb.name,
-    'description': verb.description,
+    'name': verb.name.value,
+    'description': verb.description.value,
   };
 }
 
@@ -58,7 +58,7 @@ Map<String, Object?> winetricksCategoryRecordJson(
 ) {
   return <String, Object?>{
     'id': category.id.value,
-    'name': category.name,
+    'name': category.name.value,
     'verbs': category.verbs
         .map(winetricksVerbRecordJson)
         .toList(growable: false),

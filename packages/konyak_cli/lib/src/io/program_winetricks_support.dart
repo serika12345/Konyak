@@ -1,6 +1,7 @@
 import 'package:fpdart/fpdart.dart';
 
 import '../domain/program/program_catalog_models.dart';
+import '../domain/shared/domain_value_objects.dart';
 import 'external_payload_helpers.dart';
 
 List<WinetricksCategoryRecord> parseWinetricksVerbs(String content) {
@@ -108,7 +109,11 @@ final class PendingWinetricksCategory {
   }
 
   WinetricksCategoryRecord toRecord() {
-    return WinetricksCategoryRecord(id: id, name: name, verbs: verbs);
+    return WinetricksCategoryRecord(
+      id: WinetricksCategoryId(id),
+      name: WinetricksCategoryName(name),
+      verbs: verbs,
+    );
   }
 }
 
@@ -143,11 +148,11 @@ Option<WinetricksVerbRecord> parseWinetricksVerbLine(String line) {
 
       return Option.of(
         WinetricksVerbRecord(
-          id: name,
-          name: name,
-          description: nullableOption(
-            match.group(2),
-          ).match(() => '', (value) => value.trim()),
+          id: WinetricksVerbId(name),
+          name: WinetricksVerbName(name),
+          description: WinetricksVerbDescription(
+            nullableOption(match.group(2)).match(() => '', (value) => value),
+          ),
         ),
       );
     }),

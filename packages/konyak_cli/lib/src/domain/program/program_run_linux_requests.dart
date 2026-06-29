@@ -22,7 +22,7 @@ ProgramRunRequest linuxWineRequest({
   final hostEnvironment = environment;
   final arguments = <String>[
     ...wineArguments.value,
-    ...programSettingsArguments(programSettings),
+    ...programSettingsArguments(programSettings).value,
   ];
   final logging = programSettingsLogging(programSettings);
 
@@ -40,9 +40,7 @@ ProgramRunRequest linuxWineRequest({
             environment: environment,
           ),
         ),
-    logPath: ProgramLogPath(
-      programSettingsLogPath(bottle: bottle, settings: programSettings),
-    ),
+    logPath: programSettingsLogPath(bottle: bottle, settings: programSettings),
     createLogFile: logging.createLogFile,
   );
 }
@@ -58,7 +56,7 @@ ProgramRunRequest linuxWineCommandRequest({
     programPath: ProgramPath(command.value),
     runnerKind: RunnerKind('wine'),
     executable: ProgramExecutable(linuxWineExecutable(hostEnvironment)),
-    arguments: ProgramRunArguments(wineArgumentsForBottleCommand(command)),
+    arguments: wineArgumentsForBottleCommand(command),
     environment: linuxRuntimeEnvironment(hostEnvironment).merge(
       _linuxWineEnvironmentWithRuntime(
         bottle: bottle,
@@ -82,7 +80,7 @@ ProgramRunRequest linuxRegistryUpdateRequest({
     programPath: ProgramPath('reg'),
     runnerKind: RunnerKind('wineRegistry'),
     executable: ProgramExecutable(linuxWineExecutable(hostEnvironment)),
-    arguments: ProgramRunArguments(registryUpdateArguments(update)),
+    arguments: registryUpdateArguments(update),
     environment: linuxRuntimeEnvironment(hostEnvironment).merge(
       _linuxWineEnvironmentWithRuntime(
         bottle: bottle,
@@ -106,7 +104,7 @@ ProgramRunRequest linuxRegistryQueryRequest({
     programPath: ProgramPath('reg'),
     runnerKind: RunnerKind('wineRegistryQuery'),
     executable: ProgramExecutable(linuxWineExecutable(hostEnvironment)),
-    arguments: ProgramRunArguments(registryQueryArguments(query)),
+    arguments: registryQueryArguments(query),
     environment: linuxRuntimeEnvironment(hostEnvironment).merge(
       _linuxWineEnvironmentWithRuntime(
         bottle: bottle,
@@ -256,8 +254,8 @@ ProgramRunEnvironment _linuxWineEnvironmentWithRuntime({
   }
   if (dllPathEntries.isNotEmpty) {
     final wineEnvironmentWithDllPath = wineEnvironment.add(
-      'WINEDLLPATH',
-      dllPathEntries.join(':'),
+      ProgramEnvironmentVariableName('WINEDLLPATH'),
+      ProgramEnvironmentVariableValue(dllPathEntries.join(':')),
     );
     return _linuxWineEnvironmentWithDllOverrides(
       wineEnvironment: wineEnvironmentWithDllPath,
@@ -288,8 +286,10 @@ ProgramRunEnvironment _linuxWineEnvironmentWithDllOverrides({
   ];
   if (dllOverrides.isNotEmpty) {
     return wineEnvironment.add(
-      'WINEDLLOVERRIDES',
-      dllOverrides.map((dllName) => '$dllName=n,b').join(';'),
+      ProgramEnvironmentVariableName('WINEDLLOVERRIDES'),
+      ProgramEnvironmentVariableValue(
+        dllOverrides.map((dllName) => '$dllName=n,b').join(';'),
+      ),
     );
   }
 

@@ -1,15 +1,18 @@
 import 'package:fpdart/fpdart.dart';
 
 import '../bottle/bottle_runtime_settings_models.dart';
+import '../shared/domain_value_objects.dart';
 import 'program_registry_models.dart';
 
-List<RegistryValueUpdate> windowsVersionRegistryUpdates(String windowsVersion) {
+List<RegistryValueUpdate> windowsVersionRegistryUpdates(
+  WindowsVersion windowsVersion,
+) {
   return <RegistryValueUpdate>[
     RegistryValueUpdate(
-      key: r'HKCU\Software\Wine',
-      name: 'Version',
-      type: 'REG_SZ',
-      data: windowsVersion,
+      key: ProgramRegistryKey(r'HKCU\Software\Wine'),
+      name: ProgramRegistryValueName('Version'),
+      type: ProgramRegistryValueType('REG_SZ'),
+      data: ProgramRegistryValueData(windowsVersion.value),
     ),
   ];
 }
@@ -38,18 +41,26 @@ List<RegistryValueUpdate> runtimeSettingsRegistryUpdates({
     updates
       ..add(
         RegistryValueUpdate(
-          key: r'HKLM\Software\Microsoft\Windows NT\CurrentVersion',
-          name: 'CurrentBuild',
-          type: 'REG_SZ',
-          data: effectiveRuntimeSettings.buildVersion.value.toString(),
+          key: ProgramRegistryKey(
+            r'HKLM\Software\Microsoft\Windows NT\CurrentVersion',
+          ),
+          name: ProgramRegistryValueName('CurrentBuild'),
+          type: ProgramRegistryValueType('REG_SZ'),
+          data: ProgramRegistryValueData(
+            effectiveRuntimeSettings.buildVersion.value.toString(),
+          ),
         ),
       )
       ..add(
         RegistryValueUpdate(
-          key: r'HKLM\Software\Microsoft\Windows NT\CurrentVersion',
-          name: 'CurrentBuildNumber',
-          type: 'REG_SZ',
-          data: effectiveRuntimeSettings.buildVersion.value.toString(),
+          key: ProgramRegistryKey(
+            r'HKLM\Software\Microsoft\Windows NT\CurrentVersion',
+          ),
+          name: ProgramRegistryValueName('CurrentBuildNumber'),
+          type: ProgramRegistryValueType('REG_SZ'),
+          data: ProgramRegistryValueData(
+            effectiveRuntimeSettings.buildVersion.value.toString(),
+          ),
         ),
       );
   }
@@ -59,10 +70,12 @@ List<RegistryValueUpdate> runtimeSettingsRegistryUpdates({
           currentRuntimeSettings.retinaMode) {
     updates.add(
       RegistryValueUpdate(
-        key: r'HKCU\Software\Wine\Mac Driver',
-        name: 'RetinaMode',
-        type: 'REG_SZ',
-        data: effectiveRuntimeSettings.retinaMode ? 'y' : 'n',
+        key: ProgramRegistryKey(r'HKCU\Software\Wine\Mac Driver'),
+        name: ProgramRegistryValueName('RetinaMode'),
+        type: ProgramRegistryValueType('REG_SZ'),
+        data: ProgramRegistryValueData(
+          effectiveRuntimeSettings.retinaMode ? 'y' : 'n',
+        ),
       ),
     );
   }
@@ -71,10 +84,12 @@ List<RegistryValueUpdate> runtimeSettingsRegistryUpdates({
       currentRuntimeSettings.dpiScaling) {
     updates.add(
       RegistryValueUpdate(
-        key: r'HKCU\Control Panel\Desktop',
-        name: 'LogPixels',
-        type: 'REG_DWORD',
-        data: effectiveRuntimeSettings.dpiScaling.value.toString(),
+        key: ProgramRegistryKey(r'HKCU\Control Panel\Desktop'),
+        name: ProgramRegistryValueName('LogPixels'),
+        type: ProgramRegistryValueType('REG_DWORD'),
+        data: ProgramRegistryValueData(
+          effectiveRuntimeSettings.dpiScaling.value.toString(),
+        ),
       ),
     );
   }
@@ -82,24 +97,24 @@ List<RegistryValueUpdate> runtimeSettingsRegistryUpdates({
   return List.unmodifiable(updates);
 }
 
-Option<String> _windowsVersionForBuildVersion(int buildVersion) {
+Option<WindowsVersion> _windowsVersionForBuildVersion(int buildVersion) {
   if (buildVersion >= 22000) {
-    return Option.of('win11');
+    return Option.of(WindowsVersion('win11'));
   }
   if (buildVersion >= 10000) {
-    return Option.of('win10');
+    return Option.of(WindowsVersion('win10'));
   }
   if (buildVersion >= 9600) {
-    return Option.of('win81');
+    return Option.of(WindowsVersion('win81'));
   }
   if (buildVersion >= 9200) {
-    return Option.of('win8');
+    return Option.of(WindowsVersion('win8'));
   }
   if (buildVersion >= 7600) {
-    return Option.of('win7');
+    return Option.of(WindowsVersion('win7'));
   }
   if (buildVersion >= 3790) {
-    return Option.of('winxp64');
+    return Option.of(WindowsVersion('winxp64'));
   }
 
   return const Option.none();
@@ -109,38 +124,49 @@ List<RegistryValueQuery> bottleSettingsRegistryQueries({
   required bool includeMacDriverSettings,
 }) {
   return <RegistryValueQuery>[
-    const RegistryValueQuery(key: r'HKCU\Software\Wine', name: 'Version'),
-    const RegistryValueQuery(
-      key: r'HKLM\Software\Microsoft\Windows NT\CurrentVersion',
-      name: 'CurrentBuild',
+    RegistryValueQuery(
+      key: ProgramRegistryKey(r'HKCU\Software\Wine'),
+      name: ProgramRegistryValueName('Version'),
+    ),
+    RegistryValueQuery(
+      key: ProgramRegistryKey(
+        r'HKLM\Software\Microsoft\Windows NT\CurrentVersion',
+      ),
+      name: ProgramRegistryValueName('CurrentBuild'),
     ),
     if (includeMacDriverSettings)
-      const RegistryValueQuery(
-        key: r'HKCU\Software\Wine\Mac Driver',
-        name: 'RetinaMode',
+      RegistryValueQuery(
+        key: ProgramRegistryKey(r'HKCU\Software\Wine\Mac Driver'),
+        name: ProgramRegistryValueName('RetinaMode'),
       ),
-    const RegistryValueQuery(
-      key: r'HKCU\Control Panel\Desktop',
-      name: 'LogPixels',
+    RegistryValueQuery(
+      key: ProgramRegistryKey(r'HKCU\Control Panel\Desktop'),
+      name: ProgramRegistryValueName('LogPixels'),
     ),
   ];
 }
 
-List<String> registryUpdateArguments(RegistryValueUpdate update) {
-  return <String>[
+ProgramRunArguments registryUpdateArguments(RegistryValueUpdate update) {
+  return ProgramRunArguments(<String>[
     'reg',
     'add',
-    update.key,
+    update.key.value,
     '-v',
-    update.name,
+    update.name.value,
     '-t',
-    update.type,
+    update.type.value,
     '-d',
-    update.data,
+    update.data.value,
     '-f',
-  ];
+  ]);
 }
 
-List<String> registryQueryArguments(RegistryValueQuery query) {
-  return <String>['reg', 'query', query.key, '/v', query.name];
+ProgramRunArguments registryQueryArguments(RegistryValueQuery query) {
+  return ProgramRunArguments(<String>[
+    'reg',
+    'query',
+    query.key.value,
+    '/v',
+    query.name.value,
+  ]);
 }

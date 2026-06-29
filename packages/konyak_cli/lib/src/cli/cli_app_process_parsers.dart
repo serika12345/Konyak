@@ -4,6 +4,7 @@ import 'package:fpdart/fpdart.dart';
 
 import '../domain/app/app_settings_models.dart';
 import '../domain/program/program_mutation_models.dart';
+import '../domain/shared/domain_value_objects.dart';
 import '../io/app_settings_json.dart';
 import 'cli_parsers.dart';
 
@@ -80,8 +81,8 @@ WineProcessTerminationRequest? parseJsonWineProcessTerminationRequest(
   }
 
   return WineProcessTerminationRequest(
-    bottleId: bottleId,
-    processId: processId,
+    bottleId: BottleId(bottleId),
+    processId: WineProcessId(processId),
   );
 }
 
@@ -104,5 +105,7 @@ WineProcessGroupTerminationRequest? parseJsonWineProcessGroupTerminationRequest(
         : WineProcessGroupTerminationRequest();
   }
 
-  return WineProcessGroupTerminationRequest(bottleId: Option.of(bottleId));
+  return WineProcessGroupTerminationRequest(
+    bottleId: Option.of(BottleId(bottleId)),
+  );
 }

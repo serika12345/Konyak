@@ -37,23 +37,23 @@ Option<ProgramRunArguments> wineArgumentsForProgramPath(
   return const Option.none();
 }
 
-List<String> programSettingsArguments(ProgramSettingsRecord settings) {
+ProgramRunArguments programSettingsArguments(ProgramSettingsRecord settings) {
   final arguments = settings.arguments.value.trim();
   if (arguments.isEmpty) {
-    return const <String>[];
+    return ProgramRunArguments(const <String>[]);
   }
 
-  return arguments.split(RegExp(r'\s+'));
+  return ProgramRunArguments(arguments.split(RegExp(r'\s+')));
 }
 
-List<String> wineArgumentsForBottleCommand(BottleCommand command) {
+ProgramRunArguments wineArgumentsForBottleCommand(BottleCommand command) {
   return switch (command.value) {
-    'dxdiag' => const <String>[
+    'dxdiag' => ProgramRunArguments(const <String>[
       'cmd',
       '/c',
       'dxdiag /t C:\\konyak-dxdiag.txt && start "" notepad C:\\konyak-dxdiag.txt',
-    ],
-    _ => <String>[command.value],
+    ]),
+    _ => ProgramRunArguments(<String>[command.value]),
   };
 }
 
@@ -63,16 +63,21 @@ ProgramRunEnvironment programSettingsEnvironment(
   final baseEnvironment = ProgramRunEnvironment(settings.environment.toMap());
   final localizedEnvironment = settings.locale.value.trim().isEmpty
       ? baseEnvironment
-      : baseEnvironment.add('LC_ALL', settings.locale.value);
+      : baseEnvironment.add(
+          ProgramEnvironmentVariableName('LC_ALL'),
+          ProgramEnvironmentVariableValue(settings.locale.value),
+        );
   final logging = programSettingsLogging(settings);
   final loggingChannels = logging.additionalWineLoggingChannels.value.trim();
   return loggingChannels.isEmpty
       ? localizedEnvironment
       : localizedEnvironment.add(
-          'WINEDEBUG',
-          _combinedWineDebugChannels(
-            existingChannels: localizedEnvironment['WINEDEBUG'],
-            additionalChannels: loggingChannels,
+          ProgramEnvironmentVariableName('WINEDEBUG'),
+          ProgramEnvironmentVariableValue(
+            _combinedWineDebugChannels(
+              existingChannels: localizedEnvironment['WINEDEBUG'],
+              additionalChannels: loggingChannels,
+            ),
           ),
         );
 }
@@ -83,16 +88,18 @@ ProgramLoggingSettingsRecord programSettingsLogging(
   return settings.logging.getOrElse(ProgramLoggingSettingsRecord.new);
 }
 
-String programSettingsLogPath({
+ProgramLogPath programSettingsLogPath({
   required BottleRecord bottle,
   required ProgramSettingsRecord settings,
 }) {
   final logFilePath = programSettingsLogging(settings).logFilePath.value.trim();
   if (logFilePath.isNotEmpty) {
-    return logFilePath;
+    return ProgramLogPath(logFilePath);
   }
 
-  return domainJoinPath(bottle.path.value, const ['logs', 'latest.log']);
+  return ProgramLogPath(
+    domainJoinPath(bottle.path.value, const ['logs', 'latest.log']),
+  );
 }
 
 String _combinedWineDebugChannels({

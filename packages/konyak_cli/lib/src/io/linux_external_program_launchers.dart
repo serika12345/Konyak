@@ -65,7 +65,7 @@ void synchronizeLinuxDesktopLauncherForProgramRun({
         bottle: bottle,
         programPath: metadataProgramPath(
           bottle: bottle,
-          programPath: programPath,
+          programPath: ProgramPath(programPath),
         ),
       );
       final launcherContents = linuxExternalProgramDesktopEntry(

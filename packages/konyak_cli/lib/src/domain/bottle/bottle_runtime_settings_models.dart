@@ -366,7 +366,10 @@ abstract class BottleRuntimeSettings with _$BottleRuntimeSettings {
     return entries
         .fold(
           const ProgramRunEnvironment.empty(),
-          (environment, entry) => environment.add(entry.$1, entry.$2),
+          (environment, entry) => environment.add(
+            ProgramEnvironmentVariableName(entry.$1),
+            ProgramEnvironmentVariableValue(entry.$2),
+          ),
         )
         .merge(_wineSyncEnvironment());
   }
@@ -380,7 +383,10 @@ abstract class BottleRuntimeSettings with _$BottleRuntimeSettings {
     return entries
         .fold(
           const ProgramRunEnvironment.empty(),
-          (environment, entry) => environment.add(entry.$1, entry.$2),
+          (environment, entry) => environment.add(
+            ProgramEnvironmentVariableName(entry.$1),
+            ProgramEnvironmentVariableValue(entry.$2),
+          ),
         )
         .merge(_wineSyncEnvironment());
   }

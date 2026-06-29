@@ -108,7 +108,7 @@ CliResult runProgramJsonResult(
         programRunPlanner: context.programRunPlanner,
         programRunner: runner,
         bottle: bottle,
-        programPath: request.programPath,
+        programPath: ProgramPath(request.programPath),
         oneTimeSettings: request.settings,
         beforeRun: (programRunRequest) {
           switch (syncRuntimeSettingsDllOverrides(
@@ -147,12 +147,12 @@ CliResult runProgramPathJsonResult({
   required ProgramRunPlanner programRunPlanner,
   required ProgramRunner programRunner,
   required BottleRecord bottle,
-  required String programPath,
+  required ProgramPath programPath,
   Option<ProgramSettingsRecord> oneTimeSettings = const Option.none(),
   ProgramRunPreparation? beforeRun,
 }) {
   final settingsResult = bottleRepository.readProgramSettings(
-    ProgramSettingsRequest(bottleId: bottle.id.value, programPath: programPath),
+    ProgramSettingsRequest(bottleId: bottle.id, programPath: programPath),
   );
   final ProgramSettingsRecord storedSettings;
   switch (settingsResult) {
@@ -168,10 +168,9 @@ CliResult runProgramPathJsonResult({
     storedSettings: storedSettings,
     oneTimeSettings: oneTimeSettings,
   );
-  final typedProgramPath = ProgramPath(programPath);
   final programRunRequest = programRunPlanner.plan(
     bottle: bottle,
-    programPath: typedProgramPath,
+    programPath: programPath,
     programSettings: Option.of(effectiveProgramSettings),
   );
   return programRunRequest.match(
@@ -179,7 +178,7 @@ CliResult runProgramPathJsonResult({
       exitCode: 65,
       code: 'unsupportedProgramType',
       message: 'Program type is not supported.',
-      extra: <String, Object?>{'programPath': programPath},
+      extra: <String, Object?>{'programPath': programPath.value},
     ),
     (request) {
       final preparationResult = beforeRun == null

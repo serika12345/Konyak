@@ -5,6 +5,7 @@ import '../domain/program/pinned_programs.dart';
 import '../domain/program/program_catalog_models.dart';
 import '../domain/program/program_run_models.dart';
 import '../domain/program/program_runner.dart';
+import '../domain/shared/domain_value_objects.dart';
 import '../repository/repository_interfaces.dart';
 import '../shared/common_helpers.dart';
 import '../storage/storage_paths.dart';
@@ -44,15 +45,15 @@ class DartIoBottleProgramRepository implements BottleProgramRepository {
           bottle: bottle,
           programPath: metadataProgramPath(
             bottle: bottle,
-            programPath: entity.path,
+            programPath: ProgramPath(entity.path),
           ),
         );
         programs.add(
           BottleProgramRecord(
-            id: id,
-            name: name,
-            path: entity.path,
-            source: source.id.value,
+            id: ProgramId(id),
+            name: ProgramName(name),
+            path: ProgramPath(entity.path),
+            source: source.id,
             metadata: metadata,
           ),
         );
@@ -81,15 +82,15 @@ class DartIoBottleProgramRepository implements BottleProgramRepository {
         bottle: bottle,
         programPath: metadataProgramPath(
           bottle: bottle,
-          programPath: pinnedProgram.path.value,
+          programPath: pinnedProgram.path,
         ),
       );
       programs.add(
         BottleProgramRecord(
-          id: id,
-          name: pinnedProgram.name.value,
-          path: pinnedProgram.path.value,
-          source: 'pinned',
+          id: ProgramId(id),
+          name: pinnedProgram.name,
+          path: pinnedProgram.path,
+          source: ProgramSource('pinned'),
           metadata: metadata,
         ),
       );

@@ -86,10 +86,10 @@ Option<String> pinnedProgramPathForExecutable({
   for (final program in bottle.pinnedPrograms) {
     final metadataPath = metadataProgramPath(
       bottle: bottle,
-      programPath: program.path.value,
+      programPath: program.path,
     );
-    if (executableNamesMatch(metadataPath, executable)) {
-      return Option.of(metadataPath);
+    if (executableNamesMatch(metadataPath.value, executable)) {
+      return Option.of(metadataPath.value);
     }
   }
 
