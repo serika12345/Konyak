@@ -13,33 +13,32 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-06-29 10:27 JST
+- Timestamp: 2026-06-29 10:41 JST
 - State: `completed`
 - Branch: `main`
-- Active work: Freezed-backed runtime package installation records.
+- Active work: Freezed-backed runtime validation records.
 - Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
   boundary tightening.
-- Latest commit: this commit (`Freezed runtime package installation records`).
+- Latest commit: this commit (`Freezed runtime validation records`).
 - Purpose: continue replacing hand-written immutable domain model boilerplate
-  with Freezed-backed records, now focusing on runtime package installation
-  request/result/progress models used by archive installation I/O.
-- Completed work: committed the runtime source archive bundle Freezed slice;
-  inspected `RuntimePackageInstallRequest`, `RuntimePackageInstallResult`,
-  `RuntimeInstallProgress`, archive installer switch sites, progress JSON I/O
-  projection governance, and focused domain tests; converted runtime package
-  installation request/result/progress records to Freezed-backed models with
-  `copyWith` disabled while preserving direct constructors, switch patterns,
-  value object conversion, immutable collection snapshots, checksum `Option`
-  semantics, and progress JSON projection ownership; regenerated the local
-  ignored `runtime_package_installation.freezed.dart`; updated governance to
-  accept typed Freezed `_validated` parameters while keeping domain JSON
-  projection prohibited.
-- Remaining work: `runtime_validation_models.dart` still contains
-  hand-written validation records and result variants.
-- Next action: evaluate `runtime_validation_models.dart` as the next narrow
-  Freezed conversion candidate.
+  with Freezed-backed records, now focusing on runtime validation records,
+  platform specs, validation result variants, and executable probe results.
+- Completed work: inspected `runtime_validation_models.dart`, validation JSON
+  projection governance, platform support const specs, validator switch sites,
+  executable probe adapters, and focused validation tests; converted runtime
+  validation specs, records, result variants, and executable probe results to
+  Freezed-backed models with `copyWith` disabled while preserving const specs,
+  switch patterns, RuntimeId conversion for validation records/not-found
+  results, immutable check snapshots, and CLI JSON projection ownership;
+  regenerated the local ignored `runtime_validation_models.freezed.dart`;
+  updated the validator not-found construction to use the public
+  `RuntimeValidationResult.runtimeNotFound` factory.
+- Remaining work: `RuntimeComponentVersions` still owns hand-written
+  equality/hashCode and is the next small model candidate.
+- Next action: evaluate `RuntimeComponentVersions` as the next narrow Freezed
+  conversion candidate.
 - Verification: `cd packages/konyak_cli && dart run build_runner build && dart
-  format lib/src/domain/runtime/runtime_package_installation.dart && dart
+  format lib/src/domain/runtime/runtime_validation_models.dart && dart
   analyze --fatal-infos`, `cd packages/konyak_cli && dart test
   test/domain_immutability_test.dart`, `just verify-governance`,
   `just verify-architecture`, `just verify-safety`, `just format-check`,
