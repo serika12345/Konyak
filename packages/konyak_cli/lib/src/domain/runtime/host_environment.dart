@@ -3,6 +3,8 @@ import 'package:fpdart/fpdart.dart';
 
 import '../shared/domain_value_objects.dart';
 
+/// Intentionally hand-written instead of Freezed: host environment variables
+/// enter as raw maps, then stay hidden behind validated immutable storage.
 final class HostEnvironment {
   HostEnvironment(Map<String, String> variables)
     : _variables = variables

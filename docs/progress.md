@@ -13,6 +13,33 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-29 15:04 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Document why map-snapshot value objects stay hand-written.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: `227e916` (`Use Freezed copyWith for bottle records`).
+- Purpose: record the design decision from the Freezed cleanup pass so future
+  mechanical conversions do not expose internal immutable-map storage through
+  generated fields or `copyWith`.
+- Completed work: inspected `ProgramEnvironmentOverrides`,
+  `ProgramRunEnvironment`, `HostEnvironment`, and `RuntimeComponentVersions`;
+  confirmed each accepts raw `Map<String, String>` input and hides validated
+  immutable value-object storage; added local why-not-Freezed notes to those
+  classes.
+- Remaining work: broader functional-core tightening remains in `docs/todo.md`;
+  these map-snapshot classes are now an intentional exception unless a future
+  design introduces a dedicated domain collection value object first.
+- Next action: continue with the next mechanical Freezed or primitive-boundary
+  cleanup outside the hidden-map snapshot classes.
+- Verification: `dart format
+  packages/konyak_cli/lib/src/domain/program/program_run_environment.dart
+  packages/konyak_cli/lib/src/domain/runtime/host_environment.dart
+  packages/konyak_cli/lib/src/domain/runtime/runtime_component_versions.dart`,
+  `just verify-governance`, `just verify-safety`, `just format-check`, and
+  `just lint` passed.
+
 - Timestamp: 2026-06-29 14:58 JST
 - State: `completed`
 - Branch: `main`

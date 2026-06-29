@@ -3,6 +3,8 @@ import 'package:fpdart/fpdart.dart';
 
 import '../shared/domain_value_objects.dart';
 
+/// Intentionally hand-written instead of Freezed: the public boundary accepts
+/// raw environment maps, but the validated immutable map storage stays private.
 final class ProgramEnvironmentOverrides {
   ProgramEnvironmentOverrides(Map<String, String> variables)
     : _variables = variables
@@ -46,6 +48,8 @@ final class ProgramEnvironmentOverrides {
   int get hashCode => _variables.hashCode;
 }
 
+/// Intentionally hand-written instead of Freezed: generated fields would expose
+/// the internal immutable map and make storage details part of the domain API.
 final class ProgramRunEnvironment {
   ProgramRunEnvironment(Map<String, String> variables)
     : _variables = variables

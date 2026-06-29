@@ -3,6 +3,8 @@ import 'package:fpdart/fpdart.dart';
 
 import '../shared/domain_value_objects.dart';
 
+/// Intentionally hand-written instead of Freezed: generated fields would expose
+/// the internal immutable map used to preserve validated component versions.
 final class RuntimeComponentVersions {
   RuntimeComponentVersions(Map<String, String> versions)
     : _versions = versions
