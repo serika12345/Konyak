@@ -13,6 +13,50 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-29 12:14 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Freezed-backed program graphics backend hint records.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: this commit (`Freezed program graphics backend hints`).
+- Purpose: continue replacing hand-written immutable domain model boilerplate
+  with Freezed-backed records, starting with the narrow graphics backend hint
+  records and inspection result variants before higher-risk update/program run
+  models.
+- Completed work: selected `program_graphics_backend_hints.dart` as the next
+  non-map candidate after deferring map wrappers with const/equality
+  constraints; inspected current progress, TODOs, direct call sites, CLI JSON
+  projection, and existing Freezed model patterns; added focused
+  value/immutability coverage and observed it fail against the hand-written
+  record classes; converted graphics backend hint records and inspection result
+  variants to Freezed while preserving primitive-to-value-object construction
+  at the domain boundary; changed missing/failed inspection construction to
+  base factories; kept JSON projection in the CLI layer and fixed graphics
+  backend error JSON to emit `programPath.value`; updated governance class
+  detection so the existing no-domain-`toJson` check recognizes Freezed-backed
+  abstract classes.
+- Remaining work: map wrappers with const/equality constraints remain deferred;
+  continue the Freezed scan with a slightly higher-risk non-map candidate such
+  as update records, program catalog records, or program run result variants.
+- Next action: inspect `update_records.dart` result/record constructors and
+  select the smallest Freezed conversion slice that preserves CLI JSON
+  contracts.
+- Verification: observed `cd packages/konyak_cli && dart test
+  test/domain_immutability_test.dart --name "graphics backend hints expose
+  immutable value records"` fail before implementation; after implementation,
+  `cd packages/konyak_cli && dart run build_runner build
+  --delete-conflicting-outputs`, `cd packages/konyak_cli && dart format
+  lib/src/domain/program/program_graphics_backend_hints.dart
+  lib/src/io/program_graphics_backend_hints_io.dart
+  lib/src/cli/cli_program_run_handlers.dart test/domain_immutability_test.dart
+  test/cli_contract_test.dart && dart analyze --fatal-infos`, focused graphics
+  backend hint immutability test, focused `suggest-graphics-backend` CLI
+  contract tests, `cd packages/konyak_cli && dart test
+  test/domain_immutability_test.dart`, `just verify-governance`, `just
+  verify-architecture`, `just verify-safety`, `just format-check`, `just lint`,
+  and `just cli-test` passed.
+
 - Timestamp: 2026-06-29 11:39 JST
 - State: `completed`
 - Branch: `main`

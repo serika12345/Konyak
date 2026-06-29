@@ -1,46 +1,132 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+
 import '../shared/domain_value_objects.dart';
 import 'program_runner.dart';
 
-final class ProgramGraphicsBackendHints {
-  ProgramGraphicsBackendHints({
+part 'program_graphics_backend_hints.freezed.dart';
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class ProgramGraphicsBackendHints with _$ProgramGraphicsBackendHints {
+  const ProgramGraphicsBackendHints._();
+
+  factory ProgramGraphicsBackendHints({
     required String programPath,
-    required this.hostPlatform,
+    required KonyakHostPlatform hostPlatform,
     required Iterable<ProgramGraphicsBackendSignal> signals,
     required Iterable<ProgramGraphicsBackendSuggestion> suggestions,
-  }) : programPath = ProgramPath(programPath),
-       signals = List.unmodifiable(signals),
-       suggestions = List.unmodifiable(suggestions);
+  }) {
+    return ProgramGraphicsBackendHints._validated(
+      programPath: ProgramPath(programPath),
+      hostPlatform: hostPlatform,
+      signals: List.unmodifiable(signals),
+      suggestions: List.unmodifiable(suggestions),
+    );
+  }
 
-  final ProgramPath programPath;
-  final KonyakHostPlatform hostPlatform;
-  final List<ProgramGraphicsBackendSignal> signals;
-  final List<ProgramGraphicsBackendSuggestion> suggestions;
+  const factory ProgramGraphicsBackendHints._validated({
+    required ProgramPath programPath,
+    required KonyakHostPlatform hostPlatform,
+    required List<ProgramGraphicsBackendSignal> signals,
+    required List<ProgramGraphicsBackendSuggestion> suggestions,
+  }) = _ProgramGraphicsBackendHints;
 }
 
-final class ProgramGraphicsBackendSignal {
-  ProgramGraphicsBackendSignal({required String kind, required String value})
-    : kind = GraphicsBackendSignalKind(kind),
-      value = GraphicsBackendSignalValue(value);
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class ProgramGraphicsBackendSignal
+    with _$ProgramGraphicsBackendSignal {
+  const ProgramGraphicsBackendSignal._();
 
-  final GraphicsBackendSignalKind kind;
-  final GraphicsBackendSignalValue value;
+  factory ProgramGraphicsBackendSignal({
+    required String kind,
+    required String value,
+  }) {
+    return ProgramGraphicsBackendSignal._validated(
+      kind: GraphicsBackendSignalKind(kind),
+      value: GraphicsBackendSignalValue(value),
+    );
+  }
+
+  const factory ProgramGraphicsBackendSignal._validated({
+    required GraphicsBackendSignalKind kind,
+    required GraphicsBackendSignalValue value,
+  }) = _ProgramGraphicsBackendSignal;
 }
 
-final class ProgramGraphicsBackendSuggestion {
-  ProgramGraphicsBackendSuggestion({
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class ProgramGraphicsBackendSuggestion
+    with _$ProgramGraphicsBackendSuggestion {
+  const ProgramGraphicsBackendSuggestion._();
+
+  factory ProgramGraphicsBackendSuggestion({
     required String backend,
     required String confidence,
-    required this.reason,
-  }) : backend = GraphicsBackendKind(backend),
-       confidence = GraphicsBackendConfidence(confidence);
+    required String reason,
+  }) {
+    return ProgramGraphicsBackendSuggestion._validated(
+      backend: GraphicsBackendKind(backend),
+      confidence: GraphicsBackendConfidence(confidence),
+      reason: reason,
+    );
+  }
 
-  final GraphicsBackendKind backend;
-  final GraphicsBackendConfidence confidence;
-  final String reason;
+  const factory ProgramGraphicsBackendSuggestion._validated({
+    required GraphicsBackendKind backend,
+    required GraphicsBackendConfidence confidence,
+    required String reason,
+  }) = _ProgramGraphicsBackendSuggestion;
 }
 
-sealed class ProgramGraphicsBackendHintsInspectionResult {
-  const ProgramGraphicsBackendHintsInspectionResult();
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class ProgramGraphicsBackendHintsInspectionResult
+    with _$ProgramGraphicsBackendHintsInspectionResult {
+  const ProgramGraphicsBackendHintsInspectionResult._();
+
+  const factory ProgramGraphicsBackendHintsInspectionResult.inspected(
+    ProgramGraphicsBackendHints hints,
+  ) = ProgramGraphicsBackendHintsInspected;
+
+  factory ProgramGraphicsBackendHintsInspectionResult.missingProgram(
+    String programPath,
+  ) {
+    return ProgramGraphicsBackendHintsInspectionResult._missingProgram(
+      ProgramPath(programPath),
+    );
+  }
+
+  const factory ProgramGraphicsBackendHintsInspectionResult._missingProgram(
+    ProgramPath programPath,
+  ) = ProgramGraphicsBackendHintsMissingProgram;
+
+  factory ProgramGraphicsBackendHintsInspectionResult.failed({
+    required String programPath,
+    required String message,
+  }) {
+    return ProgramGraphicsBackendHintsInspectionResult._failed(
+      programPath: ProgramPath(programPath),
+      message: message,
+    );
+  }
+
+  const factory ProgramGraphicsBackendHintsInspectionResult._failed({
+    required ProgramPath programPath,
+    required String message,
+  }) = ProgramGraphicsBackendHintsInspectionFailed;
 }
 
 abstract interface class ProgramGraphicsBackendHintsInspector {
@@ -48,32 +134,6 @@ abstract interface class ProgramGraphicsBackendHintsInspector {
     required ProgramPath programPath,
     required KonyakHostPlatform hostPlatform,
   });
-}
-
-final class ProgramGraphicsBackendHintsInspected
-    extends ProgramGraphicsBackendHintsInspectionResult {
-  const ProgramGraphicsBackendHintsInspected(this.hints);
-
-  final ProgramGraphicsBackendHints hints;
-}
-
-final class ProgramGraphicsBackendHintsMissingProgram
-    extends ProgramGraphicsBackendHintsInspectionResult {
-  ProgramGraphicsBackendHintsMissingProgram(String programPath)
-    : programPath = ProgramPath(programPath);
-
-  final ProgramPath programPath;
-}
-
-final class ProgramGraphicsBackendHintsInspectionFailed
-    extends ProgramGraphicsBackendHintsInspectionResult {
-  ProgramGraphicsBackendHintsInspectionFailed({
-    required String programPath,
-    required this.message,
-  }) : programPath = ProgramPath(programPath);
-
-  final ProgramPath programPath;
-  final String message;
 }
 
 ProgramGraphicsBackendHints programGraphicsBackendHintsFromSignals({

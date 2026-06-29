@@ -70,7 +70,7 @@ CliResult graphicsBackendHintsJsonResult(
       exitCode: 66,
       code: 'programNotFound',
       message: 'Program file was not found.',
-      extra: <String, Object?>{'programPath': programPath},
+      extra: <String, Object?>{'programPath': programPath.value},
     ),
     ProgramGraphicsBackendHintsInspectionFailed(
       :final programPath,
@@ -80,7 +80,7 @@ CliResult graphicsBackendHintsJsonResult(
         exitCode: 74,
         code: 'programInspectionFailed',
         message: message,
-        extra: <String, Object?>{'programPath': programPath},
+        extra: <String, Object?>{'programPath': programPath.value},
       ),
   };
 }

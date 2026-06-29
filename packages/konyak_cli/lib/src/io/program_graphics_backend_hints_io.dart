@@ -20,10 +20,10 @@ class DartIoProgramGraphicsBackendHintsInspector
     try {
       final file = File(path);
       if (!file.existsSync()) {
-        return ProgramGraphicsBackendHintsMissingProgram(path);
+        return ProgramGraphicsBackendHintsInspectionResult.missingProgram(path);
       }
 
-      return ProgramGraphicsBackendHintsInspected(
+      return ProgramGraphicsBackendHintsInspectionResult.inspected(
         programGraphicsBackendHintsFromSignals(
           programPath: path,
           hostPlatform: hostPlatform,
@@ -34,17 +34,17 @@ class DartIoProgramGraphicsBackendHintsInspector
         ),
       );
     } on FileSystemException catch (error) {
-      return ProgramGraphicsBackendHintsInspectionFailed(
+      return ProgramGraphicsBackendHintsInspectionResult.failed(
         programPath: path,
         message: error.message,
       );
     } on FormatException catch (error) {
-      return ProgramGraphicsBackendHintsInspectionFailed(
+      return ProgramGraphicsBackendHintsInspectionResult.failed(
         programPath: path,
         message: error.message,
       );
     } on RangeError {
-      return ProgramGraphicsBackendHintsInspectionFailed(
+      return ProgramGraphicsBackendHintsInspectionResult.failed(
         programPath: path,
         message: 'Program file could not be inspected.',
       );

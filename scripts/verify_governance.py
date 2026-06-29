@@ -673,12 +673,18 @@ def require_graphics_backend_hints_cli_json_projection() -> None:
     domain = read_text(domain_path)
 
     def class_section(class_name: str) -> str:
-        class_start = domain.find(f"class {class_name} ")
-        if class_start == -1:
+        class_match = re.search(
+            rf"\b(?:abstract\s+interface\s+|sealed\s+|abstract\s+|final\s+)*"
+            rf"class\s+{re.escape(class_name)}\b",
+            domain,
+        )
+        if class_match is None:
             raise AssertionError(f"{class_name} must exist")
+        class_start = class_match.start()
 
         next_class_match = re.search(
-            r"\n(?:abstract\s+interface\s+)?(?:final\s+)?class\s+\w+",
+            r"\n(?:abstract\s+interface\s+|sealed\s+|abstract\s+|final\s+)*"
+            r"class\s+\w+",
             domain[class_start + 1 :],
         )
         if next_class_match is None:

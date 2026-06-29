@@ -212,6 +212,40 @@ void main() {
     expect(process.hostPath.isNone(), isTrue);
   });
 
+  test('graphics backend hints expose immutable value records', () {
+    final signals = <ProgramGraphicsBackendSignal>[
+      ProgramGraphicsBackendSignal(kind: 'peImport', value: 'd3d11.dll'),
+    ];
+    final suggestions = <ProgramGraphicsBackendSuggestion>[
+      ProgramGraphicsBackendSuggestion(
+        backend: 'dxvk',
+        confidence: 'high',
+        reason: 'D3D11 API usage was detected.',
+      ),
+    ];
+    final hints = ProgramGraphicsBackendHints(
+      programPath: '/games/steam.exe',
+      hostPlatform: KonyakHostPlatform.linux,
+      signals: signals,
+      suggestions: suggestions,
+    );
+    signals.add(ProgramGraphicsBackendSignal(kind: 'string', value: 'd3d12'));
+    suggestions.clear();
+
+    expect(hints.programPath, ProgramPath('/games/steam.exe'));
+    expect(hints.hostPlatform, KonyakHostPlatform.linux);
+    expect(hints.signals, [
+      ProgramGraphicsBackendSignal(kind: 'peImport', value: 'd3d11.dll'),
+    ]);
+    expect(hints.suggestions, [
+      ProgramGraphicsBackendSuggestion(
+        backend: 'dxvk',
+        confidence: 'high',
+        reason: 'D3D11 API usage was detected.',
+      ),
+    ]);
+  });
+
   test('runtime release metadata models absent fields with Option', () {
     final metadata = RuntimeReleaseMetadata(version: '1.0.0');
 

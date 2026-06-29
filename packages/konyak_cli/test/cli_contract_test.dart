@@ -486,7 +486,7 @@ final class UnavailableProgramGraphicsBackendHintsInspector
     required ProgramPath programPath,
     required KonyakHostPlatform hostPlatform,
   }) {
-    return ProgramGraphicsBackendHintsInspectionFailed(
+    return ProgramGraphicsBackendHintsInspectionResult.failed(
       programPath: programPath.value,
       message: 'Program graphics backend hints inspector was not injected.',
     );
