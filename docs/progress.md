@@ -13,6 +13,37 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-29 16:08 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Tighten the functional-core boundary for runtime executable
+  probes.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: current commit (`Type runtime executable probe requests`).
+- Purpose: keep runtime validation probe execution requests typed as
+  `ProgramExecutable`, `ProgramRunArguments`, and
+  `ProgramWorkingDirectoryPath` instead of accepting raw process primitives at
+  the domain-facing probe interface.
+- Completed work: committed typed path opener targets; added a failing typed
+  runtime executable probe contract; changed `RuntimeExecutableProbe`,
+  `DartIoRuntimeExecutableProbe`, macOS/Linux runtime validation probe call
+  sites, and CLI recording fixtures to pass typed executable, argv, and working
+  directory values; and tightened governance so the probe interface does not
+  return to raw process primitives.
+- Remaining work: broader functional-core tightening remains in `docs/todo.md`,
+  including other primitive request/planner APIs.
+- Next action: continue with the next narrow primitive-boundary cleanup outside
+  the completed runtime executable probe path.
+- Verification: observed `cd packages/konyak_cli && dart test
+  test/domain_immutability_test.dart --name "runtime executable probes"` fail
+  before implementation because the typed test fixture did not match the old
+  raw `String` / `List<String>` / `String workingDirectory` probe interface;
+  after implementation, focused runtime executable probe and runtime validator
+  contract tests, `dart analyze --fatal-infos`, `just verify-governance`, full
+  `test/domain_immutability_test.dart`, `just cli-test`, `just verify-safety`,
+  `just format-check`, and `just lint` passed.
+
 - Timestamp: 2026-06-29 16:01 JST
 - State: `completed`
 - Branch: `main`

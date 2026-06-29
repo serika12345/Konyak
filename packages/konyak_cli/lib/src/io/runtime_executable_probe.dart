@@ -2,6 +2,7 @@ import 'dart:io';
 
 import '../domain/program/program_run_environment.dart';
 import '../domain/runtime/runtime_validation_models.dart';
+import '../domain/shared/domain_value_objects.dart';
 import 'external_payload_helpers.dart';
 
 class DartIoRuntimeExecutableProbe implements RuntimeExecutableProbe {
@@ -9,17 +10,17 @@ class DartIoRuntimeExecutableProbe implements RuntimeExecutableProbe {
 
   @override
   RuntimeExecutableProbeResult run({
-    required String executable,
-    required List<String> arguments,
+    required ProgramExecutable executable,
+    required ProgramRunArguments arguments,
     required ProgramRunEnvironment environment,
-    required String workingDirectory,
+    required ProgramWorkingDirectoryPath workingDirectory,
   }) {
     try {
       final result = Process.runSync(
-        executable,
-        arguments,
+        executable.value,
+        arguments.value,
         environment: environment.toMap(),
-        workingDirectory: workingDirectory,
+        workingDirectory: workingDirectory.value,
         runInShell: false,
       );
 

@@ -722,6 +722,75 @@ def require_typed_path_opener_boundary() -> None:
                 )
 
 
+def require_typed_runtime_executable_probe_boundary() -> None:
+    domain_path = (
+        "packages/konyak_cli/lib/src/domain/runtime/runtime_validation_models.dart"
+    )
+    domain = read_text(domain_path)
+    expected_domain_terms = [
+        "abstract interface class RuntimeExecutableProbe",
+        "required ProgramExecutable executable",
+        "required ProgramRunArguments arguments",
+        "required ProgramWorkingDirectoryPath workingDirectory",
+    ]
+    for expected in expected_domain_terms:
+        if expected not in domain:
+            raise AssertionError(
+                "RuntimeExecutableProbe must expose typed executable "
+                f"requests: {expected}"
+            )
+
+    probe_match = re.search(
+        r"abstract interface class RuntimeExecutableProbe\b(?P<body>.*?)(?=\n\})",
+        domain,
+        re.S,
+    )
+    if probe_match is None:
+        raise AssertionError("RuntimeExecutableProbe interface is missing")
+    probe_body = probe_match.group("body")
+    forbidden_domain_terms = [
+        "required String executable",
+        "required List<String> arguments",
+        "required String workingDirectory",
+    ]
+    for forbidden in forbidden_domain_terms:
+        if forbidden in probe_body:
+            raise AssertionError(
+                "RuntimeExecutableProbe must not expose primitive process "
+                f"request fields: {forbidden}"
+            )
+
+    runtime_validator_path = (
+        "packages/konyak_cli/lib/src/platform/macos/macos_runtime_validator.dart"
+    )
+    runtime_validator = read_text(runtime_validator_path)
+    expected_validator_terms = [
+        "executable: ProgramExecutable(executablePath)",
+        "arguments: ProgramRunArguments(const <String>['--version'])",
+        "workingDirectory: ProgramWorkingDirectoryPath(dirname(executablePath))",
+    ]
+    for expected in expected_validator_terms:
+        if expected not in runtime_validator:
+            raise AssertionError(
+                "Runtime validator must build typed executable probe "
+                f"requests: {expected}"
+            )
+
+    probe_io_path = "packages/konyak_cli/lib/src/io/runtime_executable_probe.dart"
+    probe_io = read_text(probe_io_path)
+    expected_io_terms = [
+        "executable.value",
+        "arguments.value",
+        "workingDirectory.value",
+    ]
+    for expected in expected_io_terms:
+        if expected not in probe_io:
+            raise AssertionError(
+                "Runtime executable probe I/O must unwrap typed requests only "
+                f"at the process boundary: {expected}"
+            )
+
+
 def require_wine_process_termination_cli_json_projection() -> None:
     domain_path = "packages/konyak_cli/lib/src/domain/program/program_run_models.dart"
     domain = read_text(domain_path)
@@ -2416,6 +2485,7 @@ def main() -> None:
     require_typed_wine_process_planner_boundary()
     require_typed_detached_process_starter_boundary()
     require_typed_path_opener_boundary()
+    require_typed_runtime_executable_probe_boundary()
     require_wine_process_termination_cli_json_projection()
     require_program_catalog_cli_json_projection()
     require_graphics_backend_hints_cli_json_projection()

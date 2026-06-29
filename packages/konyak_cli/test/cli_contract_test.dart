@@ -879,22 +879,30 @@ final class RecordingRuntimeExecutableProbe implements RuntimeExecutableProbe {
   RecordingRuntimeExecutableProbe({required this.result});
 
   final RuntimeExecutableProbeResult result;
-  String? lastExecutable;
-  List<String> lastArguments = const <String>[];
+  ProgramExecutable? lastProgramExecutable;
+  ProgramRunArguments lastProgramRunArguments = ProgramRunArguments(
+    const <String>[],
+  );
   Map<String, String> lastEnvironment = const <String, String>{};
-  String? lastWorkingDirectory;
+  ProgramWorkingDirectoryPath? lastProgramWorkingDirectory;
+
+  String? get lastExecutable => lastProgramExecutable?.value;
+
+  List<String> get lastArguments => lastProgramRunArguments.value;
+
+  String? get lastWorkingDirectory => lastProgramWorkingDirectory?.value;
 
   @override
   RuntimeExecutableProbeResult run({
-    required String executable,
-    required List<String> arguments,
+    required ProgramExecutable executable,
+    required ProgramRunArguments arguments,
     required ProgramRunEnvironment environment,
-    required String workingDirectory,
+    required ProgramWorkingDirectoryPath workingDirectory,
   }) {
-    lastExecutable = executable;
-    lastArguments = List.unmodifiable(arguments);
+    lastProgramExecutable = executable;
+    lastProgramRunArguments = arguments;
     lastEnvironment = Map.unmodifiable(environment.toMap());
-    lastWorkingDirectory = workingDirectory;
+    lastProgramWorkingDirectory = workingDirectory;
 
     return result;
   }

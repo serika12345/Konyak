@@ -152,9 +152,9 @@ abstract class RuntimeExecutableProbeResult
 
 abstract interface class RuntimeExecutableProbe {
   RuntimeExecutableProbeResult run({
-    required String executable,
-    required List<String> arguments,
+    required ProgramExecutable executable,
+    required ProgramRunArguments arguments,
     required ProgramRunEnvironment environment,
-    required String workingDirectory,
+    required ProgramWorkingDirectoryPath workingDirectory,
   });
 }

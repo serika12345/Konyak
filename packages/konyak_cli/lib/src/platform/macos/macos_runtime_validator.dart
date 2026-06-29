@@ -8,6 +8,7 @@ import '../../domain/runtime/runtime_update_support.dart';
 import '../../domain/runtime/runtime_validation_models.dart';
 import '../../domain/runtime/runtime_validation_support.dart';
 import '../../domain/runtime/wine_runtime_paths.dart';
+import '../../domain/shared/domain_value_objects.dart';
 import '../../io/macos_wine_archive_installation.dart';
 import '../../io/runtime_executable_probe.dart';
 import '../../io/runtime_probes.dart';
@@ -100,15 +101,15 @@ class DartIoMacosWineRuntimeValidator implements RuntimeValidator {
     }
 
     final loaderResult = executableProbe.run(
-      executable: executablePath,
-      arguments: const ['--version'],
+      executable: ProgramExecutable(executablePath),
+      arguments: ProgramRunArguments(const <String>['--version']),
       environment: ProgramRunEnvironment(<String, String>{
         'WINELOADER': executablePath,
         'WINESERVER': joinPath(runtimeRoot, const ['bin', 'wineserver']),
         'WINEDLLPATH': macosWineWindowsDllPaths(runtimeRoot).join(':'),
         'DYLD_LIBRARY_PATH': joinPath(runtimeRoot, const ['lib']),
       }),
-      workingDirectory: dirname(executablePath),
+      workingDirectory: ProgramWorkingDirectoryPath(dirname(executablePath)),
     );
     final loaderCheck = RuntimeValidationCheck(
       id: 'wine-loader',
@@ -164,10 +165,10 @@ class DartIoMacosWineRuntimeValidator implements RuntimeValidator {
     }
 
     final loaderResult = executableProbe.run(
-      executable: executablePath,
-      arguments: const ['--version'],
+      executable: ProgramExecutable(executablePath),
+      arguments: ProgramRunArguments(const <String>['--version']),
       environment: linuxRuntimeEnvironment(environment),
-      workingDirectory: dirname(executablePath),
+      workingDirectory: ProgramWorkingDirectoryPath(dirname(executablePath)),
     );
     final loaderCheck = RuntimeValidationCheck(
       id: 'wine-loader',

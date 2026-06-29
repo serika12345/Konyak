@@ -78,6 +78,33 @@ final class RecordingDomainPathOpener implements PathOpener {
   }
 }
 
+final class RecordingDomainRuntimeExecutableProbe
+    implements RuntimeExecutableProbe {
+  ProgramExecutable? executable;
+  ProgramRunArguments? arguments;
+  ProgramRunEnvironment? environment;
+  ProgramWorkingDirectoryPath? workingDirectory;
+
+  @override
+  RuntimeExecutableProbeResult run({
+    required ProgramExecutable executable,
+    required ProgramRunArguments arguments,
+    required ProgramRunEnvironment environment,
+    required ProgramWorkingDirectoryPath workingDirectory,
+  }) {
+    this.executable = executable;
+    this.arguments = arguments;
+    this.environment = environment;
+    this.workingDirectory = workingDirectory;
+
+    return const RuntimeExecutableProbeResult(
+      exitCode: 0,
+      stdout: 'wine-11.9',
+      stderr: '',
+    );
+  }
+}
+
 void main() {
   test('bottle records expose immutable pinned program snapshots', () {
     final pinnedPrograms = <PinnedProgramRecord>[
@@ -1519,6 +1546,26 @@ void main() {
     expect(revealResult, const PathOpenCompleted());
     expect(opener.openedTarget, PathOpenTarget('https://konyak.test'));
     expect(opener.revealedTarget, PathRevealTarget('/Games/Steam.exe'));
+  });
+
+  test('runtime executable probes expose typed executable requests', () {
+    final probe = RecordingDomainRuntimeExecutableProbe();
+    final environment = ProgramRunEnvironment(const <String, String>{
+      'PATH': '/runtime/bin',
+    });
+
+    final result = probe.run(
+      executable: ProgramExecutable('/runtime/bin/wine'),
+      arguments: ProgramRunArguments(const <String>['--version']),
+      environment: environment,
+      workingDirectory: ProgramWorkingDirectoryPath('/runtime/bin'),
+    );
+
+    expect(result.exitCode, 0);
+    expect(probe.executable, ProgramExecutable('/runtime/bin/wine'));
+    expect(probe.arguments, ProgramRunArguments(const <String>['--version']));
+    expect(probe.environment, environment);
+    expect(probe.workingDirectory, ProgramWorkingDirectoryPath('/runtime/bin'));
   });
 
   test('host environments expose immutable snapshots', () {
