@@ -13,6 +13,48 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-29 14:58 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Replace legacy bottle record wrappers with Freezed copyWith.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: this commit (`Use Freezed copyWith for bottle records`).
+- Purpose: continue the Freezed cleanup by removing compatibility `withX`
+  wrappers from `BottleRecord` and `PinnedProgramRecord` and moving call sites
+  to generated `copyWith`.
+- Completed work: committed the completed bottle mutation/runtime settings
+  Freezed batch; inspected remaining wrapper call sites in storage,
+  repository, I/O, pinned program helpers, and domain immutability tests; added
+  focused `BottleRecord.copyWith` and `PinnedProgramRecord.copyWith` coverage
+  and observed it fail while `copyWith` was disabled; enabled generated
+  `copyWith`, removed legacy `withX` wrappers from `BottleRecord` and
+  `PinnedProgramRecord`, updated call sites to typed `copyWith`, and tightened
+  governance so those wrappers do not return.
+- Remaining work: map-snapshot models such as `ProgramRunEnvironment`,
+  `HostEnvironment`, and `RuntimeComponentVersions` still use hand-written
+  equality; these require a separate decision because Freezed would otherwise
+  expose internal immutable-map fields.
+- Next action: either commit this completed wrapper cleanup or inspect the
+  map-snapshot models for a design that preserves hidden storage.
+- Verification: observed `cd packages/konyak_cli && dart test
+  test/domain_immutability_test.dart --name "bottle records copyWith preserves
+  semantic value object fields|pinned program records copyWith preserves
+  semantic fields"` fail before implementation; after implementation, `cd
+  packages/konyak_cli && dart run build_runner build
+  --delete-conflicting-outputs && dart format
+  lib/src/domain/bottle/bottle_models.dart
+  lib/src/domain/program/pinned_programs.dart lib/src/io/bottle_archives.dart
+  lib/src/io/program_registry_parsers.dart
+  lib/src/repository/file_bottle_repository_mutation_operations.dart
+  lib/src/repository/memory_bottle_repository.dart
+  lib/src/storage/storage_paths.dart test/domain_immutability_test.dart &&
+  dart analyze --fatal-infos`, focused bottle/pinned `copyWith` tests,
+  focused pinned-program and bottle mutation CLI contract tests, `cd
+  packages/konyak_cli && dart test test/domain_immutability_test.dart`, `just
+  verify-governance`, `just verify-architecture`, `just verify-safety`, `just
+  format-check`, `just lint`, and `just cli-test` passed.
+
 - Timestamp: 2026-06-29 14:20 JST
 - State: `completed`
 - Branch: `main`

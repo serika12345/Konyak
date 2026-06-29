@@ -7,11 +7,7 @@ import 'bottle_runtime_settings_models.dart';
 
 part 'bottle_models.freezed.dart';
 
-@Freezed(
-  copyWith: false,
-  map: FreezedMapOptions.none,
-  when: FreezedWhenOptions.none,
-)
+@Freezed(map: FreezedMapOptions.none, when: FreezedWhenOptions.none)
 abstract class BottleRecord with _$BottleRecord {
   const BottleRecord._();
 
@@ -42,74 +38,9 @@ abstract class BottleRecord with _$BottleRecord {
     required BottleRuntimeSettings runtimeSettings,
     required IList<PinnedProgramRecord> pinnedPrograms,
   }) = _BottleRecord;
-
-  BottleRecord withIdentity({
-    required BottleId id,
-    required BottleName name,
-    required BottlePath path,
-  }) {
-    return BottleRecord._validated(
-      id: id,
-      name: name,
-      path: path,
-      windowsVersion: windowsVersion,
-      runtimeSettings: runtimeSettings,
-      pinnedPrograms: pinnedPrograms,
-    );
-  }
-
-  BottleRecord withPath(BottlePath path) {
-    return BottleRecord._validated(
-      id: id,
-      name: name,
-      path: path,
-      windowsVersion: windowsVersion,
-      runtimeSettings: runtimeSettings,
-      pinnedPrograms: pinnedPrograms,
-    );
-  }
-
-  BottleRecord withWindowsVersion(WindowsVersion windowsVersion) {
-    return BottleRecord._validated(
-      id: id,
-      name: name,
-      path: path,
-      windowsVersion: windowsVersion,
-      runtimeSettings: runtimeSettings,
-      pinnedPrograms: pinnedPrograms,
-    );
-  }
-
-  BottleRecord withRuntimeSettings(BottleRuntimeSettings runtimeSettings) {
-    return BottleRecord._validated(
-      id: id,
-      name: name,
-      path: path,
-      windowsVersion: windowsVersion,
-      runtimeSettings: runtimeSettings,
-      pinnedPrograms: pinnedPrograms,
-    );
-  }
-
-  BottleRecord withPinnedPrograms(
-    Iterable<PinnedProgramRecord> pinnedPrograms,
-  ) {
-    return BottleRecord._validated(
-      id: id,
-      name: name,
-      path: path,
-      windowsVersion: windowsVersion,
-      runtimeSettings: runtimeSettings,
-      pinnedPrograms: pinnedPrograms.toIList(),
-    );
-  }
 }
 
-@Freezed(
-  copyWith: false,
-  map: FreezedMapOptions.none,
-  when: FreezedWhenOptions.none,
-)
+@Freezed(map: FreezedMapOptions.none, when: FreezedWhenOptions.none)
 abstract class PinnedProgramRecord with _$PinnedProgramRecord {
   const PinnedProgramRecord._();
 
@@ -133,22 +64,4 @@ abstract class PinnedProgramRecord with _$PinnedProgramRecord {
     required bool removable,
     required Option<ProgramIconPath> iconPath,
   }) = _PinnedProgramRecord;
-
-  PinnedProgramRecord withName(ProgramName name) {
-    return PinnedProgramRecord._validated(
-      name: name,
-      path: path,
-      removable: removable,
-      iconPath: iconPath,
-    );
-  }
-
-  PinnedProgramRecord withIconPath(Option<ProgramIconPath> iconPath) {
-    return PinnedProgramRecord._validated(
-      name: name,
-      path: path,
-      removable: removable,
-      iconPath: iconPath,
-    );
-  }
 }

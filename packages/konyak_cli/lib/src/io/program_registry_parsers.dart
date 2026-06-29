@@ -22,8 +22,8 @@ BottleRecord bottleWithRegistryValue({
         () => bottle,
         (value) => value.name == 'Version'
             ? bottleWithWindowsVersion(bottle, value.data)
-            : bottle.withRuntimeSettings(
-                runtimeSettingsWithRegistryValue(
+            : bottle.copyWith(
+                runtimeSettings: runtimeSettingsWithRegistryValue(
                   runtimeSettings: bottle.runtimeSettings,
                   arguments: arguments,
                   stdout: stdout,
@@ -66,7 +66,7 @@ BottleRuntimeSettings runtimeSettingsWithRegistryValue({
 BottleRecord bottleWithWindowsVersion(BottleRecord bottle, String data) {
   return registryWindowsVersion(data).match(
     () => bottle,
-    (value) => bottle.withWindowsVersion(WindowsVersion(value)),
+    (value) => bottle.copyWith(windowsVersion: WindowsVersion(value)),
   );
 }
 

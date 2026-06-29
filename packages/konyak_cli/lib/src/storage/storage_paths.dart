@@ -98,7 +98,7 @@ BottleRecord renamedFileBottle({
     () => joinPath(dataHome, const ['bottles']),
     (value) => value,
   );
-  return bottle.withIdentity(
+  return bottle.copyWith(
     id: BottleId(id),
     name: BottleName(name),
     path: BottlePath(joinPath(directory, [id])),

@@ -1,3 +1,4 @@
+import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:konyak_cli/konyak_cli.dart';
 import 'package:konyak_cli/src/domain/program/program_run_command_support.dart';
@@ -79,7 +80,7 @@ void main() {
     }
 
     expect(
-      () => validBottle().withIdentity(
+      () => validBottle().copyWith(
         id: BottleId(' '),
         name: BottleName('Steam'),
         path: BottlePath('/bottles/steam'),
@@ -87,7 +88,7 @@ void main() {
       throwsA(isA<ArgumentError>()),
     );
     expect(
-      () => validBottle().withIdentity(
+      () => validBottle().copyWith(
         id: BottleId('steam'),
         name: BottleName(' '),
         path: BottlePath('/bottles/steam'),
@@ -95,12 +96,45 @@ void main() {
       throwsA(isA<ArgumentError>()),
     );
     expect(
-      () => validBottle().withPath(BottlePath(' ')),
+      () => validBottle().copyWith(path: BottlePath(' ')),
       throwsA(isA<ArgumentError>()),
     );
     expect(
-      () => validBottle().withWindowsVersion(WindowsVersion(' ')),
+      () => validBottle().copyWith(windowsVersion: WindowsVersion(' ')),
       throwsA(isA<ArgumentError>()),
+    );
+  });
+
+  test('bottle records copyWith preserves semantic value object fields', () {
+    final bottle = BottleRecord(
+      id: 'steam',
+      name: 'Steam',
+      path: '/bottles/steam',
+      windowsVersion: 'win10',
+    );
+    final updated = bottle.copyWith(
+      id: BottleId('steam-new'),
+      name: BottleName('Steam New'),
+      path: BottlePath('/bottles/steam-new'),
+      windowsVersion: WindowsVersion('win11'),
+      runtimeSettings: BottleRuntimeSettings(dxvk: true),
+      pinnedPrograms: [
+        PinnedProgramRecord(name: 'Steam', path: '/steam.exe'),
+      ].toIList(),
+    );
+
+    expect(
+      updated,
+      BottleRecord(
+        id: 'steam-new',
+        name: 'Steam New',
+        path: '/bottles/steam-new',
+        windowsVersion: 'win11',
+        runtimeSettings: BottleRuntimeSettings(dxvk: true),
+        pinnedPrograms: [
+          PinnedProgramRecord(name: 'Steam', path: '/steam.exe'),
+        ],
+      ),
     );
   });
 
@@ -125,16 +159,36 @@ void main() {
 
   test('pinned program records model absent icons with Option', () {
     final withoutIcon = PinnedProgramRecord(name: 'Steam', path: '/steam.exe');
-    final withIcon = withoutIcon.withIconPath(
-      Option.of(ProgramIconPath('/steam.icns')),
+    final withIcon = withoutIcon.copyWith(
+      iconPath: Option.of(ProgramIconPath('/steam.icns')),
     );
-    final clearedIcon = withIcon.withIconPath(const Option.none());
+    final clearedIcon = withIcon.copyWith(iconPath: const Option.none());
 
     expect(withoutIcon.name, ProgramName('Steam'));
     expect(withoutIcon.path, ProgramPath('/steam.exe'));
     expect(withoutIcon.iconPath.isNone(), isTrue);
     expect(withIcon.iconPath.toNullable(), ProgramIconPath('/steam.icns'));
     expect(clearedIcon.iconPath.isNone(), isTrue);
+  });
+
+  test('pinned program records copyWith preserves semantic fields', () {
+    final program = PinnedProgramRecord(name: 'Steam', path: '/steam.exe');
+    final updated = program.copyWith(
+      name: ProgramName('Steam New'),
+      path: ProgramPath('/steam-new.exe'),
+      removable: true,
+      iconPath: Option.of(ProgramIconPath('/steam.icns')),
+    );
+
+    expect(
+      updated,
+      PinnedProgramRecord(
+        name: 'Steam New',
+        path: '/steam-new.exe',
+        removable: true,
+        iconPath: Option.of('/steam.icns'),
+      ),
+    );
   });
 
   test('bottle mutation request records compare by semantic values', () {

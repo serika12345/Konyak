@@ -1654,17 +1654,18 @@ def require_result_boundary_rules() -> None:
         "packages/konyak_cli/lib/src/domain/bottle/bottle_models.dart",
         "final String? iconPath;",
     )
-    for expected in [
-        "BottleRecord withPath(BottlePath path)",
-        "BottleRecord withWindowsVersion(WindowsVersion windowsVersion)",
-        "PinnedProgramRecord withName(ProgramName name)",
-        "PinnedProgramRecord withIconPath(Option<ProgramIconPath> iconPath)",
-    ]:
-        require_contains(
-            "packages/konyak_cli/lib/src/domain/bottle/bottle_models.dart",
-            expected,
-        )
+    require_not_contains(
+        "packages/konyak_cli/lib/src/domain/bottle/bottle_models.dart",
+        "copyWith: false",
+    )
     for unexpected in [
+        "BottleRecord withIdentity(",
+        "BottleRecord withPath(",
+        "BottleRecord withWindowsVersion(",
+        "BottleRecord withRuntimeSettings(",
+        "BottleRecord withPinnedPrograms(",
+        "PinnedProgramRecord withName(",
+        "PinnedProgramRecord withIconPath(",
         "BottleRecord withIdentity({\n    required String id,",
         "BottleRecord withPath(String path)",
         "BottleRecord withWindowsVersion(String windowsVersion)",

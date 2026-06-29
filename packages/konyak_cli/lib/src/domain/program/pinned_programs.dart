@@ -1,3 +1,4 @@
+import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:fpdart/fpdart.dart';
 
 import '../bottle/bottle_models.dart';
@@ -27,18 +28,20 @@ BottleRecord bottleWithPinnedProgram(
     programPath: request.programPath.value,
   );
 
-  return bottle.withPinnedPrograms(<PinnedProgramRecord>[
-    ...bottle.pinnedPrograms,
-    PinnedProgramRecord(
-      name: request.name.value,
-      path: request.programPath.value,
-      iconPath: metadata.match(
-        () => const Option<String>.none(),
-        (programMetadata) =>
-            programMetadata.iconPath.map((value) => value.value),
+  return bottle.copyWith(
+    pinnedPrograms: <PinnedProgramRecord>[
+      ...bottle.pinnedPrograms,
+      PinnedProgramRecord(
+        name: request.name.value,
+        path: request.programPath.value,
+        iconPath: metadata.match(
+          () => const Option<String>.none(),
+          (programMetadata) =>
+              programMetadata.iconPath.map((value) => value.value),
+        ),
       ),
-    ),
-  ]);
+    ].toIList(),
+  );
 }
 
 BottleRecord bottleWithPinnedProgramIcons(
@@ -63,7 +66,7 @@ BottleRecord bottleWithPinnedProgramIcons(
           return (program: program, changed: false);
         }
 
-        return (program: program.withIconPath(iconPath), changed: true);
+        return (program: program.copyWith(iconPath: iconPath), changed: true);
       })
       .toList(growable: false);
   final changed = updatedPinnedPrograms.any((program) => program.changed);
@@ -72,8 +75,10 @@ BottleRecord bottleWithPinnedProgramIcons(
     return bottle;
   }
 
-  return bottle.withPinnedPrograms(
-    updatedPinnedPrograms.map((program) => program.program),
+  return bottle.copyWith(
+    pinnedPrograms: updatedPinnedPrograms
+        .map((program) => program.program)
+        .toIList(),
   );
 }
 
@@ -93,7 +98,7 @@ BottleRecord bottleWithoutMissingBottleLocalPinnedPrograms(
     return bottle;
   }
 
-  return bottle.withPinnedPrograms(pinnedPrograms);
+  return bottle.copyWith(pinnedPrograms: pinnedPrograms.toIList());
 }
 
 bool isLivePinnedProgram(
@@ -117,12 +122,12 @@ BottleRecord bottleWithoutPinnedProgram(
   String programPath,
 ) {
   final normalizedProgramPath = normalizeFilesystemPath(programPath);
-  return bottle.withPinnedPrograms(
-    bottle.pinnedPrograms
+  return bottle.copyWith(
+    pinnedPrograms: bottle.pinnedPrograms
         .where(
           (program) => !_isPinnedProgramPath(program, normalizedProgramPath),
         )
-        .toList(growable: false),
+        .toIList(),
   );
 }
 
@@ -133,13 +138,13 @@ BottleRecord bottleWithRenamedPinnedProgram(
   final normalizedProgramPath = normalizeFilesystemPath(
     request.programPath.value,
   );
-  return bottle.withPinnedPrograms(
-    bottle.pinnedPrograms
+  return bottle.copyWith(
+    pinnedPrograms: bottle.pinnedPrograms
         .map(
           (program) => _isPinnedProgramPath(program, normalizedProgramPath)
-              ? program.withName(request.name)
+              ? program.copyWith(name: request.name)
               : program,
         )
-        .toList(growable: false),
+        .toIList(),
   );
 }

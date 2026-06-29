@@ -117,7 +117,7 @@ BottleArchiveImportResult readBottleArchive({
         return BottleArchiveImportConflict(imported.id.value);
       }
 
-      final relocated = imported.withPath(BottlePath(destinationPath));
+      final relocated = imported.copyWith(path: BottlePath(destinationPath));
       moveDirectory(from: extractedBottlePath, to: destinationPath);
       writeBottleMetadata(relocated);
       onImported?.call(relocated);
