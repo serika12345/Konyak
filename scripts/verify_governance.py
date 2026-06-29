@@ -1070,6 +1070,35 @@ def require_typed_bottle_repository_id_boundary() -> None:
             )
 
 
+def require_typed_runtime_settings_setter_boundary() -> None:
+    path = "packages/konyak_cli/lib/src/domain/bottle/bottle_runtime_settings_models.dart"
+    source = read_text(path)
+    expected_terms = [
+        "BottleRuntimeSettings withEnhancedSync(EnhancedSyncMode enhancedSync)",
+        "BottleRuntimeSettings withDxvkHud(DxvkHudMode dxvkHud)",
+        "return BottleRuntimeSettings._validated(",
+        "enhancedSync: enhancedSync,",
+        "dxvkHud: dxvkHud,",
+    ]
+    for expected in expected_terms:
+        if expected not in source:
+            raise AssertionError(
+                "BottleRuntimeSettings update helpers must preserve typed "
+                f"runtime settings values: {expected}"
+            )
+
+    forbidden_terms = [
+        "BottleRuntimeSettings withEnhancedSync(String enhancedSync)",
+        "BottleRuntimeSettings withDxvkHud(String dxvkHud)",
+    ]
+    for forbidden in forbidden_terms:
+        if forbidden in source:
+            raise AssertionError(
+                "BottleRuntimeSettings update helpers must not expose raw "
+                f"string settings: {forbidden}"
+            )
+
+
 def require_wine_process_termination_cli_json_projection() -> None:
     domain_path = "packages/konyak_cli/lib/src/domain/program/program_run_models.dart"
     domain = read_text(domain_path)
@@ -2764,6 +2793,7 @@ def main() -> None:
     require_typed_winetricks_verb_lister_boundary()
     require_typed_runtime_id_service_boundaries()
     require_typed_bottle_repository_id_boundary()
+    require_typed_runtime_settings_setter_boundary()
     require_wine_process_termination_cli_json_projection()
     require_program_catalog_cli_json_projection()
     require_graphics_backend_hints_cli_json_projection()

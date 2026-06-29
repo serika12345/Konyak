@@ -382,6 +382,8 @@ void main() {
       buildVersion: WindowsBuildVersion(22631),
       dpiScaling: WindowsDpiScaling(144),
     );
+    final esync = settings.withEnhancedSync(EnhancedSyncMode('esync'));
+    final hud = settings.withDxvkHud(DxvkHudMode('partial'));
     final dxvk = settings.withDxvk(true);
 
     expect(
@@ -395,6 +397,8 @@ void main() {
         dpiScaling: 144,
       ),
     );
+    expect(esync.enhancedSync, EnhancedSyncMode('esync'));
+    expect(hud.dxvkHud, DxvkHudMode('partial'));
     expect(dxvk.dxvk, isTrue);
     expect(dxvk.dxmt, isFalse);
     expect(dxvk.dxrEnabled, isFalse);

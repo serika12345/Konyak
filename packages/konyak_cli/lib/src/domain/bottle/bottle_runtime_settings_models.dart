@@ -60,8 +60,8 @@ abstract class BottleRuntimeSettings with _$BottleRuntimeSettings {
     required WindowsDpiScaling dpiScaling,
   }) = _BottleRuntimeSettings;
 
-  BottleRuntimeSettings withEnhancedSync(String enhancedSync) {
-    return BottleRuntimeSettings(
+  BottleRuntimeSettings withEnhancedSync(EnhancedSyncMode enhancedSync) {
+    return BottleRuntimeSettings._validated(
       enhancedSync: enhancedSync,
       metalHud: metalHud,
       metalTrace: metalTrace,
@@ -71,11 +71,11 @@ abstract class BottleRuntimeSettings with _$BottleRuntimeSettings {
       dxmt: dxmt,
       dlssMetalFx: dlssMetalFx,
       dxvkAsync: dxvkAsync,
-      dxvkHud: dxvkHud.value,
+      dxvkHud: dxvkHud,
       vkd3dProton: vkd3dProton,
-      buildVersion: buildVersion.value,
+      buildVersion: buildVersion,
       retinaMode: retinaMode,
-      dpiScaling: dpiScaling.value,
+      dpiScaling: dpiScaling,
     );
   }
 
@@ -231,9 +231,9 @@ abstract class BottleRuntimeSettings with _$BottleRuntimeSettings {
     );
   }
 
-  BottleRuntimeSettings withDxvkHud(String dxvkHud) {
-    return BottleRuntimeSettings(
-      enhancedSync: enhancedSync.value,
+  BottleRuntimeSettings withDxvkHud(DxvkHudMode dxvkHud) {
+    return BottleRuntimeSettings._validated(
+      enhancedSync: enhancedSync,
       metalHud: metalHud,
       metalTrace: metalTrace,
       avxEnabled: avxEnabled,
@@ -244,9 +244,9 @@ abstract class BottleRuntimeSettings with _$BottleRuntimeSettings {
       dxvkAsync: dxvkAsync,
       dxvkHud: dxvkHud,
       vkd3dProton: vkd3dProton,
-      buildVersion: buildVersion.value,
+      buildVersion: buildVersion,
       retinaMode: retinaMode,
-      dpiScaling: dpiScaling.value,
+      dpiScaling: dpiScaling,
     );
   }
 

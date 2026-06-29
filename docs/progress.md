@@ -13,6 +13,33 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-29 17:05 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Tighten the functional-core boundary for runtime settings update
+  helpers.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: current commit (`Type runtime settings update helpers`).
+- Purpose: keep runtime settings update helpers typed as `EnhancedSyncMode` and
+  `DxvkHudMode` instead of accepting raw string setting values inside the
+  domain model.
+- Completed work: added a failing value-object setter fixture; changed
+  `BottleRuntimeSettings.withEnhancedSync` and
+  `BottleRuntimeSettings.withDxvkHud` to accept value objects and return
+  private validated settings records; and added governance coverage for these
+  setter boundaries.
+- Remaining work: broader functional-core tightening remains in `docs/todo.md`,
+  including other primitive request/planner APIs.
+- Next action: continue with the next narrow primitive-boundary cleanup.
+- Verification: observed `cd packages/konyak_cli && dart test
+  test/domain_immutability_test.dart --name "runtime settings copyWith
+  preserves semantic value object fields"` fail before implementation because
+  the setters still accepted raw `String`; after implementation the same
+  focused test and `dart analyze --fatal-infos` passed; `just
+  verify-governance`, `just cli-test`, `just verify-safety`,
+  `just format-check`, and `just lint` passed.
+
 - Timestamp: 2026-06-29 16:53 JST
 - State: `completed`
 - Branch: `main`
