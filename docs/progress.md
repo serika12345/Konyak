@@ -13,32 +13,34 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-06-29 09:46 JST
+- Timestamp: 2026-06-29 09:52 JST
 - State: `completed`
 - Branch: `main`
-- Active work: Freezed-backed runtime definition and capability records.
+- Active work: Freezed-backed runtime record.
 - Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
   boundary tightening.
-- Latest commit: `dc86c76` (`Freezed runtime stack domain records`).
+- Latest commit: this commit (`Freezed runtime record domain model`).
 - Purpose: continue replacing hand-written immutable domain model boilerplate
-  with Freezed-backed records, continuing from runtime stack records into the
-  definition/state/capability records consumed by `RuntimeRecord.fromParts`.
-- Completed work: committed the runtime stack Freezed slice; inspected
-  `RuntimeDefinition`, `InstalledRuntimeState`, `RuntimeCapabilities`,
-  call sites, domain immutability coverage, and runtime governance baselines;
-  converted the three records to Freezed-backed models with `copyWith`
-  disabled and public constructor compatibility preserved; kept
-  `InstalledRuntimeState.unknown()` and `RuntimeCapabilities.empty()` as const
-  constructors through typed Freezed variants; regenerated the local ignored
-  `runtime_models.freezed.dart`.
-- Remaining work: commit this runtime definition/state/capability slice if
-  accepted. `RuntimeRecord` and runtime source manifest models remain
-  hand-written candidates.
-- Next action: commit this slice, then evaluate `RuntimeRecord` separately.
-- Verification: `cd packages/konyak_cli && dart analyze --fatal-infos`,
-  `cd packages/konyak_cli && dart test test/domain_immutability_test.dart`,
-  `just verify-governance`, `just verify-architecture`, `just verify-safety`,
-  `just format-check`, `just lint`, and `just cli-test` passed.
+  with Freezed-backed records, now focusing on the aggregate runtime record
+  after definition/state/capability records were converted.
+- Completed work: committed the runtime definition/state/capability Freezed
+  slice; inspected `RuntimeRecord` constructors, call sites, CLI projection,
+  domain immutability coverage, and runtime governance checks; converted
+  `RuntimeRecord` to a Freezed-backed record with `copyWith` disabled while
+  preserving the public constructor and `fromParts`; regenerated the local
+  ignored `runtime_models.freezed.dart`; updated governance so typed runtime
+  record fields can be enforced through either hand-written final fields or
+  Freezed `_validated` constructor parameters.
+- Remaining work: runtime source manifest models remain hand-written
+  candidates.
+- Next action: evaluate runtime source manifest models as the next narrow
+  Freezed conversion candidate.
+- Verification: `cd packages/konyak_cli && dart run build_runner build && dart
+  format lib/src/domain/runtime/runtime_models.dart && dart analyze
+  --fatal-infos`, `cd packages/konyak_cli && dart test
+  test/domain_immutability_test.dart`, `just verify-governance`,
+  `just verify-architecture`, `just verify-safety`, `just format-check`,
+  `just lint`, and `just cli-test` passed.
 
 - Timestamp: 2026-06-28 22:53 JST
 - State: `completed`

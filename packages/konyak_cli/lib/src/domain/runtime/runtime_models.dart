@@ -112,73 +112,94 @@ abstract class RuntimeCapabilities with _$RuntimeCapabilities {
   }) = _EmptyRuntimeCapabilities;
 }
 
-class RuntimeRecord {
-  RuntimeRecord({
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class RuntimeRecord with _$RuntimeRecord {
+  const RuntimeRecord._();
+
+  factory RuntimeRecord({
     required String id,
     required String name,
     required String platform,
     required String architecture,
     required String runnerKind,
-    required this.isBundled,
-    required this.isUpdateable,
+    required bool isBundled,
+    required bool isUpdateable,
     Option<String> distributionKind = const Option.none(),
-    this.isInstalled = const Option.none(),
+    Option<bool> isInstalled = const Option.none(),
     Option<String> applicationSupportPath = const Option.none(),
     Option<String> libraryPath = const Option.none(),
     Option<String> executablePath = const Option.none(),
     Option<String> archiveUrl = const Option.none(),
     Option<String> versionUrl = const Option.none(),
-    this.stack = const Option.none(),
-  }) : id = RuntimeId(id),
-       name = RuntimeName(name),
-       platform = RuntimePlatformName(platform),
-       architecture = RuntimeArchitecture(architecture),
-       runnerKind = RunnerKind(runnerKind),
-       distributionKind = distributionKind.map(RuntimeDistributionKind.new),
-       applicationSupportPath = applicationSupportPath.map(
-         RuntimeComponentPath.new,
-       ),
-       libraryPath = libraryPath.map(RuntimeComponentPath.new),
-       executablePath = executablePath.map(RuntimeComponentPath.new),
-       archiveUrl = archiveUrl.map(RuntimeArchiveUrl.new),
-       versionUrl = versionUrl.map(RuntimeVersionUrl.new);
+    Option<RuntimeStack> stack = const Option.none(),
+  }) {
+    return RuntimeRecord._validated(
+      id: RuntimeId(id),
+      name: RuntimeName(name),
+      platform: RuntimePlatformName(platform),
+      architecture: RuntimeArchitecture(architecture),
+      runnerKind: RunnerKind(runnerKind),
+      isBundled: isBundled,
+      isUpdateable: isUpdateable,
+      distributionKind: distributionKind.map(RuntimeDistributionKind.new),
+      isInstalled: isInstalled,
+      applicationSupportPath: applicationSupportPath.map(
+        RuntimeComponentPath.new,
+      ),
+      libraryPath: libraryPath.map(RuntimeComponentPath.new),
+      executablePath: executablePath.map(RuntimeComponentPath.new),
+      archiveUrl: archiveUrl.map(RuntimeArchiveUrl.new),
+      versionUrl: versionUrl.map(RuntimeVersionUrl.new),
+      stack: stack,
+    );
+  }
 
-  RuntimeRecord.fromParts({
+  factory RuntimeRecord.fromParts({
     required RuntimeDefinition definition,
     InstalledRuntimeState installedState =
         const InstalledRuntimeState.unknown(),
     RuntimeCapabilities capabilities = const RuntimeCapabilities.empty(),
-  }) : id = definition.id,
-       name = definition.name,
-       platform = definition.platform,
-       architecture = definition.architecture,
-       runnerKind = definition.runnerKind,
-       isBundled = definition.isBundled,
-       isUpdateable = definition.isUpdateable,
-       distributionKind = definition.distributionKind,
-       isInstalled = installedState.isInstalled,
-       applicationSupportPath = installedState.applicationSupportPath,
-       libraryPath = installedState.libraryPath,
-       executablePath = installedState.executablePath,
-       archiveUrl = definition.archiveUrl,
-       versionUrl = definition.versionUrl,
-       stack = capabilities.stack;
+  }) {
+    return RuntimeRecord._validated(
+      id: definition.id,
+      name: definition.name,
+      platform: definition.platform,
+      architecture: definition.architecture,
+      runnerKind: definition.runnerKind,
+      isBundled: definition.isBundled,
+      isUpdateable: definition.isUpdateable,
+      distributionKind: definition.distributionKind,
+      isInstalled: installedState.isInstalled,
+      applicationSupportPath: installedState.applicationSupportPath,
+      libraryPath: installedState.libraryPath,
+      executablePath: installedState.executablePath,
+      archiveUrl: definition.archiveUrl,
+      versionUrl: definition.versionUrl,
+      stack: capabilities.stack,
+    );
+  }
 
-  final RuntimeId id;
-  final RuntimeName name;
-  final RuntimePlatformName platform;
-  final RuntimeArchitecture architecture;
-  final RunnerKind runnerKind;
-  final bool isBundled;
-  final bool isUpdateable;
-  final Option<RuntimeDistributionKind> distributionKind;
-  final Option<bool> isInstalled;
-  final Option<RuntimeComponentPath> applicationSupportPath;
-  final Option<RuntimeComponentPath> libraryPath;
-  final Option<RuntimeComponentPath> executablePath;
-  final Option<RuntimeArchiveUrl> archiveUrl;
-  final Option<RuntimeVersionUrl> versionUrl;
-  final Option<RuntimeStack> stack;
+  const factory RuntimeRecord._validated({
+    required RuntimeId id,
+    required RuntimeName name,
+    required RuntimePlatformName platform,
+    required RuntimeArchitecture architecture,
+    required RunnerKind runnerKind,
+    required bool isBundled,
+    required bool isUpdateable,
+    required Option<RuntimeDistributionKind> distributionKind,
+    required Option<bool> isInstalled,
+    required Option<RuntimeComponentPath> applicationSupportPath,
+    required Option<RuntimeComponentPath> libraryPath,
+    required Option<RuntimeComponentPath> executablePath,
+    required Option<RuntimeArchiveUrl> archiveUrl,
+    required Option<RuntimeVersionUrl> versionUrl,
+    required Option<RuntimeStack> stack,
+  }) = _RuntimeRecord;
 }
 
 @Freezed(

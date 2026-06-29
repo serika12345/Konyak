@@ -1780,17 +1780,28 @@ def require_result_boundary_rules() -> None:
         "packages/konyak_cli/lib/src/domain/runtime/runtime_models.dart",
         "final String? version;",
     )
-    for expected in [
-        "final Option<RuntimeDistributionKind> distributionKind;",
-        "final Option<bool> isInstalled;",
-        "final Option<RuntimeArchiveUrl> archiveUrl;",
-        "final Option<RuntimeVersionUrl> versionUrl;",
-        "final Option<RuntimeComponentPath> applicationSupportPath;",
-        "final Option<RuntimeComponentPath> libraryPath;",
-        "final Option<RuntimeComponentPath> executablePath;",
-        "final Option<RuntimeStack> stack;",
+    for field_type, field_name in [
+        ("Option<RuntimeDistributionKind>", "distributionKind"),
+        ("Option<bool>", "isInstalled"),
+        ("Option<RuntimeArchiveUrl>", "archiveUrl"),
+        ("Option<RuntimeVersionUrl>", "versionUrl"),
+        ("Option<RuntimeComponentPath>", "applicationSupportPath"),
+        ("Option<RuntimeComponentPath>", "libraryPath"),
+        ("Option<RuntimeComponentPath>", "executablePath"),
+        ("Option<RuntimeStack>", "stack"),
     ]:
-        require_contains("packages/konyak_cli/lib/src/domain/runtime/runtime_models.dart", expected)
+        if not any(
+            expected in runtime_models_text
+            for expected in [
+                f"final {field_type} {field_name};",
+                f"required {field_type} {field_name},",
+            ]
+        ):
+            raise AssertionError(
+                "packages/konyak_cli/lib/src/domain/runtime/runtime_models.dart "
+                f"must contain a typed {field_name} field or "
+                "_validated constructor parameter"
+            )
     for forbidden in [
         "final String? distributionKind;",
         "final bool? isInstalled;",
