@@ -11,17 +11,17 @@ RuntimeUpdateCheckCompleted unknownRuntimeUpdateRecord({
 }) {
   return RuntimeUpdateCheckCompleted(
     RuntimeUpdateRecord(
-      runtimeId: runtime.id.value,
-      status: 'unknown',
-      currentVersion: currentVersion.map((version) => version.value),
-      archiveUrl: runtime.archiveUrl.map((url) => url.value),
+      runtimeId: runtime.id,
+      status: UpdateCheckStatus('unknown'),
+      currentVersion: currentVersion,
+      archiveUrl: runtime.archiveUrl,
     ),
   );
 }
 
 RuntimeUpdateCheckResult runtimeUpdateFromMetadata({
   required RuntimeRecord runtime,
-  required String versionUrl,
+  required RuntimeVersionUrl versionUrl,
   required Option<RuntimeVersion> currentVersion,
   required RuntimeReleaseMetadata metadata,
 }) {
@@ -35,22 +35,20 @@ RuntimeUpdateCheckResult runtimeUpdateFromMetadata({
 
   return RuntimeUpdateCheckCompleted(
     RuntimeUpdateRecord(
-      runtimeId: runtime.id.value,
+      runtimeId: runtime.id,
       status: updateStatus(
-        currentVersion: currentVersion.map((version) => version.value),
-        latestVersion: metadata.version.value,
+        currentVersion: currentVersion,
+        latestVersion: metadata.version,
       ),
-      currentVersion: currentVersion.map((version) => version.value),
-      latestVersion: Option.of(metadata.version.value),
+      currentVersion: currentVersion,
+      latestVersion: Option.of(RuntimeVersion(metadata.version.value)),
       versionUrl: Option.of(versionUrl),
       archiveUrl: metadata.archiveUrl.match(
-        () => runtime.archiveUrl.map((url) => url.value),
-        (url) => Option.of(url.value),
+        () => runtime.archiveUrl,
+        Option.of,
       ),
-      sourceManifestUrl: metadata.sourceManifestUrl.map((url) => url.value),
-      sourceManifestSignatureUrl: metadata.sourceManifestSignatureUrl.map(
-        (url) => url.value,
-      ),
+      sourceManifestUrl: metadata.sourceManifestUrl,
+      sourceManifestSignatureUrl: metadata.sourceManifestSignatureUrl,
     ),
   );
 }

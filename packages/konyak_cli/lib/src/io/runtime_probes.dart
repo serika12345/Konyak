@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:fpdart/fpdart.dart';
 
 import '../domain/runtime/runtime_validation_support.dart';
+import '../domain/shared/domain_value_objects.dart';
 import '../shared/common_helpers.dart';
 import '../shared/model_constants.dart';
 import 'runtime_archive_install_support.dart';
@@ -21,12 +22,12 @@ class DartIoRuntimeStackVersionProbe implements RuntimeStackVersionProbe {
   const DartIoRuntimeStackVersionProbe();
 
   @override
-  Option<String> versionFor({
-    required String runtimeRoot,
-    required String componentId,
+  Option<RuntimeVersion> versionFor({
+    required RuntimeRootPath runtimeRoot,
+    required RuntimeComponentId componentId,
   }) {
     final manifest = File(
-      joinPath(runtimeRoot, const [runtimeStackManifestFileName]),
+      joinPath(runtimeRoot.value, const [runtimeStackManifestFileName]),
     );
     if (!manifest.existsSync()) {
       return const Option.none();
@@ -36,9 +37,9 @@ class DartIoRuntimeStackVersionProbe implements RuntimeStackVersionProbe {
       return Option.fromNullable(
         runtimeStackComponentVersionFromManifestPayload(
           manifest.readAsStringSync(),
-          componentId,
+          componentId.value,
         ),
-      );
+      ).map(RuntimeVersion.new);
     } on FileSystemException {
       return const Option.none();
     } on FormatException {

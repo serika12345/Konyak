@@ -50,8 +50,10 @@ class DartIoRuntimePackageInstaller implements RuntimePackageInstaller {
           request.requiredExecutableRelativePath.value,
       expectedExecutablePath: request.expectedExecutablePath.value,
       preserveExistingRuntimeFiles: request.preserveExistingRuntimeFiles,
-      preserveExistingRuntimeSkipRelativePaths:
-          request.preserveExistingRuntimeSkipRelativePaths,
+      preserveExistingRuntimeSkipRelativePaths: request
+          .preserveExistingRuntimeSkipRelativePaths
+          .map((path) => path.value)
+          .toList(growable: false),
       preserveExistingRuntimeComponents: preserveExistingRuntimeComponents,
       normalizeStagingRoot: normalizeStagingRoot,
       afterManifestWrite: afterManifestWrite,

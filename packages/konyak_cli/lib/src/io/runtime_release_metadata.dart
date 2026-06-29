@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:fpdart/fpdart.dart';
 
+import '../domain/shared/domain_value_objects.dart';
 import '../domain/update/update_records.dart';
 import 'runtime_release_metadata_assets.dart';
 import 'runtime_release_metadata_source_manifests.dart';
@@ -19,19 +20,22 @@ Option<RuntimeReleaseMetadata> runtimeReleaseMetadataFromDecoded({
   final releaseMetadataAssetUrl = runtimeReleaseMetadataAssetUrl(release);
   return version.map(
     (value) => RuntimeReleaseMetadata(
-      version: value,
-      archiveUrl: archiveUrl,
-      archiveSha256: runtimeReleaseArchiveSha256(release, archiveUrl),
+      version: ReleaseVersion(value),
+      archiveUrl: archiveUrl.map(RuntimeArchiveUrl.new),
+      archiveSha256: runtimeReleaseArchiveSha256(
+        release,
+        archiveUrl,
+      ).map(RuntimeArchiveChecksumValue.new),
       sourceManifestUrl: runtimeReleaseSourceManifestUrl(
         release: release,
         releaseMetadataAssetUrl: releaseMetadataAssetUrl,
         releaseMetadata: releaseMetadata,
-      ),
+      ).map(RuntimeSourceManifestUrl.new),
       sourceManifestSignatureUrl: runtimeReleaseSourceManifestSignatureUrl(
         release: release,
         releaseMetadataAssetUrl: releaseMetadataAssetUrl,
         releaseMetadata: releaseMetadata,
-      ),
+      ).map(RuntimeSourceManifestSignatureUrl.new),
     ),
   );
 }

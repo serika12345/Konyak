@@ -10,6 +10,7 @@ import '../domain/runtime/runtime_package_installation.dart';
 import '../domain/runtime/runtime_platform_support.dart';
 import '../domain/runtime/runtime_source_bundle_models.dart';
 import '../domain/runtime/wine_runtime_paths.dart';
+import '../domain/shared/domain_value_objects.dart';
 import '../platform/macos/macos_wine_install_results.dart';
 import '../shared/common_helpers.dart';
 import '../shared/model_constants.dart';
@@ -39,14 +40,19 @@ extension MacosWineArchiveInstallation on DartIoMacosWineInstaller {
     final installResult = runtimePackageInstaller.install(
       RuntimePackageInstallRequest(
         runtimeLabel: 'macOS Wine',
-        archivePath: archivePath,
-        archiveSha256: archiveSha256,
-        componentArchivePaths: componentArchivePaths,
+        archivePath: RuntimeArchivePath(archivePath),
+        archiveSha256: archiveSha256.map(RuntimeArchiveChecksumValue.new),
+        componentArchivePaths: componentArchivePaths.map(
+          RuntimeArchivePath.new,
+        ),
         componentVersions: componentVersions,
-        runtimeRoot: macosWineRuntimeRoot(environment),
-        requiredExecutableRelativePath:
-            macosKonyakRuntimePlatformSpec.requiredExecutableRelativePath,
-        expectedExecutablePath: macosWineExecutable(environment),
+        runtimeRoot: RuntimeRootPath(macosWineRuntimeRoot(environment)),
+        requiredExecutableRelativePath: RuntimeRelativePath(
+          macosKonyakRuntimePlatformSpec.requiredExecutableRelativePath,
+        ),
+        expectedExecutablePath: RuntimeComponentPath(
+          macosWineExecutable(environment),
+        ),
         preserveExistingRuntimeFiles: preserveExistingRuntimeFiles,
       ),
       progressSink: progressSink,
@@ -300,12 +306,14 @@ RuntimeComponentVersions preserveImportedGptkD3DMetalComponent({
     );
 
     return componentVersions.add(
-      gptkD3DMetalComponentId,
-      runtimeStackComponentVersionFromRoot(
-            existingRuntimeRoot,
-            gptkD3DMetalComponentId,
-          ) ??
-          'user-provided',
+      RuntimeComponentId(gptkD3DMetalComponentId),
+      RuntimeVersion(
+        runtimeStackComponentVersionFromRoot(
+              existingRuntimeRoot,
+              gptkD3DMetalComponentId,
+            ) ??
+            'user-provided',
+      ),
     );
   });
 }

@@ -71,10 +71,8 @@ abstract class RuntimeStackSourceArchivePlan
 
         return RuntimeStackSourceArchiveBundleResolved(
           RuntimeStackSourceArchiveBundle(
-            wineArchivePath: wineArchivePath.value,
-            componentArchivePaths: componentArchivePaths.map(
-              (value) => value.value,
-            ),
+            wineArchivePath: wineArchivePath,
+            componentArchivePaths: componentArchivePaths,
             componentVersions: RuntimeComponentVersions(<String, String>{
               for (final component in sourceComponents)
                 component.id.value: component.version.value,
@@ -112,13 +110,13 @@ abstract class RuntimeStackSourceArchiveComponentPlan
 
   factory RuntimeStackSourceArchiveComponentPlan({
     required RuntimeSourceComponent component,
-    required String archivePath,
+    required RuntimeArchivePath archivePath,
     required num startFraction,
     required num endFraction,
   }) {
     return RuntimeStackSourceArchiveComponentPlan._validated(
       component: component,
-      archivePath: RuntimeArchivePath(archivePath),
+      archivePath: archivePath,
       startFraction: RuntimeInstallProgressFraction(startFraction),
       endFraction: RuntimeInstallProgressFraction(endFraction),
     );
@@ -219,9 +217,9 @@ RuntimeStackSourceArchiveComponentPlan _runtimeStackSourceArchiveComponentPlan({
   ).match(() => '${component.id.value}.tar.xz', (value) => value);
   return RuntimeStackSourceArchiveComponentPlan(
     component: component,
-    archivePath: domainJoinPath(tempDirectoryPath, [
-      '$componentIndex-$fileName',
-    ]),
+    archivePath: RuntimeArchivePath(
+      domainJoinPath(tempDirectoryPath, ['$componentIndex-$fileName']),
+    ),
     startFraction: 0.05 + (componentIndex / componentCount) * 0.55,
     endFraction: 0.05 + ((componentIndex + 1) / componentCount) * 0.55,
   );

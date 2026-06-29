@@ -1,6 +1,7 @@
 import 'package:fpdart/fpdart.dart';
 
 import '../../shared/model_constants.dart';
+import '../shared/domain_value_objects.dart';
 import 'host_environment.dart';
 import 'runtime_profile_environment.dart';
 import 'runtime_validation_models.dart';
@@ -425,7 +426,7 @@ const macosKonyakRuntimePlatformSpec = RuntimePlatformSpec(
   backendDefinitions: _macosKonyakRuntimeBackendDefinitions,
 );
 
-Option<String> runtimeSourceManifestForPlatform({
+Option<RuntimeSourceManifestUrl> runtimeSourceManifestForPlatform({
   required RuntimePlatformSpec platformSpec,
   required HostEnvironment environment,
 }) {
@@ -433,15 +434,19 @@ Option<String> runtimeSourceManifestForPlatform({
     environment,
     developmentKey: platformSpec.developmentSourceManifestEnvironmentKey,
     releaseKey: platformSpec.releaseSourceManifestEnvironmentKey,
-  );
+  ).map(RuntimeSourceManifestUrl.new);
   if (isDevelopmentRuntimeProfile(environment)) {
     return configuredManifest;
   }
 
-  return configuredManifest.alt(() => platformSpec.defaultSourceManifestUrl);
+  return configuredManifest.alt(
+    () =>
+        platformSpec.defaultSourceManifestUrl.map(RuntimeSourceManifestUrl.new),
+  );
 }
 
-Option<String> runtimeSourceManifestSignatureForPlatform({
+Option<RuntimeSourceManifestSignatureUrl>
+runtimeSourceManifestSignatureForPlatform({
   required RuntimePlatformSpec platformSpec,
   required HostEnvironment environment,
 }) {
@@ -449,5 +454,5 @@ Option<String> runtimeSourceManifestSignatureForPlatform({
     environment,
     developmentKey: platformSpec.developmentSourceSignatureEnvironmentKey,
     releaseKey: platformSpec.releaseSourceSignatureEnvironmentKey,
-  );
+  ).map(RuntimeSourceManifestSignatureUrl.new);
 }

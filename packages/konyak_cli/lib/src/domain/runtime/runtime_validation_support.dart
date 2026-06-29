@@ -1,6 +1,7 @@
 import 'package:fpdart/fpdart.dart';
 
 import '../shared/domain_helpers.dart';
+import '../shared/domain_value_objects.dart';
 import 'runtime_validation_models.dart';
 
 abstract interface class FileStatusProbe {
@@ -8,9 +9,9 @@ abstract interface class FileStatusProbe {
 }
 
 abstract interface class RuntimeStackVersionProbe {
-  Option<String> versionFor({
-    required String runtimeRoot,
-    required String componentId,
+  Option<RuntimeVersion> versionFor({
+    required RuntimeRootPath runtimeRoot,
+    required RuntimeComponentId componentId,
   });
 }
 

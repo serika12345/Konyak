@@ -28,19 +28,21 @@ final class RuntimeComponentVersions {
     }).unlockView;
   }
 
-  RuntimeComponentVersions add(String componentId, String version) {
+  RuntimeComponentVersions add(
+    RuntimeComponentId componentId,
+    RuntimeVersion version,
+  ) {
     return RuntimeComponentVersions._withVersions(
-      _versions.add(RuntimeComponentId(componentId), RuntimeVersion(version)),
+      _versions.add(componentId, version),
     );
   }
 
-  Option<String> operator [](String componentId) {
-    final key = RuntimeComponentId(componentId);
-    if (!_versions.containsKey(key)) {
+  Option<RuntimeVersion> operator [](RuntimeComponentId componentId) {
+    if (!_versions.containsKey(componentId)) {
       return const Option.none();
     }
 
-    return Option.of((_versions[key] as RuntimeVersion).value);
+    return Option.of(_versions[componentId] as RuntimeVersion);
   }
 
   RuntimeComponentVersions._withVersions(this._versions);

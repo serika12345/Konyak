@@ -19,35 +19,29 @@ abstract class RuntimePackageInstallRequest
 
   factory RuntimePackageInstallRequest({
     required String runtimeLabel,
-    required String archivePath,
-    required Option<String> archiveSha256,
-    required Iterable<String> componentArchivePaths,
+    required RuntimeArchivePath archivePath,
+    required Option<RuntimeArchiveChecksumValue> archiveSha256,
+    required Iterable<RuntimeArchivePath> componentArchivePaths,
     required RuntimeComponentVersions componentVersions,
-    required String runtimeRoot,
-    required List<String> requiredExecutableRelativePath,
-    required String expectedExecutablePath,
+    required RuntimeRootPath runtimeRoot,
+    required RuntimeRelativePath requiredExecutableRelativePath,
+    required RuntimeComponentPath expectedExecutablePath,
     bool preserveExistingRuntimeFiles = false,
-    List<List<String>> preserveExistingRuntimeSkipRelativePaths =
-        const <List<String>>[],
+    Iterable<RuntimeRelativePath> preserveExistingRuntimeSkipRelativePaths =
+        const <RuntimeRelativePath>[],
   }) {
     return RuntimePackageInstallRequest._validated(
       runtimeLabel: requiredNonBlankDomainString(runtimeLabel, 'runtimeLabel'),
-      archivePath: RuntimeArchivePath(archivePath),
-      archiveSha256: archiveSha256.map(RuntimeArchiveChecksumValue.new),
-      componentArchivePaths: componentArchivePaths
-          .map(RuntimeArchivePath.new)
-          .toIList(),
+      archivePath: archivePath,
+      archiveSha256: archiveSha256,
+      componentArchivePaths: componentArchivePaths.toIList(),
       componentVersions: componentVersions,
-      runtimeRoot: RuntimeRootPath(runtimeRoot),
-      requiredExecutableRelativePath: RuntimeRelativePath(
-        requiredExecutableRelativePath,
-      ),
-      expectedExecutablePath: RuntimeComponentPath(expectedExecutablePath),
+      runtimeRoot: runtimeRoot,
+      requiredExecutableRelativePath: requiredExecutableRelativePath,
+      expectedExecutablePath: expectedExecutablePath,
       preserveExistingRuntimeFiles: preserveExistingRuntimeFiles,
       preserveExistingRuntimeSkipRelativePaths:
-          preserveExistingRuntimeSkipRelativePaths
-              .map(List<String>.unmodifiable)
-              .toList(growable: false),
+          preserveExistingRuntimeSkipRelativePaths.toIList(),
     );
   }
 
@@ -61,7 +55,8 @@ abstract class RuntimePackageInstallRequest
     required RuntimeRelativePath requiredExecutableRelativePath,
     required RuntimeComponentPath expectedExecutablePath,
     required bool preserveExistingRuntimeFiles,
-    required List<List<String>> preserveExistingRuntimeSkipRelativePaths,
+    required IList<RuntimeRelativePath>
+    preserveExistingRuntimeSkipRelativePaths,
   }) = _RuntimePackageInstallRequest;
 }
 

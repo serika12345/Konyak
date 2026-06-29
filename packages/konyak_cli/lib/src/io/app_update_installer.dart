@@ -103,17 +103,15 @@ class DartIoAppUpdateInstaller implements AppUpdateInstaller {
         return switch (openResult) {
           PathOpenCompleted() => AppUpdateInstallCompleted(
             AppUpdateInstallRecord(
-              appId: update.appId.value,
-              status: 'installed',
-              currentVersion: update.currentVersion.map(
-                (version) => version.value,
-              ),
+              appId: update.appId,
+              status: UpdateInstallStatus('installed'),
+              currentVersion: update.currentVersion,
               installedVersion: update.latestVersion.map(
-                (version) => version.value,
+                (version) => AppVersion(version.value),
               ),
-              archiveUrl: Option.of(archiveUrl.value),
-              archiveSha256: Option.of(actualSha256),
-              installPath: Option.of(archivePath),
+              archiveUrl: Option.of(archiveUrl),
+              archiveSha256: Option.of(AppArchiveSha256(actualSha256)),
+              installPath: Option.of(AppInstallPath(archivePath)),
             ),
           ),
           PathOpenFailed(:final message) => AppUpdateInstallFailed(message),

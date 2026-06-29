@@ -14,26 +14,25 @@ abstract class RuntimeUpdateRecord with _$RuntimeUpdateRecord {
   const RuntimeUpdateRecord._();
 
   factory RuntimeUpdateRecord({
-    required String runtimeId,
-    required String status,
-    Option<String> currentVersion = const Option.none(),
-    Option<String> latestVersion = const Option.none(),
-    Option<String> versionUrl = const Option.none(),
-    Option<String> archiveUrl = const Option.none(),
-    Option<String> sourceManifestUrl = const Option.none(),
-    Option<String> sourceManifestSignatureUrl = const Option.none(),
+    required RuntimeId runtimeId,
+    required UpdateCheckStatus status,
+    Option<RuntimeVersion> currentVersion = const Option.none(),
+    Option<RuntimeVersion> latestVersion = const Option.none(),
+    Option<RuntimeVersionUrl> versionUrl = const Option.none(),
+    Option<RuntimeArchiveUrl> archiveUrl = const Option.none(),
+    Option<RuntimeSourceManifestUrl> sourceManifestUrl = const Option.none(),
+    Option<RuntimeSourceManifestSignatureUrl> sourceManifestSignatureUrl =
+        const Option.none(),
   }) {
     return RuntimeUpdateRecord._validated(
-      runtimeId: RuntimeId(runtimeId),
-      status: UpdateCheckStatus(status),
-      currentVersion: currentVersion.map(RuntimeVersion.new),
-      latestVersion: latestVersion.map(RuntimeVersion.new),
-      versionUrl: versionUrl.map(RuntimeVersionUrl.new),
-      archiveUrl: archiveUrl.map(RuntimeArchiveUrl.new),
-      sourceManifestUrl: sourceManifestUrl.map(RuntimeSourceManifestUrl.new),
-      sourceManifestSignatureUrl: sourceManifestSignatureUrl.map(
-        RuntimeSourceManifestSignatureUrl.new,
-      ),
+      runtimeId: runtimeId,
+      status: status,
+      currentVersion: currentVersion,
+      latestVersion: latestVersion,
+      versionUrl: versionUrl,
+      archiveUrl: archiveUrl,
+      sourceManifestUrl: sourceManifestUrl,
+      sourceManifestSignatureUrl: sourceManifestSignatureUrl,
     );
   }
 
@@ -85,22 +84,22 @@ abstract class AppUpdateRecord with _$AppUpdateRecord {
   const AppUpdateRecord._();
 
   factory AppUpdateRecord({
-    required String appId,
-    required String status,
-    Option<String> currentVersion = const Option.none(),
-    Option<String> latestVersion = const Option.none(),
-    Option<String> versionUrl = const Option.none(),
-    Option<String> archiveUrl = const Option.none(),
-    Option<String> archiveSha256 = const Option.none(),
+    required AppId appId,
+    required UpdateCheckStatus status,
+    Option<AppVersion> currentVersion = const Option.none(),
+    Option<ReleaseVersion> latestVersion = const Option.none(),
+    Option<RuntimeVersionUrl> versionUrl = const Option.none(),
+    Option<AppArchiveUrl> archiveUrl = const Option.none(),
+    Option<AppArchiveSha256> archiveSha256 = const Option.none(),
   }) {
     return AppUpdateRecord._validated(
-      appId: AppId(appId),
-      status: UpdateCheckStatus(status),
-      currentVersion: currentVersion.map(AppVersion.new),
-      latestVersion: latestVersion.map(ReleaseVersion.new),
-      versionUrl: versionUrl.map(RuntimeVersionUrl.new),
-      archiveUrl: archiveUrl.map(AppArchiveUrl.new),
-      archiveSha256: archiveSha256.map(AppArchiveSha256.new),
+      appId: appId,
+      status: status,
+      currentVersion: currentVersion,
+      latestVersion: latestVersion,
+      versionUrl: versionUrl,
+      archiveUrl: archiveUrl,
+      archiveSha256: archiveSha256,
     );
   }
 
@@ -141,22 +140,22 @@ abstract class AppUpdateInstallRecord with _$AppUpdateInstallRecord {
   const AppUpdateInstallRecord._();
 
   factory AppUpdateInstallRecord({
-    required String appId,
-    required String status,
-    Option<String> currentVersion = const Option.none(),
-    Option<String> installedVersion = const Option.none(),
-    Option<String> archiveUrl = const Option.none(),
-    Option<String> archiveSha256 = const Option.none(),
-    Option<String> installPath = const Option.none(),
+    required AppId appId,
+    required UpdateInstallStatus status,
+    Option<AppVersion> currentVersion = const Option.none(),
+    Option<AppVersion> installedVersion = const Option.none(),
+    Option<AppArchiveUrl> archiveUrl = const Option.none(),
+    Option<AppArchiveSha256> archiveSha256 = const Option.none(),
+    Option<AppInstallPath> installPath = const Option.none(),
   }) {
     return AppUpdateInstallRecord._validated(
-      appId: AppId(appId),
-      status: UpdateInstallStatus(status),
-      currentVersion: currentVersion.map(AppVersion.new),
-      installedVersion: installedVersion.map(AppVersion.new),
-      archiveUrl: archiveUrl.map(AppArchiveUrl.new),
-      archiveSha256: archiveSha256.map(AppArchiveSha256.new),
-      installPath: installPath.map(AppInstallPath.new),
+      appId: appId,
+      status: status,
+      currentVersion: currentVersion,
+      installedVersion: installedVersion,
+      archiveUrl: archiveUrl,
+      archiveSha256: archiveSha256,
+      installPath: installPath,
     );
   }
 
@@ -198,20 +197,19 @@ abstract class RuntimeReleaseMetadata with _$RuntimeReleaseMetadata {
   const RuntimeReleaseMetadata._();
 
   factory RuntimeReleaseMetadata({
-    required String version,
-    Option<String> archiveUrl = const Option.none(),
-    Option<String> archiveSha256 = const Option.none(),
-    Option<String> sourceManifestUrl = const Option.none(),
-    Option<String> sourceManifestSignatureUrl = const Option.none(),
+    required ReleaseVersion version,
+    Option<RuntimeArchiveUrl> archiveUrl = const Option.none(),
+    Option<RuntimeArchiveChecksumValue> archiveSha256 = const Option.none(),
+    Option<RuntimeSourceManifestUrl> sourceManifestUrl = const Option.none(),
+    Option<RuntimeSourceManifestSignatureUrl> sourceManifestSignatureUrl =
+        const Option.none(),
   }) {
     return RuntimeReleaseMetadata._validated(
-      version: ReleaseVersion(version),
-      archiveUrl: archiveUrl.map(RuntimeArchiveUrl.new),
-      archiveSha256: archiveSha256.map(RuntimeArchiveChecksumValue.new),
-      sourceManifestUrl: sourceManifestUrl.map(RuntimeSourceManifestUrl.new),
-      sourceManifestSignatureUrl: sourceManifestSignatureUrl.map(
-        RuntimeSourceManifestSignatureUrl.new,
-      ),
+      version: version,
+      archiveUrl: archiveUrl,
+      archiveSha256: archiveSha256,
+      sourceManifestUrl: sourceManifestUrl,
+      sourceManifestSignatureUrl: sourceManifestSignatureUrl,
     );
   }
 

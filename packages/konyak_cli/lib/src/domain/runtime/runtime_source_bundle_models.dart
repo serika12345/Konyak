@@ -16,15 +16,13 @@ abstract class RuntimeStackSourceArchiveBundle
   const RuntimeStackSourceArchiveBundle._();
 
   factory RuntimeStackSourceArchiveBundle({
-    required String wineArchivePath,
-    required Iterable<String> componentArchivePaths,
+    required RuntimeArchivePath wineArchivePath,
+    required Iterable<RuntimeArchivePath> componentArchivePaths,
     required RuntimeComponentVersions componentVersions,
   }) {
     return RuntimeStackSourceArchiveBundle._validated(
-      wineArchivePath: RuntimeArchivePath(wineArchivePath),
-      componentArchivePaths: componentArchivePaths
-          .map(RuntimeArchivePath.new)
-          .toIList(),
+      wineArchivePath: wineArchivePath,
+      componentArchivePaths: componentArchivePaths.toIList(),
       componentVersions: componentVersions,
     );
   }

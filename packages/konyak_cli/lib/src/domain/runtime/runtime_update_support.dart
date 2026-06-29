@@ -5,10 +5,10 @@ import 'runtime_models.dart';
 
 Option<RuntimeRecord> runtimeById(
   List<RuntimeRecord> runtimes,
-  String runtimeId,
+  RuntimeId runtimeId,
 ) {
   for (final runtime in runtimes) {
-    if (runtime.id.value == runtimeId) {
+    if (runtime.id == runtimeId) {
       return Option.of(runtime);
     }
   }
@@ -28,21 +28,21 @@ Option<RuntimeVersion> runtimeWineVersion(RuntimeRecord runtime) {
   });
 }
 
-String updateStatus({
-  required Option<String> currentVersion,
-  required String latestVersion,
+UpdateCheckStatus updateStatus({
+  required Option<StringDomainValueObject> currentVersion,
+  required StringDomainValueObject latestVersion,
 }) {
-  return currentVersion.match(() => 'unknown', (version) {
-    if (version.trim().isEmpty) {
-      return 'unknown';
+  return currentVersion.match(() => UpdateCheckStatus('unknown'), (version) {
+    if (version.value.trim().isEmpty) {
+      return UpdateCheckStatus('unknown');
     }
 
-    if (_normalizeRuntimeVersion(version) ==
-        _normalizeRuntimeVersion(latestVersion)) {
-      return 'current';
+    if (_normalizeRuntimeVersion(version.value) ==
+        _normalizeRuntimeVersion(latestVersion.value)) {
+      return UpdateCheckStatus('current');
     }
 
-    return 'available';
+    return UpdateCheckStatus('available');
   });
 }
 

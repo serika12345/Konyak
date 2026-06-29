@@ -62,17 +62,15 @@ extension AppUpdateHandoffInstallers on DartIoAppUpdateInstaller {
         return Option.of(switch (startResult) {
           DetachedProcessStartCompleted() => AppUpdateInstallCompleted(
             AppUpdateInstallRecord(
-              appId: update.appId.value,
-              status: 'installed',
-              currentVersion: update.currentVersion.map(
-                (version) => version.value,
-              ),
+              appId: update.appId,
+              status: UpdateInstallStatus('installed'),
+              currentVersion: update.currentVersion,
               installedVersion: update.latestVersion.map(
-                (version) => version.value,
+                (version) => AppVersion(version.value),
               ),
-              archiveUrl: update.archiveUrl.map((url) => url.value),
-              archiveSha256: Option.of(actualSha256),
-              installPath: Option.of(targetBundlePath),
+              archiveUrl: update.archiveUrl,
+              archiveSha256: Option.of(AppArchiveSha256(actualSha256)),
+              installPath: Option.of(AppInstallPath(targetBundlePath)),
             ),
           ),
           DetachedProcessStartFailed(:final message) => AppUpdateInstallFailed(
@@ -135,17 +133,15 @@ extension AppUpdateHandoffInstallers on DartIoAppUpdateInstaller {
         return Option.of(switch (startResult) {
           DetachedProcessStartCompleted() => AppUpdateInstallCompleted(
             AppUpdateInstallRecord(
-              appId: update.appId.value,
-              status: 'installed',
-              currentVersion: update.currentVersion.map(
-                (version) => version.value,
-              ),
+              appId: update.appId,
+              status: UpdateInstallStatus('installed'),
+              currentVersion: update.currentVersion,
               installedVersion: update.latestVersion.map(
-                (version) => version.value,
+                (version) => AppVersion(version.value),
               ),
-              archiveUrl: update.archiveUrl.map((url) => url.value),
-              archiveSha256: Option.of(actualSha256),
-              installPath: Option.of(targetPath),
+              archiveUrl: update.archiveUrl,
+              archiveSha256: Option.of(AppArchiveSha256(actualSha256)),
+              installPath: Option.of(AppInstallPath(targetPath)),
             ),
           ),
           DetachedProcessStartFailed(:final message) => AppUpdateInstallFailed(

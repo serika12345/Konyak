@@ -9,6 +9,7 @@ import '../domain/runtime/runtime_profile_environment.dart';
 import '../domain/runtime/runtime_validation_models.dart';
 import '../domain/runtime/runtime_validation_support.dart';
 import '../domain/runtime/wine_runtime_paths.dart';
+import '../domain/shared/domain_value_objects.dart';
 import '../shared/common_helpers.dart';
 import '../shared/model_constants.dart';
 import 'runtime_gptk_support.dart';
@@ -205,10 +206,12 @@ RuntimeStackComponent runtimeStackComponent({
     paths: paths,
     missingPaths: missingPaths,
     version: missingPaths.isEmpty
-        ? runtimeStackVersionProbe.versionFor(
-            runtimeRoot: runtimeRoot,
-            componentId: definition.id,
-          )
+        ? runtimeStackVersionProbe
+              .versionFor(
+                runtimeRoot: RuntimeRootPath(runtimeRoot),
+                componentId: RuntimeComponentId(definition.id),
+              )
+              .map((version) => version.value)
         : const Option.none(),
   );
 }

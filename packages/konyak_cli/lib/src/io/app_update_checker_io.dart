@@ -77,11 +77,11 @@ class DartIoAppUpdateChecker implements AppUpdateChecker {
     if (versionUrl.value.trim().isEmpty) {
       return AppUpdateCheckCompleted(
         AppUpdateRecord(
-          appId: appId.value,
-          status: 'unknown',
-          currentVersion: Option.of(currentVersion.value),
-          archiveUrl: archiveUrl.map((value) => value.value),
-          archiveSha256: archiveSha256.map((value) => value.value),
+          appId: appId,
+          status: UpdateCheckStatus('unknown'),
+          currentVersion: Option.of(currentVersion),
+          archiveUrl: archiveUrl,
+          archiveSha256: archiveSha256,
         ),
       );
     }
@@ -90,21 +90,21 @@ class DartIoAppUpdateChecker implements AppUpdateChecker {
     return switch (metadata) {
       RuntimeReleaseMetadataFetched(:final metadata) => AppUpdateCheckCompleted(
         AppUpdateRecord(
-          appId: appId.value,
+          appId: appId,
           status: updateStatus(
-            currentVersion: Option.of(currentVersion.value),
-            latestVersion: metadata.version.value,
+            currentVersion: Option.of(currentVersion),
+            latestVersion: metadata.version,
           ),
-          currentVersion: Option.of(currentVersion.value),
-          latestVersion: Option.of(metadata.version.value),
-          versionUrl: Option.of(versionUrl.value),
+          currentVersion: Option.of(currentVersion),
+          latestVersion: Option.of(metadata.version),
+          versionUrl: Option.of(versionUrl),
           archiveUrl: metadata.archiveUrl.match(
-            () => archiveUrl.map((value) => value.value),
-            (value) => Option.of(value.value),
+            () => archiveUrl,
+            (value) => Option.of(AppArchiveUrl(value.value)),
           ),
           archiveSha256: metadata.archiveSha256.match(
-            () => archiveSha256.map((value) => value.value),
-            (value) => Option.of(value.value),
+            () => archiveSha256,
+            (value) => Option.of(AppArchiveSha256(value.value)),
           ),
         ),
       ),

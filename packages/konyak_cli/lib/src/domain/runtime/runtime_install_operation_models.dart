@@ -211,10 +211,10 @@ sealed class RuntimeSourceManifestSignature
   const factory RuntimeSourceManifestSignature.absent() =
       RuntimeSourceManifestSignatureAbsent;
 
-  factory RuntimeSourceManifestSignature.signed(String value) {
-    return RuntimeSourceManifestSignature._signed(
-      RuntimeSourceManifestSignatureUrl(value),
-    );
+  factory RuntimeSourceManifestSignature.signed(
+    RuntimeSourceManifestSignatureUrl value,
+  ) {
+    return RuntimeSourceManifestSignature._signed(value);
   }
 
   const factory RuntimeSourceManifestSignature._signed(
@@ -252,8 +252,12 @@ sealed class RuntimeInstallSource with _$RuntimeInstallSource {
     Option<String> sourceManifestSignature = const Option.none(),
   }) {
     final checksum = _runtimeArchiveChecksum(archiveSha256);
-    final signature = runtimeSourceManifestSignature(sourceManifestSignature);
-    final components = _runtimeComponentArchivePaths(componentArchivePaths);
+    final signature = runtimeSourceManifestSignature(
+      sourceManifestSignature.map(RuntimeSourceManifestSignatureUrl.new),
+    );
+    final components = _runtimeComponentArchivePaths(
+      componentArchivePaths.map(RuntimeArchivePath.new),
+    );
     final manifest = sourceManifest.map(RuntimeSourceManifestUrl.new);
 
     return manifest.match(
@@ -286,7 +290,8 @@ sealed class RuntimeInstallSource with _$RuntimeInstallSource {
   factory RuntimeInstallSource.configuredArchive({
     RuntimeArchiveChecksum archiveChecksum =
         const RuntimeArchiveChecksum.absent(),
-    Iterable<String> componentArchivePaths = const <String>[],
+    Iterable<RuntimeArchivePath> componentArchivePaths =
+        const <RuntimeArchivePath>[],
   }) {
     return RuntimeInstallSource._configuredArchive(
       archiveChecksum: archiveChecksum,
@@ -302,13 +307,14 @@ sealed class RuntimeInstallSource with _$RuntimeInstallSource {
   }) = RuntimeConfiguredArchiveSource;
 
   factory RuntimeInstallSource.localArchive({
-    required String archivePath,
+    required RuntimeArchivePath archivePath,
     RuntimeArchiveChecksum archiveChecksum =
         const RuntimeArchiveChecksum.absent(),
-    Iterable<String> componentArchivePaths = const <String>[],
+    Iterable<RuntimeArchivePath> componentArchivePaths =
+        const <RuntimeArchivePath>[],
   }) {
     return RuntimeInstallSource._localArchive(
-      archivePath: RuntimeArchivePath(archivePath),
+      archivePath: archivePath,
       archiveChecksum: archiveChecksum,
       componentArchivePaths: _runtimeComponentArchivePaths(
         componentArchivePaths,
@@ -323,13 +329,14 @@ sealed class RuntimeInstallSource with _$RuntimeInstallSource {
   }) = RuntimeLocalArchiveSource;
 
   factory RuntimeInstallSource.remoteArchive({
-    required String archiveUrl,
+    required RuntimeArchiveUrl archiveUrl,
     RuntimeArchiveChecksum archiveChecksum =
         const RuntimeArchiveChecksum.absent(),
-    Iterable<String> componentArchivePaths = const <String>[],
+    Iterable<RuntimeArchivePath> componentArchivePaths =
+        const <RuntimeArchivePath>[],
   }) {
     return RuntimeInstallSource._remoteArchive(
-      archiveUrl: RuntimeArchiveUrl(archiveUrl),
+      archiveUrl: archiveUrl,
       archiveChecksum: archiveChecksum,
       componentArchivePaths: _runtimeComponentArchivePaths(
         componentArchivePaths,
@@ -344,12 +351,12 @@ sealed class RuntimeInstallSource with _$RuntimeInstallSource {
   }) = RuntimeRemoteArchiveSource;
 
   factory RuntimeInstallSource.sourceManifest({
-    required String sourceManifest,
+    required RuntimeSourceManifestUrl sourceManifest,
     RuntimeSourceManifestSignature signature =
         const RuntimeSourceManifestSignature.absent(),
   }) {
     return RuntimeInstallSource._sourceManifest(
-      sourceManifest: RuntimeSourceManifestUrl(sourceManifest),
+      sourceManifest: sourceManifest,
       signature: signature,
     );
   }
@@ -401,7 +408,7 @@ RuntimeArchiveChecksum _runtimeArchiveChecksum(Option<String> value) {
 }
 
 RuntimeSourceManifestSignature runtimeSourceManifestSignature(
-  Option<String> value,
+  Option<RuntimeSourceManifestSignatureUrl> value,
 ) {
   return value.match(
     () => const RuntimeSourceManifestSignature.absent(),
@@ -410,7 +417,7 @@ RuntimeSourceManifestSignature runtimeSourceManifestSignature(
 }
 
 IList<RuntimeArchivePath> _runtimeComponentArchivePaths(
-  Iterable<String> paths,
+  Iterable<RuntimeArchivePath> paths,
 ) {
-  return paths.map(RuntimeArchivePath.new).toIList();
+  return paths.toIList();
 }

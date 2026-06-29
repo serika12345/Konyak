@@ -17,7 +17,7 @@ class DartIoRuntimeUpdateChecker implements RuntimeUpdateChecker {
 
   @override
   RuntimeUpdateCheckResult check(RuntimeId runtimeId) {
-    final runtime = runtimeById(runtimeCatalog.listRuntimes(), runtimeId.value);
+    final runtime = runtimeById(runtimeCatalog.listRuntimes(), runtimeId);
     return runtime.match(
       () => RuntimeUpdateCheckResult.runtimeNotFound(runtimeId),
       checkRuntime,
@@ -44,7 +44,7 @@ class DartIoRuntimeUpdateChecker implements RuntimeUpdateChecker {
           RuntimeReleaseMetadataFetched(:final metadata) =>
             runtimeUpdateFromMetadata(
               runtime: runtime,
-              versionUrl: versionUrl.value,
+              versionUrl: versionUrl,
               currentVersion: currentVersion,
               metadata: metadata,
             ),

@@ -4,6 +4,7 @@ import '../../domain/program/program_runner.dart';
 import '../../domain/runtime/runtime_catalogs.dart';
 import '../../domain/runtime/runtime_update_support.dart';
 import '../../domain/runtime/runtime_validation_support.dart';
+import '../../domain/shared/domain_value_objects.dart';
 import '../../io/platform_host_paths.dart';
 import '../../io/runtime_probes.dart';
 import '../../shared/model_constants.dart';
@@ -107,7 +108,7 @@ class DartIoMacosSetupChecker implements MacosSetupChecker {
   MacosSetupCheckResult check() {
     final runtime = runtimeById(
       runtimeCatalog.listRuntimes(),
-      macosWineRuntimeId,
+      RuntimeId(macosWineRuntimeId),
     );
 
     return MacosSetupCheckCompleted(

@@ -37,11 +37,11 @@ CliResult installAppUpdateJsonResult({
         when update.status.value != 'available' =>
       appUpdateInstallJsonResult(
         AppUpdateInstallRecord(
-          appId: update.appId.value,
-          status: 'skipped',
-          currentVersion: update.currentVersion.map((value) => value.value),
-          installedVersion: update.currentVersion.map((value) => value.value),
-          archiveUrl: update.archiveUrl.map((value) => value.value),
+          appId: update.appId,
+          status: UpdateInstallStatus('skipped'),
+          currentVersion: update.currentVersion,
+          installedVersion: update.currentVersion,
+          archiveUrl: update.archiveUrl,
         ),
       ),
     AppUpdateCheckCompleted(:final update) => switch (installer.install(

@@ -8,6 +8,7 @@ import '../domain/runtime/runtime_package_installation.dart';
 import '../domain/runtime/runtime_platform_support.dart';
 import '../domain/runtime/runtime_source_bundle_models.dart';
 import '../domain/runtime/wine_runtime_paths.dart';
+import '../domain/shared/domain_value_objects.dart';
 import '../platform/linux/linux_wine_install_results.dart';
 import 'directory_copy_support.dart';
 import 'linux_wine_installation.dart';
@@ -31,14 +32,19 @@ extension DartIoLinuxWineInstallerOperations on DartIoLinuxWineInstaller {
     final installResult = runtimePackageInstaller.install(
       RuntimePackageInstallRequest(
         runtimeLabel: 'Linux Wine',
-        archivePath: archivePath,
-        archiveSha256: archiveSha256,
-        componentArchivePaths: componentArchivePaths,
+        archivePath: RuntimeArchivePath(archivePath),
+        archiveSha256: archiveSha256.map(RuntimeArchiveChecksumValue.new),
+        componentArchivePaths: componentArchivePaths.map(
+          RuntimeArchivePath.new,
+        ),
         componentVersions: componentVersions,
-        runtimeRoot: linuxWineRuntimeRoot(environment),
-        requiredExecutableRelativePath:
-            linuxWineRuntimePlatformSpec.requiredExecutableRelativePath,
-        expectedExecutablePath: linuxWineExecutable(environment),
+        runtimeRoot: RuntimeRootPath(linuxWineRuntimeRoot(environment)),
+        requiredExecutableRelativePath: RuntimeRelativePath(
+          linuxWineRuntimePlatformSpec.requiredExecutableRelativePath,
+        ),
+        expectedExecutablePath: RuntimeComponentPath(
+          linuxWineExecutable(environment),
+        ),
       ),
       progressSink: progressSink,
     );

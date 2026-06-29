@@ -86,8 +86,9 @@ RuntimeWineInstallPlan runtimeWineInstallPlan({
   required String unsupportedPlatformMessage,
   required RuntimeInstallRequestOperation requestOperation,
   required RuntimeRecord currentRuntime,
-  required Option<String> configuredSourceManifest,
-  required Option<String> configuredSourceManifestSignature,
+  required Option<RuntimeSourceManifestUrl> configuredSourceManifest,
+  required Option<RuntimeSourceManifestSignatureUrl>
+  configuredSourceManifestSignature,
   required String defaultArchiveFileName,
   required Option<String> missingArchiveMessage,
   required Option<String> incompleteRuntimeMessage,
@@ -204,8 +205,9 @@ RuntimeWineInstallPlan _runtimeWineInstallPlanForSource({
 
 RuntimeInstallSource _runtimeInstallSourceWithConfiguredManifest({
   required RuntimeInstallSource requestSource,
-  required Option<String> configuredSourceManifest,
-  required Option<String> configuredSourceManifestSignature,
+  required Option<RuntimeSourceManifestUrl> configuredSourceManifest,
+  required Option<RuntimeSourceManifestSignatureUrl>
+  configuredSourceManifestSignature,
 }) {
   if (requestSource is! RuntimeConfiguredArchiveSource) {
     return requestSource;
