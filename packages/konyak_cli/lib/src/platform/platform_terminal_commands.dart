@@ -3,6 +3,7 @@ import 'package:fpdart/fpdart.dart';
 import '../domain/bottle/bottle_models.dart';
 import '../domain/runtime/host_environment.dart';
 import '../domain/runtime/wine_runtime_paths.dart';
+import '../domain/shared/domain_value_objects.dart';
 import '../io/wine_run_requests.dart';
 import '../shared/common_helpers.dart';
 import 'macos/macos_program_run_requests.dart';
@@ -41,7 +42,7 @@ String linuxTerminalLauncherCommand(HostEnvironment environment) {
 String linuxWineTerminalShellCommandWithEnvironment({
   required BottleRecord bottle,
   required HostEnvironment environment,
-  Option<String> initialWineCommand = const Option.none(),
+  Option<BottleCommand> initialWineCommand = const Option.none(),
 }) {
   final hostEnvironment = environment;
   final executable = linuxWineExecutable(hostEnvironment);
@@ -86,7 +87,7 @@ String macosWineTerminalShellCommand({
   required BottleRecord bottle,
   required HostEnvironment environment,
   required Option<int> macosMajorVersion,
-  Option<String> initialWineCommand = const Option.none(),
+  Option<BottleCommand> initialWineCommand = const Option.none(),
 }) {
   final runtimeBin = macosWineBinFolder(environment);
   final executable = macosWineExecutable(environment);
@@ -123,9 +124,9 @@ String macosWineTerminalShellCommand({
 
 String wineTerminalInitialCommand({
   required String executable,
-  required String command,
+  required BottleCommand command,
 }) {
-  return '${shellQuote(executable)} ${shellQuote(command)}';
+  return '${shellQuote(executable)} ${shellQuote(command.value)}';
 }
 
 String macosTerminalSetupScriptPath(BottleRecord bottle) {

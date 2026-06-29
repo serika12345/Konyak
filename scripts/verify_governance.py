@@ -341,6 +341,7 @@ def require_typed_bottle_command_planner_boundary() -> None:
         "required BottleCommand supportedCommand",
         "supportedBottleCommand(command)",
         "supportedCommand.value == 'terminal'",
+        "initialWineCommand: Option.of(supportedCommand)",
     ]
     for expected in expected_terms:
         if expected not in planner:
@@ -352,7 +353,7 @@ def require_typed_bottle_command_planner_boundary() -> None:
     forbidden_terms = [
         "required String command",
         "required String supportedCommand",
-        "Option.of(supportedCommand)",
+        "Option.of(supportedCommand.value)",
     ]
     for forbidden in forbidden_terms:
         if forbidden in planner:
@@ -387,6 +388,40 @@ def require_typed_bottle_command_planner_boundary() -> None:
             raise AssertionError(
                 "program argument support must not expose primitive bottle "
                 f"command helpers: {forbidden}"
+            )
+
+    terminal_boundary_paths = [
+        "packages/konyak_cli/lib/src/domain/program/program_run_terminal_requests.dart",
+        "packages/konyak_cli/lib/src/platform/platform_terminal_commands.dart",
+        "packages/konyak_cli/lib/src/io/wine_run_requests.dart",
+    ]
+    for path in terminal_boundary_paths:
+        contents = read_text(path)
+        if "Option<BottleCommand> initialWineCommand" not in contents:
+            raise AssertionError(
+                f"{path} must keep terminal initial Wine commands typed"
+            )
+        for forbidden in ["Option<String> initialWineCommand"]:
+            if forbidden in contents:
+                raise AssertionError(
+                    f"{path} must not expose primitive terminal command "
+                    f"arguments: {forbidden}"
+                )
+
+    terminal_helper_paths = [
+        "packages/konyak_cli/lib/src/domain/program/program_run_terminal_requests.dart",
+        "packages/konyak_cli/lib/src/platform/platform_terminal_commands.dart",
+    ]
+    for path in terminal_helper_paths:
+        contents = read_text(path)
+        if "required BottleCommand command" not in contents:
+            raise AssertionError(
+                f"{path} must keep terminal initial command helpers typed"
+            )
+        if "required String command" in contents:
+            raise AssertionError(
+                f"{path} must not expose primitive terminal initial command "
+                "helper arguments"
             )
 
 

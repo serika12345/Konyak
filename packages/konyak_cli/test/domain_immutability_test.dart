@@ -2,6 +2,7 @@ import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:konyak_cli/konyak_cli.dart';
 import 'package:konyak_cli/src/domain/program/program_run_command_support.dart';
+import 'package:konyak_cli/src/domain/program/program_run_terminal_requests.dart';
 import 'package:konyak_cli/src/io/io_result.dart';
 import 'package:konyak_cli/src/io/runtime_catalog_factories_io.dart';
 import 'package:konyak_cli/src/repository/memory_bottle_repository.dart';
@@ -1025,6 +1026,20 @@ void main() {
       '/c',
       'dxdiag /t C:\\konyak-dxdiag.txt && start "" notepad C:\\konyak-dxdiag.txt',
     ]);
+
+    final request = linuxTerminalCommandRequest(
+      bottle: BottleRecord(
+        id: 'steam',
+        name: 'Steam',
+        path: '/home/user/.local/share/konyak/Bottles/Steam',
+        windowsVersion: 'win10',
+      ),
+      environment: const HostEnvironment.empty(),
+      initialWineCommand: Option.of(BottleCommand('cmd')),
+    );
+
+    expect(request.programPath, ProgramPath('cmd'));
+    expect(request.arguments.value.last, contains("'cmd'"));
   });
 
   test('winetricks verbs model supported verbs with WinetricksVerbId', () {

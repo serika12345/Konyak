@@ -335,11 +335,13 @@ ProgramRunRequest macosRegistryQueryRequest({
 ProgramRunRequest linuxTerminalCommandRequest({
   required BottleRecord bottle,
   required HostEnvironment environment,
-  Option<String> initialWineCommand = const Option.none(),
+  Option<BottleCommand> initialWineCommand = const Option.none(),
 }) {
   return ProgramRunRequest(
     bottleId: bottle.id,
-    programPath: ProgramPath(initialWineCommand.getOrElse(() => 'terminal')),
+    programPath: ProgramPath(
+      initialWineCommand.match(() => 'terminal', (command) => command.value),
+    ),
     runnerKind: RunnerKind('terminal'),
     executable: ProgramExecutable('sh'),
     arguments: ProgramRunArguments(<String>[
@@ -363,7 +365,7 @@ ProgramRunRequest macosTerminalCommandRequest({
   required BottleRecord bottle,
   required HostEnvironment environment,
   required Option<int> macosMajorVersion,
-  Option<String> initialWineCommand = const Option.none(),
+  Option<BottleCommand> initialWineCommand = const Option.none(),
 }) {
   final shellCommand = macosWineTerminalShellCommand(
     bottle: bottle,
@@ -375,7 +377,9 @@ ProgramRunRequest macosTerminalCommandRequest({
 
   return ProgramRunRequest(
     bottleId: bottle.id,
-    programPath: ProgramPath(initialWineCommand.getOrElse(() => 'terminal')),
+    programPath: ProgramPath(
+      initialWineCommand.match(() => 'terminal', (command) => command.value),
+    ),
     runnerKind: RunnerKind('macosTerminal'),
     executable: ProgramExecutable('/usr/bin/osascript'),
     arguments: ProgramRunArguments(<String>[

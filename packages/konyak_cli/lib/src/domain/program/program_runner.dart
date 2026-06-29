@@ -102,13 +102,13 @@ class ProgramRunPlanner {
         KonyakHostPlatform.linux => linuxTerminalCommandRequest(
           bottle: bottle,
           environment: environment,
-          initialWineCommand: Option.of(supportedCommand.value),
+          initialWineCommand: Option.of(supportedCommand),
         ),
         KonyakHostPlatform.macos => macosTerminalCommandRequest(
           bottle: bottle,
           environment: environment,
           macosMajorVersion: macosMajorVersion,
-          initialWineCommand: Option.of(supportedCommand.value),
+          initialWineCommand: Option.of(supportedCommand),
         ),
       });
     }

@@ -13,6 +13,35 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-29 15:29 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Tighten the functional-core boundary for terminal initial Wine
+  commands.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: `6b9b9e7` (`Type winedbg command planning`).
+- Purpose: keep supported bottle commands typed as `BottleCommand` when the
+  planner opens a terminal with an initial Wine command, instead of converting
+  the command back to `String` at the request-builder boundary.
+- Completed work: committed typed winedbg command planning; added a failing
+  terminal command contract for `Option<BottleCommand>`; updated
+  `ProgramRunPlanner`, Linux/macOS domain terminal request builders, legacy I/O
+  request builders, and platform terminal command helpers to keep the initial
+  Wine command typed as `BottleCommand`; and tightened governance so
+  `Option<String> initialWineCommand` does not return.
+- Remaining work: broader functional-core tightening remains in `docs/todo.md`,
+  including other primitive request/planner APIs.
+- Next action: continue with the next narrow primitive-boundary cleanup outside
+  the completed terminal initial-command path.
+- Verification: observed `cd packages/konyak_cli && dart test
+  test/domain_immutability_test.dart --name "bottle commands"` fail before
+  implementation with `BottleCommand` not assignable to `String`; after
+  implementation, focused bottle-command tests, `dart analyze --fatal-infos`,
+  `just verify-governance`, focused terminal CLI contract tests, full
+  `test/domain_immutability_test.dart`, `just cli-test`, `just verify-safety`,
+  `just format-check`, and `just lint` passed.
+
 - Timestamp: 2026-06-29 15:19 JST
 - State: `completed`
 - Branch: `main`
@@ -20,7 +49,7 @@ unfinished work.
   request planning.
 - Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
   boundary tightening.
-- Latest commit: `cd740c7` (`Document map snapshot Freezed exceptions`).
+- Latest commit: `6b9b9e7` (`Type winedbg command planning`).
 - Purpose: replace the remaining raw `String`/`List<String>` winedbg request
   arguments at the planner/request-builder boundary with a typed domain plan
   while preserving the public CLI contract.
