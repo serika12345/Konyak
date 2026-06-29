@@ -1229,6 +1229,15 @@ void main() {
     expect(winedbgAttachProcessId(WineProcessId('000000d8')), '0x000000d8');
     expect(winedbgAttachProcessId(WineProcessId('0x000000d8')), '0x000000d8');
 
+    final killPlan = winedbgProcessKillPlan(WineProcessId('000000d8'));
+
+    expect(killPlan.command, WinedbgCommand('kill'));
+    expect(killPlan.logFileName, ProgramLogFileName('wine-process-kill.log'));
+    expect(
+      killPlan.trailingArguments,
+      ProgramRunArguments(const <String>['0x000000d8']),
+    );
+
     final request =
         ProgramRunPlanner(
           hostPlatform: KonyakHostPlatform.linux,
@@ -1246,6 +1255,39 @@ void main() {
     expect(
       request.arguments,
       ProgramRunArguments(const <String>['--command', 'kill', '0x000000d8']),
+    );
+  });
+
+  test('Wine process list plans use a typed winedbg command plan', () {
+    final listPlan = winedbgProcessListPlan();
+
+    expect(listPlan.command, WinedbgCommand('info proc'));
+    expect(listPlan.logFileName, ProgramLogFileName('wine-processes.log'));
+    expect(listPlan.trailingArguments, ProgramRunArguments(const <String>[]));
+
+    final request =
+        ProgramRunPlanner(
+          hostPlatform: KonyakHostPlatform.macos,
+          environment: const HostEnvironment.empty(),
+        ).planWineProcessList(
+          bottle: BottleRecord(
+            id: 'steam',
+            name: 'Steam',
+            path:
+                '/Users/user/Library/Application Support/Konyak/Bottles/Steam',
+            windowsVersion: 'win10',
+          ),
+        );
+
+    expect(
+      request.arguments,
+      ProgramRunArguments(const <String>['winedbg', '--command', 'info proc']),
+    );
+    expect(
+      request.logPath,
+      ProgramLogPath(
+        '/Users/user/Library/Application Support/Konyak/Bottles/Steam/logs/wine-processes.log',
+      ),
     );
   });
 

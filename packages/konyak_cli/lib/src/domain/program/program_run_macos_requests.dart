@@ -176,9 +176,7 @@ ProgramRunRequest macosWinedbgRequest({
   required BottleRecord bottle,
   required HostEnvironment environment,
   required Option<int> macosMajorVersion,
-  required String command,
-  required String logName,
-  List<String> trailingArguments = const <String>[],
+  required WinedbgCommandPlan winedbgCommand,
 }) {
   final hostEnvironment = environment;
   return ProgramRunRequest(
@@ -189,8 +187,8 @@ ProgramRunRequest macosWinedbgRequest({
     arguments: ProgramRunArguments(<String>[
       'winedbg',
       '--command',
-      command,
-      ...trailingArguments,
+      winedbgCommand.command.value,
+      ...winedbgCommand.trailingArguments.value,
     ]),
     environment: macosWineEnvironmentForRequests(
       bottle: bottle,
@@ -198,7 +196,10 @@ ProgramRunRequest macosWinedbgRequest({
       macosMajorVersion: macosMajorVersion,
     ),
     logPath: ProgramLogPath(
-      domainJoinPath(bottle.path.value, <String>['logs', logName]),
+      domainJoinPath(bottle.path.value, <String>[
+        'logs',
+        winedbgCommand.logFileName.value,
+      ]),
     ),
     workingDirectory: Option.of(
       ProgramWorkingDirectoryPath(macosWineBinFolder(hostEnvironment)),

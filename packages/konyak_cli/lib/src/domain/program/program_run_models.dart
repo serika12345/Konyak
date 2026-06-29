@@ -61,6 +61,21 @@ abstract class ProgramRunRequest with _$ProgramRunRequest {
   map: FreezedMapOptions.none,
   when: FreezedWhenOptions.none,
 )
+abstract class WinedbgCommandPlan with _$WinedbgCommandPlan {
+  const WinedbgCommandPlan._();
+
+  const factory WinedbgCommandPlan({
+    required WinedbgCommand command,
+    required ProgramLogFileName logFileName,
+    required ProgramRunArguments trailingArguments,
+  }) = _WinedbgCommandPlan;
+}
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
 sealed class ProgramRunResult with _$ProgramRunResult {
   const ProgramRunResult._();
 

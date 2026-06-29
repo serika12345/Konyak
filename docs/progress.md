@@ -13,6 +13,40 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-29 15:19 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Tighten the functional-core boundary for Wine process debug
+  request planning.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: `cd740c7` (`Document map snapshot Freezed exceptions`).
+- Purpose: replace the remaining raw `String`/`List<String>` winedbg request
+  arguments at the planner/request-builder boundary with a typed domain plan
+  while preserving the public CLI contract.
+- Completed work: selected the winedbg process list/kill request path as the
+  first narrow cleanup target; added a failing domain test for typed winedbg
+  command plans; introduced `WinedbgCommand`, `ProgramLogFileName`, and
+  `WinedbgCommandPlan`; moved process list/kill command names, log file names,
+  and trailing arguments into command-support plan helpers; updated Linux/macOS
+  domain and platform request builders to accept the typed plan; and updated
+  governance so primitive winedbg request arguments do not return.
+- Remaining work: broader functional-core tightening remains in `docs/todo.md`,
+  including other primitive request/planner APIs and later strategy extraction
+  if the Linux/macOS switch grows.
+- Next action: continue with the next narrow primitive-boundary cleanup outside
+  the completed winedbg process plan path.
+- Verification: observed `cd packages/konyak_cli && dart test
+  test/domain_immutability_test.dart --name "Wine process"` fail before
+  implementation with missing typed plan/value objects; after implementation,
+  `cd packages/konyak_cli && dart run build_runner build
+  --delete-conflicting-outputs && dart format ...`, focused Wine process
+  domain tests, `dart analyze --fatal-infos`, focused
+  `cli_contract_test.dart` Wine process tests, full
+  `test/domain_immutability_test.dart`, `just cli-test`,
+  `just verify-governance`, `just verify-safety`, `just format-check`, and
+  `just lint` passed.
+
 - Timestamp: 2026-06-29 15:04 JST
 - State: `completed`
 - Branch: `main`

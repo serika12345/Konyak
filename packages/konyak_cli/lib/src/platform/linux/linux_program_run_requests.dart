@@ -174,9 +174,7 @@ ProgramRunRequest linuxWineserverKillRequest({
 ProgramRunRequest linuxWinedbgRequest({
   required BottleRecord bottle,
   required HostEnvironment environment,
-  required String command,
-  required String logName,
-  List<String> trailingArguments = const <String>[],
+  required WinedbgCommandPlan winedbgCommand,
 }) {
   final hostEnvironment = environment;
   return ProgramRunRequest(
@@ -186,14 +184,17 @@ ProgramRunRequest linuxWinedbgRequest({
     executable: ProgramExecutable(linuxWinedbgExecutable(hostEnvironment)),
     arguments: ProgramRunArguments(<String>[
       '--command',
-      command,
-      ...trailingArguments,
+      winedbgCommand.command.value,
+      ...winedbgCommand.trailingArguments.value,
     ]),
     environment: linuxRuntimeEnvironment(
       hostEnvironment,
     ).merge(linuxWinePrefixEnvironment(bottle)),
     logPath: ProgramLogPath(
-      joinPath(bottle.path.value, <String>['logs', logName]),
+      joinPath(bottle.path.value, <String>[
+        'logs',
+        winedbgCommand.logFileName.value,
+      ]),
     ),
   );
 }

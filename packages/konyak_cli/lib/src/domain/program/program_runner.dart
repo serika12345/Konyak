@@ -206,19 +206,18 @@ class ProgramRunPlanner {
   }
 
   ProgramRunRequest planWineProcessList({required BottleRecord bottle}) {
+    final winedbgCommand = winedbgProcessListPlan();
     return switch (hostPlatform) {
       KonyakHostPlatform.linux => linuxWinedbgRequest(
         bottle: bottle,
         environment: environment,
-        command: 'info proc',
-        logName: 'wine-processes.log',
+        winedbgCommand: winedbgCommand,
       ),
       KonyakHostPlatform.macos => macosWinedbgRequest(
         bottle: bottle,
         environment: environment,
         macosMajorVersion: macosMajorVersion,
-        command: 'info proc',
-        logName: 'wine-processes.log',
+        winedbgCommand: winedbgCommand,
       ),
     };
   }
@@ -227,22 +226,18 @@ class ProgramRunPlanner {
     required BottleRecord bottle,
     required WineProcessId processId,
   }) {
-    final attachProcessId = winedbgAttachProcessId(processId);
+    final winedbgCommand = winedbgProcessKillPlan(processId);
     return switch (hostPlatform) {
       KonyakHostPlatform.linux => linuxWinedbgRequest(
         bottle: bottle,
         environment: environment,
-        command: 'kill',
-        logName: 'wine-process-kill.log',
-        trailingArguments: <String>[attachProcessId],
+        winedbgCommand: winedbgCommand,
       ),
       KonyakHostPlatform.macos => macosWinedbgRequest(
         bottle: bottle,
         environment: environment,
         macosMajorVersion: macosMajorVersion,
-        command: 'kill',
-        logName: 'wine-process-kill.log',
-        trailingArguments: <String>[attachProcessId],
+        winedbgCommand: winedbgCommand,
       ),
     };
   }

@@ -434,6 +434,24 @@ abstract class ProgramLogPath
   map: FreezedMapOptions.none,
   when: FreezedWhenOptions.none,
 )
+abstract class ProgramLogFileName
+    with _$ProgramLogFileName
+    implements StringDomainValueObject {
+  const ProgramLogFileName._();
+
+  factory ProgramLogFileName(String value) => ProgramLogFileName._validated(
+    _requiredValueObjectString(value, 'programLogFileName'),
+  );
+
+  const factory ProgramLogFileName._validated(String value) =
+      _ProgramLogFileName;
+}
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
 abstract class WineDebugChannels
     with _$WineDebugChannels
     implements StringDomainValueObject {
@@ -443,6 +461,23 @@ abstract class WineDebugChannels
       WineDebugChannels._validated(value.trim());
 
   const factory WineDebugChannels._validated(String value) = _WineDebugChannels;
+}
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class WinedbgCommand
+    with _$WinedbgCommand
+    implements StringDomainValueObject {
+  const WinedbgCommand._();
+
+  factory WinedbgCommand(String value) => WinedbgCommand._validated(
+    _requiredValueObjectString(value, 'winedbgCommand'),
+  );
+
+  const factory WinedbgCommand._validated(String value) = _WinedbgCommand;
 }
 
 @Freezed(

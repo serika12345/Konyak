@@ -472,7 +472,8 @@ def require_typed_wine_process_planner_boundary() -> None:
     planner = read_text(planner_path)
     expected_terms = [
         "required WineProcessId processId",
-        "winedbgAttachProcessId(processId)",
+        "final winedbgCommand = winedbgProcessKillPlan(processId);",
+        "winedbgCommand: winedbgCommand,",
     ]
     for expected in expected_terms:
         if expected not in planner:
@@ -499,6 +500,9 @@ def require_typed_wine_process_planner_boundary() -> None:
     expected_support_terms = [
         "String winedbgAttachProcessId(WineProcessId processId)",
         "final normalized = processId.value.trim();",
+        "WinedbgCommandPlan winedbgProcessListPlan()",
+        "WinedbgCommandPlan winedbgProcessKillPlan(WineProcessId processId)",
+        "winedbgAttachProcessId(processId)",
     ]
     for expected in expected_support_terms:
         if expected not in command_support:
@@ -512,6 +516,40 @@ def require_typed_wine_process_planner_boundary() -> None:
             "program command support must not expose primitive Wine process-id "
             "helpers"
         )
+
+    request_builder_paths = [
+        "packages/konyak_cli/lib/src/domain/program/program_run_linux_requests.dart",
+        "packages/konyak_cli/lib/src/domain/program/program_run_macos_requests.dart",
+        "packages/konyak_cli/lib/src/platform/linux/linux_program_run_requests.dart",
+        "packages/konyak_cli/lib/src/platform/macos/macos_program_run_requests.dart",
+    ]
+    for path in request_builder_paths:
+        contents = read_text(path)
+        request_match = re.search(
+            r"ProgramRunRequest\s+(?:linux|macos)WinedbgRequest\(\{"
+            r"(?P<body>.*?)\n\}",
+            contents,
+            re.S,
+        )
+        if request_match is None:
+            raise AssertionError(f"{path} must define a winedbg request builder")
+
+        request_body = request_match.group("body")
+        if "required WinedbgCommandPlan winedbgCommand" not in request_body:
+            raise AssertionError(
+                f"{path} must accept typed winedbg command plans"
+            )
+        forbidden_winedbg_terms = [
+            "required String command",
+            "required String logName",
+            "List<String> trailingArguments",
+        ]
+        for forbidden in forbidden_winedbg_terms:
+            if forbidden in request_body:
+                raise AssertionError(
+                    f"{path} must not expose primitive winedbg request "
+                    f"arguments: {forbidden}"
+                )
 
     process_results_path = (
         "packages/konyak_cli/lib/src/cli/cli_app_process_results.dart"

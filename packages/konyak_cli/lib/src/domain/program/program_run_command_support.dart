@@ -1,4 +1,5 @@
 import '../shared/domain_value_objects.dart';
+import 'program_run_models.dart';
 
 bool isSupportedWinetricksVerb(WinetricksVerbId verb) {
   return RegExp(r'^[A-Za-z0-9_.+-]+$').hasMatch(verb.value);
@@ -14,4 +15,22 @@ String winedbgAttachProcessId(WineProcessId processId) {
   }
 
   return normalized;
+}
+
+WinedbgCommandPlan winedbgProcessListPlan() {
+  return WinedbgCommandPlan(
+    command: WinedbgCommand('info proc'),
+    logFileName: ProgramLogFileName('wine-processes.log'),
+    trailingArguments: ProgramRunArguments(const <String>[]),
+  );
+}
+
+WinedbgCommandPlan winedbgProcessKillPlan(WineProcessId processId) {
+  return WinedbgCommandPlan(
+    command: WinedbgCommand('kill'),
+    logFileName: ProgramLogFileName('wine-process-kill.log'),
+    trailingArguments: ProgramRunArguments(<String>[
+      winedbgAttachProcessId(processId),
+    ]),
+  );
 }
