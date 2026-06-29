@@ -5,6 +5,7 @@ import '../domain/program/program_catalog_models.dart';
 import '../domain/program/program_runner.dart';
 import '../domain/runtime/host_environment.dart';
 import '../domain/runtime/wine_runtime_paths.dart';
+import '../domain/shared/domain_value_objects.dart';
 import '../repository/repository_interfaces.dart';
 import '../shared/common_helpers.dart';
 import 'external_payload_helpers.dart';
@@ -51,7 +52,7 @@ class DartIoWinetricksVerbRepository implements WinetricksVerbRepository {
         );
       }
 
-      return lister.listVerbs(executable: managedExecutable);
+      return lister.listVerbs(executable: ProgramExecutable(managedExecutable));
     }
 
     final verbsFile = File(joinPath(runtimeRoot, const ['verbs.txt']));
@@ -76,10 +77,10 @@ class DartIoWinetricksVerbLister implements WinetricksVerbLister {
   const DartIoWinetricksVerbLister();
 
   @override
-  WinetricksVerbListResult listVerbs({required String executable}) {
+  WinetricksVerbListResult listVerbs({required ProgramExecutable executable}) {
     try {
       final result = Process.runSync(
-        executable,
+        executable.value,
         const <String>['list-all'],
         environment: const <String, String>{'LANG': 'C'},
         runInShell: false,

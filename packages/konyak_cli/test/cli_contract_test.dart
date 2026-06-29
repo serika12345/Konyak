@@ -721,11 +721,13 @@ final class RecordingWinetricksVerbLister implements WinetricksVerbLister {
   RecordingWinetricksVerbLister({required this.result});
 
   final WinetricksVerbListResult result;
-  String? executable;
+  ProgramExecutable? programExecutable;
+
+  String? get executable => programExecutable?.value;
 
   @override
-  WinetricksVerbListResult listVerbs({required String executable}) {
-    this.executable = executable;
+  WinetricksVerbListResult listVerbs({required ProgramExecutable executable}) {
+    programExecutable = executable;
 
     return result;
   }

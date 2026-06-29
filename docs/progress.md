@@ -13,6 +13,35 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-29 16:16 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Tighten the functional-core boundary for Winetricks verb
+  listing.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: current commit (`Type Winetricks verb lister executable`).
+- Purpose: keep the managed Winetricks executable typed as `ProgramExecutable`
+  at the `WinetricksVerbLister` boundary instead of passing a raw `String`
+  from repository selection into the process lister.
+- Completed work: committed typed runtime executable probe requests; added a
+  failing typed Winetricks lister fixture; changed `WinetricksVerbLister`,
+  `DartIoWinetricksVerbRepository`, `DartIoWinetricksVerbLister`, and CLI
+  recording fixtures to keep the executable typed as `ProgramExecutable`; and
+  tightened governance so the lister boundary does not return to raw
+  executable strings.
+- Remaining work: broader functional-core tightening remains in `docs/todo.md`,
+  including other primitive request/planner APIs.
+- Next action: continue with the next narrow primitive-boundary cleanup outside
+  the completed Winetricks lister path.
+- Verification: observed `cd packages/konyak_cli && dart test
+  test/cli_contract_test.dart --name "list-winetricks-verbs --json on Linux
+  ignores stale macOS runtime verbs"` fail before implementation because the
+  typed test fixture did not match the old raw `String executable` lister
+  interface; after implementation, focused Winetricks CLI contract tests,
+  `dart analyze --fatal-infos`, `just verify-governance`, `just cli-test`,
+  `just verify-safety`, `just format-check`, and `just lint` passed.
+
 - Timestamp: 2026-06-29 16:08 JST
 - State: `completed`
 - Branch: `main`

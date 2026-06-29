@@ -791,6 +791,48 @@ def require_typed_runtime_executable_probe_boundary() -> None:
             )
 
 
+def require_typed_winetricks_verb_lister_boundary() -> None:
+    repository_path = "packages/konyak_cli/lib/src/repository/repository_interfaces.dart"
+    repository = read_text(repository_path)
+    expected_repository_terms = [
+        "abstract interface class WinetricksVerbLister",
+        "WinetricksVerbListResult listVerbs({required ProgramExecutable executable})",
+    ]
+    for expected in expected_repository_terms:
+        if expected not in repository:
+            raise AssertionError(
+                "WinetricksVerbLister must expose a typed executable request: "
+                f"{expected}"
+            )
+
+    lister_match = re.search(
+        r"abstract interface class WinetricksVerbLister\b(?P<body>.*?)(?=\n\})",
+        repository,
+        re.S,
+    )
+    if lister_match is None:
+        raise AssertionError("WinetricksVerbLister interface is missing")
+    if "required String executable" in lister_match.group("body"):
+        raise AssertionError(
+            "WinetricksVerbLister must not expose primitive executable "
+            "requests"
+        )
+
+    winetricks_io_path = "packages/konyak_cli/lib/src/io/winetricks_io.dart"
+    winetricks_io = read_text(winetricks_io_path)
+    expected_io_terms = [
+        "lister.listVerbs(executable: ProgramExecutable(managedExecutable))",
+        "required ProgramExecutable executable",
+        "executable.value",
+    ]
+    for expected in expected_io_terms:
+        if expected not in winetricks_io:
+            raise AssertionError(
+                "Winetricks lister I/O must keep executable requests typed "
+                f"until the process boundary: {expected}"
+            )
+
+
 def require_wine_process_termination_cli_json_projection() -> None:
     domain_path = "packages/konyak_cli/lib/src/domain/program/program_run_models.dart"
     domain = read_text(domain_path)
@@ -2486,6 +2528,7 @@ def main() -> None:
     require_typed_detached_process_starter_boundary()
     require_typed_path_opener_boundary()
     require_typed_runtime_executable_probe_boundary()
+    require_typed_winetricks_verb_lister_boundary()
     require_wine_process_termination_cli_json_projection()
     require_program_catalog_cli_json_projection()
     require_graphics_backend_hints_cli_json_projection()

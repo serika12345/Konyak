@@ -5,6 +5,7 @@ import '../domain/bottle/bottle_models.dart';
 import '../domain/bottle/bottle_mutation_models.dart';
 import '../domain/program/program_catalog_models.dart';
 import '../domain/program/program_mutation_models.dart';
+import '../domain/shared/domain_value_objects.dart';
 import '../io/io_result.dart';
 
 abstract interface class BottleCatalog {
@@ -81,5 +82,5 @@ abstract interface class WinetricksVerbRepository {
 }
 
 abstract interface class WinetricksVerbLister {
-  WinetricksVerbListResult listVerbs({required String executable});
+  WinetricksVerbListResult listVerbs({required ProgramExecutable executable});
 }
