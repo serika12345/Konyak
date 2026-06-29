@@ -145,9 +145,11 @@ bool isSuccessfulWineProcessTerminationPayload(String payload) {
 }
 
 String operationFailureMessage(ProcessRunResult result, String command) {
-  final message = jsonErrorMessage(result.stdout);
-  if (message != null) {
-    return message;
+  switch (jsonErrorMessage(result.stdout)) {
+    case ParsedJsonErrorMessage(:final message):
+      return message;
+    case NoJsonErrorMessage():
+      break;
   }
 
   return commandFailureMessage(command, result);

@@ -8,6 +8,20 @@ import 'konyak_cli_result_helpers.dart';
 import 'program_run_contract.dart';
 import 'runtime_install_contract.dart';
 
+sealed class JsonErrorMessageParseResult {
+  const JsonErrorMessageParseResult();
+}
+
+final class ParsedJsonErrorMessage extends JsonErrorMessageParseResult {
+  const ParsedJsonErrorMessage(this.message);
+
+  final String message;
+}
+
+final class NoJsonErrorMessage extends JsonErrorMessageParseResult {
+  const NoJsonErrorMessage();
+}
+
 String detailFailureMessage(ProcessRunResult result) {
   if (result.exitCode == 0) {
     final parsed = parseBottleDetailPayload(result.stdout);
@@ -101,9 +115,11 @@ String installRuntimeFailureMessage(ProcessRunResult result) {
 }
 
 String commandFailureMessage(String command, ProcessRunResult result) {
-  final message = jsonErrorMessage(result.stdout);
-  if (message != null) {
-    return message;
+  switch (jsonErrorMessage(result.stdout)) {
+    case ParsedJsonErrorMessage(:final message):
+      return message;
+    case NoJsonErrorMessage():
+      break;
   }
 
   final diagnostic = result.stderr.trim();
@@ -114,23 +130,25 @@ String commandFailureMessage(String command, ProcessRunResult result) {
   return '$command failed with exit code ${result.exitCode}: $diagnostic';
 }
 
-String? jsonErrorMessage(String payload) {
+JsonErrorMessageParseResult jsonErrorMessage(String payload) {
   final Object? decoded;
   try {
     decoded = jsonDecode(payload);
   } on FormatException {
-    return null;
+    return const NoJsonErrorMessage();
   }
 
   if (decoded is! Map<String, Object?> || decoded['schemaVersion'] != 1) {
-    return null;
+    return const NoJsonErrorMessage();
   }
 
   final error = decoded['error'];
   if (error is! Map<String, Object?>) {
-    return null;
+    return const NoJsonErrorMessage();
   }
 
   final message = error['message'];
-  return message is String ? message : null;
+  return message is String
+      ? ParsedJsonErrorMessage(message)
+      : const NoJsonErrorMessage();
 }

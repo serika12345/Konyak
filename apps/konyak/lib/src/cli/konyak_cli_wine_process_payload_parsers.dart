@@ -3,6 +3,24 @@ import 'dart:convert';
 import 'konyak_cli_program_result_types.dart';
 import 'konyak_cli_wine_process_result_types.dart';
 
+sealed class ProgramMetadataParseResult {
+  const ProgramMetadataParseResult();
+}
+
+final class ParsedProgramMetadata extends ProgramMetadataParseResult {
+  const ParsedProgramMetadata(this.metadata);
+
+  final ProgramMetadataSummary metadata;
+}
+
+final class NoProgramMetadata extends ProgramMetadataParseResult {
+  const NoProgramMetadata();
+}
+
+final class InvalidProgramMetadata extends ProgramMetadataParseResult {
+  const InvalidProgramMetadata();
+}
+
 WineProcessListLoadResult parseWineProcessListPayload(String payload) {
   final Object? decoded;
   try {
@@ -76,26 +94,44 @@ WineProcessListLoadResult parseWineProcessListPayload(String payload) {
       );
     }
 
-    parsedProcesses.add(
-      WineProcessSummary(
-        bottleId: bottleId,
-        processId: processId,
-        executable: executable,
-        hostPath: hostPath is String ? hostPath : null,
-        metadata: parseProgramMetadata(process['metadata']),
-      ),
-    );
+    switch (parseProgramMetadata(process['metadata'])) {
+      case ParsedProgramMetadata(:final metadata):
+        parsedProcesses.add(
+          WineProcessSummary(
+            bottleId: bottleId,
+            processId: processId,
+            executable: executable,
+            hostPath: hostPath is String ? hostPath : null,
+            metadata: metadata,
+          ),
+        );
+      case NoProgramMetadata():
+        parsedProcesses.add(
+          WineProcessSummary(
+            bottleId: bottleId,
+            processId: processId,
+            executable: executable,
+            hostPath: hostPath is String ? hostPath : null,
+          ),
+        );
+      case InvalidProgramMetadata():
+        return const WineProcessListLoadFailure(
+          exitCode: 0,
+          message: 'Invalid Wine process record.',
+          diagnostic: '',
+        );
+    }
   }
 
   return LoadedWineProcesses(processes: parsedProcesses);
 }
 
-ProgramMetadataSummary? parseProgramMetadata(Object? value) {
+ProgramMetadataParseResult parseProgramMetadata(Object? value) {
   if (value == null) {
-    return null;
+    return const NoProgramMetadata();
   }
   if (value is! Map<String, Object?>) {
-    return null;
+    return const InvalidProgramMetadata();
   }
 
   final architecture = value['architecture'];
@@ -106,13 +142,29 @@ ProgramMetadataSummary? parseProgramMetadata(Object? value) {
   final productVersion = value['productVersion'];
   final iconPath = value['iconPath'];
 
-  return ProgramMetadataSummary(
-    architecture: architecture is String ? architecture : null,
-    fileDescription: fileDescription is String ? fileDescription : null,
-    productName: productName is String ? productName : null,
-    companyName: companyName is String ? companyName : null,
-    fileVersion: fileVersion is String ? fileVersion : null,
-    productVersion: productVersion is String ? productVersion : null,
-    iconPath: iconPath is String ? iconPath : null,
+  if (!_isOptionalString(architecture) ||
+      !_isOptionalString(fileDescription) ||
+      !_isOptionalString(productName) ||
+      !_isOptionalString(companyName) ||
+      !_isOptionalString(fileVersion) ||
+      !_isOptionalString(productVersion) ||
+      !_isOptionalString(iconPath)) {
+    return const InvalidProgramMetadata();
+  }
+
+  return ParsedProgramMetadata(
+    ProgramMetadataSummary(
+      architecture: architecture as String?,
+      fileDescription: fileDescription as String?,
+      productName: productName as String?,
+      companyName: companyName as String?,
+      fileVersion: fileVersion as String?,
+      productVersion: productVersion as String?,
+      iconPath: iconPath as String?,
+    ),
   );
+}
+
+bool _isOptionalString(Object? value) {
+  return value == null || value is String;
 }

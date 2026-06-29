@@ -4,6 +4,35 @@ import '../updates/update_check_summary.dart';
 import 'konyak_cli_settings_payload_parsers.dart';
 import 'konyak_cli_update_result_types.dart';
 
+sealed class UpdateCheckSummaryParseResult {
+  const UpdateCheckSummaryParseResult();
+}
+
+final class ParsedUpdateCheckSummary extends UpdateCheckSummaryParseResult {
+  const ParsedUpdateCheckSummary(this.update);
+
+  final UpdateCheckSummary update;
+}
+
+final class InvalidUpdateCheckSummary extends UpdateCheckSummaryParseResult {
+  const InvalidUpdateCheckSummary();
+}
+
+sealed class UpdateInstallSummaryParseResult {
+  const UpdateInstallSummaryParseResult();
+}
+
+final class ParsedUpdateInstallSummary extends UpdateInstallSummaryParseResult {
+  const ParsedUpdateInstallSummary(this.update);
+
+  final UpdateInstallSummary update;
+}
+
+final class InvalidUpdateInstallSummary
+    extends UpdateInstallSummaryParseResult {
+  const InvalidUpdateInstallSummary();
+}
+
 UpdateCheckLoadResult parseUpdateCheckPayload({
   required String payload,
   required String payloadKey,
@@ -47,16 +76,14 @@ UpdateCheckLoadResult parseUpdateCheckPayload({
     );
   }
 
-  final parsedUpdate = parseUpdateCheckSummary(update, idKey: idKey);
-  if (parsedUpdate == null) {
-    return const UpdateCheckLoadFailure(
+  return switch (parseUpdateCheckSummary(update, idKey: idKey)) {
+    ParsedUpdateCheckSummary(:final update) => LoadedUpdateCheck(update),
+    InvalidUpdateCheckSummary() => const UpdateCheckLoadFailure(
       exitCode: 0,
       message: 'Invalid update check payload.',
       diagnostic: '',
-    );
-  }
-
-  return LoadedUpdateCheck(parsedUpdate);
+    ),
+  };
 }
 
 UpdateInstallLoadResult parseUpdateInstallPayload(String payload) {
@@ -98,19 +125,17 @@ UpdateInstallLoadResult parseUpdateInstallPayload(String payload) {
     );
   }
 
-  final parsedInstall = parseUpdateInstallSummary(install);
-  if (parsedInstall == null) {
-    return const UpdateInstallLoadFailure(
+  return switch (parseUpdateInstallSummary(install)) {
+    ParsedUpdateInstallSummary(:final update) => InstalledUpdate(update),
+    InvalidUpdateInstallSummary() => const UpdateInstallLoadFailure(
       exitCode: 0,
       message: 'Invalid update install payload.',
       diagnostic: '',
-    );
-  }
-
-  return InstalledUpdate(parsedInstall);
+    ),
+  };
 }
 
-UpdateCheckSummary? parseUpdateCheckSummary(
+UpdateCheckSummaryParseResult parseUpdateCheckSummary(
   Map<String, Object?> value, {
   required String idKey,
 }) {
@@ -122,27 +147,31 @@ UpdateCheckSummary? parseUpdateCheckSummary(
   final archiveUrl = value['archiveUrl'];
 
   if (id is! String || status is! String) {
-    return null;
+    return const InvalidUpdateCheckSummary();
   }
 
   if (!isOptionalString(currentVersion) ||
       !isOptionalString(latestVersion) ||
       !isOptionalString(versionUrl) ||
       !isOptionalString(archiveUrl)) {
-    return null;
+    return const InvalidUpdateCheckSummary();
   }
 
-  return UpdateCheckSummary(
-    id: id,
-    status: status,
-    currentVersion: currentVersion as String?,
-    latestVersion: latestVersion as String?,
-    versionUrl: versionUrl as String?,
-    archiveUrl: archiveUrl as String?,
+  return ParsedUpdateCheckSummary(
+    UpdateCheckSummary(
+      id: id,
+      status: status,
+      currentVersion: currentVersion as String?,
+      latestVersion: latestVersion as String?,
+      versionUrl: versionUrl as String?,
+      archiveUrl: archiveUrl as String?,
+    ),
   );
 }
 
-UpdateInstallSummary? parseUpdateInstallSummary(Map<String, Object?> value) {
+UpdateInstallSummaryParseResult parseUpdateInstallSummary(
+  Map<String, Object?> value,
+) {
   final id = value['appId'];
   final status = value['status'];
   final currentVersion = value['currentVersion'];
@@ -151,22 +180,24 @@ UpdateInstallSummary? parseUpdateInstallSummary(Map<String, Object?> value) {
   final installPath = value['installPath'];
 
   if (id is! String || status is! String) {
-    return null;
+    return const InvalidUpdateInstallSummary();
   }
 
   if (!isOptionalString(currentVersion) ||
       !isOptionalString(installedVersion) ||
       !isOptionalString(archiveUrl) ||
       !isOptionalString(installPath)) {
-    return null;
+    return const InvalidUpdateInstallSummary();
   }
 
-  return UpdateInstallSummary(
-    id: id,
-    status: status,
-    currentVersion: currentVersion as String?,
-    installedVersion: installedVersion as String?,
-    archiveUrl: archiveUrl as String?,
-    installPath: installPath as String?,
+  return ParsedUpdateInstallSummary(
+    UpdateInstallSummary(
+      id: id,
+      status: status,
+      currentVersion: currentVersion as String?,
+      installedVersion: installedVersion as String?,
+      archiveUrl: archiveUrl as String?,
+      installPath: installPath as String?,
+    ),
   );
 }

@@ -5,6 +5,66 @@ import '../settings/app_settings_summary.dart';
 import 'konyak_cli_program_result_types.dart';
 import 'konyak_cli_settings_result_types.dart';
 
+sealed class AppSettingsSummaryParseResult {
+  const AppSettingsSummaryParseResult();
+}
+
+final class ParsedAppSettingsSummary extends AppSettingsSummaryParseResult {
+  const ParsedAppSettingsSummary(this.settings);
+
+  final AppSettingsSummary settings;
+}
+
+final class InvalidAppSettingsSummary extends AppSettingsSummaryParseResult {
+  const InvalidAppSettingsSummary();
+}
+
+sealed class ProgramSettingsSummaryParseResult {
+  const ProgramSettingsSummaryParseResult();
+}
+
+final class ParsedProgramSettingsSummary
+    extends ProgramSettingsSummaryParseResult {
+  const ParsedProgramSettingsSummary(this.settings);
+
+  final ProgramSettingsSummary settings;
+}
+
+final class InvalidProgramSettingsSummary
+    extends ProgramSettingsSummaryParseResult {
+  const InvalidProgramSettingsSummary();
+}
+
+sealed class ProgramLoggingSettingsSummaryParseResult {
+  const ProgramLoggingSettingsSummaryParseResult();
+}
+
+final class ParsedProgramLoggingSettingsSummary
+    extends ProgramLoggingSettingsSummaryParseResult {
+  const ParsedProgramLoggingSettingsSummary(this.logging);
+
+  final ProgramLoggingSettingsSummary logging;
+}
+
+final class InvalidProgramLoggingSettingsSummary
+    extends ProgramLoggingSettingsSummaryParseResult {
+  const InvalidProgramLoggingSettingsSummary();
+}
+
+sealed class StringMapParseResult {
+  const StringMapParseResult();
+}
+
+final class ParsedStringMap extends StringMapParseResult {
+  const ParsedStringMap(this.value);
+
+  final Map<String, String> value;
+}
+
+final class InvalidStringMap extends StringMapParseResult {
+  const InvalidStringMap();
+}
+
 ProgramSettingsLoadResult parseProgramSettingsPayload(String payload) {
   final Object? decoded;
   try {
@@ -53,7 +113,7 @@ ProgramSettingsLoadResult parseProgramSettingsPayload(String payload) {
   final bottleId = programSettings['bottleId'];
   final programPath = programSettings['programPath'];
   final settings = parseProgramSettingsSummary(programSettings['settings']);
-  if (bottleId is! String || programPath is! String || settings == null) {
+  if (bottleId is! String || programPath is! String) {
     return const ProgramSettingsLoadFailure(
       exitCode: 0,
       message: 'Invalid programSettings payload.',
@@ -61,11 +121,18 @@ ProgramSettingsLoadResult parseProgramSettingsPayload(String payload) {
     );
   }
 
-  return LoadedProgramSettings(
-    bottleId: bottleId,
-    programPath: programPath,
-    settings: settings,
-  );
+  return switch (settings) {
+    ParsedProgramSettingsSummary(:final settings) => LoadedProgramSettings(
+      bottleId: bottleId,
+      programPath: programPath,
+      settings: settings,
+    ),
+    InvalidProgramSettingsSummary() => const ProgramSettingsLoadFailure(
+      exitCode: 0,
+      message: 'Invalid programSettings payload.',
+      diagnostic: '',
+    ),
+  };
 }
 
 AppSettingsLoadResult parseAppSettingsPayload(String payload) {
@@ -99,20 +166,19 @@ AppSettingsLoadResult parseAppSettingsPayload(String payload) {
   }
 
   final settings = parseAppSettingsSummary(decoded['appSettings']);
-  if (settings == null) {
-    return const AppSettingsLoadFailure(
+  return switch (settings) {
+    ParsedAppSettingsSummary(:final settings) => LoadedAppSettings(settings),
+    InvalidAppSettingsSummary() => const AppSettingsLoadFailure(
       exitCode: 0,
       message: 'Invalid appSettings payload.',
       diagnostic: '',
-    );
-  }
-
-  return LoadedAppSettings(settings);
+    ),
+  };
 }
 
-AppSettingsSummary? parseAppSettingsSummary(Object? value) {
+AppSettingsSummaryParseResult parseAppSettingsSummary(Object? value) {
   if (value is! Map<String, Object?>) {
-    return null;
+    return const InvalidAppSettingsSummary();
   }
 
   final terminateWineProcessesOnClose = value['terminateWineProcessesOnClose'];
@@ -135,55 +201,65 @@ AppSettingsSummary? parseAppSettingsSummary(Object? value) {
       automaticallyCheckForWineUpdates is! bool ||
       (automaticallyPinNewInstalledPrograms != null &&
           automaticallyPinNewInstalledPrograms is! bool)) {
-    return null;
+    return const InvalidAppSettingsSummary();
   }
 
-  return AppSettingsSummary(
-    terminateWineProcessesOnClose: terminateWineProcessesOnClose,
-    defaultBottlePath: defaultBottlePath,
-    appearanceMode: appearanceMode,
-    languageMode: languageMode,
-    automaticallyCheckForKonyakUpdates: automaticallyCheckForKonyakUpdates,
-    automaticallyCheckForWineUpdates: automaticallyCheckForWineUpdates,
-    automaticallyPinNewInstalledPrograms:
-        automaticallyPinNewInstalledPrograms is bool
-        ? automaticallyPinNewInstalledPrograms
-        : true,
+  return ParsedAppSettingsSummary(
+    AppSettingsSummary(
+      terminateWineProcessesOnClose: terminateWineProcessesOnClose,
+      defaultBottlePath: defaultBottlePath,
+      appearanceMode: appearanceMode,
+      languageMode: languageMode,
+      automaticallyCheckForKonyakUpdates: automaticallyCheckForKonyakUpdates,
+      automaticallyCheckForWineUpdates: automaticallyCheckForWineUpdates,
+      automaticallyPinNewInstalledPrograms:
+          automaticallyPinNewInstalledPrograms is bool
+          ? automaticallyPinNewInstalledPrograms
+          : true,
+    ),
   );
 }
 
-ProgramSettingsSummary? parseProgramSettingsSummary(Object? value) {
+ProgramSettingsSummaryParseResult parseProgramSettingsSummary(Object? value) {
   if (value is! Map<String, Object?>) {
-    return null;
+    return const InvalidProgramSettingsSummary();
   }
 
   final locale = value['locale'];
   final arguments = value['arguments'];
   final environment = parseStringMap(value['environment']);
   final logging = parseProgramLoggingSettingsSummary(value['logging']);
-  if (locale is! String ||
-      arguments is! String ||
-      environment == null ||
-      logging == null) {
-    return null;
+  if (locale is! String || arguments is! String) {
+    return const InvalidProgramSettingsSummary();
   }
 
-  return ProgramSettingsSummary(
-    locale: locale,
-    arguments: arguments,
-    environment: environment,
-    logging: logging,
-  );
+  return switch ((environment, logging)) {
+    (
+      ParsedStringMap(value: final environment),
+      ParsedProgramLoggingSettingsSummary(logging: final logging),
+    ) =>
+      ParsedProgramSettingsSummary(
+        ProgramSettingsSummary(
+          locale: locale,
+          arguments: arguments,
+          environment: environment,
+          logging: logging,
+        ),
+      ),
+    _ => const InvalidProgramSettingsSummary(),
+  };
 }
 
-ProgramLoggingSettingsSummary? parseProgramLoggingSettingsSummary(
+ProgramLoggingSettingsSummaryParseResult parseProgramLoggingSettingsSummary(
   Object? value,
 ) {
   if (value == null) {
-    return const ProgramLoggingSettingsSummary();
+    return const ParsedProgramLoggingSettingsSummary(
+      ProgramLoggingSettingsSummary(),
+    );
   }
   if (value is! Map<String, Object?>) {
-    return null;
+    return const InvalidProgramLoggingSettingsSummary();
   }
 
   final createLogFile = value['createLogFile'];
@@ -193,32 +269,34 @@ ProgramLoggingSettingsSummary? parseProgramLoggingSettingsSummary(
       (additionalWineLoggingChannels != null &&
           additionalWineLoggingChannels is! String) ||
       (logFilePath != null && logFilePath is! String)) {
-    return null;
+    return const InvalidProgramLoggingSettingsSummary();
   }
 
-  return ProgramLoggingSettingsSummary(
-    createLogFile: createLogFile is bool ? createLogFile : true,
-    additionalWineLoggingChannels: additionalWineLoggingChannels is String
-        ? additionalWineLoggingChannels
-        : '',
-    logFilePath: logFilePath is String ? logFilePath : '',
+  return ParsedProgramLoggingSettingsSummary(
+    ProgramLoggingSettingsSummary(
+      createLogFile: createLogFile is bool ? createLogFile : true,
+      additionalWineLoggingChannels: additionalWineLoggingChannels is String
+          ? additionalWineLoggingChannels
+          : '',
+      logFilePath: logFilePath is String ? logFilePath : '',
+    ),
   );
 }
 
-Map<String, String>? parseStringMap(Object? value) {
+StringMapParseResult parseStringMap(Object? value) {
   if (value is! Map<String, Object?>) {
-    return null;
+    return const InvalidStringMap();
   }
 
   final environment = <String, String>{};
   for (final entry in value.entries) {
     if (entry.value is! String) {
-      return null;
+      return const InvalidStringMap();
     }
     environment[entry.key] = entry.value as String;
   }
 
-  return Map.unmodifiable(environment);
+  return ParsedStringMap(Map.unmodifiable(environment));
 }
 
 bool isOptionalString(Object? value) {

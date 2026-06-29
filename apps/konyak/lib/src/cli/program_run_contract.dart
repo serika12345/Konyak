@@ -95,14 +95,12 @@ ProgramRunParseResult parseProgramRunPayload(String payload) {
       break;
   }
 
-  final run = _parseProgramRunSummary(decoded['run']);
-  if (run == null) {
-    return const ProgramRunParseFailure(
+  return switch (_parseProgramRunSummary(decoded['run'])) {
+    _ParsedProgramRunSummary(:final run) => ParsedProgramRun(run),
+    _InvalidProgramRunSummary() => const ProgramRunParseFailure(
       'Program run payload contains an invalid run record.',
-    );
-  }
-
-  return ParsedProgramRun(run);
+    ),
+  };
 }
 
 sealed class _ProgramRunErrorParseResult {
@@ -119,21 +117,55 @@ final class _NoProgramRunError extends _ProgramRunErrorParseResult {
   const _NoProgramRunError();
 }
 
-_ProgramRunErrorParseResult _parseProgramRunError(Object? value) {
-  final parsedErrors = <ProgramRunParseResult>[
-    ?_parseBottleNotFound(value),
-    ?_parseUnsupportedProgramType(value),
-    ?_parseExecutionFailure(value),
-  ];
-
-  return parsedErrors.isEmpty
-      ? const _NoProgramRunError()
-      : _ParsedProgramRunError(parsedErrors.first);
+sealed class _ProgramRunSummaryParseResult {
+  const _ProgramRunSummaryParseResult();
 }
 
-ProgramRunBottleNotFound? _parseBottleNotFound(Object? value) {
+final class _ParsedProgramRunSummary extends _ProgramRunSummaryParseResult {
+  const _ParsedProgramRunSummary(this.run);
+
+  final ProgramRunSummary run;
+}
+
+final class _InvalidProgramRunSummary extends _ProgramRunSummaryParseResult {
+  const _InvalidProgramRunSummary();
+}
+
+sealed class _StringListParseResult {
+  const _StringListParseResult();
+}
+
+final class _ParsedStringList extends _StringListParseResult {
+  const _ParsedStringList(this.value);
+
+  final List<String> value;
+}
+
+final class _InvalidStringList extends _StringListParseResult {
+  const _InvalidStringList();
+}
+
+_ProgramRunErrorParseResult _parseProgramRunError(Object? value) {
+  switch (_parseBottleNotFound(value)) {
+    case _ParsedProgramRunError(:final result):
+      return _ParsedProgramRunError(result);
+    case _NoProgramRunError():
+      break;
+  }
+
+  switch (_parseUnsupportedProgramType(value)) {
+    case _ParsedProgramRunError(:final result):
+      return _ParsedProgramRunError(result);
+    case _NoProgramRunError():
+      break;
+  }
+
+  return _parseExecutionFailure(value);
+}
+
+_ProgramRunErrorParseResult _parseBottleNotFound(Object? value) {
   if (value is! Map<String, dynamic>) {
-    return null;
+    return const _NoProgramRunError();
   }
 
   final Object? code = value['code'];
@@ -141,15 +173,17 @@ ProgramRunBottleNotFound? _parseBottleNotFound(Object? value) {
   final Object? bottleId = value['bottleId'];
 
   if (code != 'bottleNotFound' || message is! String || bottleId is! String) {
-    return null;
+    return const _NoProgramRunError();
   }
 
-  return ProgramRunBottleNotFound(bottleId: bottleId, message: message);
+  return _ParsedProgramRunError(
+    ProgramRunBottleNotFound(bottleId: bottleId, message: message),
+  );
 }
 
-ProgramRunUnsupportedProgramType? _parseUnsupportedProgramType(Object? value) {
+_ProgramRunErrorParseResult _parseUnsupportedProgramType(Object? value) {
   if (value is! Map<String, dynamic>) {
-    return null;
+    return const _NoProgramRunError();
   }
 
   final Object? code = value['code'];
@@ -159,18 +193,20 @@ ProgramRunUnsupportedProgramType? _parseUnsupportedProgramType(Object? value) {
   if (code != 'unsupportedProgramType' ||
       message is! String ||
       programPath is! String) {
-    return null;
+    return const _NoProgramRunError();
   }
 
-  return ProgramRunUnsupportedProgramType(
-    programPath: programPath,
-    message: message,
+  return _ParsedProgramRunError(
+    ProgramRunUnsupportedProgramType(
+      programPath: programPath,
+      message: message,
+    ),
   );
 }
 
-ProgramRunExecutionFailure? _parseExecutionFailure(Object? value) {
+_ProgramRunErrorParseResult _parseExecutionFailure(Object? value) {
   if (value is! Map<String, dynamic>) {
-    return null;
+    return const _NoProgramRunError();
   }
 
   final Object? code = value['code'];
@@ -191,28 +227,32 @@ ProgramRunExecutionFailure? _parseExecutionFailure(Object? value) {
       runnerKind is! String ||
       executable is! String ||
       !_isOptionalString(workingDirectory) ||
-      argv == null ||
       logPath is! String ||
       !_isOptionalBool(logFileCreated)) {
-    return null;
+    return const _NoProgramRunError();
   }
 
-  return ProgramRunExecutionFailure(
-    bottleId: bottleId,
-    programPath: programPath,
-    message: message,
-    runnerKind: runnerKind,
-    executable: executable,
-    workingDirectory: workingDirectory as String?,
-    argv: argv,
-    logPath: logPath,
-    logFileCreated: logFileCreated is bool ? logFileCreated : true,
-  );
+  return switch (argv) {
+    _ParsedStringList(value: final argv) => _ParsedProgramRunError(
+      ProgramRunExecutionFailure(
+        bottleId: bottleId,
+        programPath: programPath,
+        message: message,
+        runnerKind: runnerKind,
+        executable: executable,
+        workingDirectory: workingDirectory as String?,
+        argv: argv,
+        logPath: logPath,
+        logFileCreated: logFileCreated is bool ? logFileCreated : true,
+      ),
+    ),
+    _InvalidStringList() => const _NoProgramRunError(),
+  };
 }
 
-ProgramRunSummary? _parseProgramRunSummary(Object? value) {
+_ProgramRunSummaryParseResult _parseProgramRunSummary(Object? value) {
   if (value is! Map<String, dynamic>) {
-    return null;
+    return const _InvalidProgramRunSummary();
   }
 
   final Object? bottleId = value['bottleId'];
@@ -230,37 +270,41 @@ ProgramRunSummary? _parseProgramRunSummary(Object? value) {
       runnerKind is! String ||
       executable is! String ||
       !_isOptionalString(workingDirectory) ||
-      argv == null ||
       logPath is! String ||
       !_isOptionalBool(logFileCreated) ||
       processExitCode is! int) {
-    return null;
+    return const _InvalidProgramRunSummary();
   }
 
-  return ProgramRunSummary(
-    bottleId: bottleId,
-    programPath: programPath,
-    runnerKind: runnerKind,
-    executable: executable,
-    workingDirectory: workingDirectory as String?,
-    argv: argv,
-    logPath: logPath,
-    logFileCreated: logFileCreated is bool ? logFileCreated : true,
-    processExitCode: processExitCode,
-  );
+  return switch (argv) {
+    _ParsedStringList(value: final argv) => _ParsedProgramRunSummary(
+      ProgramRunSummary(
+        bottleId: bottleId,
+        programPath: programPath,
+        runnerKind: runnerKind,
+        executable: executable,
+        workingDirectory: workingDirectory as String?,
+        argv: argv,
+        logPath: logPath,
+        logFileCreated: logFileCreated is bool ? logFileCreated : true,
+        processExitCode: processExitCode,
+      ),
+    ),
+    _InvalidStringList() => const _InvalidProgramRunSummary(),
+  };
 }
 
-List<String>? _parseStringList(Object? value) {
+_StringListParseResult _parseStringList(Object? value) {
   if (value is! List<dynamic>) {
-    return null;
+    return const _InvalidStringList();
   }
 
   final strings = value.whereType<String>().toList(growable: false);
   if (strings.length != value.length) {
-    return null;
+    return const _InvalidStringList();
   }
 
-  return List.unmodifiable(strings);
+  return _ParsedStringList(List.unmodifiable(strings));
 }
 
 bool _isOptionalString(Object? value) {

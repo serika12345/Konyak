@@ -109,17 +109,28 @@ BottleProgramListLoadResult parseBottleProgramListPayload(String payload) {
       );
     }
 
-    final metadata = parseProgramMetadata(program['metadata']);
-
-    parsedPrograms.add(
-      BottleProgramSummary(
-        id: id,
-        name: name,
-        path: path,
-        source: source,
-        metadata: metadata,
-      ),
-    );
+    switch (parseProgramMetadata(program['metadata'])) {
+      case ParsedProgramMetadata(:final metadata):
+        parsedPrograms.add(
+          BottleProgramSummary(
+            id: id,
+            name: name,
+            path: path,
+            source: source,
+            metadata: metadata,
+          ),
+        );
+      case NoProgramMetadata():
+        parsedPrograms.add(
+          BottleProgramSummary(id: id, name: name, path: path, source: source),
+        );
+      case InvalidProgramMetadata():
+        return const BottleProgramListLoadFailure(
+          exitCode: 0,
+          message: 'Invalid bottle program record.',
+          diagnostic: '',
+        );
+    }
   }
 
   return LoadedBottlePrograms(

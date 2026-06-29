@@ -13,6 +13,34 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-29 21:34 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Batch CLI parser nullable sentinel cleanup.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: `9f67e86` (`Type Winetricks parser results`).
+- Purpose: continue the same nullable sentinel cleanup without stopping between
+  parser files, while leaving the completed batch uncommitted for review.
+- Completed work: added focused parser tests for update summaries, settings
+  summaries, program metadata, and JSON error messages; replaced nullable
+  parse-failure returns with sealed parse results across update, settings,
+  program-run, program metadata, bottle program list, Wine process list, and
+  JSON error-message parsing; and updated all affected callers.
+- Remaining work: decide whether launch-configuration path resolution helpers
+  should remain direct nullable adapter boundaries or be moved behind explicit
+  result types before narrowing the nullable custom-lint allowance.
+- Next action: review the remaining nullable-return helpers in
+  `konyak_cli_launch_config.dart` and `konyak_cli_result_helpers.dart` as a
+  separate boundary-design pass.
+- Verification: observed focused update/settings/metadata/JSON-error helper
+  tests fail before implementation because the new parse result types did not
+  exist; after implementation, focused parser and related CLI client contract
+  tests passed, and `just flutter-format-check`, `just flutter-analyze`, `just
+  flutter-test`, `just verify-governance`, `just verify-safety`, `just
+  format-check`, and `just lint` passed in the Nix dev shell. This batch is
+  deliberately left uncommitted per request.
+
 - Timestamp: 2026-06-29 21:13 JST
 - State: `completed`
 - Branch: `main`
