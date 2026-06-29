@@ -116,20 +116,17 @@ abstract class AppUpdateRecord with _$AppUpdateRecord {
   }) = _AppUpdateRecord;
 }
 
-sealed class AppUpdateCheckResult {
-  const AppUpdateCheckResult();
-}
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class AppUpdateCheckResult with _$AppUpdateCheckResult {
+  const factory AppUpdateCheckResult.completed(AppUpdateRecord update) =
+      AppUpdateCheckCompleted;
 
-class AppUpdateCheckCompleted extends AppUpdateCheckResult {
-  const AppUpdateCheckCompleted(this.update);
-
-  final AppUpdateRecord update;
-}
-
-class AppUpdateCheckFailed extends AppUpdateCheckResult {
-  const AppUpdateCheckFailed(this.message);
-
-  final String message;
+  const factory AppUpdateCheckResult.failed(String message) =
+      AppUpdateCheckFailed;
 }
 
 abstract interface class AppUpdateChecker {
@@ -175,20 +172,18 @@ abstract class AppUpdateInstallRecord with _$AppUpdateInstallRecord {
   }) = _AppUpdateInstallRecord;
 }
 
-sealed class AppUpdateInstallResult {
-  const AppUpdateInstallResult();
-}
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class AppUpdateInstallResult with _$AppUpdateInstallResult {
+  const factory AppUpdateInstallResult.completed(
+    AppUpdateInstallRecord install,
+  ) = AppUpdateInstallCompleted;
 
-class AppUpdateInstallCompleted extends AppUpdateInstallResult {
-  const AppUpdateInstallCompleted(this.install);
-
-  final AppUpdateInstallRecord install;
-}
-
-class AppUpdateInstallFailed extends AppUpdateInstallResult {
-  const AppUpdateInstallFailed(this.message);
-
-  final String message;
+  const factory AppUpdateInstallResult.failed(String message) =
+      AppUpdateInstallFailed;
 }
 
 abstract interface class AppUpdateInstaller {

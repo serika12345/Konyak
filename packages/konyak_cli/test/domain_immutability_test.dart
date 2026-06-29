@@ -448,6 +448,41 @@ void main() {
     );
   });
 
+  test('app update results compare by value', () {
+    expect(
+      AppUpdateCheckCompleted(
+        AppUpdateRecord(
+          appId: 'konyak',
+          status: 'available',
+          latestVersion: Option.of('1.1.0'),
+        ),
+      ),
+      AppUpdateCheckCompleted(
+        AppUpdateRecord(
+          appId: 'konyak',
+          status: 'available',
+          latestVersion: Option.of('1.1.0'),
+        ),
+      ),
+    );
+    expect(
+      const AppUpdateCheckFailed('update metadata unavailable'),
+      const AppUpdateCheckFailed('update metadata unavailable'),
+    );
+    expect(
+      AppUpdateInstallCompleted(
+        AppUpdateInstallRecord(appId: 'konyak', status: 'installed'),
+      ),
+      AppUpdateInstallCompleted(
+        AppUpdateInstallRecord(appId: 'konyak', status: 'installed'),
+      ),
+    );
+    expect(
+      const AppUpdateInstallFailed('installer unavailable'),
+      const AppUpdateInstallFailed('installer unavailable'),
+    );
+  });
+
   test('runtime install operations group install source as a domain value', () {
     final operation = RuntimeInstallRequestOperation.fullInstall();
 

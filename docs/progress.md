@@ -13,6 +13,42 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-29 12:34 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Freezed-backed app update result variants.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: this commit (`Freezed app update results`).
+- Purpose: continue the update result variant Freezed pass with result unions
+  that do not perform primitive-to-value-object conversion.
+- Completed work: committed the release metadata fetch result Freezed slice;
+  selected `AppUpdateCheckResult` and `AppUpdateInstallResult` because their
+  variants only wrap validated records or failure messages and can preserve
+  existing concrete constructor usage; added focused value-semantics coverage
+  and observed it fail against the hand-written result classes; converted both
+  app update result unions to Freezed while preserving
+  `AppUpdateCheckCompleted`, `AppUpdateCheckFailed`,
+  `AppUpdateInstallCompleted`, and `AppUpdateInstallFailed` concrete
+  constructor usage.
+- Remaining work: `RuntimeUpdateCheckResult` remains hand-written.
+  `RuntimeUpdateRuntimeNotFound` still performs String-to-`RuntimeId`
+  conversion, so it needs a call-site-aware Freezed slice.
+- Next action: convert `RuntimeUpdateCheckResult` with a public base factory
+  for `runtimeNotFound(String runtimeId)` and update direct not-found
+  construction to use that factory while preserving switch pattern names.
+- Verification: observed `cd packages/konyak_cli && dart test
+  test/domain_immutability_test.dart --name "app update results compare by
+  value"` fail before implementation; after implementation, `cd
+  packages/konyak_cli && dart run build_runner build
+  --delete-conflicting-outputs && dart format
+  lib/src/domain/update/update_records.dart test/domain_immutability_test.dart
+  && dart analyze --fatal-infos`, focused app update result value-semantics
+  test, focused app update CLI contract tests, `cd packages/konyak_cli && dart
+  test test/domain_immutability_test.dart`, `just verify-governance`, `just
+  verify-architecture`, `just verify-safety`, `just format-check`, `just lint`,
+  and `just cli-test` passed.
+
 - Timestamp: 2026-06-29 12:30 JST
 - State: `completed`
 - Branch: `main`
