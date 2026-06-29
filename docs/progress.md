@@ -13,6 +13,43 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-29 16:32 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Tighten the functional-core boundary for runtime update service
+  requests.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: current commit (`Type runtime update service requests`).
+- Purpose: keep runtime update and validation service requests typed as
+  `RuntimeId`, and release metadata fetch requests typed as
+  `RuntimeVersionUrl`, instead of passing raw strings through domain-facing
+  interfaces.
+- Completed work: committed typed Winetricks verb lister executable; added
+  failing typed runtime-id and release metadata URL fixtures; changed
+  `RuntimeUpdateChecker`, `RuntimeValidator`, `RuntimeReleaseMetadataFetcher`,
+  CLI call sites, runtime update installation dispatch, I/O implementations,
+  and recording fixtures to preserve typed runtime IDs and release metadata
+  URLs; and tightened governance so these service boundaries do not return to
+  raw strings.
+- Remaining work: broader functional-core tightening remains in `docs/todo.md`,
+  including other primitive request/planner APIs.
+- Next action: continue with the next narrow primitive-boundary cleanup outside
+  the completed runtime update service request path.
+- Verification: observed `cd packages/konyak_cli && dart test
+  test/cli_contract_test.dart --name "check-runtime-update --json returns
+  machine-readable update status|validate-runtime --json returns runtime
+  loader checks"` fail before implementation because the typed test fixtures
+  did not match the old raw `String runtimeId` update checker and validator
+  interfaces; also observed `cd packages/konyak_cli && dart test
+  test/cli_contract_test.dart --name "runtime update checker uses source
+  manifests from release metadata"` fail before implementation because
+  `RuntimeReleaseMetadataFetcher.fetch` still accepted a raw `String`; after
+  implementation, focused runtime update, validation, release metadata, and
+  domain immutability tests, `dart analyze --fatal-infos`,
+  `just verify-governance`, `just cli-test`, `just verify-safety`,
+  `just format-check`, and `just lint` passed.
+
 - Timestamp: 2026-06-29 16:16 JST
 - State: `completed`
 - Branch: `main`

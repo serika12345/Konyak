@@ -833,6 +833,140 @@ def require_typed_winetricks_verb_lister_boundary() -> None:
             )
 
 
+def require_typed_runtime_id_service_boundaries() -> None:
+    update_path = "packages/konyak_cli/lib/src/domain/update/update_records.dart"
+    update = read_text(update_path)
+    expected_update_terms = [
+        "factory RuntimeUpdateCheckResult.runtimeNotFound(RuntimeId runtimeId)",
+        "RuntimeUpdateCheckResult check(RuntimeId runtimeId)",
+        "RuntimeReleaseMetadataFetchResult fetch(RuntimeVersionUrl versionUrl)",
+    ]
+    for expected in expected_update_terms:
+        if expected not in update:
+            raise AssertionError(
+                "Runtime update service boundaries must use RuntimeId: "
+                f"{expected}"
+            )
+
+    update_checker_match = re.search(
+        r"abstract interface class RuntimeUpdateChecker\b(?P<body>.*?)(?=\n\})",
+        update,
+        re.S,
+    )
+    if update_checker_match is None:
+        raise AssertionError("RuntimeUpdateChecker interface is missing")
+    if "check(String runtimeId)" in update_checker_match.group("body"):
+        raise AssertionError(
+            "RuntimeUpdateChecker must not expose primitive runtime ids"
+        )
+
+    metadata_fetcher_match = re.search(
+        r"abstract interface class RuntimeReleaseMetadataFetcher\b"
+        r"(?P<body>.*?)(?=\n\})",
+        update,
+        re.S,
+    )
+    if metadata_fetcher_match is None:
+        raise AssertionError("RuntimeReleaseMetadataFetcher interface is missing")
+    if "fetch(String versionUrl)" in metadata_fetcher_match.group("body"):
+        raise AssertionError(
+            "RuntimeReleaseMetadataFetcher must not expose primitive version urls"
+        )
+
+    validation_path = (
+        "packages/konyak_cli/lib/src/domain/runtime/runtime_validation_models.dart"
+    )
+    validation = read_text(validation_path)
+    expected_validation_terms = [
+        "factory RuntimeValidationResult.runtimeNotFound(RuntimeId runtimeId)",
+        "RuntimeValidationResult validate(RuntimeId runtimeId)",
+    ]
+    for expected in expected_validation_terms:
+        if expected not in validation:
+            raise AssertionError(
+                "Runtime validation service boundaries must use RuntimeId: "
+                f"{expected}"
+            )
+
+    validator_match = re.search(
+        r"abstract interface class RuntimeValidator\b(?P<body>.*?)(?=\n\})",
+        validation,
+        re.S,
+    )
+    if validator_match is None:
+        raise AssertionError("RuntimeValidator interface is missing")
+    if "validate(String runtimeId)" in validator_match.group("body"):
+        raise AssertionError("RuntimeValidator must not expose primitive runtime ids")
+
+    runtime_handlers_path = (
+        "packages/konyak_cli/lib/src/cli/cli_app_runtime_handlers.dart"
+    )
+    runtime_handlers = read_text(runtime_handlers_path)
+    expected_handler_terms = [
+        "runtimeId: RuntimeId(runtimeUpdateId)",
+        "runtimeId: RuntimeId(runtimeUpdateInstallId)",
+        "runtimeId: RuntimeId(runtimeValidationId)",
+        "required RuntimeId runtimeId",
+    ]
+    for expected in expected_handler_terms:
+        if expected not in runtime_handlers:
+            raise AssertionError(
+                "Runtime CLI handlers must convert parsed ids once at the "
+                f"boundary: {expected}"
+            )
+
+    update_results_path = (
+        "packages/konyak_cli/lib/src/cli/cli_update_runtime_results.dart"
+    )
+    update_results = read_text(update_results_path)
+    expected_update_result_terms = [
+        "required RuntimeId runtimeId",
+        "checker.check(runtimeId)",
+        "switch (runtimeId.value)",
+    ]
+    for expected in expected_update_result_terms:
+        if expected not in update_results:
+            raise AssertionError(
+                "Runtime update install results must preserve RuntimeId until "
+                f"JSON or dispatch boundaries: {expected}"
+            )
+
+    update_checker_io_path = "packages/konyak_cli/lib/src/io/runtime_update_checker_io.dart"
+    update_checker_io = read_text(update_checker_io_path)
+    expected_update_checker_io_terms = [
+        "RuntimeUpdateCheckResult check(RuntimeId runtimeId)",
+        "runtimeById(runtimeCatalog.listRuntimes(), runtimeId.value)",
+        "releaseMetadataFetcher.fetch(versionUrl)",
+    ]
+    for expected in expected_update_checker_io_terms:
+        if expected not in update_checker_io:
+            raise AssertionError(
+                "Runtime update checker I/O must unwrap RuntimeId only for "
+                f"catalog lookup: {expected}"
+            )
+
+    app_update_checker_path = "packages/konyak_cli/lib/src/io/app_update_checker_io.dart"
+    app_update_checker = read_text(app_update_checker_path)
+    if "releaseMetadataFetcher.fetch(versionUrl)" not in app_update_checker:
+        raise AssertionError(
+            "App update checker must pass typed RuntimeVersionUrl to release "
+            "metadata fetcher"
+        )
+
+    release_fetcher_path = "packages/konyak_cli/lib/src/io/release_metadata_fetcher.dart"
+    release_fetcher = read_text(release_fetcher_path)
+    expected_release_fetcher_terms = [
+        "RuntimeReleaseMetadataFetchResult fetch(RuntimeVersionUrl versionUrl)",
+        "versionUrl.value",
+    ]
+    for expected in expected_release_fetcher_terms:
+        if expected not in release_fetcher:
+            raise AssertionError(
+                "Release metadata fetcher I/O must unwrap RuntimeVersionUrl "
+                f"only at the curl boundary: {expected}"
+            )
+
+
 def require_wine_process_termination_cli_json_projection() -> None:
     domain_path = "packages/konyak_cli/lib/src/domain/program/program_run_models.dart"
     domain = read_text(domain_path)
@@ -2529,6 +2663,7 @@ def main() -> None:
     require_typed_path_opener_boundary()
     require_typed_runtime_executable_probe_boundary()
     require_typed_winetricks_verb_lister_boundary()
+    require_typed_runtime_id_service_boundaries()
     require_wine_process_termination_cli_json_projection()
     require_program_catalog_cli_json_projection()
     require_graphics_backend_hints_cli_json_projection()

@@ -2397,7 +2397,9 @@ void defineRuntimeProcessAndUpdateContractTests() {
         );
     const fetcher = DartIoRuntimeReleaseMetadataFetcher();
 
-    final result = fetcher.fetch(metadataFile.uri.toString());
+    final result = fetcher.fetch(
+      RuntimeVersionUrl(metadataFile.uri.toString()),
+    );
 
     expect(result, isA<RuntimeReleaseMetadataFetched>());
     final fetched = result as RuntimeReleaseMetadataFetched;
@@ -2436,7 +2438,9 @@ void defineRuntimeProcessAndUpdateContractTests() {
           );
     const fetcher = DartIoRuntimeReleaseMetadataFetcher();
 
-    final result = fetcher.fetch(metadataFile.uri.toString());
+    final result = fetcher.fetch(
+      RuntimeVersionUrl(metadataFile.uri.toString()),
+    );
 
     expect(result, isA<RuntimeReleaseMetadataFetched>());
     final fetched = result as RuntimeReleaseMetadataFetched;
@@ -2473,7 +2477,9 @@ void defineRuntimeProcessAndUpdateContractTests() {
             );
       const fetcher = DartIoRuntimeReleaseMetadataFetcher();
 
-      final result = fetcher.fetch(metadataFile.uri.toString());
+      final result = fetcher.fetch(
+        RuntimeVersionUrl(metadataFile.uri.toString()),
+      );
 
       expect(result, isA<RuntimeReleaseMetadataFetchFailed>());
       expect(
@@ -2549,7 +2555,9 @@ void defineRuntimeProcessAndUpdateContractTests() {
 
     const fetcher = DartIoRuntimeReleaseMetadataFetcher();
 
-    final result = fetcher.fetch(metadataFile.uri.toString());
+    final result = fetcher.fetch(
+      RuntimeVersionUrl(metadataFile.uri.toString()),
+    );
 
     expect(result, isA<RuntimeReleaseMetadataFetched>());
     final fetched = result as RuntimeReleaseMetadataFetched;
@@ -3349,7 +3357,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
         ),
       );
 
-      final result = checker.check('konyak-linux-wine');
+      final result = checker.check(RuntimeId('konyak-linux-wine'));
 
       expect(result, isA<RuntimeUpdateCheckCompleted>());
       final completed = result as RuntimeUpdateCheckCompleted;
@@ -3410,7 +3418,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
         ),
       );
 
-      final result = checker.check('konyak-linux-wine');
+      final result = checker.check(RuntimeId('konyak-linux-wine'));
 
       expect(result, isA<RuntimeUpdateCheckFailed>());
       expect(
@@ -3463,7 +3471,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
         ),
       );
 
-      final result = checker.check('konyak-macos-wine');
+      final result = checker.check(RuntimeId('konyak-macos-wine'));
 
       expect(result, isA<RuntimeUpdateCheckFailed>());
       expect(
@@ -3518,7 +3526,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
         ),
       );
 
-      final result = checker.check('konyak-macos-wine');
+      final result = checker.check(RuntimeId('konyak-macos-wine'));
 
       expect(result, isA<RuntimeUpdateCheckCompleted>());
       final completed = result as RuntimeUpdateCheckCompleted;
@@ -3687,7 +3695,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
         executableProbe: executableProbe,
       );
 
-      final result = validator.validate('konyak-macos-wine');
+      final result = validator.validate(RuntimeId('konyak-macos-wine'));
 
       expect(result, isA<RuntimeValidationCompleted>());
       final validation = (result as RuntimeValidationCompleted).validation;
@@ -3757,7 +3765,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
       executableProbe: executableProbe,
     );
 
-    final result = validator.validate('konyak-macos-wine');
+    final result = validator.validate(RuntimeId('konyak-macos-wine'));
 
     expect(result, isA<RuntimeValidationCompleted>());
     final validation = (result as RuntimeValidationCompleted).validation;
@@ -3818,7 +3826,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
       executableProbe: executableProbe,
     );
 
-    final result = validator.validate('konyak-linux-wine');
+    final result = validator.validate(RuntimeId('konyak-linux-wine'));
 
     expect(result, isA<RuntimeValidationCompleted>());
     final validation = (result as RuntimeValidationCompleted).validation;
@@ -3880,7 +3888,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
       executableProbe: executableProbe,
     );
 
-    final result = validator.validate('konyak-macos-wine');
+    final result = validator.validate(RuntimeId('konyak-macos-wine'));
 
     expect(result, isA<RuntimeValidationCompleted>());
     final validation = (result as RuntimeValidationCompleted).validation;

@@ -87,7 +87,7 @@ CliResult? handleRuntimeCommand(
   );
   if (runtimeUpdateId != null) {
     return runtimeUpdateCheckJsonResult(
-      runtimeId: runtimeUpdateId,
+      runtimeId: RuntimeId(runtimeUpdateId),
       runtimeUpdateChecker: context.runtimeUpdateChecker,
     );
   }
@@ -98,7 +98,7 @@ CliResult? handleRuntimeCommand(
   );
   if (runtimeUpdateInstallId != null) {
     return installRuntimeUpdateJsonResult(
-      runtimeId: runtimeUpdateInstallId,
+      runtimeId: RuntimeId(runtimeUpdateInstallId),
       runtimeUpdateChecker: context.runtimeUpdateChecker,
       macosWineInstaller: context.macosWineInstaller,
       linuxWineInstaller: context.linuxWineInstaller,
@@ -111,7 +111,7 @@ CliResult? handleRuntimeCommand(
   );
   if (runtimeValidationId != null) {
     return runtimeValidationJsonResult(
-      runtimeId: runtimeValidationId,
+      runtimeId: RuntimeId(runtimeValidationId),
       runtimeValidator: context.runtimeValidator,
     );
   }
@@ -156,7 +156,7 @@ CliResult openUrlJsonResult(String openUrl, PathOpener? pathOpener) {
 }
 
 CliResult runtimeUpdateCheckJsonResult({
-  required String runtimeId,
+  required RuntimeId runtimeId,
   required RuntimeUpdateChecker? runtimeUpdateChecker,
 }) {
   if (runtimeUpdateChecker == null) {
@@ -174,7 +174,7 @@ CliResult runtimeUpdateCheckJsonResult({
       exitCode: 66,
       code: 'runtimeNotFound',
       message: 'Runtime not found.',
-      extra: <String, Object?>{'runtimeId': runtimeId},
+      extra: <String, Object?>{'runtimeId': runtimeId.value},
     ),
     RuntimeUpdateCheckFailed(:final message) => jsonError(
       exitCode: 75,
@@ -185,7 +185,7 @@ CliResult runtimeUpdateCheckJsonResult({
 }
 
 CliResult runtimeValidationJsonResult({
-  required String runtimeId,
+  required RuntimeId runtimeId,
   required RuntimeValidator? runtimeValidator,
 }) {
   if (runtimeValidator == null) {
@@ -206,7 +206,7 @@ CliResult runtimeValidationJsonResult({
       exitCode: 66,
       code: 'runtimeNotFound',
       message: 'Runtime not found.',
-      extra: <String, Object?>{'runtimeId': runtimeId},
+      extra: <String, Object?>{'runtimeId': runtimeId.value},
     ),
     RuntimeValidationFailed(:final message) => jsonError(
       exitCode: 75,

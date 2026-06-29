@@ -2,6 +2,7 @@ import '../domain/runtime/runtime_catalogs.dart';
 import '../domain/runtime/runtime_models.dart';
 import '../domain/runtime/runtime_update_checker.dart';
 import '../domain/runtime/runtime_update_support.dart';
+import '../domain/shared/domain_value_objects.dart';
 import '../domain/update/update_records.dart';
 import 'release_metadata_fetcher.dart';
 
@@ -15,8 +16,8 @@ class DartIoRuntimeUpdateChecker implements RuntimeUpdateChecker {
   final RuntimeReleaseMetadataFetcher releaseMetadataFetcher;
 
   @override
-  RuntimeUpdateCheckResult check(String runtimeId) {
-    final runtime = runtimeById(runtimeCatalog.listRuntimes(), runtimeId);
+  RuntimeUpdateCheckResult check(RuntimeId runtimeId) {
+    final runtime = runtimeById(runtimeCatalog.listRuntimes(), runtimeId.value);
     return runtime.match(
       () => RuntimeUpdateCheckResult.runtimeNotFound(runtimeId),
       checkRuntime,
@@ -38,7 +39,7 @@ class DartIoRuntimeUpdateChecker implements RuntimeUpdateChecker {
           );
         }
 
-        final metadata = releaseMetadataFetcher.fetch(versionUrl.value);
+        final metadata = releaseMetadataFetcher.fetch(versionUrl);
         return switch (metadata) {
           RuntimeReleaseMetadataFetched(:final metadata) =>
             runtimeUpdateFromMetadata(

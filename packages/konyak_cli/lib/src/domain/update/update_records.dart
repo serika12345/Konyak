@@ -64,8 +64,8 @@ sealed class RuntimeUpdateCheckResult with _$RuntimeUpdateCheckResult {
   const factory RuntimeUpdateCheckResult.failed(String message) =
       RuntimeUpdateCheckFailed;
 
-  factory RuntimeUpdateCheckResult.runtimeNotFound(String runtimeId) {
-    return RuntimeUpdateCheckResult._runtimeNotFound(RuntimeId(runtimeId));
+  factory RuntimeUpdateCheckResult.runtimeNotFound(RuntimeId runtimeId) {
+    return RuntimeUpdateCheckResult._runtimeNotFound(runtimeId);
   }
 
   const factory RuntimeUpdateCheckResult._runtimeNotFound(RuntimeId runtimeId) =
@@ -73,7 +73,7 @@ sealed class RuntimeUpdateCheckResult with _$RuntimeUpdateCheckResult {
 }
 
 abstract interface class RuntimeUpdateChecker {
-  RuntimeUpdateCheckResult check(String runtimeId);
+  RuntimeUpdateCheckResult check(RuntimeId runtimeId);
 }
 
 @Freezed(
@@ -241,7 +241,7 @@ sealed class RuntimeReleaseMetadataFetchResult
 }
 
 abstract interface class RuntimeReleaseMetadataFetcher {
-  RuntimeReleaseMetadataFetchResult fetch(String versionUrl);
+  RuntimeReleaseMetadataFetchResult fetch(RuntimeVersionUrl versionUrl);
 }
 
 class StaticRuntimeReleaseMetadataFetcher
@@ -251,7 +251,7 @@ class StaticRuntimeReleaseMetadataFetcher
   final RuntimeReleaseMetadata metadata;
 
   @override
-  RuntimeReleaseMetadataFetchResult fetch(String versionUrl) {
+  RuntimeReleaseMetadataFetchResult fetch(RuntimeVersionUrl versionUrl) {
     return RuntimeReleaseMetadataFetched(metadata);
   }
 }

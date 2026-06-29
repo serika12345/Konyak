@@ -1,4 +1,5 @@
 import '../domain/runtime/runtime_models.dart';
+import '../domain/shared/domain_value_objects.dart';
 import '../domain/update/update_records.dart';
 import '../platform/linux/linux_wine_install_requests.dart';
 import '../platform/linux/linux_wine_install_results.dart';
@@ -64,7 +65,7 @@ CliResult installAppUpdateJsonResult({
 }
 
 CliResult installRuntimeUpdateJsonResult({
-  required String runtimeId,
+  required RuntimeId runtimeId,
   required RuntimeUpdateChecker? runtimeUpdateChecker,
   required MacosWineInstaller? macosWineInstaller,
   required LinuxWineInstaller? linuxWineInstaller,
@@ -85,9 +86,9 @@ CliResult installRuntimeUpdateJsonResult({
         exitCode: 65,
         code: 'runtimeUpdateNotAvailable',
         message: 'Runtime update is not available.',
-        extra: <String, Object?>{'runtimeId': runtimeId},
+        extra: <String, Object?>{'runtimeId': runtimeId.value},
       ),
-    RuntimeUpdateCheckCompleted(:final update) => switch (runtimeId) {
+    RuntimeUpdateCheckCompleted(:final update) => switch (runtimeId.value) {
       macosWineRuntimeId => switch (macosWineInstaller) {
         null => unavailableJsonError(
           code: 'macosWineInstallerUnavailable',
@@ -128,7 +129,7 @@ CliResult installRuntimeUpdateJsonResult({
         exitCode: 65,
         code: 'unsupportedRuntimeUpdateInstall',
         message: 'Runtime update installation is not supported.',
-        extra: <String, Object?>{'runtimeId': runtimeId},
+        extra: <String, Object?>{'runtimeId': runtimeId.value},
       ),
     },
     RuntimeUpdateRuntimeNotFound(:final runtimeId) => jsonError(

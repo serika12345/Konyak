@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import '../domain/shared/domain_value_objects.dart';
 import '../domain/update/update_records.dart';
 import 'external_payload_helpers.dart';
 import 'runtime_release_metadata.dart';
@@ -13,13 +14,13 @@ class DartIoRuntimeReleaseMetadataFetcher
   final bool Function(String url)? archiveUrlPredicate;
 
   @override
-  RuntimeReleaseMetadataFetchResult fetch(String versionUrl) {
+  RuntimeReleaseMetadataFetchResult fetch(RuntimeVersionUrl versionUrl) {
     try {
       final result = Process.runSync('curl', [
         '--fail',
         '--location',
         '--silent',
-        versionUrl,
+        versionUrl.value,
       ], runInShell: false);
       if (result.exitCode != 0) {
         return RuntimeReleaseMetadataFetchFailed(

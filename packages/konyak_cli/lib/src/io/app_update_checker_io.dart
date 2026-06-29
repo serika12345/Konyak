@@ -86,7 +86,7 @@ class DartIoAppUpdateChecker implements AppUpdateChecker {
       );
     }
 
-    final metadata = releaseMetadataFetcher.fetch(versionUrl.value);
+    final metadata = releaseMetadataFetcher.fetch(versionUrl);
     return switch (metadata) {
       RuntimeReleaseMetadataFetched(:final metadata) => AppUpdateCheckCompleted(
         AppUpdateRecord(

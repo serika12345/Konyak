@@ -31,8 +31,8 @@ class DartIoMacosWineRuntimeValidator implements RuntimeValidator {
   final RuntimeExecutableProbe executableProbe;
 
   @override
-  RuntimeValidationResult validate(String runtimeId) {
-    final runtime = runtimeById(runtimeCatalog.listRuntimes(), runtimeId);
+  RuntimeValidationResult validate(RuntimeId runtimeId) {
+    final runtime = runtimeById(runtimeCatalog.listRuntimes(), runtimeId.value);
     return runtime.match(
       () => RuntimeValidationResult.runtimeNotFound(runtimeId),
       validateRuntime,

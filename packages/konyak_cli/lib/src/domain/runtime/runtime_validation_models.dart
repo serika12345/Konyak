@@ -124,8 +124,8 @@ sealed class RuntimeValidationResult with _$RuntimeValidationResult {
   const factory RuntimeValidationResult.failed(String message) =
       RuntimeValidationFailed;
 
-  factory RuntimeValidationResult.runtimeNotFound(String runtimeId) {
-    return RuntimeValidationResult._runtimeNotFound(RuntimeId(runtimeId));
+  factory RuntimeValidationResult.runtimeNotFound(RuntimeId runtimeId) {
+    return RuntimeValidationResult._runtimeNotFound(runtimeId);
   }
 
   const factory RuntimeValidationResult._runtimeNotFound(RuntimeId runtimeId) =
@@ -133,7 +133,7 @@ sealed class RuntimeValidationResult with _$RuntimeValidationResult {
 }
 
 abstract interface class RuntimeValidator {
-  RuntimeValidationResult validate(String runtimeId);
+  RuntimeValidationResult validate(RuntimeId runtimeId);
 }
 
 @Freezed(

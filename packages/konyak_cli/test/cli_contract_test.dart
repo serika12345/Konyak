@@ -795,11 +795,13 @@ final class RecordingRuntimeUpdateChecker implements RuntimeUpdateChecker {
   RecordingRuntimeUpdateChecker({required this.result});
 
   final RuntimeUpdateCheckResult result;
-  String? lastRuntimeId;
+  RuntimeId? lastRuntimeIdValue;
+
+  String? get lastRuntimeId => lastRuntimeIdValue?.value;
 
   @override
-  RuntimeUpdateCheckResult check(String runtimeId) {
-    lastRuntimeId = runtimeId;
+  RuntimeUpdateCheckResult check(RuntimeId runtimeId) {
+    lastRuntimeIdValue = runtimeId;
 
     return result;
   }
@@ -856,11 +858,13 @@ final class RecordingRuntimeValidator implements RuntimeValidator {
   RecordingRuntimeValidator({required this.result});
 
   final RuntimeValidationResult result;
-  String? lastRuntimeId;
+  RuntimeId? lastRuntimeIdValue;
+
+  String? get lastRuntimeId => lastRuntimeIdValue?.value;
 
   @override
-  RuntimeValidationResult validate(String runtimeId) {
-    lastRuntimeId = runtimeId;
+  RuntimeValidationResult validate(RuntimeId runtimeId) {
+    lastRuntimeIdValue = runtimeId;
 
     return result;
   }

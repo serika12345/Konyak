@@ -939,8 +939,8 @@ void main() {
       const RuntimeUpdateCheckFailed('runtime metadata unavailable'),
     );
     expect(
-      RuntimeUpdateCheckResult.runtimeNotFound('wine'),
-      RuntimeUpdateCheckResult.runtimeNotFound('wine'),
+      RuntimeUpdateCheckResult.runtimeNotFound(RuntimeId('wine')),
+      RuntimeUpdateCheckResult.runtimeNotFound(RuntimeId('wine')),
     );
   });
 
