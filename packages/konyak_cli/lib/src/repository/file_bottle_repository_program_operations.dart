@@ -47,12 +47,14 @@ class FileBottleRepositoryProgramOperations {
 
   ProgramUpdateResult unpinProgram(ProgramUnpinRequest request) {
     return findBottle(request.bottleId.value).fold<ProgramUpdateResult>(
-      ProgramUpdateFailed.new,
+      ProgramUpdateResult.failed,
       (bottle) => bottle.match(
-        () => ProgramUpdateMissingBottle(request.bottleId.value),
+        () => ProgramUpdateResult.missingBottle(request.bottleId.value),
         (bottle) {
           if (!hasPinnedProgram(bottle, request.programPath.value)) {
-            return ProgramUpdateMissingProgram(request.programPath.value);
+            return ProgramUpdateResult.missingProgram(
+              request.programPath.value,
+            );
           }
 
           final updated = bottleWithoutPinnedProgram(
@@ -64,8 +66,8 @@ class FileBottleRepositoryProgramOperations {
             writeBottleMetadata(updated);
           });
           return writeResult.fold<ProgramUpdateResult>(
-            ProgramUpdateFailed.new,
-            (_) => ProgramUpdated(updated),
+            ProgramUpdateResult.failed,
+            (_) => ProgramUpdateResult.updated(updated),
           );
         },
       ),
@@ -74,12 +76,14 @@ class FileBottleRepositoryProgramOperations {
 
   ProgramUpdateResult renamePinnedProgram(ProgramRenameRequest request) {
     return findBottle(request.bottleId.value).fold<ProgramUpdateResult>(
-      ProgramUpdateFailed.new,
+      ProgramUpdateResult.failed,
       (bottle) => bottle.match(
-        () => ProgramUpdateMissingBottle(request.bottleId.value),
+        () => ProgramUpdateResult.missingBottle(request.bottleId.value),
         (bottle) {
           if (!hasPinnedProgram(bottle, request.programPath.value)) {
-            return ProgramUpdateMissingProgram(request.programPath.value);
+            return ProgramUpdateResult.missingProgram(
+              request.programPath.value,
+            );
           }
 
           final updated = bottleWithRenamedPinnedProgram(bottle, request);
@@ -88,8 +92,8 @@ class FileBottleRepositoryProgramOperations {
             writeBottleMetadata(updated);
           });
           return writeResult.fold<ProgramUpdateResult>(
-            ProgramUpdateFailed.new,
-            (_) => ProgramUpdated(updated),
+            ProgramUpdateResult.failed,
+            (_) => ProgramUpdateResult.updated(updated),
           );
         },
       ),

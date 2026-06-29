@@ -964,6 +964,34 @@ void main() {
     );
   });
 
+  test('program update results compare by semantic values', () {
+    BottleRecord bottle() {
+      return BottleRecord(
+        id: 'steam',
+        name: 'Steam',
+        path: '/bottles/steam',
+        windowsVersion: 'win10',
+      );
+    }
+
+    expect(
+      ProgramUpdateResult.updated(bottle()),
+      ProgramUpdateResult.updated(bottle()),
+    );
+    expect(
+      ProgramUpdateResult.missingBottle('steam'),
+      ProgramUpdateResult.missingBottle('steam'),
+    );
+    expect(
+      ProgramUpdateResult.missingProgram('/steam.exe'),
+      ProgramUpdateResult.missingProgram('/steam.exe'),
+    );
+    expect(
+      ProgramUpdateResult.failed('update failed'),
+      ProgramUpdateResult.failed('update failed'),
+    );
+  });
+
   test('Wine process kill plans model process ids with WineProcessId', () {
     expect(winedbgAttachProcessId(WineProcessId('000000d8')), '0x000000d8');
     expect(winedbgAttachProcessId(WineProcessId('0x000000d8')), '0x000000d8');

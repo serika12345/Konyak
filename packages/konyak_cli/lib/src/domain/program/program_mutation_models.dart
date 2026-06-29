@@ -190,33 +190,37 @@ abstract class WineProcessGroupTerminationRequest
   }) = _WineProcessGroupTerminationRequest;
 }
 
-sealed class ProgramUpdateResult {
-  const ProgramUpdateResult();
-}
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class ProgramUpdateResult with _$ProgramUpdateResult {
+  const ProgramUpdateResult._();
 
-class ProgramUpdated extends ProgramUpdateResult {
-  const ProgramUpdated(this.bottle);
+  const factory ProgramUpdateResult.updated(BottleRecord bottle) =
+      ProgramUpdated;
 
-  final BottleRecord bottle;
-}
+  factory ProgramUpdateResult.missingBottle(String bottleId) {
+    return ProgramUpdateResult._missingBottle(bottleId: BottleId(bottleId));
+  }
 
-class ProgramUpdateMissingBottle extends ProgramUpdateResult {
-  ProgramUpdateMissingBottle(String bottleId) : bottleId = BottleId(bottleId);
+  const factory ProgramUpdateResult._missingBottle({
+    required BottleId bottleId,
+  }) = ProgramUpdateMissingBottle;
 
-  final BottleId bottleId;
-}
+  factory ProgramUpdateResult.missingProgram(String programPath) {
+    return ProgramUpdateResult._missingProgram(
+      programPath: ProgramPath(programPath),
+    );
+  }
 
-class ProgramUpdateMissingProgram extends ProgramUpdateResult {
-  ProgramUpdateMissingProgram(String programPath)
-    : programPath = ProgramPath(programPath);
+  const factory ProgramUpdateResult._missingProgram({
+    required ProgramPath programPath,
+  }) = ProgramUpdateMissingProgram;
 
-  final ProgramPath programPath;
-}
-
-class ProgramUpdateFailed extends ProgramUpdateResult {
-  const ProgramUpdateFailed(this.message);
-
-  final String message;
+  const factory ProgramUpdateResult.failed(String message) =
+      ProgramUpdateFailed;
 }
 
 @Freezed(

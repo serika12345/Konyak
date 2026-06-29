@@ -1875,7 +1875,7 @@ def require_result_boundary_rules() -> None:
     )
     for expected_options in [
         ["class ProgramPinFailed", "ProgramPinResult.failed"],
-        ["class ProgramUpdateFailed"],
+        ["class ProgramUpdateFailed", "ProgramUpdateResult.failed"],
         ["class ProgramSettingsReadFailed", "ProgramSettingsReadResult.failed"],
         [
             "class ProgramSettingsUpdateFailed",

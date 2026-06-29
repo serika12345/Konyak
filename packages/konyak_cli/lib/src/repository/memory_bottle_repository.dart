@@ -243,10 +243,10 @@ class MemoryBottleRepository implements BottleRepository {
   @override
   ProgramUpdateResult unpinProgram(ProgramUnpinRequest request) {
     return mapValue(bottlesById, request.bottleId.value).match(
-      () => ProgramUpdateMissingBottle(request.bottleId.value),
+      () => ProgramUpdateResult.missingBottle(request.bottleId.value),
       (bottle) {
         if (!hasPinnedProgram(bottle, request.programPath.value)) {
-          return ProgramUpdateMissingProgram(request.programPath.value);
+          return ProgramUpdateResult.missingProgram(request.programPath.value);
         }
 
         final updated = bottleWithoutPinnedProgram(
@@ -255,7 +255,7 @@ class MemoryBottleRepository implements BottleRepository {
         );
         bottlesById[request.bottleId.value] = updated;
 
-        return ProgramUpdated(updated);
+        return ProgramUpdateResult.updated(updated);
       },
     );
   }
@@ -263,16 +263,16 @@ class MemoryBottleRepository implements BottleRepository {
   @override
   ProgramUpdateResult renamePinnedProgram(ProgramRenameRequest request) {
     return mapValue(bottlesById, request.bottleId.value).match(
-      () => ProgramUpdateMissingBottle(request.bottleId.value),
+      () => ProgramUpdateResult.missingBottle(request.bottleId.value),
       (bottle) {
         if (!hasPinnedProgram(bottle, request.programPath.value)) {
-          return ProgramUpdateMissingProgram(request.programPath.value);
+          return ProgramUpdateResult.missingProgram(request.programPath.value);
         }
 
         final updated = bottleWithRenamedPinnedProgram(bottle, request);
         bottlesById[request.bottleId.value] = updated;
 
-        return ProgramUpdated(updated);
+        return ProgramUpdateResult.updated(updated);
       },
     );
   }
