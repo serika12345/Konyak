@@ -2,18 +2,19 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:fpdart/fpdart.dart';
+
 import '../domain/bottle/bottle_models.dart';
 import 'pe_program_icons.dart';
 import 'pe_program_image.dart';
 
-String? extractPeIcon({
+Option<String> extractPeIcon({
   required PortableExecutableImage image,
   required BottleRecord bottle,
   required String programPath,
   required FileStat fileStat,
 }) {
-  return peIconBytes(image).match(
-    missingPeIconPath,
+  return peIconBytes(image).flatMap(
     (icoBytes) => writePeIcon(
       bottle: bottle,
       programPath: programPath,
@@ -23,14 +24,14 @@ String? extractPeIcon({
   );
 }
 
-Future<String?> extractPeIconAsync({
+Future<Option<String>> extractPeIconAsync({
   required PortableExecutableImage image,
   required BottleRecord bottle,
   required String programPath,
   required FileStat fileStat,
 }) async {
   return peIconBytes(image).match(
-    () async => missingPeIconPath(),
+    () async => const Option.none(),
     (icoBytes) => writePeIconAsync(
       bottle: bottle,
       programPath: programPath,
@@ -40,11 +41,7 @@ Future<String?> extractPeIconAsync({
   );
 }
 
-String? missingPeIconPath() {
-  return null;
-}
-
-String? writePeIcon({
+Option<String> writePeIcon({
   required BottleRecord bottle,
   required String programPath,
   required FileStat fileStat,
@@ -60,13 +57,13 @@ String? writePeIcon({
     iconFile.parent.createSync(recursive: true);
     iconFile.writeAsBytesSync(icoBytes);
 
-    return iconPath;
+    return Option.of(iconPath);
   } on FileSystemException {
-    return null;
+    return const Option.none();
   }
 }
 
-Future<String?> writePeIconAsync({
+Future<Option<String>> writePeIconAsync({
   required BottleRecord bottle,
   required String programPath,
   required FileStat fileStat,
@@ -82,8 +79,8 @@ Future<String?> writePeIconAsync({
     await iconFile.parent.create(recursive: true);
     await iconFile.writeAsBytes(icoBytes);
 
-    return iconPath;
+    return Option.of(iconPath);
   } on FileSystemException {
-    return null;
+    return const Option.none();
   }
 }

@@ -81,8 +81,9 @@ class AsyncWineProcessHostPathResolver {
   AsyncWineProcessHostPathResolver({required this.bottle});
 
   final BottleRecord bottle;
-  Future<String?>? latestLogContents;
-  Future<Map<String, Object?>?>? launchIndex;
+  late final Future<Option<String>> latestLogContents = readLatestLog();
+  late final Future<Option<Map<String, Object?>>> launchIndex =
+      readLaunchIndex();
 
   Future<Option<String>> hostPath(String executable) async {
     final hostPath = wineWindowsPathToHostPath(
@@ -118,19 +119,17 @@ class AsyncWineProcessHostPathResolver {
   Future<Option<String>> recordedExternalProgramPathForExecutableAsync(
     String executable,
   ) async {
-    final decoded = await (launchIndex ??= readLaunchIndex());
-    if (decoded == null) {
-      return const Option.none();
-    }
-
-    return recordedExternalProgramPathFromLaunchIndex(
-      bottle: bottle,
-      executable: executable,
-      decoded: decoded,
+    return (await launchIndex).match(
+      () => const Option.none(),
+      (decoded) => recordedExternalProgramPathFromLaunchIndex(
+        bottle: bottle,
+        executable: executable,
+        decoded: decoded,
+      ),
     );
   }
 
-  Future<Map<String, Object?>?> readLaunchIndex() async {
+  Future<Option<Map<String, Object?>>> readLaunchIndex() async {
     final launchIndexFile = File(
       joinPath(bottle.path.value, const [
         'cache',
@@ -138,46 +137,45 @@ class AsyncWineProcessHostPathResolver {
       ]),
     );
     if (!await launchIndexFile.exists()) {
-      return null;
+      return const Option.none();
     }
 
     try {
       final decoded = jsonDecode(await launchIndexFile.readAsString());
-      return decoded is Map<String, Object?> ? decoded : null;
+      return decoded is Map<String, Object?>
+          ? Option.of(decoded)
+          : const Option.none();
     } on FileSystemException {
-      return null;
+      return const Option.none();
     } on FormatException {
-      return null;
+      return const Option.none();
     }
   }
 
   Future<Option<String>> latestRunProgramPathForExecutableFromCachedLog(
     String executable,
   ) async {
-    final logContents = await (latestLogContents ??= readLatestLog());
-    if (logContents == null) {
-      return const Option.none();
-    }
-
-    return latestRunProgramPathFromLog(
-      bottle: bottle,
-      executable: executable,
-      logContents: logContents,
+    return (await latestLogContents).flatMap(
+      (logContents) => latestRunProgramPathFromLog(
+        bottle: bottle,
+        executable: executable,
+        logContents: logContents,
+      ),
     );
   }
 
-  Future<String?> readLatestLog() async {
+  Future<Option<String>> readLatestLog() async {
     final logFile = File(
       joinPath(bottle.path.value, const ['logs', 'latest.log']),
     );
     if (!await logFile.exists()) {
-      return null;
+      return const Option.none();
     }
 
     try {
-      return await logFile.readAsString();
+      return Option.of(await logFile.readAsString());
     } on FileSystemException {
-      return null;
+      return const Option.none();
     }
   }
 }

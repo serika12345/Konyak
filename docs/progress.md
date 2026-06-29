@@ -13,6 +13,52 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-29 23:18 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Replace remaining I/O double-absence nullable shapes.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: `2ab87ee` (`Ban toNullable bridge usage`).
+- Purpose: continue the same cleanup after the Wine process metadata cache
+  fix by removing `Option<T>?` and non-boundary `Future<String?>` result
+  shapes from I/O helpers.
+- Completed work: replaced `programLoggingSettingsRecordFromJson`'s
+  `Option<ProgramLoggingSettingsRecord>?` with a private sealed parse result;
+  changed `DartIoHostProcessSnapshotReader.readPsSnapshot` from
+  `Future<String?>` to `Future<Option<String>>`; changed PE icon extraction and
+  write helpers from `String?`/`Future<String?>` to `Option<String>`/
+  `Future<Option<String>>`; updated metadata projection call sites.
+- Remaining work: none for these I/O double-absence candidates.
+- Next action: continue tightening nullable/null allowances that are still
+  broader than JSON, user input, or direct framework/external API boundaries.
+- Verification: focused `list-wine-processes` and `metadata` CLI contract
+  tests, `just cli-analyze`, `just cli-test`, `just verify-governance`, `just
+  verify-safety`, `just format-check`, and `just lint` passed in the Nix dev
+  shell.
+
+- Timestamp: 2026-06-29 23:05 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Replace nullable async Wine process metadata caches.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: `2ab87ee` (`Ban toNullable bridge usage`).
+- Purpose: remove the confusing `Future<String?>?`/`Future<Map<...>?>?`
+  double-nullable cache shape from Wine process metadata resolution.
+- Completed work: replaced `Future<String?>? latestLogContents` and
+  `Future<Map<String, Object?>?>? launchIndex` with lazy
+  `Future<Option<...>>` caches in `AsyncWineProcessHostPathResolver`; changed
+  the async file readers to return `Option.none()` for missing, invalid, or
+  unreadable cache files.
+- Remaining work: none for this async cache cleanup.
+- Next action: continue tightening nullable/null allowances that are still
+  broader than JSON, user input, or direct framework/external API boundaries.
+- Verification: focused `list-wine-processes` CLI contract tests,
+  `just cli-analyze`, `just cli-test`, `just verify-governance`, `just
+  verify-safety`, `just format-check`, and `just lint` passed in the Nix dev
+  shell.
+
 - Timestamp: 2026-06-29 22:54 JST
 - State: `completed`
 - Branch: `main`

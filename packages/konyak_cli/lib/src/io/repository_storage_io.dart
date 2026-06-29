@@ -50,34 +50,52 @@ Option<ProgramSettingsRecord> programSettingsRecordFromJson(Object? value) {
   final locale = settings['locale'];
   final arguments = settings['arguments'];
   final environment = stringMap(settings['environment']);
-  final logging = programLoggingSettingsRecordFromJson(settings['logging']);
+  final logging = _programLoggingSettingsRecordFromJson(settings['logging']);
   if ((locale != null && locale is! String) ||
       (arguments != null && arguments is! String) ||
-      environment == null ||
-      logging == null) {
+      environment == null) {
     return const Option.none();
   }
 
-  return Option.of(
-    ProgramSettingsRecord(
-      locale: locale is String ? locale : '',
-      arguments: arguments is String ? arguments : '',
-      environment: ProgramEnvironmentOverrides(environment),
-      logging: logging,
+  return switch (logging) {
+    _ProgramLoggingSettingsInvalid() => const Option.none(),
+    _ProgramLoggingSettingsParsed(:final logging) => Option.of(
+      ProgramSettingsRecord(
+        locale: locale is String ? locale : '',
+        arguments: arguments is String ? arguments : '',
+        environment: ProgramEnvironmentOverrides(environment),
+        logging: logging,
+      ),
     ),
-  );
+  };
 }
 
-Option<ProgramLoggingSettingsRecord>? programLoggingSettingsRecordFromJson(
+sealed class _ProgramLoggingSettingsParseResult {
+  const _ProgramLoggingSettingsParseResult();
+}
+
+final class _ProgramLoggingSettingsParsed
+    extends _ProgramLoggingSettingsParseResult {
+  const _ProgramLoggingSettingsParsed(this.logging);
+
+  final Option<ProgramLoggingSettingsRecord> logging;
+}
+
+final class _ProgramLoggingSettingsInvalid
+    extends _ProgramLoggingSettingsParseResult {
+  const _ProgramLoggingSettingsInvalid();
+}
+
+_ProgramLoggingSettingsParseResult _programLoggingSettingsRecordFromJson(
   Object? value,
 ) {
   if (value == null) {
-    return const Option.none();
+    return const _ProgramLoggingSettingsParsed(Option.none());
   }
 
   final settings = objectMap(value);
   if (settings == null) {
-    return null;
+    return const _ProgramLoggingSettingsInvalid();
   }
 
   final createLogFile = settings['createLogFile'];
@@ -88,16 +106,18 @@ Option<ProgramLoggingSettingsRecord>? programLoggingSettingsRecordFromJson(
       (additionalWineLoggingChannels != null &&
           additionalWineLoggingChannels is! String) ||
       (logFilePath != null && logFilePath is! String)) {
-    return null;
+    return const _ProgramLoggingSettingsInvalid();
   }
 
-  return Option.of(
-    ProgramLoggingSettingsRecord(
-      createLogFile: createLogFile is bool ? createLogFile : true,
-      additionalWineLoggingChannels: additionalWineLoggingChannels is String
-          ? additionalWineLoggingChannels
-          : '',
-      logFilePath: logFilePath is String ? logFilePath : '',
+  return _ProgramLoggingSettingsParsed(
+    Option.of(
+      ProgramLoggingSettingsRecord(
+        createLogFile: createLogFile is bool ? createLogFile : true,
+        additionalWineLoggingChannels: additionalWineLoggingChannels is String
+            ? additionalWineLoggingChannels
+            : '',
+        logFilePath: logFilePath is String ? logFilePath : '',
+      ),
     ),
   );
 }

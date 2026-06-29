@@ -46,7 +46,7 @@ class DartIoProgramMetadataExtractor implements ProgramMetadataExtractor {
           companyName: versionStrings.companyName,
           fileVersion: versionStrings.fileVersion,
           productVersion: versionStrings.productVersion,
-          iconPath: Option.fromNullable(iconPath).map(ProgramIconPath.new),
+          iconPath: iconPath.map(ProgramIconPath.new),
         );
 
         return metadata.isEmpty ? const Option.none() : Option.of(metadata);
@@ -97,7 +97,7 @@ class DartIoAsyncProgramMetadataExtractor
           companyName: versionStrings.companyName,
           fileVersion: versionStrings.fileVersion,
           productVersion: versionStrings.productVersion,
-          iconPath: Option.fromNullable(iconPath).map(ProgramIconPath.new),
+          iconPath: iconPath.map(ProgramIconPath.new),
         );
 
         return metadata.isEmpty ? const Option.none() : Option.of(metadata);

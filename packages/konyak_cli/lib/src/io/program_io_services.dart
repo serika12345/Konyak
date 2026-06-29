@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:fpdart/fpdart.dart';
+
 import '../cli/cli_json_helpers.dart';
 import '../domain/program/program_run_models.dart';
 import '../domain/program/program_runner.dart';
@@ -174,14 +176,17 @@ class DartIoHostProcessSnapshotReader implements HostProcessSnapshotReader {
       '-axo',
       'command=',
     ]);
-    if (snapshot != null) {
-      return snapshot;
-    }
 
-    return await readPsSnapshot(const <String>['-axo', 'command=']) ?? '';
+    return snapshot.match(
+      () async => (await readPsSnapshot(const <String>[
+        '-axo',
+        'command=',
+      ])).match(() => '', (value) => value),
+      (value) async => value,
+    );
   }
 
-  Future<String?> readPsSnapshot(List<String> arguments) async {
+  Future<Option<String>> readPsSnapshot(List<String> arguments) async {
     try {
       final result = await Process.run(
         'ps',
@@ -189,14 +194,14 @@ class DartIoHostProcessSnapshotReader implements HostProcessSnapshotReader {
         runInShell: false,
       ).timeout(timeout);
       if (result.exitCode != 0) {
-        return null;
+        return const Option.none();
       }
 
-      return processOutputToString(result.stdout);
+      return Option.of(processOutputToString(result.stdout));
     } on ProcessException {
-      return null;
+      return const Option.none();
     } on TimeoutException {
-      return null;
+      return const Option.none();
     }
   }
 }
