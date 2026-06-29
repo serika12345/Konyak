@@ -175,31 +175,31 @@ CliResult linuxWineInstallCliResult(LinuxWineInstallResult installResult) {
 MacosWineInstallRequest macosWineInstallRequestForRuntimeUpdate(
   RuntimeUpdateRecord update,
 ) {
-  final sourceManifestUrl = update.sourceManifestUrl.toNullable();
-  if (sourceManifestUrl != null && sourceManifestUrl.value.trim().isNotEmpty) {
-    return MacosWineInstallRequest.updateInstall(
-      sourceManifest: sourceManifestUrl.value,
-      sourceManifestSignature: update.sourceManifestSignatureUrl
-          .map((value) => value.value)
-          .toNullable(),
-    );
-  }
-
-  return MacosWineInstallRequest.updateInstall();
+  return update.sourceManifestUrl.match(
+    MacosWineInstallRequest.updateInstall,
+    (sourceManifestUrl) => sourceManifestUrl.value.trim().isEmpty
+        ? MacosWineInstallRequest.updateInstall()
+        : MacosWineInstallRequest.updateInstall(
+            sourceManifest: sourceManifestUrl.value,
+            sourceManifestSignature: update.sourceManifestSignatureUrl
+                .map((value) => value.value)
+                .match(() => null, (value) => value),
+          ),
+  );
 }
 
 LinuxWineInstallRequest linuxWineInstallRequestForRuntimeUpdate(
   RuntimeUpdateRecord update,
 ) {
-  final sourceManifestUrl = update.sourceManifestUrl.toNullable();
-  if (sourceManifestUrl != null && sourceManifestUrl.value.trim().isNotEmpty) {
-    return LinuxWineInstallRequest.updateInstall(
-      sourceManifest: sourceManifestUrl.value,
-      sourceManifestSignature: update.sourceManifestSignatureUrl
-          .map((value) => value.value)
-          .toNullable(),
-    );
-  }
-
-  return LinuxWineInstallRequest.updateInstall();
+  return update.sourceManifestUrl.match(
+    LinuxWineInstallRequest.updateInstall,
+    (sourceManifestUrl) => sourceManifestUrl.value.trim().isEmpty
+        ? LinuxWineInstallRequest.updateInstall()
+        : LinuxWineInstallRequest.updateInstall(
+            sourceManifest: sourceManifestUrl.value,
+            sourceManifestSignature: update.sourceManifestSignatureUrl
+                .map((value) => value.value)
+                .match(() => null, (value) => value),
+          ),
+  );
 }

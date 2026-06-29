@@ -40,7 +40,7 @@ class DartIoRuntimePackageInstaller implements RuntimePackageInstaller {
       archivePath: request.archivePath.value,
       archiveSha256: request.archiveSha256
           .map((value) => value.value)
-          .toNullable(),
+          .match(() => null, (value) => value),
       componentArchivePaths: request.componentArchivePaths
           .map((value) => value.value)
           .toIList(),

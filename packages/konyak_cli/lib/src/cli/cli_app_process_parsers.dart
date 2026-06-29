@@ -55,7 +55,7 @@ AppSettingsRecord? parseJsonAppSettingsUpdateRequest(List<String> arguments) {
             ? const Option<AppSettingsRecord>.none()
             : Option.of(value),
       )
-      .toNullable();
+      .match(() => null, (value) => value);
 }
 
 bool isJsonWineProcessListCommand(List<String> arguments) {

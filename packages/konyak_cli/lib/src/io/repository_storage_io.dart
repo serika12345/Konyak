@@ -154,39 +154,23 @@ Option<BottleRuntimeSettings> bottleRuntimeSettingsFromJson(Object? value) {
     step: Option.of(24),
   );
 
-  final parsedEnhancedSync = enhancedSync.toNullable();
-  final parsedMetalHud = metalHud.toNullable();
-  final parsedMetalTrace = metalTrace.toNullable();
-  final parsedAvxEnabled = avxEnabled.toNullable();
-  final parsedDxrEnabled = dxrEnabled.toNullable();
-  final parsedDxvk = dxvk.toNullable();
-  final parsedDxmt = dxmt.toNullable();
-  final parsedDlssMetalFx = dlssMetalFx.toNullable();
-  final parsedDxvkAsync = dxvkAsync.toNullable();
-  final parsedDxvkHud = dxvkHud.toNullable();
-  final parsedVkd3dProton = vkd3dProton.toNullable();
-  final parsedBuildVersion = buildVersion.toNullable();
-  final parsedRetinaMode = retinaMode.toNullable();
-  final parsedDpiScaling = dpiScaling.toNullable();
-  if (parsedEnhancedSync == null ||
-      parsedMetalHud == null ||
-      parsedMetalTrace == null ||
-      parsedAvxEnabled == null ||
-      parsedDxrEnabled == null ||
-      parsedDxvk == null ||
-      parsedDxmt == null ||
-      parsedDlssMetalFx == null ||
-      parsedDxvkAsync == null ||
-      parsedDxvkHud == null ||
-      parsedVkd3dProton == null ||
-      parsedBuildVersion == null ||
-      parsedRetinaMode == null ||
-      parsedDpiScaling == null) {
-    return const Option.none();
-  }
+  return Option.Do(($) {
+    final parsedEnhancedSync = $(enhancedSync);
+    final parsedMetalHud = $(metalHud);
+    final parsedMetalTrace = $(metalTrace);
+    final parsedAvxEnabled = $(avxEnabled);
+    final parsedDxrEnabled = $(dxrEnabled);
+    final parsedDxvk = $(dxvk);
+    final parsedDxmt = $(dxmt);
+    final parsedDlssMetalFx = $(dlssMetalFx);
+    final parsedDxvkAsync = $(dxvkAsync);
+    final parsedDxvkHud = $(dxvkHud);
+    final parsedVkd3dProton = $(vkd3dProton);
+    final parsedBuildVersion = $(buildVersion);
+    final parsedRetinaMode = $(retinaMode);
+    final parsedDpiScaling = $(dpiScaling);
 
-  return Option.of(
-    BottleRuntimeSettings(
+    return BottleRuntimeSettings(
       enhancedSync: parsedEnhancedSync,
       metalHud: parsedMetalHud,
       metalTrace: parsedMetalTrace,
@@ -201,8 +185,8 @@ Option<BottleRuntimeSettings> bottleRuntimeSettingsFromJson(Object? value) {
       buildVersion: parsedBuildVersion,
       retinaMode: parsedRetinaMode,
       dpiScaling: parsedDpiScaling,
-    ),
-  );
+    );
+  });
 }
 
 Option<String> runtimeSettingsString(
@@ -314,25 +298,20 @@ Option<BottleRecord> bottleRecordFromJson(Object? value) {
     value['runtimeSettings'],
   );
   final pinnedPrograms = pinnedProgramRecordsFromJson(value['pinnedPrograms']);
-  final parsedRuntimeSettings = runtimeSettings.toNullable();
-  final parsedPinnedPrograms = pinnedPrograms.toNullable();
-  if (parsedRuntimeSettings == null || parsedPinnedPrograms == null) {
-    return const Option.none();
-  }
 
   try {
-    return Option.of(
-      BottleRecord(
+    return Option.Do(($) {
+      return BottleRecord(
         id: id,
         name: name,
         path: path,
         windowsVersion: windowsVersion,
-        runtimeSettings: parsedRuntimeSettings,
-        pinnedPrograms: parsedPinnedPrograms,
-      ),
-    );
+        runtimeSettings: $(runtimeSettings),
+        pinnedPrograms: $(pinnedPrograms),
+      );
+    });
   } on ArgumentError {
-    return const Option.none();
+    return const Option<BottleRecord>.none();
   }
 }
 

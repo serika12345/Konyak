@@ -78,7 +78,7 @@ void synchronizeLinuxDesktopLauncherForProgramRun({
         iconPath: metadata
             .flatMap((programMetadata) => programMetadata.iconPath)
             .map((iconPath) => iconPath.value)
-            .toNullable(),
+            .match(() => null, (value) => value),
       );
       writeLinuxExternalProgramDesktopLauncher(
         launcherPath: launcherPath,

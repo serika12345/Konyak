@@ -25,6 +25,10 @@ void main() {
           output,
           contains('lib/src/domain/serialization_boundary_violation.dart'),
         );
+        expect(
+          output,
+          contains('lib/src/io/to_nullable_boundary_violation.dart'),
+        );
         for (final rule in const [
           'konyak_no_domain_io',
           'konyak_no_nullable_sentinel_flow',
@@ -38,6 +42,7 @@ void main() {
           'konyak_no_null_literal_outside_boundary',
           'konyak_no_nullable_bridge_outside_boundary',
           'konyak_no_nullable_type_outside_boundary',
+          'konyak_no_to_nullable',
           'konyak_no_result_failure_to_option_none',
         ]) {
           expect(output, contains(rule));

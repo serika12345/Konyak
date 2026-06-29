@@ -20,7 +20,10 @@ class DartIoProgramRunner implements ProgramRunner {
         request.executable.value,
         request.arguments.value,
         environment: request.environment.toMap(),
-        workingDirectory: request.workingDirectory.toNullable()?.value,
+        workingDirectory: request.workingDirectory.match(
+          () => null,
+          (value) => value.value,
+        ),
         runInShell: false,
       );
 
@@ -68,7 +71,10 @@ class DartIoAsyncProgramRunner implements AsyncProgramRunner {
         request.executable.value,
         request.arguments.value,
         environment: request.environment.toMap(),
-        workingDirectory: request.workingDirectory.toNullable()?.value,
+        workingDirectory: request.workingDirectory.match(
+          () => null,
+          (value) => value.value,
+        ),
         runInShell: false,
       );
     } on ProcessException catch (error) {

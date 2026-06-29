@@ -46,12 +46,15 @@ Option<String> runtimeReleaseArchiveUrl(
     '.appimage',
   ];
   for (final url in urls) {
-    final fileName = fileNameFromUrl(url).toNullable()?.toLowerCase();
-    if (fileName == null) {
-      continue;
-    }
-    if (archiveExtensions.any(fileName.endsWith)) {
-      return Option.of(url);
+    final archiveUrl = fileNameFromUrl(url)
+        .map((fileName) => fileName.toLowerCase())
+        .flatMap(
+          (fileName) => archiveExtensions.any(fileName.endsWith)
+              ? Option.of(url)
+              : const Option<String>.none(),
+        );
+    if (archiveUrl.isSome()) {
+      return archiveUrl;
     }
   }
 

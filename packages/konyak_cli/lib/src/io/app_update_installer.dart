@@ -37,90 +37,109 @@ class DartIoAppUpdateInstaller implements AppUpdateInstaller {
 
   @override
   AppUpdateInstallResult install(AppUpdateRecord update) {
-    final archiveUrl = update.archiveUrl.toNullable();
-    if (archiveUrl == null || archiveUrl.value.trim().isEmpty) {
-      return const AppUpdateInstallFailed(
-        'Konyak update metadata does not contain an archive URL.',
-      );
-    }
-    final expectedSha256 = update.archiveSha256.toNullable();
-    if (expectedSha256 == null || !isSha256Hex(expectedSha256.value)) {
-      return const AppUpdateInstallFailed(
-        'Konyak update metadata does not contain a valid archive checksum.',
-      );
-    }
-
-    final fileName = fileNameFromUrl(
-      archiveUrl.value,
-    ).match(() => 'Konyak-update', (value) => value);
-    final updatesDirectory = Directory(appUpdateCacheDirectory(environment));
-    final archivePath = joinPath(updatesDirectory.path, [fileName]);
-
-    try {
-      updatesDirectory.createSync(recursive: true);
-      final download = Process.runSync('curl', [
-        '--fail',
-        '--location',
-        '--output',
-        archivePath,
+    AppUpdateInstallResult installAvailableUpdate({
+      required AppArchiveUrl archiveUrl,
+      required AppArchiveSha256 expectedSha256,
+    }) {
+      final fileName = fileNameFromUrl(
         archiveUrl.value,
-      ], runInShell: false);
-      if (download.exitCode != 0) {
-        return AppUpdateInstallFailed(
-          commandFailureMessage('download Konyak update', download),
-        );
-      }
+      ).match(() => 'Konyak-update', (value) => value);
+      final updatesDirectory = Directory(appUpdateCacheDirectory(environment));
+      final archivePath = joinPath(updatesDirectory.path, [fileName]);
 
-      final archive = File(archivePath);
-      final actualSha256 = sha256HexDigest(archive);
-      if (actualSha256.toLowerCase() != expectedSha256.value.toLowerCase()) {
-        if (archive.existsSync()) {
-          archive.deleteSync();
+      try {
+        updatesDirectory.createSync(recursive: true);
+        final download = Process.runSync('curl', [
+          '--fail',
+          '--location',
+          '--output',
+          archivePath,
+          archiveUrl.value,
+        ], runInShell: false);
+        if (download.exitCode != 0) {
+          return AppUpdateInstallFailed(
+            commandFailureMessage('download Konyak update', download),
+          );
         }
-        return AppUpdateInstallFailed(
-          'Konyak update archive checksum mismatch: expected '
-          '${expectedSha256.value}, got $actualSha256.',
-        );
-      }
 
-      final handoffResult = switch (hostPlatform) {
-        KonyakHostPlatform.macos => installMacosAppBundleUpdate(
-          update: update,
-          archivePath: archivePath,
-          actualSha256: actualSha256,
-          updatesDirectory: updatesDirectory,
-        ),
-        KonyakHostPlatform.linux => installLinuxAppImageUpdate(
-          update: update,
-          archivePath: archivePath,
-          actualSha256: actualSha256,
-          updatesDirectory: updatesDirectory,
-        ),
-      };
+        final archive = File(archivePath);
+        final actualSha256 = sha256HexDigest(archive);
+        if (actualSha256.toLowerCase() != expectedSha256.value.toLowerCase()) {
+          if (archive.existsSync()) {
+            archive.deleteSync();
+          }
+          return AppUpdateInstallFailed(
+            'Konyak update archive checksum mismatch: expected '
+            '${expectedSha256.value}, got $actualSha256.',
+          );
+        }
 
-      return handoffResult.match(() {
-        final openResult = pathOpener.openPath(PathOpenTarget(archivePath));
-        return switch (openResult) {
-          PathOpenCompleted() => AppUpdateInstallCompleted(
-            AppUpdateInstallRecord(
-              appId: update.appId,
-              status: UpdateInstallStatus('installed'),
-              currentVersion: update.currentVersion,
-              installedVersion: update.latestVersion.map(
-                (version) => AppVersion(version.value),
-              ),
-              archiveUrl: Option.of(archiveUrl),
-              archiveSha256: Option.of(AppArchiveSha256(actualSha256)),
-              installPath: Option.of(AppInstallPath(archivePath)),
-            ),
+        final handoffResult = switch (hostPlatform) {
+          KonyakHostPlatform.macos => installMacosAppBundleUpdate(
+            update: update,
+            archivePath: archivePath,
+            actualSha256: actualSha256,
+            updatesDirectory: updatesDirectory,
           ),
-          PathOpenFailed(:final message) => AppUpdateInstallFailed(message),
+          KonyakHostPlatform.linux => installLinuxAppImageUpdate(
+            update: update,
+            archivePath: archivePath,
+            actualSha256: actualSha256,
+            updatesDirectory: updatesDirectory,
+          ),
         };
-      }, (result) => result);
-    } on FileSystemException catch (error) {
-      return AppUpdateInstallFailed(error.message);
-    } on ProcessException catch (error) {
-      return AppUpdateInstallFailed(error.message);
+
+        return handoffResult.match(() {
+          final openResult = pathOpener.openPath(PathOpenTarget(archivePath));
+          return switch (openResult) {
+            PathOpenCompleted() => AppUpdateInstallCompleted(
+              AppUpdateInstallRecord(
+                appId: update.appId,
+                status: UpdateInstallStatus('installed'),
+                currentVersion: update.currentVersion,
+                installedVersion: update.latestVersion.map(
+                  (version) => AppVersion(version.value),
+                ),
+                archiveUrl: Option.of(archiveUrl),
+                archiveSha256: Option.of(AppArchiveSha256(actualSha256)),
+                installPath: Option.of(AppInstallPath(archivePath)),
+              ),
+            ),
+            PathOpenFailed(:final message) => AppUpdateInstallFailed(message),
+          };
+        }, (result) => result);
+      } on FileSystemException catch (error) {
+        return AppUpdateInstallFailed(error.message);
+      } on ProcessException catch (error) {
+        return AppUpdateInstallFailed(error.message);
+      }
     }
+
+    return update.archiveUrl.match(
+      () => const AppUpdateInstallFailed(
+        'Konyak update metadata does not contain an archive URL.',
+      ),
+      (archiveUrl) {
+        if (archiveUrl.value.trim().isEmpty) {
+          return const AppUpdateInstallFailed(
+            'Konyak update metadata does not contain an archive URL.',
+          );
+        }
+
+        return update.archiveSha256.match(
+          () => const AppUpdateInstallFailed(
+            'Konyak update metadata does not contain a valid archive checksum.',
+          ),
+          (expectedSha256) => !isSha256Hex(expectedSha256.value)
+              ? const AppUpdateInstallFailed(
+                  'Konyak update metadata does not contain a valid archive checksum.',
+                )
+              : installAvailableUpdate(
+                  archiveUrl: archiveUrl,
+                  expectedSha256: expectedSha256,
+                ),
+        );
+      },
+    );
   }
 }

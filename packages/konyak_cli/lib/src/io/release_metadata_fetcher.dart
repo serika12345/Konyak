@@ -29,27 +29,37 @@ class DartIoRuntimeReleaseMetadataFetcher
       }
 
       final decoded = jsonDecode(processOutputToString(result.stdout));
-      final releaseMetadataAssetUrl = runtimeReleaseMetadataAssetUrl(decoded);
-      final releaseMetadataAsset = releaseMetadataAssetUrl.toNullable();
-      final releaseMetadata = releaseMetadataAsset == null
-          ? null
-          : fetchRuntimeReleaseMetadataAsset(releaseMetadataAsset);
-      if (releaseMetadataAsset != null && releaseMetadata == null) {
-        return RuntimeReleaseMetadataFetchFailed(
-          'Runtime release metadata asset could not be fetched or parsed: '
-          '$releaseMetadataAsset',
+      RuntimeReleaseMetadataFetchResult fetchResultFromReleaseMetadata(
+        Map<String, dynamic>? releaseMetadata,
+      ) {
+        final releaseMetadataRecord = runtimeReleaseMetadataFromDecoded(
+          release: decoded,
+          releaseMetadata: releaseMetadata,
+          archiveUrlPredicate: archiveUrlPredicate,
+        );
+        return releaseMetadataRecord.match(
+          () => const RuntimeReleaseMetadataFetchFailed(
+            'Runtime release metadata does not contain a version.',
+          ),
+          RuntimeReleaseMetadataFetched.new,
         );
       }
-      final releaseMetadataRecord = runtimeReleaseMetadataFromDecoded(
-        release: decoded,
-        releaseMetadata: releaseMetadata,
-        archiveUrlPredicate: archiveUrlPredicate,
-      );
-      return releaseMetadataRecord.match(
-        () => const RuntimeReleaseMetadataFetchFailed(
-          'Runtime release metadata does not contain a version.',
-        ),
-        RuntimeReleaseMetadataFetched.new,
+
+      return runtimeReleaseMetadataAssetUrl(decoded).match(
+        () => fetchResultFromReleaseMetadata(null),
+        (releaseMetadataAsset) {
+          final releaseMetadata = fetchRuntimeReleaseMetadataAsset(
+            releaseMetadataAsset,
+          );
+          if (releaseMetadata == null) {
+            return RuntimeReleaseMetadataFetchFailed(
+              'Runtime release metadata asset could not be fetched or parsed: '
+              '$releaseMetadataAsset',
+            );
+          }
+
+          return fetchResultFromReleaseMetadata(releaseMetadata);
+        },
       );
     } on FormatException {
       return const RuntimeReleaseMetadataFetchFailed(
@@ -74,7 +84,7 @@ class DartIoRuntimeReleaseMetadataFetcher
 
       return runtimeReleaseMetadataAssetFromPayload(
         processOutputToString(result.stdout),
-      ).toNullable();
+      ).match(() => null, (value) => value);
     } on FormatException {
       return null;
     } on ProcessException {

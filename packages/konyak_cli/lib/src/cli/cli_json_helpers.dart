@@ -94,7 +94,10 @@ CliResult programRunJsonResult({
       'programPath': request.programPath.value,
       'runnerKind': request.runnerKind.value,
       'executable': request.executable.value,
-      'workingDirectory': request.workingDirectory.toNullable()?.value,
+      'workingDirectory': request.workingDirectory.match(
+        () => null,
+        (value) => value.value,
+      ),
       'argv': request.argv,
       'logPath': request.logPath.value,
       'logFileCreated': request.createLogFile,
@@ -116,7 +119,10 @@ CliResult programRunFailedJsonResult({
       'programPath': request.programPath.value,
       'runnerKind': request.runnerKind.value,
       'executable': request.executable.value,
-      'workingDirectory': request.workingDirectory.toNullable()?.value,
+      'workingDirectory': request.workingDirectory.match(
+        () => null,
+        (value) => value.value,
+      ),
       'argv': request.argv,
       'logPath': request.logPath.value,
       'logFileCreated': request.createLogFile,

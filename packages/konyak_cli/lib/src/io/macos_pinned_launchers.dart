@@ -76,7 +76,7 @@ void synchronizeMacosPinnedProgramLaunchers({
               displayName: displayName,
               iconPath: program.iconPath
                   .map((value) => value.value)
-                  .toNullable(),
+                  .match(() => null, (value) => value),
               manifest: PinnedProgramLauncherManifest(
                 launcherId: ProgramLauncherId(launcherId),
                 bottleId: bottle.id,

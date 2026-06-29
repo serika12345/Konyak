@@ -13,6 +13,81 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-29 22:54 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Replace nested Option parsing with Do notation.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: `ddf9a15` (`Restrict Flutter CLI nullable boundaries`).
+- Purpose: keep the all-source `toNullable()` ban readable by replacing the
+  heavily nested `Option.flatMap` parsing in repository storage with fpdart Do
+  notation.
+- Completed work: confirmed fpdart 1.2.0 exposes `Option.Do`; replaced the
+  deeply nested runtime-settings `Option.flatMap` chain in
+  `repository_storage_io.dart` with `Option.Do`; also converted the
+  runtime-settings plus pinned-program parse join in `bottleRecordFromJson` to
+  `Option.Do` while preserving `ArgumentError` handling.
+- Remaining work: none for this Do notation cleanup.
+- Next action: continue tightening nullable/null allowances that are still
+  broader than JSON, user input, or direct framework/external API boundaries.
+- Verification: `just cli-analyze`, `just cli-test`, `just
+  verify-governance`, `just verify-safety`, `just format-check`, and `just
+  lint` passed in the Nix dev shell.
+
+- Timestamp: 2026-06-29 22:47 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Ban `toNullable()` across Konyak source and remove all uses.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: `ddf9a15` (`Restrict Flutter CLI nullable boundaries`).
+- Purpose: enforce that `Option` absence is handled explicitly with
+  `match`/`map`/`flatMap` rather than bridged back to nullable control flow or
+  nullable adapter values.
+- Completed work: added a failing custom-lint fixture showing that
+  `toNullable()` inside an I/O boundary was not reported; added
+  `konyak_no_to_nullable` across Konyak CLI and Flutter sources; kept the
+  existing nullable bridge rule focused on `fromNullable()` outside external
+  boundaries; replaced all current CLI source `toNullable()` calls with
+  explicit `Option.match`/`map`/`flatMap` handling.
+- Remaining work: none for the all-source `toNullable()` ban.
+- Next action: continue tightening nullable/null allowances that are still
+  broader than JSON, user input, or direct framework/external API boundaries.
+- Verification: observed `dart test test/konyak_lints_test.dart` fail in the
+  Nix dev shell because `lib/src/io/to_nullable_boundary_violation.dart` was
+  not reported yet; after implementation, `just cli-custom-lint`, `just
+  flutter-custom-lint`, `just konyak-lints-test`, `just cli-analyze`, `just
+  cli-test`, `just verify-governance`, `just verify-safety`, `just
+  format-check`, and `just lint` passed in the Nix dev shell.
+
+- Timestamp: 2026-06-29 22:31 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Remove Option-to-null control flow from macOS runtime
+  validation.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: `ddf9a15` (`Restrict Flutter CLI nullable boundaries`).
+- Purpose: correct `Option` values that were immediately converted to nullable
+  values and checked with `null`, starting with
+  `macos_runtime_validator.dart`.
+- Completed work: replaced runtime layout path extraction with Option
+  `flatMap`/`map` composition and moved missing-layout handling to the Option
+  `match` none branch; changed runtime stack completeness checks to use
+  `Option.match` instead of `toNullable()` plus `null`.
+- Remaining work: audit the wider CLI backend for the same
+  `toNullable()`-then-null-branch pattern and replace those with explicit
+  Option folds/results where they are not direct serialization or external API
+  adapters.
+- Next action: continue the broader CLI backend audit, starting with
+  runtime-install and repository-storage I/O paths that still bridge Option to
+  nullable control flow.
+- Verification: focused runtime validator tests passed with `dart test
+  test/cli_contract_test.dart --plain-name "runtime validator"` in the Nix dev
+  shell; `just cli-test`, `just verify-governance`, `just verify-safety`,
+  `just format-check`, and `just lint` passed in the Nix dev shell.
+
 - Timestamp: 2026-06-29 21:44 JST
 - State: `completed`
 - Branch: `main`

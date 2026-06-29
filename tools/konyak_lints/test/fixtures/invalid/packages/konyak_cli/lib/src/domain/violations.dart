@@ -31,6 +31,10 @@ class Result<L, R> {
 class Option<T> {
   const Option.none();
 
+  static Option<T> fromNullable<T>(T? value) {
+    return Option<T>.none();
+  }
+
   R match<R>(R Function() onNone, R Function(T value) onSome) {
     throw UnimplementedError();
   }
@@ -66,6 +70,10 @@ Option<int> collapsedFailure(Result<Failure, Option<int>> result) {
 
 int nullableBridge(Option<int> value) {
   return value.toNullable() ?? 0;
+}
+
+Option<int> nullableInputBridge(int? value) {
+  return Option.fromNullable(value);
 }
 
 void domainIoReferences(File file, Directory directory) {

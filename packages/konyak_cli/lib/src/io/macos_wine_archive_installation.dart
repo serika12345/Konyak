@@ -70,28 +70,36 @@ extension MacosWineArchiveInstallation on DartIoMacosWineInstaller {
       runtimeStackVersionProbe: runtimeStackVersionProbe,
     );
 
-    if (runtime.isInstalled.toNullable() != true) {
+    if (!runtime.isInstalled.match(() => false, (value) => value)) {
       return MacosWineInstallFailed(
         'macOS Wine archive did not install '
-        '`${runtime.executablePath.toNullable()}`.',
+        '`${runtime.executablePath.match(() => 'unknown executable', (value) => value.value)}`.',
       );
     }
-    final stack = runtime.stack.toNullable();
-    if (stack == null || !stack.isComplete) {
-      return MacosWineInstallFailed(
+
+    return runtime.stack.match(
+      () => const MacosWineInstallFailed(
         'macOS Wine archive installed but runtime stack is incomplete: '
-        '${incompleteMacosWineStackSummary(stack)}.',
-      );
-    }
+        'runtime stack metadata is missing.',
+      ),
+      (stack) {
+        if (!stack.isComplete) {
+          return MacosWineInstallFailed(
+            'macOS Wine archive installed but runtime stack is incomplete: '
+            '${incompleteMacosWineStackSummary(stack)}.',
+          );
+        }
 
-    emitRuntimeInstallProgress(
-      progressSink,
-      stage: 'complete',
-      message: 'Installed Konyak macOS Wine.',
-      fraction: 1,
+        emitRuntimeInstallProgress(
+          progressSink,
+          stage: 'complete',
+          message: 'Installed Konyak macOS Wine.',
+          fraction: 1,
+        );
+
+        return MacosWineInstallCompleted(runtime: runtime);
+      },
     );
-
-    return MacosWineInstallCompleted(runtime: runtime);
   }
 
   MacosWineInstallResult installMacosWineStackFromSourceManifest(
@@ -246,7 +254,7 @@ extension MacosWineArchiveInstallation on DartIoMacosWineInstaller {
           .match(
             () => environment
                 .nonEmptyValue('KONYAK_MACOS_WINE_STACK_PUBLIC_KEY_PATH')
-                .toNullable(),
+                .match(() => null, (value) => value),
             (value) => value,
           ),
       publicKeyText: environment
@@ -254,18 +262,14 @@ extension MacosWineArchiveInstallation on DartIoMacosWineInstaller {
           .match(
             () => environment
                 .nonEmptyValue('KONYAK_MACOS_WINE_STACK_PUBLIC_KEY')
-                .toNullable(),
+                .match(() => null, (value) => value),
             (value) => value,
           ),
     );
   }
 }
 
-String incompleteMacosWineStackSummary(RuntimeStack? stack) {
-  if (stack == null) {
-    return 'runtime stack metadata is missing';
-  }
-
+String incompleteMacosWineStackSummary(RuntimeStack stack) {
   final missingComponents = stack.components
       .where((component) => component.isRequired && !component.isInstalled)
       .map((component) => component.id)

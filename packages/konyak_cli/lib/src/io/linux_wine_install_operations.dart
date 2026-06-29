@@ -60,10 +60,10 @@ extension DartIoLinuxWineInstallerOperations on DartIoLinuxWineInstaller {
       fileStatusProbe: const DartIoFileStatusProbe(),
       runtimeStackVersionProbe: runtimeStackVersionProbe,
     );
-    if (runtime.isInstalled.toNullable() != true) {
+    if (!runtime.isInstalled.match(() => false, (value) => value)) {
       return LinuxWineInstallFailed(
         'Linux Wine archive did not install '
-        '`${runtime.executablePath.toNullable()}`.',
+        '`${runtime.executablePath.match(() => 'unknown executable', (value) => value.value)}`.',
       );
     }
 
@@ -201,7 +201,7 @@ extension DartIoLinuxWineInstallerOperations on DartIoLinuxWineInstaller {
           .match(
             () => environment
                 .nonEmptyValue('KONYAK_LINUX_WINE_STACK_PUBLIC_KEY_PATH')
-                .toNullable(),
+                .match(() => null, (value) => value),
             (value) => value,
           ),
       publicKeyText: environment
@@ -209,7 +209,7 @@ extension DartIoLinuxWineInstallerOperations on DartIoLinuxWineInstaller {
           .match(
             () => environment
                 .nonEmptyValue('KONYAK_LINUX_WINE_STACK_PUBLIC_KEY')
-                .toNullable(),
+                .match(() => null, (value) => value),
             (value) => value,
           ),
     );

@@ -95,7 +95,7 @@ void synchronizeLinuxPinnedProgramLaunchers({
               environment: hostEnvironment,
               launcherCommand: launcherCommand,
               displayName: launcher.displayName,
-              iconPath: launcher.iconPath.toNullable(),
+              iconPath: launcher.iconPath.match(() => null, (value) => value),
               manifest: launcher.manifest,
             ) ||
             changed,

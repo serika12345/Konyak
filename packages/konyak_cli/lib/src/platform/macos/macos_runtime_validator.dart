@@ -40,97 +40,93 @@ class DartIoMacosWineRuntimeValidator implements RuntimeValidator {
   }
 
   RuntimeValidationResult validateRuntime(RuntimeRecord runtime) {
-    final runtimeRoot = runtime.libraryPath.toNullable()?.value;
-    final executablePath = runtime.executablePath.toNullable()?.value;
-    if (runtimeRoot == null || executablePath == null) {
+    final layout = runtime.libraryPath.flatMap(
+      (runtimeRoot) => runtime.executablePath.map(
+        (executablePath) => (
+          runtimeRoot: runtimeRoot.value,
+          executablePath: executablePath.value,
+        ),
+      ),
+    );
+
+    return layout.match(() => missingRuntimeLayoutValidation(runtime), (
+      layout,
+    ) {
+      final runtimeRoot = layout.runtimeRoot;
+      final executablePath = layout.executablePath;
+
+      if (runtime.id.value == linuxWineRuntimeId) {
+        return validateLinuxRuntime(
+          runtime: runtime,
+          runtimeRoot: runtimeRoot,
+          executablePath: executablePath,
+        );
+      }
+
+      final checks = <RuntimeValidationCheck>[
+        runtimePathCheck(
+          id: 'runtime-root',
+          name: 'Runtime root',
+          path: runtimeRoot,
+          fileStatusProbe: fileStatusProbe,
+        ),
+        runtimePathCheck(
+          id: 'wine-executable',
+          name: 'Wine executable',
+          path: executablePath,
+          fileStatusProbe: fileStatusProbe,
+        ),
+        runtimeAnyPathCheck(
+          id: 'loader-dylibs',
+          name: 'Wine loader libraries',
+          paths: macosWineLoaderLibraryPaths(runtimeRoot),
+          fileStatusProbe: fileStatusProbe,
+        ),
+        runtimeStackCompletenessCheck(runtime.stack),
+      ];
+
+      if (!checks.every((check) => !check.isRequired || check.isPassed)) {
+        return RuntimeValidationCompleted(
+          RuntimeValidationRecord(
+            runtimeId: runtime.id.value,
+            isValid: false,
+            checks: checks,
+          ),
+        );
+      }
+
+      final loaderResult = executableProbe.run(
+        executable: ProgramExecutable(executablePath),
+        arguments: ProgramRunArguments(const <String>['--version']),
+        environment: ProgramRunEnvironment(<String, String>{
+          'WINELOADER': executablePath,
+          'WINESERVER': joinPath(runtimeRoot, const ['bin', 'wineserver']),
+          'WINEDLLPATH': macosWineWindowsDllPaths(runtimeRoot).join(':'),
+          'DYLD_LIBRARY_PATH': joinPath(runtimeRoot, const ['lib']),
+        }),
+        workingDirectory: ProgramWorkingDirectoryPath(dirname(executablePath)),
+      );
+      final loaderCheck = RuntimeValidationCheck(
+        id: 'wine-loader',
+        name: 'Wine loader',
+        isRequired: true,
+        isPassed: loaderResult.exitCode == 0,
+        message: loaderResult.exitCode == 0
+            ? 'wineloader --version completed.'
+            : runtimeLoaderFailureMessage(loaderResult),
+      );
+      final completedChecks = <RuntimeValidationCheck>[...checks, loaderCheck];
+
       return RuntimeValidationCompleted(
         RuntimeValidationRecord(
           runtimeId: runtime.id.value,
-          isValid: false,
-          checks: const [
-            RuntimeValidationCheck(
-              id: 'runtime-layout',
-              name: 'Runtime layout',
-              isRequired: true,
-              isPassed: false,
-              message: 'Runtime record is missing layout paths.',
-            ),
-          ],
+          isValid: completedChecks.every(
+            (check) => !check.isRequired || check.isPassed,
+          ),
+          checks: completedChecks,
         ),
       );
-    }
-
-    if (runtime.id.value == linuxWineRuntimeId) {
-      return validateLinuxRuntime(
-        runtime: runtime,
-        runtimeRoot: runtimeRoot,
-        executablePath: executablePath,
-      );
-    }
-
-    final checks = <RuntimeValidationCheck>[
-      runtimePathCheck(
-        id: 'runtime-root',
-        name: 'Runtime root',
-        path: runtimeRoot,
-        fileStatusProbe: fileStatusProbe,
-      ),
-      runtimePathCheck(
-        id: 'wine-executable',
-        name: 'Wine executable',
-        path: executablePath,
-        fileStatusProbe: fileStatusProbe,
-      ),
-      runtimeAnyPathCheck(
-        id: 'loader-dylibs',
-        name: 'Wine loader libraries',
-        paths: macosWineLoaderLibraryPaths(runtimeRoot),
-        fileStatusProbe: fileStatusProbe,
-      ),
-      runtimeStackCompletenessCheck(runtime.stack),
-    ];
-
-    if (!checks.every((check) => !check.isRequired || check.isPassed)) {
-      return RuntimeValidationCompleted(
-        RuntimeValidationRecord(
-          runtimeId: runtime.id.value,
-          isValid: false,
-          checks: checks,
-        ),
-      );
-    }
-
-    final loaderResult = executableProbe.run(
-      executable: ProgramExecutable(executablePath),
-      arguments: ProgramRunArguments(const <String>['--version']),
-      environment: ProgramRunEnvironment(<String, String>{
-        'WINELOADER': executablePath,
-        'WINESERVER': joinPath(runtimeRoot, const ['bin', 'wineserver']),
-        'WINEDLLPATH': macosWineWindowsDllPaths(runtimeRoot).join(':'),
-        'DYLD_LIBRARY_PATH': joinPath(runtimeRoot, const ['lib']),
-      }),
-      workingDirectory: ProgramWorkingDirectoryPath(dirname(executablePath)),
-    );
-    final loaderCheck = RuntimeValidationCheck(
-      id: 'wine-loader',
-      name: 'Wine loader',
-      isRequired: true,
-      isPassed: loaderResult.exitCode == 0,
-      message: loaderResult.exitCode == 0
-          ? 'wineloader --version completed.'
-          : runtimeLoaderFailureMessage(loaderResult),
-    );
-    final completedChecks = <RuntimeValidationCheck>[...checks, loaderCheck];
-
-    return RuntimeValidationCompleted(
-      RuntimeValidationRecord(
-        runtimeId: runtime.id.value,
-        isValid: completedChecks.every(
-          (check) => !check.isRequired || check.isPassed,
-        ),
-        checks: completedChecks,
-      ),
-    );
+    });
   }
 
   RuntimeValidationResult validateLinuxRuntime({
@@ -196,33 +192,50 @@ class DartIoMacosWineRuntimeValidator implements RuntimeValidator {
 RuntimeValidationCheck runtimeStackCompletenessCheck(
   Option<RuntimeStack> stackOption,
 ) {
-  final stack = stackOption.toNullable();
-  if (stack == null) {
-    return const RuntimeValidationCheck(
+  return stackOption.match(
+    () => const RuntimeValidationCheck(
       id: 'runtime-stack',
       name: 'Runtime stack',
       isRequired: true,
       isPassed: false,
       message: 'Runtime stack metadata is missing.',
-    );
-  }
+    ),
+    (stack) => stack.isComplete
+        ? const RuntimeValidationCheck(
+            id: 'runtime-stack',
+            name: 'Runtime stack',
+            isRequired: true,
+            isPassed: true,
+            message: 'Runtime stack is complete.',
+          )
+        : RuntimeValidationCheck(
+            id: 'runtime-stack',
+            name: 'Runtime stack',
+            isRequired: true,
+            isPassed: false,
+            message:
+                'Runtime stack is incomplete: '
+                '${incompleteMacosWineStackSummary(stack)}.',
+          ),
+  );
+}
 
-  if (stack.isComplete) {
-    return const RuntimeValidationCheck(
-      id: 'runtime-stack',
-      name: 'Runtime stack',
-      isRequired: true,
-      isPassed: true,
-      message: 'Runtime stack is complete.',
-    );
-  }
-
-  return RuntimeValidationCheck(
-    id: 'runtime-stack',
-    name: 'Runtime stack',
-    isRequired: true,
-    isPassed: false,
-    message:
-        'Runtime stack is incomplete: ${incompleteMacosWineStackSummary(stack)}.',
+RuntimeValidationCompleted missingRuntimeLayoutValidation(
+  RuntimeRecord runtime,
+) {
+  return RuntimeValidationCompleted(
+    RuntimeValidationRecord(
+      runtimeId: runtime.id.value,
+      isValid: false,
+      checks: const [
+        RuntimeValidationCheck(
+          id: 'runtime-layout',
+          name: 'Runtime layout',
+          isRequired: true,
+          isPassed: false,
+          message: 'Runtime record is missing layout paths.',
+        ),
+      ],
+    ),
   );
 }

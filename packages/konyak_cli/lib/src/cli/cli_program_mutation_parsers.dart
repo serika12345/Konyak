@@ -133,7 +133,7 @@ ProgramSettingsUpdateRequest? parseJsonProgramSettingsUpdateRequest(
           settings: settings,
         ),
       )
-      .toNullable();
+      .match(() => null, (value) => value);
 }
 
 class PinnedProgramLaunchCliRequest {

@@ -92,8 +92,8 @@ class DartIoMacosWineInstaller implements MacosWineStreamingInstaller {
         return installMacosWineStackFromSourceManifest(
           sourceManifest.value,
           sourceManifestSignature: sourceManifestSignature.asOption
-              .toNullable()
-              ?.value,
+              .map((signature) => signature.value)
+              .match(() => null, (value) => value),
           preserveExistingRuntimeFiles: preserveExistingRuntimeFiles,
           progressSink: progress,
         );
@@ -209,8 +209,8 @@ class DartIoMacosWineInstaller implements MacosWineStreamingInstaller {
         return installMacosWineStackFromSourceManifestStreaming(
           sourceManifest.value,
           sourceManifestSignature: sourceManifestSignature.asOption
-              .toNullable()
-              ?.value,
+              .map((signature) => signature.value)
+              .match(() => null, (value) => value),
           preserveExistingRuntimeFiles: preserveExistingRuntimeFiles,
           progressSink: progress,
         );

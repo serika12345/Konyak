@@ -20,6 +20,7 @@ class KonyakLintPlugin extends PluginBase {
   List<LintRule> getLintRules(CustomLintConfigs configs) => const [
     KonyakNoNullLiteralOutsideBoundary(),
     KonyakNoNullableTypeOutsideBoundary(),
+    KonyakNoToNullable(),
     KonyakNoNullableBridgeOutsideBoundary(),
     KonyakNoNullableSentinelFlow(),
     KonyakNoResultFailureToOptionNone(),
@@ -113,6 +114,25 @@ class KonyakNoNullableBridgeOutsideBoundary extends _KonyakAstRule {
   @override
   RecursiveAstVisitor<void> visitor(ErrorReporter reporter) =>
       _NullableBridgeVisitor(reporter, _code);
+}
+
+class KonyakNoToNullable extends _KonyakAstRule {
+  const KonyakNoToNullable() : super(_code);
+
+  static const _code = LintCode(
+    name: 'konyak_no_to_nullable',
+    problemMessage:
+        'Do not convert Option values to nullable values. Use match/map/flatMap or an explicit boundary projection.',
+    errorSeverity: ErrorSeverity.ERROR,
+  );
+
+  @override
+  bool shouldRunOnPath(String normalizedPath) =>
+      _isKonyakSourcePath(normalizedPath);
+
+  @override
+  RecursiveAstVisitor<void> visitor(ErrorReporter reporter) =>
+      _ToNullableVisitor(reporter, _code);
 }
 
 class KonyakNoNullableSentinelFlow extends _KonyakAstRule {
@@ -401,7 +421,22 @@ class _NullableBridgeVisitor extends RecursiveAstVisitor<void> {
   @override
   void visitMethodInvocation(MethodInvocation node) {
     final methodName = node.methodName.name;
-    if (methodName == 'toNullable' || methodName == 'fromNullable') {
+    if (methodName == 'fromNullable') {
+      reporter.atNode(node.methodName, code);
+    }
+    super.visitMethodInvocation(node);
+  }
+}
+
+class _ToNullableVisitor extends RecursiveAstVisitor<void> {
+  const _ToNullableVisitor(this.reporter, this.code);
+
+  final ErrorReporter reporter;
+  final LintCode code;
+
+  @override
+  void visitMethodInvocation(MethodInvocation node) {
+    if (node.methodName.name == 'toNullable') {
       reporter.atNode(node.methodName, code);
     }
     super.visitMethodInvocation(node);

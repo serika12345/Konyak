@@ -17,3 +17,4 @@ custom_lint:
     - konyak_no_nullable_sentinel_flow
     - konyak_no_nullable_type_outside_boundary
     - konyak_no_result_failure_to_option_none
+    - konyak_no_to_nullable

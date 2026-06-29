@@ -81,11 +81,11 @@ LinuxFileAssociationInstallResult installLinuxFileAssociations({
         writeLinuxFileAssociationFiles(
           desktopEntryPath: desktopEntryPath,
           desktopEntry: linuxKonyakDesktopEntry(appExecutable: appExecutable),
-          iconSourcePath: iconSourcePath.toNullable(),
-          iconTargetPath: iconPath.toNullable(),
+          iconSourcePath: iconSourcePath.match(() => null, (value) => value),
+          iconTargetPath: iconPath.match(() => null, (value) => value),
           iconThemePath: iconPath
               .map((_) => linuxKonyakHicolorIconThemePath(hostEnvironment))
-              .toNullable(),
+              .match(() => null, (value) => value),
           mimeAppsPath: mimeAppsPath,
         );
 

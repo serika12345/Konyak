@@ -88,8 +88,8 @@ class DartIoLinuxWineInstaller implements LinuxWineStreamingInstaller {
         return installLinuxWineStackFromSourceManifest(
           sourceManifest.value,
           sourceManifestSignature: sourceManifestSignature.asOption
-              .toNullable()
-              ?.value,
+              .map((signature) => signature.value)
+              .match(() => null, (value) => value),
           progressSink: progress,
         );
       case RuntimeWineInstallFromArchive(
@@ -199,8 +199,8 @@ class DartIoLinuxWineInstaller implements LinuxWineStreamingInstaller {
         return installLinuxWineStackFromSourceManifestStreaming(
           sourceManifest.value,
           sourceManifestSignature: sourceManifestSignature.asOption
-              .toNullable()
-              ?.value,
+              .map((signature) => signature.value)
+              .match(() => null, (value) => value),
           progressSink: progress,
         );
       case RuntimeWineInstallFromArchive(

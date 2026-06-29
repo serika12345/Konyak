@@ -222,5 +222,5 @@ RuntimeSettingsUpdateRequest? parseJsonRuntimeSettingsUpdateRequest(
           runtimeSettings: runtimeSettings,
         ),
       )
-      .toNullable();
+      .match(() => null, (value) => value);
 }
