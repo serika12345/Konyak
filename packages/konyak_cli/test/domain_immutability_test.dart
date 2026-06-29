@@ -825,6 +825,81 @@ void main() {
     );
   });
 
+  test('program mutation request records compare by semantic values', () {
+    final settings = ProgramSettingsRecord(
+      locale: 'ja_JP',
+      arguments: '-novid',
+    );
+
+    expect(
+      ProgramPinRequest(
+        bottleId: 'steam',
+        name: 'Steam',
+        programPath: '/steam.exe',
+      ),
+      ProgramPinRequest(
+        bottleId: 'steam',
+        name: 'Steam',
+        programPath: '/steam.exe',
+      ),
+    );
+    expect(
+      ProgramUnpinRequest(bottleId: 'steam', programPath: '/steam.exe'),
+      ProgramUnpinRequest(bottleId: 'steam', programPath: '/steam.exe'),
+    );
+    expect(
+      ProgramRenameRequest(
+        bottleId: 'steam',
+        programPath: '/steam.exe',
+        name: 'Steam Beta',
+      ),
+      ProgramRenameRequest(
+        bottleId: 'steam',
+        programPath: '/steam.exe',
+        name: 'Steam Beta',
+      ),
+    );
+    expect(
+      PinnedProgramLauncherManifest(
+        launcherId: 'steam',
+        bottleId: 'steam',
+        programPath: '/steam.exe',
+        programName: 'Steam',
+      ),
+      PinnedProgramLauncherManifest(
+        launcherId: 'steam',
+        bottleId: 'steam',
+        programPath: '/steam.exe',
+        programName: 'Steam',
+      ),
+    );
+    expect(
+      WineProcessTerminationRequest(bottleId: 'steam', processId: '42'),
+      WineProcessTerminationRequest(bottleId: 'steam', processId: '42'),
+    );
+    expect(
+      WineProcessGroupTerminationRequest(bottleId: Option.of('steam')),
+      WineProcessGroupTerminationRequest(bottleId: Option.of('steam')),
+    );
+    expect(WineProcessGroupTerminationRequest().bottleId.isNone(), isTrue);
+    expect(
+      ProgramSettingsRequest(bottleId: 'steam', programPath: '/steam.exe'),
+      ProgramSettingsRequest(bottleId: 'steam', programPath: '/steam.exe'),
+    );
+    expect(
+      ProgramSettingsUpdateRequest(
+        bottleId: 'steam',
+        programPath: '/steam.exe',
+        settings: settings,
+      ),
+      ProgramSettingsUpdateRequest(
+        bottleId: 'steam',
+        programPath: '/steam.exe',
+        settings: ProgramSettingsRecord(locale: 'ja_JP', arguments: '-novid'),
+      ),
+    );
+  });
+
   test('Wine process kill plans model process ids with WineProcessId', () {
     expect(winedbgAttachProcessId(WineProcessId('000000d8')), '0x000000d8');
     expect(winedbgAttachProcessId(WineProcessId('0x000000d8')), '0x000000d8');

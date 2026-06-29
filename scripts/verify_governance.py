@@ -1270,7 +1270,7 @@ def require_pinned_launcher_manifest_io_json_projection() -> None:
     )
     domain = read_text(domain_path)
     record_match = re.search(
-        r"class PinnedProgramLauncherManifest \{(?P<body>.*?)\n\}",
+        r"(?:abstract\s+)?class PinnedProgramLauncherManifest[^{]*\{(?P<body>.*?)\n\}",
         domain,
         flags=re.DOTALL,
     )

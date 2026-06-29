@@ -13,6 +13,46 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-29 13:07 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Freezed-backed program mutation request records.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: this commit (`Freezed program mutation request records`).
+- Purpose: continue the Freezed domain model pass with the low-risk
+  `program_mutation_models.dart` request and manifest records before touching
+  the result unions.
+- Completed work: committed the winetricks verb-list result slice; inspected
+  `program_mutation_models.dart`, `program_registry_models.dart`, and
+  `program_registry_plans.dart`; selected request/manifest records because
+  they only wrap existing value objects or `Option` values and have no result
+  branching; added focused value-semantics coverage and observed it fail
+  against the hand-written request records; converted `ProgramPinRequest`,
+  `ProgramUnpinRequest`, `ProgramRenameRequest`,
+  `PinnedProgramLauncherManifest`, `WineProcessTerminationRequest`,
+  `WineProcessGroupTerminationRequest`, `ProgramSettingsRequest`, and
+  `ProgramSettingsUpdateRequest` to Freezed; updated the pinned launcher
+  manifest governance regex for Freezed class syntax.
+- Remaining work: `program_mutation_models.dart` still has hand-written result
+  unions: `ProgramPinResult`, `ProgramUpdateResult`,
+  `ProgramSettingsReadResult`, and `ProgramSettingsUpdateResult`.
+- Next action: convert the program mutation result unions in small groups,
+  starting with `ProgramSettingsReadResult` and
+  `ProgramSettingsUpdateResult` because their variants are the narrowest.
+- Verification: observed `cd packages/konyak_cli && dart test
+  test/domain_immutability_test.dart --name "program mutation request records
+  compare by semantic values"` fail before implementation; after
+  implementation, `cd packages/konyak_cli && dart run build_runner build
+  --delete-conflicting-outputs && dart format
+  lib/src/domain/program/program_mutation_models.dart
+  test/domain_immutability_test.dart && dart analyze --fatal-infos`, focused
+  program mutation request value-semantics test, focused pin/unpin/rename
+  program settings and terminate-wine-process CLI contract tests, `cd
+  packages/konyak_cli && dart test test/domain_immutability_test.dart`, `just
+  verify-governance`, `just verify-architecture`, `just verify-safety`, `just
+  format-check`, `just lint`, and `just cli-test` passed.
+
 - Timestamp: 2026-06-29 13:01 JST
 - State: `completed`
 - Branch: `main`
