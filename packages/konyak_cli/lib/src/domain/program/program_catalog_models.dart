@@ -135,29 +135,58 @@ abstract interface class AsyncProgramMetadataExtractor {
   });
 }
 
-class WinetricksVerbRecord {
-  WinetricksVerbRecord({
-    required String id,
-    required this.name,
-    required this.description,
-  }) : id = WinetricksVerbId(id);
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class WinetricksVerbRecord with _$WinetricksVerbRecord {
+  const WinetricksVerbRecord._();
 
-  final WinetricksVerbId id;
-  final String name;
-  final String description;
+  factory WinetricksVerbRecord({
+    required String id,
+    required String name,
+    required String description,
+  }) {
+    return WinetricksVerbRecord._validated(
+      id: WinetricksVerbId(id),
+      name: name,
+      description: description,
+    );
+  }
+
+  const factory WinetricksVerbRecord._validated({
+    required WinetricksVerbId id,
+    required String name,
+    required String description,
+  }) = _WinetricksVerbRecord;
 }
 
-class WinetricksCategoryRecord {
-  WinetricksCategoryRecord({
-    required String id,
-    required this.name,
-    required List<WinetricksVerbRecord> verbs,
-  }) : id = WinetricksCategoryId(id),
-       verbs = List.unmodifiable(verbs);
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class WinetricksCategoryRecord with _$WinetricksCategoryRecord {
+  const WinetricksCategoryRecord._();
 
-  final WinetricksCategoryId id;
-  final String name;
-  final List<WinetricksVerbRecord> verbs;
+  factory WinetricksCategoryRecord({
+    required String id,
+    required String name,
+    required List<WinetricksVerbRecord> verbs,
+  }) {
+    return WinetricksCategoryRecord._validated(
+      id: WinetricksCategoryId(id),
+      name: name,
+      verbs: List.unmodifiable(verbs),
+    );
+  }
+
+  const factory WinetricksCategoryRecord._validated({
+    required WinetricksCategoryId id,
+    required String name,
+    required List<WinetricksVerbRecord> verbs,
+  }) = _WinetricksCategoryRecord;
 }
 
 sealed class WinetricksVerbListResult {

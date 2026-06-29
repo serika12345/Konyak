@@ -257,6 +257,62 @@ void main() {
     );
   });
 
+  test('winetricks catalog records expose immutable value snapshots', () {
+    final verbs = <WinetricksVerbRecord>[
+      WinetricksVerbRecord(
+        id: 'corefonts',
+        name: 'corefonts',
+        description: 'install core fonts',
+      ),
+    ];
+    final category = WinetricksCategoryRecord(
+      id: 'fonts',
+      name: 'Fonts',
+      verbs: verbs,
+    );
+    verbs.clear();
+
+    expect(category.id, WinetricksCategoryId('fonts'));
+    expect(category.verbs, hasLength(1));
+    expect(category.verbs.single.id, WinetricksVerbId('corefonts'));
+    expect(
+      () => category.verbs.add(
+        WinetricksVerbRecord(
+          id: 'allfonts',
+          name: 'allfonts',
+          description: 'install all fonts',
+        ),
+      ),
+      throwsUnsupportedError,
+    );
+    expect(
+      WinetricksVerbRecord(
+        id: 'corefonts',
+        name: 'corefonts',
+        description: 'install core fonts',
+      ),
+      WinetricksVerbRecord(
+        id: 'corefonts',
+        name: 'corefonts',
+        description: 'install core fonts',
+      ),
+    );
+    expect(
+      category,
+      WinetricksCategoryRecord(
+        id: 'fonts',
+        name: 'Fonts',
+        verbs: <WinetricksVerbRecord>[
+          WinetricksVerbRecord(
+            id: 'corefonts',
+            name: 'corefonts',
+            description: 'install core fonts',
+          ),
+        ],
+      ),
+    );
+  });
+
   test('graphics backend hints expose immutable value records', () {
     final signals = <ProgramGraphicsBackendSignal>[
       ProgramGraphicsBackendSignal(kind: 'peImport', value: 'd3d11.dll'),

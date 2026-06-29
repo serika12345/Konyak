@@ -13,6 +13,42 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-29 12:55 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Freezed-backed winetricks catalog records.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: this commit (`Freezed winetricks catalog records`).
+- Purpose: continue the program catalog Freezed pass by converting the
+  winetricks verb/category records before touching the result union.
+- Completed work: committed the core program catalog record Freezed slice;
+  inspected winetricks parser, CLI JSON projection, result handling, and call
+  sites; selected `WinetricksVerbRecord` and `WinetricksCategoryRecord` as the
+  next slice because the category list snapshot can be preserved independently
+  from `WinetricksVerbListResult`; added focused value-semantics and
+  immutable-list snapshot coverage and observed it fail against the
+  hand-written records; converted the two winetricks catalog records to
+  Freezed while preserving public String-taking factories and the category
+  list snapshot.
+- Remaining work: `WinetricksVerbListResult` remains hand-written in
+  `program_catalog_models.dart`.
+- Next action: convert `WinetricksVerbListResult` result variants to Freezed,
+  preserving concrete variant constructor names and category list snapshots in
+  completed results.
+- Verification: observed `cd packages/konyak_cli && dart test
+  test/domain_immutability_test.dart --name "winetricks catalog records expose
+  immutable value snapshots"` fail before implementation; after
+  implementation, `cd packages/konyak_cli && dart run build_runner build
+  --delete-conflicting-outputs && dart format
+  lib/src/domain/program/program_catalog_models.dart
+  test/domain_immutability_test.dart && dart analyze --fatal-infos`, focused
+  winetricks catalog value-semantics test, focused list-winetricks-verbs CLI
+  contract tests, `cd packages/konyak_cli && dart test
+  test/domain_immutability_test.dart`, `just verify-governance`, `just
+  verify-architecture`, `just verify-safety`, `just format-check`, `just
+  lint`, and `just cli-test` passed.
+
 - Timestamp: 2026-06-29 12:50 JST
 - State: `completed`
 - Branch: `main`
