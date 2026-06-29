@@ -13,6 +13,45 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-29 12:50 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Freezed-backed program catalog core records.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: this commit (`Freezed program catalog records`).
+- Purpose: continue the Freezed domain model pass with the low-risk program
+  catalog records before touching list-snapshot winetricks records or result
+  variants.
+- Completed work: inspected `program_catalog_models.dart`, CLI JSON projection
+  governance, result-boundary governance, and call sites; selected
+  `BottleProgramRecord`, `ProgramMetadataRecord`, and `WineProcessRecord` as
+  the first catalog slice because they only wrap value objects and `Option`
+  metadata without list snapshots or result branching; added focused
+  value-semantics coverage and observed it fail against the hand-written
+  records; converted the three records to Freezed while preserving public
+  String-taking factories; updated governance baselines from hand-written
+  `final Option<...>` fields to Freezed private factory `required
+  Option<...>` fields.
+- Remaining work: `WinetricksVerbRecord`, `WinetricksCategoryRecord`, and
+  `WinetricksVerbListResult` remain hand-written in
+  `program_catalog_models.dart`. The list-snapshot category record should be
+  handled before the result variants.
+- Next action: convert the winetricks catalog records with value-semantics
+  coverage, preserving immutable verb/category snapshots and CLI JSON output.
+- Verification: observed `cd packages/konyak_cli && dart test
+  test/domain_immutability_test.dart --name "program catalog records compare
+  by semantic values"` fail before implementation; after implementation, `cd
+  packages/konyak_cli && dart run build_runner build
+  --delete-conflicting-outputs && dart format
+  lib/src/domain/program/program_catalog_models.dart
+  test/domain_immutability_test.dart && dart analyze --fatal-infos`, focused
+  program catalog value-semantics tests, focused list-bottle-programs /
+  list-wine-processes CLI contract tests, `cd packages/konyak_cli && dart test
+  test/domain_immutability_test.dart`, `just verify-governance`, `just
+  verify-architecture`, `just verify-safety`, `just format-check`, `just
+  lint`, and `just cli-test` passed.
+
 - Timestamp: 2026-06-29 12:37 JST
 - State: `completed`
 - Branch: `main`

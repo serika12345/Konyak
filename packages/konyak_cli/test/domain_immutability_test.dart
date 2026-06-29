@@ -212,6 +212,51 @@ void main() {
     expect(process.hostPath.isNone(), isTrue);
   });
 
+  test('program catalog records compare by semantic values', () {
+    expect(
+      ProgramMetadataRecord(
+        architecture: Option.of('x86_64'),
+        fileDescription: Option.of('Steam'),
+        iconPath: Option.of('/steam.icns'),
+      ),
+      ProgramMetadataRecord(
+        architecture: Option.of('x86_64'),
+        fileDescription: Option.of('Steam'),
+        iconPath: Option.of('/steam.icns'),
+      ),
+    );
+    expect(
+      BottleProgramRecord(
+        id: 'steam',
+        name: 'Steam',
+        path: '/steam.exe',
+        source: 'pinned',
+        metadata: Option.of(ProgramMetadataRecord(iconPath: Option.of('/i'))),
+      ),
+      BottleProgramRecord(
+        id: 'steam',
+        name: 'Steam',
+        path: '/steam.exe',
+        source: 'pinned',
+        metadata: Option.of(ProgramMetadataRecord(iconPath: Option.of('/i'))),
+      ),
+    );
+    expect(
+      WineProcessRecord(
+        bottleId: 'steam',
+        processId: '42',
+        executable: 'steam.exe',
+        hostPath: Option.of('/steam.exe'),
+      ),
+      WineProcessRecord(
+        bottleId: 'steam',
+        processId: '42',
+        executable: 'steam.exe',
+        hostPath: Option.of('/steam.exe'),
+      ),
+    );
+  });
+
   test('graphics backend hints expose immutable value records', () {
     final signals = <ProgramGraphicsBackendSignal>[
       ProgramGraphicsBackendSignal(kind: 'peImport', value: 'd3d11.dll'),

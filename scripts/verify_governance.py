@@ -1677,16 +1677,16 @@ def require_result_boundary_rules() -> None:
         "final Map<String, String> environment;",
     )
     for expected in [
-        "final Option<ProgramMetadataRecord> metadata;",
-        "final Option<ProgramPath> hostPath;",
+        "required Option<ProgramMetadataRecord> metadata,",
+        "required Option<ProgramPath> hostPath,",
         "Option<ProgramMetadataRecord> extract({",
-        "final Option<ProgramArchitecture> architecture;",
-        "final Option<ProgramFileDescription> fileDescription;",
-        "final Option<ProgramProductName> productName;",
-        "final Option<ProgramCompanyName> companyName;",
-        "final Option<ProgramFileVersion> fileVersion;",
-        "final Option<ProgramProductVersion> productVersion;",
-        "final Option<ProgramIconPath> iconPath;",
+        "required Option<ProgramArchitecture> architecture,",
+        "required Option<ProgramFileDescription> fileDescription,",
+        "required Option<ProgramProductName> productName,",
+        "required Option<ProgramCompanyName> companyName,",
+        "required Option<ProgramFileVersion> fileVersion,",
+        "required Option<ProgramProductVersion> productVersion,",
+        "required Option<ProgramIconPath> iconPath,",
     ]:
         require_contains("packages/konyak_cli/lib/src/domain/program/program_catalog_models.dart", expected)
     require_not_contains(
