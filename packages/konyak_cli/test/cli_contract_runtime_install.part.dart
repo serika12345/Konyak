@@ -23,13 +23,13 @@ void defineRuntimeInstallContractTests() {
     final result = const DartIoRuntimePackageInstaller().install(
       RuntimePackageInstallRequest(
         runtimeLabel: 'Linux Wine',
-        archivePath: archivePath,
+        archivePath: RuntimeArchivePath(archivePath),
         archiveSha256: const Option.none(),
-        componentArchivePaths: const [],
+        componentArchivePaths: const <RuntimeArchivePath>[],
         componentVersions: const RuntimeComponentVersions.empty(),
-        runtimeRoot: runtimeRoot.path,
-        requiredExecutableRelativePath: const ['bin', 'wine'],
-        expectedExecutablePath: executablePath,
+        runtimeRoot: RuntimeRootPath(runtimeRoot.path),
+        requiredExecutableRelativePath: RuntimeRelativePath(['bin', 'wine']),
+        expectedExecutablePath: RuntimeComponentPath(executablePath),
       ),
     );
 

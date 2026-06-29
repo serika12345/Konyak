@@ -65,7 +65,9 @@ void definePinnedProgramContractTests() {
       dataHome: _joinTestPath(tempDirectory.path, const ['data']),
       programMetadataExtractor: FixedProgramMetadataExtractor(
         programPath: '/downloads/Steam.exe',
-        metadata: ProgramMetadataRecord(iconPath: Option.of(iconPath)),
+        metadata: ProgramMetadataRecord(
+          iconPath: Option.of(ProgramIconPath(iconPath)),
+        ),
       ),
     );
     runCli(const [
@@ -322,7 +324,9 @@ void definePinnedProgramContractTests() {
       dataHome: _joinTestPath(tempDirectory.path, const ['data']),
       programMetadataExtractor: FixedProgramMetadataExtractor(
         programPath: '/downloads/Steam.exe',
-        metadata: ProgramMetadataRecord(iconPath: Option.of(iconPath)),
+        metadata: ProgramMetadataRecord(
+          iconPath: Option.of(ProgramIconPath(iconPath)),
+        ),
       ),
     );
     runCli(const [
@@ -785,7 +789,10 @@ void definePinnedProgramContractTests() {
       dataHome: tempDirectory.path,
     );
     final createResult = repository.createBottle(
-      BottleCreateRequest(name: 'Steam', windowsVersion: 'win10'),
+      BottleCreateRequest(
+        name: BottleName('Steam'),
+        windowsVersion: WindowsVersion('win10'),
+      ),
     );
     expect(createResult, isA<BottleCreated>());
     final bottle = (createResult as BottleCreated).bottle;
@@ -803,9 +810,9 @@ void definePinnedProgramContractTests() {
       ..writeAsStringSync('shortcut');
     final pinResult = repository.pinProgram(
       ProgramPinRequest(
-        bottleId: bottle.id.value,
-        name: 'Steam',
-        programPath: shortcutPath,
+        bottleId: bottle.id,
+        name: ProgramName('Steam'),
+        programPath: ProgramPath(shortcutPath),
       ),
     );
     expect(pinResult, isA<ProgramPinned>());

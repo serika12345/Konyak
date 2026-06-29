@@ -398,7 +398,10 @@ void defineRepositoryAndRunnerContractTests() {
       }, hostPlatform: KonyakHostPlatform.macos);
 
       final result = repository.createBottle(
-        BottleCreateRequest(name: 'Created', windowsVersion: 'win10'),
+        BottleCreateRequest(
+          name: BottleName('Created'),
+          windowsVersion: WindowsVersion('win10'),
+        ),
       );
 
       expect(result, isA<BottleCreated>());
@@ -455,7 +458,10 @@ void defineRepositoryAndRunnerContractTests() {
       expect(_expectIo(repository.listBottles()), isEmpty);
 
       final createResult = repository.createBottle(
-        BottleCreateRequest(name: 'Managed', windowsVersion: 'win10'),
+        BottleCreateRequest(
+          name: BottleName('Managed'),
+          windowsVersion: WindowsVersion('win10'),
+        ),
       );
 
       expect(createResult, isA<BottleCreated>());
@@ -505,7 +511,10 @@ void defineRepositoryAndRunnerContractTests() {
       );
 
       final createResult = repository.createBottle(
-        BottleCreateRequest(name: 'Created', windowsVersion: 'win10'),
+        BottleCreateRequest(
+          name: BottleName('Created'),
+          windowsVersion: WindowsVersion('win10'),
+        ),
       );
 
       expect(createResult, isA<BottleCreated>());
@@ -548,21 +557,24 @@ void defineRepositoryAndRunnerContractTests() {
     expect(deleteResult, isA<BottleDeleteMissing>());
 
     final renameResult = repository.renameBottle(
-      BottleRenameRequest(bottleId: 'imported', name: 'Renamed'),
+      BottleRenameRequest(
+        bottleId: BottleId('imported'),
+        name: BottleName('Renamed'),
+      ),
     );
     expect(renameResult, isA<BottleRenameMissing>());
 
     final moveResult = repository.moveBottle(
       BottleMoveRequest(
-        bottleId: 'imported',
-        path: '/home/user/.local/share/konyak/bottles/moved',
+        bottleId: BottleId('imported'),
+        path: BottlePath('/home/user/.local/share/konyak/bottles/moved'),
       ),
     );
     expect(moveResult, isA<BottleMoveMissing>());
 
     final runtimeSettingsResult = repository.setRuntimeSettings(
       RuntimeSettingsUpdateRequest(
-        bottleId: 'imported',
+        bottleId: BottleId('imported'),
         runtimeSettings: BottleRuntimeSettings(metalHud: true),
       ),
     );
@@ -570,9 +582,9 @@ void defineRepositoryAndRunnerContractTests() {
 
     final pinResult = repository.pinProgram(
       ProgramPinRequest(
-        bottleId: 'imported',
-        name: 'Setup',
-        programPath: '/downloads/setup.exe',
+        bottleId: BottleId('imported'),
+        name: ProgramName('Setup'),
+        programPath: ProgramPath('/downloads/setup.exe'),
       ),
     );
     expect(pinResult, isA<ProgramPinMissing>());

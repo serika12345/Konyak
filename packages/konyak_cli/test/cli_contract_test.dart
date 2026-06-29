@@ -423,9 +423,9 @@ final class FixedProgramMetadataExtractor implements ProgramMetadataExtractor {
   @override
   Option<ProgramMetadataRecord> extract({
     required BottleRecord bottle,
-    required String programPath,
+    required ProgramPath programPath,
   }) {
-    return programPath == this.programPath
+    return programPath.value == this.programPath
         ? Option.of(metadata)
         : const Option.none();
   }
@@ -437,7 +437,7 @@ final class NoopProgramMetadataExtractor implements ProgramMetadataExtractor {
   @override
   Option<ProgramMetadataRecord> extract({
     required BottleRecord bottle,
-    required String programPath,
+    required ProgramPath programPath,
   }) {
     return const Option.none();
   }
@@ -450,7 +450,7 @@ final class NoopAsyncProgramMetadataExtractor
   @override
   Future<Option<ProgramMetadataRecord>> extract({
     required BottleRecord bottle,
-    required String programPath,
+    required ProgramPath programPath,
   }) async {
     return const Option.none();
   }
@@ -487,7 +487,7 @@ final class UnavailableProgramGraphicsBackendHintsInspector
     required KonyakHostPlatform hostPlatform,
   }) {
     return ProgramGraphicsBackendHintsInspectionResult.failed(
-      programPath: programPath.value,
+      programPath: programPath,
       message: 'Program graphics backend hints inspector was not injected.',
     );
   }
@@ -521,7 +521,7 @@ final class ThrowingProgramMetadataExtractor
   @override
   Option<ProgramMetadataRecord> extract({
     required BottleRecord bottle,
-    required String programPath,
+    required ProgramPath programPath,
   }) {
     throw error;
   }
@@ -598,10 +598,10 @@ final class CountingAsyncProgramMetadataExtractor
   @override
   Future<Option<ProgramMetadataRecord>> extract({
     required BottleRecord bottle,
-    required String programPath,
+    required ProgramPath programPath,
   }) async {
-    requestedProgramPaths.add(programPath);
-    return programPath == this.programPath
+    requestedProgramPaths.add(programPath.value);
+    return programPath.value == this.programPath
         ? Option.of(metadata)
         : const Option.none();
   }
@@ -929,9 +929,9 @@ final class EmptyRuntimeStackVersionProbe implements RuntimeStackVersionProbe {
   const EmptyRuntimeStackVersionProbe();
 
   @override
-  Option<String> versionFor({
-    required String runtimeRoot,
-    required String componentId,
+  Option<RuntimeVersion> versionFor({
+    required RuntimeRootPath runtimeRoot,
+    required RuntimeComponentId componentId,
   }) {
     return const Option.none();
   }

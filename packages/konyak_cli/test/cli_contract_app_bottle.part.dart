@@ -208,7 +208,10 @@ void defineAppAndBottleContractTests() {
     );
 
     final result = repository.createBottle(
-      BottleCreateRequest(name: 'Steam', windowsVersion: 'win10'),
+      BottleCreateRequest(
+        name: BottleName('Steam'),
+        windowsVersion: WindowsVersion('win10'),
+      ),
     );
 
     expect(result, isA<BottleCreated>());
@@ -252,7 +255,10 @@ void defineAppAndBottleContractTests() {
     );
 
     final result = repository.createBottle(
-      BottleCreateRequest(name: 'Steam', windowsVersion: 'win10'),
+      BottleCreateRequest(
+        name: BottleName('Steam'),
+        windowsVersion: WindowsVersion('win10'),
+      ),
     );
 
     expect(result, isA<BottleCreated>());
@@ -276,7 +282,10 @@ void defineAppAndBottleContractTests() {
       dataHome: _joinTestPath(tempDirectory.path, const ['data']),
     );
     final createResult = repository.createBottle(
-      BottleCreateRequest(name: 'Steam', windowsVersion: 'win10'),
+      BottleCreateRequest(
+        name: BottleName('Steam'),
+        windowsVersion: WindowsVersion('win10'),
+      ),
     );
     final bottle = (createResult as BottleCreated).bottle;
     File(_joinTestPath(bottle.path.value, const ['drive_c', 'steam.txt']))
@@ -2138,7 +2147,10 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
         dataHome: tempDirectory.path,
       );
       final createResult = repository.createBottle(
-        BottleCreateRequest(name: 'Steam', windowsVersion: 'win10'),
+        BottleCreateRequest(
+          name: BottleName('Steam'),
+          windowsVersion: WindowsVersion('win10'),
+        ),
       );
       final bottle = (createResult as BottleCreated).bottle;
       final lockedDirectory = Directory(

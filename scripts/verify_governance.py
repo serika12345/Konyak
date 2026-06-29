@@ -367,24 +367,58 @@ def require_typed_bottle_command_planner_boundary() -> None:
     )
     argument_support = read_text(argument_support_path)
     expected_support_terms = [
-        "List<String> wineArgumentsForBottleCommand(BottleCommand command)",
+        "ProgramRunArguments wineArgumentsForBottleCommand(BottleCommand command)",
+        "ProgramRunArguments programSettingsArguments(ProgramSettingsRecord settings)",
+        "ProgramLogPath programSettingsLogPath({",
+        "ProgramRunArguments registryUpdateArguments(RegistryValueUpdate update)",
+        "ProgramRunArguments registryQueryArguments(RegistryValueQuery query)",
         "Option<BottleCommand> supportedBottleCommand(BottleCommand command)",
         "final normalized = command.value.trim().toLowerCase();",
         "Option.of(BottleCommand(normalized))",
     ]
     for expected in expected_support_terms:
-        if expected not in argument_support:
+        search_source = (
+            read_text("packages/konyak_cli/lib/src/domain/program/program_registry_plans.dart")
+            if expected.startswith("ProgramRunArguments registry")
+            else argument_support
+        )
+        if expected not in search_source:
             raise AssertionError(
                 "program argument support must expose typed bottle command "
                 f"helpers: {expected}"
             )
+    registry_plans_source = read_text(
+        "packages/konyak_cli/lib/src/domain/program/program_registry_plans.dart"
+    )
+    for expected in [
+        "update.key.value",
+        "update.name.value",
+        "update.type.value",
+        "update.data.value",
+        "query.key.value",
+        "query.name.value",
+    ]:
+        if expected not in registry_plans_source:
+            raise AssertionError(
+                "registry argument helpers must project typed values to argv: "
+                f"{expected}"
+            )
 
     forbidden_support_terms = [
+        "List<String> programSettingsArguments(ProgramSettingsRecord settings)",
+        "String programSettingsLogPath({",
+        "List<String> registryUpdateArguments(RegistryValueUpdate update)",
+        "List<String> registryQueryArguments(RegistryValueQuery query)",
         "List<String> wineArgumentsForBottleCommand(String command)",
+        "List<String> wineArgumentsForBottleCommand(BottleCommand command)",
         "Option<String> supportedBottleCommand(String command)",
     ]
     for forbidden in forbidden_support_terms:
-        if forbidden in argument_support:
+        search_sources = [
+            argument_support,
+            read_text("packages/konyak_cli/lib/src/domain/program/program_registry_plans.dart"),
+        ]
+        if any(forbidden in source for source in search_sources):
             raise AssertionError(
                 "program argument support must not expose primitive bottle "
                 f"command helpers: {forbidden}"
@@ -593,7 +627,7 @@ def require_typed_wine_process_planner_boundary() -> None:
     expected_process_result_terms = [
         "required WineProcessId processId",
         "processId: processId,",
-        "processId: Option.of(processId.value)",
+        "processId: Option.of(processId)",
     ]
     for expected in expected_process_result_terms:
         if expected not in process_results:
@@ -898,6 +932,34 @@ def require_typed_runtime_id_service_boundaries() -> None:
     if "validate(String runtimeId)" in validator_match.group("body"):
         raise AssertionError("RuntimeValidator must not expose primitive runtime ids")
 
+    validation_support_path = (
+        "packages/konyak_cli/lib/src/domain/runtime/runtime_validation_support.dart"
+    )
+    validation_support = read_text(validation_support_path)
+    expected_validation_support_terms = [
+        "Option<RuntimeVersion> versionFor({",
+        "required RuntimeRootPath runtimeRoot,",
+        "required RuntimeComponentId componentId,",
+    ]
+    for expected in expected_validation_support_terms:
+        if expected not in validation_support:
+            raise AssertionError(
+                "Runtime validation support must keep stack version probes "
+                f"typed: {expected}"
+            )
+
+    forbidden_validation_support_terms = [
+        "Option<String> versionFor({",
+        "required String runtimeRoot",
+        "required String componentId",
+    ]
+    for forbidden in forbidden_validation_support_terms:
+        if forbidden in validation_support:
+            raise AssertionError(
+                "Runtime validation support must not expose primitive stack "
+                f"version probes: {forbidden}"
+            )
+
     runtime_handlers_path = (
         "packages/konyak_cli/lib/src/cli/cli_app_runtime_handlers.dart"
     )
@@ -935,15 +997,70 @@ def require_typed_runtime_id_service_boundaries() -> None:
     update_checker_io = read_text(update_checker_io_path)
     expected_update_checker_io_terms = [
         "RuntimeUpdateCheckResult check(RuntimeId runtimeId)",
-        "runtimeById(runtimeCatalog.listRuntimes(), runtimeId.value)",
+        "runtimeById(runtimeCatalog.listRuntimes(), runtimeId)",
+        "versionUrl: versionUrl,",
         "releaseMetadataFetcher.fetch(versionUrl)",
     ]
     for expected in expected_update_checker_io_terms:
         if expected not in update_checker_io:
             raise AssertionError(
-                "Runtime update checker I/O must unwrap RuntimeId only for "
+                "Runtime update checker I/O must preserve typed runtime "
+                "update values until JSON or process boundaries: "
                 f"catalog lookup: {expected}"
             )
+
+    update_support_path = (
+        "packages/konyak_cli/lib/src/domain/runtime/runtime_update_support.dart"
+    )
+    update_support = read_text(update_support_path)
+    expected_update_support_terms = [
+        "RuntimeId runtimeId,",
+        "if (runtime.id == runtimeId)",
+        "UpdateCheckStatus updateStatus({",
+        "required Option<StringDomainValueObject> currentVersion,",
+        "required StringDomainValueObject latestVersion,",
+    ]
+    for expected in expected_update_support_terms:
+        if expected not in update_support:
+            raise AssertionError(
+                "Runtime update support must preserve typed runtime ids and "
+                f"version values: {expected}"
+            )
+
+    forbidden_update_support_terms = [
+        "String runtimeId,",
+        "String updateStatus({",
+        "required Option<String> currentVersion",
+        "required String latestVersion",
+    ]
+    for forbidden in forbidden_update_support_terms:
+        if forbidden in update_support:
+            raise AssertionError(
+                "Runtime update support must not expose primitive runtime "
+                f"update values: {forbidden}"
+            )
+
+    runtime_update_checker_path = (
+        "packages/konyak_cli/lib/src/domain/runtime/runtime_update_checker.dart"
+    )
+    runtime_update_checker = read_text(runtime_update_checker_path)
+    expected_runtime_update_terms = [
+        "required RuntimeVersionUrl versionUrl,",
+        "versionUrl: Option.of(versionUrl),",
+        "status: updateStatus(",
+    ]
+    for expected in expected_runtime_update_terms:
+        if expected not in runtime_update_checker:
+            raise AssertionError(
+                "Runtime update checker domain helpers must preserve typed "
+                f"version URLs and status values: {expected}"
+            )
+
+    if "required String versionUrl" in runtime_update_checker:
+        raise AssertionError(
+            "Runtime update checker domain helpers must not expose primitive "
+            "version URLs"
+        )
 
     app_update_checker_path = "packages/konyak_cli/lib/src/io/app_update_checker_io.dart"
     app_update_checker = read_text(app_update_checker_path)
@@ -1099,6 +1216,199 @@ def require_typed_runtime_settings_setter_boundary() -> None:
             )
 
 
+def require_typed_mutation_model_boundaries() -> None:
+    bottle_path = "packages/konyak_cli/lib/src/domain/bottle/bottle_mutation_models.dart"
+    bottle_source = read_text(bottle_path)
+    expected_bottle_terms = [
+        "required BottleName name,",
+        "required WindowsVersion windowsVersion,",
+        "required BottleId bottleId,",
+        "required BottleArchivePath archivePath,",
+        "factory BottleArchiveImportRequest({required BottleArchivePath archivePath})",
+        "factory BottleCreateConflict(BottleId bottleId)",
+        "factory BottleMoveConflict(BottlePath path)",
+    ]
+    for expected in expected_bottle_terms:
+        if expected not in bottle_source:
+            raise AssertionError(
+                "Bottle mutation models must preserve typed value objects: "
+                f"{expected}"
+            )
+
+    forbidden_bottle_terms = [
+        "required String bottleId",
+        "required String name",
+        "required String windowsVersion",
+        "required String archivePath",
+        "factory BottleCreateConflict(String",
+        "factory BottleMoveConflict(String",
+        "factory BottleUpdateMissing(String",
+    ]
+    for forbidden in forbidden_bottle_terms:
+        if forbidden in bottle_source:
+            raise AssertionError(
+                "Bottle mutation models must not expose primitive semantic "
+                f"values: {forbidden}"
+            )
+
+    program_path = "packages/konyak_cli/lib/src/domain/program/program_mutation_models.dart"
+    program_source = read_text(program_path)
+    expected_program_terms = [
+        "required BottleId bottleId,",
+        "required ProgramName name,",
+        "required ProgramPath programPath,",
+        "required ProgramLauncherId launcherId,",
+        "required WineProcessId processId,",
+        "Option<BottleId> bottleId = const Option.none(),",
+        "factory ProgramPinResult.conflict(ProgramPath programPath)",
+        "factory ProgramUpdateResult.missingBottle(BottleId bottleId)",
+    ]
+    for expected in expected_program_terms:
+        if expected not in program_source:
+            raise AssertionError(
+                "Program mutation models must preserve typed value objects: "
+                f"{expected}"
+            )
+
+    forbidden_program_terms = [
+        "required String bottleId",
+        "required String programPath",
+        "required String name",
+        "required String processId",
+        "Option<String> bottleId",
+        "factory ProgramPinResult.conflict(String",
+        "factory ProgramUpdateResult.missingBottle(String",
+    ]
+    for forbidden in forbidden_program_terms:
+        if forbidden in program_source:
+            raise AssertionError(
+                "Program mutation models must not expose primitive semantic "
+                f"values: {forbidden}"
+            )
+
+    catalog_path = "packages/konyak_cli/lib/src/domain/program/program_catalog_models.dart"
+    catalog_source = read_text(catalog_path)
+    if "required String programPath" in catalog_source:
+        raise AssertionError(
+            "Program metadata extractors must receive ProgramPath, not String"
+        )
+
+    pinned_path = "packages/konyak_cli/lib/src/domain/program/pinned_programs.dart"
+    pinned_source = read_text(pinned_path)
+    expected_pinned_terms = [
+        "bool hasPinnedProgram(BottleRecord bottle, ProgramPath programPath)",
+        "ProgramPath programPath,",
+    ]
+    for expected in expected_pinned_terms:
+        if expected not in pinned_source:
+            raise AssertionError(
+                "Pinned program helpers must preserve typed program paths: "
+                f"{expected}"
+            )
+
+    if "bool hasPinnedProgram(BottleRecord bottle, String programPath)" in pinned_source:
+        raise AssertionError("Pinned program helpers must not accept raw program paths")
+
+    graphics_path = (
+        "packages/konyak_cli/lib/src/domain/program/program_graphics_backend_hints.dart"
+    )
+    graphics_source = read_text(graphics_path)
+    expected_graphics_terms = [
+        "required ProgramPath programPath,",
+        "factory ProgramGraphicsBackendHintsInspectionResult.missingProgram(\n    ProgramPath programPath,",
+        "required ProgramPath programPath,",
+    ]
+    for expected in expected_graphics_terms:
+        if expected not in graphics_source:
+            raise AssertionError(
+                "Graphics backend hint APIs must preserve typed program paths: "
+                f"{expected}"
+            )
+
+    forbidden_graphics_terms = [
+        "required String programPath",
+        "missingProgram(\n    String programPath",
+    ]
+    for forbidden in forbidden_graphics_terms:
+        if forbidden in graphics_source:
+            raise AssertionError(
+                "Graphics backend hint APIs must not expose raw program paths: "
+                f"{forbidden}"
+            )
+
+
+def require_typed_registry_planner_boundary() -> None:
+    registry_model_path = "packages/konyak_cli/lib/src/domain/program/program_registry_models.dart"
+    registry_model_source = read_text(registry_model_path)
+    expected_model_terms = [
+        "required ProgramRegistryKey key,",
+        "required ProgramRegistryValueName name,",
+        "required ProgramRegistryValueType type,",
+        "required ProgramRegistryValueData data,",
+    ]
+    for expected in expected_model_terms:
+        if expected not in registry_model_source:
+            raise AssertionError(
+                "Registry value models must expose typed registry values: "
+                f"{expected}"
+            )
+    for forbidden in [
+        "required String key,",
+        "required String name,",
+        "required String type,",
+        "required String data,",
+    ]:
+        if forbidden in registry_model_source:
+            raise AssertionError(
+                "Registry value models must not expose primitive registry "
+                f"values: {forbidden}"
+            )
+
+    registry_path = "packages/konyak_cli/lib/src/domain/program/program_registry_plans.dart"
+    registry_source = read_text(registry_path)
+    expected_registry_terms = [
+        "List<RegistryValueUpdate> windowsVersionRegistryUpdates(\n  WindowsVersion windowsVersion,",
+        "Option<WindowsVersion> _windowsVersionForBuildVersion(int buildVersion)",
+        "data: ProgramRegistryValueData(windowsVersion.value),",
+    ]
+    for expected in expected_registry_terms:
+        if expected not in registry_source:
+            raise AssertionError(
+                "Registry planners must preserve typed Windows versions: "
+                f"{expected}"
+            )
+
+    forbidden_registry_terms = [
+        "List<RegistryValueUpdate> windowsVersionRegistryUpdates(String windowsVersion)",
+        "Option<String> _windowsVersionForBuildVersion(int buildVersion)",
+    ]
+    for forbidden in forbidden_registry_terms:
+        if forbidden in registry_source:
+            raise AssertionError(
+                "Registry planners must not expose primitive Windows versions: "
+                f"{forbidden}"
+            )
+
+    planner_path = "packages/konyak_cli/lib/src/domain/program/program_runner.dart"
+    planner_source = read_text(planner_path)
+    expected_planner_terms = [
+        "required WindowsVersion windowsVersion,",
+        "final updates = windowsVersionRegistryUpdates(windowsVersion);",
+    ]
+    for expected in expected_planner_terms:
+        if expected not in planner_source:
+            raise AssertionError(
+                "ProgramRunPlanner registry updates must preserve typed "
+                f"Windows versions: {expected}"
+            )
+
+    if "required String windowsVersion" in planner_source:
+        raise AssertionError(
+            "ProgramRunPlanner registry updates must not expose primitive "
+            "Windows versions"
+        )
+
+
 def require_typed_bottle_location_boundary() -> None:
     location_path = "packages/konyak_cli/lib/src/platform/platform_location_paths.dart"
     location_source = read_text(location_path)
@@ -1180,7 +1490,7 @@ def require_typed_bottle_location_boundary() -> None:
                 f"projection: {expected}"
             )
     for expected in [
-        "hasPinnedProgram(bottle, request.programPath.value)",
+        "hasPinnedProgram(bottle, request.programPath)",
         "final path = request.programPath.value;",
         "'programPath': request.programPath.value",
     ]:
@@ -1206,6 +1516,31 @@ def require_wine_process_termination_cli_json_projection() -> None:
         raise AssertionError(
             "WineProcessTerminationRecord must not own CLI JSON projection"
         )
+    record_body = record_match.group("body")
+    for expected in [
+        "required BottleId bottleId,",
+        "required WineProcessStatus status,",
+        "required RunnerKind runnerKind,",
+        "required ProgramExecutable executable,",
+        "Option<WineProcessId> processId = const Option.none(),",
+    ]:
+        if expected not in record_body:
+            raise AssertionError(
+                "WineProcessTerminationRecord must expose typed process "
+                f"termination values: {expected}"
+            )
+    for forbidden in [
+        "required String bottleId,",
+        "required String status,",
+        "required String runnerKind,",
+        "required String executable,",
+        "Option<String> processId = const Option.none(),",
+    ]:
+        if forbidden in record_body:
+            raise AssertionError(
+                "WineProcessTerminationRecord must not expose primitive "
+                f"process termination values: {forbidden}"
+            )
 
     cli_path = "packages/konyak_cli/lib/src/cli/cli_app_process_results.dart"
     cli = read_text(cli_path)
@@ -1364,6 +1699,37 @@ def require_graphics_backend_hints_cli_json_projection() -> None:
             raise AssertionError(
                 f"{class_name} must not own CLI JSON projection"
             )
+    for class_name, expected_terms, forbidden_terms in [
+        (
+            "ProgramGraphicsBackendSignal",
+            [
+                "required GraphicsBackendSignalKind kind,",
+                "required GraphicsBackendSignalValue value,",
+            ],
+            ["required String kind,", "required String value,"],
+        ),
+        (
+            "ProgramGraphicsBackendSuggestion",
+            [
+                "required GraphicsBackendKind backend,",
+                "required GraphicsBackendConfidence confidence,",
+            ],
+            ["required String backend,", "required String confidence,"],
+        ),
+    ]:
+        section = class_section(class_name)
+        for expected in expected_terms:
+            if expected not in section:
+                raise AssertionError(
+                    f"{class_name} must expose typed graphics values: "
+                    f"{expected}"
+                )
+        for forbidden in forbidden_terms:
+            if forbidden in section:
+                raise AssertionError(
+                    f"{class_name} must not expose primitive graphics values: "
+                    f"{forbidden}"
+                )
 
     if "_hostPlatformJsonValue(" in domain:
         raise AssertionError("Graphics backend host platform JSON must live in CLI")
@@ -1561,6 +1927,85 @@ def require_update_record_cli_json_projection() -> None:
             raise AssertionError(
                 f"{class_name} must not own CLI JSON projection"
             )
+
+    for class_name, expected_terms, forbidden_terms in [
+        (
+            "RuntimeUpdateRecord",
+            [
+                "required RuntimeId runtimeId,",
+                "required UpdateCheckStatus status,",
+                "Option<RuntimeVersion> currentVersion =",
+                "Option<RuntimeArchiveUrl> archiveUrl =",
+                "Option<RuntimeSourceManifestUrl> sourceManifestUrl =",
+            ],
+            [
+                "required String runtimeId,",
+                "required String status,",
+                "Option<String> currentVersion =",
+                "Option<String> archiveUrl =",
+                "Option<String> sourceManifestUrl =",
+            ],
+        ),
+        (
+            "AppUpdateRecord",
+            [
+                "required AppId appId,",
+                "required UpdateCheckStatus status,",
+                "Option<AppVersion> currentVersion =",
+                "Option<ReleaseVersion> latestVersion =",
+                "Option<AppArchiveUrl> archiveUrl =",
+            ],
+            [
+                "required String appId,",
+                "required String status,",
+                "Option<String> currentVersion =",
+                "Option<String> latestVersion =",
+                "Option<String> archiveUrl =",
+            ],
+        ),
+        (
+            "AppUpdateInstallRecord",
+            [
+                "required AppId appId,",
+                "required UpdateInstallStatus status,",
+                "Option<AppVersion> currentVersion =",
+                "Option<AppInstallPath> installPath =",
+            ],
+            [
+                "required String appId,",
+                "required String status,",
+                "Option<String> currentVersion =",
+                "Option<String> installPath =",
+            ],
+        ),
+        (
+            "RuntimeReleaseMetadata",
+            [
+                "required ReleaseVersion version,",
+                "Option<RuntimeArchiveUrl> archiveUrl =",
+                "Option<RuntimeArchiveChecksumValue> archiveSha256 =",
+                "Option<RuntimeSourceManifestUrl> sourceManifestUrl =",
+            ],
+            [
+                "required String version,",
+                "Option<String> archiveUrl =",
+                "Option<String> archiveSha256 =",
+                "Option<String> sourceManifestUrl =",
+            ],
+        ),
+    ]:
+        section = class_section(class_name)
+        for expected in expected_terms:
+            if expected not in section:
+                raise AssertionError(
+                    f"{class_name} must expose typed update values: {expected}"
+                )
+        for forbidden in forbidden_terms:
+            if forbidden in section:
+                raise AssertionError(
+                    f"{class_name} must not expose primitive update values: "
+                    f"{forbidden}"
+                )
 
     if "Map<String, Object?> _updateJsonField(" in domain:
         raise AssertionError("Update JSON helpers must live in CLI")
@@ -2346,6 +2791,26 @@ def require_result_boundary_rules() -> None:
         "final Map<String, String> environment;",
     )
     for expected in [
+        "required ProgramId id,",
+        "required ProgramName name,",
+        "required ProgramPath path,",
+        "required ProgramSource source,",
+        "required BottleId bottleId,",
+        "required WineProcessId processId,",
+        "required ProgramExecutable executable,",
+        "Option<ProgramPath> hostPath = const Option.none(),",
+        "Option<ProgramArchitecture> architecture = const Option.none(),",
+        "Option<ProgramFileDescription> fileDescription = const Option.none(),",
+        "Option<ProgramProductName> productName = const Option.none(),",
+        "Option<ProgramCompanyName> companyName = const Option.none(),",
+        "Option<ProgramFileVersion> fileVersion = const Option.none(),",
+        "Option<ProgramProductVersion> productVersion = const Option.none(),",
+        "Option<ProgramIconPath> iconPath = const Option.none(),",
+        "required WinetricksVerbId id,",
+        "required WinetricksVerbName name,",
+        "required WinetricksVerbDescription description,",
+        "required WinetricksCategoryId id,",
+        "required WinetricksCategoryName name,",
         "required Option<ProgramMetadataRecord> metadata,",
         "required Option<ProgramPath> hostPath,",
         "Option<ProgramMetadataRecord> extract({",
@@ -2362,6 +2827,36 @@ def require_result_boundary_rules() -> None:
         "packages/konyak_cli/lib/src/domain/program/program_catalog_models.dart",
         "final String? iconPath;",
     )
+    for unexpected in [
+        "required String id,",
+        "required String name,",
+        "required String path,",
+        "required String source,",
+        "required String bottleId,",
+        "required String processId,",
+        "required String executable,",
+        "Option<String> hostPath = const Option.none(),",
+        "Option<String> architecture = const Option.none(),",
+        "Option<String> fileDescription = const Option.none(),",
+        "Option<String> productName = const Option.none(),",
+        "Option<String> companyName = const Option.none(),",
+        "Option<String> fileVersion = const Option.none(),",
+        "Option<String> productVersion = const Option.none(),",
+        "Option<String> iconPath = const Option.none(),",
+    ]:
+        require_not_contains(
+            "packages/konyak_cli/lib/src/domain/program/program_catalog_models.dart",
+            unexpected,
+        )
+    for unexpected in [
+        "required String id,",
+        "required String name,",
+        "required String description,",
+    ]:
+        require_not_contains(
+            "packages/konyak_cli/lib/src/domain/program/program_catalog_models.dart",
+            unexpected,
+        )
     require_not_contains(
         "packages/konyak_cli/lib/src/domain/program/program_catalog_models.dart",
         "ProgramMetadataRecord? metadata",
@@ -2418,6 +2913,11 @@ def require_result_boundary_rules() -> None:
         "factory RuntimeInstallSource.localArchive",
         "factory RuntimeInstallSource.remoteArchive",
         "factory RuntimeInstallSource.sourceManifest",
+        "Iterable<RuntimeArchivePath> componentArchivePaths =",
+        "required RuntimeArchivePath archivePath,",
+        "required RuntimeArchiveUrl archiveUrl,",
+        "required RuntimeSourceManifestUrl sourceManifest,",
+        "RuntimeSourceManifestSignature runtimeSourceManifestSignature(\n  Option<RuntimeSourceManifestSignatureUrl> value,",
         ") = RuntimeConfiguredArchiveSource;",
         ") = RuntimeLocalArchiveSource;",
         ") = RuntimeRemoteArchiveSource;",
@@ -2443,14 +2943,105 @@ def require_result_boundary_rules() -> None:
         "final Option<String> archiveSha256;",
         "final Option<String> sourceManifest;",
         "final Option<String> sourceManifestSignature;",
+        "required String archivePath,",
+        "required String archiveUrl,",
+        "required String sourceManifest,",
+        "Iterable<String> paths,",
+        "RuntimeSourceManifestSignature runtimeSourceManifestSignature(\n  Option<String> value,",
     ]:
         require_not_contains(
             "packages/konyak_cli/lib/src/domain/runtime/runtime_install_operation_models.dart",
             forbidden,
         )
+    for expected in [
+        "required Option<RuntimeSourceManifestUrl> configuredSourceManifest,",
+        "Option<RuntimeSourceManifestSignatureUrl>",
+    ]:
+        require_contains(
+            "packages/konyak_cli/lib/src/domain/runtime/runtime_install_plans.dart",
+            expected,
+        )
+    for forbidden in [
+        "required Option<String> configuredSourceManifest",
+        "required Option<String> configuredSourceManifestSignature",
+    ]:
+        require_not_contains(
+            "packages/konyak_cli/lib/src/domain/runtime/runtime_install_plans.dart",
+            forbidden,
+        )
+    for expected_options in [
+        ["Option<RuntimeSourceManifestUrl> runtimeSourceManifestForPlatform({"],
+        [
+            "Option<RuntimeSourceManifestSignatureUrl> runtimeSourceManifestSignatureForPlatform({",
+            "Option<RuntimeSourceManifestSignatureUrl>\nruntimeSourceManifestSignatureForPlatform({",
+        ],
+    ]:
+        if not any(
+            expected
+            in read_text(
+                "packages/konyak_cli/lib/src/domain/runtime/runtime_platform_support.dart"
+            )
+            for expected in expected_options
+        ):
+            raise AssertionError(
+                "runtime platform support must expose typed source manifest "
+                f"helpers: {expected_options[0]}"
+            )
     runtime_package_installation_text = read_text(
         "packages/konyak_cli/lib/src/domain/runtime/runtime_package_installation.dart"
     )
+    for expected in [
+        "required RuntimeArchivePath archivePath,",
+        "required Option<RuntimeArchiveChecksumValue> archiveSha256,",
+        "required Iterable<RuntimeArchivePath> componentArchivePaths,",
+        "required RuntimeRootPath runtimeRoot,",
+        "required RuntimeRelativePath requiredExecutableRelativePath,",
+        "required RuntimeComponentPath expectedExecutablePath,",
+        "Iterable<RuntimeRelativePath> preserveExistingRuntimeSkipRelativePaths",
+        "required IList<RuntimeRelativePath>\n    preserveExistingRuntimeSkipRelativePaths,",
+    ]:
+        if expected not in runtime_package_installation_text:
+            raise AssertionError(
+                "RuntimePackageInstallRequest must expose typed package "
+                f"install values: {expected}"
+            )
+
+    for relative_path, expected_terms in {
+        "packages/konyak_cli/lib/src/domain/runtime/runtime_source_bundle_models.dart": [
+            "required RuntimeArchivePath wineArchivePath,",
+            "required Iterable<RuntimeArchivePath> componentArchivePaths,",
+            "required IList<RuntimeArchivePath> componentArchivePaths,",
+        ],
+        "packages/konyak_cli/lib/src/domain/runtime/runtime_source_archive_planning.dart": [
+            "required RuntimeArchivePath archivePath,",
+            "archivePath: RuntimeArchivePath(",
+        ],
+    }.items():
+        source = read_text(relative_path)
+        for expected in expected_terms:
+            if expected not in source:
+                raise AssertionError(
+                    "Runtime source archive planning must expose typed "
+                    f"archive paths: {relative_path} {expected}"
+                )
+
+    for relative_path, forbidden_terms in {
+        "packages/konyak_cli/lib/src/domain/runtime/runtime_source_bundle_models.dart": [
+            "required String wineArchivePath,",
+            "required Iterable<String> componentArchivePaths,",
+        ],
+        "packages/konyak_cli/lib/src/domain/runtime/runtime_source_archive_planning.dart": [
+            "required String archivePath,",
+        ],
+    }.items():
+        source = read_text(relative_path)
+        for forbidden in forbidden_terms:
+            if forbidden in source:
+                raise AssertionError(
+                    "Runtime source archive planning must not expose "
+                    f"primitive archive paths: {relative_path} {forbidden}"
+                )
+
     if not any(
         expected in runtime_package_installation_text
         for expected in [
@@ -2467,6 +3058,20 @@ def require_result_boundary_rules() -> None:
         "packages/konyak_cli/lib/src/domain/runtime/runtime_package_installation.dart",
         "final String? archiveSha256;",
     )
+    for forbidden in [
+        "required String archivePath,",
+        "required Option<String> archiveSha256,",
+        "required Iterable<String> componentArchivePaths,",
+        "required String runtimeRoot,",
+        "required List<String> requiredExecutableRelativePath,",
+        "required String expectedExecutablePath,",
+        "List<List<String>> preserveExistingRuntimeSkipRelativePaths",
+    ]:
+        if forbidden in runtime_package_installation_text:
+            raise AssertionError(
+                "RuntimePackageInstallRequest must not expose primitive "
+                f"package install values: {forbidden}"
+            )
     runtime_models_text = read_text(
         "packages/konyak_cli/lib/src/domain/runtime/runtime_models.dart"
     )
@@ -2757,6 +3362,55 @@ def require_typed_domain_string_maps() -> None:
     ]:
         require_contains(relative_path, expected)
 
+    program_run_environment = read_text(
+        "packages/konyak_cli/lib/src/domain/program/program_run_environment.dart"
+    )
+    for expected in [
+        "ProgramEnvironmentOverrides add(\n    ProgramEnvironmentVariableName name,\n    ProgramEnvironmentVariableValue value,",
+        "ProgramRunEnvironment add(\n    ProgramEnvironmentVariableName name,\n    ProgramEnvironmentVariableValue value,",
+    ]:
+        if expected not in program_run_environment:
+            raise AssertionError(
+                "ProgramRunEnvironment and overrides must add typed "
+                f"environment variables: {expected}"
+            )
+    for forbidden in [
+        "ProgramEnvironmentOverrides add(String name, String value)",
+        "ProgramRunEnvironment add(String name, String value)",
+    ]:
+        if forbidden in program_run_environment:
+            raise AssertionError(
+                "ProgramRunEnvironment and overrides must not add raw "
+                f"environment variables: {forbidden}"
+            )
+
+    component_versions_path = (
+        "packages/konyak_cli/lib/src/domain/runtime/runtime_component_versions.dart"
+    )
+    component_versions = read_text(component_versions_path)
+    expected_component_version_terms = [
+        "RuntimeComponentVersions add(\n    RuntimeComponentId componentId,\n    RuntimeVersion version,",
+        "Option<RuntimeVersion> operator [](RuntimeComponentId componentId)",
+        "_versions.add(componentId, version)",
+    ]
+    for expected in expected_component_version_terms:
+        if expected not in component_versions:
+            raise AssertionError(
+                "RuntimeComponentVersions must keep mutation and lookup "
+                f"helpers typed: {expected}"
+            )
+
+    forbidden_component_version_terms = [
+        "RuntimeComponentVersions add(String componentId, String version)",
+        "Option<String> operator [](String componentId)",
+    ]
+    for forbidden in forbidden_component_version_terms:
+        if forbidden in component_versions:
+            raise AssertionError(
+                "RuntimeComponentVersions helpers must not expose primitive "
+                f"component versions: {forbidden}"
+            )
+
 
 def require_runtime_ssot_rules() -> None:
     for unexpected in [
@@ -2886,6 +3540,8 @@ def main() -> None:
     require_typed_runtime_id_service_boundaries()
     require_typed_bottle_repository_id_boundary()
     require_typed_runtime_settings_setter_boundary()
+    require_typed_mutation_model_boundaries()
+    require_typed_registry_planner_boundary()
     require_typed_bottle_location_boundary()
     require_wine_process_termination_cli_json_projection()
     require_program_catalog_cli_json_projection()

@@ -5,13 +5,13 @@ void defineProgramExecutionContractTests() {
     final inspector = RecordingProgramGraphicsBackendHintsInspector(
       ProgramGraphicsBackendHintsInspected(
         ProgramGraphicsBackendHints(
-          programPath: '/games/injected.exe',
+          programPath: ProgramPath('/games/injected.exe'),
           hostPlatform: KonyakHostPlatform.macos,
           signals: const [],
           suggestions: [
             ProgramGraphicsBackendSuggestion(
-              backend: 'dxvk',
-              confidence: 'low',
+              backend: GraphicsBackendKind('dxvk'),
+              confidence: GraphicsBackendConfidence('low'),
               reason: 'Injected inspector result.',
             ),
           ],
@@ -280,8 +280,8 @@ void defineProgramExecutionContractTests() {
 
     final settings = repository.readProgramSettings(
       ProgramSettingsRequest(
-        bottleId: 'steam',
-        programPath: '/downloads/Steam.exe',
+        bottleId: BottleId('steam'),
+        programPath: ProgramPath('/downloads/Steam.exe'),
       ),
     );
     expect(settings, isA<ProgramSettingsRead>());
@@ -352,8 +352,8 @@ void defineProgramExecutionContractTests() {
 
     final settings = repository.readProgramSettings(
       ProgramSettingsRequest(
-        bottleId: 'steam',
-        programPath: '/downloads/Steam.exe',
+        bottleId: BottleId('steam'),
+        programPath: ProgramPath('/downloads/Steam.exe'),
       ),
     );
     expect(settings, isA<ProgramSettingsRead>());
@@ -446,8 +446,8 @@ void defineProgramExecutionContractTests() {
     );
     repository.setProgramSettings(
       ProgramSettingsUpdateRequest(
-        bottleId: 'steam',
-        programPath: '/downloads/Steam.exe',
+        bottleId: BottleId('steam'),
+        programPath: ProgramPath('/downloads/Steam.exe'),
         settings: ProgramSettingsRecord(
           locale: 'ja_JP.UTF-8',
           arguments: '-silent -windowed',

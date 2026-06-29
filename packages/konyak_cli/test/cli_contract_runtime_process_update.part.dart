@@ -950,12 +950,16 @@ void defineRuntimeProcessAndUpdateContractTests() {
       final checker = RecordingRuntimeUpdateChecker(
         result: RuntimeUpdateCheckCompleted(
           RuntimeUpdateRecord(
-            runtimeId: 'konyak-macos-wine',
-            status: 'available',
-            currentVersion: Option.of('wine-devel-11.9'),
-            latestVersion: Option.of('12.0'),
-            versionUrl: Option.of(macosWineRuntimeReleaseUrl),
-            sourceManifestUrl: Option.of(macosWineRuntimeSourceManifestUrl),
+            runtimeId: RuntimeId('konyak-macos-wine'),
+            status: UpdateCheckStatus('available'),
+            currentVersion: Option.of(RuntimeVersion('wine-devel-11.9')),
+            latestVersion: Option.of(RuntimeVersion('12.0')),
+            versionUrl: Option.of(
+              RuntimeVersionUrl(macosWineRuntimeReleaseUrl),
+            ),
+            sourceManifestUrl: Option.of(
+              RuntimeSourceManifestUrl(macosWineRuntimeSourceManifestUrl),
+            ),
           ),
         ),
       );
@@ -989,14 +993,18 @@ void defineRuntimeProcessAndUpdateContractTests() {
     final checker = RecordingAppUpdateChecker(
       result: AppUpdateCheckCompleted(
         AppUpdateRecord(
-          appId: 'konyak',
-          status: 'available',
-          currentVersion: Option.of('1.0.0'),
-          latestVersion: Option.of('1.1.0'),
+          appId: AppId('konyak'),
+          status: UpdateCheckStatus('available'),
+          currentVersion: Option.of(AppVersion('1.0.0')),
+          latestVersion: Option.of(ReleaseVersion('1.1.0')),
           versionUrl: Option.of(
-            'https://api.github.com/repos/serika12345/Konyak/releases/latest',
+            RuntimeVersionUrl(
+              'https://api.github.com/repos/serika12345/Konyak/releases/latest',
+            ),
           ),
-          archiveUrl: Option.of('https://example.invalid/Konyak.dmg'),
+          archiveUrl: Option.of(
+            AppArchiveUrl('https://example.invalid/Konyak.dmg'),
+          ),
         ),
       ),
     );
@@ -1276,9 +1284,13 @@ void defineRuntimeProcessAndUpdateContractTests() {
       programMetadataExtractor: FixedProgramMetadataExtractor(
         programPath: programPath,
         metadata: ProgramMetadataRecord(
-          fileDescription: Option.of('Ardour Installer'),
+          fileDescription: Option.of(
+            ProgramFileDescription('Ardour Installer'),
+          ),
           iconPath: Option.of(
-            _joinTestPath(bottlePath, const ['cache', 'icons', 'ardour.ico']),
+            ProgramIconPath(
+              _joinTestPath(bottlePath, const ['cache', 'icons', 'ardour.ico']),
+            ),
           ),
         ),
       ),
@@ -1462,9 +1474,11 @@ void defineRuntimeProcessAndUpdateContractTests() {
       final metadataExtractor = CountingAsyncProgramMetadataExtractor(
         programPath: programPath,
         metadata: ProgramMetadataRecord(
-          fileDescription: Option.of('Setup'),
+          fileDescription: Option.of(ProgramFileDescription('Setup')),
           iconPath: Option.of(
-            _joinTestPath(bottlePath, const ['cache', 'icons', 'setup.ico']),
+            ProgramIconPath(
+              _joinTestPath(bottlePath, const ['cache', 'icons', 'setup.ico']),
+            ),
           ),
         ),
       );
@@ -1573,9 +1587,11 @@ void defineRuntimeProcessAndUpdateContractTests() {
       final metadataExtractor = CountingAsyncProgramMetadataExtractor(
         programPath: programPath,
         metadata: ProgramMetadataRecord(
-          fileDescription: Option.of('Ardour'),
+          fileDescription: Option.of(ProgramFileDescription('Ardour')),
           iconPath: Option.of(
-            _joinTestPath(bottlePath, const ['cache', 'icons', 'ardour.ico']),
+            ProgramIconPath(
+              _joinTestPath(bottlePath, const ['cache', 'icons', 'ardour.ico']),
+            ),
           ),
         ),
       );
@@ -1847,9 +1863,17 @@ void defineRuntimeProcessAndUpdateContractTests() {
         programMetadataExtractor: FixedProgramMetadataExtractor(
           programPath: programPath,
           metadata: ProgramMetadataRecord(
-            fileDescription: Option.of('Ardour Installer'),
+            fileDescription: Option.of(
+              ProgramFileDescription('Ardour Installer'),
+            ),
             iconPath: Option.of(
-              _joinTestPath(bottlePath, const ['cache', 'icons', 'ardour.ico']),
+              ProgramIconPath(
+                _joinTestPath(bottlePath, const [
+                  'cache',
+                  'icons',
+                  'ardour.ico',
+                ]),
+              ),
             ),
           ),
         ),
@@ -1950,9 +1974,17 @@ void defineRuntimeProcessAndUpdateContractTests() {
         programMetadataExtractor: FixedProgramMetadataExtractor(
           programPath: programPath,
           metadata: ProgramMetadataRecord(
-            fileDescription: Option.of('Ardour Installer'),
+            fileDescription: Option.of(
+              ProgramFileDescription('Ardour Installer'),
+            ),
             iconPath: Option.of(
-              _joinTestPath(bottlePath, const ['cache', 'icons', 'ardour.ico']),
+              ProgramIconPath(
+                _joinTestPath(bottlePath, const [
+                  'cache',
+                  'icons',
+                  'ardour.ico',
+                ]),
+              ),
             ),
           ),
         ),
@@ -2067,9 +2099,15 @@ void defineRuntimeProcessAndUpdateContractTests() {
         programMetadataExtractor: FixedProgramMetadataExtractor(
           programPath: programPath,
           metadata: ProgramMetadataRecord(
-            fileDescription: Option.of('Ardour'),
+            fileDescription: Option.of(ProgramFileDescription('Ardour')),
             iconPath: Option.of(
-              _joinTestPath(bottlePath, const ['cache', 'icons', 'ardour.ico']),
+              ProgramIconPath(
+                _joinTestPath(bottlePath, const [
+                  'cache',
+                  'icons',
+                  'ardour.ico',
+                ]),
+              ),
             ),
           ),
         ),
@@ -2160,9 +2198,17 @@ void defineRuntimeProcessAndUpdateContractTests() {
         programMetadataExtractor: FixedProgramMetadataExtractor(
           programPath: programPath,
           metadata: ProgramMetadataRecord(
-            fileDescription: Option.of('Ardour Installer'),
+            fileDescription: Option.of(
+              ProgramFileDescription('Ardour Installer'),
+            ),
             iconPath: Option.of(
-              _joinTestPath(bottlePath, const ['cache', 'icons', 'ardour.ico']),
+              ProgramIconPath(
+                _joinTestPath(bottlePath, const [
+                  'cache',
+                  'icons',
+                  'ardour.ico',
+                ]),
+              ),
             ),
           ),
         ),
@@ -2275,7 +2321,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
       currentVersion: '1.0.0',
       versionUrl: 'https://example.invalid/releases/latest',
       releaseMetadataFetcher: StaticRuntimeReleaseMetadataFetcher(
-        RuntimeReleaseMetadata(version: 'v1.0.0'),
+        RuntimeReleaseMetadata(version: ReleaseVersion('v1.0.0')),
       ),
     );
 
@@ -2578,12 +2624,14 @@ void defineRuntimeProcessAndUpdateContractTests() {
       versionUrl: 'https://example.invalid/releases/latest',
       releaseMetadataFetcher: StaticRuntimeReleaseMetadataFetcher(
         RuntimeReleaseMetadata(
-          version: 'v1.1.0',
+          version: ReleaseVersion('v1.1.0'),
           archiveUrl: Option.of(
-            'https://example.invalid/Konyak-1.1.0-macos.dmg',
+            RuntimeArchiveUrl('https://example.invalid/Konyak-1.1.0-macos.dmg'),
           ),
           archiveSha256: Option.of(
-            'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+            RuntimeArchiveChecksumValue(
+              'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+            ),
           ),
         ),
       ),
@@ -2603,26 +2651,32 @@ void defineRuntimeProcessAndUpdateContractTests() {
     final checker = RecordingAppUpdateChecker(
       result: AppUpdateCheckCompleted(
         AppUpdateRecord(
-          appId: 'konyak',
-          status: 'available',
-          currentVersion: Option.of('1.0.0'),
-          latestVersion: Option.of('1.1.0'),
+          appId: AppId('konyak'),
+          status: UpdateCheckStatus('available'),
+          currentVersion: Option.of(AppVersion('1.0.0')),
+          latestVersion: Option.of(ReleaseVersion('1.1.0')),
           versionUrl: Option.of(
-            'https://api.github.com/repos/serika12345/Konyak/releases/latest',
+            RuntimeVersionUrl(
+              'https://api.github.com/repos/serika12345/Konyak/releases/latest',
+            ),
           ),
-          archiveUrl: Option.of('https://example.invalid/Konyak-1.1.0.dmg'),
+          archiveUrl: Option.of(
+            AppArchiveUrl('https://example.invalid/Konyak-1.1.0.dmg'),
+          ),
         ),
       ),
     );
     final installer = RecordingAppUpdateInstaller(
       result: AppUpdateInstallCompleted(
         AppUpdateInstallRecord(
-          appId: 'konyak',
-          status: 'installed',
-          currentVersion: Option.of('1.0.0'),
-          installedVersion: Option.of('1.1.0'),
-          archiveUrl: Option.of('https://example.invalid/Konyak-1.1.0.dmg'),
-          installPath: Option.of('/tmp/Konyak-1.1.0.dmg'),
+          appId: AppId('konyak'),
+          status: UpdateInstallStatus('installed'),
+          currentVersion: Option.of(AppVersion('1.0.0')),
+          installedVersion: Option.of(AppVersion('1.1.0')),
+          archiveUrl: Option.of(
+            AppArchiveUrl('https://example.invalid/Konyak-1.1.0.dmg'),
+          ),
+          installPath: Option.of(AppInstallPath('/tmp/Konyak-1.1.0.dmg')),
         ),
       ),
     );
@@ -2676,12 +2730,14 @@ void defineRuntimeProcessAndUpdateContractTests() {
 
     final result = installer.install(
       AppUpdateRecord(
-        appId: 'konyak',
-        status: 'available',
-        currentVersion: Option.of('1.0.0'),
-        latestVersion: Option.of('1.1.0'),
-        archiveUrl: Option.of(sourceArchive.uri.toString()),
-        archiveSha256: Option.of(_fileSha256(sourceArchive.path)),
+        appId: AppId('konyak'),
+        status: UpdateCheckStatus('available'),
+        currentVersion: Option.of(AppVersion('1.0.0')),
+        latestVersion: Option.of(ReleaseVersion('1.1.0')),
+        archiveUrl: Option.of(AppArchiveUrl(sourceArchive.uri.toString())),
+        archiveSha256: Option.of(
+          AppArchiveSha256(_fileSha256(sourceArchive.path)),
+        ),
       ),
     );
 
@@ -2727,11 +2783,11 @@ void defineRuntimeProcessAndUpdateContractTests() {
 
     final result = installer.install(
       AppUpdateRecord(
-        appId: 'konyak',
-        status: 'available',
-        currentVersion: Option.of('1.0.0'),
-        latestVersion: Option.of('1.1.0'),
-        archiveUrl: Option.of(sourceArchive.uri.toString()),
+        appId: AppId('konyak'),
+        status: UpdateCheckStatus('available'),
+        currentVersion: Option.of(AppVersion('1.0.0')),
+        latestVersion: Option.of(ReleaseVersion('1.1.0')),
+        archiveUrl: Option.of(AppArchiveUrl(sourceArchive.uri.toString())),
       ),
     );
 
@@ -2767,13 +2823,15 @@ void defineRuntimeProcessAndUpdateContractTests() {
 
     final result = installer.install(
       AppUpdateRecord(
-        appId: 'konyak',
-        status: 'available',
-        currentVersion: Option.of('1.0.0'),
-        latestVersion: Option.of('1.1.0'),
-        archiveUrl: Option.of(sourceArchive.uri.toString()),
+        appId: AppId('konyak'),
+        status: UpdateCheckStatus('available'),
+        currentVersion: Option.of(AppVersion('1.0.0')),
+        latestVersion: Option.of(ReleaseVersion('1.1.0')),
+        archiveUrl: Option.of(AppArchiveUrl(sourceArchive.uri.toString())),
         archiveSha256: Option.of(
-          'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+          AppArchiveSha256(
+            'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+          ),
         ),
       ),
     );
@@ -2817,12 +2875,14 @@ void defineRuntimeProcessAndUpdateContractTests() {
 
     final result = installer.install(
       AppUpdateRecord(
-        appId: 'konyak',
-        status: 'available',
-        currentVersion: Option.of('1.0.0'),
-        latestVersion: Option.of('1.1.0'),
-        archiveUrl: Option.of(sourceArchive.uri.toString()),
-        archiveSha256: Option.of(_fileSha256(sourceArchive.path)),
+        appId: AppId('konyak'),
+        status: UpdateCheckStatus('available'),
+        currentVersion: Option.of(AppVersion('1.0.0')),
+        latestVersion: Option.of(ReleaseVersion('1.1.0')),
+        archiveUrl: Option.of(AppArchiveUrl(sourceArchive.uri.toString())),
+        archiveSha256: Option.of(
+          AppArchiveSha256(_fileSha256(sourceArchive.path)),
+        ),
       ),
     );
 
@@ -2893,12 +2953,14 @@ void defineRuntimeProcessAndUpdateContractTests() {
 
       final result = installer.install(
         AppUpdateRecord(
-          appId: 'konyak',
-          status: 'available',
-          currentVersion: Option.of('1.0.0'),
-          latestVersion: Option.of('1.1.0'),
-          archiveUrl: Option.of(sourceArchive.uri.toString()),
-          archiveSha256: Option.of(_fileSha256(sourceArchive.path)),
+          appId: AppId('konyak'),
+          status: UpdateCheckStatus('available'),
+          currentVersion: Option.of(AppVersion('1.0.0')),
+          latestVersion: Option.of(ReleaseVersion('1.1.0')),
+          archiveUrl: Option.of(AppArchiveUrl(sourceArchive.uri.toString())),
+          archiveSha256: Option.of(
+            AppArchiveSha256(_fileSha256(sourceArchive.path)),
+          ),
         ),
       );
 
@@ -2961,12 +3023,14 @@ void defineRuntimeProcessAndUpdateContractTests() {
 
     final result = installer.install(
       AppUpdateRecord(
-        appId: 'konyak',
-        status: 'available',
-        currentVersion: Option.of('1.0.0'),
-        latestVersion: Option.of('1.1.0'),
-        archiveUrl: Option.of(sourceArchive.uri.toString()),
-        archiveSha256: Option.of(_fileSha256(sourceArchive.path)),
+        appId: AppId('konyak'),
+        status: UpdateCheckStatus('available'),
+        currentVersion: Option.of(AppVersion('1.0.0')),
+        latestVersion: Option.of(ReleaseVersion('1.1.0')),
+        archiveUrl: Option.of(AppArchiveUrl(sourceArchive.uri.toString())),
+        archiveSha256: Option.of(
+          AppArchiveSha256(_fileSha256(sourceArchive.path)),
+        ),
       ),
     );
 
@@ -3049,12 +3113,14 @@ void defineRuntimeProcessAndUpdateContractTests() {
 
     final result = installer.install(
       AppUpdateRecord(
-        appId: 'konyak',
-        status: 'available',
-        currentVersion: Option.of('1.0.0'),
-        latestVersion: Option.of('1.1.0'),
-        archiveUrl: Option.of(sourceArchive.uri.toString()),
-        archiveSha256: Option.of(_fileSha256(sourceArchive.path)),
+        appId: AppId('konyak'),
+        status: UpdateCheckStatus('available'),
+        currentVersion: Option.of(AppVersion('1.0.0')),
+        latestVersion: Option.of(ReleaseVersion('1.1.0')),
+        archiveUrl: Option.of(AppArchiveUrl(sourceArchive.uri.toString())),
+        archiveSha256: Option.of(
+          AppArchiveSha256(_fileSha256(sourceArchive.path)),
+        ),
       ),
     );
 
@@ -3095,12 +3161,14 @@ void defineRuntimeProcessAndUpdateContractTests() {
       final checker = RecordingRuntimeUpdateChecker(
         result: RuntimeUpdateCheckCompleted(
           RuntimeUpdateRecord(
-            runtimeId: 'konyak-macos-wine',
-            status: 'available',
-            currentVersion: Option.of('wine-devel-11.9'),
-            latestVersion: Option.of('12.0'),
+            runtimeId: RuntimeId('konyak-macos-wine'),
+            status: UpdateCheckStatus('available'),
+            currentVersion: Option.of(RuntimeVersion('wine-devel-11.9')),
+            latestVersion: Option.of(RuntimeVersion('12.0')),
             sourceManifestUrl: Option.of(
-              'https://example.invalid/runtime-stack-source.json',
+              RuntimeSourceManifestUrl(
+                'https://example.invalid/runtime-stack-source.json',
+              ),
             ),
           ),
         ),
@@ -3154,12 +3222,14 @@ void defineRuntimeProcessAndUpdateContractTests() {
     final checker = RecordingRuntimeUpdateChecker(
       result: RuntimeUpdateCheckCompleted(
         RuntimeUpdateRecord(
-          runtimeId: 'konyak-macos-wine',
-          status: 'available',
-          currentVersion: Option.of('wine-devel-11.9'),
-          latestVersion: Option.of('12.0'),
+          runtimeId: RuntimeId('konyak-macos-wine'),
+          status: UpdateCheckStatus('available'),
+          currentVersion: Option.of(RuntimeVersion('wine-devel-11.9')),
+          latestVersion: Option.of(RuntimeVersion('12.0')),
           sourceManifestUrl: Option.of(
-            'https://example.invalid/runtime-stack-source.json',
+            RuntimeSourceManifestUrl(
+              'https://example.invalid/runtime-stack-source.json',
+            ),
           ),
         ),
       ),
@@ -3203,12 +3273,14 @@ void defineRuntimeProcessAndUpdateContractTests() {
       final checker = RecordingRuntimeUpdateChecker(
         result: RuntimeUpdateCheckCompleted(
           RuntimeUpdateRecord(
-            runtimeId: 'konyak-linux-wine',
-            status: 'available',
-            currentVersion: Option.of('wine-10.0'),
-            latestVersion: Option.of('wine-10.1'),
+            runtimeId: RuntimeId('konyak-linux-wine'),
+            status: UpdateCheckStatus('available'),
+            currentVersion: Option.of(RuntimeVersion('wine-10.0')),
+            latestVersion: Option.of(RuntimeVersion('wine-10.1')),
             sourceManifestUrl: Option.of(
-              'https://example.invalid/linux-runtime-stack.json',
+              RuntimeSourceManifestUrl(
+                'https://example.invalid/linux-runtime-stack.json',
+              ),
             ),
           ),
         ),
@@ -3255,18 +3327,24 @@ void defineRuntimeProcessAndUpdateContractTests() {
       final checker = RecordingRuntimeUpdateChecker(
         result: RuntimeUpdateCheckCompleted(
           RuntimeUpdateRecord(
-            runtimeId: 'konyak-linux-wine',
-            status: 'available',
-            currentVersion: Option.of('wine-10.0'),
-            latestVersion: Option.of('wine-10.1'),
+            runtimeId: RuntimeId('konyak-linux-wine'),
+            status: UpdateCheckStatus('available'),
+            currentVersion: Option.of(RuntimeVersion('wine-10.0')),
+            latestVersion: Option.of(RuntimeVersion('wine-10.1')),
             sourceManifestUrl: Option.of(
-              'https://example.invalid/linux-runtime-stack.json',
+              RuntimeSourceManifestUrl(
+                'https://example.invalid/linux-runtime-stack.json',
+              ),
             ),
             sourceManifestSignatureUrl: Option.of(
-              'https://example.invalid/linux-runtime-stack.json.sig',
+              RuntimeSourceManifestSignatureUrl(
+                'https://example.invalid/linux-runtime-stack.json.sig',
+              ),
             ),
             archiveUrl: Option.of(
-              'https://example.invalid/linux-runtime-stack.json',
+              RuntimeArchiveUrl(
+                'https://example.invalid/linux-runtime-stack.json',
+              ),
             ),
           ),
         ),
@@ -3346,12 +3424,16 @@ void defineRuntimeProcessAndUpdateContractTests() {
         ]),
         releaseMetadataFetcher: StaticRuntimeReleaseMetadataFetcher(
           RuntimeReleaseMetadata(
-            version: 'wine-10.1',
+            version: ReleaseVersion('wine-10.1'),
             sourceManifestUrl: Option.of(
-              'https://example.invalid/linux-runtime-stack-source.json',
+              RuntimeSourceManifestUrl(
+                'https://example.invalid/linux-runtime-stack-source.json',
+              ),
             ),
             sourceManifestSignatureUrl: Option.of(
-              'https://example.invalid/linux-runtime-stack-source.json.sig',
+              RuntimeSourceManifestSignatureUrl(
+                'https://example.invalid/linux-runtime-stack-source.json.sig',
+              ),
             ),
           ),
         ),
@@ -3410,9 +3492,11 @@ void defineRuntimeProcessAndUpdateContractTests() {
         ]),
         releaseMetadataFetcher: StaticRuntimeReleaseMetadataFetcher(
           RuntimeReleaseMetadata(
-            version: 'wine-10.1',
+            version: ReleaseVersion('wine-10.1'),
             archiveUrl: Option.of(
-              'https://example.invalid/linux-wine-10.1.tar.xz',
+              RuntimeArchiveUrl(
+                'https://example.invalid/linux-wine-10.1.tar.xz',
+              ),
             ),
           ),
         ),
@@ -3465,8 +3549,10 @@ void defineRuntimeProcessAndUpdateContractTests() {
         ]),
         releaseMetadataFetcher: StaticRuntimeReleaseMetadataFetcher(
           RuntimeReleaseMetadata(
-            version: '11.10',
-            archiveUrl: Option.of('https://example.invalid/runtime.tar.xz'),
+            version: ReleaseVersion('11.10'),
+            archiveUrl: Option.of(
+              RuntimeArchiveUrl('https://example.invalid/runtime.tar.xz'),
+            ),
           ),
         ),
       );
@@ -3518,9 +3604,11 @@ void defineRuntimeProcessAndUpdateContractTests() {
         ]),
         releaseMetadataFetcher: StaticRuntimeReleaseMetadataFetcher(
           RuntimeReleaseMetadata(
-            version: '11.9',
+            version: ReleaseVersion('11.9'),
             sourceManifestUrl: Option.of(
-              'https://example.invalid/macos-runtime-stack-source.json',
+              RuntimeSourceManifestUrl(
+                'https://example.invalid/macos-runtime-stack-source.json',
+              ),
             ),
           ),
         ),

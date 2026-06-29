@@ -13,6 +13,35 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-29 19:45 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Continue functional-core domain type migration across CLI/domain
+  boundaries.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: current commit (`Verify domain type boundary migration`).
+- Purpose: keep raw CLI, JSON, and filesystem values at adapter boundaries
+  while preserving domain value objects through runtime install, update,
+  registry, program catalog, process, environment, graphics hint, Winetricks,
+  mutation, and repository-facing APIs.
+- Completed work: changed program pinned-program helpers, metadata extractor
+  interfaces, graphics backend hint APIs, program and bottle mutation
+  request/result models, runtime install source/package models, update records,
+  registry update/query models, program environment builders, Wine process and
+  program catalog records, Winetricks verb/category records, CLI parsers,
+  repositories, I/O projections, launch manifest mapping, focused fixtures, and
+  governance checks to preserve semantic value objects until JSON/I/O
+  projection.
+- Remaining work: broader primitive cleanup remains possible for
+  schema/compatibility records that still model raw external contracts, such as
+  runtime record/validation/source-manifest and Flutter-side contract adapters.
+- Next action: choose the next narrow primitive-boundary candidate.
+- Verification: `cd packages/konyak_cli && dart test
+  test/domain_immutability_test.dart`, `cd packages/konyak_cli && dart analyze
+  --fatal-infos`, `just verify-governance`, `just verify-safety`, `just
+  format-check`, `just lint`, and `just cli-test` passed in the Nix dev shell.
+
 - Timestamp: 2026-06-29 17:47 JST
 - State: `completed`
 - Branch: `main`

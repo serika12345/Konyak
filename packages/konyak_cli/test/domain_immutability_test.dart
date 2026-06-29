@@ -35,9 +35,9 @@ final class EmptyRuntimeStackVersionProbe implements RuntimeStackVersionProbe {
   const EmptyRuntimeStackVersionProbe();
 
   @override
-  Option<String> versionFor({
-    required String runtimeRoot,
-    required String componentId,
+  Option<RuntimeVersion> versionFor({
+    required RuntimeRootPath runtimeRoot,
+    required RuntimeComponentId componentId,
   }) {
     return const Option.none();
   }
@@ -256,54 +256,104 @@ void main() {
     );
   });
 
+  test('pinned program lookups use semantic program paths', () {
+    final bottle = BottleRecord(
+      id: 'steam',
+      name: 'Steam',
+      path: '/bottles/steam',
+      windowsVersion: 'win10',
+      pinnedPrograms: [
+        PinnedProgramRecord(name: 'Steam', path: '/games/steam.exe'),
+      ],
+    );
+
+    expect(hasPinnedProgram(bottle, ProgramPath('/games/steam.exe')), isTrue);
+    expect(hasPinnedProgram(bottle, ProgramPath('/games/other.exe')), isFalse);
+  });
+
+  test('registry update plans use semantic Windows versions', () {
+    final updates = windowsVersionRegistryUpdates(WindowsVersion('win10'));
+
+    expect(updates, hasLength(1));
+    expect(updates.single.data, ProgramRegistryValueData('win10'));
+  });
+
   test('bottle mutation request records compare by semantic values', () {
     expect(
-      BottleCreateRequest(name: 'Steam', windowsVersion: 'win10'),
-      BottleCreateRequest(name: 'Steam', windowsVersion: 'win10'),
+      BottleCreateRequest(
+        name: BottleName('Steam'),
+        windowsVersion: WindowsVersion('win10'),
+      ),
+      BottleCreateRequest(
+        name: BottleName('Steam'),
+        windowsVersion: WindowsVersion('win10'),
+      ),
     );
     expect(
       BottleArchiveExportRequest(
-        bottleId: 'steam',
-        archivePath: '/archives/steam.tar',
+        bottleId: BottleId('steam'),
+        archivePath: BottleArchivePath('/archives/steam.tar'),
       ),
       BottleArchiveExportRequest(
-        bottleId: 'steam',
-        archivePath: '/archives/steam.tar',
+        bottleId: BottleId('steam'),
+        archivePath: BottleArchivePath('/archives/steam.tar'),
       ),
     );
     expect(
-      BottleArchiveImportRequest(archivePath: '/archives/steam.tar'),
-      BottleArchiveImportRequest(archivePath: '/archives/steam.tar'),
+      BottleArchiveImportRequest(
+        archivePath: BottleArchivePath('/archives/steam.tar'),
+      ),
+      BottleArchiveImportRequest(
+        archivePath: BottleArchivePath('/archives/steam.tar'),
+      ),
     );
     expect(
       BottleArchiveRecord(
-        bottleId: 'steam',
-        archivePath: '/archives/steam.tar',
+        bottleId: BottleId('steam'),
+        archivePath: BottleArchivePath('/archives/steam.tar'),
       ),
       BottleArchiveRecord(
-        bottleId: 'steam',
-        archivePath: '/archives/steam.tar',
+        bottleId: BottleId('steam'),
+        archivePath: BottleArchivePath('/archives/steam.tar'),
       ),
     );
     expect(
-      BottleRenameRequest(bottleId: 'steam', name: 'Steam'),
-      BottleRenameRequest(bottleId: 'steam', name: 'Steam'),
+      BottleRenameRequest(
+        bottleId: BottleId('steam'),
+        name: BottleName('Steam'),
+      ),
+      BottleRenameRequest(
+        bottleId: BottleId('steam'),
+        name: BottleName('Steam'),
+      ),
     );
     expect(
-      BottleMoveRequest(bottleId: 'steam', path: '/bottles/steam'),
-      BottleMoveRequest(bottleId: 'steam', path: '/bottles/steam'),
+      BottleMoveRequest(
+        bottleId: BottleId('steam'),
+        path: BottlePath('/bottles/steam'),
+      ),
+      BottleMoveRequest(
+        bottleId: BottleId('steam'),
+        path: BottlePath('/bottles/steam'),
+      ),
     );
     expect(
-      WindowsVersionUpdateRequest(bottleId: 'steam', windowsVersion: 'win10'),
-      WindowsVersionUpdateRequest(bottleId: 'steam', windowsVersion: 'win10'),
+      WindowsVersionUpdateRequest(
+        bottleId: BottleId('steam'),
+        windowsVersion: WindowsVersion('win10'),
+      ),
+      WindowsVersionUpdateRequest(
+        bottleId: BottleId('steam'),
+        windowsVersion: WindowsVersion('win10'),
+      ),
     );
     expect(
       RuntimeSettingsUpdateRequest(
-        bottleId: 'steam',
+        bottleId: BottleId('steam'),
         runtimeSettings: BottleRuntimeSettings(dxvk: true),
       ),
       RuntimeSettingsUpdateRequest(
-        bottleId: 'steam',
+        bottleId: BottleId('steam'),
         runtimeSettings: BottleRuntimeSettings(dxvk: true),
       ),
     );
@@ -317,17 +367,20 @@ void main() {
       windowsVersion: 'win10',
     );
     final archive = BottleArchiveRecord(
-      bottleId: 'steam',
-      archivePath: '/archives/steam.tar',
+      bottleId: BottleId('steam'),
+      archivePath: BottleArchivePath('/archives/steam.tar'),
     );
 
     expect(BottleCreated(bottle), BottleCreated(bottle));
-    expect(BottleCreateConflict('steam'), BottleCreateConflict('steam'));
+    expect(
+      BottleCreateConflict(BottleId('steam')),
+      BottleCreateConflict(BottleId('steam')),
+    );
     expect(BottleCreateFailed('failed'), BottleCreateFailed('failed'));
     expect(BottleArchiveExported(archive), BottleArchiveExported(archive));
     expect(
-      BottleArchiveExportMissing('steam'),
-      BottleArchiveExportMissing('steam'),
+      BottleArchiveExportMissing(BottleId('steam')),
+      BottleArchiveExportMissing(BottleId('steam')),
     );
     expect(
       BottleArchiveExportFailed('failed'),
@@ -335,29 +388,44 @@ void main() {
     );
     expect(BottleArchiveImported(bottle), BottleArchiveImported(bottle));
     expect(
-      BottleArchiveImportConflict('steam'),
-      BottleArchiveImportConflict('steam'),
+      BottleArchiveImportConflict(BottleId('steam')),
+      BottleArchiveImportConflict(BottleId('steam')),
     );
     expect(
       BottleArchiveImportFailed('failed'),
       BottleArchiveImportFailed('failed'),
     );
     expect(BottleDeleted(bottle), BottleDeleted(bottle));
-    expect(BottleDeleteMissing('steam'), BottleDeleteMissing('steam'));
+    expect(
+      BottleDeleteMissing(BottleId('steam')),
+      BottleDeleteMissing(BottleId('steam')),
+    );
     expect(BottleDeleteFailed('failed'), BottleDeleteFailed('failed'));
     expect(BottleRenamed(bottle), BottleRenamed(bottle));
-    expect(BottleRenameMissing('steam'), BottleRenameMissing('steam'));
-    expect(BottleRenameConflict('steam'), BottleRenameConflict('steam'));
+    expect(
+      BottleRenameMissing(BottleId('steam')),
+      BottleRenameMissing(BottleId('steam')),
+    );
+    expect(
+      BottleRenameConflict(BottleId('steam')),
+      BottleRenameConflict(BottleId('steam')),
+    );
     expect(BottleRenameFailed('failed'), BottleRenameFailed('failed'));
     expect(BottleMoved(bottle), BottleMoved(bottle));
-    expect(BottleMoveMissing('steam'), BottleMoveMissing('steam'));
     expect(
-      BottleMoveConflict('/bottles/steam'),
-      BottleMoveConflict('/bottles/steam'),
+      BottleMoveMissing(BottleId('steam')),
+      BottleMoveMissing(BottleId('steam')),
+    );
+    expect(
+      BottleMoveConflict(BottlePath('/bottles/steam')),
+      BottleMoveConflict(BottlePath('/bottles/steam')),
     );
     expect(BottleMoveFailed('failed'), BottleMoveFailed('failed'));
     expect(BottleUpdated(bottle), BottleUpdated(bottle));
-    expect(BottleUpdateMissing('steam'), BottleUpdateMissing('steam'));
+    expect(
+      BottleUpdateMissing(BottleId('steam')),
+      BottleUpdateMissing(BottleId('steam')),
+    );
     expect(BottleUpdateFailed('failed'), BottleUpdateFailed('failed'));
   });
 
@@ -467,9 +535,9 @@ void main() {
   test('program metadata records model absent fields with Option', () {
     final emptyMetadata = ProgramMetadataRecord();
     final metadata = ProgramMetadataRecord(
-      architecture: Option.of('x86_64'),
-      fileDescription: Option.of('Steam'),
-      iconPath: Option.of('/steam.icns'),
+      architecture: Option.of(ProgramArchitecture('x86_64')),
+      fileDescription: Option.of(ProgramFileDescription('Steam')),
+      iconPath: Option.of(ProgramIconPath('/steam.icns')),
     );
 
     expect(emptyMetadata.isEmpty, isTrue);
@@ -485,26 +553,28 @@ void main() {
 
   test('program metadata records reject blank present fields', () {
     expect(
-      () => ProgramMetadataRecord(architecture: Option.of(' ')),
+      () => ProgramMetadataRecord(
+        architecture: Option.of(ProgramArchitecture(' ')),
+      ),
       throwsA(isA<ArgumentError>()),
     );
     expect(
-      () => ProgramMetadataRecord(iconPath: Option.of(' ')),
+      () => ProgramMetadataRecord(iconPath: Option.of(ProgramIconPath(' '))),
       throwsA(isA<ArgumentError>()),
     );
   });
 
   test('program and process records model absent metadata with Option', () {
     final program = BottleProgramRecord(
-      id: 'steam',
-      name: 'Steam',
-      path: '/steam.exe',
-      source: 'pinned',
+      id: ProgramId('steam'),
+      name: ProgramName('Steam'),
+      path: ProgramPath('/steam.exe'),
+      source: ProgramSource('pinned'),
     );
     final process = WineProcessRecord(
-      bottleId: 'steam',
-      processId: '42',
-      executable: 'steam.exe',
+      bottleId: BottleId('steam'),
+      processId: WineProcessId('42'),
+      executable: ProgramExecutable('steam.exe'),
     );
 
     expect(program.metadata.isNone(), isTrue);
@@ -522,44 +592,48 @@ void main() {
   test('program catalog records compare by semantic values', () {
     expect(
       ProgramMetadataRecord(
-        architecture: Option.of('x86_64'),
-        fileDescription: Option.of('Steam'),
-        iconPath: Option.of('/steam.icns'),
+        architecture: Option.of(ProgramArchitecture('x86_64')),
+        fileDescription: Option.of(ProgramFileDescription('Steam')),
+        iconPath: Option.of(ProgramIconPath('/steam.icns')),
       ),
       ProgramMetadataRecord(
-        architecture: Option.of('x86_64'),
-        fileDescription: Option.of('Steam'),
-        iconPath: Option.of('/steam.icns'),
+        architecture: Option.of(ProgramArchitecture('x86_64')),
+        fileDescription: Option.of(ProgramFileDescription('Steam')),
+        iconPath: Option.of(ProgramIconPath('/steam.icns')),
       ),
     );
     expect(
       BottleProgramRecord(
-        id: 'steam',
-        name: 'Steam',
-        path: '/steam.exe',
-        source: 'pinned',
-        metadata: Option.of(ProgramMetadataRecord(iconPath: Option.of('/i'))),
+        id: ProgramId('steam'),
+        name: ProgramName('Steam'),
+        path: ProgramPath('/steam.exe'),
+        source: ProgramSource('pinned'),
+        metadata: Option.of(
+          ProgramMetadataRecord(iconPath: Option.of(ProgramIconPath('/i'))),
+        ),
       ),
       BottleProgramRecord(
-        id: 'steam',
-        name: 'Steam',
-        path: '/steam.exe',
-        source: 'pinned',
-        metadata: Option.of(ProgramMetadataRecord(iconPath: Option.of('/i'))),
+        id: ProgramId('steam'),
+        name: ProgramName('Steam'),
+        path: ProgramPath('/steam.exe'),
+        source: ProgramSource('pinned'),
+        metadata: Option.of(
+          ProgramMetadataRecord(iconPath: Option.of(ProgramIconPath('/i'))),
+        ),
       ),
     );
     expect(
       WineProcessRecord(
-        bottleId: 'steam',
-        processId: '42',
-        executable: 'steam.exe',
-        hostPath: Option.of('/steam.exe'),
+        bottleId: BottleId('steam'),
+        processId: WineProcessId('42'),
+        executable: ProgramExecutable('steam.exe'),
+        hostPath: Option.of(ProgramPath('/steam.exe')),
       ),
       WineProcessRecord(
-        bottleId: 'steam',
-        processId: '42',
-        executable: 'steam.exe',
-        hostPath: Option.of('/steam.exe'),
+        bottleId: BottleId('steam'),
+        processId: WineProcessId('42'),
+        executable: ProgramExecutable('steam.exe'),
+        hostPath: Option.of(ProgramPath('/steam.exe')),
       ),
     );
   });
@@ -567,35 +641,41 @@ void main() {
   test('registry value records compare by semantic values', () {
     expect(
       RegistryValueUpdate(
-        key: r'HKCU\Software\Wine',
-        name: 'Version',
-        type: 'REG_SZ',
-        data: 'win10',
+        key: ProgramRegistryKey(r'HKCU\Software\Wine'),
+        name: ProgramRegistryValueName('Version'),
+        type: ProgramRegistryValueType('REG_SZ'),
+        data: ProgramRegistryValueData('win10'),
       ),
       RegistryValueUpdate(
-        key: r'HKCU\Software\Wine',
-        name: 'Version',
-        type: 'REG_SZ',
-        data: 'win10',
+        key: ProgramRegistryKey(r'HKCU\Software\Wine'),
+        name: ProgramRegistryValueName('Version'),
+        type: ProgramRegistryValueType('REG_SZ'),
+        data: ProgramRegistryValueData('win10'),
       ),
     );
     expect(
-      RegistryValueQuery(key: r'HKCU\Software\Wine', name: 'Version'),
-      RegistryValueQuery(key: r'HKCU\Software\Wine', name: 'Version'),
+      RegistryValueQuery(
+        key: ProgramRegistryKey(r'HKCU\Software\Wine'),
+        name: ProgramRegistryValueName('Version'),
+      ),
+      RegistryValueQuery(
+        key: ProgramRegistryKey(r'HKCU\Software\Wine'),
+        name: ProgramRegistryValueName('Version'),
+      ),
     );
   });
 
   test('winetricks catalog records expose immutable value snapshots', () {
     final verbs = <WinetricksVerbRecord>[
       WinetricksVerbRecord(
-        id: 'corefonts',
-        name: 'corefonts',
-        description: 'install core fonts',
+        id: WinetricksVerbId('corefonts'),
+        name: WinetricksVerbName('corefonts'),
+        description: WinetricksVerbDescription('install core fonts'),
       ),
     ];
     final category = WinetricksCategoryRecord(
-      id: 'fonts',
-      name: 'Fonts',
+      id: WinetricksCategoryId('fonts'),
+      name: WinetricksCategoryName('Fonts'),
       verbs: verbs,
     );
     verbs.clear();
@@ -606,35 +686,35 @@ void main() {
     expect(
       () => category.verbs.add(
         WinetricksVerbRecord(
-          id: 'allfonts',
-          name: 'allfonts',
-          description: 'install all fonts',
+          id: WinetricksVerbId('allfonts'),
+          name: WinetricksVerbName('allfonts'),
+          description: WinetricksVerbDescription('install all fonts'),
         ),
       ),
       throwsUnsupportedError,
     );
     expect(
       WinetricksVerbRecord(
-        id: 'corefonts',
-        name: 'corefonts',
-        description: 'install core fonts',
+        id: WinetricksVerbId('corefonts'),
+        name: WinetricksVerbName('corefonts'),
+        description: WinetricksVerbDescription('install core fonts'),
       ),
       WinetricksVerbRecord(
-        id: 'corefonts',
-        name: 'corefonts',
-        description: 'install core fonts',
+        id: WinetricksVerbId('corefonts'),
+        name: WinetricksVerbName('corefonts'),
+        description: WinetricksVerbDescription('install core fonts'),
       ),
     );
     expect(
       category,
       WinetricksCategoryRecord(
-        id: 'fonts',
-        name: 'Fonts',
+        id: WinetricksCategoryId('fonts'),
+        name: WinetricksCategoryName('Fonts'),
         verbs: <WinetricksVerbRecord>[
           WinetricksVerbRecord(
-            id: 'corefonts',
-            name: 'corefonts',
-            description: 'install core fonts',
+            id: WinetricksVerbId('corefonts'),
+            name: WinetricksVerbName('corefonts'),
+            description: WinetricksVerbDescription('install core fonts'),
           ),
         ],
       ),
@@ -644,13 +724,13 @@ void main() {
   test('winetricks verb list results compare by value', () {
     WinetricksCategoryRecord fontsCategory() {
       return WinetricksCategoryRecord(
-        id: 'fonts',
-        name: 'Fonts',
+        id: WinetricksCategoryId('fonts'),
+        name: WinetricksCategoryName('Fonts'),
         verbs: <WinetricksVerbRecord>[
           WinetricksVerbRecord(
-            id: 'corefonts',
-            name: 'corefonts',
-            description: 'install core fonts',
+            id: WinetricksVerbId('corefonts'),
+            name: WinetricksVerbName('corefonts'),
+            description: WinetricksVerbDescription('install core fonts'),
           ),
         ],
       );
@@ -679,40 +759,89 @@ void main() {
 
   test('graphics backend hints expose immutable value records', () {
     final signals = <ProgramGraphicsBackendSignal>[
-      ProgramGraphicsBackendSignal(kind: 'peImport', value: 'd3d11.dll'),
+      ProgramGraphicsBackendSignal(
+        kind: GraphicsBackendSignalKind('peImport'),
+        value: GraphicsBackendSignalValue('d3d11.dll'),
+      ),
     ];
     final suggestions = <ProgramGraphicsBackendSuggestion>[
       ProgramGraphicsBackendSuggestion(
-        backend: 'dxvk',
-        confidence: 'high',
+        backend: GraphicsBackendKind('dxvk'),
+        confidence: GraphicsBackendConfidence('high'),
         reason: 'D3D11 API usage was detected.',
       ),
     ];
     final hints = ProgramGraphicsBackendHints(
-      programPath: '/games/steam.exe',
+      programPath: ProgramPath('/games/steam.exe'),
       hostPlatform: KonyakHostPlatform.linux,
       signals: signals,
       suggestions: suggestions,
     );
-    signals.add(ProgramGraphicsBackendSignal(kind: 'string', value: 'd3d12'));
+    signals.add(
+      ProgramGraphicsBackendSignal(
+        kind: GraphicsBackendSignalKind('string'),
+        value: GraphicsBackendSignalValue('d3d12'),
+      ),
+    );
     suggestions.clear();
 
     expect(hints.programPath, ProgramPath('/games/steam.exe'));
     expect(hints.hostPlatform, KonyakHostPlatform.linux);
     expect(hints.signals, [
-      ProgramGraphicsBackendSignal(kind: 'peImport', value: 'd3d11.dll'),
+      ProgramGraphicsBackendSignal(
+        kind: GraphicsBackendSignalKind('peImport'),
+        value: GraphicsBackendSignalValue('d3d11.dll'),
+      ),
     ]);
     expect(hints.suggestions, [
       ProgramGraphicsBackendSuggestion(
-        backend: 'dxvk',
-        confidence: 'high',
+        backend: GraphicsBackendKind('dxvk'),
+        confidence: GraphicsBackendConfidence('high'),
         reason: 'D3D11 API usage was detected.',
       ),
     ]);
   });
 
+  test('graphics backend hint decisions use semantic program paths', () {
+    final hints = programGraphicsBackendHintsFromSignals(
+      programPath: ProgramPath('/games/steam.exe'),
+      hostPlatform: KonyakHostPlatform.linux,
+      signals: [
+        ProgramGraphicsBackendSignal(
+          kind: GraphicsBackendSignalKind('peImport'),
+          value: GraphicsBackendSignalValue('d3d12.dll'),
+        ),
+      ],
+    );
+    final missing = ProgramGraphicsBackendHintsInspectionResult.missingProgram(
+      ProgramPath('/games/missing.exe'),
+    );
+    final failed = ProgramGraphicsBackendHintsInspectionResult.failed(
+      programPath: ProgramPath('/games/broken.exe'),
+      message: 'unreadable',
+    );
+
+    expect(hints.programPath, ProgramPath('/games/steam.exe'));
+    expect(
+      missing,
+      isA<ProgramGraphicsBackendHintsMissingProgram>().having(
+        (result) => result.programPath,
+        'programPath',
+        ProgramPath('/games/missing.exe'),
+      ),
+    );
+    expect(
+      failed,
+      isA<ProgramGraphicsBackendHintsInspectionFailed>().having(
+        (result) => result.programPath,
+        'programPath',
+        ProgramPath('/games/broken.exe'),
+      ),
+    );
+  });
+
   test('runtime release metadata models absent fields with Option', () {
-    final metadata = RuntimeReleaseMetadata(version: '1.0.0');
+    final metadata = RuntimeReleaseMetadata(version: ReleaseVersion('1.0.0'));
 
     expect(metadata.version, ReleaseVersion('1.0.0'));
     expect(metadata.archiveUrl.isNone(), isTrue);
@@ -723,24 +852,31 @@ void main() {
 
   test('runtime release metadata rejects blank present fields', () {
     expect(
-      () => RuntimeReleaseMetadata(version: ' '),
+      () => RuntimeReleaseMetadata(version: ReleaseVersion(' ')),
       throwsA(isA<ArgumentError>()),
     );
     expect(
-      () =>
-          RuntimeReleaseMetadata(version: '1.0.0', archiveUrl: Option.of(' ')),
+      () => RuntimeReleaseMetadata(
+        version: ReleaseVersion('1.0.0'),
+        archiveUrl: Option.of(RuntimeArchiveUrl(' ')),
+      ),
       throwsA(isA<ArgumentError>()),
     );
   });
 
   test('runtime update records model absent fields with Option', () {
-    final update = RuntimeUpdateRecord(runtimeId: 'wine', status: 'unknown');
+    final update = RuntimeUpdateRecord(
+      runtimeId: RuntimeId('wine'),
+      status: UpdateCheckStatus('unknown'),
+    );
     final available = RuntimeUpdateRecord(
-      runtimeId: 'wine',
-      status: 'available',
-      currentVersion: Option.of('1.0.0'),
-      latestVersion: Option.of('1.1.0'),
-      archiveUrl: Option.of('https://example.invalid/wine.tar.xz'),
+      runtimeId: RuntimeId('wine'),
+      status: UpdateCheckStatus('available'),
+      currentVersion: Option.of(RuntimeVersion('1.0.0')),
+      latestVersion: Option.of(RuntimeVersion('1.1.0')),
+      archiveUrl: Option.of(
+        RuntimeArchiveUrl('https://example.invalid/wine.tar.xz'),
+      ),
     );
 
     expect(update.currentVersion.isNone(), isTrue);
@@ -757,25 +893,65 @@ void main() {
 
   test('runtime update records reject blank present fields', () {
     expect(
-      () => RuntimeUpdateRecord(runtimeId: ' ', status: 'unknown'),
-      throwsA(isA<ArgumentError>()),
-    );
-    expect(
-      () => RuntimeUpdateRecord(runtimeId: 'wine', status: ' '),
+      () => RuntimeUpdateRecord(
+        runtimeId: RuntimeId(' '),
+        status: UpdateCheckStatus('unknown'),
+      ),
       throwsA(isA<ArgumentError>()),
     );
     expect(
       () => RuntimeUpdateRecord(
-        runtimeId: 'wine',
-        status: 'unknown',
-        archiveUrl: Option.of(' '),
+        runtimeId: RuntimeId('wine'),
+        status: UpdateCheckStatus(' '),
+      ),
+      throwsA(isA<ArgumentError>()),
+    );
+    expect(
+      () => RuntimeUpdateRecord(
+        runtimeId: RuntimeId('wine'),
+        status: UpdateCheckStatus('unknown'),
+        archiveUrl: Option.of(RuntimeArchiveUrl(' ')),
       ),
       throwsA(isA<ArgumentError>()),
     );
   });
 
+  test('runtime update helpers use semantic version and runtime ids', () {
+    final runtime = RuntimeRecord(
+      id: 'konyak-macos-wine',
+      name: 'Konyak macOS Wine',
+      platform: 'macos',
+      architecture: 'arm64',
+      runnerKind: 'wine',
+      isBundled: false,
+      isUpdateable: true,
+    );
+
+    expect(
+      runtimeById([runtime], RuntimeId('konyak-macos-wine')).toNullable(),
+      runtime,
+    );
+    expect(
+      updateStatus(
+        currentVersion: Option.of(RuntimeVersion('wine-devel-9.0')),
+        latestVersion: ReleaseVersion('v9.0'),
+      ),
+      UpdateCheckStatus('current'),
+    );
+    expect(
+      updateStatus(
+        currentVersion: Option.of(AppVersion('1.0.0')),
+        latestVersion: ReleaseVersion('1.1.0'),
+      ),
+      UpdateCheckStatus('available'),
+    );
+  });
+
   test('app update records model absent fields with Option', () {
-    final update = AppUpdateRecord(appId: 'konyak', status: 'unknown');
+    final update = AppUpdateRecord(
+      appId: AppId('konyak'),
+      status: UpdateCheckStatus('unknown'),
+    );
 
     expect(update.appId, AppId('konyak'));
     expect(update.status, UpdateCheckStatus('unknown'));
@@ -787,25 +963,34 @@ void main() {
 
   test('app update records reject blank present fields', () {
     expect(
-      () => AppUpdateRecord(appId: ' ', status: 'unknown'),
-      throwsA(isA<ArgumentError>()),
-    );
-    expect(
-      () => AppUpdateRecord(appId: 'konyak', status: ' '),
+      () => AppUpdateRecord(
+        appId: AppId(' '),
+        status: UpdateCheckStatus('unknown'),
+      ),
       throwsA(isA<ArgumentError>()),
     );
     expect(
       () => AppUpdateRecord(
-        appId: 'konyak',
-        status: 'unknown',
-        archiveSha256: Option.of(' '),
+        appId: AppId('konyak'),
+        status: UpdateCheckStatus(' '),
+      ),
+      throwsA(isA<ArgumentError>()),
+    );
+    expect(
+      () => AppUpdateRecord(
+        appId: AppId('konyak'),
+        status: UpdateCheckStatus('unknown'),
+        archiveSha256: Option.of(AppArchiveSha256(' ')),
       ),
       throwsA(isA<ArgumentError>()),
     );
   });
 
   test('app update install records model absent fields with Option', () {
-    final install = AppUpdateInstallRecord(appId: 'konyak', status: 'skipped');
+    final install = AppUpdateInstallRecord(
+      appId: AppId('konyak'),
+      status: UpdateInstallStatus('skipped'),
+    );
 
     expect(install.appId, AppId('konyak'));
     expect(install.status, UpdateInstallStatus('skipped'));
@@ -818,18 +1003,24 @@ void main() {
 
   test('app update install records reject blank present fields', () {
     expect(
-      () => AppUpdateInstallRecord(appId: ' ', status: 'skipped'),
-      throwsA(isA<ArgumentError>()),
-    );
-    expect(
-      () => AppUpdateInstallRecord(appId: 'konyak', status: ' '),
+      () => AppUpdateInstallRecord(
+        appId: AppId(' '),
+        status: UpdateInstallStatus('skipped'),
+      ),
       throwsA(isA<ArgumentError>()),
     );
     expect(
       () => AppUpdateInstallRecord(
-        appId: 'konyak',
-        status: 'installed',
-        installPath: Option.of(' '),
+        appId: AppId('konyak'),
+        status: UpdateInstallStatus(' '),
+      ),
+      throwsA(isA<ArgumentError>()),
+    );
+    expect(
+      () => AppUpdateInstallRecord(
+        appId: AppId('konyak'),
+        status: UpdateInstallStatus('installed'),
+        installPath: Option.of(AppInstallPath(' ')),
       ),
       throwsA(isA<ArgumentError>()),
     );
@@ -838,55 +1029,63 @@ void main() {
   test('update records compare by semantic values', () {
     expect(
       RuntimeUpdateRecord(
-        runtimeId: 'wine',
-        status: 'available',
-        currentVersion: Option.of('1.0.0'),
-        latestVersion: Option.of('1.1.0'),
-        sourceManifestUrl: Option.of('https://example.invalid/source.json'),
+        runtimeId: RuntimeId('wine'),
+        status: UpdateCheckStatus('available'),
+        currentVersion: Option.of(RuntimeVersion('1.0.0')),
+        latestVersion: Option.of(RuntimeVersion('1.1.0')),
+        sourceManifestUrl: Option.of(
+          RuntimeSourceManifestUrl('https://example.invalid/source.json'),
+        ),
       ),
       RuntimeUpdateRecord(
-        runtimeId: 'wine',
-        status: 'available',
-        currentVersion: Option.of('1.0.0'),
-        latestVersion: Option.of('1.1.0'),
-        sourceManifestUrl: Option.of('https://example.invalid/source.json'),
+        runtimeId: RuntimeId('wine'),
+        status: UpdateCheckStatus('available'),
+        currentVersion: Option.of(RuntimeVersion('1.0.0')),
+        latestVersion: Option.of(RuntimeVersion('1.1.0')),
+        sourceManifestUrl: Option.of(
+          RuntimeSourceManifestUrl('https://example.invalid/source.json'),
+        ),
       ),
     );
     expect(
       AppUpdateRecord(
-        appId: 'konyak',
-        status: 'available',
-        archiveSha256: Option.of('abc123'),
+        appId: AppId('konyak'),
+        status: UpdateCheckStatus('available'),
+        archiveSha256: Option.of(AppArchiveSha256('abc123')),
       ),
       AppUpdateRecord(
-        appId: 'konyak',
-        status: 'available',
-        archiveSha256: Option.of('abc123'),
+        appId: AppId('konyak'),
+        status: UpdateCheckStatus('available'),
+        archiveSha256: Option.of(AppArchiveSha256('abc123')),
       ),
     );
     expect(
       AppUpdateInstallRecord(
-        appId: 'konyak',
-        status: 'installed',
-        installPath: Option.of('/Applications/Konyak.app'),
+        appId: AppId('konyak'),
+        status: UpdateInstallStatus('installed'),
+        installPath: Option.of(AppInstallPath('/Applications/Konyak.app')),
       ),
       AppUpdateInstallRecord(
-        appId: 'konyak',
-        status: 'installed',
-        installPath: Option.of('/Applications/Konyak.app'),
+        appId: AppId('konyak'),
+        status: UpdateInstallStatus('installed'),
+        installPath: Option.of(AppInstallPath('/Applications/Konyak.app')),
       ),
     );
     expect(
       RuntimeReleaseMetadata(
-        version: '1.0.0',
+        version: ReleaseVersion('1.0.0'),
         sourceManifestSignatureUrl: Option.of(
-          'https://example.invalid/source.json.sig',
+          RuntimeSourceManifestSignatureUrl(
+            'https://example.invalid/source.json.sig',
+          ),
         ),
       ),
       RuntimeReleaseMetadata(
-        version: '1.0.0',
+        version: ReleaseVersion('1.0.0'),
         sourceManifestSignatureUrl: Option.of(
-          'https://example.invalid/source.json.sig',
+          RuntimeSourceManifestSignatureUrl(
+            'https://example.invalid/source.json.sig',
+          ),
         ),
       ),
     );
@@ -896,14 +1095,18 @@ void main() {
     expect(
       RuntimeReleaseMetadataFetched(
         RuntimeReleaseMetadata(
-          version: '1.0.0',
-          sourceManifestUrl: Option.of('https://example.invalid/source.json'),
+          version: ReleaseVersion('1.0.0'),
+          sourceManifestUrl: Option.of(
+            RuntimeSourceManifestUrl('https://example.invalid/source.json'),
+          ),
         ),
       ),
       RuntimeReleaseMetadataFetched(
         RuntimeReleaseMetadata(
-          version: '1.0.0',
-          sourceManifestUrl: Option.of('https://example.invalid/source.json'),
+          version: ReleaseVersion('1.0.0'),
+          sourceManifestUrl: Option.of(
+            RuntimeSourceManifestUrl('https://example.invalid/source.json'),
+          ),
         ),
       ),
     );
@@ -917,16 +1120,16 @@ void main() {
     expect(
       AppUpdateCheckCompleted(
         AppUpdateRecord(
-          appId: 'konyak',
-          status: 'available',
-          latestVersion: Option.of('1.1.0'),
+          appId: AppId('konyak'),
+          status: UpdateCheckStatus('available'),
+          latestVersion: Option.of(ReleaseVersion('1.1.0')),
         ),
       ),
       AppUpdateCheckCompleted(
         AppUpdateRecord(
-          appId: 'konyak',
-          status: 'available',
-          latestVersion: Option.of('1.1.0'),
+          appId: AppId('konyak'),
+          status: UpdateCheckStatus('available'),
+          latestVersion: Option.of(ReleaseVersion('1.1.0')),
         ),
       ),
     );
@@ -936,10 +1139,16 @@ void main() {
     );
     expect(
       AppUpdateInstallCompleted(
-        AppUpdateInstallRecord(appId: 'konyak', status: 'installed'),
+        AppUpdateInstallRecord(
+          appId: AppId('konyak'),
+          status: UpdateInstallStatus('installed'),
+        ),
       ),
       AppUpdateInstallCompleted(
-        AppUpdateInstallRecord(appId: 'konyak', status: 'installed'),
+        AppUpdateInstallRecord(
+          appId: AppId('konyak'),
+          status: UpdateInstallStatus('installed'),
+        ),
       ),
     );
     expect(
@@ -952,16 +1161,16 @@ void main() {
     expect(
       RuntimeUpdateCheckCompleted(
         RuntimeUpdateRecord(
-          runtimeId: 'wine',
-          status: 'available',
-          latestVersion: Option.of('1.1.0'),
+          runtimeId: RuntimeId('wine'),
+          status: UpdateCheckStatus('available'),
+          latestVersion: Option.of(RuntimeVersion('1.1.0')),
         ),
       ),
       RuntimeUpdateCheckCompleted(
         RuntimeUpdateRecord(
-          runtimeId: 'wine',
-          status: 'available',
-          latestVersion: Option.of('1.1.0'),
+          runtimeId: RuntimeId('wine'),
+          status: UpdateCheckStatus('available'),
+          latestVersion: Option.of(RuntimeVersion('1.1.0')),
         ),
       ),
     );
@@ -1001,6 +1210,33 @@ void main() {
       RuntimeSourceManifestUrl('https://example.invalid/source.json'),
     );
     expect(manifestSource.signature, isA<RuntimeSourceManifestSigned>());
+
+    final typedSource = RuntimeInstallSource.sourceManifest(
+      sourceManifest: RuntimeSourceManifestUrl(
+        'https://example.invalid/typed-source.json',
+      ),
+      signature: runtimeSourceManifestSignature(
+        Option.of(
+          RuntimeSourceManifestSignatureUrl(
+            'https://example.invalid/typed-source.json.sig',
+          ),
+        ),
+      ),
+    );
+    expect(typedSource, isA<RuntimeSourceManifestInstallSource>());
+
+    final configuredManifest = runtimeSourceManifestForPlatform(
+      platformSpec: macosKonyakRuntimePlatformSpec,
+      environment: HostEnvironment({
+        'KONYAK_RUNTIME_PROFILE': 'development',
+        macosKonyakRuntimePlatformSpec.developmentSourceManifestEnvironmentKey:
+            'https://example.invalid/dev-source.json',
+      }),
+    );
+    expect(
+      configuredManifest.toNullable(),
+      RuntimeSourceManifestUrl('https://example.invalid/dev-source.json'),
+    );
   });
 
   test('runtime install operations expose immutable source snapshots', () {
@@ -1019,19 +1255,21 @@ void main() {
   });
 
   test('runtime install sources expose immutable archive path snapshots', () {
-    final componentArchivePaths = <String>['/dxvk.tar.gz'];
+    final componentArchivePaths = <RuntimeArchivePath>[
+      RuntimeArchivePath('/dxvk.tar.gz'),
+    ];
     final configuredSource = RuntimeInstallSource.configuredArchive(
       componentArchivePaths: componentArchivePaths,
     );
     final localSource = RuntimeInstallSource.localArchive(
-      archivePath: '/wine.tar.gz',
+      archivePath: RuntimeArchivePath('/wine.tar.gz'),
       componentArchivePaths: componentArchivePaths,
     );
     final remoteSource = RuntimeInstallSource.remoteArchive(
-      archiveUrl: 'https://example.invalid/wine.tar.gz',
+      archiveUrl: RuntimeArchiveUrl('https://example.invalid/wine.tar.gz'),
       componentArchivePaths: componentArchivePaths,
     );
-    componentArchivePaths.add('/vkd3d.tar.gz');
+    componentArchivePaths.add(RuntimeArchivePath('/vkd3d.tar.gz'));
 
     expect(
       switch (configuredSource) {
@@ -1113,9 +1351,7 @@ void main() {
       BottleCommand('winecfg'),
     );
     expect(supportedBottleCommand(BottleCommand('notepad')).isNone(), isTrue);
-    expect(wineArgumentsForBottleCommand(BottleCommand('dxdiag')), const <
-      String
-    >[
+    expect(wineArgumentsForBottleCommand(BottleCommand('dxdiag')).value, const [
       'cmd',
       '/c',
       'dxdiag /t C:\\konyak-dxdiag.txt && start "" notepad C:\\konyak-dxdiag.txt',
@@ -1134,6 +1370,74 @@ void main() {
 
     expect(request.programPath, ProgramPath('cmd'));
     expect(request.arguments.value.last, contains("'cmd'"));
+  });
+
+  test('program settings helpers return typed run arguments and log paths', () {
+    final bottle = BottleRecord(
+      id: 'steam',
+      name: 'Steam',
+      path: '/bottles/steam',
+      windowsVersion: 'win10',
+    );
+    final settings = ProgramSettingsRecord(
+      arguments: '-windowed -novid',
+      logging: Option.of(
+        ProgramLoggingSettingsRecord(logFilePath: '/tmp/run.log'),
+      ),
+    );
+
+    expect(
+      programSettingsArguments(settings),
+      ProgramRunArguments(const <String>['-windowed', '-novid']),
+    );
+    expect(
+      programSettingsLogPath(bottle: bottle, settings: settings),
+      ProgramLogPath('/tmp/run.log'),
+    );
+    expect(
+      programSettingsLogPath(bottle: bottle, settings: ProgramSettingsRecord()),
+      ProgramLogPath('/bottles/steam/logs/latest.log'),
+    );
+  });
+
+  test('registry argument helpers return typed run arguments', () {
+    expect(
+      registryUpdateArguments(
+        RegistryValueUpdate(
+          key: ProgramRegistryKey(r'HKCU\Software\Wine'),
+          name: ProgramRegistryValueName('Version'),
+          type: ProgramRegistryValueType('REG_SZ'),
+          data: ProgramRegistryValueData('win10'),
+        ),
+      ),
+      ProgramRunArguments(const <String>[
+        'reg',
+        'add',
+        r'HKCU\Software\Wine',
+        '-v',
+        'Version',
+        '-t',
+        'REG_SZ',
+        '-d',
+        'win10',
+        '-f',
+      ]),
+    );
+    expect(
+      registryQueryArguments(
+        RegistryValueQuery(
+          key: ProgramRegistryKey(r'HKCU\Software\Wine'),
+          name: ProgramRegistryValueName('Version'),
+        ),
+      ),
+      ProgramRunArguments(const <String>[
+        'reg',
+        'query',
+        r'HKCU\Software\Wine',
+        '/v',
+        'Version',
+      ]),
+    );
   });
 
   test('winetricks verbs model supported verbs with WinetricksVerbId', () {
@@ -1175,68 +1479,90 @@ void main() {
 
     expect(
       ProgramPinRequest(
-        bottleId: 'steam',
-        name: 'Steam',
-        programPath: '/steam.exe',
+        bottleId: BottleId('steam'),
+        name: ProgramName('Steam'),
+        programPath: ProgramPath('/steam.exe'),
       ),
       ProgramPinRequest(
-        bottleId: 'steam',
-        name: 'Steam',
-        programPath: '/steam.exe',
+        bottleId: BottleId('steam'),
+        name: ProgramName('Steam'),
+        programPath: ProgramPath('/steam.exe'),
       ),
     );
     expect(
-      ProgramUnpinRequest(bottleId: 'steam', programPath: '/steam.exe'),
-      ProgramUnpinRequest(bottleId: 'steam', programPath: '/steam.exe'),
+      ProgramUnpinRequest(
+        bottleId: BottleId('steam'),
+        programPath: ProgramPath('/steam.exe'),
+      ),
+      ProgramUnpinRequest(
+        bottleId: BottleId('steam'),
+        programPath: ProgramPath('/steam.exe'),
+      ),
     );
     expect(
       ProgramRenameRequest(
-        bottleId: 'steam',
-        programPath: '/steam.exe',
-        name: 'Steam Beta',
+        bottleId: BottleId('steam'),
+        programPath: ProgramPath('/steam.exe'),
+        name: ProgramName('Steam Beta'),
       ),
       ProgramRenameRequest(
-        bottleId: 'steam',
-        programPath: '/steam.exe',
-        name: 'Steam Beta',
+        bottleId: BottleId('steam'),
+        programPath: ProgramPath('/steam.exe'),
+        name: ProgramName('Steam Beta'),
       ),
     );
     expect(
       PinnedProgramLauncherManifest(
-        launcherId: 'steam',
-        bottleId: 'steam',
-        programPath: '/steam.exe',
-        programName: 'Steam',
+        launcherId: ProgramLauncherId('steam'),
+        bottleId: BottleId('steam'),
+        programPath: ProgramPath('/steam.exe'),
+        programName: ProgramName('Steam'),
       ),
       PinnedProgramLauncherManifest(
-        launcherId: 'steam',
-        bottleId: 'steam',
-        programPath: '/steam.exe',
-        programName: 'Steam',
+        launcherId: ProgramLauncherId('steam'),
+        bottleId: BottleId('steam'),
+        programPath: ProgramPath('/steam.exe'),
+        programName: ProgramName('Steam'),
       ),
     );
     expect(
-      WineProcessTerminationRequest(bottleId: 'steam', processId: '42'),
-      WineProcessTerminationRequest(bottleId: 'steam', processId: '42'),
+      WineProcessTerminationRequest(
+        bottleId: BottleId('steam'),
+        processId: WineProcessId('42'),
+      ),
+      WineProcessTerminationRequest(
+        bottleId: BottleId('steam'),
+        processId: WineProcessId('42'),
+      ),
     );
     expect(
-      WineProcessGroupTerminationRequest(bottleId: Option.of('steam')),
-      WineProcessGroupTerminationRequest(bottleId: Option.of('steam')),
+      WineProcessGroupTerminationRequest(
+        bottleId: Option.of(BottleId('steam')),
+      ),
+      WineProcessGroupTerminationRequest(
+        bottleId: Option.of(BottleId('steam')),
+      ),
     );
     expect(WineProcessGroupTerminationRequest().bottleId.isNone(), isTrue);
     expect(
-      ProgramSettingsRequest(bottleId: 'steam', programPath: '/steam.exe'),
-      ProgramSettingsRequest(bottleId: 'steam', programPath: '/steam.exe'),
+      ProgramSettingsRequest(
+        bottleId: BottleId('steam'),
+        programPath: ProgramPath('/steam.exe'),
+      ),
+      ProgramSettingsRequest(
+        bottleId: BottleId('steam'),
+        programPath: ProgramPath('/steam.exe'),
+      ),
     );
     expect(
       ProgramSettingsUpdateRequest(
-        bottleId: 'steam',
-        programPath: '/steam.exe',
+        bottleId: BottleId('steam'),
+        programPath: ProgramPath('/steam.exe'),
         settings: settings,
       ),
       ProgramSettingsUpdateRequest(
-        bottleId: 'steam',
-        programPath: '/steam.exe',
+        bottleId: BottleId('steam'),
+        programPath: ProgramPath('/steam.exe'),
         settings: ProgramSettingsRecord(locale: 'ja_JP', arguments: '-novid'),
       ),
     );
@@ -1255,8 +1581,8 @@ void main() {
       ),
     );
     expect(
-      ProgramSettingsReadResult.missingBottle('steam'),
-      ProgramSettingsReadResult.missingBottle('steam'),
+      ProgramSettingsReadResult.missingBottle(BottleId('steam')),
+      ProgramSettingsReadResult.missingBottle(BottleId('steam')),
     );
     expect(
       ProgramSettingsReadResult.failed('read failed'),
@@ -1269,8 +1595,8 @@ void main() {
       ),
     );
     expect(
-      ProgramSettingsUpdateResult.missingBottle('steam'),
-      ProgramSettingsUpdateResult.missingBottle('steam'),
+      ProgramSettingsUpdateResult.missingBottle(BottleId('steam')),
+      ProgramSettingsUpdateResult.missingBottle(BottleId('steam')),
     );
     expect(
       ProgramSettingsUpdateResult.failed('write failed'),
@@ -1293,12 +1619,12 @@ void main() {
       ProgramPinResult.pinned(bottle()),
     );
     expect(
-      ProgramPinResult.missing('steam'),
-      ProgramPinResult.missing('steam'),
+      ProgramPinResult.missing(BottleId('steam')),
+      ProgramPinResult.missing(BottleId('steam')),
     );
     expect(
-      ProgramPinResult.conflict('/steam.exe'),
-      ProgramPinResult.conflict('/steam.exe'),
+      ProgramPinResult.conflict(ProgramPath('/steam.exe')),
+      ProgramPinResult.conflict(ProgramPath('/steam.exe')),
     );
     expect(
       ProgramPinResult.failed('pin failed'),
@@ -1321,12 +1647,12 @@ void main() {
       ProgramUpdateResult.updated(bottle()),
     );
     expect(
-      ProgramUpdateResult.missingBottle('steam'),
-      ProgramUpdateResult.missingBottle('steam'),
+      ProgramUpdateResult.missingBottle(BottleId('steam')),
+      ProgramUpdateResult.missingBottle(BottleId('steam')),
     );
     expect(
-      ProgramUpdateResult.missingProgram('/steam.exe'),
-      ProgramUpdateResult.missingProgram('/steam.exe'),
+      ProgramUpdateResult.missingProgram(ProgramPath('/steam.exe')),
+      ProgramUpdateResult.missingProgram(ProgramPath('/steam.exe')),
     );
     expect(
       ProgramUpdateResult.failed('update failed'),
@@ -1468,10 +1794,15 @@ void main() {
     expect(logging?.additionalWineLoggingChannels, WineDebugChannels('+seh'));
     expect(logging?.logFilePath, ProgramLogPath('/tmp/steam.log'));
     expect(settings.environment.toMap(), {'LANG': 'ja_JP.UTF-8'});
-    expect(settings.environment.add('WINEDEBUG', '-all').toMap(), {
-      'LANG': 'ja_JP.UTF-8',
-      'WINEDEBUG': '-all',
-    });
+    expect(
+      settings.environment
+          .add(
+            ProgramEnvironmentVariableName('WINEDEBUG'),
+            ProgramEnvironmentVariableValue('-all'),
+          )
+          .toMap(),
+      {'LANG': 'ja_JP.UTF-8', 'WINEDEBUG': '-all'},
+    );
     expect(settings.environment.toMap(), {'LANG': 'ja_JP.UTF-8'});
   });
 
@@ -1649,10 +1980,10 @@ void main() {
   test('process termination records expose immutable argv snapshots', () {
     final argv = <String>['wine', '/steam.exe'];
     final record = WineProcessTerminationRecord(
-      bottleId: 'steam',
-      status: 'terminated',
-      runnerKind: 'wine',
-      executable: 'wine',
+      bottleId: BottleId('steam'),
+      status: WineProcessStatus('terminated'),
+      runnerKind: RunnerKind('wine'),
+      executable: ProgramExecutable('wine'),
       argv: argv,
     );
     argv.add('--changed');
@@ -1666,10 +1997,10 @@ void main() {
     expect(
       record,
       WineProcessTerminationRecord(
-        bottleId: 'steam',
-        status: 'terminated',
-        runnerKind: 'wine',
-        executable: 'wine',
+        bottleId: BottleId('steam'),
+        status: WineProcessStatus('terminated'),
+        runnerKind: RunnerKind('wine'),
+        executable: ProgramExecutable('wine'),
         argv: <String>['wine', '/steam.exe'],
       ),
     );
@@ -1678,28 +2009,34 @@ void main() {
   test(
     'runtime package install requests expose immutable collection snapshots',
     () {
-      final componentArchivePaths = <String>['/dxvk.tar.gz'];
+      final componentArchivePaths = <RuntimeArchivePath>[
+        RuntimeArchivePath('/dxvk.tar.gz'),
+      ];
       final componentVersions = <String, String>{'dxvk': '2.7'};
-      final requiredExecutableRelativePath = <String>['bin', 'wine'];
       final request = RuntimePackageInstallRequest(
         runtimeLabel: 'Konyak Wine',
-        archivePath: '/wine.tar.gz',
+        archivePath: RuntimeArchivePath('/wine.tar.gz'),
         archiveSha256: const Option.none(),
         componentArchivePaths: componentArchivePaths,
         componentVersions: RuntimeComponentVersions(componentVersions),
-        runtimeRoot: '/tmp/konyak-runtime',
-        requiredExecutableRelativePath: requiredExecutableRelativePath,
-        expectedExecutablePath: '/tmp/konyak-runtime/bin/wine',
+        runtimeRoot: RuntimeRootPath('/tmp/konyak-runtime'),
+        requiredExecutableRelativePath: RuntimeRelativePath(['bin', 'wine']),
+        expectedExecutablePath: RuntimeComponentPath(
+          '/tmp/konyak-runtime/bin/wine',
+        ),
       );
       componentArchivePaths.clear();
       componentVersions['dxvk'] = 'changed';
-      requiredExecutableRelativePath.add('changed');
 
       expect(request.archivePath, RuntimeArchivePath('/wine.tar.gz'));
       expect(request.componentArchivePaths, [
         RuntimeArchivePath('/dxvk.tar.gz'),
       ]);
       expect(request.componentVersions.toMap(), {'dxvk': '2.7'});
+      expect(
+        request.componentVersions[RuntimeComponentId('dxvk')].toNullable(),
+        RuntimeVersion('2.7'),
+      );
       expect(request.runtimeRoot, RuntimeRootPath('/tmp/konyak-runtime'));
       expect(
         request.requiredExecutableRelativePath,
@@ -1719,10 +2056,12 @@ void main() {
       expect(request.componentArchivePaths, [
         RuntimeArchivePath('/dxvk.tar.gz'),
       ]);
-      expect(request.componentVersions.add('vkd3d', '2.14').toMap(), {
-        'dxvk': '2.7',
-        'vkd3d': '2.14',
-      });
+      expect(
+        request.componentVersions
+            .add(RuntimeComponentId('vkd3d'), RuntimeVersion('2.14'))
+            .toMap(),
+        {'dxvk': '2.7', 'vkd3d': '2.14'},
+      );
       expect(request.componentVersions.toMap(), {'dxvk': '2.7'});
       expect(
         request.requiredExecutableRelativePath.components.clear,
@@ -1736,13 +2075,15 @@ void main() {
     () {
       final request = RuntimePackageInstallRequest(
         runtimeLabel: 'Konyak Wine',
-        archivePath: '/wine.tar.gz',
+        archivePath: RuntimeArchivePath('/wine.tar.gz'),
         archiveSha256: const Option.none(),
-        componentArchivePaths: const <String>[],
+        componentArchivePaths: const <RuntimeArchivePath>[],
         componentVersions: const RuntimeComponentVersions.empty(),
-        runtimeRoot: '/tmp/konyak-runtime',
-        requiredExecutableRelativePath: const <String>['bin', 'wine'],
-        expectedExecutablePath: '/tmp/konyak-runtime/bin/wine',
+        runtimeRoot: RuntimeRootPath('/tmp/konyak-runtime'),
+        requiredExecutableRelativePath: RuntimeRelativePath(['bin', 'wine']),
+        expectedExecutablePath: RuntimeComponentPath(
+          '/tmp/konyak-runtime/bin/wine',
+        ),
       );
 
       expect(request.archiveSha256.isNone(), isTrue);
@@ -1753,26 +2094,30 @@ void main() {
     expect(
       () => RuntimePackageInstallRequest(
         runtimeLabel: ' ',
-        archivePath: '/wine.tar.gz',
+        archivePath: RuntimeArchivePath('/wine.tar.gz'),
         archiveSha256: const Option.none(),
-        componentArchivePaths: const <String>[],
+        componentArchivePaths: const <RuntimeArchivePath>[],
         componentVersions: const RuntimeComponentVersions.empty(),
-        runtimeRoot: '/tmp/konyak-runtime',
-        requiredExecutableRelativePath: const <String>['bin', 'wine'],
-        expectedExecutablePath: '/tmp/konyak-runtime/bin/wine',
+        runtimeRoot: RuntimeRootPath('/tmp/konyak-runtime'),
+        requiredExecutableRelativePath: RuntimeRelativePath(['bin', 'wine']),
+        expectedExecutablePath: RuntimeComponentPath(
+          '/tmp/konyak-runtime/bin/wine',
+        ),
       ),
       throwsA(isA<ArgumentError>()),
     );
     expect(
       () => RuntimePackageInstallRequest(
         runtimeLabel: 'Konyak Wine',
-        archivePath: '/wine.tar.gz',
-        archiveSha256: Option.of(' '),
-        componentArchivePaths: const <String>[],
+        archivePath: RuntimeArchivePath('/wine.tar.gz'),
+        archiveSha256: Option.of(RuntimeArchiveChecksumValue(' ')),
+        componentArchivePaths: const <RuntimeArchivePath>[],
         componentVersions: const RuntimeComponentVersions.empty(),
-        runtimeRoot: '/tmp/konyak-runtime',
-        requiredExecutableRelativePath: const <String>['bin', 'wine'],
-        expectedExecutablePath: '/tmp/konyak-runtime/bin/wine',
+        runtimeRoot: RuntimeRootPath('/tmp/konyak-runtime'),
+        requiredExecutableRelativePath: RuntimeRelativePath(['bin', 'wine']),
+        expectedExecutablePath: RuntimeComponentPath(
+          '/tmp/konyak-runtime/bin/wine',
+        ),
       ),
       throwsA(isA<ArgumentError>()),
     );
@@ -1853,7 +2198,7 @@ void main() {
       components: <RuntimeStackSourceArchiveComponentPlan>[
         RuntimeStackSourceArchiveComponentPlan(
           component: dxvkComponent,
-          archivePath: '/tmp/dxvk.tar.xz',
+          archivePath: RuntimeArchivePath('/tmp/dxvk.tar.xz'),
           startFraction: 0.05,
           endFraction: 0.6,
         ),
