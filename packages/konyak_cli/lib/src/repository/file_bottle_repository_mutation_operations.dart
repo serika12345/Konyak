@@ -100,7 +100,7 @@ class FileBottleRepositoryMutationOperations {
             return BottleMoveConflict(destinationPath);
           }
 
-          final moved = bottle.withPath(destinationPath);
+          final moved = bottle.withPath(request.path);
 
           final writeResult = ioResult(() {
             moveFileBottleDirectoryIfChanged(
@@ -124,9 +124,7 @@ class FileBottleRepositoryMutationOperations {
       (bottle) => bottle.match(
         () => BottleUpdateMissing(request.bottleId.value),
         (bottle) {
-          final updated = bottle.withWindowsVersion(
-            request.windowsVersion.value,
-          );
+          final updated = bottle.withWindowsVersion(request.windowsVersion);
 
           final writeResult = ioResult(() {
             writeBottleMetadata(updated);

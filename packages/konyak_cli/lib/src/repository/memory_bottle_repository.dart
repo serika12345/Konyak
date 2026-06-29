@@ -185,7 +185,7 @@ class MemoryBottleRepository implements BottleRepository {
           return BottleMoveConflict(request.path.value);
         }
 
-        final moved = bottle.withPath(request.path.value);
+        final moved = bottle.withPath(request.path);
         bottlesById[bottle.id.value] = moved;
 
         return BottleMoved(moved);
@@ -198,7 +198,7 @@ class MemoryBottleRepository implements BottleRepository {
     return mapValue(bottlesById, request.bottleId.value).match(
       () => BottleUpdateMissing(request.bottleId.value),
       (bottle) {
-        final updated = bottle.withWindowsVersion(request.windowsVersion.value);
+        final updated = bottle.withWindowsVersion(request.windowsVersion);
         bottlesById[request.bottleId.value] = updated;
 
         return BottleUpdated(updated);

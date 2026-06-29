@@ -2,6 +2,7 @@ import 'package:fpdart/fpdart.dart';
 
 import '../bottle/bottle_models.dart';
 import '../shared/domain_helpers.dart';
+import '../shared/domain_value_objects.dart';
 import 'program_catalog_models.dart';
 import 'program_mutation_models.dart';
 
@@ -55,9 +56,8 @@ BottleRecord bottleWithPinnedProgramIcons(
           programPath: program.path.value,
         );
         final iconPath = metadata.match(
-          () => const Option<String>.none(),
-          (programMetadata) =>
-              programMetadata.iconPath.map((value) => value.value),
+          () => const Option<ProgramIconPath>.none(),
+          (programMetadata) => programMetadata.iconPath,
         );
         if (iconPath.isNone()) {
           return (program: program, changed: false);
@@ -137,7 +137,7 @@ BottleRecord bottleWithRenamedPinnedProgram(
     bottle.pinnedPrograms
         .map(
           (program) => _isPinnedProgramPath(program, normalizedProgramPath)
-              ? program.withName(request.name.value)
+              ? program.withName(request.name)
               : program,
         )
         .toList(growable: false),

@@ -1,11 +1,21 @@
 import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:fpdart/fpdart.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../shared/domain_value_objects.dart';
 import 'bottle_runtime_settings_models.dart';
 
-class BottleRecord {
-  BottleRecord({
+part 'bottle_models.freezed.dart';
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class BottleRecord with _$BottleRecord {
+  const BottleRecord._();
+
+  factory BottleRecord({
     required String id,
     required String name,
     required String path,
@@ -13,51 +23,57 @@ class BottleRecord {
     BottleRuntimeSettings? runtimeSettings,
     Iterable<PinnedProgramRecord> pinnedPrograms =
         const <PinnedProgramRecord>[],
-  }) : id = BottleId(id),
-       name = BottleName(name),
-       path = BottlePath(path),
-       windowsVersion = WindowsVersion(windowsVersion),
-       runtimeSettings = runtimeSettings ?? BottleRuntimeSettings(),
-       pinnedPrograms = pinnedPrograms.toIList();
+  }) {
+    return BottleRecord._validated(
+      id: BottleId(id),
+      name: BottleName(name),
+      path: BottlePath(path),
+      windowsVersion: WindowsVersion(windowsVersion),
+      runtimeSettings: runtimeSettings ?? BottleRuntimeSettings(),
+      pinnedPrograms: pinnedPrograms.toIList(),
+    );
+  }
 
-  final BottleId id;
-  final BottleName name;
-  final BottlePath path;
-  final WindowsVersion windowsVersion;
-  final BottleRuntimeSettings runtimeSettings;
-  final IList<PinnedProgramRecord> pinnedPrograms;
+  const factory BottleRecord._validated({
+    required BottleId id,
+    required BottleName name,
+    required BottlePath path,
+    required WindowsVersion windowsVersion,
+    required BottleRuntimeSettings runtimeSettings,
+    required IList<PinnedProgramRecord> pinnedPrograms,
+  }) = _BottleRecord;
 
   BottleRecord withIdentity({
-    required String id,
-    required String name,
-    required String path,
+    required BottleId id,
+    required BottleName name,
+    required BottlePath path,
   }) {
-    return BottleRecord(
+    return BottleRecord._validated(
       id: id,
       name: name,
       path: path,
-      windowsVersion: windowsVersion.value,
+      windowsVersion: windowsVersion,
       runtimeSettings: runtimeSettings,
       pinnedPrograms: pinnedPrograms,
     );
   }
 
-  BottleRecord withPath(String path) {
-    return BottleRecord(
-      id: id.value,
-      name: name.value,
+  BottleRecord withPath(BottlePath path) {
+    return BottleRecord._validated(
+      id: id,
+      name: name,
       path: path,
-      windowsVersion: windowsVersion.value,
+      windowsVersion: windowsVersion,
       runtimeSettings: runtimeSettings,
       pinnedPrograms: pinnedPrograms,
     );
   }
 
-  BottleRecord withWindowsVersion(String windowsVersion) {
-    return BottleRecord(
-      id: id.value,
-      name: name.value,
-      path: path.value,
+  BottleRecord withWindowsVersion(WindowsVersion windowsVersion) {
+    return BottleRecord._validated(
+      id: id,
+      name: name,
+      path: path,
       windowsVersion: windowsVersion,
       runtimeSettings: runtimeSettings,
       pinnedPrograms: pinnedPrograms,
@@ -65,11 +81,11 @@ class BottleRecord {
   }
 
   BottleRecord withRuntimeSettings(BottleRuntimeSettings runtimeSettings) {
-    return BottleRecord(
-      id: id.value,
-      name: name.value,
-      path: path.value,
-      windowsVersion: windowsVersion.value,
+    return BottleRecord._validated(
+      id: id,
+      name: name,
+      path: path,
+      windowsVersion: windowsVersion,
       runtimeSettings: runtimeSettings,
       pinnedPrograms: pinnedPrograms,
     );
@@ -78,82 +94,61 @@ class BottleRecord {
   BottleRecord withPinnedPrograms(
     Iterable<PinnedProgramRecord> pinnedPrograms,
   ) {
-    return BottleRecord(
-      id: id.value,
-      name: name.value,
-      path: path.value,
-      windowsVersion: windowsVersion.value,
+    return BottleRecord._validated(
+      id: id,
+      name: name,
+      path: path,
+      windowsVersion: windowsVersion,
       runtimeSettings: runtimeSettings,
-      pinnedPrograms: pinnedPrograms,
-    );
-  }
-
-  @override
-  bool operator ==(Object other) {
-    return other is BottleRecord &&
-        other.id == id &&
-        other.name == name &&
-        other.path == path &&
-        other.windowsVersion == windowsVersion &&
-        other.runtimeSettings == runtimeSettings &&
-        other.pinnedPrograms == pinnedPrograms;
-  }
-
-  @override
-  int get hashCode {
-    return Object.hash(
-      id,
-      name,
-      path,
-      windowsVersion,
-      runtimeSettings,
-      pinnedPrograms,
+      pinnedPrograms: pinnedPrograms.toIList(),
     );
   }
 }
 
-class PinnedProgramRecord {
-  PinnedProgramRecord({
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class PinnedProgramRecord with _$PinnedProgramRecord {
+  const PinnedProgramRecord._();
+
+  factory PinnedProgramRecord({
     required String name,
     required String path,
-    this.removable = false,
+    bool removable = false,
     Option<String> iconPath = const Option.none(),
-  }) : name = ProgramName(name),
-       path = ProgramPath(path),
-       iconPath = iconPath.map(ProgramIconPath.new);
-
-  final ProgramName name;
-  final ProgramPath path;
-  final bool removable;
-  final Option<ProgramIconPath> iconPath;
-
-  PinnedProgramRecord withName(String name) {
-    return PinnedProgramRecord(
-      name: name,
-      path: path.value,
+  }) {
+    return PinnedProgramRecord._validated(
+      name: ProgramName(name),
+      path: ProgramPath(path),
       removable: removable,
-      iconPath: iconPath.map((value) => value.value),
+      iconPath: iconPath.map(ProgramIconPath.new),
     );
   }
 
-  PinnedProgramRecord withIconPath(Option<String> iconPath) {
-    return PinnedProgramRecord(
-      name: name.value,
-      path: path.value,
+  const factory PinnedProgramRecord._validated({
+    required ProgramName name,
+    required ProgramPath path,
+    required bool removable,
+    required Option<ProgramIconPath> iconPath,
+  }) = _PinnedProgramRecord;
+
+  PinnedProgramRecord withName(ProgramName name) {
+    return PinnedProgramRecord._validated(
+      name: name,
+      path: path,
       removable: removable,
       iconPath: iconPath,
     );
   }
 
-  @override
-  bool operator ==(Object other) {
-    return other is PinnedProgramRecord &&
-        other.name == name &&
-        other.path == path &&
-        other.removable == removable &&
-        other.iconPath == iconPath;
+  PinnedProgramRecord withIconPath(Option<ProgramIconPath> iconPath) {
+    return PinnedProgramRecord._validated(
+      name: name,
+      path: path,
+      removable: removable,
+      iconPath: iconPath,
+    );
   }
-
-  @override
-  int get hashCode => Object.hash(name, path, removable, iconPath);
 }

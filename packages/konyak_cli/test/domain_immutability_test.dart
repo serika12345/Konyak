@@ -80,23 +80,26 @@ void main() {
 
     expect(
       () => validBottle().withIdentity(
-        id: ' ',
-        name: 'Steam',
-        path: '/bottles/steam',
+        id: BottleId(' '),
+        name: BottleName('Steam'),
+        path: BottlePath('/bottles/steam'),
       ),
       throwsA(isA<ArgumentError>()),
     );
     expect(
       () => validBottle().withIdentity(
-        id: 'steam',
-        name: ' ',
-        path: '/bottles/steam',
+        id: BottleId('steam'),
+        name: BottleName(' '),
+        path: BottlePath('/bottles/steam'),
       ),
       throwsA(isA<ArgumentError>()),
     );
-    expect(() => validBottle().withPath(' '), throwsA(isA<ArgumentError>()));
     expect(
-      () => validBottle().withWindowsVersion(' '),
+      () => validBottle().withPath(BottlePath(' ')),
+      throwsA(isA<ArgumentError>()),
+    );
+    expect(
+      () => validBottle().withWindowsVersion(WindowsVersion(' ')),
       throwsA(isA<ArgumentError>()),
     );
   });
@@ -122,7 +125,9 @@ void main() {
 
   test('pinned program records model absent icons with Option', () {
     final withoutIcon = PinnedProgramRecord(name: 'Steam', path: '/steam.exe');
-    final withIcon = withoutIcon.withIconPath(Option.of('/steam.icns'));
+    final withIcon = withoutIcon.withIconPath(
+      Option.of(ProgramIconPath('/steam.icns')),
+    );
     final clearedIcon = withIcon.withIconPath(const Option.none());
 
     expect(withoutIcon.name, ProgramName('Steam'));

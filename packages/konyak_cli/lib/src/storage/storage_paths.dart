@@ -7,6 +7,7 @@ import '../domain/bottle/bottle_mutation_models.dart';
 import '../domain/program/program_runner.dart';
 import '../domain/runtime/host_environment.dart';
 import '../domain/runtime/wine_runtime_paths.dart';
+import '../domain/shared/domain_value_objects.dart';
 import '../repository/repository_exceptions.dart';
 import '../shared/common_helpers.dart';
 
@@ -98,9 +99,9 @@ BottleRecord renamedFileBottle({
     (value) => value,
   );
   return bottle.withIdentity(
-    id: id,
-    name: name,
-    path: joinPath(directory, [id]),
+    id: BottleId(id),
+    name: BottleName(name),
+    path: BottlePath(joinPath(directory, [id])),
   );
 }
 

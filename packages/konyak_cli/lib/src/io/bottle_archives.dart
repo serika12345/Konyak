@@ -2,6 +2,7 @@ import 'dart:io';
 
 import '../domain/bottle/bottle_models.dart';
 import '../domain/bottle/bottle_mutation_models.dart';
+import '../domain/shared/domain_value_objects.dart';
 import '../platform/platform_terminal_commands.dart';
 import '../shared/common_helpers.dart';
 import 'directory_copy_support.dart';
@@ -116,7 +117,7 @@ BottleArchiveImportResult readBottleArchive({
         return BottleArchiveImportConflict(imported.id.value);
       }
 
-      final relocated = imported.withPath(destinationPath);
+      final relocated = imported.withPath(BottlePath(destinationPath));
       moveDirectory(from: extractedBottlePath, to: destinationPath);
       writeBottleMetadata(relocated);
       onImported?.call(relocated);

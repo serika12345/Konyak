@@ -4,6 +4,7 @@ import 'package:fpdart/fpdart.dart';
 
 import '../domain/bottle/bottle_models.dart';
 import '../domain/bottle/bottle_runtime_settings_models.dart';
+import '../domain/shared/domain_value_objects.dart';
 import 'external_payload_helpers.dart';
 
 BottleRecord bottleWithRegistryValue({
@@ -63,9 +64,10 @@ BottleRuntimeSettings runtimeSettingsWithRegistryValue({
 }
 
 BottleRecord bottleWithWindowsVersion(BottleRecord bottle, String data) {
-  return registryWindowsVersion(
-    data,
-  ).match(() => bottle, bottle.withWindowsVersion);
+  return registryWindowsVersion(data).match(
+    () => bottle,
+    (value) => bottle.withWindowsVersion(WindowsVersion(value)),
+  );
 }
 
 Option<String> registryWindowsVersion(String data) {

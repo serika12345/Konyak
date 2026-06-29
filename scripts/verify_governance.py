@@ -1586,19 +1586,35 @@ def require_result_boundary_rules() -> None:
         "packages/konyak_cli/lib/src/repository/repository_interfaces.dart",
         "IoResult<BottleRecord?> findBottle",
     )
-    for expected in [
-        "final BottleId id;",
-        "final BottleName name;",
-        "final BottlePath path;",
-        "final WindowsVersion windowsVersion;",
-        "final IList<PinnedProgramRecord> pinnedPrograms;",
-        "final ProgramName name;",
-        "final ProgramPath path;",
-        "final Option<ProgramIconPath> iconPath;",
-        "Option<String> iconPath = const Option.none()",
-        "iconPath.map(",
+    bottle_model_text = read_text(
+        "packages/konyak_cli/lib/src/domain/bottle/bottle_models.dart"
+    )
+    for expected_options in [
+        ["final BottleId id;", "required BottleId id,"],
+        ["final BottleName name;", "required BottleName name,"],
+        ["final BottlePath path;", "required BottlePath path,"],
+        [
+            "final WindowsVersion windowsVersion;",
+            "required WindowsVersion windowsVersion,",
+        ],
+        [
+            "final IList<PinnedProgramRecord> pinnedPrograms;",
+            "required IList<PinnedProgramRecord> pinnedPrograms,",
+        ],
+        ["final ProgramName name;", "required ProgramName name,"],
+        ["final ProgramPath path;", "required ProgramPath path,"],
+        [
+            "final Option<ProgramIconPath> iconPath;",
+            "required Option<ProgramIconPath> iconPath,",
+        ],
+        ["Option<String> iconPath = const Option.none()"],
+        ["iconPath.map("],
     ]:
-        require_contains("packages/konyak_cli/lib/src/domain/bottle/bottle_models.dart", expected)
+        if not any(expected in bottle_model_text for expected in expected_options):
+            raise AssertionError(
+                "packages/konyak_cli/lib/src/domain/bottle/bottle_models.dart "
+                f"must contain one of: {expected_options}"
+            )
     require_contains(
         "packages/konyak_cli/lib/src/domain/shared/domain_value_objects.dart",
         "throw ArgumentError.value",
@@ -1611,6 +1627,27 @@ def require_result_boundary_rules() -> None:
         "packages/konyak_cli/lib/src/domain/bottle/bottle_models.dart",
         "final String? iconPath;",
     )
+    for expected in [
+        "BottleRecord withPath(BottlePath path)",
+        "BottleRecord withWindowsVersion(WindowsVersion windowsVersion)",
+        "PinnedProgramRecord withName(ProgramName name)",
+        "PinnedProgramRecord withIconPath(Option<ProgramIconPath> iconPath)",
+    ]:
+        require_contains(
+            "packages/konyak_cli/lib/src/domain/bottle/bottle_models.dart",
+            expected,
+        )
+    for unexpected in [
+        "BottleRecord withIdentity({\n    required String id,",
+        "BottleRecord withPath(String path)",
+        "BottleRecord withWindowsVersion(String windowsVersion)",
+        "PinnedProgramRecord withName(String name)",
+        "PinnedProgramRecord withIconPath(Option<String> iconPath)",
+    ]:
+        require_not_contains(
+            "packages/konyak_cli/lib/src/domain/bottle/bottle_models.dart",
+            unexpected,
+        )
     require_not_contains(
         "packages/konyak_cli/lib/src/domain/bottle/bottle_models.dart",
         "final List<PinnedProgramRecord> pinnedPrograms;",
