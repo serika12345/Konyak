@@ -1247,7 +1247,7 @@ def require_bottle_archive_cli_json_projection() -> None:
     )
     domain = read_text(domain_path)
     record_match = re.search(
-        r"class BottleArchiveRecord \{(?P<body>.*?)\n\}",
+        r"\bclass\s+BottleArchiveRecord\b(?P<body>.*?)(?=\n(?:@Freezed|sealed class|abstract class|class )|\Z)",
         domain,
         flags=re.DOTALL,
     )

@@ -137,6 +137,111 @@ void main() {
     expect(clearedIcon.iconPath.isNone(), isTrue);
   });
 
+  test('bottle mutation request records compare by semantic values', () {
+    expect(
+      BottleCreateRequest(name: 'Steam', windowsVersion: 'win10'),
+      BottleCreateRequest(name: 'Steam', windowsVersion: 'win10'),
+    );
+    expect(
+      BottleArchiveExportRequest(
+        bottleId: 'steam',
+        archivePath: '/archives/steam.tar',
+      ),
+      BottleArchiveExportRequest(
+        bottleId: 'steam',
+        archivePath: '/archives/steam.tar',
+      ),
+    );
+    expect(
+      BottleArchiveImportRequest(archivePath: '/archives/steam.tar'),
+      BottleArchiveImportRequest(archivePath: '/archives/steam.tar'),
+    );
+    expect(
+      BottleArchiveRecord(
+        bottleId: 'steam',
+        archivePath: '/archives/steam.tar',
+      ),
+      BottleArchiveRecord(
+        bottleId: 'steam',
+        archivePath: '/archives/steam.tar',
+      ),
+    );
+    expect(
+      BottleRenameRequest(bottleId: 'steam', name: 'Steam'),
+      BottleRenameRequest(bottleId: 'steam', name: 'Steam'),
+    );
+    expect(
+      BottleMoveRequest(bottleId: 'steam', path: '/bottles/steam'),
+      BottleMoveRequest(bottleId: 'steam', path: '/bottles/steam'),
+    );
+    expect(
+      WindowsVersionUpdateRequest(bottleId: 'steam', windowsVersion: 'win10'),
+      WindowsVersionUpdateRequest(bottleId: 'steam', windowsVersion: 'win10'),
+    );
+    expect(
+      RuntimeSettingsUpdateRequest(
+        bottleId: 'steam',
+        runtimeSettings: BottleRuntimeSettings(dxvk: true),
+      ),
+      RuntimeSettingsUpdateRequest(
+        bottleId: 'steam',
+        runtimeSettings: BottleRuntimeSettings(dxvk: true),
+      ),
+    );
+  });
+
+  test('bottle mutation result records compare by semantic values', () {
+    final bottle = BottleRecord(
+      id: 'steam',
+      name: 'Steam',
+      path: '/bottles/steam',
+      windowsVersion: 'win10',
+    );
+    final archive = BottleArchiveRecord(
+      bottleId: 'steam',
+      archivePath: '/archives/steam.tar',
+    );
+
+    expect(BottleCreated(bottle), BottleCreated(bottle));
+    expect(BottleCreateConflict('steam'), BottleCreateConflict('steam'));
+    expect(BottleCreateFailed('failed'), BottleCreateFailed('failed'));
+    expect(BottleArchiveExported(archive), BottleArchiveExported(archive));
+    expect(
+      BottleArchiveExportMissing('steam'),
+      BottleArchiveExportMissing('steam'),
+    );
+    expect(
+      BottleArchiveExportFailed('failed'),
+      BottleArchiveExportFailed('failed'),
+    );
+    expect(BottleArchiveImported(bottle), BottleArchiveImported(bottle));
+    expect(
+      BottleArchiveImportConflict('steam'),
+      BottleArchiveImportConflict('steam'),
+    );
+    expect(
+      BottleArchiveImportFailed('failed'),
+      BottleArchiveImportFailed('failed'),
+    );
+    expect(BottleDeleted(bottle), BottleDeleted(bottle));
+    expect(BottleDeleteMissing('steam'), BottleDeleteMissing('steam'));
+    expect(BottleDeleteFailed('failed'), BottleDeleteFailed('failed'));
+    expect(BottleRenamed(bottle), BottleRenamed(bottle));
+    expect(BottleRenameMissing('steam'), BottleRenameMissing('steam'));
+    expect(BottleRenameConflict('steam'), BottleRenameConflict('steam'));
+    expect(BottleRenameFailed('failed'), BottleRenameFailed('failed'));
+    expect(BottleMoved(bottle), BottleMoved(bottle));
+    expect(BottleMoveMissing('steam'), BottleMoveMissing('steam'));
+    expect(
+      BottleMoveConflict('/bottles/steam'),
+      BottleMoveConflict('/bottles/steam'),
+    );
+    expect(BottleMoveFailed('failed'), BottleMoveFailed('failed'));
+    expect(BottleUpdated(bottle), BottleUpdated(bottle));
+    expect(BottleUpdateMissing('steam'), BottleUpdateMissing('steam'));
+    expect(BottleUpdateFailed('failed'), BottleUpdateFailed('failed'));
+  });
+
   test('runtime settings expose semantic value object fields', () {
     final settings = BottleRuntimeSettings(
       enhancedSync: 'msync',
@@ -149,6 +254,32 @@ void main() {
     expect(settings.dxvkHud, DxvkHudMode('off'));
     expect(settings.buildVersion, WindowsBuildVersion(22631));
     expect(settings.dpiScaling, WindowsDpiScaling(144));
+  });
+
+  test('runtime settings copyWith preserves semantic value object fields', () {
+    final settings = BottleRuntimeSettings(dxrEnabled: true, dxmt: true);
+    final updated = settings.copyWith(
+      enhancedSync: EnhancedSyncMode('none'),
+      dxvkHud: DxvkHudMode('fps'),
+      buildVersion: WindowsBuildVersion(22631),
+      dpiScaling: WindowsDpiScaling(144),
+    );
+    final dxvk = settings.withDxvk(true);
+
+    expect(
+      updated,
+      BottleRuntimeSettings(
+        enhancedSync: 'none',
+        dxrEnabled: true,
+        dxmt: true,
+        dxvkHud: 'fps',
+        buildVersion: 22631,
+        dpiScaling: 144,
+      ),
+    );
+    expect(dxvk.dxvk, isTrue);
+    expect(dxvk.dxmt, isFalse);
+    expect(dxvk.dxrEnabled, isFalse);
   });
 
   test('app settings expose default bottle path as a value object', () {

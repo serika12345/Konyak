@@ -1,244 +1,540 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+
 import '../shared/domain_value_objects.dart';
 import 'bottle_models.dart';
 import 'bottle_runtime_settings_models.dart';
 
-class BottleCreateRequest {
-  BottleCreateRequest({required String name, required String windowsVersion})
-    : name = BottleName(name),
-      windowsVersion = WindowsVersion(windowsVersion);
+part 'bottle_mutation_models.freezed.dart';
 
-  final BottleName name;
-  final WindowsVersion windowsVersion;
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class BottleCreateRequest with _$BottleCreateRequest {
+  const BottleCreateRequest._();
+
+  factory BottleCreateRequest({
+    required String name,
+    required String windowsVersion,
+  }) {
+    return BottleCreateRequest._validated(
+      name: BottleName(name),
+      windowsVersion: WindowsVersion(windowsVersion),
+    );
+  }
+
+  const factory BottleCreateRequest._validated({
+    required BottleName name,
+    required WindowsVersion windowsVersion,
+  }) = _BottleCreateRequest;
 }
 
-class BottleArchiveExportRequest {
-  BottleArchiveExportRequest({
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class BottleArchiveExportRequest with _$BottleArchiveExportRequest {
+  const BottleArchiveExportRequest._();
+
+  factory BottleArchiveExportRequest({
     required String bottleId,
     required String archivePath,
-  }) : bottleId = BottleId(bottleId),
-       archivePath = BottleArchivePath(archivePath);
+  }) {
+    return BottleArchiveExportRequest._validated(
+      bottleId: BottleId(bottleId),
+      archivePath: BottleArchivePath(archivePath),
+    );
+  }
 
-  final BottleId bottleId;
-  final BottleArchivePath archivePath;
+  const factory BottleArchiveExportRequest._validated({
+    required BottleId bottleId,
+    required BottleArchivePath archivePath,
+  }) = _BottleArchiveExportRequest;
 }
 
-class BottleArchiveImportRequest {
-  BottleArchiveImportRequest({required String archivePath})
-    : archivePath = BottleArchivePath(archivePath);
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class BottleArchiveImportRequest with _$BottleArchiveImportRequest {
+  const BottleArchiveImportRequest._();
 
-  final BottleArchivePath archivePath;
+  factory BottleArchiveImportRequest({required String archivePath}) {
+    return BottleArchiveImportRequest._validated(
+      archivePath: BottleArchivePath(archivePath),
+    );
+  }
+
+  const factory BottleArchiveImportRequest._validated({
+    required BottleArchivePath archivePath,
+  }) = _BottleArchiveImportRequest;
 }
 
-class BottleArchiveRecord {
-  BottleArchiveRecord({required String bottleId, required String archivePath})
-    : bottleId = BottleId(bottleId),
-      archivePath = BottleArchivePath(archivePath);
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class BottleArchiveRecord with _$BottleArchiveRecord {
+  const BottleArchiveRecord._();
 
-  final BottleId bottleId;
-  final BottleArchivePath archivePath;
+  factory BottleArchiveRecord({
+    required String bottleId,
+    required String archivePath,
+  }) {
+    return BottleArchiveRecord._validated(
+      bottleId: BottleId(bottleId),
+      archivePath: BottleArchivePath(archivePath),
+    );
+  }
+
+  const factory BottleArchiveRecord._validated({
+    required BottleId bottleId,
+    required BottleArchivePath archivePath,
+  }) = _BottleArchiveRecord;
 }
 
 sealed class BottleCreateResult {
   const BottleCreateResult();
 }
 
-class BottleCreated extends BottleCreateResult {
-  const BottleCreated(this.bottle);
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class BottleCreated extends BottleCreateResult with _$BottleCreated {
+  const BottleCreated._() : super();
 
-  final BottleRecord bottle;
+  const factory BottleCreated(BottleRecord bottle) = _BottleCreated;
 }
 
-class BottleCreateConflict extends BottleCreateResult {
-  BottleCreateConflict(String bottleId) : bottleId = BottleId(bottleId);
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class BottleCreateConflict extends BottleCreateResult
+    with _$BottleCreateConflict {
+  const BottleCreateConflict._() : super();
 
-  final BottleId bottleId;
+  factory BottleCreateConflict(String bottleId) {
+    return BottleCreateConflict._validated(BottleId(bottleId));
+  }
+
+  const factory BottleCreateConflict._validated(BottleId bottleId) =
+      _BottleCreateConflict;
 }
 
-class BottleCreateFailed extends BottleCreateResult {
-  const BottleCreateFailed(this.message);
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class BottleCreateFailed extends BottleCreateResult
+    with _$BottleCreateFailed {
+  const BottleCreateFailed._() : super();
 
-  final String message;
+  const factory BottleCreateFailed(String message) = _BottleCreateFailed;
 }
 
 sealed class BottleArchiveExportResult {
   const BottleArchiveExportResult();
 }
 
-class BottleArchiveExported extends BottleArchiveExportResult {
-  const BottleArchiveExported(this.archive);
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class BottleArchiveExported extends BottleArchiveExportResult
+    with _$BottleArchiveExported {
+  const BottleArchiveExported._() : super();
 
-  final BottleArchiveRecord archive;
+  const factory BottleArchiveExported(BottleArchiveRecord archive) =
+      _BottleArchiveExported;
 }
 
-class BottleArchiveExportMissing extends BottleArchiveExportResult {
-  BottleArchiveExportMissing(String bottleId) : bottleId = BottleId(bottleId);
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class BottleArchiveExportMissing extends BottleArchiveExportResult
+    with _$BottleArchiveExportMissing {
+  const BottleArchiveExportMissing._() : super();
 
-  final BottleId bottleId;
+  factory BottleArchiveExportMissing(String bottleId) {
+    return BottleArchiveExportMissing._validated(BottleId(bottleId));
+  }
+
+  const factory BottleArchiveExportMissing._validated(BottleId bottleId) =
+      _BottleArchiveExportMissing;
 }
 
-class BottleArchiveExportFailed extends BottleArchiveExportResult {
-  const BottleArchiveExportFailed(this.message);
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class BottleArchiveExportFailed extends BottleArchiveExportResult
+    with _$BottleArchiveExportFailed {
+  const BottleArchiveExportFailed._() : super();
 
-  final String message;
+  const factory BottleArchiveExportFailed(String message) =
+      _BottleArchiveExportFailed;
 }
 
 sealed class BottleArchiveImportResult {
   const BottleArchiveImportResult();
 }
 
-class BottleArchiveImported extends BottleArchiveImportResult {
-  const BottleArchiveImported(this.bottle);
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class BottleArchiveImported extends BottleArchiveImportResult
+    with _$BottleArchiveImported {
+  const BottleArchiveImported._() : super();
 
-  final BottleRecord bottle;
+  const factory BottleArchiveImported(BottleRecord bottle) =
+      _BottleArchiveImported;
 }
 
-class BottleArchiveImportConflict extends BottleArchiveImportResult {
-  BottleArchiveImportConflict(String bottleId) : bottleId = BottleId(bottleId);
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class BottleArchiveImportConflict extends BottleArchiveImportResult
+    with _$BottleArchiveImportConflict {
+  const BottleArchiveImportConflict._() : super();
 
-  final BottleId bottleId;
+  factory BottleArchiveImportConflict(String bottleId) {
+    return BottleArchiveImportConflict._validated(BottleId(bottleId));
+  }
+
+  const factory BottleArchiveImportConflict._validated(BottleId bottleId) =
+      _BottleArchiveImportConflict;
 }
 
-class BottleArchiveImportFailed extends BottleArchiveImportResult {
-  const BottleArchiveImportFailed(this.message);
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class BottleArchiveImportFailed extends BottleArchiveImportResult
+    with _$BottleArchiveImportFailed {
+  const BottleArchiveImportFailed._() : super();
 
-  final String message;
+  const factory BottleArchiveImportFailed(String message) =
+      _BottleArchiveImportFailed;
 }
 
 sealed class BottleDeleteResult {
   const BottleDeleteResult();
 }
 
-class BottleDeleted extends BottleDeleteResult {
-  const BottleDeleted(this.bottle);
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class BottleDeleted extends BottleDeleteResult with _$BottleDeleted {
+  const BottleDeleted._() : super();
 
-  final BottleRecord bottle;
+  const factory BottleDeleted(BottleRecord bottle) = _BottleDeleted;
 }
 
-class BottleDeleteMissing extends BottleDeleteResult {
-  BottleDeleteMissing(String bottleId) : bottleId = BottleId(bottleId);
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class BottleDeleteMissing extends BottleDeleteResult
+    with _$BottleDeleteMissing {
+  const BottleDeleteMissing._() : super();
 
-  final BottleId bottleId;
+  factory BottleDeleteMissing(String bottleId) {
+    return BottleDeleteMissing._validated(BottleId(bottleId));
+  }
+
+  const factory BottleDeleteMissing._validated(BottleId bottleId) =
+      _BottleDeleteMissing;
 }
 
-class BottleDeleteFailed extends BottleDeleteResult {
-  const BottleDeleteFailed(this.message);
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class BottleDeleteFailed extends BottleDeleteResult
+    with _$BottleDeleteFailed {
+  const BottleDeleteFailed._() : super();
 
-  final String message;
+  const factory BottleDeleteFailed(String message) = _BottleDeleteFailed;
 }
 
-class BottleRenameRequest {
-  BottleRenameRequest({required String bottleId, required String name})
-    : bottleId = BottleId(bottleId),
-      name = BottleName(name);
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class BottleRenameRequest with _$BottleRenameRequest {
+  const BottleRenameRequest._();
 
-  final BottleId bottleId;
-  final BottleName name;
+  factory BottleRenameRequest({
+    required String bottleId,
+    required String name,
+  }) {
+    return BottleRenameRequest._validated(
+      bottleId: BottleId(bottleId),
+      name: BottleName(name),
+    );
+  }
+
+  const factory BottleRenameRequest._validated({
+    required BottleId bottleId,
+    required BottleName name,
+  }) = _BottleRenameRequest;
 }
 
 sealed class BottleRenameResult {
   const BottleRenameResult();
 }
 
-class BottleRenamed extends BottleRenameResult {
-  const BottleRenamed(this.bottle);
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class BottleRenamed extends BottleRenameResult with _$BottleRenamed {
+  const BottleRenamed._() : super();
 
-  final BottleRecord bottle;
+  const factory BottleRenamed(BottleRecord bottle) = _BottleRenamed;
 }
 
-class BottleRenameMissing extends BottleRenameResult {
-  BottleRenameMissing(String bottleId) : bottleId = BottleId(bottleId);
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class BottleRenameMissing extends BottleRenameResult
+    with _$BottleRenameMissing {
+  const BottleRenameMissing._() : super();
 
-  final BottleId bottleId;
+  factory BottleRenameMissing(String bottleId) {
+    return BottleRenameMissing._validated(BottleId(bottleId));
+  }
+
+  const factory BottleRenameMissing._validated(BottleId bottleId) =
+      _BottleRenameMissing;
 }
 
-class BottleRenameConflict extends BottleRenameResult {
-  BottleRenameConflict(String bottleId) : bottleId = BottleId(bottleId);
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class BottleRenameConflict extends BottleRenameResult
+    with _$BottleRenameConflict {
+  const BottleRenameConflict._() : super();
 
-  final BottleId bottleId;
+  factory BottleRenameConflict(String bottleId) {
+    return BottleRenameConflict._validated(BottleId(bottleId));
+  }
+
+  const factory BottleRenameConflict._validated(BottleId bottleId) =
+      _BottleRenameConflict;
 }
 
-class BottleRenameFailed extends BottleRenameResult {
-  const BottleRenameFailed(this.message);
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class BottleRenameFailed extends BottleRenameResult
+    with _$BottleRenameFailed {
+  const BottleRenameFailed._() : super();
 
-  final String message;
+  const factory BottleRenameFailed(String message) = _BottleRenameFailed;
 }
 
-class BottleMoveRequest {
-  BottleMoveRequest({required String bottleId, required String path})
-    : bottleId = BottleId(bottleId),
-      path = BottlePath(path);
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class BottleMoveRequest with _$BottleMoveRequest {
+  const BottleMoveRequest._();
 
-  final BottleId bottleId;
-  final BottlePath path;
+  factory BottleMoveRequest({required String bottleId, required String path}) {
+    return BottleMoveRequest._validated(
+      bottleId: BottleId(bottleId),
+      path: BottlePath(path),
+    );
+  }
+
+  const factory BottleMoveRequest._validated({
+    required BottleId bottleId,
+    required BottlePath path,
+  }) = _BottleMoveRequest;
 }
 
 sealed class BottleMoveResult {
   const BottleMoveResult();
 }
 
-class BottleMoved extends BottleMoveResult {
-  const BottleMoved(this.bottle);
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class BottleMoved extends BottleMoveResult with _$BottleMoved {
+  const BottleMoved._() : super();
 
-  final BottleRecord bottle;
+  const factory BottleMoved(BottleRecord bottle) = _BottleMoved;
 }
 
-class BottleMoveMissing extends BottleMoveResult {
-  BottleMoveMissing(String bottleId) : bottleId = BottleId(bottleId);
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class BottleMoveMissing extends BottleMoveResult
+    with _$BottleMoveMissing {
+  const BottleMoveMissing._() : super();
 
-  final BottleId bottleId;
+  factory BottleMoveMissing(String bottleId) {
+    return BottleMoveMissing._validated(BottleId(bottleId));
+  }
+
+  const factory BottleMoveMissing._validated(BottleId bottleId) =
+      _BottleMoveMissing;
 }
 
-class BottleMoveConflict extends BottleMoveResult {
-  BottleMoveConflict(String path) : path = BottlePath(path);
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class BottleMoveConflict extends BottleMoveResult
+    with _$BottleMoveConflict {
+  const BottleMoveConflict._() : super();
 
-  final BottlePath path;
+  factory BottleMoveConflict(String path) {
+    return BottleMoveConflict._validated(BottlePath(path));
+  }
+
+  const factory BottleMoveConflict._validated(BottlePath path) =
+      _BottleMoveConflict;
 }
 
-class BottleMoveFailed extends BottleMoveResult {
-  const BottleMoveFailed(this.message);
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class BottleMoveFailed extends BottleMoveResult
+    with _$BottleMoveFailed {
+  const BottleMoveFailed._() : super();
 
-  final String message;
+  const factory BottleMoveFailed(String message) = _BottleMoveFailed;
 }
 
-class WindowsVersionUpdateRequest {
-  WindowsVersionUpdateRequest({
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class WindowsVersionUpdateRequest with _$WindowsVersionUpdateRequest {
+  const WindowsVersionUpdateRequest._();
+
+  factory WindowsVersionUpdateRequest({
     required String bottleId,
     required String windowsVersion,
-  }) : bottleId = BottleId(bottleId),
-       windowsVersion = WindowsVersion(windowsVersion);
+  }) {
+    return WindowsVersionUpdateRequest._validated(
+      bottleId: BottleId(bottleId),
+      windowsVersion: WindowsVersion(windowsVersion),
+    );
+  }
 
-  final BottleId bottleId;
-  final WindowsVersion windowsVersion;
+  const factory WindowsVersionUpdateRequest._validated({
+    required BottleId bottleId,
+    required WindowsVersion windowsVersion,
+  }) = _WindowsVersionUpdateRequest;
 }
 
-class RuntimeSettingsUpdateRequest {
-  RuntimeSettingsUpdateRequest({
-    required String bottleId,
-    required this.runtimeSettings,
-  }) : bottleId = BottleId(bottleId);
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class RuntimeSettingsUpdateRequest
+    with _$RuntimeSettingsUpdateRequest {
+  const RuntimeSettingsUpdateRequest._();
 
-  final BottleId bottleId;
-  final BottleRuntimeSettings runtimeSettings;
+  factory RuntimeSettingsUpdateRequest({
+    required String bottleId,
+    required BottleRuntimeSettings runtimeSettings,
+  }) {
+    return RuntimeSettingsUpdateRequest._validated(
+      bottleId: BottleId(bottleId),
+      runtimeSettings: runtimeSettings,
+    );
+  }
+
+  const factory RuntimeSettingsUpdateRequest._validated({
+    required BottleId bottleId,
+    required BottleRuntimeSettings runtimeSettings,
+  }) = _RuntimeSettingsUpdateRequest;
 }
 
 sealed class BottleUpdateResult {
   const BottleUpdateResult();
 }
 
-class BottleUpdated extends BottleUpdateResult {
-  const BottleUpdated(this.bottle);
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class BottleUpdated extends BottleUpdateResult with _$BottleUpdated {
+  const BottleUpdated._() : super();
 
-  final BottleRecord bottle;
+  const factory BottleUpdated(BottleRecord bottle) = _BottleUpdated;
 }
 
-class BottleUpdateMissing extends BottleUpdateResult {
-  BottleUpdateMissing(String bottleId) : bottleId = BottleId(bottleId);
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class BottleUpdateMissing extends BottleUpdateResult
+    with _$BottleUpdateMissing {
+  const BottleUpdateMissing._() : super();
 
-  final BottleId bottleId;
+  factory BottleUpdateMissing(String bottleId) {
+    return BottleUpdateMissing._validated(BottleId(bottleId));
+  }
+
+  const factory BottleUpdateMissing._validated(BottleId bottleId) =
+      _BottleUpdateMissing;
 }
 
-class BottleUpdateFailed extends BottleUpdateResult {
-  const BottleUpdateFailed(this.message);
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class BottleUpdateFailed extends BottleUpdateResult
+    with _$BottleUpdateFailed {
+  const BottleUpdateFailed._() : super();
 
-  final String message;
+  const factory BottleUpdateFailed(String message) = _BottleUpdateFailed;
 }

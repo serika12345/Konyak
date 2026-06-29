@@ -1,41 +1,64 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+
 import '../program/program_run_environment.dart';
 import '../shared/domain_value_objects.dart';
 
-class BottleRuntimeSettings {
-  BottleRuntimeSettings({
-    String enhancedSync = 'msync',
-    this.metalHud = false,
-    this.metalTrace = false,
-    this.avxEnabled = false,
-    this.dxrEnabled = false,
-    this.dxvk = false,
-    this.dxmt = false,
-    this.dlssMetalFx = false,
-    this.dxvkAsync = true,
-    String dxvkHud = 'off',
-    this.vkd3dProton = false,
-    int buildVersion = 0,
-    this.retinaMode = false,
-    int dpiScaling = 96,
-  }) : enhancedSync = EnhancedSyncMode(enhancedSync),
-       dxvkHud = DxvkHudMode(dxvkHud),
-       buildVersion = WindowsBuildVersion(buildVersion),
-       dpiScaling = WindowsDpiScaling(dpiScaling);
+part 'bottle_runtime_settings_models.freezed.dart';
 
-  final EnhancedSyncMode enhancedSync;
-  final bool metalHud;
-  final bool metalTrace;
-  final bool avxEnabled;
-  final bool dxrEnabled;
-  final bool dxvk;
-  final bool dxmt;
-  final bool dlssMetalFx;
-  final bool dxvkAsync;
-  final DxvkHudMode dxvkHud;
-  final bool vkd3dProton;
-  final WindowsBuildVersion buildVersion;
-  final bool retinaMode;
-  final WindowsDpiScaling dpiScaling;
+@Freezed(map: FreezedMapOptions.none, when: FreezedWhenOptions.none)
+abstract class BottleRuntimeSettings with _$BottleRuntimeSettings {
+  const BottleRuntimeSettings._();
+
+  factory BottleRuntimeSettings({
+    String enhancedSync = 'msync',
+    bool metalHud = false,
+    bool metalTrace = false,
+    bool avxEnabled = false,
+    bool dxrEnabled = false,
+    bool dxvk = false,
+    bool dxmt = false,
+    bool dlssMetalFx = false,
+    bool dxvkAsync = true,
+    String dxvkHud = 'off',
+    bool vkd3dProton = false,
+    int buildVersion = 0,
+    bool retinaMode = false,
+    int dpiScaling = 96,
+  }) {
+    return BottleRuntimeSettings._validated(
+      enhancedSync: EnhancedSyncMode(enhancedSync),
+      metalHud: metalHud,
+      metalTrace: metalTrace,
+      avxEnabled: avxEnabled,
+      dxrEnabled: dxrEnabled,
+      dxvk: dxvk,
+      dxmt: dxmt,
+      dlssMetalFx: dlssMetalFx,
+      dxvkAsync: dxvkAsync,
+      dxvkHud: DxvkHudMode(dxvkHud),
+      vkd3dProton: vkd3dProton,
+      buildVersion: WindowsBuildVersion(buildVersion),
+      retinaMode: retinaMode,
+      dpiScaling: WindowsDpiScaling(dpiScaling),
+    );
+  }
+
+  const factory BottleRuntimeSettings._validated({
+    required EnhancedSyncMode enhancedSync,
+    required bool metalHud,
+    required bool metalTrace,
+    required bool avxEnabled,
+    required bool dxrEnabled,
+    required bool dxvk,
+    required bool dxmt,
+    required bool dlssMetalFx,
+    required bool dxvkAsync,
+    required DxvkHudMode dxvkHud,
+    required bool vkd3dProton,
+    required WindowsBuildVersion buildVersion,
+    required bool retinaMode,
+    required WindowsDpiScaling dpiScaling,
+  }) = _BottleRuntimeSettings;
 
   BottleRuntimeSettings withEnhancedSync(String enhancedSync) {
     return BottleRuntimeSettings(
@@ -378,45 +401,6 @@ class BottleRuntimeSettings {
       'none' => const ProgramRunEnvironment.empty(),
       _ => const ProgramRunEnvironment.empty(),
     };
-  }
-
-  @override
-  bool operator ==(Object other) {
-    return other is BottleRuntimeSettings &&
-        other.enhancedSync == enhancedSync &&
-        other.metalHud == metalHud &&
-        other.metalTrace == metalTrace &&
-        other.avxEnabled == avxEnabled &&
-        other.dxrEnabled == dxrEnabled &&
-        other.dxvk == dxvk &&
-        other.dxmt == dxmt &&
-        other.dlssMetalFx == dlssMetalFx &&
-        other.dxvkAsync == dxvkAsync &&
-        other.dxvkHud == dxvkHud &&
-        other.vkd3dProton == vkd3dProton &&
-        other.buildVersion == buildVersion &&
-        other.retinaMode == retinaMode &&
-        other.dpiScaling == dpiScaling;
-  }
-
-  @override
-  int get hashCode {
-    return Object.hash(
-      enhancedSync,
-      metalHud,
-      metalTrace,
-      avxEnabled,
-      dxrEnabled,
-      dxvk,
-      dxmt,
-      dlssMetalFx,
-      dxvkAsync,
-      dxvkHud,
-      vkd3dProton,
-      buildVersion,
-      retinaMode,
-      dpiScaling,
-    );
   }
 }
 

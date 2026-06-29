@@ -13,6 +13,48 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-29 14:20 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Batch Freezed conversion for mechanical bottle domain records.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: `a9357f2` (`Freezed app settings record`).
+- Purpose: convert the remaining mechanically simple hand-written bottle
+  domain records to Freezed without changing public CLI contracts.
+- Completed work: inspected the current hand-written domain model scan,
+  `bottle_mutation_models.dart`, `bottle_runtime_settings_models.dart`,
+  mutation/result switch sites, repository constructor tear-offs, and runtime
+  settings `withX` call sites; selected `bottle_mutation_models.dart` and
+  `BottleRuntimeSettings` as the safe batch because they are pure value/result
+  models and their behavior can be covered with focused semantic equality and
+  `copyWith` tests; added focused tests and observed the runtime settings
+  `copyWith` test fail before implementation; converted bottle mutation
+  request/record classes and concrete result variants to Freezed while
+  preserving existing constructor names and switch pattern class names;
+  converted `BottleRuntimeSettings` to Freezed while keeping existing `withX`
+  helpers for compatibility; updated governance so the bottle archive JSON
+  projection check recognizes Freezed class shapes.
+- Remaining work: map-snapshot models such as `ProgramRunEnvironment`,
+  `HostEnvironment`, and `RuntimeComponentVersions` still use hand-written
+  equality; `BottleRecord`/`PinnedProgramRecord` still expose legacy `withX`
+  wrappers over Freezed.
+- Next action: either commit this completed batch or inspect the remaining
+  map-snapshot models before deciding whether they are safe to convert.
+- Verification: observed `cd packages/konyak_cli && dart test
+  test/domain_immutability_test.dart --name "bottle mutation request records
+  compare by semantic values|bottle mutation result records compare by semantic
+  values|runtime settings copyWith preserves semantic value object fields"`
+  fail before implementation; after implementation, `cd packages/konyak_cli &&
+  dart run build_runner build --delete-conflicting-outputs && dart format
+  lib/src/domain/bottle/bottle_mutation_models.dart
+  lib/src/domain/bottle/bottle_runtime_settings_models.dart
+  test/domain_immutability_test.dart && dart analyze --fatal-infos`, focused
+  bottle mutation/runtime settings tests, focused bottle mutation CLI contract
+  tests, `cd packages/konyak_cli && dart test test/domain_immutability_test.dart`,
+  `just verify-governance`, `just verify-architecture`, `just verify-safety`,
+  `just format-check`, `just lint`, and `just cli-test` passed.
+
 - Timestamp: 2026-06-29 14:07 JST
 - State: `completed`
 - Branch: `main`
