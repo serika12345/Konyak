@@ -50,27 +50,26 @@ abstract class RuntimeUpdateRecord with _$RuntimeUpdateRecord {
   }) = _RuntimeUpdateRecord;
 }
 
-sealed class RuntimeUpdateCheckResult {
-  const RuntimeUpdateCheckResult();
-}
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class RuntimeUpdateCheckResult with _$RuntimeUpdateCheckResult {
+  const RuntimeUpdateCheckResult._();
 
-class RuntimeUpdateCheckCompleted extends RuntimeUpdateCheckResult {
-  const RuntimeUpdateCheckCompleted(this.update);
+  const factory RuntimeUpdateCheckResult.completed(RuntimeUpdateRecord update) =
+      RuntimeUpdateCheckCompleted;
 
-  final RuntimeUpdateRecord update;
-}
+  const factory RuntimeUpdateCheckResult.failed(String message) =
+      RuntimeUpdateCheckFailed;
 
-class RuntimeUpdateCheckFailed extends RuntimeUpdateCheckResult {
-  const RuntimeUpdateCheckFailed(this.message);
+  factory RuntimeUpdateCheckResult.runtimeNotFound(String runtimeId) {
+    return RuntimeUpdateCheckResult._runtimeNotFound(RuntimeId(runtimeId));
+  }
 
-  final String message;
-}
-
-class RuntimeUpdateRuntimeNotFound extends RuntimeUpdateCheckResult {
-  RuntimeUpdateRuntimeNotFound(String runtimeId)
-    : runtimeId = RuntimeId(runtimeId);
-
-  final RuntimeId runtimeId;
+  const factory RuntimeUpdateCheckResult._runtimeNotFound(RuntimeId runtimeId) =
+      RuntimeUpdateRuntimeNotFound;
 }
 
 abstract interface class RuntimeUpdateChecker {

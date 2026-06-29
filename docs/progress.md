@@ -13,6 +13,45 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-29 12:37 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Freezed-backed runtime update check result variants.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: this commit (`Freezed runtime update results`).
+- Purpose: finish the update result variant Freezed pass by converting the
+  remaining runtime update check result union with explicit handling for the
+  not-found value-object conversion.
+- Completed work: committed the app update result Freezed slice; confirmed
+  `RuntimeUpdateCheckResult` is the remaining hand-written result union in
+  `update_records.dart`; identified `RuntimeUpdateRuntimeNotFound` as the only
+  variant requiring String-to-`RuntimeId` construction; added focused
+  value-semantics coverage and observed it fail against the hand-written
+  result classes; converted `RuntimeUpdateCheckResult` to Freezed with a
+  public `runtimeNotFound(String runtimeId)` factory; updated direct not-found
+  construction in the runtime update checker to use the base factory while
+  preserving `RuntimeUpdateRuntimeNotFound` switch pattern names.
+- Remaining work: `update_records.dart` is now Freezed-backed for its records
+  and result variants. Continue the broader Freezed scan with program catalog
+  records or program run result variants; map wrappers with const/equality
+  constraints remain deferred.
+- Next action: inspect `program_catalog_models.dart` records and result
+  variants for a low-risk Freezed slice, starting with simple records before
+  touching list/result variants.
+- Verification: observed `cd packages/konyak_cli && dart test
+  test/domain_immutability_test.dart --name "runtime update check results
+  compare by value"` fail before implementation; after implementation, `cd
+  packages/konyak_cli && dart run build_runner build
+  --delete-conflicting-outputs && dart format
+  lib/src/domain/update/update_records.dart
+  lib/src/io/runtime_update_checker_io.dart test/domain_immutability_test.dart
+  && dart analyze --fatal-infos`, focused runtime update result
+  value-semantics test, focused runtime update CLI contract tests, `cd
+  packages/konyak_cli && dart test test/domain_immutability_test.dart`, `just
+  verify-governance`, `just verify-architecture`, `just verify-safety`, `just
+  format-check`, `just lint`, and `just cli-test` passed.
+
 - Timestamp: 2026-06-29 12:34 JST
 - State: `completed`
 - Branch: `main`

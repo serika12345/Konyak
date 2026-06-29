@@ -18,7 +18,7 @@ class DartIoRuntimeUpdateChecker implements RuntimeUpdateChecker {
   RuntimeUpdateCheckResult check(String runtimeId) {
     final runtime = runtimeById(runtimeCatalog.listRuntimes(), runtimeId);
     return runtime.match(
-      () => RuntimeUpdateRuntimeNotFound(runtimeId),
+      () => RuntimeUpdateCheckResult.runtimeNotFound(runtimeId),
       checkRuntime,
     );
   }

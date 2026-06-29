@@ -483,6 +483,33 @@ void main() {
     );
   });
 
+  test('runtime update check results compare by value', () {
+    expect(
+      RuntimeUpdateCheckCompleted(
+        RuntimeUpdateRecord(
+          runtimeId: 'wine',
+          status: 'available',
+          latestVersion: Option.of('1.1.0'),
+        ),
+      ),
+      RuntimeUpdateCheckCompleted(
+        RuntimeUpdateRecord(
+          runtimeId: 'wine',
+          status: 'available',
+          latestVersion: Option.of('1.1.0'),
+        ),
+      ),
+    );
+    expect(
+      const RuntimeUpdateCheckFailed('runtime metadata unavailable'),
+      const RuntimeUpdateCheckFailed('runtime metadata unavailable'),
+    );
+    expect(
+      RuntimeUpdateCheckResult.runtimeNotFound('wine'),
+      RuntimeUpdateCheckResult.runtimeNotFound('wine'),
+    );
+  });
+
   test('runtime install operations group install source as a domain value', () {
     final operation = RuntimeInstallRequestOperation.fullInstall();
 
