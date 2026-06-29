@@ -13,14 +13,40 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-29 21:13 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Type Winetricks payload parser results.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: current commit (`Type Winetricks parser results`).
+- Purpose: continue removing nullable success/failure sentinels from Flutter
+  CLI contract parsers before narrowing nullable custom-lint allowances.
+- Completed work: added focused Winetricks payload parser contract coverage;
+  replaced category and verb helper nullable returns with explicit parse
+  results; and updated verb-list parsing to switch on parsed/invalid category
+  and verb records.
+- Remaining work: continue nullable sentinel cleanup in the remaining Flutter
+  CLI contract parsers, especially update/settings/program-run and
+  launch-config helpers, before narrowing the nullable custom-lint allowance
+  from directory level to direct boundary files.
+- Next action: choose the next concentrated nullable parser boundary and repeat
+  the same sealed-result cleanup.
+- Verification: observed the focused Winetricks payload parser test fail before
+  implementation because the new parse result types did not exist; after
+  implementation, focused Winetricks payload parser and Winetricks CLI client
+  contract tests passed, and `just flutter-format-check`, `just
+  flutter-analyze`, `just flutter-test`, `just verify-governance`, `just
+  verify-safety`, `just format-check`, and `just lint` passed in the Nix dev
+  shell.
+
 - Timestamp: 2026-06-29 21:04 JST
 - State: `completed`
 - Branch: `main`
 - Active work: Type bottle record parser results.
 - Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
   boundary tightening.
-- Latest commit: `0b85986` (`Type runtime install progress parser`); this
-  completed slice is not committed yet.
+- Latest commit: `f8ba89f` (`Type bottle record parser results`).
 - Purpose: continue removing nullable success/failure sentinels from Flutter
   CLI contract parsers before narrowing nullable custom-lint allowances.
 - Completed work: added focused bottle record parser contract coverage; changed

@@ -2,6 +2,38 @@ import 'dart:convert';
 
 import 'konyak_cli_winetricks_result_types.dart';
 
+sealed class WinetricksCategorySummaryParseResult {
+  const WinetricksCategorySummaryParseResult();
+}
+
+final class ParsedWinetricksCategorySummary
+    extends WinetricksCategorySummaryParseResult {
+  const ParsedWinetricksCategorySummary(this.category);
+
+  final WinetricksCategorySummary category;
+}
+
+final class InvalidWinetricksCategorySummary
+    extends WinetricksCategorySummaryParseResult {
+  const InvalidWinetricksCategorySummary();
+}
+
+sealed class WinetricksVerbSummaryParseResult {
+  const WinetricksVerbSummaryParseResult();
+}
+
+final class ParsedWinetricksVerbSummary
+    extends WinetricksVerbSummaryParseResult {
+  const ParsedWinetricksVerbSummary(this.verb);
+
+  final WinetricksVerbSummary verb;
+}
+
+final class InvalidWinetricksVerbSummary
+    extends WinetricksVerbSummaryParseResult {
+  const InvalidWinetricksVerbSummary();
+}
+
 WinetricksVerbListLoadResult parseWinetricksVerbListPayload(String payload) {
   final Object? decoded;
   try {
@@ -52,57 +84,63 @@ WinetricksVerbListLoadResult parseWinetricksVerbListPayload(String payload) {
 
   final parsedCategories = <WinetricksCategorySummary>[];
   for (final category in categories) {
-    final parsedCategory = parseWinetricksCategorySummary(category);
-    if (parsedCategory == null) {
-      return const WinetricksVerbListLoadFailure(
-        exitCode: 0,
-        message: 'Invalid winetricks category record.',
-        diagnostic: '',
-      );
+    switch (parseWinetricksCategorySummary(category)) {
+      case ParsedWinetricksCategorySummary(:final category):
+        parsedCategories.add(category);
+      case InvalidWinetricksCategorySummary():
+        return const WinetricksVerbListLoadFailure(
+          exitCode: 0,
+          message: 'Invalid winetricks category record.',
+          diagnostic: '',
+        );
     }
-
-    parsedCategories.add(parsedCategory);
   }
 
   return LoadedWinetricksVerbs(categories: parsedCategories);
 }
 
-WinetricksCategorySummary? parseWinetricksCategorySummary(Object? value) {
+WinetricksCategorySummaryParseResult parseWinetricksCategorySummary(
+  Object? value,
+) {
   if (value is! Map<String, Object?>) {
-    return null;
+    return const InvalidWinetricksCategorySummary();
   }
 
   final id = value['id'];
   final name = value['name'];
   final verbs = value['verbs'];
   if (id is! String || name is! String || verbs is! List<Object?>) {
-    return null;
+    return const InvalidWinetricksCategorySummary();
   }
 
   final parsedVerbs = <WinetricksVerbSummary>[];
   for (final verb in verbs) {
-    final parsedVerb = parseWinetricksVerbSummary(verb);
-    if (parsedVerb == null) {
-      return null;
+    switch (parseWinetricksVerbSummary(verb)) {
+      case ParsedWinetricksVerbSummary(:final verb):
+        parsedVerbs.add(verb);
+      case InvalidWinetricksVerbSummary():
+        return const InvalidWinetricksCategorySummary();
     }
-
-    parsedVerbs.add(parsedVerb);
   }
 
-  return WinetricksCategorySummary(id: id, name: name, verbs: parsedVerbs);
+  return ParsedWinetricksCategorySummary(
+    WinetricksCategorySummary(id: id, name: name, verbs: parsedVerbs),
+  );
 }
 
-WinetricksVerbSummary? parseWinetricksVerbSummary(Object? value) {
+WinetricksVerbSummaryParseResult parseWinetricksVerbSummary(Object? value) {
   if (value is! Map<String, Object?>) {
-    return null;
+    return const InvalidWinetricksVerbSummary();
   }
 
   final id = value['id'];
   final name = value['name'];
   final description = value['description'];
   if (id is! String || name is! String || description is! String) {
-    return null;
+    return const InvalidWinetricksVerbSummary();
   }
 
-  return WinetricksVerbSummary(id: id, name: name, description: description);
+  return ParsedWinetricksVerbSummary(
+    WinetricksVerbSummary(id: id, name: name, description: description),
+  );
 }
