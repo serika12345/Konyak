@@ -13,6 +13,43 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-29 13:46 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Freezed-backed program run result unions.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: this commit (`Freezed program run results`).
+- Purpose: continue the program-domain Freezed scan by converting the narrow
+  result unions in `program_run_models.dart` before touching the broader
+  `ProgramRunRequest` record.
+- Completed work: committed the program settings record Freezed slice;
+  inspected `ProgramRunResult`, `PathOpenResult`, and
+  `DetachedProcessStartResult` call sites; selected these unions because they
+  have simple payloads and existing concrete switch pattern names can be
+  preserved; added focused value-semantics coverage and observed it fail
+  against the hand-written result classes; converted the result unions to
+  Freezed while preserving direct concrete constructors and pattern names.
+- Remaining work: `ProgramRunRequest` and `WineProcessTerminationRecord` remain
+  hand-written in `program_run_models.dart`; both are larger because they
+  expose derived argv or immutable list snapshots.
+- Next action: inspect `ProgramRunRequest` and `WineProcessTerminationRecord`
+  for the next low-risk record conversion, starting with
+  `WineProcessTerminationRecord` if its list snapshot contract can be preserved
+  cleanly.
+- Verification: observed `cd packages/konyak_cli && dart test
+  test/domain_immutability_test.dart --name "program run result unions compare
+  by semantic values"` fail before implementation; after implementation, `cd
+  packages/konyak_cli && dart run build_runner build
+  --delete-conflicting-outputs && dart format
+  lib/src/domain/program/program_run_models.dart
+  test/domain_immutability_test.dart && dart analyze --fatal-infos`, focused
+  program run result-union value-semantics test, focused ProgramRun/PathOpen/
+  DetachedProcessStart CLI contract tests, `cd packages/konyak_cli && dart
+  test test/domain_immutability_test.dart`, `just verify-governance`, `just
+  verify-architecture`, `just verify-safety`, `just format-check`, `just
+  lint`, and `just cli-test` passed.
+
 - Timestamp: 2026-06-29 13:42 JST
 - State: `completed`
 - Branch: `main`

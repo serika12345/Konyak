@@ -1,8 +1,11 @@
 import 'package:fpdart/fpdart.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../shared/domain_helpers.dart';
 import '../shared/domain_value_objects.dart';
 import 'program_run_environment.dart';
+
+part 'program_run_models.freezed.dart';
 
 class ProgramRunRequest {
   ProgramRunRequest({
@@ -32,26 +35,22 @@ class ProgramRunRequest {
   }
 }
 
-sealed class ProgramRunResult {
-  const ProgramRunResult();
-}
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class ProgramRunResult with _$ProgramRunResult {
+  const ProgramRunResult._();
 
-class ProgramRunCompleted extends ProgramRunResult {
-  const ProgramRunCompleted({
-    required this.processExitCode,
-    this.stdout = '',
-    this.stderr = '',
-  });
+  const factory ProgramRunResult.completed({
+    required int processExitCode,
+    @Default('') String stdout,
+    @Default('') String stderr,
+  }) = ProgramRunCompleted;
 
-  final int processExitCode;
-  final String stdout;
-  final String stderr;
-}
-
-class ProgramRunFailed extends ProgramRunResult {
-  const ProgramRunFailed({required this.message});
-
-  final String message;
+  const factory ProgramRunResult.failed({required String message}) =
+      ProgramRunFailed;
 }
 
 class WineProcessTerminationRecord {
@@ -82,32 +81,32 @@ class WineProcessTerminationRecord {
   final Option<String> message;
 }
 
-sealed class PathOpenResult {
-  const PathOpenResult();
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class PathOpenResult with _$PathOpenResult {
+  const PathOpenResult._();
+
+  const factory PathOpenResult.completed() = PathOpenCompleted;
+
+  const factory PathOpenResult.failed(String message) = PathOpenFailed;
 }
 
-class PathOpenCompleted extends PathOpenResult {
-  const PathOpenCompleted();
-}
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class DetachedProcessStartResult with _$DetachedProcessStartResult {
+  const DetachedProcessStartResult._();
 
-class PathOpenFailed extends PathOpenResult {
-  const PathOpenFailed(this.message);
+  const factory DetachedProcessStartResult.completed() =
+      DetachedProcessStartCompleted;
 
-  final String message;
-}
-
-sealed class DetachedProcessStartResult {
-  const DetachedProcessStartResult();
-}
-
-class DetachedProcessStartCompleted extends DetachedProcessStartResult {
-  const DetachedProcessStartCompleted();
-}
-
-class DetachedProcessStartFailed extends DetachedProcessStartResult {
-  const DetachedProcessStartFailed(this.message);
-
-  final String message;
+  const factory DetachedProcessStartResult.failed(String message) =
+      DetachedProcessStartFailed;
 }
 
 Option<String> _optionalNonBlankDomainString(

@@ -1153,6 +1153,24 @@ void main() {
     expect(request.argv, ['wine', '/steam.exe']);
   });
 
+  test('program run result unions compare by semantic values', () {
+    expect(
+      ProgramRunCompleted(processExitCode: 0, stdout: 'launched', stderr: ''),
+      ProgramRunCompleted(processExitCode: 0, stdout: 'launched', stderr: ''),
+    );
+    expect(
+      ProgramRunFailed(message: 'wine not found'),
+      ProgramRunFailed(message: 'wine not found'),
+    );
+    expect(PathOpenCompleted(), PathOpenCompleted());
+    expect(PathOpenFailed('open failed'), PathOpenFailed('open failed'));
+    expect(DetachedProcessStartCompleted(), DetachedProcessStartCompleted());
+    expect(
+      DetachedProcessStartFailed('start failed'),
+      DetachedProcessStartFailed('start failed'),
+    );
+  });
+
   test('host environments expose immutable snapshots', () {
     final variables = <String, String>{'HOME': '/Users/user'};
     final environment = HostEnvironment(variables);
