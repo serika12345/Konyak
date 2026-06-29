@@ -1008,14 +1008,20 @@ def require_runtime_install_progress_io_json_projection() -> None:
         "packages/konyak_cli/lib/src/domain/runtime/runtime_package_installation.dart"
     )
     domain = read_text(domain_path)
-    record_match = re.search(
-        r"class RuntimeInstallProgress \{(?P<body>.*?)\n\}",
-        domain,
-        flags=re.DOTALL,
-    )
-    if record_match is None:
+    class_start = domain.find("class RuntimeInstallProgress ")
+    if class_start == -1:
         raise AssertionError("RuntimeInstallProgress must exist")
-    if "toJson(" in record_match.group("body"):
+    next_class_match = re.search(
+        r"\n(?:abstract\s+interface\s+)?(?:abstract\s+)?(?:sealed\s+)?"
+        r"(?:final\s+)?class\s+\w+",
+        domain[class_start + 1 :],
+    )
+    if next_class_match is None:
+        record_section = domain[class_start:]
+    else:
+        class_end = class_start + 1 + next_class_match.start()
+        record_section = domain[class_start:class_end]
+    if "toJson(" in record_section:
         raise AssertionError(
             "RuntimeInstallProgress must not own JSON projection"
         )
@@ -1753,10 +1759,21 @@ def require_result_boundary_rules() -> None:
             "packages/konyak_cli/lib/src/domain/runtime/runtime_install_operation_models.dart",
             forbidden,
         )
-    require_contains(
-        "packages/konyak_cli/lib/src/domain/runtime/runtime_package_installation.dart",
-        "final Option<RuntimeArchiveChecksumValue> archiveSha256;",
+    runtime_package_installation_text = read_text(
+        "packages/konyak_cli/lib/src/domain/runtime/runtime_package_installation.dart"
     )
+    if not any(
+        expected in runtime_package_installation_text
+        for expected in [
+            "final Option<RuntimeArchiveChecksumValue> archiveSha256;",
+            "required Option<RuntimeArchiveChecksumValue> archiveSha256,",
+        ]
+    ):
+        raise AssertionError(
+            "packages/konyak_cli/lib/src/domain/runtime/runtime_package_installation.dart "
+            "must contain a typed archiveSha256 field or _validated "
+            "constructor parameter"
+        )
     require_not_contains(
         "packages/konyak_cli/lib/src/domain/runtime/runtime_package_installation.dart",
         "final String? archiveSha256;",
