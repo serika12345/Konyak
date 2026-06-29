@@ -222,30 +222,43 @@ export 'program_run_terminal_requests.dart';
 def require_typed_program_run_request_boundary() -> None:
     relative_path = "packages/konyak_cli/lib/src/domain/program/program_run_models.dart"
     request_models = read_text(relative_path)
-    expected_constructor_terms = [
-        "required this.bottleId",
-        "required this.programPath",
-        "required this.runnerKind",
-        "required this.executable",
-        "required this.arguments",
-        "required this.logPath",
-        "this.workingDirectory = const Option.none()",
-        "final BottleId bottleId",
-        "final ProgramPath programPath",
-        "final RunnerKind runnerKind",
-        "final ProgramExecutable executable",
-        "final ProgramRunArguments arguments",
-        "final ProgramLogPath logPath",
-        "final Option<ProgramWorkingDirectoryPath> workingDirectory",
+    expected_constructor_options = [
+        ["required this.bottleId", "required BottleId bottleId,"],
+        ["required this.programPath", "required ProgramPath programPath,"],
+        ["required this.runnerKind", "required RunnerKind runnerKind,"],
+        ["required this.executable", "required ProgramExecutable executable,"],
+        ["required this.arguments", "required ProgramRunArguments arguments,"],
+        ["required this.logPath", "required ProgramLogPath logPath,"],
+        [
+            "this.workingDirectory = const Option.none()",
+            "Option<ProgramWorkingDirectoryPath> workingDirectory =",
+        ],
+        ["final BottleId bottleId", "required BottleId bottleId,"],
+        ["final ProgramPath programPath", "required ProgramPath programPath,"],
+        ["final RunnerKind runnerKind", "required RunnerKind runnerKind,"],
+        [
+            "final ProgramExecutable executable",
+            "required ProgramExecutable executable,",
+        ],
+        [
+            "final ProgramRunArguments arguments",
+            "required ProgramRunArguments arguments,",
+        ],
+        ["final ProgramLogPath logPath", "required ProgramLogPath logPath,"],
+        [
+            "final Option<ProgramWorkingDirectoryPath> workingDirectory",
+            "required Option<ProgramWorkingDirectoryPath> workingDirectory,",
+        ],
     ]
-    for expected in expected_constructor_terms:
-        if expected not in request_models:
+    for expected_options in expected_constructor_options:
+        if not any(expected in request_models for expected in expected_options):
             raise AssertionError(
                 "ProgramRunRequest must expose a typed domain constructor term: "
-                f"{expected}"
+                f"{expected_options[0]}"
             )
 
-    start = request_models.find("class ProgramRunRequest {")
+    start_match = re.search(r"\bclass\s+ProgramRunRequest\b", request_models)
+    start = -1 if start_match is None else start_match.start()
     end = request_models.find("sealed class ProgramRunResult", start)
     if start == -1 or end == -1:
         raise AssertionError("ProgramRunRequest class section must be readable")

@@ -7,28 +7,49 @@ import 'program_run_environment.dart';
 
 part 'program_run_models.freezed.dart';
 
-class ProgramRunRequest {
-  ProgramRunRequest({
-    required this.bottleId,
-    required this.programPath,
-    required this.runnerKind,
-    required this.executable,
-    required this.arguments,
-    required this.environment,
-    required this.logPath,
-    this.createLogFile = true,
-    this.workingDirectory = const Option.none(),
-  });
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class ProgramRunRequest with _$ProgramRunRequest {
+  const ProgramRunRequest._();
 
-  final BottleId bottleId;
-  final ProgramPath programPath;
-  final RunnerKind runnerKind;
-  final ProgramExecutable executable;
-  final ProgramRunArguments arguments;
-  final ProgramRunEnvironment environment;
-  final ProgramLogPath logPath;
-  final bool createLogFile;
-  final Option<ProgramWorkingDirectoryPath> workingDirectory;
+  factory ProgramRunRequest({
+    required BottleId bottleId,
+    required ProgramPath programPath,
+    required RunnerKind runnerKind,
+    required ProgramExecutable executable,
+    required ProgramRunArguments arguments,
+    required ProgramRunEnvironment environment,
+    required ProgramLogPath logPath,
+    bool createLogFile = true,
+    Option<ProgramWorkingDirectoryPath> workingDirectory = const Option.none(),
+  }) {
+    return ProgramRunRequest._validated(
+      bottleId: bottleId,
+      programPath: programPath,
+      runnerKind: runnerKind,
+      executable: executable,
+      arguments: arguments,
+      environment: environment,
+      logPath: logPath,
+      createLogFile: createLogFile,
+      workingDirectory: workingDirectory,
+    );
+  }
+
+  const factory ProgramRunRequest._validated({
+    required BottleId bottleId,
+    required ProgramPath programPath,
+    required RunnerKind runnerKind,
+    required ProgramExecutable executable,
+    required ProgramRunArguments arguments,
+    required ProgramRunEnvironment environment,
+    required ProgramLogPath logPath,
+    required bool createLogFile,
+    required Option<ProgramWorkingDirectoryPath> workingDirectory,
+  }) = _ProgramRunRequest;
 
   List<String> get argv {
     return List.unmodifiable(<String>[executable.value, ...arguments.value]);

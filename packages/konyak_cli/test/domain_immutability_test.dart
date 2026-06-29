@@ -1151,6 +1151,19 @@ void main() {
       ProgramWorkingDirectoryPath('/downloads'),
     );
     expect(request.argv, ['wine', '/steam.exe']);
+    expect(
+      request,
+      ProgramRunRequest(
+        bottleId: BottleId('steam'),
+        programPath: ProgramPath('/steam.exe'),
+        runnerKind: RunnerKind('wine'),
+        executable: ProgramExecutable('wine'),
+        arguments: ProgramRunArguments(const <String>['/steam.exe']),
+        environment: const ProgramRunEnvironment.empty(),
+        logPath: ProgramLogPath('/bottles/steam/logs/latest.log'),
+        workingDirectory: Option.of(ProgramWorkingDirectoryPath('/downloads')),
+      ),
+    );
   });
 
   test('program run result unions compare by semantic values', () {

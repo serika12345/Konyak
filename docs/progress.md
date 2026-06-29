@@ -13,6 +13,40 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-29 14:01 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Freezed-backed program run request.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: `ddc418e` (`Freezed Wine process termination records`);
+  working tree contains the completed uncommitted implementation.
+- Purpose: finish the hand-written value records in
+  `program_run_models.dart` by converting `ProgramRunRequest` while preserving
+  its typed constructor and derived `argv` getter.
+- Completed work: inspected `ProgramRunRequest` call sites, `const`/`copyWith`
+  usage, CLI JSON/log projections, existing request tests, and typed-boundary
+  governance; confirmed call sites use ordinary `ProgramRunRequest(...)`
+  construction and do not depend on `const` or `copyWith`; added focused
+  value-semantics coverage and observed it fail against the hand-written
+  record; converted `ProgramRunRequest` to Freezed with a private factory while
+  keeping `argv` derived; updated governance for Freezed class shapes.
+- Remaining work: commit this completed implementation if accepted, then
+  continue the broader Freezed scan outside `program_run_models.dart`.
+- Next action: review/commit the current working tree or continue with the
+  next hand-written domain record group.
+- Verification: observed `cd packages/konyak_cli && dart test
+  test/domain_immutability_test.dart --name "program run requests expose
+  semantic value object fields"` fail before implementation; after
+  implementation, `cd packages/konyak_cli && dart run build_runner build
+  --delete-conflicting-outputs && dart format
+  lib/src/domain/program/program_run_models.dart
+  test/domain_immutability_test.dart && dart analyze --fatal-infos`, focused
+  program run request test, focused run-program CLI contract tests, `cd
+  packages/konyak_cli && dart test test/domain_immutability_test.dart`, `just
+  verify-governance`, `just verify-architecture`, `just verify-safety`, `just
+  format-check`, `just lint`, and `just cli-test` passed.
+
 - Timestamp: 2026-06-29 13:50 JST
 - State: `completed`
 - Branch: `main`
