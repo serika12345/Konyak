@@ -13,6 +13,47 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-29 11:26 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Freezed-backed runtime install request operation variants.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: this commit (`Freezed runtime install operations`).
+- Purpose: finish the install-operation model Freezed pass by converting the
+  remaining request operation variants after the source/checksum/signature
+  variants were stabilized.
+- Completed work: inspected direct request operation constructor usage and
+  confirmed it is limited to platform request wrappers, domain immutability
+  tests, and the current model definitions; added focused operation snapshot
+  coverage and observed it fail before implementation; converted
+  `RuntimeInstallRequestOperation` to Freezed-backed variants with public base
+  factories for full install, repair, component install, and update install;
+  updated platform request wrappers and domain tests to use those base
+  factories; preserved existing variant pattern names, `operation`, `force`,
+  `installSource`, derived source accessors, and immutable component archive
+  path snapshots; updated governance to require the new Freezed operation
+  factory baseline.
+- Remaining work: `runtime_install_operation_models.dart` is now Freezed-backed
+  for checksum, signature, install source, and request operation variants. The
+  next candidate should be selected from the remaining hand-written runtime
+  domain wrappers or from another TODO item after a fresh scan.
+- Next action: scan remaining runtime/domain hand-written immutable wrappers
+  and choose the next narrow candidate, while keeping `RuntimeComponentVersions`
+  deferred unless its public constructor/equality constraints are simplified.
+- Verification: observed `cd packages/konyak_cli && dart test
+  test/domain_immutability_test.dart --name "runtime install operations"` fail
+  before implementation; after implementation, `cd packages/konyak_cli && dart
+  run build_runner build --delete-conflicting-outputs && dart format
+  lib/src/domain/runtime/runtime_install_operation_models.dart
+  lib/src/platform/macos/macos_wine_install_requests.dart
+  lib/src/platform/linux/linux_wine_install_requests.dart
+  test/domain_immutability_test.dart && dart analyze --fatal-infos`, focused
+  operation tests, `cd packages/konyak_cli && dart test
+  test/domain_immutability_test.dart`, `just verify-governance`, `just
+  verify-architecture`, `just verify-safety`, `just format-check`, `just
+  lint`, and `just cli-test` passed.
+
 - Timestamp: 2026-06-29 11:17 JST
 - State: `completed`
 - Branch: `main`

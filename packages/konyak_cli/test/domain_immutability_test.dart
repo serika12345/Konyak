@@ -337,7 +337,7 @@ void main() {
   });
 
   test('runtime install operations group install source as a domain value', () {
-    final operation = RuntimeFullInstallOperation();
+    final operation = RuntimeInstallRequestOperation.fullInstall();
 
     final source = operation.installSource;
 
@@ -346,7 +346,7 @@ void main() {
   });
 
   test('runtime install operations model source manifest explicitly', () {
-    final operation = RuntimeRepairOperation(
+    final operation = RuntimeInstallRequestOperation.repair(
       sourceManifest: Option.of('https://example.invalid/source.json'),
       sourceManifestSignature: Option.of(
         'https://example.invalid/source.json.sig',
@@ -362,6 +362,21 @@ void main() {
       RuntimeSourceManifestUrl('https://example.invalid/source.json'),
     );
     expect(manifestSource.signature, isA<RuntimeSourceManifestSigned>());
+  });
+
+  test('runtime install operations expose immutable source snapshots', () {
+    final componentArchivePaths = <String>['/dxvk.tar.gz'];
+    final operation = RuntimeInstallRequestOperation.componentInstall(
+      componentArchivePaths: componentArchivePaths,
+    );
+    componentArchivePaths.add('/vkd3d.tar.gz');
+
+    expect(operation, isA<RuntimeComponentInstallOperation>());
+    expect(operation.operation, RuntimeInstallOperation.componentInstall);
+    expect(operation.force, isFalse);
+    expect(operation.componentArchivePaths, [
+      RuntimeArchivePath('/dxvk.tar.gz'),
+    ]);
   });
 
   test('runtime install sources expose immutable archive path snapshots', () {
@@ -525,15 +540,20 @@ void main() {
 
   test('runtime install operations reject blank present sources', () {
     expect(
-      () => RuntimeFullInstallOperation(archivePath: Option.of(' ')),
+      () => RuntimeInstallRequestOperation.fullInstall(
+        archivePath: Option.of(' '),
+      ),
       throwsA(isA<ArgumentError>()),
     );
     expect(
-      () => RuntimeRepairOperation(sourceManifest: Option.of(' ')),
+      () =>
+          RuntimeInstallRequestOperation.repair(sourceManifest: Option.of(' ')),
       throwsA(isA<ArgumentError>()),
     );
     expect(
-      () => RuntimeUpdateInstallOperation(archiveSha256: Option.of(' ')),
+      () => RuntimeInstallRequestOperation.updateInstall(
+        archiveSha256: Option.of(' '),
+      ),
       throwsA(isA<ArgumentError>()),
     );
   });

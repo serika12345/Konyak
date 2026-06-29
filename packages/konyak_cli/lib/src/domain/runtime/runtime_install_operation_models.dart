@@ -13,14 +13,118 @@ enum RuntimeInstallOperation {
   updateInstall,
 }
 
-sealed class RuntimeInstallRequestOperation {
-  const RuntimeInstallRequestOperation();
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class RuntimeInstallRequestOperation
+    with _$RuntimeInstallRequestOperation {
+  const RuntimeInstallRequestOperation._();
 
-  RuntimeInstallOperation get operation;
+  factory RuntimeInstallRequestOperation.fullInstall({
+    Option<String> archivePath = const Option.none(),
+    Option<String> archiveUrl = const Option.none(),
+    Option<String> archiveSha256 = const Option.none(),
+    Option<String> sourceManifest = const Option.none(),
+    Option<String> sourceManifestSignature = const Option.none(),
+    bool force = false,
+  }) {
+    return RuntimeInstallRequestOperation._fullInstall(
+      installSource: RuntimeInstallSource.fromOptions(
+        archivePath: archivePath,
+        archiveUrl: archiveUrl,
+        archiveSha256: archiveSha256,
+        sourceManifest: sourceManifest,
+        sourceManifestSignature: sourceManifestSignature,
+      ),
+      force: force,
+    );
+  }
 
-  bool get force;
+  const factory RuntimeInstallRequestOperation._fullInstall({
+    required RuntimeInstallSource installSource,
+    required bool force,
+  }) = RuntimeFullInstallOperation;
 
-  RuntimeInstallSource get installSource;
+  factory RuntimeInstallRequestOperation.repair({
+    Option<String> archivePath = const Option.none(),
+    Option<String> archiveUrl = const Option.none(),
+    Option<String> archiveSha256 = const Option.none(),
+    Option<String> sourceManifest = const Option.none(),
+    Option<String> sourceManifestSignature = const Option.none(),
+    bool force = true,
+  }) {
+    return RuntimeInstallRequestOperation._repair(
+      installSource: RuntimeInstallSource.fromOptions(
+        archivePath: archivePath,
+        archiveUrl: archiveUrl,
+        archiveSha256: archiveSha256,
+        sourceManifest: sourceManifest,
+        sourceManifestSignature: sourceManifestSignature,
+      ),
+      force: force,
+    );
+  }
+
+  const factory RuntimeInstallRequestOperation._repair({
+    required RuntimeInstallSource installSource,
+    required bool force,
+  }) = RuntimeRepairOperation;
+
+  factory RuntimeInstallRequestOperation.componentInstall({
+    Option<String> archivePath = const Option.none(),
+    Option<String> archiveUrl = const Option.none(),
+    Option<String> archiveSha256 = const Option.none(),
+    Iterable<String> componentArchivePaths = const <String>[],
+    bool force = false,
+  }) {
+    return RuntimeInstallRequestOperation._componentInstall(
+      installSource: RuntimeInstallSource.fromOptions(
+        archivePath: archivePath,
+        archiveUrl: archiveUrl,
+        archiveSha256: archiveSha256,
+        componentArchivePaths: componentArchivePaths,
+      ),
+      force: force,
+    );
+  }
+
+  const factory RuntimeInstallRequestOperation._componentInstall({
+    required RuntimeInstallSource installSource,
+    required bool force,
+  }) = RuntimeComponentInstallOperation;
+
+  factory RuntimeInstallRequestOperation.updateInstall({
+    Option<String> archiveUrl = const Option.none(),
+    Option<String> archiveSha256 = const Option.none(),
+    Option<String> sourceManifest = const Option.none(),
+    Option<String> sourceManifestSignature = const Option.none(),
+    bool force = true,
+  }) {
+    return RuntimeInstallRequestOperation._updateInstall(
+      installSource: RuntimeInstallSource.fromOptions(
+        archiveUrl: archiveUrl,
+        archiveSha256: archiveSha256,
+        sourceManifest: sourceManifest,
+        sourceManifestSignature: sourceManifestSignature,
+      ),
+      force: force,
+    );
+  }
+
+  const factory RuntimeInstallRequestOperation._updateInstall({
+    required RuntimeInstallSource installSource,
+    required bool force,
+  }) = RuntimeUpdateInstallOperation;
+
+  RuntimeInstallOperation get operation => switch (this) {
+    RuntimeFullInstallOperation() => RuntimeInstallOperation.fullInstall,
+    RuntimeRepairOperation() => RuntimeInstallOperation.repair,
+    RuntimeComponentInstallOperation() =>
+      RuntimeInstallOperation.componentInstall,
+    RuntimeUpdateInstallOperation() => RuntimeInstallOperation.updateInstall,
+  };
 
   Option<RuntimeArchivePath> get archivePath => switch (installSource) {
     RuntimeLocalArchiveSource(:final archivePath) => Option.of(archivePath),
@@ -287,110 +391,6 @@ RuntimeInstallSource _runtimeArchiveInstallSourceFromOptions({
       componentArchivePaths: components,
     ),
   );
-}
-
-final class RuntimeFullInstallOperation extends RuntimeInstallRequestOperation {
-  RuntimeFullInstallOperation({
-    Option<String> archivePath = const Option.none(),
-    Option<String> archiveUrl = const Option.none(),
-    Option<String> archiveSha256 = const Option.none(),
-    Option<String> sourceManifest = const Option.none(),
-    Option<String> sourceManifestSignature = const Option.none(),
-    this.force = false,
-  }) : installSource = RuntimeInstallSource.fromOptions(
-         archivePath: archivePath,
-         archiveUrl: archiveUrl,
-         archiveSha256: archiveSha256,
-         sourceManifest: sourceManifest,
-         sourceManifestSignature: sourceManifestSignature,
-       );
-
-  @override
-  RuntimeInstallOperation get operation => RuntimeInstallOperation.fullInstall;
-
-  @override
-  final RuntimeInstallSource installSource;
-
-  @override
-  final bool force;
-}
-
-final class RuntimeRepairOperation extends RuntimeInstallRequestOperation {
-  RuntimeRepairOperation({
-    Option<String> archivePath = const Option.none(),
-    Option<String> archiveUrl = const Option.none(),
-    Option<String> archiveSha256 = const Option.none(),
-    Option<String> sourceManifest = const Option.none(),
-    Option<String> sourceManifestSignature = const Option.none(),
-    this.force = true,
-  }) : installSource = RuntimeInstallSource.fromOptions(
-         archivePath: archivePath,
-         archiveUrl: archiveUrl,
-         archiveSha256: archiveSha256,
-         sourceManifest: sourceManifest,
-         sourceManifestSignature: sourceManifestSignature,
-       );
-
-  @override
-  RuntimeInstallOperation get operation => RuntimeInstallOperation.repair;
-
-  @override
-  final RuntimeInstallSource installSource;
-
-  @override
-  final bool force;
-}
-
-final class RuntimeComponentInstallOperation
-    extends RuntimeInstallRequestOperation {
-  RuntimeComponentInstallOperation({
-    Option<String> archivePath = const Option.none(),
-    Option<String> archiveUrl = const Option.none(),
-    Option<String> archiveSha256 = const Option.none(),
-    Iterable<String> componentArchivePaths = const <String>[],
-    this.force = false,
-  }) : installSource = RuntimeInstallSource.fromOptions(
-         archivePath: archivePath,
-         archiveUrl: archiveUrl,
-         archiveSha256: archiveSha256,
-         componentArchivePaths: componentArchivePaths,
-       );
-
-  @override
-  RuntimeInstallOperation get operation =>
-      RuntimeInstallOperation.componentInstall;
-
-  @override
-  final RuntimeInstallSource installSource;
-
-  @override
-  final bool force;
-}
-
-final class RuntimeUpdateInstallOperation
-    extends RuntimeInstallRequestOperation {
-  RuntimeUpdateInstallOperation({
-    Option<String> archiveUrl = const Option.none(),
-    Option<String> archiveSha256 = const Option.none(),
-    Option<String> sourceManifest = const Option.none(),
-    Option<String> sourceManifestSignature = const Option.none(),
-    this.force = true,
-  }) : installSource = RuntimeInstallSource.fromOptions(
-         archiveUrl: archiveUrl,
-         archiveSha256: archiveSha256,
-         sourceManifest: sourceManifest,
-         sourceManifestSignature: sourceManifestSignature,
-       );
-
-  @override
-  RuntimeInstallOperation get operation =>
-      RuntimeInstallOperation.updateInstall;
-
-  @override
-  final RuntimeInstallSource installSource;
-
-  @override
-  final bool force;
 }
 
 class RuntimeWineInstallRequestAccessors {

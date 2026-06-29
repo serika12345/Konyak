@@ -13,7 +13,7 @@ class MacosWineInstallRequest {
     bool force = false,
     bool emitProgress = false,
   }) : this._(
-         requestOperation: RuntimeFullInstallOperation(
+         requestOperation: RuntimeInstallRequestOperation.fullInstall(
            archivePath: Option.fromNullable(archivePath),
            archiveUrl: Option.fromNullable(archiveUrl),
            archiveSha256: Option.fromNullable(archiveSha256),
@@ -35,7 +35,7 @@ class MacosWineInstallRequest {
     bool force = true,
     bool emitProgress = false,
   }) : this._(
-         requestOperation: RuntimeRepairOperation(
+         requestOperation: RuntimeInstallRequestOperation.repair(
            archivePath: Option.fromNullable(archivePath),
            archiveUrl: Option.fromNullable(archiveUrl),
            archiveSha256: Option.fromNullable(archiveSha256),
@@ -56,7 +56,7 @@ class MacosWineInstallRequest {
     bool force = false,
     bool emitProgress = false,
   }) : this._(
-         requestOperation: RuntimeComponentInstallOperation(
+         requestOperation: RuntimeInstallRequestOperation.componentInstall(
            archivePath: Option.fromNullable(archivePath),
            archiveUrl: Option.fromNullable(archiveUrl),
            archiveSha256: Option.fromNullable(archiveSha256),
@@ -74,7 +74,7 @@ class MacosWineInstallRequest {
     bool force = true,
     bool emitProgress = false,
   }) : this._(
-         requestOperation: RuntimeUpdateInstallOperation(
+         requestOperation: RuntimeInstallRequestOperation.updateInstall(
            archiveUrl: Option.fromNullable(archiveUrl),
            archiveSha256: Option.fromNullable(archiveSha256),
            sourceManifest: Option.fromNullable(sourceManifest),
