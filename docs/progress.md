@@ -13,6 +13,42 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-29 11:39 JST
+- State: `completed`
+- Branch: `main`
+- Active work: remove the runtime install request accessor wrapper.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: this commit (`Remove runtime install accessor wrapper`).
+- Purpose: continue the install-operation cleanup by removing a now-redundant
+  one-field forwarding wrapper after request operations became Freezed-backed.
+- Completed work: committed the request operation Freezed slice; scanned
+  remaining runtime/domain wrappers and confirmed
+  `RuntimeWineInstallRequestAccessors` only forwarded getters from
+  `RuntimeInstallRequestOperation` to macOS/Linux platform request wrappers;
+  changed the platform request wrappers to store `RuntimeInstallRequestOperation`
+  directly; deleted the forwarding accessor class.
+- Remaining work: `RuntimeComponentVersions` and `HostEnvironment` remain
+  hand-written map wrappers with const/equality constraints; continue scanning
+  non-map hand-written domain records and result variants for the next narrow
+  candidate.
+- Next action: select the next non-map hand-written domain model candidate,
+  likely from program/update/bottle mutation records, and verify whether it can
+  be moved to Freezed without widening public contracts.
+- Verification: `cd packages/konyak_cli && dart format
+  lib/src/domain/runtime/runtime_install_operation_models.dart
+  lib/src/platform/macos/macos_wine_install_requests.dart
+  lib/src/platform/linux/linux_wine_install_requests.dart && dart analyze
+  --fatal-infos`, `cd packages/konyak_cli && dart test
+  test/domain_immutability_test.dart --name "runtime install operations"`, `cd
+  packages/konyak_cli && dart test test/cli_contract_test.dart --name
+  "install-macos-wine --source-manifest passes the source
+  manifest|install-linux-wine --source-manifest passes the source
+  manifest|install-linux-wine builds a stack from component
+  archives|install-macos-wine builds a stack from component archives"`, `just
+  verify-governance`, `just verify-architecture`, `just verify-safety`, `just
+  format-check`, `just lint`, and `just cli-test` passed.
+
 - Timestamp: 2026-06-29 11:26 JST
 - State: `completed`
 - Branch: `main`

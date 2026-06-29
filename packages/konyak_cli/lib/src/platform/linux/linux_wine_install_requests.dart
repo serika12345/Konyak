@@ -87,34 +87,36 @@ class LinuxWineInstallRequest {
        );
 
   LinuxWineInstallRequest._({
-    required RuntimeInstallRequestOperation requestOperation,
+    required this.requestOperation,
     required this.emitProgress,
-  }) : accessors = RuntimeWineInstallRequestAccessors(requestOperation);
+  });
 
-  final RuntimeWineInstallRequestAccessors accessors;
+  final RuntimeInstallRequestOperation requestOperation;
   final bool emitProgress;
 
-  RuntimeInstallRequestOperation get requestOperation =>
-      accessors.requestOperation;
-
-  RuntimeInstallOperation get operation => accessors.operation;
+  RuntimeInstallOperation get operation => requestOperation.operation;
 
   Option<String> get archivePath =>
-      accessors.archivePath.map((path) => path.value);
+      requestOperation.archivePath.map((path) => path.value);
 
-  Option<String> get archiveUrl => accessors.archiveUrl.map((url) => url.value);
+  Option<String> get archiveUrl =>
+      requestOperation.archiveUrl.map((url) => url.value);
 
   Option<String> get archiveSha256 =>
-      accessors.archiveSha256.map((checksum) => checksum.value);
+      requestOperation.archiveSha256.map((checksum) => checksum.value);
 
-  IList<String> get componentArchivePaths =>
-      accessors.componentArchivePaths.map((path) => path.value).toIList();
+  IList<String> get componentArchivePaths => requestOperation
+      .componentArchivePaths
+      .map((path) => path.value)
+      .toIList();
 
-  Option<String> get sourceManifest =>
-      accessors.sourceManifest.map((sourceManifest) => sourceManifest.value);
+  Option<String> get sourceManifest => requestOperation.sourceManifest.map(
+    (sourceManifest) => sourceManifest.value,
+  );
 
-  Option<String> get sourceManifestSignature =>
-      accessors.sourceManifestSignature.map((signature) => signature.value);
+  Option<String> get sourceManifestSignature => requestOperation
+      .sourceManifestSignature
+      .map((signature) => signature.value);
 
-  bool get force => accessors.force;
+  bool get force => requestOperation.force;
 }

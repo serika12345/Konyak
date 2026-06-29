@@ -393,34 +393,6 @@ RuntimeInstallSource _runtimeArchiveInstallSourceFromOptions({
   );
 }
 
-class RuntimeWineInstallRequestAccessors {
-  const RuntimeWineInstallRequestAccessors(this.requestOperation);
-
-  final RuntimeInstallRequestOperation requestOperation;
-
-  RuntimeInstallOperation get operation => requestOperation.operation;
-
-  RuntimeInstallSource get installSource => requestOperation.installSource;
-
-  Option<RuntimeArchivePath> get archivePath => requestOperation.archivePath;
-
-  Option<RuntimeArchiveUrl> get archiveUrl => requestOperation.archiveUrl;
-
-  Option<RuntimeArchiveChecksumValue> get archiveSha256 =>
-      requestOperation.archiveSha256;
-
-  IList<RuntimeArchivePath> get componentArchivePaths =>
-      requestOperation.componentArchivePaths;
-
-  Option<RuntimeSourceManifestUrl> get sourceManifest =>
-      requestOperation.sourceManifest;
-
-  Option<RuntimeSourceManifestSignatureUrl> get sourceManifestSignature =>
-      requestOperation.sourceManifestSignature;
-
-  bool get force => requestOperation.force;
-}
-
 RuntimeArchiveChecksum _runtimeArchiveChecksum(Option<String> value) {
   return value.match(
     () => const RuntimeArchiveChecksum.absent(),
