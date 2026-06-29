@@ -1,4 +1,5 @@
 import 'package:fpdart/fpdart.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../shared/domain_helpers.dart';
 import '../shared/domain_value_objects.dart';
@@ -7,35 +8,51 @@ import 'runtime_models.dart';
 import 'runtime_source_bundle_models.dart';
 import 'runtime_validation_models.dart';
 
-sealed class RuntimeStackSourceArchivePlanResult {
-  const RuntimeStackSourceArchivePlanResult();
+part 'runtime_source_archive_planning.freezed.dart';
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class RuntimeStackSourceArchivePlanResult
+    with _$RuntimeStackSourceArchivePlanResult {
+  const RuntimeStackSourceArchivePlanResult._();
+
+  const factory RuntimeStackSourceArchivePlanResult.resolved(
+    RuntimeStackSourceArchivePlan plan,
+  ) = RuntimeStackSourceArchivePlanResolved;
+
+  const factory RuntimeStackSourceArchivePlanResult.failed(String message) =
+      RuntimeStackSourceArchivePlanFailed;
 }
 
-final class RuntimeStackSourceArchivePlanResolved
-    extends RuntimeStackSourceArchivePlanResult {
-  const RuntimeStackSourceArchivePlanResolved(this.plan);
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class RuntimeStackSourceArchivePlan
+    with _$RuntimeStackSourceArchivePlan {
+  const RuntimeStackSourceArchivePlan._();
 
-  final RuntimeStackSourceArchivePlan plan;
-}
-
-final class RuntimeStackSourceArchivePlanFailed
-    extends RuntimeStackSourceArchivePlanResult {
-  const RuntimeStackSourceArchivePlanFailed(this.message);
-
-  final String message;
-}
-
-final class RuntimeStackSourceArchivePlan {
-  RuntimeStackSourceArchivePlan({
-    required this.wineComponent,
+  factory RuntimeStackSourceArchivePlan({
+    required RuntimeSourceComponent wineComponent,
     required Iterable<RuntimeSourceComponent> sourceComponents,
     required Iterable<RuntimeStackSourceArchiveComponentPlan> components,
-  }) : sourceComponents = List.unmodifiable(sourceComponents),
-       components = List.unmodifiable(components);
+  }) {
+    return RuntimeStackSourceArchivePlan._validated(
+      wineComponent: wineComponent,
+      sourceComponents: List.unmodifiable(sourceComponents),
+      components: List.unmodifiable(components),
+    );
+  }
 
-  final RuntimeSourceComponent wineComponent;
-  final List<RuntimeSourceComponent> sourceComponents;
-  final List<RuntimeStackSourceArchiveComponentPlan> components;
+  const factory RuntimeStackSourceArchivePlan._validated({
+    required RuntimeSourceComponent wineComponent,
+    required List<RuntimeSourceComponent> sourceComponents,
+    required List<RuntimeStackSourceArchiveComponentPlan> components,
+  }) = _RuntimeStackSourceArchivePlan;
 
   RuntimeStackSourceArchiveBundleResult toBundle() {
     return _archivePathForComponent(wineComponent).match(
@@ -84,20 +101,35 @@ final class RuntimeStackSourceArchivePlan {
   }
 }
 
-final class RuntimeStackSourceArchiveComponentPlan {
-  RuntimeStackSourceArchiveComponentPlan({
-    required this.component,
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class RuntimeStackSourceArchiveComponentPlan
+    with _$RuntimeStackSourceArchiveComponentPlan {
+  const RuntimeStackSourceArchiveComponentPlan._();
+
+  factory RuntimeStackSourceArchiveComponentPlan({
+    required RuntimeSourceComponent component,
     required String archivePath,
     required num startFraction,
     required num endFraction,
-  }) : archivePath = RuntimeArchivePath(archivePath),
-       startFraction = RuntimeInstallProgressFraction(startFraction),
-       endFraction = RuntimeInstallProgressFraction(endFraction);
+  }) {
+    return RuntimeStackSourceArchiveComponentPlan._validated(
+      component: component,
+      archivePath: RuntimeArchivePath(archivePath),
+      startFraction: RuntimeInstallProgressFraction(startFraction),
+      endFraction: RuntimeInstallProgressFraction(endFraction),
+    );
+  }
 
-  final RuntimeSourceComponent component;
-  final RuntimeArchivePath archivePath;
-  final RuntimeInstallProgressFraction startFraction;
-  final RuntimeInstallProgressFraction endFraction;
+  const factory RuntimeStackSourceArchiveComponentPlan._validated({
+    required RuntimeSourceComponent component,
+    required RuntimeArchivePath archivePath,
+    required RuntimeInstallProgressFraction startFraction,
+    required RuntimeInstallProgressFraction endFraction,
+  }) = _RuntimeStackSourceArchiveComponentPlan;
 
   String get downloadingMessage {
     return 'Downloading ${component.id.value}...';
@@ -115,7 +147,7 @@ RuntimeStackSourceArchivePlanResult runtimeStackSourceArchivePlan({
 }) {
   if (manifest.runtimeId.value != platformSpec.runtimeId ||
       manifest.stackId.value != platformSpec.stackId) {
-    return const RuntimeStackSourceArchivePlanFailed(
+    return const RuntimeStackSourceArchivePlanResult.failed(
       'Runtime stack source manifest targets an unsupported runtime.',
     );
   }
@@ -127,10 +159,10 @@ RuntimeStackSourceArchivePlanResult runtimeStackSourceArchivePlan({
   );
   final componentCount = archiveComponents.length;
   return wineComponentResult.match(
-    () => const RuntimeStackSourceArchivePlanFailed(
+    () => const RuntimeStackSourceArchivePlanResult.failed(
       'Runtime stack source manifest does not contain a Wine component.',
     ),
-    (wineComponent) => RuntimeStackSourceArchivePlanResolved(
+    (wineComponent) => RuntimeStackSourceArchivePlanResult.resolved(
       RuntimeStackSourceArchivePlan(
         wineComponent: wineComponent,
         sourceComponents: manifest.components,
