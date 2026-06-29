@@ -14,6 +14,7 @@ custom_lint:
     - konyak_no_handwritten_part
     - konyak_no_null_literal_outside_boundary
     - konyak_no_nullable_bridge_outside_boundary
+    - konyak_no_nullable_absence_result
     - konyak_no_nullable_sentinel_flow
     - konyak_no_nullable_type_outside_boundary
     - konyak_no_result_failure_to_option_none

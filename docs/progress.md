@@ -13,6 +13,37 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-29 23:51 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Add custom lint guard for nullable absence-result drift.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: `52c413a` (`Tighten IO absence handling`).
+- Purpose: prevent the recently removed `Option<T>?`, `Future<T?>`, and
+  nullable async-cache shapes from returning in the CLI backend while the
+  broader JSON/user-input/direct-external nullable boundary is tightened
+  incrementally.
+- Completed work: added `konyak_no_nullable_absence_result` to reject
+  nullable `Option` results, nullable `Future`/`FutureOr` values, and
+  `Future`/`FutureOr` payloads whose outer result type is nullable in the CLI
+  backend; enabled the rule in real and fixture analysis options; added
+  invalid fixture coverage for `Option<T>?`, `Future<T?>`,
+  `Future<Map<..., Object?>?>`, and `Future<Option<T>>?`; kept
+  `Future<Option<Map<String, Object?>>>` valid for JSON payload handling.
+- Remaining work: broader nullable permissions in `cli`/`io`/`platform` are
+  still intentionally path-based and should be narrowed by replacing existing
+  nullable parser/helper contracts with typed results before removing those
+  directory-level allowances.
+- Next action: continue tightening nullable/null allowances that are broader
+  than JSON, user input, or direct framework/external API boundaries.
+- Verification: observed `dart test test/konyak_lints_test.dart` fail before
+  implementation because `konyak_no_nullable_absence_result` was not reported;
+  after implementation, `just konyak-lints-test`, tools analyzer,
+  `just cli-custom-lint`, `just flutter-custom-lint`, `just
+  verify-governance`, `just verify-safety`, `just format-check`, and
+  `just lint` passed in the Nix dev shell.
+
 - Timestamp: 2026-06-29 23:18 JST
 - State: `completed`
 - Branch: `main`

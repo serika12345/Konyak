@@ -1,6 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
 
+class Option<T> {
+  const Option(this.value);
+
+  final T value;
+}
+
 String readBoundaryFile(String path) {
   final file = File(path);
   if (!file.existsSync()) {
@@ -20,4 +26,8 @@ class DartIoAllowedBoundary {
   void write(StringSink output) {
     output.writeln(jsonEncode(<String, Object?>{'ok': true}));
   }
+}
+
+Future<Option<Map<String, Object?>>> readDecodedJsonBoundary() async {
+  return const Option(<String, Object?>{'ok': true});
 }

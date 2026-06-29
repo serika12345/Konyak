@@ -20,6 +20,7 @@ class KonyakLintPlugin extends PluginBase {
   List<LintRule> getLintRules(CustomLintConfigs configs) => const [
     KonyakNoNullLiteralOutsideBoundary(),
     KonyakNoNullableTypeOutsideBoundary(),
+    KonyakNoNullableAbsenceResult(),
     KonyakNoToNullable(),
     KonyakNoNullableBridgeOutsideBoundary(),
     KonyakNoNullableSentinelFlow(),
@@ -114,6 +115,25 @@ class KonyakNoNullableBridgeOutsideBoundary extends _KonyakAstRule {
   @override
   RecursiveAstVisitor<void> visitor(ErrorReporter reporter) =>
       _NullableBridgeVisitor(reporter, _code);
+}
+
+class KonyakNoNullableAbsenceResult extends _KonyakAstRule {
+  const KonyakNoNullableAbsenceResult() : super(_code);
+
+  static const _code = LintCode(
+    name: 'konyak_no_nullable_absence_result',
+    problemMessage:
+        'Do not model absence with nullable Option/Future result shapes. Use Option, Either, or a sealed result.',
+    errorSeverity: ErrorSeverity.ERROR,
+  );
+
+  @override
+  bool shouldRunOnPath(String normalizedPath) =>
+      _isKonyakCliBackendSourcePath(normalizedPath);
+
+  @override
+  RecursiveAstVisitor<void> visitor(ErrorReporter reporter) =>
+      _NullableAbsenceResultVisitor(reporter, _code);
 }
 
 class KonyakNoToNullable extends _KonyakAstRule {
@@ -426,6 +446,50 @@ class _NullableBridgeVisitor extends RecursiveAstVisitor<void> {
     }
     super.visitMethodInvocation(node);
   }
+}
+
+class _NullableAbsenceResultVisitor extends RecursiveAstVisitor<void> {
+  const _NullableAbsenceResultVisitor(this.reporter, this.code);
+
+  final ErrorReporter reporter;
+  final LintCode code;
+
+  @override
+  void visitNamedType(NamedType node) {
+    if (_isNullableOption(node) || _isNullableAsyncAbsence(node)) {
+      reporter.atNode(node, code);
+    }
+    super.visitNamedType(node);
+  }
+
+  bool _isNullableOption(NamedType node) {
+    return _typeName(node) == 'Option' && node.question != null;
+  }
+
+  bool _isNullableAsyncAbsence(NamedType node) {
+    final name = _typeName(node);
+    if (name != 'Future' && name != 'FutureOr') {
+      return false;
+    }
+    if (node.question != null) {
+      return true;
+    }
+
+    final arguments = node.typeArguments?.arguments;
+    return arguments != null &&
+        arguments.isNotEmpty &&
+        _hasOuterNullable(arguments.first);
+  }
+
+  bool _hasOuterNullable(TypeAnnotation annotation) {
+    return switch (annotation) {
+      NamedType(:final question) => question != null,
+      GenericFunctionType(:final question) => question != null,
+      RecordTypeAnnotation(:final question) => question != null,
+    };
+  }
+
+  String _typeName(NamedType node) => node.name.lexeme;
 }
 
 class _ToNullableVisitor extends RecursiveAstVisitor<void> {
@@ -1067,6 +1131,11 @@ bool _isStrictNullPolicyPath(String normalizedPath) =>
 
 bool _isKonyakSourcePath(String normalizedPath) =>
     _isSourceDartPath(normalizedPath) && _isKonyakDartPath(normalizedPath);
+
+bool _isKonyakCliBackendSourcePath(String normalizedPath) =>
+    _isSourceDartPath(normalizedPath) &&
+    (normalizedPath.contains('/packages/konyak_cli/lib/') ||
+        normalizedPath.contains('/packages/konyak_cli/bin/'));
 
 bool _isSourceDartPath(String normalizedPath) =>
     normalizedPath.endsWith('.dart') &&
