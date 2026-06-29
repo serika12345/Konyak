@@ -13,31 +13,32 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-06-29 10:06 JST
+- Timestamp: 2026-06-29 10:17 JST
 - State: `completed`
 - Branch: `main`
-- Active work: Freezed-backed runtime source archive plan records.
+- Active work: Freezed-backed runtime source archive bundle records.
 - Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
   boundary tightening.
-- Latest commit: this commit (`Freezed runtime source archive plans`).
+- Latest commit: `64c6d7b` (`Freezed runtime source archive plans`).
 - Purpose: continue replacing hand-written immutable domain model boilerplate
-  with Freezed-backed records, now focusing on the source archive planning
-  result variants and plan records used by runtime source manifest installs.
-- Completed work: committed the runtime source manifest Freezed slice;
-  inspected `RuntimeStackSourceArchivePlanResult`,
-  `RuntimeStackSourceArchivePlan`, `RuntimeStackSourceArchiveComponentPlan`,
-  the I/O resolver switch sites, and focused domain tests; converted the plan
-  result to a Freezed union and converted the plan/component plan records to
-  Freezed-backed models with `copyWith` disabled while preserving switch
-  patterns, public constructors, immutable source/component snapshots,
-  progress fraction validation, and `toBundle`; regenerated the local ignored
-  `runtime_source_archive_planning.freezed.dart`.
-- Remaining work: `runtime_source_bundle_models.dart` still contains
-  hand-written bundle/result records with the same shape.
-- Next action: evaluate `runtime_source_bundle_models.dart` as the next narrow
-  Freezed conversion candidate.
+  with Freezed-backed records, now focusing on the source archive bundle
+  record and result variants produced by source manifest archive planning.
+- Completed work: committed the runtime source archive plan Freezed slice;
+  inspected `RuntimeStackSourceArchiveBundle`,
+  `RuntimeStackSourceArchiveBundleResult`, direct result constructors, switch
+  sites in macOS/Linux runtime install I/O, and focused domain tests;
+  converted the bundle record and bundle result variants to Freezed-backed
+  models with `copyWith` disabled while preserving direct constructors, switch
+  patterns, archive path value conversion, immutable component archive paths,
+  and component version payloads; regenerated the local ignored
+  `runtime_source_bundle_models.freezed.dart`.
+- Remaining work: commit this source archive bundle Freezed slice if accepted.
+  `runtime_package_installation.dart` still contains hand-written request,
+  result, and progress records.
+- Next action: commit this slice, then evaluate `runtime_package_installation.dart`
+  as the next narrow Freezed conversion candidate.
 - Verification: `cd packages/konyak_cli && dart run build_runner build && dart
-  format lib/src/domain/runtime/runtime_source_archive_planning.dart && dart
+  format lib/src/domain/runtime/runtime_source_bundle_models.dart && dart
   analyze --fatal-infos`, `cd packages/konyak_cli && dart test
   test/domain_immutability_test.dart`, `just verify-governance`,
   `just verify-architecture`, `just verify-safety`, `just format-check`,

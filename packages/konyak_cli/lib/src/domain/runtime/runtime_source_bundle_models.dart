@@ -1,37 +1,54 @@
 import 'package:fast_immutable_collections/fast_immutable_collections.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../shared/domain_value_objects.dart';
 import 'runtime_component_versions.dart';
 
-class RuntimeStackSourceArchiveBundle {
-  RuntimeStackSourceArchiveBundle({
+part 'runtime_source_bundle_models.freezed.dart';
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class RuntimeStackSourceArchiveBundle
+    with _$RuntimeStackSourceArchiveBundle {
+  const RuntimeStackSourceArchiveBundle._();
+
+  factory RuntimeStackSourceArchiveBundle({
     required String wineArchivePath,
     required Iterable<String> componentArchivePaths,
-    required this.componentVersions,
-  }) : wineArchivePath = RuntimeArchivePath(wineArchivePath),
-       componentArchivePaths = componentArchivePaths
-           .map(RuntimeArchivePath.new)
-           .toIList();
+    required RuntimeComponentVersions componentVersions,
+  }) {
+    return RuntimeStackSourceArchiveBundle._validated(
+      wineArchivePath: RuntimeArchivePath(wineArchivePath),
+      componentArchivePaths: componentArchivePaths
+          .map(RuntimeArchivePath.new)
+          .toIList(),
+      componentVersions: componentVersions,
+    );
+  }
 
-  final RuntimeArchivePath wineArchivePath;
-  final IList<RuntimeArchivePath> componentArchivePaths;
-  final RuntimeComponentVersions componentVersions;
+  const factory RuntimeStackSourceArchiveBundle._validated({
+    required RuntimeArchivePath wineArchivePath,
+    required IList<RuntimeArchivePath> componentArchivePaths,
+    required RuntimeComponentVersions componentVersions,
+  }) = _RuntimeStackSourceArchiveBundle;
 }
 
-sealed class RuntimeStackSourceArchiveBundleResult {
-  const RuntimeStackSourceArchiveBundleResult();
-}
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class RuntimeStackSourceArchiveBundleResult
+    with _$RuntimeStackSourceArchiveBundleResult {
+  const RuntimeStackSourceArchiveBundleResult._();
 
-class RuntimeStackSourceArchiveBundleResolved
-    extends RuntimeStackSourceArchiveBundleResult {
-  const RuntimeStackSourceArchiveBundleResolved(this.bundle);
+  const factory RuntimeStackSourceArchiveBundleResult.resolved(
+    RuntimeStackSourceArchiveBundle bundle,
+  ) = RuntimeStackSourceArchiveBundleResolved;
 
-  final RuntimeStackSourceArchiveBundle bundle;
-}
-
-class RuntimeStackSourceArchiveBundleFailed
-    extends RuntimeStackSourceArchiveBundleResult {
-  const RuntimeStackSourceArchiveBundleFailed(this.message);
-
-  final String message;
+  const factory RuntimeStackSourceArchiveBundleResult.failed(String message) =
+      RuntimeStackSourceArchiveBundleFailed;
 }
