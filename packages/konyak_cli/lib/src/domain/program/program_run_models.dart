@@ -53,32 +53,47 @@ sealed class ProgramRunResult with _$ProgramRunResult {
       ProgramRunFailed;
 }
 
-class WineProcessTerminationRecord {
-  WineProcessTerminationRecord({
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class WineProcessTerminationRecord
+    with _$WineProcessTerminationRecord {
+  const WineProcessTerminationRecord._();
+
+  factory WineProcessTerminationRecord({
     required String bottleId,
     required String status,
     required String runnerKind,
     required String executable,
     required List<String> argv,
     Option<String> processId = const Option.none(),
-    this.processExitCode = const Option.none(),
+    Option<int> processExitCode = const Option.none(),
     Option<String> message = const Option.none(),
-  }) : bottleId = BottleId(bottleId),
-       status = WineProcessStatus(status),
-       runnerKind = RunnerKind(runnerKind),
-       executable = ProgramExecutable(executable),
-       argv = List.unmodifiable(argv),
-       processId = processId.map(WineProcessId.new),
-       message = _optionalNonBlankDomainString(message, 'message');
+  }) {
+    return WineProcessTerminationRecord._validated(
+      bottleId: BottleId(bottleId),
+      status: WineProcessStatus(status),
+      runnerKind: RunnerKind(runnerKind),
+      executable: ProgramExecutable(executable),
+      argv: List<String>.unmodifiable(argv),
+      processId: processId.map(WineProcessId.new),
+      processExitCode: processExitCode,
+      message: _optionalNonBlankDomainString(message, 'message'),
+    );
+  }
 
-  final BottleId bottleId;
-  final WineProcessStatus status;
-  final RunnerKind runnerKind;
-  final ProgramExecutable executable;
-  final List<String> argv;
-  final Option<WineProcessId> processId;
-  final Option<int> processExitCode;
-  final Option<String> message;
+  const factory WineProcessTerminationRecord._validated({
+    required BottleId bottleId,
+    required WineProcessStatus status,
+    required RunnerKind runnerKind,
+    required ProgramExecutable executable,
+    required List<String> argv,
+    required Option<WineProcessId> processId,
+    required Option<int> processExitCode,
+    required Option<String> message,
+  }) = _WineProcessTerminationRecord;
 }
 
 @Freezed(

@@ -13,6 +13,44 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-29 13:50 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Freezed-backed Wine process termination record.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: this commit (`Freezed Wine process termination records`).
+- Purpose: continue the `program_run_models.dart` Freezed pass with the
+  remaining process termination value record before evaluating
+  `ProgramRunRequest`.
+- Completed work: committed the program run result union Freezed slice;
+  inspected `WineProcessTerminationRecord` construction sites, immutable argv
+  tests, and JSON projection governance; selected this record because it has
+  few call sites and its list snapshot contract is already tested; added
+  focused value-semantics coverage and observed it fail against the
+  hand-written record; converted the record to Freezed while preserving
+  value-object coercion and unmodifiable argv snapshots; updated governance
+  class-section detection for Freezed class shapes.
+- Remaining work: `ProgramRunRequest` remains hand-written in
+  `program_run_models.dart`; it is broader because it exposes derived `argv`.
+- Next action: inspect whether `ProgramRunRequest` can be converted with a
+  private Freezed factory while preserving the derived `argv` getter and typed
+  constructor governance.
+- Verification: observed `cd packages/konyak_cli && dart test
+  test/domain_immutability_test.dart --name "process termination records
+  expose immutable argv snapshots"` fail before implementation; after
+  implementation, `cd packages/konyak_cli && dart run build_runner build
+  --delete-conflicting-outputs`, `cd packages/konyak_cli && dart format
+  lib/src/domain/program/program_run_models.dart
+  test/domain_immutability_test.dart && dart analyze --fatal-infos`, focused
+  process termination record test, focused terminate-wine-process CLI contract
+  tests, `cd packages/konyak_cli && dart test
+  test/domain_immutability_test.dart`, `just verify-governance`, `just
+  verify-architecture`, `just verify-safety`, `just format-check`, `just
+  lint`, and `just cli-test` passed. A mistaken attempt to include
+  `scripts/verify_governance.py` in `dart format` failed and was corrected by
+  rerunning Dart format on Dart files only.
+
 - Timestamp: 2026-06-29 13:46 JST
 - State: `completed`
 - Branch: `main`

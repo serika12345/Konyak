@@ -534,7 +534,8 @@ def require_wine_process_termination_cli_json_projection() -> None:
     domain_path = "packages/konyak_cli/lib/src/domain/program/program_run_models.dart"
     domain = read_text(domain_path)
     record_match = re.search(
-        r"class WineProcessTerminationRecord \{(?P<body>.*?)\n\}",
+        r"\bclass\s+WineProcessTerminationRecord\b(?P<body>.*?)(?=\n"
+        r"(?:abstract\s+(?:interface\s+)?|final\s+)?class\s+\w+|\Z)",
         domain,
         flags=re.DOTALL,
     )

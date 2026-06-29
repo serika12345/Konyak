@@ -1235,6 +1235,16 @@ void main() {
     expect(record.executable, ProgramExecutable('wine'));
     expect(record.argv, ['wine', '/steam.exe']);
     expect(() => record.argv.add('--other'), throwsUnsupportedError);
+    expect(
+      record,
+      WineProcessTerminationRecord(
+        bottleId: 'steam',
+        status: 'terminated',
+        runnerKind: 'wine',
+        executable: 'wine',
+        argv: <String>['wine', '/steam.exe'],
+      ),
+    );
   });
 
   test(
