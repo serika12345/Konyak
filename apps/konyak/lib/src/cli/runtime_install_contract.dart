@@ -63,9 +63,11 @@ RuntimeInstallParseResult parseRuntimeInstallPayload(String payload) {
     );
   }
 
-  final runtime = parseRuntimeRecord(decoded['runtime']);
-  if (runtime != null) {
-    return ParsedRuntimeInstall(runtime);
+  switch (parseRuntimeRecord(decoded['runtime'])) {
+    case ParsedRuntimeRecord(:final runtime):
+      return ParsedRuntimeInstall(runtime);
+    case InvalidRuntimeRecord():
+      break;
   }
 
   final errorMessage = _parseErrorMessage(decoded['error']);

@@ -13,6 +13,29 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-29 20:23 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Continue narrowing Flutter CLI parser nullable sentinels.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: `6c60f25` (`Narrow CLI parser nullable sentinels`).
+- Purpose: continue separating JSON boundary nullability from parser success
+  and failure flow before narrowing the custom-lint nullable allowance.
+- Completed work: changed runtime record parsing, runtime stack parsing, stack
+  backend/component parsing, and string-list parsing to use sealed parse
+  results instead of nullable success/failure sentinels; updated runtime
+  install parsing to consume the new runtime record result.
+- Remaining work: continue with other Flutter CLI contract parser helpers,
+  especially bottle record/runtime install progress helpers, before narrowing
+  the custom-lint nullable allowance from directory level to direct boundary
+  files.
+- Next action: continue nullable sentinel cleanup in `bottle_record_contract.dart`
+  or `runtime_install_contract.dart`.
+- Verification: focused runtime list and runtime install contract tests passed;
+  `just verify-governance`, `just verify-safety`, `just format-check`, `just
+  lint`, and `just flutter-test` passed in the Nix dev shell.
+
 - Timestamp: 2026-06-29 20:13 JST
 - State: `completed`
 - Branch: `main`

@@ -21,6 +21,52 @@ final class RuntimeListParseFailure extends RuntimeListParseResult {
   final String message;
 }
 
+sealed class RuntimeRecordParseResult {
+  const RuntimeRecordParseResult();
+}
+
+final class ParsedRuntimeRecord extends RuntimeRecordParseResult {
+  const ParsedRuntimeRecord(this.runtime);
+
+  final RuntimeSummary runtime;
+}
+
+final class InvalidRuntimeRecord extends RuntimeRecordParseResult {
+  const InvalidRuntimeRecord();
+}
+
+sealed class _RuntimeStackParseResult {
+  const _RuntimeStackParseResult();
+}
+
+final class _ParsedRuntimeStack extends _RuntimeStackParseResult {
+  const _ParsedRuntimeStack(this.stack);
+
+  final RuntimeStackSummary stack;
+}
+
+final class _MissingRuntimeStack extends _RuntimeStackParseResult {
+  const _MissingRuntimeStack();
+}
+
+final class _InvalidRuntimeStack extends _RuntimeStackParseResult {
+  const _InvalidRuntimeStack();
+}
+
+sealed class _PayloadParseResult<T> {
+  const _PayloadParseResult();
+}
+
+final class _ParsedPayload<T> extends _PayloadParseResult<T> {
+  const _ParsedPayload(this.value);
+
+  final T value;
+}
+
+final class _InvalidPayload<T> extends _PayloadParseResult<T> {
+  const _InvalidPayload();
+}
+
 RuntimeListParseResult parseRuntimeListPayload(String payload) {
   final Object? decoded;
 
@@ -52,31 +98,33 @@ RuntimeListParseResult parseRuntimeListPayload(String payload) {
     );
   }
 
-  final runtimes = _parseRuntimes(runtimeValues);
-  if (runtimes == null) {
-    return const RuntimeListParseFailure(
+  return switch (_parseRuntimes(runtimeValues)) {
+    _ParsedPayload(:final value) => ParsedRuntimeList(List.unmodifiable(value)),
+    _InvalidPayload() => const RuntimeListParseFailure(
       'Runtime list payload contains an invalid runtime record.',
-    );
-  }
-
-  return ParsedRuntimeList(List.unmodifiable(runtimes));
+    ),
+  };
 }
 
-List<RuntimeSummary>? _parseRuntimes(List<dynamic> runtimeValues) {
-  final runtimes = runtimeValues
-      .map(parseRuntimeRecord)
-      .toList(growable: false);
-
-  if (runtimes.any((runtime) => runtime == null)) {
-    return null;
+_PayloadParseResult<List<RuntimeSummary>> _parseRuntimes(
+  List<dynamic> runtimeValues,
+) {
+  final runtimes = <RuntimeSummary>[];
+  for (final runtimeValue in runtimeValues) {
+    switch (parseRuntimeRecord(runtimeValue)) {
+      case ParsedRuntimeRecord(:final runtime):
+        runtimes.add(runtime);
+      case InvalidRuntimeRecord():
+        return const _InvalidPayload<List<RuntimeSummary>>();
+    }
   }
 
-  return runtimes.whereType<RuntimeSummary>().toList(growable: false);
+  return _ParsedPayload(List.unmodifiable(runtimes));
 }
 
-RuntimeSummary? parseRuntimeRecord(Object? value) {
+RuntimeRecordParseResult parseRuntimeRecord(Object? value) {
   if (value is! Map<String, dynamic>) {
-    return null;
+    return const InvalidRuntimeRecord();
   }
 
   final Object? id = value['id'];
@@ -100,7 +148,7 @@ RuntimeSummary? parseRuntimeRecord(Object? value) {
       runnerKind is! String ||
       isBundled is! bool ||
       isUpdateable is! bool) {
-    return null;
+    return const InvalidRuntimeRecord();
   }
 
   if (!_isOptionalBool(isInstalled) ||
@@ -108,38 +156,54 @@ RuntimeSummary? parseRuntimeRecord(Object? value) {
       !_isOptionalString(applicationSupportPath) ||
       !_isOptionalString(libraryPath) ||
       !_isOptionalString(executablePath)) {
-    return null;
+    return const InvalidRuntimeRecord();
   }
 
-  final runtimeStack = _parseOptionalRuntimeStack(stack);
-  if (stack != null && runtimeStack == null) {
-    return null;
-  }
-
-  return RuntimeSummary(
-    id: id,
-    name: name,
-    platform: platform,
-    architecture: architecture,
-    runnerKind: runnerKind,
-    isBundled: isBundled,
-    isUpdateable: isUpdateable,
-    distributionKind: distributionKind as String?,
-    isInstalled: isInstalled as bool?,
-    applicationSupportPath: applicationSupportPath as String?,
-    libraryPath: libraryPath as String?,
-    executablePath: executablePath as String?,
-    stack: runtimeStack,
-  );
+  return switch (_parseOptionalRuntimeStack(stack)) {
+    _ParsedRuntimeStack(:final stack) => ParsedRuntimeRecord(
+      RuntimeSummary(
+        id: id,
+        name: name,
+        platform: platform,
+        architecture: architecture,
+        runnerKind: runnerKind,
+        isBundled: isBundled,
+        isUpdateable: isUpdateable,
+        distributionKind: distributionKind as String?,
+        isInstalled: isInstalled as bool?,
+        applicationSupportPath: applicationSupportPath as String?,
+        libraryPath: libraryPath as String?,
+        executablePath: executablePath as String?,
+        stack: stack,
+      ),
+    ),
+    _MissingRuntimeStack() => ParsedRuntimeRecord(
+      RuntimeSummary(
+        id: id,
+        name: name,
+        platform: platform,
+        architecture: architecture,
+        runnerKind: runnerKind,
+        isBundled: isBundled,
+        isUpdateable: isUpdateable,
+        distributionKind: distributionKind as String?,
+        isInstalled: isInstalled as bool?,
+        applicationSupportPath: applicationSupportPath as String?,
+        libraryPath: libraryPath as String?,
+        executablePath: executablePath as String?,
+      ),
+    ),
+    _InvalidRuntimeStack() => const InvalidRuntimeRecord(),
+  };
 }
 
-RuntimeStackSummary? _parseOptionalRuntimeStack(Object? value) {
+_RuntimeStackParseResult _parseOptionalRuntimeStack(Object? value) {
   if (value == null) {
-    return null;
+    return const _MissingRuntimeStack();
   }
 
   if (value is! Map<String, dynamic>) {
-    return null;
+    return const _InvalidRuntimeStack();
   }
 
   final Object? id = value['id'];
@@ -156,64 +220,66 @@ RuntimeStackSummary? _parseOptionalRuntimeStack(Object? value) {
       compatibilityTarget is! String ||
       isComplete is! bool ||
       components is! List<dynamic>) {
-    return null;
+    return const _InvalidRuntimeStack();
   }
 
-  final parsedComponents = components
-      .map(_parseRuntimeStackComponent)
-      .toList(growable: false);
-  if (parsedComponents.any((component) => component == null)) {
-    return null;
-  }
-  final runtimeComponents = parsedComponents
-      .whereType<RuntimeStackComponentSummary>()
-      .toList(growable: false);
-
-  final parsedBackends = _parseOptionalRuntimeStackBackends(backends);
-  if (parsedBackends == null) {
-    return null;
+  final runtimeComponents = <RuntimeStackComponentSummary>[];
+  for (final component in components) {
+    switch (_parseRuntimeStackComponent(component)) {
+      case _ParsedPayload(:final value):
+        runtimeComponents.add(value);
+      case _InvalidPayload():
+        return const _InvalidRuntimeStack();
+    }
   }
 
-  final runtimeStack = RuntimeStackSummary(
-    id: id,
-    name: name,
-    compatibilityTarget: compatibilityTarget,
-    components: runtimeComponents,
-    backends: parsedBackends,
-  );
-  if (isComplete != runtimeStack.isComplete) {
-    return null;
-  }
+  return switch (_parseOptionalRuntimeStackBackends(backends)) {
+    _ParsedPayload(value: final parsedBackends) => (() {
+      final runtimeStack = RuntimeStackSummary(
+        id: id,
+        name: name,
+        compatibilityTarget: compatibilityTarget,
+        components: runtimeComponents,
+        backends: parsedBackends,
+      );
+      if (isComplete != runtimeStack.isComplete) {
+        return const _InvalidRuntimeStack();
+      }
 
-  return runtimeStack;
+      return _ParsedRuntimeStack(runtimeStack);
+    })(),
+    _InvalidPayload() => const _InvalidRuntimeStack(),
+  };
 }
 
-List<RuntimeStackBackendSummary>? _parseOptionalRuntimeStackBackends(
-  Object? value,
-) {
+_PayloadParseResult<List<RuntimeStackBackendSummary>>
+_parseOptionalRuntimeStackBackends(Object? value) {
   if (value == null) {
-    return const <RuntimeStackBackendSummary>[];
+    return const _ParsedPayload(<RuntimeStackBackendSummary>[]);
   }
 
   if (value is! List<dynamic>) {
-    return null;
+    return const _InvalidPayload<List<RuntimeStackBackendSummary>>();
   }
 
-  final parsedBackends = value
-      .map(_parseRuntimeStackBackend)
-      .toList(growable: false);
-  if (parsedBackends.any((backend) => backend == null)) {
-    return null;
+  final parsedBackends = <RuntimeStackBackendSummary>[];
+  for (final backend in value) {
+    switch (_parseRuntimeStackBackend(backend)) {
+      case _ParsedPayload(:final value):
+        parsedBackends.add(value);
+      case _InvalidPayload():
+        return const _InvalidPayload<List<RuntimeStackBackendSummary>>();
+    }
   }
 
-  return parsedBackends.whereType<RuntimeStackBackendSummary>().toList(
-    growable: false,
-  );
+  return _ParsedPayload(List.unmodifiable(parsedBackends));
 }
 
-RuntimeStackBackendSummary? _parseRuntimeStackBackend(Object? value) {
+_PayloadParseResult<RuntimeStackBackendSummary> _parseRuntimeStackBackend(
+  Object? value,
+) {
   if (value is! Map<String, dynamic>) {
-    return null;
+    return const _InvalidPayload<RuntimeStackBackendSummary>();
   }
 
   final Object? id = value['id'];
@@ -227,30 +293,40 @@ RuntimeStackBackendSummary? _parseRuntimeStackBackend(Object? value) {
   if (id is! String ||
       name is! String ||
       role is! String ||
-      isAvailable is! bool ||
-      componentIds == null ||
-      missingComponentIds == null ||
-      missingPaths == null) {
-    return null;
-  }
-  final runtimeStackBackend = RuntimeStackBackendSummary(
-    id: id,
-    name: name,
-    role: role,
-    componentIds: componentIds,
-    missingComponentIds: missingComponentIds,
-    missingPaths: missingPaths,
-  );
-  if (isAvailable != runtimeStackBackend.isAvailable) {
-    return null;
+      isAvailable is! bool) {
+    return const _InvalidPayload<RuntimeStackBackendSummary>();
   }
 
-  return runtimeStackBackend;
+  return switch ((componentIds, missingComponentIds, missingPaths)) {
+    (
+      _ParsedPayload(value: final componentIds),
+      _ParsedPayload(value: final missingComponentIds),
+      _ParsedPayload(value: final missingPaths),
+    ) =>
+      (() {
+        final runtimeStackBackend = RuntimeStackBackendSummary(
+          id: id,
+          name: name,
+          role: role,
+          componentIds: componentIds,
+          missingComponentIds: missingComponentIds,
+          missingPaths: missingPaths,
+        );
+        if (isAvailable != runtimeStackBackend.isAvailable) {
+          return const _InvalidPayload<RuntimeStackBackendSummary>();
+        }
+
+        return _ParsedPayload(runtimeStackBackend);
+      })(),
+    _ => const _InvalidPayload<RuntimeStackBackendSummary>(),
+  };
 }
 
-RuntimeStackComponentSummary? _parseRuntimeStackComponent(Object? value) {
+_PayloadParseResult<RuntimeStackComponentSummary> _parseRuntimeStackComponent(
+  Object? value,
+) {
   if (value is! Map<String, dynamic>) {
-    return null;
+    return const _InvalidPayload<RuntimeStackComponentSummary>();
   }
 
   final Object? id = value['id'];
@@ -267,38 +343,46 @@ RuntimeStackComponentSummary? _parseRuntimeStackComponent(Object? value) {
       role is! String ||
       isRequired is! bool ||
       isInstalled is! bool ||
-      paths == null ||
-      missingPaths == null ||
       !_isOptionalString(version)) {
-    return null;
-  }
-  final runtimeStackComponent = RuntimeStackComponentSummary(
-    id: id,
-    name: name,
-    role: role,
-    isRequired: isRequired,
-    paths: paths,
-    missingPaths: missingPaths,
-    version: version as String?,
-  );
-  if (isInstalled != runtimeStackComponent.isInstalled) {
-    return null;
+    return const _InvalidPayload<RuntimeStackComponentSummary>();
   }
 
-  return runtimeStackComponent;
+  return switch ((paths, missingPaths)) {
+    (
+      _ParsedPayload(value: final paths),
+      _ParsedPayload(value: final missingPaths),
+    ) =>
+      (() {
+        final runtimeStackComponent = RuntimeStackComponentSummary(
+          id: id,
+          name: name,
+          role: role,
+          isRequired: isRequired,
+          paths: paths,
+          missingPaths: missingPaths,
+          version: version as String?,
+        );
+        if (isInstalled != runtimeStackComponent.isInstalled) {
+          return const _InvalidPayload<RuntimeStackComponentSummary>();
+        }
+
+        return _ParsedPayload(runtimeStackComponent);
+      })(),
+    _ => const _InvalidPayload<RuntimeStackComponentSummary>(),
+  };
 }
 
-List<String>? _parseStringList(Object? value) {
+_PayloadParseResult<List<String>> _parseStringList(Object? value) {
   if (value is! List<dynamic>) {
-    return null;
+    return const _InvalidPayload<List<String>>();
   }
 
   final strings = value.whereType<String>().toList(growable: false);
   if (strings.length != value.length) {
-    return null;
+    return const _InvalidPayload<List<String>>();
   }
 
-  return strings;
+  return _ParsedPayload(strings);
 }
 
 bool _isOptionalBool(Object? value) {
