@@ -45,7 +45,7 @@ class DartIoWinetricksVerbRepository implements WinetricksVerbRepository {
     if (hostPlatform == KonyakHostPlatform.linux) {
       final managedExecutable = joinPath(runtimeRoot, const ['winetricks']);
       if (!File(managedExecutable).existsSync()) {
-        return WinetricksVerbListFailed(
+        return WinetricksVerbListResult.failed(
           'Managed Winetricks executable is missing from runtime: '
           '$managedExecutable',
         );
@@ -57,15 +57,15 @@ class DartIoWinetricksVerbRepository implements WinetricksVerbRepository {
     final verbsFile = File(joinPath(runtimeRoot, const ['verbs.txt']));
     if (verbsFile.existsSync()) {
       try {
-        return WinetricksVerbListCompleted(
+        return WinetricksVerbListResult.completed(
           categories: parseWinetricksVerbs(verbsFile.readAsStringSync()),
         );
       } on FileSystemException catch (error) {
-        return WinetricksVerbListFailed(error.message);
+        return WinetricksVerbListResult.failed(error.message);
       }
     }
 
-    return WinetricksVerbListFailed(
+    return WinetricksVerbListResult.failed(
       'Managed Winetricks verb catalog is missing from runtime: '
       '${verbsFile.path}',
     );
@@ -86,16 +86,16 @@ class DartIoWinetricksVerbLister implements WinetricksVerbLister {
       );
 
       if (result.exitCode != 0) {
-        return WinetricksVerbListFailed(
+        return WinetricksVerbListResult.failed(
           commandFailureMessage('winetricks list-all', result),
         );
       }
 
-      return WinetricksVerbListCompleted(
+      return WinetricksVerbListResult.completed(
         categories: parseWinetricksVerbs(processOutputToString(result.stdout)),
       );
     } on ProcessException catch (error) {
-      return WinetricksVerbListFailed(
+      return WinetricksVerbListResult.failed(
         programRunnerFailureMessage(
           executable: error.executable,
           message: error.message,

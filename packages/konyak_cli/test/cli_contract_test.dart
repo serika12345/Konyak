@@ -471,7 +471,7 @@ final class UnavailableWinetricksVerbRepository
 
   @override
   WinetricksVerbListResult listVerbs() {
-    return const WinetricksVerbListFailed(
+    return WinetricksVerbListResult.failed(
       'Winetricks verb repository was not injected.',
     );
   }

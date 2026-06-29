@@ -2522,7 +2522,7 @@ ignored                  Should not be listed
 
   test('list-winetricks-verbs --json fails when runtime verbs are missing', () {
     final lister = RecordingWinetricksVerbLister(
-      result: WinetricksVerbListCompleted(
+      result: WinetricksVerbListResult.completed(
         categories: parseWinetricksVerbs('''
 ===== fonts =====
 corefonts                Microsoft Core Fonts
@@ -2593,7 +2593,7 @@ dotnetdesktop10         MS .NET Desktop Runtime 10.0 LTS
         ..createSync(recursive: true)
         ..writeAsStringSync('#!/bin/sh\n');
       final lister = RecordingWinetricksVerbLister(
-        result: WinetricksVerbListCompleted(
+        result: WinetricksVerbListResult.completed(
           categories: parseWinetricksVerbs('''
 ===== dlls =====
 corefonts                Microsoft Core Fonts

@@ -13,6 +13,45 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-29 13:01 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Freezed-backed winetricks verb list result.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: this commit (`Freezed winetricks verb list results`).
+- Purpose: finish the program catalog Freezed pass by converting the remaining
+  winetricks result union while preserving category list snapshots.
+- Completed work: committed the winetricks verb/category record Freezed slice;
+  inspected the result union, winetricks IO call sites, CLI JSON switch
+  patterns, and tests; selected a base `WinetricksVerbListResult.completed`
+  factory that can snapshot categories before exposing the existing concrete
+  `WinetricksVerbListCompleted` pattern; added focused value-semantics and
+  snapshot coverage and observed it fail against the hand-written result
+  classes; converted `WinetricksVerbListResult` to Freezed with `IList`
+  completed categories; updated direct completed/failed construction in
+  winetricks IO and tests to the base factories while preserving switch
+  pattern concrete names.
+- Remaining work: `program_catalog_models.dart` is now Freezed-backed for the
+  program records, winetricks records, and winetricks verb-list result. Continue
+  the broader Freezed scan with the next hand-written domain model group.
+- Next action: inspect `program_mutation_models.dart`,
+  `program_registry_models.dart`, and `program_registry_plans.dart` for the
+  next low-risk record/result slice.
+- Verification: observed `cd packages/konyak_cli && dart test
+  test/domain_immutability_test.dart --name "winetricks verb list results
+  compare by value"` fail before implementation; after implementation, `cd
+  packages/konyak_cli && dart run build_runner build
+  --delete-conflicting-outputs && dart format
+  lib/src/domain/program/program_catalog_models.dart lib/src/io/winetricks_io.dart
+  test/domain_immutability_test.dart test/cli_contract_test.dart
+  test/cli_contract_program_execution.part.dart && dart analyze
+  --fatal-infos`, focused winetricks result value-semantics test, focused
+  list-winetricks-verbs / run-winetricks CLI contract tests, `cd
+  packages/konyak_cli && dart test test/domain_immutability_test.dart`, `just
+  verify-governance`, `just verify-architecture`, `just verify-safety`, `just
+  format-check`, `just lint`, and `just cli-test` passed.
+
 - Timestamp: 2026-06-29 12:55 JST
 - State: `completed`
 - Branch: `main`

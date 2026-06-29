@@ -1,3 +1,4 @@
+import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
@@ -189,20 +190,26 @@ abstract class WinetricksCategoryRecord with _$WinetricksCategoryRecord {
   }) = _WinetricksCategoryRecord;
 }
 
-sealed class WinetricksVerbListResult {
-  const WinetricksVerbListResult();
-}
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class WinetricksVerbListResult with _$WinetricksVerbListResult {
+  const WinetricksVerbListResult._();
 
-class WinetricksVerbListCompleted extends WinetricksVerbListResult {
-  WinetricksVerbListCompleted({
-    required List<WinetricksCategoryRecord> categories,
-  }) : categories = List.unmodifiable(categories);
+  factory WinetricksVerbListResult.completed({
+    required Iterable<WinetricksCategoryRecord> categories,
+  }) {
+    return WinetricksVerbListResult._completed(
+      categories: categories.toIList(),
+    );
+  }
 
-  final List<WinetricksCategoryRecord> categories;
-}
+  const factory WinetricksVerbListResult._completed({
+    required IList<WinetricksCategoryRecord> categories,
+  }) = WinetricksVerbListCompleted;
 
-class WinetricksVerbListFailed extends WinetricksVerbListResult {
-  const WinetricksVerbListFailed(this.message);
-
-  final String message;
+  const factory WinetricksVerbListResult.failed(String message) =
+      WinetricksVerbListFailed;
 }

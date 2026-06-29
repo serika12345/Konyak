@@ -313,6 +313,42 @@ void main() {
     );
   });
 
+  test('winetricks verb list results compare by value', () {
+    WinetricksCategoryRecord fontsCategory() {
+      return WinetricksCategoryRecord(
+        id: 'fonts',
+        name: 'Fonts',
+        verbs: <WinetricksVerbRecord>[
+          WinetricksVerbRecord(
+            id: 'corefonts',
+            name: 'corefonts',
+            description: 'install core fonts',
+          ),
+        ],
+      );
+    }
+
+    final categories = <WinetricksCategoryRecord>[fontsCategory()];
+    final result = WinetricksVerbListResult.completed(categories: categories);
+    categories.clear();
+    final resultCategories = switch (result) {
+      WinetricksVerbListCompleted(:final categories) => categories,
+      WinetricksVerbListFailed() => fail('Expected completed result.'),
+    };
+
+    expect(resultCategories, hasLength(1));
+    expect(
+      result,
+      WinetricksVerbListResult.completed(
+        categories: <WinetricksCategoryRecord>[fontsCategory()],
+      ),
+    );
+    expect(
+      WinetricksVerbListResult.failed('missing winetricks'),
+      WinetricksVerbListResult.failed('missing winetricks'),
+    );
+  });
+
   test('graphics backend hints expose immutable value records', () {
     final signals = <ProgramGraphicsBackendSignal>[
       ProgramGraphicsBackendSignal(kind: 'peImport', value: 'd3d11.dll'),
