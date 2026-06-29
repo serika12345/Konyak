@@ -1,6 +1,9 @@
 import 'package:fpdart/fpdart.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../shared/domain_value_objects.dart';
+
+part 'runtime_models.freezed.dart';
 
 class RuntimeDefinition {
   RuntimeDefinition({
@@ -136,24 +139,37 @@ class RuntimeRecord {
   final Option<RuntimeStack> stack;
 }
 
-class RuntimeStack {
-  RuntimeStack({
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class RuntimeStack with _$RuntimeStack {
+  const RuntimeStack._();
+
+  factory RuntimeStack({
     required String id,
     required String name,
     required String compatibilityTarget,
     required Iterable<RuntimeStackComponent> components,
     Iterable<RuntimeStackBackend> backends = const <RuntimeStackBackend>[],
-  }) : id = RuntimeStackId(id),
-       name = RuntimeStackName(name),
-       compatibilityTarget = RuntimeCompatibilityTarget(compatibilityTarget),
-       components = List.unmodifiable(components),
-       backends = List.unmodifiable(backends);
+  }) {
+    return RuntimeStack._validated(
+      id: RuntimeStackId(id),
+      name: RuntimeStackName(name),
+      compatibilityTarget: RuntimeCompatibilityTarget(compatibilityTarget),
+      components: List.unmodifiable(components),
+      backends: List.unmodifiable(backends),
+    );
+  }
 
-  final RuntimeStackId id;
-  final RuntimeStackName name;
-  final RuntimeCompatibilityTarget compatibilityTarget;
-  final List<RuntimeStackComponent> components;
-  final List<RuntimeStackBackend> backends;
+  const factory RuntimeStack._validated({
+    required RuntimeStackId id,
+    required RuntimeStackName name,
+    required RuntimeCompatibilityTarget compatibilityTarget,
+    required List<RuntimeStackComponent> components,
+    required List<RuntimeStackBackend> backends,
+  }) = _RuntimeStack;
 
   bool get isComplete {
     return components
@@ -162,64 +178,85 @@ class RuntimeStack {
   }
 }
 
-class RuntimeStackBackend {
-  RuntimeStackBackend({
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class RuntimeStackBackend with _$RuntimeStackBackend {
+  const RuntimeStackBackend._();
+
+  factory RuntimeStackBackend({
     required String id,
     required String name,
     required String role,
     required Iterable<String> componentIds,
     required Iterable<String> missingComponentIds,
     required Iterable<String> missingPaths,
-  }) : id = RuntimeBackendId(id),
-       name = RuntimeName(name),
-       role = RuntimeRole(role),
-       componentIds = List.unmodifiable(
-         componentIds.map(RuntimeComponentId.new),
-       ),
-       missingComponentIds = List.unmodifiable(
-         missingComponentIds.map(RuntimeComponentId.new),
-       ),
-       missingPaths = List.unmodifiable(
-         missingPaths.map(RuntimeMissingPath.new),
-       );
+  }) {
+    return RuntimeStackBackend._validated(
+      id: RuntimeBackendId(id),
+      name: RuntimeName(name),
+      role: RuntimeRole(role),
+      componentIds: List.unmodifiable(componentIds.map(RuntimeComponentId.new)),
+      missingComponentIds: List.unmodifiable(
+        missingComponentIds.map(RuntimeComponentId.new),
+      ),
+      missingPaths: List.unmodifiable(missingPaths.map(RuntimeMissingPath.new)),
+    );
+  }
 
-  final RuntimeBackendId id;
-  final RuntimeName name;
-  final RuntimeRole role;
-  final List<RuntimeComponentId> componentIds;
-  final List<RuntimeComponentId> missingComponentIds;
-  final List<RuntimeMissingPath> missingPaths;
+  const factory RuntimeStackBackend._validated({
+    required RuntimeBackendId id,
+    required RuntimeName name,
+    required RuntimeRole role,
+    required List<RuntimeComponentId> componentIds,
+    required List<RuntimeComponentId> missingComponentIds,
+    required List<RuntimeMissingPath> missingPaths,
+  }) = _RuntimeStackBackend;
 
   bool get isAvailable {
     return missingComponentIds.isEmpty && missingPaths.isEmpty;
   }
 }
 
-class RuntimeStackComponent {
-  RuntimeStackComponent({
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class RuntimeStackComponent with _$RuntimeStackComponent {
+  const RuntimeStackComponent._();
+
+  factory RuntimeStackComponent({
     required String id,
     required String name,
     required String role,
-    required this.isRequired,
+    required bool isRequired,
     required Iterable<String> paths,
     required Iterable<String> missingPaths,
     Option<String> version = const Option.none(),
-  }) : id = RuntimeComponentId(id),
-       name = RuntimeName(name),
-       role = RuntimeRole(role),
-       paths = List.unmodifiable(paths.map(RuntimeComponentPath.new)),
-       missingPaths = List.unmodifiable(
-         missingPaths.map(RuntimeMissingPath.new),
-       ),
-       version = version.map(RuntimeVersion.new);
+  }) {
+    return RuntimeStackComponent._validated(
+      id: RuntimeComponentId(id),
+      name: RuntimeName(name),
+      role: RuntimeRole(role),
+      isRequired: isRequired,
+      paths: List.unmodifiable(paths.map(RuntimeComponentPath.new)),
+      missingPaths: List.unmodifiable(missingPaths.map(RuntimeMissingPath.new)),
+      version: version.map(RuntimeVersion.new),
+    );
+  }
 
-  final RuntimeComponentId id;
-  final RuntimeName name;
-  final RuntimeRole role;
-  final bool isRequired;
-  final List<RuntimeComponentPath> paths;
-  final List<RuntimeMissingPath> missingPaths;
-  final Option<RuntimeVersion> version;
+  const factory RuntimeStackComponent._validated({
+    required RuntimeComponentId id,
+    required RuntimeName name,
+    required RuntimeRole role,
+    required bool isRequired,
+    required List<RuntimeComponentPath> paths,
+    required List<RuntimeMissingPath> missingPaths,
+    required Option<RuntimeVersion> version,
+  }) = _RuntimeStackComponent;
 
   bool get isInstalled {
     return missingPaths.isEmpty;

@@ -13,39 +13,36 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-06-29 09:17 JST
+- Timestamp: 2026-06-29 09:37 JST
 - State: `completed`
 - Branch: `main`
-- Active work: Freezed-backed bottle domain records.
+- Active work: Freezed-backed runtime stack domain records.
 - Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
   boundary tightening.
-- Latest commit: this commit (`Freezed bottle domain records`).
-- Purpose: replace the first remaining hand-written immutable domain model
-  boilerplate with generated Freezed data classes while preserving existing
-  public constructors and domain value-object fields.
-- Completed work: inspected `BottleRecord`, `PinnedProgramRecord`, current
-  Freezed value-object patterns, domain immutability coverage, and call sites;
-  converted `BottleRecord` and `PinnedProgramRecord` to Freezed-backed records
-  with `copyWith` disabled and existing public constructors preserved; changed
-  bottle and pinned-program `withXxx` update methods to accept domain value
-  objects instead of `String`/`Option<String>`; updated repository, storage,
-  archive import, registry parsing, pinned-program domain helpers, and domain
-  immutability tests to pass typed values; regenerated the local ignored
-  `bottle_models.freezed.dart`; updated governance so the bottle model typed
-  state check accepts either hand-written final fields or Freezed `_validated`
-  typed constructor parameters, and so primitive `withXxx` signatures cannot be
-  reintroduced for these bottle records.
-- Remaining work: bottle record Freezed conversion is complete. Continue the
-  same evaluation with `runtime_models.dart` as the next candidate.
-- Next action: evaluate `runtime_models.dart` for the same Freezed-backed model
-  pattern.
+- Latest commit: this commit (`Freezed runtime stack domain records`).
+- Purpose: continue replacing hand-written immutable domain model boilerplate
+  with Freezed-backed records, starting with the runtime stack aggregate classes
+  that have simple typed fields, immutable collection normalization, and
+  computed status getters.
+- Completed work: inspected `runtime_models.dart`, runtime stack call sites,
+  domain immutability coverage, and runtime governance baselines; converted
+  `RuntimeStack`, `RuntimeStackBackend`, and `RuntimeStackComponent` to
+  Freezed-backed records with `copyWith` disabled and existing public
+  constructors preserved; regenerated the local ignored
+  `runtime_models.freezed.dart`; updated governance so
+  `RuntimeStackComponent.version` typed state can be checked through either a
+  hand-written final field or a Freezed `_validated` typed constructor
+  parameter.
+- Remaining work: runtime stack Freezed conversion is complete. `RuntimeRecord`,
+  `RuntimeDefinition`, `InstalledRuntimeState`, `RuntimeCapabilities`, and
+  runtime source manifest models remain hand-written candidates.
+- Next action: commit this runtime stack Freezed slice if accepted, then
+  evaluate `RuntimeDefinition`/`InstalledRuntimeState`/`RuntimeCapabilities`
+  as the next narrow group.
 - Verification: `cd packages/konyak_cli && dart analyze --fatal-infos`,
   `cd packages/konyak_cli && dart test test/domain_immutability_test.dart`,
   `just verify-governance`, `just verify-architecture`, `just verify-safety`,
-  `just format-check`, `just lint`, and `just cli-test` passed. Earlier
-  `verify-governance` failures during the slice exposed the disallowed
-  `copyWith` usage and hand-written-field-only baseline; both were addressed
-  without weakening the intended typed-domain-state check.
+  `just format-check`, `just lint`, and `just cli-test` passed.
 
 - Timestamp: 2026-06-28 22:53 JST
 - State: `completed`

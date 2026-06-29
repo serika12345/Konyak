@@ -1761,10 +1761,21 @@ def require_result_boundary_rules() -> None:
         "packages/konyak_cli/lib/src/domain/runtime/runtime_package_installation.dart",
         "final String? archiveSha256;",
     )
-    require_contains(
-        "packages/konyak_cli/lib/src/domain/runtime/runtime_models.dart",
-        "final Option<RuntimeVersion> version;",
+    runtime_models_text = read_text(
+        "packages/konyak_cli/lib/src/domain/runtime/runtime_models.dart"
     )
+    if not any(
+        expected in runtime_models_text
+        for expected in [
+            "final Option<RuntimeVersion> version;",
+            "required Option<RuntimeVersion> version,",
+        ]
+    ):
+        raise AssertionError(
+            "packages/konyak_cli/lib/src/domain/runtime/runtime_models.dart "
+            "must contain a typed RuntimeStackComponent version field or "
+            "_validated constructor parameter"
+        )
     require_not_contains(
         "packages/konyak_cli/lib/src/domain/runtime/runtime_models.dart",
         "final String? version;",
