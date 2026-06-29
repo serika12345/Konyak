@@ -1,34 +1,29 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+
 import '../shared/domain_value_objects.dart';
+
+part 'app_settings_models.freezed.dart';
 
 enum AppAppearanceMode { dark, light, system }
 
 enum AppLanguageMode { system, english, japanese }
 
-class AppSettingsRecord {
-  AppSettingsRecord({
-    this.terminateWineProcessesOnClose = false,
+@Freezed(map: FreezedMapOptions.none, when: FreezedWhenOptions.none)
+abstract class AppSettingsRecord with _$AppSettingsRecord {
+  const AppSettingsRecord._();
+
+  factory AppSettingsRecord({
+    bool terminateWineProcessesOnClose = false,
     required String defaultBottlePath,
-    this.appearanceMode = AppAppearanceMode.dark,
-    this.languageMode = AppLanguageMode.system,
-    this.automaticallyCheckForKonyakUpdates = false,
-    this.automaticallyCheckForWineUpdates = true,
-    this.automaticallyPinNewInstalledPrograms = true,
-  }) : defaultBottlePath = DefaultBottlePath(defaultBottlePath);
-
-  final bool terminateWineProcessesOnClose;
-  final DefaultBottlePath defaultBottlePath;
-  final AppAppearanceMode appearanceMode;
-  final AppLanguageMode languageMode;
-  final bool automaticallyCheckForKonyakUpdates;
-  final bool automaticallyCheckForWineUpdates;
-  final bool automaticallyPinNewInstalledPrograms;
-
-  AppSettingsRecord withTerminateWineProcessesOnClose(
-    bool terminateWineProcessesOnClose,
-  ) {
-    return AppSettingsRecord(
+    AppAppearanceMode appearanceMode = AppAppearanceMode.dark,
+    AppLanguageMode languageMode = AppLanguageMode.system,
+    bool automaticallyCheckForKonyakUpdates = false,
+    bool automaticallyCheckForWineUpdates = true,
+    bool automaticallyPinNewInstalledPrograms = true,
+  }) {
+    return AppSettingsRecord._validated(
       terminateWineProcessesOnClose: terminateWineProcessesOnClose,
-      defaultBottlePath: defaultBottlePath.value,
+      defaultBottlePath: DefaultBottlePath(defaultBottlePath),
       appearanceMode: appearanceMode,
       languageMode: languageMode,
       automaticallyCheckForKonyakUpdates: automaticallyCheckForKonyakUpdates,
@@ -38,113 +33,13 @@ class AppSettingsRecord {
     );
   }
 
-  AppSettingsRecord withDefaultBottlePath(String defaultBottlePath) {
-    return AppSettingsRecord(
-      terminateWineProcessesOnClose: terminateWineProcessesOnClose,
-      defaultBottlePath: defaultBottlePath,
-      appearanceMode: appearanceMode,
-      languageMode: languageMode,
-      automaticallyCheckForKonyakUpdates: automaticallyCheckForKonyakUpdates,
-      automaticallyCheckForWineUpdates: automaticallyCheckForWineUpdates,
-      automaticallyPinNewInstalledPrograms:
-          automaticallyPinNewInstalledPrograms,
-    );
-  }
-
-  AppSettingsRecord withAppearanceMode(AppAppearanceMode appearanceMode) {
-    return AppSettingsRecord(
-      terminateWineProcessesOnClose: terminateWineProcessesOnClose,
-      defaultBottlePath: defaultBottlePath.value,
-      appearanceMode: appearanceMode,
-      languageMode: languageMode,
-      automaticallyCheckForKonyakUpdates: automaticallyCheckForKonyakUpdates,
-      automaticallyCheckForWineUpdates: automaticallyCheckForWineUpdates,
-      automaticallyPinNewInstalledPrograms:
-          automaticallyPinNewInstalledPrograms,
-    );
-  }
-
-  AppSettingsRecord withLanguageMode(AppLanguageMode languageMode) {
-    return AppSettingsRecord(
-      terminateWineProcessesOnClose: terminateWineProcessesOnClose,
-      defaultBottlePath: defaultBottlePath.value,
-      appearanceMode: appearanceMode,
-      languageMode: languageMode,
-      automaticallyCheckForKonyakUpdates: automaticallyCheckForKonyakUpdates,
-      automaticallyCheckForWineUpdates: automaticallyCheckForWineUpdates,
-      automaticallyPinNewInstalledPrograms:
-          automaticallyPinNewInstalledPrograms,
-    );
-  }
-
-  AppSettingsRecord withAutomaticallyCheckForKonyakUpdates(
-    bool automaticallyCheckForKonyakUpdates,
-  ) {
-    return AppSettingsRecord(
-      terminateWineProcessesOnClose: terminateWineProcessesOnClose,
-      defaultBottlePath: defaultBottlePath.value,
-      appearanceMode: appearanceMode,
-      languageMode: languageMode,
-      automaticallyCheckForKonyakUpdates: automaticallyCheckForKonyakUpdates,
-      automaticallyCheckForWineUpdates: automaticallyCheckForWineUpdates,
-      automaticallyPinNewInstalledPrograms:
-          automaticallyPinNewInstalledPrograms,
-    );
-  }
-
-  AppSettingsRecord withAutomaticallyCheckForWineUpdates(
-    bool automaticallyCheckForWineUpdates,
-  ) {
-    return AppSettingsRecord(
-      terminateWineProcessesOnClose: terminateWineProcessesOnClose,
-      defaultBottlePath: defaultBottlePath.value,
-      appearanceMode: appearanceMode,
-      languageMode: languageMode,
-      automaticallyCheckForKonyakUpdates: automaticallyCheckForKonyakUpdates,
-      automaticallyCheckForWineUpdates: automaticallyCheckForWineUpdates,
-      automaticallyPinNewInstalledPrograms:
-          automaticallyPinNewInstalledPrograms,
-    );
-  }
-
-  AppSettingsRecord withAutomaticallyPinNewInstalledPrograms(
-    bool automaticallyPinNewInstalledPrograms,
-  ) {
-    return AppSettingsRecord(
-      terminateWineProcessesOnClose: terminateWineProcessesOnClose,
-      defaultBottlePath: defaultBottlePath.value,
-      appearanceMode: appearanceMode,
-      languageMode: languageMode,
-      automaticallyCheckForKonyakUpdates: automaticallyCheckForKonyakUpdates,
-      automaticallyCheckForWineUpdates: automaticallyCheckForWineUpdates,
-      automaticallyPinNewInstalledPrograms:
-          automaticallyPinNewInstalledPrograms,
-    );
-  }
-
-  @override
-  bool operator ==(Object other) {
-    return other is AppSettingsRecord &&
-        other.terminateWineProcessesOnClose == terminateWineProcessesOnClose &&
-        other.defaultBottlePath == defaultBottlePath &&
-        other.appearanceMode == appearanceMode &&
-        other.languageMode == languageMode &&
-        other.automaticallyCheckForKonyakUpdates ==
-            automaticallyCheckForKonyakUpdates &&
-        other.automaticallyCheckForWineUpdates ==
-            automaticallyCheckForWineUpdates &&
-        other.automaticallyPinNewInstalledPrograms ==
-            automaticallyPinNewInstalledPrograms;
-  }
-
-  @override
-  int get hashCode => Object.hash(
-    terminateWineProcessesOnClose,
-    defaultBottlePath,
-    appearanceMode,
-    languageMode,
-    automaticallyCheckForKonyakUpdates,
-    automaticallyCheckForWineUpdates,
-    automaticallyPinNewInstalledPrograms,
-  );
+  const factory AppSettingsRecord._validated({
+    required bool terminateWineProcessesOnClose,
+    required DefaultBottlePath defaultBottlePath,
+    required AppAppearanceMode appearanceMode,
+    required AppLanguageMode languageMode,
+    required bool automaticallyCheckForKonyakUpdates,
+    required bool automaticallyCheckForWineUpdates,
+    required bool automaticallyPinNewInstalledPrograms,
+  }) = _AppSettingsRecord;
 }

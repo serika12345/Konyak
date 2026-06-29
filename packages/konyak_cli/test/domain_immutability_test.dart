@@ -157,6 +157,33 @@ void main() {
     expect(settings.defaultBottlePath, DefaultBottlePath('/bottles'));
   });
 
+  test('app settings copyWith preserves semantic value object fields', () {
+    final settings = AppSettingsRecord(defaultBottlePath: '/bottles');
+    final updated = settings.copyWith(
+      terminateWineProcessesOnClose: true,
+      defaultBottlePath: DefaultBottlePath('/library'),
+      appearanceMode: AppAppearanceMode.system,
+      languageMode: AppLanguageMode.japanese,
+      automaticallyCheckForKonyakUpdates: true,
+      automaticallyCheckForWineUpdates: false,
+      automaticallyPinNewInstalledPrograms: false,
+    );
+
+    expect(settings.defaultBottlePath, DefaultBottlePath('/bottles'));
+    expect(
+      updated,
+      AppSettingsRecord(
+        terminateWineProcessesOnClose: true,
+        defaultBottlePath: '/library',
+        appearanceMode: AppAppearanceMode.system,
+        languageMode: AppLanguageMode.japanese,
+        automaticallyCheckForKonyakUpdates: true,
+        automaticallyCheckForWineUpdates: false,
+        automaticallyPinNewInstalledPrograms: false,
+      ),
+    );
+  });
+
   test('program metadata records model absent fields with Option', () {
     final emptyMetadata = ProgramMetadataRecord();
     final metadata = ProgramMetadataRecord(

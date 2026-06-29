@@ -13,6 +13,40 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-29 14:07 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Freezed-backed app settings record.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: this commit (`Freezed app settings record`).
+- Purpose: continue removing hand-written domain value boilerplate by
+  converting `AppSettingsRecord` to Freezed and replacing its manual `withX`
+  methods with generated `copyWith`.
+- Completed work: committed the completed `ProgramRunRequest` Freezed slice;
+  inspected remaining hand-written domain records and selected
+  `AppSettingsRecord` because it is a single value record with manual
+  equality/hashCode and no external `withX` call sites; added focused
+  `copyWith` coverage and observed it fail against the hand-written record;
+  converted the record to Freezed with a private validated factory while
+  preserving the public `String defaultBottlePath` constructor boundary and
+  replacing manual `withX` helpers with generated `copyWith`.
+- Remaining work: continue the broader Freezed scan with larger hand-written
+  records such as bottle mutation requests/results or bottle runtime settings.
+- Next action: inspect the next hand-written record group by risk and
+  call-site breadth.
+- Verification: observed `cd packages/konyak_cli && dart test
+  test/domain_immutability_test.dart --name "app settings copyWith preserves
+  semantic value object fields"` fail before implementation; after
+  implementation, `cd packages/konyak_cli && dart run build_runner build
+  --delete-conflicting-outputs && dart format
+  lib/src/domain/app/app_settings_models.dart test/domain_immutability_test.dart
+  && dart analyze --fatal-infos`, focused app settings `copyWith` test,
+  focused app-settings CLI contract tests, `cd packages/konyak_cli && dart
+  test test/domain_immutability_test.dart`, `just verify-governance`, `just
+  verify-safety`, `just format-check`, `just lint`, and `just cli-test`
+  passed.
+
 - Timestamp: 2026-06-29 14:01 JST
 - State: `completed`
 - Branch: `main`
