@@ -13,6 +13,36 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-29 15:41 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Tighten the functional-core boundary for detached process
+  startup.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: current commit (`Type detached process startup requests`).
+- Purpose: keep detached process startup requests typed as `ProgramExecutable`
+  and `ProgramRunArguments` at the domain interface instead of accepting raw
+  `String` and `List<String>`.
+- Completed work: committed typed terminal initial Wine commands; added a
+  failing typed starter contract; changed `DetachedProcessStarter` and
+  `DartIoDetachedProcessStarter` to accept `ProgramExecutable` and
+  `ProgramRunArguments`; updated app update handoff call sites and CLI
+  recording fixtures; and tightened governance so the detached-process domain
+  interface does not return to raw primitive arguments.
+- Remaining work: broader functional-core tightening remains in `docs/todo.md`,
+  including other primitive request/planner APIs.
+- Next action: continue with the next narrow primitive-boundary cleanup outside
+  the completed detached-process startup path.
+- Verification: observed `cd packages/konyak_cli && dart test
+  test/domain_immutability_test.dart --name "detached process"` fail before
+  implementation because the test fixture used typed detached-process requests
+  against the old raw `String`/`List<String>` interface; after implementation,
+  focused detached-process and app update handoff tests, `dart analyze
+  --fatal-infos`, `just verify-governance`, full
+  `test/domain_immutability_test.dart`, `just cli-test`, `just verify-safety`,
+  `just format-check`, and `just lint` passed.
+
 - Timestamp: 2026-06-29 15:29 JST
 - State: `completed`
 - Branch: `main`
@@ -20,7 +50,7 @@ unfinished work.
   commands.
 - Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
   boundary tightening.
-- Latest commit: `6b9b9e7` (`Type winedbg command planning`).
+- Latest commit: `0b2a91f` (`Type terminal initial Wine commands`).
 - Purpose: keep supported bottle commands typed as `BottleCommand` when the
   planner opens a terminal with an initial Wine command, instead of converting
   the command back to `String` at the request-builder boundary.

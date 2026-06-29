@@ -169,7 +169,7 @@ Option<String> _optionalNonBlankDomainString(
 
 abstract interface class DetachedProcessStarter {
   DetachedProcessStartResult start({
-    required String executable,
-    required List<String> arguments,
+    required ProgramExecutable executable,
+    required ProgramRunArguments arguments,
   });
 }

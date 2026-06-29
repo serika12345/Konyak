@@ -831,16 +831,16 @@ final class RecordingDetachedProcessStarter implements DetachedProcessStarter {
   RecordingDetachedProcessStarter({required this.result});
 
   final DetachedProcessStartResult result;
-  String? lastExecutable;
-  List<String> lastArguments = const <String>[];
+  ProgramExecutable? lastExecutable;
+  ProgramRunArguments lastArguments = ProgramRunArguments(const <String>[]);
 
   @override
   DetachedProcessStartResult start({
-    required String executable,
-    required List<String> arguments,
+    required ProgramExecutable executable,
+    required ProgramRunArguments arguments,
   }) {
     lastExecutable = executable;
-    lastArguments = List.unmodifiable(arguments);
+    lastArguments = arguments;
 
     return result;
   }

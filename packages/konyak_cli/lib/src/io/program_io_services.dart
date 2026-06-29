@@ -5,6 +5,7 @@ import 'dart:io';
 import '../cli/cli_json_helpers.dart';
 import '../domain/program/program_run_models.dart';
 import '../domain/program/program_runner.dart';
+import '../domain/shared/domain_value_objects.dart';
 import '../platform/platform_location_paths.dart';
 import 'external_payload_helpers.dart';
 import 'platform_host_paths.dart';
@@ -256,16 +257,16 @@ class DartIoDetachedProcessStarter implements DetachedProcessStarter {
 
   @override
   DetachedProcessStartResult start({
-    required String executable,
-    required List<String> arguments,
+    required ProgramExecutable executable,
+    required ProgramRunArguments arguments,
   }) {
     try {
       final result = Process.runSync('bash', <String>[
         '-lc',
         r'nohup "$1" "${@:2}" >/dev/null 2>&1 &',
         '_',
-        executable,
-        ...arguments,
+        executable.value,
+        ...arguments.value,
       ], runInShell: false);
       if (result.exitCode != 0) {
         return DetachedProcessStartFailed(processOutputToString(result.stderr));

@@ -2824,7 +2824,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
       completed.install.installPath.toNullable()?.value,
       currentAppImage.path,
     );
-    expect(detachedProcessStarter.lastExecutable, 'bash');
+    expect(detachedProcessStarter.lastExecutable, ProgramExecutable('bash'));
     expect(detachedProcessStarter.lastArguments, hasLength(4));
     expect(detachedProcessStarter.lastArguments[2], currentAppImage.path);
     expect(detachedProcessStarter.lastArguments[3], '4242');
@@ -2969,7 +2969,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
       currentBundle.path,
     );
     expect(pathOpener.lastPath, isNull);
-    expect(detachedProcessStarter.lastExecutable, 'bash');
+    expect(detachedProcessStarter.lastExecutable, ProgramExecutable('bash'));
     expect(detachedProcessStarter.lastArguments, hasLength(4));
     expect(detachedProcessStarter.lastArguments[2], currentBundle.path);
     expect(detachedProcessStarter.lastArguments[3], '5150');
@@ -3057,7 +3057,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
       currentBundle.path,
     );
     expect(pathOpener.lastPath, isNull);
-    expect(detachedProcessStarter.lastExecutable, 'bash');
+    expect(detachedProcessStarter.lastExecutable, ProgramExecutable('bash'));
     expect(detachedProcessStarter.lastArguments, hasLength(4));
     expect(detachedProcessStarter.lastArguments[1], endsWith('.dmg'));
     expect(detachedProcessStarter.lastArguments[2], currentBundle.path);

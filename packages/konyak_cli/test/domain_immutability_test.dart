@@ -42,6 +42,23 @@ final class EmptyRuntimeStackVersionProbe implements RuntimeStackVersionProbe {
   }
 }
 
+final class RecordingDomainDetachedProcessStarter
+    implements DetachedProcessStarter {
+  ProgramExecutable? executable;
+  ProgramRunArguments? arguments;
+
+  @override
+  DetachedProcessStartResult start({
+    required ProgramExecutable executable,
+    required ProgramRunArguments arguments,
+  }) {
+    this.executable = executable;
+    this.arguments = arguments;
+
+    return const DetachedProcessStartCompleted();
+  }
+}
+
 void main() {
   test('bottle records expose immutable pinned program snapshots', () {
     final pinnedPrograms = <PinnedProgramRecord>[
@@ -1450,6 +1467,24 @@ void main() {
     expect(
       DetachedProcessStartFailed('start failed'),
       DetachedProcessStartFailed('start failed'),
+    );
+  });
+
+  test('detached process starters expose typed executable requests', () {
+    final starter = RecordingDomainDetachedProcessStarter();
+
+    final result = starter.start(
+      executable: ProgramExecutable('/usr/bin/open'),
+      arguments: ProgramRunArguments(const <String>[
+        '/Applications/Konyak.app',
+      ]),
+    );
+
+    expect(result, const DetachedProcessStartCompleted());
+    expect(starter.executable, ProgramExecutable('/usr/bin/open'));
+    expect(
+      starter.arguments,
+      ProgramRunArguments(const <String>['/Applications/Konyak.app']),
     );
   });
 

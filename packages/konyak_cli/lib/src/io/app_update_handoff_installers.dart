@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:fpdart/fpdart.dart';
 
 import '../domain/program/program_run_models.dart';
+import '../domain/shared/domain_value_objects.dart';
 import '../domain/update/update_records.dart';
 import '../platform/platform_update_handoff.dart';
 import '../shared/common_helpers.dart';
@@ -50,13 +51,13 @@ extension AppUpdateHandoffInstallers on DartIoAppUpdateInstaller {
         Process.runSync('chmod', ['755', handoffScriptPath], runInShell: false);
 
         final startResult = detachedProcessStarter.start(
-          executable: 'bash',
-          arguments: [
+          executable: ProgramExecutable('bash'),
+          arguments: ProgramRunArguments(<String>[
             handoffScriptPath,
             stagedArchivePath,
             targetBundlePath,
             '$appPid',
-          ],
+          ]),
         );
         return Option.of(switch (startResult) {
           DetachedProcessStartCompleted() => AppUpdateInstallCompleted(
@@ -123,13 +124,13 @@ extension AppUpdateHandoffInstallers on DartIoAppUpdateInstaller {
         Process.runSync('chmod', ['755', handoffScriptPath], runInShell: false);
 
         final startResult = detachedProcessStarter.start(
-          executable: 'bash',
-          arguments: [
+          executable: ProgramExecutable('bash'),
+          arguments: ProgramRunArguments(<String>[
             handoffScriptPath,
             stagedArchivePath,
             targetPath,
             '$appPid',
-          ],
+          ]),
         );
         return Option.of(switch (startResult) {
           DetachedProcessStartCompleted() => AppUpdateInstallCompleted(

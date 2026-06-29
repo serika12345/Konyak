@@ -616,6 +616,56 @@ def require_typed_wine_process_planner_boundary() -> None:
         )
 
 
+def require_typed_detached_process_starter_boundary() -> None:
+    domain_path = "packages/konyak_cli/lib/src/domain/program/program_run_models.dart"
+    domain = read_text(domain_path)
+    expected_domain_terms = [
+        "abstract interface class DetachedProcessStarter",
+        "required ProgramExecutable executable",
+        "required ProgramRunArguments arguments",
+    ]
+    for expected in expected_domain_terms:
+        if expected not in domain:
+            raise AssertionError(
+                "DetachedProcessStarter must expose typed startup requests: "
+                f"{expected}"
+            )
+
+    forbidden_domain_terms = [
+        "required String executable",
+        "required List<String> arguments",
+    ]
+    detached_match = re.search(
+        r"abstract interface class DetachedProcessStarter\b(?P<body>.*?)(?=\n\})",
+        domain,
+        re.S,
+    )
+    if detached_match is None:
+        raise AssertionError("DetachedProcessStarter interface is missing")
+    detached_body = detached_match.group("body")
+    for forbidden in forbidden_domain_terms:
+        if forbidden in detached_body:
+            raise AssertionError(
+                "DetachedProcessStarter must not expose primitive startup "
+                f"request fields: {forbidden}"
+            )
+
+    app_update_handoff_path = (
+        "packages/konyak_cli/lib/src/io/app_update_handoff_installers.dart"
+    )
+    app_update_handoff = read_text(app_update_handoff_path)
+    expected_handoff_terms = [
+        "executable: ProgramExecutable('bash')",
+        "arguments: ProgramRunArguments(<String>[",
+    ]
+    for expected in expected_handoff_terms:
+        if expected not in app_update_handoff:
+            raise AssertionError(
+                "app update handoff must build typed detached process startup "
+                f"requests: {expected}"
+            )
+
+
 def require_wine_process_termination_cli_json_projection() -> None:
     domain_path = "packages/konyak_cli/lib/src/domain/program/program_run_models.dart"
     domain = read_text(domain_path)
@@ -2308,6 +2358,7 @@ def main() -> None:
     require_typed_bottle_command_planner_boundary()
     require_typed_winetricks_verb_planner_boundary()
     require_typed_wine_process_planner_boundary()
+    require_typed_detached_process_starter_boundary()
     require_wine_process_termination_cli_json_projection()
     require_program_catalog_cli_json_projection()
     require_graphics_backend_hints_cli_json_projection()
