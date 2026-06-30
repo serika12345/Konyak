@@ -148,7 +148,7 @@ JsonErrorMessageParseResult jsonErrorMessage(String payload) {
   }
 
   final message = error['message'];
-  return message is String
+  return message is String && message.isNotEmpty
       ? ParsedJsonErrorMessage(message)
       : const NoJsonErrorMessage();
 }

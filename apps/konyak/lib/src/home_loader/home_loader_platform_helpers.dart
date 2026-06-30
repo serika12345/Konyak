@@ -1,9 +1,9 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../cli/konyak_cli_failure_messages.dart';
 import '../cli/konyak_cli_process_runner.dart';
 import '../l10n/konyak_localizations.dart';
 
@@ -114,42 +114,9 @@ String installGptkFailureMessage(
   ProcessRunResult result, {
   required String command,
 }) {
-  final message = jsonErrorMessage(result.stdout);
-  if (message != null) {
-    return message;
-  }
-  final diagnostic = result.stderr.trim();
-  if (diagnostic.isEmpty) {
-    return '$command failed with exit code ${result.exitCode}.';
-  }
-  return '$command failed with exit code ${result.exitCode}: $diagnostic';
+  return commandFailureMessage(command, result);
 }
 
 String openUrlFailureMessage(ProcessRunResult result) {
-  final message = jsonErrorMessage(result.stdout);
-  if (message != null) {
-    return message;
-  }
-  final diagnostic = result.stderr.trim();
-  if (diagnostic.isEmpty) {
-    return 'open-url failed with exit code ${result.exitCode}.';
-  }
-  return 'open-url failed with exit code ${result.exitCode}: $diagnostic';
-}
-
-String? jsonErrorMessage(String payload) {
-  try {
-    final decoded = jsonDecode(payload);
-    if (decoded is! Map<String, dynamic>) {
-      return null;
-    }
-    final error = decoded['error'];
-    if (error is! Map<String, dynamic>) {
-      return null;
-    }
-    final message = error['message'];
-    return message is String && message.isNotEmpty ? message : null;
-  } on FormatException {
-    return null;
-  }
+  return commandFailureMessage('open-url', result);
 }

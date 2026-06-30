@@ -13,6 +13,34 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-30 12:50 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Replace home-loader JSON error nullable helper.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: current commit (`Replace home-loader JSON error helper`).
+- Purpose: continue narrowing `apps/konyak/lib/src/home_loader/` nullable
+  helpers by deleting the duplicate `String? jsonErrorMessage` platform helper
+  and routing failure message construction through the existing explicit CLI
+  JSON error parse result.
+- Completed work: added a failing empty-message parser test; added focused
+  home-loader platform failure message tests; tightened app CLI JSON error
+  parsing so empty messages are explicit absence; replaced the local nullable
+  `String? jsonErrorMessage` helper in `home_loader_platform_helpers.dart` with
+  the existing `commandFailureMessage` / `JsonErrorMessageParseResult` path.
+- Remaining work: none for this batch.
+- Next action: continue narrowing `home_loader/` nullable result state, with
+  `home_loader_programs.dart` run-setting/probe outcomes as the next likely
+  target after separating expected absence from UI/framework nullable values.
+- Verification: observed
+  `flutter test test/cli/konyak_cli_failure_messages_test.dart
+  test/home_loader/home_loader_platform_helpers_test.dart` fail before
+  implementation because empty JSON error messages parsed as
+  `ParsedJsonErrorMessage`. After implementation, the same targeted test
+  command passed. `just flutter-format-check`, `just flutter-analyze`, and
+  `just flutter-test` passed in the Nix dev shell.
+
 - Timestamp: 2026-06-30 12:06 JST
 - State: `completed`
 - Branch: `main`

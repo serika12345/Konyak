@@ -24,4 +24,17 @@ void main() {
 
     expect(result, isA<NoJsonErrorMessage>());
   });
+
+  test('represents empty JSON error messages explicitly as absent', () {
+    final result = jsonErrorMessage('''
+      {
+        "schemaVersion": 1,
+        "error": {
+          "message": ""
+        }
+      }
+      ''');
+
+    expect(result, isA<NoJsonErrorMessage>());
+  });
 }
