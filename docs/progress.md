@@ -13,6 +13,33 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-30 11:51 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Replace Flutter bottle-loader nullable outcomes.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: current commit (`Replace bottle-loader nullable outcomes`).
+- Purpose: continue narrowing `apps/konyak/lib/src/home_loader/` nullable
+  async result methods by replacing create/reload bottle nullable returns with
+  explicit Freezed outcome variants.
+- Completed work: added `BottleOperationOutcome` as a Freezed result variant;
+  replaced nullable returns from `createBottleFromDialog`,
+  `createBottleFromInput`, and `reloadBottle`; updated executable-open bottle
+  creation to switch on explicit outcomes; regenerated ignored Freezed parts.
+- Remaining work: none for this batch.
+- Next action: continue narrowing `home_loader/` nullable async boundaries,
+  then split remaining UI/framework nullable state from loader result state
+  before trying to make whole home-loader files strict nullable paths.
+- Verification: observed
+  `flutter test test/home_loader/bottle_operation_outcome_test.dart` fail
+  before implementation because `BottleOperationOutcome` did not exist. After
+  implementation, targeted
+  `flutter test test/home_loader/bottle_operation_outcome_test.dart`,
+  `just flutter-format-check`, `just flutter-analyze`, `just flutter-test`,
+  `just verify-governance`, `just verify-safety`, `just format-check`, and
+  `just lint` passed in the Nix dev shell.
+
 - Timestamp: 2026-06-30 11:36 JST
 - State: `completed`
 - Branch: `main`

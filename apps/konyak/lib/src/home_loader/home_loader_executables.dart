@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 
 import '../app/dialogs/open_executable_dialog.dart';
 import '../bottles/bottle_summary.dart';
+import 'bottle_operation_outcome.dart';
 import 'home_loader.dart';
 import 'home_loader_bottles.dart';
 import 'home_loader_platform_helpers.dart';
@@ -106,11 +107,18 @@ extension KonyakHomeLoaderExecutables on KonyakHomeLoaderState {
       case RunExecutableInBottle(:final bottle):
         await runProgramPath(bottle: bottle, programPath: programPath);
       case CreateBottleForExecutable():
-        final bottle = await createBottleFromDialog();
-        if (!mounted || bottle == null) {
+        final createOutcome = await createBottleFromDialog();
+        if (!mounted) {
           return;
         }
-        await runProgramPath(bottle: bottle, programPath: programPath);
+        switch (createOutcome) {
+          case CompletedBottleOperation(:final bottle):
+            await runProgramPath(bottle: bottle, programPath: programPath);
+          case CancelledBottleOperation():
+          case FailedBottleOperation():
+          case UnmountedBottleOperation():
+            return;
+        }
     }
   }
 

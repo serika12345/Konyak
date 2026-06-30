@@ -12,6 +12,7 @@ import '../cli/konyak_cli_read_commands.dart';
 import '../cli/konyak_cli_runtime_result_types.dart';
 import '../l10n/konyak_localizations.dart';
 import '../runtimes/runtime_summary.dart';
+import 'bottle_operation_outcome.dart';
 import 'home_loader.dart';
 import 'home_loader_executables.dart';
 import 'home_loader_runtimes.dart';
@@ -48,20 +49,22 @@ extension KonyakHomeLoaderBottles on KonyakHomeLoaderState {
     await createBottleFromDialog();
   }
 
-  Future<BottleSummary?> createBottleFromDialog() async {
+  Future<BottleOperationOutcome> createBottleFromDialog() async {
     final input = await showDialog<CreateBottleInput>(
       context: context,
       builder: (context) => const CreateBottleDialog(),
     );
 
     if (input == null) {
-      return null;
+      return const BottleOperationOutcome.cancelled();
     }
 
     return createBottleFromInput(input);
   }
 
-  Future<BottleSummary?> createBottleFromInput(CreateBottleInput input) async {
+  Future<BottleOperationOutcome> createBottleFromInput(
+    CreateBottleInput input,
+  ) async {
     updateState(() {
       isCreatingBottle = true;
     });
@@ -81,17 +84,17 @@ extension KonyakHomeLoaderBottles on KonyakHomeLoaderState {
     }
 
     if (!mounted) {
-      return null;
+      return const BottleOperationOutcome.unmounted();
     }
 
     switch (result) {
       case CreatedBottle(:final bottle):
         storeBottle(bottle);
-        return bottle;
+        return BottleOperationOutcome.completed(bottle);
       case ExistingBottle(:final message) ||
           BottleCreateLoadFailure(:final message):
         showSnackBar(message);
-        return null;
+        return const BottleOperationOutcome.failed();
     }
   }
 
@@ -179,21 +182,21 @@ extension KonyakHomeLoaderBottles on KonyakHomeLoaderState {
     await loadRuntimeCapabilities();
   }
 
-  Future<BottleSummary?> reloadBottle(BottleSummary bottle) async {
+  Future<BottleOperationOutcome> reloadBottle(BottleSummary bottle) async {
     final result = await widget.cliClient.inspectBottle(bottle.id);
 
     if (!mounted) {
-      return null;
+      return const BottleOperationOutcome.unmounted();
     }
 
     switch (result) {
       case LoadedBottleDetail(:final bottle):
         storeBottle(bottle);
-        return bottle;
+        return BottleOperationOutcome.completed(bottle);
       case MissingBottleDetail(:final message) ||
           BottleDetailLoadFailure(:final message):
         showSnackBar(message);
-        return null;
+        return const BottleOperationOutcome.failed();
     }
   }
 
