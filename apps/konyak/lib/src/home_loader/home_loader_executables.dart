@@ -9,6 +9,7 @@ import 'bottle_operation_outcome.dart';
 import 'executable_auto_run_bottle_selection.dart';
 import 'home_loader.dart';
 import 'home_loader_bottles.dart';
+import 'home_loader_operation_state.dart';
 import 'home_loader_platform_helpers.dart';
 import 'home_loader_programs.dart';
 import 'home_loader_runtimes.dart';
@@ -71,11 +72,14 @@ extension KonyakHomeLoaderExecutables on KonyakHomeLoaderState {
   Future<void> drainPendingExecutableOpenPaths() async {
     if (!mounted ||
         isBottleListLoading(bottleListLoadState) ||
-        isHandlingExecutableOpen) {
+        _isHandlingExecutableOpen()) {
       return;
     }
 
-    isHandlingExecutableOpen = true;
+    operationState = startHomeLoaderOperation(
+      state: operationState,
+      operation: HomeLoaderOperation.handlingExecutableOpen,
+    );
     try {
       while (mounted &&
           !isBottleListLoading(bottleListLoadState) &&
@@ -84,13 +88,23 @@ extension KonyakHomeLoaderExecutables on KonyakHomeLoaderState {
         await showOpenExecutable(programPath);
       }
     } finally {
-      isHandlingExecutableOpen = false;
+      operationState = finishHomeLoaderOperation(
+        state: operationState,
+        operation: HomeLoaderOperation.handlingExecutableOpen,
+      );
       if (mounted &&
           !isBottleListLoading(bottleListLoadState) &&
           pendingExecutableOpenPaths.isNotEmpty) {
         unawaited(drainPendingExecutableOpenPaths());
       }
     }
+  }
+
+  bool _isHandlingExecutableOpen() {
+    return isHomeLoaderOperationRunning(
+      state: operationState,
+      operation: HomeLoaderOperation.handlingExecutableOpen,
+    );
   }
 
   Future<void> showOpenExecutable(String programPath) async {

@@ -13,6 +13,36 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-30 16:15 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Model home-loader reentrancy operations explicitly.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: `7339a6e` (`Model App Settings dialog operations explicitly`).
+- Purpose: continue state hardening by replacing home-loader private
+  reentrancy booleans with an explicit operation state while keeping lifecycle
+  one-way cleanup flags separate.
+- Completed work: added `HomeLoaderOperationState` with explicit concurrent
+  operation tracking, routed settings dialog display, manual Konyak update
+  checks, and executable-open draining through it, and removed the private
+  `isShowingSettings`, `isCheckingKonyakUpdate`, and
+  `isHandlingExecutableOpen` booleans. Kept
+  `hasTerminatedWineProcesses` as a separate one-way lifecycle cleanup flag.
+- Remaining work: none for this slice. Continue a separate state-hardening
+  slice for lifecycle cleanup or launch-tracking state if those need stronger
+  domain modeling.
+- Next action: continue the next explicit-state hardening slice or commit this
+  slice when requested.
+- Verification: observed
+  `flutter test test/home_loader/home_loader_operation_state_test.dart` fail
+  before implementation because `HomeLoaderOperationState` and its transition
+  helpers did not exist. After implementation, that targeted test passed. Full
+  Flutter verification passed with `just flutter-format-check`,
+  `just flutter-analyze`, and `just flutter-test`. Repository verification
+  passed with `just verify-governance`, `just verify-safety`,
+  `just format-check`, and `just lint`.
+
 - Timestamp: 2026-06-30 15:52 JST
 - State: `completed`
 - Branch: `main`

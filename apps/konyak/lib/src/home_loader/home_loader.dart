@@ -21,6 +21,7 @@ import 'app_settings_state.dart';
 import 'blocking_progress_state.dart';
 import 'home_loader_bottles.dart';
 import 'home_loader_executables.dart';
+import 'home_loader_operation_state.dart';
 import 'home_loader_pinned_programs.dart';
 import 'home_loader_platform_helpers.dart';
 import 'home_loader_programs.dart';
@@ -86,14 +87,13 @@ class KonyakHomeLoaderState extends State<KonyakHomeLoader>
       const BlockingProgressState.hidden();
   BlockingProgressState konyakUpdateCheckProgress =
       const BlockingProgressState.hidden();
-  bool isShowingSettings = false;
-  bool isCheckingKonyakUpdate = false;
+  HomeLoaderOperationState operationState =
+      const HomeLoaderOperationState.idle();
   bool hasTerminatedWineProcesses = false;
   AppSettingsState appSettings = const AppSettingsState.unavailable();
   LatestRunLogState latestRunLog = const LatestRunLogState.unavailable();
   KnownRuntimesState knownRuntimes = const KnownRuntimesState.pending();
   final List<String> pendingExecutableOpenPaths = <String>[];
-  bool isHandlingExecutableOpen = false;
   final Map<String, ProgramSettingsSummary> programSettings =
       <String, ProgramSettingsSummary>{};
   final Set<String> loadingProgramSettings = <String>{};
@@ -181,7 +181,11 @@ class KonyakHomeLoaderState extends State<KonyakHomeLoader>
             onRefresh: loadBottles,
             onShowSettings: showSettings,
             onShowAbout: showAbout,
-            onCheckKonyakUpdates: isCheckingKonyakUpdate
+            onCheckKonyakUpdates:
+                isHomeLoaderOperationRunning(
+                  state: operationState,
+                  operation: HomeLoaderOperation.checkingKonyakUpdate,
+                )
                 ? null
                 : checkKonyakUpdateFromMenu,
             onCreateBottle: createBottle,

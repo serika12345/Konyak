@@ -14,15 +14,19 @@ import '../l10n/konyak_localizations.dart';
 import '../settings/app_settings_summary.dart';
 import 'app_settings_state.dart';
 import 'home_loader.dart';
+import 'home_loader_operation_state.dart';
 import 'home_loader_runtimes.dart';
 
 extension KonyakHomeLoaderSettings on KonyakHomeLoaderState {
   Future<void> showSettings() async {
-    if (isShowingSettings) {
+    if (_isShowingSettings()) {
       return;
     }
 
-    isShowingSettings = true;
+    operationState = startHomeLoaderOperation(
+      state: operationState,
+      operation: HomeLoaderOperation.showingSettings,
+    );
     try {
       final result = await widget.cliClient.getAppSettings();
 
@@ -62,8 +66,18 @@ extension KonyakHomeLoaderSettings on KonyakHomeLoaderState {
           showSnackBar(message);
       }
     } finally {
-      isShowingSettings = false;
+      operationState = finishHomeLoaderOperation(
+        state: operationState,
+        operation: HomeLoaderOperation.showingSettings,
+      );
     }
+  }
+
+  bool _isShowingSettings() {
+    return isHomeLoaderOperationRunning(
+      state: operationState,
+      operation: HomeLoaderOperation.showingSettings,
+    );
   }
 
   Future<RuntimeListLoadResult> loadSettingsRuntimes() async {

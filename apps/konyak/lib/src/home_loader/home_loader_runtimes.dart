@@ -25,6 +25,7 @@ import '../updates/update_check_summary.dart';
 import 'app_settings_state.dart';
 import 'blocking_progress_state.dart';
 import 'home_loader.dart';
+import 'home_loader_operation_state.dart';
 import 'home_loader_platform_helpers.dart';
 import 'known_runtimes_state.dart';
 
@@ -119,12 +120,15 @@ extension KonyakHomeLoaderRuntimes on KonyakHomeLoaderState {
   }
 
   Future<void> checkKonyakUpdateFromMenu() async {
-    if (isCheckingKonyakUpdate) {
+    if (_isCheckingKonyakUpdate()) {
       return;
     }
 
     updateState(() {
-      isCheckingKonyakUpdate = true;
+      operationState = startHomeLoaderOperation(
+        state: operationState,
+        operation: HomeLoaderOperation.checkingKonyakUpdate,
+      );
       konyakUpdateCheckProgress = BlockingProgressState.indeterminate(
         KonyakLocalizations.of(context).checkingForKonyakUpdatesEllipsis,
       );
@@ -158,11 +162,21 @@ extension KonyakHomeLoaderRuntimes on KonyakHomeLoaderState {
     } finally {
       if (mounted) {
         updateState(() {
-          isCheckingKonyakUpdate = false;
+          operationState = finishHomeLoaderOperation(
+            state: operationState,
+            operation: HomeLoaderOperation.checkingKonyakUpdate,
+          );
           konyakUpdateCheckProgress = const BlockingProgressState.hidden();
         });
       }
     }
+  }
+
+  bool _isCheckingKonyakUpdate() {
+    return isHomeLoaderOperationRunning(
+      state: operationState,
+      operation: HomeLoaderOperation.checkingKonyakUpdate,
+    );
   }
 
   Future<ConfirmationDecision> confirmKonyakUpdateInstall(
