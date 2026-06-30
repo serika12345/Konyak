@@ -16,7 +16,9 @@ import 'home_loader_programs.dart';
 extension KonyakHomeLoaderWinetricks on KonyakHomeLoaderState {
   Future<void> showWinetricks(BottleSummary bottle) async {
     updateState(() {
-      isLoadingWinetricks = true;
+      winetricksLoadProgress = BlockingProgressState.indeterminate(
+        KonyakLocalizations.of(context).loadingWinetricksPackagesEllipsis,
+      );
     });
 
     late final WinetricksVerbListLoadResult listResult;
@@ -25,7 +27,7 @@ extension KonyakHomeLoaderWinetricks on KonyakHomeLoaderState {
     } finally {
       if (mounted) {
         updateState(() {
-          isLoadingWinetricks = false;
+          winetricksLoadProgress = const BlockingProgressState.hidden();
         });
       }
     }

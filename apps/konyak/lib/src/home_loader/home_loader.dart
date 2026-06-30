@@ -6,7 +6,6 @@ import '../app/app_platform.dart';
 import '../app/home/home_contracts.dart';
 import '../app/home/home_screen.dart';
 import '../app/programs/program_window_probe.dart';
-import '../app/runtime/runtime_platform.dart';
 import '../app/widgets/blocking_progress_overlay.dart';
 import '../app/widgets/konyak_snack_bar.dart';
 import '../bottles/bottle_summary.dart';
@@ -73,11 +72,13 @@ class KonyakHomeLoader extends StatefulWidget {
 class KonyakHomeLoaderState extends State<KonyakHomeLoader>
     with WidgetsBindingObserver {
   List<BottleSummary> bottles = const <BottleSummary>[];
-  bool isLoading = true;
-  bool isCreatingBottle = false;
+  BottleListLoadState bottleListLoadState = const BottleListLoadState.loading();
+  BlockingProgressState createBottleProgress =
+      const BlockingProgressState.hidden();
   final Set<int> activeProgramLaunchIds = <int>{};
   int nextProgramLaunchId = 0;
-  bool isLoadingWinetricks = false;
+  BlockingProgressState winetricksLoadProgress =
+      const BlockingProgressState.hidden();
   BlockingProgressState winetricksInstallProgress =
       const BlockingProgressState.hidden();
   BlockingProgressState archiveProgress = const BlockingProgressState.hidden();
@@ -89,7 +90,6 @@ class KonyakHomeLoaderState extends State<KonyakHomeLoader>
   bool isCheckingKonyakUpdate = false;
   bool hasTerminatedWineProcesses = false;
   AppSettingsState appSettings = const AppSettingsState.unavailable();
-  String? errorMessage;
   LatestRunLogState latestRunLog = const LatestRunLogState.unavailable();
   KnownRuntimesState knownRuntimes = const KnownRuntimesState.pending();
   final List<String> pendingExecutableOpenPaths = <String>[];
@@ -166,17 +166,13 @@ class KonyakHomeLoaderState extends State<KonyakHomeLoader>
         KonyakHome(
           state: KonyakHomeViewState(
             platform: widget.platform,
-            runtime: switch (runtimeForPlatformSelection(
-              widget.platform,
-              knownRuntimes.runtimes,
-            )) {
-              RuntimeForPlatformFound(:final runtime) => runtime,
-              RuntimeForPlatformMissing() => null,
-            },
+            runtimeCapabilitiesState: runtimeCapabilitiesStateForPlatform(
+              platform: widget.platform,
+              isLoading: !knownRuntimes.isLoaded,
+              runtimes: knownRuntimes.runtimes,
+            ),
             bottles: bottles,
-            isLoading: isLoading,
-            errorMessage: errorMessage,
-            isRuntimeCapabilitiesLoading: !knownRuntimes.isLoaded,
+            bottleListLoadState: bottleListLoadState,
             programSettings: programSettings,
             loadingProgramSettings: loadingProgramSettings,
             pendingRuntimeSettingsControls: pendingRuntimeSettingsControls,
@@ -249,23 +245,19 @@ class KonyakHomeLoaderState extends State<KonyakHomeLoader>
             onShowWinetricks: showWinetricks,
           ),
         ),
-        if (isCreatingBottle)
-          BlockingProgressOverlay(
-            key: const ValueKey('create-bottle-progress'),
-            message: KonyakLocalizations.of(context).creatingBottleEllipsis,
-          ),
+        ...blockingProgressOverlays(
+          key: const ValueKey('create-bottle-progress'),
+          state: createBottleProgress,
+        ),
         if (activeProgramLaunchIds.isNotEmpty)
           BlockingProgressOverlay(
             key: const ValueKey('program-launch-progress'),
             message: KonyakLocalizations.of(context).launchingProgramEllipsis,
           ),
-        if (isLoadingWinetricks)
-          BlockingProgressOverlay(
-            key: const ValueKey('winetricks-progress'),
-            message: KonyakLocalizations.of(
-              context,
-            ).loadingWinetricksPackagesEllipsis,
-          ),
+        ...blockingProgressOverlays(
+          key: const ValueKey('winetricks-progress'),
+          state: winetricksLoadProgress,
+        ),
         ...blockingProgressOverlays(
           key: const ValueKey('winetricks-progress'),
           state: winetricksInstallProgress,

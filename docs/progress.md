@@ -13,6 +13,40 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-30 15:43 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Batch model remaining Flutter loader state explicitly.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: current commit (`Model Flutter loader state explicitly`).
+- Purpose: continue state domain typing without pausing while the changes
+  remain the same kind of semantic nullable-state replacement.
+- Completed work: added explicit Freezed state variants for bottle-list load
+  state, per-bottle runtime-settings control updates, process-manager loading
+  and failure state, startup known-runtime/update availability, program-run
+  feedback, and runtime capabilities loading/unavailable/available state.
+  Routed home detail program configuration through the existing explicit
+  settings state, and replaced create-bottle and winetricks loading booleans
+  with `BlockingProgressState`.
+- Remaining work: no further same-kind semantic loader/app state was left in
+  this batch after excluding DTO/CLI JSON nullable fields, Flutter optional
+  callbacks, adapter plugin nullability, and private widget interaction flags.
+- Next action: continue a new nullable-hardening slice such as App Settings
+  dialog private operation flags, or leave those private widget flags as UI
+  implementation detail.
+- Verification: observed targeted tests fail before implementation for
+  `RuntimeCapabilitiesState`, `BottleListLoadState`,
+  `RuntimeSettingsControlState`, `ProcessManagerState`, startup update state,
+  and `ProgramRunFeedback` contracts. After implementation, targeted tests
+  passed for `home_contracts_test.dart`,
+  `bottle_runtime_control_availability_test.dart`,
+  `process_manager_state_test.dart`, `immutability_test.dart`, and
+  `program_run_feedback_test.dart`. Full Flutter verification passed with
+  `just flutter-format-check`, `just flutter-analyze`, and `just
+  flutter-test`. Repository verification passed with `just verify-governance`,
+  `just verify-safety`, `just format-check`, and `just lint`.
+
 - Timestamp: 2026-06-30 14:59 JST
 - State: `completed`
 - Branch: `main`

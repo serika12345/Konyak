@@ -1,13 +1,20 @@
 import 'package:flutter/material.dart';
 
 import '../../bottles/bottle_summary.dart';
-import '../../runtimes/runtime_summary.dart';
 import '../app_platform.dart';
 import '../bottles/bottle_detail_mode.dart';
+import '../bottles/runtime_capabilities_state.dart';
 import '../bottles/runtime_settings_change.dart';
+import '../bottles/runtime_settings_control_state.dart';
+import '../programs/program_configuration_settings.dart';
 import '../utils/bottle_lists.dart';
+import 'bottle_list_load_state.dart';
 
 export '../bottles/bottle_detail_mode.dart';
+export '../bottles/runtime_capabilities_state.dart';
+export '../bottles/runtime_settings_control_state.dart';
+export '../programs/program_configuration_settings.dart';
+export 'bottle_list_load_state.dart';
 
 typedef KonyakProgramPathAction =
     void Function(BottleSummary bottle, String programPath);
@@ -27,11 +34,10 @@ typedef KonyakBottleLocationAction =
 final class KonyakHomeViewState {
   KonyakHomeViewState({
     required this.platform,
-    this.runtime,
+    this.runtimeCapabilitiesState =
+        const RuntimeCapabilitiesState.unavailable(),
     Iterable<BottleSummary> bottles = const <BottleSummary>[],
-    this.isLoading = false,
-    this.errorMessage,
-    this.isRuntimeCapabilitiesLoading = false,
+    this.bottleListLoadState = const BottleListLoadState.loaded(),
     Map<String, ProgramSettingsSummary> programSettings =
         const <String, ProgramSettingsSummary>{},
     Set<String> loadingProgramSettings = const <String>{},
@@ -45,11 +51,9 @@ final class KonyakHomeViewState {
        );
 
   final KonyakPlatform platform;
-  final RuntimeSummary? runtime;
+  final RuntimeCapabilitiesState runtimeCapabilitiesState;
   final List<BottleSummary> bottles;
-  final bool isLoading;
-  final String? errorMessage;
-  final bool isRuntimeCapabilitiesLoading;
+  final BottleListLoadState bottleListLoadState;
   final Map<String, ProgramSettingsSummary> programSettings;
   final Set<String> loadingProgramSettings;
   final Map<String, String> pendingRuntimeSettingsControls;
@@ -68,23 +72,35 @@ final class KonyakHomeViewState {
   }) {
     return KonyakHomeDetailState(
       platform: platform,
-      runtime: runtime,
+      runtimeCapabilitiesState: runtimeCapabilitiesState,
       bottle: bottle,
-      isLoading: isLoading,
-      errorMessage: errorMessage,
+      bottleListLoadState: bottleListLoadState,
       detailMode: detailMode,
       selectedProgram: selectedProgram,
-      programSettings: _programSettingsFor(bottle, selectedProgram),
-      isProgramSettingsLoading: _isProgramSettingsLoadingFor(
-        bottle,
-        selectedProgram,
-      ),
-      isRuntimeCapabilitiesLoading: isRuntimeCapabilitiesLoading,
-      pendingRuntimeSettingsControlKey: bottle == null
-          ? null
-          : pendingRuntimeSettingsControls[bottle.id],
+      programConfigurationSettingsState:
+          programConfigurationSettingsStateFromNullable(
+            settings: _programSettingsFor(bottle, selectedProgram),
+            isLoading: _isProgramSettingsLoadingFor(bottle, selectedProgram),
+          ),
+      runtimeSettingsControlState: _runtimeSettingsControlStateFor(bottle),
       isBottleNavigationLocked: isBottleNavigationLocked,
     );
+  }
+
+  RuntimeSettingsControlState _runtimeSettingsControlStateFor(
+    BottleSummary? bottle,
+  ) {
+    final controlKey = switch (bottle) {
+      BottleSummary(:final id) => pendingRuntimeSettingsControls[id],
+      _ => null,
+    };
+
+    return switch (controlKey) {
+      final String controlKey => RuntimeSettingsControlState.updating(
+        controlKey,
+      ),
+      _ => const RuntimeSettingsControlState.idle(),
+    };
   }
 
   ProgramSettingsSummary? _programSettingsFor(
@@ -125,30 +141,24 @@ final class KonyakHomeViewState {
 final class KonyakHomeDetailState {
   const KonyakHomeDetailState({
     required this.platform,
-    required this.runtime,
+    required this.runtimeCapabilitiesState,
     required this.bottle,
-    required this.isLoading,
-    required this.errorMessage,
+    required this.bottleListLoadState,
     required this.detailMode,
     required this.selectedProgram,
-    required this.programSettings,
-    required this.isProgramSettingsLoading,
-    required this.isRuntimeCapabilitiesLoading,
-    required this.pendingRuntimeSettingsControlKey,
+    required this.programConfigurationSettingsState,
+    required this.runtimeSettingsControlState,
     required this.isBottleNavigationLocked,
   });
 
   final KonyakPlatform platform;
-  final RuntimeSummary? runtime;
+  final RuntimeCapabilitiesState runtimeCapabilitiesState;
   final BottleSummary? bottle;
-  final bool isLoading;
-  final String? errorMessage;
+  final BottleListLoadState bottleListLoadState;
   final BottleDetailMode detailMode;
   final PinnedProgramSummary? selectedProgram;
-  final ProgramSettingsSummary? programSettings;
-  final bool isProgramSettingsLoading;
-  final bool isRuntimeCapabilitiesLoading;
-  final String? pendingRuntimeSettingsControlKey;
+  final ProgramConfigurationSettingsState programConfigurationSettingsState;
+  final RuntimeSettingsControlState runtimeSettingsControlState;
   final bool isBottleNavigationLocked;
 }
 

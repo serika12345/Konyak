@@ -8,6 +8,7 @@ import '../../l10n/konyak_localizations.dart';
 import '../utils/program_labels.dart';
 import '../widgets/icon_file_image.dart';
 import '../widgets/konyak_snack_bar.dart';
+import 'process_manager_state.dart';
 
 class ProcessManagerDialog extends StatefulWidget {
   const ProcessManagerDialog({
@@ -29,10 +30,8 @@ class ProcessManagerDialog extends StatefulWidget {
 }
 
 class _ProcessManagerDialogState extends State<ProcessManagerDialog> {
-  List<WineProcessSummary> _processes = const <WineProcessSummary>[];
+  ProcessManagerState _processState = const ProcessManagerState.loading();
   final Set<String> _terminatingProcessKeys = <String>{};
-  bool _isLoading = true;
-  String? _errorMessage;
 
   @override
   void initState() {
@@ -42,8 +41,7 @@ class _ProcessManagerDialogState extends State<ProcessManagerDialog> {
 
   Future<void> _loadProcesses() async {
     setState(() {
-      _isLoading = true;
-      _errorMessage = null;
+      _processState = const ProcessManagerState.loading();
     });
 
     final result = await widget.onLoadProcesses();
@@ -53,18 +51,12 @@ class _ProcessManagerDialogState extends State<ProcessManagerDialog> {
     }
 
     setState(() {
-      _isLoading = false;
-      switch (result) {
-        case LoadedWineProcesses(:final processes):
-          _processes = processes;
-        case WineProcessListLoadFailure(:final message):
-          _errorMessage = message;
-      }
+      _processState = processManagerStateFromLoadResult(result);
     });
   }
 
   Future<void> _terminateProcess(WineProcessSummary process) async {
-    final key = _processKey(process);
+    final key = processManagerProcessKey(process);
     setState(() {
       _terminatingProcessKeys.add(key);
     });
@@ -78,9 +70,10 @@ class _ProcessManagerDialogState extends State<ProcessManagerDialog> {
     setState(() {
       _terminatingProcessKeys.remove(key);
       if (result is TerminatedWineProcesses) {
-        _processes = _processes
-            .where((candidate) => _processKey(candidate) != key)
-            .toList(growable: false);
+        _processState = removeProcessFromManagerState(
+          state: _processState,
+          processKey: key,
+        );
       }
     });
 
@@ -106,7 +99,9 @@ class _ProcessManagerDialogState extends State<ProcessManagerDialog> {
       actions: [
         TextButton.icon(
           key: const ValueKey('process-manager-refresh'),
-          onPressed: _isLoading ? null : _loadProcesses,
+          onPressed: isProcessManagerLoading(_processState)
+              ? null
+              : _loadProcesses,
           icon: const Icon(Icons.refresh, size: 18),
           label: Text(localizations.refresh),
         ),
@@ -119,69 +114,65 @@ class _ProcessManagerDialogState extends State<ProcessManagerDialog> {
   }
 
   Widget _content() {
-    if (_isLoading) {
-      return const SizedBox(
+    return switch (_processState) {
+      LoadingProcessManagerState() => const SizedBox(
         height: 180,
         child: Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    final errorMessage = _errorMessage;
-    if (errorMessage != null) {
-      return SizedBox(height: 180, child: Center(child: Text(errorMessage)));
-    }
-
-    if (_processes.isEmpty) {
-      return SizedBox(
-        height: 180,
-        child: Center(
-          child: Text(KonyakLocalizations.of(context).noWineProcessesFound),
-        ),
-      );
-    }
-
-    return ConstrainedBox(
-      constraints: const BoxConstraints(maxHeight: 420),
-      child: ListView.separated(
-        shrinkWrap: true,
-        itemCount: _processes.length,
-        separatorBuilder: (context, index) => const Divider(height: 1),
-        itemBuilder: (context, index) {
-          final process = _processes[index];
-          final key = _processKey(process);
-          final isTerminating = _terminatingProcessKeys.contains(key);
-          return ListTile(
-            key: ValueKey('process-manager-process-$key'),
-            contentPadding: EdgeInsets.zero,
-            leading: _ProcessIcon(process: process),
-            title: Text(
-              _processDisplayName(process),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            subtitle: Text(
-              _processSubtitle(process),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            trailing: TextButton.icon(
-              key: ValueKey('process-manager-kill-$key'),
-              onPressed: isTerminating
-                  ? null
-                  : () => unawaited(_terminateProcess(process)),
-              icon: isTerminating
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.close, size: 16),
-              label: Text(KonyakLocalizations.of(context).kill),
-            ),
-          );
-        },
       ),
-    );
+      FailedProcessManagerState(:final message) => SizedBox(
+        height: 180,
+        child: Center(child: Text(message)),
+      ),
+      LoadedProcessManagerState(:final processes) when processes.isEmpty =>
+        SizedBox(
+          height: 180,
+          child: Center(
+            child: Text(KonyakLocalizations.of(context).noWineProcessesFound),
+          ),
+        ),
+      LoadedProcessManagerState(:final processes) => ConstrainedBox(
+        constraints: const BoxConstraints(maxHeight: 420),
+        child: ListView.separated(
+          shrinkWrap: true,
+          itemCount: processes.length,
+          separatorBuilder: (context, index) => const Divider(height: 1),
+          itemBuilder: (context, index) {
+            final process = processes[index];
+            final key = processManagerProcessKey(process);
+            final isTerminating = _terminatingProcessKeys.contains(key);
+            return ListTile(
+              key: ValueKey('process-manager-process-$key'),
+              contentPadding: EdgeInsets.zero,
+              leading: _ProcessIcon(process: process),
+              title: Text(
+                _processDisplayName(process),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              subtitle: Text(
+                _processSubtitle(process),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              trailing: TextButton.icon(
+                key: ValueKey('process-manager-kill-$key'),
+                onPressed: isTerminating
+                    ? null
+                    : () => unawaited(_terminateProcess(process)),
+                icon: isTerminating
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.close, size: 16),
+                label: Text(KonyakLocalizations.of(context).kill),
+              ),
+            );
+          },
+        ),
+      ),
+    };
   }
 
   String _processSubtitle(WineProcessSummary process) {
@@ -209,7 +200,9 @@ class _ProcessIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return IconFileImage(
-      key: ValueKey('process-manager-process-icon-${_processKey(process)}'),
+      key: ValueKey(
+        'process-manager-process-icon-${processManagerProcessKey(process)}',
+      ),
       path: process.metadata?.iconPath,
       width: 28,
       height: 28,
@@ -225,8 +218,4 @@ String _processDisplayName(WineProcessSummary process) {
   }
 
   return defaultProgramName(process.executable.replaceAll('\\', '/'));
-}
-
-String _processKey(WineProcessSummary process) {
-  return '${process.bottleId}-${process.processId}';
 }

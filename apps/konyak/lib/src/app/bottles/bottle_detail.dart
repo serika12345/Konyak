@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../l10n/konyak_localizations.dart';
 import '../app_constants.dart';
 import '../home/home_contracts.dart';
-import '../programs/program_configuration_settings.dart';
 import '../programs/program_configuration_view.dart';
 import '../widgets/konyak_top_bar.dart';
 import 'bottle_configuration_view.dart';
@@ -71,31 +70,24 @@ class KonyakBottleDetail extends StatelessWidget {
                 ? ProgramConfigurationView(
                     bottle: activeBottle,
                     program: activeProgram,
-                    settingsState:
-                        programConfigurationSettingsStateFromNullable(
-                          settings: state.programSettings,
-                          isLoading: state.isProgramSettingsLoading,
-                        ),
+                    settingsState: state.programConfigurationSettingsState,
                     onProgramSettingsChanged:
                         programActions.onProgramSettingsChanged,
                   )
                 : isConfiguration
                 ? BottleConfigurationView(
                     platform: state.platform,
-                    runtime: state.runtime,
-                    isRuntimeCapabilitiesLoading:
-                        state.isRuntimeCapabilitiesLoading,
+                    runtimeCapabilitiesState: state.runtimeCapabilitiesState,
                     bottle: activeBottle,
-                    pendingRuntimeSettingsControlKey:
-                        state.pendingRuntimeSettingsControlKey,
+                    runtimeSettingsControlState:
+                        state.runtimeSettingsControlState,
                     onRuntimeSettingsChanged:
                         bottleActions.onRuntimeSettingsChanged,
                   )
                 : BottleOverview(
                     platform: state.platform,
                     bottle: activeBottle,
-                    isLoading: state.isLoading,
-                    errorMessage: state.errorMessage,
+                    loadState: state.bottleListLoadState,
                     onRunProgram: programActions.onRunProgram,
                     onRunProgramPath: programActions.onRunProgramPath,
                     onPinProgram: programActions.onPinProgram,

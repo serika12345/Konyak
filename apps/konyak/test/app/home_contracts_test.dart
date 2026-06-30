@@ -36,6 +36,33 @@ void main() {
     expect(state.pendingRuntimeSettingsControls.clear, throwsUnsupportedError);
   });
 
+  test('models bottle list loading and failures explicitly', () {
+    expect(isBottleListLoading(const BottleListLoadState.loading()), isTrue);
+    expect(isBottleListLoading(const BottleListLoadState.loaded()), isFalse);
+    expect(
+      isBottleListLoading(
+        const BottleListLoadState.failed('list-bottles failed'),
+      ),
+      isFalse,
+    );
+  });
+
+  test('models runtime settings control updates explicitly', () {
+    const idle = RuntimeSettingsControlState.idle();
+    const updating = RuntimeSettingsControlState.updating('dxvk');
+
+    expect(hasPendingRuntimeSettings(idle), isFalse);
+    expect(hasPendingRuntimeSettings(updating), isTrue);
+    expect(
+      isRuntimeSettingsControlUpdating(state: updating, controlKey: 'dxvk'),
+      isTrue,
+    );
+    expect(
+      isRuntimeSettingsControlUpdating(state: updating, controlKey: 'retina'),
+      isFalse,
+    );
+  });
+
   test(
     'home detail state derives selected program settings by bottle and path',
     () {
@@ -52,6 +79,10 @@ void main() {
       );
       final state = KonyakHomeViewState(
         platform: KonyakPlatform.macos,
+        runtimeCapabilitiesState: const RuntimeCapabilitiesState.loading(),
+        bottleListLoadState: const BottleListLoadState.failed(
+          'list-bottles failed',
+        ),
         bottles: [bottle],
         programSettings: <String, ProgramSettingsSummary>{
           'steam:/games/setup.exe': ProgramSettingsSummary(
@@ -68,9 +99,22 @@ void main() {
         isBottleNavigationLocked: true,
       );
 
-      expect(detailState.programSettings?.locale, 'ja_JP.UTF-8');
-      expect(detailState.isProgramSettingsLoading, isTrue);
-      expect(detailState.pendingRuntimeSettingsControlKey, 'dxvk');
+      expect(switch (detailState.programConfigurationSettingsState) {
+        ReadyProgramConfigurationSettings(:final settings) => settings.locale,
+        LoadingProgramConfigurationSettings() => 'loading',
+      }, 'ja_JP.UTF-8');
+      expect(
+        detailState.runtimeSettingsControlState,
+        const RuntimeSettingsControlState.updating('dxvk'),
+      );
+      expect(
+        detailState.bottleListLoadState,
+        const BottleListLoadState.failed('list-bottles failed'),
+      );
+      expect(
+        detailState.runtimeCapabilitiesState,
+        const RuntimeCapabilitiesState.loading(),
+      );
       expect(detailState.isBottleNavigationLocked, isTrue);
     },
   );

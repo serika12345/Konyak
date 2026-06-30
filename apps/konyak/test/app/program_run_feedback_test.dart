@@ -7,37 +7,37 @@ void main() {
   test('omits feedback for all successful runner completions', () {
     expect(
       programRunFeedback(CompletedProgramRun(_run(runnerKind: 'wine'))),
-      isNull,
+      const ProgramRunFeedback.none(),
     );
     expect(
       programRunFeedback(CompletedProgramRun(_run(runnerKind: 'macosWine'))),
-      isNull,
+      const ProgramRunFeedback.none(),
     );
     expect(
       programRunFeedback(CompletedProgramRun(_run(runnerKind: 'winetricks'))),
-      isNull,
+      const ProgramRunFeedback.none(),
     );
     expect(
       programRunFeedback(
         CompletedProgramRun(_run(runnerKind: 'macosWinetricks')),
       ),
-      isNull,
+      const ProgramRunFeedback.none(),
     );
     expect(
       programRunFeedback(CompletedProgramRun(_run(runnerKind: 'terminal'))),
-      isNull,
+      const ProgramRunFeedback.none(),
     );
     expect(
       programRunFeedback(
         CompletedProgramRun(_run(runnerKind: 'macosTerminal')),
       ),
-      isNull,
+      const ProgramRunFeedback.none(),
     );
     expect(
       programRunFeedback(
         CompletedProgramRun(_run(runnerKind: 'linuxTerminal')),
       ),
-      isNull,
+      const ProgramRunFeedback.none(),
     );
   });
 
@@ -46,7 +46,7 @@ void main() {
       programRunFeedback(
         CompletedProgramRun(_run(runnerKind: 'wine', processExitCode: 1)),
       ),
-      'wine exited with code 1',
+      const ProgramRunFeedback.message('wine exited with code 1'),
     );
     expect(
       programRunFeedback(
@@ -54,7 +54,7 @@ void main() {
           _run(runnerKind: 'macosTerminal', processExitCode: 1),
         ),
       ),
-      'macosTerminal exited with code 1',
+      const ProgramRunFeedback.message('macosTerminal exited with code 1'),
     );
   });
 
@@ -71,7 +71,7 @@ void main() {
           logPath: '/bottles/steam/logs/latest.log',
         ),
       ),
-      'wine not found (wine: wine)',
+      const ProgramRunFeedback.message('wine not found (wine: wine)'),
     );
   });
 }

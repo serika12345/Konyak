@@ -350,9 +350,11 @@ extension KonyakHomeLoaderPrograms on KonyakHomeLoaderState {
         break;
     }
 
-    final feedbackMessage = programRunFeedback(result);
-    if (feedbackMessage != null) {
-      showSnackBar(feedbackMessage);
+    switch (programRunFeedback(result)) {
+      case ProgramRunFeedbackMessage(:final message):
+        showSnackBar(message);
+      case NoProgramRunFeedback():
+        break;
     }
   }
 

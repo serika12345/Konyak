@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../app/dialogs/open_executable_dialog.dart';
+import '../app/home/bottle_list_load_state.dart';
 import 'bottle_operation_outcome.dart';
 import 'executable_auto_run_bottle_selection.dart';
 import 'home_loader.dart';
@@ -68,19 +69,25 @@ extension KonyakHomeLoaderExecutables on KonyakHomeLoaderState {
   }
 
   Future<void> drainPendingExecutableOpenPaths() async {
-    if (!mounted || isLoading || isHandlingExecutableOpen) {
+    if (!mounted ||
+        isBottleListLoading(bottleListLoadState) ||
+        isHandlingExecutableOpen) {
       return;
     }
 
     isHandlingExecutableOpen = true;
     try {
-      while (mounted && !isLoading && pendingExecutableOpenPaths.isNotEmpty) {
+      while (mounted &&
+          !isBottleListLoading(bottleListLoadState) &&
+          pendingExecutableOpenPaths.isNotEmpty) {
         final programPath = pendingExecutableOpenPaths.removeAt(0);
         await showOpenExecutable(programPath);
       }
     } finally {
       isHandlingExecutableOpen = false;
-      if (mounted && !isLoading && pendingExecutableOpenPaths.isNotEmpty) {
+      if (mounted &&
+          !isBottleListLoading(bottleListLoadState) &&
+          pendingExecutableOpenPaths.isNotEmpty) {
         unawaited(drainPendingExecutableOpenPaths());
       }
     }

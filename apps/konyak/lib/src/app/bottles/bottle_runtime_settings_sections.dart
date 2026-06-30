@@ -6,6 +6,7 @@ import '../configuration_labels.dart';
 import '../widgets/configuration_controls.dart';
 import 'bottle_runtime_control_availability.dart';
 import 'bottle_runtime_settings_controls.dart';
+import 'runtime_settings_control_state.dart';
 
 typedef RuntimeSettingsControlChanged =
     void Function(BottleRuntimeSettingsSummary runtimeSettings, String control);
@@ -15,14 +16,14 @@ class BottleWineSettingsSection extends StatelessWidget {
     super.key,
     required this.settings,
     required this.availability,
-    required this.pendingRuntimeSettingsControlKey,
+    required this.runtimeSettingsControlState,
     required this.showMacosRuntimeSettings,
     required this.onChanged,
   });
 
   final BottleRuntimeSettingsSummary settings;
   final BottleRuntimeControlAvailability availability;
-  final String? pendingRuntimeSettingsControlKey;
+  final RuntimeSettingsControlState runtimeSettingsControlState;
   final bool showMacosRuntimeSettings;
   final RuntimeSettingsControlChanged onChanged;
 
@@ -56,9 +57,10 @@ class BottleWineSettingsSection extends StatelessWidget {
             loadingKey: const ValueKey('config-retina-mode-switch-loading'),
             label: localizations.highResolutionMode,
             value: settings.retinaMode,
-            isLoading:
-                pendingRuntimeSettingsControlKey ==
-                runtimeSettingsControlHighResolutionMode,
+            isLoading: isRuntimeSettingsControlUpdating(
+              state: runtimeSettingsControlState,
+              controlKey: runtimeSettingsControlHighResolutionMode,
+            ),
             onChanged: !availability.canUseWineRuntime
                 ? null
                 : (value) {
@@ -106,9 +108,10 @@ class BottleWineSettingsSection extends StatelessWidget {
             loadingKey: const ValueKey('config-avx-switch-loading'),
             label: localizations.advertiseAvxSupport,
             value: settings.avxEnabled,
-            isLoading:
-                pendingRuntimeSettingsControlKey ==
-                runtimeSettingsControlAvxEnabled,
+            isLoading: isRuntimeSettingsControlUpdating(
+              state: runtimeSettingsControlState,
+              controlKey: runtimeSettingsControlAvxEnabled,
+            ),
             onChanged: !availability.canUseWineRuntime
                 ? null
                 : (value) {
@@ -128,7 +131,7 @@ class BottleGraphicsSettingsSection extends StatelessWidget {
     super.key,
     required this.settings,
     required this.availability,
-    required this.pendingRuntimeSettingsControlKey,
+    required this.runtimeSettingsControlState,
     required this.showMacosRuntimeSettings,
     required this.showLinuxRuntimeSettings,
     required this.onChanged,
@@ -136,7 +139,7 @@ class BottleGraphicsSettingsSection extends StatelessWidget {
 
   final BottleRuntimeSettingsSummary settings;
   final BottleRuntimeControlAvailability availability;
-  final String? pendingRuntimeSettingsControlKey;
+  final RuntimeSettingsControlState runtimeSettingsControlState;
   final bool showMacosRuntimeSettings;
   final bool showLinuxRuntimeSettings;
   final RuntimeSettingsControlChanged onChanged;
@@ -192,9 +195,10 @@ class BottleGraphicsSettingsSection extends StatelessWidget {
             loadingKey: const ValueKey('config-dxvk-async-switch-loading'),
             label: 'DXVK Async',
             value: settings.dxvkAsync,
-            isLoading:
-                pendingRuntimeSettingsControlKey ==
-                runtimeSettingsControlDxvkAsync,
+            isLoading: isRuntimeSettingsControlUpdating(
+              state: runtimeSettingsControlState,
+              controlKey: runtimeSettingsControlDxvkAsync,
+            ),
             onChanged: availability.canUseDxvk
                 ? (value) {
                     onChanged(
@@ -226,9 +230,10 @@ class BottleGraphicsSettingsSection extends StatelessWidget {
             loadingKey: const ValueKey('config-vkd3d-proton-switch-loading'),
             label: 'vkd3d-proton',
             value: settings.vkd3dProton,
-            isLoading:
-                pendingRuntimeSettingsControlKey ==
-                runtimeSettingsControlVkd3dProton,
+            isLoading: isRuntimeSettingsControlUpdating(
+              state: runtimeSettingsControlState,
+              controlKey: runtimeSettingsControlVkd3dProton,
+            ),
             onChanged: !availability.canUseVkd3dProton
                 ? null
                 : (value) {
@@ -243,9 +248,10 @@ class BottleGraphicsSettingsSection extends StatelessWidget {
             loadingKey: const ValueKey('config-metal-hud-switch-loading'),
             label: 'Metal HUD',
             value: settings.metalHud,
-            isLoading:
-                pendingRuntimeSettingsControlKey ==
-                runtimeSettingsControlMetalHud,
+            isLoading: isRuntimeSettingsControlUpdating(
+              state: runtimeSettingsControlState,
+              controlKey: runtimeSettingsControlMetalHud,
+            ),
             onChanged: !availability.canUseMetal
                 ? null
                 : (value) {
@@ -260,9 +266,10 @@ class BottleGraphicsSettingsSection extends StatelessWidget {
             loadingKey: const ValueKey('config-metal-trace-switch-loading'),
             label: 'Metal Trace',
             value: settings.metalTrace,
-            isLoading:
-                pendingRuntimeSettingsControlKey ==
-                runtimeSettingsControlMetalTrace,
+            isLoading: isRuntimeSettingsControlUpdating(
+              state: runtimeSettingsControlState,
+              controlKey: runtimeSettingsControlMetalTrace,
+            ),
             onChanged: !availability.canUseMetal
                 ? null
                 : (value) {
@@ -278,9 +285,10 @@ class BottleGraphicsSettingsSection extends StatelessWidget {
             loadingKey: const ValueKey('config-dlss-metalfx-switch-loading'),
             label: 'DLSS / MetalFX',
             value: settings.dlssMetalFx,
-            isLoading:
-                pendingRuntimeSettingsControlKey ==
-                runtimeSettingsControlDlssMetalFx,
+            isLoading: isRuntimeSettingsControlUpdating(
+              state: runtimeSettingsControlState,
+              controlKey: runtimeSettingsControlDlssMetalFx,
+            ),
             onChanged: !canUseDlssMetalFx
                 ? null
                 : (value) {

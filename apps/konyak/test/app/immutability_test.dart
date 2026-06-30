@@ -90,13 +90,19 @@ void main() {
     final labels = <String>['Konyak 1.0'];
     final result = StartupUpdateCheckResult(
       availableUpdateLabels: labels,
-      knownRuntimes: const [],
+      knownRuntimesState: StartupKnownRuntimesState.loaded(const []),
+      konyakUpdateState: const StartupKonyakUpdateState.unavailable(),
     );
     labels.add('changed');
 
     expect(result.availableUpdateLabels, ['Konyak 1.0']);
     expect(() => result.availableUpdateLabels.add('x'), throwsUnsupportedError);
-    expect(() => result.knownRuntimes!.clear(), throwsUnsupportedError);
+    switch (result.knownRuntimesState) {
+      case StartupKnownRuntimesLoaded(:final runtimes):
+        expect(runtimes.clear, throwsUnsupportedError);
+      case StartupKnownRuntimesSkipped():
+        fail('Expected loaded known runtimes.');
+    }
   });
 }
 

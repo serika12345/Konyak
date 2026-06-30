@@ -1,3 +1,5 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+
 import '../../cli/konyak_cli_client.dart';
 import '../../runtimes/runtime_summary.dart';
 import '../../settings/app_settings_summary.dart';
@@ -6,19 +8,49 @@ import '../app_platform.dart';
 import '../runtime/runtime_platform.dart';
 import '../utils/update_labels.dart';
 
+part 'startup_update_checker.freezed.dart';
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class StartupKnownRuntimesState with _$StartupKnownRuntimesState {
+  const factory StartupKnownRuntimesState.skipped() =
+      StartupKnownRuntimesSkipped;
+
+  factory StartupKnownRuntimesState.loaded(List<RuntimeSummary> runtimes) {
+    return StartupKnownRuntimesState._loaded(List.unmodifiable(runtimes));
+  }
+
+  const factory StartupKnownRuntimesState._loaded(
+    List<RuntimeSummary> runtimes,
+  ) = StartupKnownRuntimesLoaded;
+}
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class StartupKonyakUpdateState with _$StartupKonyakUpdateState {
+  const factory StartupKonyakUpdateState.unavailable() =
+      StartupKonyakUpdateUnavailable;
+
+  const factory StartupKonyakUpdateState.available(UpdateCheckSummary update) =
+      StartupKonyakUpdateAvailable;
+}
+
 final class StartupUpdateCheckResult {
   StartupUpdateCheckResult({
     required List<String> availableUpdateLabels,
-    required List<RuntimeSummary>? knownRuntimes,
-    this.konyakUpdate,
-  }) : availableUpdateLabels = List.unmodifiable(availableUpdateLabels),
-       knownRuntimes = knownRuntimes == null
-           ? null
-           : List.unmodifiable(knownRuntimes);
+    required this.knownRuntimesState,
+    required this.konyakUpdateState,
+  }) : availableUpdateLabels = List.unmodifiable(availableUpdateLabels);
 
   final List<String> availableUpdateLabels;
-  final List<RuntimeSummary>? knownRuntimes;
-  final UpdateCheckSummary? konyakUpdate;
+  final StartupKnownRuntimesState knownRuntimesState;
+  final StartupKonyakUpdateState konyakUpdateState;
 }
 
 final class StartupUpdateChecker {
@@ -32,19 +64,20 @@ final class StartupUpdateChecker {
         !settings.automaticallyCheckForWineUpdates) {
       return StartupUpdateCheckResult(
         availableUpdateLabels: <String>[],
-        knownRuntimes: null,
+        knownRuntimesState: const StartupKnownRuntimesState.skipped(),
+        konyakUpdateState: const StartupKonyakUpdateState.unavailable(),
       );
     }
 
     final labels = <String>[];
-    UpdateCheckSummary? konyakUpdate;
-    List<RuntimeSummary>? knownRuntimes;
+    var konyakUpdateState = const StartupKonyakUpdateState.unavailable();
+    var knownRuntimesState = const StartupKnownRuntimesState.skipped();
 
     if (settings.automaticallyCheckForKonyakUpdates) {
       final result = await cliClient.checkKonyakUpdate();
       switch (result) {
         case LoadedUpdateCheck(:final update) when update.status == 'available':
-          konyakUpdate = update;
+          konyakUpdateState = StartupKonyakUpdateState.available(update);
           labels.add(updateCheckLabel(update, 'Konyak'));
         case LoadedUpdateCheck() || UpdateCheckLoadFailure():
           break;
@@ -56,7 +89,7 @@ final class StartupUpdateChecker {
       final runtimeResult = await cliClient.listKnownRuntimes();
       switch (runtimeResult) {
         case LoadedRuntimeList(:final runtimes):
-          knownRuntimes = runtimes;
+          knownRuntimesState = StartupKnownRuntimesState.loaded(runtimes);
           switch (runtimeForPlatformSelection(platform, runtimes)) {
             case RuntimeForPlatformFound(:final runtime)
                 when runtime.isInstalled == true:
@@ -76,14 +109,16 @@ final class StartupUpdateChecker {
               break;
           }
         case RuntimeListLoadFailure():
-          knownRuntimes = const <RuntimeSummary>[];
+          knownRuntimesState = StartupKnownRuntimesState.loaded(
+            const <RuntimeSummary>[],
+          );
       }
     }
 
     return StartupUpdateCheckResult(
       availableUpdateLabels: List.unmodifiable(labels),
-      knownRuntimes: knownRuntimes,
-      konyakUpdate: konyakUpdate,
+      knownRuntimesState: knownRuntimesState,
+      konyakUpdateState: konyakUpdateState,
     );
   }
 }

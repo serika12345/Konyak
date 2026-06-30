@@ -69,25 +69,29 @@ extension KonyakHomeLoaderRuntimes on KonyakHomeLoaderState {
       return false;
     }
 
-    final knownRuntimes = result.knownRuntimes;
-    if (knownRuntimes != null) {
-      setKnownRuntimes(knownRuntimes);
+    switch (result.knownRuntimesState) {
+      case StartupKnownRuntimesLoaded(:final runtimes):
+        setKnownRuntimes(runtimes);
+      case StartupKnownRuntimesSkipped():
+        break;
     }
 
     final labels = result.availableUpdateLabels.toList();
-    final konyakUpdate = result.konyakUpdate;
-    if (supportsStartupKonyakAppUpdatePrompt(widget.platform) &&
-        konyakUpdate != null) {
-      labels.remove(updateCheckLabel(konyakUpdate, 'Konyak'));
-      final installStarted = await confirmAndInstallAvailableKonyakUpdate(
-        konyakUpdate,
-      );
-      if (!mounted) {
-        return installStarted;
-      }
-      if (installStarted) {
-        return true;
-      }
+    switch (result.konyakUpdateState) {
+      case StartupKonyakUpdateAvailable(:final update)
+          when supportsStartupKonyakAppUpdatePrompt(widget.platform):
+        labels.remove(updateCheckLabel(update, 'Konyak'));
+        final installStarted = await confirmAndInstallAvailableKonyakUpdate(
+          update,
+        );
+        if (!mounted) {
+          return installStarted;
+        }
+        if (installStarted) {
+          return true;
+        }
+      case StartupKonyakUpdateAvailable() || StartupKonyakUpdateUnavailable():
+        break;
     }
 
     if (labels.isEmpty) {

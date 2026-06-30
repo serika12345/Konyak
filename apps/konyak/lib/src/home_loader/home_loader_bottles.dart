@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../app/dialogs/bottle_management_dialogs.dart';
 import '../app/dialogs/create_bottle_dialog.dart';
+import '../app/home/bottle_list_load_state.dart';
 import '../app/utils/bottle_lists.dart';
 import '../bottles/bottle_summary.dart';
 import '../cli/konyak_cli_bottle_commands.dart';
@@ -22,8 +23,7 @@ import 'home_loader_runtimes.dart';
 extension KonyakHomeLoaderBottles on KonyakHomeLoaderState {
   Future<void> loadBottles() async {
     updateState(() {
-      isLoading = true;
-      errorMessage = null;
+      bottleListLoadState = const BottleListLoadState.loading();
     });
 
     final result = await widget.cliClient.listBottles();
@@ -33,14 +33,12 @@ extension KonyakHomeLoaderBottles on KonyakHomeLoaderState {
     }
 
     updateState(() {
-      isLoading = false;
-
       switch (result) {
         case LoadedBottleList(:final bottles):
           this.bottles = bottles;
-          errorMessage = null;
+          bottleListLoadState = const BottleListLoadState.loaded();
         case BottleListLoadFailure(:final message):
-          errorMessage = message;
+          bottleListLoadState = BottleListLoadState.failed(message);
       }
     });
 
@@ -69,7 +67,9 @@ extension KonyakHomeLoaderBottles on KonyakHomeLoaderState {
     CreateBottleFromDialog input,
   ) async {
     updateState(() {
-      isCreatingBottle = true;
+      createBottleProgress = BlockingProgressState.indeterminate(
+        KonyakLocalizations.of(context).creatingBottleEllipsis,
+      );
     });
 
     late final BottleCreateLoadResult result;
@@ -81,7 +81,7 @@ extension KonyakHomeLoaderBottles on KonyakHomeLoaderState {
     } finally {
       if (mounted) {
         updateState(() {
-          isCreatingBottle = false;
+          createBottleProgress = const BlockingProgressState.hidden();
         });
       }
     }
@@ -106,7 +106,7 @@ extension KonyakHomeLoaderBottles on KonyakHomeLoaderState {
       bottles = oldBottleId == null
           ? upsertBottle(bottles, bottle)
           : replaceBottle(bottles, oldBottleId: oldBottleId, bottle: bottle);
-      errorMessage = null;
+      bottleListLoadState = const BottleListLoadState.loaded();
     });
   }
 
@@ -147,7 +147,7 @@ extension KonyakHomeLoaderBottles on KonyakHomeLoaderState {
         bottles,
         previousBottle.withRuntimeSettings(runtimeSettings),
       );
-      errorMessage = null;
+      bottleListLoadState = const BottleListLoadState.loaded();
     });
 
     final BottleUpdateLoadResult result;
@@ -166,11 +166,11 @@ extension KonyakHomeLoaderBottles on KonyakHomeLoaderState {
       switch (result) {
         case UpdatedBottle(:final bottle):
           bottles = upsertBottle(bottles, bottle);
-          errorMessage = null;
+          bottleListLoadState = const BottleListLoadState.loaded();
         case MissingBottleUpdate(:final message) ||
             BottleUpdateLoadFailure(:final message):
           bottles = upsertBottle(bottles, previousBottle);
-          errorMessage = null;
+          bottleListLoadState = const BottleListLoadState.loaded();
           failureMessages.add(message);
       }
     });
@@ -245,7 +245,7 @@ extension KonyakHomeLoaderBottles on KonyakHomeLoaderState {
       case DeletedBottle(:final bottle):
         updateState(() {
           bottles = removeBottle(bottles, bottle.id);
-          errorMessage = null;
+          bottleListLoadState = const BottleListLoadState.loaded();
         });
         showSnackBar(
           KonyakLocalizations.of(context).deletedBottle(bottle.name),

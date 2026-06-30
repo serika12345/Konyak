@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../bottles/bottle_summary.dart';
 import '../app_constants.dart';
 import '../app_platform.dart';
+import '../home/bottle_list_load_state.dart';
 import '../programs/pinned_programs_section.dart';
 import 'bottle_actions.dart';
 import 'bottle_empty_states.dart';
@@ -14,8 +15,7 @@ class BottleOverview extends StatelessWidget {
     super.key,
     required this.platform,
     required this.bottle,
-    required this.isLoading,
-    required this.errorMessage,
+    required this.loadState,
     required this.onRunProgram,
     required this.onRunProgramPath,
     required this.onPinProgram,
@@ -29,8 +29,7 @@ class BottleOverview extends StatelessWidget {
 
   final KonyakPlatform platform;
   final BottleSummary? bottle;
-  final bool isLoading;
-  final String? errorMessage;
+  final BottleListLoadState loadState;
   final ValueChanged<BottleSummary>? onRunProgram;
   final void Function(BottleSummary bottle, String programPath)?
   onRunProgramPath;
@@ -51,17 +50,16 @@ class BottleOverview extends StatelessWidget {
     final colors = KonyakThemeColors.of(context);
     final activeBottle = bottle;
 
-    if (isLoading && activeBottle == null) {
-      return Center(child: CircularProgressIndicator(color: colors.accent));
-    }
-
-    final message = errorMessage;
-    if (message != null && activeBottle == null) {
-      return BottleLoadFailureState(message: message);
-    }
-
     if (activeBottle == null) {
-      return const EmptyBottleState();
+      return switch (loadState) {
+        BottleListLoading() => Center(
+          child: CircularProgressIndicator(color: colors.accent),
+        ),
+        BottleListLoadFailed(:final message) => BottleLoadFailureState(
+          message: message,
+        ),
+        BottleListLoaded() => const EmptyBottleState(),
+      };
     }
 
     return LayoutBuilder(

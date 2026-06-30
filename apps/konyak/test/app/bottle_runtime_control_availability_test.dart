@@ -7,21 +7,23 @@ void main() {
   test('disables every runtime control while a settings update is pending', () {
     final availability = resolveBottleRuntimeControlAvailability(
       platform: KonyakPlatform.macos,
-      runtime: _runtime(
-        components: const <String>[
-          'dxvk-macos',
-          'dxmt',
-          'moltenvk',
-          'gptk-d3dmetal',
-        ],
-        backends: [
-          _backend('dxvk-macos', componentIds: const <String>['dxvk-macos']),
-          _backend('dxmt', componentIds: const <String>['dxmt']),
-          _backend(
+      runtimeCapabilitiesState: RuntimeCapabilitiesState.available(
+        _runtime(
+          components: const <String>[
+            'dxvk-macos',
+            'dxmt',
+            'moltenvk',
             'gptk-d3dmetal',
-            componentIds: const <String>['gptk-d3dmetal'],
-          ),
-        ],
+          ],
+          backends: [
+            _backend('dxvk-macos', componentIds: const <String>['dxvk-macos']),
+            _backend('dxmt', componentIds: const <String>['dxmt']),
+            _backend(
+              'gptk-d3dmetal',
+              componentIds: const <String>['gptk-d3dmetal'],
+            ),
+          ],
+        ),
       ),
       canChangeSettings: true,
       hasPendingRuntimeSettings: true,
@@ -37,24 +39,81 @@ void main() {
     expect(availability.canUseD3DMetalDlssMetalFx, isFalse);
   });
 
+  test('disables every runtime control while capabilities are unavailable', () {
+    final availability = resolveBottleRuntimeControlAvailability(
+      platform: KonyakPlatform.macos,
+      runtimeCapabilitiesState: const RuntimeCapabilitiesState.unavailable(),
+      canChangeSettings: true,
+      hasPendingRuntimeSettings: false,
+    );
+
+    expect(availability.canUseWineRuntime, isFalse);
+    expect(availability.canUseDxvk, isFalse);
+    expect(availability.canUseDxmt, isFalse);
+    expect(availability.canUseVkd3dProton, isFalse);
+    expect(availability.canUseMetal, isFalse);
+    expect(availability.canUseDxr, isFalse);
+    expect(availability.canUseDxmtDlssMetalFx, isFalse);
+    expect(availability.canUseD3DMetalDlssMetalFx, isFalse);
+  });
+
+  test('models runtime capabilities selection explicitly', () {
+    final runtime = _runtime(
+      id: 'konyak-macos-wine',
+      platform: 'macos',
+      components: const <String>[],
+    );
+
+    expect(
+      runtimeCapabilitiesStateForPlatform(
+        platform: KonyakPlatform.macos,
+        isLoading: true,
+        runtimes: [runtime],
+      ),
+      const RuntimeCapabilitiesState.loading(),
+    );
+    expect(
+      runtimeCapabilitiesStateForPlatform(
+        platform: KonyakPlatform.linux,
+        isLoading: false,
+        runtimes: [runtime],
+      ),
+      const RuntimeCapabilitiesState.unavailable(),
+    );
+
+    final available = runtimeCapabilitiesStateForPlatform(
+      platform: KonyakPlatform.macos,
+      isLoading: false,
+      runtimes: [runtime],
+    );
+
+    expect(switch (available) {
+      AvailableRuntimeCapabilities(:final runtime) => runtime.id,
+      LoadingRuntimeCapabilities() ||
+      UnavailableRuntimeCapabilities() => 'unavailable',
+    }, 'konyak-macos-wine');
+  });
+
   test('uses macOS runtime components for macOS controls', () {
     final availability = resolveBottleRuntimeControlAvailability(
       platform: KonyakPlatform.macos,
-      runtime: _runtime(
-        components: const <String>[
-          'dxvk-macos',
-          'dxmt',
-          'moltenvk',
-          'gptk-d3dmetal',
-        ],
-        backends: [
-          _backend('dxvk-macos', componentIds: const <String>['dxvk-macos']),
-          _backend('dxmt', componentIds: const <String>['dxmt']),
-          _backend(
+      runtimeCapabilitiesState: RuntimeCapabilitiesState.available(
+        _runtime(
+          components: const <String>[
+            'dxvk-macos',
+            'dxmt',
+            'moltenvk',
             'gptk-d3dmetal',
-            componentIds: const <String>['gptk-d3dmetal'],
-          ),
-        ],
+          ],
+          backends: [
+            _backend('dxvk-macos', componentIds: const <String>['dxvk-macos']),
+            _backend('dxmt', componentIds: const <String>['dxmt']),
+            _backend(
+              'gptk-d3dmetal',
+              componentIds: const <String>['gptk-d3dmetal'],
+            ),
+          ],
+        ),
       ),
       canChangeSettings: true,
       hasPendingRuntimeSettings: false,
@@ -73,32 +132,34 @@ void main() {
   test('requires NVIDIA shim paths for macOS DLSS MetalFX controls', () {
     final availability = resolveBottleRuntimeControlAvailability(
       platform: KonyakPlatform.macos,
-      runtime: _runtime(
-        components: const <String>['dxmt', 'gptk-d3dmetal'],
-        missingPaths: const <String, List<String>>{
-          'dxmt': <String>['/runtime/lib/dxmt/x86_64-windows/nvngx.dll'],
-          'gptk-d3dmetal': <String>[
-            '/runtime/components/gptk-d3dmetal/lib/wine/x86_64-unix/nvapi64.so',
+      runtimeCapabilitiesState: RuntimeCapabilitiesState.available(
+        _runtime(
+          components: const <String>['dxmt', 'gptk-d3dmetal'],
+          missingPaths: const <String, List<String>>{
+            'dxmt': <String>['/runtime/lib/dxmt/x86_64-windows/nvngx.dll'],
+            'gptk-d3dmetal': <String>[
+              '/runtime/components/gptk-d3dmetal/lib/wine/x86_64-unix/nvapi64.so',
+            ],
+          },
+          backends: [
+            RuntimeStackBackendSummary(
+              id: 'dxmt',
+              name: 'DXMT',
+              role: 'd3d10-d3d11-metal-translation',
+              componentIds: const <String>['dxmt'],
+              missingComponentIds: const <String>[],
+              missingPaths: const <String>[],
+            ),
+            RuntimeStackBackendSummary(
+              id: 'gptk-d3dmetal',
+              name: 'GPTK/D3DMetal',
+              role: 'd3d12-metal-translation',
+              componentIds: const <String>['gptk-d3dmetal'],
+              missingComponentIds: const <String>[],
+              missingPaths: const <String>[],
+            ),
           ],
-        },
-        backends: [
-          RuntimeStackBackendSummary(
-            id: 'dxmt',
-            name: 'DXMT',
-            role: 'd3d10-d3d11-metal-translation',
-            componentIds: const <String>['dxmt'],
-            missingComponentIds: const <String>[],
-            missingPaths: const <String>[],
-          ),
-          RuntimeStackBackendSummary(
-            id: 'gptk-d3dmetal',
-            name: 'GPTK/D3DMetal',
-            role: 'd3d12-metal-translation',
-            componentIds: const <String>['gptk-d3dmetal'],
-            missingComponentIds: const <String>[],
-            missingPaths: const <String>[],
-          ),
-        ],
+        ),
       ),
       canChangeSettings: true,
       hasPendingRuntimeSettings: false,
@@ -113,18 +174,20 @@ void main() {
   test('uses backend availability before component availability', () {
     final availability = resolveBottleRuntimeControlAvailability(
       platform: KonyakPlatform.macos,
-      runtime: _runtime(
-        components: const <String>['dxvk-macos', 'moltenvk'],
-        backends: [
-          RuntimeStackBackendSummary(
-            id: 'dxvk-macos',
-            name: 'DXVK-macOS',
-            role: 'd3d9-d3d11-metal-translation',
-            componentIds: const <String>['dxvk-macos', 'moltenvk'],
-            missingComponentIds: const <String>['moltenvk'],
-            missingPaths: const <String>['/runtime/lib/libMoltenVK.dylib'],
-          ),
-        ],
+      runtimeCapabilitiesState: RuntimeCapabilitiesState.available(
+        _runtime(
+          components: const <String>['dxvk-macos', 'moltenvk'],
+          backends: [
+            RuntimeStackBackendSummary(
+              id: 'dxvk-macos',
+              name: 'DXVK-macOS',
+              role: 'd3d9-d3d11-metal-translation',
+              componentIds: const <String>['dxvk-macos', 'moltenvk'],
+              missingComponentIds: const <String>['moltenvk'],
+              missingPaths: const <String>['/runtime/lib/libMoltenVK.dylib'],
+            ),
+          ],
+        ),
       ),
       canChangeSettings: true,
       hasPendingRuntimeSettings: false,
@@ -136,7 +199,9 @@ void main() {
   test('requires backend availability for runtime-backed controls', () {
     final availability = resolveBottleRuntimeControlAvailability(
       platform: KonyakPlatform.macos,
-      runtime: _runtime(components: const <String>['dxvk-macos', 'moltenvk']),
+      runtimeCapabilitiesState: RuntimeCapabilitiesState.available(
+        _runtime(components: const <String>['dxvk-macos', 'moltenvk']),
+      ),
       canChangeSettings: true,
       hasPendingRuntimeSettings: false,
     );
@@ -147,15 +212,17 @@ void main() {
   test('uses Linux runtime components for Vulkan controls', () {
     final availability = resolveBottleRuntimeControlAvailability(
       platform: KonyakPlatform.linux,
-      runtime: _runtime(
-        components: const <String>['dxvk', 'vkd3d-proton'],
-        backends: [
-          _backend('dxvk', componentIds: const <String>['dxvk']),
-          _backend(
-            'vkd3d-proton',
-            componentIds: const <String>['vkd3d-proton'],
-          ),
-        ],
+      runtimeCapabilitiesState: RuntimeCapabilitiesState.available(
+        _runtime(
+          components: const <String>['dxvk', 'vkd3d-proton'],
+          backends: [
+            _backend('dxvk', componentIds: const <String>['dxvk']),
+            _backend(
+              'vkd3d-proton',
+              componentIds: const <String>['vkd3d-proton'],
+            ),
+          ],
+        ),
       ),
       canChangeSettings: true,
       hasPendingRuntimeSettings: false,
@@ -187,15 +254,17 @@ RuntimeStackBackendSummary _backend(
 }
 
 RuntimeSummary _runtime({
+  String id = 'runtime',
+  String platform = 'test',
   required List<String> components,
   Map<String, List<String>> missingPaths = const <String, List<String>>{},
   List<RuntimeStackBackendSummary> backends =
       const <RuntimeStackBackendSummary>[],
 }) {
   return RuntimeSummary(
-    id: 'runtime',
+    id: id,
     name: 'Runtime',
-    platform: 'test',
+    platform: platform,
     architecture: 'x86_64',
     runnerKind: 'wine',
     isBundled: false,
