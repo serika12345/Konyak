@@ -13,6 +13,7 @@ import '../cli/konyak_cli_runtime_result_types.dart';
 import '../files/file_path_pick_result.dart';
 import '../l10n/konyak_localizations.dart';
 import '../runtimes/runtime_summary.dart';
+import 'blocking_progress_state.dart';
 import 'bottle_operation_outcome.dart';
 import 'home_loader.dart';
 import 'home_loader_executables.dart';
@@ -356,9 +357,9 @@ extension KonyakHomeLoaderBottles on KonyakHomeLoaderState {
     required String archivePath,
   }) async {
     updateState(() {
-      archiveProgressMessage = KonyakLocalizations.of(
-        context,
-      ).exportingBottleArchiveEllipsis;
+      archiveProgress = BlockingProgressState.indeterminate(
+        KonyakLocalizations.of(context).exportingBottleArchiveEllipsis,
+      );
     });
 
     late final BottleArchiveExportLoadResult result;
@@ -370,7 +371,7 @@ extension KonyakHomeLoaderBottles on KonyakHomeLoaderState {
     } finally {
       if (mounted) {
         updateState(() {
-          archiveProgressMessage = null;
+          archiveProgress = const BlockingProgressState.hidden();
         });
       }
     }
@@ -402,9 +403,9 @@ extension KonyakHomeLoaderBottles on KonyakHomeLoaderState {
 
   Future<void> importBottleArchiveFromPath(String archivePath) async {
     updateState(() {
-      archiveProgressMessage = KonyakLocalizations.of(
-        context,
-      ).importingBottleArchiveEllipsis;
+      archiveProgress = BlockingProgressState.indeterminate(
+        KonyakLocalizations.of(context).importingBottleArchiveEllipsis,
+      );
     });
 
     late final BottleArchiveImportLoadResult result;
@@ -415,7 +416,7 @@ extension KonyakHomeLoaderBottles on KonyakHomeLoaderState {
     } finally {
       if (mounted) {
         updateState(() {
-          archiveProgressMessage = null;
+          archiveProgress = const BlockingProgressState.hidden();
         });
       }
     }

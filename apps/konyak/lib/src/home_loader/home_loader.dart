@@ -19,6 +19,7 @@ import '../l10n/konyak_localizations.dart';
 import '../logs/log_reader.dart';
 import '../settings/app_settings_summary.dart';
 import 'app_settings_state.dart';
+import 'blocking_progress_state.dart';
 import 'home_loader_bottles.dart';
 import 'home_loader_executables.dart';
 import 'home_loader_pinned_programs.dart';
@@ -77,11 +78,13 @@ class KonyakHomeLoaderState extends State<KonyakHomeLoader>
   final Set<int> activeProgramLaunchIds = <int>{};
   int nextProgramLaunchId = 0;
   bool isLoadingWinetricks = false;
-  String? winetricksInstallProgressMessage;
-  String? archiveProgressMessage;
-  String? runtimeInstallProgressMessage;
-  double? runtimeInstallProgressFraction;
-  String? konyakUpdateCheckProgressMessage;
+  BlockingProgressState winetricksInstallProgress =
+      const BlockingProgressState.hidden();
+  BlockingProgressState archiveProgress = const BlockingProgressState.hidden();
+  BlockingProgressState runtimeInstallProgress =
+      const BlockingProgressState.hidden();
+  BlockingProgressState konyakUpdateCheckProgress =
+      const BlockingProgressState.hidden();
   bool isShowingSettings = false;
   bool isCheckingKonyakUpdate = false;
   bool hasTerminatedWineProcesses = false;
@@ -263,28 +266,38 @@ class KonyakHomeLoaderState extends State<KonyakHomeLoader>
               context,
             ).loadingWinetricksPackagesEllipsis,
           ),
-        if (winetricksInstallProgressMessage case final message?)
-          BlockingProgressOverlay(
-            key: const ValueKey('winetricks-progress'),
-            message: message,
-          ),
-        if (archiveProgressMessage case final message?)
-          BlockingProgressOverlay(
-            key: const ValueKey('bottle-archive-progress'),
-            message: message,
-          ),
-        if (runtimeInstallProgressMessage case final message?)
-          BlockingProgressOverlay(
-            key: const ValueKey('runtime-install-progress'),
-            message: message,
-            progress: runtimeInstallProgressFraction,
-          ),
-        if (konyakUpdateCheckProgressMessage case final message?)
-          BlockingProgressOverlay(
-            key: const ValueKey('konyak-update-check-progress'),
-            message: message,
-          ),
+        ...blockingProgressOverlays(
+          key: const ValueKey('winetricks-progress'),
+          state: winetricksInstallProgress,
+        ),
+        ...blockingProgressOverlays(
+          key: const ValueKey('bottle-archive-progress'),
+          state: archiveProgress,
+        ),
+        ...blockingProgressOverlays(
+          key: const ValueKey('runtime-install-progress'),
+          state: runtimeInstallProgress,
+        ),
+        ...blockingProgressOverlays(
+          key: const ValueKey('konyak-update-check-progress'),
+          state: konyakUpdateCheckProgress,
+        ),
       ],
     );
   }
+}
+
+List<Widget> blockingProgressOverlays({
+  required Key key,
+  required BlockingProgressState state,
+}) {
+  return switch (state) {
+    HiddenBlockingProgress() => const <Widget>[],
+    IndeterminateBlockingProgress(:final message) => <Widget>[
+      BlockingProgressOverlay(key: key, message: message),
+    ],
+    DeterminateBlockingProgress(:final message, :final progress) => <Widget>[
+      BlockingProgressOverlay(key: key, message: message, progress: progress),
+    ],
+  };
 }

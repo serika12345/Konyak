@@ -9,6 +9,7 @@ import '../cli/konyak_cli_program_result_types.dart';
 import '../cli/konyak_cli_read_commands.dart';
 import '../cli/konyak_cli_winetricks_result_types.dart';
 import '../l10n/konyak_localizations.dart';
+import 'blocking_progress_state.dart';
 import 'home_loader.dart';
 import 'home_loader_programs.dart';
 
@@ -58,9 +59,9 @@ extension KonyakHomeLoaderWinetricks on KonyakHomeLoaderState {
         }
 
         updateState(() {
-          winetricksInstallProgressMessage = KonyakLocalizations.of(
-            context,
-          ).installingVerb(verb);
+          winetricksInstallProgress = BlockingProgressState.indeterminate(
+            KonyakLocalizations.of(context).installingVerb(verb),
+          );
         });
 
         late final ProgramRunLoadResult runResult;
@@ -72,7 +73,7 @@ extension KonyakHomeLoaderWinetricks on KonyakHomeLoaderState {
         } finally {
           if (mounted) {
             updateState(() {
-              winetricksInstallProgressMessage = null;
+              winetricksInstallProgress = const BlockingProgressState.hidden();
             });
           }
         }

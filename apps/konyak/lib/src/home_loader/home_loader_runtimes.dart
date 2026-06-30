@@ -23,6 +23,7 @@ import '../runtimes/runtime_summary.dart';
 import '../settings/app_settings_summary.dart';
 import '../updates/update_check_summary.dart';
 import 'app_settings_state.dart';
+import 'blocking_progress_state.dart';
 import 'home_loader.dart';
 import 'home_loader_platform_helpers.dart';
 import 'known_runtimes_state.dart';
@@ -120,9 +121,9 @@ extension KonyakHomeLoaderRuntimes on KonyakHomeLoaderState {
 
     updateState(() {
       isCheckingKonyakUpdate = true;
-      konyakUpdateCheckProgressMessage = KonyakLocalizations.of(
-        context,
-      ).checkingForKonyakUpdatesEllipsis;
+      konyakUpdateCheckProgress = BlockingProgressState.indeterminate(
+        KonyakLocalizations.of(context).checkingForKonyakUpdatesEllipsis,
+      );
     });
 
     try {
@@ -133,7 +134,7 @@ extension KonyakHomeLoaderRuntimes on KonyakHomeLoaderState {
       }
 
       updateState(() {
-        konyakUpdateCheckProgressMessage = null;
+        konyakUpdateCheckProgress = const BlockingProgressState.hidden();
       });
 
       switch (result) {
@@ -154,7 +155,7 @@ extension KonyakHomeLoaderRuntimes on KonyakHomeLoaderState {
       if (mounted) {
         updateState(() {
           isCheckingKonyakUpdate = false;
-          konyakUpdateCheckProgressMessage = null;
+          konyakUpdateCheckProgress = const BlockingProgressState.hidden();
         });
       }
     }
@@ -351,8 +352,10 @@ extension KonyakHomeLoaderRuntimes on KonyakHomeLoaderState {
     }
 
     updateState(() {
-      runtimeInstallProgressMessage = progress.message;
-      runtimeInstallProgressFraction = progress.fraction;
+      runtimeInstallProgress = BlockingProgressState.determinate(
+        message: progress.message,
+        progress: progress.fraction,
+      );
     });
   }
 
@@ -373,10 +376,10 @@ extension KonyakHomeLoaderRuntimes on KonyakHomeLoaderState {
     }
 
     updateState(() {
-      runtimeInstallProgressMessage = KonyakLocalizations.of(
-        context,
-      ).downloadProgress(runtimeName);
-      runtimeInstallProgressFraction = 0;
+      runtimeInstallProgress = BlockingProgressState.determinate(
+        message: KonyakLocalizations.of(context).downloadProgress(runtimeName),
+        progress: 0,
+      );
     });
 
     try {
@@ -387,8 +390,7 @@ extension KonyakHomeLoaderRuntimes on KonyakHomeLoaderState {
     } finally {
       if (mounted) {
         updateState(() {
-          runtimeInstallProgressMessage = null;
-          runtimeInstallProgressFraction = null;
+          runtimeInstallProgress = const BlockingProgressState.hidden();
         });
       }
     }
@@ -433,10 +435,12 @@ extension KonyakHomeLoaderRuntimes on KonyakHomeLoaderState {
     final managedRuntime = managedRuntimePlatform(widget.platform);
 
     updateState(() {
-      runtimeInstallProgressMessage = KonyakLocalizations.of(
-        context,
-      ).downloadProgress(managedRuntime.displayName);
-      runtimeInstallProgressFraction = 0;
+      runtimeInstallProgress = BlockingProgressState.determinate(
+        message: KonyakLocalizations.of(
+          context,
+        ).downloadProgress(managedRuntime.displayName),
+        progress: 0,
+      );
     });
 
     final RuntimeInstallLoadResult result;
@@ -457,8 +461,7 @@ extension KonyakHomeLoaderRuntimes on KonyakHomeLoaderState {
     } finally {
       if (mounted) {
         updateState(() {
-          runtimeInstallProgressMessage = null;
-          runtimeInstallProgressFraction = null;
+          runtimeInstallProgress = const BlockingProgressState.hidden();
         });
       }
     }
@@ -529,9 +532,10 @@ extension KonyakHomeLoaderRuntimes on KonyakHomeLoaderState {
   ) async {
     final localizations = KonyakLocalizations.of(context);
     updateState(() {
-      runtimeInstallProgressMessage =
-          localizations.importingGptkD3dmetalEllipsis;
-      runtimeInstallProgressFraction = 0;
+      runtimeInstallProgress = BlockingProgressState.determinate(
+        message: localizations.importingGptkD3dmetalEllipsis,
+        progress: 0,
+      );
     });
 
     final ProcessRunResult installResult;
@@ -542,8 +546,7 @@ extension KonyakHomeLoaderRuntimes on KonyakHomeLoaderState {
     } finally {
       if (mounted) {
         updateState(() {
-          runtimeInstallProgressMessage = null;
-          runtimeInstallProgressFraction = null;
+          runtimeInstallProgress = const BlockingProgressState.hidden();
         });
       }
     }

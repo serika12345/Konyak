@@ -13,6 +13,32 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-30 14:41 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Replace Flutter home-loader progress nullable state.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: current commit (`Model home loader progress explicitly`).
+- Purpose: continue narrowing Flutter home-loader semantic nullable state by
+  replacing progress-message `String?` fields and paired runtime progress
+  fraction state with explicit Freezed variants.
+- Completed work: added `BlockingProgressState` for hidden, indeterminate, and
+  determinate blocking progress; replaced winetricks install, bottle archive,
+  runtime install, GPTK import, and Konyak update progress message/fraction
+  fields with explicit state; added focused state tests.
+- Remaining work: continue lower-priority nullable hardening for widget callback
+  enablement, app-settings runtime display state, loader error state, and
+  platform adapter boundaries in a follow-up batch.
+- Next action: continue the next nullable-hardening slice.
+- Verification: observed
+  `flutter test test/home_loader/blocking_progress_state_test.dart` fail before
+  implementation because `BlockingProgressState` did not exist. After
+  implementation, the same targeted test passed. Full Nix dev shell verification
+  passed with `just flutter-format-check`, `just flutter-analyze`,
+  `just flutter-test`, `just verify-governance`, `just verify-safety`,
+  `just format-check`, and `just lint`.
+
 - Timestamp: 2026-06-30 14:21 JST
 - State: `completed`
 - Branch: `main`
