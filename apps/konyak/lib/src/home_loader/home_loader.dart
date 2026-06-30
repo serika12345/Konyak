@@ -20,6 +20,7 @@ import '../settings/app_settings_summary.dart';
 import 'app_settings_state.dart';
 import 'blocking_progress_state.dart';
 import 'executable_open_queue_state.dart';
+import 'home_bottle_list_state.dart';
 import 'home_loader_bottles.dart';
 import 'home_loader_executables.dart';
 import 'home_loader_operation_state.dart';
@@ -77,8 +78,10 @@ class KonyakHomeLoader extends StatefulWidget {
 
 class KonyakHomeLoaderState extends State<KonyakHomeLoader>
     with WidgetsBindingObserver {
-  List<BottleSummary> bottles = const <BottleSummary>[];
-  BottleListLoadState bottleListLoadState = const BottleListLoadState.loading();
+  HomeBottleListState homeBottleListState = HomeBottleListState.loading();
+  List<BottleSummary> get bottles => homeBottleListBottles(homeBottleListState);
+  BottleListLoadState get bottleListLoadState =>
+      homeBottleListLoadState(homeBottleListState);
   BlockingProgressState createBottleProgress =
       const BlockingProgressState.hidden();
   ProgramLaunchState programLaunchState = const ProgramLaunchState.idle();

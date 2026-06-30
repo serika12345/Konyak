@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 
 import '../app/dialogs/bottle_management_dialogs.dart';
 import '../app/dialogs/create_bottle_dialog.dart';
-import '../app/home/bottle_list_load_state.dart';
 import '../app/utils/bottle_lists.dart';
 import '../bottles/bottle_summary.dart';
 import '../cli/konyak_cli_bottle_commands.dart';
@@ -16,6 +15,7 @@ import '../l10n/konyak_localizations.dart';
 import '../runtimes/runtime_summary.dart';
 import 'blocking_progress_state.dart';
 import 'bottle_operation_outcome.dart';
+import 'home_bottle_list_state.dart';
 import 'home_loader.dart';
 import 'home_loader_executables.dart';
 import 'home_loader_runtimes.dart';
@@ -24,7 +24,7 @@ import 'runtime_settings_pending_controls_state.dart';
 extension KonyakHomeLoaderBottles on KonyakHomeLoaderState {
   Future<void> loadBottles() async {
     updateState(() {
-      bottleListLoadState = const BottleListLoadState.loading();
+      homeBottleListState = startLoadingHomeBottleList(homeBottleListState);
     });
 
     final result = await widget.cliClient.listBottles();
@@ -36,10 +36,12 @@ extension KonyakHomeLoaderBottles on KonyakHomeLoaderState {
     updateState(() {
       switch (result) {
         case LoadedBottleList(:final bottles):
-          this.bottles = bottles;
-          bottleListLoadState = const BottleListLoadState.loaded();
+          homeBottleListState = loadHomeBottleList(bottles);
         case BottleListLoadFailure(:final message):
-          bottleListLoadState = BottleListLoadState.failed(message);
+          homeBottleListState = failHomeBottleListLoad(
+            state: homeBottleListState,
+            message: message,
+          );
       }
     });
 
@@ -104,10 +106,11 @@ extension KonyakHomeLoaderBottles on KonyakHomeLoaderState {
 
   void storeBottle(BottleSummary bottle, {String? oldBottleId}) {
     updateState(() {
-      bottles = oldBottleId == null
-          ? upsertBottle(bottles, bottle)
-          : replaceBottle(bottles, oldBottleId: oldBottleId, bottle: bottle);
-      bottleListLoadState = const BottleListLoadState.loaded();
+      homeBottleListState = storeHomeBottle(
+        state: homeBottleListState,
+        bottle: bottle,
+        oldBottleId: oldBottleId,
+      );
     });
   }
 
@@ -151,11 +154,10 @@ extension KonyakHomeLoaderBottles on KonyakHomeLoaderState {
         bottleId: bottle.id,
         controlKey: controlKey,
       );
-      bottles = upsertBottle(
-        bottles,
-        previousBottle.withRuntimeSettings(runtimeSettings),
+      homeBottleListState = storeHomeBottle(
+        state: homeBottleListState,
+        bottle: previousBottle.withRuntimeSettings(runtimeSettings),
       );
-      bottleListLoadState = const BottleListLoadState.loaded();
     });
 
     final BottleUpdateLoadResult result;
@@ -176,12 +178,16 @@ extension KonyakHomeLoaderBottles on KonyakHomeLoaderState {
       );
       switch (result) {
         case UpdatedBottle(:final bottle):
-          bottles = upsertBottle(bottles, bottle);
-          bottleListLoadState = const BottleListLoadState.loaded();
+          homeBottleListState = storeHomeBottle(
+            state: homeBottleListState,
+            bottle: bottle,
+          );
         case MissingBottleUpdate(:final message) ||
             BottleUpdateLoadFailure(:final message):
-          bottles = upsertBottle(bottles, previousBottle);
-          bottleListLoadState = const BottleListLoadState.loaded();
+          homeBottleListState = storeHomeBottle(
+            state: homeBottleListState,
+            bottle: previousBottle,
+          );
           failureMessages.add(message);
       }
     });
@@ -255,8 +261,10 @@ extension KonyakHomeLoaderBottles on KonyakHomeLoaderState {
     switch (result) {
       case DeletedBottle(:final bottle):
         updateState(() {
-          bottles = removeBottle(bottles, bottle.id);
-          bottleListLoadState = const BottleListLoadState.loaded();
+          homeBottleListState = removeHomeBottle(
+            state: homeBottleListState,
+            bottleId: bottle.id,
+          );
         });
         showSnackBar(
           KonyakLocalizations.of(context).deletedBottle(bottle.name),

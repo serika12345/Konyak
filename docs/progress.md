@@ -13,6 +13,35 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-30 19:00 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Model home bottle list state explicitly.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: `0049248` (`Model home loader cache states explicitly`).
+- Purpose: continue extracting pure Flutter home-loader state transitions by
+  replacing the split `bottles` list and `bottleListLoadState` fields with one
+  immutable state that preserves list snapshots across loading and failure
+  states.
+- Completed work: added `HomeBottleListState` with immutable loading, loaded,
+  and failed variants that preserve bottle snapshots, replaced the split
+  `bottles` and `bottleListLoadState` storage in `KonyakHomeLoaderState`, and
+  routed list load, store, runtime-settings preview/rollback, and delete
+  updates through pure helpers while keeping existing loader read getters.
+- Remaining work: none for this slice. Continue a separate hardening slice for
+  remaining loader-local state or UI-boundary nullable selections.
+- Next action: continue the next explicit-state hardening slice or commit this
+  uncommitted slice when requested.
+- Verification: observed
+  `flutter test test/home_loader/home_bottle_list_state_test.dart` fail before
+  implementation because the state and transition helpers did not exist. After
+  implementation, that targeted test passed. Full Flutter verification passed
+  with `just flutter-format-check`, `just flutter-analyze`, and
+  `just flutter-test`. Repository verification passed with
+  `just verify-governance`, `just verify-safety`, `just format-check`, and
+  `just lint`.
+
 - Timestamp: 2026-06-30 18:40 JST
 - State: `completed`
 - Branch: `main`
