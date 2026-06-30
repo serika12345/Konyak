@@ -161,10 +161,13 @@ class KonyakHomeLoaderState extends State<KonyakHomeLoader>
         KonyakHome(
           state: KonyakHomeViewState(
             platform: widget.platform,
-            runtime: runtimeForPlatform(
+            runtime: switch (runtimeForPlatformSelection(
               widget.platform,
               knownRuntimes.runtimes,
-            ),
+            )) {
+              RuntimeForPlatformFound(:final runtime) => runtime,
+              RuntimeForPlatformMissing() => null,
+            },
             bottles: bottles,
             isLoading: isLoading,
             errorMessage: errorMessage,

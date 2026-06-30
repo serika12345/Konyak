@@ -31,7 +31,6 @@ extension KonyakHomeLoaderSettings on KonyakHomeLoaderState {
         case LoadedAppSettings(:final settings):
           appSettings = settings;
           widget.onAppSettingsLoaded(settings);
-          final managedRuntime = managedRuntimePlatform(widget.platform);
           await showDialog<void>(
             context: context,
             builder: (context) => AppSettingsDialog(
@@ -42,14 +41,11 @@ extension KonyakHomeLoaderSettings on KonyakHomeLoaderState {
                 widget.platform,
                 knownRuntimes.runtimes,
               ),
-              isLoadingRuntimes:
-                  managedRuntime != null && !knownRuntimes.isLoaded,
-              onLoadRuntimes: managedRuntime == null || knownRuntimes.isLoaded
+              isLoadingRuntimes: !knownRuntimes.isLoaded,
+              onLoadRuntimes: knownRuntimes.isLoaded
                   ? null
                   : loadSettingsRuntimes,
-              onInstallRuntime: managedRuntime != null
-                  ? installSettingsRuntime
-                  : null,
+              onInstallRuntime: installSettingsRuntime,
               onInstallGptkWine: widget.platform.isMacOS
                   ? installGptkWine
                   : null,

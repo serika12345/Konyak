@@ -15,42 +15,50 @@ final class ManagedRuntimePlatform {
   final String displayName;
 }
 
-ManagedRuntimePlatform? managedRuntimePlatform(KonyakPlatform platform) {
-  if (platform.isMacOS) {
-    return const ManagedRuntimePlatform(
+sealed class RuntimeForPlatformSelection {
+  const RuntimeForPlatformSelection();
+}
+
+final class RuntimeForPlatformFound extends RuntimeForPlatformSelection {
+  const RuntimeForPlatformFound(this.runtime);
+
+  final RuntimeSummary runtime;
+}
+
+final class RuntimeForPlatformMissing extends RuntimeForPlatformSelection {
+  const RuntimeForPlatformMissing(this.managedRuntime);
+
+  final ManagedRuntimePlatform managedRuntime;
+}
+
+ManagedRuntimePlatform managedRuntimePlatform(KonyakPlatform platform) {
+  return switch (platform) {
+    KonyakPlatform.macos => const ManagedRuntimePlatform(
       runtimeId: macosWineRuntimeId,
       platformName: 'macos',
       displayName: 'Konyak macOS Wine',
-    );
-  }
-
-  if (platform.isLinux) {
-    return const ManagedRuntimePlatform(
+    ),
+    KonyakPlatform.linux => const ManagedRuntimePlatform(
       runtimeId: linuxWineRuntimeId,
       platformName: 'linux',
       displayName: 'Konyak Linux Wine',
-    );
-  }
-
-  return null;
+    ),
+  };
 }
 
-RuntimeSummary? runtimeForPlatform(
+RuntimeForPlatformSelection runtimeForPlatformSelection(
   KonyakPlatform platform,
   List<RuntimeSummary> runtimes,
 ) {
   final managedRuntime = managedRuntimePlatform(platform);
-  if (managedRuntime == null) {
-    return null;
-  }
-
-  for (final runtime in runtimes) {
-    if (runtime.id == managedRuntime.runtimeId) {
-      return runtime;
-    }
-  }
-
-  return null;
+  final matchingRuntimes = runtimes
+      .where((runtime) => runtime.id == managedRuntime.runtimeId)
+      .take(1)
+      .toList(growable: false);
+  return switch (matchingRuntimes) {
+    [final runtime] => RuntimeForPlatformFound(runtime),
+    _ => RuntimeForPlatformMissing(managedRuntime),
+  };
 }
 
 List<RuntimeSummary> runtimesForPlatform(
@@ -58,9 +66,6 @@ List<RuntimeSummary> runtimesForPlatform(
   List<RuntimeSummary> runtimes,
 ) {
   final managedRuntime = managedRuntimePlatform(platform);
-  if (managedRuntime == null) {
-    return const <RuntimeSummary>[];
-  }
 
   return List.unmodifiable(
     runtimes.where(
@@ -73,35 +78,28 @@ RuntimeInstallLoadResult installedRuntimeForPlatform(
   List<RuntimeSummary> runtimes,
   KonyakPlatform platform,
 ) {
-  final runtime = runtimeForPlatform(platform, runtimes);
-  if (runtime == null) {
-    return const RuntimeInstallLoadFailure(
+  return switch (runtimeForPlatformSelection(platform, runtimes)) {
+    RuntimeForPlatformFound(:final runtime) => InstalledRuntime(runtime),
+    RuntimeForPlatformMissing() => const RuntimeInstallLoadFailure(
       exitCode: 75,
       message: 'Runtime was installed but could not be reloaded.',
       diagnostic: '',
-    );
-  }
-  return InstalledRuntime(runtime);
+    ),
+  };
 }
 
 List<RuntimeSummary> upsertRuntimeSummary(
   List<RuntimeSummary> runtimes,
   RuntimeSummary runtime,
 ) {
-  final updated = <RuntimeSummary>[];
-  var replaced = false;
-  for (final existingRuntime in runtimes) {
-    if (existingRuntime.id == runtime.id) {
-      updated.add(runtime);
-      replaced = true;
-    } else {
-      updated.add(existingRuntime);
-    }
-  }
-
-  if (!replaced) {
-    updated.add(runtime);
-  }
-
-  return List.unmodifiable(updated);
+  final hasExistingRuntime = runtimes.any(
+    (existingRuntime) => existingRuntime.id == runtime.id,
+  );
+  return List.unmodifiable([
+    ...runtimes.map(
+      (existingRuntime) =>
+          existingRuntime.id == runtime.id ? runtime : existingRuntime,
+    ),
+    if (!hasExistingRuntime) runtime,
+  ]);
 }

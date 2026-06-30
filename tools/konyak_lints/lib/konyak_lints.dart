@@ -1348,9 +1348,12 @@ bool _isExternalNullBoundaryPath(String normalizedPath) {
   if (boundaryPrefixes.any(relativePath.startsWith)) {
     return true;
   }
+  const strictAppNullablePaths = {
+    'apps/konyak/lib/src/app/dialogs/app_settings_runtime_view_model.dart',
+    'apps/konyak/lib/src/app/runtime/runtime_platform.dart',
+  };
   if (relativePath.startsWith('apps/konyak/lib/src/app/') &&
-      relativePath !=
-          'apps/konyak/lib/src/app/dialogs/app_settings_runtime_view_model.dart') {
+      !strictAppNullablePaths.contains(relativePath)) {
     return true;
   }
   const appBoundaryPrefixes = [

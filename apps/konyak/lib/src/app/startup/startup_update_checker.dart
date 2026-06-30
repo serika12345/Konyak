@@ -52,25 +52,28 @@ final class StartupUpdateChecker {
     }
 
     final managedRuntime = managedRuntimePlatform(platform);
-    if (managedRuntime != null && settings.automaticallyCheckForWineUpdates) {
+    if (settings.automaticallyCheckForWineUpdates) {
       final runtimeResult = await cliClient.listKnownRuntimes();
       switch (runtimeResult) {
         case LoadedRuntimeList(:final runtimes):
           knownRuntimes = runtimes;
-          final runtime = runtimeForPlatform(platform, runtimes);
-          if (runtime?.isInstalled == true) {
-            final updateResult = await cliClient.checkRuntimeUpdate(
-              managedRuntime.runtimeId,
-            );
-            switch (updateResult) {
-              case LoadedUpdateCheck(:final update)
-                  when update.status == 'available':
-                labels.add(
-                  updateCheckLabel(update, managedRuntime.displayName),
-                );
-              case LoadedUpdateCheck() || UpdateCheckLoadFailure():
-                break;
-            }
+          switch (runtimeForPlatformSelection(platform, runtimes)) {
+            case RuntimeForPlatformFound(:final runtime)
+                when runtime.isInstalled == true:
+              final updateResult = await cliClient.checkRuntimeUpdate(
+                managedRuntime.runtimeId,
+              );
+              switch (updateResult) {
+                case LoadedUpdateCheck(:final update)
+                    when update.status == 'available':
+                  labels.add(
+                    updateCheckLabel(update, managedRuntime.displayName),
+                  );
+                case LoadedUpdateCheck() || UpdateCheckLoadFailure():
+                  break;
+              }
+            case RuntimeForPlatformFound() || RuntimeForPlatformMissing():
+              break;
           }
         case RuntimeListLoadFailure():
           knownRuntimes = const <RuntimeSummary>[];

@@ -244,18 +244,23 @@ extension KonyakHomeLoaderRuntimes on KonyakHomeLoaderState {
         return null;
       }
 
-      return runtimeForPlatform(widget.platform, runtimes);
+      return switch (runtimeForPlatformSelection(widget.platform, runtimes)) {
+        RuntimeForPlatformFound(:final runtime) => runtime,
+        RuntimeForPlatformMissing() => null,
+      };
     }
 
-    return runtimeForPlatform(widget.platform, knownRuntimes.runtimes);
+    return switch (runtimeForPlatformSelection(
+      widget.platform,
+      knownRuntimes.runtimes,
+    )) {
+      RuntimeForPlatformFound(:final runtime) => runtime,
+      RuntimeForPlatformMissing() => null,
+    };
   }
 
   Future<void> promptForMissingManagedRuntime() async {
     final managedRuntime = managedRuntimePlatform(widget.platform);
-    if (managedRuntime == null) {
-      return;
-    }
-
     final runtime = await ensureRuntimeForPlatformLoaded();
     if (!mounted || runtime?.isInstalled == true) {
       return;
@@ -367,15 +372,6 @@ extension KonyakHomeLoaderRuntimes on KonyakHomeLoaderState {
     bool reinstall = false,
   }) async {
     final managedRuntime = managedRuntimePlatform(widget.platform);
-    if (managedRuntime == null) {
-      return RuntimeInstallLoadFailure(
-        exitCode: 64,
-        message: KonyakLocalizations.of(
-          context,
-        ).managedRuntimeInstallationIsNotSupported,
-        diagnostic: '',
-      );
-    }
 
     updateState(() {
       runtimeInstallProgressMessage = KonyakLocalizations.of(

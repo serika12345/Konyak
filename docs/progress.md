@@ -13,6 +13,35 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-30 10:17 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Narrow Flutter runtime platform nullable boundary.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: current commit (`Narrow Flutter runtime nullable boundary`).
+- Purpose: continue tightening the broad Flutter `app/` nullable allowance by
+  making the pure runtime-platform helper represent missing runtimes with an
+  explicit app result variant instead of nullable helper returns.
+- Completed work: added focused runtime-platform tests for explicit
+  found/missing selection and immutable upsert behavior; replaced nullable
+  runtime lookup helpers with sealed `RuntimeForPlatformSelection` variants;
+  updated home-loader and startup update call sites to bridge missing runtimes
+  only at UI/state boundaries; removed `runtime_platform.dart` from the broad
+  Flutter `app/` nullable-boundary allowance.
+- Remaining work: none for this batch.
+- Next action: continue tightening broader Flutter app/home-loader nullable
+  helpers, especially selected bottle/program state and async loader results.
+- Verification: observed `flutter test test/app/runtime_platform_test.dart`
+  fail before implementation because `runtimeForPlatformSelection` and the
+  selection variants did not exist; after implementation, targeted
+  `flutter test test/app/runtime_platform_test.dart`, `just flutter-custom-lint`,
+  `just konyak-lints-test`, `just flutter-format-check`,
+  `just flutter-analyze`, `just flutter-test`, `just verify-governance`,
+  `just verify-safety`, `just format-check`, and `just lint` passed in the
+  Nix dev shell. A mistaken `dart format docs/progress.md` attempt failed
+  because Markdown is not Dart input and made no Markdown edit.
+
 - Timestamp: 2026-06-30 10:04 JST
 - State: `completed`
 - Branch: `main`
