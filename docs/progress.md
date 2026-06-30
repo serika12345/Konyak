@@ -13,6 +13,37 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-30 22:53 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Model executable-open channel payloads explicitly.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: `3003727` (`Resolve home selections explicitly`).
+- Purpose: continue nullable/external-data hardening at the Flutter platform
+  boundary by replacing `validExecutableOpenPathsFromChannel(Object?)` empty
+  list fallbacks with an explicit channel payload parse result.
+- Completed work: added Freezed
+  `ExecutableOpenPathsChannelPayload.valid`, `.partial`, and `.invalid`
+  variants; replaced the platform-channel parser's silent empty-list fallback
+  with explicit payload modeling; switched both executable-open enqueue paths
+  in `home_loader_executables.dart` to exhaustively handle the variants; kept
+  mixed payload compatibility by preserving valid executable paths in the
+  partial variant while counting invalid items; and added focused parser tests.
+- Remaining work: none for this slice. The next nullable-hardening candidates
+  are the remaining platform helper nullable comparisons and UI callback/action
+  availability nulls.
+- Next action: continue the next explicit-state hardening slice or commit this
+  uncommitted slice when requested.
+- Verification: observed the new parser tests fail before implementation
+  because the explicit payload parser and variants did not exist. During full
+  verification, the initial mixed-payload test compared a Freezed immutable
+  list inside a record by identity; the test was corrected to assert the
+  variant fields directly. Full verification then passed with
+  `just flutter-format-check`, `just flutter-analyze`, `just flutter-test`,
+  `just verify-governance`, `just verify-safety`, `just format-check`, and
+  `just lint`.
+
 - Timestamp: 2026-06-30 22:30 JST
 - State: `completed`
 - Branch: `main`

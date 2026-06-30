@@ -2,12 +2,35 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../cli/konyak_cli_failure_messages.dart';
 import '../cli/konyak_cli_process_runner.dart';
 import '../l10n/konyak_localizations.dart';
 
+part 'home_loader_platform_helpers.freezed.dart';
+
 const macosMenuChannel = MethodChannel('konyak/menu');
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class ExecutableOpenPathsChannelPayload
+    with _$ExecutableOpenPathsChannelPayload {
+  const factory ExecutableOpenPathsChannelPayload.valid({
+    required List<String> paths,
+  }) = ValidExecutableOpenPathsChannelPayload;
+
+  const factory ExecutableOpenPathsChannelPayload.partial({
+    required List<String> paths,
+    required int invalidItemCount,
+  }) = PartialExecutableOpenPathsChannelPayload;
+
+  const factory ExecutableOpenPathsChannelPayload.invalid(String reason) =
+      InvalidExecutableOpenPathsChannelPayload;
+}
 
 class MacosNativeMenuLocalizer extends StatefulWidget {
   const MacosNativeMenuLocalizer({super.key});
@@ -86,12 +109,27 @@ bool sameStringMap(Map<String, String>? left, Map<String, String> right) {
   return true;
 }
 
-List<String> validExecutableOpenPathsFromChannel(Object? arguments) {
+ExecutableOpenPathsChannelPayload executableOpenPathsChannelPayloadFrom(
+  Object? arguments,
+) {
   if (arguments is! List<Object?>) {
-    return const <String>[];
+    return const ExecutableOpenPathsChannelPayload.invalid(
+      'expected a List<String> executable-open payload',
+    );
   }
 
-  return validExecutableOpenPaths(arguments.whereType<String>());
+  final stringItems = arguments.whereType<String>().toList(growable: false);
+  final invalidItemCount = arguments.length - stringItems.length;
+  final paths = validExecutableOpenPaths(stringItems);
+
+  if (invalidItemCount > 0) {
+    return ExecutableOpenPathsChannelPayload.partial(
+      paths: paths,
+      invalidItemCount: invalidItemCount,
+    );
+  }
+
+  return ExecutableOpenPathsChannelPayload.valid(paths: paths);
 }
 
 List<String> validExecutableOpenPaths(Iterable<String> paths) {
@@ -103,7 +141,7 @@ List<String> validExecutableOpenPaths(Iterable<String> paths) {
     }
   }
 
-  return validPaths;
+  return List.unmodifiable(validPaths);
 }
 
 bool isWindowsExecutablePath(String path) {

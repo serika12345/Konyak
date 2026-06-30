@@ -3,6 +3,46 @@ import 'package:konyak/src/cli/konyak_cli_process_runner.dart';
 import 'package:konyak/src/home_loader/home_loader_platform_helpers.dart';
 
 void main() {
+  test('models non-list executable-open channel payloads explicitly', () {
+    expect(switch (executableOpenPathsChannelPayloadFrom(null)) {
+      InvalidExecutableOpenPathsChannelPayload(:final reason) => reason,
+      ValidExecutableOpenPathsChannelPayload() => '',
+      PartialExecutableOpenPathsChannelPayload() => '',
+    }, 'expected a List<String> executable-open payload');
+  });
+
+  test('models mixed executable-open channel payloads explicitly', () {
+    switch (executableOpenPathsChannelPayloadFrom(<Object?>[
+      '/games/setup.exe',
+      1,
+    ])) {
+      case PartialExecutableOpenPathsChannelPayload(
+        :final paths,
+        :final invalidItemCount,
+      ):
+        expect(paths, const <String>['/games/setup.exe']);
+        expect(invalidItemCount, 1);
+      case ValidExecutableOpenPathsChannelPayload() ||
+          InvalidExecutableOpenPathsChannelPayload():
+        fail('expected partial executable-open channel payload');
+    }
+  });
+
+  test('parses valid executable-open channel payload paths', () {
+    expect(
+      switch (executableOpenPathsChannelPayloadFrom(<Object?>[
+        ' /games/setup.EXE ',
+        '/games/readme.txt',
+        '',
+      ])) {
+        ValidExecutableOpenPathsChannelPayload(:final paths) => paths,
+        PartialExecutableOpenPathsChannelPayload(:final paths) => paths,
+        InvalidExecutableOpenPathsChannelPayload() => const <String>[],
+      },
+      const <String>['/games/setup.EXE'],
+    );
+  });
+
   test('uses machine-readable install GPTK error messages', () {
     final message = installGptkFailureMessage(
       const ProcessRunResult(

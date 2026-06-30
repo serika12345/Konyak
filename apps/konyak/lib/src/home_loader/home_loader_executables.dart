@@ -33,11 +33,22 @@ extension KonyakHomeLoaderExecutables on KonyakHomeLoaderState {
         unawaited(checkKonyakUpdateFromMenu());
         return;
       case 'openExecutableFiles':
-        executableOpenQueueState = enqueueExecutableOpenPaths(
-          state: executableOpenQueueState,
-          paths: validExecutableOpenPathsFromChannel(call.arguments),
-        );
-        unawaited(drainPendingExecutableOpenPaths());
+        switch (executableOpenPathsChannelPayloadFrom(call.arguments)) {
+          case ValidExecutableOpenPathsChannelPayload(:final paths):
+            executableOpenQueueState = enqueueExecutableOpenPaths(
+              state: executableOpenQueueState,
+              paths: paths,
+            );
+            unawaited(drainPendingExecutableOpenPaths());
+          case PartialExecutableOpenPathsChannelPayload(:final paths):
+            executableOpenQueueState = enqueueExecutableOpenPaths(
+              state: executableOpenQueueState,
+              paths: paths,
+            );
+            unawaited(drainPendingExecutableOpenPaths());
+          case InvalidExecutableOpenPathsChannelPayload():
+            return;
+        }
         return;
       case 'terminateWineProcessesBeforeQuit':
         await terminateWineProcessesOnClose();
@@ -62,11 +73,22 @@ extension KonyakHomeLoaderExecutables on KonyakHomeLoaderState {
         return;
       }
 
-      executableOpenQueueState = enqueueExecutableOpenPaths(
-        state: executableOpenQueueState,
-        paths: validExecutableOpenPathsFromChannel(arguments),
-      );
-      unawaited(drainPendingExecutableOpenPaths());
+      switch (executableOpenPathsChannelPayloadFrom(arguments)) {
+        case ValidExecutableOpenPathsChannelPayload(:final paths):
+          executableOpenQueueState = enqueueExecutableOpenPaths(
+            state: executableOpenQueueState,
+            paths: paths,
+          );
+          unawaited(drainPendingExecutableOpenPaths());
+        case PartialExecutableOpenPathsChannelPayload(:final paths):
+          executableOpenQueueState = enqueueExecutableOpenPaths(
+            state: executableOpenQueueState,
+            paths: paths,
+          );
+          unawaited(drainPendingExecutableOpenPaths());
+        case InvalidExecutableOpenPathsChannelPayload():
+          return;
+      }
     } on MissingPluginException {
       return;
     }
