@@ -20,19 +20,19 @@ void main() {
 
   test('selectBottle shows the overview and clears selected program', () {
     final state = const KonyakHomeNavigationState(
-      selectedBottleId: 'steam',
+      selectedBottle: SelectedHomeNavigationBottle('steam'),
       detailMode: BottleDetailMode.programConfiguration,
-      selectedProgramPath: '/games/setup.exe',
+      selectedProgram: SelectedHomeNavigationProgram('/games/setup.exe'),
     ).selectBottle(battle);
 
-    expect(state.selectedBottleId, 'battle');
+    expect(state.selectedBottle, const SelectedHomeNavigationBottle('battle'));
     expect(state.detailMode, BottleDetailMode.overview);
-    expect(state.selectedProgramPath, isNull);
+    expect(state.selectedProgram, const NoHomeNavigationProgram());
   });
 
   test('showBottleConfiguration keeps state when the bottle is locked', () {
     const current = KonyakHomeNavigationState(
-      selectedBottleId: 'steam',
+      selectedBottle: SelectedHomeNavigationBottle('steam'),
       detailMode: BottleDetailMode.overview,
     );
 
@@ -46,9 +46,12 @@ void main() {
     );
 
     expect(locked, same(current));
-    expect(unlocked.selectedBottleId, 'battle');
+    expect(
+      unlocked.selectedBottle,
+      const SelectedHomeNavigationBottle('battle'),
+    );
     expect(unlocked.detailMode, BottleDetailMode.configuration);
-    expect(unlocked.selectedProgramPath, isNull);
+    expect(unlocked.selectedProgram, const NoHomeNavigationProgram());
   });
 
   test(
@@ -56,7 +59,7 @@ void main() {
     () {
       final setup = steam.pinnedPrograms.first;
       const current = KonyakHomeNavigationState(
-        selectedBottleId: 'battle',
+        selectedBottle: SelectedHomeNavigationBottle('battle'),
         detailMode: BottleDetailMode.overview,
       );
 
@@ -72,15 +75,21 @@ void main() {
       );
 
       expect(locked, same(current));
-      expect(unlocked.selectedBottleId, 'steam');
+      expect(
+        unlocked.selectedBottle,
+        const SelectedHomeNavigationBottle('steam'),
+      );
       expect(unlocked.detailMode, BottleDetailMode.programConfiguration);
-      expect(unlocked.selectedProgramPath, '/games/setup.exe');
+      expect(
+        unlocked.selectedProgram,
+        const SelectedHomeNavigationProgram('/games/setup.exe'),
+      );
     },
   );
 
   test('showBottleOverview keeps state while selected bottle is locked', () {
     const current = KonyakHomeNavigationState(
-      selectedBottleId: 'steam',
+      selectedBottle: SelectedHomeNavigationBottle('steam'),
       detailMode: BottleDetailMode.configuration,
     );
 
@@ -94,22 +103,25 @@ void main() {
     );
 
     expect(locked, same(current));
-    expect(unlocked.selectedBottleId, 'steam');
+    expect(
+      unlocked.selectedBottle,
+      const SelectedHomeNavigationBottle('steam'),
+    );
     expect(unlocked.detailMode, BottleDetailMode.overview);
-    expect(unlocked.selectedProgramPath, isNull);
+    expect(unlocked.selectedProgram, const NoHomeNavigationProgram());
   });
 
   test(
     'reconcile selects the first available bottle when selection disappears',
     () {
       final state = const KonyakHomeNavigationState(
-        selectedBottleId: 'missing',
+        selectedBottle: SelectedHomeNavigationBottle('missing'),
         detailMode: BottleDetailMode.configuration,
       ).reconcile(<BottleSummary>[steam, battle]);
 
-      expect(state.selectedBottleId, 'steam');
+      expect(state.selectedBottle, const SelectedHomeNavigationBottle('steam'));
       expect(state.detailMode, BottleDetailMode.configuration);
-      expect(state.selectedProgramPath, isNull);
+      expect(state.selectedProgram, const NoHomeNavigationProgram());
     },
   );
 
@@ -117,16 +129,39 @@ void main() {
     'reconcile clears program configuration when the program disappears',
     () {
       final state = const KonyakHomeNavigationState(
-        selectedBottleId: 'steam',
+        selectedBottle: SelectedHomeNavigationBottle('steam'),
         detailMode: BottleDetailMode.programConfiguration,
-        selectedProgramPath: '/games/missing.exe',
+        selectedProgram: SelectedHomeNavigationProgram('/games/missing.exe'),
       ).reconcile(<BottleSummary>[steam, battle]);
 
-      expect(state.selectedBottleId, 'steam');
+      expect(state.selectedBottle, const SelectedHomeNavigationBottle('steam'));
       expect(state.detailMode, BottleDetailMode.overview);
-      expect(state.selectedProgramPath, isNull);
+      expect(state.selectedProgram, const NoHomeNavigationProgram());
     },
   );
+
+  test('resolves selected bottle and program with explicit variants', () {
+    const state = KonyakHomeNavigationState(
+      selectedBottle: SelectedHomeNavigationBottle('steam'),
+      detailMode: BottleDetailMode.programConfiguration,
+      selectedProgram: SelectedHomeNavigationProgram('/games/setup.exe'),
+    );
+
+    final bottleResolution = state.selectedBottleIn(<BottleSummary>[
+      steam,
+      battle,
+    ]);
+    final programResolution = state.selectedProgramIn(steam);
+
+    expect(switch (bottleResolution) {
+      ResolvedHomeNavigationBottle(:final bottle) => bottle.id,
+      MissingHomeNavigationBottle() || UnselectedHomeNavigationBottle() => '',
+    }, 'steam');
+    expect(switch (programResolution) {
+      ResolvedHomeNavigationProgram(:final program) => program.path,
+      MissingHomeNavigationProgram() || UnselectedHomeNavigationProgram() => '',
+    }, '/games/setup.exe');
+  });
 }
 
 BottleSummary _bottle({

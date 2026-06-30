@@ -13,6 +13,35 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-30 10:37 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Narrow Flutter home navigation nullable state.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: current commit (`Narrow Flutter navigation state boundary`).
+- Purpose: continue tightening broad Flutter `app/` nullable allowances by
+  moving home navigation selection state from nullable IDs to explicit
+  selection and resolution variants.
+- Completed work: updated navigation-state tests to assert explicit selected
+  bottle/program state and resolution variants; replaced nullable selected
+  bottle/program fields with `HomeNavigation*Selection` values; moved bottle
+  and program lookup results to `HomeNavigation*Resolution` variants; kept the
+  nullable UI adapter conversion in `home_screen.dart`; removed
+  `home_navigation_state.dart` from the broad Flutter `app/`
+  nullable-boundary allowance.
+- Remaining work: none for this batch.
+- Next action: continue tightening broader Flutter app/home-loader nullable
+  helpers, especially async loader result methods under `home_loader/`.
+- Verification: observed `flutter test test/app/home_navigation_state_test.dart`
+  fail before implementation because the explicit selected bottle/program and
+  resolution variants did not exist; after implementation, targeted
+  `flutter test test/app/home_navigation_state_test.dart`,
+  `just konyak-lints-test`, `just flutter-custom-lint`,
+  `just flutter-format-check`, `just flutter-analyze`, `just flutter-test`,
+  `just verify-governance`, `just verify-safety`, `just format-check`, and
+  `just lint` passed in the Nix dev shell.
+
 - Timestamp: 2026-06-30 10:27 JST
 - State: `completed`
 - Branch: `main`

@@ -63,10 +63,21 @@ class _KonyakHomeState extends State<KonyakHome> {
       bottles: state.bottles,
       searchQuery: _searchController.text,
     );
-    final selectedBottle =
-        _navigationState.selectedBottleIn(filteredBottles) ??
-        (filteredBottles.isEmpty ? null : filteredBottles.first);
-    final selectedProgram = _navigationState.selectedProgramIn(selectedBottle);
+    final selectedBottle = switch (_navigationState.selectedBottleIn(
+      filteredBottles,
+    )) {
+      ResolvedHomeNavigationBottle(:final bottle) => bottle,
+      MissingHomeNavigationBottle() || UnselectedHomeNavigationBottle() =>
+        filteredBottles.isEmpty ? null : filteredBottles.first,
+    };
+    final selectedProgram = switch (selectedBottle) {
+      final bottle? => switch (_navigationState.selectedProgramIn(bottle)) {
+        ResolvedHomeNavigationProgram(:final program) => program,
+        MissingHomeNavigationProgram() ||
+        UnselectedHomeNavigationProgram() => null,
+      },
+      null => null,
+    };
     final selectedBottleHasPendingRuntimeSettings =
         selectedBottle != null &&
         state.hasPendingRuntimeSettingsFor(selectedBottle);
