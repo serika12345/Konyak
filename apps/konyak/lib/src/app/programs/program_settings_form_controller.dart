@@ -1,21 +1,21 @@
 import 'package:flutter/widgets.dart';
 
 import '../../bottles/bottle_summary.dart';
+import '../../cli/konyak_cli_program_commands.dart';
 import '../configuration_labels.dart';
 import 'program_configuration_settings.dart';
 import 'program_environment_editor.dart';
 
 final class ProgramSettingsFormController {
-  ProgramSettingsFormController({ProgramSettingsSummary? settings}) {
+  ProgramSettingsFormController() : this.fromSettings(ProgramSettingsSummary());
+
+  ProgramSettingsFormController.fromSettings(ProgramSettingsSummary settings) {
     _argumentsController = TextEditingController();
     _wineLoggingChannelsController = TextEditingController();
     _logFilePathController = TextEditingController();
     _environmentControllers = <ProgramEnvironmentControllers>[];
-    replaceSettings(settings ?? ProgramSettingsSummary());
+    replaceSettings(settings);
   }
-
-  ProgramSettingsFormController.fromSettings(ProgramSettingsSummary settings)
-    : this(settings: settings);
 
   late final TextEditingController _argumentsController;
   late final TextEditingController _wineLoggingChannelsController;
@@ -93,16 +93,16 @@ final class ProgramSettingsFormController {
     );
   }
 
-  ProgramSettingsSummary? toOptionalSettings() {
+  ProgramRunSettingsArgument toRunSettingsArgument() {
     final settings = toSettings();
     if (settings.locale.trim().isEmpty &&
         settings.arguments.trim().isEmpty &&
         settings.environment.isEmpty &&
         settings.logging.isDefault) {
-      return null;
+      return const NoProgramRunSettings();
     }
 
-    return settings;
+    return UseProgramRunSettings(settings);
   }
 
   String effectiveLogPath({required String defaultLogPath}) {

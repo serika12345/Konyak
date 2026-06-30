@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:konyak/src/app/programs/program_settings_form_controller.dart';
 import 'package:konyak/src/bottles/bottle_summary.dart';
+import 'package:konyak/src/cli/konyak_cli_program_commands.dart';
 
 void main() {
   test('loads persisted program settings into form controllers', () {
@@ -71,15 +72,21 @@ void main() {
     expect(settings.logging.logFilePath, '/tmp/setup.log');
   });
 
-  test('builds null one-shot settings when all form values are default', () {
+  test('builds explicit one-shot settings arguments', () {
     final controller = ProgramSettingsFormController();
     addTearDown(controller.dispose);
 
-    expect(controller.toOptionalSettings(), isNull);
+    expect(controller.toRunSettingsArgument(), const NoProgramRunSettings());
 
     controller.argumentsController.text = '-windowed';
 
-    expect(controller.toOptionalSettings(), isA<ProgramSettingsSummary>());
+    final settings = controller.toRunSettingsArgument();
+    switch (settings) {
+      case UseProgramRunSettings(:final settings):
+        expect(settings.arguments, '-windowed');
+      case NoProgramRunSettings():
+        fail('Expected one-shot settings to be used.');
+    }
   });
 
   test('uses the selected log path when present', () {

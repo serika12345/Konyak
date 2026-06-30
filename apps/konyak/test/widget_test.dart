@@ -13,12 +13,15 @@ import 'package:konyak/src/app/app_constants.dart';
 import 'package:konyak/src/app/dialogs/run_program_dialog.dart';
 import 'package:konyak/src/app/home/sidebar.dart';
 import 'package:konyak/src/app/programs/pin_program_action.dart';
+import 'package:konyak/src/app/programs/program_configuration_settings.dart';
 import 'package:konyak/src/app/programs/program_configuration_view.dart';
 import 'package:konyak/src/app/programs/program_window_probe.dart';
 import 'package:konyak/src/bottles/bottle_summary.dart';
 import 'package:konyak/src/cli/konyak_cli_client.dart';
 import 'package:konyak/src/files/bottle_archive_picker.dart';
 import 'package:konyak/src/files/directory_picker.dart';
+import 'package:konyak/src/files/file_path_pick_result.dart';
+import 'package:konyak/src/files/file_picker_arguments.dart';
 import 'package:konyak/src/files/gptk_wine_source_picker.dart';
 import 'package:konyak/src/files/program_file_picker.dart';
 import 'package:konyak/src/icons/icon_file_loader.dart';
@@ -638,12 +641,15 @@ final class _FakeProgramFilePicker implements ProgramFilePicker {
   const _FakeProgramFilePicker({required this.path, this.initialDirectories});
 
   final String? path;
-  final List<String?>? initialDirectories;
+  final List<FilePickerInitialDirectory>? initialDirectories;
 
   @override
-  Future<String?> pickProgramPath({String? initialDirectory}) async {
+  Future<FilePathPickResult> pickProgramPath({
+    FilePickerInitialDirectory initialDirectory =
+        const FilePickerInitialDirectory.inherited(),
+  }) async {
     initialDirectories?.add(initialDirectory);
-    return path;
+    return filePathPickResultFromNullable(path);
   }
 }
 
@@ -653,7 +659,9 @@ final class _FakeDirectoryPicker implements DirectoryPicker {
   final String? path;
 
   @override
-  Future<String?> pickDirectoryPath() async => path;
+  Future<FilePathPickResult> pickDirectoryPath() async {
+    return filePathPickResultFromNullable(path);
+  }
 }
 
 final class _FakeGptkWineSourcePicker implements GptkWineSourcePicker {
@@ -662,7 +670,9 @@ final class _FakeGptkWineSourcePicker implements GptkWineSourcePicker {
   final String? path;
 
   @override
-  Future<String?> pickSourcePath() async => path;
+  Future<FilePathPickResult> pickSourcePath() async {
+    return filePathPickResultFromNullable(path);
+  }
 }
 
 final class _FakeBottleArchivePicker implements BottleArchivePicker {
@@ -672,10 +682,14 @@ final class _FakeBottleArchivePicker implements BottleArchivePicker {
   final String? exportPath;
 
   @override
-  Future<String?> pickArchiveToImport() async => importPath;
+  Future<FilePathPickResult> pickArchiveToImport() async {
+    return filePathPickResultFromNullable(importPath);
+  }
 
   @override
-  Future<String?> pickArchiveExportPath({required String suggestedName}) async {
-    return exportPath;
+  Future<FilePathPickResult> pickArchiveExportPath({
+    required String suggestedName,
+  }) async {
+    return filePathPickResultFromNullable(exportPath);
   }
 }

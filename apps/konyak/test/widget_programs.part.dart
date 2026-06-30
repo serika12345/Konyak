@@ -916,15 +916,16 @@ void defineProgramWidgetTests() {
                     path: '/downloads/setup.exe',
                     removable: false,
                   ),
-                  settings: ProgramSettingsSummary(
-                    arguments: '-silent',
-                    environment: const {'STEAM_COMPAT_DATA_PATH': '/compat'},
-                    logging: const ProgramLoggingSettingsSummary(
-                      additionalWineLoggingChannels: '+seh',
-                      logFilePath: '/tmp/setup.cxlog',
+                  settingsState: ProgramConfigurationSettingsState.ready(
+                    ProgramSettingsSummary(
+                      arguments: '-silent',
+                      environment: const {'STEAM_COMPAT_DATA_PATH': '/compat'},
+                      logging: const ProgramLoggingSettingsSummary(
+                        additionalWineLoggingChannels: '+seh',
+                        logFilePath: '/tmp/setup.cxlog',
+                      ),
                     ),
                   ),
-                  isLoading: false,
                   onProgramSettingsChanged: (_, _, _) {},
                 ),
               ),
@@ -1628,7 +1629,7 @@ void defineProgramWidgetTests() {
   testWidgets('run program dialog can choose a program file', (
     WidgetTester tester,
   ) async {
-    final pickerInitialDirectories = <String?>[];
+    final pickerInitialDirectories = <FilePickerInitialDirectory>[];
     final runner = _QueuedProcessRunner([
       const ProcessRunResult(
         exitCode: 0,
@@ -1687,7 +1688,9 @@ void defineProgramWidgetTests() {
     await tester.pumpAndSettle();
 
     expect(pickerInitialDirectories, const [
-      '/home/user/.local/share/konyak/bottles/steam/drive_c',
+      FilePickerInitialDirectory.path(
+        '/home/user/.local/share/konyak/bottles/steam/drive_c',
+      ),
     ]);
     expect(find.byTooltip('View latest log'), findsOneWidget);
   });

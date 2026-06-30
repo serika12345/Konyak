@@ -1,13 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../l10n/konyak_localizations.dart';
 import '../configuration_labels.dart';
 
-class CreateBottleInput {
-  const CreateBottleInput({required this.name, required this.windowsVersion});
+part 'create_bottle_dialog.freezed.dart';
 
-  final String name;
-  final String windowsVersion;
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class CreateBottleDecision with _$CreateBottleDecision {
+  const factory CreateBottleDecision.create({
+    required String name,
+    required String windowsVersion,
+  }) = CreateBottleFromDialog;
+
+  const factory CreateBottleDecision.cancelled() = CancelledCreateBottleDialog;
+}
+
+CreateBottleDecision createBottleDecisionFromNullable(
+  CreateBottleDecision? decision,
+) {
+  return decision ?? const CreateBottleDecision.cancelled();
 }
 
 class CreateBottleDialog extends StatefulWidget {
@@ -33,9 +49,9 @@ class _CreateBottleDialogState extends State<CreateBottleDialog> {
       return;
     }
 
-    Navigator.of(
-      context,
-    ).pop(CreateBottleInput(name: name, windowsVersion: _windowsVersion));
+    Navigator.of(context).pop(
+      CreateBottleDecision.create(name: name, windowsVersion: _windowsVersion),
+    );
   }
 
   @override
@@ -80,7 +96,9 @@ class _CreateBottleDialogState extends State<CreateBottleDialog> {
       ),
       actions: [
         TextButton(
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () {
+            Navigator.of(context).pop(const CreateBottleDecision.cancelled());
+          },
           child: Text(localizations.cancel),
         ),
         FilledButton.icon(

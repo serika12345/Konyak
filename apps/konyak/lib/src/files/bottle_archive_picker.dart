@@ -1,9 +1,13 @@
 import 'package:file_selector/file_selector.dart';
 
-abstract interface class BottleArchivePicker {
-  Future<String?> pickArchiveToImport();
+import 'file_path_pick_result.dart';
 
-  Future<String?> pickArchiveExportPath({required String suggestedName});
+abstract interface class BottleArchivePicker {
+  Future<FilePathPickResult> pickArchiveToImport();
+
+  Future<FilePathPickResult> pickArchiveExportPath({
+    required String suggestedName,
+  });
 }
 
 final class FileSelectorBottleArchivePicker implements BottleArchivePicker {
@@ -15,17 +19,19 @@ final class FileSelectorBottleArchivePicker implements BottleArchivePicker {
   ];
 
   @override
-  Future<String?> pickArchiveToImport() async {
+  Future<FilePathPickResult> pickArchiveToImport() async {
     final file = await openFile(
       acceptedTypeGroups: _archiveTypes,
       confirmButtonText: 'Import',
     );
 
-    return file?.path;
+    return filePathPickResultFromNullable(file?.path);
   }
 
   @override
-  Future<String?> pickArchiveExportPath({required String suggestedName}) async {
+  Future<FilePathPickResult> pickArchiveExportPath({
+    required String suggestedName,
+  }) async {
     final location = await getSaveLocation(
       acceptedTypeGroups: _archiveTypes,
       suggestedName: suggestedName,
@@ -33,6 +39,6 @@ final class FileSelectorBottleArchivePicker implements BottleArchivePicker {
       canCreateDirectories: true,
     );
 
-    return location?.path;
+    return filePathPickResultFromNullable(location?.path);
   }
 }

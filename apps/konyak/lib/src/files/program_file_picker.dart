@@ -1,7 +1,13 @@
 import 'package:file_selector/file_selector.dart';
 
+import 'file_path_pick_result.dart';
+import 'file_picker_arguments.dart';
+
 abstract interface class ProgramFilePicker {
-  Future<String?> pickProgramPath({String? initialDirectory});
+  Future<FilePathPickResult> pickProgramPath({
+    FilePickerInitialDirectory initialDirectory =
+        const FilePickerInitialDirectory.inherited(),
+  });
 }
 
 List<XTypeGroup> windowsProgramFileTypeGroups() {
@@ -17,12 +23,15 @@ final class FileSelectorProgramFilePicker implements ProgramFilePicker {
   const FileSelectorProgramFilePicker();
 
   @override
-  Future<String?> pickProgramPath({String? initialDirectory}) async {
+  Future<FilePathPickResult> pickProgramPath({
+    FilePickerInitialDirectory initialDirectory =
+        const FilePickerInitialDirectory.inherited(),
+  }) async {
     final file = await openFile(
-      initialDirectory: initialDirectory,
+      initialDirectory: filePickerInitialDirectoryPath(initialDirectory),
       acceptedTypeGroups: windowsProgramFileTypeGroups(),
     );
 
-    return file?.path;
+    return filePathPickResultFromNullable(file?.path);
   }
 }

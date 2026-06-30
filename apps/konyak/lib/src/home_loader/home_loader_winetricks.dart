@@ -35,14 +35,26 @@ extension KonyakHomeLoaderWinetricks on KonyakHomeLoaderState {
 
     switch (listResult) {
       case LoadedWinetricksVerbs(:final categories):
-        final verb = await showDialog<String>(
-          context: context,
-          builder: (context) =>
-              WinetricksDialog(bottleName: bottle.name, categories: categories),
+        final decision = winetricksVerbDecisionFromNullable(
+          await showDialog<WinetricksVerbDecision>(
+            context: context,
+            builder: (context) => WinetricksDialog(
+              bottleName: bottle.name,
+              categories: categories,
+            ),
+          ),
         );
 
-        if (!mounted || verb == null) {
+        if (!mounted) {
           return;
+        }
+
+        final String verb;
+        switch (decision) {
+          case InstallWinetricksVerb(:final verbId):
+            verb = verbId;
+          case CancelledWinetricksDialog():
+            return;
         }
 
         updateState(() {

@@ -1,21 +1,83 @@
 import 'package:flutter/material.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../bottles/bottle_summary.dart';
 import '../../cli/konyak_cli_client.dart';
+import '../../files/file_path_pick_result.dart';
+import '../../files/file_picker_arguments.dart';
 import '../../files/log_file_picker.dart';
 import '../../files/program_file_picker.dart';
 import '../../l10n/konyak_localizations.dart';
 import '../programs/program_settings_controls.dart';
 import '../programs/program_settings_form_controller.dart';
 
+part 'run_program_dialog.freezed.dart';
+
 typedef GraphicsBackendHintsLoader =
     Future<GraphicsBackendHintsLoadResult> Function(String programPath);
 
-class RunProgramDialogResult {
-  RunProgramDialogResult({required this.programPath, this.settings});
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class RunProgramDialogDecision with _$RunProgramDialogDecision {
+  const factory RunProgramDialogDecision.run({
+    required String programPath,
+    required ProgramRunSettingsArgument settings,
+  }) = RunProgramFromDialog;
 
-  final String programPath;
-  final ProgramSettingsSummary? settings;
+  const factory RunProgramDialogDecision.cancelled() =
+      CancelledRunProgramDialog;
+}
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class RunProgramGraphicsBackendHintState
+    with _$RunProgramGraphicsBackendHintState {
+  const factory RunProgramGraphicsBackendHintState.none() =
+      NoRunProgramGraphicsBackendHint;
+
+  const factory RunProgramGraphicsBackendHintState.loading() =
+      LoadingRunProgramGraphicsBackendHint;
+
+  const factory RunProgramGraphicsBackendHintState.loaded(
+    ProgramGraphicsBackendHintsSummary hints,
+  ) = LoadedRunProgramGraphicsBackendHint;
+
+  const factory RunProgramGraphicsBackendHintState.failed(String message) =
+      FailedRunProgramGraphicsBackendHint;
+}
+
+RunProgramDialogDecision runProgramDialogDecisionFromNullable(
+  RunProgramDialogDecision? decision,
+) {
+  return decision ?? const RunProgramDialogDecision.cancelled();
+}
+
+RunProgramGraphicsBackendHintState
+runProgramGraphicsBackendHintStateFromLoadResult(
+  GraphicsBackendHintsLoadResult result,
+) {
+  return switch (result) {
+    LoadedGraphicsBackendHints(:final hints) =>
+      RunProgramGraphicsBackendHintState.loaded(hints),
+    GraphicsBackendHintsLoadFailure(:final message) =>
+      RunProgramGraphicsBackendHintState.failed(message),
+  };
+}
+
+bool runProgramGraphicsBackendHintPanelVisible(
+  RunProgramGraphicsBackendHintState state,
+) {
+  return switch (state) {
+    LoadedRunProgramGraphicsBackendHint() ||
+    FailedRunProgramGraphicsBackendHint() => true,
+    NoRunProgramGraphicsBackendHint() ||
+    LoadingRunProgramGraphicsBackendHint() => false,
+  };
 }
 
 class RunProgramDialog extends StatefulWidget {
@@ -45,9 +107,8 @@ class _RunProgramDialogState extends State<RunProgramDialog> {
   final ProgramSettingsFormController _settingsController =
       ProgramSettingsFormController();
   bool _optionsExpanded = false;
-  bool _isLoadingGraphicsBackendHints = false;
-  ProgramGraphicsBackendHintsSummary? _graphicsBackendHints;
-  String? _graphicsBackendHintError;
+  RunProgramGraphicsBackendHintState _graphicsBackendHintState =
+      const RunProgramGraphicsBackendHintState.none();
 
   @override
   void dispose() {
@@ -63,25 +124,32 @@ class _RunProgramDialogState extends State<RunProgramDialog> {
     }
 
     Navigator.of(context).pop(
-      RunProgramDialogResult(
+      RunProgramDialogDecision.run(
         programPath: programPath,
-        settings: _oneTimeSettings(),
+        settings: _runSettingsArgument(),
       ),
     );
   }
 
   Future<void> _chooseProgramFile() async {
-    final selectedPath = await widget.programFilePicker.pickProgramPath(
-      initialDirectory: widget.initialDirectory,
+    final selection = await widget.programFilePicker.pickProgramPath(
+      initialDirectory: filePickerInitialDirectoryFromPath(
+        widget.initialDirectory,
+      ),
     );
-    if (!mounted || selectedPath == null || selectedPath.trim().isEmpty) {
+    if (!mounted) {
       return;
     }
 
-    setState(() {
-      _programPathController.text = selectedPath;
-      _clearGraphicsBackendHints();
-    });
+    switch (selection) {
+      case PickedFilePath(:final path):
+        setState(() {
+          _programPathController.text = path;
+          _clearGraphicsBackendHints();
+        });
+      case CancelledFilePathPick():
+        return;
+    }
   }
 
   Future<void> _loadGraphicsBackendHints() async {
@@ -92,9 +160,8 @@ class _RunProgramDialogState extends State<RunProgramDialog> {
     }
 
     setState(() {
-      _isLoadingGraphicsBackendHints = true;
-      _graphicsBackendHints = null;
-      _graphicsBackendHintError = null;
+      _graphicsBackendHintState =
+          const RunProgramGraphicsBackendHintState.loading();
     });
 
     final result = await loader(programPath);
@@ -103,13 +170,8 @@ class _RunProgramDialogState extends State<RunProgramDialog> {
     }
 
     setState(() {
-      _isLoadingGraphicsBackendHints = false;
-      switch (result) {
-        case LoadedGraphicsBackendHints(:final hints):
-          _graphicsBackendHints = hints;
-        case GraphicsBackendHintsLoadFailure(:final message):
-          _graphicsBackendHintError = message;
-      }
+      _graphicsBackendHintState =
+          runProgramGraphicsBackendHintStateFromLoadResult(result);
     });
   }
 
@@ -120,6 +182,12 @@ class _RunProgramDialogState extends State<RunProgramDialog> {
     final localizations = KonyakLocalizations.of(context);
     final canInspectGraphicsBackend =
         widget.graphicsBackendHintsLoader != null && programPath.isNotEmpty;
+    final isLoadingGraphicsBackendHints = switch (_graphicsBackendHintState) {
+      LoadingRunProgramGraphicsBackendHint() => true,
+      NoRunProgramGraphicsBackendHint() ||
+      LoadedRunProgramGraphicsBackendHint() ||
+      FailedRunProgramGraphicsBackendHint() => false,
+    };
 
     return AlertDialog(
       title: Text(localizations.runProgramIn(widget.bottleName)),
@@ -152,10 +220,10 @@ class _RunProgramDialogState extends State<RunProgramDialog> {
                     alignment: Alignment.centerLeft,
                     child: TextButton.icon(
                       key: const ValueKey('run-program-graphics-hint-button'),
-                      onPressed: _isLoadingGraphicsBackendHints
+                      onPressed: isLoadingGraphicsBackendHints
                           ? null
                           : _loadGraphicsBackendHints,
-                      icon: _isLoadingGraphicsBackendHints
+                      icon: isLoadingGraphicsBackendHints
                           ? const SizedBox.square(
                               dimension: 16,
                               child: CircularProgressIndicator(strokeWidth: 2),
@@ -165,13 +233,13 @@ class _RunProgramDialogState extends State<RunProgramDialog> {
                     ),
                   ),
                 ),
-              if (_graphicsBackendHints != null ||
-                  _graphicsBackendHintError != null)
+              if (runProgramGraphicsBackendHintPanelVisible(
+                _graphicsBackendHintState,
+              ))
                 Padding(
                   padding: const EdgeInsets.only(top: 8),
                   child: _GraphicsBackendHintPanel(
-                    hints: _graphicsBackendHints,
-                    errorMessage: _graphicsBackendHintError,
+                    state: _graphicsBackendHintState,
                   ),
                 ),
               const SizedBox(height: 12),
@@ -217,7 +285,11 @@ class _RunProgramDialogState extends State<RunProgramDialog> {
       ),
       actions: [
         TextButton(
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () {
+            Navigator.of(
+              context,
+            ).pop(const RunProgramDialogDecision.cancelled());
+          },
           child: Text(localizations.cancel),
         ),
         FilledButton.icon(
@@ -255,17 +327,22 @@ class _RunProgramDialogState extends State<RunProgramDialog> {
     final currentPath = _settingsController.effectiveLogPath(
       defaultLogPath: widget.defaultLogPath,
     );
-    final selectedPath = await widget.logFilePicker.pickLogFilePath(
-      initialDirectory: programPathDirectory(currentPath),
-      suggestedName: programPathFileName(currentPath) ?? 'latest.log',
+    final selection = await widget.logFilePicker.pickLogFilePath(
+      initialDirectory: programPathInitialDirectory(currentPath),
+      suggestedName: programPathSuggestedLogName(currentPath),
     );
-    if (!mounted || selectedPath == null || selectedPath.trim().isEmpty) {
+    if (!mounted) {
       return;
     }
 
-    setState(() {
-      _settingsController.logFilePathController.text = selectedPath;
-    });
+    switch (selection) {
+      case PickedFilePath(:final path):
+        setState(() {
+          _settingsController.logFilePathController.text = path;
+        });
+      case CancelledFilePathPick():
+        return;
+    }
   }
 
   void _handleProgramPathChanged(String _) {
@@ -273,37 +350,95 @@ class _RunProgramDialogState extends State<RunProgramDialog> {
   }
 
   void _clearGraphicsBackendHints() {
-    _graphicsBackendHints = null;
-    _graphicsBackendHintError = null;
-    _isLoadingGraphicsBackendHints = false;
+    _graphicsBackendHintState = const RunProgramGraphicsBackendHintState.none();
   }
 
-  ProgramSettingsSummary? _oneTimeSettings() {
-    return _settingsController.toOptionalSettings();
+  ProgramRunSettingsArgument _runSettingsArgument() {
+    return _settingsController.toRunSettingsArgument();
   }
 }
 
 class _GraphicsBackendHintPanel extends StatelessWidget {
-  const _GraphicsBackendHintPanel({required this.hints, this.errorMessage});
+  const _GraphicsBackendHintPanel({required this.state});
 
-  final ProgramGraphicsBackendHintsSummary? hints;
-  final String? errorMessage;
+  final RunProgramGraphicsBackendHintState state;
 
   @override
   Widget build(BuildContext context) {
     final localizations = KonyakLocalizations.of(context);
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    final error = errorMessage;
-    final currentHints = hints;
-    final suggestion = currentHints?.suggestions.firstOrNull;
-    final signalText = currentHints == null
-        ? ''
-        : currentHints.signals.map((signal) => signal.value).join(', ');
+
+    return switch (state) {
+      LoadedRunProgramGraphicsBackendHint(:final hints) =>
+        _GraphicsBackendHintFrame(
+          icon: Icons.auto_awesome_motion,
+          iconColor: colorScheme.primary,
+          children: [
+            Text(
+              localizations.graphicsBackendHint,
+              style: textTheme.labelLarge,
+            ),
+            const SizedBox(height: 4),
+            switch (hints.suggestions) {
+              [final suggestion, ...] => Text(
+                localizations.recommendedGraphicsBackend(
+                  _graphicsBackendLabel(
+                    suggestion: suggestion,
+                    hints: hints,
+                    localizations: localizations,
+                  ),
+                ),
+              ),
+              _ => Text(localizations.graphicsBackendHintUnavailable),
+            },
+            if (hints.signals.map((signal) => signal.value).join(', ')
+                case final signalText when signalText.isNotEmpty) ...[
+              const SizedBox(height: 2),
+              Text(
+                localizations.detectedGraphicsSignals(signalText),
+                style: textTheme.bodySmall,
+              ),
+            ],
+          ],
+        ),
+      FailedRunProgramGraphicsBackendHint(:final message) =>
+        _GraphicsBackendHintFrame(
+          icon: Icons.warning,
+          iconColor: colorScheme.error,
+          children: [
+            Text(
+              localizations.graphicsBackendHint,
+              style: textTheme.labelLarge,
+            ),
+            const SizedBox(height: 4),
+            Text(message, style: TextStyle(color: colorScheme.error)),
+          ],
+        ),
+      NoRunProgramGraphicsBackendHint() ||
+      LoadingRunProgramGraphicsBackendHint() => const SizedBox.shrink(),
+    };
+  }
+}
+
+class _GraphicsBackendHintFrame extends StatelessWidget {
+  const _GraphicsBackendHintFrame({
+    required this.icon,
+    required this.iconColor,
+    required this.children,
+  });
+
+  final IconData icon;
+  final Color iconColor;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        border: Border.all(color: Theme.of(context).dividerColor),
+        border: Border.all(color: theme.dividerColor),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Padding(
@@ -311,44 +446,13 @@ class _GraphicsBackendHintPanel extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(
-              error == null ? Icons.auto_awesome_motion : Icons.warning,
-              size: 18,
-              color: error == null ? colorScheme.primary : colorScheme.error,
-            ),
+            Icon(icon, size: 18, color: iconColor),
             const SizedBox(width: 8),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    localizations.graphicsBackendHint,
-                    style: textTheme.labelLarge,
-                  ),
-                  const SizedBox(height: 4),
-                  if (error != null)
-                    Text(error, style: TextStyle(color: colorScheme.error))
-                  else if (currentHints != null && suggestion != null)
-                    Text(
-                      localizations.recommendedGraphicsBackend(
-                        _graphicsBackendLabel(
-                          suggestion: suggestion,
-                          hints: currentHints,
-                          localizations: localizations,
-                        ),
-                      ),
-                    )
-                  else
-                    Text(localizations.graphicsBackendHintUnavailable),
-                  if (error == null && signalText.isNotEmpty) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      localizations.detectedGraphicsSignals(signalText),
-                      style: textTheme.bodySmall,
-                    ),
-                  ],
-                ],
+                children: children,
               ),
             ),
           ],

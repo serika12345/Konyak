@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../l10n/konyak_localizations.dart';
 import '../app_constants.dart';
 import '../home/home_contracts.dart';
+import '../programs/program_configuration_settings.dart';
 import '../programs/program_configuration_view.dart';
 import '../widgets/konyak_top_bar.dart';
 import 'bottle_configuration_view.dart';
@@ -70,8 +71,11 @@ class KonyakBottleDetail extends StatelessWidget {
                 ? ProgramConfigurationView(
                     bottle: activeBottle,
                     program: activeProgram,
-                    settings: state.programSettings,
-                    isLoading: state.isProgramSettingsLoading,
+                    settingsState:
+                        programConfigurationSettingsStateFromNullable(
+                          settings: state.programSettings,
+                          isLoading: state.isProgramSettingsLoading,
+                        ),
                     onProgramSettingsChanged:
                         programActions.onProgramSettingsChanged,
                   )

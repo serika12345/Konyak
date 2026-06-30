@@ -14,9 +14,11 @@ import '../cli/konyak_cli_program_commands.dart';
 import '../cli/konyak_cli_program_result_types.dart';
 import '../cli/konyak_cli_read_commands.dart';
 import '../l10n/konyak_localizations.dart';
+import 'app_settings_state.dart' as app_settings_state;
 import 'home_loader.dart';
 import 'home_loader_bottles.dart';
 import 'home_loader_pinned_programs.dart';
+import 'latest_run_log_state.dart';
 
 part 'home_loader_programs.freezed.dart';
 
@@ -26,33 +28,36 @@ const programLaunchProcessStablePolls = 2;
 
 extension KonyakHomeLoaderPrograms on KonyakHomeLoaderState {
   Future<void> runProgram(BottleSummary bottle) async {
-    final result = await showDialog<RunProgramDialogResult>(
-      context: context,
-      builder: (context) => RunProgramDialog(
-        bottleName: bottle.name,
-        programFilePicker: widget.programFilePicker,
-        initialDirectory: bottleDriveCPath(bottle.path),
-        defaultLogPath: bottleRunLogPath(bottle.path),
-        graphicsBackendHintsLoader: (programPath) =>
-            widget.cliClient.suggestGraphicsBackend(programPath: programPath),
+    final decision = runProgramDialogDecisionFromNullable(
+      await showDialog<RunProgramDialogDecision>(
+        context: context,
+        builder: (context) => RunProgramDialog(
+          bottleName: bottle.name,
+          programFilePicker: widget.programFilePicker,
+          initialDirectory: bottleDriveCPath(bottle.path),
+          defaultLogPath: bottleRunLogPath(bottle.path),
+          graphicsBackendHintsLoader: (programPath) =>
+              widget.cliClient.suggestGraphicsBackend(programPath: programPath),
+        ),
       ),
     );
 
-    if (result == null) {
-      return;
+    switch (decision) {
+      case RunProgramFromDialog(:final programPath, :final settings):
+        await runProgramPath(
+          bottle: bottle,
+          programPath: programPath,
+          settings: settings,
+        );
+      case CancelledRunProgramDialog():
+        return;
     }
-
-    await runProgramPath(
-      bottle: bottle,
-      programPath: result.programPath,
-      settings: result.settings,
-    );
   }
 
   Future<void> runProgramPath({
     required BottleSummary bottle,
     required String programPath,
-    ProgramSettingsSummary? settings,
+    ProgramRunSettingsArgument settings = const NoProgramRunSettings(),
   }) async {
     final launchId = beginProgramLaunch();
     final baselineWindowIds = _probeIdsOrEmpty(
@@ -79,10 +84,7 @@ extension KonyakHomeLoaderPrograms on KonyakHomeLoaderState {
       result = await widget.cliClient.runProgram(
         bottleId: bottle.id,
         programPath: programPath,
-        settings: switch (settings) {
-          null => const NoProgramRunSettings(),
-          final settings => UseProgramRunSettings(settings),
-        },
+        settings: settings,
         startObserver: NotifyProcessStart((processId) {
           unawaited(
             finishProgramLaunchWhenMatchingWindowAppears(
@@ -139,7 +141,9 @@ extension KonyakHomeLoaderPrograms on KonyakHomeLoaderState {
   }
 
   bool shouldAutomaticallyPinNewInstalledPrograms() {
-    return appSettings?.automaticallyPinNewInstalledPrograms ?? false;
+    return app_settings_state.shouldAutomaticallyPinNewInstalledPrograms(
+      appSettings,
+    );
   }
 
   Set<String> knownProgramPaths({
@@ -329,16 +333,16 @@ extension KonyakHomeLoaderPrograms on KonyakHomeLoaderState {
     switch (result) {
       case CompletedProgramRun(:final run) when run.logFileCreated:
         updateState(() {
-          latestRunLogPath = run.logPath;
+          latestRunLog = latestRunLogStateFromPath(run.logPath);
         });
       case FailedProgramRun(:final logPath, :final logFileCreated)
           when logFileCreated:
         updateState(() {
-          latestRunLogPath = logPath;
+          latestRunLog = latestRunLogStateFromPath(logPath);
         });
       case CompletedProgramRun() || FailedProgramRun():
         updateState(() {
-          latestRunLogPath = null;
+          latestRunLog = const LatestRunLogState.unavailable();
         });
       case UnsupportedProgramRun() ||
           MissingProgramRunBottle() ||

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../bottles/bottle_summary.dart';
+import '../../files/file_path_pick_result.dart';
 import '../../files/log_file_picker.dart';
 import '../../l10n/konyak_localizations.dart';
 import '../app_constants.dart';
@@ -14,16 +15,14 @@ class ProgramConfigurationView extends StatefulWidget {
     super.key,
     required this.bottle,
     required this.program,
-    required this.settings,
-    required this.isLoading,
+    required this.settingsState,
     required this.onProgramSettingsChanged,
     this.logFilePicker = const FileSelectorLogFilePicker(),
   });
 
   final BottleSummary bottle;
   final PinnedProgramSummary program;
-  final ProgramSettingsSummary? settings;
-  final bool isLoading;
+  final ProgramConfigurationSettingsState settingsState;
   final LogFilePicker logFilePicker;
   final void Function(
     BottleSummary bottle,
@@ -44,7 +43,7 @@ class _ProgramConfigurationViewState extends State<ProgramConfigurationView> {
   void initState() {
     super.initState();
     _settingsController = ProgramSettingsFormController.fromSettings(
-      widget.settings ?? ProgramSettingsSummary(),
+      programConfigurationSettingsForForm(widget.settingsState),
     );
   }
 
@@ -53,9 +52,12 @@ class _ProgramConfigurationViewState extends State<ProgramConfigurationView> {
     super.didUpdateWidget(oldWidget);
 
     if (oldWidget.program.path != widget.program.path ||
-        !sameProgramSettings(oldWidget.settings, widget.settings)) {
+        !sameProgramConfigurationSettingsState(
+          oldWidget.settingsState,
+          widget.settingsState,
+        )) {
       _settingsController.replaceSettings(
-        widget.settings ?? ProgramSettingsSummary(),
+        programConfigurationSettingsForForm(widget.settingsState),
       );
     }
   }
@@ -71,8 +73,11 @@ class _ProgramConfigurationViewState extends State<ProgramConfigurationView> {
     final colors = KonyakThemeColors.of(context);
     final localizations = KonyakLocalizations.of(context);
 
-    if (widget.isLoading && widget.settings == null) {
-      return Center(child: CircularProgressIndicator(color: colors.accent));
+    switch (widget.settingsState) {
+      case LoadingProgramConfigurationSettings():
+        return Center(child: CircularProgressIndicator(color: colors.accent));
+      case ReadyProgramConfigurationSettings():
+        break;
     }
 
     return SingleChildScrollView(
@@ -142,17 +147,22 @@ class _ProgramConfigurationViewState extends State<ProgramConfigurationView> {
     final currentPath = _settingsController.effectiveLogPath(
       defaultLogPath: _defaultLogPath,
     );
-    final selectedPath = await widget.logFilePicker.pickLogFilePath(
-      initialDirectory: programPathDirectory(currentPath),
-      suggestedName: programPathFileName(currentPath) ?? 'latest.log',
+    final selection = await widget.logFilePicker.pickLogFilePath(
+      initialDirectory: programPathInitialDirectory(currentPath),
+      suggestedName: programPathSuggestedLogName(currentPath),
     );
-    if (!mounted || selectedPath == null || selectedPath.trim().isEmpty) {
+    if (!mounted) {
       return;
     }
 
-    setState(() {
-      _settingsController.logFilePathController.text = selectedPath;
-    });
+    switch (selection) {
+      case PickedFilePath(:final path):
+        setState(() {
+          _settingsController.logFilePathController.text = path;
+        });
+      case CancelledFilePathPick():
+        return;
+    }
   }
 
   String get _defaultLogPath => programDefaultLogPath(widget.bottle.path);

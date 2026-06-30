@@ -10,6 +10,7 @@ import '../cli/konyak_cli_bottle_commands.dart';
 import '../cli/konyak_cli_bottle_result_types.dart';
 import '../cli/konyak_cli_read_commands.dart';
 import '../cli/konyak_cli_runtime_result_types.dart';
+import '../files/file_path_pick_result.dart';
 import '../l10n/konyak_localizations.dart';
 import '../runtimes/runtime_summary.dart';
 import 'bottle_operation_outcome.dart';
@@ -50,20 +51,21 @@ extension KonyakHomeLoaderBottles on KonyakHomeLoaderState {
   }
 
   Future<BottleOperationOutcome> createBottleFromDialog() async {
-    final input = await showDialog<CreateBottleInput>(
-      context: context,
-      builder: (context) => const CreateBottleDialog(),
+    final decision = createBottleDecisionFromNullable(
+      await showDialog<CreateBottleDecision>(
+        context: context,
+        builder: (context) => const CreateBottleDialog(),
+      ),
     );
 
-    if (input == null) {
-      return const BottleOperationOutcome.cancelled();
-    }
-
-    return createBottleFromInput(input);
+    return switch (decision) {
+      final CreateBottleFromDialog input => createBottleFromInput(input),
+      CancelledCreateBottleDialog() => const BottleOperationOutcome.cancelled(),
+    };
   }
 
   Future<BottleOperationOutcome> createBottleFromInput(
-    CreateBottleInput input,
+    CreateBottleFromDialog input,
   ) async {
     updateState(() {
       isCreatingBottle = true;
@@ -216,16 +218,19 @@ extension KonyakHomeLoaderBottles on KonyakHomeLoaderState {
   }
 
   Future<void> deleteBottle(BottleSummary bottle) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => DeleteBottleDialog(bottleName: bottle.name),
+    final decision = deleteBottleDecisionFromNullable(
+      await showDialog<DeleteBottleDecision>(
+        context: context,
+        builder: (context) => DeleteBottleDialog(bottleName: bottle.name),
+      ),
     );
 
-    if (confirmed != true) {
-      return;
+    switch (decision) {
+      case DeleteBottleConfirmed():
+        await deleteBottleAfterConfirmation(bottle);
+      case CancelledDeleteBottleDialog():
+        return;
     }
-
-    await deleteBottleAfterConfirmation(bottle);
   }
 
   Future<void> deleteBottleAfterConfirmation(BottleSummary bottle) async {
@@ -273,70 +278,83 @@ extension KonyakHomeLoaderBottles on KonyakHomeLoaderState {
   }
 
   Future<void> renameBottle(BottleSummary bottle) async {
-    final name = await showDialog<String>(
-      context: context,
-      builder: (context) => RenameBottleDialog(bottleName: bottle.name),
-    );
-
-    if (name == null) {
-      return;
-    }
-
-    final result = await widget.cliClient.renameBottle(
-      bottleId: bottle.id,
-      name: name,
-    );
-
-    if (!mounted) {
-      return;
-    }
-
-    handleBottleUpdateResult(
-      result,
-      oldBottleId: bottle.id,
-      successMessage: (bottle) =>
-          KonyakLocalizations.of(context).renamedBottle(bottle.name),
-    );
-  }
-
-  Future<void> moveBottle(BottleSummary bottle) async {
-    final path = await showDialog<String>(
-      context: context,
-      builder: (context) => MoveBottleDialog(
-        bottleName: bottle.name,
-        initialPath: bottle.path,
-        directoryPicker: widget.directoryPicker,
+    final decision = renameBottleDecisionFromNullable(
+      await showDialog<RenameBottleDecision>(
+        context: context,
+        builder: (context) => RenameBottleDialog(bottleName: bottle.name),
       ),
     );
 
-    if (path == null) {
-      return;
-    }
+    switch (decision) {
+      case RenameBottleToName(:final name):
+        final result = await widget.cliClient.renameBottle(
+          bottleId: bottle.id,
+          name: name,
+        );
 
-    final result = await widget.cliClient.moveBottle(
-      bottleId: bottle.id,
-      path: path,
+        if (!mounted) {
+          return;
+        }
+
+        handleBottleUpdateResult(
+          result,
+          oldBottleId: bottle.id,
+          successMessage: (bottle) =>
+              KonyakLocalizations.of(context).renamedBottle(bottle.name),
+        );
+      case CancelledRenameBottleDialog():
+        return;
+    }
+  }
+
+  Future<void> moveBottle(BottleSummary bottle) async {
+    final decision = moveBottleDecisionFromNullable(
+      await showDialog<MoveBottleDecision>(
+        context: context,
+        builder: (context) => MoveBottleDialog(
+          bottleName: bottle.name,
+          initialPath: bottle.path,
+          directoryPicker: widget.directoryPicker,
+        ),
+      ),
     );
 
-    if (!mounted) {
-      return;
-    }
+    switch (decision) {
+      case MoveBottleToPath(:final path):
+        final result = await widget.cliClient.moveBottle(
+          bottleId: bottle.id,
+          path: path,
+        );
 
-    handleBottleUpdateResult(
-      result,
-      successMessage: (bottle) =>
-          KonyakLocalizations.of(context).movedBottle(bottle.name),
-    );
+        if (!mounted) {
+          return;
+        }
+
+        handleBottleUpdateResult(
+          result,
+          successMessage: (bottle) =>
+              KonyakLocalizations.of(context).movedBottle(bottle.name),
+        );
+      case CancelledMoveBottleDialog():
+        return;
+    }
   }
 
   Future<void> exportBottleArchive(BottleSummary bottle) async {
-    final archivePath = await widget.bottleArchivePicker.pickArchiveExportPath(
-      suggestedName: '${bottle.id}.konyak-bottle.tar',
-    );
-    if (archivePath == null) {
-      return;
+    final archiveSelection = await widget.bottleArchivePicker
+        .pickArchiveExportPath(suggestedName: '${bottle.id}.konyak-bottle.tar');
+    switch (archiveSelection) {
+      case PickedFilePath(:final path):
+        await exportBottleArchiveToPath(bottle: bottle, archivePath: path);
+      case CancelledFilePathPick():
+        return;
     }
+  }
 
+  Future<void> exportBottleArchiveToPath({
+    required BottleSummary bottle,
+    required String archivePath,
+  }) async {
     updateState(() {
       archiveProgressMessage = KonyakLocalizations.of(
         context,
@@ -372,11 +390,17 @@ extension KonyakHomeLoaderBottles on KonyakHomeLoaderState {
   }
 
   Future<void> importBottleArchive() async {
-    final archivePath = await widget.bottleArchivePicker.pickArchiveToImport();
-    if (archivePath == null) {
-      return;
+    final archiveSelection = await widget.bottleArchivePicker
+        .pickArchiveToImport();
+    switch (archiveSelection) {
+      case PickedFilePath(:final path):
+        await importBottleArchiveFromPath(path);
+      case CancelledFilePathPick():
+        return;
     }
+  }
 
+  Future<void> importBottleArchiveFromPath(String archivePath) async {
     updateState(() {
       archiveProgressMessage = KonyakLocalizations.of(
         context,

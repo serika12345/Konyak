@@ -145,42 +145,55 @@ class _PinnedProgramTileState extends State<PinnedProgramTile>
     final colors = KonyakThemeColors.of(context);
     final localizations = KonyakLocalizations.of(context);
     final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
-    final selectedAction = await showMenu<PinnedProgramContextMenuAction>(
-      context: context,
-      position: RelativeRect.fromRect(
-        Rect.fromPoints(globalPosition, globalPosition),
-        Offset.zero & overlay.size,
-      ),
-      color: colors.menuBackground,
-      popUpAnimationStyle: AnimationStyle.noAnimation,
-      shape: RoundedRectangleBorder(
-        side: BorderSide(color: colors.menuBorder),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      constraints: const BoxConstraints(minWidth: 220, maxWidth: 220),
-      items: pinnedProgramContextMenuItems(
-        colors,
-        widget.platform,
-        localizations,
+    final decision = pinnedProgramContextMenuDecisionFromNullable(
+      await showMenu<PinnedProgramContextMenuAction>(
+        context: context,
+        position: RelativeRect.fromRect(
+          Rect.fromPoints(globalPosition, globalPosition),
+          Offset.zero & overlay.size,
+        ),
+        color: colors.menuBackground,
+        popUpAnimationStyle: AnimationStyle.noAnimation,
+        shape: RoundedRectangleBorder(
+          side: BorderSide(color: colors.menuBorder),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        constraints: const BoxConstraints(minWidth: 220, maxWidth: 220),
+        items: pinnedProgramContextMenuItems(
+          colors,
+          widget.platform,
+          localizations,
+        ),
       ),
     );
 
-    if (!mounted || selectedAction == null) {
+    if (!mounted) {
       return;
     }
 
-    switch (selectedAction) {
-      case PinnedProgramContextMenuAction.run:
-        unawaited(_bounceController.forward(from: 0));
-        widget.onRunProgramPath?.call(widget.bottle, widget.program.path);
-      case PinnedProgramContextMenuAction.config:
-        widget.onConfigurePinnedProgram?.call(widget.bottle, widget.program);
-      case PinnedProgramContextMenuAction.unpin:
-        widget.onUnpinProgram?.call(widget.bottle, widget.program);
-      case PinnedProgramContextMenuAction.rename:
-        widget.onRenamePinnedProgram?.call(widget.bottle, widget.program);
-      case PinnedProgramContextMenuAction.showInFinder:
-        widget.onOpenPinnedProgramLocation?.call(widget.bottle, widget.program);
+    switch (decision) {
+      case SelectedPinnedProgramContextMenuAction(:final action):
+        switch (action) {
+          case PinnedProgramContextMenuAction.run:
+            unawaited(_bounceController.forward(from: 0));
+            widget.onRunProgramPath?.call(widget.bottle, widget.program.path);
+          case PinnedProgramContextMenuAction.config:
+            widget.onConfigurePinnedProgram?.call(
+              widget.bottle,
+              widget.program,
+            );
+          case PinnedProgramContextMenuAction.unpin:
+            widget.onUnpinProgram?.call(widget.bottle, widget.program);
+          case PinnedProgramContextMenuAction.rename:
+            widget.onRenamePinnedProgram?.call(widget.bottle, widget.program);
+          case PinnedProgramContextMenuAction.showInFinder:
+            widget.onOpenPinnedProgramLocation?.call(
+              widget.bottle,
+              widget.program,
+            );
+        }
+      case CancelledPinnedProgramContextMenu():
+        return;
     }
   }
 

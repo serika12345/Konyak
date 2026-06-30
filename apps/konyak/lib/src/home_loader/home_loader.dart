@@ -18,6 +18,7 @@ import '../files/program_file_picker.dart';
 import '../l10n/konyak_localizations.dart';
 import '../logs/log_reader.dart';
 import '../settings/app_settings_summary.dart';
+import 'app_settings_state.dart';
 import 'home_loader_bottles.dart';
 import 'home_loader_executables.dart';
 import 'home_loader_pinned_programs.dart';
@@ -28,6 +29,7 @@ import 'home_loader_settings.dart';
 import 'home_loader_wine_processes.dart';
 import 'home_loader_winetricks.dart';
 import 'known_runtimes_state.dart';
+import 'latest_run_log_state.dart';
 
 class KonyakHomeLoader extends StatefulWidget {
   const KonyakHomeLoader({
@@ -83,9 +85,9 @@ class KonyakHomeLoaderState extends State<KonyakHomeLoader>
   bool isShowingSettings = false;
   bool isCheckingKonyakUpdate = false;
   bool hasTerminatedWineProcesses = false;
-  AppSettingsSummary? appSettings;
+  AppSettingsState appSettings = const AppSettingsState.unavailable();
   String? errorMessage;
-  String? latestRunLogPath;
+  LatestRunLogState latestRunLog = const LatestRunLogState.unavailable();
   KnownRuntimesState knownRuntimes = const KnownRuntimesState.pending();
   final List<String> pendingExecutableOpenPaths = <String>[];
   bool isHandlingExecutableOpen = false;
@@ -186,7 +188,10 @@ class KonyakHomeLoaderState extends State<KonyakHomeLoader>
             onCreateBottle: createBottle,
             onImportBottleArchive: importBottleArchive,
             onReinstallRuntime: reinstallManagedRuntimeFromMenu,
-            onViewLatestLog: latestRunLogPath == null ? null : showLatestLog,
+            onViewLatestLog: switch (latestRunLog) {
+              AvailableLatestRunLog() => showLatestLog,
+              UnavailableLatestRunLog() => null,
+            },
             onShowProcessManager: showProcessManager,
           ),
           bottleActions: KonyakBottleActions(

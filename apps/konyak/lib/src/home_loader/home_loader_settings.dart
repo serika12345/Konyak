@@ -11,6 +11,7 @@ import '../cli/konyak_cli_settings_commands.dart';
 import '../cli/konyak_cli_settings_result_types.dart';
 import '../l10n/konyak_localizations.dart';
 import '../settings/app_settings_summary.dart';
+import 'app_settings_state.dart';
 import 'home_loader.dart';
 import 'home_loader_runtimes.dart';
 
@@ -30,7 +31,7 @@ extension KonyakHomeLoaderSettings on KonyakHomeLoaderState {
 
       switch (result) {
         case LoadedAppSettings(:final settings):
-          appSettings = settings;
+          appSettings = AppSettingsState.loaded(settings);
           widget.onAppSettingsLoaded(settings);
           await showDialog<void>(
             context: context,
@@ -152,7 +153,7 @@ extension KonyakHomeLoaderSettings on KonyakHomeLoaderState {
 
     switch (result) {
       case LoadedAppSettings(:final settings):
-        appSettings = settings;
+        appSettings = AppSettingsState.loaded(settings);
         widget.onAppearanceModeChanged(settings.appearanceMode);
         widget.onLanguageModeChanged(settings.languageMode);
         return AppSettingsSaveOutcome.saved(settings);

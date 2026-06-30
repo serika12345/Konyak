@@ -1,14 +1,31 @@
 import 'package:flutter/material.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../../files/file_path_pick_result.dart';
 import '../../files/program_file_picker.dart';
 import '../../l10n/konyak_localizations.dart';
 import '../utils/program_labels.dart';
 
-class PinProgramInput {
-  const PinProgramInput({required this.name, required this.programPath});
+part 'pin_program_dialog.freezed.dart';
 
-  final String name;
-  final String programPath;
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class PinProgramDecision with _$PinProgramDecision {
+  const factory PinProgramDecision.pin({
+    required String name,
+    required String programPath,
+  }) = PinProgramFromDialog;
+
+  const factory PinProgramDecision.cancelled() = CancelledPinProgramDialog;
+}
+
+PinProgramDecision pinProgramDecisionFromNullable(
+  PinProgramDecision? decision,
+) {
+  return decision ?? const PinProgramDecision.cancelled();
 }
 
 class PinProgramDialog extends StatefulWidget {
@@ -45,21 +62,26 @@ class _PinProgramDialogState extends State<PinProgramDialog> {
 
     Navigator.of(
       context,
-    ).pop(PinProgramInput(name: name, programPath: programPath));
+    ).pop(PinProgramDecision.pin(name: name, programPath: programPath));
   }
 
   Future<void> _chooseProgramFile() async {
-    final selectedPath = await widget.programFilePicker.pickProgramPath();
-    if (!mounted || selectedPath == null || selectedPath.trim().isEmpty) {
+    final selection = await widget.programFilePicker.pickProgramPath();
+    if (!mounted) {
       return;
     }
 
-    setState(() {
-      _programPathController.text = selectedPath;
-      if (_nameController.text.trim().isEmpty) {
-        _nameController.text = defaultProgramName(selectedPath);
-      }
-    });
+    switch (selection) {
+      case PickedFilePath(:final path):
+        setState(() {
+          _programPathController.text = path;
+          if (_nameController.text.trim().isEmpty) {
+            _nameController.text = defaultProgramName(path);
+          }
+        });
+      case CancelledFilePathPick():
+        return;
+    }
   }
 
   @override
@@ -112,7 +134,9 @@ class _PinProgramDialogState extends State<PinProgramDialog> {
       ),
       actions: [
         TextButton(
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () {
+            Navigator.of(context).pop(const PinProgramDecision.cancelled());
+          },
           child: Text(localizations.cancel),
         ),
         FilledButton.icon(

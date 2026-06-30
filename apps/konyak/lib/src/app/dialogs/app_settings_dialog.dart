@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../cli/konyak_cli_client.dart';
 import '../../files/directory_picker.dart';
+import '../../files/file_path_pick_result.dart';
 import '../../l10n/konyak_localizations.dart';
 import '../../runtimes/runtime_summary.dart';
 import '../../settings/app_settings_summary.dart';
@@ -13,6 +14,7 @@ import 'app_settings_rows.dart';
 import 'app_settings_runtime_section.dart';
 import 'app_settings_runtime_view_model.dart';
 import 'app_settings_save_outcome.dart';
+import 'confirmation_decision.dart';
 
 class AppSettingsDialog extends StatefulWidget {
   const AppSettingsDialog({
@@ -111,12 +113,13 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
   }
 
   Future<void> _browseBottlePath() async {
-    final path = await widget.directoryPicker.pickDirectoryPath();
-    if (path == null || path.trim().isEmpty) {
-      return;
+    final selection = await widget.directoryPicker.pickDirectoryPath();
+    switch (selection) {
+      case PickedFilePath(:final path):
+        await _save(_settings.withDefaultBottlePath(path));
+      case CancelledFilePathPick():
+        return;
     }
-
-    await _save(_settings.withDefaultBottlePath(path));
   }
 
   Future<void> _installRuntime() async {
@@ -155,26 +158,43 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
     }
 
     final localizations = KonyakLocalizations.of(context);
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(localizations.importD3dmetalBackend),
-        content: Text(localizations.importD3dmetalBackendMessage),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(localizations.cancel),
-          ),
-          FilledButton(
-            key: const ValueKey('app-settings-confirm-gptk-wine-button'),
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text(localizations.importD3dmetal),
-          ),
-        ],
+    final decision = confirmationDecisionFromNullable(
+      await showDialog<ConfirmationDecision>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(localizations.importD3dmetalBackend),
+          content: Text(localizations.importD3dmetalBackendMessage),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(
+                  context,
+                ).pop(const ConfirmationDecision.cancelled());
+              },
+              child: Text(localizations.cancel),
+            ),
+            FilledButton(
+              key: const ValueKey('app-settings-confirm-gptk-wine-button'),
+              onPressed: () {
+                Navigator.of(
+                  context,
+                ).pop(const ConfirmationDecision.confirmed());
+              },
+              child: Text(localizations.importD3dmetal),
+            ),
+          ],
+        ),
       ),
     );
-    if (confirmed != true || !mounted) {
+    if (!mounted) {
       return;
+    }
+
+    switch (decision) {
+      case ConfirmedDialogDecision():
+        break;
+      case CancelledDialogDecision():
+        return;
     }
 
     setState(() {

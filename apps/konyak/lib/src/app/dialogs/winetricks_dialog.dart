@@ -1,7 +1,68 @@
 import 'package:flutter/material.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../cli/konyak_cli_client.dart';
 import '../../l10n/konyak_localizations.dart';
+
+part 'winetricks_dialog.freezed.dart';
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class WinetricksVerbDecision with _$WinetricksVerbDecision {
+  const factory WinetricksVerbDecision.install(String verbId) =
+      InstallWinetricksVerb;
+
+  const factory WinetricksVerbDecision.cancelled() = CancelledWinetricksDialog;
+}
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class WinetricksVerbSelection with _$WinetricksVerbSelection {
+  const factory WinetricksVerbSelection.selected(WinetricksVerbSummary verb) =
+      SelectedWinetricksVerb;
+
+  const factory WinetricksVerbSelection.none() = NoWinetricksVerbSelection;
+}
+
+WinetricksVerbDecision winetricksVerbDecisionFromNullable(
+  WinetricksVerbDecision? decision,
+) {
+  return decision ?? const WinetricksVerbDecision.cancelled();
+}
+
+WinetricksVerbSelection winetricksVerbSelectionById({
+  required List<WinetricksCategorySummary> categories,
+  required String verbId,
+}) {
+  final matches = categories
+      .expand((category) => category.verbs)
+      .where((verb) => verb.id == verbId)
+      .take(1)
+      .toList(growable: false);
+  return switch (matches) {
+    [final verb] => WinetricksVerbSelection.selected(verb),
+    _ => const WinetricksVerbSelection.none(),
+  };
+}
+
+WinetricksVerbSelection visibleWinetricksVerbSelection({
+  required WinetricksVerbSelection selection,
+  required List<WinetricksCategorySummary> categories,
+}) {
+  return switch (selection) {
+    SelectedWinetricksVerb(:final verb) => winetricksVerbSelectionById(
+      categories: categories,
+      verbId: verb.id,
+    ),
+    NoWinetricksVerbSelection() => const WinetricksVerbSelection.none(),
+  };
+}
 
 class WinetricksDialog extends StatefulWidget {
   const WinetricksDialog({
@@ -19,7 +80,7 @@ class WinetricksDialog extends StatefulWidget {
 
 class _WinetricksDialogState extends State<WinetricksDialog> {
   final TextEditingController _searchController = TextEditingController();
-  String? _selectedVerbId;
+  WinetricksVerbSelection _verbSelection = const WinetricksVerbSelection.none();
 
   @override
   void dispose() {
@@ -34,10 +95,10 @@ class _WinetricksDialogState extends State<WinetricksDialog> {
       categories: widget.categories,
       query: _searchController.text,
     );
-    final selectedVerbId = _selectedVerbId;
-    final canRun =
-        selectedVerbId != null &&
-        _winetricksCategoriesContainVerb(filteredCategories, selectedVerbId);
+    final visibleSelection = visibleWinetricksVerbSelection(
+      selection: _verbSelection,
+      categories: filteredCategories,
+    );
 
     return AlertDialog(
       title: Text(localizations.winetricksIn(widget.bottleName)),
@@ -88,10 +149,13 @@ class _WinetricksDialogState extends State<WinetricksDialog> {
                                       for (final category in filteredCategories)
                                         _WinetricksVerbList(
                                           category: category,
-                                          selectedVerbId: selectedVerbId,
+                                          selection: visibleSelection,
                                           onSelected: (verb) {
                                             setState(() {
-                                              _selectedVerbId = verb.id;
+                                              _verbSelection =
+                                                  WinetricksVerbSelection.selected(
+                                                    verb,
+                                                  );
                                             });
                                           },
                                         ),
@@ -107,13 +171,20 @@ class _WinetricksDialogState extends State<WinetricksDialog> {
       ),
       actions: [
         TextButton(
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () {
+            Navigator.of(context).pop(const WinetricksVerbDecision.cancelled());
+          },
           child: Text(localizations.cancel),
         ),
         FilledButton.icon(
-          onPressed: !canRun
-              ? null
-              : () => Navigator.of(context).pop(selectedVerbId),
+          onPressed: switch (visibleSelection) {
+            SelectedWinetricksVerb(:final verb) => () {
+              Navigator.of(
+                context,
+              ).pop(WinetricksVerbDecision.install(verb.id));
+            },
+            NoWinetricksVerbSelection() => null,
+          },
           icon: const Icon(Icons.play_arrow),
           label: Text(localizations.run),
         ),
@@ -151,15 +222,6 @@ List<WinetricksVerbSummary> _filteredWinetricksVerbs(
   );
 }
 
-bool _winetricksCategoriesContainVerb(
-  List<WinetricksCategorySummary> categories,
-  String verbId,
-) {
-  return categories.any(
-    (category) => category.verbs.any((verb) => verb.id == verbId),
-  );
-}
-
 bool _winetricksVerbMatches(
   WinetricksVerbSummary verb,
   String normalizedQuery,
@@ -175,12 +237,12 @@ String _normalizedWinetricksSearchQuery(String query) {
 class _WinetricksVerbList extends StatelessWidget {
   const _WinetricksVerbList({
     required this.category,
-    required this.selectedVerbId,
+    required this.selection,
     required this.onSelected,
   });
 
   final WinetricksCategorySummary category;
-  final String? selectedVerbId;
+  final WinetricksVerbSelection selection;
   final ValueChanged<WinetricksVerbSummary> onSelected;
 
   @override
@@ -199,7 +261,11 @@ class _WinetricksVerbList extends StatelessWidget {
         return ListTile(
           title: Text(verb.name),
           subtitle: Text(verb.description),
-          selected: verb.id == selectedVerbId,
+          selected: switch (selection) {
+            SelectedWinetricksVerb(verb: final selectedVerb) =>
+              verb.id == selectedVerb.id,
+            NoWinetricksVerbSelection() => false,
+          },
           onTap: () => onSelected(verb),
         );
       },

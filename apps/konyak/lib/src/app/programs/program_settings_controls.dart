@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../files/file_picker_arguments.dart';
 import '../../l10n/konyak_localizations.dart';
 import '../app_constants.dart';
 import '../configuration_labels.dart';
@@ -209,26 +210,20 @@ String effectiveProgramLogPath({
   return defaultLogPath.trim();
 }
 
-String? programPathDirectory(String path) {
+FilePickerInitialDirectory programPathInitialDirectory(String path) {
   final normalized = path.trim();
   if (normalized.isEmpty) {
-    return null;
+    return const FilePickerInitialDirectory.inherited();
   }
 
   final separator = normalized.lastIndexOf('/');
   if (separator <= 0) {
-    return null;
+    return const FilePickerInitialDirectory.inherited();
   }
 
-  return normalized.substring(0, separator);
+  return filePickerInitialDirectoryFromPath(normalized.substring(0, separator));
 }
 
-String? programPathFileName(String path) {
-  final normalized = path.trim();
-  if (normalized.isEmpty) {
-    return null;
-  }
-
-  final separator = normalized.lastIndexOf('/');
-  return separator == -1 ? normalized : normalized.substring(separator + 1);
+FilePickerSuggestedName programPathSuggestedLogName(String path) {
+  return filePickerSuggestedNameFromPath(path: path, fallback: 'latest.log');
 }

@@ -14,23 +14,26 @@ import 'home_loader_bottles.dart';
 
 extension KonyakHomeLoaderPinnedPrograms on KonyakHomeLoaderState {
   Future<void> pinProgram(BottleSummary bottle) async {
-    final input = await showDialog<PinProgramInput>(
-      context: context,
-      builder: (context) => PinProgramDialog(
-        bottleName: bottle.name,
-        programFilePicker: widget.programFilePicker,
+    final decision = pinProgramDecisionFromNullable(
+      await showDialog<PinProgramDecision>(
+        context: context,
+        builder: (context) => PinProgramDialog(
+          bottleName: bottle.name,
+          programFilePicker: widget.programFilePicker,
+        ),
       ),
     );
 
-    if (input == null) {
-      return;
+    switch (decision) {
+      case PinProgramFromDialog(:final name, :final programPath):
+        await pinProgramPath(
+          bottle: bottle,
+          name: name,
+          programPath: programPath,
+        );
+      case CancelledPinProgramDialog():
+        return;
     }
-
-    await pinProgramPath(
-      bottle: bottle,
-      name: input.name,
-      programPath: input.programPath,
-    );
   }
 
   Future<void> pinProgramPath({
@@ -79,31 +82,34 @@ extension KonyakHomeLoaderPinnedPrograms on KonyakHomeLoaderState {
     required BottleSummary bottle,
     required PinnedProgramSummary program,
   }) async {
-    final name = await showDialog<String>(
-      context: context,
-      builder: (context) =>
-          RenamePinnedProgramDialog(programName: program.name),
+    final decision = renamePinnedProgramDecisionFromNullable(
+      await showDialog<RenamePinnedProgramDecision>(
+        context: context,
+        builder: (context) =>
+            RenamePinnedProgramDialog(programName: program.name),
+      ),
     );
 
-    if (name == null) {
-      return;
+    switch (decision) {
+      case RenamePinnedProgramToName(:final name):
+        final result = await widget.cliClient.renamePinnedProgram(
+          bottleId: bottle.id,
+          programPath: program.path,
+          name: name,
+        );
+
+        if (!mounted) {
+          return;
+        }
+
+        handleBottleUpdateResult(
+          result,
+          successMessage: (_) =>
+              KonyakLocalizations.of(context).renamedProgram(name),
+        );
+      case CancelledRenamePinnedProgramDialog():
+        return;
     }
-
-    final result = await widget.cliClient.renamePinnedProgram(
-      bottleId: bottle.id,
-      programPath: program.path,
-      name: name,
-    );
-
-    if (!mounted) {
-      return;
-    }
-
-    handleBottleUpdateResult(
-      result,
-      successMessage: (_) =>
-          KonyakLocalizations.of(context).renamedProgram(name),
-    );
   }
 
   Future<void> openPinnedProgramLocation({

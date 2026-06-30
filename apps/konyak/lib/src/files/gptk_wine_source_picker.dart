@@ -1,14 +1,16 @@
 import 'package:file_selector/file_selector.dart';
 
+import 'file_path_pick_result.dart';
+
 abstract interface class GptkWineSourcePicker {
-  Future<String?> pickSourcePath();
+  Future<FilePathPickResult> pickSourcePath();
 }
 
 final class FileSelectorGptkWineSourcePicker implements GptkWineSourcePicker {
   const FileSelectorGptkWineSourcePicker();
 
   @override
-  Future<String?> pickSourcePath() async {
+  Future<FilePathPickResult> pickSourcePath() async {
     final dmg = await openFile(
       acceptedTypeGroups: const [
         XTypeGroup(
@@ -18,6 +20,6 @@ final class FileSelectorGptkWineSourcePicker implements GptkWineSourcePicker {
         ),
       ],
     );
-    return dmg?.path;
+    return filePathPickResultFromNullable(dmg?.path);
   }
 }

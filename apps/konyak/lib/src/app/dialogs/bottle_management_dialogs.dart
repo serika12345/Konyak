@@ -1,7 +1,81 @@
 import 'package:flutter/material.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../files/directory_picker.dart';
+import '../../files/file_path_pick_result.dart';
 import '../../l10n/konyak_localizations.dart';
+
+part 'bottle_management_dialogs.freezed.dart';
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class DeleteBottleDecision with _$DeleteBottleDecision {
+  const factory DeleteBottleDecision.delete() = DeleteBottleConfirmed;
+
+  const factory DeleteBottleDecision.cancelled() = CancelledDeleteBottleDialog;
+}
+
+DeleteBottleDecision deleteBottleDecisionFromNullable(
+  DeleteBottleDecision? decision,
+) {
+  return decision ?? const DeleteBottleDecision.cancelled();
+}
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class RenameBottleDecision with _$RenameBottleDecision {
+  const factory RenameBottleDecision.rename(String name) = RenameBottleToName;
+
+  const factory RenameBottleDecision.cancelled() = CancelledRenameBottleDialog;
+}
+
+RenameBottleDecision renameBottleDecisionFromNullable(
+  RenameBottleDecision? decision,
+) {
+  return decision ?? const RenameBottleDecision.cancelled();
+}
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class RenamePinnedProgramDecision with _$RenamePinnedProgramDecision {
+  const factory RenamePinnedProgramDecision.rename(String name) =
+      RenamePinnedProgramToName;
+
+  const factory RenamePinnedProgramDecision.cancelled() =
+      CancelledRenamePinnedProgramDialog;
+}
+
+RenamePinnedProgramDecision renamePinnedProgramDecisionFromNullable(
+  RenamePinnedProgramDecision? decision,
+) {
+  return decision ?? const RenamePinnedProgramDecision.cancelled();
+}
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class MoveBottleDecision with _$MoveBottleDecision {
+  const factory MoveBottleDecision.move(String path) = MoveBottleToPath;
+
+  const factory MoveBottleDecision.cancelled() = CancelledMoveBottleDialog;
+}
+
+MoveBottleDecision moveBottleDecisionFromNullable(
+  MoveBottleDecision? decision,
+) {
+  return decision ?? const MoveBottleDecision.cancelled();
+}
 
 class DeleteBottleDialog extends StatelessWidget {
   const DeleteBottleDialog({super.key, required this.bottleName});
@@ -17,11 +91,15 @@ class DeleteBottleDialog extends StatelessWidget {
       content: Text(localizations.thisRemovesTheBottleFolderAndMetadata),
       actions: [
         TextButton(
-          onPressed: () => Navigator.of(context).pop(false),
+          onPressed: () {
+            Navigator.of(context).pop(const DeleteBottleDecision.cancelled());
+          },
           child: Text(localizations.cancel),
         ),
         FilledButton.icon(
-          onPressed: () => Navigator.of(context).pop(true),
+          onPressed: () {
+            Navigator.of(context).pop(const DeleteBottleDecision.delete());
+          },
           icon: const Icon(Icons.delete_outline),
           label: Text(localizations.delete),
         ),
@@ -56,7 +134,7 @@ class _RenameBottleDialogState extends State<RenameBottleDialog> {
       return;
     }
 
-    Navigator.of(context).pop(name);
+    Navigator.of(context).pop(RenameBottleDecision.rename(name));
   }
 
   @override
@@ -80,7 +158,9 @@ class _RenameBottleDialogState extends State<RenameBottleDialog> {
       ),
       actions: [
         TextButton(
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () {
+            Navigator.of(context).pop(const RenameBottleDecision.cancelled());
+          },
           child: Text(localizations.cancel),
         ),
         FilledButton.icon(
@@ -120,7 +200,7 @@ class _RenamePinnedProgramDialogState extends State<RenamePinnedProgramDialog> {
       return;
     }
 
-    Navigator.of(context).pop(name);
+    Navigator.of(context).pop(RenamePinnedProgramDecision.rename(name));
   }
 
   @override
@@ -144,7 +224,11 @@ class _RenamePinnedProgramDialogState extends State<RenamePinnedProgramDialog> {
       ),
       actions: [
         TextButton(
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () {
+            Navigator.of(
+              context,
+            ).pop(const RenamePinnedProgramDecision.cancelled());
+          },
           child: Text(localizations.cancel),
         ),
         FilledButton.icon(
@@ -185,14 +269,19 @@ class _MoveBottleDialogState extends State<MoveBottleDialog> {
   }
 
   Future<void> _chooseDirectory() async {
-    final path = await widget.directoryPicker.pickDirectoryPath();
-    if (path == null || !mounted) {
+    final selection = await widget.directoryPicker.pickDirectoryPath();
+    if (!mounted) {
       return;
     }
 
-    setState(() {
-      _pathController.text = path;
-    });
+    switch (selection) {
+      case PickedFilePath(:final path):
+        setState(() {
+          _pathController.text = path;
+        });
+      case CancelledFilePathPick():
+        return;
+    }
   }
 
   void _submit() {
@@ -201,7 +290,7 @@ class _MoveBottleDialogState extends State<MoveBottleDialog> {
       return;
     }
 
-    Navigator.of(context).pop(path);
+    Navigator.of(context).pop(MoveBottleDecision.move(path));
   }
 
   @override
@@ -238,7 +327,9 @@ class _MoveBottleDialogState extends State<MoveBottleDialog> {
       ),
       actions: [
         TextButton(
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () {
+            Navigator.of(context).pop(const MoveBottleDecision.cancelled());
+          },
           child: Text(localizations.cancel),
         ),
         FilledButton.icon(

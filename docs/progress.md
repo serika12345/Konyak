@@ -13,6 +13,41 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-30 14:21 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Replace Flutter nullable UI decisions and loader state.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: current commit (`Replace Flutter nullable UI states`).
+- Purpose: continue removing nullable sentinels from Flutter dialog/menu/file
+  picker and home-loader state by modeling cancellation, absence, and
+  availability with explicit Freezed variants.
+- Completed work: replaced run-program, open-executable, pin-program,
+  create/rename/delete/move bottle, rename pinned program, winetricks, and
+  confirmation dialog nullable dismissals with explicit decisions; replaced
+  one-shot run settings nullability with `ProgramRunSettingsArgument`;
+  replaced file picker nullable paths and picker arguments with explicit path
+  pick and picker argument variants; replaced open-executable bottle choice,
+  winetricks verb selection, run-program graphics hint state, program
+  configuration settings state, pinned-program context menu selection, latest
+  run log availability, and loaded app settings availability with Freezed
+  variants; added focused tests for each new explicit state/decision.
+- Remaining work: none for this batch. Continue lower-priority nullable
+  hardening for widget callback enablement, app-settings runtime display state,
+  loader progress messages, and platform adapter boundaries in a follow-up
+  batch.
+- Next action: continue the next nullable-hardening slice.
+- Verification: targeted failing tests were observed before implementation for
+  new decision/state helpers. After implementation, targeted tests passed for
+  file path picking, file picker arguments, open executable decisions,
+  winetricks decisions, run program decisions, program configuration settings,
+  pinned program context menu decisions, latest run log state, app settings
+  state, and program settings form controller behavior. `just
+  flutter-analyze`, `just flutter-format-check`, `just flutter-test`, `just
+  verify-governance`, `just verify-safety`, `just format-check`, `just lint`,
+  and `git diff --check` passed in the Nix dev shell.
+
 - Timestamp: 2026-06-30 12:59 JST
 - State: `completed`
 - Branch: `main`

@@ -1,11 +1,39 @@
 import 'package:flutter/material.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../l10n/konyak_localizations.dart';
 import '../app_constants.dart';
 import '../app_platform.dart';
 import '../home/sidebar.dart';
 
+part 'pinned_program_context_menu.freezed.dart';
+
 enum PinnedProgramContextMenuAction { run, config, unpin, rename, showInFinder }
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class PinnedProgramContextMenuDecision
+    with _$PinnedProgramContextMenuDecision {
+  const factory PinnedProgramContextMenuDecision.select(
+    PinnedProgramContextMenuAction action,
+  ) = SelectedPinnedProgramContextMenuAction;
+
+  const factory PinnedProgramContextMenuDecision.cancelled() =
+      CancelledPinnedProgramContextMenu;
+}
+
+PinnedProgramContextMenuDecision pinnedProgramContextMenuDecisionFromNullable(
+  PinnedProgramContextMenuAction? action,
+) {
+  return switch (action) {
+    final PinnedProgramContextMenuAction action =>
+      PinnedProgramContextMenuDecision.select(action),
+    null => const PinnedProgramContextMenuDecision.cancelled(),
+  };
+}
 
 List<PopupMenuEntry<PinnedProgramContextMenuAction>>
 pinnedProgramContextMenuItems(

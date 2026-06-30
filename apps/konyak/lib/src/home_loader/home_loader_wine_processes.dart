@@ -9,7 +9,9 @@ import '../cli/konyak_cli_runtime_commands.dart';
 import '../cli/konyak_cli_wine_process_result_types.dart';
 import '../l10n/konyak_localizations.dart';
 import '../logs/log_reader.dart';
+import 'app_settings_state.dart';
 import 'home_loader.dart';
+import 'latest_run_log_state.dart';
 
 extension KonyakHomeLoaderWineProcesses on KonyakHomeLoaderState {
   Future<void> terminateWineProcessesOnClose() async {
@@ -17,8 +19,7 @@ extension KonyakHomeLoaderWineProcesses on KonyakHomeLoaderState {
       return;
     }
 
-    final settings = appSettings;
-    if (settings == null || !settings.terminateWineProcessesOnClose) {
+    if (!shouldTerminateWineProcessesOnClose(appSettings)) {
       return;
     }
 
@@ -62,12 +63,13 @@ extension KonyakHomeLoaderWineProcesses on KonyakHomeLoaderState {
   }
 
   Future<void> showLatestLog() async {
-    final logPath = latestRunLogPath;
-    if (logPath == null) {
-      return;
+    final LogReadResult result;
+    switch (latestRunLog) {
+      case AvailableLatestRunLog(:final path):
+        result = await widget.logReader.readLog(path);
+      case UnavailableLatestRunLog():
+        return;
     }
-
-    final result = await widget.logReader.readLog(logPath);
 
     if (!mounted) {
       return;

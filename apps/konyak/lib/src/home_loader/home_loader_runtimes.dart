@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../app/app_platform.dart';
+import '../app/dialogs/confirmation_decision.dart';
 import '../app/runtime/runtime_platform.dart';
 import '../app/startup/startup_update_checker.dart';
 import '../app/utils/update_labels.dart';
@@ -16,10 +17,12 @@ import '../cli/konyak_cli_settings_commands.dart';
 import '../cli/konyak_cli_settings_result_types.dart';
 import '../cli/konyak_cli_update_result_types.dart';
 import '../cli/runtime_install_contract.dart';
+import '../files/file_path_pick_result.dart';
 import '../l10n/konyak_localizations.dart';
 import '../runtimes/runtime_summary.dart';
 import '../settings/app_settings_summary.dart';
 import '../updates/update_check_summary.dart';
+import 'app_settings_state.dart';
 import 'home_loader.dart';
 import 'home_loader_platform_helpers.dart';
 import 'known_runtimes_state.dart';
@@ -43,7 +46,7 @@ extension KonyakHomeLoaderRuntimes on KonyakHomeLoaderState {
 
     switch (result) {
       case LoadedAppSettings(:final settings):
-        appSettings = settings;
+        appSettings = AppSettingsState.loaded(settings);
         widget.onAppSettingsLoaded(settings);
         final appUpdateInstallStarted = await checkConfiguredUpdates(settings);
         if (appUpdateInstallStarted) {
@@ -99,12 +102,15 @@ extension KonyakHomeLoaderRuntimes on KonyakHomeLoaderState {
   Future<bool> confirmAndInstallAvailableKonyakUpdate(
     UpdateCheckSummary update,
   ) async {
-    final confirmed = await confirmKonyakUpdateInstall(update);
-    if (!mounted || !confirmed) {
+    final decision = await confirmKonyakUpdateInstall(update);
+    if (!mounted) {
       return false;
     }
 
-    return installAvailableKonyakUpdate();
+    return switch (decision) {
+      ConfirmedDialogDecision() => installAvailableKonyakUpdate(),
+      CancelledDialogDecision() => false,
+    };
   }
 
   Future<void> checkKonyakUpdateFromMenu() async {
@@ -154,7 +160,9 @@ extension KonyakHomeLoaderRuntimes on KonyakHomeLoaderState {
     }
   }
 
-  Future<bool> confirmKonyakUpdateInstall(UpdateCheckSummary update) async {
+  Future<ConfirmationDecision> confirmKonyakUpdateInstall(
+    UpdateCheckSummary update,
+  ) async {
     final latestVersion = update.latestVersion;
     final localizations = KonyakLocalizations.of(context);
     final title = latestVersion == null
@@ -163,25 +171,33 @@ extension KonyakHomeLoaderRuntimes on KonyakHomeLoaderState {
     final message = latestVersion == null
         ? localizations.installKonyakUpdateMessage
         : localizations.installKonyakVersionUpdateMessage(latestVersion);
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(title),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(localizations.notNow),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text(localizations.install),
-          ),
-        ],
+    return confirmationDecisionFromNullable(
+      await showDialog<ConfirmationDecision>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(title),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(
+                  context,
+                ).pop(const ConfirmationDecision.cancelled());
+              },
+              child: Text(localizations.notNow),
+            ),
+            FilledButton(
+              onPressed: () {
+                Navigator.of(
+                  context,
+                ).pop(const ConfirmationDecision.confirmed());
+              },
+              child: Text(localizations.install),
+            ),
+          ],
+        ),
       ),
     );
-
-    return confirmed ?? false;
   }
 
   Future<bool> installAvailableKonyakUpdate() async {
@@ -344,12 +360,16 @@ extension KonyakHomeLoaderRuntimes on KonyakHomeLoaderState {
     required String runtimeName,
     required Future<RuntimeInstallLoadResult> Function() installRuntime,
   }) async {
-    final confirmed = await confirmRuntimeDownload(runtimeName);
+    final decision = await confirmRuntimeDownload(runtimeName);
     if (!mounted) {
       return const ManagedRuntimeInstallOutcome.unmounted();
     }
-    if (!confirmed) {
-      return const ManagedRuntimeInstallOutcome.cancelled();
+
+    switch (decision) {
+      case ConfirmedDialogDecision():
+        break;
+      case CancelledDialogDecision():
+        return const ManagedRuntimeInstallOutcome.cancelled();
     }
 
     updateState(() {
@@ -374,27 +394,37 @@ extension KonyakHomeLoaderRuntimes on KonyakHomeLoaderState {
     }
   }
 
-  Future<bool> confirmRuntimeDownload(String runtimeName) async {
+  Future<ConfirmationDecision> confirmRuntimeDownload(
+    String runtimeName,
+  ) async {
     final localizations = KonyakLocalizations.of(context);
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(localizations.downloadRuntimeTitle(runtimeName)),
-        content: Text(localizations.downloadRuntimeMessage(runtimeName)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(localizations.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text(localizations.download),
-          ),
-        ],
+    return confirmationDecisionFromNullable(
+      await showDialog<ConfirmationDecision>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(localizations.downloadRuntimeTitle(runtimeName)),
+          content: Text(localizations.downloadRuntimeMessage(runtimeName)),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(
+                  context,
+                ).pop(const ConfirmationDecision.cancelled());
+              },
+              child: Text(localizations.cancel),
+            ),
+            FilledButton(
+              onPressed: () {
+                Navigator.of(
+                  context,
+                ).pop(const ConfirmationDecision.confirmed());
+              },
+              child: Text(localizations.download),
+            ),
+          ],
+        ),
       ),
     );
-
-    return confirmed ?? false;
   }
 
   Future<RuntimeInstallLoadResult> installSettingsRuntime({
@@ -483,15 +513,21 @@ extension KonyakHomeLoaderRuntimes on KonyakHomeLoaderState {
 
   Future<RuntimeInstallLoadResult> installGptkWine() async {
     final localizations = KonyakLocalizations.of(context);
-    final sourcePath = await widget.gptkWineSourcePicker.pickSourcePath();
-    if (sourcePath == null || sourcePath.trim().isEmpty) {
-      return RuntimeInstallLoadFailure(
+    final sourceSelection = await widget.gptkWineSourcePicker.pickSourcePath();
+    return switch (sourceSelection) {
+      PickedFilePath(:final path) => installGptkWineFromPath(path),
+      CancelledFilePathPick() => RuntimeInstallLoadFailure(
         exitCode: 64,
         message: localizations.gptkD3dmetalSourceWasNotSelected,
         diagnostic: '',
-      );
-    }
+      ),
+    };
+  }
 
+  Future<RuntimeInstallLoadResult> installGptkWineFromPath(
+    String sourcePath,
+  ) async {
+    final localizations = KonyakLocalizations.of(context);
     updateState(() {
       runtimeInstallProgressMessage =
           localizations.importingGptkD3dmetalEllipsis;

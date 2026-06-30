@@ -100,13 +100,15 @@ extension KonyakHomeLoaderExecutables on KonyakHomeLoaderState {
       return;
     }
 
-    final decision = await showDialog<OpenExecutableDecision>(
-      context: context,
-      builder: (context) =>
-          OpenExecutableDialog(programPath: programPath, bottles: bottles),
+    final decision = openExecutableDecisionFromNullable(
+      await showDialog<OpenExecutableDecision>(
+        context: context,
+        builder: (context) =>
+            OpenExecutableDialog(programPath: programPath, bottles: bottles),
+      ),
     );
 
-    if (!mounted || decision == null) {
+    if (!mounted) {
       return;
     }
 
@@ -126,6 +128,8 @@ extension KonyakHomeLoaderExecutables on KonyakHomeLoaderState {
           case UnmountedBottleOperation():
             return;
         }
+      case CancelledOpenExecutableDialog():
+        return;
     }
   }
 

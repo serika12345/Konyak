@@ -33,8 +33,27 @@ void main() {
     expect(sameProgramSettings(left, right), isTrue);
   });
 
-  test('treats null settings explicitly', () {
-    expect(sameProgramSettings(null, null), isTrue);
-    expect(sameProgramSettings(null, ProgramSettingsSummary()), isFalse);
+  test('models loading program settings explicitly', () {
+    final state = programConfigurationSettingsStateFromNullable(
+      settings: null,
+      isLoading: true,
+    );
+
+    expect(switch (state) {
+      LoadingProgramConfigurationSettings() => 'loading',
+      ReadyProgramConfigurationSettings() => '',
+    }, 'loading');
+  });
+
+  test('models absent loaded program settings as defaults explicitly', () {
+    final state = programConfigurationSettingsStateFromNullable(
+      settings: null,
+      isLoading: false,
+    );
+
+    expect(switch (state) {
+      ReadyProgramConfigurationSettings(:final settings) => settings.arguments,
+      LoadingProgramConfigurationSettings() => 'loading',
+    }, '');
   });
 }
