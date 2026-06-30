@@ -1,8 +1,8 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../bottles/bottle_summary.dart';
-import '../bottles/bottle_detail.dart';
 import '../utils/bottle_lists.dart';
+import 'home_contracts.dart';
 
 part 'home_navigation_state.freezed.dart';
 
@@ -109,6 +109,44 @@ abstract class KonyakHomeNavigationState with _$KonyakHomeNavigationState {
           ),
         },
       NoHomeNavigationProgram() => const UnselectedHomeNavigationProgram(),
+    };
+  }
+
+  KonyakHomeDetailSelection detailSelectionIn(List<BottleSummary> bottles) {
+    return switch (_activeBottleIn(bottles)) {
+      ResolvedHomeNavigationBottle(:final bottle) => switch (selectedProgramIn(
+        bottle,
+      )) {
+        ResolvedHomeNavigationProgram(:final program) =>
+          KonyakHomeDetailSelection.program(bottle: bottle, program: program),
+        MissingHomeNavigationProgram() || UnselectedHomeNavigationProgram() =>
+          KonyakHomeDetailSelection.bottle(bottle),
+      },
+      MissingHomeNavigationBottle() || UnselectedHomeNavigationBottle() =>
+        const KonyakHomeDetailSelection.none(),
+    };
+  }
+
+  HomeNavigationBottleSelection sidebarBottleSelectionIn(
+    List<BottleSummary> bottles,
+  ) {
+    return switch (_activeBottleIn(bottles)) {
+      ResolvedHomeNavigationBottle(:final bottle) =>
+        SelectedHomeNavigationBottle(bottle.id),
+      MissingHomeNavigationBottle() ||
+      UnselectedHomeNavigationBottle() => const NoHomeNavigationBottle(),
+    };
+  }
+
+  HomeNavigationBottleResolution _activeBottleIn(List<BottleSummary> bottles) {
+    return switch (selectedBottleIn(bottles)) {
+      ResolvedHomeNavigationBottle(:final bottle) =>
+        ResolvedHomeNavigationBottle(bottle),
+      MissingHomeNavigationBottle() ||
+      UnselectedHomeNavigationBottle() => switch (bottles) {
+        [final bottle, ...] => ResolvedHomeNavigationBottle(bottle),
+        _ => const UnselectedHomeNavigationBottle(),
+      },
     };
   }
 

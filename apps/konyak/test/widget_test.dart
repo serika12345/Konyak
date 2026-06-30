@@ -11,6 +11,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:konyak/main.dart';
 import 'package:konyak/src/app/app_constants.dart';
 import 'package:konyak/src/app/dialogs/run_program_dialog.dart';
+import 'package:konyak/src/app/home/home_navigation_state.dart';
 import 'package:konyak/src/app/home/sidebar.dart';
 import 'package:konyak/src/app/programs/pin_program_action.dart';
 import 'package:konyak/src/app/programs/program_configuration_settings.dart';
@@ -148,7 +149,7 @@ Widget _testSidebar({
         platform: platform,
         reserveLeadingWindowControlsSpace: reserveLeadingWindowControlsSpace,
         bottles: const <BottleSummary>[],
-        selectedBottleId: null,
+        selectedBottle: const NoHomeNavigationBottle(),
         searchController: TextEditingController(),
         onSearchChanged: (_) {},
         onToggleSidebar: () {},

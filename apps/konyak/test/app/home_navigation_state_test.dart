@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:konyak/src/app/bottles/bottle_detail.dart';
+import 'package:konyak/src/app/home/home_contracts.dart';
 import 'package:konyak/src/app/home/home_navigation_state.dart';
 import 'package:konyak/src/bottles/bottle_summary.dart';
 
@@ -161,6 +161,63 @@ void main() {
       ResolvedHomeNavigationProgram(:final program) => program.path,
       MissingHomeNavigationProgram() || UnselectedHomeNavigationProgram() => '',
     }, '/games/setup.exe');
+  });
+
+  test('resolves detail selection with visible bottle fallback', () {
+    const state = KonyakHomeNavigationState(
+      selectedBottle: SelectedHomeNavigationBottle('missing'),
+      detailMode: BottleDetailMode.programConfiguration,
+      selectedProgram: SelectedHomeNavigationProgram('/games/setup.exe'),
+    );
+
+    expect(
+      switch (state.detailSelectionIn(<BottleSummary>[steam, battle])) {
+        SelectedKonyakHomeDetailProgram(:final bottle, :final program) => (
+          bottle.id,
+          program.path,
+        ),
+        SelectedKonyakHomeDetailBottle(:final bottle) => (bottle.id, ''),
+        NoKonyakHomeDetailSelection() => ('', ''),
+      },
+      ('steam', '/games/setup.exe'),
+    );
+  });
+
+  test('resolves missing selected programs as bottle detail selection', () {
+    const state = KonyakHomeNavigationState(
+      selectedBottle: SelectedHomeNavigationBottle('steam'),
+      detailMode: BottleDetailMode.programConfiguration,
+      selectedProgram: SelectedHomeNavigationProgram('/games/missing.exe'),
+    );
+
+    expect(switch (state.detailSelectionIn(<BottleSummary>[steam, battle])) {
+      SelectedKonyakHomeDetailBottle(:final bottle) => bottle.id,
+      SelectedKonyakHomeDetailProgram() || NoKonyakHomeDetailSelection() => '',
+    }, 'steam');
+  });
+
+  test('resolves empty detail and sidebar selections explicitly', () {
+    const state = KonyakHomeNavigationState();
+
+    expect(
+      state.detailSelectionIn(const <BottleSummary>[]),
+      const KonyakHomeDetailSelection.none(),
+    );
+    expect(
+      state.sidebarBottleSelectionIn(const <BottleSummary>[]),
+      const NoHomeNavigationBottle(),
+    );
+  });
+
+  test('resolves sidebar selection with visible bottle fallback', () {
+    const state = KonyakHomeNavigationState(
+      selectedBottle: SelectedHomeNavigationBottle('missing'),
+    );
+
+    expect(
+      state.sidebarBottleSelectionIn(<BottleSummary>[steam, battle]),
+      const SelectedHomeNavigationBottle('steam'),
+    );
   });
 }
 

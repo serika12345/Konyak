@@ -13,6 +13,38 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-30 22:30 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Resolve home selections without nullable sentinels.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: `dd45b71` (`Model bottle detail child targets explicitly`).
+- Purpose: continue nullable hardening in `KonyakHome` by moving selected
+  bottle/program resolution out of widget-local nullable variables and into
+  explicit navigation helper variants used by detail and sidebar rendering.
+- Completed work: added `KonyakHomeNavigationState.detailSelectionIn` and
+  `sidebarBottleSelectionIn` pure helpers with visible-bottle fallback
+  semantics; removed widget-local nullable `selectedBottle` and
+  `selectedProgram` resolution from `home_screen.dart`; replaced the sidebar
+  `String? selectedBottleId` API with `HomeNavigationBottleSelection`; and
+  extended `home_navigation_state_test.dart` to cover visible fallback,
+  missing pinned-program fallback, empty selection, and sidebar selection.
+- Remaining work: none for this slice. The next nullable-hardening candidates
+  are ordinary callback/action availability nulls in UI widgets or the
+  remaining loader/helper boundary nulls such as platform helper comparisons.
+- Next action: continue the next explicit-state hardening slice or commit this
+  uncommitted slice when requested.
+- Verification: observed
+  `flutter test test/app/home_navigation_state_test.dart` fail before
+  implementation because `detailSelectionIn` and `sidebarBottleSelectionIn`
+  did not exist. After implementation, targeted navigation and home-contract
+  tests passed. Full Flutter verification passed with
+  `just flutter-format-check`, `just flutter-analyze`, and
+  `just flutter-test`. Repository verification passed with
+  `just verify-governance`, `just verify-safety`, `just format-check`, and
+  `just lint`.
+
 - Timestamp: 2026-06-30 21:50 JST
 - State: `completed`
 - Branch: `main`

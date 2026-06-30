@@ -4,6 +4,7 @@ import '../../bottles/bottle_summary.dart';
 import '../../l10n/konyak_localizations.dart';
 import '../app_constants.dart';
 import '../app_platform.dart';
+import 'home_navigation_state.dart';
 import 'sidebar_bottle_item.dart';
 import 'sidebar_metrics.dart';
 
@@ -16,7 +17,7 @@ class KonyakSidebar extends StatelessWidget {
     required this.platform,
     required this.reserveLeadingWindowControlsSpace,
     required this.bottles,
-    required this.selectedBottleId,
+    required this.selectedBottle,
     required this.searchController,
     required this.onSearchChanged,
     required this.onToggleSidebar,
@@ -27,7 +28,7 @@ class KonyakSidebar extends StatelessWidget {
   final KonyakPlatform platform;
   final bool reserveLeadingWindowControlsSpace;
   final List<BottleSummary> bottles;
-  final String? selectedBottleId;
+  final HomeNavigationBottleSelection selectedBottle;
   final TextEditingController searchController;
   final ValueChanged<String> onSearchChanged;
   final VoidCallback onToggleSidebar;
@@ -133,7 +134,11 @@ class KonyakSidebar extends StatelessWidget {
                       separatorBuilder: (_, _) => const SizedBox(height: 6),
                       itemBuilder: (context, index) {
                         final bottle = bottles[index];
-                        final isSelected = bottle.id == selectedBottleId;
+                        final isSelected = switch (selectedBottle) {
+                          SelectedHomeNavigationBottle(:final bottleId) =>
+                            bottle.id == bottleId,
+                          NoHomeNavigationBottle() => false,
+                        };
 
                         return SidebarBottleItem(
                           platform: platform,

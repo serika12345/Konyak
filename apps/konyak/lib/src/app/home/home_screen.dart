@@ -63,31 +63,16 @@ class _KonyakHomeState extends State<KonyakHome> {
       bottles: state.bottles,
       searchQuery: _searchController.text,
     );
-    final selectedBottle = switch (_navigationState.selectedBottleIn(
+    final detailSelection = _navigationState.detailSelectionIn(filteredBottles);
+    final sidebarBottleSelection = _navigationState.sidebarBottleSelectionIn(
       filteredBottles,
-    )) {
-      ResolvedHomeNavigationBottle(:final bottle) => bottle,
-      MissingHomeNavigationBottle() || UnselectedHomeNavigationBottle() =>
-        filteredBottles.isEmpty ? null : filteredBottles.first,
-    };
-    final selectedProgram = switch (selectedBottle) {
-      final bottle? => switch (_navigationState.selectedProgramIn(bottle)) {
-        ResolvedHomeNavigationProgram(:final program) => program,
-        MissingHomeNavigationProgram() ||
-        UnselectedHomeNavigationProgram() => null,
-      },
-      null => null,
-    };
-    final selectedBottleHasPendingRuntimeSettings =
-        selectedBottle != null &&
-        state.hasPendingRuntimeSettingsFor(selectedBottle);
-    final detailSelection = switch ((selectedBottle, selectedProgram)) {
-      (final BottleSummary bottle, final PinnedProgramSummary program) =>
-        KonyakHomeDetailSelection.program(bottle: bottle, program: program),
-      (final BottleSummary bottle, null) => KonyakHomeDetailSelection.bottle(
-        bottle,
-      ),
-      _ => const KonyakHomeDetailSelection.none(),
+    );
+    final selectedBottleHasPendingRuntimeSettings = switch (detailSelection) {
+      SelectedKonyakHomeDetailBottle(:final bottle) ||
+      SelectedKonyakHomeDetailProgram(
+        :final bottle,
+      ) => state.hasPendingRuntimeSettingsFor(bottle),
+      NoKonyakHomeDetailSelection() => false,
     };
 
     return Scaffold(
@@ -107,7 +92,7 @@ class _KonyakHomeState extends State<KonyakHome> {
                 KonyakHomeSidebarPane(
                   platform: state.platform,
                   bottles: filteredBottles,
-                  selectedBottleId: selectedBottle?.id,
+                  selectedBottle: sidebarBottleSelection,
                   searchController: _searchController,
                   isExpanded: _isSidebarVisible,
                   showExpandedContent: _showExpandedSidebarContent,
