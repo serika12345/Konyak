@@ -19,6 +19,7 @@ import '../logs/log_reader.dart';
 import '../settings/app_settings_summary.dart';
 import 'app_settings_state.dart';
 import 'blocking_progress_state.dart';
+import 'executable_open_queue_state.dart';
 import 'home_loader_bottles.dart';
 import 'home_loader_executables.dart';
 import 'home_loader_operation_state.dart';
@@ -95,7 +96,8 @@ class KonyakHomeLoaderState extends State<KonyakHomeLoader>
   AppSettingsState appSettings = const AppSettingsState.unavailable();
   LatestRunLogState latestRunLog = const LatestRunLogState.unavailable();
   KnownRuntimesState knownRuntimes = const KnownRuntimesState.pending();
-  final List<String> pendingExecutableOpenPaths = <String>[];
+  ExecutableOpenQueueState executableOpenQueueState =
+      const ExecutableOpenQueueState.empty();
   final Map<String, ProgramSettingsSummary> programSettings =
       <String, ProgramSettingsSummary>{};
   final Set<String> loadingProgramSettings = <String>{};
@@ -107,8 +109,9 @@ class KonyakHomeLoaderState extends State<KonyakHomeLoader>
     if (widget.enableBackgroundServices) {
       WidgetsBinding.instance.addObserver(this);
     }
-    pendingExecutableOpenPaths.addAll(
-      validExecutableOpenPaths(widget.initialExecutablePaths),
+    executableOpenQueueState = enqueueExecutableOpenPaths(
+      state: executableOpenQueueState,
+      paths: validExecutableOpenPaths(widget.initialExecutablePaths),
     );
     macosMenuChannel.setMethodCallHandler(handleMacosMenuMethodCall);
     unawaited(loadPendingExecutableOpenPathsFromPlatform());

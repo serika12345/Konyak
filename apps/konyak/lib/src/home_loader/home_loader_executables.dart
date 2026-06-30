@@ -7,6 +7,7 @@ import '../app/dialogs/open_executable_dialog.dart';
 import '../app/home/bottle_list_load_state.dart';
 import 'bottle_operation_outcome.dart';
 import 'executable_auto_run_bottle_selection.dart';
+import 'executable_open_queue_state.dart';
 import 'home_loader.dart';
 import 'home_loader_bottles.dart';
 import 'home_loader_operation_state.dart';
@@ -32,8 +33,9 @@ extension KonyakHomeLoaderExecutables on KonyakHomeLoaderState {
         unawaited(checkKonyakUpdateFromMenu());
         return;
       case 'openExecutableFiles':
-        pendingExecutableOpenPaths.addAll(
-          validExecutableOpenPathsFromChannel(call.arguments),
+        executableOpenQueueState = enqueueExecutableOpenPaths(
+          state: executableOpenQueueState,
+          paths: validExecutableOpenPathsFromChannel(call.arguments),
         );
         unawaited(drainPendingExecutableOpenPaths());
         return;
@@ -60,8 +62,9 @@ extension KonyakHomeLoaderExecutables on KonyakHomeLoaderState {
         return;
       }
 
-      pendingExecutableOpenPaths.addAll(
-        validExecutableOpenPathsFromChannel(arguments),
+      executableOpenQueueState = enqueueExecutableOpenPaths(
+        state: executableOpenQueueState,
+        paths: validExecutableOpenPathsFromChannel(arguments),
       );
       unawaited(drainPendingExecutableOpenPaths());
     } on MissingPluginException {
@@ -72,6 +75,7 @@ extension KonyakHomeLoaderExecutables on KonyakHomeLoaderState {
   Future<void> drainPendingExecutableOpenPaths() async {
     if (!mounted ||
         isBottleListLoading(bottleListLoadState) ||
+        !hasPendingExecutableOpenPaths(executableOpenQueueState) ||
         _isHandlingExecutableOpen()) {
       return;
     }
@@ -83,9 +87,18 @@ extension KonyakHomeLoaderExecutables on KonyakHomeLoaderState {
     try {
       while (mounted &&
           !isBottleListLoading(bottleListLoadState) &&
-          pendingExecutableOpenPaths.isNotEmpty) {
-        final programPath = pendingExecutableOpenPaths.removeAt(0);
-        await showOpenExecutable(programPath);
+          hasPendingExecutableOpenPaths(executableOpenQueueState)) {
+        switch (dequeueExecutableOpenPath(executableOpenQueueState)) {
+          case DequeuedExecutableOpenPath(
+            programPath: final programPath,
+            state: final nextState,
+          ):
+            executableOpenQueueState = nextState;
+            await showOpenExecutable(programPath);
+          case EmptyExecutableOpenQueue(state: final nextState):
+            executableOpenQueueState = nextState;
+            return;
+        }
       }
     } finally {
       operationState = finishHomeLoaderOperation(
@@ -94,7 +107,7 @@ extension KonyakHomeLoaderExecutables on KonyakHomeLoaderState {
       );
       if (mounted &&
           !isBottleListLoading(bottleListLoadState) &&
-          pendingExecutableOpenPaths.isNotEmpty) {
+          hasPendingExecutableOpenPaths(executableOpenQueueState)) {
         unawaited(drainPendingExecutableOpenPaths());
       }
     }

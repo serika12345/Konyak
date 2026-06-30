@@ -13,6 +13,35 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-30 17:42 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Model executable-open queue state explicitly.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: `7e1947c` (`Model Wine close cleanup state explicitly`).
+- Purpose: continue extracting pure Flutter home-loader state transitions by
+  replacing the mutable `pendingExecutableOpenPaths` list with an explicit
+  FIFO queue state and dequeue result.
+- Completed work: added `ExecutableOpenQueueState` and
+  `ExecutableOpenQueueDequeueResult` with immutable FIFO semantics, replaced
+  `pendingExecutableOpenPaths` in `KonyakHomeLoaderState`, and routed initial
+  executable paths, platform open-file events, and drain loops through explicit
+  enqueue/dequeue helpers.
+- Remaining work: none for this slice. Continue a separate state-hardening
+  slice for remaining mutable home-loader maps/sets if those need stronger
+  modeling.
+- Next action: continue the next explicit-state hardening slice or commit this
+  slice when requested.
+- Verification: observed
+  `flutter test test/home_loader/executable_open_queue_state_test.dart` fail
+  before implementation because `ExecutableOpenQueueState` and its transition
+  helpers did not exist. After implementation, that targeted test passed. Full
+  Flutter verification passed with `just flutter-format-check`,
+  `just flutter-analyze`, and `just flutter-test`. Repository verification
+  passed with `just verify-governance`, `just verify-safety`,
+  `just format-check`, and `just lint`.
+
 - Timestamp: 2026-06-30 17:09 JST
 - State: `completed`
 - Branch: `main`
