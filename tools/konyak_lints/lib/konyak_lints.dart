@@ -1351,6 +1351,7 @@ bool _isExternalNullBoundaryPath(String normalizedPath) {
   const strictAppNullablePaths = {
     'apps/konyak/lib/src/app/dialogs/app_settings_runtime_view_model.dart',
     'apps/konyak/lib/src/app/runtime/runtime_platform.dart',
+    'apps/konyak/lib/src/app/utils/bottle_lists.dart',
   };
   if (relativePath.startsWith('apps/konyak/lib/src/app/') &&
       !strictAppNullablePaths.contains(relativePath)) {

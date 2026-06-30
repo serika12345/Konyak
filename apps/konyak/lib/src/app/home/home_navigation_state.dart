@@ -14,38 +14,64 @@ final class KonyakHomeNavigationState {
   final String? selectedProgramPath;
 
   BottleSummary? selectedBottleIn(List<BottleSummary> bottles) {
-    return findSelectedBottle(bottles, selectedBottleId);
+    return switch (selectedBottleId) {
+      final bottleId? => switch (findBottleById(bottles, bottleId)) {
+        BottleSelectionFound(:final bottle) => bottle,
+        BottleSelectionMissing() => null,
+      },
+      null => null,
+    };
   }
 
   PinnedProgramSummary? selectedProgramIn(BottleSummary? bottle) {
-    return findSelectedProgram(bottle, selectedProgramPath);
+    return switch ((bottle, selectedProgramPath)) {
+      (final selectedBottle?, final programPath?) =>
+        switch (findPinnedProgramByPath(selectedBottle, programPath)) {
+          PinnedProgramSelectionFound(:final program) => program,
+          PinnedProgramSelectionMissing() => null,
+        },
+      _ => null,
+    };
   }
 
   KonyakHomeNavigationState reconcile(List<BottleSummary> bottles) {
-    var state = this;
-    if (findSelectedBottle(bottles, state.selectedBottleId) == null) {
-      final nextBottleId = bottles.isEmpty ? null : bottles.first.id;
-      state = KonyakHomeNavigationState(
-        selectedBottleId: nextBottleId,
-        detailMode: nextBottleId == null
-            ? BottleDetailMode.overview
-            : state.detailMode,
-        selectedProgramPath: nextBottleId == null
-            ? null
-            : state.selectedProgramPath,
-      );
-    }
+    final reconciledBottle = _reconcileBottleSelection(bottles);
+    return switch (reconciledBottle.detailMode) {
+      BottleDetailMode.programConfiguration
+          when reconciledBottle.selectedProgramIn(
+                reconciledBottle.selectedBottleIn(bottles),
+              ) ==
+              null =>
+        KonyakHomeNavigationState(
+          selectedBottleId: reconciledBottle.selectedBottleId,
+        ),
+      _ => reconciledBottle,
+    };
+  }
 
-    final selectedBottle = findSelectedBottle(bottles, state.selectedBottleId);
-    if (state.detailMode == BottleDetailMode.programConfiguration &&
-        findSelectedProgram(selectedBottle, state.selectedProgramPath) ==
-            null) {
-      return KonyakHomeNavigationState(
-        selectedBottleId: state.selectedBottleId,
-      );
-    }
+  KonyakHomeNavigationState _reconcileBottleSelection(
+    List<BottleSummary> bottles,
+  ) {
+    return switch (selectedBottleId) {
+      final bottleId? => switch (findBottleById(bottles, bottleId)) {
+        BottleSelectionFound() => this,
+        BottleSelectionMissing() => _selectFirstAvailableBottle(bottles),
+      },
+      null => _selectFirstAvailableBottle(bottles),
+    };
+  }
 
-    return state;
+  KonyakHomeNavigationState _selectFirstAvailableBottle(
+    List<BottleSummary> bottles,
+  ) {
+    return switch (bottles) {
+      [final bottle, ...] => KonyakHomeNavigationState(
+        selectedBottleId: bottle.id,
+        detailMode: detailMode,
+        selectedProgramPath: selectedProgramPath,
+      ),
+      _ => const KonyakHomeNavigationState(),
+    };
   }
 
   KonyakHomeNavigationState selectBottle(BottleSummary bottle) {
@@ -86,8 +112,16 @@ final class KonyakHomeNavigationState {
     required List<BottleSummary> bottles,
     required Iterable<String> lockedBottleIds,
   }) {
-    final selectedBottle = findSelectedBottle(bottles, selectedBottleId);
-    if (selectedBottle != null && lockedBottleIds.contains(selectedBottle.id)) {
+    final isSelectedBottleLocked = switch (selectedBottleId) {
+      final bottleId? => switch (findBottleById(bottles, bottleId)) {
+        BottleSelectionFound(:final bottle) => lockedBottleIds.contains(
+          bottle.id,
+        ),
+        BottleSelectionMissing() => false,
+      },
+      null => false,
+    };
+    if (isSelectedBottleLocked) {
       return this;
     }
 

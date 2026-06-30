@@ -13,6 +13,36 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-30 10:27 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Narrow Flutter bottle selection nullable boundary.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: current commit (`Narrow Flutter bottle selection nullable boundary`).
+- Purpose: continue tightening broad Flutter `app/` nullable allowances by
+  moving pure bottle/program selection helpers from nullable finder returns to
+  explicit app selection variants.
+- Completed work: added focused selection tests; replaced
+  `findSelectedBottle` and `findSelectedProgram` nullable helpers with
+  `BottleSelection` and `PinnedProgramSelection` sealed variants; updated home
+  navigation reconciliation and home-loader bottle fallback call sites; removed
+  `bottle_lists.dart` from the broad Flutter `app/` nullable-boundary
+  allowance.
+- Remaining work: none for this batch.
+- Next action: continue tightening broader Flutter app/home-loader nullable
+  helpers, especially async loader results and the remaining navigation state
+  nullable fields.
+- Verification: observed `flutter test test/app/bottle_lists_test.dart` fail
+  before implementation because `findBottleById`,
+  `findPinnedProgramByPath`, and their selection variants did not exist; after
+  implementation, targeted `flutter test test/app/bottle_lists_test.dart`,
+  targeted `flutter test test/app/home_navigation_state_test.dart`,
+  `just flutter-custom-lint`, `just konyak-lints-test`,
+  `just flutter-format-check`, `just flutter-analyze`, `just flutter-test`,
+  `just verify-governance`, `just verify-safety`, `just format-check`, and
+  `just lint` passed in the Nix dev shell.
+
 - Timestamp: 2026-06-30 10:17 JST
 - State: `completed`
 - Branch: `main`

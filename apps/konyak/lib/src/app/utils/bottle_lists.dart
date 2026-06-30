@@ -1,5 +1,37 @@
 import '../../bottles/bottle_summary.dart';
 
+sealed class BottleSelection {
+  const BottleSelection();
+}
+
+final class BottleSelectionFound extends BottleSelection {
+  const BottleSelectionFound(this.bottle);
+
+  final BottleSummary bottle;
+}
+
+final class BottleSelectionMissing extends BottleSelection {
+  const BottleSelectionMissing(this.bottleId);
+
+  final String bottleId;
+}
+
+sealed class PinnedProgramSelection {
+  const PinnedProgramSelection();
+}
+
+final class PinnedProgramSelectionFound extends PinnedProgramSelection {
+  const PinnedProgramSelectionFound(this.program);
+
+  final PinnedProgramSummary program;
+}
+
+final class PinnedProgramSelectionMissing extends PinnedProgramSelection {
+  const PinnedProgramSelectionMissing(this.programPath);
+
+  final String programPath;
+}
+
 String programSettingsKey({
   required String bottleId,
   required String programPath,
@@ -38,38 +70,29 @@ List<BottleSummary> replaceBottle(
   return List.unmodifiable(updated);
 }
 
-BottleSummary? findSelectedBottle(
-  List<BottleSummary> bottles,
-  String? bottleId,
-) {
-  if (bottleId == null) {
-    return null;
-  }
-
-  for (final bottle in bottles) {
-    if (bottle.id == bottleId) {
-      return bottle;
-    }
-  }
-
-  return null;
+BottleSelection findBottleById(List<BottleSummary> bottles, String bottleId) {
+  final matchingBottles = bottles
+      .where((bottle) => bottle.id == bottleId)
+      .take(1)
+      .toList(growable: false);
+  return switch (matchingBottles) {
+    [final bottle] => BottleSelectionFound(bottle),
+    _ => BottleSelectionMissing(bottleId),
+  };
 }
 
-PinnedProgramSummary? findSelectedProgram(
-  BottleSummary? bottle,
-  String? programPath,
+PinnedProgramSelection findPinnedProgramByPath(
+  BottleSummary bottle,
+  String programPath,
 ) {
-  if (bottle == null || programPath == null) {
-    return null;
-  }
-
-  for (final program in bottle.pinnedPrograms) {
-    if (program.path == programPath) {
-      return program;
-    }
-  }
-
-  return null;
+  final matchingPrograms = bottle.pinnedPrograms
+      .where((program) => program.path == programPath)
+      .take(1)
+      .toList(growable: false);
+  return switch (matchingPrograms) {
+    [final program] => PinnedProgramSelectionFound(program),
+    _ => PinnedProgramSelectionMissing(programPath),
+  };
 }
 
 List<BottleSummary> filterBottles({

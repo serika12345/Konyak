@@ -131,7 +131,10 @@ extension KonyakHomeLoaderBottles on KonyakHomeLoaderState {
       return;
     }
 
-    final previousBottle = findSelectedBottle(bottles, bottle.id) ?? bottle;
+    final previousBottle = switch (findBottleById(bottles, bottle.id)) {
+      BottleSelectionFound(bottle: final foundBottle) => foundBottle,
+      BottleSelectionMissing() => bottle,
+    };
     updateState(() {
       pendingRuntimeSettingsControls[bottle.id] = controlKey;
       bottles = upsertBottle(
@@ -256,8 +259,10 @@ extension KonyakHomeLoaderBottles on KonyakHomeLoaderState {
         label: KonyakLocalizations.of(context).retry,
         textColor: colorScheme.onErrorContainer,
         onPressed: () {
-          final currentBottle =
-              findSelectedBottle(bottles, bottle.id) ?? bottle;
+          final currentBottle = switch (findBottleById(bottles, bottle.id)) {
+            BottleSelectionFound(bottle: final foundBottle) => foundBottle,
+            BottleSelectionMissing() => bottle,
+          };
           unawaited(deleteBottleAfterConfirmation(currentBottle));
         },
       ),
