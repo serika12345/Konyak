@@ -13,6 +13,34 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-30 17:09 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Model Wine process close cleanup state explicitly.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: `e1727c4` (`Model program launch state explicitly`).
+- Purpose: continue extracting pure Flutter home-loader state transitions by
+  replacing the one-way `hasTerminatedWineProcesses` lifecycle guard with an
+  explicit close-cleanup request state.
+- Completed work: added `WineProcessCloseCleanupState` with explicit
+  not-requested/requested variants, replaced `hasTerminatedWineProcesses` in
+  `KonyakHomeLoaderState`, and routed close cleanup duplicate-request guarding
+  through state helpers while preserving the pre-CLI request timing.
+- Remaining work: none for this slice. Continue a separate state-hardening
+  slice for pending executable-open queue state or remaining UI-local
+  interaction flags if those need stronger modeling.
+- Next action: continue the next explicit-state hardening slice or commit this
+  slice when requested.
+- Verification: observed
+  `flutter test test/home_loader/wine_process_close_cleanup_state_test.dart`
+  fail before implementation because `WineProcessCloseCleanupState` and its
+  transition helpers did not exist. After implementation, that targeted test
+  passed. Full Flutter verification passed with `just flutter-format-check`,
+  `just flutter-analyze`, and `just flutter-test`. Repository verification
+  passed with `just verify-governance`, `just verify-safety`,
+  `just format-check`, and `just lint`.
+
 - Timestamp: 2026-06-30 16:43 JST
 - State: `completed`
 - Branch: `main`

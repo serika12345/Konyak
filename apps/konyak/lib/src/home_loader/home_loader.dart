@@ -32,6 +32,7 @@ import 'home_loader_winetricks.dart';
 import 'known_runtimes_state.dart';
 import 'latest_run_log_state.dart';
 import 'program_launch_state.dart';
+import 'wine_process_close_cleanup_state.dart';
 
 class KonyakHomeLoader extends StatefulWidget {
   const KonyakHomeLoader({
@@ -89,7 +90,8 @@ class KonyakHomeLoaderState extends State<KonyakHomeLoader>
       const BlockingProgressState.hidden();
   HomeLoaderOperationState operationState =
       const HomeLoaderOperationState.idle();
-  bool hasTerminatedWineProcesses = false;
+  WineProcessCloseCleanupState wineProcessCloseCleanupState =
+      const WineProcessCloseCleanupState.notRequested();
   AppSettingsState appSettings = const AppSettingsState.unavailable();
   LatestRunLogState latestRunLog = const LatestRunLogState.unavailable();
   KnownRuntimesState knownRuntimes = const KnownRuntimesState.pending();

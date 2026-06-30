@@ -12,10 +12,12 @@ import '../logs/log_reader.dart';
 import 'app_settings_state.dart';
 import 'home_loader.dart';
 import 'latest_run_log_state.dart';
+import 'wine_process_close_cleanup_state.dart';
 
 extension KonyakHomeLoaderWineProcesses on KonyakHomeLoaderState {
   Future<void> terminateWineProcessesOnClose() async {
-    if (!widget.enableBackgroundServices || hasTerminatedWineProcesses) {
+    if (!widget.enableBackgroundServices ||
+        !shouldRequestWineProcessCloseCleanup(wineProcessCloseCleanupState)) {
       return;
     }
 
@@ -23,7 +25,9 @@ extension KonyakHomeLoaderWineProcesses on KonyakHomeLoaderState {
       return;
     }
 
-    hasTerminatedWineProcesses = true;
+    wineProcessCloseCleanupState = requestWineProcessCloseCleanup(
+      wineProcessCloseCleanupState,
+    );
     await widget.cliClient.terminateWineProcesses();
   }
 
