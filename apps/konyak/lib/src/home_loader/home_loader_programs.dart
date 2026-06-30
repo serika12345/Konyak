@@ -19,6 +19,7 @@ import 'home_loader.dart';
 import 'home_loader_bottles.dart';
 import 'home_loader_pinned_programs.dart';
 import 'latest_run_log_state.dart';
+import 'program_launch_state.dart' as program_launch_state;
 
 part 'home_loader_programs.freezed.dart';
 
@@ -206,27 +207,39 @@ extension KonyakHomeLoaderPrograms on KonyakHomeLoaderState {
   }
 
   int beginProgramLaunch() {
-    final launchId = nextProgramLaunchId;
-    nextProgramLaunchId += 1;
+    final started = program_launch_state.startProgramLaunch(
+      state: programLaunchState,
+    );
 
     if (!mounted) {
-      return launchId;
+      programLaunchState = program_launch_state.finishProgramLaunch(
+        state: started.state,
+        launchId: started.launchId,
+      );
+      return started.launchId;
     }
 
     updateState(() {
-      activeProgramLaunchIds.add(launchId);
+      programLaunchState = started.state;
     });
 
-    return launchId;
+    return started.launchId;
   }
 
   void finishProgramLaunch(int launchId) {
-    if (!mounted || !activeProgramLaunchIds.contains(launchId)) {
+    if (!mounted ||
+        !program_launch_state.isProgramLaunchActive(
+          state: programLaunchState,
+          launchId: launchId,
+        )) {
       return;
     }
 
     updateState(() {
-      activeProgramLaunchIds.remove(launchId);
+      programLaunchState = program_launch_state.finishProgramLaunch(
+        state: programLaunchState,
+        launchId: launchId,
+      );
     });
   }
 
@@ -243,14 +256,22 @@ extension KonyakHomeLoaderPrograms on KonyakHomeLoaderState {
     final startedAt = DateTime.now();
     final newWineProcessPollCounts = <int, int>{};
 
-    while (mounted && activeProgramLaunchIds.contains(launchId)) {
+    while (mounted &&
+        program_launch_state.isProgramLaunchActive(
+          state: programLaunchState,
+          launchId: launchId,
+        )) {
       if (DateTime.now().difference(startedAt) >=
           programLaunchWindowWatchTimeout) {
         return;
       }
 
       await Future<void>.delayed(programLaunchWindowPollInterval);
-      if (!mounted || !activeProgramLaunchIds.contains(launchId)) {
+      if (!mounted ||
+          !program_launch_state.isProgramLaunchActive(
+            state: programLaunchState,
+            launchId: launchId,
+          )) {
         return;
       }
 

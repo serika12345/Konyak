@@ -31,6 +31,7 @@ import 'home_loader_wine_processes.dart';
 import 'home_loader_winetricks.dart';
 import 'known_runtimes_state.dart';
 import 'latest_run_log_state.dart';
+import 'program_launch_state.dart';
 
 class KonyakHomeLoader extends StatefulWidget {
   const KonyakHomeLoader({
@@ -76,8 +77,7 @@ class KonyakHomeLoaderState extends State<KonyakHomeLoader>
   BottleListLoadState bottleListLoadState = const BottleListLoadState.loading();
   BlockingProgressState createBottleProgress =
       const BlockingProgressState.hidden();
-  final Set<int> activeProgramLaunchIds = <int>{};
-  int nextProgramLaunchId = 0;
+  ProgramLaunchState programLaunchState = const ProgramLaunchState.idle();
   BlockingProgressState winetricksLoadProgress =
       const BlockingProgressState.hidden();
   BlockingProgressState winetricksInstallProgress =
@@ -253,7 +253,7 @@ class KonyakHomeLoaderState extends State<KonyakHomeLoader>
           key: const ValueKey('create-bottle-progress'),
           state: createBottleProgress,
         ),
-        if (activeProgramLaunchIds.isNotEmpty)
+        if (hasActiveProgramLaunches(programLaunchState))
           BlockingProgressOverlay(
             key: const ValueKey('program-launch-progress'),
             message: KonyakLocalizations.of(context).launchingProgramEllipsis,

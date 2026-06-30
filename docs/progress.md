@@ -13,6 +13,35 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-30 16:43 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Model program launch tracking explicitly.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: `e93e2ae` (`Model home loader operations explicitly`).
+- Purpose: continue extracting pure Flutter home-loader state transitions by
+  replacing split program-launch id counters and active-id sets with an
+  explicit immutable launch state.
+- Completed work: added `ProgramLaunchState` and `ProgramLaunchStartResult`
+  with immutable launch id tracking, replaced `activeProgramLaunchIds` and
+  `nextProgramLaunchId` in `KonyakHomeLoaderState`, and routed program launch
+  overlay visibility plus window/process polling guards through explicit state
+  helpers.
+- Remaining work: none for this slice. Continue a separate state-hardening
+  slice for lifecycle cleanup state or remaining UI-local interaction flags if
+  those need stronger modeling.
+- Next action: continue the next explicit-state hardening slice or commit this
+  slice when requested.
+- Verification: observed
+  `flutter test test/home_loader/program_launch_state_test.dart` fail before
+  implementation because `ProgramLaunchState` and its transition helpers did
+  not exist. After implementation, that targeted test passed. Full Flutter
+  verification passed with `just flutter-format-check`,
+  `just flutter-analyze`, and `just flutter-test`. Repository verification
+  passed with `just verify-governance`, `just verify-safety`,
+  `just format-check`, and `just lint`.
+
 - Timestamp: 2026-06-30 16:15 JST
 - State: `completed`
 - Branch: `main`
