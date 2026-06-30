@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../l10n/konyak_localizations.dart';
 import '../../runtimes/runtime_summary.dart';
+import 'app_settings_dialog_operation_state.dart';
 import 'app_settings_rows.dart';
 import 'app_settings_runtime_view_model.dart';
 
@@ -12,8 +13,7 @@ class AppSettingsRuntimeSection extends StatelessWidget {
     required this.platform,
     required this.runtimes,
     required this.operationState,
-    required this.isInstalling,
-    required this.isInstallingGptkWine,
+    required this.dialogOperationState,
     required this.onInstallRuntime,
     required this.onInstallGptkWine,
     required this.onOpenGptkPage,
@@ -23,8 +23,7 @@ class AppSettingsRuntimeSection extends StatelessWidget {
   final String platform;
   final List<RuntimeSummary> runtimes;
   final RuntimeSectionOperationState operationState;
-  final bool isInstalling;
-  final bool isInstallingGptkWine;
+  final AppSettingsDialogOperationState dialogOperationState;
   final VoidCallback? onInstallRuntime;
   final VoidCallback? onInstallGptkWine;
   final VoidCallback? onOpenGptkPage;
@@ -124,20 +123,24 @@ class AppSettingsRuntimeSection extends StatelessWidget {
   }
 
   Widget _installButton(String label, KonyakLocalizations localizations) {
+    final isInstallingRuntime = isAppSettingsDialogOperationRunning(
+      state: dialogOperationState,
+      operation: AppSettingsDialogOperation.installingRuntime,
+    );
     return FilledButton.icon(
       key: const ValueKey('app-settings-install-runtime-button'),
-      onPressed: isInstalling ? null : onInstallRuntime,
+      onPressed: isInstallingRuntime ? null : onInstallRuntime,
       style: FilledButton.styleFrom(
         minimumSize: const Size(0, 32),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       ),
-      icon: isInstalling
+      icon: isInstallingRuntime
           ? const SizedBox.square(
               dimension: 16,
               child: CircularProgressIndicator(strokeWidth: 2),
             )
           : const Icon(Icons.download),
-      label: Text(isInstalling ? localizations.installing : label),
+      label: Text(isInstallingRuntime ? localizations.installing : label),
     );
   }
 
@@ -145,6 +148,10 @@ class AppSettingsRuntimeSection extends StatelessWidget {
     RuntimeStackSummary stack,
     KonyakLocalizations localizations,
   ) {
+    final isImportingGptkWine = isAppSettingsDialogOperationRunning(
+      state: dialogOperationState,
+      operation: AppSettingsDialogOperation.importingGptkWine,
+    );
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       child: Column(
@@ -164,15 +171,15 @@ class AppSettingsRuntimeSection extends StatelessWidget {
               ),
               FilledButton.icon(
                 key: const ValueKey('app-settings-install-gptk-wine-button'),
-                onPressed: isInstallingGptkWine ? null : onInstallGptkWine,
-                icon: isInstallingGptkWine
+                onPressed: isImportingGptkWine ? null : onInstallGptkWine,
+                icon: isImportingGptkWine
                     ? const SizedBox.square(
                         dimension: 16,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(Icons.folder_copy),
                 label: Text(
-                  isInstallingGptkWine
+                  isImportingGptkWine
                       ? localizations.importingD3dmetal
                       : localizations.selectGptkDmg,
                 ),

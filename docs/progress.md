@@ -13,6 +13,35 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-30 15:52 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Model App Settings dialog private operation flags explicitly.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: current commit (`Model Flutter loader state explicitly`).
+- Purpose: continue nullable/state hardening by replacing App Settings dialog
+  private saving and runtime install booleans with an explicit operation state
+  that can still represent concurrent operations.
+- Completed work: added `AppSettingsDialogOperationState` with explicit
+  saving, managed-runtime install, and GPTK import operations; routed
+  `AppSettingsDialog` and `AppSettingsRuntimeSection` through the operation
+  state; removed the dialog's private `_isSaving`, `_isInstallingRuntime`, and
+  `_isInstallingGptkWine` fields while preserving concurrent operation
+  behavior.
+- Remaining work: none for this slice. Continue with loader lifecycle guard
+  state only if those private reentrancy flags need to become domain-visible.
+- Next action: either commit this slice or continue a separate state-hardening
+  slice for `home_loader` lifecycle guard flags.
+- Verification: observed
+  `flutter test test/app/app_settings_dialog_operation_state_test.dart` fail
+  before implementation because `AppSettingsDialogOperationState` did not
+  exist. After implementation, that targeted test passed. Full Flutter
+  verification passed with `just flutter-format-check`, `just flutter-analyze`,
+  and `just flutter-test`. Repository verification passed with `just
+  verify-governance`, `just verify-safety`, `just format-check`, and `just
+  lint`.
+
 - Timestamp: 2026-06-30 15:43 JST
 - State: `completed`
 - Branch: `main`

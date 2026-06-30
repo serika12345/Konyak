@@ -10,6 +10,7 @@ import '../../runtimes/runtime_summary.dart';
 import '../../settings/app_settings_summary.dart';
 import '../app_constants.dart';
 import '../app_platform.dart';
+import 'app_settings_dialog_operation_state.dart';
 import 'app_settings_rows.dart';
 import 'app_settings_runtime_section.dart';
 import 'app_settings_runtime_view_model.dart';
@@ -52,9 +53,8 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
   late List<RuntimeSummary> _runtimes = widget.runtimes;
   late RuntimeSectionOperationState _runtimeOperationState =
       widget.runtimeOperationState;
-  bool _isSaving = false;
-  bool _isInstallingRuntime = false;
-  bool _isInstallingGptkWine = false;
+  AppSettingsDialogOperationState _operationState =
+      const AppSettingsDialogOperationState.idle();
 
   @override
   void initState() {
@@ -94,7 +94,10 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
     final previousSettings = _settings;
     setState(() {
       _settings = settings;
-      _isSaving = true;
+      _operationState = startAppSettingsDialogOperation(
+        state: _operationState,
+        operation: AppSettingsDialogOperation.savingSettings,
+      );
     });
 
     final saveOutcome = await widget.onSettingsChanged(settings);
@@ -105,7 +108,10 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
 
     setState(() {
       _settings = saveOutcome.settingsOr(previousSettings);
-      _isSaving = false;
+      _operationState = finishAppSettingsDialogOperation(
+        state: _operationState,
+        operation: AppSettingsDialogOperation.savingSettings,
+      );
     });
   }
 
@@ -121,12 +127,16 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
 
   Future<void> _installRuntime() async {
     final installRuntime = widget.onInstallRuntime;
-    if (installRuntime == null || _isInstallingRuntime) {
+    if (installRuntime == null ||
+        _isOperationRunning(AppSettingsDialogOperation.installingRuntime)) {
       return;
     }
 
     setState(() {
-      _isInstallingRuntime = true;
+      _operationState = startAppSettingsDialogOperation(
+        state: _operationState,
+        operation: AppSettingsDialogOperation.installingRuntime,
+      );
       _runtimeOperationState = const RuntimeSectionOperationState.idle();
     });
 
@@ -144,13 +154,17 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
         case RuntimeInstallLoadFailure(:final message):
           _runtimeOperationState = RuntimeSectionOperationState.failed(message);
       }
-      _isInstallingRuntime = false;
+      _operationState = finishAppSettingsDialogOperation(
+        state: _operationState,
+        operation: AppSettingsDialogOperation.installingRuntime,
+      );
     });
   }
 
   Future<void> _installGptkWine() async {
     final installGptkWine = widget.onInstallGptkWine;
-    if (installGptkWine == null || _isInstallingGptkWine) {
+    if (installGptkWine == null ||
+        _isOperationRunning(AppSettingsDialogOperation.importingGptkWine)) {
       return;
     }
 
@@ -195,7 +209,10 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
     }
 
     setState(() {
-      _isInstallingGptkWine = true;
+      _operationState = startAppSettingsDialogOperation(
+        state: _operationState,
+        operation: AppSettingsDialogOperation.importingGptkWine,
+      );
       _runtimeOperationState = const RuntimeSectionOperationState.idle();
     });
 
@@ -213,7 +230,10 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
         case RuntimeInstallLoadFailure(:final message):
           _runtimeOperationState = RuntimeSectionOperationState.failed(message);
       }
-      _isInstallingGptkWine = false;
+      _operationState = finishAppSettingsDialogOperation(
+        state: _operationState,
+        operation: AppSettingsDialogOperation.importingGptkWine,
+      );
     });
   }
 
@@ -221,6 +241,9 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
   Widget build(BuildContext context) {
     final colors = KonyakThemeColors.of(context);
     final localizations = KonyakLocalizations.of(context);
+    final isSaving = _isOperationRunning(
+      AppSettingsDialogOperation.savingSettings,
+    );
 
     return AlertDialog(
       key: const ValueKey('app-settings-dialog'),
@@ -242,7 +265,7 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
                   ),
                   label: localizations.terminateWineProcessesWhenKonyakCloses,
                   value: _settings.terminateWineProcessesOnClose,
-                  onChanged: _isSaving
+                  onChanged: isSaving
                       ? null
                       : (value) => _save(
                           _settings.withTerminateWineProcessesOnClose(value),
@@ -250,20 +273,20 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
                 ),
                 AppSettingsAppearanceRow(
                   mode: _settings.appearanceMode,
-                  onChanged: _isSaving
+                  onChanged: isSaving
                       ? null
                       : (mode) => _save(_settings.withAppearanceMode(mode)),
                 ),
                 AppSettingsLanguageRow(
                   mode: _settings.languageMode,
-                  onChanged: _isSaving
+                  onChanged: isSaving
                       ? null
                       : (mode) => _save(_settings.withLanguageMode(mode)),
                 ),
                 AppSettingsPathRow(
                   label: localizations.defaultBottlePath,
                   path: _settings.defaultBottlePath,
-                  isSaving: _isSaving,
+                  isSaving: isSaving,
                   onBrowse: _browseBottlePath,
                 ),
               ],
@@ -278,7 +301,7 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
                   ),
                   label: localizations.automaticallyPinNewlyInstalledPrograms,
                   value: _settings.automaticallyPinNewInstalledPrograms,
-                  onChanged: _isSaving
+                  onChanged: isSaving
                       ? null
                       : (value) => _save(
                           _settings.withAutomaticallyPinNewInstalledPrograms(
@@ -298,7 +321,7 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
                   ),
                   label: localizations.automaticallyCheckForKonyakUpdates,
                   value: _settings.automaticallyCheckForKonyakUpdates,
-                  onChanged: _isSaving
+                  onChanged: isSaving
                       ? null
                       : (value) => _save(
                           _settings.withAutomaticallyCheckForKonyakUpdates(
@@ -312,7 +335,7 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
                   ),
                   label: localizations.automaticallyCheckForKonyakWineUpdates,
                   value: _settings.automaticallyCheckForWineUpdates,
-                  onChanged: _isSaving
+                  onChanged: isSaving
                       ? null
                       : (value) => _save(
                           _settings.withAutomaticallyCheckForWineUpdates(value),
@@ -330,8 +353,7 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
                 platform: runtimeSectionPlatform(widget.platform),
                 runtimes: _runtimes,
                 operationState: _runtimeOperationState,
-                isInstalling: _isInstallingRuntime,
-                isInstallingGptkWine: _isInstallingGptkWine,
+                dialogOperationState: _operationState,
                 onInstallRuntime: widget.onInstallRuntime == null
                     ? null
                     : _installRuntime,
@@ -346,10 +368,17 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
       ),
       actions: [
         TextButton(
-          onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
+          onPressed: isSaving ? null : () => Navigator.of(context).pop(),
           child: Text(localizations.close),
         ),
       ],
+    );
+  }
+
+  bool _isOperationRunning(AppSettingsDialogOperation operation) {
+    return isAppSettingsDialogOperationRunning(
+      state: _operationState,
+      operation: operation,
     );
   }
 }
