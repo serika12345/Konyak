@@ -51,6 +51,26 @@ sealed class KonyakHomeDetailSelection with _$KonyakHomeDetailSelection {
   }) = SelectedKonyakHomeDetailProgram;
 }
 
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class KonyakHomeDetailContent with _$KonyakHomeDetailContent {
+  const factory KonyakHomeDetailContent.empty() = EmptyKonyakHomeDetailContent;
+
+  const factory KonyakHomeDetailContent.overview(BottleSummary bottle) =
+      OverviewKonyakHomeDetailContent;
+
+  const factory KonyakHomeDetailContent.configuration(BottleSummary bottle) =
+      ConfigurationKonyakHomeDetailContent;
+
+  const factory KonyakHomeDetailContent.program({
+    required BottleSummary bottle,
+    required PinnedProgramSummary program,
+  }) = ProgramKonyakHomeDetailContent;
+}
+
 final class KonyakHomeViewState {
   KonyakHomeViewState({
     required this.platform,
@@ -92,10 +112,8 @@ final class KonyakHomeViewState {
     return KonyakHomeDetailState(
       platform: platform,
       runtimeCapabilitiesState: runtimeCapabilitiesState,
-      bottle: _selectedBottleFor(selection),
+      content: _detailContentFor(selection: selection, detailMode: detailMode),
       bottleListLoadState: bottleListLoadState,
-      detailMode: detailMode,
-      selectedProgram: _selectedProgramFor(selection),
       programConfigurationSettingsState: _programConfigurationSettingsStateFor(
         selection,
       ),
@@ -107,18 +125,23 @@ final class KonyakHomeViewState {
   RuntimeSettingsControlState _runtimeSettingsControlStateFor(
     KonyakHomeDetailSelection selection,
   ) {
-    final controlKey = switch (selection) {
-      NoKonyakHomeDetailSelection() => null,
+    return switch (selection) {
+      NoKonyakHomeDetailSelection() => const RuntimeSettingsControlState.idle(),
       SelectedKonyakHomeDetailBottle(:final bottle) ||
       SelectedKonyakHomeDetailProgram(
         :final bottle,
-      ) => pendingRuntimeSettingsControls[bottle.id],
+      ) => _runtimeSettingsControlStateForBottle(bottle),
     };
+  }
 
-    return switch (controlKey) {
-      final String controlKey => RuntimeSettingsControlState.updating(
-        controlKey,
-      ),
+  RuntimeSettingsControlState _runtimeSettingsControlStateForBottle(
+    BottleSummary bottle,
+  ) {
+    return switch (pendingRuntimeSettingsControls.entries
+        .where((entry) => entry.key == bottle.id)
+        .map((entry) => entry.value)
+        .toList(growable: false)) {
+      [final controlKey] => RuntimeSettingsControlState.updating(controlKey),
       _ => const RuntimeSettingsControlState.idle(),
     };
   }
@@ -127,36 +150,48 @@ final class KonyakHomeViewState {
     KonyakHomeDetailSelection selection,
   ) {
     return switch (selection) {
-      SelectedKonyakHomeDetailProgram(:final bottle, :final program) =>
-        programConfigurationSettingsStateFromNullable(
-          settings:
-              programSettings[programSettingsKey(
-                bottleId: bottle.id,
-                programPath: program.path,
-              )],
-          isLoading: loadingProgramSettings.contains(
-            programSettingsKey(bottleId: bottle.id, programPath: program.path),
-          ),
-        ),
+      SelectedKonyakHomeDetailProgram(:final bottle, :final program) => () {
+        final settingsKey = programSettingsKey(
+          bottleId: bottle.id,
+          programPath: program.path,
+        );
+
+        return programConfigurationSettingsStateFromNullable(
+          settings: programSettings[settingsKey],
+          isLoading: loadingProgramSettings.contains(settingsKey),
+        );
+      }(),
       NoKonyakHomeDetailSelection() || SelectedKonyakHomeDetailBottle() =>
         ProgramConfigurationSettingsState.ready(ProgramSettingsSummary()),
     };
   }
 
-  BottleSummary? _selectedBottleFor(KonyakHomeDetailSelection selection) {
-    return switch (selection) {
-      NoKonyakHomeDetailSelection() => null,
-      SelectedKonyakHomeDetailBottle(:final bottle) ||
-      SelectedKonyakHomeDetailProgram(:final bottle) => bottle,
-    };
-  }
-
-  PinnedProgramSummary? _selectedProgramFor(
-    KonyakHomeDetailSelection selection,
-  ) {
-    return switch (selection) {
-      NoKonyakHomeDetailSelection() || SelectedKonyakHomeDetailBottle() => null,
-      SelectedKonyakHomeDetailProgram(:final program) => program,
+  KonyakHomeDetailContent _detailContentFor({
+    required KonyakHomeDetailSelection selection,
+    required BottleDetailMode detailMode,
+  }) {
+    return switch ((selection, detailMode)) {
+      (
+        SelectedKonyakHomeDetailProgram(:final bottle, :final program),
+        BottleDetailMode.programConfiguration,
+      ) =>
+        KonyakHomeDetailContent.program(bottle: bottle, program: program),
+      (
+        SelectedKonyakHomeDetailBottle(:final bottle),
+        BottleDetailMode.configuration,
+      ) =>
+        KonyakHomeDetailContent.configuration(bottle),
+      (
+        SelectedKonyakHomeDetailProgram(:final bottle),
+        BottleDetailMode.configuration,
+      ) =>
+        KonyakHomeDetailContent.configuration(bottle),
+      (SelectedKonyakHomeDetailBottle(:final bottle), _) =>
+        KonyakHomeDetailContent.overview(bottle),
+      (SelectedKonyakHomeDetailProgram(:final bottle), _) =>
+        KonyakHomeDetailContent.overview(bottle),
+      (NoKonyakHomeDetailSelection(), _) =>
+        const KonyakHomeDetailContent.empty(),
     };
   }
 }
@@ -165,10 +200,8 @@ final class KonyakHomeDetailState {
   const KonyakHomeDetailState({
     required this.platform,
     required this.runtimeCapabilitiesState,
-    required this.bottle,
+    required this.content,
     required this.bottleListLoadState,
-    required this.detailMode,
-    required this.selectedProgram,
     required this.programConfigurationSettingsState,
     required this.runtimeSettingsControlState,
     required this.isBottleNavigationLocked,
@@ -176,10 +209,8 @@ final class KonyakHomeDetailState {
 
   final KonyakPlatform platform;
   final RuntimeCapabilitiesState runtimeCapabilitiesState;
-  final BottleSummary? bottle;
+  final KonyakHomeDetailContent content;
   final BottleListLoadState bottleListLoadState;
-  final BottleDetailMode detailMode;
-  final PinnedProgramSummary? selectedProgram;
   final ProgramConfigurationSettingsState programConfigurationSettingsState;
   final RuntimeSettingsControlState runtimeSettingsControlState;
   final bool isBottleNavigationLocked;

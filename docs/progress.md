@@ -13,6 +13,36 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-30 20:47 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Model home detail content explicitly.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: `d9ac0c6` (`Model home detail selection explicitly`).
+- Purpose: continue nullable hardening at the Flutter home boundary by
+  replacing nullable `KonyakHomeDetailState` bottle/program output with
+  explicit detail content variants rendered through switch-based branching.
+- Completed work: added Freezed `KonyakHomeDetailContent` variants for empty,
+  overview, bottle configuration, and pinned-program configuration content;
+  replaced nullable `KonyakHomeDetailState` bottle/program/detail-mode output
+  with `content`; routed `KonyakBottleDetail` rendering through exhaustive
+  content switches; and extended `home_contracts_test.dart` to cover content
+  selection, absent selection, and invalid program-configuration mode fallback.
+- Remaining work: none for this slice. A later slice can remove the nullable
+  empty-state bottle arguments still exposed by `BottleOverview`,
+  `KonyakBottomBar`, and `BottleConfigurationBottomBar`.
+- Next action: continue the next explicit-state hardening slice or commit this
+  uncommitted slice when requested.
+- Verification: observed
+  `flutter test test/app/home_contracts_test.dart` fail before implementation
+  because `KonyakHomeDetailContent` and `KonyakHomeDetailState.content` did not
+  exist. After implementation, that targeted test passed. Full Flutter
+  verification passed with `just flutter-format-check`, `just flutter-analyze`,
+  and `just flutter-test`. Repository verification passed with
+  `just verify-governance`, `just verify-safety`, `just format-check`, and
+  `just lint`.
+
 - Timestamp: 2026-06-30 20:09 JST
 - State: `completed`
 - Branch: `main`

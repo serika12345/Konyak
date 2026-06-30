@@ -117,9 +117,65 @@ void main() {
         detailState.runtimeCapabilitiesState,
         const RuntimeCapabilitiesState.loading(),
       );
+      expect(
+        switch (detailState.content) {
+          ProgramKonyakHomeDetailContent(:final bottle, :final program) => (
+            bottle.id,
+            program.path,
+          ),
+          _ => ('', ''),
+        },
+        ('steam', '/games/setup.exe'),
+      );
       expect(detailState.isBottleNavigationLocked, isTrue);
     },
   );
+
+  test('home detail state chooses content from selection and mode', () {
+    final bottle = _bottle(
+      id: 'steam',
+      name: 'Steam',
+      pinnedPrograms: const <PinnedProgramSummary>[
+        PinnedProgramSummary(
+          name: 'Setup',
+          path: '/games/setup.exe',
+          removable: true,
+        ),
+      ],
+    );
+    final state = KonyakHomeViewState(platform: KonyakPlatform.macos);
+
+    expect(switch (state
+        .detailStateFor(
+          selection: KonyakHomeDetailSelection.bottle(bottle),
+          detailMode: BottleDetailMode.overview,
+          isBottleNavigationLocked: false,
+        )
+        .content) {
+      OverviewKonyakHomeDetailContent(:final bottle) => bottle.id,
+      _ => '',
+    }, 'steam');
+    expect(switch (state
+        .detailStateFor(
+          selection: KonyakHomeDetailSelection.bottle(bottle),
+          detailMode: BottleDetailMode.configuration,
+          isBottleNavigationLocked: false,
+        )
+        .content) {
+      ConfigurationKonyakHomeDetailContent(:final bottle) => bottle.id,
+      _ => '',
+    }, 'steam');
+    expect(switch (state
+        .detailStateFor(
+          selection: KonyakHomeDetailSelection.bottle(bottle),
+          detailMode: BottleDetailMode.programConfiguration,
+          isBottleNavigationLocked: false,
+        )
+        .content) {
+      OverviewKonyakHomeDetailContent(:final bottle) => bottle.id,
+      _ => '',
+    }, 'steam');
+  });
 
   test('home detail state models absent selections explicitly', () {
     final state = KonyakHomeViewState(platform: KonyakPlatform.macos);
@@ -130,8 +186,7 @@ void main() {
       isBottleNavigationLocked: false,
     );
 
-    expect(detailState.bottle, isNull);
-    expect(detailState.selectedProgram, isNull);
+    expect(detailState.content, const KonyakHomeDetailContent.empty());
     expect(
       detailState.programConfigurationSettingsState,
       isA<ReadyProgramConfigurationSettings>(),
