@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../app/dialogs/open_executable_dialog.dart';
-import '../bottles/bottle_summary.dart';
 import 'bottle_operation_outcome.dart';
+import 'executable_auto_run_bottle_selection.dart';
 import 'home_loader.dart';
 import 'home_loader_bottles.dart';
 import 'home_loader_platform_helpers.dart';
@@ -87,9 +87,16 @@ extension KonyakHomeLoaderExecutables on KonyakHomeLoaderState {
   }
 
   Future<void> showOpenExecutable(String programPath) async {
-    final autoRunBottle = executableOpenAutoRunBottle();
-    if (autoRunBottle != null) {
-      await runProgramPath(bottle: autoRunBottle, programPath: programPath);
+    switch (executableOpenAutoRunBottle()) {
+      case FoundExecutableAutoRunBottle(:final bottle):
+        await runProgramPath(bottle: bottle, programPath: programPath);
+        return;
+      case MissingExecutableAutoRunBottle():
+      case DisabledExecutableAutoRunBottle():
+        break;
+    }
+
+    if (!mounted) {
       return;
     }
 
@@ -122,18 +129,13 @@ extension KonyakHomeLoaderExecutables on KonyakHomeLoaderState {
     }
   }
 
-  BottleSummary? executableOpenAutoRunBottle() {
-    final bottleId = widget.executableOpenAutoRunBottleId?.trim();
-    if (bottleId == null || bottleId.isEmpty) {
-      return null;
-    }
-
-    for (final bottle in bottles) {
-      if (bottle.id == bottleId) {
-        return bottle;
-      }
-    }
-
-    return null;
+  ExecutableAutoRunBottleSelection executableOpenAutoRunBottle() {
+    return switch (widget.executableOpenAutoRunBottleId) {
+      null => const ExecutableAutoRunBottleSelection.disabled(),
+      final bottleId => selectExecutableAutoRunBottle(
+        bottles: bottles,
+        bottleId: bottleId,
+      ),
+    };
   }
 }

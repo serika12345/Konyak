@@ -13,6 +13,37 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-30 12:06 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Replace executable auto-run nullable bottle selection.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: current commit
+  (`Replace executable auto-run nullable selection`).
+- Purpose: continue narrowing `apps/konyak/lib/src/home_loader/` nullable
+  result helpers by replacing the executable-open auto-run bottle nullable
+  lookup with explicit selection variants.
+- Completed work: added a focused executable auto-run selection test; added
+  Freezed `ExecutableAutoRunBottleSelection`; replaced
+  `executableOpenAutoRunBottle()` nullable returns with explicit `found`,
+  `missing`, and `disabled` variants; updated `showOpenExecutable` to switch on
+  those variants; regenerated ignored Freezed parts; added a mounted guard
+  before opening the executable dialog after the auto-run branch.
+- Remaining work: none for this batch.
+- Next action: continue narrowing remaining `home_loader/` nullable adapter
+  boundaries, starting with the JSON/platform helper null sentinels only after
+  separating UI/framework nullable state from app-domain result state.
+- Verification: observed
+  `flutter test test/home_loader/executable_auto_run_bottle_selection_test.dart`
+  fail before implementation because the selection model did not exist. After
+  implementation, targeted
+  `flutter test test/home_loader/executable_auto_run_bottle_selection_test.dart`
+  passed. `just flutter-analyze` initially reported a
+  `use_build_context_synchronously` path after the switch conversion; after
+  adding the mounted guard, `just flutter-format-check`,
+  `just flutter-analyze`, and `just flutter-test` passed in the Nix dev shell.
+
 - Timestamp: 2026-06-30 11:51 JST
 - State: `completed`
 - Branch: `main`
