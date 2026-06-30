@@ -19,6 +19,7 @@ import 'bottle_operation_outcome.dart';
 import 'home_loader.dart';
 import 'home_loader_executables.dart';
 import 'home_loader_runtimes.dart';
+import 'runtime_settings_pending_controls_state.dart';
 
 extension KonyakHomeLoaderBottles on KonyakHomeLoaderState {
   Future<void> loadBottles() async {
@@ -133,7 +134,10 @@ extension KonyakHomeLoaderBottles on KonyakHomeLoaderState {
     required BottleRuntimeSettingsSummary runtimeSettings,
     required String controlKey,
   }) async {
-    if (pendingRuntimeSettingsControls.containsKey(bottle.id)) {
+    if (hasPendingRuntimeSettingsControl(
+      state: runtimeSettingsPendingControlsState,
+      bottleId: bottle.id,
+    )) {
       return;
     }
 
@@ -142,7 +146,11 @@ extension KonyakHomeLoaderBottles on KonyakHomeLoaderState {
       BottleSelectionMissing() => bottle,
     };
     updateState(() {
-      pendingRuntimeSettingsControls[bottle.id] = controlKey;
+      runtimeSettingsPendingControlsState = startRuntimeSettingsControlUpdate(
+        state: runtimeSettingsPendingControlsState,
+        bottleId: bottle.id,
+        controlKey: controlKey,
+      );
       bottles = upsertBottle(
         bottles,
         previousBottle.withRuntimeSettings(runtimeSettings),
@@ -162,7 +170,10 @@ extension KonyakHomeLoaderBottles on KonyakHomeLoaderState {
 
     final failureMessages = <String>[];
     updateState(() {
-      pendingRuntimeSettingsControls.remove(bottle.id);
+      runtimeSettingsPendingControlsState = finishRuntimeSettingsControlUpdate(
+        state: runtimeSettingsPendingControlsState,
+        bottleId: bottle.id,
+      );
       switch (result) {
         case UpdatedBottle(:final bottle):
           bottles = upsertBottle(bottles, bottle);

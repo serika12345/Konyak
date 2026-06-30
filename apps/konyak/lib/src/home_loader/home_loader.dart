@@ -32,7 +32,9 @@ import 'home_loader_wine_processes.dart';
 import 'home_loader_winetricks.dart';
 import 'known_runtimes_state.dart';
 import 'latest_run_log_state.dart';
+import 'pinned_program_settings_cache_state.dart';
 import 'program_launch_state.dart';
+import 'runtime_settings_pending_controls_state.dart';
 import 'wine_process_close_cleanup_state.dart';
 
 class KonyakHomeLoader extends StatefulWidget {
@@ -98,10 +100,10 @@ class KonyakHomeLoaderState extends State<KonyakHomeLoader>
   KnownRuntimesState knownRuntimes = const KnownRuntimesState.pending();
   ExecutableOpenQueueState executableOpenQueueState =
       const ExecutableOpenQueueState.empty();
-  final Map<String, ProgramSettingsSummary> programSettings =
-      <String, ProgramSettingsSummary>{};
-  final Set<String> loadingProgramSettings = <String>{};
-  final Map<String, String> pendingRuntimeSettingsControls = <String, String>{};
+  PinnedProgramSettingsCacheState pinnedProgramSettingsCacheState =
+      const PinnedProgramSettingsCacheState.empty();
+  RuntimeSettingsPendingControlsState runtimeSettingsPendingControlsState =
+      const RuntimeSettingsPendingControlsState.empty();
 
   @override
   void initState() {
@@ -178,9 +180,16 @@ class KonyakHomeLoaderState extends State<KonyakHomeLoader>
             ),
             bottles: bottles,
             bottleListLoadState: bottleListLoadState,
-            programSettings: programSettings,
-            loadingProgramSettings: loadingProgramSettings,
-            pendingRuntimeSettingsControls: pendingRuntimeSettingsControls,
+            programSettings: pinnedProgramSettingsSnapshot(
+              pinnedProgramSettingsCacheState,
+            ),
+            loadingProgramSettings: loadingPinnedProgramSettingsKeysSnapshot(
+              pinnedProgramSettingsCacheState,
+            ),
+            pendingRuntimeSettingsControls:
+                runtimeSettingsPendingControlsSnapshot(
+                  runtimeSettingsPendingControlsState,
+                ),
           ),
           menuActions: KonyakHomeMenuActions(
             onRefresh: loadBottles,

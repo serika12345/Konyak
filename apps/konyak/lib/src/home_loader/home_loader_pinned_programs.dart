@@ -11,6 +11,7 @@ import '../cli/konyak_cli_program_result_types.dart';
 import '../l10n/konyak_localizations.dart';
 import 'home_loader.dart';
 import 'home_loader_bottles.dart';
+import 'pinned_program_settings_cache_state.dart';
 
 extension KonyakHomeLoaderPinnedPrograms on KonyakHomeLoaderState {
   Future<void> pinProgram(BottleSummary bottle) async {
@@ -144,7 +145,10 @@ extension KonyakHomeLoaderPinnedPrograms on KonyakHomeLoaderState {
       programPath: program.path,
     );
     updateState(() {
-      loadingProgramSettings.add(key);
+      pinnedProgramSettingsCacheState = startLoadingPinnedProgramSettings(
+        state: pinnedProgramSettingsCacheState,
+        key: key,
+      );
     });
 
     final result = await widget.cliClient.getProgramSettings(
@@ -157,12 +161,18 @@ extension KonyakHomeLoaderPinnedPrograms on KonyakHomeLoaderState {
     }
 
     updateState(() {
-      loadingProgramSettings.remove(key);
       switch (result) {
         case LoadedProgramSettings(:final settings):
-          programSettings[key] = settings;
+          pinnedProgramSettingsCacheState = storeLoadedPinnedProgramSettings(
+            state: pinnedProgramSettingsCacheState,
+            key: key,
+            settings: settings,
+          );
         case MissingProgramSettingsBottle() || ProgramSettingsLoadFailure():
-          programSettings.remove(key);
+          pinnedProgramSettingsCacheState = removePinnedProgramSettings(
+            state: pinnedProgramSettingsCacheState,
+            key: key,
+          );
       }
     });
 
@@ -193,11 +203,14 @@ extension KonyakHomeLoaderPinnedPrograms on KonyakHomeLoaderState {
     switch (result) {
       case LoadedProgramSettings(:final settings):
         updateState(() {
-          programSettings[programSettingsKey(
-                bottleId: bottle.id,
-                programPath: program.path,
-              )] =
-              settings;
+          pinnedProgramSettingsCacheState = savePinnedProgramSettings(
+            state: pinnedProgramSettingsCacheState,
+            key: programSettingsKey(
+              bottleId: bottle.id,
+              programPath: program.path,
+            ),
+            settings: settings,
+          );
         });
         showSnackBar(
           KonyakLocalizations.of(

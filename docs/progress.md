@@ -13,6 +13,63 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-30 18:40 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Model pinned-program settings cache state explicitly.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: `40f8eb9` (`Model executable open queue explicitly`).
+- Purpose: continue extracting pure Flutter home-loader state transitions by
+  replacing the paired mutable `programSettings` map and
+  `loadingProgramSettings` set with one immutable state and pure update
+  helpers.
+- Completed work: added `PinnedProgramSettingsCacheState` with immutable
+  load/save/remove helpers, replaced the paired mutable `programSettings` and
+  `loadingProgramSettings` collections in `KonyakHomeLoaderState`, and kept the
+  UI-facing `KonyakHomeViewState` collections as defensive snapshot boundaries.
+- Remaining work: none for this slice. Continue a separate hardening slice for
+  any remaining loader-local mutable collections or UI-boundary nullable
+  selections.
+- Next action: continue the next explicit-state hardening slice or commit this
+  uncommitted batch when requested.
+- Verification: observed
+  `flutter test test/home_loader/pinned_program_settings_cache_state_test.dart`
+  fail before implementation because the state and transition helpers did not
+  exist. After implementation, that targeted test passed. Full Flutter
+  verification passed with `just flutter-format-check`,
+  `just flutter-analyze`, and `just flutter-test`. Repository verification
+  passed with `just verify-governance`, `just verify-safety`,
+  `just format-check`, and `just lint`.
+
+- Timestamp: 2026-06-30 18:27 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Model runtime-settings pending controls explicitly.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: `40f8eb9` (`Model executable open queue explicitly`).
+- Purpose: continue extracting pure Flutter home-loader state transitions by
+  replacing the mutable `pendingRuntimeSettingsControls` map with an immutable
+  explicit state and pure update helpers while preserving the existing
+  `KonyakHomeViewState` UI boundary.
+- Completed work: added `RuntimeSettingsPendingControlsState` with immutable
+  start/finish helpers, replaced the mutable
+  `pendingRuntimeSettingsControls` loader map with explicit state, and kept the
+  UI-facing `KonyakHomeViewState` map as a defensive snapshot boundary.
+- Remaining work: none for this slice. Continue a separate state-hardening
+  slice for the remaining loader maps/sets or UI-boundary nullable selections.
+- Next action: continue the next explicit-state hardening slice or commit this
+  slice when requested.
+- Verification: observed
+  `flutter test test/home_loader/runtime_settings_pending_controls_state_test.dart`
+  fail before implementation because the state and transition helpers did not
+  exist. After implementation, that targeted test passed. Full Flutter
+  verification passed with `just flutter-format-check`,
+  `just flutter-analyze`, and `just flutter-test`. Repository verification
+  passed with `just verify-governance`, `just verify-safety`,
+  `just format-check`, and `just lint`.
+
 - Timestamp: 2026-06-30 17:42 JST
 - State: `completed`
 - Branch: `main`
