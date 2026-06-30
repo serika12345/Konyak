@@ -59,13 +59,7 @@ Option<String> _firstExistingPath(
   Iterable<String> paths,
   FileStatusProbe fileStatusProbe,
 ) {
-  for (final path in paths) {
-    if (fileStatusProbe.exists(path)) {
-      return Option.of(path);
-    }
-  }
-
-  return const Option.none();
+  return firstWhereOption(paths, fileStatusProbe.exists);
 }
 
 List<String> macosWineLoaderLibraryPaths(String runtimeRoot) {

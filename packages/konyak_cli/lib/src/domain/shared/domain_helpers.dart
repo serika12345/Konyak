@@ -38,6 +38,16 @@ String prependPath(String path, Option<String> existingPath) {
   });
 }
 
+Option<T> firstWhereOption<T>(
+  Iterable<T> values,
+  bool Function(T value) predicate,
+) {
+  return values
+      .where(predicate)
+      .take(1)
+      .fold(Option<T>.none(), (_, value) => Option.of(value));
+}
+
 Option<String> fileNameFromUrl(String url) {
   try {
     final segments = Uri.parse(url).pathSegments;

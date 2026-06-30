@@ -60,14 +60,16 @@ abstract class RuntimeStackSourceArchivePlan
         'Runtime stack source archive plan does not contain ${wineComponent.id.value}.',
       ),
       (wineArchivePath) {
-        final componentArchivePaths = <RuntimeArchivePath>[];
-        for (final component in components) {
-          final archivePath = component.archivePath;
-          if (archivePath != wineArchivePath &&
-              !componentArchivePaths.contains(archivePath)) {
-            componentArchivePaths.add(archivePath);
-          }
-        }
+        final componentArchivePaths = components.fold<List<RuntimeArchivePath>>(
+          const <RuntimeArchivePath>[],
+          (paths, component) {
+            final archivePath = component.archivePath;
+            return archivePath != wineArchivePath &&
+                    !paths.contains(archivePath)
+                ? List<RuntimeArchivePath>.unmodifiable([...paths, archivePath])
+                : paths;
+          },
+        );
 
         return RuntimeStackSourceArchiveBundleResolved(
           RuntimeStackSourceArchiveBundle(
@@ -86,16 +88,13 @@ abstract class RuntimeStackSourceArchivePlan
   Option<RuntimeArchivePath> _archivePathForComponent(
     RuntimeSourceComponent sourceComponent,
   ) {
-    for (final component in components) {
-      if (_runtimeStackSourceArchiveMatches(
+    return firstWhereOption(
+      components,
+      (component) => _runtimeStackSourceArchiveMatches(
         component.component,
         sourceComponent,
-      )) {
-        return Option.of(component.archivePath);
-      }
-    }
-
-    return const Option.none();
+      ),
+    ).map((component) => component.archivePath);
   }
 }
 
@@ -181,17 +180,24 @@ RuntimeStackSourceArchivePlanResult runtimeStackSourceArchivePlan({
 List<RuntimeSourceComponent> _uniqueRuntimeStackSourceArchiveComponents(
   Iterable<RuntimeSourceComponent> components,
 ) {
-  final seenArchiveKeys = <String>{};
-  final uniqueComponents = <RuntimeSourceComponent>[];
-  for (final component in components) {
-    final archiveKey = _runtimeStackSourceArchiveKey(component);
-    if (!seenArchiveKeys.add(archiveKey)) {
-      continue;
-    }
-    uniqueComponents.add(component);
-  }
-
-  return List.unmodifiable(uniqueComponents);
+  return List.unmodifiable(
+    components.fold<List<RuntimeSourceComponent>>(
+      const <RuntimeSourceComponent>[],
+      (uniqueComponents, component) {
+        final archiveKey = _runtimeStackSourceArchiveKey(component);
+        final alreadySeen = uniqueComponents.any(
+          (uniqueComponent) =>
+              _runtimeStackSourceArchiveKey(uniqueComponent) == archiveKey,
+        );
+        return alreadySeen
+            ? uniqueComponents
+            : List<RuntimeSourceComponent>.unmodifiable([
+                ...uniqueComponents,
+                component,
+              ]);
+      },
+    ),
+  );
 }
 
 bool _runtimeStackSourceArchiveMatches(

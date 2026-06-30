@@ -1,5 +1,6 @@
 import 'package:fpdart/fpdart.dart';
 
+import '../shared/domain_helpers.dart';
 import '../shared/domain_value_objects.dart';
 import 'runtime_models.dart';
 
@@ -7,25 +8,16 @@ Option<RuntimeRecord> runtimeById(
   List<RuntimeRecord> runtimes,
   RuntimeId runtimeId,
 ) {
-  for (final runtime in runtimes) {
-    if (runtime.id == runtimeId) {
-      return Option.of(runtime);
-    }
-  }
-
-  return const Option.none();
+  return firstWhereOption(runtimes, (runtime) => runtime.id == runtimeId);
 }
 
 Option<RuntimeVersion> runtimeWineVersion(RuntimeRecord runtime) {
-  return runtime.stack.flatMap((stack) {
-    for (final component in stack.components) {
-      if (component.id.value == 'wine') {
-        return component.version;
-      }
-    }
-
-    return const Option.none();
-  });
+  return runtime.stack.flatMap(
+    (stack) => firstWhereOption(
+      stack.components,
+      (component) => component.id.value == 'wine',
+    ).flatMap((component) => component.version),
+  );
 }
 
 UpdateCheckStatus updateStatus({

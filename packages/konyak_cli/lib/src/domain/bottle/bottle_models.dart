@@ -16,7 +16,7 @@ abstract class BottleRecord with _$BottleRecord {
     required String name,
     required String path,
     required String windowsVersion,
-    BottleRuntimeSettings? runtimeSettings,
+    Option<BottleRuntimeSettings> runtimeSettings = const Option.none(),
     Iterable<PinnedProgramRecord> pinnedPrograms =
         const <PinnedProgramRecord>[],
   }) {
@@ -25,7 +25,10 @@ abstract class BottleRecord with _$BottleRecord {
       name: BottleName(name),
       path: BottlePath(path),
       windowsVersion: WindowsVersion(windowsVersion),
-      runtimeSettings: runtimeSettings ?? BottleRuntimeSettings(),
+      runtimeSettings: runtimeSettings.match(
+        BottleRuntimeSettings.new,
+        (settings) => settings,
+      ),
       pinnedPrograms: pinnedPrograms.toIList(),
     );
   }

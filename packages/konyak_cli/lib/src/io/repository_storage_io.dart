@@ -326,7 +326,7 @@ Option<BottleRecord> bottleRecordFromJson(Object? value) {
         name: name,
         path: path,
         windowsVersion: windowsVersion,
-        runtimeSettings: $(runtimeSettings),
+        runtimeSettings: Option.of($(runtimeSettings)),
         pinnedPrograms: $(pinnedPrograms),
       );
     });

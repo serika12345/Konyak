@@ -1015,7 +1015,7 @@ def require_typed_runtime_id_service_boundaries() -> None:
     update_support = read_text(update_support_path)
     expected_update_support_terms = [
         "RuntimeId runtimeId,",
-        "if (runtime.id == runtimeId)",
+        "firstWhereOption(runtimes, (runtime) => runtime.id == runtimeId)",
         "UpdateCheckStatus updateStatus({",
         "required Option<StringDomainValueObject> currentVersion,",
         "required StringDomainValueObject latestVersion,",

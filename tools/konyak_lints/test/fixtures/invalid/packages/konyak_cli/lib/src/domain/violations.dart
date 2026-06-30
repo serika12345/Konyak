@@ -68,6 +68,10 @@ Option<int> collapsedFailure(Result<Failure, Option<int>> result) {
   return result.getOrElse((_) => const Option<int>.none());
 }
 
+Option<int> foldedFailureCollapse(Result<Failure, Option<int>> result) {
+  return result.fold((_) => const Option<int>.none(), (value) => value);
+}
+
 int nullableBridge(Option<int> value) {
   return value.toNullable() ?? 0;
 }
@@ -91,4 +95,12 @@ int domainMutation(List<int> values, int input) {
   total++;
   values.add(total);
   return total > 0 ? (total > 1 ? total : 1) : 0;
+}
+
+List<int> domainMutableLocalCollection(Iterable<int> values) {
+  final doubled = <int>[];
+  for (final value in values) {
+    doubled.add(value * 2);
+  }
+  return doubled;
 }

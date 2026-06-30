@@ -31,6 +31,8 @@ class KonyakLintPlugin extends PluginBase {
     KonyakNoDomainReassignment(),
     KonyakNoDomainVarDeclaration(),
     KonyakNoDomainIncrement(),
+    KonyakNoDomainLoopStatement(),
+    KonyakNoDomainMutableLocalCollection(),
     KonyakNoDomainNestedConditional(),
     KonyakNoDomainParameterMutation(),
   ];
@@ -322,6 +324,44 @@ class KonyakNoDomainIncrement extends _KonyakAstRule {
       _IncrementVisitor(reporter, _code);
 }
 
+class KonyakNoDomainLoopStatement extends _KonyakAstRule {
+  const KonyakNoDomainLoopStatement() : super(_code);
+
+  static const _code = LintCode(
+    name: 'konyak_no_domain_loop_statement',
+    problemMessage:
+        'Domain logic must not use loop statements. Use collection operations, folds, or Option/Either combinators.',
+    errorSeverity: ErrorSeverity.ERROR,
+  );
+
+  @override
+  bool shouldRunOnPath(String normalizedPath) =>
+      _isDomainSourcePath(normalizedPath);
+
+  @override
+  RecursiveAstVisitor<void> visitor(ErrorReporter reporter) =>
+      _LoopStatementVisitor(reporter, _code);
+}
+
+class KonyakNoDomainMutableLocalCollection extends _KonyakAstRule {
+  const KonyakNoDomainMutableLocalCollection() : super(_code);
+
+  static const _code = LintCode(
+    name: 'konyak_no_domain_mutable_local_collection',
+    problemMessage:
+        'Domain logic must not build results by mutating local collections. Use collection expressions, folds, or immutable collections.',
+    errorSeverity: ErrorSeverity.ERROR,
+  );
+
+  @override
+  bool shouldRunOnPath(String normalizedPath) =>
+      _isDomainSourcePath(normalizedPath);
+
+  @override
+  RecursiveAstVisitor<void> visitor(ErrorReporter reporter) =>
+      _MutableLocalCollectionVisitor(reporter, _code);
+}
+
 class KonyakNoDomainNestedConditional extends _KonyakAstRule {
   const KonyakNoDomainNestedConditional() : super(_code);
 
@@ -515,17 +555,38 @@ class _ResultFailureToOptionNoneVisitor extends RecursiveAstVisitor<void> {
 
   @override
   void visitMethodInvocation(MethodInvocation node) {
-    if (node.methodName.name == 'getOrElse' &&
-        node.argumentList.arguments.any(_returnsOptionNone)) {
-      reporter.atNode(node.methodName, code);
+    switch (node.methodName.name) {
+      case 'getOrElse':
+        if (node.argumentList.arguments.any(_returnsOptionNone)) {
+          reporter.atNode(node.methodName, code);
+        }
+      case 'fold':
+        final arguments = node.argumentList.arguments;
+        if (arguments.isNotEmpty && _returnsOptionNone(arguments.first)) {
+          reporter.atNode(node.methodName, code);
+        }
     }
     super.visitMethodInvocation(node);
   }
 
   bool _returnsOptionNone(Expression argument) {
     if (argument is FunctionExpression) {
-      final body = argument.body;
-      return body is ExpressionFunctionBody && _isOptionNone(body.expression);
+      return _functionBodyReturnsOptionNone(argument.body);
+    }
+    return false;
+  }
+
+  bool _functionBodyReturnsOptionNone(FunctionBody body) {
+    if (body is ExpressionFunctionBody) {
+      return _isOptionNone(body.expression);
+    }
+    if (body is BlockFunctionBody) {
+      final statements = body.block.statements;
+      if (statements.length != 1 || statements.single is! ReturnStatement) {
+        return false;
+      }
+      final expression = (statements.single as ReturnStatement).expression;
+      return expression != null && _isOptionNone(expression);
     }
     return false;
   }
@@ -965,6 +1026,130 @@ class _IncrementVisitor extends RecursiveAstVisitor<void> {
   }
 }
 
+class _LoopStatementVisitor extends RecursiveAstVisitor<void> {
+  const _LoopStatementVisitor(this.reporter, this.code);
+
+  final ErrorReporter reporter;
+  final LintCode code;
+
+  @override
+  void visitDoStatement(DoStatement node) {
+    reporter.atNode(node, code);
+    super.visitDoStatement(node);
+  }
+
+  @override
+  void visitForStatement(ForStatement node) {
+    reporter.atNode(node, code);
+    super.visitForStatement(node);
+  }
+
+  @override
+  void visitWhileStatement(WhileStatement node) {
+    reporter.atNode(node, code);
+    super.visitWhileStatement(node);
+  }
+}
+
+class _MutableLocalCollectionVisitor extends RecursiveAstVisitor<void> {
+  _MutableLocalCollectionVisitor(this.reporter, this.code);
+
+  static const _mutatingMethods = {
+    'add',
+    'addAll',
+    'addEntries',
+    'clear',
+    'fillRange',
+    'insert',
+    'insertAll',
+    'remove',
+    'removeAt',
+    'removeLast',
+    'removeRange',
+    'removeWhere',
+    'replaceRange',
+    'retainWhere',
+    'setAll',
+    'setRange',
+    'shuffle',
+    'sort',
+    'update',
+    'updateAll',
+  };
+
+  final ErrorReporter reporter;
+  final LintCode code;
+  final List<Set<String>> _localCollectionScopes = [];
+
+  @override
+  void visitBlock(Block node) {
+    _localCollectionScopes.add(<String>{});
+    super.visitBlock(node);
+    _localCollectionScopes.removeLast();
+  }
+
+  @override
+  void visitCascadeExpression(CascadeExpression node) {
+    if (_targetsLocalCollection(node.target)) {
+      for (final section in node.cascadeSections) {
+        if (section is MethodInvocation &&
+            _mutatingMethods.contains(section.methodName.name)) {
+          reporter.atNode(section.methodName, code);
+        }
+      }
+    }
+    super.visitCascadeExpression(node);
+  }
+
+  @override
+  void visitMethodInvocation(MethodInvocation node) {
+    if (_mutatingMethods.contains(node.methodName.name) &&
+        _targetsLocalCollection(node.realTarget)) {
+      reporter.atNode(node.methodName, code);
+    }
+    super.visitMethodInvocation(node);
+  }
+
+  @override
+  void visitVariableDeclaration(VariableDeclaration node) {
+    final initializer = node.initializer;
+    if (initializer != null && _isMutableCollectionInitializer(initializer)) {
+      _currentScope.add(node.name.lexeme);
+    }
+    super.visitVariableDeclaration(node);
+  }
+
+  Set<String> get _currentScope {
+    if (_localCollectionScopes.isEmpty) {
+      _localCollectionScopes.add(<String>{});
+    }
+    return _localCollectionScopes.last;
+  }
+
+  bool _targetsLocalCollection(Expression? expression) {
+    if (expression == null) {
+      return false;
+    }
+    if (expression is SimpleIdentifier) {
+      return _isVisibleLocalCollection(expression.name);
+    }
+    if (expression is ParenthesizedExpression) {
+      return _targetsLocalCollection(expression.expression);
+    }
+    return false;
+  }
+
+  bool _isVisibleLocalCollection(String name) =>
+      _localCollectionScopes.reversed.any((scope) => scope.contains(name));
+
+  bool _isMutableCollectionInitializer(Expression expression) {
+    if (expression is ParenthesizedExpression) {
+      return _isMutableCollectionInitializer(expression.expression);
+    }
+    return expression is ListLiteral || expression is SetOrMapLiteral;
+  }
+}
+
 class _NestedConditionalVisitor extends RecursiveAstVisitor<void> {
   _NestedConditionalVisitor(this.reporter, this.code);
 
@@ -1185,7 +1370,6 @@ bool _isExternalNullBoundaryPath(String normalizedPath) {
     'packages/konyak_cli/lib/konyak_cli.dart',
     // JSON contract rendering currently lives on these domain models.
     'packages/konyak_cli/lib/src/domain/app/app_settings_models.dart',
-    'packages/konyak_cli/lib/src/domain/bottle/bottle_models.dart',
     'packages/konyak_cli/lib/src/domain/bottle/bottle_mutation_models.dart',
     'packages/konyak_cli/lib/src/domain/bottle/bottle_runtime_settings_models.dart',
     'packages/konyak_cli/lib/src/domain/program/program_catalog_models.dart',

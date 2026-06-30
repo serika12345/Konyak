@@ -1306,7 +1306,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
           name: 'Steam',
           path: bottlePath,
           windowsVersion: 'win10',
-          runtimeSettings: BottleRuntimeSettings(dxrEnabled: true),
+          runtimeSettings: Option.of(BottleRuntimeSettings(dxrEnabled: true)),
         ),
       ],
     );
@@ -1392,7 +1392,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
           name: 'Steam',
           path: bottlePath,
           windowsVersion: 'win10',
-          runtimeSettings: BottleRuntimeSettings(dxvk: true),
+          runtimeSettings: Option.of(BottleRuntimeSettings(dxvk: true)),
         ),
       ],
     );
@@ -1493,7 +1493,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
             name: 'Steam',
             path: bottlePath,
             windowsVersion: 'win10',
-            runtimeSettings: BottleRuntimeSettings(dxrEnabled: true),
+            runtimeSettings: Option.of(BottleRuntimeSettings(dxrEnabled: true)),
           ),
         ],
       );
@@ -1883,9 +1883,8 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
             path:
                 '/Users/user/Library/Application Support/Konyak/Bottles/Steam',
             windowsVersion: 'win10',
-            runtimeSettings: BottleRuntimeSettings(
-              retinaMode: true,
-              dpiScaling: 192,
+            runtimeSettings: Option.of(
+              BottleRuntimeSettings(retinaMode: true, dpiScaling: 192),
             ),
           ),
         ],

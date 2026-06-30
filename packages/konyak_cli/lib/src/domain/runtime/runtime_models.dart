@@ -1,6 +1,7 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../shared/domain_helpers.dart';
 import '../shared/domain_value_objects.dart';
 
 part 'runtime_models.freezed.dart';
@@ -353,13 +354,10 @@ abstract class RuntimeSourceManifest with _$RuntimeSourceManifest {
   }) = _RuntimeSourceManifest;
 
   Option<RuntimeSourceComponent> componentById(String id) {
-    for (final component in components) {
-      if (component.id.value == id) {
-        return Option.of(component);
-      }
-    }
-
-    return const Option.none();
+    return firstWhereOption(
+      components,
+      (component) => component.id.value == id,
+    );
   }
 }
 

@@ -13,6 +13,35 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-30 10:04 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Strengthen functional-domain custom lint enforcement.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: `52c413a` (`Tighten IO absence handling`).
+- Purpose: close the enforcement gaps found in the nullable/functional audit by
+  rejecting domain loop statements, mutable local collection builders, broader
+  Result/Either failure-to-`Option.none()` collapse, and nullable
+  `BottleRecord` runtime-settings construction.
+- Completed work: added failing lint fixtures for domain loop statements,
+  mutable local collection builders, and `fold` failure collapse; implemented
+  the new custom lint rules; refactored current domain loop/builder call sites
+  to expression/fold/Option helpers; changed `BottleRecord` construction to use
+  `Option<BottleRuntimeSettings>` for optional runtime settings and removed
+  `bottle_models.dart` from the nullable-boundary allowlist.
+- Remaining work: none for this lint-hardening batch.
+- Next action: continue tightening the broader nullable boundary allowlists,
+  especially Flutter app/home-loader state helpers and remaining CLI/io/platform
+  parser boundaries.
+- Verification: observed `just konyak-lints-test` fail before implementation
+  because `konyak_no_domain_loop_statement` was not reported; after rule
+  implementation the lint fixture test passed. Observed `just cli-custom-lint`
+  fail on existing domain loop/mutable-builder call sites, then pass after the
+  expression/fold refactor. Final verification passed with
+  `just konyak-lints-test`, `just cli-test`, `just verify-governance`, `just
+  verify-safety`, `just format-check`, and `just lint` in the Nix dev shell.
+
 - Timestamp: 2026-06-29 23:51 JST
 - State: `completed`
 - Branch: `main`

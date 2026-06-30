@@ -40,6 +40,8 @@ void main() {
           'konyak_no_domain_var_declaration',
           'konyak_no_domain_increment',
           'konyak_no_domain_nested_conditional',
+          'konyak_no_domain_loop_statement',
+          'konyak_no_domain_mutable_local_collection',
           'konyak_no_domain_parameter_mutation',
           'konyak_no_domain_part_of_root',
           'konyak_no_handwritten_part',

@@ -237,21 +237,17 @@ ProgramRunEnvironment _linuxWineEnvironmentWithRuntime({
 }) {
   final wineEnvironment = _linuxWineEnvironment(bottle);
   final hostEnvironment = environment;
-  final dllPathEntries = <String>[];
-  if (bottle.runtimeSettings.dxvk) {
-    final runtimeRoot = linuxWineRuntimeRoot(hostEnvironment);
-    dllPathEntries.addAll([
+  final runtimeRoot = linuxWineRuntimeRoot(hostEnvironment);
+  final dllPathEntries = <String>[
+    if (bottle.runtimeSettings.dxvk) ...[
       domainJoinPath(runtimeRoot, const ['dxvk', 'x64']),
       domainJoinPath(runtimeRoot, const ['dxvk', 'x86']),
-    ]);
-  }
-  if (bottle.runtimeSettings.vkd3dProton) {
-    final runtimeRoot = linuxWineRuntimeRoot(hostEnvironment);
-    dllPathEntries.addAll([
+    ],
+    if (bottle.runtimeSettings.vkd3dProton) ...[
       domainJoinPath(runtimeRoot, const ['vkd3d-proton', 'x64']),
       domainJoinPath(runtimeRoot, const ['vkd3d-proton', 'x86']),
-    ]);
-  }
+    ],
+  ];
   if (dllPathEntries.isNotEmpty) {
     final wineEnvironmentWithDllPath = wineEnvironment.add(
       ProgramEnvironmentVariableName('WINEDLLPATH'),

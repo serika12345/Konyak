@@ -195,7 +195,7 @@ void main() {
         name: 'Steam New',
         path: '/bottles/steam-new',
         windowsVersion: 'win11',
-        runtimeSettings: BottleRuntimeSettings(dxvk: true),
+        runtimeSettings: Option.of(BottleRuntimeSettings(dxvk: true)),
         pinnedPrograms: [
           PinnedProgramRecord(name: 'Steam', path: '/steam.exe'),
         ],

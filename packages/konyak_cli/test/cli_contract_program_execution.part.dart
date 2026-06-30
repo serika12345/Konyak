@@ -504,11 +504,13 @@ void defineProgramExecutionContractTests() {
           name: 'Steam',
           path: '/home/user/.local/share/konyak/bottles/steam',
           windowsVersion: 'win10',
-          runtimeSettings: BottleRuntimeSettings(
-            dxrEnabled: true,
-            metalHud: true,
-            metalTrace: true,
-            avxEnabled: true,
+          runtimeSettings: Option.of(
+            BottleRuntimeSettings(
+              dxrEnabled: true,
+              metalHud: true,
+              metalTrace: true,
+              avxEnabled: true,
+            ),
           ),
         ),
       ],
@@ -745,13 +747,15 @@ void defineProgramExecutionContractTests() {
           name: 'Steam',
           path: bottlePath,
           windowsVersion: 'win10',
-          runtimeSettings: BottleRuntimeSettings(
-            enhancedSync: 'msync',
-            metalHud: true,
-            metalTrace: true,
-            avxEnabled: true,
-            dxvk: true,
-            dxvkHud: 'partial',
+          runtimeSettings: Option.of(
+            BottleRuntimeSettings(
+              enhancedSync: 'msync',
+              metalHud: true,
+              metalTrace: true,
+              avxEnabled: true,
+              dxvk: true,
+              dxvkHud: 'partial',
+            ),
           ),
         ),
       ],
@@ -873,7 +877,7 @@ void defineProgramExecutionContractTests() {
           name: 'Steam',
           path: bottlePath,
           windowsVersion: 'win10',
-          runtimeSettings: BottleRuntimeSettings(dxrEnabled: true),
+          runtimeSettings: Option.of(BottleRuntimeSettings(dxrEnabled: true)),
         ),
       ],
     );
@@ -1003,9 +1007,8 @@ void defineProgramExecutionContractTests() {
             name: 'Steam',
             path: bottlePath,
             windowsVersion: 'win10',
-            runtimeSettings: BottleRuntimeSettings(
-              dxrEnabled: true,
-              dxmt: true,
+            runtimeSettings: Option.of(
+              BottleRuntimeSettings(dxrEnabled: true, dxmt: true),
             ),
           ),
         ],
@@ -1124,7 +1127,7 @@ void defineProgramExecutionContractTests() {
           name: 'Steam',
           path: bottlePath,
           windowsVersion: 'win10',
-          runtimeSettings: BottleRuntimeSettings(dxrEnabled: true),
+          runtimeSettings: Option.of(BottleRuntimeSettings(dxrEnabled: true)),
         ),
       ],
     );
@@ -1204,9 +1207,8 @@ void defineProgramExecutionContractTests() {
           name: 'Steam',
           path: bottlePath,
           windowsVersion: 'win10',
-          runtimeSettings: BottleRuntimeSettings(
-            dxrEnabled: true,
-            dlssMetalFx: true,
+          runtimeSettings: Option.of(
+            BottleRuntimeSettings(dxrEnabled: true, dlssMetalFx: true),
           ),
         ),
       ],
@@ -1279,9 +1281,8 @@ void defineProgramExecutionContractTests() {
           name: 'Steam',
           path: bottlePath,
           windowsVersion: 'win10',
-          runtimeSettings: BottleRuntimeSettings(
-            dxrEnabled: true,
-            dlssMetalFx: true,
+          runtimeSettings: Option.of(
+            BottleRuntimeSettings(dxrEnabled: true, dlssMetalFx: true),
           ),
         ),
       ],
@@ -1325,7 +1326,7 @@ void defineProgramExecutionContractTests() {
           name: 'Steam',
           path: '/Users/user/Library/Application Support/Konyak/Bottles/Steam',
           windowsVersion: 'win10',
-          runtimeSettings: BottleRuntimeSettings(dxmt: true),
+          runtimeSettings: Option.of(BottleRuntimeSettings(dxmt: true)),
         ),
       ],
     );
@@ -1404,7 +1405,9 @@ void defineProgramExecutionContractTests() {
           name: 'Steam',
           path: '/Users/user/Library/Application Support/Konyak/Bottles/Steam',
           windowsVersion: 'win10',
-          runtimeSettings: BottleRuntimeSettings(dxmt: true, dlssMetalFx: true),
+          runtimeSettings: Option.of(
+            BottleRuntimeSettings(dxmt: true, dlssMetalFx: true),
+          ),
         ),
       ],
     );
@@ -1445,11 +1448,13 @@ void defineProgramExecutionContractTests() {
           name: 'Steam',
           path: '/home/user/.local/share/konyak/bottles/steam',
           windowsVersion: 'win10',
-          runtimeSettings: BottleRuntimeSettings(
-            enhancedSync: 'msync',
-            dxvk: true,
-            dlssMetalFx: true,
-            dxvkHud: 'fps',
+          runtimeSettings: Option.of(
+            BottleRuntimeSettings(
+              enhancedSync: 'msync',
+              dxvk: true,
+              dlssMetalFx: true,
+              dxvkHud: 'fps',
+            ),
           ),
         ),
       ],
@@ -1528,9 +1533,8 @@ void defineProgramExecutionContractTests() {
           name: 'Steam',
           path: '/home/user/.local/share/konyak/bottles/steam',
           windowsVersion: 'win10',
-          runtimeSettings: BottleRuntimeSettings(
-            enhancedSync: 'msync',
-            vkd3dProton: true,
+          runtimeSettings: Option.of(
+            BottleRuntimeSettings(enhancedSync: 'msync', vkd3dProton: true),
           ),
         ),
       ],
