@@ -21,9 +21,33 @@ sealed class RuntimeSectionState with _$RuntimeSectionState {
   }) = RuntimeSectionAvailable;
 }
 
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class RuntimeSectionOperationState with _$RuntimeSectionOperationState {
+  const factory RuntimeSectionOperationState.idle() =
+      RuntimeSectionOperationIdle;
+
+  const factory RuntimeSectionOperationState.loadingRuntimes() =
+      RuntimeSectionLoadingRuntimes;
+
+  const factory RuntimeSectionOperationState.failed(String message) =
+      RuntimeSectionOperationFailed;
+}
+
 enum RuntimeInstallButtonLabel { install, repair }
 
 enum RuntimeStackStatusLabel { complete, incomplete, partial }
+
+bool isRuntimeSectionLoading(RuntimeSectionOperationState state) {
+  return switch (state) {
+    RuntimeSectionLoadingRuntimes() => true,
+    RuntimeSectionOperationIdle() => false,
+    RuntimeSectionOperationFailed() => false,
+  };
+}
 
 List<RuntimeSummary> upsertRuntime(
   List<RuntimeSummary> runtimes,

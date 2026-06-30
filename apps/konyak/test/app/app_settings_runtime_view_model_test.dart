@@ -12,6 +12,25 @@ void main() {
     expect(runtimeSectionPlatform(KonyakPlatform.linux), 'linux');
   });
 
+  test('models runtime section operation progress explicitly', () {
+    expect(
+      isRuntimeSectionLoading(
+        const RuntimeSectionOperationState.loadingRuntimes(),
+      ),
+      isTrue,
+    );
+    expect(
+      isRuntimeSectionLoading(const RuntimeSectionOperationState.idle()),
+      isFalse,
+    );
+    expect(
+      isRuntimeSectionLoading(
+        const RuntimeSectionOperationState.failed('download failed'),
+      ),
+      isFalse,
+    );
+  });
+
   test('selects the runtime stack for the requested platform', () {
     final selection = resolveRuntimeSectionState(
       runtimes: [

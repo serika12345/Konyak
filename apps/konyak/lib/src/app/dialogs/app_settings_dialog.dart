@@ -23,8 +23,7 @@ class AppSettingsDialog extends StatefulWidget {
     required this.initialSettings,
     required this.directoryPicker,
     this.runtimes = const <RuntimeSummary>[],
-    this.isLoadingRuntimes = false,
-    this.runtimeLoadError,
+    this.runtimeOperationState = const RuntimeSectionOperationState.idle(),
     this.onLoadRuntimes,
     this.onInstallRuntime,
     this.onInstallGptkWine,
@@ -36,8 +35,7 @@ class AppSettingsDialog extends StatefulWidget {
   final AppSettingsSummary initialSettings;
   final DirectoryPicker directoryPicker;
   final List<RuntimeSummary> runtimes;
-  final bool isLoadingRuntimes;
-  final String? runtimeLoadError;
+  final RuntimeSectionOperationState runtimeOperationState;
   final Future<RuntimeListLoadResult> Function()? onLoadRuntimes;
   final Future<RuntimeInstallLoadResult> Function()? onInstallRuntime;
   final Future<RuntimeInstallLoadResult> Function()? onInstallGptkWine;
@@ -52,8 +50,8 @@ class AppSettingsDialog extends StatefulWidget {
 class _AppSettingsDialogState extends State<AppSettingsDialog> {
   late AppSettingsSummary _settings = widget.initialSettings;
   late List<RuntimeSummary> _runtimes = widget.runtimes;
-  late bool _isLoadingRuntimes = widget.isLoadingRuntimes;
-  late String? _runtimeLoadError = widget.runtimeLoadError;
+  late RuntimeSectionOperationState _runtimeOperationState =
+      widget.runtimeOperationState;
   bool _isSaving = false;
   bool _isInstallingRuntime = false;
   bool _isInstallingGptkWine = false;
@@ -61,7 +59,7 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
   @override
   void initState() {
     super.initState();
-    if (_isLoadingRuntimes) {
+    if (isRuntimeSectionLoading(_runtimeOperationState)) {
       unawaited(_loadRuntimes());
     }
   }
@@ -70,7 +68,7 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
     final loadRuntimes = widget.onLoadRuntimes;
     if (loadRuntimes == null) {
       setState(() {
-        _isLoadingRuntimes = false;
+        _runtimeOperationState = const RuntimeSectionOperationState.idle();
       });
       return;
     }
@@ -85,11 +83,10 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
       switch (result) {
         case LoadedRuntimeList(:final runtimes):
           _runtimes = runtimes;
-          _runtimeLoadError = null;
+          _runtimeOperationState = const RuntimeSectionOperationState.idle();
         case RuntimeListLoadFailure(:final message):
-          _runtimeLoadError = message;
+          _runtimeOperationState = RuntimeSectionOperationState.failed(message);
       }
-      _isLoadingRuntimes = false;
     });
   }
 
@@ -130,7 +127,7 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
 
     setState(() {
       _isInstallingRuntime = true;
-      _runtimeLoadError = null;
+      _runtimeOperationState = const RuntimeSectionOperationState.idle();
     });
 
     final result = await installRuntime();
@@ -143,9 +140,9 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
       switch (result) {
         case InstalledRuntime(:final runtime):
           _runtimes = upsertRuntime(_runtimes, runtime);
-          _runtimeLoadError = null;
+          _runtimeOperationState = const RuntimeSectionOperationState.idle();
         case RuntimeInstallLoadFailure(:final message):
-          _runtimeLoadError = message;
+          _runtimeOperationState = RuntimeSectionOperationState.failed(message);
       }
       _isInstallingRuntime = false;
     });
@@ -199,7 +196,7 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
 
     setState(() {
       _isInstallingGptkWine = true;
-      _runtimeLoadError = null;
+      _runtimeOperationState = const RuntimeSectionOperationState.idle();
     });
 
     final result = await installGptkWine();
@@ -212,9 +209,9 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
       switch (result) {
         case InstalledRuntime(:final runtime):
           _runtimes = upsertRuntime(_runtimes, runtime);
-          _runtimeLoadError = null;
+          _runtimeOperationState = const RuntimeSectionOperationState.idle();
         case RuntimeInstallLoadFailure(:final message):
-          _runtimeLoadError = message;
+          _runtimeOperationState = RuntimeSectionOperationState.failed(message);
       }
       _isInstallingGptkWine = false;
     });
@@ -332,8 +329,7 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
                 ),
                 platform: runtimeSectionPlatform(widget.platform),
                 runtimes: _runtimes,
-                isLoading: _isLoadingRuntimes,
-                loadError: _runtimeLoadError,
+                operationState: _runtimeOperationState,
                 isInstalling: _isInstallingRuntime,
                 isInstallingGptkWine: _isInstallingGptkWine,
                 onInstallRuntime: widget.onInstallRuntime == null

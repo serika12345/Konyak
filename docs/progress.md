@@ -13,6 +13,35 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-30 14:59 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Replace App Settings runtime operation nullable state.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: current commit (`Model App Settings runtime operation state`).
+- Purpose: continue narrowing Flutter App Settings runtime display state by
+  replacing `String?` runtime load/install error state and paired loading
+  booleans with an explicit Freezed operation state.
+- Completed work: added `RuntimeSectionOperationState` with idle,
+  loading-runtimes, and failed variants; routed `AppSettingsDialog`,
+  `AppSettingsRuntimeSection`, and the home-loader settings entry point through
+  the explicit state; removed the app-settings runtime `String?` load/install
+  error field and `isLoadingRuntimes` constructor state.
+- Remaining work: continue lower-priority nullable hardening for widget
+  callback enablement, loader error state, and platform adapter boundaries in a
+  follow-up batch.
+- Next action: continue the next nullable-hardening slice.
+- Verification: observed
+  `flutter test test/app/app_settings_runtime_view_model_test.dart` fail before
+  implementation because `RuntimeSectionOperationState` and
+  `isRuntimeSectionLoading` did not exist. After implementation, targeted
+  `flutter test test/app/app_settings_runtime_view_model_test.dart` passed.
+  Full Flutter verification passed with `just flutter-format-check`,
+  `just flutter-analyze`, and `just flutter-test`. Repository verification
+  passed with `just verify-governance`, `just verify-safety`,
+  `just format-check`, and `just lint`.
+
 - Timestamp: 2026-06-30 14:41 JST
 - State: `completed`
 - Branch: `main`

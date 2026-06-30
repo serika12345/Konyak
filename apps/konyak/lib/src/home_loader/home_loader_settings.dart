@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../app/dialogs/app_settings_dialog.dart';
+import '../app/dialogs/app_settings_runtime_view_model.dart';
 import '../app/dialogs/app_settings_save_outcome.dart';
 import '../app/runtime/runtime_platform.dart';
 import '../cli/konyak_cli_read_commands.dart';
@@ -43,7 +44,9 @@ extension KonyakHomeLoaderSettings on KonyakHomeLoaderState {
                 widget.platform,
                 knownRuntimes.runtimes,
               ),
-              isLoadingRuntimes: !knownRuntimes.isLoaded,
+              runtimeOperationState: knownRuntimes.isLoaded
+                  ? const RuntimeSectionOperationState.idle()
+                  : const RuntimeSectionOperationState.loadingRuntimes(),
               onLoadRuntimes: knownRuntimes.isLoaded
                   ? null
                   : loadSettingsRuntimes,

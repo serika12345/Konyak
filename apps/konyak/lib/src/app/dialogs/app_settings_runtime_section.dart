@@ -11,8 +11,7 @@ class AppSettingsRuntimeSection extends StatelessWidget {
     required this.title,
     required this.platform,
     required this.runtimes,
-    required this.isLoading,
-    required this.loadError,
+    required this.operationState,
     required this.isInstalling,
     required this.isInstallingGptkWine,
     required this.onInstallRuntime,
@@ -23,8 +22,7 @@ class AppSettingsRuntimeSection extends StatelessWidget {
   final String title;
   final String platform;
   final List<RuntimeSummary> runtimes;
-  final bool isLoading;
-  final String? loadError;
+  final RuntimeSectionOperationState operationState;
   final bool isInstalling;
   final bool isInstallingGptkWine;
   final VoidCallback? onInstallRuntime;
@@ -39,22 +37,24 @@ class AppSettingsRuntimeSection extends StatelessWidget {
       platform: platform,
     );
     return switch (runtimeState) {
-      RuntimeSectionUnavailable() when isLoading => AppSettingsSection(
-        title: title,
-        children: [
-          AppSettingsDetailRow(
-            label: localizations.status,
-            value: localizations.loading,
-          ),
-        ],
-      ),
+      RuntimeSectionUnavailable()
+          when isRuntimeSectionLoading(operationState) =>
+        AppSettingsSection(
+          title: title,
+          children: [
+            AppSettingsDetailRow(
+              label: localizations.status,
+              value: localizations.loading,
+            ),
+          ],
+        ),
       RuntimeSectionUnavailable() => AppSettingsSection(
         title: title,
         children: [
           AppSettingsDetailRow(
             label: localizations.status,
             value: localizations.unavailable,
-            detail: loadError ?? localizations.noManagedRuntimeStackDetected,
+            detail: runtimeUnavailableDetail(operationState, localizations),
           ),
           if (onInstallRuntime != null)
             _installButtonBlock(localizations.install, localizations),
@@ -69,12 +69,10 @@ class AppSettingsRuntimeSection extends StatelessWidget {
         AppSettingsSection(
           title: title,
           children: [
-            if (loadError != null)
-              AppSettingsDetailRow(
-                label: localizations.runtimeInstall,
-                value: localizations.failed,
-                detail: loadError,
-              ),
+            ...runtimeOperationFailureRows(
+              operationState: operationState,
+              localizations: localizations,
+            ),
             AppSettingsDetailRow(
               label: runtime.name,
               value: runtime.isInstalled == true
@@ -194,6 +192,36 @@ String localizedRuntimeInstallButtonLabel(
   return switch (label) {
     RuntimeInstallButtonLabel.install => localizations.install,
     RuntimeInstallButtonLabel.repair => localizations.repair,
+  };
+}
+
+String runtimeUnavailableDetail(
+  RuntimeSectionOperationState operationState,
+  KonyakLocalizations localizations,
+) {
+  return switch (operationState) {
+    RuntimeSectionOperationFailed(:final message) => message,
+    RuntimeSectionOperationIdle() =>
+      localizations.noManagedRuntimeStackDetected,
+    RuntimeSectionLoadingRuntimes() =>
+      localizations.noManagedRuntimeStackDetected,
+  };
+}
+
+List<Widget> runtimeOperationFailureRows({
+  required RuntimeSectionOperationState operationState,
+  required KonyakLocalizations localizations,
+}) {
+  return switch (operationState) {
+    RuntimeSectionOperationFailed(:final message) => <Widget>[
+      AppSettingsDetailRow(
+        label: localizations.runtimeInstall,
+        value: localizations.failed,
+        detail: message,
+      ),
+    ],
+    RuntimeSectionOperationIdle() => const <Widget>[],
+    RuntimeSectionLoadingRuntimes() => const <Widget>[],
   };
 }
 
