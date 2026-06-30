@@ -12,6 +12,7 @@ import '../app_platform.dart';
 import 'app_settings_rows.dart';
 import 'app_settings_runtime_section.dart';
 import 'app_settings_runtime_view_model.dart';
+import 'app_settings_save_outcome.dart';
 
 class AppSettingsDialog extends StatefulWidget {
   const AppSettingsDialog({
@@ -39,7 +40,7 @@ class AppSettingsDialog extends StatefulWidget {
   final Future<RuntimeInstallLoadResult> Function()? onInstallRuntime;
   final Future<RuntimeInstallLoadResult> Function()? onInstallGptkWine;
   final Future<void> Function()? onOpenGptkPage;
-  final Future<AppSettingsSummary?> Function(AppSettingsSummary settings)
+  final Future<AppSettingsSaveOutcome> Function(AppSettingsSummary settings)
   onSettingsChanged;
 
   @override
@@ -97,14 +98,14 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
       _isSaving = true;
     });
 
-    final savedSettings = await widget.onSettingsChanged(settings);
+    final saveOutcome = await widget.onSettingsChanged(settings);
 
     if (!mounted) {
       return;
     }
 
     setState(() {
-      _settings = savedSettings ?? previousSettings;
+      _settings = saveOutcome.settingsOr(previousSettings);
       _isSaving = false;
     });
   }

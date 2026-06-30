@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../app/dialogs/app_settings_dialog.dart';
+import '../app/dialogs/app_settings_save_outcome.dart';
 import '../app/runtime/runtime_platform.dart';
 import '../cli/konyak_cli_read_commands.dart';
 import '../cli/konyak_cli_runtime_result_types.dart';
@@ -140,13 +141,13 @@ extension KonyakHomeLoaderSettings on KonyakHomeLoaderState {
     );
   }
 
-  Future<AppSettingsSummary?> setAppSettings(
+  Future<AppSettingsSaveOutcome> setAppSettings(
     AppSettingsSummary settings,
   ) async {
     final result = await widget.cliClient.setAppSettings(settings: settings);
 
     if (!mounted) {
-      return null;
+      return const AppSettingsSaveOutcome.unmounted();
     }
 
     switch (result) {
@@ -154,10 +155,10 @@ extension KonyakHomeLoaderSettings on KonyakHomeLoaderState {
         appSettings = settings;
         widget.onAppearanceModeChanged(settings.appearanceMode);
         widget.onLanguageModeChanged(settings.languageMode);
-        return settings;
+        return AppSettingsSaveOutcome.saved(settings);
       case AppSettingsLoadFailure(:final message):
         showSnackBar(message);
-        return null;
+        return const AppSettingsSaveOutcome.failed();
     }
   }
 }

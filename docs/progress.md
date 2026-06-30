@@ -13,6 +13,34 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-30 11:36 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Replace Flutter settings-save nullable outcome.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: current commit (`Replace settings-save nullable outcome`).
+- Purpose: continue narrowing `apps/konyak/lib/src/home_loader/` nullable
+  async result methods by replacing settings-save nullable callback results
+  with explicit Freezed outcome variants.
+- Completed work: added `AppSettingsSaveOutcome` as a Freezed result variant;
+  replaced the settings dialog `Future<AppSettingsSummary?>` callback with an
+  explicit save outcome; updated `home_loader_settings.dart` to return
+  `saved`, `failed`, or `unmounted`; regenerated ignored Freezed parts.
+- Remaining work: none for this batch.
+- Next action: continue narrowing `home_loader_bottles.dart` nullable async
+  result helpers, especially create/reload bottle outcomes.
+- Verification: observed
+  `flutter test test/app/app_settings_save_outcome_test.dart` fail before
+  implementation because `AppSettingsSaveOutcome` did not exist. After
+  implementation, targeted
+  `flutter test test/app/app_settings_save_outcome_test.dart`,
+  `just flutter-format-check`, `just flutter-analyze`, `just flutter-test`,
+  `just verify-governance`, `just verify-safety`, `just format-check`, and
+  `just lint` passed in the Nix dev shell. `just flutter-analyze` initially
+  failed once on a non-const test constructor and passed after making the test
+  value const.
+
 - Timestamp: 2026-06-30 11:17 JST
 - State: `completed`
 - Branch: `main`
