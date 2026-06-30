@@ -1,20 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../bottles/bottle_summary.dart';
 import '../../l10n/konyak_localizations.dart';
 
-sealed class OpenExecutableDecision {
-  const OpenExecutableDecision();
-}
+part 'open_executable_dialog.freezed.dart';
 
-final class RunExecutableInBottle extends OpenExecutableDecision {
-  const RunExecutableInBottle(this.bottle);
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class OpenExecutableDecision with _$OpenExecutableDecision {
+  const factory OpenExecutableDecision.runInBottle(BottleSummary bottle) =
+      RunExecutableInBottle;
 
-  final BottleSummary bottle;
-}
-
-final class CreateBottleForExecutable extends OpenExecutableDecision {
-  const CreateBottleForExecutable();
+  const factory OpenExecutableDecision.createBottle() =
+      CreateBottleForExecutable;
 }
 
 class OpenExecutableDialog extends StatefulWidget {

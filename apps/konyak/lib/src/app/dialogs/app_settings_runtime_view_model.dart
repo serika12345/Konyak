@@ -1,26 +1,24 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+
 import '../../runtimes/runtime_summary.dart';
 import '../app_platform.dart';
 
-sealed class RuntimeSectionState {
-  const RuntimeSectionState();
-}
+part 'app_settings_runtime_view_model.freezed.dart';
 
-final class RuntimeSectionUnavailable extends RuntimeSectionState {
-  const RuntimeSectionUnavailable();
-}
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class RuntimeSectionState with _$RuntimeSectionState {
+  const factory RuntimeSectionState.unavailable() = RuntimeSectionUnavailable;
 
-final class RuntimeSectionAvailable extends RuntimeSectionState {
-  const RuntimeSectionAvailable({
-    required this.runtime,
-    required this.stack,
-    required this.shouldOfferInstall,
-    required this.installButtonLabel,
-  });
-
-  final RuntimeSummary runtime;
-  final RuntimeStackSummary stack;
-  final bool shouldOfferInstall;
-  final RuntimeInstallButtonLabel installButtonLabel;
+  const factory RuntimeSectionState.available({
+    required RuntimeSummary runtime,
+    required RuntimeStackSummary stack,
+    required bool shouldOfferInstall,
+    required RuntimeInstallButtonLabel installButtonLabel,
+  }) = RuntimeSectionAvailable;
 }
 
 enum RuntimeInstallButtonLabel { install, repair }

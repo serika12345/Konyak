@@ -4,8 +4,8 @@ import 'package:konyak/src/runtimes/runtime_summary.dart';
 
 void main() {
   test('distinguishes pending runtime loading from a resolved empty list', () {
-    const pending = KnownRuntimesPending();
-    final loadedEmpty = KnownRuntimesLoaded(const <RuntimeSummary>[]);
+    const pending = KnownRuntimesState.pending();
+    final loadedEmpty = KnownRuntimesState.loaded(const <RuntimeSummary>[]);
 
     expect(pending.isLoaded, isFalse);
     expect(pending.runtimes, isEmpty);
@@ -16,7 +16,7 @@ void main() {
   test('keeps loaded runtimes as an immutable snapshot', () {
     final runtime = _runtime(id: 'konyak-macos-wine');
     final source = <RuntimeSummary>[runtime];
-    final loaded = KnownRuntimesLoaded(source);
+    final loaded = KnownRuntimesState.loaded(source);
 
     source.clear();
 

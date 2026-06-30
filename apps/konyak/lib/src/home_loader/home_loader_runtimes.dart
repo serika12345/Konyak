@@ -212,7 +212,7 @@ extension KonyakHomeLoaderRuntimes on KonyakHomeLoaderState {
     }
 
     updateState(() {
-      knownRuntimes = KnownRuntimesLoaded(runtimes);
+      knownRuntimes = KnownRuntimesState.loaded(runtimes);
     });
   }
 
@@ -278,7 +278,7 @@ extension KonyakHomeLoaderRuntimes on KonyakHomeLoaderState {
     switch (installResult) {
       case InstalledRuntime(:final runtime):
         updateState(() {
-          knownRuntimes = KnownRuntimesLoaded(
+          knownRuntimes = KnownRuntimesState.loaded(
             upsertRuntimeSummary(knownRuntimes.runtimes, runtime),
           );
         });
@@ -411,7 +411,7 @@ extension KonyakHomeLoaderRuntimes on KonyakHomeLoaderState {
     switch (result) {
       case InstalledRuntime(:final runtime):
         updateState(() {
-          knownRuntimes = KnownRuntimesLoaded(
+          knownRuntimes = KnownRuntimesState.loaded(
             upsertRuntimeSummary(knownRuntimes.runtimes, runtime),
           );
         });

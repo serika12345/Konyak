@@ -86,7 +86,7 @@ class KonyakHomeLoaderState extends State<KonyakHomeLoader>
   AppSettingsSummary? appSettings;
   String? errorMessage;
   String? latestRunLogPath;
-  KnownRuntimesState knownRuntimes = const KnownRuntimesPending();
+  KnownRuntimesState knownRuntimes = const KnownRuntimesState.pending();
   final List<String> pendingExecutableOpenPaths = <String>[];
   bool isHandlingExecutableOpen = false;
   final Map<String, ProgramSettingsSummary> programSettings =

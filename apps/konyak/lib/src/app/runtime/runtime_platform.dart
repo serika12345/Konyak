@@ -1,7 +1,11 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+
 import '../../cli/konyak_cli_client.dart';
 import '../../runtimes/runtime_summary.dart';
 import '../app_constants.dart';
 import '../app_platform.dart';
+
+part 'runtime_platform.freezed.dart';
 
 final class ManagedRuntimePlatform {
   const ManagedRuntimePlatform({
@@ -15,20 +19,18 @@ final class ManagedRuntimePlatform {
   final String displayName;
 }
 
-sealed class RuntimeForPlatformSelection {
-  const RuntimeForPlatformSelection();
-}
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class RuntimeForPlatformSelection with _$RuntimeForPlatformSelection {
+  const factory RuntimeForPlatformSelection.found(RuntimeSummary runtime) =
+      RuntimeForPlatformFound;
 
-final class RuntimeForPlatformFound extends RuntimeForPlatformSelection {
-  const RuntimeForPlatformFound(this.runtime);
-
-  final RuntimeSummary runtime;
-}
-
-final class RuntimeForPlatformMissing extends RuntimeForPlatformSelection {
-  const RuntimeForPlatformMissing(this.managedRuntime);
-
-  final ManagedRuntimePlatform managedRuntime;
+  const factory RuntimeForPlatformSelection.missing(
+    ManagedRuntimePlatform managedRuntime,
+  ) = RuntimeForPlatformMissing;
 }
 
 ManagedRuntimePlatform managedRuntimePlatform(KonyakPlatform platform) {

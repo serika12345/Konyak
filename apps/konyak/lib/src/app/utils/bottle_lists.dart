@@ -1,35 +1,33 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+
 import '../../bottles/bottle_summary.dart';
 
-sealed class BottleSelection {
-  const BottleSelection();
+part 'bottle_lists.freezed.dart';
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class BottleSelection with _$BottleSelection {
+  const factory BottleSelection.found(BottleSummary bottle) =
+      BottleSelectionFound;
+
+  const factory BottleSelection.missing(String bottleId) =
+      BottleSelectionMissing;
 }
 
-final class BottleSelectionFound extends BottleSelection {
-  const BottleSelectionFound(this.bottle);
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class PinnedProgramSelection with _$PinnedProgramSelection {
+  const factory PinnedProgramSelection.found(PinnedProgramSummary program) =
+      PinnedProgramSelectionFound;
 
-  final BottleSummary bottle;
-}
-
-final class BottleSelectionMissing extends BottleSelection {
-  const BottleSelectionMissing(this.bottleId);
-
-  final String bottleId;
-}
-
-sealed class PinnedProgramSelection {
-  const PinnedProgramSelection();
-}
-
-final class PinnedProgramSelectionFound extends PinnedProgramSelection {
-  const PinnedProgramSelectionFound(this.program);
-
-  final PinnedProgramSummary program;
-}
-
-final class PinnedProgramSelectionMissing extends PinnedProgramSelection {
-  const PinnedProgramSelectionMissing(this.programPath);
-
-  final String programPath;
+  const factory PinnedProgramSelection.missing(String programPath) =
+      PinnedProgramSelectionMissing;
 }
 
 String programSettingsKey({

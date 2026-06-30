@@ -13,6 +13,34 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-30 11:04 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Add Flutter Freezed unions for app state variants.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: current commit (`Use Freezed for Flutter app unions`).
+- Purpose: align Flutter app-side explicit union/value-state modeling with
+  the repository Freezed policy now that adding Flutter Freezed dependencies is
+  approved.
+- Completed work: added Flutter Freezed dependencies and a `flutter-codegen`
+  gate; converted app/home-loader/log-reader hand-written state unions to
+  Freezed while keeping collection snapshot factories for mutable inputs;
+  updated architecture tests so only generated Freezed part files are allowed;
+  regenerated ignored `.freezed.dart` outputs.
+- Remaining work: none for this batch.
+- Next action: continue tightening broader Flutter CLI adapter result types and
+  remaining nullable adapter seams when a dedicated compatibility-safe batch is
+  available.
+- Verification: initial `dart run build_runner build` exposed the wrong SDK
+  path for Flutter codegen, so the gate was changed to `flutter pub run
+  build_runner build`; initial `just flutter-test` exposed the old `part`
+  prohibition and a missing immutable snapshot copy, both fixed. Final
+  `flutter pub run build_runner build`, `just flutter-format-check`,
+  `just flutter-analyze`, `just flutter-test`, `just verify-governance`,
+  `just verify-safety`, `just format-check`, and `just lint` passed in the
+  Nix dev shell.
+
 - Timestamp: 2026-06-30 10:37 JST
 - State: `completed`
 - Branch: `main`

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../app/dialogs/bottle_programs_dialog.dart';
 import '../app/dialogs/run_program_dialog.dart';
@@ -15,6 +16,8 @@ import '../l10n/konyak_localizations.dart';
 import 'home_loader.dart';
 import 'home_loader_bottles.dart';
 import 'home_loader_pinned_programs.dart';
+
+part 'home_loader_programs.freezed.dart';
 
 const programLaunchWindowPollInterval = Duration(milliseconds: 250);
 const programLaunchWindowWatchTimeout = Duration(minutes: 5);
@@ -116,19 +119,21 @@ extension KonyakHomeLoaderPrograms on KonyakHomeLoaderState {
     BottleSummary bottle,
   ) async {
     if (!shouldAutomaticallyPinNewInstalledPrograms()) {
-      return const AutoPinBaselineUnavailable();
+      return const AutoPinBaselineProgramPaths.unavailable();
     }
 
     final result = await widget.cliClient.listBottlePrograms(bottle.id);
     if (!mounted) {
-      return const AutoPinBaselineUnavailable();
+      return const AutoPinBaselineProgramPaths.unavailable();
     }
 
     return switch (result) {
-      LoadedBottlePrograms(:final programs) => AutoPinBaselineLoaded(
-        knownProgramPaths(bottle: bottle, programs: programs),
-      ),
-      BottleProgramListLoadFailure() => const AutoPinBaselineUnavailable(),
+      LoadedBottlePrograms(:final programs) =>
+        AutoPinBaselineProgramPaths.loaded(
+          knownProgramPaths(bottle: bottle, programs: programs),
+        ),
+      BottleProgramListLoadFailure() =>
+        const AutoPinBaselineProgramPaths.unavailable(),
     };
   }
 
@@ -161,9 +166,9 @@ extension KonyakHomeLoaderPrograms on KonyakHomeLoaderState {
 
     final Set<String> baselinePaths;
     switch (baselineProgramPaths) {
-      case AutoPinBaselineUnavailable():
+      case _AutoPinBaselineUnavailable():
         return;
-      case AutoPinBaselineLoaded(:final paths):
+      case _AutoPinBaselineLoaded(:final paths):
         baselinePaths = paths;
     }
 
@@ -453,18 +458,23 @@ extension KonyakHomeLoaderPrograms on KonyakHomeLoaderState {
   }
 }
 
-sealed class AutoPinBaselineProgramPaths {
-  const AutoPinBaselineProgramPaths();
-}
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class AutoPinBaselineProgramPaths with _$AutoPinBaselineProgramPaths {
+  const AutoPinBaselineProgramPaths._();
 
-final class AutoPinBaselineUnavailable extends AutoPinBaselineProgramPaths {
-  const AutoPinBaselineUnavailable();
-}
+  const factory AutoPinBaselineProgramPaths.unavailable() =
+      _AutoPinBaselineUnavailable;
 
-final class AutoPinBaselineLoaded extends AutoPinBaselineProgramPaths {
-  AutoPinBaselineLoaded(Set<String> paths) : paths = Set.unmodifiable(paths);
+  factory AutoPinBaselineProgramPaths.loaded(Set<String> paths) {
+    return AutoPinBaselineProgramPaths._loaded(Set.unmodifiable(paths));
+  }
 
-  final Set<String> paths;
+  const factory AutoPinBaselineProgramPaths._loaded(Set<String> paths) =
+      _AutoPinBaselineLoaded;
 }
 
 String bottleDriveCPath(String bottlePath) {

@@ -17,6 +17,9 @@ konyak-lints-pub-get:
 cli-codegen: cli-pub-get
   if [ -d packages/konyak_cli ]; then cd packages/konyak_cli && dart run build_runner build; fi
 
+flutter-codegen: flutter-pub-get
+  if [ -d apps/konyak ]; then cd apps/konyak && flutter pub run build_runner build; fi
+
 verify-governance: cli-pub-get
   python3 scripts/verify_governance.py
 
@@ -45,16 +48,16 @@ verify-safety: flutter-pub-get cli-pub-get
   python3 scripts/verify_pub_licenses.py
   python3 scripts/verify_cves.py
 
-flutter-format-check:
+flutter-format-check: flutter-codegen
   if [ -d apps/konyak ]; then cd apps/konyak && dart format --set-exit-if-changed .; fi
 
-flutter-analyze: flutter-custom-lint
+flutter-analyze: flutter-codegen flutter-custom-lint
   if [ -d apps/konyak ]; then cd apps/konyak && flutter analyze --fatal-infos; fi
 
-flutter-custom-lint: flutter-pub-get
+flutter-custom-lint: flutter-codegen
   if [ -d apps/konyak ]; then cd apps/konyak && flutter pub run custom_lint; fi
 
-flutter-test:
+flutter-test: flutter-codegen
   if [ -d apps/konyak ]; then cd apps/konyak && flutter test; fi
 
 flutter-linux-loader-check:

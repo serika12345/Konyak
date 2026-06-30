@@ -1,29 +1,37 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+
 import '../runtimes/runtime_summary.dart';
 
-sealed class KnownRuntimesState {
-  const KnownRuntimesState();
+part 'known_runtimes_state.freezed.dart';
 
-  List<RuntimeSummary> get runtimes;
-  bool get isLoaded;
-}
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class KnownRuntimesState with _$KnownRuntimesState {
+  const KnownRuntimesState._();
 
-final class KnownRuntimesPending extends KnownRuntimesState {
-  const KnownRuntimesPending();
+  const factory KnownRuntimesState.pending() = _KnownRuntimesPending;
 
-  @override
-  List<RuntimeSummary> get runtimes => const <RuntimeSummary>[];
+  factory KnownRuntimesState.loaded(List<RuntimeSummary> runtimes) {
+    return KnownRuntimesState._loaded(List.unmodifiable(runtimes));
+  }
 
-  @override
-  bool get isLoaded => false;
-}
+  const factory KnownRuntimesState._loaded(List<RuntimeSummary> runtimes) =
+      _KnownRuntimesLoaded;
 
-final class KnownRuntimesLoaded extends KnownRuntimesState {
-  KnownRuntimesLoaded(List<RuntimeSummary> runtimes)
-    : runtimes = List.unmodifiable(runtimes);
+  List<RuntimeSummary> get runtimes {
+    return switch (this) {
+      _KnownRuntimesPending() => const <RuntimeSummary>[],
+      _KnownRuntimesLoaded(:final runtimes) => runtimes,
+    };
+  }
 
-  @override
-  final List<RuntimeSummary> runtimes;
-
-  @override
-  bool get isLoaded => true;
+  bool get isLoaded {
+    return switch (this) {
+      _KnownRuntimesPending() => false,
+      _KnownRuntimesLoaded() => true,
+    };
+  }
 }

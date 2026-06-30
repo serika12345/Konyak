@@ -25,17 +25,28 @@ void main() {
     final appFiles = appDirectory
         .listSync(recursive: true)
         .whereType<File>()
-        .where((file) => file.path.endsWith('.dart'))
+        .where(
+          (file) =>
+              file.path.endsWith('.dart') &&
+              !file.path.endsWith('.freezed.dart'),
+        )
         .toList(growable: false);
 
     expect(appFiles, isNotEmpty);
     for (final file in appFiles) {
       final source = file.readAsStringSync();
       expect(
-        RegExp(r'^\s*part( of)?\s', multiLine: true).hasMatch(source),
+        RegExp(r'^\s*part\s+of\s', multiLine: true).hasMatch(source),
         isFalse,
-        reason: '${file.path} must be an independent Dart library',
+        reason: '${file.path} must not be a part library',
       );
+      for (final directive in _partDirectives(source)) {
+        expect(
+          directive,
+          anyOf(endsWith(".freezed.dart'"), endsWith('.freezed.dart"')),
+          reason: '${file.path} may only use generated Freezed part files',
+        );
+      }
     }
 
     expect(
@@ -111,4 +122,11 @@ Set<String> _relativePaths(Directory baseDirectory, List<File> files) {
   return files
       .map((file) => file.absolute.path.replaceFirst(basePath, ''))
       .toSet();
+}
+
+List<String> _partDirectives(String source) {
+  return RegExp(
+    r'^\s*part\s+([^;\n]+);',
+    multiLine: true,
+  ).allMatches(source).map((match) => match.group(1)!).toList(growable: false);
 }

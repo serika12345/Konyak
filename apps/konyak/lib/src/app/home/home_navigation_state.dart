@@ -1,132 +1,87 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+
 import '../../bottles/bottle_summary.dart';
 import '../bottles/bottle_detail.dart';
 import '../utils/bottle_lists.dart';
 
-sealed class HomeNavigationBottleSelection {
-  const HomeNavigationBottleSelection();
+part 'home_navigation_state.freezed.dart';
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class HomeNavigationBottleSelection
+    with _$HomeNavigationBottleSelection {
+  const factory HomeNavigationBottleSelection.none() = NoHomeNavigationBottle;
+
+  const factory HomeNavigationBottleSelection.selected(String bottleId) =
+      SelectedHomeNavigationBottle;
 }
 
-final class NoHomeNavigationBottle extends HomeNavigationBottleSelection {
-  const NoHomeNavigationBottle();
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class HomeNavigationProgramSelection
+    with _$HomeNavigationProgramSelection {
+  const factory HomeNavigationProgramSelection.none() = NoHomeNavigationProgram;
 
-  @override
-  bool operator ==(Object other) {
-    return other is NoHomeNavigationBottle;
-  }
-
-  @override
-  int get hashCode {
-    return 1;
-  }
+  const factory HomeNavigationProgramSelection.selected(String programPath) =
+      SelectedHomeNavigationProgram;
 }
 
-final class SelectedHomeNavigationBottle extends HomeNavigationBottleSelection {
-  const SelectedHomeNavigationBottle(this.bottleId);
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class HomeNavigationBottleResolution
+    with _$HomeNavigationBottleResolution {
+  const factory HomeNavigationBottleResolution.resolved(BottleSummary bottle) =
+      ResolvedHomeNavigationBottle;
 
-  final String bottleId;
+  const factory HomeNavigationBottleResolution.missing(String bottleId) =
+      MissingHomeNavigationBottle;
 
-  @override
-  bool operator ==(Object other) {
-    return other is SelectedHomeNavigationBottle && other.bottleId == bottleId;
-  }
-
-  @override
-  int get hashCode {
-    return Object.hash(SelectedHomeNavigationBottle, bottleId);
-  }
+  const factory HomeNavigationBottleResolution.unselected() =
+      UnselectedHomeNavigationBottle;
 }
 
-sealed class HomeNavigationProgramSelection {
-  const HomeNavigationProgramSelection();
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class HomeNavigationProgramResolution
+    with _$HomeNavigationProgramResolution {
+  const factory HomeNavigationProgramResolution.resolved(
+    PinnedProgramSummary program,
+  ) = ResolvedHomeNavigationProgram;
+
+  const factory HomeNavigationProgramResolution.missing(String programPath) =
+      MissingHomeNavigationProgram;
+
+  const factory HomeNavigationProgramResolution.unselected() =
+      UnselectedHomeNavigationProgram;
 }
 
-final class NoHomeNavigationProgram extends HomeNavigationProgramSelection {
-  const NoHomeNavigationProgram();
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class KonyakHomeNavigationState with _$KonyakHomeNavigationState {
+  const KonyakHomeNavigationState._();
 
-  @override
-  bool operator ==(Object other) {
-    return other is NoHomeNavigationProgram;
-  }
-
-  @override
-  int get hashCode {
-    return 2;
-  }
-}
-
-final class SelectedHomeNavigationProgram
-    extends HomeNavigationProgramSelection {
-  const SelectedHomeNavigationProgram(this.programPath);
-
-  final String programPath;
-
-  @override
-  bool operator ==(Object other) {
-    return other is SelectedHomeNavigationProgram &&
-        other.programPath == programPath;
-  }
-
-  @override
-  int get hashCode {
-    return Object.hash(SelectedHomeNavigationProgram, programPath);
-  }
-}
-
-sealed class HomeNavigationBottleResolution {
-  const HomeNavigationBottleResolution();
-}
-
-final class ResolvedHomeNavigationBottle
-    extends HomeNavigationBottleResolution {
-  const ResolvedHomeNavigationBottle(this.bottle);
-
-  final BottleSummary bottle;
-}
-
-final class MissingHomeNavigationBottle extends HomeNavigationBottleResolution {
-  const MissingHomeNavigationBottle(this.bottleId);
-
-  final String bottleId;
-}
-
-final class UnselectedHomeNavigationBottle
-    extends HomeNavigationBottleResolution {
-  const UnselectedHomeNavigationBottle();
-}
-
-sealed class HomeNavigationProgramResolution {
-  const HomeNavigationProgramResolution();
-}
-
-final class ResolvedHomeNavigationProgram
-    extends HomeNavigationProgramResolution {
-  const ResolvedHomeNavigationProgram(this.program);
-
-  final PinnedProgramSummary program;
-}
-
-final class MissingHomeNavigationProgram
-    extends HomeNavigationProgramResolution {
-  const MissingHomeNavigationProgram(this.programPath);
-
-  final String programPath;
-}
-
-final class UnselectedHomeNavigationProgram
-    extends HomeNavigationProgramResolution {
-  const UnselectedHomeNavigationProgram();
-}
-
-final class KonyakHomeNavigationState {
-  const KonyakHomeNavigationState({
-    this.selectedBottle = const NoHomeNavigationBottle(),
-    this.detailMode = BottleDetailMode.overview,
-    this.selectedProgram = const NoHomeNavigationProgram(),
-  });
-
-  final HomeNavigationBottleSelection selectedBottle;
-  final BottleDetailMode detailMode;
-  final HomeNavigationProgramSelection selectedProgram;
+  const factory KonyakHomeNavigationState({
+    @Default(NoHomeNavigationBottle())
+    HomeNavigationBottleSelection selectedBottle,
+    @Default(BottleDetailMode.overview) BottleDetailMode detailMode,
+    @Default(NoHomeNavigationProgram())
+    HomeNavigationProgramSelection selectedProgram,
+  }) = _KonyakHomeNavigationState;
 
   HomeNavigationBottleResolution selectedBottleIn(List<BottleSummary> bottles) {
     return switch (selectedBottle) {
@@ -272,18 +227,5 @@ final class KonyakHomeNavigationState {
     }
 
     return KonyakHomeNavigationState(selectedBottle: selectedBottle);
-  }
-
-  @override
-  bool operator ==(Object other) {
-    return other is KonyakHomeNavigationState &&
-        other.selectedBottle == selectedBottle &&
-        other.detailMode == detailMode &&
-        other.selectedProgram == selectedProgram;
-  }
-
-  @override
-  int get hashCode {
-    return Object.hash(selectedBottle, detailMode, selectedProgram);
   }
 }
