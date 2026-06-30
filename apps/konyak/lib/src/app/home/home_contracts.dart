@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../bottles/bottle_summary.dart';
 import '../app_platform.dart';
@@ -16,6 +17,8 @@ export '../bottles/runtime_settings_control_state.dart';
 export '../programs/program_configuration_settings.dart';
 export 'bottle_list_load_state.dart';
 
+part 'home_contracts.freezed.dart';
+
 typedef KonyakProgramPathAction =
     void Function(BottleSummary bottle, String programPath);
 typedef KonyakPinnedProgramAction =
@@ -30,6 +33,23 @@ typedef KonyakBottleCommandAction =
     void Function(BottleSummary bottle, String command);
 typedef KonyakBottleLocationAction =
     void Function(BottleSummary bottle, String location);
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class KonyakHomeDetailSelection with _$KonyakHomeDetailSelection {
+  const factory KonyakHomeDetailSelection.none() = NoKonyakHomeDetailSelection;
+
+  const factory KonyakHomeDetailSelection.bottle(BottleSummary bottle) =
+      SelectedKonyakHomeDetailBottle;
+
+  const factory KonyakHomeDetailSelection.program({
+    required BottleSummary bottle,
+    required PinnedProgramSummary program,
+  }) = SelectedKonyakHomeDetailProgram;
+}
 
 final class KonyakHomeViewState {
   KonyakHomeViewState({
@@ -65,34 +85,34 @@ final class KonyakHomeViewState {
   }
 
   KonyakHomeDetailState detailStateFor({
-    required BottleSummary? bottle,
+    required KonyakHomeDetailSelection selection,
     required BottleDetailMode detailMode,
-    required PinnedProgramSummary? selectedProgram,
     required bool isBottleNavigationLocked,
   }) {
     return KonyakHomeDetailState(
       platform: platform,
       runtimeCapabilitiesState: runtimeCapabilitiesState,
-      bottle: bottle,
+      bottle: _selectedBottleFor(selection),
       bottleListLoadState: bottleListLoadState,
       detailMode: detailMode,
-      selectedProgram: selectedProgram,
-      programConfigurationSettingsState:
-          programConfigurationSettingsStateFromNullable(
-            settings: _programSettingsFor(bottle, selectedProgram),
-            isLoading: _isProgramSettingsLoadingFor(bottle, selectedProgram),
-          ),
-      runtimeSettingsControlState: _runtimeSettingsControlStateFor(bottle),
+      selectedProgram: _selectedProgramFor(selection),
+      programConfigurationSettingsState: _programConfigurationSettingsStateFor(
+        selection,
+      ),
+      runtimeSettingsControlState: _runtimeSettingsControlStateFor(selection),
       isBottleNavigationLocked: isBottleNavigationLocked,
     );
   }
 
   RuntimeSettingsControlState _runtimeSettingsControlStateFor(
-    BottleSummary? bottle,
+    KonyakHomeDetailSelection selection,
   ) {
-    final controlKey = switch (bottle) {
-      BottleSummary(:final id) => pendingRuntimeSettingsControls[id],
-      _ => null,
+    final controlKey = switch (selection) {
+      NoKonyakHomeDetailSelection() => null,
+      SelectedKonyakHomeDetailBottle(:final bottle) ||
+      SelectedKonyakHomeDetailProgram(
+        :final bottle,
+      ) => pendingRuntimeSettingsControls[bottle.id],
     };
 
     return switch (controlKey) {
@@ -103,38 +123,41 @@ final class KonyakHomeViewState {
     };
   }
 
-  ProgramSettingsSummary? _programSettingsFor(
-    BottleSummary? bottle,
-    PinnedProgramSummary? program,
+  ProgramConfigurationSettingsState _programConfigurationSettingsStateFor(
+    KonyakHomeDetailSelection selection,
   ) {
-    final selectedBottle = bottle;
-    final selectedProgram = program;
-    if (selectedBottle == null || selectedProgram == null) {
-      return null;
-    }
-
-    return programSettings[programSettingsKey(
-      bottleId: selectedBottle.id,
-      programPath: selectedProgram.path,
-    )];
+    return switch (selection) {
+      SelectedKonyakHomeDetailProgram(:final bottle, :final program) =>
+        programConfigurationSettingsStateFromNullable(
+          settings:
+              programSettings[programSettingsKey(
+                bottleId: bottle.id,
+                programPath: program.path,
+              )],
+          isLoading: loadingProgramSettings.contains(
+            programSettingsKey(bottleId: bottle.id, programPath: program.path),
+          ),
+        ),
+      NoKonyakHomeDetailSelection() || SelectedKonyakHomeDetailBottle() =>
+        ProgramConfigurationSettingsState.ready(ProgramSettingsSummary()),
+    };
   }
 
-  bool _isProgramSettingsLoadingFor(
-    BottleSummary? bottle,
-    PinnedProgramSummary? program,
-  ) {
-    final selectedBottle = bottle;
-    final selectedProgram = program;
-    if (selectedBottle == null || selectedProgram == null) {
-      return false;
-    }
+  BottleSummary? _selectedBottleFor(KonyakHomeDetailSelection selection) {
+    return switch (selection) {
+      NoKonyakHomeDetailSelection() => null,
+      SelectedKonyakHomeDetailBottle(:final bottle) ||
+      SelectedKonyakHomeDetailProgram(:final bottle) => bottle,
+    };
+  }
 
-    return loadingProgramSettings.contains(
-      programSettingsKey(
-        bottleId: selectedBottle.id,
-        programPath: selectedProgram.path,
-      ),
-    );
+  PinnedProgramSummary? _selectedProgramFor(
+    KonyakHomeDetailSelection selection,
+  ) {
+    return switch (selection) {
+      NoKonyakHomeDetailSelection() || SelectedKonyakHomeDetailBottle() => null,
+      SelectedKonyakHomeDetailProgram(:final program) => program,
+    };
   }
 }
 

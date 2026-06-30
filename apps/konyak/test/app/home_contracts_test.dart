@@ -93,9 +93,11 @@ void main() {
         pendingRuntimeSettingsControls: const <String, String>{'steam': 'dxvk'},
       );
       final detailState = state.detailStateFor(
-        bottle: bottle,
+        selection: KonyakHomeDetailSelection.program(
+          bottle: bottle,
+          program: bottle.pinnedPrograms.first,
+        ),
         detailMode: BottleDetailMode.programConfiguration,
-        selectedProgram: bottle.pinnedPrograms.first,
         isBottleNavigationLocked: true,
       );
 
@@ -118,6 +120,27 @@ void main() {
       expect(detailState.isBottleNavigationLocked, isTrue);
     },
   );
+
+  test('home detail state models absent selections explicitly', () {
+    final state = KonyakHomeViewState(platform: KonyakPlatform.macos);
+
+    final detailState = state.detailStateFor(
+      selection: const KonyakHomeDetailSelection.none(),
+      detailMode: BottleDetailMode.overview,
+      isBottleNavigationLocked: false,
+    );
+
+    expect(detailState.bottle, isNull);
+    expect(detailState.selectedProgram, isNull);
+    expect(
+      detailState.programConfigurationSettingsState,
+      isA<ReadyProgramConfigurationSettings>(),
+    );
+    expect(
+      detailState.runtimeSettingsControlState,
+      const RuntimeSettingsControlState.idle(),
+    );
+  });
 }
 
 BottleSummary _bottle({

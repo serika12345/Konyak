@@ -81,6 +81,14 @@ class _KonyakHomeState extends State<KonyakHome> {
     final selectedBottleHasPendingRuntimeSettings =
         selectedBottle != null &&
         state.hasPendingRuntimeSettingsFor(selectedBottle);
+    final detailSelection = switch ((selectedBottle, selectedProgram)) {
+      (final BottleSummary bottle, final PinnedProgramSummary program) =>
+        KonyakHomeDetailSelection.program(bottle: bottle, program: program),
+      (final BottleSummary bottle, null) => KonyakHomeDetailSelection.bottle(
+        bottle,
+      ),
+      _ => const KonyakHomeDetailSelection.none(),
+    };
 
     return Scaffold(
       body: Column(
@@ -119,9 +127,8 @@ class _KonyakHomeState extends State<KonyakHome> {
                 Expanded(
                   child: KonyakBottleDetail(
                     state: state.detailStateFor(
-                      bottle: selectedBottle,
+                      selection: detailSelection,
                       detailMode: _navigationState.detailMode,
-                      selectedProgram: selectedProgram,
                       isBottleNavigationLocked:
                           selectedBottleHasPendingRuntimeSettings,
                     ),

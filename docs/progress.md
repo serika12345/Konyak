@@ -13,6 +13,35 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-30 20:09 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Model home detail selection explicitly.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: `ca8ace8` (`Model home bottle list state explicitly`).
+- Purpose: continue nullable hardening at the Flutter UI boundary by replacing
+  nullable `detailStateFor` bottle/program inputs with an explicit detail
+  selection variant while keeping the existing `KonyakHomeDetailState` output
+  shape compatible with current widgets.
+- Completed work: added Freezed `KonyakHomeDetailSelection` variants for no
+  selection, selected bottle, and selected pinned program; replaced nullable
+  `detailStateFor` bottle/program inputs with that explicit selection; and
+  routed `home_screen.dart` through the new selection while keeping
+  `KonyakHomeDetailState` output compatible with current widgets.
+- Remaining work: none for this slice. A later slice can move the
+  `KonyakHomeDetailState` output fields away from nullable once
+  `KonyakBottleDetail` is ready to render from explicit variants directly.
+- Next action: continue the next explicit-state hardening slice or commit this
+  uncommitted slice when requested.
+- Verification: observed `flutter test test/app/home_contracts_test.dart` fail
+  before implementation because `KonyakHomeDetailSelection` and the
+  `selection` input did not exist. After implementation, that targeted test
+  passed. Full Flutter verification passed with `just flutter-format-check`,
+  `just flutter-analyze`, and `just flutter-test`. Repository verification
+  passed with `just verify-governance`, `just verify-safety`,
+  `just format-check`, and `just lint`.
+
 - Timestamp: 2026-06-30 19:00 JST
 - State: `completed`
 - Branch: `main`
