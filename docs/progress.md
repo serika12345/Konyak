@@ -13,6 +13,37 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-30 21:50 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Model bottle detail child targets explicitly.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: `4eec0a6` (`Model home detail content explicitly`).
+- Purpose: continue nullable hardening below `KonyakHomeDetailContent` by
+  replacing the `bottle: null` sentinel still passed into bottle overview and
+  bottom bar widgets with explicit content and action-target variants.
+- Completed work: added Freezed `BottleOverviewContent` variants for empty
+  list-load content and selected-bottle content; added Freezed
+  `BottleActionTarget` variants for absent and selected bottom-bar targets;
+  updated `BottleOverview`, `KonyakBottomBar`, `BottleConfigurationBottomBar`,
+  and `KonyakBottleDetail` so empty detail state no longer passes a nullable
+  bottle sentinel into child widgets; and added focused state tests for the new
+  variants.
+- Remaining work: none for this slice. The next nullable-hardening candidate is
+  the remaining orchestration-local nullable selection in `home_screen.dart`,
+  especially `selectedBottle != null` and `selectedBottle?.id`.
+- Next action: continue the next explicit-state hardening slice or commit this
+  uncommitted slice when requested.
+- Verification: observed
+  `flutter test test/app/bottle_detail_child_state_test.dart` fail before
+  implementation because the explicit child-state files and variants did not
+  exist. After implementation, the targeted child-state and home-contract tests
+  passed. Full Flutter verification passed with `just flutter-format-check`,
+  `just flutter-analyze`, and `just flutter-test`. Repository verification
+  passed with `just verify-governance`, `just verify-safety`,
+  `just format-check`, and `just lint`.
+
 - Timestamp: 2026-06-30 20:47 JST
 - State: `completed`
 - Branch: `main`

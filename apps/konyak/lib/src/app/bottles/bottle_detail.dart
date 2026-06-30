@@ -5,8 +5,10 @@ import '../app_constants.dart';
 import '../home/home_contracts.dart';
 import '../programs/program_configuration_view.dart';
 import '../widgets/konyak_top_bar.dart';
+import 'bottle_action_target.dart';
 import 'bottle_configuration_view.dart';
 import 'bottle_overview.dart';
+import 'bottle_overview_content.dart';
 import 'bottom_bars.dart';
 
 export 'bottle_detail_mode.dart';
@@ -85,8 +87,7 @@ class KonyakBottleDetail extends StatelessWidget {
                 ),
               OverviewKonyakHomeDetailContent(:final bottle) => BottleOverview(
                 platform: state.platform,
-                bottle: bottle,
-                loadState: state.bottleListLoadState,
+                content: BottleOverviewContent.bottle(bottle),
                 onRunProgram: programActions.onRunProgram,
                 onRunProgramPath: programActions.onRunProgramPath,
                 onPinProgram: programActions.onPinProgram,
@@ -102,8 +103,7 @@ class KonyakBottleDetail extends StatelessWidget {
               ),
               EmptyKonyakHomeDetailContent() => BottleOverview(
                 platform: state.platform,
-                bottle: null,
-                loadState: state.bottleListLoadState,
+                content: BottleOverviewContent.empty(state.bottleListLoadState),
                 onRunProgram: programActions.onRunProgram,
                 onRunProgramPath: programActions.onRunProgramPath,
                 onPinProgram: programActions.onPinProgram,
@@ -136,14 +136,14 @@ class KonyakBottleDetail extends StatelessWidget {
                 onOpenBottleLocation: bottleActions.onOpenLocation,
               ),
             OverviewKonyakHomeDetailContent(:final bottle) => KonyakBottomBar(
-              bottle: bottle,
+              target: BottleActionTarget.bottle(bottle),
               onRunProgram: programActions.onRunProgram,
               onRunBottleCommand: winetricksActions.onRunBottleCommand,
               onShowWinetricks: winetricksActions.onShowWinetricks,
               onOpenBottleLocation: bottleActions.onOpenLocation,
             ),
             EmptyKonyakHomeDetailContent() => KonyakBottomBar(
-              bottle: null,
+              target: const BottleActionTarget.none(),
               onRunProgram: programActions.onRunProgram,
               onRunBottleCommand: winetricksActions.onRunBottleCommand,
               onShowWinetricks: winetricksActions.onShowWinetricks,

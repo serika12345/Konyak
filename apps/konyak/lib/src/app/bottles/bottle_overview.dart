@@ -9,13 +9,13 @@ import '../home/bottle_list_load_state.dart';
 import '../programs/pinned_programs_section.dart';
 import 'bottle_actions.dart';
 import 'bottle_empty_states.dart';
+import 'bottle_overview_content.dart';
 
 class BottleOverview extends StatelessWidget {
   const BottleOverview({
     super.key,
     required this.platform,
-    required this.bottle,
-    required this.loadState,
+    required this.content,
     required this.onRunProgram,
     required this.onRunProgramPath,
     required this.onPinProgram,
@@ -28,8 +28,7 @@ class BottleOverview extends StatelessWidget {
   });
 
   final KonyakPlatform platform;
-  final BottleSummary? bottle;
-  final BottleListLoadState loadState;
+  final BottleOverviewContent content;
   final ValueChanged<BottleSummary>? onRunProgram;
   final void Function(BottleSummary bottle, String programPath)?
   onRunProgramPath;
@@ -48,10 +47,9 @@ class BottleOverview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = KonyakThemeColors.of(context);
-    final activeBottle = bottle;
 
-    if (activeBottle == null) {
-      return switch (loadState) {
+    return switch (content) {
+      EmptyBottleOverviewContent(:final loadState) => switch (loadState) {
         BottleListLoading() => Center(
           child: CircularProgressIndicator(color: colors.accent),
         ),
@@ -59,48 +57,47 @@ class BottleOverview extends StatelessWidget {
           message: message,
         ),
         BottleListLoaded() => const EmptyBottleState(),
-      };
-    }
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final contentHeight = math.max(
-          minimumBottleDetailContentHeight,
-          constraints.maxHeight - bottleDetailPadding.vertical,
-        );
-
-        return Padding(
-          padding: bottleDetailPadding,
-          child: SizedBox(
-            height: contentHeight,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                PinnedProgramsSection(
-                  platform: platform,
-                  bottle: activeBottle,
-                  onPinProgram: onPinProgram ?? onRunProgram,
-                  onRunProgramPath: onRunProgramPath,
-                  onConfigurePinnedProgram: onConfigurePinnedProgram,
-                  onUnpinProgram: onUnpinProgram,
-                  onRenamePinnedProgram: onRenamePinnedProgram,
-                  onOpenPinnedProgramLocation: onOpenPinnedProgramLocation,
-                ),
-                const Spacer(),
-                SizedBox(
-                  key: const ValueKey('bottle-action-panel'),
-                  width: double.infinity,
-                  child: BottleActionPanel(
-                    bottle: activeBottle,
-                    onShowBottleConfiguration: onShowBottleConfiguration,
-                    onShowBottlePrograms: onShowBottlePrograms,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
       },
-    );
+      SelectedBottleOverviewContent(:final bottle) => LayoutBuilder(
+        builder: (context, constraints) {
+          final contentHeight = math.max(
+            minimumBottleDetailContentHeight,
+            constraints.maxHeight - bottleDetailPadding.vertical,
+          );
+
+          return Padding(
+            padding: bottleDetailPadding,
+            child: SizedBox(
+              height: contentHeight,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  PinnedProgramsSection(
+                    platform: platform,
+                    bottle: bottle,
+                    onPinProgram: onPinProgram ?? onRunProgram,
+                    onRunProgramPath: onRunProgramPath,
+                    onConfigurePinnedProgram: onConfigurePinnedProgram,
+                    onUnpinProgram: onUnpinProgram,
+                    onRenamePinnedProgram: onRenamePinnedProgram,
+                    onOpenPinnedProgramLocation: onOpenPinnedProgramLocation,
+                  ),
+                  const Spacer(),
+                  SizedBox(
+                    key: const ValueKey('bottle-action-panel'),
+                    width: double.infinity,
+                    child: BottleActionPanel(
+                      bottle: bottle,
+                      onShowBottleConfiguration: onShowBottleConfiguration,
+                      onShowBottlePrograms: onShowBottlePrograms,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    };
   }
 }

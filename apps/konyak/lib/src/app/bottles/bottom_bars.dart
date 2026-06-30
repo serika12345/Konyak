@@ -6,6 +6,7 @@ import '../app_constants.dart';
 import '../app_platform.dart';
 import '../dialogs/bottle_tools_dialog.dart';
 import '../widgets/konyak_bottom_button.dart';
+import 'bottle_action_target.dart';
 
 class ProgramConfigurationBottomBar extends StatelessWidget {
   const ProgramConfigurationBottomBar({
@@ -67,14 +68,13 @@ class BottleConfigurationBottomBar extends StatelessWidget {
     required this.onOpenBottleLocation,
   });
 
-  final BottleSummary? bottle;
+  final BottleSummary bottle;
   final void Function(BottleSummary bottle, String command)? onRunBottleCommand;
   final void Function(BottleSummary bottle, String location)?
   onOpenBottleLocation;
 
   @override
   Widget build(BuildContext context) {
-    final activeBottle = bottle;
     final colors = KonyakThemeColors.of(context);
 
     return Container(
@@ -88,7 +88,7 @@ class BottleConfigurationBottomBar extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           _BottleToolsButton(
-            bottle: activeBottle,
+            target: BottleActionTarget.bottle(bottle),
             onRunBottleCommand: onRunBottleCommand,
             onOpenBottleLocation: onOpenBottleLocation,
           ),
@@ -101,14 +101,14 @@ class BottleConfigurationBottomBar extends StatelessWidget {
 class KonyakBottomBar extends StatelessWidget {
   const KonyakBottomBar({
     super.key,
-    required this.bottle,
+    required this.target,
     required this.onRunProgram,
     required this.onRunBottleCommand,
     required this.onShowWinetricks,
     required this.onOpenBottleLocation,
   });
 
-  final BottleSummary? bottle;
+  final BottleActionTarget target;
   final ValueChanged<BottleSummary>? onRunProgram;
   final void Function(BottleSummary bottle, String command)? onRunBottleCommand;
   final ValueChanged<BottleSummary>? onShowWinetricks;
@@ -117,7 +117,6 @@ class KonyakBottomBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final activeBottle = bottle;
     final colors = KonyakThemeColors.of(context);
     final localizations = KonyakLocalizations.of(context);
 
@@ -132,23 +131,19 @@ class KonyakBottomBar extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           _BottleToolsButton(
-            bottle: activeBottle,
+            target: target,
             onRunBottleCommand: onRunBottleCommand,
             onOpenBottleLocation: onOpenBottleLocation,
           ),
           const SizedBox(width: 6),
           KonyakBottomButton(
             label: localizations.winetricks,
-            onPressed: activeBottle == null || onShowWinetricks == null
-                ? null
-                : () => onShowWinetricks!(activeBottle),
+            onPressed: _targetAction(target, onShowWinetricks),
           ),
           const SizedBox(width: 6),
           KonyakBottomButton(
             label: localizations.run,
-            onPressed: activeBottle == null || onRunProgram == null
-                ? null
-                : () => onRunProgram!(activeBottle),
+            onPressed: _targetAction(target, onRunProgram),
           ),
         ],
       ),
@@ -158,27 +153,28 @@ class KonyakBottomBar extends StatelessWidget {
 
 class _BottleToolsButton extends StatelessWidget {
   const _BottleToolsButton({
-    required this.bottle,
+    required this.target,
     required this.onRunBottleCommand,
     required this.onOpenBottleLocation,
   });
 
-  final BottleSummary? bottle;
+  final BottleActionTarget target;
   final void Function(BottleSummary bottle, String command)? onRunBottleCommand;
   final void Function(BottleSummary bottle, String location)?
   onOpenBottleLocation;
 
   @override
   Widget build(BuildContext context) {
-    final activeBottle = bottle;
     final hasActions =
         onRunBottleCommand != null || onOpenBottleLocation != null;
 
     return KonyakBottomButton(
       label: KonyakLocalizations.of(context).tools,
-      onPressed: activeBottle == null || !hasActions
-          ? null
-          : () => _showBottleTools(context, activeBottle),
+      onPressed: switch (target) {
+        SelectedBottleActionTarget(:final bottle) when hasActions =>
+          () => _showBottleTools(context, bottle),
+        NoBottleActionTarget() || SelectedBottleActionTarget() => null,
+      },
     );
   }
 
@@ -201,4 +197,15 @@ class _BottleToolsButton extends StatelessWidget {
         onOpenBottleLocation?.call(bottle, action.id);
     }
   }
+}
+
+VoidCallback? _targetAction(
+  BottleActionTarget target,
+  ValueChanged<BottleSummary>? action,
+) {
+  return switch (target) {
+    SelectedBottleActionTarget(:final bottle) when action != null =>
+      () => action(bottle),
+    NoBottleActionTarget() || SelectedBottleActionTarget() => null,
+  };
 }
