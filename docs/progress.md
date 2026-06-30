@@ -13,6 +13,36 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-30 23:29 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Model home bottle store mode explicitly.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: `5051702` (`Model native menu localization cache`).
+- Purpose: continue nullable hardening in pure home-loader state transitions by
+  replacing the `oldBottleId: String?` sentinel used by bottle-list store
+  updates with explicit upsert/replace variants.
+- Completed work: committed the previous native-menu cache slice; added
+  Freezed `HomeBottleStoreMode.upsert` and `.replace` variants; changed the
+  pure `storeHomeBottle` transition to require an explicit mode; updated
+  `storeBottle`, `handleBottleUpdateResult`, runtime-settings rollback, and
+  rename call sites to pass explicit modes; and extended the focused bottle
+  list state tests.
+- Remaining work: none for this slice. The next nullable-hardening candidates
+  are UI callback/action availability nulls and remaining loader boundary
+  nullable state such as optional success-message handling.
+- Next action: continue the next explicit-state hardening slice or commit this
+  uncommitted slice when requested.
+- Verification: observed
+  `flutter test test/home_loader/home_bottle_list_state_test.dart` fail before
+  implementation because `HomeBottleStoreMode` and the `mode` argument did not
+  exist. After implementation, the targeted bottle-list state tests passed and
+  `flutter analyze --fatal-infos` reported no issues. Full verification passed
+  with `just flutter-format-check`, `just flutter-analyze`,
+  `just flutter-test`, `just verify-governance`, `just verify-safety`,
+  `just format-check`, and `just lint`.
+
 - Timestamp: 2026-06-30 23:06 JST
 - State: `completed`
 - Branch: `main`

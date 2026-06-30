@@ -53,14 +53,18 @@ void main() {
     final heroic = _bottle(id: 'heroic', name: 'Heroic');
     final loaded = HomeBottleListState.loaded([steam]);
 
-    final stored = storeHomeBottle(state: loaded, bottle: battleNet);
+    final stored = storeHomeBottle(
+      state: loaded,
+      bottle: battleNet,
+      mode: const HomeBottleStoreMode.upsert(),
+    );
 
     expect(_bottleIds(stored), ['battle-net', 'steam']);
 
     final replaced = storeHomeBottle(
       state: stored,
-      oldBottleId: 'battle-net',
       bottle: heroic,
+      mode: const HomeBottleStoreMode.replace('battle-net'),
     );
 
     expect(_bottleIds(replaced), ['heroic', 'steam']);
@@ -78,6 +82,17 @@ void main() {
       case LoadingHomeBottleListState() || FailedHomeBottleListState():
         fail('stored bottle updates must leave the list loaded');
     }
+  });
+
+  test('models bottle store modes explicitly', () {
+    expect(
+      const HomeBottleStoreMode.upsert(),
+      isA<UpsertHomeBottleStoreMode>(),
+    );
+    expect(switch (const HomeBottleStoreMode.replace('legacy')) {
+      ReplaceHomeBottleStoreMode(:final oldBottleId) => oldBottleId,
+      UpsertHomeBottleStoreMode() => '',
+    }, 'legacy');
   });
 }
 

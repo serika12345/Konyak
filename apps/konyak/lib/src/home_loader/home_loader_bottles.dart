@@ -104,24 +104,27 @@ extension KonyakHomeLoaderBottles on KonyakHomeLoaderState {
     }
   }
 
-  void storeBottle(BottleSummary bottle, {String? oldBottleId}) {
+  void storeBottle(
+    BottleSummary bottle, {
+    HomeBottleStoreMode mode = const HomeBottleStoreMode.upsert(),
+  }) {
     updateState(() {
       homeBottleListState = storeHomeBottle(
         state: homeBottleListState,
         bottle: bottle,
-        oldBottleId: oldBottleId,
+        mode: mode,
       );
     });
   }
 
   void handleBottleUpdateResult(
     BottleUpdateLoadResult result, {
-    String? oldBottleId,
+    HomeBottleStoreMode mode = const HomeBottleStoreMode.upsert(),
     String Function(BottleSummary bottle)? successMessage,
   }) {
     switch (result) {
       case UpdatedBottle(:final bottle):
-        storeBottle(bottle, oldBottleId: oldBottleId);
+        storeBottle(bottle, mode: mode);
         final message = successMessage?.call(bottle);
         if (message != null) {
           showSnackBar(message);
@@ -157,6 +160,7 @@ extension KonyakHomeLoaderBottles on KonyakHomeLoaderState {
       homeBottleListState = storeHomeBottle(
         state: homeBottleListState,
         bottle: previousBottle.withRuntimeSettings(runtimeSettings),
+        mode: const HomeBottleStoreMode.upsert(),
       );
     });
 
@@ -181,12 +185,14 @@ extension KonyakHomeLoaderBottles on KonyakHomeLoaderState {
           homeBottleListState = storeHomeBottle(
             state: homeBottleListState,
             bottle: bottle,
+            mode: const HomeBottleStoreMode.upsert(),
           );
         case MissingBottleUpdate(:final message) ||
             BottleUpdateLoadFailure(:final message):
           homeBottleListState = storeHomeBottle(
             state: homeBottleListState,
             bottle: previousBottle,
+            mode: const HomeBottleStoreMode.upsert(),
           );
           failureMessages.add(message);
       }
@@ -318,7 +324,7 @@ extension KonyakHomeLoaderBottles on KonyakHomeLoaderState {
 
         handleBottleUpdateResult(
           result,
-          oldBottleId: bottle.id,
+          mode: HomeBottleStoreMode.replace(bottle.id),
           successMessage: (bottle) =>
               KonyakLocalizations.of(context).renamedBottle(bottle.name),
         );

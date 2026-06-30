@@ -46,6 +46,18 @@ sealed class HomeBottleListState with _$HomeBottleListState {
   }) = FailedHomeBottleListState;
 }
 
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class HomeBottleStoreMode with _$HomeBottleStoreMode {
+  const factory HomeBottleStoreMode.upsert() = UpsertHomeBottleStoreMode;
+
+  const factory HomeBottleStoreMode.replace(String oldBottleId) =
+      ReplaceHomeBottleStoreMode;
+}
+
 HomeBottleListState startLoadingHomeBottleList(HomeBottleListState state) {
   return HomeBottleListState.loading(bottles: homeBottleListBottles(state));
 }
@@ -67,14 +79,17 @@ HomeBottleListState failHomeBottleListLoad({
 HomeBottleListState storeHomeBottle({
   required HomeBottleListState state,
   required BottleSummary bottle,
-  String? oldBottleId,
+  required HomeBottleStoreMode mode,
 }) {
   final bottles = homeBottleListBottles(state);
-  return HomeBottleListState.loaded(
-    oldBottleId == null
-        ? upsertBottle(bottles, bottle)
-        : replaceBottle(bottles, oldBottleId: oldBottleId, bottle: bottle),
-  );
+  return HomeBottleListState.loaded(switch (mode) {
+    UpsertHomeBottleStoreMode() => upsertBottle(bottles, bottle),
+    ReplaceHomeBottleStoreMode(:final oldBottleId) => replaceBottle(
+      bottles,
+      oldBottleId: oldBottleId,
+      bottle: bottle,
+    ),
+  });
 }
 
 HomeBottleListState removeHomeBottle({
