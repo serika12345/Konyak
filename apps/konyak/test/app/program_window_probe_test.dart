@@ -7,6 +7,19 @@ import 'package:konyak/src/app/programs/program_window_probe.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  test('native probe models unavailable probes explicitly', () async {
+    final windowIds = await const NativeProgramWindowProbe()
+        .visibleExternalWindowIds(KonyakPlatform.macos);
+    final processIds = await const NativeProgramWindowProbe()
+        .runningWineProcessIds(
+          KonyakPlatform.macos,
+          includeWineProcesses: true,
+        );
+
+    expect(windowIds, const ProgramWindowProbeResult<String>.unavailable());
+    expect(processIds, const ProgramWindowProbeResult<int>.unavailable());
+  });
+
   test('native Linux window probe asks the Linux window channel', () async {
     const channel = MethodChannel('konyak/linux_window');
     final methodCalls = <MethodCall>[];
@@ -27,7 +40,12 @@ void main() {
           includeWineProcessWindows: true,
         );
 
-    expect(windowIds, const <String>{'wine-window-1'});
+    expect(
+      windowIds,
+      ProgramWindowProbeResult<String>.available(const <String>{
+        'wine-window-1',
+      }),
+    );
     expect(methodCalls, hasLength(1));
     expect(methodCalls.single.method, 'visibleExternalWindowIds');
     expect(methodCalls.single.arguments, {
@@ -56,7 +74,10 @@ void main() {
           includeWineProcesses: true,
         );
 
-    expect(processIds, const <int>{777});
+    expect(
+      processIds,
+      ProgramWindowProbeResult<int>.available(const <int>{777}),
+    );
     expect(methodCalls, hasLength(1));
     expect(methodCalls.single.method, 'runningWineProcessIds');
     expect(methodCalls.single.arguments, {

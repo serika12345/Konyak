@@ -13,6 +13,32 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-30 12:59 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Replace program window probe nullable results.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: current commit (`Replace program window probe nullable results`).
+- Purpose: continue narrowing `apps/konyak/lib/src/home_loader/` nullable
+  result state by replacing program-window probe `Set?` returns with explicit
+  available/unavailable variants.
+- Completed work: added a failing unavailable-probe contract test; added
+  Freezed `ProgramWindowProbeResult<T>` with immutable `available` and
+  `unavailable` variants; updated native and test probes to return explicit
+  variants; replaced `home_loader_programs.dart` launch-tracking `Set?`
+  branches with switch-based result handling.
+- Remaining work: none for this batch.
+- Next action: continue narrowing `home_loader_programs.dart` nullable state,
+  especially dialog cancellation and optional one-shot run settings, while
+  keeping UI/framework nullability separate from domain result variants.
+- Verification: observed
+  `flutter test test/app/program_window_probe_test.dart` fail before
+  implementation because `ProgramWindowProbeResult` did not exist. After
+  implementation, targeted `flutter test test/app/program_window_probe_test.dart`
+  and selected launch-progress widget tests passed. `just flutter-format-check`,
+  `just flutter-analyze`, and `just flutter-test` passed in the Nix dev shell.
+
 - Timestamp: 2026-06-30 12:50 JST
 - State: `completed`
 - Branch: `main`

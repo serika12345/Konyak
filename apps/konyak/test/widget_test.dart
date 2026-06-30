@@ -553,21 +553,21 @@ final class _NoopProgramWindowProbe implements ProgramWindowProbe {
   const _NoopProgramWindowProbe();
 
   @override
-  Future<Set<String>?> visibleExternalWindowIds(
+  Future<ProgramWindowProbeResult<String>> visibleExternalWindowIds(
     KonyakPlatform platform, {
     Set<int> descendantOfProcessIds = const <int>{},
     bool includeWineProcessWindows = false,
   }) async {
-    return null;
+    return const ProgramWindowProbeResult<String>.unavailable();
   }
 
   @override
-  Future<Set<int>?> runningWineProcessIds(
+  Future<ProgramWindowProbeResult<int>> runningWineProcessIds(
     KonyakPlatform platform, {
     Set<int> descendantOfProcessIds = const <int>{},
     bool includeWineProcesses = false,
   }) async {
-    return null;
+    return const ProgramWindowProbeResult<int>.unavailable();
   }
 }
 
@@ -577,35 +577,35 @@ final class _MutableProgramWindowProbe implements ProgramWindowProbe {
   final Set<int> runningWineProcessIdSet = <int>{};
 
   @override
-  Future<Set<String>?> visibleExternalWindowIds(
+  Future<ProgramWindowProbeResult<String>> visibleExternalWindowIds(
     KonyakPlatform platform, {
     Set<int> descendantOfProcessIds = const <int>{},
     bool includeWineProcessWindows = false,
   }) async {
     if ((!platform.isMacOS && !platform.isLinux) ||
         (descendantOfProcessIds.isEmpty && !includeWineProcessWindows)) {
-      return null;
+      return const ProgramWindowProbeResult<String>.unavailable();
     }
 
-    return <String>{
+    return ProgramWindowProbeResult<String>.available(<String>{
       for (final window in visibleWindowRootProcessIds.entries)
         if (descendantOfProcessIds.contains(window.value)) window.key,
       if (includeWineProcessWindows) ...visibleWineWindowIds,
-    };
+    });
   }
 
   @override
-  Future<Set<int>?> runningWineProcessIds(
+  Future<ProgramWindowProbeResult<int>> runningWineProcessIds(
     KonyakPlatform platform, {
     Set<int> descendantOfProcessIds = const <int>{},
     bool includeWineProcesses = false,
   }) async {
     if (!platform.isLinux ||
         (descendantOfProcessIds.isEmpty && !includeWineProcesses)) {
-      return null;
+      return const ProgramWindowProbeResult<int>.unavailable();
     }
 
-    return Set<int>.of(runningWineProcessIdSet);
+    return ProgramWindowProbeResult<int>.available(runningWineProcessIdSet);
   }
 }
 

@@ -5,6 +5,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../app/dialogs/bottle_programs_dialog.dart';
 import '../app/dialogs/run_program_dialog.dart';
+import '../app/programs/program_window_probe.dart';
 import '../app/utils/program_labels.dart';
 import '../app/utils/program_run_feedback.dart';
 import '../bottles/bottle_summary.dart';
@@ -54,18 +55,18 @@ extension KonyakHomeLoaderPrograms on KonyakHomeLoaderState {
     ProgramSettingsSummary? settings,
   }) async {
     final launchId = beginProgramLaunch();
-    final baselineWindowIds =
-        await visibleExternalWindowIds(
-          descendantOfProcessIds: const <int>{},
-          includeWineProcessWindows: true,
-        ) ??
-        const <String>{};
-    final baselineWineProcessIds =
-        await runningWineProcessIds(
-          descendantOfProcessIds: const <int>{},
-          includeWineProcesses: true,
-        ) ??
-        const <int>{};
+    final baselineWindowIds = _probeIdsOrEmpty(
+      await visibleExternalWindowIds(
+        descendantOfProcessIds: const <int>{},
+        includeWineProcessWindows: true,
+      ),
+    );
+    final baselineWineProcessIds = _probeIdsOrEmpty(
+      await runningWineProcessIds(
+        descendantOfProcessIds: const <int>{},
+        includeWineProcesses: true,
+      ),
+    );
     final baselineProgramPaths = await installedProgramPathsForAutoPin(bottle);
 
     if (!mounted) {
@@ -249,51 +250,60 @@ extension KonyakHomeLoaderPrograms on KonyakHomeLoaderState {
         return;
       }
 
-      final currentWindowIds = await visibleExternalWindowIds(
+      final currentWindowProbe = await visibleExternalWindowIds(
         descendantOfProcessIds: <int>{rootProcessId},
         includeWineProcessWindows: true,
       );
-      final currentWineProcessIds = await runningWineProcessIds(
+      final currentWineProcessProbe = await runningWineProcessIds(
         descendantOfProcessIds: <int>{rootProcessId},
         includeWineProcesses: true,
       );
 
-      if (currentWindowIds == null && currentWineProcessIds == null) {
-        return;
+      switch ((currentWindowProbe, currentWineProcessProbe)) {
+        case (
+          UnavailableProgramWindowProbeResult(),
+          UnavailableProgramWindowProbeResult(),
+        ):
+          return;
+        case _:
+          break;
       }
 
-      if (currentWindowIds != null &&
-          currentWindowIds.any(
-            (windowId) => !baselineWindowIds.contains(windowId),
-          )) {
-        finishProgramLaunch(launchId);
-        return;
-      }
-
-      if (currentWineProcessIds == null) {
-        continue;
-      }
-
-      final newWineProcessIds = currentWineProcessIds
-          .where((processId) => !baselineWineProcessIds.contains(processId))
-          .toSet();
-      newWineProcessPollCounts.removeWhere(
-        (processId, _) => !newWineProcessIds.contains(processId),
-      );
-
-      for (final processId in newWineProcessIds) {
-        final pollCount = (newWineProcessPollCounts[processId] ?? 0) + 1;
-        if (pollCount >= programLaunchProcessStablePolls) {
+      switch (currentWindowProbe) {
+        case AvailableProgramWindowProbeResult(:final ids)
+            when ids.any((windowId) => !baselineWindowIds.contains(windowId)):
           finishProgramLaunch(launchId);
           return;
-        }
+        case AvailableProgramWindowProbeResult():
+        case UnavailableProgramWindowProbeResult():
+          break;
+      }
 
-        newWineProcessPollCounts[processId] = pollCount;
+      switch (currentWineProcessProbe) {
+        case UnavailableProgramWindowProbeResult():
+          continue;
+        case AvailableProgramWindowProbeResult(:final ids):
+          final newWineProcessIds = ids
+              .where((processId) => !baselineWineProcessIds.contains(processId))
+              .toSet();
+          newWineProcessPollCounts.removeWhere(
+            (processId, _) => !newWineProcessIds.contains(processId),
+          );
+
+          for (final processId in newWineProcessIds) {
+            final pollCount = (newWineProcessPollCounts[processId] ?? 0) + 1;
+            if (pollCount >= programLaunchProcessStablePolls) {
+              finishProgramLaunch(launchId);
+              return;
+            }
+
+            newWineProcessPollCounts[processId] = pollCount;
+          }
       }
     }
   }
 
-  Future<Set<String>?> visibleExternalWindowIds({
+  Future<ProgramWindowProbeResult<String>> visibleExternalWindowIds({
     required Set<int> descendantOfProcessIds,
     required bool includeWineProcessWindows,
   }) async {
@@ -304,7 +314,7 @@ extension KonyakHomeLoaderPrograms on KonyakHomeLoaderState {
     );
   }
 
-  Future<Set<int>?> runningWineProcessIds({
+  Future<ProgramWindowProbeResult<int>> runningWineProcessIds({
     required Set<int> descendantOfProcessIds,
     required bool includeWineProcesses,
   }) async {
@@ -347,18 +357,18 @@ extension KonyakHomeLoaderPrograms on KonyakHomeLoaderState {
     required String command,
   }) async {
     final launchId = beginProgramLaunch();
-    final baselineWindowIds =
-        await visibleExternalWindowIds(
-          descendantOfProcessIds: const <int>{},
-          includeWineProcessWindows: true,
-        ) ??
-        const <String>{};
-    final baselineWineProcessIds =
-        await runningWineProcessIds(
-          descendantOfProcessIds: const <int>{},
-          includeWineProcesses: true,
-        ) ??
-        const <int>{};
+    final baselineWindowIds = _probeIdsOrEmpty(
+      await visibleExternalWindowIds(
+        descendantOfProcessIds: const <int>{},
+        includeWineProcessWindows: true,
+      ),
+    );
+    final baselineWineProcessIds = _probeIdsOrEmpty(
+      await runningWineProcessIds(
+        descendantOfProcessIds: const <int>{},
+        includeWineProcesses: true,
+      ),
+    );
 
     if (!mounted) {
       finishProgramLaunch(launchId);
@@ -491,4 +501,11 @@ String bottleRunLogPath(String bottlePath) {
   }
 
   return '$bottlePath/logs/latest.log';
+}
+
+Set<T> _probeIdsOrEmpty<T>(ProgramWindowProbeResult<T> result) {
+  return switch (result) {
+    AvailableProgramWindowProbeResult(:final ids) => ids,
+    UnavailableProgramWindowProbeResult() => Set<T>.unmodifiable(const []),
+  };
 }
