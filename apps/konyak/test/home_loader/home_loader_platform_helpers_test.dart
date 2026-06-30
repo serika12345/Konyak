@@ -3,6 +3,57 @@ import 'package:konyak/src/cli/konyak_cli_process_runner.dart';
 import 'package:konyak/src/home_loader/home_loader_platform_helpers.dart';
 
 void main() {
+  test('models macOS native menu localization cache explicitly', () {
+    const emptyCache = MacosNativeMenuLocalizationCache.empty();
+    const payload = <String, String>{'settings': 'Settings'};
+    final synchronizedCache = synchronizedMacosNativeMenuLocalizationCache(
+      payload,
+    );
+
+    expect(
+      macosNativeMenuLocalizationNeedsSync(cache: emptyCache, payload: payload),
+      isTrue,
+    );
+    expect(
+      macosNativeMenuLocalizationNeedsSync(
+        cache: synchronizedCache,
+        payload: payload,
+      ),
+      isFalse,
+    );
+    expect(
+      macosNativeMenuLocalizationNeedsSync(
+        cache: synchronizedCache,
+        payload: const <String, String>{'settings': 'Preferences'},
+      ),
+      isTrue,
+    );
+  });
+
+  test('snapshots macOS native menu localization cache payloads', () {
+    final mutablePayload = <String, String>{'settings': 'Settings'};
+    final synchronizedCache = synchronizedMacosNativeMenuLocalizationCache(
+      mutablePayload,
+    );
+
+    mutablePayload['settings'] = 'Preferences';
+
+    expect(
+      macosNativeMenuLocalizationNeedsSync(
+        cache: synchronizedCache,
+        payload: const <String, String>{'settings': 'Settings'},
+      ),
+      isFalse,
+    );
+    expect(
+      macosNativeMenuLocalizationNeedsSync(
+        cache: synchronizedCache,
+        payload: mutablePayload,
+      ),
+      isTrue,
+    );
+  });
+
   test('models non-list executable-open channel payloads explicitly', () {
     expect(switch (executableOpenPathsChannelPayloadFrom(null)) {
       InvalidExecutableOpenPathsChannelPayload(:final reason) => reason,

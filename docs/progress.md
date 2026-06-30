@@ -13,6 +13,36 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-30 23:06 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Model macOS native menu localization cache explicitly.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: `e74056a` (`Model executable open channel payloads`).
+- Purpose: continue nullable hardening in the Flutter platform helper boundary
+  by replacing the native-menu localization cache's nullable `Map` sentinel
+  with explicit cache variants.
+- Completed work: committed the previous executable-open payload slice; added
+  Freezed `MacosNativeMenuLocalizationCache.empty` and `.synchronized`
+  variants; replaced `MacosNativeMenuLocalizerState.lastPayload` with an
+  explicit cache state; added pure sync-decision and snapshot helpers; removed
+  the nullable `sameStringMap` argument; and converted the map comparison to an
+  expression-based `every` check.
+- Remaining work: none for this slice. The next nullable-hardening candidates
+  are UI callback/action availability nulls and remaining loader boundary
+  nullable state.
+- Next action: continue the next explicit-state hardening slice or commit this
+  uncommitted slice when requested.
+- Verification: observed
+  `flutter test test/home_loader/home_loader_platform_helpers_test.dart` fail
+  before implementation because the cache variants and sync helper did not
+  exist. After implementation, the targeted platform-helper tests passed and
+  `flutter analyze --fatal-infos` reported no issues. Full verification passed
+  with `just flutter-format-check`, `just flutter-analyze`,
+  `just flutter-test`, `just verify-governance`, `just verify-safety`,
+  `just format-check`, and `just lint`.
+
 - Timestamp: 2026-06-30 22:53 JST
 - State: `completed`
 - Branch: `main`

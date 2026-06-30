@@ -17,6 +17,21 @@ const macosMenuChannel = MethodChannel('konyak/menu');
   map: FreezedMapOptions.none,
   when: FreezedWhenOptions.none,
 )
+sealed class MacosNativeMenuLocalizationCache
+    with _$MacosNativeMenuLocalizationCache {
+  const factory MacosNativeMenuLocalizationCache.empty() =
+      EmptyMacosNativeMenuLocalizationCache;
+
+  const factory MacosNativeMenuLocalizationCache.synchronized({
+    required Map<String, String> payload,
+  }) = SynchronizedMacosNativeMenuLocalizationCache;
+}
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
 sealed class ExecutableOpenPathsChannelPayload
     with _$ExecutableOpenPathsChannelPayload {
   const factory ExecutableOpenPathsChannelPayload.valid({
@@ -41,7 +56,8 @@ class MacosNativeMenuLocalizer extends StatefulWidget {
 }
 
 class MacosNativeMenuLocalizerState extends State<MacosNativeMenuLocalizer> {
-  Map<String, String>? lastPayload;
+  MacosNativeMenuLocalizationCache localizationCache =
+      const MacosNativeMenuLocalizationCache.empty();
 
   @override
   void didChangeDependencies() {
@@ -58,11 +74,14 @@ class MacosNativeMenuLocalizerState extends State<MacosNativeMenuLocalizer> {
     final payload = macosNativeMenuLocalizationPayload(
       KonyakLocalizations.of(context),
     );
-    if (sameStringMap(lastPayload, payload)) {
+    if (!macosNativeMenuLocalizationNeedsSync(
+      cache: localizationCache,
+      payload: payload,
+    )) {
       return;
     }
 
-    lastPayload = Map<String, String>.unmodifiable(payload);
+    localizationCache = synchronizedMacosNativeMenuLocalizationCache(payload);
     unawaited(sendMacosNativeMenuLocalization(payload));
   }
 }
@@ -95,18 +114,30 @@ Future<void> sendMacosNativeMenuLocalization(
   }
 }
 
-bool sameStringMap(Map<String, String>? left, Map<String, String> right) {
-  if (left == null || left.length != right.length) {
-    return false;
-  }
+MacosNativeMenuLocalizationCache synchronizedMacosNativeMenuLocalizationCache(
+  Map<String, String> payload,
+) {
+  return MacosNativeMenuLocalizationCache.synchronized(
+    payload: Map<String, String>.unmodifiable(payload),
+  );
+}
 
-  for (final entry in right.entries) {
-    if (left[entry.key] != entry.value) {
-      return false;
-    }
-  }
+bool macosNativeMenuLocalizationNeedsSync({
+  required MacosNativeMenuLocalizationCache cache,
+  required Map<String, String> payload,
+}) {
+  return switch (cache) {
+    EmptyMacosNativeMenuLocalizationCache() => true,
+    SynchronizedMacosNativeMenuLocalizationCache(
+      payload: final cachedPayload,
+    ) =>
+      !sameStringMap(cachedPayload, payload),
+  };
+}
 
-  return true;
+bool sameStringMap(Map<String, String> left, Map<String, String> right) {
+  return left.length == right.length &&
+      right.entries.every((entry) => left[entry.key] == entry.value);
 }
 
 ExecutableOpenPathsChannelPayload executableOpenPathsChannelPayloadFrom(
