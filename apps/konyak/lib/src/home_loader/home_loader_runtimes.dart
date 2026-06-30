@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../app/app_platform.dart';
 import '../app/runtime/runtime_platform.dart';
@@ -22,6 +23,8 @@ import '../updates/update_check_summary.dart';
 import 'home_loader.dart';
 import 'home_loader_platform_helpers.dart';
 import 'known_runtimes_state.dart';
+
+part 'home_loader_runtimes.freezed.dart';
 
 extension KonyakHomeLoaderRuntimes on KonyakHomeLoaderState {
   Future<void> initializeBackgroundServices() async {
@@ -216,79 +219,99 @@ extension KonyakHomeLoaderRuntimes on KonyakHomeLoaderState {
     });
   }
 
-  Future<List<RuntimeSummary>?> loadKnownRuntimes() async {
+  Future<KnownRuntimesLoadOutcome> loadKnownRuntimes() async {
     final runtimeResult = await widget.cliClient.listKnownRuntimes();
 
     if (!mounted) {
-      return null;
+      return const KnownRuntimesLoadOutcome.unmounted();
     }
 
     switch (runtimeResult) {
       case LoadedRuntimeList(:final runtimes):
         setKnownRuntimes(runtimes);
-        return runtimes;
+        return KnownRuntimesLoadOutcome.loaded(runtimes);
       case RuntimeListLoadFailure():
         setKnownRuntimes(const <RuntimeSummary>[]);
-        return null;
+        return const KnownRuntimesLoadOutcome.failed();
     }
   }
 
-  Future<RuntimeSummary?> ensureRuntimeForPlatformLoaded() async {
+  Future<RuntimeForPlatformLoadOutcome> ensureRuntimeForPlatformLoaded() async {
     if (!knownRuntimes.isLoaded) {
-      final runtimes = await loadKnownRuntimes();
+      final runtimesLoad = await loadKnownRuntimes();
       if (!mounted) {
-        return null;
+        return const RuntimeForPlatformLoadOutcome.unmounted();
       }
 
-      if (runtimes == null) {
-        return null;
-      }
-
-      return switch (runtimeForPlatformSelection(widget.platform, runtimes)) {
-        RuntimeForPlatformFound(:final runtime) => runtime,
-        RuntimeForPlatformMissing() => null,
+      return switch (runtimesLoad) {
+        _LoadedKnownRuntimes(:final runtimes) => runtimeForPlatformLoadOutcome(
+          runtimes,
+        ),
+        _FailedKnownRuntimesLoad() =>
+          const RuntimeForPlatformLoadOutcome.loadFailed(),
+        _UnmountedKnownRuntimesLoad() =>
+          const RuntimeForPlatformLoadOutcome.unmounted(),
       };
     }
 
-    return switch (runtimeForPlatformSelection(
-      widget.platform,
-      knownRuntimes.runtimes,
-    )) {
-      RuntimeForPlatformFound(:final runtime) => runtime,
-      RuntimeForPlatformMissing() => null,
+    return runtimeForPlatformLoadOutcome(knownRuntimes.runtimes);
+  }
+
+  RuntimeForPlatformLoadOutcome runtimeForPlatformLoadOutcome(
+    List<RuntimeSummary> runtimes,
+  ) {
+    return switch (runtimeForPlatformSelection(widget.platform, runtimes)) {
+      RuntimeForPlatformFound(:final runtime) =>
+        RuntimeForPlatformLoadOutcome.found(runtime),
+      RuntimeForPlatformMissing(:final managedRuntime) =>
+        RuntimeForPlatformLoadOutcome.missing(managedRuntime),
     };
   }
 
   Future<void> promptForMissingManagedRuntime() async {
-    final managedRuntime = managedRuntimePlatform(widget.platform);
-    final runtime = await ensureRuntimeForPlatformLoaded();
-    if (!mounted || runtime?.isInstalled == true) {
-      return;
+    final runtimeLoad = await ensureRuntimeForPlatformLoaded();
+
+    final String runtimeName;
+    switch (runtimeLoad) {
+      case FoundRuntimeForPlatformLoad(:final runtime)
+          when runtime.isInstalled == true:
+      case FailedRuntimeForPlatformLoad():
+      case UnmountedRuntimeForPlatformLoad():
+        return;
+      case FoundRuntimeForPlatformLoad(:final runtime):
+        runtimeName = runtime.name;
+      case MissingRuntimeForPlatformLoad(:final managedRuntime):
+        runtimeName = managedRuntime.displayName;
     }
 
-    final installResult = await confirmAndInstallManagedRuntime(
-      runtimeName: runtime?.name ?? managedRuntime.displayName,
+    final installOutcome = await confirmAndInstallManagedRuntime(
+      runtimeName: runtimeName,
       installRuntime: installManagedRuntimeForPlatform,
     );
 
-    if (!mounted || installResult == null) {
-      return;
-    }
-
-    switch (installResult) {
-      case InstalledRuntime(:final runtime):
-        updateState(() {
-          knownRuntimes = KnownRuntimesState.loaded(
-            upsertRuntimeSummary(knownRuntimes.runtimes, runtime),
-          );
-        });
-        showSnackBar(
-          KonyakLocalizations.of(context).installedRuntime(runtime.name),
-        );
-      case RuntimeInstallLoadFailure(:final message):
-        showSnackBar(
-          KonyakLocalizations.of(context).runtimeInstallFailed(message),
-        );
+    switch (installOutcome) {
+      case CompletedManagedRuntimeInstall(:final result):
+        if (!mounted) {
+          return;
+        }
+        switch (result) {
+          case InstalledRuntime(:final runtime):
+            updateState(() {
+              knownRuntimes = KnownRuntimesState.loaded(
+                upsertRuntimeSummary(knownRuntimes.runtimes, runtime),
+              );
+            });
+            showSnackBar(
+              KonyakLocalizations.of(context).installedRuntime(runtime.name),
+            );
+          case RuntimeInstallLoadFailure(:final message):
+            showSnackBar(
+              KonyakLocalizations.of(context).runtimeInstallFailed(message),
+            );
+        }
+      case CancelledManagedRuntimeInstall():
+      case UnmountedManagedRuntimeInstall():
+        return;
     }
   }
 
@@ -317,13 +340,16 @@ extension KonyakHomeLoaderRuntimes on KonyakHomeLoaderState {
     });
   }
 
-  Future<RuntimeInstallLoadResult?> confirmAndInstallManagedRuntime({
+  Future<ManagedRuntimeInstallOutcome> confirmAndInstallManagedRuntime({
     required String runtimeName,
     required Future<RuntimeInstallLoadResult> Function() installRuntime,
   }) async {
     final confirmed = await confirmRuntimeDownload(runtimeName);
-    if (!mounted || !confirmed) {
-      return null;
+    if (!mounted) {
+      return const ManagedRuntimeInstallOutcome.unmounted();
+    }
+    if (!confirmed) {
+      return const ManagedRuntimeInstallOutcome.cancelled();
     }
 
     updateState(() {
@@ -334,7 +360,10 @@ extension KonyakHomeLoaderRuntimes on KonyakHomeLoaderState {
     });
 
     try {
-      return await installRuntime();
+      final result = await installRuntime();
+      return mounted
+          ? ManagedRuntimeInstallOutcome.completed(result)
+          : const ManagedRuntimeInstallOutcome.unmounted();
     } finally {
       if (mounted) {
         updateState(() {
@@ -522,6 +551,82 @@ extension KonyakHomeLoaderRuntimes on KonyakHomeLoaderState {
     }
     showSnackBar(openUrlFailureMessage(result));
   }
+}
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class KnownRuntimesLoadOutcome with _$KnownRuntimesLoadOutcome {
+  const KnownRuntimesLoadOutcome._();
+
+  const factory KnownRuntimesLoadOutcome.unmounted() =
+      _UnmountedKnownRuntimesLoad;
+
+  const factory KnownRuntimesLoadOutcome.failed() = _FailedKnownRuntimesLoad;
+
+  factory KnownRuntimesLoadOutcome.loaded(List<RuntimeSummary> runtimes) {
+    return KnownRuntimesLoadOutcome._loaded(List.unmodifiable(runtimes));
+  }
+
+  const factory KnownRuntimesLoadOutcome._loaded(
+    List<RuntimeSummary> runtimes,
+  ) = _LoadedKnownRuntimes;
+
+  List<RuntimeSummary> get runtimes {
+    return switch (this) {
+      _LoadedKnownRuntimes(:final runtimes) => runtimes,
+      _FailedKnownRuntimesLoad() => const <RuntimeSummary>[],
+      _UnmountedKnownRuntimesLoad() => const <RuntimeSummary>[],
+    };
+  }
+
+  bool get isLoaded {
+    return switch (this) {
+      _LoadedKnownRuntimes() => true,
+      _FailedKnownRuntimesLoad() => false,
+      _UnmountedKnownRuntimesLoad() => false,
+    };
+  }
+}
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class RuntimeForPlatformLoadOutcome
+    with _$RuntimeForPlatformLoadOutcome {
+  const factory RuntimeForPlatformLoadOutcome.found(RuntimeSummary runtime) =
+      FoundRuntimeForPlatformLoad;
+
+  const factory RuntimeForPlatformLoadOutcome.missing(
+    ManagedRuntimePlatform managedRuntime,
+  ) = MissingRuntimeForPlatformLoad;
+
+  const factory RuntimeForPlatformLoadOutcome.loadFailed() =
+      FailedRuntimeForPlatformLoad;
+
+  const factory RuntimeForPlatformLoadOutcome.unmounted() =
+      UnmountedRuntimeForPlatformLoad;
+}
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class ManagedRuntimeInstallOutcome with _$ManagedRuntimeInstallOutcome {
+  const factory ManagedRuntimeInstallOutcome.completed(
+    RuntimeInstallLoadResult result,
+  ) = CompletedManagedRuntimeInstall;
+
+  const factory ManagedRuntimeInstallOutcome.cancelled() =
+      CancelledManagedRuntimeInstall;
+
+  const factory ManagedRuntimeInstallOutcome.unmounted() =
+      UnmountedManagedRuntimeInstall;
 }
 
 bool supportsStartupKonyakAppUpdatePrompt(KonyakPlatform platform) {

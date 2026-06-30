@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:konyak/src/home_loader/home_loader_runtimes.dart';
 import 'package:konyak/src/home_loader/known_runtimes_state.dart';
 import 'package:konyak/src/runtimes/runtime_summary.dart';
 
@@ -20,6 +21,18 @@ void main() {
 
     source.clear();
 
+    expect(loaded.runtimes, [runtime]);
+    expect(loaded.runtimes.clear, throwsUnsupportedError);
+  });
+
+  test('keeps loaded runtime load outcomes as immutable snapshots', () {
+    final runtime = _runtime(id: 'konyak-macos-wine');
+    final source = <RuntimeSummary>[runtime];
+    final loaded = KnownRuntimesLoadOutcome.loaded(source);
+
+    source.clear();
+
+    expect(loaded.isLoaded, isTrue);
     expect(loaded.runtimes, [runtime]);
     expect(loaded.runtimes.clear, throwsUnsupportedError);
   });

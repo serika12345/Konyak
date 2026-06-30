@@ -13,6 +13,34 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-06-30 11:17 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Replace Flutter runtime-loader nullable async outcomes.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: current commit (`Replace runtime-loader nullable outcomes`).
+- Purpose: continue narrowing `apps/konyak/lib/src/home_loader/` nullable
+  allowance by replacing runtime-loader nullable async return values with
+  explicit Freezed outcome variants.
+- Completed work: added a focused immutable snapshot test for runtime-load
+  outcomes; replaced nullable returns from `loadKnownRuntimes`,
+  `ensureRuntimeForPlatformLoaded`, and `confirmAndInstallManagedRuntime` with
+  explicit Freezed outcomes; preserved lifecycle cancellation as `unmounted` or
+  `cancelled` variants; regenerated ignored Freezed parts.
+- Remaining work: none for this batch.
+- Next action: continue narrowing `home_loader/` nullable async result methods,
+  especially bottle/settings loader helpers, before trying to make whole files
+  strict nullable paths.
+- Verification: observed
+  `flutter test test/home_loader/known_runtimes_state_test.dart` fail before
+  implementation because `KnownRuntimesLoadOutcome` did not exist. After
+  implementation, targeted
+  `flutter test test/home_loader/known_runtimes_state_test.dart`,
+  `just flutter-format-check`, `just flutter-analyze`, `just flutter-test`,
+  `just verify-governance`, `just verify-safety`, `just format-check`, and
+  `just lint` passed in the Nix dev shell.
+
 - Timestamp: 2026-06-30 11:04 JST
 - State: `completed`
 - Branch: `main`
