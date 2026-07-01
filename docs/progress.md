@@ -13,6 +13,35 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-07-01 11:28 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Model CLI program mutation parser inputs explicitly.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: `1647a7d` (`Model bottle overview action availability`).
+- Purpose: continue nullable hardening in the CLI parser boundary by replacing
+  repeated `== null` required-argument checks in program mutation parsers with
+  explicit parsed-input variants or Option-based helpers while preserving the
+  existing nullable public parse API used for command selection.
+- Completed work: added Option-returning program mutation parser contracts for
+  pin/unpin/rename/settings/launcher requests; kept existing nullable parser
+  functions as command-selection compatibility wrappers with explicit `match`
+  projection; replaced repeated required-argument `== null` chains with
+  `Option.Do`-based required-input helpers; and added focused parser tests for
+  valid and incomplete inputs.
+- Remaining work: none for this slice. The next nullable-hardening candidates
+  are the same pattern in adjacent CLI parser files such as bottle mutation,
+  program run, runtime, and location parsers.
+- Next action: commit this uncommitted slice when requested or continue with
+  adjacent CLI parser nullable hardening.
+- Verification: observed
+  `dart test test/cli_program_mutation_parsers_test.dart` fail before
+  implementation because the Option-returning parser APIs did not exist. After
+  implementation and the follow-up `Option.Do` readability pass, targeted
+  parser tests passed, and `just cli-test`, `just verify-governance`,
+  `just verify-safety`, `just format-check`, and `just lint` passed.
+
 - Timestamp: 2026-07-01 10:44 JST
 - State: `completed`
 - Branch: `main`
