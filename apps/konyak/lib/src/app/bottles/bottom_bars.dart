@@ -6,6 +6,7 @@ import '../app_constants.dart';
 import '../app_platform.dart';
 import '../dialogs/bottle_tools_dialog.dart';
 import '../widgets/konyak_bottom_button.dart';
+import 'bottle_action_availability.dart';
 import 'bottle_action_target.dart';
 
 class ProgramConfigurationBottomBar extends StatelessWidget {
@@ -102,16 +103,16 @@ class KonyakBottomBar extends StatelessWidget {
   const KonyakBottomBar({
     super.key,
     required this.target,
-    required this.onRunProgram,
+    required this.runProgramAction,
     required this.onRunBottleCommand,
-    required this.onShowWinetricks,
+    required this.showWinetricksAction,
     required this.onOpenBottleLocation,
   });
 
   final BottleActionTarget target;
-  final ValueChanged<BottleSummary>? onRunProgram;
+  final BottleSummaryActionAvailability runProgramAction;
   final void Function(BottleSummary bottle, String command)? onRunBottleCommand;
-  final ValueChanged<BottleSummary>? onShowWinetricks;
+  final BottleSummaryActionAvailability showWinetricksAction;
   final void Function(BottleSummary bottle, String location)?
   onOpenBottleLocation;
 
@@ -138,12 +139,22 @@ class KonyakBottomBar extends StatelessWidget {
           const SizedBox(width: 6),
           KonyakBottomButton(
             label: localizations.winetricks,
-            onPressed: _targetAction(target, onShowWinetricks),
+            onPressed: _targetActionCallback(
+              resolveBottleTargetAction(
+                target: target,
+                action: showWinetricksAction,
+              ),
+            ),
           ),
           const SizedBox(width: 6),
           KonyakBottomButton(
             label: localizations.run,
-            onPressed: _targetAction(target, onRunProgram),
+            onPressed: _targetActionCallback(
+              resolveBottleTargetAction(
+                target: target,
+                action: runProgramAction,
+              ),
+            ),
           ),
         ],
       ),
@@ -199,13 +210,9 @@ class _BottleToolsButton extends StatelessWidget {
   }
 }
 
-VoidCallback? _targetAction(
-  BottleActionTarget target,
-  ValueChanged<BottleSummary>? action,
-) {
-  return switch (target) {
-    SelectedBottleActionTarget(:final bottle) when action != null =>
-      () => action(bottle),
-    NoBottleActionTarget() || SelectedBottleActionTarget() => null,
+VoidCallback? _targetActionCallback(BottleTargetActionAvailability action) {
+  return switch (action) {
+    EnabledBottleTargetActionAvailability(:final invoke) => invoke,
+    DisabledBottleTargetActionAvailability() => null,
   };
 }

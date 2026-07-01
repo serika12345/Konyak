@@ -13,6 +13,34 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-07-01 09:48 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Model bottom-bar bottle action availability explicitly.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: `e001c50` (`Model bottle update success feedback`).
+- Purpose: continue nullable hardening in the Flutter bottle UI boundary by
+  replacing Run/Winetricks bottom-bar nullable action callbacks with explicit
+  availability and resolved-action variants.
+- Completed work: added Freezed `BottleSummaryActionAvailability` and
+  `BottleTargetActionAvailability` variants; replaced `KonyakBottomBar`
+  Run/Winetricks nullable callback props with explicit availability props;
+  converted existing home action contracts to availability at the
+  `KonyakBottleDetail` boundary; and added focused action-resolution tests.
+- Remaining work: none for this slice. The next nullable-hardening candidates
+  are `_BottleToolsButton` command/location action availability nulls and the
+  broader home action contract nullable callbacks.
+- Next action: continue the next explicit-state hardening slice or commit this
+  uncommitted slice when requested.
+- Verification: observed
+  `flutter test test/app/bottle_detail_child_state_test.dart` fail before
+  implementation because the explicit action availability file, variants, and
+  resolver did not exist. After implementation, the targeted child-state tests
+  passed. Full verification passed with `just flutter-format-check`,
+  `just flutter-analyze`, `just flutter-test`, `just verify-governance`,
+  `just verify-safety`, `just format-check`, and `just lint`.
+
 - Timestamp: 2026-07-01 09:02 JST
 - State: `completed`
 - Branch: `main`

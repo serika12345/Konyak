@@ -5,6 +5,7 @@ import '../app_constants.dart';
 import '../home/home_contracts.dart';
 import '../programs/program_configuration_view.dart';
 import '../widgets/konyak_top_bar.dart';
+import 'bottle_action_availability.dart';
 import 'bottle_action_target.dart';
 import 'bottle_configuration_view.dart';
 import 'bottle_overview.dart';
@@ -137,16 +138,24 @@ class KonyakBottleDetail extends StatelessWidget {
               ),
             OverviewKonyakHomeDetailContent(:final bottle) => KonyakBottomBar(
               target: BottleActionTarget.bottle(bottle),
-              onRunProgram: programActions.onRunProgram,
+              runProgramAction: bottleSummaryActionAvailabilityFromNullable(
+                programActions.onRunProgram,
+              ),
               onRunBottleCommand: winetricksActions.onRunBottleCommand,
-              onShowWinetricks: winetricksActions.onShowWinetricks,
+              showWinetricksAction: bottleSummaryActionAvailabilityFromNullable(
+                winetricksActions.onShowWinetricks,
+              ),
               onOpenBottleLocation: bottleActions.onOpenLocation,
             ),
             EmptyKonyakHomeDetailContent() => KonyakBottomBar(
               target: const BottleActionTarget.none(),
-              onRunProgram: programActions.onRunProgram,
+              runProgramAction: bottleSummaryActionAvailabilityFromNullable(
+                programActions.onRunProgram,
+              ),
               onRunBottleCommand: winetricksActions.onRunBottleCommand,
-              onShowWinetricks: winetricksActions.onShowWinetricks,
+              showWinetricksAction: bottleSummaryActionAvailabilityFromNullable(
+                winetricksActions.onShowWinetricks,
+              ),
               onOpenBottleLocation: bottleActions.onOpenLocation,
             ),
           },

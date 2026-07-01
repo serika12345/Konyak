@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:konyak/src/app/bottles/bottle_action_availability.dart';
 import 'package:konyak/src/app/bottles/bottle_action_target.dart';
 import 'package:konyak/src/app/bottles/bottle_overview_content.dart';
 import 'package:konyak/src/app/home/bottle_list_load_state.dart';
@@ -39,6 +40,53 @@ void main() {
       SelectedBottleActionTarget(:final bottle) => bottle.id,
       NoBottleActionTarget() => '',
     }, 'steam');
+  });
+
+  test('models unavailable bottle summary actions explicitly', () {
+    final action = bottleSummaryActionAvailabilityFromNullable(null);
+
+    expect(action, isA<UnavailableBottleSummaryActionAvailability>());
+  });
+
+  test('resolves selected bottom-bar actions to an enabled callback', () {
+    final bottle = _bottle(id: 'steam', name: 'Steam');
+    final invokedBottleIds = <String>[];
+    final action = resolveBottleTargetAction(
+      target: BottleActionTarget.bottle(bottle),
+      action: BottleSummaryActionAvailability.available(
+        (bottle) => invokedBottleIds.add(bottle.id),
+      ),
+    );
+
+    switch (action) {
+      case EnabledBottleTargetActionAvailability(:final invoke):
+        invoke();
+      case DisabledBottleTargetActionAvailability():
+        fail('Expected a selected bottle and available action to be enabled.');
+    }
+
+    expect(invokedBottleIds, <String>['steam']);
+  });
+
+  test('disables bottom-bar actions when no bottle is selected', () {
+    final action = resolveBottleTargetAction(
+      target: const BottleActionTarget.none(),
+      action: BottleSummaryActionAvailability.available(
+        (_) => fail('Unavailable target must not run the action.'),
+      ),
+    );
+
+    expect(action, isA<DisabledBottleTargetActionAvailability>());
+  });
+
+  test('disables bottom-bar actions when the action is unavailable', () {
+    final bottle = _bottle(id: 'steam', name: 'Steam');
+    final action = resolveBottleTargetAction(
+      target: BottleActionTarget.bottle(bottle),
+      action: const BottleSummaryActionAvailability.unavailable(),
+    );
+
+    expect(action, isA<DisabledBottleTargetActionAvailability>());
   });
 }
 
