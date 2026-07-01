@@ -13,6 +13,37 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-07-01 22:19 JST
+- State: `completed`
+- Branch: `task/refactor-r2-serialization-boundary`
+- Active work: R2-P2 Serialization Boundary.
+- Related TODO: `docs/todo.md` `R2-P2 Serialization Boundary`.
+- Pull request: https://github.com/serika12345/Konyak/pull/4
+- Latest commit: implementation commit `4dd4e54`
+  (`Move runtime command JSON to CLI boundary`) plus handoff updates on the
+  R2-P2 branch.
+- Purpose: move a stable JSON projection out of model objects and into the CLI
+  serialization boundary without changing CLI output compatibility.
+- Completed work: confirmed PR #3 merged with successful GitHub checks,
+  fast-forwarded local `main`, created the R2-P2 branch, read the active TODO
+  and progress state, added `docs/r2-serialization-boundary-audit.md`, added
+  failing CLI serialization tests, moved macOS setup and GPTK Wine install JSON
+  projections from model objects into `cli_app_runtime_json.dart`, updated the
+  runtime command handler to use CLI-side serializers, confirmed there are no
+  remaining domain-layer `toJson` projections, and removed the completed
+  R2-S4/R2-P2 backlog entries from `docs/todo.md`.
+- Remaining work: review draft PR #4. Do not advance into R3 automatically.
+- Next action: review https://github.com/serika12345/Konyak/pull/4 and decide
+  whether to merge or request follow-up changes.
+- Verification: observed
+  `dart test test/cli_app_runtime_json_test.dart` fail before implementation
+  because `cli_app_runtime_json.dart` and its serializer functions did not
+  exist. After implementation, the same test passed. Focused CLI contract checks
+  passed for `check-macos-setup --json returns Rosetta and runtime status` and
+  both `install-gptk-wine imports` cases. Full local verification passed with
+  `just cli-test`, `just verify-governance`, `just verify-safety`,
+  `just format-check`, and `just lint` through the Nix dev shell.
+
 - Timestamp: 2026-07-01 20:25 JST
 - State: `completed`
 - Branch: `task/refactor-r2-primitive-audit`

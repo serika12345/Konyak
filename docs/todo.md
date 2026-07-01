@@ -85,43 +85,8 @@ Small milestones:
 - [ ] R2-S3: Keep `ProgramRunPlanner` externally pure and split host platform,
   runner-kind, and graphics-backend decisions into narrow policy objects only
   when the current switch logic has grown enough to justify the split.
-- [ ] R2-S4: Move JSON `toJson` projection out of domain models into CLI or
-  serialization boundary libraries where compatibility permits.
 - [ ] R2-S5: Remove hand-written `part` usage from CLI contract tests so tests
   no longer normalize that shape as a large-file escape hatch.
-
-#### PR Gate: R2-P2 Serialization Boundary
-
-branch: `task/refactor-r2-serialization-boundary`
-
-Completion criteria:
-
-- JSON projection is moved out of at least one stable domain model family into
-  a CLI or serialization boundary without changing persisted or CLI output
-  compatibility.
-- Contract tests prove the JSON shape remains stable.
-- Remaining domain-model `toJson` projections are either converted or tracked
-  by a follow-up small milestone.
-- `docs/progress.md` records the gate state, latest commit, verification, and
-  next action.
-
-Not included:
-
-- Public schema changes.
-- Runtime artifact or manifest format changes.
-- UI redesign.
-
-Verification:
-
-- `just cli-test`
-- `just verify-governance`
-- `just verify-safety`
-- `just format-check`
-- `just lint`
-
-review gate:
-
-- Commit and push the branch, open a draft PR, then stop before R3.
 
 ### R3: Flutter Home and Bottle UI Decomposition
 

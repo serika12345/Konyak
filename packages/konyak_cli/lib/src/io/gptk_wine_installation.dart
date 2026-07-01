@@ -29,15 +29,6 @@ class GptkWineInstallRecord {
   final String sourceDirectory;
   final String runtimeRoot;
   final String installedExecutablePath;
-
-  Map<String, Object?> toJson() {
-    return <String, Object?>{
-      'componentId': componentId,
-      'sourceDirectory': sourceDirectory,
-      'runtimeRoot': runtimeRoot,
-      'installedExecutablePath': installedExecutablePath,
-    };
-  }
 }
 
 sealed class GptkWineInstallResult {
