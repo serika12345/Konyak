@@ -11,6 +11,10 @@ typedef BottleToolCommandAction =
     void Function(BottleSummary bottle, String command);
 typedef BottleToolLocationAction =
     void Function(BottleSummary bottle, String location);
+typedef PinnedProgramAction =
+    void Function(BottleSummary bottle, PinnedProgramSummary program);
+typedef ProgramPathAction =
+    void Function(BottleSummary bottle, String programPath);
 
 @Freezed(
   copyWith: false,
@@ -39,6 +43,36 @@ sealed class BottleTargetActionAvailability
 
   const factory BottleTargetActionAvailability.enabled(VoidCallback invoke) =
       EnabledBottleTargetActionAvailability;
+}
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class PinnedProgramActionAvailability
+    with _$PinnedProgramActionAvailability {
+  const factory PinnedProgramActionAvailability.unavailable() =
+      UnavailablePinnedProgramActionAvailability;
+
+  const factory PinnedProgramActionAvailability.available(
+    PinnedProgramAction invoke,
+  ) = AvailablePinnedProgramActionAvailability;
+}
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class ProgramPathActionAvailability
+    with _$ProgramPathActionAvailability {
+  const factory ProgramPathActionAvailability.unavailable() =
+      UnavailableProgramPathActionAvailability;
+
+  const factory ProgramPathActionAvailability.available(
+    ProgramPathAction invoke,
+  ) = AvailableProgramPathActionAvailability;
 }
 
 @Freezed(
@@ -103,6 +137,24 @@ BottleSummaryActionAvailability bottleSummaryActionAvailabilityFromNullable(
   };
 }
 
+PinnedProgramActionAvailability pinnedProgramActionAvailabilityFromNullable(
+  PinnedProgramAction? action,
+) {
+  return switch (action) {
+    null => const PinnedProgramActionAvailability.unavailable(),
+    final action => PinnedProgramActionAvailability.available(action),
+  };
+}
+
+ProgramPathActionAvailability programPathActionAvailabilityFromNullable(
+  ProgramPathAction? action,
+) {
+  return switch (action) {
+    null => const ProgramPathActionAvailability.unavailable(),
+    final action => ProgramPathActionAvailability.available(action),
+  };
+}
+
 BottleToolsActionAvailability bottleToolsActionAvailabilityFromNullable({
   required BottleToolCommandAction? onRunCommand,
   required BottleToolLocationAction? onOpenLocation,
@@ -134,6 +186,34 @@ BottleTargetActionAvailability resolveBottleTargetAction({
     ) =>
       BottleTargetActionAvailability.enabled(() => invoke(bottle)),
     _ => const BottleTargetActionAvailability.disabled(),
+  };
+}
+
+BottleTargetActionAvailability resolvePinnedProgramAction({
+  required BottleSummary bottle,
+  required PinnedProgramSummary program,
+  required PinnedProgramActionAvailability action,
+}) {
+  return switch (action) {
+    AvailablePinnedProgramActionAvailability(:final invoke) =>
+      BottleTargetActionAvailability.enabled(() => invoke(bottle, program)),
+    UnavailablePinnedProgramActionAvailability() =>
+      const BottleTargetActionAvailability.disabled(),
+  };
+}
+
+BottleTargetActionAvailability resolveProgramPathAction({
+  required BottleSummary bottle,
+  required PinnedProgramSummary program,
+  required ProgramPathActionAvailability action,
+}) {
+  return switch (action) {
+    AvailableProgramPathActionAvailability(:final invoke) =>
+      BottleTargetActionAvailability.enabled(
+        () => invoke(bottle, program.path),
+      ),
+    UnavailableProgramPathActionAvailability() =>
+      const BottleTargetActionAvailability.disabled(),
   };
 }
 

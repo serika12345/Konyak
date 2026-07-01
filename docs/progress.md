@@ -13,6 +13,37 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-07-01 10:24 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Model program configuration bottom-bar action availability
+  explicitly.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: `d78b12b` (`Model bottle tools action availability`).
+- Purpose: continue nullable hardening in the Flutter bottle UI boundary by
+  replacing `ProgramConfigurationBottomBar` pinned-program location and
+  run-program-path nullable callbacks with explicit availability variants.
+- Completed work: added Freezed `PinnedProgramActionAvailability` and
+  `ProgramPathActionAvailability` variants plus explicit resolver helpers;
+  replaced `ProgramConfigurationBottomBar`'s nullable action props with
+  availability props; converted existing `KonyakProgramActions` nullable
+  callbacks at the `KonyakBottleDetail` boundary; and added focused
+  action-resolution tests.
+- Remaining work: none for this slice. The next nullable-hardening candidates
+  are `BottleActionPanel` action callback availability, pinned-program tile
+  callback availability, and broader home action contract nullable callbacks.
+- Next action: continue the next explicit-state hardening slice or commit this
+  uncommitted slice when requested.
+- Verification: observed
+  `flutter test test/app/bottle_detail_child_state_test.dart` fail before
+  implementation because the pinned-program/program-path availability variants
+  and resolver helpers did not exist. After implementation, the targeted
+  child-state tests passed. Full verification passed with
+  `just flutter-format-check`, `just flutter-analyze`, `just flutter-test`,
+  `just verify-governance`, `just verify-safety`, `just format-check`, and
+  `just lint`.
+
 - Timestamp: 2026-07-01 10:04 JST
 - State: `completed`
 - Branch: `main`

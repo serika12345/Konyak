@@ -179,6 +179,86 @@ void main() {
 
     expect(dispatch, isA<UnavailableBottleToolActionDispatch>());
   });
+
+  test('models unavailable pinned program actions explicitly', () {
+    final action = pinnedProgramActionAvailabilityFromNullable(null);
+
+    expect(action, isA<UnavailablePinnedProgramActionAvailability>());
+  });
+
+  test('resolves pinned program actions to an enabled callback', () {
+    final bottle = _bottle(id: 'steam', name: 'Steam');
+    final program = _program(name: 'Steam', path: 'C:/Steam/steam.exe');
+    final invokedTargets = <(String, String)>[];
+    final action = resolvePinnedProgramAction(
+      bottle: bottle,
+      program: program,
+      action: PinnedProgramActionAvailability.available(
+        (bottle, program) => invokedTargets.add((bottle.id, program.path)),
+      ),
+    );
+
+    switch (action) {
+      case EnabledBottleTargetActionAvailability(:final invoke):
+        invoke();
+      case DisabledBottleTargetActionAvailability():
+        fail('Expected pinned program action to be enabled.');
+    }
+
+    expect(invokedTargets, <(String, String)>[('steam', 'C:/Steam/steam.exe')]);
+  });
+
+  test('disables unavailable pinned program actions', () {
+    final bottle = _bottle(id: 'steam', name: 'Steam');
+    final program = _program(name: 'Steam', path: 'C:/Steam/steam.exe');
+    final action = resolvePinnedProgramAction(
+      bottle: bottle,
+      program: program,
+      action: const PinnedProgramActionAvailability.unavailable(),
+    );
+
+    expect(action, isA<DisabledBottleTargetActionAvailability>());
+  });
+
+  test('models unavailable program path actions explicitly', () {
+    final action = programPathActionAvailabilityFromNullable(null);
+
+    expect(action, isA<UnavailableProgramPathActionAvailability>());
+  });
+
+  test('resolves program path actions to an enabled callback', () {
+    final bottle = _bottle(id: 'steam', name: 'Steam');
+    final program = _program(name: 'Steam', path: 'C:/Steam/steam.exe');
+    final invokedTargets = <(String, String)>[];
+    final action = resolveProgramPathAction(
+      bottle: bottle,
+      program: program,
+      action: ProgramPathActionAvailability.available(
+        (bottle, programPath) => invokedTargets.add((bottle.id, programPath)),
+      ),
+    );
+
+    switch (action) {
+      case EnabledBottleTargetActionAvailability(:final invoke):
+        invoke();
+      case DisabledBottleTargetActionAvailability():
+        fail('Expected program path action to be enabled.');
+    }
+
+    expect(invokedTargets, <(String, String)>[('steam', 'C:/Steam/steam.exe')]);
+  });
+
+  test('disables unavailable program path actions', () {
+    final bottle = _bottle(id: 'steam', name: 'Steam');
+    final program = _program(name: 'Steam', path: 'C:/Steam/steam.exe');
+    final action = resolveProgramPathAction(
+      bottle: bottle,
+      program: program,
+      action: const ProgramPathActionAvailability.unavailable(),
+    );
+
+    expect(action, isA<DisabledBottleTargetActionAvailability>());
+  });
 }
 
 BottleSummary _bottle({required String id, required String name}) {
@@ -188,4 +268,8 @@ BottleSummary _bottle({required String id, required String name}) {
     path: '/bottles/$id',
     windowsVersion: 'win10',
   );
+}
+
+PinnedProgramSummary _program({required String name, required String path}) {
+  return PinnedProgramSummary(name: name, path: path, removable: true);
 }

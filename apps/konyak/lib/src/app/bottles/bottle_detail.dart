@@ -126,9 +126,13 @@ class KonyakBottleDetail extends StatelessWidget {
                 platform: state.platform,
                 bottle: bottle,
                 program: program,
-                onOpenPinnedProgramLocation:
-                    programActions.onOpenPinnedProgramLocation,
-                onRunProgramPath: programActions.onRunProgramPath,
+                openPinnedProgramLocationAction:
+                    pinnedProgramActionAvailabilityFromNullable(
+                      programActions.onOpenPinnedProgramLocation,
+                    ),
+                runProgramPathAction: programPathActionAvailabilityFromNullable(
+                  programActions.onRunProgramPath,
+                ),
               ),
             ConfigurationKonyakHomeDetailContent(:final bottle) =>
               BottleConfigurationBottomBar(

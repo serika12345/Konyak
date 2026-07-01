@@ -16,17 +16,15 @@ class ProgramConfigurationBottomBar extends StatelessWidget {
     required this.platform,
     required this.bottle,
     required this.program,
-    required this.onOpenPinnedProgramLocation,
-    required this.onRunProgramPath,
+    required this.openPinnedProgramLocationAction,
+    required this.runProgramPathAction,
   });
 
   final KonyakPlatform platform;
   final BottleSummary bottle;
   final PinnedProgramSummary program;
-  final void Function(BottleSummary bottle, PinnedProgramSummary program)?
-  onOpenPinnedProgramLocation;
-  final void Function(BottleSummary bottle, String programPath)?
-  onRunProgramPath;
+  final PinnedProgramActionAvailability openPinnedProgramLocationAction;
+  final ProgramPathActionAvailability runProgramPathAction;
 
   @override
   Widget build(BuildContext context) {
@@ -45,16 +43,24 @@ class ProgramConfigurationBottomBar extends StatelessWidget {
         children: [
           KonyakBottomButton(
             label: localizedShowInFileManagerLabel(localizations, platform),
-            onPressed: onOpenPinnedProgramLocation == null
-                ? null
-                : () => onOpenPinnedProgramLocation!(bottle, program),
+            onPressed: _targetActionCallback(
+              resolvePinnedProgramAction(
+                bottle: bottle,
+                program: program,
+                action: openPinnedProgramLocationAction,
+              ),
+            ),
           ),
           const SizedBox(width: 6),
           KonyakBottomButton(
             label: localizations.runEllipsis,
-            onPressed: onRunProgramPath == null
-                ? null
-                : () => onRunProgramPath!(bottle, program.path),
+            onPressed: _targetActionCallback(
+              resolveProgramPathAction(
+                bottle: bottle,
+                program: program,
+                action: runProgramPathAction,
+              ),
+            ),
           ),
         ],
       ),
