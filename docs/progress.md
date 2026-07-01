@@ -13,26 +13,37 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-01 22:12 JST
-- State: `in_progress`
+- Timestamp: 2026-07-01 22:16 JST
+- State: `completed`
 - Branch: `task/refactor-r2-serialization-boundary`
 - Active work: R2-P2 Serialization Boundary.
 - Related TODO: `docs/todo.md` `R2-P2 Serialization Boundary`.
 - Pull request: not opened yet.
-- Latest commit: base `c6c5be7`
-  (`Merge pull request #3 from serika12345:task/refactor-r2-primitive-audit`).
+- Latest commit: implementation commit `4dd4e54`
+  (`Move runtime command JSON to CLI boundary`) plus handoff updates on the
+  R2-P2 branch.
 - Purpose: move a stable JSON projection out of model objects and into the CLI
   serialization boundary without changing CLI output compatibility.
 - Completed work: confirmed PR #3 merged with successful GitHub checks,
   fast-forwarded local `main`, created the R2-P2 branch, read the active TODO
-  and progress state, and identified macOS setup/GPTK runtime command JSON
-  projections as the smallest serialization-boundary conversion target.
-- Remaining work: add a focused serialization audit, add failing contract tests
-  for CLI-side JSON helpers, move the projection helpers into CLI code, run
-  required R2-P2 verification, commit, push, and open the draft PR.
-- Next action: add the audit note and failing CLI serialization tests before
-  changing the runtime command models.
-- Verification: not run yet on this branch.
+  and progress state, added `docs/r2-serialization-boundary-audit.md`, added
+  failing CLI serialization tests, moved macOS setup and GPTK Wine install JSON
+  projections from model objects into `cli_app_runtime_json.dart`, updated the
+  runtime command handler to use CLI-side serializers, confirmed there are no
+  remaining domain-layer `toJson` projections, and removed the completed
+  R2-S4/R2-P2 backlog entries from `docs/todo.md`.
+- Remaining work: push the branch, open the draft PR, then review it. Do not
+  advance into R3 automatically.
+- Next action: push `task/refactor-r2-serialization-boundary` and open the
+  draft pull request.
+- Verification: observed
+  `dart test test/cli_app_runtime_json_test.dart` fail before implementation
+  because `cli_app_runtime_json.dart` and its serializer functions did not
+  exist. After implementation, the same test passed. Focused CLI contract checks
+  passed for `check-macos-setup --json returns Rosetta and runtime status` and
+  both `install-gptk-wine imports` cases. Full local verification passed with
+  `just cli-test`, `just verify-governance`, `just verify-safety`,
+  `just format-check`, and `just lint` through the Nix dev shell.
 
 - Timestamp: 2026-07-01 20:25 JST
 - State: `completed`
