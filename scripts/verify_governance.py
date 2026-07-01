@@ -1113,21 +1113,26 @@ def require_typed_bottle_repository_id_boundary() -> None:
     expected_parser_terms = {
         "packages/konyak_cli/lib/src/cli/cli_value_object_parsers.dart": [
             "BottleId? requiredCliBottleId",
-            "return value == null ? null : BottleId(value);",
+            "Option<BottleId> requiredCliBottleIdOption(",
+            "return nullableParsedOption(requiredCliBottleIdOption(results, index: index));",
+            "return requiredCliRestOption(results, index: index).map(BottleId.new);",
         ],
         "packages/konyak_cli/lib/src/cli/cli_bottle_parsers.dart": [
             "BottleId? parseJsonBottleInspectCommand",
             "BottleId? parseJsonBottleProgramsListCommand",
             "BottleId? parseJsonBottleDeleteCommand",
-            "return requiredCliBottleId(results);",
+            "Option<BottleId> parseJsonBottleInspectCommandOption",
+            "Option<BottleId> parseJsonBottleProgramsListCommandOption",
+            "Option<BottleId> parseJsonBottleDeleteCommandOption",
+            "return $(requiredCliBottleIdOption(results));",
         ],
         "packages/konyak_cli/lib/src/cli/cli_program_run_parsers.dart": [
             "final BottleId bottleId;",
-            "final bottleId = requiredCliBottleId(results);",
+            "final bottleId = $(requiredCliBottleIdOption(results));",
         ],
         "packages/konyak_cli/lib/src/cli/cli_location_parsers.dart": [
             "final BottleId bottleId;",
-            "final bottleId = requiredCliBottleId(results);",
+            "final bottleId = $(requiredCliBottleIdOption(results));",
         ],
     }
     for path, expected_terms in expected_parser_terms.items():
