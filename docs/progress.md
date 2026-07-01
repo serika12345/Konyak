@@ -13,6 +13,37 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-07-01 22:34 JST
+- State: `completed`
+- Branch: `task/refactor-r3-home-loader-state`
+- Active work: R3-P1 Home Loader State Extraction.
+- Related TODO: `docs/todo.md` `R3-P1 Home Loader State Extraction`.
+- Pull request: https://github.com/serika12345/Konyak/pull/5
+- Latest commit: single R3-P1 branch commit
+  (`Extract runtime settings update state`).
+- Purpose: extract pure home loader state transitions into immutable helper
+  modules with focused tests while leaving `KonyakHomeLoaderState` responsible
+  for lifecycle, async orchestration, and platform service calls.
+- Completed work: confirmed PR #4 is merged, fast-forwarded local `main`, created
+  the R3-P1 branch, identified the first unfinished refactoring PR gate, added a
+  focused test for runtime settings update transitions, extracted the
+  optimistic/commit/revert bottle runtime settings update into
+  `runtime_settings_update_state.dart`, removed the completed R3-S1/R3-P1
+  backlog entries from `docs/todo.md`, and completed the required local
+  verification.
+- Remaining work: review draft PR #5. Do not advance into R3-P2 automatically.
+- Next action: review https://github.com/serika12345/Konyak/pull/5 and decide
+  whether to merge or request follow-up changes.
+- Verification: observed
+  `flutter test test/home_loader/runtime_settings_update_state_test.dart` fail
+  before implementation because `runtime_settings_update_state.dart` and its
+  transition functions did not exist. After implementation, the same focused
+  test passed. Full local verification passed with `just flutter-format-check`,
+  `just flutter-analyze`, `just flutter-test`, `just verify-governance`,
+  `just verify-safety`, `just format-check`, and `just lint` through the Nix dev
+  shell. `just verify-governance` also passed again after the progress document
+  was updated.
+
 - Timestamp: 2026-07-01 22:19 JST
 - State: `completed`
 - Branch: `task/refactor-r2-serialization-boundary`

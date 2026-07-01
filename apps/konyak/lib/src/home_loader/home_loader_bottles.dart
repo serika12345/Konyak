@@ -21,6 +21,7 @@ import 'home_loader.dart';
 import 'home_loader_executables.dart';
 import 'home_loader_runtimes.dart';
 import 'runtime_settings_pending_controls_state.dart';
+import 'runtime_settings_update_state.dart';
 
 extension KonyakHomeLoaderBottles on KonyakHomeLoaderState {
   Future<void> loadBottles() async {
@@ -159,16 +160,15 @@ extension KonyakHomeLoaderBottles on KonyakHomeLoaderState {
       BottleSelectionMissing() => bottle,
     };
     updateState(() {
-      runtimeSettingsPendingControlsState = startRuntimeSettingsControlUpdate(
-        state: runtimeSettingsPendingControlsState,
-        bottleId: bottle.id,
+      final nextState = startRuntimeSettingsUpdate(
+        bottleListState: homeBottleListState,
+        pendingControlsState: runtimeSettingsPendingControlsState,
+        bottle: previousBottle,
+        runtimeSettings: runtimeSettings,
         controlKey: controlKey,
       );
-      homeBottleListState = storeHomeBottle(
-        state: homeBottleListState,
-        bottle: previousBottle.withRuntimeSettings(runtimeSettings),
-        mode: const HomeBottleStoreMode.upsert(),
-      );
+      homeBottleListState = nextState.bottleListState;
+      runtimeSettingsPendingControlsState = nextState.pendingControlsState;
     });
 
     final BottleUpdateLoadResult result;
@@ -181,32 +181,31 @@ extension KonyakHomeLoaderBottles on KonyakHomeLoaderState {
       return;
     }
 
-    final failureMessages = <String>[];
     updateState(() {
-      runtimeSettingsPendingControlsState = finishRuntimeSettingsControlUpdate(
-        state: runtimeSettingsPendingControlsState,
-        bottleId: bottle.id,
-      );
-      switch (result) {
-        case UpdatedBottle(:final bottle):
-          homeBottleListState = storeHomeBottle(
-            state: homeBottleListState,
-            bottle: bottle,
-            mode: const HomeBottleStoreMode.upsert(),
-          );
-        case MissingBottleUpdate(:final message) ||
-            BottleUpdateLoadFailure(:final message):
-          homeBottleListState = storeHomeBottle(
-            state: homeBottleListState,
-            bottle: previousBottle,
-            mode: const HomeBottleStoreMode.upsert(),
-          );
-          failureMessages.add(message);
-      }
+      final nextState = switch (result) {
+        UpdatedBottle(bottle: final updatedBottle) =>
+          finishSuccessfulRuntimeSettingsUpdate(
+            bottleListState: homeBottleListState,
+            pendingControlsState: runtimeSettingsPendingControlsState,
+            bottle: updatedBottle,
+          ),
+        MissingBottleUpdate() ||
+        BottleUpdateLoadFailure() => failRuntimeSettingsUpdate(
+          bottleListState: homeBottleListState,
+          pendingControlsState: runtimeSettingsPendingControlsState,
+          previousBottle: previousBottle,
+        ),
+      };
+      homeBottleListState = nextState.bottleListState;
+      runtimeSettingsPendingControlsState = nextState.pendingControlsState;
     });
 
-    for (final message in failureMessages) {
-      showSnackBar(message);
+    switch (result) {
+      case UpdatedBottle():
+        break;
+      case MissingBottleUpdate(:final message) ||
+          BottleUpdateLoadFailure(:final message):
+        showSnackBar(message);
     }
   }
 

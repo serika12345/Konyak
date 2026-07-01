@@ -96,9 +96,6 @@ wiring.
 
 Small milestones:
 
-- [ ] R3-S1: Extract pure `KonyakHomeLoaderState` transitions into immutable
-  state/update helpers while keeping the `StatefulWidget` as the lifecycle and
-  I/O shell.
 - [ ] R3-S2: Keep the `KonyakHome` boundary grouped by responsibility-scoped
   state and action contracts instead of flat props or a single giant props
   object.
@@ -108,40 +105,6 @@ Small milestones:
 - [ ] R3-S4: Split remaining large UI files only after the extracted contracts
   are stable.
 - [ ] R3-S5: Add focused widget or golden tests when visible behavior changes.
-
-#### PR Gate: R3-P1 Home Loader State Extraction
-
-branch: `task/refactor-r3-home-loader-state`
-
-Completion criteria:
-
-- Home loader state transitions that do not require I/O live in pure helper
-  modules with focused tests.
-- `KonyakHomeLoaderState` keeps lifecycle, async orchestration, and platform
-  service calls only.
-- Existing UI behavior remains stable.
-- `docs/progress.md` records the gate state, latest commit, verification, and
-  next action.
-
-Not included:
-
-- Broad widget tree restructuring.
-- Visual redesign.
-- CLI process service rewrites.
-
-Verification:
-
-- `just flutter-format-check`
-- `just flutter-analyze`
-- `just flutter-test`
-- `just verify-governance`
-- `just verify-safety`
-- `just format-check`
-- `just lint`
-
-review gate:
-
-- Commit and push the branch, open a draft PR, then stop before R3-P2.
 
 #### PR Gate: R3-P2 Bottle View Model Extraction
 
