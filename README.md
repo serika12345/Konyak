@@ -26,6 +26,28 @@ Technical details are kept in developer documentation:
 - [runtime/konyak-macos-runtime/README.md](runtime/konyak-macos-runtime/README.md):
   macOS runtime build and release contract
 
+## Agent Workflows
+
+Refactoring work is tracked as large milestones, small milestones, and PR
+gates in [docs/todo.md](docs/todo.md). Current handoff state lives in
+[docs/progress.md](docs/progress.md).
+
+Common agent action commands:
+
+- `/advance-large`: advance the current large milestone on a dedicated branch,
+  open a draft PR at the review gate, then stop.
+- `/advance-pr`: advance only the next unfinished `PR Gate` in `docs/todo.md`,
+  open a draft PR, then stop.
+- `/advance-small`: advance the next coherent small milestone in the active
+  gate, commit and push the verified step, then stop.
+- `/review-gate`: summarize the current branch for review without implementing
+  more work.
+- `/konyak-status`: report branch state, worktree state, active milestone, and
+  recommended next action without modifying files.
+
+Repo-scoped skills under `.agents/skills` mirror these commands for Codex IDE
+selection, such as `$konyak-advance-large` and `$konyak-advance-pr`.
+
 ## Build
 
 Run builds through the Nix flake.

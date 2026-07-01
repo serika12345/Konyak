@@ -1,0 +1,8 @@
+interface:
+  display_name: "Konyak /konyak-status"
+  short_description: "Report Konyak repo status"
+  brand_color: "#0F766E"
+  default_prompt: "Use $konyak-status to report Konyak repository status."
+
+policy:
+  allow_implicit_invocation: false

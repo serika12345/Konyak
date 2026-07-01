@@ -13,6 +13,31 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-07-01 15:55 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Define Bara-style refactoring milestone management.
+- Related TODO: `docs/todo.md` `Refactoring Milestones`.
+- Latest commit: `f838994` (`Model program mutation parser inputs`).
+- Purpose: make the remaining refactoring work manageable through explicit
+  large milestones, small milestones, PR gates, and stable agent action
+  commands similar to the Bara repository workflow.
+- Completed work: added R1 through R4 refactoring large milestones with
+  small milestones and PR Gate blocks in `docs/todo.md`; documented
+  milestone branch workflow and `/advance-large`, `/advance-pr`,
+  `/advance-small`, `/review-gate`, `/docs-only`, and `/konyak-status`
+  commands in `AGENTS.md`; added README workflow entry points; and added
+  repo-scoped `.agents/skills/konyak-*` action skills for Codex IDE
+  selection.
+- Remaining work: none for the management scaffolding. The next refactoring
+  implementation gate is R1-P1 CLI Parser Boundary on branch
+  `task/refactor-r1-cli-parsers`.
+- Next action: use `/advance-pr` or `$konyak-advance-pr` to start R1-P1, or
+  use `/konyak-status` / `$konyak-status` for a no-edit status report.
+- Verification: `just verify-governance`, `just verify-safety`,
+  `just format-check`, and `just lint` passed after the documentation and
+  repo-scoped skill changes.
+
 - Timestamp: 2026-07-01 11:28 JST
 - State: `completed`
 - Branch: `main`

@@ -36,40 +36,345 @@ verification output instead of checked-off backlog entries.
     equivalent evidence where practical.
   - Do not add proprietary or nonredistributable game payloads to CI.
 
+## Refactoring Milestones
+
+This section turns the deferred functional-core / OOP-extension cleanup into
+reviewable large milestones and PR-sized gates. Refactoring work should stay
+separate from runtime feature work unless the refactor is required to make a
+feature change safe. Completed small milestones are removed after their
+implementation, verification, and review are complete.
+
+Automatic progression policy:
+
+- `/advance-pr` targets the first unfinished `PR Gate` in this section unless
+  the user names another gate.
+- `/advance-large` targets the current large refactoring milestone and stops at
+  that milestone's review gate.
+- `/advance-small` advances the next coherent small milestone inside the
+  current `PR Gate`.
+- If a required step is not represented below, add or refine the milestone
+  before implementation.
+
+### R1: Explicit Boundary State
+
+Purpose: finish the current nullable-hardening pass by replacing semantic
+absence and optional action dispatch with explicit parser, availability,
+dispatch, or result variants at the CLI and Flutter boundaries.
+
+Small milestones:
+
+- [ ] R1-S1: Convert adjacent CLI parser files to Option-returning parsed-input
+  helpers while preserving nullable command-selection wrappers where they are
+  still the public selection contract. Initial targets are
+  `cli_bottle_parsers.dart`, `cli_program_run_parsers.dart`,
+  `cli_runtime_parsers.dart`, and `cli_location_parsers.dart`.
+- [ ] R1-S2: Audit CLI command handlers that probe nullable request values and
+  split command selection from command execution where that removes semantic
+  null checks without broad rewrites.
+- [ ] R1-S3: Replace remaining Flutter home/menu action nullable callbacks in
+  `home_screen.dart`, sidebar selection, and app-level action contracts with
+  explicit availability or dispatch variants.
+- [ ] R1-S4: Classify remaining nullable UI values as framework-boundary,
+  presentation-only, or domain-significant. Convert only the
+  domain-significant cases in this milestone.
+- [ ] R1-S5: Add or tighten a governance baseline for new domain-facing
+  nullable or primitive exposures once the converted boundary is stable.
+
+#### PR Gate: R1-P1 CLI Parser Boundary
+
+branch: `task/refactor-r1-cli-parsers`
+
+Completion criteria:
+
+- The parser files listed in R1-S1 expose explicit parsed-input helpers for
+  successful machine-consumed command inputs.
+- Existing nullable parser functions remain only as command-selection
+  compatibility wrappers or are replaced with an equivalent explicit selection
+  result.
+- Focused CLI parser tests cover valid input, incomplete input, empty required
+  options, and rest-argument arity for each touched parser family.
+- `docs/progress.md` records the gate state, latest commit, verification, and
+  next action.
+
+Not included:
+
+- Rewriting all CLI handlers.
+- Changing public CLI JSON contracts or exit codes.
+- Runtime execution, Wine, launcher, or packaging behavior changes.
+
+Verification:
+
+- `just cli-test`
+- `just verify-governance`
+- `just verify-safety`
+- `just format-check`
+- `just lint`
+
+review gate:
+
+- Commit and push the branch, open a draft PR, then stop. Do not continue into
+  R1-P2 automatically.
+
+#### PR Gate: R1-P2 Flutter Action Availability
+
+branch: `task/refactor-r1-flutter-actions`
+
+Completion criteria:
+
+- Remaining bottle/home/menu actions consumed by Flutter are represented as
+  explicit availability or dispatch variants instead of nullable callbacks.
+- Action selection helpers are tested as pure state transitions where practical.
+- Visible UI behavior is unchanged, or changed behavior has focused widget or
+  golden coverage with captured artifacts.
+- `docs/progress.md` records the gate state, latest commit, verification, and
+  next action.
+
+Not included:
+
+- Large UI file splitting.
+- Visual redesign.
+- CLI backend contract changes.
+
+Verification:
+
+- `just flutter-format-check`
+- `just flutter-analyze`
+- `just flutter-test`
+- `just verify-governance`
+- `just verify-safety`
+- `just format-check`
+- `just lint`
+
+review gate:
+
+- Commit and push the branch, open a draft PR, then stop. Do not continue into
+  R2 automatically.
+
+### R2: Domain Boundary Value Objects
+
+Purpose: replace remaining semantic primitives in domain-facing planner,
+request, and serialization APIs with domain value objects or explicit result
+variants while keeping I/O, serialization, and UI adapter boundaries narrow.
+
+Small milestones:
+
+- [ ] R2-S1: Audit domain-facing `String`, `List<String>`, and
+  `Option<String>` exposures and classify each as boundary primitive,
+  domain value object, typed command object, or explicit result/plan variant.
+- [ ] R2-S2: Replace semantic planner/request primitives with existing or new
+  value objects where the invariant is stable.
+- [ ] R2-S3: Keep `ProgramRunPlanner` externally pure and split host platform,
+  runner-kind, and graphics-backend decisions into narrow policy objects only
+  when the current switch logic has grown enough to justify the split.
+- [ ] R2-S4: Move JSON `toJson` projection out of domain models into CLI or
+  serialization boundary libraries where compatibility permits.
+- [ ] R2-S5: Remove hand-written `part` usage from CLI contract tests so tests
+  no longer normalize that shape as a large-file escape hatch.
+
+#### PR Gate: R2-P1 Primitive Boundary Audit
+
+branch: `task/refactor-r2-primitive-audit`
+
+Completion criteria:
+
+- A focused audit records the domain-facing primitive exposures that remain and
+  assigns each to a planned conversion or accepted boundary category.
+- The first small conversion removes a representative semantic primitive from a
+  planner/request API and includes behavior-focused tests.
+- Any deferred primitive exposure has an explicit reason and follow-up gate.
+- `docs/progress.md` records the gate state, latest commit, verification, and
+  next action.
+
+Not included:
+
+- Bulk moving all JSON projections.
+- Reworking runtime execution behavior.
+- Splitting Flutter UI files.
+
+Verification:
+
+- `just cli-test`
+- `just verify-governance`
+- `just verify-safety`
+- `just format-check`
+- `just lint`
+
+review gate:
+
+- Commit and push the branch, open a draft PR, then stop before broader R2
+  conversions.
+
+#### PR Gate: R2-P2 Serialization Boundary
+
+branch: `task/refactor-r2-serialization-boundary`
+
+Completion criteria:
+
+- JSON projection is moved out of at least one stable domain model family into
+  a CLI or serialization boundary without changing persisted or CLI output
+  compatibility.
+- Contract tests prove the JSON shape remains stable.
+- Remaining domain-model `toJson` projections are either converted or tracked
+  by a follow-up small milestone.
+- `docs/progress.md` records the gate state, latest commit, verification, and
+  next action.
+
+Not included:
+
+- Public schema changes.
+- Runtime artifact or manifest format changes.
+- UI redesign.
+
+Verification:
+
+- `just cli-test`
+- `just verify-governance`
+- `just verify-safety`
+- `just format-check`
+- `just lint`
+
+review gate:
+
+- Commit and push the branch, open a draft PR, then stop before R3.
+
+### R3: Flutter Home and Bottle UI Decomposition
+
+Purpose: split remaining large Flutter UI and loader surfaces after backend and
+action boundaries are explicit, keeping widgets focused on rendering and event
+wiring.
+
+Small milestones:
+
+- [ ] R3-S1: Extract pure `KonyakHomeLoaderState` transitions into immutable
+  state/update helpers while keeping the `StatefulWidget` as the lifecycle and
+  I/O shell.
+- [ ] R3-S2: Keep the `KonyakHome` boundary grouped by responsibility-scoped
+  state and action contracts instead of flat props or a single giant props
+  object.
+- [ ] R3-S3: Move bottle, program, and runtime view models and action
+  selection out of `home_screen.dart`, `sidebar.dart`,
+  `program_configuration_view.dart`, and `bottle_configuration_view.dart`.
+- [ ] R3-S4: Split remaining large UI files only after the extracted contracts
+  are stable.
+- [ ] R3-S5: Add focused widget or golden tests when visible behavior changes.
+
+#### PR Gate: R3-P1 Home Loader State Extraction
+
+branch: `task/refactor-r3-home-loader-state`
+
+Completion criteria:
+
+- Home loader state transitions that do not require I/O live in pure helper
+  modules with focused tests.
+- `KonyakHomeLoaderState` keeps lifecycle, async orchestration, and platform
+  service calls only.
+- Existing UI behavior remains stable.
+- `docs/progress.md` records the gate state, latest commit, verification, and
+  next action.
+
+Not included:
+
+- Broad widget tree restructuring.
+- Visual redesign.
+- CLI process service rewrites.
+
+Verification:
+
+- `just flutter-format-check`
+- `just flutter-analyze`
+- `just flutter-test`
+- `just verify-governance`
+- `just verify-safety`
+- `just format-check`
+- `just lint`
+
+review gate:
+
+- Commit and push the branch, open a draft PR, then stop before R3-P2.
+
+#### PR Gate: R3-P2 Bottle View Model Extraction
+
+branch: `task/refactor-r3-bottle-view-models`
+
+Completion criteria:
+
+- Bottle, program, and runtime view model construction and action selection are
+  moved out of large rendering widgets into focused helpers.
+- Widgets remain responsible for rendering and event wiring.
+- Focused tests cover view model construction and action selection; widget or
+  golden tests cover any visible behavior changes.
+- `docs/progress.md` records the gate state, latest commit, verification, and
+  next action.
+
+Not included:
+
+- CLI backend changes.
+- Runtime behavior changes.
+- Large visual redesign.
+
+Verification:
+
+- `just flutter-format-check`
+- `just flutter-analyze`
+- `just flutter-test`
+- `just verify-governance`
+- `just verify-safety`
+- `just format-check`
+- `just lint`
+
+review gate:
+
+- Commit and push the branch, open a draft PR, then stop before R4.
+
+### R4: Refactoring Governance and Completion
+
+Purpose: make the refactored boundaries stay stable by adding reviewed
+baselines and cleanup rules once R1 through R3 have narrowed the major
+surfaces.
+
+Small milestones:
+
+- [ ] R4-S1: Add or tighten governance checks for new domain-facing primitive
+  exposures, planner file growth, and UI loader state growth.
+- [ ] R4-S2: Remove stale refactoring handoff entries from `docs/progress.md`
+  once the durable record exists in commits, tests, or artifacts.
+- [ ] R4-S3: Re-audit `docs/todo.md` and architecture documents so completed
+  refactoring work is removed and remaining work is represented by active
+  gates.
+
+#### PR Gate: R4-P1 Refactoring Governance
+
+branch: `task/refactor-r4-governance`
+
+Completion criteria:
+
+- Governance checks cover the refactoring boundaries stabilized by R1 through
+  R3 without weakening existing gates.
+- Documentation reflects the current refactoring state without stale completed
+  slices.
+- `docs/progress.md` records the gate state, latest commit, verification, and
+  next action.
+
+Not included:
+
+- New product features.
+- Broad formatting-only churn.
+- Runtime packaging changes.
+
+Verification:
+
+- `just verify-governance`
+- `just verify-safety`
+- `just format-check`
+- `just lint`
+
+review gate:
+
+- Commit and push the branch, open a draft PR, then stop for final refactoring
+  milestone review.
+
 ## Deferred
 
-- Tighten the functional-core / OOP-extension boundary now that the
-  post-`part` refactor is stable.
-  - Replace remaining semantic `String`, `List<String>`, and `Option<String>`
-    values in domain-facing planner/request APIs with domain value objects,
-    typed command objects, or result/plan variants where the value is not an
-    I/O, serialization, or UI boundary primitive.
-  - Keep `ProgramRunPlanner` externally pure, but split host platform,
-    runner-kind, and graphics-backend decisions into narrow policy/strategy
-    objects once those axes grow beyond the current Linux/macOS switch.
-  - Extract pure Flutter home-loader state transitions from
-    `KonyakHomeLoaderState` into immutable state/update helpers; keep the
-    `StatefulWidget` as the I/O and lifecycle shell.
-  - Remove hand-written `part` usage from CLI contract tests. Production code
-    already rejects hand-written `part`; tests should not normalize that shape
-    as the accepted large-file escape hatch.
-  - Add or tighten governance checks so new domain-facing primitive exposures,
-    planner file growth, and UI loader state growth require an explicit
-    reviewed baseline.
-- Move JSON `toJson` projection out of domain models into CLI/serialization
-  boundary libraries where compatibility permits.
-- Split remaining Flutter large UI files after backend boundaries are smaller.
-  - Keep widgets responsible for rendering and event wiring only.
-  - Keep the `KonyakHome` boundary grouped by responsibility-scoped state and
-    action contracts instead of flat props or a single giant props object.
-  - Move bottle/program/runtime view models and action selection out of
-    `home_screen.dart`, `sidebar.dart`, `program_configuration_view.dart`, and
-    `bottle_configuration_view.dart`.
-  - Keep CLI process launch and failure mapping behind the existing Flutter CLI
-    service boundary.
-  - Verify with `just flutter-format-check`, `just flutter-analyze`, and
-    `just flutter-test`; add focused widget tests when visible behavior
-    changes.
 - Linux ARM64 Windows execution research.
 - Linux executable thumbnails for sandboxed file managers.
   - Do not make the AppImage or normal app startup mutate `/nix/store` or

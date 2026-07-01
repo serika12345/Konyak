@@ -1,0 +1,8 @@
+interface:
+  display_name: "Konyak /advance-small"
+  short_description: "Advance one verified Konyak TODO step"
+  brand_color: "#0F766E"
+  default_prompt: "Use $konyak-advance-small to run Konyak's /advance-small workflow."
+
+policy:
+  allow_implicit_invocation: false

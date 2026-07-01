@@ -1,0 +1,8 @@
+interface:
+  display_name: "Konyak /review-gate"
+  short_description: "Summarize branch state for review"
+  brand_color: "#0F766E"
+  default_prompt: "Use $konyak-review-gate to prepare the current Konyak review package."
+
+policy:
+  allow_implicit_invocation: false

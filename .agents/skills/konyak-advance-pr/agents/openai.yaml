@@ -1,0 +1,8 @@
+interface:
+  display_name: "Konyak /advance-pr"
+  short_description: "Advance to the next Konyak PR gate"
+  brand_color: "#0F766E"
+  default_prompt: "Use $konyak-advance-pr to run Konyak's /advance-pr workflow."
+
+policy:
+  allow_implicit_invocation: false

@@ -260,6 +260,110 @@ When the user asks to continue work without naming a specific task, use
 coherent step. Prefer the earliest unfinished relevant TODO unless the current
 work snapshot points to a more specific continuation.
 
+### 5.1 Refactoring Milestone Workflow
+
+Large refactoring work must be represented in `docs/todo.md` before
+implementation. Broad items must be split into named large milestones, small
+milestones, and `PR Gate` blocks before code changes begin.
+
+A refactoring `PR Gate` should state:
+
+- branch name
+- completion criteria
+- work excluded from the PR
+- required verification
+- review gate or stop condition
+
+When the user asks to continue refactoring without naming a task, prefer the
+first unfinished `PR Gate` under `docs/todo.md` `Refactoring Milestones`
+unless `docs/progress.md` points to a more specific active gate.
+
+Do not advance past a `PR Gate` during automated milestone work unless the user
+explicitly asks to continue beyond that review point. If the next safe step is
+not represented by an existing gate, update `docs/todo.md` first and stop for
+review if the plan materially changes.
+
+### 5.2 Milestone Branch Workflow
+
+When the user asks to advance until a small milestone, large milestone, or PR
+gate is reached, use a dedicated work branch unless the user explicitly says
+otherwise.
+
+Branch workflow:
+
+1. Start from the current base branch, normally `main`.
+2. Create or continue the branch named by the active `PR Gate`.
+3. Advance TODO-backed small steps on that branch.
+4. Commit after each coherent verified step.
+5. Push the task branch after commits when network access is available.
+6. Continue until the requested small milestone, large milestone, PR gate, or
+   blocker is reached.
+7. At a review gate, open a draft pull request when GitHub access is available,
+   then stop with a review package.
+
+On a dedicated milestone branch, autonomous commits and pushes are allowed only
+when all of these are true:
+
+- the work is on a dedicated task branch, not `main`
+- the commit contains one coherent TODO-backed step
+- required verification for that step passed, or the failure is documented
+- TODO and progress documents match the implementation state
+- the commit does not include unrelated user changes
+
+Do not autonomously commit or push on `main`. For non-milestone tasks such as
+documentation updates, small policy edits, one-off explanations, or exploratory
+changes, usually stay on `main` and return the uncommitted diff for review
+unless the user explicitly asks for a commit.
+
+Review package at a milestone stop:
+
+- branch name and latest commit
+- pull request URL, if opened
+- completed TODO or PR Gate items
+- changed files summary
+- verification commands and results
+- design or refactoring decisions made
+- remaining risks or review points
+- recommended next milestone
+
+### 5.3 Agent Action Commands
+
+These short commands are stable aliases for common Konyak workflows. Treat them
+as explicit user instructions; do not ask the user to restate the full process
+when the command is clear.
+
+- `/advance-large`: create or continue the dedicated branch for the current
+  large milestone, advance TODO-backed small steps, commit and push coherent
+  verified steps, open a draft PR at the large milestone review gate, then stop
+  with a review package.
+- `/advance-pr`: create or continue the dedicated branch for the next
+  unfinished `PR Gate` in `docs/todo.md`, complete only that gate's criteria,
+  run required verification through the Nix dev shell, commit and push coherent
+  verified steps, open a draft PR, then stop. Do not continue into the next
+  `PR Gate` automatically.
+- `/advance-small`: create or continue the dedicated branch for the active
+  gate, complete the next coherent small milestone, run required verification,
+  commit and push the verified step, then stop with a concise review package.
+- `/continue-branch`: continue work on the current dedicated task branch using
+  the default workflow. Commit and push coherent verified steps.
+- `/review-gate`: do not implement more work. Summarize the current branch,
+  completed TODOs, changed files, verification results, risks, and recommended
+  next step.
+- `/merge-reviewed`: after explicit user approval, merge the reviewed work
+  branch into `main`, update progress documentation if needed, and clean up the
+  branch when appropriate.
+- `/docs-only`: perform documentation or policy edits only. Usually stay on
+  `main`; do not create a branch, commit, or push unless explicitly requested.
+- `/konyak-status`: report current branch state, worktree status, active TODO
+  milestone, relevant refactoring gate, and recommended next action. Do not
+  modify files.
+
+For Codex IDE / VSCode UI selection, repo-scoped skills in `.agents/skills`
+mirror these actions. Invoking `$konyak-advance-large`,
+`$konyak-advance-pr`, `$konyak-advance-small`, `$konyak-review-gate`,
+`$konyak-docs-only`, or `$konyak-status` is equivalent to the corresponding
+Konyak action command.
+
 ## 6. Verification Matrix
 
 ### 6.1 Any repository or tooling change
