@@ -80,11 +80,13 @@ class _KonyakHomeState extends State<KonyakHome> {
         children: [
           if (state.platform.isLinux)
             KonyakHomeMenuBar(
-              onShowAbout: widget.menuActions.onShowAbout,
-              onShowSettings: widget.menuActions.onShowSettings,
-              onCheckKonyakUpdates: widget.menuActions.onCheckKonyakUpdates,
-              onImportBottleArchive: widget.menuActions.onImportBottleArchive,
-              onReinstallRuntime: widget.menuActions.onReinstallRuntime,
+              showAboutAction: widget.menuActions.showAboutAction,
+              showSettingsAction: widget.menuActions.showSettingsAction,
+              checkKonyakUpdatesAction:
+                  widget.menuActions.checkKonyakUpdatesAction,
+              importBottleArchiveAction:
+                  widget.menuActions.importBottleArchiveAction,
+              reinstallRuntimeAction: widget.menuActions.reinstallRuntimeAction,
             ),
           Expanded(
             child: Row(
@@ -101,7 +103,8 @@ class _KonyakHomeState extends State<KonyakHome> {
                   onSearchChanged: (_) => setState(() {}),
                   onAnimationEnd: _handleSidebarAnimationEnd,
                   onToggleSidebar: _toggleSidebar,
-                  onBottleSelected: _selectBottle,
+                  bottleSelectionAction:
+                      BottleSummaryActionAvailability.available(_selectBottle),
                   onBottleContextMenuAction: _handleBottleContextMenuAction,
                 ),
                 VerticalDivider(
@@ -168,7 +171,12 @@ class _KonyakHomeState extends State<KonyakHome> {
     setState(() {
       _navigationState = nextNavigationState;
     });
-    widget.bottleActions.onLoadConfiguration?.call(bottle);
+    _invokeBottleTargetAction(
+      resolveBottleSummaryAction(
+        bottle: bottle,
+        action: widget.bottleActions.loadConfigurationAction,
+      ),
+    );
   }
 
   void _showPinnedProgramConfiguration(
@@ -186,7 +194,13 @@ class _KonyakHomeState extends State<KonyakHome> {
     setState(() {
       _navigationState = nextNavigationState;
     });
-    widget.programActions.onLoadPinnedProgramSettings?.call(bottle, program);
+    _invokeBottleTargetAction(
+      resolvePinnedProgramAction(
+        bottle: bottle,
+        program: program,
+        action: widget.programActions.loadPinnedProgramSettingsAction,
+      ),
+    );
   }
 
   void _showBottleOverview() {
@@ -214,17 +228,64 @@ class _KonyakHomeState extends State<KonyakHome> {
   ) {
     switch (action) {
       case BottleContextMenuAction.remove:
-        widget.bottleActions.onDelete?.call(bottle);
+        _invokeBottleTargetAction(
+          resolveBottleSummaryAction(
+            bottle: bottle,
+            action: widget.bottleActions.deleteAction,
+          ),
+        );
       case BottleContextMenuAction.rename:
-        widget.bottleActions.onRename?.call(bottle);
+        _invokeBottleTargetAction(
+          resolveBottleSummaryAction(
+            bottle: bottle,
+            action: widget.bottleActions.renameAction,
+          ),
+        );
       case BottleContextMenuAction.move:
-        widget.bottleActions.onMove?.call(bottle);
+        _invokeBottleTargetAction(
+          resolveBottleSummaryAction(
+            bottle: bottle,
+            action: widget.bottleActions.moveAction,
+          ),
+        );
       case BottleContextMenuAction.showInFinder:
-        widget.bottleActions.onOpenLocation?.call(bottle, 'root');
+        _invokeBottleLocationAction(
+          resolveBottleLocationAction(
+            bottle: bottle,
+            location: 'root',
+            action: widget.bottleActions.openLocationAction,
+          ),
+        );
       case BottleContextMenuAction.exportArchive:
-        widget.bottleActions.onExportArchive?.call(bottle);
+        _invokeBottleTargetAction(
+          resolveBottleSummaryAction(
+            bottle: bottle,
+            action: widget.bottleActions.exportArchiveAction,
+          ),
+        );
       case BottleContextMenuAction.terminateProcesses:
-        widget.bottleActions.onTerminateProcesses?.call(bottle);
+        _invokeBottleTargetAction(
+          resolveBottleSummaryAction(
+            bottle: bottle,
+            action: widget.bottleActions.terminateProcessesAction,
+          ),
+        );
+    }
+  }
+
+  void _invokeBottleTargetAction(BottleTargetActionAvailability action) {
+    switch (action) {
+      case EnabledBottleTargetActionAvailability(:final invoke):
+        invoke();
+      case DisabledBottleTargetActionAvailability():
+    }
+  }
+
+  void _invokeBottleLocationAction(BottleLocationActionDispatch action) {
+    switch (action) {
+      case AvailableBottleLocationActionDispatch(:final invoke):
+        invoke();
+      case UnavailableBottleLocationActionDispatch():
     }
   }
 }

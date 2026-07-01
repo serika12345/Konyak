@@ -63,6 +63,118 @@ void main() {
     );
   });
 
+  test('models home menu actions with explicit availability', () {
+    final unavailable = homeActionAvailabilityFromNullable(null);
+    final invokedActions = <String>[];
+    final available = homeActionAvailabilityFromNullable(
+      () => invokedActions.add('refresh'),
+    );
+
+    expect(unavailable, isA<UnavailableKonyakHomeActionAvailability>());
+    expect(
+      resolveKonyakHomeAction(unavailable),
+      isA<UnavailableKonyakHomeActionDispatch>(),
+    );
+
+    switch (resolveKonyakHomeAction(available)) {
+      case AvailableKonyakHomeActionDispatch(:final invoke):
+        invoke();
+      case UnavailableKonyakHomeActionDispatch():
+        fail('Expected available home action dispatch.');
+    }
+
+    expect(invokedActions, <String>['refresh']);
+  });
+
+  test('home action contracts default to explicit unavailable actions', () {
+    const menuActions = KonyakHomeMenuActions();
+    const bottleActions = KonyakBottleActions();
+    const programActions = KonyakProgramActions();
+    const winetricksActions = KonyakWinetricksActions();
+
+    expect([
+      menuActions.refreshAction,
+      menuActions.showSettingsAction,
+      menuActions.showAboutAction,
+      menuActions.checkKonyakUpdatesAction,
+      menuActions.createBottleAction,
+      menuActions.importBottleArchiveAction,
+      menuActions.reinstallRuntimeAction,
+      menuActions.viewLatestLogAction,
+      menuActions.showProcessManagerAction,
+    ], everyElement(isA<UnavailableKonyakHomeActionAvailability>()));
+    expect([
+      bottleActions.loadConfigurationAction,
+      bottleActions.deleteAction,
+      bottleActions.renameAction,
+      bottleActions.moveAction,
+      bottleActions.exportArchiveAction,
+      bottleActions.showProgramsAction,
+      bottleActions.terminateProcessesAction,
+    ], everyElement(isA<UnavailableBottleSummaryActionAvailability>()));
+    expect(
+      bottleActions.runtimeSettingsChangeAction,
+      isA<UnavailableRuntimeSettingsChangeAvailability>(),
+    );
+    expect(
+      bottleActions.openLocationAction,
+      isA<UnavailableBottleLocationActionAvailability>(),
+    );
+    expect([
+      programActions.runProgramAction,
+      programActions.pinProgramAction,
+    ], everyElement(isA<UnavailableBottleSummaryActionAvailability>()));
+    expect(
+      programActions.runProgramPathAction,
+      isA<UnavailableProgramPathActionAvailability>(),
+    );
+    expect([
+      programActions.loadPinnedProgramSettingsAction,
+      programActions.unpinProgramAction,
+      programActions.renamePinnedProgramAction,
+      programActions.openPinnedProgramLocationAction,
+    ], everyElement(isA<UnavailablePinnedProgramActionAvailability>()));
+    expect(
+      programActions.programSettingsChangeAction,
+      isA<UnavailableProgramSettingsChangeAvailability>(),
+    );
+    expect(
+      winetricksActions.runBottleCommandAction,
+      isA<UnavailableBottleCommandActionAvailability>(),
+    );
+    expect(
+      winetricksActions.showWinetricksAction,
+      isA<UnavailableBottleSummaryActionAvailability>(),
+    );
+  });
+
+  test('sidebar bottle selection resolves locked state explicitly', () {
+    final invokedBottleIds = <String>[];
+    final action = BottleSummaryActionAvailability.available(
+      (bottle) => invokedBottleIds.add(bottle.id),
+    );
+    final bottle = _bottle(id: 'steam', name: 'Steam');
+
+    final unlocked = resolveHomeSidebarBottleSelectionAction(
+      isBottleSelectionLocked: false,
+      action: action,
+    );
+    final locked = resolveHomeSidebarBottleSelectionAction(
+      isBottleSelectionLocked: true,
+      action: action,
+    );
+
+    switch (resolveBottleSummaryAction(bottle: bottle, action: unlocked)) {
+      case EnabledBottleTargetActionAvailability(:final invoke):
+        invoke();
+      case DisabledBottleTargetActionAvailability():
+        fail('Expected unlocked sidebar selection to be enabled.');
+    }
+
+    expect(locked, isA<UnavailableBottleSummaryActionAvailability>());
+    expect(invokedBottleIds, <String>['steam']);
+  });
+
   test(
     'home detail state derives selected program settings by bottle and path',
     () {

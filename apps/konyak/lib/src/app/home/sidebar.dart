@@ -4,6 +4,7 @@ import '../../bottles/bottle_summary.dart';
 import '../../l10n/konyak_localizations.dart';
 import '../app_constants.dart';
 import '../app_platform.dart';
+import '../bottles/bottle_action_availability.dart';
 import 'home_navigation_state.dart';
 import 'sidebar_bottle_item.dart';
 import 'sidebar_metrics.dart';
@@ -21,7 +22,7 @@ class KonyakSidebar extends StatelessWidget {
     required this.searchController,
     required this.onSearchChanged,
     required this.onToggleSidebar,
-    required this.onBottleSelected,
+    required this.bottleSelectionAction,
     required this.onBottleContextMenuAction,
   });
 
@@ -32,7 +33,7 @@ class KonyakSidebar extends StatelessWidget {
   final TextEditingController searchController;
   final ValueChanged<String> onSearchChanged;
   final VoidCallback onToggleSidebar;
-  final ValueChanged<BottleSummary>? onBottleSelected;
+  final BottleSummaryActionAvailability bottleSelectionAction;
   final void Function(BottleSummary bottle, BottleContextMenuAction action)
   onBottleContextMenuAction;
 
@@ -140,13 +141,23 @@ class KonyakSidebar extends StatelessWidget {
                           NoHomeNavigationBottle() => false,
                         };
 
+                        final resolvedSelectionAction =
+                            resolveBottleSummaryAction(
+                              bottle: bottle,
+                              action: bottleSelectionAction,
+                            );
+
                         return SidebarBottleItem(
                           platform: platform,
                           bottle: bottle,
                           isSelected: isSelected,
-                          onTap: onBottleSelected == null
-                              ? null
-                              : () => onBottleSelected!(bottle),
+                          onTap: switch (resolvedSelectionAction) {
+                            EnabledBottleTargetActionAvailability(
+                              :final invoke,
+                            ) =>
+                              invoke,
+                            DisabledBottleTargetActionAvailability() => null,
+                          },
                           onContextMenuAction: (action) {
                             onBottleContextMenuAction(bottle, action);
                           },

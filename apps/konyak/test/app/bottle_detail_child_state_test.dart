@@ -208,6 +208,51 @@ void main() {
     expect(locationIds, <String>['c-drive']);
   });
 
+  test(
+    'builds bottle tools availability from explicit command and location actions',
+    () {
+      final actions = bottleToolsActionAvailabilityFromActions(
+        commandAction: BottleCommandActionAvailability.available((_, _) {}),
+        locationAction: BottleLocationActionAvailability.available((_, _) {}),
+      );
+
+      expect(actions, isA<CommandAndLocationBottleToolsActionAvailability>());
+      expect(
+        availableBottleToolActionKinds(actions),
+        BottleToolActionKind.values,
+      );
+    },
+  );
+
+  test('resolves bottle location actions without nullable callbacks', () {
+    final bottle = _bottle(id: 'steam', name: 'Steam');
+    final openedLocations = <String>[];
+    final dispatch = resolveBottleLocationAction(
+      bottle: bottle,
+      location: 'root',
+      action: BottleLocationActionAvailability.available(
+        (_, location) => openedLocations.add(location),
+      ),
+    );
+
+    switch (dispatch) {
+      case AvailableBottleLocationActionDispatch(:final invoke):
+        invoke();
+      case UnavailableBottleLocationActionDispatch():
+        fail('Expected location dispatch to be available.');
+    }
+
+    expect(openedLocations, <String>['root']);
+    expect(
+      resolveBottleLocationAction(
+        bottle: bottle,
+        location: 'root',
+        action: const BottleLocationActionAvailability.unavailable(),
+      ),
+      isA<UnavailableBottleLocationActionDispatch>(),
+    );
+  });
+
   test('rejects unavailable bottle tool kinds before dispatch', () {
     final bottle = _bottle(id: 'steam', name: 'Steam');
     final dispatch = resolveBottleToolActionDispatch(

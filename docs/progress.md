@@ -13,6 +13,26 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-07-01 19:49 JST
+- State: `in_progress`
+- Branch: `task/refactor-r1-flutter-actions`
+- Active work: R1-P2 Flutter Action Availability.
+- Related TODO: `docs/todo.md` `R1-P2 Flutter Action Availability`.
+- Latest commit: base commit `39dfe51` (`Merge pull request #1 from
+  serika12345:task/refactor-r1-cli-parsers`).
+- Purpose: replace the remaining home/menu/sidebar action callbacks consumed by
+  Flutter with explicit availability or dispatch variants while keeping visible
+  UI behavior unchanged.
+- Completed work: fast-forwarded local `main` after PR #1 merged; created the
+  R1-P2 branch; removed completed R1-P1 parser gate entries from
+  `docs/todo.md`.
+- Remaining work: add focused action availability tests, implement the smallest
+  home/menu/sidebar action contract conversion, run R1-P2 verification, commit,
+  push, and open a draft PR.
+- Next action: add failing tests for home/menu/sidebar action availability
+  helpers before implementation.
+- Verification: not yet run for R1-P2.
+
 - Timestamp: 2026-07-01 19:21 JST
 - State: `completed`
 - Branch: `task/refactor-r1-cli-parsers`

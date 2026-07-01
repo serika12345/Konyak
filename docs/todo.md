@@ -63,11 +63,6 @@ dispatch, or result variants at the CLI and Flutter boundaries.
 
 Small milestones:
 
-- [ ] R1-S1: Convert adjacent CLI parser files to Option-returning parsed-input
-  helpers while preserving nullable command-selection wrappers where they are
-  still the public selection contract. Initial targets are
-  `cli_bottle_parsers.dart`, `cli_program_run_parsers.dart`,
-  `cli_runtime_parsers.dart`, and `cli_location_parsers.dart`.
 - [ ] R1-S2: Audit CLI command handlers that probe nullable request values and
   split command selection from command execution where that removes semantic
   null checks without broad rewrites.
@@ -79,41 +74,6 @@ Small milestones:
   domain-significant cases in this milestone.
 - [ ] R1-S5: Add or tighten a governance baseline for new domain-facing
   nullable or primitive exposures once the converted boundary is stable.
-
-#### PR Gate: R1-P1 CLI Parser Boundary
-
-branch: `task/refactor-r1-cli-parsers`
-
-Completion criteria:
-
-- The parser files listed in R1-S1 expose explicit parsed-input helpers for
-  successful machine-consumed command inputs.
-- Existing nullable parser functions remain only as command-selection
-  compatibility wrappers or are replaced with an equivalent explicit selection
-  result.
-- Focused CLI parser tests cover valid input, incomplete input, empty required
-  options, and rest-argument arity for each touched parser family.
-- `docs/progress.md` records the gate state, latest commit, verification, and
-  next action.
-
-Not included:
-
-- Rewriting all CLI handlers.
-- Changing public CLI JSON contracts or exit codes.
-- Runtime execution, Wine, launcher, or packaging behavior changes.
-
-Verification:
-
-- `just cli-test`
-- `just verify-governance`
-- `just verify-safety`
-- `just format-check`
-- `just lint`
-
-review gate:
-
-- Commit and push the branch, open a draft PR, then stop. Do not continue into
-  R1-P2 automatically.
 
 #### PR Gate: R1-P2 Flutter Action Availability
 
