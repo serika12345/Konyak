@@ -19,14 +19,6 @@ class MacosSetupStatus {
   final bool isSupported;
   final RosettaSetupStatus rosetta;
   final RuntimeSetupStatus runtime;
-
-  Map<String, Object?> toJson() {
-    return <String, Object?>{
-      'isSupported': isSupported,
-      'rosetta': rosetta.toJson(),
-      'runtime': runtime.toJson(),
-    };
-  }
 }
 
 class RosettaSetupStatus {
@@ -39,14 +31,6 @@ class RosettaSetupStatus {
   final bool isRequired;
   final bool isInstalled;
   final List<String> installCommand;
-
-  Map<String, Object?> toJson() {
-    return <String, Object?>{
-      'isRequired': isRequired,
-      'isInstalled': isInstalled,
-      'installCommand': installCommand,
-    };
-  }
 }
 
 class RuntimeSetupStatus {
@@ -57,13 +41,6 @@ class RuntimeSetupStatus {
 
   final String runtimeId;
   final bool isInstalled;
-
-  Map<String, Object?> toJson() {
-    return <String, Object?>{
-      'runtimeId': runtimeId,
-      'isInstalled': isInstalled,
-    };
-  }
 }
 
 sealed class MacosSetupCheckResult {

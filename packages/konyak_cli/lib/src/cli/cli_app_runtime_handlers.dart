@@ -10,6 +10,7 @@ import '../platform/linux/linux_wine_install_results.dart';
 import '../platform/macos/macos_setup_checker.dart';
 import '../platform/macos/macos_wine_install_requests.dart';
 import '../platform/macos/macos_wine_install_results.dart';
+import 'cli_app_runtime_json.dart';
 import 'cli_commands.dart';
 import 'cli_json_helpers.dart';
 import 'cli_location_winetricks_handlers.dart';
@@ -44,7 +45,7 @@ CliResult? handleRuntimeCommand(
 
     return switch (checker.check()) {
       MacosSetupCheckCompleted(:final status) => jsonSuccess(<String, Object?>{
-        'macosSetup': status.toJson(),
+        'macosSetup': macosSetupStatusJson(status),
       }),
       MacosSetupCheckFailed(:final message) => jsonError(
         exitCode: 75,
@@ -66,7 +67,7 @@ CliResult? handleRuntimeCommand(
 
     return switch (installer.install(gptkWineInstallRequest)) {
       GptkWineInstallCompleted(:final record) => jsonSuccess(<String, Object?>{
-        'gptkWineInstall': record.toJson(),
+        'gptkWineInstall': gptkWineInstallRecordJson(record),
       }),
       GptkWineInstallFailed(:final message) => jsonError(
         exitCode: 75,
