@@ -80,9 +80,6 @@ variants while keeping I/O, serialization, and UI adapter boundaries narrow.
 
 Small milestones:
 
-- [ ] R2-S1: Audit domain-facing `String`, `List<String>`, and
-  `Option<String>` exposures and classify each as boundary primitive,
-  domain value object, typed command object, or explicit result/plan variant.
 - [ ] R2-S2: Replace semantic planner/request primitives with existing or new
   value objects where the invariant is stable.
 - [ ] R2-S3: Keep `ProgramRunPlanner` externally pure and split host platform,
@@ -92,39 +89,6 @@ Small milestones:
   serialization boundary libraries where compatibility permits.
 - [ ] R2-S5: Remove hand-written `part` usage from CLI contract tests so tests
   no longer normalize that shape as a large-file escape hatch.
-
-#### PR Gate: R2-P1 Primitive Boundary Audit
-
-branch: `task/refactor-r2-primitive-audit`
-
-Completion criteria:
-
-- A focused audit records the domain-facing primitive exposures that remain and
-  assigns each to a planned conversion or accepted boundary category.
-- The first small conversion removes a representative semantic primitive from a
-  planner/request API and includes behavior-focused tests.
-- Any deferred primitive exposure has an explicit reason and follow-up gate.
-- `docs/progress.md` records the gate state, latest commit, verification, and
-  next action.
-
-Not included:
-
-- Bulk moving all JSON projections.
-- Reworking runtime execution behavior.
-- Splitting Flutter UI files.
-
-Verification:
-
-- `just cli-test`
-- `just verify-governance`
-- `just verify-safety`
-- `just format-check`
-- `just lint`
-
-review gate:
-
-- Commit and push the branch, open a draft PR, then stop before broader R2
-  conversions.
 
 #### PR Gate: R2-P2 Serialization Boundary
 
