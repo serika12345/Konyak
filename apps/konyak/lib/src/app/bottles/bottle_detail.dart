@@ -5,13 +5,11 @@ import '../app_constants.dart';
 import '../home/home_contracts.dart';
 import '../programs/program_configuration_view.dart';
 import '../widgets/konyak_top_bar.dart';
-import 'bottle_action_availability.dart';
 import 'bottle_action_target.dart';
 import 'bottle_configuration_view.dart';
 import 'bottle_overview.dart';
 import 'bottle_overview_content.dart';
 import 'bottom_bars.dart';
-import 'runtime_settings_change.dart';
 
 export 'bottle_detail_mode.dart';
 
@@ -61,11 +59,15 @@ class KonyakBottleDetail extends StatelessWidget {
               OverviewKonyakHomeDetailContent() ||
               EmptyKonyakHomeDetailContent() => null,
             },
-            onRefresh: menuActions.onRefresh,
-            onShowProcessManager: menuActions.onShowProcessManager,
-            onShowSettings: menuActions.onShowSettings,
-            onCreateBottle: menuActions.onCreateBottle,
-            onViewLatestLog: menuActions.onViewLatestLog,
+            onRefresh: homeActionCallback(menuActions.refreshAction),
+            onShowProcessManager: homeActionCallback(
+              menuActions.showProcessManagerAction,
+            ),
+            onShowSettings: homeActionCallback(menuActions.showSettingsAction),
+            onCreateBottle: homeActionCallback(menuActions.createBottleAction),
+            onViewLatestLog: homeActionCallback(
+              menuActions.viewLatestLogAction,
+            ),
           ),
           Expanded(
             child: switch (content) {
@@ -75,9 +77,7 @@ class KonyakBottleDetail extends StatelessWidget {
                   program: program,
                   settingsState: state.programConfigurationSettingsState,
                   programSettingsChangeAction:
-                      programSettingsChangeAvailabilityFromNullable(
-                        programActions.onProgramSettingsChanged,
-                      ),
+                      programActions.programSettingsChangeAction,
                 ),
               ConfigurationKonyakHomeDetailContent(:final bottle) =>
                 BottleConfigurationView(
@@ -87,81 +87,49 @@ class KonyakBottleDetail extends StatelessWidget {
                   runtimeSettingsControlState:
                       state.runtimeSettingsControlState,
                   runtimeSettingsChangeAction:
-                      runtimeSettingsChangeAvailabilityFromNullable(
-                        bottleActions.onRuntimeSettingsChanged,
-                      ),
+                      bottleActions.runtimeSettingsChangeAction,
                 ),
               OverviewKonyakHomeDetailContent(:final bottle) => BottleOverview(
                 platform: state.platform,
                 content: BottleOverviewContent.bottle(bottle),
-                runProgramAction: bottleSummaryActionAvailabilityFromNullable(
-                  programActions.onRunProgram,
-                ),
-                runProgramPathAction: programPathActionAvailabilityFromNullable(
-                  programActions.onRunProgramPath,
-                ),
-                pinProgramAction: bottleSummaryActionAvailabilityFromNullable(
-                  programActions.onPinProgram,
-                ),
+                runProgramAction: programActions.runProgramAction,
+                runProgramPathAction: programActions.runProgramPathAction,
+                pinProgramAction: programActions.pinProgramAction,
                 configurePinnedProgramAction:
                     PinnedProgramActionAvailability.available(
                       navigationActions.onConfigurePinnedProgram,
                     ),
-                unpinProgramAction: pinnedProgramActionAvailabilityFromNullable(
-                  programActions.onUnpinProgram,
-                ),
+                unpinProgramAction: programActions.unpinProgramAction,
                 renamePinnedProgramAction:
-                    pinnedProgramActionAvailabilityFromNullable(
-                      programActions.onRenamePinnedProgram,
-                    ),
+                    programActions.renamePinnedProgramAction,
                 openPinnedProgramLocationAction:
-                    pinnedProgramActionAvailabilityFromNullable(
-                      programActions.onOpenPinnedProgramLocation,
-                    ),
+                    programActions.openPinnedProgramLocationAction,
                 showBottleConfigurationAction:
-                    bottleSummaryActionAvailabilityFromNullable(
+                    BottleSummaryActionAvailability.available(
                       navigationActions.onShowBottleConfiguration,
                     ),
-                showBottleProgramsAction:
-                    bottleSummaryActionAvailabilityFromNullable(
-                      bottleActions.onShowPrograms,
-                    ),
+                showBottleProgramsAction: bottleActions.showProgramsAction,
               ),
               EmptyKonyakHomeDetailContent() => BottleOverview(
                 platform: state.platform,
                 content: BottleOverviewContent.empty(state.bottleListLoadState),
-                runProgramAction: bottleSummaryActionAvailabilityFromNullable(
-                  programActions.onRunProgram,
-                ),
-                runProgramPathAction: programPathActionAvailabilityFromNullable(
-                  programActions.onRunProgramPath,
-                ),
-                pinProgramAction: bottleSummaryActionAvailabilityFromNullable(
-                  programActions.onPinProgram,
-                ),
+                runProgramAction: programActions.runProgramAction,
+                runProgramPathAction: programActions.runProgramPathAction,
+                pinProgramAction: programActions.pinProgramAction,
                 configurePinnedProgramAction:
                     PinnedProgramActionAvailability.available(
                       navigationActions.onConfigurePinnedProgram,
                     ),
-                unpinProgramAction: pinnedProgramActionAvailabilityFromNullable(
-                  programActions.onUnpinProgram,
-                ),
+                unpinProgramAction: programActions.unpinProgramAction,
                 renamePinnedProgramAction:
-                    pinnedProgramActionAvailabilityFromNullable(
-                      programActions.onRenamePinnedProgram,
-                    ),
+                    programActions.renamePinnedProgramAction,
                 openPinnedProgramLocationAction:
-                    pinnedProgramActionAvailabilityFromNullable(
-                      programActions.onOpenPinnedProgramLocation,
-                    ),
+                    programActions.openPinnedProgramLocationAction,
                 showBottleConfigurationAction:
-                    bottleSummaryActionAvailabilityFromNullable(
+                    BottleSummaryActionAvailability.available(
                       navigationActions.onShowBottleConfiguration,
                     ),
-                showBottleProgramsAction:
-                    bottleSummaryActionAvailabilityFromNullable(
-                      bottleActions.onShowPrograms,
-                    ),
+                showBottleProgramsAction: bottleActions.showProgramsAction,
               ),
             },
           ),
@@ -172,46 +140,34 @@ class KonyakBottleDetail extends StatelessWidget {
                 bottle: bottle,
                 program: program,
                 openPinnedProgramLocationAction:
-                    pinnedProgramActionAvailabilityFromNullable(
-                      programActions.onOpenPinnedProgramLocation,
-                    ),
-                runProgramPathAction: programPathActionAvailabilityFromNullable(
-                  programActions.onRunProgramPath,
-                ),
+                    programActions.openPinnedProgramLocationAction,
+                runProgramPathAction: programActions.runProgramPathAction,
               ),
             ConfigurationKonyakHomeDetailContent(:final bottle) =>
               BottleConfigurationBottomBar(
                 bottle: bottle,
-                toolsAction: bottleToolsActionAvailabilityFromNullable(
-                  onRunCommand: winetricksActions.onRunBottleCommand,
-                  onOpenLocation: bottleActions.onOpenLocation,
+                toolsAction: bottleToolsActionAvailabilityFromActions(
+                  commandAction: winetricksActions.runBottleCommandAction,
+                  locationAction: bottleActions.openLocationAction,
                 ),
               ),
             OverviewKonyakHomeDetailContent(:final bottle) => KonyakBottomBar(
               target: BottleActionTarget.bottle(bottle),
-              runProgramAction: bottleSummaryActionAvailabilityFromNullable(
-                programActions.onRunProgram,
+              runProgramAction: programActions.runProgramAction,
+              toolsAction: bottleToolsActionAvailabilityFromActions(
+                commandAction: winetricksActions.runBottleCommandAction,
+                locationAction: bottleActions.openLocationAction,
               ),
-              toolsAction: bottleToolsActionAvailabilityFromNullable(
-                onRunCommand: winetricksActions.onRunBottleCommand,
-                onOpenLocation: bottleActions.onOpenLocation,
-              ),
-              showWinetricksAction: bottleSummaryActionAvailabilityFromNullable(
-                winetricksActions.onShowWinetricks,
-              ),
+              showWinetricksAction: winetricksActions.showWinetricksAction,
             ),
             EmptyKonyakHomeDetailContent() => KonyakBottomBar(
               target: const BottleActionTarget.none(),
-              runProgramAction: bottleSummaryActionAvailabilityFromNullable(
-                programActions.onRunProgram,
+              runProgramAction: programActions.runProgramAction,
+              toolsAction: bottleToolsActionAvailabilityFromActions(
+                commandAction: winetricksActions.runBottleCommandAction,
+                locationAction: bottleActions.openLocationAction,
               ),
-              toolsAction: bottleToolsActionAvailabilityFromNullable(
-                onRunCommand: winetricksActions.onRunBottleCommand,
-                onOpenLocation: bottleActions.onOpenLocation,
-              ),
-              showWinetricksAction: bottleSummaryActionAvailabilityFromNullable(
-                winetricksActions.onShowWinetricks,
-              ),
+              showWinetricksAction: winetricksActions.showWinetricksAction,
             ),
           },
         ],

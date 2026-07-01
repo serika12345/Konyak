@@ -195,75 +195,133 @@ class KonyakHomeLoaderState extends State<KonyakHomeLoader>
                 ),
           ),
           menuActions: KonyakHomeMenuActions(
-            onRefresh: loadBottles,
-            onShowSettings: showSettings,
-            onShowAbout: showAbout,
-            onCheckKonyakUpdates:
+            refreshAction: KonyakHomeActionAvailability.available(loadBottles),
+            showSettingsAction: KonyakHomeActionAvailability.available(
+              showSettings,
+            ),
+            showAboutAction: KonyakHomeActionAvailability.available(showAbout),
+            checkKonyakUpdatesAction:
                 isHomeLoaderOperationRunning(
                   state: operationState,
                   operation: HomeLoaderOperation.checkingKonyakUpdate,
                 )
-                ? null
-                : checkKonyakUpdateFromMenu,
-            onCreateBottle: createBottle,
-            onImportBottleArchive: importBottleArchive,
-            onReinstallRuntime: reinstallManagedRuntimeFromMenu,
-            onViewLatestLog: switch (latestRunLog) {
-              AvailableLatestRunLog() => showLatestLog,
-              UnavailableLatestRunLog() => null,
+                ? const KonyakHomeActionAvailability.unavailable()
+                : KonyakHomeActionAvailability.available(
+                    checkKonyakUpdateFromMenu,
+                  ),
+            createBottleAction: KonyakHomeActionAvailability.available(
+              createBottle,
+            ),
+            importBottleArchiveAction: KonyakHomeActionAvailability.available(
+              importBottleArchive,
+            ),
+            reinstallRuntimeAction: KonyakHomeActionAvailability.available(
+              reinstallManagedRuntimeFromMenu,
+            ),
+            viewLatestLogAction: switch (latestRunLog) {
+              AvailableLatestRunLog() => KonyakHomeActionAvailability.available(
+                showLatestLog,
+              ),
+              UnavailableLatestRunLog() =>
+                const KonyakHomeActionAvailability.unavailable(),
             },
-            onShowProcessManager: showProcessManager,
+            showProcessManagerAction: KonyakHomeActionAvailability.available(
+              showProcessManager,
+            ),
           ),
           bottleActions: KonyakBottleActions(
-            onLoadConfiguration: loadBottleConfiguration,
-            onDelete: deleteBottle,
-            onRename: renameBottle,
-            onMove: moveBottle,
-            onExportArchive: exportBottleArchive,
-            onRuntimeSettingsChanged: (bottle, runtimeSettings, controlKey) {
-              setRuntimeSettings(
-                bottle: bottle,
-                runtimeSettings: runtimeSettings,
-                controlKey: controlKey,
-              );
-            },
-            onOpenLocation: (bottle, location) {
+            loadConfigurationAction: BottleSummaryActionAvailability.available(
+              loadBottleConfiguration,
+            ),
+            deleteAction: BottleSummaryActionAvailability.available(
+              deleteBottle,
+            ),
+            renameAction: BottleSummaryActionAvailability.available(
+              renameBottle,
+            ),
+            moveAction: BottleSummaryActionAvailability.available(moveBottle),
+            exportArchiveAction: BottleSummaryActionAvailability.available(
+              exportBottleArchive,
+            ),
+            runtimeSettingsChangeAction:
+                RuntimeSettingsChangeAvailability.available((
+                  bottle,
+                  runtimeSettings,
+                  controlKey,
+                ) {
+                  setRuntimeSettings(
+                    bottle: bottle,
+                    runtimeSettings: runtimeSettings,
+                    controlKey: controlKey,
+                  );
+                }),
+            openLocationAction: BottleLocationActionAvailability.available((
+              bottle,
+              location,
+            ) {
               openBottleLocation(bottle: bottle, location: location);
-            },
-            onShowPrograms: showBottlePrograms,
-            onTerminateProcesses: terminateBottleProcesses,
+            }),
+            showProgramsAction: BottleSummaryActionAvailability.available(
+              showBottlePrograms,
+            ),
+            terminateProcessesAction: BottleSummaryActionAvailability.available(
+              terminateBottleProcesses,
+            ),
           ),
           programActions: KonyakProgramActions(
-            onRunProgram: runProgram,
-            onRunProgramPath: (bottle, programPath) {
+            runProgramAction: BottleSummaryActionAvailability.available(
+              runProgram,
+            ),
+            runProgramPathAction: ProgramPathActionAvailability.available((
+              bottle,
+              programPath,
+            ) {
               runProgramPath(bottle: bottle, programPath: programPath);
-            },
-            onPinProgram: pinProgram,
-            onLoadPinnedProgramSettings: (bottle, program) {
-              loadPinnedProgramSettings(bottle: bottle, program: program);
-            },
-            onProgramSettingsChanged: (bottle, program, settings) {
-              setPinnedProgramSettings(
-                bottle: bottle,
-                program: program,
-                settings: settings,
-              );
-            },
-            onUnpinProgram: (bottle, program) {
+            }),
+            pinProgramAction: BottleSummaryActionAvailability.available(
+              pinProgram,
+            ),
+            loadPinnedProgramSettingsAction:
+                PinnedProgramActionAvailability.available((bottle, program) {
+                  loadPinnedProgramSettings(bottle: bottle, program: program);
+                }),
+            programSettingsChangeAction:
+                ProgramSettingsChangeAvailability.available((
+                  bottle,
+                  program,
+                  settings,
+                ) {
+                  setPinnedProgramSettings(
+                    bottle: bottle,
+                    program: program,
+                    settings: settings,
+                  );
+                }),
+            unpinProgramAction: PinnedProgramActionAvailability.available((
+              bottle,
+              program,
+            ) {
               unpinProgram(bottle: bottle, program: program);
-            },
-            onRenamePinnedProgram: (bottle, program) {
-              renamePinnedProgram(bottle: bottle, program: program);
-            },
-            onOpenPinnedProgramLocation: (bottle, program) {
-              openPinnedProgramLocation(bottle: bottle, program: program);
-            },
+            }),
+            renamePinnedProgramAction:
+                PinnedProgramActionAvailability.available((bottle, program) {
+                  renamePinnedProgram(bottle: bottle, program: program);
+                }),
+            openPinnedProgramLocationAction:
+                PinnedProgramActionAvailability.available((bottle, program) {
+                  openPinnedProgramLocation(bottle: bottle, program: program);
+                }),
           ),
           winetricksActions: KonyakWinetricksActions(
-            onRunBottleCommand: (bottle, command) {
+            runBottleCommandAction: BottleCommandActionAvailability.available((
+              bottle,
+              command,
+            ) {
               runBottleCommand(bottle: bottle, command: command);
-            },
-            onShowWinetricks: showWinetricks,
+            }),
+            showWinetricksAction: BottleSummaryActionAvailability.available(
+              showWinetricks,
+            ),
           ),
         ),
         ...blockingProgressOverlays(

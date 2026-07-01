@@ -154,7 +154,9 @@ Widget _testSidebar({
         searchController: TextEditingController(),
         onSearchChanged: (_) {},
         onToggleSidebar: () {},
-        onBottleSelected: (_) {},
+        bottleSelectionAction: BottleSummaryActionAvailability.available(
+          (_) {},
+        ),
         onBottleContextMenuAction: (_, _) {},
       ),
     ),

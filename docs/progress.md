@@ -13,6 +13,39 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-07-01 19:49 JST
+- State: `completed`
+- Branch: `task/refactor-r1-flutter-actions`
+- Active work: R1-P2 Flutter Action Availability.
+- Related TODO: `docs/todo.md` `R1-P2 Flutter Action Availability`.
+- Pull request: https://github.com/serika12345/Konyak/pull/2
+- Latest commit: implementation commit `f07a779`
+  (`Model Flutter action availability`) plus handoff updates on the R1-P2
+  branch.
+- Purpose: replace the remaining home/menu/sidebar action callbacks consumed by
+  Flutter with explicit availability or dispatch variants while keeping visible
+  UI behavior unchanged.
+- Completed work: fast-forwarded local `main` after PR #1 merged; created the
+  R1-P2 branch; removed completed R1-P1 parser gate entries from
+  `docs/todo.md`; added explicit home action availability and dispatch
+  variants; converted home/menu/sidebar action bundles to availability fields;
+  added command/location action availability helpers for bottle tools and
+  context-menu location dispatch; updated home loader, bottle detail, Linux
+  menu, and sidebar selection wiring; committed and pushed the branch; opened
+  draft PR #2.
+- Remaining work: review draft PR #2. Do not advance into R2 automatically.
+- Next action: review https://github.com/serika12345/Konyak/pull/2 and decide
+  whether to merge or request follow-up changes.
+- Verification: observed
+  `flutter test test/app/home_contracts_test.dart
+  test/app/bottle_detail_child_state_test.dart` fail before implementation
+  because the explicit home action and bottle command/location availability
+  APIs did not exist. After implementation and formatting, the same focused
+  tests passed. Final local verification passed with `flutter analyze
+  --fatal-infos`, `just flutter-format-check`, `just flutter-analyze`,
+  `just flutter-test`, `just verify-governance`, `just verify-safety`,
+  `just format-check`, and `just lint` through the Nix dev shell.
+
 - Timestamp: 2026-07-01 19:21 JST
 - State: `completed`
 - Branch: `task/refactor-r1-cli-parsers`

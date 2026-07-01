@@ -80,6 +80,36 @@ sealed class ProgramPathActionAvailability
   map: FreezedMapOptions.none,
   when: FreezedWhenOptions.none,
 )
+sealed class BottleCommandActionAvailability
+    with _$BottleCommandActionAvailability {
+  const factory BottleCommandActionAvailability.unavailable() =
+      UnavailableBottleCommandActionAvailability;
+
+  const factory BottleCommandActionAvailability.available(
+    BottleToolCommandAction invoke,
+  ) = AvailableBottleCommandActionAvailability;
+}
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class BottleLocationActionAvailability
+    with _$BottleLocationActionAvailability {
+  const factory BottleLocationActionAvailability.unavailable() =
+      UnavailableBottleLocationActionAvailability;
+
+  const factory BottleLocationActionAvailability.available(
+    BottleToolLocationAction invoke,
+  ) = AvailableBottleLocationActionAvailability;
+}
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
 sealed class BottleToolsActionAvailability
     with _$BottleToolsActionAvailability {
   const factory BottleToolsActionAvailability.unavailable() =
@@ -128,6 +158,19 @@ sealed class BottleToolActionDispatch with _$BottleToolActionDispatch {
       AvailableBottleToolActionDispatch;
 }
 
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class BottleLocationActionDispatch with _$BottleLocationActionDispatch {
+  const factory BottleLocationActionDispatch.unavailable() =
+      UnavailableBottleLocationActionDispatch;
+
+  const factory BottleLocationActionDispatch.available(VoidCallback invoke) =
+      AvailableBottleLocationActionDispatch;
+}
+
 BottleSummaryActionAvailability bottleSummaryActionAvailabilityFromNullable(
   ValueChanged<BottleSummary>? action,
 ) {
@@ -155,23 +198,54 @@ ProgramPathActionAvailability programPathActionAvailabilityFromNullable(
   };
 }
 
+BottleCommandActionAvailability bottleCommandActionAvailabilityFromNullable(
+  BottleToolCommandAction? action,
+) {
+  return switch (action) {
+    null => const BottleCommandActionAvailability.unavailable(),
+    final action => BottleCommandActionAvailability.available(action),
+  };
+}
+
+BottleLocationActionAvailability bottleLocationActionAvailabilityFromNullable(
+  BottleToolLocationAction? action,
+) {
+  return switch (action) {
+    null => const BottleLocationActionAvailability.unavailable(),
+    final action => BottleLocationActionAvailability.available(action),
+  };
+}
+
 BottleToolsActionAvailability bottleToolsActionAvailabilityFromNullable({
   required BottleToolCommandAction? onRunCommand,
   required BottleToolLocationAction? onOpenLocation,
 }) {
-  return switch ((onRunCommand, onOpenLocation)) {
-    (final onRunCommand?, final onOpenLocation?) =>
-      BottleToolsActionAvailability.commandAndLocation(
-        onRunCommand: onRunCommand,
-        onOpenLocation: onOpenLocation,
-      ),
-    (final onRunCommand?, null) => BottleToolsActionAvailability.command(
-      onRunCommand,
-    ),
-    (null, final onOpenLocation?) => BottleToolsActionAvailability.location(
+  return bottleToolsActionAvailabilityFromActions(
+    commandAction: bottleCommandActionAvailabilityFromNullable(onRunCommand),
+    locationAction: bottleLocationActionAvailabilityFromNullable(
       onOpenLocation,
     ),
-    (null, null) => const BottleToolsActionAvailability.unavailable(),
+  );
+}
+
+BottleToolsActionAvailability bottleToolsActionAvailabilityFromActions({
+  required BottleCommandActionAvailability commandAction,
+  required BottleLocationActionAvailability locationAction,
+}) {
+  return switch ((commandAction, locationAction)) {
+    (
+      AvailableBottleCommandActionAvailability(:final invoke),
+      AvailableBottleLocationActionAvailability(invoke: final onOpenLocation),
+    ) =>
+      BottleToolsActionAvailability.commandAndLocation(
+        onRunCommand: invoke,
+        onOpenLocation: onOpenLocation,
+      ),
+    (AvailableBottleCommandActionAvailability(:final invoke), _) =>
+      BottleToolsActionAvailability.command(invoke),
+    (_, AvailableBottleLocationActionAvailability(:final invoke)) =>
+      BottleToolsActionAvailability.location(invoke),
+    _ => const BottleToolsActionAvailability.unavailable(),
   };
 }
 
@@ -234,6 +308,19 @@ BottleTargetActionAvailability resolveProgramPathAction({
       ),
     UnavailableProgramPathActionAvailability() =>
       const BottleTargetActionAvailability.disabled(),
+  };
+}
+
+BottleLocationActionDispatch resolveBottleLocationAction({
+  required BottleSummary bottle,
+  required String location,
+  required BottleLocationActionAvailability action,
+}) {
+  return switch (action) {
+    AvailableBottleLocationActionAvailability(:final invoke) =>
+      BottleLocationActionDispatch.available(() => invoke(bottle, location)),
+    UnavailableBottleLocationActionAvailability() =>
+      const BottleLocationActionDispatch.unavailable(),
   };
 }
 

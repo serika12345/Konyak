@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../bottles/bottle_summary.dart';
 import '../app_platform.dart';
+import 'home_contracts.dart';
 import 'home_navigation_state.dart';
 import 'sidebar.dart';
 
@@ -18,7 +19,7 @@ class KonyakHomeSidebarPane extends StatelessWidget {
     required this.onSearchChanged,
     required this.onAnimationEnd,
     required this.onToggleSidebar,
-    required this.onBottleSelected,
+    required this.bottleSelectionAction,
     required this.onBottleContextMenuAction,
   });
 
@@ -32,7 +33,7 @@ class KonyakHomeSidebarPane extends StatelessWidget {
   final ValueChanged<String> onSearchChanged;
   final VoidCallback onAnimationEnd;
   final VoidCallback onToggleSidebar;
-  final ValueChanged<BottleSummary> onBottleSelected;
+  final BottleSummaryActionAvailability bottleSelectionAction;
   final void Function(BottleSummary bottle, BottleContextMenuAction action)
   onBottleContextMenuAction;
 
@@ -50,7 +51,10 @@ class KonyakHomeSidebarPane extends StatelessWidget {
         searchController: searchController,
         onSearchChanged: onSearchChanged,
         onToggleSidebar: onToggleSidebar,
-        onBottleSelected: isBottleSelectionLocked ? null : onBottleSelected,
+        bottleSelectionAction: resolveHomeSidebarBottleSelectionAction(
+          isBottleSelectionLocked: isBottleSelectionLocked,
+          action: bottleSelectionAction,
+        ),
         onBottleContextMenuAction: onBottleContextMenuAction,
       ),
       collapsedSidebar: CollapsedSidebarToggle(
