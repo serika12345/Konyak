@@ -23,11 +23,12 @@ sealed class RuntimeInstallRequestOperation
   const RuntimeInstallRequestOperation._();
 
   factory RuntimeInstallRequestOperation.fullInstall({
-    Option<String> archivePath = const Option.none(),
-    Option<String> archiveUrl = const Option.none(),
-    Option<String> archiveSha256 = const Option.none(),
-    Option<String> sourceManifest = const Option.none(),
-    Option<String> sourceManifestSignature = const Option.none(),
+    Option<RuntimeArchivePath> archivePath = const Option.none(),
+    Option<RuntimeArchiveUrl> archiveUrl = const Option.none(),
+    Option<RuntimeArchiveChecksumValue> archiveSha256 = const Option.none(),
+    Option<RuntimeSourceManifestUrl> sourceManifest = const Option.none(),
+    Option<RuntimeSourceManifestSignatureUrl> sourceManifestSignature =
+        const Option.none(),
     bool force = false,
   }) {
     return RuntimeInstallRequestOperation._fullInstall(
@@ -48,11 +49,12 @@ sealed class RuntimeInstallRequestOperation
   }) = RuntimeFullInstallOperation;
 
   factory RuntimeInstallRequestOperation.repair({
-    Option<String> archivePath = const Option.none(),
-    Option<String> archiveUrl = const Option.none(),
-    Option<String> archiveSha256 = const Option.none(),
-    Option<String> sourceManifest = const Option.none(),
-    Option<String> sourceManifestSignature = const Option.none(),
+    Option<RuntimeArchivePath> archivePath = const Option.none(),
+    Option<RuntimeArchiveUrl> archiveUrl = const Option.none(),
+    Option<RuntimeArchiveChecksumValue> archiveSha256 = const Option.none(),
+    Option<RuntimeSourceManifestUrl> sourceManifest = const Option.none(),
+    Option<RuntimeSourceManifestSignatureUrl> sourceManifestSignature =
+        const Option.none(),
     bool force = true,
   }) {
     return RuntimeInstallRequestOperation._repair(
@@ -73,10 +75,11 @@ sealed class RuntimeInstallRequestOperation
   }) = RuntimeRepairOperation;
 
   factory RuntimeInstallRequestOperation.componentInstall({
-    Option<String> archivePath = const Option.none(),
-    Option<String> archiveUrl = const Option.none(),
-    Option<String> archiveSha256 = const Option.none(),
-    Iterable<String> componentArchivePaths = const <String>[],
+    Option<RuntimeArchivePath> archivePath = const Option.none(),
+    Option<RuntimeArchiveUrl> archiveUrl = const Option.none(),
+    Option<RuntimeArchiveChecksumValue> archiveSha256 = const Option.none(),
+    Iterable<RuntimeArchivePath> componentArchivePaths =
+        const <RuntimeArchivePath>[],
     bool force = false,
   }) {
     return RuntimeInstallRequestOperation._componentInstall(
@@ -96,10 +99,11 @@ sealed class RuntimeInstallRequestOperation
   }) = RuntimeComponentInstallOperation;
 
   factory RuntimeInstallRequestOperation.updateInstall({
-    Option<String> archiveUrl = const Option.none(),
-    Option<String> archiveSha256 = const Option.none(),
-    Option<String> sourceManifest = const Option.none(),
-    Option<String> sourceManifestSignature = const Option.none(),
+    Option<RuntimeArchiveUrl> archiveUrl = const Option.none(),
+    Option<RuntimeArchiveChecksumValue> archiveSha256 = const Option.none(),
+    Option<RuntimeSourceManifestUrl> sourceManifest = const Option.none(),
+    Option<RuntimeSourceManifestSignatureUrl> sourceManifestSignature =
+        const Option.none(),
     bool force = true,
   }) {
     return RuntimeInstallRequestOperation._updateInstall(
@@ -185,8 +189,8 @@ sealed class RuntimeArchiveChecksum with _$RuntimeArchiveChecksum {
 
   const factory RuntimeArchiveChecksum.absent() = RuntimeArchiveChecksumAbsent;
 
-  factory RuntimeArchiveChecksum.sha256(String value) {
-    return RuntimeArchiveChecksum._sha256(RuntimeArchiveChecksumValue(value));
+  factory RuntimeArchiveChecksum.sha256(RuntimeArchiveChecksumValue value) {
+    return RuntimeArchiveChecksum._sha256(value);
   }
 
   const factory RuntimeArchiveChecksum._sha256(
@@ -244,21 +248,19 @@ sealed class RuntimeInstallSource with _$RuntimeInstallSource {
   };
 
   static RuntimeInstallSource fromOptions({
-    Option<String> archivePath = const Option.none(),
-    Option<String> archiveUrl = const Option.none(),
-    Option<String> archiveSha256 = const Option.none(),
-    Iterable<String> componentArchivePaths = const <String>[],
-    Option<String> sourceManifest = const Option.none(),
-    Option<String> sourceManifestSignature = const Option.none(),
+    Option<RuntimeArchivePath> archivePath = const Option.none(),
+    Option<RuntimeArchiveUrl> archiveUrl = const Option.none(),
+    Option<RuntimeArchiveChecksumValue> archiveSha256 = const Option.none(),
+    Iterable<RuntimeArchivePath> componentArchivePaths =
+        const <RuntimeArchivePath>[],
+    Option<RuntimeSourceManifestUrl> sourceManifest = const Option.none(),
+    Option<RuntimeSourceManifestSignatureUrl> sourceManifestSignature =
+        const Option.none(),
   }) {
     final checksum = _runtimeArchiveChecksum(archiveSha256);
-    final signature = runtimeSourceManifestSignature(
-      sourceManifestSignature.map(RuntimeSourceManifestSignatureUrl.new),
-    );
-    final components = _runtimeComponentArchivePaths(
-      componentArchivePaths.map(RuntimeArchivePath.new),
-    );
-    final manifest = sourceManifest.map(RuntimeSourceManifestUrl.new);
+    final signature = runtimeSourceManifestSignature(sourceManifestSignature);
+    final components = _runtimeComponentArchivePaths(componentArchivePaths);
+    final manifest = sourceManifest;
 
     return manifest.match(
       () => _runtimeArchiveInstallSourceFromOptions(
@@ -268,8 +270,8 @@ sealed class RuntimeInstallSource with _$RuntimeInstallSource {
         components: components,
       ),
       (sourceManifest) {
-        final localArchive = archivePath.map(RuntimeArchivePath.new);
-        final remoteArchive = archiveUrl.map(RuntimeArchiveUrl.new);
+        final localArchive = archivePath;
+        final remoteArchive = archiveUrl;
         if (localArchive.isSome() ||
             remoteArchive.isSome() ||
             checksum is RuntimeSha256ArchiveChecksum ||
@@ -368,13 +370,13 @@ sealed class RuntimeInstallSource with _$RuntimeInstallSource {
 }
 
 RuntimeInstallSource _runtimeArchiveInstallSourceFromOptions({
-  required Option<String> archivePath,
-  required Option<String> archiveUrl,
+  required Option<RuntimeArchivePath> archivePath,
+  required Option<RuntimeArchiveUrl> archiveUrl,
   required RuntimeArchiveChecksum checksum,
   required IList<RuntimeArchivePath> components,
 }) {
-  final localArchive = archivePath.map(RuntimeArchivePath.new);
-  final remoteArchive = archiveUrl.map(RuntimeArchiveUrl.new);
+  final localArchive = archivePath;
+  final remoteArchive = archiveUrl;
 
   if (localArchive.isSome() && remoteArchive.isSome()) {
     throw ArgumentError('archivePath and archiveUrl are mutually exclusive.');
@@ -400,7 +402,9 @@ RuntimeInstallSource _runtimeArchiveInstallSourceFromOptions({
   );
 }
 
-RuntimeArchiveChecksum _runtimeArchiveChecksum(Option<String> value) {
+RuntimeArchiveChecksum _runtimeArchiveChecksum(
+  Option<RuntimeArchiveChecksumValue> value,
+) {
   return value.match(
     () => const RuntimeArchiveChecksum.absent(),
     RuntimeArchiveChecksum.sha256,

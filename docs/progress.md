@@ -13,6 +13,38 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-07-01 20:25 JST
+- State: `completed`
+- Branch: `task/refactor-r2-primitive-audit`
+- Active work: R2-P1 Primitive Boundary Audit.
+- Related TODO: `docs/todo.md` `R2-P1 Primitive Boundary Audit`.
+- Pull request: https://github.com/serika12345/Konyak/pull/3
+- Latest commit: implementation commit `bbea68a`
+  (`Model runtime install sources as typed requests`) plus handoff updates on
+  the R2-P1 branch.
+- Purpose: record the remaining domain-facing primitive exposures and remove one
+  representative semantic primitive from a runtime planner/request API without
+  broad runtime behavior changes.
+- Completed work: confirmed PR #2 merged at `309a492`, created the R2-P1 branch,
+  removed the completed R1-S3/R1-P2 backlog entries from `docs/todo.md`, added
+  `docs/r2-primitive-boundary-audit.md`, converted
+  `RuntimeInstallRequestOperation` and `RuntimeInstallSource.fromOptions` to
+  typed runtime install source inputs, kept raw install strings at macOS/Linux
+  platform request adapters, updated behavior-focused domain tests, removed the
+  completed R2-S1/R2-P1 backlog entries, pushed the branch, and opened draft PR
+  #3.
+- Remaining work: review draft PR #3. Do not advance into R2-P2 automatically.
+- Next action: review https://github.com/serika12345/Konyak/pull/3 and decide
+  whether to merge or request follow-up changes.
+- Verification: observed
+  `dart test test/domain_immutability_test.dart --name "runtime install request
+  operations accept typed source inputs"` fail before implementation because
+  `RuntimeInstallRequestOperation` still required `Option<String>` sources. The
+  same focused test passed after implementation. Final local verification passed
+  with `dart test test/domain_immutability_test.dart`, `just cli-test`,
+  `just verify-governance`, `just verify-safety`, `just format-check`, and
+  `just lint` through the Nix dev shell.
+
 - Timestamp: 2026-07-01 19:49 JST
 - State: `completed`
 - Branch: `task/refactor-r1-flutter-actions`
