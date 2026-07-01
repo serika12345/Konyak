@@ -13,13 +13,42 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-07-01 09:02 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Model bottle update success feedback explicitly.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: `e5d7dea` (`Model home bottle store mode`).
+- Purpose: continue nullable hardening in home-loader update handling by
+  replacing the optional `successMessage` callback used after bottle updates
+  with explicit silent/message feedback variants.
+- Completed work: added Freezed `BottleUpdateSuccessFeedback.silent` and
+  `.message` variants plus explicit `BottleUpdateSuccessNotice` output
+  variants; replaced `handleBottleUpdateResult`'s nullable `successMessage`
+  callback with `successFeedback`; updated bottle rename/move and pinned
+  program pin/unpin/rename call sites; and added focused feedback tests.
+- Remaining work: none for this slice. The next nullable-hardening candidates
+  are UI callback/action availability nulls and the remaining loader boundary
+  nullable values.
+- Next action: continue the next explicit-state hardening slice or commit this
+  uncommitted slice when requested.
+- Verification: observed
+  `flutter test test/home_loader/bottle_update_success_feedback_test.dart` fail
+  before implementation because the feedback file and variants did not exist.
+  After implementation, the targeted feedback and bottle-list state tests
+  passed and `flutter analyze --fatal-infos` reported no issues. Full
+  verification passed with `just flutter-format-check`, `just flutter-analyze`,
+  `just flutter-test`, `just verify-governance`, `just verify-safety`,
+  `just format-check`, and `just lint`.
+
 - Timestamp: 2026-06-30 23:29 JST
 - State: `completed`
 - Branch: `main`
 - Active work: Model home bottle store mode explicitly.
 - Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
   boundary tightening.
-- Latest commit: `5051702` (`Model native menu localization cache`).
+- Latest commit: `e5d7dea` (`Model home bottle store mode`).
 - Purpose: continue nullable hardening in pure home-loader state transitions by
   replacing the `oldBottleId: String?` sentinel used by bottle-list store
   updates with explicit upsert/replace variants.

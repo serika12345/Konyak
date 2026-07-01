@@ -9,6 +9,7 @@ import '../bottles/bottle_summary.dart';
 import '../cli/konyak_cli_program_commands.dart';
 import '../cli/konyak_cli_program_result_types.dart';
 import '../l10n/konyak_localizations.dart';
+import 'bottle_update_success_feedback.dart';
 import 'home_loader.dart';
 import 'home_loader_bottles.dart';
 import 'pinned_program_settings_cache_state.dart';
@@ -54,8 +55,9 @@ extension KonyakHomeLoaderPinnedPrograms on KonyakHomeLoaderState {
 
     handleBottleUpdateResult(
       result,
-      successMessage: (_) =>
-          KonyakLocalizations.of(context).pinnedProgram(name),
+      successFeedback: BottleUpdateSuccessFeedback.message(
+        (_) => KonyakLocalizations.of(context).pinnedProgram(name),
+      ),
     );
   }
 
@@ -74,8 +76,9 @@ extension KonyakHomeLoaderPinnedPrograms on KonyakHomeLoaderState {
 
     handleBottleUpdateResult(
       result,
-      successMessage: (_) =>
-          KonyakLocalizations.of(context).unpinnedProgram(program.name),
+      successFeedback: BottleUpdateSuccessFeedback.message(
+        (_) => KonyakLocalizations.of(context).unpinnedProgram(program.name),
+      ),
     );
   }
 
@@ -105,8 +108,9 @@ extension KonyakHomeLoaderPinnedPrograms on KonyakHomeLoaderState {
 
         handleBottleUpdateResult(
           result,
-          successMessage: (_) =>
-              KonyakLocalizations.of(context).renamedProgram(name),
+          successFeedback: BottleUpdateSuccessFeedback.message(
+            (_) => KonyakLocalizations.of(context).renamedProgram(name),
+          ),
         );
       case CancelledRenamePinnedProgramDialog():
         return;

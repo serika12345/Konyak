@@ -15,6 +15,7 @@ import '../l10n/konyak_localizations.dart';
 import '../runtimes/runtime_summary.dart';
 import 'blocking_progress_state.dart';
 import 'bottle_operation_outcome.dart';
+import 'bottle_update_success_feedback.dart';
 import 'home_bottle_list_state.dart';
 import 'home_loader.dart';
 import 'home_loader_executables.dart';
@@ -120,14 +121,20 @@ extension KonyakHomeLoaderBottles on KonyakHomeLoaderState {
   void handleBottleUpdateResult(
     BottleUpdateLoadResult result, {
     HomeBottleStoreMode mode = const HomeBottleStoreMode.upsert(),
-    String Function(BottleSummary bottle)? successMessage,
+    BottleUpdateSuccessFeedback successFeedback =
+        const BottleUpdateSuccessFeedback.silent(),
   }) {
     switch (result) {
       case UpdatedBottle(:final bottle):
         storeBottle(bottle, mode: mode);
-        final message = successMessage?.call(bottle);
-        if (message != null) {
-          showSnackBar(message);
+        switch (bottleUpdateSuccessNotice(
+          feedback: successFeedback,
+          bottle: bottle,
+        )) {
+          case MessageBottleUpdateSuccessNotice(:final message):
+            showSnackBar(message);
+          case NoBottleUpdateSuccessNotice():
+            return;
         }
       case MissingBottleUpdate(:final message) ||
           BottleUpdateLoadFailure(:final message):
@@ -325,8 +332,10 @@ extension KonyakHomeLoaderBottles on KonyakHomeLoaderState {
         handleBottleUpdateResult(
           result,
           mode: HomeBottleStoreMode.replace(bottle.id),
-          successMessage: (bottle) =>
-              KonyakLocalizations.of(context).renamedBottle(bottle.name),
+          successFeedback: BottleUpdateSuccessFeedback.message(
+            (bottle) =>
+                KonyakLocalizations.of(context).renamedBottle(bottle.name),
+          ),
         );
       case CancelledRenameBottleDialog():
         return;
@@ -358,8 +367,10 @@ extension KonyakHomeLoaderBottles on KonyakHomeLoaderState {
 
         handleBottleUpdateResult(
           result,
-          successMessage: (bottle) =>
-              KonyakLocalizations.of(context).movedBottle(bottle.name),
+          successFeedback: BottleUpdateSuccessFeedback.message(
+            (bottle) =>
+                KonyakLocalizations.of(context).movedBottle(bottle.name),
+          ),
         );
       case CancelledMoveBottleDialog():
         return;
