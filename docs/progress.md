@@ -13,13 +13,15 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-01 16:45 JST
-- State: `blocked`
+- Timestamp: 2026-07-01 18:28 JST
+- State: `completed`
 - Branch: `task/refactor-r1-cli-parsers`
 - Active work: R1-P1 CLI Parser Boundary.
 - Related TODO: `docs/todo.md` `R1-P1 CLI Parser Boundary`.
-- Latest commit: branch head containing this PR-creation blocker handoff;
-  implementation commit `fc6e991` (`Model CLI parser boundary inputs`).
+- Pull request: https://github.com/serika12345/Konyak/pull/1
+- Latest commit: implementation commit `fc6e991`
+  (`Model CLI parser boundary inputs`) plus handoff updates on the R1-P1
+  branch.
 - Purpose: convert the adjacent CLI parser boundary files to explicit
   Option-returning parsed-input helpers while preserving existing nullable
   command-selection compatibility wrappers and public CLI behavior.
@@ -28,21 +30,19 @@ unfinished work.
   converted `cli_bottle_parsers.dart`, `cli_program_run_parsers.dart`,
   `cli_runtime_parsers.dart`, and `cli_location_parsers.dart` to expose
   explicit parsed-input helpers; committed and pushed the branch to
-  `origin/task/refactor-r1-cli-parsers`.
-- Remaining work: open the draft PR for R1-P1 after GitHub PR creation
-  permissions are available. Do not advance into R1-P2 automatically.
-- Next action: create a draft PR from `task/refactor-r1-cli-parsers` to
-  `main`, or update GitHub token/app permissions and rerun PR creation.
+  `origin/task/refactor-r1-cli-parsers`; opened draft PR #1.
+- Remaining work: review draft PR #1. Do not advance into R1-P2
+  automatically.
+- Next action: review https://github.com/serika12345/Konyak/pull/1 and decide
+  whether to merge or request follow-up changes.
 - Verification: observed
   `dart test test/cli_parser_boundary_options_test.dart` fail before
   implementation because the Option-returning parser APIs did not exist. After
   implementation and formatting, the same focused parser test passed. Final
   verification passed with `just cli-test`, `just verify-governance`,
   `just verify-safety`, `just format-check`, and `just lint`. Draft PR
-  creation is blocked: the GitHub connector returned `403 Resource not
-  accessible by integration`, and `gh pr create --draft` returned GraphQL
-  `serika12345 does not have the correct permissions to execute
-  CreatePullRequest`.
+  creation initially failed with GitHub API permission errors, then succeeded
+  on retry with `gh pr create --draft`.
 
 - Timestamp: 2026-07-01 15:55 JST
 - State: `completed`
