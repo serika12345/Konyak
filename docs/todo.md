@@ -66,49 +66,11 @@ Small milestones:
 - [ ] R1-S2: Audit CLI command handlers that probe nullable request values and
   split command selection from command execution where that removes semantic
   null checks without broad rewrites.
-- [ ] R1-S3: Replace remaining Flutter home/menu action nullable callbacks in
-  `home_screen.dart`, sidebar selection, and app-level action contracts with
-  explicit availability or dispatch variants.
 - [ ] R1-S4: Classify remaining nullable UI values as framework-boundary,
   presentation-only, or domain-significant. Convert only the
   domain-significant cases in this milestone.
 - [ ] R1-S5: Add or tighten a governance baseline for new domain-facing
   nullable or primitive exposures once the converted boundary is stable.
-
-#### PR Gate: R1-P2 Flutter Action Availability
-
-branch: `task/refactor-r1-flutter-actions`
-
-Completion criteria:
-
-- Remaining bottle/home/menu actions consumed by Flutter are represented as
-  explicit availability or dispatch variants instead of nullable callbacks.
-- Action selection helpers are tested as pure state transitions where practical.
-- Visible UI behavior is unchanged, or changed behavior has focused widget or
-  golden coverage with captured artifacts.
-- `docs/progress.md` records the gate state, latest commit, verification, and
-  next action.
-
-Not included:
-
-- Large UI file splitting.
-- Visual redesign.
-- CLI backend contract changes.
-
-Verification:
-
-- `just flutter-format-check`
-- `just flutter-analyze`
-- `just flutter-test`
-- `just verify-governance`
-- `just verify-safety`
-- `just format-check`
-- `just lint`
-
-review gate:
-
-- Commit and push the branch, open a draft PR, then stop. Do not continue into
-  R2 automatically.
 
 ### R2: Domain Boundary Value Objects
 

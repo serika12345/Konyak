@@ -13,6 +13,29 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-07-01 20:16 JST
+- State: `in_progress`
+- Branch: `task/refactor-r2-primitive-audit`
+- Active work: R2-P1 Primitive Boundary Audit.
+- Related TODO: `docs/todo.md` `R2-P1 Primitive Boundary Audit`.
+- Pull request: not opened yet.
+- Latest commit: base `309a492`
+  (`Merge pull request #2 from serika12345:task/refactor-r1-flutter-actions`).
+- Purpose: record the remaining domain-facing primitive exposures and remove one
+  representative semantic primitive from a runtime planner/request API without
+  broad runtime behavior changes.
+- Completed work: confirmed PR #2 merged at `309a492`, created the R2-P1 branch,
+  removed the completed R1-S3/R1-P2 backlog entries from `docs/todo.md`, and
+  identified `RuntimeInstallRequestOperation` install-source inputs as the first
+  conversion target.
+- Remaining work: add the focused primitive-boundary audit, write the failing
+  behavior test for typed runtime install request inputs, implement the request
+  API conversion and adapter updates, run required R2-P1 verification, commit,
+  push, and open the draft PR.
+- Next action: add the audit note and failing domain test before changing the
+  runtime install request implementation.
+- Verification: not run yet on this branch.
+
 - Timestamp: 2026-07-01 19:49 JST
 - State: `completed`
 - Branch: `task/refactor-r1-flutter-actions`

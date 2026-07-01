@@ -1193,11 +1193,56 @@ void main() {
     expect(source.hasExplicitInstallSource, isFalse);
   });
 
+  test('runtime install request operations accept typed source inputs', () {
+    final archiveOperation = RuntimeInstallRequestOperation.fullInstall(
+      archivePath: Option.of(RuntimeArchivePath('/wine.tar.gz')),
+      archiveSha256: Option.of(RuntimeArchiveChecksumValue('abc123')),
+      force: true,
+    );
+
+    expect(archiveOperation, isA<RuntimeFullInstallOperation>());
+    expect(archiveOperation.force, isTrue);
+    expect(
+      archiveOperation.archivePath.toNullable(),
+      RuntimeArchivePath('/wine.tar.gz'),
+    );
+    expect(
+      archiveOperation.archiveSha256.toNullable(),
+      RuntimeArchiveChecksumValue('abc123'),
+    );
+
+    final manifestOperation = RuntimeInstallRequestOperation.repair(
+      sourceManifest: Option.of(
+        RuntimeSourceManifestUrl('https://example.invalid/source.json'),
+      ),
+      sourceManifestSignature: Option.of(
+        RuntimeSourceManifestSignatureUrl(
+          'https://example.invalid/source.json.sig',
+        ),
+      ),
+    );
+
+    expect(
+      manifestOperation.sourceManifest.toNullable(),
+      RuntimeSourceManifestUrl('https://example.invalid/source.json'),
+    );
+    expect(
+      manifestOperation.sourceManifestSignature.toNullable(),
+      RuntimeSourceManifestSignatureUrl(
+        'https://example.invalid/source.json.sig',
+      ),
+    );
+  });
+
   test('runtime install operations model source manifest explicitly', () {
     final operation = RuntimeInstallRequestOperation.repair(
-      sourceManifest: Option.of('https://example.invalid/source.json'),
+      sourceManifest: Option.of(
+        RuntimeSourceManifestUrl('https://example.invalid/source.json'),
+      ),
       sourceManifestSignature: Option.of(
-        'https://example.invalid/source.json.sig',
+        RuntimeSourceManifestSignatureUrl(
+          'https://example.invalid/source.json.sig',
+        ),
       ),
     );
 
@@ -1240,11 +1285,13 @@ void main() {
   });
 
   test('runtime install operations expose immutable source snapshots', () {
-    final componentArchivePaths = <String>['/dxvk.tar.gz'];
+    final componentArchivePaths = <RuntimeArchivePath>[
+      RuntimeArchivePath('/dxvk.tar.gz'),
+    ];
     final operation = RuntimeInstallRequestOperation.componentInstall(
       componentArchivePaths: componentArchivePaths,
     );
-    componentArchivePaths.add('/vkd3d.tar.gz');
+    componentArchivePaths.add(RuntimeArchivePath('/vkd3d.tar.gz'));
 
     expect(operation, isA<RuntimeComponentInstallOperation>());
     expect(operation.operation, RuntimeInstallOperation.componentInstall);
@@ -1726,22 +1773,11 @@ void main() {
     );
   });
 
-  test('runtime install operations reject blank present sources', () {
+  test('runtime install source value objects reject blank present sources', () {
+    expect(() => RuntimeArchivePath(' '), throwsA(isA<ArgumentError>()));
+    expect(() => RuntimeSourceManifestUrl(' '), throwsA(isA<ArgumentError>()));
     expect(
-      () => RuntimeInstallRequestOperation.fullInstall(
-        archivePath: Option.of(' '),
-      ),
-      throwsA(isA<ArgumentError>()),
-    );
-    expect(
-      () =>
-          RuntimeInstallRequestOperation.repair(sourceManifest: Option.of(' ')),
-      throwsA(isA<ArgumentError>()),
-    );
-    expect(
-      () => RuntimeInstallRequestOperation.updateInstall(
-        archiveSha256: Option.of(' '),
-      ),
+      () => RuntimeArchiveChecksumValue(' '),
       throwsA(isA<ArgumentError>()),
     );
   });
