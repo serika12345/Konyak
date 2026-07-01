@@ -26,6 +26,16 @@ for required_command in dart jq timeout; do
   fi
 done
 
+prepare_cli_package() {
+  (
+    cd "$cli_dir"
+    dart pub get
+    dart run build_runner build
+  )
+}
+
+prepare_cli_package
+
 rm -rf "$data_home" "$config_home" "$logs_dir"
 mkdir -p "$data_home" "$config_home" "$logs_dir" "$runtime_root:h" "$manifest_cache:h"
 

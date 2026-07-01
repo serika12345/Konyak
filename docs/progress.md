@@ -13,6 +13,33 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-07-01 19:21 JST
+- State: `completed`
+- Branch: `task/refactor-r1-cli-parsers`
+- Active work: Fix PR #1 CI failures.
+- Related TODO: `docs/todo.md` `R1-P1 CLI Parser Boundary`.
+- Pull request: https://github.com/serika12345/Konyak/pull/1
+- Latest commit: CI fix commit on the R1-P1 branch.
+- Purpose: make the R1-P1 branch pass GitHub Actions checks without changing
+  the parser boundary behavior.
+- Completed work: inspected PR #1 Actions failures; confirmed runtime CLI
+  smoke jobs failed on clean-checkout missing Freezed generated sources before
+  CLI execution; reproduced `tools/konyak_lints` analyze failure by removing
+  ignored fixture `.dart_tool` directories; added runtime smoke CLI package
+  preparation and excluded lint fixtures from normal package analyze.
+- Remaining work: monitor the rerun GitHub Actions checks for PR #1 after the
+  CI fix commit is pushed.
+- Next action: review PR #1 once the rerun Actions checks complete.
+- Verification: `gh pr checks` and Actions logs showed failures in Konyak
+  Verify plus macOS/Linux runtime CLI smoke. Locally reproduced the
+  `tools/konyak_lints` fixture analyze failure by temporarily removing fixture
+  `.dart_tool` directories, then confirmed `dart analyze --fatal-infos` passes
+  with fixtures excluded. Confirmed CLI codegen from a generated-source-free
+  `packages/konyak_cli` tree followed by `dart run bin/konyak.dart
+  list-bottles --json` succeeds. Confirmed `zsh -n` passes for both runtime
+  smoke scripts. Full local verification passed with `just verify` through the
+  Nix dev shell.
+
 - Timestamp: 2026-07-01 18:28 JST
 - State: `completed`
 - Branch: `task/refactor-r1-cli-parsers`
