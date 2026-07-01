@@ -13,12 +13,12 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-01 22:16 JST
+- Timestamp: 2026-07-01 22:19 JST
 - State: `completed`
 - Branch: `task/refactor-r2-serialization-boundary`
 - Active work: R2-P2 Serialization Boundary.
 - Related TODO: `docs/todo.md` `R2-P2 Serialization Boundary`.
-- Pull request: not opened yet.
+- Pull request: https://github.com/serika12345/Konyak/pull/4
 - Latest commit: implementation commit `4dd4e54`
   (`Move runtime command JSON to CLI boundary`) plus handoff updates on the
   R2-P2 branch.
@@ -32,10 +32,9 @@ unfinished work.
   runtime command handler to use CLI-side serializers, confirmed there are no
   remaining domain-layer `toJson` projections, and removed the completed
   R2-S4/R2-P2 backlog entries from `docs/todo.md`.
-- Remaining work: push the branch, open the draft PR, then review it. Do not
-  advance into R3 automatically.
-- Next action: push `task/refactor-r2-serialization-boundary` and open the
-  draft pull request.
+- Remaining work: review draft PR #4. Do not advance into R3 automatically.
+- Next action: review https://github.com/serika12345/Konyak/pull/4 and decide
+  whether to merge or request follow-up changes.
 - Verification: observed
   `dart test test/cli_app_runtime_json_test.dart` fail before implementation
   because `cli_app_runtime_json.dart` and its serializer functions did not
