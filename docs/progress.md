@@ -13,6 +13,31 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-07-01 16:40 JST
+- State: `completed`
+- Branch: `task/refactor-r1-cli-parsers`
+- Active work: R1-P1 CLI Parser Boundary.
+- Related TODO: `docs/todo.md` `R1-P1 CLI Parser Boundary`.
+- Latest commit: this R1-P1 branch commit (`Model CLI parser boundary inputs`).
+- Purpose: convert the adjacent CLI parser boundary files to explicit
+  Option-returning parsed-input helpers while preserving existing nullable
+  command-selection compatibility wrappers and public CLI behavior.
+- Completed work: added focused parser-boundary tests for bottle, program-run,
+  runtime, and location parser families; added shared Option parser helpers;
+  converted `cli_bottle_parsers.dart`, `cli_program_run_parsers.dart`,
+  `cli_runtime_parsers.dart`, and `cli_location_parsers.dart` to expose
+  explicit parsed-input helpers.
+- Remaining work: review the draft PR for R1-P1. Do not advance into R1-P2
+  automatically.
+- Next action: review the R1-P1 parser-boundary branch and decide whether to
+  merge or request follow-up changes.
+- Verification: observed
+  `dart test test/cli_parser_boundary_options_test.dart` fail before
+  implementation because the Option-returning parser APIs did not exist. After
+  implementation and formatting, the same focused parser test passed. Final
+  verification passed with `just cli-test`, `just verify-governance`,
+  `just verify-safety`, `just format-check`, and `just lint`.
+
 - Timestamp: 2026-07-01 15:55 JST
 - State: `completed`
 - Branch: `main`

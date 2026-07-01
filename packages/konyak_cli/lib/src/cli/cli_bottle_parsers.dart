@@ -1,6 +1,10 @@
 import 'dart:convert';
 
+import 'package:args/args.dart' hide Option;
+import 'package:fpdart/fpdart.dart';
+
 import '../domain/bottle/bottle_mutation_models.dart';
+import '../domain/bottle/bottle_runtime_settings_models.dart';
 import '../domain/shared/domain_value_objects.dart';
 import '../io/repository_storage_io.dart';
 import 'cli_parsers.dart';
@@ -11,24 +15,43 @@ bool isJsonBottleListCommand(List<String> arguments) {
 }
 
 BottleId? parseJsonBottleInspectCommand(List<String> arguments) {
-  final results = parseJsonCliCommand(arguments, command: 'inspect-bottle');
-  if (results == null || !hasRestCount(results, 1)) {
-    return null;
-  }
+  return nullableParsedOption(parseJsonBottleInspectCommandOption(arguments));
+}
 
-  return requiredCliBottleId(results);
+Option<BottleId> parseJsonBottleInspectCommandOption(List<String> arguments) {
+  return Option.Do(($) {
+    final results = $(
+      _parseJsonBottleCommand(
+        arguments,
+        command: 'inspect-bottle',
+        restCount: 1,
+      ),
+    );
+
+    return $(requiredCliBottleIdOption(results));
+  });
 }
 
 BottleId? parseJsonBottleProgramsListCommand(List<String> arguments) {
-  final results = parseJsonCliCommand(
-    arguments,
-    command: 'list-bottle-programs',
+  return nullableParsedOption(
+    parseJsonBottleProgramsListCommandOption(arguments),
   );
-  if (results == null || !hasRestCount(results, 1)) {
-    return null;
-  }
+}
 
-  return requiredCliBottleId(results);
+Option<BottleId> parseJsonBottleProgramsListCommandOption(
+  List<String> arguments,
+) {
+  return Option.Do(($) {
+    final results = $(
+      _parseJsonBottleCommand(
+        arguments,
+        command: 'list-bottle-programs',
+        restCount: 1,
+      ),
+    );
+
+    return $(requiredCliBottleIdOption(results));
+  });
 }
 
 bool isJsonWinetricksVerbListCommand(List<String> arguments) {
@@ -36,191 +59,249 @@ bool isJsonWinetricksVerbListCommand(List<String> arguments) {
 }
 
 BottleCreateRequest? parseJsonBottleCreateRequest(List<String> arguments) {
-  final results = parseJsonCliCommand(
-    arguments,
-    command: 'create-bottle',
-    options: const <String>['name', 'windows-version'],
-  );
-  if (results == null || !hasRestCount(results, 0)) {
-    return null;
-  }
+  return nullableParsedOption(parseJsonBottleCreateRequestOption(arguments));
+}
 
-  final name = requiredCliOption(results, 'name');
-  if (name == null) {
-    return null;
-  }
+Option<BottleCreateRequest> parseJsonBottleCreateRequestOption(
+  List<String> arguments,
+) {
+  return Option.Do(($) {
+    final results = $(
+      _parseJsonBottleCommand(
+        arguments,
+        command: 'create-bottle',
+        options: const <String>['name', 'windows-version'],
+        restCount: 0,
+      ),
+    );
+    final name = $(requiredCliOptionOption(results, 'name'));
+    final windowsVersion = $(_optionalWindowsVersion(results));
 
-  final windowsVersion = optionalCliOption(results, 'windows-version');
-  if (windowsVersion == null) {
-    if (results.wasParsed('windows-version')) {
-      return null;
-    }
     return BottleCreateRequest(
       name: BottleName(name),
-      windowsVersion: WindowsVersion('win10'),
+      windowsVersion: windowsVersion,
     );
-  }
-
-  return BottleCreateRequest(
-    name: BottleName(name),
-    windowsVersion: WindowsVersion(windowsVersion),
-  );
+  });
 }
 
 BottleArchiveExportRequest? parseJsonBottleArchiveExportRequest(
   List<String> arguments,
 ) {
-  final results = parseJsonCliCommand(
-    arguments,
-    command: 'export-bottle-archive',
-    options: const <String>['archive'],
+  return nullableParsedOption(
+    parseJsonBottleArchiveExportRequestOption(arguments),
   );
-  if (results == null || !hasRestCount(results, 1)) {
-    return null;
-  }
+}
 
-  final bottleId = requiredCliRest(results);
-  final archivePath = requiredCliOption(results, 'archive');
-  if (bottleId == null || archivePath == null) {
-    return null;
-  }
+Option<BottleArchiveExportRequest> parseJsonBottleArchiveExportRequestOption(
+  List<String> arguments,
+) {
+  return Option.Do(($) {
+    final results = $(
+      _parseJsonBottleCommand(
+        arguments,
+        command: 'export-bottle-archive',
+        options: const <String>['archive'],
+        restCount: 1,
+      ),
+    );
+    final bottleId = $(requiredCliBottleIdOption(results));
+    final archivePath = $(requiredCliOptionOption(results, 'archive'));
 
-  return BottleArchiveExportRequest(
-    bottleId: BottleId(bottleId),
-    archivePath: BottleArchivePath(archivePath),
-  );
+    return BottleArchiveExportRequest(
+      bottleId: bottleId,
+      archivePath: BottleArchivePath(archivePath),
+    );
+  });
 }
 
 BottleArchiveImportRequest? parseJsonBottleArchiveImportRequest(
   List<String> arguments,
 ) {
-  final results = parseJsonCliCommand(
-    arguments,
-    command: 'import-bottle-archive',
-    options: const <String>['archive'],
+  return nullableParsedOption(
+    parseJsonBottleArchiveImportRequestOption(arguments),
   );
-  if (results == null || !hasRestCount(results, 0)) {
-    return null;
-  }
+}
 
-  final archivePath = requiredCliOption(results, 'archive');
-  if (archivePath == null) {
-    return null;
-  }
+Option<BottleArchiveImportRequest> parseJsonBottleArchiveImportRequestOption(
+  List<String> arguments,
+) {
+  return Option.Do(($) {
+    final results = $(
+      _parseJsonBottleCommand(
+        arguments,
+        command: 'import-bottle-archive',
+        options: const <String>['archive'],
+        restCount: 0,
+      ),
+    );
+    final archivePath = $(requiredCliOptionOption(results, 'archive'));
 
-  return BottleArchiveImportRequest(
-    archivePath: BottleArchivePath(archivePath),
-  );
+    return BottleArchiveImportRequest(
+      archivePath: BottleArchivePath(archivePath),
+    );
+  });
 }
 
 BottleId? parseJsonBottleDeleteCommand(List<String> arguments) {
-  final results = parseJsonCliCommand(arguments, command: 'delete-bottle');
-  if (results == null || !hasRestCount(results, 1)) {
-    return null;
-  }
+  return nullableParsedOption(parseJsonBottleDeleteCommandOption(arguments));
+}
 
-  return requiredCliBottleId(results);
+Option<BottleId> parseJsonBottleDeleteCommandOption(List<String> arguments) {
+  return Option.Do(($) {
+    final results = $(
+      _parseJsonBottleCommand(
+        arguments,
+        command: 'delete-bottle',
+        restCount: 1,
+      ),
+    );
+
+    return $(requiredCliBottleIdOption(results));
+  });
 }
 
 BottleRenameRequest? parseJsonBottleRenameRequest(List<String> arguments) {
-  final results = parseJsonCliCommand(
-    arguments,
-    command: 'rename-bottle',
-    options: const <String>['name'],
-  );
-  if (results == null || !hasRestCount(results, 1)) {
-    return null;
-  }
+  return nullableParsedOption(parseJsonBottleRenameRequestOption(arguments));
+}
 
-  final bottleId = requiredCliRest(results);
-  final name = requiredCliOption(results, 'name');
-  if (bottleId == null || name == null) {
-    return null;
-  }
+Option<BottleRenameRequest> parseJsonBottleRenameRequestOption(
+  List<String> arguments,
+) {
+  return Option.Do(($) {
+    final results = $(
+      _parseJsonBottleCommand(
+        arguments,
+        command: 'rename-bottle',
+        options: const <String>['name'],
+        restCount: 1,
+      ),
+    );
+    final bottleId = $(requiredCliBottleIdOption(results));
+    final name = $(requiredCliOptionOption(results, 'name'));
 
-  return BottleRenameRequest(
-    bottleId: BottleId(bottleId),
-    name: BottleName(name),
-  );
+    return BottleRenameRequest(bottleId: bottleId, name: BottleName(name));
+  });
 }
 
 BottleMoveRequest? parseJsonBottleMoveRequest(List<String> arguments) {
-  final results = parseJsonCliCommand(
-    arguments,
-    command: 'move-bottle',
-    options: const <String>['path'],
-  );
-  if (results == null || !hasRestCount(results, 1)) {
-    return null;
-  }
+  return nullableParsedOption(parseJsonBottleMoveRequestOption(arguments));
+}
 
-  final bottleId = requiredCliRest(results);
-  final path = requiredCliOption(results, 'path');
-  if (bottleId == null || path == null) {
-    return null;
-  }
+Option<BottleMoveRequest> parseJsonBottleMoveRequestOption(
+  List<String> arguments,
+) {
+  return Option.Do(($) {
+    final results = $(
+      _parseJsonBottleCommand(
+        arguments,
+        command: 'move-bottle',
+        options: const <String>['path'],
+        restCount: 1,
+      ),
+    );
+    final bottleId = $(requiredCliBottleIdOption(results));
+    final path = $(requiredCliOptionOption(results, 'path'));
 
-  return BottleMoveRequest(
-    bottleId: BottleId(bottleId),
-    path: BottlePath(path),
-  );
+    return BottleMoveRequest(bottleId: bottleId, path: BottlePath(path));
+  });
 }
 
 WindowsVersionUpdateRequest? parseJsonWindowsVersionUpdateRequest(
   List<String> arguments,
 ) {
-  final results = parseJsonCliCommand(
-    arguments,
-    command: 'set-windows-version',
-    options: const <String>['windows-version'],
+  return nullableParsedOption(
+    parseJsonWindowsVersionUpdateRequestOption(arguments),
   );
-  if (results == null || !hasRestCount(results, 1)) {
-    return null;
-  }
+}
 
-  final bottleId = requiredCliRest(results);
-  final windowsVersion = requiredCliOption(results, 'windows-version');
-  if (bottleId == null || windowsVersion == null) {
-    return null;
-  }
+Option<WindowsVersionUpdateRequest> parseJsonWindowsVersionUpdateRequestOption(
+  List<String> arguments,
+) {
+  return Option.Do(($) {
+    final results = $(
+      _parseJsonBottleCommand(
+        arguments,
+        command: 'set-windows-version',
+        options: const <String>['windows-version'],
+        restCount: 1,
+      ),
+    );
+    final bottleId = $(requiredCliBottleIdOption(results));
+    final windowsVersion = $(
+      requiredCliOptionOption(results, 'windows-version'),
+    );
 
-  return WindowsVersionUpdateRequest(
-    bottleId: BottleId(bottleId),
-    windowsVersion: WindowsVersion(windowsVersion),
-  );
+    return WindowsVersionUpdateRequest(
+      bottleId: bottleId,
+      windowsVersion: WindowsVersion(windowsVersion),
+    );
+  });
 }
 
 RuntimeSettingsUpdateRequest? parseJsonRuntimeSettingsUpdateRequest(
   List<String> arguments,
 ) {
-  final results = parseJsonCliCommand(
-    arguments,
-    command: 'set-runtime-settings',
-    options: const <String>['settings-json'],
+  return nullableParsedOption(
+    parseJsonRuntimeSettingsUpdateRequestOption(arguments),
   );
-  if (results == null || !hasRestCount(results, 1)) {
-    return null;
-  }
+}
 
-  final bottleId = requiredCliRest(results);
-  final settingsJson = requiredCliOption(results, 'settings-json');
-  if (bottleId == null || settingsJson == null) {
-    return null;
-  }
+Option<RuntimeSettingsUpdateRequest>
+parseJsonRuntimeSettingsUpdateRequestOption(List<String> arguments) {
+  return Option.Do(($) {
+    final results = $(
+      _parseJsonBottleCommand(
+        arguments,
+        command: 'set-runtime-settings',
+        options: const <String>['settings-json'],
+        restCount: 1,
+      ),
+    );
+    final bottleId = $(requiredCliBottleIdOption(results));
+    final settingsJson = $(requiredCliOptionOption(results, 'settings-json'));
+    final runtimeSettings = $(
+      _bottleRuntimeSettingsFromJsonString(settingsJson),
+    );
 
-  final Object? decoded;
+    return RuntimeSettingsUpdateRequest(
+      bottleId: bottleId,
+      runtimeSettings: runtimeSettings,
+    );
+  });
+}
+
+Option<ArgResults> _parseJsonBottleCommand(
+  List<String> arguments, {
+  required String command,
+  Iterable<String> options = const <String>[],
+  required int restCount,
+}) {
+  return Option.Do(($) {
+    final results = $(
+      parseJsonCliCommandOption(arguments, command: command, options: options),
+    );
+
+    if (!hasRestCount(results, restCount)) {
+      return $(const Option<ArgResults>.none());
+    }
+
+    return results;
+  });
+}
+
+Option<WindowsVersion> _optionalWindowsVersion(ArgResults results) {
+  return optionalCliOptionOption(results, 'windows-version').match(
+    () => results.wasParsed('windows-version')
+        ? const Option<WindowsVersion>.none()
+        : Option.of(WindowsVersion('win10')),
+    (value) => Option.of(WindowsVersion(value)),
+  );
+}
+
+Option<BottleRuntimeSettings> _bottleRuntimeSettingsFromJsonString(String raw) {
   try {
-    decoded = jsonDecode(settingsJson);
+    return bottleRuntimeSettingsFromJson(jsonDecode(raw));
   } on FormatException {
-    return null;
+    return const Option.none();
   }
-
-  return bottleRuntimeSettingsFromJson(decoded)
-      .map(
-        (runtimeSettings) => RuntimeSettingsUpdateRequest(
-          bottleId: BottleId(bottleId),
-          runtimeSettings: runtimeSettings,
-        ),
-      )
-      .match(() => null, (value) => value);
 }

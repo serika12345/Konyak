@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:args/args.dart' hide Option;
 import 'package:fpdart/fpdart.dart';
 
 import '../domain/program/program_settings_models.dart';
@@ -21,42 +22,31 @@ class ProgramRunCliRequest {
 }
 
 ProgramRunCliRequest? parseJsonProgramRunCliRequest(List<String> arguments) {
-  final results = parseJsonCliCommand(
-    arguments,
-    command: 'run-program',
-    options: const <String>['program', 'settings-json'],
-  );
-  if (results == null || !hasRestCount(results, 1)) {
-    return null;
-  }
+  return nullableParsedOption(parseJsonProgramRunCliRequestOption(arguments));
+}
 
-  final bottleId = requiredCliBottleId(results);
-  final programPath = requiredCliOption(results, 'program');
-  if (bottleId == null || programPath == null) {
-    return null;
-  }
+Option<ProgramRunCliRequest> parseJsonProgramRunCliRequestOption(
+  List<String> arguments,
+) {
+  return Option.Do(($) {
+    final results = $(
+      _parseJsonProgramRunCommand(
+        arguments,
+        command: 'run-program',
+        options: const <String>['program', 'settings-json'],
+        restCount: 1,
+      ),
+    );
+    final bottleId = $(requiredCliBottleIdOption(results));
+    final programPath = $(requiredCliOptionOption(results, 'program'));
+    final settings = $(_optionalProgramSettings(results));
 
-  final settingsJson = optionalCliOption(results, 'settings-json');
-  Option<ProgramSettingsRecord> settings = const Option.none();
-  if (settingsJson != null) {
-    final Object? decoded;
-    try {
-      decoded = jsonDecode(settingsJson);
-    } on FormatException {
-      return null;
-    }
-
-    settings = programSettingsRecordFromJson(decoded);
-    if (settings.isNone()) {
-      return null;
-    }
-  }
-
-  return ProgramRunCliRequest(
-    bottleId: bottleId,
-    programPath: programPath,
-    settings: settings,
-  );
+    return ProgramRunCliRequest(
+      bottleId: bottleId,
+      programPath: programPath,
+      settings: settings,
+    );
+  });
 }
 
 class GraphicsBackendHintsCliRequest {
@@ -68,24 +58,26 @@ class GraphicsBackendHintsCliRequest {
 GraphicsBackendHintsCliRequest? parseJsonGraphicsBackendHintsCliRequest(
   List<String> arguments,
 ) {
-  final results = parseJsonCliCommand(
-    arguments,
-    command: 'suggest-graphics-backend',
-    options: const <String>['program'],
+  return nullableParsedOption(
+    parseJsonGraphicsBackendHintsCliRequestOption(arguments),
   );
-  if (results == null || hasEmptyParsedCliOption(results, 'program')) {
-    return null;
-  }
-  if (!hasRestCount(results, 0)) {
-    return null;
-  }
+}
 
-  final programPath = requiredCliOption(results, 'program');
-  if (programPath == null) {
-    return null;
-  }
+Option<GraphicsBackendHintsCliRequest>
+parseJsonGraphicsBackendHintsCliRequestOption(List<String> arguments) {
+  return Option.Do(($) {
+    final results = $(
+      _parseJsonProgramRunCommand(
+        arguments,
+        command: 'suggest-graphics-backend',
+        options: const <String>['program'],
+        restCount: 0,
+      ),
+    );
+    final programPath = $(requiredCliOptionOption(results, 'program'));
 
-  return GraphicsBackendHintsCliRequest(programPath: programPath);
+    return GraphicsBackendHintsCliRequest(programPath: programPath);
+  });
 }
 
 class WinetricksRunCliRequest {
@@ -98,22 +90,28 @@ class WinetricksRunCliRequest {
 WinetricksRunCliRequest? parseJsonWinetricksRunCliRequest(
   List<String> arguments,
 ) {
-  final results = parseJsonCliCommand(
-    arguments,
-    command: 'run-winetricks',
-    options: const <String>['verb'],
+  return nullableParsedOption(
+    parseJsonWinetricksRunCliRequestOption(arguments),
   );
-  if (results == null || !hasRestCount(results, 1)) {
-    return null;
-  }
+}
 
-  final bottleId = requiredCliBottleId(results);
-  final verb = requiredCliOption(results, 'verb');
-  if (bottleId == null || verb == null) {
-    return null;
-  }
+Option<WinetricksRunCliRequest> parseJsonWinetricksRunCliRequestOption(
+  List<String> arguments,
+) {
+  return Option.Do(($) {
+    final results = $(
+      _parseJsonProgramRunCommand(
+        arguments,
+        command: 'run-winetricks',
+        options: const <String>['verb'],
+        restCount: 1,
+      ),
+    );
+    final bottleId = $(requiredCliBottleIdOption(results));
+    final verb = $(requiredCliOptionOption(results, 'verb'));
 
-  return WinetricksRunCliRequest(bottleId: bottleId, verb: verb);
+    return WinetricksRunCliRequest(bottleId: bottleId, verb: verb);
+  });
 }
 
 class BottleCommandRunCliRequest {
@@ -129,20 +127,63 @@ class BottleCommandRunCliRequest {
 BottleCommandRunCliRequest? parseJsonBottleCommandRunCliRequest(
   List<String> arguments,
 ) {
-  final results = parseJsonCliCommand(
-    arguments,
-    command: 'run-bottle-command',
-    options: const <String>['command'],
+  return nullableParsedOption(
+    parseJsonBottleCommandRunCliRequestOption(arguments),
   );
-  if (results == null || !hasRestCount(results, 1)) {
-    return null;
-  }
+}
 
-  final bottleId = requiredCliBottleId(results);
-  final command = requiredCliOption(results, 'command');
-  if (bottleId == null || command == null) {
-    return null;
-  }
+Option<BottleCommandRunCliRequest> parseJsonBottleCommandRunCliRequestOption(
+  List<String> arguments,
+) {
+  return Option.Do(($) {
+    final results = $(
+      _parseJsonProgramRunCommand(
+        arguments,
+        command: 'run-bottle-command',
+        options: const <String>['command'],
+        restCount: 1,
+      ),
+    );
+    final bottleId = $(requiredCliBottleIdOption(results));
+    final command = $(requiredCliOptionOption(results, 'command'));
 
-  return BottleCommandRunCliRequest(bottleId: bottleId, command: command);
+    return BottleCommandRunCliRequest(bottleId: bottleId, command: command);
+  });
+}
+
+Option<ArgResults> _parseJsonProgramRunCommand(
+  List<String> arguments, {
+  required String command,
+  required Iterable<String> options,
+  required int restCount,
+}) {
+  return Option.Do(($) {
+    final results = $(
+      parseJsonCliCommandOption(arguments, command: command, options: options),
+    );
+
+    if (!hasRestCount(results, restCount)) {
+      return $(const Option<ArgResults>.none());
+    }
+
+    return results;
+  });
+}
+
+Option<Option<ProgramSettingsRecord>> _optionalProgramSettings(
+  ArgResults results,
+) {
+  return optionalCliOptionOption(results, 'settings-json').match(
+    () => Option.of(const Option<ProgramSettingsRecord>.none()),
+    (settingsJson) =>
+        _programSettingsRecordFromJsonString(settingsJson).map(Option.of),
+  );
+}
+
+Option<ProgramSettingsRecord> _programSettingsRecordFromJsonString(String raw) {
+  try {
+    return programSettingsRecordFromJson(jsonDecode(raw));
+  } on FormatException {
+    return const Option.none();
+  }
 }

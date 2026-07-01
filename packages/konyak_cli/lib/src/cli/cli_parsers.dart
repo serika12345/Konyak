@@ -1,4 +1,5 @@
 import 'package:args/args.dart' hide Option;
+import 'package:fpdart/fpdart.dart';
 
 bool isJsonFlagOnlyCommand(List<String> arguments, String command) {
   final results = parseJsonCliCommand(arguments, command: command);
@@ -44,6 +45,24 @@ ArgResults? parseJsonCliCommand(
   return results;
 }
 
+Option<ArgResults> parseJsonCliCommandOption(
+  List<String> arguments, {
+  required String command,
+  Iterable<String> options = const <String>[],
+  Iterable<String> multiOptions = const <String>[],
+  Iterable<String> flags = const <String>[],
+}) {
+  return Option.fromNullable(
+    parseJsonCliCommand(
+      arguments,
+      command: command,
+      options: options,
+      multiOptions: multiOptions,
+      flags: flags,
+    ),
+  );
+}
+
 String? requiredCliOption(ArgResults results, String name) {
   if (!results.wasParsed(name)) {
     return null;
@@ -54,12 +73,20 @@ String? requiredCliOption(ArgResults results, String name) {
   return normalized == null || normalized.isEmpty ? null : normalized;
 }
 
+Option<String> requiredCliOptionOption(ArgResults results, String name) {
+  return Option.fromNullable(requiredCliOption(results, name));
+}
+
 String? optionalCliOption(ArgResults results, String name) {
   if (!results.wasParsed(name)) {
     return null;
   }
 
   return requiredCliOption(results, name);
+}
+
+Option<String> optionalCliOptionOption(ArgResults results, String name) {
+  return Option.fromNullable(optionalCliOption(results, name));
 }
 
 String? requiredCliRest(ArgResults results, {int index = 0}) {
@@ -69,6 +96,10 @@ String? requiredCliRest(ArgResults results, {int index = 0}) {
 
   final value = results.rest[index].trim();
   return value.isEmpty ? null : value;
+}
+
+Option<String> requiredCliRestOption(ArgResults results, {int index = 0}) {
+  return Option.fromNullable(requiredCliRest(results, index: index));
 }
 
 bool hasRestCount(ArgResults results, int count) {
@@ -82,4 +113,8 @@ bool hasEmptyParsedCliOption(ArgResults results, String name) {
 
   final value = results[name] as String?;
   return value == null || value.trim().isEmpty;
+}
+
+T? nullableParsedOption<T>(Option<T> option) {
+  return option.match(() => null, (value) => value);
 }

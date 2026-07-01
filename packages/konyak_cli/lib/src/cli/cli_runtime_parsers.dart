@@ -1,4 +1,5 @@
 import 'package:args/args.dart' hide Option;
+import 'package:fpdart/fpdart.dart';
 
 import '../io/gptk_wine_installation.dart';
 import '../platform/linux/linux_wine_install_requests.dart';
@@ -16,93 +17,117 @@ bool isJsonMacosSetupCheckCommand(List<String> arguments) {
 GptkWineInstallRequest? parseJsonGptkWineInstallRequest(
   List<String> arguments,
 ) {
-  final results = parseJsonCliCommand(
-    arguments,
-    command: 'install-gptk-wine',
-    options: const <String>['from'],
-  );
-  if (results == null || !hasRestCount(results, 0)) {
-    return null;
-  }
+  return nullableParsedOption(parseJsonGptkWineInstallRequestOption(arguments));
+}
 
-  final sourcePath = requiredCliOption(results, 'from');
-  if (sourcePath == null) {
-    return null;
-  }
+Option<GptkWineInstallRequest> parseJsonGptkWineInstallRequestOption(
+  List<String> arguments,
+) {
+  return Option.Do(($) {
+    final results = $(
+      _parseJsonRuntimeCommand(
+        arguments,
+        command: 'install-gptk-wine',
+        options: const <String>['from'],
+        restCount: 0,
+      ),
+    );
+    final sourcePath = $(requiredCliOptionOption(results, 'from'));
 
-  return GptkWineInstallRequest(sourcePath: sourcePath);
+    return GptkWineInstallRequest(sourcePath: sourcePath);
+  });
 }
 
 String? parseJsonOpenUrlCommand(List<String> arguments) {
-  final results = parseJsonCliCommand(arguments, command: 'open-url');
-  if (results == null || !hasRestCount(results, 1)) {
-    return null;
-  }
+  return nullableParsedOption(parseJsonOpenUrlCommandOption(arguments));
+}
 
-  final url = requiredCliRest(results);
-  if (url != null &&
-      (url.startsWith('https://') || url.startsWith('http://'))) {
-    return url;
-  }
+Option<String> parseJsonOpenUrlCommandOption(List<String> arguments) {
+  return Option.Do(($) {
+    final results = $(
+      _parseJsonRuntimeCommand(arguments, command: 'open-url', restCount: 1),
+    );
+    final url = $(requiredCliRestOption(results));
 
-  return null;
+    return $(_httpUrl(url));
+  });
 }
 
 String? parseJsonRuntimeIdCommand(List<String> arguments, String command) {
-  final results = parseJsonCliCommand(arguments, command: command);
-  if (results == null || !hasRestCount(results, 1)) {
-    return null;
-  }
+  return nullableParsedOption(
+    parseJsonRuntimeIdCommandOption(arguments, command),
+  );
+}
 
-  return requiredCliRest(results);
+Option<String> parseJsonRuntimeIdCommandOption(
+  List<String> arguments,
+  String command,
+) {
+  return Option.Do(($) {
+    final results = $(
+      _parseJsonRuntimeCommand(arguments, command: command, restCount: 1),
+    );
+
+    return $(requiredCliRestOption(results));
+  });
 }
 
 MacosWineInstallRequest? parseJsonMacosWineInstallRequest(
   List<String> arguments,
 ) {
-  final options = parseRuntimeInstallCliOptions(
+  return nullableParsedOption(
+    parseJsonMacosWineInstallRequestOption(arguments),
+  );
+}
+
+Option<MacosWineInstallRequest> parseJsonMacosWineInstallRequestOption(
+  List<String> arguments,
+) {
+  return parseRuntimeInstallCliOptionsOption(
     arguments,
     command: 'install-macos-wine',
     allowReinstall: true,
-  );
-  if (options == null) {
-    return null;
-  }
-
-  return MacosWineInstallRequest.fullInstall(
-    sourceManifest: options.sourceManifest,
-    force: options.reinstall,
-    emitProgress: options.emitProgress,
+  ).map(
+    (options) => MacosWineInstallRequest.fullInstall(
+      sourceManifest: _runtimeInstallSourceManifestArgument(options),
+      force: options.reinstall,
+      emitProgress: options.emitProgress,
+    ),
   );
 }
 
 LinuxWineInstallRequest? parseJsonLinuxWineInstallRequest(
   List<String> arguments,
 ) {
-  final options = parseRuntimeInstallCliOptions(
+  return nullableParsedOption(
+    parseJsonLinuxWineInstallRequestOption(arguments),
+  );
+}
+
+Option<LinuxWineInstallRequest> parseJsonLinuxWineInstallRequestOption(
+  List<String> arguments,
+) {
+  return parseRuntimeInstallCliOptionsOption(
     arguments,
     command: 'install-linux-wine',
     allowReinstall: true,
-  );
-  if (options == null) {
-    return null;
-  }
-
-  return LinuxWineInstallRequest.fullInstall(
-    sourceManifest: options.sourceManifest,
-    force: options.reinstall,
-    emitProgress: options.emitProgress,
+  ).map(
+    (options) => LinuxWineInstallRequest.fullInstall(
+      sourceManifest: _runtimeInstallSourceManifestArgument(options),
+      force: options.reinstall,
+      emitProgress: options.emitProgress,
+    ),
   );
 }
 
 class RuntimeInstallCliOptions {
   RuntimeInstallCliOptions({
-    this.sourceManifest,
+    this.sourceManifest = const Option.none(),
     this.reinstall = false,
     this.emitProgress = false,
   });
 
-  final String? sourceManifest;
+  final Option<String> sourceManifest;
   final bool reinstall;
   final bool emitProgress;
 }
@@ -112,10 +137,24 @@ RuntimeInstallCliOptions? parseRuntimeInstallCliOptions(
   required String command,
   bool allowReinstall = false,
 }) {
+  return nullableParsedOption(
+    parseRuntimeInstallCliOptionsOption(
+      arguments,
+      command: command,
+      allowReinstall: allowReinstall,
+    ),
+  );
+}
+
+Option<RuntimeInstallCliOptions> parseRuntimeInstallCliOptionsOption(
+  List<String> arguments, {
+  required String command,
+  bool allowReinstall = false,
+}) {
   if (arguments.length < 2 ||
       arguments.first != command ||
       arguments.last != '--json') {
-    return null;
+    return const Option.none();
   }
 
   final parser = ArgParser(allowTrailingOptions: false)
@@ -128,38 +167,74 @@ RuntimeInstallCliOptions? parseRuntimeInstallCliOptions(
   try {
     results = parser.parse(arguments.sublist(1));
   } on FormatException {
-    return null;
+    return const Option.none();
   }
 
   if (results.rest.isNotEmpty || results['json'] != true) {
-    return null;
+    return const Option.none();
   }
 
-  for (final name in const <String>['source-manifest']) {
-    if (hasEmptyParsedCliOption(results, name)) {
-      return null;
-    }
+  if (hasEmptyParsedCliOption(results, 'source-manifest')) {
+    return const Option.none();
   }
 
-  final sourceManifest = nonEmptyCliOption(results, 'source-manifest');
   final reinstall = results['reinstall'] == true;
   if (reinstall && !allowReinstall) {
-    return null;
+    return const Option.none();
   }
 
-  return RuntimeInstallCliOptions(
-    sourceManifest: sourceManifest,
-    reinstall: reinstall,
-    emitProgress: results['progress-json'] == true,
+  return Option.of(
+    RuntimeInstallCliOptions(
+      sourceManifest: nonEmptyCliOptionOption(results, 'source-manifest'),
+      reinstall: reinstall,
+      emitProgress: results['progress-json'] == true,
+    ),
   );
 }
 
 String? nonEmptyCliOption(ArgResults results, String name) {
+  return nullableParsedOption(nonEmptyCliOptionOption(results, name));
+}
+
+Option<String> nonEmptyCliOptionOption(ArgResults results, String name) {
   final value = results[name] as String?;
   final normalized = value?.trim();
   if (normalized == null || normalized.isEmpty) {
-    return null;
+    return const Option.none();
   }
 
-  return normalized;
+  return Option.of(normalized);
+}
+
+String? _runtimeInstallSourceManifestArgument(
+  RuntimeInstallCliOptions options,
+) {
+  return options.sourceManifest.match(() => null, (value) => value);
+}
+
+Option<ArgResults> _parseJsonRuntimeCommand(
+  List<String> arguments, {
+  required String command,
+  Iterable<String> options = const <String>[],
+  required int restCount,
+}) {
+  return Option.Do(($) {
+    final results = $(
+      parseJsonCliCommandOption(arguments, command: command, options: options),
+    );
+
+    if (!hasRestCount(results, restCount)) {
+      return $(const Option<ArgResults>.none());
+    }
+
+    return results;
+  });
+}
+
+Option<String> _httpUrl(String url) {
+  if (url.startsWith('https://') || url.startsWith('http://')) {
+    return Option.of(url);
+  }
+
+  return const Option.none();
 }
