@@ -90,6 +90,47 @@ void main() {
     expect(action, isA<DisabledBottleTargetActionAvailability>());
   });
 
+  test('resolves bottle summary actions without a nullable callback', () {
+    final bottle = _bottle(id: 'steam', name: 'Steam');
+    final invokedBottleIds = <String>[];
+    final action = resolveBottleSummaryAction(
+      bottle: bottle,
+      action: BottleSummaryActionAvailability.available(
+        (bottle) => invokedBottleIds.add(bottle.id),
+      ),
+    );
+
+    switch (action) {
+      case EnabledBottleTargetActionAvailability(:final invoke):
+        invoke();
+      case DisabledBottleTargetActionAvailability():
+        fail('Expected bottle summary action to be enabled.');
+    }
+
+    expect(invokedBottleIds, <String>['steam']);
+  });
+
+  test('chooses the first available bottle summary action', () {
+    final fallback = BottleSummaryActionAvailability.available((_) {});
+
+    expect(
+      firstAvailableBottleSummaryAction(
+        preferred: const BottleSummaryActionAvailability.unavailable(),
+        fallback: fallback,
+      ),
+      fallback,
+    );
+
+    final preferred = BottleSummaryActionAvailability.available((_) {});
+    expect(
+      firstAvailableBottleSummaryAction(
+        preferred: preferred,
+        fallback: fallback,
+      ),
+      preferred,
+    );
+  });
+
   test('models unavailable bottle tools actions explicitly', () {
     final actions = bottleToolsActionAvailabilityFromNullable(
       onRunCommand: null,

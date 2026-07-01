@@ -189,6 +189,26 @@ BottleTargetActionAvailability resolveBottleTargetAction({
   };
 }
 
+BottleTargetActionAvailability resolveBottleSummaryAction({
+  required BottleSummary bottle,
+  required BottleSummaryActionAvailability action,
+}) {
+  return resolveBottleTargetAction(
+    target: BottleActionTarget.bottle(bottle),
+    action: action,
+  );
+}
+
+BottleSummaryActionAvailability firstAvailableBottleSummaryAction({
+  required BottleSummaryActionAvailability preferred,
+  required BottleSummaryActionAvailability fallback,
+}) {
+  return switch (preferred) {
+    AvailableBottleSummaryActionAvailability() => preferred,
+    UnavailableBottleSummaryActionAvailability() => fallback,
+  };
+}
+
 BottleTargetActionAvailability resolvePinnedProgramAction({
   required BottleSummary bottle,
   required PinnedProgramSummary program,

@@ -16,7 +16,7 @@ class ProgramConfigurationView extends StatefulWidget {
     required this.bottle,
     required this.program,
     required this.settingsState,
-    required this.onProgramSettingsChanged,
+    required this.programSettingsChangeAction,
     this.logFilePicker = const FileSelectorLogFilePicker(),
   });
 
@@ -24,12 +24,7 @@ class ProgramConfigurationView extends StatefulWidget {
   final PinnedProgramSummary program;
   final ProgramConfigurationSettingsState settingsState;
   final LogFilePicker logFilePicker;
-  final void Function(
-    BottleSummary bottle,
-    PinnedProgramSummary program,
-    ProgramSettingsSummary settings,
-  )?
-  onProgramSettingsChanged;
+  final ProgramSettingsChangeAvailability programSettingsChangeAction;
 
   @override
   State<ProgramConfigurationView> createState() =>
@@ -115,9 +110,10 @@ class _ProgramConfigurationViewState extends State<ProgramConfigurationView> {
             child: KonyakBottomButton(
               key: const ValueKey('program-config-save'),
               label: localizations.save,
-              onPressed: widget.onProgramSettingsChanged == null
-                  ? null
-                  : _saveSettings,
+              onPressed:
+                  canChangeProgramSettings(widget.programSettingsChangeAction)
+                  ? _saveSettings
+                  : null,
             ),
           ),
         ],
@@ -136,11 +132,19 @@ class _ProgramConfigurationViewState extends State<ProgramConfigurationView> {
   }
 
   void _saveSettings() {
-    widget.onProgramSettingsChanged?.call(
-      widget.bottle,
-      widget.program,
-      _settingsController.toSettings(),
+    final dispatch = resolveProgramSettingsChange(
+      bottle: widget.bottle,
+      program: widget.program,
+      settings: _settingsController.toSettings(),
+      action: widget.programSettingsChangeAction,
     );
+
+    switch (dispatch) {
+      case AvailableProgramSettingsChangeDispatch(:final invoke):
+        invoke();
+      case UnavailableProgramSettingsChangeDispatch():
+        return;
+    }
   }
 
   Future<void> _chooseLogFile() async {

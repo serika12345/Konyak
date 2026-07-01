@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../bottles/bottle_summary.dart';
 import '../../l10n/konyak_localizations.dart';
 import '../app_constants.dart';
+import '../bottles/bottle_action_availability.dart';
 
 const _pinProgramActionWidth = 96.0;
 
@@ -10,11 +11,11 @@ class PinProgramAction extends StatelessWidget {
   const PinProgramAction({
     super.key,
     required this.bottle,
-    required this.onPinProgram,
+    required this.pinProgramAction,
   });
 
   final BottleSummary bottle;
-  final ValueChanged<BottleSummary>? onPinProgram;
+  final BottleSummaryActionAvailability pinProgramAction;
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +26,9 @@ class PinProgramAction extends StatelessWidget {
       message: localizations.pinProgramTooltip(bottle.name),
       child: InkWell(
         borderRadius: BorderRadius.circular(8),
-        onTap: onPinProgram == null ? null : () => onPinProgram!(bottle),
+        onTap: _pinProgramActionCallback(
+          resolveBottleSummaryAction(bottle: bottle, action: pinProgramAction),
+        ),
         child: SizedBox(
           width: _pinProgramActionWidth,
           child: Column(
@@ -54,4 +57,11 @@ class PinProgramAction extends StatelessWidget {
       ),
     );
   }
+}
+
+VoidCallback? _pinProgramActionCallback(BottleTargetActionAvailability action) {
+  return switch (action) {
+    EnabledBottleTargetActionAvailability(:final invoke) => invoke,
+    DisabledBottleTargetActionAvailability() => null,
+  };
 }

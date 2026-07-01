@@ -2,11 +2,11 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import '../../bottles/bottle_summary.dart';
 import '../app_constants.dart';
 import '../app_platform.dart';
 import '../home/bottle_list_load_state.dart';
 import '../programs/pinned_programs_section.dart';
+import 'bottle_action_availability.dart';
 import 'bottle_actions.dart';
 import 'bottle_empty_states.dart';
 import 'bottle_overview_content.dart';
@@ -16,33 +16,28 @@ class BottleOverview extends StatelessWidget {
     super.key,
     required this.platform,
     required this.content,
-    required this.onRunProgram,
-    required this.onRunProgramPath,
-    required this.onPinProgram,
-    required this.onConfigurePinnedProgram,
-    required this.onUnpinProgram,
-    required this.onRenamePinnedProgram,
-    required this.onOpenPinnedProgramLocation,
-    required this.onShowBottleConfiguration,
-    required this.onShowBottlePrograms,
+    required this.runProgramAction,
+    required this.runProgramPathAction,
+    required this.pinProgramAction,
+    required this.configurePinnedProgramAction,
+    required this.unpinProgramAction,
+    required this.renamePinnedProgramAction,
+    required this.openPinnedProgramLocationAction,
+    required this.showBottleConfigurationAction,
+    required this.showBottleProgramsAction,
   });
 
   final KonyakPlatform platform;
   final BottleOverviewContent content;
-  final ValueChanged<BottleSummary>? onRunProgram;
-  final void Function(BottleSummary bottle, String programPath)?
-  onRunProgramPath;
-  final ValueChanged<BottleSummary>? onPinProgram;
-  final void Function(BottleSummary bottle, PinnedProgramSummary program)?
-  onConfigurePinnedProgram;
-  final void Function(BottleSummary bottle, PinnedProgramSummary program)?
-  onUnpinProgram;
-  final void Function(BottleSummary bottle, PinnedProgramSummary program)?
-  onRenamePinnedProgram;
-  final void Function(BottleSummary bottle, PinnedProgramSummary program)?
-  onOpenPinnedProgramLocation;
-  final ValueChanged<BottleSummary>? onShowBottleConfiguration;
-  final ValueChanged<BottleSummary>? onShowBottlePrograms;
+  final BottleSummaryActionAvailability runProgramAction;
+  final ProgramPathActionAvailability runProgramPathAction;
+  final BottleSummaryActionAvailability pinProgramAction;
+  final PinnedProgramActionAvailability configurePinnedProgramAction;
+  final PinnedProgramActionAvailability unpinProgramAction;
+  final PinnedProgramActionAvailability renamePinnedProgramAction;
+  final PinnedProgramActionAvailability openPinnedProgramLocationAction;
+  final BottleSummaryActionAvailability showBottleConfigurationAction;
+  final BottleSummaryActionAvailability showBottleProgramsAction;
 
   @override
   Widget build(BuildContext context) {
@@ -75,12 +70,16 @@ class BottleOverview extends StatelessWidget {
                   PinnedProgramsSection(
                     platform: platform,
                     bottle: bottle,
-                    onPinProgram: onPinProgram ?? onRunProgram,
-                    onRunProgramPath: onRunProgramPath,
-                    onConfigurePinnedProgram: onConfigurePinnedProgram,
-                    onUnpinProgram: onUnpinProgram,
-                    onRenamePinnedProgram: onRenamePinnedProgram,
-                    onOpenPinnedProgramLocation: onOpenPinnedProgramLocation,
+                    pinProgramAction: firstAvailableBottleSummaryAction(
+                      preferred: pinProgramAction,
+                      fallback: runProgramAction,
+                    ),
+                    runProgramPathAction: runProgramPathAction,
+                    configurePinnedProgramAction: configurePinnedProgramAction,
+                    unpinProgramAction: unpinProgramAction,
+                    renamePinnedProgramAction: renamePinnedProgramAction,
+                    openPinnedProgramLocationAction:
+                        openPinnedProgramLocationAction,
                   ),
                   const Spacer(),
                   SizedBox(
@@ -88,8 +87,9 @@ class BottleOverview extends StatelessWidget {
                     width: double.infinity,
                     child: BottleActionPanel(
                       bottle: bottle,
-                      onShowBottleConfiguration: onShowBottleConfiguration,
-                      onShowBottlePrograms: onShowBottlePrograms,
+                      showBottleConfigurationAction:
+                          showBottleConfigurationAction,
+                      showBottleProgramsAction: showBottleProgramsAction,
                     ),
                   ),
                 ],

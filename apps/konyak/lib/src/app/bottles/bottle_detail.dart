@@ -11,6 +11,7 @@ import 'bottle_configuration_view.dart';
 import 'bottle_overview.dart';
 import 'bottle_overview_content.dart';
 import 'bottom_bars.dart';
+import 'runtime_settings_change.dart';
 
 export 'bottle_detail_mode.dart';
 
@@ -73,8 +74,10 @@ class KonyakBottleDetail extends StatelessWidget {
                   bottle: bottle,
                   program: program,
                   settingsState: state.programConfigurationSettingsState,
-                  onProgramSettingsChanged:
-                      programActions.onProgramSettingsChanged,
+                  programSettingsChangeAction:
+                      programSettingsChangeAvailabilityFromNullable(
+                        programActions.onProgramSettingsChanged,
+                      ),
                 ),
               ConfigurationKonyakHomeDetailContent(:final bottle) =>
                 BottleConfigurationView(
@@ -83,40 +86,82 @@ class KonyakBottleDetail extends StatelessWidget {
                   bottle: bottle,
                   runtimeSettingsControlState:
                       state.runtimeSettingsControlState,
-                  onRuntimeSettingsChanged:
-                      bottleActions.onRuntimeSettingsChanged,
+                  runtimeSettingsChangeAction:
+                      runtimeSettingsChangeAvailabilityFromNullable(
+                        bottleActions.onRuntimeSettingsChanged,
+                      ),
                 ),
               OverviewKonyakHomeDetailContent(:final bottle) => BottleOverview(
                 platform: state.platform,
                 content: BottleOverviewContent.bottle(bottle),
-                onRunProgram: programActions.onRunProgram,
-                onRunProgramPath: programActions.onRunProgramPath,
-                onPinProgram: programActions.onPinProgram,
-                onConfigurePinnedProgram:
-                    navigationActions.onConfigurePinnedProgram,
-                onUnpinProgram: programActions.onUnpinProgram,
-                onRenamePinnedProgram: programActions.onRenamePinnedProgram,
-                onOpenPinnedProgramLocation:
-                    programActions.onOpenPinnedProgramLocation,
-                onShowBottleConfiguration:
-                    navigationActions.onShowBottleConfiguration,
-                onShowBottlePrograms: bottleActions.onShowPrograms,
+                runProgramAction: bottleSummaryActionAvailabilityFromNullable(
+                  programActions.onRunProgram,
+                ),
+                runProgramPathAction: programPathActionAvailabilityFromNullable(
+                  programActions.onRunProgramPath,
+                ),
+                pinProgramAction: bottleSummaryActionAvailabilityFromNullable(
+                  programActions.onPinProgram,
+                ),
+                configurePinnedProgramAction:
+                    PinnedProgramActionAvailability.available(
+                      navigationActions.onConfigurePinnedProgram,
+                    ),
+                unpinProgramAction: pinnedProgramActionAvailabilityFromNullable(
+                  programActions.onUnpinProgram,
+                ),
+                renamePinnedProgramAction:
+                    pinnedProgramActionAvailabilityFromNullable(
+                      programActions.onRenamePinnedProgram,
+                    ),
+                openPinnedProgramLocationAction:
+                    pinnedProgramActionAvailabilityFromNullable(
+                      programActions.onOpenPinnedProgramLocation,
+                    ),
+                showBottleConfigurationAction:
+                    bottleSummaryActionAvailabilityFromNullable(
+                      navigationActions.onShowBottleConfiguration,
+                    ),
+                showBottleProgramsAction:
+                    bottleSummaryActionAvailabilityFromNullable(
+                      bottleActions.onShowPrograms,
+                    ),
               ),
               EmptyKonyakHomeDetailContent() => BottleOverview(
                 platform: state.platform,
                 content: BottleOverviewContent.empty(state.bottleListLoadState),
-                onRunProgram: programActions.onRunProgram,
-                onRunProgramPath: programActions.onRunProgramPath,
-                onPinProgram: programActions.onPinProgram,
-                onConfigurePinnedProgram:
-                    navigationActions.onConfigurePinnedProgram,
-                onUnpinProgram: programActions.onUnpinProgram,
-                onRenamePinnedProgram: programActions.onRenamePinnedProgram,
-                onOpenPinnedProgramLocation:
-                    programActions.onOpenPinnedProgramLocation,
-                onShowBottleConfiguration:
-                    navigationActions.onShowBottleConfiguration,
-                onShowBottlePrograms: bottleActions.onShowPrograms,
+                runProgramAction: bottleSummaryActionAvailabilityFromNullable(
+                  programActions.onRunProgram,
+                ),
+                runProgramPathAction: programPathActionAvailabilityFromNullable(
+                  programActions.onRunProgramPath,
+                ),
+                pinProgramAction: bottleSummaryActionAvailabilityFromNullable(
+                  programActions.onPinProgram,
+                ),
+                configurePinnedProgramAction:
+                    PinnedProgramActionAvailability.available(
+                      navigationActions.onConfigurePinnedProgram,
+                    ),
+                unpinProgramAction: pinnedProgramActionAvailabilityFromNullable(
+                  programActions.onUnpinProgram,
+                ),
+                renamePinnedProgramAction:
+                    pinnedProgramActionAvailabilityFromNullable(
+                      programActions.onRenamePinnedProgram,
+                    ),
+                openPinnedProgramLocationAction:
+                    pinnedProgramActionAvailabilityFromNullable(
+                      programActions.onOpenPinnedProgramLocation,
+                    ),
+                showBottleConfigurationAction:
+                    bottleSummaryActionAvailabilityFromNullable(
+                      navigationActions.onShowBottleConfiguration,
+                    ),
+                showBottleProgramsAction:
+                    bottleSummaryActionAvailabilityFromNullable(
+                      bottleActions.onShowPrograms,
+                    ),
               ),
             },
           ),

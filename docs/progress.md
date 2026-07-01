@@ -13,6 +13,37 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-07-01 10:44 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Model bottle overview action availability explicitly.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: `4718cdb` (`Model program configuration actions`).
+- Purpose: continue nullable hardening across the same Flutter bottle UI action
+  surface by replacing `BottleOverview`, `BottleActionPanel`,
+  `PinnedProgramsSection`, `PinnedProgramTile`, and `PinProgramAction`
+  nullable callbacks with explicit availability variants.
+- Completed work: added explicit summary-action resolver and first-available
+  fallback helpers; replaced `BottleOverview`, `BottleActionPanel`,
+  `PinnedProgramsSection`, `PinnedProgramTile`, and `PinProgramAction`
+  nullable action props with availability variants; filtered pinned-program
+  context menu entries by available actions; and extended the same
+  availability/dispatch pattern to program-settings and runtime-settings
+  configuration changes.
+- Remaining work: none for this slice. The next nullable-hardening candidates
+  are broader home/menu action contracts and remaining non-action nullable
+  probes outside the bottle/program action surface.
+- Next action: commit this uncommitted slice when requested or continue with the
+  broader home action contract nullable callbacks.
+- Verification: observed targeted tests fail before implementation because the
+  summary-action, pinned-program context-menu, program-settings, and
+  runtime-settings availability helpers did not exist. After implementation,
+  targeted tests passed, `just flutter-format-check` passed after formatting
+  the newly edited files, and `just flutter-analyze`, `just flutter-test`,
+  `just verify-governance`, `just verify-safety`, `just format-check`, and
+  `just lint` passed.
+
 - Timestamp: 2026-07-01 10:24 JST
 - State: `completed`
 - Branch: `main`

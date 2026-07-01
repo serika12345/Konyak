@@ -27,7 +27,9 @@ void defineProgramWidgetTests() {
                   path: '/bottles/steam',
                   windowsVersion: 'win10',
                 ),
-                onPinProgram: (_) {},
+                pinProgramAction: BottleSummaryActionAvailability.available(
+                  (_) {},
+                ),
               ),
             ),
           ),
@@ -926,7 +928,8 @@ void defineProgramWidgetTests() {
                       ),
                     ),
                   ),
-                  onProgramSettingsChanged: (_, _, _) {},
+                  programSettingsChangeAction:
+                      ProgramSettingsChangeAvailability.available((_, _, _) {}),
                 ),
               ),
             ),

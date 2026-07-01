@@ -56,4 +56,50 @@ void main() {
       LoadingProgramConfigurationSettings() => 'loading',
     }, '');
   });
+
+  test('models unavailable program settings changes explicitly', () {
+    final action = programSettingsChangeAvailabilityFromNullable(null);
+
+    expect(action, isA<UnavailableProgramSettingsChangeAvailability>());
+    expect(canChangeProgramSettings(action), isFalse);
+  });
+
+  test('resolves program settings changes without a nullable callback', () {
+    final bottle = _bottle(id: 'steam', name: 'Steam');
+    const program = PinnedProgramSummary(
+      name: 'Setup',
+      path: '/games/setup.exe',
+      removable: true,
+    );
+    final settings = ProgramSettingsSummary(arguments: '-windowed');
+    final changedArguments = <String>[];
+    final action = ProgramSettingsChangeAvailability.available(
+      (_, _, settings) => changedArguments.add(settings.arguments),
+    );
+
+    final dispatch = resolveProgramSettingsChange(
+      bottle: bottle,
+      program: program,
+      settings: settings,
+      action: action,
+    );
+
+    switch (dispatch) {
+      case AvailableProgramSettingsChangeDispatch(:final invoke):
+        invoke();
+      case UnavailableProgramSettingsChangeDispatch():
+        fail('Expected program settings change dispatch to be available.');
+    }
+
+    expect(changedArguments, <String>['-windowed']);
+  });
+}
+
+BottleSummary _bottle({required String id, required String name}) {
+  return BottleSummary(
+    id: id,
+    name: name,
+    path: '/bottles/$id',
+    windowsVersion: 'win10',
+  );
 }

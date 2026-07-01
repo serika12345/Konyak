@@ -14,21 +14,23 @@ class BottleConfigurationView extends StatelessWidget {
     required this.runtimeCapabilitiesState,
     required this.bottle,
     required this.runtimeSettingsControlState,
-    required this.onRuntimeSettingsChanged,
+    required this.runtimeSettingsChangeAction,
   });
 
   final KonyakPlatform platform;
   final RuntimeCapabilitiesState runtimeCapabilitiesState;
   final BottleSummary bottle;
   final RuntimeSettingsControlState runtimeSettingsControlState;
-  final RuntimeSettingsChanged? onRuntimeSettingsChanged;
+  final RuntimeSettingsChangeAvailability runtimeSettingsChangeAction;
 
   @override
   Widget build(BuildContext context) {
     final settings = bottle.runtimeSettings;
     final showMacosRuntimeSettings = platform.isMacOS;
     final showLinuxRuntimeSettings = platform.isLinux;
-    final canChangeSettings = onRuntimeSettingsChanged != null;
+    final canChangeSettings = canChangeRuntimeSettings(
+      runtimeSettingsChangeAction,
+    );
     final hasPendingRuntimeSettingsUpdate = hasPendingRuntimeSettings(
       runtimeSettingsControlState,
     );
@@ -95,6 +97,18 @@ class BottleConfigurationView extends StatelessWidget {
     BottleRuntimeSettingsSummary runtimeSettings,
     String controlKey,
   ) {
-    onRuntimeSettingsChanged?.call(bottle, runtimeSettings, controlKey);
+    final dispatch = resolveRuntimeSettingsChange(
+      bottle: bottle,
+      runtimeSettings: runtimeSettings,
+      controlKey: controlKey,
+      action: runtimeSettingsChangeAction,
+    );
+
+    switch (dispatch) {
+      case AvailableRuntimeSettingsChangeDispatch(:final invoke):
+        invoke();
+      case UnavailableRuntimeSettingsChangeDispatch():
+        return;
+    }
   }
 }

@@ -4,6 +4,14 @@ import '../../bottles/bottle_summary.dart';
 
 part 'program_configuration_settings.freezed.dart';
 
+typedef ProgramSettingsChanged =
+    void Function(
+      BottleSummary bottle,
+      PinnedProgramSummary program,
+      ProgramSettingsSummary settings,
+    );
+typedef ProgramSettingsChangeDispatchCallback = void Function();
+
 @Freezed(
   copyWith: false,
   map: FreezedMapOptions.none,
@@ -17,6 +25,36 @@ sealed class ProgramConfigurationSettingsState
   const factory ProgramConfigurationSettingsState.ready(
     ProgramSettingsSummary settings,
   ) = ReadyProgramConfigurationSettings;
+}
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class ProgramSettingsChangeAvailability
+    with _$ProgramSettingsChangeAvailability {
+  const factory ProgramSettingsChangeAvailability.unavailable() =
+      UnavailableProgramSettingsChangeAvailability;
+
+  const factory ProgramSettingsChangeAvailability.available(
+    ProgramSettingsChanged invoke,
+  ) = AvailableProgramSettingsChangeAvailability;
+}
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class ProgramSettingsChangeDispatch
+    with _$ProgramSettingsChangeDispatch {
+  const factory ProgramSettingsChangeDispatch.unavailable() =
+      UnavailableProgramSettingsChangeDispatch;
+
+  const factory ProgramSettingsChangeDispatch.available(
+    ProgramSettingsChangeDispatchCallback invoke,
+  ) = AvailableProgramSettingsChangeDispatch;
 }
 
 class ProgramEnvironmentEntry {
@@ -53,6 +91,38 @@ programConfigurationSettingsStateFromNullable({
     (null, false) => ProgramConfigurationSettingsState.ready(
       ProgramSettingsSummary(),
     ),
+  };
+}
+
+ProgramSettingsChangeAvailability programSettingsChangeAvailabilityFromNullable(
+  ProgramSettingsChanged? action,
+) {
+  return switch (action) {
+    null => const ProgramSettingsChangeAvailability.unavailable(),
+    final action => ProgramSettingsChangeAvailability.available(action),
+  };
+}
+
+bool canChangeProgramSettings(ProgramSettingsChangeAvailability action) {
+  return switch (action) {
+    AvailableProgramSettingsChangeAvailability() => true,
+    UnavailableProgramSettingsChangeAvailability() => false,
+  };
+}
+
+ProgramSettingsChangeDispatch resolveProgramSettingsChange({
+  required BottleSummary bottle,
+  required PinnedProgramSummary program,
+  required ProgramSettingsSummary settings,
+  required ProgramSettingsChangeAvailability action,
+}) {
+  return switch (action) {
+    AvailableProgramSettingsChangeAvailability(:final invoke) =>
+      ProgramSettingsChangeDispatch.available(
+        () => invoke(bottle, program, settings),
+      ),
+    UnavailableProgramSettingsChangeAvailability() =>
+      const ProgramSettingsChangeDispatch.unavailable(),
   };
 }
 

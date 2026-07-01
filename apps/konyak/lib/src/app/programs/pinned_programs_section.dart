@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../bottles/bottle_summary.dart';
 import '../app_platform.dart';
+import '../bottles/bottle_action_availability.dart';
 import 'pin_program_action.dart';
 import 'pinned_program_tile.dart';
 
@@ -9,27 +10,22 @@ class PinnedProgramsSection extends StatelessWidget {
     super.key,
     required this.platform,
     required this.bottle,
-    required this.onPinProgram,
-    required this.onRunProgramPath,
-    required this.onConfigurePinnedProgram,
-    required this.onUnpinProgram,
-    required this.onRenamePinnedProgram,
-    required this.onOpenPinnedProgramLocation,
+    required this.pinProgramAction,
+    required this.runProgramPathAction,
+    required this.configurePinnedProgramAction,
+    required this.unpinProgramAction,
+    required this.renamePinnedProgramAction,
+    required this.openPinnedProgramLocationAction,
   });
 
   final KonyakPlatform platform;
   final BottleSummary bottle;
-  final ValueChanged<BottleSummary>? onPinProgram;
-  final void Function(BottleSummary bottle, String programPath)?
-  onRunProgramPath;
-  final void Function(BottleSummary bottle, PinnedProgramSummary program)?
-  onConfigurePinnedProgram;
-  final void Function(BottleSummary bottle, PinnedProgramSummary program)?
-  onUnpinProgram;
-  final void Function(BottleSummary bottle, PinnedProgramSummary program)?
-  onRenamePinnedProgram;
-  final void Function(BottleSummary bottle, PinnedProgramSummary program)?
-  onOpenPinnedProgramLocation;
+  final BottleSummaryActionAvailability pinProgramAction;
+  final ProgramPathActionAvailability runProgramPathAction;
+  final PinnedProgramActionAvailability configurePinnedProgramAction;
+  final PinnedProgramActionAvailability unpinProgramAction;
+  final PinnedProgramActionAvailability renamePinnedProgramAction;
+  final PinnedProgramActionAvailability openPinnedProgramLocationAction;
 
   @override
   Widget build(BuildContext context) {
@@ -42,13 +38,13 @@ class PinnedProgramsSection extends StatelessWidget {
             platform: platform,
             bottle: bottle,
             program: program,
-            onRunProgramPath: onRunProgramPath,
-            onConfigurePinnedProgram: onConfigurePinnedProgram,
-            onUnpinProgram: onUnpinProgram,
-            onRenamePinnedProgram: onRenamePinnedProgram,
-            onOpenPinnedProgramLocation: onOpenPinnedProgramLocation,
+            runProgramPathAction: runProgramPathAction,
+            configurePinnedProgramAction: configurePinnedProgramAction,
+            unpinProgramAction: unpinProgramAction,
+            renamePinnedProgramAction: renamePinnedProgramAction,
+            openPinnedProgramLocationAction: openPinnedProgramLocationAction,
           ),
-        PinProgramAction(bottle: bottle, onPinProgram: onPinProgram),
+        PinProgramAction(bottle: bottle, pinProgramAction: pinProgramAction),
       ],
     );
   }

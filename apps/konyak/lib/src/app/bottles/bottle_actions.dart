@@ -3,18 +3,19 @@ import 'package:flutter/material.dart';
 import '../../bottles/bottle_summary.dart';
 import '../../l10n/konyak_localizations.dart';
 import '../app_constants.dart';
+import 'bottle_action_availability.dart';
 
 class BottleActionPanel extends StatelessWidget {
   const BottleActionPanel({
     super.key,
     required this.bottle,
-    required this.onShowBottleConfiguration,
-    required this.onShowBottlePrograms,
+    required this.showBottleConfigurationAction,
+    required this.showBottleProgramsAction,
   });
 
   final BottleSummary bottle;
-  final ValueChanged<BottleSummary>? onShowBottleConfiguration;
-  final ValueChanged<BottleSummary>? onShowBottlePrograms;
+  final BottleSummaryActionAvailability showBottleConfigurationAction;
+  final BottleSummaryActionAvailability showBottleProgramsAction;
 
   @override
   Widget build(BuildContext context) {
@@ -33,9 +34,12 @@ class BottleActionPanel extends StatelessWidget {
           _BottleActionPanelRow(
             icon: Icons.list,
             label: localizations.installedPrograms,
-            onTap: onShowBottlePrograms == null
-                ? null
-                : () => onShowBottlePrograms!(bottle),
+            onTap: _actionPanelCallback(
+              resolveBottleSummaryAction(
+                bottle: bottle,
+                action: showBottleProgramsAction,
+              ),
+            ),
             trailing: Icon(
               Icons.chevron_right,
               color: colors.actionTrailingIcon,
@@ -46,9 +50,12 @@ class BottleActionPanel extends StatelessWidget {
           _BottleActionPanelRow(
             icon: Icons.settings_outlined,
             label: localizations.bottleConfiguration,
-            onTap: onShowBottleConfiguration == null
-                ? null
-                : () => onShowBottleConfiguration!(bottle),
+            onTap: _actionPanelCallback(
+              resolveBottleSummaryAction(
+                bottle: bottle,
+                action: showBottleConfigurationAction,
+              ),
+            ),
             trailing: Icon(
               Icons.chevron_right,
               color: colors.actionTrailingIcon,
@@ -59,6 +66,13 @@ class BottleActionPanel extends StatelessWidget {
       ),
     );
   }
+}
+
+VoidCallback? _actionPanelCallback(BottleTargetActionAvailability action) {
+  return switch (action) {
+    EnabledBottleTargetActionAvailability(:final invoke) => invoke,
+    DisabledBottleTargetActionAvailability() => null,
+  };
 }
 
 class _BottleActionPanelRow extends StatelessWidget {

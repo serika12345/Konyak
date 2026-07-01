@@ -7,6 +7,7 @@ import '../../bottles/bottle_summary.dart';
 import '../../l10n/konyak_localizations.dart';
 import '../app_constants.dart';
 import '../app_platform.dart';
+import '../bottles/bottle_action_availability.dart';
 import 'pinned_program_context_menu.dart';
 import 'pinned_program_icon.dart';
 
@@ -16,26 +17,21 @@ class PinnedProgramTile extends StatefulWidget {
     required this.platform,
     required this.bottle,
     required this.program,
-    required this.onRunProgramPath,
-    required this.onConfigurePinnedProgram,
-    required this.onUnpinProgram,
-    required this.onRenamePinnedProgram,
-    required this.onOpenPinnedProgramLocation,
+    required this.runProgramPathAction,
+    required this.configurePinnedProgramAction,
+    required this.unpinProgramAction,
+    required this.renamePinnedProgramAction,
+    required this.openPinnedProgramLocationAction,
   });
 
   final KonyakPlatform platform;
   final BottleSummary bottle;
   final PinnedProgramSummary program;
-  final void Function(BottleSummary bottle, String programPath)?
-  onRunProgramPath;
-  final void Function(BottleSummary bottle, PinnedProgramSummary program)?
-  onConfigurePinnedProgram;
-  final void Function(BottleSummary bottle, PinnedProgramSummary program)?
-  onUnpinProgram;
-  final void Function(BottleSummary bottle, PinnedProgramSummary program)?
-  onRenamePinnedProgram;
-  final void Function(BottleSummary bottle, PinnedProgramSummary program)?
-  onOpenPinnedProgramLocation;
+  final ProgramPathActionAvailability runProgramPathAction;
+  final PinnedProgramActionAvailability configurePinnedProgramAction;
+  final PinnedProgramActionAvailability unpinProgramAction;
+  final PinnedProgramActionAvailability renamePinnedProgramAction;
+  final PinnedProgramActionAvailability openPinnedProgramLocationAction;
 
   @override
   State<PinnedProgramTile> createState() => _PinnedProgramTileState();
@@ -90,6 +86,35 @@ class _PinnedProgramTileState extends State<PinnedProgramTile>
     super.dispose();
   }
 
+  List<PinnedProgramContextMenuAction> get _availableContextMenuActions {
+    return pinnedProgramContextMenuActionsFromAvailability(
+      runProgramPathAction: widget.runProgramPathAction,
+      configurePinnedProgramAction: widget.configurePinnedProgramAction,
+      unpinProgramAction: widget.unpinProgramAction,
+      renamePinnedProgramAction: widget.renamePinnedProgramAction,
+      openPinnedProgramLocationAction: widget.openPinnedProgramLocationAction,
+    );
+  }
+
+  bool get _hasAvailableAction => _availableContextMenuActions.isNotEmpty;
+
+  BottleTargetActionAvailability get _resolvedRunProgramPathAction {
+    return resolveProgramPathAction(
+      bottle: widget.bottle,
+      program: widget.program,
+      action: widget.runProgramPathAction,
+    );
+  }
+
+  void _invokeResolvedAction(BottleTargetActionAvailability action) {
+    switch (action) {
+      case EnabledBottleTargetActionAvailability(:final invoke):
+        invoke();
+      case DisabledBottleTargetActionAvailability():
+        return;
+    }
+  }
+
   Future<void> _animateClickFeedback() async {
     setState(() {
       _isPressed = true;
@@ -136,12 +161,22 @@ class _PinnedProgramTileState extends State<PinnedProgramTile>
       return;
     }
 
-    _bounceController.forward(from: 0);
-    widget.onRunProgramPath?.call(widget.bottle, widget.program.path);
-    _lastPointerDownAt = null;
+    switch (_resolvedRunProgramPathAction) {
+      case EnabledBottleTargetActionAvailability(:final invoke):
+        _bounceController.forward(from: 0);
+        invoke();
+        _lastPointerDownAt = null;
+      case DisabledBottleTargetActionAvailability():
+        return;
+    }
   }
 
   Future<void> _showContextMenu(Offset globalPosition) async {
+    final availableActions = _availableContextMenuActions;
+    if (availableActions.isEmpty) {
+      return;
+    }
+
     final colors = KonyakThemeColors.of(context);
     final localizations = KonyakLocalizations.of(context);
     final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
@@ -163,6 +198,7 @@ class _PinnedProgramTileState extends State<PinnedProgramTile>
           colors,
           widget.platform,
           localizations,
+          availableActions: availableActions,
         ),
       ),
     );
@@ -176,20 +212,38 @@ class _PinnedProgramTileState extends State<PinnedProgramTile>
         switch (action) {
           case PinnedProgramContextMenuAction.run:
             unawaited(_bounceController.forward(from: 0));
-            widget.onRunProgramPath?.call(widget.bottle, widget.program.path);
+            _invokeResolvedAction(_resolvedRunProgramPathAction);
           case PinnedProgramContextMenuAction.config:
-            widget.onConfigurePinnedProgram?.call(
-              widget.bottle,
-              widget.program,
+            _invokeResolvedAction(
+              resolvePinnedProgramAction(
+                bottle: widget.bottle,
+                program: widget.program,
+                action: widget.configurePinnedProgramAction,
+              ),
             );
           case PinnedProgramContextMenuAction.unpin:
-            widget.onUnpinProgram?.call(widget.bottle, widget.program);
+            _invokeResolvedAction(
+              resolvePinnedProgramAction(
+                bottle: widget.bottle,
+                program: widget.program,
+                action: widget.unpinProgramAction,
+              ),
+            );
           case PinnedProgramContextMenuAction.rename:
-            widget.onRenamePinnedProgram?.call(widget.bottle, widget.program);
+            _invokeResolvedAction(
+              resolvePinnedProgramAction(
+                bottle: widget.bottle,
+                program: widget.program,
+                action: widget.renamePinnedProgramAction,
+              ),
+            );
           case PinnedProgramContextMenuAction.showInFinder:
-            widget.onOpenPinnedProgramLocation?.call(
-              widget.bottle,
-              widget.program,
+            _invokeResolvedAction(
+              resolvePinnedProgramAction(
+                bottle: widget.bottle,
+                program: widget.program,
+                action: widget.openPinnedProgramLocationAction,
+              ),
             );
         }
       case CancelledPinnedProgramContextMenu():
@@ -201,13 +255,12 @@ class _PinnedProgramTileState extends State<PinnedProgramTile>
   Widget build(BuildContext context) {
     final colors = KonyakThemeColors.of(context);
     final localizations = KonyakLocalizations.of(context);
-    final isEnabled = widget.onRunProgramPath != null;
 
     return Tooltip(
       message: localizations.pinnedProgramTooltip(widget.program.path),
       child: Listener(
         behavior: HitTestBehavior.opaque,
-        onPointerDown: isEnabled ? _handlePointerDown : null,
+        onPointerDown: _hasAvailableAction ? _handlePointerDown : null,
         child: ScaleTransition(
           key: ValueKey('pinned-program-bounce-${widget.program.path}'),
           scale: _bounceScale,
