@@ -133,30 +133,36 @@ class KonyakBottleDetail extends StatelessWidget {
             ConfigurationKonyakHomeDetailContent(:final bottle) =>
               BottleConfigurationBottomBar(
                 bottle: bottle,
-                onRunBottleCommand: winetricksActions.onRunBottleCommand,
-                onOpenBottleLocation: bottleActions.onOpenLocation,
+                toolsAction: bottleToolsActionAvailabilityFromNullable(
+                  onRunCommand: winetricksActions.onRunBottleCommand,
+                  onOpenLocation: bottleActions.onOpenLocation,
+                ),
               ),
             OverviewKonyakHomeDetailContent(:final bottle) => KonyakBottomBar(
               target: BottleActionTarget.bottle(bottle),
               runProgramAction: bottleSummaryActionAvailabilityFromNullable(
                 programActions.onRunProgram,
               ),
-              onRunBottleCommand: winetricksActions.onRunBottleCommand,
+              toolsAction: bottleToolsActionAvailabilityFromNullable(
+                onRunCommand: winetricksActions.onRunBottleCommand,
+                onOpenLocation: bottleActions.onOpenLocation,
+              ),
               showWinetricksAction: bottleSummaryActionAvailabilityFromNullable(
                 winetricksActions.onShowWinetricks,
               ),
-              onOpenBottleLocation: bottleActions.onOpenLocation,
             ),
             EmptyKonyakHomeDetailContent() => KonyakBottomBar(
               target: const BottleActionTarget.none(),
               runProgramAction: bottleSummaryActionAvailabilityFromNullable(
                 programActions.onRunProgram,
               ),
-              onRunBottleCommand: winetricksActions.onRunBottleCommand,
+              toolsAction: bottleToolsActionAvailabilityFromNullable(
+                onRunCommand: winetricksActions.onRunBottleCommand,
+                onOpenLocation: bottleActions.onOpenLocation,
+              ),
               showWinetricksAction: bottleSummaryActionAvailabilityFromNullable(
                 winetricksActions.onShowWinetricks,
               ),
-              onOpenBottleLocation: bottleActions.onOpenLocation,
             ),
           },
         ],

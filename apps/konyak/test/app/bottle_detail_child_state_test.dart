@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:konyak/src/app/bottles/bottle_action_availability.dart';
 import 'package:konyak/src/app/bottles/bottle_action_target.dart';
 import 'package:konyak/src/app/bottles/bottle_overview_content.dart';
+import 'package:konyak/src/app/bottles/bottle_tool_action.dart';
 import 'package:konyak/src/app/home/bottle_list_load_state.dart';
 import 'package:konyak/src/bottles/bottle_summary.dart';
 
@@ -87,6 +88,96 @@ void main() {
     );
 
     expect(action, isA<DisabledBottleTargetActionAvailability>());
+  });
+
+  test('models unavailable bottle tools actions explicitly', () {
+    final actions = bottleToolsActionAvailabilityFromNullable(
+      onRunCommand: null,
+      onOpenLocation: null,
+    );
+
+    expect(actions, isA<UnavailableBottleToolsActionAvailability>());
+    expect(availableBottleToolActionKinds(actions), isEmpty);
+  });
+
+  test('resolves selected bottle tools targets with available tool kinds', () {
+    final bottle = _bottle(id: 'steam', name: 'Steam');
+    final targetAction = resolveBottleToolsTargetAction(
+      target: BottleActionTarget.bottle(bottle),
+      actions: BottleToolsActionAvailability.command((_, _) {}),
+    );
+
+    switch (targetAction) {
+      case EnabledBottleToolsTargetActionAvailability(
+        :final bottle,
+        :final actions,
+      ):
+        expect(bottle.id, 'steam');
+        expect(availableBottleToolActionKinds(actions), [
+          BottleToolActionKind.command,
+        ]);
+      case DisabledBottleToolsTargetActionAvailability():
+        fail('Expected selected bottle tools to be enabled.');
+    }
+  });
+
+  test('disables bottle tools targets without a selected bottle', () {
+    final targetAction = resolveBottleToolsTargetAction(
+      target: const BottleActionTarget.none(),
+      actions: BottleToolsActionAvailability.command((_, _) {}),
+    );
+
+    expect(targetAction, isA<DisabledBottleToolsTargetActionAvailability>());
+  });
+
+  test('dispatches bottle tools actions explicitly by kind', () {
+    final bottle = _bottle(id: 'steam', name: 'Steam');
+    final commandIds = <String>[];
+    final locationIds = <String>[];
+    final actions = BottleToolsActionAvailability.commandAndLocation(
+      onRunCommand: (_, command) => commandIds.add(command),
+      onOpenLocation: (_, location) => locationIds.add(location),
+    );
+
+    final commandDispatch = resolveBottleToolActionDispatch(
+      bottle: bottle,
+      actions: actions,
+      action: const BottleToolAction.command('cmd'),
+    );
+    final locationDispatch = resolveBottleToolActionDispatch(
+      bottle: bottle,
+      actions: actions,
+      action: const BottleToolAction.location('c-drive'),
+    );
+
+    switch (commandDispatch) {
+      case AvailableBottleToolActionDispatch(:final invoke):
+        invoke();
+      case UnavailableBottleToolActionDispatch():
+        fail('Expected command tool dispatch to be available.');
+    }
+    switch (locationDispatch) {
+      case AvailableBottleToolActionDispatch(:final invoke):
+        invoke();
+      case UnavailableBottleToolActionDispatch():
+        fail('Expected location tool dispatch to be available.');
+    }
+
+    expect(commandIds, <String>['cmd']);
+    expect(locationIds, <String>['c-drive']);
+  });
+
+  test('rejects unavailable bottle tool kinds before dispatch', () {
+    final bottle = _bottle(id: 'steam', name: 'Steam');
+    final dispatch = resolveBottleToolActionDispatch(
+      bottle: bottle,
+      actions: BottleToolsActionAvailability.command((_, _) {
+        fail('Unavailable location dispatch must not run command actions.');
+      }),
+      action: const BottleToolAction.location('c-drive'),
+    );
+
+    expect(dispatch, isA<UnavailableBottleToolActionDispatch>());
   });
 }
 

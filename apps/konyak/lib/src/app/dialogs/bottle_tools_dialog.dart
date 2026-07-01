@@ -1,26 +1,17 @@
 import 'package:flutter/material.dart';
 
 import '../../l10n/konyak_localizations.dart';
-
-final class BottleToolAction {
-  const BottleToolAction._({required this.kind, required this.id});
-
-  const BottleToolAction.command(String id)
-    : this._(kind: BottleToolActionKind.command, id: id);
-
-  const BottleToolAction.location(String id)
-    : this._(kind: BottleToolActionKind.location, id: id);
-
-  final BottleToolActionKind kind;
-  final String id;
-}
-
-enum BottleToolActionKind { command, location }
+import '../bottles/bottle_tool_action.dart';
 
 class BottleToolsDialog extends StatelessWidget {
-  const BottleToolsDialog({super.key, required this.bottleName});
+  const BottleToolsDialog({
+    super.key,
+    required this.bottleName,
+    this.availableKinds = BottleToolActionKind.values,
+  });
 
   final String bottleName;
+  final Iterable<BottleToolActionKind> availableKinds;
 
   @override
   Widget build(BuildContext context) {
@@ -35,14 +26,15 @@ class BottleToolsDialog extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               for (final item in _bottleToolItems)
-                ListTile(
-                  leading: Icon(item.icon),
-                  title: Text(
-                    _localizedBottleToolLabel(item.label, localizations),
+                if (availableKinds.contains(item.action.kind))
+                  ListTile(
+                    leading: Icon(item.icon),
+                    title: Text(
+                      _localizedBottleToolLabel(item.label, localizations),
+                    ),
+                    dense: true,
+                    onTap: () => Navigator.of(context).pop(item.action),
                   ),
-                  dense: true,
-                  onTap: () => Navigator.of(context).pop(item.action),
-                ),
             ],
           ),
         ),

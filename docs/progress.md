@@ -13,6 +13,37 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-07-01 10:04 JST
+- State: `completed`
+- Branch: `main`
+- Active work: Model bottle tools action availability explicitly.
+- Related TODO: `docs/todo.md` deferred functional-core / OOP-extension
+  boundary tightening.
+- Latest commit: `0edb41e` (`Model bottom bar action availability`).
+- Purpose: continue nullable hardening in the Flutter bottle UI boundary by
+  replacing `_BottleToolsButton` command/location nullable action checks and
+  `?.call` dispatch with explicit availability and dispatch variants.
+- Completed work: moved `BottleToolAction` into a Freezed value object under
+  the bottle UI state layer; added explicit command/location
+  `BottleToolsActionAvailability`, target availability, and dispatch variants;
+  replaced `_BottleToolsButton`'s nullable action checks and `?.call` dispatch;
+  filtered `BottleToolsDialog` to the executable tool kinds for the current
+  availability; and added focused state/dispatch tests.
+- Remaining work: none for this slice. The next nullable-hardening candidates
+  are the remaining program configuration bottom-bar callback nulls,
+  `BottleActions` action callback availability, and broader home action
+  contract nullable callbacks.
+- Next action: continue the next explicit-state hardening slice or commit this
+  uncommitted slice when requested.
+- Verification: observed
+  `flutter test test/app/bottle_detail_child_state_test.dart` fail before
+  implementation because `BottleToolAction`, Tools availability variants, and
+  dispatch helpers did not exist. After implementation, the targeted
+  child-state tests passed. Full verification passed with
+  `just flutter-format-check`, `just flutter-analyze`, `just flutter-test`,
+  `just verify-governance`, `just verify-safety`, `just format-check`, and
+  `just lint`.
+
 - Timestamp: 2026-07-01 09:48 JST
 - State: `completed`
 - Branch: `main`

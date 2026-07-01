@@ -8,6 +8,7 @@ import '../dialogs/bottle_tools_dialog.dart';
 import '../widgets/konyak_bottom_button.dart';
 import 'bottle_action_availability.dart';
 import 'bottle_action_target.dart';
+import 'bottle_tool_action.dart';
 
 class ProgramConfigurationBottomBar extends StatelessWidget {
   const ProgramConfigurationBottomBar({
@@ -65,14 +66,11 @@ class BottleConfigurationBottomBar extends StatelessWidget {
   const BottleConfigurationBottomBar({
     super.key,
     required this.bottle,
-    required this.onRunBottleCommand,
-    required this.onOpenBottleLocation,
+    required this.toolsAction,
   });
 
   final BottleSummary bottle;
-  final void Function(BottleSummary bottle, String command)? onRunBottleCommand;
-  final void Function(BottleSummary bottle, String location)?
-  onOpenBottleLocation;
+  final BottleToolsActionAvailability toolsAction;
 
   @override
   Widget build(BuildContext context) {
@@ -90,8 +88,7 @@ class BottleConfigurationBottomBar extends StatelessWidget {
         children: [
           _BottleToolsButton(
             target: BottleActionTarget.bottle(bottle),
-            onRunBottleCommand: onRunBottleCommand,
-            onOpenBottleLocation: onOpenBottleLocation,
+            toolsAction: toolsAction,
           ),
         ],
       ),
@@ -104,17 +101,14 @@ class KonyakBottomBar extends StatelessWidget {
     super.key,
     required this.target,
     required this.runProgramAction,
-    required this.onRunBottleCommand,
+    required this.toolsAction,
     required this.showWinetricksAction,
-    required this.onOpenBottleLocation,
   });
 
   final BottleActionTarget target;
   final BottleSummaryActionAvailability runProgramAction;
-  final void Function(BottleSummary bottle, String command)? onRunBottleCommand;
+  final BottleToolsActionAvailability toolsAction;
   final BottleSummaryActionAvailability showWinetricksAction;
-  final void Function(BottleSummary bottle, String location)?
-  onOpenBottleLocation;
 
   @override
   Widget build(BuildContext context) {
@@ -131,11 +125,7 @@ class KonyakBottomBar extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          _BottleToolsButton(
-            target: target,
-            onRunBottleCommand: onRunBottleCommand,
-            onOpenBottleLocation: onOpenBottleLocation,
-          ),
+          _BottleToolsButton(target: target, toolsAction: toolsAction),
           const SizedBox(width: 6),
           KonyakBottomButton(
             label: localizations.winetricks,
@@ -163,49 +153,55 @@ class KonyakBottomBar extends StatelessWidget {
 }
 
 class _BottleToolsButton extends StatelessWidget {
-  const _BottleToolsButton({
-    required this.target,
-    required this.onRunBottleCommand,
-    required this.onOpenBottleLocation,
-  });
+  const _BottleToolsButton({required this.target, required this.toolsAction});
 
   final BottleActionTarget target;
-  final void Function(BottleSummary bottle, String command)? onRunBottleCommand;
-  final void Function(BottleSummary bottle, String location)?
-  onOpenBottleLocation;
+  final BottleToolsActionAvailability toolsAction;
 
   @override
   Widget build(BuildContext context) {
-    final hasActions =
-        onRunBottleCommand != null || onOpenBottleLocation != null;
+    final targetAction = resolveBottleToolsTargetAction(
+      target: target,
+      actions: toolsAction,
+    );
 
     return KonyakBottomButton(
       label: KonyakLocalizations.of(context).tools,
-      onPressed: switch (target) {
-        SelectedBottleActionTarget(:final bottle) when hasActions =>
-          () => _showBottleTools(context, bottle),
-        NoBottleActionTarget() || SelectedBottleActionTarget() => null,
+      onPressed: switch (targetAction) {
+        EnabledBottleToolsTargetActionAvailability() => () => _showBottleTools(
+          context,
+          targetAction,
+        ),
+        DisabledBottleToolsTargetActionAvailability() => null,
       },
     );
   }
 
   Future<void> _showBottleTools(
     BuildContext context,
-    BottleSummary bottle,
+    EnabledBottleToolsTargetActionAvailability targetAction,
   ) async {
     final action = await showDialog<BottleToolAction>(
       context: context,
-      builder: (context) => BottleToolsDialog(bottleName: bottle.name),
+      builder: (context) => BottleToolsDialog(
+        bottleName: targetAction.bottle.name,
+        availableKinds: availableBottleToolActionKinds(targetAction.actions),
+      ),
     );
     if (!context.mounted || action == null) {
       return;
     }
 
-    switch (action.kind) {
-      case BottleToolActionKind.command:
-        onRunBottleCommand?.call(bottle, action.id);
-      case BottleToolActionKind.location:
-        onOpenBottleLocation?.call(bottle, action.id);
+    final dispatch = resolveBottleToolActionDispatch(
+      bottle: targetAction.bottle,
+      actions: targetAction.actions,
+      action: action,
+    );
+    switch (dispatch) {
+      case AvailableBottleToolActionDispatch(:final invoke):
+        invoke();
+      case UnavailableBottleToolActionDispatch():
+        return;
     }
   }
 }
