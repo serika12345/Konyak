@@ -362,6 +362,7 @@ review gate:
 
 #### PR Gate: I2-P3 CLI Contract Family Test Part Split
 
+status: completed
 branch: `task/interface-i2-cli-contract-family-tests`
 
 Completion criteria:

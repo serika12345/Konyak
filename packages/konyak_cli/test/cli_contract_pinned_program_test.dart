@@ -1,6 +1,6 @@
-part of 'cli_contract_test.dart';
+import 'support/cli_contract_full_helpers.dart';
 
-void definePinnedProgramContractTests() {
+void main() {
   test('pin-program --json adds a pinned program to the bottle record', () {
     final repository = MemoryBottleRepository(
       programMetadataExtractor: const DartIoProgramMetadataExtractor(),
@@ -40,7 +40,7 @@ void definePinnedProgramContractTests() {
       },
     });
     expect(
-      _expectFound(
+      expectFound(
         repository.findBottle(BottleId('steam')),
       ).pinnedPrograms.single.path.value,
       '/downloads/Steam.exe',
@@ -56,13 +56,13 @@ void definePinnedProgramContractTests() {
         tempDirectory.deleteSync(recursive: true);
       }
     });
-    final appBundle = _createTestMacosAppBundle(tempDirectory.path);
-    final iconPath = _joinTestPath(tempDirectory.path, const [
+    final appBundle = createTestMacosAppBundle(tempDirectory.path);
+    final iconPath = joinTestPath(tempDirectory.path, const [
       'steam-icon.icns',
     ]);
     File(iconPath).writeAsBytesSync(const <int>[0, 1, 2, 3]);
     final repository = MemoryBottleRepository(
-      dataHome: _joinTestPath(tempDirectory.path, const ['data']),
+      dataHome: joinTestPath(tempDirectory.path, const ['data']),
       programMetadataExtractor: FixedProgramMetadataExtractor(
         programPath: '/downloads/Steam.exe',
         metadata: ProgramMetadataRecord(
@@ -92,7 +92,7 @@ void definePinnedProgramContractTests() {
         hostPlatform: KonyakHostPlatform.macos,
         environment: HostEnvironment({
           'HOME': tempDirectory.path,
-          'KONYAK_APP_EXECUTABLE': _joinTestPath(appBundle.path, const [
+          'KONYAK_APP_EXECUTABLE': joinTestPath(appBundle.path, const [
             'Contents',
             'MacOS',
             'Konyak',
@@ -103,11 +103,11 @@ void definePinnedProgramContractTests() {
 
     expect(result.exitCode, 0);
 
-    final launcherBundle = _singleGeneratedMacosLauncher(tempDirectory.path);
+    final launcherBundle = singleGeneratedMacosLauncher(tempDirectory.path);
     expect(launcherBundle.path, endsWith('/Steam.app'));
 
     final infoPlist = File(
-      _joinTestPath(launcherBundle.path, const ['Contents', 'Info.plist']),
+      joinTestPath(launcherBundle.path, const ['Contents', 'Info.plist']),
     ).readAsStringSync();
     expect(infoPlist, contains('<string>app.konyak.Konyak.pinned.'));
     expect(infoPlist, contains('<key>CFBundleDisplayName</key>'));
@@ -117,7 +117,7 @@ void definePinnedProgramContractTests() {
     expect(infoPlist, contains('<string>konyak-launcher</string>'));
     expect(
       File(
-        _joinTestPath(launcherBundle.path, const [
+        joinTestPath(launcherBundle.path, const [
           'Contents',
           'Resources',
           'KonyakPinnedProgram.icns',
@@ -129,7 +129,7 @@ void definePinnedProgramContractTests() {
     final manifest =
         jsonDecode(
               File(
-                _joinTestPath(launcherBundle.path, const [
+                joinTestPath(launcherBundle.path, const [
                   'Contents',
                   'Resources',
                   'konyak-launcher.json',
@@ -145,7 +145,7 @@ void definePinnedProgramContractTests() {
     expect(manifest['launcherId'], isA<String>());
 
     final launcherExecutable = File(
-      _joinTestPath(launcherBundle.path, const [
+      joinTestPath(launcherBundle.path, const [
         'Contents',
         'MacOS',
         'konyak-launcher',
@@ -155,7 +155,7 @@ void definePinnedProgramContractTests() {
     expect(
       launcherScript,
       contains(
-        _joinTestPath(appBundle.path, const [
+        joinTestPath(appBundle.path, const [
           'Contents',
           'Resources',
           'konyak-cli',
@@ -176,10 +176,10 @@ void definePinnedProgramContractTests() {
         tempDirectory.deleteSync(recursive: true);
       }
     });
-    final appBundle = _createTestMacosAppBundle(tempDirectory.path);
+    final appBundle = createTestMacosAppBundle(tempDirectory.path);
     final repository = MemoryBottleRepository(
       programMetadataExtractor: const NoopProgramMetadataExtractor(),
-      dataHome: _joinTestPath(tempDirectory.path, const ['data']),
+      dataHome: joinTestPath(tempDirectory.path, const ['data']),
     );
     runCli(const [
       'create-bottle',
@@ -197,7 +197,7 @@ void definePinnedProgramContractTests() {
       hostPlatform: KonyakHostPlatform.macos,
       environment: HostEnvironment({
         'HOME': tempDirectory.path,
-        'KONYAK_APP_EXECUTABLE': _joinTestPath(appBundle.path, const [
+        'KONYAK_APP_EXECUTABLE': joinTestPath(appBundle.path, const [
           'Contents',
           'MacOS',
           'Konyak',
@@ -232,13 +232,13 @@ void definePinnedProgramContractTests() {
       programRunPlanner: planner,
     );
 
-    final launcherNames = _generatedMacosLaunchers(
+    final launcherNames = generatedMacosLaunchers(
       tempDirectory.path,
     ).map((directory) => directory.path.split('/').last).toList();
     expect(launcherNames, const ['Steam (2).app', 'Steam.app']);
     final duplicateInfoPlist = File(
-      _joinTestPath(
-        _generatedMacosLaunchers(tempDirectory.path).first.path,
+      joinTestPath(
+        generatedMacosLaunchers(tempDirectory.path).first.path,
         const ['Contents', 'Info.plist'],
       ),
     ).readAsStringSync();
@@ -256,7 +256,7 @@ void definePinnedProgramContractTests() {
     });
     final repository = MemoryBottleRepository(
       programMetadataExtractor: const NoopProgramMetadataExtractor(),
-      dataHome: _joinTestPath(tempDirectory.path, const ['data']),
+      dataHome: joinTestPath(tempDirectory.path, const ['data']),
     );
     runCli(const [
       'create-bottle',
@@ -291,8 +291,8 @@ void definePinnedProgramContractTests() {
 
     expect(result.exitCode, 0);
     final launcherExecutable = File(
-      _joinTestPath(
-        _singleGeneratedMacosLauncher(tempDirectory.path).path,
+      joinTestPath(
+        singleGeneratedMacosLauncher(tempDirectory.path).path,
         const ['Contents', 'MacOS', 'konyak-launcher'],
       ),
     );
@@ -315,13 +315,11 @@ void definePinnedProgramContractTests() {
         tempDirectory.deleteSync(recursive: true);
       }
     });
-    final xdgDataHome = _joinTestPath(tempDirectory.path, const ['xdg-data']);
-    final iconPath = _joinTestPath(tempDirectory.path, const [
-      'steam-icon.png',
-    ]);
+    final xdgDataHome = joinTestPath(tempDirectory.path, const ['xdg-data']);
+    final iconPath = joinTestPath(tempDirectory.path, const ['steam-icon.png']);
     File(iconPath).writeAsBytesSync(const <int>[137, 80, 78, 71]);
     final repository = MemoryBottleRepository(
-      dataHome: _joinTestPath(tempDirectory.path, const ['data']),
+      dataHome: joinTestPath(tempDirectory.path, const ['data']),
       programMetadataExtractor: FixedProgramMetadataExtractor(
         programPath: '/downloads/Steam.exe',
         metadata: ProgramMetadataRecord(
@@ -363,7 +361,7 @@ void definePinnedProgramContractTests() {
 
     expect(result.exitCode, 0);
 
-    final launcherEntry = _singleGeneratedLinuxPinnedLauncher(xdgDataHome);
+    final launcherEntry = singleGeneratedLinuxPinnedLauncher(xdgDataHome);
     expect(launcherEntry.path, contains('/applications/'));
     expect(launcherEntry.path, endsWith('.desktop'));
     final desktopEntry = launcherEntry.readAsStringSync();
@@ -374,7 +372,7 @@ void definePinnedProgramContractTests() {
     expect(desktopEntry, contains('StartupWMClass=steam.exe'));
     expect(desktopEntry, contains('Categories=Utility;'));
 
-    final manifest = _singleGeneratedLinuxPinnedManifest(xdgDataHome);
+    final manifest = singleGeneratedLinuxPinnedManifest(xdgDataHome);
     final manifestPayload =
         jsonDecode(manifest.readAsStringSync()) as Map<String, Object?>;
     expect(manifestPayload['schemaVersion'], 1);
@@ -384,7 +382,7 @@ void definePinnedProgramContractTests() {
     expect(manifestPayload['programPath'], '/downloads/Steam.exe');
     expect(manifestPayload['launcherId'], isA<String>());
 
-    final launcherScript = _singleGeneratedLinuxPinnedScript(
+    final launcherScript = singleGeneratedLinuxPinnedScript(
       xdgDataHome,
     ).readAsStringSync();
     expect(launcherScript, contains("cd '/repo/packages/konyak_cli'"));
@@ -406,20 +404,20 @@ void definePinnedProgramContractTests() {
         tempDirectory.deleteSync(recursive: true);
       }
     });
-    final xdgDataHome = _joinTestPath(tempDirectory.path, const ['xdg-data']);
-    final bundleResources = _joinTestPath(tempDirectory.path, const [
+    final xdgDataHome = joinTestPath(tempDirectory.path, const ['xdg-data']);
+    final bundleResources = joinTestPath(tempDirectory.path, const [
       'AppDir',
       'usr',
       'share',
       'konyak',
     ]);
-    final cliExecutable = _joinTestPath(bundleResources, const ['konyak-cli']);
+    final cliExecutable = joinTestPath(bundleResources, const ['konyak-cli']);
     File(cliExecutable)
       ..createSync(recursive: true)
       ..writeAsStringSync('cli');
     final repository = MemoryBottleRepository(
       programMetadataExtractor: const NoopProgramMetadataExtractor(),
-      dataHome: _joinTestPath(tempDirectory.path, const ['data']),
+      dataHome: joinTestPath(tempDirectory.path, const ['data']),
     );
     runCli(const [
       'create-bottle',
@@ -450,7 +448,7 @@ void definePinnedProgramContractTests() {
     );
 
     expect(result.exitCode, 0);
-    final launcherScript = _singleGeneratedLinuxPinnedScript(
+    final launcherScript = singleGeneratedLinuxPinnedScript(
       xdgDataHome,
     ).readAsStringSync();
     expect(
@@ -470,14 +468,14 @@ void definePinnedProgramContractTests() {
           tempDirectory.deleteSync(recursive: true);
         }
       });
-      final xdgDataHome = _joinTestPath(tempDirectory.path, const ['xdg-data']);
-      final appImage = _joinTestPath(tempDirectory.path, const [
+      final xdgDataHome = joinTestPath(tempDirectory.path, const ['xdg-data']);
+      final appImage = joinTestPath(tempDirectory.path, const [
         'Konyak.AppImage',
       ]);
       File(appImage).writeAsStringSync('appimage');
       final repository = MemoryBottleRepository(
         programMetadataExtractor: const DartIoProgramMetadataExtractor(),
-        dataHome: _joinTestPath(tempDirectory.path, const ['data']),
+        dataHome: joinTestPath(tempDirectory.path, const ['data']),
       );
       runCli(const [
         'create-bottle',
@@ -511,7 +509,7 @@ void definePinnedProgramContractTests() {
       );
 
       expect(result.exitCode, 0);
-      final launcherScript = _singleGeneratedLinuxPinnedScript(
+      final launcherScript = singleGeneratedLinuxPinnedScript(
         xdgDataHome,
       ).readAsStringSync();
       expect(
@@ -531,15 +529,15 @@ void definePinnedProgramContractTests() {
         tempDirectory.deleteSync(recursive: true);
       }
     });
-    final xdgDataHome = _joinTestPath(tempDirectory.path, const ['xdg-data']);
+    final xdgDataHome = joinTestPath(tempDirectory.path, const ['xdg-data']);
     final repository = MemoryBottleRepository(
       programMetadataExtractor: const NoopProgramMetadataExtractor(),
-      dataHome: _joinTestPath(tempDirectory.path, const ['data']),
+      dataHome: joinTestPath(tempDirectory.path, const ['data']),
       bottles: [
         BottleRecord(
           id: 'steam',
           name: 'Steam',
-          path: _joinTestPath(tempDirectory.path, const ['data', 'steam']),
+          path: joinTestPath(tempDirectory.path, const ['data', 'steam']),
           windowsVersion: 'win10',
           pinnedPrograms: [
             PinnedProgramRecord(name: 'Steam', path: '/downloads/Steam.exe'),
@@ -548,7 +546,7 @@ void definePinnedProgramContractTests() {
       ],
     );
     final staleDesktopEntry = File(
-      _joinTestPath(xdgDataHome, const [
+      joinTestPath(xdgDataHome, const [
         'applications',
         'app.konyak.Konyak.pinned.stale.desktop',
       ]),
@@ -557,7 +555,7 @@ void definePinnedProgramContractTests() {
       ..createSync(recursive: true)
       ..writeAsStringSync('[Desktop Entry]\nName=Stale\n');
     final staleManifest = File(
-      _joinTestPath(xdgDataHome, const [
+      joinTestPath(xdgDataHome, const [
         'konyak',
         'launchers',
         'linux-pinned',
@@ -596,8 +594,8 @@ void definePinnedProgramContractTests() {
     );
 
     expect(result.exitCode, 0);
-    expect(_generatedLinuxPinnedLaunchers(xdgDataHome), hasLength(1));
-    expect(_generatedLinuxPinnedManifests(xdgDataHome), hasLength(1));
+    expect(generatedLinuxPinnedLaunchers(xdgDataHome), hasLength(1));
+    expect(generatedLinuxPinnedManifests(xdgDataHome), hasLength(1));
     expect(staleDesktopEntry.existsSync(), isFalse);
     expect(staleManifest.parent.existsSync(), isFalse);
   });
@@ -611,8 +609,8 @@ void definePinnedProgramContractTests() {
         tempDirectory.deleteSync(recursive: true);
       }
     });
-    final bottlePath = _joinTestPath(tempDirectory.path, const ['Steam']);
-    final shortcutPath = _joinTestPath(bottlePath, const [
+    final bottlePath = joinTestPath(tempDirectory.path, const ['Steam']);
+    final shortcutPath = joinTestPath(bottlePath, const [
       'drive_c',
       'ProgramData',
       'Microsoft',
@@ -624,7 +622,7 @@ void definePinnedProgramContractTests() {
     File(shortcutPath)
       ..createSync(recursive: true)
       ..writeAsStringSync('shortcut');
-    final externalPath = _joinTestPath(tempDirectory.path, const [
+    final externalPath = joinTestPath(tempDirectory.path, const [
       'Downloads',
       'portable.exe',
     ]);
@@ -669,8 +667,8 @@ void definePinnedProgramContractTests() {
         tempDirectory.deleteSync(recursive: true);
       }
     });
-    final bottlePath = _joinTestPath(tempDirectory.path, const ['Steam']);
-    final shortcutPath = _joinTestPath(bottlePath, const [
+    final bottlePath = joinTestPath(tempDirectory.path, const ['Steam']);
+    final shortcutPath = joinTestPath(bottlePath, const [
       'drive_c',
       'ProgramData',
       'Microsoft',
@@ -720,8 +718,8 @@ void definePinnedProgramContractTests() {
         tempDirectory.deleteSync(recursive: true);
       }
     });
-    final bottlePath = _joinTestPath(tempDirectory.path, const ['Steam']);
-    final programPath = _joinTestPath(bottlePath, const [
+    final bottlePath = joinTestPath(tempDirectory.path, const ['Steam']);
+    final programPath = joinTestPath(bottlePath, const [
       'drive_c',
       'Program Files',
       'Steam',
@@ -729,8 +727,8 @@ void definePinnedProgramContractTests() {
     ]);
     File(programPath)
       ..createSync(recursive: true)
-      ..writeAsBytesSync(_syntheticPortableExecutableBytes());
-    final shortcutPath = _joinTestPath(bottlePath, const [
+      ..writeAsBytesSync(syntheticPortableExecutableBytes());
+    final shortcutPath = joinTestPath(bottlePath, const [
       'drive_c',
       'ProgramData',
       'Microsoft',
@@ -742,7 +740,7 @@ void definePinnedProgramContractTests() {
     File(shortcutPath)
       ..createSync(recursive: true)
       ..writeAsBytesSync(
-        _syntheticShellLinkBytes(
+        syntheticShellLinkBytes(
           localBasePath: r'C:\Program Files\Steam\Steam.exe',
         ),
       );
@@ -796,7 +794,7 @@ void definePinnedProgramContractTests() {
     );
     expect(createResult, isA<BottleCreated>());
     final bottle = (createResult as BottleCreated).bottle;
-    final shortcutPath = _joinTestPath(bottle.path.value, const [
+    final shortcutPath = joinTestPath(bottle.path.value, const [
       'drive_c',
       'ProgramData',
       'Microsoft',
@@ -832,7 +830,7 @@ void definePinnedProgramContractTests() {
     final metadata =
         jsonDecode(
               File(
-                _joinTestPath(bottle.path.value, const ['metadata.json']),
+                joinTestPath(bottle.path.value, const ['metadata.json']),
               ).readAsStringSync(),
             )
             as Map<String, Object?>;
@@ -849,15 +847,15 @@ void definePinnedProgramContractTests() {
         tempDirectory.deleteSync(recursive: true);
       }
     });
-    final xdgDataHome = _joinTestPath(tempDirectory.path, const ['xdg-data']);
+    final xdgDataHome = joinTestPath(tempDirectory.path, const ['xdg-data']);
     final repository = MemoryBottleRepository(
       programMetadataExtractor: const NoopProgramMetadataExtractor(),
-      dataHome: _joinTestPath(tempDirectory.path, const ['data']),
+      dataHome: joinTestPath(tempDirectory.path, const ['data']),
       bottles: [
         BottleRecord(
           id: 'steam',
           name: 'Steam',
-          path: _joinTestPath(tempDirectory.path, const ['data', 'steam']),
+          path: joinTestPath(tempDirectory.path, const ['data', 'steam']),
           windowsVersion: 'win10',
           pinnedPrograms: [
             PinnedProgramRecord(name: 'Steam', path: '/downloads/Steam.exe'),
@@ -898,7 +896,7 @@ void definePinnedProgramContractTests() {
     );
 
     expect(result.exitCode, 0);
-    final desktopEntry = _singleGeneratedLinuxPinnedLauncher(
+    final desktopEntry = singleGeneratedLinuxPinnedLauncher(
       xdgDataHome,
     ).readAsStringSync();
     expect(desktopEntry, contains('Name=Steam Client'));
@@ -913,15 +911,15 @@ void definePinnedProgramContractTests() {
         tempDirectory.deleteSync(recursive: true);
       }
     });
-    final xdgDataHome = _joinTestPath(tempDirectory.path, const ['xdg-data']);
+    final xdgDataHome = joinTestPath(tempDirectory.path, const ['xdg-data']);
     final repository = MemoryBottleRepository(
       programMetadataExtractor: const NoopProgramMetadataExtractor(),
-      dataHome: _joinTestPath(tempDirectory.path, const ['data']),
+      dataHome: joinTestPath(tempDirectory.path, const ['data']),
       bottles: [
         BottleRecord(
           id: 'steam',
           name: 'Steam',
-          path: _joinTestPath(tempDirectory.path, const ['data', 'steam']),
+          path: joinTestPath(tempDirectory.path, const ['data', 'steam']),
           windowsVersion: 'win10',
           pinnedPrograms: [
             PinnedProgramRecord(name: 'Steam', path: '/downloads/Steam.exe'),
@@ -946,7 +944,7 @@ void definePinnedProgramContractTests() {
       bottleRepository: repository,
       programRunPlanner: planner,
     );
-    expect(_generatedLinuxPinnedLaunchers(xdgDataHome), hasLength(1));
+    expect(generatedLinuxPinnedLaunchers(xdgDataHome), hasLength(1));
 
     final result = runCli(
       const [
@@ -961,8 +959,8 @@ void definePinnedProgramContractTests() {
     );
 
     expect(result.exitCode, 0);
-    expect(_generatedLinuxPinnedLaunchers(xdgDataHome), isEmpty);
-    expect(_generatedLinuxPinnedManifests(xdgDataHome), isEmpty);
+    expect(generatedLinuxPinnedLaunchers(xdgDataHome), isEmpty);
+    expect(generatedLinuxPinnedManifests(xdgDataHome), isEmpty);
   });
 
   test('list-bottles --json on macOS refreshes app launchers', () {
@@ -976,7 +974,7 @@ void definePinnedProgramContractTests() {
     });
     final repository = MemoryBottleRepository(
       programMetadataExtractor: const NoopProgramMetadataExtractor(),
-      dataHome: _joinTestPath(tempDirectory.path, const ['data']),
+      dataHome: joinTestPath(tempDirectory.path, const ['data']),
     );
     runCli(const [
       'create-bottle',
@@ -1019,8 +1017,8 @@ void definePinnedProgramContractTests() {
 
     expect(result.exitCode, 0);
     final launcherScript = File(
-      _joinTestPath(
-        _singleGeneratedMacosLauncher(tempDirectory.path).path,
+      joinTestPath(
+        singleGeneratedMacosLauncher(tempDirectory.path).path,
         const ['Contents', 'MacOS', 'konyak-launcher'],
       ),
     ).readAsStringSync();
@@ -1036,10 +1034,10 @@ void definePinnedProgramContractTests() {
         tempDirectory.deleteSync(recursive: true);
       }
     });
-    final appBundle = _createTestMacosAppBundle(tempDirectory.path);
+    final appBundle = createTestMacosAppBundle(tempDirectory.path);
     final repository = MemoryBottleRepository(
       programMetadataExtractor: const NoopProgramMetadataExtractor(),
-      dataHome: _joinTestPath(tempDirectory.path, const ['data']),
+      dataHome: joinTestPath(tempDirectory.path, const ['data']),
     );
     runCli(const [
       'create-bottle',
@@ -1051,7 +1049,7 @@ void definePinnedProgramContractTests() {
       hostPlatform: KonyakHostPlatform.macos,
       environment: HostEnvironment({
         'HOME': tempDirectory.path,
-        'KONYAK_APP_EXECUTABLE': _joinTestPath(appBundle.path, const [
+        'KONYAK_APP_EXECUTABLE': joinTestPath(appBundle.path, const [
           'Contents',
           'MacOS',
           'Konyak',
@@ -1072,7 +1070,7 @@ void definePinnedProgramContractTests() {
       programRunPlanner: planner,
     );
 
-    expect(_generatedMacosLaunchers(tempDirectory.path), hasLength(1));
+    expect(generatedMacosLaunchers(tempDirectory.path), hasLength(1));
 
     final result = runCli(
       const [
@@ -1087,7 +1085,7 @@ void definePinnedProgramContractTests() {
     );
 
     expect(result.exitCode, 0);
-    expect(_generatedMacosLaunchers(tempDirectory.path), isEmpty);
+    expect(generatedMacosLaunchers(tempDirectory.path), isEmpty);
   });
 
   test('launch-pinned-program --json runs the pinned program manifest', () {
@@ -1099,10 +1097,10 @@ void definePinnedProgramContractTests() {
         tempDirectory.deleteSync(recursive: true);
       }
     });
-    final appBundle = _createTestMacosAppBundle(tempDirectory.path);
+    final appBundle = createTestMacosAppBundle(tempDirectory.path);
     final repository = MemoryBottleRepository(
       programMetadataExtractor: const NoopProgramMetadataExtractor(),
-      dataHome: _joinTestPath(tempDirectory.path, const ['data']),
+      dataHome: joinTestPath(tempDirectory.path, const ['data']),
     );
     runCli(const [
       'create-bottle',
@@ -1114,7 +1112,7 @@ void definePinnedProgramContractTests() {
       hostPlatform: KonyakHostPlatform.macos,
       environment: HostEnvironment({
         'HOME': tempDirectory.path,
-        'KONYAK_APP_EXECUTABLE': _joinTestPath(appBundle.path, const [
+        'KONYAK_APP_EXECUTABLE': joinTestPath(appBundle.path, const [
           'Contents',
           'MacOS',
           'Konyak',
@@ -1153,8 +1151,8 @@ void definePinnedProgramContractTests() {
       bottleRepository: repository,
       programRunPlanner: planner,
     );
-    final manifestPath = _joinTestPath(
-      _singleGeneratedMacosLauncher(tempDirectory.path).path,
+    final manifestPath = joinTestPath(
+      singleGeneratedMacosLauncher(tempDirectory.path).path,
       const ['Contents', 'Resources', 'konyak-launcher.json'],
     );
     final runner = RecordingProgramRunner(
@@ -1193,8 +1191,8 @@ void definePinnedProgramContractTests() {
         await tempDirectory.delete(recursive: true);
       }
     });
-    final bottlePath = _joinTestPath(tempDirectory.path, const ['Steam']);
-    final programPath = _joinTestPath(bottlePath, const [
+    final bottlePath = joinTestPath(tempDirectory.path, const ['Steam']);
+    final programPath = joinTestPath(bottlePath, const [
       'drive_c',
       'Program Files',
       'Fixture',
@@ -1202,7 +1200,7 @@ void definePinnedProgramContractTests() {
     ]);
     File(programPath)
       ..createSync(recursive: true)
-      ..writeAsBytesSync(_syntheticPortableExecutableBytes());
+      ..writeAsBytesSync(syntheticPortableExecutableBytes());
     final repository = MemoryBottleRepository(
       programMetadataExtractor: const DartIoProgramMetadataExtractor(),
       dataHome: tempDirectory.path,
@@ -1251,8 +1249,8 @@ void definePinnedProgramContractTests() {
           await tempDirectory.delete(recursive: true);
         }
       });
-      final bottlePath = _joinTestPath(tempDirectory.path, const ['Steam']);
-      final programPath = _joinTestPath(bottlePath, const [
+      final bottlePath = joinTestPath(tempDirectory.path, const ['Steam']);
+      final programPath = joinTestPath(bottlePath, const [
         'drive_c',
         'Program Files',
         'Fixture',
@@ -1260,8 +1258,8 @@ void definePinnedProgramContractTests() {
       ]);
       File(programPath)
         ..createSync(recursive: true)
-        ..writeAsBytesSync(_syntheticPortableExecutableBytes());
-      final shortcutPath = _joinTestPath(bottlePath, const [
+        ..writeAsBytesSync(syntheticPortableExecutableBytes());
+      final shortcutPath = joinTestPath(bottlePath, const [
         'drive_c',
         'ProgramData',
         'Microsoft',
@@ -1273,7 +1271,7 @@ void definePinnedProgramContractTests() {
       File(shortcutPath)
         ..createSync(recursive: true)
         ..writeAsBytesSync(
-          _syntheticShellLinkBytes(
+          syntheticShellLinkBytes(
             localBasePath: r'C:\Program Files\Fixture\Fixture.exe',
           ),
         );
@@ -1328,8 +1326,8 @@ void definePinnedProgramContractTests() {
           tempDirectory.deleteSync(recursive: true);
         }
       });
-      final bottlePath = _joinTestPath(tempDirectory.path, const ['Steam']);
-      final programPath = _joinTestPath(bottlePath, const [
+      final bottlePath = joinTestPath(tempDirectory.path, const ['Steam']);
+      final programPath = joinTestPath(bottlePath, const [
         'drive_c',
         'Program Files',
         'Fixture',
@@ -1337,7 +1335,7 @@ void definePinnedProgramContractTests() {
       ]);
       File(programPath)
         ..createSync(recursive: true)
-        ..writeAsBytesSync(_syntheticPortableExecutableBytes());
+        ..writeAsBytesSync(syntheticPortableExecutableBytes());
       final repository = MemoryBottleRepository(
         programMetadataExtractor: const DartIoProgramMetadataExtractor(),
         dataHome: tempDirectory.path,
@@ -1382,8 +1380,8 @@ void definePinnedProgramContractTests() {
         tempDirectory.deleteSync(recursive: true);
       }
     });
-    final bottlePath = _joinTestPath(tempDirectory.path, const ['Steam']);
-    final programPath = _joinTestPath(bottlePath, const [
+    final bottlePath = joinTestPath(tempDirectory.path, const ['Steam']);
+    final programPath = joinTestPath(bottlePath, const [
       'drive_c',
       'Program Files',
       'Fixture',
@@ -1391,8 +1389,8 @@ void definePinnedProgramContractTests() {
     ]);
     File(programPath)
       ..createSync(recursive: true)
-      ..writeAsBytesSync(_syntheticPortableExecutableBytes());
-    final shortcutPath = _joinTestPath(bottlePath, const [
+      ..writeAsBytesSync(syntheticPortableExecutableBytes());
+    final shortcutPath = joinTestPath(bottlePath, const [
       'drive_c',
       'ProgramData',
       'Microsoft',
@@ -1404,7 +1402,7 @@ void definePinnedProgramContractTests() {
     File(shortcutPath)
       ..createSync(recursive: true)
       ..writeAsBytesSync(
-        _syntheticShellLinkBytes(
+        syntheticShellLinkBytes(
           localBasePath: r'C:\Program Files\Fixture\Fixture.exe',
         ),
       );
@@ -1485,7 +1483,7 @@ void definePinnedProgramContractTests() {
         },
       });
       expect(
-        _expectFound(repository.findBottle(BottleId('steam'))).pinnedPrograms,
+        expectFound(repository.findBottle(BottleId('steam'))).pinnedPrograms,
         isEmpty,
       );
     },
@@ -1539,7 +1537,7 @@ void definePinnedProgramContractTests() {
       },
     });
     expect(
-      _expectFound(
+      expectFound(
         repository.findBottle(BottleId('steam')),
       ).pinnedPrograms.single.name.value,
       'Steam Client',

@@ -1,6 +1,6 @@
-part of 'cli_contract_test.dart';
+import 'support/cli_contract_full_helpers.dart';
 
-void defineProgramExecutionContractTests() {
+void main() {
   test('suggest-graphics-backend --json uses the injected inspector', () {
     final inspector = RecordingProgramGraphicsBackendHintsInspector(
       ProgramGraphicsBackendHintsInspected(
@@ -64,9 +64,9 @@ void defineProgramExecutionContractTests() {
           await tempDirectory.delete(recursive: true);
         }
       });
-      final programPath = _joinTestPath(tempDirectory.path, const ['game.exe']);
+      final programPath = joinTestPath(tempDirectory.path, const ['game.exe']);
       File(programPath).writeAsBytesSync(
-        _syntheticPortableExecutableBytes(
+        syntheticPortableExecutableBytes(
           importDllNames: const ['d3d12.dll', 'dxgi.dll'],
         ),
       );
@@ -116,9 +116,9 @@ void defineProgramExecutionContractTests() {
           await tempDirectory.delete(recursive: true);
         }
       });
-      final programPath = _joinTestPath(tempDirectory.path, const ['game.exe']);
+      final programPath = joinTestPath(tempDirectory.path, const ['game.exe']);
       File(programPath).writeAsBytesSync(
-        _syntheticPortableExecutableBytes(importDllNames: const ['d3d12.dll']),
+        syntheticPortableExecutableBytes(importDllNames: const ['d3d12.dll']),
       );
 
       final result = runCli(
@@ -652,7 +652,7 @@ void defineProgramExecutionContractTests() {
       runner.lastRequest?.environment.toMap(),
       containsPair(
         'WINEDLLPATH',
-        _macosManagedWineDllPath(
+        macosManagedWineDllPath(
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
         ),
       ),
@@ -661,7 +661,7 @@ void defineProgramExecutionContractTests() {
       runner.lastRequest?.environment.toMap(),
       containsPair(
         'WINEPATH',
-        _macosManagedWinePath(
+        macosManagedWinePath(
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
         ),
       ),
@@ -716,8 +716,8 @@ void defineProgramExecutionContractTests() {
       }
     });
 
-    final runtimeRoot = _joinTestPath(tempDirectory.path, const ['runtime']);
-    final bottlePath = _joinTestPath(tempDirectory.path, const [
+    final runtimeRoot = joinTestPath(tempDirectory.path, const ['runtime']);
+    final bottlePath = joinTestPath(tempDirectory.path, const [
       'bottles',
       'steam',
     ]);
@@ -731,7 +731,7 @@ void defineProgramExecutionContractTests() {
         'd3d11.dll',
       ]) {
         final file = File(
-          _joinTestPath(runtimeRoot, ['lib', 'dxvk', arch, dllName]),
+          joinTestPath(runtimeRoot, ['lib', 'dxvk', arch, dllName]),
         );
         file.parent.createSync(recursive: true);
         file.writeAsStringSync('$arch/$dllName');
@@ -740,7 +740,7 @@ void defineProgramExecutionContractTests() {
 
     final repository = MemoryBottleRepository(
       programMetadataExtractor: const NoopProgramMetadataExtractor(),
-      dataHome: _joinTestPath(tempDirectory.path, const ['data']),
+      dataHome: joinTestPath(tempDirectory.path, const ['data']),
       bottles: [
         BottleRecord(
           id: 'steam',
@@ -820,7 +820,7 @@ void defineProgramExecutionContractTests() {
       runner.lastRequest?.environment.toMap(),
       containsPair(
         'WINEDLLPATH',
-        _macosManagedWineDllPathWithOverrides(runtimeRoot, const [
+        macosManagedWineDllPathWithOverrides(runtimeRoot, const [
           ['lib', 'dxvk', 'x86_64-windows'],
           ['lib', 'dxvk', 'i386-windows'],
         ]),
@@ -830,7 +830,7 @@ void defineProgramExecutionContractTests() {
       runner.lastRequest?.environment.toMap(),
       containsPair(
         'WINEPATH',
-        _macosManagedWinePathWithOverrides(runtimeRoot, const [
+        macosManagedWinePathWithOverrides(runtimeRoot, const [
           ['lib', 'dxvk', 'x86_64-windows'],
           ['lib', 'dxvk', 'i386-windows'],
         ]),
@@ -848,14 +848,14 @@ void defineProgramExecutionContractTests() {
       }
     });
 
-    final runtimeRoot = _joinTestPath(tempDirectory.path, const ['runtime']);
-    final bottlePath = _joinTestPath(tempDirectory.path, const [
+    final runtimeRoot = joinTestPath(tempDirectory.path, const ['runtime']);
+    final bottlePath = joinTestPath(tempDirectory.path, const [
       'bottles',
       'steam',
     ]);
-    for (final dllName in _gptkD3DMetalOverrideDllNames) {
+    for (final dllName in gptkD3DMetalOverrideDllNames) {
       final file = File(
-        _joinTestPath(runtimeRoot, [
+        joinTestPath(runtimeRoot, [
           'components',
           'gptk-d3dmetal',
           'lib',
@@ -870,7 +870,7 @@ void defineProgramExecutionContractTests() {
 
     final repository = MemoryBottleRepository(
       programMetadataExtractor: const NoopProgramMetadataExtractor(),
-      dataHome: _joinTestPath(tempDirectory.path, const ['data']),
+      dataHome: joinTestPath(tempDirectory.path, const ['data']),
       bottles: [
         BottleRecord(
           id: 'steam',
@@ -910,7 +910,7 @@ void defineProgramExecutionContractTests() {
       runner.lastRequest?.environment.toMap(),
       containsPair(
         'WINEDLLPATH',
-        _macosManagedWineDllPathWithOverrides(runtimeRoot, const [
+        macosManagedWineDllPathWithOverrides(runtimeRoot, const [
           <String>[
             'components',
             'gptk-d3dmetal',
@@ -925,7 +925,7 @@ void defineProgramExecutionContractTests() {
       runner.lastRequest?.environment.toMap(),
       containsPair(
         'WINEPATH',
-        _macosManagedWinePathWithOverrides(runtimeRoot, const [
+        macosManagedWinePathWithOverrides(runtimeRoot, const [
           <String>[
             'components',
             'gptk-d3dmetal',
@@ -978,14 +978,14 @@ void defineProgramExecutionContractTests() {
         }
       });
 
-      final runtimeRoot = _joinTestPath(tempDirectory.path, const ['runtime']);
-      final bottlePath = _joinTestPath(tempDirectory.path, const [
+      final runtimeRoot = joinTestPath(tempDirectory.path, const ['runtime']);
+      final bottlePath = joinTestPath(tempDirectory.path, const [
         'bottles',
         'steam',
       ]);
-      for (final dllName in _gptkD3DMetalOverrideDllNames) {
+      for (final dllName in gptkD3DMetalOverrideDllNames) {
         final file = File(
-          _joinTestPath(runtimeRoot, [
+          joinTestPath(runtimeRoot, [
             'components',
             'gptk-d3dmetal',
             'lib',
@@ -1000,7 +1000,7 @@ void defineProgramExecutionContractTests() {
 
       final repository = MemoryBottleRepository(
         programMetadataExtractor: const NoopProgramMetadataExtractor(),
-        dataHome: _joinTestPath(tempDirectory.path, const ['data']),
+        dataHome: joinTestPath(tempDirectory.path, const ['data']),
         bottles: [
           BottleRecord(
             id: 'steam',
@@ -1041,7 +1041,7 @@ void defineProgramExecutionContractTests() {
       );
       expect(
         environment?['WINEDLLPATH'],
-        _macosManagedWineDllPathWithOverrides(runtimeRoot, const [
+        macosManagedWineDllPathWithOverrides(runtimeRoot, const [
           <String>[
             'components',
             'gptk-d3dmetal',
@@ -1053,7 +1053,7 @@ void defineProgramExecutionContractTests() {
       );
       expect(
         environment?['WINEPATH'],
-        _macosManagedWinePathWithOverrides(runtimeRoot, const [
+        macosManagedWinePathWithOverrides(runtimeRoot, const [
           <String>[
             'components',
             'gptk-d3dmetal',
@@ -1091,14 +1091,14 @@ void defineProgramExecutionContractTests() {
       }
     });
 
-    final runtimeRoot = _joinTestPath(tempDirectory.path, const ['runtime']);
-    final bottlePath = _joinTestPath(tempDirectory.path, const [
+    final runtimeRoot = joinTestPath(tempDirectory.path, const ['runtime']);
+    final bottlePath = joinTestPath(tempDirectory.path, const [
       'bottles',
       'steam',
     ]);
-    for (final dllName in _gptkD3DMetalOverrideDllNames) {
+    for (final dllName in gptkD3DMetalOverrideDllNames) {
       final file = File(
-        _joinTestPath(runtimeRoot, [
+        joinTestPath(runtimeRoot, [
           'components',
           'gptk-d3dmetal',
           'lib',
@@ -1110,9 +1110,9 @@ void defineProgramExecutionContractTests() {
       file.parent.createSync(recursive: true);
       file.writeAsStringSync('d3dmetal/$dllName');
     }
-    for (final dllName in _gptkD3DMetalOverrideDllNames) {
+    for (final dllName in gptkD3DMetalOverrideDllNames) {
       final file = File(
-        _joinTestPath(bottlePath, ['drive_c', 'windows', 'system32', dllName]),
+        joinTestPath(bottlePath, ['drive_c', 'windows', 'system32', dllName]),
       );
       file.parent.createSync(recursive: true);
       file.writeAsStringSync('stale $dllName');
@@ -1120,7 +1120,7 @@ void defineProgramExecutionContractTests() {
 
     final repository = MemoryBottleRepository(
       programMetadataExtractor: const NoopProgramMetadataExtractor(),
-      dataHome: _joinTestPath(tempDirectory.path, const ['data']),
+      dataHome: joinTestPath(tempDirectory.path, const ['data']),
       bottles: [
         BottleRecord(
           id: 'steam',
@@ -1153,15 +1153,10 @@ void defineProgramExecutionContractTests() {
 
     expect(result.exitCode, 0);
     expect(result.stderr, isEmpty);
-    for (final dllName in _gptkD3DMetalOverrideDllNames) {
+    for (final dllName in gptkD3DMetalOverrideDllNames) {
       expect(
         File(
-          _joinTestPath(bottlePath, [
-            'drive_c',
-            'windows',
-            'system32',
-            dllName,
-          ]),
+          joinTestPath(bottlePath, ['drive_c', 'windows', 'system32', dllName]),
         ).readAsStringSync(),
         'd3dmetal/$dllName',
       );
@@ -1178,14 +1173,14 @@ void defineProgramExecutionContractTests() {
       }
     });
 
-    final runtimeRoot = _joinTestPath(tempDirectory.path, const ['runtime']);
-    final bottlePath = _joinTestPath(tempDirectory.path, const [
+    final runtimeRoot = joinTestPath(tempDirectory.path, const ['runtime']);
+    final bottlePath = joinTestPath(tempDirectory.path, const [
       'bottles',
       'steam',
     ]);
-    for (final dllName in _gptkD3DMetalOverrideDllNames) {
+    for (final dllName in gptkD3DMetalOverrideDllNames) {
       final file = File(
-        _joinTestPath(runtimeRoot, [
+        joinTestPath(runtimeRoot, [
           'components',
           'gptk-d3dmetal',
           'lib',
@@ -1200,7 +1195,7 @@ void defineProgramExecutionContractTests() {
 
     final repository = MemoryBottleRepository(
       programMetadataExtractor: const NoopProgramMetadataExtractor(),
-      dataHome: _joinTestPath(tempDirectory.path, const ['data']),
+      dataHome: joinTestPath(tempDirectory.path, const ['data']),
       bottles: [
         BottleRecord(
           id: 'steam',
@@ -1252,14 +1247,14 @@ void defineProgramExecutionContractTests() {
       }
     });
 
-    final runtimeRoot = _joinTestPath(tempDirectory.path, const ['runtime']);
-    final bottlePath = _joinTestPath(tempDirectory.path, const [
+    final runtimeRoot = joinTestPath(tempDirectory.path, const ['runtime']);
+    final bottlePath = joinTestPath(tempDirectory.path, const [
       'bottles',
       'steam',
     ]);
-    for (final dllName in _gptkD3DMetalOverrideDllNames) {
+    for (final dllName in gptkD3DMetalOverrideDllNames) {
       final file = File(
-        _joinTestPath(runtimeRoot, [
+        joinTestPath(runtimeRoot, [
           'components',
           'gptk-d3dmetal',
           'lib',
@@ -1274,7 +1269,7 @@ void defineProgramExecutionContractTests() {
 
     final repository = MemoryBottleRepository(
       programMetadataExtractor: const NoopProgramMetadataExtractor(),
-      dataHome: _joinTestPath(tempDirectory.path, const ['data']),
+      dataHome: joinTestPath(tempDirectory.path, const ['data']),
       bottles: [
         BottleRecord(
           id: 'steam',
@@ -1359,7 +1354,7 @@ void defineProgramExecutionContractTests() {
       runner.lastRequest?.environment.toMap(),
       containsPair(
         'WINEDLLPATH',
-        _macosManagedWineDllPathWithOverrides(
+        macosManagedWineDllPathWithOverrides(
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
           const [
             ['lib', 'dxmt', 'x86_64-windows'],
@@ -1372,7 +1367,7 @@ void defineProgramExecutionContractTests() {
       runner.lastRequest?.environment.toMap(),
       containsPair(
         'WINEPATH',
-        _macosManagedWinePathWithOverrides(
+        macosManagedWinePathWithOverrides(
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
           const [
             ['lib', 'dxmt', 'x86_64-windows'],
@@ -1887,7 +1882,7 @@ void defineProgramExecutionContractTests() {
       contains("MVK_CONFIG_LOG_LEVEL='0'"),
     );
     expect(runner.lastRequest?.arguments.last, contains('do script "source '));
-    final terminalCommand = _singleAppleScriptDoScriptCommand(
+    final terminalCommand = singleAppleScriptDoScriptCommand(
       runner.lastRequest!.arguments.last,
     );
     expect(terminalCommand, contains('konyak-terminal-setup.zsh'));
@@ -2468,7 +2463,7 @@ void defineProgramExecutionContractTests() {
       }
     });
 
-    File(_joinTestPath(runtimeRoot.path, const ['verbs.txt']))
+    File(joinTestPath(runtimeRoot.path, const ['verbs.txt']))
       ..createSync(recursive: true)
       ..writeAsStringSync('''
 ===== apps =====
@@ -2571,7 +2566,7 @@ win10                    Set Windows version to Windows 10
       });
 
       File(
-          _joinTestPath(home.path, const [
+          joinTestPath(home.path, const [
             'Library',
             'Application Support',
             'Konyak',
@@ -2586,14 +2581,14 @@ win10                    Set Windows version to Windows 10
 dotnetdesktop10         MS .NET Desktop Runtime 10.0 LTS
 ''');
 
-      final runtimeRoot = _joinTestPath(home.path, const [
+      final runtimeRoot = joinTestPath(home.path, const [
         '.local',
         'share',
         'konyak',
         'Runtimes',
         'linux-wine',
       ]);
-      File(_joinTestPath(runtimeRoot, const ['winetricks']))
+      File(joinTestPath(runtimeRoot, const ['winetricks']))
         ..createSync(recursive: true)
         ..writeAsStringSync('#!/bin/sh\n');
       final lister = RecordingWinetricksVerbLister(
@@ -2617,7 +2612,7 @@ corefonts                Microsoft Core Fonts
       expect(result.exitCode, 0);
       expect(
         lister.executable,
-        _joinTestPath(runtimeRoot, const ['winetricks']),
+        joinTestPath(runtimeRoot, const ['winetricks']),
       );
 
       final payload = jsonDecode(result.stdout) as Map<String, Object?>;
@@ -2867,8 +2862,8 @@ corefonts                Microsoft Core Fonts
         await tempDirectory.delete(recursive: true);
       }
     });
-    final bottlePath = _joinTestPath(tempDirectory.path, const ['Steam']);
-    final startMenuPath = _joinTestPath(bottlePath, const [
+    final bottlePath = joinTestPath(tempDirectory.path, const ['Steam']);
+    final startMenuPath = joinTestPath(bottlePath, const [
       'drive_c',
       'ProgramData',
       'Microsoft',
@@ -2877,10 +2872,10 @@ corefonts                Microsoft Core Fonts
       'Programs',
     ]);
     Directory(startMenuPath).createSync(recursive: true);
-    File(_joinTestPath(startMenuPath, const ['Steam.lnk']))
+    File(joinTestPath(startMenuPath, const ['Steam.lnk']))
       ..createSync()
       ..writeAsStringSync('shortcut');
-    File(_joinTestPath(startMenuPath, const ['Readme.txt']))
+    File(joinTestPath(startMenuPath, const ['Readme.txt']))
       ..createSync()
       ..writeAsStringSync('ignored');
 
@@ -2917,7 +2912,7 @@ corefonts                Microsoft Core Fonts
           {
             'id': 'steam',
             'name': 'Steam',
-            'path': _joinTestPath(startMenuPath, const ['Steam.lnk']),
+            'path': joinTestPath(startMenuPath, const ['Steam.lnk']),
             'source': 'globalStartMenu',
           },
         ],
@@ -2936,8 +2931,8 @@ corefonts                Microsoft Core Fonts
           await tempDirectory.delete(recursive: true);
         }
       });
-      final bottlePath = _joinTestPath(tempDirectory.path, const ['Steam']);
-      final startMenuPath = _joinTestPath(bottlePath, const [
+      final bottlePath = joinTestPath(tempDirectory.path, const ['Steam']);
+      final startMenuPath = joinTestPath(bottlePath, const [
         'drive_c',
         'ProgramData',
         'Microsoft',
@@ -2946,7 +2941,7 @@ corefonts                Microsoft Core Fonts
         'Programs',
       ]);
       Directory(startMenuPath).createSync(recursive: true);
-      final shortcutPath = _joinTestPath(startMenuPath, const ['Steam.lnk']);
+      final shortcutPath = joinTestPath(startMenuPath, const ['Steam.lnk']);
       File(shortcutPath)
         ..createSync()
         ..writeAsStringSync('shortcut');
@@ -3005,11 +3000,11 @@ corefonts                Microsoft Core Fonts
         tempDirectory.deleteSync(recursive: true);
       }
     });
-    final bottlePath = _joinTestPath(tempDirectory.path, const [
+    final bottlePath = joinTestPath(tempDirectory.path, const [
       'Bottles',
       'Steam',
     ]);
-    final programPath = _joinTestPath(bottlePath, const [
+    final programPath = joinTestPath(bottlePath, const [
       'drive_c',
       'Program Files',
       'Steam',
@@ -3067,8 +3062,8 @@ corefonts                Microsoft Core Fonts
           await tempDirectory.delete(recursive: true);
         }
       });
-      final bottlePath = _joinTestPath(tempDirectory.path, const ['Steam']);
-      final programPath = _joinTestPath(bottlePath, const [
+      final bottlePath = joinTestPath(tempDirectory.path, const ['Steam']);
+      final programPath = joinTestPath(bottlePath, const [
         'drive_c',
         'Program Files',
         'Fixture',
@@ -3076,8 +3071,8 @@ corefonts                Microsoft Core Fonts
       ]);
       File(programPath)
         ..createSync(recursive: true)
-        ..writeAsBytesSync(_syntheticPortableExecutableBytes());
-      final startMenuPath = _joinTestPath(bottlePath, const [
+        ..writeAsBytesSync(syntheticPortableExecutableBytes());
+      final startMenuPath = joinTestPath(bottlePath, const [
         'drive_c',
         'ProgramData',
         'Microsoft',
@@ -3086,10 +3081,10 @@ corefonts                Microsoft Core Fonts
         'Programs',
       ]);
       Directory(startMenuPath).createSync(recursive: true);
-      File(_joinTestPath(startMenuPath, const ['Fixture.lnk']))
+      File(joinTestPath(startMenuPath, const ['Fixture.lnk']))
         ..createSync()
         ..writeAsBytesSync(
-          _syntheticShellLinkBytes(
+          syntheticShellLinkBytes(
             localBasePath: r'C:\Program Files\Fixture\Fixture.exe',
           ),
         );
@@ -3125,7 +3120,7 @@ corefonts                Microsoft Core Fonts
 
       expect(
         program['path'],
-        _joinTestPath(startMenuPath, const ['Fixture.lnk']),
+        joinTestPath(startMenuPath, const ['Fixture.lnk']),
       );
       expect(metadata['architecture'], 'x86_64');
       expect(metadata['fileDescription'], 'Fixture App');
@@ -3144,8 +3139,8 @@ corefonts                Microsoft Core Fonts
           await tempDirectory.delete(recursive: true);
         }
       });
-      final bottlePath = _joinTestPath(tempDirectory.path, const ['Steam']);
-      final programPath = _joinTestPath(bottlePath, const [
+      final bottlePath = joinTestPath(tempDirectory.path, const ['Steam']);
+      final programPath = joinTestPath(bottlePath, const [
         'drive_c',
         'Program Files',
         'Fixture',
@@ -3153,7 +3148,7 @@ corefonts                Microsoft Core Fonts
       ]);
       File(programPath)
         ..createSync(recursive: true)
-        ..writeAsBytesSync(_syntheticPortableExecutableBytes());
+        ..writeAsBytesSync(syntheticPortableExecutableBytes());
 
       final repository = MemoryBottleRepository(
         programMetadataExtractor: const NoopProgramMetadataExtractor(),
@@ -3483,18 +3478,18 @@ corefonts                Microsoft Core Fonts
         '--json',
       ], bottleRepository: repository);
 
-      final programPath = _joinTestPath(tempDirectory.path, const [
+      final programPath = joinTestPath(tempDirectory.path, const [
         'downloads',
         'setup.exe',
       ]);
       File(programPath)
         ..createSync(recursive: true)
-        ..writeAsBytesSync(_syntheticPortableExecutableBytes());
+        ..writeAsBytesSync(syntheticPortableExecutableBytes());
 
       final runner = RecordingProgramRunner(
         result: const ProgramRunCompleted(processExitCode: 0),
       );
-      final xdgDataHome = _joinTestPath(tempDirectory.path, const ['xdg-data']);
+      final xdgDataHome = joinTestPath(tempDirectory.path, const ['xdg-data']);
 
       final result = runCli(
         ['run-program', 'steam', '--program', programPath, '--json'],
@@ -3512,7 +3507,7 @@ corefonts                Microsoft Core Fonts
 
       expect(result.exitCode, 0);
       final launcherDirectory = Directory(
-        _joinTestPath(xdgDataHome, const ['applications', 'konyak']),
+        joinTestPath(xdgDataHome, const ['applications', 'konyak']),
       );
       expect(launcherDirectory.existsSync(), isTrue);
 
@@ -3531,20 +3526,20 @@ corefonts                Microsoft Core Fonts
       expect(
         launcher,
         contains(
-          'Path=${_joinTestPath(tempDirectory.path, const ['downloads'])}',
+          'Path=${joinTestPath(tempDirectory.path, const ['downloads'])}',
         ),
       );
       expect(
         launcher,
         contains(
-          'Exec=env "WINEPREFIX=${_expectFound(repository.findBottle(BottleId('steam'))).path.value}" '
-          '"${_joinTestPath(xdgDataHome, const ['konyak', 'Runtimes', 'linux-wine', 'bin', 'wine'])}" "$programPath"',
+          'Exec=env "WINEPREFIX=${expectFound(repository.findBottle(BottleId('steam'))).path.value}" '
+          '"${joinTestPath(xdgDataHome, const ['konyak', 'Runtimes', 'linux-wine', 'bin', 'wine'])}" "$programPath"',
         ),
       );
       expect(
         launcher,
         contains(
-          'Icon=${_expectFound(repository.findBottle(BottleId('steam'))).path.value}/cache/icons/',
+          'Icon=${expectFound(repository.findBottle(BottleId('steam'))).path.value}/cache/icons/',
         ),
       );
     },
@@ -3573,20 +3568,20 @@ corefonts                Microsoft Core Fonts
         '--json',
       ], bottleRepository: repository);
 
-      final programPath = _joinTestPath(tempDirectory.path, const [
+      final programPath = joinTestPath(tempDirectory.path, const [
         'downloads',
         'setup.exe',
       ]);
       File(programPath)
         ..createSync(recursive: true)
-        ..writeAsBytesSync(_syntheticPortableExecutableBytes());
+        ..writeAsBytesSync(syntheticPortableExecutableBytes());
 
       final runner = RecordingProgramRunner(
         result: const ProgramRunCompleted(processExitCode: 0),
       );
       final diagnosticSink =
           RecordingLinuxExternalProgramLauncherDiagnosticSink();
-      final xdgDataHome = _joinTestPath(tempDirectory.path, const ['xdg-data']);
+      final xdgDataHome = joinTestPath(tempDirectory.path, const ['xdg-data']);
 
       final result = runCli(
         ['run-program', 'steam', '--program', programPath, '--json'],
@@ -3627,7 +3622,7 @@ corefonts                Microsoft Core Fonts
   );
 }
 
-String _singleAppleScriptDoScriptCommand(String appleScript) {
+String singleAppleScriptDoScriptCommand(String appleScript) {
   final commandLines = appleScript
       .split('\n')
       .map((line) => line.trim())

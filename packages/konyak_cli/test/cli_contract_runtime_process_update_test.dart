@@ -1,6 +1,6 @@
-part of 'cli_contract_test.dart';
+import 'support/cli_contract_full_helpers.dart';
 
-void defineRuntimeProcessAndUpdateContractTests() {
+void main() {
   test('list-runtimes --json returns the versioned empty runtime contract', () {
     final result = runCli(const ['list-runtimes', '--json']);
 
@@ -165,10 +165,10 @@ void defineRuntimeProcessAndUpdateContractTests() {
         hostPlatform: KonyakHostPlatform.macos,
         environment: HostEnvironment(const {'HOME': '/Users/user'}),
         fileStatusProbe: StaticFileStatusProbe({
-          ..._macosWineEntryPointExistingPaths(
+          ...macosWineEntryPointExistingPaths(
             '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
           ),
-          ..._macosWine32On64ExistingPaths(
+          ...macosWine32On64ExistingPaths(
             '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
           ),
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxvk/x86_64-windows/dxgi.dll',
@@ -184,21 +184,21 @@ void defineRuntimeProcessAndUpdateContractTests() {
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxvk/i386-windows/d3d10core.dll',
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/dxvk/i386-windows/d3d11.dll',
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/libMoltenVK.dylib',
-          ..._macosGstreamerExistingPaths(
+          ...macosGstreamerExistingPaths(
             '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
           ),
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/libfreetype.6.dylib',
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/lib/libfreetype.dylib',
-          ..._macosWineMonoExistingPaths(
+          ...macosWineMonoExistingPaths(
             '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
           ),
-          ..._macosWineGeckoExistingPaths(
+          ...macosWineGeckoExistingPaths(
             '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
           ),
-          ..._macosWinetricksExistingPaths(
+          ...macosWinetricksExistingPaths(
             '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
           ),
-          ..._macosVkd3dExistingPaths(
+          ...macosVkd3dExistingPaths(
             '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
           ),
         }),
@@ -242,7 +242,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
                 'role': 'windows-runner',
                 'isRequired': true,
                 'isInstalled': true,
-                'paths': _macosWineEntryPointExpectedPaths(
+                'paths': macosWineEntryPointExpectedPaths(
                   '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
                 ),
                 'missingPaths': <Object?>[],
@@ -253,7 +253,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
                 'role': '32-bit-windows-support',
                 'isRequired': true,
                 'isInstalled': true,
-                'paths': _macosWine32On64ExpectedPaths(
+                'paths': macosWine32On64ExpectedPaths(
                   '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
                 ),
                 'missingPaths': <Object?>[],
@@ -297,7 +297,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
                 'role': 'media-runtime',
                 'isRequired': true,
                 'isInstalled': true,
-                'paths': _macosGstreamerExpectedPaths(
+                'paths': macosGstreamerExpectedPaths(
                   '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
                 ),
                 'missingPaths': <Object?>[],
@@ -320,7 +320,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
                 'role': 'dotnet-runtime',
                 'isRequired': true,
                 'isInstalled': true,
-                'paths': _macosWineMonoExpectedPaths(
+                'paths': macosWineMonoExpectedPaths(
                   '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
                 ),
                 'missingPaths': <Object?>[],
@@ -331,7 +331,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
                 'role': 'html-runtime',
                 'isRequired': true,
                 'isInstalled': true,
-                'paths': _macosWineGeckoExpectedPaths(
+                'paths': macosWineGeckoExpectedPaths(
                   '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
                 ),
                 'missingPaths': <Object?>[],
@@ -342,7 +342,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
                 'role': 'verb-installer',
                 'isRequired': true,
                 'isInstalled': true,
-                'paths': _macosWinetricksExpectedPaths(
+                'paths': macosWinetricksExpectedPaths(
                   '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
                 ),
                 'missingPaths': <Object?>[],
@@ -353,7 +353,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
                 'role': 'd3d12-vulkan-runtime',
                 'isRequired': true,
                 'isInstalled': true,
-                'paths': _macosVkd3dExpectedPaths(
+                'paths': macosVkd3dExpectedPaths(
                   '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
                 ),
                 'missingPaths': <Object?>[],
@@ -391,10 +391,10 @@ void defineRuntimeProcessAndUpdateContractTests() {
                 'role': 'd3d12-metal-translation',
                 'isRequired': false,
                 'isInstalled': false,
-                'paths': _gptkD3DMetalExpectedPaths(
+                'paths': gptkD3DMetalExpectedPaths(
                   '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
                 ),
-                'missingPaths': _gptkD3DMetalExpectedPaths(
+                'missingPaths': gptkD3DMetalExpectedPaths(
                   '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
                 ),
               },
@@ -443,7 +443,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
                 'isAvailable': false,
                 'componentIds': ['gptk-d3dmetal'],
                 'missingComponentIds': ['gptk-d3dmetal'],
-                'missingPaths': _gptkD3DMetalExpectedPaths(
+                'missingPaths': gptkD3DMetalExpectedPaths(
                   '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
                 ),
               },
@@ -495,24 +495,24 @@ void defineRuntimeProcessAndUpdateContractTests() {
     const runtimeRoot =
         '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine';
     final existingPaths = <String>{
-      ..._macosWineEntryPointExistingPaths(runtimeRoot),
-      ..._macosWine32On64ExistingPaths(runtimeRoot),
-      for (final relativePath in _macosDxvkInstalledPaths)
-        _joinTestPath(runtimeRoot, <String>[
+      ...macosWineEntryPointExistingPaths(runtimeRoot),
+      ...macosWine32On64ExistingPaths(runtimeRoot),
+      for (final relativePath in macosDxvkInstalledPaths)
+        joinTestPath(runtimeRoot, <String>[
           'lib',
           'dxvk',
           ...relativePath.skip(1),
         ]),
-      _joinTestPath(runtimeRoot, const ['lib', 'libMoltenVK.dylib']),
-      ..._macosGstreamerExistingPaths(runtimeRoot),
-      _joinTestPath(runtimeRoot, const ['lib', 'libfreetype.6.dylib']),
-      _joinTestPath(runtimeRoot, const ['lib', 'libfreetype.dylib']),
-      ..._macosWineMonoExistingPaths(runtimeRoot),
-      ..._macosWineGeckoExistingPaths(runtimeRoot),
-      _joinTestPath(runtimeRoot, const ['winetricks']),
-      ..._macosVkd3dExistingPaths(runtimeRoot),
-      for (final relativePath in _macosDxmtInstalledPaths)
-        _joinTestPath(runtimeRoot, relativePath),
+      joinTestPath(runtimeRoot, const ['lib', 'libMoltenVK.dylib']),
+      ...macosGstreamerExistingPaths(runtimeRoot),
+      joinTestPath(runtimeRoot, const ['lib', 'libfreetype.6.dylib']),
+      joinTestPath(runtimeRoot, const ['lib', 'libfreetype.dylib']),
+      ...macosWineMonoExistingPaths(runtimeRoot),
+      ...macosWineGeckoExistingPaths(runtimeRoot),
+      joinTestPath(runtimeRoot, const ['winetricks']),
+      ...macosVkd3dExistingPaths(runtimeRoot),
+      for (final relativePath in macosDxmtInstalledPaths)
+        joinTestPath(runtimeRoot, relativePath),
     };
     final result = runCli(
       const ['list-runtimes', '--json'],
@@ -538,7 +538,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
     expect(winetricks['isInstalled'], isFalse);
     expect(
       winetricks['missingPaths'],
-      contains(_joinTestPath(runtimeRoot, const ['verbs.txt'])),
+      contains(joinTestPath(runtimeRoot, const ['verbs.txt'])),
     );
   });
 
@@ -548,19 +548,19 @@ void defineRuntimeProcessAndUpdateContractTests() {
       const runtimeRoot =
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine';
       final existingPaths = <String>{
-        ..._macosWineEntryPointExistingPaths(runtimeRoot),
-        ..._macosWine32On64ExistingPaths(runtimeRoot),
-        ..._macosDxvkExistingPaths(runtimeRoot),
-        _joinTestPath(runtimeRoot, const ['lib', 'libMoltenVK.dylib']),
-        ..._macosGstreamerExistingPaths(runtimeRoot),
-        _joinTestPath(runtimeRoot, const ['lib', 'libfreetype.6.dylib']),
-        _joinTestPath(runtimeRoot, const ['lib', 'libfreetype.dylib']),
-        ..._macosWineMonoExistingPaths(runtimeRoot),
-        ..._macosWineGeckoExistingPaths(runtimeRoot),
-        ..._macosWinetricksExistingPaths(runtimeRoot),
-        ..._macosVkd3dExistingPaths(runtimeRoot),
-        for (final relativePath in _macosDxmtInstalledPaths)
-          _joinTestPath(runtimeRoot, relativePath),
+        ...macosWineEntryPointExistingPaths(runtimeRoot),
+        ...macosWine32On64ExistingPaths(runtimeRoot),
+        ...macosDxvkExistingPaths(runtimeRoot),
+        joinTestPath(runtimeRoot, const ['lib', 'libMoltenVK.dylib']),
+        ...macosGstreamerExistingPaths(runtimeRoot),
+        joinTestPath(runtimeRoot, const ['lib', 'libfreetype.6.dylib']),
+        joinTestPath(runtimeRoot, const ['lib', 'libfreetype.dylib']),
+        ...macosWineMonoExistingPaths(runtimeRoot),
+        ...macosWineGeckoExistingPaths(runtimeRoot),
+        ...macosWinetricksExistingPaths(runtimeRoot),
+        ...macosVkd3dExistingPaths(runtimeRoot),
+        for (final relativePath in macosDxmtInstalledPaths)
+          joinTestPath(runtimeRoot, relativePath),
       };
       final result = runCli(
         const ['list-runtimes', '--json'],
@@ -599,28 +599,28 @@ void defineRuntimeProcessAndUpdateContractTests() {
           tempDirectory.deleteSync(recursive: true);
         }
       });
-      final runtimeHome = _joinTestPath(tempDirectory.path, const ['runtime']);
-      _createInstalledMacosRuntime(runtimeHome);
-      for (final relativePath in _macosDxvkComponentPaths) {
+      final runtimeHome = joinTestPath(tempDirectory.path, const ['runtime']);
+      createInstalledMacosRuntime(runtimeHome);
+      for (final relativePath in macosDxvkComponentPaths) {
         final file = File(
-          _joinTestPath(runtimeHome, relativePath.skip(2).toList()),
+          joinTestPath(runtimeHome, relativePath.skip(2).toList()),
         );
         file.parent.createSync(recursive: true);
         file.writeAsStringSync('fixture');
       }
       for (final relativePath in const <List<String>>[
         <String>['lib', 'libMoltenVK.dylib'],
-        ..._macosGstreamerInstalledPaths,
+        ...macosGstreamerInstalledPaths,
         <String>['lib', 'libfreetype.6.dylib'],
         <String>['lib', 'libfreetype.dylib'],
-        ..._macosWinetricksInstalledPaths,
+        ...macosWinetricksInstalledPaths,
       ]) {
-        final file = File(_joinTestPath(runtimeHome, relativePath));
+        final file = File(joinTestPath(runtimeHome, relativePath));
         file.parent.createSync(recursive: true);
         file.writeAsStringSync('fixture');
       }
       final frameworkBinary = File(
-        _joinTestPath(runtimeHome, const [
+        joinTestPath(runtimeHome, const [
           'components',
           'gptk-d3dmetal',
           'lib',
@@ -634,7 +634,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
       frameworkBinary.parent.createSync(recursive: true);
       frameworkBinary.writeAsStringSync('Konyak macOS dev runtime fixture');
       File(
-        _joinTestPath(runtimeHome, const [
+        joinTestPath(runtimeHome, const [
           'components',
           'gptk-d3dmetal',
           'lib',
@@ -643,7 +643,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
         ]),
       ).writeAsStringSync('fixture');
       File(
-        _joinTestPath(runtimeHome, const [runtimeStackManifestFileName]),
+        joinTestPath(runtimeHome, const [runtimeStackManifestFileName]),
       ).writeAsStringSync(
         jsonEncode({
           'schemaVersion': 1,
@@ -1236,15 +1236,15 @@ void defineRuntimeProcessAndUpdateContractTests() {
         tempDirectory.deleteSync(recursive: true);
       }
     });
-    final bottlePath = _joinTestPath(tempDirectory.path, const ['a']);
-    final programPath = _joinTestPath(tempDirectory.path, const [
+    final bottlePath = joinTestPath(tempDirectory.path, const ['a']);
+    final programPath = joinTestPath(tempDirectory.path, const [
       'Downloads',
       'Ardour-9.5.0-w64-Setup.exe',
     ]);
     Directory(
-      _joinTestPath(bottlePath, const ['logs']),
+      joinTestPath(bottlePath, const ['logs']),
     ).createSync(recursive: true);
-    File(_joinTestPath(bottlePath, const ['logs', 'latest.log']))
+    File(joinTestPath(bottlePath, const ['logs', 'latest.log']))
       ..createSync(recursive: true)
       ..writeAsStringSync('Arguments: ${jsonEncode(<String>[programPath])}\n');
     final repository = MemoryBottleRepository(
@@ -1289,7 +1289,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
           ),
           iconPath: Option.of(
             ProgramIconPath(
-              _joinTestPath(bottlePath, const ['cache', 'icons', 'ardour.ico']),
+              joinTestPath(bottlePath, const ['cache', 'icons', 'ardour.ico']),
             ),
           ),
         ),
@@ -1321,7 +1321,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
             'hostPath': programPath,
             'metadata': {
               'fileDescription': 'Ardour Installer',
-              'iconPath': _joinTestPath(bottlePath, const [
+              'iconPath': joinTestPath(bottlePath, const [
                 'cache',
                 'icons',
                 'ardour.ico',
@@ -1445,15 +1445,15 @@ void defineRuntimeProcessAndUpdateContractTests() {
           tempDirectory.deleteSync(recursive: true);
         }
       });
-      final bottlePath = _joinTestPath(tempDirectory.path, const ['a']);
-      final programPath = _joinTestPath(tempDirectory.path, const [
+      final bottlePath = joinTestPath(tempDirectory.path, const ['a']);
+      final programPath = joinTestPath(tempDirectory.path, const [
         'Downloads',
         'Setup.exe',
       ]);
       Directory(
-        _joinTestPath(bottlePath, const ['logs']),
+        joinTestPath(bottlePath, const ['logs']),
       ).createSync(recursive: true);
-      File(_joinTestPath(bottlePath, const ['logs', 'latest.log']))
+      File(joinTestPath(bottlePath, const ['logs', 'latest.log']))
         ..createSync(recursive: true)
         ..writeAsStringSync(
           'Arguments: ${jsonEncode(<String>[programPath])}\n',
@@ -1477,7 +1477,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
           fileDescription: Option.of(ProgramFileDescription('Setup')),
           iconPath: Option.of(
             ProgramIconPath(
-              _joinTestPath(bottlePath, const ['cache', 'icons', 'setup.ico']),
+              joinTestPath(bottlePath, const ['cache', 'icons', 'setup.ico']),
             ),
           ),
         ),
@@ -1519,7 +1519,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
       for (final process in processes.cast<Map<String, Object?>>()) {
         expect(process['metadata'], {
           'fileDescription': 'Setup',
-          'iconPath': _joinTestPath(bottlePath, const [
+          'iconPath': joinTestPath(bottlePath, const [
             'cache',
             'icons',
             'setup.ico',
@@ -1540,14 +1540,14 @@ void defineRuntimeProcessAndUpdateContractTests() {
           tempDirectory.deleteSync(recursive: true);
         }
       });
-      final bottlePath = _joinTestPath(tempDirectory.path, const ['a']);
-      final programPath = _joinTestPath(bottlePath, const [
+      final bottlePath = joinTestPath(tempDirectory.path, const ['a']);
+      final programPath = joinTestPath(bottlePath, const [
         'drive_c',
         'Program Files',
         'Ardour',
         'Ardour.exe',
       ]);
-      final shortcutPath = _joinTestPath(bottlePath, const [
+      final shortcutPath = joinTestPath(bottlePath, const [
         'drive_c',
         'ProgramData',
         'Microsoft',
@@ -1559,14 +1559,14 @@ void defineRuntimeProcessAndUpdateContractTests() {
       File(shortcutPath)
         ..createSync(recursive: true)
         ..writeAsBytesSync(
-          _syntheticShellLinkBytes(
+          syntheticShellLinkBytes(
             localBasePath: r'C:\Program Files\Ardour\Ardour.exe',
           ),
         );
       Directory(
-        _joinTestPath(bottlePath, const ['logs']),
+        joinTestPath(bottlePath, const ['logs']),
       ).createSync(recursive: true);
-      File(_joinTestPath(bottlePath, const ['logs', 'latest.log']))
+      File(joinTestPath(bottlePath, const ['logs', 'latest.log']))
         ..createSync(recursive: true)
         ..writeAsStringSync(
           'Arguments: ${jsonEncode(<String>['start', '/unix', shortcutPath])}\n',
@@ -1590,7 +1590,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
           fileDescription: Option.of(ProgramFileDescription('Ardour')),
           iconPath: Option.of(
             ProgramIconPath(
-              _joinTestPath(bottlePath, const ['cache', 'icons', 'ardour.ico']),
+              joinTestPath(bottlePath, const ['cache', 'icons', 'ardour.ico']),
             ),
           ),
         ),
@@ -1636,7 +1636,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
               'hostPath': programPath,
               'metadata': {
                 'fileDescription': 'Ardour',
-                'iconPath': _joinTestPath(bottlePath, const [
+                'iconPath': joinTestPath(bottlePath, const [
                   'cache',
                   'icons',
                   'ardour.ico',
@@ -1806,16 +1806,16 @@ void defineRuntimeProcessAndUpdateContractTests() {
           tempDirectory.deleteSync(recursive: true);
         }
       });
-      final bottlePath = _joinTestPath(tempDirectory.path, const ['a']);
-      final programPath = _joinTestPath(tempDirectory.path, const [
+      final bottlePath = joinTestPath(tempDirectory.path, const ['a']);
+      final programPath = joinTestPath(tempDirectory.path, const [
         'Downloads',
         'Ardour-9.5.0-w64-Setup.exe',
       ]);
       Directory(
-        _joinTestPath(bottlePath, const ['cache']),
+        joinTestPath(bottlePath, const ['cache']),
       ).createSync(recursive: true);
       File(
-        _joinTestPath(bottlePath, const [
+        joinTestPath(bottlePath, const [
           'cache',
           'external-program-launches.json',
         ]),
@@ -1868,7 +1868,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
             ),
             iconPath: Option.of(
               ProgramIconPath(
-                _joinTestPath(bottlePath, const [
+                joinTestPath(bottlePath, const [
                   'cache',
                   'icons',
                   'ardour.ico',
@@ -1892,7 +1892,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
               'hostPath': programPath,
               'metadata': {
                 'fileDescription': 'Ardour Installer',
-                'iconPath': _joinTestPath(bottlePath, const [
+                'iconPath': joinTestPath(bottlePath, const [
                   'cache',
                   'icons',
                   'ardour.ico',
@@ -1916,8 +1916,8 @@ void defineRuntimeProcessAndUpdateContractTests() {
           tempDirectory.deleteSync(recursive: true);
         }
       });
-      final bottlePath = _joinTestPath(tempDirectory.path, const ['a']);
-      final programPath = _joinTestPath(tempDirectory.path, const [
+      final bottlePath = joinTestPath(tempDirectory.path, const ['a']);
+      final programPath = joinTestPath(tempDirectory.path, const [
         'Downloads',
         'Ardour-9.5.0-w64-Setup.exe',
       ]);
@@ -1934,10 +1934,10 @@ void defineRuntimeProcessAndUpdateContractTests() {
         ],
       );
       Directory(
-        _joinTestPath(bottlePath, const ['cache']),
+        joinTestPath(bottlePath, const ['cache']),
       ).createSync(recursive: true);
       File(
-        _joinTestPath(bottlePath, const [
+        joinTestPath(bottlePath, const [
           'cache',
           'external-program-launches.json',
         ]),
@@ -1979,7 +1979,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
             ),
             iconPath: Option.of(
               ProgramIconPath(
-                _joinTestPath(bottlePath, const [
+                joinTestPath(bottlePath, const [
                   'cache',
                   'icons',
                   'ardour.ico',
@@ -2003,7 +2003,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
               'hostPath': programPath,
               'metadata': {
                 'fileDescription': 'Ardour Installer',
-                'iconPath': _joinTestPath(bottlePath, const [
+                'iconPath': joinTestPath(bottlePath, const [
                   'cache',
                   'icons',
                   'ardour.ico',
@@ -2027,14 +2027,14 @@ void defineRuntimeProcessAndUpdateContractTests() {
           tempDirectory.deleteSync(recursive: true);
         }
       });
-      final bottlePath = _joinTestPath(tempDirectory.path, const ['a']);
-      final programPath = _joinTestPath(bottlePath, const [
+      final bottlePath = joinTestPath(tempDirectory.path, const ['a']);
+      final programPath = joinTestPath(bottlePath, const [
         'drive_c',
         'Program Files',
         'Ardour',
         'Ardour.exe',
       ]);
-      final shortcutPath = _joinTestPath(bottlePath, const [
+      final shortcutPath = joinTestPath(bottlePath, const [
         'drive_c',
         'ProgramData',
         'Microsoft',
@@ -2046,7 +2046,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
       File(shortcutPath)
         ..createSync(recursive: true)
         ..writeAsBytesSync(
-          _syntheticShellLinkBytes(
+          syntheticShellLinkBytes(
             localBasePath: r'C:\Program Files\Ardour\Ardour.exe',
           ),
         );
@@ -2063,10 +2063,10 @@ void defineRuntimeProcessAndUpdateContractTests() {
         ],
       );
       Directory(
-        _joinTestPath(bottlePath, const ['cache']),
+        joinTestPath(bottlePath, const ['cache']),
       ).createSync(recursive: true);
       File(
-        _joinTestPath(bottlePath, const [
+        joinTestPath(bottlePath, const [
           'cache',
           'external-program-launches.json',
         ]),
@@ -2102,7 +2102,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
             fileDescription: Option.of(ProgramFileDescription('Ardour')),
             iconPath: Option.of(
               ProgramIconPath(
-                _joinTestPath(bottlePath, const [
+                joinTestPath(bottlePath, const [
                   'cache',
                   'icons',
                   'ardour.ico',
@@ -2126,7 +2126,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
               'hostPath': programPath,
               'metadata': {
                 'fileDescription': 'Ardour',
-                'iconPath': _joinTestPath(bottlePath, const [
+                'iconPath': joinTestPath(bottlePath, const [
                   'cache',
                   'icons',
                   'ardour.ico',
@@ -2150,8 +2150,8 @@ void defineRuntimeProcessAndUpdateContractTests() {
           tempDirectory.deleteSync(recursive: true);
         }
       });
-      final bottlePath = _joinTestPath(tempDirectory.path, const ['a']);
-      final programPath = _joinTestPath(tempDirectory.path, const [
+      final bottlePath = joinTestPath(tempDirectory.path, const ['a']);
+      final programPath = joinTestPath(tempDirectory.path, const [
         'Downloads',
         'Ardour-9.5.0-w64-Setup.exe',
       ]);
@@ -2203,7 +2203,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
             ),
             iconPath: Option.of(
               ProgramIconPath(
-                _joinTestPath(bottlePath, const [
+                joinTestPath(bottlePath, const [
                   'cache',
                   'icons',
                   'ardour.ico',
@@ -2227,7 +2227,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
               'hostPath': programPath,
               'metadata': {
                 'fileDescription': 'Ardour Installer',
-                'iconPath': _joinTestPath(bottlePath, const [
+                'iconPath': joinTestPath(bottlePath, const [
                   'cache',
                   'icons',
                   'ardour.ico',
@@ -2344,7 +2344,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
       }
     });
     final metadataFile =
-        File(_joinTestPath(tempDirectory.path, const ['release.json']))
+        File(joinTestPath(tempDirectory.path, const ['release.json']))
           ..writeAsStringSync(
             jsonEncode(<String, Object?>{
               'tag_name': 'v$konyakAppVersion',
@@ -2367,7 +2367,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
   });
 
   test('app update checker selects the macOS archive from shared releases', () {
-    final metadataFile = _writeMultiPlatformAppReleaseMetadata();
+    final metadataFile = writeMultiPlatformAppReleaseMetadata();
     final checker = DartIoAppUpdateChecker(
       appId: 'konyak',
       currentVersion: '1.0.0',
@@ -2390,7 +2390,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
   });
 
   test('app update checker selects the Linux archive from shared releases', () {
-    final metadataFile = _writeMultiPlatformAppReleaseMetadata();
+    final metadataFile = writeMultiPlatformAppReleaseMetadata();
     final checker = DartIoAppUpdateChecker(
       appId: 'konyak',
       currentVersion: '1.0.0',
@@ -2423,7 +2423,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
     });
     final metadataFile =
         File(
-          _joinTestPath(tempDirectory.path, const ['release.json']),
+          joinTestPath(tempDirectory.path, const ['release.json']),
         )..writeAsStringSync(
           jsonEncode(<String, Object?>{
             'tag_name': 'v1.1.0',
@@ -2469,7 +2469,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
       }
     });
     final metadataFile =
-        File(_joinTestPath(tempDirectory.path, const ['release.json']))
+        File(joinTestPath(tempDirectory.path, const ['release.json']))
           ..writeAsStringSync(
             jsonEncode(<String, Object?>{
               'tag_name': 'v1.1.0',
@@ -2505,10 +2505,10 @@ void defineRuntimeProcessAndUpdateContractTests() {
         }
       });
       final missingAsset = File(
-        _joinTestPath(tempDirectory.path, const ['missing.release.json']),
+        joinTestPath(tempDirectory.path, const ['missing.release.json']),
       );
       final metadataFile =
-          File(_joinTestPath(tempDirectory.path, const ['release.json']))
+          File(joinTestPath(tempDirectory.path, const ['release.json']))
             ..writeAsStringSync(
               jsonEncode(<String, Object?>{
                 'tag_name': 'v1.1.0',
@@ -2544,35 +2544,33 @@ void defineRuntimeProcessAndUpdateContractTests() {
         tempDirectory.deleteSync(recursive: true);
       }
     });
-    final metadataFile =
-        File(
-          _joinTestPath(tempDirectory.path, const ['release.json']),
-        )..writeAsStringSync(
-          jsonEncode(<String, Object?>{
-            'tag_name': 'v1.1.0',
-            'assets': [
-              {
-                'browser_download_url':
-                    'https://example.invalid/Konyak-1.1.0-linux-x86_64.AppImage',
-              },
-              {
-                'browser_download_url':
-                    'https://example.invalid/Konyak-1.1.0-linux-x86_64.release.json',
-              },
-              {
-                'browser_download_url':
-                    'https://example.invalid/konyak-linux-wine-runtime-stack-source.json',
-              },
-              {
-                'browser_download_url':
-                    'https://example.invalid/konyak-linux-wine-runtime-stack-source.json.sig',
-              },
-            ],
-          }),
-        );
+    final metadataFile = File(joinTestPath(tempDirectory.path, const ['release.json']))
+      ..writeAsStringSync(
+        jsonEncode(<String, Object?>{
+          'tag_name': 'v1.1.0',
+          'assets': [
+            {
+              'browser_download_url':
+                  'https://example.invalid/Konyak-1.1.0-linux-x86_64.AppImage',
+            },
+            {
+              'browser_download_url':
+                  'https://example.invalid/Konyak-1.1.0-linux-x86_64.release.json',
+            },
+            {
+              'browser_download_url':
+                  'https://example.invalid/konyak-linux-wine-runtime-stack-source.json',
+            },
+            {
+              'browser_download_url':
+                  'https://example.invalid/konyak-linux-wine-runtime-stack-source.json.sig',
+            },
+          ],
+        }),
+      );
     final releaseAsset =
         File(
-          _joinTestPath(tempDirectory.path, const [
+          joinTestPath(tempDirectory.path, const [
             'Konyak-1.1.0-linux.release.json',
           ]),
         )..writeAsStringSync(
@@ -2716,9 +2714,9 @@ void defineRuntimeProcessAndUpdateContractTests() {
       }
     });
     final sourceArchive = File(
-      _joinTestPath(tempDirectory.path, const ['Konyak-1.1.0-macos.dmg']),
+      joinTestPath(tempDirectory.path, const ['Konyak-1.1.0-macos.dmg']),
     )..writeAsStringSync('signed app update');
-    final updateCache = _joinTestPath(tempDirectory.path, const ['cache']);
+    final updateCache = joinTestPath(tempDirectory.path, const ['cache']);
     final pathOpener = RecordingPathOpener(result: const PathOpenCompleted());
     final installer = DartIoAppUpdateInstaller(
       environment: HostEnvironment({
@@ -2736,7 +2734,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
         latestVersion: Option.of(ReleaseVersion('1.1.0')),
         archiveUrl: Option.of(AppArchiveUrl(sourceArchive.uri.toString())),
         archiveSha256: Option.of(
-          AppArchiveSha256(_fileSha256(sourceArchive.path)),
+          AppArchiveSha256(fileSha256(sourceArchive.path)),
         ),
       ),
     );
@@ -2745,7 +2743,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
     final completed = result as AppUpdateInstallCompleted;
     expect(
       completed.install.archiveSha256.toNullable()?.value,
-      _fileSha256(sourceArchive.path),
+      fileSha256(sourceArchive.path),
     );
     expect(
       pathOpener.lastPath,
@@ -2767,15 +2765,14 @@ void defineRuntimeProcessAndUpdateContractTests() {
       }
     });
     final sourceArchive = File(
-      _joinTestPath(tempDirectory.path, const ['Konyak-1.1.0-macos.dmg']),
+      joinTestPath(tempDirectory.path, const ['Konyak-1.1.0-macos.dmg']),
     )..writeAsStringSync('unsigned app update');
     final pathOpener = RecordingPathOpener(result: const PathOpenCompleted());
     final installer = DartIoAppUpdateInstaller(
       environment: HostEnvironment({
-        'KONYAK_APP_UPDATE_CACHE_HOME': _joinTestPath(
-          tempDirectory.path,
-          const ['cache'],
-        ),
+        'KONYAK_APP_UPDATE_CACHE_HOME': joinTestPath(tempDirectory.path, const [
+          'cache',
+        ]),
       }),
       hostPlatform: KonyakHostPlatform.macos,
       pathOpener: pathOpener,
@@ -2807,15 +2804,14 @@ void defineRuntimeProcessAndUpdateContractTests() {
       }
     });
     final sourceArchive = File(
-      _joinTestPath(tempDirectory.path, const ['Konyak-1.1.0-macos.dmg']),
+      joinTestPath(tempDirectory.path, const ['Konyak-1.1.0-macos.dmg']),
     )..writeAsStringSync('tampered app update');
     final pathOpener = RecordingPathOpener(result: const PathOpenCompleted());
     final installer = DartIoAppUpdateInstaller(
       environment: HostEnvironment({
-        'KONYAK_APP_UPDATE_CACHE_HOME': _joinTestPath(
-          tempDirectory.path,
-          const ['cache'],
-        ),
+        'KONYAK_APP_UPDATE_CACHE_HOME': joinTestPath(tempDirectory.path, const [
+          'cache',
+        ]),
       }),
       hostPlatform: KonyakHostPlatform.macos,
       pathOpener: pathOpener,
@@ -2852,20 +2848,19 @@ void defineRuntimeProcessAndUpdateContractTests() {
       }
     });
     final sourceArchive = File(
-      _joinTestPath(tempDirectory.path, const ['Konyak-1.1.0-linux.AppImage']),
+      joinTestPath(tempDirectory.path, const ['Konyak-1.1.0-linux.AppImage']),
     )..writeAsStringSync('updated appimage');
     final currentAppImage = File(
-      _joinTestPath(tempDirectory.path, const ['Konyak-current.AppImage']),
+      joinTestPath(tempDirectory.path, const ['Konyak-current.AppImage']),
     )..writeAsStringSync('current appimage');
     final detachedProcessStarter = RecordingDetachedProcessStarter(
       result: const DetachedProcessStartCompleted(),
     );
     final installer = DartIoAppUpdateInstaller(
       environment: HostEnvironment({
-        'KONYAK_APP_UPDATE_CACHE_HOME': _joinTestPath(
-          tempDirectory.path,
-          const ['cache'],
-        ),
+        'KONYAK_APP_UPDATE_CACHE_HOME': joinTestPath(tempDirectory.path, const [
+          'cache',
+        ]),
         'KONYAK_APPIMAGE_PATH': currentAppImage.path,
         'KONYAK_APP_PID': '4242',
       }),
@@ -2881,7 +2876,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
         latestVersion: Option.of(ReleaseVersion('1.1.0')),
         archiveUrl: Option.of(AppArchiveUrl(sourceArchive.uri.toString())),
         archiveSha256: Option.of(
-          AppArchiveSha256(_fileSha256(sourceArchive.path)),
+          AppArchiveSha256(fileSha256(sourceArchive.path)),
         ),
       ),
     );
@@ -2910,7 +2905,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
 
     final stagedArchive = File(detachedProcessStarter.lastArguments[1]);
     expect(stagedArchive.existsSync(), isTrue);
-    expect(_fileSha256(stagedArchive.path), _fileSha256(sourceArchive.path));
+    expect(fileSha256(stagedArchive.path), fileSha256(sourceArchive.path));
   });
 
   test(
@@ -2925,11 +2920,9 @@ void defineRuntimeProcessAndUpdateContractTests() {
         }
       });
       final sourceArchive = File(
-        _joinTestPath(tempDirectory.path, const [
-          'Konyak-1.1.0-linux.AppImage',
-        ]),
+        joinTestPath(tempDirectory.path, const ['Konyak-1.1.0-linux.AppImage']),
       )..writeAsStringSync('updated appimage');
-      final missingAppImagePath = _joinTestPath(tempDirectory.path, const [
+      final missingAppImagePath = joinTestPath(tempDirectory.path, const [
         'missing',
         'Konyak-current.AppImage',
       ]);
@@ -2939,7 +2932,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
       final pathOpener = RecordingPathOpener(result: const PathOpenCompleted());
       final installer = DartIoAppUpdateInstaller(
         environment: HostEnvironment({
-          'KONYAK_APP_UPDATE_CACHE_HOME': _joinTestPath(
+          'KONYAK_APP_UPDATE_CACHE_HOME': joinTestPath(
             tempDirectory.path,
             const ['cache'],
           ),
@@ -2959,7 +2952,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
           latestVersion: Option.of(ReleaseVersion('1.1.0')),
           archiveUrl: Option.of(AppArchiveUrl(sourceArchive.uri.toString())),
           archiveSha256: Option.of(
-            AppArchiveSha256(_fileSha256(sourceArchive.path)),
+            AppArchiveSha256(fileSha256(sourceArchive.path)),
           ),
         ),
       );
@@ -2985,17 +2978,13 @@ void defineRuntimeProcessAndUpdateContractTests() {
       }
     });
     final sourceArchive = File(
-      _joinTestPath(tempDirectory.path, const ['Konyak-1.1.0-macos.zip']),
+      joinTestPath(tempDirectory.path, const ['Konyak-1.1.0-macos.zip']),
     )..writeAsStringSync('updated macOS app bundle');
     final currentBundle = Directory(
-      _joinTestPath(tempDirectory.path, const ['Konyak.app']),
+      joinTestPath(tempDirectory.path, const ['Konyak.app']),
     )..createSync();
     File(
-        _joinTestPath(currentBundle.path, const [
-          'Contents',
-          'MacOS',
-          'Konyak',
-        ]),
+        joinTestPath(currentBundle.path, const ['Contents', 'MacOS', 'Konyak']),
       )
       ..createSync(recursive: true)
       ..writeAsStringSync('current app executable');
@@ -3005,11 +2994,10 @@ void defineRuntimeProcessAndUpdateContractTests() {
     final pathOpener = RecordingPathOpener(result: const PathOpenCompleted());
     final installer = DartIoAppUpdateInstaller(
       environment: HostEnvironment({
-        'KONYAK_APP_UPDATE_CACHE_HOME': _joinTestPath(
-          tempDirectory.path,
-          const ['cache'],
-        ),
-        'KONYAK_APP_EXECUTABLE': _joinTestPath(currentBundle.path, const [
+        'KONYAK_APP_UPDATE_CACHE_HOME': joinTestPath(tempDirectory.path, const [
+          'cache',
+        ]),
+        'KONYAK_APP_EXECUTABLE': joinTestPath(currentBundle.path, const [
           'Contents',
           'MacOS',
           'Konyak',
@@ -3029,7 +3017,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
         latestVersion: Option.of(ReleaseVersion('1.1.0')),
         archiveUrl: Option.of(AppArchiveUrl(sourceArchive.uri.toString())),
         archiveSha256: Option.of(
-          AppArchiveSha256(_fileSha256(sourceArchive.path)),
+          AppArchiveSha256(fileSha256(sourceArchive.path)),
         ),
       ),
     );
@@ -3062,7 +3050,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
 
     final stagedArchive = File(detachedProcessStarter.lastArguments[1]);
     expect(stagedArchive.existsSync(), isTrue);
-    expect(_fileSha256(stagedArchive.path), _fileSha256(sourceArchive.path));
+    expect(fileSha256(stagedArchive.path), fileSha256(sourceArchive.path));
   });
 
   test('app update installer stages macOS DMG replacement handoff', () {
@@ -3075,17 +3063,13 @@ void defineRuntimeProcessAndUpdateContractTests() {
       }
     });
     final sourceArchive = File(
-      _joinTestPath(tempDirectory.path, const ['Konyak-1.1.0-macos.dmg']),
+      joinTestPath(tempDirectory.path, const ['Konyak-1.1.0-macos.dmg']),
     )..writeAsStringSync('updated macOS app bundle dmg');
     final currentBundle = Directory(
-      _joinTestPath(tempDirectory.path, const ['Konyak.app']),
+      joinTestPath(tempDirectory.path, const ['Konyak.app']),
     )..createSync();
     File(
-        _joinTestPath(currentBundle.path, const [
-          'Contents',
-          'MacOS',
-          'Konyak',
-        ]),
+        joinTestPath(currentBundle.path, const ['Contents', 'MacOS', 'Konyak']),
       )
       ..createSync(recursive: true)
       ..writeAsStringSync('current app executable');
@@ -3095,11 +3079,10 @@ void defineRuntimeProcessAndUpdateContractTests() {
     final pathOpener = RecordingPathOpener(result: const PathOpenCompleted());
     final installer = DartIoAppUpdateInstaller(
       environment: HostEnvironment({
-        'KONYAK_APP_UPDATE_CACHE_HOME': _joinTestPath(
-          tempDirectory.path,
-          const ['cache'],
-        ),
-        'KONYAK_APP_EXECUTABLE': _joinTestPath(currentBundle.path, const [
+        'KONYAK_APP_UPDATE_CACHE_HOME': joinTestPath(tempDirectory.path, const [
+          'cache',
+        ]),
+        'KONYAK_APP_EXECUTABLE': joinTestPath(currentBundle.path, const [
           'Contents',
           'MacOS',
           'Konyak',
@@ -3119,7 +3102,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
         latestVersion: Option.of(ReleaseVersion('1.1.0')),
         archiveUrl: Option.of(AppArchiveUrl(sourceArchive.uri.toString())),
         archiveSha256: Option.of(
-          AppArchiveSha256(_fileSha256(sourceArchive.path)),
+          AppArchiveSha256(fileSha256(sourceArchive.path)),
         ),
       ),
     );
@@ -3152,7 +3135,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
 
     final stagedArchive = File(detachedProcessStarter.lastArguments[1]);
     expect(stagedArchive.existsSync(), isTrue);
-    expect(_fileSha256(stagedArchive.path), _fileSha256(sourceArchive.path));
+    expect(fileSha256(stagedArchive.path), fileSha256(sourceArchive.path));
   });
 
   test(
@@ -4006,7 +3989,7 @@ void defineRuntimeProcessAndUpdateContractTests() {
   });
 }
 
-File _writeMultiPlatformAppReleaseMetadata() {
+File writeMultiPlatformAppReleaseMetadata() {
   final tempDirectory = Directory.systemTemp.createTempSync(
     'konyak-app-release-metadata-test-',
   );
@@ -4016,7 +3999,7 @@ File _writeMultiPlatformAppReleaseMetadata() {
     }
   });
 
-  return File(_joinTestPath(tempDirectory.path, const ['release.json']))
+  return File(joinTestPath(tempDirectory.path, const ['release.json']))
     ..writeAsStringSync(
       jsonEncode(<String, Object?>{
         'tag_name': 'v1.1.0',
