@@ -74,17 +74,41 @@ class CliCommandContext {
   linuxExternalProgramLauncherDiagnosticSink;
 }
 
-typedef CliCommandHandler = CliResult? Function();
+sealed class CliCommandMatch {
+  const CliCommandMatch();
+}
 
-CliResult? firstCliResult(Iterable<CliCommandHandler> handlers) {
+final class CliCommandNotMatched extends CliCommandMatch {
+  const CliCommandNotMatched();
+}
+
+final class CliCommandMatched extends CliCommandMatch {
+  const CliCommandMatched(this.result);
+
+  final CliResult result;
+}
+
+typedef CliCommandHandler = CliCommandMatch Function();
+
+CliCommandMatch firstCliCommandMatch(Iterable<CliCommandHandler> handlers) {
   for (final handler in handlers) {
-    final result = handler();
-    if (result != null) {
-      return result;
+    final match = handler();
+    switch (match) {
+      case CliCommandMatched():
+        return match;
+      case CliCommandNotMatched():
     }
   }
 
-  return null;
+  return const CliCommandNotMatched();
+}
+
+CliCommandMatch legacyCliCommandMatch(CliResult? result) {
+  if (result == null) {
+    return const CliCommandNotMatched();
+  }
+
+  return CliCommandMatched(result);
 }
 
 CliResult runCliWithContext(List<String> arguments, CliCommandContext context) {
@@ -92,30 +116,42 @@ CliResult runCliWithContext(List<String> arguments, CliCommandContext context) {
   final bottleRepository = context.bottleRepository;
   final activeBottleCatalog = bottleRepository ?? bottleCatalog;
 
-  final commandResult = firstCliResult(<CliCommandHandler>[
-    () => handleAppCommand(arguments, context),
-    () => handleHostIntegrationCommand(arguments, context),
-    () => handleWineProcessCommand(
-      arguments,
-      context: context,
-      activeBottleCatalog: activeBottleCatalog,
+  final commandMatch = firstCliCommandMatch(<CliCommandHandler>[
+    () => legacyCliCommandMatch(handleAppCommand(arguments, context)),
+    () =>
+        legacyCliCommandMatch(handleHostIntegrationCommand(arguments, context)),
+    () => legacyCliCommandMatch(
+      handleWineProcessCommand(
+        arguments,
+        context: context,
+        activeBottleCatalog: activeBottleCatalog,
+      ),
     ),
-    () => handleBottleReadCommand(
-      arguments,
-      context: context,
-      activeBottleCatalog: activeBottleCatalog,
+    () => legacyCliCommandMatch(
+      handleBottleReadCommand(
+        arguments,
+        context: context,
+        activeBottleCatalog: activeBottleCatalog,
+      ),
     ),
-    () => handleWinetricksVerbCommand(arguments, context),
-    () => handleBottleMutationCommand(arguments, context),
-    () => handleBottleConfigurationCommand(arguments, context),
-    () => handlePinnedProgramCommand(arguments, context),
-    () => handleProgramSettingsCommand(arguments, context),
-    () => handleProgramRunCommand(arguments, context),
+    () =>
+        legacyCliCommandMatch(handleWinetricksVerbCommand(arguments, context)),
+    () =>
+        legacyCliCommandMatch(handleBottleMutationCommand(arguments, context)),
+    () => legacyCliCommandMatch(
+      handleBottleConfigurationCommand(arguments, context),
+    ),
+    () => legacyCliCommandMatch(handlePinnedProgramCommand(arguments, context)),
+    () =>
+        legacyCliCommandMatch(handleProgramSettingsCommand(arguments, context)),
+    () => legacyCliCommandMatch(handleProgramRunCommand(arguments, context)),
     () => handleLocationCommand(arguments, context),
     () => handleRuntimeCommand(arguments, context),
   ]);
-  if (commandResult != null) {
-    return commandResult;
+  switch (commandMatch) {
+    case CliCommandMatched(:final result):
+      return result;
+    case CliCommandNotMatched():
   }
 
   return const CliResult(

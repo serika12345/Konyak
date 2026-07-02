@@ -7,8 +7,10 @@ import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:konyak_cli/konyak_cli.dart' hide runCli, runCliStreaming;
+import 'package:konyak_cli/src/cli/cli_app_runtime_handlers.dart';
 import 'package:konyak_cli/src/cli/cli_commands.dart';
 import 'package:konyak_cli/src/cli/cli_injected_runner.dart' as injected;
+import 'package:konyak_cli/src/cli/cli_location_winetricks_handlers.dart';
 import 'package:konyak_cli/src/cli/cli_runtime_record_json.dart';
 import 'package:konyak_cli/src/io/app_settings_repositories.dart';
 import 'package:konyak_cli/src/io/app_update_checker_io.dart';
@@ -51,6 +53,7 @@ part 'cli_contract_repository_runner.part.dart';
 part 'cli_contract_runtime_process_update.part.dart';
 part 'cli_contract_runtime_install.part.dart';
 part 'cli_contract_executable.part.dart';
+part 'cli_contract_command_dispatch.part.dart';
 
 const _gptkD3DMetalWindowsFileNames = <String>[
   'atidxx64.dll',
@@ -368,6 +371,7 @@ void main() {
   defineRuntimeProcessAndUpdateContractTests();
   defineRuntimeInstallContractTests();
   defineExecutableContractTests();
+  defineCommandDispatchContractTests();
 }
 
 File _repoFile(String relativePath) {

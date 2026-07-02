@@ -21,29 +21,33 @@ import 'cli_runtime_validation_json.dart';
 import 'cli_update_json.dart';
 import 'cli_update_runtime_results.dart';
 
-CliResult? handleRuntimeCommand(
+CliCommandMatch handleRuntimeCommand(
   List<String> arguments,
   CliCommandContext context,
 ) {
   if (isJsonRuntimeListCommand(arguments)) {
-    return jsonSuccess(<String, Object?>{
-      'runtimes': context.runtimeCatalog
-          .listRuntimes()
-          .map(runtimeRecordJson)
-          .toList(growable: false),
-    });
+    return CliCommandMatched(
+      jsonSuccess(<String, Object?>{
+        'runtimes': context.runtimeCatalog
+            .listRuntimes()
+            .map(runtimeRecordJson)
+            .toList(growable: false),
+      }),
+    );
   }
 
   if (isJsonMacosSetupCheckCommand(arguments)) {
     final checker = context.macosSetupChecker;
     if (checker == null) {
-      return unavailableJsonError(
-        code: 'macosSetupCheckerUnavailable',
-        subject: 'macOS setup checker',
+      return CliCommandMatched(
+        unavailableJsonError(
+          code: 'macosSetupCheckerUnavailable',
+          subject: 'macOS setup checker',
+        ),
       );
     }
 
-    return switch (checker.check()) {
+    return CliCommandMatched(switch (checker.check()) {
       MacosSetupCheckCompleted(:final status) => jsonSuccess(<String, Object?>{
         'macosSetup': macosSetupStatusJson(status),
       }),
@@ -52,20 +56,26 @@ CliResult? handleRuntimeCommand(
         code: 'macosSetupCheckFailed',
         message: message,
       ),
-    };
+    });
   }
 
   final gptkWineInstallResult = parseJsonGptkWineInstallRequestOption(arguments)
-      .match<CliResult?>(() => null, (gptkWineInstallRequest) {
+      .match<CliCommandMatch>(() => const CliCommandNotMatched(), (
+        gptkWineInstallRequest,
+      ) {
         final installer = context.gptkWineInstaller;
         if (installer == null) {
-          return unavailableJsonError(
-            code: 'gptkWineInstallerUnavailable',
-            subject: 'GPTK/D3DMetal importer',
+          return CliCommandMatched(
+            unavailableJsonError(
+              code: 'gptkWineInstallerUnavailable',
+              subject: 'GPTK/D3DMetal importer',
+            ),
           );
         }
 
-        return switch (installer.install(gptkWineInstallRequest)) {
+        return CliCommandMatched(switch (installer.install(
+          gptkWineInstallRequest,
+        )) {
           GptkWineInstallCompleted(:final record) => jsonSuccess(
             <String, Object?>{
               'gptkWineInstall': gptkWineInstallRecordJson(record),
@@ -76,95 +86,127 @@ CliResult? handleRuntimeCommand(
             code: 'gptkWineInstallFailed',
             message: message,
           ),
-        };
+        });
       });
-  if (gptkWineInstallResult != null) {
-    return gptkWineInstallResult;
+  switch (gptkWineInstallResult) {
+    case CliCommandMatched():
+      return gptkWineInstallResult;
+    case CliCommandNotMatched():
   }
 
   final openUrlResult = parseJsonOpenUrlCommandOption(arguments)
-      .match<CliResult?>(() => null, (openUrl) {
-        return openUrlJsonResult(openUrl, context.pathOpener);
+      .match<CliCommandMatch>(() => const CliCommandNotMatched(), (openUrl) {
+        return CliCommandMatched(
+          openUrlJsonResult(openUrl, context.pathOpener),
+        );
       });
-  if (openUrlResult != null) {
-    return openUrlResult;
+  switch (openUrlResult) {
+    case CliCommandMatched():
+      return openUrlResult;
+    case CliCommandNotMatched():
   }
 
   final runtimeUpdateCheckResult =
       parseJsonRuntimeIdCommandOption(
         arguments,
         'check-runtime-update',
-      ).match<CliResult?>(() => null, (runtimeUpdateId) {
-        return runtimeUpdateCheckJsonResult(
-          runtimeId: RuntimeId(runtimeUpdateId),
-          runtimeUpdateChecker: context.runtimeUpdateChecker,
+      ).match<CliCommandMatch>(() => const CliCommandNotMatched(), (
+        runtimeUpdateId,
+      ) {
+        return CliCommandMatched(
+          runtimeUpdateCheckJsonResult(
+            runtimeId: RuntimeId(runtimeUpdateId),
+            runtimeUpdateChecker: context.runtimeUpdateChecker,
+          ),
         );
       });
-  if (runtimeUpdateCheckResult != null) {
-    return runtimeUpdateCheckResult;
+  switch (runtimeUpdateCheckResult) {
+    case CliCommandMatched():
+      return runtimeUpdateCheckResult;
+    case CliCommandNotMatched():
   }
 
   final runtimeUpdateInstallResult =
       parseJsonRuntimeIdCommandOption(
         arguments,
         'install-runtime-update',
-      ).match<CliResult?>(() => null, (runtimeUpdateInstallId) {
-        return installRuntimeUpdateJsonResult(
-          runtimeId: RuntimeId(runtimeUpdateInstallId),
-          runtimeUpdateChecker: context.runtimeUpdateChecker,
-          macosWineInstaller: context.macosWineInstaller,
-          linuxWineInstaller: context.linuxWineInstaller,
+      ).match<CliCommandMatch>(() => const CliCommandNotMatched(), (
+        runtimeUpdateInstallId,
+      ) {
+        return CliCommandMatched(
+          installRuntimeUpdateJsonResult(
+            runtimeId: RuntimeId(runtimeUpdateInstallId),
+            runtimeUpdateChecker: context.runtimeUpdateChecker,
+            macosWineInstaller: context.macosWineInstaller,
+            linuxWineInstaller: context.linuxWineInstaller,
+          ),
         );
       });
-  if (runtimeUpdateInstallResult != null) {
-    return runtimeUpdateInstallResult;
+  switch (runtimeUpdateInstallResult) {
+    case CliCommandMatched():
+      return runtimeUpdateInstallResult;
+    case CliCommandNotMatched():
   }
 
   final runtimeValidationResult =
       parseJsonRuntimeIdCommandOption(
         arguments,
         'validate-runtime',
-      ).match<CliResult?>(() => null, (runtimeValidationId) {
-        return runtimeValidationJsonResult(
-          runtimeId: RuntimeId(runtimeValidationId),
-          runtimeValidator: context.runtimeValidator,
+      ).match<CliCommandMatch>(() => const CliCommandNotMatched(), (
+        runtimeValidationId,
+      ) {
+        return CliCommandMatched(
+          runtimeValidationJsonResult(
+            runtimeId: RuntimeId(runtimeValidationId),
+            runtimeValidator: context.runtimeValidator,
+          ),
         );
       });
-  if (runtimeValidationResult != null) {
-    return runtimeValidationResult;
+  switch (runtimeValidationResult) {
+    case CliCommandMatched():
+      return runtimeValidationResult;
+    case CliCommandNotMatched():
   }
 
   final macosWineInstallResult =
-      parseJsonMacosWineInstallRequestOption(arguments).match<CliResult?>(
-        () => null,
+      parseJsonMacosWineInstallRequestOption(arguments).match<CliCommandMatch>(
+        () => const CliCommandNotMatched(),
         (macosWineInstallRequest) {
-          return macosWineInstallJsonResult(
-            request: macosWineInstallRequest,
-            installer: context.macosWineInstaller,
-            progressSink: context.runtimeInstallProgressSink,
+          return CliCommandMatched(
+            macosWineInstallJsonResult(
+              request: macosWineInstallRequest,
+              installer: context.macosWineInstaller,
+              progressSink: context.runtimeInstallProgressSink,
+            ),
           );
         },
       );
-  if (macosWineInstallResult != null) {
-    return macosWineInstallResult;
+  switch (macosWineInstallResult) {
+    case CliCommandMatched():
+      return macosWineInstallResult;
+    case CliCommandNotMatched():
   }
 
   final linuxWineInstallResult =
-      parseJsonLinuxWineInstallRequestOption(arguments).match<CliResult?>(
-        () => null,
+      parseJsonLinuxWineInstallRequestOption(arguments).match<CliCommandMatch>(
+        () => const CliCommandNotMatched(),
         (linuxWineInstallRequest) {
-          return linuxWineInstallJsonResult(
-            request: linuxWineInstallRequest,
-            installer: context.linuxWineInstaller,
-            progressSink: context.runtimeInstallProgressSink,
+          return CliCommandMatched(
+            linuxWineInstallJsonResult(
+              request: linuxWineInstallRequest,
+              installer: context.linuxWineInstaller,
+              progressSink: context.runtimeInstallProgressSink,
+            ),
           );
         },
       );
-  if (linuxWineInstallResult != null) {
-    return linuxWineInstallResult;
+  switch (linuxWineInstallResult) {
+    case CliCommandMatched():
+      return linuxWineInstallResult;
+    case CliCommandNotMatched():
   }
 
-  return null;
+  return const CliCommandNotMatched();
 }
 
 CliResult openUrlJsonResult(String openUrl, PathOpener? pathOpener) {

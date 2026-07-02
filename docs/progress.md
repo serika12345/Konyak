@@ -13,27 +13,27 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-02 15:06 JST
+- Timestamp: 2026-07-02 15:56 JST
 - State: `completed`
-- Branch: `task/interface-i1-cli-parser-wrappers`
-- Active work: I1-P1 CLI Parser Compatibility Wrappers.
+- Branch: `task/interface-i1-cli-command-dispatch`
+- Active work: I1-P2 CLI Command Dispatch.
 - Related TODO: `docs/todo.md` `I1: Compatibility Interface Cleanup`,
-  `I1-P1 CLI Parser Compatibility Wrappers`.
-- Pull request: https://github.com/serika12345/Konyak/pull/8
-- Latest commit: branch commit (`Remove CLI parser compatibility wrappers`).
-- Purpose: remove nullable parser compatibility wrappers from the runtime and
-  location CLI parser families while preserving public CLI behavior.
-- Completed work: added governance coverage that rejects the converted
-  runtime/location nullable parser wrappers; removed those wrappers from
-  `cli_runtime_parsers.dart` and `cli_location_parsers.dart`; updated runtime,
-  streaming runtime, and location command-selection call sites to use the
-  existing `Option` parser APIs directly; and marked I1-P1 as completed in
-  `docs/todo.md`.
-- Remaining work: review the draft PR. Do not advance into I1-P2 until I1-P1
+  `I1-P2 CLI Command Dispatch`.
+- Pull request: https://github.com/serika12345/Konyak/pull/9
+- Latest commit: branch commit (`Replace CLI command nullable dispatch`).
+- Purpose: replace nullable command dispatch for the runtime and location
+  command groups with explicit matched/not-matched variants while preserving the
+  public CLI contract.
+- Completed work: introduced `CliCommandMatch`, `CliCommandMatched`, and
+  `CliCommandNotMatched`; replaced `firstCliResult` with explicit
+  `firstCliCommandMatch`; converted runtime and location command handlers to
+  return explicit dispatch variants; kept a legacy wrapper only around
+  command groups not yet converted; added matched/unmatched command dispatch
+  contract tests; added governance coverage for the converted dispatch
+  boundary; and marked I1-P2 as completed in `docs/todo.md`.
+- Remaining work: review the draft PR. Do not advance into I1-P3 until I1-P2
   has been reviewed and merged.
-- Next action: review https://github.com/serika12345/Konyak/pull/8.
-- Verification: `just verify-governance` was first run after the new governance
-  check and failed on the old `GptkWineInstallRequest?` wrapper as expected.
-  Final verification passed with `just cli-test`, `just verify-governance`,
-  `just verify-safety`, `just format-check`, and `just lint` through the Nix dev
-  shell.
+- Next action: review https://github.com/serika12345/Konyak/pull/9.
+- Verification: final verification passed with `just cli-test`,
+  `just verify-governance`, `just verify-safety`, `just format-check`, and
+  `just lint` through the Nix dev shell.
