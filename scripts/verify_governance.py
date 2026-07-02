@@ -18,6 +18,29 @@ PRODUCTION_LINE_LIMIT_BASELINE = {
     ),
 }
 
+REFACTORING_FILE_GROWTH_LIMITS = {
+    "packages/konyak_cli/lib/src/domain/program/program_runner.dart": (
+        450,
+        "program planner domain logic must stay split into focused helpers",
+    ),
+    "apps/konyak/lib/src/home_loader/home_loader.dart": (
+        420,
+        "home loader orchestration must not absorb extracted state helpers",
+    ),
+    "apps/konyak/lib/src/home_loader/home_loader_bottles.dart": (
+        520,
+        "bottle loader workflows must not absorb extracted state helpers",
+    ),
+    "apps/konyak/lib/src/home_loader/home_loader_programs.dart": (
+        600,
+        "program loader workflows must remain extension-scoped",
+    ),
+    "apps/konyak/lib/src/home_loader/home_loader_runtimes.dart": (
+        760,
+        "runtime loader workflows must remain extension-scoped",
+    ),
+}
+
 KONYAK_CLI_PUBLIC_EXPORT_LINES = [
     "export 'src/cli/cli_facade.dart' show runCli, runCliStreaming;",
     "export 'src/cli/cli_result_model.dart' show CliResult;",
@@ -198,6 +221,23 @@ def require_production_file_line_limits() -> None:
             raise AssertionError(
                 f"{relative_path} has {line_count} lines; files over 1000 lines need an explicit governance baseline"
             )
+
+
+def require_line_count_at_most(
+    relative_path: str,
+    limit: int,
+    reason: str,
+) -> None:
+    line_count = len(read_text(relative_path).splitlines())
+    if line_count > limit:
+        raise AssertionError(
+            f"{relative_path} has {line_count} lines; limit is {limit}: {reason}"
+        )
+
+
+def require_refactoring_file_growth_limits() -> None:
+    for relative_path, (limit, reason) in REFACTORING_FILE_GROWTH_LIMITS.items():
+        require_line_count_at_most(relative_path, limit, reason)
 
 
 def require_program_run_request_builders_split() -> None:
@@ -2472,6 +2512,79 @@ def require_flutter_home_contract_boundaries() -> None:
             )
 
 
+def require_flutter_view_model_extraction_boundaries() -> None:
+    for relative_path in [
+        "apps/konyak/lib/src/app/bottles/bottle_detail_view_model.dart",
+        "apps/konyak/lib/src/app/bottles/bottle_configuration_view_model.dart",
+        "apps/konyak/lib/src/app/programs/program_configuration_view_model.dart",
+        "apps/konyak/test/app/bottle_detail_view_model_test.dart",
+        "apps/konyak/test/app/bottle_configuration_view_model_test.dart",
+        "apps/konyak/test/app/program_configuration_view_model_test.dart",
+    ]:
+        if not (ROOT / relative_path).exists():
+            raise AssertionError(
+                f"{relative_path} must exist to keep R3 view model extraction covered"
+            )
+
+    detail_widget = "apps/konyak/lib/src/app/bottles/bottle_detail.dart"
+    require_contains(detail_widget, "final viewModel = bottleDetailViewModel(")
+    require_not_contains(detail_widget, "state.content")
+
+    configuration_widget = (
+        "apps/konyak/lib/src/app/bottles/bottle_configuration_view.dart"
+    )
+    require_contains(
+        configuration_widget,
+        "final viewModel = bottleConfigurationViewModel(",
+    )
+    for forbidden in [
+        "resolveBottleRuntimeControlAvailability(",
+        "canChangeRuntimeSettings(",
+        "hasPendingRuntimeSettings(",
+    ]:
+        require_not_contains(configuration_widget, forbidden)
+
+    program_widget = "apps/konyak/lib/src/app/programs/program_configuration_view.dart"
+    require_contains(program_widget, "final viewModel = programConfigurationViewModel(")
+    require_contains(program_widget, "resolveProgramConfigurationSave(")
+    require_not_contains(program_widget, "canChangeProgramSettings(")
+
+    require_contains(
+        "apps/konyak/lib/src/app/bottles/bottle_configuration_view_model.dart",
+        "resolveBottleRuntimeControlAvailability(",
+    )
+    require_contains(
+        "apps/konyak/lib/src/app/bottles/bottle_configuration_view_model.dart",
+        "resolveBottleConfigurationRuntimeSettingsChange(",
+    )
+    require_contains(
+        "apps/konyak/lib/src/app/programs/program_configuration_view_model.dart",
+        "canChangeProgramSettings(",
+    )
+    require_contains(
+        "apps/konyak/lib/src/app/programs/program_configuration_view_model.dart",
+        "resolveProgramConfigurationSave(",
+    )
+
+
+def require_refactoring_documentation_cleanup() -> None:
+    for unexpected in [
+        "## Refactoring Milestones",
+        "R3-P2 Bottle View Model Extraction",
+        "R4-P1 Refactoring Governance",
+        "task/refactor-r3-bottle-view-models",
+    ]:
+        require_not_contains("docs/todo.md", unexpected)
+
+    for stale_branch in [
+        "task/refactor-r1-",
+        "task/refactor-r2-",
+        "task/refactor-r3-",
+    ]:
+        require_not_contains("docs/progress.md", stale_branch)
+    require_contains("docs/progress.md", "task/refactor-r4-governance")
+
+
 def require_konyak_cli_public_exports() -> None:
     lines = read_text("packages/konyak_cli/lib/konyak_cli.dart").splitlines()
     if lines != KONYAK_CLI_PUBLIC_EXPORT_LINES:
@@ -3529,6 +3642,9 @@ def main() -> None:
     require_contains("scripts/cve_audit_baseline.json", '"osv"')
 
     require_result_boundary_rules()
+    require_refactoring_file_growth_limits()
+    require_flutter_view_model_extraction_boundaries()
+    require_refactoring_documentation_cleanup()
     require_typed_domain_string_maps()
     require_runtime_ssot_rules()
     require_no_cli_state_errors()
