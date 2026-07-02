@@ -13,23 +13,25 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-02 21:12 JST
-- State: `planned`
-- Branch: `main`
-- Active work: I2 Boundary Hardening and Test Contract Cleanup planning.
-- Related TODO: `docs/todo.md` `I1: Compatibility Interface Cleanup`
-  completed, `I2: Boundary Hardening and Test Contract Cleanup`, and `I2-P1
-  Primitive Boundary Audit`.
-- Pull request: not opened; this is a milestone-planning update.
-- Latest commit: not committed.
-- Purpose: define the post-I1 refactoring milestone so `/advance-pr` has a
-  concrete review gate for the next boundary-hardening pass.
-- Completed work: I1-P5 Refactoring Governance Allowance Cleanup was merged in
-  PR #13; `main` is synchronized with `origin/main`; I2 has been added to
-  `docs/todo.md` with small milestones and the first PR Gate.
-- Remaining work: review the I2 milestone shape, then run `/advance-pr` to
-  execute `I2-P1 Primitive Boundary Audit` on
-  `task/interface-i2-primitive-boundary-audit`.
-- Next action: review the I2-P1 audit gate before starting implementation.
+- Timestamp: 2026-07-02 21:20 JST
+- State: `completed`
+- Branch: `task/interface-i2-primitive-boundary-audit`
+- Active work: I2-P1 Primitive Boundary Audit.
+- Related TODO: `docs/todo.md` `I2: Boundary Hardening and Test Contract
+  Cleanup`, `I2-P1 Primitive Boundary Audit`, `I2-P2 CLI Contract Seed Test
+  Part Split`, `I2-P3 CLI Contract Family Test Part Split`, and `I2-P4
+  Semantic Constructor Primitive Fronts`.
+- Pull request: draft PR #14
+  <https://github.com/serika12345/Konyak/pull/14>.
+- Latest commit: branch head for the I2-P1 draft PR.
+- Purpose: inventory the remaining primitive, nullable, and hand-written test
+  part exceptions so the next `/advance-pr` gates remove one compatibility
+  surface at a time without changing public behavior.
+- Completed work: added `docs/i2-primitive-boundary-audit.md`; classified the
+  remaining CLI/domain, Flutter app-facing, custom lint, and governance
+  boundary exceptions; refined the next I2 PR gates in `docs/todo.md`.
+- Remaining work: review draft PR #14, then stop before implementing I2-P2.
+- Next action: review the I2-P1 draft PR and then run `/advance-pr` for
+  `I2-P2 CLI Contract Seed Test Part Split`.
 - Verification: `just verify-governance`, `just verify-safety`,
   `just format-check`, and `just lint` passed through the Nix dev shell.

@@ -2583,9 +2583,30 @@ def require_refactoring_documentation_cleanup() -> None:
         "branch: `task/interface-i1-governance-allowances`",
         "### I2: Boundary Hardening and Test Contract Cleanup",
         "#### PR Gate: I2-P1 Primitive Boundary Audit",
+        "status: completed",
         "branch: `task/interface-i2-primitive-boundary-audit`",
+        "#### PR Gate: I2-P2 CLI Contract Seed Test Part Split",
+        "branch: `task/interface-i2-cli-contract-seed-tests`",
+        "#### PR Gate: I2-P3 CLI Contract Family Test Part Split",
+        "branch: `task/interface-i2-cli-contract-family-tests`",
+        "#### PR Gate: I2-P4 Semantic Constructor Primitive Fronts",
+        "branch: `task/interface-i2-semantic-constructor-fronts`",
     ]:
         require_contains("docs/todo.md", expected)
+
+    for expected in [
+        "# I2 Primitive Boundary Audit",
+        "## Hand-Written Test Parts",
+        "## Nullable Boundaries",
+        "## Primitive Domain Values",
+        "## Governance And Lint State",
+        "## Next Gate Order",
+        "`cli_contract_executable.part.dart`",
+        "`cli_contract_runtime_install.part.dart`",
+        "`RuntimePlatformSpec`",
+        "`ProgramRunPlanner`",
+    ]:
+        require_contains("docs/i2-primitive-boundary-audit.md", expected)
 
     for unexpected in [
         "R3-P2 Bottle View Model Extraction",
@@ -2601,10 +2622,13 @@ def require_refactoring_documentation_cleanup() -> None:
         "task/refactor-r3-",
     ]:
         require_not_contains("docs/progress.md", stale_branch)
-    require_contains("docs/progress.md", "Compatibility Interface Cleanup")
     require_contains(
         "docs/progress.md",
         "I2-P1 Primitive Boundary Audit",
+    )
+    require_contains(
+        "docs/progress.md",
+        "task/interface-i2-primitive-boundary-audit",
     )
 
 
