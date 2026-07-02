@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../bottles/bottle_summary.dart';
 import '../app_platform.dart';
+import 'bottle_configuration_view_model.dart';
 import 'bottle_runtime_control_availability.dart';
 import 'bottle_runtime_settings_sections.dart';
 import 'runtime_settings_change.dart';
@@ -25,68 +26,51 @@ class BottleConfigurationView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final settings = bottle.runtimeSettings;
-    final showMacosRuntimeSettings = platform.isMacOS;
-    final showLinuxRuntimeSettings = platform.isLinux;
-    final canChangeSettings = canChangeRuntimeSettings(
-      runtimeSettingsChangeAction,
+    final viewModel = bottleConfigurationViewModel(
+      platform: platform,
+      runtimeCapabilitiesState: runtimeCapabilitiesState,
+      bottle: bottle,
+      runtimeSettingsControlState: runtimeSettingsControlState,
+      runtimeSettingsChangeAction: runtimeSettingsChangeAction,
     );
-    final hasPendingRuntimeSettingsUpdate = hasPendingRuntimeSettings(
-      runtimeSettingsControlState,
-    );
-    return switch (runtimeCapabilitiesState) {
-      LoadingRuntimeCapabilities() => const Center(
+    return switch (viewModel) {
+      LoadingBottleConfigurationViewModel() => const Center(
         child: SizedBox.square(
           key: ValueKey('bottle-configuration-runtime-loading'),
           dimension: 24,
           child: CircularProgressIndicator(strokeWidth: 2.5),
         ),
       ),
-      AvailableRuntimeCapabilities() ||
-      UnavailableRuntimeCapabilities() => _settingsBody(
-        settings: settings,
-        showMacosRuntimeSettings: showMacosRuntimeSettings,
-        showLinuxRuntimeSettings: showLinuxRuntimeSettings,
-        canChangeSettings: canChangeSettings,
-        hasPendingRuntimeSettings: hasPendingRuntimeSettingsUpdate,
-      ),
+      final RuntimeSettingsBottleConfigurationViewModel viewModel =>
+        _settingsBody(viewModel),
     };
   }
 
-  Widget _settingsBody({
-    required BottleRuntimeSettingsSummary settings,
-    required bool showMacosRuntimeSettings,
-    required bool showLinuxRuntimeSettings,
-    required bool canChangeSettings,
-    required bool hasPendingRuntimeSettings,
-  }) {
-    final availability = resolveBottleRuntimeControlAvailability(
-      platform: platform,
-      runtimeCapabilitiesState: runtimeCapabilitiesState,
-      canChangeSettings: canChangeSettings,
-      hasPendingRuntimeSettings: hasPendingRuntimeSettings,
-    );
-
+  Widget _settingsBody(RuntimeSettingsBottleConfigurationViewModel viewModel) {
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           BottleWineSettingsSection(
-            settings: settings,
-            availability: availability,
-            runtimeSettingsControlState: runtimeSettingsControlState,
-            showMacosRuntimeSettings: showMacosRuntimeSettings,
-            onChanged: _updateRuntimeSettings,
+            settings: viewModel.settings,
+            availability: viewModel.availability,
+            runtimeSettingsControlState: viewModel.runtimeSettingsControlState,
+            showMacosRuntimeSettings: viewModel.showMacosRuntimeSettings,
+            onChanged: (runtimeSettings, controlKey) {
+              _updateRuntimeSettings(viewModel, runtimeSettings, controlKey);
+            },
           ),
           const SizedBox(height: 14),
           BottleGraphicsSettingsSection(
-            settings: settings,
-            availability: availability,
-            runtimeSettingsControlState: runtimeSettingsControlState,
-            showMacosRuntimeSettings: showMacosRuntimeSettings,
-            showLinuxRuntimeSettings: showLinuxRuntimeSettings,
-            onChanged: _updateRuntimeSettings,
+            settings: viewModel.settings,
+            availability: viewModel.availability,
+            runtimeSettingsControlState: viewModel.runtimeSettingsControlState,
+            showMacosRuntimeSettings: viewModel.showMacosRuntimeSettings,
+            showLinuxRuntimeSettings: viewModel.showLinuxRuntimeSettings,
+            onChanged: (runtimeSettings, controlKey) {
+              _updateRuntimeSettings(viewModel, runtimeSettings, controlKey);
+            },
           ),
         ],
       ),
@@ -94,14 +78,14 @@ class BottleConfigurationView extends StatelessWidget {
   }
 
   void _updateRuntimeSettings(
+    RuntimeSettingsBottleConfigurationViewModel viewModel,
     BottleRuntimeSettingsSummary runtimeSettings,
     String controlKey,
   ) {
-    final dispatch = resolveRuntimeSettingsChange(
-      bottle: bottle,
+    final dispatch = resolveBottleConfigurationRuntimeSettingsChange(
+      viewModel: viewModel,
       runtimeSettings: runtimeSettings,
       controlKey: controlKey,
-      action: runtimeSettingsChangeAction,
     );
 
     switch (dispatch) {

@@ -5,10 +5,9 @@ import '../app_constants.dart';
 import '../home/home_contracts.dart';
 import '../programs/program_configuration_view.dart';
 import '../widgets/konyak_top_bar.dart';
-import 'bottle_action_target.dart';
 import 'bottle_configuration_view.dart';
+import 'bottle_detail_view_model.dart';
 import 'bottle_overview.dart';
-import 'bottle_overview_content.dart';
 import 'bottom_bars.dart';
 
 export 'bottle_detail_mode.dart';
@@ -35,30 +34,24 @@ class KonyakBottleDetail extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = KonyakThemeColors.of(context);
     final localizations = KonyakLocalizations.of(context);
-    final content = state.content;
+    final viewModel = bottleDetailViewModel(
+      state: state,
+      bottleActions: bottleActions,
+      programActions: programActions,
+      winetricksActions: winetricksActions,
+      navigationActions: navigationActions,
+    );
 
     return ColoredBox(
       color: colors.windowBackground,
       child: Column(
         children: [
           KonyakTopBar(
-            title: switch (content) {
-              ProgramKonyakHomeDetailContent(:final program) =>
-                localizations.programConfigurationTitle(program.name),
-              ConfigurationKonyakHomeDetailContent() =>
-                localizations.bottleConfiguration,
-              OverviewKonyakHomeDetailContent(:final bottle) => bottle.name,
-              EmptyKonyakHomeDetailContent() => 'Konyak',
-            },
-            onBack: switch (content) {
-              ConfigurationKonyakHomeDetailContent() ||
-              ProgramKonyakHomeDetailContent() =>
-                state.isBottleNavigationLocked
-                    ? null
-                    : navigationActions.onBackToBottle,
-              OverviewKonyakHomeDetailContent() ||
-              EmptyKonyakHomeDetailContent() => null,
-            },
+            title: _localizedBottleDetailTitle(
+              localizations,
+              viewModel.topBar.title,
+            ),
+            onBack: homeActionCallback(viewModel.topBar.backAction),
             onRefresh: homeActionCallback(menuActions.refreshAction),
             onShowProcessManager: homeActionCallback(
               menuActions.showProcessManagerAction,
@@ -69,109 +62,116 @@ class KonyakBottleDetail extends StatelessWidget {
               menuActions.viewLatestLogAction,
             ),
           ),
-          Expanded(
-            child: switch (content) {
-              ProgramKonyakHomeDetailContent(:final bottle, :final program) =>
-                ProgramConfigurationView(
-                  bottle: bottle,
-                  program: program,
-                  settingsState: state.programConfigurationSettingsState,
-                  programSettingsChangeAction:
-                      programActions.programSettingsChangeAction,
-                ),
-              ConfigurationKonyakHomeDetailContent(:final bottle) =>
-                BottleConfigurationView(
-                  platform: state.platform,
-                  runtimeCapabilitiesState: state.runtimeCapabilitiesState,
-                  bottle: bottle,
-                  runtimeSettingsControlState:
-                      state.runtimeSettingsControlState,
-                  runtimeSettingsChangeAction:
-                      bottleActions.runtimeSettingsChangeAction,
-                ),
-              OverviewKonyakHomeDetailContent(:final bottle) => BottleOverview(
-                platform: state.platform,
-                content: BottleOverviewContent.bottle(bottle),
-                runProgramAction: programActions.runProgramAction,
-                runProgramPathAction: programActions.runProgramPathAction,
-                pinProgramAction: programActions.pinProgramAction,
-                configurePinnedProgramAction:
-                    PinnedProgramActionAvailability.available(
-                      navigationActions.onConfigurePinnedProgram,
-                    ),
-                unpinProgramAction: programActions.unpinProgramAction,
-                renamePinnedProgramAction:
-                    programActions.renamePinnedProgramAction,
-                openPinnedProgramLocationAction:
-                    programActions.openPinnedProgramLocationAction,
-                showBottleConfigurationAction:
-                    BottleSummaryActionAvailability.available(
-                      navigationActions.onShowBottleConfiguration,
-                    ),
-                showBottleProgramsAction: bottleActions.showProgramsAction,
-              ),
-              EmptyKonyakHomeDetailContent() => BottleOverview(
-                platform: state.platform,
-                content: BottleOverviewContent.empty(state.bottleListLoadState),
-                runProgramAction: programActions.runProgramAction,
-                runProgramPathAction: programActions.runProgramPathAction,
-                pinProgramAction: programActions.pinProgramAction,
-                configurePinnedProgramAction:
-                    PinnedProgramActionAvailability.available(
-                      navigationActions.onConfigurePinnedProgram,
-                    ),
-                unpinProgramAction: programActions.unpinProgramAction,
-                renamePinnedProgramAction:
-                    programActions.renamePinnedProgramAction,
-                openPinnedProgramLocationAction:
-                    programActions.openPinnedProgramLocationAction,
-                showBottleConfigurationAction:
-                    BottleSummaryActionAvailability.available(
-                      navigationActions.onShowBottleConfiguration,
-                    ),
-                showBottleProgramsAction: bottleActions.showProgramsAction,
-              ),
-            },
-          ),
-          switch (content) {
-            ProgramKonyakHomeDetailContent(:final bottle, :final program) =>
-              ProgramConfigurationBottomBar(
-                platform: state.platform,
-                bottle: bottle,
-                program: program,
-                openPinnedProgramLocationAction:
-                    programActions.openPinnedProgramLocationAction,
-                runProgramPathAction: programActions.runProgramPathAction,
-              ),
-            ConfigurationKonyakHomeDetailContent(:final bottle) =>
-              BottleConfigurationBottomBar(
-                bottle: bottle,
-                toolsAction: bottleToolsActionAvailabilityFromActions(
-                  commandAction: winetricksActions.runBottleCommandAction,
-                  locationAction: bottleActions.openLocationAction,
-                ),
-              ),
-            OverviewKonyakHomeDetailContent(:final bottle) => KonyakBottomBar(
-              target: BottleActionTarget.bottle(bottle),
-              runProgramAction: programActions.runProgramAction,
-              toolsAction: bottleToolsActionAvailabilityFromActions(
-                commandAction: winetricksActions.runBottleCommandAction,
-                locationAction: bottleActions.openLocationAction,
-              ),
-              showWinetricksAction: winetricksActions.showWinetricksAction,
-            ),
-            EmptyKonyakHomeDetailContent() => KonyakBottomBar(
-              target: const BottleActionTarget.none(),
-              runProgramAction: programActions.runProgramAction,
-              toolsAction: bottleToolsActionAvailabilityFromActions(
-                commandAction: winetricksActions.runBottleCommandAction,
-                locationAction: bottleActions.openLocationAction,
-              ),
-              showWinetricksAction: winetricksActions.showWinetricksAction,
-            ),
-          },
+          Expanded(child: _bottleDetailBody(viewModel.body)),
+          _bottleDetailBottomBar(viewModel.bottomBar),
         ],
       ),
     );
   }
+}
+
+String _localizedBottleDetailTitle(
+  KonyakLocalizations localizations,
+  BottleDetailTitle title,
+) {
+  return switch (title) {
+    ProgramConfigurationBottleDetailTitle(:final programName) =>
+      localizations.programConfigurationTitle(programName),
+    BottleConfigurationBottleDetailTitle() => localizations.bottleConfiguration,
+    BottleNameBottleDetailTitle(:final bottleName) => bottleName,
+    KonyakBottleDetailTitle() => 'Konyak',
+  };
+}
+
+Widget _bottleDetailBody(BottleDetailBody body) {
+  return switch (body) {
+    ProgramConfigurationBottleDetailBody(
+      :final bottle,
+      :final program,
+      :final settingsState,
+      :final programSettingsChangeAction,
+    ) =>
+      ProgramConfigurationView(
+        bottle: bottle,
+        program: program,
+        settingsState: settingsState,
+        programSettingsChangeAction: programSettingsChangeAction,
+      ),
+    BottleConfigurationBottleDetailBody(
+      :final platform,
+      :final runtimeCapabilitiesState,
+      :final bottle,
+      :final runtimeSettingsControlState,
+      :final runtimeSettingsChangeAction,
+    ) =>
+      BottleConfigurationView(
+        platform: platform,
+        runtimeCapabilitiesState: runtimeCapabilitiesState,
+        bottle: bottle,
+        runtimeSettingsControlState: runtimeSettingsControlState,
+        runtimeSettingsChangeAction: runtimeSettingsChangeAction,
+      ),
+    OverviewBottleDetailBody(
+      :final platform,
+      :final content,
+      :final runProgramAction,
+      :final runProgramPathAction,
+      :final pinProgramAction,
+      :final configurePinnedProgramAction,
+      :final unpinProgramAction,
+      :final renamePinnedProgramAction,
+      :final openPinnedProgramLocationAction,
+      :final showBottleConfigurationAction,
+      :final showBottleProgramsAction,
+    ) =>
+      BottleOverview(
+        platform: platform,
+        content: content,
+        runProgramAction: runProgramAction,
+        runProgramPathAction: runProgramPathAction,
+        pinProgramAction: pinProgramAction,
+        configurePinnedProgramAction: configurePinnedProgramAction,
+        unpinProgramAction: unpinProgramAction,
+        renamePinnedProgramAction: renamePinnedProgramAction,
+        openPinnedProgramLocationAction: openPinnedProgramLocationAction,
+        showBottleConfigurationAction: showBottleConfigurationAction,
+        showBottleProgramsAction: showBottleProgramsAction,
+      ),
+  };
+}
+
+Widget _bottleDetailBottomBar(BottleDetailBottomBar bottomBar) {
+  return switch (bottomBar) {
+    ProgramConfigurationBottleDetailBottomBar(
+      :final platform,
+      :final bottle,
+      :final program,
+      :final openPinnedProgramLocationAction,
+      :final runProgramPathAction,
+    ) =>
+      ProgramConfigurationBottomBar(
+        platform: platform,
+        bottle: bottle,
+        program: program,
+        openPinnedProgramLocationAction: openPinnedProgramLocationAction,
+        runProgramPathAction: runProgramPathAction,
+      ),
+    BottleConfigurationBottleDetailBottomBar(
+      :final bottle,
+      :final toolsAction,
+    ) =>
+      BottleConfigurationBottomBar(bottle: bottle, toolsAction: toolsAction),
+    OverviewBottleDetailBottomBar(
+      :final target,
+      :final runProgramAction,
+      :final toolsAction,
+      :final showWinetricksAction,
+    ) =>
+      KonyakBottomBar(
+        target: target,
+        runProgramAction: runProgramAction,
+        toolsAction: toolsAction,
+        showWinetricksAction: showWinetricksAction,
+      ),
+  };
 }

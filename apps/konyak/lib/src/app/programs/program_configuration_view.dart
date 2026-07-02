@@ -7,6 +7,7 @@ import '../../l10n/konyak_localizations.dart';
 import '../app_constants.dart';
 import '../widgets/konyak_bottom_button.dart';
 import 'program_configuration_settings.dart';
+import 'program_configuration_view_model.dart';
 import 'program_settings_controls.dart';
 import 'program_settings_form_controller.dart';
 
@@ -67,14 +68,27 @@ class _ProgramConfigurationViewState extends State<ProgramConfigurationView> {
   Widget build(BuildContext context) {
     final colors = KonyakThemeColors.of(context);
     final localizations = KonyakLocalizations.of(context);
+    final viewModel = programConfigurationViewModel(
+      bottle: widget.bottle,
+      settingsState: widget.settingsState,
+      programSettingsChangeAction: widget.programSettingsChangeAction,
+    );
 
-    switch (widget.settingsState) {
-      case LoadingProgramConfigurationSettings():
+    switch (viewModel) {
+      case LoadingProgramConfigurationViewModel():
         return Center(child: CircularProgressIndicator(color: colors.accent));
-      case ReadyProgramConfigurationSettings():
-        break;
+      case final ReadyProgramConfigurationViewModel readyViewModel:
+        return _settingsBody(
+          localizations: localizations,
+          viewModel: readyViewModel,
+        );
     }
+  }
 
+  Widget _settingsBody({
+    required KonyakLocalizations localizations,
+    required ReadyProgramConfigurationViewModel viewModel,
+  }) {
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
       child: Column(
@@ -89,7 +103,7 @@ class _ProgramConfigurationViewState extends State<ProgramConfigurationView> {
             wineLoggingChannelsController:
                 _settingsController.wineLoggingChannelsController,
             logFilePathController: _settingsController.logFilePathController,
-            defaultLogPath: _defaultLogPath,
+            defaultLogPath: viewModel.defaultLogPath,
             onLocaleChanged: (locale) {
               setState(() {
                 _settingsController.setLocale(locale);
@@ -110,10 +124,7 @@ class _ProgramConfigurationViewState extends State<ProgramConfigurationView> {
             child: KonyakBottomButton(
               key: const ValueKey('program-config-save'),
               label: localizations.save,
-              onPressed:
-                  canChangeProgramSettings(widget.programSettingsChangeAction)
-                  ? _saveSettings
-                  : null,
+              onPressed: viewModel.canSave ? _saveSettings : null,
             ),
           ),
         ],
@@ -132,7 +143,7 @@ class _ProgramConfigurationViewState extends State<ProgramConfigurationView> {
   }
 
   void _saveSettings() {
-    final dispatch = resolveProgramSettingsChange(
+    final dispatch = resolveProgramConfigurationSave(
       bottle: widget.bottle,
       program: widget.program,
       settings: _settingsController.toSettings(),
@@ -148,8 +159,9 @@ class _ProgramConfigurationViewState extends State<ProgramConfigurationView> {
   }
 
   Future<void> _chooseLogFile() async {
+    final defaultLogPath = programDefaultLogPath(widget.bottle.path);
     final currentPath = _settingsController.effectiveLogPath(
-      defaultLogPath: _defaultLogPath,
+      defaultLogPath: defaultLogPath,
     );
     final selection = await widget.logFilePicker.pickLogFilePath(
       initialDirectory: programPathInitialDirectory(currentPath),
@@ -168,6 +180,4 @@ class _ProgramConfigurationViewState extends State<ProgramConfigurationView> {
         return;
     }
   }
-
-  String get _defaultLogPath => programDefaultLogPath(widget.bottle.path);
 }

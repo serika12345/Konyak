@@ -13,6 +13,34 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-07-02 09:36 JST
+- State: `completed`
+- Branch: `task/refactor-r3-bottle-view-models`
+- Active work: R3-P2 Bottle View Model Extraction.
+- Related TODO: `docs/todo.md` `R3-P2 Bottle View Model Extraction`.
+- Pull request: https://github.com/serika12345/Konyak/pull/6
+- Latest commit: single R3-P2 branch commit
+  (`Extract bottle detail view models`).
+- Purpose: move bottle, program, and runtime view model construction and action
+  selection out of large rendering widgets into focused helpers while keeping
+  widgets responsible for rendering and event wiring.
+- Completed work: confirmed PR #5 is merged with successful checks,
+  fast-forwarded local `main`, created the R3-P2 branch, identified the next
+  unfinished refactoring PR gate, added focused view model and action-selection
+  tests, extracted bottle detail, bottle configuration, and program
+  configuration view model helpers, kept widgets responsible for rendering and
+  event wiring, and removed the completed R3/R3-P2 backlog block from
+  `docs/todo.md`.
+- Remaining work: review draft PR #6. Do not advance into R4 automatically.
+- Next action: review https://github.com/serika12345/Konyak/pull/6 and decide
+  whether to merge or request follow-up changes.
+- Verification: observed focused Flutter tests fail before implementation
+  because the extracted view model helper files and APIs did not exist. After
+  implementation, focused view model tests passed. Full local verification
+  passed with `just flutter-format-check`, `just flutter-analyze`,
+  `just flutter-test`, `just verify-governance`, `just verify-safety`,
+  `just format-check`, and `just lint` through the Nix dev shell.
+
 - Timestamp: 2026-07-01 22:34 JST
 - State: `completed`
 - Branch: `task/refactor-r3-home-loader-state`
