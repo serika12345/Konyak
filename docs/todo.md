@@ -258,16 +258,71 @@ review gate:
 - Commit and push the branch, open a draft PR, then stop before adding or
   starting any post-I1 milestone.
 
+### I2: Boundary Hardening and Test Contract Cleanup
+
+Purpose: turn the post-I1 boundary-hardening candidates into scoped refactors
+now that the nullable compatibility wrappers are gone. Prefer explicit audits
+before conversion, keep external CLI JSON and argv contracts stable, and only
+replace primitive values when the invariant is stable enough to be represented
+as a value object.
+
+Small milestones:
+
+- [ ] I2-S1: Audit remaining primitive, nullable, and hand-written test-part
+  exceptions and classify each as an allowed boundary, a code cleanup candidate,
+  or a deferred design decision.
+- [ ] I2-S2: Remove hand-written `part` usage from CLI contract tests in
+  coherent families by moving coverage to standalone test files or shared test
+  helpers.
+- [ ] I2-S3: Convert selected stable semantic planner/request primitives to
+  value objects at domain-facing APIs while keeping JSON and argv projection at
+  CLI/I/O boundaries.
+- [ ] I2-S4: Reassess `ProgramRunPlanner` host-platform, runner-kind, and
+  graphics-backend policy structure; split only where the audit shows stable
+  responsibilities and reduced complexity.
+- [ ] I2-S5: Tighten governance and custom lint checks for completed I2
+  boundaries without preserving obsolete implementation details as contracts.
+
+#### PR Gate: I2-P1 Primitive Boundary Audit
+
+branch: `task/interface-i2-primitive-boundary-audit`
+
+Completion criteria:
+
+- Add an I2 audit document that inventories remaining primitive, nullable, and
+  hand-written test-part exceptions across CLI/domain code, Flutter app-facing
+  models, custom lint boundary allowlists, and governance checks.
+- Classify each finding as an allowed adapter boundary, a candidate for an I2
+  code-conversion gate, or an explicitly deferred design decision.
+- Refine or add the next I2 PR Gate blocks in `docs/todo.md` when the audit
+  identifies a safer order than the current small-milestone list.
+- Keep the audit behavior-neutral: no public CLI JSON schema, app behavior,
+  runtime behavior, or broad code conversion changes.
+- `docs/progress.md` records the gate state, latest commit, verification, and
+  next action.
+
+Not included:
+
+- Public CLI JSON schema changes.
+- Runtime behavior changes.
+- Converting primitives or nullable fields before the audit has selected the
+  exact boundary.
+- Removing all CLI contract test `part` files in the audit PR.
+
+Verification:
+
+- `just verify-governance`
+- `just verify-safety`
+- `just format-check`
+- `just lint`
+
+review gate:
+
+- Commit and push the branch, open a draft PR, then stop before implementing
+  I2 code conversions.
+
 ## Deferred
 
-- Boundary-hardening follow-up candidates outside the current compatibility
-  cleanup gates:
-  - Replace additional semantic planner/request primitives with value objects
-    only where the invariant has become stable.
-  - Split `ProgramRunPlanner` host-platform, runner-kind, and graphics-backend
-    policies only if the current switch logic grows enough to justify it.
-  - Remove hand-written `part` usage from CLI contract tests once that can be
-    done without normalizing a large-file escape hatch.
 - Linux ARM64 Windows execution research.
 - Linux executable thumbnails for sandboxed file managers.
   - Do not make the AppImage or normal app startup mutate `/nix/store` or

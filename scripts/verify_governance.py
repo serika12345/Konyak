@@ -2581,6 +2581,9 @@ def require_refactoring_documentation_cleanup() -> None:
         "branch: `task/interface-i1-flutter-json-dtos`",
         "#### PR Gate: I1-P5 Refactoring Governance Allowance Cleanup",
         "branch: `task/interface-i1-governance-allowances`",
+        "### I2: Boundary Hardening and Test Contract Cleanup",
+        "#### PR Gate: I2-P1 Primitive Boundary Audit",
+        "branch: `task/interface-i2-primitive-boundary-audit`",
     ]:
         require_contains("docs/todo.md", expected)
 
@@ -2601,7 +2604,7 @@ def require_refactoring_documentation_cleanup() -> None:
     require_contains("docs/progress.md", "Compatibility Interface Cleanup")
     require_contains(
         "docs/progress.md",
-        "I1-P5 Refactoring Governance Allowance Cleanup",
+        "I2-P1 Primitive Boundary Audit",
     )
 
 
@@ -2982,10 +2985,6 @@ def require_refactoring_governance_allowance_cleanup() -> None:
     require_contains(
         "docs/todo.md",
         "status: completed\nbranch: `task/interface-i1-governance-allowances`",
-    )
-    require_contains(
-        "docs/progress.md",
-        "task/interface-i1-governance-allowances",
     )
 
 
