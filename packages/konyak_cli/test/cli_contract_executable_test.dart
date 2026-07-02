@@ -1,6 +1,11 @@
-part of 'cli_contract_test.dart';
+import 'dart:convert';
+import 'dart:io';
 
-void defineExecutableContractTests() {
+import 'package:test/test.dart';
+
+import 'support/cli_contract_helpers.dart';
+
+void main() {
   test('executable prints the same machine-readable contract', () async {
     final dataHome = await Directory.systemTemp.createTemp('konyak-cli-test-');
 
@@ -15,7 +20,7 @@ void defineExecutableContractTests() {
       const ['run', 'bin/konyak.dart', 'list-bottles', '--json'],
       environment: {
         'KONYAK_DATA_HOME': dataHome.path,
-        'KONYAK_CONFIG_HOME': _joinTestPath(dataHome.path, const ['config']),
+        'KONYAK_CONFIG_HOME': joinTestPath(dataHome.path, const ['config']),
       },
     );
 

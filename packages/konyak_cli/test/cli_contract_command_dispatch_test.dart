@@ -1,11 +1,18 @@
-part of 'cli_contract_test.dart';
+import 'dart:convert';
 
-void defineCommandDispatchContractTests() {
+import 'package:konyak_cli/src/cli/cli_app_runtime_handlers.dart';
+import 'package:konyak_cli/src/cli/cli_commands.dart';
+import 'package:konyak_cli/src/cli/cli_location_winetricks_handlers.dart';
+import 'package:test/test.dart';
+
+import 'support/cli_contract_helpers.dart';
+
+void main() {
   test('runtime command dispatch reports matched commands explicitly', () {
     final match = handleRuntimeCommand(const [
       'list-runtimes',
       '--json',
-    ], _commandDispatchContext());
+    ], testCliCommandContext());
 
     switch (match) {
       case CliCommandMatched(:final result):
@@ -23,7 +30,7 @@ void defineCommandDispatchContractTests() {
       '--location',
       'c-drive',
       '--json',
-    ], _commandDispatchContext());
+    ], testCliCommandContext());
 
     expect(match, isA<CliCommandNotMatched>());
   });
@@ -35,7 +42,7 @@ void defineCommandDispatchContractTests() {
       '--location',
       'c-drive',
       '--json',
-    ], _commandDispatchContext());
+    ], testCliCommandContext());
 
     switch (match) {
       case CliCommandMatched(:final result):
@@ -54,36 +61,8 @@ void defineCommandDispatchContractTests() {
     final match = handleLocationCommand(const [
       'list-runtimes',
       '--json',
-    ], _commandDispatchContext());
+    ], testCliCommandContext());
 
     expect(match, isA<CliCommandNotMatched>());
   });
-}
-
-CliCommandContext _commandDispatchContext() {
-  return _testCliCommandContext(
-    bottleCatalog: null,
-    bottleRepository: null,
-    bottleProgramRepository: const EmptyBottleProgramRepository(),
-    programMetadataExtractor: const NoopProgramMetadataExtractor(),
-    winetricksVerbRepository: const UnavailableWinetricksVerbRepository(),
-    runtimeCatalog: null,
-    programRunPlanner: null,
-    programGraphicsBackendHintsInspector:
-        const UnavailableProgramGraphicsBackendHintsInspector(),
-    programRunner: null,
-    bottlePrefixInitializer: null,
-    pathOpener: null,
-    macosWineInstaller: null,
-    linuxWineInstaller: null,
-    gptkWineInstaller: null,
-    runtimeUpdateChecker: null,
-    appUpdateChecker: null,
-    appUpdateInstaller: null,
-    runtimeValidator: null,
-    macosSetupChecker: null,
-    appSettingsRepository: null,
-    runtimeInstallProgressSink: null,
-    linuxExternalProgramLauncherDiagnosticSink: null,
-  );
 }

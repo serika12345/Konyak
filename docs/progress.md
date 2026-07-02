@@ -13,25 +13,31 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-02 21:20 JST
+- Timestamp: 2026-07-02 21:36 JST
 - State: `completed`
-- Branch: `task/interface-i2-primitive-boundary-audit`
-- Active work: I2-P1 Primitive Boundary Audit.
+- Branch: `task/interface-i2-cli-contract-seed-tests`
+- Active work: I2-P2 CLI Contract Seed Test Part Split.
 - Related TODO: `docs/todo.md` `I2: Boundary Hardening and Test Contract
-  Cleanup`, `I2-P1 Primitive Boundary Audit`, `I2-P2 CLI Contract Seed Test
-  Part Split`, `I2-P3 CLI Contract Family Test Part Split`, and `I2-P4
-  Semantic Constructor Primitive Fronts`.
-- Pull request: draft PR #14
-  <https://github.com/serika12345/Konyak/pull/14>.
-- Latest commit: branch head for the I2-P1 draft PR.
-- Purpose: inventory the remaining primitive, nullable, and hand-written test
-  part exceptions so the next `/advance-pr` gates remove one compatibility
-  surface at a time without changing public behavior.
-- Completed work: added `docs/i2-primitive-boundary-audit.md`; classified the
-  remaining CLI/domain, Flutter app-facing, custom lint, and governance
-  boundary exceptions; refined the next I2 PR gates in `docs/todo.md`.
-- Remaining work: review draft PR #14, then stop before implementing I2-P2.
-- Next action: review the I2-P1 draft PR and then run `/advance-pr` for
-  `I2-P2 CLI Contract Seed Test Part Split`.
-- Verification: `just verify-governance`, `just verify-safety`,
-  `just format-check`, and `just lint` passed through the Nix dev shell.
+  Cleanup`, completed `I2-P2 CLI Contract Seed Test Part Split`, and next
+  `I2-P3 CLI Contract Family Test Part Split`.
+- Pull request: draft PR #15
+  <https://github.com/serika12345/Konyak/pull/15>.
+- Latest commit: branch head for the I2-P2 draft PR.
+- Purpose: remove the first low-dependency CLI contract hand-written test
+  `part` files so future command/runtime contract work can be split into
+  smaller test entry points.
+- Completed work: converted `cli_contract_executable.part.dart`,
+  `cli_contract_command_dispatch.part.dart`, and
+  `cli_contract_repository_runner.part.dart` into standalone tests; added
+  `test/support/cli_contract_helpers.dart`; removed the converted part
+  directives and registration calls from `cli_contract_test.dart`; added
+  governance coverage for the converted seed files.
+- Remaining work: review draft PR #15, then stop before implementing I2-P3.
+- Next action: review the I2-P2 draft PR and then run `/advance-pr` for
+  `I2-P3 CLI Contract Family Test Part Split`.
+- Verification: focused seed test command passed:
+  `cd packages/konyak_cli && dart test test/cli_contract_executable_test.dart
+  test/cli_contract_command_dispatch_test.dart
+  test/cli_contract_repository_runner_test.dart`; `just cli-test`,
+  `just verify-governance`, `just verify-safety`, `just format-check`, and
+  `just lint` passed through the Nix dev shell.

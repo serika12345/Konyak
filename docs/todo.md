@@ -268,9 +268,6 @@ as a value object.
 
 Small milestones:
 
-- [ ] I2-S2a: Remove low-dependency hand-written CLI contract test `part`
-  usage by moving seed coverage to standalone test files or shared test
-  helpers.
 - [ ] I2-S2b: Remove high-volume hand-written CLI contract test `part` usage
   from app/bottle, program, runtime process/update, and runtime install
   families after the seed split proves the helper shape.
@@ -325,6 +322,7 @@ review gate:
 
 #### PR Gate: I2-P2 CLI Contract Seed Test Part Split
 
+status: completed
 branch: `task/interface-i2-cli-contract-seed-tests`
 
 Completion criteria:
