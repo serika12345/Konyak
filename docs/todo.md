@@ -118,6 +118,7 @@ review gate:
 
 #### PR Gate: I1-P2 CLI Command Dispatch
 
+status: completed
 branch: `task/interface-i1-cli-command-dispatch`
 
 Completion criteria:

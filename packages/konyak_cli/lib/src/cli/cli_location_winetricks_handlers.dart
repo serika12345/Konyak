@@ -12,39 +12,43 @@ import 'cli_location_parsers.dart';
 import 'cli_program_catalog_json.dart';
 import 'cli_result_model.dart';
 
-CliResult? handleLocationCommand(
+CliCommandMatch handleLocationCommand(
   List<String> arguments,
   CliCommandContext context,
 ) {
   final bottleLocationOpenResult =
-      parseJsonBottleLocationOpenCliRequestOption(arguments).match<CliResult?>(
-        () => null,
-        (bottleLocationOpenCliRequest) {
-          return openBottleLocationJsonResult(
-            bottleLocationOpenCliRequest,
-            context,
-          );
-        },
-      );
-  if (bottleLocationOpenResult != null) {
-    return bottleLocationOpenResult;
+      parseJsonBottleLocationOpenCliRequestOption(
+        arguments,
+      ).match<CliCommandMatch>(() => const CliCommandNotMatched(), (
+        bottleLocationOpenCliRequest,
+      ) {
+        return CliCommandMatched(
+          openBottleLocationJsonResult(bottleLocationOpenCliRequest, context),
+        );
+      });
+  switch (bottleLocationOpenResult) {
+    case CliCommandMatched():
+      return bottleLocationOpenResult;
+    case CliCommandNotMatched():
   }
 
   final programLocationOpenResult =
-      parseJsonProgramLocationOpenCliRequestOption(arguments).match<CliResult?>(
-        () => null,
-        (programLocationOpenCliRequest) {
-          return openProgramLocationJsonResult(
-            programLocationOpenCliRequest,
-            context,
-          );
-        },
-      );
-  if (programLocationOpenResult != null) {
-    return programLocationOpenResult;
+      parseJsonProgramLocationOpenCliRequestOption(
+        arguments,
+      ).match<CliCommandMatch>(() => const CliCommandNotMatched(), (
+        programLocationOpenCliRequest,
+      ) {
+        return CliCommandMatched(
+          openProgramLocationJsonResult(programLocationOpenCliRequest, context),
+        );
+      });
+  switch (programLocationOpenResult) {
+    case CliCommandMatched():
+      return programLocationOpenResult;
+    case CliCommandNotMatched():
   }
 
-  return null;
+  return const CliCommandNotMatched();
 }
 
 CliResult openBottleLocationJsonResult(

@@ -2574,6 +2574,7 @@ def require_refactoring_documentation_cleanup() -> None:
         "#### PR Gate: I1-P1 CLI Parser Compatibility Wrappers",
         "branch: `task/interface-i1-cli-parser-wrappers`",
         "#### PR Gate: I1-P2 CLI Command Dispatch",
+        "branch: `task/interface-i1-cli-command-dispatch`",
         "#### PR Gate: I1-P3 Flutter Dialog and Picker Decisions",
         "#### PR Gate: I1-P4 Flutter JSON DTO Optional Fields",
     ]:
@@ -2594,7 +2595,7 @@ def require_refactoring_documentation_cleanup() -> None:
     ]:
         require_not_contains("docs/progress.md", stale_branch)
     require_contains("docs/progress.md", "Compatibility Interface Cleanup")
-    require_contains("docs/progress.md", "task/interface-i1-cli-parser-wrappers")
+    require_contains("docs/progress.md", "task/interface-i1-cli-command-dispatch")
 
 
 def require_cli_parser_option_boundaries() -> None:
@@ -2713,6 +2714,73 @@ def require_cli_parser_option_boundaries() -> None:
         ),
     ]:
         require_contains(relative_path, expected)
+
+
+def require_cli_command_dispatch_boundaries() -> None:
+    for expected in [
+        "sealed class CliCommandMatch",
+        "final class CliCommandNotMatched extends CliCommandMatch",
+        "final class CliCommandMatched extends CliCommandMatch",
+        "typedef CliCommandHandler = CliCommandMatch Function();",
+        "CliCommandMatch firstCliCommandMatch(",
+        "CliCommandMatch legacyCliCommandMatch(CliResult? result)",
+    ]:
+        require_contains("packages/konyak_cli/lib/src/cli/cli_commands.dart", expected)
+
+    for unexpected in [
+        "typedef CliCommandHandler = CliResult? Function();",
+        "CliResult? firstCliResult(",
+        "firstCliResult(",
+        "final commandResult =",
+        "if (commandResult != null)",
+    ]:
+        require_not_contains(
+            "packages/konyak_cli/lib/src/cli/cli_commands.dart",
+            unexpected,
+        )
+
+    for relative_path, expected in [
+        (
+            "packages/konyak_cli/lib/src/cli/cli_app_runtime_handlers.dart",
+            "CliCommandMatch handleRuntimeCommand(",
+        ),
+        (
+            "packages/konyak_cli/lib/src/cli/cli_location_winetricks_handlers.dart",
+            "CliCommandMatch handleLocationCommand(",
+        ),
+    ]:
+        require_contains(relative_path, expected)
+        require_contains(relative_path, "return const CliCommandNotMatched();")
+        require_not_contains(relative_path, "match<CliResult?>")
+
+    for relative_path, unexpected in [
+        (
+            "packages/konyak_cli/lib/src/cli/cli_app_runtime_handlers.dart",
+            "CliResult? handleRuntimeCommand(",
+        ),
+        (
+            "packages/konyak_cli/lib/src/cli/cli_location_winetricks_handlers.dart",
+            "CliResult? handleLocationCommand(",
+        ),
+    ]:
+        require_not_contains(relative_path, unexpected)
+
+    require_contains(
+        "packages/konyak_cli/test/cli_contract_command_dispatch.part.dart",
+        "runtime command dispatch reports matched commands explicitly",
+    )
+    require_contains(
+        "packages/konyak_cli/test/cli_contract_command_dispatch.part.dart",
+        "runtime command dispatch reports unmatched commands explicitly",
+    )
+    require_contains(
+        "packages/konyak_cli/test/cli_contract_command_dispatch.part.dart",
+        "location command dispatch reports matched commands explicitly",
+    )
+    require_contains(
+        "packages/konyak_cli/test/cli_contract_command_dispatch.part.dart",
+        "location command dispatch reports unmatched commands explicitly",
+    )
 
 
 def require_konyak_cli_public_exports() -> None:
@@ -3776,6 +3844,7 @@ def main() -> None:
     require_flutter_view_model_extraction_boundaries()
     require_refactoring_documentation_cleanup()
     require_cli_parser_option_boundaries()
+    require_cli_command_dispatch_boundaries()
     require_typed_domain_string_maps()
     require_runtime_ssot_rules()
     require_no_cli_state_errors()
