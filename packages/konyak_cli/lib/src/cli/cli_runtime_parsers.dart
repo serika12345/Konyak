@@ -14,12 +14,6 @@ bool isJsonMacosSetupCheckCommand(List<String> arguments) {
   return isJsonFlagOnlyCommand(arguments, 'check-macos-setup');
 }
 
-GptkWineInstallRequest? parseJsonGptkWineInstallRequest(
-  List<String> arguments,
-) {
-  return nullableParsedOption(parseJsonGptkWineInstallRequestOption(arguments));
-}
-
 Option<GptkWineInstallRequest> parseJsonGptkWineInstallRequestOption(
   List<String> arguments,
 ) {
@@ -38,10 +32,6 @@ Option<GptkWineInstallRequest> parseJsonGptkWineInstallRequestOption(
   });
 }
 
-String? parseJsonOpenUrlCommand(List<String> arguments) {
-  return nullableParsedOption(parseJsonOpenUrlCommandOption(arguments));
-}
-
 Option<String> parseJsonOpenUrlCommandOption(List<String> arguments) {
   return Option.Do(($) {
     final results = $(
@@ -51,12 +41,6 @@ Option<String> parseJsonOpenUrlCommandOption(List<String> arguments) {
 
     return $(_httpUrl(url));
   });
-}
-
-String? parseJsonRuntimeIdCommand(List<String> arguments, String command) {
-  return nullableParsedOption(
-    parseJsonRuntimeIdCommandOption(arguments, command),
-  );
 }
 
 Option<String> parseJsonRuntimeIdCommandOption(
@@ -72,14 +56,6 @@ Option<String> parseJsonRuntimeIdCommandOption(
   });
 }
 
-MacosWineInstallRequest? parseJsonMacosWineInstallRequest(
-  List<String> arguments,
-) {
-  return nullableParsedOption(
-    parseJsonMacosWineInstallRequestOption(arguments),
-  );
-}
-
 Option<MacosWineInstallRequest> parseJsonMacosWineInstallRequestOption(
   List<String> arguments,
 ) {
@@ -93,14 +69,6 @@ Option<MacosWineInstallRequest> parseJsonMacosWineInstallRequestOption(
       force: options.reinstall,
       emitProgress: options.emitProgress,
     ),
-  );
-}
-
-LinuxWineInstallRequest? parseJsonLinuxWineInstallRequest(
-  List<String> arguments,
-) {
-  return nullableParsedOption(
-    parseJsonLinuxWineInstallRequestOption(arguments),
   );
 }
 
@@ -130,20 +98,6 @@ class RuntimeInstallCliOptions {
   final Option<String> sourceManifest;
   final bool reinstall;
   final bool emitProgress;
-}
-
-RuntimeInstallCliOptions? parseRuntimeInstallCliOptions(
-  List<String> arguments, {
-  required String command,
-  bool allowReinstall = false,
-}) {
-  return nullableParsedOption(
-    parseRuntimeInstallCliOptionsOption(
-      arguments,
-      command: command,
-      allowReinstall: allowReinstall,
-    ),
-  );
 }
 
 Option<RuntimeInstallCliOptions> parseRuntimeInstallCliOptionsOption(
@@ -190,10 +144,6 @@ Option<RuntimeInstallCliOptions> parseRuntimeInstallCliOptionsOption(
       emitProgress: results['progress-json'] == true,
     ),
   );
-}
-
-String? nonEmptyCliOption(ArgResults results, String name) {
-  return nullableParsedOption(nonEmptyCliOptionOption(results, name));
 }
 
 Option<String> nonEmptyCliOptionOption(ArgResults results, String name) {

@@ -81,6 +81,7 @@ Small milestones:
 
 #### PR Gate: I1-P1 CLI Parser Compatibility Wrappers
 
+status: completed
 branch: `task/interface-i1-cli-parser-wrappers`
 
 Completion criteria:

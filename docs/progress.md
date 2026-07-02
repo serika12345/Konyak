@@ -13,24 +13,27 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-02 14:17 JST
+- Timestamp: 2026-07-02 15:06 JST
 - State: `completed`
-- Branch: `main`
-- Active work: define compatibility interface cleanup milestones.
-- Related TODO: `docs/todo.md` `I1: Compatibility Interface Cleanup`.
-- Pull request: not opened; documentation and governance preparation only.
-- Latest commit: base commit `ccce09e` (`Merge pull request #7`).
-- Purpose: make future `$konyak-advance-pr` runs target PR-sized cleanup gates
-  for compatibility interfaces that were preserved during earlier nullable and
-  boundary refactoring.
-- Completed work: added the I1 compatibility cleanup milestone with PR gates for
-  CLI parser wrappers, CLI command dispatch, Flutter dialog/picker decisions,
-  and Flutter JSON DTO optional fields; moved still-broad follow-up candidates
-  to `Deferred`; and updated governance so the new active refactoring milestone
-  section is allowed while stale R3/R4 gate entries remain forbidden.
-- Remaining work: run `$konyak-advance-pr` to start `I1-P1 CLI Parser
-  Compatibility Wrappers` on branch `task/interface-i1-cli-parser-wrappers`.
-- Next action: invoke `$konyak-advance-pr` when ready to begin I1-P1.
-- Verification: local verification passed with `just verify-governance`,
+- Branch: `task/interface-i1-cli-parser-wrappers`
+- Active work: I1-P1 CLI Parser Compatibility Wrappers.
+- Related TODO: `docs/todo.md` `I1: Compatibility Interface Cleanup`,
+  `I1-P1 CLI Parser Compatibility Wrappers`.
+- Pull request: https://github.com/serika12345/Konyak/pull/8
+- Latest commit: branch commit (`Remove CLI parser compatibility wrappers`).
+- Purpose: remove nullable parser compatibility wrappers from the runtime and
+  location CLI parser families while preserving public CLI behavior.
+- Completed work: added governance coverage that rejects the converted
+  runtime/location nullable parser wrappers; removed those wrappers from
+  `cli_runtime_parsers.dart` and `cli_location_parsers.dart`; updated runtime,
+  streaming runtime, and location command-selection call sites to use the
+  existing `Option` parser APIs directly; and marked I1-P1 as completed in
+  `docs/todo.md`.
+- Remaining work: review the draft PR. Do not advance into I1-P2 until I1-P1
+  has been reviewed and merged.
+- Next action: review https://github.com/serika12345/Konyak/pull/8.
+- Verification: `just verify-governance` was first run after the new governance
+  check and failed on the old `GptkWineInstallRequest?` wrapper as expected.
+  Final verification passed with `just cli-test`, `just verify-governance`,
   `just verify-safety`, `just format-check`, and `just lint` through the Nix dev
   shell.

@@ -2597,6 +2597,124 @@ def require_refactoring_documentation_cleanup() -> None:
     require_contains("docs/progress.md", "task/interface-i1-cli-parser-wrappers")
 
 
+def require_cli_parser_option_boundaries() -> None:
+    for relative_path, forbidden in [
+        (
+            "packages/konyak_cli/lib/src/cli/cli_runtime_parsers.dart",
+            "GptkWineInstallRequest? parseJsonGptkWineInstallRequest",
+        ),
+        (
+            "packages/konyak_cli/lib/src/cli/cli_runtime_parsers.dart",
+            "String? parseJsonOpenUrlCommand",
+        ),
+        (
+            "packages/konyak_cli/lib/src/cli/cli_runtime_parsers.dart",
+            "String? parseJsonRuntimeIdCommand",
+        ),
+        (
+            "packages/konyak_cli/lib/src/cli/cli_runtime_parsers.dart",
+            "MacosWineInstallRequest? parseJsonMacosWineInstallRequest",
+        ),
+        (
+            "packages/konyak_cli/lib/src/cli/cli_runtime_parsers.dart",
+            "LinuxWineInstallRequest? parseJsonLinuxWineInstallRequest",
+        ),
+        (
+            "packages/konyak_cli/lib/src/cli/cli_runtime_parsers.dart",
+            "RuntimeInstallCliOptions? parseRuntimeInstallCliOptions",
+        ),
+        (
+            "packages/konyak_cli/lib/src/cli/cli_location_parsers.dart",
+            "BottleLocationOpenCliRequest? parseJsonBottleLocationOpenCliRequest",
+        ),
+        (
+            "packages/konyak_cli/lib/src/cli/cli_location_parsers.dart",
+            "ProgramLocationOpenCliRequest? parseJsonProgramLocationOpenCliRequest",
+        ),
+    ]:
+        require_not_contains(relative_path, forbidden)
+
+    for relative_path, forbidden in [
+        (
+            "packages/konyak_cli/lib/src/cli/cli_app_runtime_handlers.dart",
+            "parseJsonGptkWineInstallRequest(arguments)",
+        ),
+        (
+            "packages/konyak_cli/lib/src/cli/cli_app_runtime_handlers.dart",
+            "parseJsonOpenUrlCommand(arguments)",
+        ),
+        (
+            "packages/konyak_cli/lib/src/cli/cli_app_runtime_handlers.dart",
+            "parseJsonRuntimeIdCommand(",
+        ),
+        (
+            "packages/konyak_cli/lib/src/cli/cli_app_runtime_handlers.dart",
+            "parseJsonMacosWineInstallRequest(arguments)",
+        ),
+        (
+            "packages/konyak_cli/lib/src/cli/cli_app_runtime_handlers.dart",
+            "parseJsonLinuxWineInstallRequest(arguments)",
+        ),
+        (
+            "packages/konyak_cli/lib/src/cli/cli_injected_runner.dart",
+            "parseJsonMacosWineInstallRequest(arguments)",
+        ),
+        (
+            "packages/konyak_cli/lib/src/cli/cli_injected_runner.dart",
+            "parseJsonLinuxWineInstallRequest(arguments)",
+        ),
+        (
+            "packages/konyak_cli/lib/src/cli/cli_location_winetricks_handlers.dart",
+            "parseJsonBottleLocationOpenCliRequest(arguments)",
+        ),
+        (
+            "packages/konyak_cli/lib/src/cli/cli_location_winetricks_handlers.dart",
+            "parseJsonProgramLocationOpenCliRequest(arguments)",
+        ),
+    ]:
+        require_not_contains(relative_path, forbidden)
+
+    for relative_path, expected in [
+        (
+            "packages/konyak_cli/lib/src/cli/cli_app_runtime_handlers.dart",
+            "parseJsonGptkWineInstallRequestOption(",
+        ),
+        (
+            "packages/konyak_cli/lib/src/cli/cli_app_runtime_handlers.dart",
+            "parseJsonOpenUrlCommandOption(",
+        ),
+        (
+            "packages/konyak_cli/lib/src/cli/cli_app_runtime_handlers.dart",
+            "parseJsonRuntimeIdCommandOption(",
+        ),
+        (
+            "packages/konyak_cli/lib/src/cli/cli_app_runtime_handlers.dart",
+            "parseJsonMacosWineInstallRequestOption(",
+        ),
+        (
+            "packages/konyak_cli/lib/src/cli/cli_app_runtime_handlers.dart",
+            "parseJsonLinuxWineInstallRequestOption(",
+        ),
+        (
+            "packages/konyak_cli/lib/src/cli/cli_injected_runner.dart",
+            "parseJsonMacosWineInstallRequestOption(",
+        ),
+        (
+            "packages/konyak_cli/lib/src/cli/cli_injected_runner.dart",
+            "parseJsonLinuxWineInstallRequestOption(",
+        ),
+        (
+            "packages/konyak_cli/lib/src/cli/cli_location_winetricks_handlers.dart",
+            "parseJsonBottleLocationOpenCliRequestOption(",
+        ),
+        (
+            "packages/konyak_cli/lib/src/cli/cli_location_winetricks_handlers.dart",
+            "parseJsonProgramLocationOpenCliRequestOption(",
+        ),
+    ]:
+        require_contains(relative_path, expected)
+
+
 def require_konyak_cli_public_exports() -> None:
     lines = read_text("packages/konyak_cli/lib/konyak_cli.dart").splitlines()
     if lines != KONYAK_CLI_PUBLIC_EXPORT_LINES:
@@ -3657,6 +3775,7 @@ def main() -> None:
     require_refactoring_file_growth_limits()
     require_flutter_view_model_extraction_boundaries()
     require_refactoring_documentation_cleanup()
+    require_cli_parser_option_boundaries()
     require_typed_domain_string_maps()
     require_runtime_ssot_rules()
     require_no_cli_state_errors()
