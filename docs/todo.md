@@ -268,16 +268,17 @@ as a value object.
 
 Small milestones:
 
-- [ ] I2-S1: Audit remaining primitive, nullable, and hand-written test-part
-  exceptions and classify each as an allowed boundary, a code cleanup candidate,
-  or a deferred design decision.
-- [ ] I2-S2: Remove hand-written `part` usage from CLI contract tests in
-  coherent families by moving coverage to standalone test files or shared test
+- [ ] I2-S2a: Remove low-dependency hand-written CLI contract test `part`
+  usage by moving seed coverage to standalone test files or shared test
   helpers.
-- [ ] I2-S3: Convert selected stable semantic planner/request primitives to
+- [ ] I2-S2b: Remove high-volume hand-written CLI contract test `part` usage
+  from app/bottle, program, runtime process/update, and runtime install
+  families after the seed split proves the helper shape.
+- [ ] I2-S3: Convert selected stable semantic constructor primitives to
   value objects at domain-facing APIs while keeping JSON and argv projection at
   CLI/I/O boundaries.
-- [ ] I2-S4: Reassess `ProgramRunPlanner` host-platform, runner-kind, and
+- [ ] I2-S4: Reassess nullable command-selection bridges and
+  `ProgramRunPlanner` host-platform, runner-kind, and
   graphics-backend policy structure; split only where the audit shows stable
   responsibilities and reduced complexity.
 - [ ] I2-S5: Tighten governance and custom lint checks for completed I2
@@ -285,6 +286,7 @@ Small milestones:
 
 #### PR Gate: I2-P1 Primitive Boundary Audit
 
+status: completed
 branch: `task/interface-i2-primitive-boundary-audit`
 
 Completion criteria:
@@ -320,6 +322,116 @@ review gate:
 
 - Commit and push the branch, open a draft PR, then stop before implementing
   I2 code conversions.
+
+#### PR Gate: I2-P2 CLI Contract Seed Test Part Split
+
+branch: `task/interface-i2-cli-contract-seed-tests`
+
+Completion criteria:
+
+- Convert the low-dependency CLI contract `part` files
+  `cli_contract_executable.part.dart`, `cli_contract_command_dispatch.part.dart`,
+  and `cli_contract_repository_runner.part.dart` into standalone tests or shared
+  test helpers.
+- Remove the converted `part` directives from `cli_contract_test.dart` without
+  changing public CLI JSON, argv, exit-code, app, or runtime behavior.
+- Keep equivalent contract assertions for the converted files and preserve the
+  remaining high-volume contract part files for later gates.
+- Add or update governance so the converted seed files cannot regress to
+  hand-written `part` usage.
+- `docs/progress.md` records the gate state, latest commit, verification, and
+  next action.
+
+Not included:
+
+- Converting app/bottle, pinned program, program execution, runtime
+  process/update, or runtime install contract parts.
+- Public CLI schema or command behavior changes.
+- Flutter widget test part cleanup.
+
+Verification:
+
+- `just cli-test`
+- `just verify-governance`
+- `just verify-safety`
+- `just format-check`
+- `just lint`
+
+review gate:
+
+- Commit and push the branch, open a draft PR, then stop before high-volume CLI
+  contract test splitting.
+
+#### PR Gate: I2-P3 CLI Contract Family Test Part Split
+
+branch: `task/interface-i2-cli-contract-family-tests`
+
+Completion criteria:
+
+- Convert the remaining CLI contract `part` files for app/bottle, pinned
+  program, program execution, runtime process/update, and runtime install into
+  standalone test files or shared helpers.
+- Remove `part` usage from `packages/konyak_cli/test/cli_contract_test.dart`
+  entirely while keeping equivalent contract coverage.
+- Add or update governance so CLI contract tests cannot reintroduce
+  hand-written `part` usage.
+- `docs/progress.md` records the gate state, latest commit, verification, and
+  next action.
+
+Not included:
+
+- Flutter widget test part cleanup.
+- Public CLI schema or command behavior changes.
+- Domain primitive constructor conversion.
+
+Verification:
+
+- `just cli-test`
+- `just verify-governance`
+- `just verify-safety`
+- `just format-check`
+- `just lint`
+
+review gate:
+
+- Commit and push the branch, open a draft PR, then stop before constructor or
+  command-selection boundary conversion.
+
+#### PR Gate: I2-P4 Semantic Constructor Primitive Fronts
+
+branch: `task/interface-i2-semantic-constructor-fronts`
+
+Completion criteria:
+
+- Convert selected stable constructor fronts that already validate primitives
+  into value objects, starting with settings/runtime fields where call sites are
+  controlled and invariants already exist.
+- Keep primitive decoding/projection at JSON, argv, persisted metadata, and I/O
+  adapter boundaries.
+- Add or update focused tests for converted constructor behavior without
+  asserting obsolete implementation details.
+- Update governance only for the converted constructors.
+- `docs/progress.md` records the gate state, latest commit, verification, and
+  next action.
+
+Not included:
+
+- Runtime manifest/schema type redesign.
+- Public CLI JSON schema changes.
+- ProgramRunPlanner responsibility splitting.
+
+Verification:
+
+- `just cli-test`
+- `just verify-governance`
+- `just verify-safety`
+- `just format-check`
+- `just lint`
+
+review gate:
+
+- Commit and push the branch, open a draft PR, then stop before nullable
+  command-selection or planner policy changes.
 
 ## Deferred
 
