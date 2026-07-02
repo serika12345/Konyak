@@ -63,19 +63,6 @@ objects directly.
 
 Small milestones:
 
-- [ ] I1-S1: Replace CLI parser compatibility wrappers that return nullable
-  requests or primitive values with `Option`-returning parser APIs at command
-  selection call sites.
-- [ ] I1-S2: Replace nullable `CliResult?` command-handler dispatch with an
-  explicit command-match or command-dispatch result so command selection is not
-  encoded as nullable absence.
-- [ ] I1-S3: Convert remaining Konyak-owned Flutter dialog/picker decision
-  inputs that use nullable compatibility bridges into explicit decision or pick
-  result variants, leaving `null` only at framework/OS adapter calls.
-- [ ] I1-S4: Audit Flutter CLI JSON DTOs and app-facing summary models for
-  nullable fields that are only preserving old JSON parser shapes; keep
-  optional external JSON input nullable, but expose explicit app result models
-  after parsing.
 - [ ] I1-S5: Remove or tighten governance allowances that exist only for the
   compatibility wrappers removed by I1.
 
@@ -229,6 +216,47 @@ review gate:
 
 - Commit and push the branch, open a draft PR, then stop before any new
   milestone is added.
+
+#### PR Gate: I1-P5 Refactoring Governance Allowance Cleanup
+
+branch: `task/interface-i1-governance-allowances`
+
+Completion criteria:
+
+- Audit the I1-P1 through I1-P4 governance checks and custom lint allowlists for
+  temporary compatibility allowances that only existed to land the earlier
+  wrapper removals incrementally.
+- Remove stale allowances or replace brittle compatibility-specific string
+  checks with stable boundary checks that describe the current app and CLI
+  contracts.
+- Confirm remaining nullable, primitive, and JSON boundary exceptions are
+  limited to framework, platform, parser, or serialization adapters and are
+  enforced or documented by governance.
+- Update governance tests or script checks so removed compatibility wrappers
+  cannot regress without preserving obsolete implementation details as the
+  contract.
+- `docs/progress.md` records the gate state, latest commit, verification, and
+  next action.
+
+Not included:
+
+- Public CLI JSON schema changes.
+- App or runtime behavior changes.
+- Broad nullable cleanup outside stale governance allowances.
+- Starting the next refactoring milestone after I1.
+
+Verification:
+
+- `just verify-governance`
+- `just verify-safety`
+- `just format-check`
+- `just lint`
+- `just konyak-lints-test` if custom lint implementation or lint tests change.
+
+review gate:
+
+- Commit and push the branch, open a draft PR, then stop before adding or
+  starting any post-I1 milestone.
 
 ## Deferred
 
