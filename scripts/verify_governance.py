@@ -2579,6 +2579,8 @@ def require_refactoring_documentation_cleanup() -> None:
         "branch: `task/interface-i1-flutter-dialog-decisions`",
         "#### PR Gate: I1-P4 Flutter JSON DTO Optional Fields",
         "branch: `task/interface-i1-flutter-json-dtos`",
+        "#### PR Gate: I1-P5 Refactoring Governance Allowance Cleanup",
+        "branch: `task/interface-i1-governance-allowances`",
     ]:
         require_contains("docs/todo.md", expected)
 
@@ -2597,7 +2599,10 @@ def require_refactoring_documentation_cleanup() -> None:
     ]:
         require_not_contains("docs/progress.md", stale_branch)
     require_contains("docs/progress.md", "Compatibility Interface Cleanup")
-    require_contains("docs/progress.md", "task/interface-i1-flutter-json-dtos")
+    require_contains(
+        "docs/progress.md",
+        "I1-P5 Refactoring Governance Allowance Cleanup",
+    )
 
 
 def require_cli_parser_option_boundaries() -> None:
