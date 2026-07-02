@@ -36,12 +36,6 @@ sealed class OpenExecutableBottleChoice with _$OpenExecutableBottleChoice {
       UnavailableOpenExecutableBottleChoice;
 }
 
-OpenExecutableDecision openExecutableDecisionFromNullable(
-  OpenExecutableDecision? decision,
-) {
-  return decision ?? const OpenExecutableDecision.cancelled();
-}
-
 OpenExecutableBottleChoice initialOpenExecutableBottleChoice(
   List<BottleSummary> bottles,
 ) {

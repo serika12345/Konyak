@@ -3,18 +3,16 @@ import 'package:konyak/src/app/bottles/bottle_action_availability.dart';
 import 'package:konyak/src/app/programs/pinned_program_context_menu.dart';
 
 void main() {
-  test('models dismissed pinned program context menus explicitly', () {
+  test('models pinned program context menu decisions explicitly', () {
     expect(
-      pinnedProgramContextMenuDecisionFromNullable(null),
       const PinnedProgramContextMenuDecision.cancelled(),
+      isA<CancelledPinnedProgramContextMenu>(),
     );
     expect(
-      pinnedProgramContextMenuDecisionFromNullable(
-        PinnedProgramContextMenuAction.run,
-      ),
       const PinnedProgramContextMenuDecision.select(
         PinnedProgramContextMenuAction.run,
       ),
+      isA<SelectedPinnedProgramContextMenuAction>(),
     );
   });
 

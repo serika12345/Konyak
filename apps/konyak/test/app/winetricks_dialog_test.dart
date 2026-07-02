@@ -3,16 +3,14 @@ import 'package:konyak/src/app/dialogs/winetricks_dialog.dart';
 import 'package:konyak/src/cli/konyak_cli_client.dart';
 
 void main() {
-  test('models dismissed winetricks dialogs explicitly', () {
-    const installDecision = WinetricksVerbDecision.install('vcrun2022');
-
+  test('models winetricks dialog decisions explicitly', () {
     expect(
-      winetricksVerbDecisionFromNullable(null),
-      const WinetricksVerbDecision.cancelled(),
+      const WinetricksVerbDecision.install('vcrun2022'),
+      isA<InstallWinetricksVerb>(),
     );
     expect(
-      winetricksVerbDecisionFromNullable(installDecision),
-      installDecision,
+      const WinetricksVerbDecision.cancelled(),
+      isA<CancelledWinetricksDialog>(),
     );
   });
 

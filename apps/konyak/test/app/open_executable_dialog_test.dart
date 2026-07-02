@@ -3,14 +3,15 @@ import 'package:konyak/src/app/dialogs/open_executable_dialog.dart';
 import 'package:konyak/src/bottles/bottle_summary.dart';
 
 void main() {
-  test('models dismissed open executable dialogs explicitly', () {
-    const createDecision = OpenExecutableDecision.createBottle();
-
+  test('models open executable dialog decisions explicitly', () {
     expect(
-      openExecutableDecisionFromNullable(null),
-      const OpenExecutableDecision.cancelled(),
+      const OpenExecutableDecision.createBottle(),
+      isA<CreateBottleForExecutable>(),
     );
-    expect(openExecutableDecisionFromNullable(createDecision), createDecision);
+    expect(
+      const OpenExecutableDecision.cancelled(),
+      isA<CancelledOpenExecutableDialog>(),
+    );
   });
 
   test('models unavailable bottle choices explicitly', () {

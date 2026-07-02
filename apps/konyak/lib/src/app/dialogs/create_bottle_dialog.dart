@@ -20,12 +20,6 @@ sealed class CreateBottleDecision with _$CreateBottleDecision {
   const factory CreateBottleDecision.cancelled() = CancelledCreateBottleDialog;
 }
 
-CreateBottleDecision createBottleDecisionFromNullable(
-  CreateBottleDecision? decision,
-) {
-  return decision ?? const CreateBottleDecision.cancelled();
-}
-
 class CreateBottleDialog extends StatefulWidget {
   const CreateBottleDialog({super.key});
 

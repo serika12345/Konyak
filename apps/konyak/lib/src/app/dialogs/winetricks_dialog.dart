@@ -30,12 +30,6 @@ sealed class WinetricksVerbSelection with _$WinetricksVerbSelection {
   const factory WinetricksVerbSelection.none() = NoWinetricksVerbSelection;
 }
 
-WinetricksVerbDecision winetricksVerbDecisionFromNullable(
-  WinetricksVerbDecision? decision,
-) {
-  return decision ?? const WinetricksVerbDecision.cancelled();
-}
-
 WinetricksVerbSelection winetricksVerbSelectionById({
   required List<WinetricksCategorySummary> categories,
   required String verbId,

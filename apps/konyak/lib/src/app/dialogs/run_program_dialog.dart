@@ -51,12 +51,6 @@ sealed class RunProgramGraphicsBackendHintState
       FailedRunProgramGraphicsBackendHint;
 }
 
-RunProgramDialogDecision runProgramDialogDecisionFromNullable(
-  RunProgramDialogDecision? decision,
-) {
-  return decision ?? const RunProgramDialogDecision.cancelled();
-}
-
 RunProgramGraphicsBackendHintState
 runProgramGraphicsBackendHintStateFromLoadResult(
   GraphicsBackendHintsLoadResult result,

@@ -2576,6 +2576,7 @@ def require_refactoring_documentation_cleanup() -> None:
         "#### PR Gate: I1-P2 CLI Command Dispatch",
         "branch: `task/interface-i1-cli-command-dispatch`",
         "#### PR Gate: I1-P3 Flutter Dialog and Picker Decisions",
+        "branch: `task/interface-i1-flutter-dialog-decisions`",
         "#### PR Gate: I1-P4 Flutter JSON DTO Optional Fields",
     ]:
         require_contains("docs/todo.md", expected)
@@ -2595,7 +2596,7 @@ def require_refactoring_documentation_cleanup() -> None:
     ]:
         require_not_contains("docs/progress.md", stale_branch)
     require_contains("docs/progress.md", "Compatibility Interface Cleanup")
-    require_contains("docs/progress.md", "task/interface-i1-cli-command-dispatch")
+    require_contains("docs/progress.md", "task/interface-i1-flutter-dialog-decisions")
 
 
 def require_cli_parser_option_boundaries() -> None:
@@ -2781,6 +2782,104 @@ def require_cli_command_dispatch_boundaries() -> None:
         "packages/konyak_cli/test/cli_contract_command_dispatch.part.dart",
         "location command dispatch reports unmatched commands explicitly",
     )
+
+
+def require_flutter_dialog_decision_boundaries() -> None:
+    require_contains(
+        "apps/konyak/lib/src/app/dialogs/dialog_decision.dart",
+        "Future<T> showDialogDecision<T extends Object>",
+    )
+    require_contains(
+        "apps/konyak/test/app/dialog_decision_test.dart",
+        "returns an explicit dismissed decision when a dialog is closed",
+    )
+
+    for relative_path in [
+        "apps/konyak/lib/src/app/dialogs/create_bottle_dialog.dart",
+        "apps/konyak/lib/src/app/dialogs/bottle_management_dialogs.dart",
+        "apps/konyak/lib/src/app/dialogs/pin_program_dialog.dart",
+        "apps/konyak/lib/src/app/dialogs/run_program_dialog.dart",
+        "apps/konyak/lib/src/app/dialogs/confirmation_decision.dart",
+        "apps/konyak/lib/src/app/dialogs/open_executable_dialog.dart",
+        "apps/konyak/lib/src/app/dialogs/winetricks_dialog.dart",
+        "apps/konyak/lib/src/app/home/sidebar_bottle_item.dart",
+        "apps/konyak/lib/src/app/programs/pinned_program_context_menu.dart",
+    ]:
+        require_not_contains(relative_path, "DecisionFromNullable")
+        require_not_contains(relative_path, "Decision? decision")
+        require_not_contains(relative_path, "ContextMenuAction? action")
+
+    require_contains(
+        "apps/konyak/lib/src/app/home/sidebar_bottle_item.dart",
+        "sealed class BottleContextMenuDecision",
+    )
+    require_contains(
+        "apps/konyak/test/app/sidebar_bottle_item_test.dart",
+        "models bottle context menu decisions explicitly",
+    )
+    require_not_contains(
+        "apps/konyak/lib/src/app/home/sidebar_bottle_item.dart",
+        "selectedAction == null",
+    )
+
+    for relative_path, expected in [
+        (
+            "apps/konyak/lib/src/home_loader/home_loader_bottles.dart",
+            "showDialogDecision<CreateBottleDecision>",
+        ),
+        (
+            "apps/konyak/lib/src/home_loader/home_loader_bottles.dart",
+            "showDialogDecision<DeleteBottleDecision>",
+        ),
+        (
+            "apps/konyak/lib/src/home_loader/home_loader_bottles.dart",
+            "showDialogDecision<RenameBottleDecision>",
+        ),
+        (
+            "apps/konyak/lib/src/home_loader/home_loader_bottles.dart",
+            "showDialogDecision<MoveBottleDecision>",
+        ),
+        (
+            "apps/konyak/lib/src/home_loader/home_loader_pinned_programs.dart",
+            "showDialogDecision<PinProgramDecision>",
+        ),
+        (
+            "apps/konyak/lib/src/home_loader/home_loader_pinned_programs.dart",
+            "showDialogDecision<RenamePinnedProgramDecision>",
+        ),
+        (
+            "apps/konyak/lib/src/home_loader/home_loader_programs.dart",
+            "showDialogDecision<RunProgramDialogDecision>",
+        ),
+        (
+            "apps/konyak/lib/src/home_loader/home_loader_executables.dart",
+            "showDialogDecision<OpenExecutableDecision>",
+        ),
+        (
+            "apps/konyak/lib/src/home_loader/home_loader_winetricks.dart",
+            "showDialogDecision<WinetricksVerbDecision>",
+        ),
+        (
+            "apps/konyak/lib/src/home_loader/home_loader_runtimes.dart",
+            "showDialogDecision<ConfirmationDecision>",
+        ),
+        (
+            "apps/konyak/lib/src/app/dialogs/app_settings_dialog.dart",
+            "showDialogDecision<ConfirmationDecision>",
+        ),
+    ]:
+        require_contains(relative_path, expected)
+
+    for relative_path in [
+        "apps/konyak/lib/src/home_loader/home_loader_bottles.dart",
+        "apps/konyak/lib/src/home_loader/home_loader_pinned_programs.dart",
+        "apps/konyak/lib/src/home_loader/home_loader_programs.dart",
+        "apps/konyak/lib/src/home_loader/home_loader_executables.dart",
+        "apps/konyak/lib/src/home_loader/home_loader_winetricks.dart",
+        "apps/konyak/lib/src/home_loader/home_loader_runtimes.dart",
+        "apps/konyak/lib/src/app/dialogs/app_settings_dialog.dart",
+    ]:
+        require_not_contains(relative_path, "DecisionFromNullable")
 
 
 def require_konyak_cli_public_exports() -> None:
@@ -3845,6 +3944,7 @@ def main() -> None:
     require_refactoring_documentation_cleanup()
     require_cli_parser_option_boundaries()
     require_cli_command_dispatch_boundaries()
+    require_flutter_dialog_decision_boundaries()
     require_typed_domain_string_maps()
     require_runtime_ssot_rules()
     require_no_cli_state_errors()

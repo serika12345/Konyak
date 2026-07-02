@@ -4,17 +4,17 @@ import 'package:konyak/src/cli/konyak_cli_program_commands.dart';
 import 'package:konyak/src/cli/konyak_cli_program_result_types.dart';
 
 void main() {
-  test('models dismissed run program dialogs explicitly', () {
-    final runDecision = const RunProgramDialogDecision.run(
+  test('models run program dialog decisions explicitly', () {
+    const decision = RunProgramDialogDecision.run(
       programPath: '/downloads/setup.exe',
       settings: NoProgramRunSettings(),
     );
 
+    expect(decision, isA<RunProgramFromDialog>());
     expect(
-      runProgramDialogDecisionFromNullable(null),
       const RunProgramDialogDecision.cancelled(),
+      isA<CancelledRunProgramDialog>(),
     );
-    expect(runProgramDialogDecisionFromNullable(runDecision), runDecision);
   });
 
   test('maps loaded graphics backend hints to explicit UI state', () {

@@ -154,6 +154,7 @@ review gate:
 
 #### PR Gate: I1-P3 Flutter Dialog and Picker Decisions
 
+status: completed
 branch: `task/interface-i1-flutter-dialog-decisions`
 
 Completion criteria:

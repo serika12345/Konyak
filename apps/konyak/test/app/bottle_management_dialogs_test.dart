@@ -2,46 +2,44 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:konyak/src/app/dialogs/bottle_management_dialogs.dart';
 
 void main() {
-  test('models dismissed delete bottle dialogs explicitly', () {
-    const deleteDecision = DeleteBottleDecision.delete();
-
+  test('models delete bottle dialog decisions explicitly', () {
+    expect(const DeleteBottleDecision.delete(), isA<DeleteBottleConfirmed>());
     expect(
-      deleteBottleDecisionFromNullable(null),
       const DeleteBottleDecision.cancelled(),
+      isA<CancelledDeleteBottleDialog>(),
     );
-    expect(deleteBottleDecisionFromNullable(deleteDecision), deleteDecision);
   });
 
-  test('models dismissed rename bottle dialogs explicitly', () {
-    const renameDecision = RenameBottleDecision.rename('Steam');
-
+  test('models rename bottle dialog decisions explicitly', () {
     expect(
-      renameBottleDecisionFromNullable(null),
+      const RenameBottleDecision.rename('Steam'),
+      isA<RenameBottleToName>(),
+    );
+    expect(
       const RenameBottleDecision.cancelled(),
+      isA<CancelledRenameBottleDialog>(),
     );
-    expect(renameBottleDecisionFromNullable(renameDecision), renameDecision);
   });
 
-  test('models dismissed rename pinned program dialogs explicitly', () {
-    const renameDecision = RenamePinnedProgramDecision.rename('Setup');
-
+  test('models rename pinned program dialog decisions explicitly', () {
     expect(
-      renamePinnedProgramDecisionFromNullable(null),
+      const RenamePinnedProgramDecision.rename('Setup'),
+      isA<RenamePinnedProgramToName>(),
+    );
+    expect(
       const RenamePinnedProgramDecision.cancelled(),
-    );
-    expect(
-      renamePinnedProgramDecisionFromNullable(renameDecision),
-      renameDecision,
+      isA<CancelledRenamePinnedProgramDialog>(),
     );
   });
 
-  test('models dismissed move bottle dialogs explicitly', () {
-    const moveDecision = MoveBottleDecision.move('/bottles/steam');
-
+  test('models move bottle dialog decisions explicitly', () {
     expect(
-      moveBottleDecisionFromNullable(null),
-      const MoveBottleDecision.cancelled(),
+      const MoveBottleDecision.move('/bottles/steam'),
+      isA<MoveBottleToPath>(),
     );
-    expect(moveBottleDecisionFromNullable(moveDecision), moveDecision);
+    expect(
+      const MoveBottleDecision.cancelled(),
+      isA<CancelledMoveBottleDialog>(),
+    );
   });
 }

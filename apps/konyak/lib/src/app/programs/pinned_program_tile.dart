@@ -180,28 +180,31 @@ class _PinnedProgramTileState extends State<PinnedProgramTile>
     final colors = KonyakThemeColors.of(context);
     final localizations = KonyakLocalizations.of(context);
     final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
-    final decision = pinnedProgramContextMenuDecisionFromNullable(
-      await showMenu<PinnedProgramContextMenuAction>(
-        context: context,
-        position: RelativeRect.fromRect(
-          Rect.fromPoints(globalPosition, globalPosition),
-          Offset.zero & overlay.size,
-        ),
-        color: colors.menuBackground,
-        popUpAnimationStyle: AnimationStyle.noAnimation,
-        shape: RoundedRectangleBorder(
-          side: BorderSide(color: colors.menuBorder),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        constraints: const BoxConstraints(minWidth: 220, maxWidth: 220),
-        items: pinnedProgramContextMenuItems(
-          colors,
-          widget.platform,
-          localizations,
-          availableActions: availableActions,
-        ),
+    final selectedAction = await showMenu<PinnedProgramContextMenuAction>(
+      context: context,
+      position: RelativeRect.fromRect(
+        Rect.fromPoints(globalPosition, globalPosition),
+        Offset.zero & overlay.size,
+      ),
+      color: colors.menuBackground,
+      popUpAnimationStyle: AnimationStyle.noAnimation,
+      shape: RoundedRectangleBorder(
+        side: BorderSide(color: colors.menuBorder),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      constraints: const BoxConstraints(minWidth: 220, maxWidth: 220),
+      items: pinnedProgramContextMenuItems(
+        colors,
+        widget.platform,
+        localizations,
+        availableActions: availableActions,
       ),
     );
+    final decision = switch (selectedAction) {
+      final PinnedProgramContextMenuAction action =>
+        PinnedProgramContextMenuDecision.select(action),
+      null => const PinnedProgramContextMenuDecision.cancelled(),
+    };
 
     if (!mounted) {
       return;

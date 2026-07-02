@@ -22,12 +22,6 @@ sealed class PinProgramDecision with _$PinProgramDecision {
   const factory PinProgramDecision.cancelled() = CancelledPinProgramDialog;
 }
 
-PinProgramDecision pinProgramDecisionFromNullable(
-  PinProgramDecision? decision,
-) {
-  return decision ?? const PinProgramDecision.cancelled();
-}
-
 class PinProgramDialog extends StatefulWidget {
   const PinProgramDialog({
     super.key,

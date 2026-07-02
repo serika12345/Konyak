@@ -12,9 +12,3 @@ sealed class ConfirmationDecision with _$ConfirmationDecision {
 
   const factory ConfirmationDecision.cancelled() = CancelledDialogDecision;
 }
-
-ConfirmationDecision confirmationDecisionFromNullable(
-  ConfirmationDecision? decision,
-) {
-  return decision ?? const ConfirmationDecision.cancelled();
-}
