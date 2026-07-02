@@ -1365,7 +1365,6 @@ bool _isExternalNullBoundaryPath(String normalizedPath) {
     'apps/konyak/lib/src/runtimes/',
     'apps/konyak/lib/src/runs/',
     'apps/konyak/lib/src/settings/',
-    'apps/konyak/lib/src/updates/',
   ];
   if (appBoundaryPrefixes.any(relativePath.startsWith)) {
     return true;

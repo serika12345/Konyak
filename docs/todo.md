@@ -63,8 +63,7 @@ objects directly.
 
 Small milestones:
 
-- [ ] I1-S5: Remove or tighten governance allowances that exist only for the
-  compatibility wrappers removed by I1.
+- No active I1 small milestones remain.
 
 #### PR Gate: I1-P1 CLI Parser Compatibility Wrappers
 
@@ -219,6 +218,7 @@ review gate:
 
 #### PR Gate: I1-P5 Refactoring Governance Allowance Cleanup
 
+status: completed
 branch: `task/interface-i1-governance-allowances`
 
 Completion criteria:

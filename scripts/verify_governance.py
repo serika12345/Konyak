@@ -2958,6 +2958,37 @@ def require_flutter_update_optional_field_boundaries() -> None:
         require_not_contains(relative_path, forbidden)
 
 
+def require_refactoring_governance_allowance_cleanup() -> None:
+    lint_rules = "tools/konyak_lints/lib/konyak_lints.dart"
+    require_not_contains(lint_rules, "'apps/konyak/lib/src/updates/',")
+    require_contains(
+        lint_rules,
+        "'apps/konyak/lib/src/cli/konyak_cli_update_payload_parsers.dart'",
+    )
+
+    require_not_contains(
+        "apps/konyak/lib/src/updates/update_check_summary.dart",
+        "String?",
+    )
+    require_contains(
+        "tools/konyak_lints/test/konyak_lints_test.dart",
+        "invalid Flutter fixture reports app-facing nullable violations",
+    )
+    require_contains(
+        "tools/konyak_lints/test/fixtures/invalid/apps/konyak/"
+        "lib/src/updates/update_check_summary.dart",
+        "final String? latestVersion;",
+    )
+    require_contains(
+        "docs/todo.md",
+        "status: completed\nbranch: `task/interface-i1-governance-allowances`",
+    )
+    require_contains(
+        "docs/progress.md",
+        "task/interface-i1-governance-allowances",
+    )
+
+
 def require_konyak_cli_public_exports() -> None:
     lines = read_text("packages/konyak_cli/lib/konyak_cli.dart").splitlines()
     if lines != KONYAK_CLI_PUBLIC_EXPORT_LINES:
@@ -4022,6 +4053,7 @@ def main() -> None:
     require_cli_command_dispatch_boundaries()
     require_flutter_dialog_decision_boundaries()
     require_flutter_update_optional_field_boundaries()
+    require_refactoring_governance_allowance_cleanup()
     require_typed_domain_string_maps()
     require_runtime_ssot_rules()
     require_no_cli_state_errors()
