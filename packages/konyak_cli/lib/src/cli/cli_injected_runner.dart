@@ -40,38 +40,74 @@ Future<CliResult> runCliStreaming(
   MacosWineStreamingInstaller? macosWineStreamingInstaller,
   LinuxWineStreamingInstaller? linuxWineStreamingInstaller,
 }) async {
-  final macosWineInstallRequest = parseJsonMacosWineInstallRequest(arguments);
   final activeMacosWineStreamingInstaller =
       macosWineStreamingInstaller ??
       switch (context.macosWineInstaller) {
         final MacosWineStreamingInstaller installer => installer,
         _ => null,
       };
-  if (macosWineInstallRequest?.emitProgress == true &&
-      activeMacosWineStreamingInstaller != null) {
-    final installResult = await activeMacosWineStreamingInstaller
-        .installStreaming(
-          macosWineInstallRequest!,
-          progressSink: context.runtimeInstallProgressSink,
-        );
-    return macosWineInstallCliResult(installResult);
+  final macosWineInstallMatch =
+      await parseJsonMacosWineInstallRequestOption(
+        arguments,
+      ).match<Future<_StreamingInstallMatch>>(
+        () async {
+          return const _StreamingInstallNotMatched();
+        },
+        (macosWineInstallRequest) async {
+          if (!macosWineInstallRequest.emitProgress ||
+              activeMacosWineStreamingInstaller == null) {
+            return const _StreamingInstallNotMatched();
+          }
+
+          final installResult = await activeMacosWineStreamingInstaller
+              .installStreaming(
+                macosWineInstallRequest,
+                progressSink: context.runtimeInstallProgressSink,
+              );
+          return _StreamingInstallMatched(
+            macosWineInstallCliResult(installResult),
+          );
+        },
+      );
+  switch (macosWineInstallMatch) {
+    case _StreamingInstallMatched(:final result):
+      return result;
+    case _StreamingInstallNotMatched():
   }
 
-  final linuxWineInstallRequest = parseJsonLinuxWineInstallRequest(arguments);
   final activeLinuxWineStreamingInstaller =
       linuxWineStreamingInstaller ??
       switch (context.linuxWineInstaller) {
         final LinuxWineStreamingInstaller installer => installer,
         _ => null,
       };
-  if (linuxWineInstallRequest?.emitProgress == true &&
-      activeLinuxWineStreamingInstaller != null) {
-    final installResult = await activeLinuxWineStreamingInstaller
-        .installStreaming(
-          linuxWineInstallRequest!,
-          progressSink: context.runtimeInstallProgressSink,
-        );
-    return linuxWineInstallCliResult(installResult);
+  final linuxWineInstallMatch =
+      await parseJsonLinuxWineInstallRequestOption(
+        arguments,
+      ).match<Future<_StreamingInstallMatch>>(
+        () async {
+          return const _StreamingInstallNotMatched();
+        },
+        (linuxWineInstallRequest) async {
+          if (!linuxWineInstallRequest.emitProgress ||
+              activeLinuxWineStreamingInstaller == null) {
+            return const _StreamingInstallNotMatched();
+          }
+
+          final installResult = await activeLinuxWineStreamingInstaller
+              .installStreaming(
+                linuxWineInstallRequest,
+                progressSink: context.runtimeInstallProgressSink,
+              );
+          return _StreamingInstallMatched(
+            linuxWineInstallCliResult(installResult),
+          );
+        },
+      );
+  switch (linuxWineInstallMatch) {
+    case _StreamingInstallMatched(:final result):
+      return result;
+    case _StreamingInstallNotMatched():
   }
 
   if (isJsonWineProcessListCommand(arguments)) {
@@ -101,4 +137,18 @@ Future<CliResult> runCliStreaming(
   }
 
   return runCli(arguments, context: context);
+}
+
+sealed class _StreamingInstallMatch {
+  const _StreamingInstallMatch();
+}
+
+final class _StreamingInstallNotMatched extends _StreamingInstallMatch {
+  const _StreamingInstallNotMatched();
+}
+
+final class _StreamingInstallMatched extends _StreamingInstallMatch {
+  const _StreamingInstallMatched(this.result);
+
+  final CliResult result;
 }

@@ -16,21 +16,32 @@ CliResult? handleLocationCommand(
   List<String> arguments,
   CliCommandContext context,
 ) {
-  final bottleLocationOpenCliRequest = parseJsonBottleLocationOpenCliRequest(
-    arguments,
-  );
-  if (bottleLocationOpenCliRequest != null) {
-    return openBottleLocationJsonResult(bottleLocationOpenCliRequest, context);
+  final bottleLocationOpenResult =
+      parseJsonBottleLocationOpenCliRequestOption(arguments).match<CliResult?>(
+        () => null,
+        (bottleLocationOpenCliRequest) {
+          return openBottleLocationJsonResult(
+            bottleLocationOpenCliRequest,
+            context,
+          );
+        },
+      );
+  if (bottleLocationOpenResult != null) {
+    return bottleLocationOpenResult;
   }
 
-  final programLocationOpenCliRequest = parseJsonProgramLocationOpenCliRequest(
-    arguments,
-  );
-  if (programLocationOpenCliRequest != null) {
-    return openProgramLocationJsonResult(
-      programLocationOpenCliRequest,
-      context,
-    );
+  final programLocationOpenResult =
+      parseJsonProgramLocationOpenCliRequestOption(arguments).match<CliResult?>(
+        () => null,
+        (programLocationOpenCliRequest) {
+          return openProgramLocationJsonResult(
+            programLocationOpenCliRequest,
+            context,
+          );
+        },
+      );
+  if (programLocationOpenResult != null) {
+    return programLocationOpenResult;
   }
 
   return null;

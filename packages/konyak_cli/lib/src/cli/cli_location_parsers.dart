@@ -15,14 +15,6 @@ class BottleLocationOpenCliRequest {
   final BottleLocation location;
 }
 
-BottleLocationOpenCliRequest? parseJsonBottleLocationOpenCliRequest(
-  List<String> arguments,
-) {
-  return nullableParsedOption(
-    parseJsonBottleLocationOpenCliRequestOption(arguments),
-  );
-}
-
 Option<BottleLocationOpenCliRequest>
 parseJsonBottleLocationOpenCliRequestOption(List<String> arguments) {
   return Option.Do(($) {
@@ -52,14 +44,6 @@ class ProgramLocationOpenCliRequest {
 
   final BottleId bottleId;
   final ProgramPath programPath;
-}
-
-ProgramLocationOpenCliRequest? parseJsonProgramLocationOpenCliRequest(
-  List<String> arguments,
-) {
-  return nullableParsedOption(
-    parseJsonProgramLocationOpenCliRequestOption(arguments),
-  );
 }
 
 Option<ProgramLocationOpenCliRequest>
