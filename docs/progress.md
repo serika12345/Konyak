@@ -13,27 +13,26 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-02 16:22 JST
+- Timestamp: 2026-07-02 19:15 JST
 - State: `completed`
-- Branch: `task/interface-i1-flutter-dialog-decisions`
-- Active work: I1-P3 Flutter Dialog and Picker Decisions.
+- Branch: `task/interface-i1-flutter-json-dtos`
+- Active work: I1-P4 Flutter JSON DTO Optional Fields.
 - Related TODO: `docs/todo.md` `I1: Compatibility Interface Cleanup`,
-  `I1-P3 Flutter Dialog and Picker Decisions`.
-- Pull request: https://github.com/serika12345/Konyak/pull/10
-- Latest commit: branch commit (`Replace Flutter nullable dialog decisions`).
-- Purpose: replace nullable Flutter dialog and menu decision compatibility
-  bridges with explicit app decision variants while keeping nullable values at
-  the Flutter framework boundary.
-- Completed work: added `showDialogDecision` as the dialog dismissal boundary;
-  converted bottle, runtime, program, executable, winetricks, settings, and
-  pinned-program call sites to consume explicit decisions; added explicit
-  bottle and pinned-program context menu decision variants; removed converted
-  `*DecisionFromNullable` helpers; updated widget tests to assert explicit
-  decisions; added governance coverage for the converted decision boundary; and
-  marked I1-P3 as completed in `docs/todo.md`.
-- Remaining work: review the draft PR. Do not advance into I1-P4 until I1-P3
+  `I1-P4 Flutter JSON DTO Optional Fields`.
+- Pull request: https://github.com/serika12345/Konyak/pull/11
+- Latest commit: branch commit (`Model Flutter update DTO optional fields explicitly`).
+- Purpose: replace nullable Flutter update DTO optional fields with explicit
+  absent, explicit-null, and present variants while keeping invalid optional
+  field types at the CLI JSON parse boundary.
+- Completed work: introduced `CliOptionalString`; converted update check and
+  update install summaries away from nullable optional string fields; updated
+  update parser tests to cover absent, explicit null, present, and invalid
+  optional fields; and updated update labels and install confirmation UI logic
+  to switch on explicit variants; added governance coverage for the converted
+  update DTO boundary; and marked I1-P4 as completed in `docs/todo.md`.
+- Remaining work: review the draft PR. Do not add a new milestone until I1-P4
   has been reviewed and merged.
-- Next action: review https://github.com/serika12345/Konyak/pull/10.
+- Next action: review https://github.com/serika12345/Konyak/pull/11.
 - Verification: final verification passed with `just flutter-format-check`,
   `just flutter-analyze`, `just flutter-test`, `just verify-governance`,
   `just verify-safety`, `just format-check`, and `just lint` through the Nix

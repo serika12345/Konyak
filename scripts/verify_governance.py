@@ -2578,6 +2578,7 @@ def require_refactoring_documentation_cleanup() -> None:
         "#### PR Gate: I1-P3 Flutter Dialog and Picker Decisions",
         "branch: `task/interface-i1-flutter-dialog-decisions`",
         "#### PR Gate: I1-P4 Flutter JSON DTO Optional Fields",
+        "branch: `task/interface-i1-flutter-json-dtos`",
     ]:
         require_contains("docs/todo.md", expected)
 
@@ -2596,7 +2597,7 @@ def require_refactoring_documentation_cleanup() -> None:
     ]:
         require_not_contains("docs/progress.md", stale_branch)
     require_contains("docs/progress.md", "Compatibility Interface Cleanup")
-    require_contains("docs/progress.md", "task/interface-i1-flutter-dialog-decisions")
+    require_contains("docs/progress.md", "task/interface-i1-flutter-json-dtos")
 
 
 def require_cli_parser_option_boundaries() -> None:
@@ -2880,6 +2881,76 @@ def require_flutter_dialog_decision_boundaries() -> None:
         "apps/konyak/lib/src/app/dialogs/app_settings_dialog.dart",
     ]:
         require_not_contains(relative_path, "DecisionFromNullable")
+
+
+def require_flutter_update_optional_field_boundaries() -> None:
+    optional_fields = "apps/konyak/lib/src/cli/cli_optional_fields.dart"
+    for expected in [
+        "sealed class CliOptionalString",
+        "const factory CliOptionalString.absent()",
+        "const factory CliOptionalString.explicitNull()",
+        "const factory CliOptionalString.present(String value)",
+    ]:
+        require_contains(optional_fields, expected)
+
+    update_summary = "apps/konyak/lib/src/updates/update_check_summary.dart"
+    for expected in [
+        "final CliOptionalString currentVersion;",
+        "final CliOptionalString latestVersion;",
+        "final CliOptionalString versionUrl;",
+        "final CliOptionalString archiveUrl;",
+        "final CliOptionalString installedVersion;",
+        "final CliOptionalString installPath;",
+    ]:
+        require_contains(update_summary, expected)
+    for forbidden in [
+        "final String? currentVersion;",
+        "final String? latestVersion;",
+        "final String? versionUrl;",
+        "final String? archiveUrl;",
+        "final String? installedVersion;",
+        "final String? installPath;",
+    ]:
+        require_not_contains(update_summary, forbidden)
+
+    update_parser = "apps/konyak/lib/src/cli/konyak_cli_update_payload_parsers.dart"
+    for expected in [
+        "CliOptionalStringParseResult parseCliOptionalStringField",
+        "payload.containsKey(key)",
+        "parseCliOptionalStringField(",
+        "ParsedCliOptionalString(value: final currentVersion)",
+        "ParsedCliOptionalString(value: final latestVersion)",
+        "ParsedCliOptionalString(value: final installedVersion)",
+    ]:
+        require_contains(update_parser, expected)
+    for forbidden in [
+        "currentVersion as String?",
+        "latestVersion as String?",
+        "versionUrl as String?",
+        "archiveUrl as String?",
+        "installedVersion as String?",
+        "installPath as String?",
+        "isOptionalString(currentVersion)",
+        "isOptionalString(latestVersion)",
+        "isOptionalString(installedVersion)",
+    ]:
+        require_not_contains(update_parser, forbidden)
+
+    update_tests = "apps/konyak/test/cli/konyak_cli_update_payload_parsers_test.dart"
+    for expected in [
+        "models absent and explicit null update check fields distinctly",
+        "models absent and explicit null update install fields distinctly",
+        "const CliOptionalString.absent()",
+        "const CliOptionalString.explicitNull()",
+        "const CliOptionalString.present('1.1.0')",
+    ]:
+        require_contains(update_tests, expected)
+
+    for relative_path, forbidden in [
+        ("apps/konyak/lib/src/home_loader/home_loader_runtimes.dart", "latestVersion == null"),
+        ("apps/konyak/lib/src/app/utils/update_labels.dart", "??"),
+    ]:
+        require_not_contains(relative_path, forbidden)
 
 
 def require_konyak_cli_public_exports() -> None:
@@ -3945,6 +4016,7 @@ def main() -> None:
     require_cli_parser_option_boundaries()
     require_cli_command_dispatch_boundaries()
     require_flutter_dialog_decision_boundaries()
+    require_flutter_update_optional_field_boundaries()
     require_typed_domain_string_maps()
     require_runtime_ssot_rules()
     require_no_cli_state_errors()
