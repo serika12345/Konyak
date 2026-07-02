@@ -9,6 +9,7 @@ import '../app/dialogs/dialog_decision.dart';
 import '../app/runtime/runtime_platform.dart';
 import '../app/startup/startup_update_checker.dart';
 import '../app/utils/update_labels.dart';
+import '../cli/cli_optional_fields.dart';
 import '../cli/konyak_cli_client.dart' show NotifyRuntimeInstallProgress;
 import '../cli/konyak_cli_process_runner.dart';
 import '../cli/konyak_cli_read_commands.dart';
@@ -183,14 +184,17 @@ extension KonyakHomeLoaderRuntimes on KonyakHomeLoaderState {
   Future<ConfirmationDecision> confirmKonyakUpdateInstall(
     UpdateCheckSummary update,
   ) async {
-    final latestVersion = update.latestVersion;
     final localizations = KonyakLocalizations.of(context);
-    final title = latestVersion == null
-        ? localizations.installKonyakUpdateTitle
-        : localizations.installKonyakVersionUpdateTitle(latestVersion);
-    final message = latestVersion == null
-        ? localizations.installKonyakUpdateMessage
-        : localizations.installKonyakVersionUpdateMessage(latestVersion);
+    final (title, message) = switch (update.latestVersion) {
+      PresentCliOptionalString(:final value) => (
+        localizations.installKonyakVersionUpdateTitle(value),
+        localizations.installKonyakVersionUpdateMessage(value),
+      ),
+      AbsentCliOptionalString() || ExplicitNullCliOptionalString() => (
+        localizations.installKonyakUpdateTitle,
+        localizations.installKonyakUpdateMessage,
+      ),
+    };
     return showDialogDecision<ConfirmationDecision>(
       context: context,
       dismissedDecision: const ConfirmationDecision.cancelled(),

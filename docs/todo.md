@@ -193,6 +193,7 @@ review gate:
 
 #### PR Gate: I1-P4 Flutter JSON DTO Optional Fields
 
+status: completed
 branch: `task/interface-i1-flutter-json-dtos`
 
 Completion criteria:

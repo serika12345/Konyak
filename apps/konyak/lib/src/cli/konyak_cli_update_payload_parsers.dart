@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import '../updates/update_check_summary.dart';
-import 'konyak_cli_settings_payload_parsers.dart';
+import 'cli_optional_fields.dart';
 import 'konyak_cli_update_result_types.dart';
 
 sealed class UpdateCheckSummaryParseResult {
@@ -141,32 +141,46 @@ UpdateCheckSummaryParseResult parseUpdateCheckSummary(
 }) {
   final id = value[idKey];
   final status = value['status'];
-  final currentVersion = value['currentVersion'];
-  final latestVersion = value['latestVersion'];
-  final versionUrl = value['versionUrl'];
-  final archiveUrl = value['archiveUrl'];
+  final currentVersion = parseCliOptionalStringField(
+    payload: value,
+    key: 'currentVersion',
+  );
+  final latestVersion = parseCliOptionalStringField(
+    payload: value,
+    key: 'latestVersion',
+  );
+  final versionUrl = parseCliOptionalStringField(
+    payload: value,
+    key: 'versionUrl',
+  );
+  final archiveUrl = parseCliOptionalStringField(
+    payload: value,
+    key: 'archiveUrl',
+  );
 
   if (id is! String || status is! String) {
     return const InvalidUpdateCheckSummary();
   }
 
-  if (!isOptionalString(currentVersion) ||
-      !isOptionalString(latestVersion) ||
-      !isOptionalString(versionUrl) ||
-      !isOptionalString(archiveUrl)) {
-    return const InvalidUpdateCheckSummary();
-  }
-
-  return ParsedUpdateCheckSummary(
-    UpdateCheckSummary(
-      id: id,
-      status: status,
-      currentVersion: currentVersion as String?,
-      latestVersion: latestVersion as String?,
-      versionUrl: versionUrl as String?,
-      archiveUrl: archiveUrl as String?,
-    ),
-  );
+  return switch ((currentVersion, latestVersion, versionUrl, archiveUrl)) {
+    (
+      ParsedCliOptionalString(value: final currentVersion),
+      ParsedCliOptionalString(value: final latestVersion),
+      ParsedCliOptionalString(value: final versionUrl),
+      ParsedCliOptionalString(value: final archiveUrl),
+    ) =>
+      ParsedUpdateCheckSummary(
+        UpdateCheckSummary(
+          id: id,
+          status: status,
+          currentVersion: currentVersion,
+          latestVersion: latestVersion,
+          versionUrl: versionUrl,
+          archiveUrl: archiveUrl,
+        ),
+      ),
+    _ => const InvalidUpdateCheckSummary(),
+  };
 }
 
 UpdateInstallSummaryParseResult parseUpdateInstallSummary(
@@ -174,30 +188,64 @@ UpdateInstallSummaryParseResult parseUpdateInstallSummary(
 ) {
   final id = value['appId'];
   final status = value['status'];
-  final currentVersion = value['currentVersion'];
-  final installedVersion = value['installedVersion'];
-  final archiveUrl = value['archiveUrl'];
-  final installPath = value['installPath'];
+  final currentVersion = parseCliOptionalStringField(
+    payload: value,
+    key: 'currentVersion',
+  );
+  final installedVersion = parseCliOptionalStringField(
+    payload: value,
+    key: 'installedVersion',
+  );
+  final archiveUrl = parseCliOptionalStringField(
+    payload: value,
+    key: 'archiveUrl',
+  );
+  final installPath = parseCliOptionalStringField(
+    payload: value,
+    key: 'installPath',
+  );
 
   if (id is! String || status is! String) {
     return const InvalidUpdateInstallSummary();
   }
 
-  if (!isOptionalString(currentVersion) ||
-      !isOptionalString(installedVersion) ||
-      !isOptionalString(archiveUrl) ||
-      !isOptionalString(installPath)) {
-    return const InvalidUpdateInstallSummary();
+  return switch ((currentVersion, installedVersion, archiveUrl, installPath)) {
+    (
+      ParsedCliOptionalString(value: final currentVersion),
+      ParsedCliOptionalString(value: final installedVersion),
+      ParsedCliOptionalString(value: final archiveUrl),
+      ParsedCliOptionalString(value: final installPath),
+    ) =>
+      ParsedUpdateInstallSummary(
+        UpdateInstallSummary(
+          id: id,
+          status: status,
+          currentVersion: currentVersion,
+          installedVersion: installedVersion,
+          archiveUrl: archiveUrl,
+          installPath: installPath,
+        ),
+      ),
+    _ => const InvalidUpdateInstallSummary(),
+  };
+}
+
+CliOptionalStringParseResult parseCliOptionalStringField({
+  required Map<String, Object?> payload,
+  required String key,
+}) {
+  if (!payload.containsKey(key)) {
+    return const ParsedCliOptionalString(CliOptionalString.absent());
   }
 
-  return ParsedUpdateInstallSummary(
-    UpdateInstallSummary(
-      id: id,
-      status: status,
-      currentVersion: currentVersion as String?,
-      installedVersion: installedVersion as String?,
-      archiveUrl: archiveUrl as String?,
-      installPath: installPath as String?,
-    ),
-  );
+  final value = payload[key];
+  if (value is String) {
+    return ParsedCliOptionalString(CliOptionalString.present(value));
+  }
+
+  if (value == null) {
+    return const ParsedCliOptionalString(CliOptionalString.explicitNull());
+  }
+
+  return const InvalidCliOptionalString();
 }

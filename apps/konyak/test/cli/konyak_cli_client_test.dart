@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:konyak/src/bottles/bottle_summary.dart';
+import 'package:konyak/src/cli/cli_optional_fields.dart';
 import 'package:konyak/src/cli/konyak_cli_client.dart';
 import 'package:konyak/src/cli/runtime_install_contract.dart';
 import 'package:konyak/src/settings/app_settings_summary.dart';
@@ -1076,7 +1077,10 @@ void main() {
     final loaded = result as LoadedUpdateCheck;
     expect(loaded.update.id, 'konyak');
     expect(loaded.update.status, 'available');
-    expect(loaded.update.latestVersion, '1.1.0');
+    expect(
+      loaded.update.latestVersion,
+      const CliOptionalString.present('1.1.0'),
+    );
   });
 
   test('checks Konyak Wine updates through the JSON CLI contract', () async {
@@ -1296,7 +1300,10 @@ void main() {
     expect(result, isA<InstalledUpdate>());
     final installed = result as InstalledUpdate;
     expect(installed.update.id, 'konyak');
-    expect(installed.update.installedVersion, '1.1.0');
+    expect(
+      installed.update.installedVersion,
+      const CliOptionalString.present('1.1.0'),
+    );
   });
 
   test('installs runtime updates through the JSON CLI contract', () async {

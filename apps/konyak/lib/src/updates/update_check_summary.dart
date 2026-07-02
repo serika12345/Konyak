@@ -1,35 +1,37 @@
+import '../cli/cli_optional_fields.dart';
+
 class UpdateCheckSummary {
   const UpdateCheckSummary({
     required this.id,
     required this.status,
-    this.currentVersion,
-    this.latestVersion,
-    this.versionUrl,
-    this.archiveUrl,
+    this.currentVersion = const CliOptionalString.absent(),
+    this.latestVersion = const CliOptionalString.absent(),
+    this.versionUrl = const CliOptionalString.absent(),
+    this.archiveUrl = const CliOptionalString.absent(),
   });
 
   final String id;
   final String status;
-  final String? currentVersion;
-  final String? latestVersion;
-  final String? versionUrl;
-  final String? archiveUrl;
+  final CliOptionalString currentVersion;
+  final CliOptionalString latestVersion;
+  final CliOptionalString versionUrl;
+  final CliOptionalString archiveUrl;
 }
 
 class UpdateInstallSummary {
   const UpdateInstallSummary({
     required this.id,
     required this.status,
-    this.currentVersion,
-    this.installedVersion,
-    this.archiveUrl,
-    this.installPath,
+    this.currentVersion = const CliOptionalString.absent(),
+    this.installedVersion = const CliOptionalString.absent(),
+    this.archiveUrl = const CliOptionalString.absent(),
+    this.installPath = const CliOptionalString.absent(),
   });
 
   final String id;
   final String status;
-  final String? currentVersion;
-  final String? installedVersion;
-  final String? archiveUrl;
-  final String? installPath;
+  final CliOptionalString currentVersion;
+  final CliOptionalString installedVersion;
+  final CliOptionalString archiveUrl;
+  final CliOptionalString installPath;
 }
