@@ -13,31 +13,33 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-02 21:36 JST
+- Timestamp: 2026-07-02 22:12 JST
 - State: `completed`
-- Branch: `task/interface-i2-cli-contract-seed-tests`
-- Active work: I2-P2 CLI Contract Seed Test Part Split.
+- Branch: `task/interface-i2-cli-contract-family-tests`
+- Active work: I2-P3 CLI Contract Family Test Part Split.
 - Related TODO: `docs/todo.md` `I2: Boundary Hardening and Test Contract
-  Cleanup`, completed `I2-P2 CLI Contract Seed Test Part Split`, and next
-  `I2-P3 CLI Contract Family Test Part Split`.
-- Pull request: draft PR #15
-  <https://github.com/serika12345/Konyak/pull/15>.
-- Latest commit: branch head for the I2-P2 draft PR.
-- Purpose: remove the first low-dependency CLI contract hand-written test
-  `part` files so future command/runtime contract work can be split into
-  smaller test entry points.
-- Completed work: converted `cli_contract_executable.part.dart`,
-  `cli_contract_command_dispatch.part.dart`, and
-  `cli_contract_repository_runner.part.dart` into standalone tests; added
-  `test/support/cli_contract_helpers.dart`; removed the converted part
-  directives and registration calls from `cli_contract_test.dart`; added
-  governance coverage for the converted seed files.
-- Remaining work: review draft PR #15, then stop before implementing I2-P3.
-- Next action: review the I2-P2 draft PR and then run `/advance-pr` for
-  `I2-P3 CLI Contract Family Test Part Split`.
-- Verification: focused seed test command passed:
-  `cd packages/konyak_cli && dart test test/cli_contract_executable_test.dart
-  test/cli_contract_command_dispatch_test.dart
-  test/cli_contract_repository_runner_test.dart`; `just cli-test`,
+  Cleanup`, completed `I2-P3 CLI Contract Family Test Part Split`, and next
+  `I2-P4 Semantic Constructor Primitive Fronts`.
+- Pull request: draft PR #16
+  <https://github.com/serika12345/Konyak/pull/16>.
+- Latest commit: branch head for the I2-P3 draft PR.
+- Purpose: remove the remaining CLI contract hand-written test `part` files so
+  app/bottle, pinned program, program execution, runtime process/update, and
+  runtime install contract coverage run from standalone test entry points.
+- Completed work: converted the remaining CLI contract part files into
+  standalone tests backed by `test/support/cli_contract_full_helpers.dart`;
+  reduced `cli_contract_test.dart` to the macOS runtime release SSOT check;
+  added governance coverage so `packages/konyak_cli/test` cannot reintroduce
+  CLI contract `*.part.dart` files.
+- Remaining work: review draft PR #16, then stop before implementing I2-P4.
+- Next action: review the I2-P3 draft PR and then run `/advance-pr` for
+  `I2-P4 Semantic Constructor Primitive Fronts`.
+- Verification: focused CLI contract family test command passed:
+  `cd packages/konyak_cli && dart test --reporter compact
+  test/cli_contract_app_bottle_test.dart
+  test/cli_contract_pinned_program_test.dart
+  test/cli_contract_program_execution_test.dart
+  test/cli_contract_runtime_process_update_test.dart
+  test/cli_contract_runtime_install_test.dart`; `just cli-test`,
   `just verify-governance`, `just verify-safety`, `just format-check`, and
   `just lint` passed through the Nix dev shell.
