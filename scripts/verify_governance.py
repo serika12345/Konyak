@@ -2586,6 +2586,7 @@ def require_refactoring_documentation_cleanup() -> None:
         "status: completed",
         "branch: `task/interface-i2-primitive-boundary-audit`",
         "#### PR Gate: I2-P2 CLI Contract Seed Test Part Split",
+        "status: completed",
         "branch: `task/interface-i2-cli-contract-seed-tests`",
         "#### PR Gate: I2-P3 CLI Contract Family Test Part Split",
         "branch: `task/interface-i2-cli-contract-family-tests`",
@@ -2624,12 +2625,41 @@ def require_refactoring_documentation_cleanup() -> None:
         require_not_contains("docs/progress.md", stale_branch)
     require_contains(
         "docs/progress.md",
-        "I2-P1 Primitive Boundary Audit",
+        "I2-P2 CLI Contract Seed Test Part Split",
     )
     require_contains(
         "docs/progress.md",
-        "task/interface-i2-primitive-boundary-audit",
+        "task/interface-i2-cli-contract-seed-tests",
     )
+
+    for relative_path in [
+        "packages/konyak_cli/test/cli_contract_executable_test.dart",
+        "packages/konyak_cli/test/cli_contract_command_dispatch_test.dart",
+        "packages/konyak_cli/test/cli_contract_repository_runner_test.dart",
+        "packages/konyak_cli/test/support/cli_contract_helpers.dart",
+    ]:
+        if not (ROOT / relative_path).exists():
+            raise AssertionError(f"{relative_path} must exist after I2-P2")
+
+    for relative_path in [
+        "packages/konyak_cli/test/cli_contract_executable.part.dart",
+        "packages/konyak_cli/test/cli_contract_command_dispatch.part.dart",
+        "packages/konyak_cli/test/cli_contract_repository_runner.part.dart",
+    ]:
+        require_missing(relative_path)
+
+    for forbidden in [
+        "part 'cli_contract_executable.part.dart';",
+        "part 'cli_contract_command_dispatch.part.dart';",
+        "part 'cli_contract_repository_runner.part.dart';",
+        "defineExecutableContractTests();",
+        "defineCommandDispatchContractTests();",
+        "defineRepositoryAndRunnerContractTests();",
+    ]:
+        require_not_contains(
+            "packages/konyak_cli/test/cli_contract_test.dart",
+            forbidden,
+        )
 
 
 def require_cli_parser_option_boundaries() -> None:
@@ -2799,20 +2829,23 @@ def require_cli_command_dispatch_boundaries() -> None:
     ]:
         require_not_contains(relative_path, unexpected)
 
+    dispatch_test_path = (
+        "packages/konyak_cli/test/cli_contract_command_dispatch_test.dart"
+    )
     require_contains(
-        "packages/konyak_cli/test/cli_contract_command_dispatch.part.dart",
+        dispatch_test_path,
         "runtime command dispatch reports matched commands explicitly",
     )
     require_contains(
-        "packages/konyak_cli/test/cli_contract_command_dispatch.part.dart",
+        dispatch_test_path,
         "runtime command dispatch reports unmatched commands explicitly",
     )
     require_contains(
-        "packages/konyak_cli/test/cli_contract_command_dispatch.part.dart",
+        dispatch_test_path,
         "location command dispatch reports matched commands explicitly",
     )
     require_contains(
-        "packages/konyak_cli/test/cli_contract_command_dispatch.part.dart",
+        dispatch_test_path,
         "location command dispatch reports unmatched commands explicitly",
     )
 

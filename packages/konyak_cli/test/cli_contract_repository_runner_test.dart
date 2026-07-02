@@ -1,6 +1,17 @@
-part of 'cli_contract_test.dart';
+import 'dart:convert';
+import 'dart:io';
 
-void defineRepositoryAndRunnerContractTests() {
+import 'package:fpdart/fpdart.dart';
+import 'package:konyak_cli/konyak_cli.dart' hide runCli, runCliStreaming;
+import 'package:konyak_cli/src/io/app_settings_repositories.dart';
+import 'package:konyak_cli/src/io/program_io_services.dart';
+import 'package:konyak_cli/src/repository/composite_bottle_repository.dart';
+import 'package:konyak_cli/src/repository/memory_bottle_repository.dart';
+import 'package:test/test.dart';
+
+import 'support/cli_contract_helpers.dart';
+
+void main() {
   test('install-linux-file-associations --json writes XDG MIME associations', () {
     final tempDirectory = Directory.systemTemp.createTempSync(
       'konyak-linux-file-association-test-',
@@ -11,19 +22,19 @@ void defineRepositoryAndRunnerContractTests() {
       }
     });
 
-    final xdgDataHome = _joinTestPath(tempDirectory.path, const ['xdg-data']);
-    final xdgConfigHome = _joinTestPath(tempDirectory.path, const [
+    final xdgDataHome = joinTestPath(tempDirectory.path, const ['xdg-data']);
+    final xdgConfigHome = joinTestPath(tempDirectory.path, const [
       'xdg-config',
     ]);
-    final appImage = _joinTestPath(tempDirectory.path, const [
+    final appImage = joinTestPath(tempDirectory.path, const [
       'Konyak.AppImage',
     ]);
-    final appExecutable = _joinTestPath(tempDirectory.path, const [
+    final appExecutable = joinTestPath(tempDirectory.path, const [
       'extracted-appimage',
       'usr',
       'konyak',
     ]);
-    final appIcon = _joinTestPath(tempDirectory.path, const [
+    final appIcon = joinTestPath(tempDirectory.path, const [
       'extracted-appimage',
       'app.konyak.Konyak.png',
     ]);
@@ -35,7 +46,7 @@ void defineRepositoryAndRunnerContractTests() {
       ..createSync(recursive: true)
       ..writeAsBytesSync(const [137, 80, 78, 71, 13, 10, 26, 10]);
 
-    final result = runCli(
+    final result = runTestCli(
       const ['install-linux-file-associations', '--json'],
       programRunPlanner: ProgramRunPlanner(
         hostPlatform: KonyakHostPlatform.linux,
@@ -53,7 +64,7 @@ void defineRepositoryAndRunnerContractTests() {
     expect(result.exitCode, 0);
     expect(result.stderr, isEmpty);
 
-    final desktopPath = _joinTestPath(xdgDataHome, const [
+    final desktopPath = joinTestPath(xdgDataHome, const [
       'applications',
       'app.konyak.Konyak.desktop',
     ]);
@@ -73,7 +84,7 @@ void defineRepositoryAndRunnerContractTests() {
     expect(desktopEntry, contains('application/x-msdos-program;'));
     expect(desktopEntry, contains('text/x-msdos-batch;'));
 
-    final mimeAppsPath = _joinTestPath(xdgConfigHome, const ['mimeapps.list']);
+    final mimeAppsPath = joinTestPath(xdgConfigHome, const ['mimeapps.list']);
     final mimeApps = File(mimeAppsPath).readAsStringSync();
     expect(mimeApps, contains('[Default Applications]'));
     expect(
@@ -104,7 +115,7 @@ void defineRepositoryAndRunnerContractTests() {
       contains('application/x-msdos-program=app.konyak.Konyak.desktop'),
     );
     expect(mimeApps, contains('text/x-msdos-batch=app.konyak.Konyak.desktop'));
-    final iconPath = _joinTestPath(xdgDataHome, const [
+    final iconPath = joinTestPath(xdgDataHome, const [
       'icons',
       'hicolor',
       '256x256',
@@ -142,7 +153,7 @@ void defineRepositoryAndRunnerContractTests() {
       }
     });
 
-    final logPath = _joinTestPath(logDirectory.path, const ['latest.log']);
+    final logPath = joinTestPath(logDirectory.path, const ['latest.log']);
     final result = const DartIoProgramRunner().run(
       ProgramRunRequest(
         bottleId: BottleId('steam'),
@@ -186,7 +197,7 @@ void defineRepositoryAndRunnerContractTests() {
         }
       });
 
-      final logPath = _joinTestPath(logDirectory.path, const ['latest.log']);
+      final logPath = joinTestPath(logDirectory.path, const ['latest.log']);
       final result = const DartIoProgramRunner().run(
         ProgramRunRequest(
           bottleId: BottleId('steam'),
@@ -214,7 +225,7 @@ void defineRepositoryAndRunnerContractTests() {
         await logDirectory.delete(recursive: true);
       }
     });
-    final logPath = _joinTestPath(logDirectory.path, const ['latest.log']);
+    final logPath = joinTestPath(logDirectory.path, const ['latest.log']);
 
     final result = const DartIoProgramRunner().run(
       ProgramRunRequest(
@@ -253,19 +264,19 @@ void defineRepositoryAndRunnerContractTests() {
         }
       });
       final fakeRuntimeRoot = Directory(
-        _joinTestPath(dataHome.path, const ['runtime']),
+        joinTestPath(dataHome.path, const ['runtime']),
       );
       final fakeBin = Directory(
-        _joinTestPath(fakeRuntimeRoot.path, const ['bin']),
+        joinTestPath(fakeRuntimeRoot.path, const ['bin']),
       )..createSync(recursive: true);
-      final fakeWine = File(_joinTestPath(fakeBin.path, const ['wine']))
+      final fakeWine = File(joinTestPath(fakeBin.path, const ['wine']))
         ..writeAsStringSync('#!/bin/sh\nexit 0\n')
         ..createSync(recursive: true);
       final fakeWineloader =
-          File(_joinTestPath(fakeBin.path, const ['wineloader']))
+          File(joinTestPath(fakeBin.path, const ['wineloader']))
             ..writeAsStringSync('#!/bin/sh\nexit 0\n')
             ..createSync(recursive: true);
-      final fakeWineboot = File(_joinTestPath(fakeBin.path, const ['wineboot']))
+      final fakeWineboot = File(joinTestPath(fakeBin.path, const ['wineboot']))
         ..writeAsStringSync('#!/bin/sh\nexit 0\n')
         ..createSync(recursive: true);
       Process.runSync('chmod', [
@@ -276,7 +287,7 @@ void defineRepositoryAndRunnerContractTests() {
       ]);
       final cliEnvironment = <String, String>{
         'KONYAK_DATA_HOME': dataHome.path,
-        'KONYAK_CONFIG_HOME': _joinTestPath(dataHome.path, const ['config']),
+        'KONYAK_CONFIG_HOME': joinTestPath(dataHome.path, const ['config']),
         'KONYAK_MACOS_WINE_HOME': fakeRuntimeRoot.path,
         'KONYAK_LINUX_WINE_HOME': fakeRuntimeRoot.path,
         'PATH': fakeBin.path,
@@ -336,7 +347,7 @@ void defineRepositoryAndRunnerContractTests() {
       });
       expect(
         Directory(
-          _joinTestPath(dataHome.path, const ['bottles', 'steam', 'drive_c']),
+          joinTestPath(dataHome.path, const ['bottles', 'steam', 'drive_c']),
         ).existsSync(),
         isTrue,
       );
@@ -355,17 +366,17 @@ void defineRepositoryAndRunnerContractTests() {
         }
       });
       final externalContainer = Directory(
-        _joinTestPath(tempDirectory.path, const [
+        joinTestPath(tempDirectory.path, const [
           'Library',
           'Containers',
           'com.example.ExternalBottleCatalog',
         ]),
       )..createSync(recursive: true);
       File(
-        _joinTestPath(externalContainer.path, const ['BottleVM.plist']),
+        joinTestPath(externalContainer.path, const ['BottleVM.plist']),
       ).writeAsStringSync('external bottle catalog');
       File(
-          _joinTestPath(externalContainer.path, const [
+          joinTestPath(externalContainer.path, const [
             'Bottles',
             'Steam',
             'Metadata.plist',
@@ -378,7 +389,7 @@ void defineRepositoryAndRunnerContractTests() {
         'HOME': tempDirectory.path,
       }, hostPlatform: KonyakHostPlatform.macos);
 
-      expect(_expectIo(repository.listBottles()), isEmpty);
+      expect(expectIo(repository.listBottles()), isEmpty);
     },
   );
 
@@ -412,13 +423,13 @@ void defineRepositoryAndRunnerContractTests() {
       );
       expect(
         File(
-          _joinTestPath(created.bottle.path.value, const ['metadata.json']),
+          joinTestPath(created.bottle.path.value, const ['metadata.json']),
         ).existsSync(),
         isTrue,
       );
       expect(
         Directory(
-          _joinTestPath(created.bottle.path.value, const ['drive_c']),
+          joinTestPath(created.bottle.path.value, const ['drive_c']),
         ).existsSync(),
         isTrue,
       );
@@ -437,7 +448,7 @@ void defineRepositoryAndRunnerContractTests() {
         }
       });
       final bottlesDirectory = Directory(
-        _joinTestPath(tempDirectory.path, const [
+        joinTestPath(tempDirectory.path, const [
           'Library',
           'Application Support',
           'Konyak',
@@ -445,17 +456,17 @@ void defineRepositoryAndRunnerContractTests() {
         ]),
       )..createSync(recursive: true);
       final rawPrefix = Directory(
-        _joinTestPath(bottlesDirectory.path, const ['raw-prefix']),
+        joinTestPath(bottlesDirectory.path, const ['raw-prefix']),
       )..createSync(recursive: true);
       File(
-        _joinTestPath(rawPrefix.path, const ['.update-timestamp']),
+        joinTestPath(rawPrefix.path, const ['.update-timestamp']),
       ).writeAsStringSync('');
 
       final repository = defaultBottleRepositoryFromEnvironment({
         'HOME': tempDirectory.path,
       }, hostPlatform: KonyakHostPlatform.macos);
 
-      expect(_expectIo(repository.listBottles()), isEmpty);
+      expect(expectIo(repository.listBottles()), isEmpty);
 
       final createResult = repository.createBottle(
         BottleCreateRequest(
@@ -466,7 +477,7 @@ void defineRepositoryAndRunnerContractTests() {
 
       expect(createResult, isA<BottleCreated>());
       expect(
-        _expectIo(repository.listBottles()).map((bottle) => bottle.id.value),
+        expectIo(repository.listBottles()).map((bottle) => bottle.id.value),
         const ['managed'],
       );
     },
@@ -502,11 +513,11 @@ void defineRepositoryAndRunnerContractTests() {
       );
 
       expect(
-        _expectIo(repository.listBottles()).map((bottle) => bottle.id.value),
+        expectIo(repository.listBottles()).map((bottle) => bottle.id.value),
         const ['imported', 'local'],
       );
       expect(
-        _expectFound(repository.findBottle(BottleId('imported'))).name.value,
+        expectFound(repository.findBottle(BottleId('imported'))).name.value,
         'Imported',
       );
 
@@ -519,7 +530,7 @@ void defineRepositoryAndRunnerContractTests() {
 
       expect(createResult, isA<BottleCreated>());
       expect(
-        _expectFound(repository.findBottle(BottleId('created'))).name.value,
+        expectFound(repository.findBottle(BottleId('created'))).name.value,
         'Created',
       );
     },
@@ -548,7 +559,7 @@ void defineRepositoryAndRunnerContractTests() {
     );
 
     expect(
-      _expectIo(repository.listBottles()).map((bottle) => bottle.id.value),
+      expectIo(repository.listBottles()).map((bottle) => bottle.id.value),
       const ['imported'],
     );
 
@@ -589,7 +600,7 @@ void defineRepositoryAndRunnerContractTests() {
     );
     expect(pinResult, isA<ProgramPinMissing>());
 
-    final importedBottle = _expectFound(
+    final importedBottle = expectFound(
       importedRepository.findBottle(BottleId('imported')),
     );
     expect(importedBottle.name.value, 'Imported');
@@ -600,13 +611,13 @@ void defineRepositoryAndRunnerContractTests() {
     expect(importedBottle.runtimeSettings, BottleRuntimeSettings());
     expect(importedBottle.pinnedPrograms, isEmpty);
     expect(
-      _expectIo(
+      expectIo(
         importedRepository.listBottles(),
       ).map((bottle) => bottle.id.value),
       const ['imported'],
     );
     expect(
-      _expectIo(repository.listBottles()).map((bottle) => bottle.id.value),
+      expectIo(repository.listBottles()).map((bottle) => bottle.id.value),
       const ['imported'],
     );
   });

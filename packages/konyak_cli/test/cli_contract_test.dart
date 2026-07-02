@@ -7,10 +7,8 @@ import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:konyak_cli/konyak_cli.dart' hide runCli, runCliStreaming;
-import 'package:konyak_cli/src/cli/cli_app_runtime_handlers.dart';
 import 'package:konyak_cli/src/cli/cli_commands.dart';
 import 'package:konyak_cli/src/cli/cli_injected_runner.dart' as injected;
-import 'package:konyak_cli/src/cli/cli_location_winetricks_handlers.dart';
 import 'package:konyak_cli/src/cli/cli_runtime_record_json.dart';
 import 'package:konyak_cli/src/io/app_settings_repositories.dart';
 import 'package:konyak_cli/src/io/app_update_checker_io.dart';
@@ -23,7 +21,6 @@ import 'package:konyak_cli/src/io/linux_wine_installation.dart';
 import 'package:konyak_cli/src/io/macos_wine_installation.dart';
 import 'package:konyak_cli/src/io/program_discovery.dart';
 import 'package:konyak_cli/src/io/program_graphics_backend_hints_io.dart';
-import 'package:konyak_cli/src/io/program_io_services.dart';
 import 'package:konyak_cli/src/io/program_metadata_io.dart';
 import 'package:konyak_cli/src/io/program_winetricks_support.dart';
 import 'package:konyak_cli/src/io/release_metadata_fetcher.dart';
@@ -39,7 +36,6 @@ import 'package:konyak_cli/src/platform/macos/macos_runtime_validator.dart';
 import 'package:konyak_cli/src/platform/macos/macos_setup_checker.dart';
 import 'package:konyak_cli/src/platform/macos/macos_wine_install_requests.dart';
 import 'package:konyak_cli/src/platform/macos/macos_wine_install_results.dart';
-import 'package:konyak_cli/src/repository/composite_bottle_repository.dart';
 import 'package:konyak_cli/src/repository/file_bottle_repository.dart';
 import 'package:konyak_cli/src/repository/memory_bottle_repository.dart';
 import 'package:konyak_cli/src/repository/repository_interfaces.dart';
@@ -49,11 +45,8 @@ import 'package:test/test.dart';
 part 'cli_contract_app_bottle.part.dart';
 part 'cli_contract_pinned_program.part.dart';
 part 'cli_contract_program_execution.part.dart';
-part 'cli_contract_repository_runner.part.dart';
 part 'cli_contract_runtime_process_update.part.dart';
 part 'cli_contract_runtime_install.part.dart';
-part 'cli_contract_executable.part.dart';
-part 'cli_contract_command_dispatch.part.dart';
 
 const _gptkD3DMetalWindowsFileNames = <String>[
   'atidxx64.dll',
@@ -367,11 +360,8 @@ void main() {
   defineAppAndBottleContractTests();
   definePinnedProgramContractTests();
   defineProgramExecutionContractTests();
-  defineRepositoryAndRunnerContractTests();
   defineRuntimeProcessAndUpdateContractTests();
   defineRuntimeInstallContractTests();
-  defineExecutableContractTests();
-  defineCommandDispatchContractTests();
 }
 
 File _repoFile(String relativePath) {
