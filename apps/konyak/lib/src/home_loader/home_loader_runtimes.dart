@@ -5,6 +5,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../app/app_platform.dart';
 import '../app/dialogs/confirmation_decision.dart';
+import '../app/dialogs/dialog_decision.dart';
 import '../app/runtime/runtime_platform.dart';
 import '../app/startup/startup_update_checker.dart';
 import '../app/utils/update_labels.dart';
@@ -190,31 +191,26 @@ extension KonyakHomeLoaderRuntimes on KonyakHomeLoaderState {
     final message = latestVersion == null
         ? localizations.installKonyakUpdateMessage
         : localizations.installKonyakVersionUpdateMessage(latestVersion);
-    return confirmationDecisionFromNullable(
-      await showDialog<ConfirmationDecision>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text(title),
-          content: Text(message),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(
-                  context,
-                ).pop(const ConfirmationDecision.cancelled());
-              },
-              child: Text(localizations.notNow),
-            ),
-            FilledButton(
-              onPressed: () {
-                Navigator.of(
-                  context,
-                ).pop(const ConfirmationDecision.confirmed());
-              },
-              child: Text(localizations.install),
-            ),
-          ],
-        ),
+    return showDialogDecision<ConfirmationDecision>(
+      context: context,
+      dismissedDecision: const ConfirmationDecision.cancelled(),
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(const ConfirmationDecision.cancelled());
+            },
+            child: Text(localizations.notNow),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.of(context).pop(const ConfirmationDecision.confirmed());
+            },
+            child: Text(localizations.install),
+          ),
+        ],
       ),
     );
   }
@@ -418,31 +414,26 @@ extension KonyakHomeLoaderRuntimes on KonyakHomeLoaderState {
     String runtimeName,
   ) async {
     final localizations = KonyakLocalizations.of(context);
-    return confirmationDecisionFromNullable(
-      await showDialog<ConfirmationDecision>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text(localizations.downloadRuntimeTitle(runtimeName)),
-          content: Text(localizations.downloadRuntimeMessage(runtimeName)),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(
-                  context,
-                ).pop(const ConfirmationDecision.cancelled());
-              },
-              child: Text(localizations.cancel),
-            ),
-            FilledButton(
-              onPressed: () {
-                Navigator.of(
-                  context,
-                ).pop(const ConfirmationDecision.confirmed());
-              },
-              child: Text(localizations.download),
-            ),
-          ],
-        ),
+    return showDialogDecision<ConfirmationDecision>(
+      context: context,
+      dismissedDecision: const ConfirmationDecision.cancelled(),
+      builder: (context) => AlertDialog(
+        title: Text(localizations.downloadRuntimeTitle(runtimeName)),
+        content: Text(localizations.downloadRuntimeMessage(runtimeName)),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(const ConfirmationDecision.cancelled());
+            },
+            child: Text(localizations.cancel),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.of(context).pop(const ConfirmationDecision.confirmed());
+            },
+            child: Text(localizations.download),
+          ),
+        ],
       ),
     );
   }

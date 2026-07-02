@@ -1,8 +1,7 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
-
 import '../app/dialogs/bottle_management_dialogs.dart';
+import '../app/dialogs/dialog_decision.dart';
 import '../app/dialogs/pin_program_dialog.dart';
 import '../app/utils/bottle_lists.dart';
 import '../bottles/bottle_summary.dart';
@@ -16,13 +15,12 @@ import 'pinned_program_settings_cache_state.dart';
 
 extension KonyakHomeLoaderPinnedPrograms on KonyakHomeLoaderState {
   Future<void> pinProgram(BottleSummary bottle) async {
-    final decision = pinProgramDecisionFromNullable(
-      await showDialog<PinProgramDecision>(
-        context: context,
-        builder: (context) => PinProgramDialog(
-          bottleName: bottle.name,
-          programFilePicker: widget.programFilePicker,
-        ),
+    final decision = await showDialogDecision<PinProgramDecision>(
+      context: context,
+      dismissedDecision: const PinProgramDecision.cancelled(),
+      builder: (context) => PinProgramDialog(
+        bottleName: bottle.name,
+        programFilePicker: widget.programFilePicker,
       ),
     );
 
@@ -86,12 +84,11 @@ extension KonyakHomeLoaderPinnedPrograms on KonyakHomeLoaderState {
     required BottleSummary bottle,
     required PinnedProgramSummary program,
   }) async {
-    final decision = renamePinnedProgramDecisionFromNullable(
-      await showDialog<RenamePinnedProgramDecision>(
-        context: context,
-        builder: (context) =>
-            RenamePinnedProgramDialog(programName: program.name),
-      ),
+    final decision = await showDialogDecision<RenamePinnedProgramDecision>(
+      context: context,
+      dismissedDecision: const RenamePinnedProgramDecision.cancelled(),
+      builder: (context) =>
+          RenamePinnedProgramDialog(programName: program.name),
     );
 
     switch (decision) {

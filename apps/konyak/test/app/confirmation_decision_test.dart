@@ -2,13 +2,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:konyak/src/app/dialogs/confirmation_decision.dart';
 
 void main() {
-  test('models dismissed confirmation dialogs explicitly', () {
-    const confirmed = ConfirmationDecision.confirmed();
-
+  test('models confirmation dialog decisions explicitly', () {
     expect(
-      confirmationDecisionFromNullable(null),
-      const ConfirmationDecision.cancelled(),
+      const ConfirmationDecision.confirmed(),
+      isA<ConfirmedDialogDecision>(),
     );
-    expect(confirmationDecisionFromNullable(confirmed), confirmed);
+    expect(
+      const ConfirmationDecision.cancelled(),
+      isA<CancelledDialogDecision>(),
+    );
   });
 }

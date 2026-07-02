@@ -13,27 +13,28 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-02 15:56 JST
+- Timestamp: 2026-07-02 16:22 JST
 - State: `completed`
-- Branch: `task/interface-i1-cli-command-dispatch`
-- Active work: I1-P2 CLI Command Dispatch.
+- Branch: `task/interface-i1-flutter-dialog-decisions`
+- Active work: I1-P3 Flutter Dialog and Picker Decisions.
 - Related TODO: `docs/todo.md` `I1: Compatibility Interface Cleanup`,
-  `I1-P2 CLI Command Dispatch`.
-- Pull request: https://github.com/serika12345/Konyak/pull/9
-- Latest commit: branch commit (`Replace CLI command nullable dispatch`).
-- Purpose: replace nullable command dispatch for the runtime and location
-  command groups with explicit matched/not-matched variants while preserving the
-  public CLI contract.
-- Completed work: introduced `CliCommandMatch`, `CliCommandMatched`, and
-  `CliCommandNotMatched`; replaced `firstCliResult` with explicit
-  `firstCliCommandMatch`; converted runtime and location command handlers to
-  return explicit dispatch variants; kept a legacy wrapper only around
-  command groups not yet converted; added matched/unmatched command dispatch
-  contract tests; added governance coverage for the converted dispatch
-  boundary; and marked I1-P2 as completed in `docs/todo.md`.
-- Remaining work: review the draft PR. Do not advance into I1-P3 until I1-P2
+  `I1-P3 Flutter Dialog and Picker Decisions`.
+- Pull request: https://github.com/serika12345/Konyak/pull/10
+- Latest commit: branch commit (`Replace Flutter nullable dialog decisions`).
+- Purpose: replace nullable Flutter dialog and menu decision compatibility
+  bridges with explicit app decision variants while keeping nullable values at
+  the Flutter framework boundary.
+- Completed work: added `showDialogDecision` as the dialog dismissal boundary;
+  converted bottle, runtime, program, executable, winetricks, settings, and
+  pinned-program call sites to consume explicit decisions; added explicit
+  bottle and pinned-program context menu decision variants; removed converted
+  `*DecisionFromNullable` helpers; updated widget tests to assert explicit
+  decisions; added governance coverage for the converted decision boundary; and
+  marked I1-P3 as completed in `docs/todo.md`.
+- Remaining work: review the draft PR. Do not advance into I1-P4 until I1-P3
   has been reviewed and merged.
-- Next action: review https://github.com/serika12345/Konyak/pull/9.
-- Verification: final verification passed with `just cli-test`,
-  `just verify-governance`, `just verify-safety`, `just format-check`, and
-  `just lint` through the Nix dev shell.
+- Next action: review https://github.com/serika12345/Konyak/pull/10.
+- Verification: final verification passed with `just flutter-format-check`,
+  `just flutter-analyze`, `just flutter-test`, `just verify-governance`,
+  `just verify-safety`, `just format-check`, and `just lint` through the Nix
+  dev shell.

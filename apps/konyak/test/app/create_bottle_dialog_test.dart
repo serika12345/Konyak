@@ -2,16 +2,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:konyak/src/app/dialogs/create_bottle_dialog.dart';
 
 void main() {
-  test('models dismissed create bottle dialogs explicitly', () {
-    const createDecision = CreateBottleDecision.create(
+  test('models create bottle dialog decisions explicitly', () {
+    const decision = CreateBottleDecision.create(
       name: 'Steam',
       windowsVersion: 'win10',
     );
 
+    expect(decision, isA<CreateBottleFromDialog>());
     expect(
-      createBottleDecisionFromNullable(null),
       const CreateBottleDecision.cancelled(),
+      isA<CancelledCreateBottleDialog>(),
     );
-    expect(createBottleDecisionFromNullable(createDecision), createDecision);
   });
 }

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../app/dialogs/bottle_programs_dialog.dart';
+import '../app/dialogs/dialog_decision.dart';
 import '../app/dialogs/run_program_dialog.dart';
 import '../app/programs/program_window_probe.dart';
 import '../app/utils/program_labels.dart';
@@ -29,17 +30,16 @@ const programLaunchProcessStablePolls = 2;
 
 extension KonyakHomeLoaderPrograms on KonyakHomeLoaderState {
   Future<void> runProgram(BottleSummary bottle) async {
-    final decision = runProgramDialogDecisionFromNullable(
-      await showDialog<RunProgramDialogDecision>(
-        context: context,
-        builder: (context) => RunProgramDialog(
-          bottleName: bottle.name,
-          programFilePicker: widget.programFilePicker,
-          initialDirectory: bottleDriveCPath(bottle.path),
-          defaultLogPath: bottleRunLogPath(bottle.path),
-          graphicsBackendHintsLoader: (programPath) =>
-              widget.cliClient.suggestGraphicsBackend(programPath: programPath),
-        ),
+    final decision = await showDialogDecision<RunProgramDialogDecision>(
+      context: context,
+      dismissedDecision: const RunProgramDialogDecision.cancelled(),
+      builder: (context) => RunProgramDialog(
+        bottleName: bottle.name,
+        programFilePicker: widget.programFilePicker,
+        initialDirectory: bottleDriveCPath(bottle.path),
+        defaultLogPath: bottleRunLogPath(bottle.path),
+        graphicsBackendHintsLoader: (programPath) =>
+            widget.cliClient.suggestGraphicsBackend(programPath: programPath),
       ),
     );
 

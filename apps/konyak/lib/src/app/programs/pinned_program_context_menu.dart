@@ -26,16 +26,6 @@ sealed class PinnedProgramContextMenuDecision
       CancelledPinnedProgramContextMenu;
 }
 
-PinnedProgramContextMenuDecision pinnedProgramContextMenuDecisionFromNullable(
-  PinnedProgramContextMenuAction? action,
-) {
-  return switch (action) {
-    final PinnedProgramContextMenuAction action =>
-      PinnedProgramContextMenuDecision.select(action),
-    null => const PinnedProgramContextMenuDecision.cancelled(),
-  };
-}
-
 List<PinnedProgramContextMenuAction>
 pinnedProgramContextMenuActionsFromAvailability({
   required ProgramPathActionAvailability runProgramPathAction,

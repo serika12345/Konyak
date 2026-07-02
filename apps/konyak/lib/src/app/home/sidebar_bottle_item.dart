@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../bottles/bottle_summary.dart';
 import '../../l10n/konyak_localizations.dart';
 import '../app_constants.dart';
 import '../app_platform.dart';
+
+part 'sidebar_bottle_item.freezed.dart';
 
 const _bottleContextMenuWidth = 300.0;
 const _bottleContextMenuItemWidth = 256.0;
@@ -82,11 +85,19 @@ class SidebarBottleItem extends StatelessWidget {
       items: _bottleContextMenuItems(platform, KonyakLocalizations.of(context)),
     );
 
-    if (selectedAction == null) {
-      return;
-    }
+    final decision = switch (selectedAction) {
+      final BottleContextMenuAction action => BottleContextMenuDecision.select(
+        action,
+      ),
+      null => const BottleContextMenuDecision.cancelled(),
+    };
 
-    onContextMenuAction(selectedAction);
+    switch (decision) {
+      case SelectedBottleContextMenuAction(:final action):
+        onContextMenuAction(action);
+      case CancelledBottleContextMenu():
+        return;
+    }
   }
 }
 
@@ -97,6 +108,20 @@ enum BottleContextMenuAction {
   exportArchive,
   terminateProcesses,
   showInFinder,
+}
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class BottleContextMenuDecision with _$BottleContextMenuDecision {
+  const factory BottleContextMenuDecision.select(
+    BottleContextMenuAction action,
+  ) = SelectedBottleContextMenuAction;
+
+  const factory BottleContextMenuDecision.cancelled() =
+      CancelledBottleContextMenu;
 }
 
 List<PopupMenuEntry<BottleContextMenuAction>> _bottleContextMenuItems(

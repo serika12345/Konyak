@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../app/dialogs/bottle_management_dialogs.dart';
 import '../app/dialogs/create_bottle_dialog.dart';
+import '../app/dialogs/dialog_decision.dart';
 import '../app/utils/bottle_lists.dart';
 import '../bottles/bottle_summary.dart';
 import '../cli/konyak_cli_bottle_commands.dart';
@@ -55,11 +56,10 @@ extension KonyakHomeLoaderBottles on KonyakHomeLoaderState {
   }
 
   Future<BottleOperationOutcome> createBottleFromDialog() async {
-    final decision = createBottleDecisionFromNullable(
-      await showDialog<CreateBottleDecision>(
-        context: context,
-        builder: (context) => const CreateBottleDialog(),
-      ),
+    final decision = await showDialogDecision<CreateBottleDecision>(
+      context: context,
+      dismissedDecision: const CreateBottleDecision.cancelled(),
+      builder: (context) => const CreateBottleDialog(),
     );
 
     return switch (decision) {
@@ -248,11 +248,10 @@ extension KonyakHomeLoaderBottles on KonyakHomeLoaderState {
   }
 
   Future<void> deleteBottle(BottleSummary bottle) async {
-    final decision = deleteBottleDecisionFromNullable(
-      await showDialog<DeleteBottleDecision>(
-        context: context,
-        builder: (context) => DeleteBottleDialog(bottleName: bottle.name),
-      ),
+    final decision = await showDialogDecision<DeleteBottleDecision>(
+      context: context,
+      dismissedDecision: const DeleteBottleDecision.cancelled(),
+      builder: (context) => DeleteBottleDialog(bottleName: bottle.name),
     );
 
     switch (decision) {
@@ -310,11 +309,10 @@ extension KonyakHomeLoaderBottles on KonyakHomeLoaderState {
   }
 
   Future<void> renameBottle(BottleSummary bottle) async {
-    final decision = renameBottleDecisionFromNullable(
-      await showDialog<RenameBottleDecision>(
-        context: context,
-        builder: (context) => RenameBottleDialog(bottleName: bottle.name),
-      ),
+    final decision = await showDialogDecision<RenameBottleDecision>(
+      context: context,
+      dismissedDecision: const RenameBottleDecision.cancelled(),
+      builder: (context) => RenameBottleDialog(bottleName: bottle.name),
     );
 
     switch (decision) {
@@ -342,14 +340,13 @@ extension KonyakHomeLoaderBottles on KonyakHomeLoaderState {
   }
 
   Future<void> moveBottle(BottleSummary bottle) async {
-    final decision = moveBottleDecisionFromNullable(
-      await showDialog<MoveBottleDecision>(
-        context: context,
-        builder: (context) => MoveBottleDialog(
-          bottleName: bottle.name,
-          initialPath: bottle.path,
-          directoryPicker: widget.directoryPicker,
-        ),
+    final decision = await showDialogDecision<MoveBottleDecision>(
+      context: context,
+      dismissedDecision: const MoveBottleDecision.cancelled(),
+      builder: (context) => MoveBottleDialog(
+        bottleName: bottle.name,
+        initialPath: bottle.path,
+        directoryPicker: widget.directoryPicker,
       ),
     );
 

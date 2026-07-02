@@ -18,12 +18,6 @@ sealed class DeleteBottleDecision with _$DeleteBottleDecision {
   const factory DeleteBottleDecision.cancelled() = CancelledDeleteBottleDialog;
 }
 
-DeleteBottleDecision deleteBottleDecisionFromNullable(
-  DeleteBottleDecision? decision,
-) {
-  return decision ?? const DeleteBottleDecision.cancelled();
-}
-
 @Freezed(
   copyWith: false,
   map: FreezedMapOptions.none,
@@ -33,12 +27,6 @@ sealed class RenameBottleDecision with _$RenameBottleDecision {
   const factory RenameBottleDecision.rename(String name) = RenameBottleToName;
 
   const factory RenameBottleDecision.cancelled() = CancelledRenameBottleDialog;
-}
-
-RenameBottleDecision renameBottleDecisionFromNullable(
-  RenameBottleDecision? decision,
-) {
-  return decision ?? const RenameBottleDecision.cancelled();
 }
 
 @Freezed(
@@ -54,12 +42,6 @@ sealed class RenamePinnedProgramDecision with _$RenamePinnedProgramDecision {
       CancelledRenamePinnedProgramDialog;
 }
 
-RenamePinnedProgramDecision renamePinnedProgramDecisionFromNullable(
-  RenamePinnedProgramDecision? decision,
-) {
-  return decision ?? const RenamePinnedProgramDecision.cancelled();
-}
-
 @Freezed(
   copyWith: false,
   map: FreezedMapOptions.none,
@@ -69,12 +51,6 @@ sealed class MoveBottleDecision with _$MoveBottleDecision {
   const factory MoveBottleDecision.move(String path) = MoveBottleToPath;
 
   const factory MoveBottleDecision.cancelled() = CancelledMoveBottleDialog;
-}
-
-MoveBottleDecision moveBottleDecisionFromNullable(
-  MoveBottleDecision? decision,
-) {
-  return decision ?? const MoveBottleDecision.cancelled();
 }
 
 class DeleteBottleDialog extends StatelessWidget {

@@ -16,6 +16,7 @@ import 'app_settings_runtime_section.dart';
 import 'app_settings_runtime_view_model.dart';
 import 'app_settings_save_outcome.dart';
 import 'confirmation_decision.dart';
+import 'dialog_decision.dart';
 
 class AppSettingsDialog extends StatefulWidget {
   const AppSettingsDialog({
@@ -169,32 +170,27 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
     }
 
     final localizations = KonyakLocalizations.of(context);
-    final decision = confirmationDecisionFromNullable(
-      await showDialog<ConfirmationDecision>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text(localizations.importD3dmetalBackend),
-          content: Text(localizations.importD3dmetalBackendMessage),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(
-                  context,
-                ).pop(const ConfirmationDecision.cancelled());
-              },
-              child: Text(localizations.cancel),
-            ),
-            FilledButton(
-              key: const ValueKey('app-settings-confirm-gptk-wine-button'),
-              onPressed: () {
-                Navigator.of(
-                  context,
-                ).pop(const ConfirmationDecision.confirmed());
-              },
-              child: Text(localizations.importD3dmetal),
-            ),
-          ],
-        ),
+    final decision = await showDialogDecision<ConfirmationDecision>(
+      context: context,
+      dismissedDecision: const ConfirmationDecision.cancelled(),
+      builder: (context) => AlertDialog(
+        title: Text(localizations.importD3dmetalBackend),
+        content: Text(localizations.importD3dmetalBackendMessage),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(const ConfirmationDecision.cancelled());
+            },
+            child: Text(localizations.cancel),
+          ),
+          FilledButton(
+            key: const ValueKey('app-settings-confirm-gptk-wine-button'),
+            onPressed: () {
+              Navigator.of(context).pop(const ConfirmationDecision.confirmed());
+            },
+            child: Text(localizations.importD3dmetal),
+          ),
+        ],
       ),
     );
     if (!mounted) {

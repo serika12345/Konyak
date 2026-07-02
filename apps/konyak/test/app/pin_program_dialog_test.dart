@@ -2,16 +2,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:konyak/src/app/dialogs/pin_program_dialog.dart';
 
 void main() {
-  test('models dismissed pin program dialogs explicitly', () {
-    const pinDecision = PinProgramDecision.pin(
+  test('models pin program dialog decisions explicitly', () {
+    const decision = PinProgramDecision.pin(
       name: 'Setup',
       programPath: '/downloads/setup.exe',
     );
 
+    expect(decision, isA<PinProgramFromDialog>());
     expect(
-      pinProgramDecisionFromNullable(null),
       const PinProgramDecision.cancelled(),
+      isA<CancelledPinProgramDialog>(),
     );
-    expect(pinProgramDecisionFromNullable(pinDecision), pinDecision);
   });
 }

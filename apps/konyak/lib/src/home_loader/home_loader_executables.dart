@@ -1,8 +1,8 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../app/dialogs/dialog_decision.dart';
 import '../app/dialogs/open_executable_dialog.dart';
 import '../app/home/bottle_list_load_state.dart';
 import 'bottle_operation_outcome.dart';
@@ -156,12 +156,11 @@ extension KonyakHomeLoaderExecutables on KonyakHomeLoaderState {
       return;
     }
 
-    final decision = openExecutableDecisionFromNullable(
-      await showDialog<OpenExecutableDecision>(
-        context: context,
-        builder: (context) =>
-            OpenExecutableDialog(programPath: programPath, bottles: bottles),
-      ),
+    final decision = await showDialogDecision<OpenExecutableDecision>(
+      context: context,
+      dismissedDecision: const OpenExecutableDecision.cancelled(),
+      builder: (context) =>
+          OpenExecutableDialog(programPath: programPath, bottles: bottles),
     );
 
     if (!mounted) {

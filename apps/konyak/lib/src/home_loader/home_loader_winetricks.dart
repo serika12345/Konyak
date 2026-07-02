@@ -1,7 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
-
+import '../app/dialogs/dialog_decision.dart';
 import '../app/dialogs/winetricks_dialog.dart';
 import '../bottles/bottle_summary.dart';
 import '../cli/konyak_cli_program_commands.dart';
@@ -38,14 +37,11 @@ extension KonyakHomeLoaderWinetricks on KonyakHomeLoaderState {
 
     switch (listResult) {
       case LoadedWinetricksVerbs(:final categories):
-        final decision = winetricksVerbDecisionFromNullable(
-          await showDialog<WinetricksVerbDecision>(
-            context: context,
-            builder: (context) => WinetricksDialog(
-              bottleName: bottle.name,
-              categories: categories,
-            ),
-          ),
+        final decision = await showDialogDecision<WinetricksVerbDecision>(
+          context: context,
+          dismissedDecision: const WinetricksVerbDecision.cancelled(),
+          builder: (context) =>
+              WinetricksDialog(bottleName: bottle.name, categories: categories),
         );
 
         if (!mounted) {
