@@ -88,58 +88,6 @@ Small milestones:
 - [ ] R2-S5: Remove hand-written `part` usage from CLI contract tests so tests
   no longer normalize that shape as a large-file escape hatch.
 
-### R3: Flutter Home and Bottle UI Decomposition
-
-Purpose: split remaining large Flutter UI and loader surfaces after backend and
-action boundaries are explicit, keeping widgets focused on rendering and event
-wiring.
-
-Small milestones:
-
-- [ ] R3-S2: Keep the `KonyakHome` boundary grouped by responsibility-scoped
-  state and action contracts instead of flat props or a single giant props
-  object.
-- [ ] R3-S3: Move bottle, program, and runtime view models and action
-  selection out of `home_screen.dart`, `sidebar.dart`,
-  `program_configuration_view.dart`, and `bottle_configuration_view.dart`.
-- [ ] R3-S4: Split remaining large UI files only after the extracted contracts
-  are stable.
-- [ ] R3-S5: Add focused widget or golden tests when visible behavior changes.
-
-#### PR Gate: R3-P2 Bottle View Model Extraction
-
-branch: `task/refactor-r3-bottle-view-models`
-
-Completion criteria:
-
-- Bottle, program, and runtime view model construction and action selection are
-  moved out of large rendering widgets into focused helpers.
-- Widgets remain responsible for rendering and event wiring.
-- Focused tests cover view model construction and action selection; widget or
-  golden tests cover any visible behavior changes.
-- `docs/progress.md` records the gate state, latest commit, verification, and
-  next action.
-
-Not included:
-
-- CLI backend changes.
-- Runtime behavior changes.
-- Large visual redesign.
-
-Verification:
-
-- `just flutter-format-check`
-- `just flutter-analyze`
-- `just flutter-test`
-- `just verify-governance`
-- `just verify-safety`
-- `just format-check`
-- `just lint`
-
-review gate:
-
-- Commit and push the branch, open a draft PR, then stop before R4.
-
 ### R4: Refactoring Governance and Completion
 
 Purpose: make the refactored boundaries stay stable by adding reviewed
