@@ -1,0 +1,8 @@
+analyzer:
+  plugins:
+    - custom_lint
+
+custom_lint:
+  rules:
+    - konyak_no_null_literal_outside_boundary
+    - konyak_no_nullable_type_outside_boundary

@@ -13,24 +13,28 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-02 20:23 JST
-- State: `planned`
-- Branch: `task/interface-i1-governance-gate-plan`
-- Active work: I1-P5 Refactoring Governance Allowance Cleanup planning.
+- Timestamp: 2026-07-02 20:33 JST
+- State: `completed`
+- Branch: `task/interface-i1-governance-allowances`
+- Active work: I1-P5 Refactoring Governance Allowance Cleanup.
 - Related TODO: `docs/todo.md` `I1: Compatibility Interface Cleanup`, `I1-S5`,
   and `I1-P5 Refactoring Governance Allowance Cleanup`.
-- Pull request: https://github.com/serika12345/Konyak/pull/12
-- Latest commit: branch commit (`Plan I1 governance allowance cleanup gate`).
-- Purpose: add an explicit PR Gate for the remaining I1 governance allowance
-  cleanup now that I1-P4 has been reviewed and merged.
-- Completed work: fast-forwarded `main` to the PR #11 merge, confirmed there
-  are no open Konyak PRs against `main`, added the I1-P5 PR Gate, and updated
-  governance documentation checks to expect the new gate.
-- Remaining work: review and merge the planning PR, then implement I1-P5 on
-  `task/interface-i1-governance-allowances`.
-- Next action: review the I1-P5 gate definition, then run `/advance-pr` to
-  implement the gate after the planning PR is merged.
-- Verification: `just verify-governance` intentionally failed before the docs
-  update because I1-P5 was not yet present; final verification passed with
-  `just verify-governance`, `just verify-safety`, `just format-check`, and
-  `just lint` through the Nix dev shell.
+- Pull request: https://github.com/serika12345/Konyak/pull/13
+- Latest commit: branch commit (`Tighten I1 nullable governance allowance`).
+- Purpose: remove the remaining stale governance allowance left after the I1
+  compatibility wrapper cleanup and make the current Flutter update DTO
+  boundary enforceable by custom lint.
+- Completed work: removed the broad `apps/konyak/lib/src/updates/` nullable
+  boundary allowlist from `konyak_lints`, added a Flutter custom-lint fixture
+  proving app-facing update summaries cannot reintroduce nullable fields,
+  added governance coverage for the tightened boundary, and marked I1-P5 as
+  completed in `docs/todo.md`.
+- Remaining work: review the draft PR. Do not add or start a post-I1
+  milestone until I1-P5 has been reviewed and merged.
+- Next action: review the I1-P5 draft PR after it is opened.
+- Verification: `just konyak-lints-test` intentionally failed before the lint
+  allowlist was tightened; `just verify-governance` intentionally failed before
+  the docs update because I1-P5 was not yet marked complete. Final
+  verification passed with `just konyak-lints-test`, `just verify-governance`,
+  `just verify-safety`, `just format-check`, and `just lint` through the Nix
+  dev shell.

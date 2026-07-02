@@ -7,7 +7,7 @@ void main() {
     test(
       'invalid fixture reports policy violations',
       () async {
-        final fixture = _fixtureDirectory('invalid');
+        final fixture = _fixtureDirectory('invalid', 'packages/konyak_cli');
         await _dart(fixture, const ['pub', 'get']);
 
         final result = await _dart(fixture, const ['run', 'custom_lint']);
@@ -58,8 +58,24 @@ void main() {
       timeout: const Timeout(Duration(minutes: 2)),
     );
 
+    test(
+      'invalid Flutter fixture reports app-facing nullable violations',
+      () async {
+        final fixture = _fixtureDirectory('invalid', 'apps/konyak');
+        await _dart(fixture, const ['pub', 'get']);
+
+        final result = await _dart(fixture, const ['run', 'custom_lint']);
+        final output = _combinedOutput(result);
+
+        expect(result.exitCode, isNot(0), reason: output);
+        expect(output, contains('lib/src/updates/update_check_summary.dart'));
+        expect(output, contains('konyak_no_nullable_type_outside_boundary'));
+      },
+      timeout: const Timeout(Duration(minutes: 2)),
+    );
+
     test('valid fixture passes', () async {
-      final fixture = _fixtureDirectory('valid');
+      final fixture = _fixtureDirectory('valid', 'packages/konyak_cli');
       await _dart(fixture, const ['pub', 'get']);
 
       final result = await _dart(fixture, const ['run', 'custom_lint']);
@@ -71,15 +87,14 @@ void main() {
   });
 }
 
-Directory _fixtureDirectory(String name) {
+Directory _fixtureDirectory(String name, String projectPath) {
   return Directory(
     _joinPath([
       Directory.current.path,
       'test',
       'fixtures',
       name,
-      'packages',
-      'konyak_cli',
+      ...projectPath.split('/'),
     ]),
   );
 }
