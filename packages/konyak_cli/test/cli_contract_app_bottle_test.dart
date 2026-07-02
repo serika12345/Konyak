@@ -1,6 +1,6 @@
-part of 'cli_contract_test.dart';
+import 'support/cli_contract_full_helpers.dart';
 
-void defineAppAndBottleContractTests() {
+void main() {
   test(
     'list-bottles --json returns the versioned empty bottle list contract',
     () {
@@ -91,7 +91,7 @@ void defineAppAndBottleContractTests() {
     final result = runCli(
       const ['get-app-settings', '--json'],
       appSettingsRepository: FileAppSettingsRepository(
-        configHome: _joinTestPath(tempDirectory.path, const ['config']),
+        configHome: joinTestPath(tempDirectory.path, const ['config']),
         fallbackDefaultBottlePath: '/Volumes/Games/Bottles',
       ),
     );
@@ -129,7 +129,7 @@ void defineAppAndBottleContractTests() {
     expect(result.exitCode, 0);
     expect(result.stderr, isEmpty);
     expect(
-      _expectIo(repository.read()),
+      expectIo(repository.read()),
       AppSettingsRecord(
         terminateWineProcessesOnClose: false,
         defaultBottlePath: '/Volumes/Games/Bottles',
@@ -168,7 +168,7 @@ void defineAppAndBottleContractTests() {
     expect(result.exitCode, 0);
     expect(result.stderr, isEmpty);
     expect(
-      _expectIo(repository.read()),
+      expectIo(repository.read()),
       AppSettingsRecord(
         terminateWineProcessesOnClose: true,
         defaultBottlePath: '/Volumes/Games/Bottles',
@@ -198,7 +198,7 @@ void defineAppAndBottleContractTests() {
         tempDirectory.deleteSync(recursive: true);
       }
     });
-    final bottleDirectory = _joinTestPath(tempDirectory.path, const [
+    final bottleDirectory = joinTestPath(tempDirectory.path, const [
       'Konyak Bottles',
     ]);
     final repository = defaultBottleRepositoryFromEnvironment(
@@ -218,7 +218,7 @@ void defineAppAndBottleContractTests() {
     final created = result as BottleCreated;
     expect(
       created.bottle.path.value,
-      _joinTestPath(bottleDirectory, const ['steam']),
+      joinTestPath(bottleDirectory, const ['steam']),
     );
   });
 
@@ -231,13 +231,13 @@ void defineAppAndBottleContractTests() {
         tempDirectory.deleteSync(recursive: true);
       }
     });
-    final dataHome = _joinTestPath(tempDirectory.path, const ['data']);
-    final existingBottlePath = _joinTestPath(dataHome, const [
+    final dataHome = joinTestPath(tempDirectory.path, const ['data']);
+    final existingBottlePath = joinTestPath(dataHome, const [
       'bottles',
       'existing',
     ]);
     Directory(existingBottlePath).createSync(recursive: true);
-    _writeTestBottleMetadata(
+    writeTestBottleMetadata(
       BottleRecord(
         id: 'existing',
         name: 'Existing',
@@ -245,7 +245,7 @@ void defineAppAndBottleContractTests() {
         windowsVersion: 'win10',
       ),
     );
-    final bottleDirectory = _joinTestPath(tempDirectory.path, const [
+    final bottleDirectory = joinTestPath(tempDirectory.path, const [
       'Konyak Bottles',
     ]);
     final repository = defaultBottleRepositoryFromEnvironment(
@@ -263,7 +263,7 @@ void defineAppAndBottleContractTests() {
 
     expect(result, isA<BottleCreated>());
     expect(
-      _expectIo(repository.listBottles()).map((bottle) => bottle.id.value),
+      expectIo(repository.listBottles()).map((bottle) => bottle.id.value),
       const ['existing', 'steam'],
     );
   });
@@ -279,7 +279,7 @@ void defineAppAndBottleContractTests() {
     });
     final repository = FileBottleRepository(
       programMetadataExtractor: const NoopProgramMetadataExtractor(),
-      dataHome: _joinTestPath(tempDirectory.path, const ['data']),
+      dataHome: joinTestPath(tempDirectory.path, const ['data']),
     );
     final createResult = repository.createBottle(
       BottleCreateRequest(
@@ -288,10 +288,10 @@ void defineAppAndBottleContractTests() {
       ),
     );
     final bottle = (createResult as BottleCreated).bottle;
-    File(_joinTestPath(bottle.path.value, const ['drive_c', 'steam.txt']))
+    File(joinTestPath(bottle.path.value, const ['drive_c', 'steam.txt']))
       ..createSync(recursive: true)
       ..writeAsStringSync('installed');
-    final archivePath = _joinTestPath(tempDirectory.path, const [
+    final archivePath = joinTestPath(tempDirectory.path, const [
       'steam.konyak-bottle.tar',
     ]);
 
@@ -326,7 +326,7 @@ void defineAppAndBottleContractTests() {
         tempDirectory.deleteSync(recursive: true);
       }
     });
-    final sourceBottlePath = _joinTestPath(tempDirectory.path, const [
+    final sourceBottlePath = joinTestPath(tempDirectory.path, const [
       'archive-source',
       'steam',
     ]);
@@ -337,26 +337,26 @@ void defineAppAndBottleContractTests() {
       windowsVersion: 'win10',
     );
     Directory(
-      _joinTestPath(sourceBottlePath, const ['drive_c']),
+      joinTestPath(sourceBottlePath, const ['drive_c']),
     ).createSync(recursive: true);
     File(
-      _joinTestPath(sourceBottlePath, const ['drive_c', 'steam.txt']),
+      joinTestPath(sourceBottlePath, const ['drive_c', 'steam.txt']),
     ).writeAsStringSync('installed');
-    _writeTestBottleMetadata(sourceBottle);
-    final archivePath = _joinTestPath(tempDirectory.path, const [
+    writeTestBottleMetadata(sourceBottle);
+    final archivePath = joinTestPath(tempDirectory.path, const [
       'steam.konyak-bottle.tar',
     ]);
     final archiveResult = Process.runSync('tar', [
       '-cf',
       archivePath,
       '-C',
-      _joinTestPath(tempDirectory.path, const ['archive-source']),
+      joinTestPath(tempDirectory.path, const ['archive-source']),
       'steam',
     ]);
     expect(archiveResult.exitCode, 0);
     final repository = FileBottleRepository(
       programMetadataExtractor: const NoopProgramMetadataExtractor(),
-      dataHome: _joinTestPath(tempDirectory.path, const ['data']),
+      dataHome: joinTestPath(tempDirectory.path, const ['data']),
     );
 
     final result = runCli([
@@ -370,7 +370,7 @@ void defineAppAndBottleContractTests() {
     expect(result.stderr, isEmpty);
     final payload = jsonDecode(result.stdout) as Map<String, Object?>;
     final imported = payload['bottle'] as Map<String, Object?>;
-    final importedPath = _joinTestPath(tempDirectory.path, const [
+    final importedPath = joinTestPath(tempDirectory.path, const [
       'data',
       'bottles',
       'steam',
@@ -380,12 +380,12 @@ void defineAppAndBottleContractTests() {
     expect(imported['path'], importedPath);
     expect(
       File(
-        _joinTestPath(importedPath, const ['drive_c', 'steam.txt']),
+        joinTestPath(importedPath, const ['drive_c', 'steam.txt']),
       ).readAsStringSync(),
       'installed',
     );
     expect(
-      _expectFound(repository.findBottle(BottleId('steam'))).path.value,
+      expectFound(repository.findBottle(BottleId('steam'))).path.value,
       importedPath,
     );
   });
@@ -399,7 +399,7 @@ void defineAppAndBottleContractTests() {
         tempDirectory.deleteSync(recursive: true);
       }
     });
-    final sourceBottlePath = _joinTestPath(tempDirectory.path, const [
+    final sourceBottlePath = joinTestPath(tempDirectory.path, const [
       'archive-source',
       'steam',
     ]);
@@ -410,22 +410,22 @@ void defineAppAndBottleContractTests() {
       windowsVersion: 'win10',
     );
     Directory(
-      _joinTestPath(sourceBottlePath, const ['drive_c']),
+      joinTestPath(sourceBottlePath, const ['drive_c']),
     ).createSync(recursive: true);
-    _writeTestBottleMetadata(sourceBottle);
-    final archivePath = _joinTestPath(tempDirectory.path, const [
+    writeTestBottleMetadata(sourceBottle);
+    final archivePath = joinTestPath(tempDirectory.path, const [
       'steam.konyak-bottle.tar',
     ]);
     final archiveResult = Process.runSync('tar', [
       '-cf',
       archivePath,
       '-C',
-      _joinTestPath(tempDirectory.path, const ['archive-source']),
+      joinTestPath(tempDirectory.path, const ['archive-source']),
       'steam',
     ]);
     expect(archiveResult.exitCode, 0);
-    final dataHome = _joinTestPath(tempDirectory.path, const ['data']);
-    File(_joinTestPath(dataHome, const ['bottles', 'steam', 'metadata.json']))
+    final dataHome = joinTestPath(tempDirectory.path, const ['data']);
+    File(joinTestPath(dataHome, const ['bottles', 'steam', 'metadata.json']))
       ..createSync(recursive: true)
       ..writeAsStringSync('[]');
     final repository = FileBottleRepository(
@@ -640,7 +640,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       ],
     ]);
     expect(
-      _expectFound(
+      expectFound(
         repository.findBottle(BottleId('steam')),
       ).windowsVersion.value,
       'win11',
@@ -724,12 +724,12 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: tempDirectory.path,
     );
-    final orphanedBottlePath = _joinTestPath(tempDirectory.path, const [
+    final orphanedBottlePath = joinTestPath(tempDirectory.path, const [
       'bottles',
       'steam',
     ]);
     final leftoverFile = File(
-      _joinTestPath(orphanedBottlePath, const ['drive_c', 'leftover.txt']),
+      joinTestPath(orphanedBottlePath, const ['drive_c', 'leftover.txt']),
     )..createSync(recursive: true);
     leftoverFile.writeAsStringSync('leftover');
 
@@ -754,7 +754,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
     expect(leftoverFile.readAsStringSync(), 'leftover');
     expect(
       File(
-        _joinTestPath(orphanedBottlePath, const ['metadata.json']),
+        joinTestPath(orphanedBottlePath, const ['metadata.json']),
       ).existsSync(),
       isTrue,
     );
@@ -806,7 +806,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
     });
 
     expect(
-      _expectFound(repository.findBottle(BottleId('日本語'))).name.value,
+      expectFound(repository.findBottle(BottleId('日本語'))).name.value,
       '日本語',
     );
   });
@@ -972,7 +972,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       },
     });
     expect(
-      _expectFound(repository.findBottle(BottleId('steam'))).runtimeSettings,
+      expectFound(repository.findBottle(BottleId('steam'))).runtimeSettings,
       BottleRuntimeSettings(
         enhancedSync: 'esync',
         metalHud: true,
@@ -1027,7 +1027,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
     expect(runtimeSettings, containsPair('metalHud', true));
     expect(runtimeSettings, containsPair('dlssMetalFx', false));
     expect(
-      _expectFound(
+      expectFound(
         repository.findBottle(BottleId('steam')),
       ).runtimeSettings.dlssMetalFx,
       isFalse,
@@ -1044,8 +1044,8 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       }
     });
 
-    final runtimeRoot = _joinTestPath(tempDirectory.path, const ['runtime']);
-    final bottlePath = _joinTestPath(tempDirectory.path, const [
+    final runtimeRoot = joinTestPath(tempDirectory.path, const ['runtime']);
+    final bottlePath = joinTestPath(tempDirectory.path, const [
       'bottles',
       'steam',
     ]);
@@ -1059,7 +1059,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
         'd3d11.dll',
       ]) {
         final file = File(
-          _joinTestPath(runtimeRoot, ['lib', 'dxvk', arch, dllName]),
+          joinTestPath(runtimeRoot, ['lib', 'dxvk', arch, dllName]),
         );
         file.parent.createSync(recursive: true);
         file.writeAsStringSync('$arch/$dllName');
@@ -1067,7 +1067,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
     }
     final repository = MemoryBottleRepository(
       programMetadataExtractor: const NoopProgramMetadataExtractor(),
-      dataHome: _joinTestPath(tempDirectory.path, const ['data']),
+      dataHome: joinTestPath(tempDirectory.path, const ['data']),
       bottles: [
         BottleRecord(
           id: 'steam',
@@ -1105,23 +1105,13 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
     ]) {
       expect(
         File(
-          _joinTestPath(bottlePath, [
-            'drive_c',
-            'windows',
-            'system32',
-            dllName,
-          ]),
+          joinTestPath(bottlePath, ['drive_c', 'windows', 'system32', dllName]),
         ).readAsStringSync(),
         'x86_64-windows/$dllName',
       );
       expect(
         File(
-          _joinTestPath(bottlePath, [
-            'drive_c',
-            'windows',
-            'syswow64',
-            dllName,
-          ]),
+          joinTestPath(bottlePath, ['drive_c', 'windows', 'syswow64', dllName]),
         ).readAsStringSync(),
         'i386-windows/$dllName',
       );
@@ -1138,14 +1128,14 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       }
     });
 
-    final runtimeRoot = _joinTestPath(tempDirectory.path, const ['runtime']);
-    final bottlePath = _joinTestPath(tempDirectory.path, const [
+    final runtimeRoot = joinTestPath(tempDirectory.path, const ['runtime']);
+    final bottlePath = joinTestPath(tempDirectory.path, const [
       'bottles',
       'steam',
     ]);
-    for (final dllName in _gptkD3DMetalOverrideDllNames) {
+    for (final dllName in gptkD3DMetalOverrideDllNames) {
       final file = File(
-        _joinTestPath(runtimeRoot, [
+        joinTestPath(runtimeRoot, [
           'components',
           'gptk-d3dmetal',
           'lib',
@@ -1171,7 +1161,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
         'winemetal.dll',
       ]) {
         final file = File(
-          _joinTestPath(bottlePath, [
+          joinTestPath(bottlePath, [
             'drive_c',
             'windows',
             windowsDirectory,
@@ -1184,7 +1174,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
     }
     final repository = MemoryBottleRepository(
       programMetadataExtractor: const NoopProgramMetadataExtractor(),
-      dataHome: _joinTestPath(tempDirectory.path, const ['data']),
+      dataHome: joinTestPath(tempDirectory.path, const ['data']),
       bottles: [
         BottleRecord(
           id: 'steam',
@@ -1212,26 +1202,16 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
 
     expect(result.exitCode, 0);
     expect(result.stderr, isEmpty);
-    for (final dllName in _gptkD3DMetalOverrideDllNames) {
+    for (final dllName in gptkD3DMetalOverrideDllNames) {
       expect(
         File(
-          _joinTestPath(bottlePath, [
-            'drive_c',
-            'windows',
-            'system32',
-            dllName,
-          ]),
+          joinTestPath(bottlePath, ['drive_c', 'windows', 'system32', dllName]),
         ).readAsStringSync(),
         'd3dmetal/$dllName',
       );
       expect(
         File(
-          _joinTestPath(bottlePath, [
-            'drive_c',
-            'windows',
-            'syswow64',
-            dllName,
-          ]),
+          joinTestPath(bottlePath, ['drive_c', 'windows', 'syswow64', dllName]),
         ).existsSync(),
         isFalse,
       );
@@ -1245,12 +1225,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
     ]) {
       expect(
         File(
-          _joinTestPath(bottlePath, [
-            'drive_c',
-            'windows',
-            'system32',
-            dllName,
-          ]),
+          joinTestPath(bottlePath, ['drive_c', 'windows', 'system32', dllName]),
         ).existsSync(),
         isFalse,
       );
@@ -1267,14 +1242,14 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       }
     });
 
-    final runtimeRoot = _joinTestPath(tempDirectory.path, const ['runtime']);
-    final bottlePath = _joinTestPath(tempDirectory.path, const [
+    final runtimeRoot = joinTestPath(tempDirectory.path, const ['runtime']);
+    final bottlePath = joinTestPath(tempDirectory.path, const [
       'bottles',
       'steam',
     ]);
-    for (final dllName in _gptkD3DMetalOverrideDllNames) {
+    for (final dllName in gptkD3DMetalOverrideDllNames) {
       final file = File(
-        _joinTestPath(runtimeRoot, [
+        joinTestPath(runtimeRoot, [
           'components',
           'gptk-d3dmetal',
           'lib',
@@ -1287,7 +1262,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       file.writeAsStringSync('d3dmetal/$dllName');
     }
     final staleDxgi = File(
-      _joinTestPath(bottlePath, const [
+      joinTestPath(bottlePath, const [
         'drive_c',
         'windows',
         'system32',
@@ -1299,7 +1274,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
 
     final repository = MemoryBottleRepository(
       programMetadataExtractor: const NoopProgramMetadataExtractor(),
-      dataHome: _joinTestPath(tempDirectory.path, const ['data']),
+      dataHome: joinTestPath(tempDirectory.path, const ['data']),
       bottles: [
         BottleRecord(
           id: 'steam',
@@ -1328,15 +1303,10 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
 
     expect(result.exitCode, 0);
     expect(result.stderr, isEmpty);
-    for (final dllName in _gptkD3DMetalOverrideDllNames) {
+    for (final dllName in gptkD3DMetalOverrideDllNames) {
       expect(
         File(
-          _joinTestPath(bottlePath, [
-            'drive_c',
-            'windows',
-            'system32',
-            dllName,
-          ]),
+          joinTestPath(bottlePath, ['drive_c', 'windows', 'system32', dllName]),
         ).readAsStringSync(),
         'd3dmetal/$dllName',
       );
@@ -1353,8 +1323,8 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       }
     });
 
-    final runtimeRoot = _joinTestPath(tempDirectory.path, const ['runtime']);
-    final bottlePath = _joinTestPath(tempDirectory.path, const [
+    final runtimeRoot = joinTestPath(tempDirectory.path, const ['runtime']);
+    final bottlePath = joinTestPath(tempDirectory.path, const [
       'bottles',
       'steam',
     ]);
@@ -1372,7 +1342,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
         'winemetal.dll',
       ]) {
         final file = File(
-          _joinTestPath(bottlePath, [
+          joinTestPath(bottlePath, [
             'drive_c',
             'windows',
             windowsDirectory,
@@ -1385,7 +1355,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
     }
     final repository = MemoryBottleRepository(
       programMetadataExtractor: const NoopProgramMetadataExtractor(),
-      dataHome: _joinTestPath(tempDirectory.path, const ['data']),
+      dataHome: joinTestPath(tempDirectory.path, const ['data']),
       bottles: [
         BottleRecord(
           id: 'steam',
@@ -1429,7 +1399,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       ]) {
         expect(
           File(
-            _joinTestPath(bottlePath, [
+            joinTestPath(bottlePath, [
               'drive_c',
               'windows',
               windowsDirectory,
@@ -1454,8 +1424,8 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
         }
       });
 
-      final runtimeRoot = _joinTestPath(tempDirectory.path, const ['runtime']);
-      final bottlePath = _joinTestPath(tempDirectory.path, const [
+      final runtimeRoot = joinTestPath(tempDirectory.path, const ['runtime']);
+      final bottlePath = joinTestPath(tempDirectory.path, const [
         'bottles',
         'steam',
       ]);
@@ -1473,7 +1443,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
           'winemetal.dll',
         ]) {
           final file = File(
-            _joinTestPath(bottlePath, [
+            joinTestPath(bottlePath, [
               'drive_c',
               'windows',
               windowsDirectory,
@@ -1486,7 +1456,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       }
       final repository = MemoryBottleRepository(
         programMetadataExtractor: const NoopProgramMetadataExtractor(),
-        dataHome: _joinTestPath(tempDirectory.path, const ['data']),
+        dataHome: joinTestPath(tempDirectory.path, const ['data']),
         bottles: [
           BottleRecord(
             id: 'steam',
@@ -1516,7 +1486,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       expect(result.exitCode, 0);
       expect(result.stderr, isEmpty);
       expect(
-        _expectFound(
+        expectFound(
           repository.findBottle(BottleId('steam')),
         ).runtimeSettings.dxrEnabled,
         isFalse,
@@ -1536,7 +1506,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
         ]) {
           expect(
             File(
-              _joinTestPath(bottlePath, [
+              joinTestPath(bottlePath, [
                 'drive_c',
                 'windows',
                 windowsDirectory,
@@ -1562,8 +1532,8 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
         }
       });
 
-      final runtimeRoot = _joinTestPath(tempDirectory.path, const ['runtime']);
-      final bottlePath = _joinTestPath(tempDirectory.path, const [
+      final runtimeRoot = joinTestPath(tempDirectory.path, const ['runtime']);
+      final bottlePath = joinTestPath(tempDirectory.path, const [
         'bottles',
         'steam',
       ]);
@@ -1578,7 +1548,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
           'winemetal.dll',
         ]) {
           final file = File(
-            _joinTestPath(bottlePath, [
+            joinTestPath(bottlePath, [
               'drive_c',
               'windows',
               windowsDirectory,
@@ -1591,7 +1561,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       }
       final repository = MemoryBottleRepository(
         programMetadataExtractor: const NoopProgramMetadataExtractor(),
-        dataHome: _joinTestPath(tempDirectory.path, const ['data']),
+        dataHome: joinTestPath(tempDirectory.path, const ['data']),
         bottles: [
           BottleRecord(
             id: 'steam',
@@ -1632,7 +1602,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
         ]) {
           expect(
             File(
-              _joinTestPath(bottlePath, [
+              joinTestPath(bottlePath, [
                 'drive_c',
                 'windows',
                 windowsDirectory,
@@ -1679,7 +1649,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       );
 
       expect(result.exitCode, 0);
-      final updated = _expectFound(repository.findBottle(BottleId('steam')));
+      final updated = expectFound(repository.findBottle(BottleId('steam')));
       expect(updated.runtimeSettings.dxvk, isFalse);
       expect(updated.runtimeSettings.dxmt, isTrue);
     },
@@ -1697,26 +1667,21 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
         }
       });
 
-      final runtimeRoot = _joinTestPath(tempDirectory.path, const ['runtime']);
-      final bottlePath = _joinTestPath(tempDirectory.path, const [
+      final runtimeRoot = joinTestPath(tempDirectory.path, const ['runtime']);
+      final bottlePath = joinTestPath(tempDirectory.path, const [
         'bottles',
         'steam',
       ]);
-      for (final dllName in _gptkD3DMetalOverrideDllNames) {
+      for (final dllName in gptkD3DMetalOverrideDllNames) {
         final file = File(
-          _joinTestPath(runtimeRoot, [
-            'lib',
-            'wine',
-            'x86_64-windows',
-            dllName,
-          ]),
+          joinTestPath(runtimeRoot, ['lib', 'wine', 'x86_64-windows', dllName]),
         );
         file.parent.createSync(recursive: true);
         file.writeAsStringSync('d3dmetal/$dllName');
       }
       final repository = MemoryBottleRepository(
         programMetadataExtractor: const NoopProgramMetadataExtractor(),
-        dataHome: _joinTestPath(tempDirectory.path, const ['data']),
+        dataHome: joinTestPath(tempDirectory.path, const ['data']),
         bottles: [
           BottleRecord(
             id: 'steam',
@@ -1743,7 +1708,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       );
 
       expect(result.exitCode, 0);
-      final updated = _expectFound(repository.findBottle(BottleId('steam')));
+      final updated = expectFound(repository.findBottle(BottleId('steam')));
       expect(updated.runtimeSettings.dxrEnabled, isTrue);
       expect(updated.runtimeSettings.dxvk, isFalse);
       expect(updated.runtimeSettings.dxmt, isFalse);
@@ -1861,7 +1826,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       ),
     );
     expect(
-      _expectFound(repository.findBottle(BottleId('steam'))).runtimeSettings,
+      expectFound(repository.findBottle(BottleId('steam'))).runtimeSettings,
       BottleRuntimeSettings(
         buildVersion: 22631,
         retinaMode: true,
@@ -1939,7 +1904,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
         ],
       ]);
       expect(
-        _expectFound(repository.findBottle(BottleId('steam'))).runtimeSettings,
+        expectFound(repository.findBottle(BottleId('steam'))).runtimeSettings,
         BottleRuntimeSettings(retinaMode: false, dpiScaling: 96),
       );
     },
@@ -2042,7 +2007,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       final payload = jsonDecode(result.stdout) as Map<String, Object?>;
       expect(payload['error'], containsPair('code', 'registryUpdateFailed'));
       expect(
-        _expectFound(repository.findBottle(BottleId('steam'))).runtimeSettings,
+        expectFound(repository.findBottle(BottleId('steam'))).runtimeSettings,
         BottleRuntimeSettings(),
       );
     },
@@ -2128,8 +2093,8 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
         'konyak-bottle-delete-failure-test-',
       );
       addTearDown(() {
-        _chmodPath(
-          _joinTestPath(tempDirectory.path, const [
+        chmodPath(
+          joinTestPath(tempDirectory.path, const [
             'bottles',
             'steam',
             'drive_c',
@@ -2153,12 +2118,12 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       );
       final bottle = (createResult as BottleCreated).bottle;
       final lockedDirectory = Directory(
-        _joinTestPath(bottle.path.value, const ['drive_c', 'locked']),
+        joinTestPath(bottle.path.value, const ['drive_c', 'locked']),
       )..createSync(recursive: true);
       File(
-        _joinTestPath(lockedDirectory.path, const ['file.txt']),
+        joinTestPath(lockedDirectory.path, const ['file.txt']),
       ).writeAsStringSync('locked');
-      _chmodPath(lockedDirectory.path, '555');
+      chmodPath(lockedDirectory.path, '555');
 
       final result = runCli(const [
         'delete-bottle',
@@ -2170,7 +2135,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       expect(result.stderr, isEmpty);
       expect(
         File(
-          _joinTestPath(bottle.path.value, const ['metadata.json']),
+          joinTestPath(bottle.path.value, const ['metadata.json']),
         ).existsSync(),
         isTrue,
       );
@@ -2242,9 +2207,9 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
         'windowsVersion': 'win10',
       },
     });
-    _expectMissing(repository.findBottle(BottleId('steam')));
+    expectMissing(repository.findBottle(BottleId('steam')));
     expect(
-      _expectFound(repository.findBottle(BottleId('steam-games'))).name.value,
+      expectFound(repository.findBottle(BottleId('steam-games'))).name.value,
       'Steam Games',
     );
   });
@@ -2323,7 +2288,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       },
     });
     expect(
-      _expectFound(repository.findBottle(BottleId('steam'))).path.value,
+      expectFound(repository.findBottle(BottleId('steam'))).path.value,
       '/mnt/games/Steam',
     );
   });

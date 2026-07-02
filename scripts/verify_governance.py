@@ -2589,6 +2589,11 @@ def require_refactoring_documentation_cleanup() -> None:
         "status: completed",
         "branch: `task/interface-i2-cli-contract-seed-tests`",
         "#### PR Gate: I2-P3 CLI Contract Family Test Part Split",
+        (
+            "#### PR Gate: I2-P3 CLI Contract Family Test Part Split\n\n"
+            "status: completed\n"
+            "branch: `task/interface-i2-cli-contract-family-tests`"
+        ),
         "branch: `task/interface-i2-cli-contract-family-tests`",
         "#### PR Gate: I2-P4 Semantic Constructor Primitive Fronts",
         "branch: `task/interface-i2-semantic-constructor-fronts`",
@@ -2625,11 +2630,11 @@ def require_refactoring_documentation_cleanup() -> None:
         require_not_contains("docs/progress.md", stale_branch)
     require_contains(
         "docs/progress.md",
-        "I2-P2 CLI Contract Seed Test Part Split",
+        "I2-P3 CLI Contract Family Test Part Split",
     )
     require_contains(
         "docs/progress.md",
-        "task/interface-i2-cli-contract-seed-tests",
+        "task/interface-i2-cli-contract-family-tests",
     )
 
     for relative_path in [
@@ -2637,24 +2642,49 @@ def require_refactoring_documentation_cleanup() -> None:
         "packages/konyak_cli/test/cli_contract_command_dispatch_test.dart",
         "packages/konyak_cli/test/cli_contract_repository_runner_test.dart",
         "packages/konyak_cli/test/support/cli_contract_helpers.dart",
+        "packages/konyak_cli/test/cli_contract_app_bottle_test.dart",
+        "packages/konyak_cli/test/cli_contract_pinned_program_test.dart",
+        "packages/konyak_cli/test/cli_contract_program_execution_test.dart",
+        "packages/konyak_cli/test/cli_contract_runtime_process_update_test.dart",
+        "packages/konyak_cli/test/cli_contract_runtime_install_test.dart",
+        "packages/konyak_cli/test/support/cli_contract_full_helpers.dart",
     ]:
         if not (ROOT / relative_path).exists():
-            raise AssertionError(f"{relative_path} must exist after I2-P2")
+            raise AssertionError(f"{relative_path} must exist after I2-P3")
 
     for relative_path in [
         "packages/konyak_cli/test/cli_contract_executable.part.dart",
         "packages/konyak_cli/test/cli_contract_command_dispatch.part.dart",
         "packages/konyak_cli/test/cli_contract_repository_runner.part.dart",
+        "packages/konyak_cli/test/cli_contract_app_bottle.part.dart",
+        "packages/konyak_cli/test/cli_contract_pinned_program.part.dart",
+        "packages/konyak_cli/test/cli_contract_program_execution.part.dart",
+        "packages/konyak_cli/test/cli_contract_runtime_process_update.part.dart",
+        "packages/konyak_cli/test/cli_contract_runtime_install.part.dart",
     ]:
         require_missing(relative_path)
+
+    for path in sorted((ROOT / "packages/konyak_cli/test").glob("*.part.dart")):
+        relative_path = path.relative_to(ROOT)
+        raise AssertionError(f"{relative_path} must not reintroduce CLI test parts")
 
     for forbidden in [
         "part 'cli_contract_executable.part.dart';",
         "part 'cli_contract_command_dispatch.part.dart';",
         "part 'cli_contract_repository_runner.part.dart';",
+        "part 'cli_contract_app_bottle.part.dart';",
+        "part 'cli_contract_pinned_program.part.dart';",
+        "part 'cli_contract_program_execution.part.dart';",
+        "part 'cli_contract_runtime_process_update.part.dart';",
+        "part 'cli_contract_runtime_install.part.dart';",
         "defineExecutableContractTests();",
         "defineCommandDispatchContractTests();",
         "defineRepositoryAndRunnerContractTests();",
+        "defineAppAndBottleContractTests();",
+        "definePinnedProgramContractTests();",
+        "defineProgramExecutionContractTests();",
+        "defineRuntimeProcessAndUpdateContractTests();",
+        "defineRuntimeInstallContractTests();",
     ]:
         require_not_contains(
             "packages/konyak_cli/test/cli_contract_test.dart",
