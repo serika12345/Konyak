@@ -36,107 +36,18 @@ verification output instead of checked-off backlog entries.
     equivalent evidence where practical.
   - Do not add proprietary or nonredistributable game payloads to CI.
 
-## Refactoring Milestones
-
-This section turns the deferred functional-core / OOP-extension cleanup into
-reviewable large milestones and PR-sized gates. Refactoring work should stay
-separate from runtime feature work unless the refactor is required to make a
-feature change safe. Completed small milestones are removed after their
-implementation, verification, and review are complete.
-
-Automatic progression policy:
-
-- `/advance-pr` targets the first unfinished `PR Gate` in this section unless
-  the user names another gate.
-- `/advance-large` targets the current large refactoring milestone and stops at
-  that milestone's review gate.
-- `/advance-small` advances the next coherent small milestone inside the
-  current `PR Gate`.
-- If a required step is not represented below, add or refine the milestone
-  before implementation.
-
-### R1: Explicit Boundary State
-
-Purpose: finish the current nullable-hardening pass by replacing semantic
-absence and optional action dispatch with explicit parser, availability,
-dispatch, or result variants at the CLI and Flutter boundaries.
-
-Small milestones:
-
-- [ ] R1-S2: Audit CLI command handlers that probe nullable request values and
-  split command selection from command execution where that removes semantic
-  null checks without broad rewrites.
-- [ ] R1-S4: Classify remaining nullable UI values as framework-boundary,
-  presentation-only, or domain-significant. Convert only the
-  domain-significant cases in this milestone.
-- [ ] R1-S5: Add or tighten a governance baseline for new domain-facing
-  nullable or primitive exposures once the converted boundary is stable.
-
-### R2: Domain Boundary Value Objects
-
-Purpose: replace remaining semantic primitives in domain-facing planner,
-request, and serialization APIs with domain value objects or explicit result
-variants while keeping I/O, serialization, and UI adapter boundaries narrow.
-
-Small milestones:
-
-- [ ] R2-S2: Replace semantic planner/request primitives with existing or new
-  value objects where the invariant is stable.
-- [ ] R2-S3: Keep `ProgramRunPlanner` externally pure and split host platform,
-  runner-kind, and graphics-backend decisions into narrow policy objects only
-  when the current switch logic has grown enough to justify the split.
-- [ ] R2-S5: Remove hand-written `part` usage from CLI contract tests so tests
-  no longer normalize that shape as a large-file escape hatch.
-
-### R4: Refactoring Governance and Completion
-
-Purpose: make the refactored boundaries stay stable by adding reviewed
-baselines and cleanup rules once R1 through R3 have narrowed the major
-surfaces.
-
-Small milestones:
-
-- [ ] R4-S1: Add or tighten governance checks for new domain-facing primitive
-  exposures, planner file growth, and UI loader state growth.
-- [ ] R4-S2: Remove stale refactoring handoff entries from `docs/progress.md`
-  once the durable record exists in commits, tests, or artifacts.
-- [ ] R4-S3: Re-audit `docs/todo.md` and architecture documents so completed
-  refactoring work is removed and remaining work is represented by active
-  gates.
-
-#### PR Gate: R4-P1 Refactoring Governance
-
-branch: `task/refactor-r4-governance`
-
-Completion criteria:
-
-- Governance checks cover the refactoring boundaries stabilized by R1 through
-  R3 without weakening existing gates.
-- Documentation reflects the current refactoring state without stale completed
-  slices.
-- `docs/progress.md` records the gate state, latest commit, verification, and
-  next action.
-
-Not included:
-
-- New product features.
-- Broad formatting-only churn.
-- Runtime packaging changes.
-
-Verification:
-
-- `just verify-governance`
-- `just verify-safety`
-- `just format-check`
-- `just lint`
-
-review gate:
-
-- Commit and push the branch, open a draft PR, then stop for final refactoring
-  milestone review.
-
 ## Deferred
 
+- Boundary-hardening follow-up candidates after the completed automated cleanup:
+  - Audit CLI command handlers that probe nullable request values and split
+    command selection from command execution where that removes semantic null
+    checks without broad rewrites.
+  - Replace additional semantic planner/request primitives with value objects
+    only where the invariant has become stable.
+  - Split `ProgramRunPlanner` host-platform, runner-kind, and graphics-backend
+    policies only if the current switch logic grows enough to justify it.
+  - Remove hand-written `part` usage from CLI contract tests once that can be
+    done without normalizing a large-file escape hatch.
 - Linux ARM64 Windows execution research.
 - Linux executable thumbnails for sandboxed file managers.
   - Do not make the AppImage or normal app startup mutate `/nix/store` or
