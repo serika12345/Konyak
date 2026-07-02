@@ -36,12 +36,200 @@ verification output instead of checked-off backlog entries.
     equivalent evidence where practical.
   - Do not add proprietary or nonredistributable game payloads to CI.
 
+## Refactoring Milestones
+
+This section tracks the next cleanup pass for compatibility interfaces that were
+kept temporarily to land earlier refactoring safely. These gates should remove
+one compatibility surface at a time, keep external behavior stable, and stop at
+each review gate.
+
+Automatic progression policy:
+
+- `/advance-pr` targets the first unfinished `PR Gate` in this section unless
+  the user names another gate.
+- `/advance-small` advances the next coherent small milestone inside the
+  current `PR Gate`.
+- `/review-gate` summarizes the current branch without implementing more work.
+- If a required compatibility cleanup is not represented below, add or refine
+  the milestone before implementation.
+
+### I1: Compatibility Interface Cleanup
+
+Purpose: remove nullable or primitive compatibility wrappers that were kept to
+avoid broad call-site churn during the previous boundary refactoring. Keep the
+true external boundaries explicit, but stop preserving internal compatibility
+interfaces once call sites can use `Option`, sealed dispatch, or typed value
+objects directly.
+
+Small milestones:
+
+- [ ] I1-S1: Replace CLI parser compatibility wrappers that return nullable
+  requests or primitive values with `Option`-returning parser APIs at command
+  selection call sites.
+- [ ] I1-S2: Replace nullable `CliResult?` command-handler dispatch with an
+  explicit command-match or command-dispatch result so command selection is not
+  encoded as nullable absence.
+- [ ] I1-S3: Convert remaining Konyak-owned Flutter dialog/picker decision
+  inputs that use nullable compatibility bridges into explicit decision or pick
+  result variants, leaving `null` only at framework/OS adapter calls.
+- [ ] I1-S4: Audit Flutter CLI JSON DTOs and app-facing summary models for
+  nullable fields that are only preserving old JSON parser shapes; keep
+  optional external JSON input nullable, but expose explicit app result models
+  after parsing.
+- [ ] I1-S5: Remove or tighten governance allowances that exist only for the
+  compatibility wrappers removed by I1.
+
+#### PR Gate: I1-P1 CLI Parser Compatibility Wrappers
+
+branch: `task/interface-i1-cli-parser-wrappers`
+
+Completion criteria:
+
+- CLI command-selection call sites use `Option`-returning parser APIs directly
+  for at least the runtime and location parser families.
+- Nullable parser compatibility wrappers are removed for the converted
+  families, or kept only where an external API boundary still requires a
+  nullable projection and that reason is documented in code or tests.
+- Focused parser or command-selection tests cover missing/incomplete arguments
+  without depending on nullable return values.
+- Governance is updated so the converted parser families cannot regress to
+  nullable compatibility wrappers.
+- `docs/progress.md` records the gate state, latest commit, verification, and
+  next action.
+
+Not included:
+
+- Runtime behavior changes.
+- Public CLI JSON schema changes.
+- Broad parser rewrites outside the converted families.
+
+Verification:
+
+- `just cli-test`
+- `just verify-governance`
+- `just verify-safety`
+- `just format-check`
+- `just lint`
+
+review gate:
+
+- Commit and push the branch, open a draft PR, then stop before I1-P2.
+
+#### PR Gate: I1-P2 CLI Command Dispatch
+
+branch: `task/interface-i1-cli-command-dispatch`
+
+Completion criteria:
+
+- Nullable `CliResult?` command handlers and `firstCliResult` dispatch are
+  replaced with explicit command-match or command-dispatch variants for the
+  converted command groups.
+- Missing command matches are modeled as explicit absence or dispatch variants,
+  not as `null`.
+- Command contract tests cover both matched and unmatched dispatch paths.
+- Governance is updated so converted command groups do not reintroduce nullable
+  command dispatch.
+- `docs/progress.md` records the gate state, latest commit, verification, and
+  next action.
+
+Not included:
+
+- Public CLI JSON schema changes.
+- Runtime installation behavior changes.
+- Flutter UI changes.
+
+Verification:
+
+- `just cli-test`
+- `just verify-governance`
+- `just verify-safety`
+- `just format-check`
+- `just lint`
+
+review gate:
+
+- Commit and push the branch, open a draft PR, then stop before I1-P3.
+
+#### PR Gate: I1-P3 Flutter Dialog and Picker Decisions
+
+branch: `task/interface-i1-flutter-dialog-decisions`
+
+Completion criteria:
+
+- Konyak-owned dialog, picker, and decision helpers expose explicit variants to
+  app code; nullable values remain only at `showDialog`, platform picker, or
+  Flutter framework adapter calls.
+- Widget tests assert explicit decision or picker variants rather than using
+  `null` as the expected application state.
+- Any visible behavior remains unchanged; add widget or golden coverage only if
+  visible behavior changes.
+- Governance is updated so converted app decision helpers do not regress to
+  nullable compatibility bridges.
+- `docs/progress.md` records the gate state, latest commit, verification, and
+  next action.
+
+Not included:
+
+- CLI backend changes.
+- Visual redesign.
+- Runtime behavior changes.
+
+Verification:
+
+- `just flutter-format-check`
+- `just flutter-analyze`
+- `just flutter-test`
+- `just verify-governance`
+- `just verify-safety`
+- `just format-check`
+- `just lint`
+
+review gate:
+
+- Commit and push the branch, open a draft PR, then stop before I1-P4.
+
+#### PR Gate: I1-P4 Flutter JSON DTO Optional Fields
+
+branch: `task/interface-i1-flutter-json-dtos`
+
+Completion criteria:
+
+- Flutter CLI JSON parser outputs distinguish invalid, absent, and present
+  optional fields with explicit parse/app result models where those fields are
+  consumed by application state.
+- Nullable `Object?` remains only at JSON decoding and validation boundaries.
+- Tests cover absent optional fields and invalid optional field types without
+  treating both as the same nullable state unless that is the explicit contract.
+- Governance is updated so converted DTOs do not reintroduce nullable app-facing
+  summary fields.
+- `docs/progress.md` records the gate state, latest commit, verification, and
+  next action.
+
+Not included:
+
+- Public CLI JSON schema changes.
+- Runtime behavior changes.
+- Large UI rewrites.
+
+Verification:
+
+- `just flutter-format-check`
+- `just flutter-analyze`
+- `just flutter-test`
+- `just verify-governance`
+- `just verify-safety`
+- `just format-check`
+- `just lint`
+
+review gate:
+
+- Commit and push the branch, open a draft PR, then stop before any new
+  milestone is added.
+
 ## Deferred
 
-- Boundary-hardening follow-up candidates after the completed automated cleanup:
-  - Audit CLI command handlers that probe nullable request values and split
-    command selection from command execution where that removes semantic null
-    checks without broad rewrites.
+- Boundary-hardening follow-up candidates outside the current compatibility
+  cleanup gates:
   - Replace additional semantic planner/request primitives with value objects
     only where the invariant has become stable.
   - Split `ProgramRunPlanner` host-platform, runner-kind, and graphics-backend

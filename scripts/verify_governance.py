@@ -2568,11 +2568,22 @@ def require_flutter_view_model_extraction_boundaries() -> None:
 
 
 def require_refactoring_documentation_cleanup() -> None:
-    for unexpected in [
+    for expected in [
         "## Refactoring Milestones",
+        "### I1: Compatibility Interface Cleanup",
+        "#### PR Gate: I1-P1 CLI Parser Compatibility Wrappers",
+        "branch: `task/interface-i1-cli-parser-wrappers`",
+        "#### PR Gate: I1-P2 CLI Command Dispatch",
+        "#### PR Gate: I1-P3 Flutter Dialog and Picker Decisions",
+        "#### PR Gate: I1-P4 Flutter JSON DTO Optional Fields",
+    ]:
+        require_contains("docs/todo.md", expected)
+
+    for unexpected in [
         "R3-P2 Bottle View Model Extraction",
         "R4-P1 Refactoring Governance",
         "task/refactor-r3-bottle-view-models",
+        "task/refactor-r4-governance",
     ]:
         require_not_contains("docs/todo.md", unexpected)
 
@@ -2582,7 +2593,8 @@ def require_refactoring_documentation_cleanup() -> None:
         "task/refactor-r3-",
     ]:
         require_not_contains("docs/progress.md", stale_branch)
-    require_contains("docs/progress.md", "task/refactor-r4-governance")
+    require_contains("docs/progress.md", "Compatibility Interface Cleanup")
+    require_contains("docs/progress.md", "task/interface-i1-cli-parser-wrappers")
 
 
 def require_konyak_cli_public_exports() -> None:
