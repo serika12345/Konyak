@@ -268,12 +268,6 @@ as a value object.
 
 Small milestones:
 
-- [ ] I2-S2b: Remove high-volume hand-written CLI contract test `part` usage
-  from app/bottle, program, runtime process/update, and runtime install
-  families after the seed split proves the helper shape.
-- [ ] I2-S3: Convert selected stable semantic constructor primitives to
-  value objects at domain-facing APIs while keeping JSON and argv projection at
-  CLI/I/O boundaries.
 - [ ] I2-S4: Reassess nullable command-selection bridges and
   `ProgramRunPlanner` host-platform, runner-kind, and
   graphics-backend policy structure; split only where the audit shows stable
@@ -398,6 +392,7 @@ review gate:
 
 #### PR Gate: I2-P4 Semantic Constructor Primitive Fronts
 
+status: completed
 branch: `task/interface-i2-semantic-constructor-fronts`
 
 Completion criteria:

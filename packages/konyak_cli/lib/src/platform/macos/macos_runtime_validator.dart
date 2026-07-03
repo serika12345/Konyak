@@ -88,7 +88,7 @@ class DartIoMacosWineRuntimeValidator implements RuntimeValidator {
       if (!checks.every((check) => !check.isRequired || check.isPassed)) {
         return RuntimeValidationCompleted(
           RuntimeValidationRecord(
-            runtimeId: runtime.id.value,
+            runtimeId: runtime.id,
             isValid: false,
             checks: checks,
           ),
@@ -119,7 +119,7 @@ class DartIoMacosWineRuntimeValidator implements RuntimeValidator {
 
       return RuntimeValidationCompleted(
         RuntimeValidationRecord(
-          runtimeId: runtime.id.value,
+          runtimeId: runtime.id,
           isValid: completedChecks.every(
             (check) => !check.isRequired || check.isPassed,
           ),
@@ -153,7 +153,7 @@ class DartIoMacosWineRuntimeValidator implements RuntimeValidator {
     if (!checks.every((check) => !check.isRequired || check.isPassed)) {
       return RuntimeValidationCompleted(
         RuntimeValidationRecord(
-          runtimeId: runtime.id.value,
+          runtimeId: runtime.id,
           isValid: false,
           checks: checks,
         ),
@@ -179,7 +179,7 @@ class DartIoMacosWineRuntimeValidator implements RuntimeValidator {
 
     return RuntimeValidationCompleted(
       RuntimeValidationRecord(
-        runtimeId: runtime.id.value,
+        runtimeId: runtime.id,
         isValid: completedChecks.every(
           (check) => !check.isRequired || check.isPassed,
         ),
@@ -225,7 +225,7 @@ RuntimeValidationCompleted missingRuntimeLayoutValidation(
 ) {
   return RuntimeValidationCompleted(
     RuntimeValidationRecord(
-      runtimeId: runtime.id.value,
+      runtimeId: runtime.id,
       isValid: false,
       checks: const [
         RuntimeValidationCheck(

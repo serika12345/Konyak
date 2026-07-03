@@ -13,33 +13,31 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-02 22:12 JST
+- Timestamp: 2026-07-03 09:13 JST
 - State: `completed`
-- Branch: `task/interface-i2-cli-contract-family-tests`
-- Active work: I2-P3 CLI Contract Family Test Part Split.
+- Branch: `task/interface-i2-semantic-constructor-fronts`
+- Active work: I2-P4 Semantic Constructor Primitive Fronts.
 - Related TODO: `docs/todo.md` `I2: Boundary Hardening and Test Contract
-  Cleanup`, completed `I2-P3 CLI Contract Family Test Part Split`, and next
-  `I2-P4 Semantic Constructor Primitive Fronts`.
-- Pull request: draft PR #16
-  <https://github.com/serika12345/Konyak/pull/16>.
-- Latest commit: branch head for the I2-P3 draft PR.
-- Purpose: remove the remaining CLI contract hand-written test `part` files so
-  app/bottle, pinned program, program execution, runtime process/update, and
-  runtime install contract coverage run from standalone test entry points.
-- Completed work: converted the remaining CLI contract part files into
-  standalone tests backed by `test/support/cli_contract_full_helpers.dart`;
-  reduced `cli_contract_test.dart` to the macOS runtime release SSOT check;
-  added governance coverage so `packages/konyak_cli/test` cannot reintroduce
-  CLI contract `*.part.dart` files.
-- Remaining work: review draft PR #16, then stop before implementing I2-P4.
-- Next action: review the I2-P3 draft PR and then run `/advance-pr` for
-  `I2-P4 Semantic Constructor Primitive Fronts`.
-- Verification: focused CLI contract family test command passed:
+  Cleanup`, completed `I2-P4 Semantic Constructor Primitive Fronts`, and next
+  `I2-S4` nullable command-selection bridge reassessment.
+- Pull request: draft PR #17
+  <https://github.com/serika12345/Konyak/pull/17>.
+- Latest commit: branch head for the I2-P4 draft PR.
+- Purpose: remove selected primitive constructor compatibility fronts from
+  stable settings/runtime domain APIs while preserving primitive JSON, argv,
+  registry, and persisted-data adapter boundaries.
+- Completed work: typed `AppSettingsRecord`, `BottleRuntimeSettings`,
+  `ProgramSettingsRecord`, `ProgramLoggingSettingsRecord`, and
+  `RuntimeValidationRecord` public constructors with existing value objects;
+  moved primitive conversion to app settings JSON, repository storage,
+  registry parsing, and runtime validation adapters; added governance checks
+  for the converted signatures.
+- Remaining work: review draft PR #17, then stop before nullable
+  command-selection or planner policy changes.
+- Next action: review the I2-P4 draft PR and then plan the I2-S4 command
+  selection bridge reassessment before implementation.
+- Verification: focused domain test command passed:
   `cd packages/konyak_cli && dart test --reporter compact
-  test/cli_contract_app_bottle_test.dart
-  test/cli_contract_pinned_program_test.dart
-  test/cli_contract_program_execution_test.dart
-  test/cli_contract_runtime_process_update_test.dart
-  test/cli_contract_runtime_install_test.dart`; `just cli-test`,
+  test/domain_immutability_test.dart`; `just cli-test`,
   `just verify-governance`, `just verify-safety`, `just format-check`, and
   `just lint` passed through the Nix dev shell.

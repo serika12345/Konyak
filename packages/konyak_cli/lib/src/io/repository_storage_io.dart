@@ -7,6 +7,7 @@ import '../domain/bottle/bottle_models.dart';
 import '../domain/bottle/bottle_runtime_settings_models.dart';
 import '../domain/program/program_run_environment.dart';
 import '../domain/program/program_settings_models.dart';
+import '../domain/shared/domain_value_objects.dart';
 import '../shared/common_helpers.dart';
 import '../shared/model_constants.dart';
 import 'bottle_metadata_json.dart';
@@ -61,8 +62,8 @@ Option<ProgramSettingsRecord> programSettingsRecordFromJson(Object? value) {
     _ProgramLoggingSettingsInvalid() => const Option.none(),
     _ProgramLoggingSettingsParsed(:final logging) => Option.of(
       ProgramSettingsRecord(
-        locale: locale is String ? locale : '',
-        arguments: arguments is String ? arguments : '',
+        locale: ProgramLocale(locale is String ? locale : ''),
+        arguments: ProgramArguments(arguments is String ? arguments : ''),
         environment: ProgramEnvironmentOverrides(environment),
         logging: logging,
       ),
@@ -113,10 +114,12 @@ _ProgramLoggingSettingsParseResult _programLoggingSettingsRecordFromJson(
     Option.of(
       ProgramLoggingSettingsRecord(
         createLogFile: createLogFile is bool ? createLogFile : true,
-        additionalWineLoggingChannels: additionalWineLoggingChannels is String
-            ? additionalWineLoggingChannels
-            : '',
-        logFilePath: logFilePath is String ? logFilePath : '',
+        additionalWineLoggingChannels: WineDebugChannels(
+          additionalWineLoggingChannels is String
+              ? additionalWineLoggingChannels
+              : '',
+        ),
+        logFilePath: ProgramLogPath(logFilePath is String ? logFilePath : ''),
       ),
     ),
   );
@@ -191,7 +194,7 @@ Option<BottleRuntimeSettings> bottleRuntimeSettingsFromJson(Object? value) {
     final parsedDpiScaling = $(dpiScaling);
 
     return BottleRuntimeSettings(
-      enhancedSync: parsedEnhancedSync,
+      enhancedSync: EnhancedSyncMode(parsedEnhancedSync),
       metalHud: parsedMetalHud,
       metalTrace: parsedMetalTrace,
       avxEnabled: parsedAvxEnabled,
@@ -200,11 +203,11 @@ Option<BottleRuntimeSettings> bottleRuntimeSettingsFromJson(Object? value) {
       dxmt: parsedDxrEnabled ? false : parsedDxmt,
       dlssMetalFx: parsedDlssMetalFx,
       dxvkAsync: parsedDxvkAsync,
-      dxvkHud: parsedDxvkHud,
+      dxvkHud: DxvkHudMode(parsedDxvkHud),
       vkd3dProton: parsedVkd3dProton,
-      buildVersion: parsedBuildVersion,
+      buildVersion: WindowsBuildVersion(parsedBuildVersion),
       retinaMode: parsedRetinaMode,
-      dpiScaling: parsedDpiScaling,
+      dpiScaling: WindowsDpiScaling(parsedDpiScaling),
     );
   });
 }

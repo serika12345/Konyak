@@ -15,15 +15,15 @@ abstract class ProgramSettingsRecord with _$ProgramSettingsRecord {
   const ProgramSettingsRecord._();
 
   factory ProgramSettingsRecord({
-    String locale = '',
-    String arguments = '',
+    ProgramLocale locale = ProgramLocale.empty,
+    ProgramArguments arguments = ProgramArguments.empty,
     ProgramEnvironmentOverrides environment =
         const ProgramEnvironmentOverrides.empty(),
     Option<ProgramLoggingSettingsRecord> logging = const Option.none(),
   }) {
     return ProgramSettingsRecord._validated(
-      locale: ProgramLocale(locale),
-      arguments: ProgramArguments(arguments),
+      locale: locale,
+      arguments: arguments,
       environment: environment,
       logging: logging,
     );
@@ -48,15 +48,13 @@ abstract class ProgramLoggingSettingsRecord
 
   factory ProgramLoggingSettingsRecord({
     bool createLogFile = true,
-    String additionalWineLoggingChannels = '',
-    String logFilePath = '',
+    WineDebugChannels additionalWineLoggingChannels = WineDebugChannels.empty,
+    ProgramLogPath logFilePath = ProgramLogPath.empty,
   }) {
     return ProgramLoggingSettingsRecord._validated(
       createLogFile: createLogFile,
-      additionalWineLoggingChannels: WineDebugChannels(
-        additionalWineLoggingChannels,
-      ),
-      logFilePath: ProgramLogPath(logFilePath),
+      additionalWineLoggingChannels: additionalWineLoggingChannels,
+      logFilePath: logFilePath,
     );
   }
 

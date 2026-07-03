@@ -50,7 +50,7 @@ void main() {
       appSettingsRepository: MemoryAppSettingsRepository(
         AppSettingsRecord(
           terminateWineProcessesOnClose: false,
-          defaultBottlePath: '/Volumes/Games/Bottles',
+          defaultBottlePath: DefaultBottlePath('/Volumes/Games/Bottles'),
           appearanceMode: AppAppearanceMode.light,
           languageMode: AppLanguageMode.japanese,
           automaticallyCheckForKonyakUpdates: true,
@@ -116,7 +116,9 @@ void main() {
 
   test('set-app-settings --json persists application settings', () {
     final repository = MemoryAppSettingsRepository(
-      AppSettingsRecord(defaultBottlePath: '/Users/user/Bottles'),
+      AppSettingsRecord(
+        defaultBottlePath: DefaultBottlePath('/Users/user/Bottles'),
+      ),
     );
 
     final result = runCli(const [
@@ -132,7 +134,7 @@ void main() {
       expectIo(repository.read()),
       AppSettingsRecord(
         terminateWineProcessesOnClose: false,
-        defaultBottlePath: '/Volumes/Games/Bottles',
+        defaultBottlePath: DefaultBottlePath('/Volumes/Games/Bottles'),
         appearanceMode: AppAppearanceMode.light,
         languageMode: AppLanguageMode.japanese,
         automaticallyCheckForKonyakUpdates: true,
@@ -155,7 +157,9 @@ void main() {
 
   test('set-app-settings --json defaults automatic pinning for old payloads', () {
     final repository = MemoryAppSettingsRepository(
-      AppSettingsRecord(defaultBottlePath: '/Users/user/Bottles'),
+      AppSettingsRecord(
+        defaultBottlePath: DefaultBottlePath('/Users/user/Bottles'),
+      ),
     );
 
     final result = runCli(const [
@@ -171,7 +175,7 @@ void main() {
       expectIo(repository.read()),
       AppSettingsRecord(
         terminateWineProcessesOnClose: true,
-        defaultBottlePath: '/Volumes/Games/Bottles',
+        defaultBottlePath: DefaultBottlePath('/Volumes/Games/Bottles'),
         appearanceMode: AppAppearanceMode.system,
         automaticallyPinNewInstalledPrograms: true,
       ),
@@ -204,7 +208,9 @@ void main() {
     final repository = defaultBottleRepositoryFromEnvironment(
       {'HOME': tempDirectory.path},
       hostPlatform: KonyakHostPlatform.linux,
-      appSettings: AppSettingsRecord(defaultBottlePath: bottleDirectory),
+      appSettings: AppSettingsRecord(
+        defaultBottlePath: DefaultBottlePath(bottleDirectory),
+      ),
     );
 
     final result = repository.createBottle(
@@ -251,7 +257,9 @@ void main() {
     final repository = defaultBottleRepositoryFromEnvironment(
       {'KONYAK_DATA_HOME': dataHome, 'HOME': tempDirectory.path},
       hostPlatform: KonyakHostPlatform.linux,
-      appSettings: AppSettingsRecord(defaultBottlePath: bottleDirectory),
+      appSettings: AppSettingsRecord(
+        defaultBottlePath: DefaultBottlePath(bottleDirectory),
+      ),
     );
 
     final result = repository.createBottle(
@@ -974,18 +982,18 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
     expect(
       expectFound(repository.findBottle(BottleId('steam'))).runtimeSettings,
       BottleRuntimeSettings(
-        enhancedSync: 'esync',
+        enhancedSync: EnhancedSyncMode('esync'),
         metalHud: true,
         metalTrace: true,
         avxEnabled: true,
         dxrEnabled: true,
         dlssMetalFx: true,
         dxvkAsync: false,
-        dxvkHud: 'fps',
+        dxvkHud: DxvkHudMode('fps'),
         vkd3dProton: true,
-        buildVersion: 19045,
+        buildVersion: WindowsBuildVersion(19045),
         retinaMode: true,
-        dpiScaling: 144,
+        dpiScaling: WindowsDpiScaling(144),
       ),
     );
   });
@@ -1828,9 +1836,9 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
     expect(
       expectFound(repository.findBottle(BottleId('steam'))).runtimeSettings,
       BottleRuntimeSettings(
-        buildVersion: 22631,
+        buildVersion: WindowsBuildVersion(22631),
         retinaMode: true,
-        dpiScaling: 192,
+        dpiScaling: WindowsDpiScaling(192),
       ),
     );
   });
@@ -1849,7 +1857,10 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
                 '/Users/user/Library/Application Support/Konyak/Bottles/Steam',
             windowsVersion: 'win10',
             runtimeSettings: Option.of(
-              BottleRuntimeSettings(retinaMode: true, dpiScaling: 192),
+              BottleRuntimeSettings(
+                retinaMode: true,
+                dpiScaling: WindowsDpiScaling(192),
+              ),
             ),
           ),
         ],
@@ -1905,7 +1916,10 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       ]);
       expect(
         expectFound(repository.findBottle(BottleId('steam'))).runtimeSettings,
-        BottleRuntimeSettings(retinaMode: false, dpiScaling: 96),
+        BottleRuntimeSettings(
+          retinaMode: false,
+          dpiScaling: WindowsDpiScaling(96),
+        ),
       );
     },
   );

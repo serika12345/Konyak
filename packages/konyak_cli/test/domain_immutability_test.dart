@@ -431,10 +431,10 @@ void main() {
 
   test('runtime settings expose semantic value object fields', () {
     final settings = BottleRuntimeSettings(
-      enhancedSync: 'msync',
-      dxvkHud: 'off',
-      buildVersion: 22631,
-      dpiScaling: 144,
+      enhancedSync: EnhancedSyncMode('msync'),
+      dxvkHud: DxvkHudMode('off'),
+      buildVersion: WindowsBuildVersion(22631),
+      dpiScaling: WindowsDpiScaling(144),
     );
 
     expect(settings.enhancedSync, EnhancedSyncMode('msync'));
@@ -458,12 +458,12 @@ void main() {
     expect(
       updated,
       BottleRuntimeSettings(
-        enhancedSync: 'none',
+        enhancedSync: EnhancedSyncMode('none'),
         dxrEnabled: true,
         dxmt: true,
-        dxvkHud: 'fps',
-        buildVersion: 22631,
-        dpiScaling: 144,
+        dxvkHud: DxvkHudMode('fps'),
+        buildVersion: WindowsBuildVersion(22631),
+        dpiScaling: WindowsDpiScaling(144),
       ),
     );
     expect(esync.enhancedSync, EnhancedSyncMode('esync'));
@@ -500,13 +500,17 @@ void main() {
   });
 
   test('app settings expose default bottle path as a value object', () {
-    final settings = AppSettingsRecord(defaultBottlePath: '/bottles');
+    final settings = AppSettingsRecord(
+      defaultBottlePath: DefaultBottlePath('/bottles'),
+    );
 
     expect(settings.defaultBottlePath, DefaultBottlePath('/bottles'));
   });
 
   test('app settings copyWith preserves semantic value object fields', () {
-    final settings = AppSettingsRecord(defaultBottlePath: '/bottles');
+    final settings = AppSettingsRecord(
+      defaultBottlePath: DefaultBottlePath('/bottles'),
+    );
     final updated = settings.copyWith(
       terminateWineProcessesOnClose: true,
       defaultBottlePath: DefaultBottlePath('/library'),
@@ -522,7 +526,7 @@ void main() {
       updated,
       AppSettingsRecord(
         terminateWineProcessesOnClose: true,
-        defaultBottlePath: '/library',
+        defaultBottlePath: DefaultBottlePath('/library'),
         appearanceMode: AppAppearanceMode.system,
         languageMode: AppLanguageMode.japanese,
         automaticallyCheckForKonyakUpdates: true,
@@ -1427,9 +1431,11 @@ void main() {
       windowsVersion: 'win10',
     );
     final settings = ProgramSettingsRecord(
-      arguments: '-windowed -novid',
+      arguments: ProgramArguments('-windowed -novid'),
       logging: Option.of(
-        ProgramLoggingSettingsRecord(logFilePath: '/tmp/run.log'),
+        ProgramLoggingSettingsRecord(
+          logFilePath: ProgramLogPath('/tmp/run.log'),
+        ),
       ),
     );
 
@@ -1520,8 +1526,8 @@ void main() {
 
   test('program mutation request records compare by semantic values', () {
     final settings = ProgramSettingsRecord(
-      locale: 'ja_JP',
-      arguments: '-novid',
+      locale: ProgramLocale('ja_JP'),
+      arguments: ProgramArguments('-novid'),
     );
 
     expect(
@@ -1610,21 +1616,27 @@ void main() {
       ProgramSettingsUpdateRequest(
         bottleId: BottleId('steam'),
         programPath: ProgramPath('/steam.exe'),
-        settings: ProgramSettingsRecord(locale: 'ja_JP', arguments: '-novid'),
+        settings: ProgramSettingsRecord(
+          locale: ProgramLocale('ja_JP'),
+          arguments: ProgramArguments('-novid'),
+        ),
       ),
     );
   });
 
   test('program settings results compare by semantic values', () {
     final settings = ProgramSettingsRecord(
-      locale: 'ja_JP',
-      arguments: '-novid',
+      locale: ProgramLocale('ja_JP'),
+      arguments: ProgramArguments('-novid'),
     );
 
     expect(
       ProgramSettingsReadResult.read(settings),
       ProgramSettingsReadResult.read(
-        ProgramSettingsRecord(locale: 'ja_JP', arguments: '-novid'),
+        ProgramSettingsRecord(
+          locale: ProgramLocale('ja_JP'),
+          arguments: ProgramArguments('-novid'),
+        ),
       ),
     );
     expect(
@@ -1638,7 +1650,10 @@ void main() {
     expect(
       ProgramSettingsUpdateResult.updated(settings),
       ProgramSettingsUpdateResult.updated(
-        ProgramSettingsRecord(locale: 'ja_JP', arguments: '-novid'),
+        ProgramSettingsRecord(
+          locale: ProgramLocale('ja_JP'),
+          arguments: ProgramArguments('-novid'),
+        ),
       ),
     );
     expect(
@@ -1785,26 +1800,26 @@ void main() {
   test('program settings records compare by semantic values', () {
     expect(
       ProgramSettingsRecord(
-        locale: 'ja_JP',
-        arguments: '-novid',
+        locale: ProgramLocale('ja_JP'),
+        arguments: ProgramArguments('-novid'),
         environment: ProgramEnvironmentOverrides({'LANG': 'ja_JP.UTF-8'}),
         logging: Option.of(
           ProgramLoggingSettingsRecord(
             createLogFile: false,
-            additionalWineLoggingChannels: ' +seh ',
-            logFilePath: ' /tmp/steam.log ',
+            additionalWineLoggingChannels: WineDebugChannels(' +seh '),
+            logFilePath: ProgramLogPath(' /tmp/steam.log '),
           ),
         ),
       ),
       ProgramSettingsRecord(
-        locale: 'ja_JP',
-        arguments: '-novid',
+        locale: ProgramLocale('ja_JP'),
+        arguments: ProgramArguments('-novid'),
         environment: ProgramEnvironmentOverrides({'LANG': 'ja_JP.UTF-8'}),
         logging: Option.of(
           ProgramLoggingSettingsRecord(
             createLogFile: false,
-            additionalWineLoggingChannels: '+seh',
-            logFilePath: '/tmp/steam.log',
+            additionalWineLoggingChannels: WineDebugChannels('+seh'),
+            logFilePath: ProgramLogPath('/tmp/steam.log'),
           ),
         ),
       ),
@@ -1817,8 +1832,8 @@ void main() {
       environment: ProgramEnvironmentOverrides(environment),
       logging: Option.of(
         ProgramLoggingSettingsRecord(
-          additionalWineLoggingChannels: ' +seh ',
-          logFilePath: ' /tmp/steam.log ',
+          additionalWineLoggingChannels: WineDebugChannels(' +seh '),
+          logFilePath: ProgramLogPath(' /tmp/steam.log '),
         ),
       ),
     );

@@ -3614,7 +3614,7 @@ void main() {
     final validator = RecordingRuntimeValidator(
       result: RuntimeValidationCompleted(
         RuntimeValidationRecord(
-          runtimeId: 'konyak-macos-wine',
+          runtimeId: RuntimeId('konyak-macos-wine'),
           isValid: true,
           checks: [
             RuntimeValidationCheck(

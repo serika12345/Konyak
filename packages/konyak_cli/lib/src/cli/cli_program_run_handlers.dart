@@ -203,11 +203,11 @@ ProgramSettingsRecord programRunSettings({
     () => storedSettings,
     (settings) => ProgramSettingsRecord(
       locale: settings.locale.value.trim().isEmpty
-          ? storedSettings.locale.value
-          : settings.locale.value,
+          ? storedSettings.locale
+          : settings.locale,
       arguments: settings.arguments.value.trim().isEmpty
-          ? storedSettings.arguments.value
-          : settings.arguments.value,
+          ? storedSettings.arguments
+          : settings.arguments,
       environment: ProgramEnvironmentOverrides(<String, String>{
         ...storedSettings.environment.toMap(),
         ...settings.environment.toMap(),
