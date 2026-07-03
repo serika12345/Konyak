@@ -468,6 +468,47 @@ review gate:
 - Commit and push the branch, open a draft PR, then stop before I2-S5
   governance cleanup or any broader planner-policy split.
 
+#### PR Gate: I2-P6 Planner Policy Split Plan
+
+status: planned
+branch: `task/interface-i2-planner-policy-split-plan`
+
+Completion criteria:
+
+- Audit the remaining `ProgramRunPlanner` host-platform switches,
+  runner-kind selection, macOS version policy, and graphics-backend policy
+  call sites after the completed bottle-command selection split.
+- Decide whether the next safe implementation gate should split host request
+  families, runner-kind policy, graphics-backend policy, or leave the remaining
+  planner structure intact until a more concrete behavioral need appears.
+- Add the next implementation PR Gate only when the audit identifies a stable
+  responsibility boundary that reduces complexity without changing public CLI
+  JSON, argv, exit-code, app, or runtime behavior.
+- Record explicitly deferred planner-policy decisions when a split would only
+  move conditionals without improving the boundary.
+- `docs/progress.md` records the gate state, latest commit, verification, and
+  next action.
+
+Not included:
+
+- Public CLI JSON schema changes.
+- Runtime, launcher, or Wine behavior changes.
+- Implementing the host request-family, runner-kind, or graphics-backend split
+  before the audit has selected the exact boundary.
+- Broad I2-S5 governance tightening outside planner-policy gate definition.
+
+Verification:
+
+- `just verify-governance`
+- `just verify-safety`
+- `just format-check`
+- `just lint`
+
+review gate:
+
+- Commit and push the branch, open a draft PR, then stop before implementation
+  of any further planner-policy split.
+
 ## Deferred
 
 - Linux ARM64 Windows execution research.
