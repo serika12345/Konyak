@@ -378,10 +378,11 @@ def require_typed_bottle_command_planner_boundary() -> None:
     planner = read_text(planner_path)
     expected_terms = [
         "required BottleCommand command",
-        "required BottleCommand supportedCommand",
+        "required SupportedBottleCommand supportedCommand",
         "supportedBottleCommand(command)",
-        "supportedCommand.value == 'terminal'",
-        "initialWineCommand: Option.of(supportedCommand)",
+        "final command = supportedCommand.command;",
+        "switch (supportedCommand.planKind)",
+        "initialWineCommand: Option.of(command)",
     ]
     for expected in expected_terms:
         if expected not in planner:
@@ -394,6 +395,10 @@ def require_typed_bottle_command_planner_boundary() -> None:
         "required String command",
         "required String supportedCommand",
         "Option.of(supportedCommand.value)",
+        "supportedCommand.value == 'terminal'",
+        "supportedCommand.value == 'cmd'",
+        "supportedCommand.value == 'simulate-reboot'",
+        "supportedCommand.value == 'winetricks'",
     ]
     for forbidden in forbidden_terms:
         if forbidden in planner:
@@ -412,9 +417,12 @@ def require_typed_bottle_command_planner_boundary() -> None:
         "ProgramLogPath programSettingsLogPath({",
         "ProgramRunArguments registryUpdateArguments(RegistryValueUpdate update)",
         "ProgramRunArguments registryQueryArguments(RegistryValueQuery query)",
-        "Option<BottleCommand> supportedBottleCommand(BottleCommand command)",
+        "enum BottleCommandPlanKind",
+        "typedef SupportedBottleCommand = ({",
+        "Option<SupportedBottleCommand> supportedBottleCommand(BottleCommand command)",
         "final normalized = command.value.trim().toLowerCase();",
-        "Option.of(BottleCommand(normalized))",
+        "_supportedBottleCommand(BottleCommand(normalized))",
+        "planKind: _bottleCommandPlanKind(command)",
     ]
     for expected in expected_support_terms:
         search_source = (
@@ -2597,6 +2605,8 @@ def require_refactoring_documentation_cleanup() -> None:
         "branch: `task/interface-i2-cli-contract-family-tests`",
         "#### PR Gate: I2-P4 Semantic Constructor Primitive Fronts",
         "branch: `task/interface-i2-semantic-constructor-fronts`",
+        "#### PR Gate: I2-P5 Command Selection Planner Reassessment",
+        "branch: `task/interface-i2-command-selection-planner-audit`",
     ]:
         require_contains("docs/todo.md", expected)
 
@@ -2630,11 +2640,11 @@ def require_refactoring_documentation_cleanup() -> None:
         require_not_contains("docs/progress.md", stale_branch)
     require_contains(
         "docs/progress.md",
-        "I2-P4 Semantic Constructor Primitive Fronts",
+        "I2-P5 Command Selection Planner Reassessment",
     )
     require_contains(
         "docs/progress.md",
-        "task/interface-i2-semantic-constructor-fronts",
+        "task/interface-i2-command-selection-planner-audit",
     )
 
     for relative_path in [
@@ -2701,15 +2711,6 @@ def require_semantic_constructor_value_object_fronts() -> None:
         ),
     ]:
         require_contains("docs/todo.md", expected)
-
-    require_contains(
-        "docs/progress.md",
-        "I2-P4 Semantic Constructor Primitive Fronts",
-    )
-    require_contains(
-        "docs/progress.md",
-        "task/interface-i2-semantic-constructor-fronts",
-    )
 
     app_settings = "packages/konyak_cli/lib/src/domain/app/app_settings_models.dart"
     require_contains(app_settings, "required DefaultBottlePath defaultBottlePath")

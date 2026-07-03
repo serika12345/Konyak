@@ -1396,10 +1396,31 @@ void main() {
     );
   });
 
-  test('bottle commands model supported commands with BottleCommand', () {
+  test('bottle commands model selected command plan kinds', () {
+    final supportedWinecfg = supportedBottleCommand(
+      BottleCommand(' WineCfg '),
+    ).toNullable();
+    expect(supportedWinecfg?.command, BottleCommand('winecfg'));
+    expect(supportedWinecfg?.planKind, BottleCommandPlanKind.wineCommand);
     expect(
-      supportedBottleCommand(BottleCommand(' WineCfg ')).toNullable(),
-      BottleCommand('winecfg'),
+      supportedBottleCommand(BottleCommand('terminal')).toNullable()?.planKind,
+      BottleCommandPlanKind.terminal,
+    );
+    expect(
+      supportedBottleCommand(BottleCommand('cmd')).toNullable()?.planKind,
+      BottleCommandPlanKind.terminalWithInitialCommand,
+    );
+    expect(
+      supportedBottleCommand(
+        BottleCommand('simulate-reboot'),
+      ).toNullable()?.planKind,
+      BottleCommandPlanKind.prefixRestart,
+    );
+    expect(
+      supportedBottleCommand(
+        BottleCommand('winetricks'),
+      ).toNullable()?.planKind,
+      BottleCommandPlanKind.winetricks,
     );
     expect(supportedBottleCommand(BottleCommand('notepad')).isNone(), isTrue);
     expect(wineArgumentsForBottleCommand(BottleCommand('dxdiag')).value, const [

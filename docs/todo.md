@@ -427,6 +427,47 @@ review gate:
 - Commit and push the branch, open a draft PR, then stop before nullable
   command-selection or planner policy changes.
 
+#### PR Gate: I2-P5 Command Selection Planner Reassessment
+
+status: completed
+branch: `task/interface-i2-command-selection-planner-audit`
+
+Completion criteria:
+
+- Reassess the remaining command-selection bridge around
+  `supportedBottleCommand` and `ProgramRunPlanner.planBottleCommand`, and make
+  the selected command execution shape explicit before host-specific request
+  construction.
+- Keep public CLI JSON, argv, exit-code, app, and runtime behavior stable while
+  moving command-kind branching out of ad hoc planner string comparisons.
+- Add or update focused behavior tests for supported and unsupported bottle
+  command selection before implementation.
+- Update governance only for the completed command-selection boundary.
+- `docs/progress.md` records the gate state, latest commit, verification, and
+  next action.
+
+Not included:
+
+- Public CLI JSON schema changes.
+- Runtime or launcher behavior changes.
+- Program path, winetricks verb, process-management, graphics-backend, or
+  registry planner redesign.
+- Broad nullable cleanup outside the bottle-command selection bridge.
+- Advancing I2-S5 governance cleanup outside the converted boundary.
+
+Verification:
+
+- `just cli-test`
+- `just verify-governance`
+- `just verify-safety`
+- `just format-check`
+- `just lint`
+
+review gate:
+
+- Commit and push the branch, open a draft PR, then stop before I2-S5
+  governance cleanup or any broader planner-policy split.
+
 ## Deferred
 
 - Linux ARM64 Windows execution research.
