@@ -13,27 +13,30 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-03 14:43 JST
-- State: `planned`
+- Timestamp: 2026-07-03 15:00 JST
+- State: `completed`
 - Branch: `task/interface-i2-governance-tightening`
 - Active work: I2-P8 Governance and Custom Lint Tightening.
 - Related TODO: `docs/todo.md` `I2: Boundary Hardening and Test Contract
-  Cleanup`, completed `I2-S4`, completed `I2-P7 Registry Planner Platform
-  Policy`, planned `I2-P8 Governance and Custom Lint Tightening`, and next
-  `I2-S5` governance tightening.
-- Pull request: draft PR #22
-  <https://github.com/serika12345/Konyak/pull/22>.
-- Latest commit: `40e5d7f` (`Plan I2 governance tightening gate`).
-- Purpose: define the missing I2-S5 PR Gate before implementation so
-  governance and custom lint tightening can be reviewed as a scoped boundary
-  cleanup instead of a broad opportunistic sweep.
-- Completed work: PR #21 for I2-P7 was merged and `main` was fast-forwarded;
-  `docs/todo.md` now contains the planned I2-P8 gate for governance and custom
-  lint tightening; implementation work for I2-P8 has not started.
-- Remaining work: review draft PR #22, then implement only the accepted I2-P8
-  governance and custom lint tightening gate.
-- Next action: review the I2-P8 gate definition draft PR, then run
-  `/advance-pr` again after the plan is accepted.
-- Verification: required gate-definition verification passed through the Nix
-  dev shell with `just verify-governance`, `just verify-safety`,
-  `just format-check`, and `just lint`.
+  Cleanup`, completed `I2-S4`, completed `I2-S5`, and completed `I2-P8
+  Governance and Custom Lint Tightening`.
+- Pull request: draft PR #23
+  <https://github.com/serika12345/Konyak/pull/23>.
+- Latest commit: `37fb9dc` (`Tighten I2 governance and lint guardrails`).
+- Purpose: tighten governance and custom lint checks for completed I2
+  boundaries without turning obsolete implementation details into permanent
+  contracts.
+- Completed work: PR #22 for the I2-P8 gate definition was merged and `main`
+  was fast-forwarded; `konyak_no_nullable_cli_command_handler` now blocks
+  converted runtime/location CLI command handlers from regressing to nullable
+  `CliResult` dispatch; lint fixtures cover the new rule; governance now checks
+  generic standalone CLI contract-test outcomes instead of old part-file names;
+  I2 audit docs now describe the completed CLI contract, command dispatch, and
+  registry policy boundaries.
+- Remaining work: review draft PR #23, then stop before adding post-I2
+  milestones.
+- Next action: review the I2-P8 draft PR; after approval, merge it before
+  planning any post-I2 work.
+- Verification: required I2-P8 verification passed through the Nix dev shell
+  with `just konyak-lints-test`, `just verify-governance`,
+  `just verify-safety`, `just format-check`, and `just lint`.

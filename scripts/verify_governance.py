@@ -93,6 +93,7 @@ CUSTOM_LINT_RULES = [
     "konyak_no_handwritten_part",
     "konyak_no_null_literal_outside_boundary",
     "konyak_no_nullable_bridge_outside_boundary",
+    "konyak_no_nullable_cli_command_handler",
     "konyak_no_nullable_sentinel_flow",
     "konyak_no_nullable_type_outside_boundary",
     "konyak_no_result_failure_to_option_none",
@@ -2637,8 +2638,9 @@ def require_refactoring_documentation_cleanup() -> None:
         "## Primitive Domain Values",
         "## Governance And Lint State",
         "## Next Gate Order",
-        "`cli_contract_executable.part.dart`",
-        "`cli_contract_runtime_install.part.dart`",
+        "CLI contract tests are now standalone libraries",
+        "no `*.part.dart` files remain under `packages/konyak_cli/test`",
+        "`konyak_no_nullable_cli_command_handler`",
         "`RuntimePlatformSpec`",
         "`ProgramRunPlanner`",
     ]:
@@ -2651,12 +2653,16 @@ def require_refactoring_documentation_cleanup() -> None:
         "## Registry Policy",
         "## Graphics Backend Policy",
         "## Platform Request Builder Duplication",
-        "## Next Gate Decision",
+        "## Completed Gate Decision",
         "`ProgramRunPlanner`",
-        "`includeMacDriverSettings`",
+        "`RegistryPlanningPolicy`",
         "I2-P7",
     ]:
         require_contains("docs/i2-planner-policy-split-audit.md", expected)
+    require_not_contains(
+        "docs/i2-planner-policy-split-audit.md",
+        "`includeMacDriverSettings`",
+    )
 
     for unexpected in [
         "R3-P2 Bottle View Model Extraction",
@@ -2696,43 +2702,21 @@ def require_refactoring_documentation_cleanup() -> None:
         if not (ROOT / relative_path).exists():
             raise AssertionError(f"{relative_path} must exist after I2-P3")
 
-    for relative_path in [
-        "packages/konyak_cli/test/cli_contract_executable.part.dart",
-        "packages/konyak_cli/test/cli_contract_command_dispatch.part.dart",
-        "packages/konyak_cli/test/cli_contract_repository_runner.part.dart",
-        "packages/konyak_cli/test/cli_contract_app_bottle.part.dart",
-        "packages/konyak_cli/test/cli_contract_pinned_program.part.dart",
-        "packages/konyak_cli/test/cli_contract_program_execution.part.dart",
-        "packages/konyak_cli/test/cli_contract_runtime_process_update.part.dart",
-        "packages/konyak_cli/test/cli_contract_runtime_install.part.dart",
-    ]:
-        require_missing(relative_path)
-
     for path in sorted((ROOT / "packages/konyak_cli/test").glob("*.part.dart")):
         relative_path = path.relative_to(ROOT)
         raise AssertionError(f"{relative_path} must not reintroduce CLI test parts")
 
-    for forbidden in [
-        "part 'cli_contract_executable.part.dart';",
-        "part 'cli_contract_command_dispatch.part.dart';",
-        "part 'cli_contract_repository_runner.part.dart';",
-        "part 'cli_contract_app_bottle.part.dart';",
-        "part 'cli_contract_pinned_program.part.dart';",
-        "part 'cli_contract_program_execution.part.dart';",
-        "part 'cli_contract_runtime_process_update.part.dart';",
-        "part 'cli_contract_runtime_install.part.dart';",
-        "defineExecutableContractTests();",
-        "defineCommandDispatchContractTests();",
-        "defineRepositoryAndRunnerContractTests();",
-        "defineAppAndBottleContractTests();",
-        "definePinnedProgramContractTests();",
-        "defineProgramExecutionContractTests();",
-        "defineRuntimeProcessAndUpdateContractTests();",
-        "defineRuntimeInstallContractTests();",
-    ]:
-        require_not_contains(
-            "packages/konyak_cli/test/cli_contract_test.dart",
-            forbidden,
+    cli_contract_test = read_text("packages/konyak_cli/test/cli_contract_test.dart")
+    for forbidden in ["part '", 'part "', "part of "]:
+        if forbidden in cli_contract_test:
+            raise AssertionError(
+                "packages/konyak_cli/test/cli_contract_test.dart must remain "
+                f"a standalone test library without {forbidden!r}"
+            )
+    if re.search(r"\bdefine[A-Za-z0-9]+ContractTests\(\);", cli_contract_test):
+        raise AssertionError(
+            "packages/konyak_cli/test/cli_contract_test.dart must not call "
+            "old part-library contract-test registration helpers"
         )
 
 
@@ -3036,6 +3020,24 @@ def require_cli_command_dispatch_boundaries() -> None:
     require_contains(
         dispatch_test_path,
         "location command dispatch reports unmatched commands explicitly",
+    )
+
+    lint_rule_path = "tools/konyak_lints/lib/konyak_lints.dart"
+    for expected in [
+        "class KonyakNoNullableCliCommandHandler",
+        "konyak_no_nullable_cli_command_handler",
+        "'handleRuntimeCommand'",
+        "'handleLocationCommand'",
+    ]:
+        require_contains(lint_rule_path, expected)
+    require_contains(
+        "tools/konyak_lints/test/konyak_lints_test.dart",
+        "konyak_no_nullable_cli_command_handler",
+    )
+    require_contains(
+        "tools/konyak_lints/test/fixtures/invalid/packages/konyak_cli/"
+        "lib/src/cli/cli_app_runtime_handlers.dart",
+        "CliResult? handleRuntimeCommand",
     )
 
 

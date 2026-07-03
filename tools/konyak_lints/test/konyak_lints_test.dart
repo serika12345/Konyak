@@ -33,9 +33,11 @@ void main() {
           output,
           contains('lib/src/io/nullable_absence_result_violation.dart'),
         );
+        expect(output, contains('lib/src/cli/cli_app_runtime_handlers.dart'));
         for (final rule in const [
           'konyak_no_domain_io',
           'konyak_no_nullable_sentinel_flow',
+          'konyak_no_nullable_cli_command_handler',
           'konyak_no_domain_reassignment',
           'konyak_no_domain_var_declaration',
           'konyak_no_domain_increment',
