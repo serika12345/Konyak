@@ -13,28 +13,33 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-03 12:26 JST
+- Timestamp: 2026-07-03 13:57 JST
 - State: `completed`
-- Branch: `task/interface-i2-planner-policy-split-plan`
-- Active work: I2-P6 Planner Policy Split Plan.
+- Branch: `task/interface-i2-registry-platform-policy`
+- Active work: I2-P7 Registry Planner Platform Policy.
 - Related TODO: `docs/todo.md` `I2: Boundary Hardening and Test Contract
-  Cleanup`, `I2-S4` remaining `ProgramRunPlanner` host-platform,
-  runner-kind, and graphics-backend policy reassessment; completed `I2-P6
-  Planner Policy Split Plan`; and planned `I2-P7 Registry Planner Platform
-  Policy`.
-- Pull request: draft PR #20
-  <https://github.com/serika12345/Konyak/pull/20>.
-- Latest commit: branch head for the I2-P6 draft PR.
-- Purpose: audit remaining planner-policy split candidates before code changes
-  and select the next implementation gate only if a stable responsibility
-  boundary reduces complexity without changing public contracts.
-- Completed work: PR #19 for the I2-P6 gate plan was merged; `main` was
-  fast-forwarded; `docs/i2-planner-policy-split-audit.md` now records the
-  planner host dispatch, runner-kind, registry, graphics-backend, and platform
-  request-builder decisions; `docs/todo.md` marks I2-P6 completed and adds
-  I2-P7 for registry planner platform policy.
-- Remaining work: review draft PR #20, then stop before I2-P7 implementation.
-- Next action: review the I2-P6 audit draft PR, then run `/advance-pr` again
-  to implement I2-P7 if the gate is accepted.
-- Verification: `just verify-governance`, `just verify-safety`,
-  `just format-check`, and `just lint` passed through the Nix dev shell.
+  Cleanup`, completed `I2-S4`, completed `I2-P7 Registry Planner Platform
+  Policy`, and next `I2-S5` governance tightening.
+- Pull request: not opened yet.
+- Latest commit: pending branch commit for I2-P7.
+- Purpose: replace the raw `includeMacDriverSettings` boolean bridge between
+  `ProgramRunPlanner` and registry plan helpers with an explicit
+  `RegistryPlanningPolicy` while preserving generated registry updates,
+  queries, argv, CLI JSON, exit codes, app behavior, runtime behavior, and Wine
+  execution paths.
+- Completed work: PR #20 for I2-P6 was merged; `main` was fast-forwarded;
+  registry plan helpers now accept `RegistryPlanningPolicy`; the planner maps
+  `KonyakHostPlatform` to `RegistryPlanningPolicy`; focused domain tests cover
+  macOS inclusion and Linux exclusion of Wine Mac Driver registry values;
+  governance was updated for the completed registry policy boundary; I2-S4 and
+  I2-P7 are marked complete in `docs/todo.md`.
+- Remaining work: commit, push, open the draft PR, and stop before I2-S5
+  governance cleanup.
+- Next action: commit the verified I2-P7 branch and open the draft PR for
+  review.
+- Verification: focused domain test passed:
+  `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test --reporter
+  compact test/domain_immutability_test.dart'`; required gate verification
+  passed through the Nix dev shell with `just cli-test`,
+  `just verify-governance`, `just verify-safety`, `just format-check`, and
+  `just lint`.

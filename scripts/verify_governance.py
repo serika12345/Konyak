@@ -1421,6 +1421,10 @@ def require_typed_registry_planner_boundary() -> None:
     registry_source = read_text(registry_path)
     expected_registry_terms = [
         "List<RegistryValueUpdate> windowsVersionRegistryUpdates(\n  WindowsVersion windowsVersion,",
+        "enum RegistryPlanningPolicy",
+        "bool get includesMacDriverRegistryValues",
+        "required RegistryPlanningPolicy policy,",
+        "policy.includesMacDriverRegistryValues",
         "Option<WindowsVersion> _windowsVersionForBuildVersion(int buildVersion)",
         "data: ProgramRegistryValueData(windowsVersion.value),",
     ]
@@ -1433,6 +1437,7 @@ def require_typed_registry_planner_boundary() -> None:
 
     forbidden_registry_terms = [
         "List<RegistryValueUpdate> windowsVersionRegistryUpdates(String windowsVersion)",
+        "required bool includeMacDriverSettings",
         "Option<String> _windowsVersionForBuildVersion(int buildVersion)",
     ]
     for forbidden in forbidden_registry_terms:
@@ -1447,6 +1452,10 @@ def require_typed_registry_planner_boundary() -> None:
     expected_planner_terms = [
         "required WindowsVersion windowsVersion,",
         "final updates = windowsVersionRegistryUpdates(windowsVersion);",
+        "RegistryPlanningPolicy get _registryPlanningPolicy",
+        "KonyakHostPlatform.linux => RegistryPlanningPolicy.linuxWine",
+        "KonyakHostPlatform.macos => RegistryPlanningPolicy.macosWine",
+        "policy: _registryPlanningPolicy",
     ]
     for expected in expected_planner_terms:
         if expected not in planner_source:
@@ -1459,6 +1468,11 @@ def require_typed_registry_planner_boundary() -> None:
         raise AssertionError(
             "ProgramRunPlanner registry updates must not expose primitive "
             "Windows versions"
+        )
+    if "includeMacDriverSettings:" in planner_source:
+        raise AssertionError(
+            "ProgramRunPlanner registry policy must not pass raw platform "
+            "booleans to registry plan helpers"
         )
 
 
@@ -2658,11 +2672,11 @@ def require_refactoring_documentation_cleanup() -> None:
         require_not_contains("docs/progress.md", stale_branch)
     require_contains(
         "docs/progress.md",
-        "I2-P6 Planner Policy Split Plan",
+        "I2-P7 Registry Planner Platform Policy",
     )
     require_contains(
         "docs/progress.md",
-        "task/interface-i2-planner-policy-split-plan",
+        "task/interface-i2-registry-platform-policy",
     )
 
     for relative_path in [

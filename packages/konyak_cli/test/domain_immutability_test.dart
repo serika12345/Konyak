@@ -1474,6 +1474,46 @@ void main() {
     );
   });
 
+  test('registry planning policy controls macOS-only registry values', () {
+    final macosUpdates = runtimeSettingsRegistryUpdates(
+      currentRuntimeSettings: BottleRuntimeSettings(),
+      runtimeSettings: BottleRuntimeSettings(
+        retinaMode: true,
+        dpiScaling: WindowsDpiScaling(192),
+      ),
+      policy: RegistryPlanningPolicy.macosWine,
+    );
+    final linuxUpdates = runtimeSettingsRegistryUpdates(
+      currentRuntimeSettings: BottleRuntimeSettings(),
+      runtimeSettings: BottleRuntimeSettings(
+        retinaMode: true,
+        dpiScaling: WindowsDpiScaling(192),
+      ),
+      policy: RegistryPlanningPolicy.linuxWine,
+    );
+
+    expect(
+      macosUpdates.map((update) => update.key),
+      contains(ProgramRegistryKey(r'HKCU\Software\Wine\Mac Driver')),
+    );
+    expect(
+      linuxUpdates.map((update) => update.key),
+      isNot(contains(ProgramRegistryKey(r'HKCU\Software\Wine\Mac Driver'))),
+    );
+    expect(
+      bottleSettingsRegistryQueries(
+        policy: RegistryPlanningPolicy.macosWine,
+      ).map((query) => query.key),
+      contains(ProgramRegistryKey(r'HKCU\Software\Wine\Mac Driver')),
+    );
+    expect(
+      bottleSettingsRegistryQueries(
+        policy: RegistryPlanningPolicy.linuxWine,
+      ).map((query) => query.key),
+      isNot(contains(ProgramRegistryKey(r'HKCU\Software\Wine\Mac Driver'))),
+    );
+  });
+
   test('registry argument helpers return typed run arguments', () {
     expect(
       registryUpdateArguments(

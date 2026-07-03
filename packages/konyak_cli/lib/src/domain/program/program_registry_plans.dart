@@ -4,6 +4,18 @@ import '../bottle/bottle_runtime_settings_models.dart';
 import '../shared/domain_value_objects.dart';
 import 'program_registry_models.dart';
 
+enum RegistryPlanningPolicy {
+  linuxWine,
+  macosWine;
+
+  bool get includesMacDriverRegistryValues {
+    return switch (this) {
+      RegistryPlanningPolicy.linuxWine => false,
+      RegistryPlanningPolicy.macosWine => true,
+    };
+  }
+}
+
 List<RegistryValueUpdate> windowsVersionRegistryUpdates(
   WindowsVersion windowsVersion,
 ) {
@@ -20,9 +32,9 @@ List<RegistryValueUpdate> windowsVersionRegistryUpdates(
 List<RegistryValueUpdate> runtimeSettingsRegistryUpdates({
   required BottleRuntimeSettings currentRuntimeSettings,
   required BottleRuntimeSettings runtimeSettings,
-  required bool includeMacDriverSettings,
+  required RegistryPlanningPolicy policy,
 }) {
-  final effectiveRuntimeSettings = includeMacDriverSettings
+  final effectiveRuntimeSettings = policy.includesMacDriverRegistryValues
       ? runtimeSettings.withHighResolutionModeWindowsDpiAdjustment(
           currentRuntimeSettings,
         )
@@ -62,7 +74,7 @@ List<RegistryValueUpdate> runtimeSettingsRegistryUpdates({
       : const <RegistryValueUpdate>[];
 
   final retinaModeUpdates =
-      includeMacDriverSettings &&
+      policy.includesMacDriverRegistryValues &&
           effectiveRuntimeSettings.retinaMode !=
               currentRuntimeSettings.retinaMode
       ? <RegistryValueUpdate>[
@@ -125,7 +137,7 @@ Option<WindowsVersion> _windowsVersionForBuildVersion(int buildVersion) {
 }
 
 List<RegistryValueQuery> bottleSettingsRegistryQueries({
-  required bool includeMacDriverSettings,
+  required RegistryPlanningPolicy policy,
 }) {
   return <RegistryValueQuery>[
     RegistryValueQuery(
@@ -138,7 +150,7 @@ List<RegistryValueQuery> bottleSettingsRegistryQueries({
       ),
       name: ProgramRegistryValueName('CurrentBuild'),
     ),
-    if (includeMacDriverSettings)
+    if (policy.includesMacDriverRegistryValues)
       RegistryValueQuery(
         key: ProgramRegistryKey(r'HKCU\Software\Wine\Mac Driver'),
         name: ProgramRegistryValueName('RetinaMode'),
