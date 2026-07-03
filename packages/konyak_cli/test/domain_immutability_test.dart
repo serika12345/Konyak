@@ -1278,7 +1278,9 @@ void main() {
       platformSpec: macosKonyakRuntimePlatformSpec,
       environment: HostEnvironment({
         'KONYAK_RUNTIME_PROFILE': 'development',
-        macosKonyakRuntimePlatformSpec.developmentSourceManifestEnvironmentKey:
+        macosKonyakRuntimePlatformSpec
+                .developmentSourceManifestEnvironmentKey
+                .value:
             'https://example.invalid/dev-source.json',
       }),
     );

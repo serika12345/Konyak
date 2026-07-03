@@ -614,7 +614,7 @@ Medium milestones, one PR unit each:
 - [x] I3-M2: Replace stable `RunnerKind` string literal construction with a
   typed runner-kind catalog or enum-backed factory while preserving existing
   public JSON string values.
-- [ ] I3-M3: Convert stable runtime platform-definition constructor fronts for
+- [x] I3-M3: Convert stable runtime platform-definition constructor fronts for
   ids, names, roles, architecture, runner kind, backend ids, and component ids
   into value objects where the current constructors already validate or project
   to those values.
@@ -717,7 +717,7 @@ review gate:
 
 #### PR Gate: I3-P3 Runtime Platform Definition Type Fronts
 
-status: planned
+status: completed
 branch: `task/type-safety-i3-runtime-platform-definitions`
 
 Completion criteria:

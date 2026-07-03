@@ -13,29 +13,34 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-03 21:54 JST
+- Timestamp: 2026-07-03 22:59 JST
 - State: `completed`
-- Branch: `task/type-safety-i3-runner-kind-catalog`
-- Active work: I3-P2 Runner Kind Typed Catalog.
+- Branch: `task/type-safety-i3-runtime-platform-definitions`
+- Active work: I3-P3 Runtime Platform Definition Type Fronts.
 - Related TODO: `docs/todo.md` `I3: Mechanical Type-Safety Hardening`,
-  completed `I3-P2 Runner Kind Typed Catalog`; next planned gate is I3-P3
-  Runtime Platform Definition Type Fronts.
-- Pull request: https://github.com/serika12345/Konyak/pull/25
-- Latest implementation commit: `ad17606` (`Add runner kind catalog`).
-- Purpose: remove ad hoc runner-kind string construction from request builders
-  by centralizing stable Konyak-owned runner kinds in a typed catalog while
-  preserving public `runnerKind` JSON strings, argv, exit codes, runtime
-  behavior, Wine execution paths, and app behavior.
-- Completed work: added the `RunnerKind` stable request catalog; replaced
-  direct `RunnerKind('<literal>')` construction in domain, platform, and I/O
-  request builders plus focused tests; added
-  `packages/konyak_cli/test/runner_kind_catalog_test.dart`; updated governance
-  so request builders cannot reintroduce direct runner-kind literal
-  construction.
-- Remaining work: review draft PR #25 before starting I3-P3.
-- Next action: after the I3-P2 PR is reviewed and merged, run `/advance-pr` to
-  start I3-P3 Runtime Platform Definition Type Fronts on
-  `task/type-safety-i3-runtime-platform-definitions`.
-- Verification: I3-P2 implementation verification passed through the Nix dev
-  shell with `just cli-test`, `just verify-governance`, `just verify-safety`,
-  `just format-check`, and `just lint`.
+  completed `I3-P3 Runtime Platform Definition Type Fronts`; next planned gate
+  is I3-P4 Runtime Model and Source Manifest Type Fronts.
+- Pull request: not opened yet.
+- Latest implementation commit: pending I3-P3 implementation commit.
+- Purpose: remove primitive constructor fronts from Konyak-owned runtime
+  platform definition catalogs while preserving public CLI JSON strings,
+  runtime-owner manifest strings, install planning behavior, runtime
+  validation behavior, and Wine execution paths.
+- Completed work: converted `RuntimePlatformSpec`,
+  `RuntimeStackComponentDefinition`, and `RuntimeBackendDefinition` catalog
+  fields to existing runtime value objects; updated Linux/macOS platform
+  catalogs to construct typed definitions; projected typed values back to
+  primitive strings only at CLI JSON, runtime model, install-plan, and host
+  environment boundaries; added
+  `packages/konyak_cli/test/runtime_platform_definition_type_fronts_test.dart`;
+  updated governance so the converted platform definition constructor fronts
+  cannot regress to primitive fields.
+- Remaining work: push this completed I3-P3 branch, open a draft PR, and
+  review before starting I3-P4.
+- Next action: after the I3-P3 PR is reviewed and merged, run `/advance-pr` to
+  start I3-P4 Runtime Model and Source Manifest Type Fronts on
+  `task/type-safety-i3-runtime-model-fronts`.
+- Verification: I3-P3 implementation verification passed through the Nix dev
+  shell with the focused runtime platform definition test, `just cli-test`,
+  `just verify-governance`, `just verify-safety`, `just format-check`, and
+  `just lint`.

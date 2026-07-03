@@ -47,9 +47,8 @@ extension MacosWineArchiveInstallation on DartIoMacosWineInstaller {
         ),
         componentVersions: componentVersions,
         runtimeRoot: RuntimeRootPath(macosWineRuntimeRoot(environment)),
-        requiredExecutableRelativePath: RuntimeRelativePath(
-          macosKonyakRuntimePlatformSpec.requiredExecutableRelativePath,
-        ),
+        requiredExecutableRelativePath:
+            macosKonyakRuntimePlatformSpec.requiredExecutableRelativePath,
         expectedExecutablePath: RuntimeComponentPath(
           macosWineExecutable(environment),
         ),

@@ -287,7 +287,8 @@ RuntimeWineInstallPlan linuxWineInstallPlan({
           platformSpec: linuxWineRuntimePlatformSpec,
           environment: environment,
         ),
-    defaultArchiveFileName: linuxWineRuntimePlatformSpec.defaultArchiveFileName,
+    defaultArchiveFileName:
+        linuxWineRuntimePlatformSpec.defaultArchiveFileName.value,
     missingArchiveMessage: Option.of(
       'Linux Wine source manifest is not configured.',
     ),
