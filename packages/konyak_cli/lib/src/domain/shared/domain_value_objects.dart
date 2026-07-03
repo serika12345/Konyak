@@ -146,6 +146,9 @@ abstract class EnhancedSyncMode
 
   const factory EnhancedSyncMode._validated(String value) = _EnhancedSyncMode;
 
+  static const none = EnhancedSyncMode._validated('none');
+  static const esync = EnhancedSyncMode._validated('esync');
+  static const msync = EnhancedSyncMode._validated('msync');
   static const allowedValues = <String>{'none', 'esync', 'msync'};
 }
 
@@ -169,6 +172,10 @@ abstract class DxvkHudMode
 
   const factory DxvkHudMode._validated(String value) = _DxvkHudMode;
 
+  static const full = DxvkHudMode._validated('full');
+  static const partial = DxvkHudMode._validated('partial');
+  static const fps = DxvkHudMode._validated('fps');
+  static const off = DxvkHudMode._validated('off');
   static const allowedValues = <String>{'full', 'partial', 'fps', 'off'};
 }
 
@@ -193,6 +200,8 @@ abstract class WindowsBuildVersion
 
   const factory WindowsBuildVersion._validated(int value) =
       _WindowsBuildVersion;
+
+  static const none = WindowsBuildVersion._validated(0);
 }
 
 @Freezed(
@@ -216,6 +225,8 @@ abstract class WindowsDpiScaling
   );
 
   const factory WindowsDpiScaling._validated(int value) = _WindowsDpiScaling;
+
+  static const standard = WindowsDpiScaling._validated(96);
 }
 
 @Freezed(
@@ -368,6 +379,8 @@ abstract class ProgramArguments
   factory ProgramArguments(String value) => ProgramArguments._validated(value);
 
   const factory ProgramArguments._validated(String value) = _ProgramArguments;
+
+  static const empty = ProgramArguments._validated('');
 }
 
 @Freezed(
@@ -445,6 +458,8 @@ abstract class ProgramLocale
   factory ProgramLocale(String value) => ProgramLocale._validated(value);
 
   const factory ProgramLocale._validated(String value) = _ProgramLocale;
+
+  static const empty = ProgramLocale._validated('');
 }
 
 @Freezed(
@@ -461,6 +476,8 @@ abstract class ProgramLogPath
       ProgramLogPath._validated(value.trim());
 
   const factory ProgramLogPath._validated(String value) = _ProgramLogPath;
+
+  static const empty = ProgramLogPath._validated('');
 }
 
 @Freezed(
@@ -495,6 +512,8 @@ abstract class WineDebugChannels
       WineDebugChannels._validated(value.trim());
 
   const factory WineDebugChannels._validated(String value) = _WineDebugChannels;
+
+  static const empty = WineDebugChannels._validated('');
 }
 
 @Freezed(

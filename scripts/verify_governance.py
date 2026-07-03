@@ -2630,11 +2630,11 @@ def require_refactoring_documentation_cleanup() -> None:
         require_not_contains("docs/progress.md", stale_branch)
     require_contains(
         "docs/progress.md",
-        "I2-P3 CLI Contract Family Test Part Split",
+        "I2-P4 Semantic Constructor Primitive Fronts",
     )
     require_contains(
         "docs/progress.md",
-        "task/interface-i2-cli-contract-family-tests",
+        "task/interface-i2-semantic-constructor-fronts",
     )
 
     for relative_path in [
@@ -2691,6 +2691,130 @@ def require_refactoring_documentation_cleanup() -> None:
             forbidden,
         )
 
+
+def require_semantic_constructor_value_object_fronts() -> None:
+    for expected in [
+        (
+            "#### PR Gate: I2-P4 Semantic Constructor Primitive Fronts\n\n"
+            "status: completed\n"
+            "branch: `task/interface-i2-semantic-constructor-fronts`"
+        ),
+    ]:
+        require_contains("docs/todo.md", expected)
+
+    require_contains(
+        "docs/progress.md",
+        "I2-P4 Semantic Constructor Primitive Fronts",
+    )
+    require_contains(
+        "docs/progress.md",
+        "task/interface-i2-semantic-constructor-fronts",
+    )
+
+    app_settings = "packages/konyak_cli/lib/src/domain/app/app_settings_models.dart"
+    require_contains(app_settings, "required DefaultBottlePath defaultBottlePath")
+    require_not_contains(app_settings, "required String defaultBottlePath")
+
+    runtime_settings = (
+        "packages/konyak_cli/lib/src/domain/bottle/bottle_runtime_settings_models.dart"
+    )
+    for expected in [
+        "EnhancedSyncMode enhancedSync = EnhancedSyncMode.msync",
+        "DxvkHudMode dxvkHud = DxvkHudMode.off",
+        "WindowsBuildVersion buildVersion = WindowsBuildVersion.none",
+        "WindowsDpiScaling dpiScaling = WindowsDpiScaling.standard",
+        "BottleRuntimeSettings withBuildVersion(WindowsBuildVersion buildVersion)",
+        "BottleRuntimeSettings withDpiScaling(WindowsDpiScaling dpiScaling)",
+    ]:
+        require_contains(runtime_settings, expected)
+    for forbidden in [
+        "String enhancedSync =",
+        "String dxvkHud =",
+        "int buildVersion =",
+        "int dpiScaling =",
+        "withBuildVersion(int",
+        "withDpiScaling(int",
+    ]:
+        require_not_contains(runtime_settings, forbidden)
+
+    program_settings = (
+        "packages/konyak_cli/lib/src/domain/program/program_settings_models.dart"
+    )
+    for expected in [
+        "ProgramLocale locale = ProgramLocale.empty",
+        "ProgramArguments arguments = ProgramArguments.empty",
+        "WineDebugChannels additionalWineLoggingChannels = WineDebugChannels.empty",
+        "ProgramLogPath logFilePath = ProgramLogPath.empty",
+    ]:
+        require_contains(program_settings, expected)
+    for forbidden in [
+        "String locale =",
+        "String arguments =",
+        "String additionalWineLoggingChannels =",
+        "String logFilePath =",
+    ]:
+        require_not_contains(program_settings, forbidden)
+
+    runtime_validation = (
+        "packages/konyak_cli/lib/src/domain/runtime/runtime_validation_models.dart"
+    )
+    require_contains(runtime_validation, "required RuntimeId runtimeId")
+    runtime_validation_text = read_text(runtime_validation)
+    runtime_record_start = runtime_validation_text.find(
+        "abstract class RuntimeValidationRecord"
+    )
+    if runtime_record_start == -1:
+        raise AssertionError("RuntimeValidationRecord must exist")
+    next_freezed = runtime_validation_text.find(
+        "@Freezed(",
+        runtime_record_start + len("abstract class RuntimeValidationRecord"),
+    )
+    runtime_record_section = (
+        runtime_validation_text[runtime_record_start:]
+        if next_freezed == -1
+        else runtime_validation_text[runtime_record_start:next_freezed]
+    )
+    if "required String runtimeId" in runtime_record_section:
+        raise AssertionError(
+            "RuntimeValidationRecord constructor must not expose primitive runtime ids"
+        )
+
+    for relative_path, expected in [
+        ("packages/konyak_cli/lib/src/io/app_settings_json.dart", "DefaultBottlePath("),
+        ("packages/konyak_cli/lib/src/io/repository_storage_io.dart", "ProgramLocale("),
+        (
+            "packages/konyak_cli/lib/src/io/repository_storage_io.dart",
+            "EnhancedSyncMode(parsedEnhancedSync)",
+        ),
+        (
+            "packages/konyak_cli/lib/src/io/repository_storage_io.dart",
+            "WindowsBuildVersion(parsedBuildVersion)",
+        ),
+        (
+            "packages/konyak_cli/lib/src/io/repository_storage_io.dart",
+            "WindowsDpiScaling(parsedDpiScaling)",
+        ),
+        (
+            "packages/konyak_cli/lib/src/io/program_registry_parsers.dart",
+            "WindowsBuildVersion(buildVersion)",
+        ),
+        (
+            "packages/konyak_cli/lib/src/io/program_registry_parsers.dart",
+            "WindowsDpiScaling(dpiScaling)",
+        ),
+    ]:
+        require_contains(relative_path, expected)
+
+    for expected in [
+        "? storedSettings.locale",
+        ": settings.locale",
+        "? storedSettings.arguments",
+        ": settings.arguments",
+    ]:
+        require_contains(
+            "packages/konyak_cli/lib/src/cli/cli_program_run_handlers.dart",
+            expected,
+        )
 
 def require_cli_parser_option_boundaries() -> None:
     for relative_path, forbidden in [
@@ -4135,6 +4259,7 @@ def main() -> None:
     require_refactoring_file_growth_limits()
     require_flutter_view_model_extraction_boundaries()
     require_refactoring_documentation_cleanup()
+    require_semantic_constructor_value_object_fronts()
     require_cli_parser_option_boundaries()
     require_cli_command_dispatch_boundaries()
     require_flutter_dialog_decision_boundaries()

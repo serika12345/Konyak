@@ -449,8 +449,8 @@ void main() {
         bottleId: BottleId('steam'),
         programPath: ProgramPath('/downloads/Steam.exe'),
         settings: ProgramSettingsRecord(
-          locale: 'ja_JP.UTF-8',
-          arguments: '-silent -windowed',
+          locale: ProgramLocale('ja_JP.UTF-8'),
+          arguments: ProgramArguments('-silent -windowed'),
           environment: ProgramEnvironmentOverrides(const {
             'STEAM_COMPAT_DATA_PATH': '/compat',
           }),
@@ -749,12 +749,12 @@ void main() {
           windowsVersion: 'win10',
           runtimeSettings: Option.of(
             BottleRuntimeSettings(
-              enhancedSync: 'msync',
+              enhancedSync: EnhancedSyncMode('msync'),
               metalHud: true,
               metalTrace: true,
               avxEnabled: true,
               dxvk: true,
-              dxvkHud: 'partial',
+              dxvkHud: DxvkHudMode('partial'),
             ),
           ),
         ),
@@ -1445,10 +1445,10 @@ void main() {
           windowsVersion: 'win10',
           runtimeSettings: Option.of(
             BottleRuntimeSettings(
-              enhancedSync: 'msync',
+              enhancedSync: EnhancedSyncMode('msync'),
               dxvk: true,
               dlssMetalFx: true,
-              dxvkHud: 'fps',
+              dxvkHud: DxvkHudMode('fps'),
             ),
           ),
         ),
@@ -1529,7 +1529,10 @@ void main() {
           path: '/home/user/.local/share/konyak/bottles/steam',
           windowsVersion: 'win10',
           runtimeSettings: Option.of(
-            BottleRuntimeSettings(enhancedSync: 'msync', vkd3dProton: true),
+            BottleRuntimeSettings(
+              enhancedSync: EnhancedSyncMode('msync'),
+              vkd3dProton: true,
+            ),
           ),
         ),
       ],

@@ -91,7 +91,7 @@ BottleRuntimeSettings runtimeSettingsWithBuildVersion(
     () => runtimeSettings,
     (buildVersion) => buildVersion < 0 || buildVersion > 999999
         ? runtimeSettings
-        : runtimeSettings.withBuildVersion(buildVersion),
+        : runtimeSettings.withBuildVersion(WindowsBuildVersion(buildVersion)),
   );
 }
 
@@ -115,7 +115,7 @@ BottleRuntimeSettings runtimeSettingsWithDpiScaling(
     (dpiScaling) =>
         dpiScaling < 96 || dpiScaling > 480 || (dpiScaling - 96) % 24 != 0
         ? runtimeSettings
-        : runtimeSettings.withDpiScaling(dpiScaling),
+        : runtimeSettings.withDpiScaling(WindowsDpiScaling(dpiScaling)),
   );
 }
 

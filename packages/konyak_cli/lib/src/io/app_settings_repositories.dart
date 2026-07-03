@@ -6,6 +6,7 @@ import 'package:fpdart/fpdart.dart';
 import '../domain/app/app_settings_models.dart';
 import '../domain/program/program_runner.dart';
 import '../domain/runtime/host_environment.dart';
+import '../domain/shared/domain_value_objects.dart';
 import '../repository/composite_bottle_repository.dart';
 import '../repository/file_bottle_repository.dart';
 import '../repository/repository_interfaces.dart';
@@ -124,7 +125,9 @@ class FileAppSettingsRepository implements AppSettingsRepository {
     final file = File(appSettingsJsonPath(configHome));
     if (!file.existsSync()) {
       return Right<String, AppSettingsRecord>(
-        AppSettingsRecord(defaultBottlePath: fallbackDefaultBottlePath),
+        AppSettingsRecord(
+          defaultBottlePath: DefaultBottlePath(fallbackDefaultBottlePath),
+        ),
       );
     }
 

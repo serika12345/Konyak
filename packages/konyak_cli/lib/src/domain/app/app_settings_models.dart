@@ -14,7 +14,7 @@ abstract class AppSettingsRecord with _$AppSettingsRecord {
 
   factory AppSettingsRecord({
     bool terminateWineProcessesOnClose = false,
-    required String defaultBottlePath,
+    required DefaultBottlePath defaultBottlePath,
     AppAppearanceMode appearanceMode = AppAppearanceMode.dark,
     AppLanguageMode languageMode = AppLanguageMode.system,
     bool automaticallyCheckForKonyakUpdates = false,
@@ -23,7 +23,7 @@ abstract class AppSettingsRecord with _$AppSettingsRecord {
   }) {
     return AppSettingsRecord._validated(
       terminateWineProcessesOnClose: terminateWineProcessesOnClose,
-      defaultBottlePath: DefaultBottlePath(defaultBottlePath),
+      defaultBottlePath: defaultBottlePath,
       appearanceMode: appearanceMode,
       languageMode: languageMode,
       automaticallyCheckForKonyakUpdates: automaticallyCheckForKonyakUpdates,

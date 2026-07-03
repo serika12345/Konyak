@@ -76,12 +76,12 @@ abstract class RuntimeValidationRecord with _$RuntimeValidationRecord {
   const RuntimeValidationRecord._();
 
   factory RuntimeValidationRecord({
-    required String runtimeId,
+    required RuntimeId runtimeId,
     required bool isValid,
     required Iterable<RuntimeValidationCheck> checks,
   }) {
     return RuntimeValidationRecord._validated(
-      runtimeId: RuntimeId(runtimeId),
+      runtimeId: runtimeId,
       isValid: isValid,
       checks: List.unmodifiable(checks),
     );

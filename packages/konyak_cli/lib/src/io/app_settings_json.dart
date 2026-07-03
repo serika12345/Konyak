@@ -1,6 +1,7 @@
 import 'package:fpdart/fpdart.dart';
 
 import '../domain/app/app_settings_models.dart';
+import '../domain/shared/domain_value_objects.dart';
 import 'external_payload_helpers.dart';
 
 Map<String, Object?> appSettingsRecordJson(AppSettingsRecord settings) {
@@ -85,9 +86,11 @@ Option<AppSettingsRecord> appSettingsRecordFromJson(
           terminateWineProcessesOnClose: terminateWineProcessesOnClose is bool
               ? terminateWineProcessesOnClose
               : false,
-          defaultBottlePath: defaultBottlePath is String
-              ? defaultBottlePath
-              : fallbackDefaultBottlePath,
+          defaultBottlePath: DefaultBottlePath(
+            defaultBottlePath is String
+                ? defaultBottlePath
+                : fallbackDefaultBottlePath,
+          ),
           appearanceMode: parsedAppearanceMode,
           languageMode: parsedLanguageMode,
           automaticallyCheckForKonyakUpdates:

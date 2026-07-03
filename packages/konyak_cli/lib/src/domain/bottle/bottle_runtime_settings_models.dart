@@ -10,7 +10,7 @@ abstract class BottleRuntimeSettings with _$BottleRuntimeSettings {
   const BottleRuntimeSettings._();
 
   factory BottleRuntimeSettings({
-    String enhancedSync = 'msync',
+    EnhancedSyncMode enhancedSync = EnhancedSyncMode.msync,
     bool metalHud = false,
     bool metalTrace = false,
     bool avxEnabled = false,
@@ -19,14 +19,14 @@ abstract class BottleRuntimeSettings with _$BottleRuntimeSettings {
     bool dxmt = false,
     bool dlssMetalFx = false,
     bool dxvkAsync = true,
-    String dxvkHud = 'off',
+    DxvkHudMode dxvkHud = DxvkHudMode.off,
     bool vkd3dProton = false,
-    int buildVersion = 0,
+    WindowsBuildVersion buildVersion = WindowsBuildVersion.none,
     bool retinaMode = false,
-    int dpiScaling = 96,
+    WindowsDpiScaling dpiScaling = WindowsDpiScaling.standard,
   }) {
     return BottleRuntimeSettings._validated(
-      enhancedSync: EnhancedSyncMode(enhancedSync),
+      enhancedSync: enhancedSync,
       metalHud: metalHud,
       metalTrace: metalTrace,
       avxEnabled: avxEnabled,
@@ -35,11 +35,11 @@ abstract class BottleRuntimeSettings with _$BottleRuntimeSettings {
       dxmt: dxmt,
       dlssMetalFx: dlssMetalFx,
       dxvkAsync: dxvkAsync,
-      dxvkHud: DxvkHudMode(dxvkHud),
+      dxvkHud: dxvkHud,
       vkd3dProton: vkd3dProton,
-      buildVersion: WindowsBuildVersion(buildVersion),
+      buildVersion: buildVersion,
       retinaMode: retinaMode,
-      dpiScaling: WindowsDpiScaling(dpiScaling),
+      dpiScaling: dpiScaling,
     );
   }
 
@@ -81,7 +81,7 @@ abstract class BottleRuntimeSettings with _$BottleRuntimeSettings {
 
   BottleRuntimeSettings withMetalHud(bool metalHud) {
     return BottleRuntimeSettings(
-      enhancedSync: enhancedSync.value,
+      enhancedSync: enhancedSync,
       metalHud: metalHud,
       metalTrace: metalTrace,
       avxEnabled: avxEnabled,
@@ -90,17 +90,17 @@ abstract class BottleRuntimeSettings with _$BottleRuntimeSettings {
       dxmt: dxmt,
       dlssMetalFx: dlssMetalFx,
       dxvkAsync: dxvkAsync,
-      dxvkHud: dxvkHud.value,
+      dxvkHud: dxvkHud,
       vkd3dProton: vkd3dProton,
-      buildVersion: buildVersion.value,
+      buildVersion: buildVersion,
       retinaMode: retinaMode,
-      dpiScaling: dpiScaling.value,
+      dpiScaling: dpiScaling,
     );
   }
 
   BottleRuntimeSettings withMetalTrace(bool metalTrace) {
     return BottleRuntimeSettings(
-      enhancedSync: enhancedSync.value,
+      enhancedSync: enhancedSync,
       metalHud: metalHud,
       metalTrace: metalTrace,
       avxEnabled: avxEnabled,
@@ -109,17 +109,17 @@ abstract class BottleRuntimeSettings with _$BottleRuntimeSettings {
       dxmt: dxmt,
       dlssMetalFx: dlssMetalFx,
       dxvkAsync: dxvkAsync,
-      dxvkHud: dxvkHud.value,
+      dxvkHud: dxvkHud,
       vkd3dProton: vkd3dProton,
-      buildVersion: buildVersion.value,
+      buildVersion: buildVersion,
       retinaMode: retinaMode,
-      dpiScaling: dpiScaling.value,
+      dpiScaling: dpiScaling,
     );
   }
 
   BottleRuntimeSettings withAvxEnabled(bool avxEnabled) {
     return BottleRuntimeSettings(
-      enhancedSync: enhancedSync.value,
+      enhancedSync: enhancedSync,
       metalHud: metalHud,
       metalTrace: metalTrace,
       avxEnabled: avxEnabled,
@@ -128,17 +128,17 @@ abstract class BottleRuntimeSettings with _$BottleRuntimeSettings {
       dxmt: dxmt,
       dlssMetalFx: dlssMetalFx,
       dxvkAsync: dxvkAsync,
-      dxvkHud: dxvkHud.value,
+      dxvkHud: dxvkHud,
       vkd3dProton: vkd3dProton,
-      buildVersion: buildVersion.value,
+      buildVersion: buildVersion,
       retinaMode: retinaMode,
-      dpiScaling: dpiScaling.value,
+      dpiScaling: dpiScaling,
     );
   }
 
   BottleRuntimeSettings withDxrEnabled(bool dxrEnabled) {
     return BottleRuntimeSettings(
-      enhancedSync: enhancedSync.value,
+      enhancedSync: enhancedSync,
       metalHud: metalHud,
       metalTrace: metalTrace,
       avxEnabled: avxEnabled,
@@ -147,17 +147,17 @@ abstract class BottleRuntimeSettings with _$BottleRuntimeSettings {
       dxmt: dxrEnabled ? false : dxmt,
       dlssMetalFx: dlssMetalFx,
       dxvkAsync: dxvkAsync,
-      dxvkHud: dxvkHud.value,
+      dxvkHud: dxvkHud,
       vkd3dProton: vkd3dProton,
-      buildVersion: buildVersion.value,
+      buildVersion: buildVersion,
       retinaMode: retinaMode,
-      dpiScaling: dpiScaling.value,
+      dpiScaling: dpiScaling,
     );
   }
 
   BottleRuntimeSettings withDxvk(bool dxvk) {
     return BottleRuntimeSettings(
-      enhancedSync: enhancedSync.value,
+      enhancedSync: enhancedSync,
       metalHud: metalHud,
       metalTrace: metalTrace,
       avxEnabled: avxEnabled,
@@ -166,17 +166,17 @@ abstract class BottleRuntimeSettings with _$BottleRuntimeSettings {
       dxmt: dxvk ? false : dxmt,
       dlssMetalFx: dlssMetalFx,
       dxvkAsync: dxvkAsync,
-      dxvkHud: dxvkHud.value,
+      dxvkHud: dxvkHud,
       vkd3dProton: vkd3dProton,
-      buildVersion: buildVersion.value,
+      buildVersion: buildVersion,
       retinaMode: retinaMode,
-      dpiScaling: dpiScaling.value,
+      dpiScaling: dpiScaling,
     );
   }
 
   BottleRuntimeSettings withDxmt(bool dxmt) {
     return BottleRuntimeSettings(
-      enhancedSync: enhancedSync.value,
+      enhancedSync: enhancedSync,
       metalHud: metalHud,
       metalTrace: metalTrace,
       avxEnabled: avxEnabled,
@@ -185,17 +185,17 @@ abstract class BottleRuntimeSettings with _$BottleRuntimeSettings {
       dxmt: dxmt,
       dlssMetalFx: dlssMetalFx,
       dxvkAsync: dxvkAsync,
-      dxvkHud: dxvkHud.value,
+      dxvkHud: dxvkHud,
       vkd3dProton: vkd3dProton,
-      buildVersion: buildVersion.value,
+      buildVersion: buildVersion,
       retinaMode: retinaMode,
-      dpiScaling: dpiScaling.value,
+      dpiScaling: dpiScaling,
     );
   }
 
   BottleRuntimeSettings withDlssMetalFx(bool dlssMetalFx) {
     return BottleRuntimeSettings(
-      enhancedSync: enhancedSync.value,
+      enhancedSync: enhancedSync,
       metalHud: metalHud,
       metalTrace: metalTrace,
       avxEnabled: avxEnabled,
@@ -204,17 +204,17 @@ abstract class BottleRuntimeSettings with _$BottleRuntimeSettings {
       dxmt: dxmt,
       dlssMetalFx: dlssMetalFx,
       dxvkAsync: dxvkAsync,
-      dxvkHud: dxvkHud.value,
+      dxvkHud: dxvkHud,
       vkd3dProton: vkd3dProton,
-      buildVersion: buildVersion.value,
+      buildVersion: buildVersion,
       retinaMode: retinaMode,
-      dpiScaling: dpiScaling.value,
+      dpiScaling: dpiScaling,
     );
   }
 
   BottleRuntimeSettings withDxvkAsync(bool dxvkAsync) {
     return BottleRuntimeSettings(
-      enhancedSync: enhancedSync.value,
+      enhancedSync: enhancedSync,
       metalHud: metalHud,
       metalTrace: metalTrace,
       avxEnabled: avxEnabled,
@@ -223,11 +223,11 @@ abstract class BottleRuntimeSettings with _$BottleRuntimeSettings {
       dxmt: dxmt,
       dlssMetalFx: dlssMetalFx,
       dxvkAsync: dxvkAsync,
-      dxvkHud: dxvkHud.value,
+      dxvkHud: dxvkHud,
       vkd3dProton: vkd3dProton,
-      buildVersion: buildVersion.value,
+      buildVersion: buildVersion,
       retinaMode: retinaMode,
-      dpiScaling: dpiScaling.value,
+      dpiScaling: dpiScaling,
     );
   }
 
@@ -252,7 +252,7 @@ abstract class BottleRuntimeSettings with _$BottleRuntimeSettings {
 
   BottleRuntimeSettings withVkd3dProton(bool vkd3dProton) {
     return BottleRuntimeSettings(
-      enhancedSync: enhancedSync.value,
+      enhancedSync: enhancedSync,
       metalHud: metalHud,
       metalTrace: metalTrace,
       avxEnabled: avxEnabled,
@@ -261,36 +261,36 @@ abstract class BottleRuntimeSettings with _$BottleRuntimeSettings {
       dxmt: dxmt,
       dlssMetalFx: dlssMetalFx,
       dxvkAsync: dxvkAsync,
-      dxvkHud: dxvkHud.value,
-      vkd3dProton: vkd3dProton,
-      buildVersion: buildVersion.value,
-      retinaMode: retinaMode,
-      dpiScaling: dpiScaling.value,
-    );
-  }
-
-  BottleRuntimeSettings withBuildVersion(int buildVersion) {
-    return BottleRuntimeSettings(
-      enhancedSync: enhancedSync.value,
-      metalHud: metalHud,
-      metalTrace: metalTrace,
-      avxEnabled: avxEnabled,
-      dxrEnabled: dxrEnabled,
-      dxvk: dxvk,
-      dxmt: dxmt,
-      dlssMetalFx: dlssMetalFx,
-      dxvkAsync: dxvkAsync,
-      dxvkHud: dxvkHud.value,
+      dxvkHud: dxvkHud,
       vkd3dProton: vkd3dProton,
       buildVersion: buildVersion,
       retinaMode: retinaMode,
-      dpiScaling: dpiScaling.value,
+      dpiScaling: dpiScaling,
+    );
+  }
+
+  BottleRuntimeSettings withBuildVersion(WindowsBuildVersion buildVersion) {
+    return BottleRuntimeSettings(
+      enhancedSync: enhancedSync,
+      metalHud: metalHud,
+      metalTrace: metalTrace,
+      avxEnabled: avxEnabled,
+      dxrEnabled: dxrEnabled,
+      dxvk: dxvk,
+      dxmt: dxmt,
+      dlssMetalFx: dlssMetalFx,
+      dxvkAsync: dxvkAsync,
+      dxvkHud: dxvkHud,
+      vkd3dProton: vkd3dProton,
+      buildVersion: buildVersion,
+      retinaMode: retinaMode,
+      dpiScaling: dpiScaling,
     );
   }
 
   BottleRuntimeSettings withRetinaMode(bool retinaMode) {
     return BottleRuntimeSettings(
-      enhancedSync: enhancedSync.value,
+      enhancedSync: enhancedSync,
       metalHud: metalHud,
       metalTrace: metalTrace,
       avxEnabled: avxEnabled,
@@ -299,11 +299,11 @@ abstract class BottleRuntimeSettings with _$BottleRuntimeSettings {
       dxmt: dxmt,
       dlssMetalFx: dlssMetalFx,
       dxvkAsync: dxvkAsync,
-      dxvkHud: dxvkHud.value,
+      dxvkHud: dxvkHud,
       vkd3dProton: vkd3dProton,
-      buildVersion: buildVersion.value,
+      buildVersion: buildVersion,
       retinaMode: retinaMode,
-      dpiScaling: dpiScaling.value,
+      dpiScaling: dpiScaling,
     );
   }
 
@@ -315,16 +315,18 @@ abstract class BottleRuntimeSettings with _$BottleRuntimeSettings {
     }
 
     return withDpiScaling(
-      _windowsDpiForHighResolutionModeChange(
-        currentWindowsDpi: currentRuntimeSettings.dpiScaling.value,
-        highResolutionMode: retinaMode,
+      WindowsDpiScaling(
+        _windowsDpiForHighResolutionModeChange(
+          currentWindowsDpi: currentRuntimeSettings.dpiScaling.value,
+          highResolutionMode: retinaMode,
+        ),
       ),
     );
   }
 
-  BottleRuntimeSettings withDpiScaling(int dpiScaling) {
+  BottleRuntimeSettings withDpiScaling(WindowsDpiScaling dpiScaling) {
     return BottleRuntimeSettings(
-      enhancedSync: enhancedSync.value,
+      enhancedSync: enhancedSync,
       metalHud: metalHud,
       metalTrace: metalTrace,
       avxEnabled: avxEnabled,
@@ -333,9 +335,9 @@ abstract class BottleRuntimeSettings with _$BottleRuntimeSettings {
       dxmt: dxmt,
       dlssMetalFx: dlssMetalFx,
       dxvkAsync: dxvkAsync,
-      dxvkHud: dxvkHud.value,
+      dxvkHud: dxvkHud,
       vkd3dProton: vkd3dProton,
-      buildVersion: buildVersion.value,
+      buildVersion: buildVersion,
       retinaMode: retinaMode,
       dpiScaling: dpiScaling,
     );
