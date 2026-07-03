@@ -81,10 +81,11 @@ class ProgramRunPlanner {
 
   Option<ProgramRunRequest> _planSupportedBottleCommand({
     required BottleRecord bottle,
-    required BottleCommand supportedCommand,
+    required SupportedBottleCommand supportedCommand,
   }) {
-    if (supportedCommand.value == 'terminal') {
-      return Option.of(switch (hostPlatform) {
+    final command = supportedCommand.command;
+    return Option.of(switch (supportedCommand.planKind) {
+      BottleCommandPlanKind.terminal => switch (hostPlatform) {
         KonyakHostPlatform.linux => linuxTerminalCommandRequest(
           bottle: bottle,
           environment: environment,
@@ -94,27 +95,22 @@ class ProgramRunPlanner {
           environment: environment,
           macosMajorVersion: macosMajorVersion,
         ),
-      });
-    }
-
-    if (supportedCommand.value == 'cmd') {
-      return Option.of(switch (hostPlatform) {
-        KonyakHostPlatform.linux => linuxTerminalCommandRequest(
-          bottle: bottle,
-          environment: environment,
-          initialWineCommand: Option.of(supportedCommand),
-        ),
-        KonyakHostPlatform.macos => macosTerminalCommandRequest(
-          bottle: bottle,
-          environment: environment,
-          macosMajorVersion: macosMajorVersion,
-          initialWineCommand: Option.of(supportedCommand),
-        ),
-      });
-    }
-
-    if (supportedCommand.value == 'simulate-reboot') {
-      return Option.of(switch (hostPlatform) {
+      },
+      BottleCommandPlanKind.terminalWithInitialCommand =>
+        switch (hostPlatform) {
+          KonyakHostPlatform.linux => linuxTerminalCommandRequest(
+            bottle: bottle,
+            environment: environment,
+            initialWineCommand: Option.of(command),
+          ),
+          KonyakHostPlatform.macos => macosTerminalCommandRequest(
+            bottle: bottle,
+            environment: environment,
+            macosMajorVersion: macosMajorVersion,
+            initialWineCommand: Option.of(command),
+          ),
+        },
+      BottleCommandPlanKind.prefixRestart => switch (hostPlatform) {
         KonyakHostPlatform.linux => linuxWinebootRestartRequest(
           bottle: bottle,
           environment: environment,
@@ -124,11 +120,8 @@ class ProgramRunPlanner {
           environment: environment,
           macosMajorVersion: macosMajorVersion,
         ),
-      });
-    }
-
-    if (supportedCommand.value == 'winetricks') {
-      return Option.of(switch (hostPlatform) {
+      },
+      BottleCommandPlanKind.winetricks => switch (hostPlatform) {
         KonyakHostPlatform.linux => linuxWinetricksCommandRequest(
           bottle: bottle,
           environment: environment,
@@ -139,21 +132,20 @@ class ProgramRunPlanner {
           macosMajorVersion: macosMajorVersion,
           verb: const Option.none(),
         ),
-      });
-    }
-
-    return Option.of(switch (hostPlatform) {
-      KonyakHostPlatform.linux => linuxWineCommandRequest(
-        bottle: bottle,
-        command: supportedCommand,
-        environment: environment,
-      ),
-      KonyakHostPlatform.macos => macosWineCommandRequest(
-        bottle: bottle,
-        command: supportedCommand,
-        environment: environment,
-        macosMajorVersion: macosMajorVersion,
-      ),
+      },
+      BottleCommandPlanKind.wineCommand => switch (hostPlatform) {
+        KonyakHostPlatform.linux => linuxWineCommandRequest(
+          bottle: bottle,
+          command: command,
+          environment: environment,
+        ),
+        KonyakHostPlatform.macos => macosWineCommandRequest(
+          bottle: bottle,
+          command: command,
+          environment: environment,
+          macosMajorVersion: macosMajorVersion,
+        ),
+      },
     });
   }
 

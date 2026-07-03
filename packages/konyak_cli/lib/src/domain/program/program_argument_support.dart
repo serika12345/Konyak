@@ -6,6 +6,19 @@ import '../shared/domain_value_objects.dart';
 import 'program_run_environment.dart';
 import 'program_settings_models.dart';
 
+enum BottleCommandPlanKind {
+  terminal,
+  terminalWithInitialCommand,
+  prefixRestart,
+  winetricks,
+  wineCommand,
+}
+
+typedef SupportedBottleCommand = ({
+  BottleCommand command,
+  BottleCommandPlanKind planKind,
+});
+
 Option<ProgramRunArguments> wineArgumentsForProgramPath(
   ProgramPath programPath,
 ) {
@@ -122,7 +135,7 @@ bool isSupportedProgramPath(ProgramPath programPath) {
   return wineArgumentsForProgramPath(programPath).isSome();
 }
 
-Option<BottleCommand> supportedBottleCommand(BottleCommand command) {
+Option<SupportedBottleCommand> supportedBottleCommand(BottleCommand command) {
   final normalized = command.value.trim().toLowerCase();
   return switch (normalized) {
     'winecfg' ||
@@ -136,7 +149,24 @@ Option<BottleCommand> supportedBottleCommand(BottleCommand command) {
     'dxdiag' ||
     'winver' ||
     'terminal' ||
-    'winetricks' => Option.of(BottleCommand(normalized)),
+    'winetricks' => _supportedBottleCommand(BottleCommand(normalized)),
     _ => const Option.none(),
+  };
+}
+
+Option<SupportedBottleCommand> _supportedBottleCommand(BottleCommand command) {
+  return Option.of((
+    command: command,
+    planKind: _bottleCommandPlanKind(command),
+  ));
+}
+
+BottleCommandPlanKind _bottleCommandPlanKind(BottleCommand command) {
+  return switch (command.value) {
+    'terminal' => BottleCommandPlanKind.terminal,
+    'cmd' => BottleCommandPlanKind.terminalWithInitialCommand,
+    'simulate-reboot' => BottleCommandPlanKind.prefixRestart,
+    'winetricks' => BottleCommandPlanKind.winetricks,
+    _ => BottleCommandPlanKind.wineCommand,
   };
 }
