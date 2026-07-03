@@ -597,6 +597,287 @@ review gate:
 - Commit and push the branch, open a draft PR, then stop before implementation
   work beyond this governance cleanup.
 
+### I3: Mechanical Type-Safety Hardening
+
+Purpose: improve type safety through mechanical, behavior-preserving
+conversions of stable primitive discriminants and constructor fronts into
+explicit enums, catalogs, or value objects. Keep external CLI JSON, argv,
+persisted metadata, runtime manifests, and visible app behavior stable. Do not
+convert runtime-owner manifest strings unless the conversion has a clear
+adapter boundary back to the public schema value.
+
+Medium milestones, one PR unit each:
+
+- [ ] I3-M1: Inventory remaining mechanically convertible primitive and enum
+  fronts, classify them as PR-sized conversion gates, adapter-boundary
+  primitives, or deferred design decisions.
+- [ ] I3-M2: Replace stable `RunnerKind` string literal construction with a
+  typed runner-kind catalog or enum-backed factory while preserving existing
+  public JSON string values.
+- [ ] I3-M3: Convert stable runtime platform-definition constructor fronts for
+  ids, names, roles, architecture, runner kind, backend ids, and component ids
+  into value objects where the current constructors already validate or project
+  to those values.
+- [ ] I3-M4: Convert stable runtime model and source-manifest constructor
+  fronts to typed value-object inputs where they are Konyak-owned domain
+  values, while keeping JSON and manifest parsing as adapter boundaries.
+- [ ] I3-M5: Convert macOS major-version capability plumbing from `Option<int>`
+  to an explicit value object or capability input if the I3 inventory confirms
+  the conversion is mechanical and behavior-neutral.
+- [ ] I3-M6: Tighten governance and custom lint checks so completed I3
+  conversions cannot regress to ad hoc primitive construction, without
+  preserving temporary implementation details as contracts.
+
+#### PR Gate: I3-P1 Type-Safety Inventory and Gate Order
+
+status: planned
+branch: `task/type-safety-i3-inventory`
+
+Completion criteria:
+
+- Add an I3 audit document that inventories remaining primitive, nullable, and
+  string-discriminant fronts across CLI/domain code, Flutter app-facing models,
+  runtime platform definitions, request builders, custom lint allowlists, and
+  governance checks.
+- Classify each finding as a mechanical conversion PR, an allowed adapter
+  boundary, or an explicitly deferred design decision.
+- Refine the I3-P2 through I3-P6 gate order if the audit identifies a safer
+  mechanical sequence than the initial plan.
+- Keep the audit behavior-neutral: no public CLI JSON schema, app behavior,
+  runtime behavior, Wine execution path, or broad code conversion changes.
+- `docs/progress.md` records the gate state, latest commit, verification, and
+  next action.
+
+Not included:
+
+- Implementing enum/value-object conversions before the audit selects the exact
+  boundary.
+- Public CLI JSON schema changes.
+- Runtime, launcher, Wine, app, or visible UI behavior changes.
+- Broad linter allowlist narrowing.
+
+Verification:
+
+- `just verify-governance`
+- `just verify-safety`
+- `just format-check`
+- `just lint`
+
+review gate:
+
+- Commit and push the branch, open a draft PR, then stop before implementing
+  I3-P2.
+
+#### PR Gate: I3-P2 Runner Kind Typed Catalog
+
+status: planned
+branch: `task/type-safety-i3-runner-kind-catalog`
+
+Completion criteria:
+
+- Introduce a typed runner-kind catalog, enum, or enum-backed factory for the
+  stable runner kinds used by program request builders.
+- Replace direct `RunnerKind('<literal>')` construction in domain, platform,
+  I/O request builders, and focused tests with the typed catalog or enum-backed
+  factory where the runner kind is one of the stable known values.
+- Keep `RunnerKind.value`, public CLI JSON `runnerKind` strings, argv, exit
+  codes, runtime behavior, and Wine execution paths unchanged.
+- Add or update focused tests proving the typed catalog projects to the same
+  public runner-kind strings for Linux, macOS, registry, terminal, winetricks,
+  wineserver, and winedbg requests.
+- Update governance only for the completed runner-kind construction boundary.
+- `docs/progress.md` records the gate state, latest commit, verification, and
+  next action.
+
+Not included:
+
+- Public CLI JSON schema changes.
+- Renaming existing runner-kind string values.
+- Changing process launch, request-builder argv, runtime, Wine, or app
+  behavior.
+- Converting runtime manifest `runnerKind` fields before I3-P2 selects that
+  boundary.
+- Host request-family extraction or request-builder unification.
+
+Verification:
+
+- `just cli-test`
+- `just verify-governance`
+- `just verify-safety`
+- `just format-check`
+- `just lint`
+
+review gate:
+
+- Commit and push the branch, open a draft PR, then stop before I3-P3.
+
+#### PR Gate: I3-P3 Runtime Platform Definition Type Fronts
+
+status: planned
+branch: `task/type-safety-i3-runtime-platform-definitions`
+
+Completion criteria:
+
+- Convert stable `RuntimePlatformSpec`, `RuntimeStackComponentDefinition`, and
+  `RuntimeBackendDefinition` constructor fronts from primitive strings/lists to
+  existing value objects for runtime ids, names, roles, architecture,
+  runner-kind, component ids, backend ids, archive paths, and environment keys
+  where those values are Konyak-owned definitions.
+- Keep JSON parsing and runtime-owner manifest decoding at explicit adapter
+  boundaries, projecting typed values back to the same public schema strings.
+- Add or update focused domain and CLI contract tests proving list-runtimes,
+  runtime validation, runtime install planning, and source manifest behavior
+  stay schema-compatible.
+- Update governance only for the converted runtime platform-definition
+  constructor fronts.
+- `docs/progress.md` records the gate state, latest commit, verification, and
+  next action.
+
+Not included:
+
+- Changing runtime owner manifest schemas.
+- Changing public CLI JSON schema or persisted metadata.
+- Broad runtime package/install behavior changes.
+- Converting process diagnostic strings, human-readable messages, or fields
+  that do not carry stable identity/invariants.
+- Linux runtime packaging-owner build/check hardening.
+
+Verification:
+
+- `just cli-test`
+- `just verify-governance`
+- `just verify-safety`
+- `just format-check`
+- `just lint`
+
+review gate:
+
+- Commit and push the branch, open a draft PR, then stop before I3-P4.
+
+#### PR Gate: I3-P4 Runtime Model and Source Manifest Type Fronts
+
+status: planned
+branch: `task/type-safety-i3-runtime-model-fronts`
+
+Completion criteria:
+
+- Convert stable `RuntimeDefinition`, `RuntimeRecord`, `RuntimeStack`,
+  `RuntimeStackComponent`, `RuntimeStackBackend`, `RuntimeSourceManifest`, and
+  `RuntimeSourceComponent` constructor fronts from primitive strings/lists to
+  existing value objects where the values are Konyak-owned domain state.
+- Preserve JSON parsing, persisted metadata, runtime-owner manifest decoding,
+  and CLI projection as explicit primitive adapter boundaries.
+- Keep public CLI JSON, persisted metadata, runtime manifest schemas, runtime
+  behavior, and Wine execution paths unchanged.
+- Add or update focused domain and CLI contract tests for list-runtimes,
+  runtime update, runtime install planning, runtime source manifest lookup, and
+  source archive planning where converted constructors participate.
+- Update governance only for the converted runtime model constructor fronts.
+- `docs/progress.md` records the gate state, latest commit, verification, and
+  next action.
+
+Not included:
+
+- Changing runtime owner manifest schemas.
+- Changing public CLI JSON schema or persisted metadata.
+- Converting human-readable diagnostic messages, process stdout/stderr, or
+  process exit codes.
+- Runtime platform-definition constructor conversion already owned by I3-P3.
+- Linux runtime packaging-owner build/check hardening.
+
+Verification:
+
+- `just cli-test`
+- `just verify-governance`
+- `just verify-safety`
+- `just format-check`
+- `just lint`
+
+review gate:
+
+- Commit and push the branch, open a draft PR, then stop before I3-P5.
+
+#### PR Gate: I3-P5 macOS Version Capability Type Front
+
+status: planned
+branch: `task/type-safety-i3-macos-version-capability`
+
+Completion criteria:
+
+- Replace `Option<int>` macOS major-version plumbing in `ProgramRunPlanner` and
+  macOS request/terminal helpers with an explicit value object or capability
+  input, only if I3-P1 confirms the conversion is mechanical and
+  behavior-neutral.
+- Keep D3DMetal DLSS/MetalFX environment selection, terminal setup, CLI JSON,
+  argv, runtime behavior, Wine execution paths, and app behavior unchanged.
+- Add or update focused tests proving macOS version presence/absence and
+  version thresholds preserve the same request environment decisions.
+- Update governance only for the converted macOS version/capability boundary.
+- `docs/progress.md` records the gate state, latest commit, verification, and
+  next action.
+
+Not included:
+
+- Introducing a broad macOS capability service.
+- Changing D3DMetal, DXMT, DXVK, Metal HUD/capture, or runtime component
+  policy.
+- Runtime request-family extraction or platform request-builder unification.
+- Converting unrelated process ids, exit codes, PE offsets, or diagnostic
+  integers.
+
+Verification:
+
+- `just cli-test`
+- `just verify-governance`
+- `just verify-safety`
+- `just format-check`
+- `just lint`
+
+review gate:
+
+- Commit and push the branch, open a draft PR, then stop before I3-P6.
+
+#### PR Gate: I3-P6 Type-Safety Governance and Lint Guardrails
+
+status: planned
+branch: `task/type-safety-i3-governance`
+
+Completion criteria:
+
+- Audit I3-P1 through I3-P5 governance checks and custom lint allowlists for
+  stale allowances or brittle implementation-detail assertions.
+- Add narrow governance or custom lint checks that prevent reintroducing ad hoc
+  runner-kind literals, primitive runtime constructor fronts, and primitive
+  macOS version capability plumbing in converted paths.
+- Keep remaining adapter-boundary primitives documented where they represent
+  public JSON, persisted metadata, runtime-owner manifests, or process
+  diagnostics.
+- Remove completed I3 items from active progress while leaving any genuinely
+  deferred type-safety candidates explicit in `docs/todo.md`.
+- `docs/progress.md` records the gate state, latest commit, verification, and
+  next action.
+
+Not included:
+
+- New enum/value-object conversions beyond I3-P2 through I3-P5.
+- Public CLI JSON, persisted metadata, runtime manifest, runtime behavior, or
+  visible UI changes.
+- Broad linter allowlist narrowing outside converted paths.
+
+Verification:
+
+- `just verify-governance`
+- `just verify-safety`
+- `just format-check`
+- `just lint`
+- `just konyak-lints-test` if custom lint implementation, fixtures, or tests
+  change.
+
+review gate:
+
+- Commit and push the branch, open a draft PR, then stop before adding further
+  type-safety conversion gates.
+
 ## Deferred
 
 - Linux ARM64 Windows execution research.

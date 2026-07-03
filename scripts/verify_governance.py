@@ -2628,6 +2628,20 @@ def require_refactoring_documentation_cleanup() -> None:
         "branch: `task/interface-i2-registry-platform-policy`",
         "#### PR Gate: I2-P8 Governance and Custom Lint Tightening",
         "branch: `task/interface-i2-governance-tightening`",
+        "### I3: Mechanical Type-Safety Hardening",
+        "Medium milestones, one PR unit each:",
+        "#### PR Gate: I3-P1 Type-Safety Inventory and Gate Order",
+        "branch: `task/type-safety-i3-inventory`",
+        "#### PR Gate: I3-P2 Runner Kind Typed Catalog",
+        "branch: `task/type-safety-i3-runner-kind-catalog`",
+        "#### PR Gate: I3-P3 Runtime Platform Definition Type Fronts",
+        "branch: `task/type-safety-i3-runtime-platform-definitions`",
+        "#### PR Gate: I3-P4 Runtime Model and Source Manifest Type Fronts",
+        "branch: `task/type-safety-i3-runtime-model-fronts`",
+        "#### PR Gate: I3-P5 macOS Version Capability Type Front",
+        "branch: `task/type-safety-i3-macos-version-capability`",
+        "#### PR Gate: I3-P6 Type-Safety Governance and Lint Guardrails",
+        "branch: `task/type-safety-i3-governance`",
     ]:
         require_contains("docs/todo.md", expected)
 
@@ -2680,11 +2694,11 @@ def require_refactoring_documentation_cleanup() -> None:
         require_not_contains("docs/progress.md", stale_branch)
     require_contains(
         "docs/progress.md",
-        "I2-P8 Governance and Custom Lint Tightening",
+        "I3-P1 Type-Safety Inventory and Gate Order",
     )
     require_contains(
         "docs/progress.md",
-        "task/interface-i2-governance-tightening",
+        "task/type-safety-i3-inventory",
     )
 
     for relative_path in [
