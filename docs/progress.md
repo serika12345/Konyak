@@ -13,34 +13,27 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-03 13:58 JST
-- State: `completed`
-- Branch: `task/interface-i2-registry-platform-policy`
-- Active work: I2-P7 Registry Planner Platform Policy.
+- Timestamp: 2026-07-03 14:43 JST
+- State: `planned`
+- Branch: `task/interface-i2-governance-tightening`
+- Active work: I2-P8 Governance and Custom Lint Tightening.
 - Related TODO: `docs/todo.md` `I2: Boundary Hardening and Test Contract
   Cleanup`, completed `I2-S4`, completed `I2-P7 Registry Planner Platform
-  Policy`, and next `I2-S5` governance tightening.
-- Pull request: draft PR #21
-  <https://github.com/serika12345/Konyak/pull/21>.
-- Latest commit: `8c980cb` (`Model registry planner platform policy`).
-- Purpose: replace the raw `includeMacDriverSettings` boolean bridge between
-  `ProgramRunPlanner` and registry plan helpers with an explicit
-  `RegistryPlanningPolicy` while preserving generated registry updates,
-  queries, argv, CLI JSON, exit codes, app behavior, runtime behavior, and Wine
-  execution paths.
-- Completed work: PR #20 for I2-P6 was merged; `main` was fast-forwarded;
-  registry plan helpers now accept `RegistryPlanningPolicy`; the planner maps
-  `KonyakHostPlatform` to `RegistryPlanningPolicy`; focused domain tests cover
-  macOS inclusion and Linux exclusion of Wine Mac Driver registry values;
-  governance was updated for the completed registry policy boundary; I2-S4 and
-  I2-P7 are marked complete in `docs/todo.md`.
-- Remaining work: review draft PR #21, then stop before I2-S5 governance
-  cleanup.
-- Next action: review the I2-P7 draft PR; after approval, merge it before
-  starting I2-S5.
-- Verification: focused domain test passed:
-  `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test --reporter
-  compact test/domain_immutability_test.dart'`; required gate verification
-  passed through the Nix dev shell with `just cli-test`,
-  `just verify-governance`, `just verify-safety`, `just format-check`, and
-  `just lint`.
+  Policy`, planned `I2-P8 Governance and Custom Lint Tightening`, and next
+  `I2-S5` governance tightening.
+- Pull request: draft PR #22
+  <https://github.com/serika12345/Konyak/pull/22>.
+- Latest commit: `40e5d7f` (`Plan I2 governance tightening gate`).
+- Purpose: define the missing I2-S5 PR Gate before implementation so
+  governance and custom lint tightening can be reviewed as a scoped boundary
+  cleanup instead of a broad opportunistic sweep.
+- Completed work: PR #21 for I2-P7 was merged and `main` was fast-forwarded;
+  `docs/todo.md` now contains the planned I2-P8 gate for governance and custom
+  lint tightening; implementation work for I2-P8 has not started.
+- Remaining work: review draft PR #22, then implement only the accepted I2-P8
+  governance and custom lint tightening gate.
+- Next action: review the I2-P8 gate definition draft PR, then run
+  `/advance-pr` again after the plan is accepted.
+- Verification: required gate-definition verification passed through the Nix
+  dev shell with `just verify-governance`, `just verify-safety`,
+  `just format-check`, and `just lint`.
