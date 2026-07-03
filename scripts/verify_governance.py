@@ -2625,6 +2625,8 @@ def require_refactoring_documentation_cleanup() -> None:
         "branch: `task/interface-i2-planner-policy-split-plan`",
         "#### PR Gate: I2-P7 Registry Planner Platform Policy",
         "branch: `task/interface-i2-registry-platform-policy`",
+        "#### PR Gate: I2-P8 Governance and Custom Lint Tightening",
+        "branch: `task/interface-i2-governance-tightening`",
     ]:
         require_contains("docs/todo.md", expected)
 
@@ -2672,11 +2674,11 @@ def require_refactoring_documentation_cleanup() -> None:
         require_not_contains("docs/progress.md", stale_branch)
     require_contains(
         "docs/progress.md",
-        "I2-P7 Registry Planner Platform Policy",
+        "I2-P8 Governance and Custom Lint Tightening",
     )
     require_contains(
         "docs/progress.md",
-        "task/interface-i2-registry-platform-policy",
+        "task/interface-i2-governance-tightening",
     )
 
     for relative_path in [

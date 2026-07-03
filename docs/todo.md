@@ -551,6 +551,52 @@ review gate:
   host request-family, runner-kind, graphics-backend, or I2-S5 governance
   cleanup.
 
+#### PR Gate: I2-P8 Governance and Custom Lint Tightening
+
+status: planned
+branch: `task/interface-i2-governance-tightening`
+
+Completion criteria:
+
+- Audit governance and custom lint checks added or updated during I2-P1 through
+  I2-P7 for stale allowances, obsolete branch/progress references, and checks
+  that preserve implementation details instead of stable boundary outcomes.
+- Replace stale or overly implementation-specific governance checks with
+  behavior-neutral boundary checks for the completed I2 conversions, including
+  CLI contract test part removal, semantic constructor value-object fronts,
+  command-selection dispatch, and registry planning policy.
+- Tighten custom lint boundary allowlists only for paths already converted by
+  completed I1/I2 gates and covered by lint fixtures or focused tests.
+- Keep external CLI JSON, argv, exit codes, Flutter framework adapter
+  nullability, runtime behavior, and Wine execution paths stable.
+- `docs/progress.md` records the gate state, latest commit, verification, and
+  next action.
+
+Not included:
+
+- New nullable, primitive, constructor, command-selection, request-builder,
+  runner-kind, graphics-backend, runtime, or Flutter UI boundary conversions.
+- Public CLI JSON schema changes.
+- Runtime, launcher, Wine, app behavior, or visible UI changes.
+- Narrowing broad Flutter framework adapter nullability allowances that are not
+  already covered by explicit app-facing decision models.
+- Adding new post-I2 implementation milestones before this governance cleanup
+  is reviewed.
+
+Verification:
+
+- `just verify-governance`
+- `just verify-safety`
+- `just format-check`
+- `just lint`
+- `just konyak-lints-test` if custom lint implementation, lint fixtures, or
+  lint tests change.
+
+review gate:
+
+- Commit and push the branch, open a draft PR, then stop before implementation
+  work beyond this governance cleanup.
+
 ## Deferred
 
 - Linux ARM64 Windows execution research.
