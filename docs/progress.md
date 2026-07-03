@@ -13,15 +13,16 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-03 13:57 JST
+- Timestamp: 2026-07-03 13:58 JST
 - State: `completed`
 - Branch: `task/interface-i2-registry-platform-policy`
 - Active work: I2-P7 Registry Planner Platform Policy.
 - Related TODO: `docs/todo.md` `I2: Boundary Hardening and Test Contract
   Cleanup`, completed `I2-S4`, completed `I2-P7 Registry Planner Platform
   Policy`, and next `I2-S5` governance tightening.
-- Pull request: not opened yet.
-- Latest commit: pending branch commit for I2-P7.
+- Pull request: draft PR #21
+  <https://github.com/serika12345/Konyak/pull/21>.
+- Latest commit: `8c980cb` (`Model registry planner platform policy`).
 - Purpose: replace the raw `includeMacDriverSettings` boolean bridge between
   `ProgramRunPlanner` and registry plan helpers with an explicit
   `RegistryPlanningPolicy` while preserving generated registry updates,
@@ -33,10 +34,10 @@ unfinished work.
   macOS inclusion and Linux exclusion of Wine Mac Driver registry values;
   governance was updated for the completed registry policy boundary; I2-S4 and
   I2-P7 are marked complete in `docs/todo.md`.
-- Remaining work: commit, push, open the draft PR, and stop before I2-S5
-  governance cleanup.
-- Next action: commit the verified I2-P7 branch and open the draft PR for
-  review.
+- Remaining work: review draft PR #21, then stop before I2-S5 governance
+  cleanup.
+- Next action: review the I2-P7 draft PR; after approval, merge it before
+  starting I2-S5.
 - Verification: focused domain test passed:
   `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test --reporter
   compact test/domain_immutability_test.dart'`; required gate verification
