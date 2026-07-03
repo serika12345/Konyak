@@ -2607,6 +2607,8 @@ def require_refactoring_documentation_cleanup() -> None:
         "branch: `task/interface-i2-semantic-constructor-fronts`",
         "#### PR Gate: I2-P5 Command Selection Planner Reassessment",
         "branch: `task/interface-i2-command-selection-planner-audit`",
+        "#### PR Gate: I2-P6 Planner Policy Split Plan",
+        "branch: `task/interface-i2-planner-policy-split-plan`",
     ]:
         require_contains("docs/todo.md", expected)
 
@@ -2640,11 +2642,11 @@ def require_refactoring_documentation_cleanup() -> None:
         require_not_contains("docs/progress.md", stale_branch)
     require_contains(
         "docs/progress.md",
-        "I2-P5 Command Selection Planner Reassessment",
+        "I2-P6 Planner Policy Split Plan",
     )
     require_contains(
         "docs/progress.md",
-        "task/interface-i2-command-selection-planner-audit",
+        "task/interface-i2-planner-policy-split-plan",
     )
 
     for relative_path in [
