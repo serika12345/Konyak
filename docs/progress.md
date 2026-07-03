@@ -13,7 +13,7 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-03 12:25 JST
+- Timestamp: 2026-07-03 12:26 JST
 - State: `completed`
 - Branch: `task/interface-i2-planner-policy-split-plan`
 - Active work: I2-P6 Planner Policy Split Plan.
@@ -22,8 +22,9 @@ unfinished work.
   runner-kind, and graphics-backend policy reassessment; completed `I2-P6
   Planner Policy Split Plan`; and planned `I2-P7 Registry Planner Platform
   Policy`.
-- Pull request: not opened yet.
-- Latest commit: pending branch commit for I2-P6.
+- Pull request: draft PR #20
+  <https://github.com/serika12345/Konyak/pull/20>.
+- Latest commit: branch head for the I2-P6 draft PR.
 - Purpose: audit remaining planner-policy split candidates before code changes
   and select the next implementation gate only if a stable responsibility
   boundary reduces complexity without changing public contracts.
@@ -32,9 +33,8 @@ unfinished work.
   planner host dispatch, runner-kind, registry, graphics-backend, and platform
   request-builder decisions; `docs/todo.md` marks I2-P6 completed and adds
   I2-P7 for registry planner platform policy.
-- Remaining work: commit, push, open the draft PR, and stop before I2-P7
-  implementation.
-- Next action: commit the verified I2-P6 audit branch, push it, and open the
-  draft PR for review.
+- Remaining work: review draft PR #20, then stop before I2-P7 implementation.
+- Next action: review the I2-P6 audit draft PR, then run `/advance-pr` again
+  to implement I2-P7 if the gate is accepted.
 - Verification: `just verify-governance`, `just verify-safety`,
   `just format-check`, and `just lint` passed through the Nix dev shell.
