@@ -2609,6 +2609,8 @@ def require_refactoring_documentation_cleanup() -> None:
         "branch: `task/interface-i2-command-selection-planner-audit`",
         "#### PR Gate: I2-P6 Planner Policy Split Plan",
         "branch: `task/interface-i2-planner-policy-split-plan`",
+        "#### PR Gate: I2-P7 Registry Planner Platform Policy",
+        "branch: `task/interface-i2-registry-platform-policy`",
     ]:
         require_contains("docs/todo.md", expected)
 
@@ -2625,6 +2627,20 @@ def require_refactoring_documentation_cleanup() -> None:
         "`ProgramRunPlanner`",
     ]:
         require_contains("docs/i2-primitive-boundary-audit.md", expected)
+
+    for expected in [
+        "# I2 Planner Policy Split Audit",
+        "## Planner Host Dispatch",
+        "## Runner Kind Policy",
+        "## Registry Policy",
+        "## Graphics Backend Policy",
+        "## Platform Request Builder Duplication",
+        "## Next Gate Decision",
+        "`ProgramRunPlanner`",
+        "`includeMacDriverSettings`",
+        "I2-P7",
+    ]:
+        require_contains("docs/i2-planner-policy-split-audit.md", expected)
 
     for unexpected in [
         "R3-P2 Bottle View Model Extraction",

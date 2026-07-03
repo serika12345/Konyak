@@ -470,7 +470,7 @@ review gate:
 
 #### PR Gate: I2-P6 Planner Policy Split Plan
 
-status: planned
+status: completed
 branch: `task/interface-i2-planner-policy-split-plan`
 
 Completion criteria:
@@ -508,6 +508,48 @@ review gate:
 
 - Commit and push the branch, open a draft PR, then stop before implementation
   of any further planner-policy split.
+
+#### PR Gate: I2-P7 Registry Planner Platform Policy
+
+status: planned
+branch: `task/interface-i2-registry-platform-policy`
+
+Completion criteria:
+
+- Replace the raw `includeMacDriverSettings` boolean bridge between
+  `ProgramRunPlanner` and registry plan helpers with an explicit registry
+  planning policy that carries the macOS/Linux platform decision.
+- Keep generated registry updates, registry queries, argv, public CLI JSON,
+  exit codes, app behavior, runtime behavior, and Wine execution paths stable.
+- Add or update focused tests proving macOS includes Wine Mac Driver registry
+  values and Linux excludes them without depending on implementation details.
+- Update governance only for the completed registry planner policy boundary.
+- `docs/progress.md` records the gate state, latest commit, verification, and
+  next action.
+
+Not included:
+
+- Public CLI JSON schema changes.
+- Runtime, launcher, Wine, graphics-backend, or request-builder behavior
+  changes.
+- Host request-family extraction outside registry planning.
+- Runner-kind enum redesign or runner-kind JSON contract changes.
+- Unifying domain and platform request-builder files.
+- Broad I2-S5 governance tightening outside the converted boundary.
+
+Verification:
+
+- `just cli-test`
+- `just verify-governance`
+- `just verify-safety`
+- `just format-check`
+- `just lint`
+
+review gate:
+
+- Commit and push the branch, open a draft PR, then stop before broader
+  host request-family, runner-kind, graphics-backend, or I2-S5 governance
+  cleanup.
 
 ## Deferred
 
