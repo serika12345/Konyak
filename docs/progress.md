@@ -13,28 +13,31 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-03 15:28 JST
-- State: `planned`
+- Timestamp: 2026-07-03 20:30 JST
+- State: `completed`
 - Branch: `task/type-safety-i3-inventory`
 - Active work: I3-P1 Type-Safety Inventory and Gate Order.
 - Related TODO: `docs/todo.md` `I3: Mechanical Type-Safety Hardening`,
-  planned `I3-P1 Type-Safety Inventory and Gate Order`, then PR-unit medium
+  completed `I3-P1 Type-Safety Inventory and Gate Order`, then PR-unit medium
   milestones for runner-kind, runtime platform definitions, runtime model
-  fronts, macOS version capability, and governance/lint guardrails.
-- Pull request: not opened yet.
-- Latest commit: pending milestone planning update.
-- Purpose: start the next type-safety refactoring pass by converting stable,
-  mechanically identifiable primitive discriminants such as runner-kind strings
-  into typed catalogs, enums, or value-object fronts while preserving public
-  CLI JSON, argv, persisted metadata, runtime manifests, runtime behavior, and
-  app behavior.
-- Completed work: PR #23 for I2-P8 was merged; `main` was fast-forwarded; the
-  new I3 large milestone plan has been added to `docs/todo.md` with each
-  type-safety medium milestone represented as a PR Gate.
-- Remaining work: review the I3 milestone plan, then implement only I3-P1 on
-  branch `task/type-safety-i3-inventory`.
-- Next action: run `/advance-pr` after accepting this plan to start the I3-P1
-  type-safety inventory.
-- Verification: required I3 planning verification passed through the Nix dev
-  shell with `just verify-governance`, `just verify-safety`,
-  `just format-check`, and `just lint`.
+  fronts, runtime install request fronts, macOS version capability, and
+  governance/lint guardrails.
+- Pull request: https://github.com/serika12345/Konyak/pull/24
+- Latest implementation commit: `68d1c78` (`Audit I3 type-safety fronts`).
+- Purpose: select the next type-safety refactoring sequence by inventorying
+  mechanically identifiable primitive, nullable, and string-discriminant
+  fronts while preserving public CLI JSON, argv, persisted metadata, runtime
+  manifests, runtime behavior, and app behavior.
+- Completed work: added `docs/i3-type-safety-inventory.md`; classified
+  runner-kind literals, runtime platform definitions, runtime model/source
+  manifest constructor fronts, runtime install request wrapper fronts, macOS
+  major-version capability plumbing, Flutter app-facing DTO primitives, and
+  governance/custom lint state; updated `docs/todo.md` so the audit-selected
+  I3 medium milestones are represented as PR Gates I3-P2 through I3-P7.
+- Remaining work: review draft PR #24 before starting I3-P2.
+- Next action: after the I3-P1 PR is reviewed and merged, run `/advance-pr` to
+  start I3-P2 Runner Kind Typed Catalog on
+  `task/type-safety-i3-runner-kind-catalog`.
+- Verification: I3-P1 audit verification passed through the Nix dev shell with
+  `just verify-governance`, `just verify-safety`, `just format-check`, and
+  `just lint`.
