@@ -13,15 +13,15 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-03 22:59 JST
+- Timestamp: 2026-07-03 23:03 JST
 - State: `completed`
 - Branch: `task/type-safety-i3-runtime-platform-definitions`
 - Active work: I3-P3 Runtime Platform Definition Type Fronts.
 - Related TODO: `docs/todo.md` `I3: Mechanical Type-Safety Hardening`,
   completed `I3-P3 Runtime Platform Definition Type Fronts`; next planned gate
   is I3-P4 Runtime Model and Source Manifest Type Fronts.
-- Pull request: not opened yet.
-- Latest implementation commit: pending I3-P3 implementation commit.
+- Pull request: https://github.com/serika12345/Konyak/pull/26
+- Latest implementation commit: `b1efd7a` (`Type runtime platform definitions`).
 - Purpose: remove primitive constructor fronts from Konyak-owned runtime
   platform definition catalogs while preserving public CLI JSON strings,
   runtime-owner manifest strings, install planning behavior, runtime
@@ -35,8 +35,7 @@ unfinished work.
   `packages/konyak_cli/test/runtime_platform_definition_type_fronts_test.dart`;
   updated governance so the converted platform definition constructor fronts
   cannot regress to primitive fields.
-- Remaining work: push this completed I3-P3 branch, open a draft PR, and
-  review before starting I3-P4.
+- Remaining work: review draft PR #26 before starting I3-P4.
 - Next action: after the I3-P3 PR is reviewed and merged, run `/advance-pr` to
   start I3-P4 Runtime Model and Source Manifest Type Fronts on
   `task/type-safety-i3-runtime-model-fronts`.
