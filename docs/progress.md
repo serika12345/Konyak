@@ -13,15 +13,15 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-03 21:50 JST
+- Timestamp: 2026-07-03 21:54 JST
 - State: `completed`
 - Branch: `task/type-safety-i3-runner-kind-catalog`
 - Active work: I3-P2 Runner Kind Typed Catalog.
 - Related TODO: `docs/todo.md` `I3: Mechanical Type-Safety Hardening`,
   completed `I3-P2 Runner Kind Typed Catalog`; next planned gate is I3-P3
   Runtime Platform Definition Type Fronts.
-- Pull request: not opened yet.
-- Latest implementation commit: pending I3-P2 implementation commit.
+- Pull request: https://github.com/serika12345/Konyak/pull/25
+- Latest implementation commit: `ad17606` (`Add runner kind catalog`).
 - Purpose: remove ad hoc runner-kind string construction from request builders
   by centralizing stable Konyak-owned runner kinds in a typed catalog while
   preserving public `runnerKind` JSON strings, argv, exit codes, runtime
@@ -32,8 +32,7 @@ unfinished work.
   `packages/konyak_cli/test/runner_kind_catalog_test.dart`; updated governance
   so request builders cannot reintroduce direct runner-kind literal
   construction.
-- Remaining work: push this completed I3-P2 branch, open a draft PR, and
-  review before starting I3-P3.
+- Remaining work: review draft PR #25 before starting I3-P3.
 - Next action: after the I3-P2 PR is reviewed and merged, run `/advance-pr` to
   start I3-P3 Runtime Platform Definition Type Fronts on
   `task/type-safety-i3-runtime-platform-definitions`.
