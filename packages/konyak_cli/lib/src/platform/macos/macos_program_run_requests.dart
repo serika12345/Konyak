@@ -24,7 +24,7 @@ ProgramRunRequest macosWineRequest({
   return ProgramRunRequest(
     bottleId: bottle.id,
     programPath: programPath,
-    runnerKind: RunnerKind('macosWine'),
+    runnerKind: RunnerKind.macosWine,
     executable: ProgramExecutable(macosWineExecutable(hostEnvironment)),
     arguments: ProgramRunArguments(<String>[
       'start',
@@ -58,7 +58,7 @@ ProgramRunRequest macosWinebootRequest({
   return ProgramRunRequest(
     bottleId: bottle.id,
     programPath: ProgramPath('wineboot'),
-    runnerKind: RunnerKind('macosWine'),
+    runnerKind: RunnerKind.macosWine,
     executable: ProgramExecutable(macosWineExecutable(hostEnvironment)),
     arguments: ProgramRunArguments(const <String>['wineboot', '--init']),
     environment: macosPrefixInitializationEnvironment(
@@ -84,7 +84,7 @@ ProgramRunRequest macosWinebootRestartRequest({
   return ProgramRunRequest(
     bottleId: bottle.id,
     programPath: ProgramPath('wineboot'),
-    runnerKind: RunnerKind('macosWine'),
+    runnerKind: RunnerKind.macosWine,
     executable: ProgramExecutable(macosWineExecutable(hostEnvironment)),
     arguments: ProgramRunArguments(const <String>['wineboot', '--restart']),
     environment: macosWineEnvironment(
@@ -111,7 +111,7 @@ ProgramRunRequest macosWineMonoInstallRequest({
   return ProgramRunRequest(
     bottleId: bottle.id,
     programPath: ProgramPath('wine-mono'),
-    runnerKind: RunnerKind('macosWine'),
+    runnerKind: RunnerKind.macosWine,
     executable: ProgramExecutable(macosWineExecutable(hostEnvironment)),
     arguments: ProgramRunArguments(<String>[
       'msiexec',
@@ -143,7 +143,7 @@ ProgramRunRequest macosWineserverKillRequest({
   return ProgramRunRequest(
     bottleId: bottle.id,
     programPath: ProgramPath('wineserver'),
-    runnerKind: RunnerKind('macosWineserver'),
+    runnerKind: RunnerKind.macosWineserver,
     executable: ProgramExecutable(macosWineserverExecutable(hostEnvironment)),
     arguments: ProgramRunArguments(const <String>['-k']),
     environment: macosWineEnvironment(
@@ -170,7 +170,7 @@ ProgramRunRequest macosWinedbgRequest({
   return ProgramRunRequest(
     bottleId: bottle.id,
     programPath: ProgramPath('winedbg'),
-    runnerKind: RunnerKind('macosWinedbg'),
+    runnerKind: RunnerKind.macosWinedbg,
     executable: ProgramExecutable(macosWineExecutable(hostEnvironment)),
     arguments: ProgramRunArguments(<String>[
       'winedbg',

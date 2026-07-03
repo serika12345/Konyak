@@ -850,6 +850,42 @@ abstract class RunnerKind with _$RunnerKind implements StringDomainValueObject {
       RunnerKind._validated(_requiredValueObjectString(value, 'runnerKind'));
 
   const factory RunnerKind._validated(String value) = _RunnerKind;
+
+  static const wine = RunnerKind._validated('wine');
+  static const wineRegistry = RunnerKind._validated('wineRegistry');
+  static const wineRegistryQuery = RunnerKind._validated('wineRegistryQuery');
+  static const wineboot = RunnerKind._validated('wineboot');
+  static const wineserver = RunnerKind._validated('wineserver');
+  static const winedbg = RunnerKind._validated('winedbg');
+  static const winetricks = RunnerKind._validated('winetricks');
+  static const terminal = RunnerKind._validated('terminal');
+  static const macosWine = RunnerKind._validated('macosWine');
+  static const macosWineRegistry = RunnerKind._validated('macosWineRegistry');
+  static const macosWineRegistryQuery = RunnerKind._validated(
+    'macosWineRegistryQuery',
+  );
+  static const macosWineserver = RunnerKind._validated('macosWineserver');
+  static const macosWinedbg = RunnerKind._validated('macosWinedbg');
+  static const macosWinetricks = RunnerKind._validated('macosWinetricks');
+  static const macosTerminal = RunnerKind._validated('macosTerminal');
+
+  static const stableRequestKinds = <RunnerKind>[
+    wine,
+    wineRegistry,
+    wineRegistryQuery,
+    wineboot,
+    wineserver,
+    winedbg,
+    winetricks,
+    terminal,
+    macosWine,
+    macosWineRegistry,
+    macosWineRegistryQuery,
+    macosWineserver,
+    macosWinedbg,
+    macosWinetricks,
+    macosTerminal,
+  ];
 }
 
 @Freezed(
