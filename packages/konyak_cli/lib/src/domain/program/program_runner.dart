@@ -41,6 +41,13 @@ class ProgramRunPlanner {
   final HostEnvironment environment;
   final Option<int> macosMajorVersion;
 
+  RegistryPlanningPolicy get _registryPlanningPolicy {
+    return switch (hostPlatform) {
+      KonyakHostPlatform.linux => RegistryPlanningPolicy.linuxWine,
+      KonyakHostPlatform.macos => RegistryPlanningPolicy.macosWine,
+    };
+  }
+
   Option<ProgramRunRequest> plan({
     required BottleRecord bottle,
     required ProgramPath programPath,
@@ -290,7 +297,7 @@ class ProgramRunPlanner {
     final updates = runtimeSettingsRegistryUpdates(
       currentRuntimeSettings: currentRuntimeSettings,
       runtimeSettings: runtimeSettings,
-      includeMacDriverSettings: hostPlatform == KonyakHostPlatform.macos,
+      policy: _registryPlanningPolicy,
     );
 
     return List.unmodifiable(
@@ -316,7 +323,7 @@ class ProgramRunPlanner {
     required BottleRecord bottle,
   }) {
     final queries = bottleSettingsRegistryQueries(
-      includeMacDriverSettings: hostPlatform == KonyakHostPlatform.macos,
+      policy: _registryPlanningPolicy,
     );
 
     return List.unmodifiable(

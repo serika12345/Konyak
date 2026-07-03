@@ -268,7 +268,7 @@ as a value object.
 
 Small milestones:
 
-- [ ] I2-S4: Reassess nullable command-selection bridges and
+- [x] I2-S4: Reassess nullable command-selection bridges and
   `ProgramRunPlanner` host-platform, runner-kind, and
   graphics-backend policy structure; split only where the audit shows stable
   responsibilities and reduced complexity.
@@ -511,7 +511,7 @@ review gate:
 
 #### PR Gate: I2-P7 Registry Planner Platform Policy
 
-status: planned
+status: completed
 branch: `task/interface-i2-registry-platform-policy`
 
 Completion criteria:
