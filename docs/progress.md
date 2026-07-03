@@ -13,7 +13,7 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-03 14:42 JST
+- Timestamp: 2026-07-03 14:43 JST
 - State: `planned`
 - Branch: `task/interface-i2-governance-tightening`
 - Active work: I2-P8 Governance and Custom Lint Tightening.
@@ -21,18 +21,19 @@ unfinished work.
   Cleanup`, completed `I2-S4`, completed `I2-P7 Registry Planner Platform
   Policy`, planned `I2-P8 Governance and Custom Lint Tightening`, and next
   `I2-S5` governance tightening.
-- Pull request: not opened yet.
-- Latest commit: pending branch commit for the I2-P8 gate definition.
+- Pull request: draft PR #22
+  <https://github.com/serika12345/Konyak/pull/22>.
+- Latest commit: `40e5d7f` (`Plan I2 governance tightening gate`).
 - Purpose: define the missing I2-S5 PR Gate before implementation so
   governance and custom lint tightening can be reviewed as a scoped boundary
   cleanup instead of a broad opportunistic sweep.
 - Completed work: PR #21 for I2-P7 was merged and `main` was fast-forwarded;
   `docs/todo.md` now contains the planned I2-P8 gate for governance and custom
   lint tightening; implementation work for I2-P8 has not started.
-- Remaining work: commit and push the I2-P8 gate definition, open the draft PR,
-  then review the plan before implementing only that gate.
-- Next action: commit and open a draft PR for the I2-P8 gate definition, then
-  stop before changing governance or lint implementation.
+- Remaining work: review draft PR #22, then implement only the accepted I2-P8
+  governance and custom lint tightening gate.
+- Next action: review the I2-P8 gate definition draft PR, then run
+  `/advance-pr` again after the plan is accepted.
 - Verification: required gate-definition verification passed through the Nix
   dev shell with `just verify-governance`, `just verify-safety`,
   `just format-check`, and `just lint`.
