@@ -13,15 +13,16 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-03 10:57 JST
+- Timestamp: 2026-07-03 10:58 JST
 - State: `completed`
 - Branch: `task/interface-i2-command-selection-planner-audit`
 - Active work: I2-P5 Command Selection Planner Reassessment.
 - Related TODO: `docs/todo.md` `I2: Boundary Hardening and Test Contract
   Cleanup`, `I2-S4` nullable command-selection bridge reassessment, and
   `I2-P5 Command Selection Planner Reassessment`.
-- Pull request: not opened yet.
-- Latest commit: pending branch commit for I2-P5.
+- Pull request: draft PR #18
+  <https://github.com/serika12345/Konyak/pull/18>.
+- Latest commit: branch head for the I2-P5 draft PR.
 - Purpose: make bottle-command selection carry the selected execution shape
   before `ProgramRunPlanner` maps it to host-specific run requests, removing
   ad hoc string comparisons from the planner without changing public CLI JSON,
@@ -32,10 +33,11 @@ unfinished work.
   `BottleCommandPlanKind`; `ProgramRunPlanner.planBottleCommand` now switches
   on the selected plan kind instead of comparing command strings; focused
   domain tests and governance were updated for the completed boundary.
-- Remaining work: commit, push, open the draft PR, and stop before I2-S5
-  governance cleanup or any broader planner-policy split.
-- Next action: commit the verified I2-P5 branch, push it, and open the draft
-  PR for review.
+- Remaining work: review draft PR #18, then stop before I2-S5 governance
+  cleanup or any broader planner-policy split.
+- Next action: review the I2-P5 draft PR and then decide whether the next
+  gate should finish remaining I2-S4 planner-policy reassessment or move to
+  I2-S5 governance tightening.
 - Verification: focused domain test passed:
   `cd packages/konyak_cli && dart test --reporter compact
   test/domain_immutability_test.dart`; `just cli-test`,
