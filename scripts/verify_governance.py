@@ -2638,12 +2638,31 @@ def require_refactoring_documentation_cleanup() -> None:
         "branch: `task/type-safety-i3-runtime-platform-definitions`",
         "#### PR Gate: I3-P4 Runtime Model and Source Manifest Type Fronts",
         "branch: `task/type-safety-i3-runtime-model-fronts`",
-        "#### PR Gate: I3-P5 macOS Version Capability Type Front",
+        "#### PR Gate: I3-P5 Runtime Install Request Type Fronts",
+        "branch: `task/type-safety-i3-runtime-install-requests`",
+        "#### PR Gate: I3-P6 macOS Version Capability Type Front",
         "branch: `task/type-safety-i3-macos-version-capability`",
-        "#### PR Gate: I3-P6 Type-Safety Governance and Lint Guardrails",
+        "#### PR Gate: I3-P7 Type-Safety Governance and Lint Guardrails",
         "branch: `task/type-safety-i3-governance`",
     ]:
         require_contains("docs/todo.md", expected)
+
+    for expected in [
+        "# I3 Type-Safety Inventory",
+        "## Inventory Basis",
+        "## Mechanical Conversion PRs",
+        "## Allowed Adapter Boundaries",
+        "## Deferred Design Decisions",
+        "## Next Gate Order",
+        "`RunnerKind('<literal>')`",
+        "`RuntimePlatformSpec`",
+        "`RuntimeDefinition`",
+        "`MacosWineInstallRequest`",
+        "`LinuxWineInstallRequest`",
+        "`Option<int> macosMajorVersion`",
+        "I3-P7",
+    ]:
+        require_contains("docs/i3-type-safety-inventory.md", expected)
 
     for expected in [
         "# I2 Primitive Boundary Audit",

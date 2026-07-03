@@ -608,7 +608,7 @@ adapter boundary back to the public schema value.
 
 Medium milestones, one PR unit each:
 
-- [ ] I3-M1: Inventory remaining mechanically convertible primitive and enum
+- [x] I3-M1: Inventory remaining mechanically convertible primitive and enum
   fronts, classify them as PR-sized conversion gates, adapter-boundary
   primitives, or deferred design decisions.
 - [ ] I3-M2: Replace stable `RunnerKind` string literal construction with a
@@ -621,16 +621,20 @@ Medium milestones, one PR unit each:
 - [ ] I3-M4: Convert stable runtime model and source-manifest constructor
   fronts to typed value-object inputs where they are Konyak-owned domain
   values, while keeping JSON and manifest parsing as adapter boundaries.
-- [ ] I3-M5: Convert macOS major-version capability plumbing from `Option<int>`
+- [ ] I3-M5: Convert macOS and Linux runtime install request wrapper fronts
+  from nullable archive/source strings into typed optional runtime install
+  value-object inputs while leaving CLI/update JSON parsing as the adapter
+  boundary.
+- [ ] I3-M6: Convert macOS major-version capability plumbing from `Option<int>`
   to an explicit value object or capability input if the I3 inventory confirms
   the conversion is mechanical and behavior-neutral.
-- [ ] I3-M6: Tighten governance and custom lint checks so completed I3
+- [ ] I3-M7: Tighten governance and custom lint checks so completed I3
   conversions cannot regress to ad hoc primitive construction, without
   preserving temporary implementation details as contracts.
 
 #### PR Gate: I3-P1 Type-Safety Inventory and Gate Order
 
-status: planned
+status: completed
 branch: `task/type-safety-i3-inventory`
 
 Completion criteria:
@@ -641,7 +645,7 @@ Completion criteria:
   governance checks.
 - Classify each finding as a mechanical conversion PR, an allowed adapter
   boundary, or an explicitly deferred design decision.
-- Refine the I3-P2 through I3-P6 gate order if the audit identifies a safer
+- Refine the I3-P2 through I3-P7 gate order if the audit identifies a safer
   mechanical sequence than the initial plan.
 - Keep the audit behavior-neutral: no public CLI JSON schema, app behavior,
   runtime behavior, Wine execution path, or broad code conversion changes.
@@ -797,7 +801,55 @@ review gate:
 
 - Commit and push the branch, open a draft PR, then stop before I3-P5.
 
-#### PR Gate: I3-P5 macOS Version Capability Type Front
+#### PR Gate: I3-P5 Runtime Install Request Type Fronts
+
+status: planned
+branch: `task/type-safety-i3-runtime-install-requests`
+
+Completion criteria:
+
+- Convert `MacosWineInstallRequest` and `LinuxWineInstallRequest` constructor
+  fronts from nullable archive/source strings and primitive component archive
+  path iterables to typed `Option<RuntimeArchivePath>`,
+  `Option<RuntimeArchiveUrl>`, `Option<RuntimeArchiveChecksumValue>`,
+  `Option<RuntimeSourceManifestUrl>`,
+  `Option<RuntimeSourceManifestSignatureUrl>`, and iterable
+  `RuntimeArchivePath` inputs.
+- Preserve CLI parser, update JSON, persisted metadata, runtime manifest,
+  runtime install planning, runtime behavior, and Wine execution path
+  behavior.
+- Keep public convenience projection getters returning existing primitive
+  strings where CLI JSON or progress output requires the public schema shape.
+- Add or update focused CLI/runtime install tests proving full install, repair,
+  component install, and update install requests produce the same typed
+  `RuntimeInstallRequestOperation` and public JSON/progress values.
+- Update governance only for the converted runtime install request wrapper
+  fronts.
+- `docs/progress.md` records the gate state, latest commit, verification, and
+  next action.
+
+Not included:
+
+- Changing runtime install operation semantics.
+- Changing public CLI JSON schema, update metadata, runtime source manifests,
+  runtime behavior, or Wine execution paths.
+- Runtime platform-definition constructor conversion already owned by I3-P3.
+- Runtime model and source-manifest constructor conversion already owned by
+  I3-P4.
+
+Verification:
+
+- `just cli-test`
+- `just verify-governance`
+- `just verify-safety`
+- `just format-check`
+- `just lint`
+
+review gate:
+
+- Commit and push the branch, open a draft PR, then stop before I3-P6.
+
+#### PR Gate: I3-P6 macOS Version Capability Type Front
 
 status: planned
 branch: `task/type-safety-i3-macos-version-capability`
@@ -835,20 +887,21 @@ Verification:
 
 review gate:
 
-- Commit and push the branch, open a draft PR, then stop before I3-P6.
+- Commit and push the branch, open a draft PR, then stop before I3-P7.
 
-#### PR Gate: I3-P6 Type-Safety Governance and Lint Guardrails
+#### PR Gate: I3-P7 Type-Safety Governance and Lint Guardrails
 
 status: planned
 branch: `task/type-safety-i3-governance`
 
 Completion criteria:
 
-- Audit I3-P1 through I3-P5 governance checks and custom lint allowlists for
+- Audit I3-P1 through I3-P6 governance checks and custom lint allowlists for
   stale allowances or brittle implementation-detail assertions.
 - Add narrow governance or custom lint checks that prevent reintroducing ad hoc
   runner-kind literals, primitive runtime constructor fronts, and primitive
-  macOS version capability plumbing in converted paths.
+  runtime install request or macOS version capability plumbing in converted
+  paths.
 - Keep remaining adapter-boundary primitives documented where they represent
   public JSON, persisted metadata, runtime-owner manifests, or process
   diagnostics.
@@ -859,7 +912,7 @@ Completion criteria:
 
 Not included:
 
-- New enum/value-object conversions beyond I3-P2 through I3-P5.
+- New enum/value-object conversions beyond I3-P2 through I3-P6.
 - Public CLI JSON, persisted metadata, runtime manifest, runtime behavior, or
   visible UI changes.
 - Broad linter allowlist narrowing outside converted paths.
