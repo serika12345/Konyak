@@ -272,7 +272,7 @@ Small milestones:
   `ProgramRunPlanner` host-platform, runner-kind, and
   graphics-backend policy structure; split only where the audit shows stable
   responsibilities and reduced complexity.
-- [ ] I2-S5: Tighten governance and custom lint checks for completed I2
+- [x] I2-S5: Tighten governance and custom lint checks for completed I2
   boundaries without preserving obsolete implementation details as contracts.
 
 #### PR Gate: I2-P1 Primitive Boundary Audit
@@ -553,7 +553,7 @@ review gate:
 
 #### PR Gate: I2-P8 Governance and Custom Lint Tightening
 
-status: planned
+status: completed
 branch: `task/interface-i2-governance-tightening`
 
 Completion criteria:

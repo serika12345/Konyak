@@ -12,9 +12,10 @@ exit codes, app behavior, runtime behavior, or Wine execution paths.
 - I2-P5 moved bottle-command selection to `SupportedBottleCommand` plus
   `BottleCommandPlanKind`, so the planner no longer chooses command behavior by
   comparing raw command strings.
+- I2-P7 moved registry Mac Driver inclusion behind `RegistryPlanningPolicy`, so
+  planner-to-registry calls no longer pass a raw platform boolean.
 - Remaining planner policy is concentrated in host-platform dispatch,
-  macOS-version propagation, registry macOS-driver inclusion, and
-  graphics-backend suggestion policy.
+  macOS-version propagation, and graphics-backend suggestion policy.
 
 ## Planner Host Dispatch
 
@@ -35,8 +36,8 @@ exit codes, app behavior, runtime behavior, or Wine execution paths.
 
 | Exposure | Category | I2 action |
 | --- | --- | --- |
-| `ProgramRunPlanner.planRuntimeSettingsRegistryUpdates` and `planBottleSettingsRegistryQueries` pass `includeMacDriverSettings: hostPlatform == KonyakHostPlatform.macos` into registry plan helpers. | Candidate for next implementation gate. This is stable platform policy, not JSON or runtime execution. `includeMacDriverSettings` decides whether macOS Wine Mac Driver registry values participate in runtime settings sync and query. | Add a focused gate that replaces the raw boolean with an explicit registry planning policy while keeping generated registry updates, queries, argv, and CLI behavior identical. |
-| `runtimeSettingsRegistryUpdates` applies high-resolution DPI adjustment only when Mac Driver settings are included. | Candidate under the same gate. This behavior belongs with registry planning policy, and tests already cover runtime settings registry effects. | Include in the registry policy gate with focused macOS/Linux tests. |
+| `ProgramRunPlanner.planRuntimeSettingsRegistryUpdates` and `planBottleSettingsRegistryQueries` now pass `RegistryPlanningPolicy` into registry plan helpers. | Completed I2-P7 boundary. The policy carries the macOS/Linux decision for Wine Mac Driver registry values while keeping generated registry updates, queries, argv, and CLI behavior stable. | Keep focused tests and governance for macOS inclusion and Linux exclusion of Wine Mac Driver registry values. |
+| `runtimeSettingsRegistryUpdates` applies high-resolution DPI adjustment only when `RegistryPlanningPolicy` includes Mac Driver registry values. | Completed under the same gate. This behavior belongs with registry planning policy, and focused tests cover macOS/Linux registry policy effects. | Keep unchanged unless a future runtime capability model owns Mac Driver registry planning more directly. |
 | `windowsVersionRegistryUpdates` has no platform policy. | Already stable. | Keep unchanged. |
 
 ## Graphics Backend Policy
@@ -52,9 +53,9 @@ exit codes, app behavior, runtime behavior, or Wine execution paths.
 | --- | --- | --- |
 | Domain request builders under `packages/konyak_cli/lib/src/domain/program` and platform request builders under `packages/konyak_cli/lib/src/platform` contain similar macOS/Linux request construction code. | Deferred architecture cleanup. The platform files are still referenced by I/O/runtime validation paths, while `ProgramRunPlanner` uses the domain request-builder exports. | Do not merge in I2-P7. A later gate should first decide which request-builder path is the source of truth and preserve public execution path tests. |
 
-## Next Gate Decision
+## Completed Gate Decision
 
-The next safe implementation gate is registry planner platform policy:
+I2-P7 implemented registry planner platform policy because:
 
 1. It is smaller than host request-family extraction.
 2. It removes the remaining raw platform boolean from planner-to-registry
@@ -66,6 +67,7 @@ The next safe implementation gate is registry planner platform policy:
    behavior changes.
 
 Host request-family extraction, runner-kind typing, graphics-backend policy
-splitting, and platform request-builder unification are explicitly deferred
+splitting, and platform request-builder unification remain explicitly deferred
 until a later gate identifies a boundary that reduces responsibility instead of
-only moving conditionals.
+only moving conditionals. I2-P8 is governance and custom lint tightening for
+completed I2 boundaries, not another planner implementation split.

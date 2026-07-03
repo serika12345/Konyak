@@ -23,6 +23,7 @@ class KonyakLintPlugin extends PluginBase {
     KonyakNoNullableAbsenceResult(),
     KonyakNoToNullable(),
     KonyakNoNullableBridgeOutsideBoundary(),
+    KonyakNoNullableCliCommandHandler(),
     KonyakNoNullableSentinelFlow(),
     KonyakNoResultFailureToOptionNone(),
     KonyakNoHandwrittenPart(),
@@ -117,6 +118,25 @@ class KonyakNoNullableBridgeOutsideBoundary extends _KonyakAstRule {
   @override
   RecursiveAstVisitor<void> visitor(ErrorReporter reporter) =>
       _NullableBridgeVisitor(reporter, _code);
+}
+
+class KonyakNoNullableCliCommandHandler extends _KonyakAstRule {
+  const KonyakNoNullableCliCommandHandler() : super(_code);
+
+  static const _code = LintCode(
+    name: 'konyak_no_nullable_cli_command_handler',
+    problemMessage:
+        'Converted CLI command handlers must return CliCommandMatch instead of nullable CliResult.',
+    errorSeverity: ErrorSeverity.ERROR,
+  );
+
+  @override
+  bool shouldRunOnPath(String normalizedPath) =>
+      _isKonyakCliSourcePath(normalizedPath);
+
+  @override
+  RecursiveAstVisitor<void> visitor(ErrorReporter reporter) =>
+      _NullableCliCommandHandlerVisitor(reporter, _code);
 }
 
 class KonyakNoNullableAbsenceResult extends _KonyakAstRule {
@@ -485,6 +505,34 @@ class _NullableBridgeVisitor extends RecursiveAstVisitor<void> {
       reporter.atNode(node.methodName, code);
     }
     super.visitMethodInvocation(node);
+  }
+}
+
+class _NullableCliCommandHandlerVisitor extends RecursiveAstVisitor<void> {
+  const _NullableCliCommandHandlerVisitor(this.reporter, this.code);
+
+  final ErrorReporter reporter;
+  final LintCode code;
+
+  static const _convertedHandlers = {
+    'handleRuntimeCommand',
+    'handleLocationCommand',
+  };
+
+  @override
+  void visitFunctionDeclaration(FunctionDeclaration node) {
+    final returnType = node.returnType;
+    if (_convertedHandlers.contains(node.name.lexeme) &&
+        _isNullableCliResult(returnType)) {
+      reporter.atNode(returnType!, code);
+    }
+    super.visitFunctionDeclaration(node);
+  }
+
+  bool _isNullableCliResult(TypeAnnotation? annotation) {
+    return annotation is NamedType &&
+        annotation.name.lexeme == 'CliResult' &&
+        annotation.question != null;
   }
 }
 
@@ -1321,6 +1369,10 @@ bool _isKonyakCliBackendSourcePath(String normalizedPath) =>
     _isSourceDartPath(normalizedPath) &&
     (normalizedPath.contains('/packages/konyak_cli/lib/') ||
         normalizedPath.contains('/packages/konyak_cli/bin/'));
+
+bool _isKonyakCliSourcePath(String normalizedPath) =>
+    _isSourceDartPath(normalizedPath) &&
+    normalizedPath.contains('/packages/konyak_cli/lib/src/cli/');
 
 bool _isSourceDartPath(String normalizedPath) =>
     normalizedPath.endsWith('.dart') &&
