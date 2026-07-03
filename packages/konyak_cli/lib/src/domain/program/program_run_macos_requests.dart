@@ -31,7 +31,7 @@ ProgramRunRequest macosWineRequest({
   return ProgramRunRequest(
     bottleId: bottle.id,
     programPath: programPath,
-    runnerKind: RunnerKind('macosWine'),
+    runnerKind: RunnerKind.macosWine,
     executable: ProgramExecutable(macosWineExecutable(hostEnvironment)),
     arguments: ProgramRunArguments(<String>[
       'start',
@@ -65,7 +65,7 @@ ProgramRunRequest macosWinebootRequest({
   return ProgramRunRequest(
     bottleId: bottle.id,
     programPath: ProgramPath('wineboot'),
-    runnerKind: RunnerKind('macosWine'),
+    runnerKind: RunnerKind.macosWine,
     executable: ProgramExecutable(macosWineExecutable(hostEnvironment)),
     arguments: ProgramRunArguments(const <String>['wineboot', '--init']),
     environment: _macosPrefixInitializationEnvironment(
@@ -91,7 +91,7 @@ ProgramRunRequest macosWinebootRestartRequest({
   return ProgramRunRequest(
     bottleId: bottle.id,
     programPath: ProgramPath('wineboot'),
-    runnerKind: RunnerKind('macosWine'),
+    runnerKind: RunnerKind.macosWine,
     executable: ProgramExecutable(macosWineExecutable(hostEnvironment)),
     arguments: ProgramRunArguments(const <String>['wineboot', '--restart']),
     environment: macosWineEnvironmentForRequests(
@@ -118,7 +118,7 @@ ProgramRunRequest macosWineMonoInstallRequest({
   return ProgramRunRequest(
     bottleId: bottle.id,
     programPath: ProgramPath('wine-mono'),
-    runnerKind: RunnerKind('macosWine'),
+    runnerKind: RunnerKind.macosWine,
     executable: ProgramExecutable(macosWineExecutable(hostEnvironment)),
     arguments: ProgramRunArguments(<String>[
       'msiexec',
@@ -153,7 +153,7 @@ ProgramRunRequest macosWineserverKillRequest({
   return ProgramRunRequest(
     bottleId: bottle.id,
     programPath: ProgramPath('wineserver'),
-    runnerKind: RunnerKind('macosWineserver'),
+    runnerKind: RunnerKind.macosWineserver,
     executable: ProgramExecutable(macosWineserverExecutable(hostEnvironment)),
     arguments: ProgramRunArguments(const <String>['-k']),
     environment: macosWineEnvironmentForRequests(
@@ -180,7 +180,7 @@ ProgramRunRequest macosWinedbgRequest({
   return ProgramRunRequest(
     bottleId: bottle.id,
     programPath: ProgramPath('winedbg'),
-    runnerKind: RunnerKind('macosWinedbg'),
+    runnerKind: RunnerKind.macosWinedbg,
     executable: ProgramExecutable(macosWineExecutable(hostEnvironment)),
     arguments: ProgramRunArguments(<String>[
       'winedbg',
@@ -391,7 +391,7 @@ ProgramRunRequest macosWineCommandRequest({
   return ProgramRunRequest(
     bottleId: bottle.id,
     programPath: ProgramPath(command.value),
-    runnerKind: RunnerKind('macosWine'),
+    runnerKind: RunnerKind.macosWine,
     executable: ProgramExecutable(macosWineExecutable(hostEnvironment)),
     arguments: wineArgumentsForBottleCommand(command),
     environment: macosWineEnvironmentForRequests(
@@ -418,7 +418,7 @@ ProgramRunRequest macosRegistryUpdateRequest({
   return ProgramRunRequest(
     bottleId: bottle.id,
     programPath: ProgramPath('reg'),
-    runnerKind: RunnerKind('macosWineRegistry'),
+    runnerKind: RunnerKind.macosWineRegistry,
     executable: ProgramExecutable(macosWineExecutable(hostEnvironment)),
     arguments: registryUpdateArguments(update),
     environment: macosWineEnvironmentForRequests(
@@ -445,7 +445,7 @@ ProgramRunRequest macosRegistryQueryRequest({
   return ProgramRunRequest(
     bottleId: bottle.id,
     programPath: ProgramPath('reg'),
-    runnerKind: RunnerKind('macosWineRegistryQuery'),
+    runnerKind: RunnerKind.macosWineRegistryQuery,
     executable: ProgramExecutable(macosWineExecutable(hostEnvironment)),
     arguments: registryQueryArguments(query),
     environment: macosWineEnvironmentForRequests(
@@ -477,7 +477,7 @@ ProgramRunRequest macosWinetricksCommandRequest({
     programPath: ProgramPath(
       verb.match(() => 'winetricks', (value) => value.value),
     ),
-    runnerKind: RunnerKind('macosWinetricks'),
+    runnerKind: RunnerKind.macosWinetricks,
     executable: ProgramExecutable(macosWinetricksExecutable(hostEnvironment)),
     arguments: ProgramRunArguments(
       verb.match(() => const <String>[], (value) => <String>[value.value]),

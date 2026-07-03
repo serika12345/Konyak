@@ -321,6 +321,60 @@ def require_typed_program_run_request_boundary() -> None:
             )
 
 
+def require_runner_kind_catalog_boundary() -> None:
+    value_objects_path = (
+        "packages/konyak_cli/lib/src/domain/shared/domain_value_objects.dart"
+    )
+    value_objects = read_text(value_objects_path)
+    for expected in [
+        "static const wine = RunnerKind._validated('wine');",
+        "static const wineRegistry = RunnerKind._validated('wineRegistry');",
+        "static const wineRegistryQuery = RunnerKind._validated('wineRegistryQuery');",
+        "static const wineboot = RunnerKind._validated('wineboot');",
+        "static const wineserver = RunnerKind._validated('wineserver');",
+        "static const winedbg = RunnerKind._validated('winedbg');",
+        "static const winetricks = RunnerKind._validated('winetricks');",
+        "static const terminal = RunnerKind._validated('terminal');",
+        "static const macosWine = RunnerKind._validated('macosWine');",
+        "static const macosWineRegistry = RunnerKind._validated('macosWineRegistry');",
+        "static const macosWineRegistryQuery = RunnerKind._validated(",
+        "static const macosWineserver = RunnerKind._validated('macosWineserver');",
+        "static const macosWinedbg = RunnerKind._validated('macosWinedbg');",
+        "static const macosWinetricks = RunnerKind._validated('macosWinetricks');",
+        "static const macosTerminal = RunnerKind._validated('macosTerminal');",
+        "static const stableRequestKinds = <RunnerKind>[",
+    ]:
+        if expected not in value_objects:
+            raise AssertionError(
+                "RunnerKind must expose the stable request catalog: "
+                f"{expected}"
+            )
+
+    require_contains(
+        "packages/konyak_cli/test/runner_kind_catalog_test.dart",
+        "stable runner-kind catalog preserves public request strings",
+    )
+
+    request_builder_paths = [
+        "packages/konyak_cli/lib/src/domain/program/program_run_linux_requests.dart",
+        "packages/konyak_cli/lib/src/domain/program/program_run_macos_requests.dart",
+        "packages/konyak_cli/lib/src/domain/program/program_run_terminal_requests.dart",
+        "packages/konyak_cli/lib/src/platform/linux/linux_program_run_requests.dart",
+        "packages/konyak_cli/lib/src/platform/macos/macos_program_run_requests.dart",
+        "packages/konyak_cli/lib/src/io/wine_run_requests.dart",
+    ]
+    direct_runner_kind_pattern = re.compile(r"RunnerKind\('[^']+'\)")
+    for relative_path in request_builder_paths:
+        source = read_text(relative_path)
+        match = direct_runner_kind_pattern.search(source)
+        if match is not None:
+            raise AssertionError(
+                "request builders must use the RunnerKind stable catalog "
+                f"instead of direct literal construction: {relative_path} "
+                f"{match.group(0)}"
+            )
+
+
 def require_typed_program_run_planner_boundary() -> None:
     planner_path = "packages/konyak_cli/lib/src/domain/program/program_runner.dart"
     planner = read_text(planner_path)
@@ -2713,11 +2767,11 @@ def require_refactoring_documentation_cleanup() -> None:
         require_not_contains("docs/progress.md", stale_branch)
     require_contains(
         "docs/progress.md",
-        "I3-P1 Type-Safety Inventory and Gate Order",
+        "I3-P2 Runner Kind Typed Catalog",
     )
     require_contains(
         "docs/progress.md",
-        "task/type-safety-i3-inventory",
+        "task/type-safety-i3-runner-kind-catalog",
     )
 
     for relative_path in [
@@ -4340,6 +4394,7 @@ def main() -> None:
     require_no_cli_state_errors()
     require_program_run_request_builders_split()
     require_typed_program_run_request_boundary()
+    require_runner_kind_catalog_boundary()
     require_typed_program_run_planner_boundary()
     require_typed_bottle_command_planner_boundary()
     require_typed_winetricks_verb_planner_boundary()

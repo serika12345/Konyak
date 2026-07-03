@@ -158,7 +158,7 @@ void main() {
       ProgramRunRequest(
         bottleId: BottleId('steam'),
         programPath: ProgramPath('/downloads/setup.exe'),
-        runnerKind: RunnerKind('macosWine'),
+        runnerKind: RunnerKind.macosWine,
         executable: ProgramExecutable(Platform.resolvedExecutable),
         arguments: ProgramRunArguments(const ['--version']),
         environment: ProgramRunEnvironment(const <String, String>{
@@ -202,7 +202,7 @@ void main() {
         ProgramRunRequest(
           bottleId: BottleId('steam'),
           programPath: ProgramPath('/downloads/setup.exe'),
-          runnerKind: RunnerKind('wine'),
+          runnerKind: RunnerKind.wine,
           executable: ProgramExecutable(Platform.resolvedExecutable),
           arguments: ProgramRunArguments(const ['--version']),
           environment: const ProgramRunEnvironment.empty(),
@@ -231,7 +231,7 @@ void main() {
       ProgramRunRequest(
         bottleId: BottleId('steam'),
         programPath: ProgramPath('/downloads/setup.exe'),
-        runnerKind: RunnerKind('wine'),
+        runnerKind: RunnerKind.wine,
         executable: ProgramExecutable('/definitely/missing/konyak-runner'),
         arguments: ProgramRunArguments(const ['/downloads/setup.exe']),
         environment: const ProgramRunEnvironment.empty(),

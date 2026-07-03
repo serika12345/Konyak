@@ -19,7 +19,7 @@ ProgramRunRequest linuxTerminalCommandRequest({
     programPath: ProgramPath(
       initialWineCommand.match(() => 'terminal', (command) => command.value),
     ),
-    runnerKind: RunnerKind('terminal'),
+    runnerKind: RunnerKind.terminal,
     executable: ProgramExecutable('sh'),
     arguments: ProgramRunArguments(<String>[
       '-lc',
@@ -57,7 +57,7 @@ ProgramRunRequest macosTerminalCommandRequest({
     programPath: ProgramPath(
       initialWineCommand.match(() => 'terminal', (command) => command.value),
     ),
-    runnerKind: RunnerKind('macosTerminal'),
+    runnerKind: RunnerKind.macosTerminal,
     executable: ProgramExecutable('/usr/bin/osascript'),
     arguments: ProgramRunArguments(<String>[
       '-e',

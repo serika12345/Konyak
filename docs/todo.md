@@ -611,7 +611,7 @@ Medium milestones, one PR unit each:
 - [x] I3-M1: Inventory remaining mechanically convertible primitive and enum
   fronts, classify them as PR-sized conversion gates, adapter-boundary
   primitives, or deferred design decisions.
-- [ ] I3-M2: Replace stable `RunnerKind` string literal construction with a
+- [x] I3-M2: Replace stable `RunnerKind` string literal construction with a
   typed runner-kind catalog or enum-backed factory while preserving existing
   public JSON string values.
 - [ ] I3-M3: Convert stable runtime platform-definition constructor fronts for
@@ -674,7 +674,7 @@ review gate:
 
 #### PR Gate: I3-P2 Runner Kind Typed Catalog
 
-status: planned
+status: completed
 branch: `task/type-safety-i3-runner-kind-catalog`
 
 Completion criteria:

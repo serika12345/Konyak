@@ -1939,7 +1939,7 @@ void main() {
     final request = ProgramRunRequest(
       bottleId: BottleId('steam'),
       programPath: ProgramPath('/steam.exe'),
-      runnerKind: RunnerKind('wine'),
+      runnerKind: RunnerKind.wine,
       executable: ProgramExecutable('wine'),
       arguments: ProgramRunArguments(const <String>['/steam.exe']),
       environment: const ProgramRunEnvironment.empty(),
@@ -1949,7 +1949,7 @@ void main() {
 
     expect(request.bottleId, BottleId('steam'));
     expect(request.programPath, ProgramPath('/steam.exe'));
-    expect(request.runnerKind, RunnerKind('wine'));
+    expect(request.runnerKind, RunnerKind.wine);
     expect(request.executable, ProgramExecutable('wine'));
     expect(request.logPath, ProgramLogPath('/bottles/steam/logs/latest.log'));
     expect(
@@ -1962,7 +1962,7 @@ void main() {
       ProgramRunRequest(
         bottleId: BottleId('steam'),
         programPath: ProgramPath('/steam.exe'),
-        runnerKind: RunnerKind('wine'),
+        runnerKind: RunnerKind.wine,
         executable: ProgramExecutable('wine'),
         arguments: ProgramRunArguments(const <String>['/steam.exe']),
         environment: const ProgramRunEnvironment.empty(),
@@ -2094,7 +2094,7 @@ void main() {
     final record = WineProcessTerminationRecord(
       bottleId: BottleId('steam'),
       status: WineProcessStatus('terminated'),
-      runnerKind: RunnerKind('wine'),
+      runnerKind: RunnerKind.wine,
       executable: ProgramExecutable('wine'),
       argv: argv,
     );
@@ -2102,7 +2102,7 @@ void main() {
 
     expect(record.bottleId, BottleId('steam'));
     expect(record.status, WineProcessStatus('terminated'));
-    expect(record.runnerKind, RunnerKind('wine'));
+    expect(record.runnerKind, RunnerKind.wine);
     expect(record.executable, ProgramExecutable('wine'));
     expect(record.argv, ['wine', '/steam.exe']);
     expect(() => record.argv.add('--other'), throwsUnsupportedError);
@@ -2111,7 +2111,7 @@ void main() {
       WineProcessTerminationRecord(
         bottleId: BottleId('steam'),
         status: WineProcessStatus('terminated'),
-        runnerKind: RunnerKind('wine'),
+        runnerKind: RunnerKind.wine,
         executable: ProgramExecutable('wine'),
         argv: <String>['wine', '/steam.exe'],
       ),
@@ -2341,7 +2341,7 @@ void main() {
     expect(definition.name, RuntimeName('Konyak Linux Wine'));
     expect(definition.platform, RuntimePlatformName('linux'));
     expect(definition.architecture, RuntimeArchitecture('x86_64'));
-    expect(definition.runnerKind, RunnerKind('wine'));
+    expect(definition.runnerKind, RunnerKind.wine);
     expect(definition.distributionKind.isNone(), isTrue);
     expect(definition.archiveUrl.isNone(), isTrue);
     expect(definition.versionUrl.isNone(), isTrue);
@@ -2399,7 +2399,7 @@ void main() {
     expect(runtime.name, RuntimeName('Wine'));
     expect(runtime.platform, RuntimePlatformName('linux'));
     expect(runtime.architecture, RuntimeArchitecture('x86_64'));
-    expect(runtime.runnerKind, RunnerKind('wine'));
+    expect(runtime.runnerKind, RunnerKind.wine);
     expect(runtime.distributionKind.isNone(), isTrue);
     expect(runtime.isInstalled.isNone(), isTrue);
     expect(runtime.libraryPath.isNone(), isTrue);

@@ -27,7 +27,7 @@ ProgramRunRequest linuxWineRequest({
   return ProgramRunRequest(
     bottleId: bottle.id,
     programPath: programPath,
-    runnerKind: RunnerKind('wine'),
+    runnerKind: RunnerKind.wine,
     executable: ProgramExecutable(linuxWineExecutable(hostEnvironment)),
     arguments: ProgramRunArguments(arguments),
     environment: linuxRuntimeEnvironment(hostEnvironment)
@@ -53,7 +53,7 @@ ProgramRunRequest linuxWineCommandRequest({
   return ProgramRunRequest(
     bottleId: bottle.id,
     programPath: ProgramPath(bottleCommand.value),
-    runnerKind: RunnerKind('wine'),
+    runnerKind: RunnerKind.wine,
     executable: ProgramExecutable(linuxWineExecutable(hostEnvironment)),
     arguments: wineArgumentsForBottleCommand(bottleCommand),
     environment: linuxRuntimeEnvironment(hostEnvironment).merge(
@@ -74,7 +74,7 @@ ProgramRunRequest linuxRegistryUpdateRequest({
   return ProgramRunRequest(
     bottleId: bottle.id,
     programPath: ProgramPath('reg'),
-    runnerKind: RunnerKind('wineRegistry'),
+    runnerKind: RunnerKind.wineRegistry,
     executable: ProgramExecutable(linuxWineExecutable(hostEnvironment)),
     arguments: registryUpdateArguments(update),
     environment: linuxRuntimeEnvironment(hostEnvironment).merge(
@@ -95,7 +95,7 @@ ProgramRunRequest linuxRegistryQueryRequest({
   return ProgramRunRequest(
     bottleId: bottle.id,
     programPath: ProgramPath('reg'),
-    runnerKind: RunnerKind('wineRegistryQuery'),
+    runnerKind: RunnerKind.wineRegistryQuery,
     executable: ProgramExecutable(linuxWineExecutable(hostEnvironment)),
     arguments: registryQueryArguments(query),
     environment: linuxRuntimeEnvironment(hostEnvironment).merge(
@@ -115,7 +115,7 @@ ProgramRunRequest linuxWinebootRequest({
   return ProgramRunRequest(
     bottleId: bottle.id,
     programPath: ProgramPath('wineboot'),
-    runnerKind: RunnerKind('wineboot'),
+    runnerKind: RunnerKind.wineboot,
     executable: ProgramExecutable(linuxWinebootExecutable(hostEnvironment)),
     arguments: ProgramRunArguments(const <String>['--init']),
     environment: linuxRuntimeEnvironment(hostEnvironment).merge(
@@ -135,7 +135,7 @@ ProgramRunRequest linuxWinebootRestartRequest({
   return ProgramRunRequest(
     bottleId: bottle.id,
     programPath: ProgramPath('wineboot'),
-    runnerKind: RunnerKind('wineboot'),
+    runnerKind: RunnerKind.wineboot,
     executable: ProgramExecutable(linuxWinebootExecutable(hostEnvironment)),
     arguments: ProgramRunArguments(const <String>['--restart']),
     environment: linuxRuntimeEnvironment(hostEnvironment).merge(
@@ -155,7 +155,7 @@ ProgramRunRequest linuxWineserverKillRequest({
   return ProgramRunRequest(
     bottleId: bottle.id,
     programPath: ProgramPath('wineserver'),
-    runnerKind: RunnerKind('wineserver'),
+    runnerKind: RunnerKind.wineserver,
     executable: ProgramExecutable(linuxWineserverExecutable(hostEnvironment)),
     arguments: ProgramRunArguments(const <String>['-k']),
     environment: linuxRuntimeEnvironment(
@@ -176,7 +176,7 @@ ProgramRunRequest linuxWinedbgRequest({
   return ProgramRunRequest(
     bottleId: bottle.id,
     programPath: ProgramPath('winedbg'),
-    runnerKind: RunnerKind('winedbg'),
+    runnerKind: RunnerKind.winedbg,
     executable: ProgramExecutable(linuxWinedbgExecutable(hostEnvironment)),
     arguments: ProgramRunArguments(<String>[
       '--command',

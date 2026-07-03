@@ -13,31 +13,29 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-03 20:30 JST
+- Timestamp: 2026-07-03 21:54 JST
 - State: `completed`
-- Branch: `task/type-safety-i3-inventory`
-- Active work: I3-P1 Type-Safety Inventory and Gate Order.
+- Branch: `task/type-safety-i3-runner-kind-catalog`
+- Active work: I3-P2 Runner Kind Typed Catalog.
 - Related TODO: `docs/todo.md` `I3: Mechanical Type-Safety Hardening`,
-  completed `I3-P1 Type-Safety Inventory and Gate Order`, then PR-unit medium
-  milestones for runner-kind, runtime platform definitions, runtime model
-  fronts, runtime install request fronts, macOS version capability, and
-  governance/lint guardrails.
-- Pull request: https://github.com/serika12345/Konyak/pull/24
-- Latest implementation commit: `68d1c78` (`Audit I3 type-safety fronts`).
-- Purpose: select the next type-safety refactoring sequence by inventorying
-  mechanically identifiable primitive, nullable, and string-discriminant
-  fronts while preserving public CLI JSON, argv, persisted metadata, runtime
-  manifests, runtime behavior, and app behavior.
-- Completed work: added `docs/i3-type-safety-inventory.md`; classified
-  runner-kind literals, runtime platform definitions, runtime model/source
-  manifest constructor fronts, runtime install request wrapper fronts, macOS
-  major-version capability plumbing, Flutter app-facing DTO primitives, and
-  governance/custom lint state; updated `docs/todo.md` so the audit-selected
-  I3 medium milestones are represented as PR Gates I3-P2 through I3-P7.
-- Remaining work: review draft PR #24 before starting I3-P2.
-- Next action: after the I3-P1 PR is reviewed and merged, run `/advance-pr` to
-  start I3-P2 Runner Kind Typed Catalog on
-  `task/type-safety-i3-runner-kind-catalog`.
-- Verification: I3-P1 audit verification passed through the Nix dev shell with
-  `just verify-governance`, `just verify-safety`, `just format-check`, and
-  `just lint`.
+  completed `I3-P2 Runner Kind Typed Catalog`; next planned gate is I3-P3
+  Runtime Platform Definition Type Fronts.
+- Pull request: https://github.com/serika12345/Konyak/pull/25
+- Latest implementation commit: `ad17606` (`Add runner kind catalog`).
+- Purpose: remove ad hoc runner-kind string construction from request builders
+  by centralizing stable Konyak-owned runner kinds in a typed catalog while
+  preserving public `runnerKind` JSON strings, argv, exit codes, runtime
+  behavior, Wine execution paths, and app behavior.
+- Completed work: added the `RunnerKind` stable request catalog; replaced
+  direct `RunnerKind('<literal>')` construction in domain, platform, and I/O
+  request builders plus focused tests; added
+  `packages/konyak_cli/test/runner_kind_catalog_test.dart`; updated governance
+  so request builders cannot reintroduce direct runner-kind literal
+  construction.
+- Remaining work: review draft PR #25 before starting I3-P3.
+- Next action: after the I3-P2 PR is reviewed and merged, run `/advance-pr` to
+  start I3-P3 Runtime Platform Definition Type Fronts on
+  `task/type-safety-i3-runtime-platform-definitions`.
+- Verification: I3-P2 implementation verification passed through the Nix dev
+  shell with `just cli-test`, `just verify-governance`, `just verify-safety`,
+  `just format-check`, and `just lint`.

@@ -261,7 +261,7 @@ ProgramRunRequest macosWineCommandRequest({
   return ProgramRunRequest(
     bottleId: bottle.id,
     programPath: ProgramPath(bottleCommand.value),
-    runnerKind: RunnerKind('macosWine'),
+    runnerKind: RunnerKind.macosWine,
     executable: ProgramExecutable(macosWineExecutable(hostEnvironment)),
     arguments: wineArgumentsForBottleCommand(bottleCommand),
     environment: macosWineEnvironment(
@@ -288,7 +288,7 @@ ProgramRunRequest macosRegistryUpdateRequest({
   return ProgramRunRequest(
     bottleId: bottle.id,
     programPath: ProgramPath('reg'),
-    runnerKind: RunnerKind('macosWineRegistry'),
+    runnerKind: RunnerKind.macosWineRegistry,
     executable: ProgramExecutable(macosWineExecutable(hostEnvironment)),
     arguments: registryUpdateArguments(update),
     environment: macosWineEnvironment(
@@ -315,7 +315,7 @@ ProgramRunRequest macosRegistryQueryRequest({
   return ProgramRunRequest(
     bottleId: bottle.id,
     programPath: ProgramPath('reg'),
-    runnerKind: RunnerKind('macosWineRegistryQuery'),
+    runnerKind: RunnerKind.macosWineRegistryQuery,
     executable: ProgramExecutable(macosWineExecutable(hostEnvironment)),
     arguments: registryQueryArguments(query),
     environment: macosWineEnvironment(
@@ -342,7 +342,7 @@ ProgramRunRequest linuxTerminalCommandRequest({
     programPath: ProgramPath(
       initialWineCommand.match(() => 'terminal', (command) => command.value),
     ),
-    runnerKind: RunnerKind('terminal'),
+    runnerKind: RunnerKind.terminal,
     executable: ProgramExecutable('sh'),
     arguments: ProgramRunArguments(<String>[
       '-lc',
@@ -380,7 +380,7 @@ ProgramRunRequest macosTerminalCommandRequest({
     programPath: ProgramPath(
       initialWineCommand.match(() => 'terminal', (command) => command.value),
     ),
-    runnerKind: RunnerKind('macosTerminal'),
+    runnerKind: RunnerKind.macosTerminal,
     executable: ProgramExecutable('/usr/bin/osascript'),
     arguments: ProgramRunArguments(<String>[
       '-e',
@@ -405,7 +405,7 @@ ProgramRunRequest linuxWinetricksCommandRequest({
   return ProgramRunRequest(
     bottleId: bottle.id,
     programPath: ProgramPath(verb.getOrElse(() => 'winetricks')),
-    runnerKind: RunnerKind('winetricks'),
+    runnerKind: RunnerKind.winetricks,
     executable: ProgramExecutable(linuxWinetricksExecutable(hostEnvironment)),
     arguments: ProgramRunArguments(
       verb.match(() => const <String>[], (value) => <String>[value]),
@@ -432,7 +432,7 @@ ProgramRunRequest macosWinetricksCommandRequest({
   return ProgramRunRequest(
     bottleId: bottle.id,
     programPath: ProgramPath(verb.getOrElse(() => 'winetricks')),
-    runnerKind: RunnerKind('macosWinetricks'),
+    runnerKind: RunnerKind.macosWinetricks,
     executable: ProgramExecutable(macosWinetricksExecutable(hostEnvironment)),
     arguments: ProgramRunArguments(
       verb.match(() => const <String>[], (value) => <String>[value]),
