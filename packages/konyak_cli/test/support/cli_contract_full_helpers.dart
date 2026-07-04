@@ -731,6 +731,98 @@ RuntimeStackComponent runtimeStackComponentFixture({
   );
 }
 
+MacosWineInstallRequest macosWineFullInstallRequestFixture({
+  String? archivePath,
+  String? archiveUrl,
+  String? archiveSha256,
+  String? sourceManifest,
+  String? sourceManifestSignature,
+  bool force = false,
+  bool emitProgress = false,
+}) {
+  return MacosWineInstallRequest.fullInstall(
+    archivePath: Option.fromNullable(archivePath).map(RuntimeArchivePath.new),
+    archiveUrl: Option.fromNullable(archiveUrl).map(RuntimeArchiveUrl.new),
+    archiveSha256: Option.fromNullable(
+      archiveSha256,
+    ).map(RuntimeArchiveChecksumValue.new),
+    sourceManifest: Option.fromNullable(
+      sourceManifest,
+    ).map(RuntimeSourceManifestUrl.new),
+    sourceManifestSignature: Option.fromNullable(
+      sourceManifestSignature,
+    ).map(RuntimeSourceManifestSignatureUrl.new),
+    force: force,
+    emitProgress: emitProgress,
+  );
+}
+
+MacosWineInstallRequest macosWineComponentInstallRequestFixture({
+  String? archivePath,
+  String? archiveUrl,
+  String? archiveSha256,
+  Iterable<String> componentArchivePaths = const <String>[],
+  bool force = false,
+  bool emitProgress = false,
+}) {
+  return MacosWineInstallRequest.componentInstall(
+    archivePath: Option.fromNullable(archivePath).map(RuntimeArchivePath.new),
+    archiveUrl: Option.fromNullable(archiveUrl).map(RuntimeArchiveUrl.new),
+    archiveSha256: Option.fromNullable(
+      archiveSha256,
+    ).map(RuntimeArchiveChecksumValue.new),
+    componentArchivePaths: componentArchivePaths.map(RuntimeArchivePath.new),
+    force: force,
+    emitProgress: emitProgress,
+  );
+}
+
+LinuxWineInstallRequest linuxWineFullInstallRequestFixture({
+  String? archivePath,
+  String? archiveUrl,
+  String? archiveSha256,
+  String? sourceManifest,
+  String? sourceManifestSignature,
+  bool force = false,
+  bool emitProgress = false,
+}) {
+  return LinuxWineInstallRequest.fullInstall(
+    archivePath: Option.fromNullable(archivePath).map(RuntimeArchivePath.new),
+    archiveUrl: Option.fromNullable(archiveUrl).map(RuntimeArchiveUrl.new),
+    archiveSha256: Option.fromNullable(
+      archiveSha256,
+    ).map(RuntimeArchiveChecksumValue.new),
+    sourceManifest: Option.fromNullable(
+      sourceManifest,
+    ).map(RuntimeSourceManifestUrl.new),
+    sourceManifestSignature: Option.fromNullable(
+      sourceManifestSignature,
+    ).map(RuntimeSourceManifestSignatureUrl.new),
+    force: force,
+    emitProgress: emitProgress,
+  );
+}
+
+LinuxWineInstallRequest linuxWineComponentInstallRequestFixture({
+  String? archivePath,
+  String? archiveUrl,
+  String? archiveSha256,
+  Iterable<String> componentArchivePaths = const <String>[],
+  bool force = false,
+  bool emitProgress = false,
+}) {
+  return LinuxWineInstallRequest.componentInstall(
+    archivePath: Option.fromNullable(archivePath).map(RuntimeArchivePath.new),
+    archiveUrl: Option.fromNullable(archiveUrl).map(RuntimeArchiveUrl.new),
+    archiveSha256: Option.fromNullable(
+      archiveSha256,
+    ).map(RuntimeArchiveChecksumValue.new),
+    componentArchivePaths: componentArchivePaths.map(RuntimeArchivePath.new),
+    force: force,
+    emitProgress: emitProgress,
+  );
+}
+
 void expectMissing(IoResult<Option<BottleRecord>> result) {
   expectIo(result).match(
     () {},
