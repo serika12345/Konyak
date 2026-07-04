@@ -13,15 +13,15 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-04 23:38 JST
+- Timestamp: 2026-07-04 23:40 JST
 - State: `completed`
 - Branch: `task/type-safety-i3-macos-version-capability`
 - Active work: I3-P6 macOS Version Capability Type Front.
 - Related TODO: `docs/todo.md` `I3: Mechanical Type-Safety Hardening`,
   completed `I3-P6 macOS Version Capability Type Front`; next planned gate is
   I3-P7 Type-Safety Governance and Lint Guardrails.
-- Pull request: not opened yet.
-- Latest implementation commit: pending.
+- Pull request: https://github.com/serika12345/Konyak/pull/29
+- Latest implementation commit: `6f88234` (`Type macOS version capability`).
 - Purpose: replace macOS major-version capability plumbing from primitive
   `Option<int>` to a typed value object while preserving D3DMetal DLSS/MetalFX
   environment selection, terminal setup, CLI JSON, argv, runtime behavior,
@@ -35,10 +35,10 @@ unfinished work.
   `packages/konyak_cli/test/macos_version_capability_type_fronts_test.dart`;
   updated CLI contract tests and governance so the converted macOS version
   capability plumbing cannot regress to primitive `Option<int>`.
-- Remaining work: commit, push, open the I3-P6 draft PR, and review it before
-  starting I3-P7.
-- Next action: run the I3-P6 verification set, then push
-  `task/type-safety-i3-macos-version-capability` and open a draft PR.
+- Remaining work: review draft PR #29 before starting I3-P7.
+- Next action: after the I3-P6 PR is reviewed and merged, run `/advance-pr` to
+  start I3-P7 Type-Safety Governance and Lint Guardrails on
+  `task/type-safety-i3-governance`.
 - Verification: I3-P6 implementation verification passed through the Nix dev
   shell with `dart test test/macos_version_capability_type_fronts_test.dart`,
   `just cli-test`, `just verify-governance`, `just verify-safety`,
