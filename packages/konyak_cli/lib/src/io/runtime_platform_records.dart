@@ -27,18 +27,20 @@ RuntimeRecord macosWineRuntimeRecord({
 
   return RuntimeRecord.fromParts(
     definition: RuntimeDefinition(
-      id: platformSpec.runtimeId.value,
-      name: platformSpec.runtimeName.value,
-      platform: platformSpec.platform.value,
-      architecture: platformSpec.architecture.value,
-      runnerKind: platformSpec.runnerKind.value,
+      id: platformSpec.runtimeId,
+      name: platformSpec.runtimeName,
+      platform: platformSpec.platform,
+      architecture: platformSpec.architecture,
+      runnerKind: platformSpec.runnerKind,
       isBundled: false,
       isUpdateable: true,
-      distributionKind: Option.fromNullable(
-        runtimeDistributionKind(environment, 'bootstrap'),
+      distributionKind: Option.of(
+        RuntimeDistributionKind(
+          runtimeDistributionKind(environment, 'bootstrap'),
+        ),
       ),
       archiveUrl: const Option.none(),
-      versionUrl: Option.fromNullable(macosWineVersionUrl),
+      versionUrl: Option.of(RuntimeVersionUrl(macosWineVersionUrl)),
     ),
     installedState: InstalledRuntimeState(
       isInstalled: Option.of(isInstalled),
@@ -70,18 +72,20 @@ RuntimeRecord linuxWineRuntimeRecord({
   final versionUrl = environment.nonEmptyValue('KONYAK_LINUX_WINE_VERSION_URL');
   return RuntimeRecord.fromParts(
     definition: RuntimeDefinition(
-      id: platformSpec.runtimeId.value,
-      name: platformSpec.runtimeName.value,
-      platform: platformSpec.platform.value,
-      architecture: platformSpec.architecture.value,
-      runnerKind: platformSpec.runnerKind.value,
+      id: platformSpec.runtimeId,
+      name: platformSpec.runtimeName,
+      platform: platformSpec.platform,
+      architecture: platformSpec.architecture,
+      runnerKind: platformSpec.runnerKind,
       isBundled: false,
       isUpdateable: versionUrl.isSome(),
       distributionKind: Option.of(
-        runtimeDistributionKind(environment, 'managed'),
+        RuntimeDistributionKind(
+          runtimeDistributionKind(environment, 'managed'),
+        ),
       ),
       archiveUrl: const Option.none(),
-      versionUrl: versionUrl,
+      versionUrl: versionUrl.map(RuntimeVersionUrl.new),
     ),
     installedState: InstalledRuntimeState(
       isInstalled: Option.of(fileStatusProbe.exists(executablePath)),
@@ -118,9 +122,9 @@ RuntimeStack runtimeStackForPlatform({
       )
       .toList(growable: false);
   return RuntimeStack(
-    id: platformSpec.stackId.value,
-    name: platformSpec.stackName.value,
-    compatibilityTarget: platformSpec.stackId.value,
+    id: platformSpec.stackId,
+    name: platformSpec.stackName,
+    compatibilityTarget: RuntimeCompatibilityTarget(platformSpec.stackId.value),
     components: components,
     backends: platformSpec.backendDefinitions
         .map(
@@ -140,27 +144,27 @@ RuntimeStackBackend runtimeStackBackend({
   final componentsById = <RuntimeComponentId, RuntimeStackComponent>{
     for (final component in components) component.id: component,
   };
-  final missingComponentIds = <String>[];
-  final missingPaths = <String>[];
+  final missingComponentIds = <RuntimeComponentId>[];
+  final missingPaths = <RuntimeMissingPath>[];
 
   for (final componentId in definition.componentIds) {
     final component = componentsById[componentId];
     if (component == null) {
-      missingComponentIds.add(componentId.value);
+      missingComponentIds.add(componentId);
       continue;
     }
 
     if (!component.isInstalled) {
-      missingComponentIds.add(componentId.value);
-      missingPaths.addAll(component.missingPaths.map((path) => path.value));
+      missingComponentIds.add(componentId);
+      missingPaths.addAll(component.missingPaths);
     }
   }
 
   return RuntimeStackBackend(
-    id: definition.id.value,
-    name: definition.name.value,
-    role: definition.role.value,
-    componentIds: definition.componentIds.map((id) => id.value),
+    id: definition.id,
+    name: definition.name,
+    role: definition.role,
+    componentIds: definition.componentIds,
     missingComponentIds: missingComponentIds,
     missingPaths: missingPaths,
   );
@@ -199,19 +203,17 @@ RuntimeStackComponent runtimeStackComponent({
   }
 
   return RuntimeStackComponent(
-    id: definition.id.value,
-    name: definition.name.value,
-    role: definition.role.value,
+    id: definition.id,
+    name: definition.name,
+    role: definition.role,
     isRequired: definition.isRequired,
-    paths: paths,
-    missingPaths: missingPaths,
+    paths: paths.map(RuntimeComponentPath.new),
+    missingPaths: missingPaths.map(RuntimeMissingPath.new),
     version: missingPaths.isEmpty
-        ? runtimeStackVersionProbe
-              .versionFor(
-                runtimeRoot: RuntimeRootPath(runtimeRoot),
-                componentId: definition.id,
-              )
-              .map((version) => version.value)
+        ? runtimeStackVersionProbe.versionFor(
+            runtimeRoot: RuntimeRootPath(runtimeRoot),
+            componentId: definition.id,
+          )
         : const Option.none(),
   );
 }

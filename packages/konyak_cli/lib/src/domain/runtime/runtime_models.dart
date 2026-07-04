@@ -15,28 +15,28 @@ abstract class RuntimeDefinition with _$RuntimeDefinition {
   const RuntimeDefinition._();
 
   factory RuntimeDefinition({
-    required String id,
-    required String name,
-    required String platform,
-    required String architecture,
-    required String runnerKind,
+    required RuntimeId id,
+    required RuntimeName name,
+    required RuntimePlatformName platform,
+    required RuntimeArchitecture architecture,
+    required RunnerKind runnerKind,
     required bool isBundled,
     required bool isUpdateable,
-    Option<String> distributionKind = const Option.none(),
-    Option<String> archiveUrl = const Option.none(),
-    Option<String> versionUrl = const Option.none(),
+    Option<RuntimeDistributionKind> distributionKind = const Option.none(),
+    Option<RuntimeArchiveUrl> archiveUrl = const Option.none(),
+    Option<RuntimeVersionUrl> versionUrl = const Option.none(),
   }) {
     return RuntimeDefinition._validated(
-      id: RuntimeId(id),
-      name: RuntimeName(name),
-      platform: RuntimePlatformName(platform),
-      architecture: RuntimeArchitecture(architecture),
-      runnerKind: RunnerKind(runnerKind),
+      id: id,
+      name: name,
+      platform: platform,
+      architecture: architecture,
+      runnerKind: runnerKind,
       isBundled: isBundled,
       isUpdateable: isUpdateable,
-      distributionKind: distributionKind.map(RuntimeDistributionKind.new),
-      archiveUrl: archiveUrl.map(RuntimeArchiveUrl.new),
-      versionUrl: versionUrl.map(RuntimeVersionUrl.new),
+      distributionKind: distributionKind,
+      archiveUrl: archiveUrl,
+      versionUrl: versionUrl,
     );
   }
 
@@ -122,39 +122,37 @@ abstract class RuntimeRecord with _$RuntimeRecord {
   const RuntimeRecord._();
 
   factory RuntimeRecord({
-    required String id,
-    required String name,
-    required String platform,
-    required String architecture,
-    required String runnerKind,
+    required RuntimeId id,
+    required RuntimeName name,
+    required RuntimePlatformName platform,
+    required RuntimeArchitecture architecture,
+    required RunnerKind runnerKind,
     required bool isBundled,
     required bool isUpdateable,
-    Option<String> distributionKind = const Option.none(),
+    Option<RuntimeDistributionKind> distributionKind = const Option.none(),
     Option<bool> isInstalled = const Option.none(),
-    Option<String> applicationSupportPath = const Option.none(),
-    Option<String> libraryPath = const Option.none(),
-    Option<String> executablePath = const Option.none(),
-    Option<String> archiveUrl = const Option.none(),
-    Option<String> versionUrl = const Option.none(),
+    Option<RuntimeComponentPath> applicationSupportPath = const Option.none(),
+    Option<RuntimeComponentPath> libraryPath = const Option.none(),
+    Option<RuntimeComponentPath> executablePath = const Option.none(),
+    Option<RuntimeArchiveUrl> archiveUrl = const Option.none(),
+    Option<RuntimeVersionUrl> versionUrl = const Option.none(),
     Option<RuntimeStack> stack = const Option.none(),
   }) {
     return RuntimeRecord._validated(
-      id: RuntimeId(id),
-      name: RuntimeName(name),
-      platform: RuntimePlatformName(platform),
-      architecture: RuntimeArchitecture(architecture),
-      runnerKind: RunnerKind(runnerKind),
+      id: id,
+      name: name,
+      platform: platform,
+      architecture: architecture,
+      runnerKind: runnerKind,
       isBundled: isBundled,
       isUpdateable: isUpdateable,
-      distributionKind: distributionKind.map(RuntimeDistributionKind.new),
+      distributionKind: distributionKind,
       isInstalled: isInstalled,
-      applicationSupportPath: applicationSupportPath.map(
-        RuntimeComponentPath.new,
-      ),
-      libraryPath: libraryPath.map(RuntimeComponentPath.new),
-      executablePath: executablePath.map(RuntimeComponentPath.new),
-      archiveUrl: archiveUrl.map(RuntimeArchiveUrl.new),
-      versionUrl: versionUrl.map(RuntimeVersionUrl.new),
+      applicationSupportPath: applicationSupportPath,
+      libraryPath: libraryPath,
+      executablePath: executablePath,
+      archiveUrl: archiveUrl,
+      versionUrl: versionUrl,
       stack: stack,
     );
   }
@@ -212,16 +210,16 @@ abstract class RuntimeStack with _$RuntimeStack {
   const RuntimeStack._();
 
   factory RuntimeStack({
-    required String id,
-    required String name,
-    required String compatibilityTarget,
+    required RuntimeStackId id,
+    required RuntimeStackName name,
+    required RuntimeCompatibilityTarget compatibilityTarget,
     required Iterable<RuntimeStackComponent> components,
     Iterable<RuntimeStackBackend> backends = const <RuntimeStackBackend>[],
   }) {
     return RuntimeStack._validated(
-      id: RuntimeStackId(id),
-      name: RuntimeStackName(name),
-      compatibilityTarget: RuntimeCompatibilityTarget(compatibilityTarget),
+      id: id,
+      name: name,
+      compatibilityTarget: compatibilityTarget,
       components: List.unmodifiable(components),
       backends: List.unmodifiable(backends),
     );
@@ -251,22 +249,20 @@ abstract class RuntimeStackBackend with _$RuntimeStackBackend {
   const RuntimeStackBackend._();
 
   factory RuntimeStackBackend({
-    required String id,
-    required String name,
-    required String role,
-    required Iterable<String> componentIds,
-    required Iterable<String> missingComponentIds,
-    required Iterable<String> missingPaths,
+    required RuntimeBackendId id,
+    required RuntimeName name,
+    required RuntimeRole role,
+    required Iterable<RuntimeComponentId> componentIds,
+    required Iterable<RuntimeComponentId> missingComponentIds,
+    required Iterable<RuntimeMissingPath> missingPaths,
   }) {
     return RuntimeStackBackend._validated(
-      id: RuntimeBackendId(id),
-      name: RuntimeName(name),
-      role: RuntimeRole(role),
-      componentIds: List.unmodifiable(componentIds.map(RuntimeComponentId.new)),
-      missingComponentIds: List.unmodifiable(
-        missingComponentIds.map(RuntimeComponentId.new),
-      ),
-      missingPaths: List.unmodifiable(missingPaths.map(RuntimeMissingPath.new)),
+      id: id,
+      name: name,
+      role: role,
+      componentIds: List.unmodifiable(componentIds),
+      missingComponentIds: List.unmodifiable(missingComponentIds),
+      missingPaths: List.unmodifiable(missingPaths),
     );
   }
 
@@ -293,22 +289,22 @@ abstract class RuntimeStackComponent with _$RuntimeStackComponent {
   const RuntimeStackComponent._();
 
   factory RuntimeStackComponent({
-    required String id,
-    required String name,
-    required String role,
+    required RuntimeComponentId id,
+    required RuntimeName name,
+    required RuntimeRole role,
     required bool isRequired,
-    required Iterable<String> paths,
-    required Iterable<String> missingPaths,
-    Option<String> version = const Option.none(),
+    required Iterable<RuntimeComponentPath> paths,
+    required Iterable<RuntimeMissingPath> missingPaths,
+    Option<RuntimeVersion> version = const Option.none(),
   }) {
     return RuntimeStackComponent._validated(
-      id: RuntimeComponentId(id),
-      name: RuntimeName(name),
-      role: RuntimeRole(role),
+      id: id,
+      name: name,
+      role: role,
       isRequired: isRequired,
-      paths: List.unmodifiable(paths.map(RuntimeComponentPath.new)),
-      missingPaths: List.unmodifiable(missingPaths.map(RuntimeMissingPath.new)),
-      version: version.map(RuntimeVersion.new),
+      paths: List.unmodifiable(paths),
+      missingPaths: List.unmodifiable(missingPaths),
+      version: version,
     );
   }
 
@@ -336,13 +332,13 @@ abstract class RuntimeSourceManifest with _$RuntimeSourceManifest {
   const RuntimeSourceManifest._();
 
   factory RuntimeSourceManifest({
-    required String runtimeId,
-    required String stackId,
+    required RuntimeId runtimeId,
+    required RuntimeStackId stackId,
     required Iterable<RuntimeSourceComponent> components,
   }) {
     return RuntimeSourceManifest._validated(
-      runtimeId: RuntimeId(runtimeId),
-      stackId: RuntimeStackId(stackId),
+      runtimeId: runtimeId,
+      stackId: stackId,
       components: List.unmodifiable(components),
     );
   }
@@ -353,11 +349,8 @@ abstract class RuntimeSourceManifest with _$RuntimeSourceManifest {
     required List<RuntimeSourceComponent> components,
   }) = _RuntimeSourceManifest;
 
-  Option<RuntimeSourceComponent> componentById(String id) {
-    return firstWhereOption(
-      components,
-      (component) => component.id.value == id,
-    );
+  Option<RuntimeSourceComponent> componentById(RuntimeSourceComponentId id) {
+    return firstWhereOption(components, (component) => component.id == id);
   }
 }
 
@@ -370,16 +363,16 @@ abstract class RuntimeSourceComponent with _$RuntimeSourceComponent {
   const RuntimeSourceComponent._();
 
   factory RuntimeSourceComponent({
-    required String id,
-    required String version,
-    required String archiveUrl,
-    required String sha256,
+    required RuntimeSourceComponentId id,
+    required RuntimeSourceComponentVersion version,
+    required RuntimeArchiveUrl archiveUrl,
+    required RuntimeArchiveChecksumValue sha256,
   }) {
     return RuntimeSourceComponent._validated(
-      id: RuntimeSourceComponentId(id),
-      version: RuntimeSourceComponentVersion(version),
-      archiveUrl: RuntimeArchiveUrl(archiveUrl),
-      sha256: RuntimeArchiveChecksumValue(sha256),
+      id: id,
+      version: version,
+      archiveUrl: archiveUrl,
+      sha256: sha256,
     );
   }
 

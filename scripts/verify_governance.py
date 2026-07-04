@@ -544,6 +544,327 @@ def require_runtime_platform_definition_type_fronts() -> None:
             )
 
 
+def require_runtime_model_type_fronts() -> None:
+    models_path = "packages/konyak_cli/lib/src/domain/runtime/runtime_models.dart"
+    models = read_text(models_path)
+
+    def class_section(class_name: str) -> str:
+        match = re.search(
+            rf"abstract class {class_name}\b[\s\S]*?(?=\n@Freezed|\nabstract class |\nsealed class |\nenum |\Z)",
+            models,
+        )
+        if match is None:
+            raise AssertionError(f"{models_path} must contain {class_name}")
+        return match.group(0)
+
+    runtime_definition = class_section("RuntimeDefinition")
+    runtime_record = class_section("RuntimeRecord")
+    runtime_stack = class_section("RuntimeStack")
+    runtime_stack_backend = class_section("RuntimeStackBackend")
+    runtime_stack_component = class_section("RuntimeStackComponent")
+    runtime_source_manifest = class_section("RuntimeSourceManifest")
+    runtime_source_component = class_section("RuntimeSourceComponent")
+
+    for expected in [
+        "required RuntimeId id,",
+        "required RuntimeName name,",
+        "required RuntimePlatformName platform,",
+        "required RuntimeArchitecture architecture,",
+        "required RunnerKind runnerKind,",
+        "Option<RuntimeDistributionKind> distributionKind",
+        "Option<RuntimeArchiveUrl> archiveUrl",
+        "Option<RuntimeVersionUrl> versionUrl",
+    ]:
+        if expected not in runtime_definition:
+            raise AssertionError(
+                "RuntimeDefinition must expose typed constructor fronts: "
+                f"{expected}"
+            )
+
+    for forbidden in [
+        "required String id",
+        "required String name",
+        "required String platform",
+        "required String architecture",
+        "required String runnerKind",
+        "Option<String> distributionKind",
+        "Option<String> archiveUrl",
+        "Option<String> versionUrl",
+    ]:
+        if forbidden in runtime_definition:
+            raise AssertionError(
+                "RuntimeDefinition must not expose primitive constructor "
+                f"fronts: {forbidden}"
+            )
+
+    for expected in [
+        "required RuntimeId id,",
+        "required RuntimeName name,",
+        "required RuntimePlatformName platform,",
+        "required RuntimeArchitecture architecture,",
+        "required RunnerKind runnerKind,",
+        "Option<RuntimeDistributionKind> distributionKind",
+        "Option<RuntimeComponentPath> applicationSupportPath",
+        "Option<RuntimeComponentPath> libraryPath",
+        "Option<RuntimeComponentPath> executablePath",
+        "Option<RuntimeArchiveUrl> archiveUrl",
+        "Option<RuntimeVersionUrl> versionUrl",
+    ]:
+        if expected not in runtime_record:
+            raise AssertionError(
+                "RuntimeRecord must expose typed constructor fronts: "
+                f"{expected}"
+            )
+
+    for forbidden in [
+        "required String id",
+        "required String name",
+        "required String platform",
+        "required String architecture",
+        "required String runnerKind",
+        "Option<String> distributionKind",
+        "Option<String> applicationSupportPath",
+        "Option<String> libraryPath",
+        "Option<String> executablePath",
+        "Option<String> archiveUrl",
+        "Option<String> versionUrl",
+    ]:
+        if forbidden in runtime_record:
+            raise AssertionError(
+                "RuntimeRecord must not expose primitive constructor fronts: "
+                f"{forbidden}"
+            )
+
+    for expected in [
+        "required RuntimeStackId id,",
+        "required RuntimeStackName name,",
+        "required RuntimeCompatibilityTarget compatibilityTarget,",
+    ]:
+        if expected not in runtime_stack:
+            raise AssertionError(
+                "RuntimeStack must expose typed constructor fronts: "
+                f"{expected}"
+            )
+
+    for forbidden in [
+        "required String id",
+        "required String name",
+        "required String compatibilityTarget",
+    ]:
+        if forbidden in runtime_stack:
+            raise AssertionError(
+                "RuntimeStack must not expose primitive constructor fronts: "
+                f"{forbidden}"
+            )
+
+    for expected in [
+        "required RuntimeBackendId id,",
+        "required RuntimeName name,",
+        "required RuntimeRole role,",
+        "required Iterable<RuntimeComponentId> componentIds,",
+        "required Iterable<RuntimeComponentId> missingComponentIds,",
+        "required Iterable<RuntimeMissingPath> missingPaths,",
+    ]:
+        if expected not in runtime_stack_backend:
+            raise AssertionError(
+                "RuntimeStackBackend must expose typed constructor fronts: "
+                f"{expected}"
+            )
+
+    for forbidden in [
+        "required String id",
+        "required String name",
+        "required String role",
+        "required Iterable<String> componentIds",
+        "required Iterable<String> missingComponentIds",
+        "required Iterable<String> missingPaths",
+    ]:
+        if forbidden in runtime_stack_backend:
+            raise AssertionError(
+                "RuntimeStackBackend must not expose primitive constructor "
+                f"fronts: {forbidden}"
+            )
+
+    for expected in [
+        "required RuntimeComponentId id,",
+        "required RuntimeName name,",
+        "required RuntimeRole role,",
+        "required Iterable<RuntimeComponentPath> paths,",
+        "required Iterable<RuntimeMissingPath> missingPaths,",
+        "Option<RuntimeVersion> version",
+    ]:
+        if expected not in runtime_stack_component:
+            raise AssertionError(
+                "RuntimeStackComponent must expose typed constructor fronts: "
+                f"{expected}"
+            )
+
+    for forbidden in [
+        "required String id",
+        "required String name",
+        "required String role",
+        "required Iterable<String> paths",
+        "required Iterable<String> missingPaths",
+        "Option<String> version",
+    ]:
+        if forbidden in runtime_stack_component:
+            raise AssertionError(
+                "RuntimeStackComponent must not expose primitive constructor "
+                f"fronts: {forbidden}"
+            )
+
+    for expected in [
+        "required RuntimeId runtimeId,",
+        "required RuntimeStackId stackId,",
+        "componentById(RuntimeSourceComponentId id)",
+    ]:
+        if expected not in runtime_source_manifest:
+            raise AssertionError(
+                "RuntimeSourceManifest must expose typed fronts and lookup: "
+                f"{expected}"
+            )
+
+    for forbidden in [
+        "required String runtimeId",
+        "required String stackId",
+        "componentById(String id)",
+    ]:
+        if forbidden in runtime_source_manifest:
+            raise AssertionError(
+                "RuntimeSourceManifest must not expose primitive fronts or "
+                f"lookup: {forbidden}"
+            )
+
+    for expected in [
+        "required RuntimeSourceComponentId id,",
+        "required RuntimeSourceComponentVersion version,",
+        "required RuntimeArchiveUrl archiveUrl,",
+        "required RuntimeArchiveChecksumValue sha256,",
+    ]:
+        if expected not in runtime_source_component:
+            raise AssertionError(
+                "RuntimeSourceComponent must expose typed constructor fronts: "
+                f"{expected}"
+            )
+
+    for forbidden in [
+        "required String id",
+        "required String version",
+        "required String archiveUrl",
+        "required String sha256",
+    ]:
+        if forbidden in runtime_source_component:
+            raise AssertionError(
+                "RuntimeSourceComponent must not expose primitive constructor "
+                f"fronts: {forbidden}"
+            )
+
+    records_path = "packages/konyak_cli/lib/src/io/runtime_platform_records.dart"
+    records = read_text(records_path)
+    for expected in [
+        "id: platformSpec.runtimeId,",
+        "name: platformSpec.runtimeName,",
+        "platform: platformSpec.platform,",
+        "architecture: platformSpec.architecture,",
+        "runnerKind: platformSpec.runnerKind,",
+        "distributionKind: Option.of(",
+        "RuntimeDistributionKind(",
+        "versionUrl: versionUrl.map(RuntimeVersionUrl.new),",
+        "id: platformSpec.stackId,",
+        "name: platformSpec.stackName,",
+        "compatibilityTarget: RuntimeCompatibilityTarget(platformSpec.stackId.value),",
+        "id: definition.id,",
+        "role: definition.role,",
+        "componentIds: definition.componentIds,",
+        "paths: paths.map(RuntimeComponentPath.new),",
+        "missingPaths: missingPaths.map(RuntimeMissingPath.new),",
+    ]:
+        if expected not in records:
+            raise AssertionError(
+                "runtime platform records must construct runtime models with "
+                f"typed fronts: {expected}"
+            )
+
+    for forbidden in [
+        "id: platformSpec.runtimeId.value",
+        "name: platformSpec.runtimeName.value",
+        "platform: platformSpec.platform.value",
+        "architecture: platformSpec.architecture.value",
+        "runnerKind: platformSpec.runnerKind.value",
+        "id: platformSpec.stackId.value",
+        "name: platformSpec.stackName.value",
+        "id: definition.id.value",
+        "name: definition.name.value",
+        "role: definition.role.value",
+        "componentIds: definition.componentIds.map((id) => id.value)",
+        "missingPaths.addAll(component.missingPaths.map((path) => path.value))",
+        "paths: paths,",
+    ]:
+        if forbidden in records:
+            raise AssertionError(
+                "runtime platform records must not unwrap typed values before "
+                f"runtime model construction: {forbidden}"
+            )
+
+    manifest_support_path = (
+        "packages/konyak_cli/lib/src/io/runtime_source_manifest_support.dart"
+    )
+    manifest_support = read_text(manifest_support_path)
+    for expected in [
+        "runtimeId: RuntimeId(runtimeId),",
+        "stackId: RuntimeStackId(stackId),",
+        "id: RuntimeSourceComponentId(id),",
+        "version: RuntimeSourceComponentVersion(version),",
+        "archiveUrl: RuntimeArchiveUrl(archiveUrl),",
+        "sha256: RuntimeArchiveChecksumValue(sha256),",
+    ]:
+        if expected not in manifest_support:
+            raise AssertionError(
+                "runtime source manifest parsing must validate primitive "
+                f"schema values into typed domain state: {expected}"
+            )
+
+    for forbidden in [
+        "runtimeId: runtimeId,",
+        "stackId: stackId,",
+        "id: id,",
+        "version: version,",
+        "archiveUrl: archiveUrl,",
+        "sha256: sha256,",
+    ]:
+        if forbidden in manifest_support:
+            raise AssertionError(
+                "runtime source manifest parsing must not pass primitive "
+                f"schema values into domain models: {forbidden}"
+            )
+
+    archive_planning_path = (
+        "packages/konyak_cli/lib/src/domain/runtime/runtime_source_archive_planning.dart"
+    )
+    require_contains(
+        archive_planning_path,
+        "manifest.componentById(\n    RuntimeSourceComponentId('wine'),\n  )",
+    )
+
+    require_contains(
+        "packages/konyak_cli/test/runtime_model_type_fronts_test.dart",
+        "runtime definition constructor accepts typed domain values",
+    )
+    require_contains(
+        "packages/konyak_cli/test/runtime_model_type_fronts_test.dart",
+        "source manifest parser remains the primitive adapter boundary",
+    )
+    helpers_path = "packages/konyak_cli/test/support/cli_contract_full_helpers.dart"
+    for expected in [
+        "RuntimeDefinition runtimeDefinitionFixture({",
+        "RuntimeRecord runtimeRecordFixture({",
+        "RuntimeStack runtimeStackFixture({",
+        "RuntimeStackBackend runtimeStackBackendFixture({",
+        "RuntimeStackComponent runtimeStackComponentFixture({",
+    ]:
+        require_contains(helpers_path, expected)
+
+
 def require_typed_program_run_planner_boundary() -> None:
     planner_path = "packages/konyak_cli/lib/src/domain/program/program_runner.dart"
     planner = read_text(planner_path)
@@ -2936,11 +3257,11 @@ def require_refactoring_documentation_cleanup() -> None:
         require_not_contains("docs/progress.md", stale_branch)
     require_contains(
         "docs/progress.md",
-        "I3-P3 Runtime Platform Definition Type Fronts",
+        "I3-P4 Runtime Model and Source Manifest Type Fronts",
     )
     require_contains(
         "docs/progress.md",
-        "task/type-safety-i3-runtime-platform-definitions",
+        "task/type-safety-i3-runtime-model-fronts",
     )
 
     for relative_path in [
@@ -4565,6 +4886,7 @@ def main() -> None:
     require_typed_program_run_request_boundary()
     require_runner_kind_catalog_boundary()
     require_runtime_platform_definition_type_fronts()
+    require_runtime_model_type_fronts()
     require_typed_program_run_planner_boundary()
     require_typed_bottle_command_planner_boundary()
     require_typed_winetricks_verb_planner_boundary()

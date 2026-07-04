@@ -4,6 +4,7 @@ import 'package:fpdart/fpdart.dart';
 
 import '../domain/runtime/runtime_models.dart';
 import '../domain/runtime/runtime_validation_support.dart';
+import '../domain/shared/domain_value_objects.dart';
 import '../shared/model_constants.dart';
 
 Option<RuntimeSourceManifest> runtimeStackSourceManifestFromPayload(
@@ -48,8 +49,8 @@ Option<RuntimeSourceManifest> runtimeStackSourceManifestFromPayload(
 
   return Option.of(
     RuntimeSourceManifest(
-      runtimeId: runtimeId,
-      stackId: stackId,
+      runtimeId: RuntimeId(runtimeId),
+      stackId: RuntimeStackId(stackId),
       components: parsedComponents,
     ),
   );
@@ -78,10 +79,10 @@ Option<RuntimeSourceComponent> runtimeStackSourceComponent(Object? value) {
 
   return Option.of(
     RuntimeSourceComponent(
-      id: id,
-      version: version,
-      archiveUrl: archiveUrl,
-      sha256: sha256,
+      id: RuntimeSourceComponentId(id),
+      version: RuntimeSourceComponentVersion(version),
+      archiveUrl: RuntimeArchiveUrl(archiveUrl),
+      sha256: RuntimeArchiveChecksumValue(sha256),
     ),
   );
 }

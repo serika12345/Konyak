@@ -41,7 +41,7 @@ void main() {
   test('install-macos-wine --json installs from a configured manifest source', () {
     final installer = RecordingMacosWineInstaller(
       result: MacosWineInstallCompleted(
-        runtime: RuntimeRecord(
+        runtime: runtimeRecordFixture(
           id: 'konyak-macos-wine',
           name: 'Konyak macOS Wine',
           platform: 'macos',
@@ -1667,7 +1667,7 @@ void main() {
   test('install-macos-wine rejects legacy archive install options', () {
     final installer = RecordingMacosWineInstaller(
       result: MacosWineInstallCompleted(
-        runtime: RuntimeRecord(
+        runtime: runtimeRecordFixture(
           id: 'konyak-macos-wine',
           name: 'Konyak macOS Wine',
           platform: 'macos',
@@ -2041,7 +2041,7 @@ void main() {
   test('install-macos-wine --source-manifest passes the source manifest', () {
     final installer = RecordingMacosWineInstaller(
       result: MacosWineInstallCompleted(
-        runtime: RuntimeRecord(
+        runtime: runtimeRecordFixture(
           id: 'konyak-macos-wine',
           name: 'Konyak macOS Wine',
           platform: 'macos',
@@ -2071,7 +2071,7 @@ void main() {
   test('install-macos-wine --reinstall forces a full install', () {
     final installer = RecordingMacosWineInstaller(
       result: MacosWineInstallCompleted(
-        runtime: RuntimeRecord(
+        runtime: runtimeRecordFixture(
           id: 'konyak-macos-wine',
           name: 'Konyak macOS Wine',
           platform: 'macos',
@@ -2102,7 +2102,7 @@ void main() {
     final progressOutput = StringBuffer();
     final installer = RecordingMacosWineInstaller(
       result: MacosWineInstallCompleted(
-        runtime: RuntimeRecord(
+        runtime: runtimeRecordFixture(
           id: 'konyak-macos-wine',
           name: 'Konyak macOS Wine',
           platform: 'macos',
@@ -2195,7 +2195,7 @@ void main() {
   test('install-linux-wine rejects legacy archive install options', () {
     final installer = RecordingLinuxWineInstaller(
       result: LinuxWineInstallCompleted(
-        runtime: RuntimeRecord(
+        runtime: runtimeRecordFixture(
           id: 'konyak-linux-wine',
           name: 'Konyak Linux Wine',
           platform: 'linux',
@@ -2225,7 +2225,7 @@ void main() {
   test('install-linux-wine --source-manifest passes the source manifest', () {
     final installer = RecordingLinuxWineInstaller(
       result: LinuxWineInstallCompleted(
-        runtime: RuntimeRecord(
+        runtime: runtimeRecordFixture(
           id: 'konyak-linux-wine',
           name: 'Konyak Linux Wine',
           platform: 'linux',
@@ -2254,7 +2254,7 @@ void main() {
   test('install-linux-wine --reinstall forces a full install', () {
     final installer = RecordingLinuxWineInstaller(
       result: LinuxWineInstallCompleted(
-        runtime: RuntimeRecord(
+        runtime: runtimeRecordFixture(
           id: 'konyak-linux-wine',
           name: 'Konyak Linux Wine',
           platform: 'linux',
@@ -2285,7 +2285,7 @@ void main() {
     final progressOutput = StringBuffer();
     final installer = RecordingLinuxWineInstaller(
       result: LinuxWineInstallCompleted(
-        runtime: RuntimeRecord(
+        runtime: runtimeRecordFixture(
           id: 'konyak-linux-wine',
           name: 'Konyak Linux Wine',
           platform: 'linux',

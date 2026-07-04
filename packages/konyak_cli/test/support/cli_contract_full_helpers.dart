@@ -613,6 +613,124 @@ BottleRecord expectFound(IoResult<Option<BottleRecord>> result) {
   );
 }
 
+RuntimeDefinition runtimeDefinitionFixture({
+  required String id,
+  required String name,
+  required String platform,
+  required String architecture,
+  required String runnerKind,
+  required bool isBundled,
+  required bool isUpdateable,
+  Option<String> distributionKind = const Option.none(),
+  Option<String> archiveUrl = const Option.none(),
+  Option<String> versionUrl = const Option.none(),
+}) {
+  return RuntimeDefinition(
+    id: RuntimeId(id),
+    name: RuntimeName(name),
+    platform: RuntimePlatformName(platform),
+    architecture: RuntimeArchitecture(architecture),
+    runnerKind: RunnerKind(runnerKind),
+    isBundled: isBundled,
+    isUpdateable: isUpdateable,
+    distributionKind: distributionKind.map(RuntimeDistributionKind.new),
+    archiveUrl: archiveUrl.map(RuntimeArchiveUrl.new),
+    versionUrl: versionUrl.map(RuntimeVersionUrl.new),
+  );
+}
+
+RuntimeRecord runtimeRecordFixture({
+  required String id,
+  required String name,
+  required String platform,
+  required String architecture,
+  required String runnerKind,
+  required bool isBundled,
+  required bool isUpdateable,
+  Option<String> distributionKind = const Option.none(),
+  Option<bool> isInstalled = const Option.none(),
+  Option<String> applicationSupportPath = const Option.none(),
+  Option<String> libraryPath = const Option.none(),
+  Option<String> executablePath = const Option.none(),
+  Option<String> archiveUrl = const Option.none(),
+  Option<String> versionUrl = const Option.none(),
+  Option<RuntimeStack> stack = const Option.none(),
+}) {
+  return RuntimeRecord(
+    id: RuntimeId(id),
+    name: RuntimeName(name),
+    platform: RuntimePlatformName(platform),
+    architecture: RuntimeArchitecture(architecture),
+    runnerKind: RunnerKind(runnerKind),
+    isBundled: isBundled,
+    isUpdateable: isUpdateable,
+    distributionKind: distributionKind.map(RuntimeDistributionKind.new),
+    isInstalled: isInstalled,
+    applicationSupportPath: applicationSupportPath.map(
+      RuntimeComponentPath.new,
+    ),
+    libraryPath: libraryPath.map(RuntimeComponentPath.new),
+    executablePath: executablePath.map(RuntimeComponentPath.new),
+    archiveUrl: archiveUrl.map(RuntimeArchiveUrl.new),
+    versionUrl: versionUrl.map(RuntimeVersionUrl.new),
+    stack: stack,
+  );
+}
+
+RuntimeStack runtimeStackFixture({
+  required String id,
+  required String name,
+  required String compatibilityTarget,
+  required Iterable<RuntimeStackComponent> components,
+  Iterable<RuntimeStackBackend> backends = const <RuntimeStackBackend>[],
+}) {
+  return RuntimeStack(
+    id: RuntimeStackId(id),
+    name: RuntimeStackName(name),
+    compatibilityTarget: RuntimeCompatibilityTarget(compatibilityTarget),
+    components: components,
+    backends: backends,
+  );
+}
+
+RuntimeStackBackend runtimeStackBackendFixture({
+  required String id,
+  required String name,
+  required String role,
+  required Iterable<String> componentIds,
+  required Iterable<String> missingComponentIds,
+  required Iterable<String> missingPaths,
+}) {
+  return RuntimeStackBackend(
+    id: RuntimeBackendId(id),
+    name: RuntimeName(name),
+    role: RuntimeRole(role),
+    componentIds: componentIds.map(RuntimeComponentId.new),
+    missingComponentIds: missingComponentIds.map(RuntimeComponentId.new),
+    missingPaths: missingPaths.map(RuntimeMissingPath.new),
+  );
+}
+
+RuntimeStackComponent runtimeStackComponentFixture({
+  required String id,
+  required String name,
+  required String role,
+  required bool isRequired,
+  required Iterable<String> paths,
+  required Iterable<String> missingPaths,
+  Option<String> version = const Option.none(),
+}) {
+  return RuntimeStackComponent(
+    id: RuntimeComponentId(id),
+    name: RuntimeName(name),
+    role: RuntimeRole(role),
+    isRequired: isRequired,
+    paths: paths.map(RuntimeComponentPath.new),
+    missingPaths: missingPaths.map(RuntimeMissingPath.new),
+    version: version.map(RuntimeVersion.new),
+  );
+}
+
 void expectMissing(IoResult<Option<BottleRecord>> result) {
   expectIo(result).match(
     () {},

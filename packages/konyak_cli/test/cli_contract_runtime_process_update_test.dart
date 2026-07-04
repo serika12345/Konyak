@@ -15,7 +15,7 @@ void main() {
     final result = runCli(
       const ['list-runtimes', '--json'],
       runtimeCatalog: StaticRuntimeCatalog([
-        RuntimeRecord(
+        runtimeRecordFixture(
           id: 'wine-stable-linux-x86_64',
           name: 'Wine Stable',
           platform: 'linux',
@@ -49,7 +49,7 @@ void main() {
 
   test('runtime records compose definition state and capabilities', () {
     final runtime = RuntimeRecord.fromParts(
-      definition: RuntimeDefinition(
+      definition: runtimeDefinitionFixture(
         id: 'konyak-linux-wine',
         name: 'Konyak Linux Wine',
         platform: 'linux',
@@ -72,12 +72,12 @@ void main() {
       ),
       capabilities: RuntimeCapabilities(
         stack: Option.of(
-          RuntimeStack(
+          runtimeStackFixture(
             id: 'linux-wine-runtime-stack',
             name: 'Linux Wine/Proton runtime stack',
             compatibilityTarget: 'linux-wine-runtime-stack',
             backends: [
-              RuntimeStackBackend(
+              runtimeStackBackendFixture(
                 id: 'dxvk',
                 name: 'DXVK',
                 role: 'd3d9-d3d11-vulkan-translation',
@@ -87,7 +87,7 @@ void main() {
               ),
             ],
             components: [
-              RuntimeStackComponent(
+              runtimeStackComponentFixture(
                 id: 'wine',
                 name: 'Wine',
                 role: 'windows-runner',
@@ -3158,7 +3158,7 @@ void main() {
       );
       final installer = RecordingMacosWineInstaller(
         result: MacosWineInstallCompleted(
-          runtime: RuntimeRecord(
+          runtime: runtimeRecordFixture(
             id: 'konyak-macos-wine',
             name: 'Konyak macOS Wine',
             platform: 'macos',
@@ -3219,7 +3219,7 @@ void main() {
     );
     final installer = RecordingMacosWineInstaller(
       result: MacosWineInstallCompleted(
-        runtime: RuntimeRecord(
+        runtime: runtimeRecordFixture(
           id: 'konyak-macos-wine',
           name: 'Konyak macOS Wine',
           platform: 'macos',
@@ -3270,7 +3270,7 @@ void main() {
       );
       final installer = RecordingLinuxWineInstaller(
         result: LinuxWineInstallCompleted(
-          runtime: RuntimeRecord(
+          runtime: runtimeRecordFixture(
             id: 'konyak-linux-wine',
             name: 'Konyak Linux Wine',
             platform: 'linux',
@@ -3334,7 +3334,7 @@ void main() {
       );
       final installer = RecordingLinuxWineInstaller(
         result: LinuxWineInstallCompleted(
-          runtime: RuntimeRecord(
+          runtime: runtimeRecordFixture(
             id: 'konyak-linux-wine',
             name: 'Konyak Linux Wine',
             platform: 'linux',
@@ -3376,7 +3376,7 @@ void main() {
     () {
       final checker = DartIoRuntimeUpdateChecker(
         runtimeCatalog: StaticRuntimeCatalog([
-          RuntimeRecord(
+          runtimeRecordFixture(
             id: 'konyak-linux-wine',
             name: 'Konyak Linux Wine',
             platform: 'linux',
@@ -3386,12 +3386,12 @@ void main() {
             isUpdateable: true,
             versionUrl: Option.of('https://example.invalid/releases/latest'),
             stack: Option.of(
-              RuntimeStack(
+              runtimeStackFixture(
                 id: 'linux-wine-runtime-stack',
                 name: 'Linux Wine/Proton runtime stack',
                 compatibilityTarget: 'linux-wine-runtime-stack',
                 components: [
-                  RuntimeStackComponent(
+                  runtimeStackComponentFixture(
                     id: 'wine',
                     name: 'Wine',
                     role: 'windows-runner',
@@ -3444,7 +3444,7 @@ void main() {
     () {
       final checker = DartIoRuntimeUpdateChecker(
         runtimeCatalog: StaticRuntimeCatalog([
-          RuntimeRecord(
+          runtimeRecordFixture(
             id: 'konyak-linux-wine',
             name: 'Konyak Linux Wine',
             platform: 'linux',
@@ -3454,12 +3454,12 @@ void main() {
             isUpdateable: true,
             versionUrl: Option.of('https://example.invalid/releases/latest'),
             stack: Option.of(
-              RuntimeStack(
+              runtimeStackFixture(
                 id: 'linux-wine-runtime-stack',
                 name: 'Linux Wine/Proton runtime stack',
                 compatibilityTarget: 'linux-wine-runtime-stack',
                 components: [
-                  RuntimeStackComponent(
+                  runtimeStackComponentFixture(
                     id: 'wine',
                     name: 'Wine',
                     role: 'windows-runner',
@@ -3500,7 +3500,7 @@ void main() {
     () {
       final checker = DartIoRuntimeUpdateChecker(
         runtimeCatalog: StaticRuntimeCatalog([
-          RuntimeRecord(
+          runtimeRecordFixture(
             id: 'konyak-macos-wine',
             name: 'Konyak macOS Wine',
             platform: 'macos',
@@ -3511,12 +3511,12 @@ void main() {
             versionUrl: Option.of('https://example.invalid/releases/latest'),
             archiveUrl: Option.of('https://example.invalid/runtime.tar.xz'),
             stack: Option.of(
-              RuntimeStack(
+              runtimeStackFixture(
                 id: 'macos-konyak-runtime-stack',
                 name: 'Konyak macOS runtime stack',
                 compatibilityTarget: 'macos-konyak-runtime-stack',
                 components: [
-                  RuntimeStackComponent(
+                  runtimeStackComponentFixture(
                     id: 'wine',
                     name: 'Wine',
                     role: 'windows-runner',
@@ -3555,7 +3555,7 @@ void main() {
     () {
       final checker = DartIoRuntimeUpdateChecker(
         runtimeCatalog: StaticRuntimeCatalog([
-          RuntimeRecord(
+          runtimeRecordFixture(
             id: 'konyak-macos-wine',
             name: 'Konyak macOS Wine',
             platform: 'macos',
@@ -3566,12 +3566,12 @@ void main() {
             versionUrl: Option.of('https://example.invalid/releases/latest'),
             archiveUrl: Option.of('https://example.invalid/runtime.tar.xz'),
             stack: Option.of(
-              RuntimeStack(
+              runtimeStackFixture(
                 id: 'macos-konyak-runtime-stack',
                 name: 'Konyak macOS runtime stack',
                 compatibilityTarget: 'macos-konyak-runtime-stack',
                 components: [
-                  RuntimeStackComponent(
+                  runtimeStackComponentFixture(
                     id: 'wine',
                     name: 'Wine',
                     role: 'windows-runner',
@@ -3747,7 +3747,7 @@ void main() {
       );
       final validator = DartIoMacosWineRuntimeValidator(
         runtimeCatalog: StaticRuntimeCatalog([
-          RuntimeRecord(
+          runtimeRecordFixture(
             id: 'konyak-macos-wine',
             name: 'Konyak macOS Wine',
             platform: 'macos',
@@ -3795,7 +3795,7 @@ void main() {
     );
     final validator = DartIoMacosWineRuntimeValidator(
       runtimeCatalog: StaticRuntimeCatalog([
-        RuntimeRecord(
+        runtimeRecordFixture(
           id: 'konyak-macos-wine',
           name: 'Konyak macOS Wine',
           platform: 'macos',
@@ -3806,12 +3806,12 @@ void main() {
           libraryPath: Option.of('/runtime'),
           executablePath: Option.of('/runtime/bin/wineloader'),
           stack: Option.of(
-            RuntimeStack(
+            runtimeStackFixture(
               id: 'macos-konyak-runtime-stack',
               name: 'Konyak macOS runtime stack',
               compatibilityTarget: 'macos-konyak-runtime-stack',
               components: [
-                RuntimeStackComponent(
+                runtimeStackComponentFixture(
                   id: 'wine-gecko',
                   name: 'wine-gecko',
                   role: 'html-runtime',
@@ -3921,7 +3921,7 @@ void main() {
     );
     final validator = DartIoMacosWineRuntimeValidator(
       runtimeCatalog: StaticRuntimeCatalog([
-        RuntimeRecord(
+        runtimeRecordFixture(
           id: 'konyak-macos-wine',
           name: 'Konyak macOS Wine',
           platform: 'macos',
@@ -3932,12 +3932,12 @@ void main() {
           libraryPath: Option.of('/runtime'),
           executablePath: Option.of('/runtime/bin/wineloader'),
           stack: Option.of(
-            RuntimeStack(
+            runtimeStackFixture(
               id: 'macos-konyak-runtime-stack',
               name: 'Konyak macOS runtime stack',
               compatibilityTarget: 'macos-konyak-runtime-stack',
               components: [
-                RuntimeStackComponent(
+                runtimeStackComponentFixture(
                   id: 'wine',
                   name: 'Wine',
                   role: 'windows-runner',

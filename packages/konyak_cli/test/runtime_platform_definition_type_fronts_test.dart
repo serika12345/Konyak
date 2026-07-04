@@ -85,14 +85,16 @@ void main() {
     test('source manifest planning still accepts public manifest strings', () {
       final result = runtimeStackSourceArchivePlan(
         manifest: RuntimeSourceManifest(
-          runtimeId: linuxWineRuntimeId,
-          stackId: 'linux-wine-runtime-stack',
+          runtimeId: RuntimeId(linuxWineRuntimeId),
+          stackId: RuntimeStackId('linux-wine-runtime-stack'),
           components: [
             RuntimeSourceComponent(
-              id: 'wine',
-              version: '1.0.0',
-              archiveUrl: 'https://example.invalid/wine.tar.xz',
-              sha256: 'wine-digest',
+              id: RuntimeSourceComponentId('wine'),
+              version: RuntimeSourceComponentVersion('1.0.0'),
+              archiveUrl: RuntimeArchiveUrl(
+                'https://example.invalid/wine.tar.xz',
+              ),
+              sha256: RuntimeArchiveChecksumValue('wine-digest'),
             ),
           ],
         ),
