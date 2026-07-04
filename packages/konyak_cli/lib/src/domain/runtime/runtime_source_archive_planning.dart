@@ -149,7 +149,9 @@ RuntimeStackSourceArchivePlanResult runtimeStackSourceArchivePlan({
     );
   }
 
-  final wineComponentResult = manifest.componentById('wine');
+  final wineComponentResult = manifest.componentById(
+    RuntimeSourceComponentId('wine'),
+  );
 
   final archiveComponents = _uniqueRuntimeStackSourceArchiveComponents(
     manifest.components,

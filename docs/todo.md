@@ -618,7 +618,7 @@ Medium milestones, one PR unit each:
   ids, names, roles, architecture, runner kind, backend ids, and component ids
   into value objects where the current constructors already validate or project
   to those values.
-- [ ] I3-M4: Convert stable runtime model and source-manifest constructor
+- [x] I3-M4: Convert stable runtime model and source-manifest constructor
   fronts to typed value-object inputs where they are Konyak-owned domain
   values, while keeping JSON and manifest parsing as adapter boundaries.
 - [ ] I3-M5: Convert macOS and Linux runtime install request wrapper fronts
@@ -760,7 +760,7 @@ review gate:
 
 #### PR Gate: I3-P4 Runtime Model and Source Manifest Type Fronts
 
-status: planned
+status: completed
 branch: `task/type-safety-i3-runtime-model-fronts`
 
 Completion criteria:

@@ -922,11 +922,11 @@ void main() {
 
   test('runtime update helpers use semantic version and runtime ids', () {
     final runtime = RuntimeRecord(
-      id: 'konyak-macos-wine',
-      name: 'Konyak macOS Wine',
-      platform: 'macos',
-      architecture: 'arm64',
-      runnerKind: 'wine',
+      id: RuntimeId('konyak-macos-wine'),
+      name: RuntimeName('Konyak macOS Wine'),
+      platform: RuntimePlatformName('macos'),
+      architecture: RuntimeArchitecture('arm64'),
+      runnerKind: RunnerKind.wine,
       isBundled: false,
       isUpdateable: true,
     );
@@ -2239,12 +2239,12 @@ void main() {
 
   test('runtime stack components model absent versions with Option', () {
     final component = RuntimeStackComponent(
-      id: 'wine',
-      name: 'Wine',
-      role: 'runner',
+      id: RuntimeComponentId('wine'),
+      name: RuntimeName('Wine'),
+      role: RuntimeRole('runner'),
       isRequired: true,
-      paths: const <String>['/runtime/bin/wine'],
-      missingPaths: const <String>[],
+      paths: [RuntimeComponentPath('/runtime/bin/wine')],
+      missingPaths: const <RuntimeMissingPath>[],
     );
 
     expect(component.id, RuntimeComponentId('wine'));
@@ -2255,31 +2255,20 @@ void main() {
     expect(component.isInstalled, isTrue);
   });
 
-  test('runtime stack components reject blank present versions', () {
-    expect(
-      () => RuntimeStackComponent(
-        id: 'wine',
-        name: 'Wine',
-        role: 'runner',
-        isRequired: true,
-        paths: const <String>['/runtime/bin/wine'],
-        missingPaths: const <String>[],
-        version: Option.of(' '),
-      ),
-      throwsA(isA<ArgumentError>()),
-    );
+  test('runtime versions reject blank values before entering stack state', () {
+    expect(() => RuntimeVersion(' '), throwsA(isA<ArgumentError>()));
   });
 
   test('runtime source manifests model missing components with Option', () {
     final manifest = RuntimeSourceManifest(
-      runtimeId: 'wine',
-      stackId: 'konyak',
+      runtimeId: RuntimeId('wine'),
+      stackId: RuntimeStackId('konyak'),
       components: <RuntimeSourceComponent>[
         RuntimeSourceComponent(
-          id: 'wine',
-          version: '1.0.0',
-          archiveUrl: 'https://example.invalid/wine.tar.xz',
-          sha256: 'digest',
+          id: RuntimeSourceComponentId('wine'),
+          version: RuntimeSourceComponentVersion('1.0.0'),
+          archiveUrl: RuntimeArchiveUrl('https://example.invalid/wine.tar.xz'),
+          sha256: RuntimeArchiveChecksumValue('digest'),
         ),
       ],
     );
@@ -2287,24 +2276,27 @@ void main() {
     expect(manifest.runtimeId, RuntimeId('wine'));
     expect(manifest.stackId, RuntimeStackId('konyak'));
     expect(
-      manifest.componentById('wine').toNullable()?.id,
+      manifest.componentById(RuntimeSourceComponentId('wine')).toNullable()?.id,
       RuntimeSourceComponentId('wine'),
     );
-    expect(manifest.componentById('dxvk').isNone(), isTrue);
+    expect(
+      manifest.componentById(RuntimeSourceComponentId('dxvk')).isNone(),
+      isTrue,
+    );
   });
 
   test('runtime source archive plans report missing source components', () {
     final wineComponent = RuntimeSourceComponent(
-      id: 'wine',
-      version: '1.0.0',
-      archiveUrl: 'https://example.invalid/wine.tar.xz',
-      sha256: 'wine-digest',
+      id: RuntimeSourceComponentId('wine'),
+      version: RuntimeSourceComponentVersion('1.0.0'),
+      archiveUrl: RuntimeArchiveUrl('https://example.invalid/wine.tar.xz'),
+      sha256: RuntimeArchiveChecksumValue('wine-digest'),
     );
     final dxvkComponent = RuntimeSourceComponent(
-      id: 'dxvk',
-      version: '2.0.0',
-      archiveUrl: 'https://example.invalid/dxvk.tar.xz',
-      sha256: 'dxvk-digest',
+      id: RuntimeSourceComponentId('dxvk'),
+      version: RuntimeSourceComponentVersion('2.0.0'),
+      archiveUrl: RuntimeArchiveUrl('https://example.invalid/dxvk.tar.xz'),
+      sha256: RuntimeArchiveChecksumValue('dxvk-digest'),
     );
     final plan = RuntimeStackSourceArchivePlan(
       wineComponent: wineComponent,
@@ -2330,11 +2322,11 @@ void main() {
 
   test('runtime definitions model absent source URLs with Option', () {
     final definition = RuntimeDefinition(
-      id: 'konyak-linux-wine',
-      name: 'Konyak Linux Wine',
-      platform: 'linux',
-      architecture: 'x86_64',
-      runnerKind: 'wine',
+      id: RuntimeId('konyak-linux-wine'),
+      name: RuntimeName('Konyak Linux Wine'),
+      platform: RuntimePlatformName('linux'),
+      architecture: RuntimeArchitecture('x86_64'),
+      runnerKind: RunnerKind.wine,
       isBundled: false,
       isUpdateable: true,
     );
@@ -2349,21 +2341,12 @@ void main() {
     expect(definition.versionUrl.isNone(), isTrue);
   });
 
-  test('runtime definitions reject blank present source URLs', () {
-    expect(
-      () => RuntimeDefinition(
-        id: 'konyak-linux-wine',
-        name: 'Konyak Linux Wine',
-        platform: 'linux',
-        architecture: 'x86_64',
-        runnerKind: 'wine',
-        isBundled: false,
-        isUpdateable: true,
-        archiveUrl: Option.of(' '),
-      ),
-      throwsA(isA<ArgumentError>()),
-    );
-  });
+  test(
+    'runtime archive URLs reject blank values before entering definitions',
+    () {
+      expect(() => RuntimeArchiveUrl(' '), throwsA(isA<ArgumentError>()));
+    },
+  );
 
   test('installed runtime states model absent layout paths with Option', () {
     final state = InstalledRuntimeState(isInstalled: Option.of(false));
@@ -2388,11 +2371,11 @@ void main() {
 
   test('runtime records model absent state with Option', () {
     final runtime = RuntimeRecord(
-      id: 'wine',
-      name: 'Wine',
-      platform: 'linux',
-      architecture: 'x86_64',
-      runnerKind: 'wine',
+      id: RuntimeId('wine'),
+      name: RuntimeName('Wine'),
+      platform: RuntimePlatformName('linux'),
+      architecture: RuntimeArchitecture('x86_64'),
+      runnerKind: RunnerKind.wine,
       isBundled: false,
       isUpdateable: true,
     );
@@ -2411,21 +2394,12 @@ void main() {
     expect(runtime.stack.isNone(), isTrue);
   });
 
-  test('runtime records reject blank present state fields', () {
-    expect(
-      () => RuntimeRecord(
-        id: 'wine',
-        name: 'Wine',
-        platform: 'linux',
-        architecture: 'x86_64',
-        runnerKind: 'wine',
-        isBundled: false,
-        isUpdateable: true,
-        executablePath: Option.of(' '),
-      ),
-      throwsA(isA<ArgumentError>()),
-    );
-  });
+  test(
+    'runtime component paths reject blank values before entering records',
+    () {
+      expect(() => RuntimeComponentPath(' '), throwsA(isA<ArgumentError>()));
+    },
+  );
 
   test('static catalogs expose immutable snapshots', () {
     final bottles = <BottleRecord>[
@@ -2451,11 +2425,11 @@ void main() {
 
     final runtimes = <RuntimeRecord>[
       RuntimeRecord(
-        id: 'wine',
-        name: 'Wine',
-        platform: 'linux',
-        architecture: 'x86_64',
-        runnerKind: 'wine',
+        id: RuntimeId('wine'),
+        name: RuntimeName('Wine'),
+        platform: RuntimePlatformName('linux'),
+        architecture: RuntimeArchitecture('x86_64'),
+        runnerKind: RunnerKind.wine,
         isBundled: false,
         isUpdateable: true,
       ),
