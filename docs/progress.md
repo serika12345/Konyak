@@ -13,15 +13,15 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-04 23:01 JST
+- Timestamp: 2026-07-04 23:05 JST
 - State: `completed`
 - Branch: `task/type-safety-i3-runtime-install-requests`
 - Active work: I3-P5 Runtime Install Request Type Fronts.
 - Related TODO: `docs/todo.md` `I3: Mechanical Type-Safety Hardening`,
   completed `I3-P5 Runtime Install Request Type Fronts`; next planned gate is
   I3-P6 macOS Version Capability Type Front.
-- Pull request: not opened yet.
-- Latest implementation commit: pending.
+- Pull request: https://github.com/serika12345/Konyak/pull/28
+- Latest implementation commit: `caf1028` (`Type runtime install request constructors`).
 - Purpose: remove nullable string and primitive component-archive constructor
   fronts from Konyak-owned macOS/Linux runtime install request wrappers while
   preserving CLI parser strings, update metadata strings, public request
@@ -38,10 +38,10 @@ unfinished work.
   added `packages/konyak_cli/test/runtime_install_request_type_fronts_test.dart`;
   updated CLI contract test fixtures and governance so the converted install
   request fronts cannot regress to primitive constructor inputs.
-- Remaining work: commit, push, open the I3-P5 draft PR, and review it before
-  starting I3-P6.
-- Next action: run the I3-P5 verification set, then push
-  `task/type-safety-i3-runtime-install-requests` and open a draft PR.
+- Remaining work: review draft PR #28 before starting I3-P6.
+- Next action: after the I3-P5 PR is reviewed and merged, run `/advance-pr` to
+  start I3-P6 macOS Version Capability Type Front on
+  `task/type-safety-i3-macos-version-capability`.
 - Verification: I3-P5 implementation verification passed through the Nix dev
   shell with `dart test test/runtime_install_request_type_fronts_test.dart`,
   `just cli-test`, `just verify-governance`, `just verify-safety`,
