@@ -39,7 +39,7 @@ class ProgramRunPlanner {
 
   final KonyakHostPlatform hostPlatform;
   final HostEnvironment environment;
-  final Option<int> macosMajorVersion;
+  final Option<MacosMajorVersion> macosMajorVersion;
 
   RegistryPlanningPolicy get _registryPlanningPolicy {
     return switch (hostPlatform) {
@@ -346,8 +346,10 @@ class ProgramRunPlanner {
   }
 }
 
-Option<int> macosMajorVersionFromOperatingSystemVersion(String value) {
-  return _firstDigitToken(value).flatMap(_integerFromDigits);
+Option<MacosMajorVersion> macosMajorVersionFromOperatingSystemVersion(
+  String value,
+) {
+  return _firstDigitToken(value).flatMap(_macosMajorVersionFromDigits);
 }
 
 Option<String> _firstDigitToken(String value) {
@@ -382,10 +384,12 @@ bool _isAsciiDigit(int codeUnit) {
   return codeUnit >= 0x30 && codeUnit <= 0x39;
 }
 
-Option<int> _integerFromDigits(String value) {
+Option<MacosMajorVersion> _macosMajorVersionFromDigits(String value) {
   try {
-    return Option.of(int.parse(value));
+    return Option.of(MacosMajorVersion(int.parse(value)));
   } on FormatException {
+    return const Option.none();
+  } on ArgumentError {
     return const Option.none();
   }
 }

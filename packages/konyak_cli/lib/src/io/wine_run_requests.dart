@@ -254,7 +254,7 @@ ProgramRunRequest macosWineCommandRequest({
   required BottleRecord bottle,
   required String command,
   required HostEnvironment environment,
-  required Option<int> macosMajorVersion,
+  required Option<MacosMajorVersion> macosMajorVersion,
 }) {
   final hostEnvironment = environment;
   final bottleCommand = BottleCommand(command);
@@ -282,7 +282,7 @@ ProgramRunRequest macosRegistryUpdateRequest({
   required BottleRecord bottle,
   required RegistryValueUpdate update,
   required HostEnvironment environment,
-  required Option<int> macosMajorVersion,
+  required Option<MacosMajorVersion> macosMajorVersion,
 }) {
   final hostEnvironment = environment;
   return ProgramRunRequest(
@@ -309,7 +309,7 @@ ProgramRunRequest macosRegistryQueryRequest({
   required BottleRecord bottle,
   required RegistryValueQuery query,
   required HostEnvironment environment,
-  required Option<int> macosMajorVersion,
+  required Option<MacosMajorVersion> macosMajorVersion,
 }) {
   final hostEnvironment = environment;
   return ProgramRunRequest(
@@ -364,7 +364,7 @@ ProgramRunRequest linuxTerminalCommandRequest({
 ProgramRunRequest macosTerminalCommandRequest({
   required BottleRecord bottle,
   required HostEnvironment environment,
-  required Option<int> macosMajorVersion,
+  required Option<MacosMajorVersion> macosMajorVersion,
   Option<BottleCommand> initialWineCommand = const Option.none(),
 }) {
   final shellCommand = macosWineTerminalShellCommand(
@@ -422,7 +422,7 @@ ProgramRunRequest linuxWinetricksCommandRequest({
 ProgramRunRequest macosWinetricksCommandRequest({
   required BottleRecord bottle,
   required HostEnvironment environment,
-  required Option<int> macosMajorVersion,
+  required Option<MacosMajorVersion> macosMajorVersion,
   required Option<String> verb,
 }) {
   final hostEnvironment = environment;

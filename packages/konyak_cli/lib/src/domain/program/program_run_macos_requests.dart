@@ -23,7 +23,7 @@ ProgramRunRequest macosWineRequest({
   required BottleRecord bottle,
   required ProgramPath programPath,
   required HostEnvironment environment,
-  required Option<int> macosMajorVersion,
+  required Option<MacosMajorVersion> macosMajorVersion,
   required ProgramSettingsRecord programSettings,
 }) {
   final hostEnvironment = environment;
@@ -59,7 +59,7 @@ ProgramRunRequest macosWineRequest({
 ProgramRunRequest macosWinebootRequest({
   required BottleRecord bottle,
   required HostEnvironment environment,
-  required Option<int> macosMajorVersion,
+  required Option<MacosMajorVersion> macosMajorVersion,
 }) {
   final hostEnvironment = environment;
   return ProgramRunRequest(
@@ -85,7 +85,7 @@ ProgramRunRequest macosWinebootRequest({
 ProgramRunRequest macosWinebootRestartRequest({
   required BottleRecord bottle,
   required HostEnvironment environment,
-  required Option<int> macosMajorVersion,
+  required Option<MacosMajorVersion> macosMajorVersion,
 }) {
   final hostEnvironment = environment;
   return ProgramRunRequest(
@@ -111,7 +111,7 @@ ProgramRunRequest macosWinebootRestartRequest({
 ProgramRunRequest macosWineMonoInstallRequest({
   required BottleRecord bottle,
   required HostEnvironment environment,
-  required Option<int> macosMajorVersion,
+  required Option<MacosMajorVersion> macosMajorVersion,
 }) {
   final hostEnvironment = environment;
   final runtimeRoot = macosWineRuntimeRoot(hostEnvironment);
@@ -147,7 +147,7 @@ ProgramRunRequest macosWineMonoInstallRequest({
 ProgramRunRequest macosWineserverKillRequest({
   required BottleRecord bottle,
   required HostEnvironment environment,
-  required Option<int> macosMajorVersion,
+  required Option<MacosMajorVersion> macosMajorVersion,
 }) {
   final hostEnvironment = environment;
   return ProgramRunRequest(
@@ -173,7 +173,7 @@ ProgramRunRequest macosWineserverKillRequest({
 ProgramRunRequest macosWinedbgRequest({
   required BottleRecord bottle,
   required HostEnvironment environment,
-  required Option<int> macosMajorVersion,
+  required Option<MacosMajorVersion> macosMajorVersion,
   required WinedbgCommandPlan winedbgCommand,
 }) {
   final hostEnvironment = environment;
@@ -208,7 +208,7 @@ ProgramRunRequest macosWinedbgRequest({
 ProgramRunEnvironment macosWineEnvironmentForRequests({
   required BottleRecord bottle,
   required HostEnvironment environment,
-  required Option<int> macosMajorVersion,
+  required Option<MacosMajorVersion> macosMajorVersion,
 }) {
   final hostEnvironment = environment;
   final runtimeRoot = macosWineRuntimeRoot(hostEnvironment);
@@ -289,7 +289,7 @@ String _macosWineWindowsPath(String unixPath) {
 ProgramRunEnvironment _macosPrefixInitializationEnvironment({
   required BottleRecord bottle,
   required HostEnvironment environment,
-  required Option<int> macosMajorVersion,
+  required Option<MacosMajorVersion> macosMajorVersion,
 }) {
   return macosWineEnvironmentForRequests(
     bottle: bottle,
@@ -298,8 +298,8 @@ ProgramRunEnvironment _macosPrefixInitializationEnvironment({
   );
 }
 
-bool _supportsD3DMetalDlssMetalFx(Option<int> macosMajorVersion) {
-  return macosMajorVersion.match(() => false, (version) => version >= 16);
+bool _supportsD3DMetalDlssMetalFx(Option<MacosMajorVersion> macosMajorVersion) {
+  return macosMajorVersion.match(() => false, (version) => version.value >= 16);
 }
 
 String _macosWineDataDir(String runtimeRoot) {
@@ -385,7 +385,7 @@ ProgramRunRequest macosWineCommandRequest({
   required BottleRecord bottle,
   required BottleCommand command,
   required HostEnvironment environment,
-  required Option<int> macosMajorVersion,
+  required Option<MacosMajorVersion> macosMajorVersion,
 }) {
   final hostEnvironment = environment;
   return ProgramRunRequest(
@@ -412,7 +412,7 @@ ProgramRunRequest macosRegistryUpdateRequest({
   required BottleRecord bottle,
   required RegistryValueUpdate update,
   required HostEnvironment environment,
-  required Option<int> macosMajorVersion,
+  required Option<MacosMajorVersion> macosMajorVersion,
 }) {
   final hostEnvironment = environment;
   return ProgramRunRequest(
@@ -439,7 +439,7 @@ ProgramRunRequest macosRegistryQueryRequest({
   required BottleRecord bottle,
   required RegistryValueQuery query,
   required HostEnvironment environment,
-  required Option<int> macosMajorVersion,
+  required Option<MacosMajorVersion> macosMajorVersion,
 }) {
   final hostEnvironment = environment;
   return ProgramRunRequest(
@@ -465,7 +465,7 @@ ProgramRunRequest macosRegistryQueryRequest({
 ProgramRunRequest macosWinetricksCommandRequest({
   required BottleRecord bottle,
   required HostEnvironment environment,
-  required Option<int> macosMajorVersion,
+  required Option<MacosMajorVersion> macosMajorVersion,
   required Option<WinetricksVerbId> verb,
 }) {
   final hostEnvironment = environment;

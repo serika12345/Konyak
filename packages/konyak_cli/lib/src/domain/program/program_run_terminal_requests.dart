@@ -41,7 +41,7 @@ ProgramRunRequest linuxTerminalCommandRequest({
 ProgramRunRequest macosTerminalCommandRequest({
   required BottleRecord bottle,
   required HostEnvironment environment,
-  required Option<int> macosMajorVersion,
+  required Option<MacosMajorVersion> macosMajorVersion,
   Option<BottleCommand> initialWineCommand = const Option.none(),
 }) {
   final shellCommand = _macosWineTerminalShellCommand(
@@ -159,7 +159,7 @@ String _linuxWineTerminalShellCommandWithEnvironment({
 String _macosWineTerminalShellCommand({
   required BottleRecord bottle,
   required HostEnvironment environment,
-  required Option<int> macosMajorVersion,
+  required Option<MacosMajorVersion> macosMajorVersion,
   Option<BottleCommand> initialWineCommand = const Option.none(),
 }) {
   final runtimeBin = macosWineBinFolder(environment);

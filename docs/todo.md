@@ -625,7 +625,7 @@ Medium milestones, one PR unit each:
   from nullable archive/source strings into typed optional runtime install
   value-object inputs while leaving CLI/update JSON parsing as the adapter
   boundary.
-- [ ] I3-M6: Convert macOS major-version capability plumbing from `Option<int>`
+- [x] I3-M6: Convert macOS major-version capability plumbing from `Option<int>`
   to an explicit value object or capability input if the I3 inventory confirms
   the conversion is mechanical and behavior-neutral.
 - [ ] I3-M7: Tighten governance and custom lint checks so completed I3
@@ -851,7 +851,7 @@ review gate:
 
 #### PR Gate: I3-P6 macOS Version Capability Type Front
 
-status: planned
+status: completed
 branch: `task/type-safety-i3-macos-version-capability`
 
 Completion criteria:

@@ -13,36 +13,33 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-04 23:05 JST
+- Timestamp: 2026-07-04 23:38 JST
 - State: `completed`
-- Branch: `task/type-safety-i3-runtime-install-requests`
-- Active work: I3-P5 Runtime Install Request Type Fronts.
+- Branch: `task/type-safety-i3-macos-version-capability`
+- Active work: I3-P6 macOS Version Capability Type Front.
 - Related TODO: `docs/todo.md` `I3: Mechanical Type-Safety Hardening`,
-  completed `I3-P5 Runtime Install Request Type Fronts`; next planned gate is
-  I3-P6 macOS Version Capability Type Front.
-- Pull request: https://github.com/serika12345/Konyak/pull/28
-- Latest implementation commit: `caf1028` (`Type runtime install request constructors`).
-- Purpose: remove nullable string and primitive component-archive constructor
-  fronts from Konyak-owned macOS/Linux runtime install request wrappers while
-  preserving CLI parser strings, update metadata strings, public request
-  projections, runtime install behavior, and Wine execution paths.
-- Completed work: converted `MacosWineInstallRequest` and
-  `LinuxWineInstallRequest` full, repair, component, and update constructors
-  to typed `Option<RuntimeArchivePath>`, `Option<RuntimeArchiveUrl>`,
-  `Option<RuntimeArchiveChecksumValue>`,
-  `Option<RuntimeSourceManifestUrl>`,
-  `Option<RuntimeSourceManifestSignatureUrl>`, and
-  `Iterable<RuntimeArchivePath>` inputs; kept string projection getters for
-  CLI/progress output; updated CLI install parsing and runtime update install
-  request construction to adapt external strings into typed request inputs;
-  added `packages/konyak_cli/test/runtime_install_request_type_fronts_test.dart`;
-  updated CLI contract test fixtures and governance so the converted install
-  request fronts cannot regress to primitive constructor inputs.
-- Remaining work: review draft PR #28 before starting I3-P6.
-- Next action: after the I3-P5 PR is reviewed and merged, run `/advance-pr` to
-  start I3-P6 macOS Version Capability Type Front on
-  `task/type-safety-i3-macos-version-capability`.
-- Verification: I3-P5 implementation verification passed through the Nix dev
-  shell with `dart test test/runtime_install_request_type_fronts_test.dart`,
+  completed `I3-P6 macOS Version Capability Type Front`; next planned gate is
+  I3-P7 Type-Safety Governance and Lint Guardrails.
+- Pull request: not opened yet.
+- Latest implementation commit: pending.
+- Purpose: replace macOS major-version capability plumbing from primitive
+  `Option<int>` to a typed value object while preserving D3DMetal DLSS/MetalFX
+  environment selection, terminal setup, CLI JSON, argv, runtime behavior,
+  Wine execution paths, and app behavior.
+- Completed work: added `MacosMajorVersion` as a bounded integer value object;
+  changed `ProgramRunPlanner`, macOS domain/platform request helpers,
+  terminal helpers, Wine I/O request adapters, and current-platform planner
+  creation to pass `Option<MacosMajorVersion>`; kept OS-version string parsing
+  as the I/O adapter boundary; updated D3DMetal DLSS/MetalFX gating to compare
+  typed version values; added
+  `packages/konyak_cli/test/macos_version_capability_type_fronts_test.dart`;
+  updated CLI contract tests and governance so the converted macOS version
+  capability plumbing cannot regress to primitive `Option<int>`.
+- Remaining work: commit, push, open the I3-P6 draft PR, and review it before
+  starting I3-P7.
+- Next action: run the I3-P6 verification set, then push
+  `task/type-safety-i3-macos-version-capability` and open a draft PR.
+- Verification: I3-P6 implementation verification passed through the Nix dev
+  shell with `dart test test/macos_version_capability_type_fronts_test.dart`,
   `just cli-test`, `just verify-governance`, `just verify-safety`,
   `just format-check`, and `just lint`.

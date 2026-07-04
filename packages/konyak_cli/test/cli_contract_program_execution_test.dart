@@ -1224,7 +1224,7 @@ void main() {
       programRunPlanner: ProgramRunPlanner(
         hostPlatform: KonyakHostPlatform.macos,
         environment: HostEnvironment({'KONYAK_MACOS_WINE_HOME': runtimeRoot}),
-        macosMajorVersion: Option.of(16),
+        macosMajorVersion: Option.of(MacosMajorVersion(16)),
       ),
       programRunner: runner,
     );
@@ -1298,7 +1298,7 @@ void main() {
       programRunPlanner: ProgramRunPlanner(
         hostPlatform: KonyakHostPlatform.macos,
         environment: HostEnvironment({'KONYAK_MACOS_WINE_HOME': runtimeRoot}),
-        macosMajorVersion: Option.of(15),
+        macosMajorVersion: Option.of(MacosMajorVersion(15)),
       ),
       programRunner: runner,
     );
