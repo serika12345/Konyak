@@ -20,8 +20,8 @@ unfinished work.
 - Related TODO: `docs/todo.md` `I3: Mechanical Type-Safety Hardening`,
   completed `I3-P4 Runtime Model and Source Manifest Type Fronts`; next
   planned gate is I3-P5 Runtime Install Request Type Fronts.
-- Pull request: not opened yet.
-- Latest implementation commit: pending.
+- Pull request: https://github.com/serika12345/Konyak/pull/27
+- Latest implementation commit: `0acc5c4` (`Type runtime model constructors`).
 - Purpose: remove primitive constructor fronts from Konyak-owned runtime
   models and source manifests while preserving public CLI JSON strings,
   persisted metadata, runtime-owner manifest strings, runtime install/update
@@ -36,10 +36,10 @@ unfinished work.
   contract test fixtures so public schema strings still build typed runtime
   records for assertions; updated governance so the converted runtime model
   fronts cannot regress to primitive constructors.
-- Remaining work: commit, push, open the I3-P4 draft PR, and review it before
-  starting I3-P5.
-- Next action: run the I3-P4 verification set, then push
-  `task/type-safety-i3-runtime-model-fronts` and open a draft PR.
+- Remaining work: review draft PR #27 before starting I3-P5.
+- Next action: after the I3-P4 PR is reviewed and merged, run `/advance-pr` to
+  start I3-P5 Runtime Install Request Type Fronts on
+  `task/type-safety-i3-runtime-install-requests`.
 - Verification: I3-P4 implementation verification passed through the Nix dev
   shell with
   `dart test test/runtime_model_type_fronts_test.dart test/runtime_platform_definition_type_fronts_test.dart`,
