@@ -14,11 +14,11 @@ part 'runtime_validation_models.freezed.dart';
 abstract class RuntimeStackComponentDefinition
     with _$RuntimeStackComponentDefinition {
   const factory RuntimeStackComponentDefinition({
-    required String id,
-    required String name,
-    required String role,
+    required RuntimeComponentId id,
+    required RuntimeName name,
+    required RuntimeRole role,
     required bool isRequired,
-    required List<List<String>> relativePaths,
+    required List<RuntimeRelativePath> relativePaths,
   }) = _RuntimeStackComponentDefinition;
 }
 
@@ -29,10 +29,10 @@ abstract class RuntimeStackComponentDefinition
 )
 abstract class RuntimeBackendDefinition with _$RuntimeBackendDefinition {
   const factory RuntimeBackendDefinition({
-    required String id,
-    required String name,
-    required String role,
-    required List<String> componentIds,
+    required RuntimeBackendId id,
+    required RuntimeName name,
+    required RuntimeRole role,
+    required List<RuntimeComponentId> componentIds,
   }) = _RuntimeBackendDefinition;
 }
 
@@ -43,23 +43,27 @@ abstract class RuntimeBackendDefinition with _$RuntimeBackendDefinition {
 )
 abstract class RuntimePlatformSpec with _$RuntimePlatformSpec {
   const factory RuntimePlatformSpec({
-    required String runtimeId,
-    required String runtimeName,
-    required String platform,
-    required String architecture,
-    required String runnerKind,
-    required String stackId,
-    required String stackName,
-    required List<String> requiredExecutableRelativePath,
-    required String defaultArchiveFileName,
-    required String developmentSourceManifestEnvironmentKey,
-    required String releaseSourceManifestEnvironmentKey,
-    required String developmentSourceSignatureEnvironmentKey,
-    required String releaseSourceSignatureEnvironmentKey,
+    required RuntimeId runtimeId,
+    required RuntimeName runtimeName,
+    required RuntimePlatformName platform,
+    required RuntimeArchitecture architecture,
+    required RunnerKind runnerKind,
+    required RuntimeStackId stackId,
+    required RuntimeStackName stackName,
+    required RuntimeRelativePath requiredExecutableRelativePath,
+    required RuntimeArchivePath defaultArchiveFileName,
+    required ProgramEnvironmentVariableName
+    developmentSourceManifestEnvironmentKey,
+    required ProgramEnvironmentVariableName releaseSourceManifestEnvironmentKey,
+    required ProgramEnvironmentVariableName
+    developmentSourceSignatureEnvironmentKey,
+    required ProgramEnvironmentVariableName
+    releaseSourceSignatureEnvironmentKey,
     required List<RuntimeStackComponentDefinition> componentDefinitions,
     @Default(<RuntimeBackendDefinition>[])
     List<RuntimeBackendDefinition> backendDefinitions,
-    @Default(Option<String>.none()) Option<String> defaultSourceManifestUrl,
+    @Default(Option<RuntimeSourceManifestUrl>.none())
+    Option<RuntimeSourceManifestUrl> defaultSourceManifestUrl,
     @Default(RuntimeLayoutNormalization.none)
     RuntimeLayoutNormalization layoutNormalization,
   }) = _RuntimePlatformSpec;

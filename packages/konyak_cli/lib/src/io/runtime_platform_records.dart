@@ -19,7 +19,7 @@ RuntimeRecord macosWineRuntimeRecord({
   required FileStatusProbe fileStatusProbe,
   required RuntimeStackVersionProbe runtimeStackVersionProbe,
 }) {
-  const platformSpec = macosKonyakRuntimePlatformSpec;
+  final platformSpec = macosKonyakRuntimePlatformSpec;
   final applicationSupportPath = konyakApplicationSupportFolder(environment);
   final libraryPath = macosWineRuntimeRoot(environment);
   final executablePath = macosWineExecutable(environment);
@@ -27,11 +27,11 @@ RuntimeRecord macosWineRuntimeRecord({
 
   return RuntimeRecord.fromParts(
     definition: RuntimeDefinition(
-      id: platformSpec.runtimeId,
-      name: platformSpec.runtimeName,
-      platform: platformSpec.platform,
-      architecture: platformSpec.architecture,
-      runnerKind: platformSpec.runnerKind,
+      id: platformSpec.runtimeId.value,
+      name: platformSpec.runtimeName.value,
+      platform: platformSpec.platform.value,
+      architecture: platformSpec.architecture.value,
+      runnerKind: platformSpec.runnerKind.value,
       isBundled: false,
       isUpdateable: true,
       distributionKind: Option.fromNullable(
@@ -64,17 +64,17 @@ RuntimeRecord linuxWineRuntimeRecord({
   required FileStatusProbe fileStatusProbe,
   required RuntimeStackVersionProbe runtimeStackVersionProbe,
 }) {
-  const platformSpec = linuxWineRuntimePlatformSpec;
+  final platformSpec = linuxWineRuntimePlatformSpec;
   final runtimeRoot = linuxWineRuntimeRoot(environment);
   final executablePath = joinPath(runtimeRoot, const ['bin', 'wine']);
   final versionUrl = environment.nonEmptyValue('KONYAK_LINUX_WINE_VERSION_URL');
   return RuntimeRecord.fromParts(
     definition: RuntimeDefinition(
-      id: platformSpec.runtimeId,
-      name: platformSpec.runtimeName,
-      platform: platformSpec.platform,
-      architecture: platformSpec.architecture,
-      runnerKind: platformSpec.runnerKind,
+      id: platformSpec.runtimeId.value,
+      name: platformSpec.runtimeName.value,
+      platform: platformSpec.platform.value,
+      architecture: platformSpec.architecture.value,
+      runnerKind: platformSpec.runnerKind.value,
       isBundled: false,
       isUpdateable: versionUrl.isSome(),
       distributionKind: Option.of(
@@ -118,9 +118,9 @@ RuntimeStack runtimeStackForPlatform({
       )
       .toList(growable: false);
   return RuntimeStack(
-    id: platformSpec.stackId,
-    name: platformSpec.stackName,
-    compatibilityTarget: platformSpec.stackId,
+    id: platformSpec.stackId.value,
+    name: platformSpec.stackName.value,
+    compatibilityTarget: platformSpec.stackId.value,
     components: components,
     backends: platformSpec.backendDefinitions
         .map(
@@ -137,8 +137,8 @@ RuntimeStackBackend runtimeStackBackend({
   required RuntimeBackendDefinition definition,
   required List<RuntimeStackComponent> components,
 }) {
-  final componentsById = <String, RuntimeStackComponent>{
-    for (final component in components) component.id.value: component,
+  final componentsById = <RuntimeComponentId, RuntimeStackComponent>{
+    for (final component in components) component.id: component,
   };
   final missingComponentIds = <String>[];
   final missingPaths = <String>[];
@@ -146,21 +146,21 @@ RuntimeStackBackend runtimeStackBackend({
   for (final componentId in definition.componentIds) {
     final component = componentsById[componentId];
     if (component == null) {
-      missingComponentIds.add(componentId);
+      missingComponentIds.add(componentId.value);
       continue;
     }
 
     if (!component.isInstalled) {
-      missingComponentIds.add(componentId);
+      missingComponentIds.add(componentId.value);
       missingPaths.addAll(component.missingPaths.map((path) => path.value));
     }
   }
 
   return RuntimeStackBackend(
-    id: definition.id,
-    name: definition.name,
-    role: definition.role,
-    componentIds: definition.componentIds,
+    id: definition.id.value,
+    name: definition.name.value,
+    role: definition.role.value,
+    componentIds: definition.componentIds.map((id) => id.value),
     missingComponentIds: missingComponentIds,
     missingPaths: missingPaths,
   );
@@ -173,12 +173,12 @@ RuntimeStackComponent runtimeStackComponent({
   required RuntimeStackComponentDefinition definition,
 }) {
   final paths = definition.relativePaths
-      .map((pathSegments) => joinPath(runtimeRoot, pathSegments))
+      .map((pathSegments) => joinPath(runtimeRoot, pathSegments.value))
       .toList(growable: false);
   final missingPaths = paths
       .where((path) => !fileStatusProbe.exists(path))
       .toList();
-  if (definition.id == 'gptk-d3dmetal') {
+  if (definition.id == RuntimeComponentId('gptk-d3dmetal')) {
     final frameworkBinary = d3dMetalFrameworkBinary(paths.first);
     if (frameworkBinary == null || !looksLikeMachO(File(frameworkBinary))) {
       addMissingRuntimePath(missingPaths, paths.first);
@@ -199,9 +199,9 @@ RuntimeStackComponent runtimeStackComponent({
   }
 
   return RuntimeStackComponent(
-    id: definition.id,
-    name: definition.name,
-    role: definition.role,
+    id: definition.id.value,
+    name: definition.name.value,
+    role: definition.role.value,
     isRequired: definition.isRequired,
     paths: paths,
     missingPaths: missingPaths,
@@ -209,7 +209,7 @@ RuntimeStackComponent runtimeStackComponent({
         ? runtimeStackVersionProbe
               .versionFor(
                 runtimeRoot: RuntimeRootPath(runtimeRoot),
-                componentId: RuntimeComponentId(definition.id),
+                componentId: definition.id,
               )
               .map((version) => version.value)
         : const Option.none(),

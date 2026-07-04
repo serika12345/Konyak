@@ -39,9 +39,8 @@ extension DartIoLinuxWineInstallerOperations on DartIoLinuxWineInstaller {
         ),
         componentVersions: componentVersions,
         runtimeRoot: RuntimeRootPath(linuxWineRuntimeRoot(environment)),
-        requiredExecutableRelativePath: RuntimeRelativePath(
-          linuxWineRuntimePlatformSpec.requiredExecutableRelativePath,
-        ),
+        requiredExecutableRelativePath:
+            linuxWineRuntimePlatformSpec.requiredExecutableRelativePath,
         expectedExecutablePath: RuntimeComponentPath(
           linuxWineExecutable(environment),
         ),

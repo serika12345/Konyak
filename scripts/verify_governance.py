@@ -375,6 +375,175 @@ def require_runner_kind_catalog_boundary() -> None:
             )
 
 
+def require_runtime_platform_definition_type_fronts() -> None:
+    models_path = (
+        "packages/konyak_cli/lib/src/domain/runtime/runtime_validation_models.dart"
+    )
+    models = read_text(models_path)
+
+    def class_section(class_name: str) -> str:
+        match = re.search(
+            rf"abstract class {class_name}\b[\s\S]*?(?=\n@Freezed|\nenum |\nabstract interface class|\Z)",
+            models,
+        )
+        if match is None:
+            raise AssertionError(f"{models_path} must contain {class_name}")
+        return match.group(0)
+
+    component_definition = class_section("RuntimeStackComponentDefinition")
+    backend_definition = class_section("RuntimeBackendDefinition")
+    platform_spec = class_section("RuntimePlatformSpec")
+
+    for expected in [
+        "required RuntimeComponentId id,",
+        "required RuntimeName name,",
+        "required RuntimeRole role,",
+        "required List<RuntimeRelativePath> relativePaths,",
+    ]:
+        if expected not in component_definition:
+            raise AssertionError(
+                "RuntimeStackComponentDefinition must expose typed catalog "
+                f"fields: {expected}"
+            )
+
+    for forbidden in [
+        "required String id",
+        "required String name",
+        "required String role",
+        "required List<List<String>> relativePaths",
+    ]:
+        if forbidden in component_definition:
+            raise AssertionError(
+                "RuntimeStackComponentDefinition must not expose primitive "
+                f"catalog fields: {forbidden}"
+            )
+
+    for expected in [
+        "required RuntimeBackendId id,",
+        "required RuntimeName name,",
+        "required RuntimeRole role,",
+        "required List<RuntimeComponentId> componentIds,",
+    ]:
+        if expected not in backend_definition:
+            raise AssertionError(
+                "RuntimeBackendDefinition must expose typed catalog fields: "
+                f"{expected}"
+            )
+
+    for forbidden in [
+        "required String id",
+        "required String name",
+        "required String role",
+        "required List<String> componentIds",
+    ]:
+        if forbidden in backend_definition:
+            raise AssertionError(
+                "RuntimeBackendDefinition must not expose primitive catalog "
+                f"fields: {forbidden}"
+            )
+
+    for expected_pattern in [
+        r"required\s+RuntimeId\s+runtimeId,",
+        r"required\s+RuntimeName\s+runtimeName,",
+        r"required\s+RuntimePlatformName\s+platform,",
+        r"required\s+RuntimeArchitecture\s+architecture,",
+        r"required\s+RunnerKind\s+runnerKind,",
+        r"required\s+RuntimeStackId\s+stackId,",
+        r"required\s+RuntimeStackName\s+stackName,",
+        r"required\s+RuntimeRelativePath\s+requiredExecutableRelativePath,",
+        r"required\s+RuntimeArchivePath\s+defaultArchiveFileName,",
+        r"required\s+ProgramEnvironmentVariableName\s+developmentSourceManifestEnvironmentKey,",
+        r"required\s+ProgramEnvironmentVariableName\s+releaseSourceManifestEnvironmentKey,",
+        r"required\s+ProgramEnvironmentVariableName\s+developmentSourceSignatureEnvironmentKey,",
+        r"required\s+ProgramEnvironmentVariableName\s+releaseSourceSignatureEnvironmentKey,",
+        r"Option<RuntimeSourceManifestUrl>\s+defaultSourceManifestUrl,",
+    ]:
+        if re.search(expected_pattern, platform_spec) is None:
+            raise AssertionError(
+                "RuntimePlatformSpec must expose typed catalog fields matching: "
+                f"{expected_pattern}"
+            )
+
+    for forbidden in [
+        "required String runtimeId",
+        "required String runtimeName",
+        "required String platform",
+        "required String architecture",
+        "required String runnerKind",
+        "required String stackId",
+        "required String stackName",
+        "required List<String> requiredExecutableRelativePath",
+        "required String defaultArchiveFileName",
+        "required String developmentSourceManifestEnvironmentKey",
+        "required String releaseSourceManifestEnvironmentKey",
+        "required String developmentSourceSignatureEnvironmentKey",
+        "required String releaseSourceSignatureEnvironmentKey",
+        "Option<String> defaultSourceManifestUrl",
+    ]:
+        if forbidden in platform_spec:
+            raise AssertionError(
+                "RuntimePlatformSpec must not expose primitive catalog fields: "
+                f"{forbidden}"
+            )
+
+    require_contains(
+        "packages/konyak_cli/test/runtime_platform_definition_type_fronts_test.dart",
+        "platform catalog stores stable identities as value objects",
+    )
+    require_contains(
+        "packages/konyak_cli/test/runtime_platform_definition_type_fronts_test.dart",
+        "list-runtimes JSON preserves public schema strings",
+    )
+
+    support_path = (
+        "packages/konyak_cli/lib/src/domain/runtime/runtime_platform_support.dart"
+    )
+    support = read_text(support_path)
+    for expected in [
+        "final linuxWineRuntimePlatformSpec = RuntimePlatformSpec(",
+        "final macosKonyakRuntimePlatformSpec = RuntimePlatformSpec(",
+        "runtimeId: RuntimeId(linuxWineRuntimeId),",
+        "runtimeId: RuntimeId(macosWineRuntimeId),",
+        "runnerKind: RunnerKind.wine,",
+        "runnerKind: RunnerKind.macosWine,",
+        "requiredExecutableRelativePath: RuntimeRelativePath(['bin', 'wine']),",
+        "requiredExecutableRelativePath: RuntimeRelativePath(['bin', 'wineloader']),",
+        "defaultArchiveFileName: RuntimeArchivePath('linux-wine.tar.xz'),",
+        "defaultArchiveFileName: RuntimeArchivePath(macosWineArchiveFileName),",
+        "ProgramEnvironmentVariableName(",
+        "RuntimeSourceManifestUrl(macosWineRuntimeSourceManifestUrl)",
+    ]:
+        if expected not in support:
+            raise AssertionError(
+                "runtime platform support must construct typed platform "
+                f"definitions: {expected}"
+            )
+
+    for forbidden in [
+        "const linuxWineRuntimePlatformSpec = RuntimePlatformSpec(",
+        "const macosKonyakRuntimePlatformSpec = RuntimePlatformSpec(",
+        "runtimeId: linuxWineRuntimeId,",
+        "runtimeId: macosWineRuntimeId,",
+        "platform: 'linux',",
+        "platform: 'macos',",
+        "architecture: 'x86_64',",
+        "runnerKind: 'wine',",
+        "runnerKind: 'macosWine',",
+        "stackId: 'linux-wine-runtime-stack',",
+        "stackId: 'macos-konyak-runtime-stack',",
+        "requiredExecutableRelativePath: <String>",
+        "defaultArchiveFileName: '",
+        "Option.of(macosWineRuntimeSourceManifestUrl)",
+        "componentIds: <String>",
+        "relativePaths: <List<String>>",
+    ]:
+        if forbidden in support:
+            raise AssertionError(
+                "runtime platform definitions must not pass primitive catalog "
+                f"fronts directly: {forbidden}"
+            )
+
+
 def require_typed_program_run_planner_boundary() -> None:
     planner_path = "packages/konyak_cli/lib/src/domain/program/program_runner.dart"
     planner = read_text(planner_path)
@@ -2767,11 +2936,11 @@ def require_refactoring_documentation_cleanup() -> None:
         require_not_contains("docs/progress.md", stale_branch)
     require_contains(
         "docs/progress.md",
-        "I3-P2 Runner Kind Typed Catalog",
+        "I3-P3 Runtime Platform Definition Type Fronts",
     )
     require_contains(
         "docs/progress.md",
-        "task/type-safety-i3-runner-kind-catalog",
+        "task/type-safety-i3-runtime-platform-definitions",
     )
 
     for relative_path in [
@@ -4395,6 +4564,7 @@ def main() -> None:
     require_program_run_request_builders_split()
     require_typed_program_run_request_boundary()
     require_runner_kind_catalog_boundary()
+    require_runtime_platform_definition_type_fronts()
     require_typed_program_run_planner_boundary()
     require_typed_bottle_command_planner_boundary()
     require_typed_winetricks_verb_planner_boundary()

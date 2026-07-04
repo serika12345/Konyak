@@ -314,7 +314,7 @@ RuntimeWineInstallPlan macosWineInstallPlan({
           environment: environment,
         ),
     defaultArchiveFileName:
-        macosKonyakRuntimePlatformSpec.defaultArchiveFileName,
+        macosKonyakRuntimePlatformSpec.defaultArchiveFileName.value,
     missingArchiveMessage: Option.of(
       'macOS Wine source manifest is not configured.',
     ),

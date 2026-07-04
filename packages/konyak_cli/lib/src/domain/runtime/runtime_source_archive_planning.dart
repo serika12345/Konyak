@@ -142,8 +142,8 @@ RuntimeStackSourceArchivePlanResult runtimeStackSourceArchivePlan({
   required RuntimePlatformSpec platformSpec,
   required String tempDirectoryPath,
 }) {
-  if (manifest.runtimeId.value != platformSpec.runtimeId ||
-      manifest.stackId.value != platformSpec.stackId) {
+  if (manifest.runtimeId != platformSpec.runtimeId ||
+      manifest.stackId != platformSpec.stackId) {
     return const RuntimeStackSourceArchivePlanResult.failed(
       'Runtime stack source manifest targets an unsupported runtime.',
     );
