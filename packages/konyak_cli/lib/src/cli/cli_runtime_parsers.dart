@@ -1,6 +1,7 @@
 import 'package:args/args.dart' hide Option;
 import 'package:fpdart/fpdart.dart';
 
+import '../domain/shared/domain_value_objects.dart';
 import '../io/gptk_wine_installation.dart';
 import '../platform/linux/linux_wine_install_requests.dart';
 import '../platform/macos/macos_wine_install_requests.dart';
@@ -65,7 +66,7 @@ Option<MacosWineInstallRequest> parseJsonMacosWineInstallRequestOption(
     allowReinstall: true,
   ).map(
     (options) => MacosWineInstallRequest.fullInstall(
-      sourceManifest: _runtimeInstallSourceManifestArgument(options),
+      sourceManifest: options.sourceManifest.map(RuntimeSourceManifestUrl.new),
       force: options.reinstall,
       emitProgress: options.emitProgress,
     ),
@@ -81,7 +82,7 @@ Option<LinuxWineInstallRequest> parseJsonLinuxWineInstallRequestOption(
     allowReinstall: true,
   ).map(
     (options) => LinuxWineInstallRequest.fullInstall(
-      sourceManifest: _runtimeInstallSourceManifestArgument(options),
+      sourceManifest: options.sourceManifest.map(RuntimeSourceManifestUrl.new),
       force: options.reinstall,
       emitProgress: options.emitProgress,
     ),
@@ -154,12 +155,6 @@ Option<String> nonEmptyCliOptionOption(ArgResults results, String name) {
   }
 
   return Option.of(normalized);
-}
-
-String? _runtimeInstallSourceManifestArgument(
-  RuntimeInstallCliOptions options,
-) {
-  return options.sourceManifest.match(() => null, (value) => value);
 }
 
 Option<ArgResults> _parseJsonRuntimeCommand(

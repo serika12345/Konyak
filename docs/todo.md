@@ -621,7 +621,7 @@ Medium milestones, one PR unit each:
 - [x] I3-M4: Convert stable runtime model and source-manifest constructor
   fronts to typed value-object inputs where they are Konyak-owned domain
   values, while keeping JSON and manifest parsing as adapter boundaries.
-- [ ] I3-M5: Convert macOS and Linux runtime install request wrapper fronts
+- [x] I3-M5: Convert macOS and Linux runtime install request wrapper fronts
   from nullable archive/source strings into typed optional runtime install
   value-object inputs while leaving CLI/update JSON parsing as the adapter
   boundary.
@@ -803,7 +803,7 @@ review gate:
 
 #### PR Gate: I3-P5 Runtime Install Request Type Fronts
 
-status: planned
+status: completed
 branch: `task/type-safety-i3-runtime-install-requests`
 
 Completion criteria:

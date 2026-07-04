@@ -865,6 +865,140 @@ def require_runtime_model_type_fronts() -> None:
         require_contains(helpers_path, expected)
 
 
+def require_runtime_install_request_type_fronts() -> None:
+    request_paths = [
+        (
+            "packages/konyak_cli/lib/src/platform/macos/macos_wine_install_requests.dart",
+            "MacosWineInstallRequest",
+        ),
+        (
+            "packages/konyak_cli/lib/src/platform/linux/linux_wine_install_requests.dart",
+            "LinuxWineInstallRequest",
+        ),
+    ]
+    for relative_path, class_name in request_paths:
+        source = read_text(relative_path)
+        for expected in [
+            "Option<RuntimeArchivePath> archivePath = const Option.none(),",
+            "Option<RuntimeArchiveUrl> archiveUrl = const Option.none(),",
+            "Option<RuntimeArchiveChecksumValue> archiveSha256 = const Option.none(),",
+            "Option<RuntimeSourceManifestUrl> sourceManifest = const Option.none(),",
+            "Option<RuntimeSourceManifestSignatureUrl> sourceManifestSignature =",
+            "Iterable<RuntimeArchivePath> componentArchivePaths =",
+            "archivePath: archivePath,",
+            "archiveUrl: archiveUrl,",
+            "archiveSha256: archiveSha256,",
+            "sourceManifest: sourceManifest,",
+            "sourceManifestSignature: sourceManifestSignature,",
+            "componentArchivePaths: componentArchivePaths,",
+        ]:
+            if expected not in source:
+                raise AssertionError(
+                    f"{class_name} must expose typed install request fronts: "
+                    f"{expected}"
+                )
+
+        for forbidden in [
+            "String? archivePath",
+            "String? archiveUrl",
+            "String? archiveSha256",
+            "String? sourceManifest",
+            "String? sourceManifestSignature",
+            "Iterable<String> componentArchivePaths",
+            "Option.fromNullable(",
+            ").map(RuntimeArchivePath.new)",
+            ").map(RuntimeArchiveUrl.new)",
+            ").map(RuntimeArchiveChecksumValue.new)",
+            ").map(RuntimeSourceManifestUrl.new)",
+            ").map(RuntimeSourceManifestSignatureUrl.new)",
+        ]:
+            if forbidden in source:
+                raise AssertionError(
+                    f"{class_name} must not expose primitive install request "
+                    f"fronts or convert them internally: {forbidden}"
+                )
+
+        for expected_projection in [
+            "Option<String> get archivePath",
+            "Option<String> get archiveUrl",
+            "Option<String> get archiveSha256",
+            "IList<String> get componentArchivePaths",
+            "Option<String> get sourceManifest",
+            "Option<String> get sourceManifestSignature",
+        ]:
+            if expected_projection not in source:
+                raise AssertionError(
+                    f"{class_name} must keep public string projections for "
+                    f"CLI/progress output: {expected_projection}"
+                )
+
+    parser_path = "packages/konyak_cli/lib/src/cli/cli_runtime_parsers.dart"
+    parser = read_text(parser_path)
+    for expected in [
+        "import '../domain/shared/domain_value_objects.dart';",
+        "sourceManifest: options.sourceManifest.map(RuntimeSourceManifestUrl.new),",
+    ]:
+        if expected not in parser:
+            raise AssertionError(
+                "runtime CLI parsing must remain the primitive adapter "
+                f"boundary for install requests: {expected}"
+            )
+    for forbidden in [
+        "_runtimeInstallSourceManifestArgument",
+        "sourceManifest: _runtimeInstallSourceManifestArgument(options)",
+    ]:
+        if forbidden in parser:
+            raise AssertionError(
+                "runtime CLI parsing must not pass nullable primitive source "
+                f"manifest arguments to install requests: {forbidden}"
+            )
+
+    update_results_path = "packages/konyak_cli/lib/src/cli/cli_update_runtime_results.dart"
+    update_results = read_text(update_results_path)
+    for expected in [
+        "macosWineInstallRequestForRuntimeUpdate",
+        "linuxWineInstallRequestForRuntimeUpdate",
+    ]:
+        if expected not in update_results:
+            raise AssertionError(f"{expected} must exist")
+    for expected in [
+        "sourceManifest: Option.of(sourceManifestUrl),",
+        "sourceManifestSignature: update.sourceManifestSignatureUrl,",
+    ]:
+        if update_results.count(expected) < 2:
+            raise AssertionError(
+                "runtime update install request construction must keep typed "
+                f"update values for both platforms: {expected}"
+            )
+    for forbidden in [
+        "sourceManifestUrl.value",
+        ".map((value) => value.value)",
+        "match(() => null",
+    ]:
+        if forbidden in update_results:
+            raise AssertionError(
+                "runtime update install request construction must not unwrap "
+                f"typed update values: {forbidden}"
+            )
+
+    require_contains(
+        "packages/konyak_cli/test/runtime_install_request_type_fronts_test.dart",
+        "macOS full install accepts typed source manifest options",
+    )
+    require_contains(
+        "packages/konyak_cli/test/runtime_install_request_type_fronts_test.dart",
+        "Linux update install accepts typed remote archive options",
+    )
+    helpers_path = "packages/konyak_cli/test/support/cli_contract_full_helpers.dart"
+    for expected in [
+        "MacosWineInstallRequest macosWineFullInstallRequestFixture({",
+        "MacosWineInstallRequest macosWineComponentInstallRequestFixture({",
+        "LinuxWineInstallRequest linuxWineFullInstallRequestFixture({",
+        "LinuxWineInstallRequest linuxWineComponentInstallRequestFixture({",
+    ]:
+        require_contains(helpers_path, expected)
+
+
 def require_typed_program_run_planner_boundary() -> None:
     planner_path = "packages/konyak_cli/lib/src/domain/program/program_runner.dart"
     planner = read_text(planner_path)
@@ -3257,11 +3391,11 @@ def require_refactoring_documentation_cleanup() -> None:
         require_not_contains("docs/progress.md", stale_branch)
     require_contains(
         "docs/progress.md",
-        "I3-P4 Runtime Model and Source Manifest Type Fronts",
+        "I3-P5 Runtime Install Request Type Fronts",
     )
     require_contains(
         "docs/progress.md",
-        "task/type-safety-i3-runtime-model-fronts",
+        "task/type-safety-i3-runtime-install-requests",
     )
 
     for relative_path in [
@@ -4887,6 +5021,7 @@ def main() -> None:
     require_runner_kind_catalog_boundary()
     require_runtime_platform_definition_type_fronts()
     require_runtime_model_type_fronts()
+    require_runtime_install_request_type_fronts()
     require_typed_program_run_planner_boundary()
     require_typed_bottle_command_planner_boundary()
     require_typed_winetricks_verb_planner_boundary()

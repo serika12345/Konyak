@@ -6,112 +6,80 @@ import '../../domain/shared/domain_value_objects.dart';
 
 class LinuxWineInstallRequest {
   LinuxWineInstallRequest.fullInstall({
-    String? archivePath,
-    String? archiveUrl,
-    String? archiveSha256,
-    String? sourceManifest,
-    String? sourceManifestSignature,
+    Option<RuntimeArchivePath> archivePath = const Option.none(),
+    Option<RuntimeArchiveUrl> archiveUrl = const Option.none(),
+    Option<RuntimeArchiveChecksumValue> archiveSha256 = const Option.none(),
+    Option<RuntimeSourceManifestUrl> sourceManifest = const Option.none(),
+    Option<RuntimeSourceManifestSignatureUrl> sourceManifestSignature =
+        const Option.none(),
     bool force = false,
     bool emitProgress = false,
   }) : this._(
          requestOperation: RuntimeInstallRequestOperation.fullInstall(
-           archivePath: Option.fromNullable(
-             archivePath,
-           ).map(RuntimeArchivePath.new),
-           archiveUrl: Option.fromNullable(
-             archiveUrl,
-           ).map(RuntimeArchiveUrl.new),
-           archiveSha256: Option.fromNullable(
-             archiveSha256,
-           ).map(RuntimeArchiveChecksumValue.new),
-           sourceManifest: Option.fromNullable(
-             sourceManifest,
-           ).map(RuntimeSourceManifestUrl.new),
-           sourceManifestSignature: Option.fromNullable(
-             sourceManifestSignature,
-           ).map(RuntimeSourceManifestSignatureUrl.new),
+           archivePath: archivePath,
+           archiveUrl: archiveUrl,
+           archiveSha256: archiveSha256,
+           sourceManifest: sourceManifest,
+           sourceManifestSignature: sourceManifestSignature,
            force: force,
          ),
          emitProgress: emitProgress,
        );
 
   LinuxWineInstallRequest.repair({
-    String? archivePath,
-    String? archiveUrl,
-    String? archiveSha256,
-    String? sourceManifest,
-    String? sourceManifestSignature,
+    Option<RuntimeArchivePath> archivePath = const Option.none(),
+    Option<RuntimeArchiveUrl> archiveUrl = const Option.none(),
+    Option<RuntimeArchiveChecksumValue> archiveSha256 = const Option.none(),
+    Option<RuntimeSourceManifestUrl> sourceManifest = const Option.none(),
+    Option<RuntimeSourceManifestSignatureUrl> sourceManifestSignature =
+        const Option.none(),
     bool force = true,
     bool emitProgress = false,
   }) : this._(
          requestOperation: RuntimeInstallRequestOperation.repair(
-           archivePath: Option.fromNullable(
-             archivePath,
-           ).map(RuntimeArchivePath.new),
-           archiveUrl: Option.fromNullable(
-             archiveUrl,
-           ).map(RuntimeArchiveUrl.new),
-           archiveSha256: Option.fromNullable(
-             archiveSha256,
-           ).map(RuntimeArchiveChecksumValue.new),
-           sourceManifest: Option.fromNullable(
-             sourceManifest,
-           ).map(RuntimeSourceManifestUrl.new),
-           sourceManifestSignature: Option.fromNullable(
-             sourceManifestSignature,
-           ).map(RuntimeSourceManifestSignatureUrl.new),
+           archivePath: archivePath,
+           archiveUrl: archiveUrl,
+           archiveSha256: archiveSha256,
+           sourceManifest: sourceManifest,
+           sourceManifestSignature: sourceManifestSignature,
            force: force,
          ),
          emitProgress: emitProgress,
        );
 
   LinuxWineInstallRequest.componentInstall({
-    String? archivePath,
-    String? archiveUrl,
-    String? archiveSha256,
-    Iterable<String> componentArchivePaths = const <String>[],
+    Option<RuntimeArchivePath> archivePath = const Option.none(),
+    Option<RuntimeArchiveUrl> archiveUrl = const Option.none(),
+    Option<RuntimeArchiveChecksumValue> archiveSha256 = const Option.none(),
+    Iterable<RuntimeArchivePath> componentArchivePaths =
+        const <RuntimeArchivePath>[],
     bool force = false,
     bool emitProgress = false,
   }) : this._(
          requestOperation: RuntimeInstallRequestOperation.componentInstall(
-           archivePath: Option.fromNullable(
-             archivePath,
-           ).map(RuntimeArchivePath.new),
-           archiveUrl: Option.fromNullable(
-             archiveUrl,
-           ).map(RuntimeArchiveUrl.new),
-           archiveSha256: Option.fromNullable(
-             archiveSha256,
-           ).map(RuntimeArchiveChecksumValue.new),
-           componentArchivePaths: componentArchivePaths.map(
-             RuntimeArchivePath.new,
-           ),
+           archivePath: archivePath,
+           archiveUrl: archiveUrl,
+           archiveSha256: archiveSha256,
+           componentArchivePaths: componentArchivePaths,
            force: force,
          ),
          emitProgress: emitProgress,
        );
 
   LinuxWineInstallRequest.updateInstall({
-    String? archiveUrl,
-    String? archiveSha256,
-    String? sourceManifest,
-    String? sourceManifestSignature,
+    Option<RuntimeArchiveUrl> archiveUrl = const Option.none(),
+    Option<RuntimeArchiveChecksumValue> archiveSha256 = const Option.none(),
+    Option<RuntimeSourceManifestUrl> sourceManifest = const Option.none(),
+    Option<RuntimeSourceManifestSignatureUrl> sourceManifestSignature =
+        const Option.none(),
     bool force = true,
     bool emitProgress = false,
   }) : this._(
          requestOperation: RuntimeInstallRequestOperation.updateInstall(
-           archiveUrl: Option.fromNullable(
-             archiveUrl,
-           ).map(RuntimeArchiveUrl.new),
-           archiveSha256: Option.fromNullable(
-             archiveSha256,
-           ).map(RuntimeArchiveChecksumValue.new),
-           sourceManifest: Option.fromNullable(
-             sourceManifest,
-           ).map(RuntimeSourceManifestUrl.new),
-           sourceManifestSignature: Option.fromNullable(
-             sourceManifestSignature,
-           ).map(RuntimeSourceManifestSignatureUrl.new),
+           archiveUrl: archiveUrl,
+           archiveSha256: archiveSha256,
+           sourceManifest: sourceManifest,
+           sourceManifestSignature: sourceManifestSignature,
            force: force,
          ),
          emitProgress: emitProgress,

@@ -183,7 +183,7 @@ void main() {
       );
 
       final result = installer.install(
-        MacosWineInstallRequest.fullInstall(archivePath: archivePath),
+        macosWineFullInstallRequestFixture(archivePath: archivePath),
       );
 
       expect(result, isA<MacosWineInstallCompleted>());
@@ -227,7 +227,7 @@ void main() {
       fileStatusProbe: const StaticFileStatusProbe({}),
     );
 
-    final result = installer.install(MacosWineInstallRequest.fullInstall());
+    final result = installer.install(macosWineFullInstallRequestFixture());
 
     expect(result, isA<MacosWineInstallFailed>());
     expect(
@@ -253,7 +253,7 @@ void main() {
         }),
       );
 
-      final result = installer.install(MacosWineInstallRequest.fullInstall());
+      final result = installer.install(macosWineFullInstallRequestFixture());
 
       expect(result, isA<MacosWineInstallFailed>());
       expect(
@@ -286,7 +286,7 @@ void main() {
     );
 
     final result = installer.install(
-      MacosWineInstallRequest.fullInstall(archivePath: archivePath),
+      macosWineFullInstallRequestFixture(archivePath: archivePath),
     );
 
     expect(result, isA<MacosWineInstallCompleted>());
@@ -368,7 +368,7 @@ void main() {
       );
 
       final result = installer.install(
-        MacosWineInstallRequest.fullInstall(archivePath: badArchive),
+        macosWineFullInstallRequestFixture(archivePath: badArchive),
       );
 
       expect(result, isA<MacosWineInstallFailed>());
@@ -418,7 +418,7 @@ void main() {
       );
 
       final result = installer.install(
-        MacosWineInstallRequest.componentInstall(
+        macosWineComponentInstallRequestFixture(
           archivePath: archivePath,
           componentArchivePaths: [badComponentArchive],
         ),
@@ -462,7 +462,7 @@ void main() {
     );
 
     final result = installer.install(
-      MacosWineInstallRequest.fullInstall(archivePath: archivePath),
+      macosWineFullInstallRequestFixture(archivePath: archivePath),
     );
 
     expect(result, isA<MacosWineInstallFailed>());
@@ -498,7 +498,7 @@ void main() {
       );
 
       final result = installer.install(
-        MacosWineInstallRequest.fullInstall(archivePath: archivePath),
+        macosWineFullInstallRequestFixture(archivePath: archivePath),
       );
 
       expect(result, isA<MacosWineInstallCompleted>());
@@ -674,7 +674,7 @@ void main() {
     );
 
     final result = installer.install(
-      MacosWineInstallRequest.componentInstall(
+      macosWineComponentInstallRequestFixture(
         archivePath: wineArchive,
         componentArchivePaths: [
           dxvkArchive,
@@ -982,7 +982,7 @@ void main() {
     );
 
     final result = installer.install(
-      MacosWineInstallRequest.fullInstall(sourceManifest: sourceManifestPath),
+      macosWineFullInstallRequestFixture(sourceManifest: sourceManifestPath),
     );
 
     expect(result, isA<MacosWineInstallCompleted>());
@@ -1149,7 +1149,7 @@ void main() {
       final progressSink = RecordingRuntimeInstallProgressSink();
 
       final result = installer.install(
-        MacosWineInstallRequest.fullInstall(
+        macosWineFullInstallRequestFixture(
           sourceManifest: sourceManifestPath,
           emitProgress: true,
         ),
@@ -1373,7 +1373,7 @@ void main() {
         }),
       );
 
-      final result = installer.install(MacosWineInstallRequest.fullInstall());
+      final result = installer.install(macosWineFullInstallRequestFixture());
 
       if (result is MacosWineInstallFailed) {
         fail(result.message);
@@ -1470,7 +1470,7 @@ void main() {
       );
 
       final result = installer.install(
-        MacosWineInstallRequest.fullInstall(
+        macosWineFullInstallRequestFixture(
           archivePath: wineArchive,
           force: true,
         ),
@@ -1555,7 +1555,7 @@ void main() {
       );
 
       final result = installer.install(
-        MacosWineInstallRequest.fullInstall(sourceManifest: sourceManifestPath),
+        macosWineFullInstallRequestFixture(sourceManifest: sourceManifestPath),
       );
 
       expect(result, isA<MacosWineInstallFailed>());
@@ -1592,7 +1592,7 @@ void main() {
       );
 
       final result = installer.install(
-        MacosWineInstallRequest.fullInstall(archivePath: archivePath),
+        macosWineFullInstallRequestFixture(archivePath: archivePath),
       );
 
       expect(result, isA<MacosWineInstallFailed>());
@@ -1632,7 +1632,7 @@ void main() {
       );
 
       final result = installer.install(
-        MacosWineInstallRequest.fullInstall(archivePath: archivePath),
+        macosWineFullInstallRequestFixture(archivePath: archivePath),
       );
 
       expect(result, isA<MacosWineInstallCompleted>());
@@ -2160,7 +2160,7 @@ void main() {
     );
 
     final result = installer.install(
-      MacosWineInstallRequest.fullInstall(
+      macosWineFullInstallRequestFixture(
         archivePath: archive.path,
         archiveSha256:
             'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
@@ -2420,7 +2420,7 @@ void main() {
     );
 
     final result = installer.install(
-      LinuxWineInstallRequest.fullInstall(archivePath: archivePath),
+      linuxWineFullInstallRequestFixture(archivePath: archivePath),
     );
 
     expect(result, isA<LinuxWineInstallCompleted>());
@@ -2501,7 +2501,7 @@ void main() {
     );
 
     final result = installer.install(
-      LinuxWineInstallRequest.componentInstall(
+      linuxWineComponentInstallRequestFixture(
         archivePath: wineArchive,
         componentArchivePaths: [vkd3dArchive],
       ),
@@ -2586,7 +2586,7 @@ void main() {
     );
 
     final result = installer.install(
-      LinuxWineInstallRequest.fullInstall(sourceManifest: sourceManifestPath),
+      linuxWineFullInstallRequestFixture(sourceManifest: sourceManifestPath),
     );
 
     expect(result, isA<LinuxWineInstallCompleted>());
@@ -2669,7 +2669,7 @@ void main() {
       fileStatusProbe: const DartIoFileStatusProbe(),
     );
 
-    final result = installer.install(LinuxWineInstallRequest.fullInstall());
+    final result = installer.install(linuxWineFullInstallRequestFixture());
 
     expect(result, isA<LinuxWineInstallCompleted>());
     final runtime = (result as LinuxWineInstallCompleted).runtime;
@@ -2742,7 +2742,7 @@ void main() {
     );
 
     final result = installer.install(
-      LinuxWineInstallRequest.fullInstall(
+      linuxWineFullInstallRequestFixture(
         sourceManifest: sourceManifestPath,
         sourceManifestSignature: signature.signaturePath,
       ),
@@ -2808,7 +2808,7 @@ void main() {
     );
 
     final result = installer.install(
-      LinuxWineInstallRequest.fullInstall(
+      linuxWineFullInstallRequestFixture(
         sourceManifest: sourceManifestPath,
         sourceManifestSignature: signature.signaturePath,
       ),

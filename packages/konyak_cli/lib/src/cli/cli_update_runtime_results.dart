@@ -1,3 +1,5 @@
+import 'package:fpdart/fpdart.dart';
+
 import '../domain/runtime/runtime_models.dart';
 import '../domain/shared/domain_value_objects.dart';
 import '../domain/update/update_records.dart';
@@ -177,14 +179,10 @@ MacosWineInstallRequest macosWineInstallRequestForRuntimeUpdate(
 ) {
   return update.sourceManifestUrl.match(
     MacosWineInstallRequest.updateInstall,
-    (sourceManifestUrl) => sourceManifestUrl.value.trim().isEmpty
-        ? MacosWineInstallRequest.updateInstall()
-        : MacosWineInstallRequest.updateInstall(
-            sourceManifest: sourceManifestUrl.value,
-            sourceManifestSignature: update.sourceManifestSignatureUrl
-                .map((value) => value.value)
-                .match(() => null, (value) => value),
-          ),
+    (sourceManifestUrl) => MacosWineInstallRequest.updateInstall(
+      sourceManifest: Option.of(sourceManifestUrl),
+      sourceManifestSignature: update.sourceManifestSignatureUrl,
+    ),
   );
 }
 
@@ -193,13 +191,9 @@ LinuxWineInstallRequest linuxWineInstallRequestForRuntimeUpdate(
 ) {
   return update.sourceManifestUrl.match(
     LinuxWineInstallRequest.updateInstall,
-    (sourceManifestUrl) => sourceManifestUrl.value.trim().isEmpty
-        ? LinuxWineInstallRequest.updateInstall()
-        : LinuxWineInstallRequest.updateInstall(
-            sourceManifest: sourceManifestUrl.value,
-            sourceManifestSignature: update.sourceManifestSignatureUrl
-                .map((value) => value.value)
-                .match(() => null, (value) => value),
-          ),
+    (sourceManifestUrl) => LinuxWineInstallRequest.updateInstall(
+      sourceManifest: Option.of(sourceManifestUrl),
+      sourceManifestSignature: update.sourceManifestSignatureUrl,
+    ),
   );
 }
