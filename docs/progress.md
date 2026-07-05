@@ -13,33 +13,30 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-04 23:40 JST
+- Timestamp: 2026-07-05 11:32 JST
 - State: `completed`
-- Branch: `task/type-safety-i3-macos-version-capability`
-- Active work: I3-P6 macOS Version Capability Type Front.
+- Branch: `task/type-safety-i3-governance`
+- Active work: I3-P7 Type-Safety Governance and Lint Guardrails.
 - Related TODO: `docs/todo.md` `I3: Mechanical Type-Safety Hardening`,
-  completed `I3-P6 macOS Version Capability Type Front`; next planned gate is
-  I3-P7 Type-Safety Governance and Lint Guardrails.
-- Pull request: https://github.com/serika12345/Konyak/pull/29
-- Latest implementation commit: `6f88234` (`Type macOS version capability`).
-- Purpose: replace macOS major-version capability plumbing from primitive
-  `Option<int>` to a typed value object while preserving D3DMetal DLSS/MetalFX
-  environment selection, terminal setup, CLI JSON, argv, runtime behavior,
-  Wine execution paths, and app behavior.
-- Completed work: added `MacosMajorVersion` as a bounded integer value object;
-  changed `ProgramRunPlanner`, macOS domain/platform request helpers,
-  terminal helpers, Wine I/O request adapters, and current-platform planner
-  creation to pass `Option<MacosMajorVersion>`; kept OS-version string parsing
-  as the I/O adapter boundary; updated D3DMetal DLSS/MetalFX gating to compare
-  typed version values; added
-  `packages/konyak_cli/test/macos_version_capability_type_fronts_test.dart`;
-  updated CLI contract tests and governance so the converted macOS version
-  capability plumbing cannot regress to primitive `Option<int>`.
-- Remaining work: review draft PR #29 before starting I3-P7.
-- Next action: after the I3-P6 PR is reviewed and merged, run `/advance-pr` to
-  start I3-P7 Type-Safety Governance and Lint Guardrails on
-  `task/type-safety-i3-governance`.
-- Verification: I3-P6 implementation verification passed through the Nix dev
-  shell with `dart test test/macos_version_capability_type_fronts_test.dart`,
-  `just cli-test`, `just verify-governance`, `just verify-safety`,
-  `just format-check`, and `just lint`.
+  completed `I3-P7 Type-Safety Governance and Lint Guardrails`; no remaining
+  I3 implementation gates.
+- Pull request: https://github.com/serika12345/Konyak/pull/30
+- Latest implementation commit: `5284f69` (`Complete I3 governance guardrails`).
+- Purpose: complete the I3 type-safety hardening series by auditing the I3-P1
+  through I3-P6 governance and custom lint state, then pinning only the stable
+  outcomes that should not regress after the typed runner-kind, runtime
+  constructor-front, install-request, and macOS version conversions.
+- Completed work: confirmed the existing custom lint allowlists remain focused
+  on nullable adapter-boundary checks rather than I3 implementation details;
+  kept adapter-boundary primitive decisions documented in
+  `docs/i3-type-safety-inventory.md`; added governance coverage that requires
+  all I3 milestones and PR gates to be complete, keeps the P2-P6 guard
+  functions wired into `scripts/verify_governance.py`, and rejects stale P6
+  active-progress references.
+- Remaining work: review draft PR #30 and the completed I3 series before
+  adding any new type-safety milestone.
+- Next action: review and merge PR #30, then decide whether the next
+  refactoring milestone should start a new TODO-backed type-safety series.
+- Verification: I3-P7 governance verification passed through the Nix dev shell
+  with `just verify-governance`, `just verify-safety`, `just format-check`,
+  and `just lint`.

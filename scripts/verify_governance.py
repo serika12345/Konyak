@@ -1108,6 +1108,99 @@ def require_macos_version_capability_type_front() -> None:
     )
 
 
+def require_i3_type_safety_governance_completion() -> None:
+    for expected in [
+        "- [x] I3-M1:",
+        "- [x] I3-M2:",
+        "- [x] I3-M3:",
+        "- [x] I3-M4:",
+        "- [x] I3-M5:",
+        "- [x] I3-M6:",
+        "- [x] I3-M7:",
+        (
+            "#### PR Gate: I3-P1 Type-Safety Inventory and Gate Order\n\n"
+            "status: completed\n"
+            "branch: `task/type-safety-i3-inventory`"
+        ),
+        (
+            "#### PR Gate: I3-P2 Runner Kind Typed Catalog\n\n"
+            "status: completed\n"
+            "branch: `task/type-safety-i3-runner-kind-catalog`"
+        ),
+        (
+            "#### PR Gate: I3-P3 Runtime Platform Definition Type Fronts\n\n"
+            "status: completed\n"
+            "branch: `task/type-safety-i3-runtime-platform-definitions`"
+        ),
+        (
+            "#### PR Gate: I3-P4 Runtime Model and Source Manifest Type Fronts\n\n"
+            "status: completed\n"
+            "branch: `task/type-safety-i3-runtime-model-fronts`"
+        ),
+        (
+            "#### PR Gate: I3-P5 Runtime Install Request Type Fronts\n\n"
+            "status: completed\n"
+            "branch: `task/type-safety-i3-runtime-install-requests`"
+        ),
+        (
+            "#### PR Gate: I3-P6 macOS Version Capability Type Front\n\n"
+            "status: completed\n"
+            "branch: `task/type-safety-i3-macos-version-capability`"
+        ),
+        (
+            "#### PR Gate: I3-P7 Type-Safety Governance and Lint Guardrails\n\n"
+            "status: completed\n"
+            "branch: `task/type-safety-i3-governance`"
+        ),
+    ]:
+        require_contains("docs/todo.md", expected)
+
+    for expected in [
+        "Active work: I3-P7 Type-Safety Governance and Lint Guardrails.",
+        "task/type-safety-i3-governance",
+        "completed `I3-P7 Type-Safety Governance and Lint Guardrails`",
+        "I3 implementation gates",
+    ]:
+        require_contains("docs/progress.md", expected)
+    for stale_progress in [
+        "review draft PR #29 before starting I3-P7",
+        "next planned gate is\n  I3-P7",
+        "task/type-safety-i3-macos-version-capability",
+    ]:
+        require_not_contains("docs/progress.md", stale_progress)
+
+    governance = read_text("scripts/verify_governance.py")
+    main_match = re.search(
+        r"def main\(\) -> None:\n(?P<body>[\s\S]*?)\n\nif __name__ == \"__main__\":",
+        governance,
+    )
+    if main_match is None:
+        raise AssertionError("scripts/verify_governance.py main() must be readable")
+    main_body = main_match.group("body")
+    for expected_call in [
+        "require_runner_kind_catalog_boundary()",
+        "require_runtime_platform_definition_type_fronts()",
+        "require_runtime_model_type_fronts()",
+        "require_runtime_install_request_type_fronts()",
+        "require_macos_version_capability_type_front()",
+        "require_i3_type_safety_governance_completion()",
+    ]:
+        if expected_call not in main_body:
+            raise AssertionError(
+                "I3 type-safety governance guard must remain wired in main(): "
+                f"{expected_call}"
+            )
+
+    for expected in [
+        "## Allowed Adapter Boundaries",
+        "public CLI JSON",
+        "Runtime source manifests",
+        "diagnostic messages",
+        "Custom lint invalid fixtures",
+    ]:
+        require_contains("docs/i3-type-safety-inventory.md", expected)
+
+
 def require_typed_program_run_planner_boundary() -> None:
     planner_path = "packages/konyak_cli/lib/src/domain/program/program_runner.dart"
     planner = read_text(planner_path)
@@ -3500,11 +3593,11 @@ def require_refactoring_documentation_cleanup() -> None:
         require_not_contains("docs/progress.md", stale_branch)
     require_contains(
         "docs/progress.md",
-        "I3-P6 macOS Version Capability Type Front",
+        "I3-P7 Type-Safety Governance and Lint Guardrails",
     )
     require_contains(
         "docs/progress.md",
-        "task/type-safety-i3-macos-version-capability",
+        "task/type-safety-i3-governance",
     )
 
     for relative_path in [
@@ -5132,6 +5225,7 @@ def main() -> None:
     require_runtime_model_type_fronts()
     require_runtime_install_request_type_fronts()
     require_macos_version_capability_type_front()
+    require_i3_type_safety_governance_completion()
     require_typed_program_run_planner_boundary()
     require_typed_bottle_command_planner_boundary()
     require_typed_winetricks_verb_planner_boundary()

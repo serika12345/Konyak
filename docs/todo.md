@@ -628,7 +628,7 @@ Medium milestones, one PR unit each:
 - [x] I3-M6: Convert macOS major-version capability plumbing from `Option<int>`
   to an explicit value object or capability input if the I3 inventory confirms
   the conversion is mechanical and behavior-neutral.
-- [ ] I3-M7: Tighten governance and custom lint checks so completed I3
+- [x] I3-M7: Tighten governance and custom lint checks so completed I3
   conversions cannot regress to ad hoc primitive construction, without
   preserving temporary implementation details as contracts.
 
@@ -891,7 +891,7 @@ review gate:
 
 #### PR Gate: I3-P7 Type-Safety Governance and Lint Guardrails
 
-status: planned
+status: completed
 branch: `task/type-safety-i3-governance`
 
 Completion criteria:
