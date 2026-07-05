@@ -9,7 +9,7 @@ Use `docs/todo.md` only as the top-level roadmap pointer. Use
 
 ## Current Snapshot
 
-- Timestamp: 2026-07-05 23:53 JST
+- Timestamp: 2026-07-05 23:58 JST
 - State: `completed`
 - Branch: `task/gptk3-d3d10-parent-import`
 - Pull request: https://github.com/serika12345/Konyak/pull/32
@@ -23,7 +23,8 @@ Use `docs/todo.md` only as the top-level roadmap pointer. Use
   rejects GPTK 4.0 beta 1 at `install-gptk-wine --from ... --json` with
   `GPTK/D3DMetal payload is missing atidxx64.dll.`; incorporated the reporting
   format rule from PR #31 so GPTK milestone handoffs include change intent and
-  what the change enables; started G1-P1 on
+  what the change enables; pulled the same PR #31 reporting-rule additions into
+  `AGENTS.md` on PR #32; started G1-P1 on
   `task/gptk3-d3d10-parent-import`; added parent tests and implementation so
   GPTK3 imports require, install, preserve, and report `d3d10.dll` and
   `d3d10.so`; captured public CLI proof with the Apple GPTK 3.0 DMG; committed
@@ -41,7 +42,9 @@ Use `docs/todo.md` only as the top-level roadmap pointer. Use
   /Users/masato/Downloads/Game_Porting_Toolkit_3.0.dmg --json` with a temporary
   runtime root and confirmed installed `d3d10.dll` plus `d3d10.so ->
   ../../external/libd3dshared.dylib`. The post-PR documentation record is
-  verified with `just verify-governance`.
+  verified with `just verify-governance`; the `AGENTS.md` reporting-rule
+  backport is verified with `just verify-governance`, `just verify-safety`,
+  `just format-check`, and `just lint`.
 - Workstream separation: sub-agent tooling was not used because the current
   request did not explicitly authorize sub-agents. Investigation evidence,
   implementation edits, and final audit notes are kept separate in this file
