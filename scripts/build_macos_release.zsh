@@ -72,6 +72,8 @@ if [[ -e "$flutter_framework" ]]; then
   rm -rf "$flutter_framework"
 fi
 
+./scripts/generate_dart_sources.zsh
+
 echo "Building Konyak CLI executable..."
 (
   cd packages/konyak_cli

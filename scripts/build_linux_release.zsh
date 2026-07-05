@@ -222,6 +222,8 @@ if [[ -n "$runtime_stack_signing_key_base64" ]]; then
   rm -f "$signing_key_path"
 fi
 
+./scripts/generate_dart_sources.zsh
+
 echo "Building Konyak CLI executable..."
 (
   cd packages/konyak_cli
