@@ -27,6 +27,11 @@ verify them through CI against the current compatibility stack. The goal is for
 users to get modern Wine/CrossOver-compatible runtimes from auditable inputs
 instead of opaque engine archives.
 
+Konyak's long-term goal is to provide a cross-platform, game-oriented Windows
+compatibility environment across macOS and Linux. Each platform should use the
+graphics stack that fits it best: Metal-oriented components on macOS and
+Vulkan-oriented components such as DXVK and vkd3d-proton on Linux.
+
 License transparency is part of the runtime contract. Konyak should avoid
 runtime stacks that depend on unclear redistribution of commercial application
 binaries or restrictive graphics components such as D3DMetal/GPTK. When a
