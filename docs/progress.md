@@ -13,34 +13,32 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-05 21:55 JST
-- State: `completed`
+- Timestamp: 2026-07-05 23:40 JST
+- State: `planned`
 - Branch: `main`
-- Active work: completed refactoring roadmap cleanup after Public Shell CLI
-  milestone planning.
-- Related TODO: `docs/todo.md` `Public Shell CLI Milestones` remains the next
-  planned implementation series; `docs/todo.md` `Refactoring Milestones` now
-  records that no active refactoring milestones are planned.
+- Active work: planned dedicated GPTK/D3DMetal import compatibility milestones
+  after investigating GPTK3 `d3d10.*` and GPTK4 beta 1 payload differences.
+- Related TODO: `docs/todo.md` `Next Tasks` now points at
+  `docs/gptk-d3dmetal-import-progress.md`; the first planned gate is
+  `G1-P1 GPTK3 D3D10 Parent Import Contract`.
 - Pull request: none.
-- Latest implementation commit: `5f4f471`; planning changes are currently
+- Latest implementation commit: `5f4f471`; GPTK planning changes are currently
   uncommitted.
-- Purpose: keep roadmap documents focused on active and planned work by
-  removing completed I1 compatibility cleanup, I2 boundary hardening, and I3
-  type-safety hardening gates from `docs/todo.md` after verification, while
-  preserving implementation guardrails in governance and audit documents.
-- Completed work: added the public shell CLI goal, canonical command taxonomy,
-  compatibility rule for existing flat commands, automatic progression policy,
-  C1 command-grammar gates, C2 shell-installable distribution gates, C3
-  human-facing CLI experience gates, and C4 compatibility-governance gate;
-  replaced the completed refactoring backlog with a short no-active-milestone
-  placeholder; updated governance so it rejects stale completed I1/I2/I3
-  roadmap entries instead of requiring them.
-- Remaining work: implement the planned PR gates, starting with C1-P1 Shell CLI
-  Contract and Command Registry on branch `task/cli-shell-c1-contract-registry`.
-- Next action: when implementation resumes, create or continue
-  `task/cli-shell-c1-contract-registry`, add the maintained shell CLI contract
-  and command registry/test foundation, run the required verification, open a
-  draft PR, then stop before C1-P2.
-- Verification: refactoring roadmap cleanup verification passed through the
-  Nix dev shell with `just verify-governance`, `just verify-safety`,
+- Purpose: create a dedicated progress-management file that splits GPTK3 D3D10
+  payload completion, version-specified GPTK import, GPTK4 variant support, and
+  public execution proof into reviewable PR gates.
+- Completed work: added `docs/gptk-d3dmetal-import-progress.md` with current
+  evidence, operating rules, large milestones G1-G4, PR gates G1-P1 through
+  G4-P1, verification requirements, and deferred follow-ups; added a top-level
+  TODO pointer to that file; incorporated the PR #31 reporting format requiring
+  change intent and what is now possible in GPTK review packages and final
+  reports.
+- Remaining work: implement G1-P1 on branch
+  `task/gptk3-d3d10-parent-import`.
+- Next action: create or continue `task/gptk3-d3d10-parent-import`, add failing
+  command-level tests proving GPTK3 `d3d10.dll` and `d3d10.so` are installed,
+  implement the smallest parent importer/runtime-definition change, run the
+  required verification, open a draft PR, then stop before G1-P2.
+- Verification: planning documentation verification passed through the Nix dev
+  shell with `just verify-governance`, `just verify-safety`,
   `just format-check`, and `just lint`.

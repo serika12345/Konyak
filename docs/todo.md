@@ -29,6 +29,9 @@ verification output instead of checked-off backlog entries.
 
 ## Next Tasks
 
+- Complete GPTK/D3DMetal import compatibility work tracked in
+  `docs/gptk-d3dmetal-import-progress.md`, starting with GPTK3 `d3d10.*`
+  payload completion before adding version-specified GPTK4 import support.
 - Capture end-to-end DLSS/MetalFX rendering proof with a redistributable or
   user-provided DLSS-capable Windows program.
   - Use Konyak's public `run-program --json` path, record backend environment,
