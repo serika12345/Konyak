@@ -999,6 +999,115 @@ def require_runtime_install_request_type_fronts() -> None:
         require_contains(helpers_path, expected)
 
 
+def require_macos_version_capability_type_front() -> None:
+    value_objects_path = (
+        "packages/konyak_cli/lib/src/domain/shared/domain_value_objects.dart"
+    )
+    value_objects = read_text(value_objects_path)
+    for expected in [
+        "abstract class MacosMajorVersion",
+        "implements IntDomainValueObject",
+        "fieldName: 'macosMajorVersion'",
+        "minimum: 1,",
+        "maximum: 999,",
+    ]:
+        if expected not in value_objects:
+            raise AssertionError(
+                "MacosMajorVersion must be a bounded int value object: "
+                f"{expected}"
+            )
+
+    planner_path = "packages/konyak_cli/lib/src/domain/program/program_runner.dart"
+    planner = read_text(planner_path)
+    for expected in [
+        "final Option<MacosMajorVersion> macosMajorVersion;",
+        "Option<MacosMajorVersion> macosMajorVersionFromOperatingSystemVersion(",
+        "Option<MacosMajorVersion> _macosMajorVersionFromDigits(String value)",
+        "return Option.of(MacosMajorVersion(int.parse(value)));",
+    ]:
+        if expected not in planner:
+            raise AssertionError(
+                "ProgramRunPlanner must keep macOS major version typed: "
+                f"{expected}"
+            )
+    for forbidden in [
+        "final Option<int> macosMajorVersion;",
+        "Option<int> macosMajorVersionFromOperatingSystemVersion",
+        "Option<int> _integerFromDigits",
+    ]:
+        if forbidden in planner:
+            raise AssertionError(
+                "ProgramRunPlanner must not expose primitive macOS major "
+                f"version plumbing: {forbidden}"
+            )
+
+    typed_paths = [
+        "packages/konyak_cli/lib/src/domain/program/program_run_macos_requests.dart",
+        "packages/konyak_cli/lib/src/domain/program/program_run_terminal_requests.dart",
+        "packages/konyak_cli/lib/src/platform/macos/macos_program_run_requests.dart",
+        "packages/konyak_cli/lib/src/platform/platform_terminal_commands.dart",
+        "packages/konyak_cli/lib/src/io/wine_run_requests.dart",
+    ]
+    for relative_path in typed_paths:
+        source = read_text(relative_path)
+        if "Option<MacosMajorVersion> macosMajorVersion" not in source:
+            raise AssertionError(
+                f"{relative_path} must pass typed macOS major versions"
+            )
+        if "Option<int> macosMajorVersion" in source:
+            raise AssertionError(
+                f"{relative_path} must not pass primitive macOS major versions"
+            )
+
+    for relative_path in [
+        "packages/konyak_cli/lib/src/domain/program/program_run_macos_requests.dart",
+        "packages/konyak_cli/lib/src/platform/macos/macos_program_run_requests.dart",
+    ]:
+        source = read_text(relative_path)
+        if "version.value >= 16" not in source:
+            raise AssertionError(
+                f"{relative_path} must gate DLSS MetalFX on typed version values"
+            )
+        if "version) => version >= 16" in source:
+            raise AssertionError(
+                f"{relative_path} must not compare MacosMajorVersion as a primitive"
+            )
+
+    io_planner_path = "packages/konyak_cli/lib/src/io/program_run_planner_io.dart"
+    io_planner = read_text(io_planner_path)
+    for expected in [
+        "Option<MacosMajorVersion> currentMacosMajorVersion()",
+        "macosMajorVersionFromOperatingSystemVersion(",
+        "import '../domain/shared/domain_value_objects.dart';",
+    ]:
+        if expected not in io_planner:
+            raise AssertionError(
+                "program run planner I/O must adapt platform strings into "
+                f"typed macOS versions: {expected}"
+            )
+    if "Option<int> currentMacosMajorVersion()" in io_planner:
+        raise AssertionError(
+            "program run planner I/O must not expose primitive macOS versions"
+        )
+
+    require_contains(
+        "packages/konyak_cli/test/macos_version_capability_type_fronts_test.dart",
+        "operating system version parser returns typed macOS versions",
+    )
+    require_contains(
+        "packages/konyak_cli/test/macos_version_capability_type_fronts_test.dart",
+        "planner keeps DLSS MetalFX gated by typed macOS version",
+    )
+    require_contains(
+        "packages/konyak_cli/test/cli_contract_program_execution_test.dart",
+        "macosMajorVersion: Option.of(MacosMajorVersion(16))",
+    )
+    require_contains(
+        "packages/konyak_cli/test/cli_contract_program_execution_test.dart",
+        "macosMajorVersion: Option.of(MacosMajorVersion(15))",
+    )
+
+
 def require_typed_program_run_planner_boundary() -> None:
     planner_path = "packages/konyak_cli/lib/src/domain/program/program_runner.dart"
     planner = read_text(planner_path)
@@ -3391,11 +3500,11 @@ def require_refactoring_documentation_cleanup() -> None:
         require_not_contains("docs/progress.md", stale_branch)
     require_contains(
         "docs/progress.md",
-        "I3-P5 Runtime Install Request Type Fronts",
+        "I3-P6 macOS Version Capability Type Front",
     )
     require_contains(
         "docs/progress.md",
-        "task/type-safety-i3-runtime-install-requests",
+        "task/type-safety-i3-macos-version-capability",
     )
 
     for relative_path in [
@@ -5022,6 +5131,7 @@ def main() -> None:
     require_runtime_platform_definition_type_fronts()
     require_runtime_model_type_fronts()
     require_runtime_install_request_type_fronts()
+    require_macos_version_capability_type_front()
     require_typed_program_run_planner_boundary()
     require_typed_bottle_command_planner_boundary()
     require_typed_winetricks_verb_planner_boundary()

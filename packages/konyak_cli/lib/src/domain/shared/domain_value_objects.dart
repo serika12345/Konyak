@@ -234,6 +234,28 @@ abstract class WindowsDpiScaling
   map: FreezedMapOptions.none,
   when: FreezedWhenOptions.none,
 )
+abstract class MacosMajorVersion
+    with _$MacosMajorVersion
+    implements IntDomainValueObject {
+  const MacosMajorVersion._();
+
+  factory MacosMajorVersion(int value) => MacosMajorVersion._validated(
+    _requiredBoundedValueObjectInt(
+      value: value,
+      fieldName: 'macosMajorVersion',
+      minimum: 1,
+      maximum: 999,
+    ),
+  );
+
+  const factory MacosMajorVersion._validated(int value) = _MacosMajorVersion;
+}
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
 abstract class RuntimeSettingsControlKey
     with _$RuntimeSettingsControlKey
     implements StringDomainValueObject {
