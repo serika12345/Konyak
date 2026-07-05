@@ -12,7 +12,7 @@ Use `docs/todo.md` only as the top-level roadmap pointer. Use
 - Timestamp: 2026-07-06 01:10 JST
 - State: `completed`
 - Branch: `task/gptk-d3d10-smoke`
-- Pull request: not opened yet
+- Pull request: https://github.com/serika12345/Konyak/pull/33
 - Active gate: `G1-P2 D3D10 GPTK Bridge Smoke Contract`
 - Purpose: correct the earlier active GPTK `d3d10.*` payload direction, keep
   D3D10 on the base Wine builtin frontend, and add runtime smoke/CI proof that
@@ -27,10 +27,11 @@ Use `docs/todo.md` only as the top-level roadmap pointer. Use
   runtime D3D10 bridge probe and `gptk-d3d10-bridge` smoke target; wired the
   D3D10 bridge smoke into build, artifact-smoke, and candidate-promotion
   workflows; updated docs and progress records.
-- Remaining work: commit and push the runtime submodule plus parent pointer,
-  open a draft PR, then stop before GPTK4 import work.
-- Next action: review the D3D10 bridge smoke PR; after merge, continue with
-  G2-P1 version-specified GPTK import.
+- Remaining work: review the parent PR and runtime submodule PR, then stop
+  before GPTK4 import work.
+- Next action: review https://github.com/serika12345/Konyak/pull/33 and
+  https://github.com/serika12345/konyak-macos-runtime/pull/1; after merge,
+  continue with G2-P1 version-specified GPTK import.
 - Verification so far: passed. See the G1-P2 verification section below.
 - Workstream separation: sub-agent tooling was not used because the available
   tool requires explicit user authorization before spawning agents. The
@@ -137,7 +138,7 @@ Small milestones:
   `d3d10.dll` is active.
 - [x] G1-S4: Wire D3D10 GPTK smoke into runtime CI artifact and release
   promotion workflows.
-- [ ] G1-S5: Commit, push, open a draft PR, and stop before GPTK4 import work.
+- [x] G1-S5: Commit, push, open a draft PR, and stop before GPTK4 import work.
 
 #### PR Gate: G1-P1 Superseded GPTK3 D3D10 Payload Import Contract
 
@@ -160,6 +161,9 @@ Outcome:
 
 status: completed
 branch: `task/gptk-d3d10-smoke`
+pull request: https://github.com/serika12345/Konyak/pull/33
+runtime submodule pull request:
+https://github.com/serika12345/konyak-macos-runtime/pull/1
 
 Completion criteria:
 

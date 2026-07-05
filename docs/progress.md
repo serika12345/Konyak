@@ -20,9 +20,11 @@ unfinished work.
 - Related TODO: `docs/todo.md` `Next Tasks` points at
   `docs/gptk-d3dmetal-import-progress.md`; the active gate is
   `G1-P2 D3D10 GPTK Bridge Smoke Contract`.
-- Pull request: not opened yet.
-- Latest implementation commit: runtime submodule `a1cf1d0`; parent commit is
-  pending on `task/gptk-d3d10-smoke`. PR #32 merged as
+- Pull request: https://github.com/serika12345/Konyak/pull/33
+- Runtime submodule pull request:
+  https://github.com/serika12345/konyak-macos-runtime/pull/1
+- Latest implementation commit: runtime submodule `a1cf1d0`; parent branch
+  HEAD on `task/gptk-d3d10-smoke`. PR #32 merged as
   `f30d0cf677060d100a9f0d8e92fae745a8966632`, but its active GPTK `d3d10.*`
   import direction is corrected by this follow-up.
 - Purpose: keep D3D10 on the base Wine builtin frontend, remove active GPTK
@@ -38,9 +40,9 @@ unfinished work.
   D3D10 bridge smoke into build, artifact-smoke, and candidate-promotion
   workflows; confirmed local maintained GPTK smoke passes with D3D10 bridge
   signature, D3D11 device success, and D3D12 device success.
-- Remaining work: commit and push the runtime submodule plus parent pointer,
-  open a draft PR, then stop before GPTK4 import work.
-- Next action: review the D3D10 bridge smoke PR; after merge, continue with
+- Remaining work: review the parent PR and runtime submodule PR, then stop
+  before GPTK4 import work.
+- Next action: review the D3D10 bridge smoke PRs; after merge, continue with
   G2-P1 version-specified GPTK import.
 - Verification: passed `zsh -n` for edited runtime scripts; passed runtime
   backend probe build; passed `smoke-gptk-d3dmetal-local.zsh
