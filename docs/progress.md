@@ -13,30 +13,34 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-05 11:32 JST
+- Timestamp: 2026-07-05 21:55 JST
 - State: `completed`
-- Branch: `task/type-safety-i3-governance`
-- Active work: I3-P7 Type-Safety Governance and Lint Guardrails.
-- Related TODO: `docs/todo.md` `I3: Mechanical Type-Safety Hardening`,
-  completed `I3-P7 Type-Safety Governance and Lint Guardrails`; no remaining
-  I3 implementation gates.
-- Pull request: https://github.com/serika12345/Konyak/pull/30
-- Latest implementation commit: `5284f69` (`Complete I3 governance guardrails`).
-- Purpose: complete the I3 type-safety hardening series by auditing the I3-P1
-  through I3-P6 governance and custom lint state, then pinning only the stable
-  outcomes that should not regress after the typed runner-kind, runtime
-  constructor-front, install-request, and macOS version conversions.
-- Completed work: confirmed the existing custom lint allowlists remain focused
-  on nullable adapter-boundary checks rather than I3 implementation details;
-  kept adapter-boundary primitive decisions documented in
-  `docs/i3-type-safety-inventory.md`; added governance coverage that requires
-  all I3 milestones and PR gates to be complete, keeps the P2-P6 guard
-  functions wired into `scripts/verify_governance.py`, and rejects stale P6
-  active-progress references.
-- Remaining work: review draft PR #30 and the completed I3 series before
-  adding any new type-safety milestone.
-- Next action: review and merge PR #30, then decide whether the next
-  refactoring milestone should start a new TODO-backed type-safety series.
-- Verification: I3-P7 governance verification passed through the Nix dev shell
-  with `just verify-governance`, `just verify-safety`, `just format-check`,
-  and `just lint`.
+- Branch: `main`
+- Active work: completed refactoring roadmap cleanup after Public Shell CLI
+  milestone planning.
+- Related TODO: `docs/todo.md` `Public Shell CLI Milestones` remains the next
+  planned implementation series; `docs/todo.md` `Refactoring Milestones` now
+  records that no active refactoring milestones are planned.
+- Pull request: none.
+- Latest implementation commit: `5f4f471`; planning changes are currently
+  uncommitted.
+- Purpose: keep roadmap documents focused on active and planned work by
+  removing completed I1 compatibility cleanup, I2 boundary hardening, and I3
+  type-safety hardening gates from `docs/todo.md` after verification, while
+  preserving implementation guardrails in governance and audit documents.
+- Completed work: added the public shell CLI goal, canonical command taxonomy,
+  compatibility rule for existing flat commands, automatic progression policy,
+  C1 command-grammar gates, C2 shell-installable distribution gates, C3
+  human-facing CLI experience gates, and C4 compatibility-governance gate;
+  replaced the completed refactoring backlog with a short no-active-milestone
+  placeholder; updated governance so it rejects stale completed I1/I2/I3
+  roadmap entries instead of requiring them.
+- Remaining work: implement the planned PR gates, starting with C1-P1 Shell CLI
+  Contract and Command Registry on branch `task/cli-shell-c1-contract-registry`.
+- Next action: when implementation resumes, create or continue
+  `task/cli-shell-c1-contract-registry`, add the maintained shell CLI contract
+  and command registry/test foundation, run the required verification, open a
+  draft PR, then stop before C1-P2.
+- Verification: refactoring roadmap cleanup verification passed through the
+  Nix dev shell with `just verify-governance`, `just verify-safety`,
+  `just format-check`, and `just lint`.

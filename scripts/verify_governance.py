@@ -1109,7 +1109,7 @@ def require_macos_version_capability_type_front() -> None:
 
 
 def require_i3_type_safety_governance_completion() -> None:
-    for expected in [
+    for stale_todo in [
         "- [x] I3-M1:",
         "- [x] I3-M2:",
         "- [x] I3-M3:",
@@ -1117,52 +1117,28 @@ def require_i3_type_safety_governance_completion() -> None:
         "- [x] I3-M5:",
         "- [x] I3-M6:",
         "- [x] I3-M7:",
-        (
-            "#### PR Gate: I3-P1 Type-Safety Inventory and Gate Order\n\n"
-            "status: completed\n"
-            "branch: `task/type-safety-i3-inventory`"
-        ),
-        (
-            "#### PR Gate: I3-P2 Runner Kind Typed Catalog\n\n"
-            "status: completed\n"
-            "branch: `task/type-safety-i3-runner-kind-catalog`"
-        ),
-        (
-            "#### PR Gate: I3-P3 Runtime Platform Definition Type Fronts\n\n"
-            "status: completed\n"
-            "branch: `task/type-safety-i3-runtime-platform-definitions`"
-        ),
-        (
-            "#### PR Gate: I3-P4 Runtime Model and Source Manifest Type Fronts\n\n"
-            "status: completed\n"
-            "branch: `task/type-safety-i3-runtime-model-fronts`"
-        ),
-        (
-            "#### PR Gate: I3-P5 Runtime Install Request Type Fronts\n\n"
-            "status: completed\n"
-            "branch: `task/type-safety-i3-runtime-install-requests`"
-        ),
-        (
-            "#### PR Gate: I3-P6 macOS Version Capability Type Front\n\n"
-            "status: completed\n"
-            "branch: `task/type-safety-i3-macos-version-capability`"
-        ),
-        (
-            "#### PR Gate: I3-P7 Type-Safety Governance and Lint Guardrails\n\n"
-            "status: completed\n"
-            "branch: `task/type-safety-i3-governance`"
-        ),
+        "#### PR Gate: I3-P1 Type-Safety Inventory and Gate Order",
+        "#### PR Gate: I3-P2 Runner Kind Typed Catalog",
+        "#### PR Gate: I3-P3 Runtime Platform Definition Type Fronts",
+        "#### PR Gate: I3-P4 Runtime Model and Source Manifest Type Fronts",
+        "#### PR Gate: I3-P5 Runtime Install Request Type Fronts",
+        "#### PR Gate: I3-P6 macOS Version Capability Type Front",
+        "#### PR Gate: I3-P7 Type-Safety Governance and Lint Guardrails",
+        "branch: `task/type-safety-i3-inventory`",
+        "branch: `task/type-safety-i3-runner-kind-catalog`",
+        "branch: `task/type-safety-i3-runtime-platform-definitions`",
+        "branch: `task/type-safety-i3-runtime-model-fronts`",
+        "branch: `task/type-safety-i3-runtime-install-requests`",
+        "branch: `task/type-safety-i3-macos-version-capability`",
+        "branch: `task/type-safety-i3-governance`",
     ]:
-        require_contains("docs/todo.md", expected)
+        require_not_contains("docs/todo.md", stale_todo)
 
-    for expected in [
+    for stale_progress in [
         "Active work: I3-P7 Type-Safety Governance and Lint Guardrails.",
         "task/type-safety-i3-governance",
         "completed `I3-P7 Type-Safety Governance and Lint Guardrails`",
         "I3 implementation gates",
-    ]:
-        require_contains("docs/progress.md", expected)
-    for stale_progress in [
         "review draft PR #29 before starting I3-P7",
         "next planned gate is\n  I3-P7",
         "task/type-safety-i3-macos-version-capability",
@@ -3473,6 +3449,14 @@ def require_flutter_view_model_extraction_boundaries() -> None:
 def require_refactoring_documentation_cleanup() -> None:
     for expected in [
         "## Refactoring Milestones",
+        "No active refactoring milestones are planned.",
+        "Completed I1 compatibility",
+        "I2 boundary hardening",
+        "I3 type-safety hardening",
+    ]:
+        require_contains("docs/todo.md", expected)
+
+    for stale_todo in [
         "### I1: Compatibility Interface Cleanup",
         "#### PR Gate: I1-P1 CLI Parser Compatibility Wrappers",
         "branch: `task/interface-i1-cli-parser-wrappers`",
@@ -3525,7 +3509,7 @@ def require_refactoring_documentation_cleanup() -> None:
         "#### PR Gate: I3-P7 Type-Safety Governance and Lint Guardrails",
         "branch: `task/type-safety-i3-governance`",
     ]:
-        require_contains("docs/todo.md", expected)
+        require_not_contains("docs/todo.md", stale_todo)
 
     for expected in [
         "# I3 Type-Safety Inventory",
@@ -3591,15 +3575,6 @@ def require_refactoring_documentation_cleanup() -> None:
         "task/refactor-r3-",
     ]:
         require_not_contains("docs/progress.md", stale_branch)
-    require_contains(
-        "docs/progress.md",
-        "I3-P7 Type-Safety Governance and Lint Guardrails",
-    )
-    require_contains(
-        "docs/progress.md",
-        "task/type-safety-i3-governance",
-    )
-
     for relative_path in [
         "packages/konyak_cli/test/cli_contract_executable_test.dart",
         "packages/konyak_cli/test/cli_contract_command_dispatch_test.dart",
@@ -3634,15 +3609,6 @@ def require_refactoring_documentation_cleanup() -> None:
 
 
 def require_semantic_constructor_value_object_fronts() -> None:
-    for expected in [
-        (
-            "#### PR Gate: I2-P4 Semantic Constructor Primitive Fronts\n\n"
-            "status: completed\n"
-            "branch: `task/interface-i2-semantic-constructor-fronts`"
-        ),
-    ]:
-        require_contains("docs/todo.md", expected)
-
     app_settings = "packages/konyak_cli/lib/src/domain/app/app_settings_models.dart"
     require_contains(app_settings, "required DefaultBottlePath defaultBottlePath")
     require_not_contains(app_settings, "required String defaultBottlePath")
@@ -4142,10 +4108,6 @@ def require_refactoring_governance_allowance_cleanup() -> None:
         "tools/konyak_lints/test/fixtures/invalid/apps/konyak/"
         "lib/src/updates/update_check_summary.dart",
         "final String? latestVersion;",
-    )
-    require_contains(
-        "docs/todo.md",
-        "status: completed\nbranch: `task/interface-i1-governance-allowances`",
     )
 
 

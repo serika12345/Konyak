@@ -36,95 +36,87 @@ verification output instead of checked-off backlog entries.
     equivalent evidence where practical.
   - Do not add proprietary or nonredistributable game payloads to CI.
 
-## Refactoring Milestones
+## Public Shell CLI Milestones
 
-This section tracks the next cleanup pass for compatibility interfaces that were
-kept temporarily to land earlier refactoring safely. These gates should remove
-one compatibility surface at a time, keep external behavior stable, and stop at
-each review gate.
+Goal: make Konyak usable as a first-class command from a user's normal shell on
+macOS and Linux, while preserving the existing Flutter-to-CLI process boundary,
+versioned JSON contracts, exit codes, persisted bottle metadata, and managed
+runtime ownership rules.
+
+The final user-facing command surface should prefer a canonical hierarchical
+shape:
+
+- `konyak bottle <list|show|create|rename|move|delete|export|import>`
+- `konyak program <list|run|pin|unpin|rename|settings>`
+- `konyak runtime <list|validate|install|reinstall|update|import>`
+- `konyak winetricks <list|run>`
+- `konyak process <list|kill|kill-all>`
+- `konyak update <check|install>`
+- `konyak shell install|uninstall|status`
+
+Compatibility rule: do not remove or silently change the existing flat commands
+used by Flutter and release smokes, such as `list-bottles --json`,
+`run-program ... --json`, `install-macos-wine --json`, or
+`launch-pinned-program --json`, until a later explicit compatibility-removal
+gate exists and has its own migration plan.
 
 Automatic progression policy:
 
-- `/advance-pr` targets the first unfinished `PR Gate` in this section unless
-  the user names another gate.
-- `/advance-small` advances the next coherent small milestone inside the
-  current `PR Gate`.
-- `/review-gate` summarizes the current branch without implementing more work.
-- If a required compatibility cleanup is not represented below, add or refine
-  the milestone before implementation.
+- `/advance-pr` targets the first unfinished `PR Gate` in this section when the
+  current work snapshot points at Public Shell CLI work or the user names CLI
+  shell work.
+- `/advance-small` advances the next coherent small milestone inside the active
+  Public Shell CLI `PR Gate`.
+- `/review-gate` summarizes the current Public Shell CLI branch without
+  implementing more work.
+- Stop at each Public Shell CLI review gate. Do not continue into the next gate
+  unless the user explicitly asks to continue.
+- If the next required shell-CLI step is not represented here, update this
+  section before implementation.
 
-### I1: Compatibility Interface Cleanup
+### C1: Canonical Command Grammar and Compatibility
 
-Purpose: remove nullable or primitive compatibility wrappers that were kept to
-avoid broad call-site churn during the previous boundary refactoring. Keep the
-true external boundaries explicit, but stop preserving internal compatibility
-interfaces once call sites can use `Option`, sealed dispatch, or typed value
-objects directly.
+Purpose: introduce the public `konyak` command grammar, help/version behavior,
+and hierarchical command aliases without changing the existing JSON schemas or
+Flutter-facing flat commands.
 
 Small milestones:
 
-- No active I1 small milestones remain.
+- [ ] C1-S1: Define the canonical command taxonomy, alias policy, and command
+  help model in a maintained CLI contract document or registry.
+- [ ] C1-S2: Add `konyak --help`, `konyak help`, and `konyak --version` with
+  successful exit behavior.
+- [ ] C1-S3: Add hierarchical bottle and runtime command aliases that dispatch
+  to the existing command handlers and preserve `--json` payloads.
+- [ ] C1-S4: Add hierarchical program, winetricks, process, update, and shell
+  command aliases that dispatch to the existing command handlers and preserve
+  `--json` payloads.
 
-#### PR Gate: I1-P1 CLI Parser Compatibility Wrappers
+#### PR Gate: C1-P1 Shell CLI Contract and Command Registry
 
-status: completed
-branch: `task/interface-i1-cli-parser-wrappers`
-
-Completion criteria:
-
-- CLI command-selection call sites use `Option`-returning parser APIs directly
-  for at least the runtime and location parser families.
-- Nullable parser compatibility wrappers are removed for the converted
-  families, or kept only where an external API boundary still requires a
-  nullable projection and that reason is documented in code or tests.
-- Focused parser or command-selection tests cover missing/incomplete arguments
-  without depending on nullable return values.
-- Governance is updated so the converted parser families cannot regress to
-  nullable compatibility wrappers.
-- `docs/progress.md` records the gate state, latest commit, verification, and
-  next action.
-
-Not included:
-
-- Runtime behavior changes.
-- Public CLI JSON schema changes.
-- Broad parser rewrites outside the converted families.
-
-Verification:
-
-- `just cli-test`
-- `just verify-governance`
-- `just verify-safety`
-- `just format-check`
-- `just lint`
-
-review gate:
-
-- Commit and push the branch, open a draft PR, then stop before I1-P2.
-
-#### PR Gate: I1-P2 CLI Command Dispatch
-
-status: completed
-branch: `task/interface-i1-cli-command-dispatch`
+status: planned
+branch: `task/cli-shell-c1-contract-registry`
 
 Completion criteria:
 
-- Nullable `CliResult?` command handlers and `firstCliResult` dispatch are
-  replaced with explicit command-match or command-dispatch variants for the
-  converted command groups.
-- Missing command matches are modeled as explicit absence or dispatch variants,
-  not as `null`.
-- Command contract tests cover both matched and unmatched dispatch paths.
-- Governance is updated so converted command groups do not reintroduce nullable
-  command dispatch.
-- `docs/progress.md` records the gate state, latest commit, verification, and
-  next action.
+- Add or update a maintained CLI shell contract document that names the
+  canonical user-facing command tree, compatibility aliases, JSON requirements,
+  exit-code expectations, and deprecation policy.
+- Introduce a small command registry or equivalent source of truth for help text
+  and alias mapping if that reduces duplication before parser implementation.
+- Add command-level tests for the contract surface selected in this gate,
+  focused on help metadata or parser dispatch, without changing command
+  behavior.
+- Keep all existing flat commands and JSON payloads behavior-compatible.
+- `docs/progress.md` records the gate state, latest commit when known,
+  verification, and next action.
 
 Not included:
 
-- Public CLI JSON schema changes.
+- Human-readable data output for list/show commands.
+- Packaged shell launcher installation.
+- Removing or warning on legacy flat commands.
 - Runtime installation behavior changes.
-- Flutter UI changes.
 
 Verification:
 
@@ -136,38 +128,36 @@ Verification:
 
 review gate:
 
-- Commit and push the branch, open a draft PR, then stop before I1-P3.
+- Commit and push the branch, open a draft PR, then stop before C1-P2.
 
-#### PR Gate: I1-P3 Flutter Dialog and Picker Decisions
+#### PR Gate: C1-P2 Global Help and Version
 
-status: completed
-branch: `task/interface-i1-flutter-dialog-decisions`
+status: planned
+branch: `task/cli-shell-c1-help-version`
 
 Completion criteria:
 
-- Konyak-owned dialog, picker, and decision helpers expose explicit variants to
-  app code; nullable values remain only at `showDialog`, platform picker, or
-  Flutter framework adapter calls.
-- Widget tests assert explicit decision or picker variants rather than using
-  `null` as the expected application state.
-- Any visible behavior remains unchanged; add widget or golden coverage only if
-  visible behavior changes.
-- Governance is updated so converted app decision helpers do not regress to
-  nullable compatibility bridges.
-- `docs/progress.md` records the gate state, latest commit, verification, and
-  next action.
+- `konyak --help`, `konyak help`, and command-group help return exit code `0`
+  and useful usage text.
+- `konyak --version` returns the effective Konyak app or CLI version available
+  to release builds and development runs.
+- Unknown commands and invalid arguments continue to use stable failure exit
+  codes and diagnostics.
+- Tests cover direct Dart execution and the compiled executable path where
+  practical.
+- Existing Flutter-facing flat commands remain behavior-compatible.
+- `docs/progress.md` records the gate state, latest commit when known,
+  verification, and next action.
 
 Not included:
 
-- CLI backend changes.
-- Visual redesign.
-- Runtime behavior changes.
+- Hierarchical command aliases beyond the help/version surface.
+- Human-readable list/show output.
+- Shell installation or package-manager integration.
 
 Verification:
 
-- `just flutter-format-check`
-- `just flutter-analyze`
-- `just flutter-test`
+- `just cli-test`
 - `just verify-governance`
 - `just verify-safety`
 - `just format-check`
@@ -175,37 +165,37 @@ Verification:
 
 review gate:
 
-- Commit and push the branch, open a draft PR, then stop before I1-P4.
+- Commit and push the branch, open a draft PR, then stop before C1-P3.
 
-#### PR Gate: I1-P4 Flutter JSON DTO Optional Fields
+#### PR Gate: C1-P3 Bottle and Runtime Hierarchical Commands
 
-status: completed
-branch: `task/interface-i1-flutter-json-dtos`
+status: planned
+branch: `task/cli-shell-c1-bottle-runtime`
 
 Completion criteria:
 
-- Flutter CLI JSON parser outputs distinguish invalid, absent, and present
-  optional fields with explicit parse/app result models where those fields are
-  consumed by application state.
-- Nullable `Object?` remains only at JSON decoding and validation boundaries.
-- Tests cover absent optional fields and invalid optional field types without
-  treating both as the same nullable state unless that is the explicit contract.
-- Governance is updated so converted DTOs do not reintroduce nullable app-facing
-  summary fields.
-- `docs/progress.md` records the gate state, latest commit, verification, and
-  next action.
+- Add canonical aliases for bottle commands:
+  `bottle list`, `bottle show`, `bottle create`, `bottle rename`,
+  `bottle move`, `bottle delete`, `bottle export`, and `bottle import`.
+- Add canonical aliases for runtime commands:
+  `runtime list`, `runtime validate`, `runtime install`, `runtime reinstall`,
+  `runtime update check`, `runtime update install`, and `runtime import gptk`.
+- Preserve existing JSON schemas, argv boundaries, exit codes, persisted
+  metadata, runtime source-manifest handling, and installer progress behavior.
+- Add command-level compatibility tests that compare canonical aliases with the
+  existing flat commands for representative success and failure paths.
+- `docs/progress.md` records the gate state, latest commit when known,
+  verification, and next action.
 
 Not included:
 
-- Public CLI JSON schema changes.
-- Runtime behavior changes.
-- Large UI rewrites.
+- Program launch, winetricks, process, or app-update aliases.
+- Human-readable data output.
+- Runtime recipe, artifact, or source-manifest generation changes.
 
 Verification:
 
-- `just flutter-format-check`
-- `just flutter-analyze`
-- `just flutter-test`
+- `just cli-test`
 - `just verify-governance`
 - `just verify-safety`
 - `just format-check`
@@ -213,97 +203,275 @@ Verification:
 
 review gate:
 
-- Commit and push the branch, open a draft PR, then stop before any new
-  milestone is added.
+- Commit and push the branch, open a draft PR, then stop before C1-P4.
 
-#### PR Gate: I1-P5 Refactoring Governance Allowance Cleanup
+#### PR Gate: C1-P4 Program, Winetricks, Process, Update, and Shell Aliases
 
-status: completed
-branch: `task/interface-i1-governance-allowances`
+status: planned
+branch: `task/cli-shell-c1-program-update`
 
 Completion criteria:
 
-- Audit the I1-P1 through I1-P4 governance checks and custom lint allowlists for
-  temporary compatibility allowances that only existed to land the earlier
-  wrapper removals incrementally.
-- Remove stale allowances or replace brittle compatibility-specific string
-  checks with stable boundary checks that describe the current app and CLI
-  contracts.
-- Confirm remaining nullable, primitive, and JSON boundary exceptions are
-  limited to framework, platform, parser, or serialization adapters and are
-  enforced or documented by governance.
-- Update governance tests or script checks so removed compatibility wrappers
-  cannot regress without preserving obsolete implementation details as the
-  contract.
-- `docs/progress.md` records the gate state, latest commit, verification, and
-  next action.
+- Add canonical aliases for program commands:
+  `program list`, `program run`, `program pin`, `program unpin`,
+  `program rename`, `program settings get`, and `program settings set`.
+- Add canonical aliases for winetricks commands:
+  `winetricks list` and `winetricks run`.
+- Add canonical aliases for process commands:
+  `process list`, `process kill`, and `process kill-all`.
+- Add canonical aliases for app update commands:
+  `update check` and `update install`.
+- Reserve the `shell` command group for launcher installation work without
+  implementing host-file mutations in this gate.
+- Preserve existing JSON schemas, argv boundaries, exit codes, launcher
+  contracts, process-management behavior, and Wine execution paths.
+- Add command-level compatibility tests for representative success, missing
+  argument, and unsupported-host paths.
+- `docs/progress.md` records the gate state, latest commit when known,
+  verification, and next action.
 
 Not included:
 
-- Public CLI JSON schema changes.
-- App or runtime behavior changes.
-- Broad nullable cleanup outside stale governance allowances.
-- Starting the next refactoring milestone after I1.
+- Packaged shell launcher installation.
+- Human-readable output.
+- Removing or warning on legacy flat commands.
+- Runtime or Wine behavior changes.
 
 Verification:
 
+- `just cli-test`
 - `just verify-governance`
 - `just verify-safety`
 - `just format-check`
 - `just lint`
-- `just konyak-lints-test` if custom lint implementation or lint tests change.
 
 review gate:
 
-- Commit and push the branch, open a draft PR, then stop before adding or
-  starting any post-I1 milestone.
+- Commit and push the branch, open a draft PR, then stop before C2-P1.
 
-### I2: Boundary Hardening and Test Contract Cleanup
+### C2: Shell-Installable Distribution
 
-Purpose: turn the post-I1 boundary-hardening candidates into scoped refactors
-now that the nullable compatibility wrappers are gone. Prefer explicit audits
-before conversion, keep external CLI JSON and argv contracts stable, and only
-replace primitive values when the invariant is stable enough to be represented
-as a value object.
+Purpose: make the canonical CLI reachable from normal shells in development,
+Nix, macOS app, and Linux AppImage contexts without depending on Flutter
+internals or transient build paths.
 
 Small milestones:
 
-- [x] I2-S4: Reassess nullable command-selection bridges and
-  `ProgramRunPlanner` host-platform, runner-kind, and
-  graphics-backend policy structure; split only where the audit shows stable
-  responsibilities and reduced complexity.
-- [x] I2-S5: Tighten governance and custom lint checks for completed I2
-  boundaries without preserving obsolete implementation details as contracts.
+- [ ] C2-S1: Add a stable development/Nix entry point for invoking the CLI as
+  `konyak` or `konyak-cli` from the repository shell.
+- [ ] C2-S2: Define the packaged CLI executable and wrapper naming contract for
+  macOS and Linux.
+- [ ] C2-S3: Implement user-level shell launcher install, uninstall, and status
+  commands for packaged builds.
+- [ ] C2-S4: Add packaged smoke coverage that invokes the installed or generated
+  shell command through the public CLI path.
 
-#### PR Gate: I2-P1 Primitive Boundary Audit
+#### PR Gate: C2-P1 Development and Nix CLI Entrypoint
 
-status: completed
-branch: `task/interface-i2-primitive-boundary-audit`
+status: planned
+branch: `task/cli-shell-c2-dev-entrypoint`
 
 Completion criteria:
 
-- Add an I2 audit document that inventories remaining primitive, nullable, and
-  hand-written test-part exceptions across CLI/domain code, Flutter app-facing
-  models, custom lint boundary allowlists, and governance checks.
-- Classify each finding as an allowed adapter boundary, a candidate for an I2
-  code-conversion gate, or an explicitly deferred design decision.
-- Refine or add the next I2 PR Gate blocks in `docs/todo.md` when the audit
-  identifies a safer order than the current small-milestone list.
-- Keep the audit behavior-neutral: no public CLI JSON schema, app behavior,
-  runtime behavior, or broad code conversion changes.
-- `docs/progress.md` records the gate state, latest commit, verification, and
-  next action.
+- Add a maintained development entry point that lets contributors run the public
+  CLI command from the Nix dev shell without remembering
+  `dart run bin/konyak.dart`.
+- Add a flake app, package, `just` target, or documented equivalent that runs
+  the compiled or Dart-backed CLI through the same public command parser.
+- Keep project tools and verification inside the Nix dev shell.
+- Add smoke or command-level tests proving the development entry point reaches
+  the same JSON contract as the direct Dart script.
+- Update `README.md`, `docs/cli-distribution.md`, or a dedicated CLI guide with
+  the supported development invocation.
+- `docs/progress.md` records the gate state, latest commit when known,
+  verification, and next action.
 
 Not included:
 
-- Public CLI JSON schema changes.
+- Installing files outside the repository.
+- Packaged macOS or AppImage shell launcher installation.
+- Human-readable output redesign.
+
+Verification:
+
+- `just cli-test`
+- `just verify-governance`
+- `just verify-safety`
+- `just format-check`
+- `just lint`
+
+review gate:
+
+- Commit and push the branch, open a draft PR, then stop before C2-P2.
+
+#### PR Gate: C2-P2 Packaged Shell Launcher Commands
+
+status: planned
+branch: `task/cli-shell-c2-packaged-launcher`
+
+Completion criteria:
+
+- Implement `konyak shell install`, `konyak shell uninstall`, and
+  `konyak shell status` for user-level shell integration on supported hosts.
+- macOS launcher installation must use the packaged `.app` resources or an
+  explicit user-selected prefix; it must not silently require administrator
+  writes.
+- Linux launcher installation must prefer a user-level path such as
+  `~/.local/bin/konyak` or a user-selected prefix and must preserve the stable
+  AppImage `--konyak-cli` execution path when the CLI is reached from an
+  AppImage.
+- The launcher must preserve argv boundaries and pass through the canonical CLI
+  parser rather than building shell command strings for application behavior.
+- Add command-level and packaged-smoke coverage for install, status, uninstall,
+  moved-AppImage, and missing-packaged-context cases where practical.
+- Update release and distribution docs with the supported shell installation
+  behavior.
+- `docs/progress.md` records the gate state, latest commit when known,
+  verification, and next action.
+
+Not included:
+
+- System-wide `/usr/local/bin` installation without an explicit user action.
+- Package-manager recipes.
+- Removing legacy flat commands.
+- Changing pinned Windows program launcher contracts except where they share a
+  tested wrapper helper.
+
+Verification:
+
+- `just cli-test`
+- `just smoke-macos-app-cli-bridge` on macOS when macOS launcher behavior
+  changes
+- `just linux-release-check` on Linux when AppImage launcher behavior changes
+- `just verify-governance`
+- `just verify-safety`
+- `just format-check`
+- `just lint`
+
+review gate:
+
+- Commit and push the branch, open a draft PR, then stop before C2-P3.
+
+#### PR Gate: C2-P3 Release Workflow Shell CLI Coverage
+
+status: planned
+branch: `task/cli-shell-c2-release-coverage`
+
+Completion criteria:
+
+- Update the relevant GitHub Actions workflow so CI exercises the same shell CLI
+  path proven by local packaged smoke verification.
+- Keep rerun units narrow: shell launcher smoke, release metadata, runtime
+  smoke, and expensive runtime builds must remain independently rerunnable
+  where the existing workflow split allows it.
+- Add or update local smoke scripts so macOS and Linux release artifacts prove
+  the packaged shell command can invoke at least `--help`, `--version`, and a
+  read-only JSON command from a clean environment.
+- Document any platform limitation that CI cannot mirror in `docs/progress.md`
+  and leave an explicit follow-up if needed.
+- `docs/progress.md` records the gate state, latest commit when known,
+  verification, and next action.
+
+Not included:
+
+- Human-readable output.
+- Runtime recipe changes or runtime artifact generation in the parent repo.
+- Package-manager publishing.
+
+Verification:
+
+- `just cli-test`
+- Relevant local packaged smoke target added or changed by the gate
+- `just verify-governance`
+- `just verify-safety`
+- `just format-check`
+- `just lint`
+
+review gate:
+
+- Commit and push the branch, open a draft PR, then stop before C3-P1.
+
+### C3: Human-Facing CLI Experience
+
+Purpose: make canonical commands useful without forcing users to parse JSON,
+while keeping `--json` as the stable machine contract used by Flutter and
+automation.
+
+Small milestones:
+
+- [ ] C3-S1: Add human-readable output for safe read-only canonical commands.
+- [ ] C3-S2: Add concise human-readable mutation and launch summaries.
+- [ ] C3-S3: Add command-specific usage examples and shell completion support
+  where the parser model can generate or validate it.
+- [ ] C3-S4: Document the CLI as a supported product surface in user-facing
+  docs.
+
+#### PR Gate: C3-P1 Human Output for Read-Only Commands
+
+status: planned
+branch: `task/cli-shell-c3-human-read-output`
+
+Completion criteria:
+
+- Canonical read-only commands such as `bottle list`, `bottle show`,
+  `program list`, `runtime list`, `runtime validate`, `winetricks list`,
+  `process list`, and `update check` produce readable text by default.
+- `--json` keeps the existing versioned JSON schema and remains suitable for
+  Flutter and scripts.
+- Legacy flat commands retain their current output requirements unless an
+  explicit compatibility test proves the change is behavior-neutral.
+- Add tests for empty, single-record, multi-record, and failure output where
+  relevant.
+- `docs/progress.md` records the gate state, latest commit when known,
+  verification, and next action.
+
+Not included:
+
+- Human-readable mutation output.
+- Shell launcher installation.
+- JSON schema changes.
+
+Verification:
+
+- `just cli-test`
+- `just verify-governance`
+- `just verify-safety`
+- `just format-check`
+- `just lint`
+
+review gate:
+
+- Commit and push the branch, open a draft PR, then stop before C3-P2.
+
+#### PR Gate: C3-P2 Human Output for Mutations and Launches
+
+status: planned
+branch: `task/cli-shell-c3-human-mutations`
+
+Completion criteria:
+
+- Canonical mutation and launch commands produce concise readable success and
+  failure summaries by default.
+- Runtime installation progress remains available as streaming JSON for Flutter
+  and automation, with any human progress output clearly separated from the
+  machine contract.
+- Program launch output includes enough diagnostic context for users to find
+  the runner, argv, exit code, and log path without weakening JSON contracts.
+- Add command-level tests for representative bottle mutation, program run,
+  winetricks, runtime install failure, and update command output.
+- `docs/progress.md` records the gate state, latest commit when known,
+  verification, and next action.
+
+Not included:
+
+- Interactive prompts that would block Flutter or scripts.
 - Runtime behavior changes.
-- Converting primitives or nullable fields before the audit has selected the
-  exact boundary.
-- Removing all CLI contract test `part` files in the audit PR.
+- Removing legacy flat commands.
 
 Verification:
 
+- `just cli-test`
+- Runtime smoke target when a runtime install or launch path is changed
 - `just verify-governance`
 - `just verify-safety`
 - `just format-check`
@@ -311,35 +479,31 @@ Verification:
 
 review gate:
 
-- Commit and push the branch, open a draft PR, then stop before implementing
-  I2 code conversions.
+- Commit and push the branch, open a draft PR, then stop before C3-P3.
 
-#### PR Gate: I2-P2 CLI Contract Seed Test Part Split
+#### PR Gate: C3-P3 User CLI Documentation and Completion
 
-status: completed
-branch: `task/interface-i2-cli-contract-seed-tests`
+status: planned
+branch: `task/cli-shell-c3-docs-completion`
 
 Completion criteria:
 
-- Convert the low-dependency CLI contract `part` files
-  `cli_contract_executable.part.dart`, `cli_contract_command_dispatch.part.dart`,
-  and `cli_contract_repository_runner.part.dart` into standalone tests or shared
-  test helpers.
-- Remove the converted `part` directives from `cli_contract_test.dart` without
-  changing public CLI JSON, argv, exit-code, app, or runtime behavior.
-- Keep equivalent contract assertions for the converted files and preserve the
-  remaining high-volume contract part files for later gates.
-- Add or update governance so the converted seed files cannot regress to
-  hand-written `part` usage.
-- `docs/progress.md` records the gate state, latest commit, verification, and
-  next action.
+- Add user-facing CLI documentation that covers installation, data locations,
+  JSON mode, common bottle/program/runtime workflows, exit-code expectations,
+  and runtime ownership boundaries.
+- Update `README.md` to point power users at the supported CLI entry points.
+- Add shell completion generation or static completion files if the command
+  registry can support them without duplicating command metadata.
+- Add tests or generation checks that keep documented command names aligned
+  with the command registry.
+- `docs/progress.md` records the gate state, latest commit when known,
+  verification, and next action.
 
 Not included:
 
-- Converting app/bottle, pinned program, program execution, runtime
-  process/update, or runtime install contract parts.
-- Public CLI schema or command behavior changes.
-- Flutter widget test part cleanup.
+- Package-manager publishing.
+- Removing legacy flat commands.
+- Large runtime or Flutter UI changes.
 
 Verification:
 
@@ -351,31 +515,46 @@ Verification:
 
 review gate:
 
-- Commit and push the branch, open a draft PR, then stop before high-volume CLI
-  contract test splitting.
+- Commit and push the branch, open a draft PR, then stop before C4-P1.
 
-#### PR Gate: I2-P3 CLI Contract Family Test Part Split
+### C4: Compatibility Governance and Release Readiness
 
-status: completed
-branch: `task/interface-i2-cli-contract-family-tests`
+Purpose: lock the shell CLI as a maintained product surface and make future
+changes intentional, tested, and reflected in release automation.
+
+Small milestones:
+
+- [ ] C4-S1: Add governance checks for canonical command coverage and legacy
+  alias compatibility.
+- [ ] C4-S2: Audit release docs, smoke scripts, and workflows for the final
+  shell CLI path.
+- [ ] C4-S3: Decide whether any legacy flat commands should remain permanent
+  Flutter-only contracts or enter a documented deprecation path.
+
+#### PR Gate: C4-P1 Shell CLI Governance and Compatibility Audit
+
+status: planned
+branch: `task/cli-shell-c4-governance`
 
 Completion criteria:
 
-- Convert the remaining CLI contract `part` files for app/bottle, pinned
-  program, program execution, runtime process/update, and runtime install into
-  standalone test files or shared helpers.
-- Remove `part` usage from `packages/konyak_cli/test/cli_contract_test.dart`
-  entirely while keeping equivalent contract coverage.
-- Add or update governance so CLI contract tests cannot reintroduce
-  hand-written `part` usage.
-- `docs/progress.md` records the gate state, latest commit, verification, and
-  next action.
+- Add governance or focused tests that require each canonical command group to
+  have help coverage, JSON coverage where applicable, and documented legacy
+  alias behavior.
+- Audit remaining flat commands and classify them as permanent Flutter/internal
+  contracts, public compatibility aliases, or candidates for a future
+  deprecation milestone.
+- Update release, CLI distribution, and progress docs so the supported shell
+  CLI paths are clear for development, macOS release, and Linux AppImage users.
+- Keep all existing public JSON schemas and persisted data compatible.
+- `docs/progress.md` records the gate state, latest commit when known,
+  verification, and next action.
 
 Not included:
 
-- Flutter widget test part cleanup.
-- Public CLI schema or command behavior changes.
-- Domain primitive constructor conversion.
+- Removing any existing flat command.
+- Adding new runtime components or parent-repo runtime overlays.
+- Package-manager publishing.
 
 Verification:
 
@@ -387,549 +566,19 @@ Verification:
 
 review gate:
 
-- Commit and push the branch, open a draft PR, then stop before constructor or
-  command-selection boundary conversion.
-
-#### PR Gate: I2-P4 Semantic Constructor Primitive Fronts
-
-status: completed
-branch: `task/interface-i2-semantic-constructor-fronts`
-
-Completion criteria:
-
-- Convert selected stable constructor fronts that already validate primitives
-  into value objects, starting with settings/runtime fields where call sites are
-  controlled and invariants already exist.
-- Keep primitive decoding/projection at JSON, argv, persisted metadata, and I/O
-  adapter boundaries.
-- Add or update focused tests for converted constructor behavior without
-  asserting obsolete implementation details.
-- Update governance only for the converted constructors.
-- `docs/progress.md` records the gate state, latest commit, verification, and
-  next action.
-
-Not included:
-
-- Runtime manifest/schema type redesign.
-- Public CLI JSON schema changes.
-- ProgramRunPlanner responsibility splitting.
-
-Verification:
-
-- `just cli-test`
-- `just verify-governance`
-- `just verify-safety`
-- `just format-check`
-- `just lint`
-
-review gate:
-
-- Commit and push the branch, open a draft PR, then stop before nullable
-  command-selection or planner policy changes.
-
-#### PR Gate: I2-P5 Command Selection Planner Reassessment
-
-status: completed
-branch: `task/interface-i2-command-selection-planner-audit`
-
-Completion criteria:
-
-- Reassess the remaining command-selection bridge around
-  `supportedBottleCommand` and `ProgramRunPlanner.planBottleCommand`, and make
-  the selected command execution shape explicit before host-specific request
-  construction.
-- Keep public CLI JSON, argv, exit-code, app, and runtime behavior stable while
-  moving command-kind branching out of ad hoc planner string comparisons.
-- Add or update focused behavior tests for supported and unsupported bottle
-  command selection before implementation.
-- Update governance only for the completed command-selection boundary.
-- `docs/progress.md` records the gate state, latest commit, verification, and
-  next action.
-
-Not included:
-
-- Public CLI JSON schema changes.
-- Runtime or launcher behavior changes.
-- Program path, winetricks verb, process-management, graphics-backend, or
-  registry planner redesign.
-- Broad nullable cleanup outside the bottle-command selection bridge.
-- Advancing I2-S5 governance cleanup outside the converted boundary.
-
-Verification:
-
-- `just cli-test`
-- `just verify-governance`
-- `just verify-safety`
-- `just format-check`
-- `just lint`
-
-review gate:
-
-- Commit and push the branch, open a draft PR, then stop before I2-S5
-  governance cleanup or any broader planner-policy split.
-
-#### PR Gate: I2-P6 Planner Policy Split Plan
-
-status: completed
-branch: `task/interface-i2-planner-policy-split-plan`
-
-Completion criteria:
-
-- Audit the remaining `ProgramRunPlanner` host-platform switches,
-  runner-kind selection, macOS version policy, and graphics-backend policy
-  call sites after the completed bottle-command selection split.
-- Decide whether the next safe implementation gate should split host request
-  families, runner-kind policy, graphics-backend policy, or leave the remaining
-  planner structure intact until a more concrete behavioral need appears.
-- Add the next implementation PR Gate only when the audit identifies a stable
-  responsibility boundary that reduces complexity without changing public CLI
-  JSON, argv, exit-code, app, or runtime behavior.
-- Record explicitly deferred planner-policy decisions when a split would only
-  move conditionals without improving the boundary.
-- `docs/progress.md` records the gate state, latest commit, verification, and
-  next action.
-
-Not included:
-
-- Public CLI JSON schema changes.
-- Runtime, launcher, or Wine behavior changes.
-- Implementing the host request-family, runner-kind, or graphics-backend split
-  before the audit has selected the exact boundary.
-- Broad I2-S5 governance tightening outside planner-policy gate definition.
-
-Verification:
-
-- `just verify-governance`
-- `just verify-safety`
-- `just format-check`
-- `just lint`
-
-review gate:
-
-- Commit and push the branch, open a draft PR, then stop before implementation
-  of any further planner-policy split.
-
-#### PR Gate: I2-P7 Registry Planner Platform Policy
-
-status: completed
-branch: `task/interface-i2-registry-platform-policy`
-
-Completion criteria:
-
-- Replace the raw `includeMacDriverSettings` boolean bridge between
-  `ProgramRunPlanner` and registry plan helpers with an explicit registry
-  planning policy that carries the macOS/Linux platform decision.
-- Keep generated registry updates, registry queries, argv, public CLI JSON,
-  exit codes, app behavior, runtime behavior, and Wine execution paths stable.
-- Add or update focused tests proving macOS includes Wine Mac Driver registry
-  values and Linux excludes them without depending on implementation details.
-- Update governance only for the completed registry planner policy boundary.
-- `docs/progress.md` records the gate state, latest commit, verification, and
-  next action.
-
-Not included:
-
-- Public CLI JSON schema changes.
-- Runtime, launcher, Wine, graphics-backend, or request-builder behavior
-  changes.
-- Host request-family extraction outside registry planning.
-- Runner-kind enum redesign or runner-kind JSON contract changes.
-- Unifying domain and platform request-builder files.
-- Broad I2-S5 governance tightening outside the converted boundary.
-
-Verification:
-
-- `just cli-test`
-- `just verify-governance`
-- `just verify-safety`
-- `just format-check`
-- `just lint`
-
-review gate:
-
-- Commit and push the branch, open a draft PR, then stop before broader
-  host request-family, runner-kind, graphics-backend, or I2-S5 governance
-  cleanup.
-
-#### PR Gate: I2-P8 Governance and Custom Lint Tightening
-
-status: completed
-branch: `task/interface-i2-governance-tightening`
-
-Completion criteria:
-
-- Audit governance and custom lint checks added or updated during I2-P1 through
-  I2-P7 for stale allowances, obsolete branch/progress references, and checks
-  that preserve implementation details instead of stable boundary outcomes.
-- Replace stale or overly implementation-specific governance checks with
-  behavior-neutral boundary checks for the completed I2 conversions, including
-  CLI contract test part removal, semantic constructor value-object fronts,
-  command-selection dispatch, and registry planning policy.
-- Tighten custom lint boundary allowlists only for paths already converted by
-  completed I1/I2 gates and covered by lint fixtures or focused tests.
-- Keep external CLI JSON, argv, exit codes, Flutter framework adapter
-  nullability, runtime behavior, and Wine execution paths stable.
-- `docs/progress.md` records the gate state, latest commit, verification, and
-  next action.
-
-Not included:
-
-- New nullable, primitive, constructor, command-selection, request-builder,
-  runner-kind, graphics-backend, runtime, or Flutter UI boundary conversions.
-- Public CLI JSON schema changes.
-- Runtime, launcher, Wine, app behavior, or visible UI changes.
-- Narrowing broad Flutter framework adapter nullability allowances that are not
-  already covered by explicit app-facing decision models.
-- Adding new post-I2 implementation milestones before this governance cleanup
-  is reviewed.
-
-Verification:
-
-- `just verify-governance`
-- `just verify-safety`
-- `just format-check`
-- `just lint`
-- `just konyak-lints-test` if custom lint implementation, lint fixtures, or
-  lint tests change.
-
-review gate:
-
-- Commit and push the branch, open a draft PR, then stop before implementation
-  work beyond this governance cleanup.
-
-### I3: Mechanical Type-Safety Hardening
-
-Purpose: improve type safety through mechanical, behavior-preserving
-conversions of stable primitive discriminants and constructor fronts into
-explicit enums, catalogs, or value objects. Keep external CLI JSON, argv,
-persisted metadata, runtime manifests, and visible app behavior stable. Do not
-convert runtime-owner manifest strings unless the conversion has a clear
-adapter boundary back to the public schema value.
-
-Medium milestones, one PR unit each:
-
-- [x] I3-M1: Inventory remaining mechanically convertible primitive and enum
-  fronts, classify them as PR-sized conversion gates, adapter-boundary
-  primitives, or deferred design decisions.
-- [x] I3-M2: Replace stable `RunnerKind` string literal construction with a
-  typed runner-kind catalog or enum-backed factory while preserving existing
-  public JSON string values.
-- [x] I3-M3: Convert stable runtime platform-definition constructor fronts for
-  ids, names, roles, architecture, runner kind, backend ids, and component ids
-  into value objects where the current constructors already validate or project
-  to those values.
-- [x] I3-M4: Convert stable runtime model and source-manifest constructor
-  fronts to typed value-object inputs where they are Konyak-owned domain
-  values, while keeping JSON and manifest parsing as adapter boundaries.
-- [x] I3-M5: Convert macOS and Linux runtime install request wrapper fronts
-  from nullable archive/source strings into typed optional runtime install
-  value-object inputs while leaving CLI/update JSON parsing as the adapter
-  boundary.
-- [x] I3-M6: Convert macOS major-version capability plumbing from `Option<int>`
-  to an explicit value object or capability input if the I3 inventory confirms
-  the conversion is mechanical and behavior-neutral.
-- [x] I3-M7: Tighten governance and custom lint checks so completed I3
-  conversions cannot regress to ad hoc primitive construction, without
-  preserving temporary implementation details as contracts.
-
-#### PR Gate: I3-P1 Type-Safety Inventory and Gate Order
-
-status: completed
-branch: `task/type-safety-i3-inventory`
-
-Completion criteria:
-
-- Add an I3 audit document that inventories remaining primitive, nullable, and
-  string-discriminant fronts across CLI/domain code, Flutter app-facing models,
-  runtime platform definitions, request builders, custom lint allowlists, and
-  governance checks.
-- Classify each finding as a mechanical conversion PR, an allowed adapter
-  boundary, or an explicitly deferred design decision.
-- Refine the I3-P2 through I3-P7 gate order if the audit identifies a safer
-  mechanical sequence than the initial plan.
-- Keep the audit behavior-neutral: no public CLI JSON schema, app behavior,
-  runtime behavior, Wine execution path, or broad code conversion changes.
-- `docs/progress.md` records the gate state, latest commit, verification, and
-  next action.
-
-Not included:
-
-- Implementing enum/value-object conversions before the audit selects the exact
-  boundary.
-- Public CLI JSON schema changes.
-- Runtime, launcher, Wine, app, or visible UI behavior changes.
-- Broad linter allowlist narrowing.
-
-Verification:
-
-- `just verify-governance`
-- `just verify-safety`
-- `just format-check`
-- `just lint`
-
-review gate:
-
-- Commit and push the branch, open a draft PR, then stop before implementing
-  I3-P2.
-
-#### PR Gate: I3-P2 Runner Kind Typed Catalog
-
-status: completed
-branch: `task/type-safety-i3-runner-kind-catalog`
-
-Completion criteria:
-
-- Introduce a typed runner-kind catalog, enum, or enum-backed factory for the
-  stable runner kinds used by program request builders.
-- Replace direct `RunnerKind('<literal>')` construction in domain, platform,
-  I/O request builders, and focused tests with the typed catalog or enum-backed
-  factory where the runner kind is one of the stable known values.
-- Keep `RunnerKind.value`, public CLI JSON `runnerKind` strings, argv, exit
-  codes, runtime behavior, and Wine execution paths unchanged.
-- Add or update focused tests proving the typed catalog projects to the same
-  public runner-kind strings for Linux, macOS, registry, terminal, winetricks,
-  wineserver, and winedbg requests.
-- Update governance only for the completed runner-kind construction boundary.
-- `docs/progress.md` records the gate state, latest commit, verification, and
-  next action.
-
-Not included:
-
-- Public CLI JSON schema changes.
-- Renaming existing runner-kind string values.
-- Changing process launch, request-builder argv, runtime, Wine, or app
-  behavior.
-- Converting runtime manifest `runnerKind` fields before I3-P2 selects that
-  boundary.
-- Host request-family extraction or request-builder unification.
-
-Verification:
-
-- `just cli-test`
-- `just verify-governance`
-- `just verify-safety`
-- `just format-check`
-- `just lint`
-
-review gate:
-
-- Commit and push the branch, open a draft PR, then stop before I3-P3.
-
-#### PR Gate: I3-P3 Runtime Platform Definition Type Fronts
-
-status: completed
-branch: `task/type-safety-i3-runtime-platform-definitions`
-
-Completion criteria:
-
-- Convert stable `RuntimePlatformSpec`, `RuntimeStackComponentDefinition`, and
-  `RuntimeBackendDefinition` constructor fronts from primitive strings/lists to
-  existing value objects for runtime ids, names, roles, architecture,
-  runner-kind, component ids, backend ids, archive paths, and environment keys
-  where those values are Konyak-owned definitions.
-- Keep JSON parsing and runtime-owner manifest decoding at explicit adapter
-  boundaries, projecting typed values back to the same public schema strings.
-- Add or update focused domain and CLI contract tests proving list-runtimes,
-  runtime validation, runtime install planning, and source manifest behavior
-  stay schema-compatible.
-- Update governance only for the converted runtime platform-definition
-  constructor fronts.
-- `docs/progress.md` records the gate state, latest commit, verification, and
-  next action.
-
-Not included:
-
-- Changing runtime owner manifest schemas.
-- Changing public CLI JSON schema or persisted metadata.
-- Broad runtime package/install behavior changes.
-- Converting process diagnostic strings, human-readable messages, or fields
-  that do not carry stable identity/invariants.
-- Linux runtime packaging-owner build/check hardening.
-
-Verification:
-
-- `just cli-test`
-- `just verify-governance`
-- `just verify-safety`
-- `just format-check`
-- `just lint`
-
-review gate:
-
-- Commit and push the branch, open a draft PR, then stop before I3-P4.
-
-#### PR Gate: I3-P4 Runtime Model and Source Manifest Type Fronts
-
-status: completed
-branch: `task/type-safety-i3-runtime-model-fronts`
-
-Completion criteria:
-
-- Convert stable `RuntimeDefinition`, `RuntimeRecord`, `RuntimeStack`,
-  `RuntimeStackComponent`, `RuntimeStackBackend`, `RuntimeSourceManifest`, and
-  `RuntimeSourceComponent` constructor fronts from primitive strings/lists to
-  existing value objects where the values are Konyak-owned domain state.
-- Preserve JSON parsing, persisted metadata, runtime-owner manifest decoding,
-  and CLI projection as explicit primitive adapter boundaries.
-- Keep public CLI JSON, persisted metadata, runtime manifest schemas, runtime
-  behavior, and Wine execution paths unchanged.
-- Add or update focused domain and CLI contract tests for list-runtimes,
-  runtime update, runtime install planning, runtime source manifest lookup, and
-  source archive planning where converted constructors participate.
-- Update governance only for the converted runtime model constructor fronts.
-- `docs/progress.md` records the gate state, latest commit, verification, and
-  next action.
-
-Not included:
-
-- Changing runtime owner manifest schemas.
-- Changing public CLI JSON schema or persisted metadata.
-- Converting human-readable diagnostic messages, process stdout/stderr, or
-  process exit codes.
-- Runtime platform-definition constructor conversion already owned by I3-P3.
-- Linux runtime packaging-owner build/check hardening.
-
-Verification:
-
-- `just cli-test`
-- `just verify-governance`
-- `just verify-safety`
-- `just format-check`
-- `just lint`
-
-review gate:
-
-- Commit and push the branch, open a draft PR, then stop before I3-P5.
-
-#### PR Gate: I3-P5 Runtime Install Request Type Fronts
-
-status: completed
-branch: `task/type-safety-i3-runtime-install-requests`
-
-Completion criteria:
-
-- Convert `MacosWineInstallRequest` and `LinuxWineInstallRequest` constructor
-  fronts from nullable archive/source strings and primitive component archive
-  path iterables to typed `Option<RuntimeArchivePath>`,
-  `Option<RuntimeArchiveUrl>`, `Option<RuntimeArchiveChecksumValue>`,
-  `Option<RuntimeSourceManifestUrl>`,
-  `Option<RuntimeSourceManifestSignatureUrl>`, and iterable
-  `RuntimeArchivePath` inputs.
-- Preserve CLI parser, update JSON, persisted metadata, runtime manifest,
-  runtime install planning, runtime behavior, and Wine execution path
-  behavior.
-- Keep public convenience projection getters returning existing primitive
-  strings where CLI JSON or progress output requires the public schema shape.
-- Add or update focused CLI/runtime install tests proving full install, repair,
-  component install, and update install requests produce the same typed
-  `RuntimeInstallRequestOperation` and public JSON/progress values.
-- Update governance only for the converted runtime install request wrapper
-  fronts.
-- `docs/progress.md` records the gate state, latest commit, verification, and
-  next action.
-
-Not included:
-
-- Changing runtime install operation semantics.
-- Changing public CLI JSON schema, update metadata, runtime source manifests,
-  runtime behavior, or Wine execution paths.
-- Runtime platform-definition constructor conversion already owned by I3-P3.
-- Runtime model and source-manifest constructor conversion already owned by
-  I3-P4.
-
-Verification:
-
-- `just cli-test`
-- `just verify-governance`
-- `just verify-safety`
-- `just format-check`
-- `just lint`
-
-review gate:
-
-- Commit and push the branch, open a draft PR, then stop before I3-P6.
-
-#### PR Gate: I3-P6 macOS Version Capability Type Front
-
-status: completed
-branch: `task/type-safety-i3-macos-version-capability`
-
-Completion criteria:
-
-- Replace `Option<int>` macOS major-version plumbing in `ProgramRunPlanner` and
-  macOS request/terminal helpers with an explicit value object or capability
-  input, only if I3-P1 confirms the conversion is mechanical and
-  behavior-neutral.
-- Keep D3DMetal DLSS/MetalFX environment selection, terminal setup, CLI JSON,
-  argv, runtime behavior, Wine execution paths, and app behavior unchanged.
-- Add or update focused tests proving macOS version presence/absence and
-  version thresholds preserve the same request environment decisions.
-- Update governance only for the converted macOS version/capability boundary.
-- `docs/progress.md` records the gate state, latest commit, verification, and
-  next action.
-
-Not included:
-
-- Introducing a broad macOS capability service.
-- Changing D3DMetal, DXMT, DXVK, Metal HUD/capture, or runtime component
-  policy.
-- Runtime request-family extraction or platform request-builder unification.
-- Converting unrelated process ids, exit codes, PE offsets, or diagnostic
-  integers.
-
-Verification:
-
-- `just cli-test`
-- `just verify-governance`
-- `just verify-safety`
-- `just format-check`
-- `just lint`
-
-review gate:
-
-- Commit and push the branch, open a draft PR, then stop before I3-P7.
-
-#### PR Gate: I3-P7 Type-Safety Governance and Lint Guardrails
-
-status: completed
-branch: `task/type-safety-i3-governance`
-
-Completion criteria:
-
-- Audit I3-P1 through I3-P6 governance checks and custom lint allowlists for
-  stale allowances or brittle implementation-detail assertions.
-- Add narrow governance or custom lint checks that prevent reintroducing ad hoc
-  runner-kind literals, primitive runtime constructor fronts, and primitive
-  runtime install request or macOS version capability plumbing in converted
-  paths.
-- Keep remaining adapter-boundary primitives documented where they represent
-  public JSON, persisted metadata, runtime-owner manifests, or process
-  diagnostics.
-- Remove completed I3 items from active progress while leaving any genuinely
-  deferred type-safety candidates explicit in `docs/todo.md`.
-- `docs/progress.md` records the gate state, latest commit, verification, and
-  next action.
-
-Not included:
-
-- New enum/value-object conversions beyond I3-P2 through I3-P6.
-- Public CLI JSON, persisted metadata, runtime manifest, runtime behavior, or
-  visible UI changes.
-- Broad linter allowlist narrowing outside converted paths.
-
-Verification:
-
-- `just verify-governance`
-- `just verify-safety`
-- `just format-check`
-- `just lint`
-- `just konyak-lints-test` if custom lint implementation, fixtures, or tests
-  change.
-
-review gate:
-
-- Commit and push the branch, open a draft PR, then stop before adding further
-  type-safety conversion gates.
+- Commit and push the branch, open a draft PR, then stop before any future
+  compatibility-removal, package-manager, or runtime-related milestone.
+
+## Refactoring Milestones
+
+No active refactoring milestones are planned. Completed I1 compatibility
+cleanup, I2 boundary hardening, and I3 type-safety hardening gates have been
+removed from this backlog after verification. Their durable records live in
+commits, focused tests, audit documents, and governance checks.
+
+Before starting a future refactoring series, add fresh large milestones, small
+milestones, and `PR Gate` blocks here, then stop for review if the plan changes
+the current product or architecture direction.
 
 ## Deferred
 
