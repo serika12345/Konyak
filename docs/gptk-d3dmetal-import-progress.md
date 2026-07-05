@@ -9,9 +9,10 @@ Use `docs/todo.md` only as the top-level roadmap pointer. Use
 
 ## Current Snapshot
 
-- Timestamp: 2026-07-05 23:49 JST
-- State: `in_progress`
+- Timestamp: 2026-07-05 23:53 JST
+- State: `completed`
 - Branch: `task/gptk3-d3d10-parent-import`
+- Pull request: https://github.com/serika12345/Konyak/pull/32
 - Active gate: `G1-P1 GPTK3 D3D10 Parent Import Contract`
 - Purpose: restore complete GPTK 3 payload import by carrying `d3d10.dll` and
   `d3d10.so`, then add explicit GPTK version selection before accepting GPTK 4
@@ -25,10 +26,12 @@ Use `docs/todo.md` only as the top-level roadmap pointer. Use
   what the change enables; started G1-P1 on
   `task/gptk3-d3d10-parent-import`; added parent tests and implementation so
   GPTK3 imports require, install, preserve, and report `d3d10.dll` and
-  `d3d10.so`; captured public CLI proof with the Apple GPTK 3.0 DMG.
-- Remaining work: commit and push the verified G1-P1 implementation, open a
-  draft PR, record the PR URL, then stop before G1-P2.
-- Next action: commit the verified G1-P1 parent import contract change.
+  `d3d10.so`; captured public CLI proof with the Apple GPTK 3.0 DMG; committed
+  and pushed `aa88bd6`; opened draft PR #32.
+- Remaining work: review draft PR #32, then start G1-P2 only after the review
+  gate is accepted.
+- Next action: review https://github.com/serika12345/Konyak/pull/32; do not
+  start G1-P2 until the G1-P1 review gate is cleared.
 - Verification so far: G1-P1 implementation verification passed through the
   Nix dev shell with `just cli-test`, `just verify-governance`,
   `just verify-safety`, `just format-check`, and `just lint`. Focused red/green
@@ -37,7 +40,8 @@ Use `docs/todo.md` only as the top-level roadmap pointer. Use
   used `install-gptk-wine --from
   /Users/masato/Downloads/Game_Porting_Toolkit_3.0.dmg --json` with a temporary
   runtime root and confirmed installed `d3d10.dll` plus `d3d10.so ->
-  ../../external/libd3dshared.dylib`.
+  ../../external/libd3dshared.dylib`. The post-PR documentation record is
+  verified with `just verify-governance`.
 - Workstream separation: sub-agent tooling was not used because the current
   request did not explicitly authorize sub-agents. Investigation evidence,
   implementation edits, and final audit notes are kept separate in this file
@@ -152,6 +156,7 @@ Small milestones:
 
 status: completed
 branch: `task/gptk3-d3d10-parent-import`
+pull request: https://github.com/serika12345/Konyak/pull/32
 
 Completion criteria:
 
