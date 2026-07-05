@@ -12,6 +12,33 @@ instead of relying on live external plist metadata. The Flutter app lives in
 
 Konyak is distributed under the MIT License.
 
+## Project Goals
+
+Konyak treats the Wine/CrossOver runtime supply chain as a core product
+surface. Existing Wine wrapper projects are useful, but many distribute
+prebuilt engines without publishing the complete recipe that produced the
+runtime a user actually runs. Published upstream source is valuable, but it is
+not the same as a reproducible runtime recipe that records dependencies,
+patches, configure flags, bundled components, packaging layout, manifests, and
+verification.
+
+Konyak aims to keep those runtime recipes in Nix, update them continuously, and
+verify them through CI against the current compatibility stack. The goal is for
+users to get modern Wine/CrossOver-compatible runtimes from auditable inputs
+instead of opaque engine archives.
+
+License transparency is part of the runtime contract. Konyak should avoid
+runtime stacks that depend on unclear redistribution of commercial application
+binaries or restrictive graphics components such as D3DMetal/GPTK. When a
+component cannot be rebuilt, redistributed, or audited under clear terms, that
+constraint should be explicit instead of hidden inside the wrapper.
+
+This makes Konyak useful even before a polished GUI exists. Power users can
+already benefit from CLI-driven bottles, reproducible builds, explicit runtime
+manifests, reviewable artifacts, and CI-backed smoke verification. The Flutter
+app should improve ergonomics without replacing the CLI and runtime recipes as
+the source of truth.
+
 Technical details are kept in developer documentation:
 
 - [AGENTS.md](AGENTS.md): repository engineering contract
