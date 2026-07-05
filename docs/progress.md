@@ -13,32 +13,40 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-05 23:40 JST
-- State: `planned`
-- Branch: `main`
-- Active work: planned dedicated GPTK/D3DMetal import compatibility milestones
-  after investigating GPTK3 `d3d10.*` and GPTK4 beta 1 payload differences.
+- Timestamp: 2026-07-05 23:58 JST
+- State: `completed`
+- Branch: `task/gptk3-d3d10-parent-import`
+- Active work: G1-P1 GPTK3 D3D10 Parent Import Contract.
 - Related TODO: `docs/todo.md` `Next Tasks` now points at
   `docs/gptk-d3dmetal-import-progress.md`; the first planned gate is
   `G1-P1 GPTK3 D3D10 Parent Import Contract`.
-- Pull request: none.
-- Latest implementation commit: `5f4f471`; GPTK planning changes are currently
-  uncommitted.
-- Purpose: create a dedicated progress-management file that splits GPTK3 D3D10
-  payload completion, version-specified GPTK import, GPTK4 variant support, and
-  public execution proof into reviewable PR gates.
+- Pull request: https://github.com/serika12345/Konyak/pull/32
+- Latest implementation commit: `aa88bd6`.
+- Purpose: make the parent repository import contract preserve GPTK3
+  `d3d10.dll` and `d3d10.so` before any GPTK4 variant support is added.
 - Completed work: added `docs/gptk-d3dmetal-import-progress.md` with current
   evidence, operating rules, large milestones G1-G4, PR gates G1-P1 through
   G4-P1, verification requirements, and deferred follow-ups; added a top-level
   TODO pointer to that file; incorporated the PR #31 reporting format requiring
   change intent and what is now possible in GPTK review packages and final
-  reports.
-- Remaining work: implement G1-P1 on branch
-  `task/gptk3-d3d10-parent-import`.
-- Next action: create or continue `task/gptk3-d3d10-parent-import`, add failing
-  command-level tests proving GPTK3 `d3d10.dll` and `d3d10.so` are installed,
-  implement the smallest parent importer/runtime-definition change, run the
-  required verification, open a draft PR, then stop before G1-P2.
-- Verification: planning documentation verification passed through the Nix dev
-  shell with `just verify-governance`, `just verify-safety`,
+  reports; pulled the same PR #31 reporting-rule additions into `AGENTS.md` on
+  PR #32; created `task/gptk3-d3d10-parent-import`; added parent tests and
+  implementation so GPTK3 imports require, install, preserve, and report
+  `d3d10.dll` and `d3d10.so`; captured public CLI proof with the Apple GPTK 3.0
+  DMG; committed and pushed `aa88bd6`; opened draft PR #32.
+- Remaining work: review draft PR #32, then start G1-P2 only after the review
+  gate is accepted.
+- Next action: review https://github.com/serika12345/Konyak/pull/32; do not
+  start G1-P2 until the G1-P1 review gate is cleared.
+- Verification: G1-P1 implementation verification passed through the Nix dev
+  shell with `just cli-test`, `just verify-governance`, `just verify-safety`,
+  `just format-check`, and `just lint`. Focused red/green coverage used
+  `dart test test/cli_contract_runtime_install_test.dart
+  test/runtime_platform_definition_type_fronts_test.dart`. Public CLI proof
+  used `install-gptk-wine --from
+  /Users/masato/Downloads/Game_Porting_Toolkit_3.0.dmg --json` with a temporary
+  runtime root and confirmed installed `d3d10.dll` plus `d3d10.so ->
+  ../../external/libd3dshared.dylib`. The post-PR documentation record is
+  verified with `just verify-governance`; the `AGENTS.md` reporting-rule
+  backport is verified with `just verify-governance`, `just verify-safety`,
   `just format-check`, and `just lint`.

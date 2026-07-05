@@ -69,6 +69,7 @@ export 'package:test/test.dart';
 
 const gptkD3DMetalWindowsFileNames = <String>[
   'atidxx64.dll',
+  'd3d10.dll',
   'd3d11.dll',
   'd3d12.dll',
   'dxgi.dll',
@@ -78,6 +79,7 @@ const gptkD3DMetalWindowsFileNames = <String>[
 
 const gptkD3DMetalUnixFileNames = <String>[
   'atidxx64.so',
+  'd3d10.so',
   'd3d11.so',
   'd3d12.so',
   'dxgi.so',
@@ -1964,6 +1966,7 @@ bool isGptkD3DMetalUnixSymlinkPath(List<String> relativePath) {
   return relativePath.contains('x86_64-unix') &&
       const <String>[
         'atidxx64.so',
+        'd3d10.so',
         'd3d11.so',
         'd3d12.so',
         'dxgi.so',

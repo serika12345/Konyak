@@ -320,6 +320,8 @@ Review package at a milestone stop:
 - branch name and latest commit
 - pull request URL, if opened
 - completed TODO or PR Gate items
+- intent behind the change
+- what is now possible because of the change
 - changed files summary
 - verification commands and results
 - design or refactoring decisions made
@@ -505,5 +507,6 @@ A coding task is not complete unless all of the following are true:
   completed milestone, or roadmap item.
 - No unrelated files were reformatted or refactored.
 
-Final reports must include what changed, which commands ran, whether they
-passed, and any remaining risks.
+Final reports must include the intent behind the change, what is now possible
+because of the change, what changed, which commands ran, whether they passed,
+and any remaining risks.

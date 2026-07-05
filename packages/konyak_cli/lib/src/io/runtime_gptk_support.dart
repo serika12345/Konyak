@@ -9,6 +9,7 @@ import 'gptk_wine_installation.dart';
 
 const requiredGptkD3DMetalWindowsFileNames = <String>[
   'atidxx64.dll',
+  'd3d10.dll',
   'd3d11.dll',
   'd3d12.dll',
   'dxgi.dll',
@@ -18,6 +19,7 @@ const requiredGptkD3DMetalWindowsFileNames = <String>[
 
 const requiredGptkD3DMetalUnixFileNames = <String>[
   'atidxx64.so',
+  'd3d10.so',
   'd3d11.so',
   'd3d12.so',
   'dxgi.so',
@@ -285,7 +287,12 @@ Either<String, Unit> validateGptkD3DMetalSource(GptkD3DMetalSource source) {
       );
     }
   }
-  for (final libraryName in const <String>['d3d11.so', 'd3d12.so', 'dxgi.so']) {
+  for (final libraryName in const <String>[
+    'd3d10.so',
+    'd3d11.so',
+    'd3d12.so',
+    'dxgi.so',
+  ]) {
     final path = gptkD3DMetalUnixPayloadPath(
       source.unixLibraryRoot,
       libraryName,
