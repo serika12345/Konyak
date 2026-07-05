@@ -3470,10 +3470,8 @@ def require_refactoring_documentation_cleanup() -> None:
         "branch: `task/interface-i1-governance-allowances`",
         "### I2: Boundary Hardening and Test Contract Cleanup",
         "#### PR Gate: I2-P1 Primitive Boundary Audit",
-        "status: completed",
         "branch: `task/interface-i2-primitive-boundary-audit`",
         "#### PR Gate: I2-P2 CLI Contract Seed Test Part Split",
-        "status: completed",
         "branch: `task/interface-i2-cli-contract-seed-tests`",
         "#### PR Gate: I2-P3 CLI Contract Family Test Part Split",
         (
