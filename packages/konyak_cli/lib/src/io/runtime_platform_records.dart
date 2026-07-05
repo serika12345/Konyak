@@ -191,6 +191,7 @@ RuntimeStackComponent runtimeStackComponent({
       addMissingRuntimePath(missingPaths, paths[1]);
     }
     for (final path in const <String>[
+      'components/gptk-d3dmetal/lib/wine/x86_64-unix/d3d10.so',
       'components/gptk-d3dmetal/lib/wine/x86_64-unix/d3d11.so',
       'components/gptk-d3dmetal/lib/wine/x86_64-unix/d3d12.so',
       'components/gptk-d3dmetal/lib/wine/x86_64-unix/dxgi.so',
