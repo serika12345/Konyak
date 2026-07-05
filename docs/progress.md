@@ -13,15 +13,15 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-05 22:28 JST
+- Timestamp: 2026-07-05 22:30 JST
 - State: `completed`
 - Branch: `task/cli-shell-c1-contract-registry`
 - Active work: C1-P1 Shell CLI Contract and Command Registry.
 - Related TODO: `docs/todo.md` `Public Shell CLI Milestones`,
   `C1: Canonical Command Grammar and Compatibility`, PR Gate `C1-P1 Shell CLI
   Contract and Command Registry`.
-- Pull request: none.
-- Latest implementation commit: pending C1-P1 commit.
+- Pull request: https://github.com/serika12345/Konyak/pull/31
+- Latest implementation commit: `7b99995`.
 - Purpose: establish the maintained public shell CLI contract and a small
   command registry/test foundation before changing parser behavior, so later
   help/version and hierarchical alias work has a single command taxonomy and
