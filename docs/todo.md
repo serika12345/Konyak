@@ -82,7 +82,7 @@ Flutter-facing flat commands.
 
 Small milestones:
 
-- [ ] C1-S1: Define the canonical command taxonomy, alias policy, and command
+- [x] C1-S1: Define the canonical command taxonomy, alias policy, and command
   help model in a maintained CLI contract document or registry.
 - [ ] C1-S2: Add `konyak --help`, `konyak help`, and `konyak --version` with
   successful exit behavior.
@@ -94,7 +94,7 @@ Small milestones:
 
 #### PR Gate: C1-P1 Shell CLI Contract and Command Registry
 
-status: planned
+status: completed
 branch: `task/cli-shell-c1-contract-registry`
 
 Completion criteria:

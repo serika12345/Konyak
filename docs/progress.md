@@ -13,34 +13,29 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-05 21:55 JST
+- Timestamp: 2026-07-05 22:28 JST
 - State: `completed`
-- Branch: `main`
-- Active work: completed refactoring roadmap cleanup after Public Shell CLI
-  milestone planning.
-- Related TODO: `docs/todo.md` `Public Shell CLI Milestones` remains the next
-  planned implementation series; `docs/todo.md` `Refactoring Milestones` now
-  records that no active refactoring milestones are planned.
+- Branch: `task/cli-shell-c1-contract-registry`
+- Active work: C1-P1 Shell CLI Contract and Command Registry.
+- Related TODO: `docs/todo.md` `Public Shell CLI Milestones`,
+  `C1: Canonical Command Grammar and Compatibility`, PR Gate `C1-P1 Shell CLI
+  Contract and Command Registry`.
 - Pull request: none.
-- Latest implementation commit: `5f4f471`; planning changes are currently
-  uncommitted.
-- Purpose: keep roadmap documents focused on active and planned work by
-  removing completed I1 compatibility cleanup, I2 boundary hardening, and I3
-  type-safety hardening gates from `docs/todo.md` after verification, while
-  preserving implementation guardrails in governance and audit documents.
-- Completed work: added the public shell CLI goal, canonical command taxonomy,
-  compatibility rule for existing flat commands, automatic progression policy,
-  C1 command-grammar gates, C2 shell-installable distribution gates, C3
-  human-facing CLI experience gates, and C4 compatibility-governance gate;
-  replaced the completed refactoring backlog with a short no-active-milestone
-  placeholder; updated governance so it rejects stale completed I1/I2/I3
-  roadmap entries instead of requiring them.
-- Remaining work: implement the planned PR gates, starting with C1-P1 Shell CLI
-  Contract and Command Registry on branch `task/cli-shell-c1-contract-registry`.
-- Next action: when implementation resumes, create or continue
-  `task/cli-shell-c1-contract-registry`, add the maintained shell CLI contract
-  and command registry/test foundation, run the required verification, open a
-  draft PR, then stop before C1-P2.
-- Verification: refactoring roadmap cleanup verification passed through the
-  Nix dev shell with `just verify-governance`, `just verify-safety`,
-  `just format-check`, and `just lint`.
+- Latest implementation commit: pending C1-P1 commit.
+- Purpose: establish the maintained public shell CLI contract and a small
+  command registry/test foundation before changing parser behavior, so later
+  help/version and hierarchical alias work has a single command taxonomy and
+  compatibility source of truth.
+- Completed work: added `docs/cli-shell-contract.md` with the canonical public
+  command tree, JSON/exit-code compatibility rules, flat-command alias policy,
+  and deprecation policy; added `cli_shell_command_registry.dart` as a small
+  registry for command groups, canonical paths, help summaries, and
+  compatibility aliases; added focused registry tests that compare the registry
+  with the maintained contract document; marked C1-S1 and C1-P1 complete.
+- Remaining work: commit, push, open a draft PR, then stop before C1-P2.
+- Next action: commit the verified C1-P1 change, push
+  `task/cli-shell-c1-contract-registry`, and open a draft PR.
+- Verification: passed through the Nix dev shell with `just format-check`,
+  `just cli-test`, `just verify-governance`, `just verify-safety`, and
+  `just lint`. Focused registry coverage also passed with
+  `cd packages/konyak_cli && dart test test/cli_shell_command_registry_test.dart`.
