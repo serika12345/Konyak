@@ -1871,8 +1871,9 @@ void createCompleteMacosRuntime(String runtimeHome) {
 
 Directory createGptkD3DMetalSource(
   String tempPath,
-  List<String> externalRelativePath,
-) {
+  List<String> externalRelativePath, {
+  String frameworkVersion = '3.0',
+}) {
   final sourceRoot = Directory(joinTestPath(tempPath, externalRelativePath))
     ..createSync(recursive: true);
   _createMachOFile(
@@ -1883,6 +1884,29 @@ Directory createGptkD3DMetalSource(
       'D3DMetal',
     ]),
   );
+  File(
+      joinTestPath(sourceRoot.path, const [
+        'D3DMetal.framework',
+        'Versions',
+        'A',
+        'Resources',
+        'Info.plist',
+      ]),
+    )
+    ..parent.createSync(recursive: true)
+    ..writeAsStringSync('''
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleShortVersionString</key>
+  <string>$frameworkVersion</string>
+  <key>CFBundleVersion</key>
+  <string>$frameworkVersion</string>
+</dict>
+</plist>
+''');
   _createMachOFile(joinTestPath(sourceRoot.path, const ['libd3dshared.dylib']));
   final dllRoot = _gptkFixtureDllRoot(sourceRoot);
   for (final fileName in gptkD3DMetalWindowsFileNames) {
@@ -1910,6 +1934,7 @@ Directory createGptkWineRoot(
   String tempPath, {
   bool validBinaries = true,
   bool includeD3DMetal = false,
+  String frameworkVersion = '3.0',
 }) {
   final wineRoot = Directory(joinTestPath(tempPath, const ['gptk-wine']));
   final wineloader = File(
@@ -1930,7 +1955,10 @@ Directory createGptkWineRoot(
     ..parent.createSync(recursive: true)
     ..writeAsStringSync('fixture');
   if (includeD3DMetal) {
-    createGptkD3DMetalSource(wineRoot.path, const ['lib', 'external']);
+    createGptkD3DMetalSource(wineRoot.path, const [
+      'lib',
+      'external',
+    ], frameworkVersion: frameworkVersion);
   }
   return wineRoot;
 }
@@ -1939,6 +1967,7 @@ Directory createGptkWineAppBundle(
   String tempPath, {
   bool validBinaries = true,
   bool includeD3DMetal = false,
+  String frameworkVersion = '3.0',
 }) {
   final appBundle = Directory(
     joinTestPath(tempPath, const ['Game Porting Toolkit.app']),
@@ -1947,6 +1976,7 @@ Directory createGptkWineAppBundle(
     appBundle.path,
     validBinaries: validBinaries,
     includeD3DMetal: includeD3DMetal,
+    frameworkVersion: frameworkVersion,
   );
   final targetWineRoot = Directory(
     joinTestPath(appBundle.path, const ['Contents', 'Resources', 'wine']),

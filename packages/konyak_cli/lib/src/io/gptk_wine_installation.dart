@@ -48,9 +48,15 @@ class GptkWineInstallCompleted extends GptkWineInstallResult {
 }
 
 class GptkWineInstallFailed extends GptkWineInstallResult {
-  const GptkWineInstallFailed(this.message);
+  const GptkWineInstallFailed(
+    this.message, {
+    this.code = 'gptkWineInstallFailed',
+    this.extra = const <String, Object?>{},
+  });
 
   final String message;
+  final String code;
+  final Map<String, Object?> extra;
 }
 
 abstract interface class GptkWineInstaller {
@@ -108,6 +114,23 @@ class DartIoGptkWineInstaller implements GptkWineInstaller {
       }
 
       final bundledD3DMetal = sourceResolution.source;
+      late final GptkWineImportVersion detectedVersion;
+      switch (detectGptkD3DMetalPayloadVersion(bundledD3DMetal)) {
+        case Left<String, GptkWineImportVersion>(:final value):
+          return GptkWineInstallFailed(
+            value,
+            code: 'gptkWineVersionDetectionFailed',
+          );
+        case Right<String, GptkWineImportVersion>(:final value):
+          detectedVersion = value;
+      }
+      final versionMismatchFailure = _gptkWineVersionMismatchFailureOption(
+        requestedVersion: request.requestedVersion,
+        detectedVersion: detectedVersion,
+      );
+      if (versionMismatchFailure != null) {
+        return versionMismatchFailure;
+      }
       switch (validateGptkD3DMetalSource(bundledD3DMetal)) {
         case Left<String, Unit>(:final value):
           return GptkWineInstallFailed(value);
@@ -166,6 +189,37 @@ class DartIoGptkWineInstaller implements GptkWineInstaller {
       ),
     );
   }
+}
+
+GptkWineInstallFailed? _gptkWineVersionMismatchFailureOption({
+  required GptkWineImportVersion requestedVersion,
+  required GptkWineImportVersion detectedVersion,
+}) {
+  if (requestedVersion == GptkWineImportVersion.auto ||
+      requestedVersion == detectedVersion) {
+    return null;
+  }
+
+  final requestedValue = gptkWineImportVersionCliValue(requestedVersion);
+  final detectedValue = gptkWineImportVersionCliValue(detectedVersion);
+
+  return GptkWineInstallFailed(
+    'Requested GPTK $requestedValue, but selected GPTK/D3DMetal payload is '
+    'GPTK $detectedValue.',
+    code: 'gptkWineVersionMismatch',
+    extra: <String, Object?>{
+      'requestedVersion': requestedValue,
+      'detectedVersion': detectedValue,
+    },
+  );
+}
+
+String gptkWineImportVersionCliValue(GptkWineImportVersion version) {
+  return switch (version) {
+    GptkWineImportVersion.auto => 'auto',
+    GptkWineImportVersion.gptk3 => '3',
+    GptkWineImportVersion.gptk4 => '4',
+  };
 }
 
 void copyDirectoryReplacing({

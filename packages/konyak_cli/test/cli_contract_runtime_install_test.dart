@@ -1724,6 +1724,144 @@ void main() {
     );
   });
 
+  test('install-gptk-wine rejects GPTK3 requests for GPTK4 payloads', () {
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-gptk-wine-version-mismatch-test-',
+    );
+    addTearDown(() {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    });
+
+    final appBundle = createGptkWineAppBundle(
+      tempDirectory.path,
+      includeD3DMetal: true,
+      frameworkVersion: '4.0b1',
+    );
+    final runtimeRoot = Directory(
+      joinTestPath(tempDirectory.path, const ['runtime']),
+    );
+    createInstalledMacosRuntime(runtimeRoot.path);
+
+    final result = runCli(
+      [
+        'install-gptk-wine',
+        '--from',
+        appBundle.path,
+        '--gptk-version',
+        '3',
+        '--json',
+      ],
+      gptkWineInstaller: DartIoGptkWineInstaller(
+        environment: HostEnvironment({
+          'KONYAK_MACOS_WINE_HOME': runtimeRoot.path,
+        }),
+      ),
+    );
+
+    expect(result.exitCode, 75);
+    final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+    final error = payload['error'] as Map<String, Object?>;
+    expect(error['code'], 'gptkWineVersionMismatch');
+    expect(error['requestedVersion'], '3');
+    expect(error['detectedVersion'], '4');
+    expect(error['message'], contains('Requested GPTK 3'));
+    expect(
+      Directory(
+        joinTestPath(runtimeRoot.path, const ['components', 'gptk-d3dmetal']),
+      ).existsSync(),
+      isFalse,
+    );
+  });
+
+  test('install-gptk-wine rejects GPTK4 requests for GPTK3 payloads', () {
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-gptk-wine-version-mismatch-test-',
+    );
+    addTearDown(() {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    });
+
+    final appBundle = createGptkWineAppBundle(
+      tempDirectory.path,
+      includeD3DMetal: true,
+      frameworkVersion: '3.0',
+    );
+    final runtimeRoot = Directory(
+      joinTestPath(tempDirectory.path, const ['runtime']),
+    );
+    createInstalledMacosRuntime(runtimeRoot.path);
+
+    final result = runCli(
+      [
+        'install-gptk-wine',
+        '--from',
+        appBundle.path,
+        '--gptk-version',
+        '4',
+        '--json',
+      ],
+      gptkWineInstaller: DartIoGptkWineInstaller(
+        environment: HostEnvironment({
+          'KONYAK_MACOS_WINE_HOME': runtimeRoot.path,
+        }),
+      ),
+    );
+
+    expect(result.exitCode, 75);
+    final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+    final error = payload['error'] as Map<String, Object?>;
+    expect(error['code'], 'gptkWineVersionMismatch');
+    expect(error['requestedVersion'], '4');
+    expect(error['detectedVersion'], '3');
+    expect(error['message'], contains('Requested GPTK 4'));
+  });
+
+  test('install-gptk-wine auto accepts detected GPTK4 payloads', () {
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-gptk-wine-auto-version-test-',
+    );
+    addTearDown(() {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    });
+
+    final appBundle = createGptkWineAppBundle(
+      tempDirectory.path,
+      includeD3DMetal: true,
+      frameworkVersion: '4.0b1',
+    );
+    final runtimeRoot = Directory(
+      joinTestPath(tempDirectory.path, const ['runtime']),
+    );
+    createInstalledMacosRuntime(runtimeRoot.path);
+
+    final result = runCli(
+      [
+        'install-gptk-wine',
+        '--from',
+        appBundle.path,
+        '--gptk-version',
+        'auto',
+        '--json',
+      ],
+      gptkWineInstaller: DartIoGptkWineInstaller(
+        environment: HostEnvironment({
+          'KONYAK_MACOS_WINE_HOME': runtimeRoot.path,
+        }),
+      ),
+    );
+
+    expect(result.exitCode, 0, reason: result.stderr);
+    final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+    final install = payload['gptkWineInstall'] as Map<String, Object?>;
+    expect(install['componentId'], 'gptk-d3dmetal');
+  });
+
   test('install-gptk-wine rejects sources without an installed runtime', () {
     final tempDirectory = Directory.systemTemp.createTempSync(
       'konyak-gptk-wine-test-',

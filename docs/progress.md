@@ -13,34 +13,33 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-06 16:53 JST
-- State: `paused`
-- Branch: `task/gptk-version-import-contract`
-- Active work: `G2-P1 GPTK Version Parser and Request Model`.
+- Timestamp: 2026-07-06 17:18 JST
+- State: `in_progress`
+- Branch: `task/gptk-version-detection`
+- Active work: `G2-P2 GPTK Version Detection and Mismatch Diagnostics`.
 - Related TODO: `docs/todo.md` `Next Tasks` points at
   `docs/gptk-d3dmetal-import-progress.md`; the active gate is
-  `G2-P1 GPTK Version Parser and Request Model`.
-- Pull request: https://github.com/serika12345/Konyak/pull/35
+  `G2-P2 GPTK Version Detection and Mismatch Diagnostics`.
+- Pull request: not opened yet for the current gate. Previous parent PR
+  https://github.com/serika12345/Konyak/pull/35 merged as `0afa99f`.
 - Latest known completed work: runtime PR
   https://github.com/serika12345/konyak-macos-runtime/pull/3 merged as
   `eedc190`; parent PR https://github.com/serika12345/Konyak/pull/34 merged
-  as `ab048d8`.
-- Purpose: make GPTK/D3DMetal import requests version-aware before accepting
-  GPTK4 payload variants, while preserving the existing unversioned
-  `install-gptk-wine --from <path> --json` command as backward-compatible
-  `auto` behavior.
-- Completed work: created branch `task/gptk-version-import-contract`; added
-  failing parser coverage for omitted `--gptk-version`, explicit `auto`, `3`,
-  `4`, and invalid values; added `GptkWineImportVersion` and
-  `GptkWineInstallRequest.requestedVersion`; wired the parser and handler path
-  so the requested version reaches `GptkWineInstaller`; updated CLI usage text.
-- Remaining work: review and merge PR #35 before starting G2-P2.
-- Next action: review PR #35. If no changes are requested, merge it, then
-  continue to G2-P2 for payload-version detection and mismatch diagnostics.
+  as `ab048d8`; parent PR https://github.com/serika12345/Konyak/pull/35
+  merged as `0afa99f`.
+- Purpose: detect GPTK3/GPTK4 payload versions from `D3DMetal.framework`
+  metadata and return stable JSON diagnostics when an explicit requested
+  version does not match the detected payload.
+- Completed work: created branch `task/gptk-version-detection`; confirmed real
+  GPTK metadata uses `CFBundleShortVersionString=3.0` for GPTK3/CrossOver and
+  `4.0b1` for GPTK4 beta 1; added failing CLI contract tests for GPTK3 request
+  receiving GPTK4, GPTK4 request receiving GPTK3, and `auto` accepting detected
+  GPTK4; implemented framework version detection and `gptkWineVersionMismatch`
+  JSON error fields.
+- Remaining work: commit, push, open a draft PR, then stop before G3-P1.
+- Next action: commit the verified G2-P2 implementation and open a draft PR.
 - Verification so far: `nix develop -c zsh -lc 'cd packages/konyak_cli && dart
-  test test/cli_parser_boundary_options_test.dart --plain-name "runtime parser
-  options"'` passed; `nix develop -c zsh -lc 'cd packages/konyak_cli && dart
   test test/cli_contract_runtime_install_test.dart --plain-name
-  "install-gptk-wine forwards the requested GPTK version"'` passed; `nix
-  develop -c zsh -lc 'just cli-test && just verify-governance && just
-  verify-safety && just format-check && just lint'` passed.
+  "install-gptk-wine"'` passed; `nix develop -c zsh -lc 'just cli-test &&
+  just verify-governance && just verify-safety && just format-check && just
+  lint'` passed.

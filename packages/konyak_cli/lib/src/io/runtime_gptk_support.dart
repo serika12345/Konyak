@@ -5,6 +5,7 @@ import 'package:fpdart/fpdart.dart';
 import '../platform/platform_terminal_commands.dart';
 import '../shared/common_helpers.dart';
 import 'directory_copy_support.dart';
+import 'external_payload_helpers.dart';
 import 'gptk_wine_installation.dart';
 
 const requiredGptkD3DMetalWindowsFileNames = <String>[
@@ -303,6 +304,46 @@ Either<String, Unit> validateGptkD3DMetalSource(GptkD3DMetalSource source) {
   return const Right<String, Unit>(unit);
 }
 
+Either<String, GptkWineImportVersion> detectGptkD3DMetalPayloadVersion(
+  GptkD3DMetalSource source,
+) {
+  final frameworkVersion = d3dMetalFrameworkVersion(source.framework.path);
+  if (frameworkVersion == null || frameworkVersion.trim().isEmpty) {
+    return const Left<String, GptkWineImportVersion>(
+      'D3DMetal.framework does not contain GPTK version metadata.',
+    );
+  }
+
+  final detectedVersion = gptkD3DMetalPayloadVersionFromFrameworkVersion(
+    frameworkVersion,
+  );
+  if (detectedVersion == null) {
+    return Left<String, GptkWineImportVersion>(
+      'Unsupported GPTK/D3DMetal framework version: $frameworkVersion.',
+    );
+  }
+
+  return Right<String, GptkWineImportVersion>(detectedVersion);
+}
+
+GptkWineImportVersion? gptkD3DMetalPayloadVersionFromFrameworkVersion(
+  String frameworkVersion,
+) {
+  final normalized = frameworkVersion.trim().toLowerCase();
+  if (normalized == '3' ||
+      normalized.startsWith('3.') ||
+      normalized.startsWith('3b')) {
+    return GptkWineImportVersion.gptk3;
+  }
+  if (normalized == '4' ||
+      normalized.startsWith('4.') ||
+      normalized.startsWith('4b')) {
+    return GptkWineImportVersion.gptk4;
+  }
+
+  return null;
+}
+
 GptkD3DMetalSource? resolveGptkD3DMetalSource(String sourcePath) {
   final sourceType = FileSystemEntity.typeSync(sourcePath);
   if (sourceType == FileSystemEntityType.notFound) {
@@ -464,6 +505,75 @@ String? d3dMetalFrameworkBinary(String frameworkPath) {
     }
   }
   return null;
+}
+
+String? d3dMetalFrameworkVersion(String frameworkPath) {
+  final infoPlist = d3dMetalFrameworkInfoPlist(frameworkPath);
+  if (infoPlist == null) {
+    return null;
+  }
+
+  return plistStringValue(infoPlist, 'CFBundleShortVersionString') ??
+      plistStringValue(infoPlist, 'CFBundleVersion');
+}
+
+File? d3dMetalFrameworkInfoPlist(String frameworkPath) {
+  for (final relativePath in const <List<String>>[
+    <String>['Resources', 'Info.plist'],
+    <String>['Versions', 'A', 'Resources', 'Info.plist'],
+  ]) {
+    final file = File(joinPath(frameworkPath, relativePath));
+    if (file.existsSync()) {
+      return file;
+    }
+  }
+
+  return null;
+}
+
+String? plistStringValue(File plist, String key) {
+  return plutilRawValue(plist, key) ?? xmlPlistStringValue(plist, key);
+}
+
+String? plutilRawValue(File plist, String key) {
+  try {
+    final result = Process.runSync('plutil', <String>[
+      '-extract',
+      key,
+      'raw',
+      '-o',
+      '-',
+      plist.path,
+    ]);
+    if (result.exitCode != 0) {
+      return null;
+    }
+
+    final value = processOutputToString(result.stdout).trim();
+    if (value.isEmpty) {
+      return null;
+    }
+
+    return value;
+  } on ProcessException {
+    return null;
+  }
+}
+
+String? xmlPlistStringValue(File plist, String key) {
+  try {
+    final contents = plist.readAsStringSync();
+    final match = RegExp(
+      '<key>\\s*${RegExp.escape(key)}\\s*</key>\\s*<string>([^<]+)</string>',
+      dotAll: true,
+    ).firstMatch(contents);
+
+    return match?.group(1)?.trim();
+  } on FileSystemException {
+    return null;
+  } on FormatException {
+    return null;
+  }
 }
 
 bool looksLikeMachO(File file) {
