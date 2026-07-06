@@ -13,40 +13,54 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-06 17:44 JST
-- State: `paused`
-- Branch: `task/gptk4-parent-import-variant`
-- Active work: `G3-P1 GPTK4 Parent Import Variant`.
+- Timestamp: 2026-07-06 18:31 JST
+- State: `in_progress`
+- Branch: `task/gptk4-runtime-import-smoke`
+- Active work: `G3-P2 GPTK4 Runtime Submodule Import and Smoke Contract`.
 - Related TODO: `docs/todo.md` `Next Tasks` points at
   `docs/gptk-d3dmetal-import-progress.md`; the active gate is
-  `G3-P1 GPTK4 Parent Import Variant`.
-- Pull request: https://github.com/serika12345/Konyak/pull/37. Previous
-  parent PR https://github.com/serika12345/Konyak/pull/36 merged as
-  `4e56d49`.
+  `G3-P2 GPTK4 Runtime Submodule Import and Smoke Contract`.
+- Pull request: parent PR not opened yet for the current gate. Runtime PR
+  https://github.com/serika12345/konyak-macos-runtime/pull/4 is open as draft.
+  Previous parent PR https://github.com/serika12345/Konyak/pull/37 merged as
+  `2445a0d`.
 - Latest known completed work: runtime PR
   https://github.com/serika12345/konyak-macos-runtime/pull/3 merged as
   `eedc190`; parent PR https://github.com/serika12345/Konyak/pull/34 merged
   as `ab048d8`; parent PR https://github.com/serika12345/Konyak/pull/35
   merged as `0afa99f`; parent PR https://github.com/serika12345/Konyak/pull/36
-  merged as `4e56d49`.
-- Purpose: accept the GPTK4 parent import payload variant that lacks
-  `atidxx64.*`, while keeping GPTK3 validation strict and recording the
-  detected GPTK version in the public import result.
-- Completed work: created branch `task/gptk4-parent-import-variant`; added
-  GPTK4-without-`atidxx64.*` CLI import coverage; kept GPTK3 validation strict;
-  split GPTK validation and component copy requirements by detected GPTK
-  version; removed `atidxx64.*` from the active runtime completeness contract;
-  preserved `nvngx-on-metalfx.*` source normalization into canonical
-  `nvngx.*` installed names; added detected GPTK version to public import JSON;
-  pushed implementation commit `bb00c94`; opened draft PR #37.
-- Remaining work: review PR #37. Apple GPTK 4.0 beta 1 DMG proof remains
-  pending outside this parent fixture gate.
-- Next action: review PR #37. If no changes are requested, merge it, then
-  continue to G3-P2 for runtime submodule import and smoke contract updates.
+  merged as `4e56d49`; parent PR https://github.com/serika12345/Konyak/pull/37
+  merged as `2445a0d`.
+- Runtime branch: `runtime/konyak-macos-runtime` branch
+  `task/gptk4-runtime-import-smoke`, based on runtime `main` commit
+  `eedc190`, latest commit `f8e3652`.
+- Purpose: make the runtime-owned GPTK/D3DMetal import scripts, smoke checks,
+  and CI preparation accept GPTK4 payloads without `atidxx64.*`, while keeping
+  GPTK3 smoke green and preserving the no-active-`d3d10.*` contract.
+- Workstream separation: sub-agent spawning is not available for this turn
+  because the tool is restricted to explicit user requests. Investigation,
+  implementation, and audit evidence will be kept separate in this snapshot and
+  in `docs/gptk-d3dmetal-import-progress.md`.
+- Completed work: PR #37 was merged; local parent `main` was fast-forwarded to
+  `2445a0d`; created parent branch `task/gptk4-runtime-import-smoke`; updated
+  runtime submodule checkout from `9f8f43a` to runtime `main` merge commit
+  `eedc190`; created runtime branch `task/gptk4-runtime-import-smoke`; updated
+  runtime import, CI preparation, backend smoke, archive exclusion, workflow,
+  and runtime contract docs so GPTK4 payloads without `atidxx64.*` are accepted
+  while GPTK3 still requires `atidxx64.*`; proved GPTK3 and GPTK4 maintained
+  local smoke against `dist/konyak-macos-wine-runtime-stack.tar.zst`.
+- Remaining work: commit and push parent changes, then open the parent tracking
+  PR for the submodule pointer/docs.
+- Next action: commit/push parent branch and prepare the G3-P2 review package.
 - Verification so far:
-  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_runtime_install_test.dart test/cli_contract_runtime_process_update_test.dart test/cli_app_runtime_json_test.dart test/runtime_platform_definition_type_fronts_test.dart'`
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && zsh -n scripts/import-gptk-d3dmetal-redist.zsh scripts/prepare-gptk-d3dmetal-ci-smoke.zsh scripts/smoke-backend-device.zsh scripts/smoke-gptk-d3dmetal-local.zsh scripts/check-runtime-archive-excludes-gptk.zsh'`
     passed.
-  - `nix develop -c zsh -lc 'dart format packages/konyak_cli/test/cli_contract_runtime_install_test.dart && cd packages/konyak_cli && dart test test/cli_contract_runtime_install_test.dart --plain-name "install-gptk-wine imports GPTK4 payloads without atidxx64"'`
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && KONYAK_GPTK_D3DMETAL_CI_SOURCE_PATH=/Users/masato/Downloads/Game_Porting_Toolkit_4.0_beta_1.dmg ./scripts/smoke-gptk-d3dmetal-local.zsh --allow-unsupported-host --work-root /tmp/konyak-gptk4-local-smoke dist/konyak-macos-wine-runtime-stack.tar.zst'`
+    passed: GPTK4 was detected, `gptk-d3d10-unsupported`,
+    `gptk-d3d11-device`, and `gptk-d3d12-device` passed.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && ./scripts/smoke-gptk-d3dmetal-local.zsh --allow-unsupported-host --work-root /tmp/konyak-gptk3-local-smoke dist/konyak-macos-wine-runtime-stack.tar.zst'`
+    passed: GPTK3 was detected and the same GPTK smoke targets passed.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && nix shell nixpkgs#gnutar -c ./scripts/check-runtime-archive-excludes-gptk.zsh dist/konyak-macos-wine-runtime-stack.tar.zst'`
     passed.
-  - `nix develop -c zsh -lc 'just cli-test && just verify-governance && just verify-safety && just format-check && just lint'`
+  - `nix develop -c zsh -lc 'git diff --check && git -C runtime/konyak-macos-runtime diff --check && just verify-governance && just verify-safety && just format-check && just lint'`
     passed.
