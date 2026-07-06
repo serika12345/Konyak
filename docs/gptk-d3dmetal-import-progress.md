@@ -9,28 +9,34 @@ Use `docs/todo.md` only as the top-level roadmap pointer. Use
 
 ## Current Snapshot
 
-- Timestamp: 2026-07-06 10:43 JST
-- State: `blocked`
+- Timestamp: 2026-07-06 11:01 JST
+- State: `planned`
 - Branch: `task/gptk-d3d10-smoke`
 - Pull request: https://github.com/serika12345/Konyak/pull/33
-- Active gate: `G1-P4 GPTK D3D10 Render/Readback Proof`
-- Purpose: prove actual D3D10 render/readback through native GPTK/D3DMetal,
-  not through DXVK or WineD3D/Vulkan fallback.
+- Active gate: `G1-P4 GPTK D3D10 Unsupported and WineD3D Fallback Contract`
+- Purpose: match CrossOver's practical D3D10 handling: GPTK/D3DMetal is not a
+  direct D3D10 renderer, D3D10 render support is proven through DXVK first and
+  WineD3D/Vulkan fallback second, and any GPTK D3D10 attempt is expected to
+  fail with a known unsupported signature.
 - Completed work: kept G1-P3's DXVK D3D10 render/readback proof intact; tested
   native GPTK D3D10 candidate paths with Apple GPTK 3.0, Apple GPTK 4.0 beta 1,
-  and CrossOver.app's `apple_gptk` payload against the Konyak runtime.
-- Blocker: native GPTK/D3DMetal `dxgi`/`d3d11` does not return a usable
-  `ID3D10Device` in the tested paths. CrossOver.app can pass the same D3D10
-  render/readback probe, but loaded-DLL tracing shows that path uses builtin
-  WineD3D with the Vulkan renderer rather than native GPTK/D3DMetal.
-- Remaining work: choose whether D3D10 should remain DXVK/WineD3D-backed on
-  macOS, or provide a new upstream runtime/payload combination that can prove
-  native GPTK/D3DMetal D3D10 render/readback.
-- Next action: do not merge a `gptk-d3d10-render` CI target until a dynamic run
-  prints the render/readback success marker while loaded-DLL tracing proves
-  native GPTK/D3DMetal `dxgi`/`d3d11` is responsible.
-- Verification so far: G1-P3 passed. G1-P4 is blocked by dynamic evidence; see
-  the Evidence Ledger below.
+  and CrossOver.app's `apple_gptk` payload against the Konyak runtime; confirmed
+  CrossOver.app's passing D3D10 render/readback route is builtin WineD3D/Vulkan,
+  not GPTK/D3DMetal.
+- Decision: macOS D3D10 rendering must be treated as DXVK/WineD3D-backed.
+  Native GPTK/D3DMetal D3D10 render/readback is unsupported unless a future
+  upstream payload changes the observed behavior and the support contract is
+  reviewed.
+- Remaining work: add maintained runtime smoke coverage for expected GPTK D3D10
+  unsupported behavior and CrossOver-equivalent WineD3D/Vulkan D3D10
+  render/readback; align parent CLI/backend hints and launch fallback behavior.
+- Next action: implement G1-P4. Do not continue GPTK4 import until the expected
+  unsupported GPTK D3D10 path and WineD3D/Vulkan fallback path are represented
+  in runtime/parent contracts.
+- Verification so far: G1-P3 passed. The G1-P4 plan update passed runtime
+  submodule `git diff --check` and parent `just verify-governance`,
+  `just verify-safety`, `just format-check`, and `just lint` through the Nix
+  dev shell.
 - Workstream separation: sub-agent tooling was not used because the available
   tool requires explicit user authorization before spawning agents. The
   investigation conclusion, implementation changes, and audit/verification
@@ -63,6 +69,10 @@ Use `docs/todo.md` only as the top-level roadmap pointer. Use
 - Runtime submodule changes must be coordinated with parent repository consumer
   contracts when import scripts, smoke checks, archive exclusion checks, source
   manifests, component paths, or CI workflows change.
+- D3D10 policy: GPTK/D3DMetal is not treated as a supported D3D10 renderer.
+  Konyak must prefer DXVK for D3D10 and keep a CrossOver-equivalent
+  WineD3D/Vulkan fallback. A GPTK D3D10 smoke must assert the known unsupported
+  signature rather than accepting bridge reachability as render proof.
 
 ## Reporting Format
 
@@ -126,6 +136,11 @@ Final reports must include:
     `dxgi.dll`, `d3d10.dll`, `d3d10core.dll`, `d3d11.dll`, `wined3d.dll`, and
     `winevulkan.dll`; the log emitted `Using the Vulkan renderer for d3d10/11
     applications.` This is not GPTK/D3DMetal proof.
+  - Current Konyak runtime archives contain the base Wine builtin D3D10,
+    D3D11/DXGI, WineD3D, and winevulkan payloads needed for the
+    CrossOver-equivalent route. Current parent code can reach that route only
+    when no DXVK, DXMT, or GPTK override is selected; it does not yet expose or
+    verify it as an explicit D3D10 fallback backend.
 - GPTK 4.0 beta 1 import failure before version support:
   - Public command:
     `install-gptk-wine --from /Users/masato/Downloads/Game_Porting_Toolkit_4.0_beta_1.dmg --json`
@@ -135,11 +150,12 @@ Final reports must include:
 
 ## Large Milestones
 
-### G1: D3D10 GPTK Routing and Smoke
+### G1: D3D10 GPTK Routing and Fallback Smoke
 
-Goal: prove D3D10 works with GPTK/D3DMetal without treating Apple GPTK
-`d3d10.*` as an active component. D3D10 remains the base Wine frontend, while
-GPTK supplies D3D11/DXGI/D3D12/NVIDIA shim payloads.
+Goal: keep GPTK/D3DMetal scoped to the D3D11/D3D12/DXGI payloads it actually
+supports, prove that direct GPTK D3D10 render/readback is unsupported, and make
+macOS D3D10 rendering use CrossOver-equivalent fallback behavior: DXVK first,
+then base WineD3D/Vulkan.
 
 Small milestones:
 
@@ -158,8 +174,15 @@ Small milestones:
 - [x] G1-S7: Align parent graphics backend hints so D3D10 selects DXVK and
   D3D11 keeps DXMT first.
 - [x] G1-S8: Commit, push, open runtime PR #2, and update the parent PR.
-- [ ] G1-S9: Prove native GPTK/D3DMetal D3D10 render/readback or formally
+- [x] G1-S9: Prove native GPTK/D3DMetal D3D10 render/readback or formally
   decide that macOS D3D10 rendering remains DXVK/WineD3D-backed.
+- [ ] G1-S10: Add a maintained GPTK D3D10 unsupported smoke that fails if
+  GPTK/D3DMetal unexpectedly returns a render/readback success without a support
+  contract review.
+- [ ] G1-S11: Add a maintained CrossOver-equivalent WineD3D/Vulkan D3D10
+  render/readback smoke using the base Wine builtin route.
+- [ ] G1-S12: Align parent backend hints and launch behavior so D3D10 falls
+  back from GPTK/D3DMetal to DXVK or WineD3D/Vulkan with an explicit reason.
 
 #### PR Gate: G1-P1 Superseded GPTK3 D3D10 Payload Import Contract
 
@@ -285,9 +308,9 @@ Review gate:
 - Runtime PR #2 is open as a draft. Review the parent PR and runtime PR #2,
   then stop before G2-P1.
 
-#### PR Gate: G1-P4 GPTK D3D10 Render/Readback Proof
+#### PR Gate: G1-P4 GPTK D3D10 Unsupported and WineD3D Fallback Contract
 
-status: blocked
+status: planned
 branch: `task/gptk-d3d10-smoke`
 pull request: https://github.com/serika12345/Konyak/pull/33
 runtime submodule branch: `task/d3d10-render-smoke`
@@ -296,13 +319,28 @@ https://github.com/serika12345/konyak-macos-runtime/pull/2
 
 Completion criteria:
 
-- Add a maintained smoke path that proves a D3D10 device can clear a render
-  target, copy it to a staging texture, and verify the readback pixel while
-  loaded-DLL tracing proves native GPTK/D3DMetal `dxgi`/`d3d11` is active.
-- Keep DXVK and WineD3D/Vulkan successes separate from GPTK/D3DMetal success.
-- Do not accept GPTK bridge reachability or expected `E_FAIL` as render proof.
+- Add a maintained `gptk-d3d10-unsupported` smoke path that loads native
+  GPTK/D3DMetal `dxgi`/`d3d11`, proves Apple GPTK `d3d10.*` is not active, and
+  expects the known unsupported result instead of render/readback success.
+- Make `gptk-d3d10-unsupported` fail if `KONYAK_D3D10_RENDER_PROBE_OK` appears,
+  or if loaded-DLL tracing shows the probe escaped to DXVK or WineD3D/Vulkan.
+- Add a maintained `wined3d-d3d10-render` or equivalent smoke target that uses
+  base Wine builtin `d3d10`, `d3d10core`, `d3d11`, `dxgi`, `wined3d`, and
+  `winevulkan` without DXVK, DXMT, or GPTK override paths, and verifies D3D10
+  render/readback.
+- Update runtime CI so the WineD3D/Vulkan fallback smoke is rerunnable without
+  rebuilding the CrossOver Wine derivation after a successful runtime artifact
+  build.
+- Update parent backend hint and launch contracts so macOS D3D10 prefers DXVK
+  and can explicitly fall back to WineD3D/Vulkan when GPTK/D3DMetal is selected
+  or requested for a D3D10 program.
+- Machine-readable diagnostics must distinguish `requested=gptk-d3dmetal`,
+  `selected=dxvk` or `selected=wined3d-vulkan`, and
+  `reason=gptkD3d10Unsupported` when fallback is applied.
+- Update `docs/progress.md`, `docs/todo.md`, this workstream plan, and runtime
+  import-contract documentation.
 
-Blocked evidence:
+Investigation evidence:
 
 - Native Apple GPTK 3.0, Apple GPTK 4.0 beta 1, and CrossOver.app
   `apple_gptk` payload tests against the assembled Konyak runtime did not
@@ -310,11 +348,16 @@ Blocked evidence:
 - CrossOver.app can render/readback D3D10, but tracing shows it uses builtin
   WineD3D/Vulkan rather than native GPTK/D3DMetal.
 
+Not included:
+
+- GPTK4 import support.
+- Claiming native GPTK/D3DMetal D3D10 render support.
+- UI for manually selecting the fallback route.
+
 Next action:
 
-- Choose a product decision before implementation continues: keep D3D10 render
-  proof as DXVK/WineD3D-backed, or supply a different upstream runtime/payload
-  that can dynamically prove native GPTK/D3DMetal D3D10 render/readback.
+- Implement the two runtime smoke paths, then update the parent fallback
+  selection contract before continuing to G2-P1.
 
 ### G2: Version-Specified GPTK Import Contract
 
