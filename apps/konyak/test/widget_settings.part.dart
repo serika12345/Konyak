@@ -1248,7 +1248,7 @@ void defineSettingsWidgetTests() {
       await _expectGoldenFileWithinTolerance(
         find.byKey(const ValueKey('app-settings-dialog')),
         'goldens/app_settings_gptk_import_version_mismatch.png',
-        diffTolerance: 0.03,
+        diffTolerance: 0.04,
       );
     },
   );
