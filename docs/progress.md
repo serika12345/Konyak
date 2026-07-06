@@ -13,15 +13,16 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-06 17:18 JST
-- State: `in_progress`
+- Timestamp: 2026-07-06 17:21 JST
+- State: `paused`
 - Branch: `task/gptk-version-detection`
 - Active work: `G2-P2 GPTK Version Detection and Mismatch Diagnostics`.
 - Related TODO: `docs/todo.md` `Next Tasks` points at
   `docs/gptk-d3dmetal-import-progress.md`; the active gate is
   `G2-P2 GPTK Version Detection and Mismatch Diagnostics`.
-- Pull request: not opened yet for the current gate. Previous parent PR
-  https://github.com/serika12345/Konyak/pull/35 merged as `0afa99f`.
+- Pull request: https://github.com/serika12345/Konyak/pull/36. Previous
+  parent PR https://github.com/serika12345/Konyak/pull/35 merged as
+  `0afa99f`.
 - Latest known completed work: runtime PR
   https://github.com/serika12345/konyak-macos-runtime/pull/3 merged as
   `eedc190`; parent PR https://github.com/serika12345/Konyak/pull/34 merged
@@ -36,8 +37,9 @@ unfinished work.
   receiving GPTK4, GPTK4 request receiving GPTK3, and `auto` accepting detected
   GPTK4; implemented framework version detection and `gptkWineVersionMismatch`
   JSON error fields.
-- Remaining work: commit, push, open a draft PR, then stop before G3-P1.
-- Next action: commit the verified G2-P2 implementation and open a draft PR.
+- Remaining work: review and merge PR #36 before starting G3-P1.
+- Next action: review PR #36. If no changes are requested, merge it, then
+  continue to G3-P1 for GPTK4 payload-variant support.
 - Verification so far: `nix develop -c zsh -lc 'cd packages/konyak_cli && dart
   test test/cli_contract_runtime_install_test.dart --plain-name
   "install-gptk-wine"'` passed; `nix develop -c zsh -lc 'just cli-test &&

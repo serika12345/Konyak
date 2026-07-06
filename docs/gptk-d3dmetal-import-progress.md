@@ -9,13 +9,13 @@ Use `docs/todo.md` only as the top-level roadmap pointer. Use
 
 ## Current Snapshot
 
-- Timestamp: 2026-07-06 17:18 JST
-- State: `in_progress`
+- Timestamp: 2026-07-06 17:21 JST
+- State: `paused`
 - Branch: `task/gptk-version-detection`
-- Pull request: not opened yet for the current gate. Previous parent PR
-  https://github.com/serika12345/Konyak/pull/35 was merged into parent `main`
-  as `0afa99f`; parent PR https://github.com/serika12345/Konyak/pull/34 was
-  merged as `ab048d8`.
+- Pull request: https://github.com/serika12345/Konyak/pull/36. Previous parent
+  PR https://github.com/serika12345/Konyak/pull/35 was merged into parent
+  `main` as `0afa99f`; parent PR https://github.com/serika12345/Konyak/pull/34
+  was merged as `ab048d8`.
 - Runtime submodule: no runtime changes planned for G2-P2. Previous runtime PR
   https://github.com/serika12345/konyak-macos-runtime/pull/3 was merged into
   runtime `main` as `eedc190`.
@@ -32,8 +32,9 @@ Use `docs/todo.md` only as the top-level roadmap pointer. Use
 - Decision: G2-P2 detects and rejects requested/detected version mismatches,
   but does not relax GPTK4 payload validation or accept real GPTK4's missing
   `atidxx64.*` shape; that remains G3.
-- Remaining work: commit, push, open a draft PR, and stop before G3-P1.
-- Next action: commit the verified G2-P2 implementation and open a draft PR.
+- Remaining work: review and merge PR #36 before starting G3-P1.
+- Next action: review PR #36. If no changes are requested, merge it, then
+  continue to G3-P1 for GPTK4 payload-variant support.
 - Verification so far: `install-gptk-wine` CLI contract tests passed; full
   G2-P2 verification passed with `just cli-test`, `just verify-governance`,
   `just verify-safety`, `just format-check`, and `just lint`.
@@ -482,8 +483,9 @@ Review gate:
 
 #### PR Gate: G2-P2 GPTK Version Detection and Mismatch Diagnostics
 
-status: in_progress
+status: paused
 branch: `task/gptk-version-detection`
+pull request: https://github.com/serika12345/Konyak/pull/36
 
 Implementation status as of 2026-07-06 17:15 JST:
 
