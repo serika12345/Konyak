@@ -9,7 +9,7 @@ Use `docs/todo.md` only as the top-level roadmap pointer. Use
 
 ## Current Snapshot
 
-- Timestamp: 2026-07-06 15:46 JST
+- Timestamp: 2026-07-06 16:03 JST
 - State: `paused`
 - Branch: `task/gptk-d3d10-fallback-contract`
 - Pull request: https://github.com/serika12345/Konyak/pull/34. Previous parent
@@ -68,7 +68,9 @@ Use `docs/todo.md` only as the top-level roadmap pointer. Use
   passed `Build MoltenVK component artifact`, `Assemble runtime stack
   artifact`, `Generate release metadata`, `Verify WineD3D/Vulkan D3D10
   fallback smoke`, `Verify GPTK/D3DMetal backend smoke`, and the rest of the
-  PR checks; publish was skipped because this is a PR run.
+  PR checks; publish was skipped because this is a PR run. Parent PR #34 GitHub
+  Actions passed both `Konyak` checks, both `Published runtime CLI smoke`
+  checks, and `Build D3D12 fixture`.
 - Workstream separation: investigation evidence, implementation, and audit were
   kept separate. A read-only audit sub-agent reviewed the current diff and found
   three issues; the implementation now addresses hosted-runner GPTK unsupported

@@ -13,7 +13,7 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-06 15:46 JST
+- Timestamp: 2026-07-06 16:03 JST
 - State: `paused`
 - Branch: `task/gptk-d3d10-fallback-contract`
 - Active work: `G1-P4 GPTK D3D10 Unsupported and WineD3D Fallback Contract`.
@@ -85,4 +85,6 @@ unfinished work.
   passed `Build MoltenVK component artifact`, `Assemble runtime stack
   artifact`, `Verify WineD3D/Vulkan D3D10 fallback smoke`, `Verify
   GPTK/D3DMetal backend smoke`, and the rest of the runtime checks; publish was
-  skipped because this is a PR run.
+  skipped because this is a PR run. Parent PR #34 GitHub Actions passed both
+  `Konyak` checks, both `Published runtime CLI smoke` checks, and `Build D3D12
+  fixture`.
