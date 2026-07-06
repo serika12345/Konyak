@@ -13,21 +13,21 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-06 14:53 JST
-- State: `in_progress`
+- Timestamp: 2026-07-06 15:46 JST
+- State: `paused`
 - Branch: `task/gptk-d3d10-fallback-contract`
 - Active work: `G1-P4 GPTK D3D10 Unsupported and WineD3D Fallback Contract`.
 - Related TODO: `docs/todo.md` `Next Tasks` points at
   `docs/gptk-d3dmetal-import-progress.md`; the active gate is
   `G1-P4 GPTK D3D10 Unsupported and WineD3D Fallback Contract`.
-- Pull request: not opened yet for the current gate. Previous parent PR
-  https://github.com/serika12345/Konyak/pull/33 was merged into parent `main`
-  as `bb8fefc`.
-- Runtime submodule branch: `task/d3d10-fallback-smoke`; pull request not
-  opened yet. Previous runtime PR
-  https://github.com/serika12345/konyak-macos-runtime/pull/2 was merged into
-  runtime `main` as `9c5bdf1`.
-- Latest implementation commit: parent `d7915aa`, runtime submodule `9f8f43a`.
+- Pull request: https://github.com/serika12345/Konyak/pull/34. Previous parent
+  PR https://github.com/serika12345/Konyak/pull/33 was merged into parent
+  `main` as `bb8fefc`.
+- Runtime submodule branch: `task/d3d10-fallback-smoke`; pull request
+  https://github.com/serika12345/konyak-macos-runtime/pull/3. Previous runtime
+  PR https://github.com/serika12345/konyak-macos-runtime/pull/2 was merged
+  into runtime `main` as `9c5bdf1`.
+- Latest implementation commit: parent `4c26f95`, runtime submodule `9f8f43a`.
   Runtime PR #1 was merged into runtime `main` as `2fd0578`.
 - Purpose: implement CrossOver-equivalent D3D10 handling for Konyak: GPTK/D3DMetal
   is expected to be unsupported for direct D3D10 render/readback, while actual
@@ -54,13 +54,13 @@ unfinished work.
   `QueryInterface(ID3D10Device)` returns `0x80004002`. CrossOver.app can pass
   the D3D10 render/readback probe, but `WINEDEBUG=+loaddll` shows that success
   uses builtin WineD3D's Vulkan renderer, not native GPTK/D3DMetal DLLs.
-- Remaining work: commit and push the runtime and parent branches, open PRs,
-  run the new `build-moltenvk-component` GitHub Actions path through runtime
-  stack assembly and smoke, then address any CI-only findings.
-- Next action: rerun final local static checks, commit the source-built
-  CrossOver MoltenVK component work, push the branches, and watch runtime CI
-  until `wined3d-d3d10-render` plus `gptk-d3d10-unsupported` pass from uploaded
-  artifacts.
+- Remaining work: review and merge runtime PR #3, update the parent submodule
+  pointer if the runtime PR changes during review, then review and merge parent
+  PR #34. GPTK4 import remains intentionally deferred until this D3D10 fallback
+  contract is merged.
+- Next action: review runtime PR #3. If no changes are requested, merge runtime
+  PR #3 first, then merge parent PR #34 and start the GPTK4 version-specific
+  import gate.
 - Verification: parent `nix develop -c zsh -lc 'cd packages/konyak_cli && dart
   test test/cli_contract_program_execution_test.dart
   test/cli_contract_pinned_program_test.dart'` passed; parent `nix develop -c
@@ -80,4 +80,9 @@ unfinished work.
   `check-wine32on64-runtime.zsh`; local dynamic smoke passed
   `wined3d-d3d10-render`; GPTK local smoke passed
   `gptk-d3d10-unsupported`, `gptk-d3d11-device`, and `gptk-d3d12-device`.
-  Runtime GitHub Actions are still pending.
+  Runtime PR #3 GitHub Actions run
+  https://github.com/serika12345/konyak-macos-runtime/actions/runs/28771060023
+  passed `Build MoltenVK component artifact`, `Assemble runtime stack
+  artifact`, `Verify WineD3D/Vulkan D3D10 fallback smoke`, `Verify
+  GPTK/D3DMetal backend smoke`, and the rest of the runtime checks; publish was
+  skipped because this is a PR run.

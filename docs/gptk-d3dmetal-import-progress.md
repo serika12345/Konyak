@@ -9,16 +9,16 @@ Use `docs/todo.md` only as the top-level roadmap pointer. Use
 
 ## Current Snapshot
 
-- Timestamp: 2026-07-06 14:53 JST
-- State: `in_progress`
+- Timestamp: 2026-07-06 15:46 JST
+- State: `paused`
 - Branch: `task/gptk-d3d10-fallback-contract`
-- Pull request: not opened yet for the current gate. Previous parent PR
-  https://github.com/serika12345/Konyak/pull/33 was merged into parent `main`
-  as `bb8fefc`.
-- Runtime submodule branch: `task/d3d10-fallback-smoke`; pull request not
-  opened yet. Previous runtime PR
-  https://github.com/serika12345/konyak-macos-runtime/pull/2 was merged into
-  runtime `main` as `9c5bdf1`.
+- Pull request: https://github.com/serika12345/Konyak/pull/34. Previous parent
+  PR https://github.com/serika12345/Konyak/pull/33 was merged into parent
+  `main` as `bb8fefc`.
+- Runtime submodule branch: `task/d3d10-fallback-smoke`; pull request
+  https://github.com/serika12345/konyak-macos-runtime/pull/3. Previous runtime
+  PR https://github.com/serika12345/konyak-macos-runtime/pull/2 was merged
+  into runtime `main` as `9c5bdf1`.
 - Active gate: `G1-P4 GPTK D3D10 Unsupported and WineD3D Fallback Contract`
 - Purpose: match CrossOver's practical D3D10 handling: GPTK/D3DMetal is not a
   direct D3D10 renderer, D3D10 render support is proven through DXVK first and
@@ -34,19 +34,20 @@ Use `docs/todo.md` only as the top-level roadmap pointer. Use
   D3D10-only programs; added runtime smoke and CI paths for GPTK D3D10
   unsupported behavior and WineD3D/Vulkan fallback; added a dedicated
   CrossOver-source MoltenVK Nix recipe; removed non-Wine-library patching from
-  the CrossOver Wine derivation; proved the MoltenVK local build/package path
-  and local dynamic D3D10 fallback smoke.
+  the CrossOver Wine derivation; proved the MoltenVK local build/package path,
+  local dynamic D3D10 fallback smoke, and runtime PR #3 GitHub Actions build,
+  assembly, metadata, and smoke jobs.
 - Decision: macOS D3D10 rendering must be treated as DXVK/WineD3D-backed.
   Native GPTK/D3DMetal D3D10 render/readback is unsupported unless a future
   upstream payload changes the observed behavior and the support contract is
   reviewed.
-- Remaining work: commit and push the runtime and parent branches, open PRs,
-  run the new `build-moltenvk-component` GitHub Actions job through stack
-  assembly and smoke, then address any CI-only findings.
-- Next action: rerun final local static checks, commit the source-built
-  CrossOver MoltenVK component work, push the branches, and watch runtime CI
-  until `wined3d-d3d10-render` and `gptk-d3d10-unsupported` pass from uploaded
-  artifacts.
+- Remaining work: review and merge runtime PR #3, update the parent submodule
+  pointer if the runtime PR changes during review, then review and merge parent
+  PR #34. GPTK4 import remains intentionally deferred until this D3D10 fallback
+  contract is merged.
+- Next action: review runtime PR #3. If no changes are requested, merge runtime
+  PR #3 first, then merge parent PR #34 and start the GPTK4 version-specific
+  import gate.
 - Verification so far: G1-P3 passed. The G1-P4 plan update passed runtime
   submodule `git diff --check` and parent `just verify-governance`,
   `just verify-safety`, `just format-check`, and `just lint` through the Nix
@@ -62,6 +63,12 @@ Use `docs/todo.md` only as the top-level roadmap pointer. Use
   result-moltenvk-crossover`, component packaging, archive recheck, local
   stack assembly checks, `wined3d-d3d10-render`, and GPTK local smoke
   (`gptk-d3d10-unsupported`, `gptk-d3d11-device`, `gptk-d3d12-device`).
+  Runtime PR #3 GitHub Actions run
+  https://github.com/serika12345/konyak-macos-runtime/actions/runs/28771060023
+  passed `Build MoltenVK component artifact`, `Assemble runtime stack
+  artifact`, `Generate release metadata`, `Verify WineD3D/Vulkan D3D10
+  fallback smoke`, `Verify GPTK/D3DMetal backend smoke`, and the rest of the
+  PR checks; publish was skipped because this is a PR run.
 - Workstream separation: investigation evidence, implementation, and audit were
   kept separate. A read-only audit sub-agent reviewed the current diff and found
   three issues; the implementation now addresses hosted-runner GPTK unsupported
@@ -214,7 +221,7 @@ Small milestones:
   render/readback smoke using the base Wine builtin route.
 - [x] G1-S12: Align parent backend hints and launch behavior so D3D10 falls
   back from GPTK/D3DMetal to DXVK or WineD3D/Vulkan with an explicit reason.
-- [ ] G1-S13: Source-build CrossOver MoltenVK as an independent runtime
+- [x] G1-S13: Source-build CrossOver MoltenVK as an independent runtime
   component, wire it into CI/runtime assembly, and prove the WineD3D/Vulkan
   D3D10 smoke against that component.
 
@@ -347,19 +354,22 @@ Review gate:
 
 #### PR Gate: G1-P4 GPTK D3D10 Unsupported and WineD3D Fallback Contract
 
-status: in_progress
+status: paused
 branch: `task/gptk-d3d10-fallback-contract`
-pull request: not opened yet
+pull request: https://github.com/serika12345/Konyak/pull/34
 runtime submodule branch: `task/d3d10-fallback-smoke`
-runtime submodule pull request: not opened yet
+runtime submodule pull request:
+https://github.com/serika12345/konyak-macos-runtime/pull/3
 
-Implementation status as of 2026-07-06 14:27 JST:
+Implementation status as of 2026-07-06 15:46 JST:
 
 - Runtime submodule adds `gptk-d3d10-unsupported` and
-  `wined3d-d3d10-render` smoke targets. The GPTK target requires native
-  GPTK/D3DMetal `dxgi` / `d3d11`, forbids DXVK/DXMT/WineD3D escape, and treats
-  the known `0x80004005` D3D10 result as the expected outcome. The WineD3D
-  target requires builtin `dxgi`, `d3d10`, `d3d10core`, `d3d11`, `wined3d`, and
+  `wined3d-d3d10-render` smoke targets. The GPTK target requires `dxgi` /
+  `d3d11` from the isolated GPTK/D3DMetal component, forbids DXVK/DXMT and
+  winevulkan render fallback, and treats the known `0x80004005` D3D10 result as
+  the expected outcome. Wine `+loaddll` may label the component files as native
+  or builtin; the route proof is the resolved component path. The WineD3D target
+  requires builtin `dxgi`, `d3d10`, `d3d10core`, `d3d11`, `wined3d`, and
   `winevulkan`, then verifies render/readback.
 - Runtime CI now has separate WineD3D/Vulkan D3D10 smoke jobs after assembled
   artifact download in build, candidate promotion, and artifact-smoke
@@ -383,16 +393,21 @@ Implementation status as of 2026-07-06 14:27 JST:
   from the pinned CrossOver FOSS source, checks for the expected D3D10
   feature-advertisement source lines, and packages a universal
   `lib/libMoltenVK.dylib`.
-- Dynamic runtime smoke verification is pending CI completion and stack smoke
-  using the source-built CrossOver MoltenVK component.
+- Runtime PR #3 GitHub Actions run
+  https://github.com/serika12345/konyak-macos-runtime/actions/runs/28771060023
+  passed the MoltenVK build, stack assembly, metadata generation, WineD3D/Vulkan
+  D3D10 fallback smoke, GPTK/D3DMetal smoke, and all other PR checks; publish
+  was skipped because this is a PR run.
 
 Completion criteria:
 
-- Add a maintained `gptk-d3d10-unsupported` smoke path that loads native
-  GPTK/D3DMetal `dxgi`/`d3d11`, proves Apple GPTK `d3d10.*` is not active, and
-  expects the known unsupported result instead of render/readback success.
+- Add a maintained `gptk-d3d10-unsupported` smoke path that routes
+  `dxgi`/`d3d11` from the isolated GPTK/D3DMetal component, proves Apple GPTK
+  `d3d10.*` is not active, and expects the known unsupported result instead of
+  render/readback success.
 - Make `gptk-d3d10-unsupported` fail if `KONYAK_D3D10_RENDER_PROBE_OK` appears,
-  or if loaded-DLL tracing shows the probe escaped to DXVK or WineD3D/Vulkan.
+  or if loaded-DLL tracing shows the probe escaped to DXVK, DXMT, or winevulkan
+  render fallback.
 - Add a maintained `wined3d-d3d10-render` or equivalent smoke target that uses
   base Wine builtin `d3d10`, `d3d10core`, `d3d11`, `dxgi`, `wined3d`, and
   `winevulkan` without DXVK, DXMT, or GPTK override paths, and verifies D3D10
@@ -435,10 +450,9 @@ Not included:
 
 Next action:
 
-- Finish MoltenVK CI wiring, run the runtime workflow through stack assembly,
-  run the WineD3D/Vulkan D3D10 render smoke and GPTK D3D10 unsupported smoke
-  against that rebuilt stack, then open runtime and parent PRs before
-  continuing to G2-P1.
+- Review and merge runtime PR #3. If no changes are requested, merge parent PR
+  #34 after the runtime PR, then continue to G2-P1 for version-specified GPTK
+  import and GPTK4 support.
 
 ### G2: Version-Specified GPTK Import Contract
 
