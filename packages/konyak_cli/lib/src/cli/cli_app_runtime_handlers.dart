@@ -81,11 +81,8 @@ CliCommandMatch handleRuntimeCommand(
               'gptkWineInstall': gptkWineInstallRecordJson(record),
             },
           ),
-          GptkWineInstallFailed(:final message) => jsonError(
-            exitCode: 75,
-            code: 'gptkWineInstallFailed',
-            message: message,
-          ),
+          GptkWineInstallFailed(:final code, :final message, :final extra) =>
+            jsonError(exitCode: 75, code: code, message: message, extra: extra),
         });
       });
   switch (gptkWineInstallResult) {

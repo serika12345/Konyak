@@ -9,37 +9,35 @@ Use `docs/todo.md` only as the top-level roadmap pointer. Use
 
 ## Current Snapshot
 
-- Timestamp: 2026-07-06 16:53 JST
+- Timestamp: 2026-07-06 17:21 JST
 - State: `paused`
-- Branch: `task/gptk-version-import-contract`
-- Pull request: https://github.com/serika12345/Konyak/pull/35. Previous parent
-  PR https://github.com/serika12345/Konyak/pull/34 was merged into parent
-  `main` as `ab048d8`.
-- Runtime submodule: no runtime changes planned for G2-P1. Previous runtime PR
+- Branch: `task/gptk-version-detection`
+- Pull request: https://github.com/serika12345/Konyak/pull/36. Previous parent
+  PR https://github.com/serika12345/Konyak/pull/35 was merged into parent
+  `main` as `0afa99f`; parent PR https://github.com/serika12345/Konyak/pull/34
+  was merged as `ab048d8`.
+- Runtime submodule: no runtime changes planned for G2-P2. Previous runtime PR
   https://github.com/serika12345/konyak-macos-runtime/pull/3 was merged into
   runtime `main` as `eedc190`.
-- Active gate: `G2-P1 GPTK Version Parser and Request Model`
-- Purpose: make GPTK import requests version-aware before accepting GPTK4
-  payload variants, while preserving the existing unversioned
-  `install-gptk-wine --from <path> --json` command as backward-compatible
-  `auto` behavior.
-- Completed work: created branch `task/gptk-version-import-contract`; added
-  parser coverage for omitted `--gptk-version`, explicit `auto`, `3`, `4`, and
-  invalid values; added `GptkWineImportVersion`; extended
-  `GptkWineInstallRequest` with `requestedVersion`; wired the parser and
-  handler path so the requested version reaches `GptkWineInstaller`; updated CLI
-  usage text.
-- Decision: G2-P1 only models and preserves the requested version. It does not
-  detect GPTK3/GPTK4 payload versions, return requested/detected mismatch
-  diagnostics, or relax GPTK4 payload validation; those remain G2-P2 and G3.
-- Remaining work: review and merge PR #35 before starting G2-P2.
-- Next action: review PR #35. If no changes are requested, merge it, then
-  continue to G2-P2 for payload-version detection and mismatch diagnostics.
-- Verification so far: parser runtime-options tests passed; the
-  `install-gptk-wine forwards the requested GPTK version` CLI contract test
-  passed; full G2-P1 verification passed with `just cli-test`,
-  `just verify-governance`, `just verify-safety`, `just format-check`, and
-  `just lint`.
+- Active gate: `G2-P2 GPTK Version Detection and Mismatch Diagnostics`
+- Purpose: detect GPTK3/GPTK4 payload versions from `D3DMetal.framework`
+  metadata and return stable JSON diagnostics when explicit requested versions
+  do not match the detected payload.
+- Completed work: created branch `task/gptk-version-detection`; confirmed real
+  payload metadata uses `CFBundleShortVersionString=3.0` for GPTK3/CrossOver and
+  `4.0b1` for GPTK4 beta 1; added CLI contract tests for requested GPTK3
+  receiving GPTK4, requested GPTK4 receiving GPTK3, and `auto` accepting a
+  detected GPTK4 payload; implemented `gptkWineVersionMismatch` with stable
+  `requestedVersion` and `detectedVersion` fields.
+- Decision: G2-P2 detects and rejects requested/detected version mismatches,
+  but does not relax GPTK4 payload validation or accept real GPTK4's missing
+  `atidxx64.*` shape; that remains G3.
+- Remaining work: review and merge PR #36 before starting G3-P1.
+- Next action: review PR #36. If no changes are requested, merge it, then
+  continue to G3-P1 for GPTK4 payload-variant support.
+- Verification so far: `install-gptk-wine` CLI contract tests passed; full
+  G2-P2 verification passed with `just cli-test`, `just verify-governance`,
+  `just verify-safety`, `just format-check`, and `just lint`.
 
 ## Status Key
 
@@ -149,6 +147,10 @@ Final reports must include:
     `shaderCullDistance`. Konyak must use a source-built CrossOver MoltenVK
     runtime component instead of adding a local WineD3D feature-gate patch or
     using the generic Khronos MoltenVK release binary.
+- D3DMetal framework version metadata:
+  - CrossOver.app and Apple GPTK 3.0 report
+    `CFBundleShortVersionString=3.0`.
+  - Apple GPTK 4.0 beta 1 reports `CFBundleShortVersionString=4.0b1`.
 - GPTK 4.0 beta 1 import failure before version support:
   - Public command:
     `install-gptk-wine --from /Users/masato/Downloads/Game_Porting_Toolkit_4.0_beta_1.dmg --json`
@@ -435,17 +437,18 @@ Small milestones:
 
 - [x] G2-S1: Extend request parsing with `--gptk-version <auto|3|4>`.
 - [x] G2-S2: Add an explicit GPTK import version value object or sealed model.
-- [ ] G2-S3: Detect payload version from validated source metadata and payload
+- [x] G2-S3: Detect payload version from validated source metadata and payload
   shape.
-- [ ] G2-S4: Return clear JSON diagnostics when requested and detected versions
+- [x] G2-S4: Return clear JSON diagnostics when requested and detected versions
   do not match.
 - [x] G2-S5: Document the flat command and future hierarchical alias behavior.
 
 #### PR Gate: G2-P1 GPTK Version Parser and Request Model
 
-status: paused
+status: completed
 branch: `task/gptk-version-import-contract`
 pull request: https://github.com/serika12345/Konyak/pull/35
+parent merge commit: `0afa99f`
 
 Implementation status as of 2026-07-06 16:43 JST:
 
@@ -476,13 +479,25 @@ Verification:
 
 Review gate:
 
-- Commit and push the branch, open a draft PR when GitHub access is available,
-  then stop before G2-P2.
+- Parent PR #35 was merged into parent `main` as `0afa99f`. Continue to G2-P2.
 
 #### PR Gate: G2-P2 GPTK Version Detection and Mismatch Diagnostics
 
-status: planned
+status: paused
 branch: `task/gptk-version-detection`
+pull request: https://github.com/serika12345/Konyak/pull/36
+
+Implementation status as of 2026-07-06 17:15 JST:
+
+- GPTK payload version detection reads `D3DMetal.framework` Info.plist
+  `CFBundleShortVersionString`, falling back to `CFBundleVersion`.
+- `3.x` framework versions are detected as GPTK3; `4.x` and `4.0b1` are
+  detected as GPTK4.
+- Explicit requested version mismatches return JSON error code
+  `gptkWineVersionMismatch` with stable `requestedVersion` and
+  `detectedVersion` fields.
+- `auto` accepts the detected version and continues to the existing payload
+  validation path.
 
 Completion criteria:
 
