@@ -35,6 +35,16 @@ verification output instead of checked-off backlog entries.
     selected runtime/component paths, process/log evidence, and Metal HUD or
     equivalent evidence where practical.
   - Do not add proprietary or nonredistributable game payloads to CI.
+- When a Gcenx GPTK4 binary release becomes available, strengthen
+  `runtime/konyak-macos-runtime` CI to verify GPTK4 automatically.
+  - Keep the existing GPTK3 smoke coverage and add a separate GPTK4 smoke gate
+    rather than replacing GPTK3 validation.
+  - Pin the Gcenx GPTK4 release tag, archive name, and SHA-256 in
+    `prepare-gptk-d3dmetal-ci-smoke.zsh` or a narrowly scoped wrapper.
+  - Exercise the same runtime CI backend probes:
+    `gptk-d3d10-unsupported`, `gptk-d3d11-device`, and `gptk-d3d12-device`.
+  - Continue to treat the GPTK/D3DMetal payload as transient CI input only; do
+    not upload it as a Konyak artifact or include it in runtime release assets.
 
 ## Public Shell CLI Milestones
 
