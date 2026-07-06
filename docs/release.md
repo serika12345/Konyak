@@ -229,6 +229,34 @@ enabled, packaged macOS builds prompt the user on startup after an available app
 update is found, then invoke that verified install path only after the user
 confirms installation.
 
+## GPTK/D3DMetal Import Proof
+
+Konyak releases do not bundle or redistribute Apple GPTK/D3DMetal payloads.
+Release notes and support documentation must describe GPTK3/GPTK4 as
+user-imported payload compatibility, not as a bundled runtime component or as
+blanket Metal 4 enablement.
+
+Before claiming GPTK3/GPTK4 import support for a release, run the maintained
+public CLI smoke on macOS:
+
+```sh
+nix develop -c zsh -lc 'just smoke-macos-gptk-import-cli'
+```
+
+The smoke installs a fresh Konyak macOS runtime for each payload through
+`install-macos-wine --reinstall --source-manifest ... --json`, then imports:
+
+- Apple GPTK 3.x through
+  `install-gptk-wine --from <Game_Porting_Toolkit_3.x.dmg> --json`.
+- Apple GPTK 4.x through
+  `install-gptk-wine --from <Game_Porting_Toolkit_4.x.dmg> --gptk-version 4 --json`.
+
+It then verifies `list-runtimes --json` reports the optional
+`gptk-d3dmetal` component and backend as available, checks that GPTK4 did not
+install legacy `atidxx64.*` payloads, and runs the maintained
+`gptk-d3d10-unsupported`, `gptk-d3d11-device`, and `gptk-d3d12-device` runtime
+smoke targets against both imported runtimes.
+
 ## GitHub Release Workflow
 
 `.github/workflows/publish.yml` runs on `v*` tags and manual dispatch. The

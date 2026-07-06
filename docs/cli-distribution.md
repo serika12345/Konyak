@@ -183,6 +183,37 @@ names to the canonical `nvngx` runtime layout. User-imported GPTK/D3DMetal is
 kept isolated under `components/gptk-d3dmetal`; reinstalling or updating the
 managed macOS runtime preserves only that canonical component layout.
 
+GPTK/D3DMetal import compatibility is version-aware:
+
+- Apple GPTK 3.x payloads can be imported with the backward-compatible
+  `auto` path, for example
+  `install-gptk-wine --from /path/to/Game_Porting_Toolkit_3.0.dmg --json`.
+  GPTK3 validation requires the legacy `atidxx64.dll` and `atidxx64.so`
+  payloads.
+- Apple GPTK 4.x payloads can be imported with
+  `install-gptk-wine --from /path/to/Game_Porting_Toolkit_4.0_beta_1.dmg --gptk-version 4 --json`.
+  GPTK4 does not ship `atidxx64.*`, and Konyak must not synthesize or require
+  those files for GPTK4.
+- Both variants install only the active D3DMetal D3D11, D3D12, DXGI, NVIDIA
+  shim, `D3DMetal.framework`, and `libd3dshared.dylib` paths under
+  `components/gptk-d3dmetal`. Neither variant installs active `d3d10.dll` or
+  `d3d10.so`; D3D10 uses DXVK or the base WineD3D/Vulkan fallback instead.
+
+This is payload import compatibility, not a promise that every Metal 4 feature
+is enabled for every host. Apple D3DMetal remains a user-provided x86_64/Rosetta
+payload subject to Apple's host OS, hardware, and license requirements. The
+maintained local public CLI proof is:
+
+```sh
+nix develop -c zsh -lc 'just smoke-macos-gptk-import-cli'
+```
+
+That smoke installs a fresh Konyak macOS runtime twice through
+`install-macos-wine --reinstall --source-manifest ... --json`, imports GPTK3
+with the omitted-version public CLI contract, imports GPTK4 with
+`--gptk-version 4`, verifies `list-runtimes --json`, and runs the maintained
+GPTK D3D10/D3D11/D3D12 backend smoke targets against each imported runtime.
+
 Development runtime preparation follows the same manifest-only boundary.
 `scripts/prepare_macos_dev_runtime_stack.zsh` resolves a complete source
 manifest produced by `runtime/konyak-macos-runtime` or an explicitly supplied
