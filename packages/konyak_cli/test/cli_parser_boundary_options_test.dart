@@ -3,6 +3,7 @@ import 'package:konyak_cli/src/cli/cli_bottle_parsers.dart';
 import 'package:konyak_cli/src/cli/cli_location_parsers.dart';
 import 'package:konyak_cli/src/cli/cli_program_run_parsers.dart';
 import 'package:konyak_cli/src/cli/cli_runtime_parsers.dart';
+import 'package:konyak_cli/src/io/gptk_wine_installation.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -276,6 +277,43 @@ void main() {
         ]),
       );
       expect(gptkInstall.sourcePath, '/downloads/GPTK.dmg');
+      expect(gptkInstall.requestedVersion, GptkWineImportVersion.auto);
+
+      final autoGptkInstall = _expectSome(
+        parseJsonGptkWineInstallRequestOption(const [
+          'install-gptk-wine',
+          '--from',
+          '/downloads/GPTK.dmg',
+          '--gptk-version',
+          'auto',
+          '--json',
+        ]),
+      );
+      expect(autoGptkInstall.requestedVersion, GptkWineImportVersion.auto);
+
+      final gptk3Install = _expectSome(
+        parseJsonGptkWineInstallRequestOption(const [
+          'install-gptk-wine',
+          '--from',
+          '/downloads/GPTK3.dmg',
+          '--gptk-version',
+          '3',
+          '--json',
+        ]),
+      );
+      expect(gptk3Install.requestedVersion, GptkWineImportVersion.gptk3);
+
+      final gptk4Install = _expectSome(
+        parseJsonGptkWineInstallRequestOption(const [
+          'install-gptk-wine',
+          '--from',
+          '/downloads/GPTK4.dmg',
+          '--gptk-version',
+          '4',
+          '--json',
+        ]),
+      );
+      expect(gptk4Install.requestedVersion, GptkWineImportVersion.gptk4);
 
       expect(
         _expectSome(
@@ -330,6 +368,26 @@ void main() {
       _expectNone(
         parseJsonGptkWineInstallRequestOption(const [
           'install-gptk-wine',
+          '--json',
+        ]),
+      );
+      _expectNone(
+        parseJsonGptkWineInstallRequestOption(const [
+          'install-gptk-wine',
+          '--from',
+          '/downloads/GPTK.dmg',
+          '--gptk-version',
+          '5',
+          '--json',
+        ]),
+      );
+      _expectNone(
+        parseJsonGptkWineInstallRequestOption(const [
+          'install-gptk-wine',
+          '--from',
+          '/downloads/GPTK.dmg',
+          '--gptk-version',
+          ' ',
           '--json',
         ]),
       );

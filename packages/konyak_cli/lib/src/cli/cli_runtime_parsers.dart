@@ -23,14 +23,34 @@ Option<GptkWineInstallRequest> parseJsonGptkWineInstallRequestOption(
       _parseJsonRuntimeCommand(
         arguments,
         command: 'install-gptk-wine',
-        options: const <String>['from'],
+        options: const <String>['from', 'gptk-version'],
         restCount: 0,
       ),
     );
     final sourcePath = $(requiredCliOptionOption(results, 'from'));
+    final requestedVersion = $(_gptkWineImportVersionOption(results));
 
-    return GptkWineInstallRequest(sourcePath: sourcePath);
+    return GptkWineInstallRequest(
+      sourcePath: sourcePath,
+      requestedVersion: requestedVersion,
+    );
   });
+}
+
+Option<GptkWineImportVersion> _gptkWineImportVersionOption(ArgResults results) {
+  if (hasEmptyParsedCliOption(results, 'gptk-version')) {
+    return const Option.none();
+  }
+
+  return optionalCliOptionOption(results, 'gptk-version').match(
+    () => Option.of(GptkWineImportVersion.auto),
+    (version) => switch (version) {
+      'auto' => Option.of(GptkWineImportVersion.auto),
+      '3' => Option.of(GptkWineImportVersion.gptk3),
+      '4' => Option.of(GptkWineImportVersion.gptk4),
+      _ => const Option.none(),
+    },
+  );
 }
 
 Option<String> parseJsonOpenUrlCommandOption(List<String> arguments) {

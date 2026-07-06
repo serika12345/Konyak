@@ -171,10 +171,12 @@ plugins.
 Konyak keeps the CrossOver-derived macOS Wine runtime as the default Wine
 component. Users may import Apple GPTK DMGs, app bundles, or extracted redist
 trees with
-`install-gptk-wine --from <path> --json` to add Apple-provided D3DMetal files
-without replacing the default Wine executable. Konyak validates the bundled
-D3DMetal files and installs them as the optional `gptk-d3dmetal` component;
-bottle prefixes are kept outside the runtime root. CrossOver.app imports use
+`install-gptk-wine --from <path> [--gptk-version <auto|3|4>] --json` to add
+Apple-provided D3DMetal files without replacing the default Wine executable.
+Omitting `--gptk-version` is backward-compatible `auto` behavior. Konyak
+validates the bundled D3DMetal files and installs them as the optional
+`gptk-d3dmetal` component; bottle prefixes are kept outside the runtime root.
+CrossOver.app imports use
 `Contents/SharedSupport/CrossOver/lib64/apple_gptk`, require the NVIDIA shim
 files `nvapi64` and `nvngx`, and normalize older `nvngx-on-metalfx` source
 names to the canonical `nvngx` runtime layout. User-imported GPTK/D3DMetal is

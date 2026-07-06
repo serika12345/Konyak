@@ -193,7 +193,7 @@ Usage:
   konyak open-program-location <id> --program <path> --json
   konyak list-runtimes --json
   konyak check-macos-setup --json
-  konyak install-gptk-wine --from <path> --json
+  konyak install-gptk-wine --from <path> [--gptk-version <auto|3|4>] --json
   konyak open-url <https-url> --json
   konyak check-runtime-update <id> --json
   konyak install-runtime-update <id> --json

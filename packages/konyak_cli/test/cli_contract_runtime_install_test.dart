@@ -1695,6 +1695,35 @@ void main() {
     expect(installer.lastRequest, isNull);
   });
 
+  test('install-gptk-wine forwards the requested GPTK version', () {
+    final installer = RecordingGptkWineInstaller(
+      result: const GptkWineInstallCompleted(
+        GptkWineInstallRecord(
+          componentId: 'gptk-d3dmetal',
+          sourceDirectory: '/downloads/GPTK4',
+          runtimeRoot: '/runtimes/macos-wine',
+          installedExecutablePath: '/runtimes/macos-wine/bin/wineloader',
+        ),
+      ),
+    );
+
+    final result = runCli(const [
+      'install-gptk-wine',
+      '--from',
+      '/downloads/GPTK4.dmg',
+      '--gptk-version',
+      '4',
+      '--json',
+    ], gptkWineInstaller: installer);
+
+    expect(result.exitCode, 0, reason: result.stderr);
+    expect(installer.lastRequest?.sourcePath, '/downloads/GPTK4.dmg');
+    expect(
+      installer.lastRequest?.requestedVersion,
+      GptkWineImportVersion.gptk4,
+    );
+  });
+
   test('install-gptk-wine rejects sources without an installed runtime', () {
     final tempDirectory = Directory.systemTemp.createTempSync(
       'konyak-gptk-wine-test-',
