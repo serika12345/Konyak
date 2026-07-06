@@ -21,6 +21,7 @@ import '../cli/konyak_cli_update_result_types.dart';
 import '../cli/runtime_install_contract.dart';
 import '../files/file_path_pick_result.dart';
 import '../l10n/konyak_localizations.dart';
+import '../runtimes/gptk_import_version.dart';
 import '../runtimes/runtime_summary.dart';
 import '../settings/app_settings_summary.dart';
 import '../updates/update_check_summary.dart';
@@ -527,11 +528,13 @@ extension KonyakHomeLoaderRuntimes on KonyakHomeLoaderState {
     }
   }
 
-  Future<RuntimeInstallLoadResult> installGptkWine() async {
+  Future<RuntimeInstallLoadResult> installGptkWine(
+    GptkImportVersion version,
+  ) async {
     final localizations = KonyakLocalizations.of(context);
     final sourceSelection = await widget.gptkWineSourcePicker.pickSourcePath();
     return switch (sourceSelection) {
-      PickedFilePath(:final path) => installGptkWineFromPath(path),
+      PickedFilePath(:final path) => installGptkWineFromPath(path, version),
       CancelledFilePathPick() => RuntimeInstallLoadFailure(
         exitCode: 64,
         message: localizations.gptkD3dmetalSourceWasNotSelected,
@@ -542,6 +545,7 @@ extension KonyakHomeLoaderRuntimes on KonyakHomeLoaderState {
 
   Future<RuntimeInstallLoadResult> installGptkWineFromPath(
     String sourcePath,
+    GptkImportVersion version,
   ) async {
     final localizations = KonyakLocalizations.of(context);
     updateState(() {
@@ -555,6 +559,7 @@ extension KonyakHomeLoaderRuntimes on KonyakHomeLoaderState {
     try {
       installResult = await widget.cliClient.installGptkWine(
         sourcePath: sourcePath,
+        version: version,
       );
     } finally {
       if (mounted) {

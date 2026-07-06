@@ -530,6 +530,24 @@ abstract class KonyakLocalizations {
   /// **'GPTK/D3DMetal source was not selected.'**
   String get gptkD3dmetalSourceWasNotSelected;
 
+  /// Konyak UI string: GPTK version
+  ///
+  /// In en, this message translates to:
+  /// **'GPTK version'**
+  String get gptkImportVersion;
+
+  /// Konyak UI string: GPTK 3
+  ///
+  /// In en, this message translates to:
+  /// **'GPTK 3'**
+  String get gptkImportVersionGptkThree;
+
+  /// Konyak UI string: GPTK 4
+  ///
+  /// In en, this message translates to:
+  /// **'GPTK 4'**
+  String get gptkImportVersionGptkFour;
+
   /// Konyak UI string: High Resolution Mode
   ///
   /// In en, this message translates to:

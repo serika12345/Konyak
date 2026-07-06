@@ -6,6 +6,7 @@ import '../../cli/konyak_cli_client.dart';
 import '../../files/directory_picker.dart';
 import '../../files/file_path_pick_result.dart';
 import '../../l10n/konyak_localizations.dart';
+import '../../runtimes/gptk_import_version.dart';
 import '../../runtimes/runtime_summary.dart';
 import '../../settings/app_settings_summary.dart';
 import '../app_constants.dart';
@@ -40,7 +41,8 @@ class AppSettingsDialog extends StatefulWidget {
   final RuntimeSectionOperationState runtimeOperationState;
   final Future<RuntimeListLoadResult> Function()? onLoadRuntimes;
   final Future<RuntimeInstallLoadResult> Function()? onInstallRuntime;
-  final Future<RuntimeInstallLoadResult> Function()? onInstallGptkWine;
+  final Future<RuntimeInstallLoadResult> Function(GptkImportVersion version)?
+  onInstallGptkWine;
   final Future<void> Function()? onOpenGptkPage;
   final Future<AppSettingsSaveOutcome> Function(AppSettingsSummary settings)
   onSettingsChanged;
@@ -56,6 +58,7 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
       widget.runtimeOperationState;
   AppSettingsDialogOperationState _operationState =
       const AppSettingsDialogOperationState.idle();
+  GptkImportVersion _gptkImportVersion = GptkImportVersion.auto;
 
   @override
   void initState() {
@@ -212,7 +215,7 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
       _runtimeOperationState = const RuntimeSectionOperationState.idle();
     });
 
-    final result = await installGptkWine();
+    final result = await installGptkWine(_gptkImportVersion);
 
     if (!mounted) {
       return;
@@ -357,6 +360,12 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
                     ? null
                     : _installGptkWine,
                 onOpenGptkPage: widget.onOpenGptkPage,
+                gptkImportVersion: _gptkImportVersion,
+                onGptkImportVersionChanged: (version) {
+                  setState(() {
+                    _gptkImportVersion = version;
+                  });
+                },
               ),
             ],
           ],

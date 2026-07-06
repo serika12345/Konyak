@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import '../runtimes/gptk_import_version.dart';
 import 'konyak_cli_client.dart'
     show
         IgnoreRuntimeInstallProgress,
@@ -52,8 +53,17 @@ extension KonyakCliRuntimeCommands on KonyakCliClient {
     );
   }
 
-  Future<ProcessRunResult> installGptkWine({required String sourcePath}) {
-    return run(['install-gptk-wine', '--from', sourcePath, '--json']);
+  Future<ProcessRunResult> installGptkWine({
+    required String sourcePath,
+    GptkImportVersion version = GptkImportVersion.auto,
+  }) {
+    return run([
+      'install-gptk-wine',
+      '--from',
+      sourcePath,
+      ...version.cliArguments,
+      '--json',
+    ]);
   }
 
   Future<ProcessRunResult> openUrl(String url) {

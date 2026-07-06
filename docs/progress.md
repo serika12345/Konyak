@@ -13,21 +13,18 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-06 20:09 JST
+- Timestamp: 2026-07-06 21:34 JST
 - State: `completed`
-- Branch: `task/gptk-import-public-proof-docs`
-- Active work: `G4-P1 GPTK Import Public Proof and Docs`.
-- Related TODO: GPTK/D3DMetal import compatibility work is completed in
-  `docs/gptk-d3dmetal-import-progress.md`; `docs/todo.md` now points at the
-  next DLSS/MetalFX rendering-proof task.
-- Pull request: runtime draft PR
-  https://github.com/serika12345/konyak-macos-runtime/pull/5 opened from
-  `task/gptk-import-public-proof-docs`; parent draft PR
-  https://github.com/serika12345/Konyak/pull/39 opened from the same branch.
-  Previous runtime PR
-  https://github.com/serika12345/konyak-macos-runtime/pull/4 merged as
-  `472091f`; parent PR https://github.com/serika12345/Konyak/pull/38 merged
-  as `3e1d5f`.
+- Branch: `task/gptk-import-version-ui`
+- Active work: `G5-P1 Flutter GPTK Import Version UI and CLI Connection`.
+- Related TODO: `docs/gptk-d3dmetal-import-progress.md` records `G5-P1` as
+  completed; `docs/todo.md` now points at the next DLSS/MetalFX rendering-proof
+  task.
+- Pull request: runtime PR
+  https://github.com/serika12345/konyak-macos-runtime/pull/5 merged as
+  `0a09716b`; parent PR https://github.com/serika12345/Konyak/pull/39 merged
+  as `104e23b`; current draft PR
+  https://github.com/serika12345/Konyak/pull/40.
 - Latest known completed work: runtime PR
   https://github.com/serika12345/konyak-macos-runtime/pull/3 merged as
   `eedc190`; parent PR https://github.com/serika12345/Konyak/pull/34 merged
@@ -38,31 +35,40 @@ unfinished work.
   https://github.com/serika12345/konyak-macos-runtime/pull/4 merged as
   `472091f`; parent PR https://github.com/serika12345/Konyak/pull/38 merged
   as `3e1d5f`.
-- Runtime branch: `runtime/konyak-macos-runtime` branch
-  `task/gptk-import-public-proof-docs`, based on runtime `main` merge commit
-  `472091f`, documentation commit `61624ad`.
-- Purpose: prove GPTK3 and GPTK4 import through Konyak's public
-  `install-gptk-wine --json` CLI path, rerun maintained GPTK backend smoke
-  against those installed runtimes, and document the resulting support matrix.
+- Runtime branch: no runtime submodule changes planned for this gate; parent
+  branch consumes the already-merged GPTK3/GPTK4 CLI/runtime contract.
+- Purpose: complete the Flutter Settings UI and app-to-CLI connection for
+  GPTK/D3DMetal import version selection so users can choose Auto, GPTK 3, or
+  GPTK 4 before selecting a GPTK source.
 - Workstream separation: the multi-agent tool is available, but its tool-level
   instructions allow spawning only when the user explicitly requests
   sub-agents. Investigation, implementation, and audit evidence will therefore
   be kept separate in this snapshot and in
   `docs/gptk-d3dmetal-import-progress.md`.
-- Completed work: runtime PR #4 and parent PR #38 merged GPTK4 payload import
-  support; this gate added the maintained parent public CLI smoke
-  `scripts/run_macos_gptk_import_cli_smoke.zsh` and `just
-  smoke-macos-gptk-import-cli`; proved Apple GPTK 3.0 and Apple GPTK 4.0 beta 1
-  imports through `install-gptk-wine --json`; proved `list-runtimes --json`
-  reports the `gptk-d3dmetal` component/backend after each import; reran the
-  maintained runtime `gptk-d3d10-unsupported`, `gptk-d3d11-device`, and
-  `gptk-d3d12-device` smokes against both installed runtimes; updated
-  user-facing, release, GPTK workstream, and runtime contract docs with the
-  GPTK3/GPTK4 support matrix.
-- Remaining work: review runtime PR #5 and parent PR #39 before merging.
-- Next action: review G4-P1 PRs; after merge, continue with the DLSS/MetalFX
-  rendering-proof task in `docs/todo.md`.
+- Completed work: runtime PR #5 and parent PR #39 merged the public CLI proof
+  and documentation gate for GPTK3/GPTK4 import compatibility; this gate added
+  the Flutter Settings Auto/GPTK 3/GPTK 4 import-version segmented control,
+  connected the selection through HomeLoader to `install-gptk-wine`, preserved
+  Auto as the omitted-version CLI command, added CLI/widget/golden tests, and
+  captured the updated Settings panel golden.
+- Remaining work: run final repository-wide verification, commit and push the
+  branch, open a draft PR, and review before merging.
+- Next action: review the G5-P1 draft PR; after merge, continue with the
+  DLSS/MetalFX rendering-proof task in `docs/todo.md`.
 - Verification so far:
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/cli/konyak_cli_client_test.dart --plain-name "imports GPTK Wine"'`
+    passed after first failing for the missing version model/CLI argument.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "macOS settings dialog imports"'`
+    passed: Auto keeps the existing omitted-version argv, GPTK 3 passes
+    `--gptk-version 3`, and GPTK 4 passes `--gptk-version 4`.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "macOS settings GPTK import version panel matches golden" --update-goldens'`
+    passed and captured `apps/konyak/test/goldens/app_settings_gptk_import_version.png`.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "macOS settings GPTK import version panel matches golden"'`
+    passed against the captured golden.
+  - `nix develop -c zsh -lc 'just flutter-format-check && just flutter-analyze && just flutter-test'`
+    passed; Flutter test reported 465 tests passed.
+  - `nix develop -c zsh -lc 'git diff --check && git -C runtime/konyak-macos-runtime diff --check && just verify-governance && just verify-safety && just format-check && just lint'`
+    passed.
   - `nix develop -c zsh -lc 'just smoke-macos-gptk-import-cli'` passed:
     Apple GPTK 3.0 and Apple GPTK 4.0 beta 1 were installed through the public
     CLI path, `list-runtimes --json` reported `gptk-d3dmetal`, GPTK3 retained
