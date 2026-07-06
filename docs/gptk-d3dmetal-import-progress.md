@@ -9,72 +9,36 @@ Use `docs/todo.md` only as the top-level roadmap pointer. Use
 
 ## Current Snapshot
 
-- Timestamp: 2026-07-06 16:03 JST
-- State: `paused`
-- Branch: `task/gptk-d3d10-fallback-contract`
-- Pull request: https://github.com/serika12345/Konyak/pull/34. Previous parent
-  PR https://github.com/serika12345/Konyak/pull/33 was merged into parent
-  `main` as `bb8fefc`.
-- Runtime submodule branch: `task/d3d10-fallback-smoke`; pull request
-  https://github.com/serika12345/konyak-macos-runtime/pull/3. Previous runtime
-  PR https://github.com/serika12345/konyak-macos-runtime/pull/2 was merged
-  into runtime `main` as `9c5bdf1`.
-- Active gate: `G1-P4 GPTK D3D10 Unsupported and WineD3D Fallback Contract`
-- Purpose: match CrossOver's practical D3D10 handling: GPTK/D3DMetal is not a
-  direct D3D10 renderer, D3D10 render support is proven through DXVK first and
-  WineD3D/Vulkan fallback second, and any GPTK D3D10 attempt is expected to
-  fail with a known unsupported signature.
-- Completed work: kept G1-P3's DXVK D3D10 render/readback proof intact; tested
-  native GPTK D3D10 candidate paths with Apple GPTK 3.0, Apple GPTK 4.0 beta 1,
-  and CrossOver.app's `apple_gptk` payload against the Konyak runtime; confirmed
-  CrossOver.app's passing D3D10 render/readback route is builtin WineD3D/Vulkan,
-  not GPTK/D3DMetal; identified CrossOver's MoltenVK source-level D3D10 feature
-  advertisements as required for the WineD3D/Vulkan fallback; implemented
-  parent run and pinned-launch fallback when GPTK/D3DMetal is selected for
-  D3D10-only programs; added runtime smoke and CI paths for GPTK D3D10
-  unsupported behavior and WineD3D/Vulkan fallback; added a dedicated
-  CrossOver-source MoltenVK Nix recipe; removed non-Wine-library patching from
-  the CrossOver Wine derivation; proved the MoltenVK local build/package path,
-  local dynamic D3D10 fallback smoke, and runtime PR #3 GitHub Actions build,
-  assembly, metadata, and smoke jobs.
-- Decision: macOS D3D10 rendering must be treated as DXVK/WineD3D-backed.
-  Native GPTK/D3DMetal D3D10 render/readback is unsupported unless a future
-  upstream payload changes the observed behavior and the support contract is
-  reviewed.
-- Remaining work: review and merge runtime PR #3, update the parent submodule
-  pointer if the runtime PR changes during review, then review and merge parent
-  PR #34. GPTK4 import remains intentionally deferred until this D3D10 fallback
-  contract is merged.
-- Next action: review runtime PR #3. If no changes are requested, merge runtime
-  PR #3 first, then merge parent PR #34 and start the GPTK4 version-specific
-  import gate.
-- Verification so far: G1-P3 passed. The G1-P4 plan update passed runtime
-  submodule `git diff --check` and parent `just verify-governance`,
-  `just verify-safety`, `just format-check`, and `just lint` through the Nix
-  dev shell. Runtime PR #2 GitHub Actions passed before merge, including
-  `Verify DXVK D3D10/D3D11 backend smoke`, `Verify GPTK/D3DMetal backend smoke`,
-  runtime stack assembly, metadata, GUI, Wine32-on-64, DXMT, and vkd3d smoke
-  jobs. Parent PR #33 GitHub Actions passed before merge, including both
-  `Konyak` checks, both `Published runtime CLI smoke` checks, and
-  `Build D3D12 fixture`. Runtime MoltenVK local verification passed
-  `nix develop -c zsh -lc 'nix build
-  .#packages.x86_64-darwin.konyak-macos-moltenvk -L --show-trace --out-link
-  result-moltenvk-crossover'`, `./scripts/check-moltenvk-component.zsh
-  result-moltenvk-crossover`, component packaging, archive recheck, local
-  stack assembly checks, `wined3d-d3d10-render`, and GPTK local smoke
-  (`gptk-d3d10-unsupported`, `gptk-d3d11-device`, `gptk-d3d12-device`).
-  Runtime PR #3 GitHub Actions run
-  https://github.com/serika12345/konyak-macos-runtime/actions/runs/28771060023
-  passed `Build MoltenVK component artifact`, `Assemble runtime stack
-  artifact`, `Generate release metadata`, `Verify WineD3D/Vulkan D3D10
-  fallback smoke`, `Verify GPTK/D3DMetal backend smoke`, and the rest of the
-  PR checks; publish was skipped because this is a PR run. Parent PR #34 GitHub
-  Actions passed both `Konyak` checks, both `Published runtime CLI smoke`
-  checks, and `Build D3D12 fixture`.
-- Workstream separation: investigation evidence, implementation, and audit were
-  kept separate. A read-only audit sub-agent reviewed the current diff and found
-  three issues; the implementation now addresses hosted-runner GPTK unsupported
-  handling, D3D12 string-signal priority, and pinned-launch fallback coverage.
+- Timestamp: 2026-07-06 16:50 JST
+- State: `in_progress`
+- Branch: `task/gptk-version-import-contract`
+- Pull request: not opened yet for the current gate. Previous parent PR
+  https://github.com/serika12345/Konyak/pull/34 was merged into parent `main`
+  as `ab048d8`.
+- Runtime submodule: no runtime changes planned for G2-P1. Previous runtime PR
+  https://github.com/serika12345/konyak-macos-runtime/pull/3 was merged into
+  runtime `main` as `eedc190`.
+- Active gate: `G2-P1 GPTK Version Parser and Request Model`
+- Purpose: make GPTK import requests version-aware before accepting GPTK4
+  payload variants, while preserving the existing unversioned
+  `install-gptk-wine --from <path> --json` command as backward-compatible
+  `auto` behavior.
+- Completed work: created branch `task/gptk-version-import-contract`; added
+  parser coverage for omitted `--gptk-version`, explicit `auto`, `3`, `4`, and
+  invalid values; added `GptkWineImportVersion`; extended
+  `GptkWineInstallRequest` with `requestedVersion`; wired the parser and
+  handler path so the requested version reaches `GptkWineInstaller`; updated CLI
+  usage text.
+- Decision: G2-P1 only models and preserves the requested version. It does not
+  detect GPTK3/GPTK4 payload versions, return requested/detected mismatch
+  diagnostics, or relax GPTK4 payload validation; those remain G2-P2 and G3.
+- Remaining work: commit, push, open a draft PR, and stop before G2-P2.
+- Next action: commit the verified G2-P1 implementation and open a draft PR.
+- Verification so far: parser runtime-options tests passed; the
+  `install-gptk-wine forwards the requested GPTK version` CLI contract test
+  passed; full G2-P1 verification passed with `just cli-test`,
+  `just verify-governance`, `just verify-safety`, `just format-check`, and
+  `just lint`.
 
 ## Status Key
 
@@ -95,6 +59,9 @@ Use `docs/todo.md` only as the top-level roadmap pointer. Use
 - Version-specific import must be explicit and schema-stable. The planned
   command option is `--gptk-version <auto|3|4>`, with omitted value treated as
   `auto` for backward compatibility.
+- Any future hierarchical runtime import alias must preserve the same requested
+  version semantics as the flat command: omitted version means `auto`, and
+  explicit GPTK3/GPTK4 requests use the same `auto|3|4` value set.
 - GPTK/D3DMetal payloads remain user-imported. Do not redistribute Apple GPTK
   payloads from Konyak release artifacts.
 - Parent repository code may consume and preserve runtime-owner-produced
@@ -356,12 +323,14 @@ Review gate:
 
 #### PR Gate: G1-P4 GPTK D3D10 Unsupported and WineD3D Fallback Contract
 
-status: paused
+status: completed
 branch: `task/gptk-d3d10-fallback-contract`
 pull request: https://github.com/serika12345/Konyak/pull/34
+parent merge commit: `ab048d8`
 runtime submodule branch: `task/d3d10-fallback-smoke`
 runtime submodule pull request:
 https://github.com/serika12345/konyak-macos-runtime/pull/3
+runtime merge commit: `eedc190`
 
 Implementation status as of 2026-07-06 15:46 JST:
 
@@ -450,11 +419,11 @@ Not included:
 - Claiming native GPTK/D3DMetal D3D10 render support.
 - UI for manually selecting the fallback route.
 
-Next action:
+Review gate:
 
-- Review and merge runtime PR #3. If no changes are requested, merge parent PR
-  #34 after the runtime PR, then continue to G2-P1 for version-specified GPTK
-  import and GPTK4 support.
+- Runtime PR #3 was merged into runtime `main` as `eedc190`. Parent PR #34 was
+  merged into parent `main` as `ab048d8`. Continue to G2-P1 for
+  version-specified GPTK import before GPTK4 payload support.
 
 ### G2: Version-Specified GPTK Import Contract
 
@@ -463,18 +432,27 @@ the existing unversioned command as backward-compatible `auto` behavior.
 
 Small milestones:
 
-- [ ] G2-S1: Extend request parsing with `--gptk-version <auto|3|4>`.
-- [ ] G2-S2: Add an explicit GPTK import version value object or sealed model.
+- [x] G2-S1: Extend request parsing with `--gptk-version <auto|3|4>`.
+- [x] G2-S2: Add an explicit GPTK import version value object or sealed model.
 - [ ] G2-S3: Detect payload version from validated source metadata and payload
   shape.
 - [ ] G2-S4: Return clear JSON diagnostics when requested and detected versions
   do not match.
-- [ ] G2-S5: Document the flat command and future hierarchical alias behavior.
+- [x] G2-S5: Document the flat command and future hierarchical alias behavior.
 
 #### PR Gate: G2-P1 GPTK Version Parser and Request Model
 
-status: planned
+status: in_progress
 branch: `task/gptk-version-import-contract`
+
+Implementation status as of 2026-07-06 16:43 JST:
+
+- `install-gptk-wine --from <path> --json` still parses as a GPTK import
+  request with `requestedVersion=auto`.
+- `install-gptk-wine --from <path> --gptk-version <auto|3|4> --json` now
+  preserves the requested version in `GptkWineInstallRequest`.
+- Invalid `--gptk-version` values do not parse as this command. Stable
+  requested/detected mismatch JSON diagnostics remain planned for G2-P2.
 
 Completion criteria:
 

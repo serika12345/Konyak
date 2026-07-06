@@ -959,6 +959,20 @@ final class RecordingLinuxWineInstaller implements LinuxWineInstaller {
   }
 }
 
+final class RecordingGptkWineInstaller implements GptkWineInstaller {
+  RecordingGptkWineInstaller({required this.result});
+
+  final GptkWineInstallResult result;
+  GptkWineInstallRequest? lastRequest;
+
+  @override
+  GptkWineInstallResult install(GptkWineInstallRequest request) {
+    lastRequest = request;
+
+    return result;
+  }
+}
+
 final class RecordingRuntimeInstallProgressSink
     implements RuntimeInstallProgressSink {
   final List<RuntimeInstallProgress> events = <RuntimeInstallProgress>[];

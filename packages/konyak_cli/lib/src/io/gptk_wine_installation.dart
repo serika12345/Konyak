@@ -11,10 +11,16 @@ import 'runtime_archive_install_support.dart';
 import 'runtime_gptk_support.dart';
 import 'runtime_stack_manifest_io.dart';
 
+enum GptkWineImportVersion { auto, gptk3, gptk4 }
+
 class GptkWineInstallRequest {
-  const GptkWineInstallRequest({required this.sourcePath});
+  const GptkWineInstallRequest({
+    required this.sourcePath,
+    this.requestedVersion = GptkWineImportVersion.auto,
+  });
 
   final String sourcePath;
+  final GptkWineImportVersion requestedVersion;
 }
 
 class GptkWineInstallRecord {
