@@ -302,6 +302,10 @@
   "@gptkImportVersion": {
     "description": "Konyak UI string: GPTK version"
   },
+  "gptkInstalledVersion": "Installed GPTK version",
+  "@gptkInstalledVersion": {
+    "description": "Konyak UI string: Installed GPTK version"
+  },
   "gptkImportVersionGptkThree": "GPTK 3",
   "@gptkImportVersionGptkThree": {
     "description": "Konyak UI string: GPTK 3"

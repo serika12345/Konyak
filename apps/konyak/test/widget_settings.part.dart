@@ -1132,6 +1132,180 @@ void defineSettingsWidgetTests() {
     ]);
   });
 
+  testWidgets(
+    'macOS settings dialog shows GPTK version mismatch import errors',
+    (WidgetTester tester) async {
+      await _loadKonyakTestFonts();
+      await tester.binding.setSurfaceSize(const Size(900, 760));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      final runner = _FutureQueuedProcessRunner([
+        Future.value(
+          const ProcessRunResult(
+            exitCode: 0,
+            stdout: '{"schemaVersion":1,"bottles":[]}',
+            stderr: '',
+          ),
+        ),
+        Future.value(
+          const ProcessRunResult(
+            exitCode: 0,
+            stdout: '''
+            {
+              "schemaVersion": 1,
+              "appSettings": {
+                "terminateWineProcessesOnClose": false,
+                "defaultBottlePath": "/Users/user/Library/Application Support/Konyak/Bottles",
+                "appearanceMode": "dark",
+                "automaticallyCheckForKonyakUpdates": false,
+                "automaticallyCheckForWineUpdates": false
+              }
+            }
+          ''',
+            stderr: '',
+          ),
+        ),
+        Future.value(
+          ProcessRunResult(
+            exitCode: 0,
+            stdout: _macosRuntimeListPayload(gptkAvailable: true),
+            stderr: '',
+          ),
+        ),
+        Future.value(
+          const ProcessRunResult(
+            exitCode: 75,
+            stdout: '''
+            {
+              "schemaVersion": 1,
+              "error": {
+                "code": "gptkWineVersionMismatch",
+                "message": "Requested GPTK 4, but selected GPTK/D3DMetal payload is GPTK 3."
+              }
+            }
+          ''',
+            stderr: '',
+          ),
+        ),
+      ]);
+
+      await tester.pumpWidget(
+        _testKonyakApp(
+          platform: KonyakPlatform.macos,
+          cliClient: KonyakCliClient(
+            executable: 'konyak',
+            processRunner: runner,
+          ),
+          gptkWineSourcePicker: const _FakeGptkWineSourcePicker(
+            path: '/Users/user/Downloads/Game_Porting_Toolkit_3.0.dmg',
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byTooltip('Settings'));
+      await tester.pumpAndSettle();
+
+      await tester.ensureVisible(
+        find.byKey(const ValueKey('app-settings-gptk-version-4')),
+      );
+      await tester.tap(
+        find.byKey(const ValueKey('app-settings-gptk-version-4')),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(
+        find.byKey(const ValueKey('app-settings-install-gptk-wine-button')),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.byKey(const ValueKey('app-settings-confirm-gptk-wine-button')),
+      );
+      await tester.pumpAndSettle();
+
+      final importError = find.byKey(
+        const ValueKey('app-settings-gptk-import-error-message'),
+      );
+      expect(importError, findsOneWidget);
+      expect(
+        tester.widget<Text>(importError).data,
+        'Requested GPTK 4, but selected GPTK/D3DMetal payload is GPTK 3.',
+      );
+      expect(runner.argumentsLog, const [
+        ['list-bottles', '--json'],
+        ['get-app-settings', '--json'],
+        ['list-runtimes', '--json'],
+        [
+          'install-gptk-wine',
+          '--from',
+          '/Users/user/Downloads/Game_Porting_Toolkit_3.0.dmg',
+          '--gptk-version',
+          '4',
+          '--json',
+        ],
+      ]);
+
+      await _expectGoldenFileWithinTolerance(
+        find.byKey(const ValueKey('app-settings-dialog')),
+        'goldens/app_settings_gptk_import_version_mismatch.png',
+        diffTolerance: 0.03,
+      );
+    },
+  );
+
+  testWidgets('macOS settings dialog shows installed GPTK version', (
+    WidgetTester tester,
+  ) async {
+    final runner = _QueuedProcessRunner([
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '{"schemaVersion":1,"bottles":[]}',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "appSettings": {
+              "terminateWineProcessesOnClose": false,
+              "defaultBottlePath": "/Users/user/Library/Application Support/Konyak/Bottles",
+              "appearanceMode": "dark",
+              "automaticallyCheckForKonyakUpdates": false,
+              "automaticallyCheckForWineUpdates": false
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+      ProcessRunResult(
+        exitCode: 0,
+        stdout: _macosRuntimeListPayload(
+          gptkAvailable: true,
+          gptkVersion: 'GPTK 4',
+        ),
+        stderr: '',
+      ),
+    ]);
+
+    await tester.pumpWidget(
+      _testKonyakApp(
+        platform: KonyakPlatform.macos,
+        cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Settings'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Installed GPTK version'), findsOneWidget);
+    final installedVersionText = tester.widget<Text>(
+      find.byKey(const ValueKey('app-settings-installed-gptk-version-value')),
+    );
+    expect(installedVersionText.data, 'GPTK 4');
+  });
+
   testWidgets('macOS settings GPTK import version panel matches golden', (
     WidgetTester tester,
   ) async {
@@ -1165,7 +1339,10 @@ void defineSettingsWidgetTests() {
       ),
       ProcessRunResult(
         exitCode: 0,
-        stdout: _macosRuntimeListPayload(gptkAvailable: false),
+        stdout: _macosRuntimeListPayload(
+          gptkAvailable: true,
+          gptkVersion: 'GPTK 4',
+        ),
         stderr: '',
       ),
     ]);
@@ -1184,6 +1361,12 @@ void defineSettingsWidgetTests() {
       find.byKey(const ValueKey('app-settings-gptk-version-selector')),
     );
     await tester.pumpAndSettle();
+
+    expect(find.text('Installed GPTK version'), findsOneWidget);
+    final installedVersionText = tester.widget<Text>(
+      find.byKey(const ValueKey('app-settings-installed-gptk-version-value')),
+    );
+    expect(installedVersionText.data, 'GPTK 4');
 
     await _expectGoldenFileWithinTolerance(
       find.byKey(const ValueKey('app-settings-dialog')),

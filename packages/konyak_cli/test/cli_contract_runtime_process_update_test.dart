@@ -677,6 +677,56 @@ void main() {
     },
   );
 
+  test('list-runtimes --json reports the installed GPTK major version', () {
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-gptk-runtime-version-test-',
+    );
+    addTearDown(() {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    });
+    final runtimeHome = joinTestPath(tempDirectory.path, const ['runtime']);
+    createCompleteMacosRuntime(runtimeHome);
+    createGptkD3DMetalSource(
+      runtimeHome,
+      const ['components', 'gptk-d3dmetal', 'lib', 'external'],
+      frameworkVersion: '4.0b1',
+      includeAtidxx64: false,
+    );
+    File(
+      joinTestPath(runtimeHome, const [runtimeStackManifestFileName]),
+    ).writeAsStringSync(
+      jsonEncode({
+        'schemaVersion': 1,
+        'components': {'gptk-d3dmetal': 'user-provided'},
+      }),
+    );
+
+    final result = runCli(
+      const ['list-runtimes', '--json'],
+      runtimeCatalog: MacosWineRuntimeCatalog(
+        hostPlatform: KonyakHostPlatform.macos,
+        environment: HostEnvironment({'KONYAK_MACOS_WINE_HOME': runtimeHome}),
+        fileStatusProbe: DartIoFileStatusProbe(),
+        runtimeStackVersionProbe: const DartIoRuntimeStackVersionProbe(),
+      ),
+    );
+
+    expect(result.exitCode, 0);
+    final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+    final runtime =
+        (payload['runtimes'] as List<Object?>).single as Map<String, Object?>;
+    final stack = runtime['stack'] as Map<String, Object?>;
+    final components = stack['components'] as List<Object?>;
+    final gptk = components.cast<Map<String, Object?>>().singleWhere(
+      (component) => component['id'] == 'gptk-d3dmetal',
+    );
+
+    expect(gptk['isInstalled'], isTrue);
+    expect(gptk['version'], 'GPTK 4');
+  });
+
   test('list-runtimes --json omits Konyak macOS Wine outside macOS', () {
     final result = runCli(
       const ['list-runtimes', '--json'],

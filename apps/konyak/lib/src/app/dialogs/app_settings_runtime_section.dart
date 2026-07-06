@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../l10n/konyak_localizations.dart';
 import '../../runtimes/gptk_import_version.dart';
 import '../../runtimes/runtime_summary.dart';
+import '../app_constants.dart';
 import 'app_settings_dialog_operation_state.dart';
 import 'app_settings_rows.dart';
 import 'app_settings_runtime_view_model.dart';
@@ -19,6 +20,7 @@ class AppSettingsRuntimeSection extends StatelessWidget {
     required this.onInstallGptkWine,
     required this.onOpenGptkPage,
     required this.gptkImportVersion,
+    required this.gptkImportFailureMessage,
     required this.onGptkImportVersionChanged,
   });
 
@@ -31,6 +33,7 @@ class AppSettingsRuntimeSection extends StatelessWidget {
   final VoidCallback? onInstallGptkWine;
   final VoidCallback? onOpenGptkPage;
   final GptkImportVersion gptkImportVersion;
+  final String? gptkImportFailureMessage;
   final ValueChanged<GptkImportVersion> onGptkImportVersionChanged;
 
   @override
@@ -111,7 +114,8 @@ class AppSettingsRuntimeSection extends StatelessWidget {
                 label: component.name,
                 value: localizedComponentStatusLabel(component, localizations),
               ),
-            if (platform == 'macos') _gptkInstallPanel(stack, localizations),
+            if (platform == 'macos')
+              _gptkInstallPanel(context, stack, localizations),
           ],
         ),
     };
@@ -150,9 +154,11 @@ class AppSettingsRuntimeSection extends StatelessWidget {
   }
 
   Widget _gptkInstallPanel(
+    BuildContext context,
     RuntimeStackSummary stack,
     KonyakLocalizations localizations,
   ) {
+    final colors = KonyakThemeColors.of(context);
     final isImportingGptkWine = isAppSettingsDialogOperationRunning(
       state: dialogOperationState,
       operation: AppSettingsDialogOperation.importingGptkWine,
@@ -164,6 +170,57 @@ class AppSettingsRuntimeSection extends StatelessWidget {
         children: [
           Text(localizations.d3dmetalLicenseNotice),
           const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  localizations.gptkInstalledVersion,
+                  style: TextStyle(color: colors.mutedText, fontSize: 13),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                installedGptkD3DMetalVersionLabel(stack, localizations),
+                key: const ValueKey(
+                  'app-settings-installed-gptk-version-value',
+                ),
+                style: TextStyle(
+                  color: colors.text,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+                textAlign: TextAlign.end,
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (gptkImportFailureMessage case final message?
+              when message.trim().isNotEmpty) ...[
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.error_outline,
+                  size: 16,
+                  color: Theme.of(context).colorScheme.error,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    message,
+                    key: const ValueKey(
+                      'app-settings-gptk-import-error-message',
+                    ),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+          ],
           Text(localizations.gptkImportVersion),
           const SizedBox(height: 8),
           SegmentedButton<GptkImportVersion>(
@@ -231,6 +288,32 @@ class AppSettingsRuntimeSection extends StatelessWidget {
       ),
     );
   }
+}
+
+String installedGptkD3DMetalVersionLabel(
+  RuntimeStackSummary stack,
+  KonyakLocalizations localizations,
+) {
+  final matchingComponents = stack.components.where(
+    (component) => component.id == 'gptk-d3dmetal',
+  );
+  if (matchingComponents.isEmpty) {
+    return localizations.notInstalled;
+  }
+
+  final component = matchingComponents.first;
+  if (!component.isInstalled) {
+    return localizations.notInstalled;
+  }
+
+  final version = component.version?.trim();
+  if (version == null ||
+      version.isEmpty ||
+      version.toLowerCase() == 'user-provided') {
+    return localizations.installed;
+  }
+
+  return version;
 }
 
 String localizedRuntimeInstallButtonLabel(

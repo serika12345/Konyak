@@ -383,6 +383,22 @@ GptkWineImportVersion? gptkD3DMetalPayloadVersionFromFrameworkVersion(
   return null;
 }
 
+String? gptkD3DMetalInstalledVersionLabel(String frameworkPath) {
+  final frameworkVersion = d3dMetalFrameworkVersion(frameworkPath);
+  if (frameworkVersion == null || frameworkVersion.trim().isEmpty) {
+    return null;
+  }
+
+  final detectedVersion = gptkD3DMetalPayloadVersionFromFrameworkVersion(
+    frameworkVersion,
+  );
+  return switch (detectedVersion) {
+    GptkWineImportVersion.gptk3 => 'GPTK 3',
+    GptkWineImportVersion.gptk4 => 'GPTK 4',
+    _ => null,
+  };
+}
+
 GptkD3DMetalSource? resolveGptkD3DMetalSource(String sourcePath) {
   final sourceType = FileSystemEntity.typeSync(sourcePath);
   if (sourceType == FileSystemEntityType.notFound) {

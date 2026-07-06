@@ -536,6 +536,12 @@ abstract class KonyakLocalizations {
   /// **'GPTK version'**
   String get gptkImportVersion;
 
+  /// Konyak UI string: Installed GPTK version
+  ///
+  /// In en, this message translates to:
+  /// **'Installed GPTK version'**
+  String get gptkInstalledVersion;
+
   /// Konyak UI string: GPTK 3
   ///
   /// In en, this message translates to:

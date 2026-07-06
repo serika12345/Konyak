@@ -242,6 +242,9 @@ class KonyakLocalizationsEn extends KonyakLocalizations {
   String get gptkImportVersion => 'GPTK version';
 
   @override
+  String get gptkInstalledVersion => 'Installed GPTK version';
+
+  @override
   String get gptkImportVersionGptkThree => 'GPTK 3';
 
   @override

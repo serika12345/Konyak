@@ -59,6 +59,7 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
   AppSettingsDialogOperationState _operationState =
       const AppSettingsDialogOperationState.idle();
   GptkImportVersion _gptkImportVersion = GptkImportVersion.auto;
+  String? _gptkImportFailureMessage;
 
   @override
   void initState() {
@@ -213,6 +214,7 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
         operation: AppSettingsDialogOperation.importingGptkWine,
       );
       _runtimeOperationState = const RuntimeSectionOperationState.idle();
+      _gptkImportFailureMessage = null;
     });
 
     final result = await installGptkWine(_gptkImportVersion);
@@ -226,8 +228,10 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
         case InstalledRuntime(:final runtime):
           _runtimes = upsertRuntime(_runtimes, runtime);
           _runtimeOperationState = const RuntimeSectionOperationState.idle();
+          _gptkImportFailureMessage = null;
         case RuntimeInstallLoadFailure(:final message):
           _runtimeOperationState = RuntimeSectionOperationState.failed(message);
+          _gptkImportFailureMessage = message;
       }
       _operationState = finishAppSettingsDialogOperation(
         state: _operationState,
@@ -361,9 +365,11 @@ class _AppSettingsDialogState extends State<AppSettingsDialog> {
                     : _installGptkWine,
                 onOpenGptkPage: widget.onOpenGptkPage,
                 gptkImportVersion: _gptkImportVersion,
+                gptkImportFailureMessage: _gptkImportFailureMessage,
                 onGptkImportVersionChanged: (version) {
                   setState(() {
                     _gptkImportVersion = version;
+                    _gptkImportFailureMessage = null;
                   });
                 },
               ),

@@ -221,6 +221,7 @@ String _macosRuntimeListPayload({
   bool dxvkAvailable = true,
   bool dxmtAvailable = true,
   bool gptkAvailable = true,
+  String? gptkVersion,
 }) {
   return jsonEncode(<String, Object?>{
     'schemaVersion': 1,
@@ -327,7 +328,7 @@ String _macosRuntimeListPayload({
               name: 'GPTK/D3DMetal',
               role: 'd3d12-metal-translation',
               isRequired: false,
-              version: gptkAvailable ? 'user-provided' : null,
+              version: gptkAvailable ? gptkVersion ?? 'user-provided' : null,
               missingPaths: gptkAvailable
                   ? const <String>[]
                   : [

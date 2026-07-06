@@ -1410,7 +1410,7 @@ void main() {
         'user-provided-gptk-wine',
       );
       expect(gptkComponent?.isInstalled, isTrue);
-      expect(gptkComponent?.version.toNullable()?.value, 'user-provided');
+      expect(gptkComponent?.version.toNullable()?.value, 'GPTK 3');
       final dxmtComponent = completed.runtime.stack
           .toNullable()
           ?.components
@@ -1487,7 +1487,7 @@ void main() {
           .where((component) => component.id.value == 'gptk-d3dmetal')
           .single;
       expect(gptkComponent?.isInstalled, isTrue);
-      expect(gptkComponent?.version.toNullable()?.value, 'user-provided');
+      expect(gptkComponent?.version.toNullable()?.value, 'GPTK 3');
       for (final relativePath in gptkD3DMetalInstalledPaths) {
         expect(
           FileSystemEntity.typeSync(

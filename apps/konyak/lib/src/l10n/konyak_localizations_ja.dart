@@ -236,6 +236,9 @@ class KonyakLocalizationsJa extends KonyakLocalizations {
   String get gptkImportVersion => 'GPTK バージョン';
 
   @override
+  String get gptkInstalledVersion => 'インストール済み GPTK バージョン';
+
+  @override
   String get gptkImportVersionGptkThree => 'GPTK 3';
 
   @override
