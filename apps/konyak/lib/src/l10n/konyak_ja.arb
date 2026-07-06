@@ -298,6 +298,18 @@
   "@gptkD3dmetalSourceWasNotSelected": {
     "description": "Konyak UI string: GPTK/D3DMetal source was not selected."
   },
+  "gptkImportVersion": "GPTK バージョン",
+  "@gptkImportVersion": {
+    "description": "Konyak UI string: GPTK version"
+  },
+  "gptkImportVersionGptkThree": "GPTK 3",
+  "@gptkImportVersionGptkThree": {
+    "description": "Konyak UI string: GPTK 3"
+  },
+  "gptkImportVersionGptkFour": "GPTK 4",
+  "@gptkImportVersionGptkFour": {
+    "description": "Konyak UI string: GPTK 4"
+  },
   "highResolutionMode": "高解像度モード",
   "@highResolutionMode": {
     "description": "Konyak UI string: High Resolution Mode"

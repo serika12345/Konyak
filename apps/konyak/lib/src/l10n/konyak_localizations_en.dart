@@ -239,6 +239,15 @@ class KonyakLocalizationsEn extends KonyakLocalizations {
       'GPTK/D3DMetal source was not selected.';
 
   @override
+  String get gptkImportVersion => 'GPTK version';
+
+  @override
+  String get gptkImportVersionGptkThree => 'GPTK 3';
+
+  @override
+  String get gptkImportVersionGptkFour => 'GPTK 4';
+
+  @override
   String get highResolutionMode => 'High Resolution Mode';
 
   @override

@@ -9,41 +9,46 @@ Use `docs/todo.md` only as the top-level roadmap pointer. Use
 
 ## Current Snapshot
 
-- Timestamp: 2026-07-06 20:09 JST
+- Timestamp: 2026-07-06 21:34 JST
 - State: `completed`
-- Branch: `task/gptk-import-public-proof-docs`
-- Pull request: runtime draft PR
-  https://github.com/serika12345/konyak-macos-runtime/pull/5 opened from
-  `task/gptk-import-public-proof-docs`; parent draft PR
-  https://github.com/serika12345/Konyak/pull/39 opened from the same branch.
-  Previous runtime PR
-  https://github.com/serika12345/konyak-macos-runtime/pull/4 merged as
-  `472091f`; parent PR https://github.com/serika12345/Konyak/pull/38 merged
-  as `3e1d5f`.
-- Runtime submodule: branch `task/gptk-import-public-proof-docs`, based on
-  runtime `main` merge commit `472091f`, documentation commit `61624ad`.
-- Active gate: `G4-P1 GPTK Import Public Proof and Docs`
-- Purpose: prove GPTK3 and GPTK4 import through Konyak's public
-  `install-gptk-wine --json` CLI path, rerun maintained GPTK backend smoke
-  against those installed runtimes, and document the resulting support matrix.
-- Completed work: runtime PR #4 and parent PR #38 merged GPTK4 payload import
-  support; this gate added the maintained parent public CLI smoke
-  `scripts/run_macos_gptk_import_cli_smoke.zsh` and `just
-  smoke-macos-gptk-import-cli`; proved Apple GPTK 3.0 and Apple GPTK 4.0 beta 1
-  imports through `install-gptk-wine --json`; proved `list-runtimes --json`
-  reports the `gptk-d3dmetal` component/backend after each import; reran the
-  maintained runtime `gptk-d3d10-unsupported`, `gptk-d3d11-device`, and
-  `gptk-d3d12-device` smokes against both installed runtimes; updated
-  user-facing, release, GPTK workstream, and runtime contract docs with the
-  GPTK3/GPTK4 support matrix.
+- Branch: `task/gptk-import-version-ui`
+- Pull request: runtime PR
+  https://github.com/serika12345/konyak-macos-runtime/pull/5 merged as
+  `0a09716b`; parent PR https://github.com/serika12345/Konyak/pull/39 merged
+  as `104e23b`; current draft PR
+  https://github.com/serika12345/Konyak/pull/40.
+- Runtime submodule: no runtime submodule changes planned for this gate; parent
+  branch consumes the already-merged GPTK3/GPTK4 CLI/runtime contract.
+- Active gate: `G5-P1 Flutter GPTK Import Version UI and CLI Connection`
+- Purpose: complete the Flutter Settings UI and app-to-CLI connection for
+  GPTK/D3DMetal import version selection so users can choose Auto, GPTK 3, or
+  GPTK 4 before selecting a GPTK source.
+- Completed work: runtime PR #5 and parent PR #39 merged the public CLI proof
+  and documentation gate for GPTK3/GPTK4 import compatibility; this gate added
+  the Flutter Settings Auto/GPTK 3/GPTK 4 import-version segmented control,
+  connected the selection through HomeLoader to `install-gptk-wine`, preserved
+  Auto as the omitted-version CLI command, added CLI/widget/golden tests, and
+  captured the updated Settings panel golden.
 - Workstream separation: the multi-agent tool is available, but its tool-level
   instructions allow spawning only when the user explicitly requests
   sub-agents. Investigation, implementation, and audit evidence will be kept
   separate in this file.
-- Remaining work: review runtime PR #5 and parent PR #39 before merging.
-- Next action: review G4-P1 PRs; after merge, continue with the DLSS/MetalFX
-  rendering-proof task in `docs/todo.md`.
+- Remaining work: run final repository-wide verification, commit and push the
+  branch, open a draft PR, and review before merging.
+- Next action: review the G5-P1 draft PR; after merge, continue with the
+  DLSS/MetalFX rendering-proof task in `docs/todo.md`.
 - Verification so far:
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/cli/konyak_cli_client_test.dart --plain-name "imports GPTK Wine"'`
+    passed after first failing for the missing version model/CLI argument.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "macOS settings dialog imports"'`
+    passed: Auto keeps the existing omitted-version argv, GPTK 3 passes
+    `--gptk-version 3`, and GPTK 4 passes `--gptk-version 4`.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "macOS settings GPTK import version panel matches golden" --update-goldens'`
+    passed and captured `apps/konyak/test/goldens/app_settings_gptk_import_version.png`.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "macOS settings GPTK import version panel matches golden"'`
+    passed against the captured golden.
+  - `nix develop -c zsh -lc 'just flutter-format-check && just flutter-analyze && just flutter-test'`
+    passed; Flutter test reported 465 tests passed.
   - `nix develop -c zsh -lc 'just smoke-macos-gptk-import-cli'` passed:
     Apple GPTK 3.0 and Apple GPTK 4.0 beta 1 were installed through the public
     CLI path, `list-runtimes --json` reported `gptk-d3dmetal`, GPTK3 retained
@@ -736,9 +741,63 @@ Review gate:
 - Commit and push the branch, open a draft PR when GitHub access is available,
   then stop for review before any UI or Metal 4 enablement work.
 
+### G5: Flutter Import Version UI and Connection
+
+Goal: expose the completed GPTK3/GPTK4 import contract through the Flutter
+Settings UI without weakening the existing Auto import path.
+
+Small milestones:
+
+- [x] G5-S1: Add widget coverage for Auto, GPTK 3, and GPTK 4 import-version
+  selection in the macOS Settings GPTK import panel.
+- [x] G5-S2: Add golden coverage for the updated GPTK import panel.
+- [x] G5-S3: Connect the selected version to Flutter's CLI wrapper so GPTK 3
+  and GPTK 4 selections pass `--gptk-version 3` and `--gptk-version 4`.
+- [x] G5-S4: Preserve the Auto path as the backward-compatible omitted-version
+  `install-gptk-wine --from <path> --json` command.
+- [x] G5-S5: Update user-facing copy and current-state docs, then run the
+  Flutter and repository verification matrix.
+
+#### PR Gate: G5-P1 Flutter GPTK Import Version UI and CLI Connection
+
+status: completed
+branch: `task/gptk-import-version-ui`
+
+Completion criteria:
+
+- macOS Settings exposes a compact Auto/GPTK 3/GPTK 4 control in the
+  GPTK/D3DMetal import panel.
+- Auto keeps the existing omitted-version CLI command for backward
+  compatibility.
+- GPTK 3 and GPTK 4 selections forward `--gptk-version 3` and
+  `--gptk-version 4` to `install-gptk-wine`.
+- Widget tests prove UI selection and argv behavior.
+- A golden test captures the updated Settings GPTK import panel.
+- `docs/progress.md` and this file record completion, verification, and the
+  next follow-up.
+
+Verification:
+
+- `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/cli/konyak_cli_client_test.dart --plain-name "imports GPTK Wine"'`
+  passed after first failing for the missing version model/CLI argument.
+- `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "macOS settings dialog imports"'`
+  passed.
+- `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "macOS settings GPTK import version panel matches golden" --update-goldens'`
+  passed and captured `apps/konyak/test/goldens/app_settings_gptk_import_version.png`.
+- `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --plain-name "macOS settings GPTK import version panel matches golden"'`
+  passed against the captured golden.
+- `nix develop -c zsh -lc 'just flutter-format-check && just flutter-analyze && just flutter-test'`
+  passed; Flutter test reported 465 tests passed.
+- `nix develop -c zsh -lc 'git diff --check && git -C runtime/konyak-macos-runtime diff --check && just verify-governance && just verify-safety && just format-check && just lint'`
+  passed.
+
+Review gate:
+
+- Commit and push the branch, open a draft PR when GitHub access is available,
+  then stop before Metal 4 policy controls or DLSS/MetalFX rendering proof.
+
 ## Deferred Follow-Ups
 
-- Flutter UI for choosing GPTK import version.
 - Metal 4 backend environment and policy controls after GPTK4 import is
   accepted.
 - End-to-end game rendering proof beyond maintained smoke/probe paths.

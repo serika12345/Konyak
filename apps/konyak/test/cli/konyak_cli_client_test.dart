@@ -5,6 +5,7 @@ import 'package:konyak/src/bottles/bottle_summary.dart';
 import 'package:konyak/src/cli/cli_optional_fields.dart';
 import 'package:konyak/src/cli/konyak_cli_client.dart';
 import 'package:konyak/src/cli/runtime_install_contract.dart';
+import 'package:konyak/src/runtimes/gptk_import_version.dart';
 import 'package:konyak/src/settings/app_settings_summary.dart';
 
 void main() {
@@ -939,6 +940,67 @@ void main() {
     expect(progressEvents.single.message, 'Downloading Konyak macOS Wine...');
     expect(progressEvents.single.fraction, 0.42);
     expect(result, isA<InstalledRuntime>());
+  });
+
+  test('imports GPTK Wine with omitted version for auto detection', () async {
+    final runner = _FakeProcessRunner(
+      result: const ProcessRunResult(
+        exitCode: 0,
+        stdout: '{"schemaVersion":1,"gptkWineInstall":{"componentId":"wine"}}',
+        stderr: '',
+      ),
+    );
+    final client = KonyakCliClient(executable: 'konyak', processRunner: runner);
+
+    await client.installGptkWine(
+      sourcePath: '/downloads/Game_Porting_Toolkit_3.0.dmg',
+    );
+
+    expect(runner.arguments, const [
+      'install-gptk-wine',
+      '--from',
+      '/downloads/Game_Porting_Toolkit_3.0.dmg',
+      '--json',
+    ]);
+  });
+
+  test('imports GPTK Wine with explicit requested versions', () async {
+    final runner = _FakeProcessRunner(
+      result: const ProcessRunResult(
+        exitCode: 0,
+        stdout: '{"schemaVersion":1,"gptkWineInstall":{"componentId":"wine"}}',
+        stderr: '',
+      ),
+    );
+    final client = KonyakCliClient(executable: 'konyak', processRunner: runner);
+
+    await client.installGptkWine(
+      sourcePath: '/downloads/Game_Porting_Toolkit_4.0_beta_1.dmg',
+      version: GptkImportVersion.gptk4,
+    );
+
+    expect(runner.arguments, const [
+      'install-gptk-wine',
+      '--from',
+      '/downloads/Game_Porting_Toolkit_4.0_beta_1.dmg',
+      '--gptk-version',
+      '4',
+      '--json',
+    ]);
+
+    await client.installGptkWine(
+      sourcePath: '/downloads/Game_Porting_Toolkit_3.0.dmg',
+      version: GptkImportVersion.gptk3,
+    );
+
+    expect(runner.arguments, const [
+      'install-gptk-wine',
+      '--from',
+      '/downloads/Game_Porting_Toolkit_3.0.dmg',
+      '--gptk-version',
+      '3',
+      '--json',
+    ]);
   });
 
   test('returns install failures from install-macos-wine JSON', () async {

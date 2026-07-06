@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../l10n/konyak_localizations.dart';
+import '../../runtimes/gptk_import_version.dart';
 import '../../runtimes/runtime_summary.dart';
 import 'app_settings_dialog_operation_state.dart';
 import 'app_settings_rows.dart';
@@ -17,6 +18,8 @@ class AppSettingsRuntimeSection extends StatelessWidget {
     required this.onInstallRuntime,
     required this.onInstallGptkWine,
     required this.onOpenGptkPage,
+    required this.gptkImportVersion,
+    required this.onGptkImportVersionChanged,
   });
 
   final String title;
@@ -27,6 +30,8 @@ class AppSettingsRuntimeSection extends StatelessWidget {
   final VoidCallback? onInstallRuntime;
   final VoidCallback? onInstallGptkWine;
   final VoidCallback? onOpenGptkPage;
+  final GptkImportVersion gptkImportVersion;
+  final ValueChanged<GptkImportVersion> onGptkImportVersionChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -158,6 +163,42 @@ class AppSettingsRuntimeSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(localizations.d3dmetalLicenseNotice),
+          const SizedBox(height: 12),
+          Text(localizations.gptkImportVersion),
+          const SizedBox(height: 8),
+          SegmentedButton<GptkImportVersion>(
+            key: const ValueKey('app-settings-gptk-version-selector'),
+            selected: <GptkImportVersion>{gptkImportVersion},
+            showSelectedIcon: false,
+            onSelectionChanged: isImportingGptkWine
+                ? null
+                : (selection) {
+                    onGptkImportVersionChanged(selection.single);
+                  },
+            segments: [
+              ButtonSegment<GptkImportVersion>(
+                value: GptkImportVersion.auto,
+                label: Text(
+                  localizations.auto,
+                  key: const ValueKey('app-settings-gptk-version-auto'),
+                ),
+              ),
+              ButtonSegment<GptkImportVersion>(
+                value: GptkImportVersion.gptk3,
+                label: Text(
+                  localizations.gptkImportVersionGptkThree,
+                  key: const ValueKey('app-settings-gptk-version-3'),
+                ),
+              ),
+              ButtonSegment<GptkImportVersion>(
+                value: GptkImportVersion.gptk4,
+                label: Text(
+                  localizations.gptkImportVersionGptkFour,
+                  key: const ValueKey('app-settings-gptk-version-4'),
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 12),
           Wrap(
             spacing: 10,
