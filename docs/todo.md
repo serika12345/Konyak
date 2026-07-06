@@ -31,12 +31,10 @@ verification output instead of checked-off backlog entries.
 
 - Complete GPTK/D3DMetal import compatibility work tracked in
   `docs/gptk-d3dmetal-import-progress.md`. The active gate is
-  `G3-P2 GPTK4 Runtime Submodule Import and Smoke Contract`: update the runtime
-  submodule import scripts, smoke checks, CI GPTK preparation, and proprietary
-  payload exclusion checks so GPTK4 payloads without `atidxx64.*` are accepted
-  without adding active `d3d10.*`. Runtime-owned Apple GPTK 4.0 beta 1 DMG
-  smoke proof has been captured locally; public CLI Apple DMG proof remains in
-  the later G4 gate.
+  `G3-P2 GPTK4 Runtime Submodule Import and Smoke Contract`, currently paused
+  at review with runtime PR #4 and parent PR #38 open as drafts. Runtime-owned
+  Apple GPTK 4.0 beta 1 DMG smoke proof has been captured locally; public CLI
+  Apple DMG proof remains in the later G4 gate.
 - Capture end-to-end DLSS/MetalFX rendering proof with a redistributable or
   user-provided DLSS-capable Windows program.
   - Use Konyak's public `run-program --json` path, record backend environment,

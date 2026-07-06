@@ -13,14 +13,15 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-06 18:31 JST
-- State: `in_progress`
+- Timestamp: 2026-07-06 18:37 JST
+- State: `paused`
 - Branch: `task/gptk4-runtime-import-smoke`
 - Active work: `G3-P2 GPTK4 Runtime Submodule Import and Smoke Contract`.
 - Related TODO: `docs/todo.md` `Next Tasks` points at
   `docs/gptk-d3dmetal-import-progress.md`; the active gate is
   `G3-P2 GPTK4 Runtime Submodule Import and Smoke Contract`.
-- Pull request: parent PR not opened yet for the current gate. Runtime PR
+- Pull request: parent PR https://github.com/serika12345/Konyak/pull/38 is
+  open as draft. Runtime PR
   https://github.com/serika12345/konyak-macos-runtime/pull/4 is open as draft.
   Previous parent PR https://github.com/serika12345/Konyak/pull/37 merged as
   `2445a0d`.
@@ -48,10 +49,12 @@ unfinished work.
   runtime import, CI preparation, backend smoke, archive exclusion, workflow,
   and runtime contract docs so GPTK4 payloads without `atidxx64.*` are accepted
   while GPTK3 still requires `atidxx64.*`; proved GPTK3 and GPTK4 maintained
-  local smoke against `dist/konyak-macos-wine-runtime-stack.tar.zst`.
-- Remaining work: commit and push parent changes, then open the parent tracking
-  PR for the submodule pointer/docs.
-- Next action: commit/push parent branch and prepare the G3-P2 review package.
+  local smoke against `dist/konyak-macos-wine-runtime-stack.tar.zst`; opened
+  runtime PR #4 and parent PR #38 as drafts.
+- Remaining work: review CI and merge runtime PR #4 first, then update or merge
+  parent PR #38 for the submodule pointer/docs.
+- Next action: review the G3-P2 PRs and, after approval, merge runtime PR #4
+  before the parent PR.
 - Verification so far:
   - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && zsh -n scripts/import-gptk-d3dmetal-redist.zsh scripts/prepare-gptk-d3dmetal-ci-smoke.zsh scripts/smoke-backend-device.zsh scripts/smoke-gptk-d3dmetal-local.zsh scripts/check-runtime-archive-excludes-gptk.zsh'`
     passed.
