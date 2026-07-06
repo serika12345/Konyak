@@ -13,14 +13,14 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-06 16:50 JST
-- State: `in_progress`
+- Timestamp: 2026-07-06 16:53 JST
+- State: `paused`
 - Branch: `task/gptk-version-import-contract`
 - Active work: `G2-P1 GPTK Version Parser and Request Model`.
 - Related TODO: `docs/todo.md` `Next Tasks` points at
   `docs/gptk-d3dmetal-import-progress.md`; the active gate is
   `G2-P1 GPTK Version Parser and Request Model`.
-- Pull request: not opened yet for the current gate.
+- Pull request: https://github.com/serika12345/Konyak/pull/35
 - Latest known completed work: runtime PR
   https://github.com/serika12345/konyak-macos-runtime/pull/3 merged as
   `eedc190`; parent PR https://github.com/serika12345/Konyak/pull/34 merged
@@ -34,8 +34,9 @@ unfinished work.
   `4`, and invalid values; added `GptkWineImportVersion` and
   `GptkWineInstallRequest.requestedVersion`; wired the parser and handler path
   so the requested version reaches `GptkWineInstaller`; updated CLI usage text.
-- Remaining work: commit, push, open a draft PR, then stop before G2-P2.
-- Next action: commit the verified G2-P1 implementation and open a draft PR.
+- Remaining work: review and merge PR #35 before starting G2-P2.
+- Next action: review PR #35. If no changes are requested, merge it, then
+  continue to G2-P2 for payload-version detection and mismatch diagnostics.
 - Verification so far: `nix develop -c zsh -lc 'cd packages/konyak_cli && dart
   test test/cli_parser_boundary_options_test.dart --plain-name "runtime parser
   options"'` passed; `nix develop -c zsh -lc 'cd packages/konyak_cli && dart

@@ -9,12 +9,12 @@ Use `docs/todo.md` only as the top-level roadmap pointer. Use
 
 ## Current Snapshot
 
-- Timestamp: 2026-07-06 16:50 JST
-- State: `in_progress`
+- Timestamp: 2026-07-06 16:53 JST
+- State: `paused`
 - Branch: `task/gptk-version-import-contract`
-- Pull request: not opened yet for the current gate. Previous parent PR
-  https://github.com/serika12345/Konyak/pull/34 was merged into parent `main`
-  as `ab048d8`.
+- Pull request: https://github.com/serika12345/Konyak/pull/35. Previous parent
+  PR https://github.com/serika12345/Konyak/pull/34 was merged into parent
+  `main` as `ab048d8`.
 - Runtime submodule: no runtime changes planned for G2-P1. Previous runtime PR
   https://github.com/serika12345/konyak-macos-runtime/pull/3 was merged into
   runtime `main` as `eedc190`.
@@ -32,8 +32,9 @@ Use `docs/todo.md` only as the top-level roadmap pointer. Use
 - Decision: G2-P1 only models and preserves the requested version. It does not
   detect GPTK3/GPTK4 payload versions, return requested/detected mismatch
   diagnostics, or relax GPTK4 payload validation; those remain G2-P2 and G3.
-- Remaining work: commit, push, open a draft PR, and stop before G2-P2.
-- Next action: commit the verified G2-P1 implementation and open a draft PR.
+- Remaining work: review and merge PR #35 before starting G2-P2.
+- Next action: review PR #35. If no changes are requested, merge it, then
+  continue to G2-P2 for payload-version detection and mismatch diagnostics.
 - Verification so far: parser runtime-options tests passed; the
   `install-gptk-wine forwards the requested GPTK version` CLI contract test
   passed; full G2-P1 verification passed with `just cli-test`,
@@ -442,8 +443,9 @@ Small milestones:
 
 #### PR Gate: G2-P1 GPTK Version Parser and Request Model
 
-status: in_progress
+status: paused
 branch: `task/gptk-version-import-contract`
+pull request: https://github.com/serika12345/Konyak/pull/35
 
 Implementation status as of 2026-07-06 16:43 JST:
 
