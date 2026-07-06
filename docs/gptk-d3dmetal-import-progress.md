@@ -9,30 +9,26 @@ Use `docs/todo.md` only as the top-level roadmap pointer. Use
 
 ## Current Snapshot
 
-- Timestamp: 2026-07-06 01:10 JST
+- Timestamp: 2026-07-06 09:32 JST
 - State: `completed`
 - Branch: `task/gptk-d3d10-smoke`
 - Pull request: https://github.com/serika12345/Konyak/pull/33
-- Active gate: `G1-P2 D3D10 GPTK Bridge Smoke Contract`
-- Purpose: correct the earlier active GPTK `d3d10.*` payload direction, keep
-  D3D10 on the base Wine builtin frontend, and add runtime smoke/CI proof that
-  D3D10 reaches GPTK/D3DMetal through the selected D3D11/DXGI backend.
-- Completed work: investigated Apple GPTK 3.0, Apple GPTK 4.0 beta 1,
-  `/Users/masato/Documents/CrossOver.app`, and the CrossOver FOSS sources under
-  `/Users/masato/Documents/sources`; confirmed CrossOver does not ship active
-  GPTK `d3d10.dll` or `d3d10.so`; confirmed Wine D3D10 flows through
-  `d3d10core` into D3D11/DXGI; confirmed Konyak launch overrides already kept
-  GPTK D3DMetal to `dxgi,d3d11,d3d12,nvapi64,nvngx=n,b`; removed active GPTK
-  `d3d10.*` from parent component/import contracts and fixtures; added the
-  runtime D3D10 bridge probe and `gptk-d3d10-bridge` smoke target; wired the
-  D3D10 bridge smoke into build, artifact-smoke, and candidate-promotion
-  workflows; updated docs and progress records.
-- Remaining work: review the parent PR and runtime submodule PR, then stop
+- Active gate: `G1-P3 D3D10 DXVK Render Smoke and Backend Hint Contract`
+- Purpose: keep the GPTK D3D10 bridge correction from G1-P2, then add real
+  D3D10 render/readback proof for the supported bundled runtime route and keep
+  parent backend suggestions aligned with that evidence.
+- Completed work: merged runtime PR #1 into runtime `main`; diagnosed actual
+  D3D10 execution against the assembled runtime stack; confirmed DXVK D3D10
+  render/readback succeeds while DXMT D3D10 device/swapchain creation returns
+  `0x80004005`; added runtime PR #2 with `dxvk-d3d10-render` CI coverage;
+  split parent graphics backend suggestions so macOS D3D10 recommends DXVK
+  while D3D11 keeps DXMT first with DXVK fallback.
+- Remaining work: review the parent PR and runtime submodule PR #2, then stop
   before GPTK4 import work.
 - Next action: review https://github.com/serika12345/Konyak/pull/33 and
-  https://github.com/serika12345/konyak-macos-runtime/pull/1; after merge,
+  https://github.com/serika12345/konyak-macos-runtime/pull/2; after merge,
   continue with G2-P1 version-specified GPTK import.
-- Verification so far: passed. See the G1-P2 verification section below.
+- Verification so far: passed. See the G1-P3 verification section below.
 - Workstream separation: sub-agent tooling was not used because the available
   tool requires explicit user authorization before spawning agents. The
   investigation conclusion, implementation changes, and audit/verification
@@ -112,6 +108,12 @@ Final reports must include:
     controlled by the D3D11/DXGI load path and overrides.
   - Konyak must not override `d3d10` for GPTK/D3DMetal. The correct override is
     `dxgi,d3d11,d3d12,nvapi64,nvngx=n,b`.
+  - Actual D3D10 rendering is currently proven through DXVK. On
+    2026-07-06, `dxvk-d3d10-render` passed D3D10 device creation, offscreen
+    render target clear, staging copy, and readback verification against
+    `dist/konyak-macos-wine-runtime-stack.tar.zst`. Diagnostic DXMT D3D10 runs
+    failed with `0x80004005` before rendering, so Konyak does not claim DXMT
+    D3D10 render support.
 - GPTK 4.0 beta 1 import failure before version support:
   - Public command:
     `install-gptk-wine --from /Users/masato/Downloads/Game_Porting_Toolkit_4.0_beta_1.dmg --json`
@@ -139,6 +141,11 @@ Small milestones:
 - [x] G1-S4: Wire D3D10 GPTK smoke into runtime CI artifact and release
   promotion workflows.
 - [x] G1-S5: Commit, push, open a draft PR, and stop before GPTK4 import work.
+- [x] G1-S6: Add actual D3D10 render/readback smoke for the supported DXVK
+  runtime route.
+- [x] G1-S7: Align parent graphics backend hints so D3D10 selects DXVK and
+  D3D11 keeps DXMT first.
+- [x] G1-S8: Commit, push, open runtime PR #2, and update the parent PR.
 
 #### PR Gate: G1-P1 Superseded GPTK3 D3D10 Payload Import Contract
 
@@ -211,6 +218,57 @@ Verification:
 Review gate:
 
 - Commit and push the branch, open a draft PR when GitHub access is available,
+  then stop before G2-P1.
+
+#### PR Gate: G1-P3 D3D10 DXVK Render Smoke and Backend Hint Contract
+
+status: completed
+branch: `task/gptk-d3d10-smoke`
+pull request: https://github.com/serika12345/Konyak/pull/33
+runtime submodule branch: `task/d3d10-render-smoke`
+runtime submodule pull request:
+https://github.com/serika12345/konyak-macos-runtime/pull/2
+
+Completion criteria:
+
+- Add a runtime D3D10 render/readback probe that fails unless a D3D10 device can
+  clear a render target, copy it to a staging texture, and verify the pixel
+  data.
+- Add a maintained `dxvk-d3d10-render` smoke target and run it in build,
+  artifact-smoke, and candidate-promotion workflows without merging it into
+  Wine build rerun units.
+- Keep DXMT covered by D3D11 smoke only; do not claim DXMT D3D10 support until a
+  separate dynamic proof passes.
+- Split parent graphics backend hints so macOS D3D10 recommends DXVK and macOS
+  D3D11 keeps DXMT first with DXVK fallback.
+- Update progress records and runtime import-contract documentation.
+
+Not included:
+
+- DXMT D3D10 support.
+- GPTK4 import support.
+- End-to-end game rendering proof beyond maintained runtime probes.
+
+Verification:
+
+- `nix develop -c zsh -lc 'zsh -n scripts/build-backend-probes.zsh scripts/smoke-backend-device.zsh scripts/check-dxvk-component.zsh scripts/check-dxmt-component.zsh && ./scripts/build-backend-probes.zsh .dart_tool/backend-probes && work=/tmp/konyak-d3d10-render-smoke-check; rm -rf "$work"; mkdir -p "$work/runtime" "$work/probes"; nix shell nixpkgs#gnutar -c tar -xaf dist/konyak-macos-wine-runtime-stack.tar.zst -C "$work/runtime"; ./scripts/check-dxvk-component.zsh "$work/runtime"; ./scripts/check-dxmt-component.zsh "$work/runtime"; ./scripts/smoke-backend-device.zsh "$work/runtime" dxvk-d3d10-render "$work/probes"; ./scripts/smoke-backend-device.zsh "$work/runtime" dxvk-d3d11 "$work/probes"; ./scripts/smoke-backend-device.zsh "$work/runtime" dxmt-d3d11 "$work/probes"'`
+  passed in `runtime/konyak-macos-runtime`.
+- `nix develop -c zsh -lc 'git diff --check && nix flake check -L --show-trace'`
+  passed in `runtime/konyak-macos-runtime`.
+- `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_program_execution_test.dart --plain-name "suggest-graphics-backend"'`
+  passed.
+- `nix develop -c zsh -lc 'just cli-test'` passed with 372 tests.
+- `nix develop -c zsh -lc 'just verify-governance'` passed.
+- `nix develop -c zsh -lc 'just verify-safety'` passed.
+- `nix develop -c zsh -lc 'just format-check'` initially formatted
+  `packages/konyak_cli/lib/src/domain/program/program_graphics_backend_hints.dart`
+  and exited 1; after keeping that formatter output, rerun `just format-check`
+  passed.
+- `nix develop -c zsh -lc 'just lint'` passed.
+
+Review gate:
+
+- Runtime PR #2 is open as a draft. Review the parent PR and runtime PR #2,
   then stop before G2-P1.
 
 ### G2: Version-Specified GPTK Import Contract
