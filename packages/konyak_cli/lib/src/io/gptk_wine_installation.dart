@@ -26,12 +26,14 @@ class GptkWineInstallRequest {
 class GptkWineInstallRecord {
   const GptkWineInstallRecord({
     required this.componentId,
+    required this.detectedVersion,
     required this.sourceDirectory,
     required this.runtimeRoot,
     required this.installedExecutablePath,
   });
 
   final String componentId;
+  final GptkWineImportVersion detectedVersion;
   final String sourceDirectory;
   final String runtimeRoot;
   final String installedExecutablePath;
@@ -102,6 +104,7 @@ class DartIoGptkWineInstaller implements GptkWineInstaller {
     var lockCreated = false;
     var backupCreated = false;
     late GptkD3DMetalSource installedD3DMetal;
+    late GptkWineImportVersion installedD3DMetalVersion;
 
     try {
       try {
@@ -131,13 +134,17 @@ class DartIoGptkWineInstaller implements GptkWineInstaller {
       if (versionMismatchFailure != null) {
         return versionMismatchFailure;
       }
-      switch (validateGptkD3DMetalSource(bundledD3DMetal)) {
+      switch (validateGptkD3DMetalSource(
+        bundledD3DMetal,
+        detectedVersion: detectedVersion,
+      )) {
         case Left<String, Unit>(:final value):
           return GptkWineInstallFailed(value);
         case Right<String, Unit>():
           break;
       }
       installedD3DMetal = bundledD3DMetal;
+      installedD3DMetalVersion = detectedVersion;
 
       runtimeRoot.parent.createSync(recursive: true);
       if (backupRoot.existsSync()) {
@@ -154,6 +161,7 @@ class DartIoGptkWineInstaller implements GptkWineInstaller {
       installGptkD3DMetalComponentPayload(
         source: bundledD3DMetal,
         runtimeRoot: runtimeRoot,
+        detectedVersion: detectedVersion,
       );
       upsertRuntimeStackComponentVersion(
         runtimeRoot: runtimeRoot,
@@ -183,6 +191,7 @@ class DartIoGptkWineInstaller implements GptkWineInstaller {
     return GptkWineInstallCompleted(
       GptkWineInstallRecord(
         componentId: gptkD3DMetalComponentId,
+        detectedVersion: installedD3DMetalVersion,
         sourceDirectory: installedD3DMetal.payloadRoot.path,
         runtimeRoot: runtimeRoot.path,
         installedExecutablePath: macosWineExecutable(environment),
@@ -313,6 +322,7 @@ const gptkD3DMetalComponentLibRelativePath = <String>[
 void installGptkD3DMetalComponentPayload({
   required GptkD3DMetalSource source,
   required Directory runtimeRoot,
+  required GptkWineImportVersion detectedVersion,
 }) {
   final componentRoot = Directory(
     joinPath(runtimeRoot.path, gptkD3DMetalComponentRelativePath),
@@ -340,7 +350,9 @@ void installGptkD3DMetalComponentPayload({
   final windowsDllRoot = Directory(
     joinPath(componentRoot.path, const ['lib', 'wine', 'x86_64-windows']),
   )..createSync(recursive: true);
-  for (final fileName in requiredGptkD3DMetalWindowsFileNames) {
+  for (final fileName in requiredGptkD3DMetalWindowsFileNamesForVersion(
+    detectedVersion,
+  )) {
     final sourcePath = gptkD3DMetalWindowsPayloadPath(
       source.windowsDllRoot,
       fileName,
@@ -360,7 +372,9 @@ void installGptkD3DMetalComponentPayload({
   final unixLibraryRoot = Directory(
     joinPath(componentRoot.path, const ['lib', 'wine', 'x86_64-unix']),
   )..createSync(recursive: true);
-  for (final fileName in requiredGptkD3DMetalUnixFileNames) {
+  for (final fileName in requiredGptkD3DMetalUnixFileNamesForVersion(
+    detectedVersion,
+  )) {
     final sourcePath = gptkD3DMetalUnixPayloadPath(
       source.unixLibraryRoot,
       fileName,

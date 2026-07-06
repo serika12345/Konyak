@@ -1700,6 +1700,7 @@ void main() {
       result: const GptkWineInstallCompleted(
         GptkWineInstallRecord(
           componentId: 'gptk-d3dmetal',
+          detectedVersion: GptkWineImportVersion.gptk4,
           sourceDirectory: '/downloads/GPTK4',
           runtimeRoot: '/runtimes/macos-wine',
           installedExecutablePath: '/runtimes/macos-wine/bin/wineloader',
@@ -1862,6 +1863,230 @@ void main() {
     expect(install['componentId'], 'gptk-d3dmetal');
   });
 
+  test('install-gptk-wine imports GPTK4 payloads without atidxx64', () {
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-gptk4-import-test-',
+    );
+    addTearDown(() {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    });
+
+    final appBundle = createGptkWineAppBundle(
+      tempDirectory.path,
+      includeD3DMetal: true,
+      frameworkVersion: '4.0b1',
+      includeAtidxx64: false,
+    );
+    final gptkWineRoot = joinTestPath(appBundle.path, const [
+      'Contents',
+      'Resources',
+      'wine',
+    ]);
+    File(
+      joinTestPath(gptkWineRoot, const [
+        'lib',
+        'wine',
+        'x86_64-windows',
+        'nvngx.dll',
+      ]),
+    ).renameSync(
+      joinTestPath(gptkWineRoot, const [
+        'lib',
+        'wine',
+        'x86_64-windows',
+        'nvngx-on-metalfx.dll',
+      ]),
+    );
+    Link(
+      joinTestPath(gptkWineRoot, const [
+        'lib',
+        'wine',
+        'x86_64-unix',
+        'nvngx.so',
+      ]),
+    ).renameSync(
+      joinTestPath(gptkWineRoot, const [
+        'lib',
+        'wine',
+        'x86_64-unix',
+        'nvngx-on-metalfx.so',
+      ]),
+    );
+    final runtimeRoot = Directory(
+      joinTestPath(tempDirectory.path, const ['runtime']),
+    );
+    createInstalledMacosRuntime(runtimeRoot.path);
+
+    final result = runCli(
+      [
+        'install-gptk-wine',
+        '--from',
+        appBundle.path,
+        '--gptk-version',
+        '4',
+        '--json',
+      ],
+      gptkWineInstaller: DartIoGptkWineInstaller(
+        environment: HostEnvironment({
+          'KONYAK_MACOS_WINE_HOME': runtimeRoot.path,
+        }),
+      ),
+    );
+
+    expect(result.exitCode, 0, reason: result.stdout);
+    final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+    final install = payload['gptkWineInstall'] as Map<String, Object?>;
+    expect(install['componentId'], 'gptk-d3dmetal');
+    expect(install['detectedVersion'], '4');
+    for (final dllName in gptkD3DMetalCoreWindowsFileNames) {
+      expect(
+        File(
+          joinTestPath(runtimeRoot.path, [
+            'components',
+            'gptk-d3dmetal',
+            'lib',
+            'wine',
+            'x86_64-windows',
+            dllName,
+          ]),
+        ).existsSync(),
+        isTrue,
+      );
+    }
+    for (final unixName in gptkD3DMetalCoreUnixFileNames) {
+      expect(
+        FileSystemEntity.typeSync(
+          joinTestPath(runtimeRoot.path, [
+            'components',
+            'gptk-d3dmetal',
+            'lib',
+            'wine',
+            'x86_64-unix',
+            unixName,
+          ]),
+          followLinks: false,
+        ),
+        isNot(FileSystemEntityType.notFound),
+      );
+    }
+    for (final absentName in const <String>['atidxx64.dll', 'atidxx64.so']) {
+      expect(
+        FileSystemEntity.typeSync(
+          joinTestPath(runtimeRoot.path, [
+            'components',
+            'gptk-d3dmetal',
+            'lib',
+            'wine',
+            if (absentName.endsWith('.dll'))
+              'x86_64-windows'
+            else
+              'x86_64-unix',
+            absentName,
+          ]),
+          followLinks: false,
+        ),
+        FileSystemEntityType.notFound,
+      );
+    }
+    for (final absentName in const <String>[
+      'nvngx-on-metalfx.dll',
+      'nvngx-on-metalfx.so',
+    ]) {
+      expect(
+        FileSystemEntity.typeSync(
+          joinTestPath(runtimeRoot.path, [
+            'components',
+            'gptk-d3dmetal',
+            'lib',
+            'wine',
+            if (absentName.endsWith('.dll'))
+              'x86_64-windows'
+            else
+              'x86_64-unix',
+            absentName,
+          ]),
+          followLinks: false,
+        ),
+        FileSystemEntityType.notFound,
+      );
+    }
+
+    final listResult = runCli(
+      const ['list-runtimes', '--json'],
+      runtimeCatalog: MacosWineRuntimeCatalog(
+        hostPlatform: KonyakHostPlatform.macos,
+        environment: HostEnvironment({
+          'KONYAK_MACOS_WINE_HOME': runtimeRoot.path,
+        }),
+        fileStatusProbe: DartIoFileStatusProbe(),
+        runtimeStackVersionProbe: const DartIoRuntimeStackVersionProbe(),
+      ),
+    );
+    expect(listResult.exitCode, 0, reason: listResult.stderr);
+    final listPayload = jsonDecode(listResult.stdout) as Map<String, Object?>;
+    final runtime =
+        (listPayload['runtimes'] as List<Object?>).single
+            as Map<String, Object?>;
+    final stack = runtime['stack'] as Map<String, Object?>;
+    final gptk = (stack['components'] as List<Object?>)
+        .cast<Map<String, Object?>>()
+        .singleWhere((component) => component['id'] == 'gptk-d3dmetal');
+    expect(gptk['isInstalled'], isTrue);
+    expect(gptk['missingPaths'], isEmpty);
+  });
+
+  test('install-gptk-wine still rejects GPTK3 payloads without atidxx64', () {
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-gptk3-missing-atidxx-test-',
+    );
+    addTearDown(() {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    });
+
+    final appBundle = createGptkWineAppBundle(
+      tempDirectory.path,
+      includeD3DMetal: true,
+      frameworkVersion: '3.0',
+      includeAtidxx64: false,
+    );
+    final runtimeRoot = Directory(
+      joinTestPath(tempDirectory.path, const ['runtime']),
+    );
+    createInstalledMacosRuntime(runtimeRoot.path);
+
+    final result = runCli(
+      [
+        'install-gptk-wine',
+        '--from',
+        appBundle.path,
+        '--gptk-version',
+        '3',
+        '--json',
+      ],
+      gptkWineInstaller: DartIoGptkWineInstaller(
+        environment: HostEnvironment({
+          'KONYAK_MACOS_WINE_HOME': runtimeRoot.path,
+        }),
+      ),
+    );
+
+    expect(result.exitCode, 75);
+    final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+    final error = payload['error'] as Map<String, Object?>;
+    expect(error['code'], 'gptkWineInstallFailed');
+    expect(error['message'], contains('atidxx64.dll'));
+    expect(
+      Directory(
+        joinTestPath(runtimeRoot.path, const ['components', 'gptk-d3dmetal']),
+      ).existsSync(),
+      isFalse,
+    );
+  });
+
   test('install-gptk-wine rejects sources without an installed runtime', () {
     final tempDirectory = Directory.systemTemp.createTempSync(
       'konyak-gptk-wine-test-',
@@ -1994,6 +2219,7 @@ void main() {
     final payload = jsonDecode(result.stdout) as Map<String, Object?>;
     final install = payload['gptkWineInstall'] as Map<String, Object?>;
     expect(install['componentId'], 'gptk-d3dmetal');
+    expect(install['detectedVersion'], '3');
     expect(
       install['sourceDirectory'],
       endsWith('Game Porting Toolkit.app/Contents/Resources/wine'),

@@ -32,6 +32,7 @@ void main() {
   test('GPTK Wine install record JSON keeps the CLI contract stable', () {
     const record = GptkWineInstallRecord(
       componentId: 'gptk-d3dmetal',
+      detectedVersion: GptkWineImportVersion.gptk4,
       sourceDirectory: '/Applications/Game Porting Toolkit.app',
       runtimeRoot:
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',
@@ -41,6 +42,7 @@ void main() {
 
     expect(gptkWineInstallRecordJson(record), {
       'componentId': 'gptk-d3dmetal',
+      'detectedVersion': '4',
       'sourceDirectory': '/Applications/Game Porting Toolkit.app',
       'runtimeRoot':
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine',

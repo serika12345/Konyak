@@ -67,8 +67,9 @@ export 'package:konyak_cli/src/repository/repository_interfaces.dart';
 export 'package:konyak_cli/src/shared/model_constants.dart';
 export 'package:test/test.dart';
 
-const gptkD3DMetalWindowsFileNames = <String>[
-  'atidxx64.dll',
+const gptkD3DMetalLegacyWindowsFileNames = <String>['atidxx64.dll'];
+
+const gptkD3DMetalCoreWindowsFileNames = <String>[
   'd3d11.dll',
   'd3d12.dll',
   'dxgi.dll',
@@ -76,13 +77,24 @@ const gptkD3DMetalWindowsFileNames = <String>[
   'nvngx.dll',
 ];
 
-const gptkD3DMetalUnixFileNames = <String>[
-  'atidxx64.so',
+const gptkD3DMetalWindowsFileNames = <String>[
+  ...gptkD3DMetalLegacyWindowsFileNames,
+  ...gptkD3DMetalCoreWindowsFileNames,
+];
+
+const gptkD3DMetalLegacyUnixFileNames = <String>['atidxx64.so'];
+
+const gptkD3DMetalCoreUnixFileNames = <String>[
   'd3d11.so',
   'd3d12.so',
   'dxgi.so',
   'nvapi64.so',
   'nvngx.so',
+];
+
+const gptkD3DMetalUnixFileNames = <String>[
+  ...gptkD3DMetalLegacyUnixFileNames,
+  ...gptkD3DMetalCoreUnixFileNames,
 ];
 
 const gptkD3DMetalOverrideDllNames = <String>[
@@ -154,6 +166,41 @@ final gptkD3DMetalInstalledPaths = <List<String>>[
       fileName,
     ],
   for (final fileName in gptkD3DMetalUnixFileNames)
+    <String>[
+      'components',
+      'gptk-d3dmetal',
+      'lib',
+      'wine',
+      'x86_64-unix',
+      fileName,
+    ],
+];
+
+final gptkD3DMetalRuntimeComponentPaths = <List<String>>[
+  <String>[
+    'components',
+    'gptk-d3dmetal',
+    'lib',
+    'external',
+    'D3DMetal.framework',
+  ],
+  <String>[
+    'components',
+    'gptk-d3dmetal',
+    'lib',
+    'external',
+    'libd3dshared.dylib',
+  ],
+  for (final fileName in gptkD3DMetalCoreWindowsFileNames)
+    <String>[
+      'components',
+      'gptk-d3dmetal',
+      'lib',
+      'wine',
+      'x86_64-windows',
+      fileName,
+    ],
+  for (final fileName in gptkD3DMetalCoreUnixFileNames)
     <String>[
       'components',
       'gptk-d3dmetal',
@@ -1443,7 +1490,7 @@ String macosManagedWineDllPath(String runtimeRoot) {
 
 List<String> gptkD3DMetalExpectedPaths(String runtimeRoot) {
   return <String>[
-    for (final relativePath in gptkD3DMetalInstalledPaths)
+    for (final relativePath in gptkD3DMetalRuntimeComponentPaths)
       joinTestPath(runtimeRoot, relativePath),
   ];
 }
@@ -1873,6 +1920,7 @@ Directory createGptkD3DMetalSource(
   String tempPath,
   List<String> externalRelativePath, {
   String frameworkVersion = '3.0',
+  bool includeAtidxx64 = true,
 }) {
   final sourceRoot = Directory(joinTestPath(tempPath, externalRelativePath))
     ..createSync(recursive: true);
@@ -1909,11 +1957,11 @@ Directory createGptkD3DMetalSource(
 ''');
   _createMachOFile(joinTestPath(sourceRoot.path, const ['libd3dshared.dylib']));
   final dllRoot = _gptkFixtureDllRoot(sourceRoot);
-  for (final fileName in gptkD3DMetalWindowsFileNames) {
+  for (final fileName in gptkD3DMetalWindowsFixtureFileNames(includeAtidxx64)) {
     _createPEFile(joinTestPath(dllRoot.path, [fileName]));
   }
   final unixRoot = _gptkFixtureUnixRoot(sourceRoot);
-  for (final fileName in gptkD3DMetalUnixFileNames) {
+  for (final fileName in gptkD3DMetalUnixFixtureFileNames(includeAtidxx64)) {
     final path = joinTestPath(unixRoot.path, [fileName]);
     File(path).parent.createSync(recursive: true);
     if (isGptkD3DMetalUnixSymlinkPath(<String>[
@@ -1930,11 +1978,26 @@ Directory createGptkD3DMetalSource(
   return sourceRoot;
 }
 
+List<String> gptkD3DMetalWindowsFixtureFileNames(bool includeAtidxx64) {
+  return <String>[
+    if (includeAtidxx64) ...gptkD3DMetalLegacyWindowsFileNames,
+    ...gptkD3DMetalCoreWindowsFileNames,
+  ];
+}
+
+List<String> gptkD3DMetalUnixFixtureFileNames(bool includeAtidxx64) {
+  return <String>[
+    if (includeAtidxx64) ...gptkD3DMetalLegacyUnixFileNames,
+    ...gptkD3DMetalCoreUnixFileNames,
+  ];
+}
+
 Directory createGptkWineRoot(
   String tempPath, {
   bool validBinaries = true,
   bool includeD3DMetal = false,
   String frameworkVersion = '3.0',
+  bool includeAtidxx64 = true,
 }) {
   final wineRoot = Directory(joinTestPath(tempPath, const ['gptk-wine']));
   final wineloader = File(
@@ -1955,10 +2018,12 @@ Directory createGptkWineRoot(
     ..parent.createSync(recursive: true)
     ..writeAsStringSync('fixture');
   if (includeD3DMetal) {
-    createGptkD3DMetalSource(wineRoot.path, const [
-      'lib',
-      'external',
-    ], frameworkVersion: frameworkVersion);
+    createGptkD3DMetalSource(
+      wineRoot.path,
+      const ['lib', 'external'],
+      frameworkVersion: frameworkVersion,
+      includeAtidxx64: includeAtidxx64,
+    );
   }
   return wineRoot;
 }
@@ -1968,6 +2033,7 @@ Directory createGptkWineAppBundle(
   bool validBinaries = true,
   bool includeD3DMetal = false,
   String frameworkVersion = '3.0',
+  bool includeAtidxx64 = true,
 }) {
   final appBundle = Directory(
     joinTestPath(tempPath, const ['Game Porting Toolkit.app']),
@@ -1977,6 +2043,7 @@ Directory createGptkWineAppBundle(
     validBinaries: validBinaries,
     includeD3DMetal: includeD3DMetal,
     frameworkVersion: frameworkVersion,
+    includeAtidxx64: includeAtidxx64,
   );
   final targetWineRoot = Directory(
     joinTestPath(appBundle.path, const ['Contents', 'Resources', 'wine']),

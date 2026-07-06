@@ -9,35 +9,40 @@ Use `docs/todo.md` only as the top-level roadmap pointer. Use
 
 ## Current Snapshot
 
-- Timestamp: 2026-07-06 17:21 JST
-- State: `paused`
-- Branch: `task/gptk-version-detection`
-- Pull request: https://github.com/serika12345/Konyak/pull/36. Previous parent
-  PR https://github.com/serika12345/Konyak/pull/35 was merged into parent
-  `main` as `0afa99f`; parent PR https://github.com/serika12345/Konyak/pull/34
-  was merged as `ab048d8`.
-- Runtime submodule: no runtime changes planned for G2-P2. Previous runtime PR
+- Timestamp: 2026-07-06 17:41 JST
+- State: `in_progress`
+- Branch: `task/gptk4-parent-import-variant`
+- Pull request: not opened yet for the current gate. Previous parent PR
+  https://github.com/serika12345/Konyak/pull/36 was merged into parent `main`
+  as `4e56d49`; parent PR https://github.com/serika12345/Konyak/pull/35 was
+  merged as `0afa99f`.
+- Runtime submodule: no runtime changes planned for G3-P1. Previous runtime PR
   https://github.com/serika12345/konyak-macos-runtime/pull/3 was merged into
   runtime `main` as `eedc190`.
-- Active gate: `G2-P2 GPTK Version Detection and Mismatch Diagnostics`
-- Purpose: detect GPTK3/GPTK4 payload versions from `D3DMetal.framework`
-  metadata and return stable JSON diagnostics when explicit requested versions
-  do not match the detected payload.
-- Completed work: created branch `task/gptk-version-detection`; confirmed real
-  payload metadata uses `CFBundleShortVersionString=3.0` for GPTK3/CrossOver and
-  `4.0b1` for GPTK4 beta 1; added CLI contract tests for requested GPTK3
-  receiving GPTK4, requested GPTK4 receiving GPTK3, and `auto` accepting a
-  detected GPTK4 payload; implemented `gptkWineVersionMismatch` with stable
-  `requestedVersion` and `detectedVersion` fields.
-- Decision: G2-P2 detects and rejects requested/detected version mismatches,
-  but does not relax GPTK4 payload validation or accept real GPTK4's missing
-  `atidxx64.*` shape; that remains G3.
-- Remaining work: review and merge PR #36 before starting G3-P1.
-- Next action: review PR #36. If no changes are requested, merge it, then
-  continue to G3-P1 for GPTK4 payload-variant support.
-- Verification so far: `install-gptk-wine` CLI contract tests passed; full
-  G2-P2 verification passed with `just cli-test`, `just verify-governance`,
-  `just verify-safety`, `just format-check`, and `just lint`.
+- Active gate: `G3-P1 GPTK4 Parent Import Variant`
+- Purpose: accept the GPTK4 parent import payload variant that lacks
+  `atidxx64.*`, while keeping GPTK3 validation strict and recording the
+  detected GPTK version in the public import result.
+- Completed work: created branch `task/gptk4-parent-import-variant`; added
+  GPTK4-without-`atidxx64.*` parent CLI/importer coverage; kept GPTK3
+  validation strict; split GPTK validation and copy requirements by detected
+  version; removed `atidxx64.*` from the active runtime completeness contract;
+  preserved `nvngx-on-metalfx.*` source normalization into canonical installed
+  `nvngx.*` names; added detected GPTK version to public import JSON.
+- Decision: G3-P1 is parent CLI/importer work only. Runtime submodule import
+  scripts and smoke contract remain G3-P2.
+- Remaining work: commit, push, open a draft PR, and stop at the G3-P1 review
+  gate. Apple GPTK 4.0 beta 1 DMG proof remains pending outside this
+  fixture-based parent gate.
+- Next action: stage the G3-P1 files, commit, push
+  `task/gptk4-parent-import-variant`, and open a draft PR.
+- Verification so far:
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_runtime_install_test.dart test/cli_contract_runtime_process_update_test.dart test/cli_app_runtime_json_test.dart test/runtime_platform_definition_type_fronts_test.dart'`
+    passed.
+  - `nix develop -c zsh -lc 'dart format packages/konyak_cli/test/cli_contract_runtime_install_test.dart && cd packages/konyak_cli && dart test test/cli_contract_runtime_install_test.dart --plain-name "install-gptk-wine imports GPTK4 payloads without atidxx64"'`
+    passed.
+  - `nix develop -c zsh -lc 'just cli-test && just verify-governance && just verify-safety && just format-check && just lint'`
+    passed.
 
 ## Status Key
 
@@ -483,9 +488,10 @@ Review gate:
 
 #### PR Gate: G2-P2 GPTK Version Detection and Mismatch Diagnostics
 
-status: paused
+status: completed
 branch: `task/gptk-version-detection`
 pull request: https://github.com/serika12345/Konyak/pull/36
+parent merge commit: `4e56d49`
 
 Implementation status as of 2026-07-06 17:15 JST:
 
@@ -530,19 +536,19 @@ without weakening GPTK3 validation.
 
 Small milestones:
 
-- [ ] G3-S1: Add GPTK4 fixture coverage with `atidxx64.*` absent.
-- [ ] G3-S2: Split GPTK required payload validation by detected/requested
+- [x] G3-S1: Add GPTK4 fixture coverage with `atidxx64.*` absent.
+- [x] G3-S2: Split GPTK required payload validation by detected/requested
   variant.
-- [ ] G3-S3: Install GPTK4 payloads into the canonical
+- [x] G3-S3: Install GPTK4 payloads into the canonical
   `components/gptk-d3dmetal` layout without active `d3d10.*`.
-- [ ] G3-S4: Preserve `nvngx-on-metalfx` normalization to canonical installed
+- [x] G3-S4: Preserve `nvngx-on-metalfx` normalization to canonical installed
   `nvngx` names.
 - [ ] G3-S5: Capture public CLI import proof with the Apple GPTK 4.0 beta 1
   DMG.
 
 #### PR Gate: G3-P1 GPTK4 Parent Import Variant
 
-status: planned
+status: in_progress
 branch: `task/gptk4-parent-import-variant`
 
 Completion criteria:
@@ -558,11 +564,12 @@ Completion criteria:
 
 Verification:
 
-- `just cli-test`
-- `just verify-governance`
-- `just verify-safety`
-- `just format-check`
-- `just lint`
+- `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_runtime_install_test.dart test/cli_contract_runtime_process_update_test.dart test/cli_app_runtime_json_test.dart test/runtime_platform_definition_type_fronts_test.dart'`
+  passed.
+- `nix develop -c zsh -lc 'dart format packages/konyak_cli/test/cli_contract_runtime_install_test.dart && cd packages/konyak_cli && dart test test/cli_contract_runtime_install_test.dart --plain-name "install-gptk-wine imports GPTK4 payloads without atidxx64"'`
+  passed.
+- `nix develop -c zsh -lc 'just cli-test && just verify-governance && just verify-safety && just format-check && just lint'`
+  passed.
 
 Review gate:
 
