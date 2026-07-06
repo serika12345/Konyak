@@ -110,14 +110,6 @@ const _macosGptkD3DMetalComponentPaths = <List<String>>[
     'lib',
     'wine',
     'x86_64-windows',
-    'atidxx64.dll',
-  ],
-  <String>[
-    'components',
-    'gptk-d3dmetal',
-    'lib',
-    'wine',
-    'x86_64-windows',
     'd3d11.dll',
   ],
   <String>[
@@ -151,14 +143,6 @@ const _macosGptkD3DMetalComponentPaths = <List<String>>[
     'wine',
     'x86_64-windows',
     'nvngx.dll',
-  ],
-  <String>[
-    'components',
-    'gptk-d3dmetal',
-    'lib',
-    'wine',
-    'x86_64-unix',
-    'atidxx64.so',
   ],
   <String>[
     'components',

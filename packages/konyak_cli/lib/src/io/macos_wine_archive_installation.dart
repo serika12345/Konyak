@@ -300,12 +300,22 @@ RuntimeComponentVersions preserveImportedGptkD3DMetalComponent({
     return componentVersions;
   }
 
-  return validateGptkD3DMetalSource(source).match((_) => componentVersions, (
-    _,
+  final detectedVersionResult = detectGptkD3DMetalPayloadVersion(source);
+  return detectedVersionResult.match((_) => componentVersions, (
+    detectedVersion,
   ) {
+    final validation = validateGptkD3DMetalSource(
+      source,
+      detectedVersion: detectedVersion,
+    );
+    if (validation.isLeft()) {
+      return componentVersions;
+    }
+
     installGptkD3DMetalComponentPayload(
       source: source,
       runtimeRoot: stagingRuntimeRoot,
+      detectedVersion: detectedVersion,
     );
 
     return componentVersions.add(

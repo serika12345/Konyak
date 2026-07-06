@@ -8,8 +8,9 @@ import 'directory_copy_support.dart';
 import 'external_payload_helpers.dart';
 import 'gptk_wine_installation.dart';
 
-const requiredGptkD3DMetalWindowsFileNames = <String>[
-  'atidxx64.dll',
+const requiredGptkD3DMetalLegacyWindowsFileNames = <String>['atidxx64.dll'];
+
+const requiredGptkD3DMetalCoreWindowsFileNames = <String>[
   'd3d11.dll',
   'd3d12.dll',
   'dxgi.dll',
@@ -17,14 +18,45 @@ const requiredGptkD3DMetalWindowsFileNames = <String>[
   'nvngx.dll',
 ];
 
-const requiredGptkD3DMetalUnixFileNames = <String>[
-  'atidxx64.so',
+const requiredGptkD3DMetalWindowsFileNames = <String>[
+  ...requiredGptkD3DMetalLegacyWindowsFileNames,
+  ...requiredGptkD3DMetalCoreWindowsFileNames,
+];
+
+const requiredGptkD3DMetalLegacyUnixFileNames = <String>['atidxx64.so'];
+
+const requiredGptkD3DMetalCoreUnixFileNames = <String>[
   'd3d11.so',
   'd3d12.so',
   'dxgi.so',
   'nvapi64.so',
   'nvngx.so',
 ];
+
+const requiredGptkD3DMetalUnixFileNames = <String>[
+  ...requiredGptkD3DMetalLegacyUnixFileNames,
+  ...requiredGptkD3DMetalCoreUnixFileNames,
+];
+
+List<String> requiredGptkD3DMetalWindowsFileNamesForVersion(
+  GptkWineImportVersion version,
+) {
+  return switch (version) {
+    GptkWineImportVersion.auto => requiredGptkD3DMetalWindowsFileNames,
+    GptkWineImportVersion.gptk3 => requiredGptkD3DMetalWindowsFileNames,
+    GptkWineImportVersion.gptk4 => requiredGptkD3DMetalCoreWindowsFileNames,
+  };
+}
+
+List<String> requiredGptkD3DMetalUnixFileNamesForVersion(
+  GptkWineImportVersion version,
+) {
+  return switch (version) {
+    GptkWineImportVersion.auto => requiredGptkD3DMetalUnixFileNames,
+    GptkWineImportVersion.gptk3 => requiredGptkD3DMetalUnixFileNames,
+    GptkWineImportVersion.gptk4 => requiredGptkD3DMetalCoreUnixFileNames,
+  };
+}
 
 final class GptkD3DMetalSourceResolution {
   GptkD3DMetalSourceResolution({
@@ -206,7 +238,10 @@ File? findDmgFile(Directory root, {required int maxDepth}) {
   return null;
 }
 
-Either<String, Unit> validateGptkD3DMetalSource(GptkD3DMetalSource source) {
+Either<String, Unit> validateGptkD3DMetalSource(
+  GptkD3DMetalSource source, {
+  required GptkWineImportVersion detectedVersion,
+}) {
   final frameworkBinary = d3dMetalFrameworkBinary(source.framework.path);
   if (frameworkBinary == null || !File(frameworkBinary).existsSync()) {
     return const Left<String, Unit>(
@@ -243,7 +278,9 @@ Either<String, Unit> validateGptkD3DMetalSource(GptkD3DMetalSource source) {
       'compatible Game Porting Toolkit distribution.',
     );
   }
-  for (final dllName in requiredGptkD3DMetalWindowsFileNames) {
+  for (final dllName in requiredGptkD3DMetalWindowsFileNamesForVersion(
+    detectedVersion,
+  )) {
     final path = gptkD3DMetalWindowsPayloadPath(source.windowsDllRoot, dllName);
     if (path == null) {
       return Left<String, Unit>('GPTK/D3DMetal payload is missing $dllName.');
@@ -255,7 +292,9 @@ Either<String, Unit> validateGptkD3DMetalSource(GptkD3DMetalSource source) {
       );
     }
   }
-  for (final libraryName in requiredGptkD3DMetalUnixFileNames) {
+  for (final libraryName in requiredGptkD3DMetalUnixFileNamesForVersion(
+    detectedVersion,
+  )) {
     final path = gptkD3DMetalUnixPayloadPath(
       source.unixLibraryRoot,
       libraryName,

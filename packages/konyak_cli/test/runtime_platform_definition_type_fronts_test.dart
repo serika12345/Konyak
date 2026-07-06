@@ -113,6 +113,36 @@ void main() {
           ),
         ),
       );
+      expect(
+        macosGptk.relativePaths,
+        isNot(
+          contains(
+            RuntimeRelativePath([
+              'components',
+              'gptk-d3dmetal',
+              'lib',
+              'wine',
+              'x86_64-windows',
+              'atidxx64.dll',
+            ]),
+          ),
+        ),
+      );
+      expect(
+        macosGptk.relativePaths,
+        isNot(
+          contains(
+            RuntimeRelativePath([
+              'components',
+              'gptk-d3dmetal',
+              'lib',
+              'wine',
+              'x86_64-unix',
+              'atidxx64.so',
+            ]),
+          ),
+        ),
+      );
       expect(macosDxmt.role, RuntimeRole('d3d11-metal-translation'));
     });
 

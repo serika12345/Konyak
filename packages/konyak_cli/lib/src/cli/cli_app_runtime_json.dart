@@ -27,6 +27,7 @@ Map<String, Object?> runtimeSetupStatusJson(RuntimeSetupStatus status) {
 Map<String, Object?> gptkWineInstallRecordJson(GptkWineInstallRecord record) {
   return <String, Object?>{
     'componentId': record.componentId,
+    'detectedVersion': gptkWineImportVersionCliValue(record.detectedVersion),
     'sourceDirectory': record.sourceDirectory,
     'runtimeRoot': record.runtimeRoot,
     'installedExecutablePath': record.installedExecutablePath,
