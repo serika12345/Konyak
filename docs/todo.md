@@ -31,10 +31,10 @@ verification output instead of checked-off backlog entries.
 
 - Complete GPTK/D3DMetal import compatibility work tracked in
   `docs/gptk-d3dmetal-import-progress.md`. The active gate is
-  `G3-P1 GPTK4 Parent Import Variant`: implementation and required verification
-  are complete; commit, push, open the draft PR, and stop at the review gate.
-  Apple GPTK 4.0 beta 1 DMG proof remains pending after this fixture-based
-  parent import gate.
+  `G3-P1 GPTK4 Parent Import Variant`: draft PR #37 is open for review. Review
+  and merge it before starting `G3-P2 GPTK4 Runtime Submodule Import and Smoke
+  Contract`. Apple GPTK 4.0 beta 1 DMG proof remains pending after this
+  fixture-based parent import gate.
 - Capture end-to-end DLSS/MetalFX rendering proof with a redistributable or
   user-provided DLSS-capable Windows program.
   - Use Konyak's public `run-program --json` path, record backend environment,

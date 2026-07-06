@@ -13,15 +13,16 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-06 17:41 JST
-- State: `in_progress`
+- Timestamp: 2026-07-06 17:44 JST
+- State: `paused`
 - Branch: `task/gptk4-parent-import-variant`
 - Active work: `G3-P1 GPTK4 Parent Import Variant`.
 - Related TODO: `docs/todo.md` `Next Tasks` points at
   `docs/gptk-d3dmetal-import-progress.md`; the active gate is
   `G3-P1 GPTK4 Parent Import Variant`.
-- Pull request: not opened yet for the current gate. Previous parent PR
-  https://github.com/serika12345/Konyak/pull/36 merged as `4e56d49`.
+- Pull request: https://github.com/serika12345/Konyak/pull/37. Previous
+  parent PR https://github.com/serika12345/Konyak/pull/36 merged as
+  `4e56d49`.
 - Latest known completed work: runtime PR
   https://github.com/serika12345/konyak-macos-runtime/pull/3 merged as
   `eedc190`; parent PR https://github.com/serika12345/Konyak/pull/34 merged
@@ -36,12 +37,12 @@ unfinished work.
   split GPTK validation and component copy requirements by detected GPTK
   version; removed `atidxx64.*` from the active runtime completeness contract;
   preserved `nvngx-on-metalfx.*` source normalization into canonical
-  `nvngx.*` installed names; added detected GPTK version to public import JSON.
-- Remaining work: commit, push, open a draft PR, and stop at the G3-P1 review
-  gate. Apple GPTK 4.0 beta 1 DMG proof remains pending outside this parent
-  fixture gate.
-- Next action: stage the G3-P1 files, commit, push
-  `task/gptk4-parent-import-variant`, and open a draft PR.
+  `nvngx.*` installed names; added detected GPTK version to public import JSON;
+  pushed implementation commit `bb00c94`; opened draft PR #37.
+- Remaining work: review PR #37. Apple GPTK 4.0 beta 1 DMG proof remains
+  pending outside this parent fixture gate.
+- Next action: review PR #37. If no changes are requested, merge it, then
+  continue to G3-P2 for runtime submodule import and smoke contract updates.
 - Verification so far:
   - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_runtime_install_test.dart test/cli_contract_runtime_process_update_test.dart test/cli_app_runtime_json_test.dart test/runtime_platform_definition_type_fronts_test.dart'`
     passed.

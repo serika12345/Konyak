@@ -9,13 +9,13 @@ Use `docs/todo.md` only as the top-level roadmap pointer. Use
 
 ## Current Snapshot
 
-- Timestamp: 2026-07-06 17:41 JST
-- State: `in_progress`
+- Timestamp: 2026-07-06 17:44 JST
+- State: `paused`
 - Branch: `task/gptk4-parent-import-variant`
-- Pull request: not opened yet for the current gate. Previous parent PR
-  https://github.com/serika12345/Konyak/pull/36 was merged into parent `main`
-  as `4e56d49`; parent PR https://github.com/serika12345/Konyak/pull/35 was
-  merged as `0afa99f`.
+- Pull request: https://github.com/serika12345/Konyak/pull/37. Previous parent
+  PR https://github.com/serika12345/Konyak/pull/36 was merged into parent
+  `main` as `4e56d49`; parent PR https://github.com/serika12345/Konyak/pull/35
+  was merged as `0afa99f`.
 - Runtime submodule: no runtime changes planned for G3-P1. Previous runtime PR
   https://github.com/serika12345/konyak-macos-runtime/pull/3 was merged into
   runtime `main` as `eedc190`.
@@ -28,14 +28,14 @@ Use `docs/todo.md` only as the top-level roadmap pointer. Use
   validation strict; split GPTK validation and copy requirements by detected
   version; removed `atidxx64.*` from the active runtime completeness contract;
   preserved `nvngx-on-metalfx.*` source normalization into canonical installed
-  `nvngx.*` names; added detected GPTK version to public import JSON.
+  `nvngx.*` names; added detected GPTK version to public import JSON; pushed
+  implementation commit `bb00c94`; opened draft PR #37.
 - Decision: G3-P1 is parent CLI/importer work only. Runtime submodule import
   scripts and smoke contract remain G3-P2.
-- Remaining work: commit, push, open a draft PR, and stop at the G3-P1 review
-  gate. Apple GPTK 4.0 beta 1 DMG proof remains pending outside this
-  fixture-based parent gate.
-- Next action: stage the G3-P1 files, commit, push
-  `task/gptk4-parent-import-variant`, and open a draft PR.
+- Remaining work: review PR #37. Apple GPTK 4.0 beta 1 DMG proof remains
+  pending outside this fixture-based parent gate.
+- Next action: review PR #37. If no changes are requested, merge it, then
+  continue to G3-P2 for runtime submodule import and smoke contract updates.
 - Verification so far:
   - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_runtime_install_test.dart test/cli_contract_runtime_process_update_test.dart test/cli_app_runtime_json_test.dart test/runtime_platform_definition_type_fronts_test.dart'`
     passed.
@@ -548,8 +548,10 @@ Small milestones:
 
 #### PR Gate: G3-P1 GPTK4 Parent Import Variant
 
-status: in_progress
+status: paused
 branch: `task/gptk4-parent-import-variant`
+pull request: https://github.com/serika12345/Konyak/pull/37
+implementation commit: `bb00c94`
 
 Completion criteria:
 
