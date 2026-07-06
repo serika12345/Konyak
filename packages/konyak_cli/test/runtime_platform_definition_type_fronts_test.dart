@@ -54,6 +54,9 @@ void main() {
                 definition.id == RuntimeComponentId('gptk-d3dmetal'),
           )
           .single;
+      final macosDxmt = macosKonyakRuntimePlatformSpec.backendDefinitions
+          .where((definition) => definition.id == RuntimeBackendId('dxmt'))
+          .single;
 
       expect(linuxWine.id, RuntimeComponentId('wine'));
       expect(linuxWine.name, RuntimeName('Wine'));
@@ -110,6 +113,7 @@ void main() {
           ),
         ),
       );
+      expect(macosDxmt.role, RuntimeRole('d3d11-metal-translation'));
     });
 
     test('source manifest planning still accepts public manifest strings', () {

@@ -345,7 +345,7 @@ final _macosKonyakRuntimeComponentDefinitions =
       RuntimeStackComponentDefinition(
         id: RuntimeComponentId('dxmt'),
         name: RuntimeName('DXMT'),
-        role: RuntimeRole('d3d10-d3d11-metal-translation'),
+        role: RuntimeRole('d3d11-metal-translation'),
         isRequired: true,
         relativePaths: _runtimeRelativePaths(const <List<String>>[
           <String>['lib', 'dxmt', 'x86_64-windows', 'd3d10core.dll'],
@@ -380,7 +380,7 @@ final _macosKonyakRuntimeBackendDefinitions = <RuntimeBackendDefinition>[
   RuntimeBackendDefinition(
     id: RuntimeBackendId('dxmt'),
     name: RuntimeName('DXMT'),
-    role: RuntimeRole('d3d10-d3d11-metal-translation'),
+    role: RuntimeRole('d3d11-metal-translation'),
     componentIds: _runtimeComponentIds(const <String>['dxmt']),
   ),
   RuntimeBackendDefinition(

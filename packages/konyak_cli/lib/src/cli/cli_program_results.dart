@@ -1,4 +1,5 @@
 import '../domain/program/pinned_programs.dart';
+import '../domain/program/program_graphics_backend_hints.dart';
 import '../domain/program/program_mutation_models.dart';
 import '../domain/program/program_runner.dart';
 import '../domain/program/program_settings_models.dart';
@@ -35,6 +36,8 @@ CliResult runPinnedProgramLauncherCli({
   required PinnedProgramLaunchCliRequest request,
   required BottleRepository? bottleRepository,
   required ProgramRunPlanner programRunPlanner,
+  required ProgramGraphicsBackendHintsInspector
+  programGraphicsBackendHintsInspector,
   required ProgramRunner? programRunner,
 }) {
   final launcherManifest = readPinnedProgramLauncherManifest(
@@ -82,6 +85,21 @@ CliResult runPinnedProgramLauncherCli({
             programRunner: programRunner,
             bottle: bottle,
             programPath: manifest.programPath,
+            programGraphicsBackendHintsInspector:
+                programGraphicsBackendHintsInspector,
+            beforeRun:
+                ({required effectiveBottle, required programRunRequest}) {
+                  switch (syncRuntimeSettingsDllOverrides(
+                    bottle: effectiveBottle,
+                    runtimeSettings: effectiveBottle.runtimeSettings,
+                    programRunPlanner: programRunPlanner,
+                  )) {
+                    case CliSideEffectFailed(:final result):
+                      return CliSideEffectFailed(result);
+                    case CliSideEffectSucceeded():
+                      return const CliSideEffectSucceeded();
+                  }
+                },
           );
         },
       );

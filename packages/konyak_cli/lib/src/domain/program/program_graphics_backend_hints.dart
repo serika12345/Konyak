@@ -168,13 +168,29 @@ List<ProgramGraphicsBackendSuggestion> _graphicsBackendSuggestions({
   }
 
   if (_hasAnyGraphicsSignal(signals, _d3d10Signals)) {
-    return <ProgramGraphicsBackendSuggestion>[
-      ProgramGraphicsBackendSuggestion(
-        backend: GraphicsBackendKind('dxvk'),
-        confidence: GraphicsBackendConfidence('high'),
-        reason: 'D3D10 API usage was detected.',
-      ),
-    ];
+    return switch (hostPlatform) {
+      KonyakHostPlatform.macos => <ProgramGraphicsBackendSuggestion>[
+        ProgramGraphicsBackendSuggestion(
+          backend: GraphicsBackendKind('dxvk'),
+          confidence: GraphicsBackendConfidence('high'),
+          reason: 'D3D10 API usage was detected.',
+        ),
+        ProgramGraphicsBackendSuggestion(
+          backend: GraphicsBackendKind('wineDefault'),
+          confidence: GraphicsBackendConfidence('medium'),
+          reason:
+              'GPTK/D3DMetal does not provide native D3D10; use WineD3D/'
+              'Vulkan fallback when D3DMetal is selected.',
+        ),
+      ],
+      KonyakHostPlatform.linux => <ProgramGraphicsBackendSuggestion>[
+        ProgramGraphicsBackendSuggestion(
+          backend: GraphicsBackendKind('dxvk'),
+          confidence: GraphicsBackendConfidence('high'),
+          reason: 'D3D10 API usage was detected.',
+        ),
+      ],
+    };
   }
 
   if (_hasAnyGraphicsSignal(signals, _d3d11Signals)) {

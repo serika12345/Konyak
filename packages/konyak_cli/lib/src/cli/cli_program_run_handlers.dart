@@ -1,6 +1,7 @@
 import 'package:fpdart/fpdart.dart';
 
 import '../domain/bottle/bottle_models.dart';
+import '../domain/bottle/bottle_runtime_settings_models.dart';
 import '../domain/program/program_graphics_backend_hints.dart';
 import '../domain/program/program_mutation_models.dart';
 import '../domain/program/program_run_environment.dart';
@@ -106,41 +107,54 @@ CliResult runProgramJsonResult(
       return runProgramPathJsonResult(
         bottleRepository: repository,
         programRunPlanner: context.programRunPlanner,
+        programGraphicsBackendHintsInspector:
+            context.programGraphicsBackendHintsInspector,
         programRunner: runner,
         bottle: bottle,
         programPath: ProgramPath(request.programPath),
         oneTimeSettings: request.settings,
-        beforeRun: (programRunRequest) {
-          switch (syncRuntimeSettingsDllOverrides(
-            bottle: bottle,
-            runtimeSettings: bottle.runtimeSettings,
-            programRunPlanner: context.programRunPlanner,
-          )) {
-            case CliSideEffectFailed(:final result):
-              return CliSideEffectFailed(result);
-            case CliSideEffectSucceeded():
-              break;
-          }
+        beforeRun:
+            ({
+              required BottleRecord effectiveBottle,
+              required ProgramRunRequest programRunRequest,
+            }) {
+              switch (syncRuntimeSettingsDllOverrides(
+                bottle: effectiveBottle,
+                runtimeSettings: effectiveBottle.runtimeSettings,
+                programRunPlanner: context.programRunPlanner,
+              )) {
+                case CliSideEffectFailed(:final result):
+                  return CliSideEffectFailed(result);
+                case CliSideEffectSucceeded():
+                  break;
+              }
 
-          recordExternalProgramRun(bottle: bottle, request: programRunRequest);
-          synchronizeLinuxDesktopLauncherForProgramRun(
-            hostPlatform: context.programRunPlanner.hostPlatform,
-            environment: context.programRunPlanner.environment.toMap(),
-            bottle: bottle,
-            request: programRunRequest,
-            programMetadataExtractor: context.programMetadataExtractor,
-            diagnosticSink: context.linuxExternalProgramLauncherDiagnosticSink,
-          );
+              recordExternalProgramRun(
+                bottle: bottle,
+                request: programRunRequest,
+              );
+              synchronizeLinuxDesktopLauncherForProgramRun(
+                hostPlatform: context.programRunPlanner.hostPlatform,
+                environment: context.programRunPlanner.environment.toMap(),
+                bottle: bottle,
+                request: programRunRequest,
+                programMetadataExtractor: context.programMetadataExtractor,
+                diagnosticSink:
+                    context.linuxExternalProgramLauncherDiagnosticSink,
+              );
 
-          return const CliSideEffectSucceeded();
-        },
+              return const CliSideEffectSucceeded();
+            },
       );
     },
   );
 }
 
 typedef ProgramRunPreparation =
-    CliSideEffectResult Function(ProgramRunRequest request);
+    CliSideEffectResult Function({
+      required BottleRecord effectiveBottle,
+      required ProgramRunRequest programRunRequest,
+    });
 
 CliResult runProgramPathJsonResult({
   required BottleRepository bottleRepository,
@@ -149,6 +163,7 @@ CliResult runProgramPathJsonResult({
   required BottleRecord bottle,
   required ProgramPath programPath,
   Option<ProgramSettingsRecord> oneTimeSettings = const Option.none(),
+  ProgramGraphicsBackendHintsInspector? programGraphicsBackendHintsInspector,
   ProgramRunPreparation? beforeRun,
 }) {
   final settingsResult = bottleRepository.readProgramSettings(
@@ -168,10 +183,35 @@ CliResult runProgramPathJsonResult({
     storedSettings: storedSettings,
     oneTimeSettings: oneTimeSettings,
   );
-  final programRunRequest = programRunPlanner.plan(
+  final launchFallback = macosD3DMetalD3D10Fallback(
     bottle: bottle,
     programPath: programPath,
-    programSettings: Option.of(effectiveProgramSettings),
+    programRunPlanner: programRunPlanner,
+    programGraphicsBackendHintsInspector: programGraphicsBackendHintsInspector,
+  );
+  final effectiveBottle = launchFallback.match(
+    () => bottle,
+    (_) => bottle.copyWith(
+      runtimeSettings: wineD3DVulkanFallbackRuntimeSettings(
+        bottle.runtimeSettings,
+      ),
+    ),
+  );
+  final effectiveProgramSettingsWithDiagnostics = launchFallback.match(
+    () => effectiveProgramSettings,
+    (_) => programSettingsWithEnvironmentOverrides(
+      settings: effectiveProgramSettings,
+      environment: const <String, String>{
+        'KONYAK_GRAPHICS_BACKEND_REQUESTED': 'gptk-d3dmetal',
+        'KONYAK_GRAPHICS_BACKEND_SELECTED': 'wined3d-vulkan',
+        'KONYAK_GRAPHICS_BACKEND_FALLBACK_REASON': 'gptkD3d10Unsupported',
+      },
+    ),
+  );
+  final programRunRequest = programRunPlanner.plan(
+    bottle: effectiveBottle,
+    programPath: programPath,
+    programSettings: Option.of(effectiveProgramSettingsWithDiagnostics),
   );
   return programRunRequest.match(
     () => jsonError(
@@ -183,7 +223,10 @@ CliResult runProgramPathJsonResult({
     (request) {
       final preparationResult = beforeRun == null
           ? const CliSideEffectSucceeded()
-          : beforeRun(request);
+          : beforeRun(
+              effectiveBottle: effectiveBottle,
+              programRunRequest: request,
+            );
       return switch (preparationResult) {
         CliSideEffectFailed(:final result) => result,
         CliSideEffectSucceeded() => programRunResultJson(
@@ -192,6 +235,82 @@ CliResult runProgramPathJsonResult({
         ),
       };
     },
+  );
+}
+
+Option<Unit> macosD3DMetalD3D10Fallback({
+  required BottleRecord bottle,
+  required ProgramPath programPath,
+  required ProgramRunPlanner programRunPlanner,
+  required ProgramGraphicsBackendHintsInspector?
+  programGraphicsBackendHintsInspector,
+}) {
+  if (programRunPlanner.hostPlatform != KonyakHostPlatform.macos ||
+      !bottle.runtimeSettings.dxrEnabled ||
+      programGraphicsBackendHintsInspector == null) {
+    return const Option.none();
+  }
+
+  final result = programGraphicsBackendHintsInspector.inspect(
+    programPath: programPath,
+    hostPlatform: programRunPlanner.hostPlatform,
+  );
+  return switch (result) {
+    ProgramGraphicsBackendHintsInspected(:final hints)
+        when hasD3D10Signal(hints) && !hasD3D12Signal(hints) =>
+      Option.of(unit),
+    _ => const Option.none(),
+  };
+}
+
+bool hasD3D10Signal(ProgramGraphicsBackendHints hints) {
+  return _hasSignalValue(hints, const <String>{
+    'd3d10.dll',
+    'd3d10_1.dll',
+    'd3d10core.dll',
+  });
+}
+
+bool hasD3D12Signal(ProgramGraphicsBackendHints hints) {
+  return _hasSignalValue(hints, const <String>{
+    'd3d12.dll',
+    'd3d12core.dll',
+    'd3d12createdevice',
+  });
+}
+
+bool _hasSignalValue(ProgramGraphicsBackendHints hints, Set<String> values) {
+  return hints.signals.any((signal) => values.contains(signal.value.value));
+}
+
+BottleRuntimeSettings wineD3DVulkanFallbackRuntimeSettings(
+  BottleRuntimeSettings settings,
+) {
+  return BottleRuntimeSettings(
+    enhancedSync: settings.enhancedSync,
+    metalHud: settings.metalHud,
+    metalTrace: settings.metalTrace,
+    avxEnabled: settings.avxEnabled,
+    dxvkAsync: settings.dxvkAsync,
+    dxvkHud: settings.dxvkHud,
+    buildVersion: settings.buildVersion,
+    retinaMode: settings.retinaMode,
+    dpiScaling: settings.dpiScaling,
+  );
+}
+
+ProgramSettingsRecord programSettingsWithEnvironmentOverrides({
+  required ProgramSettingsRecord settings,
+  required Map<String, String> environment,
+}) {
+  return ProgramSettingsRecord(
+    locale: settings.locale,
+    arguments: settings.arguments,
+    environment: ProgramEnvironmentOverrides(<String, String>{
+      ...settings.environment.toMap(),
+      ...environment,
+    }),
+    logging: settings.logging,
   );
 }
 
