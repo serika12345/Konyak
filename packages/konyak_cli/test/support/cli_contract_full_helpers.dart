@@ -2168,6 +2168,7 @@ String joinTestPath(String root, List<String> segments) {
 
 Uint8List syntheticPortableExecutableBytes({
   List<String> importDllNames = const <String>[],
+  List<String> asciiStrings = const <String>[],
 }) {
   final iconImage = Uint8List.fromList(const <int>[1, 2, 3, 4]);
   final groupIcon = _syntheticGroupIconBytes(
@@ -2205,9 +2206,17 @@ Uint8List syntheticPortableExecutableBytes({
     dllNames: importDllNames,
     sectionRva: importRva,
   );
+  final extraAsciiBytes = <int>[
+    for (final value in asciiStrings) ...ascii.encode(value),
+    0,
+  ];
+  final extraAsciiOffset = max(
+    resourceRawOffset + resourceSize + 0x100,
+    importRawOffset + importDirectory.length + 0x100,
+  );
   final bytes = Uint8List(
     max(
-      resourceRawOffset + resourceSize + 0x100,
+      extraAsciiOffset + extraAsciiBytes.length + 0x100,
       importRawOffset + importDirectory.length + 0x100,
     ),
   );
@@ -2304,6 +2313,11 @@ Uint8List syntheticPortableExecutableBytes({
     resourceRawOffset + versionDataOffset,
     resourceRawOffset + versionDataOffset + versionInfo.length,
     versionInfo,
+  );
+  bytes.setRange(
+    extraAsciiOffset,
+    extraAsciiOffset + extraAsciiBytes.length,
+    extraAsciiBytes,
   );
 
   return bytes;

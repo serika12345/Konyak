@@ -119,6 +119,8 @@ CliResult? handlePinnedProgramCommand(
       request: pinnedProgramLaunchCliRequest,
       bottleRepository: context.bottleRepository,
       programRunPlanner: context.programRunPlanner,
+      programGraphicsBackendHintsInspector:
+          context.programGraphicsBackendHintsInspector,
       programRunner: context.programRunner,
     );
   }

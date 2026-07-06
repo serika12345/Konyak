@@ -1182,6 +1182,142 @@ void main() {
     );
   });
 
+  test('launch-pinned-program --json falls back from D3DMetal for D3D10', () {
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-macos-pinned-d3d10-fallback-launch-test-',
+    );
+    addTearDown(() {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    });
+
+    final appBundle = createTestMacosAppBundle(tempDirectory.path);
+    final runtimeRoot = joinTestPath(tempDirectory.path, const ['runtime']);
+    final bottlePath = joinTestPath(tempDirectory.path, const [
+      'bottles',
+      'steam',
+    ]);
+    final programPath = joinTestPath(bottlePath, const [
+      'drive_c',
+      'Games',
+      'D3D10Game.exe',
+    ]);
+    File(programPath)
+      ..createSync(recursive: true)
+      ..writeAsBytesSync(
+        syntheticPortableExecutableBytes(importDllNames: const ['d3d10.dll']),
+      );
+    for (final dllName in gptkD3DMetalOverrideDllNames) {
+      final runtimeFile = File(
+        joinTestPath(runtimeRoot, [
+          'components',
+          'gptk-d3dmetal',
+          'lib',
+          'wine',
+          'x86_64-windows',
+          dllName,
+        ]),
+      );
+      runtimeFile.parent.createSync(recursive: true);
+      runtimeFile.writeAsStringSync('d3dmetal/$dllName');
+      final staleFile = File(
+        joinTestPath(bottlePath, ['drive_c', 'windows', 'system32', dllName]),
+      );
+      staleFile.parent.createSync(recursive: true);
+      staleFile.writeAsStringSync('stale $dllName');
+    }
+
+    final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
+      dataHome: joinTestPath(tempDirectory.path, const ['data']),
+      bottles: [
+        BottleRecord(
+          id: 'steam',
+          name: 'Steam',
+          path: bottlePath,
+          windowsVersion: 'win10',
+          runtimeSettings: Option.of(BottleRuntimeSettings(dxrEnabled: true)),
+        ),
+      ],
+    );
+    final planner = ProgramRunPlanner(
+      hostPlatform: KonyakHostPlatform.macos,
+      environment: HostEnvironment({
+        'HOME': tempDirectory.path,
+        'KONYAK_APP_EXECUTABLE': joinTestPath(appBundle.path, const [
+          'Contents',
+          'MacOS',
+          'Konyak',
+        ]),
+        'KONYAK_MACOS_WINE_HOME': runtimeRoot,
+      }),
+    );
+
+    final pinResult = runCli(
+      [
+        'pin-program',
+        'steam',
+        '--name',
+        'D3D10 Game',
+        '--program',
+        programPath,
+        '--json',
+      ],
+      bottleRepository: repository,
+      programRunPlanner: planner,
+    );
+    expect(pinResult.exitCode, 0);
+    expect(pinResult.stderr, isEmpty);
+    final manifestPath = joinTestPath(
+      singleGeneratedMacosLauncher(tempDirectory.path).path,
+      const ['Contents', 'Resources', 'konyak-launcher.json'],
+    );
+    final runner = RecordingProgramRunner(
+      result: const ProgramRunCompleted(processExitCode: 0),
+    );
+
+    final result = runCli(
+      ['launch-pinned-program', '--manifest', manifestPath, '--json'],
+      bottleRepository: repository,
+      programRunPlanner: planner,
+      programGraphicsBackendHintsInspector:
+          const DartIoProgramGraphicsBackendHintsInspector(),
+      programRunner: runner,
+    );
+
+    expect(result.exitCode, 0);
+    expect(result.stderr, isEmpty);
+    final environment = runner.lastRequest?.environment.toMap();
+    expect(
+      environment?['WINEDLLPATH'],
+      macosManagedWineDllPathWithOverrides(runtimeRoot, const []),
+    );
+    expect(
+      environment,
+      containsPair('KONYAK_GRAPHICS_BACKEND_REQUESTED', 'gptk-d3dmetal'),
+    );
+    expect(
+      environment,
+      containsPair('KONYAK_GRAPHICS_BACKEND_SELECTED', 'wined3d-vulkan'),
+    );
+    expect(
+      environment,
+      containsPair(
+        'KONYAK_GRAPHICS_BACKEND_FALLBACK_REASON',
+        'gptkD3d10Unsupported',
+      ),
+    );
+    for (final dllName in gptkD3DMetalOverrideDllNames) {
+      expect(
+        File(
+          joinTestPath(bottlePath, ['drive_c', 'windows', 'system32', dllName]),
+        ).existsSync(),
+        isFalse,
+      );
+    }
+  });
+
   test('pin-program --json extracts an icon for pinned PE programs', () async {
     final tempDirectory = await Directory.systemTemp.createTemp(
       'konyak-pin-program-icon-test-',

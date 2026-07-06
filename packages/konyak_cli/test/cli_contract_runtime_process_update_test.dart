@@ -361,7 +361,7 @@ void main() {
               {
                 'id': 'dxmt',
                 'name': 'DXMT',
-                'role': 'd3d10-d3d11-metal-translation',
+                'role': 'd3d11-metal-translation',
                 'isRequired': true,
                 'isInstalled': false,
                 'paths': [
@@ -412,7 +412,7 @@ void main() {
               {
                 'id': 'dxmt',
                 'name': 'DXMT',
-                'role': 'd3d10-d3d11-metal-translation',
+                'role': 'd3d11-metal-translation',
                 'isAvailable': false,
                 'componentIds': ['dxmt'],
                 'missingComponentIds': ['dxmt'],

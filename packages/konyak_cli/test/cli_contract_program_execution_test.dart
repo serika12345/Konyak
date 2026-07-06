@@ -143,6 +143,13 @@ void main() {
             'confidence': 'high',
             'reason': 'D3D10 API usage was detected.',
           },
+          {
+            'backend': 'wineDefault',
+            'confidence': 'medium',
+            'reason':
+                'GPTK/D3DMetal does not provide native D3D10; use WineD3D/'
+                'Vulkan fallback when D3DMetal is selected.',
+          },
         ],
       );
     },
@@ -1056,6 +1063,297 @@ void main() {
       containsPair('D3DM_SUPPORT_DXR', '1'),
     );
   });
+
+  test('run-program --json falls back to WineD3D for D3D10 with D3DMetal', () {
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-d3dmetal-d3d10-fallback-run-test-',
+    );
+    addTearDown(() {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    });
+
+    final runtimeRoot = joinTestPath(tempDirectory.path, const ['runtime']);
+    final bottlePath = joinTestPath(tempDirectory.path, const [
+      'bottles',
+      'steam',
+    ]);
+    final programPath = joinTestPath(tempDirectory.path, const ['game.exe']);
+    File(programPath).writeAsBytesSync(
+      syntheticPortableExecutableBytes(importDllNames: const ['d3d10.dll']),
+    );
+    for (final dllName in gptkD3DMetalOverrideDllNames) {
+      final runtimeFile = File(
+        joinTestPath(runtimeRoot, [
+          'components',
+          'gptk-d3dmetal',
+          'lib',
+          'wine',
+          'x86_64-windows',
+          dllName,
+        ]),
+      );
+      runtimeFile.parent.createSync(recursive: true);
+      runtimeFile.writeAsStringSync('d3dmetal/$dllName');
+      final staleFile = File(
+        joinTestPath(bottlePath, ['drive_c', 'windows', 'system32', dllName]),
+      );
+      staleFile.parent.createSync(recursive: true);
+      staleFile.writeAsStringSync('stale $dllName');
+    }
+
+    final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
+      dataHome: joinTestPath(tempDirectory.path, const ['data']),
+      bottles: [
+        BottleRecord(
+          id: 'steam',
+          name: 'Steam',
+          path: bottlePath,
+          windowsVersion: 'win10',
+          runtimeSettings: Option.of(BottleRuntimeSettings(dxrEnabled: true)),
+        ),
+      ],
+    );
+    final runner = RecordingProgramRunner(
+      result: const ProgramRunCompleted(processExitCode: 0),
+    );
+
+    final result = runCli(
+      ['run-program', 'steam', '--program', programPath, '--json'],
+      bottleRepository: repository,
+      programRunPlanner: ProgramRunPlanner(
+        hostPlatform: KonyakHostPlatform.macos,
+        environment: HostEnvironment({'KONYAK_MACOS_WINE_HOME': runtimeRoot}),
+      ),
+      programGraphicsBackendHintsInspector:
+          const DartIoProgramGraphicsBackendHintsInspector(),
+      programRunner: runner,
+    );
+
+    expect(result.exitCode, 0);
+    expect(result.stderr, isEmpty);
+    final environment = runner.lastRequest?.environment.toMap();
+    expect(
+      environment?['WINEDLLPATH'],
+      macosManagedWineDllPathWithOverrides(runtimeRoot, const []),
+    );
+    expect(
+      environment?['WINEPATH'],
+      macosManagedWinePathWithOverrides(runtimeRoot, const []),
+    );
+    expect(environment, isNot(containsPair('WINEDLLOVERRIDES', anything)));
+    expect(environment, isNot(containsPair('DYLD_FRAMEWORK_PATH', anything)));
+    expect(
+      environment,
+      isNot(containsPair('CX_APPLEGPTK_LIBD3DSHARED_PATH', anything)),
+    );
+    expect(environment, isNot(containsPair('D3DM_SUPPORT_DXR', anything)));
+    expect(
+      environment,
+      containsPair('KONYAK_GRAPHICS_BACKEND_REQUESTED', 'gptk-d3dmetal'),
+    );
+    expect(
+      environment,
+      containsPair('KONYAK_GRAPHICS_BACKEND_SELECTED', 'wined3d-vulkan'),
+    );
+    expect(
+      environment,
+      containsPair(
+        'KONYAK_GRAPHICS_BACKEND_FALLBACK_REASON',
+        'gptkD3d10Unsupported',
+      ),
+    );
+    for (final dllName in gptkD3DMetalOverrideDllNames) {
+      expect(
+        File(
+          joinTestPath(bottlePath, ['drive_c', 'windows', 'system32', dllName]),
+        ).existsSync(),
+        isFalse,
+      );
+    }
+  });
+
+  test('run-program --json keeps D3DMetal for D3D12 imports on macOS', () {
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-d3dmetal-d3d12-run-env-test-',
+    );
+    addTearDown(() {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    });
+
+    final runtimeRoot = joinTestPath(tempDirectory.path, const ['runtime']);
+    final bottlePath = joinTestPath(tempDirectory.path, const [
+      'bottles',
+      'steam',
+    ]);
+    final programPath = joinTestPath(tempDirectory.path, const ['game.exe']);
+    File(programPath).writeAsBytesSync(
+      syntheticPortableExecutableBytes(
+        importDllNames: const ['d3d12.dll', 'd3d10.dll'],
+      ),
+    );
+    for (final dllName in gptkD3DMetalOverrideDllNames) {
+      final file = File(
+        joinTestPath(runtimeRoot, [
+          'components',
+          'gptk-d3dmetal',
+          'lib',
+          'wine',
+          'x86_64-windows',
+          dllName,
+        ]),
+      );
+      file.parent.createSync(recursive: true);
+      file.writeAsStringSync('d3dmetal/$dllName');
+    }
+
+    final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
+      dataHome: joinTestPath(tempDirectory.path, const ['data']),
+      bottles: [
+        BottleRecord(
+          id: 'steam',
+          name: 'Steam',
+          path: bottlePath,
+          windowsVersion: 'win10',
+          runtimeSettings: Option.of(BottleRuntimeSettings(dxrEnabled: true)),
+        ),
+      ],
+    );
+    final runner = RecordingProgramRunner(
+      result: const ProgramRunCompleted(processExitCode: 0),
+    );
+
+    final result = runCli(
+      ['run-program', 'steam', '--program', programPath, '--json'],
+      bottleRepository: repository,
+      programRunPlanner: ProgramRunPlanner(
+        hostPlatform: KonyakHostPlatform.macos,
+        environment: HostEnvironment({'KONYAK_MACOS_WINE_HOME': runtimeRoot}),
+      ),
+      programGraphicsBackendHintsInspector:
+          const DartIoProgramGraphicsBackendHintsInspector(),
+      programRunner: runner,
+    );
+
+    expect(result.exitCode, 0);
+    expect(result.stderr, isEmpty);
+    final environment = runner.lastRequest?.environment.toMap();
+    expect(
+      environment?['WINEDLLPATH'],
+      macosManagedWineDllPathWithOverrides(runtimeRoot, const [
+        <String>[
+          'components',
+          'gptk-d3dmetal',
+          'lib',
+          'wine',
+          'x86_64-windows',
+        ],
+      ]),
+    );
+    expect(environment, containsPair('D3DM_SUPPORT_DXR', '1'));
+    expect(
+      environment,
+      isNot(containsPair('KONYAK_GRAPHICS_BACKEND_FALLBACK_REASON', anything)),
+    );
+  });
+
+  test(
+    'run-program --json keeps D3DMetal for D3D12 string signals on macOS',
+    () {
+      final tempDirectory = Directory.systemTemp.createTempSync(
+        'konyak-d3dmetal-d3d12-string-run-env-test-',
+      );
+      addTearDown(() {
+        if (tempDirectory.existsSync()) {
+          tempDirectory.deleteSync(recursive: true);
+        }
+      });
+
+      final runtimeRoot = joinTestPath(tempDirectory.path, const ['runtime']);
+      final bottlePath = joinTestPath(tempDirectory.path, const [
+        'bottles',
+        'steam',
+      ]);
+      final programPath = joinTestPath(tempDirectory.path, const ['game.exe']);
+      File(programPath).writeAsBytesSync(
+        syntheticPortableExecutableBytes(
+          importDllNames: const ['d3d10.dll'],
+          asciiStrings: const ['D3D12CreateDevice'],
+        ),
+      );
+      for (final dllName in gptkD3DMetalOverrideDllNames) {
+        final file = File(
+          joinTestPath(runtimeRoot, [
+            'components',
+            'gptk-d3dmetal',
+            'lib',
+            'wine',
+            'x86_64-windows',
+            dllName,
+          ]),
+        );
+        file.parent.createSync(recursive: true);
+        file.writeAsStringSync('d3dmetal/$dllName');
+      }
+
+      final repository = MemoryBottleRepository(
+        programMetadataExtractor: const NoopProgramMetadataExtractor(),
+        dataHome: joinTestPath(tempDirectory.path, const ['data']),
+        bottles: [
+          BottleRecord(
+            id: 'steam',
+            name: 'Steam',
+            path: bottlePath,
+            windowsVersion: 'win10',
+            runtimeSettings: Option.of(BottleRuntimeSettings(dxrEnabled: true)),
+          ),
+        ],
+      );
+      final runner = RecordingProgramRunner(
+        result: const ProgramRunCompleted(processExitCode: 0),
+      );
+
+      final result = runCli(
+        ['run-program', 'steam', '--program', programPath, '--json'],
+        bottleRepository: repository,
+        programRunPlanner: ProgramRunPlanner(
+          hostPlatform: KonyakHostPlatform.macos,
+          environment: HostEnvironment({'KONYAK_MACOS_WINE_HOME': runtimeRoot}),
+        ),
+        programGraphicsBackendHintsInspector:
+            const DartIoProgramGraphicsBackendHintsInspector(),
+        programRunner: runner,
+      );
+
+      expect(result.exitCode, 0);
+      expect(result.stderr, isEmpty);
+      final environment = runner.lastRequest?.environment.toMap();
+      expect(
+        environment?['WINEDLLPATH'],
+        macosManagedWineDllPathWithOverrides(runtimeRoot, const [
+          <String>[
+            'components',
+            'gptk-d3dmetal',
+            'lib',
+            'wine',
+            'x86_64-windows',
+          ],
+        ]),
+      );
+      expect(environment, containsPair('D3DM_SUPPORT_DXR', '1'));
+      expect(
+        environment,
+        isNot(
+          containsPair('KONYAK_GRAPHICS_BACKEND_FALLBACK_REASON', anything),
+        ),
+      );
+    },
+  );
 
   test(
     'run-program --json prefers D3DMetal over stale DXMT settings on macOS',
