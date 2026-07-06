@@ -9,10 +9,11 @@ Use `docs/todo.md` only as the top-level roadmap pointer. Use
 
 ## Current Snapshot
 
-- Timestamp: 2026-07-06 11:43 JST
+- Timestamp: 2026-07-06 11:57 JST
 - State: `planned`
-- Branch: `task/gptk-d3d10-smoke`
-- Pull request: https://github.com/serika12345/Konyak/pull/33
+- Branch: `main`
+- Pull request: https://github.com/serika12345/Konyak/pull/33, merged into
+  parent `main` as `bb8fefc`.
 - Runtime submodule pull request:
   https://github.com/serika12345/konyak-macos-runtime/pull/2, merged into
   runtime `main` as `9c5bdf1`.
@@ -42,7 +43,9 @@ Use `docs/todo.md` only as the top-level roadmap pointer. Use
   dev shell. Runtime PR #2 GitHub Actions passed before merge, including
   `Verify DXVK D3D10/D3D11 backend smoke`, `Verify GPTK/D3DMetal backend smoke`,
   runtime stack assembly, metadata, GUI, Wine32-on-64, DXMT, and vkd3d smoke
-  jobs.
+  jobs. Parent PR #33 GitHub Actions passed before merge, including both
+  `Konyak` checks, both `Published runtime CLI smoke` checks, and
+  `Build D3D12 fixture`.
 - Workstream separation: sub-agent tooling was not used because the available
   tool requires explicit user authorization before spawning agents. The
   investigation conclusion, implementation changes, and audit/verification
@@ -268,6 +271,7 @@ Review gate:
 status: completed
 branch: `task/gptk-d3d10-smoke`
 pull request: https://github.com/serika12345/Konyak/pull/33
+parent merge commit: `bb8fefc`
 runtime submodule branch: `task/d3d10-render-smoke`
 runtime submodule pull request:
 https://github.com/serika12345/konyak-macos-runtime/pull/2
@@ -312,8 +316,9 @@ Verification:
 
 Review gate:
 
-- Runtime PR #2 was merged into runtime `main` as `9c5bdf1`. Merge the parent
-  PR, then stop before G1-P4 implementation and G2-P1 GPTK4 import work.
+- Runtime PR #2 was merged into runtime `main` as `9c5bdf1`. Parent PR #33 was
+  merged into parent `main` as `bb8fefc`. Stop before G1-P4 implementation and
+  G2-P1 GPTK4 import work.
 
 #### PR Gate: G1-P4 GPTK D3D10 Unsupported and WineD3D Fallback Contract
 

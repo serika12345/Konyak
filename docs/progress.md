@@ -13,20 +13,20 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-06 11:43 JST
+- Timestamp: 2026-07-06 11:57 JST
 - State: `planned`
-- Branch: `task/gptk-d3d10-smoke`
+- Branch: `main`
 - Active work: `G1-P4 GPTK D3D10 Unsupported and WineD3D Fallback Contract`.
 - Related TODO: `docs/todo.md` `Next Tasks` points at
   `docs/gptk-d3dmetal-import-progress.md`; the active gate is
   `G1-P4 GPTK D3D10 Unsupported and WineD3D Fallback Contract`.
-- Pull request: https://github.com/serika12345/Konyak/pull/33
+- Pull request: https://github.com/serika12345/Konyak/pull/33, merged into
+  parent `main` as `bb8fefc`.
 - Runtime submodule pull request:
   https://github.com/serika12345/konyak-macos-runtime/pull/2, merged into
   runtime `main` as `9c5bdf1`.
-- Latest implementation commit: runtime submodule `9c5bdf1`; parent branch
-  update is on `task/gptk-d3d10-smoke`. Runtime PR #1 was merged into runtime
-  `main` as `2fd0578`.
+- Latest implementation commit: parent `bb8fefc`, runtime submodule `9c5bdf1`.
+  Runtime PR #1 was merged into runtime `main` as `2fd0578`.
 - Purpose: implement CrossOver-equivalent D3D10 handling for Konyak: GPTK/D3DMetal
   is expected to be unsupported for direct D3D10 render/readback, while actual
   macOS D3D10 rendering is handled through DXVK first and WineD3D/Vulkan
@@ -45,10 +45,9 @@ unfinished work.
 - Remaining work: add runtime smoke coverage for expected GPTK D3D10
   unsupported behavior and CrossOver-equivalent WineD3D/Vulkan D3D10
   render/readback; align parent backend hints and launch fallback diagnostics.
-- Next action: merge parent PR #33, then implement G1-P4 before GPTK4 import.
-  The runtime side needs `gptk-d3d10-unsupported` and `wined3d-d3d10-render`
-  smoke coverage, and the parent side needs an explicit D3D10 fallback
-  contract.
+- Next action: implement G1-P4 before GPTK4 import. The runtime side needs
+  `gptk-d3d10-unsupported` and `wined3d-d3d10-render` smoke coverage, and the
+  parent side needs an explicit D3D10 fallback contract.
 - Verification: this plan update passed runtime submodule
   `nix develop -c zsh -lc 'git diff --check'`; parent
   `nix develop -c zsh -lc 'just verify-governance'`,
@@ -57,4 +56,6 @@ unfinished work.
   `nix develop -c zsh -lc 'just lint'`. Runtime PR #2 CI passed through
   GitHub Actions before merge, including `Verify DXVK D3D10/D3D11 backend
   smoke`, `Verify GPTK/D3DMetal backend smoke`, runtime stack assembly, metadata,
-  GUI, Wine32-on-64, DXMT, and vkd3d smoke jobs.
+  GUI, Wine32-on-64, DXMT, and vkd3d smoke jobs. Parent PR #33 CI passed before
+  merge, including both `Konyak` checks, both `Published runtime CLI smoke`
+  checks, and `Build D3D12 fixture`.
