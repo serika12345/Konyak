@@ -13,7 +13,7 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-06 11:01 JST
+- Timestamp: 2026-07-06 11:43 JST
 - State: `planned`
 - Branch: `task/gptk-d3d10-smoke`
 - Active work: `G1-P4 GPTK D3D10 Unsupported and WineD3D Fallback Contract`.
@@ -22,8 +22,9 @@ unfinished work.
   `G1-P4 GPTK D3D10 Unsupported and WineD3D Fallback Contract`.
 - Pull request: https://github.com/serika12345/Konyak/pull/33
 - Runtime submodule pull request:
-  https://github.com/serika12345/konyak-macos-runtime/pull/2
-- Latest implementation commit: runtime submodule `5ca9454`; parent branch
+  https://github.com/serika12345/konyak-macos-runtime/pull/2, merged into
+  runtime `main` as `9c5bdf1`.
+- Latest implementation commit: runtime submodule `9c5bdf1`; parent branch
   update is on `task/gptk-d3d10-smoke`. Runtime PR #1 was merged into runtime
   `main` as `2fd0578`.
 - Purpose: implement CrossOver-equivalent D3D10 handling for Konyak: GPTK/D3DMetal
@@ -44,14 +45,16 @@ unfinished work.
 - Remaining work: add runtime smoke coverage for expected GPTK D3D10
   unsupported behavior and CrossOver-equivalent WineD3D/Vulkan D3D10
   render/readback; align parent backend hints and launch fallback diagnostics.
-- Next action: implement G1-P4 before GPTK4 import. The runtime side needs
-  `gptk-d3d10-unsupported` and `wined3d-d3d10-render` smoke coverage, and the
-  parent side needs an explicit D3D10 fallback contract.
+- Next action: merge parent PR #33, then implement G1-P4 before GPTK4 import.
+  The runtime side needs `gptk-d3d10-unsupported` and `wined3d-d3d10-render`
+  smoke coverage, and the parent side needs an explicit D3D10 fallback
+  contract.
 - Verification: this plan update passed runtime submodule
   `nix develop -c zsh -lc 'git diff --check'`; parent
   `nix develop -c zsh -lc 'just verify-governance'`,
   `nix develop -c zsh -lc 'just verify-safety'`,
   `nix develop -c zsh -lc 'just format-check'`, and
-  `nix develop -c zsh -lc 'just lint'`. The latest runtime implementation
-  verification remains the G1-P3 DXVK D3D10 render/readback verification
-  recorded in `docs/gptk-d3dmetal-import-progress.md`.
+  `nix develop -c zsh -lc 'just lint'`. Runtime PR #2 CI passed through
+  GitHub Actions before merge, including `Verify DXVK D3D10/D3D11 backend
+  smoke`, `Verify GPTK/D3DMetal backend smoke`, runtime stack assembly, metadata,
+  GUI, Wine32-on-64, DXMT, and vkd3d smoke jobs.

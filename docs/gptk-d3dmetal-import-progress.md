@@ -9,10 +9,13 @@ Use `docs/todo.md` only as the top-level roadmap pointer. Use
 
 ## Current Snapshot
 
-- Timestamp: 2026-07-06 11:01 JST
+- Timestamp: 2026-07-06 11:43 JST
 - State: `planned`
 - Branch: `task/gptk-d3d10-smoke`
 - Pull request: https://github.com/serika12345/Konyak/pull/33
+- Runtime submodule pull request:
+  https://github.com/serika12345/konyak-macos-runtime/pull/2, merged into
+  runtime `main` as `9c5bdf1`.
 - Active gate: `G1-P4 GPTK D3D10 Unsupported and WineD3D Fallback Contract`
 - Purpose: match CrossOver's practical D3D10 handling: GPTK/D3DMetal is not a
   direct D3D10 renderer, D3D10 render support is proven through DXVK first and
@@ -36,7 +39,10 @@ Use `docs/todo.md` only as the top-level roadmap pointer. Use
 - Verification so far: G1-P3 passed. The G1-P4 plan update passed runtime
   submodule `git diff --check` and parent `just verify-governance`,
   `just verify-safety`, `just format-check`, and `just lint` through the Nix
-  dev shell.
+  dev shell. Runtime PR #2 GitHub Actions passed before merge, including
+  `Verify DXVK D3D10/D3D11 backend smoke`, `Verify GPTK/D3DMetal backend smoke`,
+  runtime stack assembly, metadata, GUI, Wine32-on-64, DXMT, and vkd3d smoke
+  jobs.
 - Workstream separation: sub-agent tooling was not used because the available
   tool requires explicit user authorization before spawning agents. The
   investigation conclusion, implementation changes, and audit/verification
@@ -265,6 +271,7 @@ pull request: https://github.com/serika12345/Konyak/pull/33
 runtime submodule branch: `task/d3d10-render-smoke`
 runtime submodule pull request:
 https://github.com/serika12345/konyak-macos-runtime/pull/2
+runtime merge commit: `9c5bdf1`
 
 Completion criteria:
 
@@ -305,8 +312,8 @@ Verification:
 
 Review gate:
 
-- Runtime PR #2 is open as a draft. Review the parent PR and runtime PR #2,
-  then stop before G2-P1.
+- Runtime PR #2 was merged into runtime `main` as `9c5bdf1`. Merge the parent
+  PR, then stop before G1-P4 implementation and G2-P1 GPTK4 import work.
 
 #### PR Gate: G1-P4 GPTK D3D10 Unsupported and WineD3D Fallback Contract
 
