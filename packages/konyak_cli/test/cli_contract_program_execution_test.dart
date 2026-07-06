@@ -106,6 +106,97 @@ void main() {
   );
 
   test(
+    'suggest-graphics-backend --json recommends DXVK for D3D10 on macOS',
+    () async {
+      final tempDirectory = await Directory.systemTemp.createTemp(
+        'konyak-graphics-hints-d3d10-test-',
+      );
+      addTearDown(() async {
+        if (await tempDirectory.exists()) {
+          await tempDirectory.delete(recursive: true);
+        }
+      });
+      final programPath = joinTestPath(tempDirectory.path, const ['game.exe']);
+      File(programPath).writeAsBytesSync(
+        syntheticPortableExecutableBytes(importDllNames: const ['d3d10.dll']),
+      );
+
+      final result = runCli(
+        ['suggest-graphics-backend', '--program', programPath, '--json'],
+        programRunPlanner: ProgramRunPlanner(
+          hostPlatform: KonyakHostPlatform.macos,
+        ),
+        programGraphicsBackendHintsInspector:
+            const DartIoProgramGraphicsBackendHintsInspector(),
+      );
+
+      expect(result.exitCode, 0);
+      expect(result.stderr, isEmpty);
+
+      final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+      expect(
+        (payload['graphicsBackendHints']
+            as Map<String, Object?>)['suggestions'],
+        [
+          {
+            'backend': 'dxvk',
+            'confidence': 'high',
+            'reason': 'D3D10 API usage was detected.',
+          },
+        ],
+      );
+    },
+  );
+
+  test(
+    'suggest-graphics-backend --json keeps DXMT first for D3D11 on macOS',
+    () async {
+      final tempDirectory = await Directory.systemTemp.createTemp(
+        'konyak-graphics-hints-d3d11-test-',
+      );
+      addTearDown(() async {
+        if (await tempDirectory.exists()) {
+          await tempDirectory.delete(recursive: true);
+        }
+      });
+      final programPath = joinTestPath(tempDirectory.path, const ['game.exe']);
+      File(programPath).writeAsBytesSync(
+        syntheticPortableExecutableBytes(importDllNames: const ['d3d11.dll']),
+      );
+
+      final result = runCli(
+        ['suggest-graphics-backend', '--program', programPath, '--json'],
+        programRunPlanner: ProgramRunPlanner(
+          hostPlatform: KonyakHostPlatform.macos,
+        ),
+        programGraphicsBackendHintsInspector:
+            const DartIoProgramGraphicsBackendHintsInspector(),
+      );
+
+      expect(result.exitCode, 0);
+      expect(result.stderr, isEmpty);
+
+      final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+      expect(
+        (payload['graphicsBackendHints']
+            as Map<String, Object?>)['suggestions'],
+        [
+          {
+            'backend': 'dxmt',
+            'confidence': 'medium',
+            'reason': 'D3D11 API usage was detected.',
+          },
+          {
+            'backend': 'dxvk',
+            'confidence': 'medium',
+            'reason': 'D3D11 API usage was detected.',
+          },
+        ],
+      );
+    },
+  );
+
+  test(
     'suggest-graphics-backend --json recommends vkd3d-proton for D3D12 on Linux',
     () async {
       final tempDirectory = await Directory.systemTemp.createTemp(

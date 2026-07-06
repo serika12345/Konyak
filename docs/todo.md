@@ -30,8 +30,11 @@ verification output instead of checked-off backlog entries.
 ## Next Tasks
 
 - Complete GPTK/D3DMetal import compatibility work tracked in
-  `docs/gptk-d3dmetal-import-progress.md`, starting with GPTK3 `d3d10.*`
-  payload completion before adding version-specified GPTK4 import support.
+  `docs/gptk-d3dmetal-import-progress.md`. The active gate is implementing the
+  macOS D3D10 contract: GPTK/D3DMetal D3D10 is expected unsupported, D3D10
+  render support uses DXVK first and CrossOver-equivalent WineD3D/Vulkan
+  fallback second, and GPTK4 import must wait until G1-P4 is complete or
+  explicitly deferred.
 - Capture end-to-end DLSS/MetalFX rendering proof with a redistributable or
   user-provided DLSS-capable Windows program.
   - Use Konyak's public `run-program --json` path, record backend environment,

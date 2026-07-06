@@ -167,25 +167,35 @@ List<ProgramGraphicsBackendSuggestion> _graphicsBackendSuggestions({
     ];
   }
 
+  if (_hasAnyGraphicsSignal(signals, _d3d10Signals)) {
+    return <ProgramGraphicsBackendSuggestion>[
+      ProgramGraphicsBackendSuggestion(
+        backend: GraphicsBackendKind('dxvk'),
+        confidence: GraphicsBackendConfidence('high'),
+        reason: 'D3D10 API usage was detected.',
+      ),
+    ];
+  }
+
   if (_hasAnyGraphicsSignal(signals, _d3d11Signals)) {
     return switch (hostPlatform) {
       KonyakHostPlatform.macos => <ProgramGraphicsBackendSuggestion>[
         ProgramGraphicsBackendSuggestion(
           backend: GraphicsBackendKind('dxmt'),
           confidence: GraphicsBackendConfidence('medium'),
-          reason: 'D3D10/D3D11 API usage was detected.',
+          reason: 'D3D11 API usage was detected.',
         ),
         ProgramGraphicsBackendSuggestion(
           backend: GraphicsBackendKind('dxvk'),
           confidence: GraphicsBackendConfidence('medium'),
-          reason: 'D3D10/D3D11 API usage was detected.',
+          reason: 'D3D11 API usage was detected.',
         ),
       ],
       KonyakHostPlatform.linux => <ProgramGraphicsBackendSuggestion>[
         ProgramGraphicsBackendSuggestion(
           backend: GraphicsBackendKind('dxvk'),
           confidence: GraphicsBackendConfidence('high'),
-          reason: 'D3D10/D3D11 API usage was detected.',
+          reason: 'D3D11 API usage was detected.',
         ),
       ],
     };
@@ -223,13 +233,9 @@ bool _hasAnyGraphicsSignal(
 
 const _d3d12Signals = <String>{'d3d12.dll', 'd3d12createdevice'};
 
-const _d3d11Signals = <String>{
-  'd3d10.dll',
-  'd3d10_1.dll',
-  'd3d10core.dll',
-  'd3d11.dll',
-  'd3d11createdevice',
-};
+const _d3d10Signals = <String>{'d3d10.dll', 'd3d10_1.dll', 'd3d10core.dll'};
+
+const _d3d11Signals = <String>{'d3d11.dll', 'd3d11createdevice'};
 
 const _d3d9Signals = <String>{'d3d9.dll', 'direct3dcreate9'};
 

@@ -82,24 +82,33 @@ void main() {
       );
       expect(
         macosGptk.relativePaths,
-        containsAll(<RuntimeRelativePath>[
-          RuntimeRelativePath([
-            'components',
-            'gptk-d3dmetal',
-            'lib',
-            'wine',
-            'x86_64-windows',
-            'd3d10.dll',
-          ]),
-          RuntimeRelativePath([
-            'components',
-            'gptk-d3dmetal',
-            'lib',
-            'wine',
-            'x86_64-unix',
-            'd3d10.so',
-          ]),
-        ]),
+        isNot(
+          contains(
+            RuntimeRelativePath([
+              'components',
+              'gptk-d3dmetal',
+              'lib',
+              'wine',
+              'x86_64-windows',
+              'd3d10.dll',
+            ]),
+          ),
+        ),
+      );
+      expect(
+        macosGptk.relativePaths,
+        isNot(
+          contains(
+            RuntimeRelativePath([
+              'components',
+              'gptk-d3dmetal',
+              'lib',
+              'wine',
+              'x86_64-unix',
+              'd3d10.so',
+            ]),
+          ),
+        ),
       );
     });
 
