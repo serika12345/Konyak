@@ -13,10 +13,11 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-06 23:24 JST
+- Timestamp: 2026-07-07 10:00 JST
 - State: `completed`
 - Branch: `main`
-- Active work: Release Konyak `v1.0.7`.
+- Active work: Harden Konyak Pages reruns after repeated Pages deployment
+  failures.
 - Related TODO: `docs/todo.md` now points at the next DLSS/MetalFX
   rendering-proof task; the Gcenx GPTK4 CI follow-up remains deferred until a
   Gcenx GPTK4 binary release exists.
@@ -25,16 +26,26 @@ unfinished work.
 - Release workflow:
   https://github.com/serika12345/Konyak/actions/runs/28798279839 passed and
   published the GitHub Release assets.
+- Pages failure root cause: failed-job reruns of `Konyak Pages` reused the
+  default `github-pages` artifact name in the same workflow run. GitHub kept
+  the previous attempt's artifact, so `actions/deploy-pages` saw multiple
+  artifacts with the same name and failed before deployment.
 - Runtime release: parent runtime release locator already points at the latest
   published `serika12345/konyak-macos-runtime` Release,
   `crossover-26.1.0-konyak.0`, with no parent JSON update needed.
 - Runtime branch: no runtime submodule changes planned; parent `main` records
   runtime submodule commit `61624ad`, which has the same tree as runtime
   `origin/main` merge commit `0a09716b`.
-- Purpose: publish the completed GPTK4 import support, installed GPTK version
-  display, GPTK import mismatch diagnostics, and CrossOver-compatible D3D10
-  fallback behavior in Konyak `v1.0.7`.
+- Purpose: make Pages deployment reruns deterministic by avoiding artifact-name
+  collisions between rerun attempts, instead of relying on empty commits or
+  manually dispatched clean runs to hide failed checks.
 - Completed work:
+  - Updated `.github/workflows/pages.yml` so `actions/upload-pages-artifact`
+    and `actions/deploy-pages` both use
+    `github-pages-${{ github.run_id }}-${{ github.run_attempt }}`.
+  - Confirmed `actionlint` is not currently available in the Nix dev shell, so
+    final syntax/protocol validation for the workflow change must come from the
+    GitHub Actions run.
   - Confirmed the runtime release list and latest runtime release assets; the
     parent `runtime/macos-wine-release.json` already uses the latest runtime
     release tag.
@@ -47,10 +58,21 @@ unfinished work.
     variance before moving the unpublished `v1.0.7` tag to the verified commit.
   - Published `v1.0.7` with macOS DMG, Linux AppImage, platform release
     metadata, Linux runtime source-manifest assets, and combined `SHA256SUMS`.
-- Remaining work: none for this release.
+- Remaining work: none for the local Pages rerun hardening change.
 - Next action: continue with the next TODO-backed DLSS/MetalFX rendering-proof
   task when requested.
 - Verification performed:
+  - `gh run list --repo serika12345/Konyak --workflow pages.yml --limit 20
+    --json databaseId,displayTitle,event,headBranch,headSha,status,
+    conclusion,createdAt,url` showed repeated historical Pages failures,
+    including the rerun artifact collision on
+    https://github.com/serika12345/Konyak/actions/runs/28798935826.
+  - `nix develop -c zsh -lc 'command -v actionlint || true'` found no
+    `actionlint` executable in the current dev shell.
+  - `nix develop -c zsh -lc 'git diff --check && git -C
+    runtime/konyak-macos-runtime diff --check && just verify-governance &&
+    just verify-safety && just format-check && just lint'` passed after the
+    Pages workflow change.
   - `gh release list --repo serika12345/konyak-macos-runtime --limit 5
     --json tagName,isLatest,isDraft,isPrerelease,publishedAt` confirmed
     `crossover-26.1.0-konyak.0` is the latest runtime release.
