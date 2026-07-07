@@ -13,69 +13,38 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-07 15:00 JST
-- State: `completed`
-- Branch: parent `codex/runtime-wine-update-ui`; runtime
-  `runtime/konyak-macos-runtime` `main` at
-  `6f84a6d58662287aa01781caf2ac02399e8a044`.
-- Active work: publish a new `serika12345/konyak-macos-runtime` GitHub Release
-  for the GPTK4-capable runtime.
-- Related TODO: no long-running TODO item; this is the runtime release artifact
-  required for the completed GPTK4/runtime update work to be observable from the
-  production release feed.
-- Purpose: the latest runtime CI run succeeded but reused the existing
-  `crossover-26.1.0-konyak.0` tag, so GitHub updated the old Release instead
-  of adding a new one. Produce an actual new runtime Release by bumping the
-  Konyak-owned runtime revision while keeping the CrossOver source version at
-  `26.1.0`.
+- Timestamp: 2026-07-07 15:11 JST
+- State: `in_progress`
+- Branch: `main` at `cc7cc76a77623cc0ed9444af2e486bc6e2e3f4ec`.
+- Active work: publish Konyak `v1.0.8`.
+- Related TODO: no long-running TODO item; this is the application release for
+  the merged runtime update UI and macOS runtime release-check work.
+- Purpose: make the runtime update UI, macOS Wine runtime release feed
+  integration, and `crossover-26.1.0-konyak.1` runtime availability visible to
+  users through a normal Konyak release.
 - Completed work:
-  - Confirmed the public runtime Releases page still shows only
-    `crossover-26.1.0-konyak.0`.
-  - Confirmed the latest runtime `Build runtime` main run succeeded and the
-    publish job completed.
-  - Identified the release-version root cause: runtime version generation still
-    hardcodes `konyak.0` in Nix derivations and source-manifest generation.
-  - Added explicit Konyak runtime release revision metadata and generated
-    `crossover-26.1.0-konyak.1` release metadata while keeping the CrossOver
-    source version at `26.1.0`.
-  - Added runtime release-version and Wine payload-stamping scripts so a
-    Konyak release revision bump does not force a Wine binary rebuild when the
-    Wine build identity is unchanged.
-  - Updated normal and candidate release workflows to create new release tags
-    with `--target "$GITHUB_SHA"`.
-  - Published GitHub Release
-    `https://github.com/serika12345/konyak-macos-runtime/releases/tag/crossover-26.1.0-konyak.1`.
-  - Merged runtime PR
-    `https://github.com/serika12345/konyak-macos-runtime/pull/6` into runtime
-    `main` with `[skip ci]` after the release workflow passed, and cancelled
-    the redundant pull-request workflow run.
-- Remaining work: none for this runtime release.
-- Next action: continue parent PR review/merge for the runtime update UI and
-  release-check wiring.
+  - Fast-forwarded local `main` to `origin/main` after PR #41 was merged.
+  - Confirmed `v1.0.7` is the latest published Konyak Release and `v1.0.8`
+    does not already exist locally.
+  - Confirmed the release delta from `v1.0.7` includes the Wine runtime update
+    UI, app-menu runtime update check wiring, macOS runtime release URL
+    override, runtime update CLI contract tests, and the submodule pointer to
+    `runtime/konyak-macos-runtime` commit
+    `6f84a6d58662287aa01781caf2ac02399e8a044`.
+- Remaining work:
+  - Wait for the post-merge `Konyak Verify` and `macOS Runtime CLI Smoke` main
+    runs to complete successfully.
+  - Prepare the `v1.0.8` release notes.
+  - Run release preparation through the Nix dev shell, create and push the
+    release commit and tag, and dispatch/publish the release.
+  - Audit the published GitHub Release, assets, notes, and publish workflow.
+- Next action: create the release notes draft, then run `prepare_release.py`
+  with `just release-candidate-gates` after post-merge CI is green.
 - Verification performed:
-  - `gh release list --repo serika12345/konyak-macos-runtime --limit 10`
-    showed only `crossover-26.1.0-konyak.0`.
-  - `gh run view 28790344840 --repo serika12345/konyak-macos-runtime` showed
-    the latest main `Build runtime` run completed successfully, including
-    `Publish runtime release`, on commit
-    `0a09716b3e2df5ca64959cbf4cfc93d94beb7c55`.
-  - `nix develop -c zsh -lc 'git diff --check; nix shell nixpkgs#actionlint -c
-    actionlint .github/workflows/build-runtime.yml
-    .github/workflows/promote-runtime-candidate.yml; nix flake check
-    --all-systems --no-build -L --show-trace'` passed in
-    `runtime/konyak-macos-runtime`.
-  - Runtime `Build runtime` workflow run `28842870557` completed successfully,
-    including `Publish runtime release`.
-  - `gh release list --repo serika12345/konyak-macos-runtime --limit 5` shows
-    `Konyak macOS runtime crossover-26.1.0-konyak.1` as `Latest`.
-  - `gh release view crossover-26.1.0-konyak.1 --repo
-    serika12345/konyak-macos-runtime` reports a non-draft, non-prerelease
-    release targeting commit `67112ba4c221e547774a22fff56c5831840fa205` with
-    the expected three assets.
-  - Downloaded `konyak-macos-runtime.release.json` and
-    `konyak-macos-wine-runtime-stack-source.json` from the release; metadata
-    version and Wine component version are both
-    `crossover-26.1.0-konyak.1`.
-  - Downloaded the published stack archive and inspected
-    `.konyak-runtime-stack.json`; the Wine component version is
-    `crossover-26.1.0-konyak.1`.
+  - `git status --short --branch` showed local `main` clean and aligned with
+    `origin/main`.
+  - `gh release list --repo serika12345/Konyak --limit 10` showed `v1.0.7` as
+    the latest published release.
+  - `gh run list --repo serika12345/Konyak --branch main --limit 20` showed
+    post-merge Pages and Linux runtime smoke passing; Konyak Verify and macOS
+    runtime smoke were still in progress at the start of release work.
