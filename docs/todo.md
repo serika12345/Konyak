@@ -31,6 +31,13 @@ verification output instead of checked-off backlog entries.
 
 - Capture end-to-end DLSS/MetalFX rendering proof with a redistributable or
   user-provided DLSS-capable Windows program.
+  - Use the maintained local smoke entry point
+    `scripts/run_macos_dlss_metalfx_cli_smoke.zsh` with user-provided
+    GPTK/D3DMetal input and a DLSS-capable Windows executable.
+  - The repo-owned `tests/fixtures/windows/dlss_metalfx_preflight` fixture is
+    only launch-contract preflight coverage for D3D12, D3DMetal MetalFX
+    environment, and NVIDIA shim loading. Do not count preflight success as
+    end-to-end DLSS rendering proof.
   - Use Konyak's public `run-program --json` path, record backend environment,
     selected runtime/component paths, process/log evidence, and Metal HUD or
     equivalent evidence where practical.

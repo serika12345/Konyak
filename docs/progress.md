@@ -13,61 +13,88 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-07 15:30 JST
-- State: `completed`
-- Branch: `main` at `136f32e94226d07df27aacbf83c45dbf3c218741`;
-  tag `v1.0.8`.
-- Active work: publish Konyak `v1.0.8`.
-- Related TODO: no long-running TODO item; this is the application release for
-  the merged runtime update UI and macOS runtime release-check work.
-- Purpose: make the runtime update UI, macOS Wine runtime release feed
-  integration, and `crossover-26.1.0-konyak.1` runtime availability visible to
-  users through a normal Konyak release.
+- Timestamp: 2026-07-07 19:45 JST
+- State: `blocked`
+- Branch: `task/dlss-metalfx-render-proof`; this snapshot is committed at the
+  branch tip for the DLSS/MetalFX proof harness.
+- Active work: DLSS/MetalFX rendering proof harness.
+- Related TODO: `docs/todo.md` Next Tasks, "Capture end-to-end DLSS/MetalFX
+  rendering proof with a redistributable or user-provided DLSS-capable Windows
+  program."
+- Purpose: add a maintained minimal Windows-side DLSS/MetalFX probe and
+  Konyak-owned smoke path that can prove the public `run-program --json`
+  D3DMetal launch contract with user-provided or transient DLSS/GPTK payloads,
+  without redistributing proprietary runtime inputs.
+- Workstream separation:
+  - Investigation: confirm the existing D3D12 visible sample, GPTK/D3DMetal
+    import contract, DLSS/MetalFX environment gating, and vendor-payload
+    constraints before changing code.
+  - Implementation: add the smallest fixture, script, workflow, and docs needed
+    for a repeatable user-provided-payload proof through Konyak's public CLI.
+  - Audit: rerun focused tests and required gates independently after the
+    implementation, and record any external-payload blocker as unconfirmed
+    rather than claiming dynamic DLSS/MetalFX proof.
 - Completed work:
-  - Fast-forwarded local `main` to `origin/main` after PR #41 was merged.
-  - Confirmed `v1.0.7` is the latest published Konyak Release and `v1.0.8`
-    does not already exist locally.
-  - Confirmed the release delta from `v1.0.7` includes the Wine runtime update
-    UI, app-menu runtime update check wiring, macOS runtime release URL
-    override, runtime update CLI contract tests, and the submodule pointer to
-    `runtime/konyak-macos-runtime` commit
-    `6f84a6d58662287aa01781caf2ac02399e8a044`.
-  - Confirmed all post-merge main CI runs for PR #41 passed before release:
-    `Konyak Verify`, `Konyak Pages`, Linux runtime CLI smoke, and macOS runtime
-    CLI smoke.
-  - Prepared `docs/releases/v1.0.8.md` with runtime update UI and
-    GPTK4-capable runtime release notes.
-  - Ran release preparation through the Nix dev shell, bumped the app from
-    `1.0.7+8` to `1.0.8+9`, created release commit
-    `136f32e94226d07df27aacbf83c45dbf3c218741`, created tag `v1.0.8`, pushed
-    both to origin, and dispatched the publish workflow.
-  - Published GitHub Release
-    `https://github.com/serika12345/Konyak/releases/tag/v1.0.8`.
-  - Audited the published release assets, release body, macOS/Linux release
-    metadata, and SHA-256 checksum files.
-- Remaining work: none for the `v1.0.8` application release.
-- Next action: continue the next roadmap item from `docs/todo.md`.
+  - Created dedicated branch `task/dlss-metalfx-render-proof`.
+  - Added a failing-first Flutter contract test for the DLSS/MetalFX fixture,
+    build script, workflow, smoke entry point, and proof documentation.
+  - Added `tests/fixtures/windows/dlss_metalfx_preflight`, a Windows x64 MSVC
+    D3D12 preflight fixture that verifies D3D12 presentation,
+    `D3DM_ENABLE_METALFX`, and `nvngx.dll` / `nvapi64.dll` loading without
+    bundling NVIDIA DLSS SDK binaries.
+  - Added `scripts/build_dlss_metalfx_preflight_windows.ps1` and
+    `.github/workflows/windows-dlss-metalfx-preflight-build.yml` so CI can
+    build the redistributable fixture on Windows.
+  - Added `scripts/run_macos_dlss_metalfx_cli_smoke.zsh`, a maintained public
+    `run-program --json` smoke path for user-provided GPTK/D3DMetal and
+    user-provided DLSS-capable Windows programs.
+  - Added `docs/dlss-metalfx-render-proof.md` documenting what the preflight
+    fixture proves, what it does not prove, and the evidence required for the
+    remaining end-to-end rendering proof.
+  - Built the preflight fixture on GitHub Actions, downloaded the Windows
+    artifact, and ran the public CLI smoke locally on macOS 26.5.1 with Apple
+    GPTK 4.0 beta 1.
+  - The dynamic preflight reached `run-program --json`, imported GPTK4,
+    selected D3DMetal, emitted `D3DM_ENABLE_METALFX=1`, and loaded
+    `nvngx.dll`.
+  - The preflight failed before D3D12 presentation because `LoadLibraryW` for
+    `nvapi64.dll` returned false with `GetLastError=1114`
+    (`ERROR_DLL_INIT_FAILED`). No end-to-end DLSS/MetalFX rendering proof is
+    claimed.
+- Remaining work: investigate why the current GPTK4 D3DMetal runtime path
+  cannot initialize `nvapi64.dll` under Konyak's public `run-program --json`
+  launch contract, then rerun `scripts/run_macos_dlss_metalfx_cli_smoke.zsh`
+  with either the preflight fixture or a real DLSS-capable Windows program.
+- Next action: open a focused runtime investigation against the captured
+  `nvapi64.dll` initialization failure. Use the same smoke command and compare
+  against CrossOver or a known-good GPTK/D3DMetal launch path before changing
+  runtime contracts.
 - Verification performed:
   - `git status --short --branch` showed local `main` clean and aligned with
-    `origin/main`.
-  - `gh release list --repo serika12345/Konyak --limit 10` showed `v1.0.7` as
-    the latest published release.
-  - `gh run list --repo serika12345/Konyak --branch main --limit 20` showed
-    post-merge Pages and Linux runtime smoke passing; Konyak Verify and macOS
-    runtime smoke were still in progress at the start of release work.
-  - `gh run watch 28845362690 --repo serika12345/Konyak --exit-status
-    --interval 30` passed for the post-merge macOS runtime CLI smoke.
-  - `nix develop -c zsh -lc 'python3 scripts/prepare_release.py --version
-    1.0.8 --release-notes .dart_tool/konyak/release-notes-v1.0.8.md --gate
-    "just release-candidate-gates" --commit --tag --push --push-branch main
-    --dispatch-publish'` passed.
-  - `gh run watch 28846025368 --repo serika12345/Konyak --exit-status
-    --interval 30` passed for the `v1.0.8` publish workflow.
-  - `gh release view v1.0.8 --repo serika12345/Konyak --json
-    tagName,name,isDraft,isPrerelease,isImmutable,publishedAt,url,
-    targetCommitish,assets,body` showed a non-draft, non-prerelease latest
-    release with the expected macOS DMG, Linux AppImage, metadata, checksum,
-    and Linux runtime source-manifest assets.
-  - Downloaded the published `*.release.json`, `*.sha256`, and `SHA256SUMS`
-    assets from `v1.0.8`; both platform metadata files report version `1.0.8`
-    and their SHA-256 values match the published checksum files.
+    `origin/main` before branching.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/windows_dlss_metalfx_preflight_fixture_test.dart'`
+    first failed because the fixture files did not exist, then passed after
+    implementation.
+  - `nix develop -c zsh -lc 'zsh -n scripts/run_macos_dlss_metalfx_cli_smoke.zsh && git diff --check && just flutter-format-check && just flutter-analyze && just flutter-test'`
+    passed; Flutter test reported 471 tests passed.
+  - `nix develop -c zsh -lc './scripts/run_macos_dlss_metalfx_cli_smoke.zsh'`
+    returned exit code `64` as expected when
+    `KONYAK_MACOS_DLSS_METALFX_SMOKE_PROGRAM_EXE` was not supplied.
+  - `nix develop -c zsh -lc 'just cli-test && just verify-governance && just verify-safety && just format-check && just lint'`
+    passed; `just cli-test` reported 385 tests passed.
+  - GitHub Actions run `28860032171` passed
+    `Windows DLSS MetalFX Preflight Build` for branch
+    `task/dlss-metalfx-render-proof`; the downloaded artifact was
+    `.dart_tool/konyak/windows-dlss-metalfx-preflight/konyak_dlss_metalfx_preflight.exe`.
+  - Local dynamic preflight command:
+    `nix develop -c zsh -lc 'KONYAK_MACOS_DLSS_METALFX_SMOKE_PROGRAM_EXE="$PWD/.dart_tool/konyak/windows-dlss-metalfx-preflight/konyak_dlss_metalfx_preflight.exe" KONYAK_MACOS_DLSS_METALFX_SMOKE_GPTK_SOURCE=/Users/masato/Downloads/Game_Porting_Toolkit_4.0_beta_1.dmg KONYAK_MACOS_DLSS_METALFX_SMOKE_GPTK_VERSION=4 ./scripts/run_macos_dlss_metalfx_cli_smoke.zsh'`
+    failed as expected for the current runtime state after writing structured
+    evidence:
+    `marker=KONYAK_DLSS_METALFX_PREFLIGHT_FAILED`,
+    `D3DM_ENABLE_METALFX=1`, `D3DM_SUPPORT_DXR=1`, `nvngx_loaded=true`,
+    `nvapi64_loaded=false`, `nvapi64_error=1114`,
+    `d3d12_presented=false`.
+  - Dynamic evidence paths:
+    `.dart_tool/konyak/macos-dlss-metalfx-smoke/logs/dlss-metalfx-run.cxlog`
+    and
+    `.dart_tool/konyak/macos-dlss-metalfx-smoke/logs/preflight-evidence.txt`.
