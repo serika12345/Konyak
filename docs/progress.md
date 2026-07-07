@@ -13,17 +13,21 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-07 11:39 JST
+- Timestamp: 2026-07-07 11:46 JST
 - State: `completed`
 - Branch: `codex/runtime-wine-update-ui`
 - Active work: Clarify Konyak Wine runtime release checks as new runtime
-  versions rather than in-place updates.
+  versions rather than in-place updates, with a development override for
+  end-to-end release-check verification.
 - Related TODO: no long-running TODO item; this is a focused UX/completion fix
   for the existing runtime update CLI contract.
 - Purpose: make runtime Releases actionable from Flutter while presenting a
   newly published runtime release as a new installable runtime version, and add
   a CLI contract check that proves a newly added `crossover-26.x-konyak.x`
-  release tag is detected as available.
+  release tag is detected as available. Also make the macOS runtime release URL
+  overridable in development so the same `check-runtime-update` path can be
+  verified against a test release feed without publishing a production runtime
+  release first.
 - Completed work:
   - Added startup runtime update state so the UI keeps the full
     `runtimeUpdate` record returned by `check-runtime-update`.
@@ -47,6 +51,9 @@ unfinished work.
     `crossover-26.1.1-konyak.0` runtime release becoming available over the
     installed `crossover-26.1.0-konyak.0` runtime stack.
   - Regenerate Flutter localizations and the runtime confirmation golden.
+  - Added `KONYAK_MACOS_WINE_VERSION_URL` support for the macOS runtime record,
+    matching the existing app update and Linux runtime update URL override
+    pattern.
 - Remaining work: none for the local implementation; publish the verified
   follow-up commit to the existing draft PR.
 - Next action: commit and push the PR update for review.
@@ -119,3 +126,21 @@ unfinished work.
   - `nix develop -c zsh -lc 'git diff --check && git -C
     runtime/konyak-macos-runtime diff --check && just verify-governance &&
     just verify-safety && just format-check && just lint'` passed.
+  - The macOS runtime version URL override failure was captured with `nix
+    develop -c zsh -lc 'cd packages/konyak_cli && dart test
+    test/cli_contract_runtime_process_update_test.dart --plain-name "runtime
+    update checker uses the macOS runtime version URL override"'`; before the
+    implementation it still fetched the production
+    `https://api.github.com/repos/serika12345/konyak-macos-runtime/releases/latest`
+    URL.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart format
+    lib/src/io/runtime_platform_records.dart
+    test/cli_contract_runtime_process_update_test.dart && dart test
+    test/cli_contract_runtime_process_update_test.dart --plain-name "runtime
+    update checker uses the macOS runtime version URL override"'` passed after
+    implementing `KONYAK_MACOS_WINE_VERSION_URL`.
+  - `nix develop -c zsh -lc 'just cli-test'` passed after the override change.
+  - `nix develop -c zsh -lc 'git diff --check && git -C
+    runtime/konyak-macos-runtime diff --check && just verify-governance &&
+    just verify-safety && just format-check && just lint'` passed after the
+    override change.

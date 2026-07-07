@@ -24,6 +24,9 @@ RuntimeRecord macosWineRuntimeRecord({
   final libraryPath = macosWineRuntimeRoot(environment);
   final executablePath = macosWineExecutable(environment);
   final isInstalled = fileStatusProbe.exists(executablePath);
+  final versionUrl = environment
+      .nonEmptyValue('KONYAK_MACOS_WINE_VERSION_URL')
+      .match(() => macosWineVersionUrl, (value) => value);
 
   return RuntimeRecord.fromParts(
     definition: RuntimeDefinition(
@@ -40,7 +43,7 @@ RuntimeRecord macosWineRuntimeRecord({
         ),
       ),
       archiveUrl: const Option.none(),
-      versionUrl: Option.of(RuntimeVersionUrl(macosWineVersionUrl)),
+      versionUrl: Option.of(RuntimeVersionUrl(versionUrl)),
     ),
     installedState: InstalledRuntimeState(
       isInstalled: Option.of(isInstalled),
