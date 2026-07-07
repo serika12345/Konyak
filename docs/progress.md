@@ -13,134 +13,69 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-07 11:46 JST
+- Timestamp: 2026-07-07 15:00 JST
 - State: `completed`
-- Branch: `codex/runtime-wine-update-ui`
-- Active work: Clarify Konyak Wine runtime release checks as new runtime
-  versions rather than in-place updates, with a development override for
-  end-to-end release-check verification.
-- Related TODO: no long-running TODO item; this is a focused UX/completion fix
-  for the existing runtime update CLI contract.
-- Purpose: make runtime Releases actionable from Flutter while presenting a
-  newly published runtime release as a new installable runtime version, and add
-  a CLI contract check that proves a newly added `crossover-26.x-konyak.x`
-  release tag is detected as available. Also make the macOS runtime release URL
-  overridable in development so the same `check-runtime-update` path can be
-  verified against a test release feed without publishing a production runtime
-  release first.
+- Branch: parent `codex/runtime-wine-update-ui`; runtime
+  `runtime/konyak-macos-runtime` `main` at
+  `6f84a6d58662287aa01781caf2ac02399e8a044`.
+- Active work: publish a new `serika12345/konyak-macos-runtime` GitHub Release
+  for the GPTK4-capable runtime.
+- Related TODO: no long-running TODO item; this is the runtime release artifact
+  required for the completed GPTK4/runtime update work to be observable from the
+  production release feed.
+- Purpose: the latest runtime CI run succeeded but reused the existing
+  `crossover-26.1.0-konyak.0` tag, so GitHub updated the old Release instead
+  of adding a new one. Produce an actual new runtime Release by bumping the
+  Konyak-owned runtime revision while keeping the CrossOver source version at
+  `26.1.0`.
 - Completed work:
-  - Added startup runtime update state so the UI keeps the full
-    `runtimeUpdate` record returned by `check-runtime-update`.
-  - Changed startup runtime update handling from snackbar-only notification to
-    a confirmation dialog with `Not Now` and `Install`, matching the Konyak app
-    update prompt shape.
-  - Extended the existing manual `Check for Updates...` flow so a current app
-    update check continues into installed managed runtime update checks.
-  - Wired confirmed runtime updates to
-    `install-runtime-update <runtime-id> --json` and refreshes the known runtime
-    list from the returned runtime record.
-  - Added English and Japanese strings plus generated localizations for runtime
-    update prompts, current/unknown status, and check/install failures.
-  - Added widget coverage for startup runtime update prompting, manual menu
-    runtime update checks, runtime update installation, and the runtime update
-    confirmation golden.
-  - Generated and visually inspected
-    `apps/konyak/test/goldens/konyak_wine_update_confirmation_prompt.png`.
-  - Change user-facing runtime release UI copy from "update" to "new version".
-  - Add a CLI contract test for a newly published
-    `crossover-26.1.1-konyak.0` runtime release becoming available over the
-    installed `crossover-26.1.0-konyak.0` runtime stack.
-  - Regenerate Flutter localizations and the runtime confirmation golden.
-  - Added `KONYAK_MACOS_WINE_VERSION_URL` support for the macOS runtime record,
-    matching the existing app update and Linux runtime update URL override
-    pattern.
-- Remaining work: none for the local implementation; publish the verified
-  follow-up commit to the existing draft PR.
-- Next action: commit and push the PR update for review.
+  - Confirmed the public runtime Releases page still shows only
+    `crossover-26.1.0-konyak.0`.
+  - Confirmed the latest runtime `Build runtime` main run succeeded and the
+    publish job completed.
+  - Identified the release-version root cause: runtime version generation still
+    hardcodes `konyak.0` in Nix derivations and source-manifest generation.
+  - Added explicit Konyak runtime release revision metadata and generated
+    `crossover-26.1.0-konyak.1` release metadata while keeping the CrossOver
+    source version at `26.1.0`.
+  - Added runtime release-version and Wine payload-stamping scripts so a
+    Konyak release revision bump does not force a Wine binary rebuild when the
+    Wine build identity is unchanged.
+  - Updated normal and candidate release workflows to create new release tags
+    with `--target "$GITHUB_SHA"`.
+  - Published GitHub Release
+    `https://github.com/serika12345/konyak-macos-runtime/releases/tag/crossover-26.1.0-konyak.1`.
+  - Merged runtime PR
+    `https://github.com/serika12345/konyak-macos-runtime/pull/6` into runtime
+    `main` with `[skip ci]` after the release workflow passed, and cancelled
+    the redundant pull-request workflow run.
+- Remaining work: none for this runtime release.
+- Next action: continue parent PR review/merge for the runtime update UI and
+  release-check wiring.
 - Verification performed:
-  - Failing tests captured before implementation:
-    - `nix develop -c zsh -lc 'cd apps/konyak && flutter test
-      test/widget_test.dart --plain-name "macOS prompts before installing
-      Konyak Wine runtime updates on startup"'`
-    - `nix develop -c zsh -lc 'cd apps/konyak && flutter test
-      test/widget_test.dart --plain-name "macOS app menu command checks Konyak
-      Wine updates"'`
-  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test
-    test/widget_test.dart --plain-name "macOS prompts before installing Konyak
-    Wine runtime updates on startup"'` passed after implementation.
-  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test
-    test/widget_test.dart --plain-name "macOS app menu command checks Konyak
-    Wine updates"'` passed after implementation.
-  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test
-    test/widget_test.dart --update-goldens --plain-name "macOS Konyak Wine
-    update confirmation prompt matches golden"'` passed and wrote the golden.
-  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test
-    test/widget_test.dart --plain-name "macOS Konyak Wine update confirmation
-    prompt matches golden"'` passed.
-  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test
-    test/widget_test.dart'` passed with 131 tests.
-  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test
-    test/app/immutability_test.dart'` passed.
-  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test
-    test/cli/konyak_cli_client_test.dart --plain-name "installs runtime updates
-    through the JSON CLI contract"'` passed.
-  - `nix develop -c zsh -lc 'just flutter-format-check &&
-    just flutter-analyze && just flutter-test'` passed; Flutter test reported
-    469 tests passed.
-  - Initial repository common-gate run failed because
-    `apps/konyak/lib/src/home_loader/home_loader_runtimes.dart` exceeded the
-    governance line-count limit after adding runtime update UI. The update
-    workflow was split into `home_loader_updates.dart`, reducing the original
-    runtime loader file to 499 lines.
-  - `nix develop -c zsh -lc 'git diff --check && git -C
-    runtime/konyak-macos-runtime diff --check && just verify-governance &&
-    just verify-safety && just format-check && just lint'` passed after the
-    split.
-  - For the runtime-release wording follow-up, the new failing expectation was
-    captured with `nix develop -c zsh -lc 'cd apps/konyak && flutter test
-    test/widget_test.dart --plain-name "macOS prompts before installing new
-    Konyak Wine runtime versions on startup"'` before regenerating
-    localizations.
-  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test
-    test/widget_test.dart --plain-name "macOS prompts before installing new
-    Konyak Wine runtime versions on startup"'` passed after regenerating
-    localizations.
-  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test
-    test/cli_contract_runtime_process_update_test.dart --plain-name "runtime
-    update checker reports newly added macOS runtime release versions"'`
-    passed.
-  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test
-    test/widget_test.dart --update-goldens --plain-name "macOS Konyak Wine
-    version confirmation prompt matches golden"'` passed and updated
-    `apps/konyak/test/goldens/konyak_wine_update_confirmation_prompt.png`.
-  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test
-    test/widget_test.dart --plain-name "macOS Konyak Wine version confirmation
-    prompt matches golden"'` passed.
-  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test
-    test/widget_test.dart --plain-name "macOS app menu command checks Konyak
-    Wine runtime versions"'` passed.
-  - `nix develop -c zsh -lc 'just cli-test'` passed.
-  - `nix develop -c zsh -lc 'just flutter-format-check && just
-    flutter-analyze && just flutter-test'` passed; Flutter test reported 469
-    tests passed.
-  - `nix develop -c zsh -lc 'git diff --check && git -C
-    runtime/konyak-macos-runtime diff --check && just verify-governance &&
-    just verify-safety && just format-check && just lint'` passed.
-  - The macOS runtime version URL override failure was captured with `nix
-    develop -c zsh -lc 'cd packages/konyak_cli && dart test
-    test/cli_contract_runtime_process_update_test.dart --plain-name "runtime
-    update checker uses the macOS runtime version URL override"'`; before the
-    implementation it still fetched the production
-    `https://api.github.com/repos/serika12345/konyak-macos-runtime/releases/latest`
-    URL.
-  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart format
-    lib/src/io/runtime_platform_records.dart
-    test/cli_contract_runtime_process_update_test.dart && dart test
-    test/cli_contract_runtime_process_update_test.dart --plain-name "runtime
-    update checker uses the macOS runtime version URL override"'` passed after
-    implementing `KONYAK_MACOS_WINE_VERSION_URL`.
-  - `nix develop -c zsh -lc 'just cli-test'` passed after the override change.
-  - `nix develop -c zsh -lc 'git diff --check && git -C
-    runtime/konyak-macos-runtime diff --check && just verify-governance &&
-    just verify-safety && just format-check && just lint'` passed after the
-    override change.
+  - `gh release list --repo serika12345/konyak-macos-runtime --limit 10`
+    showed only `crossover-26.1.0-konyak.0`.
+  - `gh run view 28790344840 --repo serika12345/konyak-macos-runtime` showed
+    the latest main `Build runtime` run completed successfully, including
+    `Publish runtime release`, on commit
+    `0a09716b3e2df5ca64959cbf4cfc93d94beb7c55`.
+  - `nix develop -c zsh -lc 'git diff --check; nix shell nixpkgs#actionlint -c
+    actionlint .github/workflows/build-runtime.yml
+    .github/workflows/promote-runtime-candidate.yml; nix flake check
+    --all-systems --no-build -L --show-trace'` passed in
+    `runtime/konyak-macos-runtime`.
+  - Runtime `Build runtime` workflow run `28842870557` completed successfully,
+    including `Publish runtime release`.
+  - `gh release list --repo serika12345/konyak-macos-runtime --limit 5` shows
+    `Konyak macOS runtime crossover-26.1.0-konyak.1` as `Latest`.
+  - `gh release view crossover-26.1.0-konyak.1 --repo
+    serika12345/konyak-macos-runtime` reports a non-draft, non-prerelease
+    release targeting commit `67112ba4c221e547774a22fff56c5831840fa205` with
+    the expected three assets.
+  - Downloaded `konyak-macos-runtime.release.json` and
+    `konyak-macos-wine-runtime-stack-source.json` from the release; metadata
+    version and Wine component version are both
+    `crossover-26.1.0-konyak.1`.
+  - Downloaded the published stack archive and inspected
+    `.konyak-runtime-stack.json`; the Wine component version is
+    `crossover-26.1.0-konyak.1`.
