@@ -13,16 +13,17 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-07 11:03 JST
+- Timestamp: 2026-07-07 11:39 JST
 - State: `completed`
 - Branch: `codex/runtime-wine-update-ui`
-- Active work: Bring Konyak Wine runtime update UI up to the Konyak app update
-  flow.
+- Active work: Clarify Konyak Wine runtime release checks as new runtime
+  versions rather than in-place updates.
 - Related TODO: no long-running TODO item; this is a focused UX/completion fix
   for the existing runtime update CLI contract.
-- Purpose: make runtime Releases actionable from Flutter instead of only
-  surfacing a startup snackbar when `check-runtime-update` reports an
-  available Konyak Wine runtime update.
+- Purpose: make runtime Releases actionable from Flutter while presenting a
+  newly published runtime release as a new installable runtime version, and add
+  a CLI contract check that proves a newly added `crossover-26.x-konyak.x`
+  release tag is detected as available.
 - Completed work:
   - Added startup runtime update state so the UI keeps the full
     `runtimeUpdate` record returned by `check-runtime-update`.
@@ -41,9 +42,14 @@ unfinished work.
     confirmation golden.
   - Generated and visually inspected
     `apps/konyak/test/goldens/konyak_wine_update_confirmation_prompt.png`.
+  - Change user-facing runtime release UI copy from "update" to "new version".
+  - Add a CLI contract test for a newly published
+    `crossover-26.1.1-konyak.0` runtime release becoming available over the
+    installed `crossover-26.1.0-konyak.0` runtime stack.
+  - Regenerate Flutter localizations and the runtime confirmation golden.
 - Remaining work: none for the local implementation; publish the verified
-  branch as a draft PR.
-- Next action: commit, push, and open the draft PR for review.
+  follow-up commit to the existing draft PR.
+- Next action: commit and push the PR update for review.
 - Verification performed:
   - Failing tests captured before implementation:
     - `nix develop -c zsh -lc 'cd apps/konyak && flutter test
@@ -83,3 +89,33 @@ unfinished work.
     runtime/konyak-macos-runtime diff --check && just verify-governance &&
     just verify-safety && just format-check && just lint'` passed after the
     split.
+  - For the runtime-release wording follow-up, the new failing expectation was
+    captured with `nix develop -c zsh -lc 'cd apps/konyak && flutter test
+    test/widget_test.dart --plain-name "macOS prompts before installing new
+    Konyak Wine runtime versions on startup"'` before regenerating
+    localizations.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test
+    test/widget_test.dart --plain-name "macOS prompts before installing new
+    Konyak Wine runtime versions on startup"'` passed after regenerating
+    localizations.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test
+    test/cli_contract_runtime_process_update_test.dart --plain-name "runtime
+    update checker reports newly added macOS runtime release versions"'`
+    passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test
+    test/widget_test.dart --update-goldens --plain-name "macOS Konyak Wine
+    version confirmation prompt matches golden"'` passed and updated
+    `apps/konyak/test/goldens/konyak_wine_update_confirmation_prompt.png`.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test
+    test/widget_test.dart --plain-name "macOS Konyak Wine version confirmation
+    prompt matches golden"'` passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test
+    test/widget_test.dart --plain-name "macOS app menu command checks Konyak
+    Wine runtime versions"'` passed.
+  - `nix develop -c zsh -lc 'just cli-test'` passed.
+  - `nix develop -c zsh -lc 'just flutter-format-check && just
+    flutter-analyze && just flutter-test'` passed; Flutter test reported 469
+    tests passed.
+  - `nix develop -c zsh -lc 'git diff --check && git -C
+    runtime/konyak-macos-runtime diff --check && just verify-governance &&
+    just verify-safety && just format-check && just lint'` passed.

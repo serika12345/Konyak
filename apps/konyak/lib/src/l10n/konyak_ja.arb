@@ -1007,18 +1007,18 @@
       }
     }
   },
-  "installRuntimeUpdateTitle": "{runtimeName} アップデートをインストールしますか？",
+  "installRuntimeUpdateTitle": "新しい {runtimeName} バージョンをインストールしますか？",
   "@installRuntimeUpdateTitle": {
-    "description": "Konyak UI string: Install {runtimeName} update?",
+    "description": "Konyak UI string: Install new {runtimeName} version?",
     "placeholders": {
       "runtimeName": {
         "type": "String"
       }
     }
   },
-  "installRuntimeVersionUpdateTitle": "{runtimeName} {latestVersion} アップデートをインストールしますか？",
+  "installRuntimeVersionUpdateTitle": "{runtimeName} {latestVersion} をインストールしますか？",
   "@installRuntimeVersionUpdateTitle": {
-    "description": "Konyak UI string: Install {runtimeName} {latestVersion} update?",
+    "description": "Konyak UI string: Install {runtimeName} {latestVersion}?",
     "placeholders": {
       "runtimeName": {
         "type": "String"
@@ -1028,16 +1028,16 @@
       }
     }
   },
-  "installRuntimeUpdateMessage": "{runtimeName} のアップデートがあります。今すぐインストールしますか？",
+  "installRuntimeUpdateMessage": "新しい {runtimeName} バージョンがあります。今すぐインストールしますか？",
   "@installRuntimeUpdateMessage": {
-    "description": "Konyak UI string: A {runtimeName} update is available. Install it now?",
+    "description": "Konyak UI string: A new {runtimeName} version is available. Install it now?",
     "placeholders": {
       "runtimeName": {
         "type": "String"
       }
     }
   },
-  "installRuntimeVersionUpdateMessage": "{runtimeName} {latestVersion} があります。今すぐインストールしますか？",
+  "installRuntimeVersionUpdateMessage": "{runtimeName} {latestVersion} が利用可能です。今すぐインストールしますか？",
   "@installRuntimeVersionUpdateMessage": {
     "description": "Konyak UI string: {runtimeName} {latestVersion} is available. Install it now?",
     "placeholders": {
@@ -1049,27 +1049,27 @@
       }
     }
   },
-  "installedRuntimeUpdate": "{label} アップデートをインストールしました。",
+  "installedRuntimeUpdate": "{label} をインストールしました。",
   "@installedRuntimeUpdate": {
-    "description": "Konyak UI string: Installed {label} update.",
+    "description": "Konyak UI string: Installed {label}.",
     "placeholders": {
       "label": {
         "type": "String"
       }
     }
   },
-  "runtimeIsUpToDate": "{runtimeName} は最新です。",
+  "runtimeIsUpToDate": "{runtimeName} は最新バージョンです。",
   "@runtimeIsUpToDate": {
-    "description": "Konyak UI string: {runtimeName} is up to date.",
+    "description": "Konyak UI string: {runtimeName} is on the latest version.",
     "placeholders": {
       "runtimeName": {
         "type": "String"
       }
     }
   },
-  "runtimeUpdateStatusIsUnknown": "{runtimeName} のアップデート状態は不明です。",
+  "runtimeUpdateStatusIsUnknown": "{runtimeName} のバージョン状態は不明です。",
   "@runtimeUpdateStatusIsUnknown": {
-    "description": "Konyak UI string: {runtimeName} update status is unknown.",
+    "description": "Konyak UI string: {runtimeName} version status is unknown.",
     "placeholders": {
       "runtimeName": {
         "type": "String"
@@ -1103,9 +1103,9 @@
       }
     }
   },
-  "runtimeUpdateCheckFailed": "{runtimeName} のアップデート確認に失敗しました: {message}",
+  "runtimeUpdateCheckFailed": "{runtimeName} のバージョン確認に失敗しました: {message}",
   "@runtimeUpdateCheckFailed": {
-    "description": "Konyak UI string: {runtimeName} update check failed: {message}",
+    "description": "Konyak UI string: {runtimeName} version check failed: {message}",
     "placeholders": {
       "runtimeName": {
         "type": "String"
@@ -1115,9 +1115,9 @@
       }
     }
   },
-  "runtimeUpdateInstallFailed": "{runtimeName} アップデートのインストールに失敗しました: {message}",
+  "runtimeUpdateInstallFailed": "{runtimeName} バージョンのインストールに失敗しました: {message}",
   "@runtimeUpdateInstallFailed": {
-    "description": "Konyak UI string: {runtimeName} update install failed: {message}",
+    "description": "Konyak UI string: {runtimeName} version install failed: {message}",
     "placeholders": {
       "runtimeName": {
         "type": "String"

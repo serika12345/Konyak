@@ -722,7 +722,7 @@ void defineMacosStartupAndRuntimeWidgetTests() {
     );
   });
 
-  testWidgets('macOS Konyak Wine update confirmation prompt matches golden', (
+  testWidgets('macOS Konyak Wine version confirmation prompt matches golden', (
     WidgetTester tester,
   ) async {
     await _loadKonyakTestFonts();
@@ -803,7 +803,7 @@ void defineMacosStartupAndRuntimeWidgetTests() {
     await tester.pumpAndSettle();
 
     expect(
-      find.text('Install Konyak macOS Wine crossover-26.1.1-konyak.0 update?'),
+      find.text('Install Konyak macOS Wine crossover-26.1.1-konyak.0?'),
       findsOneWidget,
     );
     expect(
@@ -964,7 +964,7 @@ void defineMacosStartupAndRuntimeWidgetTests() {
   });
 
   testWidgets(
-    'macOS prompts before installing Konyak Wine runtime updates on startup',
+    'macOS prompts before installing new Konyak Wine runtime versions on startup',
     (WidgetTester tester) async {
       final runner = _QueuedProcessRunner([
         const ProcessRunResult(
@@ -1056,9 +1056,7 @@ void defineMacosStartupAndRuntimeWidgetTests() {
       await tester.pumpAndSettle();
 
       expect(
-        find.text(
-          'Install Konyak macOS Wine crossover-26.1.1-konyak.0 update?',
-        ),
+        find.text('Install Konyak macOS Wine crossover-26.1.1-konyak.0?'),
         findsOneWidget,
       );
       expect(
@@ -1096,15 +1094,13 @@ void defineMacosStartupAndRuntimeWidgetTests() {
         ),
       );
       expect(
-        find.text(
-          'Installed Konyak macOS Wine crossover-26.1.1-konyak.0 update.',
-        ),
+        find.text('Installed Konyak macOS Wine crossover-26.1.1-konyak.0.'),
         findsOneWidget,
       );
     },
   );
 
-  testWidgets('macOS app menu command checks Konyak Wine updates', (
+  testWidgets('macOS app menu command checks Konyak Wine runtime versions', (
     WidgetTester tester,
   ) async {
     final runner = _QueuedProcessRunner([
@@ -1204,7 +1200,7 @@ void defineMacosStartupAndRuntimeWidgetTests() {
     await tester.pumpAndSettle();
 
     expect(
-      find.text('Install Konyak macOS Wine crossover-26.1.1-konyak.0 update?'),
+      find.text('Install Konyak macOS Wine crossover-26.1.1-konyak.0?'),
       findsOneWidget,
     );
     expect(
@@ -1227,9 +1223,7 @@ void defineMacosStartupAndRuntimeWidgetTests() {
       ),
     );
     expect(
-      find.text(
-        'Installed Konyak macOS Wine crossover-26.1.1-konyak.0 update.',
-      ),
+      find.text('Installed Konyak macOS Wine crossover-26.1.1-konyak.0.'),
       findsOneWidget,
     );
   });

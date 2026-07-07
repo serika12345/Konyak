@@ -3660,6 +3660,85 @@ void main() {
     },
   );
 
+  test(
+    'runtime update checker reports newly added macOS runtime release versions',
+    () {
+      final checker = DartIoRuntimeUpdateChecker(
+        runtimeCatalog: StaticRuntimeCatalog([
+          runtimeRecordFixture(
+            id: 'konyak-macos-wine',
+            name: 'Konyak macOS Wine',
+            platform: 'macos',
+            architecture: 'x86_64',
+            runnerKind: 'macosWine',
+            isBundled: false,
+            isUpdateable: true,
+            versionUrl: Option.of('https://example.invalid/releases/latest'),
+            stack: Option.of(
+              runtimeStackFixture(
+                id: 'macos-konyak-runtime-stack',
+                name: 'Konyak macOS runtime stack',
+                compatibilityTarget: 'macos-konyak-runtime-stack',
+                components: [
+                  runtimeStackComponentFixture(
+                    id: 'wine',
+                    name: 'Wine',
+                    role: 'windows-runner',
+                    isRequired: true,
+                    paths: const <String>[],
+                    missingPaths: const <String>[],
+                    version: Option.of('crossover-26.1.0-konyak.0'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ]),
+        releaseMetadataFetcher: StaticRuntimeReleaseMetadataFetcher(
+          RuntimeReleaseMetadata(
+            version: ReleaseVersion('crossover-26.1.1-konyak.0'),
+            sourceManifestUrl: Option.of(
+              RuntimeSourceManifestUrl(
+                'https://example.invalid/'
+                'konyak-macos-wine-runtime-stack-source.json',
+              ),
+            ),
+            sourceManifestSignatureUrl: Option.of(
+              RuntimeSourceManifestSignatureUrl(
+                'https://example.invalid/'
+                'konyak-macos-wine-runtime-stack-source.json.sig',
+              ),
+            ),
+          ),
+        ),
+      );
+
+      final result = checker.check(RuntimeId('konyak-macos-wine'));
+
+      expect(result, isA<RuntimeUpdateCheckCompleted>());
+      final completed = result as RuntimeUpdateCheckCompleted;
+      expect(completed.update.status.value, 'available');
+      expect(
+        completed.update.currentVersion.toNullable()?.value,
+        'crossover-26.1.0-konyak.0',
+      );
+      expect(
+        completed.update.latestVersion.toNullable()?.value,
+        'crossover-26.1.1-konyak.0',
+      );
+      expect(
+        completed.update.sourceManifestUrl.toNullable()?.value,
+        'https://example.invalid/'
+        'konyak-macos-wine-runtime-stack-source.json',
+      );
+      expect(
+        completed.update.sourceManifestSignatureUrl.toNullable()?.value,
+        'https://example.invalid/'
+        'konyak-macos-wine-runtime-stack-source.json.sig',
+      );
+    },
+  );
+
   test('validate-runtime --json returns runtime loader checks', () {
     final validator = RecordingRuntimeValidator(
       result: RuntimeValidationCompleted(

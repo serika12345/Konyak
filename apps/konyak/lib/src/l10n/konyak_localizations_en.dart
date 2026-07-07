@@ -750,7 +750,7 @@ class KonyakLocalizationsEn extends KonyakLocalizations {
 
   @override
   String installRuntimeUpdateTitle(String runtimeName) {
-    return 'Install $runtimeName update?';
+    return 'Install new $runtimeName version?';
   }
 
   @override
@@ -758,12 +758,12 @@ class KonyakLocalizationsEn extends KonyakLocalizations {
     String runtimeName,
     String latestVersion,
   ) {
-    return 'Install $runtimeName $latestVersion update?';
+    return 'Install $runtimeName $latestVersion?';
   }
 
   @override
   String installRuntimeUpdateMessage(String runtimeName) {
-    return 'A $runtimeName update is available. Install it now?';
+    return 'A new $runtimeName version is available. Install it now?';
   }
 
   @override
@@ -776,17 +776,17 @@ class KonyakLocalizationsEn extends KonyakLocalizations {
 
   @override
   String installedRuntimeUpdate(String label) {
-    return 'Installed $label update.';
+    return 'Installed $label.';
   }
 
   @override
   String runtimeIsUpToDate(String runtimeName) {
-    return '$runtimeName is up to date.';
+    return '$runtimeName is on the latest version.';
   }
 
   @override
   String runtimeUpdateStatusIsUnknown(String runtimeName) {
-    return '$runtimeName update status is unknown.';
+    return '$runtimeName version status is unknown.';
   }
 
   @override
@@ -806,12 +806,12 @@ class KonyakLocalizationsEn extends KonyakLocalizations {
 
   @override
   String runtimeUpdateCheckFailed(String runtimeName, String message) {
-    return '$runtimeName update check failed: $message';
+    return '$runtimeName version check failed: $message';
   }
 
   @override
   String runtimeUpdateInstallFailed(String runtimeName, String message) {
-    return '$runtimeName update install failed: $message';
+    return '$runtimeName version install failed: $message';
   }
 
   @override
