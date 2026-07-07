@@ -78,10 +78,18 @@ The fixture verifies that the launch process can:
 
 - Create a D3D12 device and present frames.
 - Observe `D3DM_ENABLE_METALFX=1` when required.
-- Load `nvngx.dll` and `nvapi64.dll` when required.
+- Load `nvngx.dll` and `nvapi64.dll` when required, either before D3D12 setup
+  or after D3D12 presentation.
 - Write `C:\konyak-dlss-metalfx-preflight-ok.txt`.
 - Write `C:\konyak-dlss-metalfx-preflight-evidence.txt` with the observed
   D3DMetal, DXR, GPTK, and NVIDIA shim state.
+
+Use the default `--probe-nv-shims-before-d3d12` mode to catch missing or
+unloadable NVIDIA shims before rendering. Use
+`--probe-nv-shims-after-d3d12` only as a diagnostic comparison when
+investigating whether a GPTK/D3DMetal payload requires D3D12 initialization
+before its NVIDIA shim DLLs can attach. The evidence file records
+`nv_shim_probe_phase`.
 
 This fixture is a preflight harness, not a DLSS SDK integration. Passing it
 proves the Konyak D3DMetal/DLSS MetalFX launch contract and shim availability.

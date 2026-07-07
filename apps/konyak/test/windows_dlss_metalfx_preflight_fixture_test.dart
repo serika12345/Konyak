@@ -36,6 +36,9 @@ void main() {
     expect(source, contains('CreateSwapChainForHwnd'));
     expect(source, contains('LoadLibraryW(L"nvngx.dll")'));
     expect(source, contains('LoadLibraryW(L"nvapi64.dll")'));
+    expect(source, contains('--probe-nv-shims-before-d3d12'));
+    expect(source, contains('--probe-nv-shims-after-d3d12'));
+    expect(source, contains('nv_shim_probe_phase='));
     expect(source, contains('D3DM_ENABLE_METALFX'));
     expect(source, contains('KONYAK_DLSS_METALFX_PREFLIGHT_OK'));
     expect(source, contains('konyak-dlss-metalfx-preflight-ok.txt'));

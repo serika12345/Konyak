@@ -13,8 +13,8 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-07 19:45 JST
-- State: `blocked`
+- Timestamp: 2026-07-07 20:16 JST
+- State: `in_progress`
 - Branch: `task/dlss-metalfx-render-proof`; this snapshot is committed at the
   branch tip for the DLSS/MetalFX proof harness.
 - Active work: DLSS/MetalFX rendering proof harness.
@@ -61,14 +61,24 @@ unfinished work.
     `nvapi64.dll` returned false with `GetLastError=1114`
     (`ERROR_DLL_INIT_FAILED`). No end-to-end DLSS/MetalFX rendering proof is
     claimed.
-- Remaining work: investigate why the current GPTK4 D3DMetal runtime path
-  cannot initialize `nvapi64.dll` under Konyak's public `run-program --json`
-  launch contract, then rerun `scripts/run_macos_dlss_metalfx_cli_smoke.zsh`
-  with either the preflight fixture or a real DLSS-capable Windows program.
-- Next action: open a focused runtime investigation against the captured
-  `nvapi64.dll` initialization failure. Use the same smoke command and compare
-  against CrossOver or a known-good GPTK/D3DMetal launch path before changing
-  runtime contracts.
+  - Continued GPTK4 investigation through the public `run-program --json`
+    path. With `--require-nv-shims` removed, GPTK4 still returned
+    `nvapi64_error=1114` but presented D3D12 frames successfully, proving the
+    GPTK4 failure is scoped to the NVIDIA shim attach path rather than the
+    D3D12/D3DMetal present path.
+  - Re-ran the same GPTK4 bottle with `dlssMetalFx=false`; `D3DM_ENABLE_METALFX`
+    was absent and `nvapi64.dll` still failed with `GetLastError=1114`, so the
+    MetalFX environment switch itself is not the failure trigger.
+  - Added an in-progress preflight fixture option to compare NVIDIA shim probe
+    timing before D3D12 setup versus after D3D12 presentation.
+- Remaining work: build the updated Windows preflight fixture in CI, rerun the
+  GPTK4 public CLI smoke with `--probe-nv-shims-after-d3d12`, and determine
+  whether GPTK4 `nvapi64.dll` requires prior D3D12 initialization or fails
+  independently of load order.
+- Next action: run focused tests for the updated fixture contract, push the
+  branch so the Windows preflight artifact is rebuilt, download the artifact,
+  and run the GPTK4 after-D3D12 comparison through
+  `scripts/run_macos_dlss_metalfx_cli_smoke.zsh`.
 - Verification performed:
   - `git status --short --branch` showed local `main` clean and aligned with
     `origin/main` before branching.
@@ -98,3 +108,13 @@ unfinished work.
     `.dart_tool/konyak/macos-dlss-metalfx-smoke/logs/dlss-metalfx-run.cxlog`
     and
     `.dart_tool/konyak/macos-dlss-metalfx-smoke/logs/preflight-evidence.txt`.
+  - `nix develop -c zsh -lc 'KONYAK_MACOS_DLSS_METALFX_SMOKE_WORK_ROOT="$PWD/.dart_tool/konyak/macos-dlss-metalfx-smoke-gptk4-no-shim-require" KONYAK_MACOS_DLSS_METALFX_SMOKE_PROGRAM_EXE="$PWD/.dart_tool/konyak/windows-dlss-metalfx-preflight/konyak_dlss_metalfx_preflight.exe" KONYAK_MACOS_DLSS_METALFX_SMOKE_GPTK_SOURCE=/Users/masato/Downloads/Game_Porting_Toolkit_4.0_beta_1.dmg KONYAK_MACOS_DLSS_METALFX_SMOKE_GPTK_VERSION=4 KONYAK_MACOS_DLSS_METALFX_SMOKE_ARGUMENTS="--frames 60 --require-metalfx-env" KONYAK_MACOS_DLSS_METALFX_SMOKE_WAIT_SECONDS=20 ./scripts/run_macos_dlss_metalfx_cli_smoke.zsh'`
+    passed and wrote
+    `.dart_tool/konyak/macos-dlss-metalfx-smoke-gptk4-no-shim-require/logs/preflight-evidence.txt`
+    with `marker=KONYAK_DLSS_METALFX_PREFLIGHT_OK`,
+    `d3d12_presented=true`, `nvngx_loaded=true`,
+    `nvapi64_loaded=false`, and `nvapi64_error=1114`.
+  - Manual public CLI comparison against the same GPTK4 smoke bottle with
+    `dlssMetalFx=false` wrote
+    `.dart_tool/konyak/macos-dlss-metalfx-smoke-gptk4-dlss-off/logs/preflight-evidence.txt`
+    with `D3DM_ENABLE_METALFX=` and the same `nvapi64_error=1114` failure.

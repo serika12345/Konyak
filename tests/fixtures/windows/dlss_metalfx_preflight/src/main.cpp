@@ -24,10 +24,17 @@ constexpr wchar_t kDefaultEvidencePath[] =
 constexpr wchar_t kWindowClassName[] =
     L"KonyakDlssMetalFxPreflightWindow";
 
+enum class NvidiaShimProbePhase {
+  beforeD3D12,
+  afterD3D12,
+};
+
 struct Options {
   int frames = 4;
   bool requireMetalFxEnvironment = false;
   bool requireNvidiaShims = false;
+  NvidiaShimProbePhase nvidiaShimProbePhase =
+      NvidiaShimProbePhase::beforeD3D12;
   std::wstring sentinelPath = kDefaultSuccessSentinelPath;
   std::wstring evidencePath = kDefaultEvidencePath;
 };
@@ -187,6 +194,22 @@ void closeModule(ModuleProbe& probe) {
     FreeLibrary(probe.handle);
     probe.handle = nullptr;
   }
+}
+
+void probeNvidiaShims(ModuleProbe& nvngx, ModuleProbe& nvapi64) {
+  nvngx = probeModule(L"nvngx.dll");
+  nvapi64 = probeModule(L"nvapi64.dll");
+}
+
+const char* nvidiaShimProbePhaseName(NvidiaShimProbePhase phase) {
+  switch (phase) {
+    case NvidiaShimProbePhase::beforeD3D12:
+      return "before_d3d12";
+    case NvidiaShimProbePhase::afterD3D12:
+      return "after_d3d12";
+  }
+
+  return "unknown";
 }
 
 LRESULT CALLBACK windowProc(
@@ -441,6 +464,10 @@ Options parseOptions(int argc, wchar_t** argv) {
       options.requireMetalFxEnvironment = true;
     } else if (argument == L"--require-nv-shims") {
       options.requireNvidiaShims = true;
+    } else if (argument == L"--probe-nv-shims-before-d3d12") {
+      options.nvidiaShimProbePhase = NvidiaShimProbePhase::beforeD3D12;
+    } else if (argument == L"--probe-nv-shims-after-d3d12") {
+      options.nvidiaShimProbePhase = NvidiaShimProbePhase::afterD3D12;
     }
   }
 
@@ -463,6 +490,9 @@ std::string evidenceText(
     text += "error=" + error + "\n";
   }
   text += "frames=" + std::to_string(options.frames) + "\n";
+  text += "nv_shim_probe_phase=" +
+      std::string(nvidiaShimProbePhaseName(options.nvidiaShimProbePhase)) +
+      "\n";
   text += std::string("d3d12_presented=") +
       (d3d12Presented ? "true" : "false") + "\n";
   text += "D3DM_ENABLE_METALFX=" + utf8FromWide(metalFx) + "\n";
@@ -498,14 +528,12 @@ int wmain(int argc, wchar_t** argv) {
     dxr = environmentValue(L"D3DM_SUPPORT_DXR");
     gptkPath = environmentValue(L"CX_APPLEGPTK_LIBD3DSHARED_PATH");
 
-    nvngx = probeModule(L"nvngx.dll");
-    nvapi64 = probeModule(L"nvapi64.dll");
+    if (options.nvidiaShimProbePhase == NvidiaShimProbePhase::beforeD3D12) {
+      probeNvidiaShims(nvngx, nvapi64);
+    }
 
     if (options.requireMetalFxEnvironment && metalFx != L"1") {
       throw std::runtime_error("D3DM_ENABLE_METALFX was not set to 1");
-    }
-    if (options.requireNvidiaShims && (!nvngx.loaded || !nvapi64.loaded)) {
-      throw std::runtime_error("NVIDIA NGX shim DLLs were not both loadable");
     }
 
     HINSTANCE instance = GetModuleHandleW(nullptr);
@@ -517,6 +545,13 @@ int wmain(int argc, wchar_t** argv) {
       drawFrame(state, static_cast<UINT>(frame));
     }
     d3d12Presented = true;
+
+    if (options.nvidiaShimProbePhase == NvidiaShimProbePhase::afterD3D12) {
+      probeNvidiaShims(nvngx, nvapi64);
+    }
+    if (options.requireNvidiaShims && (!nvngx.loaded || !nvapi64.loaded)) {
+      throw std::runtime_error("NVIDIA NGX shim DLLs were not both loadable");
+    }
 
     waitForGpu(state);
     writeTextFile(
