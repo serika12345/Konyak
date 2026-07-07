@@ -1467,6 +1467,54 @@ abstract class KonyakLocalizations {
   /// **'Installing {label} update. Konyak will restart.'**
   String installingKonyakUpdate(String label);
 
+  /// Konyak UI string: Install new {runtimeName} version?
+  ///
+  /// In en, this message translates to:
+  /// **'Install new {runtimeName} version?'**
+  String installRuntimeUpdateTitle(String runtimeName);
+
+  /// Konyak UI string: Install {runtimeName} {latestVersion}?
+  ///
+  /// In en, this message translates to:
+  /// **'Install {runtimeName} {latestVersion}?'**
+  String installRuntimeVersionUpdateTitle(
+    String runtimeName,
+    String latestVersion,
+  );
+
+  /// Konyak UI string: A new {runtimeName} version is available. Install it now?
+  ///
+  /// In en, this message translates to:
+  /// **'A new {runtimeName} version is available. Install it now?'**
+  String installRuntimeUpdateMessage(String runtimeName);
+
+  /// Konyak UI string: {runtimeName} {latestVersion} is available. Install it now?
+  ///
+  /// In en, this message translates to:
+  /// **'{runtimeName} {latestVersion} is available. Install it now?'**
+  String installRuntimeVersionUpdateMessage(
+    String runtimeName,
+    String latestVersion,
+  );
+
+  /// Konyak UI string: Installed {label}.
+  ///
+  /// In en, this message translates to:
+  /// **'Installed {label}.'**
+  String installedRuntimeUpdate(String label);
+
+  /// Konyak UI string: {runtimeName} is on the latest version.
+  ///
+  /// In en, this message translates to:
+  /// **'{runtimeName} is on the latest version.'**
+  String runtimeIsUpToDate(String runtimeName);
+
+  /// Konyak UI string: {runtimeName} version status is unknown.
+  ///
+  /// In en, this message translates to:
+  /// **'{runtimeName} version status is unknown.'**
+  String runtimeUpdateStatusIsUnknown(String runtimeName);
+
   /// Konyak UI string: Updates available: {labels}
   ///
   /// In en, this message translates to:
@@ -1484,6 +1532,18 @@ abstract class KonyakLocalizations {
   /// In en, this message translates to:
   /// **'Konyak update install failed: {message}'**
   String konyakUpdateInstallFailed(String message);
+
+  /// Konyak UI string: {runtimeName} version check failed: {message}
+  ///
+  /// In en, this message translates to:
+  /// **'{runtimeName} version check failed: {message}'**
+  String runtimeUpdateCheckFailed(String runtimeName, String message);
+
+  /// Konyak UI string: {runtimeName} version install failed: {message}
+  ///
+  /// In en, this message translates to:
+  /// **'{runtimeName} version install failed: {message}'**
+  String runtimeUpdateInstallFailed(String runtimeName, String message);
 
   /// Konyak UI string: Installed {runtimeName}
   ///

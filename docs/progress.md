@@ -13,103 +13,69 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-07 10:00 JST
+- Timestamp: 2026-07-07 15:00 JST
 - State: `completed`
-- Branch: `main`
-- Active work: Harden Konyak Pages reruns after repeated Pages deployment
-  failures.
-- Related TODO: `docs/todo.md` now points at the next DLSS/MetalFX
-  rendering-proof task; the Gcenx GPTK4 CI follow-up remains deferred until a
-  Gcenx GPTK4 binary release exists.
-- Release tag: `v1.0.7`.
-- GitHub Release: https://github.com/serika12345/Konyak/releases/tag/v1.0.7
-- Release workflow:
-  https://github.com/serika12345/Konyak/actions/runs/28798279839 passed and
-  published the GitHub Release assets.
-- Pages failure root cause: failed-job reruns of `Konyak Pages` reused the
-  default `github-pages` artifact name in the same workflow run. GitHub kept
-  the previous attempt's artifact, so `actions/deploy-pages` saw multiple
-  artifacts with the same name and failed before deployment.
-- Runtime release: parent runtime release locator already points at the latest
-  published `serika12345/konyak-macos-runtime` Release,
-  `crossover-26.1.0-konyak.0`, with no parent JSON update needed.
-- Runtime branch: no runtime submodule changes planned; parent `main` records
-  runtime submodule commit `61624ad`, which has the same tree as runtime
-  `origin/main` merge commit `0a09716b`.
-- Purpose: make Pages deployment reruns deterministic by avoiding artifact-name
-  collisions between rerun attempts, instead of relying on empty commits or
-  manually dispatched clean runs to hide failed checks.
+- Branch: parent `codex/runtime-wine-update-ui`; runtime
+  `runtime/konyak-macos-runtime` `main` at
+  `6f84a6d58662287aa01781caf2ac02399e8a044`.
+- Active work: publish a new `serika12345/konyak-macos-runtime` GitHub Release
+  for the GPTK4-capable runtime.
+- Related TODO: no long-running TODO item; this is the runtime release artifact
+  required for the completed GPTK4/runtime update work to be observable from the
+  production release feed.
+- Purpose: the latest runtime CI run succeeded but reused the existing
+  `crossover-26.1.0-konyak.0` tag, so GitHub updated the old Release instead
+  of adding a new one. Produce an actual new runtime Release by bumping the
+  Konyak-owned runtime revision while keeping the CrossOver source version at
+  `26.1.0`.
 - Completed work:
-  - Updated `.github/workflows/pages.yml` so `actions/upload-pages-artifact`
-    and `actions/deploy-pages` both use
-    `github-pages-${{ github.run_id }}-${{ github.run_attempt }}`.
-  - Confirmed `actionlint` is not currently available in the Nix dev shell, so
-    final syntax/protocol validation for the workflow change must come from the
-    GitHub Actions run.
-  - Confirmed the runtime release list and latest runtime release assets; the
-    parent `runtime/macos-wine-release.json` already uses the latest runtime
-    release tag.
-  - Prepared `apps/konyak/pubspec.yaml` version `1.0.7+8`.
-  - Prepared `packages/konyak_cli/lib/src/shared/model_constants.dart` default
-    Konyak app version `1.0.7`.
-  - Added `docs/releases/v1.0.7.md` with GPTK4 import support and
-    CrossOver-compatible D3D10 fallback behavior as primary highlights.
-  - Stabilized the new GPTK mismatch golden test for Linux CI rendering
-    variance before moving the unpublished `v1.0.7` tag to the verified commit.
-  - Published `v1.0.7` with macOS DMG, Linux AppImage, platform release
-    metadata, Linux runtime source-manifest assets, and combined `SHA256SUMS`.
-- Remaining work: none for the local Pages rerun hardening change.
-- Next action: continue with the next TODO-backed DLSS/MetalFX rendering-proof
-  task when requested.
+  - Confirmed the public runtime Releases page still shows only
+    `crossover-26.1.0-konyak.0`.
+  - Confirmed the latest runtime `Build runtime` main run succeeded and the
+    publish job completed.
+  - Identified the release-version root cause: runtime version generation still
+    hardcodes `konyak.0` in Nix derivations and source-manifest generation.
+  - Added explicit Konyak runtime release revision metadata and generated
+    `crossover-26.1.0-konyak.1` release metadata while keeping the CrossOver
+    source version at `26.1.0`.
+  - Added runtime release-version and Wine payload-stamping scripts so a
+    Konyak release revision bump does not force a Wine binary rebuild when the
+    Wine build identity is unchanged.
+  - Updated normal and candidate release workflows to create new release tags
+    with `--target "$GITHUB_SHA"`.
+  - Published GitHub Release
+    `https://github.com/serika12345/konyak-macos-runtime/releases/tag/crossover-26.1.0-konyak.1`.
+  - Merged runtime PR
+    `https://github.com/serika12345/konyak-macos-runtime/pull/6` into runtime
+    `main` with `[skip ci]` after the release workflow passed, and cancelled
+    the redundant pull-request workflow run.
+- Remaining work: none for this runtime release.
+- Next action: continue parent PR review/merge for the runtime update UI and
+  release-check wiring.
 - Verification performed:
-  - `gh run list --repo serika12345/Konyak --workflow pages.yml --limit 20
-    --json databaseId,displayTitle,event,headBranch,headSha,status,
-    conclusion,createdAt,url` showed repeated historical Pages failures,
-    including the rerun artifact collision on
-    https://github.com/serika12345/Konyak/actions/runs/28798935826.
-  - `nix develop -c zsh -lc 'command -v actionlint || true'` found no
-    `actionlint` executable in the current dev shell.
-  - `nix develop -c zsh -lc 'git diff --check && git -C
-    runtime/konyak-macos-runtime diff --check && just verify-governance &&
-    just verify-safety && just format-check && just lint'` passed after the
-    Pages workflow change.
-  - `gh release list --repo serika12345/konyak-macos-runtime --limit 5
-    --json tagName,isLatest,isDraft,isPrerelease,publishedAt` confirmed
-    `crossover-26.1.0-konyak.0` is the latest runtime release.
-  - `gh api repos/serika12345/konyak-macos-runtime/releases/latest --jq
-    '{tag_name, name, draft, prerelease, published_at, assets:
-    [.assets[].name]}'` confirmed the latest runtime release assets include
-    `konyak-macos-runtime.release.json`,
-    `konyak-macos-wine-runtime-stack-source.json`, and
-    `konyak-macos-wine-runtime-stack.tar.zst`.
-  - `nix develop -c zsh -lc 'python3 scripts/prepare_release.py --version
-    1.0.7 --release-notes
-    .dart_tool/konyak/release-notes-v1.0.7.md --gate '\''just
-    release-candidate-gates'\'''` passed; this ran `just verify`, the macOS
-    release build, packaged runtime extraction smoke, DMG layout smoke,
-    Finder integration smoke with PuTTY, packaged app CLI bridge smoke, and app
-    update handoff smoke before preparing `v1.0.7`.
-  - Initial publish workflow run
-    https://github.com/serika12345/Konyak/actions/runs/28797616198 failed in
-    Linux `just verify` because the new GPTK mismatch golden differed by
-    3.54%, just above its 3% comparator tolerance.
-  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test
-    test/widget_test.dart --plain-name "macOS settings dialog shows GPTK
-    version mismatch import errors"'` passed after raising that golden's
-    comparator tolerance to 4%.
-  - `nix develop -c zsh -lc 'just flutter-format-check &&
-    just flutter-analyze && just flutter-test'` passed; Flutter test reported
-    467 tests passed.
-  - `nix develop -c zsh -lc 'git diff --check && git -C
-    runtime/konyak-macos-runtime diff --check && just verify-governance &&
-    just verify-safety && just format-check && just lint'` passed.
-  - Publish workflow run
-    https://github.com/serika12345/Konyak/actions/runs/28798279839 passed:
-    Linux AppImage, macOS app, repository verify, and GitHub Release publish
-    jobs all succeeded.
-  - `gh release view v1.0.7 --repo serika12345/Konyak --json
-    tagName,name,isDraft,isPrerelease,isImmutable,publishedAt,url,
-    targetCommitish,assets` confirmed the Release is published and includes
-    `Konyak-1.0.7-macos-arm64.dmg`,
-    `Konyak-1.0.7-linux-x86_64.AppImage`, platform metadata, Linux runtime
-    source-manifest assets, and `SHA256SUMS`.
+  - `gh release list --repo serika12345/konyak-macos-runtime --limit 10`
+    showed only `crossover-26.1.0-konyak.0`.
+  - `gh run view 28790344840 --repo serika12345/konyak-macos-runtime` showed
+    the latest main `Build runtime` run completed successfully, including
+    `Publish runtime release`, on commit
+    `0a09716b3e2df5ca64959cbf4cfc93d94beb7c55`.
+  - `nix develop -c zsh -lc 'git diff --check; nix shell nixpkgs#actionlint -c
+    actionlint .github/workflows/build-runtime.yml
+    .github/workflows/promote-runtime-candidate.yml; nix flake check
+    --all-systems --no-build -L --show-trace'` passed in
+    `runtime/konyak-macos-runtime`.
+  - Runtime `Build runtime` workflow run `28842870557` completed successfully,
+    including `Publish runtime release`.
+  - `gh release list --repo serika12345/konyak-macos-runtime --limit 5` shows
+    `Konyak macOS runtime crossover-26.1.0-konyak.1` as `Latest`.
+  - `gh release view crossover-26.1.0-konyak.1 --repo
+    serika12345/konyak-macos-runtime` reports a non-draft, non-prerelease
+    release targeting commit `67112ba4c221e547774a22fff56c5831840fa205` with
+    the expected three assets.
+  - Downloaded `konyak-macos-runtime.release.json` and
+    `konyak-macos-wine-runtime-stack-source.json` from the release; metadata
+    version and Wine component version are both
+    `crossover-26.1.0-konyak.1`.
+  - Downloaded the published stack archive and inspected
+    `.konyak-runtime-stack.json`; the Wine component version is
+    `crossover-26.1.0-konyak.1`.

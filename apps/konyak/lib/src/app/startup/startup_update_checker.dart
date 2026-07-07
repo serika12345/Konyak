@@ -41,16 +41,31 @@ sealed class StartupKonyakUpdateState with _$StartupKonyakUpdateState {
       StartupKonyakUpdateAvailable;
 }
 
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class StartupRuntimeUpdateState with _$StartupRuntimeUpdateState {
+  const factory StartupRuntimeUpdateState.unavailable() =
+      StartupRuntimeUpdateUnavailable;
+
+  const factory StartupRuntimeUpdateState.available(UpdateCheckSummary update) =
+      StartupRuntimeUpdateAvailable;
+}
+
 final class StartupUpdateCheckResult {
   StartupUpdateCheckResult({
     required List<String> availableUpdateLabels,
     required this.knownRuntimesState,
     required this.konyakUpdateState,
+    required this.runtimeUpdateState,
   }) : availableUpdateLabels = List.unmodifiable(availableUpdateLabels);
 
   final List<String> availableUpdateLabels;
   final StartupKnownRuntimesState knownRuntimesState;
   final StartupKonyakUpdateState konyakUpdateState;
+  final StartupRuntimeUpdateState runtimeUpdateState;
 }
 
 final class StartupUpdateChecker {
@@ -66,11 +81,13 @@ final class StartupUpdateChecker {
         availableUpdateLabels: <String>[],
         knownRuntimesState: const StartupKnownRuntimesState.skipped(),
         konyakUpdateState: const StartupKonyakUpdateState.unavailable(),
+        runtimeUpdateState: const StartupRuntimeUpdateState.unavailable(),
       );
     }
 
     final labels = <String>[];
     var konyakUpdateState = const StartupKonyakUpdateState.unavailable();
+    var runtimeUpdateState = const StartupRuntimeUpdateState.unavailable();
     var knownRuntimesState = const StartupKnownRuntimesState.skipped();
 
     if (settings.automaticallyCheckForKonyakUpdates) {
@@ -99,8 +116,8 @@ final class StartupUpdateChecker {
               switch (updateResult) {
                 case LoadedUpdateCheck(:final update)
                     when update.status == 'available':
-                  labels.add(
-                    updateCheckLabel(update, managedRuntime.displayName),
+                  runtimeUpdateState = StartupRuntimeUpdateState.available(
+                    update,
                   );
                 case LoadedUpdateCheck() || UpdateCheckLoadFailure():
                   break;
@@ -119,6 +136,7 @@ final class StartupUpdateChecker {
       availableUpdateLabels: List.unmodifiable(labels),
       knownRuntimesState: knownRuntimesState,
       konyakUpdateState: konyakUpdateState,
+      runtimeUpdateState: runtimeUpdateState,
     );
   }
 }

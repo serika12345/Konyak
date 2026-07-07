@@ -426,6 +426,13 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
         ),
       ),
       checkCompleter.future,
+      Future.value(
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '{"schemaVersion":1,"runtimes":[]}',
+          stderr: '',
+        ),
+      ),
     ]);
 
     await tester.pumpWidget(
@@ -474,6 +481,7 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
     expect(runner.argumentsLog, const [
       ['list-bottles', '--json'],
       ['check-app-update', '--json'],
+      ['list-runtimes', '--json'],
     ]);
   });
 

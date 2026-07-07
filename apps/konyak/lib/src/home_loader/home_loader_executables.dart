@@ -15,6 +15,7 @@ import 'home_loader_platform_helpers.dart';
 import 'home_loader_programs.dart';
 import 'home_loader_runtimes.dart';
 import 'home_loader_settings.dart';
+import 'home_loader_updates.dart';
 import 'home_loader_wine_processes.dart';
 
 extension KonyakHomeLoaderExecutables on KonyakHomeLoaderState {

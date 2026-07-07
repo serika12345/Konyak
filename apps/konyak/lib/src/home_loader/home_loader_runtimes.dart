@@ -3,13 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../app/app_platform.dart';
 import '../app/dialogs/confirmation_decision.dart';
 import '../app/dialogs/dialog_decision.dart';
 import '../app/runtime/runtime_platform.dart';
-import '../app/startup/startup_update_checker.dart';
-import '../app/utils/update_labels.dart';
-import '../cli/cli_optional_fields.dart';
 import '../cli/konyak_cli_client.dart' show NotifyRuntimeInstallProgress;
 import '../cli/konyak_cli_process_runner.dart';
 import '../cli/konyak_cli_read_commands.dart';
@@ -17,19 +13,16 @@ import '../cli/konyak_cli_runtime_commands.dart';
 import '../cli/konyak_cli_runtime_result_types.dart';
 import '../cli/konyak_cli_settings_commands.dart';
 import '../cli/konyak_cli_settings_result_types.dart';
-import '../cli/konyak_cli_update_result_types.dart';
 import '../cli/runtime_install_contract.dart';
 import '../files/file_path_pick_result.dart';
 import '../l10n/konyak_localizations.dart';
 import '../runtimes/gptk_import_version.dart';
 import '../runtimes/runtime_summary.dart';
-import '../settings/app_settings_summary.dart';
-import '../updates/update_check_summary.dart';
 import 'app_settings_state.dart';
 import 'blocking_progress_state.dart';
 import 'home_loader.dart';
-import 'home_loader_operation_state.dart';
 import 'home_loader_platform_helpers.dart';
+import 'home_loader_updates.dart';
 import 'known_runtimes_state.dart';
 
 part 'home_loader_runtimes.freezed.dart';
@@ -60,188 +53,6 @@ extension KonyakHomeLoaderRuntimes on KonyakHomeLoaderState {
         await promptForMissingManagedRuntime();
       case AppSettingsLoadFailure():
         break;
-    }
-  }
-
-  Future<bool> checkConfiguredUpdates(AppSettingsSummary settings) async {
-    final result = await StartupUpdateChecker(
-      platform: widget.platform,
-      cliClient: widget.cliClient,
-    ).check(settings);
-
-    if (!mounted) {
-      return false;
-    }
-
-    switch (result.knownRuntimesState) {
-      case StartupKnownRuntimesLoaded(:final runtimes):
-        setKnownRuntimes(runtimes);
-      case StartupKnownRuntimesSkipped():
-        break;
-    }
-
-    final labels = result.availableUpdateLabels.toList();
-    switch (result.konyakUpdateState) {
-      case StartupKonyakUpdateAvailable(:final update)
-          when supportsStartupKonyakAppUpdatePrompt(widget.platform):
-        labels.remove(updateCheckLabel(update, 'Konyak'));
-        final installStarted = await confirmAndInstallAvailableKonyakUpdate(
-          update,
-        );
-        if (!mounted) {
-          return installStarted;
-        }
-        if (installStarted) {
-          return true;
-        }
-      case StartupKonyakUpdateAvailable() || StartupKonyakUpdateUnavailable():
-        break;
-    }
-
-    if (labels.isEmpty) {
-      return false;
-    }
-
-    showSnackBar(
-      KonyakLocalizations.of(context).updatesAvailable(labels.join(', ')),
-    );
-    return false;
-  }
-
-  Future<bool> confirmAndInstallAvailableKonyakUpdate(
-    UpdateCheckSummary update,
-  ) async {
-    final decision = await confirmKonyakUpdateInstall(update);
-    if (!mounted) {
-      return false;
-    }
-
-    return switch (decision) {
-      ConfirmedDialogDecision() => installAvailableKonyakUpdate(),
-      CancelledDialogDecision() => false,
-    };
-  }
-
-  Future<void> checkKonyakUpdateFromMenu() async {
-    if (_isCheckingKonyakUpdate()) {
-      return;
-    }
-
-    updateState(() {
-      operationState = startHomeLoaderOperation(
-        state: operationState,
-        operation: HomeLoaderOperation.checkingKonyakUpdate,
-      );
-      konyakUpdateCheckProgress = BlockingProgressState.indeterminate(
-        KonyakLocalizations.of(context).checkingForKonyakUpdatesEllipsis,
-      );
-    });
-
-    try {
-      final result = await widget.cliClient.checkKonyakUpdate();
-
-      if (!mounted) {
-        return;
-      }
-
-      updateState(() {
-        konyakUpdateCheckProgress = const BlockingProgressState.hidden();
-      });
-
-      switch (result) {
-        case LoadedUpdateCheck(:final update) when update.status == 'available':
-          await confirmAndInstallAvailableKonyakUpdate(update);
-        case LoadedUpdateCheck(:final update) when update.status == 'current':
-          showSnackBar(KonyakLocalizations.of(context).konyakIsUpToDate);
-        case LoadedUpdateCheck():
-          showSnackBar(
-            KonyakLocalizations.of(context).konyakUpdateStatusIsUnknown,
-          );
-        case UpdateCheckLoadFailure(:final message):
-          showWarningSnackBar(
-            KonyakLocalizations.of(context).konyakUpdateCheckFailed(message),
-          );
-      }
-    } finally {
-      if (mounted) {
-        updateState(() {
-          operationState = finishHomeLoaderOperation(
-            state: operationState,
-            operation: HomeLoaderOperation.checkingKonyakUpdate,
-          );
-          konyakUpdateCheckProgress = const BlockingProgressState.hidden();
-        });
-      }
-    }
-  }
-
-  bool _isCheckingKonyakUpdate() {
-    return isHomeLoaderOperationRunning(
-      state: operationState,
-      operation: HomeLoaderOperation.checkingKonyakUpdate,
-    );
-  }
-
-  Future<ConfirmationDecision> confirmKonyakUpdateInstall(
-    UpdateCheckSummary update,
-  ) async {
-    final localizations = KonyakLocalizations.of(context);
-    final (title, message) = switch (update.latestVersion) {
-      PresentCliOptionalString(:final value) => (
-        localizations.installKonyakVersionUpdateTitle(value),
-        localizations.installKonyakVersionUpdateMessage(value),
-      ),
-      AbsentCliOptionalString() || ExplicitNullCliOptionalString() => (
-        localizations.installKonyakUpdateTitle,
-        localizations.installKonyakUpdateMessage,
-      ),
-    };
-    return showDialogDecision<ConfirmationDecision>(
-      context: context,
-      dismissedDecision: const ConfirmationDecision.cancelled(),
-      builder: (context) => AlertDialog(
-        title: Text(title),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop(const ConfirmationDecision.cancelled());
-            },
-            child: Text(localizations.notNow),
-          ),
-          FilledButton(
-            onPressed: () {
-              Navigator.of(context).pop(const ConfirmationDecision.confirmed());
-            },
-            child: Text(localizations.install),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<bool> installAvailableKonyakUpdate() async {
-    final installResult = await widget.cliClient.installKonyakUpdate();
-
-    if (!mounted) {
-      return false;
-    }
-
-    switch (installResult) {
-      case InstalledUpdate(:final update) when update.status == 'installed':
-        showSnackBar(
-          KonyakLocalizations.of(
-            context,
-          ).installingKonyakUpdate(installedUpdateLabel(update, 'Konyak')),
-        );
-        return true;
-      case InstalledUpdate():
-        return false;
-      case UpdateInstallLoadFailure(:final message):
-        showSnackBar(
-          KonyakLocalizations.of(context).konyakUpdateInstallFailed(message),
-        );
-        return false;
     }
   }
 
@@ -684,8 +495,4 @@ sealed class ManagedRuntimeInstallOutcome with _$ManagedRuntimeInstallOutcome {
 
   const factory ManagedRuntimeInstallOutcome.unmounted() =
       UnmountedManagedRuntimeInstall;
-}
-
-bool supportsStartupKonyakAppUpdatePrompt(KonyakPlatform platform) {
-  return platform.isMacOS || platform.isLinux;
 }

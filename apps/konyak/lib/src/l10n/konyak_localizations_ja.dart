@@ -740,6 +740,47 @@ class KonyakLocalizationsJa extends KonyakLocalizations {
   }
 
   @override
+  String installRuntimeUpdateTitle(String runtimeName) {
+    return '新しい $runtimeName バージョンをインストールしますか？';
+  }
+
+  @override
+  String installRuntimeVersionUpdateTitle(
+    String runtimeName,
+    String latestVersion,
+  ) {
+    return '$runtimeName $latestVersion をインストールしますか？';
+  }
+
+  @override
+  String installRuntimeUpdateMessage(String runtimeName) {
+    return '新しい $runtimeName バージョンがあります。今すぐインストールしますか？';
+  }
+
+  @override
+  String installRuntimeVersionUpdateMessage(
+    String runtimeName,
+    String latestVersion,
+  ) {
+    return '$runtimeName $latestVersion が利用可能です。今すぐインストールしますか？';
+  }
+
+  @override
+  String installedRuntimeUpdate(String label) {
+    return '$label をインストールしました。';
+  }
+
+  @override
+  String runtimeIsUpToDate(String runtimeName) {
+    return '$runtimeName は最新バージョンです。';
+  }
+
+  @override
+  String runtimeUpdateStatusIsUnknown(String runtimeName) {
+    return '$runtimeName のバージョン状態は不明です。';
+  }
+
+  @override
   String updatesAvailable(String labels) {
     return '利用可能なアップデート: $labels';
   }
@@ -752,6 +793,16 @@ class KonyakLocalizationsJa extends KonyakLocalizations {
   @override
   String konyakUpdateInstallFailed(String message) {
     return 'Konyak アップデートのインストールに失敗しました: $message';
+  }
+
+  @override
+  String runtimeUpdateCheckFailed(String runtimeName, String message) {
+    return '$runtimeName のバージョン確認に失敗しました: $message';
+  }
+
+  @override
+  String runtimeUpdateInstallFailed(String runtimeName, String message) {
+    return '$runtimeName バージョンのインストールに失敗しました: $message';
   }
 
   @override
