@@ -1,0 +1,32 @@
+name: Windows DLSS MetalFX Preflight Build
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/windows-dlss-metalfx-preflight-build.yml
+      - scripts/build_dlss_metalfx_preflight_windows.ps1
+      - tests/fixtures/windows/dlss_metalfx_preflight/**
+  push:
+    paths:
+      - .github/workflows/windows-dlss-metalfx-preflight-build.yml
+      - scripts/build_dlss_metalfx_preflight_windows.ps1
+      - tests/fixtures/windows/dlss_metalfx_preflight/**
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: MSVC CMake DLSS MetalFX preflight fixture
+    runs-on: windows-2022
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build DLSS MetalFX preflight fixture
+        shell: pwsh
+        run: ./scripts/build_dlss_metalfx_preflight_windows.ps1
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: konyak-dlss-metalfx-preflight-windows-x64
+          path: .dart_tool/konyak/windows-dlss-metalfx-preflight/konyak_dlss_metalfx_preflight.exe
+          if-no-files-found: error

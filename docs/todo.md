@@ -22,6 +22,12 @@ verification output instead of checked-off backlog entries.
 - Runtime-specific details stay behind CLI/backend platform services.
 - The Flutter app and Dart CLI are the source of truth for application
   behavior.
+- GPTK4 D3DMetal is treated as supported for the D3DMetal/D3D12 render path
+  proven by Konyak's maintained preflight, but GPTK4 plus DLSS/MetalFX is not
+  supported for now because the supported path requires macOS 27.
+- The primary maintainer must keep macOS 26 available while developing another
+  Rosetta 2 based project, so Konyak will not implement GPTK4 plus DLSS/MetalFX
+  support until that host constraint changes.
 - Drop live external plist metadata from the supported model. Konyak-owned
   bottle metadata is the source of truth.
 - Remove runtime verification masking and prove prefix/addon integrity through
@@ -31,6 +37,16 @@ verification output instead of checked-off backlog entries.
 
 - Capture end-to-end DLSS/MetalFX rendering proof with a redistributable or
   user-provided DLSS-capable Windows program.
+  - Do not target GPTK4 for this proof while the project support matrix treats
+    GPTK4 plus DLSS/MetalFX as requiring macOS 27. GPTK4 work remains limited
+    to D3DMetal import and D3D12/D3DMetal render-path validation.
+  - Use the maintained local smoke entry point
+    `scripts/run_macos_dlss_metalfx_cli_smoke.zsh` with user-provided
+    GPTK/D3DMetal input and a DLSS-capable Windows executable.
+  - The repo-owned `tests/fixtures/windows/dlss_metalfx_preflight` fixture is
+    only launch-contract preflight coverage for D3D12, D3DMetal MetalFX
+    environment, and NVIDIA shim loading. Do not count preflight success as
+    end-to-end DLSS rendering proof.
   - Use Konyak's public `run-program --json` path, record backend environment,
     selected runtime/component paths, process/log evidence, and Metal HUD or
     equivalent evidence where practical.
@@ -38,7 +54,10 @@ verification output instead of checked-off backlog entries.
 - When a Gcenx GPTK4 binary release becomes available, strengthen
   `runtime/konyak-macos-runtime` CI to verify GPTK4 automatically.
   - Keep the existing GPTK3 smoke coverage and add a separate GPTK4 smoke gate
-    rather than replacing GPTK3 validation.
+    for D3DMetal import and D3D12/D3DMetal backend behavior rather than
+    replacing GPTK3 validation.
+  - Do not add a GPTK4 DLSS/MetalFX gate until macOS 27 is available in the
+    supported development and verification matrix.
   - Pin the Gcenx GPTK4 release tag, archive name, and SHA-256 in
     `prepare-gptk-d3dmetal-ci-smoke.zsh` or a narrowly scoped wrapper.
   - Exercise the same runtime CI backend probes:
