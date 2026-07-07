@@ -1007,6 +1007,75 @@
       }
     }
   },
+  "installRuntimeUpdateTitle": "{runtimeName} アップデートをインストールしますか？",
+  "@installRuntimeUpdateTitle": {
+    "description": "Konyak UI string: Install {runtimeName} update?",
+    "placeholders": {
+      "runtimeName": {
+        "type": "String"
+      }
+    }
+  },
+  "installRuntimeVersionUpdateTitle": "{runtimeName} {latestVersion} アップデートをインストールしますか？",
+  "@installRuntimeVersionUpdateTitle": {
+    "description": "Konyak UI string: Install {runtimeName} {latestVersion} update?",
+    "placeholders": {
+      "runtimeName": {
+        "type": "String"
+      },
+      "latestVersion": {
+        "type": "String"
+      }
+    }
+  },
+  "installRuntimeUpdateMessage": "{runtimeName} のアップデートがあります。今すぐインストールしますか？",
+  "@installRuntimeUpdateMessage": {
+    "description": "Konyak UI string: A {runtimeName} update is available. Install it now?",
+    "placeholders": {
+      "runtimeName": {
+        "type": "String"
+      }
+    }
+  },
+  "installRuntimeVersionUpdateMessage": "{runtimeName} {latestVersion} があります。今すぐインストールしますか？",
+  "@installRuntimeVersionUpdateMessage": {
+    "description": "Konyak UI string: {runtimeName} {latestVersion} is available. Install it now?",
+    "placeholders": {
+      "runtimeName": {
+        "type": "String"
+      },
+      "latestVersion": {
+        "type": "String"
+      }
+    }
+  },
+  "installedRuntimeUpdate": "{label} アップデートをインストールしました。",
+  "@installedRuntimeUpdate": {
+    "description": "Konyak UI string: Installed {label} update.",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "runtimeIsUpToDate": "{runtimeName} は最新です。",
+  "@runtimeIsUpToDate": {
+    "description": "Konyak UI string: {runtimeName} is up to date.",
+    "placeholders": {
+      "runtimeName": {
+        "type": "String"
+      }
+    }
+  },
+  "runtimeUpdateStatusIsUnknown": "{runtimeName} のアップデート状態は不明です。",
+  "@runtimeUpdateStatusIsUnknown": {
+    "description": "Konyak UI string: {runtimeName} update status is unknown.",
+    "placeholders": {
+      "runtimeName": {
+        "type": "String"
+      }
+    }
+  },
   "updatesAvailable": "利用可能なアップデート: {labels}",
   "@updatesAvailable": {
     "description": "Konyak UI string: Updates available: {labels}",
@@ -1029,6 +1098,30 @@
   "@konyakUpdateInstallFailed": {
     "description": "Konyak UI string: Konyak update install failed: {message}",
     "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "runtimeUpdateCheckFailed": "{runtimeName} のアップデート確認に失敗しました: {message}",
+  "@runtimeUpdateCheckFailed": {
+    "description": "Konyak UI string: {runtimeName} update check failed: {message}",
+    "placeholders": {
+      "runtimeName": {
+        "type": "String"
+      },
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "runtimeUpdateInstallFailed": "{runtimeName} アップデートのインストールに失敗しました: {message}",
+  "@runtimeUpdateInstallFailed": {
+    "description": "Konyak UI string: {runtimeName} update install failed: {message}",
+    "placeholders": {
+      "runtimeName": {
+        "type": "String"
+      },
       "message": {
         "type": "String"
       }

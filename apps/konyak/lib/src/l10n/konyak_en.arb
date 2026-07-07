@@ -1007,6 +1007,75 @@
       }
     }
   },
+  "installRuntimeUpdateTitle": "Install {runtimeName} update?",
+  "@installRuntimeUpdateTitle": {
+    "description": "Konyak UI string: Install {runtimeName} update?",
+    "placeholders": {
+      "runtimeName": {
+        "type": "String"
+      }
+    }
+  },
+  "installRuntimeVersionUpdateTitle": "Install {runtimeName} {latestVersion} update?",
+  "@installRuntimeVersionUpdateTitle": {
+    "description": "Konyak UI string: Install {runtimeName} {latestVersion} update?",
+    "placeholders": {
+      "runtimeName": {
+        "type": "String"
+      },
+      "latestVersion": {
+        "type": "String"
+      }
+    }
+  },
+  "installRuntimeUpdateMessage": "A {runtimeName} update is available. Install it now?",
+  "@installRuntimeUpdateMessage": {
+    "description": "Konyak UI string: A {runtimeName} update is available. Install it now?",
+    "placeholders": {
+      "runtimeName": {
+        "type": "String"
+      }
+    }
+  },
+  "installRuntimeVersionUpdateMessage": "{runtimeName} {latestVersion} is available. Install it now?",
+  "@installRuntimeVersionUpdateMessage": {
+    "description": "Konyak UI string: {runtimeName} {latestVersion} is available. Install it now?",
+    "placeholders": {
+      "runtimeName": {
+        "type": "String"
+      },
+      "latestVersion": {
+        "type": "String"
+      }
+    }
+  },
+  "installedRuntimeUpdate": "Installed {label} update.",
+  "@installedRuntimeUpdate": {
+    "description": "Konyak UI string: Installed {label} update.",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "runtimeIsUpToDate": "{runtimeName} is up to date.",
+  "@runtimeIsUpToDate": {
+    "description": "Konyak UI string: {runtimeName} is up to date.",
+    "placeholders": {
+      "runtimeName": {
+        "type": "String"
+      }
+    }
+  },
+  "runtimeUpdateStatusIsUnknown": "{runtimeName} update status is unknown.",
+  "@runtimeUpdateStatusIsUnknown": {
+    "description": "Konyak UI string: {runtimeName} update status is unknown.",
+    "placeholders": {
+      "runtimeName": {
+        "type": "String"
+      }
+    }
+  },
   "updatesAvailable": "Updates available: {labels}",
   "@updatesAvailable": {
     "description": "Konyak UI string: Updates available: {labels}",
@@ -1029,6 +1098,30 @@
   "@konyakUpdateInstallFailed": {
     "description": "Konyak UI string: Konyak update install failed: {message}",
     "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "runtimeUpdateCheckFailed": "{runtimeName} update check failed: {message}",
+  "@runtimeUpdateCheckFailed": {
+    "description": "Konyak UI string: {runtimeName} update check failed: {message}",
+    "placeholders": {
+      "runtimeName": {
+        "type": "String"
+      },
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "runtimeUpdateInstallFailed": "{runtimeName} update install failed: {message}",
+  "@runtimeUpdateInstallFailed": {
+    "description": "Konyak UI string: {runtimeName} update install failed: {message}",
+    "placeholders": {
+      "runtimeName": {
+        "type": "String"
+      },
       "message": {
         "type": "String"
       }

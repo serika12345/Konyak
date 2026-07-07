@@ -13,103 +13,73 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-07 10:00 JST
+- Timestamp: 2026-07-07 11:03 JST
 - State: `completed`
-- Branch: `main`
-- Active work: Harden Konyak Pages reruns after repeated Pages deployment
-  failures.
-- Related TODO: `docs/todo.md` now points at the next DLSS/MetalFX
-  rendering-proof task; the Gcenx GPTK4 CI follow-up remains deferred until a
-  Gcenx GPTK4 binary release exists.
-- Release tag: `v1.0.7`.
-- GitHub Release: https://github.com/serika12345/Konyak/releases/tag/v1.0.7
-- Release workflow:
-  https://github.com/serika12345/Konyak/actions/runs/28798279839 passed and
-  published the GitHub Release assets.
-- Pages failure root cause: failed-job reruns of `Konyak Pages` reused the
-  default `github-pages` artifact name in the same workflow run. GitHub kept
-  the previous attempt's artifact, so `actions/deploy-pages` saw multiple
-  artifacts with the same name and failed before deployment.
-- Runtime release: parent runtime release locator already points at the latest
-  published `serika12345/konyak-macos-runtime` Release,
-  `crossover-26.1.0-konyak.0`, with no parent JSON update needed.
-- Runtime branch: no runtime submodule changes planned; parent `main` records
-  runtime submodule commit `61624ad`, which has the same tree as runtime
-  `origin/main` merge commit `0a09716b`.
-- Purpose: make Pages deployment reruns deterministic by avoiding artifact-name
-  collisions between rerun attempts, instead of relying on empty commits or
-  manually dispatched clean runs to hide failed checks.
+- Branch: `codex/runtime-wine-update-ui`
+- Active work: Bring Konyak Wine runtime update UI up to the Konyak app update
+  flow.
+- Related TODO: no long-running TODO item; this is a focused UX/completion fix
+  for the existing runtime update CLI contract.
+- Purpose: make runtime Releases actionable from Flutter instead of only
+  surfacing a startup snackbar when `check-runtime-update` reports an
+  available Konyak Wine runtime update.
 - Completed work:
-  - Updated `.github/workflows/pages.yml` so `actions/upload-pages-artifact`
-    and `actions/deploy-pages` both use
-    `github-pages-${{ github.run_id }}-${{ github.run_attempt }}`.
-  - Confirmed `actionlint` is not currently available in the Nix dev shell, so
-    final syntax/protocol validation for the workflow change must come from the
-    GitHub Actions run.
-  - Confirmed the runtime release list and latest runtime release assets; the
-    parent `runtime/macos-wine-release.json` already uses the latest runtime
-    release tag.
-  - Prepared `apps/konyak/pubspec.yaml` version `1.0.7+8`.
-  - Prepared `packages/konyak_cli/lib/src/shared/model_constants.dart` default
-    Konyak app version `1.0.7`.
-  - Added `docs/releases/v1.0.7.md` with GPTK4 import support and
-    CrossOver-compatible D3D10 fallback behavior as primary highlights.
-  - Stabilized the new GPTK mismatch golden test for Linux CI rendering
-    variance before moving the unpublished `v1.0.7` tag to the verified commit.
-  - Published `v1.0.7` with macOS DMG, Linux AppImage, platform release
-    metadata, Linux runtime source-manifest assets, and combined `SHA256SUMS`.
-- Remaining work: none for the local Pages rerun hardening change.
-- Next action: continue with the next TODO-backed DLSS/MetalFX rendering-proof
-  task when requested.
+  - Added startup runtime update state so the UI keeps the full
+    `runtimeUpdate` record returned by `check-runtime-update`.
+  - Changed startup runtime update handling from snackbar-only notification to
+    a confirmation dialog with `Not Now` and `Install`, matching the Konyak app
+    update prompt shape.
+  - Extended the existing manual `Check for Updates...` flow so a current app
+    update check continues into installed managed runtime update checks.
+  - Wired confirmed runtime updates to
+    `install-runtime-update <runtime-id> --json` and refreshes the known runtime
+    list from the returned runtime record.
+  - Added English and Japanese strings plus generated localizations for runtime
+    update prompts, current/unknown status, and check/install failures.
+  - Added widget coverage for startup runtime update prompting, manual menu
+    runtime update checks, runtime update installation, and the runtime update
+    confirmation golden.
+  - Generated and visually inspected
+    `apps/konyak/test/goldens/konyak_wine_update_confirmation_prompt.png`.
+- Remaining work: none for the local implementation; publish the verified
+  branch as a draft PR.
+- Next action: commit, push, and open the draft PR for review.
 - Verification performed:
-  - `gh run list --repo serika12345/Konyak --workflow pages.yml --limit 20
-    --json databaseId,displayTitle,event,headBranch,headSha,status,
-    conclusion,createdAt,url` showed repeated historical Pages failures,
-    including the rerun artifact collision on
-    https://github.com/serika12345/Konyak/actions/runs/28798935826.
-  - `nix develop -c zsh -lc 'command -v actionlint || true'` found no
-    `actionlint` executable in the current dev shell.
+  - Failing tests captured before implementation:
+    - `nix develop -c zsh -lc 'cd apps/konyak && flutter test
+      test/widget_test.dart --plain-name "macOS prompts before installing
+      Konyak Wine runtime updates on startup"'`
+    - `nix develop -c zsh -lc 'cd apps/konyak && flutter test
+      test/widget_test.dart --plain-name "macOS app menu command checks Konyak
+      Wine updates"'`
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test
+    test/widget_test.dart --plain-name "macOS prompts before installing Konyak
+    Wine runtime updates on startup"'` passed after implementation.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test
+    test/widget_test.dart --plain-name "macOS app menu command checks Konyak
+    Wine updates"'` passed after implementation.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test
+    test/widget_test.dart --update-goldens --plain-name "macOS Konyak Wine
+    update confirmation prompt matches golden"'` passed and wrote the golden.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test
+    test/widget_test.dart --plain-name "macOS Konyak Wine update confirmation
+    prompt matches golden"'` passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test
+    test/widget_test.dart'` passed with 131 tests.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test
+    test/app/immutability_test.dart'` passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test
+    test/cli/konyak_cli_client_test.dart --plain-name "installs runtime updates
+    through the JSON CLI contract"'` passed.
+  - `nix develop -c zsh -lc 'just flutter-format-check &&
+    just flutter-analyze && just flutter-test'` passed; Flutter test reported
+    469 tests passed.
+  - Initial repository common-gate run failed because
+    `apps/konyak/lib/src/home_loader/home_loader_runtimes.dart` exceeded the
+    governance line-count limit after adding runtime update UI. The update
+    workflow was split into `home_loader_updates.dart`, reducing the original
+    runtime loader file to 499 lines.
   - `nix develop -c zsh -lc 'git diff --check && git -C
     runtime/konyak-macos-runtime diff --check && just verify-governance &&
     just verify-safety && just format-check && just lint'` passed after the
-    Pages workflow change.
-  - `gh release list --repo serika12345/konyak-macos-runtime --limit 5
-    --json tagName,isLatest,isDraft,isPrerelease,publishedAt` confirmed
-    `crossover-26.1.0-konyak.0` is the latest runtime release.
-  - `gh api repos/serika12345/konyak-macos-runtime/releases/latest --jq
-    '{tag_name, name, draft, prerelease, published_at, assets:
-    [.assets[].name]}'` confirmed the latest runtime release assets include
-    `konyak-macos-runtime.release.json`,
-    `konyak-macos-wine-runtime-stack-source.json`, and
-    `konyak-macos-wine-runtime-stack.tar.zst`.
-  - `nix develop -c zsh -lc 'python3 scripts/prepare_release.py --version
-    1.0.7 --release-notes
-    .dart_tool/konyak/release-notes-v1.0.7.md --gate '\''just
-    release-candidate-gates'\'''` passed; this ran `just verify`, the macOS
-    release build, packaged runtime extraction smoke, DMG layout smoke,
-    Finder integration smoke with PuTTY, packaged app CLI bridge smoke, and app
-    update handoff smoke before preparing `v1.0.7`.
-  - Initial publish workflow run
-    https://github.com/serika12345/Konyak/actions/runs/28797616198 failed in
-    Linux `just verify` because the new GPTK mismatch golden differed by
-    3.54%, just above its 3% comparator tolerance.
-  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test
-    test/widget_test.dart --plain-name "macOS settings dialog shows GPTK
-    version mismatch import errors"'` passed after raising that golden's
-    comparator tolerance to 4%.
-  - `nix develop -c zsh -lc 'just flutter-format-check &&
-    just flutter-analyze && just flutter-test'` passed; Flutter test reported
-    467 tests passed.
-  - `nix develop -c zsh -lc 'git diff --check && git -C
-    runtime/konyak-macos-runtime diff --check && just verify-governance &&
-    just verify-safety && just format-check && just lint'` passed.
-  - Publish workflow run
-    https://github.com/serika12345/Konyak/actions/runs/28798279839 passed:
-    Linux AppImage, macOS app, repository verify, and GitHub Release publish
-    jobs all succeeded.
-  - `gh release view v1.0.7 --repo serika12345/Konyak --json
-    tagName,name,isDraft,isPrerelease,isImmutable,publishedAt,url,
-    targetCommitish,assets` confirmed the Release is published and includes
-    `Konyak-1.0.7-macos-arm64.dmg`,
-    `Konyak-1.0.7-linux-x86_64.AppImage`, platform metadata, Linux runtime
-    source-manifest assets, and `SHA256SUMS`.
+    split.

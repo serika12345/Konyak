@@ -722,6 +722,109 @@ void defineMacosStartupAndRuntimeWidgetTests() {
     );
   });
 
+  testWidgets('macOS Konyak Wine update confirmation prompt matches golden', (
+    WidgetTester tester,
+  ) async {
+    await _loadKonyakTestFonts();
+    await tester.binding.setSurfaceSize(const Size(960, 600));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final goldenKey = GlobalKey();
+    final runner = _QueuedProcessRunner([
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '{"schemaVersion":1,"bottles":[]}',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "appSettings": {
+              "terminateWineProcessesOnClose": false,
+              "defaultBottlePath": "/Users/user/Library/Application Support/Konyak/Bottles",
+              "automaticallyCheckForKonyakUpdates": false,
+              "automaticallyCheckForWineUpdates": true
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "runtimes": [
+              {
+                "id": "konyak-macos-wine",
+                "name": "Konyak macOS Wine",
+                "platform": "macos",
+                "architecture": "x86_64",
+                "runnerKind": "macosWine",
+                "isBundled": false,
+                "isUpdateable": true,
+                "isInstalled": true
+              }
+            ]
+          }
+        ''',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "runtimeUpdate": {
+              "runtimeId": "konyak-macos-wine",
+              "status": "available",
+              "currentVersion": "crossover-26.1.0-konyak.0",
+              "latestVersion": "crossover-26.1.1-konyak.0"
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+    ]);
+
+    await tester.pumpWidget(
+      RepaintBoundary(
+        key: goldenKey,
+        child: _testKonyakApp(
+          cliClient: KonyakCliClient(
+            executable: 'konyak',
+            processRunner: runner,
+          ),
+          enableBackgroundServices: true,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Install Konyak macOS Wine crossover-26.1.1-konyak.0 update?'),
+      findsOneWidget,
+    );
+    expect(
+      runner.argumentsLog,
+      isNot(
+        anyElement(
+          equals(const [
+            'install-runtime-update',
+            'konyak-macos-wine',
+            '--json',
+          ]),
+        ),
+      ),
+    );
+    await _expectGoldenFileWithinTolerance(
+      find.byKey(goldenKey),
+      'goldens/konyak_wine_update_confirmation_prompt.png',
+      diffTolerance: 0.02,
+    );
+  });
+
   testWidgets('macOS prompts before installing Konyak app updates on startup', (
     WidgetTester tester,
   ) async {
@@ -861,7 +964,7 @@ void defineMacosStartupAndRuntimeWidgetTests() {
   });
 
   testWidgets(
-    'macOS notifies available runtime updates when the app is current',
+    'macOS prompts before installing Konyak Wine runtime updates on startup',
     (WidgetTester tester) async {
       final runner = _QueuedProcessRunner([
         const ProcessRunResult(
@@ -877,23 +980,8 @@ void defineMacosStartupAndRuntimeWidgetTests() {
             "appSettings": {
               "terminateWineProcessesOnClose": false,
               "defaultBottlePath": "/Users/user/Library/Application Support/Konyak/Bottles",
-              "automaticallyCheckForKonyakUpdates": true,
+              "automaticallyCheckForKonyakUpdates": false,
               "automaticallyCheckForWineUpdates": true
-            }
-          }
-        ''',
-          stderr: '',
-        ),
-        const ProcessRunResult(
-          exitCode: 0,
-          stdout: '''
-          {
-            "schemaVersion": 1,
-            "appUpdate": {
-              "appId": "konyak",
-              "status": "current",
-              "currentVersion": "1.1.0",
-              "latestVersion": "1.1.0"
             }
           }
         ''',
@@ -928,8 +1016,27 @@ void defineMacosStartupAndRuntimeWidgetTests() {
             "runtimeUpdate": {
               "runtimeId": "konyak-macos-wine",
               "status": "available",
-              "currentVersion": "wine-devel-11.9",
-              "latestVersion": "12.0"
+              "currentVersion": "crossover-26.1.0-konyak.0",
+              "latestVersion": "crossover-26.1.1-konyak.0"
+            }
+          }
+        ''',
+          stderr: '',
+        ),
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+          {
+            "schemaVersion": 1,
+            "runtime": {
+              "id": "konyak-macos-wine",
+              "name": "Konyak macOS Wine",
+              "platform": "macos",
+              "architecture": "x86_64",
+              "runnerKind": "macosWine",
+              "isBundled": false,
+              "isUpdateable": true,
+              "isInstalled": true
             }
           }
         ''',
@@ -949,11 +1056,183 @@ void defineMacosStartupAndRuntimeWidgetTests() {
       await tester.pumpAndSettle();
 
       expect(
-        find.text('Updates available: Konyak macOS Wine 12.0'),
+        find.text(
+          'Install Konyak macOS Wine crossover-26.1.1-konyak.0 update?',
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.text(
+          'Konyak macOS Wine crossover-26.1.1-konyak.0 is available. Install it now?',
+        ),
+        findsOneWidget,
+      );
+      expect(find.widgetWithText(TextButton, 'Not Now'), findsOneWidget);
+      expect(find.widgetWithText(FilledButton, 'Install'), findsOneWidget);
+      expect(
+        runner.argumentsLog,
+        isNot(
+          anyElement(
+            equals(const [
+              'install-runtime-update',
+              'konyak-macos-wine',
+              '--json',
+            ]),
+          ),
+        ),
+      );
+
+      await tester.tap(find.widgetWithText(FilledButton, 'Install'));
+      await tester.pumpAndSettle();
+
+      expect(
+        runner.argumentsLog,
+        anyElement(
+          equals(const [
+            'install-runtime-update',
+            'konyak-macos-wine',
+            '--json',
+          ]),
+        ),
+      );
+      expect(
+        find.text(
+          'Installed Konyak macOS Wine crossover-26.1.1-konyak.0 update.',
+        ),
         findsOneWidget,
       );
     },
   );
+
+  testWidgets('macOS app menu command checks Konyak Wine updates', (
+    WidgetTester tester,
+  ) async {
+    final runner = _QueuedProcessRunner([
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '{"schemaVersion":1,"bottles":[]}',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "appUpdate": {
+              "appId": "konyak",
+              "status": "current",
+              "currentVersion": "1.0.7",
+              "latestVersion": "1.0.7"
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "runtimes": [
+              {
+                "id": "konyak-macos-wine",
+                "name": "Konyak macOS Wine",
+                "platform": "macos",
+                "architecture": "x86_64",
+                "runnerKind": "macosWine",
+                "isBundled": false,
+                "isUpdateable": true,
+                "isInstalled": true
+              }
+            ]
+          }
+        ''',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "runtimeUpdate": {
+              "runtimeId": "konyak-macos-wine",
+              "status": "available",
+              "currentVersion": "crossover-26.1.0-konyak.0",
+              "latestVersion": "crossover-26.1.1-konyak.0"
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "runtime": {
+              "id": "konyak-macos-wine",
+              "name": "Konyak macOS Wine",
+              "platform": "macos",
+              "architecture": "x86_64",
+              "runnerKind": "macosWine",
+              "isBundled": false,
+              "isUpdateable": true,
+              "isInstalled": true
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+    ]);
+
+    await tester.pumpWidget(
+      _testKonyakApp(
+        cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final result = Completer<ByteData?>();
+    await tester.binding.defaultBinaryMessenger.handlePlatformMessage(
+      'konyak/menu',
+      const StandardMethodCodec().encodeMethodCall(
+        const MethodCall('checkKonyakUpdates'),
+      ),
+      result.complete,
+    );
+    await result.future;
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Install Konyak macOS Wine crossover-26.1.1-konyak.0 update?'),
+      findsOneWidget,
+    );
+    expect(
+      runner.argumentsLog,
+      containsAllInOrder([
+        const ['list-bottles', '--json'],
+        const ['check-app-update', '--json'],
+        const ['list-runtimes', '--json'],
+        const ['check-runtime-update', 'konyak-macos-wine', '--json'],
+      ]),
+    );
+
+    await tester.tap(find.widgetWithText(FilledButton, 'Install'));
+    await tester.pumpAndSettle();
+
+    expect(
+      runner.argumentsLog,
+      anyElement(
+        equals(const ['install-runtime-update', 'konyak-macos-wine', '--json']),
+      ),
+    );
+    expect(
+      find.text(
+        'Installed Konyak macOS Wine crossover-26.1.1-konyak.0 update.',
+      ),
+      findsOneWidget,
+    );
+  });
 
   testWidgets('macOS warns when automatic Konyak update install fails', (
     WidgetTester tester,

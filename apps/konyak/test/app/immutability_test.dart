@@ -92,6 +92,7 @@ void main() {
       availableUpdateLabels: labels,
       knownRuntimesState: StartupKnownRuntimesState.loaded(const []),
       konyakUpdateState: const StartupKonyakUpdateState.unavailable(),
+      runtimeUpdateState: const StartupRuntimeUpdateState.unavailable(),
     );
     labels.add('changed');
 
