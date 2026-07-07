@@ -240,16 +240,17 @@ Before claiming GPTK3/GPTK4 import support for a release, run the maintained
 public CLI smoke on macOS:
 
 ```sh
+KONYAK_GPTK3_SOURCE_PATH=<user-provided-gptk3-dmg>
+KONYAK_GPTK4_SOURCE_PATH=<user-provided-gptk4-dmg>
 nix develop -c zsh -lc 'just smoke-macos-gptk-import-cli'
 ```
 
 The smoke installs a fresh Konyak macOS runtime for each payload through
 `install-macos-wine --reinstall --source-manifest ... --json`, then imports:
 
-- Apple GPTK 3.x through
-  `install-gptk-wine --from <Game_Porting_Toolkit_3.x.dmg> --json`.
+- Apple GPTK 3.x through `install-gptk-wine --from <gptk3-dmg> --json`.
 - Apple GPTK 4.x through
-  `install-gptk-wine --from <Game_Porting_Toolkit_4.x.dmg> --gptk-version 4 --json`.
+  `install-gptk-wine --from <gptk4-dmg> --gptk-version 4 --json`.
 
 It then verifies `list-runtimes --json` reports the optional
 `gptk-d3dmetal` component and backend as available, checks that GPTK4 did not

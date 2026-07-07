@@ -49,9 +49,10 @@ Use `docs/todo.md` only as the top-level roadmap pointer. Use
     passed against the captured golden.
   - `nix develop -c zsh -lc 'just flutter-format-check && just flutter-analyze && just flutter-test'`
     passed; Flutter test reported 465 tests passed.
-  - `nix develop -c zsh -lc 'just smoke-macos-gptk-import-cli'` passed:
-    Apple GPTK 3.0 and Apple GPTK 4.0 beta 1 were installed through the public
-    CLI path, `list-runtimes --json` reported `gptk-d3dmetal`, GPTK3 retained
+  - `nix develop -c zsh -lc 'just smoke-macos-gptk-import-cli'` passed with
+    user-provided GPTK3 and GPTK4 source inputs: Apple GPTK 3.0 and Apple
+    GPTK 4.0 beta 1 were installed through the public CLI path,
+    `list-runtimes --json` reported `gptk-d3dmetal`, GPTK3 retained
     `atidxx64.*`, GPTK4 omitted `atidxx64.*`, neither installed active
     `d3d10.*`, and all maintained GPTK backend smokes passed. Logs:
     `.dart_tool/konyak/gptk-import-cli-smoke/logs`.
@@ -59,10 +60,10 @@ Use `docs/todo.md` only as the top-level roadmap pointer. Use
     passed; `just cli-test` reported 382 tests passed.
   - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && zsh -n scripts/import-gptk-d3dmetal-redist.zsh scripts/prepare-gptk-d3dmetal-ci-smoke.zsh scripts/smoke-backend-device.zsh scripts/smoke-gptk-d3dmetal-local.zsh scripts/check-runtime-archive-excludes-gptk.zsh'`
     passed.
-  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && KONYAK_GPTK_D3DMETAL_CI_SOURCE_PATH=/Users/masato/Downloads/Game_Porting_Toolkit_4.0_beta_1.dmg ./scripts/smoke-gptk-d3dmetal-local.zsh --allow-unsupported-host --work-root /tmp/konyak-gptk4-local-smoke dist/konyak-macos-wine-runtime-stack.tar.zst'`
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && KONYAK_GPTK_D3DMETAL_CI_SOURCE_PATH="$KONYAK_GPTK4_SOURCE_PATH" ./scripts/smoke-gptk-d3dmetal-local.zsh --allow-unsupported-host --work-root "$KONYAK_GPTK4_RUNTIME_WORK_ROOT" dist/konyak-macos-wine-runtime-stack.tar.zst'`
     passed: GPTK4 was detected, `gptk-d3d10-unsupported`,
     `gptk-d3d11-device`, and `gptk-d3d12-device` passed.
-  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && ./scripts/smoke-gptk-d3dmetal-local.zsh --allow-unsupported-host --work-root /tmp/konyak-gptk3-local-smoke dist/konyak-macos-wine-runtime-stack.tar.zst'`
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && ./scripts/smoke-gptk-d3dmetal-local.zsh --allow-unsupported-host --work-root "$KONYAK_GPTK3_RUNTIME_WORK_ROOT" dist/konyak-macos-wine-runtime-stack.tar.zst'`
     passed: GPTK3 was detected and the same GPTK smoke targets passed.
   - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && nix shell nixpkgs#gnutar -c ./scripts/check-runtime-archive-excludes-gptk.zsh dist/konyak-macos-wine-runtime-stack.tar.zst'`
     passed.
@@ -139,14 +140,10 @@ Final reports must include:
 
 ## Evidence Ledger
 
-- Apple GPTK 3.0 DMG:
-  `/Users/masato/Downloads/Game_Porting_Toolkit_3.0.dmg`
-- Apple GPTK 4.0 beta 1 DMG:
-  `/Users/masato/Downloads/Game_Porting_Toolkit_4.0_beta_1.dmg`
-- CrossOver application checked:
-  `/Users/masato/Documents/CrossOver.app`
-- CrossOver FOSS sources checked:
-  `/Users/masato/Documents/sources`
+- Apple GPTK 3.0 DMG: user-provided GPTK3 source input.
+- Apple GPTK 4.0 beta 1 DMG: user-provided GPTK4 source input.
+- CrossOver application checked: user-provided CrossOver bundle.
+- CrossOver FOSS sources checked: user-provided CrossOver source checkout.
 - D3D10 conclusion:
   - Apple GPTK 3.0 and GPTK 4.0 beta 1 contain `d3d10.dll` and matching
     `d3d10.so` symlinks, but CrossOver's active GPTK layout does not.
@@ -188,7 +185,7 @@ Final reports must include:
   - Apple GPTK 4.0 beta 1 reports `CFBundleShortVersionString=4.0b1`.
 - GPTK 4.0 beta 1 import failure before version support:
   - Public command:
-    `install-gptk-wine --from /Users/masato/Downloads/Game_Porting_Toolkit_4.0_beta_1.dmg --json`
+    `install-gptk-wine --from "$KONYAK_GPTK4_SOURCE_PATH" --json`
   - Exit code: `75`
   - JSON error code: `gptkWineInstallFailed`
   - Message: `GPTK/D3DMetal payload is missing atidxx64.dll.`
@@ -288,7 +285,7 @@ Verification:
   passed in `runtime/konyak-macos-runtime`.
 - `nix develop -c zsh -lc './scripts/build-backend-probes.zsh .dart_tool/backend-probes'`
   passed in `runtime/konyak-macos-runtime`.
-- `nix develop -c zsh -lc './scripts/smoke-gptk-d3dmetal-local.zsh --allow-unsupported-host --work-root /tmp/konyak-gptk-d3d10-bridge-smoke-check dist/konyak-macos-wine-runtime-stack.tar.zst'`
+- `nix develop -c zsh -lc './scripts/smoke-gptk-d3dmetal-local.zsh --allow-unsupported-host --work-root "$KONYAK_GPTK_D3D10_BRIDGE_WORK_ROOT" dist/konyak-macos-wine-runtime-stack.tar.zst'`
   passed: D3D10 reached `DXGID3D10CreateDevice` and returned the known
   `0x80004005` CI bridge signature, D3D11 device smoke passed, and D3D12 device
   smoke passed.
@@ -338,7 +335,7 @@ Not included:
 
 Verification:
 
-- `nix develop -c zsh -lc 'zsh -n scripts/build-backend-probes.zsh scripts/smoke-backend-device.zsh scripts/check-dxvk-component.zsh scripts/check-dxmt-component.zsh && ./scripts/build-backend-probes.zsh .dart_tool/backend-probes && work=/tmp/konyak-d3d10-render-smoke-check; rm -rf "$work"; mkdir -p "$work/runtime" "$work/probes"; nix shell nixpkgs#gnutar -c tar -xaf dist/konyak-macos-wine-runtime-stack.tar.zst -C "$work/runtime"; ./scripts/check-dxvk-component.zsh "$work/runtime"; ./scripts/check-dxmt-component.zsh "$work/runtime"; ./scripts/smoke-backend-device.zsh "$work/runtime" dxvk-d3d10-render "$work/probes"; ./scripts/smoke-backend-device.zsh "$work/runtime" dxvk-d3d11 "$work/probes"; ./scripts/smoke-backend-device.zsh "$work/runtime" dxmt-d3d11 "$work/probes"'`
+- `nix develop -c zsh -lc 'zsh -n scripts/build-backend-probes.zsh scripts/smoke-backend-device.zsh scripts/check-dxvk-component.zsh scripts/check-dxmt-component.zsh && ./scripts/build-backend-probes.zsh .dart_tool/backend-probes && work="$KONYAK_D3D10_RENDER_SMOKE_WORK_ROOT"; rm -rf "$work"; mkdir -p "$work/runtime" "$work/probes"; nix shell nixpkgs#gnutar -c tar -xaf dist/konyak-macos-wine-runtime-stack.tar.zst -C "$work/runtime"; ./scripts/check-dxvk-component.zsh "$work/runtime"; ./scripts/check-dxmt-component.zsh "$work/runtime"; ./scripts/smoke-backend-device.zsh "$work/runtime" dxvk-d3d10-render "$work/probes"; ./scripts/smoke-backend-device.zsh "$work/runtime" dxvk-d3d11 "$work/probes"; ./scripts/smoke-backend-device.zsh "$work/runtime" dxmt-d3d11 "$work/probes"'`
   passed in `runtime/konyak-macos-runtime`.
 - `nix develop -c zsh -lc 'git diff --check && nix flake check -L --show-trace'`
   passed in `runtime/konyak-macos-runtime`.
@@ -654,11 +651,11 @@ Verification:
 
 - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && zsh -n scripts/import-gptk-d3dmetal-redist.zsh scripts/prepare-gptk-d3dmetal-ci-smoke.zsh scripts/smoke-backend-device.zsh scripts/smoke-gptk-d3dmetal-local.zsh scripts/check-runtime-archive-excludes-gptk.zsh'`
   passed.
-- `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && KONYAK_GPTK_D3DMETAL_CI_SOURCE_PATH=/Users/masato/Downloads/Game_Porting_Toolkit_4.0_beta_1.dmg ./scripts/smoke-gptk-d3dmetal-local.zsh --allow-unsupported-host --work-root /tmp/konyak-gptk4-local-smoke dist/konyak-macos-wine-runtime-stack.tar.zst'`
+- `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && KONYAK_GPTK_D3DMETAL_CI_SOURCE_PATH="$KONYAK_GPTK4_SOURCE_PATH" ./scripts/smoke-gptk-d3dmetal-local.zsh --allow-unsupported-host --work-root "$KONYAK_GPTK4_RUNTIME_WORK_ROOT" dist/konyak-macos-wine-runtime-stack.tar.zst'`
   passed: Apple GPTK 4.0 beta 1 DMG was imported as GPTK4 without
   `atidxx64.*`; `gptk-d3d10-unsupported`, `gptk-d3d11-device`, and
   `gptk-d3d12-device` passed.
-- `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && ./scripts/smoke-gptk-d3dmetal-local.zsh --allow-unsupported-host --work-root /tmp/konyak-gptk3-local-smoke dist/konyak-macos-wine-runtime-stack.tar.zst'`
+- `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && ./scripts/smoke-gptk-d3dmetal-local.zsh --allow-unsupported-host --work-root "$KONYAK_GPTK3_RUNTIME_WORK_ROOT" dist/konyak-macos-wine-runtime-stack.tar.zst'`
   passed: the pinned Gcenx GPTK3 source was imported as GPTK3 and the same GPTK
   smoke targets passed.
 - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && nix shell nixpkgs#gnutar -c ./scripts/check-runtime-archive-excludes-gptk.zsh dist/konyak-macos-wine-runtime-stack.tar.zst'`
@@ -728,10 +725,10 @@ Implementation status:
 
 Verification:
 
-- `nix develop -c zsh -lc 'just smoke-macos-gptk-import-cli'` passed: public
-  CLI GPTK3 import smoke with Apple GPTK 3.0 DMG, public CLI GPTK4 import smoke
-  with Apple GPTK 4.0 beta 1 DMG, `list-runtimes --json`, and runtime backend
-  smoke all passed. Logs:
+- `nix develop -c zsh -lc 'just smoke-macos-gptk-import-cli'` passed with
+  user-provided GPTK3 and GPTK4 source inputs: public CLI GPTK3 import smoke
+  with Apple GPTK 3.0, public CLI GPTK4 import smoke with Apple GPTK 4.0
+  beta 1, `list-runtimes --json`, and runtime backend smoke all passed. Logs:
   `.dart_tool/konyak/gptk-import-cli-smoke/logs`.
 - `nix develop -c zsh -lc 'zsh -n scripts/run_macos_gptk_import_cli_smoke.zsh && git diff --check && git -C runtime/konyak-macos-runtime diff --check && just cli-test && just verify-governance && just verify-safety && just format-check && just lint'`
   passed; `just cli-test` reported 382 tests passed.

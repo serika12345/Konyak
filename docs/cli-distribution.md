@@ -187,11 +187,11 @@ GPTK/D3DMetal import compatibility is version-aware:
 
 - Apple GPTK 3.x payloads can be imported with the backward-compatible
   `auto` path, for example
-  `install-gptk-wine --from /path/to/Game_Porting_Toolkit_3.0.dmg --json`.
+  `install-gptk-wine --from <gptk3-dmg> --json`.
   GPTK3 validation requires the legacy `atidxx64.dll` and `atidxx64.so`
   payloads.
 - Apple GPTK 4.x payloads can be imported with
-  `install-gptk-wine --from /path/to/Game_Porting_Toolkit_4.0_beta_1.dmg --gptk-version 4 --json`.
+  `install-gptk-wine --from <gptk4-dmg> --gptk-version 4 --json`.
   GPTK4 does not ship `atidxx64.*`, and Konyak must not synthesize or require
   those files for GPTK4.
 - Both variants install only the active D3DMetal D3D11, D3D12, DXGI, NVIDIA
@@ -205,6 +205,8 @@ payload subject to Apple's host OS, hardware, and license requirements. The
 maintained local public CLI proof is:
 
 ```sh
+KONYAK_GPTK3_SOURCE_PATH=<user-provided-gptk3-dmg>
+KONYAK_GPTK4_SOURCE_PATH=<user-provided-gptk4-dmg>
 nix develop -c zsh -lc 'just smoke-macos-gptk-import-cli'
 ```
 

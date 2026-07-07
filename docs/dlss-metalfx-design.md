@@ -41,6 +41,13 @@ that only treats `D3DM_ENABLE_METALFX=1` as applicable on macOS 16 or newer.
 Konyak stores the same references near the launch-environment code so future
 runtime changes can be audited against the source of the signal.
 
+GPTK4 is a narrower support case. Konyak treats GPTK4 D3DMetal as supported for
+the D3DMetal/D3D12 render path proven by the maintained preflight, but does not
+support GPTK4 plus DLSS/MetalFX for now. Project policy treats that combination
+as requiring macOS 27, and the primary maintainer must keep macOS 26 available
+while developing another Rosetta 2 based project. Do not add GPTK4-specific
+DLSS/MetalFX implementation work until that host constraint changes.
+
 ## Existing Konyak Runtime Shape
 
 Konyak already has most of the required runtime shape:

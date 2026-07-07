@@ -9,8 +9,8 @@ logs_dir="$work_root/logs"
 manifest_path="${KONYAK_GPTK_IMPORT_CLI_SMOKE_SOURCE_MANIFEST:-}"
 runtime_stack_manifest="$repo_root/runtime/konyak-macos-runtime/dist/konyak-macos-wine-runtime-stack-source.json"
 runtime_stack_archive="${KONYAK_GPTK_IMPORT_CLI_SMOKE_RUNTIME_STACK_ARCHIVE:-$repo_root/runtime/konyak-macos-runtime/dist/konyak-macos-wine-runtime-stack.tar.zst}"
-gptk3_source="${KONYAK_GPTK3_SOURCE_PATH:-/Users/masato/Downloads/Game_Porting_Toolkit_3.0.dmg}"
-gptk4_source="${KONYAK_GPTK4_SOURCE_PATH:-/Users/masato/Downloads/Game_Porting_Toolkit_4.0_beta_1.dmg}"
+gptk3_source="${KONYAK_GPTK3_SOURCE_PATH:-}"
+gptk4_source="${KONYAK_GPTK4_SOURCE_PATH:-}"
 command_timeout="${KONYAK_GPTK_IMPORT_CLI_SMOKE_COMMAND_TIMEOUT:-240s}"
 install_timeout="${KONYAK_GPTK_IMPORT_CLI_SMOKE_INSTALL_TIMEOUT:-1200s}"
 import_timeout="${KONYAK_GPTK_IMPORT_CLI_SMOKE_IMPORT_TIMEOUT:-600s}"
@@ -31,6 +31,16 @@ done
 if [[ ! -d "$runtime_smoke_dir" ]]; then
   echo "Missing runtime submodule checkout: $runtime_smoke_dir" >&2
   exit 66
+fi
+
+if [[ -z "$gptk3_source" ]]; then
+  echo "Set KONYAK_GPTK3_SOURCE_PATH to a user-provided GPTK 3 DMG path." >&2
+  exit 64
+fi
+
+if [[ -z "$gptk4_source" ]]; then
+  echo "Set KONYAK_GPTK4_SOURCE_PATH to a user-provided GPTK 4 DMG path." >&2
+  exit 64
 fi
 
 prepare_cli_package() {

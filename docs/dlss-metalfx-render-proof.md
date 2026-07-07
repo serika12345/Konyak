@@ -22,6 +22,19 @@ Do not add proprietary game payloads, Apple GPTK/D3DMetal payloads, NVIDIA DLSS
 DLLs, or Streamline binary release artifacts to this repository or to Konyak
 release assets.
 
+## GPTK4 Support Decision
+
+Konyak treats GPTK4 D3DMetal as working for the D3DMetal/D3D12 render path
+when the maintained preflight can present frames through GPTK4. Konyak does not
+support GPTK4 plus DLSS/MetalFX for now.
+
+Project policy treats GPTK4 plus DLSS/MetalFX as requiring macOS 27. The
+primary maintainer must keep macOS 26 available while developing another
+Rosetta 2 based project, so Konyak will not implement or claim GPTK4
+DLSS/MetalFX support until that host constraint changes. GPTK4 verification is
+therefore limited to import, runtime layout, and D3DMetal/D3D12 render-path
+proof.
+
 ## Maintained Entrypoints
 
 The reusable local smoke script is:
@@ -33,8 +46,8 @@ nix develop -c zsh -lc './scripts/run_macos_dlss_metalfx_cli_smoke.zsh'
 Required input:
 
 ```sh
-KONYAK_MACOS_DLSS_METALFX_SMOKE_PROGRAM_EXE=/path/to/program.exe
-KONYAK_MACOS_DLSS_METALFX_SMOKE_GPTK_SOURCE=/path/to/Game_Porting_Toolkit.dmg
+KONYAK_MACOS_DLSS_METALFX_SMOKE_PROGRAM_EXE=<user-provided-windows-program>
+KONYAK_MACOS_DLSS_METALFX_SMOKE_GPTK_SOURCE=<user-provided-gptk-source>
 ```
 
 Optional input:
