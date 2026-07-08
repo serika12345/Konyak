@@ -62,18 +62,18 @@ captured_stdout_path=""
 captured_stderr_path=""
 
 print_failure_log_excerpt() {
-  local path="$1"
+  local log_path="$1"
   local label="$2"
 
-  if [[ ! -s "$path" ]]; then
+  if [[ ! -s "$log_path" ]]; then
     return
   fi
 
   echo "----- ${label} head -----" >&2
-  sed -n '1,120p' "$path" >&2
-  if (( $(wc -l <"$path") > 120 )); then
+  sed -n '1,120p' "$log_path" >&2
+  if (( $(wc -l <"$log_path") > 120 )); then
     echo "----- ${label} tail -----" >&2
-    tail -n 120 "$path" >&2
+    tail -n 120 "$log_path" >&2
   fi
 }
 
