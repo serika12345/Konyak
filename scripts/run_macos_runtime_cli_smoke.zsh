@@ -61,6 +61,22 @@ trap stop_wineserver EXIT
 captured_stdout_path=""
 captured_stderr_path=""
 
+print_failure_log_excerpt() {
+  local path="$1"
+  local label="$2"
+
+  if [[ ! -s "$path" ]]; then
+    return
+  fi
+
+  echo "----- ${label} head -----" >&2
+  sed -n '1,120p' "$path" >&2
+  if (( $(wc -l <"$path") > 120 )); then
+    echo "----- ${label} tail -----" >&2
+    tail -n 120 "$path" >&2
+  fi
+}
+
 run_cli_capture() {
   local label="$1"
   local timeout_value="$2"
@@ -89,14 +105,8 @@ run_cli_capture() {
 
   if [[ "$exit_code" -ne 0 ]]; then
     echo "konyak $* failed with exit code $exit_code" >&2
-    if [[ -s "$captured_stdout_path" ]]; then
-      echo "----- stdout -----" >&2
-      sed -n '1,200p' "$captured_stdout_path" >&2
-    fi
-    if [[ -s "$captured_stderr_path" ]]; then
-      echo "----- stderr -----" >&2
-      sed -n '1,200p' "$captured_stderr_path" >&2
-    fi
+    print_failure_log_excerpt "$captured_stdout_path" stdout
+    print_failure_log_excerpt "$captured_stderr_path" stderr
     exit "$exit_code"
   fi
 }
