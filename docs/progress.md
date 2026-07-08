@@ -13,6 +13,88 @@ unfinished work.
 
 ### Latest Update
 
+- Timestamp: 2026-07-08 15:54 JST
+- State: `completed`
+- Branch: `task/steam-black-screen-profile`; latest commit not yet created.
+- Active work: Steam black-screen remediation, first issue #44 slice.
+- Related TODO: `docs/todo.md` Next Tasks, "Start Steam black-screen
+  remediation from GitHub issue #44."
+- Related issue: <https://github.com/serika12345/Konyak/issues/44>
+- Purpose: remove the known-bad upstream `winetricks steam` install path and
+  add the runtime-owned `cabextract` completeness contract needed for
+  Konyak-managed Steam dependencies before implementing Steam profiles and
+  child-process compatibility rules.
+- Workstream separation:
+  - Investigation: use issue #44's captured dynamic evidence as input, inspect
+    the current public CLI/runtime execution contracts, and prove this slice
+    dynamically through Konyak's public JSON CLI route without relying on the
+    third-party attachment.
+  - Implementation: limit code changes to the winetricks verb contract,
+    runtime winetricks component packaging/validation, parent runtime
+    validation, and matching docs/TODO state.
+  - Audit: rerun focused CLI/runtime tests plus required gates independently
+    after implementation; this slice must not claim the Steam black window is
+    fixed until the later child-process argv rule is dynamically proven.
+- Completed work:
+  - Created dedicated branch `task/steam-black-screen-profile`.
+  - Located GitHub issue #44 and confirmed the required ordered work:
+    runtime `cabextract`, disable upstream `winetricks steam`, then Steam
+    profile and child-process argv rewrite support.
+  - Add failing CLI/runtime tests for `steam` verb filtering/rejection and
+    `bin/cabextract` runtime completeness.
+  - Implemented CLI/domain filtering so `list-winetricks-verbs --json` drops
+    upstream `steam`, while non-Steam verbs such as `corefonts` remain
+    available.
+  - Implemented stable JSON rejection for
+    `run-winetricks <bottle> --verb steam --json` with
+    `steamWinetricksVerbUnsupported`, before any Wine process is launched.
+  - Updated parent runtime validation to require `bin/cabextract` in the macOS
+    winetricks component.
+  - Updated `runtime/konyak-macos-runtime` winetricks component packaging so
+    nixpkgs `cabextract` is copied into `bin/cabextract` with its Mach-O
+    closure, and updated runtime component checks, source-manifest versioning,
+    workflow inputs, and runtime docs.
+  - Verified the suspicious issue attachment path is no longer present in
+    issue #44 comments and did not use that attachment as implementation input.
+- Remaining work:
+  - Produce/release a new macOS runtime stack artifact after the runtime-side
+    change is reviewed and merged.
+  - Add install-profile catalog and Steam profile metadata persistence.
+  - Add the generic child-process compatibility rule mechanism and Steam
+    `steamwebhelper.exe` argv rewrite.
+  - Dynamically prove the Steam login window through the public Konyak app/CLI
+    route; this slice does not claim the black-screen defect is fixed yet.
+- Next action: commit and push this slice, open a draft PR, and link it to
+  issue #44.
+- Verification performed:
+  - `nix develop -c zsh -lc 'git status --short --branch'` showed local
+    `main` clean and aligned with `origin/main` before branching.
+  - `nix develop -c zsh -lc 'gh issue view 44 --comments --json ...'`
+    captured the issue contract and dynamic evidence summary.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_program_execution_test.dart --name "winetricks|run-winetricks"'`
+    first failed against the old implementation, then passed after the change.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/domain_immutability_test.dart --name "winetricks verbs"'`
+    passed.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_runtime_install_test.dart --name "install-macos-wine builds a stack from component archives|install-macos-wine builds a stack from a source manifest"'`
+    passed.
+  - `nix develop -c zsh -lc 'zsh -n runtime/konyak-macos-runtime/scripts/package-binary-components.zsh runtime/konyak-macos-runtime/scripts/check-winetricks-component.zsh runtime/konyak-macos-runtime/scripts/make-source-manifest.zsh && ... check-winetricks-component.zsh "$tmp"'`
+    passed with a fixture containing `winetricks`, `verbs.txt`, and
+    `bin/cabextract`.
+  - `nix develop -c zsh -lc 'uname -m && nix build --no-link --print-out-paths nixpkgs#legacyPackages.x86_64-darwin.cabextract'`
+    passed on an arm64 host and resolved
+    `/nix/store/yp7faxhjkljh9gb37vx92qx994n2w2xa-cabextract-1.11`.
+  - `nix develop -c zsh -lc 'git diff --check'` and
+    `nix develop -c zsh -lc 'git -C runtime/konyak-macos-runtime diff --check'`
+    passed.
+  - `nix develop -c zsh -lc 'just cli-test'` passed; Dart CLI tests reported
+    387 tests passed.
+  - `nix develop -c zsh -lc 'just verify-governance'` passed.
+  - `nix develop -c zsh -lc 'just verify-safety'` passed.
+  - `nix develop -c zsh -lc 'just format-check'` passed.
+  - `nix develop -c zsh -lc 'just lint'` passed.
+
+### Previous Update
+
 - Timestamp: 2026-07-07 22:54 JST
 - State: `paused`
 - Branch: `task/dlss-metalfx-render-proof`; latest committed investigation

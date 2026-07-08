@@ -1343,6 +1343,7 @@ final macosWineGeckoComponentPaths = <List<String>>[
 const macosWinetricksInstalledPaths = <List<String>>[
   <String>['winetricks'],
   <String>['verbs.txt'],
+  <String>['bin', 'cabextract'],
 ];
 
 final macosWinetricksComponentPaths = <List<String>>[

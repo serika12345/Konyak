@@ -1,6 +1,7 @@
 import 'package:fpdart/fpdart.dart';
 
 import '../domain/program/program_catalog_models.dart';
+import '../domain/program/program_run_command_support.dart' as command_support;
 import '../domain/shared/domain_value_objects.dart';
 import 'external_payload_helpers.dart';
 
@@ -160,5 +161,6 @@ Option<WinetricksVerbRecord> parseWinetricksVerbLine(String line) {
 }
 
 bool isSupportedWinetricksVerb(String verb) {
-  return RegExp(r'^[A-Za-z0-9_.+-]+$').hasMatch(verb);
+  return RegExp(r'^[A-Za-z0-9_.+-]+$').hasMatch(verb) &&
+      command_support.isSupportedWinetricksVerb(WinetricksVerbId(verb));
 }
