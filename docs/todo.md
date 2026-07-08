@@ -37,9 +37,6 @@ verification output instead of checked-off backlog entries.
 
 - Continue Steam black-screen remediation from GitHub issue #44 after the
   initial `cabextract` and `winetricks steam` gate.
-  - Produce and consume a new macOS runtime stack release after the
-    runtime-side `bin/cabextract` packaging and validation change is reviewed
-    and merged.
   - Add the profile catalog, profile metadata persistence, Steam install and
     repair commands, and UI entry points.
   - Add generic child-process compatibility rule delivery for profiled

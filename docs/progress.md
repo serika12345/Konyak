@@ -13,10 +13,10 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-08 15:54 JST
+- Timestamp: 2026-07-08 19:33 JST
 - State: `completed`
-- Branch: `task/steam-black-screen-profile`; latest committed code change is
-  `f649ffc`.
+- Branch: `task/steam-black-screen-profile`; latest committed code change is the
+  commit containing this snapshot.
 - Active work: Steam black-screen remediation, first issue #44 slice.
 - Related TODO: `docs/todo.md` Next Tasks, "Continue Steam black-screen
   remediation from GitHub issue #44 after the initial `cabextract` and
@@ -26,10 +26,10 @@ unfinished work.
   - Parent: <https://github.com/serika12345/Konyak/pull/45>
   - Runtime owner:
     <https://github.com/serika12345/konyak-macos-runtime/pull/7>
-- Purpose: remove the known-bad upstream `winetricks steam` install path and
-  add the runtime-owned `cabextract` completeness contract needed for
-  Konyak-managed Steam dependencies before implementing Steam profiles and
-  child-process compatibility rules.
+- Purpose: remove the known-bad upstream `winetricks steam` install path,
+  publish and consume the runtime-owned `cabextract` completeness contract, and
+  keep the remaining Steam profile and child-process compatibility work
+  explicitly deferred until dynamic proof through the public Konyak route.
 - Workstream separation:
   - Investigation: use issue #44's captured dynamic evidence as input, inspect
     the current public CLI/runtime execution contracts, and prove this slice
@@ -60,19 +60,37 @@ unfinished work.
     nixpkgs `cabextract` is copied into `bin/cabextract` with its Mach-O
     closure, and updated runtime component checks, source-manifest versioning,
     workflow inputs, and runtime docs.
+  - Investigated PR #45 CI failures from GitHub Actions logs. The final
+    failing macOS runtime smoke had passed archive download/extract, then
+    failed runtime completeness validation because the consumed
+    `crossover-26.1.0-konyak.0` runtime stack did not include the new
+    `winetricks` component contract path `bin/cabextract`.
+  - Confirmed the already published `crossover-26.1.0-konyak.1` runtime stack
+    also lacked `bin/cabextract`, so parent-only retargeting to `.1` was not a
+    valid fix.
+  - Fixed runtime stack assembly in the runtime-owner submodule so component
+    archives preserve the Wine runtime's `bin -> Konyak Wine Hosted
+    Application` symlink when layering `bin/cabextract`.
+  - Bumped the runtime-owner release revision to
+    `crossover-26.1.0-konyak.2`, pushed runtime commit `04761d5`, and verified
+    runtime-owner PR #7 plus the workflow-dispatch publish run were green.
+  - Published and verified runtime release `crossover-26.1.0-konyak.2`; its
+    source manifest records winetricks version `20260125+cabextract-nix`, and
+    the stack archive SHA-256 is
+    `b1f841c55c66be7f7adfa2c90b3be2b1224467d9aaa2662169365276a2df2946`.
+  - Updated the parent default macOS runtime release reference, CLI default
+    constant, runtime submodule pointer, and release notes to consume
+    `crossover-26.1.0-konyak.2`.
   - Verified the suspicious issue attachment path is no longer present in
     issue #44 comments and did not use that attachment as implementation input.
 - Remaining work:
-  - Produce/release a new macOS runtime stack artifact after the runtime-side
-    change is reviewed and merged.
   - Add install-profile catalog and Steam profile metadata persistence.
   - Add the generic child-process compatibility rule mechanism and Steam
     `steamwebhelper.exe` argv rewrite.
   - Dynamically prove the Steam login window through the public Konyak app/CLI
     route; this slice does not claim the black-screen defect is fixed yet.
 - Next action: review draft PR #45 together with runtime-owner PR #7, then
-  continue with the runtime release/consume step before implementing Steam
-  profile metadata and child-process compatibility rules.
+  continue with Steam profile metadata and child-process compatibility rules.
 - Verification performed:
   - `nix develop -c zsh -lc 'git status --short --branch'` showed local
     `main` clean and aligned with `origin/main` before branching.
@@ -101,6 +119,25 @@ unfinished work.
   - `nix develop -c zsh -lc 'just lint'` passed.
   - Draft parent PR #45 and runtime-owner PR #7 were opened; issue #44 was
     linked with an explicit handoff comment.
+  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && ./scripts/assemble-runtime-stack.zsh ... && ./scripts/check-wine32on64-runtime.zsh ... && ./scripts/check-winetricks-component.zsh ... && ./scripts/check-runtime-archive-excludes-gptk.zsh ...'`
+    first reproduced the broken `runtime/bin` directory state with the CI
+    artifacts, then passed after adding `--keep-directory-symlink`.
+  - Runtime-owner PR run
+    <https://github.com/serika12345/konyak-macos-runtime/actions/runs/28931762142>
+    passed after rerunning a transient artifact-download failure.
+  - Runtime-owner workflow-dispatch publish run
+    <https://github.com/serika12345/konyak-macos-runtime/actions/runs/28931954004>
+    passed and published `crossover-26.1.0-konyak.2`.
+  - Downloaded the published `.2` source manifest and stack archive, verified
+    the archive SHA-256 against the manifest, confirmed `bin` remains a symlink
+    to `Konyak Wine Hosted Application`, and confirmed `bin/cabextract` is
+    executable through that symlink.
+  - `nix develop -c zsh -lc 'dart format packages/konyak_cli/lib/src/shared/model_constants.dart apps/konyak/test/cli/konyak_cli_client_test.dart && cd packages/konyak_cli && dart test test/cli_contract_test.dart && cd ../../apps/konyak && flutter test test/cli/konyak_cli_client_test.dart --name "passes configured development macOS runtime release manifest"'`
+    passed.
+  - `nix develop -c zsh -lc 'just verify'` passed.
+  - `nix develop -c zsh -lc './scripts/run_macos_runtime_cli_smoke.zsh'`
+    passed against
+    `https://github.com/serika12345/konyak-macos-runtime/releases/download/crossover-26.1.0-konyak.2/konyak-macos-wine-runtime-stack-source.json`.
 
 ### Previous Update
 
