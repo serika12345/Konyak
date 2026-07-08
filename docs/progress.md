@@ -15,11 +15,17 @@ unfinished work.
 
 - Timestamp: 2026-07-08 15:54 JST
 - State: `completed`
-- Branch: `task/steam-black-screen-profile`; latest commit not yet created.
+- Branch: `task/steam-black-screen-profile`; latest committed code change is
+  `f649ffc`.
 - Active work: Steam black-screen remediation, first issue #44 slice.
-- Related TODO: `docs/todo.md` Next Tasks, "Start Steam black-screen
-  remediation from GitHub issue #44."
+- Related TODO: `docs/todo.md` Next Tasks, "Continue Steam black-screen
+  remediation from GitHub issue #44 after the initial `cabextract` and
+  `winetricks steam` gate."
 - Related issue: <https://github.com/serika12345/Konyak/issues/44>
+- Pull requests:
+  - Parent: <https://github.com/serika12345/Konyak/pull/45>
+  - Runtime owner:
+    <https://github.com/serika12345/konyak-macos-runtime/pull/7>
 - Purpose: remove the known-bad upstream `winetricks steam` install path and
   add the runtime-owned `cabextract` completeness contract needed for
   Konyak-managed Steam dependencies before implementing Steam profiles and
@@ -64,8 +70,9 @@ unfinished work.
     `steamwebhelper.exe` argv rewrite.
   - Dynamically prove the Steam login window through the public Konyak app/CLI
     route; this slice does not claim the black-screen defect is fixed yet.
-- Next action: commit and push this slice, open a draft PR, and link it to
-  issue #44.
+- Next action: review draft PR #45 together with runtime-owner PR #7, then
+  continue with the runtime release/consume step before implementing Steam
+  profile metadata and child-process compatibility rules.
 - Verification performed:
   - `nix develop -c zsh -lc 'git status --short --branch'` showed local
     `main` clean and aligned with `origin/main` before branching.
@@ -92,6 +99,8 @@ unfinished work.
   - `nix develop -c zsh -lc 'just verify-safety'` passed.
   - `nix develop -c zsh -lc 'just format-check'` passed.
   - `nix develop -c zsh -lc 'just lint'` passed.
+  - Draft parent PR #45 and runtime-owner PR #7 were opened; issue #44 was
+    linked with an explicit handoff comment.
 
 ### Previous Update
 
