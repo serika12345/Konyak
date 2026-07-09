@@ -13,63 +13,70 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-09 10:57 JST
+- Timestamp: 2026-07-09 13:21 JST
 - State: `completed`
-- Branch: `task/steam-profile-catalog`; latest committed code change is the
-  commit containing this snapshot.
-- Active work: Steam black-screen remediation, install-profile catalog and
-  Konyak-owned profile metadata contracts.
+- Branch: `task/steam-profile-install-flow`; latest committed code change is
+  the commit containing this snapshot.
+- Active work: Steam black-screen remediation, CLI-backed Steam profile install
+  flow after merged parent PR #46.
 - Related TODO: `docs/todo.md` Next Tasks, "Continue Steam black-screen
   remediation from GitHub issue #44 after the initial `cabextract` and macOS
   `winetricks steam` gate."
 - Related issue: <https://github.com/serika12345/Konyak/issues/44>
 - Pull requests:
-  - Parent/runtime first slice was merged:
+  - Merged first slice:
     <https://github.com/serika12345/Konyak/pull/45> and
     <https://github.com/serika12345/konyak-macos-runtime/pull/7>
-  - Current parent PR: to be opened from this branch after commit/push.
-- Purpose: add the first Konyak-owned Steam profile surface: a static install
-  profile catalog, versioned compatibility profile metadata, and CLI contracts
-  that can attach or repair Steam profile metadata on a bottle without relying
-  on CrossOver plist/live external metadata.
+  - Merged profile catalog slice:
+    <https://github.com/serika12345/Konyak/pull/46>
+  - Current parent PR:
+    <https://github.com/serika12345/Konyak/pull/47>
+  - Issue handoff comment:
+    <https://github.com/serika12345/Konyak/issues/44#issuecomment-4921546797>
+- Purpose: add the next profile-driven install slice without claiming the Steam
+  black-screen defect is fixed: accept a Konyak-selected local Steam installer
+  path, run profile dependencies through the public Konyak winetricks route,
+  launch the installer through the public `run-program` planning path, then
+  attach Konyak-owned Steam profile metadata.
 - Workstream separation:
-  - Investigation: use issue #44's captured dynamic evidence and the merged
-    first slice as input; no new runtime defect root-cause claim is made in
+  - Investigation: use issue #44's dynamic evidence and merged PR #46 profile
+    catalog contract as input; no new black-screen root-cause claim is made in
     this PR.
-  - Implementation: limit code changes to CLI/domain/repository profile
-    catalog and metadata persistence contracts. Do not implement Wine-side
+  - Implementation: limit code changes to CLI parser/handler contracts,
+    installer-source policy for local installer input, dependency execution,
+    installer launch, and docs. Do not implement UI entry points or Wine-side
     child-process argv rewriting in this PR.
-  - Audit: rerun focused profile contract tests plus required repository gates
-    before opening the PR.
+  - Audit: rerun focused install-profile contract tests plus required gates
+    before opening the PR. Sub-agent execution is not used because the
+    available sub-agent tool requires an explicit user request before spawning.
 - Completed work:
-  - Merged parent PR #45 and runtime-owner PR #7 after all checks were green.
-  - Created dedicated branch `task/steam-profile-catalog` from updated `main`.
-  - Added failing-first CLI parser and contract tests for listing,
-    inspecting, applying, and repairing the Steam profile metadata contract.
-  - Added file repository coverage proving the applied profile persists in
-    Konyak-owned `metadata.json` under the bottle.
-  - Implemented Steam install profile catalog data, compatibility profile rule
-    metadata, bottle `profiles` persistence, and profile apply/repair
-    repository operations.
+  - Confirmed PR #46 was merged and all checks passed, then synchronized local
+    `main` to merge commit `0e9b92e`.
+  - Created dedicated branch `task/steam-profile-install-flow` from updated
+    `main`.
+  - Added failing-first CLI parser and contract tests for
+    `install-profile steam --bottle <id> --installer <path> --json`.
+  - Implemented CLI execution that runs profile dependency winetricks verbs,
+    launches the local installer path, stops on failed steps, and applies the
+    Steam profile metadata only after successful steps.
 - Remaining work:
-  - Add profile-driven installer execution, including source policy,
-    dependency execution, install-profile command wiring, and UI entry points.
+  - Add UI entry points for the CLI-backed Steam profile install flow.
   - Add the generic child-process compatibility rule delivery mechanism and
     Steam `steamwebhelper.exe` argv rewrite.
   - Dynamically prove the Steam login window through the public Konyak app/CLI
     route; this slice does not claim the black-screen defect is fixed yet.
-- Next action: review the current parent PR, then continue with
-  profile-driven installer execution and child-process compatibility rules.
+- Next action: review draft PR #47, then continue with UI entry points or
+  child-process compatibility rules in a later slice.
 - Verification performed:
-  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_program_mutation_parsers_test.dart test/cli_contract_program_execution_test.dart --name "install-profile|program profile|Steam profile|profile"'`
-    passed for the new parser and profile CLI contracts.
-  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_repository_runner_test.dart --name "persists program profile"'`
-    passed as part of the focused profile test run.
-  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/domain_immutability_test.dart --name "bottle records expose immutable program snapshots|program mutation request records"'`
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_program_mutation_parsers_test.dart test/cli_contract_program_execution_test.dart --name "install-profile"'`
+    first failed before implementation, then passed for the CLI install-profile
+    contract after implementation.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_program_mutation_parsers_test.dart'`
     passed.
+  - `nix develop -c zsh -lc 'just lint'` initially failed on a null-aware map
+    entry cleanup, then passed after replacing the optional field construction.
   - `nix develop -c zsh -lc 'just cli-test && just verify-governance && just verify-safety && just format-check && just lint'`
-    passed after updating the public CLI export governance allowlist for the
-    new profile domain contracts.
+    passed after the lint fix; Dart CLI tests reported 399 tests passed.
 
 ### Previous Update
 

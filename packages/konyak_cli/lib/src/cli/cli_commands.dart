@@ -189,6 +189,7 @@ Usage:
   konyak set-program-settings <id> --program <path> --settings-json <json> --json
   konyak list-install-profiles --json
   konyak inspect-install-profile <profile> --json
+  konyak install-profile <profile> --bottle <id> --installer <path> --json
   konyak apply-program-profile <profile> --bottle <id> --program <path> --json
   konyak repair-profile <profile> --bottle <id> --json
   konyak suggest-graphics-backend --program <path> --json
