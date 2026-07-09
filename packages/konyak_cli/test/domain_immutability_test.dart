@@ -1558,11 +1558,8 @@ void main() {
 
   test('winetricks verbs model supported verbs with WinetricksVerbId', () {
     expect(isSupportedWinetricksVerb(WinetricksVerbId('corefonts')), isTrue);
-    expect(isSupportedWinetricksVerb(WinetricksVerbId('steam')), isFalse);
-    expect(
-      isUnsupportedProfileInstallWinetricksVerb(WinetricksVerbId('steam')),
-      isTrue,
-    );
+    expect(isSupportedWinetricksVerb(WinetricksVerbId('steam')), isTrue);
+    expect(isProfileInstallWinetricksVerb(WinetricksVerbId('steam')), isTrue);
     expect(
       isSupportedWinetricksVerb(WinetricksVerbId('corefonts;rm')),
       isFalse,

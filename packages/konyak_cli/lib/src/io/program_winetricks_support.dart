@@ -5,11 +5,16 @@ import '../domain/program/program_run_command_support.dart' as command_support;
 import '../domain/shared/domain_value_objects.dart';
 import 'external_payload_helpers.dart';
 
-List<WinetricksCategoryRecord> parseWinetricksVerbs(String content) {
+List<WinetricksCategoryRecord> parseWinetricksVerbs(
+  String content, {
+  bool includeProfileInstallVerbs = false,
+}) {
   final state = content
       .split('\n')
       .fold(
-        WinetricksVerbParseState.empty(),
+        WinetricksVerbParseState.empty(
+          includeProfileInstallVerbs: includeProfileInstallVerbs,
+        ),
         (state, line) => state.withLine(line),
       );
   return state.flushCurrentCategory().categories;
@@ -19,17 +24,22 @@ final class WinetricksVerbParseState {
   WinetricksVerbParseState({
     required Iterable<WinetricksCategoryRecord> categories,
     required this.currentCategory,
+    required this.includeProfileInstallVerbs,
   }) : categories = List.unmodifiable(categories);
 
-  factory WinetricksVerbParseState.empty() {
+  factory WinetricksVerbParseState.empty({
+    required bool includeProfileInstallVerbs,
+  }) {
     return WinetricksVerbParseState(
       categories: <WinetricksCategoryRecord>[],
       currentCategory: const Option.none(),
+      includeProfileInstallVerbs: includeProfileInstallVerbs,
     );
   }
 
   final List<WinetricksCategoryRecord> categories;
   final Option<PendingWinetricksCategory> currentCategory;
+  final bool includeProfileInstallVerbs;
 
   WinetricksVerbParseState withLine(String line) {
     final trimmed = line.trim();
@@ -54,10 +64,14 @@ final class WinetricksVerbParseState {
   WinetricksVerbParseState withVerbLine(String line) {
     return currentCategory.match(
       () => this,
-      (category) => parseWinetricksVerbLine(line).match(
-        () => this,
-        (verb) => withCurrentCategory(category.withVerb(verb)),
-      ),
+      (category) =>
+          parseWinetricksVerbLine(
+            line,
+            includeProfileInstallVerbs: includeProfileInstallVerbs,
+          ).match(
+            () => this,
+            (verb) => withCurrentCategory(category.withVerb(verb)),
+          ),
     );
   }
 
@@ -69,6 +83,7 @@ final class WinetricksVerbParseState {
             ? categories
             : <WinetricksCategoryRecord>[...categories, category.toRecord()],
         currentCategory: const Option.none(),
+        includeProfileInstallVerbs: includeProfileInstallVerbs,
       ),
     );
   }
@@ -77,6 +92,7 @@ final class WinetricksVerbParseState {
     return WinetricksVerbParseState(
       categories: categories,
       currentCategory: const Option.none(),
+      includeProfileInstallVerbs: includeProfileInstallVerbs,
     );
   }
 
@@ -86,6 +102,7 @@ final class WinetricksVerbParseState {
     return WinetricksVerbParseState(
       categories: categories,
       currentCategory: Option.of(category),
+      includeProfileInstallVerbs: includeProfileInstallVerbs,
     );
   }
 }
@@ -139,11 +156,17 @@ Option<String> winetricksCategoryName(String id) {
   };
 }
 
-Option<WinetricksVerbRecord> parseWinetricksVerbLine(String line) {
+Option<WinetricksVerbRecord> parseWinetricksVerbLine(
+  String line, {
+  bool includeProfileInstallVerbs = false,
+}) {
   return nullableOption(RegExp(r'^(\S+)\s*(.*)$').firstMatch(line)).flatMap(
     (match) => nullableOption(match.group(1)).flatMap((rawName) {
       final name = rawName.trim();
-      if (!isSupportedWinetricksVerb(name)) {
+      if (!isSupportedWinetricksVerb(
+        name,
+        includeProfileInstallVerbs: includeProfileInstallVerbs,
+      )) {
         return const Option.none();
       }
 
@@ -160,7 +183,13 @@ Option<WinetricksVerbRecord> parseWinetricksVerbLine(String line) {
   );
 }
 
-bool isSupportedWinetricksVerb(String verb) {
+bool isSupportedWinetricksVerb(
+  String verb, {
+  bool includeProfileInstallVerbs = false,
+}) {
+  final verbId = WinetricksVerbId(verb);
   return RegExp(r'^[A-Za-z0-9_.+-]+$').hasMatch(verb) &&
-      command_support.isSupportedWinetricksVerb(WinetricksVerbId(verb));
+      command_support.isSupportedWinetricksVerb(verbId) &&
+      (includeProfileInstallVerbs ||
+          !command_support.isProfileInstallWinetricksVerb(verbId));
 }

@@ -2904,9 +2904,72 @@ ignored                  Should not be listed
     });
   });
 
-  test('list-winetricks-verbs --json does not expose Steam install verb', () {
+  test('list-winetricks-verbs --json does not expose Steam on macOS', () {
     final runtimeRoot = Directory.systemTemp.createTempSync(
       'konyak-winetricks-filter-test-',
+    );
+    addTearDown(() {
+      if (runtimeRoot.existsSync()) {
+        runtimeRoot.deleteSync(recursive: true);
+      }
+    });
+    File(joinTestPath(runtimeRoot.path, const ['verbs.txt']))
+      ..createSync(recursive: true)
+      ..writeAsStringSync('''
+===== apps =====
+steam                    Steam Client
+ubisoftconnect           Ubisoft Connect
+
+===== fonts =====
+corefonts                Microsoft Core Fonts
+''');
+
+    final result = runCli(
+      const ['list-winetricks-verbs', '--json'],
+      winetricksVerbRepository: DartIoWinetricksVerbRepository(
+        runtimeRoot: runtimeRoot.path,
+        hostPlatform: KonyakHostPlatform.macos,
+      ),
+    );
+
+    expect(result.exitCode, 0);
+    expect(result.stderr, isEmpty);
+
+    final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+    expect(payload, {
+      'schemaVersion': 1,
+      'winetricks': {
+        'categories': [
+          {
+            'id': 'apps',
+            'name': 'Apps',
+            'verbs': [
+              {
+                'id': 'ubisoftconnect',
+                'name': 'ubisoftconnect',
+                'description': 'Ubisoft Connect',
+              },
+            ],
+          },
+          {
+            'id': 'fonts',
+            'name': 'Fonts',
+            'verbs': [
+              {
+                'id': 'corefonts',
+                'name': 'corefonts',
+                'description': 'Microsoft Core Fonts',
+              },
+            ],
+          },
+        ],
+      },
+    });
+  });
+
+  test('list-winetricks-verbs --json exposes Steam on Linux', () {
+    final runtimeRoot = Directory.systemTemp.createTempSync(
+      'konyak-linux-winetricks-steam-test-',
     );
     addTearDown(() {
       if (runtimeRoot.existsSync()) {
@@ -2925,7 +2988,7 @@ ubisoftconnect           Ubisoft Connect
 
 ===== fonts =====
 corefonts                Microsoft Core Fonts
-'''),
+''', includeProfileInstallVerbs: true),
       ),
     );
 
@@ -2950,6 +3013,7 @@ corefonts                Microsoft Core Fonts
             'id': 'apps',
             'name': 'Apps',
             'verbs': [
+              {'id': 'steam', 'name': 'steam', 'description': 'Steam Client'},
               {
                 'id': 'ubisoftconnect',
                 'name': 'ubisoftconnect',
@@ -3185,6 +3249,54 @@ corefonts                Microsoft Core Fonts
       });
     },
   );
+
+  test('run-winetricks --json launches Steam install verb on Linux', () {
+    final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
+      dataHome: '/home/user/.local/share/konyak',
+      bottles: [
+        BottleRecord(
+          id: 'steam',
+          name: 'Steam',
+          path: '/home/user/.local/share/konyak/bottles/steam',
+          windowsVersion: 'win10',
+        ),
+      ],
+    );
+    final runner = RecordingProgramRunner(
+      result: const ProgramRunCompleted(processExitCode: 0),
+    );
+
+    final result = runCli(
+      const ['run-winetricks', 'steam', '--verb', 'steam', '--json'],
+      bottleRepository: repository,
+      programRunPlanner: ProgramRunPlanner(
+        hostPlatform: KonyakHostPlatform.linux,
+        environment: HostEnvironment({'HOME': '/home/user'}),
+      ),
+      programRunner: runner,
+    );
+
+    expect(result.exitCode, 0);
+    expect(runner.lastRequest?.runnerKind.value, 'winetricks');
+    expect(runner.lastRequest?.programPath.value, 'steam');
+    expect(runner.lastRequest?.arguments, const ['steam']);
+    expect(
+      runner.lastRequest?.executable.value,
+      '/home/user/.local/share/konyak/Runtimes/linux-wine/winetricks',
+    );
+
+    final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+    final run = payload['run'] as Map<String, Object?>;
+    expect(payload['schemaVersion'], 1);
+    expect(run['bottleId'], 'steam');
+    expect(run['programPath'], 'steam');
+    expect(run['runnerKind'], 'winetricks');
+    expect(run['argv'], [
+      '/home/user/.local/share/konyak/Runtimes/linux-wine/winetricks',
+      'steam',
+    ]);
+  });
 
   test('run-winetricks --json rejects unsafe verb names', () {
     final repository = MemoryBottleRepository(

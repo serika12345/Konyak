@@ -356,7 +356,8 @@ CliResult runWinetricksJsonResult(
     bottleId: request.bottleId,
     onFound: (bottle) {
       final winetricksVerb = WinetricksVerbId(request.verb);
-      if (isUnsupportedProfileInstallWinetricksVerb(winetricksVerb)) {
+      if (context.programRunPlanner.hostPlatform == KonyakHostPlatform.macos &&
+          isProfileInstallWinetricksVerb(winetricksVerb)) {
         return jsonError(
           exitCode: 65,
           code: 'steamWinetricksVerbUnsupported',

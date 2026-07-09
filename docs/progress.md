@@ -13,20 +13,20 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-08 19:33 JST
+- Timestamp: 2026-07-09 10:04 JST
 - State: `completed`
 - Branch: `task/steam-black-screen-profile`; latest committed code change is the
   commit containing this snapshot.
 - Active work: Steam black-screen remediation, first issue #44 slice.
 - Related TODO: `docs/todo.md` Next Tasks, "Continue Steam black-screen
-  remediation from GitHub issue #44 after the initial `cabextract` and
+  remediation from GitHub issue #44 after the initial `cabextract` and macOS
   `winetricks steam` gate."
 - Related issue: <https://github.com/serika12345/Konyak/issues/44>
 - Pull requests:
   - Parent: <https://github.com/serika12345/Konyak/pull/45>
   - Runtime owner:
     <https://github.com/serika12345/konyak-macos-runtime/pull/7>
-- Purpose: remove the known-bad upstream `winetricks steam` install path,
+- Purpose: remove the known-bad upstream macOS `winetricks steam` install path,
   publish and consume the runtime-owned `cabextract` completeness contract, and
   keep the remaining Steam profile and child-process compatibility work
   explicitly deferred until dynamic proof through the public Konyak route.
@@ -44,16 +44,17 @@ unfinished work.
 - Completed work:
   - Created dedicated branch `task/steam-black-screen-profile`.
   - Located GitHub issue #44 and confirmed the required ordered work:
-    runtime `cabextract`, disable upstream `winetricks steam`, then Steam
-    profile and child-process argv rewrite support.
+    runtime `cabextract`, disable upstream macOS `winetricks steam`, then
+    Steam profile and child-process argv rewrite support.
   - Add failing CLI/runtime tests for `steam` verb filtering/rejection and
     `bin/cabextract` runtime completeness.
-  - Implemented CLI/domain filtering so `list-winetricks-verbs --json` drops
-    upstream `steam`, while non-Steam verbs such as `corefonts` remain
-    available.
+  - Implemented CLI/domain filtering so macOS `list-winetricks-verbs --json`
+    drops upstream `steam`, while Linux still exposes the upstream Linux
+    `steam` verb and non-Steam verbs such as `corefonts` remain available.
   - Implemented stable JSON rejection for
-    `run-winetricks <bottle> --verb steam --json` with
-    `steamWinetricksVerbUnsupported`, before any Wine process is launched.
+    macOS `run-winetricks <bottle> --verb steam --json` with
+    `steamWinetricksVerbUnsupported`, before any Wine process is launched;
+    Linux still plans and runs the upstream `steam` verb.
   - Updated parent runtime validation to require `bin/cabextract` in the macOS
     winetricks component.
   - Updated `runtime/konyak-macos-runtime` winetricks component packaging so
@@ -138,6 +139,9 @@ unfinished work.
   - `nix develop -c zsh -lc './scripts/run_macos_runtime_cli_smoke.zsh'`
     passed against
     `https://github.com/serika12345/konyak-macos-runtime/releases/download/crossover-26.1.0-konyak.2/konyak-macos-wine-runtime-stack-source.json`.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_program_execution_test.dart --name "list-winetricks-verbs|run-winetricks" && dart test test/domain_immutability_test.dart --name "winetricks verbs"'`
+    passed after correcting the policy so Steam is blocked only on macOS and
+    remains available on Linux.
 
 ### Previous Update
 

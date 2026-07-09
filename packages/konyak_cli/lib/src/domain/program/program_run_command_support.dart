@@ -1,17 +1,18 @@
 import '../shared/domain_value_objects.dart';
 import 'program_run_models.dart';
 
-const _unsupportedProfileInstallWinetricksVerbIds = <String>{'steam'};
+const _profileInstallWinetricksVerbIds = <String>{'steam'};
 
 bool isSupportedWinetricksVerb(WinetricksVerbId verb) {
-  return RegExp(r'^[A-Za-z0-9_.+-]+$').hasMatch(verb.value) &&
-      !isUnsupportedProfileInstallWinetricksVerb(verb);
+  return RegExp(r'^[A-Za-z0-9_.+-]+$').hasMatch(verb.value);
+}
+
+bool isProfileInstallWinetricksVerb(WinetricksVerbId verb) {
+  return _profileInstallWinetricksVerbIds.contains(verb.value.toLowerCase());
 }
 
 bool isUnsupportedProfileInstallWinetricksVerb(WinetricksVerbId verb) {
-  return _unsupportedProfileInstallWinetricksVerbIds.contains(
-    verb.value.toLowerCase(),
-  );
+  return isProfileInstallWinetricksVerb(verb);
 }
 
 String winedbgAttachProcessId(WineProcessId processId) {

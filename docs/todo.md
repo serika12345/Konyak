@@ -36,7 +36,7 @@ verification output instead of checked-off backlog entries.
 ## Next Tasks
 
 - Continue Steam black-screen remediation from GitHub issue #44 after the
-  initial `cabextract` and `winetricks steam` gate.
+  initial `cabextract` and macOS `winetricks steam` gate.
   - Add the profile catalog, profile metadata persistence, Steam install and
     repair commands, and UI entry points.
   - Add generic child-process compatibility rule delivery for profiled
