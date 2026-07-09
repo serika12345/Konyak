@@ -93,7 +93,10 @@ class DartIoWinetricksVerbLister implements WinetricksVerbLister {
       }
 
       return WinetricksVerbListResult.completed(
-        categories: parseWinetricksVerbs(processOutputToString(result.stdout)),
+        categories: parseWinetricksVerbs(
+          processOutputToString(result.stdout),
+          includeProfileInstallVerbs: true,
+        ),
       );
     } on ProcessException catch (error) {
       return WinetricksVerbListResult.failed(

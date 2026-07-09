@@ -245,7 +245,9 @@ class ProgramRunPlanner {
     required BottleRecord bottle,
     required WinetricksVerbId verb,
   }) {
-    if (!isSupportedWinetricksVerb(verb)) {
+    if (!isSupportedWinetricksVerb(verb) ||
+        (hostPlatform == KonyakHostPlatform.macos &&
+            isProfileInstallWinetricksVerb(verb))) {
       return const Option.none();
     }
 

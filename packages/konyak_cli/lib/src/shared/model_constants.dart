@@ -13,7 +13,7 @@ const linuxWineRuntimeId = 'konyak-linux-wine';
 const macosWineRuntimeId = 'konyak-macos-wine';
 const macosWineArchiveFileName = 'macos-wine.tar.xz';
 const macosWineRuntimeRepository = 'serika12345/konyak-macos-runtime';
-const macosWineRuntimeDefaultReleaseTag = 'crossover-26.1.0-konyak.0';
+const macosWineRuntimeDefaultReleaseTag = 'crossover-26.1.0-konyak.2';
 const macosWineRuntimeSourceManifestFileName =
     'konyak-macos-wine-runtime-stack-source.json';
 const macosWineRuntimeReleaseUrl =

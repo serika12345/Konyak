@@ -4,6 +4,7 @@ import '../domain/bottle/bottle_models.dart';
 import '../domain/bottle/bottle_runtime_settings_models.dart';
 import '../domain/program/program_graphics_backend_hints.dart';
 import '../domain/program/program_mutation_models.dart';
+import '../domain/program/program_run_command_support.dart';
 import '../domain/program/program_run_environment.dart';
 import '../domain/program/program_run_models.dart';
 import '../domain/program/program_runner.dart';
@@ -355,6 +356,16 @@ CliResult runWinetricksJsonResult(
     bottleId: request.bottleId,
     onFound: (bottle) {
       final winetricksVerb = WinetricksVerbId(request.verb);
+      if (context.programRunPlanner.hostPlatform == KonyakHostPlatform.macos &&
+          isProfileInstallWinetricksVerb(winetricksVerb)) {
+        return jsonError(
+          exitCode: 65,
+          code: 'steamWinetricksVerbUnsupported',
+          message: 'Steam must be installed through the Konyak Steam profile.',
+          extra: <String, Object?>{'verb': request.verb, 'profileId': 'steam'},
+        );
+      }
+
       final programRunRequest = context.programRunPlanner.planWinetricksVerb(
         bottle: bottle,
         verb: winetricksVerb,

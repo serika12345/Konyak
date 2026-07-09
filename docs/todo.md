@@ -35,6 +35,15 @@ verification output instead of checked-off backlog entries.
 
 ## Next Tasks
 
+- Continue Steam black-screen remediation from GitHub issue #44 after the
+  initial `cabextract` and macOS `winetricks steam` gate.
+  - Add the profile catalog, profile metadata persistence, Steam install and
+    repair commands, and UI entry points.
+  - Add generic child-process compatibility rule delivery for profiled
+    programs, then implement the Steam `steamwebhelper.exe` argv rewrite.
+  - Dynamically prove the Steam login window through the public Konyak app/CLI
+    route with process tree, window dump, screenshot, run JSON, and logs before
+    claiming the black-screen defect is fixed.
 - Capture end-to-end DLSS/MetalFX rendering proof with a redistributable or
   user-provided DLSS-capable Windows program.
   - Do not target GPTK4 for this proof while the project support matrix treats

@@ -317,6 +317,7 @@ final _macosKonyakRuntimeComponentDefinitions =
         relativePaths: _runtimeRelativePaths(const <List<String>>[
           <String>['winetricks'],
           <String>['verbs.txt'],
+          <String>['bin', 'cabextract'],
         ]),
       ),
       RuntimeStackComponentDefinition(

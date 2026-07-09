@@ -332,7 +332,7 @@ void main() {
       );
       const manifest =
           'https://github.com/serika12345/konyak-macos-runtime/releases/'
-          'download/crossover-26.1.0-konyak.0/'
+          'download/crossover-26.1.0-konyak.2/'
           'konyak-macos-wine-runtime-stack-source.json';
 
       final client = createDefaultKonyakCliClient(

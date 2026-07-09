@@ -1,6 +1,35 @@
+import 'package:konyak_cli/src/io/runtime_source_archive_downloads.dart';
+
 import 'support/cli_contract_full_helpers.dart';
 
 void main() {
+  test(
+    'runtime source archive remote downloads use retrying curl request contract',
+    () {
+      expect(
+        runtimeStackSourceArchiveCurlArguments(
+          source: 'https://example.test/runtime.tar.xz',
+          targetPath: '/tmp/konyak/runtime.tar.xz',
+        ),
+        <String>[
+          '--fail',
+          '--location',
+          '--silent',
+          '--show-error',
+          '--retry',
+          '3',
+          '--retry-delay',
+          '2',
+          '--user-agent',
+          'Konyak/$konyakAppVersion',
+          '--output',
+          '/tmp/konyak/runtime.tar.xz',
+          'https://example.test/runtime.tar.xz',
+        ],
+      );
+    },
+  );
+
   test('runtime package installer stages and replaces runtime roots', () {
     final tempDirectory = Directory.systemTemp.createTempSync(
       'konyak-runtime-package-installer-test-',

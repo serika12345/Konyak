@@ -45,13 +45,14 @@ RuntimeStackSourceArchiveDownloadResult downloadRuntimeStackSourceArchive({
     message: message,
     fraction: startFraction,
   );
-  final result = Process.runSync('curl', [
-    '--fail',
-    '--location',
-    '--output',
-    targetPath,
-    source,
-  ], runInShell: false);
+  final result = Process.runSync(
+    'curl',
+    runtimeStackSourceArchiveCurlArguments(
+      source: source,
+      targetPath: targetPath,
+    ),
+    runInShell: false,
+  );
   if (result.exitCode != 0) {
     return Left<String, Unit>(
       commandFailureMessage('download runtime stack component', result),
@@ -170,64 +171,60 @@ downloadRuntimeStackSourceUriStreaming({
     );
   }
 
-  final client = HttpClient();
-  try {
-    emitRuntimeInstallProgress(
-      progressSink,
-      stage: stage,
-      message: message,
-      fraction: startFraction,
-    );
+  emitRuntimeInstallProgress(
+    progressSink,
+    stage: stage,
+    message: message,
+    fraction: startFraction,
+  );
 
-    final request = await client.getUrl(uri);
-    request.headers.set(
-      HttpHeaders.userAgentHeader,
-      'Konyak/$konyakAppVersion',
+  try {
+    File(targetPath).parent.createSync(recursive: true);
+    final result = await Process.run(
+      'curl',
+      runtimeStackSourceArchiveCurlArguments(
+        source: source,
+        targetPath: targetPath,
+      ),
+      runInShell: false,
     );
-    final response = await request.close();
-    if (response.statusCode < 200 || response.statusCode >= 300) {
+    if (result.exitCode != 0) {
       return Left<String, Unit>(
-        'download runtime stack component failed with HTTP status '
-        '${response.statusCode}.',
+        commandFailureMessage('download runtime stack component', result),
       );
     }
-
-    final totalBytes = response.contentLength;
-    var receivedBytes = 0;
-    File(targetPath).parent.createSync(recursive: true);
-    final sink = File(targetPath).openWrite();
-    try {
-      await for (final chunk in response) {
-        receivedBytes += chunk.length;
-        sink.add(chunk);
-        emitRuntimeInstallByteProgress(
-          progressSink,
-          stage: stage,
-          message: message,
-          copiedBytes: receivedBytes,
-          totalBytes: totalBytes,
-          startFraction: startFraction,
-          endFraction: endFraction,
-        );
-      }
-    } finally {
-      await sink.close();
-    }
-
-    emitRuntimeInstallProgress(
-      progressSink,
-      stage: stage,
-      message: message,
-      fraction: endFraction,
-    );
-    return const Right<String, Unit>(unit);
-  } on HttpException catch (error) {
-    return Left<String, Unit>(error.message);
   } on IOException catch (error) {
     return Left<String, Unit>(error.toString());
-  } finally {
-    client.close(force: true);
   }
+
+  emitRuntimeInstallProgress(
+    progressSink,
+    stage: stage,
+    message: message,
+    fraction: endFraction,
+  );
+  return const Right<String, Unit>(unit);
+}
+
+List<String> runtimeStackSourceArchiveCurlArguments({
+  required String source,
+  required String targetPath,
+}) {
+  return <String>[
+    '--fail',
+    '--location',
+    '--silent',
+    '--show-error',
+    '--retry',
+    '3',
+    '--retry-delay',
+    '2',
+    '--user-agent',
+    'Konyak/$konyakAppVersion',
+    '--output',
+    targetPath,
+    source,
+  ];
 }
 
 void emitRuntimeInstallByteProgress(
