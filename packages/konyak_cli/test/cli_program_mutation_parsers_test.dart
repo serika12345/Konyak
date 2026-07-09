@@ -69,6 +69,22 @@ void main() {
   });
 
   test('parses program profile requests as explicit options', () {
+    final installRequest = _expectSome(
+      parseJsonProgramProfileInstallRequestOption(const [
+        'install-profile',
+        'steam',
+        '--bottle',
+        'steam',
+        '--installer',
+        '/downloads/SteamSetup.exe',
+        '--json',
+      ]),
+    );
+
+    expect(installRequest.profileId.value, 'steam');
+    expect(installRequest.bottleId.value, 'steam');
+    expect(installRequest.installerPath.value, '/downloads/SteamSetup.exe');
+
     final applyRequest = _expectSome(
       parseJsonProgramProfileApplyRequestOption(const [
         'apply-program-profile',

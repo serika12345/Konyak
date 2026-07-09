@@ -201,6 +201,49 @@ parseJsonInstallProfileInspectCliRequestOption(List<String> arguments) {
   });
 }
 
+class ProgramProfileInstallCliRequest {
+  const ProgramProfileInstallCliRequest({
+    required this.profileId,
+    required this.bottleId,
+    required this.installerPath,
+  });
+
+  final ProfileId profileId;
+  final BottleId bottleId;
+  final ProgramPath installerPath;
+}
+
+ProgramProfileInstallCliRequest? parseJsonProgramProfileInstallRequest(
+  List<String> arguments,
+) {
+  return _nullableParsedRequest(
+    parseJsonProgramProfileInstallRequestOption(arguments),
+  );
+}
+
+Option<ProgramProfileInstallCliRequest>
+parseJsonProgramProfileInstallRequestOption(List<String> arguments) {
+  return Option.Do(($) {
+    final results = $(
+      _parseJsonProgramMutationCommand(
+        arguments,
+        command: 'install-profile',
+        options: const <String>['bottle', 'installer'],
+        restCount: 1,
+      ),
+    );
+    final profileId = $(_requiredProfileIdFromRest(results));
+    final bottleId = $(_requiredBottleIdOption(results, 'bottle'));
+    final installerPath = $(_requiredProgramPath(results, 'installer'));
+
+    return ProgramProfileInstallCliRequest(
+      profileId: profileId,
+      bottleId: bottleId,
+      installerPath: installerPath,
+    );
+  });
+}
+
 class ProgramProfileApplyCliRequest {
   const ProgramProfileApplyCliRequest({
     required this.profileId,
