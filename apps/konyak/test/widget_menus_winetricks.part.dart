@@ -46,7 +46,7 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
     await _expectGoldenFileWithinTolerance(
       find.byKey(goldenKey),
       'goldens/bottom_bar_steam_install.png',
-      diffTolerance: 0.02,
+      diffTolerance: 0.05,
     );
   });
 

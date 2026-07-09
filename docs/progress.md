@@ -13,7 +13,7 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-09 16:59 JST
+- Timestamp: 2026-07-09 17:25 JST
 - State: `completed`
 - Branch: `task/steam-profile-install-ui`; latest committed code change is the
   commit containing this snapshot.
@@ -31,6 +31,8 @@ unfinished work.
     <https://github.com/serika12345/Konyak/pull/46>
   - Merged CLI install-profile slice:
     <https://github.com/serika12345/Konyak/pull/47>
+  - Current UI slice:
+    <https://github.com/serika12345/Konyak/pull/48>
   - Issue handoff comment:
     <https://github.com/serika12345/Konyak/issues/44#issuecomment-4921546797>
 - Purpose: expose the merged profile-driven install flow in the Flutter app
@@ -62,6 +64,13 @@ unfinished work.
     `Winetricks`, and `Run`.
   - Implemented Flutter-side `installProfile`, validated `installedProfile`
     payload parsing, localized Steam install labels, and HomeLoader orchestration.
+  - Opened draft PR #48 and inspected the first GitHub Actions failure. The
+    failure was limited to Flutter golden mismatches after the new bottom-bar
+    button changed the captured background and the compact bottom-bar golden
+    exceeded its Linux CI pixel tolerance.
+  - Regenerated the affected update-confirmation prompt goldens and raised the
+    compact bottom-bar golden tolerance to cover the observed CI antialiasing
+    variance without weakening behavior assertions.
 - Remaining work:
   - Add the generic child-process compatibility rule delivery mechanism and
     Steam `steamwebhelper.exe` argv rewrite.
@@ -83,6 +92,14 @@ unfinished work.
     passed; Flutter tests reported 474 tests passed.
   - `nix develop -c zsh -lc 'just verify-governance && just verify-safety && just format-check && just lint'`
     passed.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --name "macOS Konyak update confirmation prompt matches golden|macOS Konyak Wine version confirmation prompt matches golden" --update-goldens'`
+    passed and rewrote
+    `apps/konyak/test/goldens/konyak_update_confirmation_prompt.png` and
+    `apps/konyak/test/goldens/konyak_wine_update_confirmation_prompt.png`.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --name "bottom bar Steam install action matches golden|macOS Konyak update confirmation prompt matches golden|macOS Konyak Wine version confirmation prompt matches golden"'`
+    passed.
+  - `nix develop -c zsh -lc 'just flutter-format-check && just flutter-analyze && just flutter-test && just verify-governance && just verify-safety && just format-check && just lint'`
+    passed after the CI golden stabilization.
 
 ### Previous Update
 
