@@ -811,6 +811,15 @@ class KonyakLocalizationsJa extends KonyakLocalizations {
   }
 
   @override
+  String get installedSteam => 'Steam をインストールしました';
+
+  @override
+  String get installSteam => 'Steam をインストール';
+
+  @override
+  String get installingSteamEllipsis => 'Steam をインストールしています';
+
+  @override
   String reinstalledRuntime(String runtimeName) {
     return '$runtimeName を再インストールしました';
   }

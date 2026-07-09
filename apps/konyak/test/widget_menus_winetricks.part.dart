@@ -1,6 +1,55 @@
 part of 'widget_test.dart';
 
 void defineMenuWinetricksAndInstalledProgramWidgetTests() {
+  testWidgets('bottom bar Steam install action matches golden', (
+    WidgetTester tester,
+  ) async {
+    await _loadKonyakTestFonts();
+    final goldenKey = GlobalKey();
+    final bottle = BottleSummary(
+      id: 'steam',
+      name: 'Steam',
+      path: '/bottles/steam',
+      windowsVersion: 'win10',
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: konyakThemeData(konyakDarkColors),
+        supportedLocales: KonyakLocalizations.supportedLocales,
+        localizationsDelegates: KonyakLocalizations.localizationsDelegates,
+        home: Scaffold(
+          body: Align(
+            alignment: Alignment.bottomCenter,
+            child: RepaintBoundary(
+              key: goldenKey,
+              child: SizedBox(
+                width: 520,
+                child: KonyakBottomBar(
+                  target: BottleActionTarget.bottle(bottle),
+                  runProgramAction: BottleSummaryActionAvailability.available(
+                    (_) {},
+                  ),
+                  installSteamProfileAction:
+                      BottleSummaryActionAvailability.available((_) {}),
+                  toolsAction: BottleToolsActionAvailability.command((_, _) {}),
+                  showWinetricksAction:
+                      BottleSummaryActionAvailability.available((_) {}),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await _expectGoldenFileWithinTolerance(
+      find.byKey(goldenKey),
+      'goldens/bottom_bar_steam_install.png',
+      diffTolerance: 0.02,
+    );
+  });
+
   testWidgets('bottle utilities menu is not shown in the top bar', (
     WidgetTester tester,
   ) async {
@@ -884,6 +933,145 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
     await tester.pumpAndSettle();
 
     expect(find.text('macosWinetricks exited with code 0'), findsNothing);
+  });
+
+  testWidgets('bottom bar installs Steam profile from a selected installer', (
+    WidgetTester tester,
+  ) async {
+    final installCompleter = Completer<ProcessRunResult>();
+    final runner = _FutureQueuedProcessRunner([
+      Future.value(
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+            {
+              "schemaVersion": 1,
+              "bottles": [
+                {
+                  "id": "steam",
+                  "name": "Steam",
+                  "path": "/Users/user/Library/Application Support/Konyak/Bottles/Steam",
+                  "windowsVersion": "win10"
+                }
+              ]
+            }
+          ''',
+          stderr: '',
+        ),
+      ),
+      installCompleter.future,
+      Future.value(
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+            {
+              "schemaVersion": 1,
+              "bottle": {
+                "id": "steam",
+                "name": "Steam",
+                "path": "/Users/user/Library/Application Support/Konyak/Bottles/Steam",
+                "windowsVersion": "win10",
+                "pinnedPrograms": [
+                  {
+                    "name": "Steam",
+                    "path": "C:\\\\Program Files (x86)\\\\Steam\\\\Steam.exe",
+                    "removable": false
+                  }
+                ]
+              }
+            }
+          ''',
+          stderr: '',
+        ),
+      ),
+    ]);
+
+    await tester.pumpWidget(
+      _testKonyakApp(
+        cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
+        programFilePicker: const _FakeProgramFilePicker(
+          path: '/downloads/SteamSetup.exe',
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.widgetWithText(TextButton, 'Install Steam'));
+    await tester.pump();
+
+    expect(
+      find.byKey(const ValueKey('install-profile-progress')),
+      findsOneWidget,
+    );
+    expect(find.text('Installing Steam...'), findsOneWidget);
+    expect(runner.argumentsLog, [
+      ['list-bottles', '--json'],
+      [
+        'install-profile',
+        'steam',
+        '--bottle',
+        'steam',
+        '--installer',
+        '/downloads/SteamSetup.exe',
+        '--json',
+      ],
+    ]);
+
+    installCompleter.complete(
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "installedProfile": {
+              "bottleId": "steam",
+              "profileId": "steam",
+              "profileVersion": 1,
+              "installerSource": {
+                "kind": "localFile",
+                "path": "/downloads/SteamSetup.exe"
+              },
+              "steps": [
+                {
+                  "kind": "winetricks",
+                  "id": "corefonts",
+                  "runnerKind": "macosWinetricks",
+                  "argv": ["/runtime/winetricks", "corefonts"],
+                  "logPath": "/bottles/steam/logs/winetricks.log",
+                  "processExitCode": 0
+                },
+                {
+                  "kind": "installer",
+                  "id": "/downloads/SteamSetup.exe",
+                  "runnerKind": "macosWine",
+                  "argv": ["/runtime/bin/wine64", "start", "/unix", "/downloads/SteamSetup.exe"],
+                  "logPath": "/bottles/steam/logs/installer.log",
+                  "processExitCode": 0
+                }
+              ],
+              "programProfile": {
+                "bottleId": "steam",
+                "profileId": "steam",
+                "profileVersion": 1,
+                "managedProgramPath": "C:\\\\Program Files (x86)\\\\Steam\\\\Steam.exe",
+                "compatibilityProfileId": "steam",
+                "compatibilityProfileVersion": 1
+              }
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const ValueKey('install-profile-progress')),
+      findsNothing,
+    );
+    expect(find.text('Installed Steam'), findsOneWidget);
+    expect(find.text('Steam'), findsWidgets);
+    expect(runner.argumentsLog.last, ['inspect-bottle', 'steam', '--json']);
   });
 
   testWidgets('winetricks shows progress while loading the verb catalog', (

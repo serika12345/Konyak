@@ -1136,6 +1136,18 @@
       }
     }
   },
+  "installedSteam": "Steam をインストールしました",
+  "@installedSteam": {
+    "description": "Konyak UI string: Installed Steam"
+  },
+  "installSteam": "Steam をインストール",
+  "@installSteam": {
+    "description": "Konyak UI string: Install Steam"
+  },
+  "installingSteamEllipsis": "Steam をインストールしています",
+  "@installingSteamEllipsis": {
+    "description": "Konyak UI string: Installing Steam..."
+  },
   "reinstalledRuntime": "{runtimeName} を再インストールしました",
   "@reinstalledRuntime": {
     "description": "Konyak UI string: Reinstalled {runtimeName}",

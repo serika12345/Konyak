@@ -107,12 +107,14 @@ class KonyakBottomBar extends StatelessWidget {
     super.key,
     required this.target,
     required this.runProgramAction,
+    required this.installSteamProfileAction,
     required this.toolsAction,
     required this.showWinetricksAction,
   });
 
   final BottleActionTarget target;
   final BottleSummaryActionAvailability runProgramAction;
+  final BottleSummaryActionAvailability installSteamProfileAction;
   final BottleToolsActionAvailability toolsAction;
   final BottleSummaryActionAvailability showWinetricksAction;
 
@@ -132,6 +134,16 @@ class KonyakBottomBar extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           _BottleToolsButton(target: target, toolsAction: toolsAction),
+          const SizedBox(width: 6),
+          KonyakBottomButton(
+            label: localizations.installSteam,
+            onPressed: _targetActionCallback(
+              resolveBottleTargetAction(
+                target: target,
+                action: installSteamProfileAction,
+              ),
+            ),
+          ),
           const SizedBox(width: 6),
           KonyakBottomButton(
             label: localizations.winetricks,

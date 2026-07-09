@@ -53,6 +53,8 @@ double _bottomButtonWidth(String label) {
     'Open Wine Configuration' => 174,
     'Show in Finder' => 112,
     'Show in File Manager' => 154,
+    'Install Steam' => 104,
+    'Steam をインストール' => 128,
     'Terminal' => 76,
     'Tools' => 64,
     'Winetricks' => 88,

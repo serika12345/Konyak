@@ -1968,6 +1968,124 @@ void main() {
     expect(completed.run.processExitCode, 0);
   });
 
+  test('installs a Steam profile through the JSON CLI contract', () async {
+    final runner = _FakeProcessRunner(
+      result: const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "installedProfile": {
+              "bottleId": "steam",
+              "profileId": "steam",
+              "profileVersion": 1,
+              "installerSource": {
+                "kind": "localFile",
+                "path": "/downloads/SteamSetup.exe"
+              },
+              "steps": [
+                {
+                  "kind": "winetricks",
+                  "id": "corefonts",
+                  "runnerKind": "macosWinetricks",
+                  "argv": ["/runtime/winetricks", "corefonts"],
+                  "logPath": "/bottles/steam/logs/winetricks.log",
+                  "processExitCode": 0
+                },
+                {
+                  "kind": "installer",
+                  "id": "/downloads/SteamSetup.exe",
+                  "runnerKind": "macosWine",
+                  "argv": ["/runtime/bin/wine64", "start", "/unix", "/downloads/SteamSetup.exe"],
+                  "logPath": "/bottles/steam/logs/installer.log",
+                  "processExitCode": 0
+                }
+              ],
+              "programProfile": {
+                "bottleId": "steam",
+                "profileId": "steam",
+                "profileVersion": 1,
+                "managedProgramPath": "C:\\\\Program Files (x86)\\\\Steam\\\\Steam.exe",
+                "compatibilityProfileId": "steam",
+                "compatibilityProfileVersion": 1
+              }
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+    );
+    final client = KonyakCliClient(executable: 'konyak', processRunner: runner);
+
+    final result = await client.installProfile(
+      profileId: 'steam',
+      bottleId: 'steam',
+      installerPath: '/downloads/SteamSetup.exe',
+    );
+
+    expect(runner.arguments, const [
+      'install-profile',
+      'steam',
+      '--bottle',
+      'steam',
+      '--installer',
+      '/downloads/SteamSetup.exe',
+      '--json',
+    ]);
+    expect(result, isA<InstalledProgramProfile>());
+
+    final installed = result as InstalledProgramProfile;
+    expect(installed.profile.bottleId, 'steam');
+    expect(installed.profile.profileId, 'steam');
+    expect(installed.profile.installerSource.path, '/downloads/SteamSetup.exe');
+    expect(installed.profile.steps.map((step) => step.kind), [
+      'winetricks',
+      'installer',
+    ]);
+    expect(
+      installed.profile.programProfile.managedProgramPath,
+      r'C:\Program Files (x86)\Steam\Steam.exe',
+    );
+  });
+
+  test('returns install-profile JSON failures explicitly', () async {
+    final client = KonyakCliClient(
+      executable: 'konyak',
+      processRunner: _FakeProcessRunner(
+        result: const ProcessRunResult(
+          exitCode: 75,
+          stdout: '''
+            {
+              "schemaVersion": 1,
+              "error": {
+                "code": "installProfileStepFailed",
+                "message": "Install profile step exited with code 42.",
+                "profileId": "steam",
+                "stepKind": "winetricks",
+                "stepId": "corefonts",
+                "runnerKind": "macosWinetricks",
+                "argv": ["/runtime/winetricks", "corefonts"],
+                "processExitCode": 42
+              }
+            }
+          ''',
+          stderr: '',
+        ),
+      ),
+    );
+
+    final result = await client.installProfile(
+      profileId: 'steam',
+      bottleId: 'steam',
+      installerPath: '/downloads/SteamSetup.exe',
+    );
+
+    expect(result, isA<InstallProgramProfileLoadFailure>());
+    final failure = result as InstallProgramProfileLoadFailure;
+    expect(failure.exitCode, 75);
+    expect(failure.message, 'Install profile step exited with code 42.');
+  });
+
   test('passes one-time program settings to run-program', () async {
     final runner = _FakeProcessRunner(
       result: const ProcessRunResult(

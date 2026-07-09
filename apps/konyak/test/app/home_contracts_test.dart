@@ -122,6 +122,7 @@ void main() {
     );
     expect([
       programActions.runProgramAction,
+      programActions.installSteamProfileAction,
       programActions.pinProgramAction,
     ], everyElement(isA<UnavailableBottleSummaryActionAvailability>()));
     expect(

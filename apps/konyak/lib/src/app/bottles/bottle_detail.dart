@@ -164,12 +164,14 @@ Widget _bottleDetailBottomBar(BottleDetailBottomBar bottomBar) {
     OverviewBottleDetailBottomBar(
       :final target,
       :final runProgramAction,
+      :final installSteamProfileAction,
       :final toolsAction,
       :final showWinetricksAction,
     ) =>
       KonyakBottomBar(
         target: target,
         runProgramAction: runProgramAction,
+        installSteamProfileAction: installSteamProfileAction,
         toolsAction: toolsAction,
         showWinetricksAction: showWinetricksAction,
       ),

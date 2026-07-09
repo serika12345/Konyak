@@ -1136,6 +1136,18 @@
       }
     }
   },
+  "installedSteam": "Installed Steam",
+  "@installedSteam": {
+    "description": "Konyak UI string: Installed Steam"
+  },
+  "installSteam": "Install Steam",
+  "@installSteam": {
+    "description": "Konyak UI string: Install Steam"
+  },
+  "installingSteamEllipsis": "Installing Steam...",
+  "@installingSteamEllipsis": {
+    "description": "Konyak UI string: Installing Steam..."
+  },
   "reinstalledRuntime": "Reinstalled {runtimeName}",
   "@reinstalledRuntime": {
     "description": "Konyak UI string: Reinstalled {runtimeName}",

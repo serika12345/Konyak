@@ -13,12 +13,12 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-09 13:21 JST
+- Timestamp: 2026-07-09 16:59 JST
 - State: `completed`
-- Branch: `task/steam-profile-install-flow`; latest committed code change is
-  the commit containing this snapshot.
-- Active work: Steam black-screen remediation, CLI-backed Steam profile install
-  flow after merged parent PR #46.
+- Branch: `task/steam-profile-install-ui`; latest committed code change is the
+  commit containing this snapshot.
+- Active work: Steam black-screen remediation, Flutter UI entry point for the
+  CLI-backed Steam profile install flow after merged parent PR #47.
 - Related TODO: `docs/todo.md` Next Tasks, "Continue Steam black-screen
   remediation from GitHub issue #44 after the initial `cabextract` and macOS
   `winetricks steam` gate."
@@ -29,54 +29,60 @@ unfinished work.
     <https://github.com/serika12345/konyak-macos-runtime/pull/7>
   - Merged profile catalog slice:
     <https://github.com/serika12345/Konyak/pull/46>
-  - Current parent PR:
+  - Merged CLI install-profile slice:
     <https://github.com/serika12345/Konyak/pull/47>
   - Issue handoff comment:
     <https://github.com/serika12345/Konyak/issues/44#issuecomment-4921546797>
-- Purpose: add the next profile-driven install slice without claiming the Steam
-  black-screen defect is fixed: accept a Konyak-selected local Steam installer
-  path, run profile dependencies through the public Konyak winetricks route,
-  launch the installer through the public `run-program` planning path, then
-  attach Konyak-owned Steam profile metadata.
+- Purpose: expose the merged profile-driven install flow in the Flutter app
+  without claiming the Steam black-screen defect is fixed: let the user pick a
+  local Steam installer for the selected bottle, call
+  `install-profile steam --bottle <id> --installer <path> --json`, show
+  blocking progress and success/failure feedback, then refresh the bottle.
 - Workstream separation:
   - Investigation: use issue #44's dynamic evidence and merged PR #46 profile
-    catalog contract as input; no new black-screen root-cause claim is made in
-    this PR.
-  - Implementation: limit code changes to CLI parser/handler contracts,
-    installer-source policy for local installer input, dependency execution,
-    installer launch, and docs. Do not implement UI entry points or Wine-side
-    child-process argv rewriting in this PR.
-  - Audit: rerun focused install-profile contract tests plus required gates
-    before opening the PR. Sub-agent execution is not used because the
+    catalog contract plus merged PR #47 install-profile contract as input; no
+    new black-screen root-cause claim is made in this PR.
+  - Implementation: limit code changes to Flutter CLI client parsing, the
+    selected-bottle Steam install action, progress/feedback wiring, localized
+    labels, and UI tests/golden. Do not implement Wine-side child-process argv
+    rewriting in this PR.
+  - Audit: rerun focused Flutter CLI/UI tests, golden capture, and required
+    gates before opening the PR. Sub-agent execution is not used because the
     available sub-agent tool requires an explicit user request before spawning.
 - Completed work:
-  - Confirmed PR #46 was merged and all checks passed, then synchronized local
-    `main` to merge commit `0e9b92e`.
-  - Created dedicated branch `task/steam-profile-install-flow` from updated
-    `main`.
-  - Added failing-first CLI parser and contract tests for
-    `install-profile steam --bottle <id> --installer <path> --json`.
-  - Implemented CLI execution that runs profile dependency winetricks verbs,
-    launches the local installer path, stops on failed steps, and applies the
-    Steam profile metadata only after successful steps.
+  - Confirmed PR #47 was merged and synchronized local `main` before creating
+    dedicated branch `task/steam-profile-install-ui`.
+  - Added failing-first Flutter CLI client tests for the `install-profile`
+    command and typed `installedProfile` / JSON error handling.
+  - Added a failing-first widget flow test for selecting a local Steam
+    installer from the selected bottle's bottom bar, showing install progress,
+    calling the public JSON CLI route, refreshing the bottle, and surfacing
+    success feedback.
+  - Added a golden test for the bottom bar with `Tools`, `Install Steam`,
+    `Winetricks`, and `Run`.
+  - Implemented Flutter-side `installProfile`, validated `installedProfile`
+    payload parsing, localized Steam install labels, and HomeLoader orchestration.
 - Remaining work:
-  - Add UI entry points for the CLI-backed Steam profile install flow.
   - Add the generic child-process compatibility rule delivery mechanism and
     Steam `steamwebhelper.exe` argv rewrite.
   - Dynamically prove the Steam login window through the public Konyak app/CLI
     route; this slice does not claim the black-screen defect is fixed yet.
-- Next action: review draft PR #47, then continue with UI entry points or
-  child-process compatibility rules in a later slice.
+- Next action: review the UI PR, then continue with child-process
+  compatibility rules in a later slice.
 - Verification performed:
-  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_program_mutation_parsers_test.dart test/cli_contract_program_execution_test.dart --name "install-profile"'`
-    first failed before implementation, then passed for the CLI install-profile
-    contract after implementation.
-  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_program_mutation_parsers_test.dart'`
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/cli/konyak_cli_client_test.dart test/widget_test.dart --name "install-profile|Steam install"'`
+    first failed because `installProfile`, typed result classes, the UI action,
+    and the bottom-bar golden did not exist.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/widget_test.dart --name "bottom bar Steam install action matches golden" --update-goldens'`
+    passed and wrote `apps/konyak/test/goldens/bottom_bar_steam_install.png`.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/cli/konyak_cli_client_test.dart test/widget_test.dart --name "Steam profile|install-profile|Steam install"'`
+    passed after implementation.
+  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test test/app/home_contracts_test.dart test/app/bottle_detail_view_model_test.dart test/cli/konyak_cli_client_test.dart --name "home action contracts|locked bottle configuration|Steam profile|install-profile"'`
     passed.
-  - `nix develop -c zsh -lc 'just lint'` initially failed on a null-aware map
-    entry cleanup, then passed after replacing the optional field construction.
-  - `nix develop -c zsh -lc 'just cli-test && just verify-governance && just verify-safety && just format-check && just lint'`
-    passed after the lint fix; Dart CLI tests reported 399 tests passed.
+  - `nix develop -c zsh -lc 'just flutter-format-check && just flutter-analyze && just flutter-test'`
+    passed; Flutter tests reported 474 tests passed.
+  - `nix develop -c zsh -lc 'just verify-governance && just verify-safety && just format-check && just lint'`
+    passed.
 
 ### Previous Update
 

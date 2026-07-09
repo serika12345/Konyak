@@ -820,6 +820,15 @@ class KonyakLocalizationsEn extends KonyakLocalizations {
   }
 
   @override
+  String get installedSteam => 'Installed Steam';
+
+  @override
+  String get installSteam => 'Install Steam';
+
+  @override
+  String get installingSteamEllipsis => 'Installing Steam...';
+
+  @override
   String reinstalledRuntime(String runtimeName) {
     return 'Reinstalled $runtimeName';
   }

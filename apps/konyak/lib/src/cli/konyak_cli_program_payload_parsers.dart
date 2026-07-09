@@ -35,6 +35,228 @@ final class _InvalidGraphicsBackendSuggestion
   const _InvalidGraphicsBackendSuggestion();
 }
 
+sealed class _InstallProfileParseResult<T> {
+  const _InstallProfileParseResult();
+}
+
+final class _ParsedInstallProfileValue<T>
+    extends _InstallProfileParseResult<T> {
+  const _ParsedInstallProfileValue(this.value);
+
+  final T value;
+}
+
+final class _InvalidInstallProfileValue<T>
+    extends _InstallProfileParseResult<T> {
+  const _InvalidInstallProfileValue();
+}
+
+InstallProgramProfileLoadResult parseInstallProgramProfilePayload(
+  String payload,
+) {
+  final Object? decoded;
+  try {
+    decoded = jsonDecode(payload);
+  } on FormatException catch (error) {
+    return InstallProgramProfileLoadFailure(
+      exitCode: 0,
+      message: error.message,
+      diagnostic: '',
+    );
+  }
+
+  if (decoded is! Map<String, Object?> || decoded['schemaVersion'] != 1) {
+    return const InstallProgramProfileLoadFailure(
+      exitCode: 0,
+      message: 'Unsupported install profile payload.',
+      diagnostic: '',
+    );
+  }
+
+  final error = decoded['error'];
+  if (error is Map<String, Object?>) {
+    final message = error['message'];
+    return InstallProgramProfileLoadFailure(
+      exitCode: 0,
+      message: message is String ? message : 'Install profile failed.',
+      diagnostic: '',
+    );
+  }
+
+  return switch (_parseInstalledProgramProfile(decoded['installedProfile'])) {
+    _ParsedInstallProfileValue(value: final profile) => InstalledProgramProfile(
+      profile,
+    ),
+    _InvalidInstallProfileValue() => const InstallProgramProfileLoadFailure(
+      exitCode: 0,
+      message: 'Invalid installedProfile payload.',
+      diagnostic: '',
+    ),
+  };
+}
+
+_InstallProfileParseResult<InstalledProgramProfileSummary>
+_parseInstalledProgramProfile(Object? value) {
+  if (value is! Map<String, Object?>) {
+    return const _InvalidInstallProfileValue();
+  }
+
+  final bottleId = value['bottleId'];
+  final profileId = value['profileId'];
+  final profileVersion = value['profileVersion'];
+  final installerSource = _parseInstallProfileInstallerSource(
+    value['installerSource'],
+  );
+  final steps = _parseInstalledProgramProfileSteps(value['steps']);
+  final programProfile = _parseInstalledProgramProfileProgram(
+    value['programProfile'],
+  );
+
+  if (bottleId is! String || profileId is! String || profileVersion is! int) {
+    return const _InvalidInstallProfileValue();
+  }
+
+  return switch ((installerSource, steps, programProfile)) {
+    (
+      _ParsedInstallProfileValue(value: final installerSource),
+      _ParsedInstallProfileValue(value: final steps),
+      _ParsedInstallProfileValue(value: final programProfile),
+    ) =>
+      _ParsedInstallProfileValue(
+        InstalledProgramProfileSummary(
+          bottleId: bottleId,
+          profileId: profileId,
+          profileVersion: profileVersion,
+          installerSource: installerSource,
+          steps: steps,
+          programProfile: programProfile,
+        ),
+      ),
+    _ => const _InvalidInstallProfileValue(),
+  };
+}
+
+_InstallProfileParseResult<InstallProfileInstallerSourceSummary>
+_parseInstallProfileInstallerSource(Object? value) {
+  if (value is! Map<String, Object?>) {
+    return const _InvalidInstallProfileValue();
+  }
+
+  final kind = value['kind'];
+  final path = value['path'];
+  if (kind is! String || path is! String) {
+    return const _InvalidInstallProfileValue();
+  }
+
+  return _ParsedInstallProfileValue(
+    InstallProfileInstallerSourceSummary(kind: kind, path: path),
+  );
+}
+
+_InstallProfileParseResult<List<InstalledProgramProfileStepSummary>>
+_parseInstalledProgramProfileSteps(Object? value) {
+  if (value is! List<Object?>) {
+    return const _InvalidInstallProfileValue();
+  }
+
+  final steps = <InstalledProgramProfileStepSummary>[];
+  for (final step in value) {
+    switch (_parseInstalledProgramProfileStep(step)) {
+      case _ParsedInstallProfileValue(value: final step):
+        steps.add(step);
+      case _InvalidInstallProfileValue():
+        return const _InvalidInstallProfileValue();
+    }
+  }
+
+  return _ParsedInstallProfileValue(List.unmodifiable(steps));
+}
+
+_InstallProfileParseResult<InstalledProgramProfileStepSummary>
+_parseInstalledProgramProfileStep(Object? value) {
+  if (value is! Map<String, Object?>) {
+    return const _InvalidInstallProfileValue();
+  }
+
+  final kind = value['kind'];
+  final id = value['id'];
+  final runnerKind = value['runnerKind'];
+  final argv = _parseInstallProfileStringList(value['argv']);
+  final logPath = value['logPath'];
+  final processExitCode = value['processExitCode'];
+
+  if (kind is! String ||
+      id is! String ||
+      runnerKind is! String ||
+      logPath is! String ||
+      processExitCode is! int) {
+    return const _InvalidInstallProfileValue();
+  }
+
+  return switch (argv) {
+    _ParsedInstallProfileValue(value: final argv) => _ParsedInstallProfileValue(
+      InstalledProgramProfileStepSummary(
+        kind: kind,
+        id: id,
+        runnerKind: runnerKind,
+        argv: argv,
+        logPath: logPath,
+        processExitCode: processExitCode,
+      ),
+    ),
+    _InvalidInstallProfileValue() => const _InvalidInstallProfileValue(),
+  };
+}
+
+_InstallProfileParseResult<InstalledProgramProfileProgramSummary>
+_parseInstalledProgramProfileProgram(Object? value) {
+  if (value is! Map<String, Object?>) {
+    return const _InvalidInstallProfileValue();
+  }
+
+  final bottleId = value['bottleId'];
+  final profileId = value['profileId'];
+  final profileVersion = value['profileVersion'];
+  final managedProgramPath = value['managedProgramPath'];
+  final compatibilityProfileId = value['compatibilityProfileId'];
+  final compatibilityProfileVersion = value['compatibilityProfileVersion'];
+
+  if (bottleId is! String ||
+      profileId is! String ||
+      profileVersion is! int ||
+      managedProgramPath is! String ||
+      compatibilityProfileId is! String ||
+      compatibilityProfileVersion is! int) {
+    return const _InvalidInstallProfileValue();
+  }
+
+  return _ParsedInstallProfileValue(
+    InstalledProgramProfileProgramSummary(
+      bottleId: bottleId,
+      profileId: profileId,
+      profileVersion: profileVersion,
+      managedProgramPath: managedProgramPath,
+      compatibilityProfileId: compatibilityProfileId,
+      compatibilityProfileVersion: compatibilityProfileVersion,
+    ),
+  );
+}
+
+_InstallProfileParseResult<List<String>> _parseInstallProfileStringList(
+  Object? value,
+) {
+  if (value is! List<Object?>) {
+    return const _InvalidInstallProfileValue();
+  }
+
+  final strings = value.whereType<String>().toList(growable: false);
+  if (strings.length != value.length) {
+    return const _InvalidInstallProfileValue();
+  }
+
+  return _ParsedInstallProfileValue(List.unmodifiable(strings));
+}
+
 BottleProgramListLoadResult parseBottleProgramListPayload(String payload) {
   final Object? decoded;
   try {

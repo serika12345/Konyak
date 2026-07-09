@@ -54,6 +54,39 @@ extension KonyakCliProgramCommands on KonyakCliClient {
     );
   }
 
+  Future<InstallProgramProfileLoadResult> installProfile({
+    required String profileId,
+    required String bottleId,
+    required String installerPath,
+  }) async {
+    final result = await run([
+      'install-profile',
+      profileId,
+      '--bottle',
+      bottleId,
+      '--installer',
+      installerPath,
+      '--json',
+    ]);
+
+    final parsed = parseInstallProgramProfilePayload(result.stdout);
+
+    return switch (parsed) {
+      InstalledProgramProfile() when result.exitCode == 0 => parsed,
+      InstallProgramProfileLoadFailure(:final message) =>
+        InstallProgramProfileLoadFailure(
+          exitCode: result.exitCode,
+          message: message,
+          diagnostic: result.stderr,
+        ),
+      InstalledProgramProfile() => InstallProgramProfileLoadFailure(
+        exitCode: result.exitCode,
+        message: operationFailureMessage(result, 'install-profile'),
+        diagnostic: result.stderr,
+      ),
+    };
+  }
+
   Future<BottleUpdateLoadResult> pinProgram({
     required String bottleId,
     required String name,

@@ -1551,6 +1551,24 @@ abstract class KonyakLocalizations {
   /// **'Installed {runtimeName}'**
   String installedRuntime(String runtimeName);
 
+  /// Konyak UI string: Installed Steam
+  ///
+  /// In en, this message translates to:
+  /// **'Installed Steam'**
+  String get installedSteam;
+
+  /// Konyak UI string: Install Steam
+  ///
+  /// In en, this message translates to:
+  /// **'Install Steam'**
+  String get installSteam;
+
+  /// Konyak UI string: Installing Steam...
+  ///
+  /// In en, this message translates to:
+  /// **'Installing Steam...'**
+  String get installingSteamEllipsis;
+
   /// Konyak UI string: Reinstalled {runtimeName}
   ///
   /// In en, this message translates to:

@@ -67,6 +67,93 @@ final class ProgramRunLoadFailure extends ProgramRunLoadResult {
   final String diagnostic;
 }
 
+sealed class InstallProgramProfileLoadResult {
+  const InstallProgramProfileLoadResult();
+}
+
+final class InstalledProgramProfile extends InstallProgramProfileLoadResult {
+  const InstalledProgramProfile(this.profile);
+
+  final InstalledProgramProfileSummary profile;
+}
+
+final class InstallProgramProfileLoadFailure
+    extends InstallProgramProfileLoadResult {
+  const InstallProgramProfileLoadFailure({
+    required this.exitCode,
+    required this.message,
+    required this.diagnostic,
+  });
+
+  final int exitCode;
+  final String message;
+  final String diagnostic;
+}
+
+final class InstalledProgramProfileSummary {
+  InstalledProgramProfileSummary({
+    required this.bottleId,
+    required this.profileId,
+    required this.profileVersion,
+    required this.installerSource,
+    required Iterable<InstalledProgramProfileStepSummary> steps,
+    required this.programProfile,
+  }) : steps = List.unmodifiable(steps);
+
+  final String bottleId;
+  final String profileId;
+  final int profileVersion;
+  final InstallProfileInstallerSourceSummary installerSource;
+  final List<InstalledProgramProfileStepSummary> steps;
+  final InstalledProgramProfileProgramSummary programProfile;
+}
+
+final class InstallProfileInstallerSourceSummary {
+  const InstallProfileInstallerSourceSummary({
+    required this.kind,
+    required this.path,
+  });
+
+  final String kind;
+  final String path;
+}
+
+final class InstalledProgramProfileStepSummary {
+  InstalledProgramProfileStepSummary({
+    required this.kind,
+    required this.id,
+    required this.runnerKind,
+    required Iterable<String> argv,
+    required this.logPath,
+    required this.processExitCode,
+  }) : argv = List.unmodifiable(argv);
+
+  final String kind;
+  final String id;
+  final String runnerKind;
+  final List<String> argv;
+  final String logPath;
+  final int processExitCode;
+}
+
+final class InstalledProgramProfileProgramSummary {
+  const InstalledProgramProfileProgramSummary({
+    required this.bottleId,
+    required this.profileId,
+    required this.profileVersion,
+    required this.managedProgramPath,
+    required this.compatibilityProfileId,
+    required this.compatibilityProfileVersion,
+  });
+
+  final String bottleId;
+  final String profileId;
+  final int profileVersion;
+  final String managedProgramPath;
+  final String compatibilityProfileId;
+  final int compatibilityProfileVersion;
+}
+
 sealed class BottleLocationOpenResult {
   const BottleLocationOpenResult();
 }

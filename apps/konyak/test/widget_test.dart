@@ -11,6 +11,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:konyak/main.dart';
 import 'package:konyak/src/app/app_constants.dart';
 import 'package:konyak/src/app/bottles/bottle_action_availability.dart';
+import 'package:konyak/src/app/bottles/bottle_action_target.dart';
+import 'package:konyak/src/app/bottles/bottom_bars.dart';
 import 'package:konyak/src/app/dialogs/run_program_dialog.dart';
 import 'package:konyak/src/app/home/home_navigation_state.dart';
 import 'package:konyak/src/app/home/sidebar.dart';
