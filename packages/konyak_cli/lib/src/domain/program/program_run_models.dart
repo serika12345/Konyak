@@ -7,6 +7,15 @@ import 'program_run_environment.dart';
 
 part 'program_run_models.freezed.dart';
 
+enum ProgramRunCompletionPolicy {
+  waitForExit('waitForExit'),
+  launchOnly('launchOnly');
+
+  const ProgramRunCompletionPolicy(this.value);
+
+  final String value;
+}
+
 @Freezed(
   copyWith: false,
   map: FreezedMapOptions.none,
@@ -25,6 +34,8 @@ abstract class ProgramRunRequest with _$ProgramRunRequest {
     required ProgramLogPath logPath,
     bool createLogFile = true,
     Option<ProgramWorkingDirectoryPath> workingDirectory = const Option.none(),
+    ProgramRunCompletionPolicy completionPolicy =
+        ProgramRunCompletionPolicy.waitForExit,
   }) {
     return ProgramRunRequest._validated(
       bottleId: bottleId,
@@ -36,6 +47,7 @@ abstract class ProgramRunRequest with _$ProgramRunRequest {
       logPath: logPath,
       createLogFile: createLogFile,
       workingDirectory: workingDirectory,
+      completionPolicy: completionPolicy,
     );
   }
 
@@ -49,10 +61,28 @@ abstract class ProgramRunRequest with _$ProgramRunRequest {
     required ProgramLogPath logPath,
     required bool createLogFile,
     required Option<ProgramWorkingDirectoryPath> workingDirectory,
+    required ProgramRunCompletionPolicy completionPolicy,
   }) = _ProgramRunRequest;
 
   List<String> get argv {
     return List.unmodifiable(<String>[executable.value, ...arguments.value]);
+  }
+
+  ProgramRunRequest withCompletionPolicy(
+    ProgramRunCompletionPolicy completionPolicy,
+  ) {
+    return ProgramRunRequest(
+      bottleId: bottleId,
+      programPath: programPath,
+      runnerKind: runnerKind,
+      executable: executable,
+      arguments: arguments,
+      environment: environment,
+      logPath: logPath,
+      createLogFile: createLogFile,
+      workingDirectory: workingDirectory,
+      completionPolicy: completionPolicy,
+    );
   }
 }
 

@@ -13,7 +13,7 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-09 17:25 JST
+- Timestamp: 2026-07-09 18:02 JST
 - State: `completed`
 - Branch: `task/steam-profile-install-ui`; latest committed code change is the
   commit containing this snapshot.
@@ -40,6 +40,9 @@ unfinished work.
   local Steam installer for the selected bottle, call
   `install-profile steam --bottle <id> --installer <path> --json`, show
   blocking progress and success/failure feedback, then refresh the bottle.
+  A follow-up freeze found during manual UI execution is fixed in the same PR:
+  the Steam installer launch no longer waits for the long-lived Steam client
+  process that the updater starts after installation.
 - Workstream separation:
   - Investigation: use issue #44's dynamic evidence and merged PR #46 profile
     catalog contract plus merged PR #47 install-profile contract as input; no
@@ -71,6 +74,31 @@ unfinished work.
   - Regenerated the affected update-confirmation prompt goldens and raised the
     compact bottom-bar golden tolerance to cover the observed CI antialiasing
     variance without weakening behavior assertions.
+  - Reproduced the UI freeze through the public Flutter-to-CLI path. At
+    2026-07-09 17:47-17:52 JST, Konyak PID 72279 launched
+    `bin/konyak.dart install-profile steam --bottle bottle --installer /Users/masato/Downloads/SteamSetup.exe --json`
+    as CLI PID 72580. Wine then started wineserver PID 75260 and Steam PID
+    75355 in bottle
+    `/Users/masato/Library/Application Support/Konyak/Bottles/bottle`.
+  - Captured process evidence with `ps`, `pgrep`, `lsof`, and `sample`.
+    Konyak's main thread was in the normal AppKit runloop, while Konyak also
+    had a `dart:io Process.start` wait4 thread waiting for CLI PID 72580.
+    CLI PID 72580 had no direct child process left, but held the read end of a
+    pipe whose write end was still Steam PID 75355 stderr. Steam's
+    `bootstrap_log.txt` showed `Update complete, launching Steam...` followed
+    by `Shutdown`, proving the installer/updater completed and then launched a
+    long-lived Steam client that inherited the captured stderr pipe.
+  - Terminated the hung CLI PID 72580 and cleaned up the bottle through the
+    public CLI command
+    `dart run bin/konyak.dart terminate-wine-processes --bottle bottle --json`,
+    which returned `status: terminated` with wineserver `processExitCode: 0`.
+    A subsequent process snapshot showed no remaining Wine, Steam, or
+    `install-profile` CLI process.
+  - Added `ProgramRunCompletionPolicy.launchOnly` and changed the
+    `install-profile` installer step to launch-only completion. Normal program
+    runs and dependency steps still wait for process exit; only the local
+    installer launch avoids capturing inherited stdout/stderr from a
+    long-lived child process.
 - Remaining work:
   - Add the generic child-process compatibility rule delivery mechanism and
     Steam `steamwebhelper.exe` argv rewrite.
@@ -100,6 +128,16 @@ unfinished work.
     passed.
   - `nix develop -c zsh -lc 'just flutter-format-check && just flutter-analyze && just flutter-test && just verify-governance && just verify-safety && just format-check && just lint'`
     passed after the CI golden stabilization.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_program_execution_test.dart test/program_io_services_test.dart --name "install-profile --json runs dependencies|launchOnly program runs"'`
+    first failed before implementation because `ProgramRunCompletionPolicy`,
+    `ProgramRunRequest.completionPolicy`, and the launch-only runner behavior
+    did not exist.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_program_execution_test.dart test/program_io_services_test.dart --name "install-profile --json runs dependencies|launchOnly program runs"'`
+    passed after implementation.
+  - `nix develop -c zsh -lc 'just cli-test'` passed.
+  - `nix develop -c zsh -lc 'just flutter-format-check && just flutter-analyze && just flutter-test && just cli-test && just verify-governance && just verify-safety && just format-check && just lint'`
+    first stopped at `format-check` because the new CLI test file needed
+    formatting; after formatting, the same command passed.
 
 ### Previous Update
 

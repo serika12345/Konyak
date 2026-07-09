@@ -248,11 +248,14 @@ CliResult runInstallProfileInstaller({
       stepId: request.installerPath.value,
     ),
     (installerRequest) {
+      final installerLaunchRequest = installerRequest.withCompletionPolicy(
+        ProgramRunCompletionPolicy.launchOnly,
+      );
       return switch (runInstallProfileStep(
         profileId: profile.id,
         stepKind: 'installer',
         stepId: request.installerPath.value,
-        request: installerRequest,
+        request: installerLaunchRequest,
         programRunner: programRunner,
       )) {
         InstallProfileStepFailed(:final result) => result,

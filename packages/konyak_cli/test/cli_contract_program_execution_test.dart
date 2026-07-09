@@ -586,9 +586,17 @@ void main() {
       expect(result.exitCode, 0);
       expect(result.stderr, isEmpty);
       expect(runner.requests, hasLength(2));
+      expect(
+        runner.requests.first.completionPolicy,
+        ProgramRunCompletionPolicy.waitForExit,
+      );
       expect(runner.requests.first.runnerKind.value, 'macosWinetricks');
       expect(runner.requests.first.programPath.value, 'corefonts');
       expect(runner.requests.first.arguments.value, ['corefonts']);
+      expect(
+        runner.requests.last.completionPolicy,
+        ProgramRunCompletionPolicy.launchOnly,
+      );
       expect(runner.requests.last.runnerKind.value, 'macosWine');
       expect(
         runner.requests.last.programPath.value,
