@@ -462,6 +462,189 @@ void main() {
     expect(logging?.logFilePath.value, '/tmp/steam.cxlog');
   });
 
+  test('list-install-profiles --json returns the Steam profile catalog', () {
+    final result = runCli(const ['list-install-profiles', '--json']);
+
+    expect(result.exitCode, 0);
+    expect(result.stderr, isEmpty);
+
+    final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+    expect(payload, {
+      'schemaVersion': 1,
+      'installProfiles': [
+        {
+          'id': 'steam',
+          'name': 'Steam',
+          'profileVersion': 1,
+          'summary': 'Install and launch Steam with Konyak-managed metadata.',
+          'platforms': ['macos'],
+          'bottleTemplate': {'windowsVersion': 'win10'},
+          'managedProgramPath': r'C:\Program Files (x86)\Steam\Steam.exe',
+          'dependencyWinetricksVerbs': ['corefonts'],
+          'compatibilityProfile': {
+            'id': 'steam',
+            'profileVersion': 1,
+            'childProcessRules': [
+              {
+                'executableSuffix': 'steamwebhelper.exe',
+                'appendArgumentsIfMissing': [
+                  '--use-angle=swiftshader-webgl',
+                  '--use-gl=angle',
+                  '--no-sandbox',
+                  '--in-process-gpu',
+                  '--disable-gpu',
+                ],
+              },
+            ],
+          },
+        },
+      ],
+    });
+  });
+
+  test('inspect-install-profile --json returns Steam profile details', () {
+    final result = runCli(const ['inspect-install-profile', 'steam', '--json']);
+
+    expect(result.exitCode, 0);
+    expect(result.stderr, isEmpty);
+
+    final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+    final profile = payload['installProfile'] as Map<String, Object?>;
+    expect(payload['schemaVersion'], 1);
+    expect(profile['id'], 'steam');
+    expect(
+      profile['managedProgramPath'],
+      r'C:\Program Files (x86)\Steam\Steam.exe',
+    );
+    expect(
+      (profile['compatibilityProfile'] as Map<String, Object?>)['id'],
+      'steam',
+    );
+  });
+
+  test('inspect-install-profile --json rejects unknown profiles', () {
+    final result = runCli(const [
+      'inspect-install-profile',
+      'unknown',
+      '--json',
+    ]);
+
+    expect(result.exitCode, 66);
+    expect(result.stderr, isEmpty);
+
+    final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+    expect(payload, {
+      'schemaVersion': 1,
+      'error': {
+        'code': 'installProfileNotFound',
+        'message': 'Install profile was not found.',
+        'profileId': 'unknown',
+      },
+    });
+  });
+
+  test('apply-program-profile --json persists Steam profile metadata', () {
+    final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
+      dataHome: '/home/user/.local/share/konyak',
+      bottles: [
+        BottleRecord(
+          id: 'steam',
+          name: 'Steam',
+          path: '/home/user/.local/share/konyak/bottles/steam',
+          windowsVersion: 'win10',
+        ),
+      ],
+    );
+
+    final result = runCli(const [
+      'apply-program-profile',
+      'steam',
+      '--bottle',
+      'steam',
+      '--program',
+      r'C:\Program Files (x86)\Steam\Steam.exe',
+      '--json',
+    ], bottleRepository: repository);
+
+    expect(result.exitCode, 0);
+    expect(result.stderr, isEmpty);
+
+    final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+    expect(payload, {
+      'schemaVersion': 1,
+      'programProfile': {
+        'bottleId': 'steam',
+        'profileId': 'steam',
+        'profileVersion': 1,
+        'managedProgramPath': r'C:\Program Files (x86)\Steam\Steam.exe',
+        'compatibilityProfileId': 'steam',
+        'compatibilityProfileVersion': 1,
+      },
+    });
+
+    final updated = expectFound(repository.findBottle(BottleId('steam')));
+    expect(updated.programProfiles, hasLength(1));
+    expect(updated.programProfiles.single.profileId.value, 'steam');
+    expect(
+      updated.programProfiles.single.managedProgramPath.value,
+      r'C:\Program Files (x86)\Steam\Steam.exe',
+    );
+    expect(updated.pinnedPrograms, hasLength(1));
+    expect(updated.pinnedPrograms.single.name.value, 'Steam');
+  });
+
+  test(
+    'repair-profile --json returns the persisted Steam profile metadata',
+    () {
+      final repository = MemoryBottleRepository(
+        programMetadataExtractor: const NoopProgramMetadataExtractor(),
+        dataHome: '/home/user/.local/share/konyak',
+        bottles: [
+          BottleRecord(
+            id: 'steam',
+            name: 'Steam',
+            path: '/home/user/.local/share/konyak/bottles/steam',
+            windowsVersion: 'win10',
+            programProfiles: [
+              ProgramProfileRecord(
+                profileId: 'steam',
+                profileVersion: 1,
+                managedProgramPath: r'C:\Program Files (x86)\Steam\Steam.exe',
+                compatibilityProfileId: 'steam',
+                compatibilityProfileVersion: 1,
+              ),
+            ],
+          ),
+        ],
+      );
+
+      final result = runCli(const [
+        'repair-profile',
+        'steam',
+        '--bottle',
+        'steam',
+        '--json',
+      ], bottleRepository: repository);
+
+      expect(result.exitCode, 0);
+      expect(result.stderr, isEmpty);
+
+      final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+      expect(payload, {
+        'schemaVersion': 1,
+        'programProfile': {
+          'bottleId': 'steam',
+          'profileId': 'steam',
+          'profileVersion': 1,
+          'managedProgramPath': r'C:\Program Files (x86)\Steam\Steam.exe',
+          'compatibilityProfileId': 'steam',
+          'compatibilityProfileVersion': 1,
+        },
+      });
+    },
+  );
+
   test('run-program --json runs an EXE through the program runner', () {
     final repository = MemoryBottleRepository(
       programMetadataExtractor: const NoopProgramMetadataExtractor(),

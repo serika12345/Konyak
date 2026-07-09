@@ -436,6 +436,58 @@ void main() {
     },
   );
 
+  test('file bottle repository persists program profile metadata', () async {
+    final tempDirectory = await Directory.systemTemp.createTemp(
+      'konyak-program-profile-metadata-test-',
+    );
+    addTearDown(() async {
+      if (await tempDirectory.exists()) {
+        await tempDirectory.delete(recursive: true);
+      }
+    });
+    final repository = defaultBottleRepositoryFromEnvironment({
+      'HOME': tempDirectory.path,
+    }, hostPlatform: KonyakHostPlatform.macos);
+    final created = repository.createBottle(
+      BottleCreateRequest(
+        name: BottleName('Steam'),
+        windowsVersion: WindowsVersion('win10'),
+      ),
+    );
+    expect(created, isA<BottleCreated>());
+    final bottle = (created as BottleCreated).bottle;
+
+    final result = repository.applyProgramProfile(
+      ProgramProfileApplyRequest(
+        bottleId: bottle.id,
+        installProfile: steamInstallProfile,
+        programPath: ProgramPath(r'C:\Program Files (x86)\Steam\Steam.exe'),
+      ),
+    );
+
+    expect(result, isA<ProgramProfileUpdated>());
+    final metadata =
+        jsonDecode(
+              File(
+                joinTestPath(bottle.path.value, const ['metadata.json']),
+              ).readAsStringSync(),
+            )
+            as Map<String, Object?>;
+    expect(
+      ((metadata['bottle'] as Map<String, Object?>)['profiles'] as List).single,
+      {
+        'profileId': 'steam',
+        'profileVersion': 1,
+        'managedProgramPath': r'C:\Program Files (x86)\Steam\Steam.exe',
+        'compatibilityProfileId': 'steam',
+        'compatibilityProfileVersion': 1,
+      },
+    );
+
+    final reread = expectFound(repository.findBottle(BottleId('steam')));
+    expect(reread.programProfiles.single.profileId.value, 'steam');
+  });
+
   test(
     'file bottle repository ignores directories without Konyak metadata',
     () {

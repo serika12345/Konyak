@@ -13,135 +13,63 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-09 10:04 JST
+- Timestamp: 2026-07-09 10:57 JST
 - State: `completed`
-- Branch: `task/steam-black-screen-profile`; latest committed code change is the
+- Branch: `task/steam-profile-catalog`; latest committed code change is the
   commit containing this snapshot.
-- Active work: Steam black-screen remediation, first issue #44 slice.
+- Active work: Steam black-screen remediation, install-profile catalog and
+  Konyak-owned profile metadata contracts.
 - Related TODO: `docs/todo.md` Next Tasks, "Continue Steam black-screen
   remediation from GitHub issue #44 after the initial `cabextract` and macOS
   `winetricks steam` gate."
 - Related issue: <https://github.com/serika12345/Konyak/issues/44>
 - Pull requests:
-  - Parent: <https://github.com/serika12345/Konyak/pull/45>
-  - Runtime owner:
+  - Parent/runtime first slice was merged:
+    <https://github.com/serika12345/Konyak/pull/45> and
     <https://github.com/serika12345/konyak-macos-runtime/pull/7>
-- Purpose: remove the known-bad upstream macOS `winetricks steam` install path,
-  publish and consume the runtime-owned `cabextract` completeness contract, and
-  keep the remaining Steam profile and child-process compatibility work
-  explicitly deferred until dynamic proof through the public Konyak route.
+  - Current parent PR: to be opened from this branch after commit/push.
+- Purpose: add the first Konyak-owned Steam profile surface: a static install
+  profile catalog, versioned compatibility profile metadata, and CLI contracts
+  that can attach or repair Steam profile metadata on a bottle without relying
+  on CrossOver plist/live external metadata.
 - Workstream separation:
-  - Investigation: use issue #44's captured dynamic evidence as input, inspect
-    the current public CLI/runtime execution contracts, and prove this slice
-    dynamically through Konyak's public JSON CLI route without relying on the
-    third-party attachment.
-  - Implementation: limit code changes to the winetricks verb contract,
-    runtime winetricks component packaging/validation, parent runtime
-    validation, and matching docs/TODO state.
-  - Audit: rerun focused CLI/runtime tests plus required gates independently
-    after implementation; this slice must not claim the Steam black window is
-    fixed until the later child-process argv rule is dynamically proven.
+  - Investigation: use issue #44's captured dynamic evidence and the merged
+    first slice as input; no new runtime defect root-cause claim is made in
+    this PR.
+  - Implementation: limit code changes to CLI/domain/repository profile
+    catalog and metadata persistence contracts. Do not implement Wine-side
+    child-process argv rewriting in this PR.
+  - Audit: rerun focused profile contract tests plus required repository gates
+    before opening the PR.
 - Completed work:
-  - Created dedicated branch `task/steam-black-screen-profile`.
-  - Located GitHub issue #44 and confirmed the required ordered work:
-    runtime `cabextract`, disable upstream macOS `winetricks steam`, then
-    Steam profile and child-process argv rewrite support.
-  - Add failing CLI/runtime tests for `steam` verb filtering/rejection and
-    `bin/cabextract` runtime completeness.
-  - Implemented CLI/domain filtering so macOS `list-winetricks-verbs --json`
-    drops upstream `steam`, while Linux still exposes the upstream Linux
-    `steam` verb and non-Steam verbs such as `corefonts` remain available.
-  - Implemented stable JSON rejection for
-    macOS `run-winetricks <bottle> --verb steam --json` with
-    `steamWinetricksVerbUnsupported`, before any Wine process is launched;
-    Linux still plans and runs the upstream `steam` verb.
-  - Updated parent runtime validation to require `bin/cabextract` in the macOS
-    winetricks component.
-  - Updated `runtime/konyak-macos-runtime` winetricks component packaging so
-    nixpkgs `cabextract` is copied into `bin/cabextract` with its Mach-O
-    closure, and updated runtime component checks, source-manifest versioning,
-    workflow inputs, and runtime docs.
-  - Investigated PR #45 CI failures from GitHub Actions logs. The final
-    failing macOS runtime smoke had passed archive download/extract, then
-    failed runtime completeness validation because the consumed
-    `crossover-26.1.0-konyak.0` runtime stack did not include the new
-    `winetricks` component contract path `bin/cabextract`.
-  - Confirmed the already published `crossover-26.1.0-konyak.1` runtime stack
-    also lacked `bin/cabextract`, so parent-only retargeting to `.1` was not a
-    valid fix.
-  - Fixed runtime stack assembly in the runtime-owner submodule so component
-    archives preserve the Wine runtime's `bin -> Konyak Wine Hosted
-    Application` symlink when layering `bin/cabextract`.
-  - Bumped the runtime-owner release revision to
-    `crossover-26.1.0-konyak.2`, pushed runtime commit `04761d5`, and verified
-    runtime-owner PR #7 plus the workflow-dispatch publish run were green.
-  - Published and verified runtime release `crossover-26.1.0-konyak.2`; its
-    source manifest records winetricks version `20260125+cabextract-nix`, and
-    the stack archive SHA-256 is
-    `b1f841c55c66be7f7adfa2c90b3be2b1224467d9aaa2662169365276a2df2946`.
-  - Updated the parent default macOS runtime release reference, CLI default
-    constant, runtime submodule pointer, and release notes to consume
-    `crossover-26.1.0-konyak.2`.
-  - Verified the suspicious issue attachment path is no longer present in
-    issue #44 comments and did not use that attachment as implementation input.
+  - Merged parent PR #45 and runtime-owner PR #7 after all checks were green.
+  - Created dedicated branch `task/steam-profile-catalog` from updated `main`.
+  - Added failing-first CLI parser and contract tests for listing,
+    inspecting, applying, and repairing the Steam profile metadata contract.
+  - Added file repository coverage proving the applied profile persists in
+    Konyak-owned `metadata.json` under the bottle.
+  - Implemented Steam install profile catalog data, compatibility profile rule
+    metadata, bottle `profiles` persistence, and profile apply/repair
+    repository operations.
 - Remaining work:
-  - Add install-profile catalog and Steam profile metadata persistence.
-  - Add the generic child-process compatibility rule mechanism and Steam
-    `steamwebhelper.exe` argv rewrite.
+  - Add profile-driven installer execution, including source policy,
+    dependency execution, install-profile command wiring, and UI entry points.
+  - Add the generic child-process compatibility rule delivery mechanism and
+    Steam `steamwebhelper.exe` argv rewrite.
   - Dynamically prove the Steam login window through the public Konyak app/CLI
     route; this slice does not claim the black-screen defect is fixed yet.
-- Next action: review draft PR #45 together with runtime-owner PR #7, then
-  continue with Steam profile metadata and child-process compatibility rules.
+- Next action: review the current parent PR, then continue with
+  profile-driven installer execution and child-process compatibility rules.
 - Verification performed:
-  - `nix develop -c zsh -lc 'git status --short --branch'` showed local
-    `main` clean and aligned with `origin/main` before branching.
-  - `nix develop -c zsh -lc 'gh issue view 44 --comments --json ...'`
-    captured the issue contract and dynamic evidence summary.
-  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_program_execution_test.dart --name "winetricks|run-winetricks"'`
-    first failed against the old implementation, then passed after the change.
-  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/domain_immutability_test.dart --name "winetricks verbs"'`
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_program_mutation_parsers_test.dart test/cli_contract_program_execution_test.dart --name "install-profile|program profile|Steam profile|profile"'`
+    passed for the new parser and profile CLI contracts.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_repository_runner_test.dart --name "persists program profile"'`
+    passed as part of the focused profile test run.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/domain_immutability_test.dart --name "bottle records expose immutable program snapshots|program mutation request records"'`
     passed.
-  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_runtime_install_test.dart --name "install-macos-wine builds a stack from component archives|install-macos-wine builds a stack from a source manifest"'`
-    passed.
-  - `nix develop -c zsh -lc 'zsh -n runtime/konyak-macos-runtime/scripts/package-binary-components.zsh runtime/konyak-macos-runtime/scripts/check-winetricks-component.zsh runtime/konyak-macos-runtime/scripts/make-source-manifest.zsh && ... check-winetricks-component.zsh "$tmp"'`
-    passed with a fixture containing `winetricks`, `verbs.txt`, and
-    `bin/cabextract`.
-  - `nix develop -c zsh -lc 'uname -m && nix build --no-link --print-out-paths nixpkgs#legacyPackages.x86_64-darwin.cabextract'`
-    passed on an arm64 host and resolved
-    `/nix/store/yp7faxhjkljh9gb37vx92qx994n2w2xa-cabextract-1.11`.
-  - `nix develop -c zsh -lc 'git diff --check'` and
-    `nix develop -c zsh -lc 'git -C runtime/konyak-macos-runtime diff --check'`
-    passed.
-  - `nix develop -c zsh -lc 'just cli-test'` passed; Dart CLI tests reported
-    387 tests passed.
-  - `nix develop -c zsh -lc 'just verify-governance'` passed.
-  - `nix develop -c zsh -lc 'just verify-safety'` passed.
-  - `nix develop -c zsh -lc 'just format-check'` passed.
-  - `nix develop -c zsh -lc 'just lint'` passed.
-  - Draft parent PR #45 and runtime-owner PR #7 were opened; issue #44 was
-    linked with an explicit handoff comment.
-  - `nix develop -c zsh -lc 'cd runtime/konyak-macos-runtime && ./scripts/assemble-runtime-stack.zsh ... && ./scripts/check-wine32on64-runtime.zsh ... && ./scripts/check-winetricks-component.zsh ... && ./scripts/check-runtime-archive-excludes-gptk.zsh ...'`
-    first reproduced the broken `runtime/bin` directory state with the CI
-    artifacts, then passed after adding `--keep-directory-symlink`.
-  - Runtime-owner PR run
-    <https://github.com/serika12345/konyak-macos-runtime/actions/runs/28931762142>
-    passed after rerunning a transient artifact-download failure.
-  - Runtime-owner workflow-dispatch publish run
-    <https://github.com/serika12345/konyak-macos-runtime/actions/runs/28931954004>
-    passed and published `crossover-26.1.0-konyak.2`.
-  - Downloaded the published `.2` source manifest and stack archive, verified
-    the archive SHA-256 against the manifest, confirmed `bin` remains a symlink
-    to `Konyak Wine Hosted Application`, and confirmed `bin/cabextract` is
-    executable through that symlink.
-  - `nix develop -c zsh -lc 'dart format packages/konyak_cli/lib/src/shared/model_constants.dart apps/konyak/test/cli/konyak_cli_client_test.dart && cd packages/konyak_cli && dart test test/cli_contract_test.dart && cd ../../apps/konyak && flutter test test/cli/konyak_cli_client_test.dart --name "passes configured development macOS runtime release manifest"'`
-    passed.
-  - `nix develop -c zsh -lc 'just verify'` passed.
-  - `nix develop -c zsh -lc './scripts/run_macos_runtime_cli_smoke.zsh'`
-    passed against
-    `https://github.com/serika12345/konyak-macos-runtime/releases/download/crossover-26.1.0-konyak.2/konyak-macos-wine-runtime-stack-source.json`.
-  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_program_execution_test.dart --name "list-winetricks-verbs|run-winetricks" && dart test test/domain_immutability_test.dart --name "winetricks verbs"'`
-    passed after correcting the policy so Steam is blocked only on macOS and
-    remains available on Linux.
+  - `nix develop -c zsh -lc 'just cli-test && just verify-governance && just verify-safety && just format-check && just lint'`
+    passed after updating the public CLI export governance allowlist for the
+    new profile domain contracts.
 
 ### Previous Update
 

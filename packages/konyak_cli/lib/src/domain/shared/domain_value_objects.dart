@@ -308,6 +308,76 @@ abstract class ProgramId with _$ProgramId implements StringDomainValueObject {
   map: FreezedMapOptions.none,
   when: FreezedWhenOptions.none,
 )
+abstract class ProfileId with _$ProfileId implements StringDomainValueObject {
+  const ProfileId._();
+
+  factory ProfileId(String value) => ProfileId._validated(
+    _requiredIdentifierValueObjectString(value, 'profileId'),
+  );
+
+  const factory ProfileId._validated(String value) = _ProfileId;
+}
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class ProfileName
+    with _$ProfileName
+    implements StringDomainValueObject {
+  const ProfileName._();
+
+  factory ProfileName(String value) =>
+      ProfileName._validated(_requiredValueObjectString(value, 'profileName'));
+
+  const factory ProfileName._validated(String value) = _ProfileName;
+}
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class ProfileSummary
+    with _$ProfileSummary
+    implements StringDomainValueObject {
+  const ProfileSummary._();
+
+  factory ProfileSummary(String value) => ProfileSummary._validated(
+    _requiredValueObjectString(value, 'profileSummary'),
+  );
+
+  const factory ProfileSummary._validated(String value) = _ProfileSummary;
+}
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class ProfileVersion
+    with _$ProfileVersion
+    implements IntDomainValueObject {
+  const ProfileVersion._();
+
+  factory ProfileVersion(int value) => ProfileVersion._validated(
+    _requiredBoundedValueObjectInt(
+      value: value,
+      fieldName: 'profileVersion',
+      minimum: 1,
+      maximum: 999999,
+    ),
+  );
+
+  const factory ProfileVersion._validated(int value) = _ProfileVersion;
+}
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
 abstract class ProgramName
     with _$ProgramName
     implements StringDomainValueObject {
@@ -1803,6 +1873,18 @@ String _requiredValueObjectString(String value, String fieldName) {
     throw ArgumentError.value(value, fieldName, 'must not be blank');
   }
   return value;
+}
+
+String _requiredIdentifierValueObjectString(String value, String fieldName) {
+  final checked = _requiredValueObjectString(value, fieldName);
+  if (!RegExp(r'^[a-z0-9][a-z0-9_.-]*$').hasMatch(checked)) {
+    throw ArgumentError.value(
+      value,
+      fieldName,
+      'must be a lowercase identifier',
+    );
+  }
+  return checked;
 }
 
 String _requiredAllowedValueObjectString({

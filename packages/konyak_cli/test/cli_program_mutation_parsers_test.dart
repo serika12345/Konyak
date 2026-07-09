@@ -67,6 +67,40 @@ void main() {
 
     expect(request.manifestPath, '/launchers/steam.json');
   });
+
+  test('parses program profile requests as explicit options', () {
+    final applyRequest = _expectSome(
+      parseJsonProgramProfileApplyRequestOption(const [
+        'apply-program-profile',
+        'steam',
+        '--bottle',
+        'steam',
+        '--program',
+        r'C:\Program Files (x86)\Steam\Steam.exe',
+        '--json',
+      ]),
+    );
+
+    expect(applyRequest.profileId.value, 'steam');
+    expect(applyRequest.bottleId.value, 'steam');
+    expect(
+      applyRequest.programPath.value,
+      r'C:\Program Files (x86)\Steam\Steam.exe',
+    );
+
+    final repairRequest = _expectSome(
+      parseJsonProgramProfileRepairRequestOption(const [
+        'repair-profile',
+        'steam',
+        '--bottle',
+        'steam',
+        '--json',
+      ]),
+    );
+
+    expect(repairRequest.profileId.value, 'steam');
+    expect(repairRequest.bottleId.value, 'steam');
+  });
 }
 
 T _expectSome<T>(Option<T> option) {

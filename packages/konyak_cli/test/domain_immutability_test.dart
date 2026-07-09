@@ -107,9 +107,18 @@ final class RecordingDomainRuntimeExecutableProbe
 }
 
 void main() {
-  test('bottle records expose immutable pinned program snapshots', () {
+  test('bottle records expose immutable program snapshots', () {
     final pinnedPrograms = <PinnedProgramRecord>[
       PinnedProgramRecord(name: 'Steam', path: '/steam.exe'),
+    ];
+    final programProfiles = <ProgramProfileRecord>[
+      ProgramProfileRecord(
+        profileId: 'steam',
+        profileVersion: 1,
+        managedProgramPath: '/steam.exe',
+        compatibilityProfileId: 'steam',
+        compatibilityProfileVersion: 1,
+      ),
     ];
     final bottle = BottleRecord(
       id: 'steam',
@@ -117,10 +126,13 @@ void main() {
       path: '/bottles/steam',
       windowsVersion: 'win10',
       pinnedPrograms: pinnedPrograms,
+      programProfiles: programProfiles,
     );
     pinnedPrograms.clear();
+    programProfiles.clear();
 
     expect(bottle.pinnedPrograms, hasLength(1));
+    expect(bottle.programProfiles, hasLength(1));
     expect(bottle.id, BottleId('steam'));
     expect(bottle.name, BottleName('Steam'));
     expect(bottle.path, BottlePath('/bottles/steam'));
@@ -132,6 +144,19 @@ void main() {
       hasLength(2),
     );
     expect(bottle.pinnedPrograms, hasLength(1));
+    expect(
+      bottle.programProfiles.add(
+        ProgramProfileRecord(
+          profileId: 'other',
+          profileVersion: 1,
+          managedProgramPath: '/other.exe',
+          compatibilityProfileId: 'other',
+          compatibilityProfileVersion: 1,
+        ),
+      ),
+      hasLength(2),
+    );
+    expect(bottle.programProfiles, hasLength(1));
   });
 
   test('bottle records reject blank required fields', () {
@@ -1685,6 +1710,28 @@ void main() {
           locale: ProgramLocale('ja_JP'),
           arguments: ProgramArguments('-novid'),
         ),
+      ),
+    );
+    expect(
+      ProgramProfileApplyRequest(
+        bottleId: BottleId('steam'),
+        installProfile: steamInstallProfile,
+        programPath: ProgramPath('/steam.exe'),
+      ),
+      ProgramProfileApplyRequest(
+        bottleId: BottleId('steam'),
+        installProfile: steamInstallProfile,
+        programPath: ProgramPath('/steam.exe'),
+      ),
+    );
+    expect(
+      ProgramProfileRepairRequest(
+        bottleId: BottleId('steam'),
+        installProfile: steamInstallProfile,
+      ),
+      ProgramProfileRepairRequest(
+        bottleId: BottleId('steam'),
+        installProfile: steamInstallProfile,
       ),
     );
   });

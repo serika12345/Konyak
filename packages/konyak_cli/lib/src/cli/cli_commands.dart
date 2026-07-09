@@ -18,6 +18,7 @@ import 'cli_bottle_read_handlers.dart';
 import 'cli_host_integration_handlers.dart';
 import 'cli_location_winetricks_handlers.dart';
 import 'cli_pinned_program_handlers.dart';
+import 'cli_program_profile_handlers.dart';
 import 'cli_program_run_handlers.dart';
 import 'cli_result_model.dart';
 import 'cli_wine_process_handlers.dart';
@@ -144,6 +145,8 @@ CliResult runCliWithContext(List<String> arguments, CliCommandContext context) {
     () => legacyCliCommandMatch(handlePinnedProgramCommand(arguments, context)),
     () =>
         legacyCliCommandMatch(handleProgramSettingsCommand(arguments, context)),
+    () =>
+        legacyCliCommandMatch(handleProgramProfileCommand(arguments, context)),
     () => legacyCliCommandMatch(handleProgramRunCommand(arguments, context)),
     () => handleLocationCommand(arguments, context),
     () => handleRuntimeCommand(arguments, context),
@@ -184,6 +187,10 @@ Usage:
   konyak rename-pinned-program <id> --program <path> --name <name> --json
   konyak get-program-settings <id> --program <path> --json
   konyak set-program-settings <id> --program <path> --settings-json <json> --json
+  konyak list-install-profiles --json
+  konyak inspect-install-profile <profile> --json
+  konyak apply-program-profile <profile> --bottle <id> --program <path> --json
+  konyak repair-profile <profile> --bottle <id> --json
   konyak suggest-graphics-backend --program <path> --json
   konyak launch-pinned-program --manifest <path> --json
   konyak run-program <id> --program <path> [--settings-json <json>] --json

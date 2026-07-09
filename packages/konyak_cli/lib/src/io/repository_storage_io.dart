@@ -5,6 +5,7 @@ import 'package:fpdart/fpdart.dart';
 
 import '../domain/bottle/bottle_models.dart';
 import '../domain/bottle/bottle_runtime_settings_models.dart';
+import '../domain/program/program_profile_models.dart';
 import '../domain/program/program_run_environment.dart';
 import '../domain/program/program_settings_models.dart';
 import '../domain/shared/domain_value_objects.dart';
@@ -321,6 +322,7 @@ Option<BottleRecord> bottleRecordFromJson(Object? value) {
     value['runtimeSettings'],
   );
   final pinnedPrograms = pinnedProgramRecordsFromJson(value['pinnedPrograms']);
+  final programProfiles = programProfileRecordsFromJson(value['profiles']);
 
   try {
     return Option.Do(($) {
@@ -331,6 +333,7 @@ Option<BottleRecord> bottleRecordFromJson(Object? value) {
         windowsVersion: windowsVersion,
         runtimeSettings: Option.of($(runtimeSettings)),
         pinnedPrograms: $(pinnedPrograms),
+        programProfiles: $(programProfiles),
       );
     });
   } on ArgumentError {
@@ -380,4 +383,51 @@ Option<List<PinnedProgramRecord>> pinnedProgramRecordsFromJson(Object? value) {
   }
 
   return Option.of(List.unmodifiable(programs));
+}
+
+Option<List<ProgramProfileRecord>> programProfileRecordsFromJson(
+  Object? value,
+) {
+  if (value == null) {
+    return Option.of(const <ProgramProfileRecord>[]);
+  }
+  if (value is! List<dynamic>) {
+    return const Option.none();
+  }
+
+  final profiles = <ProgramProfileRecord>[];
+  for (final item in value) {
+    if (item is! Map<String, dynamic>) {
+      return const Option.none();
+    }
+
+    final profileId = item['profileId'];
+    final profileVersion = item['profileVersion'];
+    final managedProgramPath = item['managedProgramPath'];
+    final compatibilityProfileId = item['compatibilityProfileId'];
+    final compatibilityProfileVersion = item['compatibilityProfileVersion'];
+    if (profileId is! String ||
+        profileVersion is! int ||
+        managedProgramPath is! String ||
+        compatibilityProfileId is! String ||
+        compatibilityProfileVersion is! int) {
+      return const Option.none();
+    }
+
+    try {
+      profiles.add(
+        ProgramProfileRecord(
+          profileId: profileId,
+          profileVersion: profileVersion,
+          managedProgramPath: managedProgramPath,
+          compatibilityProfileId: compatibilityProfileId,
+          compatibilityProfileVersion: compatibilityProfileVersion,
+        ),
+      );
+    } on ArgumentError {
+      return const Option.none();
+    }
+  }
+
+  return Option.of(List.unmodifiable(profiles));
 }

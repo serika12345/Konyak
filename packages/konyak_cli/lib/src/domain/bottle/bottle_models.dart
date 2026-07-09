@@ -2,6 +2,7 @@ import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../program/program_profile_models.dart';
 import '../shared/domain_value_objects.dart';
 import 'bottle_runtime_settings_models.dart';
 
@@ -19,6 +20,8 @@ abstract class BottleRecord with _$BottleRecord {
     Option<BottleRuntimeSettings> runtimeSettings = const Option.none(),
     Iterable<PinnedProgramRecord> pinnedPrograms =
         const <PinnedProgramRecord>[],
+    Iterable<ProgramProfileRecord> programProfiles =
+        const <ProgramProfileRecord>[],
   }) {
     return BottleRecord._validated(
       id: BottleId(id),
@@ -30,6 +33,7 @@ abstract class BottleRecord with _$BottleRecord {
         (settings) => settings,
       ),
       pinnedPrograms: pinnedPrograms.toIList(),
+      programProfiles: programProfiles.toIList(),
     );
   }
 
@@ -40,6 +44,7 @@ abstract class BottleRecord with _$BottleRecord {
     required WindowsVersion windowsVersion,
     required BottleRuntimeSettings runtimeSettings,
     required IList<PinnedProgramRecord> pinnedPrograms,
+    required IList<ProgramProfileRecord> programProfiles,
   }) = _BottleRecord;
 }
 
