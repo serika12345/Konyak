@@ -2,6 +2,7 @@ import 'package:fpdart/fpdart.dart';
 
 import '../shared/domain_value_objects.dart';
 import 'program_profile_models.dart';
+import 'program_run_models.dart';
 
 final installProfileCatalog = List<InstallProfileRecord>.unmodifiable([
   steamInstallProfile,
@@ -16,6 +17,7 @@ final steamInstallProfile = InstallProfileRecord(
   windowsVersion: 'win10',
   managedProgramPath: r'C:\Program Files (x86)\Steam\Steam.exe',
   dependencyWinetricksVerbs: const ['corefonts'],
+  runCompletionPolicy: ProgramRunCompletionPolicy.launchOnly,
   compatibilityProfile: CompatibilityProfileRecord(
     id: 'steam',
     profileVersion: 1,

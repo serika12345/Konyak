@@ -8,6 +8,7 @@ import 'program_catalog_models.dart';
 import 'program_mutation_models.dart';
 import 'program_profile_catalog.dart';
 import 'program_profile_models.dart';
+import 'program_run_models.dart';
 
 Option<ProgramProfileRecord> findProgramProfile(
   BottleRecord bottle,
@@ -85,4 +86,24 @@ BottleRecord bottleWithProgramProfile({
 
 bool isSameProgramProfile(ProgramProfileRecord profile, ProfileId profileId) {
   return profile.profileId == profileId;
+}
+
+Option<ProgramProfileRecord> findProgramProfileForPath(
+  BottleRecord bottle,
+  ProgramPath programPath,
+) {
+  final matches = bottle.programProfiles
+      .where((profile) => profile.managedProgramPath == programPath)
+      .toList(growable: false);
+  return matches.isEmpty ? const Option.none() : Option.of(matches.first);
+}
+
+ProgramRunCompletionPolicy programRunCompletionPolicyForProfiledPath({
+  required BottleRecord bottle,
+  required ProgramPath programPath,
+}) {
+  return findProgramProfileForPath(bottle, programPath)
+      .flatMap((profile) => findInstallProfile(profile.profileId))
+      .map((profile) => profile.runCompletionPolicy)
+      .getOrElse(() => ProgramRunCompletionPolicy.waitForExit);
 }

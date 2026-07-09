@@ -4,6 +4,7 @@ import '../domain/bottle/bottle_models.dart';
 import '../domain/bottle/bottle_runtime_settings_models.dart';
 import '../domain/program/program_graphics_backend_hints.dart';
 import '../domain/program/program_mutation_models.dart';
+import '../domain/program/program_profiles.dart';
 import '../domain/program/program_run_command_support.dart';
 import '../domain/program/program_run_environment.dart';
 import '../domain/program/program_run_models.dart';
@@ -222,16 +223,22 @@ CliResult runProgramPathJsonResult({
       extra: <String, Object?>{'programPath': programPath.value},
     ),
     (request) {
+      final launchRequest = request.withCompletionPolicy(
+        programRunCompletionPolicyForProfiledPath(
+          bottle: effectiveBottle,
+          programPath: programPath,
+        ),
+      );
       final preparationResult = beforeRun == null
           ? const CliSideEffectSucceeded()
           : beforeRun(
               effectiveBottle: effectiveBottle,
-              programRunRequest: request,
+              programRunRequest: launchRequest,
             );
       return switch (preparationResult) {
         CliSideEffectFailed(:final result) => result,
         CliSideEffectSucceeded() => programRunResultJson(
-          request,
+          launchRequest,
           programRunner,
         ),
       };

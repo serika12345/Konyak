@@ -1038,6 +1038,10 @@ void main() {
       '/unix',
       '/downloads/setup.exe',
     ]);
+    expect(
+      runner.lastRequest?.completionPolicy,
+      ProgramRunCompletionPolicy.waitForExit,
+    );
     expect(runner.lastRequest?.runnerKind.value, 'macosWine');
     expect(
       runner.lastRequest?.environment.toMap(),
@@ -1143,6 +1147,60 @@ void main() {
       },
     });
   });
+
+  test(
+    'run-program --json launches the managed Steam profile without waiting',
+    () {
+      const steamPath = r'C:\Program Files (x86)\Steam\Steam.exe';
+      final repository = MemoryBottleRepository(
+        programMetadataExtractor: const NoopProgramMetadataExtractor(),
+        dataHome: '/Users/user/Library/Application Support/Konyak',
+        bottles: [
+          BottleRecord(
+            id: 'bottle',
+            name: 'Bottle',
+            path:
+                '/Users/user/Library/Application Support/Konyak/Bottles/bottle',
+            windowsVersion: 'win10',
+            programProfiles: [
+              ProgramProfileRecord(
+                profileId: 'steam',
+                profileVersion: 1,
+                managedProgramPath: steamPath,
+                compatibilityProfileId: 'steam',
+                compatibilityProfileVersion: 1,
+              ),
+            ],
+          ),
+        ],
+      );
+      final runner = RecordingProgramRunner(
+        result: const ProgramRunCompleted(processExitCode: 0),
+      );
+
+      final result = runCli(
+        const ['run-program', 'bottle', '--program', steamPath, '--json'],
+        bottleRepository: repository,
+        programRunPlanner: ProgramRunPlanner(
+          hostPlatform: KonyakHostPlatform.macos,
+          environment: HostEnvironment({'HOME': '/Users/user'}),
+        ),
+        programRunner: runner,
+      );
+
+      expect(result.exitCode, 0);
+      expect(result.stderr, isEmpty);
+      expect(
+        runner.lastRequest?.completionPolicy,
+        ProgramRunCompletionPolicy.launchOnly,
+      );
+      expect(runner.lastRequest?.arguments, const [
+        'start',
+        '/unix',
+        steamPath,
+      ]);
+    },
+  );
 
   test('run-program --json preserves macOS bottle environment on macOS', () {
     final tempDirectory = Directory.systemTemp.createTempSync(

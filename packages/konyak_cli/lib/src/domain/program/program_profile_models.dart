@@ -2,6 +2,7 @@ import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../shared/domain_value_objects.dart';
+import 'program_run_models.dart';
 
 part 'program_profile_models.freezed.dart';
 
@@ -19,6 +20,8 @@ abstract class InstallProfileRecord with _$InstallProfileRecord {
     required String managedProgramPath,
     required Iterable<String> dependencyWinetricksVerbs,
     required CompatibilityProfileRecord compatibilityProfile,
+    ProgramRunCompletionPolicy runCompletionPolicy =
+        ProgramRunCompletionPolicy.waitForExit,
   }) {
     return InstallProfileRecord._validated(
       id: ProfileId(id),
@@ -32,6 +35,7 @@ abstract class InstallProfileRecord with _$InstallProfileRecord {
           .map(WinetricksVerbId.new)
           .toIList(),
       compatibilityProfile: compatibilityProfile,
+      runCompletionPolicy: runCompletionPolicy,
     );
   }
 
@@ -45,6 +49,7 @@ abstract class InstallProfileRecord with _$InstallProfileRecord {
     required ProgramPath managedProgramPath,
     required IList<WinetricksVerbId> dependencyWinetricksVerbs,
     required CompatibilityProfileRecord compatibilityProfile,
+    required ProgramRunCompletionPolicy runCompletionPolicy,
   }) = _InstallProfileRecord;
 }
 

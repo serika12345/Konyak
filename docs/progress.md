@@ -13,7 +13,7 @@ unfinished work.
 
 ### Latest Update
 
-- Timestamp: 2026-07-09 18:02 JST
+- Timestamp: 2026-07-09 18:33 JST
 - State: `completed`
 - Branch: `task/steam-profile-install-ui`; latest committed code change is the
   commit containing this snapshot.
@@ -41,8 +41,9 @@ unfinished work.
   `install-profile steam --bottle <id> --installer <path> --json`, show
   blocking progress and success/failure feedback, then refresh the bottle.
   A follow-up freeze found during manual UI execution is fixed in the same PR:
-  the Steam installer launch no longer waits for the long-lived Steam client
-  process that the updater starts after installation.
+  the Steam installer launch and managed Steam profile launch no longer wait
+  for the long-lived Steam client process that the updater starts after
+  installation or normal launch.
 - Workstream separation:
   - Investigation: use issue #44's dynamic evidence and merged PR #46 profile
     catalog contract plus merged PR #47 install-profile contract as input; no
@@ -99,6 +100,30 @@ unfinished work.
     runs and dependency steps still wait for process exit; only the local
     installer launch avoids capturing inherited stdout/stderr from a
     long-lived child process.
+  - Reproduced the remaining freeze through the public Flutter-to-CLI
+    `run-program` path after launching the pinned Steam program. At
+    2026-07-09 18:27 JST, Konyak PID 72279 launched
+    `bin/konyak.dart run-program bottle --program C:\Program Files (x86)\Steam\Steam.exe --json`
+    as CLI PID 89948. Wine then started wineserver PID 89953 and Steam PID
+    89987.
+  - Captured process evidence with `ps`, `pgrep`, `lsof`, and `sample`.
+    Konyak's main thread was in the normal AppKit runloop, while a
+    `dart:io Process.start` thread waited for CLI PID 89948. Steam PID 89987
+    held stderr fd2 to the CLI pipe, matching CLI fd19, so the CLI could not
+    finish until Steam exited. Steam's `bootstrap_log.txt` showed
+    `Update complete, launching Steam...` followed by `Shutdown` at
+    2026-07-09 18:26:44 JST, proving the updater had finished and left the
+    long-lived Steam process behind.
+  - Terminated the stuck live run through
+    `dart run bin/konyak.dart terminate-wine-processes --bottle bottle --json`.
+    The first cleanup returned `status: terminated` with wineserver
+    `processExitCode: 0`; a follow-up snapshot showed the old `run-program`
+    CLI and Steam process were gone.
+  - Added profile-level run completion policy in the install profile catalog
+    and applied it to `run-program` requests only when the bottle has the
+    matching managed Steam profile path. Non-profiled `run-program` calls still
+    wait for exit so smoke fixtures and short-lived programs keep their exit
+    code contract.
 - Remaining work:
   - Add the generic child-process compatibility rule delivery mechanism and
     Steam `steamwebhelper.exe` argv rewrite.
@@ -138,6 +163,24 @@ unfinished work.
   - `nix develop -c zsh -lc 'just flutter-format-check && just flutter-analyze && just flutter-test && just cli-test && just verify-governance && just verify-safety && just format-check && just lint'`
     first stopped at `format-check` because the new CLI test file needed
     formatting; after formatting, the same command passed.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_program_execution_test.dart --name "managed Steam profile|Konyak macOS Wine startup path"'`
+    first failed before implementation because managed Steam profile
+    `run-program` requests still used `ProgramRunCompletionPolicy.waitForExit`.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart test test/cli_contract_program_execution_test.dart --name "managed Steam profile|Konyak macOS Wine startup path"'`
+    passed after implementation.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && /usr/bin/time -p timeout 15s dart run bin/konyak.dart run-program bottle --program "C:\\Program Files (x86)\\Steam\\Steam.exe" --json'`
+    passed through the public CLI route and returned in `real 1.27s` while
+    Steam remained as a normal Wine process. `pgrep` showed no remaining
+    `run-program` CLI process, and `lsof -p <Steam PID>` showed fd0/fd1/fd2
+    connected to `/dev/null` rather than a Konyak/CLI pipe.
+  - `nix develop -c zsh -lc 'cd packages/konyak_cli && dart run bin/konyak.dart terminate-wine-processes --bottle bottle --json'`
+    cleaned up the verification Steam process with `status: terminated` and
+    wineserver `processExitCode: 0`.
+  - `nix develop -c zsh -lc 'just cli-test && just verify-governance && just verify-safety && just format-check && just lint'`
+    first stopped at `format-check` because
+    `packages/konyak_cli/test/cli_contract_program_execution_test.dart` needed
+    formatting after the new contract test; after formatting, the same command
+    passed.
 
 ### Previous Update
 
