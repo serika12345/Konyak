@@ -148,6 +148,142 @@ parseJsonProgramSettingsUpdateRequestOption(List<String> arguments) {
   });
 }
 
+class InstallProfileListCliRequest {
+  const InstallProfileListCliRequest();
+}
+
+InstallProfileListCliRequest? parseJsonInstallProfileListCliRequest(
+  List<String> arguments,
+) {
+  return _nullableParsedRequest(
+    parseJsonInstallProfileListCliRequestOption(arguments),
+  );
+}
+
+Option<InstallProfileListCliRequest>
+parseJsonInstallProfileListCliRequestOption(List<String> arguments) {
+  return _parseJsonProgramMutationCommand(
+    arguments,
+    command: 'list-install-profiles',
+    options: const <String>[],
+    restCount: 0,
+  ).map((_) => const InstallProfileListCliRequest());
+}
+
+class InstallProfileInspectCliRequest {
+  const InstallProfileInspectCliRequest({required this.profileId});
+
+  final ProfileId profileId;
+}
+
+InstallProfileInspectCliRequest? parseJsonInstallProfileInspectCliRequest(
+  List<String> arguments,
+) {
+  return _nullableParsedRequest(
+    parseJsonInstallProfileInspectCliRequestOption(arguments),
+  );
+}
+
+Option<InstallProfileInspectCliRequest>
+parseJsonInstallProfileInspectCliRequestOption(List<String> arguments) {
+  return Option.Do(($) {
+    final results = $(
+      _parseJsonProgramMutationCommand(
+        arguments,
+        command: 'inspect-install-profile',
+        options: const <String>[],
+        restCount: 1,
+      ),
+    );
+    final profileId = $(_requiredProfileIdFromRest(results));
+
+    return InstallProfileInspectCliRequest(profileId: profileId);
+  });
+}
+
+class ProgramProfileApplyCliRequest {
+  const ProgramProfileApplyCliRequest({
+    required this.profileId,
+    required this.bottleId,
+    required this.programPath,
+  });
+
+  final ProfileId profileId;
+  final BottleId bottleId;
+  final ProgramPath programPath;
+}
+
+ProgramProfileApplyCliRequest? parseJsonProgramProfileApplyRequest(
+  List<String> arguments,
+) {
+  return _nullableParsedRequest(
+    parseJsonProgramProfileApplyRequestOption(arguments),
+  );
+}
+
+Option<ProgramProfileApplyCliRequest> parseJsonProgramProfileApplyRequestOption(
+  List<String> arguments,
+) {
+  return Option.Do(($) {
+    final results = $(
+      _parseJsonProgramMutationCommand(
+        arguments,
+        command: 'apply-program-profile',
+        options: const <String>['bottle', 'program'],
+        restCount: 1,
+      ),
+    );
+    final profileId = $(_requiredProfileIdFromRest(results));
+    final bottleId = $(_requiredBottleIdOption(results, 'bottle'));
+    final programPath = $(_requiredProgramPath(results, 'program'));
+
+    return ProgramProfileApplyCliRequest(
+      profileId: profileId,
+      bottleId: bottleId,
+      programPath: programPath,
+    );
+  });
+}
+
+class ProgramProfileRepairCliRequest {
+  const ProgramProfileRepairCliRequest({
+    required this.profileId,
+    required this.bottleId,
+  });
+
+  final ProfileId profileId;
+  final BottleId bottleId;
+}
+
+ProgramProfileRepairCliRequest? parseJsonProgramProfileRepairRequest(
+  List<String> arguments,
+) {
+  return _nullableParsedRequest(
+    parseJsonProgramProfileRepairRequestOption(arguments),
+  );
+}
+
+Option<ProgramProfileRepairCliRequest>
+parseJsonProgramProfileRepairRequestOption(List<String> arguments) {
+  return Option.Do(($) {
+    final results = $(
+      _parseJsonProgramMutationCommand(
+        arguments,
+        command: 'repair-profile',
+        options: const <String>['bottle'],
+        restCount: 1,
+      ),
+    );
+    final profileId = $(_requiredProfileIdFromRest(results));
+    final bottleId = $(_requiredBottleIdOption(results, 'bottle'));
+
+    return ProgramProfileRepairCliRequest(
+      profileId: profileId,
+      bottleId: bottleId,
+    );
+  });
+}
+
 class PinnedProgramLaunchCliRequest {
   const PinnedProgramLaunchCliRequest({required this.manifestPath});
 
@@ -212,6 +348,14 @@ _programMutationTargetFromResults(ArgResults results) {
 
 Option<BottleId> _requiredBottleId(ArgResults results) {
   return Option.fromNullable(requiredCliRest(results)).map(BottleId.new);
+}
+
+Option<BottleId> _requiredBottleIdOption(ArgResults results, String name) {
+  return _requiredCliOption(results, name).map(BottleId.new);
+}
+
+Option<ProfileId> _requiredProfileIdFromRest(ArgResults results) {
+  return Option.fromNullable(requiredCliRest(results)).map(ProfileId.new);
 }
 
 Option<ProgramPath> _requiredProgramPath(ArgResults results, String name) {

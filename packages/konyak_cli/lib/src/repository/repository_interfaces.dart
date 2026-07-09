@@ -52,6 +52,14 @@ abstract interface class BottleRepository implements BottleCatalog {
   ProgramSettingsUpdateResult setProgramSettings(
     ProgramSettingsUpdateRequest request,
   );
+
+  ProgramProfileUpdateResult applyProgramProfile(
+    ProgramProfileApplyRequest request,
+  );
+
+  ProgramProfileUpdateResult repairProgramProfile(
+    ProgramProfileRepairRequest request,
+  );
 }
 
 abstract interface class BottleProgramRepository {

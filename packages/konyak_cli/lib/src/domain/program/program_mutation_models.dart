@@ -3,6 +3,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../bottle/bottle_models.dart';
 import '../shared/domain_value_objects.dart';
+import 'program_profile_models.dart';
 import 'program_settings_models.dart';
 
 part 'program_mutation_models.freezed.dart';
@@ -316,4 +317,88 @@ sealed class ProgramSettingsUpdateResult with _$ProgramSettingsUpdateResult {
 
   const factory ProgramSettingsUpdateResult.failed(String message) =
       ProgramSettingsUpdateFailed;
+}
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class ProgramProfileApplyRequest with _$ProgramProfileApplyRequest {
+  const ProgramProfileApplyRequest._();
+
+  factory ProgramProfileApplyRequest({
+    required BottleId bottleId,
+    required InstallProfileRecord installProfile,
+    required ProgramPath programPath,
+  }) {
+    return ProgramProfileApplyRequest._validated(
+      bottleId: bottleId,
+      installProfile: installProfile,
+      programPath: programPath,
+    );
+  }
+
+  const factory ProgramProfileApplyRequest._validated({
+    required BottleId bottleId,
+    required InstallProfileRecord installProfile,
+    required ProgramPath programPath,
+  }) = _ProgramProfileApplyRequest;
+}
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class ProgramProfileRepairRequest with _$ProgramProfileRepairRequest {
+  const ProgramProfileRepairRequest._();
+
+  factory ProgramProfileRepairRequest({
+    required BottleId bottleId,
+    required InstallProfileRecord installProfile,
+  }) {
+    return ProgramProfileRepairRequest._validated(
+      bottleId: bottleId,
+      installProfile: installProfile,
+    );
+  }
+
+  const factory ProgramProfileRepairRequest._validated({
+    required BottleId bottleId,
+    required InstallProfileRecord installProfile,
+  }) = _ProgramProfileRepairRequest;
+}
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class ProgramProfileUpdateResult with _$ProgramProfileUpdateResult {
+  const ProgramProfileUpdateResult._();
+
+  const factory ProgramProfileUpdateResult.updated({
+    required BottleId bottleId,
+    required ProgramProfileRecord profile,
+  }) = ProgramProfileUpdated;
+
+  factory ProgramProfileUpdateResult.missingBottle(BottleId bottleId) {
+    return ProgramProfileUpdateResult._missingBottle(bottleId: bottleId);
+  }
+
+  const factory ProgramProfileUpdateResult._missingBottle({
+    required BottleId bottleId,
+  }) = ProgramProfileUpdateMissingBottle;
+
+  factory ProgramProfileUpdateResult.profileNotApplied(ProfileId profileId) {
+    return ProgramProfileUpdateResult._profileNotApplied(profileId: profileId);
+  }
+
+  const factory ProgramProfileUpdateResult._profileNotApplied({
+    required ProfileId profileId,
+  }) = ProgramProfileUpdateProfileNotApplied;
+
+  const factory ProgramProfileUpdateResult.failed(String message) =
+      ProgramProfileUpdateFailed;
 }

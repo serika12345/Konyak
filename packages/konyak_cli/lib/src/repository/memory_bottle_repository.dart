@@ -5,6 +5,7 @@ import '../domain/bottle/bottle_mutation_models.dart';
 import '../domain/program/pinned_programs.dart';
 import '../domain/program/program_catalog_models.dart';
 import '../domain/program/program_mutation_models.dart';
+import '../domain/program/program_profiles.dart';
 import '../domain/program/program_settings_models.dart';
 import '../domain/shared/domain_value_objects.dart';
 import '../io/bottle_archives.dart';
@@ -308,6 +309,66 @@ class MemoryBottleRepository implements BottleRepository {
 
         return ProgramSettingsUpdateResult.updated(request.settings);
       },
+    );
+  }
+
+  @override
+  ProgramProfileUpdateResult applyProgramProfile(
+    ProgramProfileApplyRequest request,
+  ) {
+    return mapValue(bottlesById, request.bottleId.value).match(
+      () => ProgramProfileUpdateResult.missingBottle(request.bottleId),
+      (bottle) {
+        final updated = bottleWithAppliedProgramProfile(
+          bottle: bottle,
+          installProfile: request.installProfile,
+          programPath: request.programPath,
+          programMetadataExtractor: programMetadataExtractor,
+        );
+        bottlesById[request.bottleId.value] = updated;
+
+        return findProgramProfile(updated, request.installProfile.id).match(
+          () => const ProgramProfileUpdateResult.failed(
+            'Program profile metadata was not written.',
+          ),
+          (profile) => ProgramProfileUpdateResult.updated(
+            bottleId: request.bottleId,
+            profile: profile,
+          ),
+        );
+      },
+    );
+  }
+
+  @override
+  ProgramProfileUpdateResult repairProgramProfile(
+    ProgramProfileRepairRequest request,
+  ) {
+    return mapValue(bottlesById, request.bottleId.value).match(
+      () => ProgramProfileUpdateResult.missingBottle(request.bottleId),
+      (bottle) => findProgramProfile(bottle, request.installProfile.id).match(
+        () => ProgramProfileUpdateResult.profileNotApplied(
+          request.installProfile.id,
+        ),
+        (_) {
+          final updated = bottleWithRepairedProgramProfile(
+            bottle: bottle,
+            installProfile: request.installProfile,
+            programMetadataExtractor: programMetadataExtractor,
+          );
+          bottlesById[request.bottleId.value] = updated;
+
+          return findProgramProfile(updated, request.installProfile.id).match(
+            () => const ProgramProfileUpdateResult.failed(
+              'Program profile metadata was not written.',
+            ),
+            (profile) => ProgramProfileUpdateResult.updated(
+              bottleId: request.bottleId,
+              profile: profile,
+            ),
+          );
+        },
+      ),
     );
   }
 }

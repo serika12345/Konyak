@@ -170,4 +170,18 @@ class CompositeBottleRepository implements BottleRepository {
   ) {
     return writableRepository.setProgramSettings(request);
   }
+
+  @override
+  ProgramProfileUpdateResult applyProgramProfile(
+    ProgramProfileApplyRequest request,
+  ) {
+    return writableRepository.applyProgramProfile(request);
+  }
+
+  @override
+  ProgramProfileUpdateResult repairProgramProfile(
+    ProgramProfileRepairRequest request,
+  ) {
+    return writableRepository.repairProgramProfile(request);
+  }
 }
