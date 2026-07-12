@@ -4,14 +4,15 @@ import '../domain/bottle/bottle_models.dart';
 import '../domain/bottle/bottle_runtime_settings_models.dart';
 import '../domain/program/program_graphics_backend_hints.dart';
 import '../domain/program/program_mutation_models.dart';
+import '../domain/program/program_profile_catalog.dart';
 import '../domain/program/program_profiles.dart';
-import '../domain/program/program_run_command_support.dart';
 import '../domain/program/program_run_environment.dart';
 import '../domain/program/program_run_models.dart';
 import '../domain/program/program_runner.dart';
 import '../domain/program/program_settings_models.dart';
 import '../domain/shared/domain_value_objects.dart';
 import '../io/linux_external_program_launchers.dart';
+import '../io/program_shortcut_metadata_io.dart';
 import '../repository/repository_interfaces.dart';
 import 'cli_bottle_mutation_handlers.dart';
 import 'cli_bottle_results.dart';
@@ -114,6 +115,7 @@ CliResult runProgramJsonResult(
         programRunner: runner,
         bottle: bottle,
         programPath: ProgramPath(request.programPath),
+        installProfileCatalog: context.installProfileCatalog,
         oneTimeSettings: request.settings,
         beforeRun:
             ({
@@ -164,10 +166,15 @@ CliResult runProgramPathJsonResult({
   required ProgramRunner programRunner,
   required BottleRecord bottle,
   required ProgramPath programPath,
+  required InstallProfileCatalog installProfileCatalog,
   Option<ProgramSettingsRecord> oneTimeSettings = const Option.none(),
   ProgramGraphicsBackendHintsInspector? programGraphicsBackendHintsInspector,
   ProgramRunPreparation? beforeRun,
 }) {
+  final profileProgramPath = metadataProgramPath(
+    bottle: bottle,
+    programPath: programPath,
+  );
   final settingsResult = bottleRepository.readProgramSettings(
     ProgramSettingsRequest(bottleId: bottle.id, programPath: programPath),
   );
@@ -213,6 +220,12 @@ CliResult runProgramPathJsonResult({
   final programRunRequest = programRunPlanner.plan(
     bottle: effectiveBottle,
     programPath: programPath,
+    compatibilityEnvironment:
+        childProcessCompatibilityEnvironmentForProfiledPath(
+          installProfileCatalog: installProfileCatalog,
+          bottle: effectiveBottle,
+          programPath: profileProgramPath,
+        ),
     programSettings: Option.of(effectiveProgramSettingsWithDiagnostics),
   );
   return programRunRequest.match(
@@ -225,8 +238,9 @@ CliResult runProgramPathJsonResult({
     (request) {
       final launchRequest = request.withCompletionPolicy(
         programRunCompletionPolicyForProfiledPath(
+          installProfileCatalog: installProfileCatalog,
           bottle: effectiveBottle,
-          programPath: programPath,
+          programPath: profileProgramPath,
         ),
       );
       final preparationResult = beforeRun == null
@@ -363,16 +377,6 @@ CliResult runWinetricksJsonResult(
     bottleId: request.bottleId,
     onFound: (bottle) {
       final winetricksVerb = WinetricksVerbId(request.verb);
-      if (context.programRunPlanner.hostPlatform == KonyakHostPlatform.macos &&
-          isProfileInstallWinetricksVerb(winetricksVerb)) {
-        return jsonError(
-          exitCode: 65,
-          code: 'steamWinetricksVerbUnsupported',
-          message: 'Steam must be installed through the Konyak Steam profile.',
-          extra: <String, Object?>{'verb': request.verb, 'profileId': 'steam'},
-        );
-      }
-
       final programRunRequest = context.programRunPlanner.planWinetricksVerb(
         bottle: bottle,
         verb: winetricksVerb,

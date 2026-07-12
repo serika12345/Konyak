@@ -12,8 +12,8 @@ verification output instead of checked-off backlog entries.
 - macOS uses a Konyak-managed macOS Wine launch plan for Windows program
   execution.
 - The macOS runtime layout keeps the loader at
-  `Runtimes/macos-wine/bin/wineloader` and launches programs through
-  `wineloader start /unix`.
+  `Runtimes/macos-wine/bin/wineloader`; host paths launch through
+  `wineloader start /unix`, while Windows executable paths launch directly.
 - macOS targets a Konyak-managed component stack produced by
   `serika12345/konyak-macos-runtime`; the macOS runtime stack manifest and
   runtime-owner-produced artifacts remain the source of truth.
@@ -35,13 +35,82 @@ verification output instead of checked-off backlog entries.
 
 ## Next Tasks
 
-- Continue Steam black-screen remediation from GitHub issue #44 after the
-  initial `cabextract` and macOS `winetricks steam` gate.
-  - Add generic child-process compatibility rule delivery for profiled
-    programs, then implement the Steam `steamwebhelper.exe` argv rewrite.
-  - Dynamically prove the Steam login window through the public Konyak app/CLI
-    route with process tree, window dump, screenshot, run JSON, and logs before
-    claiming the black-screen defect is fixed.
+- Build a distributable compatibility profile system.
+  - Define a versioned canonical profile manifest format, with JSON as the
+    normalized CLI/import/export contract and optional authoring syntaxes left
+    for later.
+  - Extend Profile Manager to create and edit a profile manifest, import a
+    validated manifest file, and export a selected profile as canonical JSON.
+    Every editing, import, and export path must use the same JSON Schema and
+    Dart semantic validation as the built-in catalog; imported profiles must
+    not introduce arbitrary code execution.
+  - Define declarative installer resources in a profile. Resources must use
+    bounded resource kinds and include enough immutable source identity for
+    audit and verification, such as a URL or local import identity plus a
+    SHA-256 digest. Profile installation may fetch or select only declared
+    resources and must never execute an arbitrary shell command or script.
+  - Add a generic profile-install operation that resolves the declared
+    installer resource, installs it into the selected bottle, then runs the
+    profile's declared winetricks dependencies with recorded progress and
+    failure results. Keep dependency ordering explicit in the manifest
+    contract before exposing it to profile authors.
+  - Preserve `apply-program-profile` as the manual-install path: it binds a
+    selected executable and may pin it, but must not download an installer,
+    execute an installer, or run winetricks dependencies.
+  - Add profile validation, import, export, and listing commands that load both
+    Konyak-shipped profiles and user-installed profiles through a shared
+    provider interface.
+  - Store profile bindings in Konyak-owned bottle metadata with enough source
+    information to make external profiles auditable: schema version, profile
+    id/version, profile digest, source kind/path, managed executable path, and
+    compatibility profile id/version.
+  - Keep profile manifests declarative. Profiles may request supported
+    compatibility capabilities such as Windows version, winetricks
+    dependencies, completion policy, registry values, DLL overrides, and
+    child-process argv rules, but must not run arbitrary scripts.
+  - Add repository/share workflow support only after import validation and
+    profile binding are stable. Shared profiles must be reviewed as data and
+    should not require runtime/app code changes for each application.
+- Continue Steam black-screen remediation from GitHub issue #44.
+  - Keep the Steam profile aligned with the current CrossOver definition.
+    CrossOver's installer-scoped `WINE_WAIT_CHILD_PIPE_IGNORE=steam.exe` is not
+    a normal Steam launch workaround. CrossOver also has installer-phase
+    AppDefaults `wineoss.drv` and font/DWrite registry setup; represent those
+    as generic declarative registry actions before applying them. The current
+    CEF argv rule is independently verified Konyak profile data, not a
+    CrossOver reproduction; future profile values require equivalent evidence.
+  - The observed failure is generic: CEF's D3DMetal GPU process fails command
+    buffer creation and crashes in `CrGpuMain` with `0xc0000005`, leaving the
+    login window black. Reproduce it with a non-Steam CEF/Chromium D3D11 or
+    D3DMetal test program, then correct the minimal generic runtime/backend
+    contract.
+  - The normal pinned path now canonicalizes an executable in a bottle's
+    `drive_c` to the equivalent Windows path before macOS Wine launches it.
+    This makes the Profile Manager binding activate for either path notation;
+    keep this behavior generic and do not make the launch route Steam-specific.
+  - A DXMT comparison did not retain a Steam client process or login window, so
+    it is not a validated fallback for the D3DMetal CEF failure.
+  - CrossOver's GPTK 3 payload and `CX_ROOT` loader contract did not remove the
+    failure when tested with Konyak Wine. Do not treat copying CrossOver's
+    payload, loader, or private compatibility database as a profile remedy.
+  - Keep child-process argv delivery generic through the Konyak Wine
+    `CreateProcess` hook. A bound profile supplies data-only
+    `<executable suffix><TAB><argument>` rules through
+    `KONYAK_CHILD_PROCESS_RULES`; the hook appends only missing arguments. It
+    must remain free of application branches, profile databases, arbitrary
+    script execution, and CrossOver compatibility data. Steam is only the
+    initial built-in profile and dynamic validation target. Keep the versioned
+    limits and runtime verification aligned with
+    `runtime/konyak-macos-runtime/docs/profile-child-process-rules.md`.
+  - Current platform scope: `childProcessRules` is implemented only by the
+    Konyak macOS Wine runtime. The Linux request builder does not propagate
+    `KONYAK_CHILD_PROCESS_RULES`, and the Linux Wine runtime does not contain
+    the `CreateProcess` hook. Therefore a Linux profile can be represented in
+    the manifest but its child-process argv rules do not take effect. Before
+    claiming Linux support, add the generic hook to a Konyak-managed Linux Wine
+    build, propagate the validated environment through the Linux request
+    builder, add a Linux child-process argv integration test, and enforce a
+    profile's declared `platforms` at binding and launch.
 - Capture end-to-end DLSS/MetalFX rendering proof with a redistributable or
   user-provided DLSS-capable Windows program.
   - Do not target GPTK4 for this proof while the project support matrix treats

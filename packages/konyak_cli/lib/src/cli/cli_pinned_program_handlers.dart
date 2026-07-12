@@ -122,6 +122,7 @@ CliResult? handlePinnedProgramCommand(
       programGraphicsBackendHintsInspector:
           context.programGraphicsBackendHintsInspector,
       programRunner: context.programRunner,
+      installProfileCatalog: context.installProfileCatalog,
     );
   }
 

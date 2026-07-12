@@ -1,6 +1,14 @@
 import '../domain/program/program_profile_models.dart';
 import '../io/bottle_metadata_json.dart';
 
+Map<String, Object?> installProfileSummaryJson(InstallProfileRecord profile) {
+  return <String, Object?>{
+    'id': profile.id.value,
+    'name': profile.name.value,
+    'profileVersion': profile.profileVersion.value,
+  };
+}
+
 Map<String, Object?> installProfileJson(InstallProfileRecord profile) {
   return <String, Object?>{
     'id': profile.id.value,
@@ -17,6 +25,7 @@ Map<String, Object?> installProfileJson(InstallProfileRecord profile) {
     'dependencyWinetricksVerbs': profile.dependencyWinetricksVerbs
         .map((verb) => verb.value)
         .toList(growable: false),
+    'runCompletionPolicy': profile.runCompletionPolicy.value,
     'compatibilityProfile': compatibilityProfileJson(
       profile.compatibilityProfile,
     ),

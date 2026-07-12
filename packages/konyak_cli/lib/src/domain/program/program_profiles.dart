@@ -8,6 +8,7 @@ import 'program_catalog_models.dart';
 import 'program_mutation_models.dart';
 import 'program_profile_catalog.dart';
 import 'program_profile_models.dart';
+import 'program_run_environment.dart';
 import 'program_run_models.dart';
 
 Option<ProgramProfileRecord> findProgramProfile(
@@ -35,7 +36,7 @@ BottleRecord bottleWithAppliedProgramProfile({
     profile: profile,
   );
 
-  if (hasPinnedProgram(profiledBottle, programPath)) {
+  if (_hasEquivalentPinnedProgram(profiledBottle, programPath)) {
     return profiledBottle;
   }
 
@@ -77,7 +78,13 @@ BottleRecord bottleWithProgramProfile({
   return bottle.copyWith(
     programProfiles: <ProgramProfileRecord>[
       ...bottle.programProfiles.where(
-        (existing) => !isSameProgramProfile(existing, profile.profileId),
+        (existing) =>
+            !isSameProgramProfile(existing, profile.profileId) &&
+            !_hasEquivalentProgramPath(
+              bottle: bottle,
+              left: existing.managedProgramPath,
+              right: profile.managedProgramPath,
+            ),
       ),
       profile,
     ].toIList(),
@@ -93,17 +100,110 @@ Option<ProgramProfileRecord> findProgramProfileForPath(
   ProgramPath programPath,
 ) {
   final matches = bottle.programProfiles
-      .where((profile) => profile.managedProgramPath == programPath)
+      .where(
+        (profile) => _hasEquivalentProgramPath(
+          bottle: bottle,
+          left: profile.managedProgramPath,
+          right: programPath,
+        ),
+      )
       .toList(growable: false);
   return matches.isEmpty ? const Option.none() : Option.of(matches.first);
 }
 
+bool _hasEquivalentPinnedProgram(BottleRecord bottle, ProgramPath programPath) {
+  return bottle.pinnedPrograms.any(
+    (pinnedProgram) => _hasEquivalentProgramPath(
+      bottle: bottle,
+      left: pinnedProgram.path,
+      right: programPath,
+    ),
+  );
+}
+
+bool _hasEquivalentProgramPath({
+  required BottleRecord bottle,
+  required ProgramPath left,
+  required ProgramPath right,
+}) {
+  return _programPathKey(bottle, left) == _programPathKey(bottle, right);
+}
+
+String _programPathKey(BottleRecord bottle, ProgramPath programPath) {
+  final path = programPath.value;
+  return _normalizedWindowsProgramPath(path).getOrElse(() {
+    final driveCPrefix = '${bottle.path.value}/drive_c/';
+    if (path.startsWith(driveCPrefix)) {
+      final relativePath = path.substring(driveCPrefix.length);
+      return 'c:\\${relativePath.replaceAll('/', '\\')}'.toLowerCase();
+    }
+
+    return path;
+  });
+}
+
+Option<String> _normalizedWindowsProgramPath(String path) {
+  return Option.fromPredicate(
+    path,
+    (value) => RegExp(r'^[a-zA-Z]:[\\/]').hasMatch(value),
+  ).map((value) => value.replaceAll('/', '\\').toLowerCase());
+}
+
 ProgramRunCompletionPolicy programRunCompletionPolicyForProfiledPath({
+  required InstallProfileCatalog installProfileCatalog,
   required BottleRecord bottle,
   required ProgramPath programPath,
 }) {
-  return findProgramProfileForPath(bottle, programPath)
-      .flatMap((profile) => findInstallProfile(profile.profileId))
+  return installProfileForProgramPath(
+        installProfileCatalog: installProfileCatalog,
+        bottle: bottle,
+        programPath: programPath,
+      )
       .map((profile) => profile.runCompletionPolicy)
       .getOrElse(() => ProgramRunCompletionPolicy.waitForExit);
+}
+
+Option<InstallProfileRecord> installProfileForProgramPath({
+  required InstallProfileCatalog installProfileCatalog,
+  required BottleRecord bottle,
+  required ProgramPath programPath,
+}) {
+  return findProgramProfileForPath(
+    bottle,
+    programPath,
+  ).flatMap((profile) => installProfileCatalog.find(profile.profileId));
+}
+
+ProgramRunEnvironment childProcessCompatibilityEnvironmentForProfiledPath({
+  required InstallProfileCatalog installProfileCatalog,
+  required BottleRecord bottle,
+  required ProgramPath programPath,
+}) {
+  final rules = installProfileForProgramPath(
+    installProfileCatalog: installProfileCatalog,
+    bottle: bottle,
+    programPath: programPath,
+  ).map((profile) => profile.compatibilityProfile.childProcessRules);
+  return rules
+      .map(_serializedChildProcessRules)
+      .match(
+        () => const ProgramRunEnvironment.empty(),
+        (value) => value.isEmpty
+            ? const ProgramRunEnvironment.empty()
+            : ProgramRunEnvironment(<String, String>{
+                konyakChildProcessRulesEnvironmentVariable: value,
+              }),
+      );
+}
+
+String _serializedChildProcessRules(
+  IList<ChildProcessCompatibilityRule> rules,
+) {
+  return rules
+      .expand(
+        (rule) => rule.appendArgumentsIfMissing.value.map(
+          (argument) => '${rule.executableSuffix.value}\t$argument',
+        ),
+      )
+      .join('\n');
 }

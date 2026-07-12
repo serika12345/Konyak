@@ -148,14 +148,14 @@ final class OverviewBottleDetailBottomBar extends BottleDetailBottomBar {
   const OverviewBottleDetailBottomBar({
     required this.target,
     required this.runProgramAction,
-    required this.installSteamProfileAction,
+    required this.showProfileManagerAction,
     required this.toolsAction,
     required this.showWinetricksAction,
   });
 
   final BottleActionTarget target;
   final BottleSummaryActionAvailability runProgramAction;
-  final BottleSummaryActionAvailability installSteamProfileAction;
+  final BottleSummaryActionAvailability showProfileManagerAction;
   final BottleToolsActionAvailability toolsAction;
   final BottleSummaryActionAvailability showWinetricksAction;
 }
@@ -314,14 +314,14 @@ BottleDetailBottomBar _bottleDetailBottomBar({
       OverviewBottleDetailBottomBar(
         target: BottleActionTarget.bottle(bottle),
         runProgramAction: programActions.runProgramAction,
-        installSteamProfileAction: programActions.installSteamProfileAction,
+        showProfileManagerAction: programActions.showProfileManagerAction,
         toolsAction: toolsAction,
         showWinetricksAction: winetricksActions.showWinetricksAction,
       ),
     EmptyKonyakHomeDetailContent() => OverviewBottleDetailBottomBar(
       target: const BottleActionTarget.none(),
       runProgramAction: programActions.runProgramAction,
-      installSteamProfileAction: programActions.installSteamProfileAction,
+      showProfileManagerAction: programActions.showProfileManagerAction,
       toolsAction: toolsAction,
       showWinetricksAction: winetricksActions.showWinetricksAction,
     ),

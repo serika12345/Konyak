@@ -3,6 +3,22 @@ import 'package:konyak_cli/src/io/program_io_services.dart';
 import 'support/cli_contract_full_helpers.dart';
 
 void main() {
+  test('program runner clears inherited child-process profile rules', () {
+    final result = Process.runSync(
+      Platform.resolvedExecutable,
+      const ['run', 'test/support/program_runner_environment_probe.dart'],
+      environment: <String, String>{
+        ...Platform.environment,
+        konyakChildProcessRulesEnvironmentVariable.toLowerCase():
+            'unvalidated-rule',
+      },
+      includeParentEnvironment: false,
+      runInShell: false,
+    );
+
+    expect(result.exitCode, 0, reason: '${result.stdout}\n${result.stderr}');
+  });
+
   test(
     'launchOnly program runs return without waiting for inherited stderr',
     () async {

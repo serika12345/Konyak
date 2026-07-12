@@ -10,6 +10,15 @@ import 'package:konyak_cli/src/repository/memory_bottle_repository.dart';
 import 'package:test/test.dart';
 
 import 'support/cli_contract_helpers.dart';
+import 'support/install_profile_fixtures.dart';
+
+InstallProfileRecord _steamInstallProfile() {
+  return testInstallProfile(
+    id: 'steam',
+    name: 'Steam',
+    managedProgramPath: r'C:\Program Files (x86)\Steam\Steam.exe',
+  );
+}
 
 void main() {
   test('install-linux-file-associations --json writes XDG MIME associations', () {
@@ -460,7 +469,7 @@ void main() {
     final result = repository.applyProgramProfile(
       ProgramProfileApplyRequest(
         bottleId: bottle.id,
-        installProfile: steamInstallProfile,
+        installProfile: _steamInstallProfile(),
         programPath: ProgramPath(r'C:\Program Files (x86)\Steam\Steam.exe'),
       ),
     );

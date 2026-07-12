@@ -328,7 +328,7 @@ final class KonyakBottleActions {
 final class KonyakProgramActions {
   const KonyakProgramActions({
     this.runProgramAction = const BottleSummaryActionAvailability.unavailable(),
-    this.installSteamProfileAction =
+    this.showProfileManagerAction =
         const BottleSummaryActionAvailability.unavailable(),
     this.runProgramPathAction =
         const ProgramPathActionAvailability.unavailable(),
@@ -346,7 +346,7 @@ final class KonyakProgramActions {
   });
 
   final BottleSummaryActionAvailability runProgramAction;
-  final BottleSummaryActionAvailability installSteamProfileAction;
+  final BottleSummaryActionAvailability showProfileManagerAction;
   final ProgramPathActionAvailability runProgramPathAction;
   final BottleSummaryActionAvailability pinProgramAction;
   final PinnedProgramActionAvailability loadPinnedProgramSettingsAction;

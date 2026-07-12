@@ -811,13 +811,58 @@ class KonyakLocalizationsJa extends KonyakLocalizations {
   }
 
   @override
-  String get installedSteam => 'Steam をインストールしました';
+  String appliedProfile(String profileName) {
+    return '$profileName を適用しました';
+  }
 
   @override
-  String get installSteam => 'Steam をインストール';
+  String get profileManager => 'Profile Manager';
 
   @override
-  String get installingSteamEllipsis => 'Steam をインストールしています';
+  String profileManagerIn(String bottleName) {
+    return '$bottleName の Profile Manager';
+  }
+
+  @override
+  String get loadingInstallProfilesEllipsis => 'インストールプロファイルを読み込んでいます';
+
+  @override
+  String get loadingProfileDetailsEllipsis => 'プロファイル詳細を読み込んでいます';
+
+  @override
+  String applyingProfileEllipsis(String profileName) {
+    return '$profileName を適用しています';
+  }
+
+  @override
+  String get applyProfile => 'プロファイルを適用';
+
+  @override
+  String get noInstallProfilesFound => 'インストールプロファイルが見つかりません。';
+
+  @override
+  String get installProfilePlatforms => 'プラットフォーム';
+
+  @override
+  String get installProfileWindowsVersion => 'Windows バージョン';
+
+  @override
+  String get installProfileManagedProgramPath => '既定のプログラムパス';
+
+  @override
+  String get installProfileDependencies => '依存関係';
+
+  @override
+  String get installProfileNoDependencies => 'なし';
+
+  @override
+  String get installProfileRunCompletionPolicy => '実行完了ポリシー';
+
+  @override
+  String get installProfileCompatibilityRules => '互換性ルール';
+
+  @override
+  String get installProfileNoCompatibilityRules => 'なし';
 
   @override
   String reinstalledRuntime(String runtimeName) {

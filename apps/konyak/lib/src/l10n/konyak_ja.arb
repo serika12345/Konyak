@@ -1136,17 +1136,84 @@
       }
     }
   },
-  "installedSteam": "Steam をインストールしました",
-  "@installedSteam": {
-    "description": "Konyak UI string: Installed Steam"
+  "appliedProfile": "{profileName} を適用しました",
+  "@appliedProfile": {
+    "description": "Konyak UI string: Applied {profileName}",
+    "placeholders": {
+      "profileName": {
+        "type": "String"
+      }
+    }
   },
-  "installSteam": "Steam をインストール",
-  "@installSteam": {
-    "description": "Konyak UI string: Install Steam"
+  "profileManager": "Profile Manager",
+  "@profileManager": {
+    "description": "Konyak UI string: Profile Manager"
   },
-  "installingSteamEllipsis": "Steam をインストールしています",
-  "@installingSteamEllipsis": {
-    "description": "Konyak UI string: Installing Steam..."
+  "profileManagerIn": "{bottleName} の Profile Manager",
+  "@profileManagerIn": {
+    "description": "Konyak UI string: Profile Manager in {bottleName}",
+    "placeholders": {
+      "bottleName": {
+        "type": "String"
+      }
+    }
+  },
+  "loadingInstallProfilesEllipsis": "インストールプロファイルを読み込んでいます",
+  "@loadingInstallProfilesEllipsis": {
+    "description": "Konyak UI string: Loading install profiles..."
+  },
+  "loadingProfileDetailsEllipsis": "プロファイル詳細を読み込んでいます",
+  "@loadingProfileDetailsEllipsis": {
+    "description": "Konyak UI string: Loading profile details..."
+  },
+  "applyingProfileEllipsis": "{profileName} を適用しています",
+  "@applyingProfileEllipsis": {
+    "description": "Konyak UI string: Applying {profileName}...",
+    "placeholders": {
+      "profileName": {
+        "type": "String"
+      }
+    }
+  },
+  "applyProfile": "プロファイルを適用",
+  "@applyProfile": {
+    "description": "Konyak UI string: Apply profile"
+  },
+  "noInstallProfilesFound": "インストールプロファイルが見つかりません。",
+  "@noInstallProfilesFound": {
+    "description": "Konyak UI string: No install profiles found."
+  },
+  "installProfilePlatforms": "プラットフォーム",
+  "@installProfilePlatforms": {
+    "description": "Konyak UI string: Platforms"
+  },
+  "installProfileWindowsVersion": "Windows バージョン",
+  "@installProfileWindowsVersion": {
+    "description": "Konyak UI string: Windows version"
+  },
+  "installProfileManagedProgramPath": "既定のプログラムパス",
+  "@installProfileManagedProgramPath": {
+    "description": "Konyak UI string: Default program path"
+  },
+  "installProfileDependencies": "依存関係",
+  "@installProfileDependencies": {
+    "description": "Konyak UI string: Dependencies"
+  },
+  "installProfileNoDependencies": "なし",
+  "@installProfileNoDependencies": {
+    "description": "Konyak UI string: None"
+  },
+  "installProfileRunCompletionPolicy": "実行完了ポリシー",
+  "@installProfileRunCompletionPolicy": {
+    "description": "Konyak UI string: Run completion"
+  },
+  "installProfileCompatibilityRules": "互換性ルール",
+  "@installProfileCompatibilityRules": {
+    "description": "Konyak UI string: Compatibility rules"
+  },
+  "installProfileNoCompatibilityRules": "なし",
+  "@installProfileNoCompatibilityRules": {
+    "description": "Konyak UI string: None"
   },
   "reinstalledRuntime": "{runtimeName} を再インストールしました",
   "@reinstalledRuntime": {

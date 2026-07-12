@@ -22,9 +22,12 @@ const _gptkD3DMetalComponentLibRelativePath = <String>[
 ProgramRunRequest macosWineRequest({
   required BottleRecord bottle,
   required ProgramPath programPath,
+  required ProgramRunArguments wineArguments,
   required HostEnvironment environment,
   required Option<MacosMajorVersion> macosMajorVersion,
   required ProgramSettingsRecord programSettings,
+  ProgramRunEnvironment compatibilityEnvironment =
+      const ProgramRunEnvironment.empty(),
 }) {
   final hostEnvironment = environment;
   final logging = programSettingsLogging(programSettings);
@@ -34,9 +37,7 @@ ProgramRunRequest macosWineRequest({
     runnerKind: RunnerKind.macosWine,
     executable: ProgramExecutable(macosWineExecutable(hostEnvironment)),
     arguments: ProgramRunArguments(<String>[
-      'start',
-      '/unix',
-      programPath.value,
+      ...wineArguments.value,
       ...programSettingsArguments(programSettings).value,
     ]),
     environment: ProgramRunEnvironment(<String, String>{
@@ -46,6 +47,7 @@ ProgramRunRequest macosWineRequest({
         macosMajorVersion: macosMajorVersion,
       ).toMap(),
       ...programSettingsEnvironment(programSettings).toMap(),
+      ...compatibilityEnvironment.toMap(),
       'WINEPREFIX': bottle.path.value,
     }),
     logPath: programSettingsLogPath(bottle: bottle, settings: programSettings),

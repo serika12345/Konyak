@@ -54,34 +54,75 @@ extension KonyakCliProgramCommands on KonyakCliClient {
     );
   }
 
-  Future<InstallProgramProfileLoadResult> installProfile({
-    required String profileId,
-    required String bottleId,
-    required String installerPath,
-  }) async {
-    final result = await run([
-      'install-profile',
-      profileId,
-      '--bottle',
-      bottleId,
-      '--installer',
-      installerPath,
-      '--json',
-    ]);
-
-    final parsed = parseInstallProgramProfilePayload(result.stdout);
+  Future<InstallProfileListLoadResult> listInstallProfiles() async {
+    final result = await run(['list-install-profiles', '--json']);
+    final parsed = parseInstallProfileListPayload(result.stdout);
 
     return switch (parsed) {
-      InstalledProgramProfile() when result.exitCode == 0 => parsed,
-      InstallProgramProfileLoadFailure(:final message) =>
-        InstallProgramProfileLoadFailure(
+      LoadedInstallProfiles() when result.exitCode == 0 => parsed,
+      InstallProfileListLoadFailure(:final message) =>
+        InstallProfileListLoadFailure(
           exitCode: result.exitCode,
           message: message,
           diagnostic: result.stderr,
         ),
-      InstalledProgramProfile() => InstallProgramProfileLoadFailure(
+      LoadedInstallProfiles() => InstallProfileListLoadFailure(
         exitCode: result.exitCode,
-        message: operationFailureMessage(result, 'install-profile'),
+        message: operationFailureMessage(result, 'list-install-profiles'),
+        diagnostic: result.stderr,
+      ),
+    };
+  }
+
+  Future<InstallProfileInspectLoadResult> inspectInstallProfile({
+    required String profileId,
+  }) async {
+    final result = await run(['inspect-install-profile', profileId, '--json']);
+    final parsed = parseInstallProfileInspectPayload(result.stdout);
+
+    return switch (parsed) {
+      InspectedInstallProfile() when result.exitCode == 0 => parsed,
+      InstallProfileInspectLoadFailure(:final message) =>
+        InstallProfileInspectLoadFailure(
+          exitCode: result.exitCode,
+          message: message,
+          diagnostic: result.stderr,
+        ),
+      InspectedInstallProfile() => InstallProfileInspectLoadFailure(
+        exitCode: result.exitCode,
+        message: operationFailureMessage(result, 'inspect-install-profile'),
+        diagnostic: result.stderr,
+      ),
+    };
+  }
+
+  Future<ProgramProfileApplyLoadResult> applyProgramProfile({
+    required String profileId,
+    required String bottleId,
+    required String programPath,
+  }) async {
+    final result = await run([
+      'apply-program-profile',
+      profileId,
+      '--bottle',
+      bottleId,
+      '--program',
+      programPath,
+      '--json',
+    ]);
+    final parsed = parseProgramProfileApplyPayload(result.stdout);
+
+    return switch (parsed) {
+      AppliedProgramProfile() when result.exitCode == 0 => parsed,
+      ProgramProfileApplyLoadFailure(:final message) =>
+        ProgramProfileApplyLoadFailure(
+          exitCode: result.exitCode,
+          message: message,
+          diagnostic: result.stderr,
+        ),
+      AppliedProgramProfile() => ProgramProfileApplyLoadFailure(
+        exitCode: result.exitCode,
+        message: operationFailureMessage(result, 'apply-program-profile'),
         diagnostic: result.stderr,
       ),
     };

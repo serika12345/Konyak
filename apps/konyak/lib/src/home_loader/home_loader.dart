@@ -91,7 +91,7 @@ class KonyakHomeLoaderState extends State<KonyakHomeLoader>
       const BlockingProgressState.hidden();
   BlockingProgressState winetricksInstallProgress =
       const BlockingProgressState.hidden();
-  BlockingProgressState installProfileProgress =
+  BlockingProgressState profileManagerProgress =
       const BlockingProgressState.hidden();
   BlockingProgressState archiveProgress = const BlockingProgressState.hidden();
   BlockingProgressState runtimeInstallProgress =
@@ -276,8 +276,9 @@ class KonyakHomeLoaderState extends State<KonyakHomeLoader>
             runProgramAction: BottleSummaryActionAvailability.available(
               runProgram,
             ),
-            installSteamProfileAction:
-                BottleSummaryActionAvailability.available(installSteamProfile),
+            showProfileManagerAction: BottleSummaryActionAvailability.available(
+              showProfileManager,
+            ),
             runProgramPathAction: ProgramPathActionAvailability.available((
               bottle,
               programPath,
@@ -348,8 +349,8 @@ class KonyakHomeLoaderState extends State<KonyakHomeLoader>
           state: winetricksInstallProgress,
         ),
         ...blockingProgressOverlays(
-          key: const ValueKey('install-profile-progress'),
-          state: installProfileProgress,
+          key: const ValueKey('profile-manager-progress'),
+          state: profileManagerProgress,
         ),
         ...blockingProgressOverlays(
           key: const ValueKey('bottle-archive-progress'),

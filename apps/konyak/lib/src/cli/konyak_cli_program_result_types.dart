@@ -67,19 +67,19 @@ final class ProgramRunLoadFailure extends ProgramRunLoadResult {
   final String diagnostic;
 }
 
-sealed class InstallProgramProfileLoadResult {
-  const InstallProgramProfileLoadResult();
+sealed class InstallProfileListLoadResult {
+  const InstallProfileListLoadResult();
 }
 
-final class InstalledProgramProfile extends InstallProgramProfileLoadResult {
-  const InstalledProgramProfile(this.profile);
+final class LoadedInstallProfiles extends InstallProfileListLoadResult {
+  LoadedInstallProfiles({required Iterable<InstallProfileListItem> profiles})
+    : profiles = List.unmodifiable(profiles);
 
-  final InstalledProgramProfileSummary profile;
+  final List<InstallProfileListItem> profiles;
 }
 
-final class InstallProgramProfileLoadFailure
-    extends InstallProgramProfileLoadResult {
-  const InstallProgramProfileLoadFailure({
+final class InstallProfileListLoadFailure extends InstallProfileListLoadResult {
+  const InstallProfileListLoadFailure({
     required this.exitCode,
     required this.message,
     required this.diagnostic,
@@ -90,54 +90,115 @@ final class InstallProgramProfileLoadFailure
   final String diagnostic;
 }
 
-final class InstalledProgramProfileSummary {
-  InstalledProgramProfileSummary({
-    required this.bottleId,
-    required this.profileId,
-    required this.profileVersion,
-    required this.installerSource,
-    required Iterable<InstalledProgramProfileStepSummary> steps,
-    required this.programProfile,
-  }) : steps = List.unmodifiable(steps);
-
-  final String bottleId;
-  final String profileId;
-  final int profileVersion;
-  final InstallProfileInstallerSourceSummary installerSource;
-  final List<InstalledProgramProfileStepSummary> steps;
-  final InstalledProgramProfileProgramSummary programProfile;
+sealed class InstallProfileInspectLoadResult {
+  const InstallProfileInspectLoadResult();
 }
 
-final class InstallProfileInstallerSourceSummary {
-  const InstallProfileInstallerSourceSummary({
-    required this.kind,
-    required this.path,
+final class InspectedInstallProfile extends InstallProfileInspectLoadResult {
+  const InspectedInstallProfile(this.profile);
+
+  final InstallProfileDetails profile;
+}
+
+final class InstallProfileInspectLoadFailure
+    extends InstallProfileInspectLoadResult {
+  const InstallProfileInspectLoadFailure({
+    required this.exitCode,
+    required this.message,
+    required this.diagnostic,
   });
 
-  final String kind;
-  final String path;
+  final int exitCode;
+  final String message;
+  final String diagnostic;
 }
 
-final class InstalledProgramProfileStepSummary {
-  InstalledProgramProfileStepSummary({
-    required this.kind,
+sealed class ProgramProfileApplyLoadResult {
+  const ProgramProfileApplyLoadResult();
+}
+
+final class AppliedProgramProfile extends ProgramProfileApplyLoadResult {
+  const AppliedProgramProfile(this.profile);
+
+  final ProgramProfileSummary profile;
+}
+
+final class ProgramProfileApplyLoadFailure
+    extends ProgramProfileApplyLoadResult {
+  const ProgramProfileApplyLoadFailure({
+    required this.exitCode,
+    required this.message,
+    required this.diagnostic,
+  });
+
+  final int exitCode;
+  final String message;
+  final String diagnostic;
+}
+
+final class InstallProfileListItem {
+  const InstallProfileListItem({
     required this.id,
-    required this.runnerKind,
-    required Iterable<String> argv,
-    required this.logPath,
-    required this.processExitCode,
-  }) : argv = List.unmodifiable(argv);
+    required this.name,
+    required this.profileVersion,
+  });
 
-  final String kind;
   final String id;
-  final String runnerKind;
-  final List<String> argv;
-  final String logPath;
-  final int processExitCode;
+  final String name;
+  final int profileVersion;
 }
 
-final class InstalledProgramProfileProgramSummary {
-  const InstalledProgramProfileProgramSummary({
+final class InstallProfileDetails {
+  InstallProfileDetails({
+    required this.id,
+    required this.name,
+    required this.profileVersion,
+    required this.summary,
+    required Iterable<String> platforms,
+    required this.windowsVersion,
+    required this.managedProgramPath,
+    required Iterable<String> dependencyWinetricksVerbs,
+    required this.runCompletionPolicy,
+    required this.compatibilityProfile,
+  }) : platforms = List.unmodifiable(platforms),
+       dependencyWinetricksVerbs = List.unmodifiable(dependencyWinetricksVerbs);
+
+  final String id;
+  final String name;
+  final int profileVersion;
+  final String summary;
+  final List<String> platforms;
+  final String windowsVersion;
+  final String managedProgramPath;
+  final List<String> dependencyWinetricksVerbs;
+  final String runCompletionPolicy;
+  final CompatibilityProfileSummary compatibilityProfile;
+}
+
+final class CompatibilityProfileSummary {
+  CompatibilityProfileSummary({
+    required this.id,
+    required this.profileVersion,
+    required Iterable<ChildProcessCompatibilityRuleSummary> childProcessRules,
+  }) : childProcessRules = List.unmodifiable(childProcessRules);
+
+  final String id;
+  final int profileVersion;
+  final List<ChildProcessCompatibilityRuleSummary> childProcessRules;
+}
+
+final class ChildProcessCompatibilityRuleSummary {
+  ChildProcessCompatibilityRuleSummary({
+    required this.executableSuffix,
+    required Iterable<String> appendArgumentsIfMissing,
+  }) : appendArgumentsIfMissing = List.unmodifiable(appendArgumentsIfMissing);
+
+  final String executableSuffix;
+  final List<String> appendArgumentsIfMissing;
+}
+
+final class ProgramProfileSummary {
+  const ProgramProfileSummary({
     required this.bottleId,
     required this.profileId,
     required this.profileVersion,

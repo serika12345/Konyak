@@ -1136,17 +1136,84 @@
       }
     }
   },
-  "installedSteam": "Installed Steam",
-  "@installedSteam": {
-    "description": "Konyak UI string: Installed Steam"
+  "appliedProfile": "Applied {profileName}",
+  "@appliedProfile": {
+    "description": "Konyak UI string: Applied {profileName}",
+    "placeholders": {
+      "profileName": {
+        "type": "String"
+      }
+    }
   },
-  "installSteam": "Install Steam",
-  "@installSteam": {
-    "description": "Konyak UI string: Install Steam"
+  "profileManager": "Profile Manager",
+  "@profileManager": {
+    "description": "Konyak UI string: Profile Manager"
   },
-  "installingSteamEllipsis": "Installing Steam...",
-  "@installingSteamEllipsis": {
-    "description": "Konyak UI string: Installing Steam..."
+  "profileManagerIn": "Profile Manager in {bottleName}",
+  "@profileManagerIn": {
+    "description": "Konyak UI string: Profile Manager in {bottleName}",
+    "placeholders": {
+      "bottleName": {
+        "type": "String"
+      }
+    }
+  },
+  "loadingInstallProfilesEllipsis": "Loading install profiles...",
+  "@loadingInstallProfilesEllipsis": {
+    "description": "Konyak UI string: Loading install profiles..."
+  },
+  "loadingProfileDetailsEllipsis": "Loading profile details...",
+  "@loadingProfileDetailsEllipsis": {
+    "description": "Konyak UI string: Loading profile details..."
+  },
+  "applyingProfileEllipsis": "Applying {profileName}...",
+  "@applyingProfileEllipsis": {
+    "description": "Konyak UI string: Applying {profileName}...",
+    "placeholders": {
+      "profileName": {
+        "type": "String"
+      }
+    }
+  },
+  "applyProfile": "Apply profile",
+  "@applyProfile": {
+    "description": "Konyak UI string: Apply profile"
+  },
+  "noInstallProfilesFound": "No install profiles found.",
+  "@noInstallProfilesFound": {
+    "description": "Konyak UI string: No install profiles found."
+  },
+  "installProfilePlatforms": "Platforms",
+  "@installProfilePlatforms": {
+    "description": "Konyak UI string: Platforms"
+  },
+  "installProfileWindowsVersion": "Windows version",
+  "@installProfileWindowsVersion": {
+    "description": "Konyak UI string: Windows version"
+  },
+  "installProfileManagedProgramPath": "Default program path",
+  "@installProfileManagedProgramPath": {
+    "description": "Konyak UI string: Default program path"
+  },
+  "installProfileDependencies": "Dependencies",
+  "@installProfileDependencies": {
+    "description": "Konyak UI string: Dependencies"
+  },
+  "installProfileNoDependencies": "None",
+  "@installProfileNoDependencies": {
+    "description": "Konyak UI string: None"
+  },
+  "installProfileRunCompletionPolicy": "Run completion",
+  "@installProfileRunCompletionPolicy": {
+    "description": "Konyak UI string: Run completion"
+  },
+  "installProfileCompatibilityRules": "Compatibility rules",
+  "@installProfileCompatibilityRules": {
+    "description": "Konyak UI string: Compatibility rules"
+  },
+  "installProfileNoCompatibilityRules": "None",
+  "@installProfileNoCompatibilityRules": {
+    "description": "Konyak UI string: None"
   },
   "reinstalledRuntime": "Reinstalled {runtimeName}",
   "@reinstalledRuntime": {

@@ -1,7 +1,7 @@
 part of 'widget_test.dart';
 
 void defineMenuWinetricksAndInstalledProgramWidgetTests() {
-  testWidgets('bottom bar Steam install action matches golden', (
+  testWidgets('bottom bar Profile Manager action matches golden', (
     WidgetTester tester,
   ) async {
     await _loadKonyakTestFonts();
@@ -30,7 +30,7 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
                   runProgramAction: BottleSummaryActionAvailability.available(
                     (_) {},
                   ),
-                  installSteamProfileAction:
+                  showProfileManagerAction:
                       BottleSummaryActionAvailability.available((_) {}),
                   toolsAction: BottleToolsActionAvailability.command((_, _) {}),
                   showWinetricksAction:
@@ -45,7 +45,7 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
 
     await _expectGoldenFileWithinTolerance(
       find.byKey(goldenKey),
-      'goldens/bottom_bar_steam_install.png',
+      'goldens/bottom_bar_profile_manager.png',
       diffTolerance: 0.05,
     );
   });
@@ -935,10 +935,14 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
     expect(find.text('macosWinetricks exited with code 0'), findsNothing);
   });
 
-  testWidgets('bottom bar installs Steam profile from a selected installer', (
+  testWidgets('bottom bar applies a selected program profile to an exe path', (
     WidgetTester tester,
   ) async {
-    final installCompleter = Completer<ProcessRunResult>();
+    const selectedProgramPath =
+        '/Users/user/Library/Application Support/Konyak/Bottles/Steam/drive_c/'
+        'Program Files (x86)/Steam/Steam.exe';
+    final listProfilesCompleter = Completer<ProcessRunResult>();
+    final applyCompleter = Completer<ProcessRunResult>();
     final runner = _FutureQueuedProcessRunner([
       Future.value(
         const ProcessRunResult(
@@ -959,7 +963,42 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
           stderr: '',
         ),
       ),
-      installCompleter.future,
+      listProfilesCompleter.future,
+      Future.value(
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+            {
+              "schemaVersion": 1,
+              "installProfile": {
+                "id": "steam",
+                "name": "Steam",
+                "profileVersion": 1,
+                "summary": "Apply Konyak compatibility rules to an installed Steam executable.",
+                "platforms": ["macos"],
+                "bottleTemplate": {
+                  "windowsVersion": "win10"
+                },
+                "managedProgramPath": "C:\\\\Program Files (x86)\\\\Steam\\\\Steam.exe",
+                "dependencyWinetricksVerbs": ["corefonts"],
+                "runCompletionPolicy": "launchOnly",
+                "compatibilityProfile": {
+                  "id": "steam",
+                  "profileVersion": 1,
+                  "childProcessRules": [
+                    {
+                      "executableSuffix": "steamwebhelper.exe",
+                      "appendArgumentsIfMissing": ["--disable-gpu", "--in-process-gpu"]
+                    }
+                  ]
+                }
+              }
+            }
+          ''',
+          stderr: '',
+        ),
+      ),
+      applyCompleter.future,
       Future.value(
         const ProcessRunResult(
           exitCode: 0,
@@ -990,73 +1029,89 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
       _testKonyakApp(
         cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
         programFilePicker: const _FakeProgramFilePicker(
-          path: '/downloads/SteamSetup.exe',
+          path: selectedProgramPath,
         ),
       ),
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.widgetWithText(TextButton, 'Install Steam'));
+    await tester.tap(find.widgetWithText(TextButton, 'Profile Manager'));
     await tester.pump();
 
     expect(
-      find.byKey(const ValueKey('install-profile-progress')),
+      find.byKey(const ValueKey('profile-manager-progress')),
       findsOneWidget,
     );
-    expect(find.text('Installing Steam...'), findsOneWidget);
+    expect(find.text('Loading install profiles...'), findsOneWidget);
     expect(runner.argumentsLog, [
       ['list-bottles', '--json'],
-      [
-        'install-profile',
-        'steam',
-        '--bottle',
-        'steam',
-        '--installer',
-        '/downloads/SteamSetup.exe',
-        '--json',
-      ],
+      ['list-install-profiles', '--json'],
     ]);
 
-    installCompleter.complete(
+    listProfilesCompleter.complete(
       const ProcessRunResult(
         exitCode: 0,
         stdout: '''
           {
             "schemaVersion": 1,
-            "installedProfile": {
+            "installProfiles": [
+              {
+                "id": "steam",
+                "name": "Steam",
+                "profileVersion": 1
+              }
+            ]
+          }
+        ''',
+        stderr: '',
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Profile Manager in Steam'), findsOneWidget);
+    expect(find.text('Steam'), findsWidgets);
+    expect(find.text('launchOnly'), findsOneWidget);
+    expect(runner.argumentsLog, [
+      ['list-bottles', '--json'],
+      ['list-install-profiles', '--json'],
+      ['inspect-install-profile', 'steam', '--json'],
+    ]);
+
+    final chooseProgramButton = find.byTooltip('Choose program file');
+    await tester.ensureVisible(chooseProgramButton);
+    await tester.tap(chooseProgramButton);
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Apply profile'));
+    await tester.pump();
+
+    expect(
+      find.byKey(const ValueKey('profile-manager-progress')),
+      findsOneWidget,
+    );
+    expect(find.text('Applying Steam...'), findsOneWidget);
+    expect(runner.argumentsLog.last, [
+      'apply-program-profile',
+      'steam',
+      '--bottle',
+      'steam',
+      '--program',
+      selectedProgramPath,
+      '--json',
+    ]);
+
+    applyCompleter.complete(
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "programProfile": {
               "bottleId": "steam",
               "profileId": "steam",
               "profileVersion": 1,
-              "installerSource": {
-                "kind": "localFile",
-                "path": "/downloads/SteamSetup.exe"
-              },
-              "steps": [
-                {
-                  "kind": "winetricks",
-                  "id": "corefonts",
-                  "runnerKind": "macosWinetricks",
-                  "argv": ["/runtime/winetricks", "corefonts"],
-                  "logPath": "/bottles/steam/logs/winetricks.log",
-                  "processExitCode": 0
-                },
-                {
-                  "kind": "installer",
-                  "id": "/downloads/SteamSetup.exe",
-                  "runnerKind": "macosWine",
-                  "argv": ["/runtime/bin/wine64", "start", "/unix", "/downloads/SteamSetup.exe"],
-                  "logPath": "/bottles/steam/logs/installer.log",
-                  "processExitCode": 0
-                }
-              ],
-              "programProfile": {
-                "bottleId": "steam",
-                "profileId": "steam",
-                "profileVersion": 1,
-                "managedProgramPath": "C:\\\\Program Files (x86)\\\\Steam\\\\Steam.exe",
-                "compatibilityProfileId": "steam",
-                "compatibilityProfileVersion": 1
-              }
+              "managedProgramPath": "C:\\\\Program Files (x86)\\\\Steam\\\\Steam.exe",
+              "compatibilityProfileId": "steam",
+              "compatibilityProfileVersion": 1
             }
           }
         ''',
@@ -1066,11 +1121,10 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
     await tester.pumpAndSettle();
 
     expect(
-      find.byKey(const ValueKey('install-profile-progress')),
+      find.byKey(const ValueKey('profile-manager-progress')),
       findsNothing,
     );
-    expect(find.text('Installed Steam'), findsOneWidget);
-    expect(find.text('Steam'), findsWidgets);
+    expect(find.text('Applied Steam'), findsOneWidget);
     expect(runner.argumentsLog.last, ['inspect-bottle', 'steam', '--json']);
   });
 

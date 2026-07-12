@@ -2,6 +2,7 @@ import 'dart:io';
 
 import '../domain/program/program_catalog_models.dart';
 import '../domain/program/program_graphics_backend_hints.dart';
+import '../domain/program/program_profile_catalog.dart';
 import '../domain/program/program_runner.dart';
 import '../domain/runtime/host_environment.dart';
 import '../domain/runtime/runtime_catalogs.dart';
@@ -18,6 +19,7 @@ import '../io/program_discovery.dart';
 import '../io/program_graphics_backend_hints_io.dart';
 import '../io/program_io_services.dart';
 import '../io/program_metadata_io.dart';
+import '../io/program_profile_catalog_io.dart';
 import '../io/program_run_planner_io.dart';
 import '../io/runtime_catalog_factories_io.dart';
 import '../io/runtime_install_progress_io.dart';
@@ -68,6 +70,7 @@ CliCommandContext defaultCliCommandContext(
     bottleRepository: dependencies.bottleRepository,
     bottleProgramRepository: dependencies.bottleProgramRepository,
     programMetadataExtractor: dependencies.programMetadataExtractor,
+    installProfileCatalog: dependencies.installProfileCatalog,
     winetricksVerbRepository: dependencies.winetricksVerbRepository,
     runtimeCatalog: dependencies.runtimeCatalog,
     programRunPlanner: dependencies.programRunPlanner,
@@ -95,6 +98,7 @@ DefaultCliDependencies defaultCliDependencies() {
   final environment = Platform.environment;
   final runtimeCatalog = currentKonyakRuntimeCatalog();
   final programRunPlanner = currentProgramRunPlanner();
+  final installProfileCatalog = DartIoInstallProfileCatalog.deferredCurrent();
   final appSettingsRepository = defaultAppSettingsRepositoryFromEnvironment(
     environment,
   );
@@ -118,6 +122,7 @@ DefaultCliDependencies defaultCliDependencies() {
       metadataExtractor: programMetadataExtractor,
     ),
     programMetadataExtractor: programMetadataExtractor,
+    installProfileCatalog: installProfileCatalog,
     winetricksVerbRepository: DartIoWinetricksVerbRepository.current(),
     runtimeCatalog: runtimeCatalog,
     programRunPlanner: programRunPlanner,
@@ -156,6 +161,7 @@ final class DefaultCliDependencies {
     required this.bottleRepository,
     required this.bottleProgramRepository,
     required this.programMetadataExtractor,
+    required this.installProfileCatalog,
     required this.winetricksVerbRepository,
     required this.runtimeCatalog,
     required this.programRunPlanner,
@@ -181,6 +187,7 @@ final class DefaultCliDependencies {
   final BottleRepository bottleRepository;
   final BottleProgramRepository bottleProgramRepository;
   final ProgramMetadataExtractor programMetadataExtractor;
+  final InstallProfileCatalog installProfileCatalog;
   final WinetricksVerbRepository winetricksVerbRepository;
   final RuntimeCatalog runtimeCatalog;
   final ProgramRunPlanner programRunPlanner;

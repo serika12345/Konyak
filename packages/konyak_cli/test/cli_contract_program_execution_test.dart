@@ -462,8 +462,11 @@ void main() {
     expect(logging?.logFilePath.value, '/tmp/steam.cxlog');
   });
 
-  test('list-install-profiles --json returns the Steam profile catalog', () {
-    final result = runCli(const ['list-install-profiles', '--json']);
+  test('list-install-profiles --json returns profile summaries', () {
+    final result = runCli(const [
+      'list-install-profiles',
+      '--json',
+    ], installProfileCatalog: testInstallProfileCatalog());
 
     expect(result.exitCode, 0);
     expect(result.stderr, isEmpty);
@@ -472,38 +475,17 @@ void main() {
     expect(payload, {
       'schemaVersion': 1,
       'installProfiles': [
-        {
-          'id': 'steam',
-          'name': 'Steam',
-          'profileVersion': 1,
-          'summary': 'Install and launch Steam with Konyak-managed metadata.',
-          'platforms': ['macos'],
-          'bottleTemplate': {'windowsVersion': 'win10'},
-          'managedProgramPath': r'C:\Program Files (x86)\Steam\Steam.exe',
-          'dependencyWinetricksVerbs': ['corefonts'],
-          'compatibilityProfile': {
-            'id': 'steam',
-            'profileVersion': 1,
-            'childProcessRules': [
-              {
-                'executableSuffix': 'steamwebhelper.exe',
-                'appendArgumentsIfMissing': [
-                  '--use-angle=swiftshader-webgl',
-                  '--use-gl=angle',
-                  '--no-sandbox',
-                  '--in-process-gpu',
-                  '--disable-gpu',
-                ],
-              },
-            ],
-          },
-        },
+        {'id': 'test-profile', 'name': 'Test Profile', 'profileVersion': 1},
       ],
     });
   });
 
-  test('inspect-install-profile --json returns Steam profile details', () {
-    final result = runCli(const ['inspect-install-profile', 'steam', '--json']);
+  test('inspect-install-profile --json returns complete profile details', () {
+    final result = runCli(const [
+      'inspect-install-profile',
+      'test-profile',
+      '--json',
+    ], installProfileCatalog: testInstallProfileCatalog());
 
     expect(result.exitCode, 0);
     expect(result.stderr, isEmpty);
@@ -511,15 +493,27 @@ void main() {
     final payload = jsonDecode(result.stdout) as Map<String, Object?>;
     final profile = payload['installProfile'] as Map<String, Object?>;
     expect(payload['schemaVersion'], 1);
-    expect(profile['id'], 'steam');
-    expect(
-      profile['managedProgramPath'],
-      r'C:\Program Files (x86)\Steam\Steam.exe',
-    );
-    expect(
-      (profile['compatibilityProfile'] as Map<String, Object?>)['id'],
-      'steam',
-    );
+    expect(profile, {
+      'id': 'test-profile',
+      'name': 'Test Profile',
+      'profileVersion': 1,
+      'summary': 'A deterministic compatibility profile used by CLI tests.',
+      'platforms': ['macos'],
+      'bottleTemplate': {'windowsVersion': 'win10'},
+      'managedProgramPath': r'C:\Test App\Test.exe',
+      'dependencyWinetricksVerbs': ['corefonts'],
+      'runCompletionPolicy': 'launchOnly',
+      'compatibilityProfile': {
+        'id': 'test-profile',
+        'profileVersion': 1,
+        'childProcessRules': [
+          {
+            'executableSuffix': 'test-helper.exe',
+            'appendArgumentsIfMissing': ['--test-compat'],
+          },
+        ],
+      },
+    });
   });
 
   test('inspect-install-profile --json rejects unknown profiles', () {
@@ -527,7 +521,7 @@ void main() {
       'inspect-install-profile',
       'unknown',
       '--json',
-    ]);
+    ], installProfileCatalog: testInstallProfileCatalog());
 
     expect(result.exitCode, 66);
     expect(result.stderr, isEmpty);
@@ -543,164 +537,7 @@ void main() {
     });
   });
 
-  test(
-    'install-profile --json runs dependencies, launches installer, and applies metadata',
-    () {
-      final repository = MemoryBottleRepository(
-        programMetadataExtractor: const NoopProgramMetadataExtractor(),
-        dataHome: '/Users/user/Library/Application Support/Konyak',
-        bottles: [
-          BottleRecord(
-            id: 'steam',
-            name: 'Steam',
-            path:
-                '/Users/user/Library/Application Support/Konyak/Bottles/steam',
-            windowsVersion: 'win10',
-          ),
-        ],
-      );
-      final runner = RecordingProgramRunner(
-        results: const [
-          ProgramRunCompleted(processExitCode: 0),
-          ProgramRunCompleted(processExitCode: 0),
-        ],
-      );
-
-      final result = runCli(
-        const [
-          'install-profile',
-          'steam',
-          '--bottle',
-          'steam',
-          '--installer',
-          '/downloads/SteamSetup.exe',
-          '--json',
-        ],
-        bottleRepository: repository,
-        programRunPlanner: ProgramRunPlanner(
-          hostPlatform: KonyakHostPlatform.macos,
-        ),
-        programRunner: runner,
-      );
-
-      expect(result.exitCode, 0);
-      expect(result.stderr, isEmpty);
-      expect(runner.requests, hasLength(2));
-      expect(
-        runner.requests.first.completionPolicy,
-        ProgramRunCompletionPolicy.waitForExit,
-      );
-      expect(runner.requests.first.runnerKind.value, 'macosWinetricks');
-      expect(runner.requests.first.programPath.value, 'corefonts');
-      expect(runner.requests.first.arguments.value, ['corefonts']);
-      expect(
-        runner.requests.last.completionPolicy,
-        ProgramRunCompletionPolicy.launchOnly,
-      );
-      expect(runner.requests.last.runnerKind.value, 'macosWine');
-      expect(
-        runner.requests.last.programPath.value,
-        '/downloads/SteamSetup.exe',
-      );
-      expect(runner.requests.last.arguments.value, [
-        'start',
-        '/unix',
-        '/downloads/SteamSetup.exe',
-      ]);
-
-      final payload = jsonDecode(result.stdout) as Map<String, Object?>;
-      final installedProfile =
-          payload['installedProfile'] as Map<String, Object?>;
-      expect(payload['schemaVersion'], 1);
-      expect(installedProfile['bottleId'], 'steam');
-      expect(installedProfile['profileId'], 'steam');
-      expect(installedProfile['profileVersion'], 1);
-      expect(installedProfile['installerSource'], {
-        'kind': 'localFile',
-        'path': '/downloads/SteamSetup.exe',
-      });
-      expect(
-        (installedProfile['programProfile']
-            as Map<String, Object?>)['managedProgramPath'],
-        r'C:\Program Files (x86)\Steam\Steam.exe',
-      );
-
-      final steps = installedProfile['steps'] as List<Object?>;
-      expect(steps, hasLength(2));
-      expect(steps.first, containsPair('kind', 'winetricks'));
-      expect(steps.first, containsPair('id', 'corefonts'));
-      expect(steps.last, containsPair('kind', 'installer'));
-      expect(steps.last, containsPair('id', '/downloads/SteamSetup.exe'));
-
-      final updated = expectFound(repository.findBottle(BottleId('steam')));
-      expect(updated.programProfiles.single.profileId.value, 'steam');
-      expect(updated.pinnedPrograms.single.name.value, 'Steam');
-    },
-  );
-
-  test(
-    'install-profile --json stops before installer when dependency fails',
-    () {
-      final repository = MemoryBottleRepository(
-        programMetadataExtractor: const NoopProgramMetadataExtractor(),
-        dataHome: '/Users/user/Library/Application Support/Konyak',
-        bottles: [
-          BottleRecord(
-            id: 'steam',
-            name: 'Steam',
-            path:
-                '/Users/user/Library/Application Support/Konyak/Bottles/steam',
-            windowsVersion: 'win10',
-          ),
-        ],
-      );
-      final runner = RecordingProgramRunner(
-        result: const ProgramRunCompleted(processExitCode: 42),
-      );
-
-      final result = runCli(
-        const [
-          'install-profile',
-          'steam',
-          '--bottle',
-          'steam',
-          '--installer',
-          '/downloads/SteamSetup.exe',
-          '--json',
-        ],
-        bottleRepository: repository,
-        programRunPlanner: ProgramRunPlanner(
-          hostPlatform: KonyakHostPlatform.macos,
-        ),
-        programRunner: runner,
-      );
-
-      expect(result.exitCode, 75);
-      expect(result.stderr, isEmpty);
-      expect(runner.requests, hasLength(1));
-
-      final payload = jsonDecode(result.stdout) as Map<String, Object?>;
-      expect(payload, {
-        'schemaVersion': 1,
-        'error': {
-          'code': 'installProfileStepFailed',
-          'message': 'Install profile step exited with code 42.',
-          'profileId': 'steam',
-          'stepKind': 'winetricks',
-          'stepId': 'corefonts',
-          'runnerKind': 'macosWinetricks',
-          'argv': ['Konyak/Runtimes/macos-wine/winetricks', 'corefonts'],
-          'processExitCode': 42,
-        },
-      });
-
-      final updated = expectFound(repository.findBottle(BottleId('steam')));
-      expect(updated.programProfiles, isEmpty);
-      expect(updated.pinnedPrograms, isEmpty);
-    },
-  );
-
-  test('apply-program-profile --json persists Steam profile metadata', () {
+  test('apply-program-profile --json persists profile metadata', () {
     final repository = MemoryBottleRepository(
       programMetadataExtractor: const NoopProgramMetadataExtractor(),
       dataHome: '/home/user/.local/share/konyak',
@@ -714,15 +551,19 @@ void main() {
       ],
     );
 
-    final result = runCli(const [
-      'apply-program-profile',
-      'steam',
-      '--bottle',
-      'steam',
-      '--program',
-      r'C:\Program Files (x86)\Steam\Steam.exe',
-      '--json',
-    ], bottleRepository: repository);
+    final result = runCli(
+      const [
+        'apply-program-profile',
+        'test-profile',
+        '--bottle',
+        'steam',
+        '--program',
+        r'C:\Test App\Test.exe',
+        '--json',
+      ],
+      bottleRepository: repository,
+      installProfileCatalog: testInstallProfileCatalog(),
+    );
 
     expect(result.exitCode, 0);
     expect(result.stderr, isEmpty);
@@ -732,75 +573,70 @@ void main() {
       'schemaVersion': 1,
       'programProfile': {
         'bottleId': 'steam',
-        'profileId': 'steam',
+        'profileId': 'test-profile',
         'profileVersion': 1,
-        'managedProgramPath': r'C:\Program Files (x86)\Steam\Steam.exe',
-        'compatibilityProfileId': 'steam',
+        'managedProgramPath': r'C:\Test App\Test.exe',
+        'compatibilityProfileId': 'test-profile',
         'compatibilityProfileVersion': 1,
       },
     });
 
     final updated = expectFound(repository.findBottle(BottleId('steam')));
     expect(updated.programProfiles, hasLength(1));
-    expect(updated.programProfiles.single.profileId.value, 'steam');
+    expect(updated.programProfiles.single.profileId.value, 'test-profile');
     expect(
       updated.programProfiles.single.managedProgramPath.value,
-      r'C:\Program Files (x86)\Steam\Steam.exe',
+      r'C:\Test App\Test.exe',
     );
     expect(updated.pinnedPrograms, hasLength(1));
-    expect(updated.pinnedPrograms.single.name.value, 'Steam');
+    expect(updated.pinnedPrograms.single.name.value, 'Test Profile');
   });
 
-  test(
-    'repair-profile --json returns the persisted Steam profile metadata',
-    () {
-      final repository = MemoryBottleRepository(
-        programMetadataExtractor: const NoopProgramMetadataExtractor(),
-        dataHome: '/home/user/.local/share/konyak',
-        bottles: [
-          BottleRecord(
-            id: 'steam',
-            name: 'Steam',
-            path: '/home/user/.local/share/konyak/bottles/steam',
-            windowsVersion: 'win10',
-            programProfiles: [
-              ProgramProfileRecord(
-                profileId: 'steam',
-                profileVersion: 1,
-                managedProgramPath: r'C:\Program Files (x86)\Steam\Steam.exe',
-                compatibilityProfileId: 'steam',
-                compatibilityProfileVersion: 1,
-              ),
-            ],
-          ),
-        ],
-      );
+  test('repair-profile --json returns persisted profile metadata', () {
+    final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
+      dataHome: '/home/user/.local/share/konyak',
+      bottles: [
+        BottleRecord(
+          id: 'steam',
+          name: 'Steam',
+          path: '/home/user/.local/share/konyak/bottles/steam',
+          windowsVersion: 'win10',
+          programProfiles: [
+            ProgramProfileRecord(
+              profileId: 'test-profile',
+              profileVersion: 1,
+              managedProgramPath: r'C:\Test App\Test.exe',
+              compatibilityProfileId: 'test-profile',
+              compatibilityProfileVersion: 1,
+            ),
+          ],
+        ),
+      ],
+    );
 
-      final result = runCli(const [
-        'repair-profile',
-        'steam',
-        '--bottle',
-        'steam',
-        '--json',
-      ], bottleRepository: repository);
+    final result = runCli(
+      const ['repair-profile', 'test-profile', '--bottle', 'steam', '--json'],
+      bottleRepository: repository,
+      installProfileCatalog: testInstallProfileCatalog(),
+    );
 
-      expect(result.exitCode, 0);
-      expect(result.stderr, isEmpty);
+    expect(result.exitCode, 0);
+    expect(result.stderr, isEmpty);
 
-      final payload = jsonDecode(result.stdout) as Map<String, Object?>;
-      expect(payload, {
-        'schemaVersion': 1,
-        'programProfile': {
-          'bottleId': 'steam',
-          'profileId': 'steam',
-          'profileVersion': 1,
-          'managedProgramPath': r'C:\Program Files (x86)\Steam\Steam.exe',
-          'compatibilityProfileId': 'steam',
-          'compatibilityProfileVersion': 1,
-        },
-      });
-    },
-  );
+    final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+    expect(payload, {
+      'schemaVersion': 1,
+      'programProfile': {
+        'bottleId': 'steam',
+        'profileId': 'test-profile',
+        'profileVersion': 1,
+        'managedProgramPath': r'C:\Test App\Test.exe',
+        'compatibilityProfileId': 'test-profile',
+        'compatibilityProfileVersion': 1,
+      },
+    });
+  });
 
   test('run-program --json runs an EXE through the program runner', () {
     final repository = MemoryBottleRepository(
@@ -1148,27 +984,136 @@ void main() {
     });
   });
 
+  test('run-program --json launches a managed profile without waiting', () {
+    final installProfile = testInstallProfile(
+      executableSuffix: 'synthetic-helper.exe',
+      appendArgumentsIfMissing: const ['--first', '--second=value'],
+    );
+    final profiledProgramPath = installProfile.managedProgramPath.value;
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-profile-run-test-',
+    );
+    addTearDown(() {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    });
+    final dataHome = joinTestPath(tempDirectory.path, const ['data']);
+    final bottlePath = joinTestPath(dataHome, const ['Bottles', 'bottle']);
+    final programPath = joinTestPath(bottlePath, const [
+      'drive_c',
+      'Test App',
+      'Test.exe',
+    ]);
+    final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
+      dataHome: dataHome,
+      bottles: [
+        BottleRecord(
+          id: 'bottle',
+          name: 'Bottle',
+          path: bottlePath,
+          windowsVersion: 'win10',
+          programProfiles: [
+            ProgramProfileRecord(
+              profileId: installProfile.id.value,
+              profileVersion: installProfile.profileVersion.value,
+              managedProgramPath: profiledProgramPath,
+              compatibilityProfileId:
+                  installProfile.compatibilityProfile.id.value,
+              compatibilityProfileVersion:
+                  installProfile.compatibilityProfile.profileVersion.value,
+            ),
+          ],
+        ),
+      ],
+    );
+    final runner = RecordingProgramRunner(
+      result: const ProgramRunCompleted(processExitCode: 0),
+    );
+
+    final result = runCli(
+      ['run-program', 'bottle', '--program', programPath, '--json'],
+      bottleRepository: repository,
+      installProfileCatalog: InstallProfileCatalog([installProfile]),
+      programRunPlanner: ProgramRunPlanner(
+        hostPlatform: KonyakHostPlatform.macos,
+        environment: HostEnvironment({'HOME': '/Users/user'}),
+      ),
+      programRunner: runner,
+    );
+
+    expect(result.exitCode, 0);
+    expect(result.stderr, isEmpty);
+    expect(
+      runner.lastRequest?.completionPolicy,
+      ProgramRunCompletionPolicy.launchOnly,
+    );
+    expect(runner.requests, hasLength(1));
+    expect(runner.lastRequest?.arguments, [profiledProgramPath]);
+
+    final environment = runner.lastRequest?.environment.toMap();
+    expect(
+      environment,
+      containsPair(
+        konyakChildProcessRulesEnvironmentVariable,
+        'synthetic-helper.exe\t--first\n'
+        'synthetic-helper.exe\t--second=value',
+      ),
+    );
+  });
+
   test(
-    'run-program --json launches the managed Steam profile without waiting',
+    'run-program --json resolves shortcut targets for profile compatibility',
     () {
-      const steamPath = r'C:\Program Files (x86)\Steam\Steam.exe';
+      final installProfile = testInstallProfile(
+        executableSuffix: 'synthetic-helper.exe',
+        appendArgumentsIfMissing: const ['--test-compat'],
+      );
+      final profiledProgramPath = installProfile.managedProgramPath.value;
+      final tempDirectory = Directory.systemTemp.createTempSync(
+        'konyak-profile-shortcut-run-test-',
+      );
+      addTearDown(() {
+        if (tempDirectory.existsSync()) {
+          tempDirectory.deleteSync(recursive: true);
+        }
+      });
+      final dataHome = joinTestPath(tempDirectory.path, const ['data']);
+      final bottlePath = joinTestPath(dataHome, const ['Bottles', 'bottle']);
+      final shortcutPath = joinTestPath(bottlePath, const [
+        'drive_c',
+        'ProgramData',
+        'Microsoft',
+        'Windows',
+        'Start Menu',
+        'Programs',
+        'Test App',
+        'Test.lnk',
+      ]);
+      File(shortcutPath)
+        ..createSync(recursive: true)
+        ..writeAsBytesSync(
+          syntheticShellLinkBytes(localBasePath: profiledProgramPath),
+        );
       final repository = MemoryBottleRepository(
         programMetadataExtractor: const NoopProgramMetadataExtractor(),
-        dataHome: '/Users/user/Library/Application Support/Konyak',
+        dataHome: dataHome,
         bottles: [
           BottleRecord(
             id: 'bottle',
             name: 'Bottle',
-            path:
-                '/Users/user/Library/Application Support/Konyak/Bottles/bottle',
+            path: bottlePath,
             windowsVersion: 'win10',
             programProfiles: [
               ProgramProfileRecord(
-                profileId: 'steam',
-                profileVersion: 1,
-                managedProgramPath: steamPath,
-                compatibilityProfileId: 'steam',
-                compatibilityProfileVersion: 1,
+                profileId: installProfile.id.value,
+                profileVersion: installProfile.profileVersion.value,
+                managedProgramPath: profiledProgramPath,
+                compatibilityProfileId:
+                    installProfile.compatibilityProfile.id.value,
+                compatibilityProfileVersion:
+                    installProfile.compatibilityProfile.profileVersion.value,
               ),
             ],
           ),
@@ -1179,8 +1124,9 @@ void main() {
       );
 
       final result = runCli(
-        const ['run-program', 'bottle', '--program', steamPath, '--json'],
+        ['run-program', 'bottle', '--program', shortcutPath, '--json'],
         bottleRepository: repository,
+        installProfileCatalog: InstallProfileCatalog([installProfile]),
         programRunPlanner: ProgramRunPlanner(
           hostPlatform: KonyakHostPlatform.macos,
           environment: HostEnvironment({'HOME': '/Users/user'}),
@@ -1190,15 +1136,18 @@ void main() {
 
       expect(result.exitCode, 0);
       expect(result.stderr, isEmpty);
+      expect(runner.lastRequest?.arguments, ['start', '/unix', shortcutPath]);
       expect(
         runner.lastRequest?.completionPolicy,
         ProgramRunCompletionPolicy.launchOnly,
       );
-      expect(runner.lastRequest?.arguments, const [
-        'start',
-        '/unix',
-        steamPath,
-      ]);
+      expect(
+        runner.lastRequest?.environment.toMap(),
+        containsPair(
+          konyakChildProcessRulesEnvironmentVariable,
+          'synthetic-helper.exe\t--test-compat',
+        ),
+      );
     },
   );
 
@@ -3282,6 +3231,13 @@ ignored                  Should not be listed
       'winetricks': {
         'categories': [
           {
+            'id': 'apps',
+            'name': 'Apps',
+            'verbs': [
+              {'id': 'steam', 'name': 'steam', 'description': 'Steam Client'},
+            ],
+          },
+          {
             'id': 'dlls',
             'name': 'DLLs',
             'verbs': [
@@ -3302,7 +3258,7 @@ ignored                  Should not be listed
     });
   });
 
-  test('list-winetricks-verbs --json does not expose Steam on macOS', () {
+  test('list-winetricks-verbs --json exposes Steam on macOS', () {
     final runtimeRoot = Directory.systemTemp.createTempSync(
       'konyak-winetricks-filter-test-',
     );
@@ -3342,6 +3298,7 @@ corefonts                Microsoft Core Fonts
             'id': 'apps',
             'name': 'Apps',
             'verbs': [
+              {'id': 'steam', 'name': 'steam', 'description': 'Steam Client'},
               {
                 'id': 'ubisoftconnect',
                 'name': 'ubisoftconnect',
@@ -3386,7 +3343,7 @@ ubisoftconnect           Ubisoft Connect
 
 ===== fonts =====
 corefonts                Microsoft Core Fonts
-''', includeProfileInstallVerbs: true),
+'''),
       ),
     );
 
@@ -3600,53 +3557,6 @@ corefonts                Microsoft Core Fonts
       'corefonts',
     ]);
   });
-
-  test(
-    'run-winetricks --json rejects Steam install verb with profile error',
-    () {
-      final repository = MemoryBottleRepository(
-        programMetadataExtractor: const NoopProgramMetadataExtractor(),
-        dataHome: '/Users/user/Library/Application Support/Konyak',
-        bottles: [
-          BottleRecord(
-            id: 'steam',
-            name: 'Steam',
-            path:
-                '/Users/user/Library/Application Support/Konyak/Bottles/Steam',
-            windowsVersion: 'win10',
-          ),
-        ],
-      );
-      final runner = RecordingProgramRunner(
-        result: const ProgramRunCompleted(processExitCode: 0),
-      );
-
-      final result = runCli(
-        const ['run-winetricks', 'steam', '--verb', 'steam', '--json'],
-        bottleRepository: repository,
-        programRunPlanner: ProgramRunPlanner(
-          hostPlatform: KonyakHostPlatform.macos,
-          environment: HostEnvironment({'HOME': '/Users/user'}),
-        ),
-        programRunner: runner,
-      );
-
-      expect(result.exitCode, 65);
-      expect(runner.lastRequest, isNull);
-
-      final payload = jsonDecode(result.stdout) as Map<String, Object?>;
-      expect(payload, {
-        'schemaVersion': 1,
-        'error': {
-          'code': 'steamWinetricksVerbUnsupported',
-          'message':
-              'Steam must be installed through the Konyak Steam profile.',
-          'verb': 'steam',
-          'profileId': 'steam',
-        },
-      });
-    },
-  );
 
   test('run-winetricks --json launches Steam install verb on Linux', () {
     final repository = MemoryBottleRepository(

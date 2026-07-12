@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:fpdart/fpdart.dart';
 
 import '../cli/cli_json_helpers.dart';
+import '../domain/program/program_run_environment.dart';
 import '../domain/program/program_run_models.dart';
 import '../domain/program/program_runner.dart';
 import '../domain/shared/domain_value_objects.dart';
@@ -28,7 +29,8 @@ class DartIoProgramRunner implements ProgramRunner {
       final result = Process.runSync(
         request.executable.value,
         request.arguments.value,
-        environment: request.environment.toMap(),
+        environment: _programProcessEnvironment(request),
+        includeParentEnvironment: false,
         workingDirectory: request.workingDirectory.match(
           () => null,
           (value) => value.value,
@@ -77,7 +79,8 @@ class DartIoProgramRunner implements ProgramRunner {
           request.executable.value,
           ...request.arguments.value,
         ],
-        environment: request.environment.toMap(),
+        environment: _programProcessEnvironment(request),
+        includeParentEnvironment: false,
         workingDirectory: request.workingDirectory.match(
           () => null,
           (value) => value.value,
@@ -128,7 +131,8 @@ class DartIoAsyncProgramRunner implements AsyncProgramRunner {
       process = await Process.start(
         request.executable.value,
         request.arguments.value,
-        environment: request.environment.toMap(),
+        environment: _programProcessEnvironment(request),
+        includeParentEnvironment: false,
         workingDirectory: request.workingDirectory.match(
           () => null,
           (value) => value.value,
@@ -218,6 +222,24 @@ class DartIoAsyncProgramRunner implements AsyncProgramRunner {
       },
     );
   }
+}
+
+Map<String, String> _programProcessEnvironment(ProgramRunRequest request) {
+  final requestEnvironment = request.environment.toMap();
+  return <String, String>{
+    for (final entry in Platform.environment.entries)
+      if (!isKonyakChildProcessRulesEnvironmentVariable(entry.key))
+        entry.key: entry.value,
+    for (final entry in requestEnvironment.entries)
+      if (!isKonyakChildProcessRulesEnvironmentVariable(entry.key))
+        entry.key: entry.value,
+    ...request.environment[konyakChildProcessRulesEnvironmentVariable].match(
+      () => const <String, String>{},
+      (rules) => rules.isEmpty
+          ? const <String, String>{}
+          : <String, String>{konyakChildProcessRulesEnvironmentVariable: rules},
+    ),
+  };
 }
 
 class DartIoHostProcessSnapshotReader implements HostProcessSnapshotReader {

@@ -1968,47 +1968,114 @@ void main() {
     expect(completed.run.processExitCode, 0);
   });
 
-  test('installs a Steam profile through the JSON CLI contract', () async {
+  test(
+    'loads install profile summaries through the JSON catalog contract',
+    () async {
+      final runner = _FakeProcessRunner(
+        result: const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+          {
+            "schemaVersion": 1,
+            "installProfiles": [
+              {
+                "id": "sample",
+                "name": "Sample",
+                "profileVersion": 2
+              }
+            ]
+          }
+        ''',
+          stderr: '',
+        ),
+      );
+      final client = KonyakCliClient(
+        executable: 'konyak',
+        processRunner: runner,
+      );
+
+      final result = await client.listInstallProfiles();
+
+      expect(runner.arguments, const ['list-install-profiles', '--json']);
+      expect(result, isA<LoadedInstallProfiles>());
+      final loaded = result as LoadedInstallProfiles;
+      expect(loaded.profiles.single.id, 'sample');
+      expect(loaded.profiles.single.name, 'Sample');
+      expect(loaded.profiles.single.profileVersion, 2);
+    },
+  );
+
+  test(
+    'inspects an install profile through the JSON detail contract',
+    () async {
+      final runner = _FakeProcessRunner(
+        result: const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+          {
+            "schemaVersion": 1,
+            "installProfile": {
+              "id": "steam",
+              "name": "Steam",
+              "profileVersion": 1,
+              "summary": "Apply Konyak compatibility rules to an installed Steam executable.",
+              "platforms": ["macos"],
+              "bottleTemplate": {
+                "windowsVersion": "win10"
+              },
+              "managedProgramPath": "C:\\\\Program Files (x86)\\\\Steam\\\\Steam.exe",
+              "dependencyWinetricksVerbs": ["corefonts"],
+              "runCompletionPolicy": "launchOnly",
+              "compatibilityProfile": {
+                "id": "steam",
+                "profileVersion": 1,
+                "childProcessRules": [
+                  {
+                    "executableSuffix": "steamwebhelper.exe",
+                    "appendArgumentsIfMissing": ["--disable-gpu", "--in-process-gpu"]
+                  }
+                ]
+              }
+            }
+          }
+        ''',
+          stderr: '',
+        ),
+      );
+      final client = KonyakCliClient(
+        executable: 'konyak',
+        processRunner: runner,
+      );
+
+      final result = await client.inspectInstallProfile(profileId: 'steam');
+
+      expect(runner.arguments, const [
+        'inspect-install-profile',
+        'steam',
+        '--json',
+      ]);
+      expect(result, isA<InspectedInstallProfile>());
+      final inspected = result as InspectedInstallProfile;
+      expect(inspected.profile.name, 'Steam');
+      expect(inspected.profile.dependencyWinetricksVerbs, ['corefonts']);
+      expect(inspected.profile.runCompletionPolicy, 'launchOnly');
+    },
+  );
+
+  test('applies an install profile to a specific program path', () async {
     final runner = _FakeProcessRunner(
       result: const ProcessRunResult(
         exitCode: 0,
         stdout: '''
           {
             "schemaVersion": 1,
-            "installedProfile": {
+            "programProfile": {
               "bottleId": "steam",
               "profileId": "steam",
               "profileVersion": 1,
-              "installerSource": {
-                "kind": "localFile",
-                "path": "/downloads/SteamSetup.exe"
-              },
-              "steps": [
-                {
-                  "kind": "winetricks",
-                  "id": "corefonts",
-                  "runnerKind": "macosWinetricks",
-                  "argv": ["/runtime/winetricks", "corefonts"],
-                  "logPath": "/bottles/steam/logs/winetricks.log",
-                  "processExitCode": 0
-                },
-                {
-                  "kind": "installer",
-                  "id": "/downloads/SteamSetup.exe",
-                  "runnerKind": "macosWine",
-                  "argv": ["/runtime/bin/wine64", "start", "/unix", "/downloads/SteamSetup.exe"],
-                  "logPath": "/bottles/steam/logs/installer.log",
-                  "processExitCode": 0
-                }
-              ],
-              "programProfile": {
-                "bottleId": "steam",
-                "profileId": "steam",
-                "profileVersion": 1,
-                "managedProgramPath": "C:\\\\Program Files (x86)\\\\Steam\\\\Steam.exe",
-                "compatibilityProfileId": "steam",
-                "compatibilityProfileVersion": 1
-              }
+              "managedProgramPath": "C:\\\\Program Files (x86)\\\\Steam\\\\Steam.exe",
+              "compatibilityProfileId": "steam",
+              "compatibilityProfileVersion": 1
             }
           }
         ''',
@@ -2017,73 +2084,25 @@ void main() {
     );
     final client = KonyakCliClient(executable: 'konyak', processRunner: runner);
 
-    final result = await client.installProfile(
+    final result = await client.applyProgramProfile(
       profileId: 'steam',
       bottleId: 'steam',
-      installerPath: '/downloads/SteamSetup.exe',
+      programPath: r'C:\Program Files (x86)\Steam\Steam.exe',
     );
 
     expect(runner.arguments, const [
-      'install-profile',
+      'apply-program-profile',
       'steam',
       '--bottle',
       'steam',
-      '--installer',
-      '/downloads/SteamSetup.exe',
+      '--program',
+      r'C:\Program Files (x86)\Steam\Steam.exe',
       '--json',
     ]);
-    expect(result, isA<InstalledProgramProfile>());
-
-    final installed = result as InstalledProgramProfile;
-    expect(installed.profile.bottleId, 'steam');
-    expect(installed.profile.profileId, 'steam');
-    expect(installed.profile.installerSource.path, '/downloads/SteamSetup.exe');
-    expect(installed.profile.steps.map((step) => step.kind), [
-      'winetricks',
-      'installer',
-    ]);
-    expect(
-      installed.profile.programProfile.managedProgramPath,
-      r'C:\Program Files (x86)\Steam\Steam.exe',
-    );
-  });
-
-  test('returns install-profile JSON failures explicitly', () async {
-    final client = KonyakCliClient(
-      executable: 'konyak',
-      processRunner: _FakeProcessRunner(
-        result: const ProcessRunResult(
-          exitCode: 75,
-          stdout: '''
-            {
-              "schemaVersion": 1,
-              "error": {
-                "code": "installProfileStepFailed",
-                "message": "Install profile step exited with code 42.",
-                "profileId": "steam",
-                "stepKind": "winetricks",
-                "stepId": "corefonts",
-                "runnerKind": "macosWinetricks",
-                "argv": ["/runtime/winetricks", "corefonts"],
-                "processExitCode": 42
-              }
-            }
-          ''',
-          stderr: '',
-        ),
-      ),
-    );
-
-    final result = await client.installProfile(
-      profileId: 'steam',
-      bottleId: 'steam',
-      installerPath: '/downloads/SteamSetup.exe',
-    );
-
-    expect(result, isA<InstallProgramProfileLoadFailure>());
-    final failure = result as InstallProgramProfileLoadFailure;
-    expect(failure.exitCode, 75);
-    expect(failure.message, 'Install profile step exited with code 42.');
+    expect(result, isA<AppliedProgramProfile>());
+    final applied = result as AppliedProgramProfile;
+    expect(applied.profile.bottleId, 'steam');
+    expect(applied.profile.profileId, 'steam');
   });
 
   test('passes one-time program settings to run-program', () async {

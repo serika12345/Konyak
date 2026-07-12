@@ -820,13 +820,58 @@ class KonyakLocalizationsEn extends KonyakLocalizations {
   }
 
   @override
-  String get installedSteam => 'Installed Steam';
+  String appliedProfile(String profileName) {
+    return 'Applied $profileName';
+  }
 
   @override
-  String get installSteam => 'Install Steam';
+  String get profileManager => 'Profile Manager';
 
   @override
-  String get installingSteamEllipsis => 'Installing Steam...';
+  String profileManagerIn(String bottleName) {
+    return 'Profile Manager in $bottleName';
+  }
+
+  @override
+  String get loadingInstallProfilesEllipsis => 'Loading install profiles...';
+
+  @override
+  String get loadingProfileDetailsEllipsis => 'Loading profile details...';
+
+  @override
+  String applyingProfileEllipsis(String profileName) {
+    return 'Applying $profileName...';
+  }
+
+  @override
+  String get applyProfile => 'Apply profile';
+
+  @override
+  String get noInstallProfilesFound => 'No install profiles found.';
+
+  @override
+  String get installProfilePlatforms => 'Platforms';
+
+  @override
+  String get installProfileWindowsVersion => 'Windows version';
+
+  @override
+  String get installProfileManagedProgramPath => 'Default program path';
+
+  @override
+  String get installProfileDependencies => 'Dependencies';
+
+  @override
+  String get installProfileNoDependencies => 'None';
+
+  @override
+  String get installProfileRunCompletionPolicy => 'Run completion';
+
+  @override
+  String get installProfileCompatibilityRules => 'Compatibility rules';
+
+  @override
+  String get installProfileNoCompatibilityRules => 'None';
 
   @override
   String reinstalledRuntime(String runtimeName) {

@@ -6,6 +6,11 @@ import 'program_run_models.dart';
 
 part 'program_profile_models.freezed.dart';
 
+const konyakMaxChildProcessRuleArguments = 64;
+const konyakMaxChildProcessRulesLength = 65535;
+const konyakMaxChildProcessExecutableSuffixLength = 1024;
+const konyakMaxChildProcessArgumentLength = 8192;
+
 @Freezed(map: FreezedMapOptions.none, when: FreezedWhenOptions.none)
 abstract class InstallProfileRecord with _$InstallProfileRecord {
   const InstallProfileRecord._();
@@ -62,10 +67,12 @@ abstract class CompatibilityProfileRecord with _$CompatibilityProfileRecord {
     required int profileVersion,
     required Iterable<ChildProcessCompatibilityRule> childProcessRules,
   }) {
+    final validatedRules = childProcessRules.toIList();
+    _validateChildProcessRuleSet(validatedRules);
     return CompatibilityProfileRecord._validated(
       id: ProfileId(id),
       profileVersion: ProfileVersion(profileVersion),
-      childProcessRules: childProcessRules.toIList(),
+      childProcessRules: validatedRules,
     );
   }
 
@@ -85,9 +92,36 @@ abstract class ChildProcessCompatibilityRule
     required String executableSuffix,
     required Iterable<String> appendArgumentsIfMissing,
   }) {
+    final validatedSuffix = _validateChildProcessExecutableSuffix(
+      executableSuffix,
+    );
+    final validatedArguments = appendArgumentsIfMissing
+        .map(_validateChildProcessArgument)
+        .toList(growable: false);
+    if (validatedArguments.isEmpty) {
+      throw ArgumentError.value(
+        validatedArguments,
+        'appendArgumentsIfMissing',
+        'must contain at least one argument',
+      );
+    }
+    if (validatedArguments.length > konyakMaxChildProcessRuleArguments) {
+      throw ArgumentError.value(
+        validatedArguments.length,
+        'appendArgumentsIfMissing',
+        'must contain at most $konyakMaxChildProcessRuleArguments arguments',
+      );
+    }
+    if (validatedArguments.toSet().length != validatedArguments.length) {
+      throw ArgumentError.value(
+        validatedArguments,
+        'appendArgumentsIfMissing',
+        'must not contain duplicate arguments',
+      );
+    }
     return ChildProcessCompatibilityRule._validated(
-      executableSuffix: ProgramExecutable(executableSuffix),
-      appendArgumentsIfMissing: ProgramRunArguments(appendArgumentsIfMissing),
+      executableSuffix: ProgramExecutable(validatedSuffix),
+      appendArgumentsIfMissing: ProgramRunArguments(validatedArguments),
     );
   }
 
@@ -95,6 +129,77 @@ abstract class ChildProcessCompatibilityRule
     required ProgramExecutable executableSuffix,
     required ProgramRunArguments appendArgumentsIfMissing,
   }) = _ChildProcessCompatibilityRule;
+}
+
+String _validateChildProcessExecutableSuffix(String value) {
+  if (value.trim().isEmpty ||
+      value.length > konyakMaxChildProcessExecutableSuffixLength ||
+      !value.codeUnits.every(
+        (codeUnit) => codeUnit >= 0x20 && codeUnit <= 0x7e,
+      )) {
+    throw ArgumentError.value(
+      value,
+      'executableSuffix',
+      'must be non-blank, at most '
+          '$konyakMaxChildProcessExecutableSuffixLength printable ASCII '
+          'characters',
+    );
+  }
+  return value;
+}
+
+String _validateChildProcessArgument(String value) {
+  if (value.isEmpty ||
+      value.length > konyakMaxChildProcessArgumentLength ||
+      value.contains('\u0000') ||
+      value.contains('\t') ||
+      value.contains('\n') ||
+      value.contains('\r') ||
+      value.contains(' ') ||
+      value.contains('"')) {
+    throw ArgumentError.value(
+      value,
+      'appendArgumentsIfMissing',
+      'each argument must be a non-empty unquoted token of at most '
+          '$konyakMaxChildProcessArgumentLength characters',
+    );
+  }
+  return value;
+}
+
+void _validateChildProcessRuleSet(IList<ChildProcessCompatibilityRule> rules) {
+  final argumentCount = rules.fold<int>(
+    0,
+    (count, rule) => count + rule.appendArgumentsIfMissing.length,
+  );
+  if (argumentCount > konyakMaxChildProcessRuleArguments) {
+    throw ArgumentError.value(
+      argumentCount,
+      'childProcessRules',
+      'must contain at most $konyakMaxChildProcessRuleArguments '
+          'child-process arguments',
+    );
+  }
+
+  final entryLengths = rules
+      .expand(
+        (rule) => rule.appendArgumentsIfMissing.map(
+          (argument) =>
+              rule.executableSuffix.value.length + 1 + argument.length,
+        ),
+      )
+      .toList(growable: false);
+  final serializedLength =
+      entryLengths.fold<int>(0, (length, entry) => length + entry) +
+      (entryLengths.isEmpty ? 0 : entryLengths.length - 1);
+  if (serializedLength > konyakMaxChildProcessRulesLength) {
+    throw ArgumentError.value(
+      serializedLength,
+      'childProcessRules',
+      'serialized rules must contain at most '
+          '$konyakMaxChildProcessRulesLength UTF-16 code units',
+    );
+  }
 }
 
 @Freezed(map: FreezedMapOptions.none, when: FreezedWhenOptions.none)

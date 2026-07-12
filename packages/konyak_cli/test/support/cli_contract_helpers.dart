@@ -7,24 +7,33 @@ import 'package:konyak_cli/src/repository/memory_bottle_repository.dart';
 import 'package:konyak_cli/src/repository/repository_interfaces.dart';
 import 'package:test/test.dart';
 
+import 'install_profile_fixtures.dart';
+
 CliResult runTestCli(
   List<String> arguments, {
   ProgramRunPlanner? programRunPlanner,
+  InstallProfileCatalog? installProfileCatalog,
 }) {
   return injected.runCli(
     arguments,
-    context: testCliCommandContext(programRunPlanner: programRunPlanner),
+    context: testCliCommandContext(
+      programRunPlanner: programRunPlanner,
+      installProfileCatalog: installProfileCatalog,
+    ),
   );
 }
 
 CliCommandContext testCliCommandContext({
   ProgramRunPlanner? programRunPlanner,
+  InstallProfileCatalog? installProfileCatalog,
 }) {
   return CliCommandContext(
     bottleCatalog: StaticBottleCatalog(const []),
     bottleRepository: null,
     bottleProgramRepository: const EmptyBottleProgramRepository(),
     programMetadataExtractor: const NoopProgramMetadataExtractor(),
+    installProfileCatalog:
+        installProfileCatalog ?? testInstallProfileCatalog(profiles: const []),
     winetricksVerbRepository: const UnavailableWinetricksVerbRepository(),
     runtimeCatalog: StaticRuntimeCatalog(const []),
     programRunPlanner:

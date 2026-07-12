@@ -1,6 +1,7 @@
 import '../domain/program/pinned_programs.dart';
 import '../domain/program/program_graphics_backend_hints.dart';
 import '../domain/program/program_mutation_models.dart';
+import '../domain/program/program_profile_catalog.dart';
 import '../domain/program/program_runner.dart';
 import '../domain/program/program_settings_models.dart';
 import '../io/macos_pinned_launcher_manifest_io.dart';
@@ -39,6 +40,7 @@ CliResult runPinnedProgramLauncherCli({
   required ProgramGraphicsBackendHintsInspector
   programGraphicsBackendHintsInspector,
   required ProgramRunner? programRunner,
+  required InstallProfileCatalog installProfileCatalog,
 }) {
   final launcherManifest = readPinnedProgramLauncherManifest(
     request.manifestPath,
@@ -85,6 +87,7 @@ CliResult runPinnedProgramLauncherCli({
             programRunner: programRunner,
             bottle: bottle,
             programPath: manifest.programPath,
+            installProfileCatalog: installProfileCatalog,
             programGraphicsBackendHintsInspector:
                 programGraphicsBackendHintsInspector,
             beforeRun:

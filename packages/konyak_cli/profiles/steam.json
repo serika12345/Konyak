@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/serika12345/Konyak/main/packages/konyak_cli/profiles/profile.schema.json",
+  "schemaVersion": 1,
+  "id": "steam",
+  "name": "Steam",
+  "profileVersion": 1,
+  "summary": "Apply Konyak compatibility rules to an installed Steam executable.",
+  "platforms": ["macos"],
+  "windowsVersion": "win10",
+  "managedProgramPath": "C:\\Program Files (x86)\\Steam\\Steam.exe",
+  "dependencyWinetricksVerbs": ["corefonts"],
+  "runCompletionPolicy": "launchOnly",
+  "compatibilityProfile": {
+    "id": "steam",
+    "profileVersion": 1,
+    "childProcessRules": [
+      {
+        "executableSuffix": "steamwebhelper.exe",
+        "appendArgumentsIfMissing": ["--disable-gpu", "--in-process-gpu"]
+      }
+    ]
+  }
+}
