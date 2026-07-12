@@ -265,9 +265,10 @@ collect_linux_appimage_elf_libraries \
   "$usr_root/konyak" \
   "$usr_root"/lib/*.so*(N)
 
-mkdir -p "$bundle_resources_dir/Licenses"
+mkdir -p "$bundle_resources_dir/Licenses" "$bundle_resources_dir/profiles"
 cp "$cli_executable" "$bundle_resources_dir/konyak-cli"
 chmod 755 "$bundle_resources_dir/konyak-cli"
+rsync -a --delete packages/konyak_cli/profiles/ "$bundle_resources_dir/profiles/"
 cp LICENSE "$bundle_resources_dir/Licenses/Konyak-MIT.txt"
 cp THIRD_PARTY_NOTICES.md "$bundle_resources_dir/Licenses/THIRD_PARTY_NOTICES.md"
 cp apps/konyak/assets/fonts/inter/OFL.txt "$bundle_resources_dir/Licenses/Inter-OFL.txt"

@@ -6,6 +6,7 @@ import '../runtime/host_environment.dart';
 import '../shared/domain_value_objects.dart';
 import 'program_argument_support.dart';
 import 'program_registry_plans.dart';
+import 'program_run_environment.dart';
 import 'program_run_models.dart';
 import 'program_run_request_builders.dart';
 import 'program_settings_models.dart';
@@ -51,9 +52,18 @@ class ProgramRunPlanner {
   Option<ProgramRunRequest> plan({
     required BottleRecord bottle,
     required ProgramPath programPath,
+    ProgramRunEnvironment compatibilityEnvironment =
+        const ProgramRunEnvironment.empty(),
     Option<ProgramSettingsRecord> programSettings = const Option.none(),
   }) {
-    return wineArgumentsForProgramPath(programPath).map(
+    final wineArguments = switch (hostPlatform) {
+      KonyakHostPlatform.linux => wineArgumentsForProgramPath(programPath),
+      KonyakHostPlatform.macos => macosWineArgumentsForProgramPath(
+        programPath,
+        bottlePath: Option.of(bottle.path),
+      ),
+    };
+    return wineArguments.map(
       (wineArguments) => switch (hostPlatform) {
         KonyakHostPlatform.linux => linuxWineRequest(
           bottle: bottle,
@@ -65,9 +75,11 @@ class ProgramRunPlanner {
         KonyakHostPlatform.macos => macosWineRequest(
           bottle: bottle,
           programPath: programPath,
+          wineArguments: wineArguments,
           environment: environment,
           macosMajorVersion: macosMajorVersion,
           programSettings: programSettings.getOrElse(ProgramSettingsRecord.new),
+          compatibilityEnvironment: compatibilityEnvironment,
         ),
       },
     );
@@ -245,9 +257,7 @@ class ProgramRunPlanner {
     required BottleRecord bottle,
     required WinetricksVerbId verb,
   }) {
-    if (!isSupportedWinetricksVerb(verb) ||
-        (hostPlatform == KonyakHostPlatform.macos &&
-            isProfileInstallWinetricksVerb(verb))) {
+    if (!isSupportedWinetricksVerb(verb)) {
       return const Option.none();
     }
 

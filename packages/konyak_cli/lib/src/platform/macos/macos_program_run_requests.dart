@@ -27,9 +27,10 @@ ProgramRunRequest macosWineRequest({
     runnerKind: RunnerKind.macosWine,
     executable: ProgramExecutable(macosWineExecutable(hostEnvironment)),
     arguments: ProgramRunArguments(<String>[
-      'start',
-      '/unix',
-      programPath.value,
+      ...macosWineArgumentsForProgramPath(
+        programPath,
+        bottlePath: Option.of(bottle.path),
+      ).getOrElse(() => ProgramRunArguments(<String>[programPath.value])).value,
       ...programSettingsArguments(programSettings).value,
     ]),
     environment: ProgramRunEnvironment(<String, String>{

@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:fpdart/fpdart.dart';
 
 import '../cli/cli_json_helpers.dart';
+import '../domain/program/program_run_environment.dart';
 import '../domain/program/program_run_models.dart';
 import '../domain/program/program_runner.dart';
 import '../domain/shared/domain_value_objects.dart';
@@ -17,11 +18,19 @@ class DartIoProgramRunner implements ProgramRunner {
 
   @override
   ProgramRunResult run(ProgramRunRequest request) {
+    return switch (request.completionPolicy) {
+      ProgramRunCompletionPolicy.waitForExit => runAndWaitForExit(request),
+      ProgramRunCompletionPolicy.launchOnly => runLaunchOnly(request),
+    };
+  }
+
+  ProgramRunResult runAndWaitForExit(ProgramRunRequest request) {
     try {
       final result = Process.runSync(
         request.executable.value,
         request.arguments.value,
-        environment: request.environment.toMap(),
+        environment: _programProcessEnvironment(request),
+        includeParentEnvironment: false,
         workingDirectory: request.workingDirectory.match(
           () => null,
           (value) => value.value,
@@ -58,6 +67,56 @@ class DartIoProgramRunner implements ProgramRunner {
       return ProgramRunFailed(message: error.message);
     }
   }
+
+  ProgramRunResult runLaunchOnly(ProgramRunRequest request) {
+    try {
+      final result = Process.runSync(
+        'bash',
+        <String>[
+          '-lc',
+          r'nohup "$1" "${@:2}" >/dev/null 2>&1 &',
+          '_',
+          request.executable.value,
+          ...request.arguments.value,
+        ],
+        environment: _programProcessEnvironment(request),
+        includeParentEnvironment: false,
+        workingDirectory: request.workingDirectory.match(
+          () => null,
+          (value) => value.value,
+        ),
+        runInShell: false,
+      );
+
+      if (request.createLogFile) {
+        final logFile = File(request.logPath.value);
+        logFile.parent.createSync(recursive: true);
+        logFile.writeAsStringSync(programRunLog(request, result));
+      }
+
+      return ProgramRunCompleted(
+        processExitCode: result.exitCode,
+        stdout: processOutputToString(result.stdout),
+        stderr: processOutputToString(result.stderr),
+      );
+    } on ProcessException catch (error) {
+      final message = programRunnerFailureMessage(
+        executable: 'bash',
+        message: error.message,
+      );
+      if (request.createLogFile) {
+        final logFile = File(request.logPath.value);
+        logFile.parent.createSync(recursive: true);
+        logFile.writeAsStringSync(
+          programRunStartupFailureLog(request, message),
+        );
+      }
+
+      return ProgramRunFailed(message: message);
+    } on FileSystemException catch (error) {
+      return ProgramRunFailed(message: error.message);
+    }
+  }
 }
 
 class DartIoAsyncProgramRunner implements AsyncProgramRunner {
@@ -72,7 +131,8 @@ class DartIoAsyncProgramRunner implements AsyncProgramRunner {
       process = await Process.start(
         request.executable.value,
         request.arguments.value,
-        environment: request.environment.toMap(),
+        environment: _programProcessEnvironment(request),
+        includeParentEnvironment: false,
         workingDirectory: request.workingDirectory.match(
           () => null,
           (value) => value.value,
@@ -162,6 +222,24 @@ class DartIoAsyncProgramRunner implements AsyncProgramRunner {
       },
     );
   }
+}
+
+Map<String, String> _programProcessEnvironment(ProgramRunRequest request) {
+  final requestEnvironment = request.environment.toMap();
+  return <String, String>{
+    for (final entry in Platform.environment.entries)
+      if (!isKonyakChildProcessRulesEnvironmentVariable(entry.key))
+        entry.key: entry.value,
+    for (final entry in requestEnvironment.entries)
+      if (!isKonyakChildProcessRulesEnvironmentVariable(entry.key))
+        entry.key: entry.value,
+    ...request.environment[konyakChildProcessRulesEnvironmentVariable].match(
+      () => const <String, String>{},
+      (rules) => rules.isEmpty
+          ? const <String, String>{}
+          : <String, String>{konyakChildProcessRulesEnvironmentVariable: rules},
+    ),
+  };
 }
 
 class DartIoHostProcessSnapshotReader implements HostProcessSnapshotReader {

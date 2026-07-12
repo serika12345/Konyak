@@ -3,6 +3,12 @@ import 'package:fpdart/fpdart.dart';
 
 import '../shared/domain_value_objects.dart';
 
+const konyakChildProcessRulesEnvironmentVariable = 'KONYAK_CHILD_PROCESS_RULES';
+
+bool isKonyakChildProcessRulesEnvironmentVariable(String name) {
+  return name.toUpperCase() == konyakChildProcessRulesEnvironmentVariable;
+}
+
 /// Intentionally hand-written instead of Freezed: the public boundary accepts
 /// raw environment maps, but the validated immutable map storage stays private.
 final class ProgramEnvironmentOverrides {
@@ -25,6 +31,18 @@ final class ProgramEnvironmentOverrides {
     return _variables
         .map((name, value) => MapEntry(name.value, value.value))
         .unlockView;
+  }
+
+  ProgramRunEnvironment toRunEnvironmentWhere(
+    bool Function(ProgramEnvironmentVariableName name) includeName,
+  ) {
+    return ProgramRunEnvironment(
+      Map<String, String>.fromEntries(
+        _variables.entries
+            .where((entry) => includeName(entry.key))
+            .map((entry) => MapEntry(entry.key.value, entry.value.value)),
+      ),
+    );
   }
 
   ProgramEnvironmentOverrides add(

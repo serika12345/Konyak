@@ -2,7 +2,9 @@ import 'dart:convert';
 
 import 'package:konyak_cli/src/cli/cli_app_runtime_handlers.dart';
 import 'package:konyak_cli/src/cli/cli_commands.dart';
+import 'package:konyak_cli/src/cli/cli_injected_runner.dart' as injected;
 import 'package:konyak_cli/src/cli/cli_location_winetricks_handlers.dart';
+import 'package:konyak_cli/src/domain/program/program_profile_catalog.dart';
 import 'package:test/test.dart';
 
 import 'support/cli_contract_helpers.dart';
@@ -64,5 +66,42 @@ void main() {
     ], testCliCommandContext());
 
     expect(match, isA<CliCommandNotMatched>());
+  });
+
+  test('unrelated commands do not load deferred install profiles', () {
+    final context = testCliCommandContext(
+      installProfileCatalog: InstallProfileCatalog.deferred(
+        () => throw const InstallProfileCatalogException('invalid profile'),
+      ),
+    );
+
+    final result = injected.runCli(const [
+      'list-bottles',
+      '--json',
+    ], context: context);
+
+    expect(result.exitCode, 0);
+  });
+
+  test('profile catalog failures are returned as structured errors', () {
+    final context = testCliCommandContext(
+      installProfileCatalog: InstallProfileCatalog.deferred(
+        () => throw const InstallProfileCatalogException('invalid profile'),
+      ),
+    );
+
+    final result = injected.runCli(const [
+      'list-install-profiles',
+      '--json',
+    ], context: context);
+
+    expect(result.exitCode, 65);
+    expect(jsonDecode(result.stdout), {
+      'schemaVersion': 1,
+      'error': {
+        'code': 'installProfileCatalogError',
+        'message': 'invalid profile',
+      },
+    });
   });
 }

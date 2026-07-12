@@ -67,6 +67,7 @@ fi
 
 resources_dir="$app_bundle/Contents/Resources"
 licenses_dir="$resources_dir/Licenses"
+profiles_dir="$resources_dir/profiles"
 zstd_executable="$(command -v zstd)"
 zstd_library="$(otool -L "$zstd_executable" | awk '/libzstd\.1\.dylib/ { print $1; exit }')"
 
@@ -82,6 +83,10 @@ rm -f \
 
 cp "$cli_executable" "$resources_dir/konyak-cli"
 chmod 755 "$resources_dir/konyak-cli"
+
+rm -rf "$profiles_dir"
+mkdir -p "$profiles_dir"
+cp packages/konyak_cli/profiles/*.json "$profiles_dir/"
 
 cp "$zstd_executable" "$resources_dir/zstd"
 cp "${zstd_library:A}" "$resources_dir/libzstd.1.dylib"

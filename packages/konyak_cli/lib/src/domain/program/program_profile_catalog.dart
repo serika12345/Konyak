@@ -1,44 +1,60 @@
+import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:fpdart/fpdart.dart';
 
 import '../shared/domain_value_objects.dart';
 import 'program_profile_models.dart';
 
-final installProfileCatalog = List<InstallProfileRecord>.unmodifiable([
-  steamInstallProfile,
-]);
+abstract class InstallProfileCatalog {
+  const InstallProfileCatalog._();
 
-final steamInstallProfile = InstallProfileRecord(
-  id: 'steam',
-  name: 'Steam',
-  profileVersion: 1,
-  summary: 'Install and launch Steam with Konyak-managed metadata.',
-  platforms: const ['macos'],
-  windowsVersion: 'win10',
-  managedProgramPath: r'C:\Program Files (x86)\Steam\Steam.exe',
-  dependencyWinetricksVerbs: const ['corefonts'],
-  compatibilityProfile: CompatibilityProfileRecord(
-    id: 'steam',
-    profileVersion: 1,
-    childProcessRules: [
-      ChildProcessCompatibilityRule(
-        executableSuffix: 'steamwebhelper.exe',
-        appendArgumentsIfMissing: const [
-          '--use-angle=swiftshader-webgl',
-          '--use-gl=angle',
-          '--no-sandbox',
-          '--in-process-gpu',
-          '--disable-gpu',
-        ],
-      ),
-    ],
-  ),
-);
+  factory InstallProfileCatalog(Iterable<InstallProfileRecord> profiles) =
+      _EagerInstallProfileCatalog;
 
-Option<InstallProfileRecord> findInstallProfile(ProfileId profileId) {
-  final matches = installProfileCatalog
-      .where((profile) => profile.id == profileId)
-      .toList(growable: false);
-  return matches.isEmpty ? const Option.none() : Option.of(matches.first);
+  factory InstallProfileCatalog.deferred(
+    InstallProfileCatalog Function() loader,
+  ) = _DeferredInstallProfileCatalog;
+
+  IList<InstallProfileRecord> get profiles;
+
+  Option<InstallProfileRecord> find(ProfileId profileId) {
+    final matches = profiles
+        .where((profile) => profile.id == profileId)
+        .toList(growable: false);
+    return matches.isEmpty ? const Option.none() : Option.of(matches.first);
+  }
+}
+
+final class _EagerInstallProfileCatalog extends InstallProfileCatalog {
+  _EagerInstallProfileCatalog(Iterable<InstallProfileRecord> profiles)
+    : profiles = profiles.toIList(),
+      super._() {
+    final profileIds = this.profiles.map((profile) => profile.id).toSet();
+    if (profileIds.length != this.profiles.length) {
+      throw ArgumentError('Install profile catalog contains duplicate IDs.');
+    }
+  }
+
+  @override
+  final IList<InstallProfileRecord> profiles;
+}
+
+final class _DeferredInstallProfileCatalog extends InstallProfileCatalog {
+  _DeferredInstallProfileCatalog(this._loader) : super._();
+
+  final InstallProfileCatalog Function() _loader;
+  late final InstallProfileCatalog _loadedCatalog = _loader();
+
+  @override
+  IList<InstallProfileRecord> get profiles => _loadedCatalog.profiles;
+}
+
+final class InstallProfileCatalogException implements Exception {
+  const InstallProfileCatalogException(this.message);
+
+  final String message;
+
+  @override
+  String toString() => message;
 }
 
 ProgramProfileRecord programProfileFromInstallProfile({

@@ -24,6 +24,8 @@ import 'package:konyak_cli/src/repository/repository_interfaces.dart';
 import 'package:konyak_cli/src/shared/model_constants.dart';
 import 'package:test/test.dart';
 
+import 'install_profile_fixtures.dart';
+
 export 'dart:async';
 export 'dart:convert';
 export 'dart:io';
@@ -66,6 +68,8 @@ export 'package:konyak_cli/src/repository/memory_bottle_repository.dart';
 export 'package:konyak_cli/src/repository/repository_interfaces.dart';
 export 'package:konyak_cli/src/shared/model_constants.dart';
 export 'package:test/test.dart';
+
+export 'install_profile_fixtures.dart';
 
 const gptkD3DMetalLegacyWindowsFileNames = <String>['atidxx64.dll'];
 
@@ -219,6 +223,7 @@ CliResult runCli(
       const EmptyBottleProgramRepository(),
   ProgramMetadataExtractor programMetadataExtractor =
       const NoopProgramMetadataExtractor(),
+  InstallProfileCatalog? installProfileCatalog,
   WinetricksVerbRepository winetricksVerbRepository =
       const UnavailableWinetricksVerbRepository(),
   RuntimeCatalog? runtimeCatalog,
@@ -248,6 +253,9 @@ CliResult runCli(
       bottleRepository: bottleRepository,
       bottleProgramRepository: bottleProgramRepository,
       programMetadataExtractor: programMetadataExtractor,
+      installProfileCatalog:
+          installProfileCatalog ??
+          testInstallProfileCatalog(profiles: const []),
       winetricksVerbRepository: winetricksVerbRepository,
       runtimeCatalog: runtimeCatalog,
       programRunPlanner: programRunPlanner,
@@ -280,6 +288,7 @@ Future<CliResult> runCliStreaming(
       const EmptyBottleProgramRepository(),
   ProgramMetadataExtractor programMetadataExtractor =
       const NoopProgramMetadataExtractor(),
+  InstallProfileCatalog? installProfileCatalog,
   WinetricksVerbRepository winetricksVerbRepository =
       const UnavailableWinetricksVerbRepository(),
   RuntimeCatalog? runtimeCatalog,
@@ -314,6 +323,9 @@ Future<CliResult> runCliStreaming(
       bottleRepository: bottleRepository,
       bottleProgramRepository: bottleProgramRepository,
       programMetadataExtractor: programMetadataExtractor,
+      installProfileCatalog:
+          installProfileCatalog ??
+          testInstallProfileCatalog(profiles: const []),
       winetricksVerbRepository: winetricksVerbRepository,
       runtimeCatalog: runtimeCatalog,
       programRunPlanner: programRunPlanner,
@@ -346,6 +358,7 @@ CliCommandContext _testCliCommandContext({
   required BottleRepository? bottleRepository,
   required BottleProgramRepository bottleProgramRepository,
   required ProgramMetadataExtractor programMetadataExtractor,
+  required InstallProfileCatalog installProfileCatalog,
   required WinetricksVerbRepository winetricksVerbRepository,
   required RuntimeCatalog? runtimeCatalog,
   required ProgramRunPlanner? programRunPlanner,
@@ -373,6 +386,7 @@ CliCommandContext _testCliCommandContext({
     bottleRepository: bottleRepository,
     bottleProgramRepository: bottleProgramRepository,
     programMetadataExtractor: programMetadataExtractor,
+    installProfileCatalog: installProfileCatalog,
     winetricksVerbRepository: winetricksVerbRepository,
     runtimeCatalog: runtimeCatalog ?? StaticRuntimeCatalog(const []),
     programRunPlanner: programRunPlanner ?? _testProgramRunPlanner(),

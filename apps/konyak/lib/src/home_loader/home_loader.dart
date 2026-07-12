@@ -26,6 +26,7 @@ import 'home_loader_executables.dart';
 import 'home_loader_operation_state.dart';
 import 'home_loader_pinned_programs.dart';
 import 'home_loader_platform_helpers.dart';
+import 'home_loader_program_profiles.dart';
 import 'home_loader_programs.dart';
 import 'home_loader_runtimes.dart';
 import 'home_loader_settings.dart';
@@ -89,6 +90,8 @@ class KonyakHomeLoaderState extends State<KonyakHomeLoader>
   BlockingProgressState winetricksLoadProgress =
       const BlockingProgressState.hidden();
   BlockingProgressState winetricksInstallProgress =
+      const BlockingProgressState.hidden();
+  BlockingProgressState profileManagerProgress =
       const BlockingProgressState.hidden();
   BlockingProgressState archiveProgress = const BlockingProgressState.hidden();
   BlockingProgressState runtimeInstallProgress =
@@ -273,6 +276,9 @@ class KonyakHomeLoaderState extends State<KonyakHomeLoader>
             runProgramAction: BottleSummaryActionAvailability.available(
               runProgram,
             ),
+            showProfileManagerAction: BottleSummaryActionAvailability.available(
+              showProfileManager,
+            ),
             runProgramPathAction: ProgramPathActionAvailability.available((
               bottle,
               programPath,
@@ -341,6 +347,10 @@ class KonyakHomeLoaderState extends State<KonyakHomeLoader>
         ...blockingProgressOverlays(
           key: const ValueKey('winetricks-progress'),
           state: winetricksInstallProgress,
+        ),
+        ...blockingProgressOverlays(
+          key: const ValueKey('profile-manager-progress'),
+          state: profileManagerProgress,
         ),
         ...blockingProgressOverlays(
           key: const ValueKey('bottle-archive-progress'),

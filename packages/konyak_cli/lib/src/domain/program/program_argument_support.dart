@@ -50,6 +50,52 @@ Option<ProgramRunArguments> wineArgumentsForProgramPath(
   return const Option.none();
 }
 
+Option<ProgramRunArguments> macosWineArgumentsForProgramPath(
+  ProgramPath programPath, {
+  Option<BottlePath> bottlePath = const Option.none(),
+}) {
+  final rawProgramPath = _macosWineLaunchPath(
+    bottlePath: bottlePath,
+    programPath: programPath,
+  );
+  final lowerCasePath = rawProgramPath.toLowerCase();
+
+  if (lowerCasePath.endsWith('.exe')) {
+    return Option.of(
+      ProgramRunArguments(<String>[
+        if (!_looksLikeWindowsPath(rawProgramPath)) ...['start', '/unix'],
+        rawProgramPath,
+      ]),
+    );
+  }
+
+  return wineArgumentsForProgramPath(programPath);
+}
+
+bool _looksLikeWindowsPath(String path) {
+  return RegExp(r'^[a-zA-Z]:[\\/]').hasMatch(path) || path.startsWith(r'\\');
+}
+
+String _macosWineLaunchPath({
+  required Option<BottlePath> bottlePath,
+  required ProgramPath programPath,
+}) {
+  final path = programPath.value;
+  if (!path.toLowerCase().endsWith('.exe')) {
+    return path;
+  }
+
+  return bottlePath.match(() => path, (bottlePath) {
+    final driveCPrefix = '${bottlePath.value}/drive_c/';
+    if (!path.startsWith(driveCPrefix)) {
+      return path;
+    }
+
+    final relativePath = path.substring(driveCPrefix.length);
+    return 'C:\\${relativePath.replaceAll('/', '\\')}';
+  });
+}
+
 ProgramRunArguments programSettingsArguments(ProgramSettingsRecord settings) {
   final arguments = settings.arguments.value.trim();
   if (arguments.isEmpty) {
@@ -73,7 +119,9 @@ ProgramRunArguments wineArgumentsForBottleCommand(BottleCommand command) {
 ProgramRunEnvironment programSettingsEnvironment(
   ProgramSettingsRecord settings,
 ) {
-  final baseEnvironment = ProgramRunEnvironment(settings.environment.toMap());
+  final baseEnvironment = settings.environment.toRunEnvironmentWhere(
+    (name) => !isKonyakChildProcessRulesEnvironmentVariable(name.value),
+  );
   final localizedEnvironment = settings.locale.value.trim().isEmpty
       ? baseEnvironment
       : baseEnvironment.add(

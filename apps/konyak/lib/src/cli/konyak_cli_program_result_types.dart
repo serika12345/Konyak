@@ -67,6 +67,154 @@ final class ProgramRunLoadFailure extends ProgramRunLoadResult {
   final String diagnostic;
 }
 
+sealed class InstallProfileListLoadResult {
+  const InstallProfileListLoadResult();
+}
+
+final class LoadedInstallProfiles extends InstallProfileListLoadResult {
+  LoadedInstallProfiles({required Iterable<InstallProfileListItem> profiles})
+    : profiles = List.unmodifiable(profiles);
+
+  final List<InstallProfileListItem> profiles;
+}
+
+final class InstallProfileListLoadFailure extends InstallProfileListLoadResult {
+  const InstallProfileListLoadFailure({
+    required this.exitCode,
+    required this.message,
+    required this.diagnostic,
+  });
+
+  final int exitCode;
+  final String message;
+  final String diagnostic;
+}
+
+sealed class InstallProfileInspectLoadResult {
+  const InstallProfileInspectLoadResult();
+}
+
+final class InspectedInstallProfile extends InstallProfileInspectLoadResult {
+  const InspectedInstallProfile(this.profile);
+
+  final InstallProfileDetails profile;
+}
+
+final class InstallProfileInspectLoadFailure
+    extends InstallProfileInspectLoadResult {
+  const InstallProfileInspectLoadFailure({
+    required this.exitCode,
+    required this.message,
+    required this.diagnostic,
+  });
+
+  final int exitCode;
+  final String message;
+  final String diagnostic;
+}
+
+sealed class ProgramProfileApplyLoadResult {
+  const ProgramProfileApplyLoadResult();
+}
+
+final class AppliedProgramProfile extends ProgramProfileApplyLoadResult {
+  const AppliedProgramProfile(this.profile);
+
+  final ProgramProfileSummary profile;
+}
+
+final class ProgramProfileApplyLoadFailure
+    extends ProgramProfileApplyLoadResult {
+  const ProgramProfileApplyLoadFailure({
+    required this.exitCode,
+    required this.message,
+    required this.diagnostic,
+  });
+
+  final int exitCode;
+  final String message;
+  final String diagnostic;
+}
+
+final class InstallProfileListItem {
+  const InstallProfileListItem({
+    required this.id,
+    required this.name,
+    required this.profileVersion,
+  });
+
+  final String id;
+  final String name;
+  final int profileVersion;
+}
+
+final class InstallProfileDetails {
+  InstallProfileDetails({
+    required this.id,
+    required this.name,
+    required this.profileVersion,
+    required this.summary,
+    required Iterable<String> platforms,
+    required this.windowsVersion,
+    required this.managedProgramPath,
+    required Iterable<String> dependencyWinetricksVerbs,
+    required this.runCompletionPolicy,
+    required this.compatibilityProfile,
+  }) : platforms = List.unmodifiable(platforms),
+       dependencyWinetricksVerbs = List.unmodifiable(dependencyWinetricksVerbs);
+
+  final String id;
+  final String name;
+  final int profileVersion;
+  final String summary;
+  final List<String> platforms;
+  final String windowsVersion;
+  final String managedProgramPath;
+  final List<String> dependencyWinetricksVerbs;
+  final String runCompletionPolicy;
+  final CompatibilityProfileSummary compatibilityProfile;
+}
+
+final class CompatibilityProfileSummary {
+  CompatibilityProfileSummary({
+    required this.id,
+    required this.profileVersion,
+    required Iterable<ChildProcessCompatibilityRuleSummary> childProcessRules,
+  }) : childProcessRules = List.unmodifiable(childProcessRules);
+
+  final String id;
+  final int profileVersion;
+  final List<ChildProcessCompatibilityRuleSummary> childProcessRules;
+}
+
+final class ChildProcessCompatibilityRuleSummary {
+  ChildProcessCompatibilityRuleSummary({
+    required this.executableSuffix,
+    required Iterable<String> appendArgumentsIfMissing,
+  }) : appendArgumentsIfMissing = List.unmodifiable(appendArgumentsIfMissing);
+
+  final String executableSuffix;
+  final List<String> appendArgumentsIfMissing;
+}
+
+final class ProgramProfileSummary {
+  const ProgramProfileSummary({
+    required this.bottleId,
+    required this.profileId,
+    required this.profileVersion,
+    required this.managedProgramPath,
+    required this.compatibilityProfileId,
+    required this.compatibilityProfileVersion,
+  });
+
+  final String bottleId;
+  final String profileId;
+  final int profileVersion;
+  final String managedProgramPath;
+  final String compatibilityProfileId;
+  final int compatibilityProfileVersion;
+}
+
 sealed class BottleLocationOpenResult {
   const BottleLocationOpenResult();
 }

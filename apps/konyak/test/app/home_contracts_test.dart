@@ -122,6 +122,7 @@ void main() {
     );
     expect([
       programActions.runProgramAction,
+      programActions.showProfileManagerAction,
       programActions.pinProgramAction,
     ], everyElement(isA<UnavailableBottleSummaryActionAvailability>()));
     expect(

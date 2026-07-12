@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import '../domain/program/program_catalog_models.dart';
+import '../domain/program/program_profile_catalog.dart';
 import '../domain/program/program_runner.dart';
 import '../platform/linux/linux_wine_install_results.dart';
 import '../platform/macos/macos_wine_install_results.dart';
@@ -26,6 +27,12 @@ CliResult runCli(List<String> arguments, {required CliCommandContext context}) {
     return jsonError(
       exitCode: 74,
       code: 'appSettingsRepositoryError',
+      message: error.message,
+    );
+  } on InstallProfileCatalogException catch (error) {
+    return jsonError(
+      exitCode: 65,
+      code: 'installProfileCatalogError',
       message: error.message,
     );
   }

@@ -1968,6 +1968,143 @@ void main() {
     expect(completed.run.processExitCode, 0);
   });
 
+  test(
+    'loads install profile summaries through the JSON catalog contract',
+    () async {
+      final runner = _FakeProcessRunner(
+        result: const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+          {
+            "schemaVersion": 1,
+            "installProfiles": [
+              {
+                "id": "sample",
+                "name": "Sample",
+                "profileVersion": 2
+              }
+            ]
+          }
+        ''',
+          stderr: '',
+        ),
+      );
+      final client = KonyakCliClient(
+        executable: 'konyak',
+        processRunner: runner,
+      );
+
+      final result = await client.listInstallProfiles();
+
+      expect(runner.arguments, const ['list-install-profiles', '--json']);
+      expect(result, isA<LoadedInstallProfiles>());
+      final loaded = result as LoadedInstallProfiles;
+      expect(loaded.profiles.single.id, 'sample');
+      expect(loaded.profiles.single.name, 'Sample');
+      expect(loaded.profiles.single.profileVersion, 2);
+    },
+  );
+
+  test(
+    'inspects an install profile through the JSON detail contract',
+    () async {
+      final runner = _FakeProcessRunner(
+        result: const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+          {
+            "schemaVersion": 1,
+            "installProfile": {
+              "id": "steam",
+              "name": "Steam",
+              "profileVersion": 1,
+              "summary": "Apply Konyak compatibility rules to an installed Steam executable.",
+              "platforms": ["macos"],
+              "bottleTemplate": {
+                "windowsVersion": "win10"
+              },
+              "managedProgramPath": "C:\\\\Program Files (x86)\\\\Steam\\\\Steam.exe",
+              "dependencyWinetricksVerbs": ["corefonts"],
+              "runCompletionPolicy": "launchOnly",
+              "compatibilityProfile": {
+                "id": "steam",
+                "profileVersion": 1,
+                "childProcessRules": [
+                  {
+                    "executableSuffix": "steamwebhelper.exe",
+                    "appendArgumentsIfMissing": ["--disable-gpu", "--in-process-gpu"]
+                  }
+                ]
+              }
+            }
+          }
+        ''',
+          stderr: '',
+        ),
+      );
+      final client = KonyakCliClient(
+        executable: 'konyak',
+        processRunner: runner,
+      );
+
+      final result = await client.inspectInstallProfile(profileId: 'steam');
+
+      expect(runner.arguments, const [
+        'inspect-install-profile',
+        'steam',
+        '--json',
+      ]);
+      expect(result, isA<InspectedInstallProfile>());
+      final inspected = result as InspectedInstallProfile;
+      expect(inspected.profile.name, 'Steam');
+      expect(inspected.profile.dependencyWinetricksVerbs, ['corefonts']);
+      expect(inspected.profile.runCompletionPolicy, 'launchOnly');
+    },
+  );
+
+  test('applies an install profile to a specific program path', () async {
+    final runner = _FakeProcessRunner(
+      result: const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "programProfile": {
+              "bottleId": "steam",
+              "profileId": "steam",
+              "profileVersion": 1,
+              "managedProgramPath": "C:\\\\Program Files (x86)\\\\Steam\\\\Steam.exe",
+              "compatibilityProfileId": "steam",
+              "compatibilityProfileVersion": 1
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+    );
+    final client = KonyakCliClient(executable: 'konyak', processRunner: runner);
+
+    final result = await client.applyProgramProfile(
+      profileId: 'steam',
+      bottleId: 'steam',
+      programPath: r'C:\Program Files (x86)\Steam\Steam.exe',
+    );
+
+    expect(runner.arguments, const [
+      'apply-program-profile',
+      'steam',
+      '--bottle',
+      'steam',
+      '--program',
+      r'C:\Program Files (x86)\Steam\Steam.exe',
+      '--json',
+    ]);
+    expect(result, isA<AppliedProgramProfile>());
+    final applied = result as AppliedProgramProfile;
+    expect(applied.profile.bottleId, 'steam');
+    expect(applied.profile.profileId, 'steam');
+  });
+
   test('passes one-time program settings to run-program', () async {
     final runner = _FakeProcessRunner(
       result: const ProcessRunResult(

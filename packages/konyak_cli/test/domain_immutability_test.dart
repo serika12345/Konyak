@@ -9,6 +9,8 @@ import 'package:konyak_cli/src/platform/platform_location_paths.dart';
 import 'package:konyak_cli/src/repository/memory_bottle_repository.dart';
 import 'package:test/test.dart';
 
+import 'support/install_profile_fixtures.dart';
+
 T _expectIo<T>(IoResult<T> result) {
   return result.fold((message) => throw TestFailure(message), (value) => value);
 }
@@ -17,6 +19,14 @@ BottleRecord _expectFound(IoResult<Option<BottleRecord>> result) {
   return _expectIo(result).match(
     () => throw TestFailure('Expected bottle to exist.'),
     (bottle) => bottle,
+  );
+}
+
+InstallProfileRecord _steamInstallProfile() {
+  return testInstallProfile(
+    id: 'steam',
+    name: 'Steam',
+    managedProgramPath: r'C:\Program Files (x86)\Steam\Steam.exe',
   );
 }
 
@@ -1418,6 +1428,35 @@ void main() {
       ProgramRunArguments(const <String>['/Games/setup.exe']),
     );
     expect(
+      wineArgumentsForProgramPath(ProgramPath('/Games/Steam.lnk')).toNullable(),
+      ProgramRunArguments(const <String>['start', '/unix', '/Games/Steam.lnk']),
+    );
+    expect(
+      macosWineArgumentsForProgramPath(
+        ProgramPath('/Games/setup.exe'),
+      ).toNullable(),
+      ProgramRunArguments(const <String>['start', '/unix', '/Games/setup.exe']),
+    );
+    expect(
+      macosWineArgumentsForProgramPath(
+        ProgramPath(r'C:\Program Files (x86)\Steam\Steam.exe'),
+      ).toNullable(),
+      ProgramRunArguments(const <String>[
+        r'C:\Program Files (x86)\Steam\Steam.exe',
+      ]),
+    );
+    expect(
+      macosWineArgumentsForProgramPath(
+        ProgramPath(
+          '/Bottles/steam/drive_c/Program Files (x86)/Steam/Steam.exe',
+        ),
+        bottlePath: Option.of(BottlePath('/Bottles/steam')),
+      ).toNullable(),
+      ProgramRunArguments(const <String>[
+        r'C:\Program Files (x86)\Steam\Steam.exe',
+      ]),
+    );
+    expect(
       wineArgumentsForProgramPath(ProgramPath('/Games/readme.txt')).isNone(),
       isTrue,
     );
@@ -1584,7 +1623,6 @@ void main() {
   test('winetricks verbs model supported verbs with WinetricksVerbId', () {
     expect(isSupportedWinetricksVerb(WinetricksVerbId('corefonts')), isTrue);
     expect(isSupportedWinetricksVerb(WinetricksVerbId('steam')), isTrue);
-    expect(isProfileInstallWinetricksVerb(WinetricksVerbId('steam')), isTrue);
     expect(
       isSupportedWinetricksVerb(WinetricksVerbId('corefonts;rm')),
       isFalse,
@@ -1715,23 +1753,23 @@ void main() {
     expect(
       ProgramProfileApplyRequest(
         bottleId: BottleId('steam'),
-        installProfile: steamInstallProfile,
+        installProfile: _steamInstallProfile(),
         programPath: ProgramPath('/steam.exe'),
       ),
       ProgramProfileApplyRequest(
         bottleId: BottleId('steam'),
-        installProfile: steamInstallProfile,
+        installProfile: _steamInstallProfile(),
         programPath: ProgramPath('/steam.exe'),
       ),
     );
     expect(
       ProgramProfileRepairRequest(
         bottleId: BottleId('steam'),
-        installProfile: steamInstallProfile,
+        installProfile: _steamInstallProfile(),
       ),
       ProgramProfileRepairRequest(
         bottleId: BottleId('steam'),
-        installProfile: steamInstallProfile,
+        installProfile: _steamInstallProfile(),
       ),
     );
   });

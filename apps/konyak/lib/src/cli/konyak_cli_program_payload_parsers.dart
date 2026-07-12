@@ -35,6 +35,354 @@ final class _InvalidGraphicsBackendSuggestion
   const _InvalidGraphicsBackendSuggestion();
 }
 
+sealed class _InstallProfileParseResult<T> {
+  const _InstallProfileParseResult();
+}
+
+final class _ParsedInstallProfileValue<T>
+    extends _InstallProfileParseResult<T> {
+  const _ParsedInstallProfileValue(this.value);
+
+  final T value;
+}
+
+final class _InvalidInstallProfileValue<T>
+    extends _InstallProfileParseResult<T> {
+  const _InvalidInstallProfileValue();
+}
+
+InstallProfileListLoadResult parseInstallProfileListPayload(String payload) {
+  final Object? decoded;
+  try {
+    decoded = jsonDecode(payload);
+  } on FormatException catch (error) {
+    return InstallProfileListLoadFailure(
+      exitCode: 0,
+      message: error.message,
+      diagnostic: '',
+    );
+  }
+
+  if (decoded is! Map<String, Object?> || decoded['schemaVersion'] != 1) {
+    return const InstallProfileListLoadFailure(
+      exitCode: 0,
+      message: 'Unsupported install profile list payload.',
+      diagnostic: '',
+    );
+  }
+
+  final error = decoded['error'];
+  if (error is Map<String, Object?>) {
+    final message = error['message'];
+    return InstallProfileListLoadFailure(
+      exitCode: 0,
+      message: message is String ? message : 'Install profile list failed.',
+      diagnostic: '',
+    );
+  }
+
+  final profiles = decoded['installProfiles'];
+  if (profiles is! List<Object?>) {
+    return const InstallProfileListLoadFailure(
+      exitCode: 0,
+      message: 'Missing installProfiles payload.',
+      diagnostic: '',
+    );
+  }
+
+  final parsedProfiles = <InstallProfileListItem>[];
+  for (final profile in profiles) {
+    switch (_parseInstallProfileListItem(profile)) {
+      case _ParsedInstallProfileValue(value: final profile):
+        parsedProfiles.add(profile);
+      case _InvalidInstallProfileValue():
+        return const InstallProfileListLoadFailure(
+          exitCode: 0,
+          message: 'Invalid install profile record.',
+          diagnostic: '',
+        );
+    }
+  }
+
+  return LoadedInstallProfiles(profiles: parsedProfiles);
+}
+
+InstallProfileInspectLoadResult parseInstallProfileInspectPayload(
+  String payload,
+) {
+  final Object? decoded;
+  try {
+    decoded = jsonDecode(payload);
+  } on FormatException catch (error) {
+    return InstallProfileInspectLoadFailure(
+      exitCode: 0,
+      message: error.message,
+      diagnostic: '',
+    );
+  }
+
+  if (decoded is! Map<String, Object?> || decoded['schemaVersion'] != 1) {
+    return const InstallProfileInspectLoadFailure(
+      exitCode: 0,
+      message: 'Unsupported install profile inspect payload.',
+      diagnostic: '',
+    );
+  }
+
+  final error = decoded['error'];
+  if (error is Map<String, Object?>) {
+    final message = error['message'];
+    return InstallProfileInspectLoadFailure(
+      exitCode: 0,
+      message: message is String ? message : 'Install profile inspect failed.',
+      diagnostic: '',
+    );
+  }
+
+  return switch (_parseInstallProfileDetails(decoded['installProfile'])) {
+    _ParsedInstallProfileValue(value: final profile) => InspectedInstallProfile(
+      profile,
+    ),
+    _InvalidInstallProfileValue() => const InstallProfileInspectLoadFailure(
+      exitCode: 0,
+      message: 'Invalid installProfile payload.',
+      diagnostic: '',
+    ),
+  };
+}
+
+ProgramProfileApplyLoadResult parseProgramProfileApplyPayload(String payload) {
+  final Object? decoded;
+  try {
+    decoded = jsonDecode(payload);
+  } on FormatException catch (error) {
+    return ProgramProfileApplyLoadFailure(
+      exitCode: 0,
+      message: error.message,
+      diagnostic: '',
+    );
+  }
+
+  if (decoded is! Map<String, Object?> || decoded['schemaVersion'] != 1) {
+    return const ProgramProfileApplyLoadFailure(
+      exitCode: 0,
+      message: 'Unsupported program profile apply payload.',
+      diagnostic: '',
+    );
+  }
+
+  final error = decoded['error'];
+  if (error is Map<String, Object?>) {
+    final message = error['message'];
+    return ProgramProfileApplyLoadFailure(
+      exitCode: 0,
+      message: message is String ? message : 'Program profile apply failed.',
+      diagnostic: '',
+    );
+  }
+
+  return switch (_parseProgramProfileSummary(decoded['programProfile'])) {
+    _ParsedInstallProfileValue(value: final profile) => AppliedProgramProfile(
+      profile,
+    ),
+    _InvalidInstallProfileValue() => const ProgramProfileApplyLoadFailure(
+      exitCode: 0,
+      message: 'Invalid programProfile payload.',
+      diagnostic: '',
+    ),
+  };
+}
+
+_InstallProfileParseResult<InstallProfileListItem> _parseInstallProfileListItem(
+  Object? value,
+) {
+  if (value is! Map<String, Object?>) {
+    return const _InvalidInstallProfileValue();
+  }
+
+  final id = value['id'];
+  final name = value['name'];
+  final profileVersion = value['profileVersion'];
+  if (id is! String || name is! String || profileVersion is! int) {
+    return const _InvalidInstallProfileValue();
+  }
+
+  return _ParsedInstallProfileValue(
+    InstallProfileListItem(id: id, name: name, profileVersion: profileVersion),
+  );
+}
+
+_InstallProfileParseResult<InstallProfileDetails> _parseInstallProfileDetails(
+  Object? value,
+) {
+  if (value is! Map<String, Object?>) {
+    return const _InvalidInstallProfileValue();
+  }
+
+  final id = value['id'];
+  final name = value['name'];
+  final profileVersion = value['profileVersion'];
+  final summary = value['summary'];
+  final platforms = _parseInstallProfileStringList(value['platforms']);
+  final bottleTemplate = value['bottleTemplate'];
+  final managedProgramPath = value['managedProgramPath'];
+  final dependencyWinetricksVerbs = _parseInstallProfileStringList(
+    value['dependencyWinetricksVerbs'],
+  );
+  final runCompletionPolicy = value['runCompletionPolicy'];
+  final compatibilityProfile = _parseCompatibilityProfileSummary(
+    value['compatibilityProfile'],
+  );
+
+  if (id is! String ||
+      name is! String ||
+      profileVersion is! int ||
+      summary is! String ||
+      bottleTemplate is! Map<String, Object?> ||
+      managedProgramPath is! String ||
+      runCompletionPolicy is! String) {
+    return const _InvalidInstallProfileValue();
+  }
+
+  final windowsVersion = bottleTemplate['windowsVersion'];
+  if (windowsVersion is! String) {
+    return const _InvalidInstallProfileValue();
+  }
+
+  return switch ((platforms, dependencyWinetricksVerbs, compatibilityProfile)) {
+    (
+      _ParsedInstallProfileValue(value: final platforms),
+      _ParsedInstallProfileValue(value: final dependencyWinetricksVerbs),
+      _ParsedInstallProfileValue(value: final compatibilityProfile),
+    ) =>
+      _ParsedInstallProfileValue(
+        InstallProfileDetails(
+          id: id,
+          name: name,
+          profileVersion: profileVersion,
+          summary: summary,
+          platforms: platforms,
+          windowsVersion: windowsVersion,
+          managedProgramPath: managedProgramPath,
+          dependencyWinetricksVerbs: dependencyWinetricksVerbs,
+          runCompletionPolicy: runCompletionPolicy,
+          compatibilityProfile: compatibilityProfile,
+        ),
+      ),
+    _ => const _InvalidInstallProfileValue(),
+  };
+}
+
+_InstallProfileParseResult<CompatibilityProfileSummary>
+_parseCompatibilityProfileSummary(Object? value) {
+  if (value is! Map<String, Object?>) {
+    return const _InvalidInstallProfileValue();
+  }
+
+  final id = value['id'];
+  final profileVersion = value['profileVersion'];
+  final childProcessRules = value['childProcessRules'];
+  if (id is! String ||
+      profileVersion is! int ||
+      childProcessRules is! List<Object?>) {
+    return const _InvalidInstallProfileValue();
+  }
+
+  final parsedRules = <ChildProcessCompatibilityRuleSummary>[];
+  for (final rule in childProcessRules) {
+    switch (_parseChildProcessCompatibilityRuleSummary(rule)) {
+      case _ParsedInstallProfileValue(value: final rule):
+        parsedRules.add(rule);
+      case _InvalidInstallProfileValue():
+        return const _InvalidInstallProfileValue();
+    }
+  }
+
+  return _ParsedInstallProfileValue(
+    CompatibilityProfileSummary(
+      id: id,
+      profileVersion: profileVersion,
+      childProcessRules: parsedRules,
+    ),
+  );
+}
+
+_InstallProfileParseResult<ChildProcessCompatibilityRuleSummary>
+_parseChildProcessCompatibilityRuleSummary(Object? value) {
+  if (value is! Map<String, Object?>) {
+    return const _InvalidInstallProfileValue();
+  }
+
+  final executableSuffix = value['executableSuffix'];
+  final appendArgumentsIfMissing = _parseInstallProfileStringList(
+    value['appendArgumentsIfMissing'],
+  );
+  if (executableSuffix is! String) {
+    return const _InvalidInstallProfileValue();
+  }
+
+  return switch (appendArgumentsIfMissing) {
+    _ParsedInstallProfileValue(value: final appendArgumentsIfMissing) =>
+      _ParsedInstallProfileValue(
+        ChildProcessCompatibilityRuleSummary(
+          executableSuffix: executableSuffix,
+          appendArgumentsIfMissing: appendArgumentsIfMissing,
+        ),
+      ),
+    _InvalidInstallProfileValue() => const _InvalidInstallProfileValue(),
+  };
+}
+
+_InstallProfileParseResult<ProgramProfileSummary> _parseProgramProfileSummary(
+  Object? value,
+) {
+  if (value is! Map<String, Object?>) {
+    return const _InvalidInstallProfileValue();
+  }
+
+  final bottleId = value['bottleId'];
+  final profileId = value['profileId'];
+  final profileVersion = value['profileVersion'];
+  final managedProgramPath = value['managedProgramPath'];
+  final compatibilityProfileId = value['compatibilityProfileId'];
+  final compatibilityProfileVersion = value['compatibilityProfileVersion'];
+
+  if (bottleId is! String ||
+      profileId is! String ||
+      profileVersion is! int ||
+      managedProgramPath is! String ||
+      compatibilityProfileId is! String ||
+      compatibilityProfileVersion is! int) {
+    return const _InvalidInstallProfileValue();
+  }
+
+  return _ParsedInstallProfileValue(
+    ProgramProfileSummary(
+      bottleId: bottleId,
+      profileId: profileId,
+      profileVersion: profileVersion,
+      managedProgramPath: managedProgramPath,
+      compatibilityProfileId: compatibilityProfileId,
+      compatibilityProfileVersion: compatibilityProfileVersion,
+    ),
+  );
+}
+
+_InstallProfileParseResult<List<String>> _parseInstallProfileStringList(
+  Object? value,
+) {
+  if (value is! List<Object?>) {
+    return const _InvalidInstallProfileValue();
+  }
+
+  final strings = value.whereType<String>().toList(growable: false);
+  if (strings.length != value.length) {
+    return const _InvalidInstallProfileValue();
+  }
+
+  return _ParsedInstallProfileValue(List.unmodifiable(strings));
+}
+
 BottleProgramListLoadResult parseBottleProgramListPayload(String payload) {
   final Object? decoded;
   try {

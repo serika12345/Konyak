@@ -1,6 +1,55 @@
 part of 'widget_test.dart';
 
 void defineMenuWinetricksAndInstalledProgramWidgetTests() {
+  testWidgets('bottom bar Profile Manager action matches golden', (
+    WidgetTester tester,
+  ) async {
+    await _loadKonyakTestFonts();
+    final goldenKey = GlobalKey();
+    final bottle = BottleSummary(
+      id: 'steam',
+      name: 'Steam',
+      path: '/bottles/steam',
+      windowsVersion: 'win10',
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: konyakThemeData(konyakDarkColors),
+        supportedLocales: KonyakLocalizations.supportedLocales,
+        localizationsDelegates: KonyakLocalizations.localizationsDelegates,
+        home: Scaffold(
+          body: Align(
+            alignment: Alignment.bottomCenter,
+            child: RepaintBoundary(
+              key: goldenKey,
+              child: SizedBox(
+                width: 520,
+                child: KonyakBottomBar(
+                  target: BottleActionTarget.bottle(bottle),
+                  runProgramAction: BottleSummaryActionAvailability.available(
+                    (_) {},
+                  ),
+                  showProfileManagerAction:
+                      BottleSummaryActionAvailability.available((_) {}),
+                  toolsAction: BottleToolsActionAvailability.command((_, _) {}),
+                  showWinetricksAction:
+                      BottleSummaryActionAvailability.available((_) {}),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await _expectGoldenFileWithinTolerance(
+      find.byKey(goldenKey),
+      'goldens/bottom_bar_profile_manager.png',
+      diffTolerance: 0.05,
+    );
+  });
+
   testWidgets('bottle utilities menu is not shown in the top bar', (
     WidgetTester tester,
   ) async {
@@ -884,6 +933,199 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
     await tester.pumpAndSettle();
 
     expect(find.text('macosWinetricks exited with code 0'), findsNothing);
+  });
+
+  testWidgets('bottom bar applies a selected program profile to an exe path', (
+    WidgetTester tester,
+  ) async {
+    const selectedProgramPath =
+        '/Users/user/Library/Application Support/Konyak/Bottles/Steam/drive_c/'
+        'Program Files (x86)/Steam/Steam.exe';
+    final listProfilesCompleter = Completer<ProcessRunResult>();
+    final applyCompleter = Completer<ProcessRunResult>();
+    final runner = _FutureQueuedProcessRunner([
+      Future.value(
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+            {
+              "schemaVersion": 1,
+              "bottles": [
+                {
+                  "id": "steam",
+                  "name": "Steam",
+                  "path": "/Users/user/Library/Application Support/Konyak/Bottles/Steam",
+                  "windowsVersion": "win10"
+                }
+              ]
+            }
+          ''',
+          stderr: '',
+        ),
+      ),
+      listProfilesCompleter.future,
+      Future.value(
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+            {
+              "schemaVersion": 1,
+              "installProfile": {
+                "id": "steam",
+                "name": "Steam",
+                "profileVersion": 1,
+                "summary": "Apply Konyak compatibility rules to an installed Steam executable.",
+                "platforms": ["macos"],
+                "bottleTemplate": {
+                  "windowsVersion": "win10"
+                },
+                "managedProgramPath": "C:\\\\Program Files (x86)\\\\Steam\\\\Steam.exe",
+                "dependencyWinetricksVerbs": ["corefonts"],
+                "runCompletionPolicy": "launchOnly",
+                "compatibilityProfile": {
+                  "id": "steam",
+                  "profileVersion": 1,
+                  "childProcessRules": [
+                    {
+                      "executableSuffix": "steamwebhelper.exe",
+                      "appendArgumentsIfMissing": ["--disable-gpu", "--in-process-gpu"]
+                    }
+                  ]
+                }
+              }
+            }
+          ''',
+          stderr: '',
+        ),
+      ),
+      applyCompleter.future,
+      Future.value(
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+            {
+              "schemaVersion": 1,
+              "bottle": {
+                "id": "steam",
+                "name": "Steam",
+                "path": "/Users/user/Library/Application Support/Konyak/Bottles/Steam",
+                "windowsVersion": "win10",
+                "pinnedPrograms": [
+                  {
+                    "name": "Steam",
+                    "path": "C:\\\\Program Files (x86)\\\\Steam\\\\Steam.exe",
+                    "removable": false
+                  }
+                ]
+              }
+            }
+          ''',
+          stderr: '',
+        ),
+      ),
+    ]);
+
+    await tester.pumpWidget(
+      _testKonyakApp(
+        cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
+        programFilePicker: const _FakeProgramFilePicker(
+          path: selectedProgramPath,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.widgetWithText(TextButton, 'Profile Manager'));
+    await tester.pump();
+
+    expect(
+      find.byKey(const ValueKey('profile-manager-progress')),
+      findsOneWidget,
+    );
+    expect(find.text('Loading install profiles...'), findsOneWidget);
+    expect(runner.argumentsLog, [
+      ['list-bottles', '--json'],
+      ['list-install-profiles', '--json'],
+    ]);
+
+    listProfilesCompleter.complete(
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "installProfiles": [
+              {
+                "id": "steam",
+                "name": "Steam",
+                "profileVersion": 1
+              }
+            ]
+          }
+        ''',
+        stderr: '',
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Profile Manager in Steam'), findsOneWidget);
+    expect(find.text('Steam'), findsWidgets);
+    expect(find.text('launchOnly'), findsOneWidget);
+    expect(runner.argumentsLog, [
+      ['list-bottles', '--json'],
+      ['list-install-profiles', '--json'],
+      ['inspect-install-profile', 'steam', '--json'],
+    ]);
+
+    final chooseProgramButton = find.byTooltip('Choose program file');
+    await tester.ensureVisible(chooseProgramButton);
+    await tester.tap(chooseProgramButton);
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Apply profile'));
+    await tester.pump();
+
+    expect(
+      find.byKey(const ValueKey('profile-manager-progress')),
+      findsOneWidget,
+    );
+    expect(find.text('Applying Steam...'), findsOneWidget);
+    expect(runner.argumentsLog.last, [
+      'apply-program-profile',
+      'steam',
+      '--bottle',
+      'steam',
+      '--program',
+      selectedProgramPath,
+      '--json',
+    ]);
+
+    applyCompleter.complete(
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "programProfile": {
+              "bottleId": "steam",
+              "profileId": "steam",
+              "profileVersion": 1,
+              "managedProgramPath": "C:\\\\Program Files (x86)\\\\Steam\\\\Steam.exe",
+              "compatibilityProfileId": "steam",
+              "compatibilityProfileVersion": 1
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const ValueKey('profile-manager-progress')),
+      findsNothing,
+    );
+    expect(find.text('Applied Steam'), findsOneWidget);
+    expect(runner.argumentsLog.last, ['inspect-bottle', 'steam', '--json']);
   });
 
   testWidgets('winetricks shows progress while loading the verb catalog', (

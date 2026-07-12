@@ -54,6 +54,80 @@ extension KonyakCliProgramCommands on KonyakCliClient {
     );
   }
 
+  Future<InstallProfileListLoadResult> listInstallProfiles() async {
+    final result = await run(['list-install-profiles', '--json']);
+    final parsed = parseInstallProfileListPayload(result.stdout);
+
+    return switch (parsed) {
+      LoadedInstallProfiles() when result.exitCode == 0 => parsed,
+      InstallProfileListLoadFailure(:final message) =>
+        InstallProfileListLoadFailure(
+          exitCode: result.exitCode,
+          message: message,
+          diagnostic: result.stderr,
+        ),
+      LoadedInstallProfiles() => InstallProfileListLoadFailure(
+        exitCode: result.exitCode,
+        message: operationFailureMessage(result, 'list-install-profiles'),
+        diagnostic: result.stderr,
+      ),
+    };
+  }
+
+  Future<InstallProfileInspectLoadResult> inspectInstallProfile({
+    required String profileId,
+  }) async {
+    final result = await run(['inspect-install-profile', profileId, '--json']);
+    final parsed = parseInstallProfileInspectPayload(result.stdout);
+
+    return switch (parsed) {
+      InspectedInstallProfile() when result.exitCode == 0 => parsed,
+      InstallProfileInspectLoadFailure(:final message) =>
+        InstallProfileInspectLoadFailure(
+          exitCode: result.exitCode,
+          message: message,
+          diagnostic: result.stderr,
+        ),
+      InspectedInstallProfile() => InstallProfileInspectLoadFailure(
+        exitCode: result.exitCode,
+        message: operationFailureMessage(result, 'inspect-install-profile'),
+        diagnostic: result.stderr,
+      ),
+    };
+  }
+
+  Future<ProgramProfileApplyLoadResult> applyProgramProfile({
+    required String profileId,
+    required String bottleId,
+    required String programPath,
+  }) async {
+    final result = await run([
+      'apply-program-profile',
+      profileId,
+      '--bottle',
+      bottleId,
+      '--program',
+      programPath,
+      '--json',
+    ]);
+    final parsed = parseProgramProfileApplyPayload(result.stdout);
+
+    return switch (parsed) {
+      AppliedProgramProfile() when result.exitCode == 0 => parsed,
+      ProgramProfileApplyLoadFailure(:final message) =>
+        ProgramProfileApplyLoadFailure(
+          exitCode: result.exitCode,
+          message: message,
+          diagnostic: result.stderr,
+        ),
+      AppliedProgramProfile() => ProgramProfileApplyLoadFailure(
+        exitCode: result.exitCode,
+        message: operationFailureMessage(result, 'apply-program-profile'),
+        diagnostic: result.stderr,
+      ),
+    };
+  }
+
   Future<BottleUpdateLoadResult> pinProgram({
     required String bottleId,
     required String name,

@@ -328,6 +328,8 @@ final class KonyakBottleActions {
 final class KonyakProgramActions {
   const KonyakProgramActions({
     this.runProgramAction = const BottleSummaryActionAvailability.unavailable(),
+    this.showProfileManagerAction =
+        const BottleSummaryActionAvailability.unavailable(),
     this.runProgramPathAction =
         const ProgramPathActionAvailability.unavailable(),
     this.pinProgramAction = const BottleSummaryActionAvailability.unavailable(),
@@ -344,6 +346,7 @@ final class KonyakProgramActions {
   });
 
   final BottleSummaryActionAvailability runProgramAction;
+  final BottleSummaryActionAvailability showProfileManagerAction;
   final ProgramPathActionAvailability runProgramPathAction;
   final BottleSummaryActionAvailability pinProgramAction;
   final PinnedProgramActionAvailability loadPinnedProgramSettingsAction;

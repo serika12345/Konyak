@@ -1551,6 +1551,102 @@ abstract class KonyakLocalizations {
   /// **'Installed {runtimeName}'**
   String installedRuntime(String runtimeName);
 
+  /// Konyak UI string: Applied {profileName}
+  ///
+  /// In en, this message translates to:
+  /// **'Applied {profileName}'**
+  String appliedProfile(String profileName);
+
+  /// Konyak UI string: Profile Manager
+  ///
+  /// In en, this message translates to:
+  /// **'Profile Manager'**
+  String get profileManager;
+
+  /// Konyak UI string: Profile Manager in {bottleName}
+  ///
+  /// In en, this message translates to:
+  /// **'Profile Manager in {bottleName}'**
+  String profileManagerIn(String bottleName);
+
+  /// Konyak UI string: Loading install profiles...
+  ///
+  /// In en, this message translates to:
+  /// **'Loading install profiles...'**
+  String get loadingInstallProfilesEllipsis;
+
+  /// Konyak UI string: Loading profile details...
+  ///
+  /// In en, this message translates to:
+  /// **'Loading profile details...'**
+  String get loadingProfileDetailsEllipsis;
+
+  /// Konyak UI string: Applying {profileName}...
+  ///
+  /// In en, this message translates to:
+  /// **'Applying {profileName}...'**
+  String applyingProfileEllipsis(String profileName);
+
+  /// Konyak UI string: Apply profile
+  ///
+  /// In en, this message translates to:
+  /// **'Apply profile'**
+  String get applyProfile;
+
+  /// Konyak UI string: No install profiles found.
+  ///
+  /// In en, this message translates to:
+  /// **'No install profiles found.'**
+  String get noInstallProfilesFound;
+
+  /// Konyak UI string: Platforms
+  ///
+  /// In en, this message translates to:
+  /// **'Platforms'**
+  String get installProfilePlatforms;
+
+  /// Konyak UI string: Windows version
+  ///
+  /// In en, this message translates to:
+  /// **'Windows version'**
+  String get installProfileWindowsVersion;
+
+  /// Konyak UI string: Default program path
+  ///
+  /// In en, this message translates to:
+  /// **'Default program path'**
+  String get installProfileManagedProgramPath;
+
+  /// Konyak UI string: Dependencies
+  ///
+  /// In en, this message translates to:
+  /// **'Dependencies'**
+  String get installProfileDependencies;
+
+  /// Konyak UI string: None
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get installProfileNoDependencies;
+
+  /// Konyak UI string: Run completion
+  ///
+  /// In en, this message translates to:
+  /// **'Run completion'**
+  String get installProfileRunCompletionPolicy;
+
+  /// Konyak UI string: Compatibility rules
+  ///
+  /// In en, this message translates to:
+  /// **'Compatibility rules'**
+  String get installProfileCompatibilityRules;
+
+  /// Konyak UI string: None
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get installProfileNoCompatibilityRules;
+
   /// Konyak UI string: Reinstalled {runtimeName}
   ///
   /// In en, this message translates to:
