@@ -104,10 +104,14 @@ sets `KONYAK_RUNTIME_PROFILE=development`, points `KONYAK_MACOS_WINE_HOME` at
 manifest under `.dart_tool/konyak/dev-runtime-source/macos-wine-stack`.
 `scripts/prepare_macos_dev_runtime_stack.zsh` resolves the selected Konyak
 macOS runtime release from `runtime/macos-wine-release.json` and refreshes that
-cache before launch. To switch the development build to another published
-runtime release, set `KONYAK_DEV_MACOS_RUNTIME_RELEASE_TAG` before launching
-VSCode or the Nix terminal task; use `latest` for the latest release. A complete
-manifest URL can be forced with `KONYAK_DEV_MACOS_WINE_STACK_MANIFEST`.
+cache before launch. The supported VSCode, Nix terminal, and Agent Watch launch
+paths also run it with `--ensure-runtime`: they compare the selected manifest
+with the installed component metadata and update the managed development
+runtime only when it is missing or stale. To switch the development build to
+another published runtime release, set `KONYAK_DEV_MACOS_RUNTIME_RELEASE_TAG`
+before launching VSCode or the Nix terminal task; use `latest` for the latest
+release. A complete manifest URL can be forced with
+`KONYAK_DEV_MACOS_WINE_STACK_MANIFEST`.
 These runtime values are passed both as process environment and as
 `--dart-define` values so the Flutter app can forward them explicitly to the
 CLI child process.
@@ -135,12 +139,12 @@ symlinks most of the Nix-provided SDK while copying the macOS engine artifacts
 as writable files. The first run can take a little time because the copied
 artifacts are hundreds of megabytes. The directory is ignored by git.
 
-The same task also runs `scripts/prepare_macos_dev_runtime_stack.zsh`. It does
-not install the runtime eagerly or build component archives in the parent
-repository; it prepares a complete source manifest produced by
-`runtime/konyak-macos-runtime` so the Konyak Settings runtime action can install
-or repair `.dart_tool/konyak/dev-runtime/macos-wine` through the normal CLI
-contract.
+The same task also runs `scripts/prepare_macos_dev_runtime_stack.zsh` with
+`--ensure-runtime`. It refreshes the complete source manifest produced by
+`runtime/konyak-macos-runtime`, then updates
+`.dart_tool/konyak/dev-runtime/macos-wine` through the normal CLI contract only
+when the installed component versions are not current. It never builds
+component archives in the parent repository.
 
 The launch configuration forces macOS Flutter builds to use the real Xcode
 toolchain:

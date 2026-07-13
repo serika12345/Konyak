@@ -68,10 +68,6 @@ DEV_RUNTIME_STACK_MANIFEST = os.environ.get(
 )
 
 
-def is_remote_manifest(value: str) -> bool:
-    return value.startswith("https://") or value.startswith("http://")
-
-
 def prepare_sdk() -> Path:
     result = subprocess.run(
         [str(SDK_PREPARE_SCRIPT), "--print-sdk-path"],
@@ -86,15 +82,23 @@ def prepare_sdk() -> Path:
     return Path(lines[-1])
 
 
-def prepare_runtime_stack() -> None:
-    if is_remote_manifest(DEV_RUNTIME_STACK_MANIFEST):
-        return
-
+def prepare_runtime_stack(sdk: Path) -> None:
+    env = os.environ.copy()
+    env.update(
+        {
+            "KONYAK_DART_EXECUTABLE": str(sdk / "bin" / "dart"),
+            "KONYAK_CLI_SCRIPT": str(
+                ROOT / "packages" / "konyak_cli" / "bin" / "konyak.dart",
+            ),
+            "KONYAK_MACOS_WINE_HOME": str(DEV_RUNTIME_ROOT),
+            "KONYAK_DEV_MACOS_WINE_STACK_MANIFEST": DEV_RUNTIME_STACK_MANIFEST,
+        },
+    )
     subprocess.run(
-        [str(RUNTIME_STACK_PREPARE_SCRIPT), "--print-manifest-path"],
+        [str(RUNTIME_STACK_PREPARE_SCRIPT), "--ensure-runtime"],
         cwd=ROOT,
+        env=env,
         check=True,
-        stdout=subprocess.DEVNULL,
         text=True,
     )
 
@@ -197,7 +201,7 @@ def print_changed_paths(paths: list[Path]) -> None:
 
 def run() -> int:
     sdk = prepare_sdk()
-    prepare_runtime_stack()
+    prepare_runtime_stack(sdk)
     master_fd, slave_fd = pty.openpty()
     process = subprocess.Popen(
         flutter_command(sdk),
