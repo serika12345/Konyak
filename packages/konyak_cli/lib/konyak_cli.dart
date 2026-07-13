@@ -10,6 +10,7 @@ export 'src/domain/program/program_catalog_models.dart';
 export 'src/domain/program/program_graphics_backend_hints.dart';
 export 'src/domain/program/program_mutation_models.dart';
 export 'src/domain/program/program_profile_catalog.dart';
+export 'src/domain/program/program_profile_install_models.dart';
 export 'src/domain/program/program_profile_models.dart';
 export 'src/domain/program/program_profiles.dart';
 export 'src/domain/program/program_registry_models.dart';

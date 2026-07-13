@@ -62,9 +62,14 @@ ProgramProfileRecord programProfileFromInstallProfile({
   required ProgramPath managedProgramPath,
 }) {
   return ProgramProfileRecord(
+    profileSchemaVersion: konyakProfileSchemaVersion,
     profileId: installProfile.id.value,
     profileVersion: installProfile.profileVersion.value,
+    profileSourceKind: installProfile.sourceKind,
+    profileSourceId: installProfile.sourceId.value,
+    profileDigest: installProfile.manifestDigest.value,
     managedProgramPath: managedProgramPath.value,
+    installerResource: installProfile.installerResource,
     compatibilityProfileId: installProfile.compatibilityProfile.id.value,
     compatibilityProfileVersion:
         installProfile.compatibilityProfile.profileVersion.value,

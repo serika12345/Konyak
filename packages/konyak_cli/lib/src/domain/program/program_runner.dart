@@ -85,6 +85,37 @@ class ProgramRunPlanner {
     );
   }
 
+  Option<ProgramRunRequest> planInstaller({
+    required BottleRecord bottle,
+    required ProgramPath installerPath,
+  }) {
+    final arguments = switch (hostPlatform) {
+      KonyakHostPlatform.linux => wineArgumentsForProgramPath(installerPath),
+      KonyakHostPlatform.macos => macosInstallerArgumentsForProgramPath(
+        installerPath,
+      ),
+    };
+    return arguments.map(
+      (arguments) => switch (hostPlatform) {
+        KonyakHostPlatform.linux => linuxWineRequest(
+          bottle: bottle,
+          programPath: installerPath,
+          wineArguments: arguments,
+          environment: environment,
+          programSettings: ProgramSettingsRecord(),
+        ),
+        KonyakHostPlatform.macos => macosWineRequest(
+          bottle: bottle,
+          programPath: installerPath,
+          wineArguments: arguments,
+          environment: environment,
+          macosMajorVersion: macosMajorVersion,
+          programSettings: ProgramSettingsRecord(),
+        ),
+      },
+    );
+  }
+
   Option<ProgramRunRequest> planBottleCommand({
     required BottleRecord bottle,
     required BottleCommand command,

@@ -34,6 +34,7 @@ CliCommandContext testCliCommandContext({
     programMetadataExtractor: const NoopProgramMetadataExtractor(),
     installProfileCatalog:
         installProfileCatalog ?? testInstallProfileCatalog(profiles: const []),
+    programProfileInstaller: null,
     winetricksVerbRepository: const UnavailableWinetricksVerbRepository(),
     runtimeCatalog: StaticRuntimeCatalog(const []),
     programRunPlanner:
@@ -54,6 +55,7 @@ CliCommandContext testCliCommandContext({
     macosSetupChecker: null,
     appSettingsRepository: null,
     runtimeInstallProgressSink: null,
+    programProfileInstallProgressSink: null,
     linuxExternalProgramLauncherDiagnosticSink: null,
   );
 }

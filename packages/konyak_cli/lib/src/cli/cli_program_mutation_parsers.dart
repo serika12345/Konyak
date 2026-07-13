@@ -213,6 +213,49 @@ class ProgramProfileApplyCliRequest {
   final ProgramPath programPath;
 }
 
+class ProgramProfileInstallCliRequest {
+  const ProgramProfileInstallCliRequest({
+    required this.profileId,
+    required this.bottleId,
+    required this.emitProgress,
+  });
+
+  final ProfileId profileId;
+  final BottleId bottleId;
+  final bool emitProgress;
+}
+
+ProgramProfileInstallCliRequest? parseJsonProgramProfileInstallRequest(
+  List<String> arguments,
+) {
+  return _nullableParsedRequest(
+    parseJsonProgramProfileInstallRequestOption(arguments),
+  );
+}
+
+Option<ProgramProfileInstallCliRequest>
+parseJsonProgramProfileInstallRequestOption(List<String> arguments) {
+  return Option.Do(($) {
+    final results = $(
+      _parseJsonProgramMutationCommand(
+        arguments,
+        command: 'install-program-profile',
+        options: const <String>['bottle'],
+        flags: const <String>['progress-json'],
+        restCount: 1,
+      ),
+    );
+    final profileId = $(_requiredProfileIdFromRest(results));
+    final bottleId = $(_requiredBottleIdOption(results, 'bottle'));
+
+    return ProgramProfileInstallCliRequest(
+      profileId: profileId,
+      bottleId: bottleId,
+      emitProgress: results['progress-json'] == true,
+    );
+  });
+}
+
 ProgramProfileApplyCliRequest? parseJsonProgramProfileApplyRequest(
   List<String> arguments,
 ) {
@@ -320,11 +363,17 @@ Option<ArgResults> _parseJsonProgramMutationCommand(
   required String command,
   required Iterable<String> options,
   required int restCount,
+  Iterable<String> flags = const <String>[],
 }) {
   return Option.Do(($) {
     final results = $(
       Option.fromNullable(
-        parseJsonCliCommand(arguments, command: command, options: options),
+        parseJsonCliCommand(
+          arguments,
+          command: command,
+          options: options,
+          flags: flags,
+        ),
       ),
     );
 

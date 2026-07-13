@@ -23,6 +23,17 @@ void main() {
     expect(() => _installerResource(kind: 'http'), throwsArgumentError);
   });
 
+  test('validates persisted profile identity values', () {
+    expect(ProfileSourceId('steam.json').value, 'steam.json');
+    expect(
+      ProfileManifestDigest('ABCDEF0123456789' * 4).value,
+      'abcdef0123456789' * 4,
+    );
+    expect(() => ProfileSourceId('../steam.json'), throwsArgumentError);
+    expect(() => ProfileSourceId('/steam.json'), throwsArgumentError);
+    expect(() => ProfileManifestDigest('not-a-digest'), throwsArgumentError);
+  });
+
   for (final invalidUrl in <String>[
     'http://downloads.example.test/Setup.exe',
     'https:///Setup.exe',

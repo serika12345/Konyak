@@ -8,9 +8,10 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
 
 ## Current Work Snapshot
 
-- Timestamp: 2026-07-13 21:05 JST
-- State: `paused`
-- Branch: `task/profile-installer-flow`; base commit is `6f23f55`.
+- Timestamp: 2026-07-13 22:25 JST
+- State: `planned`
+- Branch: `task/profile-installer-flow`; the previous verified step is commit
+  `a5da3e4` and the branch base is `6f23f55`.
 - Related TODO: `docs/todo.md` Next Tasks, "Build a distributable compatibility
   profile system".
 - Related issue: <https://github.com/serika12345/Konyak/issues/44>
@@ -37,22 +38,55 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
     digest to the built-in Steam profile
   - completed an independent implementation audit and corrected its Flutter
     external-data validation finding
+  - committed the completed installer manifest/read contract as `a5da3e4`
+  - accepted the review gate and changed the delivery plan to keep IP-P2
+    through IP-P4 on this feature branch, with one pull request after the full
+    automatic installation feature is complete
+  - added the public `install-program-profile` CLI command with versioned final
+    JSON and optional stdout JSONL stage progress
+  - added download-before-execution preflight for profile platform, complete
+    host runtime and runner kind, bottle Windows version, every declared
+    winetricks verb, and every installer/dependency plan
+  - added a profile-owned HTTPS-only resource fetcher with redirect, timeout,
+    and size limits, private exclusive staging, SHA-256 verification, typed
+    cleanup, and no shell execution
+  - added installer-only macOS `start /wait /unix` planning without changing
+    normal program launch, plus MSI and Linux installer planning
+  - made installer and dependency startup/non-zero failures stop all later
+    stages, verified managed executables stay inside `drive_c`, and persisted
+    profile bindings only after complete success
+  - persisted the built-in manifest digest, source identity, installer resource
+    identity, managed path, and compatibility profile identity directly in the
+    unreleased binding shape
+  - completed an independent IP-P2 audit, dynamically reproduced and fixed a
+    cache-directory symlink escape, and added a nine-case public CLI failure
+    matrix plus manual apply/repair no-installer contracts
 - Remaining work:
-  - review IP-P1 and then complete IP-P2 through IP-P4
+  - complete IP-P3 and IP-P4
   - after the automatic installation path is stable, resume user profile
     storage, canonical import/export, editing, and sharing work
-- Next action: review the IP-P1 manifest/read-contract diff. After approval,
-  start IP-P2 on `task/profile-install-cli` with failing command-orchestration
-  tests; do not add resource I/O to the IP-P1 branch.
+- Next action: start IP-P3 with a failing Profile Manager golden and Flutter CLI
+  streaming parser/client tests before adding separate automatic-install and
+  manual-apply actions.
 - Verification performed:
   - TDD red states captured for the new CLI/domain and Flutter parser contracts
-  - `just cli-format-check`, `just cli-analyze`, and `just cli-test` passed; 460
+  - `just cli-format-check`, `just cli-analyze`, and `just cli-test` passed; 487
     CLI tests passed
   - `just flutter-format-check`, `just flutter-analyze`, and
     `just flutter-test` passed; 477 Flutter tests passed after the final parser
     hardening
   - `just verify-governance`, `just verify-safety`, `just format-check`, and
     `just lint` passed
+  - the independent audit dynamically proved the old deterministic digest
+    directory could follow a symlink and overwrite a file outside the cache;
+    six hardened resource-boundary tests passed after moving to private unique
+    staging with real-path containment
+  - the remaining same-UID active symlink-race boundary is documented in the
+    fetcher: Dart cannot pass an `O_NOFOLLOW` descriptor to curl, while the
+    private mode-0700 staging prevents hostile profiles and other users from
+    supplying the raced path
+  - real network download and Wine installer execution were deliberately
+    deferred to the maintained synthetic public-CLI smoke in IP-P4
   - the Steam installer returned HTTP 200 with no redirect and 2,380,800 bytes;
     its SHA-256 matched
     `7d3654531c32d941b8cae81c4137fc542172bfa9635f169cb392f245a0a12bcb`

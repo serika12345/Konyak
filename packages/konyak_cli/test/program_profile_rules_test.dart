@@ -5,6 +5,64 @@ import 'package:test/test.dart';
 import 'support/install_profile_fixtures.dart';
 
 void main() {
+  test('plans profile installers with blocking platform-specific argv', () {
+    final bottle = BottleRecord(
+      id: 'test',
+      name: 'Test',
+      path: '/bottles/test',
+      windowsVersion: 'win10',
+    );
+    final macosPlanner = ProgramRunPlanner(
+      hostPlatform: KonyakHostPlatform.macos,
+      environment: HostEnvironment({'HOME': '/Users/test'}),
+    );
+    final linuxPlanner = ProgramRunPlanner(
+      hostPlatform: KonyakHostPlatform.linux,
+      environment: HostEnvironment({
+        'HOME': '/home/test',
+        'KONYAK_LINUX_WINE_HOME': '/runtime',
+      }),
+    );
+
+    final macosExe = macosPlanner
+        .planInstaller(
+          bottle: bottle,
+          installerPath: ProgramPath('/downloads/Setup.exe'),
+        )
+        .getOrElse(() => throw TestFailure('Expected macOS EXE plan.'));
+    final macosMsi = macosPlanner
+        .planInstaller(
+          bottle: bottle,
+          installerPath: ProgramPath('/downloads/Setup.msi'),
+        )
+        .getOrElse(() => throw TestFailure('Expected macOS MSI plan.'));
+    final linuxExe = linuxPlanner
+        .planInstaller(
+          bottle: bottle,
+          installerPath: ProgramPath('/downloads/Setup.exe'),
+        )
+        .getOrElse(() => throw TestFailure('Expected Linux EXE plan.'));
+
+    expect(macosExe.arguments.value, [
+      'start',
+      '/wait',
+      '/unix',
+      '/downloads/Setup.exe',
+    ]);
+    expect(macosMsi.arguments.value, ['msiexec', '/i', '/downloads/Setup.msi']);
+    expect(linuxExe.arguments.value, ['/downloads/Setup.exe']);
+    expect(macosExe.completionPolicy, ProgramRunCompletionPolicy.waitForExit);
+
+    final normalMacosExe = macosPlanner
+        .plan(bottle: bottle, programPath: ProgramPath('/downloads/Setup.exe'))
+        .getOrElse(() => throw TestFailure('Expected normal macOS EXE plan.'));
+    expect(normalMacosExe.arguments.value, [
+      'start',
+      '/unix',
+      '/downloads/Setup.exe',
+    ]);
+  });
+
   test('preserves dependency winetricks order in the domain model', () {
     final profile = testInstallProfile(
       dependencyWinetricksVerbs: const ['vcrun2022', 'corefonts'],
@@ -84,6 +142,9 @@ void main() {
           profileId: installProfile.id.value,
           profileVersion: installProfile.profileVersion.value,
           managedProgramPath: installProfile.managedProgramPath.value,
+          installerResource: installProfile.installerResource,
+          profileSourceId: installProfile.sourceId.value,
+          profileDigest: installProfile.manifestDigest.value,
           compatibilityProfileId: installProfile.compatibilityProfile.id.value,
           compatibilityProfileVersion:
               installProfile.compatibilityProfile.profileVersion.value,
@@ -133,6 +194,9 @@ void main() {
       profileId: 'first-profile',
       profileVersion: 1,
       managedProgramPath: r'C:\Test App\Test.exe',
+      installerResource: testInstallerResource(),
+      profileSourceId: 'first-profile.json',
+      profileDigest: 'fedcba9876543210' * 4,
       compatibilityProfileId: 'first-profile',
       compatibilityProfileVersion: 1,
     );
@@ -140,6 +204,9 @@ void main() {
       profileId: 'second-profile',
       profileVersion: 1,
       managedProgramPath: r'c:/test app/test.exe',
+      installerResource: testInstallerResource(),
+      profileSourceId: 'second-profile.json',
+      profileDigest: 'fedcba9876543210' * 4,
       compatibilityProfileId: 'second-profile',
       compatibilityProfileVersion: 1,
     );
