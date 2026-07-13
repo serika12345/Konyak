@@ -15,6 +15,93 @@ const konyakMaxDependencyWinetricksVerbs = 64;
 const konyakMaxDependencyWinetricksVerbLength = 128;
 const konyakMaxInstallerResourceUrlLength = 8192;
 const konyakMaxInstallerResourceFileNameLength = 255;
+const konyakProfileSchemaVersion = 1;
+const konyakMaxProfileSourceIdLength = 1024;
+
+enum ProfileSourceKind {
+  builtin('builtin');
+
+  const ProfileSourceKind(this.value);
+
+  final String value;
+}
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class ProfileSchemaVersion with _$ProfileSchemaVersion {
+  const ProfileSchemaVersion._();
+
+  factory ProfileSchemaVersion(int value) {
+    if (value != konyakProfileSchemaVersion) {
+      throw ArgumentError.value(
+        value,
+        'profileSchemaVersion',
+        'must be $konyakProfileSchemaVersion',
+      );
+    }
+    return ProfileSchemaVersion._validated(value);
+  }
+
+  const factory ProfileSchemaVersion._validated(int value) =
+      _ProfileSchemaVersion;
+}
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class ProfileSourceId with _$ProfileSourceId {
+  const ProfileSourceId._();
+
+  factory ProfileSourceId(String value) {
+    final components = value.split('/');
+    if (value.isEmpty ||
+        value.length > konyakMaxProfileSourceIdLength ||
+        value.startsWith('/') ||
+        value.contains('\\') ||
+        !RegExp(r'^[A-Za-z0-9._+/-]+$').hasMatch(value) ||
+        components.any(
+          (component) =>
+              component.isEmpty || component == '.' || component == '..',
+        )) {
+      throw ArgumentError.value(
+        value,
+        'sourceId',
+        'must be a safe non-empty relative source identifier',
+      );
+    }
+    return ProfileSourceId._validated(value);
+  }
+
+  const factory ProfileSourceId._validated(String value) = _ProfileSourceId;
+}
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class ProfileManifestDigest with _$ProfileManifestDigest {
+  const ProfileManifestDigest._();
+
+  factory ProfileManifestDigest(String value) {
+    if (!RegExp(r'^[0-9A-Fa-f]{64}$').hasMatch(value)) {
+      throw ArgumentError.value(
+        value,
+        'manifestDigest',
+        'must contain exactly 64 hexadecimal characters',
+      );
+    }
+    return ProfileManifestDigest._validated(value.toLowerCase());
+  }
+
+  const factory ProfileManifestDigest._validated(String value) =
+      _ProfileManifestDigest;
+}
 
 enum InstallerResourceKind {
   https('https');
@@ -154,6 +241,8 @@ abstract class InstallProfileRecord with _$InstallProfileRecord {
 
   factory InstallProfileRecord({
     required String id,
+    required String sourceId,
+    required String manifestDigest,
     required String name,
     required int profileVersion,
     required String summary,
@@ -163,6 +252,7 @@ abstract class InstallProfileRecord with _$InstallProfileRecord {
     required InstallerResourceRecord installerResource,
     required Iterable<String> dependencyWinetricksVerbs,
     required CompatibilityProfileRecord compatibilityProfile,
+    ProfileSourceKind sourceKind = ProfileSourceKind.builtin,
     ProgramRunCompletionPolicy runCompletionPolicy =
         ProgramRunCompletionPolicy.waitForExit,
   }) {
@@ -172,6 +262,8 @@ abstract class InstallProfileRecord with _$InstallProfileRecord {
     _validateDependencyWinetricksVerbs(validatedDependencyWinetricksVerbs);
     return InstallProfileRecord._validated(
       id: ProfileId(id),
+      sourceId: ProfileSourceId(sourceId),
+      manifestDigest: ProfileManifestDigest(manifestDigest),
       name: ProfileName(name),
       profileVersion: ProfileVersion(profileVersion),
       summary: ProfileSummary(summary),
@@ -183,12 +275,15 @@ abstract class InstallProfileRecord with _$InstallProfileRecord {
       installerResource: installerResource,
       dependencyWinetricksVerbs: validatedDependencyWinetricksVerbs,
       compatibilityProfile: compatibilityProfile,
+      sourceKind: sourceKind,
       runCompletionPolicy: runCompletionPolicy,
     );
   }
 
   const factory InstallProfileRecord._validated({
     required ProfileId id,
+    required ProfileSourceId sourceId,
+    required ProfileManifestDigest manifestDigest,
     required ProfileName name,
     required ProfileVersion profileVersion,
     required ProfileSummary summary,
@@ -198,6 +293,7 @@ abstract class InstallProfileRecord with _$InstallProfileRecord {
     required InstallerResourceRecord installerResource,
     required IList<WinetricksVerbId> dependencyWinetricksVerbs,
     required CompatibilityProfileRecord compatibilityProfile,
+    required ProfileSourceKind sourceKind,
     required ProgramRunCompletionPolicy runCompletionPolicy,
   }) = _InstallProfileRecord;
 }
@@ -426,20 +522,35 @@ abstract class ProgramProfileRecord with _$ProgramProfileRecord {
     required String managedProgramPath,
     required String compatibilityProfileId,
     required int compatibilityProfileVersion,
+    required InstallerResourceRecord installerResource,
+    required String profileSourceId,
+    required String profileDigest,
+    int profileSchemaVersion = konyakProfileSchemaVersion,
+    ProfileSourceKind profileSourceKind = ProfileSourceKind.builtin,
   }) {
     return ProgramProfileRecord._validated(
+      profileSchemaVersion: ProfileSchemaVersion(profileSchemaVersion),
       profileId: ProfileId(profileId),
       profileVersion: ProfileVersion(profileVersion),
+      profileSourceKind: profileSourceKind,
+      profileSourceId: ProfileSourceId(profileSourceId),
+      profileDigest: ProfileManifestDigest(profileDigest),
       managedProgramPath: ProgramPath(managedProgramPath),
+      installerResource: installerResource,
       compatibilityProfileId: ProfileId(compatibilityProfileId),
       compatibilityProfileVersion: ProfileVersion(compatibilityProfileVersion),
     );
   }
 
   const factory ProgramProfileRecord._validated({
+    required ProfileSchemaVersion profileSchemaVersion,
     required ProfileId profileId,
     required ProfileVersion profileVersion,
+    required ProfileSourceKind profileSourceKind,
+    required ProfileSourceId profileSourceId,
+    required ProfileManifestDigest profileDigest,
     required ProgramPath managedProgramPath,
+    required InstallerResourceRecord installerResource,
     required ProfileId compatibilityProfileId,
     required ProfileVersion compatibilityProfileVersion,
   }) = _ProgramProfileRecord;

@@ -1,4 +1,5 @@
 import '../domain/program/program_mutation_models.dart';
+import '../domain/program/program_profile_install_models.dart';
 import '../domain/shared/domain_value_objects.dart';
 import 'cli_bottle_mutation_handlers.dart';
 import 'cli_bottle_results.dart';
@@ -56,6 +57,34 @@ CliResult? handleProgramProfileCommand(
         );
   }
 
+  final installRequest = parseJsonProgramProfileInstallRequest(arguments);
+  if (installRequest != null) {
+    final installer = context.programProfileInstaller;
+    if (installer == null) {
+      return jsonError(
+        exitCode: 69,
+        code: 'programProfileInstallerUnavailable',
+        message: 'Program profile installer is unavailable.',
+      );
+    }
+
+    final progressSink = installRequest.emitProgress
+        ? context.programProfileInstallProgressSink ??
+              const NoopProgramProfileInstallProgressSink()
+        : const NoopProgramProfileInstallProgressSink();
+    return programProfileInstallJsonResult(
+      request: installRequest,
+      result: installer
+          .withProgressSink(progressSink)
+          .install(
+            ProgramProfileInstallRequest(
+              profileId: installRequest.profileId,
+              bottleId: installRequest.bottleId,
+            ),
+          ),
+    );
+  }
+
   final repairRequest = parseJsonProgramProfileRepairRequest(arguments);
   if (repairRequest != null) {
     final repository = context.bottleRepository;
@@ -79,6 +108,57 @@ CliResult? handleProgramProfileCommand(
   }
 
   return null;
+}
+
+CliResult programProfileInstallJsonResult({
+  required ProgramProfileInstallCliRequest request,
+  required ProgramProfileInstallResult result,
+}) {
+  return switch (result) {
+    ProgramProfileInstalled(:final bottleId, :final profile) => jsonSuccess(
+      <String, Object?>{
+        'programProfileInstall': <String, Object?>{
+          'stage': ProgramProfileInstallStage.persistence.value,
+          'programProfile': programProfileJson(
+            bottleId: bottleId.value,
+            profile: profile,
+          ),
+        },
+      },
+    ),
+    ProgramProfileInstallFailed(
+      :final stage,
+      :final code,
+      :final message,
+      :final dependencyIndex,
+      :final dependencyVerb,
+      :final processExitCode,
+    ) =>
+      jsonError(
+        exitCode: 70,
+        code: code,
+        message: message,
+        extra: <String, Object?>{
+          'programProfileInstall': <String, Object?>{
+            'profileId': request.profileId.value,
+            'bottleId': request.bottleId.value,
+            'stage': stage.value,
+            ...dependencyIndex.match(
+              () => const <String, Object?>{},
+              (value) => <String, Object?>{'dependencyIndex': value},
+            ),
+            ...dependencyVerb.match(
+              () => const <String, Object?>{},
+              (value) => <String, Object?>{'dependencyVerb': value.value},
+            ),
+            ...processExitCode.match(
+              () => const <String, Object?>{},
+              (value) => <String, Object?>{'processExitCode': value},
+            ),
+          },
+        },
+      ),
+  };
 }
 
 CliResult programProfileUpdateJsonResult({

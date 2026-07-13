@@ -401,25 +401,56 @@ Option<List<ProgramProfileRecord>> programProfileRecordsFromJson(
       return const Option.none();
     }
 
+    final profileSchemaVersion = item['profileSchemaVersion'];
     final profileId = item['profileId'];
     final profileVersion = item['profileVersion'];
+    final profileSourceKind = item['profileSourceKind'];
+    final profileSourceId = item['profileSourceId'];
+    final profileDigest = item['profileDigest'];
     final managedProgramPath = item['managedProgramPath'];
     final compatibilityProfileId = item['compatibilityProfileId'];
     final compatibilityProfileVersion = item['compatibilityProfileVersion'];
-    if (profileId is! String ||
+    final installerResource = item['installerResource'];
+    if (profileSchemaVersion is! int ||
+        profileId is! String ||
         profileVersion is! int ||
+        profileSourceKind != ProfileSourceKind.builtin.value ||
+        profileSourceId is! String ||
+        profileDigest is! String ||
         managedProgramPath is! String ||
         compatibilityProfileId is! String ||
-        compatibilityProfileVersion is! int) {
+        compatibilityProfileVersion is! int ||
+        installerResource is! Map<String, dynamic>) {
+      return const Option.none();
+    }
+
+    final installerKind = installerResource['kind'];
+    final installerUrl = installerResource['url'];
+    final installerSha256 = installerResource['sha256'];
+    final installerFileName = installerResource['fileName'];
+    if (installerKind is! String ||
+        installerUrl is! String ||
+        installerSha256 is! String ||
+        installerFileName is! String) {
       return const Option.none();
     }
 
     try {
       profiles.add(
         ProgramProfileRecord(
+          profileSchemaVersion: profileSchemaVersion,
           profileId: profileId,
           profileVersion: profileVersion,
+          profileSourceKind: ProfileSourceKind.builtin,
+          profileSourceId: profileSourceId,
+          profileDigest: profileDigest,
           managedProgramPath: managedProgramPath,
+          installerResource: InstallerResourceRecord(
+            kind: installerKind,
+            url: installerUrl,
+            sha256: installerSha256,
+            fileName: installerFileName,
+          ),
           compatibilityProfileId: compatibilityProfileId,
           compatibilityProfileVersion: compatibilityProfileVersion,
         ),

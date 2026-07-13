@@ -69,6 +69,32 @@ void main() {
   });
 
   test('parses program profile requests as explicit options', () {
+    final installRequest = _expectSome(
+      parseJsonProgramProfileInstallRequestOption(const [
+        'install-program-profile',
+        'steam',
+        '--bottle',
+        'games',
+        '--json',
+      ]),
+    );
+
+    expect(installRequest.profileId.value, 'steam');
+    expect(installRequest.bottleId.value, 'games');
+    expect(installRequest.emitProgress, isFalse);
+
+    final progressInstallRequest = _expectSome(
+      parseJsonProgramProfileInstallRequestOption(const [
+        'install-program-profile',
+        'steam',
+        '--bottle',
+        'games',
+        '--progress-json',
+        '--json',
+      ]),
+    );
+    expect(progressInstallRequest.emitProgress, isTrue);
+
     final applyRequest = _expectSome(
       parseJsonProgramProfileApplyRequestOption(const [
         'apply-program-profile',

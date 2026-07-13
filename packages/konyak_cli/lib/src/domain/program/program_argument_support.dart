@@ -72,6 +72,22 @@ Option<ProgramRunArguments> macosWineArgumentsForProgramPath(
   return wineArgumentsForProgramPath(programPath);
 }
 
+Option<ProgramRunArguments> macosInstallerArgumentsForProgramPath(
+  ProgramPath installerPath,
+) {
+  final path = installerPath.value;
+  final lowerCasePath = path.toLowerCase();
+  if (lowerCasePath.endsWith('.exe')) {
+    return Option.of(
+      ProgramRunArguments(<String>['start', '/wait', '/unix', path]),
+    );
+  }
+  if (lowerCasePath.endsWith('.msi')) {
+    return Option.of(ProgramRunArguments(<String>['msiexec', '/i', path]));
+  }
+  return const Option.none();
+}
+
 bool _looksLikeWindowsPath(String path) {
   return RegExp(r'^[a-zA-Z]:[\\/]').hasMatch(path) || path.startsWith(r'\\');
 }

@@ -14,6 +14,9 @@ Map<String, Object?> installProfileJson(InstallProfileRecord profile) {
     'id': profile.id.value,
     'name': profile.name.value,
     'profileVersion': profile.profileVersion.value,
+    'profileSourceKind': profile.sourceKind.value,
+    'profileSourceId': profile.sourceId.value,
+    'profileDigest': profile.manifestDigest.value,
     'summary': profile.summary.value,
     'platforms': profile.platforms
         .map((platform) => platform.value)

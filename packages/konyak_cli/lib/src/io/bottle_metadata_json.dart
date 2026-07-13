@@ -54,10 +54,20 @@ Map<String, Object?> bottleRuntimeSettingsJson(BottleRuntimeSettings settings) {
 
 Map<String, Object?> programProfileRecordJson(ProgramProfileRecord profile) {
   return <String, Object?>{
+    'profileSchemaVersion': profile.profileSchemaVersion.value,
     'profileId': profile.profileId.value,
     'profileVersion': profile.profileVersion.value,
+    'profileSourceKind': profile.profileSourceKind.value,
+    'profileSourceId': profile.profileSourceId.value,
+    'profileDigest': profile.profileDigest.value,
     'managedProgramPath': profile.managedProgramPath.value,
     'compatibilityProfileId': profile.compatibilityProfileId.value,
     'compatibilityProfileVersion': profile.compatibilityProfileVersion.value,
+    'installerResource': <String, Object?>{
+      'kind': profile.installerResource.kind.value,
+      'url': profile.installerResource.url.value,
+      'sha256': profile.installerResource.sha256.value,
+      'fileName': profile.installerResource.fileName.value,
+    },
   };
 }
