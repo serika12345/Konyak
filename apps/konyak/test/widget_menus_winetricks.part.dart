@@ -1,6 +1,90 @@
 part of 'widget_test.dart';
 
 void defineMenuWinetricksAndInstalledProgramWidgetTests() {
+  testWidgets('Profile Manager automatic install action matches golden', (
+    WidgetTester tester,
+  ) async {
+    await _loadKonyakTestFonts();
+    final goldenKey = GlobalKey();
+    await tester.binding.setSurfaceSize(const Size(1040, 720));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: konyakThemeData(konyakDarkColors),
+        supportedLocales: KonyakLocalizations.supportedLocales,
+        localizationsDelegates: KonyakLocalizations.localizationsDelegates,
+        home: RepaintBoundary(
+          key: goldenKey,
+          child: Scaffold(
+            body: Center(
+              child: ProfileManagerDialog(
+                bottleName: 'Steam',
+                profiles: const [
+                  InstallProfileListItem(
+                    id: 'steam',
+                    name: 'Steam',
+                    profileVersion: 1,
+                  ),
+                ],
+                programFilePicker: const _FakeProgramFilePicker(
+                  path: '/bottles/steam/drive_c/Steam.exe',
+                ),
+                initialDirectory: '/bottles/steam/drive_c',
+                inspectProfile: (_) async => InspectedInstallProfile(
+                  InstallProfileDetails(
+                    id: 'steam',
+                    name: 'Steam',
+                    profileVersion: 1,
+                    profileSourceKind: 'builtin',
+                    profileSourceId: 'steam.json',
+                    profileDigest:
+                        'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+                        'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+                    summary: 'Install Steam with Konyak compatibility rules.',
+                    platforms: const ['macos'],
+                    windowsVersion: 'win10',
+                    managedProgramPath:
+                        r'C:\Program Files (x86)\Steam\Steam.exe',
+                    installerResource: InstallerResourceSummary(
+                      kind: 'https',
+                      url:
+                          'https://cdn.cloudflare.steamstatic.com/client/'
+                          'installer/SteamSetup.exe',
+                      sha256:
+                          'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
+                          'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+                      fileName: 'SteamSetup.exe',
+                    ),
+                    dependencyWinetricksVerbs: const ['corefonts', 'vcrun2022'],
+                    runCompletionPolicy: 'waitForExit',
+                    compatibilityProfile: CompatibilityProfileSummary(
+                      id: 'steam',
+                      profileVersion: 1,
+                      childProcessRules: const [],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Install automatically'), findsOneWidget);
+    expect(find.text('Apply to existing program'), findsOneWidget);
+    expect(find.textContaining('builtin / steam.json'), findsOneWidget);
+    expect(find.text('1. corefonts\n2. vcrun2022'), findsOneWidget);
+
+    await _expectGoldenFileWithinTolerance(
+      find.byKey(goldenKey),
+      'goldens/profile_manager_automatic_install.png',
+      diffTolerance: 0.05,
+    );
+  });
+
   testWidgets('bottom bar Profile Manager action matches golden', (
     WidgetTester tester,
   ) async {
@@ -48,6 +132,161 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
       'goldens/bottom_bar_profile_manager.png',
       diffTolerance: 0.05,
     );
+  });
+
+  testWidgets('Profile Manager installs a selected profile automatically', (
+    WidgetTester tester,
+  ) async {
+    final installCompleter = Completer<ProcessRunResult>();
+    final runner = _FutureQueuedProcessRunner([
+      Future.value(
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+            {
+              "schemaVersion": 1,
+              "bottles": [
+                {
+                  "id": "steam",
+                  "name": "Steam",
+                  "path": "/bottles/steam",
+                  "windowsVersion": "win10"
+                }
+              ]
+            }
+          ''',
+          stderr: '',
+        ),
+      ),
+      Future.value(
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+            {
+              "schemaVersion": 1,
+              "installProfiles": [
+                {"id": "steam", "name": "Steam", "profileVersion": 1}
+              ]
+            }
+          ''',
+          stderr: '',
+        ),
+      ),
+      Future.value(
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+            {
+              "schemaVersion": 1,
+              "installProfile": {
+                "id": "steam",
+                "name": "Steam",
+                "profileVersion": 1,
+                "profileSourceKind": "builtin",
+                "profileSourceId": "steam.json",
+                "profileDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "summary": "Install Steam automatically.",
+                "platforms": ["macos"],
+                "bottleTemplate": {"windowsVersion": "win10"},
+                "managedProgramPath": "C:\\\\Program Files (x86)\\\\Steam\\\\Steam.exe",
+                "installerResource": {
+                  "kind": "https",
+                  "url": "https://cdn.example.test/SteamSetup.exe",
+                  "sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+                  "fileName": "SteamSetup.exe"
+                },
+                "dependencyWinetricksVerbs": ["corefonts"],
+                "runCompletionPolicy": "waitForExit",
+                "compatibilityProfile": {
+                  "id": "steam",
+                  "profileVersion": 1,
+                  "childProcessRules": []
+                }
+              }
+            }
+          ''',
+          stderr: '',
+        ),
+      ),
+      installCompleter.future,
+      Future.value(
+        const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+            {
+              "schemaVersion": 1,
+              "bottle": {
+                "id": "steam",
+                "name": "Steam",
+                "path": "/bottles/steam",
+                "windowsVersion": "win10",
+                "pinnedPrograms": [
+                  {
+                    "name": "Steam",
+                    "path": "C:\\\\Program Files (x86)\\\\Steam\\\\Steam.exe",
+                    "removable": false
+                  }
+                ]
+              }
+            }
+          ''',
+          stderr: '',
+        ),
+      ),
+    ]);
+
+    await tester.pumpWidget(
+      _testKonyakApp(
+        cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.widgetWithText(TextButton, 'Profile Manager'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Install automatically'));
+    await tester.pump();
+
+    expect(runner.argumentsLog.last, const [
+      'install-program-profile',
+      'steam',
+      '--bottle',
+      'steam',
+      '--progress-json',
+      '--json',
+    ]);
+    expect(find.text('Applying Steam...'), findsOneWidget);
+
+    runner.emitStdoutLine(
+      '{"schemaVersion":1,"programProfileInstallProgress":'
+      '{"stage":"download","state":"started"}}',
+    );
+    await tester.pump();
+
+    expect(find.text('Downloading Steam...'), findsOneWidget);
+
+    installCompleter.complete(
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout:
+            '{"schemaVersion":1,"programProfileInstall":'
+            '{"stage":"persistence","programProfile":'
+            '{"bottleId":"steam","profileId":"steam",'
+            '"profileVersion":1,"managedProgramPath":'
+            '"C:\\\\Program Files (x86)\\\\Steam\\\\Steam.exe",'
+            '"compatibilityProfileId":"steam",'
+            '"compatibilityProfileVersion":1}}}',
+        stderr: '',
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Installed Steam'), findsOneWidget);
+    expect(runner.argumentsLog.last, const [
+      'inspect-bottle',
+      'steam',
+      '--json',
+    ]);
   });
 
   testWidgets('bottle utilities menu is not shown in the top bar', (
@@ -972,9 +1211,12 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
               "schemaVersion": 1,
               "installProfile": {
                 "id": "steam",
-                "name": "Steam",
-                "profileVersion": 1,
-                "summary": "Apply Konyak compatibility rules to an installed Steam executable.",
+              "name": "Steam",
+              "profileVersion": 1,
+              "profileSourceKind": "builtin",
+              "profileSourceId": "steam.json",
+              "profileDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "summary": "Apply Konyak compatibility rules to an installed Steam executable.",
                 "platforms": ["macos"],
                 "bottleTemplate": {
                   "windowsVersion": "win10"
@@ -1087,7 +1329,9 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
     await tester.ensureVisible(chooseProgramButton);
     await tester.tap(chooseProgramButton);
     await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(FilledButton, 'Apply profile'));
+    await tester.tap(
+      find.widgetWithText(OutlinedButton, 'Apply to existing program'),
+    );
     await tester.pump();
 
     expect(

@@ -180,41 +180,11 @@ verification are complete.
 
 Small milestones:
 
-- [ ] IP-S5: Add separate automatic-install and manual-apply actions to Profile
-  Manager. Show the declared origin, digest, and dependency order before the
-  explicit install action, stream progress, and add golden coverage before the
-  UI implementation.
 - [ ] IP-S6: Add an independently rerunnable macOS public-CLI E2E using a
   repository-owned synthetic installer. Cover digest rejection, installer and
   dependency ordering, binding, pinned EXE launch, real `.lnk` launch, and
   automatic child-process rule activation without Steam or live third-party
   downloads.
-
-#### Implementation Gate: IP-P3 Profile Manager Installation Flow
-
-branch: `task/profile-installer-flow`
-
-Completion criteria:
-
-- Complete IP-S5 with golden coverage written before the UI implementation.
-- Keep automatic installation and manual application as visibly separate user
-  decisions.
-- Surface typed CLI progress and failures without reproducing installation
-  orchestration in Flutter.
-
-Required verification:
-
-- `just flutter-format-check`
-- `just flutter-analyze`
-- `just flutter-test`
-- `just verify-governance`
-- `just verify-safety`
-- `just format-check`
-- `just lint`
-- Capture and report the updated Profile Manager golden artifact.
-
-Checkpoint: after the Flutter contract and golden are green, commit the
-verified UI step and continue to IP-P4.
 
 #### Implementation Gate: IP-P4 macOS Profile Installation E2E
 

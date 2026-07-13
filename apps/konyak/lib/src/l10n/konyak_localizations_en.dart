@@ -847,10 +847,22 @@ class KonyakLocalizationsEn extends KonyakLocalizations {
   String get applyProfile => 'Apply profile';
 
   @override
+  String get installProfileAutomatically => 'Install automatically';
+
+  @override
+  String get applyProfileToExistingProgram => 'Apply to existing program';
+
+  @override
   String get noInstallProfilesFound => 'No install profiles found.';
 
   @override
   String get installProfilePlatforms => 'Platforms';
+
+  @override
+  String get installProfileSource => 'Profile source';
+
+  @override
+  String get installProfileInstallerUrl => 'Installer URL';
 
   @override
   String get installProfileWindowsVersion => 'Windows version';

@@ -1179,6 +1179,14 @@
   "@applyProfile": {
     "description": "Konyak UI string: Apply profile"
   },
+  "installProfileAutomatically": "自動インストール",
+  "@installProfileAutomatically": {
+    "description": "Konyak UI string: Install automatically"
+  },
+  "applyProfileToExistingProgram": "既存プログラムに適用",
+  "@applyProfileToExistingProgram": {
+    "description": "Konyak UI string: Apply to existing program"
+  },
   "noInstallProfilesFound": "インストールプロファイルが見つかりません。",
   "@noInstallProfilesFound": {
     "description": "Konyak UI string: No install profiles found."
@@ -1186,6 +1194,14 @@
   "installProfilePlatforms": "プラットフォーム",
   "@installProfilePlatforms": {
     "description": "Konyak UI string: Platforms"
+  },
+  "installProfileSource": "プロファイルの出所",
+  "@installProfileSource": {
+    "description": "Konyak UI string: Profile source"
+  },
+  "installProfileInstallerUrl": "インストーラー URL",
+  "@installProfileInstallerUrl": {
+    "description": "Konyak UI string: Installer URL"
   },
   "installProfileWindowsVersion": "Windows バージョン",
   "@installProfileWindowsVersion": {

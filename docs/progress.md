@@ -8,10 +8,10 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
 
 ## Current Work Snapshot
 
-- Timestamp: 2026-07-13 22:25 JST
-- State: `planned`
-- Branch: `task/profile-installer-flow`; the previous verified step is commit
-  `a5da3e4` and the branch base is `6f23f55`.
+- Timestamp: 2026-07-14 01:37 JST
+- State: `paused`
+- Branch: `task/profile-installer-flow`; IP-P3 is the current verified commit
+  and the branch base is `6f23f55`.
 - Related TODO: `docs/todo.md` Next Tasks, "Build a distributable compatibility
   profile system".
 - Related issue: <https://github.com/serika12345/Konyak/issues/44>
@@ -61,13 +61,25 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
   - completed an independent IP-P2 audit, dynamically reproduced and fixed a
     cache-directory symlink escape, and added a nine-case public CLI failure
     matrix plus manual apply/repair no-installer contracts
+  - added a Flutter contract for the versioned profile-install JSONL stream,
+    with typed stages, dependency context, states, and invalid-record handling
+  - added the `install-program-profile` Flutter client path with streamed
+    progress and explicit success/failure results
+  - made Profile Manager show the profile source, manifest SHA-256, installer
+    URL and SHA-256, and numbered winetricks dependency order before execution
+  - added visibly separate automatic-install and manual-apply decisions;
+    automatic installation streams CLI stage progress and reloads the bottle
+    only after the CLI reports success
+  - captured the new Profile Manager golden and covered both the automatic
+    install flow and the retained manual apply flow with widget tests
 - Remaining work:
-  - complete IP-P3 and IP-P4
+  - manually inspect the Profile Manager flow in the running macOS GUI
+  - complete IP-P4 after the GUI checkpoint is accepted
   - after the automatic installation path is stable, resume user profile
     storage, canonical import/export, editing, and sharing work
-- Next action: start IP-P3 with a failing Profile Manager golden and Flutter CLI
-  streaming parser/client tests before adding separate automatic-install and
-  manual-apply actions.
+- Next action: run Konyak, open Profile Manager for a bottle, inspect the source
+  and dependency details, and exercise the automatic-install action. After the
+  GUI checkpoint is accepted, resume with IP-P4; do not begin it before review.
 - Verification performed:
   - TDD red states captured for the new CLI/domain and Flutter parser contracts
   - `just cli-format-check`, `just cli-analyze`, and `just cli-test` passed; 487
@@ -87,6 +99,18 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
     supplying the raced path
   - real network download and Wine installer execution were deliberately
     deferred to the maintained synthetic public-CLI smoke in IP-P4
+  - captured the expected TDD red state before adding the Flutter progress
+    contract and Profile Manager actions
+  - targeted progress parser/client tests, automatic-install widget flow,
+    retained manual-apply widget flow, and the new golden test passed
+  - `just flutter-format-check`, `just flutter-analyze`, and
+    `just flutter-test` passed with 484 Flutter tests
+  - `just verify-governance`, `just verify-safety`, `just format-check`, and
+    `just lint` passed against the final IP-P3 diff
+  - visually inspected
+    `apps/konyak/test/goldens/profile_manager_automatic_install.png` at
+    1040x720; source identity, manifest digest, installer URL and digest,
+    dependency order, and both actions are visible
   - the Steam installer returned HTTP 200 with no redirect and 2,380,800 bytes;
     its SHA-256 matched
     `7d3654531c32d941b8cae81c4137fc542172bfa9635f169cb392f245a0a12bcb`
