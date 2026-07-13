@@ -8,52 +8,56 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
 
 ## Current Work Snapshot
 
-- Timestamp: 2026-07-14 18:53 JST
+- Timestamp: 2026-07-14 19:00 JST
 - State: `paused`
-- Branch: `fix/profile-dependencies-before-installer`; based on the `main`
-  merge of PR #51 (`9ed1730`) and carrying the dependency-order fix originally
-  committed as `2105572`.
+- Branch: `task/profile-manager-auto-install`; based on the `main` merge of PR
+  #52 (`5950bea`) and carrying the GUI implementation originally committed as
+  `aa90256`.
 - Related TODO: `docs/todo.md` Next Tasks, "Build a distributable compatibility
   profile system".
 - Related issue: <https://github.com/serika12345/Konyak/issues/44>
-- Purpose: correct the public profile-install CLI so every declared winetricks
-  dependency completes in manifest order before the Windows installer starts,
-  before exposing automatic installation through Profile Manager.
+- Purpose: expose the verified public `install-program-profile` CLI through
+  Profile Manager without reproducing installation orchestration in Flutter.
 - Completed work:
-  - merged PR #50, which added the bounded installer-resource manifest and read
-    contracts
-  - merged PR #51, which added the typed public `install-program-profile` CLI,
-    resource verification, installer/dependency execution, managed-program
-    verification, and binding persistence
-  - changed the orchestrator to fetch and verify the installer first, run every
-    declared dependency, release the staged payload on dependency failure, and
-    start the installer only after all dependencies succeed
-  - prevented installer launch, managed-program verification, and persistence
-    after dependency startup or non-zero-exit failures
-  - preserved typed dependency index and verb context in progress and failure
-    results
-  - updated the roadmap and public-CLI tests to require dependency-first order
+  - merged PRs #50 through #52 for installer-resource declarations, the public
+    profile-install CLI, and dependency-before-installer ordering
+  - added a Flutter contract for the versioned profile-install JSONL stream,
+    with typed stages, dependency context, states, and invalid-record handling
+  - added streamed `install-program-profile` execution to the Flutter CLI client
+    with explicit success and failure results
+  - made Profile Manager show profile source, manifest SHA-256, installer URL
+    and SHA-256, and numbered winetricks dependency order before execution
+  - added visibly separate automatic-install and manual-apply decisions
+  - made automatic installation render CLI stage progress and reload the bottle
+    only after the CLI reports success
+  - retained the manual apply path without downloading or executing resources
+  - added parser, client, widget, and golden coverage for the complete GUI flow
+  - removed the completed Profile Manager milestone and implementation gate from
+    `docs/todo.md`
 - Remaining work:
-  - review and merge the focused dependency-order pull request
-  - submit the Profile Manager automatic-install GUI path as a later pull
-    request only after the order fix is on `main`
-  - continue the remaining profile recovery, runtime, Steam dependency,
+  - review and merge the focused Profile Manager pull request
+  - continue the invalid-bottle recovery, runtime, Steam dependency,
     completion-policy, pin-icon, native-component, and E2E-gate commits one pull
     request at a time
-- Next action: merge the dependency-order pull request, then cherry-pick
-  `aa90256` onto the resulting `main` for the Profile Manager GUI pull request.
+- Next action: merge the Profile Manager pull request, then cherry-pick
+  `3d68718` onto the resulting `main` for invalid-bottle metadata recovery.
 - Verification performed:
-  - the original TDD run dynamically confirmed the incorrect baseline request
-    order was installer, `corefonts`, then `vcrun2022`
-  - focused orchestration and public-command tests prove the corrected request
-    order is `corefonts`, `vcrun2022`, installer
-  - dependency failure cases issue no installer request, make no verifier or
-    persistence call, release the fetched resource once, and retain typed
-    failure context
-  - the current cherry-picked branch passed `just verify-governance`, `just
-    verify-safety`, `just format-check`, `just lint`, `just cli-format-check`,
-    `just cli-analyze`, `just cli-test` (488 tests), and `git diff --check`
+  - the original TDD run captured the parser/client and widget red states before
+    the implementation
+  - targeted progress parser/client tests, automatic-install widget flow,
+    retained manual-apply widget flow, and the new golden passed on the source
+    branch
+  - the source golden was visually inspected at 1040x720; source identity,
+    manifest digest, installer URL and digest, dependency order, progress, and
+    both actions are visible
+  - the current cherry-picked branch passed the focused golden update test,
+    `just flutter-format-check`, `just flutter-analyze`, `just flutter-test`
+    (484 tests), `just verify-governance`, `just verify-safety`, `just
+    format-check`, `just lint`, and `git diff --check`
+  - the regenerated 1040x720 golden was unchanged and has SHA-256
+    `11822bbdae2543e7182252ffb72a44e140f49128ad73a8dc14287457bf068877`
 - Remaining risk:
-  - the maintained real network/Wine public-CLI smoke remains deferred to the
-    later synthetic E2E-gate pull request; this focused change is covered by
-    deterministic orchestration and CLI contract tests
+  - this split PR verifies the UI contract and rendering deterministically but
+    does not rerun the real network/Wine installation; that path remains covered
+    by the previously completed GUI checkpoint and the later maintained
+    synthetic public-CLI E2E gate

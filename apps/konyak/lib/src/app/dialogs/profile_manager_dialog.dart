@@ -15,6 +15,12 @@ sealed class ProfileManagerDecision {
   const ProfileManagerDecision();
 }
 
+final class InstallProfileManagerDecision extends ProfileManagerDecision {
+  const InstallProfileManagerDecision({required this.profileId});
+
+  final String profileId;
+}
+
 final class ApplyProfileManagerDecision extends ProfileManagerDecision {
   const ApplyProfileManagerDecision({
     required this.profileId,
@@ -97,6 +103,8 @@ class _ProfileManagerDialogState extends State<ProfileManagerDialog> {
   Widget build(BuildContext context) {
     final localizations = KonyakLocalizations.of(context);
     final selectedProfile = _selectedProfile;
+    final canInstall =
+        selectedProfile != null && _detailsState is LoadedInstallProfileDetails;
     final canApply =
         selectedProfile != null &&
         _programPathController.text.trim().isNotEmpty &&
@@ -105,8 +113,8 @@ class _ProfileManagerDialogState extends State<ProfileManagerDialog> {
     return AlertDialog(
       title: Text(localizations.profileManagerIn(widget.bottleName)),
       content: SizedBox(
-        width: 720,
-        height: 460,
+        width: 800,
+        height: 520,
         child: widget.profiles.isEmpty
             ? Center(child: Text(localizations.noInstallProfilesFound))
             : Row(
@@ -159,10 +167,16 @@ class _ProfileManagerDialogState extends State<ProfileManagerDialog> {
           },
           child: Text(localizations.cancel),
         ),
-        FilledButton.icon(
+        OutlinedButton.icon(
           onPressed: canApply ? _applySelectedProfile : null,
           icon: const Icon(Icons.check),
-          label: Text(localizations.applyProfile),
+          label: Text(localizations.applyProfileToExistingProgram),
+        ),
+        FilledButton.icon(
+          key: const ValueKey('profile-manager-install-automatically'),
+          onPressed: canInstall ? _installSelectedProfile : null,
+          icon: const Icon(Icons.download),
+          label: Text(localizations.installProfileAutomatically),
         ),
       ],
     );
@@ -224,6 +238,17 @@ class _ProfileManagerDialogState extends State<ProfileManagerDialog> {
         programPath: programPath,
       ),
     );
+  }
+
+  void _installSelectedProfile() {
+    final profile = _selectedProfile;
+    if (profile == null || _detailsState is! LoadedInstallProfileDetails) {
+      return;
+    }
+
+    Navigator.of(
+      context,
+    ).pop(InstallProfileManagerDecision(profileId: profile.id));
   }
 }
 
@@ -291,6 +316,18 @@ class _ProfileManagerDetails extends StatelessWidget {
           Text(profile.summary),
           const SizedBox(height: 12),
           _ProfileDetailRow(
+            label: localizations.installProfileSource,
+            value:
+                '${profile.profileSourceKind} / ${profile.profileSourceId}\n'
+                'SHA-256: ${profile.profileDigest}',
+          ),
+          _ProfileDetailRow(
+            label: localizations.installProfileInstallerUrl,
+            value:
+                '${profile.installerResource.url}\n'
+                'SHA-256: ${profile.installerResource.sha256}',
+          ),
+          _ProfileDetailRow(
             label: localizations.installProfilePlatforms,
             value: profile.platforms.join(', '),
           ),
@@ -306,7 +343,7 @@ class _ProfileManagerDetails extends StatelessWidget {
             label: localizations.installProfileDependencies,
             value: profile.dependencyWinetricksVerbs.isEmpty
                 ? localizations.installProfileNoDependencies
-                : profile.dependencyWinetricksVerbs.join(', '),
+                : _dependencyOrderLabel(profile.dependencyWinetricksVerbs),
           ),
           _ProfileDetailRow(
             label: localizations.installProfileRunCompletionPolicy,
@@ -376,4 +413,12 @@ String _compatibilityRulesLabel(
   }
 
   return actions.join(', ');
+}
+
+String _dependencyOrderLabel(List<String> verbs) {
+  return List<String>.generate(
+    verbs.length,
+    (index) => '${index + 1}. ${verbs[index]}',
+    growable: false,
+  ).join('\n');
 }

@@ -1593,6 +1593,18 @@ abstract class KonyakLocalizations {
   /// **'Apply profile'**
   String get applyProfile;
 
+  /// Konyak UI string: Install automatically
+  ///
+  /// In en, this message translates to:
+  /// **'Install automatically'**
+  String get installProfileAutomatically;
+
+  /// Konyak UI string: Apply to existing program
+  ///
+  /// In en, this message translates to:
+  /// **'Apply to existing program'**
+  String get applyProfileToExistingProgram;
+
   /// Konyak UI string: No install profiles found.
   ///
   /// In en, this message translates to:
@@ -1604,6 +1616,18 @@ abstract class KonyakLocalizations {
   /// In en, this message translates to:
   /// **'Platforms'**
   String get installProfilePlatforms;
+
+  /// Konyak UI string: Profile source
+  ///
+  /// In en, this message translates to:
+  /// **'Profile source'**
+  String get installProfileSource;
+
+  /// Konyak UI string: Installer URL
+  ///
+  /// In en, this message translates to:
+  /// **'Installer URL'**
+  String get installProfileInstallerUrl;
 
   /// Konyak UI string: Windows version
   ///

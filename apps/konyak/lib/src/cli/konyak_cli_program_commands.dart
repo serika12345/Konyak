@@ -10,6 +10,7 @@ import 'konyak_cli_process_runner.dart';
 import 'konyak_cli_program_payload_parsers.dart';
 import 'konyak_cli_program_result_types.dart';
 import 'konyak_cli_result_helpers.dart';
+import 'program_profile_install_contract.dart';
 
 sealed class ProgramRunSettingsArgument {
   const ProgramRunSettingsArgument();
@@ -123,6 +124,65 @@ extension KonyakCliProgramCommands on KonyakCliClient {
       AppliedProgramProfile() => ProgramProfileApplyLoadFailure(
         exitCode: result.exitCode,
         message: operationFailureMessage(result, 'apply-program-profile'),
+        diagnostic: result.stderr,
+      ),
+    };
+  }
+
+  Future<ProgramProfileInstallLoadResult> installProgramProfile({
+    required String profileId,
+    required String bottleId,
+    ProgramProfileInstallProgressObservation progressObservation =
+        const IgnoreProgramProfileInstallProgress(),
+  }) async {
+    final arguments = <String>[
+      'install-program-profile',
+      profileId,
+      '--bottle',
+      bottleId,
+    ];
+    final result = await switch (progressObservation) {
+      IgnoreProgramProfileInstallProgress() => run(<String>[
+        ...arguments,
+        '--json',
+      ]),
+      NotifyProgramProfileInstallProgress(:final onProgress) =>
+        processRunner.run(
+          executable,
+          <String>[...baseArguments, ...arguments, '--progress-json', '--json'],
+          workingDirectory: workingDirectory,
+          environment: <String, String>{
+            ...environment,
+            ...launcherEnvironment(),
+          },
+          observation: ObservedProcessRun(
+            startObserver: const IgnoreProcessStart(),
+            stdoutObserver: NotifyProcessStdoutLine((line) {
+              switch (parseProgramProfileInstallProgressPayload(line)) {
+                case ParsedProgramProfileInstallProgress(:final progress):
+                  onProgress(progress);
+                case InvalidProgramProfileInstallProgress():
+                  break;
+              }
+            }),
+          ),
+        ),
+    };
+    final parsed = parseProgramProfileInstallCommandPayload(result.stdout);
+
+    return switch (parsed) {
+      ParsedProgramProfileInstall(:final profile) when result.exitCode == 0 =>
+        InstalledProgramProfile(profile),
+      ProgramProfileInstallCommandFailure(:final message) =>
+        ProgramProfileInstallLoadFailure(
+          exitCode: result.exitCode,
+          message: message,
+          diagnostic: result.stderr,
+        ),
+      ParsedProgramProfileInstall() ||
+      ProgramProfileInstallParseFailure() => ProgramProfileInstallLoadFailure(
+        exitCode: result.exitCode,
+        message: operationFailureMessage(result, 'install-program-profile'),
         diagnostic: result.stderr,
       ),
     };

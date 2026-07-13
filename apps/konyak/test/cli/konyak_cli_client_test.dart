@@ -2019,6 +2019,9 @@ void main() {
               "id": "steam",
               "name": "Steam",
               "profileVersion": 1,
+              "profileSourceKind": "builtin",
+              "profileSourceId": "steam.json",
+              "profileDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
               "summary": "Apply Konyak compatibility rules to an installed Steam executable.",
               "platforms": ["macos"],
               "bottleTemplate": {
@@ -2148,6 +2151,9 @@ void main() {
               'id': 'invalid',
               'name': 'Invalid',
               'profileVersion': 1,
+              'profileSourceKind': 'builtin',
+              'profileSourceId': 'invalid.json',
+              'profileDigest': 'a' * 64,
               'summary': 'Invalid installer resource.',
               'platforms': <String>['macos'],
               'bottleTemplate': <String, Object?>{'windowsVersion': 'win10'},
@@ -2217,6 +2223,84 @@ void main() {
     final applied = result as AppliedProgramProfile;
     expect(applied.profile.bottleId, 'steam');
     expect(applied.profile.profileId, 'steam');
+  });
+
+  test('installs a program profile and reports typed progress', () async {
+    final progressEvents = <ProgramProfileInstallProgress>[];
+    final runner = _FakeProcessRunner(
+      stdoutLines: const [
+        '{"schemaVersion":1,"programProfileInstallProgress":'
+            '{"stage":"download","state":"started"}}',
+        '{"schemaVersion":1,"programProfileInstallProgress":'
+            '{"stage":"dependency","state":"started",'
+            '"dependencyIndex":0,"dependencyVerb":"corefonts"}}',
+      ],
+      result: const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {"schemaVersion":1,"programProfileInstallProgress":{"stage":"download","state":"started"}}
+          {"schemaVersion":1,"programProfileInstall":{"stage":"persistence","programProfile":{"bottleId":"steam","profileId":"steam","profileVersion":1,"managedProgramPath":"C:\\\\Program Files (x86)\\\\Steam\\\\Steam.exe","compatibilityProfileId":"steam","compatibilityProfileVersion":1}}}
+        ''',
+        stderr: '',
+      ),
+    );
+    final client = KonyakCliClient(executable: 'konyak', processRunner: runner);
+
+    final result = await client.installProgramProfile(
+      profileId: 'steam',
+      bottleId: 'steam',
+      progressObservation: NotifyProgramProfileInstallProgress(
+        progressEvents.add,
+      ),
+    );
+
+    expect(runner.arguments, const [
+      'install-program-profile',
+      'steam',
+      '--bottle',
+      'steam',
+      '--progress-json',
+      '--json',
+    ]);
+    expect(progressEvents, hasLength(2));
+    expect(progressEvents.first.stage, ProgramProfileInstallStage.download);
+    expect(progressEvents.last.stage, ProgramProfileInstallStage.dependency);
+    expect(result, isA<InstalledProgramProfile>());
+    expect((result as InstalledProgramProfile).profile.profileId, 'steam');
+  });
+
+  test('returns a typed program profile install failure', () async {
+    final runner = _FakeProcessRunner(
+      result: const ProcessRunResult(
+        exitCode: 70,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "error": {
+              "code": "digestMismatch",
+              "message": "Installer digest did not match.",
+              "programProfileInstall": {
+                "profileId": "steam",
+                "bottleId": "steam",
+                "stage": "verification"
+              }
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+    );
+    final client = KonyakCliClient(executable: 'konyak', processRunner: runner);
+
+    final result = await client.installProgramProfile(
+      profileId: 'steam',
+      bottleId: 'steam',
+    );
+
+    expect(result, isA<ProgramProfileInstallLoadFailure>());
+    final failure = result as ProgramProfileInstallLoadFailure;
+    expect(failure.exitCode, 70);
+    expect(failure.message, 'Installer digest did not match.');
   });
 
   test('passes one-time program settings to run-program', () async {
