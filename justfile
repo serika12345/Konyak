@@ -41,7 +41,7 @@ nix-lint:
   deadnix --fail flake.nix
   statix check flake.nix
 
-test: flutter-pub-get cli-pub-get konyak-lints-pub-get flutter-test cli-test konyak-lints-test release-automation-test
+test: flutter-pub-get cli-pub-get konyak-lints-pub-get flutter-test cli-test konyak-lints-test release-automation-test macos-dev-runtime-prepare-test
 
 verify-safety: flutter-pub-get cli-pub-get
   python3 scripts/verify_no_invisible_chars.py
@@ -86,6 +86,9 @@ cli-test: cli-codegen
 
 release-automation-test:
   python3 scripts/prepare_release_test.py
+
+macos-dev-runtime-prepare-test:
+  python3 scripts/prepare_macos_dev_runtime_stack_test.py
 
 draft-release-notes VERSION:
   ./scripts/draft_release_notes.zsh "{{VERSION}}"

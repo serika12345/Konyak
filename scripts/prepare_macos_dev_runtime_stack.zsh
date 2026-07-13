@@ -9,6 +9,7 @@ RUNTIME_SOURCE_MODE="${KONYAK_DEV_MACOS_RUNTIME_SOURCE_MODE:-release}"
 
 print_manifest_path=false
 print_runtime_path=false
+ensure_runtime=false
 force=false
 
 for arg in "$@"; do
@@ -18,6 +19,9 @@ for arg in "$@"; do
       ;;
     --print-runtime-path)
       print_runtime_path=true
+      ;;
+    --ensure-runtime)
+      ensure_runtime=true
       ;;
     --force)
       force=true
@@ -116,7 +120,11 @@ if [[ -z "${manifest_source}" ]]; then
   default_tag="$(json_value defaultReleaseTag)"
   manifest_file_name="$(json_value sourceManifestFileName)"
   release_tag="${KONYAK_DEV_MACOS_RUNTIME_RELEASE_TAG:-${default_tag}}"
-  manifest_source="https://github.com/${repository}/releases/download/${release_tag}/${manifest_file_name}"
+  if [[ "${release_tag}" == "latest" ]]; then
+    manifest_source="https://github.com/${repository}/releases/latest/download/${manifest_file_name}"
+  else
+    manifest_source="https://github.com/${repository}/releases/download/${release_tag}/${manifest_file_name}"
+  fi
 fi
 
 if is_url "${manifest_source}"; then
@@ -128,6 +136,66 @@ else
   fi
   validate_manifest "${manifest_source}"
   manifest_path="${manifest_source}"
+fi
+
+runtime_matches_manifest() {
+  local runtime_metadata="${runtime_path}/.konyak-runtime-stack.json"
+
+  [[ -x "${runtime_path}/bin/wineloader" ]] || return 1
+  [[ -f "${runtime_metadata}" ]] || return 1
+  jq -e --slurpfile source "${manifest_path}" '
+    .schemaVersion == 1 and
+    (.components | type) == "object" and
+    (
+      .components as $installed |
+      ($source[0].components | map({key: .id, value: .version}) | from_entries) as $expected |
+      all($expected | to_entries[]; $installed[.key] == .value)
+    )
+  ' "${runtime_metadata}" >/dev/null
+}
+
+ensure_development_runtime() {
+  local dart_executable="${KONYAK_DART_EXECUTABLE:-dart}"
+  local cli_script="${KONYAK_CLI_SCRIPT:-${ROOT}/packages/konyak_cli/bin/konyak.dart}"
+  local absolute_manifest_path="${manifest_path:A}"
+
+  if runtime_matches_manifest; then
+    print -u2 "Konyak macOS development runtime is current."
+    return
+  fi
+
+  if [[ "${dart_executable}" == */* && ! -x "${dart_executable}" ]]; then
+    print -u2 "Dart executable does not exist or is not executable: ${dart_executable}"
+    exit 69
+  fi
+  if [[ ! -f "${cli_script}" ]]; then
+    print -u2 "Konyak CLI script does not exist: ${cli_script}"
+    exit 66
+  fi
+
+  print -u2 "Updating Konyak macOS development runtime from the selected release..."
+  (
+    cd "${ROOT}/packages/konyak_cli"
+    env \
+      KONYAK_RUNTIME_PROFILE=development \
+      KONYAK_MACOS_WINE_HOME="${runtime_path}" \
+      KONYAK_DEV_MACOS_WINE_STACK_MANIFEST="${absolute_manifest_path}" \
+      "${dart_executable}" "${cli_script}" \
+        install-macos-wine \
+        --reinstall \
+        --source-manifest "${absolute_manifest_path}" \
+        --progress-json \
+        --json
+  ) >&2
+
+  if ! runtime_matches_manifest; then
+    print -u2 "Konyak CLI completed without installing the selected runtime component versions."
+    exit 1
+  fi
+}
+
+if [[ "${ensure_runtime}" == true ]]; then
+  ensure_development_runtime
 fi
 
 if [[ "${print_manifest_path}" == true ]]; then

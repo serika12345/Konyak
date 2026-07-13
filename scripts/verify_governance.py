@@ -5560,6 +5560,7 @@ def main() -> None:
     require_contains("docs/vscode-macos.md", "KONYAK_DEV_LINUX_WINE_STACK_SOURCE_MANIFEST")
     require_contains("docs/vscode-macos.md", "KONYAK_LINUX_WINE_LIBRARY_PATH")
     require_contains("docs/vscode-macos.md", "KONYAK_MACOS_WINE_HOME")
+    require_contains("docs/vscode-macos.md", "--ensure-runtime")
     require_not_contains("docs/vscode-macos.md", "Nix-provided Wine")
     require_not_contains(".vscode/tasks.json", "Prepare Linux Dev Runtime")
     require_not_contains(".vscode/tasks.json", "prepare_linux_dev_runtime.zsh")
@@ -5577,6 +5578,9 @@ def main() -> None:
         require_contains(".vscode/launch.json", expected)
         require_contains(".vscode/tasks.json", expected)
     require_contains(".vscode/tasks.json", "scripts/prepare_linux_dev_runtime_source.zsh")
+    require_contains(".vscode/tasks.json", "--ensure-runtime")
+    require_contains("scripts/flutter_macos_agent_watch.py", "--ensure-runtime")
+    require_contains("justfile", "macos-dev-runtime-prepare-test")
     require_contains(".vscode/launch.json", "Konyak: Prepare Linux Runtime Source")
     require_contains(
         ".vscode/launch.json",

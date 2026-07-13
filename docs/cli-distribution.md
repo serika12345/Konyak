@@ -17,7 +17,10 @@ macOS development launches also use `KONYAK_RUNTIME_PROFILE=development`,
 `KONYAK_MACOS_WINE_HOME`, and `KONYAK_DEV_MACOS_WINE_STACK_MANIFEST`.
 `scripts/prepare_macos_dev_runtime_stack.zsh` resolves the selected Konyak
 macOS runtime release from `runtime/macos-wine-release.json` and caches the
-release source manifest consumed by `install-macos-wine --json`. Set
+release source manifest consumed by `install-macos-wine --json`. Supported
+macOS development launchers pass `--ensure-runtime`, which compares every
+published component version with `.konyak-runtime-stack.json` and reinstalls
+the managed development runtime only when it is missing or stale. Set
 `KONYAK_DEV_MACOS_RUNTIME_RELEASE_TAG` to switch the development build to a
 different published runtime release, or set
 `KONYAK_DEV_MACOS_WINE_STACK_MANIFEST` to a complete manifest URL or local file.
@@ -219,12 +222,14 @@ GPTK D3D10/D3D11/D3D12 backend smoke targets against each imported runtime.
 Development runtime preparation follows the same manifest-only boundary.
 `scripts/prepare_macos_dev_runtime_stack.zsh` resolves a complete source
 manifest produced by `runtime/konyak-macos-runtime` or an explicitly supplied
-complete manifest. `scripts/prepare_linux_dev_runtime_source.zsh` resolves the
-default complete Linux source manifest from `runtime/linux-wine-release.json`
-or an explicitly supplied complete source manifest from
-`KONYAK_DEV_LINUX_WINE_STACK_SOURCE_MANIFEST`, then validates and caches it.
-Neither script creates component archives or overlays runtime files in the
-parent repository.
+complete manifest. Its opt-in `--ensure-runtime` mode installs that unmodified
+published stack through the public CLI contract; it does not construct or
+overlay runtime contents. `scripts/prepare_linux_dev_runtime_source.zsh`
+resolves the default complete Linux source manifest from
+`runtime/linux-wine-release.json` or an explicitly supplied complete source
+manifest from `KONYAK_DEV_LINUX_WINE_STACK_SOURCE_MANIFEST`, then validates and
+caches it. Neither preparation script creates component archives or overlays
+runtime files in the parent repository.
 
 Linux runtime construction now follows the same pattern through
 `install-linux-wine`. A managed Linux stack may layer `vkd3d-proton` component
