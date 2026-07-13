@@ -26,9 +26,13 @@ const dxvkOverrideDllNames = <String>[
   'd3d11.dll',
 ];
 
-const macosD3DTranslationOverrideDllNames = <String>[
+const macosWineD3DBuiltinDllNames = <String>[
   ...dxvkOverrideDllNames,
   'd3d12.dll',
+];
+
+const macosD3DTranslationOverrideDllNames = <String>[
+  ...macosWineD3DBuiltinDllNames,
   'nvapi64.dll',
   'nvngx.dll',
   'nvngx-on-metalfx.dll',
@@ -57,6 +61,47 @@ void removeMacosD3DTranslationDllOverrides({required BottleRecord bottle}) {
         continue;
       }
       deleteFileSystemEntitySync(dllPath, type);
+    }
+  }
+}
+
+void syncMacosWineD3DBuiltinDlls({
+  required BottleRecord bottle,
+  required Map<String, String> environment,
+}) {
+  final runtimeRoot = macosWineRuntimeRoot(HostEnvironment(environment));
+  for (final arch in const <(String, String)>[
+    ('x86_64-windows', 'system32'),
+    ('i386-windows', 'syswow64'),
+  ]) {
+    final (runtimeArch, windowsDirectory) = arch;
+    final sourceFiles = <(String, File)>[
+      for (final dllName in macosWineD3DBuiltinDllNames)
+        (
+          dllName,
+          File(
+            joinPath(runtimeRoot, <String>[
+              'lib',
+              'wine',
+              runtimeArch,
+              dllName,
+            ]),
+          ),
+        ),
+    ].where((entry) => entry.$2.existsSync()).toList(growable: false);
+    if (sourceFiles.isEmpty) {
+      continue;
+    }
+
+    final destinationDirectory = Directory(
+      joinPath(bottle.path.value, <String>[
+        'drive_c',
+        'windows',
+        windowsDirectory,
+      ]),
+    )..createSync(recursive: true);
+    for (final (dllName, sourceFile) in sourceFiles) {
+      sourceFile.copySync(joinPath(destinationDirectory.path, [dllName]));
     }
   }
 }

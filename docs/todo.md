@@ -54,6 +54,26 @@ verification output instead of checked-off backlog entries.
     profile's declared winetricks dependencies with recorded progress and
     failure results. Keep dependency ordering explicit in the manifest
     contract before exposing it to profile authors.
+  - Once installer resources, dependency winetricks, and the profile-install
+    user flow are complete, add an independently rerunnable macOS CI E2E gate
+    for the entire declarative profile path. Use a repository-owned,
+    redistributable synthetic installer and profile with an immutable digest;
+    do not depend on Steam payloads, authentication, or live third-party
+    downloads. Exercise the public Konyak CLI path used by the GUI to validate
+    and resolve the resource, reject a digest mismatch before execution, create
+    or select a bottle, run the installer, run a deterministic declared
+    winetricks dependency in manifest order, record the installed profile
+    binding, and launch the installed program normally.
+  - The profile-install E2E fixture must install a launcher and child executable
+    that record received argv. Verify that launching the pinned executable and
+    an actual Windows `.lnk` automatically activates the bound profile's
+    child-process rules without a profile-specific launch command. Also retain
+    contract coverage proving that `apply-program-profile` for a manual install
+    performs no resource download, installer execution, or dependency
+    winetricks run. Make this E2E gate required for changes to the installer
+    resource schema, profile-install orchestration, profile binding/launch
+    behavior, or the macOS child-process runtime contract after its runtime and
+    flake rate are established.
   - Preserve `apply-program-profile` as the manual-install path: it binds a
     selected executable and may pin it, but must not download an installer,
     execute an installer, or run winetricks dependencies.

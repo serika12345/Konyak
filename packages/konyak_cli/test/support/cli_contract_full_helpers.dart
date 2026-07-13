@@ -1503,6 +1503,39 @@ String macosManagedWineDllPath(String runtimeRoot) {
   ].join(':');
 }
 
+const testMacosWineD3DBuiltinDllNames = <String>[
+  'dxgi.dll',
+  'd3d9.dll',
+  'd3d10.dll',
+  'd3d10_1.dll',
+  'd3d10core.dll',
+  'd3d11.dll',
+  'd3d12.dll',
+];
+
+void createMacosWineD3DBuiltinDlls(
+  String runtimeRoot, {
+  List<String> runtimeArchitectures = const <String>[
+    'x86_64-windows',
+    'i386-windows',
+  ],
+}) {
+  for (final runtimeArchitecture in runtimeArchitectures) {
+    for (final dllName in testMacosWineD3DBuiltinDllNames) {
+      final file = File(
+        joinTestPath(runtimeRoot, <String>[
+          'lib',
+          'wine',
+          runtimeArchitecture,
+          dllName,
+        ]),
+      );
+      file.parent.createSync(recursive: true);
+      file.writeAsStringSync('$runtimeArchitecture/$dllName');
+    }
+  }
+}
+
 List<String> gptkD3DMetalExpectedPaths(String runtimeRoot) {
   return <String>[
     for (final relativePath in gptkD3DMetalRuntimeComponentPaths)

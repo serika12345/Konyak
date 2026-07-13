@@ -28,7 +28,11 @@ void main() {
     expect(profile.compatibilityProfile.childProcessRules, [
       ChildProcessCompatibilityRule(
         executableSuffix: 'steamwebhelper.exe',
-        appendArgumentsIfMissing: const ['--disable-gpu', '--in-process-gpu'],
+        appendArgumentsIfMissing: const [
+          '--no-sandbox',
+          '--in-process-gpu',
+          '--disable-gpu',
+        ],
       ),
     ]);
   });

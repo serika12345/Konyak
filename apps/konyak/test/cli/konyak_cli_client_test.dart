@@ -2032,7 +2032,7 @@ void main() {
                 "childProcessRules": [
                   {
                     "executableSuffix": "steamwebhelper.exe",
-                    "appendArgumentsIfMissing": ["--disable-gpu", "--in-process-gpu"]
+                    "appendArgumentsIfMissing": ["--no-sandbox", "--in-process-gpu", "--disable-gpu"]
                   }
                 ]
               }

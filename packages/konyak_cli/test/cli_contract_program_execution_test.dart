@@ -1426,6 +1426,7 @@ void main() {
       'bottles',
       'steam',
     ]);
+    createMacosWineD3DBuiltinDlls(runtimeRoot);
     final programPath = joinTestPath(tempDirectory.path, const ['game.exe']);
     File(programPath).writeAsBytesSync(
       syntheticPortableExecutableBytes(importDllNames: const ['d3d10.dll']),
@@ -1512,13 +1513,37 @@ void main() {
         'gptkD3d10Unsupported',
       ),
     );
-    for (final dllName in gptkD3DMetalOverrideDllNames) {
-      expect(
-        File(
-          joinTestPath(bottlePath, ['drive_c', 'windows', 'system32', dllName]),
-        ).existsSync(),
-        isFalse,
-      );
+    for (final arch in const <(String, String)>[
+      ('x86_64-windows', 'system32'),
+      ('i386-windows', 'syswow64'),
+    ]) {
+      final (runtimeArchitecture, windowsDirectory) = arch;
+      for (final dllName in testMacosWineD3DBuiltinDllNames) {
+        expect(
+          File(
+            joinTestPath(bottlePath, [
+              'drive_c',
+              'windows',
+              windowsDirectory,
+              dllName,
+            ]),
+          ).readAsStringSync(),
+          '$runtimeArchitecture/$dllName',
+        );
+      }
+      for (final dllName in const <String>['nvapi64.dll', 'nvngx.dll']) {
+        expect(
+          File(
+            joinTestPath(bottlePath, [
+              'drive_c',
+              'windows',
+              windowsDirectory,
+              dllName,
+            ]),
+          ).existsSync(),
+          isFalse,
+        );
+      }
     }
   });
 

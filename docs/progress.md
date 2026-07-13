@@ -25,6 +25,10 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
   - add Profile Manager editing, import, and export UI
   - define immutable installer resources and a generic install operation that
     runs declared winetricks dependencies only during profile installation
+  - after that install path is complete, add a deterministic macOS CI E2E gate
+    covering resource digest verification, installer execution, ordered
+    dependency winetricks, persisted binding, and automatic profile activation
+    from normal pinned EXE and Windows `.lnk` launches
   - preserve `apply-program-profile` as a side-effect-free manual binding path
 - Next action: specify the persisted user-profile repository and canonical
   import/export contract, then add failing CLI contract tests.
