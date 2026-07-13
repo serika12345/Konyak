@@ -157,6 +157,7 @@ final class InstallProfileDetails {
     required Iterable<String> platforms,
     required this.windowsVersion,
     required this.managedProgramPath,
+    required this.installerResource,
     required Iterable<String> dependencyWinetricksVerbs,
     required this.runCompletionPolicy,
     required this.compatibilityProfile,
@@ -170,9 +171,75 @@ final class InstallProfileDetails {
   final List<String> platforms;
   final String windowsVersion;
   final String managedProgramPath;
+  final InstallerResourceSummary installerResource;
   final List<String> dependencyWinetricksVerbs;
   final String runCompletionPolicy;
   final CompatibilityProfileSummary compatibilityProfile;
+}
+
+final class InstallerResourceSummary {
+  factory InstallerResourceSummary({
+    required String kind,
+    required String url,
+    required String sha256,
+    required String fileName,
+  }) {
+    final parsedUrl = _parseInstallerResourceUrl(url);
+    final lowerCaseFileName = fileName.toLowerCase();
+    final hasInstallerExtension =
+        lowerCaseFileName.endsWith('.exe') ||
+        lowerCaseFileName.endsWith('.msi');
+    final isValid =
+        kind == 'https' &&
+        url.isNotEmpty &&
+        url.length <= 8192 &&
+        url.codeUnits.every(
+          (codeUnit) => codeUnit > 0x20 && codeUnit != 0x7f,
+        ) &&
+        parsedUrl.scheme == 'https' &&
+        parsedUrl.hasAuthority &&
+        parsedUrl.host.isNotEmpty &&
+        !parsedUrl.authority.contains('@') &&
+        !parsedUrl.hasFragment &&
+        RegExp(r'^[0-9A-Fa-f]{64}$').hasMatch(sha256) &&
+        fileName.length > '.exe'.length &&
+        fileName.length <= 255 &&
+        !fileName.contains('/') &&
+        !fileName.contains('\\') &&
+        fileName.codeUnits.every(
+          (codeUnit) => codeUnit > 0x1f && codeUnit != 0x7f,
+        ) &&
+        hasInstallerExtension;
+    if (!isValid) {
+      throw ArgumentError('Invalid installer resource summary.');
+    }
+    return InstallerResourceSummary._validated(
+      kind: kind,
+      url: url,
+      sha256: sha256,
+      fileName: fileName,
+    );
+  }
+
+  const InstallerResourceSummary._validated({
+    required this.kind,
+    required this.url,
+    required this.sha256,
+    required this.fileName,
+  });
+
+  final String kind;
+  final String url;
+  final String sha256;
+  final String fileName;
+}
+
+Uri _parseInstallerResourceUrl(String value) {
+  try {
+    return Uri.parse(value);
+  } on FormatException {
+    throw ArgumentError('Invalid installer resource URL.');
+  }
 }
 
 final class CompatibilityProfileSummary {

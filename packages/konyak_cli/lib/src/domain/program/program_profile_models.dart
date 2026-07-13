@@ -2,6 +2,7 @@ import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../shared/domain_value_objects.dart';
+import 'program_run_command_support.dart';
 import 'program_run_models.dart';
 
 part 'program_profile_models.freezed.dart';
@@ -10,6 +11,142 @@ const konyakMaxChildProcessRuleArguments = 64;
 const konyakMaxChildProcessRulesLength = 65535;
 const konyakMaxChildProcessExecutableSuffixLength = 1024;
 const konyakMaxChildProcessArgumentLength = 8192;
+const konyakMaxDependencyWinetricksVerbs = 64;
+const konyakMaxDependencyWinetricksVerbLength = 128;
+const konyakMaxInstallerResourceUrlLength = 8192;
+const konyakMaxInstallerResourceFileNameLength = 255;
+
+enum InstallerResourceKind {
+  https('https');
+
+  const InstallerResourceKind(this.value);
+
+  final String value;
+}
+
+@Freezed(map: FreezedMapOptions.none, when: FreezedWhenOptions.none)
+abstract class InstallerResourceRecord with _$InstallerResourceRecord {
+  const InstallerResourceRecord._();
+
+  factory InstallerResourceRecord({
+    required String kind,
+    required String url,
+    required String sha256,
+    required String fileName,
+  }) {
+    if (kind != InstallerResourceKind.https.value) {
+      throw ArgumentError.value(
+        kind,
+        'kind',
+        'must be ${InstallerResourceKind.https.value}',
+      );
+    }
+    return InstallerResourceRecord._validated(
+      kind: InstallerResourceKind.https,
+      url: InstallerResourceUrl(url),
+      sha256: InstallerResourceSha256(sha256),
+      fileName: InstallerResourceFileName(fileName),
+    );
+  }
+
+  const factory InstallerResourceRecord._validated({
+    required InstallerResourceKind kind,
+    required InstallerResourceUrl url,
+    required InstallerResourceSha256 sha256,
+    required InstallerResourceFileName fileName,
+  }) = _InstallerResourceRecord;
+}
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class InstallerResourceUrl with _$InstallerResourceUrl {
+  const InstallerResourceUrl._();
+
+  factory InstallerResourceUrl(String value) {
+    final uri = _parseInstallerResourceUri(value);
+    if (value.isEmpty ||
+        value.length > konyakMaxInstallerResourceUrlLength ||
+        value.codeUnits.any(
+          (codeUnit) => codeUnit <= 0x20 || codeUnit == 0x7f,
+        ) ||
+        uri.scheme != InstallerResourceKind.https.value ||
+        !uri.hasAuthority ||
+        uri.host.isEmpty ||
+        uri.authority.contains('@') ||
+        uri.hasFragment) {
+      throw ArgumentError.value(
+        value,
+        'url',
+        'must be an HTTPS URL with a host and no userinfo or fragment',
+      );
+    }
+    return InstallerResourceUrl._validated(value);
+  }
+
+  const factory InstallerResourceUrl._validated(String value) =
+      _InstallerResourceUrl;
+}
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class InstallerResourceSha256 with _$InstallerResourceSha256 {
+  const InstallerResourceSha256._();
+
+  factory InstallerResourceSha256(String value) {
+    if (!RegExp(r'^[0-9A-Fa-f]{64}$').hasMatch(value)) {
+      throw ArgumentError.value(
+        value,
+        'sha256',
+        'must contain exactly 64 hexadecimal characters',
+      );
+    }
+    return InstallerResourceSha256._validated(value);
+  }
+
+  const factory InstallerResourceSha256._validated(String value) =
+      _InstallerResourceSha256;
+}
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class InstallerResourceFileName with _$InstallerResourceFileName {
+  const InstallerResourceFileName._();
+
+  factory InstallerResourceFileName(String value) {
+    final lowerCaseValue = value.toLowerCase();
+    final hasInstallerExtension =
+        lowerCaseValue.endsWith('.exe') || lowerCaseValue.endsWith('.msi');
+    if (value.length <= '.exe'.length ||
+        value.length > konyakMaxInstallerResourceFileNameLength ||
+        value.contains('/') ||
+        value.contains('\\') ||
+        value.codeUnits.any(
+          (codeUnit) => codeUnit <= 0x1f || codeUnit == 0x7f,
+        ) ||
+        !hasInstallerExtension) {
+      throw ArgumentError.value(
+        value,
+        'fileName',
+        'must be a basename of at most '
+            '$konyakMaxInstallerResourceFileNameLength characters ending in '
+            '.exe or .msi',
+      );
+    }
+    return InstallerResourceFileName._validated(value);
+  }
+
+  const factory InstallerResourceFileName._validated(String value) =
+      _InstallerResourceFileName;
+}
 
 @Freezed(map: FreezedMapOptions.none, when: FreezedWhenOptions.none)
 abstract class InstallProfileRecord with _$InstallProfileRecord {
@@ -23,11 +160,16 @@ abstract class InstallProfileRecord with _$InstallProfileRecord {
     required Iterable<String> platforms,
     required String windowsVersion,
     required String managedProgramPath,
+    required InstallerResourceRecord installerResource,
     required Iterable<String> dependencyWinetricksVerbs,
     required CompatibilityProfileRecord compatibilityProfile,
     ProgramRunCompletionPolicy runCompletionPolicy =
         ProgramRunCompletionPolicy.waitForExit,
   }) {
+    final validatedDependencyWinetricksVerbs = dependencyWinetricksVerbs
+        .map(WinetricksVerbId.new)
+        .toIList();
+    _validateDependencyWinetricksVerbs(validatedDependencyWinetricksVerbs);
     return InstallProfileRecord._validated(
       id: ProfileId(id),
       name: ProfileName(name),
@@ -35,10 +177,11 @@ abstract class InstallProfileRecord with _$InstallProfileRecord {
       summary: ProfileSummary(summary),
       platforms: platforms.map(RuntimePlatformName.new).toIList(),
       windowsVersion: WindowsVersion(windowsVersion),
-      managedProgramPath: ProgramPath(managedProgramPath),
-      dependencyWinetricksVerbs: dependencyWinetricksVerbs
-          .map(WinetricksVerbId.new)
-          .toIList(),
+      managedProgramPath: ProgramPath(
+        _validateManagedProgramPath(managedProgramPath),
+      ),
+      installerResource: installerResource,
+      dependencyWinetricksVerbs: validatedDependencyWinetricksVerbs,
       compatibilityProfile: compatibilityProfile,
       runCompletionPolicy: runCompletionPolicy,
     );
@@ -52,10 +195,81 @@ abstract class InstallProfileRecord with _$InstallProfileRecord {
     required IList<RuntimePlatformName> platforms,
     required WindowsVersion windowsVersion,
     required ProgramPath managedProgramPath,
+    required InstallerResourceRecord installerResource,
     required IList<WinetricksVerbId> dependencyWinetricksVerbs,
     required CompatibilityProfileRecord compatibilityProfile,
     required ProgramRunCompletionPolicy runCompletionPolicy,
   }) = _InstallProfileRecord;
+}
+
+Uri _parseInstallerResourceUri(String value) {
+  try {
+    return Uri.parse(value);
+  } on FormatException {
+    throw ArgumentError.value(
+      value,
+      'url',
+      'must be an HTTPS URL with a host and no userinfo or fragment',
+    );
+  }
+}
+
+String _validateManagedProgramPath(String value) {
+  final hasAbsoluteCDriveRoot = RegExp(r'^[Cc]:[\\/]').hasMatch(value);
+  final components = value.length >= 3
+      ? value.substring(3).split(RegExp(r'[\\/]'))
+      : const <String>[];
+  final hasUnsafeComponent = components.any(
+    (component) => component.isEmpty || component == '.' || component == '..',
+  );
+  final hasExeFileName =
+      components.isNotEmpty &&
+      components.last.length > '.exe'.length &&
+      components.last.toLowerCase().endsWith('.exe');
+  if (!hasAbsoluteCDriveRoot ||
+      value.contains('\u0000') ||
+      hasUnsafeComponent ||
+      !hasExeFileName) {
+    throw ArgumentError.value(
+      value,
+      'managedProgramPath',
+      'must be an absolute C-drive Windows .exe path without empty, dot, or '
+          'dot-dot components',
+    );
+  }
+  return value;
+}
+
+void _validateDependencyWinetricksVerbs(IList<WinetricksVerbId> verbs) {
+  if (verbs.length > konyakMaxDependencyWinetricksVerbs) {
+    throw ArgumentError.value(
+      verbs.length,
+      'dependencyWinetricksVerbs',
+      'must contain at most $konyakMaxDependencyWinetricksVerbs verbs',
+    );
+  }
+  final invalidVerb = verbs.where(
+    (verb) =>
+        verb.value.length > konyakMaxDependencyWinetricksVerbLength ||
+        !isSupportedWinetricksVerb(verb),
+  );
+  if (invalidVerb.isNotEmpty) {
+    throw ArgumentError.value(
+      invalidVerb.first.value,
+      'dependencyWinetricksVerbs',
+      'each verb must be at most '
+          '$konyakMaxDependencyWinetricksVerbLength characters and match '
+          r'[A-Za-z0-9_.+-]+',
+    );
+  }
+  final values = verbs.map((verb) => verb.value).toList(growable: false);
+  if (values.toSet().length != values.length) {
+    throw ArgumentError.value(
+      values,
+      'dependencyWinetricksVerbs',
+      'must not contain duplicate verbs',
+    );
+  }
 }
 
 @Freezed(map: FreezedMapOptions.none, when: FreezedWhenOptions.none)

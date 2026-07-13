@@ -4,6 +4,7 @@ InstallProfileRecord testInstallProfile({
   String id = 'test-profile',
   String name = 'Test Profile',
   String managedProgramPath = r'C:\Test App\Test.exe',
+  Iterable<String> dependencyWinetricksVerbs = const ['corefonts'],
   String executableSuffix = 'test-helper.exe',
   Iterable<String> appendArgumentsIfMissing = const ['--test-compat'],
 }) {
@@ -15,7 +16,13 @@ InstallProfileRecord testInstallProfile({
     platforms: const ['macos'],
     windowsVersion: 'win10',
     managedProgramPath: managedProgramPath,
-    dependencyWinetricksVerbs: const ['corefonts'],
+    installerResource: InstallerResourceRecord(
+      kind: 'https',
+      url: 'https://downloads.example.test/TestSetup.exe',
+      sha256: '0123456789abcdef' * 4,
+      fileName: 'TestSetup.exe',
+    ),
+    dependencyWinetricksVerbs: dependencyWinetricksVerbs,
     runCompletionPolicy: ProgramRunCompletionPolicy.launchOnly,
     compatibilityProfile: CompatibilityProfileRecord(
       id: id,
