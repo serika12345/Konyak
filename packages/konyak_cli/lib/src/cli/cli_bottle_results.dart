@@ -128,6 +128,11 @@ CliSideEffectResult syncRuntimeSettingsDllOverrides({
         bottle: bottle,
         environment: programRunPlanner.environment.toMap(),
       );
+    } else if (!runtimeSettings.dxmt) {
+      syncMacosWineD3DBuiltinDlls(
+        bottle: bottle,
+        environment: programRunPlanner.environment.toMap(),
+      );
     }
   });
   return syncResult.fold<CliSideEffectResult>(

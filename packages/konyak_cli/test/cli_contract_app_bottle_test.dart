@@ -1321,7 +1321,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
     }
   });
 
-  test('set-runtime-settings --json removes macOS D3D DLL overrides', () {
+  test('set-runtime-settings --json restores macOS WineD3D DLLs', () {
     final tempDirectory = Directory.systemTemp.createTempSync(
       'konyak-dxvk-overrides-remove-test-',
     );
@@ -1336,6 +1336,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       'bottles',
       'steam',
     ]);
+    createMacosWineD3DBuiltinDlls(runtimeRoot);
     for (final windowsDirectory in const ['system32', 'syswow64']) {
       for (final dllName in const [
         'dxgi.dll',
@@ -1392,14 +1393,25 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
 
     expect(result.exitCode, 0);
     expect(result.stderr, isEmpty);
-    for (final windowsDirectory in const ['system32', 'syswow64']) {
+    for (final arch in const <(String, String)>[
+      ('x86_64-windows', 'system32'),
+      ('i386-windows', 'syswow64'),
+    ]) {
+      final (runtimeArchitecture, windowsDirectory) = arch;
+      for (final dllName in testMacosWineD3DBuiltinDllNames) {
+        expect(
+          File(
+            joinTestPath(bottlePath, [
+              'drive_c',
+              'windows',
+              windowsDirectory,
+              dllName,
+            ]),
+          ).readAsStringSync(),
+          '$runtimeArchitecture/$dllName',
+        );
+      }
       for (final dllName in const [
-        'dxgi.dll',
-        'd3d9.dll',
-        'd3d10.dll',
-        'd3d10core.dll',
-        'd3d11.dll',
-        'd3d12.dll',
         'nvapi64.dll',
         'nvngx.dll',
         'nvngx-on-metalfx.dll',
@@ -1421,7 +1433,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
   });
 
   test(
-    'set-runtime-settings --json disables macOS D3DMetal without i386 Wine DLLs',
+    'set-runtime-settings --json restores available WineD3D DLLs without i386 Wine DLLs',
     () {
       final tempDirectory = Directory.systemTemp.createTempSync(
         'konyak-d3dmetal-disable-x64-runtime-test-',
@@ -1437,6 +1449,10 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
         'bottles',
         'steam',
       ]);
+      createMacosWineD3DBuiltinDlls(
+        runtimeRoot,
+        runtimeArchitectures: const <String>['x86_64-windows'],
+      );
       for (final windowsDirectory in const ['system32', 'syswow64']) {
         for (final dllName in const [
           'dxgi.dll',
@@ -1499,14 +1515,32 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
         ).runtimeSettings.dxrEnabled,
         isFalse,
       );
+      for (final dllName in testMacosWineD3DBuiltinDllNames) {
+        expect(
+          File(
+            joinTestPath(bottlePath, [
+              'drive_c',
+              'windows',
+              'system32',
+              dllName,
+            ]),
+          ).readAsStringSync(),
+          'x86_64-windows/$dllName',
+        );
+        expect(
+          File(
+            joinTestPath(bottlePath, [
+              'drive_c',
+              'windows',
+              'syswow64',
+              dllName,
+            ]),
+          ).existsSync(),
+          isFalse,
+        );
+      }
       for (final windowsDirectory in const ['system32', 'syswow64']) {
         for (final dllName in const [
-          'dxgi.dll',
-          'd3d9.dll',
-          'd3d10.dll',
-          'd3d10core.dll',
-          'd3d11.dll',
-          'd3d12.dll',
           'nvapi64.dll',
           'nvngx.dll',
           'nvngx-on-metalfx.dll',
@@ -1545,6 +1579,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
         'bottles',
         'steam',
       ]);
+      createMacosWineD3DBuiltinDlls(runtimeRoot);
       for (final windowsDirectory in const ['system32', 'syswow64']) {
         for (final dllName in const [
           'dxgi.dll',
@@ -1597,17 +1632,12 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
 
       expect(result.exitCode, 0);
       expect(result.stderr, isEmpty);
-      for (final windowsDirectory in const ['system32', 'syswow64']) {
-        for (final dllName in const [
-          'dxgi.dll',
-          'd3d9.dll',
-          'd3d10.dll',
-          'd3d10_1.dll',
-          'd3d10core.dll',
-          'd3d11.dll',
-          'd3d12.dll',
-          'winemetal.dll',
-        ]) {
+      for (final arch in const <(String, String)>[
+        ('x86_64-windows', 'system32'),
+        ('i386-windows', 'syswow64'),
+      ]) {
+        final (runtimeArchitecture, windowsDirectory) = arch;
+        for (final dllName in testMacosWineD3DBuiltinDllNames) {
           expect(
             File(
               joinTestPath(bottlePath, [
@@ -1616,10 +1646,21 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
                 windowsDirectory,
                 dllName,
               ]),
-            ).existsSync(),
-            isFalse,
+            ).readAsStringSync(),
+            '$runtimeArchitecture/$dllName',
           );
         }
+        expect(
+          File(
+            joinTestPath(bottlePath, [
+              'drive_c',
+              'windows',
+              windowsDirectory,
+              'winemetal.dll',
+            ]),
+          ).existsSync(),
+          isFalse,
+        );
       }
     },
   );
