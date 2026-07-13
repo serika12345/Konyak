@@ -226,6 +226,9 @@ _InstallProfileParseResult<InstallProfileDetails> _parseInstallProfileDetails(
   final platforms = _parseInstallProfileStringList(value['platforms']);
   final bottleTemplate = value['bottleTemplate'];
   final managedProgramPath = value['managedProgramPath'];
+  final installerResource = _parseInstallerResourceSummary(
+    value['installerResource'],
+  );
   final dependencyWinetricksVerbs = _parseInstallProfileStringList(
     value['dependencyWinetricksVerbs'],
   );
@@ -249,9 +252,15 @@ _InstallProfileParseResult<InstallProfileDetails> _parseInstallProfileDetails(
     return const _InvalidInstallProfileValue();
   }
 
-  return switch ((platforms, dependencyWinetricksVerbs, compatibilityProfile)) {
+  return switch ((
+    platforms,
+    installerResource,
+    dependencyWinetricksVerbs,
+    compatibilityProfile,
+  )) {
     (
       _ParsedInstallProfileValue(value: final platforms),
+      _ParsedInstallProfileValue(value: final installerResource),
       _ParsedInstallProfileValue(value: final dependencyWinetricksVerbs),
       _ParsedInstallProfileValue(value: final compatibilityProfile),
     ) =>
@@ -264,6 +273,7 @@ _InstallProfileParseResult<InstallProfileDetails> _parseInstallProfileDetails(
           platforms: platforms,
           windowsVersion: windowsVersion,
           managedProgramPath: managedProgramPath,
+          installerResource: installerResource,
           dependencyWinetricksVerbs: dependencyWinetricksVerbs,
           runCompletionPolicy: runCompletionPolicy,
           compatibilityProfile: compatibilityProfile,
@@ -271,6 +281,37 @@ _InstallProfileParseResult<InstallProfileDetails> _parseInstallProfileDetails(
       ),
     _ => const _InvalidInstallProfileValue(),
   };
+}
+
+_InstallProfileParseResult<InstallerResourceSummary>
+_parseInstallerResourceSummary(Object? value) {
+  if (value is! Map<String, Object?>) {
+    return const _InvalidInstallProfileValue();
+  }
+
+  final kind = value['kind'];
+  final url = value['url'];
+  final sha256 = value['sha256'];
+  final fileName = value['fileName'];
+  if (kind is! String ||
+      url is! String ||
+      sha256 is! String ||
+      fileName is! String) {
+    return const _InvalidInstallProfileValue();
+  }
+
+  try {
+    return _ParsedInstallProfileValue(
+      InstallerResourceSummary(
+        kind: kind,
+        url: url,
+        sha256: sha256,
+        fileName: fileName,
+      ),
+    );
+  } on ArgumentError {
+    return const _InvalidInstallProfileValue();
+  }
 }
 
 _InstallProfileParseResult<CompatibilityProfileSummary>

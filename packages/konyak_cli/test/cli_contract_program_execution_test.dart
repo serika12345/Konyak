@@ -501,6 +501,12 @@ void main() {
       'platforms': ['macos'],
       'bottleTemplate': {'windowsVersion': 'win10'},
       'managedProgramPath': r'C:\Test App\Test.exe',
+      'installerResource': {
+        'kind': 'https',
+        'url': 'https://downloads.example.test/TestSetup.exe',
+        'sha256': '0123456789abcdef' * 4,
+        'fileName': 'TestSetup.exe',
+      },
       'dependencyWinetricksVerbs': ['corefonts'],
       'runCompletionPolicy': 'launchOnly',
       'compatibilityProfile': {

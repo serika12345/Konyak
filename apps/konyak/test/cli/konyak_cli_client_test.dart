@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -2024,6 +2025,12 @@ void main() {
                 "windowsVersion": "win10"
               },
               "managedProgramPath": "C:\\\\Program Files (x86)\\\\Steam\\\\Steam.exe",
+              "installerResource": {
+                "kind": "https",
+                "url": "https://cdn.example.test/SteamSetup.exe",
+                "sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+                "fileName": "SteamSetup.exe"
+              },
               "dependencyWinetricksVerbs": ["corefonts"],
               "runCompletionPolicy": "launchOnly",
               "compatibilityProfile": {
@@ -2057,10 +2064,117 @@ void main() {
       expect(result, isA<InspectedInstallProfile>());
       final inspected = result as InspectedInstallProfile;
       expect(inspected.profile.name, 'Steam');
+      expect(inspected.profile.installerResource.kind, 'https');
+      expect(
+        inspected.profile.installerResource.url,
+        'https://cdn.example.test/SteamSetup.exe',
+      );
+      expect(
+        inspected.profile.installerResource.sha256,
+        '0123456789abcdef0123456789abcdef'
+        '0123456789abcdef0123456789abcdef',
+      );
+      expect(inspected.profile.installerResource.fileName, 'SteamSetup.exe');
       expect(inspected.profile.dependencyWinetricksVerbs, ['corefonts']);
       expect(inspected.profile.runCompletionPolicy, 'launchOnly');
     },
   );
+
+  test('rejects an install profile without an installer resource', () async {
+    final runner = _FakeProcessRunner(
+      result: const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "installProfile": {
+              "id": "invalid",
+              "name": "Invalid",
+              "profileVersion": 1,
+              "summary": "Missing installer resource.",
+              "platforms": ["macos"],
+              "bottleTemplate": {"windowsVersion": "win10"},
+              "managedProgramPath": "C:\\\\Invalid\\\\Invalid.exe",
+              "dependencyWinetricksVerbs": [],
+              "runCompletionPolicy": "waitForExit",
+              "compatibilityProfile": {
+                "id": "invalid",
+                "profileVersion": 1,
+                "childProcessRules": []
+              }
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+    );
+    final client = KonyakCliClient(executable: 'konyak', processRunner: runner);
+
+    final result = await client.inspectInstallProfile(profileId: 'invalid');
+
+    expect(result, isA<InstallProfileInspectLoadFailure>());
+  });
+
+  test('rejects malformed installer resource fields', () async {
+    final validResource = <String, Object?>{
+      'kind': 'https',
+      'url': 'https://cdn.example.test/SteamSetup.exe',
+      'sha256': '0123456789abcdef' * 4,
+      'fileName': 'SteamSetup.exe',
+    };
+    final invalidResources = <Map<String, Object?>>[
+      <String, Object?>{...validResource, 'kind': 'shell'},
+      <String, Object?>{...validResource, 'url': 'file:///tmp/SteamSetup.exe'},
+      <String, Object?>{
+        ...validResource,
+        'url': 'https://user@cdn.example.test/SteamSetup.exe',
+      },
+      <String, Object?>{
+        ...validResource,
+        'url': 'https://cdn.example.test/SteamSetup.exe#fragment',
+      },
+      <String, Object?>{...validResource, 'sha256': '0123456789abcdef'},
+      <String, Object?>{...validResource, 'fileName': '../Setup.exe'},
+      <String, Object?>{...validResource, 'fileName': 'Setup.sh'},
+    ];
+
+    for (final installerResource in invalidResources) {
+      final runner = _FakeProcessRunner(
+        result: ProcessRunResult(
+          exitCode: 0,
+          stdout: jsonEncode(<String, Object?>{
+            'schemaVersion': 1,
+            'installProfile': <String, Object?>{
+              'id': 'invalid',
+              'name': 'Invalid',
+              'profileVersion': 1,
+              'summary': 'Invalid installer resource.',
+              'platforms': <String>['macos'],
+              'bottleTemplate': <String, Object?>{'windowsVersion': 'win10'},
+              'managedProgramPath': r'C:\Invalid\Invalid.exe',
+              'installerResource': installerResource,
+              'dependencyWinetricksVerbs': <String>[],
+              'runCompletionPolicy': 'waitForExit',
+              'compatibilityProfile': <String, Object?>{
+                'id': 'invalid',
+                'profileVersion': 1,
+                'childProcessRules': <Object?>[],
+              },
+            },
+          }),
+          stderr: '',
+        ),
+      );
+      final client = KonyakCliClient(
+        executable: 'konyak',
+        processRunner: runner,
+      );
+
+      final result = await client.inspectInstallProfile(profileId: 'invalid');
+
+      expect(result, isA<InstallProfileInspectLoadFailure>());
+    }
+  });
 
   test('applies an install profile to a specific program path', () async {
     final runner = _FakeProcessRunner(
