@@ -33,13 +33,17 @@ class PrepareMacosDevRuntimeStackTest(unittest.TestCase):
         self.work_root = Path(self.temporary_directory.name)
         self.runtime_root = self.work_root / "runtime"
         self.manifest_path = self.work_root / "manifest.json"
+        self.manifest_cache = self.work_root / "cache" / "manifest.json"
         self.call_log = self.work_root / "fake-cli-calls.jsonl"
+        self.fake_curl_log = self.work_root / "fake-curl-source.txt"
+        self.fake_bin = self.work_root / "fake-bin"
         self.fake_cli = self.work_root / "fake_cli.py"
         self.versions = {
             component_id: f"{component_id}-current" for component_id in COMPONENT_IDS
         }
         self._write_manifest()
         self._write_fake_cli()
+        self._write_fake_curl()
 
     def _write_manifest(self) -> None:
         components = [
@@ -102,6 +106,38 @@ print(json.dumps({"schemaVersion": 1, "runtime": {"isInstalled": True}}))
             encoding="utf-8",
         )
 
+    def _write_fake_curl(self) -> None:
+        self.fake_bin.mkdir()
+        fake_curl = self.fake_bin / "curl"
+        fake_curl.write_text(
+            """#!/usr/bin/env python3
+import os
+import shutil
+import sys
+from pathlib import Path
+
+arguments = sys.argv[1:]
+output_path = Path(arguments[arguments.index("--output") + 1])
+shutil.copyfile(os.environ["KONYAK_TEST_REMOTE_MANIFEST"], output_path)
+Path(os.environ["KONYAK_TEST_FAKE_CURL_LOG"]).write_text(
+    arguments[-1], encoding="utf-8"
+)
+""",
+            encoding="utf-8",
+        )
+        fake_curl.chmod(0o755)
+
+    def _default_manifest_source(self) -> str:
+        reference = json.loads(
+            (ROOT / "runtime" / "macos-wine-release.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        return (
+            f"https://github.com/{reference['repository']}/releases/latest/download/"
+            f"{reference['sourceManifestFileName']}"
+        )
+
     def _environment(self) -> dict[str, str]:
         environment = os.environ.copy()
         environment.update(
@@ -145,6 +181,95 @@ print(json.dumps({"schemaVersion": 1, "runtime": {"isInstalled": True}}))
         self.assertEqual(second.stdout.strip(), str(self.manifest_path))
         self.assertEqual(self._fake_cli_call_count(), 1)
         self.assertIn("development runtime is current", second.stderr)
+
+    def test_prints_selected_manifest_source_without_exposing_cache_path(self) -> None:
+        result = subprocess.run(
+            [str(PREPARE_SCRIPT), "--print-manifest-source"],
+            cwd=ROOT,
+            env=self._environment(),
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+
+        self.assertEqual(result.stdout.strip(), str(self.manifest_path))
+
+    def test_trims_configured_manifest_source(self) -> None:
+        environment = self._environment()
+        environment["KONYAK_DEV_MACOS_WINE_STACK_MANIFEST"] = (
+            f" \t{self.manifest_path}\n "
+        )
+
+        result = subprocess.run(
+            [str(PREPARE_SCRIPT), "--print-manifest-source"],
+            cwd=ROOT,
+            env=environment,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+
+        self.assertEqual(result.stdout.strip(), str(self.manifest_path))
+
+    def test_blank_manifest_source_uses_repository_latest(self) -> None:
+        environment = self._environment()
+        environment.update(
+            {
+                "PATH": f"{self.fake_bin}:{environment['PATH']}",
+                "KONYAK_DEV_MACOS_WINE_STACK_MANIFEST": " \t\n ",
+                "KONYAK_DEV_MACOS_WINE_STACK_MANIFEST_CACHE": str(
+                    self.manifest_cache
+                ),
+                "KONYAK_TEST_REMOTE_MANIFEST": str(self.manifest_path),
+                "KONYAK_TEST_FAKE_CURL_LOG": str(self.fake_curl_log),
+            }
+        )
+
+        result = subprocess.run(
+            [str(PREPARE_SCRIPT), "--print-manifest-source"],
+            cwd=ROOT,
+            env=environment,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+
+        expected_source = self._default_manifest_source()
+        self.assertEqual(result.stdout.strip(), expected_source)
+        self.assertEqual(
+            self.fake_curl_log.read_text(encoding="utf-8"), expected_source
+        )
+
+    def test_dev_shell_normalizes_manifest_override(self) -> None:
+        cases = (
+            (" \t\n ", self._default_manifest_source()),
+            (
+                " \thttps://example.invalid/pinned-source.json\n ",
+                "https://example.invalid/pinned-source.json",
+            ),
+        )
+
+        for override, expected_source in cases:
+            with self.subTest(override=override):
+                environment = os.environ.copy()
+                environment["KONYAK_MACOS_WINE_STACK_MANIFEST_OVERRIDE"] = override
+                result = subprocess.run(
+                    [
+                        "nix",
+                        "develop",
+                        "-c",
+                        "zsh",
+                        "-lc",
+                        'print -rn -- "$KONYAK_DEV_MACOS_WINE_STACK_MANIFEST"',
+                    ],
+                    cwd=ROOT,
+                    env=environment,
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                )
+
+                self.assertEqual(result.stdout, expected_source)
 
     def test_updates_stale_runtime_but_allows_additional_components(self) -> None:
         installed_versions = dict(self.versions)

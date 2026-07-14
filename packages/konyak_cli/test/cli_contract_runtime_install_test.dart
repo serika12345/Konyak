@@ -267,29 +267,52 @@ void main() {
   });
 
   test(
-    'install-macos-wine reports incomplete installed runtime without a configured stack source in development',
+    'install-macos-wine plans an incomplete development runtime repair from the platform default',
     () {
-      final installer = DartIoMacosWineInstaller(
+      final currentRuntime = runtimeRecordFixture(
+        id: macosWineRuntimeId,
+        name: 'Konyak macOS Wine',
+        platform: 'macos',
+        architecture: 'x86_64',
+        runnerKind: 'macosWine',
+        isBundled: false,
+        isUpdateable: true,
+        isInstalled: Option.of(true),
+        stack: Option.of(
+          runtimeStackFixture(
+            id: 'macos-konyak-runtime-stack',
+            name: 'macOS Konyak runtime stack',
+            compatibilityTarget: 'macos',
+            components: [
+              runtimeStackComponentFixture(
+                id: 'wine',
+                name: 'Wine',
+                role: 'windows-runner',
+                isRequired: true,
+                paths: ['/runtime/bin/wineloader'],
+                missingPaths: ['/runtime/bin/wineloader'],
+              ),
+            ],
+          ),
+        ),
+      );
+      final plan = macosWineInstallPlan(
         hostPlatform: KonyakHostPlatform.macos,
         environment: HostEnvironment(const {
           'HOME': '/Users/user',
           'KONYAK_RUNTIME_PROFILE': 'development',
         }),
-        fileStatusProbe: const StaticFileStatusProbe({
-          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wineloader',
-          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wineserver',
-          '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wine',
-        }),
+        request: macosWineFullInstallRequestFixture(),
+        currentRuntime: currentRuntime,
       );
 
-      final result = installer.install(macosWineFullInstallRequestFixture());
-
-      expect(result, isA<MacosWineInstallFailed>());
+      expect(plan, isA<RuntimeWineInstallFromSourceManifest>());
+      final repairPlan = plan as RuntimeWineInstallFromSourceManifest;
       expect(
-        (result as MacosWineInstallFailed).message,
-        contains('runtime stack is incomplete'),
+        repairPlan.sourceManifest,
+        RuntimeSourceManifestUrl(macosWineRuntimeSourceManifestUrl),
       );
-      expect(result.message, contains('KONYAK_MACOS_WINE_STACK_MANIFEST'));
+      expect(repairPlan.preserveExistingRuntimeFiles, isTrue);
     },
   );
 

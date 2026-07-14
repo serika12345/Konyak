@@ -8,17 +8,18 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
 
 ## Current Work Snapshot
 
-- Timestamp: 2026-07-14 11:12 JST
+- Timestamp: 2026-07-14 12:09 JST
 - State: `paused`
-- Branch: `task/profile-installer-flow`; the latest committed prerequisite is
-  `3d68718`, IP-S5O is verified in the current worktree, and the branch base is
-  `6f23f55`.
+- Branch: `task/profile-installer-flow`; the latest completed profile step
+  before this runtime correction is `2105572`, IP-S5O is verified, and the
+  branch base is `6f23f55`.
 - Related TODO: `docs/todo.md` Next Tasks, "Build a distributable compatibility
   profile system".
 - Related issue: <https://github.com/serika12345/Konyak/issues/44>
-- Purpose: let users author, validate, import, export, install, and share
-  declarative compatibility profiles without adding application-specific app or
-  runtime branches.
+- Purpose: remove a stale macOS development-runtime manifest reference before
+  repeating the Profile Manager GUI checkpoint, while preserving the broader
+  goal of letting users author, validate, import, export, install, and share
+  declarative compatibility profiles without application-specific branches.
 - Completed work:
   - inspected the existing profile schema, domain model, CLI contracts,
     Profile Manager, winetricks planner, resource download support, persisted
@@ -99,15 +100,36 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
     the staged installer exactly once on dependency failure, and prevented
     installer launch, EXE verification, and persistence after such a failure
   - completed an independent dependency-order audit with no blocking findings
+  - dynamically confirmed that the repository release reference, GitHub latest
+    release, and published source manifest select `.4`
+  - dynamically confirmed that the active VSCode macOS debug process instead
+    receives the cached `.dart_tool` source-manifest path, whose contents and
+    source URL still select `.2`
+  - made the repository macOS release policy `latest`, made the CLI use the
+    stable `releases/latest/download` source-manifest URL, and made development
+    runs without a non-empty explicit source fall back to that platform default
+  - stopped VSCode, Nix Terminal, and Agent Watch launchers from treating the
+    `.dart_tool` manifest cache as their release selector; the cache remains an
+    internal validated output of the prepare script
+  - separated explicit repository, tag, and manifest overrides from derived
+    `KONYAK_DEV_*` values so a newly entered Nix shell replaces stale values
+    inherited from an older development shell
+  - normalized whitespace at the Nix, prepare-script, Agent Watch, and Dart
+    boundaries so blank overrides select latest and padded non-empty overrides
+    retain their explicit meaning
+  - completed independent implementation audit after correcting its blank
+    manifest-override finding; no blocking findings remain
 - Remaining work:
   - repeat the Profile Manager automatic-install GUI inspection with the
     corrected dependency-first ordering
   - complete IP-P4 after the GUI checkpoint is accepted
   - after the automatic installation path is stable, resume user profile
     storage, canonical import/export, editing, and sharing work
-- Next action: repeat Profile Manager automatic installation and confirm the
-  visible `corefonts` stage completes before SteamSetup starts. Do not begin
-  IP-P4 before that GUI review.
+- Next action: stop the currently running pre-fix Flutter debug session, relaunch
+  `Konyak Flutter (macOS)` so it receives the corrected latest-source contract,
+  then repeat Profile Manager automatic installation and confirm the visible
+  `corefonts` stage completes before SteamSetup starts. Do not begin IP-P4
+  before that GUI review.
 - Verification performed:
   - TDD red states captured for the new CLI/domain and Flutter parser contracts
   - `just cli-format-check`, `just cli-analyze`, and `just cli-test` passed; 487
@@ -174,3 +196,27 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
     its SHA-256 matched
     `7d3654531c32d941b8cae81c4137fc542172bfa9635f169cb392f245a0a12bcb`
   - `git diff --check` passed
+  - at 2026-07-14 11:23 JST, process inspection showed the active Flutter debug
+    command receiving
+    `KONYAK_DEV_MACOS_WINE_STACK_MANIFEST=.dart_tool/konyak/dev-runtime-source/macos-wine-stack/konyak-macos-wine-runtime-stack-source.json`
+  - the cached manifest, its source marker, the installed runtime marker, and a
+    public CLI invocation with the active debug inputs select `.2`, while the
+    current Nix development environment, GitHub latest release, and published
+    source manifest resolve `.4`
+  - captured TDD red states for the fixed `.4` repository/Dart defaults, absent
+    development fallback, missing prepare source output, stale derived Nix
+    values, and blank or padded overrides across Nix and prepare boundaries
+  - focused runtime tests passed with 55 cases, prepare-script tests passed with
+    6 cases, and the full CLI suite passed with 499 cases
+  - independent Nix-shell probes proved the fresh default and stale derived
+    `.2` inputs both select latest, while dedicated repository, tag, and
+    manifest overrides select their normalized explicit values
+  - at 2026-07-14 11:54 JST, the maintained prepare script updated the
+    development runtime from Wine `.2` to `crossover-26.1.0-konyak.4`, updated
+    the cache source marker to the latest URL, and left no temporary files
+  - the public `list-runtimes --json` path then reported the development runtime
+    installed and complete with Wine `.4`; the audit did not stop the GUI or
+    modify Bottle or Library data
+  - the final independent audit passed `just verify-governance`,
+    `just verify-safety`, `just format-check`, `just lint`, `just cli-test`,
+    `just macos-dev-runtime-prepare-test`, and `git diff --check`

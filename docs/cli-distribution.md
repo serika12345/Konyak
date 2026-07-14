@@ -20,10 +20,15 @@ macOS runtime release from `runtime/macos-wine-release.json` and caches the
 release source manifest consumed by `install-macos-wine --json`. Supported
 macOS development launchers pass `--ensure-runtime`, which compares every
 published component version with `.konyak-runtime-stack.json` and reinstalls
-the managed development runtime only when it is missing or stale. Set
-`KONYAK_DEV_MACOS_RUNTIME_RELEASE_TAG` to switch the development build to a
-different published runtime release, or set
-`KONYAK_DEV_MACOS_WINE_STACK_MANIFEST` to a complete manifest URL or local file.
+the managed development runtime only when it is missing or stale. A new Nix dev
+shell regenerates the CLI-facing development source from the repository SSOT,
+so a source derived by an older shell is not reused as a pin. Set
+`KONYAK_MACOS_RUNTIME_RELEASE_TAG_OVERRIDE` to switch supported Nix terminal or
+Agent Watch launches to a different published runtime release, or set
+`KONYAK_MACOS_WINE_STACK_MANIFEST_OVERRIDE` to a complete manifest URL or local
+file. The supported launchers map these explicit inputs to the CLI-facing
+`KONYAK_DEV_MACOS_RUNTIME_RELEASE_TAG` and
+`KONYAK_DEV_MACOS_WINE_STACK_MANIFEST` variables.
 The parent repository does not generate macOS runtime component archives. Wine,
 winetricks, Mono, Gecko, MoltenVK, FreeType, GStreamer, DXVK, DXMT, and vkd3d
 must come from the `runtime/konyak-macos-runtime` produced stack manifest.
