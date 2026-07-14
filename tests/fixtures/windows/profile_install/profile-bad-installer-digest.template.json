@@ -1,0 +1,5 @@
+{
+  "id": "profile-install-fixture-bad-installer-digest",
+  "name": "Konyak Profile Fixture Bad Installer Digest",
+  "digestTarget": "installer"
+}

@@ -1,0 +1,60 @@
+{
+  "$schema": "https://raw.githubusercontent.com/serika12345/Konyak/main/packages/konyak_cli/profiles/profile.schema.json",
+  "schemaVersion": 1,
+  "id": "profile-install-fixture",
+  "name": "Konyak Profile Install Fixture",
+  "profileVersion": 1,
+  "summary": "Install the redistributable Konyak profile E2E fixture.",
+  "platforms": ["macos"],
+  "windowsVersion": "win10",
+  "managedProgramPath": "C:\\Program Files\\Konyak Profile Fixture\\profile_fixture_launcher.exe",
+  "installerResource": {
+    "kind": "https",
+    "url": "https://127.0.0.1:18443/profile_fixture_installer.exe",
+    "sha256": "__INSTALLER_SHA256__",
+    "fileName": "profile_fixture_installer.exe"
+  },
+  "preInstallActions": [
+    {
+      "kind": "winetricks",
+      "verb": "win10"
+    },
+    {
+      "kind": "nativeDll",
+      "componentId": "fixture-d3dcompiler-x86",
+      "machine": "x86",
+      "destination": "windowsSysWow64",
+      "targetFileName": "d3dcompiler_47.dll",
+      "resource": {
+        "kind": "https",
+        "url": "https://127.0.0.1:18443/profile_fixture_x86.dll",
+        "sha256": "__X86_DLL_SHA256__",
+        "fileName": "profile_fixture_x86.dll"
+      }
+    },
+    {
+      "kind": "nativeDll",
+      "componentId": "fixture-d3dcompiler-x64",
+      "machine": "x64",
+      "destination": "windowsSystem32",
+      "targetFileName": "d3dcompiler_47.dll",
+      "resource": {
+        "kind": "https",
+        "url": "https://127.0.0.1:18443/profile_fixture_x64.dll",
+        "sha256": "__X64_DLL_SHA256__",
+        "fileName": "profile_fixture_x64.dll"
+      }
+    }
+  ],
+  "runCompletionPolicy": "waitForExit",
+  "compatibilityProfile": {
+    "id": "profile-install-fixture",
+    "profileVersion": 1,
+    "childProcessRules": [
+      {
+        "executableSuffix": "profile_fixture_child.exe",
+        "appendArgumentsIfMissing": ["--profile-rule=active"]
+      }
+    ]
+  }
+}

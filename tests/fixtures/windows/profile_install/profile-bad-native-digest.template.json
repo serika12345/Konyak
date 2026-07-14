@@ -1,0 +1,5 @@
+{
+  "id": "profile-install-fixture-bad-native-digest",
+  "name": "Konyak Profile Fixture Bad Native Digest",
+  "digestTarget": "x86NativeDll"
+}
