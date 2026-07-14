@@ -6,7 +6,7 @@ import '../domain/bottle/bottle_models.dart';
 import '../domain/shared/domain_value_objects.dart';
 import '../shared/common_helpers.dart';
 import 'external_payload_helpers.dart';
-import 'wine_process_metadata.dart';
+import 'wine_path_mapping.dart';
 
 List<BottleProgramSource> bottleStartMenuSources(BottleRecord bottle) {
   return <BottleProgramSource>[

@@ -1375,6 +1375,67 @@ void main() {
   });
 
   test(
+    'pin-program --json extracts an icon for Windows-path PE programs',
+    () async {
+      final tempDirectory = await Directory.systemTemp.createTemp(
+        'konyak-pin-windows-program-icon-test-',
+      );
+      addTearDown(() async {
+        if (await tempDirectory.exists()) {
+          await tempDirectory.delete(recursive: true);
+        }
+      });
+      final bottlePath = joinTestPath(tempDirectory.path, const ['Steam']);
+      final programPath = joinTestPath(bottlePath, const [
+        'drive_c',
+        'Program Files',
+        'Fixture',
+        'Fixture.exe',
+      ]);
+      File(programPath)
+        ..createSync(recursive: true)
+        ..writeAsBytesSync(syntheticPortableExecutableBytes());
+      final repository = MemoryBottleRepository(
+        programMetadataExtractor: const DartIoProgramMetadataExtractor(),
+        dataHome: tempDirectory.path,
+        bottles: [
+          BottleRecord(
+            id: 'steam',
+            name: 'Steam',
+            path: bottlePath,
+            windowsVersion: 'win10',
+          ),
+        ],
+      );
+      const windowsProgramPath = r'C:\Program Files\Fixture\Fixture.exe';
+
+      final result = runCli(const [
+        'pin-program',
+        'steam',
+        '--name',
+        'Fixture',
+        '--program',
+        windowsProgramPath,
+        '--json',
+      ], bottleRepository: repository);
+
+      expect(result.exitCode, 0);
+      expect(result.stderr, isEmpty);
+
+      final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+      final bottle = payload['bottle'] as Map<String, Object?>;
+      final pinnedPrograms = bottle['pinnedPrograms'] as List<Object?>;
+      final pinnedProgram = pinnedPrograms.single as Map<String, Object?>;
+      expect(pinnedProgram['path'], windowsProgramPath);
+      final iconPath = pinnedProgram['iconPath'];
+      expect(iconPath, isA<String>());
+      expect(iconPath as String, startsWith('$bottlePath/cache/icons/'));
+      final iconBytes = File(iconPath).readAsBytesSync();
+      expect(iconBytes.take(4), const [0, 0, 1, 0]);
+    },
+  );
+
+  test(
     'pin-program --json resolves Wine shortcuts before extracting icons',
     () async {
       final tempDirectory = await Directory.systemTemp.createTemp(
@@ -1506,6 +1567,161 @@ void main() {
       expect(iconPath as String, startsWith('$bottlePath/cache/icons/'));
     },
   );
+
+  test('list-bottles --json extracts icons for existing Windows-path pins', () {
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-existing-windows-pinned-program-icon-test-',
+    );
+    addTearDown(() {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    });
+    final bottlePath = joinTestPath(tempDirectory.path, const ['Steam']);
+    final programPath = joinTestPath(bottlePath, const [
+      'drive_c',
+      'Program Files',
+      'Fixture',
+      'Fixture.exe',
+    ]);
+    File(programPath)
+      ..createSync(recursive: true)
+      ..writeAsBytesSync(syntheticPortableExecutableBytes());
+    const windowsProgramPath = r'C:\Program Files\Fixture\Fixture.exe';
+    final repository = MemoryBottleRepository(
+      programMetadataExtractor: const DartIoProgramMetadataExtractor(),
+      dataHome: tempDirectory.path,
+      bottles: [
+        BottleRecord(
+          id: 'steam',
+          name: 'Steam',
+          path: bottlePath,
+          windowsVersion: 'win10',
+          pinnedPrograms: [
+            PinnedProgramRecord(name: 'Fixture', path: windowsProgramPath),
+          ],
+        ),
+      ],
+    );
+
+    final result = runCli(const [
+      'list-bottles',
+      '--json',
+    ], bottleRepository: repository);
+
+    expect(result.exitCode, 0);
+    expect(result.stderr, isEmpty);
+
+    final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+    final bottles = payload['bottles'] as List<Object?>;
+    final bottle = bottles.single as Map<String, Object?>;
+    final pinnedPrograms = bottle['pinnedPrograms'] as List<Object?>;
+    final pinnedProgram = pinnedPrograms.single as Map<String, Object?>;
+    expect(pinnedProgram['path'], windowsProgramPath);
+    final iconPath = pinnedProgram['iconPath'];
+    expect(iconPath, isA<String>());
+    expect(iconPath as String, startsWith('$bottlePath/cache/icons/'));
+  });
+
+  test(
+    'list-bottles --json preserves a malformed persisted Windows-path pin without an icon',
+    () {
+      final tempDirectory = Directory.systemTemp.createTempSync(
+        'konyak-malformed-windows-pinned-program-test-',
+      );
+      addTearDown(() {
+        if (tempDirectory.existsSync()) {
+          tempDirectory.deleteSync(recursive: true);
+        }
+      });
+      const malformedDotPath = r'C:\..\outside.exe';
+      final repository = FileBottleRepository(
+        programMetadataExtractor: const DartIoProgramMetadataExtractor(),
+        dataHome: tempDirectory.path,
+      );
+      final createResult = repository.createBottle(
+        BottleCreateRequest(
+          name: BottleName('Steam'),
+          windowsVersion: WindowsVersion('win10'),
+        ),
+      );
+      expect(createResult, isA<BottleCreated>());
+      final bottle = (createResult as BottleCreated).bottle;
+      final malformedPaths = <String, String>{
+        'Malformed Dot': malformedDotPath,
+        'Malformed Control': 'C:\\Games\\\u0000outside.exe',
+      };
+      for (final entry in malformedPaths.entries) {
+        final pinResult = repository.pinProgram(
+          ProgramPinRequest(
+            bottleId: bottle.id,
+            name: ProgramName(entry.key),
+            programPath: ProgramPath(entry.value),
+          ),
+        );
+        expect(pinResult, isA<ProgramPinned>());
+      }
+
+      final result = runCli(const [
+        'list-bottles',
+        '--json',
+      ], bottleRepository: repository);
+
+      expect(result.exitCode, 0);
+      expect(result.stderr, isEmpty);
+      final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+      final bottles = payload['bottles'] as List<Object?>;
+      final listedBottle = bottles.single as Map<String, Object?>;
+      final pinnedPrograms = listedBottle['pinnedPrograms'] as List<Object?>;
+      expect(pinnedPrograms, hasLength(malformedPaths.length));
+      final listedPrograms = pinnedPrograms.cast<Map<String, Object?>>();
+      final listedByPath = <String, Map<String, Object?>>{
+        for (final item in listedPrograms) item['path']! as String: item,
+      };
+      for (final malformedPath in malformedPaths.values) {
+        expect(listedByPath, contains(malformedPath));
+        expect(listedByPath[malformedPath], isNot(contains('iconPath')));
+      }
+
+      final storedBottle = expectFound(repository.findBottle(bottle.id));
+      expect(storedBottle.pinnedPrograms, hasLength(malformedPaths.length));
+      for (final storedPin in storedBottle.pinnedPrograms) {
+        expect(malformedPaths.values, contains(storedPin.path.value));
+        expect(storedPin.iconPath, const Option<ProgramIconPath>.none());
+      }
+    },
+  );
+
+  test('metadata extraction never accesses malformed pins as host files', () {
+    final bottle = BottleRecord(
+      id: 'steam',
+      name: 'Steam',
+      path: '/tmp/konyak-malformed-pin-bottle',
+      windowsVersion: 'win10',
+    );
+    final fallbackFile = File('/tmp/konyak-malformed-pin-missing.exe');
+    final malformedPaths = <String>[
+      r'C:\..\outside.exe',
+      'C:\\Games\\\u0000outside.exe',
+    ];
+
+    for (final malformedPath in malformedPaths) {
+      final requestedPaths = <String>[];
+      final metadata = IOOverrides.runZoned(
+        () => const DartIoProgramMetadataExtractor().extract(
+          bottle: bottle,
+          programPath: ProgramPath(malformedPath),
+        ),
+        createFile: (path) {
+          requestedPaths.add(path);
+          return fallbackFile;
+        },
+      );
+
+      expect(metadata, const Option<ProgramMetadataRecord>.none());
+      expect(requestedPaths, isEmpty, reason: malformedPath);
+    }
+  });
 
   test('list-bottles --json extracts icons for existing pinned shortcuts', () {
     final tempDirectory = Directory.systemTemp.createTempSync(

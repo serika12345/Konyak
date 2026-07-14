@@ -6,39 +6,8 @@ import '../domain/bottle/bottle_models.dart';
 import '../shared/common_helpers.dart';
 import 'external_payload_helpers.dart';
 import 'program_shortcut_metadata_io.dart';
+import 'wine_path_mapping.dart';
 import 'wine_process_metadata_io.dart';
-
-Option<String> wineWindowsPathToHostPath({
-  required BottleRecord bottle,
-  required String windowsPath,
-}) {
-  final normalized = windowsPath.trim().replaceAll('\\', '/');
-  return nullableOption(
-    RegExp(r'^([A-Za-z]):/?(.*)$').firstMatch(normalized),
-  ).match(
-    () => normalized.startsWith('/')
-        ? Option.of(normalized)
-        : const Option.none(),
-    (driveMatch) => nullableOption(driveMatch.group(1)).flatMap((rawDrive) {
-      final drive = rawDrive.toLowerCase();
-      final path = nullableOption(
-        driveMatch.group(2),
-      ).match(() => '', (value) => value);
-      final parts = path
-          .split('/')
-          .where((part) => part.isNotEmpty)
-          .toList(growable: false);
-
-      return switch (drive) {
-        'c' => Option.of(
-          joinPath(bottle.path.value, <String>['drive_c', ...parts]),
-        ),
-        'z' => Option.of('/${parts.join('/')}'),
-        _ => const Option.none(),
-      };
-    }),
-  );
-}
 
 Option<String> wineProcessHostPath({
   required BottleRecord bottle,
