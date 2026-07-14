@@ -168,6 +168,13 @@ directly.
   `run-winetricks <bottle-id> --verb <verb> --json`, which must produce and run
   a `macosWinetricks` program request. The maintained local CLI smoke entry
   point is `scripts/run_macos_runtime_cli_smoke.zsh`.
+- For macOS declarative profile-install verification, the maintained local
+  entry point is `scripts/run_macos_profile_install_cli_smoke.zsh`. It must use
+  the public runtime install, bottle, profile-install, manual-apply, pinned
+  launch, shortcut launch, and process-termination CLI contracts. Its synthetic
+  Windows fixture is built by `scripts/build_profile_install_fixture_windows.zsh`;
+  the fixture-build and runtime-smoke GitHub Actions jobs must remain separately
+  rerunnable, and smoke evidence must be uploaded even on failure.
 - For Linux runtime installation verification, the maintained local CLI smoke
   entry point is `scripts/run_linux_runtime_cli_smoke.zsh`, which consumes a
   complete runtime-owner-produced source manifest and exercises the public CLI

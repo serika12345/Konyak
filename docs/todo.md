@@ -44,16 +44,6 @@ verification output instead of checked-off backlog entries.
     Every editing, import, and export path must use the same JSON Schema and
     Dart semantic validation as the built-in catalog; imported profiles must
     not introduce arbitrary code execution.
-  - Define declarative installer resources in a profile. Resources must use
-    bounded resource kinds and include enough immutable source identity for
-    audit and verification, such as a URL or local import identity plus a
-    SHA-256 digest. Profile installation may fetch or select only declared
-    resources and must never execute an arbitrary shell command or script.
-  - Add a generic profile-install operation that resolves the declared
-    installer resource, verifies it, runs the profile's declared winetricks
-    dependencies, and only then installs it into the selected bottle. Record
-    progress and failure results, and keep dependency ordering explicit in the
-    manifest contract before exposing it to profile authors.
   - Before the first release containing automatic profile installation, resolve
     the Steam `d3dcompiler_47` acquisition compliance blocker. The current
     immutable resources are fetched from a fixed `mozilla/fxc2` commit but that
@@ -62,29 +52,6 @@ verification output instead of checked-off backlog entries.
     record applicable use terms, or obtain an explicit legal/source-acceptance
     decision. A pinned URL and SHA-256 establish integrity, not redistribution
     authority or long-term availability.
-  - Once installer resources, dependency winetricks, and the profile-install
-    user flow are complete, add an independently rerunnable macOS CI E2E gate
-    for the entire declarative profile path. Use a repository-owned,
-    redistributable synthetic installer and profile with an immutable digest;
-    do not depend on Steam payloads, authentication, or live third-party
-    downloads. Exercise the public Konyak CLI path used by the GUI to validate
-    and resolve the resource, reject a digest mismatch before execution, create
-    or select a bottle, run a deterministic declared winetricks dependency in
-    manifest order, run the installer, record the installed profile
-    binding, and launch the installed program normally.
-  - The profile-install E2E fixture must install a launcher and child executable
-    that record received argv. Verify that launching the pinned executable and
-    an actual Windows `.lnk` automatically activates the bound profile's
-    child-process rules without a profile-specific launch command. Also retain
-    contract coverage proving that `apply-program-profile` for a manual install
-    performs no resource download, installer execution, or dependency
-    winetricks run. Make this E2E gate required for changes to the installer
-    resource schema, profile-install orchestration, profile binding/launch
-    behavior, or the macOS child-process runtime contract after its runtime and
-    flake rate are established.
-  - Preserve `apply-program-profile` as the manual-install path: it binds a
-    selected executable and may pin it, but must not download an installer,
-    execute an installer, or run winetricks dependencies.
   - Add profile validation, import, export, and listing commands that load both
     Konyak-shipped profiles and user-installed profiles through a shared
     provider interface.
@@ -170,55 +137,6 @@ verification output instead of checked-off backlog entries.
     `gptk-d3d10-unsupported`, `gptk-d3d11-device`, and `gptk-d3d12-device`.
   - Continue to treat the GPTK/D3DMetal payload as transient CI input only; do
     not upload it as a Konyak artifact or include it in runtime release assets.
-
-## Compatibility Profile Installation Milestones
-
-Goal: let an explicitly selected compatibility profile acquire its declared
-Windows installer, verify that immutable payload, apply declared winetricks
-dependencies in manifest order through Konyak's public CLI execution path,
-then run the installer and bind the installed program only after every stage
-succeeds.
-
-Compatibility policy: compatibility profiles and profile bindings have not
-shipped yet. Until the first release containing this feature, update the
-current profile schema and persisted profile-binding shape directly instead of
-adding migration branches for repository-only development formats.
-
-Delivery policy: land the verified installation steps from
-`task/profile-installer-flow` as focused cherry-picked pull requests. Wait for
-each pull request to merge before preparing the next step. Keep IP-P4 as its
-own final E2E review gate.
-
-Small milestones:
-
-- [ ] IP-S6: Add an independently rerunnable macOS public-CLI E2E using a
-  repository-owned synthetic installer. Cover digest rejection, installer and
-  dependency ordering, binding, pinned EXE launch, real `.lnk` launch, and
-  automatic child-process rule activation without Steam or live third-party
-  downloads.
-
-#### Implementation Gate: IP-P4 macOS Profile Installation E2E
-
-branch: `task/profile-installer-flow`
-
-Completion criteria:
-
-- Complete IP-S6 with a maintained local script and a separately rerunnable
-  GitHub Actions job using the same public CLI path.
-- Keep the synthetic fixture redistributable and independent of authentication
-  and live third-party installer downloads.
-
-Required verification:
-
-- `just verify`
-- The maintained macOS profile-install CLI smoke.
-- The corresponding GitHub Actions workflow syntax and path filters.
-
-Completion stop: after dynamic command, process, log, and artifact evidence and
-all required verification are complete, open the feature pull request. If
-runtime files or loader behavior must change, coordinate that work with
-`runtime/konyak-macos-runtime` in a separate implementation and audit
-workstream before declaring this gate complete.
 
 ## Public Shell CLI Milestones
 

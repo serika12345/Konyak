@@ -1,0 +1,108 @@
+name: macOS Profile Installation CLI Smoke
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/macos-profile-install-cli-smoke.yml
+      - AGENTS.md
+      - flake.lock
+      - flake.nix
+      - justfile
+      - packages/konyak_cli/**
+      - runtime/konyak-macos-runtime
+      - runtime/macos-wine-release.json
+      - scripts/build_profile_install_fixture_windows.zsh
+      - scripts/prepare_macos_dev_runtime_stack.zsh
+      - scripts/profile_install_fixture_test.py
+      - scripts/run_macos_profile_install_cli_smoke.zsh
+      - scripts/verify_governance.py
+      - tests/fixtures/windows/profile_install/**
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/macos-profile-install-cli-smoke.yml
+      - AGENTS.md
+      - flake.lock
+      - flake.nix
+      - justfile
+      - packages/konyak_cli/**
+      - runtime/konyak-macos-runtime
+      - runtime/macos-wine-release.json
+      - scripts/build_profile_install_fixture_windows.zsh
+      - scripts/prepare_macos_dev_runtime_stack.zsh
+      - scripts/profile_install_fixture_test.py
+      - scripts/run_macos_profile_install_cli_smoke.zsh
+      - scripts/verify_governance.py
+      - tests/fixtures/windows/profile_install/**
+  workflow_dispatch:
+
+jobs:
+  build-profile-install-fixture:
+    name: Build profile-install fixture
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: cachix/install-nix-action@v31
+
+      - name: Build deterministic Windows fixture
+        run: >-
+          nix develop -c zsh -lc
+          './scripts/build_profile_install_fixture_windows.zsh
+          --output .dart_tool/konyak/profile-install-fixture'
+
+      - name: Verify fixture contracts
+        run: nix develop -c zsh -lc 'python3 scripts/profile_install_fixture_test.py'
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: konyak-profile-install-fixture
+          path: .dart_tool/konyak/profile-install-fixture
+          if-no-files-found: error
+
+  profile-install-cli-smoke:
+    name: Published runtime profile-install CLI smoke
+    needs: build-profile-install-fixture
+    runs-on: macos-15
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          submodules: recursive
+
+      - uses: cachix/install-nix-action@v31
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: konyak-profile-install-fixture
+          path: .dart_tool/konyak/profile-install-fixture
+
+      - name: Install Rosetta when needed
+        run: |
+          if [[ "$(uname -m)" == "arm64" ]]; then
+            /usr/sbin/softwareupdate --install-rosetta --agree-to-license || true
+          fi
+
+      - name: Run public CLI profile-install smoke
+        env:
+          KONYAK_MACOS_PROFILE_INSTALL_SMOKE_BUILD_FIXTURE: "false"
+          KONYAK_MACOS_PROFILE_INSTALL_SMOKE_HTTPS_PORT: "18443"
+        run: >-
+          nix develop -c zsh -lc
+          './scripts/run_macos_profile_install_cli_smoke.zsh'
+
+      - name: Upload profile-install evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: konyak-macos-profile-install-evidence
+          path: .dart_tool/konyak/macos-profile-install-cli-smoke/logs
+          if-no-files-found: warn

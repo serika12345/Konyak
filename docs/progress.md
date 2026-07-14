@@ -8,84 +8,83 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
 
 ## Current Work Snapshot
 
-- Timestamp: 2026-07-14 21:27 JST
-- State: `paused`
-- Branch: `feat/declarative-native-components`; based on the `main` merge of
-  PR #58 (`e7e8441`) and carrying source commit `2be21c1`; the code-only
-  cherry-pick was `0639767` before this handoff documentation was amended.
-- Related TODO: `docs/todo.md` Next Tasks, "Build a distributable compatibility
-  profile system", bounded native-component milestone.
+- Timestamp: 2026-07-14 22:45 JST
+- State: `paused` at the IP-P4 review gate
+- Branch: `test/macos-profile-install-e2e`; based on the `main` merge of PR #59
+  (`e7227b5`) and containing the final IP-S6 review commit.
+- Related TODO: IP-S6 and IP-P4 are complete and removed from `docs/todo.md`.
 - Related issue: <https://github.com/serika12345/Konyak/issues/44>
-- Purpose: replace the profile's verb-only dependency list with ordered,
-  declarative pre-install actions and add CrossOver-style x86/x64
-  `d3dcompiler_47` placement without creating a Wine DLL override.
+- Purpose: gate the complete declarative profile-install path with an
+  independently rerunnable macOS public-CLI E2E and an isolated GitHub Actions
+  workflow, without Steam, authentication, or live third-party installers.
 - Completed work:
-  - merged PR #58, fast-forwarded `main`, and created this focused branch
-  - cherry-picked the source native-component commit without a code conflict;
-    its stable patch ID matches source commit `2be21c1`
-  - replaced the unreleased verb-only dependency shape with an ordered union of
-    bounded winetricks and native-DLL pre-install actions across schema, domain,
-    persisted metadata, versioned CLI JSON, Flutter parsing, and Profile Manager
-  - added x86/x64 `d3dcompiler_47` resources to the Steam profile after
-    `corefonts` and `vcrun2022`, before `fakejapanese` and the Steam installer
-  - added resource-first download and SHA verification so no Wine-side action
-    starts unless the installer and both native resources are available
-  - added native placement validation for PE machine, digest, real-path and
-    symlink boundaries, idempotent reruns, and atomic replacement while keeping
-    the existing target on failure and writing no DLL override
-  - completed separate implementation, source/artifact investigation, and
-    independent result-audit workstreams with no functional code blocker
+  - added a deterministic repository-owned Windows fixture containing an
+    installer, launcher, child process, real `.lnk`, and matching x86/x64 PE
+    DLLs; the generated artifact includes the repository MIT `LICENSE`
+  - added `scripts/run_macos_profile_install_cli_smoke.zsh`, which exercises
+    digest rejection before mutation, declared action and HTTPS ordering,
+    installer execution, native DLL SHA/PE placement, override invariance,
+    idempotent reinstall, binding and pin uniqueness, pinned EXE and real
+    shortcut launches, child-process rules, manual apply non-mutation, metadata
+    retention, and public process termination
+  - added separately rerunnable Ubuntu fixture-build and macOS published-runtime
+    smoke jobs in `.github/workflows/macos-profile-install-cli-smoke.yml`; the
+    downstream job consumes the fixture artifact and complete runtime-owner
+    manifest rather than rebuilding Wine
+  - isolated work, runtime, data, config, home, resource cache, runtime manifest
+    cache, HTTPS port, and ephemeral CA state; destructive roots require an
+    ownership marker except for a symlink-free repository default
+  - made cleanup attempt every registered bottle, preserve an original nonzero
+    status, promote cleanup failure after a successful body to exit 70, and
+    write portable per-bottle results plus a versioned `smoke-result.json`
+  - preserved the validated runtime-owner source manifest and its SHA-256 in the
+    evidence artifact, with URL, local-path, and default manifest sources all
+    resolved through the maintained runtime preparation script
+  - completed separate investigation, implementation, and independent result
+    audit workstreams; every high and medium finding was fixed and the final
+    audit found no remaining PR blocker
 - Remaining work:
-  - review the focused pull request and decide the pre-release compliance
-    posture for DLLs downloaded from the fixed `mozilla/fxc2` commit: replace
-    them with a Microsoft-owned, explicitly licensed acquisition route or
-    explicitly accept the current external source before release
-  - after this pull request merges, advance IP-S6 as a separate pull request to
-    add the maintained public-CLI profile-install smoke and isolated CI job
-- Next action: review this focused pull request, with particular attention to
-  the external DLL source; after merge, resolve that release blocker and advance
-  IP-S6 before claiming the complete profile-installation gate.
+  - amend the verified implementation and documentation into the branch commit,
+    push the branch, and open the IP-P4 pull request
+  - let GitHub execute the new macOS 15 workflow; it has not run in Actions yet
+  - after review and merge, continue user profile storage, canonical
+    import/export, editing, and sharing work from `docs/todo.md`
+- Next action: push the final commit, open the pull request, and stop for review.
 - Verification performed:
-  - source commit `2be21c1` and cherry-picked commit `0639767` have the same
-    stable patch ID, `fa54bca2d13809b74966d809e552d612c32472a9`
-  - focused CLI/domain/I/O verification passed with 183 tests in the
-    implementation workstream and 91 independently selected tests in the
-    investigation workstream; the full `just cli-test` passed with 550 tests
-  - focused Flutter contract verification passed with 96 tests, the three
-    focused widget tests passed, and the full `just flutter-test` passed with
-    507 tests
-  - the Profile Manager golden test passed and
-    `apps/konyak/test/goldens/profile_manager_automatic_install.png` was
-    visually inspected; all five ordered actions are readable without clipping
-  - at 2026-07-14 21:11-21:12 JST, read-only inspection of the active Steam
-    bottle confirmed regular x86 and x64 files in SysWOW64 and System32 with
-    the manifest SHA-256 values and PE machines `0x014c` and `0x8664`; no
-    `d3dcompiler` entry exists in any bottle registry file
-  - at 2026-07-14 21:14 JST, HEAD-only availability checks returned HTTP 200
-    and the expected content lengths for both fixed GitHub raw URLs
-  - `just verify-governance`, `just verify-safety`, `just format-check`,
-    `just lint`, `just cli-format-check`, `just cli-analyze`,
-    `just flutter-format-check`, `just flutter-analyze`, `git diff --check`,
-    and the runtime submodule diff check passed through the Nix dev shell
-  - no workflow changes are included because this pull request adds the
-    deterministic contract and implementation but does not claim a maintained
-    local runtime smoke; IP-S6 remains the explicit follow-up that will add the
-    public CLI smoke and matching independently rerunnable Actions job
+  - `direnv allow`: passed after the `flake.nix` change
+  - `nix develop -c zsh -lc 'just verify'`: passed on the final implementation;
+    Flutter 507 tests, CLI 550 tests, custom-lint 3 tests, release automation 4
+    tests, macOS runtime preparation 6 tests, and fixture 13 tests passed
+  - `just verify-governance`, `just verify-safety`, `just format-check`, and
+    `just lint`: passed independently in the Nix dev shell
+  - the initial isolated full smoke installed complete runtime
+    `crossover-26.1.0-konyak.4` through public `install-macos-wine` and completed
+    the full workflow from 2026-07-14 22:04:19 to 22:07:34 JST with exit 0
+  - the final-code success smoke ran from 2026-07-14 22:38:30 to 22:40:31 JST;
+    `smoke-result.json` records original/final exit 0 and no cleanup failure
+  - the final-code timeout smoke ran from 2026-07-14 22:40:59 to 22:42:22 JST;
+    it timed out at the intended public `inspect-bottle` operation and records
+    original/final exit 124 with no cleanup failure
+  - both final runs terminated `profile-fixture-failure` and
+    `profile-fixture-success` through the public CLI with exit 0 and
+    `hasFailures: false`; post-run `ps` and `lsof` found no related process or
+    TCP 18443 listener, the resource cache was empty, and the private CA was
+    removed
+  - final success evidence is retained under
+    `.dart_tool/konyak/macos-profile-install-cli-smoke-ip-s6-final-success-evidence/logs`;
+    final timeout evidence is retained under
+    `.dart_tool/konyak/macos-profile-install-cli-smoke-ip-s6-final-timeout-evidence/logs`
+  - both artifacts validate runtime manifest SHA-256
+    `f767196724a7daeee12d307784b1d5bd476968610e18e62b64328a1877c2de6e`
+  - independent workflow audit confirmed valid YAML, read-only permissions,
+    disabled persisted checkout credentials, appropriate path filters, narrow
+    rerunnable jobs, and no runtime submodule or parent runtime dependency change
 - Remaining risk:
-  - `mozilla/fxc2` records that the DLLs came from Firefox 102.5 ESR but has no
-    repository license; fixed SHA values establish integrity, not redistribution
-    authority, authenticity, long-term availability, or a GitHub service level
-  - installation is not profile-wide transactional: a later failure stops
-    subsequent actions and persistence but does not roll back earlier successful
-    winetricks, DLL, or installer side effects; each DLL replacement itself is
-    atomic and preserves the old target on failure
-  - resource cleanup ownership is removed before deletion succeeds, so a rare
-    root/path change or transient filesystem failure can leave an unretryable
-    staging directory in the process; this behavior predates the native-resource
-    change but remains a follow-up hardening candidate
-  - real-path and symlink checks do not eliminate same-UID time-of-check races,
-    and rename gives atomic visibility but not crash durability without a
-    directory fsync
-  - the current read-only artifact audit confirms the user's successful GUI
-    result but does not replace IP-S6's future public-CLI sequence, process,
-    log, and CI evidence
+  - the workflow consumes the runtime owner's published `latest` manifest; the
+    archived manifest and component SHA-256 values make the selected inputs
+    auditable, but the release reference itself remains mutable
+  - the new workflow has only local syntax, contract, and dynamic validation
+    until GitHub Actions runs it on the pull request
+  - the separate Steam `d3dcompiler_47` acquisition compliance issue remains a
+    release blocker in `docs/todo.md`; the synthetic fixture does not resolve or
+    depend on those live Microsoft DLL resources

@@ -61,6 +61,11 @@
             ripgrep
           ];
 
+          windowsFixtureBuildPackages = with pkgs; [
+            pkgsCross.mingw32.stdenv.cc
+            pkgsCross.mingwW64.stdenv.cc
+          ];
+
           linuxFlutterBuildPackages = with pkgs; [
             clang
             cmake
@@ -89,7 +94,6 @@
 
           linuxHostRuntimePackages = with pkgs; [
             dbus
-            pkgsCross.mingwW64.stdenv.cc
             vulkan-loader
             vulkan-tools
             vulkan-validation-layers
@@ -151,10 +155,6 @@
             swiftlint
           ];
 
-          darwinHostRuntimePackages = with pkgs; [
-            pkgsCross.mingwW64.stdenv.cc
-          ];
-
           releaseBuildPackages =
             dartFlutterPackages
             ++ (with pkgs; [
@@ -169,14 +169,12 @@
             ++ scriptRuntimePackages
             ++ verificationPackages
             ++ workflowPackages
+            ++ windowsFixtureBuildPackages
             ++ lib.optionals pkgs.stdenv.isLinux (
               linuxFlutterBuildPackages ++ linuxReleasePackagingPackages ++ linuxHostRuntimePackages
             )
             ++ lib.optionals pkgs.stdenv.isDarwin (
-              darwinFlutterBuildPackages
-              ++ darwinReleasePackagingPackages
-              ++ darwinHostRuntimePackages
-              ++ darwinVerificationPackages
+              darwinFlutterBuildPackages ++ darwinReleasePackagingPackages ++ darwinVerificationPackages
             );
 
           darwinXcodeEnvironment = ''
