@@ -39,6 +39,8 @@ void main() {
     expect(profile.installerResource.fileName.value, 'SteamSetup.exe');
     expect(profile.dependencyWinetricksVerbs.map((verb) => verb.value), [
       'corefonts',
+      'fakejapanese',
+      'vcrun2022',
     ]);
     expect(
       profile.managedProgramPath.value,

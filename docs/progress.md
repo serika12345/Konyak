@@ -8,18 +8,18 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
 
 ## Current Work Snapshot
 
-- Timestamp: 2026-07-14 12:09 JST
+- Timestamp: 2026-07-14 12:54 JST
 - State: `paused`
 - Branch: `task/profile-installer-flow`; the latest completed profile step
-  before this runtime correction is `2105572`, IP-S5O is verified, and the
-  branch base is `6f23f55`.
+  is verified on top of `10cd370`, IP-S5O and the latest-runtime correction are
+  verified, and the branch base is `6f23f55`.
 - Related TODO: `docs/todo.md` Next Tasks, "Build a distributable compatibility
   profile system".
 - Related issue: <https://github.com/serika12345/Konyak/issues/44>
-- Purpose: remove a stale macOS development-runtime manifest reference before
-  repeating the Profile Manager GUI checkpoint, while preserving the broader
-  goal of letting users author, validate, import, export, install, and share
-  declarative compatibility profiles without application-specific branches.
+- Purpose: bring the built-in Steam profile's dependency-first installation
+  closer to the current CrossOver 26 launcher dependency set, beginning with
+  the Japanese font replacement and Visual C++ runtime dependencies that the
+  existing declarative winetricks contract can express safely.
 - Completed work:
   - inspected the existing profile schema, domain model, CLI contracts,
     Profile Manager, winetricks planner, resource download support, persisted
@@ -119,17 +119,34 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
     retain their explicit meaning
   - completed independent implementation audit after correcting its blank
     manifest-override finding; no blocking findings remain
+  - compared the CrossOver 26 Steam/Game Launcher dependency graph, an existing
+    CrossOver Steam bottle, the Konyak bottle, and bundled winetricks 20260125
+  - identified `fakejapanese` as the smallest Source Han Sans plus Windows
+    Japanese-font replacement candidate and `vcrun2022` as the closest existing
+    VC++ x86/x64 verb
+  - confirmed that the standard `d3dcompiler_47` verb is not CrossOver-equivalent
+    because it adds a native DLL override while CrossOver explicitly does not
+  - updated the built-in Steam profile to run `corefonts`, `fakejapanese`, and
+    `vcrun2022` in that order before SteamSetup
+  - updated the built-in profile contract test and the Profile Manager golden
+    fixture, regenerated the 1040x720 golden, and visually confirmed all three
+    dependencies and both install decisions are visible without clipping
+  - confirmed through public `inspect-install-profile steam --json` that the
+    shipped manifest exposes the expanded dependency order
+  - documented a separate bounded native-component milestone for exact
+    CrossOver-style `d3dcompiler_47` placement without a DLL override
 - Remaining work:
   - repeat the Profile Manager automatic-install GUI inspection with the
-    corrected dependency-first ordering
+    expanded dependency-first ordering
+  - implement the separately tracked bounded native-component milestone before
+    claiming full CrossOver launcher dependency parity
   - complete IP-P4 after the GUI checkpoint is accepted
   - after the automatic installation path is stable, resume user profile
     storage, canonical import/export, editing, and sharing work
-- Next action: stop the currently running pre-fix Flutter debug session, relaunch
-  `Konyak Flutter (macOS)` so it receives the corrected latest-source contract,
-  then repeat Profile Manager automatic installation and confirm the visible
-  `corefonts` stage completes before SteamSetup starts. Do not begin IP-P4
-  before that GUI review.
+- Next action: relaunch the macOS app, run the Steam automatic install from
+  Profile Manager, and confirm the visible stages complete in the order
+  `corefonts`, `fakejapanese`, `vcrun2022`, then SteamSetup. Do not add the
+  non-equivalent standard `d3dcompiler_47` verb.
 - Verification performed:
   - TDD red states captured for the new CLI/domain and Flutter parser contracts
   - `just cli-format-check`, `just cli-analyze`, and `just cli-test` passed; 487
@@ -220,3 +237,20 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
   - the final independent audit passed `just verify-governance`,
     `just verify-safety`, `just format-check`, `just lint`, `just cli-test`,
     `just macos-dev-runtime-prepare-test`, and `git diff --check`
+  - captured the Steam-profile TDD red state: the catalog test expected
+    `corefonts`, `fakejapanese`, and `vcrun2022` while the manifest still
+    contained only `corefonts`
+  - the complete profile catalog test file passed with 30 tests, and the focused
+    Profile Manager golden test passed after regeneration
+  - `just cli-format-check`, `just cli-analyze`, `just flutter-format-check`,
+    `just flutter-analyze`, `just verify-governance`, `just verify-safety`,
+    `just format-check`, and `just lint` passed
+  - `just cli-test` and `just flutter-test` passed; the Flutter suite completed
+    495 tests
+  - visually inspected
+    `apps/konyak/test/goldens/profile_manager_automatic_install.png` at
+    1040x720; the three dependency stages and both actions are readable without
+    clipping or overlap
+  - final independent audit reran the 30 catalog tests, focused golden test,
+    dependency-before-installer test, public profile/verb inspection, and
+    `git diff --check`; all passed with no blocking findings
