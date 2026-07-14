@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:crypto/crypto.dart';
+import 'package:konyak_cli/src/domain/program/program_profile_catalog.dart';
 import 'package:konyak_cli/src/domain/program/program_profile_models.dart';
 import 'package:konyak_cli/src/io/program_profile_catalog_io.dart'
     show
@@ -44,11 +45,43 @@ void main() {
       ),
       InstallerCompletionRecord(ignoreChildExecutable: 'steam.exe'),
     );
-    expect(profile.dependencyWinetricksVerbs.map((verb) => verb.value), [
-      'corefonts',
-      'fakejapanese',
-      'vcrun2022',
-    ]);
+    expect(
+      profile.preInstallActions.map(preInstallActionId).map((id) => id.value),
+      [
+        'corefonts',
+        'vcrun2022',
+        'd3dcompiler_47-x86',
+        'd3dcompiler_47-x64',
+        'fakejapanese',
+      ],
+    );
+    final nativeActions = profile.preInstallActions
+        .whereType<NativeDllPreInstallAction>()
+        .toList(growable: false);
+    expect(nativeActions.first.machine, NativeDllMachine.x86);
+    expect(
+      nativeActions.first.destination,
+      NativeDllDestination.windowsSysWow64,
+    );
+    expect(
+      nativeActions.first.resource.url.value,
+      'https://raw.githubusercontent.com/mozilla/fxc2/'
+      '9aba9b11079303d5577e0e3eb455f4d00f3b5946/'
+      'dll/d3dcompiler_47_32.dll',
+    );
+    expect(
+      nativeActions.first.resource.sha256.value,
+      '2ad0d4987fc4624566b190e747c9d95038443956ed816abfd1e2d389b5ec0851',
+    );
+    expect(nativeActions.last.machine, NativeDllMachine.x64);
+    expect(
+      nativeActions.last.destination,
+      NativeDllDestination.windowsSystem32,
+    );
+    expect(
+      nativeActions.last.resource.sha256.value,
+      '4432bbd1a390874f3f0a503d45cc48d346abc3a8c0213c289f4b615bf0ee84f3',
+    );
     expect(
       profile.managedProgramPath.value,
       r'C:\Program Files (x86)\Steam\Steam.exe',
@@ -316,7 +349,9 @@ void main() {
         jsonDecode(File('profiles/steam.json').readAsStringSync())
             as Map<String, Object?>;
     profile['installerResource'] = _validInstallerResourceJson();
-    profile['dependencyWinetricksVerbs'] = ['corefonts;rm'];
+    profile['preInstallActions'] = [
+      {'kind': 'winetricks', 'verb': 'corefonts;rm'},
+    ];
     File(
       '${temporaryDirectory.path}/unsafe-winetricks.json',
     ).writeAsStringSync(jsonEncode(profile));
@@ -330,7 +365,7 @@ void main() {
         isA<FormatException>().having(
           (error) => error.message,
           'message',
-          contains('dependencyWinetricksVerbs'),
+          contains('preInstallActions'),
         ),
       ),
     );
@@ -349,8 +384,9 @@ void main() {
         jsonDecode(File('profiles/steam.json').readAsStringSync())
             as Map<String, Object?>;
     profile['installerResource'] = _validInstallerResourceJson();
-    profile['dependencyWinetricksVerbs'] = [
-      for (var index = 0; index < 65; index++) 'verb$index',
+    profile['preInstallActions'] = [
+      for (var index = 0; index < 65; index++)
+        {'kind': 'winetricks', 'verb': 'verb$index'},
     ];
     File(
       '${temporaryDirectory.path}/too-many-winetricks.json',
@@ -365,7 +401,7 @@ void main() {
         isA<FormatException>().having(
           (error) => error.message,
           'message',
-          contains('dependencyWinetricksVerbs'),
+          contains('preInstallActions'),
         ),
       ),
     );
@@ -384,7 +420,10 @@ void main() {
         jsonDecode(File('profiles/steam.json').readAsStringSync())
             as Map<String, Object?>;
     profile['installerResource'] = _validInstallerResourceJson();
-    profile['dependencyWinetricksVerbs'] = ['vcrun2022', 'corefonts'];
+    profile['preInstallActions'] = [
+      {'kind': 'winetricks', 'verb': 'vcrun2022'},
+      {'kind': 'winetricks', 'verb': 'corefonts'},
+    ];
     File(
       '${temporaryDirectory.path}/ordered-winetricks.json',
     ).writeAsStringSync(jsonEncode(profile));
@@ -395,12 +434,66 @@ void main() {
     );
 
     expect(
-      catalog.profiles.single.dependencyWinetricksVerbs.map(
-        (verb) => verb.value,
-      ),
+      catalog.profiles.single.preInstallActions
+          .whereType<WinetricksPreInstallAction>()
+          .map((action) => action.verb.value),
       ['vcrun2022', 'corefonts'],
     );
   });
+
+  for (final (length, accepted) in const <(int, bool)>[
+    (128, true),
+    (129, false),
+  ]) {
+    test('${accepted ? 'accepts' : 'rejects'} a $length-character native DLL '
+        'component action identifier', () {
+      final temporaryDirectory = Directory.systemTemp.createTempSync(
+        'konyak-profile-native-component-id-limit-test-',
+      );
+      addTearDown(() {
+        if (temporaryDirectory.existsSync()) {
+          temporaryDirectory.deleteSync(recursive: true);
+        }
+      });
+      final profile =
+          jsonDecode(File('profiles/steam.json').readAsStringSync())
+              as Map<String, Object?>;
+      profile['installerResource'] = _validInstallerResourceJson();
+      profile['preInstallActions'] = <Object?>[
+        <String, Object?>{
+          'kind': 'nativeDll',
+          'componentId': 'a' * length,
+          'machine': 'x86',
+          'destination': 'windowsSysWow64',
+          'targetFileName': 'component.dll',
+          'resource': <String, Object?>{
+            'kind': 'https',
+            'url': 'https://downloads.example.test/component.dll',
+            'sha256': 'a' * 64,
+            'fileName': 'component.dll',
+          },
+        },
+      ];
+      File(
+        '${temporaryDirectory.path}/component-id.json',
+      ).writeAsStringSync(jsonEncode(profile));
+
+      InstallProfileCatalog load() => DartIoInstallProfileCatalog.fromDirectory(
+        temporaryDirectory.path,
+        schemaPath: 'profiles/$konyakProfileSchemaFileName',
+      );
+      if (accepted) {
+        expect(
+          preInstallActionId(
+            load().profiles.single.preInstallActions.single,
+          ).value,
+          'a' * length,
+        );
+      } else {
+        expect(load, throwsA(isA<FormatException>()));
+      }
+    });
+  }
 
   for (final invalidManagedProgramPath in <String>[
     'Steam.exe',
@@ -540,8 +633,14 @@ void main() {
   "summary": "A deliberately invalid profile.",
   "platforms": ["macos"],
   "windowsVersion": "win10",
-  "managedProgramPath": "Invalid.exe",
-  "dependencyWinetricksVerbs": [],
+  "managedProgramPath": "C:\\\\Invalid\\\\Invalid.exe",
+  "installerResource": {
+    "kind": "https",
+    "url": "https://downloads.example.test/Setup.exe",
+    "sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+    "fileName": "Setup.exe"
+  },
+  "preInstallActions": [],
   "runCompletionPolicy": "launchOnly",
   "compatibilityProfile": {
     "id": "invalid",

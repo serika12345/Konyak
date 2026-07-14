@@ -17,8 +17,47 @@ InstallProfileRecord _steamInstallProfile() {
     id: 'steam',
     name: 'Steam',
     managedProgramPath: r'C:\Program Files (x86)\Steam\Steam.exe',
+    preInstallActions: <PreInstallActionRecord>[
+      PreInstallActionRecord.winetricks(verb: 'corefonts'),
+      _nativeAction(
+        componentId: 'd3dcompiler_47-x86',
+        machine: 'x86',
+        destination: 'windowsSysWow64',
+        url: 'https://downloads.example.test/d3dcompiler_47_32.dll',
+        sha256: 'a' * 64,
+        fileName: 'd3dcompiler_47_32.dll',
+      ),
+      _nativeAction(
+        componentId: 'd3dcompiler_47-x64',
+        machine: 'x64',
+        destination: 'windowsSystem32',
+        url: 'https://downloads.example.test/d3dcompiler_47.dll',
+        sha256: 'b' * 64,
+        fileName: 'd3dcompiler_47.dll',
+      ),
+    ],
   );
 }
+
+PreInstallActionRecord _nativeAction({
+  required String componentId,
+  required String machine,
+  required String destination,
+  required String url,
+  required String sha256,
+  required String fileName,
+}) => PreInstallActionRecord.nativeDll(
+  componentId: componentId,
+  machine: machine,
+  destination: destination,
+  targetFileName: 'd3dcompiler_47.dll',
+  resource: NativeDllResourceRecord(
+    kind: 'https',
+    url: url,
+    sha256: sha256,
+    fileName: fileName,
+  ),
+);
 
 void main() {
   test('install-linux-file-associations --json writes XDG MIME associations', () {
@@ -501,6 +540,35 @@ void main() {
           'sha256': '0123456789abcdef' * 4,
           'fileName': 'TestSetup.exe',
         },
+        'preInstallActions': <Object?>[
+          <String, Object?>{'kind': 'winetricks', 'verb': 'corefonts'},
+          <String, Object?>{
+            'kind': 'nativeDll',
+            'componentId': 'd3dcompiler_47-x86',
+            'machine': 'x86',
+            'destination': 'windowsSysWow64',
+            'targetFileName': 'd3dcompiler_47.dll',
+            'resource': <String, Object?>{
+              'kind': 'https',
+              'url': 'https://downloads.example.test/d3dcompiler_47_32.dll',
+              'sha256': 'a' * 64,
+              'fileName': 'd3dcompiler_47_32.dll',
+            },
+          },
+          <String, Object?>{
+            'kind': 'nativeDll',
+            'componentId': 'd3dcompiler_47-x64',
+            'machine': 'x64',
+            'destination': 'windowsSystem32',
+            'targetFileName': 'd3dcompiler_47.dll',
+            'resource': <String, Object?>{
+              'kind': 'https',
+              'url': 'https://downloads.example.test/d3dcompiler_47.dll',
+              'sha256': 'b' * 64,
+              'fileName': 'd3dcompiler_47.dll',
+            },
+          },
+        ],
       },
     );
 
@@ -512,6 +580,7 @@ void main() {
     expect(binding.profileSourceId.value, 'steam.json');
     expect(binding.profileDigest.value, 'fedcba9876543210' * 4);
     expect(binding.installerResource, _steamInstallProfile().installerResource);
+    expect(binding.preInstallActions, _steamInstallProfile().preInstallActions);
   });
 
   test(

@@ -155,8 +155,9 @@ CliResult programProfileInstallJsonResult({
       :final stage,
       :final code,
       :final message,
-      :final dependencyIndex,
-      :final dependencyVerb,
+      :final actionIndex,
+      :final actionKind,
+      :final actionId,
       :final processExitCode,
     ) =>
       jsonError(
@@ -168,13 +169,17 @@ CliResult programProfileInstallJsonResult({
             'profileId': request.profileId.value,
             'bottleId': request.bottleId.value,
             'stage': stage.value,
-            ...dependencyIndex.match(
+            ...actionIndex.match(
               () => const <String, Object?>{},
-              (value) => <String, Object?>{'dependencyIndex': value},
+              (value) => <String, Object?>{'actionIndex': value},
             ),
-            ...dependencyVerb.match(
+            ...actionKind.match(
               () => const <String, Object?>{},
-              (value) => <String, Object?>{'dependencyVerb': value.value},
+              (value) => <String, Object?>{'actionKind': value.value},
+            ),
+            ...actionId.match(
+              () => const <String, Object?>{},
+              (value) => <String, Object?>{'actionId': value.value},
             ),
             ...processExitCode.match(
               () => const <String, Object?>{},

@@ -517,7 +517,7 @@ void main() {
         'fileName': 'TestSetup.exe',
       },
       'installerCompletion': {'ignoreChildExecutable': 'launcher.exe'},
-      'dependencyWinetricksVerbs': ['corefonts'],
+      'preInstallActions': <Object?>[],
       'runCompletionPolicy': 'launchOnly',
       'compatibilityProfile': {
         'id': 'test-profile',
@@ -604,6 +604,7 @@ void main() {
           'sha256': '0123456789abcdef' * 4,
           'fileName': 'TestSetup.exe',
         },
+        'preInstallActions': <Object?>[],
       },
     });
 
@@ -673,6 +674,7 @@ void main() {
           'sha256': '0123456789abcdef' * 4,
           'fileName': 'TestSetup.exe',
         },
+        'preInstallActions': <Object?>[],
       },
     });
   });

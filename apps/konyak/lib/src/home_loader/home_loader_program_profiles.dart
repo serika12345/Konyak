@@ -224,11 +224,12 @@ String _programProfileInstallProgressMessage({
       localizations.applyingProfileEllipsis(profileName),
     ProgramProfileInstallStage.resourceCleanup =>
       localizations.applyingProfileEllipsis(profileName),
-    ProgramProfileInstallStage.dependency => switch (progress.dependency) {
-      ProgramProfileInstallDependency(:final index, :final verb) =>
-        localizations.installingVerb('${index + 1}. $verb'),
-      NoProgramProfileInstallDependency() =>
-        localizations.applyingProfileEllipsis(profileName),
+    ProgramProfileInstallStage.preInstallAction => switch (progress.action) {
+      ProgramProfileInstallAction(:final index, :final id) =>
+        localizations.installingVerb('${index + 1}. $id'),
+      NoProgramProfileInstallAction() => localizations.applyingProfileEllipsis(
+        profileName,
+      ),
     },
     ProgramProfileInstallStage.managedProgram =>
       localizations.applyingProfileEllipsis(profileName),

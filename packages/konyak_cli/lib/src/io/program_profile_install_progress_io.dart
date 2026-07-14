@@ -13,13 +13,17 @@ Map<String, Object?> programProfileInstallProgressJson(
       ProgramProfileInstallStageCompleted() => 'completed',
       ProgramProfileInstallStageFailed() => 'failed',
     },
-    ...progress.dependencyIndex.match(
+    ...progress.actionIndex.match(
       () => const <String, Object?>{},
-      (value) => <String, Object?>{'dependencyIndex': value},
+      (value) => <String, Object?>{'actionIndex': value},
     ),
-    ...progress.dependencyVerb.match(
+    ...progress.actionKind.match(
       () => const <String, Object?>{},
-      (value) => <String, Object?>{'dependencyVerb': value.value},
+      (value) => <String, Object?>{'actionKind': value.value},
+    ),
+    ...progress.actionId.match(
+      () => const <String, Object?>{},
+      (value) => <String, Object?>{'actionId': value.value},
     ),
     if (progress case ProgramProfileInstallStageFailed(:final code))
       'code': code,

@@ -39,15 +39,16 @@ void main() {
   });
 
   test(
-    'install-program-profile failure includes typed dependency details',
+    'install-program-profile failure includes typed action details',
     () async {
       final installer = RecordingProgramProfileInstaller(
         ProgramProfileInstallFailed(
-          stage: ProgramProfileInstallStage.dependency,
+          stage: ProgramProfileInstallStage.preInstallAction,
           code: 'dependencyInstallerExitNonZero',
           message: 'Dependency failed.',
-          dependencyIndex: const Option.of(1),
-          dependencyVerb: Option.of(WinetricksVerbId('vcrun2022')),
+          actionIndex: const Option.of(1),
+          actionKind: const Option.of(PreInstallActionKind.winetricks),
+          actionId: Option.of(PreInstallActionId('vcrun2022')),
           processExitCode: const Option.of(37),
         ),
       );
@@ -70,9 +71,10 @@ void main() {
           'programProfileInstall': <String, Object?>{
             'profileId': 'test-profile',
             'bottleId': 'test',
-            'stage': 'dependency',
-            'dependencyIndex': 1,
-            'dependencyVerb': 'vcrun2022',
+            'stage': 'preInstallAction',
+            'actionIndex': 1,
+            'actionKind': 'winetricks',
+            'actionId': 'vcrun2022',
             'processExitCode': 37,
           },
         },
@@ -173,7 +175,10 @@ void main() {
     'default installer runs dependencies in manifest order before installer',
     () async {
       final profile = testInstallProfile(
-        dependencyWinetricksVerbs: const <String>['corefonts', 'vcrun2022'],
+        preInstallActions: [
+          PreInstallActionRecord.winetricks(verb: 'corefonts'),
+          PreInstallActionRecord.winetricks(verb: 'vcrun2022'),
+        ],
       );
       final repository = _RecordingProfileBottleRepository(
         failPersistence: false,
@@ -260,15 +265,16 @@ void main() {
         (exitCode) =>
             expect(install['processExitCode'], exitCode, reason: kind.name),
       );
-      kind.dependencyIndex.match(
+      kind.actionIndex.match(
         () => expect(
-          install.containsKey('dependencyIndex'),
+          install.containsKey('actionIndex'),
           isFalse,
           reason: kind.name,
         ),
         (index) {
-          expect(install['dependencyIndex'], index, reason: kind.name);
-          expect(install['dependencyVerb'], 'corefonts', reason: kind.name);
+          expect(install['actionIndex'], index, reason: kind.name);
+          expect(install['actionKind'], 'winetricks', reason: kind.name);
+          expect(install['actionId'], 'corefonts', reason: kind.name);
         },
       );
 
@@ -294,19 +300,15 @@ void main() {
       expect(progress.last, failedProgress.single, reason: kind.name);
       expect(progress.last['stage'], kind.stage.value, reason: kind.name);
       expect(progress.last['code'], kind.code, reason: kind.name);
-      kind.dependencyIndex.match(
+      kind.actionIndex.match(
         () => expect(
-          progress.last.containsKey('dependencyIndex'),
+          progress.last.containsKey('actionIndex'),
           isFalse,
           reason: kind.name,
         ),
         (index) {
-          expect(progress.last['dependencyIndex'], index, reason: kind.name);
-          expect(
-            progress.last['dependencyVerb'],
-            'corefonts',
-            reason: kind.name,
-          );
+          expect(progress.last['actionIndex'], index, reason: kind.name);
+          expect(progress.last['actionId'], 'corefonts', reason: kind.name);
         },
       );
 
@@ -474,15 +476,15 @@ enum _InstallFailureKind {
       ProgramProfileInstallStage.resourceCleanup,
     _InstallFailureKind.dependencyStartup ||
     _InstallFailureKind.dependencyNonzero =>
-      ProgramProfileInstallStage.dependency,
+      ProgramProfileInstallStage.preInstallAction,
     _InstallFailureKind.managedProgram =>
       ProgramProfileInstallStage.managedProgram,
     _InstallFailureKind.persistence => ProgramProfileInstallStage.persistence,
   };
 
   String get code => switch (this) {
-    _InstallFailureKind.download => 'installerResourceDownloadFailed',
-    _InstallFailureKind.digest => 'installerResourceDigestMismatch',
+    _InstallFailureKind.download => 'profileResourceDownloadFailed',
+    _InstallFailureKind.digest => 'profileResourceDigestMismatch',
     _InstallFailureKind.installerStartup => 'installerRunFailed',
     _InstallFailureKind.installerNonzero => 'installerExitNonZero',
     _InstallFailureKind.resourceCleanup => 'installerResourceReleaseFailed',
@@ -498,7 +500,7 @@ enum _InstallFailureKind {
     _ => const Option.none(),
   };
 
-  Option<int> get dependencyIndex => switch (this) {
+  Option<int> get actionIndex => switch (this) {
     _InstallFailureKind.dependencyStartup ||
     _InstallFailureKind.dependencyNonzero => const Option.of(0),
     _ => const Option.none(),
@@ -567,9 +569,11 @@ _InstallFailureFixture _installFailureFixture(_InstallFailureKind kind) {
       kind == _InstallFailureKind.dependencyStartup ||
       kind == _InstallFailureKind.dependencyNonzero;
   final profile = testInstallProfile(
-    dependencyWinetricksVerbs: hasDependency
-        ? const <String>['corefonts']
-        : const <String>[],
+    preInstallActions: hasDependency
+        ? <PreInstallActionRecord>[
+            PreInstallActionRecord.winetricks(verb: 'corefonts'),
+          ]
+        : const <PreInstallActionRecord>[],
   );
   final repository = _RecordingProfileBottleRepository(
     failPersistence: kind == _InstallFailureKind.persistence,
@@ -726,12 +730,15 @@ final class _MatrixProfileInstallerResourceFetcher
 
   final ProfileInstallerResourceFetchResult fetchResult;
   final ProfileInstallerResourceReleaseResult releaseResult;
-  final List<InstallerResourceRecord> resources = <InstallerResourceRecord>[];
+  final List<ProfileResourceFetchRequest> resources =
+      <ProfileResourceFetchRequest>[];
   final List<ProfileInstallerResourceFetched> releasedResources =
       <ProfileInstallerResourceFetched>[];
 
   @override
-  ProfileInstallerResourceFetchResult fetch(InstallerResourceRecord resource) {
+  ProfileInstallerResourceFetchResult fetch(
+    ProfileResourceFetchRequest resource,
+  ) {
     resources.add(resource);
     return fetchResult;
   }
