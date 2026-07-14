@@ -1375,6 +1375,67 @@ void main() {
   });
 
   test(
+    'pin-program --json extracts an icon for Windows-path PE programs',
+    () async {
+      final tempDirectory = await Directory.systemTemp.createTemp(
+        'konyak-pin-windows-program-icon-test-',
+      );
+      addTearDown(() async {
+        if (await tempDirectory.exists()) {
+          await tempDirectory.delete(recursive: true);
+        }
+      });
+      final bottlePath = joinTestPath(tempDirectory.path, const ['Steam']);
+      final programPath = joinTestPath(bottlePath, const [
+        'drive_c',
+        'Program Files',
+        'Fixture',
+        'Fixture.exe',
+      ]);
+      File(programPath)
+        ..createSync(recursive: true)
+        ..writeAsBytesSync(syntheticPortableExecutableBytes());
+      final repository = MemoryBottleRepository(
+        programMetadataExtractor: const DartIoProgramMetadataExtractor(),
+        dataHome: tempDirectory.path,
+        bottles: [
+          BottleRecord(
+            id: 'steam',
+            name: 'Steam',
+            path: bottlePath,
+            windowsVersion: 'win10',
+          ),
+        ],
+      );
+      const windowsProgramPath = r'C:\Program Files\Fixture\Fixture.exe';
+
+      final result = runCli(const [
+        'pin-program',
+        'steam',
+        '--name',
+        'Fixture',
+        '--program',
+        windowsProgramPath,
+        '--json',
+      ], bottleRepository: repository);
+
+      expect(result.exitCode, 0);
+      expect(result.stderr, isEmpty);
+
+      final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+      final bottle = payload['bottle'] as Map<String, Object?>;
+      final pinnedPrograms = bottle['pinnedPrograms'] as List<Object?>;
+      final pinnedProgram = pinnedPrograms.single as Map<String, Object?>;
+      expect(pinnedProgram['path'], windowsProgramPath);
+      final iconPath = pinnedProgram['iconPath'];
+      expect(iconPath, isA<String>());
+      expect(iconPath as String, startsWith('$bottlePath/cache/icons/'));
+      final iconBytes = File(iconPath).readAsBytesSync();
+      expect(iconBytes.take(4), const [0, 0, 1, 0]);
+    },
+  );
+
+  test(
     'pin-program --json resolves Wine shortcuts before extracting icons',
     () async {
       final tempDirectory = await Directory.systemTemp.createTemp(
@@ -1506,6 +1567,61 @@ void main() {
       expect(iconPath as String, startsWith('$bottlePath/cache/icons/'));
     },
   );
+
+  test('list-bottles --json extracts icons for existing Windows-path pins', () {
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-existing-windows-pinned-program-icon-test-',
+    );
+    addTearDown(() {
+      if (tempDirectory.existsSync()) {
+        tempDirectory.deleteSync(recursive: true);
+      }
+    });
+    final bottlePath = joinTestPath(tempDirectory.path, const ['Steam']);
+    final programPath = joinTestPath(bottlePath, const [
+      'drive_c',
+      'Program Files',
+      'Fixture',
+      'Fixture.exe',
+    ]);
+    File(programPath)
+      ..createSync(recursive: true)
+      ..writeAsBytesSync(syntheticPortableExecutableBytes());
+    const windowsProgramPath = r'C:\Program Files\Fixture\Fixture.exe';
+    final repository = MemoryBottleRepository(
+      programMetadataExtractor: const DartIoProgramMetadataExtractor(),
+      dataHome: tempDirectory.path,
+      bottles: [
+        BottleRecord(
+          id: 'steam',
+          name: 'Steam',
+          path: bottlePath,
+          windowsVersion: 'win10',
+          pinnedPrograms: [
+            PinnedProgramRecord(name: 'Fixture', path: windowsProgramPath),
+          ],
+        ),
+      ],
+    );
+
+    final result = runCli(const [
+      'list-bottles',
+      '--json',
+    ], bottleRepository: repository);
+
+    expect(result.exitCode, 0);
+    expect(result.stderr, isEmpty);
+
+    final payload = jsonDecode(result.stdout) as Map<String, Object?>;
+    final bottles = payload['bottles'] as List<Object?>;
+    final bottle = bottles.single as Map<String, Object?>;
+    final pinnedPrograms = bottle['pinnedPrograms'] as List<Object?>;
+    final pinnedProgram = pinnedPrograms.single as Map<String, Object?>;
+    expect(pinnedProgram['path'], windowsProgramPath);
+    final iconPath = pinnedProgram['iconPath'];
+    expect(iconPath, isA<String>());
+    expect(iconPath as String, startsWith('$bottlePath/cache/icons/'));
+  });
 
   test('list-bottles --json extracts icons for existing pinned shortcuts', () {
     final tempDirectory = Directory.systemTemp.createTempSync(

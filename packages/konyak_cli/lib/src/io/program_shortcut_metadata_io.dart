@@ -5,6 +5,7 @@ import 'package:fpdart/fpdart.dart';
 import '../domain/bottle/bottle_models.dart';
 import '../domain/shared/domain_value_objects.dart';
 import 'program_shortcut_metadata.dart';
+import 'wine_path_mapping.dart';
 
 Option<String> shortcutTargetProgramPath({
   required BottleRecord bottle,
@@ -26,7 +27,10 @@ ProgramPath metadataProgramPath({
 }) {
   final path = programPath.value;
   if (!isShortcutPath(path)) {
-    return programPath;
+    return wineWindowsPathToHostPath(
+      bottle: bottle,
+      windowsPath: path,
+    ).match(() => programPath, ProgramPath.new);
   }
 
   return shortcutTargetProgramPath(

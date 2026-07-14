@@ -8,18 +8,17 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
 
 ## Current Work Snapshot
 
-- Timestamp: 2026-07-14 14:31 JST
+- Timestamp: 2026-07-14 15:16 JST
 - State: `paused`
-- Branch: `task/profile-installer-flow`; the latest completed profile step
-  is `e6b2824`, IP-S5O and the latest-runtime correction are verified, and the
+- Branch: `task/profile-installer-flow`; this icon correction starts from
+  `b0e6860`, IP-S5O and the latest-runtime correction are verified, and the
   branch base is `6f23f55`.
 - Related TODO: `docs/todo.md` Next Tasks, "Build a distributable compatibility
   profile system".
 - Related issue: <https://github.com/serika12345/Konyak/issues/44>
-- Purpose: make automatic profile installation complete when an installer
-  launches a long-lived managed application, while applying the selected
-  profile's validated child-process rules to that first installer-launched
-  application before the successful binding is persisted.
+- Purpose: restore pinned-program icons for profile-managed executables whose
+  portable persisted identity is an absolute Wine Windows path, without
+  replacing that identity with a bottle-location-dependent host path.
 - Completed work:
   - inspected the existing profile schema, domain model, CLI contracts,
     Profile Manager, winetricks planner, resource download support, persisted
@@ -170,21 +169,32 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
   - completed an independent result audit, fixed its finding that ordinary
     program settings could still inject the reserved child-ignore value, and
     finished with no blocking, high, or medium findings
+  - received the real Profile Manager checkpoint: automatic installation,
+    dependency setup, installer completion, and Steam launch now work, while
+    the resulting Steam pin displayed only the fallback icon
+  - dynamically isolated the icon failure through the public CLI: the real
+    Steam PE and shortcut icon parser were valid, but a persisted `C:\\...`
+    pin returned no metadata because the non-shortcut path was passed directly
+    to the macOS filesystem
+  - kept the Windows pin path as the portable persisted identity, extracted
+    the existing Wine-to-host path mapping as a shared I/O SSOT, and resolved
+    Windows paths only before metadata and icon file access
+  - added TDD coverage for both a newly created Windows-path pin and hydration
+    of an existing Windows-path pin, preserving the stored path while
+    producing an ICO cache path
+  - completed an independent result audit covering the shared resolver,
+    shortcut and process regressions, public CLI artifact, and user metadata;
+    it reported no blocking, high, medium, or low findings
 - Remaining work:
-  - prove the implementation against the real public Profile Manager path with
-    `Run Steam` checked, including CLI completion, binding persistence,
-    steamwebhelper compatibility arguments, and a non-black Steam window
-  - repeat the Profile Manager automatic-install GUI inspection with the
-    expanded dependency-first ordering
+  - refresh the running GUI and visually confirm the real Steam pin renders the
+    extracted icon instead of the fallback
   - implement the separately tracked bounded native-component milestone before
     claiming full CrossOver launcher dependency parity
   - complete IP-P4 after the GUI checkpoint is accepted
   - after the automatic installation path is stable, resume user profile
     storage, canonical import/export, editing, and sharing work
-- Next action: relaunch the macOS app from this branch, install Steam from
-  Profile Manager with `Run Steam` checked, and capture the completion,
-  metadata, process argv/environment, logs, and window evidence. Do not add the
-  non-equivalent standard `d3dcompiler_47` verb.
+- Next action: rebuild or relaunch the macOS app from this branch and refresh
+  the existing bottle; after the icon checkpoint is accepted, continue IP-P4.
 - Verification performed:
   - TDD red states captured for the new CLI/domain and Flutter parser contracts
   - `just cli-format-check`, `just cli-analyze`, and `just cli-test` passed; 487
@@ -322,3 +332,18 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
     tests, `just cli-analyze`, public Steam profile inspection, and
     `git diff --check`; its only remaining risk is the deliberately pending real
     Steam GUI confirmation
+  - captured the Windows-path icon TDD red state with both new-pin and
+    existing-pin cases returning no `iconPath`; the corrected focused tests,
+    all 26 pinned-program contract tests, `just cli-analyze`, and all 522 CLI
+    tests passed
+  - at 2026-07-14 15:11 JST, isolated public `list-bottles --json` against the
+    real read-only Steam `drive_c` returned the unchanged Windows pin path and
+    a generated 70,124-byte ICO containing 13 images; the real user metadata
+    inode, size, and mtime remained unchanged
+  - final `just verify-governance`, `just verify-safety`, `just format-check`,
+    `just lint`, and `just cli-test` passed; the CLI suite completed 522 tests
+  - the independent audit passed all 26 pinned-program contract tests, all 64
+    runtime/process regression tests, `just cli-analyze`, and
+    `git diff --check`; no CI workflow update was needed because the public CLI
+    regression is exercised by the existing CLI test job without a new runtime
+    or packaging path
