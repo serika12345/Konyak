@@ -179,21 +179,41 @@ ProgramRunEnvironment childProcessCompatibilityEnvironmentForProfiledPath({
   required BottleRecord bottle,
   required ProgramPath programPath,
 }) {
-  final rules = installProfileForProgramPath(
-    installProfileCatalog: installProfileCatalog,
-    bottle: bottle,
-    programPath: programPath,
-  ).map((profile) => profile.compatibilityProfile.childProcessRules);
-  return rules
-      .map(_serializedChildProcessRules)
-      .match(
-        () => const ProgramRunEnvironment.empty(),
-        (value) => value.isEmpty
-            ? const ProgramRunEnvironment.empty()
-            : ProgramRunEnvironment(<String, String>{
-                konyakChildProcessRulesEnvironmentVariable: value,
-              }),
-      );
+  return installProfileForProgramPath(
+        installProfileCatalog: installProfileCatalog,
+        bottle: bottle,
+        programPath: programPath,
+      )
+      .map(childProcessCompatibilityEnvironmentForInstallProfile)
+      .getOrElse(() => const ProgramRunEnvironment.empty());
+}
+
+ProgramRunEnvironment childProcessCompatibilityEnvironmentForInstallProfile(
+  InstallProfileRecord profile,
+) {
+  final value = _serializedChildProcessRules(
+    profile.compatibilityProfile.childProcessRules,
+  );
+  return value.isEmpty
+      ? const ProgramRunEnvironment.empty()
+      : ProgramRunEnvironment(<String, String>{
+          konyakChildProcessRulesEnvironmentVariable: value,
+        });
+}
+
+ProgramRunEnvironment installerCompatibilityEnvironmentForProfile(
+  InstallProfileRecord profile,
+) {
+  final completionEnvironment = profile.installerCompletion.match(
+    () => const ProgramRunEnvironment.empty(),
+    (completion) => ProgramRunEnvironment(<String, String>{
+      wineWaitChildPipeIgnoreEnvironmentVariable:
+          completion.ignoreChildExecutable.value,
+    }),
+  );
+  return completionEnvironment.merge(
+    childProcessCompatibilityEnvironmentForInstallProfile(profile),
+  );
 }
 
 String _serializedChildProcessRules(

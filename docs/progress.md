@@ -8,18 +8,18 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
 
 ## Current Work Snapshot
 
-- Timestamp: 2026-07-14 12:54 JST
+- Timestamp: 2026-07-14 14:31 JST
 - State: `paused`
 - Branch: `task/profile-installer-flow`; the latest completed profile step
-  is verified on top of `10cd370`, IP-S5O and the latest-runtime correction are
-  verified, and the branch base is `6f23f55`.
+  is `e6b2824`, IP-S5O and the latest-runtime correction are verified, and the
+  branch base is `6f23f55`.
 - Related TODO: `docs/todo.md` Next Tasks, "Build a distributable compatibility
   profile system".
 - Related issue: <https://github.com/serika12345/Konyak/issues/44>
-- Purpose: bring the built-in Steam profile's dependency-first installation
-  closer to the current CrossOver 26 launcher dependency set, beginning with
-  the Japanese font replacement and Visual C++ runtime dependencies that the
-  existing declarative winetricks contract can express safely.
+- Purpose: make automatic profile installation complete when an installer
+  launches a long-lived managed application, while applying the selected
+  profile's validated child-process rules to that first installer-launched
+  application before the successful binding is persisted.
 - Completed work:
   - inspected the existing profile schema, domain model, CLI contracts,
     Profile Manager, winetricks planner, resource download support, persisted
@@ -135,7 +135,45 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
     shipped manifest exposes the expanded dependency order
   - documented a separate bounded native-component milestone for exact
     CrossOver-style `d3dcompiler_47` placement without a DLL override
+  - dynamically reproduced the Steam `Run Steam` completion defect through the
+    public Profile Manager `install-program-profile` path: the CLI remained
+    alive while Steam, explorer, and steamwebhelper descendants retained the
+    captured stderr pipe, so managed-program verification and profile binding
+    persistence were never reached
+  - confirmed in the same run that installer-launched steamwebhelper processes
+    did not receive the profile's three child-process arguments and repeatedly
+    crashed their CEF GPU process before presenting a black login window
+  - captured a CrossOver 26.1 pre-Finish comparison proving its live
+    winewrapper, SteamSetup, and explorer environments contain installer-only
+    `WINE_WAIT_CHILD_PIPE_IGNORE=steam.exe`, use `--wait-children`, and connect
+    standard input/output/error to `/dev/null`
+  - confirmed the current CrossOver Steam definition no longer applies its old
+    Steam registry, wineoss, scheduler-yield, GPUAccelWebViews, or
+    LargeAddressAware hacks; those removed settings are not Konyak parity work
+  - added the bounded `installerCompletion.ignoreChildExecutable` profile
+    capability with schema, semantic basename validation, inspect JSON, and
+    Steam's `steam.exe` declaration; profiles still cannot supply arbitrary
+    environment variables
+  - mapped that typed capability to installer-only
+    `WINE_WAIT_CHILD_PIPE_IGNORE`, removed inherited copies from ordinary
+    process launches, and passed the selected profile's validated child-process
+    rules into the first installer process tree before a binding exists
+  - changed only the installer execution boundary to an asynchronous runner
+    that completes on the requested process exit, captures output for a bounded
+    drain interval, preserves exit status and argv boundaries, and does not
+    wait forever for descendant-held stdout or stderr
+  - kept dependency execution synchronous and ordered, kept macOS
+    `start /wait /unix`, and retained cleanup, managed-program verification,
+    and binding persistence strictly after successful installer completion
+  - moved `install-program-profile` orchestration onto the public streaming CLI
+    path used by the executable and Flutter client
+  - completed an independent result audit, fixed its finding that ordinary
+    program settings could still inject the reserved child-ignore value, and
+    finished with no blocking, high, or medium findings
 - Remaining work:
+  - prove the implementation against the real public Profile Manager path with
+    `Run Steam` checked, including CLI completion, binding persistence,
+    steamwebhelper compatibility arguments, and a non-black Steam window
   - repeat the Profile Manager automatic-install GUI inspection with the
     expanded dependency-first ordering
   - implement the separately tracked bounded native-component milestone before
@@ -143,9 +181,9 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
   - complete IP-P4 after the GUI checkpoint is accepted
   - after the automatic installation path is stable, resume user profile
     storage, canonical import/export, editing, and sharing work
-- Next action: relaunch the macOS app, run the Steam automatic install from
-  Profile Manager, and confirm the visible stages complete in the order
-  `corefonts`, `fakejapanese`, `vcrun2022`, then SteamSetup. Do not add the
+- Next action: relaunch the macOS app from this branch, install Steam from
+  Profile Manager with `Run Steam` checked, and capture the completion,
+  metadata, process argv/environment, logs, and window evidence. Do not add the
   non-equivalent standard `d3dcompiler_47` verb.
 - Verification performed:
   - TDD red states captured for the new CLI/domain and Flutter parser contracts
@@ -213,6 +251,14 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
     its SHA-256 matched
     `7d3654531c32d941b8cae81c4137fc542172bfa9635f169cb392f245a0a12bcb`
   - `git diff --check` passed
+  - at 2026-07-14 13:03-13:09 JST, process-tree, `lsof`, `sample`, Steam log,
+    CGWindow, NSRunningApplication, metadata, and window-pixel capture evidence
+    proved the live Konyak CLI wait condition, missing binding, missing
+    steamwebhelper arguments, repeated CEF GPU-process exits, and black window
+  - at 2026-07-14 13:21-13:26 JST, `KERN_PROCARGS2`, `lsof`, process-tree,
+    Crosstie, bottle registry, and CGWindow evidence proved the current
+    CrossOver installer environment and `/dev/null` standard-FD difference;
+    no CrossOver or Konyak process was operated or terminated during capture
   - at 2026-07-14 11:23 JST, process inspection showed the active Flutter debug
     command receiving
     `KONYAK_DEV_MACOS_WINE_STACK_MANIFEST=.dart_tool/konyak/dev-runtime-source/macos-wine-stack/konyak-macos-wine-runtime-stack-source.json`
@@ -254,3 +300,25 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
   - final independent audit reran the 30 catalog tests, focused golden test,
     dependency-before-installer test, public profile/verb inspection, and
     `git diff --check`; all passed with no blocking findings
+  - captured TDD red states for the missing typed completion contract, missing
+    installer environment mapping, missing pre-binding child-process rules,
+    absent asynchronous installer boundary, and descendant-held stderr wait
+  - the focused profile model/catalog/rules/orchestration/CLI and process-runner
+    tests passed, including a repository-owned child process that retains
+    stderr for 20 seconds while the requested installer exits immediately
+  - public `inspect-install-profile steam --json` returned exit 0 and exposed
+    `installerCompletion.ignoreChildExecutable` as `steam.exe`, the three
+    dependency verbs in order, and the existing steamwebhelper arguments
+  - `just cli-analyze` and `just cli-test` passed; the CLI suite completed 520
+    tests
+  - final `just verify-governance`, `just verify-safety`, `just format-check`,
+    `just lint`, and `just test` passed; the aggregate test gate included 495
+    Flutter tests, 520 CLI tests, 3 custom-lint tests, and repository script
+    tests
+  - no workflow update was needed: the new deterministic regression and public
+    CLI contract coverage run through the existing `just test`/CLI test jobs,
+    and no real runtime installation was claimed as CI proof
+  - the final independent audit passed 169 focused tests, 38 post-fix focused
+    tests, `just cli-analyze`, public Steam profile inspection, and
+    `git diff --check`; its only remaining risk is the deliberately pending real
+    Steam GUI confirmation

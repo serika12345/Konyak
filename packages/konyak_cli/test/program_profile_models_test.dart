@@ -2,6 +2,33 @@ import 'package:konyak_cli/konyak_cli.dart';
 import 'package:test/test.dart';
 
 void main() {
+  test('models an installer completion child executable basename', () {
+    final completion = InstallerCompletionRecord(
+      ignoreChildExecutable: 'steam.exe',
+    );
+
+    expect(completion.ignoreChildExecutable.value, 'steam.exe');
+  });
+
+  for (final invalidChildExecutable in <String>[
+    '.exe',
+    'steam',
+    'nested/steam.exe',
+    r'nested\steam.exe',
+    'steam\u0000.exe',
+    '${'s' * 252}.exe',
+  ]) {
+    test('rejects invalid installer completion child executable '
+        '$invalidChildExecutable', () {
+      expect(
+        () => InstallerCompletionRecord(
+          ignoreChildExecutable: invalidChildExecutable,
+        ),
+        throwsArgumentError,
+      );
+    });
+  }
+
   test('models a validated HTTPS installer resource', () {
     final resource = InstallerResourceRecord(
       kind: 'https',

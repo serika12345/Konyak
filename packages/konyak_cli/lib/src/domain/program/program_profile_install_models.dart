@@ -82,7 +82,9 @@ abstract class ProgramProfileInstallRequest
 }
 
 abstract interface class ProgramProfileInstaller {
-  ProgramProfileInstallResult install(ProgramProfileInstallRequest request);
+  Future<ProgramProfileInstallResult> install(
+    ProgramProfileInstallRequest request,
+  );
 
   ProgramProfileInstaller withProgressSink(
     ProgramProfileInstallProgressSink progressSink,

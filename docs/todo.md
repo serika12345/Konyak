@@ -104,11 +104,13 @@ verification output instead of checked-off backlog entries.
 - Continue Steam black-screen remediation from GitHub issue #44.
   - Keep the Steam profile aligned with the current CrossOver definition.
     CrossOver's installer-scoped `WINE_WAIT_CHILD_PIPE_IGNORE=steam.exe` is not
-    a normal Steam launch workaround. CrossOver also has installer-phase
-    AppDefaults `wineoss.drv` and font/DWrite registry setup; represent those
-    as generic declarative registry actions before applying them. The current
-    CEF argv rule is independently verified Konyak profile data, not a
-    CrossOver reproduction; future profile values require equivalent evidence.
+    a normal Steam launch workaround. CrossOver 26.1 no longer applies the old
+    Steam AppDefaults, `wineoss.drv`, scheduler-yield, GPUAccelWebViews, or
+    LargeAddressAware hacks, so do not add them to Konyak. Its font, VC++,
+    no-override d3dcompiler, and MSync setup comes from the separate Game
+    Launcher Dependencies graph. The current CEF argv rule is independently
+    verified Konyak profile data, not a CrossOver reproduction; future profile
+    values require equivalent evidence.
   - The observed failure is generic: CEF's D3DMetal GPU process fails command
     buffer creation and crashes in `CrGpuMain` with `0xc0000005`, leaving the
     login window black. Reproduce it with a non-Steam CEF/Chromium D3D11 or
@@ -191,6 +193,16 @@ verification are complete.
 
 Small milestones:
 
+- [ ] IP-S5C: Make automatic installer completion safe when the installer
+  launches a long-lived managed application. Add a bounded typed profile
+  capability that maps to macOS Wine's installer-only child-ignore contract,
+  pass the selected profile's validated child-process rules into the installer
+  process tree before binding persistence, and make process completion depend
+  on the direct installer process exit rather than descendant-held output-pipe
+  EOF. Preserve `start /wait`, exit status, diagnostic logs, argv boundaries,
+  dependency-first ordering, and verify-then-persist failure atomicity. Cover a
+  repository-owned descendant-held-stderr fixture and the public Profile
+  Manager path with Steam's `Run Steam` selected.
 - [ ] IP-S6: Add an independently rerunnable macOS public-CLI E2E using a
   repository-owned synthetic installer. Cover digest rejection, installer and
   dependency ordering, binding, pinned EXE launch, real `.lnk` launch, and

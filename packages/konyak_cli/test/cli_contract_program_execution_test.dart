@@ -481,11 +481,17 @@ void main() {
   });
 
   test('inspect-install-profile --json returns complete profile details', () {
-    final result = runCli(const [
-      'inspect-install-profile',
-      'test-profile',
-      '--json',
-    ], installProfileCatalog: testInstallProfileCatalog());
+    final installProfile = testInstallProfile().copyWith(
+      installerCompletion: Option.of(
+        InstallerCompletionRecord(ignoreChildExecutable: 'launcher.exe'),
+      ),
+    );
+    final result = runCli(
+      const ['inspect-install-profile', 'test-profile', '--json'],
+      installProfileCatalog: testInstallProfileCatalog(
+        profiles: [installProfile],
+      ),
+    );
 
     expect(result.exitCode, 0);
     expect(result.stderr, isEmpty);
@@ -510,6 +516,7 @@ void main() {
         'sha256': '0123456789abcdef' * 4,
         'fileName': 'TestSetup.exe',
       },
+      'installerCompletion': {'ignoreChildExecutable': 'launcher.exe'},
       'dependencyWinetricksVerbs': ['corefonts'],
       'runCompletionPolicy': 'launchOnly',
       'compatibilityProfile': {

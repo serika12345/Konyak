@@ -6,6 +6,7 @@ import '../domain/program/program_mutation_models.dart';
 import '../domain/program/program_profile_catalog.dart';
 import '../domain/program/program_profile_install_models.dart';
 import '../domain/program/program_profile_models.dart';
+import '../domain/program/program_profiles.dart';
 import '../domain/program/program_run_models.dart';
 import '../domain/program/program_runner.dart';
 import '../domain/runtime/runtime_catalogs.dart';
@@ -20,6 +21,7 @@ final class DefaultProgramProfileInstaller implements ProgramProfileInstaller {
     required this.winetricksVerbRepository,
     required this.programRunPlanner,
     required this.programRunner,
+    required this.installerProgramRunner,
     required this.resourceFetcher,
     required this.managedProgramVerifier,
     this.progressSink = const NoopProgramProfileInstallProgressSink(),
@@ -31,6 +33,7 @@ final class DefaultProgramProfileInstaller implements ProgramProfileInstaller {
   final WinetricksVerbRepository winetricksVerbRepository;
   final ProgramRunPlanner programRunPlanner;
   final ProgramRunner programRunner;
+  final AsyncProgramRunner installerProgramRunner;
   final ProfileInstallerResourceFetcher resourceFetcher;
   final ManagedProfileProgramVerifier managedProgramVerifier;
   final ProgramProfileInstallProgressSink progressSink;
@@ -46,6 +49,7 @@ final class DefaultProgramProfileInstaller implements ProgramProfileInstaller {
       winetricksVerbRepository: winetricksVerbRepository,
       programRunPlanner: programRunPlanner,
       programRunner: programRunner,
+      installerProgramRunner: installerProgramRunner,
       resourceFetcher: resourceFetcher,
       managedProgramVerifier: managedProgramVerifier,
       progressSink: progressSink,
@@ -53,72 +57,81 @@ final class DefaultProgramProfileInstaller implements ProgramProfileInstaller {
   }
 
   @override
-  ProgramProfileInstallResult install(ProgramProfileInstallRequest request) {
+  Future<ProgramProfileInstallResult> install(
+    ProgramProfileInstallRequest request,
+  ) {
     _started(ProgramProfileInstallStage.preflight);
-    return installProfileCatalog.find(request.profileId).match(
-      () => _failed(
-        const ProgramProfileInstallFailed(
-          stage: ProgramProfileInstallStage.preflight,
-          code: 'installProfileNotFound',
-          message: 'Install profile was not found.',
-        ),
-      ),
-      (profile) {
-        final platform = programRunPlanner.hostPlatform.name;
-        if (!profile.platforms.any(
-          (candidate) => candidate.value == platform,
-        )) {
-          return _failed(
-            const ProgramProfileInstallFailed(
-              stage: ProgramProfileInstallStage.preflight,
-              code: 'installProfilePlatformUnsupported',
-              message: 'Install profile does not support the host platform.',
-            ),
-          );
-        }
-
-        final expectedRunnerKind = switch (programRunPlanner.hostPlatform) {
-          KonyakHostPlatform.linux => 'wine',
-          KonyakHostPlatform.macos => 'macosWine',
-        };
-        final hasInstalledRuntime = runtimeCatalog.listRuntimes().any(
-          (runtime) =>
-              runtime.platform.value == platform &&
-              runtime.runnerKind.value == expectedRunnerKind &&
-              runtime.isInstalled.getOrElse(() => false) &&
-              runtime.libraryPath.isSome() &&
-              runtime.executablePath.isSome() &&
-              runtime.stack.match(() => false, (stack) => stack.isComplete),
-        );
-        if (!hasInstalledRuntime) {
-          return _failed(
-            const ProgramProfileInstallFailed(
-              stage: ProgramProfileInstallStage.preflight,
-              code: 'installedRuntimeUnavailable',
-              message:
-                  'An installed runtime for the host platform is required.',
-            ),
-          );
-        }
-
-        return bottleRepository
-            .findBottle(request.bottleId)
-            .fold(
-              (message) => _failed(
-                ProgramProfileInstallFailed(
-                  stage: ProgramProfileInstallStage.preflight,
-                  code: 'bottleLookupFailed',
-                  message: message,
-                ),
+    return installProfileCatalog
+        .find(request.profileId)
+        .match(
+          () async {
+            return _failed(
+              const ProgramProfileInstallFailed(
+                stage: ProgramProfileInstallStage.preflight,
+                code: 'installProfileNotFound',
+                message: 'Install profile was not found.',
               ),
-              (bottle) => bottle.match(
-                () => _failed(
-                  const ProgramProfileInstallFailed(
-                    stage: ProgramProfileInstallStage.preflight,
-                    code: 'bottleNotFound',
-                    message: 'Bottle was not found.',
-                  ),
+            );
+          },
+          (profile) async {
+            final platform = programRunPlanner.hostPlatform.name;
+            if (!profile.platforms.any(
+              (candidate) => candidate.value == platform,
+            )) {
+              return _failed(
+                const ProgramProfileInstallFailed(
+                  stage: ProgramProfileInstallStage.preflight,
+                  code: 'installProfilePlatformUnsupported',
+                  message:
+                      'Install profile does not support the host platform.',
                 ),
+              );
+            }
+
+            final expectedRunnerKind = switch (programRunPlanner.hostPlatform) {
+              KonyakHostPlatform.linux => 'wine',
+              KonyakHostPlatform.macos => 'macosWine',
+            };
+            final hasInstalledRuntime = runtimeCatalog.listRuntimes().any(
+              (runtime) =>
+                  runtime.platform.value == platform &&
+                  runtime.runnerKind.value == expectedRunnerKind &&
+                  runtime.isInstalled.getOrElse(() => false) &&
+                  runtime.libraryPath.isSome() &&
+                  runtime.executablePath.isSome() &&
+                  runtime.stack.match(() => false, (stack) => stack.isComplete),
+            );
+            if (!hasInstalledRuntime) {
+              return _failed(
+                const ProgramProfileInstallFailed(
+                  stage: ProgramProfileInstallStage.preflight,
+                  code: 'installedRuntimeUnavailable',
+                  message:
+                      'An installed runtime for the host platform is required.',
+                ),
+              );
+            }
+
+            return bottleRepository.findBottle(request.bottleId).fold(
+              (message) async {
+                return _failed(
+                  ProgramProfileInstallFailed(
+                    stage: ProgramProfileInstallStage.preflight,
+                    code: 'bottleLookupFailed',
+                    message: message,
+                  ),
+                );
+              },
+              (bottle) => bottle.match(
+                () async {
+                  return _failed(
+                    const ProgramProfileInstallFailed(
+                      stage: ProgramProfileInstallStage.preflight,
+                      code: 'bottleNotFound',
+                      message: 'Bottle was not found.',
+                    ),
+                  );
+                },
                 (foundBottle) => _installIntoBottle(
                   request: request,
                   profile: profile,
@@ -126,15 +139,15 @@ final class DefaultProgramProfileInstaller implements ProgramProfileInstaller {
                 ),
               ),
             );
-      },
-    );
+          },
+        );
   }
 
-  ProgramProfileInstallResult _installIntoBottle({
+  Future<ProgramProfileInstallResult> _installIntoBottle({
     required ProgramProfileInstallRequest request,
     required InstallProfileRecord profile,
     required BottleRecord bottle,
-  }) {
+  }) async {
     if (bottle.windowsVersion != profile.windowsVersion) {
       return _failed(
         const ProgramProfileInstallFailed(
@@ -153,7 +166,7 @@ final class DefaultProgramProfileInstaller implements ProgramProfileInstaller {
           message: message,
         ),
       ),
-      WinetricksVerbListCompleted(:final categories) => () {
+      WinetricksVerbListCompleted(:final categories) => await (() async {
         final availableVerbs = categories
             .expand((category) => category.verbs)
             .map((verb) => verb.id)
@@ -177,6 +190,8 @@ final class DefaultProgramProfileInstaller implements ProgramProfileInstaller {
               installerPath: ProgramPath(
                 profile.installerResource.fileName.value,
               ),
+              compatibilityEnvironment:
+                  installerCompatibilityEnvironmentForProfile(profile),
             )
             .isNone()) {
           return _failed(
@@ -208,11 +223,11 @@ final class DefaultProgramProfileInstaller implements ProgramProfileInstaller {
           profile: profile,
           bottle: bottle,
         );
-      }(),
+      })(),
     };
   }
 
-  ProgramProfileInstallResult _fetchAndInstall({
+  Future<ProgramProfileInstallResult> _fetchAndInstall({
     required ProgramProfileInstallRequest request,
     required InstallProfileRecord profile,
     required BottleRecord bottle,
@@ -220,24 +235,28 @@ final class DefaultProgramProfileInstaller implements ProgramProfileInstaller {
     _started(ProgramProfileInstallStage.download);
     final fetchResult = resourceFetcher.fetch(profile.installerResource);
     return switch (fetchResult) {
-      ProfileInstallerResourceDownloadFailed(:final message) => _failed(
-        ProgramProfileInstallFailed(
-          stage: ProgramProfileInstallStage.download,
-          code: 'installerResourceDownloadFailed',
-          message: message,
+      ProfileInstallerResourceDownloadFailed(:final message) => Future.value(
+        _failed(
+          ProgramProfileInstallFailed(
+            stage: ProgramProfileInstallStage.download,
+            code: 'installerResourceDownloadFailed',
+            message: message,
+          ),
         ),
       ),
-      ProfileInstallerResourceDigestMismatch() => () {
-        _completed(ProgramProfileInstallStage.download);
-        _started(ProgramProfileInstallStage.verification);
-        return _failed(
-          const ProgramProfileInstallFailed(
-            stage: ProgramProfileInstallStage.verification,
-            code: 'installerResourceDigestMismatch',
-            message: 'Installer resource SHA-256 digest did not match.',
-          ),
-        );
-      }(),
+      ProfileInstallerResourceDigestMismatch() => Future.value(
+        (() {
+          _completed(ProgramProfileInstallStage.download);
+          _started(ProgramProfileInstallStage.verification);
+          return _failed(
+            const ProgramProfileInstallFailed(
+              stage: ProgramProfileInstallStage.verification,
+              code: 'installerResourceDigestMismatch',
+              message: 'Installer resource SHA-256 digest did not match.',
+            ),
+          );
+        })(),
+      ),
       final ProfileInstallerResourceFetched fetched => () {
         _completed(ProgramProfileInstallStage.download);
         _started(ProgramProfileInstallStage.verification);
@@ -273,14 +292,14 @@ final class DefaultProgramProfileInstaller implements ProgramProfileInstaller {
     };
   }
 
-  ProgramProfileInstallResult _runInstaller({
+  Future<ProgramProfileInstallResult> _runInstaller({
     required ProgramProfileInstallRequest request,
     required InstallProfileRecord profile,
     required BottleRecord bottle,
     required ProgramRunRequest plan,
     required ProfileInstallerResourceFetched resource,
-  }) {
-    final runResult = programRunner.run(plan);
+  }) async {
+    final runResult = await installerProgramRunner.run(plan);
     return switch (runResult) {
       ProgramRunFailed(:final message) => _releaseResourceThen(
         resource: resource,
@@ -321,12 +340,12 @@ final class DefaultProgramProfileInstaller implements ProgramProfileInstaller {
     };
   }
 
-  ProgramProfileInstallResult _runDependencies({
+  Future<ProgramProfileInstallResult> _runDependencies({
     required ProgramProfileInstallRequest request,
     required InstallProfileRecord profile,
     required BottleRecord bottle,
     required ProfileInstallerResourceFetched resource,
-  }) {
+  }) async {
     for (final (index, verb) in profile.dependencyWinetricksVerbs.indexed) {
       final dependencyIndex = Option.of(index);
       final dependencyVerb = Option.of(verb);
@@ -353,9 +372,15 @@ final class DefaultProgramProfileInstaller implements ProgramProfileInstaller {
 
     _started(ProgramProfileInstallStage.installer);
     return programRunPlanner
-        .planInstaller(bottle: bottle, installerPath: resource.path)
-        .match(
-          () => _releaseResourceThen(
+        .planInstaller(
+          bottle: bottle,
+          installerPath: resource.path,
+          compatibilityEnvironment: installerCompatibilityEnvironmentForProfile(
+            profile,
+          ),
+        )
+        .match<Future<ProgramProfileInstallResult>>(
+          () async => _releaseResourceThen(
             resource: resource,
             continuation: () => _failed(
               const ProgramProfileInstallFailed(

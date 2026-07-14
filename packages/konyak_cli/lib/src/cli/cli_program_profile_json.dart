@@ -26,6 +26,12 @@ Map<String, Object?> installProfileJson(InstallProfileRecord profile) {
     },
     'managedProgramPath': profile.managedProgramPath.value,
     'installerResource': installerResourceJson(profile.installerResource),
+    ...profile.installerCompletion.match(
+      () => const <String, Object?>{},
+      (completion) => <String, Object?>{
+        'installerCompletion': installerCompletionJson(completion),
+      },
+    ),
     'dependencyWinetricksVerbs': profile.dependencyWinetricksVerbs
         .map((verb) => verb.value)
         .toList(growable: false),
@@ -33,6 +39,14 @@ Map<String, Object?> installProfileJson(InstallProfileRecord profile) {
     'compatibilityProfile': compatibilityProfileJson(
       profile.compatibilityProfile,
     ),
+  };
+}
+
+Map<String, Object?> installerCompletionJson(
+  InstallerCompletionRecord completion,
+) {
+  return <String, Object?>{
+    'ignoreChildExecutable': completion.ignoreChildExecutable.value,
   };
 }
 

@@ -10,6 +10,7 @@ import 'cli_app_process_parsers.dart';
 import 'cli_app_process_results.dart';
 import 'cli_commands.dart';
 import 'cli_json_helpers.dart';
+import 'cli_program_profile_handlers.dart';
 import 'cli_result_model.dart';
 import 'cli_runtime_parsers.dart';
 import 'cli_update_runtime_results.dart';
@@ -115,6 +116,36 @@ Future<CliResult> runCliStreaming(
     case _StreamingInstallMatched(:final result):
       return result;
     case _StreamingInstallNotMatched():
+  }
+
+  try {
+    final profileInstallMatch = await handleProgramProfileInstallCommand(
+      arguments,
+      context,
+    );
+    switch (profileInstallMatch) {
+      case ProgramProfileInstallCommandMatched(:final result):
+        return result;
+      case ProgramProfileInstallCommandNotMatched():
+    }
+  } on BottleRepositoryException catch (error) {
+    return jsonError(
+      exitCode: 74,
+      code: 'bottleRepositoryError',
+      message: error.message,
+    );
+  } on AppSettingsRepositoryException catch (error) {
+    return jsonError(
+      exitCode: 74,
+      code: 'appSettingsRepositoryError',
+      message: error.message,
+    );
+  } on InstallProfileCatalogException catch (error) {
+    return jsonError(
+      exitCode: 65,
+      code: 'installProfileCatalogError',
+      message: error.message,
+    );
   }
 
   if (isJsonWineProcessListCommand(arguments)) {

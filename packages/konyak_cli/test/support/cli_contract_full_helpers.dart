@@ -454,6 +454,17 @@ final class RecordingProgramRunner implements ProgramRunner {
   }
 }
 
+final class ImmediateAsyncProgramRunner implements AsyncProgramRunner {
+  const ImmediateAsyncProgramRunner(this.programRunner);
+
+  final ProgramRunner programRunner;
+
+  @override
+  Future<ProgramRunResult> run(ProgramRunRequest request) async {
+    return programRunner.run(request);
+  }
+}
+
 final class FixedProgramMetadataExtractor implements ProgramMetadataExtractor {
   const FixedProgramMetadataExtractor({
     required this.programPath,
