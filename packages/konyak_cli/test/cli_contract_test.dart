@@ -11,6 +11,7 @@ void main() {
         jsonDecode(referenceFile.readAsStringSync()) as Map<String, Object?>;
 
     expect(reference['repository'], macosWineRuntimeRepository);
+    expect(reference['defaultReleaseTag'], 'latest');
     expect(reference['defaultReleaseTag'], macosWineRuntimeDefaultReleaseTag);
     expect(
       reference['sourceManifestFileName'],
@@ -18,8 +19,7 @@ void main() {
     );
     expect(
       macosWineRuntimeSourceManifestUrl,
-      'https://github.com/$macosWineRuntimeRepository/releases/download/'
-      '$macosWineRuntimeDefaultReleaseTag/'
+      'https://github.com/$macosWineRuntimeRepository/releases/latest/download/'
       '$macosWineRuntimeSourceManifestFileName',
     );
     expect(

@@ -8,77 +8,75 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
 
 ## Current Work Snapshot
 
-- Timestamp: 2026-07-14 19:31 JST
+- Timestamp: 2026-07-14 19:54 JST
 - State: `paused`
-- Branch: `fix/invalid-bottle-recovery`; based on the `main` merge of PR #53
-  (`13c88c3`) and carrying the recovery implementation originally committed as
-  `3d68718`.
+- Branch: `fix/macos-development-runtime-latest`; based on the `main` merge of
+  PR #54 (`d9a16fc`) and carrying the runtime correction originally committed
+  as `10cd370`. The latest commit is the branch HEAD named
+  `fix(runtime): default macos development to latest`.
 - Related TODO: `docs/todo.md` Next Tasks, "Build a distributable compatibility
   profile system".
 - Related issue: <https://github.com/serika12345/Konyak/issues/44>
-- Purpose: keep valid bottles usable when one Konyak-owned metadata record is
-  incompatible, and provide a bounded GUI recovery path instead of leaving a
-  hidden bottle that still reserves its storage identity.
+- Purpose: make the macOS development runtime follow the runtime-owner-published
+  latest source manifest by default, while retaining explicit rollback and
+  local-manifest overrides and keeping the runtime submodule artifacts as SSOT.
 - Completed work:
-  - merged PRs #50 through #53 for installer-resource declarations, the public
-    profile-install CLI, dependency-first execution, and the Profile Manager UI
-  - changed bottle listing to retain valid records and return invalid Konyak
-    metadata entries as separately validated result records
-  - kept one writable-first storage-ID namespace across configured and fallback
-    catalogs so a hidden invalid bottle cannot be recreated under the same ID
-  - added `repair-bottle-metadata <storage-id> --action
-    discard-invalid-profiles --json`
-  - revalidated the target before repair, wrote an exclusive byte-identical
-    backup, and atomically removed only the incompatible profile bindings
-  - rejected traversal, path mismatch, symbolic links, arbitrary corruption,
-    and lower-priority duplicate targets without mutating bottle contents
-  - added a dedicated invalid-bottle sidebar section, cause/path details,
-    explicit confirmation, blocking progress, success reload, and backup notice
-  - retained the recovery row after a failed repair so users can retry
-  - added CLI contract, repository, Flutter parser/client, widget, localization,
-    and golden coverage for the recovery path
-  - hardened the recovery boundary after independent dynamic audit: storage
-    IDs that require normalization or contain path separators are isolated
-    without hiding valid bottles, bottle-directory symlinks never advertise a
-    repair action, and Flutter validates the same storage-ID contract
-  - added screenshot coverage for both the recovery details dialog and the
-    destructive confirmation dialog
+  - merged PRs #50 through #54 for installer resources, profile installation,
+    dependency-first execution, Profile Manager installation, and invalid
+    bottle recovery
+  - fast-forwarded local `main` to the PR #54 merge and created the focused
+    runtime branch
+  - applied the parent-repository runtime policy, CLI fallback, Nix/VSCode/Agent
+    Watch launcher, prepare-script, documentation, governance, and test changes
+    from `10cd370`
+  - kept the runtime owner responsible for complete component archives and
+    source manifests; no runtime submodule files or parent-side component
+    overlays are changed
+  - verified that blank development manifest input resolves to the
+    runtime-owner `latest` source manifest, while explicit release-tag and
+    complete-manifest overrides retain deterministic rollback paths
+  - verified that a fresh Nix development shell replaces inherited stale
+    derived development variables with repository SSOT values
+  - completed focused tests, full required gates, isolated maintained-script
+    source selection, read-only public CLI runtime parity, and an independent
+    artifact/result audit
+  - confirmed that existing GitHub Actions already run `just verify`, the
+    maintained preparation tests, and the public macOS runtime CLI smoke for
+    the files changed by this branch; no workflow change is required
 - Remaining work:
-  - review and merge the focused invalid-bottle recovery pull request
-  - continue the runtime, Steam dependency, completion-policy, pin-icon,
-    native-component, and E2E-gate commits one pull request at a time
-- Next action: merge the recovery pull request, then cherry-pick `10cd370` onto
-  the resulting `main` for latest-development-runtime SSOT handling.
+  - submit this focused runtime pull request and wait for review and merge
+  - after merge, update local `main`, create the next focused branch, and apply
+    `e6b2824` for the Steam font and Visual C++ profile dependencies
+- Next action: push the focused branch, open the pull request, and stop at the
+  review gate.
 - Verification performed:
-  - the original dynamic reproduction proved that one old profile binding made
-    public `list-bottles --json` return exit 74 while the hidden bottle still
-    reserved its storage identity
-  - the original isolated public-CLI audit proved partial listing, a
-    byte-identical backup, canonical metadata with only `profiles` removed,
-    unchanged bottle content, and no mutation for arbitrary corruption
-  - focused CLI recovery contracts passed 12 tests; focused Flutter bottle-list
-    contracts passed 18 tests; the focused recovery-dialog golden test passed
-  - full CLI and Flutter suites passed 500 and 503 tests respectively
-  - `just verify-governance`, `just verify-safety`, `just format-check`, `just
-    lint`, CLI/Flutter format and analysis gates, and `git diff --check` passed
-  - the 1040x720 recovery details golden remains
-    `apps/konyak/test/goldens/invalid_bottle_recovery.png` with SHA-256
-    `1ccfa090f5b26cbe040eb31c4c25e0029a4886fdd370f2901ad7333504038b51`
-  - the 1040x720 confirmation golden is
-    `apps/konyak/test/goldens/invalid_bottle_recovery_confirmation.png` with
-    SHA-256
-    `39cf527d88421539010cda56fdac6b86400ae23a1b8f85df2304c89c36fbddbe`;
-    both dialog images were inspected without clipping or overlap
-  - an independent read-only audit dynamically exercised the public CLI with
-    canonical, whitespace-boundary, separator-containing, and symlinked bottle
-    fixtures; canonical repair followed by inspect and delete succeeded, unsafe
-    entries remained unmodified, and the final audit reported no blockers
+  - focused Dart runtime contract tests: 55 passed
+  - `just macos-dev-runtime-prepare-test`: 6 passed
+  - full `just cli-test`: 502 passed
+  - `just verify-governance`, `just verify-safety`, `just format-check`,
+    `just lint`, `just cli-format-check`, and `just cli-analyze`: passed
+  - `git diff --check` and runtime submodule `git diff --check`: passed
+  - maintained prepare-script source selection at
+    `.dart_tool/konyak/macos-latest-source-audit-20260714-194650`: selected the
+    runtime-owner `releases/latest/download` source, cached matching source
+    metadata, and resolved Wine `crossover-26.1.0-konyak.4`
+  - explicit padded fixed-tag and complete-manifest overrides were normalized
+    and selected; inherited stale derived variables were replaced in a fresh
+    Nix development shell
+  - read-only public `dart run bin/konyak.dart list-runtimes --json` at
+    2026-07-14 19:51 JST reported an installed, complete stack whose 10
+    component versions matched the selected latest manifest
+  - independent read-only audit repeated SSOT/platform focused tests (7
+    passed), runtime install contracts (48 passed), preparation tests (6
+    passed), governance, VSCode JSON parsing, override selection, Agent Watch
+    input normalization, isolated latest-manifest retrieval, and submodule
+    pointer inspection; no implementation or artifact blocker was found
 - Remaining risk:
-  - recovery deliberately handles only incompatible profile bindings; unrelated
-    or structurally corrupt metadata remains visible as invalid but is not
-    rewritten automatically
-  - unaddressable storage basenames are intentionally isolated rather than
-    exposed through a GUI cleanup path
-  - metadata replacement compares the expected bytes before writing its backup
-    and temporary file but does not yet use a cross-process lock or final
-    compare-and-swap immediately before rename
+  - `latest` is intentionally mutable, so deterministic rollback depends on the
+    explicit release-tag or complete-manifest override
+  - HTTPS and component SHA-256 checks protect component retrieval, but manifest
+    authenticity and fully reproducible selection still depend on an explicit
+    fixed-tag, complete-manifest, or signature override
+  - callers that previously set derived `KONYAK_DEV_*` values directly must use
+    the documented `_OVERRIDE` variables; maintained Nix, VSCode, and Agent
+    Watch paths already use the new contract

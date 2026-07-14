@@ -45,6 +45,48 @@ void main() {
       );
     });
 
+    test('development macOS manifest falls back to the platform default', () {
+      final environments = [
+        HostEnvironment({'KONYAK_RUNTIME_PROFILE': 'development'}),
+        HostEnvironment({
+          'KONYAK_RUNTIME_PROFILE': 'development',
+          'KONYAK_DEV_MACOS_WINE_STACK_MANIFEST': '   ',
+        }),
+      ];
+
+      final manifests = environments.map(
+        (environment) => runtimeSourceManifestForPlatform(
+          platformSpec: macosKonyakRuntimePlatformSpec,
+          environment: environment,
+        ).toNullable(),
+      );
+
+      expect(
+        manifests,
+        everyElement(
+          RuntimeSourceManifestUrl(macosWineRuntimeSourceManifestUrl),
+        ),
+      );
+    });
+
+    test('development macOS manifest override has highest priority', () {
+      final configuredManifest = runtimeSourceManifestForPlatform(
+        platformSpec: macosKonyakRuntimePlatformSpec,
+        environment: HostEnvironment({
+          'KONYAK_RUNTIME_PROFILE': 'development',
+          'KONYAK_DEV_MACOS_WINE_STACK_MANIFEST':
+              ' \thttps://example.invalid/rollback-source.json\n ',
+        }),
+      );
+
+      expect(
+        configuredManifest.toNullable(),
+        RuntimeSourceManifestUrl(
+          'https://example.invalid/rollback-source.json',
+        ),
+      );
+    });
+
     test('component and backend catalogs store typed ids and paths', () {
       final linuxWine = linuxWineRuntimePlatformSpec.componentDefinitions.first;
       final linuxDxvk = linuxWineRuntimePlatformSpec.backendDefinitions.first;

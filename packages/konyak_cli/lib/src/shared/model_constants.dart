@@ -13,14 +13,14 @@ const linuxWineRuntimeId = 'konyak-linux-wine';
 const macosWineRuntimeId = 'konyak-macos-wine';
 const macosWineArchiveFileName = 'macos-wine.tar.xz';
 const macosWineRuntimeRepository = 'serika12345/konyak-macos-runtime';
-const macosWineRuntimeDefaultReleaseTag = 'crossover-26.1.0-konyak.4';
+const macosWineRuntimeDefaultReleaseTag = 'latest';
 const macosWineRuntimeSourceManifestFileName =
     'konyak-macos-wine-runtime-stack-source.json';
 const macosWineRuntimeReleaseUrl =
     'https://api.github.com/repos/$macosWineRuntimeRepository/releases/latest';
 const macosWineRuntimeSourceManifestUrl =
-    'https://github.com/$macosWineRuntimeRepository/releases/download/'
-    '$macosWineRuntimeDefaultReleaseTag/$macosWineRuntimeSourceManifestFileName';
+    'https://github.com/$macosWineRuntimeRepository/releases/latest/download/'
+    '$macosWineRuntimeSourceManifestFileName';
 const macosWineVersionUrl = macosWineRuntimeReleaseUrl;
 const rosettaRuntimePath = '/Library/Apple/usr/libexec/oah/libRosettaRuntime';
 const rosettaInstallCommand = <String>[
