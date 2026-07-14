@@ -8,86 +8,52 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
 
 ## Current Work Snapshot
 
-- Timestamp: 2026-07-13 22:25 JST
-- State: `planned`
-- Branch: `task/profile-installer-flow`; the previous verified step is commit
-  `a5da3e4` and the branch base is `6f23f55`.
+- Timestamp: 2026-07-14 18:53 JST
+- State: `paused`
+- Branch: `fix/profile-dependencies-before-installer`; based on the `main`
+  merge of PR #51 (`9ed1730`) and carrying the dependency-order fix originally
+  committed as `2105572`.
 - Related TODO: `docs/todo.md` Next Tasks, "Build a distributable compatibility
   profile system".
 - Related issue: <https://github.com/serika12345/Konyak/issues/44>
-- Purpose: let users author, validate, import, export, install, and share
-  declarative compatibility profiles without adding application-specific app or
-  runtime branches.
+- Purpose: correct the public profile-install CLI so every declared winetricks
+  dependency completes in manifest order before the Windows installer starts,
+  before exposing automatic installation through Profile Manager.
 - Completed work:
-  - inspected the existing profile schema, domain model, CLI contracts,
-    Profile Manager, winetricks planner, resource download support, persisted
-    bindings, and runtime smoke boundaries
-  - split the automatic profile installation work into IP-P1 through IP-P4 in
-    `docs/todo.md`
-  - confirmed that profile compatibility is not required before the first
-    release, so IP-P1 updates the current schema directly
-  - made one immutable HTTPS installer resource mandatory in profile schema 1
-    and added matching JSON Schema, Dart semantic, CLI inspect, and Flutter
-    parser validation
-  - restricted installer resources to HTTPS URLs with a host and no userinfo or
-    fragment, 64-character SHA-256 values, and safe `.exe` or `.msi` basenames
-  - bounded dependency winetricks verbs and preserved their declared order
-  - restricted managed program paths to absolute C-drive `.exe` paths without
-    empty, dot, dot-dot, or NUL components
-  - added the official Steam installer URL and a dynamically verified payload
-    digest to the built-in Steam profile
-  - completed an independent implementation audit and corrected its Flutter
-    external-data validation finding
-  - committed the completed installer manifest/read contract as `a5da3e4`
-  - accepted the review gate and changed the delivery plan to keep IP-P2
-    through IP-P4 on this feature branch, with one pull request after the full
-    automatic installation feature is complete
-  - added the public `install-program-profile` CLI command with versioned final
-    JSON and optional stdout JSONL stage progress
-  - added download-before-execution preflight for profile platform, complete
-    host runtime and runner kind, bottle Windows version, every declared
-    winetricks verb, and every installer/dependency plan
-  - added a profile-owned HTTPS-only resource fetcher with redirect, timeout,
-    and size limits, private exclusive staging, SHA-256 verification, typed
-    cleanup, and no shell execution
-  - added installer-only macOS `start /wait /unix` planning without changing
-    normal program launch, plus MSI and Linux installer planning
-  - made installer and dependency startup/non-zero failures stop all later
-    stages, verified managed executables stay inside `drive_c`, and persisted
-    profile bindings only after complete success
-  - persisted the built-in manifest digest, source identity, installer resource
-    identity, managed path, and compatibility profile identity directly in the
-    unreleased binding shape
-  - completed an independent IP-P2 audit, dynamically reproduced and fixed a
-    cache-directory symlink escape, and added a nine-case public CLI failure
-    matrix plus manual apply/repair no-installer contracts
+  - merged PR #50, which added the bounded installer-resource manifest and read
+    contracts
+  - merged PR #51, which added the typed public `install-program-profile` CLI,
+    resource verification, installer/dependency execution, managed-program
+    verification, and binding persistence
+  - changed the orchestrator to fetch and verify the installer first, run every
+    declared dependency, release the staged payload on dependency failure, and
+    start the installer only after all dependencies succeed
+  - prevented installer launch, managed-program verification, and persistence
+    after dependency startup or non-zero-exit failures
+  - preserved typed dependency index and verb context in progress and failure
+    results
+  - updated the roadmap and public-CLI tests to require dependency-first order
 - Remaining work:
-  - complete IP-P3 and IP-P4
-  - after the automatic installation path is stable, resume user profile
-    storage, canonical import/export, editing, and sharing work
-- Next action: start IP-P3 with a failing Profile Manager golden and Flutter CLI
-  streaming parser/client tests before adding separate automatic-install and
-  manual-apply actions.
+  - review and merge the focused dependency-order pull request
+  - submit the Profile Manager automatic-install GUI path as a later pull
+    request only after the order fix is on `main`
+  - continue the remaining profile recovery, runtime, Steam dependency,
+    completion-policy, pin-icon, native-component, and E2E-gate commits one pull
+    request at a time
+- Next action: merge the dependency-order pull request, then cherry-pick
+  `aa90256` onto the resulting `main` for the Profile Manager GUI pull request.
 - Verification performed:
-  - TDD red states captured for the new CLI/domain and Flutter parser contracts
-  - `just cli-format-check`, `just cli-analyze`, and `just cli-test` passed; 487
-    CLI tests passed
-  - `just flutter-format-check`, `just flutter-analyze`, and
-    `just flutter-test` passed; 477 Flutter tests passed after the final parser
-    hardening
-  - `just verify-governance`, `just verify-safety`, `just format-check`, and
-    `just lint` passed
-  - the independent audit dynamically proved the old deterministic digest
-    directory could follow a symlink and overwrite a file outside the cache;
-    six hardened resource-boundary tests passed after moving to private unique
-    staging with real-path containment
-  - the remaining same-UID active symlink-race boundary is documented in the
-    fetcher: Dart cannot pass an `O_NOFOLLOW` descriptor to curl, while the
-    private mode-0700 staging prevents hostile profiles and other users from
-    supplying the raced path
-  - real network download and Wine installer execution were deliberately
-    deferred to the maintained synthetic public-CLI smoke in IP-P4
-  - the Steam installer returned HTTP 200 with no redirect and 2,380,800 bytes;
-    its SHA-256 matched
-    `7d3654531c32d941b8cae81c4137fc542172bfa9635f169cb392f245a0a12bcb`
-  - `git diff --check` passed
+  - the original TDD run dynamically confirmed the incorrect baseline request
+    order was installer, `corefonts`, then `vcrun2022`
+  - focused orchestration and public-command tests prove the corrected request
+    order is `corefonts`, `vcrun2022`, installer
+  - dependency failure cases issue no installer request, make no verifier or
+    persistence call, release the fetched resource once, and retain typed
+    failure context
+  - the current cherry-picked branch passed `just verify-governance`, `just
+    verify-safety`, `just format-check`, `just lint`, `just cli-format-check`,
+    `just cli-analyze`, `just cli-test` (488 tests), and `git diff --check`
+- Remaining risk:
+  - the maintained real network/Wine public-CLI smoke remains deferred to the
+    later synthetic E2E-gate pull request; this focused change is covered by
+    deterministic orchestration and CLI contract tests

@@ -50,10 +50,10 @@ verification output instead of checked-off backlog entries.
     SHA-256 digest. Profile installation may fetch or select only declared
     resources and must never execute an arbitrary shell command or script.
   - Add a generic profile-install operation that resolves the declared
-    installer resource, installs it into the selected bottle, then runs the
-    profile's declared winetricks dependencies with recorded progress and
-    failure results. Keep dependency ordering explicit in the manifest
-    contract before exposing it to profile authors.
+    installer resource, verifies it, runs the profile's declared winetricks
+    dependencies, and only then installs it into the selected bottle. Record
+    progress and failure results, and keep dependency ordering explicit in the
+    manifest contract before exposing it to profile authors.
   - Once installer resources, dependency winetricks, and the profile-install
     user flow are complete, add an independently rerunnable macOS CI E2E gate
     for the entire declarative profile path. Use a repository-owned,
@@ -61,8 +61,8 @@ verification output instead of checked-off backlog entries.
     do not depend on Steam payloads, authentication, or live third-party
     downloads. Exercise the public Konyak CLI path used by the GUI to validate
     and resolve the resource, reject a digest mismatch before execution, create
-    or select a bottle, run the installer, run a deterministic declared
-    winetricks dependency in manifest order, record the installed profile
+    or select a bottle, run a deterministic declared winetricks dependency in
+    manifest order, run the installer, record the installed profile
     binding, and launch the installed program normally.
   - The profile-install E2E fixture must install a launcher and child executable
     that record received argv. Verify that launching the pinned executable and
@@ -164,9 +164,10 @@ verification output instead of checked-off backlog entries.
 ## Compatibility Profile Installation Milestones
 
 Goal: let an explicitly selected compatibility profile acquire its declared
-Windows installer, verify that immutable payload, run it through Konyak's
-public CLI execution path, apply declared winetricks dependencies in manifest
-order, and bind the installed program only after every stage succeeds.
+Windows installer, verify that immutable payload, apply declared winetricks
+dependencies in manifest order through Konyak's public CLI execution path,
+then run the installer and bind the installed program only after every stage
+succeeds.
 
 Compatibility policy: compatibility profiles and profile bindings have not
 shipped yet. Until the first release containing this feature, update the
