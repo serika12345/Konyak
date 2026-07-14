@@ -26,7 +26,7 @@ void main() {
       fileName: 'Setup.exe',
     );
 
-    final result = fetcher.fetch(resource);
+    final result = _fetchInstaller(fetcher, resource);
 
     expect(result, isA<ProfileInstallerResourceFetched>());
     final fetched = result as ProfileInstallerResourceFetched;
@@ -91,7 +91,8 @@ void main() {
       processRunner: processRunner,
     );
 
-    final result = fetcher.fetch(
+    final result = _fetchInstaller(
+      fetcher,
       InstallerResourceRecord(
         kind: 'https',
         url: 'https://downloads.example.test/Setup.exe',
@@ -166,7 +167,8 @@ void main() {
       processRunner: processRunner,
     );
 
-    final result = fetcher.fetch(
+    final result = _fetchInstaller(
+      fetcher,
       InstallerResourceRecord(
         kind: 'https',
         url: 'https://downloads.example.test/Setup.exe',
@@ -200,7 +202,8 @@ void main() {
       processRunner: processRunner,
     );
 
-    final result = fetcher.fetch(
+    final result = _fetchInstaller(
+      fetcher,
       InstallerResourceRecord(
         kind: 'https',
         url: 'https://downloads.example.test/Setup.exe',
@@ -226,7 +229,8 @@ void main() {
       processRunner: processRunner,
     );
 
-    final result = fetcher.fetch(
+    final result = _fetchInstaller(
+      fetcher,
       InstallerResourceRecord(
         kind: 'https',
         url: 'https://downloads.example.test/Setup.exe',
@@ -259,7 +263,8 @@ void main() {
       maxBytes: 3,
     );
 
-    final result = fetcher.fetch(
+    final result = _fetchInstaller(
+      fetcher,
       InstallerResourceRecord(
         kind: 'https',
         url: 'https://downloads.example.test/Setup.exe',
@@ -275,6 +280,13 @@ void main() {
     );
     expect(File(processRunner.outputPath).existsSync(), isFalse);
   });
+}
+
+ProfileInstallerResourceFetchResult _fetchInstaller(
+  DartIoProfileInstallerResourceFetcher fetcher,
+  InstallerResourceRecord resource,
+) {
+  return fetcher.fetch(ProfileResourceFetchRequest.installer(resource));
 }
 
 final class RecordingProfileInstallerProcessRunner

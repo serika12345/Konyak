@@ -32,8 +32,8 @@ Map<String, Object?> installProfileJson(InstallProfileRecord profile) {
         'installerCompletion': installerCompletionJson(completion),
       },
     ),
-    'dependencyWinetricksVerbs': profile.dependencyWinetricksVerbs
-        .map((verb) => verb.value)
+    'preInstallActions': profile.preInstallActions
+        .map(preInstallActionJson)
         .toList(growable: false),
     'runCompletionPolicy': profile.runCompletionPolicy.value,
     'compatibilityProfile': compatibilityProfileJson(

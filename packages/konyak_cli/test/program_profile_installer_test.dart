@@ -17,10 +17,212 @@ import 'support/install_profile_fixtures.dart';
 
 void main() {
   test(
+    'fetches every resource before ordered mixed pre-install actions',
+    () async {
+      final actions = _mixedPreInstallActions();
+      final profile = testInstallProfile(preInstallActions: actions);
+      final events = <String>[];
+      final fetcher = _SequencedResourceFetcher(
+        events: events,
+        results: <ProfileInstallerResourceFetchResult>[
+          ProfileInstallerResourceFetched(ProgramPath('/cache/TestSetup.exe')),
+          ProfileInstallerResourceFetched(ProgramPath('/cache/d3d-x86.dll')),
+          ProfileInstallerResourceFetched(ProgramPath('/cache/d3d-x64.dll')),
+        ],
+      );
+      final runner = _EventProgramRunner(events);
+      final nativeInstaller = _EventNativeDllInstaller(events);
+      final installer = DefaultProgramProfileInstaller(
+        installProfileCatalog: InstallProfileCatalog([profile]),
+        runtimeCatalog: StaticRuntimeCatalog([_runtime()]),
+        bottleRepository: _repository(),
+        winetricksVerbRepository: _verbRepository([
+          'corefonts',
+          'vcrun2022',
+          'fakejapanese',
+        ]),
+        programRunPlanner: ProgramRunPlanner(
+          hostPlatform: KonyakHostPlatform.macos,
+        ),
+        programRunner: runner,
+        installerProgramRunner: ImmediateAsyncProgramRunner(runner),
+        resourceFetcher: fetcher,
+        nativeDllInstaller: nativeInstaller,
+        managedProgramVerifier: RecordingManagedProfileProgramVerifier(
+          ManagedProfileProgramVerified(ProgramPath('/bottles/test/Test.exe')),
+        ),
+      );
+
+      expect(
+        await installer.install(
+          ProgramProfileInstallRequest(
+            profileId: profile.id,
+            bottleId: BottleId('test'),
+          ),
+        ),
+        isA<ProgramProfileInstalled>(),
+      );
+      expect(events.take(3), [
+        'fetch:TestSetup.exe',
+        'fetch:d3d-x86.dll',
+        'fetch:d3d-x64.dll',
+      ]);
+      expect(events.skip(3).take(6), [
+        'run:corefonts',
+        'run:vcrun2022',
+        'native:d3dcompiler_47-x86',
+        'native:d3dcompiler_47-x64',
+        'run:fakejapanese',
+        'run:installer',
+      ]);
+    },
+  );
+
+  test(
+    'each native DLL action failure stops later actions and releases resources',
+    () async {
+      for (final failureCase in const <(int, int, String)>[
+        (1, 2, 'd3dcompiler_47-x86'),
+        (2, 3, 'd3dcompiler_47-x64'),
+      ]) {
+        final (failAtCall, expectedIndex, expectedId) = failureCase;
+        final profile = testInstallProfile(
+          preInstallActions: _mixedPreInstallActions(),
+        );
+        final events = <String>[];
+        final fetcher = _SequencedResourceFetcher(
+          events: events,
+          results: <ProfileInstallerResourceFetchResult>[
+            ProfileInstallerResourceFetched(
+              ProgramPath('/cache/TestSetup.exe'),
+            ),
+            ProfileInstallerResourceFetched(ProgramPath('/cache/d3d-x86.dll')),
+            ProfileInstallerResourceFetched(ProgramPath('/cache/d3d-x64.dll')),
+          ],
+        );
+        final runner = _EventProgramRunner(events);
+        final repository = _repository();
+        final installer = DefaultProgramProfileInstaller(
+          installProfileCatalog: InstallProfileCatalog([profile]),
+          runtimeCatalog: StaticRuntimeCatalog([_runtime()]),
+          bottleRepository: repository,
+          winetricksVerbRepository: _verbRepository([
+            'corefonts',
+            'vcrun2022',
+            'fakejapanese',
+          ]),
+          programRunPlanner: ProgramRunPlanner(
+            hostPlatform: KonyakHostPlatform.macos,
+          ),
+          programRunner: runner,
+          installerProgramRunner: ImmediateAsyncProgramRunner(runner),
+          resourceFetcher: fetcher,
+          nativeDllInstaller: _EventNativeDllInstaller(
+            events,
+            failAtCall: failAtCall,
+          ),
+          managedProgramVerifier: RecordingManagedProfileProgramVerifier(
+            ManagedProfileProgramVerified(
+              ProgramPath('/bottles/test/Test.exe'),
+            ),
+          ),
+        );
+
+        final result = await installer.install(
+          ProgramProfileInstallRequest(
+            profileId: profile.id,
+            bottleId: BottleId('test'),
+          ),
+        );
+        expect(result, isA<ProgramProfileInstallFailed>());
+        final failure = result as ProgramProfileInstallFailed;
+        expect(failure.actionIndex, Option.of(expectedIndex));
+        expect(failure.actionId, Option.of(PreInstallActionId(expectedId)));
+        expect(
+          failure.actionKind,
+          const Option.of(PreInstallActionKind.nativeDll),
+        );
+        expect(fetcher.released, hasLength(3));
+        expect(events, isNot(contains('run:fakejapanese')));
+        expect(events, isNot(contains('run:installer')));
+        expect(
+          _expectBottle(repository, BottleId('test')).programProfiles,
+          isEmpty,
+        );
+      }
+    },
+  );
+
+  test(
+    'a maximum-length native action failure is typed and releases resources',
+    () async {
+      final componentId = 'a' * 128;
+      final action = PreInstallActionRecord.nativeDll(
+        componentId: componentId,
+        machine: 'x86',
+        destination: 'windowsSysWow64',
+        targetFileName: 'component.dll',
+        resource: NativeDllResourceRecord(
+          kind: 'https',
+          url: 'https://downloads.example.test/component.dll',
+          sha256: 'a' * 64,
+          fileName: 'component.dll',
+        ),
+      );
+      final profile = testInstallProfile(preInstallActions: [action]);
+      final events = <String>[];
+      final fetcher = _SequencedResourceFetcher(
+        events: events,
+        results: <ProfileInstallerResourceFetchResult>[
+          ProfileInstallerResourceFetched(ProgramPath('/cache/TestSetup.exe')),
+          ProfileInstallerResourceFetched(ProgramPath('/cache/component.dll')),
+        ],
+      );
+      final repository = _repository();
+      final runner = _EventProgramRunner(events);
+      final installer = DefaultProgramProfileInstaller(
+        installProfileCatalog: InstallProfileCatalog([profile]),
+        runtimeCatalog: StaticRuntimeCatalog([_runtime()]),
+        bottleRepository: repository,
+        winetricksVerbRepository: _verbRepository(const <String>[]),
+        programRunPlanner: ProgramRunPlanner(
+          hostPlatform: KonyakHostPlatform.macos,
+        ),
+        programRunner: runner,
+        installerProgramRunner: ImmediateAsyncProgramRunner(runner),
+        resourceFetcher: fetcher,
+        nativeDllInstaller: _EventNativeDllInstaller(events, failAtCall: 1),
+        managedProgramVerifier: RecordingManagedProfileProgramVerifier(
+          ManagedProfileProgramVerified(ProgramPath('/bottles/test/Test.exe')),
+        ),
+      );
+
+      final result = await installer.install(
+        ProgramProfileInstallRequest(
+          profileId: profile.id,
+          bottleId: BottleId('test'),
+        ),
+      );
+
+      expect(result, isA<ProgramProfileInstallFailed>());
+      final failure = result as ProgramProfileInstallFailed;
+      expect(failure.actionId, Option.of(PreInstallActionId(componentId)));
+      expect(fetcher.released, hasLength(2));
+      expect(
+        _expectBottle(repository, BottleId('test')).programProfiles,
+        isEmpty,
+      );
+    },
+  );
+
+  test(
     'installs in manifest order and persists only after verification',
     () async {
       final profile = testInstallProfile(
-        dependencyWinetricksVerbs: const <String>['corefonts', 'vcrun2022'],
+        preInstallActions: [
+          PreInstallActionRecord.winetricks(verb: 'corefonts'),
+          PreInstallActionRecord.winetricks(verb: 'vcrun2022'),
+        ],
         installerCompletionChildExecutable: 'test.exe',
         executableSuffix: 'test-helper.exe',
         appendArgumentsIfMissing: const <String>[
@@ -73,8 +275,8 @@ void main() {
       );
 
       expect(result, isA<ProgramProfileInstalled>());
-      expect(fetcher.resources, <InstallerResourceRecord>[
-        profile.installerResource,
+      expect(fetcher.resources, <ProfileResourceFetchRequest>[
+        ProfileResourceFetchRequest.installer(profile.installerResource),
       ]);
       expect(runner.requests, hasLength(3));
       expect(runner.requests[0].arguments.value, contains('corefonts'));
@@ -117,28 +319,31 @@ void main() {
         profile.installerResource,
       );
       expect(
-        progressSink.progress.map(programProfileInstallProgressJson),
-        <Map<String, Object?>>[
-          _progress('preflight', 'started'),
-          _progress('preflight', 'completed'),
-          _progress('download', 'started'),
-          _progress('download', 'completed'),
-          _progress('verification', 'started'),
-          _progress('verification', 'completed'),
-          _progress('dependency', 'started', index: 0, verb: 'corefonts'),
-          _progress('dependency', 'completed', index: 0, verb: 'corefonts'),
-          _progress('dependency', 'started', index: 1, verb: 'vcrun2022'),
-          _progress('dependency', 'completed', index: 1, verb: 'vcrun2022'),
-          _progress('installer', 'started'),
-          _progress('installer', 'completed'),
-          _progress('resourceCleanup', 'started'),
-          _progress('resourceCleanup', 'completed'),
-          _progress('managedProgram', 'started'),
-          _progress('managedProgram', 'completed'),
-          _progress('persistence', 'started'),
-          _progress('persistence', 'completed'),
-        ],
+        bottle.programProfiles.single.preInstallActions,
+        profile.preInstallActions,
       );
+      expect(progressSink.progress.map(programProfileInstallProgressJson), <
+        Map<String, Object?>
+      >[
+        _progress('preflight', 'started'),
+        _progress('preflight', 'completed'),
+        _progress('download', 'started'),
+        _progress('download', 'completed'),
+        _progress('verification', 'started'),
+        _progress('verification', 'completed'),
+        _progress('preInstallAction', 'started', index: 0, verb: 'corefonts'),
+        _progress('preInstallAction', 'completed', index: 0, verb: 'corefonts'),
+        _progress('preInstallAction', 'started', index: 1, verb: 'vcrun2022'),
+        _progress('preInstallAction', 'completed', index: 1, verb: 'vcrun2022'),
+        _progress('installer', 'started'),
+        _progress('installer', 'completed'),
+        _progress('resourceCleanup', 'started'),
+        _progress('resourceCleanup', 'completed'),
+        _progress('managedProgram', 'started'),
+        _progress('managedProgram', 'completed'),
+        _progress('persistence', 'started'),
+        _progress('persistence', 'completed'),
+      ]);
     },
   );
 
@@ -146,7 +351,7 @@ void main() {
     'persists only after the asynchronous installer process exits',
     () async {
       final profile = testInstallProfile(
-        dependencyWinetricksVerbs: const <String>[],
+        preInstallActions: const <PreInstallActionRecord>[],
       );
       final repository = _repository();
       final verifier = RecordingManagedProfileProgramVerifier(
@@ -200,7 +405,10 @@ void main() {
 
   test('preflights every dependency verb before resource fetch', () async {
     final profile = testInstallProfile(
-      dependencyWinetricksVerbs: const <String>['corefonts', 'vcrun2022'],
+      preInstallActions: [
+        PreInstallActionRecord.winetricks(verb: 'corefonts'),
+        PreInstallActionRecord.winetricks(verb: 'vcrun2022'),
+      ],
     );
     final repository = _repository();
     final fetcher = RecordingProfileInstallerResourceFetcher(
@@ -243,8 +451,8 @@ void main() {
     final failure = result as ProgramProfileInstallFailed;
     expect(failure.stage, ProgramProfileInstallStage.preflight);
     expect(failure.code, 'dependencyWinetricksVerbUnavailable');
-    expect(failure.dependencyIndex, const Option.of(1));
-    expect(failure.dependencyVerb, Option.of(WinetricksVerbId('vcrun2022')));
+    expect(failure.actionIndex, const Option.of(1));
+    expect(failure.actionId, Option.of(PreInstallActionId('vcrun2022')));
     expect(fetcher.resources, isEmpty);
     expect(runner.requests, isEmpty);
     expect(verifier.requests, isEmpty);
@@ -258,8 +466,9 @@ void main() {
         _progress('preflight', 'started'),
         <String, Object?>{
           ..._progress('preflight', 'failed'),
-          'dependencyIndex': 1,
-          'dependencyVerb': 'vcrun2022',
+          'actionIndex': 1,
+          'actionKind': 'winetricks',
+          'actionId': 'vcrun2022',
           'code': 'dependencyWinetricksVerbUnavailable',
         },
       ],
@@ -270,7 +479,10 @@ void main() {
     'non-zero dependency exit stops installer, verification, and persistence',
     () async {
       final profile = testInstallProfile(
-        dependencyWinetricksVerbs: const <String>['corefonts', 'vcrun2022'],
+        preInstallActions: [
+          PreInstallActionRecord.winetricks(verb: 'corefonts'),
+          PreInstallActionRecord.winetricks(verb: 'vcrun2022'),
+        ],
       );
       final repository = _repository();
       final verifier = RecordingManagedProfileProgramVerifier(
@@ -315,10 +527,10 @@ void main() {
 
       expect(result, isA<ProgramProfileInstallFailed>());
       final failure = result as ProgramProfileInstallFailed;
-      expect(failure.stage, ProgramProfileInstallStage.dependency);
+      expect(failure.stage, ProgramProfileInstallStage.preInstallAction);
       expect(failure.code, 'dependencyInstallerExitNonZero');
-      expect(failure.dependencyIndex, const Option.of(1));
-      expect(failure.dependencyVerb, Option.of(WinetricksVerbId('vcrun2022')));
+      expect(failure.actionIndex, const Option.of(1));
+      expect(failure.actionId, Option.of(PreInstallActionId('vcrun2022')));
       expect(failure.processExitCode, const Option.of(37));
       expect(runner.requests, hasLength(2));
       expect(
@@ -400,7 +612,9 @@ void main() {
 
   test('preflights dependency plans before resource fetch', () async {
     final profile = testInstallProfile(
-      dependencyWinetricksVerbs: const <String>['unknown-plan-verb'],
+      preInstallActions: [
+        PreInstallActionRecord.winetricks(verb: 'unknown-plan-verb'),
+      ],
     );
     final fetcher = RecordingProfileInstallerResourceFetcher(
       ProfileInstallerResourceFetched(ProgramPath('/cache/TestSetup.exe')),
@@ -424,7 +638,7 @@ void main() {
     final failure = result as ProgramProfileInstallFailed;
     expect(failure.stage, ProgramProfileInstallStage.preflight);
     expect(failure.code, 'dependencyInstallerPlanUnavailable');
-    expect(failure.dependencyIndex, const Option.of(0));
+    expect(failure.actionIndex, const Option.of(0));
     expect(fetcher.resources, isEmpty);
   });
 
@@ -455,7 +669,7 @@ void main() {
 
   test('treats a non-zero installer completion as a typed failure', () async {
     final profile = testInstallProfile(
-      dependencyWinetricksVerbs: const <String>[],
+      preInstallActions: const <PreInstallActionRecord>[],
     );
     final repository = _repository();
     final verifier = RecordingManagedProfileProgramVerifier(
@@ -499,7 +713,7 @@ void main() {
     'does not persist when the managed executable verification fails',
     () async {
       final profile = testInstallProfile(
-        dependencyWinetricksVerbs: const <String>[],
+        preInstallActions: const <PreInstallActionRecord>[],
       );
       final repository = _repository();
       final installer = _preflightInstaller(
@@ -597,11 +811,14 @@ Map<String, Object?> _progress(
     'stage': stage,
     'state': state,
     ...switch (index) {
-      final int value => <String, Object?>{'dependencyIndex': value},
+      final int value => <String, Object?>{'actionIndex': value},
       _ => const <String, Object?>{},
     },
     ...switch (verb) {
-      final String value => <String, Object?>{'dependencyVerb': value},
+      final String value => <String, Object?>{
+        'actionKind': 'winetricks',
+        'actionId': value,
+      },
       _ => const <String, Object?>{},
     },
   };
@@ -742,12 +959,15 @@ final class RecordingProfileInstallerResourceFetcher
 
   final ProfileInstallerResourceFetchResult result;
   final ProfileInstallerResourceReleaseResult releaseResult;
-  final List<InstallerResourceRecord> resources = <InstallerResourceRecord>[];
+  final List<ProfileResourceFetchRequest> resources =
+      <ProfileResourceFetchRequest>[];
   final List<ProfileInstallerResourceFetched> releasedResources =
       <ProfileInstallerResourceFetched>[];
 
   @override
-  ProfileInstallerResourceFetchResult fetch(InstallerResourceRecord resource) {
+  ProfileInstallerResourceFetchResult fetch(
+    ProfileResourceFetchRequest resource,
+  ) {
     resources.add(resource);
     return result;
   }
@@ -775,6 +995,103 @@ final class RecordingManagedProfileProgramVerifier
   }) {
     requests.add(managedProgramPath);
     return result;
+  }
+}
+
+List<PreInstallActionRecord> _mixedPreInstallActions() {
+  NativeDllResourceRecord resource(String fileName, String digest) =>
+      NativeDllResourceRecord(
+        kind: 'https',
+        url: 'https://downloads.example.test/$fileName',
+        sha256: digest,
+        fileName: fileName,
+      );
+  return <PreInstallActionRecord>[
+    PreInstallActionRecord.winetricks(verb: 'corefonts'),
+    PreInstallActionRecord.winetricks(verb: 'vcrun2022'),
+    PreInstallActionRecord.nativeDll(
+      componentId: 'd3dcompiler_47-x86',
+      machine: 'x86',
+      destination: 'windowsSysWow64',
+      targetFileName: 'd3dcompiler_47.dll',
+      resource: resource('d3d-x86.dll', 'a' * 64),
+    ),
+    PreInstallActionRecord.nativeDll(
+      componentId: 'd3dcompiler_47-x64',
+      machine: 'x64',
+      destination: 'windowsSystem32',
+      targetFileName: 'd3dcompiler_47.dll',
+      resource: resource('d3d-x64.dll', 'b' * 64),
+    ),
+    PreInstallActionRecord.winetricks(verb: 'fakejapanese'),
+  ];
+}
+
+final class _SequencedResourceFetcher
+    implements ProfileInstallerResourceFetcher {
+  _SequencedResourceFetcher({required this.events, required this.results});
+
+  final List<String> events;
+  final List<ProfileInstallerResourceFetchResult> results;
+  final List<ProfileInstallerResourceFetched> released = [];
+  var _index = 0;
+
+  @override
+  ProfileInstallerResourceFetchResult fetch(
+    ProfileResourceFetchRequest request,
+  ) {
+    events.add('fetch:${request.fileName}');
+    return results[_index++];
+  }
+
+  @override
+  ProfileInstallerResourceReleaseResult release(
+    ProfileInstallerResourceFetched resource,
+  ) {
+    released.add(resource);
+    return const ProfileInstallerResourceReleased();
+  }
+}
+
+final class _EventProgramRunner implements ProgramRunner {
+  _EventProgramRunner(this.events);
+
+  final List<String> events;
+
+  @override
+  ProgramRunResult run(ProgramRunRequest request) {
+    final action = [
+      'corefonts',
+      'vcrun2022',
+      'fakejapanese',
+    ].firstWhere(request.arguments.value.contains, orElse: () => 'installer');
+    events.add('run:$action');
+    return const ProgramRunCompleted(processExitCode: 0);
+  }
+}
+
+final class _EventNativeDllInstaller implements NativeDllInstaller {
+  _EventNativeDllInstaller(this.events, {this.failAtCall});
+
+  final List<String> events;
+  final int? failAtCall;
+  var _calls = 0;
+
+  @override
+  NativeDllInstallResult install({
+    required BottleRecord bottle,
+    required NativeDllPreInstallAction action,
+    required ProgramPath resourcePath,
+  }) {
+    _calls += 1;
+    events.add('native:${action.componentId.value}');
+    if (_calls == failAtCall) {
+      return const NativeDllInstallFailed(
+        code: 'nativeDllInstallFailed',
+        message: 'Injected failure.',
+      );
+    }
+    return const NativeDllInstalled(changed: true);
   }
 }
 

@@ -76,19 +76,27 @@ void main() {
 
   test('preserves dependency winetricks order in the domain model', () {
     final profile = testInstallProfile(
-      dependencyWinetricksVerbs: const ['vcrun2022', 'corefonts'],
+      preInstallActions: [
+        PreInstallActionRecord.winetricks(verb: 'vcrun2022'),
+        PreInstallActionRecord.winetricks(verb: 'corefonts'),
+      ],
     );
 
-    expect(profile.dependencyWinetricksVerbs.map((verb) => verb.value), [
-      'vcrun2022',
-      'corefonts',
-    ]);
+    expect(
+      profile.preInstallActions.whereType<WinetricksPreInstallAction>().map(
+        (action) => action.verb.value,
+      ),
+      ['vcrun2022', 'corefonts'],
+    );
   });
 
   test('rejects unsafe dependency winetricks verbs in the domain model', () {
     expect(
-      () =>
-          testInstallProfile(dependencyWinetricksVerbs: const ['corefonts;rm']),
+      () => testInstallProfile(
+        preInstallActions: [
+          PreInstallActionRecord.winetricks(verb: 'corefonts;rm'),
+        ],
+      ),
       throwsArgumentError,
     );
   });
@@ -96,7 +104,46 @@ void main() {
   test('rejects duplicate dependency winetricks verbs in the domain model', () {
     expect(
       () => testInstallProfile(
-        dependencyWinetricksVerbs: const ['corefonts', 'corefonts'],
+        preInstallActions: [
+          PreInstallActionRecord.winetricks(verb: 'corefonts'),
+          PreInstallActionRecord.winetricks(verb: 'corefonts'),
+        ],
+      ),
+      throwsArgumentError,
+    );
+  });
+
+  test('accepts a 128-character native DLL component action identifier', () {
+    final componentId = 'a' * 128;
+    final action = PreInstallActionRecord.nativeDll(
+      componentId: componentId,
+      machine: 'x86',
+      destination: 'windowsSysWow64',
+      targetFileName: 'component.dll',
+      resource: NativeDllResourceRecord(
+        kind: 'https',
+        url: 'https://downloads.example.test/component.dll',
+        sha256: 'a' * 64,
+        fileName: 'component.dll',
+      ),
+    );
+
+    expect(preInstallActionId(action).value, componentId);
+  });
+
+  test('rejects a 129-character native DLL component action identifier', () {
+    expect(
+      () => PreInstallActionRecord.nativeDll(
+        componentId: 'a' * 129,
+        machine: 'x86',
+        destination: 'windowsSysWow64',
+        targetFileName: 'component.dll',
+        resource: NativeDllResourceRecord(
+          kind: 'https',
+          url: 'https://downloads.example.test/component.dll',
+          sha256: 'a' * 64,
+          fileName: 'component.dll',
+        ),
       ),
       throwsArgumentError,
     );
@@ -107,8 +154,9 @@ void main() {
     () {
       expect(
         () => testInstallProfile(
-          dependencyWinetricksVerbs: [
-            for (var index = 0; index < 65; index++) 'verb$index',
+          preInstallActions: [
+            for (var index = 0; index < 65; index++)
+              PreInstallActionRecord.winetricks(verb: 'verb$index'),
           ],
         ),
         throwsArgumentError,

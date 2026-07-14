@@ -33,46 +33,48 @@ enum ProgramProfileInstallStage {
   verification,
   installer,
   resourceCleanup,
-  dependency,
+  preInstallAction,
   managedProgram,
   persistence,
 }
 
-sealed class ProgramProfileInstallDependencyContext {
-  const ProgramProfileInstallDependencyContext();
+sealed class ProgramProfileInstallActionContext {
+  const ProgramProfileInstallActionContext();
 }
 
-final class NoProgramProfileInstallDependency
-    extends ProgramProfileInstallDependencyContext {
-  const NoProgramProfileInstallDependency();
+final class NoProgramProfileInstallAction
+    extends ProgramProfileInstallActionContext {
+  const NoProgramProfileInstallAction();
 }
 
-final class ProgramProfileInstallDependency
-    extends ProgramProfileInstallDependencyContext {
-  const ProgramProfileInstallDependency({
+final class ProgramProfileInstallAction
+    extends ProgramProfileInstallActionContext {
+  const ProgramProfileInstallAction({
     required this.index,
-    required this.verb,
+    required this.kind,
+    required this.id,
   });
 
   final int index;
-  final String verb;
+  final String kind;
+  final String id;
 }
 
 sealed class ProgramProfileInstallProgress {
   const ProgramProfileInstallProgress({
     required this.stage,
-    required this.dependency,
+    required this.action,
   });
 
   final ProgramProfileInstallStage stage;
-  final ProgramProfileInstallDependencyContext dependency;
+  final ProgramProfileInstallActionContext action;
 }
 
 final class StartedProgramProfileInstallStage
     extends ProgramProfileInstallProgress {
   const StartedProgramProfileInstallStage({
     required super.stage,
-    required super.dependency,
+    required super.action,
   });
 }
 
@@ -80,7 +82,7 @@ final class CompletedProgramProfileInstallStage
     extends ProgramProfileInstallProgress {
   const CompletedProgramProfileInstallStage({
     required super.stage,
-    required super.dependency,
+    required super.action,
   });
 }
 
@@ -88,7 +90,7 @@ final class FailedProgramProfileInstallStage
     extends ProgramProfileInstallProgress {
   const FailedProgramProfileInstallStage({
     required super.stage,
-    required super.dependency,
+    required super.action,
     required this.code,
   });
 

@@ -16,7 +16,7 @@ InstallProfileRecord testInstallProfile({
   String managedProgramPath = r'C:\Test App\Test.exe',
   Iterable<String> platforms = const <String>['macos'],
   String windowsVersion = 'win10',
-  Iterable<String> dependencyWinetricksVerbs = const ['corefonts'],
+  Iterable<PreInstallActionRecord> preInstallActions = const [],
   String? installerCompletionChildExecutable,
   String executableSuffix = 'test-helper.exe',
   Iterable<String> appendArgumentsIfMissing = const ['--test-compat'],
@@ -37,7 +37,7 @@ InstallProfileRecord testInstallProfile({
           (executable) =>
               InstallerCompletionRecord(ignoreChildExecutable: executable),
         ),
-    dependencyWinetricksVerbs: dependencyWinetricksVerbs,
+    preInstallActions: preInstallActions,
     runCompletionPolicy: ProgramRunCompletionPolicy.launchOnly,
     compatibilityProfile: CompatibilityProfileRecord(
       id: id,

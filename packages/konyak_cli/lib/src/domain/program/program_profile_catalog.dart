@@ -70,6 +70,7 @@ ProgramProfileRecord programProfileFromInstallProfile({
     profileDigest: installProfile.manifestDigest.value,
     managedProgramPath: managedProgramPath.value,
     installerResource: installProfile.installerResource,
+    preInstallActions: installProfile.preInstallActions,
     compatibilityProfileId: installProfile.compatibilityProfile.id.value,
     compatibilityProfileVersion:
         installProfile.compatibilityProfile.profileVersion.value,

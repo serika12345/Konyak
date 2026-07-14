@@ -308,6 +308,7 @@ class _ProfileManagerDetails extends StatelessWidget {
     }
 
     return SingleChildScrollView(
+      key: const ValueKey('profile-manager-details-scroll'),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -341,9 +342,12 @@ class _ProfileManagerDetails extends StatelessWidget {
           ),
           _ProfileDetailRow(
             label: localizations.installProfileDependencies,
-            value: profile.dependencyWinetricksVerbs.isEmpty
+            value: profile.preInstallActions.isEmpty
                 ? localizations.installProfileNoDependencies
-                : _dependencyOrderLabel(profile.dependencyWinetricksVerbs),
+                : _preInstallActionOrderLabel(profile.preInstallActions),
+            tooltip: _preInstallActionResourceAuditLabel(
+              profile.preInstallActions,
+            ),
           ),
           _ProfileDetailRow(
             label: localizations.installProfileRunCompletionPolicy,
@@ -375,10 +379,15 @@ class _ProfileManagerDetails extends StatelessWidget {
 }
 
 class _ProfileDetailRow extends StatelessWidget {
-  const _ProfileDetailRow({required this.label, required this.value});
+  const _ProfileDetailRow({
+    required this.label,
+    required this.value,
+    this.tooltip,
+  });
 
   final String label;
   final String value;
+  final String? tooltip;
 
   @override
   Widget build(BuildContext context) {
@@ -393,7 +402,13 @@ class _ProfileDetailRow extends StatelessWidget {
         children: [
           Text(label, style: labelStyle),
           const SizedBox(height: 2),
-          Text(value),
+          switch (tooltip) {
+            final String message when message.isNotEmpty => Tooltip(
+              message: message,
+              child: Text(value),
+            ),
+            _ => Text(value),
+          },
         ],
       ),
     );
@@ -415,10 +430,32 @@ String _compatibilityRulesLabel(
   return actions.join(', ');
 }
 
-String _dependencyOrderLabel(List<String> verbs) {
+String _preInstallActionOrderLabel(List<PreInstallActionSummary> actions) {
   return List<String>.generate(
-    verbs.length,
-    (index) => '${index + 1}. ${verbs[index]}',
+    actions.length,
+    (index) => switch (actions[index]) {
+      WinetricksPreInstallActionSummary(:final verb) =>
+        '${index + 1}. winetricks $verb',
+      NativeDllPreInstallActionSummary(
+        :final machine,
+        :final destination,
+        :final targetFileName,
+      ) =>
+        '${index + 1}. nativeDll $machine → $destination/$targetFileName',
+    },
     growable: false,
   ).join('\n');
+}
+
+String _preInstallActionResourceAuditLabel(
+  List<PreInstallActionSummary> actions,
+) {
+  return actions
+      .whereType<NativeDllPreInstallActionSummary>()
+      .map(
+        (action) =>
+            '${action.componentId}\n${action.resource.url}\n'
+            'SHA-256: ${action.resource.sha256}',
+      )
+      .join('\n\n');
 }

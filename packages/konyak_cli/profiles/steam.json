@@ -17,7 +17,37 @@
   "installerCompletion": {
     "ignoreChildExecutable": "steam.exe"
   },
-  "dependencyWinetricksVerbs": ["corefonts", "fakejapanese", "vcrun2022"],
+  "preInstallActions": [
+    {"kind": "winetricks", "verb": "corefonts"},
+    {"kind": "winetricks", "verb": "vcrun2022"},
+    {
+      "kind": "nativeDll",
+      "componentId": "d3dcompiler_47-x86",
+      "machine": "x86",
+      "destination": "windowsSysWow64",
+      "targetFileName": "d3dcompiler_47.dll",
+      "resource": {
+        "kind": "https",
+        "url": "https://raw.githubusercontent.com/mozilla/fxc2/9aba9b11079303d5577e0e3eb455f4d00f3b5946/dll/d3dcompiler_47_32.dll",
+        "sha256": "2ad0d4987fc4624566b190e747c9d95038443956ed816abfd1e2d389b5ec0851",
+        "fileName": "d3dcompiler_47_32.dll"
+      }
+    },
+    {
+      "kind": "nativeDll",
+      "componentId": "d3dcompiler_47-x64",
+      "machine": "x64",
+      "destination": "windowsSystem32",
+      "targetFileName": "d3dcompiler_47.dll",
+      "resource": {
+        "kind": "https",
+        "url": "https://raw.githubusercontent.com/mozilla/fxc2/9aba9b11079303d5577e0e3eb455f4d00f3b5946/dll/d3dcompiler_47.dll",
+        "sha256": "4432bbd1a390874f3f0a503d45cc48d346abc3a8c0213c289f4b615bf0ee84f3",
+        "fileName": "d3dcompiler_47.dll"
+      }
+    },
+    {"kind": "winetricks", "verb": "fakejapanese"}
+  ],
   "runCompletionPolicy": "launchOnly",
   "compatibilityProfile": {
     "id": "steam",

@@ -16,7 +16,7 @@
     "windowsVersion",
     "managedProgramPath",
     "installerResource",
-    "dependencyWinetricksVerbs",
+    "preInstallActions",
     "runCompletionPolicy",
     "compatibilityProfile"
   ],
@@ -117,15 +117,92 @@
         }
       }
     },
-    "dependencyWinetricksVerbs": {
+    "preInstallActions": {
       "type": "array",
       "maxItems": 64,
-      "uniqueItems": true,
       "items": {
-        "type": "string",
-        "minLength": 1,
-        "maxLength": 128,
-        "pattern": "^[A-Za-z0-9_.+-]+$"
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "verb"],
+            "properties": {
+              "kind": {"const": "winetricks"},
+              "verb": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128,
+                "pattern": "^[A-Za-z0-9_.+-]+$"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "componentId",
+              "machine",
+              "destination",
+              "targetFileName",
+              "resource"
+            ],
+            "oneOf": [
+              {
+                "properties": {
+                  "machine": {"const": "x86"},
+                  "destination": {"const": "windowsSysWow64"}
+                }
+              },
+              {
+                "properties": {
+                  "machine": {"const": "x64"},
+                  "destination": {"const": "windowsSystem32"}
+                }
+              }
+            ],
+            "properties": {
+              "kind": {"const": "nativeDll"},
+              "componentId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128,
+                "pattern": "^[a-z0-9][a-z0-9_.-]*$"
+              },
+              "machine": {"enum": ["x86", "x64"]},
+              "destination": {
+                "enum": ["windowsSysWow64", "windowsSystem32"]
+              },
+              "targetFileName": {
+                "type": "string",
+                "minLength": 5,
+                "maxLength": 255,
+                "pattern": "^[^/\\\\\\u0000-\\u001f\\u007f]+\\.[Dd][Ll][Ll]$"
+              },
+              "resource": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["kind", "url", "sha256", "fileName"],
+                "properties": {
+                  "kind": {"const": "https"},
+                  "url": {
+                    "type": "string",
+                    "minLength": 9,
+                    "maxLength": 8192,
+                    "pattern": "^https://[^/?#@\\u0000-\\u0020\\u007f]+(?:[/?][^#\\u0000-\\u0020\\u007f]*)?$"
+                  },
+                  "sha256": {"type": "string", "pattern": "^[0-9A-Fa-f]{64}$"},
+                  "fileName": {
+                    "type": "string",
+                    "minLength": 5,
+                    "maxLength": 255,
+                    "pattern": "^[^/\\\\\\u0000-\\u001f\\u007f]+\\.[Dd][Ll][Ll]$"
+                  }
+                }
+              }
+            }
+          }
+        ]
       }
     },
     "runCompletionPolicy": {

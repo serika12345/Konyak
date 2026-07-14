@@ -12,8 +12,8 @@ const konyakMaxChildProcessRuleArguments = 64;
 const konyakMaxChildProcessRulesLength = 65535;
 const konyakMaxChildProcessExecutableSuffixLength = 1024;
 const konyakMaxChildProcessArgumentLength = 8192;
-const konyakMaxDependencyWinetricksVerbs = 64;
-const konyakMaxDependencyWinetricksVerbLength = 128;
+const konyakMaxPreInstallActions = 64;
+const konyakMaxPreInstallActionIdLength = 128;
 const konyakMaxInstallerResourceUrlLength = 8192;
 const konyakMaxInstallerResourceFileNameLength = 255;
 const konyakMaxInstallerCompletionChildExecutableNameLength = 255;
@@ -237,6 +237,190 @@ abstract class InstallerResourceFileName with _$InstallerResourceFileName {
       _InstallerResourceFileName;
 }
 
+enum NativeDllMachine {
+  x86('x86', 0x014c),
+  x64('x64', 0x8664);
+
+  const NativeDllMachine(this.value, this.peCoffMachine);
+
+  final String value;
+  final int peCoffMachine;
+}
+
+enum NativeDllDestination {
+  windowsSysWow64('windowsSysWow64'),
+  windowsSystem32('windowsSystem32');
+
+  const NativeDllDestination(this.value);
+
+  final String value;
+}
+
+enum PreInstallActionKind {
+  winetricks('winetricks'),
+  nativeDll('nativeDll');
+
+  const PreInstallActionKind(this.value);
+
+  final String value;
+}
+
+PreInstallActionKind preInstallActionKind(PreInstallActionRecord action) =>
+    switch (action) {
+      WinetricksPreInstallAction() => PreInstallActionKind.winetricks,
+      NativeDllPreInstallAction() => PreInstallActionKind.nativeDll,
+    };
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class PreInstallActionId with _$PreInstallActionId {
+  const PreInstallActionId._();
+
+  factory PreInstallActionId(String value) {
+    if (value.isEmpty ||
+        value.length > konyakMaxPreInstallActionIdLength ||
+        !RegExp(r'^[A-Za-z0-9_.+-]+$').hasMatch(value)) {
+      throw ArgumentError.value(value, 'preInstallActionId');
+    }
+    return PreInstallActionId._validated(value);
+  }
+
+  const factory PreInstallActionId._validated(String value) =
+      _PreInstallActionId;
+}
+
+PreInstallActionId preInstallActionId(PreInstallActionRecord action) =>
+    switch (action) {
+      WinetricksPreInstallAction(:final verb) => PreInstallActionId(verb.value),
+      NativeDllPreInstallAction(:final componentId) => componentId,
+    };
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class NativeDllFileName with _$NativeDllFileName {
+  const NativeDllFileName._();
+
+  factory NativeDllFileName(String value) {
+    if (value.length <= '.dll'.length ||
+        value.length > konyakMaxInstallerResourceFileNameLength ||
+        value.contains('/') ||
+        value.contains('\\') ||
+        value.codeUnits.any(
+          (codeUnit) => codeUnit <= 0x1f || codeUnit == 0x7f,
+        ) ||
+        !value.toLowerCase().endsWith('.dll')) {
+      throw ArgumentError.value(
+        value,
+        'fileName',
+        'must be a safe .dll basename',
+      );
+    }
+    return NativeDllFileName._validated(value);
+  }
+
+  const factory NativeDllFileName._validated(String value) = _NativeDllFileName;
+}
+
+@Freezed(map: FreezedMapOptions.none, when: FreezedWhenOptions.none)
+abstract class NativeDllResourceRecord with _$NativeDllResourceRecord {
+  const NativeDllResourceRecord._();
+
+  factory NativeDllResourceRecord({
+    required String kind,
+    required String url,
+    required String sha256,
+    required String fileName,
+  }) {
+    if (kind != InstallerResourceKind.https.value) {
+      throw ArgumentError.value(kind, 'kind', 'must be https');
+    }
+    return NativeDllResourceRecord._validated(
+      kind: InstallerResourceKind.https,
+      url: InstallerResourceUrl(url),
+      sha256: InstallerResourceSha256(sha256),
+      fileName: NativeDllFileName(fileName),
+    );
+  }
+
+  const factory NativeDllResourceRecord._validated({
+    required InstallerResourceKind kind,
+    required InstallerResourceUrl url,
+    required InstallerResourceSha256 sha256,
+    required NativeDllFileName fileName,
+  }) = _NativeDllResourceRecord;
+}
+
+@Freezed(map: FreezedMapOptions.none, when: FreezedWhenOptions.none)
+sealed class PreInstallActionRecord with _$PreInstallActionRecord {
+  const PreInstallActionRecord._();
+
+  factory PreInstallActionRecord.winetricks({required String verb}) {
+    return PreInstallActionRecord._winetricks(verb: WinetricksVerbId(verb));
+  }
+
+  const factory PreInstallActionRecord._winetricks({
+    required WinetricksVerbId verb,
+  }) = WinetricksPreInstallAction;
+
+  factory PreInstallActionRecord.nativeDll({
+    required String componentId,
+    required String machine,
+    required String destination,
+    required String targetFileName,
+    required NativeDllResourceRecord resource,
+  }) {
+    if (componentId.length > konyakMaxPreInstallActionIdLength ||
+        !RegExp(r'^[a-z0-9][a-z0-9_.-]*$').hasMatch(componentId)) {
+      throw ArgumentError.value(
+        componentId,
+        'componentId',
+        'must be at most $konyakMaxPreInstallActionIdLength characters and '
+            r'match [a-z0-9][a-z0-9_.-]*',
+      );
+    }
+    final parsedMachine = NativeDllMachine.values.singleWhere(
+      (candidate) => candidate.value == machine,
+      orElse: () => throw ArgumentError.value(machine, 'machine'),
+    );
+    final parsedDestination = NativeDllDestination.values.singleWhere(
+      (candidate) => candidate.value == destination,
+      orElse: () => throw ArgumentError.value(destination, 'destination'),
+    );
+    final expectedDestination = switch (parsedMachine) {
+      NativeDllMachine.x86 => NativeDllDestination.windowsSysWow64,
+      NativeDllMachine.x64 => NativeDllDestination.windowsSystem32,
+    };
+    if (parsedDestination != expectedDestination) {
+      throw ArgumentError.value(
+        destination,
+        'destination',
+        'does not match $machine',
+      );
+    }
+    return PreInstallActionRecord._nativeDll(
+      componentId: PreInstallActionId(componentId),
+      machine: parsedMachine,
+      destination: parsedDestination,
+      targetFileName: NativeDllFileName(targetFileName),
+      resource: resource,
+    );
+  }
+
+  const factory PreInstallActionRecord._nativeDll({
+    required PreInstallActionId componentId,
+    required NativeDllMachine machine,
+    required NativeDllDestination destination,
+    required NativeDllFileName targetFileName,
+    required NativeDllResourceRecord resource,
+  }) = NativeDllPreInstallAction;
+}
+
 @Freezed(
   copyWith: false,
   map: FreezedMapOptions.none,
@@ -308,18 +492,16 @@ abstract class InstallProfileRecord with _$InstallProfileRecord {
     required String windowsVersion,
     required String managedProgramPath,
     required InstallerResourceRecord installerResource,
-    required Iterable<String> dependencyWinetricksVerbs,
+    required Iterable<PreInstallActionRecord> preInstallActions,
     required CompatibilityProfileRecord compatibilityProfile,
     Option<InstallerCompletionRecord> installerCompletion = const Option.none(),
     ProfileSourceKind sourceKind = ProfileSourceKind.builtin,
     ProgramRunCompletionPolicy runCompletionPolicy =
         ProgramRunCompletionPolicy.waitForExit,
   }) {
-    final validatedDependencyWinetricksVerbs = dependencyWinetricksVerbs
-        .map(WinetricksVerbId.new)
-        .toIList();
+    final validatedPreInstallActions = preInstallActions.toIList();
     final validatedPlatforms = platforms.map(RuntimePlatformName.new).toIList();
-    _validateDependencyWinetricksVerbs(validatedDependencyWinetricksVerbs);
+    _validatePreInstallActions(validatedPreInstallActions);
     _validateInstallerCompletionPlatforms(
       installerCompletion,
       validatedPlatforms,
@@ -338,7 +520,7 @@ abstract class InstallProfileRecord with _$InstallProfileRecord {
       ),
       installerResource: installerResource,
       installerCompletion: installerCompletion,
-      dependencyWinetricksVerbs: validatedDependencyWinetricksVerbs,
+      preInstallActions: validatedPreInstallActions,
       compatibilityProfile: compatibilityProfile,
       sourceKind: sourceKind,
       runCompletionPolicy: runCompletionPolicy,
@@ -357,7 +539,7 @@ abstract class InstallProfileRecord with _$InstallProfileRecord {
     required ProgramPath managedProgramPath,
     required InstallerResourceRecord installerResource,
     required Option<InstallerCompletionRecord> installerCompletion,
-    required IList<WinetricksVerbId> dependencyWinetricksVerbs,
+    required IList<PreInstallActionRecord> preInstallActions,
     required CompatibilityProfileRecord compatibilityProfile,
     required ProfileSourceKind sourceKind,
     required ProgramRunCompletionPolicy runCompletionPolicy,
@@ -417,25 +599,28 @@ String _validateManagedProgramPath(String value) {
   return value;
 }
 
-void _validateDependencyWinetricksVerbs(IList<WinetricksVerbId> verbs) {
-  if (verbs.length > konyakMaxDependencyWinetricksVerbs) {
+void _validatePreInstallActions(IList<PreInstallActionRecord> actions) {
+  if (actions.length > konyakMaxPreInstallActions) {
     throw ArgumentError.value(
-      verbs.length,
-      'dependencyWinetricksVerbs',
-      'must contain at most $konyakMaxDependencyWinetricksVerbs verbs',
+      actions.length,
+      'preInstallActions',
+      'must contain at most $konyakMaxPreInstallActions actions',
     );
   }
+  final verbs = actions.whereType<WinetricksPreInstallAction>().map(
+    (action) => action.verb,
+  );
   final invalidVerb = verbs.where(
     (verb) =>
-        verb.value.length > konyakMaxDependencyWinetricksVerbLength ||
+        verb.value.length > konyakMaxPreInstallActionIdLength ||
         !isSupportedWinetricksVerb(verb),
   );
   if (invalidVerb.isNotEmpty) {
     throw ArgumentError.value(
       invalidVerb.first.value,
-      'dependencyWinetricksVerbs',
+      'preInstallActions',
       'each verb must be at most '
-          '$konyakMaxDependencyWinetricksVerbLength characters and match '
+          '$konyakMaxPreInstallActionIdLength characters and match '
           r'[A-Za-z0-9_.+-]+',
     );
   }
@@ -443,8 +628,22 @@ void _validateDependencyWinetricksVerbs(IList<WinetricksVerbId> verbs) {
   if (values.toSet().length != values.length) {
     throw ArgumentError.value(
       values,
-      'dependencyWinetricksVerbs',
+      'preInstallActions',
       'must not contain duplicate verbs',
+    );
+  }
+  final nativeTargets = actions
+      .whereType<NativeDllPreInstallAction>()
+      .map(
+        (action) =>
+            '${action.destination.value}/${action.targetFileName.value.toLowerCase()}',
+      )
+      .toList(growable: false);
+  if (nativeTargets.toSet().length != nativeTargets.length) {
+    throw ArgumentError.value(
+      nativeTargets,
+      'preInstallActions',
+      'must not contain duplicate native DLL destinations',
     );
   }
 }
@@ -604,11 +803,14 @@ abstract class ProgramProfileRecord with _$ProgramProfileRecord {
     required String compatibilityProfileId,
     required int compatibilityProfileVersion,
     required InstallerResourceRecord installerResource,
+    Iterable<PreInstallActionRecord> preInstallActions = const [],
     required String profileSourceId,
     required String profileDigest,
     int profileSchemaVersion = konyakProfileSchemaVersion,
     ProfileSourceKind profileSourceKind = ProfileSourceKind.builtin,
   }) {
+    final validatedPreInstallActions = preInstallActions.toIList();
+    _validatePreInstallActions(validatedPreInstallActions);
     return ProgramProfileRecord._validated(
       profileSchemaVersion: ProfileSchemaVersion(profileSchemaVersion),
       profileId: ProfileId(profileId),
@@ -618,6 +820,7 @@ abstract class ProgramProfileRecord with _$ProgramProfileRecord {
       profileDigest: ProfileManifestDigest(profileDigest),
       managedProgramPath: ProgramPath(managedProgramPath),
       installerResource: installerResource,
+      preInstallActions: validatedPreInstallActions,
       compatibilityProfileId: ProfileId(compatibilityProfileId),
       compatibilityProfileVersion: ProfileVersion(compatibilityProfileVersion),
     );
@@ -632,6 +835,7 @@ abstract class ProgramProfileRecord with _$ProgramProfileRecord {
     required ProfileManifestDigest profileDigest,
     required ProgramPath managedProgramPath,
     required InstallerResourceRecord installerResource,
+    required IList<PreInstallActionRecord> preInstallActions,
     required ProfileId compatibilityProfileId,
     required ProfileVersion compatibilityProfileVersion,
   }) = _ProgramProfileRecord;

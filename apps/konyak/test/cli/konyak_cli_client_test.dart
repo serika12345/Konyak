@@ -2140,7 +2140,35 @@ void main() {
                 "sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
                 "fileName": "SteamSetup.exe"
               },
-              "dependencyWinetricksVerbs": ["corefonts"],
+              "preInstallActions": [
+                {"kind":"winetricks","verb":"corefonts"},
+                {
+                  "kind":"nativeDll",
+                  "componentId":"d3dcompiler_47-x86",
+                  "machine":"x86",
+                  "destination":"windowsSysWow64",
+                  "targetFileName":"d3dcompiler_47.dll",
+                  "resource":{
+                    "kind":"https",
+                    "url":"https://downloads.example.test/d3dcompiler_47_32.dll",
+                    "sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    "fileName":"d3dcompiler_47_32.dll"
+                  }
+                },
+                {
+                  "kind":"nativeDll",
+                  "componentId":"d3dcompiler_47-x64",
+                  "machine":"x64",
+                  "destination":"windowsSystem32",
+                  "targetFileName":"d3dcompiler_47.dll",
+                  "resource":{
+                    "kind":"https",
+                    "url":"https://downloads.example.test/d3dcompiler_47.dll",
+                    "sha256":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                    "fileName":"d3dcompiler_47.dll"
+                  }
+                }
+              ],
               "runCompletionPolicy": "launchOnly",
               "compatibilityProfile": {
                 "id": "steam",
@@ -2184,7 +2212,34 @@ void main() {
         '0123456789abcdef0123456789abcdef',
       );
       expect(inspected.profile.installerResource.fileName, 'SteamSetup.exe');
-      expect(inspected.profile.dependencyWinetricksVerbs, ['corefonts']);
+      expect(
+        inspected.profile.preInstallActions.map((action) => action.id),
+        <String>['corefonts', 'd3dcompiler_47-x86', 'd3dcompiler_47-x64'],
+      );
+      final x86 =
+          inspected.profile.preInstallActions[1]
+              as NativeDllPreInstallActionSummary;
+      expect(x86.machine, 'x86');
+      expect(x86.destination, 'windowsSysWow64');
+      expect(x86.targetFileName, 'd3dcompiler_47.dll');
+      expect(
+        x86.resource.url,
+        'https://downloads.example.test/d3dcompiler_47_32.dll',
+      );
+      expect(x86.resource.sha256, 'a' * 64);
+      expect(x86.resource.fileName, 'd3dcompiler_47_32.dll');
+      final x64 =
+          inspected.profile.preInstallActions[2]
+              as NativeDllPreInstallActionSummary;
+      expect(x64.machine, 'x64');
+      expect(x64.destination, 'windowsSystem32');
+      expect(x64.targetFileName, 'd3dcompiler_47.dll');
+      expect(
+        x64.resource.url,
+        'https://downloads.example.test/d3dcompiler_47.dll',
+      );
+      expect(x64.resource.sha256, 'b' * 64);
+      expect(x64.resource.fileName, 'd3dcompiler_47.dll');
       expect(inspected.profile.runCompletionPolicy, 'launchOnly');
     },
   );
@@ -2204,7 +2259,7 @@ void main() {
               "platforms": ["macos"],
               "bottleTemplate": {"windowsVersion": "win10"},
               "managedProgramPath": "C:\\\\Invalid\\\\Invalid.exe",
-              "dependencyWinetricksVerbs": [],
+              "preInstallActions": [],
               "runCompletionPolicy": "waitForExit",
               "compatibilityProfile": {
                 "id": "invalid",
@@ -2265,7 +2320,7 @@ void main() {
               'bottleTemplate': <String, Object?>{'windowsVersion': 'win10'},
               'managedProgramPath': r'C:\Invalid\Invalid.exe',
               'installerResource': installerResource,
-              'dependencyWinetricksVerbs': <String>[],
+              'preInstallActions': <Object?>[],
               'runCompletionPolicy': 'waitForExit',
               'compatibilityProfile': <String, Object?>{
                 'id': 'invalid',
@@ -2338,8 +2393,8 @@ void main() {
         '{"schemaVersion":1,"programProfileInstallProgress":'
             '{"stage":"download","state":"started"}}',
         '{"schemaVersion":1,"programProfileInstallProgress":'
-            '{"stage":"dependency","state":"started",'
-            '"dependencyIndex":0,"dependencyVerb":"corefonts"}}',
+            '{"stage":"preInstallAction","state":"started",'
+            '"actionIndex":0,"actionKind":"winetricks","actionId":"corefonts"}}',
       ],
       result: const ProcessRunResult(
         exitCode: 0,
@@ -2370,7 +2425,10 @@ void main() {
     ]);
     expect(progressEvents, hasLength(2));
     expect(progressEvents.first.stage, ProgramProfileInstallStage.download);
-    expect(progressEvents.last.stage, ProgramProfileInstallStage.dependency);
+    expect(
+      progressEvents.last.stage,
+      ProgramProfileInstallStage.preInstallAction,
+    );
     expect(result, isA<InstalledProgramProfile>());
     expect((result as InstalledProgramProfile).profile.profileId, 'steam');
   });

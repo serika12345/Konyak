@@ -23,6 +23,7 @@ final class DefaultProgramProfileInstaller implements ProgramProfileInstaller {
     required this.programRunner,
     required this.installerProgramRunner,
     required this.resourceFetcher,
+    this.nativeDllInstaller = const UnsupportedNativeDllInstaller(),
     required this.managedProgramVerifier,
     this.progressSink = const NoopProgramProfileInstallProgressSink(),
   });
@@ -35,6 +36,7 @@ final class DefaultProgramProfileInstaller implements ProgramProfileInstaller {
   final ProgramRunner programRunner;
   final AsyncProgramRunner installerProgramRunner;
   final ProfileInstallerResourceFetcher resourceFetcher;
+  final NativeDllInstaller nativeDllInstaller;
   final ManagedProfileProgramVerifier managedProgramVerifier;
   final ProgramProfileInstallProgressSink progressSink;
 
@@ -51,6 +53,7 @@ final class DefaultProgramProfileInstaller implements ProgramProfileInstaller {
       programRunner: programRunner,
       installerProgramRunner: installerProgramRunner,
       resourceFetcher: resourceFetcher,
+      nativeDllInstaller: nativeDllInstaller,
       managedProgramVerifier: managedProgramVerifier,
       progressSink: progressSink,
     );
@@ -171,15 +174,20 @@ final class DefaultProgramProfileInstaller implements ProgramProfileInstaller {
             .expand((category) => category.verbs)
             .map((verb) => verb.id)
             .toSet();
-        for (final (index, verb) in profile.dependencyWinetricksVerbs.indexed) {
+        for (final (index, action) in profile.preInstallActions.indexed) {
+          if (action is! WinetricksPreInstallAction) {
+            continue;
+          }
+          final verb = action.verb;
           if (!availableVerbs.contains(verb)) {
             return _failed(
               ProgramProfileInstallFailed(
                 stage: ProgramProfileInstallStage.preflight,
                 code: 'dependencyWinetricksVerbUnavailable',
                 message: 'A dependency winetricks verb is unavailable.',
-                dependencyIndex: Option.of(index),
-                dependencyVerb: Option.of(verb),
+                actionIndex: Option.of(index),
+                actionKind: Option.of(PreInstallActionKind.winetricks),
+                actionId: Option.of(PreInstallActionId(verb.value)),
               ),
             );
           }
@@ -202,7 +210,11 @@ final class DefaultProgramProfileInstaller implements ProgramProfileInstaller {
             ),
           );
         }
-        for (final (index, verb) in profile.dependencyWinetricksVerbs.indexed) {
+        for (final (index, action) in profile.preInstallActions.indexed) {
+          if (action is! WinetricksPreInstallAction) {
+            continue;
+          }
+          final verb = action.verb;
           if (programRunPlanner
               .planWinetricksVerb(bottle: bottle, verb: verb)
               .isNone()) {
@@ -211,8 +223,9 @@ final class DefaultProgramProfileInstaller implements ProgramProfileInstaller {
                 stage: ProgramProfileInstallStage.preflight,
                 code: 'dependencyInstallerPlanUnavailable',
                 message: 'A dependency winetricks verb cannot be planned.',
-                dependencyIndex: Option.of(index),
-                dependencyVerb: Option.of(verb),
+                actionIndex: Option.of(index),
+                actionKind: Option.of(PreInstallActionKind.winetricks),
+                actionId: Option.of(PreInstallActionId(verb.value)),
               ),
             );
           }
@@ -233,63 +246,106 @@ final class DefaultProgramProfileInstaller implements ProgramProfileInstaller {
     required BottleRecord bottle,
   }) {
     _started(ProgramProfileInstallStage.download);
-    final fetchResult = resourceFetcher.fetch(profile.installerResource);
-    return switch (fetchResult) {
-      ProfileInstallerResourceDownloadFailed(:final message) => Future.value(
-        _failed(
-          ProgramProfileInstallFailed(
-            stage: ProgramProfileInstallStage.download,
-            code: 'installerResourceDownloadFailed',
-            message: message,
-          ),
-        ),
+    final requests = <_ProfileResourceRequest>[
+      _ProfileResourceRequest(
+        ProfileResourceFetchRequest.installer(profile.installerResource),
       ),
-      ProfileInstallerResourceDigestMismatch() => Future.value(
-        (() {
-          _completed(ProgramProfileInstallStage.download);
-          _started(ProgramProfileInstallStage.verification);
-          return _failed(
-            const ProgramProfileInstallFailed(
-              stage: ProgramProfileInstallStage.verification,
-              code: 'installerResourceDigestMismatch',
-              message: 'Installer resource SHA-256 digest did not match.',
+      ...profile.preInstallActions.indexed.expand<_ProfileResourceRequest>((
+        entry,
+      ) {
+        final (index, action) = entry;
+        return switch (action) {
+          WinetricksPreInstallAction() => const <_ProfileResourceRequest>[],
+          NativeDllPreInstallAction(:final resource) =>
+            <_ProfileResourceRequest>[
+              _ProfileResourceRequest(
+                ProfileResourceFetchRequest.nativeDll(resource),
+                actionIndex: Option.of(index),
+                action: Option.of(action),
+              ),
+            ],
+        };
+      }),
+    ];
+    final fetched = <_FetchedProfileResource>[];
+    for (final requestResource in requests) {
+      switch (resourceFetcher.fetch(requestResource.resource)) {
+        case ProfileInstallerResourceDownloadFailed(:final message):
+          final failure = ProgramProfileInstallFailed(
+            stage: ProgramProfileInstallStage.download,
+            code: 'profileResourceDownloadFailed',
+            message: message,
+            actionIndex: requestResource.actionIndex,
+            actionKind: requestResource.action.map(preInstallActionKind),
+            actionId: requestResource.action.map(preInstallActionId),
+          );
+          return Future.value(
+            _releaseResourcesThen(
+              resources: fetched.map((item) => item.fetched),
+              continuation: () => _failed(failure),
             ),
           );
-        })(),
-      ),
-      final ProfileInstallerResourceFetched fetched => () {
-        _completed(ProgramProfileInstallStage.download);
-        _started(ProgramProfileInstallStage.verification);
-        _completed(ProgramProfileInstallStage.verification);
-        return _runDependencies(
-          request: request,
-          profile: profile,
-          bottle: bottle,
-          resource: fetched,
-        );
-      }(),
-    };
+        case ProfileInstallerResourceDigestMismatch():
+          _completed(ProgramProfileInstallStage.download);
+          _started(ProgramProfileInstallStage.verification);
+          final failure = ProgramProfileInstallFailed(
+            stage: ProgramProfileInstallStage.verification,
+            code: 'profileResourceDigestMismatch',
+            message: 'Profile resource SHA-256 digest did not match.',
+            actionIndex: requestResource.actionIndex,
+            actionKind: requestResource.action.map(preInstallActionKind),
+            actionId: requestResource.action.map(preInstallActionId),
+          );
+          return Future.value(
+            _releaseResourcesThen(
+              resources: fetched.map((item) => item.fetched),
+              continuation: () => _failed(failure),
+            ),
+          );
+        case final ProfileInstallerResourceFetched resource:
+          fetched.add(
+            _FetchedProfileResource(
+              fetched: resource,
+              actionIndex: requestResource.actionIndex,
+            ),
+          );
+      }
+    }
+    _completed(ProgramProfileInstallStage.download);
+    _started(ProgramProfileInstallStage.verification);
+    _completed(ProgramProfileInstallStage.verification);
+    return _runPreInstallActions(
+      request: request,
+      profile: profile,
+      bottle: bottle,
+      resources: fetched,
+    );
   }
 
-  ProgramProfileInstallResult _releaseResourceThen({
-    required ProfileInstallerResourceFetched resource,
+  ProgramProfileInstallResult _releaseResourcesThen({
+    required Iterable<ProfileInstallerResourceFetched> resources,
     required ProgramProfileInstallResult Function() continuation,
   }) {
     _started(ProgramProfileInstallStage.resourceCleanup);
-    return switch (resourceFetcher.release(resource)) {
-      ProfileInstallerResourceReleased() => () {
-        _completed(ProgramProfileInstallStage.resourceCleanup);
-        return continuation();
-      }(),
-      ProfileInstallerResourceReleaseFailed(:final code, :final message) =>
-        _failed(
-          ProgramProfileInstallFailed(
-            stage: ProgramProfileInstallStage.resourceCleanup,
-            code: code,
-            message: message,
-          ),
+    ProfileInstallerResourceReleaseFailed? firstFailure;
+    resources.toList(growable: false).reversed.forEach((resource) {
+      final result = resourceFetcher.release(resource);
+      if (result case final ProfileInstallerResourceReleaseFailed failure) {
+        firstFailure ??= failure;
+      }
+    });
+    final failure = firstFailure;
+    if (failure != null) {
+      return _failed(
+        ProgramProfileInstallFailed(
+          stage: ProgramProfileInstallStage.resourceCleanup,
+          code: failure.code,
+          message: failure.message,
         ),
-    };
+      );
+    }
+    _completed(ProgramProfileInstallStage.resourceCleanup);
+    return continuation();
   }
 
   Future<ProgramProfileInstallResult> _runInstaller({
@@ -297,12 +353,12 @@ final class DefaultProgramProfileInstaller implements ProgramProfileInstaller {
     required InstallProfileRecord profile,
     required BottleRecord bottle,
     required ProgramRunRequest plan,
-    required ProfileInstallerResourceFetched resource,
+    required List<_FetchedProfileResource> resources,
   }) async {
     final runResult = await installerProgramRunner.run(plan);
     return switch (runResult) {
-      ProgramRunFailed(:final message) => _releaseResourceThen(
-        resource: resource,
+      ProgramRunFailed(:final message) => _releaseResourcesThen(
+        resources: resources.map((item) => item.fetched),
         continuation: () => _failed(
           ProgramProfileInstallFailed(
             stage: ProgramProfileInstallStage.installer,
@@ -312,8 +368,8 @@ final class DefaultProgramProfileInstaller implements ProgramProfileInstaller {
         ),
       ),
       ProgramRunCompleted(:final processExitCode) when processExitCode != 0 =>
-        _releaseResourceThen(
-          resource: resource,
+        _releaseResourcesThen(
+          resources: resources.map((item) => item.fetched),
           continuation: () => _failed(
             ProgramProfileInstallFailed(
               stage: ProgramProfileInstallStage.installer,
@@ -325,8 +381,8 @@ final class DefaultProgramProfileInstaller implements ProgramProfileInstaller {
         ),
       ProgramRunCompleted() => () {
         _completed(ProgramProfileInstallStage.installer);
-        return _releaseResourceThen(
-          resource: resource,
+        return _releaseResourcesThen(
+          resources: resources.map((item) => item.fetched),
           continuation: () {
             _started(ProgramProfileInstallStage.managedProgram);
             return _verifyAndPersist(
@@ -340,48 +396,66 @@ final class DefaultProgramProfileInstaller implements ProgramProfileInstaller {
     };
   }
 
-  Future<ProgramProfileInstallResult> _runDependencies({
+  Future<ProgramProfileInstallResult> _runPreInstallActions({
     required ProgramProfileInstallRequest request,
     required InstallProfileRecord profile,
     required BottleRecord bottle,
-    required ProfileInstallerResourceFetched resource,
+    required List<_FetchedProfileResource> resources,
   }) async {
-    for (final (index, verb) in profile.dependencyWinetricksVerbs.indexed) {
-      final dependencyIndex = Option.of(index);
-      final dependencyVerb = Option.of(verb);
+    for (final (index, action) in profile.preInstallActions.indexed) {
+      final kind = preInstallActionKind(action);
+      final id = preInstallActionId(action);
       _started(
-        ProgramProfileInstallStage.dependency,
-        dependencyIndex: dependencyIndex,
-        dependencyVerb: dependencyVerb,
+        ProgramProfileInstallStage.preInstallAction,
+        actionIndex: Option.of(index),
+        actionKind: Option.of(kind),
+        actionId: Option.of(id),
       );
-      switch (_runDependency(bottle: bottle, index: index, verb: verb)) {
+      final step = switch (action) {
+        WinetricksPreInstallAction(:final verb) => _runDependency(
+          bottle: bottle,
+          index: index,
+          verb: verb,
+        ),
+        final NativeDllPreInstallAction nativeDll => _runNativeDllAction(
+          bottle: bottle,
+          index: index,
+          action: nativeDll,
+          resource: resources
+              .singleWhere((item) => item.actionIndex == Option.of(index))
+              .fetched,
+        ),
+      };
+      switch (step) {
         case _DependencyInstallContinued():
           _completed(
-            ProgramProfileInstallStage.dependency,
-            dependencyIndex: dependencyIndex,
-            dependencyVerb: dependencyVerb,
+            ProgramProfileInstallStage.preInstallAction,
+            actionIndex: Option.of(index),
+            actionKind: Option.of(kind),
+            actionId: Option.of(id),
           );
           continue;
         case _DependencyInstallStopped(:final failure):
-          return _releaseResourceThen(
-            resource: resource,
+          return _releaseResourcesThen(
+            resources: resources.map((item) => item.fetched),
             continuation: () => _failed(failure),
           );
       }
     }
 
     _started(ProgramProfileInstallStage.installer);
+    final installerResource = resources.first.fetched;
     return programRunPlanner
         .planInstaller(
           bottle: bottle,
-          installerPath: resource.path,
+          installerPath: installerResource.path,
           compatibilityEnvironment: installerCompatibilityEnvironmentForProfile(
             profile,
           ),
         )
         .match<Future<ProgramProfileInstallResult>>(
-          () async => _releaseResourceThen(
-            resource: resource,
+          () async => _releaseResourcesThen(
+            resources: resources.map((item) => item.fetched),
             continuation: () => _failed(
               const ProgramProfileInstallFailed(
                 stage: ProgramProfileInstallStage.installer,
@@ -395,9 +469,35 @@ final class DefaultProgramProfileInstaller implements ProgramProfileInstaller {
             profile: profile,
             bottle: bottle,
             plan: plan,
-            resource: resource,
+            resources: resources,
           ),
         );
+  }
+
+  _DependencyInstallStepResult _runNativeDllAction({
+    required BottleRecord bottle,
+    required int index,
+    required NativeDllPreInstallAction action,
+    required ProfileInstallerResourceFetched resource,
+  }) {
+    return switch (nativeDllInstaller.install(
+      bottle: bottle,
+      action: action,
+      resourcePath: resource.path,
+    )) {
+      NativeDllInstalled() => const _DependencyInstallContinued(),
+      NativeDllInstallFailed(:final code, :final message) =>
+        _DependencyInstallStopped(
+          ProgramProfileInstallFailed(
+            stage: ProgramProfileInstallStage.preInstallAction,
+            code: code,
+            message: message,
+            actionIndex: Option.of(index),
+            actionKind: Option.of(PreInstallActionKind.nativeDll),
+            actionId: Option.of(PreInstallActionId(action.componentId.value)),
+          ),
+        ),
+    };
   }
 
   _DependencyInstallStepResult _runDependency({
@@ -410,33 +510,36 @@ final class DefaultProgramProfileInstaller implements ProgramProfileInstaller {
         .match(
           () => _DependencyInstallStopped(
             ProgramProfileInstallFailed(
-              stage: ProgramProfileInstallStage.dependency,
+              stage: ProgramProfileInstallStage.preInstallAction,
               code: 'dependencyInstallerPlanUnavailable',
               message: 'A dependency winetricks verb cannot be planned.',
-              dependencyIndex: Option.of(index),
-              dependencyVerb: Option.of(verb),
+              actionIndex: Option.of(index),
+              actionKind: Option.of(PreInstallActionKind.winetricks),
+              actionId: Option.of(PreInstallActionId(verb.value)),
             ),
           ),
           (plan) => switch (programRunner.run(plan)) {
             ProgramRunFailed(:final message) => _DependencyInstallStopped(
               ProgramProfileInstallFailed(
-                stage: ProgramProfileInstallStage.dependency,
+                stage: ProgramProfileInstallStage.preInstallAction,
                 code: 'dependencyInstallerRunFailed',
                 message: message,
-                dependencyIndex: Option.of(index),
-                dependencyVerb: Option.of(verb),
+                actionIndex: Option.of(index),
+                actionKind: Option.of(PreInstallActionKind.winetricks),
+                actionId: Option.of(PreInstallActionId(verb.value)),
               ),
             ),
             ProgramRunCompleted(:final processExitCode)
                 when processExitCode != 0 =>
               _DependencyInstallStopped(
                 ProgramProfileInstallFailed(
-                  stage: ProgramProfileInstallStage.dependency,
+                  stage: ProgramProfileInstallStage.preInstallAction,
                   code: 'dependencyInstallerExitNonZero',
                   message:
                       'A dependency installer exited with a non-zero status.',
-                  dependencyIndex: Option.of(index),
-                  dependencyVerb: Option.of(verb),
+                  actionIndex: Option.of(index),
+                  actionKind: Option.of(PreInstallActionKind.winetricks),
+                  actionId: Option.of(PreInstallActionId(verb.value)),
                   processExitCode: Option.of(processExitCode),
                 ),
               ),
@@ -508,28 +611,32 @@ final class DefaultProgramProfileInstaller implements ProgramProfileInstaller {
 
   void _started(
     ProgramProfileInstallStage stage, {
-    Option<int> dependencyIndex = const Option.none(),
-    Option<WinetricksVerbId> dependencyVerb = const Option.none(),
+    Option<int> actionIndex = const Option.none(),
+    Option<PreInstallActionKind> actionKind = const Option.none(),
+    Option<PreInstallActionId> actionId = const Option.none(),
   }) {
     progressSink.report(
       ProgramProfileInstallStageStarted(
         stage: stage,
-        dependencyIndex: dependencyIndex,
-        dependencyVerb: dependencyVerb,
+        actionIndex: actionIndex,
+        actionKind: actionKind,
+        actionId: actionId,
       ),
     );
   }
 
   void _completed(
     ProgramProfileInstallStage stage, {
-    Option<int> dependencyIndex = const Option.none(),
-    Option<WinetricksVerbId> dependencyVerb = const Option.none(),
+    Option<int> actionIndex = const Option.none(),
+    Option<PreInstallActionKind> actionKind = const Option.none(),
+    Option<PreInstallActionId> actionId = const Option.none(),
   }) {
     progressSink.report(
       ProgramProfileInstallStageCompleted(
         stage: stage,
-        dependencyIndex: dependencyIndex,
-        dependencyVerb: dependencyVerb,
+        actionIndex: actionIndex,
+        actionKind: actionKind,
+        actionId: actionId,
       ),
     );
   }
@@ -539,12 +646,35 @@ final class DefaultProgramProfileInstaller implements ProgramProfileInstaller {
       ProgramProfileInstallStageFailed(
         stage: failure.stage,
         code: failure.code,
-        dependencyIndex: failure.dependencyIndex,
-        dependencyVerb: failure.dependencyVerb,
+        actionIndex: failure.actionIndex,
+        actionKind: failure.actionKind,
+        actionId: failure.actionId,
       ),
     );
     return failure;
   }
+}
+
+final class _ProfileResourceRequest {
+  const _ProfileResourceRequest(
+    this.resource, {
+    this.actionIndex = const Option.none(),
+    this.action = const Option.none(),
+  });
+
+  final ProfileResourceFetchRequest resource;
+  final Option<int> actionIndex;
+  final Option<PreInstallActionRecord> action;
+}
+
+final class _FetchedProfileResource {
+  const _FetchedProfileResource({
+    required this.fetched,
+    required this.actionIndex,
+  });
+
+  final ProfileInstallerResourceFetched fetched;
+  final Option<int> actionIndex;
 }
 
 sealed class _DependencyInstallStepResult {

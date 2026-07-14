@@ -17,6 +17,7 @@ import '../io/linux_external_program_launchers.dart';
 import '../io/linux_wine_installation.dart';
 import '../io/macos_wine_installation.dart';
 import '../io/managed_profile_program_verifier_io.dart';
+import '../io/native_dll_installer_io.dart';
 import '../io/program_discovery.dart';
 import '../io/program_graphics_backend_hints_io.dart';
 import '../io/program_io_services.dart';
@@ -138,6 +139,7 @@ DefaultCliDependencies defaultCliDependencies() {
     resourceFetcher: DartIoProfileInstallerResourceFetcher(
       cacheRoot: profileInstallerCacheDirectory(hostEnvironment),
     ),
+    nativeDllInstaller: DartIoNativeDllInstaller(),
     managedProgramVerifier: const DartIoManagedProfileProgramVerifier(),
   );
 
