@@ -32,6 +32,7 @@ export 'konyak_cli_wine_process_payload_parsers.dart';
 export 'konyak_cli_wine_process_result_types.dart';
 export 'konyak_cli_winetricks_payload_parsers.dart';
 export 'konyak_cli_winetricks_result_types.dart';
+export 'program_profile_install_contract.dart';
 
 sealed class RuntimeInstallProgressObservation {
   const RuntimeInstallProgressObservation();

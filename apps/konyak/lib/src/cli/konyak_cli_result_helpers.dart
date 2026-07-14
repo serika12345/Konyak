@@ -4,12 +4,14 @@ import 'bottle_detail_contract.dart';
 import 'konyak_cli_bottle_result_types.dart';
 import 'konyak_cli_failure_messages.dart';
 import 'konyak_cli_process_runner.dart';
+import 'konyak_cli_program_payload_parsers.dart';
 import 'konyak_cli_program_result_types.dart';
 import 'konyak_cli_settings_payload_parsers.dart';
 import 'konyak_cli_settings_result_types.dart';
 import 'konyak_cli_update_payload_parsers.dart';
 import 'konyak_cli_update_result_types.dart';
 import 'konyak_cli_wine_process_result_types.dart';
+import 'program_profile_install_contract.dart';
 import 'runtime_install_contract.dart';
 
 BottleUpdateLoadResult bottleUpdateResultFromCommand({
@@ -169,6 +171,29 @@ RuntimeInstallParseResult parseRuntimeInstallCommandPayload(String stdout) {
   for (final line in lines.reversed) {
     final lineParsed = parseRuntimeInstallPayload(line);
     if (lineParsed is! RuntimeInstallParseFailure) {
+      return lineParsed;
+    }
+  }
+
+  return parsed;
+}
+
+ProgramProfileInstallParseResult parseProgramProfileInstallCommandPayload(
+  String stdout,
+) {
+  final parsed = parseProgramProfileInstallPayload(stdout);
+  if (parsed is! ProgramProfileInstallParseFailure) {
+    return parsed;
+  }
+
+  final lines = const LineSplitter()
+      .convert(stdout)
+      .map((line) => line.trim())
+      .where((line) => line.isNotEmpty)
+      .toList(growable: false);
+  for (final line in lines.reversed) {
+    final lineParsed = parseProgramProfileInstallPayload(line);
+    if (lineParsed is! ProgramProfileInstallParseFailure) {
       return lineParsed;
     }
   }

@@ -2,6 +2,80 @@ import 'dart:convert';
 
 import 'konyak_cli_program_result_types.dart';
 import 'konyak_cli_wine_process_payload_parsers.dart';
+import 'program_profile_install_contract.dart';
+
+ProgramProfileInstallProgressParseResult
+parseProgramProfileInstallProgressPayload(String payload) {
+  final Object? decoded;
+  try {
+    decoded = jsonDecode(payload);
+  } on FormatException {
+    return const InvalidProgramProfileInstallProgress();
+  }
+  if (decoded is! Map<String, dynamic> ||
+      decoded['schemaVersion'] != programProfileInstallSchemaVersion) {
+    return const InvalidProgramProfileInstallProgress();
+  }
+
+  final progress = decoded['programProfileInstallProgress'];
+  if (progress is! Map<String, dynamic>) {
+    return const InvalidProgramProfileInstallProgress();
+  }
+  final stage = _parseProgramProfileInstallStage(progress['stage']);
+  final state = progress['state'];
+  final dependency = _parseProgramProfileInstallDependency(progress);
+  if (stage == null || state is! String || dependency == null) {
+    return const InvalidProgramProfileInstallProgress();
+  }
+
+  return switch (state) {
+    'started' => ParsedProgramProfileInstallProgress(
+      StartedProgramProfileInstallStage(stage: stage, dependency: dependency),
+    ),
+    'completed' => ParsedProgramProfileInstallProgress(
+      CompletedProgramProfileInstallStage(stage: stage, dependency: dependency),
+    ),
+    'failed' => switch (progress['code']) {
+      final String code when code.isNotEmpty =>
+        ParsedProgramProfileInstallProgress(
+          FailedProgramProfileInstallStage(
+            stage: stage,
+            dependency: dependency,
+            code: code,
+          ),
+        ),
+      _ => const InvalidProgramProfileInstallProgress(),
+    },
+    _ => const InvalidProgramProfileInstallProgress(),
+  };
+}
+
+ProgramProfileInstallStage? _parseProgramProfileInstallStage(Object? value) {
+  return switch (value) {
+    'preflight' => ProgramProfileInstallStage.preflight,
+    'download' => ProgramProfileInstallStage.download,
+    'verification' => ProgramProfileInstallStage.verification,
+    'installer' => ProgramProfileInstallStage.installer,
+    'resourceCleanup' => ProgramProfileInstallStage.resourceCleanup,
+    'dependency' => ProgramProfileInstallStage.dependency,
+    'managedProgram' => ProgramProfileInstallStage.managedProgram,
+    'persistence' => ProgramProfileInstallStage.persistence,
+    _ => null,
+  };
+}
+
+ProgramProfileInstallDependencyContext? _parseProgramProfileInstallDependency(
+  Map<String, dynamic> progress,
+) {
+  final index = progress['dependencyIndex'];
+  final verb = progress['dependencyVerb'];
+  return switch ((index, verb)) {
+    (null, null) => const NoProgramProfileInstallDependency(),
+    (final int index, final String verb) when index >= 0 && verb.isNotEmpty =>
+      ProgramProfileInstallDependency(index: index, verb: verb),
+    _ => null,
+  };
+}
 
 sealed class _GraphicsBackendSignalParseResult {
   const _GraphicsBackendSignalParseResult();
@@ -193,6 +267,46 @@ ProgramProfileApplyLoadResult parseProgramProfileApplyPayload(String payload) {
   };
 }
 
+ProgramProfileInstallParseResult parseProgramProfileInstallPayload(
+  String payload,
+) {
+  final Object? decoded;
+  try {
+    decoded = jsonDecode(payload);
+  } on FormatException catch (error) {
+    return ProgramProfileInstallParseFailure(error.message);
+  }
+
+  if (decoded is! Map<String, Object?> || decoded['schemaVersion'] != 1) {
+    return const ProgramProfileInstallParseFailure(
+      'Unsupported program profile install payload.',
+    );
+  }
+
+  final error = decoded['error'];
+  if (error is Map<String, Object?>) {
+    final message = error['message'];
+    return ProgramProfileInstallCommandFailure(
+      message is String ? message : 'Program profile install failed.',
+    );
+  }
+
+  final install = decoded['programProfileInstall'];
+  if (install is! Map<String, Object?>) {
+    return const ProgramProfileInstallParseFailure(
+      'Missing programProfileInstall payload.',
+    );
+  }
+
+  return switch (_parseProgramProfileSummary(install['programProfile'])) {
+    _ParsedInstallProfileValue(value: final profile) =>
+      ParsedProgramProfileInstall(profile),
+    _InvalidInstallProfileValue() => const ProgramProfileInstallParseFailure(
+      'Invalid programProfileInstall payload.',
+    ),
+  };
+}
+
 _InstallProfileParseResult<InstallProfileListItem> _parseInstallProfileListItem(
   Object? value,
 ) {
@@ -222,6 +336,9 @@ _InstallProfileParseResult<InstallProfileDetails> _parseInstallProfileDetails(
   final id = value['id'];
   final name = value['name'];
   final profileVersion = value['profileVersion'];
+  final profileSourceKind = value['profileSourceKind'];
+  final profileSourceId = value['profileSourceId'];
+  final profileDigest = value['profileDigest'];
   final summary = value['summary'];
   final platforms = _parseInstallProfileStringList(value['platforms']);
   final bottleTemplate = value['bottleTemplate'];
@@ -240,6 +357,12 @@ _InstallProfileParseResult<InstallProfileDetails> _parseInstallProfileDetails(
   if (id is! String ||
       name is! String ||
       profileVersion is! int ||
+      profileSourceKind is! String ||
+      profileSourceId is! String ||
+      profileDigest is! String ||
+      profileSourceKind.isEmpty ||
+      profileSourceId.isEmpty ||
+      !RegExp(r'^[0-9A-Fa-f]{64}$').hasMatch(profileDigest) ||
       summary is! String ||
       bottleTemplate is! Map<String, Object?> ||
       managedProgramPath is! String ||
@@ -269,6 +392,9 @@ _InstallProfileParseResult<InstallProfileDetails> _parseInstallProfileDetails(
           id: id,
           name: name,
           profileVersion: profileVersion,
+          profileSourceKind: profileSourceKind,
+          profileSourceId: profileSourceId,
+          profileDigest: profileDigest.toLowerCase(),
           summary: summary,
           platforms: platforms,
           windowsVersion: windowsVersion,

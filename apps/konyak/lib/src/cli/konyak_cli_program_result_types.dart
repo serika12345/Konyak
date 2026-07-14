@@ -136,6 +136,29 @@ final class ProgramProfileApplyLoadFailure
   final String diagnostic;
 }
 
+sealed class ProgramProfileInstallLoadResult {
+  const ProgramProfileInstallLoadResult();
+}
+
+final class InstalledProgramProfile extends ProgramProfileInstallLoadResult {
+  const InstalledProgramProfile(this.profile);
+
+  final ProgramProfileSummary profile;
+}
+
+final class ProgramProfileInstallLoadFailure
+    extends ProgramProfileInstallLoadResult {
+  const ProgramProfileInstallLoadFailure({
+    required this.exitCode,
+    required this.message,
+    required this.diagnostic,
+  });
+
+  final int exitCode;
+  final String message;
+  final String diagnostic;
+}
+
 final class InstallProfileListItem {
   const InstallProfileListItem({
     required this.id,
@@ -153,6 +176,9 @@ final class InstallProfileDetails {
     required this.id,
     required this.name,
     required this.profileVersion,
+    required this.profileSourceKind,
+    required this.profileSourceId,
+    required this.profileDigest,
     required this.summary,
     required Iterable<String> platforms,
     required this.windowsVersion,
@@ -167,6 +193,9 @@ final class InstallProfileDetails {
   final String id;
   final String name;
   final int profileVersion;
+  final String profileSourceKind;
+  final String profileSourceId;
+  final String profileDigest;
   final String summary;
   final List<String> platforms;
   final String windowsVersion;
