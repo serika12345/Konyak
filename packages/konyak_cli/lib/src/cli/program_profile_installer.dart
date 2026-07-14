@@ -242,28 +242,12 @@ final class DefaultProgramProfileInstaller implements ProgramProfileInstaller {
         _completed(ProgramProfileInstallStage.download);
         _started(ProgramProfileInstallStage.verification);
         _completed(ProgramProfileInstallStage.verification);
-        _started(ProgramProfileInstallStage.installer);
-        return programRunPlanner
-            .planInstaller(bottle: bottle, installerPath: fetched.path)
-            .match(
-              () => _releaseResourceThen(
-                resource: fetched,
-                continuation: () => _failed(
-                  const ProgramProfileInstallFailed(
-                    stage: ProgramProfileInstallStage.installer,
-                    code: 'installerPlanUnavailable',
-                    message: 'Installer resource type is not supported.',
-                  ),
-                ),
-              ),
-              (plan) => _runInstaller(
-                request: request,
-                profile: profile,
-                bottle: bottle,
-                plan: plan,
-                resource: fetched,
-              ),
-            );
+        return _runDependencies(
+          request: request,
+          profile: profile,
+          bottle: bottle,
+          resource: fetched,
+        );
       }(),
     };
   }
@@ -324,11 +308,14 @@ final class DefaultProgramProfileInstaller implements ProgramProfileInstaller {
         _completed(ProgramProfileInstallStage.installer);
         return _releaseResourceThen(
           resource: resource,
-          continuation: () => _runDependencies(
-            request: request,
-            profile: profile,
-            bottle: bottle,
-          ),
+          continuation: () {
+            _started(ProgramProfileInstallStage.managedProgram);
+            return _verifyAndPersist(
+              request: request,
+              profile: profile,
+              bottle: bottle,
+            );
+          },
         );
       }(),
     };
@@ -338,6 +325,7 @@ final class DefaultProgramProfileInstaller implements ProgramProfileInstaller {
     required ProgramProfileInstallRequest request,
     required InstallProfileRecord profile,
     required BottleRecord bottle,
+    required ProfileInstallerResourceFetched resource,
   }) {
     for (final (index, verb) in profile.dependencyWinetricksVerbs.indexed) {
       final dependencyIndex = Option.of(index);
@@ -356,16 +344,35 @@ final class DefaultProgramProfileInstaller implements ProgramProfileInstaller {
           );
           continue;
         case _DependencyInstallStopped(:final failure):
-          return _failed(failure);
+          return _releaseResourceThen(
+            resource: resource,
+            continuation: () => _failed(failure),
+          );
       }
     }
 
-    _started(ProgramProfileInstallStage.managedProgram);
-    return _verifyAndPersist(
-      request: request,
-      profile: profile,
-      bottle: bottle,
-    );
+    _started(ProgramProfileInstallStage.installer);
+    return programRunPlanner
+        .planInstaller(bottle: bottle, installerPath: resource.path)
+        .match(
+          () => _releaseResourceThen(
+            resource: resource,
+            continuation: () => _failed(
+              const ProgramProfileInstallFailed(
+                stage: ProgramProfileInstallStage.installer,
+                code: 'installerPlanUnavailable',
+                message: 'Installer resource type is not supported.',
+              ),
+            ),
+          ),
+          (plan) => _runInstaller(
+            request: request,
+            profile: profile,
+            bottle: bottle,
+            plan: plan,
+            resource: resource,
+          ),
+        );
   }
 
   _DependencyInstallStepResult _runDependency({

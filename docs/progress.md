@@ -8,10 +8,10 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
 
 ## Current Work Snapshot
 
-- Timestamp: 2026-07-14 10:34 JST
+- Timestamp: 2026-07-14 11:12 JST
 - State: `paused`
 - Branch: `task/profile-installer-flow`; the latest committed prerequisite is
-  `aa90256`, IP-S5R is verified in the current worktree, and the branch base is
+  `3d68718`, IP-S5O is verified in the current worktree, and the branch base is
   `6f23f55`.
 - Related TODO: `docs/todo.md` Next Tasks, "Build a distributable compatibility
   profile system".
@@ -91,15 +91,23 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
     and backup notice, and a retained recovery row after failure
   - captured and inspected the invalid-bottle recovery golden and completed an
     independent implementation audit after correcting its custom-lint finding
+  - repaired the previously hidden bottle through the macOS GUI and launched
+    the Steam installer from Profile Manager
+  - corrected automatic installation to run every declared winetricks
+    dependency in manifest order before starting the Windows installer
+  - kept download and digest verification before Wine-side mutations, released
+    the staged installer exactly once on dependency failure, and prevented
+    installer launch, EXE verification, and persistence after such a failure
+  - completed an independent dependency-order audit with no blocking findings
 - Remaining work:
-  - run the macOS GUI, repair the visible `bottle` record, and resume the Profile
-    Manager automatic-install inspection
+  - repeat the Profile Manager automatic-install GUI inspection with the
+    corrected dependency-first ordering
   - complete IP-P4 after the GUI checkpoint is accepted
   - after the automatic installation path is stable, resume user profile
     storage, canonical import/export, editing, and sharing work
-- Next action: run Konyak, select `bottle` under the repair section, confirm the
-  backup-first profile-setting discard, then inspect Profile Manager and its
-  automatic-install action. Do not begin IP-P4 before this GUI review.
+- Next action: repeat Profile Manager automatic installation and confirm the
+  visible `corefonts` stage completes before SteamSetup starts. Do not begin
+  IP-P4 before that GUI review.
 - Verification performed:
   - TDD red states captured for the new CLI/domain and Flutter parser contracts
   - `just cli-format-check`, `just cli-analyze`, and `just cli-test` passed; 487
@@ -151,6 +159,17 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
     `apps/konyak/test/goldens/invalid_bottle_recovery.png` at 1040x720; the
     usable bottle, repair entry, cause, path, and explicit discard action are
     visible without clipping or overlap
+  - at 2026-07-14 11:06 JST, focused public-command and orchestration tests
+    dynamically confirmed the incorrect baseline request order was installer,
+    `corefonts`, then `vcrun2022`
+  - captured the dependency-first TDD red state, then proved the corrected
+    request order is `corefonts`, `vcrun2022`, installer and the progress order
+    is preflight, download, verification, dependencies, installer, cleanup,
+    managed-program verification, and persistence
+  - dependency startup/non-zero audit cases issued no installer request, made
+    no verifier or persistence call, released the fetched resource once, and
+    preserved typed dependency failure context; 15 focused tests and all 497
+    CLI tests passed
   - the Steam installer returned HTTP 200 with no redirect and 2,380,800 bytes;
     its SHA-256 matched
     `7d3654531c32d941b8cae81c4137fc542172bfa9635f169cb392f245a0a12bcb`

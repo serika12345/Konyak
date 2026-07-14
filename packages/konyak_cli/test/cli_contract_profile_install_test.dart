@@ -166,6 +166,62 @@ void main() {
     expect(installer.requests, isEmpty);
   });
 
+  test(
+    'default installer runs dependencies in manifest order before installer',
+    () {
+      final profile = testInstallProfile(
+        dependencyWinetricksVerbs: const <String>['corefonts', 'vcrun2022'],
+      );
+      final repository = _RecordingProfileBottleRepository(
+        failPersistence: false,
+      );
+      final fetcher = _MatrixProfileInstallerResourceFetcher(
+        fetchResult: ProfileInstallerResourceFetched(
+          ProgramPath('/cache/TestSetup.exe'),
+        ),
+        releaseResult: const ProfileInstallerResourceReleased(),
+      );
+      final runner = RecordingProgramRunner(
+        results: const <ProgramRunResult>[
+          ProgramRunCompleted(processExitCode: 0),
+          ProgramRunCompleted(processExitCode: 0),
+          ProgramRunCompleted(processExitCode: 0),
+        ],
+      );
+      final installer = _defaultInstaller(
+        profile: profile,
+        repository: repository,
+        fetcher: fetcher,
+        runner: runner,
+        verifier: _MatrixManagedProgramVerifier(
+          result: ManagedProfileProgramVerified(profile.managedProgramPath),
+        ),
+      );
+
+      final result = installer.install(
+        ProgramProfileInstallRequest(
+          profileId: profile.id,
+          bottleId: BottleId('test'),
+        ),
+      );
+
+      expect(result, isA<ProgramProfileInstalled>());
+      expect(
+        runner.requests.map(
+          (request) =>
+              '${request.runnerKind.value}:${request.programPath.value}',
+        ),
+        const <String>[
+          'macosWinetricks:corefonts',
+          'macosWinetricks:vcrun2022',
+          'macosWine:/cache/TestSetup.exe',
+        ],
+      );
+      expect(fetcher.releasedResources, hasLength(1));
+      expect(repository.applyCalls, 1);
+    },
+  );
+
   test('public install command exposes the typed failure matrix', () {
     for (final kind in _InstallFailureKind.values) {
       final fixture = _installFailureFixture(kind);
@@ -260,6 +316,11 @@ void main() {
       expect(
         fixture.runner.requests,
         hasLength(kind.expectedRunnerCalls),
+        reason: kind.name,
+      );
+      expect(
+        fixture.runner.requests.map((request) => request.runnerKind),
+        kind.expectedRunnerKinds,
         reason: kind.name,
       );
       expect(
@@ -445,9 +506,26 @@ enum _InstallFailureKind {
 
   int get expectedRunnerCalls => switch (this) {
     _InstallFailureKind.download || _InstallFailureKind.digest => 0,
+    _InstallFailureKind.installerStartup ||
+    _InstallFailureKind.installerNonzero => 2,
     _InstallFailureKind.dependencyStartup ||
-    _InstallFailureKind.dependencyNonzero => 2,
+    _InstallFailureKind.dependencyNonzero => 1,
     _ => 1,
+  };
+
+  List<RunnerKind> get expectedRunnerKinds => switch (this) {
+    _InstallFailureKind.download ||
+    _InstallFailureKind.digest => const <RunnerKind>[],
+    _InstallFailureKind.installerStartup ||
+    _InstallFailureKind.installerNonzero => const <RunnerKind>[
+      RunnerKind.macosWinetricks,
+      RunnerKind.macosWine,
+    ],
+    _InstallFailureKind.dependencyStartup ||
+    _InstallFailureKind.dependencyNonzero => const <RunnerKind>[
+      RunnerKind.macosWinetricks,
+    ],
+    _ => const <RunnerKind>[RunnerKind.macosWine],
   };
 
   int get expectedVerifierCalls => switch (this) {
@@ -479,6 +557,8 @@ final class _InstallFailureFixture {
 
 _InstallFailureFixture _installFailureFixture(_InstallFailureKind kind) {
   final hasDependency =
+      kind == _InstallFailureKind.installerStartup ||
+      kind == _InstallFailureKind.installerNonzero ||
       kind == _InstallFailureKind.dependencyStartup ||
       kind == _InstallFailureKind.dependencyNonzero;
   final profile = testInstallProfile(
@@ -509,17 +589,17 @@ _InstallFailureFixture _installFailureFixture(_InstallFailureKind kind) {
   final runner = RecordingProgramRunner(
     results: switch (kind) {
       _InstallFailureKind.installerStartup => const <ProgramRunResult>[
+        ProgramRunCompleted(processExitCode: 0),
         ProgramRunFailed(message: 'Installer startup failed.'),
       ],
       _InstallFailureKind.installerNonzero => const <ProgramRunResult>[
+        ProgramRunCompleted(processExitCode: 0),
         ProgramRunCompleted(processExitCode: 19),
       ],
       _InstallFailureKind.dependencyStartup => const <ProgramRunResult>[
-        ProgramRunCompleted(processExitCode: 0),
         ProgramRunFailed(message: 'Dependency startup failed.'),
       ],
       _InstallFailureKind.dependencyNonzero => const <ProgramRunResult>[
-        ProgramRunCompleted(processExitCode: 0),
         ProgramRunCompleted(processExitCode: 37),
       ],
       _ => const <ProgramRunResult>[ProgramRunCompleted(processExitCode: 0)],
@@ -533,7 +613,30 @@ _InstallFailureFixture _installFailureFixture(_InstallFailureKind kind) {
           )
         : ManagedProfileProgramVerified(profile.managedProgramPath),
   );
-  final installer = DefaultProgramProfileInstaller(
+  final installer = _defaultInstaller(
+    profile: profile,
+    repository: repository,
+    fetcher: fetcher,
+    runner: runner,
+    verifier: verifier,
+  );
+  return _InstallFailureFixture(
+    installer: installer,
+    repository: repository,
+    fetcher: fetcher,
+    runner: runner,
+    verifier: verifier,
+  );
+}
+
+DefaultProgramProfileInstaller _defaultInstaller({
+  required InstallProfileRecord profile,
+  required _RecordingProfileBottleRepository repository,
+  required _MatrixProfileInstallerResourceFetcher fetcher,
+  required RecordingProgramRunner runner,
+  required _MatrixManagedProgramVerifier verifier,
+}) {
+  return DefaultProgramProfileInstaller(
     installProfileCatalog: InstallProfileCatalog(<InstallProfileRecord>[
       profile,
     ]),
@@ -576,13 +679,6 @@ _InstallFailureFixture _installFailureFixture(_InstallFailureKind kind) {
     programRunner: runner,
     resourceFetcher: fetcher,
     managedProgramVerifier: verifier,
-  );
-  return _InstallFailureFixture(
-    installer: installer,
-    repository: repository,
-    fetcher: fetcher,
-    runner: runner,
-    verifier: verifier,
   );
 }
 
@@ -676,6 +772,11 @@ final class _MatrixWinetricksVerbRepository
               id: WinetricksVerbId('corefonts'),
               name: WinetricksVerbName('corefonts'),
               description: WinetricksVerbDescription('Core fonts'),
+            ),
+            WinetricksVerbRecord(
+              id: WinetricksVerbId('vcrun2022'),
+              name: WinetricksVerbName('vcrun2022'),
+              description: WinetricksVerbDescription('Visual C++ runtime'),
             ),
           ],
         ),
