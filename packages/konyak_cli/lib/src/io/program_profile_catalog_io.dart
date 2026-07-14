@@ -234,10 +234,10 @@ InstallProfileRecord _installProfileFromJson(
       fileName: _requiredString(installerResource, 'fileName'),
     ),
     installerCompletion: _installerCompletion(profile),
-    dependencyWinetricksVerbs: _requiredStringList(
+    preInstallActions: _requiredObjectList(
       profile,
-      'dependencyWinetricksVerbs',
-    ),
+      'preInstallActions',
+    ).map(_preInstallAction),
     runCompletionPolicy: _completionPolicy(
       _requiredString(profile, 'runCompletionPolicy'),
     ),
@@ -256,6 +256,33 @@ InstallProfileRecord _installProfileFromJson(
           ),
     ),
   );
+}
+
+PreInstallActionRecord _preInstallAction(Map<String, Object?> action) {
+  return switch (_requiredString(action, 'kind')) {
+    'winetricks' => PreInstallActionRecord.winetricks(
+      verb: _requiredString(action, 'verb'),
+    ),
+    'nativeDll' => () {
+      final resource = _requiredObject(
+        action['resource'],
+        'nativeDll resource must be an object.',
+      );
+      return PreInstallActionRecord.nativeDll(
+        componentId: _requiredString(action, 'componentId'),
+        machine: _requiredString(action, 'machine'),
+        destination: _requiredString(action, 'destination'),
+        targetFileName: _requiredString(action, 'targetFileName'),
+        resource: NativeDllResourceRecord(
+          kind: _requiredString(resource, 'kind'),
+          url: _requiredString(resource, 'url'),
+          sha256: _requiredString(resource, 'sha256'),
+          fileName: _requiredString(resource, 'fileName'),
+        ),
+      );
+    }(),
+    final kind => throw FormatException('Unsupported preInstallAction $kind.'),
+  };
 }
 
 Option<InstallerCompletionRecord> _installerCompletion(

@@ -184,11 +184,11 @@ final class InstallProfileDetails {
     required this.windowsVersion,
     required this.managedProgramPath,
     required this.installerResource,
-    required Iterable<String> dependencyWinetricksVerbs,
+    required Iterable<PreInstallActionSummary> preInstallActions,
     required this.runCompletionPolicy,
     required this.compatibilityProfile,
   }) : platforms = List.unmodifiable(platforms),
-       dependencyWinetricksVerbs = List.unmodifiable(dependencyWinetricksVerbs);
+       preInstallActions = List.unmodifiable(preInstallActions);
 
   final String id;
   final String name;
@@ -201,9 +201,101 @@ final class InstallProfileDetails {
   final String windowsVersion;
   final String managedProgramPath;
   final InstallerResourceSummary installerResource;
-  final List<String> dependencyWinetricksVerbs;
+  final List<PreInstallActionSummary> preInstallActions;
   final String runCompletionPolicy;
   final CompatibilityProfileSummary compatibilityProfile;
+}
+
+sealed class PreInstallActionSummary {
+  const PreInstallActionSummary();
+
+  String get id;
+  String get kind;
+}
+
+final class WinetricksPreInstallActionSummary extends PreInstallActionSummary {
+  const WinetricksPreInstallActionSummary(this.verb);
+
+  final String verb;
+
+  @override
+  String get id => verb;
+
+  @override
+  String get kind => 'winetricks';
+}
+
+final class NativeDllPreInstallActionSummary extends PreInstallActionSummary {
+  const NativeDllPreInstallActionSummary({
+    required this.componentId,
+    required this.machine,
+    required this.destination,
+    required this.targetFileName,
+    required this.resource,
+  });
+
+  final String componentId;
+  final String machine;
+  final String destination;
+  final String targetFileName;
+  final NativeDllResourceSummary resource;
+
+  @override
+  String get id => componentId;
+
+  @override
+  String get kind => 'nativeDll';
+}
+
+final class NativeDllResourceSummary {
+  factory NativeDllResourceSummary({
+    required String kind,
+    required String url,
+    required String sha256,
+    required String fileName,
+  }) {
+    final parsedUrl = _parseInstallerResourceUrl(url);
+    if (kind != 'https' ||
+        url.isEmpty ||
+        url.length > 8192 ||
+        url.codeUnits.any((code) => code <= 0x20 || code == 0x7f) ||
+        parsedUrl.scheme != 'https' ||
+        !parsedUrl.hasAuthority ||
+        parsedUrl.host.isEmpty ||
+        parsedUrl.authority.contains('@') ||
+        parsedUrl.hasFragment ||
+        !RegExp(r'^[0-9A-Fa-f]{64}$').hasMatch(sha256) ||
+        !isSafeNativeDllFileName(fileName)) {
+      throw ArgumentError('Invalid native DLL resource.');
+    }
+    return NativeDllResourceSummary._(
+      kind: kind,
+      url: url,
+      sha256: sha256.toLowerCase(),
+      fileName: fileName,
+    );
+  }
+
+  const NativeDllResourceSummary._({
+    required this.kind,
+    required this.url,
+    required this.sha256,
+    required this.fileName,
+  });
+
+  final String kind;
+  final String url;
+  final String sha256;
+  final String fileName;
+}
+
+bool isSafeNativeDllFileName(String value) {
+  return value.length > 4 &&
+      value.length <= 255 &&
+      !value.contains('/') &&
+      !value.contains('\\') &&
+      value.toLowerCase().endsWith('.dll') &&
+      value.codeUnits.every((code) => code > 0x1f && code != 0x7f);
 }
 
 final class InstallerResourceSummary {

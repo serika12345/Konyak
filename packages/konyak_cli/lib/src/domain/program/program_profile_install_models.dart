@@ -12,7 +12,7 @@ enum ProgramProfileInstallStage {
   download('download'),
   verification('verification'),
   installer('installer'),
-  dependency('dependency'),
+  preInstallAction('preInstallAction'),
   managedProgram('managedProgram'),
   persistence('persistence'),
   resourceCleanup('resourceCleanup');
@@ -45,24 +45,30 @@ sealed class ProgramProfileInstallProgress
 
   const factory ProgramProfileInstallProgress.started({
     required ProgramProfileInstallStage stage,
-    @Default(Option<int>.none()) Option<int> dependencyIndex,
-    @Default(Option<WinetricksVerbId>.none())
-    Option<WinetricksVerbId> dependencyVerb,
+    @Default(Option<int>.none()) Option<int> actionIndex,
+    @Default(Option<PreInstallActionKind>.none())
+    Option<PreInstallActionKind> actionKind,
+    @Default(Option<PreInstallActionId>.none())
+    Option<PreInstallActionId> actionId,
   }) = ProgramProfileInstallStageStarted;
 
   const factory ProgramProfileInstallProgress.completed({
     required ProgramProfileInstallStage stage,
-    @Default(Option<int>.none()) Option<int> dependencyIndex,
-    @Default(Option<WinetricksVerbId>.none())
-    Option<WinetricksVerbId> dependencyVerb,
+    @Default(Option<int>.none()) Option<int> actionIndex,
+    @Default(Option<PreInstallActionKind>.none())
+    Option<PreInstallActionKind> actionKind,
+    @Default(Option<PreInstallActionId>.none())
+    Option<PreInstallActionId> actionId,
   }) = ProgramProfileInstallStageCompleted;
 
   const factory ProgramProfileInstallProgress.failed({
     required ProgramProfileInstallStage stage,
     required String code,
-    @Default(Option<int>.none()) Option<int> dependencyIndex,
-    @Default(Option<WinetricksVerbId>.none())
-    Option<WinetricksVerbId> dependencyVerb,
+    @Default(Option<int>.none()) Option<int> actionIndex,
+    @Default(Option<PreInstallActionKind>.none())
+    Option<PreInstallActionKind> actionKind,
+    @Default(Option<PreInstallActionId>.none())
+    Option<PreInstallActionId> actionId,
   }) = ProgramProfileInstallStageFailed;
 }
 
@@ -108,19 +114,58 @@ sealed class ProgramProfileInstallResult with _$ProgramProfileInstallResult {
     required ProgramProfileInstallStage stage,
     required String code,
     required String message,
-    @Default(Option<int>.none()) Option<int> dependencyIndex,
-    @Default(Option<WinetricksVerbId>.none())
-    Option<WinetricksVerbId> dependencyVerb,
+    @Default(Option<int>.none()) Option<int> actionIndex,
+    @Default(Option<PreInstallActionKind>.none())
+    Option<PreInstallActionKind> actionKind,
+    @Default(Option<PreInstallActionId>.none())
+    Option<PreInstallActionId> actionId,
     @Default(Option<int>.none()) Option<int> processExitCode,
   }) = ProgramProfileInstallFailed;
 }
 
 abstract interface class ProfileInstallerResourceFetcher {
-  ProfileInstallerResourceFetchResult fetch(InstallerResourceRecord resource);
+  ProfileInstallerResourceFetchResult fetch(
+    ProfileResourceFetchRequest request,
+  );
 
   ProfileInstallerResourceReleaseResult release(
     ProfileInstallerResourceFetched resource,
   );
+}
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class ProfileResourceFetchRequest with _$ProfileResourceFetchRequest {
+  const ProfileResourceFetchRequest._();
+
+  factory ProfileResourceFetchRequest.installer(
+    InstallerResourceRecord resource,
+  ) {
+    return ProfileResourceFetchRequest._validated(
+      url: resource.url,
+      sha256: resource.sha256,
+      fileName: resource.fileName.value,
+    );
+  }
+
+  factory ProfileResourceFetchRequest.nativeDll(
+    NativeDllResourceRecord resource,
+  ) {
+    return ProfileResourceFetchRequest._validated(
+      url: resource.url,
+      sha256: resource.sha256,
+      fileName: resource.fileName.value,
+    );
+  }
+
+  const factory ProfileResourceFetchRequest._validated({
+    required InstallerResourceUrl url,
+    required InstallerResourceSha256 sha256,
+    required String fileName,
+  }) = _ProfileResourceFetchRequest;
 }
 
 @Freezed(
@@ -168,6 +213,47 @@ abstract interface class ManagedProfileProgramVerifier {
     required BottleRecord bottle,
     required ProgramPath managedProgramPath,
   });
+}
+
+abstract interface class NativeDllInstaller {
+  NativeDllInstallResult install({
+    required BottleRecord bottle,
+    required NativeDllPreInstallAction action,
+    required ProgramPath resourcePath,
+  });
+}
+
+final class UnsupportedNativeDllInstaller implements NativeDllInstaller {
+  const UnsupportedNativeDllInstaller();
+
+  @override
+  NativeDllInstallResult install({
+    required BottleRecord bottle,
+    required NativeDllPreInstallAction action,
+    required ProgramPath resourcePath,
+  }) {
+    return const NativeDllInstallFailed(
+      code: 'nativeDllInstallerUnavailable',
+      message: 'Native DLL installation is unavailable.',
+    );
+  }
+}
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+sealed class NativeDllInstallResult with _$NativeDllInstallResult {
+  const NativeDllInstallResult._();
+
+  const factory NativeDllInstallResult.installed({required bool changed}) =
+      NativeDllInstalled;
+
+  const factory NativeDllInstallResult.failed({
+    required String code,
+    required String message,
+  }) = NativeDllInstallFailed;
 }
 
 @Freezed(

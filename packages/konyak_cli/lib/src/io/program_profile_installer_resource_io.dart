@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import '../domain/program/program_profile_install_models.dart';
-import '../domain/program/program_profile_models.dart';
 import '../domain/shared/domain_helpers.dart';
 import '../domain/shared/domain_value_objects.dart';
 import 'file_digest_io.dart';
@@ -48,7 +47,9 @@ final class DartIoProfileInstallerResourceFetcher
       <String, _OwnedInstallerResource>{};
 
   @override
-  ProfileInstallerResourceFetchResult fetch(InstallerResourceRecord resource) {
+  ProfileInstallerResourceFetchResult fetch(
+    ProfileResourceFetchRequest resource,
+  ) {
     final cacheDirectory = Directory(cacheRoot);
     Directory? stagingDirectory;
 
@@ -71,9 +72,7 @@ final class DartIoProfileInstallerResourceFetcher
         rootRealPath: cacheRealPath,
       );
       final destination = File(
-        domainJoinPath(stagingDirectory.path, <String>[
-          resource.fileName.value,
-        ]),
+        domainJoinPath(stagingDirectory.path, <String>[resource.fileName]),
       );
       final partial = File('${destination.path}.part');
 

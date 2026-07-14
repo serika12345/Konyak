@@ -4,6 +4,9 @@ import 'konyak_cli_program_result_types.dart';
 import 'konyak_cli_wine_process_payload_parsers.dart';
 import 'program_profile_install_contract.dart';
 
+const _maxPreInstallActions = 64;
+const _maxPreInstallActionIdLength = 128;
+
 ProgramProfileInstallProgressParseResult
 parseProgramProfileInstallProgressPayload(String payload) {
   final Object? decoded;
@@ -23,24 +26,24 @@ parseProgramProfileInstallProgressPayload(String payload) {
   }
   final stage = _parseProgramProfileInstallStage(progress['stage']);
   final state = progress['state'];
-  final dependency = _parseProgramProfileInstallDependency(progress);
-  if (stage == null || state is! String || dependency == null) {
+  final action = _parseProgramProfileInstallAction(progress);
+  if (stage == null || state is! String || action == null) {
     return const InvalidProgramProfileInstallProgress();
   }
 
   return switch (state) {
     'started' => ParsedProgramProfileInstallProgress(
-      StartedProgramProfileInstallStage(stage: stage, dependency: dependency),
+      StartedProgramProfileInstallStage(stage: stage, action: action),
     ),
     'completed' => ParsedProgramProfileInstallProgress(
-      CompletedProgramProfileInstallStage(stage: stage, dependency: dependency),
+      CompletedProgramProfileInstallStage(stage: stage, action: action),
     ),
     'failed' => switch (progress['code']) {
       final String code when code.isNotEmpty =>
         ParsedProgramProfileInstallProgress(
           FailedProgramProfileInstallStage(
             stage: stage,
-            dependency: dependency,
+            action: action,
             code: code,
           ),
         ),
@@ -57,22 +60,27 @@ ProgramProfileInstallStage? _parseProgramProfileInstallStage(Object? value) {
     'verification' => ProgramProfileInstallStage.verification,
     'installer' => ProgramProfileInstallStage.installer,
     'resourceCleanup' => ProgramProfileInstallStage.resourceCleanup,
-    'dependency' => ProgramProfileInstallStage.dependency,
+    'preInstallAction' => ProgramProfileInstallStage.preInstallAction,
     'managedProgram' => ProgramProfileInstallStage.managedProgram,
     'persistence' => ProgramProfileInstallStage.persistence,
     _ => null,
   };
 }
 
-ProgramProfileInstallDependencyContext? _parseProgramProfileInstallDependency(
+ProgramProfileInstallActionContext? _parseProgramProfileInstallAction(
   Map<String, dynamic> progress,
 ) {
-  final index = progress['dependencyIndex'];
-  final verb = progress['dependencyVerb'];
-  return switch ((index, verb)) {
-    (null, null) => const NoProgramProfileInstallDependency(),
-    (final int index, final String verb) when index >= 0 && verb.isNotEmpty =>
-      ProgramProfileInstallDependency(index: index, verb: verb),
+  final index = progress['actionIndex'];
+  final kind = progress['actionKind'];
+  final id = progress['actionId'];
+  return switch ((index, kind, id)) {
+    (null, null, null) => const NoProgramProfileInstallAction(),
+    (final int index, final String kind, final String id)
+        when index >= 0 &&
+            index < _maxPreInstallActions &&
+            (kind == 'winetricks' || kind == 'nativeDll') &&
+            _isPreInstallActionId(id) =>
+      ProgramProfileInstallAction(index: index, kind: kind, id: id),
     _ => null,
   };
 }
@@ -346,9 +354,7 @@ _InstallProfileParseResult<InstallProfileDetails> _parseInstallProfileDetails(
   final installerResource = _parseInstallerResourceSummary(
     value['installerResource'],
   );
-  final dependencyWinetricksVerbs = _parseInstallProfileStringList(
-    value['dependencyWinetricksVerbs'],
-  );
+  final preInstallActions = _parsePreInstallActions(value['preInstallActions']);
   final runCompletionPolicy = value['runCompletionPolicy'];
   final compatibilityProfile = _parseCompatibilityProfileSummary(
     value['compatibilityProfile'],
@@ -378,13 +384,13 @@ _InstallProfileParseResult<InstallProfileDetails> _parseInstallProfileDetails(
   return switch ((
     platforms,
     installerResource,
-    dependencyWinetricksVerbs,
+    preInstallActions,
     compatibilityProfile,
   )) {
     (
       _ParsedInstallProfileValue(value: final platforms),
       _ParsedInstallProfileValue(value: final installerResource),
-      _ParsedInstallProfileValue(value: final dependencyWinetricksVerbs),
+      _ParsedInstallProfileValue(value: final preInstallActions),
       _ParsedInstallProfileValue(value: final compatibilityProfile),
     ) =>
       _ParsedInstallProfileValue(
@@ -400,13 +406,107 @@ _InstallProfileParseResult<InstallProfileDetails> _parseInstallProfileDetails(
           windowsVersion: windowsVersion,
           managedProgramPath: managedProgramPath,
           installerResource: installerResource,
-          dependencyWinetricksVerbs: dependencyWinetricksVerbs,
+          preInstallActions: preInstallActions,
           runCompletionPolicy: runCompletionPolicy,
           compatibilityProfile: compatibilityProfile,
         ),
       ),
     _ => const _InvalidInstallProfileValue(),
   };
+}
+
+_InstallProfileParseResult<List<PreInstallActionSummary>>
+_parsePreInstallActions(Object? value) {
+  if (value is! List<Object?> || value.length > _maxPreInstallActions) {
+    return const _InvalidInstallProfileValue();
+  }
+  final actions = <PreInstallActionSummary>[];
+  final winetricksVerbs = <String>{};
+  final nativeTargets = <String>{};
+  for (final item in value) {
+    if (item is! Map<String, Object?>) {
+      return const _InvalidInstallProfileValue();
+    }
+    final kind = item['kind'];
+    if (kind == 'winetricks') {
+      final verb = item['verb'];
+      if (verb is! String ||
+          !_isPreInstallActionId(verb) ||
+          !winetricksVerbs.add(verb)) {
+        return const _InvalidInstallProfileValue();
+      }
+      actions.add(WinetricksPreInstallActionSummary(verb));
+      continue;
+    }
+    if (kind != 'nativeDll') {
+      return const _InvalidInstallProfileValue();
+    }
+    final componentId = item['componentId'];
+    final machine = item['machine'];
+    final destination = item['destination'];
+    final targetFileName = item['targetFileName'];
+    final resourceResult = _parseNativeDllResourceSummary(item['resource']);
+    final machineDestinationMatches =
+        (machine == 'x86' && destination == 'windowsSysWow64') ||
+        (machine == 'x64' && destination == 'windowsSystem32');
+    if (componentId is! String ||
+        componentId.length > _maxPreInstallActionIdLength ||
+        !RegExp(r'^[a-z0-9][a-z0-9_.-]*$').hasMatch(componentId) ||
+        !machineDestinationMatches ||
+        targetFileName is! String ||
+        !isSafeNativeDllFileName(targetFileName) ||
+        resourceResult
+            is! _ParsedInstallProfileValue<NativeDllResourceSummary>) {
+      return const _InvalidInstallProfileValue();
+    }
+    final nativeTarget = '$destination/${targetFileName.toLowerCase()}';
+    if (!nativeTargets.add(nativeTarget)) {
+      return const _InvalidInstallProfileValue();
+    }
+    actions.add(
+      NativeDllPreInstallActionSummary(
+        componentId: componentId,
+        machine: machine as String,
+        destination: destination as String,
+        targetFileName: targetFileName,
+        resource: resourceResult.value,
+      ),
+    );
+  }
+  return _ParsedInstallProfileValue(List.unmodifiable(actions));
+}
+
+bool _isPreInstallActionId(String value) =>
+    value.length <= _maxPreInstallActionIdLength &&
+    RegExp(r'^[A-Za-z0-9_.+-]+$').hasMatch(value);
+
+_InstallProfileParseResult<NativeDllResourceSummary>
+_parseNativeDllResourceSummary(Object? value) {
+  if (value is! Map<String, Object?>) {
+    return const _InvalidInstallProfileValue();
+  }
+  try {
+    final kind = value['kind'];
+    final url = value['url'];
+    final sha256 = value['sha256'];
+    final fileName = value['fileName'];
+    if (kind is! String ||
+        url is! String ||
+        sha256 is! String ||
+        fileName is! String) {
+      return const _InvalidInstallProfileValue();
+    }
+    return _ParsedInstallProfileValue(
+      NativeDllResourceSummary(
+        kind: kind,
+        url: url,
+        sha256: sha256,
+        fileName: fileName,
+      ),
+    );
+  } on ArgumentError {
+    return const _InvalidInstallProfileValue();
+  }
 }
 
 _InstallProfileParseResult<InstallerResourceSummary>

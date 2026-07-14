@@ -410,6 +410,7 @@ Option<List<ProgramProfileRecord>> programProfileRecordsFromJson(
     final compatibilityProfileId = item['compatibilityProfileId'];
     final compatibilityProfileVersion = item['compatibilityProfileVersion'];
     final installerResource = item['installerResource'];
+    final preInstallActions = item['preInstallActions'];
     if (profileSchemaVersion is! int ||
         profileId is! String ||
         profileVersion is! int ||
@@ -419,7 +420,8 @@ Option<List<ProgramProfileRecord>> programProfileRecordsFromJson(
         managedProgramPath is! String ||
         compatibilityProfileId is! String ||
         compatibilityProfileVersion is! int ||
-        installerResource is! Map<String, dynamic>) {
+        installerResource is! Map<String, dynamic> ||
+        preInstallActions is! List<dynamic>) {
       return const Option.none();
     }
 
@@ -450,11 +452,50 @@ Option<List<ProgramProfileRecord>> programProfileRecordsFromJson(
             sha256: installerSha256,
             fileName: installerFileName,
           ),
+          preInstallActions: preInstallActions.map((action) {
+            if (action is! Map<String, dynamic>) {
+              throw const FormatException('Invalid pre-install action.');
+            }
+            final kind = action['kind'];
+            if (kind == 'winetricks' && action['verb'] is String) {
+              return PreInstallActionRecord.winetricks(
+                verb: action['verb'] as String,
+              );
+            }
+            if (kind == 'nativeDll' &&
+                action['componentId'] is String &&
+                action['machine'] is String &&
+                action['destination'] is String &&
+                action['targetFileName'] is String &&
+                action['resource'] is Map<String, dynamic>) {
+              final resource = action['resource'] as Map<String, dynamic>;
+              if (resource['kind'] is String &&
+                  resource['url'] is String &&
+                  resource['sha256'] is String &&
+                  resource['fileName'] is String) {
+                return PreInstallActionRecord.nativeDll(
+                  componentId: action['componentId'] as String,
+                  machine: action['machine'] as String,
+                  destination: action['destination'] as String,
+                  targetFileName: action['targetFileName'] as String,
+                  resource: NativeDllResourceRecord(
+                    kind: resource['kind'] as String,
+                    url: resource['url'] as String,
+                    sha256: resource['sha256'] as String,
+                    fileName: resource['fileName'] as String,
+                  ),
+                );
+              }
+            }
+            throw const FormatException('Invalid pre-install action.');
+          }),
           compatibilityProfileId: compatibilityProfileId,
           compatibilityProfileVersion: compatibilityProfileVersion,
         ),
       );
-    } on ArgumentError {
+    } on ArgumentError catch (_) {
+      return const Option.none();
+    } on FormatException catch (_) {
       return const Option.none();
     }
   }

@@ -54,16 +54,14 @@ verification output instead of checked-off backlog entries.
     dependencies, and only then installs it into the selected bottle. Record
     progress and failure results, and keep dependency ordering explicit in the
     manifest contract before exposing it to profile authors.
-  - Add a separate bounded native-component milestone before claiming
-    CrossOver launcher dependency parity. Replace the unreleased verb-only
-    dependency list with ordered pre-install actions and immutable component
-    resources, beginning with x86/x64 `d3dcompiler_47` placement into only the
-    matching Windows system directory without creating a DLL override. Validate
-    the resource digest, PE machine type, bottle real-path containment, symlink
-    boundaries, explicit x86-before-x64 order, idempotent reruns, atomic
-    replacement that preserves the original DLL on failure, cleanup, and the
-    absence of newly created or modified user DLL overrides through the public
-    CLI path before adding it to the Steam profile.
+  - Before the first release containing automatic profile installation, resolve
+    the Steam `d3dcompiler_47` acquisition compliance blocker. The current
+    immutable resources are fetched from a fixed `mozilla/fxc2` commit but that
+    repository does not state the downstream license for the Microsoft DLLs.
+    Replace them with a Microsoft-owned, explicitly licensed acquisition route,
+    record applicable use terms, or obtain an explicit legal/source-acceptance
+    decision. A pinned URL and SHA-256 establish integrity, not redistribution
+    authority or long-term availability.
   - Once installer resources, dependency winetricks, and the profile-install
     user flow are complete, add an independently rerunnable macOS CI E2E gate
     for the entire declarative profile path. Use a repository-owned,

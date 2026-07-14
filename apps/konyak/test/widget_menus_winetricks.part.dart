@@ -6,7 +6,7 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
   ) async {
     await _loadKonyakTestFonts();
     final goldenKey = GlobalKey();
-    await tester.binding.setSurfaceSize(const Size(1040, 720));
+    await tester.binding.setSurfaceSize(const Size(1040, 1000));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
     await tester.pumpWidget(
@@ -56,10 +56,34 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
                           'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
                       fileName: 'SteamSetup.exe',
                     ),
-                    dependencyWinetricksVerbs: const [
-                      'corefonts',
-                      'fakejapanese',
-                      'vcrun2022',
+                    preInstallActions: [
+                      const WinetricksPreInstallActionSummary('corefonts'),
+                      const WinetricksPreInstallActionSummary('vcrun2022'),
+                      NativeDllPreInstallActionSummary(
+                        componentId: 'd3dcompiler_47-x86',
+                        machine: 'x86',
+                        destination: 'windowsSysWow64',
+                        targetFileName: 'd3dcompiler_47.dll',
+                        resource: NativeDllResourceSummary(
+                          kind: 'https',
+                          url: 'https://downloads.example.test/d3d-x86.dll',
+                          sha256: 'c' * 64,
+                          fileName: 'd3dcompiler_47_32.dll',
+                        ),
+                      ),
+                      NativeDllPreInstallActionSummary(
+                        componentId: 'd3dcompiler_47-x64',
+                        machine: 'x64',
+                        destination: 'windowsSystem32',
+                        targetFileName: 'd3dcompiler_47.dll',
+                        resource: NativeDllResourceSummary(
+                          kind: 'https',
+                          url: 'https://downloads.example.test/d3d-x64.dll',
+                          sha256: 'd' * 64,
+                          fileName: 'd3dcompiler_47.dll',
+                        ),
+                      ),
+                      const WinetricksPreInstallActionSummary('fakejapanese'),
                     ],
                     runCompletionPolicy: 'waitForExit',
                     compatibilityProfile: CompatibilityProfileSummary(
@@ -81,7 +105,37 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
     expect(find.text('Apply to existing program'), findsOneWidget);
     expect(find.textContaining('builtin / steam.json'), findsOneWidget);
     expect(
-      find.text('1. corefonts\n2. fakejapanese\n3. vcrun2022'),
+      find.textContaining('3. nativeDll x86 → windowsSysWow64'),
+      findsOneWidget,
+    );
+    expect(
+      find.textContaining('4. nativeDll x64 → windowsSystem32'),
+      findsOneWidget,
+    );
+    final dependencyTooltip = tester.widget<Tooltip>(
+      find.byWidgetPredicate(
+        (widget) =>
+            widget is Tooltip &&
+            (widget.message ?? '').contains('d3dcompiler_47-x86'),
+      ),
+    );
+    expect(
+      dependencyTooltip.message,
+      allOf(
+        contains('d3dcompiler_47-x86'),
+        contains('https://downloads.example.test/d3d-x86.dll'),
+        contains('SHA-256: ${'c' * 64}'),
+        contains('d3dcompiler_47-x64'),
+        contains('https://downloads.example.test/d3d-x64.dll'),
+        contains('SHA-256: ${'d' * 64}'),
+      ),
+    );
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('profile-manager-program-path-field')),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey('profile-manager-program-path-field')),
       findsOneWidget,
     );
 
@@ -202,7 +256,7 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
                   "sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
                   "fileName": "SteamSetup.exe"
                 },
-                "dependencyWinetricksVerbs": ["corefonts"],
+                "preInstallActions": [{"kind":"winetricks","verb":"corefonts"}],
                 "runCompletionPolicy": "waitForExit",
                 "compatibilityProfile": {
                   "id": "steam",
@@ -1235,7 +1289,7 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
                   "sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
                   "fileName": "SteamSetup.exe"
                 },
-                "dependencyWinetricksVerbs": ["corefonts"],
+                "preInstallActions": [{"kind":"winetricks","verb":"corefonts"}],
                 "runCompletionPolicy": "launchOnly",
                 "compatibilityProfile": {
                   "id": "steam",

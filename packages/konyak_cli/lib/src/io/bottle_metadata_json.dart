@@ -77,5 +77,37 @@ Map<String, Object?> programProfileRecordJson(ProgramProfileRecord profile) {
       'sha256': profile.installerResource.sha256.value,
       'fileName': profile.installerResource.fileName.value,
     },
+    'preInstallActions': profile.preInstallActions
+        .map(preInstallActionJson)
+        .toList(growable: false),
+  };
+}
+
+Map<String, Object?> preInstallActionJson(PreInstallActionRecord action) {
+  return switch (action) {
+    WinetricksPreInstallAction(:final verb) => <String, Object?>{
+      'kind': 'winetricks',
+      'verb': verb.value,
+    },
+    NativeDllPreInstallAction(
+      :final componentId,
+      :final machine,
+      :final destination,
+      :final targetFileName,
+      :final resource,
+    ) =>
+      <String, Object?>{
+        'kind': 'nativeDll',
+        'componentId': componentId.value,
+        'machine': machine.value,
+        'destination': destination.value,
+        'targetFileName': targetFileName.value,
+        'resource': <String, Object?>{
+          'kind': resource.kind.value,
+          'url': resource.url.value,
+          'sha256': resource.sha256.value,
+          'fileName': resource.fileName.value,
+        },
+      },
   };
 }
