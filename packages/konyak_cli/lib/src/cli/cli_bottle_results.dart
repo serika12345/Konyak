@@ -1,5 +1,6 @@
 import 'package:fpdart/fpdart.dart';
 
+import '../domain/bottle/bottle_metadata_recovery_models.dart';
 import '../domain/bottle/bottle_models.dart';
 import '../domain/bottle/bottle_mutation_models.dart';
 import '../domain/bottle/bottle_runtime_settings_models.dart';
@@ -12,6 +13,50 @@ import '../io/program_registry_parsers.dart';
 import '../io/wine_run_requests.dart';
 import 'cli_json_helpers.dart';
 import 'cli_result_model.dart';
+
+Map<String, Object?> invalidBottleSummaryJson(InvalidBottleSummary summary) {
+  return <String, Object?>{
+    'storageId': summary.storageId.value,
+    'path': summary.path.value,
+    'code': summary.code.value,
+    'message': summary.message,
+    'recoveryActions': summary.recoveryActions
+        .map((action) => action.jsonValue)
+        .toList(growable: false),
+  };
+}
+
+CliResult bottleMetadataRepairJsonResult(BottleMetadataRepairResult result) {
+  return switch (result) {
+    BottleMetadataRepaired(:final repair) => jsonSuccess(<String, Object?>{
+      'bottleMetadataRepair': <String, Object?>{
+        'storageId': repair.storageId.value,
+        'action': repair.action.jsonValue,
+        'backupPath': repair.backupPath.value,
+        'bottle': bottleRecordJson(repair.bottle),
+      },
+    }),
+    BottleMetadataRepairMissing(:final storageId) => jsonError(
+      exitCode: 66,
+      code: 'bottleMetadataNotFound',
+      message: 'Bottle metadata not found.',
+      extra: <String, Object?>{'storageId': storageId.value},
+    ),
+    BottleMetadataRepairNotRepairable(:final storageId, :final message) =>
+      jsonError(
+        exitCode: 65,
+        code: 'bottleMetadataNotRepairable',
+        message: message,
+        extra: <String, Object?>{'storageId': storageId.value},
+      ),
+    BottleMetadataRepairFailed(:final storageId, :final message) => jsonError(
+      exitCode: 74,
+      code: 'bottleMetadataRepairFailed',
+      message: message,
+      extra: <String, Object?>{'storageId': storageId.value},
+    ),
+  };
+}
 
 CliResult bottleArchiveExportJsonResult(BottleArchiveExportResult result) {
   return switch (result) {

@@ -9,6 +9,8 @@ import 'konyak_cli_runtime_result_types.dart';
 import 'program_run_contract.dart';
 import 'runtime_install_contract.dart';
 
+export 'bottle_list_contract.dart';
+export 'bottle_metadata_repair_contract.dart';
 export 'konyak_cli_bottle_commands.dart';
 export 'konyak_cli_bottle_payload_parsers.dart';
 export 'konyak_cli_bottle_result_types.dart';

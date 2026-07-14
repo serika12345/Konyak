@@ -1,5 +1,6 @@
 import 'package:fpdart/fpdart.dart';
 
+import '../domain/bottle/bottle_metadata_recovery_models.dart';
 import '../domain/bottle/bottle_models.dart';
 import '../domain/bottle/bottle_mutation_models.dart';
 import '../domain/program/program_mutation_models.dart';
@@ -8,7 +9,11 @@ import '../io/bottle_archives.dart';
 import '../io/io_result.dart';
 import 'repository_interfaces.dart';
 
-class CompositeBottleRepository implements BottleRepository {
+class CompositeBottleRepository
+    implements
+        BottleRepository,
+        RecoverableBottleCatalog,
+        BottleMetadataRepairRepository {
   CompositeBottleRepository({
     required Iterable<BottleCatalog> catalogs,
     required this.writableRepository,
@@ -19,30 +24,77 @@ class CompositeBottleRepository implements BottleRepository {
 
   @override
   IoResult<List<BottleRecord>> listBottles() {
+    return listBottleCatalog().map(
+      (snapshot) => List<BottleRecord>.unmodifiable(snapshot.bottles),
+    );
+  }
+
+  @override
+  IoResult<BottleCatalogSnapshot> listBottleCatalog() {
     final records = <String, BottleRecord>{};
-    return writableRepository.listBottles().match<IoResult<List<BottleRecord>>>(
-      Left<String, List<BottleRecord>>.new,
-      (writableBottles) {
-        for (final bottle in writableBottles) {
-          records[bottle.id.value] = bottle;
+    final claimedStorageIds = <String>{};
+    final invalidBottles = <InvalidBottleSummary>[];
+    return _listBottleCatalog(writableRepository).match<
+      IoResult<BottleCatalogSnapshot>
+    >(Left<String, BottleCatalogSnapshot>.new, (writableSnapshot) {
+      for (final bottle in writableSnapshot.bottles) {
+        records[bottle.id.value] = bottle;
+        claimedStorageIds.add(bottle.id.value);
+      }
+      for (final invalidBottle in writableSnapshot.invalidBottles) {
+        if (claimedStorageIds.add(invalidBottle.storageId.value)) {
+          invalidBottles.add(invalidBottle);
         }
+      }
 
-        for (final catalog in catalogs) {
-          switch (catalog.listBottles()) {
-            case Left<String, List<BottleRecord>>(:final value):
-              return Left<String, List<BottleRecord>>(value);
-            case Right<String, List<BottleRecord>>(:final value):
-              for (final bottle in value) {
-                records.putIfAbsent(bottle.id.value, () => bottle);
+      for (final catalog in catalogs) {
+        switch (_listBottleCatalog(catalog)) {
+          case Left<String, BottleCatalogSnapshot>(:final value):
+            return Left<String, BottleCatalogSnapshot>(value);
+          case Right<String, BottleCatalogSnapshot>(:final value):
+            for (final bottle in value.bottles) {
+              if (claimedStorageIds.add(bottle.id.value)) {
+                records[bottle.id.value] = bottle;
               }
-          }
+            }
+            for (final invalidBottle in value.invalidBottles) {
+              if (claimedStorageIds.add(invalidBottle.storageId.value)) {
+                invalidBottles.add(invalidBottle);
+              }
+            }
         }
+      }
 
-        final bottles = records.values.toList(growable: false)
-          ..sort((left, right) => left.id.value.compareTo(right.id.value));
+      final bottles = records.values.toList(growable: false)
+        ..sort((left, right) => left.id.value.compareTo(right.id.value));
+      invalidBottles.sort(
+        (left, right) => left.storageId.value.compareTo(right.storageId.value),
+      );
 
-        return Right<String, List<BottleRecord>>(List.unmodifiable(bottles));
-      },
+      return Right<String, BottleCatalogSnapshot>(
+        BottleCatalogSnapshot(bottles: bottles, invalidBottles: invalidBottles),
+      );
+    });
+  }
+
+  @override
+  BottleMetadataRepairResult repairBottleMetadata(
+    BottleMetadataRepairRequest request,
+  ) {
+    final repositories = switch (writableRepository) {
+      final BottleMetadataRepairRepository repository =>
+        <BottleMetadataRepairRepository>[
+          repository,
+          ...catalogs.whereType<BottleMetadataRepairRepository>(),
+        ],
+      _ => catalogs.whereType<BottleMetadataRepairRepository>().toList(
+        growable: false,
+      ),
+    };
+    return _repairBottleMetadataAcrossRepositories(
+      repositories: repositories,
+      request: request,
+      index: 0,
     );
   }
 
@@ -184,4 +236,35 @@ class CompositeBottleRepository implements BottleRepository {
   ) {
     return writableRepository.repairProgramProfile(request);
   }
+}
+
+IoResult<BottleCatalogSnapshot> _listBottleCatalog(BottleCatalog catalog) {
+  return switch (catalog) {
+    final RecoverableBottleCatalog recoverable =>
+      recoverable.listBottleCatalog(),
+    _ => catalog.listBottles().map(
+      (bottles) => BottleCatalogSnapshot(bottles: bottles),
+    ),
+  };
+}
+
+BottleMetadataRepairResult _repairBottleMetadataAcrossRepositories({
+  required List<BottleMetadataRepairRepository> repositories,
+  required BottleMetadataRepairRequest request,
+  required int index,
+}) {
+  if (index >= repositories.length) {
+    return BottleMetadataRepairMissing(request.storageId);
+  }
+
+  final current = repositories[index].repairBottleMetadata(request);
+  return switch (current) {
+    BottleMetadataRepaired() || BottleMetadataRepairFailed() => current,
+    BottleMetadataRepairMissing() => _repairBottleMetadataAcrossRepositories(
+      repositories: repositories,
+      request: request,
+      index: index + 1,
+    ),
+    BottleMetadataRepairNotRepairable() => current,
+  };
 }

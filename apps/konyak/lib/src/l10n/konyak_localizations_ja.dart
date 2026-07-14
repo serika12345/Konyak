@@ -985,4 +985,35 @@ class KonyakLocalizationsJa extends KonyakLocalizations {
 
   @override
   String get bottleFolder => 'ボトルフォルダ';
+
+  @override
+  String get bottlesNeedRepair => '修復が必要';
+
+  @override
+  String get bottleNeedsRepair => 'ボトルの修復が必要です';
+
+  @override
+  String get storageIdentifier => 'ストレージ ID';
+
+  @override
+  String get discardIncompatibleProfileSettingsEllipsis => '互換性のないプロファイル設定を破棄';
+
+  @override
+  String get discardIncompatibleProfileSettingsTitle =>
+      '互換性のないプロファイル設定を破棄しますか？';
+
+  @override
+  String get discardIncompatibleProfileSettingsMessage =>
+      'ボトルのメタデータをバックアップしてから、互換性のないプロファイル設定だけを削除します。Wine prefix とインストール済みプログラムは変更しません。';
+
+  @override
+  String get discardProfileSettings => 'プロファイル設定を破棄';
+
+  @override
+  String get repairingBottleMetadataEllipsis => 'ボトルのメタデータを修復しています';
+
+  @override
+  String repairedBottleMetadata(String backupPath) {
+    return 'プロファイル設定を破棄しました。メタデータのバックアップ: $backupPath';
+  }
 }

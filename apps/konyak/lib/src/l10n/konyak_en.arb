@@ -1427,5 +1427,46 @@
   "bottleFolder": "bottle folder",
   "@bottleFolder": {
     "description": "Konyak UI string: bottle folder"
+  },
+  "bottlesNeedRepair": "Needs repair",
+  "@bottlesNeedRepair": {
+    "description": "Sidebar heading for invalid bottles that need explicit recovery."
+  },
+  "bottleNeedsRepair": "Bottle needs repair",
+  "@bottleNeedsRepair": {
+    "description": "Title for the invalid bottle recovery details dialog."
+  },
+  "storageIdentifier": "Storage ID",
+  "@storageIdentifier": {
+    "description": "Label for the storage directory identifier of an invalid bottle."
+  },
+  "discardIncompatibleProfileSettingsEllipsis": "Discard incompatible profile settings...",
+  "@discardIncompatibleProfileSettingsEllipsis": {
+    "description": "Action that opens confirmation before removing incompatible profile settings."
+  },
+  "discardIncompatibleProfileSettingsTitle": "Discard incompatible profile settings?",
+  "@discardIncompatibleProfileSettingsTitle": {
+    "description": "Confirmation title before removing incompatible profile settings."
+  },
+  "discardIncompatibleProfileSettingsMessage": "Konyak will back up the bottle metadata, then remove only the incompatible profile settings. The Wine prefix and installed programs will not be changed.",
+  "@discardIncompatibleProfileSettingsMessage": {
+    "description": "Confirmation explanation for bottle profile metadata recovery."
+  },
+  "discardProfileSettings": "Discard profile settings",
+  "@discardProfileSettings": {
+    "description": "Confirmed action label for removing incompatible profile settings."
+  },
+  "repairingBottleMetadataEllipsis": "Repairing bottle metadata...",
+  "@repairingBottleMetadataEllipsis": {
+    "description": "Progress label while repairing bottle metadata."
+  },
+  "repairedBottleMetadata": "Profile settings discarded. Metadata backup: {backupPath}",
+  "@repairedBottleMetadata": {
+    "description": "Success message after repairing bottle metadata.",
+    "placeholders": {
+      "backupPath": {
+        "type": "String"
+      }
+    }
   }
 }

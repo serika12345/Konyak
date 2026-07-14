@@ -18,6 +18,7 @@ class KonyakHome extends StatefulWidget {
     this.bottleActions = const KonyakBottleActions(),
     this.programActions = const KonyakProgramActions(),
     this.winetricksActions = const KonyakWinetricksActions(),
+    this.recoveryActions = const KonyakBottleRecoveryActions(),
   });
 
   final KonyakHomeViewState state;
@@ -25,6 +26,7 @@ class KonyakHome extends StatefulWidget {
   final KonyakBottleActions bottleActions;
   final KonyakProgramActions programActions;
   final KonyakWinetricksActions winetricksActions;
+  final KonyakBottleRecoveryActions recoveryActions;
 
   @override
   State<KonyakHome> createState() => _KonyakHomeState();
@@ -94,6 +96,7 @@ class _KonyakHomeState extends State<KonyakHome> {
                 KonyakHomeSidebarPane(
                   platform: state.platform,
                   bottles: filteredBottles,
+                  invalidBottles: state.invalidBottles,
                   selectedBottle: sidebarBottleSelection,
                   searchController: _searchController,
                   isExpanded: _isSidebarVisible,
@@ -106,6 +109,7 @@ class _KonyakHomeState extends State<KonyakHome> {
                   bottleSelectionAction:
                       BottleSummaryActionAvailability.available(_selectBottle),
                   onBottleContextMenuAction: _handleBottleContextMenuAction,
+                  recoveryAction: widget.recoveryActions.showRecoveryAction,
                 ),
                 VerticalDivider(
                   width: 1,

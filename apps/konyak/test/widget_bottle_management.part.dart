@@ -1,6 +1,240 @@
 part of 'widget_test.dart';
 
 void defineBottleManagementWidgetTests() {
+  testWidgets('invalid bottle recovery surface matches golden', (
+    WidgetTester tester,
+  ) async {
+    await _loadKonyakTestFonts();
+    await tester.binding.setSurfaceSize(const Size(1040, 720));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    final goldenKey = GlobalKey();
+    await tester.pumpWidget(
+      RepaintBoundary(
+        key: goldenKey,
+        child: _testKonyakApp(
+          cliClient: KonyakCliClient(
+            executable: 'konyak',
+            processRunner: _QueuedProcessRunner([
+              const ProcessRunResult(
+                exitCode: 0,
+                stdout: '''
+                  {
+                    "schemaVersion": 1,
+                    "bottles": [
+                      {
+                        "id": "usable",
+                        "name": "Usable bottle",
+                        "path": "/bottles/usable",
+                        "windowsVersion": "win10"
+                      }
+                    ],
+                    "invalidBottles": [
+                      {
+                        "storageId": "steam",
+                        "path": "/Users/user/Library/Application Support/Konyak/Bottles/steam",
+                        "code": "invalidProgramProfiles",
+                        "message": "Program profile metadata is incompatible.",
+                        "recoveryActions": ["discardInvalidProfiles"]
+                      }
+                    ]
+                  }
+                ''',
+                stderr: '',
+              ),
+            ]),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('sidebar-bottle-usable')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('sidebar-invalid-bottle-steam')),
+      findsOneWidget,
+    );
+    await tester.tap(
+      find.byKey(const ValueKey('sidebar-invalid-bottle-steam')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Bottle needs repair'), findsOneWidget);
+    expect(find.text('steam'), findsWidgets);
+    expect(
+      find.text('/Users/user/Library/Application Support/Konyak/Bottles/steam'),
+      findsWidgets,
+    );
+    expect(
+      find.text('Program profile metadata is incompatible.'),
+      findsWidgets,
+    );
+    expect(
+      find.text('Discard incompatible profile settings...'),
+      findsOneWidget,
+    );
+    await _expectGoldenFileWithinTolerance(
+      find.byKey(goldenKey),
+      'goldens/invalid_bottle_recovery.png',
+      diffTolerance: 0.02,
+    );
+  });
+
+  testWidgets('confirmed invalid profile repair reloads the bottle list', (
+    WidgetTester tester,
+  ) async {
+    final runner = _QueuedProcessRunner([
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottles": [],
+            "invalidBottles": [
+              {
+                "storageId": "steam",
+                "path": "/bottles/steam",
+                "code": "invalidProgramProfiles",
+                "message": "Program profile metadata is incompatible.",
+                "recoveryActions": ["discardInvalidProfiles"]
+              }
+            ]
+          }
+        ''',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottleMetadataRepair": {
+              "storageId": "steam",
+              "action": "discardInvalidProfiles",
+              "backupPath": "/bottles/steam/metadata.json.backup",
+              "bottle": {
+                "id": "steam",
+                "name": "Steam",
+                "path": "/bottles/steam",
+                "windowsVersion": "win10"
+              }
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottles": [
+              {
+                "id": "steam",
+                "name": "Steam",
+                "path": "/bottles/steam",
+                "windowsVersion": "win10"
+              }
+            ],
+            "invalidBottles": []
+          }
+        ''',
+        stderr: '',
+      ),
+    ]);
+    await tester.pumpWidget(
+      _testKonyakApp(
+        cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(
+      find.byKey(const ValueKey('sidebar-invalid-bottle-steam')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Discard incompatible profile settings...'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Discard incompatible profile settings?'), findsOneWidget);
+    await tester.tap(find.text('Discard profile settings'));
+    await tester.pumpAndSettle();
+
+    expect(runner.argumentsLog[1], const [
+      'repair-bottle-metadata',
+      'steam',
+      '--action',
+      'discard-invalid-profiles',
+      '--json',
+    ]);
+    expect(runner.argumentsLog.last, const ['list-bottles', '--json']);
+    expect(
+      find.byKey(const ValueKey('sidebar-invalid-bottle-steam')),
+      findsNothing,
+    );
+    expect(find.byKey(const ValueKey('sidebar-bottle-steam')), findsOneWidget);
+  });
+
+  testWidgets('failed invalid profile repair keeps recovery reachable', (
+    WidgetTester tester,
+  ) async {
+    final runner = _QueuedProcessRunner([
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottles": [],
+            "invalidBottles": [
+              {
+                "storageId": "steam",
+                "path": "/bottles/steam",
+                "code": "invalidProgramProfiles",
+                "message": "Program profile metadata is incompatible.",
+                "recoveryActions": ["discardInvalidProfiles"]
+              }
+            ]
+          }
+        ''',
+        stderr: '',
+      ),
+      const ProcessRunResult(
+        exitCode: 74,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "error": {
+              "code": "bottleRepositoryError",
+              "message": "Could not back up metadata."
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+    ]);
+    await tester.pumpWidget(
+      _testKonyakApp(
+        cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(
+      find.byKey(const ValueKey('sidebar-invalid-bottle-steam')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Discard incompatible profile settings...'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Discard profile settings'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Could not back up metadata.'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('sidebar-invalid-bottle-steam')),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('Japanese bottle context menu fits localized labels', (
     WidgetTester tester,
   ) async {

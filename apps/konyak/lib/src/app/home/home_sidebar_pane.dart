@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../bottles/bottle_summary.dart';
+import '../../bottles/invalid_bottle_record.dart';
 import '../app_platform.dart';
 import 'home_contracts.dart';
 import 'home_navigation_state.dart';
@@ -11,6 +12,7 @@ class KonyakHomeSidebarPane extends StatelessWidget {
     super.key,
     required this.platform,
     required this.bottles,
+    required this.invalidBottles,
     required this.selectedBottle,
     required this.searchController,
     required this.isExpanded,
@@ -21,10 +23,12 @@ class KonyakHomeSidebarPane extends StatelessWidget {
     required this.onToggleSidebar,
     required this.bottleSelectionAction,
     required this.onBottleContextMenuAction,
+    required this.recoveryAction,
   });
 
   final KonyakPlatform platform;
   final List<BottleSummary> bottles;
+  final List<InvalidBottleRecord> invalidBottles;
   final HomeNavigationBottleSelection selectedBottle;
   final TextEditingController searchController;
   final bool isExpanded;
@@ -36,6 +40,7 @@ class KonyakHomeSidebarPane extends StatelessWidget {
   final BottleSummaryActionAvailability bottleSelectionAction;
   final void Function(BottleSummary bottle, BottleContextMenuAction action)
   onBottleContextMenuAction;
+  final InvalidBottleRecoveryActionAvailability recoveryAction;
 
   @override
   Widget build(BuildContext context) {
@@ -47,6 +52,7 @@ class KonyakHomeSidebarPane extends StatelessWidget {
         platform: platform,
         reserveLeadingWindowControlsSpace: platform.isMacOS,
         bottles: bottles,
+        invalidBottles: invalidBottles,
         selectedBottle: selectedBottle,
         searchController: searchController,
         onSearchChanged: onSearchChanged,
@@ -56,6 +62,7 @@ class KonyakHomeSidebarPane extends StatelessWidget {
           action: bottleSelectionAction,
         ),
         onBottleContextMenuAction: onBottleContextMenuAction,
+        recoveryAction: recoveryAction,
       ),
       collapsedSidebar: CollapsedSidebarToggle(
         reserveLeadingWindowControlsSpace: platform.isMacOS,

@@ -13,6 +13,12 @@ PRODUCTION_DART_ROOTS = [
 
 PRODUCTION_LINE_LIMIT_BASELINE = {
     "apps/konyak/lib/src/l10n/konyak_localizations.dart": "Flutter generated localization API",
+    "apps/konyak/lib/src/l10n/konyak_localizations_en.dart": (
+        "Flutter generated English localization implementation"
+    ),
+    "apps/konyak/lib/src/l10n/konyak_localizations_ja.dart": (
+        "Flutter generated Japanese localization implementation"
+    ),
     "packages/konyak_cli/lib/src/domain/shared/domain_value_objects.dart": (
         "Freezed value object declarations are intentionally centralized"
     ),
@@ -45,6 +51,7 @@ KONYAK_CLI_PUBLIC_EXPORT_LINES = [
     "export 'src/cli/cli_facade.dart' show runCli, runCliStreaming;",
     "export 'src/cli/cli_result_model.dart' show CliResult;",
     "export 'src/domain/app/app_settings_models.dart';",
+    "export 'src/domain/bottle/bottle_metadata_recovery_models.dart';",
     "export 'src/domain/bottle/bottle_models.dart';",
     "export 'src/domain/bottle/bottle_mutation_models.dart';",
     "export 'src/domain/bottle/bottle_runtime_settings_models.dart';",
@@ -3248,7 +3255,7 @@ def require_bottle_metadata_io_json_projection() -> None:
         ),
         (
             "packages/konyak_cli/lib/src/io/repository_storage_io.dart",
-            "'bottle': bottleRecordJson(bottle)",
+            "bottleMetadataDocumentJson(bottle)",
         ),
     ]:
         caller = read_text(caller_path)

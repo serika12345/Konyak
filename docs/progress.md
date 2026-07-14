@@ -8,10 +8,11 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
 
 ## Current Work Snapshot
 
-- Timestamp: 2026-07-14 01:37 JST
+- Timestamp: 2026-07-14 10:34 JST
 - State: `paused`
-- Branch: `task/profile-installer-flow`; IP-P3 is the current verified commit
-  and the branch base is `6f23f55`.
+- Branch: `task/profile-installer-flow`; the latest committed prerequisite is
+  `aa90256`, IP-S5R is verified in the current worktree, and the branch base is
+  `6f23f55`.
 - Related TODO: `docs/todo.md` Next Tasks, "Build a distributable compatibility
   profile system".
 - Related issue: <https://github.com/serika12345/Konyak/issues/44>
@@ -72,14 +73,33 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
     only after the CLI reports success
   - captured the new Profile Manager golden and covered both the automatic
     install flow and the retained manual apply flow with widget tests
+  - reproduced the GUI checkpoint failure through public `list-bottles --json`:
+    one old unreleased profile binding makes the catalog return exit 74, while
+    an isolated equivalent current binding returns exit 0
+  - confirmed that the hidden bottle still reserves its storage identity, so
+    creating the same visible name returns a conflict with no GUI recovery path
+  - changed bottle listing to preserve valid records and return invalid storage
+    entries separately, with one writable-first storage-ID namespace across
+    configured and fallback catalogs
+  - added `repair-bottle-metadata <storage-id> --action
+    discard-invalid-profiles --json`, which revalidates the record, writes an
+    exclusive backup, and atomically removes only incompatible profile bindings
+  - rejected traversal, path mismatch, symbolic links, arbitrary corruption,
+    and lower-priority duplicate repair targets without mutating bottle contents
+  - made Flutter show invalid bottles in a dedicated sidebar section with cause
+    and path details, a separate confirmation, blocking progress, success reload
+    and backup notice, and a retained recovery row after failure
+  - captured and inspected the invalid-bottle recovery golden and completed an
+    independent implementation audit after correcting its custom-lint finding
 - Remaining work:
-  - manually inspect the Profile Manager flow in the running macOS GUI
+  - run the macOS GUI, repair the visible `bottle` record, and resume the Profile
+    Manager automatic-install inspection
   - complete IP-P4 after the GUI checkpoint is accepted
   - after the automatic installation path is stable, resume user profile
     storage, canonical import/export, editing, and sharing work
-- Next action: run Konyak, open Profile Manager for a bottle, inspect the source
-  and dependency details, and exercise the automatic-install action. After the
-  GUI checkpoint is accepted, resume with IP-P4; do not begin it before review.
+- Next action: run Konyak, select `bottle` under the repair section, confirm the
+  backup-first profile-setting discard, then inspect Profile Manager and its
+  automatic-install action. Do not begin IP-P4 before this GUI review.
 - Verification performed:
   - TDD red states captured for the new CLI/domain and Flutter parser contracts
   - `just cli-format-check`, `just cli-analyze`, and `just cli-test` passed; 487
@@ -111,6 +131,26 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
     `apps/konyak/test/goldens/profile_manager_automatic_install.png` at
     1040x720; source identity, manifest digest, installer URL and digest,
     dependency order, and both actions are visible
+  - at 2026-07-14 10:07:38 JST, the real public CLI reproduced the hidden
+    bottle failure with exit 74; isolated old/current binding fixtures returned
+    exit 74/0 respectively, dynamically proving the old `profiles` entry is the
+    material cause rather than the bottle base record
+  - after IP-S5R, the same real public CLI returned exit 0 with one unique,
+    actionable `invalidProgramProfiles` entry; no repair was run against user
+    data
+  - isolated public-CLI audit proved the pre-repair partial list, byte-identical
+    backup, canonical metadata with only `profiles` removed, unchanged prefix
+    sentinel, and valid post-repair list; arbitrary corruption returned exit 65
+    without a backup or metadata mutation
+  - CLI format, custom lint, analysis, and all 496 CLI tests passed; Flutter
+    format, custom lint, analysis, and all 495 Flutter tests passed
+  - final `just verify-governance`, `just verify-safety`, `just format-check`,
+    and `just lint` passed after keeping filesystem work in `src/io`, extracting
+    the focused recovery loader, and registering generated localization outputs
+  - visually inspected
+    `apps/konyak/test/goldens/invalid_bottle_recovery.png` at 1040x720; the
+    usable bottle, repair entry, cause, path, and explicit discard action are
+    visible without clipping or overlap
   - the Steam installer returned HTTP 200 with no redirect and 2,380,800 bytes;
     its SHA-256 matched
     `7d3654531c32d941b8cae81c4137fc542172bfa9635f169cb392f245a0a12bcb`

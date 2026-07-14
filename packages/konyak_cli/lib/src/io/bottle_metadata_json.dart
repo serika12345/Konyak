@@ -1,6 +1,7 @@
 import '../domain/bottle/bottle_models.dart';
 import '../domain/bottle/bottle_runtime_settings_models.dart';
 import '../domain/program/program_profile_models.dart';
+import '../shared/model_constants.dart';
 
 Map<String, Object?> bottleRecordJson(BottleRecord bottle) {
   return <String, Object?>{
@@ -18,6 +19,13 @@ Map<String, Object?> bottleRecordJson(BottleRecord bottle) {
       'profiles': bottle.programProfiles
           .map(programProfileRecordJson)
           .toList(growable: false),
+  };
+}
+
+Map<String, Object?> bottleMetadataDocumentJson(BottleRecord bottle) {
+  return <String, Object?>{
+    'schemaVersion': cliSchemaVersion,
+    'bottle': bottleRecordJson(bottle),
   };
 }
 

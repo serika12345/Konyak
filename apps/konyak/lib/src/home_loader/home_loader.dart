@@ -23,6 +23,7 @@ import 'executable_open_queue_state.dart';
 import 'home_bottle_list_state.dart';
 import 'home_loader_bottles.dart';
 import 'home_loader_executables.dart';
+import 'home_loader_invalid_bottle_recovery.dart';
 import 'home_loader_operation_state.dart';
 import 'home_loader_pinned_programs.dart';
 import 'home_loader_platform_helpers.dart';
@@ -81,10 +82,13 @@ class KonyakHomeLoader extends StatefulWidget {
 class KonyakHomeLoaderState extends State<KonyakHomeLoader>
     with WidgetsBindingObserver {
   HomeBottleListState homeBottleListState = HomeBottleListState.loading();
+  List<InvalidBottleRecord> invalidBottles = const <InvalidBottleRecord>[];
   List<BottleSummary> get bottles => homeBottleListBottles(homeBottleListState);
   BottleListLoadState get bottleListLoadState =>
       homeBottleListLoadState(homeBottleListState);
   BlockingProgressState createBottleProgress =
+      const BlockingProgressState.hidden();
+  BlockingProgressState bottleMetadataRepairProgress =
       const BlockingProgressState.hidden();
   ProgramLaunchState programLaunchState = const ProgramLaunchState.idle();
   BlockingProgressState winetricksLoadProgress =
@@ -186,6 +190,7 @@ class KonyakHomeLoaderState extends State<KonyakHomeLoader>
               runtimes: knownRuntimes.runtimes,
             ),
             bottles: bottles,
+            invalidBottles: invalidBottles,
             bottleListLoadState: bottleListLoadState,
             programSettings: pinnedProgramSettingsSnapshot(
               pinnedProgramSettingsCacheState,
@@ -330,10 +335,19 @@ class KonyakHomeLoaderState extends State<KonyakHomeLoader>
               showWinetricks,
             ),
           ),
+          recoveryActions: KonyakBottleRecoveryActions(
+            showRecoveryAction: AvailableInvalidBottleRecoveryAction(
+              showInvalidBottleRecovery,
+            ),
+          ),
         ),
         ...blockingProgressOverlays(
           key: const ValueKey('create-bottle-progress'),
           state: createBottleProgress,
+        ),
+        ...blockingProgressOverlays(
+          key: const ValueKey('bottle-metadata-repair-progress'),
+          state: bottleMetadataRepairProgress,
         ),
         if (hasActiveProgramLaunches(programLaunchState))
           BlockingProgressOverlay(

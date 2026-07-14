@@ -30,7 +30,8 @@ extension KonyakCliReadCommands on KonyakCliClient {
     final parsed = parseBottleListPayload(result.stdout);
 
     return switch (parsed) {
-      ParsedBottleList(:final bottles) => LoadedBottleList(bottles),
+      ParsedBottleList(:final bottles, :final invalidBottles) =>
+        LoadedBottleList(bottles: bottles, invalidBottles: invalidBottles),
       BottleListParseFailure(:final message) => BottleListLoadFailure(
         exitCode: result.exitCode,
         message: message,

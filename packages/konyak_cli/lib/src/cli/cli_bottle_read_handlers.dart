@@ -1,3 +1,4 @@
+import '../domain/bottle/bottle_metadata_recovery_models.dart';
 import '../io/bottle_metadata_json.dart';
 import '../io/linux_pinned_launchers.dart';
 import '../repository/repository_interfaces.dart';
@@ -14,19 +15,30 @@ CliResult? handleBottleReadCommand(
   required BottleCatalog activeBottleCatalog,
 }) {
   if (isJsonBottleListCommand(arguments)) {
-    return activeBottleCatalog.listBottles().match<CliResult>(
-      bottleCatalogFailureJsonResult,
-      (bottles) {
-        synchronizePinnedProgramLaunchers(
-          hostPlatform: context.programRunPlanner.hostPlatform,
-          environment: context.programRunPlanner.environment.toMap(),
-          bottles: bottles,
-        );
-        return jsonSuccess(<String, Object?>{
-          'bottles': bottles.map(bottleRecordJson).toList(growable: false),
-        });
-      },
-    );
+    final snapshotResult = switch (activeBottleCatalog) {
+      final RecoverableBottleCatalog recoverable =>
+        recoverable.listBottleCatalog(),
+      _ => activeBottleCatalog.listBottles().map(
+        (bottles) => BottleCatalogSnapshot(bottles: bottles),
+      ),
+    };
+    return snapshotResult.match<CliResult>(bottleCatalogFailureJsonResult, (
+      snapshot,
+    ) {
+      synchronizePinnedProgramLaunchers(
+        hostPlatform: context.programRunPlanner.hostPlatform,
+        environment: context.programRunPlanner.environment.toMap(),
+        bottles: snapshot.bottles.toList(),
+      );
+      return jsonSuccess(<String, Object?>{
+        'bottles': snapshot.bottles
+            .map(bottleRecordJson)
+            .toList(growable: false),
+        'invalidBottles': snapshot.invalidBottles
+            .map(invalidBottleSummaryJson)
+            .toList(growable: false),
+      });
+    });
   }
 
   final inspectedBottleId = parseJsonBottleInspectCommand(arguments);
