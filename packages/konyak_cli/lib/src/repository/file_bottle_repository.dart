@@ -1,11 +1,13 @@
 import 'package:fpdart/fpdart.dart';
 
+import '../domain/bottle/bottle_metadata_recovery_models.dart';
 import '../domain/bottle/bottle_models.dart';
 import '../domain/bottle/bottle_mutation_models.dart';
 import '../domain/program/program_catalog_models.dart';
 import '../domain/program/program_mutation_models.dart';
 import '../domain/runtime/host_environment.dart';
 import '../domain/shared/domain_value_objects.dart';
+import '../io/file_bottle_repository_recovery_io.dart';
 import '../io/io_result.dart';
 import '../shared/common_helpers.dart';
 import '../storage/storage_paths.dart';
@@ -15,7 +17,11 @@ import 'file_bottle_repository_program_operations.dart';
 import 'file_bottle_repository_read_operations.dart';
 import 'repository_interfaces.dart';
 
-class FileBottleRepository implements BottleRepository {
+class FileBottleRepository
+    implements
+        BottleRepository,
+        RecoverableBottleCatalog,
+        BottleMetadataRepairRepository {
   factory FileBottleRepository({
     required String dataHome,
     Option<String> bottleDirectory = const Option.none(),
@@ -34,6 +40,9 @@ class FileBottleRepository implements BottleRepository {
       dataHome: dataHome,
       bottleDirectory: resolvedBottleDirectory,
       readOperations: readOperations,
+      recoveryOperations: FileBottleRepositoryRecoveryOperations(
+        bottleDirectory: resolvedBottleDirectory,
+      ),
       mutationOperations: FileBottleRepositoryMutationOperations(
         dataHome: dataHome,
         bottleDirectory: resolvedBottleDirectory,
@@ -54,6 +63,7 @@ class FileBottleRepository implements BottleRepository {
     required this.dataHome,
     required this.bottleDirectory,
     required this.readOperations,
+    required this.recoveryOperations,
     required this.mutationOperations,
     required this.archiveOperations,
     required this.programOperations,
@@ -74,12 +84,25 @@ class FileBottleRepository implements BottleRepository {
   final String dataHome;
   final String bottleDirectory;
   final FileBottleRepositoryReadOperations readOperations;
+  final FileBottleRepositoryRecoveryOperations recoveryOperations;
   final FileBottleRepositoryMutationOperations mutationOperations;
   final FileBottleRepositoryArchiveOperations archiveOperations;
   final FileBottleRepositoryProgramOperations programOperations;
 
   @override
   IoResult<List<BottleRecord>> listBottles() => readOperations.listBottles();
+
+  @override
+  IoResult<BottleCatalogSnapshot> listBottleCatalog() {
+    return readOperations.listBottleCatalog();
+  }
+
+  @override
+  BottleMetadataRepairResult repairBottleMetadata(
+    BottleMetadataRepairRequest request,
+  ) {
+    return recoveryOperations.repairBottleMetadata(request);
+  }
 
   @override
   IoResult<Option<BottleRecord>> findBottle(BottleId id) {

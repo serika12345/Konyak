@@ -3,6 +3,24 @@ import 'dart:io';
 import '../shared/common_helpers.dart';
 import 'directory_copy_support.dart';
 
+enum FileBottleRepositoryRootStatus { missing, directory, invalid }
+
+FileBottleRepositoryRootStatus fileBottleRepositoryRootStatus(
+  String bottleDirectory,
+) {
+  final rootType = FileSystemEntity.typeSync(
+    bottleDirectory,
+    followLinks: false,
+  );
+  if (rootType == FileSystemEntityType.notFound) {
+    return FileBottleRepositoryRootStatus.missing;
+  }
+
+  return Directory(bottleDirectory).existsSync()
+      ? FileBottleRepositoryRootStatus.directory
+      : FileBottleRepositoryRootStatus.invalid;
+}
+
 bool fileBottleRepositoryDirectoryExists(String bottleDirectory) {
   return Directory(bottleDirectory).existsSync();
 }

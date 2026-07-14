@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../bottles/bottle_summary.dart';
+import '../../bottles/invalid_bottle_record.dart';
 import '../app_platform.dart';
 import '../bottles/bottle_action_availability.dart';
 import '../bottles/bottle_detail_mode.dart';
@@ -128,6 +129,8 @@ final class KonyakHomeViewState {
     this.runtimeCapabilitiesState =
         const RuntimeCapabilitiesState.unavailable(),
     Iterable<BottleSummary> bottles = const <BottleSummary>[],
+    Iterable<InvalidBottleRecord> invalidBottles =
+        const <InvalidBottleRecord>[],
     this.bottleListLoadState = const BottleListLoadState.loaded(),
     Map<String, ProgramSettingsSummary> programSettings =
         const <String, ProgramSettingsSummary>{},
@@ -135,6 +138,7 @@ final class KonyakHomeViewState {
     Map<String, String> pendingRuntimeSettingsControls =
         const <String, String>{},
   }) : bottles = List.unmodifiable(bottles),
+       invalidBottles = List.unmodifiable(invalidBottles),
        programSettings = Map.unmodifiable(programSettings),
        loadingProgramSettings = Set.unmodifiable(loadingProgramSettings),
        pendingRuntimeSettingsControls = Map.unmodifiable(
@@ -144,6 +148,7 @@ final class KonyakHomeViewState {
   final KonyakPlatform platform;
   final RuntimeCapabilitiesState runtimeCapabilitiesState;
   final List<BottleSummary> bottles;
+  final List<InvalidBottleRecord> invalidBottles;
   final BottleListLoadState bottleListLoadState;
   final Map<String, ProgramSettingsSummary> programSettings;
   final Set<String> loadingProgramSettings;
@@ -245,6 +250,30 @@ final class KonyakHomeViewState {
         const KonyakHomeDetailContent.empty(),
     };
   }
+}
+
+sealed class InvalidBottleRecoveryActionAvailability {
+  const InvalidBottleRecoveryActionAvailability();
+}
+
+final class UnavailableInvalidBottleRecoveryAction
+    extends InvalidBottleRecoveryActionAvailability {
+  const UnavailableInvalidBottleRecoveryAction();
+}
+
+final class AvailableInvalidBottleRecoveryAction
+    extends InvalidBottleRecoveryActionAvailability {
+  const AvailableInvalidBottleRecoveryAction(this.invoke);
+
+  final ValueChanged<InvalidBottleRecord> invoke;
+}
+
+final class KonyakBottleRecoveryActions {
+  const KonyakBottleRecoveryActions({
+    this.showRecoveryAction = const UnavailableInvalidBottleRecoveryAction(),
+  });
+
+  final InvalidBottleRecoveryActionAvailability showRecoveryAction;
 }
 
 final class KonyakHomeDetailState {

@@ -1,13 +1,16 @@
 import 'package:fpdart/fpdart.dart';
 
+import '../domain/bottle/bottle_metadata_recovery_models.dart';
 import '../domain/bottle/bottle_models.dart';
 import '../domain/program/pinned_programs.dart';
 import '../domain/program/program_catalog_models.dart';
 import '../domain/shared/domain_value_objects.dart';
+import '../io/bottle_metadata_recovery_io.dart';
 import '../io/file_bottle_repository_io.dart';
 import '../io/io_result.dart';
 import '../io/pinned_program_availability_io.dart';
 import '../io/repository_storage_io.dart';
+import '../shared/common_helpers.dart';
 
 class FileBottleRepositoryReadOperations {
   const FileBottleRepositoryReadOperations({
@@ -19,14 +22,40 @@ class FileBottleRepositoryReadOperations {
   final ProgramMetadataExtractor programMetadataExtractor;
 
   IoResult<List<BottleRecord>> listBottles() {
-    if (!fileBottleRepositoryDirectoryExists(bottleDirectory)) {
-      return const Right<String, List<BottleRecord>>(<BottleRecord>[]);
-    }
+    return listBottleCatalog().map(
+      (snapshot) => List<BottleRecord>.unmodifiable(snapshot.bottles),
+    );
+  }
 
+  IoResult<BottleCatalogSnapshot> listBottleCatalog() {
     return ioResult(() {
+      switch (fileBottleRepositoryRootStatus(bottleDirectory)) {
+        case FileBottleRepositoryRootStatus.missing:
+          return BottleCatalogSnapshot();
+        case FileBottleRepositoryRootStatus.invalid:
+          throw const FormatException(
+            'Bottle repository root is not a directory.',
+          );
+        case FileBottleRepositoryRootStatus.directory:
+          break;
+      }
+
+      final inspections = fileBottleRepositoryBottleDirectories(bottleDirectory)
+          .map((entry) => (entry: entry, storageIdValue: baseName(entry.path)))
+          .where((candidate) {
+            return isValidBottleStorageId(candidate.storageIdValue);
+          })
+          .map((candidate) {
+            return inspectBottleMetadata(
+              bottlePath: candidate.entry.path,
+              storageId: BottleStorageId(candidate.storageIdValue),
+            );
+          })
+          .toList(growable: false);
       final bottles =
-          fileBottleRepositoryBottleDirectories(bottleDirectory)
-              .map((entry) => readBottleMetadata(entry.path))
+          inspections
+              .whereType<ValidBottleMetadata>()
+              .map((inspection) => inspection.bottle)
               .map(repairedBottleWithoutMissingBottleLocalPinnedProgramFiles)
               .map(
                 (bottle) => bottleWithPinnedProgramIcons(
@@ -37,7 +66,20 @@ class FileBottleRepositoryReadOperations {
               .toList(growable: false)
             ..sort((left, right) => left.id.value.compareTo(right.id.value));
 
-      return List.unmodifiable(bottles);
+      final invalidBottles =
+          inspections
+              .whereType<InvalidBottleMetadata>()
+              .map((inspection) => inspection.summary)
+              .toList(growable: false)
+            ..sort(
+              (left, right) =>
+                  left.storageId.value.compareTo(right.storageId.value),
+            );
+
+      return BottleCatalogSnapshot(
+        bottles: bottles,
+        invalidBottles: invalidBottles,
+      );
     });
   }
 

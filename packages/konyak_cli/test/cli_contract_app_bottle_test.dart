@@ -10,7 +10,11 @@ void main() {
       expect(result.stderr, isEmpty);
 
       final payload = jsonDecode(result.stdout) as Map<String, Object?>;
-      expect(payload, {'schemaVersion': 1, 'bottles': <Object?>[]});
+      expect(payload, {
+        'schemaVersion': 1,
+        'bottles': <Object?>[],
+        'invalidBottles': <Object?>[],
+      });
     },
   );
 
@@ -41,6 +45,7 @@ void main() {
           'windowsVersion': 'win10',
         },
       ],
+      'invalidBottles': <Object?>[],
     });
   });
 
@@ -697,6 +702,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
           'windowsVersion': 'win10',
         },
       ],
+      'invalidBottles': <Object?>[],
     });
   });
 
@@ -748,6 +754,7 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
     expect(jsonDecode(listBefore.stdout), {
       'schemaVersion': 1,
       'bottles': <Object?>[],
+      'invalidBottles': <Object?>[],
     });
 
     final result = runCli(const [
@@ -2138,7 +2145,11 @@ HKEY_CURRENT_USER\\Control Panel\\Desktop
       '--json',
     ], bottleRepository: repository);
     final listPayload = jsonDecode(listResult.stdout) as Map<String, Object?>;
-    expect(listPayload, {'schemaVersion': 1, 'bottles': <Object?>[]});
+    expect(listPayload, {
+      'schemaVersion': 1,
+      'bottles': <Object?>[],
+      'invalidBottles': <Object?>[],
+    });
   });
 
   test(

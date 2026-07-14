@@ -2,6 +2,7 @@ import '../domain/bottle/bottle_mutation_models.dart';
 import '../domain/bottle/bottle_runtime_settings_models.dart';
 import '../domain/program/program_runner.dart';
 import '../io/bottle_metadata_json.dart';
+import '../repository/repository_interfaces.dart';
 import 'cli_bottle_parsers.dart';
 import 'cli_bottle_results.dart';
 import 'cli_commands.dart';
@@ -12,6 +13,18 @@ CliResult? handleBottleMutationCommand(
   List<String> arguments,
   CliCommandContext context,
 ) {
+  final metadataRepairRequest = parseJsonBottleMetadataRepairRequest(arguments);
+  if (metadataRepairRequest != null) {
+    final repository = context.bottleRepository;
+    return switch (repository) {
+      final BottleMetadataRepairRepository repairRepository =>
+        bottleMetadataRepairJsonResult(
+          repairRepository.repairBottleMetadata(metadataRepairRequest),
+        ),
+      _ => bottleRepositoryUnavailableError(),
+    };
+  }
+
   final createBottleRequest = parseJsonBottleCreateRequest(arguments);
   if (createBottleRequest != null) {
     final repository = context.bottleRepository;

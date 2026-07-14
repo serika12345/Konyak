@@ -4,6 +4,7 @@ import 'dart:convert';
 import '../bottles/bottle_summary.dart';
 import 'bottle_create_contract.dart';
 import 'bottle_detail_contract.dart';
+import 'bottle_metadata_repair_contract.dart';
 import 'konyak_cli_bottle_payload_parsers.dart';
 import 'konyak_cli_bottle_result_types.dart';
 import 'konyak_cli_client.dart' show KonyakCliClient;
@@ -11,6 +12,30 @@ import 'konyak_cli_failure_messages.dart';
 import 'konyak_cli_result_helpers.dart';
 
 extension KonyakCliBottleCommands on KonyakCliClient {
+  Future<BottleMetadataRepairLoadResult> discardInvalidBottleProfiles(
+    String storageId,
+  ) async {
+    final result = await run([
+      'repair-bottle-metadata',
+      storageId,
+      '--action',
+      'discard-invalid-profiles',
+      '--json',
+    ]);
+    final parsed = parseBottleMetadataRepairPayload(result.stdout);
+
+    return switch (parsed) {
+      ParsedBottleMetadataRepair(:final repair) when result.exitCode == 0 =>
+        RepairedBottleMetadata(repair),
+      ParsedBottleMetadataRepair() ||
+      BottleMetadataRepairParseFailure() => BottleMetadataRepairLoadFailure(
+        exitCode: result.exitCode,
+        message: operationFailureMessage(result, 'repair-bottle-metadata'),
+        diagnostic: result.stderr,
+      ),
+    };
+  }
+
   Future<BottleCreateLoadResult> createBottle({
     required String name,
     required String windowsVersion,
