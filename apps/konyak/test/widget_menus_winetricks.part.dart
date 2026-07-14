@@ -56,7 +56,11 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
                           'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
                       fileName: 'SteamSetup.exe',
                     ),
-                    dependencyWinetricksVerbs: const ['corefonts', 'vcrun2022'],
+                    dependencyWinetricksVerbs: const [
+                      'corefonts',
+                      'fakejapanese',
+                      'vcrun2022',
+                    ],
                     runCompletionPolicy: 'waitForExit',
                     compatibilityProfile: CompatibilityProfileSummary(
                       id: 'steam',
@@ -76,7 +80,10 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
     expect(find.text('Install automatically'), findsOneWidget);
     expect(find.text('Apply to existing program'), findsOneWidget);
     expect(find.textContaining('builtin / steam.json'), findsOneWidget);
-    expect(find.text('1. corefonts\n2. vcrun2022'), findsOneWidget);
+    expect(
+      find.text('1. corefonts\n2. fakejapanese\n3. vcrun2022'),
+      findsOneWidget,
+    );
 
     await _expectGoldenFileWithinTolerance(
       find.byKey(goldenKey),
