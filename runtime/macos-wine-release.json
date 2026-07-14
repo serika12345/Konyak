@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "repository": "serika12345/konyak-macos-runtime",
-  "defaultReleaseTag": "crossover-26.1.0-konyak.4",
+  "defaultReleaseTag": "latest",
   "sourceManifestFileName": "konyak-macos-wine-runtime-stack-source.json",
   "sourceManifestSignatureFileName": "konyak-macos-wine-runtime-stack-source.json.sig"
 }

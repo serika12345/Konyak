@@ -42,13 +42,13 @@ def macos_runtime_release_reference() -> dict[str, object]:
 
 def macos_runtime_source_manifest_url() -> str:
     reference = macos_runtime_release_reference()
-    repository = os.environ.get(
-        "KONYAK_DEV_MACOS_RUNTIME_RELEASE_REPO",
-        str(reference["repository"]),
+    repository = (
+        os.environ.get("KONYAK_DEV_MACOS_RUNTIME_RELEASE_REPO", "").strip()
+        or str(reference["repository"]).strip()
     )
-    release_tag = os.environ.get(
-        "KONYAK_DEV_MACOS_RUNTIME_RELEASE_TAG",
-        str(reference["defaultReleaseTag"]),
+    release_tag = (
+        os.environ.get("KONYAK_DEV_MACOS_RUNTIME_RELEASE_TAG", "").strip()
+        or str(reference["defaultReleaseTag"]).strip()
     )
     manifest_name = str(reference["sourceManifestFileName"])
     if release_tag == "latest":
@@ -62,9 +62,9 @@ def macos_runtime_source_manifest_url() -> str:
     )
 
 
-DEV_RUNTIME_STACK_MANIFEST = os.environ.get(
-    "KONYAK_DEV_MACOS_WINE_STACK_MANIFEST",
-    macos_runtime_source_manifest_url(),
+DEV_RUNTIME_STACK_MANIFEST = (
+    os.environ.get("KONYAK_DEV_MACOS_WINE_STACK_MANIFEST", "").strip()
+    or macos_runtime_source_manifest_url()
 )
 
 

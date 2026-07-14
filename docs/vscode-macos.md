@@ -99,19 +99,28 @@ jobs pass.
 
 The macOS VSCode launch profile uses the same development runtime profile. It
 sets `KONYAK_RUNTIME_PROFILE=development`, points `KONYAK_MACOS_WINE_HOME` at
-`.dart_tool/konyak/dev-runtime/macos-wine`, and points
-`KONYAK_DEV_MACOS_WINE_STACK_MANIFEST` at the cached development source
-manifest under `.dart_tool/konyak/dev-runtime-source/macos-wine-stack`.
+`.dart_tool/konyak/dev-runtime/macos-wine`, and exposes
+`KONYAK_DEV_MACOS_WINE_STACK_MANIFEST` as the CLI-facing manifest input. The
+VSCode environment override hook is the separate
+`KONYAK_MACOS_WINE_STACK_MANIFEST_OVERRIDE`; when that override is empty or
+unspecified, the CLI uses the platform default manifest at the GitHub
+`releases/latest/download` URL.
 `scripts/prepare_macos_dev_runtime_stack.zsh` resolves the selected Konyak
 macOS runtime release from `runtime/macos-wine-release.json` and refreshes that
-cache before launch. The supported VSCode, Nix terminal, and Agent Watch launch
-paths also run it with `--ensure-runtime`: they compare the selected manifest
-with the installed component metadata and update the managed development
-runtime only when it is missing or stale. To switch the development build to
-another published runtime release, set `KONYAK_DEV_MACOS_RUNTIME_RELEASE_TAG`
-before launching VSCode or the Nix terminal task; use `latest` for the latest
-release. A complete manifest URL can be forced with
-`KONYAK_DEV_MACOS_WINE_STACK_MANIFEST`.
+internal cache under `.dart_tool/konyak/dev-runtime-source/macos-wine-stack`
+before launch. That cache is preparation-only and is not passed to the launched
+CLI as its manifest source. The supported VSCode, Nix terminal, and Agent Watch
+launch paths also run the script with `--ensure-runtime`: they compare the
+selected manifest with the installed component metadata and update the managed
+development runtime only when it is missing or stale. The repository default
+release policy is `latest`. Each new Nix dev shell regenerates the CLI-facing
+`KONYAK_DEV_MACOS_RUNTIME_RELEASE_TAG` and
+`KONYAK_DEV_MACOS_WINE_STACK_MANIFEST` values from that repository policy, so
+values derived by an older shell are not treated as explicit pins. For a
+fixed-tag rollback in the Nix terminal or Agent Watch path, set
+`KONYAK_MACOS_RUNTIME_RELEASE_TAG_OVERRIDE`; CI may use the same override. For
+the VSCode debug profile, or to force any complete local or remote manifest
+source, set `KONYAK_MACOS_WINE_STACK_MANIFEST_OVERRIDE` explicitly.
 These runtime values are passed both as process environment and as
 `--dart-define` values so the Flutter app can forward them explicitly to the
 CLI child process.

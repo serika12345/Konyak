@@ -263,10 +263,26 @@
                 macos_runtime_reference_value() {
                   python3 -c 'import json,sys; print(json.load(open(sys.argv[1], encoding="utf-8"))[sys.argv[2]])' "$macos_runtime_reference" "$1"
                 }
-                export KONYAK_DEV_MACOS_RUNTIME_RELEASE_REPO="''${KONYAK_DEV_MACOS_RUNTIME_RELEASE_REPO:-$(macos_runtime_reference_value repository)}"
-                export KONYAK_DEV_MACOS_RUNTIME_RELEASE_TAG="''${KONYAK_DEV_MACOS_RUNTIME_RELEASE_TAG:-$(macos_runtime_reference_value defaultReleaseTag)}"
+                macos_runtime_trimmed_value() {
+                  python3 -c 'import sys; print(sys.argv[1].strip(), end="")' "$1"
+                }
+                macos_runtime_repository_override="$(macos_runtime_trimmed_value "''${KONYAK_MACOS_RUNTIME_RELEASE_REPO_OVERRIDE:-}")"
+                macos_runtime_release_tag_override="$(macos_runtime_trimmed_value "''${KONYAK_MACOS_RUNTIME_RELEASE_TAG_OVERRIDE:-}")"
+                macos_runtime_manifest_override="$(macos_runtime_trimmed_value "''${KONYAK_MACOS_WINE_STACK_MANIFEST_OVERRIDE:-}")"
+                if [ -n "$macos_runtime_repository_override" ]; then
+                  export KONYAK_DEV_MACOS_RUNTIME_RELEASE_REPO="$macos_runtime_repository_override"
+                else
+                  export KONYAK_DEV_MACOS_RUNTIME_RELEASE_REPO="$(macos_runtime_reference_value repository)"
+                fi
+                if [ -n "$macos_runtime_release_tag_override" ]; then
+                  export KONYAK_DEV_MACOS_RUNTIME_RELEASE_TAG="$macos_runtime_release_tag_override"
+                else
+                  export KONYAK_DEV_MACOS_RUNTIME_RELEASE_TAG="$(macos_runtime_reference_value defaultReleaseTag)"
+                fi
                 macos_runtime_source_manifest_file_name="$(macos_runtime_reference_value sourceManifestFileName)"
-                if [ -z "''${KONYAK_DEV_MACOS_WINE_STACK_MANIFEST:-}" ]; then
+                if [ -n "$macos_runtime_manifest_override" ]; then
+                  export KONYAK_DEV_MACOS_WINE_STACK_MANIFEST="$macos_runtime_manifest_override"
+                else
                   if [ "''${KONYAK_DEV_MACOS_RUNTIME_RELEASE_TAG}" = "latest" ]; then
                     export KONYAK_DEV_MACOS_WINE_STACK_MANIFEST="https://github.com/''${KONYAK_DEV_MACOS_RUNTIME_RELEASE_REPO}/releases/latest/download/$macos_runtime_source_manifest_file_name"
                   else

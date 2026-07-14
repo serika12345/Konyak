@@ -5481,6 +5481,13 @@ def main() -> None:
     require_contains("docs/todo.md", "wineloader start /unix")
     require_contains("docs/todo.md", "serika12345/konyak-macos-runtime")
     require_contains("runtime/macos-wine-release.json", "defaultReleaseTag")
+    require_contains(
+        "runtime/macos-wine-release.json", '"defaultReleaseTag": "latest"'
+    )
+    require_contains(
+        "packages/konyak_cli/lib/src/shared/model_constants.dart",
+        "releases/latest/download",
+    )
     for expected in [
         "defaultReleaseTag",
         "sourceManifestFileName",
@@ -5587,6 +5594,10 @@ def main() -> None:
         require_contains(".vscode/tasks.json", expected)
     require_contains(".vscode/tasks.json", "scripts/prepare_linux_dev_runtime_source.zsh")
     require_contains(".vscode/tasks.json", "--ensure-runtime")
+    require_contains(".vscode/tasks.json", "--print-manifest-source")
+    require_contains(
+        "scripts/prepare_macos_dev_runtime_stack.zsh", "--print-manifest-source"
+    )
     require_contains("scripts/flutter_macos_agent_watch.py", "--ensure-runtime")
     require_contains("justfile", "macos-dev-runtime-prepare-test")
     require_contains(".vscode/launch.json", "Konyak: Prepare Linux Runtime Source")
@@ -5608,6 +5619,33 @@ def main() -> None:
         "--dart-define=KONYAK_DEV_MACOS_WINE_STACK_MANIFEST",
     ]:
         require_contains("scripts/flutter_macos_agent_watch.py", expected)
+
+    require_contains(
+        ".vscode/launch.json",
+        "${env:KONYAK_MACOS_WINE_STACK_MANIFEST_OVERRIDE}",
+    )
+    for override_name in [
+        "KONYAK_MACOS_RUNTIME_RELEASE_REPO_OVERRIDE",
+        "KONYAK_MACOS_RUNTIME_RELEASE_TAG_OVERRIDE",
+        "KONYAK_MACOS_WINE_STACK_MANIFEST_OVERRIDE",
+    ]:
+        require_contains("flake.nix", override_name)
+    for inherited_derived_name in [
+        "KONYAK_DEV_MACOS_RUNTIME_RELEASE_REPO:-",
+        "KONYAK_DEV_MACOS_RUNTIME_RELEASE_TAG:-",
+        "KONYAK_DEV_MACOS_WINE_STACK_MANIFEST:-",
+    ]:
+        require_not_contains("flake.nix", inherited_derived_name)
+    macos_manifest_cache_launch_path = (
+        "dev-runtime-source/macos-wine-stack/"
+        "konyak-macos-wine-runtime-stack-source.json"
+    )
+    for launch_path in [
+        ".vscode/launch.json",
+        ".vscode/tasks.json",
+        "scripts/flutter_macos_agent_watch.py",
+    ]:
+        require_not_contains(launch_path, macos_manifest_cache_launch_path)
 
     for expected in [
         "prepare_macos_dev_runtime_stack.zsh",

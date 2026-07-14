@@ -446,11 +446,7 @@ Option<RuntimeSourceManifestUrl> runtimeSourceManifestForPlatform({
     environment,
     developmentKey: platformSpec.developmentSourceManifestEnvironmentKey,
     releaseKey: platformSpec.releaseSourceManifestEnvironmentKey,
-  ).map(RuntimeSourceManifestUrl.new);
-  if (isDevelopmentRuntimeProfile(environment)) {
-    return configuredManifest;
-  }
-
+  ).map((value) => RuntimeSourceManifestUrl(value.trim()));
   return configuredManifest.alt(() => platformSpec.defaultSourceManifestUrl);
 }
 

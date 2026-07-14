@@ -8,6 +8,7 @@ RELEASE_METADATA_PATH="${ROOT}/runtime/macos-wine-release.json"
 RUNTIME_SOURCE_MODE="${KONYAK_DEV_MACOS_RUNTIME_SOURCE_MODE:-release}"
 
 print_manifest_path=false
+print_manifest_source=false
 print_runtime_path=false
 ensure_runtime=false
 force=false
@@ -16,6 +17,9 @@ for arg in "$@"; do
   case "${arg}" in
     --print-manifest-path)
       print_manifest_path=true
+      ;;
+    --print-manifest-source)
+      print_manifest_source=true
       ;;
     --print-runtime-path)
       print_runtime_path=true
@@ -52,6 +56,10 @@ if not isinstance(value, str) or not value.strip():
     raise SystemExit(f"missing {sys.argv[2]} in {sys.argv[1]}")
 print(value)
 PY
+}
+
+trim_value() {
+  python3 -c 'import sys; print(sys.argv[1].strip(), end="")' "$1"
 }
 
 is_url() {
@@ -112,14 +120,20 @@ cache_url_manifest() {
 }
 
 runtime_path="${KONYAK_MACOS_WINE_HOME:-${ROOT}/.dart_tool/konyak/dev-runtime/macos-wine}"
-manifest_source="${KONYAK_DEV_MACOS_WINE_STACK_MANIFEST:-}"
+manifest_source="$(trim_value "${KONYAK_DEV_MACOS_WINE_STACK_MANIFEST:-}")"
 manifest_path="${MANIFEST_PATH}"
 
 if [[ -z "${manifest_source}" ]]; then
-  repository="$(json_value repository)"
+  repository="$(trim_value "${KONYAK_DEV_MACOS_RUNTIME_RELEASE_REPO:-}")"
+  if [[ -z "${repository}" ]]; then
+    repository="$(json_value repository)"
+  fi
   default_tag="$(json_value defaultReleaseTag)"
   manifest_file_name="$(json_value sourceManifestFileName)"
-  release_tag="${KONYAK_DEV_MACOS_RUNTIME_RELEASE_TAG:-${default_tag}}"
+  release_tag="$(trim_value "${KONYAK_DEV_MACOS_RUNTIME_RELEASE_TAG:-}")"
+  if [[ -z "${release_tag}" ]]; then
+    release_tag="${default_tag}"
+  fi
   if [[ "${release_tag}" == "latest" ]]; then
     manifest_source="https://github.com/${repository}/releases/latest/download/${manifest_file_name}"
   else
@@ -200,6 +214,10 @@ fi
 
 if [[ "${print_manifest_path}" == true ]]; then
   print -r -- "${manifest_path}"
+fi
+
+if [[ "${print_manifest_source}" == true ]]; then
+  print -r -- "${manifest_source}"
 fi
 
 if [[ "${print_runtime_path}" == true ]]; then
